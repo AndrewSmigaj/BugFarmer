@@ -8,6 +8,16 @@ import (
 	"github.com/heroiclabs/nakama-common/runtime"
 )
 
+// Direction represents the 4 cardinal directions for top-down view
+type Direction int
+
+const (
+	DirDown  Direction = iota // 0 - default, facing camera
+	DirLeft                   // 1
+	DirRight                  // 2
+	DirUp                     // 3
+)
+
 // WorldConfig holds configurable world parameters
 type WorldConfig struct {
 	ChunkSize   int // Default: 32
@@ -32,10 +42,10 @@ type WorldState struct {
 
 // PlayerState tracks a player within the world
 type PlayerState struct {
-	UserID     string
-	Username   string
-	Position   entities.EntityPosition
-	FacingLeft bool // For other players to see which way you're facing
+	UserID   string
+	Username string
+	Position entities.EntityPosition
+	Facing   Direction // For other players to see which way you're facing
 }
 
 // DefaultConfig returns sensible defaults from architecture doc
@@ -67,10 +77,10 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 // AddPlayer adds a new player to the world
 func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presence) {
 	s.Players[userID] = &PlayerState{
-		UserID:     userID,
-		Username:   username,
-		Position:   entities.EntityPosition{ChunkX: 8, ChunkY: 8, LocalX: 16, LocalY: 16}, // Spawn at center
-		FacingLeft: false,
+		UserID:   userID,
+		Username: username,
+		Position: entities.EntityPosition{ChunkX: 8, ChunkY: 8, LocalX: 16, LocalY: 16}, // Spawn at center
+		Facing:   DirDown, // Default: facing camera
 	}
 	s.Presences[userID] = presence
 }

@@ -11,10 +11,23 @@ Bug Farmer is a 2D multiplayer game where players farm bugs, build structures, a
 | Component | Technology | Status |
 |-----------|------------|--------|
 | Frontend | Unity 6 (2D) | Not started |
-| Backend | Nakama 3.35.0 | Docker configured |
-| Database | PostgreSQL 15 | Docker configured |
-| Server Logic | Go modules | Structure planned |
+| Backend | Nakama 3.35.0 | ✅ Running |
+| Database | PostgreSQL 15 | ✅ Running |
+| Server Logic | Go modules | ✅ Compiles & loads |
 | Realtime | Nakama WebSockets | Not started |
+
+### 1.3 Dependency Versions (LOCKED)
+
+These versions MUST match exactly for Go plugin compatibility:
+
+```
+github.com/heroiclabs/nakama-common  v1.44.0
+google.golang.org/protobuf           v1.36.8
+github.com/gofrs/uuid                v4.4.0+incompatible
+go version                           1.23+
+```
+
+**Why this matters**: Go plugins must be compiled with identical dependency versions as the Nakama binary. Version mismatches cause `plugin was built with different version` errors.
 
 ### 1.1 Unity Configuration (LOCKED)
 
@@ -36,10 +49,34 @@ The Unity client is **render-only**. All game logic runs on the server.
 | Movement validation | ✓ | |
 | Reproduction logic | ✓ | |
 | Collision detection | ✓ | |
+| Tool hit detection | | ✓ |
+| Damage calculation | ✓ | |
 | Rendering | | ✓ |
 | Input capture | | ✓ |
 | Interpolation | | ✓ |
 | Audio/VFX | | ✓ |
+
+### 1.4 Tool Use Authority Model (LOCKED)
+
+Terraria-style controls: WASD movement, mouse click to use tools.
+
+**Model: Client Animation + Server Damage**
+
+```
+Client A clicks tree
+  → Client A: plays swing animation immediately (local, responsive)
+  → Client A → Server: {tool: "axe", target_id: "tree_123"}
+  → Server: validates range, looks up tool damage from player stats
+  → Server → ALL in chunk: {player_id: "A", tool: "axe", target_id: "tree_123", damage: 10, health: 90}
+  → Client B: sees broadcast, plays A's swing animation, updates tree health
+  → Client A: updates tree health (already played own animation)
+```
+
+**Why this model**:
+- Animation plays instantly for the acting player (responsive feel)
+- Server controls damage values (prevents cheating damage amounts)
+- Other players see animations via broadcast
+- Client can claim hits but cannot control damage amount
 
 ---
 
@@ -47,19 +84,44 @@ The Unity client is **render-only**. All game logic runs on the server.
 
 ```
 BugFarmer/
-├── docker-compose.yml          # Nakama + PostgreSQL
+├── docker-compose.yml              # Nakama + PostgreSQL + Builder
 ├── nakama/
 │   ├── data/
-│   │   └── local.yml           # Nakama config
-│   └── modules/                # Go server code
-│       ├── main.go             # Entry point
-│       ├── world/              # World simulation
-│       ├── rpc/                # RPC handlers
-│       └── entities/           # Game entities
-├── unity/                      # Unity project (TBD)
-├── requirements.md             # Game design requirements
-└── ARCHITECTURE.md             # This document
+│   │   ├── local.yml               # Nakama config
+│   │   └── .cookie                 # Session key
+│   └── modules/                    # Go server code
+│       ├── Dockerfile.build        # Plugin builder
+│       ├── go.mod                  # Go dependencies
+│       ├── go.sum                  # Dependency checksums
+│       ├── main.go                 # Entry point, registers RPCs & match
+│       ├── entities/
+│       │   └── types.go            # EntityPosition, Entity interface
+│       ├── rpc/
+│       │   └── world.go            # world_create, world_list, world_join
+│       └── world/
+│           ├── match.go            # Match handler (runtime.Match impl)
+│           ├── messages.go         # OpCode constants
+│           └── state.go            # WorldState, PlayerState, WorldConfig
+├── unity/                          # Unity project (TBD)
+├── requirements.md                 # Game design requirements
+└── ARCHITECTURE.md                 # This document
 ```
+
+### 2.1 Docker Services
+
+```yaml
+services:
+  postgres:     # Database, port 5432
+  builder:      # Compiles Go plugin, exits after build
+  nakama:       # Game server, ports 7349/7350/7351
+```
+
+**Build flow**:
+1. `builder` compiles Go module → `backend.so`
+2. Output stored in `modules` volume
+3. `nakama` waits for builder, then loads `backend.so`
+
+**Rebuild command**: `docker compose build builder && docker compose up -d`
 
 ---
 
@@ -77,18 +139,21 @@ BugFarmer/
 
 ### 3.2 RPCs (Request/Response)
 
-**World Management:**
+**World Management (✅ Implemented):**
 
 | RPC Name | Purpose | Request | Response |
 |----------|---------|---------|----------|
-| `world_create` | Create new world | name, access_policy | world_id, match_id |
-| `world_list` | List available worlds | filters, pagination | world[] |
-| `world_join` | Get match ID to join | world_id | match_id |
-| `world_leave` | Leave current world | world_id | success |
+| `world_create` | Create new world | `{name, access_policy}` | `{world_id, match_id}` |
+| `world_list` | List available worlds | `{limit?, cursor?}` | `{worlds[], cursor?}` |
+| `world_join` | Get match ID to join | `{world_id}` | `{match_id}` |
+
+**Note**: `world_leave` was removed - socket disconnect triggers `MatchLeave` automatically.
 
 **Access Policy Values:**
 - `public` - Anyone can join
 - `private` - Owner invite only
+
+**Match Auto-Recreation**: If server restarts, `world_join` automatically recreates the match from stored metadata. Players don't see any error - the world persists transparently.
 
 **Player Data:**
 
@@ -456,11 +521,12 @@ The first playable prototype includes:
 6. Bug reproduction mechanics
 
 ### Phase 1: Foundation (Current)
-- [x] Docker setup (Nakama + PostgreSQL)
+- [x] Docker setup (Nakama + PostgreSQL + Builder)
 - [x] Architecture document
-- [ ] Go module structure (scaffolding)
-- [ ] Basic RPC handlers (world create/list/join)
-- [ ] Empty match handler (join/leave only)
+- [x] Go module structure with proper dependency versions
+- [x] RPC handlers: `world_create`, `world_list`, `world_join`
+- [x] Match handler with full lifecycle (init/join/leave/loop/terminate/signal)
+- [x] World state management (players, config, presences)
 - [ ] Unity 6 project setup
 - [ ] Nakama SDK integration
 
@@ -521,6 +587,14 @@ Resolved questions and decisions made during planning:
 | Entity IDs | **UUID with type prefix** | Globally unique, no coordination needed |
 | World generation | **Hand-crafted + procedural** | Unity layouts, procedural decoration |
 | World size | **16x16 chunks** | 512x512 tiles, balanced for prototype |
+| world_leave RPC | **Removed** | Socket disconnect triggers MatchLeave automatically |
+| Match persistence | **Auto-recreate** | world_join recreates match if server restarted |
+| Tool authority | **Client anim + Server damage** | Responsive feel, server controls damage values |
+| Player facing | **Direction enum (4-way)** | Top-down view: Down/Left/Right/Up (0-3) |
+| Game perspective | **Top-down** | Like Stardew Valley, not side-view |
+| UUID generation | **gofrs/uuid package** | Not in NakamaModule, use standard Go library |
+| Storage ownership | **System-owned** | UserID="" for public world listing |
+| Config values | **Configurable struct** | WorldConfig holds ChunkSize, TickRate, etc. |
 
 ### Open Questions (Remaining)
 
@@ -528,6 +602,57 @@ Resolved questions and decisions made during planning:
 2. **Station types and tiers** - Deferred to Phase 4
 3. **Exact region biomes** - Deferred to world generation implementation
 4. **Monetization model** - Deferred
+
+---
+
+## 12. Quick Reference
+
+### Starting the Server
+
+```bash
+cd /mnt/c/Users/emily/BugFarmer
+sudo docker compose up -d
+```
+
+### Rebuilding After Code Changes
+
+```bash
+sudo docker compose down
+sudo docker compose build builder
+sudo docker compose up -d
+```
+
+### Checking Logs
+
+```bash
+# Module loading
+sudo docker compose logs nakama | grep -E "(Bug Farmer|Registered|error)"
+
+# All Nakama logs
+sudo docker compose logs -f nakama
+```
+
+### Nakama Console
+
+- URL: http://localhost:7351
+- Default login: admin / password
+
+### Key Files to Edit
+
+| Purpose | File |
+|---------|------|
+| Add new RPC | `nakama/modules/rpc/world.go` + register in `main.go` |
+| Match logic | `nakama/modules/world/match.go` |
+| Game state | `nakama/modules/world/state.go` |
+| OpCodes | `nakama/modules/world/messages.go` |
+| Entity types | `nakama/modules/entities/types.go` |
+
+### Verified Working State
+
+As of 2024-12-23:
+- Module loads: "Bug Farmer module loaded successfully"
+- RPCs registered: `world_create`, `world_join`, `world_list`
+- Match handler registered: `world`
 
 ---
 
@@ -540,3 +665,7 @@ Resolved questions and decisions made during planning:
 | 2024-12-22 | Research validation pass: tick rate 5→10/sec, added priority-based sync |
 | 2024-12-22 | Added entity position system (Section 4.7): dual coordinates, boundary handling |
 | 2024-12-22 | Added: access policies, entity IDs, world generation (4.8), player storage, error codes |
+| 2024-12-23 | **Phase 1 Implementation Complete**: Go module compiles and loads |
+| 2024-12-23 | Added dependency versions (1.3), tool use authority model (1.4), docker services (2.1) |
+| 2024-12-23 | Updated RPC section: removed world_leave, added auto-recreate match behavior |
+| 2024-12-23 | Added implementation decisions: FacingLeft, UUID generation, system-owned storage |
