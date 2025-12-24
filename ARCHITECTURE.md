@@ -33,11 +33,12 @@ go version                           1.23+
 
 | Setting | Value | Rationale |
 |---------|-------|-----------|
-| Unity Version | Unity 6 (latest) | Modern features, active support |
+| Unity Version | 6000.2.9f1 | URP, modern features, active support |
 | 2D System | Built-in Tilemap | Native chunk-based rendering, good for grids |
-| Tile Size | 32x32 pixels | Classic, balanced detail |
-| Visible Area | 32x24 tiles | ~1 chunk visible at default zoom |
-| Pixels Per Unit | 32 | 1 tile = 1 Unity unit |
+| Block Size | 8x8 pixels | Fine-grained placement, diggable terrain |
+| Pixels Per Unit | 8 | 1 block = 1 Unity unit (all sprites use PPU=8) |
+| Visible Area | ~64x48 blocks | ~1 chunk visible at default zoom |
+| Perspective | Top-down | 4-direction facing (Down/Left/Right/Up) |
 
 ### 1.2 Client Architecture (LOCKED)
 
@@ -102,7 +103,7 @@ BugFarmer/
 │           ├── match.go            # Match handler (runtime.Match impl)
 │           ├── messages.go         # OpCode constants
 │           └── state.go            # WorldState, PlayerState, WorldConfig
-├── unity/                          # Unity project (TBD)
+├── BugFarmerClient/                # Unity 6 project (6000.2.9f1, URP)
 ├── requirements.md                 # Game design requirements
 └── ARCHITECTURE.md                 # This document
 ```
@@ -171,8 +172,8 @@ services:
 | 2 | C→S | Player action (interact) |
 | 3 | C→S | Chunk subscribe |
 | 4 | C→S | Chunk unsubscribe |
-| 5 | C→S | Tile placement |
-| 6 | C→S | Tile break |
+| 5 | C→S | Block placement |
+| 6 | C→S | Block break |
 | 7 | C→S | Tool use |
 | 8-9 | C→S | *Reserved for future* |
 | 10 | S→C | State update (chunk delta) |
@@ -187,8 +188,11 @@ services:
 
 ```
 TickRate: 10 ticks/second (100ms per tick)
-ChunkSize: 32x32 tiles
-ChunkViewDistance: 2 chunks (5x5 grid = 160x160 tiles visible)
+ChunkSize: 64x64 blocks
+BlockSize: 8x8 pixels (base unit)
+ChunkPixelSize: 512x512 pixels (64 blocks × 8 pixels)
+WorldSize: 16x16 chunks = 1024x1024 blocks = 8192x8192 pixels
+ChunkViewDistance: 2 chunks (5x5 grid = 320x320 blocks visible)
 MaxPlayersPerWorld: 100
 ```
 
@@ -218,7 +222,7 @@ ClientInterpolation: true     # Smooth movement between updates
 Chunk {
     Coord: {X, Y}
     Tier: 0|1|2
-    Tiles: [32][32]Tile
+    Blocks: [64][64]Block   // 64x64 blocks per chunk
     Entities: []Entity
     SeqNum: int64           // For delta ordering
     Aggregates: {           // Used in Tier 2
@@ -230,67 +234,71 @@ Chunk {
 }
 ```
 
-### 4.5 Tile Data Structure
+### 4.5 Block Data Structure
 
 ```go
-Tile {
-    GroundType: int         // Grass, dirt, stone, etc.
-    FloorType: int          // 0 = none (bugs can spawn)
-    WallType: int           // 0 = none
-    StructureID: string     // Station, furniture, etc.
-    PlantID: string         // Growing plant
+Block {
+    GroundType: int         // Dirt, grass, stone, water, etc. (diggable at 8x8)
+    ObjectType: int         // Wall, fence, furniture (0 = none)
+    ObjectID: string        // Reference to object data if any
 }
 ```
 
+**Block vs Entity Scale:**
+- Block = 1 Unity unit = 8x8 pixels (base grid unit)
+- Player = 4x4 blocks = 32x32 pixels
+- Fence piece = 1x3 blocks = 8x24 pixels
+- Plant area = 4x4 blocks required (game rule)
+
 ### 4.6 Spawn Suppression Rule (LOCKED)
 
-Bugs CANNOT spawn on tiles where `FloorType > 0`. This applies to:
+Bugs CANNOT spawn on blocks where `ObjectType > 0`. This applies to:
 - Natural spawns during simulation
 - Rehydration when Tier2 → Tier0
 
 ### 4.7 Entity Position System (LOCKED)
 
 **Dual Coordinate System:**
-- **Tiles**: Integer grid (0-31) within chunk - for walls, floors, structures
-- **Entities**: Float position (0.0-32.0) within chunk - for bugs, players, workers
+- **Blocks**: Integer grid (0-63) within chunk - for ground, walls, objects
+- **Entities**: Float position (0.0-64.0) within chunk - for bugs, players, workers
 
 **Entity Position Structure:**
 ```go
 EntityPosition {
     ChunkX, ChunkY int       // Which chunk the entity is in
-    LocalX, LocalY float32   // Position within chunk (0.0 to 32.0)
+    LocalX, LocalY float32   // Position within chunk (0.0 to 64.0)
 }
 ```
 
 **World Position Conversion:**
 ```go
-// Chunk-local to world:
-WorldX = ChunkX * ChunkSize + LocalX
-WorldY = ChunkY * ChunkSize + LocalY
+// Chunk-local to world (ChunkSize = 64):
+WorldX = ChunkX * 64 + LocalX
+WorldY = ChunkY * 64 + LocalY
 
 // World to chunk-local:
-ChunkX = floor(WorldX / ChunkSize)
-ChunkY = floor(WorldY / ChunkSize)
-LocalX = WorldX - (ChunkX * ChunkSize)
-LocalY = WorldY - (ChunkY * ChunkSize)
+ChunkX = floor(WorldX / 64)
+ChunkY = floor(WorldY / 64)
+LocalX = WorldX - (ChunkX * 64)
+LocalY = WorldY - (ChunkY * 64)
 ```
 
 **Chunk Boundary Handling (End-of-Tick):**
 ```
 At end of each tick:
-1. Check if LocalX/LocalY outside [0, ChunkSize)
-2. If LocalX >= ChunkSize: ChunkX++, LocalX -= ChunkSize
-3. If LocalX < 0: ChunkX--, LocalX += ChunkSize
+1. Check if LocalX/LocalY outside [0, 64)
+2. If LocalX >= 64: ChunkX++, LocalX -= 64
+3. If LocalX < 0: ChunkX--, LocalX += 64
 4. Same for Y axis
 5. If chunk changed, move entity to new chunk's entity list
 ```
 
-**Tile Collision Check:**
+**Block Collision Check:**
 ```go
-// Entity at (LocalX=15.7, LocalY=22.3) checks tile (15, 22)
-tileX := int(math.Floor(entity.LocalX))
-tileY := int(math.Floor(entity.LocalY))
-tile := chunk.Tiles[tileX][tileY]
+// Entity at (LocalX=15.7, LocalY=22.3) checks block (15, 22)
+blockX := int(math.Floor(entity.LocalX))
+blockY := int(math.Floor(entity.LocalY))
+block := chunk.Blocks[blockX][blockY]
 ```
 
 ### 4.8 World Generation (LOCKED)
@@ -298,7 +306,8 @@ tile := chunk.Tiles[tileX][tileY]
 Worlds use hand-crafted layouts with procedural decoration.
 
 ```
-WorldSize: 16x16 chunks (512x512 tiles, ~262k total)
+WorldSize: 16x16 chunks = 1024x1024 blocks = 8192x8192 pixels
+ChunkSize: 64x64 blocks = 512x512 pixels
 Layout: Hand-crafted in Unity (terrain, village, structures)
 Decoration: Procedural spawning (trees, rocks, vegetation)
 Hub: Central village as player spawn/hub area
@@ -427,8 +436,8 @@ All messages are JSON with OpCode prefix.
 // Chunk Unsubscribe (OpCode 4)
 {"chunks": ["2,3", "2,4"]}
 
-// Tile Placement (OpCode 5)
-{"chunk": "3,4", "x": 15, "y": 20, "type": "floor", "id": 2}
+// Block Placement (OpCode 5)
+{"chunk": "3,4", "x": 15, "y": 20, "type": "object", "id": 2}
 
 // Tool Use (OpCode 7)
 {"tool": "net", "target_x": 105.0, "target_y": 198.0}
@@ -570,7 +579,12 @@ Resolved questions and decisions made during planning:
 
 | Question | Decision | Rationale |
 |----------|----------|-----------|
-| Chunk size | 32x32 tiles | Matches Factorio, visible area, good balance |
+| Block size | 8x8 pixels | Fine-grained placement, diggable terrain |
+| PPU | 8 | 1 Unity unit = 1 block for all sprites |
+| Chunk size | 64x64 blocks | Same pixel area as before (512x512 px) |
+| Server grid | Uniform 8x8 | Full granularity, no hybrid layers |
+| Custom art | User-created | Scrapping asset packs for custom 8x8 art |
+| Entity scale | Player = 4x4 blocks | 32x32 pixels, bigger than placeable blocks |
 | Tick rate | **10/sec** | Industry standard (10-20 Hz), responsive gameplay |
 | Region system | **Hybrid** | Procedural base + hand-placed POIs |
 | Shop system | NPC shops | Players sell resources AND complete bounties for currency |
@@ -586,7 +600,7 @@ Resolved questions and decisions made during planning:
 | Access policies | **Public + Private** | Simple for prototype, can add friends-only later |
 | Entity IDs | **UUID with type prefix** | Globally unique, no coordination needed |
 | World generation | **Hand-crafted + procedural** | Unity layouts, procedural decoration |
-| World size | **16x16 chunks** | 512x512 tiles, balanced for prototype |
+| World size | **16x16 chunks** | 1024x1024 blocks = 8192x8192 pixels |
 | world_leave RPC | **Removed** | Socket disconnect triggers MatchLeave automatically |
 | Match persistence | **Auto-recreate** | world_join recreates match if server restarted |
 | Tool authority | **Client anim + Server damage** | Responsive feel, server controls damage values |
@@ -669,3 +683,5 @@ As of 2024-12-23:
 | 2024-12-23 | Added dependency versions (1.3), tool use authority model (1.4), docker services (2.1) |
 | 2024-12-23 | Updated RPC section: removed world_leave, added auto-recreate match behavior |
 | 2024-12-23 | Added implementation decisions: FacingLeft, UUID generation, system-owned storage |
+| 2024-12-23 | **Block System Overhaul**: Tiles→Blocks, 32px→8px, ChunkSize 32→64, PPU=8 |
+| 2024-12-23 | Updated all sections for 8x8 block grid, entity scale (player 4x4 blocks) |

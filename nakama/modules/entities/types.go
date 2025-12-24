@@ -1,5 +1,16 @@
 package entities
 
+// Direction represents the 4 cardinal directions for top-down view.
+// Shared by all entities (players, bugs, etc.)
+type Direction int
+
+const (
+	DirDown  Direction = iota // 0 - default, facing camera
+	DirLeft                   // 1
+	DirRight                  // 2
+	DirUp                     // 3
+)
+
 // EntityPosition represents chunk-relative coordinates for entities.
 type EntityPosition struct {
 	ChunkX int
@@ -37,12 +48,12 @@ func (p *EntityPosition) Normalize(chunkSize int) {
 	}
 }
 
-// TileX returns the integer tile X coordinate within the chunk.
-func (p *EntityPosition) TileX() int {
+// BlockX returns the integer block X coordinate within the chunk.
+func (p *EntityPosition) BlockX() int {
 	return int(p.LocalX)
 }
 
-// TileY returns the integer tile Y coordinate within the chunk.
-func (p *EntityPosition) TileY() int {
+// BlockY returns the integer block Y coordinate within the chunk.
+func (p *EntityPosition) BlockY() int {
 	return int(p.LocalY)
 }

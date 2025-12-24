@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"bugfarmer/entities"
+
 	"github.com/heroiclabs/nakama-common/runtime"
 )
 
@@ -149,10 +151,49 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 	}
 
 	worldState.TickCount++
+	chunkSize := worldState.Config.ChunkSize
 
-	// Process messages (Phase 1: empty, just log)
+	// Process incoming messages
 	for _, msg := range messages {
-		logger.Debug("Received OpCode %d from %s", msg.GetOpCode(), msg.GetUserId())
+		userID := msg.GetUserId()
+		player, exists := worldState.Players[userID]
+		if !exists {
+			continue
+		}
+
+		switch msg.GetOpCode() {
+		case OpCodeMovement:
+			var movement MovementMessage
+			if err := json.Unmarshal(msg.GetData(), &movement); err != nil {
+				logger.Warn("Invalid movement message from %s: %v", userID, err)
+				continue
+			}
+			// Update player state
+			player.SetWorldPosition(movement.X, movement.Y, chunkSize)
+			player.Facing = entities.Direction(movement.Facing)
+		}
+	}
+
+	// Broadcast entity updates to all clients
+	if len(worldState.Players) > 0 {
+		entityData := make([]EntityData, 0, len(worldState.Players))
+		for userID, player := range worldState.Players {
+			entityData = append(entityData, EntityData{
+				ID:     "player_" + userID,
+				Type:   "player",
+				X:      player.WorldX(chunkSize),
+				Y:      player.WorldY(chunkSize),
+				Facing: int(player.Facing),
+			})
+		}
+
+		update := EntityUpdateMessage{Entities: entityData}
+		data, err := json.Marshal(update)
+		if err != nil {
+			logger.Error("Failed to marshal entity update: %v", err)
+		} else {
+			dispatcher.BroadcastMessage(OpCodeEntityUpdate, data, nil, nil, true)
+		}
 	}
 
 	// Return state to continue (never nil for persistent world)

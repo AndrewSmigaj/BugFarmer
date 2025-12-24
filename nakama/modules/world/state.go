@@ -8,19 +8,10 @@ import (
 	"github.com/heroiclabs/nakama-common/runtime"
 )
 
-// Direction represents the 4 cardinal directions for top-down view
-type Direction int
-
-const (
-	DirDown  Direction = iota // 0 - default, facing camera
-	DirLeft                   // 1
-	DirRight                  // 2
-	DirUp                     // 3
-)
-
 // WorldConfig holds configurable world parameters
 type WorldConfig struct {
-	ChunkSize   int // Default: 32
+	ChunkSize   int // Default: 64 (blocks per chunk side)
+	BlockSize   int // Default: 8 (pixels per block)
 	TickRate    int // Default: 10 (ticks per second)
 	MaxPlayers  int // Default: 100
 	WorldWidth  int // Default: 16 (chunks)
@@ -45,13 +36,42 @@ type PlayerState struct {
 	UserID   string
 	Username string
 	Position entities.EntityPosition
-	Facing   Direction // For other players to see which way you're facing
+	Facing   entities.Direction // For other players to see which way you're facing
+}
+
+// WorldX returns the world X coordinate (ChunkX * chunkSize + LocalX)
+func (p *PlayerState) WorldX(chunkSize int) float32 {
+	return float32(p.Position.ChunkX*chunkSize) + p.Position.LocalX
+}
+
+// WorldY returns the world Y coordinate (ChunkY * chunkSize + LocalY)
+func (p *PlayerState) WorldY(chunkSize int) float32 {
+	return float32(p.Position.ChunkY*chunkSize) + p.Position.LocalY
+}
+
+// SetWorldPosition updates position from world coordinates
+func (p *PlayerState) SetWorldPosition(x, y float32, chunkSize int) {
+	cs := float32(chunkSize)
+	p.Position.ChunkX = int(x / cs)
+	p.Position.ChunkY = int(y / cs)
+	p.Position.LocalX = x - float32(p.Position.ChunkX)*cs
+	p.Position.LocalY = y - float32(p.Position.ChunkY)*cs
+	// Handle negative coordinates
+	if p.Position.LocalX < 0 {
+		p.Position.ChunkX--
+		p.Position.LocalX += cs
+	}
+	if p.Position.LocalY < 0 {
+		p.Position.ChunkY--
+		p.Position.LocalY += cs
+	}
 }
 
 // DefaultConfig returns sensible defaults from architecture doc
 func DefaultConfig() WorldConfig {
 	return WorldConfig{
-		ChunkSize:   32,
+		ChunkSize:   64, // 64x64 blocks per chunk
+		BlockSize:   8,  // 8x8 pixels per block
 		TickRate:    10,
 		MaxPlayers:  100,
 		WorldWidth:  16,
@@ -79,8 +99,8 @@ func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presenc
 	s.Players[userID] = &PlayerState{
 		UserID:   userID,
 		Username: username,
-		Position: entities.EntityPosition{ChunkX: 8, ChunkY: 8, LocalX: 16, LocalY: 16}, // Spawn at center
-		Facing:   DirDown, // Default: facing camera
+		Position: entities.EntityPosition{ChunkX: 8, ChunkY: 8, LocalX: 32, LocalY: 32}, // Spawn at world center
+		Facing:   entities.DirDown, // Default: facing camera
 	}
 	s.Presences[userID] = presence
 }
