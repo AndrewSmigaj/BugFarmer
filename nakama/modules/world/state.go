@@ -29,6 +29,25 @@ type WorldState struct {
 	TickCount    int64
 	Players      map[string]*PlayerState
 	Presences    map[string]runtime.Presence
+
+	// Entity maps (Phase 1)
+	Swarms      map[string]*entities.SwarmState
+	EggClusters map[string]*entities.EggClusterState
+	Individuals map[string]*entities.IndividualBugState
+	Plants      map[string]*entities.PlantState
+	GroundItems map[string]*entities.GroundItem
+
+	// Config
+	Species map[string]*entities.BugSpecies // Loaded from config
+
+	// Timing
+	LastMergeCheck int64 // Tick of last merge/split check
+}
+
+// InventorySlot holds one stack of items (bugs or tools)
+type InventorySlot struct {
+	ItemID string `json:"item_id"` // species_id for bugs, item_id for tools, "" = empty
+	Count  int    `json:"count"`
 }
 
 // PlayerState tracks a player within the world
@@ -37,7 +56,17 @@ type PlayerState struct {
 	Username string
 	Position entities.EntityPosition
 	Facing   entities.Direction // For other players to see which way you're facing
+
+	// Inventory (Phase 3)
+	Coins     int64              // Currency
+	BugSlots  [20]InventorySlot  // Bug inventory (20 slots)
+	ItemSlots [20]InventorySlot  // Tool inventory (20 slots, first 10 = hotbar)
+
+	// Bug catching
+	LastCatchTime int64  // Unix millis, rate limiting
+	EquippedTool  string // "" (hand), "small_net", etc.
 }
+
 
 // WorldX returns the world X coordinate (ChunkX * chunkSize + LocalX)
 func (p *PlayerState) WorldX(chunkSize int) float32 {
@@ -91,17 +120,31 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		TickCount:    0,
 		Players:      make(map[string]*PlayerState),
 		Presences:    make(map[string]runtime.Presence),
+		// Entity maps
+		Swarms:      make(map[string]*entities.SwarmState),
+		EggClusters: make(map[string]*entities.EggClusterState),
+		Individuals: make(map[string]*entities.IndividualBugState),
+		Plants:      make(map[string]*entities.PlantState),
+		GroundItems: make(map[string]*entities.GroundItem),
+		Species:     make(map[string]*entities.BugSpecies),
 	}
 }
 
 // AddPlayer adds a new player to the world
 func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presence) {
-	s.Players[userID] = &PlayerState{
+	player := &PlayerState{
 		UserID:   userID,
 		Username: username,
-		Position: entities.EntityPosition{ChunkX: 8, ChunkY: 8, LocalX: 32, LocalY: 32}, // Spawn at world center
-		Facing:   entities.DirDown, // Default: facing camera
+		Position: entities.EntityPosition{ChunkX: 0, ChunkY: 0, LocalX: 10, LocalY: 10}, // Spawn near origin
+		Facing:   entities.DirDown,                                                      // Default: facing camera
+		// BugSlots are zero-initialized (empty)
+		// Coins defaults to 0
 	}
+	// Give new player a Small Net in hotbar slot 1 (ItemSlots[0])
+	player.ItemSlots[0] = InventorySlot{ItemID: "small_net", Count: 1}
+	player.EquippedTool = "small_net"
+
+	s.Players[userID] = player
 	s.Presences[userID] = presence
 }
 

@@ -13,11 +13,13 @@ namespace BugFarmer.Player
     public class PlayerController : MonoBehaviour
     {
         [SerializeField] private float moveSpeed = 5f; // Blocks per second
+        [SerializeField] private Sprite[] directionSprites; // 0=Down, 1=Left, 2=Right, 3=Up
 
         public Direction Facing { get; private set; } = Direction.Down;
         public Vector2 Velocity { get; private set; }
 
         private Rigidbody2D _rb;
+        private SpriteRenderer _spriteRenderer;
 
         // Movement sending state
         private const float SendInterval = 0.1f; // 100ms
@@ -28,6 +30,7 @@ namespace BugFarmer.Player
         private void Awake()
         {
             _rb = GetComponent<Rigidbody2D>();
+            _spriteRenderer = GetComponent<SpriteRenderer>();
             if (_rb == null)
             {
                 Debug.LogWarning("[PlayerController] No Rigidbody2D found. Using transform movement.");
@@ -72,14 +75,30 @@ namespace BugFarmer.Player
             if (Mathf.Abs(h) < 0.01f && Mathf.Abs(v) < 0.01f)
                 return;
 
+            Direction newFacing;
             // Prioritize horizontal if both pressed equally, else use dominant
             if (Mathf.Abs(h) >= Mathf.Abs(v))
             {
-                Facing = h > 0 ? Direction.Right : Direction.Left;
+                newFacing = h > 0 ? Direction.Right : Direction.Left;
             }
             else
             {
-                Facing = v > 0 ? Direction.Up : Direction.Down;
+                newFacing = v > 0 ? Direction.Up : Direction.Down;
+            }
+
+            if (newFacing != Facing)
+            {
+                Facing = newFacing;
+                UpdateSprite();
+            }
+        }
+
+        private void UpdateSprite()
+        {
+            if (_spriteRenderer != null && directionSprites != null &&
+                (int)Facing < directionSprites.Length && directionSprites[(int)Facing] != null)
+            {
+                _spriteRenderer.sprite = directionSprites[(int)Facing];
             }
         }
 

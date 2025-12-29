@@ -124,8 +124,18 @@ namespace BugFarmer.Networking
 
         private Task<ISession> AuthenticateAsync()
         {
-            var deviceId = PlayerPrefs.GetString(DeviceIdPrefName, SystemInfo.deviceUniqueIdentifier);
-            PlayerPrefs.SetString(DeviceIdPrefName, deviceId);
+            // Use different device ID for build vs editor to allow local multiplayer testing
+            var prefKey = DeviceIdPrefName;
+#if !UNITY_EDITOR
+            prefKey += "_build";
+#endif
+            var deviceId = PlayerPrefs.GetString(prefKey, "");
+            if (string.IsNullOrEmpty(deviceId))
+            {
+                deviceId = SystemInfo.deviceUniqueIdentifier + "_" + System.Guid.NewGuid().ToString("N")[..8];
+                PlayerPrefs.SetString(prefKey, deviceId);
+                PlayerPrefs.Save();
+            }
             Debug.Log($"[NetworkManager] Using device ID: {deviceId}");
             return Client.AuthenticateDeviceAsync(deviceId);
         }

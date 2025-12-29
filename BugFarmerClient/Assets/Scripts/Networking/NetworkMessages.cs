@@ -6,7 +6,7 @@ namespace BugFarmer.Networking
     /// OpCodes for match state messages.
     /// Must match server nakama/modules/world/messages.go
     /// </summary>
-    public static class OpCodes
+    public static partial class OpCodes
     {
         // Client -> Server
         public const int Movement = 1;

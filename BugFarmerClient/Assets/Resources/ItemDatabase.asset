@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19b8d8df00a27bb4fbcc4079a087dce3, type: 3}
+  m_Name: ItemDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::BugFarmer.UI.ItemDatabase
+  items:
+  - itemId: small_net
+    icon: {fileID: -6353404503537698385, guid: 1e9724d4701ba304c8aa030b9c64362a, type: 3}
+    displayName: Small Net
+  - itemId: fly
+    icon: {fileID: 5352286359449648278, guid: f55c1d324bdf60546bd5a46462ce4a98, type: 3}
+    displayName: Test Fly

@@ -1,0 +1,23 @@
+{
+  "small_net": {
+    "name": "Small Net",
+    "reach": 4.5,
+    "catch_radius": 1.5,
+    "buy_price": 0,
+    "sell_price": 25
+  },
+  "large_net": {
+    "name": "Large Net",
+    "reach": 5.5,
+    "catch_radius": 2.5,
+    "buy_price": 100,
+    "sell_price": 50
+  },
+  "calm_spray": {
+    "name": "Calm Spray",
+    "reach": 3.0,
+    "effect": "calm",
+    "buy_price": 20,
+    "sell_price": 10
+  }
+}
