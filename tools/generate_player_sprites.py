@@ -1,159 +1,331 @@
 #!/usr/bin/env python3
-"""Generate simple pixel art player sprites for Bug Farmer.
+"""Generate player character sprites for Bug Farmer.
 
-Creates 32x32 pixel sprites for 4 directions.
-Uses block-based drawing for clean pixel art.
-Style: Simple, proportional, classic pixel art (think Stardew Valley / SNES RPG).
+STYLE: User-approved Zelda/Terraria style
+=========================================
+Based on user's hand-edited farmer_down-1.png
+
+Characters:
+- Farmer: Brown hair, Teal shirt, Brown pants (default)
+- Ranger: Auburn hair, Green shirt, Dark brown pants
+- Scholar: Black hair, Blue shirt, Gray pants
+- Merchant: Blonde hair, Red shirt, Tan pants
 """
 
 from PIL import Image
+import os
 
-# Colors (RGBA)
-T = (0, 0, 0, 0)           # Transparent
-O = (35, 25, 25, 255)      # Outline/dark
-H = (90, 60, 40, 255)      # Hair
-h = (65, 42, 28, 255)      # Hair shadow
-S = (255, 220, 180, 255)   # Skin
-D = (235, 195, 155, 255)   # Skin shadow
-E = (35, 30, 30, 255)      # Eye (simple dark dot)
-B = (70, 130, 100, 255)    # Shirt (muted green)
-b = (50, 100, 75, 255)     # Shirt shadow
-P = (65, 55, 80, 255)      # Pants (muted purple)
-p = (45, 38, 60, 255)      # Pants shadow
-K = (90, 75, 55, 255)      # Shoes
+# === SHARED COLORS ===
+T   = (0, 0, 0, 0)           # Transparent
+O   = (24, 20, 24, 255)      # Outline (dark)
+BLK = (0, 0, 0, 255)         # Pure black (pupils)
+EW  = (255, 255, 255, 255)   # Eye white
 
-def create_sprite_from_grid(grid):
-    """Create a 32x32 image from a 16x16 grid (each cell = 2x2 pixels)."""
-    img = Image.new('RGBA', (32, 32), T)
-    pixels = img.load()
+# Skin (shared by all characters)
+SK  = (248, 200, 144, 255)   # Skin light
+SKd = (208, 152, 104, 255)   # Skin shadow
 
+# Boots (shared)
+BT  = (80, 56, 40, 255)      # Boots
+
+# === CHARACTER COLOR PALETTES ===
+PALETTES = {
+    'farmer': {
+        'hair':  ((144, 88, 56, 255), (96, 56, 32, 255)),      # Brown
+        'shirt': ((64, 176, 144, 255), (40, 120, 96, 255)),    # Teal
+        'pants': ((144, 104, 64, 255), (96, 64, 40, 255)),     # Brown
+    },
+    'ranger': {
+        'hair':  ((170, 95, 70, 255), (120, 55, 35, 255)),     # Auburn
+        'shirt': ((95, 150, 100, 255), (60, 105, 65, 255)),    # Green
+        'pants': ((100, 75, 55, 255), (65, 45, 30, 255)),      # Dark brown
+    },
+    'scholar': {
+        'hair':  ((55, 55, 65, 255), (30, 30, 40, 255)),       # Black
+        'shirt': ((100, 130, 185, 255), (65, 90, 140, 255)),   # Blue
+        'pants': ((115, 115, 120, 255), (80, 80, 85, 255)),    # Gray
+    },
+    'merchant': {
+        'hair':  ((210, 175, 110, 255), (170, 135, 75, 255)),  # Blonde
+        'shirt': ((185, 85, 85, 255), (140, 55, 55, 255)),     # Red
+        'pants': ((175, 150, 110, 255), (135, 110, 75, 255)),  # Tan
+    },
+}
+
+
+def img(grid):
+    height, width = len(grid), len(grid[0])
+    im = Image.new('RGBA', (width, height), T)
+    px = im.load()
     for y, row in enumerate(grid):
-        for x, color in enumerate(row):
-            # Each grid cell becomes 2x2 pixels
-            px, py = x * 2, y * 2
-            pixels[px, py] = color
-            pixels[px + 1, py] = color
-            pixels[px, py + 1] = color
-            pixels[px + 1, py + 1] = color
+        for x, c in enumerate(row):
+            px[x, y] = c
+    return im
 
-    return img
 
-# 16x16 grids (each cell = 2x2 pixels = 32x32 final)
-# Simple proportional style: smaller head, longer body, no blush
+def make_down(h, hd, c, cd, p, pd):
+    """Generate down-facing sprite with given colors."""
+    _ = T
+    o = O
+    b = BLK
+    s, sd = SK, SKd
+    w = EW
+    bt = BT
 
-# Player facing DOWN (toward camera)
-PLAYER_DOWN = [
-    [T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T],
-    [T, T, T, T, T, T, O, O, O, O, T, T, T, T, T, T],
-    [T, T, T, T, T, O, H, H, H, H, O, T, T, T, T, T],
-    [T, T, T, T, O, H, H, H, H, H, H, O, T, T, T, T],
-    [T, T, T, T, O, H, H, H, H, H, H, O, T, T, T, T],
-    [T, T, T, T, O, S, S, S, S, S, S, O, T, T, T, T],
-    [T, T, T, T, O, S, E, S, S, E, S, O, T, T, T, T],
-    [T, T, T, T, O, S, S, S, S, S, S, O, T, T, T, T],
-    [T, T, T, T, T, O, S, D, D, S, O, T, T, T, T, T],
-    [T, T, T, T, T, T, O, S, S, O, T, T, T, T, T, T],
-    [T, T, T, T, T, O, B, B, B, B, O, T, T, T, T, T],
-    [T, T, T, T, O, B, B, b, b, B, B, O, T, T, T, T],
-    [T, T, T, T, O, B, B, b, b, B, B, O, T, T, T, T],
-    [T, T, T, T, T, O, P, P, P, P, O, T, T, T, T, T],
-    [T, T, T, T, T, O, P, p, p, P, O, T, T, T, T, T],
-    [T, T, T, T, T, O, K, O, O, K, O, T, T, T, T, T],
-]
+    return [
+        # Row 0-7: Hair (big rectangular head top)
+        [_,_,_,_,_,_,_,_,_,_,_,o,o,o,o,o,o,o,o,o,o,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,o,h,h,h,h,h,h,h,h,h,h,o,o,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,o,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,o,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        # Row 8-10: Hair framing face
+        [_,_,_,_,_,_,o,h,h,h,o,o,o,o,o,o,o,o,o,o,o,o,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,h,h,o,s,s,s,s,s,s,s,s,s,s,s,s,o,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,h,h,o,s,s,s,s,s,s,s,s,s,s,s,s,o,h,hd,o,_,_,_,_,_,_],
+        # Row 11-14: Eyes (white with outlined pupils)
+        [_,_,_,_,_,_,o,h,h,o,s,w,w,w,s,s,s,s,w,w,w,s,o,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,h,o,s,s,w,o,o,s,s,s,s,o,o,w,s,s,o,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,hd,o,s,s,w,o,o,s,s,s,s,o,o,w,s,s,o,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,hd,o,s,s,w,b,b,s,s,s,s,b,b,w,s,s,o,hd,o,_,_,_,_,_,_],
+        # Row 15-17: Lower face
+        [_,_,_,_,_,_,o,hd,o,s,s,s,s,s,s,s,s,s,s,s,s,s,s,o,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,hd,o,s,s,s,s,s,s,s,s,s,s,s,s,s,s,o,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,o,o,s,s,s,s,s,s,s,s,s,s,s,s,s,s,o,o,_,_,_,_,_,_,_],
+        # Row 18-20: Chin/neck
+        [_,_,_,_,_,_,_,_,o,sd,s,s,s,s,s,s,s,s,s,s,s,s,sd,o,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,o,sd,s,s,s,s,s,s,s,s,sd,o,o,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,o,o,sd,s,s,s,s,s,s,sd,o,o,_,_,_,_,_,_,_,_,_,_],
+        # Row 21: Shoulder line
+        [_,_,_,_,_,_,_,o,o,o,o,o,o,o,o,o,o,o,o,o,o,o,o,o,o,_,_,_,_,_,_,_],
+        # Row 22-28: Shirt/body
+        [_,_,_,_,_,_,b,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,_,_,_,_,_,_],
+        [_,_,_,_,_,_,c,b,s,s,o,c,c,c,c,c,c,c,c,c,c,o,sd,sd,o,c,_,_,_,_,_,_],
+        [_,_,_,_,_,_,c,b,s,s,o,c,c,c,c,c,c,c,c,c,c,o,sd,sd,o,c,_,_,_,_,_,_],
+        [_,_,_,_,_,_,c,b,s,sd,o,c,c,c,c,c,c,c,c,c,c,o,sd,sd,o,cd,_,_,_,_,_,_],
+        [_,_,_,_,_,_,c,b,sd,sd,o,c,c,c,c,c,c,c,c,c,c,o,sd,sd,o,cd,_,_,_,_,_,_],
+        [_,_,_,_,_,_,b,o,o,o,o,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,o,o,o,o,o,_,_,_,_,_,_],
+        # Row 29: Belt
+        [_,_,_,_,_,_,_,_,_,_,o,o,o,o,o,o,o,o,o,o,o,o,_,_,_,_,_,_,_,_,_,_],
+        # Row 30-36: Pants/legs
+        [_,_,_,_,_,_,_,_,_,o,pd,pd,pd,pd,pd,o,o,pd,pd,pd,pd,pd,o,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,p,p,p,p,p,o,o,p,p,p,p,p,o,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,p,p,p,p,pd,o,o,p,p,p,p,pd,o,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,p,p,p,pd,o,_,_,o,p,p,p,pd,o,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,p,p,p,pd,o,_,_,o,p,p,p,pd,o,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,p,p,pd,pd,o,_,_,o,p,p,pd,pd,o,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,pd,pd,pd,o,o,_,_,o,pd,pd,pd,o,o,_,_,_,_,_,_,_,_,_],
+        # Row 37-39: Feet
+        [_,_,_,_,_,_,_,_,o,bt,bt,bt,bt,bt,o,_,_,o,bt,bt,bt,bt,bt,o,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,o,bt,bt,bt,bt,bt,o,_,_,o,bt,bt,bt,bt,bt,o,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,o,o,o,o,_,_,_,_,o,o,o,o,o,_,_,_,_,_,_,_,_,_],
+        # Row 40-47: Bottom padding
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+    ]
 
-# Player facing UP (away from camera)
-PLAYER_UP = [
-    [T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T],
-    [T, T, T, T, T, T, O, O, O, O, T, T, T, T, T, T],
-    [T, T, T, T, T, O, H, H, H, H, O, T, T, T, T, T],
-    [T, T, T, T, O, H, H, H, H, H, H, O, T, T, T, T],
-    [T, T, T, T, O, H, H, H, H, H, H, O, T, T, T, T],
-    [T, T, T, T, O, H, H, H, H, H, H, O, T, T, T, T],
-    [T, T, T, T, O, H, H, H, H, H, H, O, T, T, T, T],
-    [T, T, T, T, O, S, H, H, H, H, S, O, T, T, T, T],
-    [T, T, T, T, T, O, S, S, S, S, O, T, T, T, T, T],
-    [T, T, T, T, T, T, O, S, S, O, T, T, T, T, T, T],
-    [T, T, T, T, T, O, B, B, B, B, O, T, T, T, T, T],
-    [T, T, T, T, O, B, B, b, b, B, B, O, T, T, T, T],
-    [T, T, T, T, O, B, B, b, b, B, B, O, T, T, T, T],
-    [T, T, T, T, T, O, P, P, P, P, O, T, T, T, T, T],
-    [T, T, T, T, T, O, P, p, p, P, O, T, T, T, T, T],
-    [T, T, T, T, T, O, K, O, O, K, O, T, T, T, T, T],
-]
 
-# Player facing LEFT
-PLAYER_LEFT = [
-    [T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T],
-    [T, T, T, T, T, O, O, O, O, T, T, T, T, T, T, T],
-    [T, T, T, T, O, H, H, H, H, O, T, T, T, T, T, T],
-    [T, T, T, O, H, H, H, H, H, H, O, T, T, T, T, T],
-    [T, T, T, O, H, H, H, H, H, H, O, T, T, T, T, T],
-    [T, T, T, O, S, S, S, H, H, H, O, T, T, T, T, T],
-    [T, T, T, O, S, E, S, S, H, H, O, T, T, T, T, T],
-    [T, T, T, O, S, S, S, S, S, S, O, T, T, T, T, T],
-    [T, T, T, T, O, S, S, D, S, O, T, T, T, T, T, T],
-    [T, T, T, T, T, O, S, S, O, T, T, T, T, T, T, T],
-    [T, T, T, T, T, O, B, B, B, O, T, T, T, T, T, T],
-    [T, T, T, T, O, B, B, b, B, B, O, T, T, T, T, T],
-    [T, T, T, T, O, B, B, b, B, B, O, T, T, T, T, T],
-    [T, T, T, T, T, O, P, P, P, O, T, T, T, T, T, T],
-    [T, T, T, T, T, O, P, p, P, O, T, T, T, T, T, T],
-    [T, T, T, T, T, O, K, O, K, O, T, T, T, T, T, T],
-]
+def make_up(h, hd, c, cd, p, pd):
+    """Generate up-facing sprite (back view) with given colors."""
+    _ = T
+    o = O
+    s, sd = SK, SKd
+    bt = BT
+    b = BLK
 
-# Player facing RIGHT
-PLAYER_RIGHT = [
-    [T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T],
-    [T, T, T, T, T, T, T, O, O, O, O, T, T, T, T, T],
-    [T, T, T, T, T, T, O, H, H, H, H, O, T, T, T, T],
-    [T, T, T, T, T, O, H, H, H, H, H, H, O, T, T, T],
-    [T, T, T, T, T, O, H, H, H, H, H, H, O, T, T, T],
-    [T, T, T, T, T, O, H, H, H, S, S, S, O, T, T, T],
-    [T, T, T, T, T, O, H, H, S, S, E, S, O, T, T, T],
-    [T, T, T, T, T, O, S, S, S, S, S, S, O, T, T, T],
-    [T, T, T, T, T, T, O, S, D, S, S, O, T, T, T, T],
-    [T, T, T, T, T, T, T, O, S, S, O, T, T, T, T, T],
-    [T, T, T, T, T, T, O, B, B, B, O, T, T, T, T, T],
-    [T, T, T, T, T, O, B, B, b, B, B, O, T, T, T, T],
-    [T, T, T, T, T, O, B, B, b, B, B, O, T, T, T, T],
-    [T, T, T, T, T, T, O, P, P, P, O, T, T, T, T, T],
-    [T, T, T, T, T, T, O, P, p, P, O, T, T, T, T, T],
-    [T, T, T, T, T, T, O, K, O, K, O, T, T, T, T, T],
-]
+    return [
+        # Row 0-7: Hair top (same as front)
+        [_,_,_,_,_,_,_,_,_,_,_,o,o,o,o,o,o,o,o,o,o,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,o,h,h,h,h,h,h,h,h,h,h,o,o,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,o,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,o,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        # Row 8-20: Back of head (all hair)
+        [_,_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,hd,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,hd,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,hd,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,hd,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,o,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,o,o,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,o,hd,h,h,h,h,h,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,o,hd,h,h,h,h,h,h,h,h,hd,o,o,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,o,o,hd,h,h,h,h,h,h,hd,o,o,_,_,_,_,_,_,_,_,_,_],
+        # Row 21: Shoulder line
+        [_,_,_,_,_,_,_,o,o,o,o,o,o,o,o,o,o,o,o,o,o,o,o,o,o,_,_,_,_,_,_,_],
+        # Row 22-28: Back of shirt
+        [_,_,_,_,_,_,b,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,_,_,_,_,_,_],
+        [_,_,_,_,_,_,c,b,s,s,o,c,c,c,c,c,c,c,c,c,c,o,sd,sd,o,c,_,_,_,_,_,_],
+        [_,_,_,_,_,_,c,b,s,s,o,c,c,c,c,c,c,c,c,c,c,o,sd,sd,o,c,_,_,_,_,_,_],
+        [_,_,_,_,_,_,c,b,s,sd,o,c,c,c,c,c,c,c,c,c,c,o,sd,sd,o,cd,_,_,_,_,_,_],
+        [_,_,_,_,_,_,c,b,sd,sd,o,c,c,c,c,c,c,c,c,c,c,o,sd,sd,o,cd,_,_,_,_,_,_],
+        [_,_,_,_,_,_,b,o,o,o,o,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,o,o,o,o,o,_,_,_,_,_,_],
+        # Row 29: Belt
+        [_,_,_,_,_,_,_,_,_,_,o,o,o,o,o,o,o,o,o,o,o,o,_,_,_,_,_,_,_,_,_,_],
+        # Row 30-36: Pants/legs
+        [_,_,_,_,_,_,_,_,_,o,pd,pd,pd,pd,pd,o,o,pd,pd,pd,pd,pd,o,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,p,p,p,p,p,o,o,p,p,p,p,p,o,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,p,p,p,p,pd,o,o,p,p,p,p,pd,o,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,p,p,p,pd,o,_,_,o,p,p,p,pd,o,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,p,p,p,pd,o,_,_,o,p,p,p,pd,o,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,p,p,pd,pd,o,_,_,o,p,p,pd,pd,o,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,pd,pd,pd,o,o,_,_,o,pd,pd,pd,o,o,_,_,_,_,_,_,_,_,_],
+        # Row 37-39: Feet
+        [_,_,_,_,_,_,_,_,o,bt,bt,bt,bt,bt,o,_,_,o,bt,bt,bt,bt,bt,o,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,o,bt,bt,bt,bt,bt,o,_,_,o,bt,bt,bt,bt,bt,o,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,o,o,o,o,_,_,_,_,o,o,o,o,o,_,_,_,_,_,_,_,_,_],
+        # Row 40-47: Bottom padding
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+    ]
 
-def main():
-    output_dir = "/mnt/c/Users/emily/BugFarmer/BugFarmerClient/Assets/Sprites/Player"
+
+def make_left(h, hd, c, cd, p, pd):
+    """Generate left-facing sprite with given colors."""
+    _ = T
+    o = O
+    b = BLK
+    s, sd = SK, SKd
+    w = EW
+    bt = BT
+
+    return [
+        # Row 0-7: Hair
+        [_,_,_,_,_,_,_,_,_,_,o,o,o,o,o,o,o,o,o,o,o,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,o,o,h,h,h,h,h,h,h,h,h,h,h,o,o,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,o,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,o,_,_,_,_,_,_,_],
+        [_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,o,_,_,_,_,_,_],
+        [_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,o,_,_,_,_,_,_],
+        [_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,o,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        # Row 8-10: Face opening on left side
+        [_,_,_,_,_,o,h,h,o,o,o,o,o,o,o,o,o,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,o,h,o,s,s,s,s,s,s,s,s,o,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,o,h,o,s,s,s,s,s,s,s,s,o,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        # Row 11-14: Eye (one visible on left)
+        [_,_,_,_,_,o,h,o,s,w,w,w,s,s,s,s,o,h,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,o,h,o,s,w,o,o,s,s,s,s,s,o,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,o,hd,o,s,w,o,o,s,s,s,s,s,o,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,o,hd,o,s,w,b,b,s,s,s,s,s,o,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        # Row 15-17: Lower face
+        [_,_,_,_,_,o,hd,o,s,s,s,s,s,s,s,s,s,o,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,o,hd,o,s,s,s,s,s,s,s,s,s,o,h,h,h,h,h,h,hd,o,_,_,_,_,_,_],
+        [_,_,_,_,_,_,o,o,s,s,s,s,s,s,s,s,o,h,h,h,h,h,h,o,o,_,_,_,_,_,_,_],
+        # Row 18-20: Chin
+        [_,_,_,_,_,_,_,o,sd,s,s,s,s,s,s,s,o,h,h,h,h,h,hd,o,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,o,o,sd,s,s,s,s,o,o,h,h,h,hd,o,o,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,o,o,sd,sd,o,o,o,hd,hd,o,o,o,_,_,_,_,_,_,_,_,_,_],
+        # Row 21: Shoulder line
+        [_,_,_,_,_,_,_,o,o,o,o,o,o,o,o,o,o,o,o,o,o,o,o,o,_,_,_,_,_,_,_,_],
+        # Row 22-28: Shirt/body
+        [_,_,_,_,_,_,b,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,o,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,c,b,s,s,o,c,c,c,c,c,c,c,c,c,o,sd,sd,o,c,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,c,b,s,s,o,c,c,c,c,c,c,c,c,c,o,sd,sd,o,c,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,c,b,s,sd,o,c,c,c,c,c,c,c,c,c,o,sd,sd,o,cd,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,c,b,sd,sd,o,c,c,c,c,c,c,c,c,c,o,sd,sd,o,cd,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,b,o,o,o,o,cd,cd,cd,cd,cd,cd,cd,cd,cd,o,o,o,o,o,_,_,_,_,_,_,_],
+        # Row 29: Belt
+        [_,_,_,_,_,_,_,_,_,o,o,o,o,o,o,o,o,o,o,o,o,_,_,_,_,_,_,_,_,_,_,_],
+        # Row 30-36: Pants/legs
+        [_,_,_,_,_,_,_,_,_,o,pd,pd,pd,pd,o,o,pd,pd,pd,pd,o,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,p,p,p,p,o,o,p,p,p,p,o,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,p,p,p,pd,o,o,p,p,p,pd,o,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,p,p,pd,o,_,_,o,p,p,pd,o,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,p,p,pd,o,_,_,o,p,p,pd,o,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,p,pd,pd,o,_,_,o,p,pd,pd,o,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,pd,pd,o,o,_,_,o,pd,pd,o,o,_,_,_,_,_,_,_,_,_,_,_],
+        # Row 37-39: Feet
+        [_,_,_,_,_,_,_,_,o,bt,bt,bt,bt,o,_,_,o,bt,bt,bt,bt,o,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,o,bt,bt,bt,bt,o,_,_,o,bt,bt,bt,bt,o,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,o,o,o,o,_,_,_,_,o,o,o,o,_,_,_,_,_,_,_,_,_,_,_],
+        # Row 40-47: Bottom padding
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+    ]
+
+
+def make_right(h, hd, c, cd, p, pd):
+    """Generate right-facing sprite (mirror of left)."""
+    return [row[::-1] for row in make_left(h, hd, c, cd, p, pd)]
+
+
+def generate_character(name, palette, output_dir):
+    """Generate all 4 directions for a character."""
+    h, hd = palette['hair']
+    c, cd = palette['shirt']
+    p, pd = palette['pants']
 
     sprites = [
-        ("player_down.png", PLAYER_DOWN),
-        ("player_up.png", PLAYER_UP),
-        ("player_left.png", PLAYER_LEFT),
-        ("player_right.png", PLAYER_RIGHT),
+        (f"{name}_down.png", make_down(h, hd, c, cd, p, pd)),
+        (f"{name}_up.png", make_up(h, hd, c, cd, p, pd)),
+        (f"{name}_left.png", make_left(h, hd, c, cd, p, pd)),
+        (f"{name}_right.png", make_right(h, hd, c, cd, p, pd)),
     ]
 
     for filename, grid in sprites:
-        img = create_sprite_from_grid(grid)
+        i = img(grid)
         path = f"{output_dir}/{filename}"
-        img.save(path)
+        i.save(path)
         print(f"Created: {path}")
 
-    # Create sprite sheet (4x1, 128x32) - order: Down, Left, Right, Up (matches Direction enum)
-    sheet = Image.new('RGBA', (128, 32), T)
-    sheet_order = [PLAYER_DOWN, PLAYER_LEFT, PLAYER_RIGHT, PLAYER_UP]
-    for i, grid in enumerate(sheet_order):
-        sprite = create_sprite_from_grid(grid)
-        sheet.paste(sprite, (i * 32, 0))
-
-    sheet_path = f"{output_dir}/player_spritesheet.png"
+    # Spritesheet
+    sheet = Image.new('RGBA', (128, 48), T)
+    for i, (_, grid) in enumerate(sprites):
+        sheet.paste(img(grid), (i * 32, 0))
+    sheet_path = f"{output_dir}/{name}_spritesheet.png"
     sheet.save(sheet_path)
-    print(f"Created sprite sheet: {sheet_path}")
+    print(f"Created: {sheet_path}")
 
+
+def main():
+    output_dir = "/mnt/c/Users/emily/BugFarmer/BugFarmerClient/Assets/Sprites/Player"
+    os.makedirs(output_dir, exist_ok=True)
+
+    print("Generating player character sprites...")
+    print("=" * 50)
+
+    for name, palette in PALETTES.items():
+        print(f"\n{name.upper()}:")
+        generate_character(name, palette, output_dir)
+
+    print("\n" + "=" * 50)
+    print(f"Generated {len(PALETTES)} characters x 5 files = {len(PALETTES) * 5} total files")
     print("\nUnity import settings:")
-    print("  - Texture Type: Sprite (2D and UI)")
-    print("  - Sprite Mode: Single (or Multiple for sheet)")
-    print("  - Pixels Per Unit: 8")
+    print("  - Pixels Per Unit: 16")
     print("  - Filter Mode: Point (no filter)")
     print("  - Compression: None")
+
 
 if __name__ == "__main__":
     main()

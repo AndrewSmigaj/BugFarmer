@@ -10,12 +10,12 @@ import (
 
 // WorldConfig holds configurable world parameters
 type WorldConfig struct {
-	ChunkSize   int // Default: 64 (blocks per chunk side)
-	BlockSize   int // Default: 8 (pixels per block)
+	ChunkSize   int // Default: 32 (cells per chunk side)
+	BlockSize   int // Default: 16 (pixels per cell)
 	TickRate    int // Default: 10 (ticks per second)
 	MaxPlayers  int // Default: 100
-	WorldWidth  int // Default: 16 (chunks)
-	WorldHeight int // Default: 16 (chunks)
+	WorldWidth  int // Default: 16 (chunks per zone)
+	WorldHeight int // Default: 16 (chunks per zone)
 }
 
 // WorldState is the match state for a world instance
@@ -42,6 +42,24 @@ type WorldState struct {
 
 	// Timing
 	LastMergeCheck int64 // Tick of last merge/split check
+
+	// World Building (Phase 4)
+	CurrentZone   *ZoneConfig                    // Current zone metadata
+	Chunks        map[string]*ChunkData          // "chunkX,chunkY" -> chunk data
+	ChunkSubs     map[string]map[string]bool     // "chunkX,chunkY" -> player IDs subscribed
+	TileDefs      map[string]*TileDefinition     // Loaded from tiles.json
+	OccupantDefs  map[string]*OccupantDefinition // Loaded from occupants.json
+	BreakingState map[string]*BreakingProgress   // "gx,gy" -> breaking progress
+}
+
+// BreakingProgress tracks an in-progress tile break
+type BreakingProgress struct {
+	GridX     int    // Global cell X
+	GridY     int    // Global cell Y
+	PlayerID  string // Who is breaking
+	CurrentHP int    // Remaining HP
+	MaxHP     int    // Starting HP
+	LastTick  int64  // Tick of last damage (for timeout)
 }
 
 // InventorySlot holds one stack of items (bugs or tools)
@@ -99,12 +117,12 @@ func (p *PlayerState) SetWorldPosition(x, y float32, chunkSize int) {
 // DefaultConfig returns sensible defaults from architecture doc
 func DefaultConfig() WorldConfig {
 	return WorldConfig{
-		ChunkSize:   64, // 64x64 blocks per chunk
-		BlockSize:   8,  // 8x8 pixels per block
+		ChunkSize:   32, // 32x32 cells per chunk (512x512 pixels)
+		BlockSize:   16, // 16x16 pixels per cell
 		TickRate:    10,
 		MaxPlayers:  100,
-		WorldWidth:  16,
-		WorldHeight: 16,
+		WorldWidth:  16, // 16 chunks per zone
+		WorldHeight: 16, // 16 chunks per zone
 	}
 }
 
@@ -127,6 +145,12 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		Plants:      make(map[string]*entities.PlantState),
 		GroundItems: make(map[string]*entities.GroundItem),
 		Species:     make(map[string]*entities.BugSpecies),
+		// World building
+		Chunks:        make(map[string]*ChunkData),
+		ChunkSubs:     make(map[string]map[string]bool),
+		TileDefs:      make(map[string]*TileDefinition),
+		OccupantDefs:  make(map[string]*OccupantDefinition),
+		BreakingState: make(map[string]*BreakingProgress),
 	}
 }
 
