@@ -310,7 +310,7 @@
     "blocks_players": true,
     "is_breakable": true,
     "required_tool_type": "shovel",
-    "hp": 2,
+    "hp": 4,
     "drop_item_id": "dirt",
     "reveals_floor_tile": "cave_floor"
   },

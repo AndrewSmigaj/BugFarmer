@@ -16,8 +16,8 @@ namespace BugFarmer.Player
         [Tooltip("Time between break messages sent to server")]
         [SerializeField] private float breakClickInterval = 0.25f;
 
-        [Tooltip("Maximum distance from player to break an object")]
-        [SerializeField] private float maxBreakDistance = 4f;
+        [Tooltip("Maximum distance from player to break an object (Terraria-style reach)")]
+        [SerializeField] private float maxBreakDistance = 8f;
 
         private Vector2Int? _breakingCell;
         private float _lastBreakTime;
@@ -44,27 +44,50 @@ namespace BugFarmer.Player
 
         private void TryBreak()
         {
-            if (TilemapManager.Instance == null || _mainCamera == null)
+            if (_mainCamera == null)
                 return;
 
-            // Get cell under mouse
+            // Get world position under mouse
             Vector3 mouseWorld = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
             mouseWorld.z = 0;
-            Vector2Int cellPos = TilemapManager.Instance.WorldToCell(mouseWorld);
 
-            // Check distance from player
-            Vector3 cellWorld = TilemapManager.Instance.CellToWorld(cellPos);
-            if (Vector3.Distance(transform.position, cellWorld) > maxBreakDistance)
+            // Find occupant collider at mouse position
+            Collider2D hitCollider = Physics2D.OverlapPoint(mouseWorld);
+            if (hitCollider == null)
             {
+                // Debug: show what's under cursor when clicking on empty space
+                if (Input.GetMouseButtonDown(0))
+                {
+                    Debug.Log($"[BreakingController] No collider at {mouseWorld}");
+                }
                 StopBreaking();
                 return;
             }
 
-            // Check if there's something to break at this cell
-            if (!TilemapManager.Instance.IsCellOccupied(cellPos))
+            // Get click target component for occupant metadata
+            var clickTarget = hitCollider.GetComponent<OccupantClickTarget>();
+            if (clickTarget == null || !clickTarget.IsBreakable)
             {
+                if (Input.GetMouseButtonDown(0))
+                {
+                    Debug.Log($"[BreakingController] Hit {hitCollider.name} but no OccupantClickTarget or not breakable");
+                }
                 StopBreaking();
                 return;
+            }
+
+            // Use anchor cell from click target (bottom-left of footprint)
+            Vector2Int anchorCell = clickTarget.AnchorCell;
+
+            // Check distance from player to anchor cell
+            if (TilemapManager.Instance != null)
+            {
+                Vector3 cellWorld = TilemapManager.Instance.CellToWorld(anchorCell);
+                if (Vector3.Distance(transform.position, cellWorld) > maxBreakDistance)
+                {
+                    StopBreaking();
+                    return;
+                }
             }
 
             // Check if we have a tool equipped (not a placeable item)
@@ -79,9 +102,9 @@ namespace BugFarmer.Player
             }
 
             // Check if target changed
-            if (_breakingCell != cellPos)
+            if (_breakingCell != anchorCell)
             {
-                _breakingCell = cellPos;
+                _breakingCell = anchorCell;
                 _lastBreakTime = 0; // Reset timer for new target
             }
 
@@ -90,7 +113,7 @@ namespace BugFarmer.Player
             // Send break message at interval
             if (Time.time - _lastBreakTime >= breakClickInterval)
             {
-                SendBreakRequest(cellPos);
+                SendBreakRequest(anchorCell);
                 _lastBreakTime = Time.time;
             }
         }

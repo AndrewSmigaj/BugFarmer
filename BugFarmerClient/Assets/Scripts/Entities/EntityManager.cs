@@ -18,6 +18,7 @@ namespace BugFarmer.Entities
 
         private readonly Dictionary<string, RemoteEntity> _entities = new();
         private string _localPlayerId;
+        private bool _localPlayerInitialized;
 
         private void Awake()
         {
@@ -59,8 +60,22 @@ namespace BugFarmer.Entities
         {
             foreach (var data in entities)
             {
-                // Skip local player - handled by PlayerController
-                if (data.id == _localPlayerId) continue;
+                // Handle local player spawn position
+                if (data.id == _localPlayerId)
+                {
+                    if (!_localPlayerInitialized)
+                    {
+                        // Apply initial spawn position from server
+                        var player = FindObjectOfType<Player.PlayerController>();
+                        if (player != null)
+                        {
+                            player.transform.position = new Vector3(data.x, data.y, 0);
+                            _localPlayerInitialized = true;
+                            Debug.Log($"[EntityManager] Local player spawned at ({data.x}, {data.y})");
+                        }
+                    }
+                    continue; // Skip further processing - movement handled by PlayerController
+                }
 
                 if (_entities.TryGetValue(data.id, out var entity))
                 {
@@ -114,6 +129,7 @@ namespace BugFarmer.Entities
                     Destroy(entity.gameObject);
             }
             _entities.Clear();
+            _localPlayerInitialized = false; // Reset for next match join
         }
     }
 }

@@ -402,5 +402,10 @@ MonoBehaviour:
     footprintHeight: 2
     pivot: {x: 0.5, y: 0}
     isBreakable: 1
+  breakStageSprites:
+  - {fileID: 58988247408070596, guid: d5d20af0ea67ce14c8195593c43b04c9, type: 3}
+  - {fileID: -3572342591922453495, guid: db275468a2f4c40459943512c2905420, type: 3}
+  - {fileID: -1132065676181005703, guid: b29b4564673e89243b46f7cfd564bba4, type: 3}
+  - {fileID: 3348258478250671900, guid: 2190ca2d6cb2a964bbc995c85590cd59, type: 3}
   defaultGroundTile: {fileID: 0}
   defaultOccupantSprite: {fileID: 0}

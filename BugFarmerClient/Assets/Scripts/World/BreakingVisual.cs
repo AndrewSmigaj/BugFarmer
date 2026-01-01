@@ -29,10 +29,11 @@ namespace BugFarmer.World
             {
                 _renderer = gameObject.AddComponent<SpriteRenderer>();
             }
-            // Render above occupants
-            _renderer.sortingOrder = 100;
+            // Render above occupants - must be on same sorting layer
+            _renderer.sortingLayerName = "Occupants";
+            _renderer.sortingOrder = 1000; // High value to render on top of all occupants
             // Semi-transparent overlay
-            _renderer.color = new Color(1f, 1f, 1f, 0.8f);
+            _renderer.color = new Color(1f, 1f, 1f, 0.9f);
         }
 
         /// <summary>
@@ -55,8 +56,16 @@ namespace BugFarmer.World
             int stageIndex = Mathf.FloorToInt(damagePercent * _breakStages.Length);
             stageIndex = Mathf.Clamp(stageIndex, 0, _breakStages.Length - 1);
 
-            _renderer.sprite = _breakStages[stageIndex];
+            var sprite = _breakStages[stageIndex];
+            if (sprite == null)
+            {
+                Debug.LogWarning($"[BreakingVisual] Break stage sprite {stageIndex} is null!");
+                return;
+            }
+
+            _renderer.sprite = sprite;
             _renderer.enabled = true;
+            Debug.Log($"[BreakingVisual] Set stage {stageIndex} (damage {damagePercent:P0}), sprite: {sprite.name}");
         }
 
         /// <summary>

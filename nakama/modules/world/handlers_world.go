@@ -192,6 +192,7 @@ func (m *Match) handleTileBreak(
 		MaxHP:     progress.MaxHP,
 		PlayerID:  userID,
 	}
+	logger.Debug("Broadcasting BreakProgress: %d,%d HP=%d/%d", msg.GridX, msg.GridY, progress.CurrentHP, progress.MaxHP)
 	m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeBreakProgress, progressMsg)
 
 	// Check if broken

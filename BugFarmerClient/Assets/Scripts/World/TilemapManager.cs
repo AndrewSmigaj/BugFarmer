@@ -66,6 +66,18 @@ namespace BugFarmer.World
             {
                 Debug.LogError("[TilemapManager] WorldManager.Instance is null!");
             }
+
+            // Load break stage sprites for visual feedback
+            var breakSprites = TileDatabase.Instance?.GetBreakStageSprites();
+            if (breakSprites != null && breakSprites.Length > 0)
+            {
+                BreakingVisual.SetBreakStages(breakSprites);
+                Debug.Log($"[TilemapManager] Loaded {breakSprites.Length} break stage sprites");
+            }
+            else
+            {
+                Debug.LogWarning("[TilemapManager] No break stage sprites configured in TileDatabase");
+            }
         }
 
         private void OnDestroy()
@@ -229,11 +241,17 @@ namespace BugFarmer.World
         private void HandleBreakProgress(IMatchState state)
         {
             var json = System.Text.Encoding.UTF8.GetString(state.State);
+            Debug.Log($"[TilemapManager] BreakProgress received: {json}");
+
             var msg = JsonUtility.FromJson<BreakProgressMessage>(json);
             if (msg == null)
+            {
+                Debug.LogWarning("[TilemapManager] Failed to parse BreakProgressMessage");
                 return;
+            }
 
             var cellPos = new Vector2Int(msg.grid_x, msg.grid_y);
+            Debug.Log($"[TilemapManager] BreakProgress at {cellPos}: {msg.current_hp}/{msg.max_hp}");
 
             if (msg.current_hp <= 0)
             {
@@ -418,6 +436,23 @@ namespace BugFarmer.World
             // Y-sorting: lower Y = higher sorting order (appears in front)
             sr.sortingOrder = -cellPos.y;
 
+            // Configure collider to match sprite bounds
+            var collider = go.GetComponent<BoxCollider2D>();
+            if (collider != null)
+            {
+                var bounds = entry.sprite.bounds;
+                collider.offset = bounds.center;
+                collider.size = bounds.size;
+                collider.enabled = true;
+            }
+
+            // Initialize click target with occupant metadata
+            var clickTarget = go.GetComponent<OccupantClickTarget>();
+            if (clickTarget != null)
+            {
+                clickTarget.Initialize(cellPos, occData.Occupant.id, entry.isBreakable);
+            }
+
             go.SetActive(true);
             _occupantObjects[cellPos] = go;
         }
@@ -469,12 +504,17 @@ namespace BugFarmer.World
             if (!_breakingVisuals.TryGetValue(cellPos, out var visual))
             {
                 var go = new GameObject($"Breaking_{cellPos.x}_{cellPos.y}");
-                go.transform.position = CellToWorld(cellPos);
+                // CellToWorld already returns cell center
+                Vector3 pos = CellToWorld(cellPos);
+                go.transform.position = pos;
                 go.transform.SetParent(occupantContainer);
                 visual = go.AddComponent<BreakingVisual>();
                 _breakingVisuals[cellPos] = visual;
+                Debug.Log($"[TilemapManager] Created BreakingVisual at world pos {pos} for cell {cellPos}");
             }
-            visual.SetProgress((float)currentHP / maxHP);
+            float progress = (float)currentHP / maxHP;
+            visual.SetProgress(progress);
+            Debug.Log($"[TilemapManager] BreakingVisual renderer enabled: {visual.GetComponent<SpriteRenderer>()?.enabled}, sprite: {visual.GetComponent<SpriteRenderer>()?.sprite?.name}");
         }
 
         private void RemoveBreakingVisual(Vector2Int cellPos)
@@ -502,6 +542,14 @@ namespace BugFarmer.World
 
             var go = new GameObject("PooledOccupant");
             go.AddComponent<SpriteRenderer>();
+
+            // Add collider for sprite-based click detection
+            var collider = go.AddComponent<BoxCollider2D>();
+            collider.isTrigger = true; // Raycast-only, no physics
+
+            // Add click target component for metadata
+            go.AddComponent<OccupantClickTarget>();
+
             return go;
         }
 
@@ -512,6 +560,17 @@ namespace BugFarmer.World
 
             go.SetActive(false);
             go.transform.SetParent(null);
+
+            // Disable collider to prevent stray raycast hits
+            var collider = go.GetComponent<BoxCollider2D>();
+            if (collider != null)
+                collider.enabled = false;
+
+            // Reset click target metadata
+            var clickTarget = go.GetComponent<OccupantClickTarget>();
+            if (clickTarget != null)
+                clickTarget.Reset();
+
             _occupantPool.Push(go);
         }
 

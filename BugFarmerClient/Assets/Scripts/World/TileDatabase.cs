@@ -42,6 +42,10 @@ namespace BugFarmer.World
         [Tooltip("Map occupant IDs to sprites for object rendering")]
         [SerializeField] private OccupantEntry[] occupants;
 
+        [Header("Breaking Effects")]
+        [Tooltip("Crack overlay sprites for breaking progress (stage 1-4, increasing damage)")]
+        [SerializeField] private Sprite[] breakStageSprites;
+
         [Header("Fallbacks")]
         [SerializeField] private TileBase defaultGroundTile;
         [SerializeField] private Sprite defaultOccupantSprite;
@@ -160,6 +164,15 @@ namespace BugFarmer.World
                 return Vector2Int.one;
 
             return new Vector2Int(entry.footprintWidth, entry.footprintHeight);
+        }
+
+        /// <summary>
+        /// Get the break stage sprites for visual feedback during breaking.
+        /// Returns null if not configured.
+        /// </summary>
+        public Sprite[] GetBreakStageSprites()
+        {
+            return breakStageSprites;
         }
     }
 }
