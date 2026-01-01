@@ -1,3 +1,17 @@
+# DEPRECATED - Item Database
+
+> **This file is deprecated.** The authoritative data sources are now:
+> - `nakama/data/occupants.json` - World occupants (trees, furniture, structures)
+> - `nakama/data/tiles.json` - Ground tiles
+> - `nakama/data/bugs.json` - Bug entities
+> - `nakama/data/items.json` - Inventory items and tools
+>
+> Use `BugFarmer > Build TileDatabase` in Unity to populate TileDatabase from JSON.
+
+---
+
+*Original content below kept for historical reference:*
+
 # Item Database for World Building
 
 Structured for LLM parsing during world generation.

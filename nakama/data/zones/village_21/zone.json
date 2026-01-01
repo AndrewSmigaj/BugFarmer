@@ -1,0 +1,13 @@
+{
+  "zone_id": "village_21",
+  "name": "Starting Village",
+  "row": 2,
+  "col": 1,
+  "width": 512,
+  "height": 512,
+  "spawn_point": [
+    256,
+    256
+  ],
+  "biome_type": "village"
+}

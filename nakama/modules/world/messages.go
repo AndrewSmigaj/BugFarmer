@@ -1,5 +1,7 @@
 package world
 
+import "encoding/json"
+
 // Client → Server OpCodes
 const (
 	OpCodeMovement       int64 = 1  // Player position update
@@ -39,6 +41,13 @@ const (
 	OpCodeItemSlotUpdate    int64 = 37 // S→C: Single item slot changed
 	OpCodeFullInventorySync int64 = 38 // S→C: Complete inventory on join
 	OpCodeErrorMessage      int64 = 40 // S→C: Operation failed
+)
+
+// World Building OpCodes (Phase 4) - Server → Client
+const (
+	OpCodeChunkData     int64 = 44 // S→C: Full chunk data on subscribe
+	OpCodeBreakProgress int64 = 45 // S→C: Breaking progress update
+	OpCodeWorldUpdate   int64 = 46 // S→C: Single cell changed
 )
 
 // === Client → Server Messages ===
@@ -141,4 +150,54 @@ type MoveSlotMessage struct {
 // ErrorMessage is sent when an operation fails (OpCode 40)
 type ErrorMessage struct {
 	Error string `json:"error"`
+}
+
+// === World Building Messages (Phase 4) ===
+
+// ChunkSubscribeMessage is sent by client (OpCode 3/4)
+type ChunkSubscribeMessage struct {
+	ChunkX int `json:"chunk_x"`
+	ChunkY int `json:"chunk_y"`
+}
+
+// TilePlaceMessage is sent by client (OpCode 5)
+type TilePlaceMessage struct {
+	GridX      int    `json:"grid_x"`      // Global cell X
+	GridY      int    `json:"grid_y"`      // Global cell Y
+	OccupantID string `json:"occupant_id"` // What to place
+	Direction  int    `json:"direction"`   // 0-3 facing direction
+}
+
+// TileBreakMessage is sent by client (OpCode 6)
+type TileBreakMessage struct {
+	GridX int `json:"grid_x"` // Global cell X
+	GridY int `json:"grid_y"` // Global cell Y
+}
+
+// ChunkDataMessage is sent to client (OpCode 44)
+// Contains full chunk data for client to render
+type ChunkDataMessage struct {
+	ChunkX    int                 `json:"chunk_x"`
+	ChunkY    int                 `json:"chunk_y"`
+	Ground    [][]string          `json:"ground"`    // 32x32 tile IDs
+	Occupants [][]json.RawMessage `json:"occupants"` // 32x32: null, "@", or {id,dir}
+}
+
+// WorldUpdateMessage is sent to client (OpCode 46)
+// Single cell change notification
+type WorldUpdateMessage struct {
+	GridX    int         `json:"grid_x"`
+	GridY    int         `json:"grid_y"`
+	Ground   string      `json:"ground,omitempty"`   // New ground tile (if changed)
+	Occupant interface{} `json:"occupant,omitempty"` // nil clears, *PlacedOccupant sets
+}
+
+// BreakProgressMessage is sent to client (OpCode 45)
+// Shows breaking progress for client animation
+type BreakProgressMessage struct {
+	GridX     int    `json:"grid_x"`
+	GridY     int    `json:"grid_y"`
+	CurrentHP int    `json:"current_hp"`
+	MaxHP     int    `json:"max_hp"`
+	PlayerID  string `json:"player_id"`
 }

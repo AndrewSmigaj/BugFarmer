@@ -1,0 +1,13 @@
+{
+  "zone_id": "underground_passages_31",
+  "name": "Underground Passages",
+  "row": 3,
+  "col": 1,
+  "width": 512,
+  "height": 512,
+  "spawn_point": [
+    256,
+    55
+  ],
+  "biome_type": "cave"
+}

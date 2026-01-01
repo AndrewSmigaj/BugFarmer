@@ -1,0 +1,66 @@
+{
+  "grass": {
+    "sprite_path": "Sprites/Terrain/grass.png",
+    "movement_mult": 1.0,
+    "accepts_furniture": true,
+    "accepts_structure": true,
+    "tool_actions": {"hoe": "garden_plot"}
+  },
+  "dirt": {
+    "sprite_path": "Sprites/Terrain/dirt.png",
+    "movement_mult": 0.9,
+    "accepts_furniture": true,
+    "accepts_structure": true,
+    "tool_actions": {"hoe": "garden_plot"}
+  },
+  "stone_path": {
+    "sprite_path": "Sprites/Terrain/stone_path.png",
+    "movement_mult": 1.1,
+    "accepts_furniture": true,
+    "accepts_structure": true
+  },
+  "wood_floor": {
+    "sprite_path": "Sprites/Terrain/wood_floor.png",
+    "movement_mult": 1.0,
+    "accepts_furniture": true,
+    "accepts_structure": true
+  },
+  "stone_floor": {
+    "sprite_path": "Sprites/Terrain/stone_floor.png",
+    "movement_mult": 1.0,
+    "accepts_furniture": true,
+    "accepts_structure": true
+  },
+  "cave_floor": {
+    "sprite_path": "Sprites/Terrain/cave_floor.png",
+    "movement_mult": 1.0,
+    "accepts_furniture": true,
+    "accepts_structure": true
+  },
+  "garden_plot": {
+    "sprite_path": "Sprites/Terrain/garden_plot.png",
+    "movement_mult": 0.8,
+    "accepts_plant": true
+  },
+  "mud": {
+    "sprite_path": "Sprites/Terrain/mud.png",
+    "movement_mult": 0.6,
+    "accepts_structure": true
+  },
+  "sand": {
+    "sprite_path": "Sprites/Terrain/sand.png",
+    "movement_mult": 0.8,
+    "accepts_furniture": true,
+    "accepts_structure": true
+  },
+  "water_shallow": {
+    "sprite_path": "Sprites/Terrain/water_shallow.png",
+    "movement_mult": 0.5,
+    "blocks_bugs": true
+  },
+  "water_deep": {
+    "sprite_path": "Sprites/Terrain/water_deep.png",
+    "blocks_players": true,
+    "blocks_bugs": true
+  }
+}

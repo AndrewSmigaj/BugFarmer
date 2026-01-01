@@ -70,6 +70,30 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 	}
 	logger.Info("Loaded %d species", len(state.Species))
 
+	// Load zone data (Phase 4)
+	zonePath := "data/zones/underground_passages_31"
+	zoneConfig, err := LoadZoneConfig(zonePath)
+	if err != nil {
+		logger.Warn("Failed to load zone config: %v - using default", err)
+		zoneConfig = &ZoneConfig{ZoneID: "underground_passages_31", BiomeType: "cave"}
+	}
+	state.CurrentZone = zoneConfig
+	logger.Info("Loaded zone: %s", zoneConfig.ZoneID)
+
+	// Load tile and occupant definitions (Phase 4)
+	state.TileDefs, err = LoadTileDefinitions("data/tiles.json")
+	if err != nil {
+		logger.Warn("Failed to load tile definitions: %v", err)
+	} else {
+		logger.Info("Loaded %d tile definitions", len(state.TileDefs))
+	}
+	state.OccupantDefs, err = LoadOccupantDefinitions("data/occupants.json")
+	if err != nil {
+		logger.Warn("Failed to load occupant definitions: %v", err)
+	} else {
+		logger.Info("Loaded %d occupant definitions", len(state.OccupantDefs))
+	}
+
 	// Spawn initial swarms for testing
 	m.spawnInitialSwarms(state, logger)
 
@@ -245,6 +269,38 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				continue
 			}
 			m.handleMoveSlot(logger, dispatcher, worldState, moveMsg, userID)
+
+		// World Building (Phase 4)
+		case OpCodeChunkSubscribe:
+			var subMsg ChunkSubscribeMessage
+			if err := json.Unmarshal(msg.GetData(), &subMsg); err != nil {
+				logger.Warn("Invalid chunk subscribe from %s: %v", userID, err)
+				continue
+			}
+			m.handleChunkSubscribe(logger, dispatcher, worldState, userID, subMsg.ChunkX, subMsg.ChunkY)
+
+		case OpCodeChunkUnsub:
+			var subMsg ChunkSubscribeMessage
+			if err := json.Unmarshal(msg.GetData(), &subMsg); err != nil {
+				continue
+			}
+			m.handleChunkUnsub(worldState, userID, subMsg.ChunkX, subMsg.ChunkY)
+
+		case OpCodeTilePlace:
+			var placeMsg TilePlaceMessage
+			if err := json.Unmarshal(msg.GetData(), &placeMsg); err != nil {
+				logger.Warn("Invalid tile place from %s: %v", userID, err)
+				continue
+			}
+			m.handleTilePlace(logger, dispatcher, worldState, userID, placeMsg)
+
+		case OpCodeTileBreak:
+			var breakMsg TileBreakMessage
+			if err := json.Unmarshal(msg.GetData(), &breakMsg); err != nil {
+				logger.Warn("Invalid tile break from %s: %v", userID, err)
+				continue
+			}
+			m.handleTileBreak(logger, dispatcher, worldState, userID, breakMsg, worldState.TickCount)
 		}
 	}
 

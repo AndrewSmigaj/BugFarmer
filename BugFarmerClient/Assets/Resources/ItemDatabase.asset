@@ -19,3 +19,12 @@ MonoBehaviour:
   - itemId: fly
     icon: {fileID: 5352286359449648278, guid: f55c1d324bdf60546bd5a46462ce4a98, type: 3}
     displayName: Test Fly
+  - itemId: pickaxe_wood
+    icon: {fileID: -9006532264313040971, guid: 6e387a51940262e4fb0bd6c0ec0fcc5c, type: 3}
+    displayName: Wooden Pickaxe
+  - itemId: axe_wood
+    icon: {fileID: -6696424569657030907, guid: 4e0f4c2807c5a1140a51d3b71c74b25c, type: 3}
+    displayName: Wooden Axe
+  - itemId: shovel_wood
+    icon: {fileID: 2528568293213484758, guid: ffe619369752e6c4b8ac99f2284f4fdd, type: 3}
+    displayName: Wooden Shovel

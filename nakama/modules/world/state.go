@@ -156,16 +156,28 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 
 // AddPlayer adds a new player to the world
 func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presence) {
+	// Use zone's spawn point, or default to center if not set
+	spawnX := float32(256)
+	spawnY := float32(256)
+	if s.CurrentZone != nil {
+		spawnX = float32(s.CurrentZone.SpawnPoint[0])
+		spawnY = float32(s.CurrentZone.SpawnPoint[1])
+	}
+
 	player := &PlayerState{
 		UserID:   userID,
 		Username: username,
-		Position: entities.EntityPosition{ChunkX: 0, ChunkY: 0, LocalX: 10, LocalY: 10}, // Spawn near origin
-		Facing:   entities.DirDown,                                                      // Default: facing camera
+		Facing:   entities.DirDown, // Default: facing camera
 		// BugSlots are zero-initialized (empty)
 		// Coins defaults to 0
 	}
-	// Give new player a Small Net in hotbar slot 1 (ItemSlots[0])
+	player.SetWorldPosition(spawnX, spawnY, s.Config.ChunkSize)
+
+	// Give new player starting tools in hotbar
 	player.ItemSlots[0] = InventorySlot{ItemID: "small_net", Count: 1}
+	player.ItemSlots[1] = InventorySlot{ItemID: "pickaxe_wood", Count: 1}
+	player.ItemSlots[2] = InventorySlot{ItemID: "axe_wood", Count: 1}
+	player.ItemSlots[3] = InventorySlot{ItemID: "shovel_wood", Count: 1}
 	player.EquippedTool = "small_net"
 
 	s.Players[userID] = player
