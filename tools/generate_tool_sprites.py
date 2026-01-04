@@ -188,7 +188,7 @@ def build_bugnet(tier):
 
 
 def main():
-    output_dir = "/mnt/c/Users/emily/BugFarmer/BugFarmerClient/Assets/Sprites/Tools"
+    output_dir = "/mnt/c/Users/emily/BugFarmer/BugFarmerClient/Assets/Resources/Items"
     os.makedirs(output_dir, exist_ok=True)
 
     tools_generated = []

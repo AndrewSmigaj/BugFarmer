@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using Nakama;
 using Newtonsoft.Json.Linq;
+using BugFarmer.Data;
 using BugFarmer.Networking;
 
 namespace BugFarmer.World
@@ -68,7 +69,7 @@ namespace BugFarmer.World
             }
 
             // Load break stage sprites for visual feedback
-            var breakSprites = TileDatabase.Instance?.GetBreakStageSprites();
+            var breakSprites = EntityDatabase.GetBreakStageSprites();
             if (breakSprites != null && breakSprites.Length > 0)
             {
                 BreakingVisual.SetBreakStages(breakSprites);
@@ -76,7 +77,7 @@ namespace BugFarmer.World
             }
             else
             {
-                Debug.LogWarning("[TilemapManager] No break stage sprites configured in TileDatabase");
+                Debug.LogWarning("[TilemapManager] No break stage sprites found in Resources/Sprites/Effects/");
             }
         }
 
@@ -406,32 +407,38 @@ namespace BugFarmer.World
             if (occData.Occupant == null || string.IsNullOrEmpty(occData.Occupant.id))
                 return;
 
-            // Get occupant entry from database
-            var entry = TileDatabase.Instance?.GetOccupant(occData.Occupant.id);
-            if (entry == null || entry.sprite == null)
+            string occupantId = occData.Occupant.id;
+
+            // Get sprite from EntityDatabase
+            var sprite = EntityDatabase.GetWorldSprite(occupantId);
+            if (sprite == null)
             {
-                Debug.LogWarning($"[TilemapManager] Unknown occupant: {occData.Occupant.id}");
+                Debug.LogWarning($"[TilemapManager] No sprite for occupant: {occupantId}");
                 return;
             }
 
+            // Get pivot from EntityDatabase
+            var pivot = EntityDatabase.GetPivot(occupantId);
+            bool isBreakable = EntityDatabase.IsBreakable(occupantId);
+
             // Create or get pooled GameObject
             var go = GetFromPool();
-            go.name = $"Occ_{occData.Occupant.id}_{cellPos.x}_{cellPos.y}";
+            go.name = $"Occ_{occupantId}_{cellPos.x}_{cellPos.y}";
             go.transform.SetParent(occupantContainer);
 
             // Position at cell with pivot adjustment
             Vector3 worldPos = CellToWorld(cellPos);
-            // Adjust Y for pivot (entry.pivot.y gives bottom-center offset)
+            // Adjust Y for pivot (pivot.y gives bottom-center offset)
             // Use sprite's actual height for positioning
-            float spriteHeightCells = entry.sprite.rect.height / 16f;
-            worldPos.y += entry.pivot.y * spriteHeightCells * cellSize;
+            float spriteHeightCells = sprite.rect.height / 16f;
+            worldPos.y += pivot.y * spriteHeightCells * cellSize;
             go.transform.position = worldPos;
 
             // Configure sprite renderer
             var sr = go.GetComponent<SpriteRenderer>();
             if (sr == null)
                 sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = entry.sprite;
+            sr.sprite = sprite;
             sr.sortingLayerName = "Occupants"; // Must create this sorting layer in Unity
             // Y-sorting: lower Y = higher sorting order (appears in front)
             sr.sortingOrder = -cellPos.y;
@@ -440,7 +447,7 @@ namespace BugFarmer.World
             var collider = go.GetComponent<BoxCollider2D>();
             if (collider != null)
             {
-                var bounds = entry.sprite.bounds;
+                var bounds = sprite.bounds;
                 collider.offset = bounds.center;
                 collider.size = bounds.size;
                 collider.enabled = true;
@@ -450,7 +457,7 @@ namespace BugFarmer.World
             var clickTarget = go.GetComponent<OccupantClickTarget>();
             if (clickTarget != null)
             {
-                clickTarget.Initialize(cellPos, occData.Occupant.id, entry.isBreakable);
+                clickTarget.Initialize(cellPos, occupantId, isBreakable);
             }
 
             go.SetActive(true);

@@ -1,4 +1,5 @@
 using UnityEngine;
+using BugFarmer.Data;
 using BugFarmer.Networking;
 using BugFarmer.World;
 using BugFarmer.UI;
@@ -95,7 +96,7 @@ namespace BugFarmer.Player
             string equippedItem = InventoryManager.Instance?.GetEquippedToolId() ?? "";
 
             // Skip if holding a placeable item (placement uses different input)
-            if (!string.IsNullOrEmpty(equippedItem) && TileDatabase.Instance?.IsPlaceable(equippedItem) == true)
+            if (!string.IsNullOrEmpty(equippedItem) && EntityDatabase.IsPlaceable(equippedItem))
             {
                 StopBreaking();
                 return;

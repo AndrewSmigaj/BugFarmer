@@ -1,0 +1,270 @@
+{
+  "_comment": "Inventory-only items: resources, tools, consumables. Sprites load from Resources/Sprites/Items/{id}.png",
+
+  "wood": {
+    "name": "Wood",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 2
+  },
+  "fiber": {
+    "name": "Plant Fiber",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1
+  },
+  "flower": {
+    "name": "Flower",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 3
+  },
+  "crystal": {
+    "name": "Crystal",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 15
+  },
+  "bone": {
+    "name": "Bone",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
+  },
+  "coal": {
+    "name": "Coal",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 4
+  },
+  "copper_ore": {
+    "name": "Copper Ore",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 8
+  },
+  "iron_ore": {
+    "name": "Iron Ore",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 12
+  },
+  "silver_ore": {
+    "name": "Silver Ore",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 20
+  },
+  "gold_ore": {
+    "name": "Gold Ore",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 30
+  },
+  "platinum_ore": {
+    "name": "Platinum Ore",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 50
+  },
+  "diamond": {
+    "name": "Diamond",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 100
+  },
+  "iron_bar": {
+    "name": "Iron Bar",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 25
+  },
+  "brick": {
+    "name": "Brick",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
+  },
+  "sunflower_seed": {
+    "name": "Sunflower Seed",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 2
+  },
+  "mushroom_red": {
+    "name": "Red Mushroom",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
+  },
+  "mushroom_glow": {
+    "name": "Glowing Mushroom",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 10
+  },
+  "apple": {
+    "name": "Apple",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
+  },
+
+  "small_net": {
+    "name": "Small Net",
+    "category": "tool",
+    "tool_type": "net",
+    "reach": 4.5,
+    "catch_radius": 1.5,
+    "buy_price": 0,
+    "sell_price": 25
+  },
+  "large_net": {
+    "name": "Large Net",
+    "category": "tool",
+    "tool_type": "net",
+    "reach": 5.5,
+    "catch_radius": 2.5,
+    "buy_price": 100,
+    "sell_price": 50
+  },
+  "pickaxe_wood": {
+    "name": "Wooden Pickaxe",
+    "category": "tool",
+    "tool_type": "pickaxe",
+    "tool_tier": 1,
+    "reach": 3.5,
+    "mining_speed": 1.0,
+    "durability": 50,
+    "buy_price": 25,
+    "sell_price": 10
+  },
+  "pickaxe_stone": {
+    "name": "Stone Pickaxe",
+    "category": "tool",
+    "tool_type": "pickaxe",
+    "tool_tier": 2,
+    "reach": 3.5,
+    "mining_speed": 1.3,
+    "durability": 100,
+    "buy_price": 75,
+    "sell_price": 30
+  },
+  "pickaxe_copper": {
+    "name": "Copper Pickaxe",
+    "category": "tool",
+    "tool_type": "pickaxe",
+    "tool_tier": 3,
+    "reach": 4.0,
+    "mining_speed": 1.6,
+    "durability": 150,
+    "buy_price": 150,
+    "sell_price": 60
+  },
+  "pickaxe_iron": {
+    "name": "Iron Pickaxe",
+    "category": "tool",
+    "tool_type": "pickaxe",
+    "tool_tier": 4,
+    "reach": 4.0,
+    "mining_speed": 2.0,
+    "durability": 250,
+    "buy_price": 300,
+    "sell_price": 120
+  },
+  "axe_wood": {
+    "name": "Wooden Axe",
+    "category": "tool",
+    "tool_type": "axe",
+    "tool_tier": 1,
+    "reach": 3.5,
+    "mining_speed": 1.0,
+    "durability": 50,
+    "buy_price": 25,
+    "sell_price": 10
+  },
+  "axe_stone": {
+    "name": "Stone Axe",
+    "category": "tool",
+    "tool_type": "axe",
+    "tool_tier": 2,
+    "reach": 3.5,
+    "mining_speed": 1.3,
+    "durability": 100,
+    "buy_price": 75,
+    "sell_price": 30
+  },
+  "axe_copper": {
+    "name": "Copper Axe",
+    "category": "tool",
+    "tool_type": "axe",
+    "tool_tier": 3,
+    "reach": 4.0,
+    "mining_speed": 1.6,
+    "durability": 150,
+    "buy_price": 150,
+    "sell_price": 60
+  },
+  "axe_iron": {
+    "name": "Iron Axe",
+    "category": "tool",
+    "tool_type": "axe",
+    "tool_tier": 4,
+    "reach": 4.0,
+    "mining_speed": 2.0,
+    "durability": 250,
+    "buy_price": 300,
+    "sell_price": 120
+  },
+  "shovel_wood": {
+    "name": "Wooden Shovel",
+    "category": "tool",
+    "tool_type": "shovel",
+    "tool_tier": 1,
+    "reach": 3.5,
+    "mining_speed": 1.2,
+    "durability": 50,
+    "buy_price": 20,
+    "sell_price": 8
+  },
+  "shovel_stone": {
+    "name": "Stone Shovel",
+    "category": "tool",
+    "tool_type": "shovel",
+    "tool_tier": 2,
+    "reach": 3.5,
+    "mining_speed": 1.5,
+    "durability": 100,
+    "buy_price": 60,
+    "sell_price": 25
+  },
+
+  "calm_spray": {
+    "name": "Calm Spray",
+    "category": "consumable",
+    "stackable": true,
+    "max_stack": 20,
+    "reach": 3.0,
+    "effect": "calm",
+    "buy_price": 20,
+    "sell_price": 10
+  }
+}

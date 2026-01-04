@@ -44,12 +44,12 @@ type WorldState struct {
 	LastMergeCheck int64 // Tick of last merge/split check
 
 	// World Building (Phase 4)
-	CurrentZone   *ZoneConfig                    // Current zone metadata
-	Chunks        map[string]*ChunkData          // "chunkX,chunkY" -> chunk data
-	ChunkSubs     map[string]map[string]bool     // "chunkX,chunkY" -> player IDs subscribed
-	TileDefs      map[string]*TileDefinition     // Loaded from tiles.json
-	OccupantDefs  map[string]*OccupantDefinition // Loaded from occupants.json
-	BreakingState map[string]*BreakingProgress   // "gx,gy" -> breaking progress
+	CurrentZone   *ZoneConfig                  // Current zone metadata
+	Chunks        map[string]*ChunkData        // "chunkX,chunkY" -> chunk data
+	ChunkSubs     map[string]map[string]bool   // "chunkX,chunkY" -> player IDs subscribed
+	TileDefs      map[string]*TileDefinition   // Loaded from tiles.json
+	Entities      map[string]*EntityDef        // Loaded from entities/*.json (items, occupants, placeables)
+	BreakingState map[string]*BreakingProgress // "gx,gy" -> breaking progress
 }
 
 // BreakingProgress tracks an in-progress tile break
@@ -149,7 +149,7 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		Chunks:        make(map[string]*ChunkData),
 		ChunkSubs:     make(map[string]map[string]bool),
 		TileDefs:      make(map[string]*TileDefinition),
-		OccupantDefs:  make(map[string]*OccupantDefinition),
+		Entities:      make(map[string]*EntityDef),
 		BreakingState: make(map[string]*BreakingProgress),
 	}
 }
@@ -178,6 +178,7 @@ func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presenc
 	player.ItemSlots[1] = InventorySlot{ItemID: "pickaxe_wood", Count: 1}
 	player.ItemSlots[2] = InventorySlot{ItemID: "axe_wood", Count: 1}
 	player.ItemSlots[3] = InventorySlot{ItemID: "shovel_wood", Count: 1}
+	player.ItemSlots[4] = InventorySlot{ItemID: "dirt_block", Count: 10} // Test placement
 	player.EquippedTool = "small_net"
 
 	s.Players[userID] = player

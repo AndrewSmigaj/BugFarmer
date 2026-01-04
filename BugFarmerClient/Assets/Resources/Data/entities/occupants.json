@@ -1,0 +1,409 @@
+{
+  "_comment": "World-only occupants: natural objects that cannot be placed by players. Sprites load from Resources/Sprites/Occupants/{id}.png",
+
+  "tree_oak": {
+    "name": "Oak Tree",
+    "category": "natural",
+    "world": {
+      "footprint": [2, 2],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 5,
+        "required_tool_type": "axe",
+        "required_tool_tier": 1,
+        "drops": [
+          {"item_id": "wood", "count": 4, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "tree_pine": {
+    "name": "Pine Tree",
+    "category": "natural",
+    "world": {
+      "footprint": [2, 2],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 5,
+        "required_tool_type": "axe",
+        "required_tool_tier": 1,
+        "drops": [
+          {"item_id": "wood", "count": 4, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "tree_dead": {
+    "name": "Dead Tree",
+    "category": "natural",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "required_tool_tier": 1,
+        "drops": [
+          {"item_id": "wood", "count": 2, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "tree_palm": {
+    "name": "Palm Tree",
+    "category": "natural",
+    "world": {
+      "footprint": [2, 2],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 4,
+        "required_tool_type": "axe",
+        "required_tool_tier": 1,
+        "drops": [
+          {"item_id": "wood", "count": 3, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "tree_fruit": {
+    "name": "Fruit Tree",
+    "category": "natural",
+    "world": {
+      "footprint": [2, 2],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 5,
+        "required_tool_type": "axe",
+        "required_tool_tier": 1,
+        "drops": [
+          {"item_id": "wood", "count": 3, "chance": 1.0},
+          {"item_id": "apple", "count": 1, "chance": 0.25}
+        ]
+      }
+    }
+  },
+  "bush": {
+    "name": "Bush",
+    "category": "natural",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "fiber", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "tall_grass": {
+    "name": "Tall Grass",
+    "category": "natural",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "fiber", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "reeds": {
+    "name": "Reeds",
+    "category": "natural",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "fiber", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "mushroom_red": {
+    "name": "Red Mushroom",
+    "category": "natural",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "mushroom_red", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "mushroom_glow": {
+    "name": "Glowing Mushroom",
+    "category": "natural",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "mushroom_glow", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "flower_wild": {
+    "name": "Wild Flower",
+    "category": "natural",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "flower", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "flower_red": {
+    "name": "Red Flower",
+    "category": "natural",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "flower", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "flower_blue": {
+    "name": "Blue Flower",
+    "category": "natural",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "flower", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "flower_yellow": {
+    "name": "Yellow Flower",
+    "category": "natural",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "flower", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "sunflower": {
+    "name": "Sunflower",
+    "category": "natural",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "sunflower_seed", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "crystal_small": {
+    "name": "Small Crystal",
+    "category": "natural",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 4,
+        "required_tool_type": "pickaxe",
+        "required_tool_tier": 2,
+        "drops": [
+          {"item_id": "crystal", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "crystal_large": {
+    "name": "Large Crystal",
+    "category": "natural",
+    "world": {
+      "footprint": [2, 2],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 8,
+        "required_tool_type": "pickaxe",
+        "required_tool_tier": 3,
+        "drops": [
+          {"item_id": "crystal", "count": 3, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "bone_pile": {
+    "name": "Bone Pile",
+    "category": "natural",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "bone", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "ant_mound": {
+    "name": "Ant Mound",
+    "category": "natural",
+    "world": {
+      "footprint": [2, 2],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 5,
+        "required_tool_type": "shovel"
+      }
+    }
+  },
+
+  "ore_coal_block": {
+    "name": "Coal Deposit",
+    "category": "ore",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 4,
+        "required_tool_type": "pickaxe",
+        "required_tool_tier": 1,
+        "drops": [
+          {"item_id": "coal", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "ore_copper_block": {
+    "name": "Copper Deposit",
+    "category": "ore",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 5,
+        "required_tool_type": "pickaxe",
+        "required_tool_tier": 1,
+        "drops": [
+          {"item_id": "copper_ore", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "ore_iron_block": {
+    "name": "Iron Deposit",
+    "category": "ore",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 6,
+        "required_tool_type": "pickaxe",
+        "required_tool_tier": 2,
+        "drops": [
+          {"item_id": "iron_ore", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "ore_silver_block": {
+    "name": "Silver Deposit",
+    "category": "ore",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 7,
+        "required_tool_type": "pickaxe",
+        "required_tool_tier": 2,
+        "drops": [
+          {"item_id": "silver_ore", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "ore_gold_block": {
+    "name": "Gold Deposit",
+    "category": "ore",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 8,
+        "required_tool_type": "pickaxe",
+        "required_tool_tier": 3,
+        "drops": [
+          {"item_id": "gold_ore", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "ore_platinum_block": {
+    "name": "Platinum Deposit",
+    "category": "ore",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 10,
+        "required_tool_type": "pickaxe",
+        "required_tool_tier": 4,
+        "drops": [
+          {"item_id": "platinum_ore", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "ore_diamond_block": {
+    "name": "Diamond Deposit",
+    "category": "ore",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 12,
+        "required_tool_type": "pickaxe",
+        "required_tool_tier": 5,
+        "drops": [
+          {"item_id": "diamond", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  }
+}

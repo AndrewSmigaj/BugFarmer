@@ -3,6 +3,10 @@ package world
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"time"
+
+	"bugfarmer/entities"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 )
@@ -48,6 +52,22 @@ func (m *Match) handleChunkSubscribe(
 	presence, ok := state.Presences[userID]
 	if ok && presence != nil {
 		dispatcher.BroadcastMessage(OpCodeChunkData, data, []runtime.Presence{presence}, nil, true)
+
+		// Send ground items in this chunk
+		cs := state.Config.ChunkSize
+		for _, item := range state.GroundItems {
+			if item.Position.ChunkX == cx && item.Position.ChunkY == cy {
+				spawnMsg := GroundItemSpawnMessage{
+					ID:       item.ID,
+					ItemType: item.ItemType,
+					Count:    item.Count,
+					X:        float32(cx*cs) + item.Position.LocalX,
+					Y:        float32(cy*cs) + item.Position.LocalY,
+				}
+				spawnData, _ := json.Marshal(spawnMsg)
+				dispatcher.BroadcastMessage(OpCodeGroundItemSpawn, spawnData, []runtime.Presence{presence}, nil, true)
+			}
+		}
 	}
 }
 
@@ -71,14 +91,29 @@ func (m *Match) handleTilePlace(
 	userID string,
 	msg TilePlaceMessage,
 ) {
-	// Get occupant definition
-	def, exists := state.OccupantDefs[msg.OccupantID]
+	// Get entity definition
+	def, exists := state.Entities[msg.OccupantID]
 	if !exists {
-		m.sendWorldError(dispatcher, state, userID, "Unknown occupant type")
+		m.sendWorldError(dispatcher, state, userID, "Unknown item type")
 		return
 	}
 
-	// TODO: Validate player has item in inventory
+	// Check entity can be placed in world
+	if !def.IsPlaceable() {
+		m.sendWorldError(dispatcher, state, userID, "Cannot place this item")
+		return
+	}
+
+	// Validate player has item in inventory
+	player := state.Players[userID]
+	if player == nil {
+		return
+	}
+	slotIndex := player.FindItem(msg.OccupantID)
+	if slotIndex < 0 {
+		m.sendWorldError(dispatcher, state, userID, "You don't have this item")
+		return
+	}
 
 	// Check placement is valid
 	if !m.canPlace(state, msg.GridX, msg.GridY, def, msg.Direction) {
@@ -114,6 +149,20 @@ func (m *Match) handleTilePlace(
 		}
 	}
 
+	// Consume item from inventory
+	player.RemoveItem(slotIndex, 1)
+
+	// Send inventory update to player
+	slotMsg := SlotUpdateMessage{
+		SlotIndex: slotIndex,
+		ItemID:    player.ItemSlots[slotIndex].ItemID,
+		Count:     player.ItemSlots[slotIndex].Count,
+	}
+	slotData, _ := json.Marshal(slotMsg)
+	if presence, ok := state.Presences[userID]; ok && presence != nil {
+		dispatcher.BroadcastMessage(OpCodeItemSlotUpdate, slotData, []runtime.Presence{presence}, nil, true)
+	}
+
 	logger.Debug("Player %s placed %s at %d,%d", userID, msg.OccupantID, msg.GridX, msg.GridY)
 
 	// Broadcast update to chunk subscribers
@@ -147,8 +196,8 @@ func (m *Match) handleTileBreak(
 	}
 
 	occ := cell.Occupant
-	def, exists := state.OccupantDefs[occ.ID]
-	if !exists || !def.IsBreakable {
+	def, exists := state.Entities[occ.ID]
+	if !exists || !def.IsBreakable() {
 		return
 	}
 
@@ -157,7 +206,7 @@ func (m *Match) handleTileBreak(
 	if player == nil {
 		return
 	}
-	toolType, toolTier := m.getToolStats(player.EquippedTool)
+	toolType, toolTier := m.getToolStats(state, player.EquippedTool)
 
 	// Check tool requirements
 	if !def.CanBreakWith(toolType, toolTier) {
@@ -167,14 +216,15 @@ func (m *Match) handleTileBreak(
 
 	// Get or create breaking progress
 	breakKey := fmt.Sprintf("%d,%d", msg.GridX, msg.GridY)
+	hp := def.GetHP()
 	progress, exists := state.BreakingState[breakKey]
 	if !exists || progress.PlayerID != userID {
 		progress = &BreakingProgress{
 			GridX:     msg.GridX,
 			GridY:     msg.GridY,
 			PlayerID:  userID,
-			CurrentHP: def.HP,
-			MaxHP:     def.HP,
+			CurrentHP: hp,
+			MaxHP:     hp,
 			LastTick:  tick,
 		}
 		state.BreakingState[breakKey] = progress
@@ -213,7 +263,52 @@ func (m *Match) handleTileBreak(
 			}
 		}
 
-		// TODO: Drop items to ground or give to player inventory
+		// Drop items to ground (with chance-based multi-drop)
+		drops := def.GetDrops()
+		cs := float32(state.Config.ChunkSize)
+		for _, drop := range drops {
+			// Roll for chance
+			if rand.Float32() > drop.Chance {
+				continue
+			}
+
+			// Create unique ground item ID
+			itemID := fmt.Sprintf("item_%d_%d_%d", msg.GridX, msg.GridY, time.Now().UnixNano())
+
+			// World position at cell center with random offset to prevent stacking
+			worldX := float32(msg.GridX) + 0.5 + (rand.Float32()-0.5)*0.3
+			worldY := float32(msg.GridY) + 0.5 + (rand.Float32()-0.5)*0.3
+
+			// Local position within chunk
+			localX := worldX - float32(cx)*cs
+			localY := worldY - float32(cy)*cs
+
+			groundItem := &entities.GroundItem{
+				ID:       itemID,
+				ItemType: drop.ItemID,
+				Count:    drop.Count,
+				Position: entities.EntityPosition{
+					ChunkX: cx,
+					ChunkY: cy,
+					LocalX: localX,
+					LocalY: localY,
+				},
+				Lifetime: 60.0,
+			}
+			state.GroundItems[itemID] = groundItem
+
+			// Broadcast spawn to chunk subscribers
+			spawnMsg := GroundItemSpawnMessage{
+				ID:       itemID,
+				ItemType: drop.ItemID,
+				Count:    drop.Count,
+				X:        worldX,
+				Y:        worldY,
+			}
+			m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeGroundItemSpawn, spawnMsg)
+
+			logger.Debug("Spawned ground item %s x%d at %.1f,%.1f", drop.ItemID, drop.Count, worldX, worldY)
+		}
 
 		logger.Debug("Player %s broke %s at %d,%d", userID, occ.ID, msg.GridX, msg.GridY)
 
@@ -226,7 +321,7 @@ func (m *Match) handleTileBreak(
 }
 
 // canPlace checks if an occupant can be placed at the given location
-func (m *Match) canPlace(state *WorldState, gx, gy int, def *OccupantDefinition, dir int) bool {
+func (m *Match) canPlace(state *WorldState, gx, gy int, def *EntityDef, dir int) bool {
 	w, h := def.GetFootprint(dir)
 
 	for dy := 0; dy < h; dy++ {
@@ -294,33 +389,17 @@ func (m *Match) broadcastWorldUpdate(
 }
 
 // getToolStats returns the tool type and tier for a given tool ID
-func (m *Match) getToolStats(toolID string) (toolType string, tier int) {
-	// TODO: Look up from item definitions
-	// For now, hardcode some basics
-	switch toolID {
-	case "pickaxe_wood":
-		return "pickaxe", 1
-	case "pickaxe_stone":
-		return "pickaxe", 2
-	case "pickaxe_copper":
-		return "pickaxe", 3
-	case "pickaxe_iron":
-		return "pickaxe", 4
-	case "axe_wood":
-		return "axe", 1
-	case "axe_stone":
-		return "axe", 2
-	case "axe_copper":
-		return "axe", 3
-	case "axe_iron":
-		return "axe", 4
-	case "shovel_wood":
-		return "shovel", 1
-	case "shovel_stone":
-		return "shovel", 2
-	default:
-		return "", 0
+func (m *Match) getToolStats(state *WorldState, toolID string) (toolType string, tier int) {
+	if toolID == "" {
+		return "", 0 // Bare hands
 	}
+
+	// Look up tool from entity definitions
+	if def, exists := state.Entities[toolID]; exists && def.Category == "tool" {
+		return def.ToolType, def.ToolTier
+	}
+
+	return "", 0
 }
 
 // sendWorldError sends an error message to a specific player
@@ -335,4 +414,64 @@ func (m *Match) sendWorldError(
 	if presence, exists := state.Presences[userID]; exists && presence != nil {
 		dispatcher.BroadcastMessage(OpCodeErrorMessage, data, []runtime.Presence{presence}, nil, true)
 	}
+}
+
+// handlePickupItem processes a player's request to pick up a ground item
+func (m *Match) handlePickupItem(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	userID string,
+	msg PickupItemMessage,
+) {
+	player := state.Players[userID]
+	if player == nil {
+		return
+	}
+
+	item, exists := state.GroundItems[msg.ID]
+	if !exists {
+		// Item already picked up by another player - silently ignore
+		return
+	}
+
+	// Distance check (server allows 3.0 vs client 2.0 to account for latency)
+	cs := state.Config.ChunkSize
+	playerX := player.WorldX(cs)
+	playerY := player.WorldY(cs)
+	itemX := float32(item.Position.ChunkX*cs) + item.Position.LocalX
+	itemY := float32(item.Position.ChunkY*cs) + item.Position.LocalY
+
+	dx := playerX - itemX
+	dy := playerY - itemY
+	if dx*dx+dy*dy > 9.0 { // 3.0 squared
+		m.sendWorldError(dispatcher, state, userID, "Too far away")
+		return
+	}
+
+	slotIndex := player.AddItem(item.ItemType, item.Count)
+	if slotIndex < 0 {
+		m.sendWorldError(dispatcher, state, userID, "Inventory full")
+		return
+	}
+
+	// Remove from ground
+	delete(state.GroundItems, msg.ID)
+
+	// Send inventory update to player
+	slotMsg := SlotUpdateMessage{
+		SlotIndex: slotIndex,
+		ItemID:    player.ItemSlots[slotIndex].ItemID,
+		Count:     player.ItemSlots[slotIndex].Count,
+	}
+	slotData, _ := json.Marshal(slotMsg)
+	if presence, ok := state.Presences[userID]; ok && presence != nil {
+		dispatcher.BroadcastMessage(OpCodeItemSlotUpdate, slotData, []runtime.Presence{presence}, nil, true)
+	}
+
+	// Broadcast removal to chunk subscribers
+	removeMsg := GroundItemRemoveMessage{ID: msg.ID}
+	m.broadcastToChunk(dispatcher, state, item.Position.ChunkX, item.Position.ChunkY, OpCodeGroundItemRemove, removeMsg)
+
+	logger.Debug("Player %s picked up %s x%d", userID, item.ItemType, item.Count)
 }

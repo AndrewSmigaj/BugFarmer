@@ -380,6 +380,7 @@ GameObject:
   m_Component:
   - component: {fileID: 153021792}
   - component: {fileID: 153021791}
+  - component: {fileID: 153021793}
   m_Layer: 0
   m_Name: WorldManager
   m_TagString: Untagged
@@ -414,6 +415,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &153021793
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 153021790}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d3b5092c6efe31747b5e6f74cc107ed2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BugFarmer.World.GroundItemManager
 --- !u!1 &191059501
 GameObject:
   m_ObjectHideFlags: 0
@@ -1739,9 +1752,9 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingLayerID: -2009438711
+  m_SortingLayer: 2
+  m_SortingOrder: 101
   m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0.44705883}
   m_FlipX: 0
@@ -3350,6 +3363,22 @@ PrefabInstance:
       propertyPath: m_SortingLayerID
       value: 346767411
       objectReference: {fileID: 0}
+    - target: {fileID: 3744457791661226772, guid: c72f45ef2638d1c45a7a501f991b680a, type: 3}
+      propertyPath: 'directionSprites.Array.data[0]'
+      value: 
+      objectReference: {fileID: 21300000, guid: 9d0e21465be58c14388926c5ab59bb10, type: 3}
+    - target: {fileID: 3744457791661226772, guid: c72f45ef2638d1c45a7a501f991b680a, type: 3}
+      propertyPath: 'directionSprites.Array.data[1]'
+      value: 
+      objectReference: {fileID: 21300000, guid: 3f7fce76cc9cbee41829cfe3a18e4888, type: 3}
+    - target: {fileID: 3744457791661226772, guid: c72f45ef2638d1c45a7a501f991b680a, type: 3}
+      propertyPath: 'directionSprites.Array.data[2]'
+      value: 
+      objectReference: {fileID: 21300000, guid: 3d6c0e7c38a2875499c475d2df6b4378, type: 3}
+    - target: {fileID: 3744457791661226772, guid: c72f45ef2638d1c45a7a501f991b680a, type: 3}
+      propertyPath: 'directionSprites.Array.data[3]'
+      value: 
+      objectReference: {fileID: 21300000, guid: 43b97cb9f3978dc49a7ee28c7aa2dc5f, type: 3}
     - target: {fileID: 8372036298024693223, guid: c72f45ef2638d1c45a7a501f991b680a, type: 3}
       propertyPath: m_Name
       value: Player
@@ -3367,6 +3396,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8372036298024693223, guid: c72f45ef2638d1c45a7a501f991b680a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1941498156}
+    - targetCorrespondingSourceObject: {fileID: 8372036298024693223, guid: c72f45ef2638d1c45a7a501f991b680a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1941498162}
   m_SourcePrefab: {fileID: 100100000, guid: c72f45ef2638d1c45a7a501f991b680a, type: 3}
 --- !u!1 &1765566269 stripped
 GameObject:
@@ -3441,6 +3473,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BugFarmer.Player.BreakingController
   breakClickInterval: 0.5
   maxBreakDistance: 2
+--- !u!114 &1941498162
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1765566269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f45e44674df354543a2e3e251f570846, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BugFarmer.Player.PickupController
+  pickupRange: 2
+  highlightRange: 3
 --- !u!1 &1953283314
 GameObject:
   m_ObjectHideFlags: 0

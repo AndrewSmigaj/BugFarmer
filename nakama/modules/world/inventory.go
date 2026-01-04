@@ -49,6 +49,17 @@ func (p *PlayerState) RemoveBugs(slotIndex int, count int) bool {
 	return true
 }
 
+// FindItem finds the first slot containing the given item ID.
+// Returns the slot index, or -1 if not found.
+func (p *PlayerState) FindItem(itemID string) int {
+	for i := range p.ItemSlots {
+		if p.ItemSlots[i].ItemID == itemID && p.ItemSlots[i].Count > 0 {
+			return i
+		}
+	}
+	return -1
+}
+
 // AddItem adds a tool to the player's item inventory.
 // Returns the slot index that was modified, or -1 if inventory is full.
 func (p *PlayerState) AddItem(itemID string, count int) int {

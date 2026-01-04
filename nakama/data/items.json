@@ -134,5 +134,201 @@
     "durability": 100,
     "buy_price": 60,
     "sell_price": 25
+  },
+
+  "wood": {
+    "name": "Wood",
+    "category": "resource",
+    "sell_price": 2
+  },
+  "stone": {
+    "name": "Stone",
+    "category": "resource",
+    "sell_price": 2
+  },
+  "fiber": {
+    "name": "Plant Fiber",
+    "category": "resource",
+    "sell_price": 1
+  },
+  "flower": {
+    "name": "Flower",
+    "category": "resource",
+    "sell_price": 3
+  },
+  "crystal": {
+    "name": "Crystal",
+    "category": "resource",
+    "sell_price": 15
+  },
+  "bone": {
+    "name": "Bone",
+    "category": "resource",
+    "sell_price": 5
+  },
+  "clay": {
+    "name": "Clay",
+    "category": "resource",
+    "sell_price": 3
+  },
+  "coal": {
+    "name": "Coal",
+    "category": "resource",
+    "sell_price": 4
+  },
+  "dirt": {
+    "name": "Dirt",
+    "category": "resource",
+    "sell_price": 1
+  },
+  "copper_ore": {
+    "name": "Copper Ore",
+    "category": "resource",
+    "sell_price": 8
+  },
+  "iron_ore": {
+    "name": "Iron Ore",
+    "category": "resource",
+    "sell_price": 12
+  },
+  "silver_ore": {
+    "name": "Silver Ore",
+    "category": "resource",
+    "sell_price": 20
+  },
+  "gold_ore": {
+    "name": "Gold Ore",
+    "category": "resource",
+    "sell_price": 30
+  },
+  "platinum_ore": {
+    "name": "Platinum Ore",
+    "category": "resource",
+    "sell_price": 50
+  },
+  "diamond": {
+    "name": "Diamond",
+    "category": "resource",
+    "sell_price": 100
+  },
+  "iron_bar": {
+    "name": "Iron Bar",
+    "category": "resource",
+    "sell_price": 25
+  },
+  "brick": {
+    "name": "Brick",
+    "category": "resource",
+    "sell_price": 5
+  },
+  "sunflower_seed": {
+    "name": "Sunflower Seed",
+    "category": "resource",
+    "sell_price": 2
+  },
+  "mushroom_red": {
+    "name": "Red Mushroom",
+    "category": "resource",
+    "sell_price": 5
+  },
+  "mushroom_glow": {
+    "name": "Glowing Mushroom",
+    "category": "resource",
+    "sell_price": 10
+  },
+  "torch": {
+    "name": "Torch",
+    "category": "placeable",
+    "sell_price": 2
+  },
+  "door_wood": {
+    "name": "Wooden Door",
+    "category": "placeable",
+    "sell_price": 8
+  },
+  "door_iron": {
+    "name": "Iron Door",
+    "category": "placeable",
+    "sell_price": 20
+  },
+  "workbench": {
+    "name": "Workbench",
+    "category": "placeable",
+    "sell_price": 15
+  },
+  "furnace": {
+    "name": "Furnace",
+    "category": "placeable",
+    "sell_price": 25
+  },
+  "anvil": {
+    "name": "Anvil",
+    "category": "placeable",
+    "sell_price": 40
+  },
+  "table_wood": {
+    "name": "Wooden Table",
+    "category": "placeable",
+    "sell_price": 10
+  },
+  "table_stone": {
+    "name": "Stone Table",
+    "category": "placeable",
+    "sell_price": 15
+  },
+  "chair_wood": {
+    "name": "Wooden Chair",
+    "category": "placeable",
+    "sell_price": 5
+  },
+  "bed_basic": {
+    "name": "Basic Bed",
+    "category": "placeable",
+    "sell_price": 20
+  },
+  "chest_wood": {
+    "name": "Wooden Chest",
+    "category": "placeable",
+    "sell_price": 15
+  },
+  "barrel": {
+    "name": "Barrel",
+    "category": "placeable",
+    "sell_price": 8
+  },
+  "crate": {
+    "name": "Crate",
+    "category": "placeable",
+    "sell_price": 5
+  },
+  "bookshelf": {
+    "name": "Bookshelf",
+    "category": "placeable",
+    "sell_price": 12
+  },
+  "lamp_floor": {
+    "name": "Floor Lamp",
+    "category": "placeable",
+    "sell_price": 10
+  },
+  "beehive_basic": {
+    "name": "Basic Beehive",
+    "category": "placeable",
+    "sell_price": 25
+  },
+  "beehive_medium": {
+    "name": "Medium Beehive",
+    "category": "placeable",
+    "sell_price": 50
+  },
+  "honey_extractor": {
+    "name": "Honey Extractor",
+    "category": "placeable",
+    "sell_price": 75
+  },
+  "signpost": {
+    "name": "Signpost",
+    "category": "placeable",
+    "sell_price": 3
   }
 }

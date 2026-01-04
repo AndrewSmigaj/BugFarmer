@@ -441,7 +441,7 @@ def create_butterfly_icon(size):
 
 
 def main():
-    output_dir = "/mnt/c/Users/emily/BugFarmer/BugFarmerClient/Assets/Sprites/Items"
+    output_dir = "/mnt/c/Users/emily/BugFarmer/BugFarmerClient/Assets/Resources/Items"
     os.makedirs(output_dir, exist_ok=True)
 
     size = 24  # All icons are 24x24

@@ -12,6 +12,11 @@ namespace BugFarmer.Networking
         public const int ChunkData = 44;      // S->C: Full chunk on subscribe
         public const int BreakProgress = 45;  // S->C: Breaking progress update
         public const int WorldUpdate = 46;    // S->C: Single cell changed
+
+        // Ground Items (Phase 5)
+        public const int GroundItemSpawn = 47;  // S->C: Item dropped on ground
+        public const int GroundItemRemove = 48; // S->C: Item picked up/despawned
+        public const int PickupItem = 49;       // C->S: Player picks up item
     }
 
     // === Client -> Server Messages ===
@@ -76,6 +81,42 @@ namespace BugFarmer.Networking
         public int current_hp;
         public int max_hp;
         public string player_id;
+    }
+
+    // === Ground Item Messages (Phase 5) ===
+
+    /// <summary>
+    /// Ground item spawned (OpCode 47).
+    /// Matches server GroundItemSpawnMessage in messages.go
+    /// </summary>
+    [Serializable]
+    public class GroundItemSpawnMessage
+    {
+        public string id;        // Unique instance ID
+        public string item_type; // Type of item (e.g., "rock_small")
+        public int count;        // Stack count
+        public float x;          // World X position
+        public float y;          // World Y position
+    }
+
+    /// <summary>
+    /// Ground item removed (OpCode 48).
+    /// Matches server GroundItemRemoveMessage in messages.go
+    /// </summary>
+    [Serializable]
+    public class GroundItemRemoveMessage
+    {
+        public string id; // Unique instance ID to remove
+    }
+
+    /// <summary>
+    /// Pickup item request (OpCode 49).
+    /// Matches server PickupItemMessage in messages.go
+    /// </summary>
+    [Serializable]
+    public class PickupItemMessage
+    {
+        public string id; // Unique instance ID to pick up
     }
 
     // === Notes on ChunkData and WorldUpdate ===

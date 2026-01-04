@@ -50,6 +50,13 @@ const (
 	OpCodeWorldUpdate   int64 = 46 // S→C: Single cell changed
 )
 
+// Ground Item OpCodes (Phase 5)
+const (
+	OpCodeGroundItemSpawn  int64 = 47 // S→C: Item dropped on ground
+	OpCodeGroundItemRemove int64 = 48 // S→C: Item picked up/despawned
+	OpCodePickupItem       int64 = 49 // C→S: Player picks up item
+)
+
 // === Client → Server Messages ===
 
 // MovementMessage is sent by clients (OpCode 1)
@@ -200,4 +207,25 @@ type BreakProgressMessage struct {
 	CurrentHP int    `json:"current_hp"`
 	MaxHP     int    `json:"max_hp"`
 	PlayerID  string `json:"player_id"`
+}
+
+// === Ground Item Messages (Phase 5) ===
+
+// GroundItemSpawnMessage is sent to client (OpCode 47)
+type GroundItemSpawnMessage struct {
+	ID       string  `json:"id"`        // Unique instance ID
+	ItemType string  `json:"item_type"` // Type of item (e.g., "rock_small")
+	Count    int     `json:"count"`     // Stack count
+	X        float32 `json:"x"`         // World X position
+	Y        float32 `json:"y"`         // World Y position
+}
+
+// GroundItemRemoveMessage is sent to client (OpCode 48)
+type GroundItemRemoveMessage struct {
+	ID string `json:"id"` // Unique instance ID to remove
+}
+
+// PickupItemMessage is sent by client (OpCode 49)
+type PickupItemMessage struct {
+	ID string `json:"id"` // Unique instance ID to pick up
 }

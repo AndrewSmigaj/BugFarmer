@@ -80,18 +80,24 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 	state.CurrentZone = zoneConfig
 	logger.Info("Loaded zone: %s", zoneConfig.ZoneID)
 
-	// Load tile and occupant definitions (Phase 4)
+	// Load tile definitions (Phase 4)
 	state.TileDefs, err = LoadTileDefinitions("data/tiles.json")
 	if err != nil {
 		logger.Warn("Failed to load tile definitions: %v", err)
 	} else {
 		logger.Info("Loaded %d tile definitions", len(state.TileDefs))
 	}
-	state.OccupantDefs, err = LoadOccupantDefinitions("data/occupants.json")
+
+	// Load entity definitions from unified entity system
+	var warnings []string
+	state.Entities, warnings, err = LoadAllEntities("data")
 	if err != nil {
-		logger.Warn("Failed to load occupant definitions: %v", err)
+		logger.Warn("Failed to load entity definitions: %v", err)
 	} else {
-		logger.Info("Loaded %d occupant definitions", len(state.OccupantDefs))
+		logger.Info("Loaded %d entity definitions", len(state.Entities))
+		for _, w := range warnings {
+			logger.Warn("Entity loading: %s", w)
+		}
 	}
 
 	// Spawn initial swarms for testing
@@ -301,6 +307,13 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				continue
 			}
 			m.handleTileBreak(logger, dispatcher, worldState, userID, breakMsg, worldState.TickCount)
+
+		case OpCodePickupItem:
+			var pickupMsg PickupItemMessage
+			if err := json.Unmarshal(msg.GetData(), &pickupMsg); err != nil {
+				continue
+			}
+			m.handlePickupItem(logger, dispatcher, worldState, userID, pickupMsg)
 		}
 	}
 
@@ -366,6 +379,9 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			dispatcher.BroadcastMessage(OpCodeSwarmUpdate, data, nil, nil, true)
 		}
 	}
+
+	// Update ground item lifetimes
+	m.updateGroundItemLifetimes(logger, dispatcher, worldState, deltaTime)
 
 	// Return state to continue (never nil for persistent world)
 	return worldState
@@ -752,4 +768,29 @@ func (m *Match) handleMoveSlot(
 
 	logger.Debug("Player %s moved slot %s[%d] -> %s[%d]",
 		playerID, msg.SourceType, msg.SourceIndex, msg.DestType, msg.DestIndex)
+}
+
+// updateGroundItemLifetimes decrements item lifetimes and removes expired items
+func (m *Match) updateGroundItemLifetimes(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	deltaTime float32,
+) {
+	var expired []string
+
+	for id, item := range state.GroundItems {
+		item.Lifetime -= deltaTime
+		if item.Lifetime <= 0 {
+			expired = append(expired, id)
+		}
+	}
+
+	for _, id := range expired {
+		item := state.GroundItems[id]
+		delete(state.GroundItems, id)
+
+		removeMsg := GroundItemRemoveMessage{ID: id}
+		m.broadcastToChunk(dispatcher, state, item.Position.ChunkX, item.Position.ChunkY, OpCodeGroundItemRemove, removeMsg)
+	}
 }

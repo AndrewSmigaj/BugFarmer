@@ -61,13 +61,21 @@ namespace BugFarmer.UI
 
         public static Sprite GetSprite(string itemId)
         {
-            if (string.IsNullOrEmpty(itemId) || Instance == null)
+            if (string.IsNullOrEmpty(itemId))
                 return null;
 
-            if (Instance._lookup == null)
-                Instance.BuildLookup();
+            // Try manual lookup first
+            if (Instance != null)
+            {
+                if (Instance._lookup == null)
+                    Instance.BuildLookup();
 
-            return Instance._lookup.TryGetValue(itemId, out var entry) ? entry.icon : null;
+                if (Instance._lookup.TryGetValue(itemId, out var entry) && entry.icon != null)
+                    return entry.icon;
+            }
+
+            // Fallback: load by convention from Resources/Items/
+            return Resources.Load<Sprite>($"Items/{itemId}");
         }
 
         public static string GetDisplayName(string itemId)

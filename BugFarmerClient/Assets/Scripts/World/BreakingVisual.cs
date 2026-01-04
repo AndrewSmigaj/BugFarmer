@@ -5,7 +5,7 @@ namespace BugFarmer.World
     /// <summary>
     /// Visual feedback for breaking/mining progress.
     /// Displays crack overlay sprites as HP decreases.
-    /// Requires break stage sprites to be assigned in TileDatabase or prefab.
+    /// Requires break stage sprites from Resources/Sprites/Effects/break_stage_*.png
     /// </summary>
     public class BreakingVisual : MonoBehaviour
     {

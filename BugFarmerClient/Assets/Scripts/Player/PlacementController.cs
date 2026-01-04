@@ -1,4 +1,5 @@
 using UnityEngine;
+using BugFarmer.Data;
 using BugFarmer.Networking;
 using BugFarmer.World;
 using BugFarmer.UI;
@@ -76,8 +77,7 @@ namespace BugFarmer.Player
         private void UpdatePlacementMode()
         {
             string itemId = InventoryManager.Instance?.GetEquippedToolId() ?? "";
-            bool isPlaceable = !string.IsNullOrEmpty(itemId) &&
-                               (TileDatabase.Instance?.IsPlaceable(itemId) ?? false);
+            bool isPlaceable = !string.IsNullOrEmpty(itemId) && EntityDatabase.IsPlaceable(itemId);
 
             if (isPlaceable && itemId != _currentPlaceableId)
             {
@@ -87,7 +87,7 @@ namespace BugFarmer.Player
 
                 if (ghostPreview != null)
                 {
-                    ghostPreview.sprite = TileDatabase.Instance?.GetOccupantSprite(itemId);
+                    ghostPreview.sprite = EntityDatabase.GetWorldSprite(itemId);
                     ghostPreview.gameObject.SetActive(true);
                 }
             }
@@ -121,7 +121,7 @@ namespace BugFarmer.Player
             if (Vector3.Distance(transform.position, cellWorld) > maxPlaceDistance)
                 return false;
 
-            Vector2Int size = TileDatabase.Instance?.GetOccupantCellSize(_currentPlaceableId) ?? Vector2Int.one;
+            Vector2Int size = EntityDatabase.GetFootprint(_currentPlaceableId, _placementDirection);
             for (int dy = 0; dy < size.y; dy++)
             {
                 for (int dx = 0; dx < size.x; dx++)

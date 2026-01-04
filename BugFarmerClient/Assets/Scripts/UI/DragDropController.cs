@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
+using BugFarmer.Data;
 using BugFarmer.Networking;
 
 namespace BugFarmer.UI
@@ -333,7 +334,7 @@ namespace BugFarmer.UI
             {
                 if (HasCursorItem)
                 {
-                    cursorIcon.sprite = ItemDatabase.GetSprite(_cursorItemId);
+                    cursorIcon.sprite = EntityDatabase.GetItemSprite(_cursorItemId);
                     cursorIcon.enabled = cursorIcon.sprite != null;
                 }
                 else

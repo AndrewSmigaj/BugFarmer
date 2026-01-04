@@ -1,0 +1,564 @@
+{
+  "_comment": "Placeable items: exist in inventory AND world. Sprites: Items/{id}.png for inventory, Placeables/{id}.png for world",
+
+  "dirt_block": {
+    "name": "Dirt Block",
+    "category": "block",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 4,
+        "required_tool_type": "shovel",
+        "drops": [{"item_id": "dirt_block", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "stone_block": {
+    "name": "Stone Block",
+    "category": "block",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 2,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 4,
+        "required_tool_type": "pickaxe",
+        "required_tool_tier": 1,
+        "drops": [{"item_id": "stone_block", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "clay_block": {
+    "name": "Clay Block",
+    "category": "block",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 3,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 3,
+        "required_tool_type": "shovel",
+        "drops": [{"item_id": "clay_block", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+
+  "fence_wood": {
+    "name": "Wooden Fence",
+    "category": "structure",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 3,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "fence_wood", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "fence_stone": {
+    "name": "Stone Fence",
+    "category": "structure",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 4,
+        "required_tool_type": "pickaxe",
+        "drops": [{"item_id": "fence_stone", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "fence_iron": {
+    "name": "Iron Fence",
+    "category": "structure",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 10,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 6,
+        "required_tool_type": "pickaxe",
+        "drops": [{"item_id": "fence_iron", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "fence_electric": {
+    "name": "Electric Fence",
+    "category": "structure",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 15,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 4,
+        "required_tool_type": "pickaxe",
+        "drops": [{"item_id": "fence_electric", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "gate_wood": {
+    "name": "Wooden Gate",
+    "category": "structure",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "door",
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "gate_wood", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "gate_iron": {
+    "name": "Iron Gate",
+    "category": "structure",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 12,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "door",
+      "breakable": {
+        "hp": 4,
+        "required_tool_type": "pickaxe",
+        "drops": [{"item_id": "gate_iron", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "wall_wood": {
+    "name": "Wooden Wall",
+    "category": "structure",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 4,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 3,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "wall_wood", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "wall_stone": {
+    "name": "Stone Wall",
+    "category": "structure",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 6,
+        "required_tool_type": "pickaxe",
+        "drops": [{"item_id": "wall_stone", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "wall_brick": {
+    "name": "Brick Wall",
+    "category": "structure",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 8,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 8,
+        "required_tool_type": "pickaxe",
+        "drops": [{"item_id": "wall_brick", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "door_wood": {
+    "name": "Wooden Door",
+    "category": "structure",
+    "stackable": false,
+    "sell_price": 8,
+    "world": {
+      "footprint": [1, 2],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "door",
+      "rotatable": true,
+      "directions": 4,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "door_wood", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "door_iron": {
+    "name": "Iron Door",
+    "category": "structure",
+    "stackable": false,
+    "sell_price": 20,
+    "world": {
+      "footprint": [1, 2],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "door",
+      "rotatable": true,
+      "directions": 4,
+      "breakable": {
+        "hp": 4,
+        "required_tool_type": "pickaxe",
+        "drops": [{"item_id": "door_iron", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+
+  "workbench": {
+    "name": "Workbench",
+    "category": "crafting",
+    "stackable": false,
+    "sell_price": 15,
+    "world": {
+      "footprint": [2, 1],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "craft",
+      "breakable": {
+        "hp": 3,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "workbench", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "furnace": {
+    "name": "Furnace",
+    "category": "crafting",
+    "stackable": false,
+    "sell_price": 25,
+    "world": {
+      "footprint": [2, 2],
+      "pivot": "bc",
+      "blocks_players": true,
+      "interactable": true,
+      "interaction_type": "craft",
+      "breakable": {
+        "hp": 6,
+        "required_tool_type": "pickaxe",
+        "drops": [{"item_id": "furnace", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "anvil": {
+    "name": "Anvil",
+    "category": "crafting",
+    "stackable": false,
+    "sell_price": 40,
+    "world": {
+      "footprint": [2, 1],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "craft",
+      "breakable": {
+        "hp": 8,
+        "required_tool_type": "pickaxe",
+        "drops": [{"item_id": "anvil", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+
+  "table_wood": {
+    "name": "Wooden Table",
+    "category": "furniture",
+    "stackable": false,
+    "sell_price": 10,
+    "world": {
+      "footprint": [2, 2],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "table_wood", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "table_stone": {
+    "name": "Stone Table",
+    "category": "furniture",
+    "stackable": false,
+    "sell_price": 15,
+    "world": {
+      "footprint": [2, 2],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 4,
+        "required_tool_type": "pickaxe",
+        "drops": [{"item_id": "table_stone", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "chair_wood": {
+    "name": "Wooden Chair",
+    "category": "furniture",
+    "stackable": false,
+    "sell_price": 5,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "rotatable": true,
+      "directions": 4,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "chair_wood", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "bed_basic": {
+    "name": "Basic Bed",
+    "category": "furniture",
+    "stackable": false,
+    "sell_price": 20,
+    "world": {
+      "footprint": [2, 4],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "sleep",
+      "rotatable": true,
+      "directions": 4,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "bed_basic", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "bookshelf": {
+    "name": "Bookshelf",
+    "category": "furniture",
+    "stackable": false,
+    "sell_price": 12,
+    "world": {
+      "footprint": [1, 2],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "bookshelf", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+
+  "chest_wood": {
+    "name": "Wooden Chest",
+    "category": "storage",
+    "stackable": false,
+    "sell_price": 15,
+    "world": {
+      "footprint": [2, 1],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "storage",
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "chest_wood", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "barrel": {
+    "name": "Barrel",
+    "category": "storage",
+    "stackable": false,
+    "sell_price": 8,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "storage",
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "barrel", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "crate": {
+    "name": "Crate",
+    "category": "storage",
+    "stackable": false,
+    "sell_price": 5,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "c",
+      "interactable": true,
+      "interaction_type": "storage",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "crate", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+
+  "torch": {
+    "name": "Torch",
+    "category": "lighting",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 2,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "drops": [{"item_id": "torch", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "lamp_floor": {
+    "name": "Floor Lamp",
+    "category": "lighting",
+    "stackable": false,
+    "sell_price": 10,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "lamp_floor", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+
+  "beehive_basic": {
+    "name": "Basic Beehive",
+    "category": "beekeeping",
+    "stackable": false,
+    "sell_price": 25,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "beehive",
+      "breakable": {
+        "hp": 3,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "beehive_basic", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "beehive_medium": {
+    "name": "Medium Beehive",
+    "category": "beekeeping",
+    "stackable": false,
+    "sell_price": 50,
+    "world": {
+      "footprint": [2, 1],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "beehive",
+      "breakable": {
+        "hp": 4,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "beehive_medium", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "honey_extractor": {
+    "name": "Honey Extractor",
+    "category": "beekeeping",
+    "stackable": false,
+    "sell_price": 75,
+    "world": {
+      "footprint": [2, 2],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "craft",
+      "breakable": {
+        "hp": 5,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "honey_extractor", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+
+  "signpost": {
+    "name": "Signpost",
+    "category": "structure",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 3,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "sign",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "signpost", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "well": {
+    "name": "Well",
+    "category": "structure",
+    "stackable": false,
+    "sell_price": 50,
+    "world": {
+      "footprint": [2, 2],
+      "pivot": "bc",
+      "blocks_players": true,
+      "interactable": true,
+      "interaction_type": "well",
+      "breakable": {
+        "hp": 10,
+        "required_tool_type": "pickaxe",
+        "drops": [
+          {"item_id": "stone", "count": 4, "chance": 1.0}
+        ]
+      }
+    }
+  }
+}

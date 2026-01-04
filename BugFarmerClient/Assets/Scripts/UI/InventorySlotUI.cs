@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
+using BugFarmer.Data;
 using BugFarmer.Networking;
 
 namespace BugFarmer.UI
@@ -47,7 +48,7 @@ namespace BugFarmer.UI
 
             if (iconImage != null)
             {
-                var sprite = ItemDatabase.GetSprite(slot.item_id);
+                var sprite = EntityDatabase.GetItemSprite(slot.item_id);
                 iconImage.sprite = sprite;
                 iconImage.enabled = sprite != null;
             }
