@@ -421,12 +421,40 @@ type SwarmGroup struct {
 }
 ```
 
+### Drift Detection (Sample-Based)
+
+Full snapshots are expensive (1000 bugs × 12 bytes = 12KB per swarm). Since deterministic RNG keeps players in sync most of the time, we use **sample-based drift detection** to minimize bandwidth:
+
+```
+Every 30 seconds per active swarm:
+
+1. Server picks 5-10 random bug IDs from swarm roster
+2. Server requests those positions from ONE player
+3. Server broadcasts sample: {swarm_id, tick, samples: [{id, x, y}, ...]}
+4. Each player compares their local positions for those same IDs
+5. If max_distance < 0.5 blocks: do nothing (in sync)
+6. If max_distance >= 0.5 blocks: player requests full snapshot
+```
+
+**Bandwidth comparison:**
+| Scenario | Full Snapshot | Sample Check |
+|----------|---------------|--------------|
+| 1000 bugs | ~12 KB | ~120 bytes (10 samples) |
+| In sync | Wasted 12 KB | 120 bytes, no action |
+| Drifted | 12 KB | 120 bytes + 12 KB (only when needed) |
+
+**Why sample-based works:**
+- Floating point drift is gradual and affects all bugs similarly
+- Random sampling catches drift over multiple 30-second checks
+- Threshold (0.5 blocks) allows imperceptible differences
+- Hash-based would fail on any tiny difference (useless for our case)
+
 ### Snapshot Triggers
 
-Server requests bug positions from a player when:
+Full snapshot is only sent when actually needed:
 
-1. **Late joiner enters active chunk** - immediate request
-2. **Periodic drift correction** - every 30 seconds per chunk
+1. **Late joiner enters active chunk** - immediate full snapshot (no local state to compare)
+2. **Drift detected via sample check** - player requests full snapshot for that swarm
 3. **Manual debug** - /sync command for testing
 
 If the requested player doesn't respond within 2 seconds, server tries another player in the chunk.
@@ -468,19 +496,32 @@ Occupant collision data comes from `placeables.json` / `occupants.json`:
 }
 ```
 
-### Snapshot Sync (For Late Joiners & Drift)
+### Sync Flow (Sample Check + On-Demand Snapshot)
 
-Sync is NOT real-time authority. It's periodic correction:
-
-1. Server periodically requests bug positions from ONE player in chunk
-2. If player doesn't respond in ~1-2 seconds, try another player
-3. Server relays snapshot to players who need it (late joiners, or periodic resync)
-4. A 1-2 second delay is acceptable for sync purposes
-
+**Normal operation (players in sync):**
 ```
-Server: "Hey Player A, send me bug positions for chunk 5"
-Player A: [sends snapshot]
-Server: [relays to Player B who just joined, or to all for drift correction]
+Server: "Player A, send positions for bugs [3, 17, 42, 88, 156]"
+Player A: [{3, 10.23, 5.67}, {17, 8.91, 12.34}, ...]  (120 bytes)
+Server: Broadcasts sample to all players
+Player B: Compares local bugs 3, 17, 42... all within 0.5 blocks. Done.
+Player C: Compares local bugs 3, 17, 42... all within 0.5 blocks. Done.
+```
+
+**Drift detected:**
+```
+Player D: Bug 42 is at (15.2, 9.8) locally, sample says (12.1, 8.2)
+         Distance = 3.4 blocks > 0.5 threshold
+Player D: Sends RequestFullSnapshot to server
+Server: Requests full snapshot from Player A, relays to Player D
+Player D: Replaces local bug positions with snapshot
+```
+
+**Late joiner (no local state):**
+```
+Player E: Joins chunk, has no bugs spawned yet
+Server: Immediately requests full snapshot from Player A
+Server: Sends snapshot to Player E
+Player E: Spawns bugs at snapshot positions, starts simulating
 ```
 
 ### BugAgent Data Model (All Clients)
@@ -594,28 +635,58 @@ public static class BugMovement {
 ```go
 // TO IMPLEMENT
 const (
-    OpCodeRequestSnapshot int64 = 61 // Server → Client: "Send me bug positions"
-    OpCodeBugSnapshot     int64 = 62 // Client → Server: Bug positions response
-    OpCodeSyncSnapshot    int64 = 63 // Server → Clients: Relayed positions for sync
+    // Sample-based drift detection (lightweight, every 30s)
+    OpCodeRequestSample   int64 = 61 // Server → Client: "Send positions for these bug IDs"
+    OpCodeSampleResponse  int64 = 62 // Client → Server: Positions for requested bugs
+    OpCodeSampleBroadcast int64 = 63 // Server → Clients: Sample for local comparison
+
+    // Full snapshot (only when needed)
+    OpCodeRequestSnapshot int64 = 66 // Client → Server: "I'm drifted, send full snapshot"
+    OpCodeFullSnapshot    int64 = 67 // Server → Client: Full bug positions for resync
 )
 ```
 
-**Server requests snapshot:**
+**Sample request (server picks random bug IDs):**
+```go
+type SampleRequestMessage struct {
+    SwarmID  string `json:"swarm_id"`
+    BugIDs   []int  `json:"bug_ids"`  // 5-10 random IDs to sample
+}
+```
+
+**Sample response (player sends positions for requested IDs):**
+```go
+type SampleResponseMessage struct {
+    SwarmID  string            `json:"swarm_id"`
+    Tick     int64             `json:"tick"`
+    Samples  []BugPositionData `json:"samples"`  // Only the requested bugs
+}
+```
+
+**Sample broadcast (server relays to all players for comparison):**
+```go
+type SampleBroadcastMessage struct {
+    SwarmID  string            `json:"swarm_id"`
+    Tick     int64             `json:"tick"`
+    Samples  []BugPositionData `json:"samples"`  // ~120 bytes for 10 samples
+}
+// Each player compares local positions, requests full snapshot if drift > 0.5 blocks
+```
+
+**Full snapshot request (player detected drift):**
 ```go
 type SnapshotRequestMessage struct {
-    ChunkID int `json:"chunk_id"`
     SwarmID string `json:"swarm_id"`
 }
 ```
 
-**Client responds with positions:**
+**Full snapshot (only sent on-demand):**
 ```go
-type BugSnapshotMessage struct {
-    ChunkID   int               `json:"chunk_id"`
+type FullSnapshotMessage struct {
     SwarmID   string            `json:"swarm_id"`
     Tick      int64             `json:"tick"`
-    Seed      int64             `json:"seed"`  // For deterministic sim continuation
-    Bugs      []BugPositionData `json:"bugs"`
+    Seed      int64             `json:"seed"`
+    Bugs      []BugPositionData `json:"bugs"`  // All bugs in swarm
 }
 
 type BugPositionData struct {
@@ -990,7 +1061,7 @@ private void HandleSplitCheckRequest() {
 | `nakama/modules/entities/swarm.go` | MODIFY - add Members map, meters, behavior | 1-3 |
 | `nakama/modules/entities/species.go` | MODIFY - add CollisionBehavior, IntentType, AttractedTo | 1 |
 | `nakama/modules/world/state.go` | MODIFY - add GlobalSimTick | 1 |
-| `nakama/modules/world/messages.go` | MODIFY - add OpCodes 50-65, snapshot/split check msgs | 1-2 |
+| `nakama/modules/world/messages.go` | MODIFY - add OpCodes 50-67, sample/snapshot/split msgs | 1-2 |
 | `nakama/modules/world/match.go` | MODIFY - add snapshot/split request logic, tick sync | 1-2 |
 | `nakama/modules/entities/behavior.go` | CREATE - swarm-level behavior (targeting, idle) | 3 |
 
@@ -998,9 +1069,9 @@ private void HandleSplitCheckRequest() {
 
 | File | Action | Phase |
 |------|--------|-------|
-| `BugMessages.cs` | MODIFY - add snapshot messages, OpCodes 61-65 | 1 |
-| `SwarmVisual.cs` | MODIFY - local simulation, snapshot/split check handlers | 1-3 |
-| `SwarmManager.cs` | MODIFY - handle OpCodes 50-65, tick sync | 1-2 |
+| `BugMessages.cs` | MODIFY - add sample/snapshot messages, OpCodes 61-67 | 1 |
+| `SwarmVisual.cs` | MODIFY - local simulation, sample comparison, snapshot handlers | 1-3 |
+| `SwarmManager.cs` | MODIFY - handle OpCodes 50-67, tick sync, drift detection | 1-2 |
 | `BugMovement.cs` | CREATE - local collision resolution (all clients run) | 1 |
 | `DeterministicRandom.cs` | CREATE - seeded PRNG for deterministic sim | 1 |
 | `TileDatabase.cs` | MODIFY - ensure blocks_bugs accessible | 1 |
@@ -1016,7 +1087,8 @@ private void HandleSplitCheckRequest() {
 | **Server Tick** | Server (Nakama) | Swarm-level updates (center, meters) | 10 Hz (100ms) configurable |
 | **Client Sim Tick** | All clients | Local per-bug simulation | 10-60 Hz (match server or higher) |
 | **SwarmUpdate Broadcast** | Server → Clients | Swarm state sync | Every 3 server ticks (300ms) |
-| **Snapshot Sync** | Server requests, client responds | Drift correction, late joiners | Every 30 seconds per chunk, or on late join |
+| **Sample Check** | Server → Clients | Drift detection (10 bug samples) | Every 30 seconds per swarm (~120 bytes) |
+| **Full Snapshot** | On-demand | Resync drifted players, late joiners | Only when drift > 0.5 blocks detected |
 
 ### Server Tick Rate (Swarm-Level)
 - **Tick rate:** 10 ticks per second (100ms per tick) - configurable via WorldConfig.TickRate
@@ -1061,10 +1133,17 @@ public class SwarmManager {
 - Tick counter ensures all clients are "at the same point" in simulation
 - Late joiners receive current tick with snapshot
 
-### Snapshot Sync Rate
-- **Server requests:** On-demand (late joiner, or every 30 seconds for drift correction)
-- **Acceptable delay:** 1-2 seconds is fine for sync purposes
-- **Fallback:** If one player doesn't respond, try another
+### Sample-Based Drift Detection Rate
+- **Sample check:** Every 30 seconds per swarm, server requests 10 bug positions (~120 bytes)
+- **Broadcast:** Server relays sample to all players for local comparison
+- **Threshold:** 0.5 blocks - anything less is imperceptible drift, ignore it
+- **Full snapshot:** Only sent on-demand when player detects drift > threshold
+- **Fallback:** If sampled player doesn't respond in 2 seconds, try another
+
+**Why this scales:**
+- 100 swarms × 120 bytes = 12 KB total every 30 seconds (vs 1.2 MB with full snapshots)
+- Most of the time players are in sync, so no full snapshots needed
+- Only drifted players request full sync, not everyone
 
 ---
 
