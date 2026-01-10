@@ -131,38 +131,51 @@ def build_wood():
 
 
 def build_stone():
-    """Stone chunk: 16x16 - irregular rock with shading."""
+    """Stone chunk: 16x16 - chunky rock with top/front planes and ground contact."""
     d, m, l = [c(x) for x in STONE]
     grid = [[T] * 16 for _ in range(16)]
 
-    # Irregular rock shape
-    shape = [
-        #     x range for each y
-        (3, 7, 11),
-        (4, 5, 12),
-        (5, 4, 13),
+    # Rock shape - top surface (rows 3-9, ~60%) and front face (rows 10-13, ~30%)
+    # Top surface
+    top_shape = [
+        (3, 6, 10),
+        (4, 5, 11),
+        (5, 4, 12),
         (6, 3, 13),
-        (7, 3, 14),
-        (8, 3, 14),
-        (9, 3, 13),
-        (10, 4, 13),
-        (11, 5, 12),
-        (12, 6, 10),
+        (7, 3, 13),
+        (8, 3, 13),
+        (9, 4, 12),
     ]
-
-    for y, x_start, x_end in shape:
+    for y, x_start, x_end in top_shape:
         for x in range(x_start, x_end):
-            # Shading: top-left light, bottom-right dark
-            if x < 7 and y < 7:
-                grid[y][x] = l
-            elif x > 10 or y > 9:
-                grid[y][x] = d
+            if x < 6:
+                grid[y][x] = l  # Left lit
+            elif x > 10:
+                grid[y][x] = m  # Right slightly darker
             else:
-                grid[y][x] = m
+                grid[y][x] = l if y < 5 else m
 
-    # Highlight spot
-    grid[4][6] = l
-    grid[5][5] = l
+    # Clustered texture on top (not random)
+    grid[5][5] = m
+    grid[5][6] = m
+    grid[7][8] = d
+    grid[7][9] = d
+
+    # Front face (darker, rows 10-13)
+    front_shape = [
+        (10, 4, 12),
+        (11, 5, 11),
+        (12, 6, 10),
+        (13, 7, 9),
+    ]
+    for y, x_start, x_end in front_shape:
+        for x in range(x_start, x_end):
+            grid[y][x] = d
+
+    # Ground contact - extra dark bottom
+    ground = (max(0, d[0]-20), max(0, d[1]-20), max(0, d[2]-20), 255)
+    grid[13][7] = ground
+    grid[13][8] = ground
 
     return grid
 
@@ -314,139 +327,199 @@ def build_bone():
 
 
 def build_clay():
-    """Clay ball: 16x16 - rounded lump of clay."""
+    """Clay ball: 16x16 - rounded lump with top/front planes and ground contact."""
     d, m, l = [c(x) for x in CLAY]
     grid = [[T] * 16 for _ in range(16)]
 
-    # Rounded shape
-    shape = [
+    # Top surface (rows 4-9, ~55%)
+    top_shape = [
         (4, 6, 10),
         (5, 5, 11),
         (6, 4, 12),
-        (7, 3, 13),
-        (8, 3, 13),
-        (9, 3, 13),
+        (7, 4, 12),
+        (8, 4, 12),
+        (9, 5, 11),
+    ]
+    for y, x_start, x_end in top_shape:
+        for x in range(x_start, x_end):
+            if x < 7:
+                grid[y][x] = l  # Left lit
+            elif x > 9:
+                grid[y][x] = m
+            else:
+                grid[y][x] = l if y < 6 else m
+
+    # Front face (rows 10-12, ~30%)
+    front_shape = [
         (10, 4, 12),
         (11, 5, 11),
         (12, 6, 10),
     ]
-
-    for y, x_start, x_end in shape:
+    for y, x_start, x_end in front_shape:
         for x in range(x_start, x_end):
-            if x < 7 and y < 8:
-                grid[y][x] = l
-            elif x > 9 or y > 10:
-                grid[y][x] = d
-            else:
-                grid[y][x] = m
+            grid[y][x] = d
+
+    # Ground contact
+    ground = (max(0, d[0]-20), max(0, d[1]-20), max(0, d[2]-20), 255)
+    for x in range(6, 10):
+        grid[12][x] = ground
 
     return grid
 
 
 def build_coal():
-    """Coal chunk: 16x16 - dark irregular chunk."""
+    """Coal chunk: 16x16 - dark irregular chunk with clustered texture and ground contact."""
     d, m, l = [c(x) for x in COAL]
     grid = [[T] * 16 for _ in range(16)]
 
-    # Irregular dark shape
-    shape = [
+    # Top surface (rows 4-9, ~55%)
+    top_shape = [
         (4, 5, 11),
         (5, 4, 12),
         (6, 3, 13),
         (7, 3, 13),
-        (8, 4, 13),
-        (9, 3, 12),
-        (10, 4, 13),
-        (11, 5, 12),
-        (12, 6, 10),
+        (8, 4, 12),
+        (9, 5, 11),
     ]
-
-    for y, x_start, x_end in shape:
+    for y, x_start, x_end in top_shape:
         for x in range(x_start, x_end):
-            # Mostly dark with subtle shading
-            if (x + y) % 4 == 0:
-                grid[y][x] = l  # Subtle highlight
-            elif (x * y) % 5 == 0:
-                grid[y][x] = d
+            if x < 7 and y < 7:
+                grid[y][x] = l  # Top-left highlight
             else:
                 grid[y][x] = m
+
+    # Clustered highlight spots (not random)
+    grid[5][5] = l
+    grid[5][6] = l
+    grid[6][5] = l
+    grid[7][9] = l
+    grid[7][10] = l
+
+    # Front face (rows 10-13, ~35%)
+    front_shape = [
+        (10, 4, 12),
+        (11, 5, 11),
+        (12, 6, 10),
+        (13, 7, 9),
+    ]
+    for y, x_start, x_end in front_shape:
+        for x in range(x_start, x_end):
+            grid[y][x] = d
+
+    # Ground contact
+    ground = (max(0, d[0]-15), max(0, d[1]-15), max(0, d[2]-15), 255)
+    grid[13][7] = ground
+    grid[13][8] = ground
 
     return grid
 
 
 def build_dirt():
-    """Dirt pile: 16x16 - mound of dirt."""
+    """Dirt pile: 16x16 - mound with top/front planes and ground contact."""
     d, m, l = [c(x) for x in DIRT]
     grid = [[T] * 16 for _ in range(16)]
 
-    # Mound shape (wider at bottom)
-    shape = [
+    # Top surface (rows 5-9, ~55%)
+    top_shape = [
         (5, 6, 10),
         (6, 5, 11),
         (7, 4, 12),
         (8, 4, 12),
-        (9, 3, 13),
-        (10, 3, 13),
-        (11, 3, 13),
-        (12, 4, 12),
+        (9, 4, 12),
     ]
-
-    for y, x_start, x_end in shape:
+    for y, x_start, x_end in top_shape:
         for x in range(x_start, x_end):
-            if y < 8:
-                grid[y][x] = l
-            elif y > 10:
-                grid[y][x] = d
-            else:
+            if x < 7:
+                grid[y][x] = l  # Left lit
+            elif x > 9:
                 grid[y][x] = m
-            # Texture
-            if (x + y) % 5 == 0:
-                grid[y][x] = d
+            else:
+                grid[y][x] = l if y < 7 else m
+
+    # Horizontal strata texture (patterned, not random)
+    grid[6][6] = m
+    grid[6][7] = m
+    grid[8][5] = d
+    grid[8][6] = d
+    grid[8][9] = d
+
+    # Front face (rows 10-13, ~35%)
+    front_shape = [
+        (10, 3, 13),
+        (11, 4, 12),
+        (12, 5, 11),
+        (13, 6, 10),
+    ]
+    for y, x_start, x_end in front_shape:
+        for x in range(x_start, x_end):
+            grid[y][x] = d
+
+    # Ground contact - extra dark
+    ground = (max(0, d[0]-25), max(0, d[1]-25), max(0, d[2]-25), 255)
+    for x in range(6, 10):
+        grid[13][x] = ground
 
     return grid
 
 
 def build_ore(ore_palette):
-    """Generic ore: 16x16 - stone base with ore spots."""
+    """Generic ore: 16x16 - stone base with connected ore veins and ground contact."""
     sd, sm, sl = [c(x) for x in STONE]
     od, om, ol = [c(x) for x in ore_palette]
     grid = [[T] * 16 for _ in range(16)]
 
-    # Stone base (same as build_stone)
-    shape = [
-        (3, 7, 11),
-        (4, 5, 12),
-        (5, 4, 13),
+    # Top surface (rows 3-9, ~60%)
+    top_shape = [
+        (3, 6, 10),
+        (4, 5, 11),
+        (5, 4, 12),
         (6, 3, 13),
-        (7, 3, 14),
-        (8, 3, 14),
-        (9, 3, 13),
-        (10, 4, 13),
-        (11, 5, 12),
-        (12, 6, 10),
+        (7, 3, 13),
+        (8, 3, 13),
+        (9, 4, 12),
     ]
-
-    for y, x_start, x_end in shape:
+    for y, x_start, x_end in top_shape:
         for x in range(x_start, x_end):
-            if x < 7 and y < 7:
+            if x < 6:
                 grid[y][x] = sl
-            elif x > 10 or y > 9:
-                grid[y][x] = sd
-            else:
+            elif x > 10:
                 grid[y][x] = sm
+            else:
+                grid[y][x] = sl if y < 5 else sm
 
-    # Ore veins/spots
-    ore_spots = [
-        (5, 6), (6, 9), (7, 5), (8, 8), (8, 11), (9, 6), (10, 9)
+    # Front face (rows 10-13, ~35%)
+    front_shape = [
+        (10, 4, 12),
+        (11, 5, 11),
+        (12, 6, 10),
+        (13, 7, 9),
     ]
-    for x, y in ore_spots:
+    for y, x_start, x_end in front_shape:
+        for x in range(x_start, x_end):
+            grid[y][x] = sd
+
+    # Connected ore vein on top (L-shaped cluster)
+    vein_top = [(5, 5), (5, 6), (6, 6), (6, 7), (7, 7)]
+    for x, y in vein_top:
+        if grid[y][x] != T:
+            grid[y][x] = ol if x < 6 else om
+
+    # Second cluster
+    vein_top2 = [(9, 7), (9, 8), (10, 8)]
+    for x, y in vein_top2:
         if grid[y][x] != T:
             grid[y][x] = om
-            # Highlight on some
-            if x < 8:
-                grid[y][x] = ol
-            elif x > 9:
-                grid[y][x] = od
+
+    # Ore on front face (darker)
+    vein_front = [(6, 10), (7, 10), (7, 11)]
+    for x, y in vein_front:
+        if grid[y][x] != T:
+            grid[y][x] = od
+
+    # Ground contact
+    ground = (max(0, sd[0]-20), max(0, sd[1]-20), max(0, sd[2]-20), 255)
+    grid[13][7] = ground
+    grid[13][8] = ground
 
     return grid
 
@@ -483,11 +556,11 @@ def build_diamond():
 
 
 def build_iron_bar():
-    """Iron bar/ingot: 16x16 - metal ingot shape."""
+    """Iron bar/ingot: 16x16 - metal ingot with ground contact."""
     d, m, l = [c(x) for x in IRON_BAR]
     grid = [[T] * 16 for _ in range(16)]
 
-    # Top face (trapezoid, viewed from above)
+    # Top face (trapezoid, rows 4-6, ~30%)
     grid[4][4] = l; grid[4][5] = l; grid[4][6] = l; grid[4][7] = l
     grid[4][8] = l; grid[4][9] = l; grid[4][10] = m; grid[4][11] = m
     grid[5][4] = l; grid[5][5] = l; grid[5][6] = l; grid[5][7] = m
@@ -495,7 +568,7 @@ def build_iron_bar():
     grid[6][4] = l; grid[6][5] = m; grid[6][6] = m; grid[6][7] = m
     grid[6][8] = m; grid[6][9] = m; grid[6][10] = m; grid[6][11] = d
 
-    # Front face (darker)
+    # Front face (darker, rows 7-11)
     for y in range(7, 12):
         for x in range(3, 13):
             if x == 3:
@@ -509,15 +582,20 @@ def build_iron_bar():
     grid[7][4] = l
     grid[7][5] = l
 
+    # Ground contact
+    ground = (max(0, d[0]-20), max(0, d[1]-20), max(0, d[2]-20), 255)
+    for x in range(3, 13):
+        grid[11][x] = ground
+
     return grid
 
 
 def build_brick():
-    """Brick: 16x16 - single brick."""
+    """Brick: 16x16 - single brick with ground contact."""
     d, m, l = [c(x) for x in BRICK]
     grid = [[T] * 16 for _ in range(16)]
 
-    # Top face (rectangle)
+    # Top face (rectangle, rows 4-6, ~30%)
     for y in range(4, 7):
         for x in range(3, 13):
             if y == 4:
@@ -525,7 +603,7 @@ def build_brick():
             else:
                 grid[y][x] = l if x < 6 else m
 
-    # Front face
+    # Front face (rows 7-11, ~50%)
     for y in range(7, 12):
         for x in range(3, 13):
             if x == 3:
@@ -537,8 +615,11 @@ def build_brick():
 
     # Edge lines
     grid[7][3] = d
+
+    # Ground contact - extra dark bottom
+    ground = (max(0, d[0]-25), max(0, d[1]-25), max(0, d[2]-25), 255)
     for x in range(3, 13):
-        grid[11][x] = d
+        grid[11][x] = ground
 
     return grid
 

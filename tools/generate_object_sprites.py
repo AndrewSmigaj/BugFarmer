@@ -131,10 +131,14 @@ def create_sprite_from_grid(grid):
 # =============================================================================
 
 def build_tree_oak():
-    """Oak tree: 32x48 (2x2 footprint) - round canopy"""
+    """Oak tree: 32x48 (2x2 footprint) - round canopy
+
+    Canopy shows top surface (lit), trunk has front face (dark), grounded
+    """
     grid = [[T] * 32 for _ in range(48)]
 
     # Canopy: oval shape centered, rows 0-35
+    # Top portion (rows 0-22) is lit top surface, bottom (rows 23-35) is front/shadow
     for y in range(36):
         cy, cx = 16, 16
         ry, rx = 16, 14
@@ -148,67 +152,115 @@ def build_tree_oak():
                 x_end = cx + x_range
 
                 for x in range(max(0, x_start), min(32, x_end + 1)):
-                    # Top-left = light, bottom-right = dark
-                    diag = (x - 16) + (y - 16)
-                    if diag < -8:
-                        grid[y][x] = Ll
-                    elif diag < 4:
-                        grid[y][x] = L
-                    else:
-                        grid[y][x] = Ld
+                    # Top vs bottom distinction (plane contrast)
+                    if y < 22:  # Top surface of canopy
+                        if x < 10:
+                            grid[y][x] = Ll
+                        elif x < 22:
+                            grid[y][x] = L
+                        else:
+                            grid[y][x] = Ld
+                    else:  # Front/underside of canopy (darker)
+                        if x < 10:
+                            grid[y][x] = L
+                        else:
+                            grid[y][x] = Ld
 
-    # Trunk: rows 32-47, centered
+    # Edge between canopy top and front
+    for x in range(6, 26):
+        if grid[22][x] != T:
+            grid[22][x] = Ld
+
+    # Trunk: rows 32-47, centered with clear front face
+    # Trunk top portion (32-40) visible, front (41-47) darker
     for y in range(32, 48):
         trunk_half_width = 4 if y < 40 else 3
         trunk_center = 16
 
         for x in range(trunk_center - trunk_half_width, trunk_center + trunk_half_width):
-            if x < trunk_center - 1:
-                grid[y][x] = Wl
-            elif x > trunk_center:
-                grid[y][x] = Wd
-            else:
-                grid[y][x] = W
+            if y < 41:  # Upper trunk visible
+                if x < trunk_center - 1:
+                    grid[y][x] = Wl
+                elif x > trunk_center:
+                    grid[y][x] = Wd
+                else:
+                    grid[y][x] = W
+            else:  # Front face of trunk (darker)
+                if x < trunk_center:
+                    grid[y][x] = W
+                else:
+                    grid[y][x] = Wd
+
+    # Ground contact - extra dark base
+    ground = (max(0, Wd[0]-25), max(0, Wd[1]-25), max(0, Wd[2]-25), 255)
+    for x in range(13, 19):
+        grid[47][x] = ground
 
     return grid
 
 
 def build_tree_pine():
-    """Pine tree: 32x52 (2x2 footprint) - triangular/conical"""
+    """Pine tree: 32x52 (2x2 footprint) - triangular/conical
+
+    Layered canopy with top/front distinction, grounded trunk
+    """
     grid = [[T] * 32 for _ in range(52)]
 
     # Pine: triangular canopy, rows 0-42
+    # Top portion is lit, lower portion darker
     for y in range(42):
         half_width = 2 + int(y * 0.62)
         center = 16
 
         for x in range(max(0, center - half_width), min(32, center + half_width)):
             rel_x = x - center
-            if rel_x < -half_width // 2:
-                grid[y][x] = Pl
-            elif rel_x < half_width // 3:
-                grid[y][x] = P
-            else:
-                grid[y][x] = Pd
 
-    # Trunk: rows 38-51
+            # Add layered effect - alternating bands of light/dark
+            layer = y // 8
+            in_top_of_layer = (y % 8) < 5
+
+            if in_top_of_layer:  # Top of each "tier"
+                if rel_x < -half_width // 2:
+                    grid[y][x] = Pl
+                elif rel_x < half_width // 3:
+                    grid[y][x] = P
+                else:
+                    grid[y][x] = Pd
+            else:  # Front/shadow of each tier
+                if rel_x < 0:
+                    grid[y][x] = P
+                else:
+                    grid[y][x] = Pd
+
+    # Trunk: rows 38-51 with front face
     for y in range(38, 52):
         trunk_half_width = 3
         trunk_center = 16
 
         for x in range(trunk_center - trunk_half_width, trunk_center + trunk_half_width):
-            if x < trunk_center - 1:
-                grid[y][x] = Wl
-            elif x > trunk_center:
-                grid[y][x] = Wd
-            else:
-                grid[y][x] = W
+            if y < 45:  # Upper trunk
+                if x < trunk_center - 1:
+                    grid[y][x] = Wl
+                elif x > trunk_center:
+                    grid[y][x] = Wd
+                else:
+                    grid[y][x] = W
+            else:  # Front face (darker)
+                if x < trunk_center:
+                    grid[y][x] = W
+                else:
+                    grid[y][x] = Wd
+
+    # Ground contact
+    ground = (max(0, Wd[0]-25), max(0, Wd[1]-25), max(0, Wd[2]-25), 255)
+    for x in range(13, 19):
+        grid[51][x] = ground
 
     return grid
 
 
 def build_tree_dead():
-    """Dead tree: 16x32 (1x1 footprint) - bare branches"""
+    """Dead tree: 16x32 (1x1 footprint) - bare branches with ground contact"""
     grid = [[T] * 16 for _ in range(32)]
 
     # Main trunk: center, full height
@@ -222,12 +274,19 @@ def build_tree_dead():
             width = 4
 
         for x in range(trunk_x - width // 2, trunk_x + (width + 1) // 2):
-            if x < trunk_x:
-                grid[y][x] = Dl
-            elif x > trunk_x:
-                grid[y][x] = Dd
+            # Front face distinction in lower half
+            if y >= 22:  # Front face region
+                if x < trunk_x:
+                    grid[y][x] = D
+                else:
+                    grid[y][x] = Dd
             else:
-                grid[y][x] = D
+                if x < trunk_x:
+                    grid[y][x] = Dl
+                elif x > trunk_x:
+                    grid[y][x] = Dd
+                else:
+                    grid[y][x] = D
 
     # Branches extending left and right
     for i in range(6):
@@ -254,30 +313,61 @@ def build_tree_dead():
         if 0 <= x < 16 and 0 <= y < 32:
             grid[y][x] = D
 
+    # Ground contact - dark base
+    ground = (max(0, Dd[0]-20), max(0, Dd[1]-20), max(0, Dd[2]-20), 255)
+    for x in range(6, 11):
+        grid[31][x] = ground
+
     return grid
 
 
 def build_bush():
-    """Bush: 16x16 (1x1 footprint) - small round shrub"""
+    """Bush: 16x16 (1x1 footprint) - chunky shrub with top/front planes
+
+    Top surface (65%) + front face (35%), grounded
+    """
     grid = [[T] * 16 for _ in range(16)]
 
-    cy, cx = 8, 8
-    ry, rx = 6, 7
+    # Bush structure: top surface rows 0-9, front face rows 10-15
+    top_end = 10
 
-    for y in range(16):
-        for x in range(16):
-            dx = (x - cx) / rx
-            dy = (y - cy) / ry
-            dist_sq = dx * dx + dy * dy
+    # Top surface (rows 0-9) - rounded horizontally
+    for y in range(top_end):
+        # Horizontal extent varies for rounded shape
+        margin = max(0, int(2 * (abs(y - 4) / 5)))
+        x_start = 2 + margin
+        x_end = 14 - margin
 
-            if dist_sq <= 1.0:
-                diag = (x - cx) + (y - cy)
-                if diag < -4:
-                    grid[y][x] = Ll
-                elif diag < 2:
-                    grid[y][x] = L
-                else:
-                    grid[y][x] = Ld
+        for x in range(x_start, x_end):
+            # Left-right gradient on top
+            if x < 6:
+                grid[y][x] = Ll
+            elif x < 11:
+                grid[y][x] = L
+            else:
+                grid[y][x] = Ld
+
+    # Front face (rows 10-15) - darker
+    for y in range(10, 16):
+        # Front tapers at bottom
+        margin = (y - 10) // 2
+        x_start = 3 + margin
+        x_end = 13 - margin
+
+        for x in range(x_start, x_end):
+            if x < 6:
+                grid[y][x] = L  # Left edge catches some light
+            else:
+                grid[y][x] = Ld  # Rest is shadow
+
+    # Edge between top and front
+    for x in range(3, 13):
+        grid[9][x] = Ld
+
+    # Ground contact - darker bottom
+    darker = (max(0, Ld[0]-20), max(0, Ld[1]-20), max(0, Ld[2]-20), 255)
+    for x in range(5, 11):
+        grid[15][x] = darker
 
     return grid
 
@@ -289,55 +379,115 @@ def build_bush():
 def build_rock_small():
     """Small rock: 16x16 (1x1 footprint) - 3/4 perspective
 
-    Uses left-right shading for consistency
+    Top surface (65%) + front face (35%), chunky and grounded
     """
     grid = [[T] * 16 for _ in range(16)]
 
-    cy, cx = 8, 8
+    # Rock is a chunky 3D object: top surface rows 0-9, front face rows 10-15
+    top_rows = 10  # 62.5% top
+    front_rows = 6  # 37.5% front
 
-    for y in range(16):
-        for x in range(16):
-            dx = x - cx
-            dy = y - cy
-            dist = (dx * dx + dy * dy) ** 0.5
+    # Top surface (rounded-ish, lighter)
+    for y in range(top_rows):
+        # Horizontal extent varies to create rounded top
+        margin = max(0, int(2 * (abs(y - 4) / 5)))
+        x_start = 2 + margin
+        x_end = 14 - margin
 
-            # Irregular edge
-            threshold = 6.5 + ((x * 3 + y * 7) % 3 - 1) * 0.5
+        for x in range(x_start, x_end):
+            # Left-right gradient on top surface
+            if x < 6:
+                grid[y][x] = Rl
+            elif x < 11:
+                grid[y][x] = R
+            else:
+                grid[y][x] = Rd
 
-            if dist <= threshold:
-                # Left-right shading (x-based)
-                if x < 6:
-                    grid[y][x] = Rl  # Left - lit
-                elif x < 11:
-                    grid[y][x] = R   # Center
-                else:
-                    grid[y][x] = Rd  # Right - shadow
+    # Front face (darker, rows 10-15)
+    darker = (max(0, Rd[0]-25), max(0, Rd[1]-25), max(0, Rd[2]-25), 255)
+    for y in range(10, 16):
+        # Front face tapers at bottom
+        margin = max(0, (y - 10) // 2)
+        x_start = 3 + margin
+        x_end = 13 - margin
+
+        for x in range(x_start, x_end):
+            if x < 6:
+                grid[y][x] = Rd  # Left of front gets some light
+            else:
+                grid[y][x] = darker  # Rest is deep shadow
+
+    # Ground contact - extra dark bottom edge
+    ground = (max(0, Rd[0]-40), max(0, Rd[1]-40), max(0, Rd[2]-40), 255)
+    for x in range(5, 11):
+        grid[15][x] = ground
+
+    # Edge line between top and front
+    for x in range(3, 13):
+        grid[9][x] = Rd
 
     return grid
 
 
 def build_rock_large():
-    """Large rock: 32x32 (2x2 footprint) - 3/4 perspective"""
+    """Large rock: 32x32 (2x2 footprint) - 3/4 perspective
+
+    Top surface (65%) + front face (35%), chunky and grounded
+    """
     grid = [[T] * 32 for _ in range(32)]
 
-    cy, cx = 16, 16
+    # Rock structure: top surface rows 0-20, front face rows 21-31
+    top_rows = 21  # 65% top
+    front_start = 21
 
-    for y in range(32):
-        for x in range(32):
-            dx = x - cx
-            dy = y - cy
-            dist = (dx * dx + dy * dy) ** 0.5
+    # Top surface (irregular rounded shape)
+    for y in range(top_rows):
+        # Horizontal extent with slight irregularity
+        base_margin = max(0, int(4 * (abs(y - 10) / 12)))
+        wobble = ((y * 3) % 3) - 1  # Minor edge variation
+        x_start = 3 + base_margin + wobble
+        x_end = 29 - base_margin - wobble
 
-            threshold = 13 + ((x * 5 + y * 11) % 5 - 2) * 0.8
+        for x in range(max(0, x_start), min(32, x_end)):
+            # Left-right gradient on top surface
+            if x < 12:
+                grid[y][x] = Rl
+            elif x < 22:
+                grid[y][x] = R
+            else:
+                grid[y][x] = Rd
 
-            if dist <= threshold:
-                # Left-right shading (x-based)
-                if x < 11:
-                    grid[y][x] = Rl  # Left - lit
-                elif x < 21:
-                    grid[y][x] = R   # Center
-                else:
-                    grid[y][x] = Rd  # Right - shadow
+    # Add clustered texture on top surface
+    clusters = [(8, 6), (18, 10), (24, 5), (12, 14)]
+    for cx, cy in clusters:
+        for dy in range(-1, 2):
+            for dx in range(-1, 2):
+                nx, ny = cx + dx, cy + dy
+                if 0 <= nx < 32 and 0 <= ny < 21 and grid[ny][nx] != T:
+                    grid[ny][nx] = Rd
+
+    # Front face (darker, rows 21-31)
+    darker = (max(0, Rd[0]-25), max(0, Rd[1]-25), max(0, Rd[2]-25), 255)
+    for y in range(front_start, 32):
+        # Front face tapers toward bottom
+        margin = (y - front_start) // 2
+        x_start = 5 + margin
+        x_end = 27 - margin
+
+        for x in range(x_start, x_end):
+            if x < 12:
+                grid[y][x] = Rd  # Left side gets some reflected light
+            else:
+                grid[y][x] = darker
+
+    # Edge line between top and front (strong contrast)
+    for x in range(5, 27):
+        grid[20][x] = Rd
+
+    # Ground contact - extra dark bottom edge
+    ground = (max(0, Rd[0]-40), max(0, Rd[1]-40), max(0, Rd[2]-40), 255)
+    for x in range(10, 22):
+        grid[31][x] = ground
 
     return grid
 
@@ -509,10 +659,10 @@ def build_reeds():
 
 
 def build_mushroom_red():
-    """Red mushroom: 16x16 (1x1 footprint)"""
+    """Red mushroom: 16x16 (1x1 footprint) - with ground contact"""
     grid = [[T] * 16 for _ in range(16)]
 
-    # Cap (dome shape, top half)
+    # Cap (dome shape, top half) with top/front distinction
     for y in range(10):
         cy, cx = 5, 8
         ry, rx = 5, 6
@@ -524,36 +674,51 @@ def build_mushroom_red():
                 x_range = int(rx * (ratio ** 0.5))
                 for x in range(cx - x_range, cx + x_range + 1):
                     if 0 <= x < 16:
-                        diag = (x - 8) + (y - 5)
-                        if diag < -3:
-                            grid[y][x] = MRl
-                        elif diag < 2:
-                            grid[y][x] = MR
-                        else:
-                            grid[y][x] = MRd
+                        # Top vs front of cap (y-based)
+                        if y < 6:  # Top of cap
+                            if x < 6:
+                                grid[y][x] = MRl
+                            elif x < 10:
+                                grid[y][x] = MR
+                            else:
+                                grid[y][x] = MRd
+                        else:  # Front/underside of cap
+                            if x < 7:
+                                grid[y][x] = MR
+                            else:
+                                grid[y][x] = MRd
 
-    # White spots on cap
-    spots = [(5, 3), (10, 4), (7, 6)]
+    # White spots on cap top
+    spots = [(5, 3), (10, 4), (7, 2)]
     for sx, sy in spots:
-        if 0 <= sx < 16 and 0 <= sy < 10:
+        if 0 <= sx < 16 and 0 <= sy < 6:
             grid[sy][sx] = MS
 
-    # Stem
+    # Stem with front face
+    stem_dark = (180, 175, 165, 255)
     for y in range(8, 16):
         for x in range(6, 10):
-            if x < 8:
-                grid[y][x] = MS
-            else:
-                grid[y][x] = (200, 195, 185, 255)  # Slightly darker
+            if y < 12:  # Upper stem
+                if x < 8:
+                    grid[y][x] = MS
+                else:
+                    grid[y][x] = stem_dark
+            else:  # Front face of stem
+                grid[y][x] = stem_dark
+
+    # Ground contact
+    ground = (160, 155, 145, 255)
+    for x in range(6, 10):
+        grid[15][x] = ground
 
     return grid
 
 
 def build_mushroom_glow():
-    """Glowing mushroom: 16x16 (1x1 footprint) - bioluminescent"""
+    """Glowing mushroom: 16x16 (1x1 footprint) - bioluminescent with ground contact"""
     grid = [[T] * 16 for _ in range(16)]
 
-    # Cap (dome shape)
+    # Cap (dome shape) with top/front distinction
     for y in range(10):
         cy, cx = 5, 8
         ry, rx = 5, 6
@@ -565,51 +730,65 @@ def build_mushroom_glow():
                 x_range = int(rx * (ratio ** 0.5))
                 for x in range(cx - x_range, cx + x_range + 1):
                     if 0 <= x < 16:
-                        diag = (x - 8) + (y - 5)
-                        if diag < -3:
-                            grid[y][x] = MGl  # Bright glow
-                        elif diag < 2:
-                            grid[y][x] = MG
-                        else:
-                            grid[y][x] = MGd
+                        # Top vs front of cap
+                        if y < 6:  # Top of cap (brightest)
+                            if x < 6:
+                                grid[y][x] = MGl
+                            elif x < 10:
+                                grid[y][x] = MG
+                            else:
+                                grid[y][x] = MGd
+                        else:  # Front/underside
+                            if x < 7:
+                                grid[y][x] = MG
+                            else:
+                                grid[y][x] = MGd
 
-    # Stem (also slightly glowing)
+    # Stem with front face (also glowing)
+    stem_light = (70, 150, 130, 255)
+    stem_dark = (50, 120, 100, 255)
     for y in range(8, 16):
         for x in range(6, 10):
-            grid[y][x] = (60, 140, 120, 255)
+            if y < 12:  # Upper stem
+                if x < 8:
+                    grid[y][x] = stem_light
+                else:
+                    grid[y][x] = stem_dark
+            else:  # Front face
+                grid[y][x] = stem_dark
+
+    # Ground contact
+    ground = (40, 100, 85, 255)
+    for x in range(6, 10):
+        grid[15][x] = ground
 
     return grid
 
 
 def build_flower(color_d, color_b, color_l):
-    """Generic flower: 16x16 (1x1 footprint)"""
+    """Generic flower: 16x16 (1x1 footprint) - iconic shape with ground contact"""
     grid = [[T] * 16 for _ in range(16)]
 
     # Petals (simple 4-petal flower from above)
-    center_x, center_y = 8, 6
-
-    # Top petal
+    # Top petal (lit)
     for y in range(2, 6):
         for x in range(6, 10):
-            diag = (x - 8) + (y - 4)
-            if diag < -1:
+            if x < 8:
                 grid[y][x] = color_l
-            elif diag < 1:
-                grid[y][x] = color_b
             else:
-                grid[y][x] = color_d
+                grid[y][x] = color_b
 
-    # Left petal
+    # Left petal (lit side)
     for y in range(4, 8):
         for x in range(2, 6):
             grid[y][x] = color_l if x < 4 else color_b
 
-    # Right petal
+    # Right petal (shadow side)
     for y in range(4, 8):
         for x in range(10, 14):
             grid[y][x] = color_b if x < 12 else color_d
 
-    # Bottom petal
+    # Bottom petal (front face, darker)
     for y in range(7, 11):
         for x in range(6, 10):
             grid[y][x] = color_b if y < 9 else color_d
@@ -620,9 +799,15 @@ def build_flower(color_d, color_b, color_l):
         for x in range(7, 10):
             grid[y][x] = yellow
 
-    # Stem
+    # Stem with ground contact
     for y in range(10, 16):
-        grid[y][8] = G
+        if y < 14:
+            grid[y][8] = Gl  # Lit part of stem
+        else:
+            grid[y][8] = Gd  # Darker base
+
+    # Ground contact
+    grid[15][8] = (45, 95, 45, 255)
 
     return grid
 
@@ -811,6 +996,300 @@ def build_ant_mound():
     return grid
 
 
+# =============================================================================
+# VILLAGE PROPS
+# =============================================================================
+
+def build_stump():
+    """Tree stump: 16x16 (1x1 footprint) - cut tree top view with rings"""
+    grid = [[T] * 16 for _ in range(16)]
+
+    # Outer bark ring (irregular circle)
+    for y in range(16):
+        for x in range(16):
+            dx, dy = x - 8, y - 8
+            dist = (dx * dx + dy * dy) ** 0.5
+
+            if dist < 7:
+                # Inner wood with rings
+                if dist < 2:
+                    grid[y][x] = Wl  # Center (lightest)
+                elif dist < 4:
+                    grid[y][x] = W   # Middle ring
+                elif dist < 5.5:
+                    grid[y][x] = Wl  # Light ring
+                else:
+                    grid[y][x] = W   # Outer wood
+
+            elif dist < 8:
+                # Bark edge
+                grid[y][x] = Wd
+
+    # Add shadow on right side
+    for y in range(4, 12):
+        for x in range(10, 14):
+            if grid[y][x] != T:
+                grid[y][x] = Wd
+
+    return grid
+
+
+def build_log_pile():
+    """Log pile: 32x16 (2x1 footprint) - stacked horizontal logs"""
+    grid = [[T] * 32 for _ in range(16)]
+
+    # Three logs stacked (viewed from front/above at angle)
+    logs = [
+        (8, 12, 6),   # (center_x, center_y, radius) - bottom left
+        (24, 12, 6),  # bottom right
+        (16, 6, 6),   # top center
+    ]
+
+    for cx, cy, r in logs:
+        for y in range(16):
+            for x in range(32):
+                dx, dy = x - cx, y - cy
+                dist = (dx * dx + dy * dy) ** 0.5
+
+                if dist < r:
+                    # Log cross-section with rings
+                    if dist < r * 0.3:
+                        grid[y][x] = Wl  # Center
+                    elif dist < r * 0.6:
+                        grid[y][x] = W   # Middle
+                    elif dist < r * 0.85:
+                        grid[y][x] = Wl  # Ring
+                    else:
+                        grid[y][x] = Wd  # Bark
+
+        # Shadow on bottom right of each log
+        for y in range(cy, cy + r):
+            for x in range(cx, cx + r):
+                if 0 <= x < 32 and 0 <= y < 16:
+                    dx, dy = x - cx, y - cy
+                    if (dx * dx + dy * dy) ** 0.5 < r:
+                        grid[y][x] = Wd
+
+    return grid
+
+
+def build_compost_pile():
+    """Compost pile: 32x32 (2x2 footprint) - dark mound with debris"""
+    grid = [[T] * 32 for _ in range(32)]
+
+    # Compost colors (dark brown/greenish decay)
+    CPd = (50, 40, 25, 255)   # Dark compost
+    CP  = (70, 55, 35, 255)   # Base compost
+    CPl = (90, 70, 45, 255)   # Light compost
+
+    # Mound shape
+    for y in range(8, 32):
+        cy, cx = 20, 16
+        ry, rx = 12, 14
+
+        dy = y - cy
+        if abs(dy) <= ry:
+            ratio = 1 - (dy / ry) ** 2
+            if ratio > 0:
+                x_range = int(rx * (ratio ** 0.5))
+                for x in range(cx - x_range, cx + x_range + 1):
+                    if 0 <= x < 32:
+                        diag = (x - 16) + (y - 20)
+                        if diag < -6:
+                            grid[y][x] = CPl
+                        elif diag < 4:
+                            grid[y][x] = CP
+                        else:
+                            grid[y][x] = CPd
+
+    # Add debris bits (leaves, twigs)
+    debris_color = (60, 80, 40, 255)  # Greenish
+    debris_positions = [(10, 14), (22, 16), (14, 10), (18, 12), (8, 20), (24, 22)]
+    for dx, dy in debris_positions:
+        if grid[dy][dx] != T:
+            grid[dy][dx] = debris_color
+            if dx + 1 < 32:
+                grid[dy][dx + 1] = debris_color
+
+    return grid
+
+
+def build_apple_crate():
+    """Apple crate: 16x16 (1x1 footprint) - wooden crate with apples visible"""
+    grid = [[T] * 16 for _ in range(16)]
+
+    # Crate structure (top-down view of open crate)
+    # Outer frame
+    for y in range(2, 14):
+        for x in range(2, 14):
+            # Frame edges
+            if y < 4 or y > 11 or x < 4 or x > 11:
+                if x < 6:
+                    grid[y][x] = Wl
+                elif x > 9:
+                    grid[y][x] = Wd
+                else:
+                    grid[y][x] = W
+
+    # Apples inside (red circles)
+    apple_positions = [(6, 6), (10, 6), (8, 9), (6, 10), (10, 10)]
+    for ax, ay in apple_positions:
+        for dy in range(-1, 2):
+            for dx in range(-1, 2):
+                nx, ny = ax + dx, ay + dy
+                if 4 <= nx <= 11 and 4 <= ny <= 11:
+                    if dx + dy < 0:
+                        grid[ny][nx] = Fl  # Apple light
+                    elif dx + dy > 1:
+                        grid[ny][nx] = Fd  # Apple dark
+                    else:
+                        grid[ny][nx] = F   # Apple base
+
+    return grid
+
+
+def build_broken_net():
+    """Broken net: 32x16 (2x1 footprint) - torn netting on ground"""
+    grid = [[T] * 32 for _ in range(16)]
+
+    # Net colors (fiber/rope)
+    Nd = (80, 70, 50, 255)    # Net dark
+    N  = (120, 105, 80, 255)  # Net base
+    Nl = (150, 135, 110, 255) # Net light
+
+    # Tangled net strands (irregular mesh pattern)
+    # Horizontal strands
+    for y in [3, 7, 11]:
+        for x in range(4, 28):
+            if (x + y) % 5 != 0:  # Gaps for broken look
+                grid[y][x] = Nl if x < 12 else (N if x < 20 else Nd)
+
+    # Vertical/diagonal strands
+    for x in [6, 12, 18, 24]:
+        for y in range(2, 14):
+            if (x + y) % 4 != 0:  # Gaps
+                if grid[y][x] == T:
+                    grid[y][x] = N
+
+    # Torn edges (frayed bits)
+    frays = [(3, 5), (28, 4), (5, 13), (26, 12), (15, 2), (17, 14)]
+    for fx, fy in frays:
+        if 0 <= fx < 32 and 0 <= fy < 16:
+            grid[fy][fx] = Nl
+            if fx + 1 < 32:
+                grid[fy][fx + 1] = Nd
+
+    return grid
+
+
+def build_ladder():
+    """Ladder: 16x24 (1x1 footprint) - leaning wooden ladder"""
+    grid = [[T] * 16 for _ in range(24)]
+
+    # Two side rails (slightly angled/leaning)
+    for y in range(24):
+        # Left rail
+        x_left = 4 + (y // 8)
+        if 0 <= x_left < 16:
+            grid[y][x_left] = Wl
+            if x_left + 1 < 16:
+                grid[y][x_left + 1] = W
+
+        # Right rail
+        x_right = 10 + (y // 8)
+        if 0 <= x_right < 16:
+            grid[y][x_right] = W
+            if x_right + 1 < 16:
+                grid[y][x_right + 1] = Wd
+
+    # Rungs (horizontal bars)
+    for rung_y in [4, 9, 14, 19]:
+        x_start = 5 + (rung_y // 8)
+        x_end = 11 + (rung_y // 8)
+        for x in range(x_start, x_end + 1):
+            if 0 <= x < 16:
+                grid[rung_y][x] = W
+                grid[rung_y + 1][x] = Wd
+
+    return grid
+
+
+def build_net_post():
+    """Net post: 16x24 (1x1 footprint) - wooden post with net attachment"""
+    grid = [[T] * 16 for _ in range(24)]
+
+    # Vertical post
+    for y in range(24):
+        for x in range(6, 10):
+            if x < 7:
+                grid[y][x] = Wl
+            elif x > 8:
+                grid[y][x] = Wd
+            else:
+                grid[y][x] = W
+
+    # Crossbar at top
+    for x in range(2, 14):
+        for y in range(2, 4):
+            if x < 6:
+                grid[y][x] = Wl
+            elif x > 9:
+                grid[y][x] = Wd
+            else:
+                grid[y][x] = W
+
+    # Net remnant hanging from crossbar
+    net_color = (120, 105, 80, 255)
+    for x in [3, 6, 9, 12]:
+        for y in range(4, 8):
+            if (y + x) % 2 == 0:
+                grid[y][x] = net_color
+
+    return grid
+
+
+def build_bait_basket():
+    """Bait basket: 16x16 (1x1 footprint) - small woven basket"""
+    grid = [[T] * 16 for _ in range(16)]
+
+    # Basket colors (woven material)
+    Bkd = (90, 70, 40, 255)   # Basket dark
+    Bk  = (130, 100, 60, 255) # Basket base
+    Bkl = (170, 140, 90, 255) # Basket light
+
+    # Basket body (round from above)
+    for y in range(4, 14):
+        for x in range(4, 12):
+            dx, dy = x - 8, y - 9
+            dist = (dx * dx + dy * dy) ** 0.5
+
+            if dist < 4:
+                # Woven pattern
+                if (x + y) % 2 == 0:
+                    grid[y][x] = Bkl if x < 8 else Bk
+                else:
+                    grid[y][x] = Bk if x < 8 else Bkd
+
+    # Rim at top
+    for x in range(4, 12):
+        grid[4][x] = Bkl
+        grid[5][x] = Bk
+
+    # Handle
+    for x in range(6, 10):
+        grid[2][x] = Bk
+        grid[3][x] = Bkd
+
+    # Dark interior visible
+    for y in range(6, 12):
+        for x in range(5, 11):
+            dx, dy = x - 8, y - 9
+            if (dx * dx + dy * dy) ** 0.5 < 2.5:
+                grid[y][x] = (50, 40, 25, 255)  # Dark inside
+
+    return grid
+
+
 # Build all sprites
 TREE_OAK = build_tree_oak()
 TREE_PINE = build_tree_pine()
@@ -834,6 +1313,16 @@ CRYSTAL_LARGE = build_crystal_large()
 STALAGMITE = build_stalagmite()
 BONE_PILE = build_bone_pile()
 ANT_MOUND = build_ant_mound()
+
+# Village props
+STUMP = build_stump()
+LOG_PILE = build_log_pile()
+COMPOST_PILE = build_compost_pile()
+APPLE_CRATE = build_apple_crate()
+BROKEN_NET = build_broken_net()
+LADDER = build_ladder()
+NET_POST = build_net_post()
+BAIT_BASKET = build_bait_basket()
 
 
 def main():
@@ -870,6 +1359,15 @@ def main():
         ("bone_pile.png", BONE_PILE),
         # Special
         ("ant_mound.png", ANT_MOUND),
+        # Village props
+        ("stump.png", STUMP),
+        ("log_pile.png", LOG_PILE),
+        ("compost_pile.png", COMPOST_PILE),
+        ("apple_crate.png", APPLE_CRATE),
+        ("broken_net.png", BROKEN_NET),
+        ("ladder.png", LADDER),
+        ("net_post.png", NET_POST),
+        ("bait_basket.png", BAIT_BASKET),
     ]
 
     for filename, grid in sprites:

@@ -560,5 +560,139 @@
         ]
       }
     }
+  },
+
+  "bench": {
+    "name": "Wooden Bench",
+    "category": "furniture",
+    "stackable": false,
+    "sell_price": 8,
+    "world": {
+      "footprint": [2, 1],
+      "pivot": "bc",
+      "rotatable": true,
+      "directions": 4,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "bench", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "planter_box": {
+    "name": "Planter Box",
+    "category": "furniture",
+    "stackable": false,
+    "sell_price": 10,
+    "world": {
+      "footprint": [2, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "planter_box", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "chopping_block": {
+    "name": "Chopping Block",
+    "category": "crafting",
+    "stackable": false,
+    "sell_price": 6,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "c",
+      "interactable": true,
+      "interaction_type": "craft",
+      "breakable": {
+        "hp": 4,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "chopping_block", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "sawhorse": {
+    "name": "Sawhorse",
+    "category": "furniture",
+    "stackable": false,
+    "sell_price": 5,
+    "world": {
+      "footprint": [2, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "sawhorse", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "ladder": {
+    "name": "Ladder",
+    "category": "structure",
+    "stackable": true,
+    "max_stack": 10,
+    "sell_price": 4,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "rotatable": true,
+      "directions": 4,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "ladder", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "net_post": {
+    "name": "Net Post",
+    "category": "structure",
+    "stackable": true,
+    "max_stack": 20,
+    "sell_price": 3,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "net_post", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "bait_basket": {
+    "name": "Bait Basket",
+    "category": "structure",
+    "stackable": true,
+    "max_stack": 20,
+    "sell_price": 4,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "c",
+      "interactable": true,
+      "interaction_type": "storage",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "bait_basket", "count": 1, "chance": 1.0}]
+      }
+    }
+  },
+  "collection_tray": {
+    "name": "Collection Tray",
+    "category": "structure",
+    "stackable": false,
+    "sell_price": 6,
+    "world": {
+      "footprint": [2, 1],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "storage",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [{"item_id": "collection_tray", "count": 1, "chance": 1.0}]
+      }
+    }
   }
 }

@@ -341,8 +341,7 @@ namespace BugFarmer.Data
 
         /// <summary>
         /// Get the inventory icon sprite for an item.
-        /// Convention: Resources/Items/{id}
-        /// For placeables (e.g., dirt_block), loads Items/{base}_icon (e.g., dirt_icon)
+        /// Convention: Resources/Items/{id}_icon
         /// </summary>
         public static Sprite GetItemSprite(string id)
         {
@@ -353,17 +352,8 @@ namespace BugFarmer.Data
             if (_spriteCache.TryGetValue(cacheKey, out var cached))
                 return cached;
 
-            // Determine sprite path based on entity type
-            string spritePath = id;
-            var def = Get(id);
-            if (def != null && def.EntityType == "placeable" && id.EndsWith("_block"))
-            {
-                // Placeables use {base}_icon for inventory sprites
-                string baseName = id.Substring(0, id.Length - 6); // Remove "_block"
-                spritePath = baseName + "_icon";
-            }
-
-            var sprite = Resources.Load<Sprite>($"Items/{spritePath}");
+            // All icons use {id}_icon naming convention
+            var sprite = Resources.Load<Sprite>($"Items/{id}_icon");
             if (sprite != null)
                 _spriteCache[cacheKey] = sprite;
 

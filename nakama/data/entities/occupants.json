@@ -405,5 +405,100 @@
         ]
       }
     }
+  },
+
+  "stump": {
+    "name": "Tree Stump",
+    "category": "natural",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "c",
+      "breakable": {
+        "hp": 3,
+        "required_tool_type": "axe",
+        "drops": [
+          {"item_id": "wood", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "log_pile": {
+    "name": "Log Pile",
+    "category": "natural",
+    "world": {
+      "footprint": [2, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 4,
+        "required_tool_type": "axe",
+        "drops": [
+          {"item_id": "wood", "count": 3, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "compost_pile": {
+    "name": "Compost Pile",
+    "category": "natural",
+    "world": {
+      "footprint": [2, 2],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "shovel",
+        "drops": [
+          {"item_id": "fiber", "count": 2, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "apple_crate": {
+    "name": "Apple Crate",
+    "category": "natural",
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {"item_id": "apple", "count": 2, "chance": 1.0},
+          {"item_id": "wood", "count": 1, "chance": 0.5}
+        ]
+      }
+    }
+  },
+  "broken_net": {
+    "name": "Broken Net",
+    "category": "natural",
+    "world": {
+      "footprint": [2, 1],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "fiber", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "notice_board": {
+    "name": "Notice Board",
+    "category": "structure",
+    "world": {
+      "footprint": [1, 2],
+      "pivot": "bc",
+      "blocks_players": true,
+      "interactable": true,
+      "interaction_type": "sign",
+      "breakable": {
+        "hp": 3,
+        "required_tool_type": "axe",
+        "drops": [
+          {"item_id": "wood", "count": 2, "chance": 1.0}
+        ]
+      }
+    }
   }
 }

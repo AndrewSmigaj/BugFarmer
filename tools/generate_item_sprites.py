@@ -144,16 +144,16 @@ def create_large_net(size):
 
 
 def create_calm_spray(size):
-    """Create spray bottle icon."""
+    """Create spray bottle icon with top/front distinction."""
     img = Image.new('RGBA', (size, size), T)
     pixels = img.load()
 
     center_x = size // 2
 
-    # Spray nozzle (top)
+    # Spray nozzle (top - lighter)
     for y in range(2, 6):
-        pixels[center_x, y] = METAL_MAIN
-        pixels[center_x + 1, y] = METAL_DARK
+        pixels[center_x, y] = METAL_LIGHT
+        pixels[center_x + 1, y] = METAL_MAIN
 
     # Trigger
     for x in range(center_x + 2, center_x + 5):
@@ -161,18 +161,27 @@ def create_calm_spray(size):
             pixels[x, 5] = METAL_MAIN
             pixels[x, 6] = METAL_DARK
 
-    # Bottle body
-    for y in range(6, size - 2):
+    # Bottle top surface (rows 6-9, lighter)
+    for y in range(6, 10):
         for x in range(center_x - 4, center_x + 5):
             if 0 <= x < size:
-                if x == center_x - 4:
-                    pixels[x, y] = SPRAY_DARK
-                elif x == center_x + 4:
+                if x < center_x - 2:
+                    pixels[x, y] = SPRAY_LIGHT
+                elif x > center_x + 2:
+                    pixels[x, y] = SPRAY_MAIN
+                else:
+                    pixels[x, y] = SPRAY_LIGHT
+
+    # Bottle front face (rows 10-21, darker)
+    for y in range(10, size - 2):
+        for x in range(center_x - 4, center_x + 5):
+            if 0 <= x < size:
+                if x == center_x - 4 or x == center_x + 4:
                     pixels[x, y] = SPRAY_DARK
                 elif x < center_x:
                     pixels[x, y] = SPRAY_MAIN
                 else:
-                    pixels[x, y] = SPRAY_LIGHT
+                    pixels[x, y] = SPRAY_DARK
 
     # Liquid inside (show level)
     for y in range(12, size - 3):
@@ -180,10 +189,11 @@ def create_calm_spray(size):
             if 0 <= x < size:
                 pixels[x, y] = SPRAY_LIQUID
 
-    # Bottom
+    # Ground contact - extra dark bottom
+    ground = (max(0, SPRAY_DARK[0]-20), max(0, SPRAY_DARK[1]-20), max(0, SPRAY_DARK[2]-20), 255)
     for x in range(center_x - 4, center_x + 5):
         if 0 <= x < size:
-            pixels[x, size - 2] = SPRAY_DARK
+            pixels[x, size - 2] = ground
 
     return img
 

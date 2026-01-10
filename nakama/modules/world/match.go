@@ -71,11 +71,11 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 	logger.Info("Loaded %d species", len(state.Species))
 
 	// Load zone data (Phase 4)
-	zonePath := "data/zones/underground_passages_31"
+	zonePath := "data/zones/village_21"
 	zoneConfig, err := LoadZoneConfig(zonePath)
 	if err != nil {
 		logger.Warn("Failed to load zone config: %v - using default", err)
-		zoneConfig = &ZoneConfig{ZoneID: "underground_passages_31", BiomeType: "cave"}
+		zoneConfig = &ZoneConfig{ZoneID: "village_21", BiomeType: "village"}
 	}
 	state.CurrentZone = zoneConfig
 	logger.Info("Loaded zone: %s", zoneConfig.ZoneID)

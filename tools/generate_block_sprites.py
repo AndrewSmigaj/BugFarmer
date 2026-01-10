@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """Generate 3D block sprites (Minecraft-style cubes) for Bug Farmer.
 
-Design principles from SPRITE_GENERATION_GUIDE.md:
+Design principles from sprite_guidelines.md:
 - 45-degree top-down perspective (see top + front face)
 - Light source: top-left
 - 3-5 colors per material using guide palettes
 - No pure black outlines
+- Thickness: 55-65% top, 25-35% front
+- Texture: clustered patterns, not random noise
 
 Block structure (16x20):
-- Rows 0-11: Top face (lit, visible from above)
-- Rows 12-19: Front face (darker, vertical surface)
+- Rows 0-12: Top face (13px = 65%, lit, horizontal surface)
+- Rows 13-19: Front face (7px = 35%, darker, vertical surface)
 - Light falls top-left, shadows bottom-right
 """
 
@@ -102,18 +104,19 @@ def create_sprite_from_grid(grid):
     return img
 
 
-def build_solid_block(material):
+def build_solid_block(material, texture_type='smooth'):
     """Build a 16x20 solid block (dirt, stone, clay) - 3/4 perspective.
 
-    Top face (rows 0-11): HORIZONTAL surface, left-right shading
-    Front face (rows 12-19): VERTICAL surface, darker with left-right shading
+    Top face (rows 0-12): HORIZONTAL surface, 13px = 65%
+    Front face (rows 13-19): VERTICAL surface, 7px = 35%
+    texture_type: 'smooth', 'dirt_strata', 'stone_cluster'
     """
     d, b, l = material['dark'], material['base'], material['light']
     grid = [[T] * 16 for _ in range(20)]
 
-    # Top face (rows 0-11) - horizontal surface viewed from above
-    # Left-right shading: left=light, right=shadow
-    for y in range(12):
+    # Top face (rows 0-12) - 13px, horizontal surface viewed from above
+    # Base fill with left-right gradient
+    for y in range(13):
         for x in range(16):
             if x < 5:
                 grid[y][x] = l   # Left - lit
@@ -122,26 +125,59 @@ def build_solid_block(material):
             else:
                 grid[y][x] = d   # Right - shadow
 
-    # Top edge highlight
+    # Top edge highlight (row 0)
     for x in range(16):
         grid[0][x] = l
 
-    # Front face (rows 12-19) - vertical surface, darker
-    # Left-right shading (left catches some light)
-    for y in range(12, 20):
-        for x in range(16):
-            if x < 4:
-                grid[y][x] = b  # Left edge catches some light
-            elif x < 12:
-                grid[y][x] = d  # Middle is dark
-            else:
-                # Far right is very dark
-                darker = (max(0, d[0]-20), max(0, d[1]-20), max(0, d[2]-20), 255)
-                grid[y][x] = darker
+    # Apply texture patterns on top face
+    if texture_type == 'dirt_strata':
+        # Horizontal strata bands with pebble clusters
+        strata_rows = [3, 7, 10]
+        for row in strata_rows:
+            for x in range(0, 16, 3):
+                if x + 1 < 16:
+                    grid[row][x] = d
+                    grid[row][x + 1] = d
+        # Pebble clusters
+        pebble_clusters = [(2, 5), (8, 2), (12, 8), (5, 10)]
+        for px, py in pebble_clusters:
+            if py < 13:
+                grid[py][px] = d
+                if px + 1 < 16:
+                    grid[py][px + 1] = d
 
-    # Edge between top and front (row 11-12 transition)
+    elif texture_type == 'stone_cluster':
+        # Clustered noise pattern for stone
+        cluster_centers = [(3, 3), (10, 5), (6, 9), (13, 10)]
+        for cx, cy in cluster_centers:
+            for dy in range(-1, 2):
+                for dx in range(-1, 2):
+                    nx, ny = cx + dx, cy + dy
+                    if 0 <= nx < 16 and 0 <= ny < 13:
+                        # Vary shade within cluster
+                        if dx == 0 and dy == 0:
+                            grid[ny][nx] = d
+                        elif abs(dx) + abs(dy) == 1:
+                            grid[ny][nx] = b if grid[ny][nx] == l else d
+
+    # Front face (rows 13-19) - 7px, vertical surface, darker overall
+    # Much darker than top to show strong plane contrast
+    darker = (max(0, d[0] - 25), max(0, d[1] - 25), max(0, d[2] - 25), 255)
+    for y in range(13, 20):
+        for x in range(16):
+            if x < 3:
+                grid[y][x] = d  # Left edge catches some reflected light
+            else:
+                grid[y][x] = darker  # Rest is deep shadow
+
+    # Edge line between top and front (row 12) - strong contrast
     for x in range(16):
-        grid[11][x] = d  # Dark line at edge
+        grid[12][x] = darker
+
+    # Ground contact - bottom row extra dark
+    bottom_dark = (max(0, d[0] - 35), max(0, d[1] - 35), max(0, d[2] - 35), 255)
+    for x in range(16):
+        grid[19][x] = bottom_dark
 
     return grid
 
@@ -149,17 +185,19 @@ def build_solid_block(material):
 def build_ore_block(stone_mat, ore_mat, ore_density='medium'):
     """Build a 16x20 ore block (stone with ore veins) - 3/4 perspective.
 
-    Stone base with ore material spots/veins.
+    Stone base with ore material veins (clustered, not scattered).
+    Top face: rows 0-12 (13px = 65%)
+    Front face: rows 13-19 (7px = 35%)
     ore_density: 'low', 'medium', 'high'
     """
     sd, sb, sl = stone_mat['dark'], stone_mat['base'], stone_mat['light']
     od, ob, ol = ore_mat['dark'], ore_mat['base'], ore_mat['light']
 
-    # Start with solid stone block
+    # Start with solid stone block base
     grid = [[T] * 16 for _ in range(20)]
 
-    # Top face (rows 0-11) - left-right shading
-    for y in range(12):
+    # Top face (rows 0-12) - 13px with clustered stone texture
+    for y in range(13):
         for x in range(16):
             if x < 5:
                 grid[y][x] = sl   # Left - lit
@@ -172,62 +210,85 @@ def build_ore_block(stone_mat, ore_mat, ore_density='medium'):
     for x in range(16):
         grid[0][x] = sl
 
-    # Front face (rows 12-19) - darker with left-right shading
-    for y in range(12, 20):
+    # Add stone texture clusters on top
+    stone_clusters = [(2, 4), (9, 6), (13, 3)]
+    for cx, cy in stone_clusters:
+        for dy in range(-1, 2):
+            for dx in range(-1, 2):
+                nx, ny = cx + dx, cy + dy
+                if 0 <= nx < 16 and 0 <= ny < 13:
+                    if dx == 0 and dy == 0:
+                        grid[ny][nx] = sd
+
+    # Front face (rows 13-19) - 7px, much darker for plane contrast
+    darker = (max(0, sd[0] - 25), max(0, sd[1] - 25), max(0, sd[2] - 25), 255)
+    for y in range(13, 20):
         for x in range(16):
-            if x < 4:
-                grid[y][x] = sb
-            elif x < 12:
-                grid[y][x] = sd
+            if x < 3:
+                grid[y][x] = sd  # Left edge reflects some light
             else:
-                darker = (max(0, sd[0]-20), max(0, sd[1]-20), max(0, sd[2]-20), 255)
                 grid[y][x] = darker
 
-    # Edge
+    # Edge line between top and front
     for x in range(16):
-        grid[11][x] = sd
+        grid[12][x] = darker
 
-    # Add ore deposits based on density
+    # Ground contact - extra dark bottom
+    bottom_dark = (max(0, sd[0] - 35), max(0, sd[1] - 35), max(0, sd[2] - 35), 255)
+    for x in range(16):
+        grid[19][x] = bottom_dark
+
+    # Define ore vein clusters (connected, not scattered spots)
     if ore_density == 'low':
-        # 2 small spots on top face
-        ore_spots_top = [(4, 3), (10, 7)]
-        ore_spots_front = [(6, 14)]
+        # One small vein cluster on top, one on front
+        ore_veins_top = [
+            [(5, 4), (6, 4), (6, 5), (7, 5)],  # L-shaped vein
+        ]
+        ore_veins_front = [
+            [(7, 15), (8, 15)],  # Small cluster
+        ]
     elif ore_density == 'medium':
-        # 3-4 spots
-        ore_spots_top = [(3, 2), (9, 4), (5, 8), (11, 6)]
-        ore_spots_front = [(4, 14), (10, 16)]
+        # Two vein clusters on top, one on front
+        ore_veins_top = [
+            [(3, 3), (4, 3), (4, 4), (5, 4)],  # Diagonal vein
+            [(10, 7), (11, 7), (11, 8), (10, 8)],  # Square cluster
+        ]
+        ore_veins_front = [
+            [(5, 14), (6, 14), (5, 15)],  # L-shape
+        ]
     else:  # high
-        # More prominent ore
-        ore_spots_top = [(2, 2), (6, 3), (10, 2), (4, 6), (8, 7), (12, 5), (6, 9)]
-        ore_spots_front = [(3, 13), (7, 15), (11, 14), (5, 17)]
+        # Large connected vein across top
+        ore_veins_top = [
+            [(2, 2), (3, 2), (3, 3), (4, 3), (4, 4)],  # Main diagonal vein
+            [(8, 5), (9, 5), (9, 6), (10, 6), (10, 7), (11, 7)],  # Second vein
+            [(5, 9), (6, 9), (6, 10), (7, 10)],  # Third cluster
+        ]
+        ore_veins_front = [
+            [(4, 14), (5, 14), (5, 15), (6, 15)],  # Front vein
+            [(10, 16), (11, 16)],  # Small cluster
+        ]
 
-    # Draw ore on top face (2x2 pixel spots with lighting)
-    for (ox, oy) in ore_spots_top:
-        if oy < 12:  # Top face
-            for dy in range(2):
-                for dx in range(2):
-                    nx, ny = ox + dx, oy + dy
-                    if 0 <= nx < 16 and 0 <= ny < 12:
-                        # Light direction on ore
-                        if dx == 0 and dy == 0:
-                            grid[ny][nx] = ol
-                        elif dx == 1 and dy == 1:
-                            grid[ny][nx] = od
-                        else:
-                            grid[ny][nx] = ob
+    # Draw ore veins on top face with proper lighting
+    for vein in ore_veins_top:
+        for i, (ox, oy) in enumerate(vein):
+            if 0 <= ox < 16 and 0 <= oy < 13:
+                # First pixel in vein is lit, last is dark, middle is base
+                if i == 0:
+                    grid[oy][ox] = ol
+                elif i == len(vein) - 1:
+                    grid[oy][ox] = od
+                else:
+                    grid[oy][ox] = ob
 
-    # Draw ore on front face (2x2 pixel spots, darker)
-    for (ox, oy) in ore_spots_front:
-        if oy >= 12:  # Front face
-            for dy in range(2):
-                for dx in range(2):
-                    nx, ny = ox + dx, oy + dy
-                    if 0 <= nx < 16 and 12 <= ny < 20:
-                        # Front face ore is darker overall
-                        if dx == 0:
-                            grid[ny][nx] = ob
-                        else:
-                            grid[ny][nx] = od
+    # Draw ore veins on front face (darker overall)
+    for vein in ore_veins_front:
+        for i, (ox, oy) in enumerate(vein):
+            if 0 <= ox < 16 and 13 <= oy < 20:
+                # Front face ore is darker
+                if i == 0:
+                    grid[oy][ox] = ob
+                else:
+                    grid[oy][ox] = od
 
     return grid
 
@@ -238,10 +299,10 @@ def main():
 
     sprites = []
 
-    # Solid blocks
-    sprites.append(("dirt_block.png", build_solid_block(DIRT)))
-    sprites.append(("stone_block.png", build_solid_block(STONE)))
-    sprites.append(("clay_block.png", build_solid_block(CLAY)))
+    # Solid blocks with appropriate textures
+    sprites.append(("dirt_block.png", build_solid_block(DIRT, 'dirt_strata')))
+    sprites.append(("stone_block.png", build_solid_block(STONE, 'stone_cluster')))
+    sprites.append(("clay_block.png", build_solid_block(CLAY, 'smooth')))
 
     # Ore blocks (stone + ore veins)
     sprites.append(("ore_coal_block.png", build_ore_block(STONE, COAL, 'high')))

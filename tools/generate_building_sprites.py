@@ -88,6 +88,12 @@ def build_fence_wood():
         grid[y][9] = W
         grid[y][10] = Wd if y > 10 else W
 
+    # Ground contact - dark bottom edge
+    ground = (max(0, Wd[0]-25), max(0, Wd[1]-25), max(0, Wd[2]-25), 255)
+    for x in range(16):
+        if grid[19][x] != T:
+            grid[19][x] = ground
+
     return grid
 
 
@@ -617,6 +623,132 @@ def build_door_iron():
     return grid
 
 
+# =============================================================================
+# VILLAGE PROPS
+# =============================================================================
+
+def build_notice_board():
+    """Notice board: 16x32 (1x2 footprint) - wooden signboard on posts
+
+    Structure:
+    - Board top: HORIZONTAL surface (thin)
+    - Board face: VERTICAL surface with papers
+    - Posts: supporting the board
+    """
+    grid = [[T] * 16 for _ in range(32)]
+
+    # === BOARD TOP (horizontal surface, thin) ===
+    for y in range(0, 2):
+        for x in range(2, 14):
+            if x < 6:
+                grid[y][x] = Wl  # Left - lit
+            elif x < 10:
+                grid[y][x] = W   # Center
+            else:
+                grid[y][x] = Wd  # Right - shadow
+
+    # Top edge highlight
+    for x in range(2, 14):
+        grid[0][x] = Wl
+
+    # === BOARD FACE (vertical surface with papers) ===
+    for y in range(2, 18):
+        for x in range(2, 14):
+            if x < 6:
+                grid[y][x] = W   # Left - less dark
+            else:
+                grid[y][x] = Wd  # Right - dark
+
+    # Edge between top and face
+    for x in range(2, 14):
+        grid[2][x] = Wd
+
+    # Papers/notices on board (lighter rectangles)
+    paper = (230, 220, 200, 255)
+    paper_shadow = (200, 190, 170, 255)
+
+    # Left paper
+    for y in range(4, 10):
+        for x in range(4, 8):
+            grid[y][x] = paper if x < 6 else paper_shadow
+
+    # Right paper
+    for y in range(5, 12):
+        for x in range(9, 13):
+            grid[y][x] = paper if x < 11 else paper_shadow
+
+    # Bottom paper
+    for y in range(12, 16):
+        for x in range(5, 11):
+            grid[y][x] = paper if x < 8 else paper_shadow
+
+    # === POSTS (supporting the board) ===
+    for y in range(18, 32):
+        # Left post
+        grid[y][3] = W; grid[y][4] = Wd
+        # Right post
+        grid[y][11] = W; grid[y][12] = Wd
+
+    return grid
+
+
+def build_collection_tray():
+    """Collection tray: 32x16 (2x1 footprint) - shallow tray for fly farm
+
+    Structure:
+    - Tray rim: HORIZONTAL surface (viewed from above)
+    - Tray interior: shallow, shows contents
+    - Short legs
+    """
+    grid = [[T] * 32 for _ in range(16)]
+
+    # === TRAY RIM (horizontal surface) ===
+    for y in range(0, 3):
+        for x in range(2, 30):
+            if x < 10:
+                grid[y][x] = Wl  # Left - lit
+            elif x < 22:
+                grid[y][x] = W   # Center
+            else:
+                grid[y][x] = Wd  # Right - shadow
+
+    # Top edge highlight
+    for x in range(2, 30):
+        grid[0][x] = Wl
+
+    # === TRAY INTERIOR (shallow) ===
+    interior = (90, 70, 50, 255)  # Dark wood interior
+    for y in range(3, 10):
+        for x in range(4, 28):
+            grid[y][x] = interior
+
+    # Some collected material dots (fly larvae colors)
+    larvae = (220, 210, 180, 255)
+    larvae_positions = [(8, 5), (12, 6), (18, 5), (24, 7), (10, 8), (16, 7), (22, 6)]
+    for lx, ly in larvae_positions:
+        if 4 <= lx < 28 and 3 <= ly < 10:
+            grid[ly][lx] = larvae
+
+    # === FRONT FACE (vertical, shows depth) ===
+    for y in range(10, 14):
+        for x in range(2, 30):
+            if x < 10:
+                grid[y][x] = W   # Left - lit
+            else:
+                grid[y][x] = Wd  # Right - shadow
+
+    # Edge between interior and front
+    for x in range(2, 30):
+        grid[10][x] = Wd
+
+    # === SHORT LEGS ===
+    for y in range(14, 16):
+        grid[y][4] = W; grid[y][5] = Wd
+        grid[y][26] = W; grid[y][27] = Wd
+
+    return grid
+
+
 def main():
     output_dir = "/mnt/c/Users/emily/BugFarmer/BugFarmerClient/Assets/Sprites/Buildings"
     os.makedirs(output_dir, exist_ok=True)
@@ -637,6 +769,9 @@ def main():
         # Doors
         ("door_wood.png", build_door_wood()),
         ("door_iron.png", build_door_iron()),
+        # Village props
+        ("notice_board.png", build_notice_board()),
+        ("collection_tray.png", build_collection_tray()),
     ]
 
     for filename, grid in sprites:

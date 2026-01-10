@@ -80,6 +80,14 @@ OCCUPANT_CATEGORIES = {
     "bone_pile": "cave",
     "ant_mound": "cave",
 
+    # Village props
+    "stump": "tree",
+    "log_pile": "tree",
+    "compost_pile": "plant",
+    "apple_crate": "storage",
+    "broken_net": "structure",
+    "notice_board": "structure",
+
     # Blocks
     "dirt_block": "block",
     "stone_block": "block",

@@ -1309,6 +1309,11 @@ def build_chest_wood():
     grid[8][15] = Ml; grid[8][16] = M
     grid[9][15] = M; grid[9][16] = Md
 
+    # Ground contact - dark bottom edge
+    ground = (max(0, Wd[0]-25), max(0, Wd[1]-25), max(0, Wd[2]-25), 255)
+    for x in range(2, 30):
+        grid[19][x] = ground
+
     return grid
 
 
@@ -1353,6 +1358,11 @@ def build_chest_iron():
     for y in range(8, 12):
         for x in range(14, 18):
             grid[y][x] = (40, 45, 50, 255)  # Dark lock
+
+    # Ground contact
+    ground = (max(0, Md[0]-25), max(0, Md[1]-25), max(0, Md[2]-25), 255)
+    for x in range(2, 30):
+        grid[19][x] = ground
 
     return grid
 
@@ -1450,6 +1460,11 @@ def build_barrel():
         grid[10][x] = Md  # Middle band
         grid[17][x] = Md  # Bottom band
 
+    # Ground contact
+    ground = (max(0, Wd[0]-30), max(0, Wd[1]-30), max(0, Wd[2]-30), 255)
+    for x in range(3, 13):
+        grid[19][x] = ground
+
     return grid
 
 
@@ -1496,6 +1511,11 @@ def build_crate():
     # Horizontal plank line on front
     for x in range(16):
         grid[12][x] = Wd
+
+    # Ground contact
+    ground = (max(0, Wd[0]-30), max(0, Wd[1]-30), max(0, Wd[2]-30), 255)
+    for x in range(16):
+        grid[17][x] = ground
 
     return grid
 
@@ -1924,6 +1944,239 @@ def build_mirror():
     return grid
 
 
+# =============================================================================
+# VILLAGE PROPS
+# =============================================================================
+
+def build_bench():
+    """Wooden bench: 32x16 (2x1 footprint) - 3/4 perspective seating
+
+    Structure:
+    - Seat top: HORIZONTAL surface (viewed from above)
+    - Seat front: VERTICAL surface (darker)
+    - Legs: visible below
+    """
+    grid = [[T] * 32 for _ in range(16)]
+
+    # === SEAT TOP (horizontal surface) ===
+    for y in range(0, 5):
+        for x in range(2, 30):
+            if x < 10:
+                grid[y][x] = Wl  # Left - lit
+            elif x < 22:
+                grid[y][x] = W   # Center - base
+            else:
+                grid[y][x] = Wd  # Right - shadow
+
+    # Top edge highlight
+    for x in range(2, 30):
+        grid[0][x] = Wl
+
+    # === SEAT FRONT (vertical surface, darker) ===
+    for y in range(5, 8):
+        for x in range(2, 30):
+            if x < 10:
+                grid[y][x] = W   # Left - less dark
+            else:
+                grid[y][x] = Wd  # Center/right - dark
+
+    # Edge line between top and front
+    for x in range(2, 30):
+        grid[5][x] = Wd
+
+    # === LEGS (four) ===
+    for y in range(8, 16):
+        # Front left leg
+        grid[y][4] = W; grid[y][5] = Wd
+        # Front right leg
+        grid[y][26] = W; grid[y][27] = Wd
+        # Back left leg
+        if y < 12:
+            grid[y][8] = W; grid[y][9] = Wd
+        # Back right leg
+        if y < 12:
+            grid[y][22] = W; grid[y][23] = Wd
+
+    return grid
+
+
+def build_planter_box():
+    """Planter box: 32x16 (2x1 footprint) - wooden box with flowers
+
+    Structure:
+    - Box sides: VERTICAL wood frame
+    - Inside: dirt with colorful flowers visible from above
+    """
+    grid = [[T] * 32 for _ in range(16)]
+
+    # === BOX FRAME (outer wooden rim) ===
+    # Top edge (horizontal)
+    for y in range(0, 3):
+        for x in range(2, 30):
+            if x < 10:
+                grid[y][x] = Wl
+            elif x < 22:
+                grid[y][x] = W
+            else:
+                grid[y][x] = Wd
+
+    # Front face of box (vertical)
+    for y in range(3, 14):
+        for x in range(2, 30):
+            # Only draw the frame, not the inside
+            if x < 5 or x > 26:
+                if x < 10:
+                    grid[y][x] = W
+                else:
+                    grid[y][x] = Wd
+
+    # Bottom edge
+    for y in range(14, 16):
+        for x in range(2, 30):
+            grid[y][x] = Wd
+
+    # === DIRT INSIDE (visible from above) ===
+    dirt_color = (90, 60, 35, 255)
+    for y in range(3, 14):
+        for x in range(5, 27):
+            grid[y][x] = dirt_color
+
+    # === FLOWERS (colorful dots on top of dirt) ===
+    flower_colors = [
+        (220, 80, 100, 255),   # Pink
+        (100, 80, 220, 255),   # Purple
+        (220, 200, 80, 255),   # Yellow
+        (80, 180, 100, 255),   # Green (leaves)
+    ]
+
+    flower_positions = [
+        (8, 5), (14, 4), (20, 6), (11, 8), (17, 7), (24, 5),
+        (7, 10), (13, 11), (19, 9), (25, 10), (10, 12), (16, 11)
+    ]
+
+    for i, (fx, fy) in enumerate(flower_positions):
+        color = flower_colors[i % len(flower_colors)]
+        if 5 <= fx < 27 and 3 <= fy < 14:
+            grid[fy][fx] = color
+            if fx + 1 < 27:
+                grid[fy][fx + 1] = color
+
+    return grid
+
+
+def build_sawhorse():
+    """Sawhorse: 32x16 (2x1 footprint) - X-frame wood support
+
+    Structure:
+    - Top beam: HORIZONTAL surface (viewed from above)
+    - X-shaped legs
+    """
+    grid = [[T] * 32 for _ in range(16)]
+
+    # === TOP BEAM (horizontal surface) ===
+    for y in range(0, 4):
+        for x in range(4, 28):
+            if x < 12:
+                grid[y][x] = Wl  # Left - lit
+            elif x < 20:
+                grid[y][x] = W   # Center - base
+            else:
+                grid[y][x] = Wd  # Right - shadow
+
+    # Top edge highlight
+    for x in range(4, 28):
+        grid[0][x] = Wl
+
+    # Front edge (vertical, darker)
+    for x in range(4, 28):
+        grid[4][x] = Wd
+
+    # === X-FRAME LEGS ===
+    # Left X
+    for y in range(5, 16):
+        progress = (y - 5) / 10
+        # Left leg of X (goes outward)
+        lx = int(8 - progress * 6)
+        if 0 <= lx < 32:
+            grid[y][lx] = Wl
+            grid[y][lx + 1] = W
+        # Right leg of X (goes inward)
+        rx = int(8 + progress * 4)
+        if 0 <= rx < 32:
+            grid[y][rx] = W
+            grid[y][rx + 1] = Wd
+
+    # Right X
+    for y in range(5, 16):
+        progress = (y - 5) / 10
+        # Left leg of X
+        lx = int(22 - progress * 4)
+        if 0 <= lx < 32:
+            grid[y][lx] = W
+            grid[y][lx + 1] = Wd
+        # Right leg of X
+        rx = int(22 + progress * 6)
+        if 0 <= rx < 32:
+            grid[y][rx] = W
+            grid[y][rx + 1] = Wd
+
+    return grid
+
+
+def build_chopping_block():
+    """Chopping block: 16x16 (1x1 footprint) - thick wood round with axe marks
+
+    Structure:
+    - Top surface: circular wood grain (viewed from above)
+    - Side: bark edge visible
+    """
+    grid = [[T] * 16 for _ in range(16)]
+
+    # === TOP SURFACE (circular, viewed from above) ===
+    for y in range(12):
+        for x in range(16):
+            dx, dy = x - 8, y - 6
+            dist = (dx * dx + dy * dy) ** 0.5
+
+            if dist < 6:
+                # Wood grain rings
+                if dist < 1.5:
+                    grid[y][x] = Wl  # Center
+                elif dist < 3:
+                    grid[y][x] = W   # Inner ring
+                elif dist < 4.5:
+                    grid[y][x] = Wl  # Light ring
+                else:
+                    grid[y][x] = W   # Outer wood
+
+            elif dist < 7:
+                # Bark edge
+                grid[y][x] = Wd
+
+    # Add shadow on right side of top
+    for y in range(2, 10):
+        for x in range(10, 14):
+            if grid[y][x] != T:
+                grid[y][x] = Wd
+
+    # === FRONT FACE (vertical, shows height) ===
+    for y in range(10, 16):
+        for x in range(2, 14):
+            if x < 6:
+                grid[y][x] = W   # Left - lit
+            else:
+                grid[y][x] = Wd  # Right - shadow
+
+    # Edge between top and front
+    for x in range(2, 14):
+        grid[10][x] = Wd
+
+    # Axe marks (dark cuts on top)
+    grid[4][7] = Wd; grid[5][8] = Wd; grid[3][9] = Wd
+
+    return grid
+
+
 def main():
     output_dir = "/mnt/c/Users/emily/BugFarmer/BugFarmerClient/Assets/Sprites/Furniture"
     os.makedirs(output_dir, exist_ok=True)
@@ -1972,6 +2225,11 @@ def main():
         ("banner.png", build_banner()),
         ("clock.png", build_clock()),
         ("mirror.png", build_mirror()),
+        # Village props
+        ("bench.png", build_bench()),
+        ("planter_box.png", build_planter_box()),
+        ("sawhorse.png", build_sawhorse()),
+        ("chopping_block.png", build_chopping_block()),
     ]
 
     for filename, grid in sprites:

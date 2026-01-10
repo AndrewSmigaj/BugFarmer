@@ -144,6 +144,24 @@ FOOTPRINTS = {
     "well": (2, 2),
     "bridge_wood": (2, 2),
     "bridge_stone": (2, 2),
+
+    # Village props (natural)
+    "stump": (1, 1),
+    "log_pile": (2, 1),
+    "compost_pile": (2, 2),
+    "apple_crate": (1, 1),
+    "broken_net": (2, 1),
+    "notice_board": (1, 2),
+
+    # Village props (placeable)
+    "bench": (2, 1),
+    "planter_box": (2, 1),
+    "chopping_block": (1, 1),
+    "sawhorse": (2, 1),
+    "ladder": (1, 1),
+    "net_post": (1, 1),
+    "bait_basket": (1, 1),
+    "collection_tray": (2, 1),
 }
 
 # Valid ground tiles
