@@ -57,6 +57,29 @@ const (
 	OpCodePickupItem       int64 = 49 // C→S: Player picks up item
 )
 
+// Bug Simulation OpCodes (Phase 6 - Deterministic Per-Bug)
+const (
+	OpCodeRequestSample       int64 = 61 // S→C: Request positions for specific bug IDs
+	OpCodeSampleResponse      int64 = 62 // C→S: Positions for requested bugs
+	OpCodeSampleBroadcast     int64 = 63 // S→C: Sample for comparison by all clients
+	OpCodeRequestSnapshot     int64 = 66 // C→S: Client requests full snapshot (drift detected)
+	OpCodeFullSnapshot        int64 = 67 // S→C: Full bug positions for swarm
+	OpCodeWorldInit           int64 = 68 // S→C: WorldSeed on join (sent once)
+	OpCodeRequestInteractions int64 = 69 // S→C: Request aggregated interaction counts
+	OpCodeInteractionReport   int64 = 70 // C→S: Aggregated interaction counts per swarm
+)
+
+// Influence Event OpCodes (Server-Authored Bug Sync)
+const (
+	OpCodeInfluenceBroadcast  int64 = 71 // S→C: Player cell change events (deterministic bug AI)
+	OpCodeLateJoinSnapshot    int64 = 72 // S→C: Full state for late joiner (fixed tick range)
+	OpCodeZoneHandoff         int64 = 73 // S→C: Handoff watermark after late join (confirms live)
+	OpCodeZoneSnapshot        int64 = 75 // C→S: Authority sends periodic snapshot
+	OpCodeZoneAuthority       int64 = 76 // S→C: Authority assigned/changed
+	OpCodeZoneHash            int64 = 77 // C→S: Client sends state hash for validation
+	OpCodeZoneTickBroadcast   int64 = 78 // S→C: Tick frontier update (every tick, 10Hz)
+)
+
 // === Client → Server Messages ===
 
 // MovementMessage is sent by clients (OpCode 1)
@@ -86,37 +109,42 @@ type EntityUpdateMessage struct {
 
 // SwarmData represents a single swarm in updates (OpCode 20)
 type SwarmData struct {
-	ID        string  `json:"id"`
-	SpeciesID string  `json:"species_id"`
-	X         float32 `json:"x"`
-	Y         float32 `json:"y"`
-	Radius    float32 `json:"radius"`
-	Count     int     `json:"count"`
-	Facing    int     `json:"facing"`
+	ID         string  `json:"id"`
+	SpeciesID  string  `json:"species_id"`
+	SpriteID   string  `json:"sprite_id"`
+	X          float32 `json:"x"`
+	Y          float32 `json:"y"`
+	Radius     float32 `json:"radius"`
+	Count      int     `json:"count"`
+	Facing     int     `json:"facing"`
+	Phase      string  `json:"phase"`                      // "feeding", "reproducing", "idle"
+	NextBugID  int     `json:"next_bug_id,omitempty"`      // Total bugs ever spawned (for late joiners)
+	RemovedIDs []int   `json:"removed_ids,omitempty"`      // Bug IDs to skip when spawning (for late joiners)
 }
 
 // SwarmUpdateMessage is broadcast to clients (OpCode 20)
 type SwarmUpdateMessage struct {
+	Tick   int64       `json:"tick"`
 	Swarms []SwarmData `json:"swarms"`
 }
 
 // === Bug Catching Messages (Phase 2a) ===
 
 // CatchBugMessage is sent by client (OpCode 24)
-// Client detects flies in radius and sends count per swarm
+// Client detects bugs by ID and sends the list to server for validation
 type CatchBugMessage struct {
-	ClickX      float32 `json:"click_x"`      // World X where player clicked
-	ClickY      float32 `json:"click_y"`      // World Y where player clicked
-	SwarmID     string  `json:"swarm_id"`     // Which swarm was caught from
-	CaughtCount int     `json:"caught_count"` // Client-detected count
+	ClickX  float32 `json:"click_x"`  // World X where player clicked
+	ClickY  float32 `json:"click_y"`  // World Y where player clicked
+	SwarmID string  `json:"swarm_id"` // Which swarm was caught from
+	BugIDs  []int   `json:"bug_ids"`  // IDs of bugs client detected in radius
 }
 
 // BugCaughtMessage is broadcast to all clients (OpCode 25)
-// Allows other clients to update swarm visuals and show catch animation
+// All clients use validated bug IDs for deterministic removal
 type BugCaughtMessage struct {
 	SwarmID   string  `json:"swarm_id"`
 	CatcherID string  `json:"catcher_id"`
-	Count     int     `json:"count"`     // How many bugs caught
+	BugIDs    []int   `json:"bug_ids"`   // Server-validated bug IDs to remove
 	NewTotal  int     `json:"new_total"` // Swarm's new count
 	X         float32 `json:"x"`         // Catch position for animation
 	Y         float32 `json:"y"`
@@ -187,7 +215,7 @@ type ChunkDataMessage struct {
 	ChunkX    int                 `json:"chunk_x"`
 	ChunkY    int                 `json:"chunk_y"`
 	Ground    [][]string          `json:"ground"`    // 32x32 tile IDs
-	Occupants [][]json.RawMessage `json:"occupants"` // 32x32: null, "@", or {id,dir}
+	Occupants [][]json.RawMessage `json:"occupants"` // 32x32: null or {id,dir,anchor}
 }
 
 // WorldUpdateMessage is sent to client (OpCode 46)
@@ -228,4 +256,184 @@ type GroundItemRemoveMessage struct {
 // PickupItemMessage is sent by client (OpCode 49)
 type PickupItemMessage struct {
 	ID string `json:"id"` // Unique instance ID to pick up
+}
+
+// === Bug Simulation Messages (Phase 6 - Deterministic Per-Bug) ===
+
+// WorldInitMessage sent to client on join (OpCode 68)
+type WorldInitMessage struct {
+	WorldSeed int64 `json:"world_seed"`
+	Tick      int64 `json:"tick"`
+}
+
+// BugSampleQuery identifies a single bug for sampling
+type BugSampleQuery struct {
+	SwarmID string `json:"swarm_id"`
+	BugID   int    `json:"bug_id"`
+}
+
+// BugSampleData contains full state for a single bug (fixed-point)
+// Includes all state needed for deterministic sync
+type BugSampleData struct {
+	// Core state
+	SwarmID  string `json:"swarm_id"`
+	BugID    int    `json:"bug_id"`
+	X        int    `json:"x"`         // FixedPoint value: actual = X / 1000.0
+	Y        int    `json:"y"`         // FixedPoint value: actual = Y / 1000.0
+	Vx       int    `json:"vx"`        // Velocity X (fixed-point)
+	Vy       int    `json:"vy"`        // Velocity Y (fixed-point)
+	RngState uint32 `json:"rng_state"` // RNG state for deterministic sync
+
+	// Behavior state
+	Behavior      string `json:"behavior"`       // "wander", "flee", "attack", "curious"
+	TargetID      string `json:"target_id"`      // Player ID bug is reacting to (empty if none)
+	IsAlerted     bool   `json:"is_alerted"`
+	AlertCooldown int    `json:"alert_cooldown"`
+
+	// Movement state
+	TicksUntilChange int `json:"ticks_until_change"`
+	IntentDirX       int `json:"intent_dir_x"`     // Brownian: intent direction
+	IntentDirY       int `json:"intent_dir_y"`
+	IntentTargetX    int `json:"intent_target_x"`  // Gliding: intent target
+	IntentTargetY    int `json:"intent_target_y"`
+	CurrentDirX      int `json:"current_dir_x"`    // Gliding: current direction
+	CurrentDirY      int `json:"current_dir_y"`
+}
+
+// SampleRequestMessage sent to one client (OpCode 61)
+// Server asks client for positions of specific bugs at current tick
+type SampleRequestMessage struct {
+	ChunkX  int              `json:"chunk_x"`
+	ChunkY  int              `json:"chunk_y"`
+	Tick    int64            `json:"tick"`    // Server tick when request was made
+	Samples []BugSampleQuery `json:"samples"` // Which bugs to report positions for
+}
+
+// SampleResponseMessage from client (OpCode 62)
+type SampleResponseMessage struct {
+	ChunkX  int             `json:"chunk_x"`
+	ChunkY  int             `json:"chunk_y"`
+	Tick    int64           `json:"tick"` // Tick these positions are from
+	Samples []BugSampleData `json:"samples"`
+}
+
+// SampleBroadcastMessage to all clients (OpCode 63)
+// Server broadcasts sample for comparison - same structure as response
+type SampleBroadcastMessage = SampleResponseMessage
+
+// SnapshotRequestMessage from client (OpCode 66)
+// Client requests full snapshot when drift detected
+type SnapshotRequestMessage struct {
+	ChunkX int `json:"chunk_x"`
+	ChunkY int `json:"chunk_y"`
+}
+
+// SwarmSnapshotData contains all bug positions for a single swarm
+type SwarmSnapshotData struct {
+	SwarmID string          `json:"swarm_id"`
+	Bugs    []BugSampleData `json:"bugs"` // All bugs in swarm
+}
+
+// FullSnapshotMessage for late joiners or drift correction (OpCode 67)
+type FullSnapshotMessage struct {
+	ChunkX int                 `json:"chunk_x"`
+	ChunkY int                 `json:"chunk_y"`
+	Tick   int64               `json:"tick"` // Tick this snapshot is from
+	Swarms []SwarmSnapshotData `json:"swarms"`
+}
+
+// === Bug Lifecycle Interaction Messages ===
+
+// SwarmInteractionReport contains aggregated interaction counts for one swarm
+type SwarmInteractionReport struct {
+	SwarmID    string `json:"swarm_id"`
+	FoodCount  int    `json:"food_count"`  // Number of feeding interactions since last report
+	BreedCount int    `json:"breed_count"` // Number of breeding interactions since last report
+}
+
+// InteractionReportMessage is sent by client (OpCode 70)
+// Contains aggregated bug-resource interactions for lifecycle meter updates
+type InteractionReportMessage struct {
+	Reports []SwarmInteractionReport `json:"reports"`
+}
+
+// === Influence Event Messages (Server-Authored Bug Sync) ===
+
+// Influence event types
+const (
+	InfluencePlayerCellEnter = "PLAYER_CELL_ENTER"
+	InfluencePlayerCellLeave = "PLAYER_CELL_LEAVE"
+	InfluenceSwarmCenterMove = "SWARM_CENTER_MOVE"
+	InfluenceBugRemoved      = "BUG_REMOVED"
+	InfluenceBugSpawned      = "BUG_SPAWNED"
+)
+
+// InfluenceEvent represents a discrete, replayable signal for bug AI
+// Server-authored, ensures all clients process same ordered event stream
+type InfluenceEvent struct {
+	Tick     int64  `json:"tick"`                // Simulation tick when event occurs
+	Seq      int64  `json:"seq"`                 // Strictly increasing sequence number (zone-local)
+	Type     string `json:"type"`                // Event type constant
+	ZoneID   string `json:"zone_id,omitempty"`   // Zone this event belongs to
+	PlayerID string `json:"player_id,omitempty"` // For PLAYER_CELL_* events
+	CellX    int    `json:"cell_x,omitempty"`    // Cell coordinates
+	CellY    int    `json:"cell_y,omitempty"`
+	SwarmID  string `json:"swarm_id,omitempty"` // For BUG_* and SWARM_* events
+	BugID    int    `json:"bug_id,omitempty"`   // For BUG_* events
+}
+
+// InfluenceBroadcastMessage sent to all clients (OpCode 71)
+type InfluenceBroadcastMessage struct {
+	Events []InfluenceEvent `json:"events"`
+}
+
+// ZoneAuthorityMessage broadcast when authority assigned/changed (OpCode 76)
+// Includes bootstrap tick + watermark for first client (FIX #7)
+type ZoneAuthorityMessage struct {
+	ZoneID           string `json:"zone_id"`
+	AuthorityID      string `json:"authority_id"`
+	AuthoritativeTick int64  `json:"authoritative_tick"` // Bootstrap tick for first client
+	LastEventSeq     int64  `json:"last_event_seq"`      // FIX #7: Initial watermark
+}
+
+// ZoneTickBroadcastMessage sent EVERY tick (10Hz) by server (OpCode 78)
+// CRITICAL: Server must broadcast influence events BEFORE this message each tick
+// This ensures clients never simulate without all events for that tick
+type ZoneTickBroadcastMessage struct {
+	ZoneID           string `json:"zone_id"`
+	AuthoritativeTick int64  `json:"authoritative_tick"` // Client may simulate up to (but not beyond) this
+	LastEventSeq     int64  `json:"last_event_seq"`      // FIX #7: Watermark - all events with seq <= this are finalized
+}
+
+// ZoneHandoffMessage sent after late join snapshot (OpCode 73)
+// Confirms "no undisclosed events <= EndTick" so client can go LIVE immediately
+type ZoneHandoffMessage struct {
+	ZoneID        string `json:"zone_id"`
+	LiveStartTick int64  `json:"live_start_tick"` // T_end + 1: first tick client is live
+}
+
+// ZoneSnapshotMessage from authority client (OpCode 75)
+type ZoneSnapshotMessage struct {
+	ZoneID       string              `json:"zone_id"`
+	SnapshotTick int64               `json:"snapshot_tick"`
+	Swarms       []SwarmSnapshotData `json:"swarms"`
+	StateHash    string              `json:"state_hash"`
+}
+
+// ZoneHashMessage from client for validation (OpCode 77)
+type ZoneHashMessage struct {
+	ZoneID    string `json:"zone_id"`
+	Tick      int64  `json:"tick"`       // Tick this hash was computed at
+	StateHash string `json:"state_hash"` // Deterministic hash of bug state
+}
+
+// LateJoinSnapshot sent to joining player (OpCode 72)
+type LateJoinSnapshot struct {
+	ZoneID       string              `json:"zone_id"`
+	WorldSeed    int64               `json:"world_seed"`
+	SnapshotTick int64               `json:"snapshot_tick"` // T_snapshot (fixed)
+	EndTick      int64               `json:"end_tick"`      // T_end (fixed)
+	Swarms       []SwarmSnapshotData `json:"swarms"`        // Bug state from authority
+	InfluenceLog []InfluenceEvent    `json:"influence_log"` // Events from T_snapshot+1 to T_end
+	AuthorityID  string              `json:"authority_id"`
 }

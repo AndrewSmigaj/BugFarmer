@@ -8,6 +8,7 @@
       "footprint": [2, 2],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 5,
         "required_tool_type": "axe",
@@ -25,6 +26,7 @@
       "footprint": [2, 2],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 5,
         "required_tool_type": "axe",
@@ -42,6 +44,7 @@
       "footprint": [1, 1],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
@@ -59,6 +62,7 @@
       "footprint": [2, 2],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 4,
         "required_tool_type": "axe",
@@ -76,6 +80,7 @@
       "footprint": [2, 2],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 5,
         "required_tool_type": "axe",
@@ -250,6 +255,7 @@
       "footprint": [2, 2],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 8,
         "required_tool_type": "pickaxe",
@@ -294,6 +300,7 @@
       "footprint": [1, 1],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 4,
         "required_tool_type": "pickaxe",
@@ -311,6 +318,7 @@
       "footprint": [1, 1],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 5,
         "required_tool_type": "pickaxe",
@@ -328,6 +336,7 @@
       "footprint": [1, 1],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 6,
         "required_tool_type": "pickaxe",
@@ -345,6 +354,7 @@
       "footprint": [1, 1],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 7,
         "required_tool_type": "pickaxe",
@@ -362,6 +372,7 @@
       "footprint": [1, 1],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 8,
         "required_tool_type": "pickaxe",
@@ -379,6 +390,7 @@
       "footprint": [1, 1],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 10,
         "required_tool_type": "pickaxe",
@@ -396,6 +408,7 @@
       "footprint": [1, 1],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 12,
         "required_tool_type": "pickaxe",
@@ -429,6 +442,7 @@
       "footprint": [2, 1],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 4,
         "required_tool_type": "axe",
@@ -490,6 +504,7 @@
       "footprint": [1, 2],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "interactable": true,
       "interaction_type": "sign",
       "breakable": {

@@ -35,6 +35,12 @@ namespace BugFarmer.Player
             {
                 Debug.LogWarning("[PlayerController] No Rigidbody2D found. Using transform movement.");
             }
+
+            // Set sorting layer for proper rendering with Y-sorting
+            if (_spriteRenderer != null)
+            {
+                _spriteRenderer.sortingLayerName = "Occupants";
+            }
         }
 
         private void Update()
@@ -66,6 +72,12 @@ namespace BugFarmer.Player
             else
             {
                 transform.position += (Vector3)Velocity * Time.fixedDeltaTime;
+            }
+
+            // Update sorting order for Y-sorting
+            if (_spriteRenderer != null)
+            {
+                _spriteRenderer.sortingOrder = -Mathf.FloorToInt(transform.position.y);
             }
         }
 

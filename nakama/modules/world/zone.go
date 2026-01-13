@@ -10,17 +10,44 @@ import (
 // ChunkSize is cells per chunk dimension (32x32 cells = 512x512 pixels).
 const ChunkSize = 32
 
+// BugSpawnConfig holds zone-level bug spawning configuration.
+// Species caps are zone-wide (not per-area). Spawn areas define WHERE bugs appear.
+type BugSpawnConfig struct {
+	SpeciesCaps map[string]SpeciesCap `json:"species_caps"` // species_id → cap config
+	SpawnAreas  []SpawnArea           `json:"spawn_areas"`  // WHERE species can spawn
+}
+
+// SpeciesCap defines spawn limits for one species in a zone.
+type SpeciesCap struct {
+	Initial       int     `json:"initial"`        // Swarms to spawn on match init
+	Max           int     `json:"max"`            // Zone-wide max for this species
+	SpawnInterval float32 `json:"spawn_interval"` // Seconds between continuous spawn attempts
+}
+
+// SpawnArea defines where a species can spawn.
+// Type "zone" = anywhere in zone, Type "circle" = within radius of cx,cy.
+type SpawnArea struct {
+	ID      string   `json:"id"`
+	Species []string `json:"species"` // Which species can spawn here
+	Type    string   `json:"type"`    // "zone" or "circle"
+	// Circle fields (only used if Type == "circle")
+	CX     int `json:"cx,omitempty"`
+	CY     int `json:"cy,omitempty"`
+	Radius int `json:"radius,omitempty"`
+}
+
 // ZoneConfig describes a zone's metadata and spawn settings.
 // Zones are 16x16 chunks (512x512 cells at 16px per cell = 8192x8192 pixels).
 type ZoneConfig struct {
-	ZoneID     string `json:"zone_id"`
-	Name       string `json:"name"`
-	Row        int    `json:"row"`         // Zone grid row
-	Col        int    `json:"col"`         // Zone grid column
-	Width      int    `json:"width"`       // Width in cells (default 512)
-	Height     int    `json:"height"`      // Height in cells (default 512)
-	SpawnPoint [2]int `json:"spawn_point"` // Default spawn (cell coords)
-	BiomeType  string `json:"biome_type"`  // "meadow", "forest", "cave", etc.
+	ZoneID      string          `json:"zone_id"`
+	Name        string          `json:"name"`
+	Row         int             `json:"row"`          // Zone grid row
+	Col         int             `json:"col"`          // Zone grid column
+	Width       int             `json:"width"`        // Width in cells (default 512)
+	Height      int             `json:"height"`       // Height in cells (default 512)
+	SpawnPoint  [2]int          `json:"spawn_point"`  // Default spawn (cell coords)
+	BiomeType   string          `json:"biome_type"`   // "meadow", "forest", "cave", etc.
+	BugSpawning *BugSpawnConfig `json:"bug_spawning"` // Zone-level bug spawn config (optional)
 }
 
 // ChunkData stores the two-layer tile data for a 32x32 cell chunk.
@@ -29,8 +56,8 @@ type ZoneConfig struct {
 //
 // Occupants use json.RawMessage for polymorphic storage:
 //   - null: empty cell
-//   - "@": blocked by multi-cell occupant (anchor is in adjacent cell)
-//   - {"id":"...", "dir":0}: anchor cell with occupant data
+//   - {"id":"...", "dir":0, "anchor":true}: anchor cell with occupant data
+//   - {"id":"...", "dir":0}: footprint cell (anchor omitted = false)
 type ChunkData struct {
 	ChunkX    int                 `json:"chunk_x"`
 	ChunkY    int                 `json:"chunk_y"`
@@ -40,9 +67,8 @@ type ChunkData struct {
 
 // OccupantCell represents parsed occupant layer data.
 type OccupantCell struct {
-	IsEmpty   bool            // null in JSON
-	IsBlocked bool            // "@" marker - blocked by adjacent multi-cell occupant
-	Occupant  *PlacedOccupant // Anchor cell with occupant data
+	IsEmpty  bool            // null in JSON
+	Occupant *PlacedOccupant // Occupant data (has Anchor=true for anchor cell)
 }
 
 // ParseOccupantCell interprets a json.RawMessage from the occupants layer.
@@ -51,16 +77,7 @@ func ParseOccupantCell(raw json.RawMessage) (*OccupantCell, error) {
 		return &OccupantCell{IsEmpty: true}, nil
 	}
 
-	// Check for "@" blocked marker
-	var str string
-	if err := json.Unmarshal(raw, &str); err == nil {
-		if str == "@" {
-			return &OccupantCell{IsBlocked: true}, nil
-		}
-		return nil, fmt.Errorf("invalid occupant string: %q (expected \"@\")", str)
-	}
-
-	// Full occupant object {id, dir}
+	// Parse occupant object {id, dir, anchor}
 	var occ PlacedOccupant
 	if err := json.Unmarshal(raw, &occ); err != nil {
 		return nil, fmt.Errorf("invalid occupant cell: %w", err)
@@ -157,6 +174,7 @@ func (c *ChunkData) GetOccupantCell(lx, ly int) (*OccupantCell, error) {
 }
 
 // SetOccupant places an occupant at local coordinates (anchor cell).
+// Sets Anchor=true on the occupant before storing.
 func (c *ChunkData) SetOccupant(lx, ly int, occ *PlacedOccupant) bool {
 	if lx < 0 || lx >= ChunkSize || ly < 0 || ly >= ChunkSize {
 		return false
@@ -167,6 +185,8 @@ func (c *ChunkData) SetOccupant(lx, ly int, occ *PlacedOccupant) bool {
 		return true
 	}
 
+	// Mark as anchor cell
+	occ.Anchor = true
 	data, err := json.Marshal(occ)
 	if err != nil {
 		return false
@@ -175,13 +195,14 @@ func (c *ChunkData) SetOccupant(lx, ly int, occ *PlacedOccupant) bool {
 	return true
 }
 
-// SetBlockedMarker marks a cell as blocked by a multi-cell occupant.
-// Used for non-anchor cells of multi-cell occupants.
-func (c *ChunkData) SetBlockedMarker(lx, ly int) bool {
+// SetFootprintCell marks a cell as part of a multi-cell occupant's footprint.
+// Stores the occupant ID and direction but with Anchor=false (omitted in JSON).
+func (c *ChunkData) SetFootprintCell(lx, ly int, occupantID string, dir int) bool {
 	if lx < 0 || lx >= ChunkSize || ly < 0 || ly >= ChunkSize {
 		return false
 	}
-	data, _ := json.Marshal("@")
+	occ := &PlacedOccupant{ID: occupantID, Dir: dir, Anchor: false}
+	data, _ := json.Marshal(occ)
 	c.Occupants[ly][lx] = data
 	return true
 }

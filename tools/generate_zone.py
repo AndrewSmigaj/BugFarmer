@@ -236,6 +236,13 @@ class ZoneBuilder:
         # Blocked cells (for collision detection during placement)
         self._blocked: Set[Tuple[int, int]] = set()
 
+        # Track which occupant owns each blocked cell (for footprint output)
+        self._cell_to_occupant: Dict[Tuple[int, int], PlacedOccupant] = {}
+
+        # Bug spawning configuration (optional)
+        self.bug_spawning: Optional[Dict] = None
+        self._meadows: List[Dict] = []  # Track meadows for auto-spawn-area generation
+
         # Initialize random with seed if provided
         if seed is not None:
             random.seed(seed)
@@ -391,9 +398,10 @@ class ZoneBuilder:
         occ = PlacedOccupant(id=occupant_id, gx=gx, gy=gy, dir=dir)
         self.occupants[(gx, gy)] = occ
 
-        # Mark all cells as blocked
+        # Mark all cells as blocked and track which occupant owns them
         for cell in occ.blocked_cells():
             self._blocked.add(cell)
+            self._cell_to_occupant[cell] = occ
 
         return True
 
@@ -405,6 +413,7 @@ class ZoneBuilder:
         occ = self.occupants.pop((gx, gy))
         for cell in occ.blocked_cells():
             self._blocked.discard(cell)
+            self._cell_to_occupant.pop(cell, None)
         return True
 
     def is_blocked(self, gx: int, gy: int) -> bool:
@@ -662,6 +671,9 @@ class ZoneBuilder:
         Returns:
             Dict of flower_id -> count placed
         """
+        # Track meadow for auto-spawn-area generation
+        self._meadows.append({"cx": cx, "cy": cy, "radius": radius})
+
         results = {}
         area = 3.14159 * radius * radius
         total_count = int(area * density)
@@ -830,6 +842,58 @@ class ZoneBuilder:
         return results
 
     # =========================================================================
+    # BUG SPAWNING
+    # =========================================================================
+
+    def set_bug_spawning(self, species_caps: Dict[str, Dict], spawn_areas: List[Dict] = None):
+        """Configure bug spawning for this zone.
+
+        Args:
+            species_caps: Dict of species_id -> {initial, max, spawn_interval}
+                Example: {"fly_common": {"initial": 5, "max": 15, "spawn_interval": 45.0}}
+            spawn_areas: Optional list of spawn areas. Can also use add_spawn_area().
+        """
+        self.bug_spawning = {
+            "species_caps": species_caps,
+            "spawn_areas": spawn_areas or []
+        }
+
+    def add_spawn_area(self, id: str, species: List[str], area_type: str, **kwargs):
+        """Add a bug spawn area.
+
+        Args:
+            id: Unique identifier for the spawn area
+            species: List of species that can spawn here
+            area_type: "zone" (anywhere in zone) or "circle"
+            **kwargs: For circle type: cx, cy, radius
+        """
+        if self.bug_spawning is None:
+            self.bug_spawning = {"species_caps": {}, "spawn_areas": []}
+
+        area = {"id": id, "species": species, "type": area_type}
+        area.update(kwargs)
+        self.bug_spawning["spawn_areas"].append(area)
+
+    def auto_spawn_areas_from_meadows(self, species: str = "butterfly_meadow"):
+        """Generate spawn areas from all tracked meadows.
+
+        Call this after creating meadows with scatter_meadow() to automatically
+        create butterfly spawn circles matching the meadow locations.
+
+        Args:
+            species: Species ID to assign to meadow spawn areas
+        """
+        for i, meadow in enumerate(self._meadows):
+            self.add_spawn_area(
+                id=f"meadow_{i}",
+                species=[species],
+                area_type="circle",
+                cx=meadow["cx"],
+                cy=meadow["cy"],
+                radius=meadow["radius"]
+            )
+
+    # =========================================================================
     # BUILDING TEMPLATES
     # =========================================================================
 
@@ -945,6 +1009,10 @@ class ZoneBuilder:
             "biome_type": self.biome
         }
 
+        # Include bug spawning config if set
+        if self.bug_spawning:
+            zone_config["bug_spawning"] = self.bug_spawning
+
         with open(os.path.join(output_dir, "zone.json"), "w") as f:
             json.dump(zone_config, f, indent=2)
 
@@ -982,12 +1050,16 @@ class ZoneBuilder:
                 gx, gy = base_x + lx, base_y + ly
 
                 if (gx, gy) in self.occupants:
-                    # Anchor cell
+                    # Anchor cell - include anchor:true
                     occ = self.occupants[(gx, gy)]
-                    row.append({"id": occ.id, "dir": occ.dir})
+                    row.append({"id": occ.id, "dir": occ.dir, "anchor": True})
                 elif (gx, gy) in self._blocked:
-                    # Blocked by multi-cell occupant
-                    row.append("@")
+                    # Footprint cell - include occupant data (no anchor = false)
+                    occ = self._cell_to_occupant.get((gx, gy))
+                    if occ:
+                        row.append({"id": occ.id, "dir": occ.dir})
+                    else:
+                        row.append(None)
                 else:
                     # Empty
                     row.append(None)

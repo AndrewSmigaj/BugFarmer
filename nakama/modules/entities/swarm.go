@@ -6,13 +6,13 @@ import (
 )
 
 // SwarmState tracks a group of bugs moving together.
-// Server manages position/count, client renders individual flies with Brownian motion.
+// Server manages position/count, client renders individual flies with deterministic simulation.
 type SwarmState struct {
 	ID        string
 	SpeciesID string
 	Position  EntityPosition
 	Radius    float32   // Visual spread radius in blocks
-	Count     int       // Number of bugs in swarm
+	Count     int       // Number of alive bugs in swarm
 	Facing    Direction // Movement direction hint for client
 	Velocity  Vec2      // Current movement
 	HomePos   EntityPosition
@@ -23,11 +23,78 @@ type SwarmState struct {
 	// Condition meter (for subduing mechanics, 0-100 range)
 	ConditionValue float32
 	CurrentHP      int
+
+	// Lifecycle (server-owned)
+	Phase             string  // "feeding", "reproducing", "idle"
+	Satiation         float32 // 0-100, increases when bugs feed
+	ReproductionMeter float32 // 0-100, increases when bugs visit breeding sites
+
+	// Movement target (pre-validated path)
+	TargetX   float32 // Destination X (validated to be reachable)
+	TargetY   float32 // Destination Y
+	HasTarget bool    // Whether we have an active target
+
+	// Think timer - swarms make decisions every few seconds, not every tick
+	NextThinkTick int64 // Tick when swarm next evaluates targets
+
+	// Bug ID tracking for deterministic catching
+	RemovedBugIDs map[int]bool // Set of removed bug IDs (not serialized)
+	NextBugID     int          // Next ID to assign for new bugs (reproduction)
 }
 
 // CanReproduce returns true if reproduction cooldown has elapsed
 func (s *SwarmState) CanReproduce() bool {
 	return s.ReproduceCooldown <= 0
+}
+
+// InitializeBugIDs sets up bug ID tracking for deterministic catching.
+// Optional - RemoveBugs will lazy-initialize if needed.
+func (s *SwarmState) InitializeBugIDs() {
+	s.RemovedBugIDs = make(map[int]bool)
+	s.NextBugID = s.Count // Bugs start with IDs 0 to Count-1
+}
+
+// IsBugAlive returns true if the bug ID is valid and has not been removed.
+func (s *SwarmState) IsBugAlive(bugID int) bool {
+	if bugID < 0 || bugID >= s.NextBugID {
+		return false
+	}
+	// Safe to read from nil map - returns false (zero value)
+	return !s.RemovedBugIDs[bugID]
+}
+
+// RemoveBugs marks the given bug IDs as removed and returns which were actually removed.
+// Invalid or already-removed IDs are silently ignored.
+func (s *SwarmState) RemoveBugs(bugIDs []int) []int {
+	// Lazy initialization - safe even if InitializeBugIDs wasn't called
+	if s.RemovedBugIDs == nil {
+		s.RemovedBugIDs = make(map[int]bool)
+		if s.NextBugID == 0 {
+			s.NextBugID = s.Count
+		}
+	}
+
+	var removed []int
+	for _, id := range bugIDs {
+		if s.IsBugAlive(id) {
+			s.RemovedBugIDs[id] = true
+			removed = append(removed, id)
+		}
+	}
+	s.Count -= len(removed)
+	return removed
+}
+
+// GetRemovedIDs returns a slice of all removed bug IDs (for late joiner sync).
+func (s *SwarmState) GetRemovedIDs() []int {
+	if len(s.RemovedBugIDs) == 0 {
+		return nil
+	}
+	ids := make([]int, 0, len(s.RemovedBugIDs))
+	for id := range s.RemovedBugIDs {
+		ids = append(ids, id)
+	}
+	return ids
 }
 
 // GetID implements Entity interface
@@ -55,36 +122,137 @@ func (s *SwarmState) WorldY(chunkSize int) float32 {
 	return float32(s.Position.ChunkY*chunkSize) + s.Position.LocalY
 }
 
-// UpdateWander applies Brownian motion movement to the swarm
-func (s *SwarmState) UpdateWander(deltaTime float32, species *BugSpecies, chunkSize int) {
-	// 30% chance per tick to change direction (Brownian motion)
-	if rand.Float32() < 0.3 {
+// BlockedChecker is a function that checks if a world position blocks swarm movement
+type BlockedChecker func(worldX, worldY float32) bool
+
+// Think is called every few seconds (not every tick) to pick a new target.
+// resourceX/resourceY are the closest resource, or NaN if none visible.
+func (s *SwarmState) Think(species *BugSpecies, chunkSize int,
+	resourceX, resourceY float32, isBlocked BlockedChecker) {
+
+	currX := s.WorldX(chunkSize)
+	currY := s.WorldY(chunkSize)
+
+	var rawTargetX, rawTargetY float32
+	if !math.IsNaN(float64(resourceX)) {
+		// Go toward resource
+		rawTargetX, rawTargetY = resourceX, resourceY
+	} else {
+		// Random direction within vision range
 		angle := rand.Float32() * 2 * math.Pi
-		s.Velocity = Vec2{
-			X: float32(math.Cos(float64(angle))) * species.BaseSpeed,
-			Y: float32(math.Sin(float64(angle))) * species.BaseSpeed,
-		}
+		dist := rand.Float32() * species.VisionRange
+		rawTargetX = currX + float32(math.Cos(float64(angle)))*dist
+		rawTargetY = currY + float32(math.Sin(float64(angle)))*dist
 	}
 
-	// Apply velocity
-	s.Position.LocalX += s.Velocity.X * deltaTime
-	s.Position.LocalY += s.Velocity.Y * deltaTime
-	s.Position.Normalize(chunkSize)
+	s.TargetX, s.TargetY = raycastToBlock(currX, currY, rawTargetX, rawTargetY, isBlocked)
+	s.HasTarget = true
+}
 
-	// Check distance from home, bias back if too far
-	homeWorldX := float32(s.HomePos.ChunkX*chunkSize) + s.HomePos.LocalX
-	homeWorldY := float32(s.HomePos.ChunkY*chunkSize) + s.HomePos.LocalY
-	currWorldX := s.WorldX(chunkSize)
-	currWorldY := s.WorldY(chunkSize)
+// Move is called every tick to move toward current target.
+// This is cheap - just applies velocity, no decision making.
+func (s *SwarmState) Move(deltaTime float32, species *BugSpecies, chunkSize int) {
+	if !s.HasTarget {
+		s.Velocity = Vec2{X: 0, Y: 0}
+		s.Facing = VelocityToDirection(s.Velocity)
+		return
+	}
 
-	dx, dy := currWorldX-homeWorldX, currWorldY-homeWorldY
+	currX := s.WorldX(chunkSize)
+	currY := s.WorldY(chunkSize)
+
+	dx, dy := s.TargetX-currX, s.TargetY-currY
 	dist := float32(math.Sqrt(float64(dx*dx + dy*dy)))
 
-	if dist > s.WanderRad {
-		s.Velocity = Vec2{X: -dx / dist * species.BaseSpeed, Y: -dy / dist * species.BaseSpeed}
+	if dist < 0.5 {
+		// Arrived at target - stop, wait for next Think
+		s.HasTarget = false
+		s.Velocity = Vec2{X: 0, Y: 0}
+	} else {
+		// Move toward target
+		s.Velocity = Vec2{
+			X: dx / dist * species.BaseSpeed,
+			Y: dy / dist * species.BaseSpeed,
+		}
+		s.Position.LocalX += s.Velocity.X * deltaTime
+		s.Position.LocalY += s.Velocity.Y * deltaTime
+		s.Position.Normalize(chunkSize)
 	}
 
 	s.Facing = VelocityToDirection(s.Velocity)
+}
+
+// raycastToBlock walks from start toward end, returning position just before first blocked cell.
+// If path is clear, returns the end position. If isBlocked is nil, returns end directly.
+func raycastToBlock(startX, startY, endX, endY float32, isBlocked BlockedChecker) (float32, float32) {
+	if isBlocked == nil {
+		return endX, endY
+	}
+
+	dx := endX - startX
+	dy := endY - startY
+	dist := float32(math.Sqrt(float64(dx*dx + dy*dy)))
+
+	if dist < 0.5 {
+		return endX, endY
+	}
+
+	// Normalize direction
+	dirX := dx / dist
+	dirY := dy / dist
+
+	// Step through in 0.5-block increments (small enough to catch 1x1 cells)
+	const stepSize float32 = 0.5
+	steps := int(dist / stepSize)
+
+	prevX, prevY := startX, startY
+	for i := 1; i <= steps; i++ {
+		checkX := startX + dirX*stepSize*float32(i)
+		checkY := startY + dirY*stepSize*float32(i)
+
+		if isBlocked(checkX, checkY) {
+			// Return position just before the blocked cell
+			return prevX, prevY
+		}
+		prevX, prevY = checkX, checkY
+	}
+
+	// Check final position
+	if isBlocked(endX, endY) {
+		return prevX, prevY
+	}
+
+	return endX, endY
+}
+
+// CheckPhaseTransition checks if swarm should transition to a new lifecycle phase
+func (s *SwarmState) CheckPhaseTransition(species *BugSpecies) {
+	switch s.Phase {
+	case "feeding":
+		if s.Satiation >= 100 {
+			s.Phase = "reproducing"
+		}
+	case "reproducing":
+		if s.ReproductionMeter >= 100 {
+			// TODO: Spawn eggs based on species config
+			s.Phase = "feeding"
+			s.ReproductionMeter = 0
+			s.Satiation = 0 // Hungry again after breeding
+		}
+	case "", "idle":
+		s.Phase = "feeding" // Default to feeding
+	}
+}
+
+// GetCurrentAttractions returns the resource IDs this swarm is attracted to based on current phase
+func (s *SwarmState) GetCurrentAttractions(species *BugSpecies) []string {
+	if species.AttractionsByPhase == nil {
+		return nil
+	}
+	if attractions, ok := species.AttractionsByPhase[s.Phase]; ok {
+		return attractions
+	}
+	return nil
 }
 
 // VelocityToDirection converts a velocity vector to the nearest cardinal direction

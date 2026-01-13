@@ -11,6 +11,7 @@
       "footprint": [1, 1],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 4,
         "required_tool_type": "shovel",
@@ -28,6 +29,7 @@
       "footprint": [1, 1],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 4,
         "required_tool_type": "pickaxe",
@@ -46,6 +48,7 @@
       "footprint": [1, 1],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 3,
         "required_tool_type": "shovel",
@@ -172,6 +175,7 @@
       "footprint": [1, 1],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 3,
         "required_tool_type": "axe",
@@ -189,6 +193,7 @@
       "footprint": [1, 1],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 6,
         "required_tool_type": "pickaxe",
@@ -206,6 +211,7 @@
       "footprint": [1, 1],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 8,
         "required_tool_type": "pickaxe",
@@ -278,6 +284,7 @@
       "footprint": [2, 2],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "interactable": true,
       "interaction_type": "craft",
       "breakable": {
@@ -380,6 +387,7 @@
       "footprint": [1, 2],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
@@ -550,6 +558,7 @@
       "footprint": [2, 2],
       "pivot": "bc",
       "blocks_players": true,
+      "blocks_bugs": true,
       "interactable": true,
       "interaction_type": "well",
       "breakable": {

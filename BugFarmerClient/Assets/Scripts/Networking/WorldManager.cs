@@ -94,6 +94,17 @@ namespace BugFarmer.Networking
                 Players.Clear();
                 Players.AddRange(CurrentMatch.Presences);
 
+                // CRITICAL: Set local player ID for EntityManager to filter self updates
+                if (Entities.EntityManager.Instance != null)
+                {
+                    Entities.EntityManager.Instance.SetLocalPlayerId(Self.UserId);
+                    Debug.Log($"[WorldManager] Set local player ID: {Self.UserId}");
+                }
+                else
+                {
+                    Debug.LogError("[WorldManager] EntityManager.Instance is null! Remote players will not be filtered correctly.");
+                }
+
                 Debug.Log($"[WorldManager] Joined match: {CurrentMatch.Id} with {Players.Count} player(s)");
                 return CurrentMatch;
             }

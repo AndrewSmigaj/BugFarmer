@@ -884,6 +884,25 @@ def main():
     zone.set_spawn(center, center - 15)
 
     # =========================================================================
+    # BUG SPAWNING
+    # =========================================================================
+    zone.set_bug_spawning(
+        species_caps={
+            "fly_common": {"initial": 100, "max": 300, "spawn_interval": 45.0},
+            "butterfly_meadow": {"initial": 60, "max": 200, "spawn_interval": 90.0}
+        }
+    )
+    # Flies spawn zone-wide
+    zone.add_spawn_area("zone_wide", ["fly_common"], "zone")
+    # Fly farm concentration
+    zone.add_spawn_area("fly_farm", ["fly_common"], "circle", cx=center+45, cy=center+60, radius=40)
+    # Butterflies in open meadow areas (between village, forests, lakes)
+    zone.add_spawn_area("meadow_nw", ["butterfly_meadow"], "circle", cx=180, cy=180, radius=50)
+    zone.add_spawn_area("meadow_ne", ["butterfly_meadow"], "circle", cx=330, cy=180, radius=40)
+    zone.add_spawn_area("meadow_sw", ["butterfly_meadow"], "circle", cx=180, cy=330, radius=50)
+    zone.add_spawn_area("meadow_se", ["butterfly_meadow"], "circle", cx=380, cy=380, radius=40)
+
+    # =========================================================================
     # EXPORT
     # =========================================================================
     output_dir = os.path.join(

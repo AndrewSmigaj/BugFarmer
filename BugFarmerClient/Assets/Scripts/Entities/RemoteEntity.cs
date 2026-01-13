@@ -23,6 +23,31 @@ namespace BugFarmer.Entities
         private void Awake()
         {
             _spriteRenderer = GetComponent<SpriteRenderer>();
+
+            // Set sorting layer for proper rendering with Y-sorting
+            if (_spriteRenderer != null)
+            {
+                _spriteRenderer.sortingLayerName = "Occupants";
+            }
+
+            // Load sprites from Resources if not assigned in prefab
+            if (directionSprites == null || directionSprites.Length == 0)
+            {
+                directionSprites = new Sprite[4];
+                directionSprites[0] = Resources.Load<Sprite>("Player/farmer_down");
+                directionSprites[1] = Resources.Load<Sprite>("Player/farmer_left");
+                directionSprites[2] = Resources.Load<Sprite>("Player/farmer_right");
+                directionSprites[3] = Resources.Load<Sprite>("Player/farmer_up");
+
+                if (directionSprites[0] != null)
+                {
+                    Debug.Log("[RemoteEntity] Loaded farmer sprites from Resources/Player/");
+                }
+                else
+                {
+                    Debug.LogWarning("[RemoteEntity] No farmer sprites found in Resources/Player/");
+                }
+            }
         }
 
         private void Update()
@@ -32,6 +57,12 @@ namespace BugFarmer.Entities
                 _interpProgress = Mathf.Min(_interpProgress + Time.deltaTime / InterpDuration, 1f);
                 Vector2 newPos = Vector2.Lerp(_startPos, _targetPos, _interpProgress);
                 transform.position = new Vector3(newPos.x, newPos.y, transform.position.z);
+
+                // Update sorting order for Y-sorting
+                if (_spriteRenderer != null)
+                {
+                    _spriteRenderer.sortingOrder = -Mathf.FloorToInt(newPos.y);
+                }
             }
         }
 

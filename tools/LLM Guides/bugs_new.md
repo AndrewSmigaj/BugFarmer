@@ -25,12 +25,14 @@ Everything in this section exists in the codebase and can be verified.
 | `nakama/modules/world/match.go` | Match lifecycle, tick loop, message handlers |
 | `nakama/modules/world/state.go` | WorldState, PlayerState structs |
 | `nakama/modules/world/messages.go` | OpCodes and message structs |
-| `nakama/modules/entities/swarm.go` | SwarmState struct and UpdateWander |
+| `nakama/modules/world/resource_query.go` | FindNearbyResources for swarm attraction |
+| `nakama/modules/entities/swarm.go` | SwarmState struct, Think/Move methods |
 | `nakama/modules/entities/species.go` | BugSpecies struct and LoadSpecies |
 | `nakama/modules/entities/types.go` | EntityPosition, Direction, Entity interface |
 | `nakama/modules/entities/vec.go` | Vec2 math operations |
+| `nakama/data/species.json` | Species definitions (fly, butterfly, etc.) |
 
-### SwarmState (swarm.go:10-26)
+### SwarmState (swarm.go)
 
 ```go
 type SwarmState struct {
@@ -49,17 +51,33 @@ type SwarmState struct {
     // Condition meter (for subduing mechanics, 0-100 range)
     ConditionValue float32
     CurrentHP      int
+
+    // Lifecycle (server-owned)
+    Phase             string  // "feeding", "reproducing", "idle"
+    Satiation         float32 // 0-100, increases when bugs feed
+    ReproductionMeter float32 // 0-100, increases when bugs visit breeding sites
+
+    // Movement target (pre-validated path)
+    TargetX       float32 // Destination X (validated to be reachable)
+    TargetY       float32 // Destination Y
+    HasTarget     bool    // Whether we have an active target
+    NextThinkTick int64   // Tick when swarm next evaluates targets
 }
 
 // Methods that exist:
 func (s *SwarmState) WorldX(chunkSize int) float32
 func (s *SwarmState) WorldY(chunkSize int) float32
-func (s *SwarmState) UpdateWander(deltaTime float32, species *BugSpecies, chunkSize int)
+func (s *SwarmState) Think(species *BugSpecies, chunkSize int, resourceX, resourceY float32, isBlocked BlockedChecker)
+func (s *SwarmState) Move(deltaTime float32, species *BugSpecies, chunkSize int)
+func (s *SwarmState) CheckPhaseTransition(species *BugSpecies)
+func (s *SwarmState) GetCurrentAttractions(species *BugSpecies) []string
 ```
+
+**Think/Move Split:** Server calls `Think()` every 30-50 ticks (3-5 seconds) to pick a new target. `Move()` is called every tick to apply velocity toward the target. This reduces pathfinding cost.
 
 **Note:** Current SwarmState has `Count` (a single int), NOT a per-member roster. The `CurrentHP` is a single value for the whole swarm, NOT per-member.
 
-### BugSpecies (species.go:11-60)
+### BugSpecies (species.go)
 
 ```go
 type BugSpecies struct {
@@ -69,10 +87,21 @@ type BugSpecies struct {
     Category    string `json:"category"` // "swarm", "individual", "boss"
 
     // Movement
-    BaseSpeed    float32 `json:"base_speed"`
-    WanderRadius float32 `json:"wander_radius"`
+    BaseSpeed        float32 `json:"base_speed"`
+    WanderRadius     float32 `json:"wander_radius"`
+    WanderChangeRate float32 `json:"wander_change_rate"` // Chance per tick to change direction
 
-    // Swarm-specific
+    // Vision-based resource seeking (server-side swarm AI)
+    VisionRange        float32             `json:"vision_range"`        // How far swarm can "see" resources
+    AttractionsByPhase map[string][]string `json:"attractions_by_phase"` // phase → resource IDs
+    AttractionStrength float32             `json:"attraction_strength"`
+
+    // Lifecycle parameters
+    FeedAmount         float32 `json:"feed_amount"`          // Satiation per feeding event
+    BreedAmount        float32 `json:"breed_amount"`         // Reproduction progress per breeding event
+    SatiationDecayRate float32 `json:"satiation_decay_rate"` // Per second in idle
+
+    // Swarm-specific (category=swarm only)
     MinSwarmSize   int     `json:"min_swarm_size"`
     MaxSwarmSize   int     `json:"max_swarm_size"`
     SwarmRadius    float32 `json:"swarm_radius"`
@@ -80,7 +109,7 @@ type BugSpecies struct {
     SplitThreshold int     `json:"split_threshold"`
     SplitChance    float32 `json:"split_chance"`
 
-    // Player Reaction (DEFINED but NOT USED)
+    // Player Reaction AI
     PlayerReaction string  `json:"player_reaction"` // "ignore", "flee", "attack", "curious"
     ReactionRadius float32 `json:"reaction_radius"`
     FleeSpeedMult  float32 `json:"flee_speed_mult"`
@@ -114,10 +143,7 @@ type BugSpecies struct {
 }
 ```
 
-**What does NOT exist in BugSpecies:**
-- `MovementMode` (no orbit/agent distinction)
-- `OrbitParams`
-- `AttractedTo`, `AttractionRadius`, `AttractionStrength`
+**Vision-based attraction:** Swarms use `VisionRange` to find nearby resources matching `AttractionsByPhase[currentPhase]`. Flies (vision 8) stay local; butterflies (vision 24) seek distant flowers.
 
 ### OpCodes (messages.go)
 
@@ -133,11 +159,23 @@ const (
     OpCodeBugCaught int64 = 25 // S→C: Broadcast catch event
     OpCodeEquipTool int64 = 27 // C→S: Player equips/unequips a tool
 )
+
+// Bug Simulation OpCodes (Phase 1 - Deterministic Per-Bug)
+const (
+    OpCodeRequestSample       int64 = 61 // S→C: Request positions for specific bug IDs
+    OpCodeSampleResponse      int64 = 62 // C→S: Positions for requested bugs
+    OpCodeSampleBroadcast     int64 = 63 // S→C: Sample for comparison by all clients
+    OpCodeRequestSnapshot     int64 = 66 // C→S: Client requests full snapshot (drift detected)
+    OpCodeFullSnapshot        int64 = 67 // S→C: Full bug positions for swarm
+    OpCodeWorldInit           int64 = 68 // S→C: WorldSeed on join (sent once)
+    OpCodeRequestInteractions int64 = 69 // S→C: Request aggregated interaction counts
+    OpCodeInteractionReport   int64 = 70 // C→S: Aggregated interaction counts per swarm
+)
 ```
 
-**What does NOT exist:** OpCodes 50-59 (split events, hit events, meter events)
+**Note:** OpCodes 50-60 (hit/catch/meter events) do NOT exist yet. Phase 1 sync OpCodes (61-70) ARE defined but client handlers not fully implemented.
 
-### SwarmData Message (messages.go:87-96)
+### SwarmData Message (messages.go)
 
 ```go
 type SwarmData struct {
@@ -161,23 +199,39 @@ type SwarmUpdateMessage struct {
 
 ### Match Handlers (match.go)
 
-**spawnInitialSwarms() (lines 469-499):**
-- Hardcoded 5 fly swarms near origin
-- Uses defaultFlySpecies() fallback
+**Tick Loop Structure:**
+- `Think()` called every 30-50 ticks (3-5 seconds) via `NextThinkTick` check
+- `Move()` called every tick to apply velocity toward target
+- `CheckPhaseTransition()` called to update lifecycle state
+- Resources found via `FindNearbyResources()` in `resource_query.go`
 
-**checkSwarmMerging() (lines 501-547):**
+**spawnInitialSwarms():**
+- Spawns swarms from zone configuration or defaults
+- Loads species from `data/species.json`
+
+**checkSwarmMerging():**
 - Server-side merge check every 50 ticks
 - Merges same-species swarms within MergeRadius
 
-**checkSwarmSplitting() (lines 549-597):**
+**checkSwarmSplitting():**
 - SERVER-SIDE split based on SplitThreshold and SplitChance
 - Uses random chance, NOT fly positions
 - **Architecture violation:** Should be client-reported, not server-computed
 
-**handleCatchBug() (lines 619+):**
+**handleCatchBug():**
 - Rate limited 200ms between catches
 - Validates click within reach
 - Trusts client count, no per-member targeting
+
+**handleInteractionReport() (OpCode 70):**
+- Receives aggregated food/breed counts from client
+- Updates `Satiation` and `ReproductionMeter` on swarms
+- Triggers phase transitions via `CheckPhaseTransition()`
+
+**WorldInit (OpCode 68):**
+- Sent on player join
+- Contains `WorldSeed` (int64) for deterministic client simulation
+- Contains current server `Tick` for sync
 
 ---
 
@@ -189,9 +243,18 @@ type SwarmUpdateMessage struct {
 |------|---------|
 | `SwarmManager.cs` | Singleton, handles OpCode 20/25, creates/destroys SwarmVisuals |
 | `SwarmVisual.cs` | Single swarm rendering, fly spawning, position interpolation |
-| `FlyBehavior.cs` | Brownian motion for individual flies |
+| `FlyBehavior.cs` | Brownian motion for individual flies (legacy system) |
 | `BugMessages.cs` | Message structs for OpCodes 20, 24, 25 |
 | `CatchingController.cs` | Input handling, catch detection |
+| `Bugs/DeterministicRandom.cs` | Seeded PRNG with FNV-1a hashing (per-bug seeds) |
+| `Bugs/FixedPoint.cs` | Fixed-point math struct (scale 1000) for determinism |
+| `Bugs/FixedPointMath.cs` | FixedPoint2 for 2D vectors, distance calculations |
+| `Bugs/BugAgent.cs` | Per-bug state: position, velocity, behavior, RNG |
+| `Bugs/IBugMovement.cs` | Interface for species-specific movement |
+| `Bugs/BrownianMovement.cs` | Erratic fly-like movement (deterministic) |
+| `Bugs/GlidingMovement.cs` | Smooth butterfly-like movement (deterministic) |
+| `Bugs/MovementFactory.cs` | Creates movement instances by species ID |
+| `Bugs/BugCollision.cs` | Collision detection infrastructure |
 
 ### SwarmManager.cs
 
@@ -230,7 +293,7 @@ public class SwarmVisual : MonoBehaviour
 ```
 
 **Key implementation details:**
-- Fly spawning uses `Random.insideUnitCircle` (line 113) - NON-DETERMINISTIC
+- Fly spawning uses `Random.insideUnitCircle` - NON-DETERMINISTIC
 - Flies tracked as `List<FlyBehavior>`, NOT by member ID
 - No split detection code exists
 
@@ -256,7 +319,7 @@ public class SwarmUpdateMessage {
 - `roster` field in SwarmData
 - SwarmSplitMessage, MemberRemovedMessage, etc.
 
-### FlyBehavior.cs
+### FlyBehavior.cs (Legacy)
 
 ```csharp
 public class FlyBehavior : MonoBehaviour
@@ -270,23 +333,304 @@ public class FlyBehavior : MonoBehaviour
 }
 ```
 
+**Note:** This is the LEGACY system used by SwarmVisual. Being replaced by BugAgent + deterministic movement.
+
+### DeterministicRandom.cs (Phase 1 Foundation)
+
+```csharp
+// IMPLEMENTED - per-bug seeded PRNG using xorshift32
+public class DeterministicRandom
+{
+    private uint _state;
+
+    public DeterministicRandom(long seed);
+
+    /// Creates RNG for specific bug. Same inputs = same sequence on all clients.
+    public static DeterministicRandom ForBug(long worldSeed, string swarmId, int bugId);
+
+    /// Combines (worldSeed, swarmId, bugId) using FNV-1a 64-bit hash.
+    public static long ComputeBugSeed(long worldSeed, string swarmId, int bugId);
+
+    public float NextFloat();           // [0, 1)
+    public float Range(float min, float max);
+    public int RangeInt(int min, int max);
+}
+```
+
+### FixedPoint.cs (Phase 1 Foundation)
+
+```csharp
+// IMPLEMENTED - fixed-point math to avoid floating-point non-determinism
+public struct FixedPoint
+{
+    public const int Scale = 1000;  // 3 decimal places
+    public int Value;               // Actual = Value / 1000.0f
+
+    public static FixedPoint FromFloat(float f);
+    public float ToFloat();
+    // Operators: +, -, *, /
+}
+
+public struct FixedPoint2  // 2D vector
+{
+    public FixedPoint X, Y;
+
+    public FixedPoint SqrDistanceTo(FixedPoint2 other);
+    public FixedPoint SqrMagnitude();
+    public Vector2 ToVector2();
+}
+```
+
+### BugAgent.cs (Phase 1 Foundation)
+
+```csharp
+// IMPLEMENTED - per-bug state (NOT yet integrated into SwarmVisual)
+public class BugAgent
+{
+    public int BugId;
+    public string SwarmId;
+    public string SpeciesId;
+
+    public DeterministicRandom Rng;   // Per-bug seeded RNG
+    public FixedPoint2 Position;      // Fixed-point for determinism
+    public FixedPoint2 Velocity;
+    public IBugMovement Movement;     // Species-specific movement
+
+    public string CurrentBehavior;    // "wander", "flee", "attack", "curious"
+    public string TargetPlayerId;
+
+    public BugAgent(long worldSeed, string swarmId, string speciesId, int bugId, FixedPoint2 startPosition);
+
+    /// Simulate one tick: update behavior, apply movement, update position
+    public void SimulateTick(FixedPoint2 swarmCenter, List<PlayerTarget> players);
+}
+```
+
+**Stochastic alert system:** Bugs don't all react instantly. They have a 30% chance per check (every 5-15 ticks) to notice a player within `ReactionRadius`. This creates emergent behavior - some bugs flee first, others follow.
+
+### IBugMovement Interface
+
+```csharp
+public interface IBugMovement
+{
+    void UpdateMovement(BugAgent bug, FixedPoint2 swarmCenter, FixedPoint wanderRadiusSqr);
+    void MoveToward(BugAgent bug, FixedPoint2 target);
+    void MoveAwayFrom(BugAgent bug, FixedPoint2 threat);
+    void MoveTowardSlow(BugAgent bug, FixedPoint2 target);  // For "curious"
+}
+```
+
+**Implementations:** `BrownianMovement` (erratic buzzing for flies), `GlidingMovement` (smooth arcs for butterflies)
+
 ---
 
-## 1.3 What's Missing (Current Gaps)
+## 1.3 What's Missing (Integration Gaps)
 
-- **No `species.json` config file** - `nakama/data/entities/species.json` does not exist
-- **No per-member tracking** - Both server and client only track count
-- **No deterministic positions** - Client uses `Random`, not hash-based
-- **No movement modes** - No orbit/agent distinction
-- **No split detection on client** - Server does random splits
-- **No OpCodes 50-59** - Split, combat, meter events don't exist
-- **No behavior system** - PlayerReaction fields exist but aren't used
+The following components exist but are **NOT YET INTEGRATED**:
+
+- **BugAgent not wired into SwarmVisual** - `BugAgent.cs` exists with full per-bug state, but `SwarmVisual` still uses `List<FlyBehavior>` with non-deterministic `Random.insideUnitCircle`
+- **Sample/snapshot handlers incomplete** - OpCodes 61-67 are defined, but client comparison logic and snapshot request handlers not implemented
+- **Collision detection not hooked in** - `BugCollision.cs` exists but bugs don't check terrain/occupants during movement
+- **No per-member roster on server** - Server has `Count` but no `MemberIDs []int` for targeting specific bugs
+- **Server-side split detection** - Should be client-requested per architecture doc, but server uses random `SplitChance`
+- **OpCodes 50-60 not defined** - Hit/catch/meter events for per-member combat don't exist yet
+
+**What DOES exist now:**
+- ✓ `nakama/data/species.json` with lifecycle/attraction data
+- ✓ `DeterministicRandom`, `FixedPoint`, `BugAgent` classes
+- ✓ `IBugMovement` with `BrownianMovement` and `GlidingMovement`
+- ✓ Server-side resource seeking with `FindNearbyResources()`
+- ✓ Lifecycle phases (feeding → reproducing → idle)
+- ✓ OpCodes 61-70 for sample/snapshot sync (message structs defined)
+
+---
+
+## 1.4 World Building / Occupant System
+
+### Multi-Cell Occupants (Footprint System)
+
+Occupants like trees, fences, and buildings can span multiple cells. The system uses an **anchor + footprint** model:
+
+- **Anchor cell:** The primary cell where the occupant is logically placed (bottom-left corner)
+- **Footprint cells:** Additional cells occupied by the entity (based on size/direction)
+
+### Storage Format
+
+**Anchor cell:** `{"id":"tree_oak","dir":0,"anchor":true}`
+**Footprint cell:** `{"id":"tree_oak","dir":0}` (anchor field omitted = false)
+
+### PlacedOccupant Structure
+
+**Server (Go) - occupants.go:**
+```go
+type PlacedOccupant struct {
+    ID     string `json:"id"`
+    Dir    int    `json:"dir"`    // 0-3 facing direction
+    Anchor bool   `json:"anchor"` // true for anchor cell, false for footprint
+}
+```
+
+**Client (C#) - WorldMessages.cs:**
+```csharp
+public class PlacedOccupant {
+    public string id;
+    public int dir;
+    public bool anchor;  // true = anchor cell, false = footprint cell
+}
+```
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `nakama/modules/world/occupants.go` | PlacedOccupant struct, OccupantCell helpers |
+| `nakama/modules/world/zone.go` | Chunk storage, SetOccupant, SetFootprintCell |
+| `nakama/modules/world/handlers_world.go` | handleTilePlace, handleTileBreak |
+| `TilemapManager.cs` | Client chunk storage, rendering, occupancy queries |
+
+### Client Data Structures
+
+```csharp
+// Stores ALL cells (anchor + footprint) - use for collision/placement checks
+private Dictionary<Vector2Int, ChunkOccupantData> _loadedChunks;
+
+// Stores rendered GameObjects (anchor cells ONLY) - use for sprite management
+private Dictionary<Vector2Int, GameObject> _occupantObjects;
+```
+
+**Critical distinction:**
+- `_loadedChunks` has data for **every occupied cell** → use for `IsCellOccupied()`, `GetOccupantAt()`
+- `_occupantObjects` has **only anchor cells** → use for visual sprite management
+
+### Server → Client Sync Flow
+
+**Initial Load (ChunkData - OpCode 44):**
+1. Server sends full chunk JSON with ALL cells (anchor + footprint)
+2. Client parses into `_loadedChunks[chunkPos].Occupants[y][x]`
+3. Client renders only anchor cells (`RenderOccupant` checks `anchor` flag)
+
+**Real-time Update (WorldUpdate - OpCode 46):**
+1. Server broadcasts **only anchor cell** via WorldUpdate message
+2. Client receives anchor cell with `anchor=true`
+3. Client computes full footprint via `EntityDatabase.GetFootprint(id, dir)`
+4. Client updates ALL cells in `_loadedChunks` via `UpdateOccupantCellData()`
+5. Client renders sprite only at anchor position
+
+### Occupancy Checking
+
+```csharp
+// CORRECT: Checks _loadedChunks which has ALL occupied cells (anchor + footprint)
+public string GetOccupantAt(Vector2Int cellPos) {
+    // Returns occupant ID at cell, or null if empty
+}
+
+// CORRECT: Uses GetOccupantAt internally for proper footprint detection
+public bool IsCellOccupied(Vector2Int cellPos) {
+    string occ = GetOccupantAt(cellPos);
+    return !string.IsNullOrEmpty(occ);
+}
+```
+
+**Warning:** Do NOT use `_occupantObjects.ContainsKey()` for occupancy checks - it only has anchor cells and will miss footprint cells.
+
+### Server-Side Occupant Placement (handleTilePlace)
+
+```go
+// 1. Store anchor cell
+chunk.SetOccupant(lx, ly, occ)  // Sets Anchor=true automatically
+
+// 2. Store footprint cells for multi-cell occupants
+w, h := def.GetFootprint(msg.Direction)
+for dy := 0; dy < h; dy++ {
+    for dx := 0; dx < w; dx++ {
+        if dx == 0 && dy == 0 { continue }  // Skip anchor
+        bChunk.SetFootprintCell(blx, bly, msg.OccupantID, msg.Direction)
+    }
+}
+
+// 3. Broadcast only anchor cell to clients
+m.broadcastWorldUpdate(dispatcher, state, cx, cy, msg.GridX, msg.GridY, "", occ)
+```
+
+### Server-Side Occupant Breaking (handleTileBreak)
+
+```go
+// 1. Clear anchor cell
+chunk.ClearOccupant(lx, ly)
+
+// 2. Clear all footprint cells
+w, h := def.GetFootprint(occ.Dir)
+for dy := 0; dy < h; dy++ {
+    for dx := 0; dx < w; dx++ {
+        bChunk.ClearOccupant(blx, bly)
+    }
+}
+
+// 3. Broadcast removal (nil occupant)
+m.broadcastWorldUpdate(dispatcher, state, cx, cy, msg.GridX, msg.GridY, "", nil)
+```
+
+---
+
+## 1.5 Implementation Status Summary
+
+| Component | Status | Location | Notes |
+|-----------|--------|----------|-------|
+| DeterministicRandom | ✓ Complete | `Bugs/DeterministicRandom.cs` | Per-bug seeded xorshift32 PRNG |
+| FixedPoint math | ✓ Complete | `Bugs/FixedPoint.cs`, `FixedPointMath.cs` | Scale 1000, deterministic ops |
+| BugAgent class | ✓ Complete | `Bugs/BugAgent.cs` | Per-bug state, behaviors, SimulateTick |
+| BrownianMovement | ✓ Complete | `Bugs/BrownianMovement.cs` | Erratic fly movement |
+| GlidingMovement | ✓ Complete | `Bugs/GlidingMovement.cs` | Smooth butterfly arcs |
+| MovementFactory | ✓ Complete | `Bugs/MovementFactory.cs` | Creates movement by species |
+| BugCollision | ✓ Structure | `Bugs/BugCollision.cs` | Framework exists, not hooked in |
+| species.json | ✓ Complete | `nakama/data/species.json` | Full lifecycle/attraction data |
+| Server resource seeking | ✓ Working | `resource_query.go`, `swarm.go` | Think/Move split, FindNearbyResources |
+| Lifecycle phases | ✓ Working | `swarm.go` | feeding → reproducing → idle |
+| OpCodes 61-70 | ✓ Defined | `messages.go` | Sample/snapshot/interaction structs |
+| **SwarmVisual integration** | **⚠ Pending** | `SwarmVisual.cs` | Still uses List<FlyBehavior> |
+| **Client sync handlers** | **⚠ Pending** | - | OpCode 61-67 handlers not implemented |
+| **Server member roster** | **⚠ Pending** | `swarm.go` | No MemberIDs for per-bug targeting |
+
+**Next integration step:** Wire `BugAgent` into `SwarmVisual` to replace `FlyBehavior`. This enables deterministic per-bug simulation on all clients.
 
 ---
 
 # PART 2: PLANNED IMPLEMENTATION
 
 Everything in this section is TO BE IMPLEMENTED. Organized by implementation phase.
+
+---
+
+## Two-Layer Architecture
+
+The bug system has two distinct simulation layers:
+
+### Layer 1: Server-Side Swarm AI (WHERE swarms go)
+- Server owns swarm CENTER movement
+- Each species has a **vision range** - how far the swarm can "see" resources
+- Butterflies: long vision (24 blocks) → swarm centers move far to reach flowers
+- Flies: short vision (8 blocks) → swarm centers stay local near compost/fruit
+- Server runs resource detection, biases swarm velocity toward attractive objects
+- This creates purposeful, species-specific swarm movement
+
+### Layer 2: Client-Side Bug Movement (HOW individual bugs move)
+- ALL clients simulate per-bug positions locally (deterministic)
+- Bugs have species-specific **movement patterns**:
+  - Flies: Brownian motion (erratic buzzing, short intent range)
+  - Butterflies: Gliding motion (smooth arcs, long intent range)
+- All bugs **bias toward swarm center** (follow where server moved it)
+- When butterfly swarm center moves to flowers, individual butterflies glide there gracefully
+
+### Key Insight: Intent Range
+Different bugs have different "vision" when choosing local movement:
+
+| Species | Intent Range | Dir Change Rate | Visual Result |
+|---------|--------------|-----------------|---------------|
+| Fly | 1.5 blocks | 30% per tick | Erratic buzzing, stays local |
+| Butterfly | 10 blocks | 5% per tick | Long gliding arcs across screen |
+
+- Flies pick random directions nearby → frequent changes → buzzy movement
+- Butterflies pick destination points far away → commit to direction → graceful arcs
 
 ---
 
@@ -336,35 +680,41 @@ Every player in a chunk runs the bug simulation:
 
 This gives responsive local rendering. Players see bugs moving immediately without network delay.
 
-### Deterministic Simulation via Seeded PRNG
+### Deterministic Simulation via Per-Bug Seeded PRNG
 
 To ensure all clients see bugs in the same positions:
 
-1. **Each swarm has a seed** (int64) generated by server on swarm creation
-2. **Clients use deterministic RNG** initialized from seed
-3. **All random decisions** (direction changes, initial spawn positions) go through seeded RNG
-4. **Call order matters** - all clients must make RNG calls in same order per tick
+1. **Each bug has its own seed**: `seed = hash(worldSeed, swarmID, bugID)`
+2. **Independent RNG per bug**: Removal of bug 2 doesn't affect bug 3's RNG
+3. **Fixed-point positions**: Use int32 × 1000 to avoid floating point drift
+4. **ID-order updates**: Bugs MUST be updated in ascending bugID order
+5. **Lerp on resync**: Smooth correction over 250ms avoids visual pops
 
 ```go
-// Server-side: SwarmGroup needs seed
+// Server-side: SwarmGroup needs world seed (shared) not per-swarm seed
 type SwarmGroup struct {
     // ... existing fields ...
-    Seed int64 `json:"seed"` // For deterministic client simulation
+    // WorldSeed is global, not per-swarm
 }
 
-// Generate on swarm creation
-func newSwarmSeed() int64 {
-    return rand.Int63()
+// Bug seed derived from stable IDs
+func bugSeed(worldSeed int64, swarmID string, bugID int) int64 {
+    h := fnv.New64a()
+    binary.Write(h, binary.LittleEndian, worldSeed)
+    h.Write([]byte(swarmID))
+    binary.Write(h, binary.LittleEndian, int64(bugID))
+    return int64(h.Sum64())
 }
 ```
 
 ```csharp
-// Client-side: Deterministic RNG per swarm
+// Client-side: Deterministic RNG per BUG (not per swarm)
 public class DeterministicRandom {
     private uint state;
 
     public DeterministicRandom(long seed) {
         state = (uint)(seed ^ (seed >> 32));
+        if (state == 0) state = 1; // Prevent zero state
     }
 
     public float NextFloat() {
@@ -379,9 +729,92 @@ public class DeterministicRandom {
         return min + NextFloat() * (max - min);
     }
 }
+
+// Each bug has its own RNG
+public class BugAgent {
+    public int BugId;
+    public DeterministicRandom Rng;  // Seeded with hash(worldSeed, swarmId, bugId)
+    // ...
+}
 ```
 
-**Drift mitigation:** Even with deterministic RNG, floating point differences can accumulate. Periodic snapshot sync (every 30 seconds) corrects any drift.
+### Fixed-Point Positions
+
+To eliminate floating point non-determinism across platforms:
+
+```csharp
+// Use int32 with 3 decimal places (multiply by 1000)
+public struct FixedPoint {
+    public int Value;  // Actual position = Value / 1000.0f
+
+    public static FixedPoint FromFloat(float f) => new FixedPoint { Value = (int)(f * 1000) };
+    public float ToFloat() => Value / 1000f;
+
+    public static FixedPoint operator +(FixedPoint a, FixedPoint b) =>
+        new FixedPoint { Value = a.Value + b.Value };
+}
+
+// BugAgent uses fixed-point internally
+public class BugAgent {
+    public FixedPoint PosX, PosY;  // Fixed-point for determinism
+    public FixedPoint VelX, VelY;
+
+    public Vector2 WorldPosition => new Vector2(PosX.ToFloat(), PosY.ToFloat());
+}
+```
+
+### Update Order Rule
+
+**CRITICAL:** Bugs must be updated in ascending ID order to ensure all clients make RNG calls in the same sequence:
+
+```csharp
+void SimulateTick() {
+    // Sort by ID (or use sorted data structure)
+    var sortedBugs = _bugs.OrderBy(b => b.BugId);
+
+    foreach (var bug in sortedBugs) {
+        bug.UpdateMovement();  // RNG calls happen in same order on all clients
+    }
+}
+```
+
+### Resync with Lerp Correction
+
+When a snapshot is received, don't teleport bugs - smoothly correct over 250ms:
+
+```csharp
+void OnSnapshotReceived(FullSnapshotMessage snapshot) {
+    foreach (var bugData in snapshot.Bugs) {
+        var bug = GetBug(bugData.BugID);
+        if (bug != null) {
+            // Start lerping to correct position
+            bug.StartCorrection(bugData.X, bugData.Y, duration: 0.25f);
+        }
+    }
+}
+
+// In BugAgent
+public void StartCorrection(float targetX, float targetY, float duration) {
+    _correctionStart = WorldPosition;
+    _correctionTarget = new Vector2(targetX, targetY);
+    _correctionTimer = duration;
+}
+
+void Update() {
+    if (_correctionTimer > 0) {
+        float t = 1 - (_correctionTimer / 0.25f);
+        transform.position = Vector2.Lerp(_correctionStart, _correctionTarget, t);
+        _correctionTimer -= Time.deltaTime;
+    }
+}
+```
+
+**Why per-bug seeds work:**
+- Bug 2's removal doesn't affect bug 3's RNG (independent seeds)
+- Fixed-point eliminates floating point non-determinism
+- ID-order updates ensure all clients call RNG in same sequence
+- Lerp correction avoids jarring visual pops on resync
+- 30-second sample sync catches any remaining drift
 
 ### Swarm Center Behavior
 
@@ -449,6 +882,38 @@ Every 30 seconds per active swarm:
 - Threshold (0.5 blocks) allows imperceptible differences
 - Hash-based would fail on any tiny difference (useless for our case)
 
+### Sample Comparison Timing
+
+When server broadcasts a sample at tick T, clients may be at different ticks:
+
+- Sample includes the tick number it was captured at
+- Client compares against their LOCAL state at that tick
+- If client is ahead (at T+5): lookup historical position from buffer
+- If client is behind (at T-2): wait until reaching tick T, then compare
+
+**Implementation:** Client stores last ~60 ticks of bug positions for each swarm:
+
+```csharp
+// Ring buffer for position history (60 ticks = ~6 seconds at 10 Hz)
+private Dictionary<int, Vector2>[] _positionHistory = new Dictionary<int, Vector2>[60];
+private int _historyIndex = 0;
+
+void OnSimulationTick(long tick) {
+    // Store current positions
+    _positionHistory[_historyIndex] = CaptureBugPositions();
+    _historyIndex = (_historyIndex + 1) % 60;
+}
+
+Vector2? GetPositionAtTick(int bugId, long targetTick) {
+    int ticksAgo = (int)(_currentTick - targetTick);
+    if (ticksAgo < 0 || ticksAgo >= 60) return null; // Out of range
+    int index = (_historyIndex - ticksAgo - 1 + 60) % 60;
+    return _positionHistory[index].TryGetValue(bugId, out var pos) ? pos : null;
+}
+```
+
+**If history unavailable:** Client can skip comparison and request full snapshot to be safe.
+
 ### Snapshot Triggers
 
 Full snapshot is only sent when actually needed:
@@ -461,7 +926,8 @@ If the requested player doesn't respond within 2 seconds, server tries another p
 
 ### Collision Data Access
 
-Bugs check collision against terrain and occupants via TilemapManager:
+Bugs check collision against terrain and occupants via TilemapManager.
+**See Section 1.4** for details on the occupant footprint system and why `GetOccupantAt()` correctly handles multi-cell occupants.
 
 ```csharp
 // BugMovement.cs - collision check
@@ -469,32 +935,35 @@ public static bool IsBlocked(Vector2 worldPos) {
     // Check ground tile
     string tileId = TilemapManager.Instance.GetTileAt(worldPos);
     if (tileId != null) {
-        TileData tile = TileDatabase.Get(tileId);
-        if (tile != null && tile.blocks_bugs) return true;
+        var tileEntry = TileDatabase.Instance.GetGroundTileEntry(tileId);
+        if (tileEntry != null && tileEntry.blocksBugs) return true;
     }
 
     // Check occupant (fence, tree, etc.)
+    // GetOccupantAt uses _loadedChunks which includes BOTH anchor and footprint cells
     var occupant = TilemapManager.Instance.GetOccupantAt(worldPos);
-    if (occupant != null && occupant.blocks_bugs) return true;
+    if (occupant != null) {
+        var entry = TileDatabase.Instance.GetOccupant(occupant.Id);
+        if (entry != null && entry.blocksBugs) return true;
+    }
 
     return false;
 }
 ```
 
-Tile collision data comes from `tiles.json`:
-```json
-{
-    "water_deep": { "blocks_players": true, "blocks_bugs": true },
-    "water_shallow": { "blocks_bugs": true, "movement_mult": 0.5 }
-}
+**Implementation note:** TileDatabase.cs exists at `Assets/Scripts/World/TileDatabase.cs` but needs `blocksBugs` field added:
+
+```csharp
+// Add to GroundTileEntry:
+public bool blocksBugs;  // Water, lava, etc.
+
+// Add to OccupantEntry:
+public bool blocksBugs;  // Fences, walls, etc.
 ```
 
-Occupant collision data comes from `placeables.json` / `occupants.json`:
-```json
-{
-    "fence_wood": { "blocks_players": true, "blocks_bugs": true }
-}
-```
+Server-side blocking data comes from existing JSON files:
+- `nakama/data/entities/placeables.json` - has `blocks_players` field, add `blocks_bugs`
+- Ground tile blocking defined in tile data or hardcoded (water always blocks bugs)
 
 ### Sync Flow (Sample Check + On-Demand Snapshot)
 
@@ -529,12 +998,22 @@ Player E: Spawns bugs at snapshot positions, starts simulating
 ```csharp
 // TO IMPLEMENT - per-bug state on EVERY client
 public class BugAgent {
-    public int BugId;           // Unique within session
+    public int BugId;              // Unique within swarm (0 to Count-1)
     public string SpeciesId;
-    public Vector2 Pos;         // Current position
-    public Vector2 Vel;         // Current velocity
-    public string BehaviorState; // wander/chase/flee/idle/attack
+    public DeterministicRandom Rng; // Per-bug RNG: seed = hash(worldSeed, swarmId, bugId)
+
+    // Fixed-point for determinism (int32 × 1000)
+    public FixedPoint PosX, PosY;
+    public FixedPoint VelX, VelY;
+
+    public string BehaviorState;   // wander/chase/flee/idle/attack
     public GameObject Visual;
+
+    // For lerp correction on resync
+    private Vector2 _correctionStart, _correctionTarget;
+    private float _correctionTimer;
+
+    public Vector2 WorldPosition => new Vector2(PosX.ToFloat(), PosY.ToFloat());
 }
 ```
 
@@ -553,6 +1032,8 @@ type SwarmGroup struct {
     ReproductionState ReproState
     HomeRegion        Bounds
     WanderRadius      float32
+    // Note: WorldSeed is global (in WorldState), not per-swarm
+    // Bug seeds derived from: hash(WorldSeed, SwarmID, BugID)
 }
 ```
 
@@ -609,6 +1090,47 @@ public static class BugMovement {
     }
 }
 ```
+
+### Collision Determinism Rules
+
+**CRITICAL:** Collision resolution must be identical on all clients. Follow these rules:
+
+1. **Axis order**: Always resolve X before Y (never randomize)
+2. **Tile alignment**: Use floor division for tile lookup: `tileX = (int)Math.Floor(posX)`
+3. **Rounding**: Use consistent rounding (floor for negative, truncate for positive is NOT okay - pick one)
+4. **Fixed-point**: All collision math uses FixedPoint, convert to tile coords deterministically
+
+```csharp
+// Deterministic tile lookup from fixed-point position
+public static (int tileX, int tileY) GetTileCoords(FixedPoint posX, FixedPoint posY) {
+    // Use integer division (floor toward negative infinity)
+    int tileX = posX.Value >= 0 ? posX.Value / 1000 : (posX.Value - 999) / 1000;
+    int tileY = posY.Value >= 0 ? posY.Value / 1000 : (posY.Value - 999) / 1000;
+    return (tileX, tileY);
+}
+
+// Collision check order is ALWAYS: X-axis first, then Y-axis
+public static FixedPoint2 ResolveCollision(FixedPoint2 current, FixedPoint2 proposed) {
+    // 1. Try full move
+    if (!IsBlocked(proposed)) return proposed;
+
+    // 2. Try X-only (ALWAYS first)
+    var xOnly = new FixedPoint2(proposed.X, current.Y);
+    if (!IsBlocked(xOnly)) return xOnly;
+
+    // 3. Try Y-only (ALWAYS second)
+    var yOnly = new FixedPoint2(current.X, proposed.Y);
+    if (!IsBlocked(yOnly)) return yOnly;
+
+    // 4. No movement possible
+    return current;
+}
+```
+
+**Never use:**
+- `Random` for collision tiebreakers
+- Platform-specific rounding (`MidpointRounding` varies)
+- Floating-point for intermediate collision math
 
 ### Chunk Transitions
 
@@ -780,8 +1302,7 @@ const (
 type HitBugMessage struct {
     SwarmID   string `json:"swarm_id"`
     MemberID  int    `json:"member_id"`
-    Damage    int    `json:"damage"`
-    HitType   string `json:"hit_type"`
+    ToolID    string `json:"tool_id"`  // Server calculates damage from species.DamageTools[tool]
 }
 
 type MemberRemovedMessage struct {
@@ -852,12 +1373,12 @@ type SwarmMeterUpdateMessage struct {
 
 **Hitting a bug:**
 1. **Client**: Detects hit collision locally (shows VFX for responsiveness)
-2. **Client**: Sends HitBug(swarm_id, member_id, damage) to SERVER
-3. **Server**: Validates member exists, applies damage
-4. **Server**: If HP <= 0: delete member from roster, broadcast MemberRemoved
+2. **Client**: Sends HitBug(swarm_id, member_id, tool_id) to SERVER
+3. **Server**: Validates member exists, calculates damage from `species.DamageTools[tool_id]`
+4. **Server**: Applies damage. If HP <= 0: delete member from roster, broadcast MemberRemoved
 5. **All Clients**: On MemberRemoved, delete local BugAgent
 
-**Key:** Server owns HP/roster truth. Same as current architecture.
+**Key:** Server owns HP/roster truth. Server calculates damage (never trust client damage values).
 
 ### Catch Flow (Server-Validated)
 
@@ -986,7 +1507,6 @@ private void HandleSplitCheckRequest() {
     "name": "Common Fly",
     "category": "swarm",
     "collision_behavior": "slide",
-    "intent_type": "wander",
     "base_speed": 1.5,
     "wander_radius": 8.0,
     "min_swarm_size": 5,
@@ -997,8 +1517,12 @@ private void HandleSplitCheckRequest() {
     "player_reaction": "flee",
     "reaction_radius": 6.0,
     "flee_speed_mult": 2.0,
-    "attracted_to": ["compost_pile", "apple_crate", "bait_basket"],
-    "attraction_radius": 20.0,
+    "vision_range": 8.0,
+    "attracted_to": ["compost_pile", "rotten_fruit", "bait_basket"],
+    "attraction_strength": 0.6,
+    "movement_mode": "brownian",
+    "intent_range": 1.5,
+    "direction_change_rate": 0.3,
     "max_hp": 1,
     "catch_condition": "none",
     "sell_price": 1,
@@ -1008,14 +1532,19 @@ private void HandleSplitCheckRequest() {
     "name": "Meadow Butterfly",
     "category": "swarm",
     "collision_behavior": "jitter",
-    "intent_type": "wander",
-    "base_speed": 1.0,
+    "base_speed": 1.2,
     "wander_radius": 12.0,
     "min_swarm_size": 2,
     "max_swarm_size": 15,
     "swarm_radius": 5.0,
     "player_reaction": "curious",
+    "vision_range": 24.0,
     "attracted_to": ["flower_wild", "flower_red", "flower_blue", "flower_yellow"],
+    "attraction_strength": 0.8,
+    "movement_mode": "gliding",
+    "intent_range": 10.0,
+    "direction_change_rate": 0.05,
+    "turn_rate": 0.1,
     "max_hp": 2,
     "catch_condition": "calm",
     "condition_threshold": 50,
@@ -1047,11 +1576,164 @@ private void HandleSplitCheckRequest() {
 
 **Field Descriptions:**
 - `collision_behavior`: How bug handles blocked movement ("slide", "bounce", "jitter")
-- `intent_type`: Base movement pattern ("wander" = around center, "chase" = toward players)
+- `vision_range`: Server-side - how far swarm can "see" resources (blocks)
+- `attracted_to`: Server-side - object IDs that attract this species
+- `attraction_strength`: Server-side - 0-1, how strongly swarm biases toward resources
+- `movement_mode`: Client-side - "brownian" (erratic) or "gliding" (smooth arcs)
+- `intent_range`: Client-side - how far ahead bug "looks" when choosing direction (blocks)
+- `direction_change_rate`: Client-side - 0-1, chance per tick to pick new direction
+- `turn_rate`: Client-side (gliding only) - 0-1, how fast bug turns toward destination
 
 ---
 
-## 2.5 Files to Create/Modify
+## 2.5 Server-Side Swarm AI
+
+### Vision-Based Resource Seeking
+
+Each swarm has a vision range determined by species. Every tick:
+
+1. Server queries nearby occupants within `vision_range`
+2. Filter by `species.attracted_to` (flowers for butterflies, compost for flies)
+3. If resources found: bias swarm velocity toward closest resource
+4. If no resources: continue brownian wander within home radius
+
+### Resource Query
+
+```go
+func FindNearbyResources(state *WorldState, pos EntityPosition, visionRange float32, targetIDs []string) []ResourceHit
+```
+
+Iterates chunks within vision range, checks occupant layer for matching IDs.
+
+### UpdateWander with Vision
+
+```go
+func (s *SwarmState) UpdateWander(deltaTime float32, species *BugSpecies, chunkSize int, resources []ResourceHit) {
+    if len(resources) > 0 {
+        // Bias toward closest resource
+        closest := resources[0]
+        dx := closest.X - s.WorldX(chunkSize)
+        dy := closest.Y - s.WorldY(chunkSize)
+        dist := math.Sqrt(dx*dx + dy*dy)
+        attractVel := Vec2{X: dx/dist * species.BaseSpeed, Y: dy/dist * species.BaseSpeed}
+        s.Velocity = BlendVelocity(s.Velocity, attractVel, species.AttractionStrength)
+    } else {
+        // Pure brownian motion (existing logic)
+        if rand.Float32() < 0.3 {
+            angle := rand.Float32() * 2 * math.Pi
+            s.Velocity = Vec2{X: cos(angle) * species.BaseSpeed, Y: sin(angle) * species.BaseSpeed}
+        }
+    }
+    // Apply velocity, normalize, check home bounds...
+}
+```
+
+### Why This Matters
+- Butterfly swarms actively seek flowers across the map
+- Fly swarms stay near food sources
+- Creates emergent, species-appropriate behavior
+- Players can observe swarm movement to find resources
+
+---
+
+## 2.6 Client-Side Movement Behaviors
+
+### Movement Strategy Pattern
+
+Each bug has an `IBugMovement` that determines its local movement:
+
+```csharp
+public interface IBugMovement {
+    void UpdateMovement(BugAgent bug, FixedPoint2 swarmCenter, FixedPoint wanderRadiusSqr);
+}
+```
+
+### BrownianMovement (Flies)
+
+- Short intent range (1.5 blocks)
+- High direction change rate (30% per tick)
+- Picks random direction, not destination
+- Results in erratic, buzzy movement
+- Strong bias back toward swarm center when outside wander radius
+
+```csharp
+public class BrownianMovement : IBugMovement {
+    private readonly float _intentRange = 1.5f;
+    private readonly float _directionChangeChance = 0.3f;
+    private readonly FixedPoint _speed;
+
+    public void UpdateMovement(BugAgent bug, FixedPoint2 swarmCenter, FixedPoint wanderRadiusSqr) {
+        if (bug.Rng.NextFloat() < _directionChangeChance) {
+            if (bug.Position.SqrDistanceTo(swarmCenter) > wanderRadiusSqr) {
+                // Too far - bias back toward center
+                BiasTowardCenter(bug, swarmCenter);
+            } else {
+                // Random direction with short intent range
+                float angle = bug.Rng.NextFloat() * 2f * Mathf.PI;
+                bug.Velocity = new FixedPoint2 {
+                    X = FixedPoint.FromFloat(Mathf.Cos(angle) * _speed.ToFloat()),
+                    Y = FixedPoint.FromFloat(Mathf.Sin(angle) * _speed.ToFloat())
+                };
+            }
+        }
+    }
+}
+```
+
+### GlidingMovement (Butterflies)
+
+- Long intent range (10 blocks)
+- Low direction change rate (5% per tick)
+- Picks destination points far away
+- Smooth turning toward destination (`turn_rate: 0.1`)
+- Results in graceful arcing paths
+- Bias toward swarm center creates sweeping traversals
+
+```csharp
+public class GlidingMovement : IBugMovement {
+    private readonly float _intentRange = 10.0f;
+    private readonly float _directionChangeChance = 0.05f;
+    private readonly float _turnRate = 0.1f;
+    private readonly FixedPoint _speed;
+
+    private FixedPoint2 _targetPoint;
+    private bool _hasTarget;
+
+    public void UpdateMovement(BugAgent bug, FixedPoint2 swarmCenter, FixedPoint wanderRadiusSqr) {
+        // Pick new target point when needed
+        if (!_hasTarget || bug.Rng.NextFloat() < _directionChangeChance) {
+            PickNewTarget(bug, swarmCenter, wanderRadiusSqr);
+        }
+
+        // Smooth turn toward target (creates arcs)
+        var toTarget = _targetPoint - bug.Position;
+        var targetDir = toTarget.Normalized();
+        float speedFloat = _speed.ToFloat();
+        bug.Velocity = new FixedPoint2 {
+            X = FixedPoint.FromFloat(Mathf.Lerp(bug.Velocity.X.ToFloat(),
+                targetDir.X.ToFloat() * speedFloat, _turnRate)),
+            Y = FixedPoint.FromFloat(Mathf.Lerp(bug.Velocity.Y.ToFloat(),
+                targetDir.Y.ToFloat() * speedFloat, _turnRate))
+        };
+    }
+}
+```
+
+### MovementFactory
+
+```csharp
+public static class MovementFactory {
+    public static IBugMovement Create(string speciesId) => speciesId switch {
+        "fly" => new BrownianMovement(speed: 1.5f, intentRange: 1.5f, changeRate: 0.3f),
+        "butterfly" => new GlidingMovement(speed: 1.2f, intentRange: 10f, changeRate: 0.05f, turnRate: 0.1f),
+        _ => new BrownianMovement(speed: 1.0f, intentRange: 2.0f, changeRate: 0.3f)
+    };
+}
+```
+
+---
+
+## 2.7 Files to Create/Modify
 
 ### Server (Nakama/Go)
 
@@ -1078,7 +1760,7 @@ private void HandleSplitCheckRequest() {
 
 ---
 
-## 2.6 Timing & Broadcast Rates
+## 2.8 Timing & Broadcast Rates
 
 ### Tick Rates
 
@@ -1094,6 +1776,25 @@ private void HandleSplitCheckRequest() {
 - **Tick rate:** 10 ticks per second (100ms per tick) - configurable via WorldConfig.TickRate
 - **SwarmUpdate broadcast (OpCode 20):** Every 3 ticks (300ms)
 - Server simulates: swarm center movement, targeting, idle mechanics, reproduction
+
+### SwarmUpdate Filtering
+
+OpCode 20 is per-player, only includes swarms in subscribed chunks:
+
+```go
+// Each player gets a different SwarmUpdateMessage
+func broadcastSwarmUpdates(worldState *WorldState) {
+    for playerID, player := range worldState.Players {
+        visibleSwarms := filterSwarmsByChunks(worldState.Swarms, player.ChunkSubs)
+        sendToPlayer(playerID, OpCodeSwarmUpdate, visibleSwarms)
+    }
+}
+```
+
+**Benefits:**
+- Reduces bandwidth (only relevant swarms per player)
+- Players in different areas don't receive irrelevant swarm data
+- Scales with world size
 
 ### Client Simulation Rate (Per-Bug)
 - **Simulation:** All clients run locally at 10-60 Hz (must be >= server tick rate)
@@ -1147,7 +1848,7 @@ public class SwarmManager {
 
 ---
 
-## 2.7 Meter State Thresholds
+## 2.9 Meter State Thresholds
 
 ### Three Meters (0-100 each)
 | Meter | Description |
@@ -1174,7 +1875,7 @@ else:                  MeterState = "neutral"
 
 ---
 
-## 2.8 Edge Cases
+## 2.10 Edge Cases
 
 ### Chunk Activation Definition
 
@@ -1245,9 +1946,25 @@ When catching/kills reduce swarm below `min_swarm_size`:
 - Cooldown: 100 ticks (5 seconds)
 - Prevents split spam from any client
 
+### Cross-Chunk Swarms
+
+When a swarm's center moves between chunks:
+
+- Swarm is included in player's update if center is in ANY subscribed chunk
+- Bugs may physically be in adjacent chunk (within `wander_radius` of center)
+- No special handling needed: bugs bias toward center and will follow
+- Players see swarm appear/disappear naturally as they subscribe/unsubscribe from chunks
+
+```
+Example: Swarm center moves from chunk (0,0) to (1,0)
+- Player subscribed to (0,0) only: swarm disappears from their updates
+- Player subscribed to (1,0) only: swarm appears in their updates
+- Player subscribed to both: continuous visibility
+```
+
 ---
 
-## 2.9 Architecture Constraints (MANDATORY)
+## 2.11 Architecture Constraints (MANDATORY)
 
 ### Architecture Lock
 
@@ -1296,7 +2013,7 @@ Late joiners become correct via snapshots:
 
 ---
 
-## 2.10 Swarm Lifecycle
+## 2.12 Swarm Lifecycle
 
 ### Swarm Despawn (Count = 0)
 When all members are killed or caught:
@@ -1304,18 +2021,20 @@ When all members are killed or caught:
 2. Next SwarmUpdate doesn't include that swarm
 3. Client: Removes SwarmVisual when swarm not in update
 
-### Split Conflict Resolution
-When multiple clients report splits for same swarm:
-1. Server accepts first valid split (deduplication via LastSplitTick)
-2. Server rejects subsequent splits within cooldown window
-3. **Client behavior:** Do NOT visually split until server confirms (OpCode 51)
-4. On rejection: Client does nothing (already waiting for confirmation)
+### Split Handling
 
-This avoids client needing to "undo" an optimistic split.
+Since server requests split checks from ONE player at a time (Section 2.3):
+- No race conditions possible - only one player is ever asked
+- If player reports "no split": server debounces 5 seconds before asking again
+- If player reports split: server validates min sizes, creates new swarm
+- SwarmSplitResult (OpCode 51) confirms to all clients
+- **Client behavior:** Do NOT visually split until server confirms (OpCode 51)
+
+This avoids both race conditions and optimistic split rollbacks.
 
 ---
 
-## 2.11 Open Questions
+## 2.13 Open Questions
 
 - [ ] Should swarms merge across different spawn regions?
 - [ ] Minimum distance for resource attraction?

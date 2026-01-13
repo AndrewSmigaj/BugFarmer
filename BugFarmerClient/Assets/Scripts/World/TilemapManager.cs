@@ -234,9 +234,164 @@ namespace BugFarmer.World
                 SetGroundTile(cellPos, ground);
             }
 
-            // Update occupant (can be null, "@", or {id, dir})
+            // Update occupant
             var occupantToken = root["occupant"];
-            UpdateOccupantFromToken(cellPos, occupantToken);
+            if (occupantToken != null && occupantToken.Type != JTokenType.Null)
+            {
+                // Placement - parse and compute footprint
+                string id = occupantToken["id"]?.Value<string>();
+                int dir = occupantToken["dir"]?.Value<int>() ?? 0;
+                bool anchor = occupantToken["anchor"]?.Value<bool>() ?? false;
+
+                if (anchor && !string.IsNullOrEmpty(id))
+                {
+                    // This is an anchor cell - compute and fill all footprint cells
+                    var footprint = EntityDatabase.GetFootprint(id, dir);
+                    for (int dy = 0; dy < footprint.y; dy++)
+                    {
+                        for (int dx = 0; dx < footprint.x; dx++)
+                        {
+                            var fpCellPos = new Vector2Int(gx + dx, gy + dy);
+                            bool isAnchor = (dx == 0 && dy == 0);
+                            UpdateOccupantCellData(fpCellPos, id, dir, isAnchor);
+
+                            // Only render at anchor cell
+                            if (isAnchor)
+                            {
+                                var occData = new OccupantCellData
+                                {
+                                    Occupant = new PlacedOccupant { id = id, dir = dir, anchor = true }
+                                };
+                                RenderOccupant(fpCellPos, occData);
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Removal - look up old occupant to get footprint, then clear all cells
+                ClearOccupantAndFootprint(gx, gy);
+            }
+        }
+
+        /// <summary>
+        /// Update occupant cell data in loaded chunk (for real-time sync).
+        /// </summary>
+        private void UpdateOccupantCellData(Vector2Int cellPos, string id, int dir, bool anchor)
+        {
+            int cx = cellPos.x / ChunkSize;
+            int cy = cellPos.y / ChunkSize;
+            if (cellPos.x < 0 && cellPos.x % ChunkSize != 0) cx--;
+            if (cellPos.y < 0 && cellPos.y % ChunkSize != 0) cy--;
+
+            var chunkPos = new Vector2Int(cx, cy);
+            if (!_loadedChunks.TryGetValue(chunkPos, out var chunk))
+                return;
+
+            int lx = cellPos.x - cx * ChunkSize;
+            int ly = cellPos.y - cy * ChunkSize;
+
+            if (ly < 0 || ly >= ChunkSize || lx < 0 || lx >= ChunkSize)
+                return;
+
+            if (chunk.Occupants[ly] == null)
+                chunk.Occupants[ly] = new OccupantCellData[ChunkSize];
+
+            chunk.Occupants[ly][lx] = new OccupantCellData
+            {
+                Occupant = new PlacedOccupant { id = id, dir = dir, anchor = anchor }
+            };
+        }
+
+        /// <summary>
+        /// Clear an occupant and all its footprint cells from chunk data.
+        /// </summary>
+        private void ClearOccupantAndFootprint(int anchorX, int anchorY)
+        {
+            var anchorPos = new Vector2Int(anchorX, anchorY);
+
+            // Get existing occupant data (including direction for footprint calculation)
+            int cx = anchorX / ChunkSize;
+            int cy = anchorY / ChunkSize;
+            if (anchorX < 0 && anchorX % ChunkSize != 0) cx--;
+            if (anchorY < 0 && anchorY % ChunkSize != 0) cy--;
+
+            var chunkPos = new Vector2Int(cx, cy);
+            if (!_loadedChunks.TryGetValue(chunkPos, out var chunk))
+            {
+                // Chunk not loaded, just remove render object if exists
+                if (_occupantObjects.TryGetValue(anchorPos, out var obj))
+                {
+                    ReturnToPool(obj);
+                    _occupantObjects.Remove(anchorPos);
+                }
+                RemoveBreakingVisual(anchorPos);
+                return;
+            }
+
+            int lx = anchorX - cx * ChunkSize;
+            int ly = anchorY - cy * ChunkSize;
+
+            var oldOcc = chunk.Occupants[ly]?[lx]?.Occupant;
+            if (oldOcc == null || string.IsNullOrEmpty(oldOcc.id))
+            {
+                // No occupant data, just clear render
+                if (_occupantObjects.TryGetValue(anchorPos, out var obj))
+                {
+                    ReturnToPool(obj);
+                    _occupantObjects.Remove(anchorPos);
+                }
+                RemoveBreakingVisual(anchorPos);
+                return;
+            }
+
+            // Look up footprint from entity database
+            var footprint = EntityDatabase.GetFootprint(oldOcc.id, oldOcc.dir);
+
+            // Clear all footprint cells
+            for (int dy = 0; dy < footprint.y; dy++)
+            {
+                for (int dx = 0; dx < footprint.x; dx++)
+                {
+                    var fpCellPos = new Vector2Int(anchorX + dx, anchorY + dy);
+                    ClearOccupantCellData(fpCellPos);
+                }
+            }
+
+            // Remove render object at anchor
+            if (_occupantObjects.TryGetValue(anchorPos, out var anchorObj))
+            {
+                ReturnToPool(anchorObj);
+                _occupantObjects.Remove(anchorPos);
+            }
+            RemoveBreakingVisual(anchorPos);
+        }
+
+        /// <summary>
+        /// Clear occupant cell data in loaded chunk.
+        /// </summary>
+        private void ClearOccupantCellData(Vector2Int cellPos)
+        {
+            int cx = cellPos.x / ChunkSize;
+            int cy = cellPos.y / ChunkSize;
+            if (cellPos.x < 0 && cellPos.x % ChunkSize != 0) cx--;
+            if (cellPos.y < 0 && cellPos.y % ChunkSize != 0) cy--;
+
+            var chunkPos = new Vector2Int(cx, cy);
+            if (!_loadedChunks.TryGetValue(chunkPos, out var chunk))
+                return;
+
+            int lx = cellPos.x - cx * ChunkSize;
+            int ly = cellPos.y - cy * ChunkSize;
+
+            if (ly < 0 || ly >= ChunkSize || lx < 0 || lx >= ChunkSize)
+                return;
+
+            if (chunk.Occupants[ly] != null)
+            {
+                chunk.Occupants[ly][lx] = new OccupantCellData { IsEmpty = true };
+            }
         }
 
         private void HandleBreakProgress(IMatchState state)
@@ -323,16 +478,6 @@ namespace BugFarmer.World
                 return new OccupantCellData { IsEmpty = true };
             }
 
-            if (token.Type == JTokenType.String)
-            {
-                string str = token.Value<string>();
-                if (str == "@")
-                {
-                    return new OccupantCellData { IsBlocked = true };
-                }
-                return new OccupantCellData { IsEmpty = true };
-            }
-
             if (token.Type == JTokenType.Object)
             {
                 var obj = token as JObject;
@@ -341,7 +486,8 @@ namespace BugFarmer.World
                     Occupant = new PlacedOccupant
                     {
                         id = obj["id"]?.Value<string>(),
-                        dir = obj["dir"]?.Value<int>() ?? 0
+                        dir = obj["dir"]?.Value<int>() ?? 0,
+                        anchor = obj["anchor"]?.Value<bool>() ?? false
                     }
                 };
             }
@@ -399,12 +545,17 @@ namespace BugFarmer.World
                 _occupantObjects.Remove(cellPos);
             }
 
-            // Skip if empty or blocked
-            if (occData == null || occData.IsEmpty || occData.IsBlocked)
+            // Skip if empty
+            if (occData == null || occData.IsEmpty)
                 return;
 
             // Skip if no occupant data
             if (occData.Occupant == null || string.IsNullOrEmpty(occData.Occupant.id))
+                return;
+
+            // Skip non-anchor cells (footprint cells have occupant data but anchor=false)
+            // We only render the sprite at the anchor cell to avoid duplicate sprites
+            if (!occData.Occupant.anchor)
                 return;
 
             string occupantId = occData.Occupant.id;
@@ -462,12 +613,6 @@ namespace BugFarmer.World
 
             go.SetActive(true);
             _occupantObjects[cellPos] = go;
-        }
-
-        private void UpdateOccupantFromToken(Vector2Int cellPos, JToken token)
-        {
-            var occData = ParseOccupantCell(token);
-            RenderOccupant(cellPos, occData);
         }
 
         private void UnloadChunk(Vector2Int chunkPos)
@@ -627,15 +772,17 @@ namespace BugFarmer.World
         }
 
         /// <summary>
-        /// Check if a cell is occupied by an occupant.
+        /// Check if a cell is occupied by an occupant (anchor or footprint cell).
         /// </summary>
         public bool IsCellOccupied(Vector2Int cellPos)
         {
-            return _occupantObjects.ContainsKey(cellPos);
+            string occ = GetOccupantAt(cellPos);
+            return !string.IsNullOrEmpty(occ);
         }
 
         /// <summary>
         /// Get the occupant ID at a cell, or null if empty.
+        /// Works for both anchor and footprint cells.
         /// </summary>
         public string GetOccupantAt(Vector2Int cellPos)
         {
@@ -659,6 +806,52 @@ namespace BugFarmer.World
             return occ?.Occupant?.id;
         }
 
+        /// <summary>
+        /// Get the ground tile ID at a cell, or null if chunk not loaded.
+        /// </summary>
+        public string GetGroundAt(Vector2Int cellPos)
+        {
+            int cx = cellPos.x / ChunkSize;
+            int cy = cellPos.y / ChunkSize;
+            if (cellPos.x < 0 && cellPos.x % ChunkSize != 0) cx--;
+            if (cellPos.y < 0 && cellPos.y % ChunkSize != 0) cy--;
+
+            var chunkPos = new Vector2Int(cx, cy);
+            if (!_loadedChunks.TryGetValue(chunkPos, out var chunk))
+                return null;
+
+            int lx = cellPos.x - cx * ChunkSize;
+            int ly = cellPos.y - cy * ChunkSize;
+
+            if (ly < 0 || ly >= ChunkSize || lx < 0 || lx >= ChunkSize)
+                return null;
+
+            return chunk.Ground[ly]?[lx];
+        }
+
+        /// <summary>
+        /// Check if a cell blocks bug movement.
+        /// Returns true if occupied by a blocking occupant or blocking ground tile.
+        /// </summary>
+        public bool IsCellBlockedForBugs(Vector2Int cellPos)
+        {
+            // Check occupant
+            string occupantId = GetOccupantAt(cellPos);
+            if (!string.IsNullOrEmpty(occupantId))
+            {
+                var def = Data.EntityDatabase.Get(occupantId);
+                if (def?.World != null && def.World.BlocksBugs)
+                    return true;
+            }
+
+            // Check ground tile
+            string groundId = GetGroundAt(cellPos);
+            if (groundId == "water_shallow" || groundId == "water_deep" || groundId == "lava")
+                return true;
+
+            return false;
+        }
+
         #endregion
     }
 
@@ -679,7 +872,6 @@ namespace BugFarmer.World
     public class OccupantCellData
     {
         public bool IsEmpty;    // null in JSON
-        public bool IsBlocked;  // "@" marker
-        public PlacedOccupant Occupant; // Anchor cell with {id, dir}
+        public Networking.PlacedOccupant Occupant; // Occupant data (anchor=true for anchor cell)
     }
 }

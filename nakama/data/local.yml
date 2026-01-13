@@ -1,7 +1,7 @@
 name: bugfarmer
 
 logger:
-  level: DEBUG
+  level: WARN
   stdout: true
 
 session:

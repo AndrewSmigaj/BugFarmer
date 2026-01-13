@@ -1,8 +1,9 @@
 package world
 
-// PlacedOccupant is stored in chunk data at anchor cell.
-// Blocked cells store "@" marker string.
+// PlacedOccupant is stored in chunk data for all footprint cells.
+// Anchor cell has Anchor=true, footprint cells have Anchor=false (omitted in JSON).
 type PlacedOccupant struct {
-	ID  string `json:"id"`
-	Dir int    `json:"dir,omitempty"` // 0=down, 1=left, 2=right, 3=up
+	ID     string `json:"id"`
+	Dir    int    `json:"dir,omitempty"`    // 0=down, 1=left, 2=right, 3=up
+	Anchor bool   `json:"anchor,omitempty"` // true for anchor cell, false/omitted for footprint
 }

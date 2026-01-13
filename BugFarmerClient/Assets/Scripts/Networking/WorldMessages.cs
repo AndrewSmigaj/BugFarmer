@@ -67,6 +67,7 @@ namespace BugFarmer.Networking
     {
         public string id;
         public int dir;           // 0=down, 1=left, 2=right, 3=up
+        public bool anchor;       // true for anchor cell, false for footprint
     }
 
     /// <summary>
@@ -126,8 +127,8 @@ namespace BugFarmer.Networking
     //
     // The server sends occupants as:
     //   - null: empty cell
-    //   - "@": blocked by multi-cell occupant anchor elsewhere
-    //   - {id, dir}: anchor cell with occupant data
+    //   - {id, dir, anchor:true}: anchor cell with occupant data
+    //   - {id, dir}: footprint cell (anchor omitted = false)
     //
     // These messages are parsed directly in TilemapManager using
     // Newtonsoft.Json (JObject/JArray) which is included via Nakama package.
@@ -141,9 +142,9 @@ namespace BugFarmer.Networking
     // }
     //
     // type WorldUpdateMessage struct {
-    //     GridX    int         `json:"grid_x"`
-    //     GridY    int         `json:"grid_y"`
-    //     Ground   string      `json:"ground,omitempty"`
-    //     Occupant interface{} `json:"occupant,omitempty"` // nil, "@", or {id,dir}
+    //     GridX    int             `json:"grid_x"`
+    //     GridY    int             `json:"grid_y"`
+    //     Ground   string          `json:"ground,omitempty"`
+    //     Occupant *PlacedOccupant `json:"occupant,omitempty"` // nil or {id,dir,anchor}
     // }
 }

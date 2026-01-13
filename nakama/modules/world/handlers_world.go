@@ -33,6 +33,27 @@ func (m *Match) handleChunkSubscribe(
 		state.Chunks[chunkKey] = chunk
 	}
 
+	// Check for late joiner: if others already in chunk, request snapshot
+	if state.ChunkSubs[chunkKey] != nil && len(state.ChunkSubs[chunkKey]) > 0 {
+		// Find a connected player to provide snapshot
+		var sourceID string
+		for playerID := range state.ChunkSubs[chunkKey] {
+			if _, connected := state.Presences[playerID]; connected {
+				sourceID = playerID
+				break
+			}
+		}
+
+		if sourceID != "" {
+			logger.Debug("Late joiner %s in chunk %d,%d - requesting snapshot from %s", userID, cx, cy, sourceID)
+			m.requestSnapshotForLateJoiner(logger, dispatcher, state, sourceID, userID, cx, cy)
+		} else {
+			// All subscribers disconnected - late joiner is effectively first active player
+			// They spawn at initial positions; drift detection corrects if others reconnect
+			logger.Debug("Late joiner %s in chunk %d,%d - no connected source available", userID, cx, cy)
+		}
+	}
+
 	// Add player to chunk subscribers
 	if state.ChunkSubs[chunkKey] == nil {
 		state.ChunkSubs[chunkKey] = make(map[string]bool)
@@ -133,7 +154,7 @@ func (m *Match) handleTilePlace(
 	occ := &PlacedOccupant{ID: msg.OccupantID, Dir: msg.Direction}
 	chunk.SetOccupant(lx, ly, occ)
 
-	// Mark blocked cells for multi-cell occupants
+	// Set footprint cells for multi-cell occupants
 	w, h := def.GetFootprint(msg.Direction)
 	for dy := 0; dy < h; dy++ {
 		for dx := 0; dx < w; dx++ {
@@ -144,7 +165,7 @@ func (m *Match) handleTilePlace(
 			bcx, bcy, blx, bly := GlobalToChunk(bx, by)
 			bChunk := state.Chunks[ChunkKey(bcx, bcy)]
 			if bChunk != nil {
-				bChunk.SetBlockedMarker(blx, bly)
+				bChunk.SetFootprintCell(blx, bly, msg.OccupantID, msg.Direction)
 			}
 		}
 	}
@@ -190,7 +211,8 @@ func (m *Match) handleTileBreak(
 	if cell.IsEmpty {
 		return // Nothing to break
 	}
-	if cell.IsBlocked {
+	if cell.Occupant != nil && !cell.Occupant.Anchor {
+		// This is a footprint cell, not the anchor - ignore
 		// TODO: Find anchor cell and break that instead
 		return
 	}

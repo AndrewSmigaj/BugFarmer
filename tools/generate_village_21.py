@@ -361,6 +361,24 @@ def main():
     builder.place_occupant(262, 270, "lamp_floor")
 
     # =========================================================================
+    # BUG SPAWNING
+    # =========================================================================
+
+    # Configure zone-level species caps
+    builder.set_bug_spawning(
+        species_caps={
+            "fly_common": {"initial": 100, "max": 300, "spawn_interval": 45.0},
+            "butterfly_meadow": {"initial": 60, "max": 200, "spawn_interval": 90.0}
+        }
+    )
+
+    # Auto-generate butterfly spawn areas from meadows created above
+    builder.auto_spawn_areas_from_meadows("butterfly_meadow")
+
+    # Add zone-wide fly spawner (flies can appear anywhere)
+    builder.add_spawn_area("zone_wide", ["fly_common"], "zone")
+
+    # =========================================================================
     # VALIDATION AND EXPORT
     # =========================================================================
 

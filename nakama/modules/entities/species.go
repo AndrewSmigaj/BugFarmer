@@ -15,8 +15,19 @@ type BugSpecies struct {
 	Category    string `json:"category"` // "swarm", "individual", "boss"
 
 	// Movement
-	BaseSpeed    float32 `json:"base_speed"`
-	WanderRadius float32 `json:"wander_radius"`
+	BaseSpeed        float32 `json:"base_speed"`
+	WanderRadius     float32 `json:"wander_radius"`
+	WanderChangeRate float32 `json:"wander_change_rate"` // Chance per tick to change direction (0.0-1.0)
+
+	// Vision-based resource seeking (server-side swarm AI)
+	VisionRange        float32             `json:"vision_range"`
+	AttractionsByPhase map[string][]string `json:"attractions_by_phase"` // phase → resource IDs
+	AttractionStrength float32             `json:"attraction_strength"`
+
+	// Lifecycle parameters
+	FeedAmount         float32 `json:"feed_amount"`          // Satiation per feeding event
+	BreedAmount        float32 `json:"breed_amount"`         // Reproduction progress per breeding event
+	SatiationDecayRate float32 `json:"satiation_decay_rate"` // Per second in idle
 
 	// Swarm-specific (category=swarm only)
 	MinSwarmSize   int     `json:"min_swarm_size"`

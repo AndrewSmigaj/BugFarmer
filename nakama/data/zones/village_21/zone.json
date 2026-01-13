@@ -9,5 +9,78 @@
     256,
     241
   ],
-  "biome_type": "village"
+  "biome_type": "village",
+  "bug_spawning": {
+    "species_caps": {
+      "fly_common": {
+        "initial": 100,
+        "max": 300,
+        "spawn_interval": 45.0
+      },
+      "butterfly_meadow": {
+        "initial": 60,
+        "max": 200,
+        "spawn_interval": 90.0
+      }
+    },
+    "spawn_areas": [
+      {
+        "id": "zone_wide",
+        "species": [
+          "fly_common"
+        ],
+        "type": "zone"
+      },
+      {
+        "id": "fly_farm",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 301,
+        "cy": 316,
+        "radius": 40
+      },
+      {
+        "id": "meadow_nw",
+        "species": [
+          "butterfly_meadow"
+        ],
+        "type": "circle",
+        "cx": 180,
+        "cy": 180,
+        "radius": 50
+      },
+      {
+        "id": "meadow_ne",
+        "species": [
+          "butterfly_meadow"
+        ],
+        "type": "circle",
+        "cx": 330,
+        "cy": 180,
+        "radius": 40
+      },
+      {
+        "id": "meadow_sw",
+        "species": [
+          "butterfly_meadow"
+        ],
+        "type": "circle",
+        "cx": 180,
+        "cy": 330,
+        "radius": 50
+      },
+      {
+        "id": "meadow_se",
+        "species": [
+          "butterfly_meadow"
+        ],
+        "type": "circle",
+        "cx": 380,
+        "cy": 380,
+        "radius": 40
+      }
+    ]
+  }
 }

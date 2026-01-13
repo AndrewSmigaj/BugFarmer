@@ -165,12 +165,19 @@ namespace BugFarmer.Player
 
                 float catchRadius = HasNetEquipped ? netCatchRadius : handCatchRadius;
 
-                // CLIENT-SIDE: Detect and remove flies immediately
+                // CLIENT-SIDE: Detect bugs at click position (returns IDs)
                 var swarmManager = SwarmManager.Instance;
                 List<CatchResult> catches = null;
                 if (swarmManager != null)
                 {
-                    catches = swarmManager.CatchAtPosition(clickPos, catchRadius);
+                    catches = swarmManager.GetBugsAtPosition(clickPos, catchRadius);
+
+                    // Optimistic removal - remove bugs immediately for instant feedback
+                    foreach (var result in catches)
+                    {
+                        var swarm = swarmManager.GetSwarm(result.swarmId);
+                        swarm?.RemoveBugsById(result.bugIds);
+                    }
                 }
 
                 // Play animation (even on miss)
@@ -182,7 +189,7 @@ namespace BugFarmer.Player
                     StartCoroutine(ShowCatchIndicator(clickPos, catchRadius));
                 }
 
-                // Send to server for each affected swarm
+                // Send bug IDs to server for validation
                 if (catches != null)
                 {
                     foreach (var result in catches)
@@ -192,9 +199,9 @@ namespace BugFarmer.Player
                             click_x = clickPos.x,
                             click_y = clickPos.y,
                             swarm_id = result.swarmId,
-                            caught_count = result.caughtCount
+                            bug_ids = result.bugIds
                         };
-                        Debug.Log($"[Catch] Sent: swarm={result.swarmId}, count={result.caughtCount}");
+                        Debug.Log($"[Catch] Sent: swarm={result.swarmId}, bugIds={result.bugIds.Length}");
                         SendCatchRequest(msg, world.CurrentMatch.Id, socket);
                     }
                 }

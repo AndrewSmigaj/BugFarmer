@@ -17,6 +17,7 @@ namespace BugFarmer.Entities
         [SerializeField] private GameObject bugPrefab;
 
         private readonly Dictionary<string, RemoteEntity> _entities = new();
+        private readonly Dictionary<string, RemoteEntity> _players = new(); // O(1) player access for bug targeting
         private string _localPlayerId;
         private bool _localPlayerInitialized;
 
@@ -54,6 +55,7 @@ namespace BugFarmer.Entities
         public void SetLocalPlayerId(string userId)
         {
             _localPlayerId = "player_" + userId;
+            Debug.Log($"[EntityManager] Local player ID set to: {_localPlayerId}");
         }
 
         private void HandleEntityUpdate(EntityData[] entities)
@@ -95,7 +97,18 @@ namespace BugFarmer.Entities
                             remote.EntityId = data.id;
                             remote.SetTargetState(data.x, data.y, data.facing);
                             _entities[data.id] = remote;
+
+                            // Track players separately for O(1) access
+                            if (data.type == "player")
+                            {
+                                _players[data.id] = remote;
+                                Debug.Log($"[EntityManager] Spawned REMOTE PLAYER: {data.id} at ({data.x}, {data.y})");
+                            }
                         }
+                    }
+                    else if (data.type == "player")
+                    {
+                        Debug.LogError($"[EntityManager] playerPrefab is null! Cannot spawn remote player: {data.id}");
                     }
                 }
             }
@@ -115,8 +128,15 @@ namespace BugFarmer.Entities
             {
                 Destroy(entity.gameObject);
                 _entities.Remove(id);
+                _players.Remove(id);
             }
         }
+
+        /// <summary>
+        /// Get all remote players for bug behavior targeting.
+        /// Returns dictionary for O(1) access. Keys are "player_userId".
+        /// </summary>
+        public IReadOnlyDictionary<string, RemoteEntity> GetRemotePlayers() => _players;
 
         /// <summary>
         /// Destroy all tracked entities. Call when leaving a match.
@@ -129,6 +149,7 @@ namespace BugFarmer.Entities
                     Destroy(entity.gameObject);
             }
             _entities.Clear();
+            _players.Clear();
             _localPlayerInitialized = false; // Reset for next match join
         }
     }
