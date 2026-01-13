@@ -1,197 +1,353 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using BugFarmer.Bugs;
 using BugFarmer.Networking;
+using BugFarmer.Util;
 
 namespace BugFarmer.Entities
 {
     /// <summary>
-    /// Visual representation of a swarm. Manages individual fly GameObjects
-    /// and interpolates the swarm center position.
+    /// Visual representation of a swarm - a PASSIVE RENDERER that never owns time.
+    /// SwarmManager owns THE ONE simulation tick and calls:
+    /// - SimulateTick(tick, players) to advance bug simulation
+    /// - Interpolate(t) to smooth visuals between ticks
+    ///
+    /// This class manages Dictionary of bugs keyed by ID for O(1) lookup.
+    /// FIX #2: All bug iteration uses OrderBy(bugId) for determinism.
+    ///
+    /// Species differentiation is automatic via BugAgent constructor:
+    /// - fly → BrownianMovement (erratic, flee from players)
+    /// - butterfly → GlidingMovement (graceful arcs, curious toward players)
     /// </summary>
     public class SwarmVisual : MonoBehaviour
     {
-        [SerializeField] private GameObject flyPrefab;
+        // Bugs keyed by ID for O(1) lookup and deterministic removal
+        private readonly Dictionary<int, BugVisual> _bugs = new();
+        private static readonly Stack<Transform> _spritePool = new();
 
-        private readonly List<FlyBehavior> _flies = new();
-        private static readonly Stack<FlyBehavior> _flyPool = new();
+        // Species sprite loaded from Resources/Bugs/{species_id}
+        private Sprite _bugSprite;
 
-        private Vector2 _previousPos;
-        private Vector2 _targetPos;
-        private float _interpProgress = 1f;
-        private const float InterpDuration = 0.15f; // 150ms interpolation
+        // Bug ID tracking (matches server)
+        private int _nextBugId;
+        private HashSet<int> _removedIds = new();
+
+        // Swarm center interpolation (server-driven)
+        private Vector2 _previousCenter;
+        private Vector2 _targetCenter;
+        private float _centerInterpProgress = 1f;
+        private const float CenterInterpDuration = 0.15f;
+
+        // NOTE: SwarmManager owns THE ONE simulation tick.
+        // SwarmVisual NEVER advances time on its own.
+        // _localTick and _tickAccumulator have been REMOVED.
+
+        // Late joiner sync - don't simulate until snapshot received
+        private bool _waitingForSnapshot;
+
+        // Cached swarm state
+        private FixedPoint2 _swarmCenter;
+        private float _radius;
 
         public string SwarmId { get; private set; }
         public string SpeciesId { get; private set; }
-        public int Count => _flies.Count;
+        public int Count => _bugs.Count;
+        public bool IsWaitingForSnapshot => _waitingForSnapshot;
 
         /// <summary>
-        /// Initialize the swarm visual with server data.
+        /// Mark this swarm as waiting for snapshot (late joiner).
+        /// Simulation is paused until ApplySnapshot is called.
         /// </summary>
-        public void Initialize(SwarmData data, GameObject flyPrefabOverride = null)
+        public void SetWaitingForSnapshot()
         {
-            if (flyPrefabOverride != null)
-            {
-                flyPrefab = flyPrefabOverride;
-            }
-
-            SwarmId = data.id;
-            SpeciesId = data.species_id;
-
-            _previousPos = new Vector2(data.x, data.y);
-            _targetPos = _previousPos;
-            transform.position = _previousPos;
-
-            AdjustFlyCount(data.count, data.radius);
+            _waitingForSnapshot = true;
+            Debug.Log($"[SwarmVisual] {SwarmId} waiting for snapshot - simulation paused");
         }
 
         /// <summary>
-        /// Update from server data - starts interpolation to new position.
+        /// Initialize the swarm visual with server data.
+        /// Handles late joiner sync via next_bug_id and removed_ids.
+        /// </summary>
+        /// <summary>
+        /// Initialize swarm from server data.
+        /// </summary>
+        /// <param name="data">Swarm data from server</param>
+        /// <param name="serverTick">The server tick from the SwarmUpdate message - MUST use this for determinism</param>
+        public void Initialize(SwarmData data, long serverTick)
+        {
+            SwarmId = data.id;
+            SpeciesId = data.species_id;
+
+            // Load sprite from Resources using sprite_id from server
+            var spriteId = !string.IsNullOrEmpty(data.sprite_id) ? data.sprite_id : data.species_id;
+            _bugSprite = Resources.Load<Sprite>($"Bugs/{spriteId}");
+            if (_bugSprite == null)
+            {
+                Debug.LogWarning($"[SwarmVisual] No sprite found at Resources/Bugs/{spriteId}");
+            }
+
+            _previousCenter = new Vector2(data.x, data.y);
+            _targetCenter = _previousCenter;
+            _swarmCenter = FixedPoint2.FromVector2(_previousCenter);
+            transform.position = _previousCenter;
+            _radius = data.radius;
+
+            // Setup bug ID tracking for late joiner sync
+            _nextBugId = data.next_bug_id > 0 ? data.next_bug_id : data.count;
+            _removedIds.Clear();
+            if (data.removed_ids != null)
+            {
+                foreach (int id in data.removed_ids)
+                {
+                    _removedIds.Add(id);
+                }
+            }
+
+            // NOTE: SwarmManager owns the tick. serverTick is used only for logging/debugging.
+            // The actual tick for simulation comes from SwarmManager.AdvanceOneTick().
+
+            // Spawn bugs with deterministic positions
+            SpawnInitialBugs(data.count, data.radius);
+        }
+
+        /// <summary>
+        /// Spawn initial bugs deterministically. For late joiners, spawns bugs 0 to _nextBugId-1
+        /// skipping any in _removedIds, resulting in exactly data.count bugs.
+        /// </summary>
+        private void SpawnInitialBugs(int targetCount, float radius)
+        {
+            if (!WorldSeedProvider.Instance?.IsInitialized ?? true)
+            {
+                Debug.LogError($"[SwarmVisual] WorldSeed not initialized! This should not happen - SwarmManager should wait for seed.");
+                return; // Don't spawn bugs without proper seed
+            }
+
+            long worldSeed = WorldSeedProvider.Instance.WorldSeed;
+
+            var spawnMsg = $"[SwarmVisual] Spawning {targetCount} bugs for swarm {SwarmId} with seed {worldSeed}, nextBugId={_nextBugId}";
+            Debug.Log(spawnMsg);
+            DebugFileLogger.Log(spawnMsg);
+
+            // Spawn bugs 0 to _nextBugId-1, skipping removed IDs
+            for (int bugId = 0; bugId < _nextBugId && _bugs.Count < targetCount; bugId++)
+            {
+                if (_removedIds.Contains(bugId))
+                    continue;
+
+                SpawnBug(worldSeed, bugId, radius);
+            }
+
+            var completeMsg = $"[SwarmVisual] Spawn complete for {SwarmId}: {_bugs.Count} bugs created (target was {targetCount}, nextBugId={_nextBugId})";
+            Debug.Log(completeMsg);
+            DebugFileLogger.Log(completeMsg);
+        }
+
+        /// <summary>
+        /// Spawn a single bug with deterministic initial position.
+        /// BugAgent constructor automatically gets correct movement for species:
+        /// - fly → BrownianMovement
+        /// - butterfly → GlidingMovement
+        /// </summary>
+        private void SpawnBug(long worldSeed, int bugId, float radius)
+        {
+            // Deterministic initial position using bug's RNG and fixed-point math
+            // IMPORTANT: Uses lookup tables instead of Mathf.Cos/Sin for cross-platform determinism
+            var rng = DeterministicRandom.ForBug(worldSeed, SwarmId, bugId);
+
+            // Direction from fixed-point lookup table (256 entries around unit circle)
+            int dirIndex = rng.RangeInt(0, FixedPointMath.TableSize);
+            var dir = FixedPointMath.DirectionFromIndex(dirIndex);
+
+            // Distance in fixed-point (0 to radius)
+            var radiusFixed = FixedPoint.FromFloat(radius);
+            int distValue = rng.RangeInt(0, radiusFixed.Value + 1);
+            var dist = new FixedPoint { Value = distValue };
+
+            // Calculate offset and start position entirely in fixed-point
+            var offset = dir * dist;
+            var startPos = _swarmCenter + offset;
+
+            // Create agent - MovementFactory.CreateMovement(SpeciesId) is called internally
+            // fly → BrownianMovement, butterfly → GlidingMovement, etc.
+            var agent = new BugAgent(worldSeed, SwarmId, SpeciesId, bugId, startPos);
+
+            // Get or create visual
+            var visual = GetSpriteFromPool();
+            if (visual == null)
+            {
+                var obj = new GameObject($"Bug_{bugId}");
+                var sr = obj.AddComponent<SpriteRenderer>();
+                sr.sprite = _bugSprite;
+                sr.sortingLayerName = "Occupants";
+                visual = obj.transform;
+            }
+            else
+            {
+                // Update pooled sprite in case species changed
+                var sr = visual.GetComponent<SpriteRenderer>();
+                if (sr != null)
+                {
+                    sr.sprite = _bugSprite;
+                    sr.sortingLayerName = "Occupants";
+                }
+            }
+
+            visual.gameObject.SetActive(true);
+            visual.SetParent(transform);
+            visual.position = startPos.ToVector2();
+
+            var bugVisual = new BugVisual(agent, visual);
+            _bugs[bugId] = bugVisual;
+        }
+
+        /// <summary>
+        /// Update from server data - starts interpolation to new center position.
         /// </summary>
         public void UpdateFromServer(SwarmData data)
         {
-            // Start interpolation from current position to new target
-            _previousPos = transform.position;
-            _targetPos = new Vector2(data.x, data.y);
-            _interpProgress = 0f;
+            // Start center interpolation
+            _previousCenter = transform.position;
+            _targetCenter = new Vector2(data.x, data.y);
+            _centerInterpProgress = 0f;
 
-            // Adjust fly count if changed
-            if (_flies.Count != data.count)
-            {
-                AdjustFlyCount(data.count, data.radius);
-            }
+            // Update cached state
+            _radius = data.radius;
 
-            // Update fly wander radius if changed
-            foreach (var fly in _flies)
+            // Sync bug ID state if server provides it
+            if (data.next_bug_id > _nextBugId)
             {
-                fly.WanderRadius = data.radius;
+                _nextBugId = data.next_bug_id;
             }
         }
 
         private void Update()
         {
-            // Interpolate position
-            if (_interpProgress < 1f)
-            {
-                _interpProgress += Time.deltaTime / InterpDuration;
-                if (_interpProgress > 1f)
-                {
-                    _interpProgress = 1f;
-                }
+            // ONLY do center interpolation - SwarmManager owns tick advancement
+            UpdateCenterInterpolation();
 
-                transform.position = Vector2.Lerp(_previousPos, _targetPos, _interpProgress);
-
-                // Update fly home positions to follow swarm center
-                Vector2 center = transform.position;
-                foreach (var fly in _flies)
-                {
-                    fly.SetHomePosition(center);
-                }
-            }
+            // DO NOT advance ticks here - SwarmManager.AdvanceOneTick() handles that
+            // DO NOT call SimulateTick() here
+            // Interpolation is called by SwarmManager.InterpolateAllSwarms()
         }
 
-        /// <summary>
-        /// Adjust the number of flies to match server count.
-        /// </summary>
-        private void AdjustFlyCount(int targetCount, float radius)
+        private void UpdateCenterInterpolation()
         {
-            // Add flies
-            while (_flies.Count < targetCount)
+            if (_centerInterpProgress < 1f)
             {
-                var fly = GetFlyFromPool();
-                if (fly == null && flyPrefab != null)
-                {
-                    var flyObj = Instantiate(flyPrefab, transform);
-                    fly = flyObj.GetComponent<FlyBehavior>();
-                }
+                _centerInterpProgress += Time.deltaTime / CenterInterpDuration;
+                if (_centerInterpProgress > 1f)
+                    _centerInterpProgress = 1f;
 
-                if (fly != null)
-                {
-                    fly.gameObject.SetActive(true);
-                    fly.transform.SetParent(transform);
-
-                    // Random position within swarm radius
-                    Vector2 offset = Random.insideUnitCircle * radius;
-                    fly.transform.position = (Vector2)transform.position + offset;
-                    fly.SetHomePosition(transform.position);
-                    fly.WanderRadius = radius;
-
-                    _flies.Add(fly);
-                }
-            }
-
-            // Remove excess flies
-            while (_flies.Count > targetCount && _flies.Count > 0)
-            {
-                var fly = _flies[_flies.Count - 1];
-                _flies.RemoveAt(_flies.Count - 1);
-                ReturnFlyToPool(fly);
+                transform.position = Vector2.Lerp(_previousCenter, _targetCenter, _centerInterpProgress);
+                _swarmCenter = FixedPoint2.FromVector2(transform.position);
             }
         }
 
         /// <summary>
-        /// Get a fly from the static pool, or null if empty.
+        /// Simulate one tick. Called by SwarmManager (which owns SimulationTick).
+        /// SwarmVisual NEVER advances time on its own.
+        /// FIX #2: Bugs MUST be iterated in deterministic order (sorted by bugId).
         /// </summary>
-        private static FlyBehavior GetFlyFromPool()
+        /// <param name="tick">The current simulation tick from SwarmManager</param>
+        /// <param name="players">Player targets from InfluenceManager (deterministic, sorted by playerId)</param>
+        public void SimulateTick(long tick, List<PlayerTarget> players)
         {
-            if (_flyPool.Count > 0)
+            if (!WorldSeedProvider.Instance?.IsInitialized ?? true)
+                return;
+
+            // FIX #2: MUST iterate bugs in deterministic order (sorted by bugId)
+            var sortedBugIds = _bugs.Keys.OrderBy(id => id).ToList();
+
+            // Debug: warn if no bugs exist (key diagnostic)
+            if (_bugs.Count == 0 && tick % 100 == 0)
             {
-                return _flyPool.Pop();
+                var warnMsg = $"[SwarmVisual] {SwarmId} tick {tick}: NO BUGS! nextBugId={_nextBugId}";
+                Debug.LogWarning(warnMsg);
+                DebugFileLogger.Log("WARNING: " + warnMsg);
             }
-            return null;
+
+            // 1. Capture previous positions for interpolation FIRST
+            foreach (var bugId in sortedBugIds)
+            {
+                _bugs[bugId].CapturePosition();
+            }
+
+            // 2. Simulate each bug in deterministic order
+            foreach (var bugId in sortedBugIds)
+            {
+                _bugs[bugId].Agent.SimulateTick(_swarmCenter, players, tick);
+            }
+
+            // Debug: log first bug's state every 100 ticks (sample one swarm)
+            if (sortedBugIds.Count > 0 && tick % 100 == 0 && SwarmId.GetHashCode() % 50 == 0)
+            {
+                var firstBug = _bugs[sortedBugIds[0]];
+                var agent = firstBug.Agent;
+                var bugMsg = $"[SwarmVisual] {SwarmId} bug0 @ tick {tick}: pos=({agent.Position.X.Value},{agent.Position.Y.Value}) vel=({agent.Velocity.X.Value},{agent.Velocity.Y.Value}) behavior={agent.CurrentBehavior}";
+                DebugFileLogger.Log(bugMsg);
+            }
         }
 
         /// <summary>
-        /// Return a fly to the static pool.
+        /// Interpolate all bugs between captured positions.
+        /// Called by SwarmManager.InterpolateAllSwarms() after time accumulation.
+        /// FIX #2: Iterate deterministically even for visuals (cheap insurance).
+        /// INVARIANT: This is READ-ONLY visual lerp. MUST NOT mutate simulation state.
         /// </summary>
-        private static void ReturnFlyToPool(FlyBehavior fly)
+        /// <param name="t">Interpolation factor (0 to 1)</param>
+        public void Interpolate(float t)
         {
-            if (fly != null)
+            foreach (var bugId in _bugs.Keys.OrderBy(id => id))
             {
-                fly.gameObject.SetActive(false);
-                fly.transform.SetParent(null);
-                _flyPool.Push(fly);
+                _bugs[bugId].Interpolate(t);
             }
         }
 
-        /// <summary>
-        /// Remove random flies immediately (visual feedback for catches).
-        /// Different from AdjustFlyCount which removes from end.
-        /// </summary>
-        public void RemoveRandomFlies(int count)
-        {
-            for (int i = 0; i < count && _flies.Count > 0; i++)
-            {
-                int idx = Random.Range(0, _flies.Count);
-                var fly = _flies[idx];
-                _flies.RemoveAt(idx);
-                ReturnFlyToPool(fly);
-            }
-        }
+        // NOTE: GetPlayerTargets() REMOVED - SwarmManager provides deterministic player targets
+        // from InfluenceManager.GetPlayerCells() via the SimulateTick(tick, players) parameter.
+        // This ensures all clients have identical inputs for bug behavior.
 
         /// <summary>
-        /// Remove flies within radius of a world position.
-        /// Returns count removed for sending to server.
+        /// Get bug IDs within radius of a world position.
+        /// Used by catching system to determine which bugs were clicked.
+        /// Returns IDs for deterministic removal across all clients.
         /// </summary>
-        public int RemoveFliesInRadius(Vector2 worldPosition, float radius)
+        public int[] GetBugsInRadius(Vector2 worldPos, float radius)
         {
             float radiusSq = radius * radius;
-            int removed = 0;
+            var result = new List<int>();
 
-            for (int i = _flies.Count - 1; i >= 0; i--)
+            foreach (var kvp in _bugs)
             {
-                var fly = _flies[i];
-                if (fly == null) continue;
-
-                Vector2 flyPos = fly.transform.position;
-                if ((flyPos - worldPosition).sqrMagnitude <= radiusSq)
+                Vector2 bugPos = kvp.Value.Agent.Position.ToVector2();
+                if ((bugPos - worldPos).sqrMagnitude <= radiusSq)
                 {
-                    _flies.RemoveAt(i);
-                    ReturnFlyToPool(fly);
-                    removed++;
+                    result.Add(kvp.Key);
                 }
             }
 
-            return removed;
+            return result.ToArray();
+        }
+
+        /// <summary>
+        /// Remove bugs by ID (deterministic removal).
+        /// All clients call this with the same IDs from server broadcast,
+        /// ensuring everyone sees the exact same bugs disappear.
+        /// </summary>
+        public void RemoveBugsById(int[] bugIds)
+        {
+            if (bugIds == null) return;
+
+            foreach (int id in bugIds)
+            {
+                if (_bugs.TryGetValue(id, out var bug))
+                {
+                    ReturnSpriteToPool(bug.Transform);
+                    _bugs.Remove(id);
+                    _removedIds.Add(id);
+                }
+            }
         }
 
         /// <summary>
@@ -199,15 +355,186 @@ namespace BugFarmer.Entities
         /// </summary>
         public void ShowCatchAnimation(Vector2 catchPos, string catcherID)
         {
-            // Skip if catcher is local player
             var localUserId = WorldManager.Instance?.Self?.UserId;
             if (catcherID == localUserId)
-            {
                 return;
+
+            // Visual effect can be added here
+            Debug.Log($"[SwarmVisual] Player {catcherID} caught bugs at {catchPos}");
+        }
+
+        // === Bug Sync (Late Joiner + Drift Detection) ===
+
+        /// <summary>
+        /// Get positions for specific bugs (used for sample request response).
+        /// Returns full state including position, velocity, RNG, behavior, and movement state.
+        /// </summary>
+        public BugSampleData[] GetBugPositions(int[] bugIds)
+        {
+            var result = new List<BugSampleData>();
+            foreach (int id in bugIds)
+            {
+                if (_bugs.TryGetValue(id, out var bug))
+                {
+                    result.Add(CreateBugSampleData(bug, id));
+                }
+            }
+            return result.ToArray();
+        }
+
+        /// <summary>
+        /// Create full state snapshot for a single bug.
+        /// </summary>
+        private BugSampleData CreateBugSampleData(BugVisual bug, int bugId)
+        {
+            var agent = bug.Agent;
+            var movementState = agent.Movement.GetState();
+
+            return new BugSampleData
+            {
+                swarm_id = SwarmId,
+                bug_id = bugId,
+                // Core state
+                x = agent.Position.X.Value,
+                y = agent.Position.Y.Value,
+                vx = agent.Velocity.X.Value,
+                vy = agent.Velocity.Y.Value,
+                rng_state = agent.Rng.State,
+                // Behavior state
+                behavior = agent.CurrentBehavior ?? "wander",
+                target_id = agent.TargetPlayerId ?? "",
+                is_alerted = agent.IsAlerted,
+                alert_cooldown = agent.AlertCheckCooldown,
+                // Movement state
+                ticks_until_change = movementState.TicksUntilChange,
+                intent_dir_x = movementState.IntentDirX,
+                intent_dir_y = movementState.IntentDirY,
+                intent_target_x = movementState.IntentTargetX,
+                intent_target_y = movementState.IntentTargetY,
+                current_dir_x = movementState.CurrentDirX,
+                current_dir_y = movementState.CurrentDirY
+            };
+        }
+
+        /// <summary>
+        /// Get positions for all bugs (used for full snapshot response).
+        /// </summary>
+        public BugSampleData[] GetAllBugPositions()
+        {
+            var result = new List<BugSampleData>();
+            foreach (var kvp in _bugs)
+            {
+                result.Add(CreateBugSampleData(kvp.Value, kvp.Key));
+            }
+            return result.ToArray();
+        }
+
+        /// <summary>
+        /// Apply snapshot from another client (late joiner or drift correction).
+        /// Sets full state including position, velocity, RNG, behavior, and movement state.
+        /// NOTE: SwarmManager owns ticks - this method only sets bug state.
+        /// </summary>
+        /// <param name="positions">Bug state data from snapshot</param>
+        public void ApplySnapshot(BugSampleData[] positions)
+        {
+            int applied = 0;
+            int notFound = 0;
+            foreach (var data in positions)
+            {
+                if (_bugs.TryGetValue(data.bug_id, out var bug))
+                {
+                    var agent = bug.Agent;
+
+                    // Core state
+                    agent.Position = new FixedPoint2
+                    {
+                        X = new FixedPoint { Value = data.x },
+                        Y = new FixedPoint { Value = data.y }
+                    };
+                    agent.Velocity = new FixedPoint2
+                    {
+                        X = new FixedPoint { Value = data.vx },
+                        Y = new FixedPoint { Value = data.vy }
+                    };
+                    agent.Rng.State = data.rng_state;
+
+                    // Behavior state
+                    agent.CurrentBehavior = string.IsNullOrEmpty(data.behavior) ? "wander" : data.behavior;
+                    agent.TargetPlayerId = string.IsNullOrEmpty(data.target_id) ? null : data.target_id;
+                    agent.IsAlerted = data.is_alerted;
+                    agent.AlertCheckCooldown = data.alert_cooldown;
+
+                    // Movement state
+                    agent.Movement.SetState(new MovementState
+                    {
+                        TicksUntilChange = data.ticks_until_change,
+                        IntentDirX = data.intent_dir_x,
+                        IntentDirY = data.intent_dir_y,
+                        IntentTargetX = data.intent_target_x,
+                        IntentTargetY = data.intent_target_y,
+                        CurrentDirX = data.current_dir_x,
+                        CurrentDirY = data.current_dir_y
+                    });
+
+                    // Sync visual to new position (also resets interpolation state)
+                    bug.SyncPosition();
+                    applied++;
+                }
+                else
+                {
+                    notFound++;
+                }
             }
 
-            // For now, just log - visual effect prefab can be added later
-            Debug.Log($"[SwarmVisual] Player {catcherID} caught bugs at {catchPos}");
+            // Clear waiting flag - simulation can now proceed
+            if (_waitingForSnapshot)
+            {
+                _waitingForSnapshot = false;
+                Debug.Log($"[SwarmVisual] {SwarmId} snapshot received - simulation resumed");
+            }
+
+            Debug.Log($"[SwarmVisual] ApplySnapshot to {SwarmId}: {applied} applied, {notFound} not found, _bugs.Count={_bugs.Count}");
+        }
+
+        // NOTE: CatchUpTicks() REMOVED - SwarmManager.ReplayToTick() handles catch-up
+        // by calling AdvanceOneTick() which calls swarm.SimulateTick(tick, players).
+
+        // NOTE: SimulateSingleTick() REMOVED - superseded by SimulateTick(tick, players)
+        // which is called by SwarmManager.AdvanceOneTick().
+
+        /// <summary>
+        /// Snap all bug visuals to current agent positions.
+        /// Call after replay completes to update visuals to final state.
+        /// </summary>
+        public void SyncAllBugPositions()
+        {
+            foreach (var kvp in _bugs)
+            {
+                kvp.Value.SyncPosition();
+            }
+        }
+
+        // === Sprite Pooling ===
+
+        private static Transform GetSpriteFromPool()
+        {
+            while (_spritePool.Count > 0)
+            {
+                var sprite = _spritePool.Pop();
+                if (sprite != null)
+                    return sprite;
+            }
+            return null;
+        }
+
+        private static void ReturnSpriteToPool(Transform sprite)
+        {
+            if (sprite != null)
+            {
+                sprite.gameObject.SetActive(false);
+                sprite.SetParent(null);
+                _spritePool.Push(sprite);
+            }
         }
 
         /// <summary>
@@ -215,11 +542,12 @@ namespace BugFarmer.Entities
         /// </summary>
         public void Cleanup()
         {
-            foreach (var fly in _flies)
+            foreach (var kvp in _bugs)
             {
-                ReturnFlyToPool(fly);
+                ReturnSpriteToPool(kvp.Value.Transform);
             }
-            _flies.Clear();
+            _bugs.Clear();
+            _removedIds.Clear();
         }
 
         private void OnDestroy()
