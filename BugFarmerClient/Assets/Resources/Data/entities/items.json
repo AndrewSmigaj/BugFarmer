@@ -127,6 +127,76 @@
     "max_stack": 99,
     "sell_price": 5
   },
+  "orange": {
+    "name": "Orange",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "rotten_apple": {
+    "name": "Rotten Apple",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1
+  },
+  "rotten_orange": {
+    "name": "Rotten Orange",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1
+  },
+  "tomato": {
+    "name": "Tomato",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 8
+  },
+  "corn": {
+    "name": "Corn",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "wheat": {
+    "name": "Wheat",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 4
+  },
+
+  "seed_tomato": {
+    "name": "Tomato Seeds",
+    "category": "seed",
+    "stackable": true,
+    "max_stack": 99,
+    "places_crop": "tomato",
+    "buy_price": 10,
+    "sell_price": 2
+  },
+  "seed_corn": {
+    "name": "Corn Seeds",
+    "category": "seed",
+    "stackable": true,
+    "max_stack": 99,
+    "places_crop": "corn",
+    "buy_price": 8,
+    "sell_price": 2
+  },
+  "seed_wheat": {
+    "name": "Wheat Seeds",
+    "category": "seed",
+    "stackable": true,
+    "max_stack": 99,
+    "places_crop": "wheat",
+    "buy_price": 5,
+    "sell_price": 1
+  },
 
   "small_net": {
     "name": "Small Net",
@@ -255,6 +325,48 @@
     "durability": 100,
     "buy_price": 60,
     "sell_price": 25
+  },
+  "hoe_wood": {
+    "name": "Wooden Hoe",
+    "category": "tool",
+    "tool_type": "hoe",
+    "tool_tier": 1,
+    "reach": 3.5,
+    "cooldown_ticks": 5,
+    "durability": 50,
+    "buy_price": 20,
+    "sell_price": 8
+  },
+  "hoe_stone": {
+    "name": "Stone Hoe",
+    "category": "tool",
+    "tool_type": "hoe",
+    "tool_tier": 2,
+    "reach": 3.5,
+    "cooldown_ticks": 4,
+    "durability": 100,
+    "buy_price": 50,
+    "sell_price": 20
+  },
+  "watering_can_basic": {
+    "name": "Watering Can",
+    "category": "tool",
+    "tool_type": "watering_can",
+    "reach": 3.5,
+    "cooldown_ticks": 3,
+    "metadata_defaults": {"uses": 40, "capacity": 40},
+    "buy_price": 30,
+    "sell_price": 12
+  },
+  "watering_can_large": {
+    "name": "Large Watering Can",
+    "category": "tool",
+    "tool_type": "watering_can",
+    "reach": 4.0,
+    "cooldown_ticks": 2,
+    "metadata_defaults": {"uses": 80, "capacity": 80},
+    "buy_price": 100,
+    "sell_price": 40
   },
 
   "calm_spray": {

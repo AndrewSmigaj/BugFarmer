@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace BugFarmer.Networking
 {
@@ -28,6 +29,7 @@ namespace BugFarmer.Networking
     {
         public string item_id;  // species_id for bugs, item_id for tools, "" = empty
         public int count;
+        public Dictionary<string, int> metadata;  // For tools with state (watering can uses)
 
         public bool IsEmpty => string.IsNullOrEmpty(item_id) || count <= 0;
 
@@ -35,18 +37,31 @@ namespace BugFarmer.Networking
         {
             item_id = "";
             count = 0;
+            metadata = null;
         }
 
         public InventorySlot(string itemId, int count)
         {
             this.item_id = itemId;
             this.count = count;
+            this.metadata = null;
         }
 
         public void Clear()
         {
             item_id = "";
             count = 0;
+            metadata = null;
+        }
+
+        /// <summary>
+        /// Get metadata value or default.
+        /// </summary>
+        public int GetMetadata(string key, int defaultValue = 0)
+        {
+            if (metadata == null || !metadata.ContainsKey(key))
+                return defaultValue;
+            return metadata[key];
         }
     }
 
@@ -62,6 +77,7 @@ namespace BugFarmer.Networking
         public int slot_index;
         public string item_id;  // "" = empty slot
         public int count;
+        public Dictionary<string, int> metadata;  // For tools with state (watering can uses)
     }
 
     /// <summary>

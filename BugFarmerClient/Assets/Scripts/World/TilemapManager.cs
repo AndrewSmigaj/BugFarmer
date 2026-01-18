@@ -197,6 +197,9 @@ namespace BugFarmer.World
                 case OpCodes.BreakProgress:
                     HandleBreakProgress(state);
                     break;
+                case OpCodes.CropUpdate:
+                    HandleCropUpdate(state);
+                    break;
             }
         }
 
@@ -419,6 +422,25 @@ namespace BugFarmer.World
                 // Show/update breaking progress
                 ShowBreakingProgress(cellPos, msg.current_hp, msg.max_hp);
             }
+        }
+
+        private void HandleCropUpdate(IMatchState state)
+        {
+            var json = System.Text.Encoding.UTF8.GetString(state.State);
+            var msg = JsonUtility.FromJson<CropUpdateMessage>(json);
+            if (msg == null)
+            {
+                Debug.LogWarning("[TilemapManager] Failed to parse CropUpdateMessage");
+                return;
+            }
+
+            var cellPos = new Vector2Int(msg.grid_x, msg.grid_y);
+            Debug.Log($"[TilemapManager] CropUpdate at {cellPos}: stage={msg.stage}, water={msg.water}");
+
+            // Update crop visual based on stage
+            // The occupant sprite path includes stage: plant_tomato_stage0, etc.
+            // For now, just log - full visual update would require sprite swapping
+            // TODO: Implement crop stage visualization
         }
 
         #endregion

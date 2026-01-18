@@ -48,6 +48,18 @@ namespace BugFarmer.Player
             if (_mainCamera == null)
                 return;
 
+            // Skip if equipped tool is a farming tool (handled by ToolUseController)
+            string toolId = InventoryManager.Instance?.GetEquippedToolId();
+            if (!string.IsNullOrEmpty(toolId))
+            {
+                var toolDef = EntityDatabase.Get(toolId);
+                if (toolDef != null && (toolDef.ToolType == "hoe" || toolDef.ToolType == "watering_can"))
+                {
+                    StopBreaking();
+                    return;
+                }
+            }
+
             // Get world position under mouse
             Vector3 mouseWorld = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
             mouseWorld.z = 0;
