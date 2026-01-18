@@ -88,6 +88,14 @@ namespace BugFarmer.Player
                 if (ghostPreview != null)
                 {
                     ghostPreview.sprite = EntityDatabase.GetWorldSprite(itemId);
+
+                    // Scale ghost to match target size
+                    var targetSize = EntityDatabase.GetSpriteSize(itemId);
+                    var sprite = ghostPreview.sprite;
+                    float scaleX = targetSize.x / sprite.rect.width;
+                    float scaleY = targetSize.y / sprite.rect.height;
+                    ghostPreview.transform.localScale = new Vector3(scaleX, scaleY, 1f);
+
                     ghostPreview.gameObject.SetActive(true);
                 }
             }

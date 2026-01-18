@@ -1754,7 +1754,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: -2009438711
   m_SortingLayer: 2
-  m_SortingOrder: 101
+  m_SortingOrder: 1001
   m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0.44705883}
   m_FlipX: 0
@@ -2507,6 +2507,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1003514519}
   m_CullTransparentMesh: 1
+--- !u!1 &1164539824
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1164539826}
+  - component: {fileID: 1164539825}
+  m_Layer: 0
+  m_Name: WorldSeedProvider
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1164539825
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1164539824}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35c27254feef6234bbcf197d6f047610, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BugFarmer.Bugs.WorldSeedProvider
+--- !u!4 &1164539826
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1164539824}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 260.98376, y: 233.9773, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1201505269 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2800150757093010076, guid: cf11ef66b9d992647ba96cb7885faa5d, type: 3}
@@ -3691,8 +3735,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42bb14ba413c15d4bbf9303df35885cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BugFarmer.Entities.SwarmManager
-  swarmVisualPrefab: {fileID: 3636617496318033807, guid: 39241a8615a3a9f40aa0f7616d3c99d3, type: 3}
-  flyPrefab: {fileID: 2220781319760257774, guid: 85feb3fb506fab44cb8555aee3011f0d, type: 3}
 --- !u!1001 &5252652697891090095
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3812,3 +3854,4 @@ SceneRoots:
   - {fileID: 1765566268}
   - {fileID: 994649254}
   - {fileID: 1585272562}
+  - {fileID: 1164539826}

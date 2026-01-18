@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: a2b371fb216e80c4c9515136d3bda7be
+guid: 255430276e2901945a9eb203c9370d61
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6006050137916855233
-    second: rock_small_0
+      213: 2417393974275083813
+    second: millipede_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: rock_small_0
+      name: millipede_0
       rect:
         serializedVersion: 2
-        x: 0
+        x: 2
         y: 0
-        width: 16
-        height: 15
+        width: 8
+        height: 24
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 1c358bd67c6c95350800000000000000
-      internalID: 6006050137916855233
+      spriteID: 52e06def20f4c8120800000000000000
+      internalID: 2417393974275083813
       vertices: []
       indices: 
       edges: []
@@ -138,7 +138,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      rock_small_0: 6006050137916855233
+      millipede_0: 2417393974275083813
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

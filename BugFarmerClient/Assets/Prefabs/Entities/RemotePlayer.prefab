@@ -77,9 +77,9 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 3
+  m_SortingLayerID: -2009438711
+  m_SortingLayer: 2
+  m_SortingOrder: 1000
   m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -104,7 +104,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BugFarmer.Entities.RemoteEntity
   directionSprites:
-  - {fileID: -3953365634733000360, guid: 64d1d7dd2c9bf0f4f95b1db1439dacff, type: 3}
-  - {fileID: 2018255162231593255, guid: 86728d22c32e2354a97471410277c03d, type: 3}
-  - {fileID: 9203954956759660754, guid: ec12d07a2f5f61a4f929a1b0911d47a5, type: 3}
-  - {fileID: 241396038161257350, guid: 7d68f54cdaabd8d428aed2f2985f6f04, type: 3}
+  - {fileID: 21300000, guid: 9d0e21465be58c14388926c5ab59bb10, type: 3}
+  - {fileID: 21300000, guid: 3f7fce76cc9cbee41829cfe3a18e4888, type: 3}
+  - {fileID: 21300000, guid: 3d6c0e7c38a2875499c475d2df6b4378, type: 3}
+  - {fileID: 21300000, guid: 43b97cb9f3978dc49a7ee28c7aa2dc5f, type: 3}

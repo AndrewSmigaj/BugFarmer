@@ -1,11 +1,13 @@
 {
-  "_comment": "World-only occupants: natural objects that cannot be placed by players. Sprites load from Resources/Sprites/Occupants/{id}.png",
+  "_comment": "World-only occupants: natural objects that cannot be placed by players. Sprites load from Resources/Objects/{id}.png",
 
   "tree_oak": {
     "name": "Oak Tree",
     "category": "natural",
+    "sprite_w": 32,
+    "sprite_h": 48,
     "world": {
-      "footprint": [2, 2],
+      "footprint": [1, 1],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -22,8 +24,10 @@
   "tree_pine": {
     "name": "Pine Tree",
     "category": "natural",
+    "sprite_w": 32,
+    "sprite_h": 52,
     "world": {
-      "footprint": [2, 2],
+      "footprint": [1, 1],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -40,6 +44,8 @@
   "tree_dead": {
     "name": "Dead Tree",
     "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 32,
     "world": {
       "footprint": [1, 1],
       "pivot": "bc",
@@ -58,8 +64,10 @@
   "tree_palm": {
     "name": "Palm Tree",
     "category": "natural",
+    "sprite_w": 32,
+    "sprite_h": 48,
     "world": {
-      "footprint": [2, 2],
+      "footprint": [1, 1],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -76,8 +84,10 @@
   "tree_fruit": {
     "name": "Fruit Tree",
     "category": "natural",
+    "sprite_w": 32,
+    "sprite_h": 44,
     "world": {
-      "footprint": [2, 2],
+      "footprint": [1, 1],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -95,6 +105,8 @@
   "bush": {
     "name": "Bush",
     "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
     "world": {
       "footprint": [1, 1],
       "pivot": "c",
@@ -109,6 +121,8 @@
   "tall_grass": {
     "name": "Tall Grass",
     "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 24,
     "world": {
       "footprint": [1, 1],
       "pivot": "bc",
@@ -123,6 +137,8 @@
   "reeds": {
     "name": "Reeds",
     "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 24,
     "world": {
       "footprint": [1, 1],
       "pivot": "bc",
@@ -137,6 +153,8 @@
   "mushroom_red": {
     "name": "Red Mushroom",
     "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
     "world": {
       "footprint": [1, 1],
       "pivot": "bc",
@@ -151,6 +169,8 @@
   "mushroom_glow": {
     "name": "Glowing Mushroom",
     "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
     "world": {
       "footprint": [1, 1],
       "pivot": "bc",
@@ -165,6 +185,8 @@
   "flower_wild": {
     "name": "Wild Flower",
     "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
     "world": {
       "footprint": [1, 1],
       "pivot": "c",
@@ -179,6 +201,8 @@
   "flower_red": {
     "name": "Red Flower",
     "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
     "world": {
       "footprint": [1, 1],
       "pivot": "c",
@@ -193,6 +217,8 @@
   "flower_blue": {
     "name": "Blue Flower",
     "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
     "world": {
       "footprint": [1, 1],
       "pivot": "c",
@@ -207,6 +233,8 @@
   "flower_yellow": {
     "name": "Yellow Flower",
     "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
     "world": {
       "footprint": [1, 1],
       "pivot": "c",
@@ -221,6 +249,8 @@
   "sunflower": {
     "name": "Sunflower",
     "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 32,
     "world": {
       "footprint": [1, 1],
       "pivot": "bc",
@@ -235,6 +265,8 @@
   "crystal_small": {
     "name": "Small Crystal",
     "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 24,
     "world": {
       "footprint": [1, 1],
       "pivot": "bc",
@@ -251,6 +283,8 @@
   "crystal_large": {
     "name": "Large Crystal",
     "category": "natural",
+    "sprite_w": 32,
+    "sprite_h": 40,
     "world": {
       "footprint": [2, 2],
       "pivot": "bc",
@@ -269,6 +303,8 @@
   "bone_pile": {
     "name": "Bone Pile",
     "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
     "world": {
       "footprint": [1, 1],
       "pivot": "c",
@@ -283,6 +319,8 @@
   "ant_mound": {
     "name": "Ant Mound",
     "category": "natural",
+    "sprite_w": 32,
+    "sprite_h": 32,
     "world": {
       "footprint": [2, 2],
       "pivot": "bc",
@@ -296,6 +334,8 @@
   "ore_coal_block": {
     "name": "Coal Deposit",
     "category": "ore",
+    "sprite_w": 16,
+    "sprite_h": 20,
     "world": {
       "footprint": [1, 1],
       "pivot": "bc",
@@ -314,6 +354,8 @@
   "ore_copper_block": {
     "name": "Copper Deposit",
     "category": "ore",
+    "sprite_w": 16,
+    "sprite_h": 20,
     "world": {
       "footprint": [1, 1],
       "pivot": "bc",
@@ -332,6 +374,8 @@
   "ore_iron_block": {
     "name": "Iron Deposit",
     "category": "ore",
+    "sprite_w": 16,
+    "sprite_h": 20,
     "world": {
       "footprint": [1, 1],
       "pivot": "bc",
@@ -350,6 +394,8 @@
   "ore_silver_block": {
     "name": "Silver Deposit",
     "category": "ore",
+    "sprite_w": 16,
+    "sprite_h": 20,
     "world": {
       "footprint": [1, 1],
       "pivot": "bc",
@@ -368,6 +414,8 @@
   "ore_gold_block": {
     "name": "Gold Deposit",
     "category": "ore",
+    "sprite_w": 16,
+    "sprite_h": 20,
     "world": {
       "footprint": [1, 1],
       "pivot": "bc",
@@ -386,6 +434,8 @@
   "ore_platinum_block": {
     "name": "Platinum Deposit",
     "category": "ore",
+    "sprite_w": 16,
+    "sprite_h": 20,
     "world": {
       "footprint": [1, 1],
       "pivot": "bc",
@@ -404,6 +454,8 @@
   "ore_diamond_block": {
     "name": "Diamond Deposit",
     "category": "ore",
+    "sprite_w": 16,
+    "sprite_h": 20,
     "world": {
       "footprint": [1, 1],
       "pivot": "bc",
@@ -423,6 +475,8 @@
   "stump": {
     "name": "Tree Stump",
     "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
     "world": {
       "footprint": [1, 1],
       "pivot": "c",
@@ -438,6 +492,8 @@
   "log_pile": {
     "name": "Log Pile",
     "category": "natural",
+    "sprite_w": 32,
+    "sprite_h": 20,
     "world": {
       "footprint": [2, 1],
       "pivot": "bc",
@@ -455,6 +511,8 @@
   "compost_pile": {
     "name": "Compost Pile",
     "category": "natural",
+    "sprite_w": 32,
+    "sprite_h": 24,
     "world": {
       "footprint": [2, 2],
       "pivot": "bc",
@@ -470,6 +528,8 @@
   "apple_crate": {
     "name": "Apple Crate",
     "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
     "world": {
       "footprint": [1, 1],
       "pivot": "c",
@@ -486,6 +546,8 @@
   "broken_net": {
     "name": "Broken Net",
     "category": "natural",
+    "sprite_w": 32,
+    "sprite_h": 16,
     "world": {
       "footprint": [2, 1],
       "pivot": "c",
@@ -500,6 +562,8 @@
   "notice_board": {
     "name": "Notice Board",
     "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
     "world": {
       "footprint": [1, 2],
       "pivot": "bc",

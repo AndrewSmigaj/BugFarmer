@@ -62,5 +62,29 @@
     "sprite_path": "Sprites/Terrain/water_deep.png",
     "blocks_players": true,
     "blocks_bugs": true
+  },
+  "bridge_wood": {
+    "sprite_path": "Sprites/Terrain/bridge_wood.png",
+    "movement_mult": 1.0,
+    "accepts_furniture": true,
+    "accepts_structure": true
+  },
+  "bridge_stone": {
+    "sprite_path": "Sprites/Terrain/bridge_stone.png",
+    "movement_mult": 1.0,
+    "accepts_furniture": true,
+    "accepts_structure": true
+  },
+  "rug_small": {
+    "sprite_path": "Sprites/Terrain/rug_small.png",
+    "movement_mult": 1.0,
+    "accepts_furniture": true,
+    "accepts_structure": true
+  },
+  "rug_large": {
+    "sprite_path": "Sprites/Terrain/rug_large.png",
+    "movement_mult": 1.0,
+    "accepts_furniture": true,
+    "accepts_structure": true
   }
 }

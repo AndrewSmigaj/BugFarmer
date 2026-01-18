@@ -58,6 +58,10 @@ namespace BugFarmer.Data
             public string Category;
             public string EntityType; // "item", "occupant", or "placeable"
 
+            // Sprite dimensions (target size in pixels)
+            public int SpriteW;
+            public int SpriteH;
+
             // Inventory properties
             public bool Stackable;
             public int MaxStack = 99;
@@ -166,6 +170,18 @@ namespace BugFarmer.Data
                 CatchRadius = data["catch_radius"]?.Value<float>() ?? 0f,
                 Effect = data["effect"]?.Value<string>()
             };
+
+            // Parse sprite dimensions (required for occupants/placeables)
+            var spriteW = data["sprite_w"]?.Value<int>();
+            var spriteH = data["sprite_h"]?.Value<int>();
+            if (spriteW.HasValue)
+                entity.SpriteW = spriteW.Value;
+            else if (entityType != "item")
+                Debug.LogWarning($"[EntityDatabase] {id} missing sprite_w");
+            if (spriteH.HasValue)
+                entity.SpriteH = spriteH.Value;
+            else if (entityType != "item")
+                Debug.LogWarning($"[EntityDatabase] {id} missing sprite_h");
 
             // Parse world data if present
             var worldData = data["world"] as JObject;
@@ -311,6 +327,15 @@ namespace BugFarmer.Data
                 return new Vector2Int(h, w);
 
             return new Vector2Int(w, h);
+        }
+
+        /// <summary>
+        /// Get target sprite size in pixels.
+        /// </summary>
+        public static Vector2Int GetSpriteSize(string id)
+        {
+            var def = Get(id);
+            return new Vector2Int(def.SpriteW, def.SpriteH);
         }
 
         /// <summary>

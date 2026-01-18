@@ -1092,7 +1092,7 @@ def build_ant_queen():
 
 
 def main():
-    output_dir = "/mnt/c/Users/emily/BugFarmer/BugFarmerClient/Assets/Sprites/Bugs"
+    output_dir = "/mnt/c/Users/emily/BugFarmer/BugFarmerClient/Assets/Resources/Bugs"
     os.makedirs(output_dir, exist_ok=True)
 
     sprites = [

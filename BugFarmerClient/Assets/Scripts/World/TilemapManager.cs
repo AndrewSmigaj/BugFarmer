@@ -580,8 +580,9 @@ namespace BugFarmer.World
             // Position at cell with pivot adjustment
             Vector3 worldPos = CellToWorld(cellPos);
             // Adjust Y for pivot (pivot.y gives bottom-center offset)
-            // Use sprite's actual height for positioning
-            float spriteHeightCells = sprite.rect.height / 16f;
+            // Use target size from database for positioning
+            var targetSize = EntityDatabase.GetSpriteSize(occupantId);
+            float spriteHeightCells = targetSize.y / 16f;
             worldPos.y += pivot.y * spriteHeightCells * cellSize;
             go.transform.position = worldPos;
 
@@ -590,6 +591,12 @@ namespace BugFarmer.World
             if (sr == null)
                 sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
+
+            // Scale sprite to match target size from database
+            float scaleX = targetSize.x / sprite.rect.width;
+            float scaleY = targetSize.y / sprite.rect.height;
+            go.transform.localScale = new Vector3(scaleX, scaleY, 1f);
+
             sr.sortingLayerName = "Occupants"; // Must create this sorting layer in Unity
             // Y-sorting: lower Y = higher sorting order (appears in front)
             sr.sortingOrder = -cellPos.y;
