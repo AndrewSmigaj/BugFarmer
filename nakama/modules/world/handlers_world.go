@@ -31,6 +31,9 @@ func (m *Match) handleChunkSubscribe(
 			logger.Debug("Created empty chunk %d,%d (no file)", cx, cy)
 		}
 		state.Chunks[chunkKey] = chunk
+
+		// Initialize fruit tree states for any fruit trees in this chunk
+		m.initFruitTreesInChunk(state, chunk, cx, cy, logger)
 	}
 
 	// Check for late joiner: if others already in chunk, request snapshot
@@ -119,12 +122,6 @@ func (m *Match) handleTilePlace(
 		return
 	}
 
-	// Check entity can be placed in world
-	if !def.IsPlaceable() {
-		m.sendWorldError(dispatcher, state, userID, "Cannot place this item")
-		return
-	}
-
 	// Validate player has item in inventory
 	player := state.Players[userID]
 	if player == nil {
@@ -133,6 +130,18 @@ func (m *Match) handleTilePlace(
 	slotIndex := player.FindItem(msg.OccupantID)
 	if slotIndex < 0 {
 		m.sendWorldError(dispatcher, state, userID, "You don't have this item")
+		return
+	}
+
+	// Check if this is a seed (has PlacesCrop)
+	if def.PlacesCrop != "" {
+		m.handleSeedPlanting(logger, dispatcher, state, userID, player, slotIndex, msg.GridX, msg.GridY, def)
+		return
+	}
+
+	// Check entity can be placed in world
+	if !def.IsPlaceable() {
+		m.sendWorldError(dispatcher, state, userID, "Cannot place this item")
 		return
 	}
 
@@ -188,6 +197,100 @@ func (m *Match) handleTilePlace(
 
 	// Broadcast update to chunk subscribers
 	m.broadcastWorldUpdate(dispatcher, state, cx, cy, msg.GridX, msg.GridY, "", occ)
+}
+
+// handleSeedPlanting plants a seed on a garden_plot tile
+func (m *Match) handleSeedPlanting(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	userID string,
+	player *PlayerState,
+	slotIndex int,
+	gx, gy int,
+	seedDef *EntityDef,
+) {
+	cropType := seedDef.PlacesCrop
+
+	// Get crop definition
+	cropDef := state.CropDefs[cropType]
+	if cropDef == nil {
+		m.sendWorldError(dispatcher, state, userID, "Unknown crop type")
+		return
+	}
+
+	// Get chunk and local coords
+	cx, cy, lx, ly := GlobalToChunk(gx, gy)
+	chunk := state.Chunks[ChunkKey(cx, cy)]
+	if chunk == nil {
+		m.sendWorldError(dispatcher, state, userID, "Chunk not loaded")
+		return
+	}
+
+	// Check tile is garden_plot (accepts_plant)
+	tile := chunk.GetGroundTile(lx, ly)
+	tileDef := state.TileDefs[tile]
+	if tileDef == nil || !tileDef.AcceptsPlant {
+		m.sendWorldError(dispatcher, state, userID, "Can only plant on tilled soil")
+		return
+	}
+
+	// Check cell is empty (no occupant)
+	cell, _ := chunk.GetOccupantCell(lx, ly)
+	if !cell.IsEmpty {
+		m.sendWorldError(dispatcher, state, userID, "Cell is occupied")
+		return
+	}
+
+	// Check no existing crop at this location
+	cropKey := fmt.Sprintf("%d,%d", gx, gy)
+	if state.CropStates[cropKey] != nil {
+		m.sendWorldError(dispatcher, state, userID, "Crop already planted here")
+		return
+	}
+
+	// Create crop state
+	plantID := fmt.Sprintf("plant_%d_%d_%d", gx, gy, state.TickCount)
+	crop := &entities.CropState{
+		PlantID:           plantID,
+		PlantType:         cropType,
+		GridX:             gx,
+		GridY:             gy,
+		Stage:             0, // Seed stage
+		HP:                100,
+		Water:             0,
+		WateringsToday:    0,
+		HarvestsRemaining: cropDef.MaxHarvests,
+		PlantedTick:       state.TickCount,
+	}
+	state.CropStates[cropKey] = crop
+
+	// Place plant occupant
+	plantOccID := "plant_" + cropType
+	occ := &PlacedOccupant{ID: plantOccID, Dir: 0}
+	chunk.SetOccupant(lx, ly, occ)
+
+	// Consume seed from inventory
+	player.RemoveItem(slotIndex, 1)
+
+	// Send inventory update
+	slotMsg := SlotUpdateMessage{
+		SlotIndex: slotIndex,
+		ItemID:    player.ItemSlots[slotIndex].ItemID,
+		Count:     player.ItemSlots[slotIndex].Count,
+	}
+	slotData, _ := json.Marshal(slotMsg)
+	if presence, ok := state.Presences[userID]; ok && presence != nil {
+		dispatcher.BroadcastMessage(OpCodeItemSlotUpdate, slotData, []runtime.Presence{presence}, nil, true)
+	}
+
+	// Broadcast occupant placement
+	m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, "", occ)
+
+	// Broadcast initial crop state
+	m.broadcastCropUpdate(dispatcher, state, gx, gy, crop)
+
+	logger.Debug("Player %s planted %s at %d,%d", userID, cropType, gx, gy)
 }
 
 // handleTileBreak attempts to break/mine an occupant

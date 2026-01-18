@@ -41,6 +41,58 @@
       }
     }
   },
+  "tree_apple": {
+    "name": "Apple Tree",
+    "category": "natural",
+    "sprite_w": 32,
+    "sprite_h": 48,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "fruit_tree",
+      "fruit_type": "apple",
+      "max_fruit": 5,
+      "fruit_grow_ticks": 840,
+      "fruit_drop_ticks": 4200,
+      "breakable": {
+        "hp": 5,
+        "required_tool_type": "axe",
+        "required_tool_tier": 1,
+        "drops": [
+          {"item_id": "wood", "count": 3, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "tree_orange": {
+    "name": "Orange Tree",
+    "category": "natural",
+    "sprite_w": 32,
+    "sprite_h": 48,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "fruit_tree",
+      "fruit_type": "orange",
+      "max_fruit": 4,
+      "fruit_grow_ticks": 1000,
+      "fruit_drop_ticks": 5000,
+      "breakable": {
+        "hp": 5,
+        "required_tool_type": "axe",
+        "required_tool_tier": 1,
+        "drops": [
+          {"item_id": "wood", "count": 3, "chance": 1.0}
+        ]
+      }
+    }
+  },
   "tree_dead": {
     "name": "Dead Tree",
     "category": "natural",
@@ -578,6 +630,37 @@
           {"item_id": "wood", "count": 2, "chance": 1.0}
         ]
       }
+    }
+  },
+
+  "plant_tomato": {
+    "name": "Tomato Plant",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc"
+    }
+  },
+  "plant_corn": {
+    "name": "Corn Plant",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc"
+    }
+  },
+  "plant_wheat": {
+    "name": "Wheat Plant",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc"
     }
   }
 }

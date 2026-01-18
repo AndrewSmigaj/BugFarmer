@@ -104,6 +104,14 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 		}
 	}
 
+	// Load crop definitions
+	state.CropDefs, err = LoadCropDefs("data")
+	if err != nil {
+		logger.Warn("Failed to load crop definitions: %v", err)
+	} else {
+		logger.Info("Loaded %d crop definitions", len(state.CropDefs))
+	}
+
 	// Spawn initial swarms for testing
 	m.spawnInitialSwarms(state, logger)
 
@@ -413,6 +421,22 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			}
 			m.handleTileBreak(logger, dispatcher, worldState, userID, breakMsg, worldState.TickCount)
 
+		case OpCodeToolUse:
+			var toolMsg ToolUseMessage
+			if err := json.Unmarshal(msg.GetData(), &toolMsg); err != nil {
+				logger.Warn("Invalid tool use from %s: %v", userID, err)
+				continue
+			}
+			m.handleToolUse(logger, dispatcher, worldState, userID, toolMsg, worldState.TickCount)
+
+		case OpCodePlantInteract:
+			var plantMsg PlantInteractMessage
+			if err := json.Unmarshal(msg.GetData(), &plantMsg); err != nil {
+				logger.Warn("Invalid plant interact from %s: %v", userID, err)
+				continue
+			}
+			m.handlePlantInteract(logger, dispatcher, worldState, userID, plantMsg, worldState.TickCount)
+
 		case OpCodePickupItem:
 			var pickupMsg PickupItemMessage
 			if err := json.Unmarshal(msg.GetData(), &pickupMsg); err != nil {
@@ -477,6 +501,13 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			dispatcher.BroadcastMessage(OpCodeEntityUpdate, data, nil, nil, true)
 		}
 	}
+
+	// === Crop Growth ===
+	m.processCropGrowth(worldState, dispatcher)
+
+	// === Fruit Trees & Ground Item Decay ===
+	m.processFruitTrees(worldState, dispatcher, logger)
+	m.processGroundItemDecay(worldState, dispatcher)
 
 	// === Swarm Simulation ===
 	deltaTime := 1.0 / float32(worldState.Config.TickRate)

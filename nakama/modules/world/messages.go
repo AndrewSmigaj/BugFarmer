@@ -80,6 +80,12 @@ const (
 	OpCodeZoneTickBroadcast   int64 = 78 // S→C: Tick frontier update (every tick, 10Hz)
 )
 
+// Farming OpCodes
+const (
+	OpCodeCropUpdate    int64 = 50 // S→C: Crop state changed (water, stage, HP)
+	OpCodePlantInteract int64 = 55 // C→S: Harvest or destroy plant
+)
+
 // === Client → Server Messages ===
 
 // MovementMessage is sent by clients (OpCode 1)
@@ -159,9 +165,10 @@ type EquipToolMessage struct {
 
 // SlotUpdateMessage is sent when a single slot changes (OpCode 26 for bugs, 37 for items)
 type SlotUpdateMessage struct {
-	SlotIndex int    `json:"slot_index"`
-	ItemID    string `json:"item_id"` // "" = empty slot
-	Count     int    `json:"count"`
+	SlotIndex int            `json:"slot_index"`
+	ItemID    string         `json:"item_id"` // "" = empty slot
+	Count     int            `json:"count"`
+	Metadata  map[string]int `json:"metadata,omitempty"` // For tools with state (watering can uses)
 }
 
 // FullInventorySyncMessage is sent on player join (OpCode 38)
@@ -207,6 +214,30 @@ type TilePlaceMessage struct {
 type TileBreakMessage struct {
 	GridX int `json:"grid_x"` // Global cell X
 	GridY int `json:"grid_y"` // Global cell Y
+}
+
+// ToolUseMessage is sent by client (OpCode 7)
+// Server looks up player.EquippedTool to determine action (hoe, watering can)
+type ToolUseMessage struct {
+	GridX int `json:"grid_x"` // Target cell X
+	GridY int `json:"grid_y"` // Target cell Y
+}
+
+// PlantInteractMessage is sent by client (OpCode 55)
+type PlantInteractMessage struct {
+	GridX         int  `json:"grid_x"`
+	GridY         int  `json:"grid_y"`
+	DestroyIntent bool `json:"destroy_intent"` // true = destroy, false = harvest
+}
+
+// CropUpdateMessage is sent to client (OpCode 50)
+type CropUpdateMessage struct {
+	GridX int `json:"grid_x"`
+	GridY int `json:"grid_y"`
+	Stage int `json:"stage"`
+	HP    int `json:"hp"`
+	Water int `json:"water"`
+	Flags int `json:"flags"` // fertilized, etc.
 }
 
 // ChunkDataMessage is sent to client (OpCode 44)
@@ -366,6 +397,10 @@ const (
 	InfluenceSwarmCenterMove = "SWARM_CENTER_MOVE"
 	InfluenceBugRemoved      = "BUG_REMOVED"
 	InfluenceBugSpawned      = "BUG_SPAWNED"
+	// Farming/ecology events
+	InfluenceTreeFruitGrow = "TREE_FRUIT_GROW"
+	InfluenceTreeFruitDrop = "TREE_FRUIT_DROP"
+	InfluenceItemRotted    = "ITEM_ROTTED"
 )
 
 // InfluenceEvent represents a discrete, replayable signal for bug AI

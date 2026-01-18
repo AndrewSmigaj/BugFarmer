@@ -2,11 +2,13 @@ package entities
 
 // GroundItem represents a dropped item in the world (seeds, etc.)
 type GroundItem struct {
-	ID       string
-	ItemType string         // "acorn", "flower_seed", etc.
-	Count    int            // Stack count (default 1)
-	Position EntityPosition
-	Lifetime float32        // Seconds until despawn (60.0 default)
+	ID        string
+	ItemType  string         // "acorn", "flower_seed", etc.
+	Count     int            // Stack count (default 1)
+	Position  EntityPosition
+	Lifetime  float32        // Seconds until despawn (60.0 default)
+	DecaysTo  string         // Item type this decays into ("apple" -> "rotten_apple")
+	FoodValue int            // Food value for bugs (100 for rotten fruit, consumed by flies)
 }
 
 // GetID implements Entity interface

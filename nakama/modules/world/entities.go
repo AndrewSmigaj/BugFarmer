@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"bugfarmer/entities"
 )
 
 // EntityDef is the unified definition for all game entities.
@@ -24,12 +26,17 @@ type EntityDef struct {
 	BuyPrice  int  `json:"buy_price,omitempty"`
 
 	// Tool properties (category = "tool")
-	ToolType    string  `json:"tool_type,omitempty"`
-	ToolTier    int     `json:"tool_tier,omitempty"`
-	Reach       float32 `json:"reach,omitempty"`
-	MiningSpeed float32 `json:"mining_speed,omitempty"`
-	Durability  int     `json:"durability,omitempty"`
-	CatchRadius float32 `json:"catch_radius,omitempty"` // For nets
+	ToolType         string         `json:"tool_type,omitempty"`
+	ToolTier         int            `json:"tool_tier,omitempty"`
+	Reach            float32        `json:"reach,omitempty"`
+	MiningSpeed      float32        `json:"mining_speed,omitempty"`
+	Durability       int            `json:"durability,omitempty"`
+	CatchRadius      float32        `json:"catch_radius,omitempty"`      // For nets
+	CooldownTicks    int            `json:"cooldown_ticks,omitempty"`    // Ticks between uses (farming tools)
+	MetadataDefaults map[string]int `json:"metadata_defaults,omitempty"` // Initial metadata (watering can capacity)
+
+	// Seed properties
+	PlacesCrop string `json:"places_crop,omitempty"` // Crop type this seed plants
 
 	// Consumable properties
 	Effect string `json:"effect,omitempty"`
@@ -58,6 +65,12 @@ type WorldData struct {
 
 	// Breaking (nil = unbreakable)
 	Breakable *BreakableData `json:"breakable,omitempty"`
+
+	// Fruit tree properties
+	FruitType      string `json:"fruit_type,omitempty"`       // "apple", "orange"
+	MaxFruit       int    `json:"max_fruit,omitempty"`        // Maximum fruit capacity
+	FruitGrowTicks int    `json:"fruit_grow_ticks,omitempty"` // Ticks per fruit growth
+	FruitDropTicks int    `json:"fruit_drop_ticks,omitempty"` // Ticks until fruit drops
 }
 
 // BreakableData describes how something can be broken/harvested.
@@ -275,4 +288,52 @@ func applyDefaults(e *EntityDef) {
 			}
 		}
 	}
+}
+
+// LoadCropDefs loads crop definitions from crops.json
+func LoadCropDefs(basePath string) (map[string]*entities.CropDef, error) {
+	crops := make(map[string]*entities.CropDef)
+
+	path := filepath.Join(basePath, "entities", "crops.json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read crops.json: %w", err)
+	}
+
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return nil, fmt.Errorf("failed to parse crops.json: %w", err)
+	}
+
+	for id, cropData := range raw {
+		if id == "_comment" {
+			continue
+		}
+
+		var def entities.CropDef
+		if err := json.Unmarshal(cropData, &def); err != nil {
+			return nil, fmt.Errorf("failed to parse crop %s: %w", id, err)
+		}
+
+		// Apply defaults
+		if def.GrowthStages == 0 {
+			def.GrowthStages = 4
+		}
+		if def.WateringsPerStage == 0 {
+			def.WateringsPerStage = 3
+		}
+		if def.MaxDailyWaterings == 0 {
+			def.MaxDailyWaterings = 2
+		}
+		if def.HarvestCountMin == 0 {
+			def.HarvestCountMin = 1
+		}
+		if def.HarvestCountMax == 0 {
+			def.HarvestCountMax = def.HarvestCountMin
+		}
+
+		crops[id] = &def
+	}
+
+	return crops, nil
 }

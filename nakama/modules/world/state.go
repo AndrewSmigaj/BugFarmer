@@ -53,6 +53,13 @@ type WorldState struct {
 	Entities      map[string]*EntityDef        // Loaded from entities/*.json (items, occupants, placeables)
 	BreakingState map[string]*BreakingProgress // "gx,gy" -> breaking progress
 
+	// Farming (crops)
+	CropStates map[string]*entities.CropState // "gx,gy" -> crop state
+	CropDefs   map[string]*entities.CropDef   // cropType -> crop definition
+
+	// Fruit trees
+	FruitTreeStates map[string]*entities.FruitTreeState // "gx,gy" -> fruit tree state
+
 	// Bug spawn tracking (zone-level, per species)
 	SwarmsBySpecies  map[string][]string // speciesID → swarmIDs of that species
 	SpeciesNextSpawn map[string]float64  // speciesID → next spawn time (seconds since start)
@@ -125,8 +132,9 @@ type PendingSnapshotReq struct {
 
 // InventorySlot holds one stack of items (bugs or tools)
 type InventorySlot struct {
-	ItemID string `json:"item_id"` // species_id for bugs, item_id for tools, "" = empty
-	Count  int    `json:"count"`
+	ItemID   string         `json:"item_id"`             // species_id for bugs, item_id for tools, "" = empty
+	Count    int            `json:"count"`
+	Metadata map[string]int `json:"metadata,omitempty"` // For tools with state (watering can uses)
 }
 
 // PlayerState tracks a player within the world
@@ -144,6 +152,9 @@ type PlayerState struct {
 	// Bug catching
 	LastCatchTime int64  // Unix millis, rate limiting
 	EquippedTool  string // "" (hand), "small_net", etc.
+
+	// Tool use
+	LastToolTick int64 // Tick of last tool use (cooldown)
 }
 
 
@@ -212,6 +223,10 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		TileDefs:      make(map[string]*TileDefinition),
 		Entities:      make(map[string]*EntityDef),
 		BreakingState: make(map[string]*BreakingProgress),
+		// Farming
+		CropStates:      make(map[string]*entities.CropState),
+		CropDefs:        make(map[string]*entities.CropDef),
+		FruitTreeStates: make(map[string]*entities.FruitTreeState),
 		// Bug spawn tracking
 		SwarmsBySpecies:  make(map[string][]string),
 		SpeciesNextSpawn: make(map[string]float64),
@@ -249,7 +264,17 @@ func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presenc
 	player.ItemSlots[1] = InventorySlot{ItemID: "pickaxe_wood", Count: 1}
 	player.ItemSlots[2] = InventorySlot{ItemID: "axe_wood", Count: 1}
 	player.ItemSlots[3] = InventorySlot{ItemID: "shovel_wood", Count: 1}
-	player.ItemSlots[4] = InventorySlot{ItemID: "dirt_block", Count: 10} // Test placement
+	player.ItemSlots[4] = InventorySlot{ItemID: "dirt_block", Count: 10}
+	// Farming tools and seeds
+	player.ItemSlots[5] = InventorySlot{ItemID: "hoe_wood", Count: 1}
+	player.ItemSlots[6] = InventorySlot{
+		ItemID:   "watering_can_basic",
+		Count:    1,
+		Metadata: map[string]int{"uses": 40, "capacity": 40},
+	}
+	player.ItemSlots[7] = InventorySlot{ItemID: "seed_tomato", Count: 10}
+	player.ItemSlots[8] = InventorySlot{ItemID: "seed_corn", Count: 10}
+	player.ItemSlots[9] = InventorySlot{ItemID: "seed_wheat", Count: 10}
 	player.EquippedTool = "small_net"
 
 	s.Players[userID] = player
