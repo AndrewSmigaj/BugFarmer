@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"runtime/debug"
 	"time"
 
 	"bugfarmer/entities"
@@ -57,15 +58,34 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 		accessPolicy = "public"
 	}
 
+	// Extract zone_id param (default to village_21)
+	zoneID, ok := params["zone_id"].(string)
+	if !ok || zoneID == "" {
+		zoneID = "village_21"
+	}
+
+	// Extract debug_mode param
+	debugMode, _ := params["debug_mode"].(bool)
+
+	if debugMode {
+		logger.Info("DEBUG MODE ENABLED - zone: %s", zoneID)
+	}
+
 	// Create world state
 	state := NewWorldState(worldID, ownerID, name, accessPolicy)
+	state.ZoneID = zoneID
+	state.DebugMode = debugMode
 
 	// Initialize world seed for deterministic bug simulation
 	state.WorldSeed = rand.Int63()
 	logger.Info("World seed: %d", state.WorldSeed)
 
-	// Load species from config
-	species, err := entities.LoadSpecies("data/species.json")
+	// Load species from config (use debug config in debug mode)
+	speciesPath := "data/species.json"
+	if debugMode {
+		speciesPath = "data/species_debug.json"
+	}
+	species, err := entities.LoadSpecies(speciesPath)
 	if err != nil {
 		logger.Warn("Failed to load species config: %v - using defaults", err)
 		state.Species = defaultFlySpecies()
@@ -75,7 +95,7 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 	logger.Info("Loaded %d species", len(state.Species))
 
 	// Load zone data (Phase 4)
-	zonePath := "data/zones/village_21"
+	zonePath := fmt.Sprintf("data/zones/%s", zoneID)
 	zoneConfig, err := LoadZoneConfig(zonePath)
 	if err != nil {
 		logger.Warn("Failed to load zone config: %v - using default", err)
@@ -136,6 +156,7 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 
 // MatchJoinAttempt validates if a player can join
 func (m *Match) MatchJoinAttempt(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, presence runtime.Presence, metadata map[string]string) (interface{}, bool, string) {
+	logger.Info(">>> MatchJoinAttempt called for %s at tick %d", presence.GetUserId(), tick)
 	worldState, ok := state.(*WorldState)
 	if !ok {
 		logger.Error("MatchJoinAttempt: invalid state type")
@@ -164,6 +185,7 @@ func (m *Match) MatchJoinAttempt(ctx context.Context, logger runtime.Logger, db 
 
 // MatchJoin is called when player(s) successfully join
 func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, presences []runtime.Presence) interface{} {
+	logger.Info(">>> MatchJoin called with %d presences at tick %d", len(presences), tick)
 	worldState, ok := state.(*WorldState)
 	if !ok {
 		logger.Error("MatchJoin: invalid state type")
@@ -204,10 +226,10 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 			zone := worldState.GetOrCreateZone(zoneID)
 			zone.Members[userID] = true
 
-			if zone.AuthorityUserID == "" {
-				// First player in zone - assign as authority
+			if zone.AuthorityUserID == "" || zone.AuthorityUserID == userID {
+				// First player OR authority reconnecting - assign/confirm as authority
 				zone.AuthorityUserID = userID
-				logger.Info("Assigned %s as authority for zone %s", userID, zoneID)
+				logger.Info("Assigned %s as authority for zone %s (reconnect=%v)", userID, zoneID, zone.AuthorityUserID == userID)
 
 				// Send ZoneAuthority with bootstrap tick
 				// Bootstrap Rule: LastEventSeq = -1 for first client
@@ -264,6 +286,7 @@ func (m *Match) sendInventorySync(logger runtime.Logger, dispatcher runtime.Matc
 
 // MatchLeave is called when player(s) leave
 func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, presences []runtime.Presence) interface{} {
+	logger.Info(">>> MatchLeave called with %d presences at tick %d", len(presences), tick)
 	worldState, ok := state.(*WorldState)
 	if !ok {
 		logger.Error("MatchLeave: invalid state type")
@@ -274,8 +297,23 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 		userID := presence.GetUserId()
 		worldState.RemovePlayer(userID)
 
-		// Clean up player cell state for influence events
+		// Emit PLAYER_CELL_LEAVE influence event before deleting cell state
+		// This ensures other clients' InfluenceManager removes the phantom player cell
+		if cell, exists := worldState.PlayerCells[userID]; exists {
+			zoneID := ""
+			if worldState.CurrentZone != nil {
+				zoneID = worldState.CurrentZone.ZoneID
+			}
+			worldState.AddInfluenceEvent(zoneID, InfluencePlayerCellLeave, userID, cell.CellX, cell.CellY, "", 0)
+		}
+
+		// Clean up player cell state
 		delete(worldState.PlayerCells, userID)
+
+		// Clean up chunk subscriptions
+		for _, subs := range worldState.ChunkSubs {
+			delete(subs, userID)
+		}
 
 		// === ZONE AUTHORITY REASSIGNMENT ===
 		// If leaving player was authority, reassign to another member
@@ -285,8 +323,18 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 			if zone != nil {
 				delete(zone.Members, userID)
 
-				if zone.AuthorityUserID == userID {
-					// Authority is leaving - find new authority
+				// Check if zone is now completely empty - reset ALL sync state
+				// This prevents watermark mismatch when next player joins
+				if len(zone.Members) == 0 {
+					zone.NextSeq = 0
+					zone.InfluenceLog = nil
+					zone.LatestSnapshot = nil
+					zone.LatestSnapshotTick = 0
+					zone.LatestSnapshotHash = ""
+					zone.AuthorityUserID = ""
+					logger.Info("Zone %s is now empty - reset all sync state (NextSeq, InfluenceLog, Snapshot, Authority)", zoneID)
+				} else if zone.AuthorityUserID == userID {
+					// Authority is leaving but zone still has members - reassign
 					zone.AuthorityUserID = ""
 					var newAuthority string
 					for memberID := range zone.Members {
@@ -311,7 +359,9 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 						authData, _ := json.Marshal(authMsg)
 						dispatcher.BroadcastMessage(OpCodeZoneAuthority, authData, nil, nil, true)
 					} else {
-						logger.Info("No remaining players in zone %s, authority cleared", zoneID)
+						// Members exist but none are connected - this is a transient state
+						// Zone will be reset when the last member actually leaves
+						logger.Info("No connected players in zone %s, authority cleared (waiting for full empty)", zoneID)
 					}
 				}
 			}
@@ -328,12 +378,22 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 }
 
 // MatchLoop is called every tick
-func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, messages []runtime.MatchData) interface{} {
+func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, messages []runtime.MatchData) (result interface{}) {
 	worldState, ok := state.(*WorldState)
 	if !ok {
 		logger.Error("MatchLoop: invalid state type")
 		return nil // End match on invalid state
 	}
+
+	// PANIC RECOVERY: Catch any hidden panics and log them
+	// IMPORTANT: We set result = worldState so if panic occurs, match continues
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Error("PANIC in MatchLoop: %v", r)
+			logger.Error("Stack trace:\n%s", debug.Stack())
+			result = worldState // Keep match alive after panic
+		}
+	}()
 
 	worldState.TickCount++
 	chunkSize := worldState.Config.ChunkSize
@@ -346,7 +406,13 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			continue
 		}
 
-		switch msg.GetOpCode() {
+		opCode := msg.GetOpCode()
+		// Don't log high-frequency messages
+		if opCode != OpCodeMovement && opCode != OpCodeChunkSubscribe && opCode != OpCodeChunkUnsub {
+			logger.Info("Received OpCode %d from %s", opCode, userID)
+		}
+
+		switch opCode {
 		case OpCodeMovement:
 			var movement MovementMessage
 			if err := json.Unmarshal(msg.GetData(), &movement); err != nil {
@@ -503,6 +569,10 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 	}
 
 	// === Crop Growth ===
+	cropCount := len(worldState.CropStates)
+	if cropCount > 0 && worldState.TickCount%100 == 0 {
+		logger.Debug("DEBUG: processCropGrowth starting with %d crops at tick %d", cropCount, worldState.TickCount)
+	}
 	m.processCropGrowth(worldState, dispatcher)
 
 	// === Fruit Trees & Ground Item Decay ===
@@ -636,6 +706,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			ZoneID:            worldState.CurrentZone.ZoneID,
 			AuthoritativeTick: worldState.TickCount,
 			LastEventSeq:      zone.NextSeq - 1, // Last assigned seq (NextSeq is next to assign)
+			AuthorityID:       zone.AuthorityUserID,
 		}
 		tickData, err := json.Marshal(tickMsg)
 		if err != nil {
@@ -859,6 +930,10 @@ func (m *Match) spawnSwarmForSpecies(state *WorldState, speciesID string, logger
 // checkContinuousSpawning spawns new swarms over time until species caps are reached.
 // Should be called periodically from the tick loop.
 func (m *Match) checkContinuousSpawning(state *WorldState, tick int64, logger runtime.Logger) {
+	if state.DebugMode {
+		return // Skip continuous spawning in debug mode
+	}
+
 	cfg := state.CurrentZone.BugSpawning
 	if cfg == nil {
 		return
@@ -896,6 +971,10 @@ func (m *Match) checkContinuousSpawning(state *WorldState, tick int64, logger ru
 
 // checkSwarmMerging merges nearby swarms of the same species
 func (m *Match) checkSwarmMerging(state *WorldState, chunkSize int, logger runtime.Logger) {
+	if state.DebugMode {
+		return // Skip merging in debug mode
+	}
+
 	merged := make(map[string]bool)
 	toDelete := []string{}
 
@@ -944,6 +1023,10 @@ func (m *Match) checkSwarmMerging(state *WorldState, chunkSize int, logger runti
 
 // checkSwarmSplitting randomly splits large swarms
 func (m *Match) checkSwarmSplitting(state *WorldState, chunkSize int, logger runtime.Logger) {
+	if state.DebugMode {
+		return // Skip splitting in debug mode
+	}
+
 	newSwarms := []*entities.SwarmState{}
 
 	for _, swarm := range state.Swarms {
@@ -1512,15 +1595,16 @@ func (m *Match) handleZoneSnapshot(
 
 	// Store the snapshot (opaque to server)
 	zone.LatestSnapshot = &ZoneSnapshot{
-		ZoneID:       msg.ZoneID,
-		SnapshotTick: msg.SnapshotTick,
-		Swarms:       msg.Swarms,
-		StateHash:    msg.StateHash,
+		ZoneID:               msg.ZoneID,
+		SnapshotTick:         msg.SnapshotTick,
+		SnapshotLastEventSeq: msg.SnapshotLastEventSeq,
+		Swarms:               msg.Swarms,
+		StateHash:            msg.StateHash,
 	}
 	zone.LatestSnapshotTick = msg.SnapshotTick
 	zone.LatestSnapshotHash = msg.StateHash
 
-	logger.Debug("Stored snapshot from authority %s at tick %d", senderID, msg.SnapshotTick)
+	logger.Debug("Stored snapshot from authority %s at tick %d, last_event_seq=%d", senderID, msg.SnapshotTick, msg.SnapshotLastEventSeq)
 }
 
 // sendLateJoinSnapshot sends a LateJoinSnapshot (OpCode 72) to a joining player.
@@ -1541,33 +1625,103 @@ func (m *Match) sendLateJoinSnapshot(
 	zone := state.GetOrCreateZone(zoneID)
 
 	// Check if we have a snapshot from authority
+	// If no snapshot yet, create bootstrap snapshot - client will get swarms via SwarmUpdate
 	if zone.LatestSnapshot == nil {
-		logger.Warn("No snapshot available for late joiner %s in zone %s", joinerID, zoneID)
-		// Without a snapshot, the late joiner can't sync properly
-		// They'll need to wait for the authority to send one
-		return
+		logger.Info("No authority snapshot yet, creating bootstrap for late joiner %s in zone %s", joinerID, zoneID)
+		zone.LatestSnapshot = &ZoneSnapshot{
+			ZoneID:               zoneID,
+			SnapshotTick:         state.TickCount,
+			SnapshotLastEventSeq: zone.NextSeq - 1, // All events to date are "in" the bootstrap state
+			Swarms:               []SwarmSnapshotData{}, // Empty - SwarmUpdate provides swarm data
+			StateHash:            "",
+		}
+		zone.LatestSnapshotTick = state.TickCount
 	}
 
 	snapshotTick := zone.LatestSnapshotTick
 	endTick := state.TickCount
+	snapshotLastSeq := zone.LatestSnapshot.SnapshotLastEventSeq
+	endLastSeq := zone.NextSeq - 1 // Current watermark
 
-	// Build influence log from snapshot_tick+1 to end_tick
-	// Events at snapshot_tick are already baked into the snapshot
+	// Build influence log by seq interval (spec §8.2: "Do not filter by tick alone. Use seq intervals.")
+	// Include events where seq ∈ (snapshotLastSeq, endLastSeq]
 	var influenceLog []InfluenceEvent
 	for _, evt := range zone.InfluenceLog {
-		if evt.Tick > snapshotTick && evt.Tick <= endTick {
+		if evt.Seq > snapshotLastSeq && evt.Seq <= endLastSeq {
 			influenceLog = append(influenceLog, evt)
 		}
 	}
 
+	// Server packaging verification (spec §7.5)
+	if len(influenceLog) > 0 {
+		firstSeq := influenceLog[0].Seq
+		lastSeq := influenceLog[len(influenceLog)-1].Seq
+		logger.Info("LateJoinSnapshot packaging: seq interval (%d, %d], events=%d, first_seq=%d, last_seq=%d",
+			snapshotLastSeq, endLastSeq, len(influenceLog), firstSeq, lastSeq)
+	} else {
+		logger.Info("LateJoinSnapshot packaging: seq interval (%d, %d], events=0 (empty)",
+			snapshotLastSeq, endLastSeq)
+	}
+
+	// Collect current player cell positions from authoritative state
+	// This is snapshot state, NOT event reconstruction
+	// Only include players currently in zone.Members (connected, zone-resident)
+	var playerCells []PlayerCellData
+	for playerID := range zone.Members {
+		if cell, ok := state.PlayerCells[playerID]; ok {
+			playerCells = append(playerCells, PlayerCellData{
+				PlayerID: playerID,
+				CellX:    cell.CellX,
+				CellY:    cell.CellY,
+			})
+		}
+	}
+
+	// Sanity check: playerCells should match zone.Members count
+	// If mismatch, state.PlayerCells wasn't updated correctly on join/leave
+	if len(playerCells) != len(zone.Members) {
+		logger.Warn("LateJoinSnapshot: playerCells=%d but zone.Members=%d - possible state sync bug",
+			len(playerCells), len(zone.Members))
+	}
+
+	// Collect swarm metadata for creating swarm visuals on client
+	// This allows clients to create swarms BEFORE replay, so snapshot positions can be applied
+	chunkSize := state.Config.ChunkSize
+	var swarmMetadata []SwarmData
+	for _, swarmSnapshot := range zone.LatestSnapshot.Swarms {
+		if swarm, ok := state.Swarms[swarmSnapshot.SwarmID]; ok {
+			spriteID := swarm.SpeciesID // fallback
+			if species, ok := state.Species[swarm.SpeciesID]; ok {
+				spriteID = species.SpriteID
+			}
+			swarmMetadata = append(swarmMetadata, SwarmData{
+				ID:         swarm.ID,
+				SpeciesID:  swarm.SpeciesID,
+				SpriteID:   spriteID,
+				X:          swarm.WorldX(chunkSize),
+				Y:          swarm.WorldY(chunkSize),
+				Radius:     swarm.Radius,
+				Count:      swarm.Count,
+				Facing:     int(swarm.Facing),
+				Phase:      swarm.Phase,
+				NextBugID:  swarm.NextBugID,
+				RemovedIDs: swarm.GetRemovedIDs(),
+			})
+		}
+	}
+
 	msg := LateJoinSnapshot{
-		ZoneID:       zoneID,
-		WorldSeed:    state.WorldSeed,
-		SnapshotTick: snapshotTick,
-		EndTick:      endTick,
-		Swarms:       zone.LatestSnapshot.Swarms,
-		InfluenceLog: influenceLog,
-		AuthorityID:  zone.AuthorityUserID,
+		ZoneID:               zoneID,
+		WorldSeed:            state.WorldSeed,
+		SnapshotTick:         snapshotTick,
+		EndTick:              endTick,
+		SnapshotLastEventSeq: snapshotLastSeq,
+		EndLastEventSeq:      endLastSeq,
+		Swarms:               zone.LatestSnapshot.Swarms,
+		SwarmMetadata:        swarmMetadata,
+		InfluenceLog:         influenceLog,
+		AuthorityID:          zone.AuthorityUserID,
+		PlayerCells:          playerCells,
 	}
 
 	data, err := json.Marshal(msg)
@@ -1577,17 +1731,26 @@ func (m *Match) sendLateJoinSnapshot(
 	}
 
 	dispatcher.BroadcastMessage(OpCodeLateJoinSnapshot, data, []runtime.Presence{presence}, nil, true)
-	logger.Info("Sent LateJoinSnapshot to %s: tick range %d to %d, %d events",
-		joinerID, snapshotTick, endTick, len(influenceLog))
+	swarmCount := 0
+	if zone.LatestSnapshot != nil && zone.LatestSnapshot.Swarms != nil {
+		swarmCount = len(zone.LatestSnapshot.Swarms)
+	}
+	logger.Info("Sent LateJoinSnapshot to %s: tick range %d to %d, seq range (%d, %d], %d events, %d player_cells, %d swarms, %d swarm_metadata",
+		joinerID, snapshotTick, endTick, snapshotLastSeq, endLastSeq, len(influenceLog), len(playerCells), swarmCount, len(swarmMetadata))
+	for _, cell := range playerCells {
+		logger.Info("  PlayerCell: %s at (%d, %d)", cell.PlayerID, cell.CellX, cell.CellY)
+	}
 
 	// Send ZoneHandoff to confirm the tick range
 	// This guarantees: "no undisclosed events <= end_tick"
 	handoffMsg := ZoneHandoffMessage{
 		ZoneID:        zoneID,
 		LiveStartTick: endTick + 1,
+		LastEventSeq:  endLastSeq, // Watermark at handoff time (spec §3.6)
 	}
 	handoffData, _ := json.Marshal(handoffMsg)
 	dispatcher.BroadcastMessage(OpCodeZoneHandoff, handoffData, []runtime.Presence{presence}, nil, true)
+	logger.Info("Sent ZoneHandoff to %s: live_start_tick=%d, last_event_seq=%d", joinerID, endTick+1, endLastSeq)
 }
 
 // checkDriftSampling performs periodic drift detection by sampling bug positions.

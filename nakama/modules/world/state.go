@@ -28,7 +28,9 @@ type WorldState struct {
 	AccessPolicy string // "public" or "private"
 	CreatedAt    int64  // Unix timestamp
 	TickCount    int64
-	WorldSeed    int64 // Global seed for deterministic bug simulation
+	WorldSeed    int64  // Global seed for deterministic bug simulation
+	ZoneID       string // Which zone was loaded (for logging)
+	DebugMode    bool   // Disables split/merge, continuous spawning
 	Players      map[string]*PlayerState
 	Presences    map[string]runtime.Presence
 
@@ -114,10 +116,11 @@ type ZoneState struct {
 
 // ZoneSnapshot stores bug state from authority client
 type ZoneSnapshot struct {
-	ZoneID       string
-	SnapshotTick int64
-	Swarms       []SwarmSnapshotData
-	StateHash    string
+	ZoneID               string
+	SnapshotTick         int64
+	SnapshotLastEventSeq int64 // Last applied seq included in snapshot state
+	Swarms               []SwarmSnapshotData
+	StateHash            string
 }
 
 // PendingSnapshotReq tracks a snapshot request waiting for response

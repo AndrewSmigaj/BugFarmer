@@ -272,6 +272,7 @@ namespace BugFarmer.Networking
         public string zone_id;
         public long authoritative_tick;  // Client may simulate up to (but not beyond) this
         public long last_event_seq;      // FIX #7: Watermark - all events with seq <= this are finalized
+        public string authority_id;      // Current zone authority (for late authority setup)
     }
 
     /// <summary>
@@ -284,6 +285,7 @@ namespace BugFarmer.Networking
     {
         public string zone_id;
         public long live_start_tick;  // T_end + 1: first tick client is live
+        public long last_event_seq;   // Watermark at handoff time
     }
 
     /// <summary>
@@ -294,6 +296,7 @@ namespace BugFarmer.Networking
     {
         public string zone_id;
         public long snapshot_tick;
+        public long snapshot_last_event_seq; // Last applied seq included in snapshot state
         public SwarmSnapshotData[] swarms;
         public string state_hash;
     }
@@ -310,6 +313,18 @@ namespace BugFarmer.Networking
     }
 
     /// <summary>
+    /// Player cell position data for late join sync.
+    /// This is snapshot STATE, not an event.
+    /// </summary>
+    [Serializable]
+    public class PlayerCellData
+    {
+        public string player_id;
+        public int cell_x;
+        public int cell_y;
+    }
+
+    /// <summary>
     /// Late join snapshot from server (OpCode 72).
     /// Contains fixed tick range for deterministic replay.
     /// </summary>
@@ -318,10 +333,14 @@ namespace BugFarmer.Networking
     {
         public string zone_id;
         public long world_seed;
-        public long snapshot_tick;         // T_snapshot (fixed)
-        public long end_tick;              // T_end (fixed)
-        public SwarmSnapshotData[] swarms; // Bug state from authority
-        public InfluenceEvent[] influence_log; // Events from T_snapshot+1 to T_end
+        public long snapshot_tick;             // T_snapshot (fixed)
+        public long end_tick;                  // T_end (fixed)
+        public long snapshot_last_event_seq;   // Last seq baked into snapshot state
+        public long end_last_event_seq;        // Current watermark at end_tick
+        public SwarmSnapshotData[] swarms;     // Bug state from authority
+        public SwarmData[] swarm_metadata;     // Swarm metadata for creating visuals before replay
+        public InfluenceEvent[] influence_log; // Events in (snapshot_last_seq, end_last_seq]
         public string authority_id;
+        public PlayerCellData[] player_cells;  // Current player positions (state, not events)
     }
 }

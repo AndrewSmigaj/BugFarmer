@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +7,7 @@ using UnityEngine;
 using BugFarmer.Bugs;
 using BugFarmer.Networking;
 using BugFarmer.Util;
+using BugFarmer.Tracing;
 
 namespace BugFarmer.Entities
 {
@@ -77,9 +79,9 @@ namespace BugFarmer.Entities
         private SyncState _syncState = SyncState.Joining;
 
         // Time accumulator for LIVE mode ticking
-        private const float TickRate = 10f;
-        private const float SecondsPerTick = 1f / TickRate;
-        private float _tickAccumulator;
+        private const double TickRate = 10.0;
+        private const double SecondsPerTick = 1.0 / TickRate;
+        private double _tickAccumulator;
 
         // === Event Inbox (FIX #1: No SortedSet - it silently drops duplicates!) ===
         // Use Dictionary for dedup + List for ordered processing
@@ -108,6 +110,40 @@ namespace BugFarmer.Entities
         private Coroutine _snapshotCoroutine;
         private const float SnapshotInterval = 10f;
 
+        // Pending authority check (for race condition where ZoneAuthority arrives before Self is known)
+        private string _pendingAuthorityId;
+        private long _pendingAuthorityTick;
+        private long _pendingAuthoritySeq;
+
+        // Safety net timeouts
+        private float _frontierStallTimer;
+        private const float FrontierStallTimeout = 5.0f; // Request resync after 5s stuck
+        private float _handshakeWaitTimer;
+        private const float HandshakeWaitTimeout = 10.0f; // Request resync after 10s in HandshakeWait
+        private int _resyncAttempts;
+        private const int MaxResyncAttempts = 3;
+
+        // Trace callback - only invoked when debug overlay is recording
+        private Action<long, long, List<BugTrace>, List<PlayerTarget>> _traceCallback;
+
+        /// <summary>Current simulation tick (read-only for external code).</summary>
+        public long SimulationTick => _simulationTick;
+
+        /// <summary>Number of active swarms.</summary>
+        public int SwarmCount => _swarms.Count;
+
+        /// <summary>Total bugs across all swarms.</summary>
+        public int TotalBugCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (var swarm in _swarms.Values)
+                    count += swarm.Count;
+                return count;
+            }
+        }
+
         private void Awake()
         {
             Instance = this;
@@ -130,7 +166,8 @@ namespace BugFarmer.Entities
             if (WorldManager.Instance != null)
             {
                 WorldManager.Instance.OnMatchData += HandleMatchData;
-                Debug.Log("[SwarmManager] Subscribed to WorldManager.OnMatchData");
+                WorldManager.Instance.OnPlayerLeft += HandlePlayerLeft;
+                Debug.Log("[SwarmManager] Subscribed to WorldManager.OnMatchData + OnPlayerLeft");
             }
             else
             {
@@ -138,9 +175,20 @@ namespace BugFarmer.Entities
             }
         }
 
+        /// <summary>
+        /// Clean up InfluenceManager when a player leaves (presence-based safety net).
+        /// Server also emits PLAYER_CELL_LEAVE, but this handles the case where the event is lost.
+        /// </summary>
+        private void HandlePlayerLeft(Nakama.IUserPresence presence)
+        {
+            InfluenceManager.Instance?.RemovePlayerCell(presence.UserId);
+            Debug.Log($"[SwarmManager] Player left: {presence.UserId}, removed from InfluenceManager");
+        }
+
         // Debug: track last logged state to avoid spam
         private SyncState _lastLoggedState = SyncState.Joining;
         private long _lastLoggedTick = -1;
+        private bool _lastLoggedCanAdvance = true;
         private bool _loggedInitialState = false;
 
         private void Update()
@@ -150,6 +198,20 @@ namespace BugFarmer.Entities
             {
                 Debug.Log($"[SwarmManager] Initial state: syncState={_syncState}, simTick={_simulationTick}, authTick={_authoritativeTick}");
                 _loggedInitialState = true;
+            }
+
+            // RACE CONDITION FIX: Process pending ZoneAuthority when localUserId becomes available
+            // This handles the case where ZoneAuthority arrived before JoinMatchAsync completed
+            if (!string.IsNullOrEmpty(_pendingAuthorityId))
+            {
+                var localUserId = WorldManager.Instance?.Self?.UserId;
+                if (!string.IsNullOrEmpty(localUserId))
+                {
+                    Debug.Log($"[SwarmManager] Processing DEFERRED ZoneAuthority now that localUserId={localUserId} is known");
+                    DebugFileLogger.Log($"[SwarmManager] Processing DEFERRED ZoneAuthority: authority={_pendingAuthorityId}, localUserId={localUserId}");
+                    ProcessZoneAuthority(_pendingAuthorityId, _pendingAuthorityTick, _pendingAuthoritySeq, _currentZoneId, localUserId);
+                    _pendingAuthorityId = null;  // Clear pending - processed
+                }
             }
 
             // Handle pending swarm data (existing logic)
@@ -180,15 +242,20 @@ namespace BugFarmer.Entities
             // 2. _lastReceivedSeq >= _frontierWatermark  (watermark check - all events received)
             _tickAccumulator += Time.deltaTime;
             bool canAdvance = _simulationTick < _authoritativeTick
-                           && _lastReceivedSeq >= _frontierWatermark;
+                           && HasAllEventsUpTo(_frontierWatermark);
 
-            // Debug: log gate conditions (also to file for debugging)
-            if (_simulationTick != _lastLoggedTick || Time.frameCount % 300 == 0)
+            // Debug: log gate conditions only when important changes occur
+            // - Every 50 ticks (~5 sec) for periodic status
+            // - When canAdvance changes (stuck/unstuck transition)
+            bool shouldLog = (_simulationTick % 50 == 0 && _simulationTick != _lastLoggedTick)
+                          || (canAdvance != _lastLoggedCanAdvance);
+            if (shouldLog)
             {
                 var gateMsg = $"[SwarmManager] Tick gate: state={_syncState}, simTick={_simulationTick}, authTick={_authoritativeTick}, lastSeq={_lastReceivedSeq}, watermark={_frontierWatermark}, canAdvance={canAdvance}";
                 Debug.Log(gateMsg);
                 DebugFileLogger.Log(gateMsg);
                 _lastLoggedTick = _simulationTick;
+                _lastLoggedCanAdvance = canAdvance;
             }
 
             while (_tickAccumulator >= SecondsPerTick && canAdvance)
@@ -197,17 +264,17 @@ namespace BugFarmer.Entities
                 _tickAccumulator -= SecondsPerTick;
                 // Re-check after each tick
                 canAdvance = _simulationTick < _authoritativeTick
-                          && _lastReceivedSeq >= _frontierWatermark;
+                          && HasAllEventsUpTo(_frontierWatermark);
             }
 
             // Cap accumulator if we're gated (don't let it grow unbounded)
             if (!canAdvance)
             {
-                _tickAccumulator = Mathf.Min(_tickAccumulator, SecondsPerTick);
+                _tickAccumulator = System.Math.Min(_tickAccumulator, SecondsPerTick);
             }
 
             // Visual interpolation (read-only) - always runs in LIVE
-            float t = _tickAccumulator / SecondsPerTick;
+            float t = (float)(_tickAccumulator / SecondsPerTick);
             InterpolateAllSwarms(t);
         }
 
@@ -264,6 +331,24 @@ namespace BugFarmer.Entities
             return _pendingEvents;
         }
 
+        /// <summary>
+        /// Check if all events from lastApplied+1 through watermark are in inbox.
+        /// Prevents race condition when ZoneTickBroadcast arrives before InfluenceBroadcast.
+        /// </summary>
+        private bool HasAllEventsUpTo(long watermark)
+        {
+            // Bootstrap: no events required
+            if (watermark < 0) return true;
+
+            // Check continuous sequence from lastApplied+1 to watermark
+            for (long seq = _lastAppliedSeq + 1; seq <= watermark; seq++)
+            {
+                if (!_inboxBySeq.ContainsKey(seq))
+                    return false;
+            }
+            return true;
+        }
+
         // ==========================================================================
         // TICK ADVANCEMENT METHODS
         // ==========================================================================
@@ -304,6 +389,14 @@ namespace BugFarmer.Entities
             foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
             {
                 _swarms[swarmId].SimulateTick(_simulationTick, players);
+            }
+
+            // Invoke trace callback if recording
+            if (_traceCallback != null)
+            {
+                var bugs = CollectBugTraces();
+                var hash = ComputeStateHash();
+                _traceCallback(_simulationTick, hash, bugs, players);
             }
         }
 
@@ -434,7 +527,9 @@ namespace BugFarmer.Entities
                 state.OpCode == OpCodes.LateJoinSnapshot ||
                 state.OpCode == OpCodes.InfluenceBroadcast)
             {
-                Debug.Log($"[SwarmManager] Received OpCode {state.OpCode}");
+                var logMsg = $"[SwarmManager] Received OpCode {state.OpCode}";
+                Debug.Log(logMsg);
+                DebugFileLogger.Log(logMsg);
             }
 
             switch (state.OpCode)
@@ -705,7 +800,8 @@ namespace BugFarmer.Entities
             // Check for pending snapshot (late joiner race condition fix)
             if (_pendingSnapshots.TryGetValue(data.id, out var pending))
             {
-                Debug.Log($"[SwarmManager] Applying cached snapshot to swarm {data.id} ({pending.Bugs.Length} bugs)");
+                Debug.Log($"[SwarmManager] Applying cached snapshot to swarm {data.id} ({pending.Bugs.Length} bugs from tick {pending.SnapshotTick})");
+                DebugFileLogger.Log($"[SwarmManager] Applying cached snapshot to swarm {data.id} ({pending.Bugs.Length} bugs from tick {pending.SnapshotTick})");
 
                 visual.ApplySnapshot(pending.Bugs);
                 // NOTE: Catch-up is handled by SwarmManager's tick advancement loop
@@ -713,6 +809,24 @@ namespace BugFarmer.Entities
 
                 _pendingSnapshots.Remove(data.id);
             }
+            else
+            {
+                Debug.Log($"[SwarmManager] No cached snapshot for swarm {data.id}, using SwarmUpdate initialization");
+                DebugFileLogger.Log($"[SwarmManager] No cached snapshot for swarm {data.id}, using SwarmUpdate initialization");
+            }
+        }
+
+        /// <summary>
+        /// Create a swarm visual from metadata during late join snapshot processing.
+        /// Bug positions will be set separately via ApplySnapshot.
+        /// </summary>
+        private void SpawnSwarmFromMetadata(SwarmData data, long snapshotTick)
+        {
+            var obj = new GameObject($"Swarm_{data.id}");
+            var visual = obj.AddComponent<SwarmVisual>();
+            visual.Initialize(data, snapshotTick);
+            _swarms[data.id] = visual;
+            // Note: Bug positions will be applied via ApplySnapshot after this
         }
 
         // ==========================================================================
@@ -746,7 +860,14 @@ namespace BugFarmer.Entities
             var msg = JsonUtility.FromJson<LateJoinSnapshotMessage>(json);
             if (msg == null) return;
 
-            Debug.Log($"[SwarmManager] LateJoinSnapshot: zone={msg.zone_id}, tick range {msg.snapshot_tick} to {msg.end_tick}");
+            var lateJoinLog = $"[SwarmManager] LateJoinSnapshot: zone={msg.zone_id}, tick range {msg.snapshot_tick} to {msg.end_tick}, authority={msg.authority_id}, player_cells={msg.player_cells?.Length ?? 0}";
+            Debug.Log(lateJoinLog);
+            DebugFileLogger.Log(lateJoinLog);
+
+            // DEBUG: Tick semantics investigation - log BEFORE applying snapshot_tick
+            var beforeLog = $"[LateJoin] Before snapshot: simTick={_simulationTick}";
+            Debug.Log(beforeLog);
+            DebugFileLogger.Log(beforeLog);
 
             // Enter REPLAYING state
             _syncState = SyncState.Replaying;
@@ -760,25 +881,85 @@ namespace BugFarmer.Entities
             _simulationTick = msg.snapshot_tick;
             _authoritativeTick = msg.end_tick;  // During replay, frontier is end_tick
 
+            // DEBUG: Tick semantics investigation - log AFTER applying snapshot_tick
+            var afterSnapshotLog = $"[LateJoin] After applying snapshot_tick: simTick={_simulationTick}";
+            Debug.Log(afterSnapshotLog);
+            DebugFileLogger.Log(afterSnapshotLog);
+
             var localUserId = WorldManager.Instance?.Self?.UserId;
             _isAuthority = (msg.authority_id == localUserId);
 
-            // Clear player cells for fresh replay
+            // Late join = full state replacement. Snapshot player_cells is authoritative.
+            // Do not merge with existing state; always clear then rehydrate.
             InfluenceManager.Instance?.ClearPlayerCells();
 
-            // Apply bug snapshots
+            // Hydrate player cells from snapshot STATE (not events)
+            // This restores the point-in-time player positions at snapshot_tick
+            if (msg.player_cells != null)
+            {
+                foreach (var cell in msg.player_cells)
+                {
+                    InfluenceManager.Instance?.SetPlayerCell(cell.player_id, cell.cell_x, cell.cell_y);
+                }
+                Debug.Log($"[SwarmManager] Hydrated {msg.player_cells.Length} player cells from snapshot");
+                DebugFileLogger.Log($"[SwarmManager] Hydrated {msg.player_cells.Length} player cells from snapshot");
+            }
+
+            // Create swarm visuals from metadata BEFORE applying snapshots
+            // This ensures swarms exist when we apply bug positions
+            int metadataCount = msg.swarm_metadata?.Length ?? 0;
+            Debug.Log($"[SwarmManager] LateJoinSnapshot contains {metadataCount} swarm metadata entries");
+            DebugFileLogger.Log($"[SwarmManager] LateJoinSnapshot contains {metadataCount} swarm metadata entries");
+
+            if (msg.swarm_metadata != null)
+            {
+                foreach (var metadata in msg.swarm_metadata)
+                {
+                    if (_swarms.ContainsKey(metadata.id))
+                    {
+                        Debug.Log($"[SwarmManager] Swarm {metadata.id} already exists, skipping creation");
+                        continue;
+                    }
+
+                    Debug.Log($"[SwarmManager] Creating swarm {metadata.id} from metadata before replay");
+                    DebugFileLogger.Log($"[SwarmManager] Creating swarm {metadata.id} from metadata before replay");
+
+                    // Create swarm visual using the snapshot_tick (they'll be positioned at snapshot state)
+                    SpawnSwarmFromMetadata(metadata, msg.snapshot_tick);
+                }
+            }
+
+            // Apply bug snapshots - swarms should now exist from metadata above
+            int swarmCount = msg.swarms?.Length ?? 0;
+            Debug.Log($"[SwarmManager] Applying bug positions for {swarmCount} swarms");
+            DebugFileLogger.Log($"[SwarmManager] Applying bug positions for {swarmCount} swarms");
+
+            if (swarmCount == 0)
+            {
+                Debug.Log("[SwarmManager] Bootstrap snapshot (no swarms yet), will receive via SwarmUpdate");
+                DebugFileLogger.Log("[SwarmManager] Bootstrap snapshot (no swarms), bugs will come via SwarmUpdate");
+            }
             if (msg.swarms != null)
             {
                 foreach (var swarmData in msg.swarms)
                 {
+                    int bugCount = swarmData.bugs?.Length ?? 0;
+                    Debug.Log($"[SwarmManager] Processing swarm {swarmData.swarm_id} with {bugCount} bugs");
+                    DebugFileLogger.Log($"[SwarmManager] Processing swarm {swarmData.swarm_id} with {bugCount} bugs");
+
                     if (swarmData.bugs == null) continue;
                     var swarm = GetSwarm(swarmData.swarm_id);
                     if (swarm != null)
                     {
+                        Debug.Log($"[SwarmManager] Swarm {swarmData.swarm_id} exists, applying snapshot directly");
+                        DebugFileLogger.Log($"[SwarmManager] Swarm {swarmData.swarm_id} exists, applying snapshot directly");
                         swarm.ApplySnapshot(swarmData.bugs);
                     }
                     else
                     {
+                        // This shouldn't happen now that we create from metadata, but keep as fallback
+                        Debug.LogWarning($"[SwarmManager] Swarm {swarmData.swarm_id} NOT found (no metadata?), caching {bugCount} bugs for later");
+                        DebugFileLogger.Log($"[SwarmManager] Swarm {swarmData.swarm_id} NOT found, caching {bugCount} bugs for later");
                         _pendingSnapshots[swarmData.swarm_id] = new PendingSnapshot
                         {
                             Bugs = swarmData.bugs,
@@ -788,10 +969,22 @@ namespace BugFarmer.Entities
                 }
             }
 
-            // Reset seq tracking for replay
-            _lastAppliedSeq = -1;
-            _lastReceivedSeq = -1;
-            _frontierWatermark = -1;  // Replay bypasses frontier gating
+            // Set seq baselines from snapshot (spec §4.2: _lastAppliedSeq = snapshot_last_event_seq)
+            // THIS IS THE PRIMARY FREEZE FIX: without this, _lastAppliedSeq stays -1 and
+            // HasAllEventsUpTo(watermark) looks for events baked into the snapshot that never arrive.
+            _lastAppliedSeq = msg.snapshot_last_event_seq;
+            _lastReceivedSeq = msg.snapshot_last_event_seq;
+            _frontierWatermark = msg.end_last_event_seq;  // Know the target from the start
+
+            // Spec §7.3: APPLY_SNAPSHOT checkpoint
+            var applyLog = $"APPLY_SNAPSHOT snapshot_tick={msg.snapshot_tick} snapshot_last_seq={msg.snapshot_last_event_seq} end_tick={msg.end_tick} end_last_seq={msg.end_last_event_seq}";
+            Debug.Log($"[SwarmManager] {applyLog}");
+            DebugFileLogger.Log($"[SwarmManager] {applyLog}");
+
+            // Spec §7.3: BASELINES checkpoint
+            var baselineLog = $"BASELINES simTick={_simulationTick} lastAppliedSeq={_lastAppliedSeq}";
+            Debug.Log($"[SwarmManager] {baselineLog}");
+            DebugFileLogger.Log($"[SwarmManager] {baselineLog}");
 
             // Add influence log events to inbox
             if (msg.influence_log != null)
@@ -802,8 +995,29 @@ namespace BugFarmer.Entities
                 }
             }
 
+            // Spec §7.3: INBOX checkpoint
+            long minSeq = -1, maxSeq = -1;
+            if (_inboxBySeq.Count > 0)
+            {
+                minSeq = long.MaxValue;
+                foreach (var seq in _inboxBySeq.Keys)
+                {
+                    if (seq < minSeq) minSeq = seq;
+                    if (seq > maxSeq) maxSeq = seq;
+                }
+            }
+            var inboxLog = $"INBOX minSeq={minSeq} maxSeq={maxSeq} count={_inboxBySeq.Count}";
+            Debug.Log($"[SwarmManager] {inboxLog}");
+            DebugFileLogger.Log($"[SwarmManager] {inboxLog}");
+
             // Replay to end_tick
             ReplayToTick(msg.end_tick);
+
+            // Spec §7.3: REPLAY_DONE checkpoint
+            var replayHash = ComputeStateHash();
+            var replayLog = $"REPLAY_DONE simTick={_simulationTick} lastAppliedSeq={_lastAppliedSeq} hash={replayHash}";
+            Debug.Log($"[SwarmManager] {replayLog}");
+            DebugFileLogger.Log($"[SwarmManager] {replayLog}");
 
             // Snap visuals after replay
             foreach (var swarm in _swarms.Values)
@@ -826,12 +1040,19 @@ namespace BugFarmer.Entities
             var msg = JsonUtility.FromJson<ZoneHandoffMessage>(json);
             if (msg == null) return;
 
-            Debug.Log($"[SwarmManager] ZoneHandoff received: live from tick {msg.live_start_tick}");
+            // Spec §7.3: HANDOFF checkpoint
+            var handoffLog = $"HANDOFF live_start_tick={msg.live_start_tick} last_event_seq={msg.last_event_seq} simTick={_simulationTick} state={_syncState}";
+            Debug.Log($"[SwarmManager] {handoffLog}");
+            DebugFileLogger.Log($"[SwarmManager] {handoffLog}");
 
             if (_syncState == SyncState.HandshakeWait)
             {
-                _authoritativeTick = msg.live_start_tick;
+                // Use Math.Max to avoid rolling back values that ZoneTickBroadcast already advanced
+                // during HandshakeWait (spec §3.6)
+                _authoritativeTick = Math.Max(_authoritativeTick, msg.live_start_tick);
+                _frontierWatermark = Math.Max(_frontierWatermark, msg.last_event_seq);
                 TransitionToLive();
+                DebugFileLogger.Log($"[SwarmManager] Transitioned to LIVE at tick {_simulationTick}, authTick={_authoritativeTick}, watermark={_frontierWatermark}");
             }
         }
 
@@ -851,20 +1072,46 @@ namespace BugFarmer.Entities
             }
 
             var localUserId = WorldManager.Instance?.Self?.UserId;
-            bool wasAuthority = _isAuthority;
-            _isAuthority = (msg.authority_id == localUserId);
-            _currentZoneId = msg.zone_id;
 
-            Debug.Log($"[SwarmManager] ZoneAuthority: authority={msg.authority_id}, tick={msg.authoritative_tick}, seq={msg.last_event_seq}, localUser={localUserId}, isLocalAuthority={_isAuthority}, currentState={_syncState}");
+            // RACE CONDITION FIX: ZoneAuthority may arrive before JoinMatchAsync completes
+            // and Self.UserId is populated. Cache the info and process in Update() when ready.
+            if (string.IsNullOrEmpty(localUserId))
+            {
+                _pendingAuthorityId = msg.authority_id;
+                _pendingAuthorityTick = msg.authoritative_tick;
+                _pendingAuthoritySeq = msg.last_event_seq;
+                _currentZoneId = msg.zone_id;
+                Debug.LogWarning($"[SwarmManager] ZoneAuthority received but localUserId not yet known - caching. authority={msg.authority_id}, tick={msg.authoritative_tick}");
+                DebugFileLogger.Log($"[SwarmManager] ZoneAuthority CACHED (localUserId empty): authority={msg.authority_id}, tick={msg.authoritative_tick}");
+                return;
+            }
+
+            ProcessZoneAuthority(msg.authority_id, msg.authoritative_tick, msg.last_event_seq, msg.zone_id, localUserId);
+        }
+
+        /// <summary>
+        /// Process zone authority assignment. Called immediately from HandleZoneAuthority
+        /// or deferred from Update() when localUserId becomes available.
+        /// </summary>
+        private void ProcessZoneAuthority(string authorityId, long authoritativeTick, long lastEventSeq, string zoneId, string localUserId)
+        {
+            bool wasAuthority = _isAuthority;
+            _isAuthority = (authorityId == localUserId);
+            _currentZoneId = zoneId;
+
+            var authLog = $"[SwarmManager] ZoneAuthority: authority={authorityId}, tick={authoritativeTick}, seq={lastEventSeq}, localUser={localUserId}, isLocalAuthority={_isAuthority}, currentState={_syncState}";
+            Debug.Log(authLog);
+            DebugFileLogger.Log(authLog);
 
             // First client joins - go directly to LIVE
             if (_syncState == SyncState.Joining)
             {
-                _authoritativeTick = msg.authoritative_tick;
-                _simulationTick = msg.authoritative_tick;  // "I have simulated through this tick"
-                _frontierWatermark = msg.last_event_seq;   // FIX #7: Initial watermark
-                _lastReceivedSeq = msg.last_event_seq;     // FIX #7: Assume all prior events received
+                _authoritativeTick = authoritativeTick;
+                _simulationTick = authoritativeTick;  // "I have simulated through this tick"
+                _frontierWatermark = lastEventSeq;   // FIX #7: Initial watermark
+                _lastReceivedSeq = lastEventSeq;     // FIX #7: Assume all prior events received
                 TransitionToLive();
+                DebugFileLogger.Log($"[SwarmManager] First client -> LIVE at tick {_simulationTick}");
             }
 
             // Handle authority handoff
@@ -893,6 +1140,34 @@ namespace BugFarmer.Entities
                 return;
             }
 
+            // FIX: Detect authority from tick broadcast if ZoneAuthority was lost
+            // This handles the case where ZoneAuthority is sent at MatchJoin before socket is ready
+            var localUserId = WorldManager.Instance?.Self?.UserId;
+            if (!string.IsNullOrEmpty(msg.authority_id) && msg.authority_id == localUserId && !_isAuthority)
+            {
+                Debug.Log($"[SwarmManager] ZoneTickBroadcast: Detected self as authority from tick broadcast (ZoneAuthority was likely lost)");
+                DebugFileLogger.Log($"[SwarmManager] Late authority setup from tick broadcast: authority_id={msg.authority_id}");
+
+                _isAuthority = true;
+                _currentZoneId = msg.zone_id;
+
+                // If still JOINING, go directly to LIVE (same as ZoneAuthority handler)
+                if (_syncState == SyncState.Joining)
+                {
+                    _authoritativeTick = msg.authoritative_tick;
+                    _simulationTick = msg.authoritative_tick;
+                    _frontierWatermark = msg.last_event_seq;
+                    _lastReceivedSeq = msg.last_event_seq;
+                    TransitionToLive();
+                    DebugFileLogger.Log($"[SwarmManager] Authority (from tick) -> LIVE at tick {_simulationTick}");
+                }
+                else
+                {
+                    // Already past JOINING - just start sending snapshots
+                    StartAuthoritySnapshots();
+                }
+            }
+
             // Update frontier AND watermark (FIX #7)
             if (msg.authoritative_tick > _authoritativeTick)
             {
@@ -908,7 +1183,7 @@ namespace BugFarmer.Entities
         private void TransitionToLive()
         {
             _syncState = SyncState.Live;
-            _tickAccumulator = 0f;
+            _tickAccumulator = 0.0;
 
             Debug.Log($"[SwarmManager] Entered LIVE at tick {_simulationTick}, frontier at {_authoritativeTick}");
 
@@ -949,38 +1224,59 @@ namespace BugFarmer.Entities
         /// </summary>
         private IEnumerator AuthoritySnapshotLoop()
         {
+            // Small delay to ensure swarms are initialized, then send first snapshot
+            yield return new WaitForSeconds(0.5f);
+            if (!_isAuthority) yield break;
+
+            SendAuthoritySnapshot();
+
             while (_isAuthority)
             {
                 yield return new WaitForSeconds(SnapshotInterval);
-
                 if (!_isAuthority) break;
-
-                // Build and send snapshot
-                var swarmSnapshots = new List<SwarmSnapshotData>();
-                foreach (var kvp in _swarms)
-                {
-                    var bugData = kvp.Value.GetBugPositions(null); // Get all bugs
-                    if (bugData.Length > 0)
-                    {
-                        swarmSnapshots.Add(new SwarmSnapshotData
-                        {
-                            swarm_id = kvp.Key,
-                            bugs = bugData
-                        });
-                    }
-                }
-
-                var snapshot = new ZoneSnapshotMessage
-                {
-                    zone_id = _currentZoneId,
-                    snapshot_tick = _simulationTick,
-                    swarms = swarmSnapshots.ToArray(),
-                    state_hash = "" // TODO: Implement state hash
-                };
-
-                SendToServer(OpCodes.ZoneSnapshot, snapshot);
-                Debug.Log($"[SwarmManager] Sent authority snapshot at tick {_simulationTick}");
+                SendAuthoritySnapshot();
             }
+        }
+
+        /// <summary>
+        /// Build and send authority snapshot to server.
+        /// </summary>
+        private void SendAuthoritySnapshot()
+        {
+            // Guard: don't send snapshot before any ticks simulated (snapshot_tick would be negative)
+            if (_simulationTick <= 0) return;
+
+            var swarmSnapshots = new List<SwarmSnapshotData>();
+            foreach (var kvp in _swarms)
+            {
+                var bugData = kvp.Value.GetAllBugPositions();
+                if (bugData.Length > 0)
+                {
+                    swarmSnapshots.Add(new SwarmSnapshotData
+                    {
+                        swarm_id = kvp.Key,
+                        bugs = bugData
+                    });
+                }
+            }
+
+            // FIX: snapshot_tick must be the tick whose simulation is COMPLETE in this snapshot.
+            // _simulationTick is the tick we're ABOUT TO simulate (next tick), so subtract 1.
+            // Contract: snapshot_tick = T means "state after SimulateTick(T) with events at T applied"
+            var snapshot = new ZoneSnapshotMessage
+            {
+                zone_id = _currentZoneId,
+                snapshot_tick = _simulationTick - 1,
+                snapshot_last_event_seq = _lastAppliedSeq, // Last seq whose effects are in this snapshot
+                swarms = swarmSnapshots.ToArray(),
+                state_hash = "" // TODO: Implement state hash
+            };
+
+            SendToServer(OpCodes.ZoneSnapshot, snapshot);
+            // DEBUG: Tick semantics - log when snapshot is sent
+            var snapLog = $"[Snapshot] Sending zone snapshot: snapshot_tick={snapshot.snapshot_tick}, simTick={_simulationTick}, lastAppliedSeq={_lastAppliedSeq}, swarms={swarmSnapshots.Count}";
+            Debug.Log(snapLog);
+            DebugFileLogger.Log(snapLog);
         }
 
         /// <summary>
@@ -1020,11 +1316,71 @@ namespace BugFarmer.Entities
             return results;
         }
 
+        // ==========================================================================
+        // DEBUG TRACE METHODS
+        // ==========================================================================
+
+        public void SetTraceCallback(Action<long, long, List<BugTrace>, List<PlayerTarget>> callback)
+        {
+            _traceCallback = callback;
+        }
+
+        /// <summary>
+        /// Collect bug traces from all swarms for the trace buffer.
+        /// Uses existing GetAllBugPositions() which returns BugSampleData[].
+        /// </summary>
+        private List<BugTrace> CollectBugTraces()
+        {
+            var traces = new List<BugTrace>();
+            foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
+            {
+                var samples = _swarms[swarmId].GetAllBugPositions();
+                foreach (var sample in samples)
+                {
+                    traces.Add(BugTrace.FromSampleData(_simulationTick, sample));
+                }
+            }
+            return traces;
+        }
+
+        /// <summary>
+        /// Compute deterministic hash of all bug state for divergence detection.
+        /// Uses FNV-1a with position and velocity (the core simulation state).
+        /// </summary>
+        public long ComputeStateHash()
+        {
+            unchecked
+            {
+                // FNV-1a 64-bit
+                ulong hash = 14695981039346656037UL;
+                const ulong prime = 1099511628211UL;
+
+                foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
+                {
+                    var samples = _swarms[swarmId].GetAllBugPositions();
+                    // GetAllBugPositions already returns in consistent order
+                    foreach (var bug in samples.OrderBy(b => b.bug_id))
+                    {
+                        hash ^= (ulong)bug.x;
+                        hash *= prime;
+                        hash ^= (ulong)bug.y;
+                        hash *= prime;
+                        hash ^= (ulong)bug.vx;
+                        hash *= prime;
+                        hash ^= (ulong)bug.vy;
+                        hash *= prime;
+                    }
+                }
+                return (long)hash;
+            }
+        }
+
         private void OnDestroy()
         {
             if (WorldManager.Instance != null)
             {
                 WorldManager.Instance.OnMatchData -= HandleMatchData;
+                WorldManager.Instance.OnPlayerLeft -= HandlePlayerLeft;
             }
 
             // Clean up all swarms
@@ -1034,6 +1390,9 @@ namespace BugFarmer.Entities
             }
             _swarms.Clear();
             _pendingSnapshots.Clear();
+
+            // Clear pending authority state
+            _pendingAuthorityId = null;
         }
     }
 }

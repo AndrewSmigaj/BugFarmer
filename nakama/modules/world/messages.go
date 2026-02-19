@@ -435,9 +435,10 @@ type ZoneAuthorityMessage struct {
 // CRITICAL: Server must broadcast influence events BEFORE this message each tick
 // This ensures clients never simulate without all events for that tick
 type ZoneTickBroadcastMessage struct {
-	ZoneID           string `json:"zone_id"`
+	ZoneID            string `json:"zone_id"`
 	AuthoritativeTick int64  `json:"authoritative_tick"` // Client may simulate up to (but not beyond) this
-	LastEventSeq     int64  `json:"last_event_seq"`      // FIX #7: Watermark - all events with seq <= this are finalized
+	LastEventSeq      int64  `json:"last_event_seq"`     // FIX #7: Watermark - all events with seq <= this are finalized
+	AuthorityID       string `json:"authority_id"`       // Current zone authority (for late authority setup)
 }
 
 // ZoneHandoffMessage sent after late join snapshot (OpCode 73)
@@ -445,14 +446,16 @@ type ZoneTickBroadcastMessage struct {
 type ZoneHandoffMessage struct {
 	ZoneID        string `json:"zone_id"`
 	LiveStartTick int64  `json:"live_start_tick"` // T_end + 1: first tick client is live
+	LastEventSeq  int64  `json:"last_event_seq"`  // Watermark at handoff time
 }
 
 // ZoneSnapshotMessage from authority client (OpCode 75)
 type ZoneSnapshotMessage struct {
-	ZoneID       string              `json:"zone_id"`
-	SnapshotTick int64               `json:"snapshot_tick"`
-	Swarms       []SwarmSnapshotData `json:"swarms"`
-	StateHash    string              `json:"state_hash"`
+	ZoneID               string              `json:"zone_id"`
+	SnapshotTick         int64               `json:"snapshot_tick"`
+	SnapshotLastEventSeq int64               `json:"snapshot_last_event_seq"` // Last applied seq included in snapshot state
+	Swarms               []SwarmSnapshotData `json:"swarms"`
+	StateHash            string              `json:"state_hash"`
 }
 
 // ZoneHashMessage from client for validation (OpCode 77)
@@ -462,13 +465,25 @@ type ZoneHashMessage struct {
 	StateHash string `json:"state_hash"` // Deterministic hash of bug state
 }
 
+// PlayerCellData represents a player's current cell position for late join sync.
+// This is snapshot STATE, not an event.
+type PlayerCellData struct {
+	PlayerID string `json:"player_id"`
+	CellX    int    `json:"cell_x"`
+	CellY    int    `json:"cell_y"`
+}
+
 // LateJoinSnapshot sent to joining player (OpCode 72)
 type LateJoinSnapshot struct {
-	ZoneID       string              `json:"zone_id"`
-	WorldSeed    int64               `json:"world_seed"`
-	SnapshotTick int64               `json:"snapshot_tick"` // T_snapshot (fixed)
-	EndTick      int64               `json:"end_tick"`      // T_end (fixed)
-	Swarms       []SwarmSnapshotData `json:"swarms"`        // Bug state from authority
-	InfluenceLog []InfluenceEvent    `json:"influence_log"` // Events from T_snapshot+1 to T_end
-	AuthorityID  string              `json:"authority_id"`
+	ZoneID               string              `json:"zone_id"`
+	WorldSeed            int64               `json:"world_seed"`
+	SnapshotTick         int64               `json:"snapshot_tick"`           // T_snapshot (fixed)
+	EndTick              int64               `json:"end_tick"`                // T_end (fixed)
+	SnapshotLastEventSeq int64               `json:"snapshot_last_event_seq"` // Last seq baked into snapshot state
+	EndLastEventSeq      int64               `json:"end_last_event_seq"`     // Current watermark at end_tick
+	Swarms               []SwarmSnapshotData `json:"swarms"`                 // Bug state from authority
+	SwarmMetadata        []SwarmData         `json:"swarm_metadata"`         // Swarm metadata for creating visuals
+	InfluenceLog         []InfluenceEvent    `json:"influence_log"`          // Events in (snapshot_last_seq, end_last_seq]
+	AuthorityID          string              `json:"authority_id"`
+	PlayerCells          []PlayerCellData    `json:"player_cells"`           // Current player positions (state, not events)
 }
