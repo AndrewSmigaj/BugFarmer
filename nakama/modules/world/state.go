@@ -47,6 +47,12 @@ type WorldState struct {
 	// Timing
 	LastMergeCheck int64 // Tick of last merge/split check
 
+	// SwarmUpdate (OpCode 20) is event-driven, not per-tick: set true whenever the
+	// swarm SET or metadata changes (spawn/despawn/merge/split/phase). Bug centers are
+	// derived deterministically from SWARM_SET_TARGET events, so positions are NOT
+	// broadcast per tick. Cleared after each broadcast.
+	SwarmsDirty bool
+
 	// World Building (Phase 4)
 	CurrentZone   *ZoneConfig                  // Current zone metadata
 	Chunks        map[string]*ChunkData        // "chunkX,chunkY" -> chunk data
@@ -66,14 +72,25 @@ type WorldState struct {
 	SwarmsBySpecies  map[string][]string // speciesID → swarmIDs of that species
 	SpeciesNextSpawn map[string]float64  // speciesID → next spawn time (seconds since start)
 
-	// Bug sync (late joiner + drift detection)
-	LastSampleTick   map[string]int64               // swarmID → last sample tick
-	PendingSnapshots map[string]*PendingSnapshotReq // requestID → pending snapshot request
+	// Bug sync (drift detection)
+	LastSampleTick map[string]int64       // swarmID → last sample tick
+	DriftChecks    map[string]*DriftCheck // chunkKey → in-flight settled-tick hash check
 
 	// Influence event system (server-authored bug sync)
 	PlayerCells      map[string]*PlayerCellState // playerID → current cell
 	ZoneStates       map[string]*ZoneState       // zoneID → zone authority/sync state
 	PendingInfluence []InfluenceEvent            // Events to broadcast this tick
+}
+
+// DriftCheck accumulates per-client state-hash responses for one settled-tick drift round.
+// The server asks every client in a chunk for ComputeStateHash() at the SAME past tick
+// (settled behind the frontier so all clients have simulated it). Comparing equal-tick hashes
+// is an honest determinism check; clients in the minority get a targeted late-join resync.
+type DriftCheck struct {
+	SampleTick int64            // The tick all clients hash (TickCount - margin)
+	Expected   map[string]bool  // Clients the request was sent to
+	Responded  map[string]bool  // Clients that replied (vote OR abstain)
+	Votes      map[string]int64 // userID → reported hash (buffered clients only)
 }
 
 // BreakingProgress tracks an in-progress tile break
@@ -123,19 +140,9 @@ type ZoneSnapshot struct {
 	StateHash            string
 }
 
-// PendingSnapshotReq tracks a snapshot request waiting for response
-type PendingSnapshotReq struct {
-	RequesterID  string   // Player who needs the snapshot
-	SourceID     string   // Current player we're waiting on
-	TriedSources []string // Players we've already tried (for fallback on timeout)
-	ChunkX       int      // Chunk coordinates
-	ChunkY       int
-	RequestTick  int64 // Tick when request was made (for timeout)
-}
-
 // InventorySlot holds one stack of items (bugs or tools)
 type InventorySlot struct {
-	ItemID   string         `json:"item_id"`             // species_id for bugs, item_id for tools, "" = empty
+	ItemID   string         `json:"item_id"` // species_id for bugs, item_id for tools, "" = empty
 	Count    int            `json:"count"`
 	Metadata map[string]int `json:"metadata,omitempty"` // For tools with state (watering can uses)
 }
@@ -148,9 +155,9 @@ type PlayerState struct {
 	Facing   entities.Direction // For other players to see which way you're facing
 
 	// Inventory (Phase 3)
-	Coins     int64              // Currency
-	BugSlots  [20]InventorySlot  // Bug inventory (20 slots)
-	ItemSlots [20]InventorySlot  // Tool inventory (20 slots, first 10 = hotbar)
+	Coins     int64             // Currency
+	BugSlots  [20]InventorySlot // Bug inventory (20 slots)
+	ItemSlots [20]InventorySlot // Tool inventory (20 slots, first 10 = hotbar)
 
 	// Bug catching
 	LastCatchTime int64  // Unix millis, rate limiting
@@ -159,7 +166,6 @@ type PlayerState struct {
 	// Tool use
 	LastToolTick int64 // Tick of last tool use (cooldown)
 }
-
 
 // WorldX returns the world X coordinate (ChunkX * chunkSize + LocalX)
 func (p *PlayerState) WorldX(chunkSize int) float32 {
@@ -234,8 +240,8 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		SwarmsBySpecies:  make(map[string][]string),
 		SpeciesNextSpawn: make(map[string]float64),
 		// Bug sync
-		LastSampleTick:   make(map[string]int64),
-		PendingSnapshots: make(map[string]*PendingSnapshotReq),
+		LastSampleTick: make(map[string]int64),
+		DriftChecks:    make(map[string]*DriftCheck),
 		// Influence event system
 		PlayerCells:      make(map[string]*PlayerCellState),
 		ZoneStates:       make(map[string]*ZoneState),
@@ -386,6 +392,29 @@ func (s *WorldState) AddInfluenceEvent(zoneID, eventType, playerID string, cellX
 	zone.InfluenceLog = append(zone.InfluenceLog, event)
 
 	// Add to pending broadcast
+	s.PendingInfluence = append(s.PendingInfluence, event)
+}
+
+// AddSwarmTargetEvent logs a SWARM_SET_TARGET leg through the same seq-gated ledger
+// as AddInfluenceEvent. Coordinates/speed are fixed-point (×1000).
+func (s *WorldState) AddSwarmTargetEvent(zoneID, swarmID string, originX, originY, targetX, targetY, speed int) {
+	zone := s.GetOrCreateZone(zoneID)
+
+	event := InfluenceEvent{
+		Tick:    s.TickCount,
+		Seq:     zone.NextSeq,
+		Type:    InfluenceSwarmSetTarget,
+		ZoneID:  zoneID,
+		SwarmID: swarmID,
+		OriginX: originX,
+		OriginY: originY,
+		TargetX: targetX,
+		TargetY: targetY,
+		Speed:   speed,
+	}
+	zone.NextSeq++
+
+	zone.InfluenceLog = append(zone.InfluenceLog, event)
 	s.PendingInfluence = append(s.PendingInfluence, event)
 }
 

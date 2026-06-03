@@ -112,6 +112,19 @@ namespace BugFarmer.Bugs
         {
             return min + Float(worldSeed, swarmId, bugId, tick, purposeId) * (max - min);
         }
+
+        /// <summary>
+        /// Integer-only probability test: returns true with probability numerator/denominator.
+        /// Compares the raw hash modulo denominator to numerator - no float math, so the result
+        /// is bit-identical across platforms (unlike Float(...) &lt; threshold). Use this for
+        /// gameplay decisions in the deterministic sim hot path.
+        /// </summary>
+        public static bool Chance(long worldSeed, string swarmId, int bugId, long tick, int purposeId, int numerator, int denominator)
+        {
+            if (denominator <= 0) return false;
+            uint h = Hash(worldSeed, swarmId, bugId, tick, purposeId);
+            return (h % (uint)denominator) < (uint)numerator;
+        }
     }
 
     /// <summary>

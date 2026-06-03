@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using BugFarmer.Util;
 using Nakama;
 using UnityEngine;
 
@@ -67,18 +68,21 @@ namespace BugFarmer.Networking
             Socket.Connected += () =>
             {
                 Debug.Log("[NetworkManager] Socket connected");
+                DebugFileLogger.Log("[NetworkManager] Socket connected");
                 OnConnected?.Invoke();
             };
 
             Socket.Closed += (reason) =>
             {
                 Debug.Log($"[NetworkManager] Socket closed: {reason}");
+                DebugFileLogger.Log($"[NetworkManager] Socket closed: {reason}");
                 OnDisconnected?.Invoke(reason);
             };
 
             Socket.ReceivedError += e =>
             {
                 Debug.LogError($"[NetworkManager] Socket error: {e.Message}");
+                DebugFileLogger.Log($"[NetworkManager] Socket error: {e.Message}");
                 OnError?.Invoke(e);
             };
 

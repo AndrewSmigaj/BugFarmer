@@ -87,14 +87,25 @@ namespace BugFarmer.Player
 
                 if (ghostPreview != null)
                 {
-                    ghostPreview.sprite = EntityDatabase.GetWorldSprite(itemId);
+                    // For seeds, show the plant sprite instead of seed sprite
+                    string spriteId = itemId;
+                    var def = EntityDatabase.Get(itemId);
+                    if (def != null && !string.IsNullOrEmpty(def.PlacesCrop))
+                    {
+                        spriteId = "plant_" + def.PlacesCrop;
+                    }
+
+                    ghostPreview.sprite = EntityDatabase.GetWorldSprite(spriteId);
 
                     // Scale ghost to match target size
-                    var targetSize = EntityDatabase.GetSpriteSize(itemId);
+                    var targetSize = EntityDatabase.GetSpriteSize(spriteId);
                     var sprite = ghostPreview.sprite;
-                    float scaleX = targetSize.x / sprite.rect.width;
-                    float scaleY = targetSize.y / sprite.rect.height;
-                    ghostPreview.transform.localScale = new Vector3(scaleX, scaleY, 1f);
+                    if (sprite != null)
+                    {
+                        float scaleX = targetSize.x / sprite.rect.width;
+                        float scaleY = targetSize.y / sprite.rect.height;
+                        ghostPreview.transform.localScale = new Vector3(scaleX, scaleY, 1f);
+                    }
 
                     ghostPreview.gameObject.SetActive(true);
                 }
@@ -129,6 +140,15 @@ namespace BugFarmer.Player
             if (Vector3.Distance(transform.position, cellWorld) > maxPlaceDistance)
                 return false;
 
+            // Seeds can only be placed on garden_plot tiles
+            var def = EntityDatabase.Get(_currentPlaceableId);
+            if (def != null && !string.IsNullOrEmpty(def.PlacesCrop))
+            {
+                string groundTile = TilemapManager.Instance.GetGroundAt(cellPos);
+                if (groundTile != "garden_plot" && groundTile != "garden_plot_wet")
+                    return false;
+            }
+
             Vector2Int size = EntityDatabase.GetFootprint(_currentPlaceableId, _placementDirection);
             for (int dy = 0; dy < size.y; dy++)
             {
@@ -155,9 +175,13 @@ namespace BugFarmer.Player
 
             var socket = NetworkManager.Instance?.Socket;
             var match = WorldManager.Instance?.CurrentMatch;
-            if (socket == null || match == null)
+            if (socket == null || !socket.IsConnected || match == null)
+            {
+                Debug.LogWarning("[PlacementController] Socket not connected, cannot place");
                 return;
+            }
 
+            // Send the item ID as-is - server handles seed->plant conversion
             var msg = new TilePlaceMessage
             {
                 grid_x = cellPos.x,
@@ -166,6 +190,7 @@ namespace BugFarmer.Player
                 direction = _placementDirection
             };
             _ = socket.SendMatchStateAsync(match.Id, OpCodes.TilePlace, JsonUtility.ToJson(msg));
+            Debug.Log($"[PlacementController] Placing {_currentPlaceableId} at ({cellPos.x}, {cellPos.y})");
         }
 
         public bool IsPlacing => _isPlacing;

@@ -194,6 +194,15 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 
 	for _, presence := range presences {
 		userID := presence.GetUserId()
+
+		// RECONNECTION DETECTION: If this user already has a presence (old session),
+		// log it. The old session's MatchLeave will fire later but will be ignored
+		// by the stale session guard (session ID mismatch).
+		if oldPresence, exists := worldState.Presences[userID]; exists {
+			logger.Info("Player %s reconnecting: replacing session %s with %s",
+				userID, oldPresence.GetSessionId(), presence.GetSessionId())
+		}
+
 		worldState.AddPlayer(userID, presence.GetUsername(), presence)
 		logger.Info("Player %s joined world %s", presence.GetUsername(), worldState.WorldID)
 
@@ -255,6 +264,11 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 	// Update label with new player count
 	m.updateLabel(dispatcher, worldState)
 
+	// SwarmUpdate is event-driven, so bootstrap a joiner's swarm set on the next tick.
+	// (Late joiners also receive swarm_metadata in the snapshot; this re-broadcast is a
+	// harmless reconcile and is the ONLY swarm set the first/authority client receives.)
+	worldState.SwarmsDirty = true
+
 	return worldState
 }
 
@@ -295,6 +309,18 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 
 	for _, presence := range presences {
 		userID := presence.GetUserId()
+
+		// STALE SESSION GUARD: If a newer session has already replaced this one
+		// (reconnection), skip the leave cleanup entirely. The new session is still
+		// active and should not be wiped out by the old session disconnecting.
+		if currentPresence, exists := worldState.Presences[userID]; exists {
+			if currentPresence.GetSessionId() != presence.GetSessionId() {
+				logger.Info("Ignoring stale MatchLeave for %s: leaving session %s != current session %s",
+					userID, presence.GetSessionId(), currentPresence.GetSessionId())
+				continue
+			}
+		}
+
 		worldState.RemovePlayer(userID)
 
 		// Emit PLAYER_CELL_LEAVE influence event before deleting cell state
@@ -606,7 +632,21 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				}
 			}
 
+			// Origin = center BEFORE this leg starts (pre-Move). Emit a sparse,
+			// self-describing leg event so clients re-anchor + move deterministically.
+			originX := swarm.WorldX(chunkSize)
+			originY := swarm.WorldY(chunkSize)
+
 			swarm.Think(species, chunkSize, resourceX, resourceY, isBlocked)
+
+			if worldState.CurrentZone != nil {
+				worldState.AddSwarmTargetEvent(
+					worldState.CurrentZone.ZoneID, swarm.ID,
+					toFixed(originX), toFixed(originY),
+					toFixed(swarm.TargetX), toFixed(swarm.TargetY),
+					toFixed(species.BaseSpeed*deltaTime),
+				)
+			}
 
 			// Schedule next think: 30-50 ticks (3-5 seconds at 10 ticks/sec)
 			swarm.NextThinkTick = worldState.TickCount + 30 + rand.Int63n(21)
@@ -615,8 +655,12 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		// MOVE: Every tick, move toward target (cheap)
 		swarm.Move(deltaTime, species, chunkSize)
 
-		// Check phase transitions
+		// Check phase transitions (metadata change → re-broadcast swarm set)
+		prevPhase := swarm.Phase
 		swarm.CheckPhaseTransition(species)
+		if swarm.Phase != prevPhase {
+			worldState.SwarmsDirty = true
+		}
 	}
 
 	// Check merge/split every 50 ticks (5 seconds)
@@ -631,8 +675,10 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		m.checkContinuousSpawning(worldState, worldState.TickCount, logger)
 	}
 
-	// Broadcast swarm updates
-	if len(worldState.Swarms) > 0 {
+	// Broadcast swarm SET/metadata only when it changes (NOT per tick). Positions are
+	// derived deterministically on clients from SWARM_SET_TARGET events, so this carries
+	// lifecycle/metadata + the current leg for clients creating a swarm's visual.
+	if worldState.SwarmsDirty {
 		swarmData := make([]SwarmData, 0, len(worldState.Swarms))
 		for _, swarm := range worldState.Swarms {
 			spriteID := swarm.SpeciesID // fallback
@@ -661,13 +707,11 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		} else {
 			dispatcher.BroadcastMessage(OpCodeSwarmUpdate, data, nil, nil, true)
 		}
+		worldState.SwarmsDirty = false
 	}
 
 	// Update ground item lifetimes
 	m.updateGroundItemLifetimes(logger, dispatcher, worldState, deltaTime)
-
-	// Bug sync: check for pending snapshot timeouts (frozen players)
-	m.checkPendingSnapshotTimeouts(logger, dispatcher, worldState)
 
 	// Bug sync: periodic drift sampling every 300 ticks (30 seconds at 10Hz)
 	if worldState.TickCount%300 == 0 {
@@ -920,6 +964,7 @@ func (m *Match) spawnSwarmForSpecies(state *WorldState, speciesID string, logger
 
 	state.Swarms[swarm.ID] = swarm
 	state.SwarmsBySpecies[speciesID] = append(state.SwarmsBySpecies[speciesID], swarm.ID)
+	state.SwarmsDirty = true
 
 	logger.Debug("Spawned swarm %s (%s) in %s at (%.0f, %.0f)",
 		swarm.ID, speciesID, area.ID, worldX, worldY)
@@ -1017,6 +1062,7 @@ func (m *Match) checkSwarmMerging(state *WorldState, chunkSize int, logger runti
 	}
 
 	if len(toDelete) > 0 {
+		state.SwarmsDirty = true
 		logger.Info("Merged %d swarms", len(toDelete))
 	}
 }
@@ -1071,8 +1117,15 @@ func (m *Match) checkSwarmSplitting(state *WorldState, chunkSize int, logger run
 	}
 
 	if len(newSwarms) > 0 {
+		state.SwarmsDirty = true
 		logger.Info("Split into %d new swarms", len(newSwarms))
 	}
+}
+
+// toFixed converts a float32 world coordinate to the client fixed-point scale (×1000).
+// Matches FixedPoint.Scale on the client so leg events deserialize without rescaling.
+func toFixed(v float32) int {
+	return int(math.Round(float64(v) * 1000.0))
 }
 
 // distBetweenSwarms calculates world distance between two swarms
@@ -1191,9 +1244,10 @@ func (m *Match) handleCatchBug(
 			[]runtime.Presence{presence}, nil, true)
 	}
 
-	// Remove empty swarm
+	// Remove empty swarm (despawn → re-broadcast set so clients drop the visual)
 	if swarm.Count <= 0 {
 		delete(state.Swarms, swarm.ID)
+		state.SwarmsDirty = true
 	}
 }
 
@@ -1330,67 +1384,11 @@ func (m *Match) handleInteractionReport(state *WorldState, msg InteractionReport
 
 // === Bug Sync (Late Joiner + Drift Detection) ===
 
-// requestSnapshotForLateJoiner sends OpCode 61 to source player requesting all bug positions in chunk.
-// Called from handleChunkSubscribe when a late joiner enters an active chunk.
-func (m *Match) requestSnapshotForLateJoiner(
-	logger runtime.Logger,
-	dispatcher runtime.MatchDispatcher,
-	state *WorldState,
-	sourceID string,
-	requesterID string,
-	cx, cy int,
-) {
-	// Build list of all bugs in swarms that are in this chunk
-	var queries []BugSampleQuery
-	for _, swarm := range state.Swarms {
-		if swarm.Position.ChunkX != cx || swarm.Position.ChunkY != cy {
-			continue
-		}
-		// Add all alive bugs in this swarm
-		for bugID := 0; bugID < swarm.NextBugID; bugID++ {
-			if swarm.IsBugAlive(bugID) {
-				queries = append(queries, BugSampleQuery{
-					SwarmID: swarm.ID,
-					BugID:   bugID,
-				})
-			}
-		}
-	}
-
-	if len(queries) == 0 {
-		logger.Debug("No bugs in chunk %d,%d for late joiner %s", cx, cy, requesterID)
-		return
-	}
-
-	// Create pending request
-	reqID := fmt.Sprintf("%s_%d", requesterID, time.Now().UnixNano())
-	state.PendingSnapshots[reqID] = &PendingSnapshotReq{
-		RequesterID:  requesterID,
-		SourceID:     sourceID,
-		TriedSources: []string{sourceID},
-		ChunkX:       cx,
-		ChunkY:       cy,
-		RequestTick:  state.TickCount,
-	}
-
-	// Send sample request to source player
-	reqMsg := SampleRequestMessage{
-		ChunkX:  cx,
-		ChunkY:  cy,
-		Tick:    state.TickCount,
-		Samples: queries,
-	}
-	data, _ := json.Marshal(reqMsg)
-
-	if presence, ok := state.Presences[sourceID]; ok && presence != nil {
-		dispatcher.BroadcastMessage(OpCodeRequestSample, data, []runtime.Presence{presence}, nil, true)
-		logger.Debug("Requested snapshot from %s for late joiner %s in chunk %d,%d (%d bugs)",
-			sourceID, requesterID, cx, cy, len(queries))
-	}
-}
-
-// handleSampleResponse processes OpCode 62 from a client.
-// Either relays as full snapshot to late joiner, or broadcasts for drift comparison.
+// handleSampleResponse processes OpCode 62 - a client's state hash at the settled drift tick.
+// It accumulates responses into the chunk's DriftCheck; once every expected (still-connected)
+// client has answered, it compares the equal-tick hashes and issues a targeted late-join
+// resync to any minority. Hashes are only ever compared at the SAME tick, so this never
+// false-positives on legitimate motion (the bug in the old position-sampling scheme).
 func (m *Match) handleSampleResponse(
 	logger runtime.Logger,
 	dispatcher runtime.MatchDispatcher,
@@ -1398,69 +1396,72 @@ func (m *Match) handleSampleResponse(
 	senderID string,
 	msg SampleResponseMessage,
 ) {
-	// Check if this is a response to a pending late joiner request
-	for reqID, pending := range state.PendingSnapshots {
-		if pending.SourceID == senderID && pending.ChunkX == msg.ChunkX && pending.ChunkY == msg.ChunkY {
-			// Convert samples to full snapshot format
-			swarmMap := make(map[string][]BugSampleData)
-			for _, sample := range msg.Samples {
-				swarmMap[sample.SwarmID] = append(swarmMap[sample.SwarmID], sample)
-			}
+	chunkKey := ChunkKey(msg.ChunkX, msg.ChunkY)
+	check := state.DriftChecks[chunkKey]
+	if check == nil || msg.Tick != check.SampleTick || !check.Expected[senderID] {
+		return // Stale, unsolicited, or not part of this round
+	}
 
-			var swarmSnapshots []SwarmSnapshotData
-			for swarmID, bugs := range swarmMap {
-				swarmSnapshots = append(swarmSnapshots, SwarmSnapshotData{
-					SwarmID: swarmID,
-					Bugs:    bugs,
-				})
-			}
+	check.Responded[senderID] = true
+	if msg.HasHash {
+		check.Votes[senderID] = msg.Hash
+	}
+	// HasHash==false: client lacks that tick (e.g. just resynced) - abstains, no vote.
 
-			snapshotMsg := FullSnapshotMessage{
-				ChunkX: msg.ChunkX,
-				ChunkY: msg.ChunkY,
-				Tick:   msg.Tick,
-				Swarms: swarmSnapshots,
-			}
-			data, _ := json.Marshal(snapshotMsg)
-
-			// Send to requester
-			if presence, ok := state.Presences[pending.RequesterID]; ok && presence != nil {
-				dispatcher.BroadcastMessage(OpCodeFullSnapshot, data, []runtime.Presence{presence}, nil, true)
-				logger.Debug("Relayed snapshot to late joiner %s for chunk %d,%d (%d samples)",
-					pending.RequesterID, msg.ChunkX, msg.ChunkY, len(msg.Samples))
-			}
-
-			delete(state.PendingSnapshots, reqID)
-			return
+	// Wait until every still-connected expected client has responded.
+	for userID := range check.Expected {
+		if _, connected := state.Presences[userID]; !connected {
+			continue // Disconnected mid-round - don't wait on it
+		}
+		if !check.Responded[userID] {
+			return // Still waiting
 		}
 	}
 
-	// Not for a late joiner - broadcast as drift sample to all others in chunk
-	chunkKey := ChunkKey(msg.ChunkX, msg.ChunkY)
-	subs := state.ChunkSubs[chunkKey]
-	if len(subs) == 0 {
+	// Round complete - tally votes.
+	delete(state.DriftChecks, chunkKey)
+	counts := make(map[int64]int)
+	for _, h := range check.Votes {
+		counts[h]++
+	}
+	if len(counts) <= 1 {
+		return // Unanimous (or nobody voted) - no drift
+	}
+
+	// Pick the majority hash as the reference. On a tie, skip to avoid resync storms.
+	var refHash int64
+	bestCount, tie := -1, false
+	for h, c := range counts {
+		if c > bestCount {
+			bestCount, refHash, tie = c, h, false
+		} else if c == bestCount {
+			tie = true
+		}
+	}
+	if tie {
+		logger.Warn("Drift check for chunk %d,%d at tick %d: ambiguous hash split %v - skipping resync",
+			msg.ChunkX, msg.ChunkY, check.SampleTick, counts)
 		return
 	}
 
-	var presences []runtime.Presence
-	for userID := range subs {
-		if userID == senderID {
-			continue // Don't send back to sender
+	// Resync every voter that disagreed with the majority.
+	for userID, h := range check.Votes {
+		if h == refHash {
+			continue
 		}
-		if p, exists := state.Presences[userID]; exists && p != nil {
-			presences = append(presences, p)
+		if p, ok := state.Presences[userID]; ok && p != nil {
+			logger.Warn("Drift detected: client %s hash %d != majority %d at tick %d - resyncing",
+				userID, h, refHash, check.SampleTick)
+			m.sendLateJoinSnapshot(logger, dispatcher, state, userID, p)
 		}
-	}
-
-	if len(presences) > 0 {
-		data, _ := json.Marshal(msg)
-		dispatcher.BroadcastMessage(OpCodeSampleBroadcast, data, presences, nil, true)
-		logger.Debug("Broadcast drift sample for chunk %d,%d to %d clients", msg.ChunkX, msg.ChunkY, len(presences))
 	}
 }
 
-// handleSnapshotRequest processes OpCode 66 from a client that detected drift.
-// Finds another player in the chunk and requests a snapshot from them.
+// handleSnapshotRequest processes OpCode 66 - a client's request for a full zone resync.
+// The frontier system is zone-scoped, so recovery routes through the same proven late-join
+// path (snapshot -> influence-log replay -> handoff -> live) rather than partial chunk
+// catch-up, which cannot safely rewind the zone-wide simulation tick. The chunk fields in
+// the request are ignored; resync is always zone-wide for the requester.
 func (m *Match) handleSnapshotRequest(
 	logger runtime.Logger,
 	dispatcher runtime.MatchDispatcher,
@@ -1468,113 +1469,14 @@ func (m *Match) handleSnapshotRequest(
 	requesterID string,
 	msg SnapshotRequestMessage,
 ) {
-	chunkKey := ChunkKey(msg.ChunkX, msg.ChunkY)
-	subs := state.ChunkSubs[chunkKey]
-
-	// Find a connected player other than requester
-	var sourceID string
-	for playerID := range subs {
-		if playerID == requesterID {
-			continue
-		}
-		if _, connected := state.Presences[playerID]; connected {
-			sourceID = playerID
-			break
-		}
-	}
-
-	if sourceID == "" {
-		logger.Debug("No other players in chunk %d,%d to provide snapshot for %s", msg.ChunkX, msg.ChunkY, requesterID)
+	presence, ok := state.Presences[requesterID]
+	if !ok || presence == nil {
+		logger.Warn("Resync request from %s but no presence found", requesterID)
 		return
 	}
 
-	// Request snapshot from source player
-	m.requestSnapshotForLateJoiner(logger, dispatcher, state, sourceID, requesterID, msg.ChunkX, msg.ChunkY)
-}
-
-// checkPendingSnapshotTimeouts checks for pending snapshot requests that have timed out.
-// If a source player doesn't respond within 50 ticks (5 seconds), try another player.
-func (m *Match) checkPendingSnapshotTimeouts(
-	logger runtime.Logger,
-	dispatcher runtime.MatchDispatcher,
-	state *WorldState,
-) {
-	const timeoutTicks = 50 // 5 seconds at 10Hz
-
-	for reqID, pending := range state.PendingSnapshots {
-		if state.TickCount-pending.RequestTick < timeoutTicks {
-			continue
-		}
-
-		// Timed out - try to find another source
-		chunkKey := ChunkKey(pending.ChunkX, pending.ChunkY)
-		subs := state.ChunkSubs[chunkKey]
-
-		var newSource string
-		for playerID := range subs {
-			if playerID == pending.RequesterID {
-				continue
-			}
-			// Skip already tried sources
-			tried := false
-			for _, s := range pending.TriedSources {
-				if s == playerID {
-					tried = true
-					break
-				}
-			}
-			if tried {
-				continue
-			}
-			if _, connected := state.Presences[playerID]; connected {
-				newSource = playerID
-				break
-			}
-		}
-
-		if newSource == "" {
-			// No more players to try - give up
-			logger.Warn("Snapshot request timed out for %s in chunk %d,%d - no more sources",
-				pending.RequesterID, pending.ChunkX, pending.ChunkY)
-			delete(state.PendingSnapshots, reqID)
-			continue
-		}
-
-		// Update pending request with new source
-		pending.SourceID = newSource
-		pending.TriedSources = append(pending.TriedSources, newSource)
-		pending.RequestTick = state.TickCount
-
-		// Build query list again and send to new source
-		var queries []BugSampleQuery
-		for _, swarm := range state.Swarms {
-			if swarm.Position.ChunkX != pending.ChunkX || swarm.Position.ChunkY != pending.ChunkY {
-				continue
-			}
-			for bugID := 0; bugID < swarm.NextBugID; bugID++ {
-				if swarm.IsBugAlive(bugID) {
-					queries = append(queries, BugSampleQuery{
-						SwarmID: swarm.ID,
-						BugID:   bugID,
-					})
-				}
-			}
-		}
-
-		reqMsg := SampleRequestMessage{
-			ChunkX:  pending.ChunkX,
-			ChunkY:  pending.ChunkY,
-			Tick:    state.TickCount,
-			Samples: queries,
-		}
-		data, _ := json.Marshal(reqMsg)
-
-		if presence, ok := state.Presences[newSource]; ok && presence != nil {
-			dispatcher.BroadcastMessage(OpCodeRequestSample, data, []runtime.Presence{presence}, nil, true)
-			logger.Debug("Retrying snapshot from %s for %s in chunk %d,%d (attempt %d)",
-				newSource, pending.RequesterID, pending.ChunkX, pending.ChunkY, len(pending.TriedSources))
-		}
-	}
+	logger.Info("Zone resync requested by %s - sending late-join snapshot", requesterID)
+	m.sendLateJoinSnapshot(logger, dispatcher, state, requesterID, presence)
 }
 
 // handleZoneSnapshot stores a snapshot from the authority client (OpCode 75).
@@ -1631,7 +1533,7 @@ func (m *Match) sendLateJoinSnapshot(
 		zone.LatestSnapshot = &ZoneSnapshot{
 			ZoneID:               zoneID,
 			SnapshotTick:         state.TickCount,
-			SnapshotLastEventSeq: zone.NextSeq - 1, // All events to date are "in" the bootstrap state
+			SnapshotLastEventSeq: zone.NextSeq - 1,      // All events to date are "in" the bootstrap state
 			Swarms:               []SwarmSnapshotData{}, // Empty - SwarmUpdate provides swarm data
 			StateHash:            "",
 		}
@@ -1694,7 +1596,7 @@ func (m *Match) sendLateJoinSnapshot(
 			if species, ok := state.Species[swarm.SpeciesID]; ok {
 				spriteID = species.SpriteID
 			}
-			swarmMetadata = append(swarmMetadata, SwarmData{
+			meta := SwarmData{
 				ID:         swarm.ID,
 				SpeciesID:  swarm.SpeciesID,
 				SpriteID:   spriteID,
@@ -1706,7 +1608,28 @@ func (m *Match) sendLateJoinSnapshot(
 				Phase:      swarm.Phase,
 				NextBugID:  swarm.NextBugID,
 				RemovedIDs: swarm.GetRemovedIDs(),
-			})
+			}
+
+			// Hydrate the leg active AT snapshotTick: the most recent SWARM_SET_TARGET for
+			// this swarm with Tick <= snapshotTick. Legs started after snapshotTick are NOT
+			// included here - they replay from influenceLog and overwrite the hydrated leg at
+			// their own tick. Carrying the event's exact fixed-point values keeps the client's
+			// closed-form center march bit-identical to the live clients'.
+			for i := len(zone.InfluenceLog) - 1; i >= 0; i-- {
+				evt := zone.InfluenceLog[i]
+				if evt.Type == InfluenceSwarmSetTarget && evt.SwarmID == swarm.ID && evt.Tick <= snapshotTick {
+					meta.HasTarget = true
+					meta.LegOriginX = evt.OriginX
+					meta.LegOriginY = evt.OriginY
+					meta.LegTargetX = evt.TargetX
+					meta.LegTargetY = evt.TargetY
+					meta.LegSpeed = evt.Speed
+					meta.LegStartTick = evt.Tick
+					break
+				}
+			}
+
+			swarmMetadata = append(swarmMetadata, meta)
 		}
 	}
 
@@ -1753,83 +1676,56 @@ func (m *Match) sendLateJoinSnapshot(
 	logger.Info("Sent ZoneHandoff to %s: live_start_tick=%d, last_event_seq=%d", joinerID, endTick+1, endLastSeq)
 }
 
-// checkDriftSampling performs periodic drift detection by sampling bug positions.
-// Called every 300 ticks (30 seconds). Samples 10 random bugs from one player per chunk.
+// driftSampleMargin is how far behind the frontier the sampled tick sits, so every client
+// has already simulated it (and still has it buffered) by the time the request arrives.
+const driftSampleMargin = 20 // ticks (~2s at 10Hz)
+
+// checkDriftSampling performs periodic, tick-aligned drift detection.
+// Called every 300 ticks (~30s). For each chunk with ≥2 connected clients it asks ALL of
+// them for ComputeStateHash() at the SAME settled tick (TickCount - margin) and records the
+// expected responders in a DriftCheck. handleSampleResponse compares the equal-tick hashes and
+// resyncs any minority. This replaces position sampling, which compared positions across
+// mismatched ticks and produced false-positive resyncs every 30s.
 func (m *Match) checkDriftSampling(
 	logger runtime.Logger,
 	dispatcher runtime.MatchDispatcher,
 	state *WorldState,
 ) {
-	// For each chunk with subscribers, sample bugs
+	sampleTick := state.TickCount - driftSampleMargin
+	if sampleTick < 0 {
+		return // Not enough history yet
+	}
+
 	for chunkKey, subs := range state.ChunkSubs {
-		if len(subs) < 2 {
-			continue // Need at least 2 players for drift comparison
+		// Collect connected clients in this chunk
+		var presences []runtime.Presence
+		expected := make(map[string]bool)
+		for playerID := range subs {
+			if p, ok := state.Presences[playerID]; ok && p != nil {
+				presences = append(presences, p)
+				expected[playerID] = true
+			}
+		}
+		if len(expected) < 2 {
+			continue // Need at least 2 clients to compare
 		}
 
 		// Parse chunk coordinates
 		var cx, cy int
 		fmt.Sscanf(chunkKey, "%d,%d", &cx, &cy)
 
-		// Find swarms in this chunk
-		var queries []BugSampleQuery
-		for _, swarm := range state.Swarms {
-			if swarm.Position.ChunkX != cx || swarm.Position.ChunkY != cy {
-				continue
-			}
-
-			// Sample up to 10 random bugs from this swarm
-			aliveBugs := []int{}
-			for bugID := 0; bugID < swarm.NextBugID; bugID++ {
-				if swarm.IsBugAlive(bugID) {
-					aliveBugs = append(aliveBugs, bugID)
-				}
-			}
-
-			// Shuffle and take up to 10
-			rand.Shuffle(len(aliveBugs), func(i, j int) {
-				aliveBugs[i], aliveBugs[j] = aliveBugs[j], aliveBugs[i]
-			})
-			sampleCount := 10
-			if len(aliveBugs) < sampleCount {
-				sampleCount = len(aliveBugs)
-			}
-			for i := 0; i < sampleCount; i++ {
-				queries = append(queries, BugSampleQuery{
-					SwarmID: swarm.ID,
-					BugID:   aliveBugs[i],
-				})
-			}
+		// Open a fresh drift-check round (overwrites any stale one for this chunk)
+		state.DriftChecks[chunkKey] = &DriftCheck{
+			SampleTick: sampleTick,
+			Expected:   expected,
+			Responded:  make(map[string]bool),
+			Votes:      make(map[string]int64),
 		}
 
-		if len(queries) == 0 {
-			continue
-		}
-
-		// Pick one connected player to sample
-		var sourceID string
-		for playerID := range subs {
-			if _, connected := state.Presences[playerID]; connected {
-				sourceID = playerID
-				break
-			}
-		}
-		if sourceID == "" {
-			continue
-		}
-
-		// Send sample request
-		reqMsg := SampleRequestMessage{
-			ChunkX:  cx,
-			ChunkY:  cy,
-			Tick:    state.TickCount,
-			Samples: queries,
-		}
+		reqMsg := SampleRequestMessage{ChunkX: cx, ChunkY: cy, Tick: sampleTick}
 		data, _ := json.Marshal(reqMsg)
-
-		if presence, ok := state.Presences[sourceID]; ok && presence != nil {
-			dispatcher.BroadcastMessage(OpCodeRequestSample, data, []runtime.Presence{presence}, nil, true)
-			logger.Debug("Drift sample request sent to %s for chunk %d,%d (%d bugs)",
-				sourceID, cx, cy, len(queries))
-		}
+		dispatcher.BroadcastMessage(OpCodeRequestSample, data, presences, nil, true)
+		logger.Debug("Drift hash request sent to %d clients for chunk %d,%d at tick %d",
+			len(presences), cx, cy, sampleTick)
 	}
 }

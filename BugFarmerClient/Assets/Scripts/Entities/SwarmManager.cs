@@ -126,6 +126,27 @@ namespace BugFarmer.Entities
         // Trace callback - only invoked when debug overlay is recording
         private Action<long, long, List<BugTrace>, List<PlayerTarget>> _traceCallback;
 
+        // Always-on ring buffer of tick -> ComputeStateHash() for tick-aligned drift checks.
+        // The server samples a settled tick (behind the frontier) from every client and compares
+        // equal-tick hashes; comparing the SAME tick is what makes the check honest (the old
+        // position-sampling scheme compared across mismatched ticks and false-positived).
+        private const int HashRingSize = 120; // ~12s at 10Hz - covers drift margin + RTT
+        private readonly Queue<long> _hashRingOrder = new();
+        private readonly Dictionary<long, long> _hashRing = new();
+
+        private void RecordTickHash(long tick, long hash)
+        {
+            if (_hashRing.ContainsKey(tick))
+            {
+                _hashRing[tick] = hash;
+                return;
+            }
+            _hashRing[tick] = hash;
+            _hashRingOrder.Enqueue(tick);
+            if (_hashRingOrder.Count > HashRingSize)
+                _hashRing.Remove(_hashRingOrder.Dequeue());
+        }
+
         /// <summary>Current simulation tick (read-only for external code).</summary>
         public long SimulationTick => _simulationTick;
 
@@ -234,7 +255,28 @@ namespace BugFarmer.Entities
             // NOTE: HANDSHAKE_WAIT is a LOGIC gate, not a NETWORK gate.
             // Messages still arrive and update frontier/watermark/inbox during wait.
             if (_syncState != SyncState.Live)
+            {
+                // Safety net: a client stuck in HandshakeWait (handoff lost) auto-resyncs.
+                if (_syncState == SyncState.HandshakeWait)
+                {
+                    _handshakeWaitTimer += Time.deltaTime;
+                    if (_handshakeWaitTimer >= HandshakeWaitTimeout && _resyncAttempts < MaxResyncAttempts)
+                    {
+                        Debug.LogWarning($"[SwarmManager] HandshakeWait exceeded {HandshakeWaitTimeout}s - resyncing (attempt {_resyncAttempts + 1}/{MaxResyncAttempts})");
+                        _resyncAttempts++;
+                        _handshakeWaitTimer = 0f;
+                        RequestResync();
+                    }
+                }
+                else
+                {
+                    _handshakeWaitTimer = 0f;
+                }
                 return;
+            }
+
+            // Entered LIVE: handshake timer no longer relevant.
+            _handshakeWaitTimer = 0f;
 
             // CRITICAL: Tick Frontier Gate with Watermark Check (FIX #7)
             // Client may ONLY advance when:
@@ -271,6 +313,23 @@ namespace BugFarmer.Entities
             if (!canAdvance)
             {
                 _tickAccumulator = System.Math.Min(_tickAccumulator, SecondsPerTick);
+
+                // Safety net: if we stay gated too long (lost event or stalled frontier),
+                // auto-resync via the late-join path. Bounded by MaxResyncAttempts.
+                _frontierStallTimer += Time.deltaTime;
+                if (_frontierStallTimer >= FrontierStallTimeout && _resyncAttempts < MaxResyncAttempts)
+                {
+                    Debug.LogWarning($"[SwarmManager] Frontier stalled {FrontierStallTimeout}s (simTick={_simulationTick}, authTick={_authoritativeTick}, lastSeq={_lastReceivedSeq}, watermark={_frontierWatermark}) - resyncing (attempt {_resyncAttempts + 1}/{MaxResyncAttempts})");
+                    _resyncAttempts++;
+                    _frontierStallTimer = 0f;
+                    RequestResync();
+                    return;
+                }
+            }
+            else
+            {
+                // Made progress - clear the stall timer.
+                _frontierStallTimer = 0f;
             }
 
             // Visual interpolation (read-only) - always runs in LIVE
@@ -391,11 +450,14 @@ namespace BugFarmer.Entities
                 _swarms[swarmId].SimulateTick(_simulationTick, players);
             }
 
+            // Record this tick's state hash for tick-aligned drift checks (always on, cheap).
+            var hash = ComputeStateHash();
+            RecordTickHash(_simulationTick, hash);
+
             // Invoke trace callback if recording
             if (_traceCallback != null)
             {
                 var bugs = CollectBugTraces();
-                var hash = ComputeStateHash();
                 _traceCallback(_simulationTick, hash, bugs, players);
             }
         }
@@ -482,20 +544,25 @@ namespace BugFarmer.Entities
         }
 
         /// <summary>
-        /// FIX #4: Request resync when protocol violation detected.
+        /// Request a full zone resync (recovery). The frontier system is zone-scoped, so recovery
+        /// routes through the proven late-join path: the server responds to OpCode 66 with a
+        /// LateJoinSnapshot (OpCode 72), which HandleLateJoinSnapshot replays to the frontier and
+        /// transitions back to LIVE. Used for protocol violations, frontier stalls, handshake
+        /// timeouts, and large drift. Bounded by MaxResyncAttempts in the Update loop.
         /// </summary>
         private void RequestResync()
         {
-            Debug.LogError($"[SwarmManager] Requesting resync due to protocol violation");
+            Debug.LogWarning($"[SwarmManager] Requesting zone resync (late-join path)");
             _syncState = SyncState.Joining;
             _inboxBySeq.Clear();
             _pendingEvents.Clear();
+            _pendingEventsDirty = false;
             _lastAppliedSeq = -1;
             _lastReceivedSeq = -1;
             _frontierWatermark = -1;
 
-            // Request late join snapshot from server
-            RequestFullSnapshot(0, 0); // TODO: Track current chunk
+            // Zone-wide resync request. Chunk fields are unused; the server resyncs the whole zone.
+            SendToServer(OpCodes.RequestSnapshot, new SnapshotRequestMessage());
         }
 
         /// <summary>
@@ -543,12 +610,6 @@ namespace BugFarmer.Entities
                 // Bug sync (late joiner + drift detection)
                 case OpCodes.RequestSample:
                     HandleSampleRequest(state);
-                    break;
-                case OpCodes.SampleBroadcast:
-                    HandleSampleBroadcast(state);
-                    break;
-                case OpCodes.FullSnapshot:
-                    HandleFullSnapshot(state);
                     break;
                 // Zone authority + late join
                 case OpCodes.InfluenceBroadcast:
@@ -650,130 +711,39 @@ namespace BugFarmer.Entities
         // === Bug Sync Handlers (Late Joiner + Drift Detection) ===
 
         /// <summary>
-        /// Handle server request for bug positions (OpCode 61).
-        /// Respond with positions for the requested bugs.
+        /// Handle server request for our state hash at a settled tick (OpCode 61).
+        /// Respond with ComputeStateHash() at msg.tick from the ring buffer. If that tick is no
+        /// longer buffered (e.g. we just resynced), respond with has_hash=false to abstain - the
+        /// server then excludes us from the comparison instead of treating us as drifted.
         /// </summary>
         private void HandleSampleRequest(IMatchState state)
         {
             var json = System.Text.Encoding.UTF8.GetString(state.State);
             var msg = JsonUtility.FromJson<SampleRequestMessage>(json);
-            if (msg?.samples == null) return;
+            if (msg == null) return;
 
-            // Gather positions for all requested bugs
-            var samples = new List<BugSampleData>();
-            foreach (var query in msg.samples)
-            {
-                var swarm = GetSwarm(query.swarm_id);
-                if (swarm != null)
-                {
-                    var positions = swarm.GetBugPositions(new[] { query.bug_id });
-                    samples.AddRange(positions);
-                }
-            }
-
-            // Send response back to server
+            bool hasHash = _hashRing.TryGetValue(msg.tick, out var hash);
             var response = new SampleResponseMessage
             {
                 chunk_x = msg.chunk_x,
                 chunk_y = msg.chunk_y,
                 tick = msg.tick,
-                samples = samples.ToArray()
+                hash = hasHash ? hash : 0,
+                has_hash = hasHash
             };
             SendToServer(OpCodes.SampleResponse, response);
         }
 
-        /// <summary>
-        /// Handle server broadcast of sample positions (OpCode 63).
-        /// Compare local positions and request snapshot if drift exceeds threshold.
-        /// </summary>
-        private void HandleSampleBroadcast(IMatchState state)
-        {
-            var json = System.Text.Encoding.UTF8.GetString(state.State);
-            var msg = JsonUtility.FromJson<SampleResponseMessage>(json);
-            if (msg?.samples == null) return;
+        // NOTE: HandleSampleBroadcast (OpCode 63) REMOVED. Drift comparison is now server-side:
+        // the server collects each client's equal-tick hash and resyncs only the minority. The
+        // old client-side position compare ran across mismatched ticks and false-positived.
 
-            float maxDrift = 0f;
-            foreach (var sample in msg.samples)
-            {
-                var swarm = GetSwarm(sample.swarm_id);
-                if (swarm != null)
-                {
-                    var localPositions = swarm.GetBugPositions(new[] { sample.bug_id });
-                    if (localPositions.Length > 0)
-                    {
-                        // Calculate drift in world units (fixed-point / 1000)
-                        float dx = (localPositions[0].x - sample.x) / 1000f;
-                        float dy = (localPositions[0].y - sample.y) / 1000f;
-                        float drift = Mathf.Sqrt(dx * dx + dy * dy);
-                        maxDrift = Mathf.Max(maxDrift, drift);
-                    }
-                }
-            }
-
-            // If drift exceeds 0.5 blocks, request full snapshot
-            if (maxDrift >= 0.5f)
-            {
-                Debug.Log($"[SwarmManager] Drift detected ({maxDrift:F2} blocks), requesting snapshot for chunk {msg.chunk_x},{msg.chunk_y}");
-                RequestFullSnapshot(msg.chunk_x, msg.chunk_y);
-            }
-        }
-
-        /// <summary>
-        /// Handle full snapshot from server (OpCode 67).
-        /// Apply positions to sync bugs with authoritative state.
-        /// Includes catch-up simulation to reach current tick.
-        /// Caches snapshots for swarms that don't exist yet (race condition).
-        /// </summary>
-        private void HandleFullSnapshot(IMatchState state)
-        {
-            var json = System.Text.Encoding.UTF8.GetString(state.State);
-            var msg = JsonUtility.FromJson<FullSnapshotMessage>(json);
-            if (msg?.swarms == null) return;
-
-            Debug.Log($"[SwarmManager] Received snapshot for chunk {msg.chunk_x},{msg.chunk_y} with {msg.swarms.Length} swarms at tick {msg.tick}");
-
-            foreach (var swarmData in msg.swarms)
-            {
-                if (swarmData.bugs == null) continue;
-
-                var swarm = GetSwarm(swarmData.swarm_id);
-                if (swarm != null)
-                {
-                    swarm.ApplySnapshot(swarmData.bugs);
-                    // TODO: Drift correction catch-up needs redesign for tick frontier architecture
-                    // The old CatchUpTicks was removed. Drift correction should:
-                    // 1. Set _simulationTick = msg.tick
-                    // 2. Replay to _authoritativeTick using AdvanceOneTick()
-                    // For now, just apply snapshot and let normal tick advancement continue
-                }
-                else
-                {
-                    // Swarm doesn't exist yet - cache for when it's created
-                    Debug.Log($"[SwarmManager] Caching snapshot for swarm {swarmData.swarm_id} ({swarmData.bugs.Length} bugs)");
-                    _pendingSnapshots[swarmData.swarm_id] = new PendingSnapshot
-                    {
-                        Bugs = swarmData.bugs,
-                        SnapshotTick = msg.tick
-                    };
-                }
-            }
-        }
+        // NOTE: HandleFullSnapshot (OpCode 67) and RequestFullSnapshot REMOVED. Recovery is now
+        // zone-wide via the late-join path (RequestResync -> server LateJoinSnapshot). The old
+        // chunk-scoped snapshot couldn't safely rewind the zone-wide simulation tick.
 
         // NOTE: GetCurrentPlayerTargets() REMOVED - use GetDeterministicPlayerTargets() instead
         // which reads from InfluenceManager (server-authored) for deterministic simulation.
-
-        /// <summary>
-        /// Request full snapshot when drift detected or as late joiner.
-        /// </summary>
-        private void RequestFullSnapshot(int chunkX, int chunkY)
-        {
-            var request = new SnapshotRequestMessage
-            {
-                chunk_x = chunkX,
-                chunk_y = chunkY
-            };
-            SendToServer(OpCodes.RequestSnapshot, request);
-        }
 
         /// <summary>
         /// Send a message to the server via the match socket.
@@ -893,6 +863,12 @@ namespace BugFarmer.Entities
             // Do not merge with existing state; always clear then rehydrate.
             InfluenceManager.Instance?.ClearPlayerCells();
 
+            // Clear swarm movement legs too. Any leg whose Think falls inside the replay window
+            // is re-established when the influence_log replays below. Swarms that are mid-leg
+            // (Think happened before snapshot_tick) fall back to their metadata center until the
+            // next Think - acceptable, sub-cell, and self-correcting.
+            InfluenceManager.Instance?.ClearSwarmLegs();
+
             // Hydrate player cells from snapshot STATE (not events)
             // This restores the point-in-time player positions at snapshot_tick
             if (msg.player_cells != null)
@@ -915,6 +891,26 @@ namespace BugFarmer.Entities
             {
                 foreach (var metadata in msg.swarm_metadata)
                 {
+                    // Re-hydrate the in-flight movement leg BEFORE replay (legs were cleared above).
+                    // Must run for existing swarms too (resync path): otherwise the center freezes
+                    // at the metadata fallback until the next Think and diverges from live clients.
+                    // Legs that started after snapshot_tick arrive via influence_log replay and
+                    // overwrite this at their own tick. Origin/target/speed are fixed-point (×1000),
+                    // identical to the originating event, so the closed-form march is bit-identical.
+                    if (metadata.has_target)
+                    {
+                        InfluenceManager.Instance?.SetSwarmLeg(
+                            metadata.id,
+                            new FixedPoint2(
+                                new FixedPoint { Value = metadata.leg_origin_x },
+                                new FixedPoint { Value = metadata.leg_origin_y }),
+                            new FixedPoint2(
+                                new FixedPoint { Value = metadata.leg_target_x },
+                                new FixedPoint { Value = metadata.leg_target_y }),
+                            new FixedPoint { Value = metadata.leg_speed },
+                            metadata.leg_start_tick);
+                    }
+
                     if (_swarms.ContainsKey(metadata.id))
                     {
                         Debug.Log($"[SwarmManager] Swarm {metadata.id} already exists, skipping creation");
@@ -1184,6 +1180,11 @@ namespace BugFarmer.Entities
         {
             _syncState = SyncState.Live;
             _tickAccumulator = 0.0;
+
+            // Successful (re)sync - clear recovery counters so future stalls get a fresh budget.
+            _resyncAttempts = 0;
+            _frontierStallTimer = 0f;
+            _handshakeWaitTimer = 0f;
 
             Debug.Log($"[SwarmManager] Entered LIVE at tick {_simulationTick}, frontier at {_authoritativeTick}");
 

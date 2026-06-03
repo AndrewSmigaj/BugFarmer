@@ -30,6 +30,8 @@ type WorldMetadata struct {
 type WorldCreateRequest struct {
 	Name         string `json:"name"`
 	AccessPolicy string `json:"access_policy"`
+	ZoneID       string `json:"zone_id,omitempty"`    // Optional zone override (default: village_21)
+	DebugMode    bool   `json:"debug_mode,omitempty"` // Optional debug mode (disables split/merge/spawn)
 }
 
 type WorldCreateResponse struct {
@@ -91,6 +93,8 @@ func WorldCreate(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runt
 		"owner_id":      userID,
 		"name":          req.Name,
 		"access_policy": req.AccessPolicy,
+		"zone_id":       req.ZoneID,
+		"debug_mode":    req.DebugMode,
 	}
 	matchID, err := nk.MatchCreate(ctx, "world", matchParams)
 	if err != nil {

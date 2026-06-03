@@ -5,53 +5,24 @@ using UnityEngine.Tilemaps;
 namespace BugFarmer.World
 {
     /// <summary>
-    /// ScriptableObject database mapping tile and occupant IDs to Unity assets.
-    /// Ground tiles use TileBase for efficient tilemap rendering.
-    /// Occupants use Sprites for individual GameObject rendering.
-    /// Create via Assets > Create > BugFarmer > TileDatabase.
-    /// Place the asset in a Resources folder for auto-loading.
+    /// Loads ground tile sprites from Resources/Tiles/ and creates TileBase objects at runtime.
+    /// Drop a PNG in Resources/Tiles/{tileId}.png and it just works — consistent with
+    /// EntityDatabase loading objects from Resources/Objects/, items from Resources/Items/, etc.
     /// </summary>
     [CreateAssetMenu(fileName = "TileDatabase", menuName = "BugFarmer/TileDatabase")]
     public class TileDatabase : ScriptableObject
     {
         private static TileDatabase _instance;
 
-        [System.Serializable]
-        public class GroundTileEntry
-        {
-            public string tileId;       // Matches server tile ID (grass, dirt, etc.)
-            public TileBase tile;       // Unity Tile asset for tilemap rendering
-        }
-
-        [System.Serializable]
-        public class OccupantEntry
-        {
-            public string occupantId;   // Matches server occupant ID (tree_oak, rock_small, etc.)
-            public Sprite sprite;       // Sprite for rendering
-            public int footprintWidth = 1;  // Collision/placement width in cells
-            public int footprintHeight = 1; // Collision/placement height in cells
-            public Vector2 pivot = new Vector2(0.5f, 0f); // Pivot point (0.5,0 = bottom-center)
-            public bool isBreakable;    // For client-side visual hints
-        }
-
-        [Header("Ground Tiles")]
-        [Tooltip("Map tile IDs to Unity Tile assets for tilemap rendering")]
-        [SerializeField] private GroundTileEntry[] groundTiles;
-
-        [Header("Occupants (Objects)")]
-        [Tooltip("Map occupant IDs to sprites for object rendering")]
-        [SerializeField] private OccupantEntry[] occupants;
-
         [Header("Breaking Effects")]
         [Tooltip("Crack overlay sprites for breaking progress (stage 1-4, increasing damage)")]
         [SerializeField] private Sprite[] breakStageSprites;
 
-        [Header("Fallbacks")]
-        [SerializeField] private TileBase defaultGroundTile;
-        [SerializeField] private Sprite defaultOccupantSprite;
+        [Header("Fallback")]
+        [SerializeField] private Sprite fallbackTileSprite;
 
-        private Dictionary<string, GroundTileEntry> _groundLookup;
-        private Dictionary<string, OccupantEntry> _occupantLookup;
+        private Dictionary<string, TileBase> _tileCache;
+        private TileBase _fallbackTile;
 
         public static TileDatabase Instance
         {
@@ -61,114 +32,65 @@ namespace BugFarmer.World
                 {
                     _instance = Resources.Load<TileDatabase>("TileDatabase");
                     if (_instance == null)
-                    {
                         Debug.LogWarning("[TileDatabase] Not found in Resources. Create via Assets > Create > BugFarmer > TileDatabase");
-                    }
-                    else
-                    {
-                        _instance.BuildLookups();
-                    }
                 }
                 return _instance;
             }
         }
 
-        private void BuildLookups()
-        {
-            // Build ground tile lookup
-            _groundLookup = new Dictionary<string, GroundTileEntry>();
-            if (groundTiles != null)
-            {
-                foreach (var entry in groundTiles)
-                {
-                    if (!string.IsNullOrEmpty(entry.tileId))
-                    {
-                        _groundLookup[entry.tileId] = entry;
-                    }
-                }
-            }
-
-            // Build occupant lookup
-            _occupantLookup = new Dictionary<string, OccupantEntry>();
-            if (occupants != null)
-            {
-                foreach (var entry in occupants)
-                {
-                    if (!string.IsNullOrEmpty(entry.occupantId))
-                    {
-                        _occupantLookup[entry.occupantId] = entry;
-                    }
-                }
-            }
-        }
-
         /// <summary>
         /// Get the Unity Tile for a ground tile ID.
-        /// Returns defaultGroundTile if not found.
+        /// Loads sprite from Resources/Tiles/{tileId}.png and creates a Tile at runtime.
         /// </summary>
         public TileBase GetGroundTile(string tileId)
         {
             if (string.IsNullOrEmpty(tileId))
-                return defaultGroundTile;
+                return GetFallbackTile();
 
-            if (_groundLookup == null)
-                BuildLookups();
+            if (_tileCache == null)
+                _tileCache = new Dictionary<string, TileBase>();
 
-            if (_groundLookup.TryGetValue(tileId, out var entry) && entry.tile != null)
-                return entry.tile;
+            if (_tileCache.TryGetValue(tileId, out var cached))
+                return cached;
 
-            return defaultGroundTile;
+            var tex = Resources.Load<Texture2D>($"Tiles/{tileId}");
+            if (tex != null)
+            {
+                // Create sprite with PPU = texture width so any size PNG fits exactly one cell
+                var sprite = Sprite.Create(tex,
+                    new Rect(0, 0, tex.width, tex.height),
+                    new Vector2(0.5f, 0.5f),
+                    tex.width);
+                var tile = ScriptableObject.CreateInstance<Tile>();
+                tile.sprite = sprite;
+                tile.color = Color.white;
+                _tileCache[tileId] = tile;
+                return tile;
+            }
+
+            Debug.LogWarning($"[TileDatabase] No sprite found for tile '{tileId}' in Resources/Tiles/");
+            return GetFallbackTile();
         }
 
-        /// <summary>
-        /// Get the full occupant entry for an occupant ID.
-        /// Returns null if not found.
-        /// </summary>
-        public OccupantEntry GetOccupant(string occupantId)
+        private TileBase GetFallbackTile()
         {
-            if (string.IsNullOrEmpty(occupantId))
-                return null;
+            if (_fallbackTile != null)
+                return _fallbackTile;
 
-            if (_occupantLookup == null)
-                BuildLookups();
+            if (fallbackTileSprite != null)
+            {
+                var tile = ScriptableObject.CreateInstance<Tile>();
+                tile.sprite = fallbackTileSprite;
+                tile.color = new Color(1f, 0f, 1f, 1f); // Magenta so missing tiles are obvious
+                _fallbackTile = tile;
+                return _fallbackTile;
+            }
 
-            return _occupantLookup.TryGetValue(occupantId, out var entry) ? entry : null;
-        }
-
-        /// <summary>
-        /// Get just the sprite for an occupant ID.
-        /// Returns defaultOccupantSprite if not found.
-        /// </summary>
-        public Sprite GetOccupantSprite(string occupantId)
-        {
-            var entry = GetOccupant(occupantId);
-            return entry?.sprite ?? defaultOccupantSprite;
-        }
-
-        /// <summary>
-        /// Check if an occupant ID is placeable (exists in database).
-        /// </summary>
-        public bool IsPlaceable(string occupantId)
-        {
-            return GetOccupant(occupantId) != null;
-        }
-
-        /// <summary>
-        /// Get the footprint size for an occupant (in grid cells).
-        /// This is the collision/placement area, not sprite dimensions.
-        /// </summary>
-        public Vector2Int GetOccupantCellSize(string occupantId)
-        {
-            var entry = GetOccupant(occupantId);
-            if (entry == null)
-                return Vector2Int.one;
-
-            return new Vector2Int(entry.footprintWidth, entry.footprintHeight);
+            return null;
         }
 
         /// <summary>
         /// Get the break stage sprites for visual feedback during breaking.
-        /// Returns null if not configured.
         /// </summary>
         public Sprite[] GetBreakStageSprites()
         {

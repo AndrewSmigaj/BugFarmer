@@ -36,10 +36,16 @@ namespace BugFarmer.Networking
             socket.ReceivedMatchState += HandleMatchState;
         }
 
-        public async Task<WorldCreateResponse> CreateWorld(string name, string accessPolicy = "public")
+        public async Task<WorldCreateResponse> CreateWorld(string name, string accessPolicy = "public", string zoneId = "", bool debugMode = false)
         {
             var session = await NetworkManager.Instance.Session;
-            var request = new WorldCreateRequest { name = name, access_policy = accessPolicy };
+            var request = new WorldCreateRequest
+            {
+                name = name,
+                access_policy = accessPolicy,
+                zone_id = zoneId,
+                debug_mode = debugMode
+            };
             var payload = JsonUtility.ToJson(request);
 
             try
@@ -190,6 +196,8 @@ namespace BugFarmer.Networking
     {
         public string name;
         public string access_policy;
+        public string zone_id;
+        public bool debug_mode;
     }
 
     [Serializable]

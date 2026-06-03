@@ -36,26 +36,8 @@ func (m *Match) handleChunkSubscribe(
 		m.initFruitTreesInChunk(state, chunk, cx, cy, logger)
 	}
 
-	// Check for late joiner: if others already in chunk, request snapshot
-	if state.ChunkSubs[chunkKey] != nil && len(state.ChunkSubs[chunkKey]) > 0 {
-		// Find a connected player to provide snapshot
-		var sourceID string
-		for playerID := range state.ChunkSubs[chunkKey] {
-			if _, connected := state.Presences[playerID]; connected {
-				sourceID = playerID
-				break
-			}
-		}
-
-		if sourceID != "" {
-			logger.Debug("Late joiner %s in chunk %d,%d - requesting snapshot from %s", userID, cx, cy, sourceID)
-			m.requestSnapshotForLateJoiner(logger, dispatcher, state, sourceID, userID, cx, cy)
-		} else {
-			// All subscribers disconnected - late joiner is effectively first active player
-			// They spawn at initial positions; drift detection corrects if others reconnect
-			logger.Debug("Late joiner %s in chunk %d,%d - no connected source available", userID, cx, cy)
-		}
-	}
+	// NOTE: bug state for late joiners is delivered zone-wide via LateJoinSnapshot (OpCode 72)
+	// on MatchJoin, not per-chunk. The old chunk-level peer snapshot request was removed.
 
 	// Add player to chunk subscribers
 	if state.ChunkSubs[chunkKey] == nil {
@@ -115,12 +97,16 @@ func (m *Match) handleTilePlace(
 	userID string,
 	msg TilePlaceMessage,
 ) {
+	logger.Info("TilePlace received from %s: occupant=%s at (%d,%d)", userID, msg.OccupantID, msg.GridX, msg.GridY)
+
 	// Get entity definition
 	def, exists := state.Entities[msg.OccupantID]
 	if !exists {
+		logger.Warn("TilePlace: Unknown entity %s", msg.OccupantID)
 		m.sendWorldError(dispatcher, state, userID, "Unknown item type")
 		return
 	}
+	logger.Info("TilePlace: Found entity def, PlacesCrop=%s", def.PlacesCrop)
 
 	// Validate player has item in inventory
 	player := state.Players[userID]
@@ -196,7 +182,7 @@ func (m *Match) handleTilePlace(
 	logger.Debug("Player %s placed %s at %d,%d", userID, msg.OccupantID, msg.GridX, msg.GridY)
 
 	// Broadcast update to chunk subscribers
-	m.broadcastWorldUpdate(dispatcher, state, cx, cy, msg.GridX, msg.GridY, "", occ)
+	m.broadcastWorldUpdate(dispatcher, state, cx, cy, msg.GridX, msg.GridY, "", occ, false)
 }
 
 // handleSeedPlanting plants a seed on a garden_plot tile
@@ -210,44 +196,62 @@ func (m *Match) handleSeedPlanting(
 	gx, gy int,
 	seedDef *EntityDef,
 ) {
+	logger.Info("DEBUG handleSeedPlanting: START user=%s, grid=(%d,%d), seedDef=%s", userID, gx, gy, seedDef.ID)
+
 	cropType := seedDef.PlacesCrop
+	logger.Info("DEBUG handleSeedPlanting: cropType=%s", cropType)
 
 	// Get crop definition
+	logger.Info("DEBUG handleSeedPlanting: Looking up CropDefs[%s], CropDefs has %d entries", cropType, len(state.CropDefs))
 	cropDef := state.CropDefs[cropType]
 	if cropDef == nil {
+		logger.Warn("DEBUG handleSeedPlanting: cropDef is nil for %s", cropType)
 		m.sendWorldError(dispatcher, state, userID, "Unknown crop type")
 		return
 	}
+	logger.Info("DEBUG handleSeedPlanting: Got cropDef, MaxHarvests=%d", cropDef.MaxHarvests)
 
 	// Get chunk and local coords
 	cx, cy, lx, ly := GlobalToChunk(gx, gy)
-	chunk := state.Chunks[ChunkKey(cx, cy)]
+	chunkKey := ChunkKey(cx, cy)
+	logger.Info("DEBUG handleSeedPlanting: chunk=(%d,%d), local=(%d,%d), key=%s", cx, cy, lx, ly, chunkKey)
+
+	chunk := state.Chunks[chunkKey]
 	if chunk == nil {
+		logger.Warn("DEBUG handleSeedPlanting: chunk is nil for key %s", chunkKey)
 		m.sendWorldError(dispatcher, state, userID, "Chunk not loaded")
 		return
 	}
+	logger.Info("DEBUG handleSeedPlanting: Got chunk")
 
 	// Check tile is garden_plot (accepts_plant)
 	tile := chunk.GetGroundTile(lx, ly)
+	logger.Info("DEBUG handleSeedPlanting: tile=%s", tile)
 	tileDef := state.TileDefs[tile]
 	if tileDef == nil || !tileDef.AcceptsPlant {
+		logger.Warn("DEBUG handleSeedPlanting: tileDef nil or not AcceptsPlant")
 		m.sendWorldError(dispatcher, state, userID, "Can only plant on tilled soil")
 		return
 	}
+	logger.Info("DEBUG handleSeedPlanting: tile accepts plant")
 
 	// Check cell is empty (no occupant)
 	cell, _ := chunk.GetOccupantCell(lx, ly)
 	if !cell.IsEmpty {
+		logger.Warn("DEBUG handleSeedPlanting: cell not empty")
 		m.sendWorldError(dispatcher, state, userID, "Cell is occupied")
 		return
 	}
+	logger.Info("DEBUG handleSeedPlanting: cell is empty")
 
 	// Check no existing crop at this location
 	cropKey := fmt.Sprintf("%d,%d", gx, gy)
 	if state.CropStates[cropKey] != nil {
+		logger.Warn("DEBUG handleSeedPlanting: crop already exists at %s", cropKey)
 		m.sendWorldError(dispatcher, state, userID, "Crop already planted here")
 		return
 	}
+	logger.Info("DEBUG handleSeedPlanting: no existing crop, creating CropState")
 
 	// Create crop state
 	plantID := fmt.Sprintf("plant_%d_%d_%d", gx, gy, state.TickCount)
@@ -264,33 +268,51 @@ func (m *Match) handleSeedPlanting(
 		PlantedTick:       state.TickCount,
 	}
 	state.CropStates[cropKey] = crop
+	logger.Info("DEBUG handleSeedPlanting: Created CropState, plantID=%s", plantID)
 
 	// Place plant occupant
 	plantOccID := "plant_" + cropType
 	occ := &PlacedOccupant{ID: plantOccID, Dir: 0}
 	chunk.SetOccupant(lx, ly, occ)
+	logger.Info("DEBUG handleSeedPlanting: Set occupant %s", plantOccID)
 
 	// Consume seed from inventory
 	player.RemoveItem(slotIndex, 1)
+	logger.Info("DEBUG handleSeedPlanting: Removed seed from inventory slot %d", slotIndex)
 
 	// Send inventory update
+	logger.Info("DEBUG handleSeedPlanting: Creating SlotUpdateMessage")
 	slotMsg := SlotUpdateMessage{
 		SlotIndex: slotIndex,
 		ItemID:    player.ItemSlots[slotIndex].ItemID,
 		Count:     player.ItemSlots[slotIndex].Count,
 	}
-	slotData, _ := json.Marshal(slotMsg)
-	if presence, ok := state.Presences[userID]; ok && presence != nil {
+	slotData, err := json.Marshal(slotMsg)
+	if err != nil {
+		logger.Error("DEBUG handleSeedPlanting: FAILED to marshal SlotUpdateMessage: %v", err)
+	} else {
+		logger.Info("DEBUG handleSeedPlanting: Marshaled SlotUpdateMessage")
+	}
+
+	presence, presenceOk := state.Presences[userID]
+	logger.Info("DEBUG handleSeedPlanting: Presences lookup for %s: found=%v, nil=%v", userID, presenceOk, presence == nil)
+	if presenceOk && presence != nil {
+		logger.Info("DEBUG handleSeedPlanting: Broadcasting OpCodeItemSlotUpdate")
 		dispatcher.BroadcastMessage(OpCodeItemSlotUpdate, slotData, []runtime.Presence{presence}, nil, true)
+		logger.Info("DEBUG handleSeedPlanting: OpCodeItemSlotUpdate sent")
 	}
 
 	// Broadcast occupant placement
-	m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, "", occ)
+	logger.Info("DEBUG handleSeedPlanting: Calling broadcastWorldUpdate")
+	m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, "", occ, false)
+	logger.Info("DEBUG handleSeedPlanting: broadcastWorldUpdate done")
 
 	// Broadcast initial crop state
+	logger.Info("DEBUG handleSeedPlanting: Calling broadcastCropUpdate")
 	m.broadcastCropUpdate(dispatcher, state, gx, gy, crop)
+	logger.Info("DEBUG handleSeedPlanting: broadcastCropUpdate done")
 
-	logger.Debug("Player %s planted %s at %d,%d", userID, cropType, gx, gy)
+	logger.Info("DEBUG handleSeedPlanting: END - Player %s planted %s at %d,%d", userID, cropType, gx, gy)
 }
 
 // handleTileBreak attempts to break/mine an occupant
@@ -440,8 +462,8 @@ func (m *Match) handleTileBreak(
 		// Clear breaking state
 		delete(state.BreakingState, breakKey)
 
-		// Broadcast removal
-		m.broadcastWorldUpdate(dispatcher, state, cx, cy, msg.GridX, msg.GridY, "", nil)
+		// Broadcast removal (clear occupant)
+		m.broadcastWorldUpdate(dispatcher, state, cx, cy, msg.GridX, msg.GridY, "", nil, true)
 	}
 }
 
@@ -497,19 +519,29 @@ func (m *Match) broadcastToChunk(
 }
 
 // broadcastWorldUpdate sends a world cell update to chunk subscribers
+// clearOccupant: true = explicitly remove occupant, false = no change to occupant
 func (m *Match) broadcastWorldUpdate(
 	dispatcher runtime.MatchDispatcher,
 	state *WorldState,
 	cx, cy, gx, gy int,
 	ground string,
 	occupant *PlacedOccupant,
+	clearOccupant bool,
 ) {
 	msg := WorldUpdateMessage{
-		GridX:    gx,
-		GridY:    gy,
-		Ground:   ground,
-		Occupant: occupant,
+		GridX:  gx,
+		GridY:  gy,
+		Ground: ground,
 	}
+	// Only include occupant field when explicitly setting or clearing
+	// nil pointer assigned to interface{} is NOT nil interface, so omitempty won't work
+	if occupant != nil {
+		msg.Occupant = occupant
+	} else if clearOccupant {
+		// Assign typed nil to get "occupant": null in JSON (signals removal)
+		msg.Occupant = (*PlacedOccupant)(nil)
+	}
+	// If neither: msg.Occupant stays as true nil interface, field is omitted (no change)
 	m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeWorldUpdate, msg)
 }
 

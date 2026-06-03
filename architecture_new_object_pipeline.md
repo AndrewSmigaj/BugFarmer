@@ -2,6 +2,27 @@
 
 ## Terraria/Zelda-Style Game Assets for Bug Farmer
 
+> **North star:** chunky Terraria-style pixel art, but **overhead** - a 45-degree
+> top-down view with a slight forward tilt so we still see the front faces of
+> walls, trees, and furniture. Blocky shapes, top-left light, three-shade materials.
+
+---
+
+## Document Map (read this first)
+
+| Document | Role |
+|----------|------|
+| **architecture_new_object_pipeline.md** (this file) | **CANONICAL** - pipeline + style + perspective, single source of truth |
+| `tools/gen_sprites.py` | The implementation of this pipeline (run it; don't hand-curl) |
+| `tools/LLM Guides/MASTER_STYLE_GUIDE.md` | Supporting - style reference (consistent with this doc) |
+| `tools/PERSPECTIVE_GUIDE.md` | Supporting - per-category 3/4-view diagrams |
+| `tools/CHARACTER_DESIGN_GUIDE.md` | Supporting - player/character specifics |
+| `tools/LLM Guides/OBJECT_CREATION_GUIDE.md` | Supporting - JSON entity + Unity `.meta` steps |
+| `tools/LLM Guides/COMFYUI_CLEANUP_PIPELINE.md` | Legacy - ComfyUI not available here; PIL trim instead |
+
+When these disagree, **this file wins**. The old procedural `generate_*_sprites.py`
+scripts are kept only as fallback/reference.
+
 ---
 
 ## Purpose
@@ -298,21 +319,27 @@ This guide must be loaded for every generation. It consolidates `sprite_guidelin
 ### 1. CAMERA & PERSPECTIVE (Non-Negotiable)
 
 ```
-45° overhead (RPG perspective, bird's eye with slight angle)
+45° overhead (RPG perspective): camera ABOVE the object looking DOWN with a slight tilt.
 
 What player sees:
-- Top surfaces of objects (viewed from directly above)
-- Front faces of vertical elements (drawn front-on, 1:1)
+- Top surface (viewed from above) - DOMINANT, ~60% of the sprite, well lit
+- A single FRONT face below it (drawn front-on, 1:1, darker) - ~30%, shows thickness
 
 NEVER show:
 - Left/right side faces
-- Isometric diamond tops
-- True side views
+- Isometric diamond tops (rotated-square tops)
+- True side views / head-on elevations
 
 Plane Rules:
-- Horizontal planes (tops): squares stay square, circles stay circular
+- Horizontal planes (tops): squares stay square, circles stay circular (axis-aligned, NOT rotated)
 - Vertical planes (fronts): darker than tops, drawn front-on
+- Every edge is strictly horizontal or vertical
 - Depth comes from CONTRAST, not perspective distortion
+
+Two failure modes to avoid (both seen in testing):
+- ISOMETRIC: object rotated so two side faces meet at a corner + diamond top  -> WRONG
+- FLAT ELEVATION: pure front view, top surface not visible                    -> WRONG
+- CORRECT: top surface clearly visible from above AND a short front face below
 ```
 
 ### 2. THICKNESS RATIOS (Critical for Terraria Feel)
@@ -749,6 +776,18 @@ Example for tree frame 1:
 
 ## Image Generation Call
 
+> **Use the driver script.** `tools/gen_sprites.py` implements this whole pipeline
+> (prompt build -> API call -> decode -> PIL trim -> place -> .meta patch -> validate)
+> with the *actually-working* method. Prefer it over hand-running curl:
+> ```bash
+> python3 tools/gen_sprites.py --category furniture --dry-run   # preview prompts
+> python3 tools/gen_sprites.py --category furniture             # generate
+> python3 tools/gen_sprites.py --keys table_wood --force        # one asset
+> ```
+> Environment notes (this repo): **no `jq`** (decode b64 with python), **no ComfyUI**
+> (trim with PIL `getbbox()`). The curl + jq + ComfyUI snippets below are legacy
+> reference only.
+
 ### API Endpoints
 
 **For static sprites and reference frames:**
@@ -775,22 +814,29 @@ curl -X POST "https://api.openai.com/v1/images/generations" \
     "background": "transparent",
     "quality": "low",
     "output_format": "png"
-  }' | jq -r '.data[0].b64_json' | base64 --decode > "{output_path}"
+  }' > /tmp/resp.json
+# No jq in this repo - decode the base64 with python:
+python3 -c "import json,base64,sys; d=json.load(open('/tmp/resp.json')); open(sys.argv[1],'wb').write(base64.b64decode(d['data'][0]['b64_json']))" "{output_path}"
 ```
 
-**Note**: gpt-image-1 only supports: 1024x1024, 1024x1536, 1536x1024. Use 1024x1024 for most sprites.
+**Note**: gpt-image-1 only supports: 1024x1024, 1024x1536, 1536x1024. Use 1024x1024 for most sprites. (gpt-image-2 exists but does NOT support `background:"transparent"` - we stay on gpt-image-1.)
 
-### Post-Processing (ComfyUI)
+### Post-Processing (PIL trim - no ComfyUI in this repo)
 
-**DO NOT RESIZE THE BITMAP.** Unity handles scaling at runtime.
+**DO NOT RESIZE THE BITMAP.** Unity handles scaling at runtime via `Transform.localScale`.
 
-Post-processing trims whitespace only:
+Post-processing trims transparent margins only (`gen_sprites.py` does this automatically):
 
+```python
+from PIL import Image
+img = Image.open(raw_path).convert("RGBA")
+assert min(p[3] for p in img.getdata()) < 255, "no transparency"
+bbox = img.getbbox()
+if bbox: img = img.crop(bbox)
+img.save(dest)   # full-resolution trimmed sprite; Unity scales to sprite_w x sprite_h
 ```
-LoadImage → JoinImageWithAlpha → FastAlphaCropper (padding: 0) → SaveImage
-```
 
-The output is the trimmed full-resolution image. Unity scales it to the correct game-world size via `Transform.localScale` when spawning objects.
+(Legacy: a ComfyUI `LoadImage -> FastAlphaCropper -> SaveImage` graph did the same trim, but ComfyUI is not available here.)
 
 ---
 
@@ -951,11 +997,13 @@ BugFarmerClient/Assets/Resources/
 ├── Objects/{key}.png            (from occupants.json or placeables.json key)
 ├── Items/{item_id}_icon.png     (inventory icons)
 ├── Player/{class}_{direction}.png
+├── Tiles/{tile_id}.png          (from tiles.json; TileDatabase loads at runtime)
 └── Effects/{effect_name}.png
-
-BugFarmerClient/Assets/Sprites/
-└── Terrain/{tile_id}.png        (from tiles.json)
 ```
+
+**Note:** ground tiles live in `Resources/Tiles/` (loaded by TileDatabase via
+runtime `Sprite.Create`), NOT `Assets/Sprites/Terrain/`. Player sprites are under
+`Resources/Player/`.
 
 **Loading conventions:**
 - Bugs: `Resources.Load<Sprite>($"Bugs/{spriteId}")` - spriteId from species.json

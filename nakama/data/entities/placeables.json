@@ -1,6 +1,5 @@
 {
   "_comment": "Placeable items: exist in inventory AND world. Sprites load from Resources/Objects/{id}.png",
-
   "dirt_block": {
     "name": "Dirt Block",
     "category": "block",
@@ -10,14 +9,23 @@
     "max_stack": 99,
     "sell_price": 1,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
       "breakable": {
         "hp": 4,
         "required_tool_type": "shovel",
-        "drops": [{"item_id": "dirt_block", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "dirt_block",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -30,7 +38,10 @@
     "max_stack": 99,
     "sell_price": 2,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -38,7 +49,13 @@
         "hp": 4,
         "required_tool_type": "pickaxe",
         "required_tool_tier": 1,
-        "drops": [{"item_id": "stone_block", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "stone_block",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -51,18 +68,26 @@
     "max_stack": 99,
     "sell_price": 3,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
       "breakable": {
         "hp": 3,
         "required_tool_type": "shovel",
-        "drops": [{"item_id": "clay_block", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "clay_block",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
-
   "fence_wood": {
     "name": "Wooden Fence",
     "category": "structure",
@@ -72,14 +97,23 @@
     "max_stack": 99,
     "sell_price": 3,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "fence_wood", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "fence_wood",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -92,14 +126,23 @@
     "max_stack": 99,
     "sell_price": 5,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
       "breakable": {
         "hp": 4,
         "required_tool_type": "pickaxe",
-        "drops": [{"item_id": "fence_stone", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "fence_stone",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -112,14 +155,23 @@
     "max_stack": 99,
     "sell_price": 10,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
       "breakable": {
         "hp": 6,
         "required_tool_type": "pickaxe",
-        "drops": [{"item_id": "fence_iron", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "fence_iron",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -132,14 +184,23 @@
     "max_stack": 99,
     "sell_price": 15,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
       "breakable": {
         "hp": 4,
         "required_tool_type": "pickaxe",
-        "drops": [{"item_id": "fence_electric", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "fence_electric",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -152,14 +213,23 @@
     "max_stack": 99,
     "sell_price": 4,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "fence_corner_wood", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "fence_corner_wood",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -172,14 +242,23 @@
     "max_stack": 99,
     "sell_price": 5,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "door",
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "gate_wood", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "gate_wood",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -192,14 +271,23 @@
     "max_stack": 99,
     "sell_price": 12,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "door",
       "breakable": {
         "hp": 4,
         "required_tool_type": "pickaxe",
-        "drops": [{"item_id": "gate_iron", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "gate_iron",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -207,19 +295,28 @@
     "name": "Wooden Wall",
     "category": "structure",
     "sprite_w": 16,
-    "sprite_h": 20,
+    "sprite_h": 24,
     "stackable": true,
     "max_stack": 99,
     "sell_price": 4,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
       "breakable": {
         "hp": 3,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "wall_wood", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "wall_wood",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -227,19 +324,28 @@
     "name": "Stone Wall",
     "category": "structure",
     "sprite_w": 16,
-    "sprite_h": 20,
+    "sprite_h": 32,
     "stackable": true,
     "max_stack": 99,
     "sell_price": 6,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
       "breakable": {
         "hp": 6,
         "required_tool_type": "pickaxe",
-        "drops": [{"item_id": "wall_stone", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "wall_stone",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -252,33 +358,51 @@
     "max_stack": 99,
     "sell_price": 8,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
       "breakable": {
         "hp": 8,
         "required_tool_type": "pickaxe",
-        "drops": [{"item_id": "wall_brick", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "wall_brick",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
   "door_wood": {
     "name": "Wooden Door",
     "category": "structure",
-    "sprite_w": 16,
+    "sprite_w": 32,
     "sprite_h": 32,
     "stackable": false,
     "sell_price": 8,
     "world": {
-      "footprint": [1, 2],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "door",
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "door_wood", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "door_wood",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -290,18 +414,26 @@
     "stackable": false,
     "sell_price": 20,
     "world": {
-      "footprint": [1, 2],
+      "footprint": [
+        1,
+        2
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "door",
       "breakable": {
         "hp": 4,
         "required_tool_type": "pickaxe",
-        "drops": [{"item_id": "door_iron", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "door_iron",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
-
   "workbench": {
     "name": "Workbench",
     "category": "crafting",
@@ -310,14 +442,23 @@
     "stackable": false,
     "sell_price": 15,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "craft",
       "breakable": {
         "hp": 3,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "workbench", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "workbench",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -329,7 +470,10 @@
     "stackable": false,
     "sell_price": 25,
     "world": {
-      "footprint": [2, 2],
+      "footprint": [
+        2,
+        2
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -338,7 +482,13 @@
       "breakable": {
         "hp": 6,
         "required_tool_type": "pickaxe",
-        "drops": [{"item_id": "furnace", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "furnace",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -350,14 +500,23 @@
     "stackable": false,
     "sell_price": 40,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "craft",
       "breakable": {
         "hp": 8,
         "required_tool_type": "pickaxe",
-        "drops": [{"item_id": "anvil", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "anvil",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -369,7 +528,10 @@
     "stackable": false,
     "sell_price": 60,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -378,7 +540,13 @@
       "breakable": {
         "hp": 8,
         "required_tool_type": "pickaxe",
-        "drops": [{"item_id": "forge", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "forge",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -390,7 +558,10 @@
     "stackable": false,
     "sell_price": 30,
     "world": {
-      "footprint": [2, 2],
+      "footprint": [
+        2,
+        2
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -399,7 +570,13 @@
       "breakable": {
         "hp": 5,
         "required_tool_type": "pickaxe",
-        "drops": [{"item_id": "cauldron", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "cauldron",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -411,14 +588,23 @@
     "stackable": false,
     "sell_price": 15,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "craft",
       "breakable": {
         "hp": 3,
         "required_tool_type": "pickaxe",
-        "drops": [{"item_id": "cooking_pot", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "cooking_pot",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -430,14 +616,23 @@
     "stackable": false,
     "sell_price": 35,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "craft",
       "breakable": {
         "hp": 3,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "loom", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "loom",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -449,14 +644,23 @@
     "stackable": false,
     "sell_price": 40,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "craft",
       "breakable": {
         "hp": 4,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "sawmill", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "sawmill",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -468,14 +672,23 @@
     "stackable": false,
     "sell_price": 45,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "craft",
       "breakable": {
         "hp": 5,
         "required_tool_type": "pickaxe",
-        "drops": [{"item_id": "stonecutter", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "stonecutter",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -487,18 +700,26 @@
     "stackable": false,
     "sell_price": 6,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "c",
       "interactable": true,
       "interaction_type": "craft",
       "breakable": {
         "hp": 4,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "chopping_block", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "chopping_block",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
-
   "table_wood": {
     "name": "Wooden Table",
     "category": "furniture",
@@ -507,12 +728,21 @@
     "stackable": false,
     "sell_price": 10,
     "world": {
-      "footprint": [2, 2],
+      "footprint": [
+        2,
+        2
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "table_wood", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "table_wood",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -524,12 +754,21 @@
     "stackable": false,
     "sell_price": 15,
     "world": {
-      "footprint": [2, 2],
+      "footprint": [
+        2,
+        2
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 4,
         "required_tool_type": "pickaxe",
-        "drops": [{"item_id": "table_stone", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "table_stone",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -541,12 +780,21 @@
     "stackable": false,
     "sell_price": 5,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "chair_wood", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "chair_wood",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -558,12 +806,21 @@
     "stackable": false,
     "sell_price": 15,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "chair_fancy", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "chair_fancy",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -575,14 +832,23 @@
     "stackable": false,
     "sell_price": 20,
     "world": {
-      "footprint": [2, 4],
+      "footprint": [
+        2,
+        4
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "sleep",
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "bed_basic", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "bed_basic",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -594,14 +860,23 @@
     "stackable": false,
     "sell_price": 50,
     "world": {
-      "footprint": [2, 4],
+      "footprint": [
+        2,
+        4
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "sleep",
       "breakable": {
         "hp": 3,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "bed_fancy", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "bed_fancy",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -609,18 +884,27 @@
     "name": "Bookshelf",
     "category": "furniture",
     "sprite_w": 32,
-    "sprite_h": 36,
+    "sprite_h": 30,
     "stackable": false,
     "sell_price": 12,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "bookshelf", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "bookshelf",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -632,12 +916,21 @@
     "stackable": false,
     "sell_price": 8,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "bench", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "bench",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -649,12 +942,21 @@
     "stackable": false,
     "sell_price": 10,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "planter_box", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "planter_box",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -666,16 +968,24 @@
     "stackable": false,
     "sell_price": 5,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "sawhorse", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "sawhorse",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
-
   "chest_wood": {
     "name": "Wooden Chest",
     "category": "storage",
@@ -684,14 +994,23 @@
     "stackable": false,
     "sell_price": 15,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "storage",
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "chest_wood", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "chest_wood",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -703,14 +1022,23 @@
     "stackable": false,
     "sell_price": 30,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "storage",
       "breakable": {
         "hp": 5,
         "required_tool_type": "pickaxe",
-        "drops": [{"item_id": "chest_iron", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "chest_iron",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -722,14 +1050,23 @@
     "stackable": false,
     "sell_price": 25,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "storage",
       "breakable": {
         "hp": 3,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "chest_large", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "chest_large",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -741,14 +1078,23 @@
     "stackable": false,
     "sell_price": 8,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "storage",
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "barrel", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "barrel",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -760,18 +1106,26 @@
     "stackable": false,
     "sell_price": 5,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "c",
       "interactable": true,
       "interaction_type": "storage",
       "breakable": {
         "hp": 1,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "crate", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "crate",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
-
   "torch": {
     "name": "Torch",
     "category": "lighting",
@@ -781,11 +1135,20 @@
     "max_stack": 99,
     "sell_price": 2,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "c",
       "breakable": {
         "hp": 1,
-        "drops": [{"item_id": "torch", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "torch",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -797,12 +1160,21 @@
     "stackable": false,
     "sell_price": 10,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "lamp_floor", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "lamp_floor",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -814,15 +1186,23 @@
     "stackable": false,
     "sell_price": 8,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "c",
       "breakable": {
         "hp": 1,
-        "drops": [{"item_id": "lamp_table", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "lamp_table",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
-
   "beehive_basic": {
     "name": "Basic Beehive",
     "category": "beekeeping",
@@ -831,14 +1211,23 @@
     "stackable": false,
     "sell_price": 25,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "beehive",
       "breakable": {
         "hp": 3,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "beehive_basic", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "beehive_basic",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -850,14 +1239,23 @@
     "stackable": false,
     "sell_price": 50,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "beehive",
       "breakable": {
         "hp": 4,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "beehive_medium", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "beehive_medium",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -869,14 +1267,23 @@
     "stackable": false,
     "sell_price": 75,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "beehive",
       "breakable": {
         "hp": 5,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "beehive_large", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "beehive_large",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -888,14 +1295,23 @@
     "stackable": false,
     "sell_price": 100,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "beehive",
       "breakable": {
         "hp": 6,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "beehive_deluxe", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "beehive_deluxe",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -907,18 +1323,26 @@
     "stackable": false,
     "sell_price": 75,
     "world": {
-      "footprint": [2, 2],
+      "footprint": [
+        2,
+        2
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "craft",
       "breakable": {
         "hp": 5,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "honey_extractor", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "honey_extractor",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
-
   "signpost": {
     "name": "Signpost",
     "category": "structure",
@@ -928,14 +1352,23 @@
     "max_stack": 99,
     "sell_price": 3,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "sign",
       "breakable": {
         "hp": 1,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "signpost", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "signpost",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -947,7 +1380,10 @@
     "stackable": false,
     "sell_price": 50,
     "world": {
-      "footprint": [2, 2],
+      "footprint": [
+        2,
+        2
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -957,7 +1393,11 @@
         "hp": 10,
         "required_tool_type": "pickaxe",
         "drops": [
-          {"item_id": "stone", "count": 4, "chance": 1.0}
+          {
+            "item_id": "stone",
+            "count": 4,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -970,14 +1410,23 @@
     "stackable": false,
     "sell_price": 40,
     "world": {
-      "footprint": [2, 2],
+      "footprint": [
+        2,
+        2
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
       "breakable": {
         "hp": 8,
         "required_tool_type": "pickaxe",
-        "drops": [{"item_id": "fireplace", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "fireplace",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -990,12 +1439,21 @@
     "max_stack": 10,
     "sell_price": 4,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "ladder", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "ladder",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -1008,12 +1466,21 @@
     "max_stack": 20,
     "sell_price": 3,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "net_post", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "net_post",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -1026,14 +1493,23 @@
     "max_stack": 20,
     "sell_price": 4,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "c",
       "interactable": true,
       "interaction_type": "storage",
       "breakable": {
         "hp": 1,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "bait_basket", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "bait_basket",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -1045,18 +1521,26 @@
     "stackable": false,
     "sell_price": 6,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "storage",
       "breakable": {
         "hp": 1,
         "required_tool_type": "axe",
-        "drops": [{"item_id": "collection_tray", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "collection_tray",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
-
   "potted_plant": {
     "name": "Potted Plant",
     "category": "decoration",
@@ -1065,11 +1549,20 @@
     "stackable": false,
     "sell_price": 5,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
-        "drops": [{"item_id": "potted_plant", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "potted_plant",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   },
@@ -1081,14 +1574,23 @@
     "stackable": false,
     "sell_price": 25,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
       "breakable": {
         "hp": 6,
         "required_tool_type": "pickaxe",
-        "drops": [{"item_id": "statue_stone", "count": 1, "chance": 1.0}]
+        "drops": [
+          {
+            "item_id": "statue_stone",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
       }
     }
   }

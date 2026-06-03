@@ -16,7 +16,8 @@ namespace BugFarmer.Util
         {
             if (_initialized) return;
 
-            _logPath = Path.Combine(Application.persistentDataPath, "BugFarmer_debug.log");
+            var pid = System.Diagnostics.Process.GetCurrentProcess().Id;
+            _logPath = Path.Combine(Application.persistentDataPath, $"BugFarmer_debug_{pid}.log");
 
             // Clear old log
             try

@@ -99,10 +99,10 @@ func LoadZoneConfig(zonePath string) (*ZoneConfig, error) {
 
 	// Defaults
 	if zone.Width == 0 {
-		zone.Width = ChunkSize * 16 // 512 cells (16 chunks × 32 cells)
+		zone.Width = ChunkSize * 8 // 256 cells (8 chunks × 32 cells)
 	}
 	if zone.Height == 0 {
-		zone.Height = ChunkSize * 16 // 512 cells (16 chunks × 32 cells)
+		zone.Height = ChunkSize * 8 // 256 cells (8 chunks × 32 cells)
 	}
 
 	return &zone, nil

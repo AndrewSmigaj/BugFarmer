@@ -1,17 +1,17 @@
 name: bugfarmer
 
 logger:
-  level: WARN
+  level: INFO
   stdout: true
 
 session:
   token_expiry_sec: 7200
 
 socket:
-  max_message_size_bytes: 16384
-  max_request_size_bytes: 131072
-  read_buffer_size_bytes: 4096
-  write_buffer_size_bytes: 4096
+  max_message_size_bytes: 8388608   # 8MB
+  max_request_size_bytes: 8388608   # 8MB
+  read_buffer_size_bytes: 1048576   # 1MB
+  write_buffer_size_bytes: 1048576  # 1MB
 
 runtime:
   js_entrypoint: ""

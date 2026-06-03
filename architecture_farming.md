@@ -13,7 +13,7 @@ This integrates with the **Frontier-Gated Deterministic Simulation** system wher
 - Clients simulate locally and deterministically
 - Server finalizes irreversible world state through sparse, ordered events
 - Clients advance only up to the server's published tick frontier
-- All events are applied with **effects-at-t semantics** (see below)
+- All events are applied with **end-of-tick (effects-at-(t+1)) semantics** (see below)
 
 ---
 
@@ -30,27 +30,45 @@ This integrates with the **Frontier-Gated Deterministic Simulation** system wher
 
 ### Event Timing Semantics (CRITICAL)
 
-**Rule: Events with tick T are applied BEFORE simulating tick T.**
-**Effects take place DURING tick T simulation.**
+**Rule: Events with tick T are applied at the END of tick T, after simulating T and
+before simulating T+1. Their effects are first visible in tick T+1 (effects-at-(t+1)).**
+
+This is what `SwarmManager.AdvanceOneTick()` actually does, in both LIVE and REPLAY (they
+share the same code path, so the semantics are identical and cross-client consistent):
 
 ```
-Client receives Event(tick=T)
-  → Apply event immediately
-  → Simulate tick T using updated state
-  → Event effects are visible in tick T
+AdvanceOneTick():
+  → ProcessEventsForTick(simTick)   // apply all events stamped tick == simTick
+  → simTick++                       // now entering the next tick
+  → Simulate(simTick)               // event effects are visible here (T+1)
+```
+
+```
+Client holds Event(tick=T)
+  → Finishes simulating tick T
+  → Applies Event(T) at end of tick T
+  → Simulates tick T+1 using updated state
+  → Event effects are visible starting at tick T+1
 ```
 
 This applies to ALL events:
-- `BUG_REMOVED` - bug disappears during tick T simulation
-- `PLANT_WATER_COMMIT` - water level updated for tick T
-- `PLANT_DAMAGE_COMMIT` - HP updated for tick T
-- `PLANT_STAGE_COMMIT` - stage updated for tick T
+- `BUG_REMOVED` - bug is gone from tick T+1 onward
+- `SWARM_SET_TARGET` - new center leg takes effect from tick T+1 onward
+- `PLANT_WATER_COMMIT` - water level updated for tick T+1
+- `PLANT_DAMAGE_COMMIT` - HP updated for tick T+1
+- `PLANT_STAGE_COMMIT` - stage updated for tick T+1
 
-**Replay algorithm:**
+> Note: the 1-tick (100 ms) application lag is uniform across all clients because LIVE and
+> REPLAY share `AdvanceOneTick`, so it never causes divergence. It is a deliberate, consistent
+> contract — not a reaction-lag bug to "fix" by moving application before simulation.
+
+**Replay algorithm** (same `AdvanceOneTick` as LIVE — events applied at end of tick):
 ```
-for tick in (snapshotTick+1) .. endTick:
-    apply all events where event.tick == tick
-    simulate tick
+simTick = snapshotTick
+while simTick < endTick:
+    apply all events where event.tick == simTick   // end of tick simTick
+    simTick++
+    simulate simTick                                // effects of tick-simTick-1 events visible here
 ```
 
 ### Key Concepts
@@ -314,7 +332,7 @@ Late joiner receives `influence_log` containing all events where `evt.tick > sna
 - `ITEM_ROTTED`
 - `ROTTEN_FRUIT_CONSUMED`
 
-Client replays using effects-at-t semantics (apply event before simulating its tick).
+Client replays using end-of-tick semantics (apply event at the end of its tick, before simulating the next tick — see "Event Timing Semantics").
 
 ### Plant State Storage
 
@@ -483,8 +501,9 @@ Player equips hoe → Left-click on grass/dirt tile → Tile becomes garden_plot
 - Player within tool reach distance
 
 **Implementation:**
-- Uses existing `OpCode 7 (ToolUse)` - currently defined but not implemented
+- Uses `OpCode 7 (ToolUse)` - fully implemented in `handlers_farming.go`
 - Server validates and changes ground tile via `WorldUpdateMessage`
+- Client sends via `ToolUseController.cs` (must be attached to Player GameObject)
 
 ### 2. Seed Planting
 
@@ -1139,7 +1158,7 @@ Day transition triggers:
 | **tiles.json** | `nakama/data/tiles.json` | ✓ Ready | `grass`/`dirt` have `tool_actions.hoe: "garden_plot"` |
 | **garden_plot tile** | `nakama/data/tiles.json:40-44` | ✓ Ready | Has `accepts_plant: true` |
 | **water_shallow tile** | `nakama/data/tiles.json:56-60` | ✓ Ready | For watering can refill |
-| **OpCode 7 (ToolUse)** | `messages.go:13` | ⚠️ Defined only | Handler NOT implemented |
+| **OpCode 7 (ToolUse)** | `messages.go:13`, `handlers_farming.go` | ✓ Implemented | Routes to handleHoe/handleWatering |
 | **GroundItem** | `entities/items.go` | ✓ Ready | Has ID, ItemType, Count, Position, Lifetime |
 | **PlacedOccupant** | `world/occupants.go:5-9` | ✓ Ready | Has ID, Dir, Anchor |
 | **EntityDef** | `world/entities.go:15-42` | ✓ Ready | Has ToolType, ToolTier, Reach, World data |
@@ -1778,6 +1797,41 @@ type RottenFruitReport struct {
 
 ---
 
+## Troubleshooting
+
+### Common Issues
+
+**Hoe/Watering can does nothing:**
+
+1. **Check Unity Setup:** `ToolUseController.cs` must be attached to the Player GameObject
+   - Select Player in scene hierarchy
+   - Click Add Component → ToolUseController
+   - Default settings are fine (cooldown: 0.3, max distance: 4)
+
+2. **Check Client Console:** Look for `[ToolUseController] Sent ToolUse at (X, Y)`
+   - If NOT seen: ToolUseController not attached or tool type not "hoe"/"watering_can"
+   - If seen: Message is being sent, check server
+
+3. **Check Server Logs:** `docker compose logs -f nakama | grep -i "tool\|hoe\|water"`
+   - Should see: `ToolUse received from <userID>: grid(X,Y), equipped=<toolID>`
+   - Should see: `Player X hoed tile at X,Y -> garden_plot`
+
+4. **Check EquippedTool is set:**
+   - Client must send OpCode 27 (EquipTool) when selecting hotbar slot
+   - Verify with server logs: the `equipped=` value should match the tool ID
+
+### Debug Commands
+
+```bash
+# Watch server logs live
+docker compose logs -f nakama | grep -i "tool\|hoe\|water"
+
+# Rebuild server if code changes made
+docker compose build --no-cache builder && docker compose down && docker compose up -d
+```
+
+---
+
 ## Revision History
 
 | Date | Author | Changes |
@@ -1828,3 +1882,9 @@ type RottenFruitReport struct {
 | 2026-01-18 | Claude | Documented: plant.go exists (rename to BreedingPlantState) |
 | 2026-01-18 | Claude | Added complete file path reference for server and client |
 | 2026-01-18 | Claude | Added tool cooldown system for scalability (O(players) not O(players×plants)) |
+| 2026-01-18 | Claude | Added troubleshooting section for debugging hoe/watering can issues |
+| 2026-01-18 | Claude | Updated: OpCode 7 (ToolUse) now fully implemented in handlers_farming.go |
+| 2026-06-02 | Claude | **CORRECTION:** Event semantics are end-of-tick / effects-at-(t+1) as implemented in AdvanceOneTick (events stamped tick T applied after simulating T, visible at T+1), uniform across LIVE+REPLAY. Supersedes the 2026-01-18 "effects-at-t" entry. |
+| 2026-06-02 | Claude | Swarm-center determinism: server emits sparse SWARM_SET_TARGET legs (origin+target+speed); clients march centers in fixed-point. Per-tick center firehose removed; SwarmUpdate made event-driven (SwarmsDirty). |
+| 2026-06-02 | Claude | Recovery routed through zone late-join resync (RequestResync → LateJoinSnapshot); removed legacy chunk-scoped FullSnapshot path. Wired frontier-stall + handshake-wait timers. |
+| 2026-06-02 | Claude | Alert roll now integer-only (CounterRng.Chance 3/10) — removed last float from sim hot path. |

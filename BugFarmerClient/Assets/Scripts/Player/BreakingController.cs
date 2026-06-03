@@ -141,8 +141,11 @@ namespace BugFarmer.Player
         {
             var socket = NetworkManager.Instance?.Socket;
             var match = WorldManager.Instance?.CurrentMatch;
-            if (socket == null || match == null)
+            if (socket == null || !socket.IsConnected || match == null)
+            {
+                Debug.LogWarning("[BreakingController] Socket not connected");
                 return;
+            }
 
             var msg = new TileBreakMessage
             {

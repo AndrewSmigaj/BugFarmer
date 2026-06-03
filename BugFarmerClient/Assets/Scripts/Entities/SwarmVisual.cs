@@ -46,8 +46,12 @@ namespace BugFarmer.Entities
         // Late joiner sync - don't simulate until snapshot received
         private bool _waitingForSnapshot;
 
-        // Cached swarm state
-        private FixedPoint2 _swarmCenter;
+        // Deterministic swarm center, derived each SimulateTick from the swarm's current
+        // movement leg (InfluenceManager.TryComputeSwarmCenter). This is the value bug AI reads.
+        // It is NEVER written from the rendered transform - that would be non-deterministic (#1 fix).
+        private FixedPoint2 _simCenter;
+        // Initial/fallback center (from SwarmData x,y) used until the first SWARM_SET_TARGET leg.
+        private FixedPoint2 _fallbackCenter;
         private float _radius;
 
         public string SwarmId { get; private set; }
@@ -89,7 +93,8 @@ namespace BugFarmer.Entities
 
             _previousCenter = new Vector2(data.x, data.y);
             _targetCenter = _previousCenter;
-            _swarmCenter = FixedPoint2.FromVector2(_previousCenter);
+            _fallbackCenter = FixedPoint2.FromVector2(_previousCenter);
+            _simCenter = _fallbackCenter;
             transform.position = _previousCenter;
             _radius = data.radius;
 
@@ -166,7 +171,7 @@ namespace BugFarmer.Entities
 
             // Calculate offset and start position entirely in fixed-point
             var offset = dir * dist;
-            var startPos = _swarmCenter + offset;
+            var startPos = _simCenter + offset;
 
             // Create agent - MovementFactory.CreateMovement(SpeciesId) is called internally
             // fly → BrownianMovement, butterfly → GlidingMovement, etc.
@@ -202,14 +207,14 @@ namespace BugFarmer.Entities
         }
 
         /// <summary>
-        /// Update from server data - starts interpolation to new center position.
+        /// Update from server data. SwarmUpdate is now event-driven (spawn/despawn/merge/split/
+        /// count/phase change), NOT a per-tick center firehose. The center itself is derived
+        /// deterministically from SWARM_SET_TARGET legs; data.x/y only updates the pre-leg fallback.
         /// </summary>
         public void UpdateFromServer(SwarmData data)
         {
-            // Start center interpolation
-            _previousCenter = transform.position;
-            _targetCenter = new Vector2(data.x, data.y);
-            _centerInterpProgress = 0f;
+            // data.x/y is the initial/fallback center, used only until the first leg event.
+            _fallbackCenter = FixedPoint2.FromVector2(new Vector2(data.x, data.y));
 
             // Update cached state
             _radius = data.radius;
@@ -233,6 +238,8 @@ namespace BugFarmer.Entities
 
         private void UpdateCenterInterpolation()
         {
+            // COSMETIC ONLY. Lerps the rendered transform toward the deterministic _simCenter.
+            // It MUST NOT write any value the simulation reads (that was the #1 determinism bug).
             if (_centerInterpProgress < 1f)
             {
                 _centerInterpProgress += Time.deltaTime / CenterInterpDuration;
@@ -240,7 +247,6 @@ namespace BugFarmer.Entities
                     _centerInterpProgress = 1f;
 
                 transform.position = Vector2.Lerp(_previousCenter, _targetCenter, _centerInterpProgress);
-                _swarmCenter = FixedPoint2.FromVector2(transform.position);
             }
         }
 
@@ -255,6 +261,23 @@ namespace BugFarmer.Entities
         {
             if (!WorldSeedProvider.Instance?.IsInitialized ?? true)
                 return;
+
+            // Derive the deterministic swarm center for THIS tick from the current movement leg.
+            // Stateless closed-form march - identical on every client, in live and replay.
+            // Falls back to the initial/metadata center until the first leg event arrives.
+            FixedPoint2 newCenter = (InfluenceManager.Instance != null &&
+                                     InfluenceManager.Instance.TryComputeSwarmCenter(SwarmId, tick, out var c))
+                ? c
+                : _fallbackCenter;
+
+            if (newCenter != _simCenter)
+            {
+                // Drive cosmetic interpolation from the rendered position toward the new sim center.
+                _previousCenter = transform.position;
+                _targetCenter = newCenter.ToVector2();
+                _centerInterpProgress = 0f;
+            }
+            _simCenter = newCenter;
 
             // FIX #2: MUST iterate bugs in deterministic order (sorted by bugId)
             var sortedBugIds = _bugs.Keys.OrderBy(id => id).ToList();
@@ -276,7 +299,7 @@ namespace BugFarmer.Entities
             // 2. Simulate each bug in deterministic order
             foreach (var bugId in sortedBugIds)
             {
-                _bugs[bugId].Agent.SimulateTick(_swarmCenter, players, tick);
+                _bugs[bugId].Agent.SimulateTick(_simCenter, players, tick);
             }
 
             // Debug: log first bug's state every 100 ticks (sample one swarm)

@@ -237,45 +237,50 @@ namespace BugFarmer.World
                 SetGroundTile(cellPos, ground);
             }
 
-            // Update occupant
-            var occupantToken = root["occupant"];
-            if (occupantToken != null && occupantToken.Type != JTokenType.Null)
+            // Update occupant only if the field is present in the JSON
+            // Missing field = no change, explicit null = removal, object = placement
+            if (root.Property("occupant") != null)
             {
-                // Placement - parse and compute footprint
-                string id = occupantToken["id"]?.Value<string>();
-                int dir = occupantToken["dir"]?.Value<int>() ?? 0;
-                bool anchor = occupantToken["anchor"]?.Value<bool>() ?? false;
-
-                if (anchor && !string.IsNullOrEmpty(id))
+                var occupantToken = root["occupant"];
+                if (occupantToken != null && occupantToken.Type != JTokenType.Null)
                 {
-                    // This is an anchor cell - compute and fill all footprint cells
-                    var footprint = EntityDatabase.GetFootprint(id, dir);
-                    for (int dy = 0; dy < footprint.y; dy++)
-                    {
-                        for (int dx = 0; dx < footprint.x; dx++)
-                        {
-                            var fpCellPos = new Vector2Int(gx + dx, gy + dy);
-                            bool isAnchor = (dx == 0 && dy == 0);
-                            UpdateOccupantCellData(fpCellPos, id, dir, isAnchor);
+                    // Placement - parse and compute footprint
+                    string id = occupantToken["id"]?.Value<string>();
+                    int dir = occupantToken["dir"]?.Value<int>() ?? 0;
+                    bool anchor = occupantToken["anchor"]?.Value<bool>() ?? false;
 
-                            // Only render at anchor cell
-                            if (isAnchor)
+                    if (anchor && !string.IsNullOrEmpty(id))
+                    {
+                        // This is an anchor cell - compute and fill all footprint cells
+                        var footprint = EntityDatabase.GetFootprint(id, dir);
+                        for (int dy = 0; dy < footprint.y; dy++)
+                        {
+                            for (int dx = 0; dx < footprint.x; dx++)
                             {
-                                var occData = new OccupantCellData
+                                var fpCellPos = new Vector2Int(gx + dx, gy + dy);
+                                bool isAnchor = (dx == 0 && dy == 0);
+                                UpdateOccupantCellData(fpCellPos, id, dir, isAnchor);
+
+                                // Only render at anchor cell
+                                if (isAnchor)
                                 {
-                                    Occupant = new PlacedOccupant { id = id, dir = dir, anchor = true }
-                                };
-                                RenderOccupant(fpCellPos, occData);
+                                    var occData = new OccupantCellData
+                                    {
+                                        Occupant = new PlacedOccupant { id = id, dir = dir, anchor = true }
+                                    };
+                                    RenderOccupant(fpCellPos, occData);
+                                }
                             }
                         }
                     }
                 }
+                else
+                {
+                    // Explicit null = removal
+                    ClearOccupantAndFootprint(gx, gy);
+                }
             }
-            else
-            {
-                // Removal - look up old occupant to get footprint, then clear all cells
-                ClearOccupantAndFootprint(gx, gy);
-            }
+            // If "occupant" key is missing, don't touch occupant (ground-only update)
         }
 
         /// <summary>
@@ -553,9 +558,28 @@ namespace BugFarmer.World
             if (groundTilemap == null)
                 return;
 
+            // Update visual tilemap
             var tile = TileDatabase.Instance?.GetGroundTile(tileId);
             var tilePos = new Vector3Int(cellPos.x, cellPos.y, 0);
             groundTilemap.SetTile(tilePos, tile);
+
+            // Also update chunk data so GetGroundAt() returns correct value
+            int cx = cellPos.x / ChunkSize;
+            int cy = cellPos.y / ChunkSize;
+            if (cellPos.x < 0 && cellPos.x % ChunkSize != 0) cx--;
+            if (cellPos.y < 0 && cellPos.y % ChunkSize != 0) cy--;
+
+            var chunkPos = new Vector2Int(cx, cy);
+            if (_loadedChunks.TryGetValue(chunkPos, out var chunk))
+            {
+                int lx = cellPos.x - cx * ChunkSize;
+                int ly = cellPos.y - cy * ChunkSize;
+                if (ly >= 0 && ly < ChunkSize && lx >= 0 && lx < ChunkSize)
+                {
+                    if (chunk.Ground[ly] != null)
+                        chunk.Ground[ly][lx] = tileId;
+                }
+            }
         }
 
         private void RenderOccupant(Vector2Int cellPos, OccupantCellData occData)
@@ -606,6 +630,7 @@ namespace BugFarmer.World
             var targetSize = EntityDatabase.GetSpriteSize(occupantId);
             float spriteHeightCells = targetSize.y / 16f;
             worldPos.y += pivot.y * spriteHeightCells * cellSize;
+            worldPos.z = -0.1f; // Slightly in front of tilemap to guarantee render order
             go.transform.position = worldPos;
 
             // Configure sprite renderer

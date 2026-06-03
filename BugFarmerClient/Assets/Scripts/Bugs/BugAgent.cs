@@ -55,8 +55,9 @@ namespace BugFarmer.Bugs
         private FixedPoint _reactionRadiusSqr;
         private FixedPoint _wanderRadiusSqr;
 
-        // Alert chance per check (30%)
-        private const float AlertChance = 0.3f;
+        // Alert chance per check (3/10 = 30%). Integer ratio to keep the roll float-free.
+        private const int AlertChanceNumerator = 3;
+        private const int AlertChanceDenominator = 10;
 
         public BugAgent(long worldSeed, string swarmId, string speciesId, int bugId, FixedPoint2 startPosition)
         {
@@ -226,16 +227,18 @@ namespace BugFarmer.Bugs
                     }
                 }
 
-                // Counter-based RNG for alert - ALWAYS compute, use conditionally
-                // This prevents desync: same hash regardless of whether we're in "if (!_isAlerted)" branch
-                float alertRoll = RandomFloat(RngPurpose.Alert);
+                // Integer counter-based roll for alert - ALWAYS compute, use conditionally.
+                // This prevents desync: same hash regardless of whether we're in the "if (!_isAlerted)"
+                // branch, and the integer comparison is bit-identical across platforms.
+                bool alertNotice = CounterRng.Chance(_worldSeed, SwarmId, BugId, _currentTick,
+                    RngPurpose.Alert, AlertChanceNumerator, AlertChanceDenominator);
 
                 if (nearestId != null)
                 {
                     // Player in range - roll chance to notice
                     if (!_isAlerted)
                     {
-                        if (alertRoll < AlertChance)
+                        if (alertNotice)
                         {
                             _isAlerted = true;
                             TargetPlayerId = nearestId;

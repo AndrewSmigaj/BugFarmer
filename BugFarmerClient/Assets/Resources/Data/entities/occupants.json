@@ -368,6 +368,22 @@
       }
     }
   },
+  "torch_wall": {
+    "name": "Wall Torch",
+    "category": "lighting",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "torch_wall", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
   "ant_mound": {
     "name": "Ant Mound",
     "category": "natural",

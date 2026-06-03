@@ -4,13 +4,13 @@ import "encoding/json"
 
 // Client → Server OpCodes
 const (
-	OpCodeMovement       int64 = 1  // Player position update
-	OpCodeAction         int64 = 2  // Generic interaction (talk to NPC, open chest)
-	OpCodeChunkSubscribe int64 = 3  // Subscribe to chunk updates
-	OpCodeChunkUnsub     int64 = 4  // Unsubscribe from chunk updates
-	OpCodeTilePlace      int64 = 5  // Place floor/wall tile
-	OpCodeTileBreak      int64 = 6  // Remove floor/wall tile
-	OpCodeToolUse        int64 = 7  // Use tool on target (axe, net, spray)
+	OpCodeMovement       int64 = 1 // Player position update
+	OpCodeAction         int64 = 2 // Generic interaction (talk to NPC, open chest)
+	OpCodeChunkSubscribe int64 = 3 // Subscribe to chunk updates
+	OpCodeChunkUnsub     int64 = 4 // Unsubscribe from chunk updates
+	OpCodeTilePlace      int64 = 5 // Place floor/wall tile
+	OpCodeTileBreak      int64 = 6 // Remove floor/wall tile
+	OpCodeToolUse        int64 = 7 // Use tool on target (axe, net, spray)
 	// 8-9 reserved for future
 )
 
@@ -71,13 +71,13 @@ const (
 
 // Influence Event OpCodes (Server-Authored Bug Sync)
 const (
-	OpCodeInfluenceBroadcast  int64 = 71 // S→C: Player cell change events (deterministic bug AI)
-	OpCodeLateJoinSnapshot    int64 = 72 // S→C: Full state for late joiner (fixed tick range)
-	OpCodeZoneHandoff         int64 = 73 // S→C: Handoff watermark after late join (confirms live)
-	OpCodeZoneSnapshot        int64 = 75 // C→S: Authority sends periodic snapshot
-	OpCodeZoneAuthority       int64 = 76 // S→C: Authority assigned/changed
-	OpCodeZoneHash            int64 = 77 // C→S: Client sends state hash for validation
-	OpCodeZoneTickBroadcast   int64 = 78 // S→C: Tick frontier update (every tick, 10Hz)
+	OpCodeInfluenceBroadcast int64 = 71 // S→C: Player cell change events (deterministic bug AI)
+	OpCodeLateJoinSnapshot   int64 = 72 // S→C: Full state for late joiner (fixed tick range)
+	OpCodeZoneHandoff        int64 = 73 // S→C: Handoff watermark after late join (confirms live)
+	OpCodeZoneSnapshot       int64 = 75 // C→S: Authority sends periodic snapshot
+	OpCodeZoneAuthority      int64 = 76 // S→C: Authority assigned/changed
+	OpCodeZoneHash           int64 = 77 // C→S: Client sends state hash for validation
+	OpCodeZoneTickBroadcast  int64 = 78 // S→C: Tick frontier update (every tick, 10Hz)
 )
 
 // Farming OpCodes
@@ -123,9 +123,24 @@ type SwarmData struct {
 	Radius     float32 `json:"radius"`
 	Count      int     `json:"count"`
 	Facing     int     `json:"facing"`
-	Phase      string  `json:"phase"`                      // "feeding", "reproducing", "idle"
-	NextBugID  int     `json:"next_bug_id,omitempty"`      // Total bugs ever spawned (for late joiners)
-	RemovedIDs []int   `json:"removed_ids,omitempty"`      // Bug IDs to skip when spawning (for late joiners)
+	Phase      string  `json:"phase"`                 // "feeding", "reproducing", "idle"
+	NextBugID  int     `json:"next_bug_id,omitempty"` // Total bugs ever spawned (for late joiners)
+	RemovedIDs []int   `json:"removed_ids,omitempty"` // Bug IDs to skip when spawning (for late joiners)
+	// NOTE: X,Y is the swarm's CURRENT center, used by a client only as the initial/fallback
+	// center until the first SWARM_SET_TARGET leg event arrives. Per-tick motion is NOT here.
+
+	// In-flight movement leg active at the snapshot tick (late-join hydration only).
+	// Lets a resyncing/late-joining client re-anchor the swarm center BEFORE replay instead
+	// of freezing at X,Y until the next Think. Values are fixed-point (×1000), identical to
+	// the originating SWARM_SET_TARGET event so the hydrated leg reproduces the live march
+	// bit-for-bit. Legs that begin after the snapshot tick arrive via the replayed influence log.
+	HasTarget    bool  `json:"has_target,omitempty"`
+	LegOriginX   int   `json:"leg_origin_x,omitempty"`
+	LegOriginY   int   `json:"leg_origin_y,omitempty"`
+	LegTargetX   int   `json:"leg_target_x,omitempty"`
+	LegTargetY   int   `json:"leg_target_y,omitempty"`
+	LegSpeed     int   `json:"leg_speed,omitempty"`
+	LegStartTick int64 `json:"leg_start_tick,omitempty"`
 }
 
 // SwarmUpdateMessage is broadcast to clients (OpCode 20)
@@ -182,11 +197,11 @@ type FullInventorySyncMessage struct {
 // MoveSlotMessage is sent by client (OpCode 28)
 // Handles drag/drop and stack splitting
 type MoveSlotMessage struct {
-	SourceType  string `json:"source_type"`  // "bug" or "item"
+	SourceType  string `json:"source_type"` // "bug" or "item"
 	SourceIndex int    `json:"source_index"`
-	DestType    string `json:"dest_type"`    // "bug" or "item"
+	DestType    string `json:"dest_type"` // "bug" or "item"
 	DestIndex   int    `json:"dest_index"`
-	Count       int    `json:"count"`        // -1 = all, else specific amount
+	Count       int    `json:"count"` // -1 = all, else specific amount
 }
 
 // ErrorMessage is sent when an operation fails (OpCode 40)
@@ -316,41 +331,39 @@ type BugSampleData struct {
 	RngState uint32 `json:"rng_state"` // RNG state for deterministic sync
 
 	// Behavior state
-	Behavior      string `json:"behavior"`       // "wander", "flee", "attack", "curious"
-	TargetID      string `json:"target_id"`      // Player ID bug is reacting to (empty if none)
+	Behavior      string `json:"behavior"`  // "wander", "flee", "attack", "curious"
+	TargetID      string `json:"target_id"` // Player ID bug is reacting to (empty if none)
 	IsAlerted     bool   `json:"is_alerted"`
 	AlertCooldown int    `json:"alert_cooldown"`
 
 	// Movement state
 	TicksUntilChange int `json:"ticks_until_change"`
-	IntentDirX       int `json:"intent_dir_x"`     // Brownian: intent direction
+	IntentDirX       int `json:"intent_dir_x"` // Brownian: intent direction
 	IntentDirY       int `json:"intent_dir_y"`
-	IntentTargetX    int `json:"intent_target_x"`  // Gliding: intent target
+	IntentTargetX    int `json:"intent_target_x"` // Gliding: intent target
 	IntentTargetY    int `json:"intent_target_y"`
-	CurrentDirX      int `json:"current_dir_x"`    // Gliding: current direction
+	CurrentDirX      int `json:"current_dir_x"` // Gliding: current direction
 	CurrentDirY      int `json:"current_dir_y"`
 }
 
-// SampleRequestMessage sent to one client (OpCode 61)
-// Server asks client for positions of specific bugs at current tick
+// SampleRequestMessage sent to every client in a chunk (OpCode 61).
+// Server asks each client for its ComputeStateHash() at the settled tick Tick.
 type SampleRequestMessage struct {
-	ChunkX  int              `json:"chunk_x"`
-	ChunkY  int              `json:"chunk_y"`
-	Tick    int64            `json:"tick"`    // Server tick when request was made
-	Samples []BugSampleQuery `json:"samples"` // Which bugs to report positions for
+	ChunkX int   `json:"chunk_x"`
+	ChunkY int   `json:"chunk_y"`
+	Tick   int64 `json:"tick"` // Settled tick the client should hash (behind the frontier)
 }
 
-// SampleResponseMessage from client (OpCode 62)
+// SampleResponseMessage from client (OpCode 62).
+// Carries the client's state hash at Tick. HasHash=false means the client no longer has
+// that tick buffered (e.g. just resynced) and abstains from the comparison.
 type SampleResponseMessage struct {
-	ChunkX  int             `json:"chunk_x"`
-	ChunkY  int             `json:"chunk_y"`
-	Tick    int64           `json:"tick"` // Tick these positions are from
-	Samples []BugSampleData `json:"samples"`
+	ChunkX  int   `json:"chunk_x"`
+	ChunkY  int   `json:"chunk_y"`
+	Tick    int64 `json:"tick"`     // Tick this hash is from (echoes the request)
+	Hash    int64 `json:"hash"`     // ComputeStateHash() at Tick
+	HasHash bool  `json:"has_hash"` // False = tick not buffered, abstain
 }
-
-// SampleBroadcastMessage to all clients (OpCode 63)
-// Server broadcasts sample for comparison - same structure as response
-type SampleBroadcastMessage = SampleResponseMessage
 
 // SnapshotRequestMessage from client (OpCode 66)
 // Client requests full snapshot when drift detected
@@ -394,7 +407,7 @@ type InteractionReportMessage struct {
 const (
 	InfluencePlayerCellEnter = "PLAYER_CELL_ENTER"
 	InfluencePlayerCellLeave = "PLAYER_CELL_LEAVE"
-	InfluenceSwarmCenterMove = "SWARM_CENTER_MOVE"
+	InfluenceSwarmSetTarget  = "SWARM_SET_TARGET" // Re-anchoring movement leg for a swarm center
 	InfluenceBugRemoved      = "BUG_REMOVED"
 	InfluenceBugSpawned      = "BUG_SPAWNED"
 	// Farming/ecology events
@@ -415,6 +428,14 @@ type InfluenceEvent struct {
 	CellY    int    `json:"cell_y,omitempty"`
 	SwarmID  string `json:"swarm_id,omitempty"` // For BUG_* and SWARM_* events
 	BugID    int    `json:"bug_id,omitempty"`   // For BUG_* events
+
+	// SWARM_SET_TARGET leg fields (fixed-point ×1000). Self-describes one movement
+	// leg so clients re-anchor center to Origin and walk toward Target at Speed/tick.
+	OriginX int `json:"origin_x,omitempty"`
+	OriginY int `json:"origin_y,omitempty"`
+	TargetX int `json:"target_x,omitempty"`
+	TargetY int `json:"target_y,omitempty"`
+	Speed   int `json:"speed,omitempty"` // World units per tick (×1000)
 }
 
 // InfluenceBroadcastMessage sent to all clients (OpCode 71)
@@ -425,10 +446,10 @@ type InfluenceBroadcastMessage struct {
 // ZoneAuthorityMessage broadcast when authority assigned/changed (OpCode 76)
 // Includes bootstrap tick + watermark for first client (FIX #7)
 type ZoneAuthorityMessage struct {
-	ZoneID           string `json:"zone_id"`
-	AuthorityID      string `json:"authority_id"`
+	ZoneID            string `json:"zone_id"`
+	AuthorityID       string `json:"authority_id"`
 	AuthoritativeTick int64  `json:"authoritative_tick"` // Bootstrap tick for first client
-	LastEventSeq     int64  `json:"last_event_seq"`      // FIX #7: Initial watermark
+	LastEventSeq      int64  `json:"last_event_seq"`     // FIX #7: Initial watermark
 }
 
 // ZoneTickBroadcastMessage sent EVERY tick (10Hz) by server (OpCode 78)
@@ -480,10 +501,10 @@ type LateJoinSnapshot struct {
 	SnapshotTick         int64               `json:"snapshot_tick"`           // T_snapshot (fixed)
 	EndTick              int64               `json:"end_tick"`                // T_end (fixed)
 	SnapshotLastEventSeq int64               `json:"snapshot_last_event_seq"` // Last seq baked into snapshot state
-	EndLastEventSeq      int64               `json:"end_last_event_seq"`     // Current watermark at end_tick
-	Swarms               []SwarmSnapshotData `json:"swarms"`                 // Bug state from authority
-	SwarmMetadata        []SwarmData         `json:"swarm_metadata"`         // Swarm metadata for creating visuals
-	InfluenceLog         []InfluenceEvent    `json:"influence_log"`          // Events in (snapshot_last_seq, end_last_seq]
+	EndLastEventSeq      int64               `json:"end_last_event_seq"`      // Current watermark at end_tick
+	Swarms               []SwarmSnapshotData `json:"swarms"`                  // Bug state from authority
+	SwarmMetadata        []SwarmData         `json:"swarm_metadata"`          // Swarm metadata for creating visuals
+	InfluenceLog         []InfluenceEvent    `json:"influence_log"`           // Events in (snapshot_last_seq, end_last_seq]
 	AuthorityID          string              `json:"authority_id"`
-	PlayerCells          []PlayerCellData    `json:"player_cells"`           // Current player positions (state, not events)
+	PlayerCells          []PlayerCellData    `json:"player_cells"` // Current player positions (state, not events)
 }

@@ -22,10 +22,12 @@ func (m *Match) handleToolUse(
 ) {
 	player := state.Players[userID]
 	if player == nil {
+		logger.Warn("ToolUse: player %s not found", userID)
 		return
 	}
 
 	toolID := player.EquippedTool
+	logger.Info("ToolUse received from %s: grid(%d,%d), equipped=%s", userID, msg.GridX, msg.GridY, toolID)
 	if toolID == "" {
 		m.sendWorldError(dispatcher, state, userID, "No tool equipped")
 		return
@@ -33,9 +35,12 @@ func (m *Match) handleToolUse(
 
 	toolDef := state.Entities[toolID]
 	if toolDef == nil {
+		logger.Warn("ToolUse: toolDef for %s not found in Entities", toolID)
 		m.sendWorldError(dispatcher, state, userID, "Unknown tool")
 		return
 	}
+
+	logger.Info("ToolUse: tool %s has type=%s", toolID, toolDef.ToolType)
 
 	// Route based on tool type
 	switch toolDef.ToolType {
@@ -84,6 +89,7 @@ func (m *Match) handleHoe(
 
 	// Validate cooldown
 	if !m.validateToolCooldown(state, player, tick) {
+		logger.Debug("Hoe: cooldown not passed for %s", userID)
 		return
 	}
 
@@ -92,12 +98,14 @@ func (m *Match) handleHoe(
 	chunkKey := ChunkKey(cx, cy)
 	chunk := state.Chunks[chunkKey]
 	if chunk == nil {
+		logger.Warn("Hoe: chunk %s not loaded for gx=%d, gy=%d", chunkKey, gx, gy)
 		m.sendWorldError(dispatcher, state, userID, "Chunk not loaded")
 		return
 	}
 
 	// Get tile at position
 	tile := chunk.GetGroundTile(lx, ly)
+	logger.Debug("Hoe: tile at (%d,%d) = %s", gx, gy, tile)
 	tileDef := state.TileDefs[tile]
 	if tileDef == nil {
 		m.sendWorldError(dispatcher, state, userID, "Unknown tile")
@@ -121,8 +129,8 @@ func (m *Match) handleHoe(
 	// Change ground tile
 	chunk.Ground[ly][lx] = newTile
 
-	// Broadcast WorldUpdate with new ground tile
-	m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, newTile, nil)
+	// Broadcast WorldUpdate with new ground tile (no occupant change)
+	m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, newTile, nil, false)
 
 	logger.Debug("Player %s hoed tile at %d,%d -> %s", userID, gx, gy, newTile)
 }
@@ -221,6 +229,12 @@ func (m *Match) handleWatering(
 	crop.WateringsToday++
 	slot.Metadata["uses"]--
 
+	// Change ground tile to wet variant for visual feedback (no occupant change)
+	if tile == "garden_plot" {
+		chunk.Ground[ly][lx] = "garden_plot_wet"
+		m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, "garden_plot_wet", nil, false)
+	}
+
 	// Send updates
 	m.sendSlotUpdate(dispatcher, state, userID, slotIndex, slot)
 	m.broadcastCropUpdate(dispatcher, state, gx, gy, crop)
@@ -257,6 +271,12 @@ func (m *Match) broadcastCropUpdate(
 	gx, gy int,
 	crop *entities.CropState,
 ) {
+	// DEBUG: Log entry and validate parameters
+	if crop == nil {
+		// This would cause a nil pointer dereference - log and return safely
+		return
+	}
+
 	cx, cy, _, _ := GlobalToChunk(gx, gy)
 
 	msg := CropUpdateMessage{
@@ -367,8 +387,8 @@ func (m *Match) destroyCrop(
 		chunk.ClearOccupant(lx, ly)
 	}
 
-	// Broadcast removal
-	m.broadcastWorldUpdate(dispatcher, state, cx, cy, crop.GridX, crop.GridY, "", nil)
+	// Broadcast removal (clear occupant)
+	m.broadcastWorldUpdate(dispatcher, state, cx, cy, crop.GridX, crop.GridY, "", nil, true)
 }
 
 // spawnHarvestDrops creates ground items from harvest
@@ -415,9 +435,19 @@ func (m *Match) spawnHarvestDrops(
 
 // processCropGrowth advances crop growth based on water accumulation
 func (m *Match) processCropGrowth(state *WorldState, dispatcher runtime.MatchDispatcher) {
+	// DEBUG: Log if CropStates is not empty (only occasionally to reduce spam)
+	cropCount := len(state.CropStates)
+
 	for cropKey, crop := range state.CropStates {
+		// DEBUG: Validate crop is not nil
+		if crop == nil {
+			// ERROR: nil crop in CropStates - this shouldn't happen
+			continue
+		}
+
 		cropDef := state.CropDefs[crop.PlantType]
 		if cropDef == nil {
+			// DEBUG: Log when cropDef lookup fails
 			continue
 		}
 
@@ -436,6 +466,9 @@ func (m *Match) processCropGrowth(state *WorldState, dispatcher runtime.MatchDis
 			_ = cropKey // suppress unused warning
 		}
 	}
+
+	// Suppress unused warning
+	_ = cropCount
 }
 
 // processFruitTrees handles fruit growth and natural dropping
@@ -444,6 +477,9 @@ func (m *Match) processFruitTrees(
 	dispatcher runtime.MatchDispatcher,
 	logger runtime.Logger,
 ) {
+	// Collect keys to delete after iteration to avoid map modification during range
+	var toDelete []string
+
 	for treeKey, tree := range state.FruitTreeStates {
 		// Get tree entity definition
 		cx, cy, lx, ly := GlobalToChunk(tree.GridX, tree.GridY)
@@ -454,8 +490,8 @@ func (m *Match) processFruitTrees(
 
 		cell, _ := chunk.GetOccupantCell(lx, ly)
 		if cell.IsEmpty || cell.Occupant == nil {
-			// Tree was removed, clean up state
-			delete(state.FruitTreeStates, treeKey)
+			// Tree was removed, mark for cleanup
+			toDelete = append(toDelete, treeKey)
 			continue
 		}
 
@@ -491,6 +527,11 @@ func (m *Match) processFruitTrees(
 				m.dropFruitFromTree(dispatcher, state, tree, treeDef.World.FruitType, logger)
 			}
 		}
+	}
+
+	// Clean up removed trees after iteration
+	for _, key := range toDelete {
+		delete(state.FruitTreeStates, key)
 	}
 }
 
@@ -552,13 +593,20 @@ func (m *Match) dropFruitFromTree(
 func (m *Match) processGroundItemDecay(state *WorldState, dispatcher runtime.MatchDispatcher) {
 	tickDelta := 0.1 // 10Hz = 0.1 seconds per tick
 
+	// Collect items to remove after iteration to avoid map modification during range
+	type itemToRemove struct {
+		id   string
+		item *entities.GroundItem
+	}
+	var toRemove []itemToRemove
+
 	for itemID, item := range state.GroundItems {
 		// Skip items that don't decay
 		if item.DecaysTo == "" {
 			// Check normal lifetime despawn
 			item.Lifetime -= float32(tickDelta)
 			if item.Lifetime <= 0 {
-				m.removeGroundItem(state, dispatcher, itemID, item)
+				toRemove = append(toRemove, itemToRemove{itemID, item})
 			}
 			continue
 		}
@@ -601,6 +649,11 @@ func (m *Match) processGroundItemDecay(state *WorldState, dispatcher runtime.Mat
 
 			_ = oldType // suppress unused warning
 		}
+	}
+
+	// Remove expired items after iteration
+	for _, r := range toRemove {
+		m.removeGroundItem(state, dispatcher, r.id, r.item)
 	}
 }
 

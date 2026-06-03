@@ -45,17 +45,28 @@ namespace BugFarmer.Player
             // Check if we have a farming tool equipped
             string toolId = InventoryManager.Instance?.GetEquippedToolId();
             if (string.IsNullOrEmpty(toolId))
+            {
+                Debug.Log("[ToolUseController] No tool equipped");
                 return;
+            }
 
             // Get tool definition to check if it's a farming tool
             var toolDef = EntityDatabase.Get(toolId);
             if (toolDef == null)
+            {
+                Debug.LogWarning($"[ToolUseController] Tool definition not found for: {toolId}");
                 return;
+            }
 
             string toolType = toolDef.ToolType;
+            Debug.Log($"[ToolUseController] Tool {toolId} has type: {toolType}");
+
             // Only handle hoe and watering_can - other tools use BreakingController
             if (toolType != "hoe" && toolType != "watering_can")
+            {
+                Debug.Log($"[ToolUseController] Tool type {toolType} not handled (use BreakingController)");
                 return;
+            }
 
             if (_mainCamera == null)
                 return;
@@ -84,8 +95,11 @@ namespace BugFarmer.Player
         {
             var socket = NetworkManager.Instance?.Socket;
             var match = WorldManager.Instance?.CurrentMatch;
-            if (socket == null || match == null)
+            if (socket == null || !socket.IsConnected || match == null)
+            {
+                Debug.LogWarning("[ToolUseController] Socket not connected, cannot send ToolUse");
                 return;
+            }
 
             var msg = new ToolUseMessage
             {

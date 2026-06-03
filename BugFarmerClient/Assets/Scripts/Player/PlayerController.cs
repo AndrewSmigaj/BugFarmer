@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using Nakama;
 using BugFarmer.Networking;
 
@@ -45,6 +46,20 @@ namespace BugFarmer.Player
 
         private void Update()
         {
+            // Don't move until we've joined a match
+            if (WorldManager.Instance?.CurrentMatch == null)
+            {
+                Velocity = Vector2.zero;
+                return;
+            }
+
+            // Skip input when typing in UI
+            if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject != null)
+            {
+                Velocity = Vector2.zero;
+                return;
+            }
+
             // Read input
             float horizontal = Input.GetAxisRaw("Horizontal");
             float vertical = Input.GetAxisRaw("Vertical");

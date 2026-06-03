@@ -79,6 +79,9 @@ namespace BugFarmer.Data
             // Consumable
             public string Effect;
 
+            // Seed properties - places a crop when used on garden_plot
+            public string PlacesCrop;
+
             // World presence (null for inventory-only items)
             public WorldData World;
         }
@@ -168,7 +171,8 @@ namespace BugFarmer.Data
                 MiningSpeed = data["mining_speed"]?.Value<float>() ?? 1f,
                 Durability = data["durability"]?.Value<int>() ?? 0,
                 CatchRadius = data["catch_radius"]?.Value<float>() ?? 0f,
-                Effect = data["effect"]?.Value<string>()
+                Effect = data["effect"]?.Value<string>(),
+                PlacesCrop = data["places_crop"]?.Value<string>()
             };
 
             // Parse sprite dimensions (required for occupants/placeables)
@@ -281,11 +285,22 @@ namespace BugFarmer.Data
 
         /// <summary>
         /// Check if an entity can be placed in the world by players.
+        /// Includes placeables and seeds (which place crops).
         /// </summary>
         public static bool IsPlaceable(string id)
         {
             var def = Get(id);
-            return def != null && def.EntityType == "placeable";
+            if (def == null) return false;
+            return def.EntityType == "placeable" || !string.IsNullOrEmpty(def.PlacesCrop);
+        }
+
+        /// <summary>
+        /// Check if an item is a seed that places a crop.
+        /// </summary>
+        public static bool IsSeed(string id)
+        {
+            var def = Get(id);
+            return def != null && !string.IsNullOrEmpty(def.PlacesCrop);
         }
 
         /// <summary>

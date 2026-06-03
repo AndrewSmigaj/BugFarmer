@@ -24,8 +24,8 @@ from typing import Optional, Dict, List, Tuple, Set, Any
 
 # Constants matching server zone.go
 CHUNK_SIZE = 32  # 32x32 cells per chunk
-ZONE_CHUNKS = 16  # 16x16 chunks per zone
-ZONE_SIZE = CHUNK_SIZE * ZONE_CHUNKS  # 512x512 cells per zone
+ZONE_CHUNKS = 8   # 8x8 chunks per zone
+ZONE_SIZE = CHUNK_SIZE * ZONE_CHUNKS  # 256x256 cells per zone
 
 # Occupant footprints from item_database.md
 # Format: (width, height) in cells

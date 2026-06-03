@@ -3,10 +3,10 @@
   "name": "Underground Passages",
   "row": 3,
   "col": 1,
-  "width": 512,
-  "height": 512,
+  "width": 256,
+  "height": 256,
   "spawn_point": [
-    256,
+    128,
     55
   ],
   "biome_type": "cave"

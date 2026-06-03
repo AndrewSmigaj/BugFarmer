@@ -30,7 +30,7 @@ def main():
         seed=seed
     )
 
-    center = ZONE_SIZE // 2  # 256
+    center = ZONE_SIZE // 2
 
     # =========================================================================
     # BASE TERRAIN - cave_floor everywhere (revealed when blocks mined)
@@ -90,22 +90,22 @@ def main():
     create_outcroppings(zone)
 
     # =========================================================================
-    # SCATTER ORE VEINS
+    # SCATTER ORE VEINS (quartered for smaller zone)
     # =========================================================================
     print("Placing ore veins...")
 
     # Coal and copper - common throughout
-    place_ore_veins(zone, "ore_coal_block", count=100, min_y=20, max_y=ZONE_SIZE)
-    place_ore_veins(zone, "ore_copper_block", count=90, min_y=20, max_y=ZONE_SIZE)
+    place_ore_veins(zone, "ore_coal_block", count=25, min_y=20, max_y=ZONE_SIZE)
+    place_ore_veins(zone, "ore_copper_block", count=22, min_y=20, max_y=ZONE_SIZE)
 
     # Iron - more common in mid-south
-    place_ore_veins(zone, "ore_iron_block", count=50, min_y=ZONE_SIZE // 4, max_y=ZONE_SIZE)
+    place_ore_veins(zone, "ore_iron_block", count=12, min_y=ZONE_SIZE // 4, max_y=ZONE_SIZE)
 
     # Silver - rare, south only
-    place_ore_veins(zone, "ore_silver_block", count=20, min_y=ZONE_SIZE // 2, max_y=ZONE_SIZE)
+    place_ore_veins(zone, "ore_silver_block", count=5, min_y=ZONE_SIZE // 2, max_y=ZONE_SIZE)
 
     # Gold - very rare, deep south
-    place_ore_veins(zone, "ore_gold_block", count=8, min_y=int(ZONE_SIZE * 0.7), max_y=ZONE_SIZE)
+    place_ore_veins(zone, "ore_gold_block", count=2, min_y=int(ZONE_SIZE * 0.7), max_y=ZONE_SIZE)
 
     # =========================================================================
     # CARVE ORGANIC MINE TUNNEL (from north, going south)
@@ -113,7 +113,7 @@ def main():
     print("Carving organic mine tunnel...")
 
     entrance_x = center
-    tunnel_length = int(ZONE_SIZE * 0.4)  # About 200 cells deep
+    tunnel_length = int(ZONE_SIZE * 0.4)
 
     carve_organic_tunnel(zone, entrance_x, 0, tunnel_length)
 
@@ -160,34 +160,33 @@ def main():
     carve_organic_branch(zone, center - 3, 130, direction="west", length=80)
 
     # Southeast branch (deeper)
-    carve_organic_branch(zone, center + 2, 180, direction="southeast", length=60)
+    carve_organic_branch(zone, center + 2, 180, direction="southeast", length=50)
 
     # =========================================================================
-    # NATURAL CAVERNS (10-12, organic shapes, various sizes)
+    # NATURAL CAVERNS (organic shapes, various sizes)
     # =========================================================================
     print("Carving natural caverns...")
 
     caverns = [
         # (cx, cy, radius, has_water, has_crystals, irregularity)
         # Western caverns
-        (70, 150, 18, False, True, 0.35),    # Large crystal cavern
-        (90, 280, 14, True, False, 0.3),     # Water cavern
-        (50, 400, 20, False, False, 0.4),    # Large empty cavern
+        (50, 120, 18, False, True, 0.35),    # Large crystal cavern
+        (70, 200, 14, True, False, 0.3),     # Water cavern
+        (45, 225, 20, False, False, 0.4),    # Large empty cavern
 
         # Eastern caverns
-        (420, 120, 15, False, True, 0.3),    # Crystal cavern
-        (450, 250, 12, True, True, 0.25),    # Mixed cavern
-        (400, 380, 22, True, False, 0.35),   # Large water cavern
+        (200, 100, 15, False, True, 0.3),    # Crystal cavern
+        (210, 185, 12, True, True, 0.25),    # Mixed cavern
+        (190, 215, 22, True, False, 0.35),   # Large water cavern
 
         # Central/South caverns
-        (200, 320, 16, False, True, 0.3),    # Crystal cavern
-        (300, 280, 13, False, False, 0.25),  # Medium cavern
-        (350, 450, 18, True, True, 0.35),    # Large mixed cavern
-        (150, 480, 14, False, True, 0.3),    # Deep crystal cavern
+        (130, 200, 16, False, True, 0.3),    # Crystal cavern
+        (160, 160, 13, False, False, 0.25),  # Medium cavern
+        (100, 175, 18, True, True, 0.35),    # Large mixed cavern
 
         # Small hidden caverns
-        (280, 400, 10, False, False, 0.2),   # Small hidden
-        (180, 220, 11, True, False, 0.25),   # Small water
+        (100, 235, 10, False, False, 0.2),   # Small hidden
+        (155, 140, 11, True, False, 0.25),   # Small water
     ]
 
     for cx, cy, radius, has_water, has_crystals, irreg in caverns:
@@ -228,9 +227,6 @@ def main():
 
 def create_cliff_edge(zone):
     """Create a rocky, uneven cliff edge at the north (transition from village)."""
-    # The north edge should have scattered rocks/boulders outside the solid cliff
-    # and an uneven cliff face
-
     for x in range(ZONE_SIZE):
         # Vary the cliff depth using noise
         base_depth = 8
@@ -241,30 +237,30 @@ def create_cliff_edge(zone):
         for y in range(min(cliff_start, 15)):
             zone.remove_occupant(x, y)
 
-        # Add scattered rocks just below the cliff edge
+        # Add scattered stone blocks just below the cliff edge
         if random.random() < 0.15 and cliff_start < 12:
             zone.remove_occupant(x, cliff_start)
-            zone.place_occupant(x, cliff_start, "rock_large" if random.random() < 0.3 else "rock_small")
+            zone.place_occupant(x, cliff_start, "stone_block")
 
 
 def create_outcroppings(zone):
     """Add natural rock outcroppings along zone edges."""
     # West edge outcroppings
-    for _ in range(8):
+    for _ in range(4):
         y = random.randint(50, ZONE_SIZE - 50)
         depth = random.randint(8, 20)
         height = random.randint(15, 35)
         carve_outcropping(zone, 0, y, depth, height, direction="east")
 
     # East edge outcroppings
-    for _ in range(8):
+    for _ in range(4):
         y = random.randint(50, ZONE_SIZE - 50)
         depth = random.randint(8, 20)
         height = random.randint(15, 35)
         carve_outcropping(zone, ZONE_SIZE - 1, y, depth, height, direction="west")
 
     # South edge outcroppings (fewer, leads to deeper zones)
-    for _ in range(5):
+    for _ in range(2):
         x = random.randint(50, ZONE_SIZE - 50)
         depth = random.randint(6, 15)
         width = random.randint(12, 30)
@@ -371,7 +367,6 @@ def carve_organic_branch(zone, start_x, start_y, direction, length):
 
 def carve_organic_cavern(zone, cx, cy, radius, irregularity=0.3):
     """Carve an organic, non-circular cavern."""
-    # Generate noise-based shape like we did for ponds
     num_bumps = random.randint(5, 9)
     bump_phases = [random.random() * 2 * math.pi for _ in range(num_bumps)]
     bump_amplitudes = [random.uniform(0.1, irregularity) for _ in range(num_bumps)]
@@ -460,7 +455,7 @@ def expose_ore_in_tunnels(zone, tunnel_x, tunnel_length):
 
 def place_cavern_objects(zone, cx, cy, radius, has_crystals):
     """Place objects inside a carved cavern."""
-    # More mushrooms
+    # Mushrooms
     for _ in range(random.randint(5, 12)):
         angle = random.random() * 2 * math.pi
         dist = random.random() * (radius - 2)
@@ -470,14 +465,14 @@ def place_cavern_objects(zone, cx, cy, radius, has_crystals):
             mtype = "mushroom_glow" if random.random() < 0.4 else "mushroom_red"
             zone.place_occupant(ox, oy, mtype)
 
-    # Stalagmites around edges
+    # Stone blocks around edges (cavern walls)
     for _ in range(random.randint(4, 8)):
         angle = random.random() * 2 * math.pi
         dist = radius * random.uniform(0.6, 0.95)
         ox = int(cx + dist * math.cos(angle))
         oy = int(cy + dist * math.sin(angle))
         if not zone.is_blocked(ox, oy):
-            zone.place_occupant(ox, oy, "stalagmite")
+            zone.place_occupant(ox, oy, "stone_block")
 
     if has_crystals:
         # Crystal clusters

@@ -66,6 +66,17 @@ namespace BugFarmer.Networking
         public string phase;           // "feeding", "reproducing", "idle"
         public int next_bug_id;        // Total bugs ever spawned (for late joiners)
         public int[] removed_ids;      // Bug IDs to skip when spawning (for late joiners)
+
+        // In-flight movement leg active at snapshot_tick (late-join hydration only).
+        // Fixed-point (value/1000 = actual), identical to the originating SWARM_SET_TARGET
+        // event so the hydrated leg reproduces the live center march bit-for-bit.
+        public bool has_target;
+        public int leg_origin_x;
+        public int leg_origin_y;
+        public int leg_target_x;
+        public int leg_target_y;
+        public int leg_speed;
+        public long leg_start_tick;
     }
 
     /// <summary>
@@ -163,20 +174,19 @@ namespace BugFarmer.Networking
     }
 
     /// <summary>
-    /// Server requests positions for specific bugs (OpCode 61).
+    /// Server requests our state hash at a settled tick (OpCode 61).
     /// </summary>
     [Serializable]
     public class SampleRequestMessage
     {
         public int chunk_x;
         public int chunk_y;
-        public long tick;
-        public BugSampleQuery[] samples;
+        public long tick;   // Settled tick to hash (behind the frontier)
     }
 
     /// <summary>
-    /// Client responds with positions (OpCode 62).
-    /// Also used for SampleBroadcast (OpCode 63).
+    /// Client responds with its ComputeStateHash() at the requested tick (OpCode 62).
+    /// has_hash=false means the tick is no longer buffered (abstain from comparison).
     /// </summary>
     [Serializable]
     public class SampleResponseMessage
@@ -184,7 +194,8 @@ namespace BugFarmer.Networking
         public int chunk_x;
         public int chunk_y;
         public long tick;
-        public BugSampleData[] samples;
+        public long hash;
+        public bool has_hash;
     }
 
     /// <summary>
@@ -237,6 +248,13 @@ namespace BugFarmer.Networking
         public int cell_y;
         public string swarm_id;            // For BUG_* and SWARM_* events
         public int bug_id;                 // For BUG_* events
+
+        // For SWARM_SET_TARGET: re-anchoring movement leg (fixed-point, value/1000 = actual)
+        public int origin_x;               // Center position at start of leg
+        public int origin_y;
+        public int target_x;               // Center destination
+        public int target_y;
+        public int speed;                  // Distance per tick (fixed-point)
     }
 
     /// <summary>

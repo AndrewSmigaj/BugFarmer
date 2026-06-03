@@ -1,5 +1,103 @@
 # Character Design Guide for Bug Farmer
 
+## Architecture Decision: LAYERED / Modular Player (2026-06-02)
+
+The player is **composited at runtime from stacked layers**, not a single baked sprite.
+This is the only approach that scales to armor + helmets + clothing without a combinatorial
+sprite explosion (skin x shirt x pants x chest x helmet). Decided with the user; 4 skin tones
+to start.
+
+### Layer stack (back -> front; one SpriteRenderer per layer, ascending sortingOrder)
+1. `base_body`  - bare humanoid: skin tone, face, hands, feet. One set per **skin tone** (4).
+2. `pants`      - clothing bottom (legs/waist).
+3. `shirt`      - clothing top (torso/arms).
+4. `chest`      - chest armor, drawn OVER shirt (equipment slot).
+5. `hair`       - hair, sits on top of the head; one set per hair style/color.
+6. `helmet`     - head equipment, drawn OVER hair (equipment slot).
+
+(`EquippedTool` already renders separately and is out of this stack.)
+
+### Shared anchor template (the thing that makes layers line up)
+Every layer is **32x48**, same pivot, same canonical pose per direction. All layers register
+to ONE master silhouette so they overlay pixel-perfect. The **`*_down` body is the master**;
+up/left/right derive from it. Documented anchor rows (32x48 grid):
+- head center column: x=16; head box rows ~0-19
+- shoulder/neck line: row ~22
+- hand height: row ~32 (arms at side)
+- waist line: row ~36
+- feet baseline: row ~47
+A helmet must occupy the head box; a chest layer the shoulder->waist band; pants waist->feet.
+
+### Registration strategy (CRITICAL - how AI parts align) — PAPER-DOLL (spike-verified 2026-06-02)
+gpt-image-1 `generations` produces independent images that will NOT register on their own.
+
+**REJECTED — images/edits inpainting.** Spike result: gpt-image-1's `edits` endpoint does NOT
+honor the mask as a hard constraint. Even with a correct head-only mask it regenerated the WHOLE
+character (tank top -> armor, arms reshaped, torso drifted). The base body is not preserved, so no
+clean layer can be extracted. Do not use edits for layer production.
+(Repro: `python3 gen_sprites.py --player-spike` -> `raw_sprites/spike_head_tan_down.png`.)
+
+**CHOSEN — paper-doll with anchor offsets we control.** Spike-verified working:
+- **Base bodies**: `generations` against the template prompt (one per skin tone x direction).
+- **Equipment / clothing layers**: generate each piece **STANDALONE** (`item_layer_prompt`):
+  "draw ONLY the item, no head/body, sized to fit a chibi character, 3/4 top-down, transparent."
+  Trim with `getbbox()`.
+- **Registration is done by US, not the model:** each layer gets **anchor-offset metadata**
+  (where it pins relative to the body's head/torso/waist anchor + a scale factor). Unity stacks
+  it over an UNCHANGED body via a SpriteRenderer. Body stays pixel-identical; only the offset/scale
+  are tuned per slot.
+  (Repro: `python3 gen_sprites.py --paperdoll-spike` -> `raw_sprites/spike_paperdoll_tan_down.png`
+  shows the body intact + helmet composited at the head anchor.)
+- Anchor knobs live in `paperdoll_spike()` (`scale`, `px`, `py`) — promote these to per-item
+  metadata when building the real layer set. Head item ~= head bbox width; sits ~12% above head top.
+
+### Data model (server + network) - prerequisite, NOT yet built
+- `PlayerState` (state.go): add `Appearance { SkinTone, Hair, HairColor }` + equipment slots
+  `{ Head, Chest, Legs }` holding item_id or empty. `EquippedTool` already exists.
+- `items.json`: wearables get `equip_slot` (head/chest/legs) + a layer sprite key.
+- `EntityData` / join payload: must carry appearance + visible equipment so REMOTE clients
+  render the same stack (today it only sends id/type/x/y/facing).
+
+### Resources layout
+```
+Resources/Player/body/{tone}_{dir}.png        # e.g. body/tan_down.png   (4 tones x 4 dir)
+Resources/Player/hair/{style}_{dir}.png
+Resources/Player/wear/{slot}/{item}_{dir}.png # wear/head/iron_helm_down.png, wear/chest/..., wear/legs/...
+```
+File naming stays `{thing}_{direction}.png` per existing convention.
+
+### Animation / walk frames (spike-verified 2026-06-02)
+Spikes (`--walk-sheet` then `--segment-sheet`) established:
+- gpt-image-1 **CAN** draw several consistent walk poses of the same chibi in one sheet
+  (foot-forward / passing poses read as a walk).
+- It will **NOT** honor a requested frame COUNT or even spacing (asked 4, got 3, uneven). So
+  fixed-column slicing is wrong.
+- **Working extraction:** generate sheet -> `segment_sheet()` splits figures by TRANSPARENT
+  column gaps (variable count) -> trim + re-center each onto the fixed 32x48 anchor -> frames.
+  Verified: 3 clean figures extracted from `walksheet_medium_down.png`.
+- Frame count is nondeterministic -> normalize: pad/loop to a target (a 2-frame alternating
+  step-bob is enough at this zoom; 4 is nicer). Re-roll a sheet if it yields too few.
+
+**Animation x layering cost (the expensive combination, needs a decision):**
+Full per-frame layered art = every equipment layer redrawn & registered for every walk frame x
+direction = explosion. Pragmatic compromise to recommend:
+- Animate the **base body** only (legs/arms move) -> a few frames per direction per skin tone
+  (skin tones still come from recoloring ONE master frame set).
+- Equipment/clothing = a SINGLE overlay per direction that rides the body's torso/head anchor
+  each frame (slight bob), NOT redrawn per frame. Cheap, reads fine at game zoom.
+- Only redraw equipment per-frame later if a specific item visibly needs it.
+
+### Build order (de-risk before mass-generating)
+1. **Registration spike** (cheap, ~2-3 API calls): one base body -> `images/edits` add a
+   helmet -> confirm the helmet pixels land on the head box and overlay cleanly. PROVE the
+   edits approach before scaling. (If it fails, fall back to hand-registered atlas.)
+2. Generate 4 base bodies (4 dir each) = the "variants to choose from".
+3. Hair + a couple clothing layers; verify stacking in Unity.
+4. Wire the data model (Go + network + multi-SpriteRenderer client) — separate effort,
+   C# cannot be compiled here (needs Unity).
+
+---
+
 ## Design Philosophy
 
 ### Style Reference: Terraria-Cute-Retro
