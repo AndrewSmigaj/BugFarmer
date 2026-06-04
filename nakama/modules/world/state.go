@@ -30,7 +30,7 @@ type WorldState struct {
 	TickCount    int64
 	WorldSeed    int64  // Global seed for deterministic bug simulation
 	ZoneID       string // Which zone was loaded (for logging)
-	DebugMode    bool   // Disables split/merge, continuous spawning
+	StaticSim    bool   // Disables split/merge, continuous spawning (set from zone bug_spawning.static)
 	Players      map[string]*PlayerState
 	Presences    map[string]runtime.Presence
 

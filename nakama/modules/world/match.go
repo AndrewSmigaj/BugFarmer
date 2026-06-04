@@ -64,28 +64,12 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 		zoneID = "village_21"
 	}
 
-	// Extract debug_mode param
-	debugMode, _ := params["debug_mode"].(bool)
-
-	if debugMode {
-		logger.Info("DEBUG MODE ENABLED - zone: %s", zoneID)
-	}
-
 	// Create world state
 	state := NewWorldState(worldID, ownerID, name, accessPolicy)
 	state.ZoneID = zoneID
-	state.DebugMode = debugMode
 
-	// Initialize world seed for deterministic bug simulation
-	state.WorldSeed = rand.Int63()
-	logger.Info("World seed: %d", state.WorldSeed)
-
-	// Load species from config (use debug config in debug mode)
-	speciesPath := "data/species.json"
-	if debugMode {
-		speciesPath = "data/species_debug.json"
-	}
-	species, err := entities.LoadSpecies(speciesPath)
+	// Load species from the canonical config
+	species, err := entities.LoadSpecies("data/species.json")
 	if err != nil {
 		logger.Warn("Failed to load species config: %v - using defaults", err)
 		state.Species = defaultFlySpecies()
@@ -102,7 +86,19 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 		zoneConfig = &ZoneConfig{ZoneID: "village_21", BiomeType: "village"}
 	}
 	state.CurrentZone = zoneConfig
-	logger.Info("Loaded zone: %s", zoneConfig.ZoneID)
+
+	// Static-sim zones (test/deterministic) disable continuous spawn, merge, and split.
+	if zoneConfig.BugSpawning != nil {
+		state.StaticSim = zoneConfig.BugSpawning.Static
+	}
+
+	// World seed: fixed from zone config for deterministic runs, else random.
+	if zoneConfig.Seed != 0 {
+		state.WorldSeed = zoneConfig.Seed
+	} else {
+		state.WorldSeed = rand.Int63()
+	}
+	logger.Info("Loaded zone: %s (static=%v, seed=%d)", zoneConfig.ZoneID, state.StaticSim, state.WorldSeed)
 
 	// Load tile definitions (Phase 4)
 	state.TileDefs, err = LoadTileDefinitions("data/tiles.json")
@@ -945,10 +941,15 @@ func (m *Match) spawnSwarmForSpecies(state *WorldState, speciesID string, logger
 		LocalY: worldY - float32(int(worldY)/chunkSize*chunkSize),
 	}
 
-	// Create swarm with count in lower-middle range
+	// Determine bug count: fixed swarm_size if set (deterministic test zones),
+	// else species MinSwarmSize plus a random amount in the lower-middle range.
 	countRange := species.MaxSwarmSize / 2
 	if countRange < 1 {
 		countRange = 1
+	}
+	count := species.MinSwarmSize + rand.Intn(countRange)
+	if cap.SwarmSize > 0 {
+		count = cap.SwarmSize
 	}
 	id, _ := uuid.NewV4()
 	swarm := &entities.SwarmState{
@@ -956,7 +957,7 @@ func (m *Match) spawnSwarmForSpecies(state *WorldState, speciesID string, logger
 		SpeciesID: speciesID,
 		Position:  pos,
 		Radius:    species.SwarmRadius,
-		Count:     species.MinSwarmSize + rand.Intn(countRange),
+		Count:     count,
 		WanderRad: species.WanderRadius,
 		HomePos:   pos,
 	}
@@ -975,7 +976,7 @@ func (m *Match) spawnSwarmForSpecies(state *WorldState, speciesID string, logger
 // checkContinuousSpawning spawns new swarms over time until species caps are reached.
 // Should be called periodically from the tick loop.
 func (m *Match) checkContinuousSpawning(state *WorldState, tick int64, logger runtime.Logger) {
-	if state.DebugMode {
+	if state.StaticSim {
 		return // Skip continuous spawning in debug mode
 	}
 
@@ -1016,7 +1017,7 @@ func (m *Match) checkContinuousSpawning(state *WorldState, tick int64, logger ru
 
 // checkSwarmMerging merges nearby swarms of the same species
 func (m *Match) checkSwarmMerging(state *WorldState, chunkSize int, logger runtime.Logger) {
-	if state.DebugMode {
+	if state.StaticSim {
 		return // Skip merging in debug mode
 	}
 
@@ -1069,7 +1070,7 @@ func (m *Match) checkSwarmMerging(state *WorldState, chunkSize int, logger runti
 
 // checkSwarmSplitting randomly splits large swarms
 func (m *Match) checkSwarmSplitting(state *WorldState, chunkSize int, logger runtime.Logger) {
-	if state.DebugMode {
+	if state.StaticSim {
 		return // Skip splitting in debug mode
 	}
 

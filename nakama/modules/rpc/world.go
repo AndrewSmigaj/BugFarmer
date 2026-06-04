@@ -21,6 +21,7 @@ type WorldMetadata struct {
 	OwnerID      string `json:"owner_id"`
 	Name         string `json:"name"`
 	AccessPolicy string `json:"access_policy"`
+	ZoneID       string `json:"zone_id"`
 	MatchID      string `json:"match_id"`
 	CreatedAt    int64  `json:"created_at"`
 }
@@ -30,8 +31,7 @@ type WorldMetadata struct {
 type WorldCreateRequest struct {
 	Name         string `json:"name"`
 	AccessPolicy string `json:"access_policy"`
-	ZoneID       string `json:"zone_id,omitempty"`    // Optional zone override (default: village_21)
-	DebugMode    bool   `json:"debug_mode,omitempty"` // Optional debug mode (disables split/merge/spawn)
+	ZoneID       string `json:"zone_id,omitempty"` // Optional zone override (default: village_21)
 }
 
 type WorldCreateResponse struct {
@@ -94,7 +94,6 @@ func WorldCreate(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runt
 		"name":          req.Name,
 		"access_policy": req.AccessPolicy,
 		"zone_id":       req.ZoneID,
-		"debug_mode":    req.DebugMode,
 	}
 	matchID, err := nk.MatchCreate(ctx, "world", matchParams)
 	if err != nil {
@@ -108,6 +107,7 @@ func WorldCreate(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runt
 		OwnerID:      userID,
 		Name:         req.Name,
 		AccessPolicy: req.AccessPolicy,
+		ZoneID:       req.ZoneID,
 		MatchID:      matchID,
 		CreatedAt:    time.Now().Unix(),
 	}
@@ -236,6 +236,7 @@ func WorldJoin(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtim
 			"owner_id":      metadata.OwnerID,
 			"name":          metadata.Name,
 			"access_policy": metadata.AccessPolicy,
+			"zone_id":       metadata.ZoneID,
 		}
 		newMatchID, err := nk.MatchCreate(ctx, "world", matchParams)
 		if err != nil {

@@ -15,6 +15,7 @@ const ChunkSize = 32
 type BugSpawnConfig struct {
 	SpeciesCaps map[string]SpeciesCap `json:"species_caps"` // species_id → cap config
 	SpawnAreas  []SpawnArea           `json:"spawn_areas"`  // WHERE species can spawn
+	Static      bool                  `json:"static"`       // If true: no continuous spawn, merge, or split (test/deterministic zones)
 }
 
 // SpeciesCap defines spawn limits for one species in a zone.
@@ -22,6 +23,7 @@ type SpeciesCap struct {
 	Initial       int     `json:"initial"`        // Swarms to spawn on match init
 	Max           int     `json:"max"`            // Zone-wide max for this species
 	SpawnInterval float32 `json:"spawn_interval"` // Seconds between continuous spawn attempts
+	SwarmSize     int     `json:"swarm_size"`     // Fixed bugs per swarm (0 = use species Min/Max range)
 }
 
 // SpawnArea defines where a species can spawn.
@@ -46,8 +48,9 @@ type ZoneConfig struct {
 	Width       int             `json:"width"`        // Width in cells (default 512)
 	Height      int             `json:"height"`       // Height in cells (default 512)
 	SpawnPoint  [2]int          `json:"spawn_point"`  // Default spawn (cell coords)
-	BiomeType   string          `json:"biome_type"`   // "meadow", "forest", "cave", etc.
-	BugSpawning *BugSpawnConfig `json:"bug_spawning"` // Zone-level bug spawn config (optional)
+	BiomeType   string          `json:"biome_type"`     // "meadow", "forest", "cave", etc.
+	Seed        int64           `json:"seed,omitempty"` // Fixed world seed for deterministic runs (0 = random)
+	BugSpawning *BugSpawnConfig `json:"bug_spawning"`   // Zone-level bug spawn config (optional)
 }
 
 // ChunkData stores the two-layer tile data for a 32x32 cell chunk.
@@ -61,8 +64,8 @@ type ZoneConfig struct {
 type ChunkData struct {
 	ChunkX    int                 `json:"chunk_x"`
 	ChunkY    int                 `json:"chunk_y"`
-	Ground    [][]string          `json:"ground"`    // 16x16 tile IDs
-	Occupants [][]json.RawMessage `json:"occupants"` // 16x16 polymorphic
+	Ground    [][]string          `json:"ground"`    // 32x32 tile IDs (ChunkSize per side)
+	Occupants [][]json.RawMessage `json:"occupants"` // 32x32 polymorphic
 }
 
 // OccupantCell represents parsed occupant layer data.
