@@ -37,3 +37,8 @@ scenes. Depends on the two items above.
 - Authoring brand-new zones.
 - Weapons / tools rework (currently weak).
 - An enemy.
+- Active/inactive zones: simulate bugs in detail only in zones that have players; cheaply
+  aggregate the rest; pause a zone entirely when it has no one. Finer-grained than today's
+  per-match pause-when-empty (which only idles when the *whole* world is empty).
+- Free long-idle matches + clean up accumulated world metadata (matches currently idle when
+  empty but are never freed; harness `world_create` runs leave stale metadata).
