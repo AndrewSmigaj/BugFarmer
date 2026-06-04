@@ -51,7 +51,6 @@ SOURCES = {
 }
 
 API_URL = "https://api.openai.com/v1/images/generations"
-EDITS_URL = "https://api.openai.com/v1/images/edits"
 PLAYER_DIR = os.path.join(RESOURCES, "Player")
 
 # --- Player layered-character system (see CHARACTER_DESIGN_GUIDE.md) ----------
@@ -160,107 +159,6 @@ def body_prompt(tone, direction):
         "This is the BASE BODY layer of a layered character - clean, uncluttered, skin only.",
     ])
 
-
-def equip_prompt(item_desc, slot):
-    region = {"head": "head", "chest": "torso/chest", "legs": "lower body/legs"}[slot]
-    return (
-        f"Add {item_desc} onto this EXACT character's {region}. "
-        "Keep the character's pose, scale, framing, pixel-art style and TOP-LEFT lighting "
-        "identical. Do not move or resize the character. Only draw the new item where the "
-        f"{region} is. Same chunky Terraria chibi pixel-art style, transparent background."
-    )
-
-
-def head_mask(base_img, slot):
-    """Build an edits mask (RGBA, transparent = editable) registered to the
-    character's actual alpha bbox. Region depends on equip slot."""
-    from PIL import Image as _Image
-    w, h = base_img.size
-    bbox = base_img.getbbox()  # (l, t, r, b) of the character
-    if not bbox:
-        bbox = (0, 0, w, h)
-    l, t, r, b = bbox
-    ch = b - t
-    # Vertical band per slot, as fraction of the character's own height.
-    bands = {
-        "head":  (0.00, 0.46),   # top of head -> chin
-        "chest": (0.40, 0.74),   # shoulders -> waist
-        "legs":  (0.66, 1.00),   # waist -> feet
-    }
-    f0, f1 = bands[slot]
-    y0 = int(t + f0 * ch)
-    y1 = int(t + f1 * ch)
-    pad = max(4, int((r - l) * 0.08))
-    x0 = max(0, l - pad)
-    x1 = min(w, r + pad)
-    # Opaque everywhere (preserve), transparent in the edit band (regenerate).
-    mask = _Image.new("RGBA", (w, h), (0, 0, 0, 255))
-    hole = _Image.new("RGBA", (max(1, x1 - x0), max(1, y1 - y0)), (0, 0, 0, 0))
-    mask.paste(hole, (x0, y0))
-    return mask
-
-
-def call_edits(prompt, image_path, mask_path, api_key, model="gpt-image-1"):
-    """images/edits: paint onto an existing image inside the mask's transparent
-    region. multipart/form-data, hand-rolled (no requests lib)."""
-    boundary = "----bugfarmerboundary7m3"
-    fields = {"model": model, "prompt": prompt, "size": "1024x1024",
-              "background": "transparent", "n": "1"}
-    files = [("image", image_path), ("mask", mask_path)]
-    body = bytearray()
-    for k, v in fields.items():
-        body += f"--{boundary}\r\n".encode()
-        body += f'Content-Disposition: form-data; name="{k}"\r\n\r\n'.encode()
-        body += f"{v}\r\n".encode()
-    for name, path in files:
-        with open(path, "rb") as f:
-            data = f.read()
-        body += f"--{boundary}\r\n".encode()
-        body += (f'Content-Disposition: form-data; name="{name}"; '
-                 f'filename="{os.path.basename(path)}"\r\n').encode()
-        body += b"Content-Type: image/png\r\n\r\n"
-        body += data + b"\r\n"
-    body += f"--{boundary}--\r\n".encode()
-    req = urllib.request.Request(
-        EDITS_URL, data=bytes(body),
-        headers={"Authorization": f"Bearer {api_key}",
-                 "Content-Type": f"multipart/form-data; boundary={boundary}"},
-        method="POST")
-    with urllib.request.urlopen(req, timeout=240) as resp:
-        payload = resp.read()
-    data = json.loads(payload)
-    return base64.b64decode(data["data"][0]["b64_json"])
-
-
-def player_spike(api_key, model, tone="tan", direction="down",
-                 item_desc="a chunky iron knight helmet", slot="head"):
-    """De-risk the layered approach: gen a base body, then EDIT a helmet onto it
-    using a bbox-registered mask. Outputs go to raw_sprites/ for visual inspection.
-    Proves whether images/edits keeps registration before we mass-generate."""
-    os.makedirs(RAW_DIR, exist_ok=True)
-    base_raw = os.path.join(RAW_DIR, f"spike_body_{tone}_{direction}.png")
-    mask_raw = os.path.join(RAW_DIR, f"spike_mask_{slot}_{direction}.png")
-    out_raw = os.path.join(RAW_DIR, f"spike_{slot}_{tone}_{direction}.png")
-
-    print(f"[1/3] base body  tone={tone} dir={direction}")
-    png = call_api(body_prompt(tone, direction), "low", api_key, model)
-    with open(base_raw, "wb") as f:
-        f.write(png)
-
-    print(f"[2/3] build {slot} mask from alpha bbox")
-    base_img = Image.open(base_raw).convert("RGBA")
-    mask = head_mask(base_img, slot)
-    mask.save(mask_raw)
-    print(f"      char bbox={base_img.getbbox()}  mask={mask_raw}")
-
-    print(f"[3/3] edits: add '{item_desc}' on {slot}")
-    edited = call_edits(equip_prompt(item_desc, slot), base_raw, mask_raw,
-                        api_key, model)
-    with open(out_raw, "wb") as f:
-        f.write(edited)
-    print(f"\nSpike done. Inspect:\n  base : {base_raw}\n  mask : {mask_raw}\n  "
-          f"edited: {out_raw}\nCheck: does the {slot} item sit registered on the "
-          f"body, same pose/scale/lighting?")
 
 # --- Material palettes (from architecture_new_object_pipeline.md) ------------
 PALETTES = {
@@ -822,62 +720,6 @@ def select_keys(ents, args):
     return keys
 
 
-def item_layer_prompt(item_desc, slot):
-    view = {"head": "as seen from a 45-degree top-down angle (top of helmet visible)",
-            "chest": "as a chest piece seen 45-degree top-down",
-            "legs": "as leg armor seen 45-degree top-down"}[slot]
-    return "\n".join([
-        f"Create a single {item_desc} {view}, pixel art, NOTHING else in frame.",
-        f"ART DIRECTION: {PLAYER_STYLE}",
-        "Draw ONLY the item itself - NO head, NO body, NO character, NO mannequin.",
-        "It should look sized to fit a chunky chibi character (head ~22px wide). "
-        "Centered, transparent background, no ground, no shadow. Three shades, top-left light.",
-    ])
-
-
-def paperdoll_spike(api_key, model, tone="tan", direction="down",
-                    item_desc="a chunky iron knight helmet", slot="head"):
-    """Alternative to the failed edits approach: generate the item STANDALONE,
-    trim it, and composite over an UNCHANGED base body at an anchor offset we
-    control. Proves the paper-doll method keeps the body intact."""
-    os.makedirs(RAW_DIR, exist_ok=True)
-    base_raw = os.path.join(RAW_DIR, f"spike_body_{tone}_{direction}.png")
-    if not os.path.exists(base_raw):
-        print("base body missing; generating one")
-        png = call_api(body_prompt(tone, direction), "low", api_key, model)
-        with open(base_raw, "wb") as f:
-            f.write(png)
-    item_raw = os.path.join(RAW_DIR, f"spike_item_{slot}_{direction}.png")
-    comp_raw = os.path.join(RAW_DIR, f"spike_paperdoll_{slot}_{tone}_{direction}.png")
-
-    print(f"[1/2] standalone item: {item_desc}")
-    ipng = call_api(item_layer_prompt(item_desc, slot), "low", api_key, model)
-    with open(item_raw, "wb") as f:
-        f.write(ipng)
-
-    print("[2/2] composite item over UNCHANGED body at head anchor")
-    body = Image.open(base_raw).convert("RGBA")
-    item = Image.open(item_raw).convert("RGBA")
-    ib = item.getbbox()
-    if ib:
-        item = item.crop(ib)
-    bb = body.getbbox()
-    l, t, r, b = bb
-    head_w = int((r - l) * 1.02)            # helmet ~ head width
-    scale = head_w / item.width
-    item = item.resize((max(1, int(item.width * scale)),
-                        max(1, int(item.height * scale))), Image.NEAREST)
-    cx = (l + r) // 2
-    px = cx - item.width // 2
-    py = t - int(item.height * 0.12)        # sit slightly above head top
-    out = body.copy()
-    out.alpha_composite(item, (px, py))
-    out.save(comp_raw)
-    print(f"\nPaper-doll spike done. Inspect:\n  body : {base_raw}\n  item : "
-          f"{item_raw}\n  composite: {comp_raw}\nCheck: is the BODY unchanged and the "
-          f"{slot} item sitting on it at the right place/scale?")
-
-
 def walk_sheet_prompt(tone, direction, frames=4):
     return "\n".join([
         f"A horizontal pixel-art SPRITE SHEET: {frames} poses of the SAME chibi character "
@@ -946,31 +788,6 @@ def make_strip(frames, path, pad=8):
         strip.alpha_composite(f, (x, h - f.height))
         x += f.width + pad
     strip.save(path)
-
-
-def walk_sheet_spike(api_key, model, tone="medium", direction="down", frames=4):
-    """Empirical test: can gpt-image-1 produce a usable, evenly-spaced, consistent
-    walk sprite sheet we can crop into frames? Generates the sheet, slices it into
-    equal columns, trims each, and writes a contact-sheet preview for inspection."""
-    os.makedirs(RAW_DIR, exist_ok=True)
-    sheet_raw = os.path.join(RAW_DIR, f"walksheet_{tone}_{direction}.png")
-    print(f"[1/2] generate {frames}-frame walk sheet  tone={tone} dir={direction}")
-    png = call_api(walk_sheet_prompt(tone, direction, frames), "low", api_key, model)
-    with open(sheet_raw, "wb") as f:
-        f.write(png)
-    sheet = Image.open(sheet_raw).convert("RGBA")
-    w, h = sheet.size
-    print(f"[2/2] slice into {frames} equal columns ({w//frames}px each) and trim")
-    fw = w // frames
-    for i in range(frames):
-        cell = sheet.crop((i * fw, 0, (i + 1) * fw, h))
-        cb = cell.getbbox()
-        out = os.path.join(RAW_DIR, f"walkframe_{tone}_{direction}_{i}.png")
-        cell.save(out)
-        print(f"  frame{i}: cell bbox={cb}")
-    print(f"\nWalk-sheet spike done. Inspect sheet: {sheet_raw}\n"
-          f"and frames walkframe_{tone}_{direction}_0..{frames-1}.png\n"
-          f"Assess: even spacing? same character each frame? clean leg poses?")
 
 
 def segment_sheet(sheet_path, min_gap=8, min_w=20):
@@ -1084,10 +901,6 @@ def main():
     ap.add_argument("--dry-run", action="store_true", help="print prompts, no API call")
     ap.add_argument("--force", action="store_true", help="overwrite existing sprites")
     ap.add_argument("--limit", type=int, help="cap number of assets")
-    ap.add_argument("--player-spike", action="store_true",
-                    help="de-risk layered player: gen base body + edit-on a helmet")
-    ap.add_argument("--paperdoll-spike", action="store_true",
-                    help="de-risk layered player: standalone item composited over body")
     ap.add_argument("--player-bodies", action="store_true",
                     help="generate the 4 skin-tone base bodies (review batch)")
     ap.add_argument("--master-body", action="store_true",
@@ -1096,22 +909,12 @@ def main():
                     help="production: walk sheet -> 4 normalized frames -> recolor all tones")
     ap.add_argument("--char-sample", action="store_true",
                     help="generate ONE polished flat front-facing character (quality test)")
-    ap.add_argument("--walk-sheet", action="store_true",
-                    help="spike: generate a walk sprite sheet and slice into frames")
     ap.add_argument("--segment-sheet", metavar="PATH",
                     help="split an existing sheet into figures by transparent gaps")
     ap.add_argument("--dirs", help="comma dirs for --player-bodies (default: down)")
     ap.add_argument("--variants", type=int, default=1,
                     help="terrain only: number of seamless variants per tile (v1=base, then _v2, _v3...)")
     args = ap.parse_args()
-
-    if args.walk_sheet:
-        api_key = resolve_api_key() if not args.dry_run else None
-        if args.dry_run:
-            print(walk_sheet_prompt("medium", "down"))
-            return
-        walk_sheet_spike(api_key, args.model)
-        return
 
     if args.char_sample:
         direction = (args.dirs or "down").split(",")[0].strip()
@@ -1178,23 +981,6 @@ def main():
             out = f"{base}_seg{i}.png"
             fr.save(out)
             print(f"  seg{i}: size={fr.size} -> {os.path.basename(out)}")
-        return
-
-    if args.player_spike:
-        api_key = resolve_api_key()
-        if args.dry_run:
-            print("=== body prompt ===\n" + body_prompt("tan", "down"))
-            print("\n=== equip prompt ===\n" + equip_prompt("a chunky iron knight helmet", "head"))
-            return
-        player_spike(api_key, args.model)
-        return
-
-    if args.paperdoll_spike:
-        api_key = resolve_api_key()
-        if args.dry_run:
-            print("=== item prompt ===\n" + item_layer_prompt("a chunky iron knight helmet", "head"))
-            return
-        paperdoll_spike(api_key, args.model)
         return
 
     if args.player_bodies:
