@@ -625,6 +625,12 @@ namespace BugFarmer.World
 
             // Position at cell with pivot adjustment
             Vector3 worldPos = CellToWorld(cellPos);
+            // CellToWorld returns the anchor cell's center, but a multi-cell-wide
+            // footprint occupies cells to the right of the anchor. Shift X so the
+            // sprite is centered over the whole footprint, not just the anchor cell.
+            // Odd widths straddle symmetrically (no shift); even widths shift half a cell.
+            var footprint = EntityDatabase.GetFootprint(occupantId);
+            worldPos.x += (footprint.x - 1) * 0.5f * cellSize;
             // Adjust Y for pivot (pivot.y gives bottom-center offset)
             // Use target size from database for positioning
             var targetSize = EntityDatabase.GetSpriteSize(occupantId);
