@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
-"""Compose a preview scene PNG from the generated sprites, mirroring the game's
-placement rules (ground tiles + bottom-center-anchored occupants, y-sorted, each
-occupant stretched to its sprite_w x sprite_h target size like TilemapManager does).
+"""Compose a preview-scene PNG from sprites, mirroring the game's placement rules
+(ground tiles + bottom-center/centered occupants, y-sorted, each occupant stretched
+to its sprite_w x sprite_h target like TilemapManager does).
 
-This is a DESIGN PREVIEW so you can eyeball how sprites read together without
-opening Unity. It intentionally reproduces the in-game per-axis scaling, so any
-distortion you see here is what you'd see in the game.
+This is the DESIGN-PREVIEW / VISUAL-QA tool for zone authoring: build a small grid
+(a "scene") and render it to a focused PNG so you can eyeball how items read together
+without opening Unity. Missing sprites render as labeled PLACEHOLDER squares (colored
+by category), so layout/composition can be iterated before any art exists.
 
-Usage:  python3 make_scene.py [--scale 6] [--out /tmp/scene.png]
+It can render either:
+  * a built ZONE on disk:  python3 make_scene.py --zone sim_test [--bounds x0,y0,x1,y1]
+  * the built-in demo scene: python3 make_scene.py            (a house + yard vignette)
+
+It also exposes render_scene()/load_zone() as a library for build scripts (tools/zonegen).
+
+Usage: python3 make_scene.py [--zone <id>] [--bounds x0,y0,x1,y1] [--scale 6] [--out PATH]
 """
 import argparse, glob, json, os, random
-from PIL import Image
+from PIL import Image, ImageDraw
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(ROOT, "BugFarmerClient", "Assets", "Resources")
@@ -18,19 +25,61 @@ TILES = os.path.join(RES, "Tiles")
 OBJS = os.path.join(RES, "Objects")
 PLAYER = os.path.join(RES, "Player")
 ENT_DIR = os.path.join(ROOT, "nakama", "data", "entities")
-CELL = 16  # logical pixels per cell
+ZONES_DIR = os.path.join(ROOT, "nakama", "data", "zones")
+CELL = 16        # logical pixels per cell
+CHUNK = 32       # cells per chunk side (matches world.ChunkSize)
 
-# Player sprites are pre-authored at a fixed frame size (no target-stretch).
-# (sprite_file, cx, cy) bottom-center anchor; drawn at native frame size scaled by S.
-PLAYERS = [
-    ("farmer_down", 6, 7),      # standing inside the room
-    ("merchant_down", 18, 11),  # over in the yard
+# Placeholder fill color (RGBA) by entity category, so a missing-sprite square reads
+# as roughly the right kind of thing. Anything unmapped uses DEFAULT_PH.
+CATEGORY_COLORS = {
+    "block":       (140, 140, 145, 255),
+    "wall":        (150, 120, 90, 255),
+    "structure":   (165, 125, 85, 255),
+    "furniture":   (200, 170, 120, 255),
+    "natural":     (95, 160, 90, 255),
+    "tree":        (70, 130, 70, 255),
+    "plant":       (120, 185, 95, 255),
+    "flower":      (210, 140, 180, 255),
+    "crop":        (130, 195, 100, 255),
+    "decoration":  (200, 160, 200, 255),
+    "container":   (180, 150, 110, 255),
+    "light":       (235, 215, 130, 255),
+}
+DEFAULT_PH = (195, 195, 195, 255)
+MISSING_TILE = (60, 80, 60, 255)   # ground placeholder
+
+# Built-in demo scene (used when --zone is not given): a cottage + yard vignette.
+PLAYERS = [("farmer_down", 6, 7), ("merchant_down", 18, 11)]
+DEMO_GW, DEMO_GH = 26, 16
+DEMO_GROUND_FILL = "grass"
+DEMO_GROUND_RECTS = [
+    ("wood_floor", 1, 2, 10, 9),
+    ("stone_path", 11, 9, 13, 15),
+    ("stone_path", 11, 9, 20, 10),
+]
+DEMO_OBJECTS = [
+    *[("wall_wood", x, 2) for x in range(1, 11) if x not in (5, 6)],
+    ("door_wood", 5, 2),
+    *[("wall_wood", 1, y) for y in range(3, 10)],
+    *[("wall_wood", 10, y) for y in range(3, 10)],
+    *[("wall_wood", x, 9) for x in range(2, 10)],
+    ("bed_fancy", 2, 7), ("bookshelf", 3, 3), ("fireplace", 8, 3), ("chest_wood", 8, 5),
+    ("lamp_floor", 9, 8), ("table_wood", 4, 8), ("chair_wood", 2.5, 8), ("chair_wood", 5.5, 8),
+    *[("fence_wood", x, 1) for x in range(11, 21)], *[("fence_wood", 20, y) for y in range(2, 8)],
+    ("gate_wood", 15, 1),
+    ("tree_oak", 13, 4), ("tree_apple", 17, 5), ("tree_pine", 19, 3), ("bush", 11, 5), ("bush", 18, 7),
+    ("sunflower", 12, 6), ("flower_red", 14, 7), ("flower_blue", 15, 6), ("flower_yellow", 16, 7),
+    ("tall_grass", 19, 8),
+    ("bench", 12, 12), ("planter_box", 22, 11), ("well", 16, 13), ("signpost", 11, 11),
+    ("sawhorse", 23, 14), ("table_stone", 19, 13), ("chair_fancy", 21, 13), ("lamp_floor", 14, 11),
+    ("statue_stone", 24, 8), ("bed_basic", 23, 5),
 ]
 
 
+# ---- entity metadata --------------------------------------------------------
 def load_meta():
     meta = {}
-    for fn in ("occupants.json", "placeables.json"):
+    for fn in ("occupants.json", "placeables.json", "crops.json"):
         p = os.path.join(ENT_DIR, fn)
         if not os.path.exists(p):
             continue
@@ -43,9 +92,7 @@ def load_meta():
 
 def sprite_size_cells(meta, key):
     e = meta.get(key, {})
-    w = e.get("sprite_w") or 16
-    h = e.get("sprite_h") or 16
-    return w, h
+    return e.get("sprite_w") or 16, e.get("sprite_h") or 16
 
 
 def pivot_of(meta, key):
@@ -53,173 +100,167 @@ def pivot_of(meta, key):
 
 
 def footprint_of(meta, key):
-    """Footprint in CELLS (not the stretched sprite_w). A 2-cell-wide object
-    occupies the anchor cell plus cells to its right, so its center sits half a
-    cell right of the anchor cell's center — mirror TilemapManager's X shift."""
+    """Footprint width in CELLS. Multi-cell-wide objects sit half a cell right of the
+    anchor cell's center — mirror TilemapManager's X shift."""
     fp = (meta.get(key, {}).get("world", {}) or {}).get("footprint")
     if isinstance(fp, (list, tuple)) and len(fp) >= 1 and fp[0]:
         return int(fp[0])
     return 1
 
 
+def category_of(meta, key):
+    return (meta.get(key, {}) or {}).get("category", "")
+
+
 def load_png(folder, key):
     p = os.path.join(folder, f"{key}.png")
-    if not os.path.exists(p):
-        return None
-    return Image.open(p).convert("RGBA")
+    return Image.open(p).convert("RGBA") if os.path.exists(p) else None
 
 
-# ---- Scene definition -------------------------------------------------------
-# Grid is GW x GH cells. Ground is a fill plus rectangular/explicit overrides.
-GW, GH = 26, 16
-
-GROUND_FILL = "grass"
-GROUND_RECTS = [
-    # (tile, x0, y0, x1, y1) inclusive
-    ("wood_floor", 1, 2, 10, 9),    # house interior (enclosed box)
-    ("stone_path", 11, 9, 13, 15),  # path from house into yard
-    ("stone_path", 11, 9, 20, 10),
-]
-
-# Occupants: (id, cx, cy) with (cx,cy) = bottom-center anchor cell (floats OK).
-OBJECTS = [
-    # --- house back wall + door (row y=2); door footprint=2 occupies cells 5-6 ---
-    *[("wall_wood", x, 2) for x in range(1, 11) if x not in (5, 6)],
-    ("door_wood", 5, 2),
-    # --- house side walls (left x=1, right x=10), full height ---
-    *[("wall_wood", 1, y) for y in range(3, 10)],
-    *[("wall_wood", 10, y) for y in range(3, 10)],
-    # --- house front/bottom wall (row y=9) ---
-    *[("wall_wood", x, 9) for x in range(2, 10)],
-    # --- house interior furniture (all inside x2..9, y3..8) ---
-    ("bed_fancy", 2, 7),       # left wall, head to back (footprint=2; code centers it)
-    ("bookshelf", 3, 3),       # back wall, left of door
-    ("fireplace", 8, 3),       # back wall, right
-    ("chest_wood", 8, 5),      # right side, below fireplace
-    ("lamp_floor", 9, 8),      # bottom-right corner of room
-    ("table_wood", 4, 8),      # along the bottom wall
-    ("chair_wood", 2.5, 8),    # flanking the table
-    ("chair_wood", 5.5, 8),
-    # --- yard: fence line along the right edge ---
-    *[("fence_wood", x, 1) for x in range(11, 21)],
-    *[("fence_wood", 20, y) for y in range(2, 8)],
-    ("gate_wood", 15, 1),
-    # --- yard trees & nature ---
-    ("tree_oak", 13, 4),
-    ("tree_apple", 17, 5),
-    ("tree_pine", 19, 3),
-    ("bush", 11, 5),
-    ("bush", 18, 7),
-    ("sunflower", 12, 6),
-    ("flower_red", 14, 7),
-    ("flower_blue", 15, 6),
-    ("flower_yellow", 16, 7),
-    ("tall_grass", 19, 8),
-    # --- yard furniture/structures ---
-    ("bench", 12, 12),
-    ("planter_box", 22, 11),
-    ("well", 16, 13),
-    ("signpost", 11, 11),
-    ("sawhorse", 23, 14),
-    ("table_stone", 19, 13),
-    ("chair_fancy", 21, 13),
-    ("lamp_floor", 14, 11),
-    ("statue_stone", 24, 8),
-    ("bed_basic", 23, 5),
-]
+def placeholder_img(meta, key, rw, rh):
+    """A labeled colored square standing in for a missing sprite."""
+    color = CATEGORY_COLORS.get(category_of(meta, key), DEFAULT_PH)
+    img = Image.new("RGBA", (rw, rh), color)
+    d = ImageDraw.Draw(img)
+    d.rectangle([0, 0, rw - 1, rh - 1], outline=(25, 25, 25, 255))
+    if rw >= 24 and rh >= 12:
+        d.text((2, 2), key[:12], fill=(20, 20, 20, 255))
+    return img
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--scale", type=int, default=6, help="upscale factor per cell")
-    ap.add_argument("--assets", default=None,
-                    help="root holding Tiles/ and Objects/ (default: game Resources, "
-                         "which already holds the cleaned canonical sprites).")
-    ap.add_argument("--out", default=os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                                   "_generated", "previews", "scene.png"))
-    args = ap.parse_args()
-    global TILES, OBJS
-    if args.assets:
-        root = args.assets if os.path.isabs(args.assets) else os.path.join(os.getcwd(), args.assets)
-        TILES = os.path.join(root, "Tiles")
-        OBJS = os.path.join(root, "Objects")
-    os.makedirs(os.path.dirname(args.out), exist_ok=True)
-    S = args.scale
-    cpx = CELL * S  # cell size in output px
+def _variant_pool(tid):
+    files = sorted(glob.glob(os.path.join(TILES, f"{tid}.png")) +
+                   glob.glob(os.path.join(TILES, f"{tid}_v*.png")))
+    return [os.path.splitext(os.path.basename(f))[0] for f in files] or [tid]
 
-    meta = load_meta()
-    W, H = GW * cpx, GH * cpx
-    canvas = Image.new("RGBA", (W, H), (0, 0, 0, 0))
 
-    # 1) Ground fill
-    fill = load_png(TILES, GROUND_FILL)
-    ground = [[GROUND_FILL] * GW for _ in range(GH)]
-    for tile, x0, y0, x1, y1 in GROUND_RECTS:
-        for y in range(y0, y1 + 1):
-            for x in range(x0, x1 + 1):
-                if 0 <= x < GW and 0 <= y < GH:
-                    ground[y][x] = tile
-    # Variant pools: a tile id maps to itself + any {id}_v2/_v3... files on disk.
-    def variant_pool(tid):
-        files = sorted(glob.glob(os.path.join(TILES, f"{tid}.png")) +
-                       glob.glob(os.path.join(TILES, f"{tid}_v*.png")))
-        return [os.path.splitext(os.path.basename(f))[0] for f in files] or [tid]
+# ---- core renderer (library) ------------------------------------------------
+def render_scene(ground, occupants, meta, scale, out_path, players=None, seed=7):
+    """Render a scene to PNG.
+      ground:    GH x GW grid of tile-id strings.
+      occupants: list of (id, cx, cy) ANCHOR cells in local cell coords (floats OK).
+      players:   optional list of (sprite_id, cx, cy) drawn at native size.
+    Returns a report dict (size, placeholders used, missing tiles)."""
+    GH = len(ground)
+    GW = len(ground[0]) if GH else 0
+    cpx = CELL * scale
+    canvas = Image.new("RGBA", (GW * cpx, GH * cpx), (0, 0, 0, 0))
 
-    pools = {}
-    tcache = {}
-    rng = random.Random(7)  # fixed seed -> reproducible scene
+    pools, tcache, missing_tiles = {}, {}, set()
+    rng = random.Random(seed)
     for y in range(GH):
         for x in range(GW):
             base = ground[y][x]
-            pool = pools.setdefault(base, variant_pool(base))
-            tid = rng.choice(pool)
+            tid = rng.choice(pools.setdefault(base, _variant_pool(base)))
             if tid not in tcache:
                 im = load_png(TILES, tid)
                 tcache[tid] = im.resize((cpx, cpx), Image.NEAREST) if im else None
             t = tcache[tid]
             if t:
                 canvas.alpha_composite(t, (x * cpx, y * cpx))
+            else:
+                missing_tiles.add(base)
+                ph = Image.new("RGBA", (cpx, cpx), MISSING_TILE)
+                canvas.alpha_composite(ph, (x * cpx, y * cpx))
 
-    # 2) Occupants, y-sorted (lower on screen drawn later = in front)
-    missing = []
-    for oid, cx, cy in sorted(OBJECTS, key=lambda o: (o[2], o[1])):
+    placeholders = []
+    for oid, cx, cy in sorted(occupants, key=lambda o: (o[2], o[1])):
+        sw, sh = sprite_size_cells(meta, oid)
+        rw, rh = max(1, sw * scale), max(1, sh * scale)
         img = load_png(OBJS, oid)
         if img is None:
-            missing.append(oid)
-            continue
-        sw, sh = sprite_size_cells(meta, oid)
-        # mirror game: stretch trimmed sprite to (sprite_w x sprite_h) cells
-        rw, rh = max(1, sw * S), max(1, sh * S)
-        spr = img.resize((rw, rh), Image.NEAREST)
-        piv = pivot_of(meta, oid)
-        # bottom-center of anchor cell (cx,cy), shifted right for wide footprints
+            spr = placeholder_img(meta, oid, rw, rh)
+            placeholders.append(oid)
+        else:
+            spr = img.resize((rw, rh), Image.NEAREST)
         fp_x = footprint_of(meta, oid)
         anchor_x = cx * cpx + cpx / 2 + (fp_x - 1) * 0.5 * cpx
         anchor_y = (cy + 1) * cpx
-        if piv == "c":
-            px = int(anchor_x - rw / 2)
-            py = int(anchor_y - cpx / 2 - rh / 2)
+        if pivot_of(meta, oid) == "c":
+            px, py = int(anchor_x - rw / 2), int(anchor_y - cpx / 2 - rh / 2)
         else:  # bc
-            px = int(anchor_x - rw / 2)
-            py = int(anchor_y - rh)
+            px, py = int(anchor_x - rw / 2), int(anchor_y - rh)
         canvas.alpha_composite(spr, (px, py))
 
-    # 3) Player(s): drawn at native frame size (already authored, no stretch)
-    for pid, cx, cy in PLAYERS:
+    for pid, cx, cy in (players or []):
         img = load_png(PLAYER, pid)
         if img is None:
-            missing.append(pid)
             continue
         pw, ph = img.size
-        spr = img.resize((pw * S, ph * S), Image.NEAREST)
-        anchor_x = cx * cpx + cpx / 2
-        anchor_y = (cy + 1) * cpx
-        canvas.alpha_composite(spr, (int(anchor_x - pw * S / 2), int(anchor_y - ph * S)))
+        spr = img.resize((pw * scale, ph * scale), Image.NEAREST)
+        ax, ay = cx * cpx + cpx / 2, (cy + 1) * cpx
+        canvas.alpha_composite(spr, (int(ax - pw * scale / 2), int(ay - ph * scale)))
 
-    canvas.convert("RGB").save(args.out)
-    print(f"Scene: {GW}x{GH} cells @ scale {S} -> {W}x{H}px  {args.out}")
-    if missing:
-        print(f"Missing sprites (skipped): {', '.join(sorted(set(missing)))}")
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    canvas.convert("RGB").save(out_path)
+    return {"w": GW * cpx, "h": GH * cpx, "gw": GW, "gh": GH,
+            "placeholders": sorted(set(placeholders)), "missing_tiles": sorted(missing_tiles)}
+
+
+# ---- load a built zone from disk into (ground, occupants) -------------------
+def load_zone(zone, bounds=None):
+    zdir = zone if os.path.isdir(zone) else os.path.join(ZONES_DIR, zone)
+    cfg = json.load(open(os.path.join(zdir, "zone.json")))
+    W, H = cfg.get("width") or 256, cfg.get("height") or 256
+    x0, y0, x1, y1 = bounds or (0, 0, W - 1, H - 1)
+    x0, y0 = max(0, x0), max(0, y0)
+    x1, y1 = min(W - 1, x1), min(H - 1, y1)
+    gw, gh = x1 - x0 + 1, y1 - y0 + 1
+    ground = [["grass"] * gw for _ in range(gh)]
+    occupants = []
+    for cy in range(y0 // CHUNK, y1 // CHUNK + 1):
+        for cx in range(x0 // CHUNK, x1 // CHUNK + 1):
+            cf = os.path.join(zdir, f"chunk_{cx}_{cy}.json")
+            if not os.path.exists(cf):
+                continue
+            ch = json.load(open(cf))
+            for ly in range(CHUNK):
+                for lx in range(CHUNK):
+                    gx, gy = cx * CHUNK + lx, cy * CHUNK + ly
+                    if not (x0 <= gx <= x1 and y0 <= gy <= y1):
+                        continue
+                    ground[gy - y0][gx - x0] = ch["ground"][ly][lx]
+                    occ = ch["occupants"][ly][lx]
+                    if isinstance(occ, dict) and occ.get("anchor"):
+                        occupants.append((occ["id"], gx - x0, gy - y0))
+    return ground, occupants
+
+
+def _demo_ground():
+    g = [[DEMO_GROUND_FILL] * DEMO_GW for _ in range(DEMO_GH)]
+    for tile, x0, y0, x1, y1 in DEMO_GROUND_RECTS:
+        for y in range(y0, y1 + 1):
+            for x in range(x0, x1 + 1):
+                if 0 <= x < DEMO_GW and 0 <= y < DEMO_GH:
+                    g[y][x] = tile
+    return g
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--zone", default=None, help="render a built zone on disk (id or path)")
+    ap.add_argument("--bounds", default=None, help="x0,y0,x1,y1 cell viewport (zones only)")
+    ap.add_argument("--scale", type=int, default=6, help="upscale factor per cell")
+    ap.add_argument("--out", default=os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                                   "_generated", "previews", "scene.png"))
+    args = ap.parse_args()
+    meta = load_meta()
+
+    if args.zone:
+        bounds = tuple(int(v) for v in args.bounds.split(",")) if args.bounds else None
+        ground, occupants = load_zone(args.zone, bounds)
+        players = None
+        label = f"zone {args.zone}" + (f" bounds {args.bounds}" if args.bounds else "")
+    else:
+        ground, occupants, players = _demo_ground(), DEMO_OBJECTS, PLAYERS
+        label = "demo"
+
+    r = render_scene(ground, occupants, meta, args.scale, args.out, players)
+    print(f"Scene ({label}): {r['gw']}x{r['gh']} cells @ scale {args.scale} -> {r['w']}x{r['h']}px  {args.out}")
+    if r["placeholders"]:
+        print(f"Placeholders (no sprite yet): {', '.join(r['placeholders'])}")
+    if r["missing_tiles"]:
+        print(f"Missing ground tiles: {', '.join(r['missing_tiles'])}")
 
 
 if __name__ == "__main__":
