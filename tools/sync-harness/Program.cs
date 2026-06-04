@@ -8,15 +8,17 @@ using Nakama;
 
 // Headless Bug Farmer sync harness.
 //
-// A PROTOCOL OBSERVER (not a reimplementation of the client sync state machine): it joins a
-// world via the real Nakama .NET SDK, then records every incoming match message and watches for
-// a reception gap. Its question is narrow and decisive: "does the server keep delivering ticks to
-// a present client?" Running headless (no Unity main-thread pump) localizes the freeze:
-//   - reproduces the reception stop  -> server/protocol side
-//   - stays clean while Unity freezes -> Unity main-thread side
+// A PROTOCOL OBSERVER (not a reimplementation of the client sync state machine): it joins a world
+// via the real Nakama .NET SDK and records the tick frontier + the seq of every influence event.
+// Running headless (no Unity main-thread pump) localizes sync bugs to client vs server.
+//
+// --reconnect drives the reconnect/re-enter case: enter -> observe -> leave -> wait -> re-enter,
+// logging the seqs the server delivers AFTER re-entry. Decisive for the seq-desync bug: if the
+// re-entered session receives stale high seqs while the watermark is low, the SERVER is leaking
+// pre-reset events; if it only sees fresh low seqs, the desync is client-side.
 //
 // Usage: dotnet run -- [--host 127.0.0.1] [--port 7350] [--key defaultkey]
-//                      [--zone sim_test] [--duration 150] [--tag p1]
+//                      [--zone village_21] [--duration 15] [--tag p1] [--reconnect]
 namespace BugFarmer.SyncHarness
 {
     internal static class Program
@@ -29,132 +31,182 @@ namespace BugFarmer.SyncHarness
         private const long OpZoneAuthority = 76;
         private const long OpZoneTickBroadcast = 78;
 
+        // Shared observer state (closed over by the message handler).
+        private static readonly Stopwatch Sw = Stopwatch.StartNew();
+        private static long _recvCount, _authTick = -1, _lastSeq = -1, _maxAuthTick = -1;
+        private static long _maxInflSeq = -1, _minInflSeqPhase = long.MaxValue, _maxInflSeqPhase = -1;
+        private static string _myUserId, _phase = "P1";
+        private static bool _isAuthority, _loggedFirstInflThisPhase, _loggedStaleHigh;
+
         private static async Task<int> Main(string[] args)
         {
             var o = Args.Parse(args);
-            Log($"connecting to {o.Host}:{o.Port} key={o.Key} zone={o.Zone} duration={o.Duration}s");
+            Log($"connect {o.Host}:{o.Port} zone={o.Zone} duration={o.Duration}s reconnect={o.Reconnect}");
 
             var client = new Client("http", o.Host, o.Port, o.Key) { Timeout = 10 };
             var deviceId = $"sim-{o.Tag}-{Guid.NewGuid():N}".Substring(0, 24);
             var session = await client.AuthenticateDeviceAsync(deviceId);
+            _myUserId = session.UserId;
             Log($"authenticated user={session.UserId}");
-
-            var sw = Stopwatch.StartNew();
-            double lastRecvMs = 0;
-            long recvCount = 0, authTick = -1, lastSeq = -1, maxAuthTick = -1;
-            string authorityId = null, myUserId = session.UserId;
-            bool isAuthority = false, gapOpen = false;
-            int gapCount = 0;
-            var opCounts = new Dictionary<long, long>();
 
             var socket = Socket.From(client);
             socket.Closed += () => Log("!! socket CLOSED");
             socket.ReceivedError += e => Log($"!! socket ERROR: {e.Message}");
-            socket.ReceivedMatchState += st =>
-            {
-                recvCount++;
-                lastRecvMs = sw.Elapsed.TotalMilliseconds;
-                if (gapOpen) { Log($"reception RESUMED after gap (authTick={authTick})"); gapOpen = false; }
-                opCounts.TryGetValue(st.OpCode, out var c);
-                opCounts[st.OpCode] = c + 1;
-
-                if (st.OpCode == OpZoneTickBroadcast || st.OpCode == OpZoneAuthority)
-                {
-                    try
-                    {
-                        using var doc = JsonDocument.Parse(Encoding.UTF8.GetString(st.State));
-                        var root = doc.RootElement;
-                        if (root.TryGetProperty("authoritative_tick", out var at)) { authTick = at.GetInt64(); if (authTick > maxAuthTick) maxAuthTick = authTick; }
-                        if (root.TryGetProperty("last_event_seq", out var ls)) lastSeq = ls.GetInt64();
-                        if (st.OpCode == OpZoneAuthority && root.TryGetProperty("authority_id", out var aid))
-                        {
-                            authorityId = aid.GetString();
-                            isAuthority = authorityId == myUserId;
-                            Log($"ZoneAuthority authority={authorityId} isAuthority={isAuthority}");
-                        }
-                    }
-                    catch (Exception ex) { Log($"parse err op{st.OpCode}: {ex.Message}"); }
-                }
-                else if (st.OpCode == OpLateJoinSnapshot || st.OpCode == OpZoneHandoff)
-                {
-                    Log($"received op{st.OpCode} ({(st.OpCode == OpLateJoinSnapshot ? "LateJoinSnapshot" : "ZoneHandoff")})");
-                }
-            };
-
+            socket.ReceivedMatchState += OnMatchState;
             await socket.ConnectAsync(session);
             Log("socket connected");
 
-            // Enter the canonical world for the zone (find-or-create singleton, server-side).
-            var enterPayload = JsonSerializer.Serialize(new Dictionary<string, object> { ["zone_id"] = o.Zone });
+            // Phase 1
+            var matchId = await Enter(client, socket, session, o.Zone);
+            await Observe(socket, o.Duration);
+
+            if (o.Reconnect)
+            {
+                Log("=== RECONNECT: leaving match ===");
+                await socket.LeaveMatchAsync(matchId);
+                await Task.Delay(3000); // let the zone empty-reset + pause settle (mirror the real gap)
+
+                BeginPhase("P2-reconnect");
+                matchId = await Enter(client, socket, session, o.Zone);
+                await Observe(socket, o.Duration + 10); // a bit longer to catch the post-reconnect stall window
+            }
+
+            Summary();
+            await socket.CloseAsync();
+            return 0;
+        }
+
+        private static async Task<string> Enter(IClient client, ISocket socket, ISession session, string zone)
+        {
+            var enterPayload = JsonSerializer.Serialize(new Dictionary<string, object> { ["zone_id"] = zone });
             var rpc = await client.RpcAsync(session, "world_enter", enterPayload);
             string matchId;
             using (var rdoc = JsonDocument.Parse(rpc.Payload))
                 matchId = rdoc.RootElement.GetProperty("match_id").GetString();
-            Log($"world_enter {o.Zone} -> match={matchId}");
+            Log($"[{_phase}] world_enter {zone} -> match={matchId}");
 
             var match = await socket.JoinMatchAsync(matchId);
-            myUserId = match.Self.UserId;
-            int presences = 0; foreach (var _ in match.Presences) presences++;
-            Log($"joined match={match.Id} self={myUserId} presences={presences}");
+            _myUserId = match.Self.UserId;
+            Log($"[{_phase}] joined match={match.Id} self={_myUserId}");
 
-            // One movement to establish a player cell (mirror the real client / repro).
             var mv = JsonSerializer.Serialize(new Dictionary<string, object> { ["x"] = 48.0, ["y"] = 48.0, ["facing"] = 0 });
             await socket.SendMatchStateAsync(matchId, OpMovement, mv);
-            Log("sent initial movement (cell 48,48)");
+            Log($"[{_phase}] sent initial movement (cell 48,48)");
+            return matchId;
+        }
 
-            // Observe: report progress every ~5s; flag a >2s reception gap (the freeze signature).
-            double endAt = sw.Elapsed.TotalSeconds + o.Duration;
-            double nextReport = 5;
-            while (sw.Elapsed.TotalSeconds < endAt)
+        private static void OnMatchState(IMatchState st)
+        {
+            _recvCount++;
+            try
             {
-                await Task.Delay(250);
-                double now = sw.Elapsed.TotalSeconds;
-                double gap = (sw.Elapsed.TotalMilliseconds - lastRecvMs) / 1000.0;
-                if (recvCount > 0 && gap > 2.0 && !gapOpen)
+                if (st.OpCode == OpZoneTickBroadcast || st.OpCode == OpZoneAuthority)
                 {
-                    gapOpen = true; gapCount++;
-                    Log($"RECEPTION GAP gap={gap:F1}s lastAuthTick={authTick} recvCount={recvCount} connected={socket.IsConnected}");
+                    using var doc = JsonDocument.Parse(Encoding.UTF8.GetString(st.State));
+                    var root = doc.RootElement;
+                    if (root.TryGetProperty("authoritative_tick", out var at)) { _authTick = at.GetInt64(); if (_authTick > _maxAuthTick) _maxAuthTick = _authTick; }
+                    if (root.TryGetProperty("last_event_seq", out var ls)) _lastSeq = ls.GetInt64();
+                    if (st.OpCode == OpZoneAuthority && root.TryGetProperty("authority_id", out var aid))
+                    {
+                        var authorityId = aid.GetString();
+                        _isAuthority = authorityId == _myUserId;
+                        Log($"[{_phase}] ZoneAuthority authority={authorityId} isAuthority={_isAuthority} tick={_authTick} seq={_lastSeq}");
+                    }
                 }
-                if (now >= nextReport)
+                else if (st.OpCode == OpInfluenceBroadcast)
                 {
-                    nextReport += 5;
-                    Log($"t={now,4:F0}s authTick={authTick} lastSeq={lastSeq} recv={recvCount} authority={isAuthority}");
+                    // Decode events[].seq — the decisive datum for the seq-desync bug.
+                    using var doc = JsonDocument.Parse(Encoding.UTF8.GetString(st.State));
+                    if (doc.RootElement.TryGetProperty("events", out var evs) && evs.ValueKind == JsonValueKind.Array)
+                    {
+                        long bMin = long.MaxValue, bMax = -1; int n = 0;
+                        foreach (var e in evs.EnumerateArray())
+                        {
+                            if (!e.TryGetProperty("seq", out var sq)) continue;
+                            long s = sq.GetInt64(); n++;
+                            if (s < bMin) bMin = s;
+                            if (s > bMax) bMax = s;
+                        }
+                        if (n > 0)
+                        {
+                            if (bMax > _maxInflSeq) _maxInflSeq = bMax;
+                            if (bMin < _minInflSeqPhase) _minInflSeqPhase = bMin;
+                            if (bMax > _maxInflSeqPhase) _maxInflSeqPhase = bMax;
+                            if (!_loggedFirstInflThisPhase)
+                            {
+                                _loggedFirstInflThisPhase = true;
+                                Log($"[{_phase}] FIRST influence after entry: {n} events seq [{bMin}..{bMax}] (watermark={_lastSeq})");
+                            }
+                            // Flag stale-high seqs (the 7833 signature) against the current watermark.
+                            if (!_loggedStaleHigh && _lastSeq >= 0 && bMax > _lastSeq + 100)
+                            {
+                                _loggedStaleHigh = true;
+                                Log($"[{_phase}] STALE-HIGH influence seq={bMax} while watermark={_lastSeq} (gap!)");
+                            }
+                        }
+                    }
+                }
+                else if (st.OpCode == OpLateJoinSnapshot || st.OpCode == OpZoneHandoff)
+                {
+                    Log($"[{_phase}] received op{st.OpCode} ({(st.OpCode == OpLateJoinSnapshot ? "LateJoinSnapshot" : "ZoneHandoff")})");
                 }
             }
+            catch (Exception ex) { Log($"[{_phase}] parse err op{st.OpCode}: {ex.Message}"); }
+        }
 
+        private static void BeginPhase(string name)
+        {
+            _phase = name;
+            _loggedFirstInflThisPhase = false;
+            _loggedStaleHigh = false;
+            _minInflSeqPhase = long.MaxValue;
+            _maxInflSeqPhase = -1;
+            Log($"=== PHASE {name} ===");
+        }
+
+        private static async Task Observe(ISocket socket, int seconds)
+        {
+            double endAt = Sw.Elapsed.TotalSeconds + seconds;
+            double nextReport = Sw.Elapsed.TotalSeconds + 5;
+            while (Sw.Elapsed.TotalSeconds < endAt)
+            {
+                await Task.Delay(250);
+                if (Sw.Elapsed.TotalSeconds >= nextReport)
+                {
+                    nextReport += 5;
+                    string inflRange = _maxInflSeqPhase >= 0 ? $"infl[{_minInflSeqPhase}..{_maxInflSeqPhase}]" : "infl[-]";
+                    Log($"[{_phase}] t={Sw.Elapsed.TotalSeconds,4:F0}s authTick={_authTick} watermark={_lastSeq} {inflRange} recv={_recvCount} auth={_isAuthority}");
+                }
+            }
+        }
+
+        private static void Summary()
+        {
             Log("=== SUMMARY ===");
-            Log($"maxAuthTick={maxAuthTick} recvCount={recvCount} gaps={gapCount} isAuthority={isAuthority} connected={socket.IsConnected}");
-            var ops = new List<string>(); foreach (var kv in opCounts) ops.Add($"op{kv.Key}={kv.Value}");
-            ops.Sort(); Log("opcodes: " + string.Join(" ", ops));
-            bool advanced = maxAuthTick >= 50;
-            Log(gapCount == 0 && advanced
-                ? "RESULT: PASS (ticks advanced, no reception gap)"
-                : $"RESULT: {(advanced ? "GAP DETECTED" : "NO ADVANCE")} (gaps={gapCount}, maxAuthTick={maxAuthTick})");
-
-            await socket.CloseAsync();
-            return gapCount == 0 && advanced ? 0 : 1;
+            Log($"maxAuthTick={_maxAuthTick} maxInfluenceSeq={_maxInflSeq} recvCount={_recvCount} isAuthority={_isAuthority}");
         }
 
         private static void Log(string m) => Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss.fff}] {m}");
 
         private sealed class Args
         {
-            public string Host = "127.0.0.1", Key = "defaultkey", Zone = "sim_test", Tag = "p1";
-            public int Port = 7350, Duration = 150;
+            public string Host = "127.0.0.1", Key = "defaultkey", Zone = "village_21", Tag = "p1";
+            public int Port = 7350, Duration = 15;
+            public bool Reconnect;
             public static Args Parse(string[] a)
             {
                 var o = new Args();
-                for (int i = 0; i + 1 < a.Length; i += 2)
+                for (int i = 0; i < a.Length; i++)
                 {
-                    var v = a[i + 1];
                     switch (a[i])
                     {
-                        case "--host": o.Host = v; break;
-                        case "--port": o.Port = int.Parse(v); break;
-                        case "--key": o.Key = v; break;
-                        case "--zone": o.Zone = v; break;
-                        case "--duration": o.Duration = int.Parse(v); break;
-                        case "--tag": o.Tag = v; break;
+                        case "--host": o.Host = a[++i]; break;
+                        case "--port": o.Port = int.Parse(a[++i]); break;
+                        case "--key": o.Key = a[++i]; break;
+                        case "--zone": o.Zone = a[++i]; break;
+                        case "--duration": o.Duration = int.Parse(a[++i]); break;
+                        case "--tag": o.Tag = a[++i]; break;
+                        case "--reconnect": o.Reconnect = true; break;
                     }
                 }
                 return o;
