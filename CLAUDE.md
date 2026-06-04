@@ -8,7 +8,7 @@ pipeline that generates the sprite/world art.
 - `nakama/` — Nakama Go server (authoritative game logic) + canonical entity data.
 - `tools/` — Python sprite/world pipeline (gen → clean → preview → publish).
 - `docs/` — `product/` (how the game works) and `guides/` (how to operate the pipeline).
-- `.claude/skills/` — task playbooks (`add-object`, `regenerate-sprite`).
+- `.claude/skills/` — task playbooks (`add-object`, `regenerate-sprite`, `run-backend`).
 
 ## Where things live
 - World art (loaded by `key` at runtime): `Assets/Resources/{Objects,Tiles,Items,Bugs,Effects}/`.
