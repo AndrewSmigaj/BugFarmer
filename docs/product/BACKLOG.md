@@ -6,6 +6,17 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Done (recent) — sync stability + headless test infra
+- Fixed the frontier-gated freeze (spurious resync — "caught up" was wrongly treated as a stall)
+  and the reconnect seq-desync (stale `PendingInfluence` leaked to the next client). Details in
+  `architecture_swarm_sync.md` §11.
+- World lifecycle: pause-when-empty + `world_enter` (singleton Normal/Test worlds; the frontend no
+  longer creates worlds).
+- Test infra: headless `.NET` sync-harness (`tools/sync-harness/`, incl. a reconnect scenario),
+  test-zone generator (`tools/make_test_zone.py`), `sim_test` zone; single-source zone config
+  (removed `debug_mode` + `species_debug.json`).
+- New world-select login (`WorldMenu`).
+
 ## Now — Safe cleanup only (no refactoring, no splitting files)
 Tidy what's clearly safe; leave anything risky alone.
 - Delete dead one-off experiments in `tools/gen_sprites.py` (`player_spike`, `paperdoll_spike`,

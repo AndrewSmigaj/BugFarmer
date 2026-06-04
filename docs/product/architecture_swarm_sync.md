@@ -576,4 +576,44 @@ C) No protocol violations:
 
 “Old event not applied” never triggers in a healthy run.
 
+## 11. Implemented world lifecycle & recovery (2026-06)
+
+How the above is wired in practice, and the fixes that made it hold up under real play. The
+headless `tools/sync-harness` (real Nakama .NET client, no Unity) reproduces/verifies these.
+
+### 11.1 World lifecycle (server, `match.go`)
+- **Entry is via `world_enter(zone_id)`** (RPC): find-or-create the canonical *singleton* world per
+  zone (deterministic key `default_<zone>`), reuse its live match or recreate on demand, return the
+  match id. The frontend never creates worlds; Normal=`village_21`, Test=`sim_test`.
+- **Pause when empty:** `MatchLoop` early-returns when no players/presences are connected — no tick
+  advance, no swarm sim/merge/split, no broadcasts. A world only "runs" while someone is in it; a
+  joining player resumes from the frozen `TickCount`. (Replaces the old never-terminating match that
+  ticked forever with zero players and eventually crashed in merge/split.)
+- **Empty-reset:** when the last player leaves, the zone's sync state resets
+  (`NextSeq=0, InfluenceLog=nil, Snapshot=nil, AuthorityUserID=""`) **and `PendingInfluence` is
+  cleared** — see 11.3.
+
+### 11.2 Frontier stall ≠ "caught up" (client, `SwarmManager.Update`)
+The frontier-stall watchdog must only fire when the client is genuinely **behind and blocked**
+(`simTick < authTick` but missing events). Being **caught up** (`simTick == authTick`, the normal
+state between tick broadcasts) must NOT count as a stall — the client catches up within the frame a
+broadcast arrives, so the gate ends each frame caught-up. The earlier code counted that as a stall,
+so `_frontierStallTimer` never reset and fired a spurious resync every ~5s (and, before the lifecycle
+fixes, hung when that resync got stuck in `Joining`). Reset the timer when caught up; only accumulate
+when behind-and-blocked.
+
+### 11.3 Reconnect must not leak stale seqs (server)
+On re-entry a client bootstraps as first-client with `LastEventSeq=-1` and expects a fresh,
+contiguous seq stream from 0. An influence event from the last tick before everyone left could be
+stranded in `WorldState.PendingInfluence` (the empty-reset cleared `InfluenceLog`/`NextSeq` but not
+the pending queue, and pause-when-empty skips the normal per-tick broadcast+clear). Delivered on
+resume, it created a `lastSeq` ≫ `watermark` gap that `HasAllEventsUpTo` can never close → genuine
+stall. Fix: clear `PendingInfluence` in the empty-reset (and defensively in the pause guard) so the
+next client always gets a clean stream from seq 0.
+
+### 11.4 Test/dev knobs
+Test zones are ordinary zones authored by `tools/make_test_zone.py`; the zone config is the single
+source of truth (`static` = no spawn/merge/split, `swarm_size` = fixed count, `seed` = fixed world
+seed). There is no separate `debug_mode` flag or `species_debug.json` anymore.
+
 If it triggers, logs immediately show whether it’s epoch mismatch, gap in seq, or tick contract mismatch.

@@ -12,7 +12,8 @@ for every step, not just the big ones.
 ## Repo map
 - `BugFarmerClient/` — Unity 6 client (C#); all art lives under `Assets/Resources/`.
 - `nakama/` — Nakama Go server (authoritative game logic) + canonical entity data.
-- `tools/` — Python sprite/world pipeline (gen → clean → preview → publish).
+- `tools/` — Python sprite/world pipeline (gen → clean → preview → publish), the test-zone
+  generator (`make_test_zone.py`), and the headless `.NET` netcode harness (`sync-harness/`).
 - `docs/` — `product/` (how the game works) and `guides/` (how to operate the pipeline).
 - `.claude/skills/` — task playbooks (`add-object`, `regenerate-sprite`, `run-backend`).
 
