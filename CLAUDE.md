@@ -15,7 +15,7 @@ for every step, not just the big ones.
 - `tools/` — Python sprite/world pipeline (gen → clean → preview → publish), the test-zone
   generator (`make_test_zone.py`), and the headless `.NET` netcode harness (`sync-harness/`).
 - `docs/` — `product/` (how the game works) and `guides/` (how to operate the pipeline).
-- `.claude/skills/` — task playbooks (`add-object`, `regenerate-sprite`, `run-backend`).
+- `.claude/skills/` — task playbooks (`add-object`, `regenerate-sprite`, `run-backend`, `author-zone`).
 
 ## Where things live
 - World art (loaded by `key` at runtime): `Assets/Resources/{Objects,Tiles,Items,Bugs,Effects}/`.
