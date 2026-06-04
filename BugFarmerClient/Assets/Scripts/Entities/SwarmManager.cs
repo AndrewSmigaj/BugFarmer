@@ -123,6 +123,11 @@ namespace BugFarmer.Entities
         private int _resyncAttempts;
         private const int MaxResyncAttempts = 3;
 
+        // Reception watchdog (observability only): detect when match messages stop arriving while
+        // Update() keeps running — the freeze signature. Set in HandleMatchData, checked in Update().
+        private float _lastMatchMsgTime = -1f;
+        private bool _receptionGapLogged;
+
         // Trace callback - only invoked when debug overlay is recording
         private Action<long, long, List<BugTrace>, List<PlayerTarget>> _traceCallback;
 
@@ -219,6 +224,14 @@ namespace BugFarmer.Entities
             {
                 Debug.Log($"[SwarmManager] Initial state: syncState={_syncState}, simTick={_simulationTick}, authTick={_authoritativeTick}");
                 _loggedInitialState = true;
+            }
+
+            // Reception watchdog: if match messages stop arriving while Update keeps running, log the
+            // gap once at its onset (the freeze signature). Observability only — no behavior change.
+            if (_lastMatchMsgTime >= 0f && Time.time - _lastMatchMsgTime > 2f && !_receptionGapLogged)
+            {
+                _receptionGapLogged = true;
+                DebugFileLogger.Log($"[SwarmManager] RECEPTION GAP: no match msg for {Time.time - _lastMatchMsgTime:F1}s, state={_syncState}, simTick={_simulationTick}, authTick={_authoritativeTick}, lastSeq={_lastReceivedSeq}");
             }
 
             // RACE CONDITION FIX: Process pending ZoneAuthority when localUserId becomes available
@@ -320,6 +333,7 @@ namespace BugFarmer.Entities
                 if (_frontierStallTimer >= FrontierStallTimeout && _resyncAttempts < MaxResyncAttempts)
                 {
                     Debug.LogWarning($"[SwarmManager] Frontier stalled {FrontierStallTimeout}s (simTick={_simulationTick}, authTick={_authoritativeTick}, lastSeq={_lastReceivedSeq}, watermark={_frontierWatermark}) - resyncing (attempt {_resyncAttempts + 1}/{MaxResyncAttempts})");
+                    DebugFileLogger.Log($"[SwarmManager] Frontier STALLED {FrontierStallTimeout}s simTick={_simulationTick} authTick={_authoritativeTick} lastSeq={_lastReceivedSeq} watermark={_frontierWatermark} - resync {_resyncAttempts + 1}/{MaxResyncAttempts}");
                     _resyncAttempts++;
                     _frontierStallTimer = 0f;
                     RequestResync();
@@ -553,6 +567,7 @@ namespace BugFarmer.Entities
         private void RequestResync()
         {
             Debug.LogWarning($"[SwarmManager] Requesting zone resync (late-join path)");
+            DebugFileLogger.Log($"[SwarmManager] RequestResync -> Joining (from {_syncState}, simTick={_simulationTick}, authTick={_authoritativeTick}, lastSeq={_lastReceivedSeq})");
             _syncState = SyncState.Joining;
             _inboxBySeq.Clear();
             _pendingEvents.Clear();
@@ -572,6 +587,7 @@ namespace BugFarmer.Entities
         private void ReplayToTick(long targetTick)
         {
             Debug.Log($"[SwarmManager] Replaying from tick {_simulationTick} to {targetTick}");
+            DebugFileLogger.Log($"[SwarmManager] ReplayToTick: from {_simulationTick} to {targetTick}");
 
             while (_simulationTick < targetTick)
             {
@@ -579,6 +595,7 @@ namespace BugFarmer.Entities
             }
 
             Debug.Log($"[SwarmManager] Replay complete at tick {_simulationTick}");
+            DebugFileLogger.Log($"[SwarmManager] ReplayToTick: complete at {_simulationTick}");
         }
 
         // ==========================================================================
@@ -587,6 +604,10 @@ namespace BugFarmer.Entities
 
         private void HandleMatchData(IMatchState state)
         {
+            // Reception watchdog bookkeeping (observability).
+            _lastMatchMsgTime = Time.time;
+            _receptionGapLogged = false;
+
             // Debug: log zone-related opcodes
             if (state.OpCode == OpCodes.ZoneAuthority ||
                 state.OpCode == OpCodes.ZoneTickBroadcast ||
@@ -840,6 +861,7 @@ namespace BugFarmer.Entities
             DebugFileLogger.Log(beforeLog);
 
             // Enter REPLAYING state
+            DebugFileLogger.Log($"[SwarmManager] STATE -> Replaying (late-join snapshot received, from {_syncState})");
             _syncState = SyncState.Replaying;
             _inboxBySeq.Clear();
             _pendingEvents.Clear();
@@ -1024,6 +1046,7 @@ namespace BugFarmer.Entities
             // Enter HANDSHAKE_WAIT
             _syncState = SyncState.HandshakeWait;
             Debug.Log($"[SwarmManager] Replay complete at tick {_simulationTick}, waiting for handshake");
+            DebugFileLogger.Log($"[SwarmManager] STATE -> HandshakeWait at simTick={_simulationTick} (awaiting ZoneHandoff)");
         }
 
         /// <summary>
