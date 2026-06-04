@@ -387,7 +387,7 @@
     "sell_price": 8,
     "world": {
       "footprint": [
-        1,
+        2,
         1
       ],
       "pivot": "bc",

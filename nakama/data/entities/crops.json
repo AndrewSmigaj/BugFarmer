@@ -2,8 +2,8 @@
   "tomato": {
     "crop_type": "tomato",
     "growth_stages": 4,
-    "waterings_per_stage": 1,
-    "max_daily_waterings": 99,
+    "waterings_per_stage": 3,
+    "max_daily_waterings": 2,
     "harvest_item": "tomato",
     "harvest_count_min": 2,
     "harvest_count_max": 4,
@@ -15,8 +15,8 @@
   "corn": {
     "crop_type": "corn",
     "growth_stages": 4,
-    "waterings_per_stage": 1,
-    "max_daily_waterings": 99,
+    "waterings_per_stage": 4,
+    "max_daily_waterings": 2,
     "harvest_item": "corn",
     "harvest_count_min": 1,
     "harvest_count_max": 2,
@@ -28,8 +28,8 @@
   "wheat": {
     "crop_type": "wheat",
     "growth_stages": 3,
-    "waterings_per_stage": 1,
-    "max_daily_waterings": 99,
+    "waterings_per_stage": 2,
+    "max_daily_waterings": 2,
     "harvest_item": "wheat",
     "harvest_count_min": 2,
     "harvest_count_max": 3,
