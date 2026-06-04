@@ -52,6 +52,16 @@ def pivot_of(meta, key):
     return (meta.get(key, {}).get("world", {}) or {}).get("pivot", "bc")
 
 
+def footprint_of(meta, key):
+    """Footprint in CELLS (not the stretched sprite_w). A 2-cell-wide object
+    occupies the anchor cell plus cells to its right, so its center sits half a
+    cell right of the anchor cell's center — mirror TilemapManager's X shift."""
+    fp = (meta.get(key, {}).get("world", {}) or {}).get("footprint")
+    if isinstance(fp, (list, tuple)) and len(fp) >= 1 and fp[0]:
+        return int(fp[0])
+    return 1
+
+
 def load_png(folder, key):
     p = os.path.join(folder, f"{key}.png")
     if not os.path.exists(p):
@@ -73,8 +83,8 @@ GROUND_RECTS = [
 
 # Occupants: (id, cx, cy) with (cx,cy) = bottom-center anchor cell (floats OK).
 OBJECTS = [
-    # --- house back wall + door (row y=2); door is 2 cells wide so skip x4-6 ---
-    *[("wall_wood", x, 2) for x in range(1, 11) if x not in (4, 5, 6)],
+    # --- house back wall + door (row y=2); door footprint=2 occupies cells 5-6 ---
+    *[("wall_wood", x, 2) for x in range(1, 11) if x not in (5, 6)],
     ("door_wood", 5, 2),
     # --- house side walls (left x=1, right x=10), full height ---
     *[("wall_wood", 1, y) for y in range(3, 10)],
@@ -82,7 +92,7 @@ OBJECTS = [
     # --- house front/bottom wall (row y=9) ---
     *[("wall_wood", x, 9) for x in range(2, 10)],
     # --- house interior furniture (all inside x2..9, y3..8) ---
-    ("bed_fancy", 2.5, 7),     # left wall, head to back
+    ("bed_fancy", 2, 7),       # left wall, head to back (footprint=2; code centers it)
     ("bookshelf", 3, 3),       # back wall, left of door
     ("fireplace", 8, 3),       # back wall, right
     ("chest_wood", 8, 5),      # right side, below fireplace
@@ -123,10 +133,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--scale", type=int, default=6, help="upscale factor per cell")
     ap.add_argument("--assets", default=None,
-                    help="root holding Tiles/ and Objects/ (default: game Resources). "
-                         "Pass tools/pixelclean_out to render cleaned sprites.")
+                    help="root holding Tiles/ and Objects/ (default: game Resources, "
+                         "which already holds the cleaned canonical sprites).")
     ap.add_argument("--out", default=os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                                   "previews", "scene.png"))
+                                                   "_generated", "previews", "scene.png"))
     args = ap.parse_args()
     global TILES, OBJS
     if args.assets:
@@ -182,8 +192,9 @@ def main():
         rw, rh = max(1, sw * S), max(1, sh * S)
         spr = img.resize((rw, rh), Image.NEAREST)
         piv = pivot_of(meta, oid)
-        # bottom-center of anchor cell (cx,cy)
-        anchor_x = cx * cpx + cpx / 2
+        # bottom-center of anchor cell (cx,cy), shifted right for wide footprints
+        fp_x = footprint_of(meta, oid)
+        anchor_x = cx * cpx + cpx / 2 + (fp_x - 1) * 0.5 * cpx
         anchor_y = (cy + 1) * cpx
         if piv == "c":
             px = int(anchor_x - rw / 2)

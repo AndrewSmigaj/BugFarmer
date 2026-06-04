@@ -36,8 +36,12 @@ RES = os.path.join(ROOT, "BugFarmerClient", "Assets", "Resources")
 TILES_IN = os.path.join(RES, "Tiles")
 OBJS_IN = os.path.join(RES, "Objects")
 ENT_DIR = os.path.join(ROOT, "nakama", "data", "entities")
-OUT = os.path.join(ROOT, "tools", "pixelclean_out")
-PREV = os.path.join(ROOT, "tools", "previews")
+# Clean IN PLACE: overwrite the canonical game sprites under Resources/{Tiles,Objects}
+# (single source of truth, no side dir to hand-copy). Re-running is ~idempotent: the
+# BOX downscale to the same target size and the k-means re-quantize are stable. Only
+# Tiles/ and Objects/ are touched -- Player/ (hand-authored art) is never read here.
+OUT = RES
+PREV = os.path.join(ROOT, "tools", "_generated", "previews")
 
 PPC = 2          # cleaned pixels per logical cell-unit (16 logical px -> 32 clean px)
 TILE_PX = 32     # cleaned tile resolution (square)

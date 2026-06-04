@@ -40,7 +40,7 @@ TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(TOOLS_DIR)
 ENTITY_DIR = os.path.join(REPO, "nakama", "data", "entities")
 RESOURCES = os.path.join(REPO, "BugFarmerClient", "Assets", "Resources")
-RAW_DIR = os.path.join(TOOLS_DIR, "raw_sprites")
+RAW_DIR = os.path.join(TOOLS_DIR, "_generated", "raw")
 TMP_DIR = "/tmp"
 
 SOURCES = {

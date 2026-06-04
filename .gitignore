@@ -97,3 +97,33 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# ============================================================================
+# Project-specific. The Unity project is nested under BugFarmerClient/, so the
+# root-anchored Unity rules above (/[Ll]ibrary/ etc.) do NOT match it. Re-ignore
+# the nested generated/cache dirs explicitly.
+# ============================================================================
+BugFarmerClient/[Ll]ibrary/
+BugFarmerClient/[Tt]emp/
+BugFarmerClient/[Oo]bj/
+BugFarmerClient/[Bb]uild/
+BugFarmerClient/[Bb]uilds/
+BugFarmerClient/[Ll]ogs/
+BugFarmerClient/[Mm]emoryCaptures/
+
+# Secrets (OpenAI API key for the sprite pipeline)
+.env
+tools/.env
+
+# Python tooling
+__pycache__/
+*.pyc
+
+# Sprite/world pipeline output: regenerable, kept on disk but out of git.
+# raw API images, cleaned-sprite staging, scene previews, world renders.
+tools/_generated/
+
+# One-off API response dumps and scratch sprite iterations
+tools/response*.json
+tools/honeybee*.png
+/Untitled.png

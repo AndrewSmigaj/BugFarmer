@@ -1,6 +1,8 @@
 # BugFarmer Master Style Guide
 
-Single source of truth for all sprite generation. Use this document with ComfyUI and PROMPT_SCAFFOLDS.md.
+Single source of truth for the art style of all sprites. This guide covers the *look*
+(palette, perspective, proportions); for the *mechanics* of generating sprites see
+[object_pipeline.md](object_pipeline.md).
 
 ---
 
