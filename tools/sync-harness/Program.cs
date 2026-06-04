@@ -84,15 +84,13 @@ namespace BugFarmer.SyncHarness
             await socket.ConnectAsync(session);
             Log("socket connected");
 
-            var createPayload = JsonSerializer.Serialize(new Dictionary<string, object>
-            {
-                ["name"] = "sim-harness", ["access_policy"] = "public", ["zone_id"] = o.Zone,
-            });
-            var rpc = await client.RpcAsync(session, "world_create", createPayload);
+            // Enter the canonical world for the zone (find-or-create singleton, server-side).
+            var enterPayload = JsonSerializer.Serialize(new Dictionary<string, object> { ["zone_id"] = o.Zone });
+            var rpc = await client.RpcAsync(session, "world_enter", enterPayload);
             string matchId;
             using (var rdoc = JsonDocument.Parse(rpc.Payload))
                 matchId = rdoc.RootElement.GetProperty("match_id").GetString();
-            Log($"world_create -> match={matchId}");
+            Log($"world_enter {o.Zone} -> match={matchId}");
 
             var match = await socket.JoinMatchAsync(matchId);
             myUserId = match.Self.UserId;

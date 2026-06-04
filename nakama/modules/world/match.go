@@ -417,6 +417,14 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		}
 	}()
 
+	// Pause when no one is connected. A world must not "run" (advance ticks, simulate bugs,
+	// merge/split, broadcast) with zero players — that both wastes work and was crashing
+	// long-idle matches in merge/split. Returning state keeps the match alive but fully idle;
+	// TickCount freezes, so every tick-delta pauses cleanly and resumes when a player joins.
+	if len(worldState.Players) == 0 && len(worldState.Presences) == 0 {
+		return worldState
+	}
+
 	worldState.TickCount++
 	chunkSize := worldState.Config.ChunkSize
 

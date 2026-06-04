@@ -20,6 +20,9 @@ func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 	if err := initializer.RegisterRpc("world_join", rpc.WorldJoin); err != nil {
 		return err
 	}
+	if err := initializer.RegisterRpc("world_enter", rpc.WorldEnter); err != nil {
+		return err
+	}
 	if err := initializer.RegisterRpc("world_list", rpc.WorldList); err != nil {
 		return err
 	}

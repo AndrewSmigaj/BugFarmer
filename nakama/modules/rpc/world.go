@@ -57,6 +57,22 @@ type WorldJoinResponse struct {
 	MatchID string `json:"match_id"`
 }
 
+type WorldEnterRequest struct {
+	ZoneID string `json:"zone_id"`
+}
+
+// friendlyZoneName maps a zone id to a display name for the canonical (singleton) world.
+func friendlyZoneName(zoneID string) string {
+	switch zoneID {
+	case "village_21":
+		return "Normal"
+	case "sim_test":
+		return "Test"
+	default:
+		return zoneID
+	}
+}
+
 type ErrorResponse struct {
 	Error string `json:"error"`
 	Code  string `json:"code"`
@@ -268,6 +284,97 @@ func WorldJoin(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtim
 		MatchID: matchID,
 	}
 	responseJSON, _ := json.Marshal(response)
+	return string(responseJSON), nil
+}
+
+// WorldEnter finds-or-creates the canonical singleton world for a zone and returns a live match
+// for it. This is how the frontend enters Normal/Test without a world-creation UI: the server
+// guarantees exactly one world per zone (deterministic storage key), recreating the match on
+// demand if it has been terminated. Race-free and survives a DB wipe. User-hosted worlds (the
+// future menu) still use world_create/world_join.
+func WorldEnter(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, payload string) (string, error) {
+	userID, ok := ctx.Value(runtime.RUNTIME_CTX_USER_ID).(string)
+	if !ok || userID == "" {
+		return errorResponse("authentication required", "AUTH_REQUIRED")
+	}
+
+	var req WorldEnterRequest
+	if err := json.Unmarshal([]byte(payload), &req); err != nil {
+		return errorResponse("invalid request format", "INVALID_REQUEST")
+	}
+	if req.ZoneID == "" {
+		req.ZoneID = "village_21"
+	}
+
+	// Deterministic per-zone identity so there is exactly one canonical world per zone.
+	worldID := "default_" + req.ZoneID
+
+	// Load existing canonical metadata (if any).
+	var metadata WorldMetadata
+	haveMetadata := false
+	if objects, err := nk.StorageRead(ctx, []*runtime.StorageRead{{
+		Collection: CollectionWorlds,
+		Key:        worldID,
+		UserID:     "", // system-owned
+	}}); err == nil && len(objects) > 0 {
+		if err := json.Unmarshal([]byte(objects[0].Value), &metadata); err == nil {
+			haveMetadata = true
+		}
+	}
+
+	// Reuse the live match if it still exists; otherwise (re)create it.
+	matchID := ""
+	if haveMetadata && metadata.MatchID != "" {
+		if match, err := nk.MatchGet(ctx, metadata.MatchID); err == nil && match != nil {
+			matchID = metadata.MatchID
+		}
+	}
+
+	if matchID == "" {
+		ownerID := userID
+		if haveMetadata && metadata.OwnerID != "" {
+			ownerID = metadata.OwnerID
+		}
+		newMatchID, err := nk.MatchCreate(ctx, "world", map[string]interface{}{
+			"world_id":      worldID,
+			"owner_id":      ownerID,
+			"name":          friendlyZoneName(req.ZoneID),
+			"access_policy": "public",
+			"zone_id":       req.ZoneID,
+		})
+		if err != nil {
+			logger.Error("WorldEnter: failed to create match for zone %s: %v", req.ZoneID, err)
+			return errorResponse("failed to enter world", "MATCH_CREATE_FAILED")
+		}
+		matchID = newMatchID
+
+		metadata = WorldMetadata{
+			WorldID:      worldID,
+			OwnerID:      ownerID,
+			Name:         friendlyZoneName(req.ZoneID),
+			AccessPolicy: "public",
+			ZoneID:       req.ZoneID,
+			MatchID:      matchID,
+			CreatedAt:    time.Now().Unix(),
+		}
+		metadataJSON, _ := json.Marshal(metadata)
+		if _, err := nk.StorageWrite(ctx, []*runtime.StorageWrite{{
+			Collection:      CollectionWorlds,
+			Key:             worldID,
+			UserID:          "", // system-owned
+			Value:           string(metadataJSON),
+			PermissionRead:  2,
+			PermissionWrite: 0,
+		}}); err != nil {
+			logger.Warn("WorldEnter: failed to persist metadata for zone %s: %v", req.ZoneID, err)
+			// Non-fatal: the match exists; a later enter will re-persist.
+		}
+		logger.Info("WorldEnter: zone %s -> match %s (created)", req.ZoneID, matchID)
+	} else {
+		logger.Info("WorldEnter: zone %s -> match %s (reused)", req.ZoneID, matchID)
+	}
+
+	responseJSON, _ := json.Marshal(WorldJoinResponse{MatchID: matchID})
 	return string(responseJSON), nil
 }
 
