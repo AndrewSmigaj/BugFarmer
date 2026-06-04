@@ -327,17 +327,30 @@ namespace BugFarmer.Entities
             {
                 _tickAccumulator = System.Math.Min(_tickAccumulator, SecondsPerTick);
 
-                // Safety net: if we stay gated too long (lost event or stalled frontier),
-                // auto-resync via the late-join path. Bounded by MaxResyncAttempts.
-                _frontierStallTimer += Time.deltaTime;
-                if (_frontierStallTimer >= FrontierStallTimeout && _resyncAttempts < MaxResyncAttempts)
+                // A genuine stall is being BEHIND the frontier (simTick < authTick) yet unable to
+                // advance because events are missing — that's what a resync (snapshot) can fix.
+                // Being CAUGHT UP (simTick >= authTick) is the normal healthy state between tick
+                // broadcasts and must NOT count as a stall: the client catches up within the same
+                // frame a broadcast arrives, so the gate ends each frame caught-up. Counting that
+                // as a stall made _frontierStallTimer accumulate every frame and fire a spurious
+                // resync ~every FrontierStallTimeout during perfectly healthy play.
+                if (_simulationTick < _authoritativeTick)
                 {
-                    Debug.LogWarning($"[SwarmManager] Frontier stalled {FrontierStallTimeout}s (simTick={_simulationTick}, authTick={_authoritativeTick}, lastSeq={_lastReceivedSeq}, watermark={_frontierWatermark}) - resyncing (attempt {_resyncAttempts + 1}/{MaxResyncAttempts})");
-                    DebugFileLogger.Log($"[SwarmManager] Frontier STALLED {FrontierStallTimeout}s simTick={_simulationTick} authTick={_authoritativeTick} lastSeq={_lastReceivedSeq} watermark={_frontierWatermark} - resync {_resyncAttempts + 1}/{MaxResyncAttempts}");
-                    _resyncAttempts++;
+                    _frontierStallTimer += Time.deltaTime;
+                    if (_frontierStallTimer >= FrontierStallTimeout && _resyncAttempts < MaxResyncAttempts)
+                    {
+                        Debug.LogWarning($"[SwarmManager] Frontier stalled {FrontierStallTimeout}s (simTick={_simulationTick}, authTick={_authoritativeTick}, lastSeq={_lastReceivedSeq}, watermark={_frontierWatermark}) - resyncing (attempt {_resyncAttempts + 1}/{MaxResyncAttempts})");
+                        DebugFileLogger.Log($"[SwarmManager] Frontier STALLED {FrontierStallTimeout}s simTick={_simulationTick} authTick={_authoritativeTick} lastSeq={_lastReceivedSeq} watermark={_frontierWatermark} - resync {_resyncAttempts + 1}/{MaxResyncAttempts}");
+                        _resyncAttempts++;
+                        _frontierStallTimer = 0f;
+                        RequestResync();
+                        return;
+                    }
+                }
+                else
+                {
+                    // Caught up to the frontier — healthy; just waiting for the next broadcast.
                     _frontierStallTimer = 0f;
-                    RequestResync();
-                    return;
                 }
             }
             else
