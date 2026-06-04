@@ -462,7 +462,9 @@ Hard constraints:
 No purchasable bug pens
 
 
-No automated catching or combat
+No FAST or free automation — no instant auto-catching, no automated combat. The one allowed
+catching automation is the AUTONET (11.4): deliberately slow and capacity-capped, so it eases
+tedium without out-producing the hand net.
 
 
 Containment is always emergent
@@ -499,6 +501,18 @@ Processing stations
 
 
 They enable production but do not provide containment.
+
+11.4 Autonet (the one allowed auto-catcher)
+A more expensive, later-purchase structure (players start with the hand net / manual catching).
+A small vat with a fan that slowly sucks nearby flies through an opening into an internal net.
+Deliberately SLOW, and a capacity that FILLS UP and then stops until emptied — so it trims tedium
+but never out-produces active hand-netting. Other bugs/zones may get their own slow auto-collectors
+in the same spirit.
+
+11.5 Furniture production boosts
+Decorative furniture in the private plot can grant small idle production multipliers with
+DIMINISHING RETURNS per duplicate (a second sofa adds less than the first) and an overall cap —
+rewarding thoughtful layout without replacing gameplay.
 
 12. Risk, Events, and Offline Behavior
 12.1 Private Plot Safety
