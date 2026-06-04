@@ -14,6 +14,7 @@ Bug Farmer is a 2D multiplayer game where players farm bugs, build structures, a
 - [architecture_entity_sync.md](architecture_entity_sync.md) — entity replication
 - [architecture_swarm_sync.md](architecture_swarm_sync.md) — authoritative-client swarm sim + deterministic followers
 - [requirements.md](requirements.md) — game design requirements
+- [BACKLOG.md](BACKLOG.md) — running queue of upcoming work (Now / Next / Later)
 - [zones/](zones/) — per-zone design notes
 
 **`docs/guides/` — how to operate the pipeline** (see [../guides/object_pipeline.md](../guides/object_pipeline.md))

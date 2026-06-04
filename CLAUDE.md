@@ -43,4 +43,6 @@ python3 tools/make_scene.py                         # render tools/_generated/pr
 
 ## Find depth in
 - `docs/product/ARCHITECTURE.md` — top-level architecture + index to all product docs.
+- `docs/product/BACKLOG.md` — the live "what's next" queue (Now / Next / Later). The throwaway plan
+  doc covers only the item we're actively working; the backlog is what persists between sessions.
 - `docs/guides/object_pipeline.md` — canonical art/sprite pipeline (the one to read first).
