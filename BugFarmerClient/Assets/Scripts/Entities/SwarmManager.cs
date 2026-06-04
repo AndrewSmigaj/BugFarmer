@@ -1194,6 +1194,14 @@ namespace BugFarmer.Entities
                 _authoritativeTick = msg.authoritative_tick;
                 _frontierWatermark = msg.last_event_seq;
             }
+            else
+            {
+                // Observability: a broadcast that does NOT advance the frontier. Healthy play almost
+                // never hits this (each tick's broadcast is newer); a burst of these during a stall
+                // means we're draining STALE broadcasts (processing behind the server) — the smoking
+                // gun for a client-side message backlog under load.
+                DebugFileLogger.Log($"[SwarmManager] ZTB non-advancing: msg.tick={msg.authoritative_tick} authTick={_authoritativeTick} msg.seq={msg.last_event_seq} sim={_simulationTick} state={_syncState}");
+            }
         }
 
         /// <summary>
