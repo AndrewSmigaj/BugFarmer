@@ -36,15 +36,14 @@ namespace BugFarmer.Networking
             socket.ReceivedMatchState += HandleMatchState;
         }
 
-        public async Task<WorldCreateResponse> CreateWorld(string name, string accessPolicy = "public", string zoneId = "", bool debugMode = false)
+        public async Task<WorldCreateResponse> CreateWorld(string name, string accessPolicy = "public", string zoneId = "")
         {
             var session = await NetworkManager.Instance.Session;
             var request = new WorldCreateRequest
             {
                 name = name,
                 access_policy = accessPolicy,
-                zone_id = zoneId,
-                debug_mode = debugMode
+                zone_id = zoneId
             };
             var payload = JsonUtility.ToJson(request);
 
@@ -117,6 +116,44 @@ namespace BugFarmer.Networking
             catch (ApiResponseException ex)
             {
                 Debug.LogError($"[WorldManager] JoinWorld failed: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Enter the canonical world for a zone (Normal=village_21, Test=sim_test) via the
+        /// world_enter RPC, which finds-or-creates a singleton world server-side. No world
+        /// creation happens client-side. Mirrors JoinWorld once it has the match id.
+        /// </summary>
+        public async Task<IMatch> EnterWorld(string zoneId)
+        {
+            var session = await NetworkManager.Instance.Session;
+            var socket = NetworkManager.Instance.Socket;
+
+            var request = new WorldEnterRequest { zone_id = zoneId };
+            var payload = JsonUtility.ToJson(request);
+
+            try
+            {
+                var result = await NetworkManager.Instance.Client.RpcAsync(session, "world_enter", payload);
+                var response = JsonUtility.FromJson<WorldJoinResponse>(result.Payload);
+
+                CurrentMatch = await socket.JoinMatchAsync(response.match_id);
+                Self = CurrentMatch.Self;
+                Players.Clear();
+                Players.AddRange(CurrentMatch.Presences);
+
+                if (Entities.EntityManager.Instance != null)
+                {
+                    Entities.EntityManager.Instance.SetLocalPlayerId(Self.UserId);
+                }
+
+                Debug.Log($"[WorldManager] Entered zone '{zoneId}': match {CurrentMatch.Id} with {Players.Count} player(s)");
+                return CurrentMatch;
+            }
+            catch (ApiResponseException ex)
+            {
+                Debug.LogError($"[WorldManager] EnterWorld('{zoneId}') failed: {ex.Message}");
                 throw;
             }
         }
@@ -197,7 +234,6 @@ namespace BugFarmer.Networking
         public string name;
         public string access_policy;
         public string zone_id;
-        public bool debug_mode;
     }
 
     [Serializable]
@@ -210,6 +246,12 @@ namespace BugFarmer.Networking
     public class WorldJoinRequest
     {
         public string world_id;
+    }
+
+    [Serializable]
+    public class WorldEnterRequest
+    {
+        public string zone_id;
     }
 
     // Response DTOs

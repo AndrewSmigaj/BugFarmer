@@ -20,7 +20,7 @@ namespace BugFarmer.UI
         [SerializeField] private Button joinWorldButton;
         [SerializeField] private TMP_Text statusText;
         [SerializeField] private TMP_InputField worldNameInput;
-        [SerializeField] private Toggle debugModeToggle;  // Uses test_debug zone with minimal bugs
+        [SerializeField] private Toggle debugModeToggle;  // ON = create on the sim_test test zone (deterministic, few bugs) instead of the default zone
 
         private string _lastWorldId;
 
@@ -84,13 +84,13 @@ namespace BugFarmer.UI
         private async void OnCreateWorld()
         {
             var name = string.IsNullOrEmpty(worldNameInput?.text) ? "Test World" : worldNameInput.text;
-            var debugMode = debugModeToggle != null && debugModeToggle.isOn;
-            var zoneId = debugMode ? "test_debug" : "";
+            var useTestZone = debugModeToggle != null && debugModeToggle.isOn;
+            var zoneId = useTestZone ? "sim_test" : "";
 
-            Log($"Creating world '{name}' (debug={debugMode})...");
+            Log($"Creating world '{name}' (zone={(useTestZone ? "sim_test" : "default")})...");
             try
             {
-                var response = await WorldManager.Instance.CreateWorld(name, "public", zoneId, debugMode);
+                var response = await WorldManager.Instance.CreateWorld(name, "public", zoneId);
                 _lastWorldId = response.world_id;
                 Log($"Created world: {response.world_id}");
             }
