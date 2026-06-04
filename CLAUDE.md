@@ -3,6 +3,12 @@
 2D multiplayer farming/bug game. Unity client + Nakama (Go) server, with a Python
 pipeline that generates the sprite/world art.
 
+## How we work (every step)
+Carefully review the plan and/or the code you're about to write to make sure it's correct
+and well-designed. **Never guess — always read and verify the actual code involved** (the real
+function, the real call site, the real data shape) before relying on how it behaves. This holds
+for every step, not just the big ones.
+
 ## Repo map
 - `BugFarmerClient/` — Unity 6 client (C#); all art lives under `Assets/Resources/`.
 - `nakama/` — Nakama Go server (authoritative game logic) + canonical entity data.
@@ -46,3 +52,13 @@ python3 tools/make_scene.py                         # render tools/_generated/pr
 - `docs/product/BACKLOG.md` — the live "what's next" queue (Now / Next / Later). The throwaway plan
   doc covers only the item we're actively working; the backlog is what persists between sessions.
 - `docs/guides/object_pipeline.md` — canonical art/sprite pipeline (the one to read first).
+
+## Keep the canonical docs in step with the code
+When you finish a plan's work — before you call it done — reconcile the docs the change touched:
+- **`docs/product/BACKLOG.md`** — move/remove the item you completed; add anything new the work surfaced.
+- **The affected `docs/product/architecture_*.md`** — if behavior, data flow, or a contract changed,
+  update that doc so it still describes how the game actually works.
+- If nothing architectural changed, say so explicitly rather than skipping silently.
+
+This is the project's weak point: docs drift because updates happen at a different time than the code.
+Plan-completion is the reconciliation point.
