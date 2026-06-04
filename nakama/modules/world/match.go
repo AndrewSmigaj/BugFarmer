@@ -354,7 +354,12 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 					zone.LatestSnapshotTick = 0
 					zone.LatestSnapshotHash = ""
 					zone.AuthorityUserID = ""
-					logger.Info("Zone %s is now empty - reset all sync state (NextSeq, InfluenceLog, Snapshot, Authority)", zoneID)
+					// Drop any event still queued for broadcast. Otherwise an event from the last
+					// tick before everyone left can survive the reset + pause-when-empty and be
+					// delivered to the next (reconnecting) client mixed with the fresh seq-0 stream,
+					// leaving a seq gap the client's HasAllEventsUpTo can never close (it stalls).
+					worldState.ClearPendingInfluence()
+					logger.Info("Zone %s is now empty - reset all sync state (NextSeq, InfluenceLog, Snapshot, Authority, PendingInfluence)", zoneID)
 				} else if zone.AuthorityUserID == userID {
 					// Authority is leaving but zone still has members - reassign
 					zone.AuthorityUserID = ""
@@ -422,6 +427,11 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 	// long-idle matches in merge/split. Returning state keeps the match alive but fully idle;
 	// TickCount freezes, so every tick-delta pauses cleanly and resumes when a player joins.
 	if len(worldState.Players) == 0 && len(worldState.Presences) == 0 {
+		// Defense in depth: the pause skips the normal per-tick broadcast+clear, so make sure no
+		// event lingers in the queue across an empty period (it would leak to the next client).
+		if len(worldState.PendingInfluence) > 0 {
+			worldState.ClearPendingInfluence()
+		}
 		return worldState
 	}
 
