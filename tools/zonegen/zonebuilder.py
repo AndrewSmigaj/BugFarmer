@@ -67,6 +67,9 @@ class ZoneBuilder:
         self.occ = {}  # (x,y) -> {"id","dir","anchor"?}
         self.surface = [["grass"] * width for _ in range(height)]
         self.reserved = [[False] * width for _ in range(height)]
+        self.players = []  # [(sprite_id, x, y)] scene-dressing characters (render-only)
+        self.bugs = []     # [(sprite_id, x, y)] scene-dressing bugs (render-only)
+        self.decor = []    # [(id, x, y, mult)] free-floating ground decor (fruit) — render-only
 
     # ---- queries ------------------------------------------------------------
     def in_bounds(self, x, y):
@@ -132,6 +135,21 @@ class ZoneBuilder:
             if surface:
                 self.surface[cy][cx] = surface
         return True
+
+    # ---- scene dressing (render-only; not persisted to chunks) --------------
+    def place_player(self, sprite_id, x, y):
+        """A character sprite (from Resources/Player) for scene previews only."""
+        self.players.append((sprite_id, x, y))
+
+    def place_bug(self, sprite_id, x, y, scale=1.0):
+        """A bug sprite (from Resources/Bugs) for scene previews only — sub-grid floats, scaled,
+        no reserve."""
+        self.bugs.append((sprite_id, x, y, scale))
+
+    def place_decor(self, oid, x, y, scale=1.0):
+        """Free-floating ground decor (fruit) — sub-grid (x,y may be floats), scaled by `scale`,
+        NOT an occupant (no footprint, no reserve, doesn't line up with cells)."""
+        self.decor.append((oid, x, y, scale))
 
     # ---- art tracking -------------------------------------------------------
     def missing_art(self):

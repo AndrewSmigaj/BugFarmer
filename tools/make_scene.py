@@ -24,6 +24,7 @@ RES = os.path.join(ROOT, "BugFarmerClient", "Assets", "Resources")
 TILES = os.path.join(RES, "Tiles")
 OBJS = os.path.join(RES, "Objects")
 PLAYER = os.path.join(RES, "Player")
+BUGS = os.path.join(RES, "Bugs")
 ENT_DIR = os.path.join(ROOT, "nakama", "data", "entities")
 ZONES_DIR = os.path.join(ROOT, "nakama", "data", "zones")
 CELL = 16        # logical pixels per cell
@@ -120,6 +121,11 @@ def category_of(meta, key):
     return (meta.get(key, {}) or {}).get("category", "")
 
 
+def is_flat(meta, key):
+    """Flat floor coverings (rugs): lie on the ground, drawn before furniture sits on them."""
+    return bool((meta.get(key, {}).get("world", {}) or {}).get("flat"))
+
+
 def load_png(folder, key):
     p = os.path.join(folder, f"{key}.png")
     return Image.open(p).convert("RGBA") if os.path.exists(p) else None
@@ -143,11 +149,15 @@ def _variant_pool(tid):
 
 
 # ---- core renderer (library) ------------------------------------------------
-def render_scene(ground, occupants, meta, scale, out_path, players=None, seed=7):
+def render_scene(ground, occupants, meta, scale, out_path, players=None, seed=7, bugs=None,
+                 decor=None):
     """Render a scene to PNG.
       ground:    GH x GW grid of tile-id strings.
       occupants: list of (id, cx, cy) ANCHOR cells in local cell coords (floats OK).
       players:   optional list of (sprite_id, cx, cy) drawn at native size.
+      bugs:      optional list of (sprite_id, cx, cy) from Resources/Bugs, centered, on top.
+      decor:     optional list of (id, cx, cy, mult) free-floating ground decor (fruit, etc.) —
+                 NOT grid-aligned: drawn from Objects at sprite_size*mult, centered on (cx,cy).
     Returns a report dict (size, placeholders used, missing tiles)."""
     GH = len(ground)
     GW = len(ground[0]) if GH else 0
@@ -172,13 +182,35 @@ def render_scene(ground, occupants, meta, scale, out_path, players=None, seed=7)
                 ph = Image.new("RGBA", (cpx, cpx), MISSING_TILE)
                 canvas.alpha_composite(ph, (x * cpx, iy))
 
-    # Draw back-to-front: higher cy (north, away) first, lower cy (south, near) last so the
-    # near object is on top — the painter's order that matches the game's -cellPos.y sorting.
-    placeholders = []
-    for oid, cx, cy in sorted(occupants, key=lambda o: (-o[2], o[1])):
-        sw, sh = sprite_size_cells(meta, oid)
-        rw, rh = max(1, sw * scale), max(1, sh * scale)
+    # Flat floor coverings (rugs) are drawn FIRST, at ground level over their footprint, so
+    # furniture placed on them sits on top.
+    for oid, cx, cy in [o for o in occupants if is_flat(meta, o[0])]:
         img = load_png(OBJS, oid)
+        if img is None:
+            continue
+        fw, fh = footprint_of(meta, oid)
+        spr = img.resize((fw * cpx, fh * cpx), Image.NEAREST)
+        canvas.alpha_composite(spr, (cx * cpx, (GH - cy - fh) * cpx))
+
+    # Occupants AND free-floating decor (fruit) share ONE back-to-front pass, sorted by cy:
+    # higher cy (north, away) first, lower cy (south, near) last. So fruit BEHIND a tree (higher
+    # cy than the trunk) draws before it and is correctly occluded; fruit in front draws on top.
+    placeholders = []
+    items = [("occ", oid, cx, cy, 1.0) for (oid, cx, cy) in occupants if not is_flat(meta, oid)]
+    items += [("decor", did, cx, cy, mult) for (did, cx, cy, mult) in (decor or [])]
+    for kind, oid, cx, cy, mult in sorted(items, key=lambda t: (-t[3], t[2])):
+        img = load_png(OBJS, oid)
+        sw, sh = sprite_size_cells(meta, oid)
+        if kind == "decor":
+            if img is None:
+                continue
+            rw, rh = max(1, int(sw * scale * mult)), max(1, int(sh * scale * mult))
+            spr = img.resize((rw, rh), Image.NEAREST)
+            ax = cx * cpx + cpx / 2
+            cyc = (GH - cy - 0.5) * cpx
+            canvas.alpha_composite(spr, (int(ax - rw / 2), int(cyc - rh / 2)))
+            continue
+        rw, rh = max(1, sw * scale), max(1, sh * scale)
         if img is None:
             spr = placeholder_img(meta, oid, rw, rh)
             placeholders.append(oid)
@@ -206,6 +238,19 @@ def render_scene(ground, occupants, meta, scale, out_path, players=None, seed=7)
         ax = cx * cpx + cpx / 2
         front_edge_y = (GH - cy) * cpx
         canvas.alpha_composite(spr, (int(ax - pw * scale / 2), int(front_edge_y - ph * scale)))
+
+    # Bugs: small free-floating sprites (flies, butterflies) from Resources/Bugs, sub-grid
+    # (cx,cy floats) and scaled by `mult`, drawn last so they sit on top of everything.
+    for bid, cx, cy, mult in (bugs or []):
+        img = load_png(BUGS, bid)
+        if img is None:
+            continue
+        bw, bh = img.size
+        rw, rh = max(1, int(bw * scale * mult)), max(1, int(bh * scale * mult))
+        spr = img.resize((rw, rh), Image.NEAREST)
+        ax = cx * cpx + cpx / 2
+        cyc = (GH - cy - 0.5) * cpx
+        canvas.alpha_composite(spr, (int(ax - rw / 2), int(cyc - rh / 2)))
 
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     canvas.convert("RGB").save(out_path)

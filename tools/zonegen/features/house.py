@@ -201,7 +201,7 @@ def living_template(b, I, doors, doorways):
     def P(oid, x, y, **k):
         return _safe(b, oid, x, y, doorways, **k)
 
-    P("fireplace", cx - 1, iy1 - 1)        # 2x2 hearth, centered on the north (back) wall
+    P("fireplace", cx - 1, iy1)            # 2x1 hearth, flush against the north (back) wall
     P("bookshelf", ix0, iy1)               # north wall, west
     P("bug_terrarium", ix1, iy1)           # north wall, east (show off your catches)
     P("rug", cx - 1, cy - 1, reserve=False, surface=None)
@@ -209,6 +209,7 @@ def living_template(b, I, doors, doorways):
     P("armchair", ix0, cy - 1)             # west, by the rug
     P("armchair", ix1, cy - 1)             # east, by the rug
     P("lamp_floor", ix0, iy1 - 1)          # west wall, by the shelf
+    P("grandfather_clock", ix1, cy + 1)    # east wall
     P("vase", ix1, iy1 - 1)                # east wall, by the terrarium
     P("potted_plant", ix0, iy0)            # south-west corner
     P("potted_plant", ix1, iy0)            # south-east corner

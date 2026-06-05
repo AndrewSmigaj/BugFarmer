@@ -20,12 +20,13 @@ for fn in ("occupants.json", "placeables.json", "crops.json"):
 PY
 ```
 
-## Missing world sprites (11 of 108 catalog entities, 2026-06)
+## Missing world sprites (11 of 114 catalog entities, 2026-06)
 Generate via the **add-object** skill: `gen_sprites.py --source <src> --keys <key>` → `pixelclean.py`.
 
-The **house set** (fridge, stove, sink, counter, keg, sofa, armchair, nightstand, dresser, rug,
-bug_terrarium, vase, window_4pane) is **DONE** — generated via gpt-image-1 and cleaned; the player
-house renders with full real art. Remaining backlog below.
+**DONE** (generated via gpt-image-1 + cleaned): the **house set** (fridge, stove, sink, counter,
+keg, sofa, armchair, nightstand, dresser, rug, bug_terrarium, vase, window_4pane) and the **farm
+set** (fountain, compost_bin, autonet, fly_netting, fallen_fruit, rotten_fruit). Scene 1 (house +
+fly farm) renders with full real art except the two backlog items below that appear in it.
 
 ### Pre-existing backlog
 | id | category | source |

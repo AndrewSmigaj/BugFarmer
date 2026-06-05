@@ -207,8 +207,9 @@ TILE_DESC = {
     "garden_plot_wet": "tilled dark soil, damp and darker, in even furrows",
     "mud": "wet brown mud, glossy uneven surface",
     "sand": "fine pale tan sand with gentle ripples",
-    "water_shallow": "shallow clear water, light teal with soft ripples",
-    "water_deep": "deep water, darker blue with soft ripples",
+    "water_shallow": "calm water, soft medium teal-blue with gentle ripples",
+    "water_deep": "calm deeper water, the SAME teal-blue hue as shallow water but only "
+                  "SLIGHTLY darker (a subtle deepening, NOT a different colour), gentle ripples",
     "bridge_wood": "wooden bridge planks running horizontally, sturdy brown boards",
     "bridge_stone": "flat stone bridge slabs, grey with even joints",
 }
@@ -379,6 +380,66 @@ OBJECT_DESC = {
     "statue_stone": (
         "a carved STONE STATUE on a pedestal: a small weathered grey stone figure/bust standing "
         "on a square stone BASE/plinth. Clearly a carved statue, NOT a plain rock or pillar."),
+    # --- farm / outdoor (fly pen, orchard, garden) ---
+    "fountain": (
+        "an ornate stone garden FOUNTAIN seen front-on from slightly above: a round TIERED stone "
+        "basin with a central spout, clear blue WATER spilling between the tiers into the pool. "
+        "Grand and decorative; clearly a working fountain."),
+    "compost_bin": (
+        "a wooden COMPOST BIN: an open-topped slatted wooden box filled with dark crumbly compost "
+        "and food scraps mounded above the rim. Clearly a compost bin, NOT a plain crate."),
+    "autonet": (
+        "an AUTONET automatic fly-catcher seen front-on, WIDER than tall: on the left a round "
+        "spinning electric FAN in a housing, and ATTACHED right beside it a cylindrical metal "
+        "TANK/vat with a mesh intake; the fan sucks flies through the opening into a collection "
+        "net inside the tank. A quirky two-part bug-suction machine on little legs."),
+    "net_post": (
+        "a bug-catching NET STATION: a tall wooden POST with a round hoop NET of fine pale mesh "
+        "mounted at the top (a butterfly-style net fixed upright on a stand). Clearly a net on a post."),
+    "broken_net": (
+        "a BROKEN handheld bug net lying on the ground, seen from above: a wooden HANDLE with a "
+        "round hoop at the end holding torn, frayed mesh full of holes. A damaged catching net."),
+    "apple_crate": (
+        "a simple wooden CRATE seen FLAT and FACE-ON (straight from the front, NOT angled, NOT "
+        "tilted, NOT isometric): a square slatted wooden box with a few red APPLES piled on top. "
+        "Mostly just a plain front-facing wooden crate."),
+    "fly_netting": (
+        "a square patch of NET hung up: a flat square panel of fine MESH — a simple GRID OF "
+        "CROSSED STRINGS, slightly slack — with a few small dark FLIES caught on it. Just the open "
+        "mesh grid, NO wooden frame, NO box, NO solid panel; you can see through the holes."),
+    "fallen_fruit": (
+        "two or three small round red APPLES lying on the ground, seen from directly above, "
+        "ripe and whole. Just apples — red."),
+    "fallen_orange": (
+        "two or three small round ORANGES lying on the ground, seen from directly above, ripe "
+        "and whole. Just oranges — orange."),
+    "rotten_fruit": (
+        "a piece of ROTTING FRUIT on the ground seen from above: brown, mushy and partly "
+        "collapsed with dark spots and a faint haze — clearly spoiled (a fly attractant)."),
+    "grandfather_clock": (
+        "a tall GRANDFATHER CLOCK seen front-on: a narrow upright wooden cabinet with a round "
+        "white CLOCK FACE near the top and a long glass PENDULUM case below. Much taller than wide."),
+    "scarecrow": (
+        "a SCARECROW: a straw-stuffed figure on a wooden CROSS-POST, a burlap sack head with a "
+        "stitched face under a tattered straw HAT, arms spread along the crossbar, bits of straw "
+        "poking out. Stands upright in a field."),
+    "birdbath": (
+        "a stone BIRDBATH garden ornament: a shallow round BASIN of water on a slim carved stone "
+        "PEDESTAL with a round base. Clearly a birdbath."),
+    "garden_arch": (
+        "a GARDEN ARCH / trellis archway seen front-on: two slim posts joined by an arched top, "
+        "with climbing green VINES and small flowers over it and an open walk-through gap in the "
+        "middle. A decorative garden arch."),
+    "hedge": (
+        "a section of trimmed HEDGE: a dense flat-topped block of green leafy shrubbery, like a "
+        "low green wall. The foliage spans the FULL WIDTH and bleeds off the left and right edges "
+        "so sections tile into one continuous hedge with no gap."),
+    "lamp_post": (
+        "an outdoor LAMP POST: a tall slim dark metal POLE on a small round base, topped with a "
+        "glass LANTERN that glows warm yellow. A garden/street lamp, taller than wide."),
+    "lily_pad": (
+        "a flat round green LILY PAD floating on water, seen from straight above, with a small "
+        "notch in one side and maybe a tiny pink flower. Flat, just the pad."),
     # --- nature (organic) ---
     "tree_oak": (
         "a leafy OAK TREE: a thick brown TRUNK at the bottom widening into a big round, full "
@@ -408,6 +469,16 @@ OBJECT_DESC = {
     "tall_grass": (
         "a tuft of TALL GRASS: a clump of upright thin green grass blades fanning out, wild, "
         "denser at the base. Just grass blades, no flowers."),
+    # --- crops (mature, must read as DIFFERENT plants) ---
+    "plant_tomato": (
+        "a mature TOMATO plant: a low leafy green bush with several round ripe RED TOMATOES "
+        "hanging among the leaves. Clearly tomatoes (red)."),
+    "plant_corn": (
+        "a tall CORN / maize plant: an upright green stalk with long arching leaves and one or two "
+        "yellow CORN COBS, distinctly TALLER than it is wide. Clearly corn."),
+    "plant_wheat": (
+        "a clump of ripe golden WHEAT: several upright tan-GOLDEN stalks topped with bushy seed "
+        "heads, dry straw colour. Clearly wheat, NOT green leafy."),
 }
 
 # Per-object palette overrides where the keyword guesser picks the wrong material
@@ -650,17 +721,38 @@ NATURAL_DESIGN = (
     "- Render ONLY the plant - no ground patch, no pot (unless described), no cast shadow.")
 
 
+# A flat see-through NET tile (no perspective at all) — its own prompt; NOT the perspective
+# STYLE_BLOCK. Used for fly_netting (a pen-wall net drawn as a flat mesh on a tile).
+FLAT_NET = (
+    "Create a 2D game sprite (pixel art): a FLAT square of NETTING that fills the entire frame.\n"
+    "ART DIRECTION: viewed perfectly STRAIGHT-ON and FLAT — absolutely NO perspective, NO angle, "
+    "NO 3D, NO isometric, NO top face, NO drop shadow, NO shading or depth. Just a flat 2D mesh.\n"
+    "DESIGN:\n"
+    "- A regular GRID of crossed ROPE STRINGS (a square net mesh) spanning the whole frame, edge "
+    "to edge: roughly a 5x5 grid of strings.\n"
+    "- The strings are a light PALE-GREY / off-white rope (around RGB 225,225,228) with a slightly "
+    "darker grey edge so they read clearly. The strings MUST be solid and OPAQUE and 1-2 px thick — "
+    "the mesh must be CLEARLY VISIBLE. Do NOT output a blank, faint, or nearly-transparent image.\n"
+    "- The square HOLES between the strings are FULLY TRANSPARENT (empty alpha) so the game "
+    "background shows straight through.\n"
+    "- Reads instantly as a piece of NET. NO wooden frame, NO posts, NO box, NO solid fabric "
+    "panel, NO bugs drawn on it — only the pale rope string mesh.\n"
+    "This is a flat net overlay placed on a tile in a 2D game.")
+
+
 def build_prompt(key, ent):
     name = ent.get("name", key)
     category = ent.get("category", "furniture")
     world = ent.get("world", {}) or {}
     pivot = world.get("pivot", "bc")
+    if key == "fly_netting":
+        return FLAT_NET
     mats = guess_materials(key, name, category)
     # Walls, ground blocks (dirt/stone/clay) and ore blocks all use the cube-tiling block prompt
     # so they read as one continuous surface when stacked/tiled.
     if category in ("block", "ore") or (category == "structure" and key.startswith("wall")):
         return build_wall_prompt(key, ent, mats)
-    is_natural = category == "natural"
+    is_natural = category in ("natural", "crop")   # crops are organic plants, not boxy objects
     desc_lines = [f"\nWHAT IT IS (draw exactly this): {OBJECT_DESC[key]}"] if key in OBJECT_DESC else []
     if is_natural:
         parts = [

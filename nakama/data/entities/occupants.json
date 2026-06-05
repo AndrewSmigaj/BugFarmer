@@ -237,8 +237,8 @@
   "flower_wild": {
     "name": "Wild Flower",
     "category": "natural",
-    "sprite_w": 16,
-    "sprite_h": 16,
+    "sprite_w": 10,
+    "sprite_h": 10,
     "world": {
       "footprint": [1, 1],
       "pivot": "c",
@@ -253,8 +253,8 @@
   "flower_red": {
     "name": "Red Flower",
     "category": "natural",
-    "sprite_w": 16,
-    "sprite_h": 16,
+    "sprite_w": 10,
+    "sprite_h": 10,
     "world": {
       "footprint": [1, 1],
       "pivot": "c",
@@ -269,8 +269,8 @@
   "flower_blue": {
     "name": "Blue Flower",
     "category": "natural",
-    "sprite_w": 16,
-    "sprite_h": 16,
+    "sprite_w": 10,
+    "sprite_h": 10,
     "world": {
       "footprint": [1, 1],
       "pivot": "c",
@@ -285,8 +285,8 @@
   "flower_yellow": {
     "name": "Yellow Flower",
     "category": "natural",
-    "sprite_w": 16,
-    "sprite_h": 16,
+    "sprite_w": 10,
+    "sprite_h": 10,
     "world": {
       "footprint": [1, 1],
       "pivot": "c",
@@ -595,12 +595,12 @@
   },
   "apple_crate": {
     "name": "Apple Crate",
-    "category": "natural",
+    "category": "storage",
     "sprite_w": 16,
-    "sprite_h": 16,
+    "sprite_h": 18,
     "world": {
       "footprint": [1, 1],
-      "pivot": "c",
+      "pivot": "bc",
       "breakable": {
         "hp": 1,
         "required_tool_type": "axe",
@@ -678,5 +678,20 @@
       "footprint": [1, 1],
       "pivot": "bc"
     }
+  },
+  "fallen_fruit": {
+    "name": "Fallen Apples", "category": "natural",
+    "sprite_w": 16, "sprite_h": 16,
+    "world": {"footprint": [1, 1], "pivot": "c"}
+  },
+  "fallen_orange": {
+    "name": "Fallen Oranges", "category": "natural",
+    "sprite_w": 16, "sprite_h": 16,
+    "world": {"footprint": [1, 1], "pivot": "c"}
+  },
+  "rotten_fruit": {
+    "name": "Rotten Fruit", "category": "natural",
+    "sprite_w": 16, "sprite_h": 16,
+    "world": {"footprint": [1, 1], "pivot": "c"}
   }
 }

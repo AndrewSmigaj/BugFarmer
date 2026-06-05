@@ -19,7 +19,14 @@ def render_builder(b, out, scale=6, bounds=None):
     ground = [[b.ground[y0 + yy][x0 + xx] for xx in range(gw)] for yy in range(gh)]
     occ = [(c["id"], x - x0, y - y0) for (x, y), c in b.occ.items()
            if c.get("anchor") and x0 <= x <= x1 and y0 <= y <= y1]
-    r = make_scene.render_scene(ground, occ, b.meta, scale, out)
+    players = [(s, x - x0, y - y0) for (s, x, y) in getattr(b, "players", [])
+               if x0 <= x <= x1 and y0 <= y <= y1]
+    bugs = [(s, x - x0, y - y0, sc) for (s, x, y, sc) in getattr(b, "bugs", [])
+            if x0 <= x <= x1 and y0 <= y <= y1]
+    decor = [(s, x - x0, y - y0, m) for (s, x, y, m) in getattr(b, "decor", [])
+             if x0 <= x <= x1 and y0 <= y <= y1]
+    r = make_scene.render_scene(ground, occ, b.meta, scale, out, players=players, bugs=bugs,
+                                decor=decor)
     print(f"  rendered {r['gw']}x{r['gh']} -> {r['w']}x{r['h']}px  {out}")
     if r["placeholders"]:
         print(f"  placeholders: {', '.join(r['placeholders'])}")

@@ -23,19 +23,23 @@ working; this file is what survives between sessions.
 - **House composer** (`features/house.py`): multi-room buildings from shared-wall rects (⊥/L),
   interior doors + windows + doorway-avoidance, and a reusable room-template library
   (living/bedroom/kitchen/crafting) following the south-facing **facing rule**. Guide:
-  `docs/guides/house-building.md`; example: `builds/player_house.py`.
+  `docs/guides/house-building.md`; reusable house `houses/player_house.py`; scenes live in
+  `scenes/` and compose houses (e.g. `scenes/scene1_player_farm.py`).
 - New entities (data + `OBJECT_DESC` ready, art pending): fridge, stove, sink, counter, keg, sofa,
   armchair, nightstand, dresser, rug, bug_terrarium, vase, window_4pane, door_square.
 - **Engine fix**: `TilemapManager` tall-sprite vertical baseline (center-pivot PNGs + zeroed bc
   offset made beds overshoot); preview renderer flipped to match game orientation (+Y north).
 
 ## Now — Scene 1: player house + fly farm
-- House DONE (the ⊥ cottage above). Pending:
+- House DONE (the ⊥ cottage, full real art). Fly farm FIRST PASS done
+  (`scenes/scene1_player_farm.py`): netted fly pen (apple trees, fallen/rotting fruit, flies on
+  ground + netting, autonet, compost bin, broken net, apple crate, the farmer), orchard, garden
+  (fountain, benches, beds, lamps), paths, scattered decor + butterflies/bee. Pending:
+  - **Generate the farm art** (placeholders now): fountain, compost_bin, autonet, fly_netting,
+    fallen_fruit, rotten_fruit, rock_small, rock_mossy — `OBJECT_DESC` ready in `gen_sprites.py`.
+  - Iterate the garden/pen layout; confirm the **decorative-rock** decision (vs the old
+    "no standalone rocks, use stone_block" rule).
   - **Unity Play test** of the tall-sprite pivot fix + orientation (verify in-game vs preview).
-  - **Generate the house-set art** via add-object (gpt-image-1) — see `art_needed.md`.
-  - **Reconvert old-style sprites** to gpt-image-1 (keys to be identified — `art_needed.md`).
-  - Build the outdoor + **fly pen** half of the scene (fruit trees w/ fallen/rotting fruit, flies
-    on ground + netting, net station + autonet, fountain, garden beds, character with net).
 
 ## Now — Safe cleanup only (no refactoring, no splitting files)
 Tidy what's clearly safe; leave anything risky alone.

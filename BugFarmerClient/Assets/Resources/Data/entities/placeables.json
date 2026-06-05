@@ -1412,7 +1412,7 @@
     "world": {
       "footprint": [
         2,
-        2
+        1
       ],
       "pivot": "bc",
       "blocks_players": true,
@@ -1893,6 +1893,7 @@
         2
       ],
       "pivot": "bc",
+      "flat": true,
       "breakable": {
         "hp": 1,
         "drops": [
@@ -1959,5 +1960,82 @@
         ]
       }
     }
+  },
+  "fountain": {
+    "name": "Fountain", "category": "decoration",
+    "sprite_w": 32, "sprite_h": 40, "stackable": false, "sell_price": 120,
+    "world": {"footprint": [2, 2], "pivot": "bc", "blocks_players": true, "blocks_bugs": true,
+      "breakable": {"hp": 10, "required_tool_type": "pickaxe",
+        "drops": [{"item_id": "fountain", "count": 1, "chance": 1.0}]}}
+  },
+  "compost_bin": {
+    "name": "Compost Bin", "category": "structure",
+    "sprite_w": 16, "sprite_h": 20, "stackable": false, "sell_price": 18,
+    "world": {"footprint": [1, 1], "pivot": "bc", "blocks_players": true, "blocks_bugs": true,
+      "interactable": true, "interaction_type": "storage",
+      "breakable": {"hp": 3, "required_tool_type": "axe",
+        "drops": [{"item_id": "compost_bin", "count": 1, "chance": 1.0}]}}
+  },
+  "autonet": {
+    "name": "Autonet", "category": "structure",
+    "sprite_w": 32, "sprite_h": 28, "stackable": false, "sell_price": 90,
+    "world": {"footprint": [2, 1], "pivot": "bc", "blocks_players": true, "blocks_bugs": true,
+      "interactable": true, "interaction_type": "storage",
+      "breakable": {"hp": 4, "required_tool_type": "axe",
+        "drops": [{"item_id": "autonet", "count": 1, "chance": 1.0}]}}
+  },
+  "fly_netting": {
+    "name": "Fly Netting", "category": "structure",
+    "sprite_w": 16, "sprite_h": 16, "stackable": true, "max_stack": 99, "sell_price": 6,
+    "world": {"footprint": [1, 1], "pivot": "c", "blocks_players": true, "blocks_bugs": true,
+      "breakable": {"hp": 2, "required_tool_type": "axe",
+        "drops": [{"item_id": "fly_netting", "count": 1, "chance": 1.0}]}}
+  },
+  "grandfather_clock": {
+    "name": "Grandfather Clock", "category": "furniture",
+    "sprite_w": 16, "sprite_h": 32, "stackable": false, "sell_price": 45,
+    "world": {"footprint": [1, 1], "pivot": "bc", "blocks_players": true, "blocks_bugs": true,
+      "breakable": {"hp": 3, "required_tool_type": "axe",
+        "drops": [{"item_id": "grandfather_clock", "count": 1, "chance": 1.0}]}}
+  },
+  "scarecrow": {
+    "name": "Scarecrow", "category": "decoration",
+    "sprite_w": 16, "sprite_h": 32, "stackable": false, "sell_price": 15,
+    "world": {"footprint": [1, 1], "pivot": "bc",
+      "breakable": {"hp": 2, "required_tool_type": "axe",
+        "drops": [{"item_id": "scarecrow", "count": 1, "chance": 1.0}]}}
+  },
+  "birdbath": {
+    "name": "Birdbath", "category": "decoration",
+    "sprite_w": 16, "sprite_h": 24, "stackable": false, "sell_price": 22,
+    "world": {"footprint": [1, 1], "pivot": "bc", "blocks_players": true,
+      "breakable": {"hp": 4, "required_tool_type": "pickaxe",
+        "drops": [{"item_id": "birdbath", "count": 1, "chance": 1.0}]}}
+  },
+  "garden_arch": {
+    "name": "Garden Arch", "category": "structure",
+    "sprite_w": 32, "sprite_h": 36, "stackable": false, "sell_price": 30,
+    "world": {"footprint": [2, 1], "pivot": "bc",
+      "breakable": {"hp": 2, "required_tool_type": "axe",
+        "drops": [{"item_id": "garden_arch", "count": 1, "chance": 1.0}]}}
+  },
+  "hedge": {
+    "name": "Hedge", "category": "structure",
+    "sprite_w": 16, "sprite_h": 20, "stackable": true, "max_stack": 99, "sell_price": 5,
+    "world": {"footprint": [1, 1], "pivot": "bc", "blocks_players": true, "blocks_bugs": true,
+      "breakable": {"hp": 2, "required_tool_type": "axe",
+        "drops": [{"item_id": "hedge", "count": 1, "chance": 1.0}]}}
+  },
+  "lamp_post": {
+    "name": "Lamp Post", "category": "lighting",
+    "sprite_w": 16, "sprite_h": 32, "stackable": false, "sell_price": 18,
+    "world": {"footprint": [1, 1], "pivot": "bc", "blocks_players": true,
+      "breakable": {"hp": 4, "required_tool_type": "pickaxe",
+        "drops": [{"item_id": "lamp_post", "count": 1, "chance": 1.0}]}}
+  },
+  "lily_pad": {
+    "name": "Lily Pad", "category": "decoration",
+    "sprite_w": 16, "sprite_h": 16, "stackable": true, "max_stack": 99, "sell_price": 3,
+    "world": {"footprint": [1, 1], "pivot": "c"}
   }
 }

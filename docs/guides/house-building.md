@@ -6,7 +6,8 @@ stitching several differently-sized rooms into **one connected building** (an L,
 upside-down-T) with shared walls, interior doors, windows, and furniture placed against the
 walls by reusable room templates.
 
-Module: `tools/zonegen/features/house.py`. Worked example: `tools/zonegen/builds/player_house.py`.
+Module: `tools/zonegen/features/house.py`. Reusable house: `tools/zonegen/houses/player_house.py`
+(`place_player_house(b, ox, oy)` drops it into any scene). Worked use: `tools/zonegen/scenes/scene1_player_farm.py`.
 
 ## Orientation (read this first)
 The renderer now matches the game: **world +Y is NORTH (up)**, so in a rendered preview
@@ -84,7 +85,8 @@ guide you.
 
 ## Build → render → review loop
 ```bash
-python3 tools/zonegen/builds/player_house.py     # build + render the preview PNG
+python3 tools/zonegen/houses/player_house.py     # render the house on its own
+python3 tools/zonegen/scenes/scene1_player_farm.py  # render the house inside the full farm scene
 ```
 Read the PNG (and crop with `render_builder(b, out, scale, bounds=(x0,y0,x1,y1))` for detail).
 Aim for **0 placement warnings**; the builder refuses overlaps loudly.

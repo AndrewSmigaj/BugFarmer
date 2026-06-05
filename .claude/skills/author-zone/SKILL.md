@@ -51,5 +51,14 @@ python3 tools/zonegen/builds/<scene>.py    # builds + renders to tools/_generate
 - **Scenes are example vignettes** (rendered straight from the builder, no zone files); they double
   as the visual catalog/QA and the worked examples for the guides. One scene usually spans several
   guides. Across all scenes, aim to place **every** world entity at least once (catalog coverage).
+- **One preview file per scene.** A build script renders to a single canonical PNG and overwrites
+  it in place (e.g. `scene1_player_farm.png`). Don't spawn `_crop`/`_v2` variants in the previews
+  dir; render transient crops to `/tmp` and delete them.
+- **Collectible / free-floating decor is NOT placeable like furniture.** Fruit, FLOWERS, and bugs
+  are things you collect; they don't occupy or line up with cells. Place them with
+  `place_decor`(fruit/flowers, sub-grid float coords, scaled down) / `place_bug` (float coords,
+  scaled) — scattered, NOT snapped to a grid. Only structures, furniture, fences, walls and crops
+  are grid occupants (`place_occupant`). Design note: a future "collectible decor" layer in the
+  game should treat these the same way (sub-grid, pickup-able).
 - **Real zones** use `save()` (size must be a multiple of 32 cells).
 - Sprite generation is out of scope here — placeholders now, real art later via `add-object`.
