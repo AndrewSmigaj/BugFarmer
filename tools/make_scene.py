@@ -43,7 +43,11 @@ CATEGORY_COLORS = {
     "crop":        (130, 195, 100, 255),
     "decoration":  (200, 160, 200, 255),
     "container":   (180, 150, 110, 255),
+    "storage":     (180, 150, 110, 255),
+    "crafting":    (170, 130, 110, 255),
     "light":       (235, 215, 130, 255),
+    "lighting":    (235, 215, 130, 255),
+    "beekeeping":  (225, 200, 110, 255),
 }
 DEFAULT_PH = (195, 195, 195, 255)
 MISSING_TILE = (60, 80, 60, 255)   # ground placeholder
@@ -100,12 +104,16 @@ def pivot_of(meta, key):
 
 
 def footprint_of(meta, key):
-    """Footprint width in CELLS. Multi-cell-wide objects sit half a cell right of the
-    anchor cell's center — mirror TilemapManager's X shift."""
+    """Footprint (width, height) in CELLS. Multi-cell-wide objects sit half a cell right
+    of the anchor cell's center (TilemapManager's X shift); multi-cell-DEEP objects (beds,
+    tables) have the anchor at the footprint's TOP-LEFT, so the sprite's baseline is the
+    BOTTOM of the footprint, not of the anchor cell."""
     fp = (meta.get(key, {}).get("world", {}) or {}).get("footprint")
-    if isinstance(fp, (list, tuple)) and len(fp) >= 1 and fp[0]:
-        return int(fp[0])
-    return 1
+    if isinstance(fp, (list, tuple)) and len(fp) >= 2:
+        return (int(fp[0]) or 1), (int(fp[1]) or 1)
+    if isinstance(fp, (list, tuple)) and len(fp) == 1 and fp[0]:
+        return int(fp[0]), 1
+    return 1, 1
 
 
 def category_of(meta, key):
@@ -156,15 +164,18 @@ def render_scene(ground, occupants, meta, scale, out_path, players=None, seed=7)
                 im = load_png(TILES, tid)
                 tcache[tid] = im.resize((cpx, cpx), Image.NEAREST) if im else None
             t = tcache[tid]
+            iy = (GH - 1 - y) * cpx   # flip vertically: zone row 0 at image BOTTOM (game +Y up)
             if t:
-                canvas.alpha_composite(t, (x * cpx, y * cpx))
+                canvas.alpha_composite(t, (x * cpx, iy))
             else:
                 missing_tiles.add(base)
                 ph = Image.new("RGBA", (cpx, cpx), MISSING_TILE)
-                canvas.alpha_composite(ph, (x * cpx, y * cpx))
+                canvas.alpha_composite(ph, (x * cpx, iy))
 
+    # Draw back-to-front: higher cy (north, away) first, lower cy (south, near) last so the
+    # near object is on top — the painter's order that matches the game's -cellPos.y sorting.
     placeholders = []
-    for oid, cx, cy in sorted(occupants, key=lambda o: (o[2], o[1])):
+    for oid, cx, cy in sorted(occupants, key=lambda o: (-o[2], o[1])):
         sw, sh = sprite_size_cells(meta, oid)
         rw, rh = max(1, sw * scale), max(1, sh * scale)
         img = load_png(OBJS, oid)
@@ -173,13 +184,17 @@ def render_scene(ground, occupants, meta, scale, out_path, players=None, seed=7)
             placeholders.append(oid)
         else:
             spr = img.resize((rw, rh), Image.NEAREST)
-        fp_x = footprint_of(meta, oid)
+        fp_x, _ = footprint_of(meta, oid)
         anchor_x = cx * cpx + cpx / 2 + (fp_x - 1) * 0.5 * cpx
-        anchor_y = (cy + 1) * cpx
+        # Anchor is the FRONT (south) cell of the footprint; in the flipped image its front
+        # edge is the bottom of its band. The sprite baselines there and rises toward the back,
+        # filling the footprint (matches TilemapManager's center-pivot placement).
         if pivot_of(meta, oid) == "c":
-            px, py = int(anchor_x - rw / 2), int(anchor_y - cpx / 2 - rh / 2)
+            cell_center_y = (GH - cy - 0.5) * cpx
+            px, py = int(anchor_x - rw / 2), int(cell_center_y - rh / 2)
         else:  # bc
-            px, py = int(anchor_x - rw / 2), int(anchor_y - rh)
+            front_edge_y = (GH - cy) * cpx
+            px, py = int(anchor_x - rw / 2), int(front_edge_y - rh)
         canvas.alpha_composite(spr, (px, py))
 
     for pid, cx, cy in (players or []):
@@ -188,8 +203,9 @@ def render_scene(ground, occupants, meta, scale, out_path, players=None, seed=7)
             continue
         pw, ph = img.size
         spr = img.resize((pw * scale, ph * scale), Image.NEAREST)
-        ax, ay = cx * cpx + cpx / 2, (cy + 1) * cpx
-        canvas.alpha_composite(spr, (int(ax - pw * scale / 2), int(ay - ph * scale)))
+        ax = cx * cpx + cpx / 2
+        front_edge_y = (GH - cy) * cpx
+        canvas.alpha_composite(spr, (int(ax - pw * scale / 2), int(front_edge_y - ph * scale)))
 
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     canvas.convert("RGB").save(out_path)

@@ -51,8 +51,8 @@ def _tile_surface(tile_id):
 
 class ZoneBuilder:
     def __init__(self, zone_id, width, height, base_tile="grass", seed=0, name=None, biome="meadow"):
-        if width % CHUNK or height % CHUNK:
-            raise ValueError(f"width/height must be multiples of {CHUNK} (got {width}x{height})")
+        # Render-only scene vignettes can be any size; only save() (which chunks the grid)
+        # requires multiples of CHUNK.
         self.zone_id = zone_id
         self.W, self.H = width, height
         self.base_tile = base_tile
@@ -159,6 +159,9 @@ class ZoneBuilder:
         return self.W // CHUNK, self.H // CHUNK
 
     def save(self, zones_dir=ZONES_DIR):
+        if self.W % CHUNK or self.H % CHUNK:
+            raise ValueError(f"save() needs width/height as multiples of {CHUNK} "
+                             f"(got {self.W}x{self.H}); pad the zone or build at a chunk-aligned size")
         out = os.path.join(zones_dir, self.zone_id)
         os.makedirs(out, exist_ok=True)
         cfg = {

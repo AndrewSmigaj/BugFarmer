@@ -299,6 +299,59 @@ OBJECT_DESC = {
         "a standing FLOOR LAMP: a slim vertical pole on a small round base, topped with a wide "
         "trapezoid LAMPSHADE (wider at the bottom) that GLOWS warm yellow. The shade is a "
         "lampshade, NOT a tent, teepee or pyramid."),
+    # --- kitchen ---
+    "fridge": (
+        "a wide squat retro REFRIGERATOR seen front-on: a rounded-corner cream/white enamel "
+        "cabinet, a horizontal seam splitting it into a smaller top FREEZER door and a larger "
+        "lower door, a slim vertical chrome HANDLE on each door. Clearly a kitchen appliance, "
+        "NOT a cabinet, wardrobe or dresser. Wider than it is tall."),
+    "stove": (
+        "a kitchen STOVE / oven RANGE seen front-on: an enamel-and-steel cabinet with an OVEN "
+        "door (a handle and a small dark window) below, and a flat COOKTOP across the top "
+        "showing TWO round black BURNERS. A two-burner cooking range, clearly a stove."),
+    "sink": (
+        "a kitchen SINK unit seen front-on: a counter-height base cabinet with a rectangular "
+        "metal BASIN set into the top and a curved chrome FAUCET/tap rising at the back. Clearly "
+        "a sink, NOT a plain cabinet."),
+    "counter": (
+        "a kitchen COUNTER cabinet seen front-on: a wooden base CABINET with two cupboard doors "
+        "and knobs below, and a flat pale stone COUNTERTOP across the top, empty surface. A "
+        "section of kitchen counter."),
+    "keg": (
+        "a wooden brewing KEG/cask standing upright: a fat vertical wooden barrel bound with "
+        "dark metal HOOPS, with a small metal TAP/spigot near the bottom front. Clearly a keg "
+        "for brewing, taller and chunkier than a plain barrel."),
+    # --- living / bedroom furniture ---
+    "sofa": (
+        "a comfy upholstered SOFA/couch facing the viewer: a long padded fabric couch with two "
+        "seat cushions, a padded backrest, and rolled ARMRESTS at each end, in a warm muted "
+        "fabric color. Wide enough to seat two or three. Clearly a sofa, NOT a bench or bed."),
+    "armchair": (
+        "a single cozy upholstered ARMCHAIR facing the viewer: a deep padded fabric seat with a "
+        "tall padded backrest and two soft ARMRESTS, on short wooden feet. A lounge chair."),
+    "nightstand": (
+        "a small wooden BEDSIDE TABLE / nightstand seen front-on: a little cabinet with one "
+        "small DRAWER (a round knob) above a tiny open shelf, short legs, flat top. Small."),
+    "dresser": (
+        "a wooden DRESSER / chest of drawers seen front-on: a low wide cabinet with three "
+        "stacked DRAWERS, each with two round knobs, short feet. Clearly a dresser, NOT a "
+        "bookshelf or cabinet of doors."),
+    "rug": (
+        "a rectangular woven floor RUG/carpet seen FROM ABOVE (flat, top-down): a patterned "
+        "textile lying flat on the ground with a decorative woven BORDER and a central medallion "
+        "motif, warm colors (deep red, ochre, blue). Flat, no thickness, no furniture."),
+    "bug_terrarium": (
+        "a glass BUG TERRARIUM display case on a wooden stand: a clear glass tank with a wooden "
+        "base and corner frame, holding a little greenery and a mounted INSECT specimen on "
+        "display inside. A prized-bug display case, clearly made of glass."),
+    "vase": (
+        "a decorative ceramic VASE seen front-on: a rounded glazed pot with a narrow neck "
+        "holding a small arrangement of flowers/stems. A small tabletop vase."),
+    "window_4pane": (
+        "a closed GLASS WINDOW set in a wooden frame, seen front-on, filling a tall wall-tile "
+        "shape: a wooden frame divided by a cross MULLION into FOUR equal glass PANES, the glass "
+        "pale blue-white with a soft diagonal reflection. Reads instantly as a window in a wall, "
+        "NOT a painting, cabinet or door. The frame fills the tile; transparent outside it."),
     # --- yard structures ---
     "well": (
         "a stone WATER WELL: a round waist-high STONE wall (the well shaft), a wooden POST on "
@@ -314,6 +367,14 @@ OBJECT_DESC = {
     "fence_wood": (
         "a section of wooden post-and-rail FENCE: a vertical wooden POST with two horizontal "
         "RAILS running left and right off it; rustic split wood."),
+    "fence_iron": (
+        "a section of wrought-IRON FENCE: a slim dark metal POST with two horizontal metal "
+        "RAILS running left and right off it (same post-and-rail layout as a wooden fence, but "
+        "dark wrought iron, slimmer)."),
+    "fence_electric": (
+        "a section of ELECTRIC FENCE: a slim post with two horizontal taut WIRES running left "
+        "and right, small ceramic INSULATORS where the wires meet the post and a tiny warning "
+        "spark; same post-and-rail layout as a wooden fence but thin metal wire."),
     # --- decoration ---
     "statue_stone": (
         "a carved STONE STATUE on a pedestal: a small weathered grey stone figure/bust standing "
@@ -352,6 +413,22 @@ OBJECT_DESC = {
 # Per-object palette overrides where the keyword guesser picks the wrong material
 # (e.g. "fireplace"/"oak" miss stone/foliage and default to plain wood).
 OBJECT_MATS = {
+    # cube-tiling blocks / walls / ores
+    "wall_stone": ["stone"],
+    "wall_brick": ["stone"],
+    "stone_block": ["stone"],
+    "dirt_block": ["dirt"],
+    "clay_block": ["dirt"],
+    "ore_coal_block": ["stone"],
+    "ore_copper_block": ["stone", "metal"],
+    "ore_iron_block": ["stone", "metal"],
+    "ore_silver_block": ["stone", "metal"],
+    "ore_gold_block": ["stone", "metal"],
+    "ore_platinum_block": ["stone", "metal"],
+    "ore_diamond_block": ["stone"],
+    # iron / electric fences read as metal, not wood
+    "fence_iron": ["metal"],
+    "fence_electric": ["metal"],
     "fireplace": ["stone", "wood"],
     "well": ["stone", "wood"],
     "statue_stone": ["stone"],
@@ -468,21 +545,21 @@ CONNECTOR_BLOCK = (
 # gets its OWN prompt (build_wall_prompt) that does NOT use the face-on
 # STYLE_BLOCK - here we WANT visible cube top faces, like the clay_block.
 WALL_ART_DIRECTION = (
-    "ART DIRECTION: 2D pixel-art WALL BLOCK - ONE solid wooden building block viewed "
+    "ART DIRECTION: 2D pixel-art WALL BLOCK - ONE solid building block viewed "
     "STRAIGHT FROM THE FRONT, from only SLIGHTLY above (orthographic FRONT view, NOT "
     "rotated, NOT angled, NOT isometric). It is DOMINATED by a LARGE flat lit TOP SURFACE, "
     "with only a SHORT front face beneath it. Chunky hard pixel edges, no anti-aliasing, "
     "muted palette.")
 
 WALL_BLOCK = (
-    "WOODEN WALL BLOCK that TILES IN A GRID (CRITICAL - get the PROPORTIONS exactly):\n"
+    "SOLID BLOCK that TILES IN A GRID (CRITICAL - get the PROPORTIONS exactly):\n"
     "- The block has TWO horizontal regions stacked vertically: a LARGE flat lit TOP "
     "SURFACE filling the upper ~75% of the height, and a SHORT darker FRONT FACE filling "
     "only the lower ~25%. The top surface MUST DOMINATE; the front face is just a thin lip "
     "at the very bottom.\n"
     "- WHY (the whole point): when these blocks are stacked in a vertical column, the big "
     "top surface of the lower block must rise high enough to COMPLETELY COVER the short "
-    "front face of the block above it, so the column reads as ONE continuous wooden top "
+    "front face of the block above it, so the column reads as ONE continuous top surface"
     "with NO repeating dark bands, NO rungs, NO ladder.\n"
     "- CAMERA IS DEAD-ON FRONT, only slightly above. The top surface is a FLAT HORIZONTAL "
     "band (a foreshortened rectangle), NEVER a tilted diamond or parallelogram, NEVER "
@@ -495,29 +572,60 @@ WALL_BLOCK = (
     "left/right ends.\n"
     "- FLAT CLEAN BOTTOM: the bottom edge is one straight FULL-WIDTH horizontal line. NO "
     "legs, feet, base strip, plinth, shadow or notch below the front face.\n"
-    "- Wood-grain/plank texture runs HORIZONTALLY. Keep shading EVEN across the block (no "
+    "- The SURFACE texture (specified below) runs HORIZONTALLY. Keep shading EVEN across the block (no "
     "dark vignette at the edges) so tiles match seam-free. LOW contrast - the front lip is "
     "only SLIGHTLY darker than the top surface, NOT a heavy black band.")
 
 
+# Surface texture for the cube-tiling block prompt, shared by walls, ground blocks and ores
+# (all rendered as one continuous surface when stacked/tiled).
+BLOCK_SURFACE = {
+    "wall_wood": "horizontal WOOD PLANKS with visible grain",
+    "wall_stone": "fitted grey STONE masonry blocks",
+    "wall_brick": "rows of warm red-brown BRICKS with pale mortar lines",
+    "stone_block": "solid grey STONE with subtle cracks",
+    "dirt_block": "packed brown DIRT/soil flecked with a few small pebbles",
+    "clay_block": "smooth warm red-brown CLAY",
+}
+ORE_FLECK = {
+    "ore_coal_block": "chunks of black COAL",
+    "ore_copper_block": "orange-brown COPPER veins",
+    "ore_iron_block": "rusty orange IRON veins",
+    "ore_silver_block": "pale silver-white SILVER flecks",
+    "ore_gold_block": "bright yellow GOLD nuggets",
+    "ore_platinum_block": "pale blue-white PLATINUM flecks",
+    "ore_diamond_block": "glinting cyan-white DIAMOND crystals",
+}
+
+
+def block_surface(key):
+    if key in BLOCK_SURFACE:
+        return BLOCK_SURFACE[key]
+    if key.startswith("ore_"):
+        return f"grey STONE studded with {ORE_FLECK.get(key, 'metallic ore veins')}"
+    return "a solid even surface"
+
+
 def build_wall_prompt(key, ent, mats):
-    """Walls get a Minecraft-style cube prompt (visible top faces), NOT the
-    face-on STYLE_BLOCK which forbids cubes and made them look like footstools."""
+    """Minecraft-style cube prompt (visible top face) shared by walls, ground blocks and ores,
+    so a stacked column / tiled grid reads as one continuous surface. NOT the face-on
+    STYLE_BLOCK (which forbids cubes and made these look like footstools)."""
     name = ent.get("name", key)
     parts = [
-        "Create a 2D game sprite (single WALL UNIT, pixel art).",
+        "Create a 2D game sprite (single tiling BLOCK, pixel art).",
         "",
         WALL_ART_DIRECTION,
         "",
         f"Asset: {name}",
-        "Category: structure (stacked cubic wall block)",
+        "Category: cube-tiling building block",
         "",
         WALL_BLOCK,
+        f"- SURFACE TEXTURE: {block_surface(key)}.",
         "",
         "COLOR PALETTE:",
         *[f"- {m}" for m in mats],
         "",
-        "This image will be used directly as a tiling wall sprite in a 2D game.",
+        "This image will be used directly as a tiling block sprite in a 2D game.",
     ]
     return "\n".join(parts)
 
@@ -548,7 +656,9 @@ def build_prompt(key, ent):
     world = ent.get("world", {}) or {}
     pivot = world.get("pivot", "bc")
     mats = guess_materials(key, name, category)
-    if category == "structure" and key.startswith("wall"):
+    # Walls, ground blocks (dirt/stone/clay) and ore blocks all use the cube-tiling block prompt
+    # so they read as one continuous surface when stacked/tiled.
+    if category in ("block", "ore") or (category == "structure" and key.startswith("wall")):
         return build_wall_prompt(key, ent, mats)
     is_natural = category == "natural"
     desc_lines = [f"\nWHAT IT IS (draw exactly this): {OBJECT_DESC[key]}"] if key in OBJECT_DESC else []

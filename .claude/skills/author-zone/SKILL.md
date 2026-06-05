@@ -41,6 +41,8 @@ python3 tools/zonegen/builds/<scene>.py    # builds + renders to tools/_generate
 
 ## Feature guides
 - `docs/guides/feature-building.md` — rooms, walls, doors, building shells.
+- `docs/guides/house-building.md` — multi-room houses: the composer, the south-facing **facing
+  rule**, the room-template library (living/bedroom/kitchen/crafting), ⊥/L shapes.
 - `docs/guides/feature-vegetation.md` — scatter (flowers/bushes/grass): density + spacing.
 - Cross-cutting style/perspective: `docs/guides/MASTER_STYLE_GUIDE.md` (+ the broader guide set,
   being consolidated — see BACKLOG "Zone-design guides cleanup").

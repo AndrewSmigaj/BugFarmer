@@ -241,7 +241,6 @@ Chests/shelves face a direction for access.
 |----|-------------|-------------|-----------|-------|-----|--------|
 | chest_wood | Sprites/Furniture/chest_wood.png | 32x20 | 2x1 | bc | 4 | DONE |
 | chest_iron | Sprites/Furniture/chest_iron.png | 32x20 | 2x1 | bc | 4 | DONE |
-| chest_large | Sprites/Furniture/chest_large.png | 32x24 | 2x2 | bc | 4 | DONE |
 | barrel | Sprites/Furniture/barrel.png | 16x20 | 1x1 | bc | 0 | DONE |
 | crate | Sprites/Furniture/crate.png | 16x18 | 1x1 | c | 0 | DONE |
 | bookshelf | Sprites/Furniture/bookshelf.png | 16x24 | 1x2 | bc | 4 | DONE |

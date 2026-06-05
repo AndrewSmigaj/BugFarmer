@@ -17,6 +17,26 @@ working; this file is what survives between sessions.
   (removed `debug_mode` + `species_debug.json`).
 - New world-select login (`WorldMenu`).
 
+## Done (recent) — zone-authoring scaffolding + house system
+- Builder library `tools/zonegen/` (ZoneBuilder + occupancy masks), `make_scene` renders from data
+  with category placeholders, `author-zone` skill, `feature-building`/`feature-vegetation` guides.
+- **House composer** (`features/house.py`): multi-room buildings from shared-wall rects (⊥/L),
+  interior doors + windows + doorway-avoidance, and a reusable room-template library
+  (living/bedroom/kitchen/crafting) following the south-facing **facing rule**. Guide:
+  `docs/guides/house-building.md`; example: `builds/player_house.py`.
+- New entities (data + `OBJECT_DESC` ready, art pending): fridge, stove, sink, counter, keg, sofa,
+  armchair, nightstand, dresser, rug, bug_terrarium, vase, window_4pane, door_square.
+- **Engine fix**: `TilemapManager` tall-sprite vertical baseline (center-pivot PNGs + zeroed bc
+  offset made beds overshoot); preview renderer flipped to match game orientation (+Y north).
+
+## Now — Scene 1: player house + fly farm
+- House DONE (the ⊥ cottage above). Pending:
+  - **Unity Play test** of the tall-sprite pivot fix + orientation (verify in-game vs preview).
+  - **Generate the house-set art** via add-object (gpt-image-1) — see `art_needed.md`.
+  - **Reconvert old-style sprites** to gpt-image-1 (keys to be identified — `art_needed.md`).
+  - Build the outdoor + **fly pen** half of the scene (fruit trees w/ fallen/rotting fruit, flies
+    on ground + netting, net station + autonet, fountain, garden beds, character with net).
+
 ## Now — Safe cleanup only (no refactoring, no splitting files)
 Tidy what's clearly safe; leave anything risky alone.
 - Delete dead one-off experiments in `tools/gen_sprites.py` (`player_spike`, `paperdoll_spike`,

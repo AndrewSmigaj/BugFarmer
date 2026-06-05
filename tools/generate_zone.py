@@ -108,7 +108,6 @@ FOOTPRINTS = {
     # Furniture - Storage
     "chest_wood": (2, 1),
     "chest_iron": (2, 1),
-    "chest_large": (2, 2),
     "barrel": (1, 1),
     "crate": (1, 1),
     "bookshelf": (1, 2),

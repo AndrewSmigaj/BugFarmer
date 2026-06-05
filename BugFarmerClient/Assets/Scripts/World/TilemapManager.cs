@@ -631,11 +631,17 @@ namespace BugFarmer.World
             // Odd widths straddle symmetrically (no shift); even widths shift half a cell.
             var footprint = EntityDatabase.GetFootprint(occupantId);
             worldPos.x += (footprint.x - 1) * 0.5f * cellSize;
-            // Adjust Y for pivot (pivot.y gives bottom-center offset)
-            // Use target size from database for positioning
+            // Vertical placement. Every object sprite imports with a CENTER asset pivot, so
+            // transform.position is the sprite's center; CellToWorld gave the anchor cell center.
+            // The anchor is the FRONT (low-Y) cell of the footprint, which extends toward +Y.
+            //   bottom pivots (bc/bl/br, pivot.y == 0): baseline the sprite at the anchor cell's
+            //     front edge so it sits at the front of its footprint and rises toward the back —
+            //     a 4-deep bed now fills its footprint instead of overshooting the anchor cell.
+            //   center pivot (c, pivot.y == 0.5): leave it centered in the cell (CellToWorld).
             var targetSize = EntityDatabase.GetSpriteSize(occupantId);
             float spriteHeightCells = targetSize.y / 16f;
-            worldPos.y += pivot.y * spriteHeightCells * cellSize;
+            if (Mathf.Approximately(pivot.y, 0f))
+                worldPos.y = cellPos.y * cellSize + 0.5f * spriteHeightCells * cellSize;
             worldPos.z = -0.1f; // Slightly in front of tilemap to guarantee render order
             go.transform.position = worldPos;
 

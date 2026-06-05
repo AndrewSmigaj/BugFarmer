@@ -391,7 +391,6 @@ Storage items.
 |------|-------------|-----------|--------|-------|
 | chest_wood | Basic storage | 2×1 | 32×20 | 20 |
 | chest_iron | Better storage | 2×1 | 32×20 | 30 |
-| chest_large | Big storage | 2×2 | 32×28 | 50 |
 | barrel | Liquid/bulk | 1×1 | 16×20 | 10 |
 | crate | Stackable | 1×1 | 16×16 | 10 |
 | bag | Portable | - | 16×16 | 5, carryable |

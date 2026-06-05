@@ -130,7 +130,6 @@ OCCUPANT_CATEGORIES = {
     "bed_fancy": "furniture",
     "chest_wood": "storage",
     "chest_iron": "storage",
-    "chest_large": "storage",
     "barrel": "storage",
     "crate": "storage",
 
