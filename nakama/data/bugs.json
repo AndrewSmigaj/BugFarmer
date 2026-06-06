@@ -7,7 +7,9 @@
     "base_speed": 1.0,
     "catch_difficulty": 1,
     "value": 5,
-    "zones": ["village"]
+    "zones": [
+      "village"
+    ]
   },
   "ant_queen": {
     "sprite_path": "Sprites/Bugs/ant_queen.png",
@@ -17,7 +19,9 @@
     "base_speed": 0.5,
     "catch_difficulty": 5,
     "value": 500,
-    "zones": ["ant_queen_chamber"]
+    "zones": [
+      "ant_queen_chamber"
+    ]
   },
   "honeybee": {
     "sprite_path": "Sprites/Bugs/honeybee.png",
@@ -27,7 +31,9 @@
     "base_speed": 1.5,
     "catch_difficulty": 2,
     "value": 15,
-    "zones": ["bee_meadow"]
+    "zones": [
+      "bee_meadow"
+    ]
   },
   "bumblebee": {
     "sprite_path": "Sprites/Bugs/bumblebee.png",
@@ -37,7 +43,9 @@
     "base_speed": 1.2,
     "catch_difficulty": 2,
     "value": 20,
-    "zones": ["meadow"]
+    "zones": [
+      "meadow"
+    ]
   },
   "wasp_common": {
     "sprite_path": "Sprites/Bugs/wasp_common.png",
@@ -47,7 +55,9 @@
     "base_speed": 1.8,
     "catch_difficulty": 3,
     "value": 25,
-    "zones": ["wasp_thicket"]
+    "zones": [
+      "wasp_thicket"
+    ]
   },
   "hornet": {
     "sprite_path": "Sprites/Bugs/hornet.png",
@@ -57,7 +67,9 @@
     "base_speed": 2.0,
     "catch_difficulty": 4,
     "value": 50,
-    "zones": ["wasp_thicket"]
+    "zones": [
+      "wasp_thicket"
+    ]
   },
   "butterfly_common": {
     "sprite_path": "Sprites/Bugs/butterfly_common.png",
@@ -67,7 +79,9 @@
     "base_speed": 1.0,
     "catch_difficulty": 2,
     "value": 20,
-    "zones": ["butterfly_fields"]
+    "zones": [
+      "butterfly_fields"
+    ]
   },
   "butterfly_monarch": {
     "sprite_path": "Sprites/Bugs/butterfly_monarch.png",
@@ -77,7 +91,9 @@
     "base_speed": 1.2,
     "catch_difficulty": 3,
     "value": 40,
-    "zones": ["butterfly_fields"]
+    "zones": [
+      "butterfly_fields"
+    ]
   },
   "moth_common": {
     "sprite_path": "Sprites/Bugs/moth_common.png",
@@ -87,7 +103,9 @@
     "base_speed": 0.8,
     "catch_difficulty": 2,
     "value": 15,
-    "zones": ["butterfly_fields"]
+    "zones": [
+      "butterfly_fields"
+    ]
   },
   "beetle_common": {
     "sprite_path": "Sprites/Bugs/beetle_common.png",
@@ -97,7 +115,9 @@
     "base_speed": 0.6,
     "catch_difficulty": 1,
     "value": 10,
-    "zones": ["various"]
+    "zones": [
+      "various"
+    ]
   },
   "stag_beetle": {
     "sprite_path": "Sprites/Bugs/stag_beetle.png",
@@ -107,7 +127,9 @@
     "base_speed": 0.5,
     "catch_difficulty": 3,
     "value": 75,
-    "zones": ["millipede_forest"]
+    "zones": [
+      "millipede_forest"
+    ]
   },
   "ladybug": {
     "sprite_path": "Sprites/Bugs/ladybug.png",
@@ -117,7 +139,9 @@
     "base_speed": 0.7,
     "catch_difficulty": 1,
     "value": 15,
-    "zones": ["village"]
+    "zones": [
+      "village"
+    ]
   },
   "fly_common": {
     "sprite_path": "Sprites/Bugs/fly_common.png",
@@ -127,7 +151,9 @@
     "base_speed": 2.0,
     "catch_difficulty": 2,
     "value": 5,
-    "zones": ["village"]
+    "zones": [
+      "village"
+    ]
   },
   "firefly": {
     "sprite_path": "Sprites/Bugs/firefly.png",
@@ -137,7 +163,9 @@
     "base_speed": 0.8,
     "catch_difficulty": 2,
     "value": 30,
-    "zones": ["butterfly_fields"]
+    "zones": [
+      "butterfly_fields"
+    ]
   },
   "dragonfly": {
     "sprite_path": "Sprites/Bugs/dragonfly.png",
@@ -147,7 +175,9 @@
     "base_speed": 2.5,
     "catch_difficulty": 4,
     "value": 60,
-    "zones": ["deep_swamp"]
+    "zones": [
+      "deep_swamp"
+    ]
   },
   "grasshopper": {
     "sprite_path": "Sprites/Bugs/grasshopper.png",
@@ -157,7 +187,9 @@
     "base_speed": 1.5,
     "catch_difficulty": 3,
     "value": 25,
-    "zones": ["locust_farmland"]
+    "zones": [
+      "locust_farmland"
+    ]
   },
   "locust": {
     "sprite_path": "Sprites/Bugs/locust.png",
@@ -167,7 +199,9 @@
     "base_speed": 1.8,
     "catch_difficulty": 3,
     "value": 30,
-    "zones": ["locust_farmland"]
+    "zones": [
+      "locust_farmland"
+    ]
   },
   "cricket": {
     "sprite_path": "Sprites/Bugs/cricket.png",
@@ -177,7 +211,9 @@
     "base_speed": 1.2,
     "catch_difficulty": 2,
     "value": 20,
-    "zones": ["locust_farmland"]
+    "zones": [
+      "locust_farmland"
+    ]
   },
   "millipede": {
     "sprite_path": "Sprites/Bugs/millipede.png",
@@ -187,7 +223,9 @@
     "base_speed": 0.4,
     "catch_difficulty": 2,
     "value": 25,
-    "zones": ["millipede_forest"]
+    "zones": [
+      "millipede_forest"
+    ]
   },
   "centipede": {
     "sprite_path": "Sprites/Bugs/centipede.png",
@@ -197,7 +235,9 @@
     "base_speed": 0.8,
     "catch_difficulty": 3,
     "value": 35,
-    "zones": ["millipede_forest"]
+    "zones": [
+      "millipede_forest"
+    ]
   },
   "giant_centipede": {
     "sprite_path": "Sprites/Bugs/giant_centipede.png",
@@ -207,7 +247,9 @@
     "base_speed": 1.0,
     "catch_difficulty": 5,
     "value": 150,
-    "zones": ["centipede_cavern"]
+    "zones": [
+      "centipede_cavern"
+    ]
   },
   "wolf_spider": {
     "sprite_path": "Sprites/Bugs/wolf_spider.png",
@@ -217,7 +259,9 @@
     "base_speed": 1.5,
     "catch_difficulty": 3,
     "value": 40,
-    "zones": ["spider_vale_w"]
+    "zones": [
+      "spider_vale_w"
+    ]
   },
   "jumping_spider": {
     "sprite_path": "Sprites/Bugs/jumping_spider.png",
@@ -227,7 +271,9 @@
     "base_speed": 2.0,
     "catch_difficulty": 4,
     "value": 45,
-    "zones": ["spider_vale_w"]
+    "zones": [
+      "spider_vale_w"
+    ]
   },
   "black_widow": {
     "sprite_path": "Sprites/Bugs/black_widow.png",
@@ -237,7 +283,9 @@
     "base_speed": 1.0,
     "catch_difficulty": 4,
     "value": 100,
-    "zones": ["spider_vale_e"]
+    "zones": [
+      "spider_vale_e"
+    ]
   },
   "tarantula": {
     "sprite_path": "Sprites/Bugs/tarantula.png",
@@ -247,7 +295,9 @@
     "base_speed": 0.8,
     "catch_difficulty": 5,
     "value": 200,
-    "zones": ["spider_vale_e"]
+    "zones": [
+      "spider_vale_e"
+    ]
   },
   "cave_spider": {
     "sprite_path": "Sprites/Bugs/cave_spider.png",
@@ -257,7 +307,9 @@
     "base_speed": 1.2,
     "catch_difficulty": 3,
     "value": 50,
-    "zones": ["underground"]
+    "zones": [
+      "underground"
+    ]
   },
   "scorpion": {
     "sprite_path": "Sprites/Bugs/scorpion.png",
@@ -267,6 +319,738 @@
     "base_speed": 0.7,
     "catch_difficulty": 4,
     "value": 80,
-    "zones": ["scorpion_rocks"]
+    "zones": [
+      "scorpion_rocks"
+    ]
+  },
+  "centipede_head_a": {
+    "sprite_path": "Sprites/Bugs/centipede_head_a.png",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "category": "centipede",
+    "part": "head",
+    "base_speed": 0.6,
+    "catch_difficulty": 3,
+    "value": 20,
+    "zones": [
+      "centipede_cavern"
+    ]
+  },
+  "centipede_head_b": {
+    "sprite_path": "Sprites/Bugs/centipede_head_b.png",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "category": "centipede",
+    "part": "head",
+    "base_speed": 0.6,
+    "catch_difficulty": 3,
+    "value": 20,
+    "zones": [
+      "centipede_cavern"
+    ]
+  },
+  "centipede_body_a": {
+    "sprite_path": "Sprites/Bugs/centipede_body_a.png",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "category": "centipede",
+    "part": "body",
+    "base_speed": 0.6,
+    "catch_difficulty": 3,
+    "value": 20,
+    "zones": [
+      "centipede_cavern"
+    ]
+  },
+  "centipede_body_b": {
+    "sprite_path": "Sprites/Bugs/centipede_body_b.png",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "category": "centipede",
+    "part": "body",
+    "base_speed": 0.6,
+    "catch_difficulty": 3,
+    "value": 20,
+    "zones": [
+      "centipede_cavern"
+    ]
+  },
+  "centipede_tail_a": {
+    "sprite_path": "Sprites/Bugs/centipede_tail_a.png",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "category": "centipede",
+    "part": "tail",
+    "base_speed": 0.6,
+    "catch_difficulty": 3,
+    "value": 20,
+    "zones": [
+      "centipede_cavern"
+    ]
+  },
+  "centipede_tail_b": {
+    "sprite_path": "Sprites/Bugs/centipede_tail_b.png",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "category": "centipede",
+    "part": "tail",
+    "base_speed": 0.6,
+    "catch_difficulty": 3,
+    "value": 20,
+    "zones": [
+      "centipede_cavern"
+    ]
+  },
+  "millipede_head_a": {
+    "sprite_path": "Sprites/Bugs/millipede_head_a.png",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "category": "millipede",
+    "part": "head",
+    "base_speed": 0.6,
+    "catch_difficulty": 3,
+    "value": 20,
+    "zones": [
+      "centipede_cavern"
+    ]
+  },
+  "millipede_head_b": {
+    "sprite_path": "Sprites/Bugs/millipede_head_b.png",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "category": "millipede",
+    "part": "head",
+    "base_speed": 0.6,
+    "catch_difficulty": 3,
+    "value": 20,
+    "zones": [
+      "centipede_cavern"
+    ]
+  },
+  "millipede_body_a": {
+    "sprite_path": "Sprites/Bugs/millipede_body_a.png",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "category": "millipede",
+    "part": "body",
+    "base_speed": 0.6,
+    "catch_difficulty": 3,
+    "value": 20,
+    "zones": [
+      "centipede_cavern"
+    ]
+  },
+  "millipede_body_b": {
+    "sprite_path": "Sprites/Bugs/millipede_body_b.png",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "category": "millipede",
+    "part": "body",
+    "base_speed": 0.6,
+    "catch_difficulty": 3,
+    "value": 20,
+    "zones": [
+      "centipede_cavern"
+    ]
+  },
+  "millipede_tail_a": {
+    "sprite_path": "Sprites/Bugs/millipede_tail_a.png",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "category": "millipede",
+    "part": "tail",
+    "base_speed": 0.6,
+    "catch_difficulty": 3,
+    "value": 20,
+    "zones": [
+      "centipede_cavern"
+    ]
+  },
+  "millipede_tail_b": {
+    "sprite_path": "Sprites/Bugs/millipede_tail_b.png",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "category": "millipede",
+    "part": "tail",
+    "base_speed": 0.6,
+    "catch_difficulty": 3,
+    "value": 20,
+    "zones": [
+      "centipede_cavern"
+    ]
+  },
+  "fly_house": {
+    "sprite_path": "Sprites/Bugs/fly_house.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "fly",
+    "tier": "easy",
+    "base_speed": 1.0,
+    "catch_difficulty": 1,
+    "value": 4,
+    "zones": []
+  },
+  "fly_horse": {
+    "sprite_path": "Sprites/Bugs/fly_horse.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "fly",
+    "tier": "medium",
+    "base_speed": 1.0,
+    "catch_difficulty": 2,
+    "value": 10,
+    "zones": []
+  },
+  "fly_bot": {
+    "sprite_path": "Sprites/Bugs/fly_bot.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "fly",
+    "tier": "elite",
+    "base_speed": 1.0,
+    "catch_difficulty": 4,
+    "value": 22,
+    "zones": []
+  },
+  "fruitfly_common": {
+    "sprite_path": "Sprites/Bugs/fruitfly_common.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "fruitfly",
+    "tier": "easy",
+    "base_speed": 1.0,
+    "catch_difficulty": 1,
+    "value": 2,
+    "zones": []
+  },
+  "fruitfly_vinegar": {
+    "sprite_path": "Sprites/Bugs/fruitfly_vinegar.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "fruitfly",
+    "tier": "medium",
+    "base_speed": 1.0,
+    "catch_difficulty": 2,
+    "value": 5,
+    "zones": []
+  },
+  "fruitfly_spotwing": {
+    "sprite_path": "Sprites/Bugs/fruitfly_spotwing.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "fruitfly",
+    "tier": "elite",
+    "base_speed": 1.0,
+    "catch_difficulty": 4,
+    "value": 12,
+    "zones": []
+  },
+  "mosquito_common": {
+    "sprite_path": "Sprites/Bugs/mosquito_common.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "mosquito",
+    "tier": "easy",
+    "base_speed": 1.0,
+    "catch_difficulty": 1,
+    "value": 4,
+    "zones": []
+  },
+  "mosquito_tiger": {
+    "sprite_path": "Sprites/Bugs/mosquito_tiger.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "mosquito",
+    "tier": "medium",
+    "base_speed": 1.0,
+    "catch_difficulty": 2,
+    "value": 10,
+    "zones": []
+  },
+  "mosquito_malaria": {
+    "sprite_path": "Sprites/Bugs/mosquito_malaria.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "mosquito",
+    "tier": "elite",
+    "base_speed": 1.0,
+    "catch_difficulty": 4,
+    "value": 20,
+    "zones": []
+  },
+  "wasp_paper": {
+    "sprite_path": "Sprites/Bugs/wasp_paper.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "wasp",
+    "tier": "easy",
+    "base_speed": 1.0,
+    "catch_difficulty": 1,
+    "value": 8,
+    "zones": []
+  },
+  "wasp_yellowjacket": {
+    "sprite_path": "Sprites/Bugs/wasp_yellowjacket.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "wasp",
+    "tier": "medium",
+    "base_speed": 1.0,
+    "catch_difficulty": 2,
+    "value": 16,
+    "zones": []
+  },
+  "beetle_rhino": {
+    "sprite_path": "Sprites/Bugs/beetle_rhino.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "beetle",
+    "tier": "medium",
+    "base_speed": 1.0,
+    "catch_difficulty": 2,
+    "value": 18,
+    "zones": []
+  },
+  "beetle_stag": {
+    "sprite_path": "Sprites/Bugs/beetle_stag.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "beetle",
+    "tier": "elite",
+    "base_speed": 1.0,
+    "catch_difficulty": 4,
+    "value": 30,
+    "zones": []
+  },
+  "moth_brown": {
+    "sprite_path": "Sprites/Bugs/moth_brown.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "moth",
+    "tier": "easy",
+    "base_speed": 1.0,
+    "catch_difficulty": 1,
+    "value": 4,
+    "zones": []
+  },
+  "moth_luna": {
+    "sprite_path": "Sprites/Bugs/moth_luna.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "moth",
+    "tier": "medium",
+    "base_speed": 1.0,
+    "catch_difficulty": 2,
+    "value": 14,
+    "zones": []
+  },
+  "moth_atlas": {
+    "sprite_path": "Sprites/Bugs/moth_atlas.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "moth",
+    "tier": "elite",
+    "base_speed": 1.0,
+    "catch_difficulty": 4,
+    "value": 40,
+    "zones": []
+  },
+  "strider_common": {
+    "sprite_path": "Sprites/Bugs/strider_common.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "water_bug",
+    "tier": "easy",
+    "base_speed": 0.7,
+    "catch_difficulty": 1,
+    "value": 4,
+    "zones": [
+      "water"
+    ]
+  },
+  "strider_giant": {
+    "sprite_path": "Sprites/Bugs/strider_giant.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "water_bug",
+    "tier": "medium",
+    "base_speed": 0.7,
+    "catch_difficulty": 2,
+    "value": 10,
+    "zones": [
+      "water"
+    ]
+  },
+  "dytiscid_small": {
+    "sprite_path": "Sprites/Bugs/dytiscid_small.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "water_bug",
+    "tier": "easy",
+    "base_speed": 0.7,
+    "catch_difficulty": 1,
+    "value": 6,
+    "zones": [
+      "water"
+    ]
+  },
+  "dytiscid_great": {
+    "sprite_path": "Sprites/Bugs/dytiscid_great.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "water_bug",
+    "tier": "medium",
+    "base_speed": 0.7,
+    "catch_difficulty": 2,
+    "value": 14,
+    "zones": [
+      "water"
+    ]
+  },
+  "dytiscid_giant": {
+    "sprite_path": "Sprites/Bugs/dytiscid_giant.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "water_bug",
+    "tier": "elite",
+    "base_speed": 0.7,
+    "catch_difficulty": 4,
+    "value": 28,
+    "zones": [
+      "water"
+    ]
+  },
+  "backswimmer_common": {
+    "sprite_path": "Sprites/Bugs/backswimmer_common.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "water_bug",
+    "tier": "easy",
+    "base_speed": 0.7,
+    "catch_difficulty": 1,
+    "value": 5,
+    "zones": [
+      "water"
+    ]
+  },
+  "mayfly_common": {
+    "sprite_path": "Sprites/Bugs/mayfly_common.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "water_bug",
+    "tier": "easy",
+    "base_speed": 0.7,
+    "catch_difficulty": 1,
+    "value": 3,
+    "zones": [
+      "water"
+    ]
+  },
+  "mayfly_giant": {
+    "sprite_path": "Sprites/Bugs/mayfly_giant.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "water_bug",
+    "tier": "medium",
+    "base_speed": 0.7,
+    "catch_difficulty": 2,
+    "value": 9,
+    "zones": [
+      "water"
+    ]
+  },
+  "leech_common": {
+    "sprite_path": "Sprites/Bugs/leech_common.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "water_bug",
+    "tier": "easy",
+    "base_speed": 0.7,
+    "catch_difficulty": 1,
+    "value": 4,
+    "zones": [
+      "water"
+    ]
+  },
+  "leech_giant": {
+    "sprite_path": "Sprites/Bugs/leech_giant.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "water_bug",
+    "tier": "elite",
+    "base_speed": 0.7,
+    "catch_difficulty": 4,
+    "value": 16,
+    "zones": [
+      "water"
+    ]
+  },
+  "snail_pond": {
+    "sprite_path": "Sprites/Bugs/snail_pond.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "water_bug",
+    "tier": "easy",
+    "base_speed": 0.7,
+    "catch_difficulty": 1,
+    "value": 3,
+    "zones": [
+      "water"
+    ]
+  },
+  "snail_apple": {
+    "sprite_path": "Sprites/Bugs/snail_apple.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "water_bug",
+    "tier": "medium",
+    "base_speed": 0.7,
+    "catch_difficulty": 2,
+    "value": 8,
+    "zones": [
+      "water"
+    ]
+  },
+  "spider_wolf": {
+    "sprite_path": "Sprites/Bugs/spider_wolf.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "spider",
+    "tier": "medium",
+    "base_speed": 1.0,
+    "catch_difficulty": 2,
+    "value": 12,
+    "zones": []
+  },
+  "spider_huntsman": {
+    "sprite_path": "Sprites/Bugs/spider_huntsman.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "spider",
+    "tier": "elite",
+    "base_speed": 1.0,
+    "catch_difficulty": 4,
+    "value": 26,
+    "zones": []
+  },
+  "spider_orb": {
+    "sprite_path": "Sprites/Bugs/spider_orb.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "spider",
+    "tier": "easy",
+    "base_speed": 1.0,
+    "catch_difficulty": 1,
+    "value": 6,
+    "zones": []
+  },
+  "spider_funnel": {
+    "sprite_path": "Sprites/Bugs/spider_funnel.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "spider",
+    "tier": "elite",
+    "base_speed": 1.0,
+    "catch_difficulty": 4,
+    "value": 30,
+    "zones": []
+  },
+  "bee_carpenter": {
+    "sprite_path": "Sprites/Bugs/bee_carpenter.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "bee",
+    "tier": "elite",
+    "base_speed": 1.0,
+    "catch_difficulty": 4,
+    "value": 18,
+    "zones": []
+  },
+  "scorpion_bark": {
+    "sprite_path": "Sprites/Bugs/scorpion_bark.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "scorpion",
+    "tier": "easy",
+    "base_speed": 1.0,
+    "catch_difficulty": 1,
+    "value": 10,
+    "zones": []
+  },
+  "scorpion_desert": {
+    "sprite_path": "Sprites/Bugs/scorpion_desert.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "scorpion",
+    "tier": "medium",
+    "base_speed": 1.0,
+    "catch_difficulty": 2,
+    "value": 20,
+    "zones": []
+  },
+  "scorpion_emperor": {
+    "sprite_path": "Sprites/Bugs/scorpion_emperor.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "scorpion",
+    "tier": "elite",
+    "base_speed": 1.0,
+    "catch_difficulty": 4,
+    "value": 40,
+    "zones": []
+  },
+  "butterfly_swallowtail": {
+    "sprite_path": "Sprites/Bugs/butterfly_swallowtail.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "butterfly",
+    "tier": "medium",
+    "base_speed": 1.0,
+    "catch_difficulty": 2,
+    "value": 12,
+    "zones": []
+  },
+  "butterfly_emperor": {
+    "sprite_path": "Sprites/Bugs/butterfly_emperor.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "butterfly",
+    "tier": "elite",
+    "base_speed": 1.0,
+    "catch_difficulty": 4,
+    "value": 30,
+    "zones": []
+  },
+  "locust_swarm": {
+    "sprite_path": "Sprites/Bugs/locust_swarm.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "locust",
+    "tier": "elite",
+    "base_speed": 1.0,
+    "catch_difficulty": 4,
+    "value": 18,
+    "zones": []
+  },
+  "roach_common": {
+    "sprite_path": "Sprites/Bugs/roach_common.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "roach",
+    "tier": "easy",
+    "base_speed": 1.0,
+    "catch_difficulty": 1,
+    "value": 3,
+    "zones": []
+  },
+  "roach_hisser": {
+    "sprite_path": "Sprites/Bugs/roach_hisser.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "roach",
+    "tier": "medium",
+    "base_speed": 1.0,
+    "catch_difficulty": 2,
+    "value": 9,
+    "zones": []
+  },
+  "roach_giant": {
+    "sprite_path": "Sprites/Bugs/roach_giant.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "roach",
+    "tier": "elite",
+    "base_speed": 1.0,
+    "catch_difficulty": 4,
+    "value": 20,
+    "zones": []
+  },
+  "cicada_annual": {
+    "sprite_path": "Sprites/Bugs/cicada_annual.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "cicada",
+    "tier": "easy",
+    "base_speed": 1.0,
+    "catch_difficulty": 1,
+    "value": 5,
+    "zones": []
+  },
+  "cicada_periodical": {
+    "sprite_path": "Sprites/Bugs/cicada_periodical.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "cicada",
+    "tier": "elite",
+    "base_speed": 1.0,
+    "catch_difficulty": 4,
+    "value": 16,
+    "zones": []
+  },
+  "ladybug_orange": {
+    "sprite_path": "Sprites/Bugs/ladybug_orange.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "ladybug",
+    "tier": "medium",
+    "base_speed": 1.0,
+    "catch_difficulty": 2,
+    "value": 6,
+    "zones": []
+  },
+  "ladybug_giant": {
+    "sprite_path": "Sprites/Bugs/ladybug_giant.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "ladybug",
+    "tier": "elite",
+    "base_speed": 1.0,
+    "catch_difficulty": 4,
+    "value": 16,
+    "zones": []
+  },
+  "firefly_blue": {
+    "sprite_path": "Sprites/Bugs/firefly_blue.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "firefly",
+    "tier": "medium",
+    "base_speed": 1.0,
+    "catch_difficulty": 2,
+    "value": 10,
+    "zones": []
+  },
+  "firefly_great": {
+    "sprite_path": "Sprites/Bugs/firefly_great.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "firefly",
+    "tier": "elite",
+    "base_speed": 1.0,
+    "catch_difficulty": 4,
+    "value": 20,
+    "zones": []
+  },
+  "dragonfly_emperor": {
+    "sprite_path": "Sprites/Bugs/dragonfly_emperor.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "dragonfly",
+    "tier": "medium",
+    "base_speed": 1.0,
+    "catch_difficulty": 2,
+    "value": 14,
+    "zones": []
+  },
+  "dragonfly_hawker": {
+    "sprite_path": "Sprites/Bugs/dragonfly_hawker.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "dragonfly",
+    "tier": "elite",
+    "base_speed": 1.0,
+    "catch_difficulty": 4,
+    "value": 26,
+    "zones": []
   }
 }

@@ -27,17 +27,20 @@ toward the camera). Consequences:
 
 ## The composer
 ```python
-from features.house import (place_house, living_template, bedroom_template,
+from features.house import (place_house, styled_rooms, living_template, bedroom_template,
                             kitchen_template, crafting_template)
 
-rooms = [
-    {"name": "bedroom",  "rect": (4, 8, 13, 17),   "fill": bedroom_template},
-    {"name": "main",     "rect": (13, 8, 24, 17),  "fill": living_template},
-    {"name": "kitchen",  "rect": (24, 8, 34, 17),  "fill": kitchen_template},
-    {"name": "crafting", "rect": (15, 17, 23, 25), "fill": crafting_template},
-]
+# (name, rect, template) specs; styled_rooms binds a FURNITURE COLLECTION (see below).
+rooms = styled_rooms([
+    ("bedroom",  (4, 8, 13, 17),  bedroom_template),
+    ("main",     (13, 8, 24, 17), living_template),
+    ("kitchen",  (24, 8, 34, 17), kitchen_template),
+    ("crafting", (15, 17, 23, 25), crafting_template),
+], collection="fancy")
 place_house(b, rooms, front=("main", "top"))   # exterior door on main's south wall
 ```
+(You can still pass a raw `rooms` list of `{"name","rect","fill"}` dicts; `styled_rooms` is the
+terse form that also binds the collection. For ready-made shapes use the layout generators below.)
 - Each `rect` is the inclusive **OUTER-wall** bounds. Adjacent rooms **overlap by exactly one
   shared wall line** (e.g. bedroom `x1 == main x0`); the composer turns each shared segment into
   a wall with a **single interior door** punched through it.
@@ -55,6 +58,14 @@ Compose shapes by choosing room rects that share walls:
 - **L:** two rooms sharing one wall, a third sharing a wall with one of them.
 - Vary room **sizes** (different widths/heights) — don't make three equal boxes. Keep rooms
   **cozy** (~8–10 cells/side); fill them with furniture rather than making them cavernous.
+
+### Room-count layouts (`houses/layouts.py`)
+Ready-made shared-wall floor plans so you don't hand-place every rect — each returns
+`(specs, front)` for `styled_rooms(specs, collection)` → `place_house(b, rooms, front=front)`:
+- `row_house(ox, oy)` — 3 rooms in a bar.
+- `t_house(ox, oy)` — 4 rooms (bar + a crafting stem north; the ⊥).
+- `plus_house(ox, oy)` — 5 rooms (bar + study & sunroom stems north).
+`bbox(specs)` returns the overall rect (handy for wrapping the house in a yard).
 
 ## Furniture: templates + `wall_run`
 Templates place furniture **against walls** using `wall_run` and a doorway-safe `_safe`:
@@ -78,10 +89,29 @@ wall_run(b, ["counter", "sink", "counter", "stove"], side="top", I=I, doorways=d
 - **`crafting_template`** — `furnace` + `cauldron` on the **north** wall; `workbench` + `anvil`
   as work surfaces flanking the south entry; storage (chest/barrel/crate) on a side wall.
 
-Write a **new template** as `fn(b, interior, doors, doorways)`: unpack `ix0,iy0,ix1,iy1`, build
-a doorway-safe `P = lambda oid,x,y,**k: _safe(b,oid,x,y,doorways,**k)`, and place per the facing
-rule (front-facing on north/sides, flat on south). Render and let the builder's overlap warnings
-guide you.
+Each stock template takes a trailing `coll=` (the collection) and asks the catalog for the right id
+per **role** (`pick(role, coll)`), so the SAME template furnishes a plain or an upscale room.
+
+Write a **new template** as `fn(b, interior, doors, doorways, coll="basic")`: unpack `ix0,iy0,ix1,iy1`,
+`F = lambda role: pick(role, coll)`, build a doorway-safe `P` that skips `None`
+(`lambda oid,x,y,**k: _safe(b,oid,x,y,doorways,**k) if oid else False`), and place `F("bed")`,
+`F("lounge")`, etc. per the facing rule. Render and let the builder's overlap warnings guide you.
+
+## Furniture collections (`features/furniture.py`)
+A **collection** is a self-contained look/feel set mapping a **role** (bed, seating, lounge, table,
+light, rug, plant, hearth, display, counter, stove, …) to a concrete entity id. A house picks a
+collection; any role it doesn't define falls back to `basic`. Two exist now — `basic` (plain/cheap) and
+`fancy` (upscale) — and they're **modular: add or remove a collection as a unit** (later: `tropical`,
+`modern`, `rustic` — ideally each its own module). The "which is fancy / appropriate for wealth"
+knowledge lives HERE, in the scaffolding — never in the game's entity data (the game treats every
+placeable as an independent item).
+- Use it via `styled_rooms(specs, collection="fancy")` (binds `coll` into each template).
+- `pick(role, collection)` resolves the id (returns `None` for a role a collection intentionally omits,
+  e.g. `basic` has no clock → templates skip it).
+- **Members of a role across collections should share a footprint** (so swapping doesn't shift
+  `wall_run` placement); flat decor (rug) is the allowed exception.
+- To add a collection: define a new `role -> id` dict listing only the roles where it differs from
+  `basic`, and register it in `COLLECTIONS`. New ids are added via the **add-object** skill.
 
 ## Build → render → review loop
 ```bash
@@ -94,5 +124,8 @@ Aim for **0 placement warnings**; the builder refuses overlaps loudly.
 ## Cross-cutting
 - New furniture/appliance sprites are added via the **add-object** skill (gpt-image-1); missing
   ones render as labeled placeholder squares. Track them in [../product/art_needed.md](../product/art_needed.md).
+- Fenced **yards** (fence + gate + approach path + exterior decor) around a house:
+  [feature-yard.md](feature-yard.md) (`features/yard.py`). Worked multi-house example:
+  `tools/zonegen/scenes/scene_houses.py` (room counts × collections, each in a yard).
 - Single-room shells, doors, and the precedence order: [feature-building.md](feature-building.md).
 - Sprite/pipeline rules: [object_pipeline.md](object_pipeline.md).

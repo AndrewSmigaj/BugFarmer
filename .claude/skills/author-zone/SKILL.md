@@ -10,6 +10,30 @@ shared occupancy model, compose with **placeholder squares** (never wait on art)
 **rendering a preview PNG and looking at it**. The preview is the test — there's no live game to
 watch here.
 
+## Make it RICH — brainstorm, don't do the bare minimum (read this first)
+A scene is a crafted vignette, not a checklist. When asked for a new scene you are EXPECTED to
+**brainstorm interesting content yourself**, not just place the few things named:
+- Start by **brainstorming a content list** for the scene's theme/situation: the named things PLUS
+  the supporting props, decorations, clutter, and variety that make the place feel real and lived-in
+  (e.g. a mining camp isn't just tents — it's crates, barrels, pickaxes leaning on rocks, ore sacks,
+  a stew pot over the fire, lanterns, tool racks, a wash line, scattered rubble). Aim for diversity
+  (several variants, a poor→nice range where it fits) — we have AI artists, so content is cheap
+  (`game_design.md §19`). Too sparse reads as a tech demo; fill it with character.
+- **Most of that content will be NEW entities** — that's expected. Add each via the **add-object**
+  skill (lean entity row + a catalog `look` row). It renders as a placeholder immediately, so layout
+  never waits on art.
+- **Write the brainstorm down and sanity-check it** against the theme before building — did you cover
+  the activity, the people, the wear-and-tear, the lighting, the surroundings? Present the plan/brainstorm
+  for review rather than silently doing the minimum.
+
+## Go slow; check before you call it done
+This is an iterative craft loop, not a one-shot. Deliberately:
+- Plan → build a first pass with placeholders → **render and actually LOOK at the PNG** → adjust
+  composition → repeat. Crop regions (`render_builder(..., bounds=...)` to `/tmp`) to inspect detail.
+- Before declaring a scene (or a plan) good: re-read the render with a critical eye, run `b.validate()`,
+  confirm **0 placement warnings**, and check the brainstorm actually landed (is it rich, on-theme,
+  readable?). Don't rubber-stamp your own work — verify it.
+
 ## The loop
 1. Read the zone document (`docs/product/zones/<zone>.md`) or decide the scene's contents.
 2. For each feature, read its **feature guide** (below) + the cross-cutting style guide.
@@ -24,8 +48,11 @@ watch here.
   Key methods: `place_occupant(id, x, y)` (writes anchor + footprint cells; **refuses overlaps
   loudly** — no silent overwrite), `set_ground`/`fill_ground`, `missing_art()`, `validate()`,
   `save()` (chunk-aligned zones) / `load(zone_id)` (edit an existing zone; derives masks).
-- `features/` — feature primitives: `room.place_room` (building shells), `scatter.scatter`
-  (decor). More are added over time, each with a feature guide.
+- `features/` — feature primitives: `room.place_room` (building shells), `house.place_house` +
+  `styled_rooms` (multi-room houses), `furniture` (collection catalog: `pick(role, coll)`),
+  `yard.{fence_rect,yard}` (fenced enclosures), `terrain.{hpath,vpath,pond}`,
+  `garden.{crop_bed,flower_patch,fruit_around}`, `scatter.scatter` (decor). `houses/layouts.py`
+  has ready-made 3/4/5-room floor plans (`row_/t_/plus_house`). Each has a feature guide.
 - `render.render_builder(b, out, scale, bounds=None)` — render a builder straight to a preview PNG
   (for scene vignettes; no zone files written).
 - **Precedence — place HARD features first so later ones route around them:** biome base → water →
@@ -42,8 +69,11 @@ python3 tools/zonegen/builds/<scene>.py    # builds + renders to tools/_generate
 ## Feature guides
 - `docs/guides/feature-building.md` — rooms, walls, doors, building shells.
 - `docs/guides/house-building.md` — multi-room houses: the composer, the south-facing **facing
-  rule**, the room-template library (living/bedroom/kitchen/crafting), ⊥/L shapes.
+  rule**, room templates, ⊥/L shapes, **furniture collections** (basic/fancy), and the 3/4/5-room
+  layout generators.
+- `docs/guides/feature-yard.md` — fenced yards/pens: `fence_rect`, `yard` (gate + path + decor).
 - `docs/guides/feature-vegetation.md` — scatter (flowers/bushes/grass): density + spacing.
+- Worked multi-feature scene: `tools/zonegen/scenes/scene_houses.py` (room counts × collections, yards).
 - Cross-cutting style/perspective: `docs/guides/MASTER_STYLE_GUIDE.md` (+ the broader guide set,
   being consolidated — see BACKLOG "Zone-design guides cleanup").
 

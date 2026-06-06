@@ -77,6 +77,8 @@ def downscale(arr, tw, th):
 
 
 def build_palette(rgb_pixels, k, seed=1):
+    if rgb_pixels.size == 0:        # fully-transparent sprite -> nothing to quantize
+        return np.zeros((1, 3))     # (caller emits an all-transparent result; batch continues)
     uniq = np.unique(rgb_pixels.reshape(-1, 3), axis=0)
     k = max(2, min(k, len(uniq)))
     centroids, _ = kmeans2(rgb_pixels.astype(np.float64), k,

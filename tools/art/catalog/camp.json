@@ -1,0 +1,42 @@
+{
+  "campfire": {
+    "look": "a small CAMPFIRE: a ring of grey stones around crossed burning logs with bright orange-yellow FLAMES and a wisp of smoke.",
+    "materials": [
+      "stone",
+      "wood"
+    ]
+  },
+  "campfire_spit": {
+    "look": "a CAMPFIRE WITH A ROASTING SPIT: a stone fire ring with flames, two forked wooden posts holding a horizontal spit with a roast skewered over the fire.",
+    "materials": [
+      "wood",
+      "stone"
+    ]
+  },
+  "log_seat": {
+    "look": "a LOG SEAT: a short horizontal section of log to sit on, round end-grain showing, rough bark texture.",
+    "materials": [
+      "wood"
+    ]
+  },
+  "ore_sluice": {
+    "look": "an ORE SLUICE: a slanted wooden trough with cross-riffles and a trickle of water, for washing ore and gravel.",
+    "materials": [
+      "wood",
+      "metal"
+    ]
+  },
+  "sign_camp": {
+    "look": "a rugged wooden CAMP SIGN: a standing post holding a small board carved with a crossed-pickaxe symbol, weathered.",
+    "materials": [
+      "wood"
+    ]
+  },
+  "tent": {
+    "look": "a canvas TENT: a simple triangular ridge tent of tan canvas with a dark triangular open-flap entrance and guy-ropes pegged down.",
+    "materials": [
+      "fabric",
+      "wood"
+    ]
+  }
+}

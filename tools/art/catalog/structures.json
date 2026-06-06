@@ -1,0 +1,81 @@
+{
+  "apple_crate": {
+    "look": "a simple wooden CRATE seen FLAT and FACE-ON (straight from the front, NOT angled, NOT tilted, NOT isometric): a square slatted wooden box with a few red APPLES piled on top. Mostly just a plain front-facing wooden crate."
+  },
+  "autonet": {
+    "look": "an AUTONET automatic fly-catcher seen front-on, WIDER than tall: on the left a round spinning electric FAN in a housing, and ATTACHED right beside it a cylindrical metal TANK/vat with a mesh intake; the fan sucks flies through the opening into a collection net inside the tank. A quirky two-part bug-suction machine on little legs."
+  },
+  "chest_wood": {
+    "look": "a closed wooden treasure CHEST: a rectangular wooden box with a rounded hinged LID, dark iron METAL BANDS and a metal latch/lock on the front.",
+    "materials": [
+      "wood",
+      "metal"
+    ]
+  },
+  "compost_bin": {
+    "look": "a wooden COMPOST BIN: an open-topped slatted wooden box filled with dark crumbly compost and food scraps mounded above the rim. Clearly a compost bin, NOT a plain crate."
+  },
+  "door_wood": {
+    "look": "a single closed WOODEN DOOR standing in a simple wooden door FRAME: a tall vertical slab made of vertical wood planks, with two or three recessed rectangular PANELS, a small round brass DOORKNOB near the right edge at mid-height, and a visible frame/jamb around it. It must read instantly as a DOORWAY you could walk through - NOT a cabinet, dresser, box, or wardrobe. Taller than it is wide."
+  },
+  "fence_electric": {
+    "look": "a section of ELECTRIC FENCE: a slim post with two horizontal taut WIRES running left and right, small ceramic INSULATORS where the wires meet the post and a tiny warning spark; same post-and-rail layout as a wooden fence but thin metal wire.",
+    "materials": [
+      "metal"
+    ]
+  },
+  "fence_iron": {
+    "look": "a section of wrought-IRON FENCE: a slim dark metal POST with two horizontal metal RAILS running left and right off it (same post-and-rail layout as a wooden fence, but dark wrought iron, slimmer).",
+    "materials": [
+      "metal"
+    ]
+  },
+  "fence_wood": {
+    "look": "a section of wooden post-and-rail FENCE: a vertical wooden POST with two horizontal RAILS running left and right off it; rustic split wood."
+  },
+  "fireplace": {
+    "look": "a STONE FIREPLACE: a chunky grey stone hearth with a dark arched FIREBOX opening in the lower-center, warm glowing ORANGE-AND-YELLOW FLAMES burning inside the opening, and a flat stone MANTEL ledge across the top. Stone surround framing the fire on the left, right and top; the fire is the bright focal point.",
+    "materials": [
+      "stone",
+      "wood"
+    ]
+  },
+  "fly_netting": {
+    "look": "a square patch of NET hung up: a flat square panel of fine MESH — a simple GRID OF CROSSED STRINGS, slightly slack — with a few small dark FLIES caught on it. Just the open mesh grid, NO wooden frame, NO box, NO solid panel; you can see through the holes."
+  },
+  "garden_arch": {
+    "look": "a GARDEN ARCH / trellis archway seen front-on: two slim posts joined by an arched top, with climbing green VINES and small flowers over it and an open walk-through gap in the middle. A decorative garden arch."
+  },
+  "gate_wood": {
+    "look": "a wooden fence GATE: a single hinged gate panel matching a wooden fence - a frame of horizontal rails with a diagonal CROSS-BRACE, slightly shorter, meant to sit in a fence line as the openable section."
+  },
+  "hedge": {
+    "look": "a section of trimmed HEDGE: a dense flat-topped block of green leafy shrubbery, like a low green wall. The foliage spans the FULL WIDTH and bleeds off the left and right edges so sections tile into one continuous hedge with no gap."
+  },
+  "net_post": {
+    "look": "a bug-catching NET STATION: a tall wooden POST with a round hoop NET of fine pale mesh mounted at the top (a butterfly-style net fixed upright on a stand). Clearly a net on a post."
+  },
+  "signpost": {
+    "look": "a wooden SIGNPOST: a vertical wooden POST with a rectangular wooden SIGN BOARD mounted near the top (blank, with a faint arrow), like a directional trail sign."
+  },
+  "wall_brick": {
+    "materials": [
+      "stone"
+    ]
+  },
+  "wall_stone": {
+    "materials": [
+      "stone"
+    ]
+  },
+  "well": {
+    "look": "a stone WATER WELL: a round waist-high STONE wall (the well shaft), a wooden POST on each side holding a small peaked wooden ROOF over the top, and a bucket on a rope. Dark water in the opening. Reads clearly as a wishing well, NOT a plain hole.",
+    "materials": [
+      "stone",
+      "wood"
+    ]
+  },
+  "window_4pane": {
+    "look": "a closed GLASS WINDOW set in a wooden frame, seen front-on, filling a tall wall-tile shape: a wooden frame divided by a cross MULLION into FOUR equal glass PANES, the glass pale blue-white with a soft diagonal reflection. Reads instantly as a window in a wall, NOT a painting, cabinet or door. The frame fills the tile; transparent outside it."
+  }
+}

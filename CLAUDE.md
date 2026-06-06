@@ -14,6 +14,8 @@ for every step, not just the big ones.
 - `nakama/` — Nakama Go server (authoritative game logic) + canonical entity data.
 - `tools/` — Python sprite/world pipeline (gen → clean → preview → publish), the test-zone
   generator (`make_test_zone.py`), and the headless `.NET` netcode harness (`sync-harness/`).
+  Art prompts are DATA: `tools/art/style.json` (global look) + `tools/art/catalog/*.json` (per-item).
+  Zone/scene authoring: `tools/zonegen/` (builder + `features/` primitives + `scenes/`).
 - `docs/` — `product/` (how the game works) and `guides/` (how to operate the pipeline).
 - `.claude/skills/` — task playbooks (`add-object`, `regenerate-sprite`, `run-backend`, `author-zone`).
 

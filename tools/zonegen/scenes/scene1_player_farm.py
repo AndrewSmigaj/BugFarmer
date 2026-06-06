@@ -20,84 +20,16 @@ sys.path.insert(0, ZG)
 from zonebuilder import ZoneBuilder              # noqa: E402
 from render import render_builder                # noqa: E402
 from features.scatter import scatter             # noqa: E402
+from features.yard import fence_rect              # noqa: E402
+from features.terrain import hpath, vpath, pond   # noqa: E402
+from features.garden import crop_bed, flower_patch, fruit_around  # noqa: E402
 from houses.player_house import place_player_house  # noqa: E402
 
 W, H = 46, 50
 
 
-# ---- helpers ----------------------------------------------------------------
-def hpath(b, x0, x1, y):
-    for x in range(x0, x1 + 1):
-        b.set_ground(x, y, "stone_path", surface="path")
-
-
-def vpath(b, x, y0, y1):
-    for y in range(y0, y1 + 1):
-        b.set_ground(x, y, "stone_path", surface="path")
-
-
-def fence_rect(b, x0, y0, x1, y1, gate, fence="fence_wood"):
-    cells = set()
-    for x in range(x0, x1 + 1):
-        cells.add((x, y0)); cells.add((x, y1))
-    for y in range(y0, y1 + 1):
-        cells.add((x0, y)); cells.add((x1, y))
-    cells.discard(gate)
-    for c in sorted(cells):
-        b.place_occupant(fence, *c)
-    b.place_occupant("gate_wood", *gate)
-
-
-def fruit_around(b, tx, ty, fresh="fallen_fruit", n=6):
-    """Fallen/rotting fruit as free-floating decor around a tree base (sub-grid, half scale)."""
-    rng = random.Random(tx * 131 + ty)
-    for _ in range(n):
-        dx, dy = rng.uniform(-1.5, 1.5), rng.uniform(-1.2, 0.3)
-        fid = "rotten_fruit" if rng.random() < 0.3 else fresh
-        b.place_decor(fid, tx + dx, ty + dy, scale=0.5)
-
-
-def flower_patch(b, x0, y0, x1, y1, kinds, n, seed=0, scale=0.8):
-    """Flowers as free-floating COLLECTIBLE decor — sub-grid (not snapped to cells), on grass."""
-    rng = random.Random(seed)
-    placed = tries = 0
-    while placed < n and tries < n * 10:
-        tries += 1
-        fx, fy = rng.uniform(x0, x1), rng.uniform(y0, y1)
-        ix, iy = int(round(fx)), int(round(fy))
-        if b.in_bounds(ix, iy) and b.is_free(ix, iy) and b.surface[iy][ix] == "grass":
-            b.place_decor(rng.choice(kinds), fx, fy, scale=scale)
-            placed += 1
-
-
-def pond(b, cx, cy, rx, ry, seed=3):
-    """An ORGANIC water feature: irregular shallow blob with a smaller deep centre + reeds."""
-    rng = random.Random(seed)
-    bank = []
-    for y in range(cy - ry - 1, cy + ry + 2):
-        for x in range(cx - rx - 1, cx + rx + 2):
-            if not b.in_bounds(x, y):
-                continue
-            nx, ny = (x - cx) / (rx + 0.5), (y - cy) / (ry + 0.5)
-            d = (nx * nx + ny * ny) ** 0.5
-            if d <= 1.0 + rng.uniform(-0.15, 0.15):
-                b.set_ground(x, y, "water_deep" if d <= 0.5 else "water_shallow", surface="water")
-                b.reserve(x, y, surface="water")
-            elif d <= 1.5:
-                bank.append((x, y))
-    for (x, y) in bank:
-        if b.is_free(x, y) and b.surface[y][x] == "grass" and rng.random() < 0.3:
-            b.place_occupant("reeds", x, y)
-
-
-def crop_bed(b, x0, y0, x1, y1, crops):
-    """A tilled bed with MIXED crops — each column a different crop, cycling `crops`."""
-    b.fill_ground(x0, y0, x1, y1, "garden_plot", surface="farm")
-    for i, x in enumerate(range(x0, x1 + 1)):
-        crop = crops[i % len(crops)]
-        for y in range(y0, y1 + 1):
-            if b.is_free(x, y):
-                b.place_occupant(crop, x, y, surface="farm")
+# Scene helpers now live in features/: yard.fence_rect, terrain.{hpath,vpath,pond},
+# garden.{crop_bed, flower_patch, fruit_around} (imported above).
 
 
 # ---- the scene --------------------------------------------------------------

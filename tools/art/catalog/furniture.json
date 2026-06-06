@@ -1,0 +1,236 @@
+{
+  "armchair": {
+    "look": "a single cozy upholstered ARMCHAIR facing the viewer: a deep padded fabric seat with a tall padded backrest and two soft ARMRESTS, on short wooden feet. A lounge chair."
+  },
+  "armchair_fancy": {
+    "look": "a plush WINGBACK ARMCHAIR facing the viewer: a tall padded backrest with winged sides, rolled arms, deep buttoned burgundy upholstery, on small wooden feet."
+  },
+  "bar_cart": {
+    "look": "a BAR CART: a small two-tier brass-and-glass rolling cart holding bottles and glasses.",
+    "materials": [
+      "metal"
+    ]
+  },
+  "bathtub": {
+    "look": "a clawfoot BATHTUB seen front-on: a white enamel oval tub on four clawed feet, filled with water.",
+    "materials": [
+      "metal"
+    ]
+  },
+  "bed_basic": {
+    "look": "a simple BED seen front-on from slightly above: plain wooden frame, a white PILLOW at the head end (top), and a plain blue BLANKET over the mattress. Modest, no tall posts."
+  },
+  "bed_canopy": {
+    "look": "a grand CANOPY BED seen front-on from slightly above: four tall posts holding a draped fabric CANOPY overhead, plump white pillows, a rich red quilt. Luxurious."
+  },
+  "bed_fancy": {
+    "look": "an ornate four-poster BED seen front-on from slightly above: wooden frame with tall carved CORNER POSTS, a plump white PILLOW at the head end (top), and a richly colored deep-purple QUILT/BLANKET with trim covering the mattress. Clearly a bed."
+  },
+  "bench": {
+    "look": "a long wooden BENCH facing the viewer: a horizontal plank seat on legs with a low back rail; wide enough to seat two."
+  },
+  "bench_padded": {
+    "look": "a long UPHOLSTERED BENCH facing the viewer: a padded muted fabric top on short wooden legs, no back; seats two or three.",
+    "materials": [
+      "wood",
+      "fabric"
+    ]
+  },
+  "bench_stone": {
+    "look": "a carved STONE BENCH: a long slab seat resting on two stone-block legs.",
+    "materials": [
+      "stone"
+    ]
+  },
+  "bookshelf": {
+    "look": "a tall wooden BOOKCASE: an upright wooden frame divided into 3-4 horizontal SHELVES, each shelf packed with a row of upright BOOKS with colorful spines (muted red, green, blue, ochre, brown), a few books tilted at an angle. The shelves-with-books fill the whole front face; clearly a bookshelf, NOT a plain cabinet or dresser."
+  },
+  "bookshelf_fancy": {
+    "look": "a tall ornate MAHOGANY BOOKCASE: a dark carved wooden frame with 4 shelves packed with colorful books and a decorative cornice on top. Richer than a plain bookshelf."
+  },
+  "bunk_bed": {
+    "look": "a wooden BUNK BED seen front-on: two stacked bunks with a ladder at one end and plain bedding.",
+    "materials": [
+      "wood",
+      "fabric"
+    ]
+  },
+  "cabinet": {
+    "look": "a wooden DISPLAY CABINET seen front-on: a chest-high cabinet with GLASS-front upper doors showing shelves inside, and solid lower doors with knobs."
+  },
+  "chair_cushioned": {
+    "look": "a wooden CHAIR facing the viewer with a soft CUSHION: an upright slatted back, four legs, and a padded muted-blue fabric SEAT CUSHION on top."
+  },
+  "chair_fancy": {
+    "look": "a comfy upholstered ARMCHAIR facing the viewer: wooden frame with a padded PURPLE cushioned seat, a tall padded backrest and small armrests."
+  },
+  "chair_wood": {
+    "look": "a simple wooden CHAIR facing the viewer: a seat, four legs, and an upright BACKREST with vertical slats. Clearly a chair."
+  },
+  "chaise_lounge": {
+    "look": "a CHAISE LOUNGE: an elegant backless reclining sofa with one raised curved end and a rolled bolster, richly upholstered.",
+    "materials": [
+      "fabric",
+      "wood"
+    ]
+  },
+  "coffee_table": {
+    "look": "a low rectangular COFFEE TABLE: a long low wooden tabletop on short legs, lower than a dining table, empty surface."
+  },
+  "cot": {
+    "look": "a simple narrow COT seen front-on from slightly above: a low plain wooden frame with a thin mattress and a plain grey blanket, no posts. Modest and small.",
+    "materials": [
+      "wood",
+      "fabric"
+    ]
+  },
+  "counter": {
+    "look": "a kitchen COUNTER cabinet seen front-on: a wooden base CABINET with two cupboard doors and knobs below, and a flat pale stone COUNTERTOP across the top, empty surface. A section of kitchen counter."
+  },
+  "counter_fancy": {
+    "look": "a kitchen COUNTER with a MARBLE top seen front-on: a wooden base cabinet with doors and knobs below, and a pale veined MARBLE countertop across the top, empty surface.",
+    "materials": [
+      "stone",
+      "wood"
+    ]
+  },
+  "cupboard": {
+    "look": "a kitchen CUPBOARD seen front-on: a tall wooden cabinet with two panelled doors and knobs, for storing dishes. Clearly a cupboard."
+  },
+  "desk": {
+    "look": "a wooden WRITING DESK facing the viewer: a flat top with a stack of small DRAWERS (knobs) under one side and slim legs. Clearly a desk."
+  },
+  "dining_table_fancy": {
+    "look": "an ornate carved DINING TABLE: a large polished wooden tabletop with decoratively turned/carved legs, richer than a plain table, empty surface."
+  },
+  "dresser": {
+    "look": "a wooden DRESSER / chest of drawers seen front-on: a low wide cabinet with three stacked DRAWERS, each with two round knobs, short feet. Clearly a dresser, NOT a bookshelf or cabinet of doors."
+  },
+  "dresser_fancy": {
+    "look": "a carved hardwood DRESSER / chest of drawers seen front-on: a low wide cabinet with three drawers, ornate brass handles and carved trim, short curved feet.",
+    "materials": [
+      "wood"
+    ]
+  },
+  "fridge": {
+    "look": "a wide squat retro REFRIGERATOR seen front-on: a rounded-corner cream/white enamel cabinet, a horizontal seam splitting it into a smaller top FREEZER door and a larger lower door, a slim vertical chrome HANDLE on each door. Clearly a kitchen appliance, NOT a cabinet, wardrobe or dresser. Wider than it is tall."
+  },
+  "grandfather_clock": {
+    "look": "a tall GRANDFATHER CLOCK seen front-on: a narrow upright wooden cabinet with a round white CLOCK FACE near the top and a long glass PENDULUM case below. Much taller than wide."
+  },
+  "keg": {
+    "look": "a wooden brewing KEG/cask standing upright: a fat vertical wooden barrel bound with dark metal HOOPS, with a small metal TAP/spigot near the bottom front. Clearly a keg for brewing, taller and chunkier than a plain barrel."
+  },
+  "kitchen_island": {
+    "look": "a kitchen ISLAND: a free-standing counter block with a pale butcher-block top and cabinet doors around the base.",
+    "materials": [
+      "wood",
+      "stone"
+    ]
+  },
+  "loveseat": {
+    "look": "a small two-seat SOFA (loveseat) facing the viewer: a short padded couch with two seat cushions, a padded back and rolled arms, cosy warm fabric. Narrower than a full sofa.",
+    "materials": [
+      "fabric",
+      "wood"
+    ]
+  },
+  "nightstand": {
+    "look": "a small wooden BEDSIDE TABLE / nightstand seen front-on: a little cabinet with one small DRAWER (a round knob) above a tiny open shelf, short legs, flat top. Small."
+  },
+  "nightstand_fancy": {
+    "look": "an ornate BEDSIDE NIGHTSTAND seen front-on: a small elegant cabinet with one drawer (brass handle) and curved carved legs. Refined.",
+    "materials": [
+      "wood"
+    ]
+  },
+  "ottoman": {
+    "look": "a padded round OTTOMAN footstool: a low upholstered cushion-stool with a tufted top, short feet.",
+    "materials": [
+      "fabric",
+      "wood"
+    ]
+  },
+  "planter_box": {
+    "look": "a low rectangular wooden PLANTER BOX/trough filled with green leafy plants and a few small flowers poking up above the rim.",
+    "materials": [
+      "wood",
+      "foliage"
+    ]
+  },
+  "range_stove": {
+    "look": "a large kitchen RANGE seen front-on: a wide steel-and-enamel cooking range with a big oven door (handle + window) below and a flat cooktop on top showing FOUR round black burners. Bigger than a basic stove.",
+    "materials": [
+      "metal"
+    ]
+  },
+  "rocking_chair": {
+    "look": "a wooden ROCKING CHAIR facing the viewer: a tall slatted back, armrests, and curved ROCKER runners instead of straight feet at the bottom. Cosy.",
+    "materials": [
+      "wood"
+    ]
+  },
+  "sawhorse": {
+    "look": "a carpenter's SAWHORSE: an open A-frame wooden trestle - a horizontal top beam with splayed angled legs forming an A at each end; you can see through the open frame."
+  },
+  "side_table": {
+    "look": "a small round SIDE TABLE: a little round wooden tabletop on a single slim pedestal or three thin legs. Small, empty top."
+  },
+  "sink": {
+    "look": "a kitchen SINK unit seen front-on: a counter-height base cabinet with a rectangular metal BASIN set into the top and a curved chrome FAUCET/tap rising at the back. Clearly a sink, NOT a plain cabinet."
+  },
+  "sofa": {
+    "look": "a comfy upholstered SOFA/couch facing the viewer: a long padded fabric couch with two seat cushions, a padded backrest, and rolled ARMRESTS at each end, in a warm muted fabric color. Wide enough to seat two or three. Clearly a sofa, NOT a bench or bed."
+  },
+  "sofa_fancy": {
+    "look": "a luxurious VELVET SOFA facing the viewer: a long padded couch with deep tufted cushions, rolled arms, rich purple velvet, small carved wooden feet.",
+    "materials": [
+      "fabric",
+      "wood"
+    ]
+  },
+  "stool_stone": {
+    "look": "a simple STONE STOOL: a short cylindrical carved-stone seat, no back.",
+    "materials": [
+      "stone"
+    ]
+  },
+  "stool_wood": {
+    "look": "a small round wooden STOOL: a round flat seat on three or four splayed legs, no backrest. Low and simple."
+  },
+  "stove": {
+    "look": "a kitchen STOVE / oven RANGE seen front-on: an enamel-and-steel cabinet with an OVEN door (a handle and a small dark window) below, and a flat COOKTOP across the top showing TWO round black BURNERS. A two-burner cooking range, clearly a stove."
+  },
+  "stove_wood": {
+    "look": "a cast-iron WOOD-BURNING STOVE seen front-on: a chunky black iron stove body with a small door showing glowing orange FLAMES, short legs, and a stovepipe rising from the top.",
+    "materials": [
+      "metal",
+      "wood"
+    ]
+  },
+  "table_stone": {
+    "look": "a STONE TABLE: a flat grey stone slab tabletop on a chunky stone pedestal/legs, empty surface."
+  },
+  "table_wood": {
+    "look": "a sturdy rectangular wooden TABLE: a flat plank tabletop on four legs, wood grain running across the top, empty surface."
+  },
+  "throne": {
+    "look": "an ornate golden THRONE: a tall high-backed gilded chair with deep-red velvet cushions and carved arms; opulent.",
+    "materials": [
+      "metal",
+      "fabric"
+    ]
+  },
+  "vanity": {
+    "look": "a VANITY dressing table: a slim wooden table with a tall oval MIRROR above it and a small drawer, a little stool tucked under.",
+    "materials": [
+      "wood"
+    ]
+  },
+  "wardrobe": {
+    "look": "a tall WARDROBE / armoire seen front-on: a tall narrow wooden cabinet with two full-height panelled doors, knobs and a small cornice on top. Taller than it is wide."
+  },
+  "wine_rack": {
+    "look": "a wooden WINE RACK: a small lattice/X-frame of diamond cubbies holding several wine BOTTLES lying on their sides (green and red glass)."
+  }
+}

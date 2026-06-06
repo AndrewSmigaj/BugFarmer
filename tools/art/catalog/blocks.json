@@ -1,0 +1,101 @@
+{
+  "clay_block": {
+    "materials": [
+      "dirt"
+    ],
+    "surface": "a full face of smooth red-brown CLAY with subtle mottling and tiny cracks throughout the WHOLE square"
+  },
+  "dirt_block": {
+    "materials": [
+      "dirt"
+    ],
+    "surface": "packed brown DIRT/soil flecked with a few small pebbles"
+  },
+  "hard_stone_block": {
+    "surface": "dark dense grey STONE with tight fine cracks, tougher-looking than normal rock"
+  },
+  "ore_coal_block": {
+    "materials": [
+      "stone"
+    ],
+    "fleck": "chunks of black COAL"
+  },
+  "ore_copper_block": {
+    "materials": [
+      "stone",
+      "metal"
+    ],
+    "fleck": "orange-brown COPPER veins"
+  },
+  "ore_diamond_block": {
+    "materials": [
+      "stone"
+    ],
+    "fleck": "bright cyan-white DIAMOND flecks (solid bright specks, NOT see-through)"
+  },
+  "ore_gold_block": {
+    "materials": [
+      "stone",
+      "metal"
+    ],
+    "fleck": "bright yellow GOLD nuggets"
+  },
+  "ore_iron_block": {
+    "materials": [
+      "stone",
+      "metal"
+    ],
+    "fleck": "rusty orange IRON veins"
+  },
+  "ore_platinum_block": {
+    "materials": [
+      "stone",
+      "metal"
+    ],
+    "fleck": "bright pale blue-white PLATINUM flecks (solid bright specks)"
+  },
+  "ore_silver_block": {
+    "materials": [
+      "stone",
+      "metal"
+    ],
+    "fleck": "pale silver-white SILVER flecks"
+  },
+  "ore_tin_block": {
+    "fleck": "pale silvery-grey TIN flecks",
+    "materials": [
+      "stone",
+      "metal"
+    ]
+  },
+  "quartz_block": {
+    "surface": "a full face of opaque milky-white QUARTZ rock - speckled crystalline grains and thin pale-grey veins throughout the WHOLE square, fully filled (NOT glassy, NOT see-through)"
+  },
+  "sand_block": {
+    "surface": "a full face of compacted golden SAND - dense fine speckled grains with a few tiny pebbles throughout the WHOLE square, no smooth empty patches"
+  },
+  "sandstone_block": {
+    "surface": "a full face of tan SANDSTONE - fine speckled grains with faint horizontal striations across the WHOLE square"
+  },
+  "stone_block": {
+    "materials": [
+      "stone"
+    ],
+    "surface": "a full face of rough grey ROCK - irregular cobbled stones of varied grey tones packed tightly together with thin darker cracks between them, textured across the WHOLE square, no smooth empty areas"
+  },
+  "wall_brick": {
+    "surface": "rows of warm red-brown BRICKS with pale mortar lines"
+  },
+  "wall_brick2": {
+    "surface": "mixed STONE-AND-BRICK masonry, rough banded courses of grey stone and red brick"
+  },
+  "wall_stone": {
+    "surface": "fitted grey STONE masonry blocks"
+  },
+  "wall_wood": {
+    "surface": "horizontal WOOD PLANKS with visible grain"
+  },
+  "wall_wood2": {
+    "surface": "vertical stacked LOG timbers, rounded, with darker chinking lines between the logs"
+  }
+}

@@ -513,6 +513,40 @@ in the same spirit.
 Decorative furniture in the private plot can grant small idle production multipliers with
 DIMINISHING RETURNS per duplicate (a second sofa adds less than the first) and an overall cap —
 rewarding thoughtful layout without replacing gameplay.
+- Diminishing returns key off the item `id` (a duplicate of the same item); `category` is available as
+  a coarser grouping. Inventory already tracks by `id`, so the "type" is known with no schema change.
+- The per-item bonus VALUE is a field added WITH this system (not before). Item taxonomy + the
+  derived/authored icon split live in `docs/product/architecture_items.md §0`.
+
+11.6 Power & Electrification (opt-in industrial route)
+A later-game, OPTIONAL path: electrify the plot to run higher-tier machines. You can ignore it
+entirely and stay hands-on.
+- Generation: windmill, waterwheel (hydro), or fuel generator. Each connects to a power unit
+  (generator / battery bank) that distributes power.
+- Linked placement (a shared placement tool): connect a source (windmill/hydro) to its power unit
+  by drawing a LINE — click the start, click the end; the line is rejected if its path clips any
+  occupied cell. The SAME linked-placement interaction lays rail / track (which other machines need).
+  Show a ghost line while dragging.
+- Coverage is a HEURISTIC AURA: the power unit energizes every cell within a radius (within distance
+  N = powered — no per-wire simulation). At placement time, highlight the covered cells so the player
+  can see exactly what is energized before committing.
+- Two machine classes:
+  - FUEL-FED — manually loaded (e.g. the starter wood stove burns wood). No power needed.
+  - ELECTRIC — must sit INSIDE a powered area; no manual fuel.
+  Progression is manual → fuel → electrified/automated.
+- Electric/automatable machines include stoves/ranges, the fly-catcher (autonet, 11.4 — still slow
+  and capacity-capped either way), and processing stations.
+- It must be easy to see at a glance which placed objects need power vs fuel, and which powered cells
+  cover them.
+- (Data note: machines will carry a power/fuel-requirement flag WHEN this system is built — it is not
+  in the entity schema yet. Do not add it ahead of the feature.)
+
+11.7 Cooking & Stoves (capacity progression)
+Stoves are cooking devices; cooking recipes/content fill in over time.
+- Starter WOOD STOVE: cooks ONE dish at a time; manual fuel (wood).
+- Larger stoves: more simultaneous dishes (e.g. a 4-burner range).
+- Top-tier ELECTRIC RANGE: high capacity, needs POWER (11.6) instead of fuel.
+Cooking capacity = number of simultaneous dishes, gated by stove tier + its fuel/power source.
 
 12. Risk, Events, and Offline Behavior
 12.1 Private Plot Safety
@@ -697,5 +731,13 @@ No autoplay
 
 No forced chaos
 
+
+19. Content philosophy — lean into diversity
+We have AI artists and a working sprite pipeline, so adding content is cheap. LEAN INTO VARIETY: many
+furniture pieces across a poor->rich value ladder, several tree/plant/mushroom species, graded ores,
+lots of decorations. "Quality" is just the item's value (sell_price); the fancy/appropriate-for-wealth
+knowledge lives in the AUTHORING scaffolding (furniture collections), never in game data. There is such
+a thing as too much, but the world is far from it — richness of things to gather, craft, and decorate
+with is a feature. New art is a catalog row away (see the add-object skill).
 
 

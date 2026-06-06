@@ -1,0 +1,103 @@
+{
+  "_comment": "Global art style for gpt-image-1 prompts. Edit here to change the look of ALL generated sprites. Multi-line blocks are arrays of lines (joined with newlines). Per-item silhouettes live in catalog/*.json; per-category design nuances + the base art-direction sentence + closers are in gen_sprites.py (design_block/spatial_block/build_prompt).",
+  "palettes": {
+    "wood": "Wood: dark (70,50,35), base (120,90,60), light (160,130,95)",
+    "stone": "Stone: dark (85,85,90), base (120,120,125), light (155,155,160)",
+    "metal": "Metal/iron: dark (60,65,70), base (100,105,110), light (150,155,160)",
+    "foliage": "Foliage: dark (40,85,40), base (55,120,55), light (80,150,70)",
+    "dirt": "Dirt: dark (110,75,40), base (140,95,50), light (165,120,70)",
+    "fabric": "Fabric: dark (100,70,100), base (140,100,140), light (180,140,180)"
+  },
+  "object": {
+    "style_block": [
+      "STYLE REQUIREMENTS (the camera angle is the SINGLE MOST important constraint - get it exactly right):",
+      "- Reference style: STARDEW VALLEY furniture/objects. The object is a FLAT, FACE-ON 2D sprite. You look at it straight from the FRONT, from only slightly above.",
+      "- The FRONT face DOMINATES the sprite (lower ~75%) and faces the viewer dead-on, perfectly flat.",
+      "- Only a THIN strip of the top surface is visible as a flat, axis-aligned horizontal BAND along the very top edge (upper ~20%) - just enough to read the object's depth. The top is a thin band, NOT a large surface.",
+      "- Show ONLY the front face and that thin top band. NEVER show a left or right side face. NEVER rotate the object corner-on.",
+      "- This is NOT isometric, NOT Minecraft, NOT a voxel/3D render. A square top reads as a thin horizontal band, NEVER a tilted diamond or rhombus.",
+      "- Every edge is strictly horizontal or vertical. NO 3D corner rotation, NO perspective lines, NO vanishing points, NO converging edges.",
+      "- Light source: TOP-LEFT. Depth comes from CONTRAST (lighter top band, mid-tone front face), never from geometric tilt or visible side faces.",
+      "- Three-shade coloring per material; no pure black, no pure white; muted saturation.",
+      "- Chunky, slightly overbuilt. Transparent background; render ONLY the object - no ground, no floor tile, no cast shadow."
+    ]
+  },
+  "flora": {
+    "art_direction": "ART DIRECTION: 2D pixel-art PLANT/TREE in the style of STARDEW VALLEY nature sprites. Top-down 3/4 view - we see it from the front and slightly above as it stands on the ground. ORGANIC, rounded, slightly irregular shapes: soft bumpy leaf/petal clusters, NOT blocky cubes, NOT orthogonal, NOT isometric, NOT a 3D render. Chunky hard pixel edges, no anti-aliasing, limited muted natural palette.",
+    "design": [
+      "DESIGN REQUIREMENTS:",
+      "- Organic rounded silhouette (leaves/petals/blades in soft clumps); NOT boxy or orthogonal, no straight-ruled edges except a slim trunk/stem.",
+      "- Instantly recognizable as this exact plant even at small size; bold simple masses.",
+      "- Soft cel shading: lighter where the top-left light hits the canopy, darker underneath; 3-4 shades.",
+      "- Render ONLY the plant - no ground patch, no pot (unless described), no cast shadow."
+    ]
+  },
+  "block": {
+    "art_direction": [
+      "ART DIRECTION: 2D pixel-art WALL BLOCK - ONE solid building block viewed STRAIGHT FROM THE FRONT, from only SLIGHTLY above (orthographic FRONT view, NOT rotated, NOT angled, NOT isometric). It is DOMINATED by a LARGE flat lit TOP SURFACE, with only a SHORT front face beneath it. Chunky hard pixel edges, no anti-aliasing, muted palette."
+    ],
+    "block": [
+      "SOLID BLOCK that TILES IN A GRID (CRITICAL - get the PROPORTIONS exactly):",
+      "- The block has TWO horizontal regions stacked vertically: a LARGE flat lit TOP SURFACE filling the upper ~70% of the height, and a SHORT darker FRONT FACE filling the lower ~30%. The top surface dominates; the front face is the visible wall face beneath it.",
+      "- WHY (the whole point): when blocks are stacked in a vertical column, the top surfaces and front faces LINE UP into a clean grid - each block shows its lit top then its darker front face, exactly like the stone-wall / gold-block examples. The fronts SHOW (that is the wall), but they must line up block-to-block, no random offset, no doubled/overlapping fronts.",
+      "- CAMERA IS DEAD-ON FRONT, only slightly above. The top surface is a FLAT HORIZONTAL band, NEVER a tilted diamond, NEVER corner-on. EVERY edge strictly HORIZONTAL or VERTICAL. NO left or right side face. NOT isometric, NOT a rotated cube.",
+      "- FULL-WIDTH: the top surface AND the front face span the ENTIRE WIDTH and bleed off the LEFT and RIGHT edges, NO transparent side margin, so side-by-side copies merge with no gap and no seam.",
+      "- The top edge and the bottom edge are straight full-width horizontal lines so blocks stack flush top-to-bottom into a continuous grid.",
+      "- The SURFACE texture (below) covers BOTH the top and the front face. Keep shading EVEN, LOW contrast - the front face is only slightly darker than the top, NO heavy black band, NO dark outline/border around the block."
+    ]
+  },
+  "tile": {
+    "style": "Seamless top-down ground TEXTURE tile for a 2D game, viewed straight from directly above (flat orthographic - NO perspective, NO angle, NOT isometric). The texture FILLS THE ENTIRE SQUARE FRAME edge to edge and bleeds off all four sides so many copies tile seamlessly with NO visible seam. CRITICAL - NO grid lines: absolutely NO border, NO frame, NO outline, NO dark edges, NO vignette, NO corner shadows, NO drop shadow. Lighting is COMPLETELY FLAT and EVEN across the whole tile, identical brightness in the center and at every edge and corner, so that when tiled in a grid you CANNOT see where one tile ends and the next begins. Chunky pixel-art texture, limited muted natural palette, subtle low-contrast organic variation spread evenly (no single big feature in the center), hard pixel edges, no anti-aliasing.",
+    "variants": [
+      "",
+      " Nudge two or three tiny blade/speck pixels to slightly different spots. IMPORTANT: keep the EXACT SAME base color, hue, saturation and overall brightness as the standard tile - this is the same ground type, only with a couple of tiny detail pixels moved. The change must be barely noticeable.",
+      " Place one or two tiny accent pixels in different spots. IMPORTANT: keep the EXACT SAME base color, hue, saturation and overall brightness as the standard tile - this is the same ground type, only with a couple of tiny detail pixels moved. The change must be barely noticeable.",
+      " Shift a few single detail pixels very slightly. IMPORTANT: keep the EXACT SAME base color, hue, saturation and overall brightness as the standard tile - this is the same ground type, only with a couple of tiny detail pixels moved. The change must be barely noticeable."
+    ]
+  },
+  "connector": [
+    "HORIZONTAL TILING (CRITICAL - this piece is placed in a continuous row):",
+    "- The horizontal members (fence rails / the wall body and its top edge) MUST extend ALL THE WAY to the LEFT edge and ALL THE WAY to the RIGHT edge of the image and bleed off both sides, so that when identical copies are placed side-by-side they join into one unbroken fence/wall with NO gap and NO seam.",
+    "- Do NOT inset, taper, or round off the left/right ends. Do NOT leave any transparent margin on the left or right side. The rails/wall reach pixel 0 and the final pixel column.",
+    "- At most ONE vertical post/support, centered; the rails pass through/behind it and continue to both edges. Avoid heavy posts at the left/right ends (they would double up into a thick lump where two pieces meet).",
+    "- Transparency is allowed only ABOVE and BELOW the rails/wall, never on the sides."
+  ],
+  "net": [
+    "Create a 2D game sprite (pixel art): a FLAT square of NETTING that fills the entire frame.",
+    "ART DIRECTION: viewed perfectly STRAIGHT-ON and FLAT — absolutely NO perspective, NO angle, NO 3D, NO isometric, NO top face, NO drop shadow, NO shading or depth. Just a flat 2D mesh.",
+    "DESIGN:",
+    "- A regular GRID of crossed ROPE STRINGS (a square net mesh) spanning the whole frame, edge to edge: roughly a 5x5 grid of strings.",
+    "- The strings are a light PALE-GREY / off-white rope (around RGB 225,225,228) with a slightly darker grey edge so they read clearly. The strings MUST be solid and OPAQUE and 1-2 px thick — the mesh must be CLEARLY VISIBLE. Do NOT output a blank, faint, or nearly-transparent image.",
+    "- The square HOLES between the strings are FULLY TRANSPARENT (empty alpha) so the game background shows straight through.",
+    "- Reads instantly as a piece of NET. NO wooden frame, NO posts, NO box, NO solid fabric panel, NO bugs drawn on it — only the pale rope string mesh.",
+    "This is a flat net overlay placed on a tile in a 2D game."
+  ],
+  "mineral": {
+    "art_direction": [
+      "ART DIRECTION: 2D pixel-art MINERAL / ROCK formation in the style of Stardew Valley / Terraria mining art. Top-down 3/4 view, seen from the front and slightly above as it sits on the ground. HARD, ANGULAR, crystalline or chunky-rock forms (faceted crystal clusters or blocky rubble) — NOT organic, NOT leafy, NOT a plant, NOT a 3D render. Chunky hard pixel edges, no anti-aliasing, limited muted palette."
+    ],
+    "design": [
+      "DESIGN REQUIREMENTS:",
+      "- Angular FACETED silhouette (sharp planes, straight crystal edges or blocky rock chunks); no soft",
+      "  rounded foliage shapes.",
+      "- Crystals: a cluster of pointed prisms with a bright highlight GLINT on the lit facets. Rock/rubble:",
+      "  a chunky pile of angular stones. Bones: pale chalky angular pieces.",
+      "- Soft cel shading, 3-4 shades; brightest on the top-left facets.",
+      "- Render ONLY the formation - no ground patch, no plant, no cast shadow."
+    ]
+  },
+  "creature": {
+    "art_direction": [
+      "ART DIRECTION: 2D pixel-art small CREATURE / BUG in the style of Stardew Valley / classic top-down RPG insects. TOP-DOWN view (looking straight DOWN at it on the ground), body laid out flat. Clear readable silhouette; legs and antennae visible. NOT a side view, NOT isometric, NOT 3D. Chunky hard pixel edges, no anti-aliasing, limited muted natural palette."
+    ],
+    "design": [
+      "DESIGN REQUIREMENTS:",
+      "- Body type is the identifier (segmented for centipedes/millipedes, round for beetles, wings for",
+      "  flyers); instantly recognizable even small.",
+      "- For a SEGMENT piece: draw ONE segment only, oriented vertically, with FLAT top and bottom edges so",
+      "  pieces stack into a continuous chain; legs splay out to the left and right sides.",
+      "- 2-3 shades, soft cel shading, light from top-left.",
+      "- Render ONLY the creature - no ground, no cast shadow."
+    ]
+  }
+}

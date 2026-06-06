@@ -1,0 +1,44 @@
+{
+  "bridge_stone": {
+    "look": "flat stone bridge slabs, grey with even joints"
+  },
+  "bridge_wood": {
+    "look": "wooden bridge planks running horizontally, sturdy brown boards"
+  },
+  "cave_floor": {
+    "look": "rough dark grey rocky cave ground with fine rubble"
+  },
+  "dirt": {
+    "look": "bare brown soil, fine grain with small pebbles and subtle clods"
+  },
+  "garden_plot": {
+    "look": "tilled dark soil in even furrows, ready for planting"
+  },
+  "garden_plot_wet": {
+    "look": "tilled dark soil, damp and darker, in even furrows"
+  },
+  "grass": {
+    "look": "lush green grass, fine blades with gentle lighter and darker green clumps"
+  },
+  "mud": {
+    "look": "wet brown mud, glossy uneven surface"
+  },
+  "sand": {
+    "look": "fine pale tan sand with gentle ripples"
+  },
+  "stone_floor": {
+    "look": "polished grey stone floor tiles, clean even joints"
+  },
+  "stone_path": {
+    "look": "fitted flat flagstones / cobbles with thin even mortar lines, grey stone"
+  },
+  "water_deep": {
+    "look": "calm deeper water, the SAME teal-blue hue as shallow water but only SLIGHTLY darker (a subtle deepening, NOT a different colour), gentle ripples"
+  },
+  "water_shallow": {
+    "look": "calm water, soft medium teal-blue with gentle ripples"
+  },
+  "wood_floor": {
+    "look": "wooden plank floor, warm brown planks running horizontally with thin seams"
+  }
+}

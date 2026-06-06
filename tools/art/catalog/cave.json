@@ -1,0 +1,120 @@
+{
+  "bone_pile": {
+    "look": "a small PILE OF BONES: a heap of pale chalky-white bones - a skull, a few ribs and long bones - jumbled together.",
+    "materials": [
+      "stone"
+    ],
+    "family": "mineral"
+  },
+  "cave_moss": {
+    "look": "a flat patch of CAVE MOSS: an irregular smear of soft blue-green glowing moss and lichen on the rock floor, darker at the edges.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "chest_mossy": {
+    "look": "an old MOSSY TREASURE CHEST: a weathered wooden chest with a rounded lid and dark iron bands, partly covered in green MOSS, a hint of gold under the lid.",
+    "materials": [
+      "wood",
+      "foliage"
+    ]
+  },
+  "crystal_large": {
+    "look": "a large CRYSTAL formation: a tall cluster of pointed purple-and-blue prisms of varying height on a chunky rock base, bright facet glints.",
+    "materials": [
+      "stone"
+    ],
+    "family": "mineral"
+  },
+  "crystal_quartz": {
+    "look": "a QUARTZ cluster in rock: a group of clear milky-white six-sided prisms with pale blue-grey shadows and sharp facet glints, on a grey stone base.",
+    "materials": [
+      "stone"
+    ],
+    "family": "mineral"
+  },
+  "crystal_small": {
+    "look": "a small CRYSTAL cluster: a few short pointed amethyst-purple prisms jutting up from a rocky base, with bright glints on the facets.",
+    "materials": [
+      "stone"
+    ],
+    "family": "mineral"
+  },
+  "geode": {
+    "look": "a GEODE: a roundish grey rock split open to reveal a hollow lined with sparkling purple crystals.",
+    "materials": [
+      "stone"
+    ],
+    "family": "mineral"
+  },
+  "mine_cart": {
+    "look": "a metal MINE CART seen front-on: an open rectangular iron ore cart on four small wheels, half-full of grey ore and rock. Clearly a mine cart.",
+    "materials": [
+      "metal"
+    ]
+  },
+  "mine_rail": {
+    "look": "a straight section of MINE RAIL TRACK seen from above: two parallel metal rails on wooden cross-ties (sleepers) running LEFT-TO-RIGHT across the tile, the rails bleeding off both side edges so sections connect into one track.",
+    "materials": [
+      "metal",
+      "wood"
+    ]
+  },
+  "mine_support": {
+    "look": "a wooden MINE SUPPORT: a rough-hewn timber frame like a doorway - two vertical posts and a horizontal cross-beam - bracing a tunnel.",
+    "materials": [
+      "wood"
+    ]
+  },
+  "mining_bucket": {
+    "look": "a wooden mining BUCKET with an iron handle, half full of grey ore chunks.",
+    "materials": [
+      "wood",
+      "metal"
+    ]
+  },
+  "ore_pile": {
+    "look": "a loose PILE OF ORE: a low heap of chunky grey rocks flecked with copper-orange and iron glints.",
+    "materials": [
+      "stone",
+      "metal"
+    ]
+  },
+  "ore_sack": {
+    "look": "a burlap ORE SACK: a tied tan cloth sack, bulging, with a few chunks of grey ore spilling from the open top.",
+    "materials": [
+      "dirt"
+    ]
+  },
+  "powder_keg": {
+    "look": "a POWDER KEG: a stout wooden barrel banded with iron, a red explosive marking on the front and a short fuse on top.",
+    "materials": [
+      "wood",
+      "metal"
+    ]
+  },
+  "rubble": {
+    "look": "a pile of mining RUBBLE: a low heap of broken angular grey rocks and pebbles of mixed sizes.",
+    "materials": [
+      "stone"
+    ],
+    "family": "mineral"
+  },
+  "tnt": {
+    "look": "a stick of mining TNT: a bundle of three bright RED dynamite sticks bound together with a short lit fuse on top. Clearly explosive, not a candle."
+  },
+  "tool_rack": {
+    "look": "a wooden TOOL RACK: an upright frame holding mining tools - a pickaxe, a shovel and a hammer hanging in a row.",
+    "materials": [
+      "wood",
+      "metal"
+    ]
+  },
+  "wheelbarrow": {
+    "look": "a metal WHEELBARROW seen front-on: a single-wheel barrow with a grey tub, two handles, half-full of rock and ore.",
+    "materials": [
+      "metal",
+      "wood"
+    ]
+  }
+}

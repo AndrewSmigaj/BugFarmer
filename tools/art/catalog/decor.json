@@ -1,0 +1,92 @@
+{
+  "aquarium": {
+    "look": "a glass AQUARIUM seen front-on: a rectangular clear glass tank of blue WATER with a few small colorful fish and green plants inside, on a low wooden stand."
+  },
+  "birdbath": {
+    "look": "a stone BIRDBATH garden ornament: a shallow round BASIN of water on a slim carved stone PEDESTAL with a round base. Clearly a birdbath."
+  },
+  "bug_terrarium": {
+    "look": "a glass BUG TERRARIUM display case on a wooden stand: a clear glass tank with a wooden base and corner frame, holding a little greenery and a mounted INSECT specimen on display inside. A prized-bug display case, clearly made of glass."
+  },
+  "coat_rack": {
+    "look": "a tall standing COAT RACK: a slim vertical pole on a small base with several hooks near the top holding a coat and a hat. Thin and tall."
+  },
+  "easel": {
+    "look": "an artist's EASEL: a wooden tripod easel holding a small painted canvas.",
+    "materials": [
+      "wood"
+    ]
+  },
+  "fountain": {
+    "look": "an ornate stone garden FOUNTAIN seen front-on from slightly above: a round TIERED stone basin with a central spout, clear blue WATER spilling between the tiers into the pool. Grand and decorative; clearly a working fountain."
+  },
+  "globe": {
+    "look": "an antique GLOBE: a tilted spherical world map on a turned wooden floor stand.",
+    "materials": [
+      "wood"
+    ]
+  },
+  "gramophone": {
+    "look": "a GRAMOPHONE: a wooden box player with a large flared BRASS horn rising from the top.",
+    "materials": [
+      "wood",
+      "metal"
+    ]
+  },
+  "lily_pad": {
+    "look": "a flat round green LILY PAD floating on water, seen from straight above, with a small notch in one side and maybe a tiny pink flower. Flat, just the pad."
+  },
+  "mirror_standing": {
+    "look": "a tall STANDING FLOOR MIRROR (cheval): a full-length oval MIRROR in a wooden frame on a tilting stand; the glass shows a pale silvery reflection."
+  },
+  "plant_large": {
+    "look": "a large LEAFY HOUSEPLANT: a tall potted PALM with broad green fronds spreading up and out of a terracotta pot. Taller than a small potted plant."
+  },
+  "room_divider": {
+    "look": "a folding ROOM DIVIDER / screen seen front-on: three or four tall hinged PANELS of muted patterned cloth in wooden frames, standing in a slight zigzag.",
+    "materials": [
+      "wood",
+      "fabric"
+    ]
+  },
+  "rug": {
+    "look": "a rectangular woven floor RUG/carpet seen FROM ABOVE (flat, top-down): a patterned textile lying flat on the ground with a decorative woven BORDER and a central medallion motif, warm colors (deep red, ochre, blue). Flat, no thickness, no furniture."
+  },
+  "rug_large": {
+    "look": "a large rectangular woven RUG seen flat from above: a big patterned floor mat with a decorative border and a central medallion in warm colors, lying flat. Just the rug."
+  },
+  "rug_round": {
+    "look": "a round woven RUG seen flat from above: a circular patterned floor mat with a bordered design in warm reds and blues, lying flat. Just the rug, no objects on it."
+  },
+  "scarecrow": {
+    "look": "a SCARECROW: a straw-stuffed figure on a wooden CROSS-POST, a burlap sack head with a stitched face under a tattered straw HAT, arms spread along the crossbar, bits of straw poking out. Stands upright in a field."
+  },
+  "statue_bug": {
+    "look": "a carved STONE STATUE of a beetle on a square stone plinth, grey stone.",
+    "materials": [
+      "stone"
+    ]
+  },
+  "statue_stone": {
+    "look": "a carved STONE STATUE on a pedestal: a small weathered grey stone figure/bust standing on a square stone BASE/plinth. Clearly a carved statue, NOT a plain rock or pillar.",
+    "materials": [
+      "stone"
+    ]
+  },
+  "suit_of_armor": {
+    "look": "a standing SUIT OF ARMOR: a full plate-metal knight's armor on a stand, polished steel, a shield at its side.",
+    "materials": [
+      "metal"
+    ]
+  },
+  "telescope": {
+    "look": "a brass TELESCOPE on a wooden tripod, the tube angled upward toward the sky.",
+    "materials": [
+      "metal",
+      "wood"
+    ]
+  },
+  "vase": {
+    "look": "a decorative ceramic VASE seen front-on: a rounded glazed pot with a narrow neck holding a small arrangement of flowers/stems. A small tabletop vase."
+  }
+}

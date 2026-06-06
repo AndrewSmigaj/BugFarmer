@@ -1,0 +1,29 @@
+{
+  "candelabra": {
+    "look": "a branched CANDELABRA: an ornate metal stand holding three or five tall candles, each with a small warm flame. Elegant.",
+    "materials": [
+      "metal"
+    ]
+  },
+  "candle": {
+    "look": "a single lit CANDLE in a small holder: a short pale candle with a small warm glowing FLAME on top, on a little dish. Tiny."
+  },
+  "lamp_floor": {
+    "look": "a standing FLOOR LAMP: a slim vertical pole on a small round base, topped with a wide trapezoid LAMPSHADE (wider at the bottom) that GLOWS warm yellow. The shade is a lampshade, NOT a tent, teepee or pyramid."
+  },
+  "lamp_floor_fancy": {
+    "look": "an elegant BRASS FLOOR LAMP: a slim ornate brass pole on a round base topped with a fringed fabric LAMPSHADE that glows warm. Fancier than a plain floor lamp.",
+    "materials": [
+      "metal"
+    ]
+  },
+  "lamp_post": {
+    "look": "an outdoor LAMP POST: a tall slim dark metal POLE on a small round base, topped with a glass LANTERN that glows warm yellow. A garden/street lamp, taller than wide."
+  },
+  "lantern": {
+    "look": "a metal LANTERN: a small framed glass lantern with a warm glowing flame inside and a ring handle on top. Compact.",
+    "materials": [
+      "metal"
+    ]
+  }
+}

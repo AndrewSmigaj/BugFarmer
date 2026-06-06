@@ -50,18 +50,28 @@ Output destinations (the `dest_path` contract):
 - `terrain` → `Resources/Tiles/{key}.png` (opaque, full-bleed, no trim; `--variants` adds `_v2`, `_v3`…)
 - `placeables` / `occupants` → `Resources/Objects/{key}.png`
 
-Prompt construction is driven by the entity's `category` and `world.pivot`:
-- **`OBJECT_DESC`** — per-key concrete descriptions ("a tall wooden BOOKCASE with 3-4
-  shelves of books…"). The generic scaffold only knows the *name*, so without this the
-  model invents the wrong silhouette (a "Wooden Door" came back as a cabinet). Add an
-  entry here whenever a new object's shape isn't obvious from its name.
-- **`OBJECT_MATS`** — per-key palette overrides where the keyword guesser picks the wrong
-  material (e.g. `fireplace` → stone, not the default wood).
-- **`natural` branch** — organic assets (`category: natural` — trees, flowers, bushes,
-  grass) use a soft organic art direction instead of the rigid face-on `STYLE_BLOCK`,
-  which otherwise made foliage read as boxy blobs.
-- Walls (`category: structure`, key `wall*`) and linear connectors (`fence*`) get
-  dedicated tiling prompts so they join seam-free in a row/column.
+## Art data model (prompts are DATA)
+
+The prompt "knowledge" is **not** hardcoded in `gen_sprites.py` — it's data under `tools/art/`, and
+`gen_sprites.py` is a thin assembler:
+
+- **`tools/art/catalog/*.json`** — the per-item art, ONE FILE PER CATEGORY (`furniture, lighting,
+  decor, kitchen?, structures, flora, crops, tiles, blocks`). Each row keyed by entity id:
+  `{ "look": "<silhouette>", "materials": ["wood"] }`. `look` is the concrete description (without it
+  the model invents a wrong silhouette — a "Wooden Door" came back as a cabinet). `materials` is
+  optional — add it only when the keyword guesser is wrong (e.g. `range_stove` → metal). Files are
+  organizational: the loader **globs and merges by id**, and special-cases `tiles.json` (`look`) and
+  `blocks.json` (`surface`/`fleck`). Add an item = add a row (see the **add-object** skill).
+- **`tools/art/style.json`** — the GLOBAL look in one place: `palettes` (the 6 material ramps) and
+  per-FAMILY art-direction blocks (`object` face-on, `flora` organic, `block`/wall cube-tiling, `tile`
+  seamless, plus `connector` and `net`). Edit this to change how *everything* looks; you don't touch it
+  to add one item.
+
+The assembled recipe (in `build_prompt`), driven by the entity's `category` + `world.pivot`:
+`shared family art-direction → asset/category → catalog look → spatial(pivot) → design(category) →
+[connector for fence/wall] → palette(materials) → closer`. Natural/crop ids use the organic `flora`
+family (not the face-on style, which made foliage read as boxy blobs); walls (`wall*`) and linear
+connectors (`fence*`) get the cube/tiling prompts so they join seam-free.
 
 ### 2. `pixelclean.py` — clean **in place**
 gpt-image-1 returns fuzzy 1024px art with anti-aliased edges, near-duplicate colors, and

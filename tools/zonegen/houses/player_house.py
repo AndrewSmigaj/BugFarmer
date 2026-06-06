@@ -13,7 +13,7 @@ ZG = os.path.dirname(HERE)
 sys.path.insert(0, ZG)
 from zonebuilder import ZoneBuilder                                    # noqa: E402
 from render import render_builder                                      # noqa: E402
-from features.house import (place_house, living_template,             # noqa: E402
+from features.house import (place_house, styled_rooms, living_template,   # noqa: E402
                             bedroom_template, kitchen_template, crafting_template)
 
 # Bounding box of the house (incl. the approach path) in its own local frame.
@@ -26,12 +26,13 @@ def place_player_house(b, ox=0, oy=0):
     def R(x0, y0, x1, y1):
         return (x0 + ox, y0 + oy, x1 + ox, y1 + oy)
 
-    rooms = [
-        {"name": "bedroom",  "rect": R(4, 8, 13, 17),   "fill": bedroom_template},
-        {"name": "main",     "rect": R(13, 8, 24, 17),  "fill": living_template},
-        {"name": "kitchen",  "rect": R(24, 8, 34, 17),  "fill": kitchen_template},
-        {"name": "crafting", "rect": R(15, 17, 23, 25), "fill": crafting_template},
-    ]
+    # The player's home is the "rich showcase" -> the fancy collection.
+    rooms = styled_rooms([
+        ("bedroom",  R(4, 8, 13, 17),  bedroom_template),
+        ("main",     R(13, 8, 24, 17), living_template),
+        ("kitchen",  R(24, 8, 34, 17), kitchen_template),
+        ("crafting", R(15, 17, 23, 25), crafting_template),
+    ], collection="fancy")
     place_house(b, rooms, floor="wood_floor", front=("main", "top"))
     for y in range(4, 8):  # approach path south of the front door
         b.set_ground(18 + ox, y + oy, "stone_path", surface="path")

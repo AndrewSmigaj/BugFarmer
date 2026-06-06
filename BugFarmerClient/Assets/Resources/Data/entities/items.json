@@ -57,6 +57,27 @@
     "max_stack": 99,
     "sell_price": 12
   },
+  "tin_ore": {
+    "name": "Tin Ore",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 4
+  },
+  "quartz": {
+    "name": "Quartz",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
+  },
+  "sand": {
+    "name": "Sand",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1
+  },
   "silver_ore": {
     "name": "Silver Ore",
     "category": "resource",
@@ -119,6 +140,90 @@
     "stackable": true,
     "max_stack": 99,
     "sell_price": 10
+  },
+  "mushroom_brown": {
+    "name": "Brown Mushroom",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 4
+  },
+  "mushroom_chanterelle": {
+    "name": "Chanterelle",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 8
+  },
+  "mushroom_puffball": {
+    "name": "Puffball",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
+  },
+  "chamomile": {
+    "name": "Chamomile",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
+  },
+  "lavender": {
+    "name": "Lavender",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 7
+  },
+  "yarrow": {
+    "name": "Yarrow",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "berries": {
+    "name": "Wild Berries",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 4
+  },
+  "dandelion": {
+    "name": "Dandelion Greens",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 2
+  },
+  "fern": {
+    "name": "Fern Frond",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 4
+  },
+  "clover": {
+    "name": "Clover",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 2
+  },
+  "milkweed": {
+    "name": "Milkweed",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "poppy": {
+    "name": "Poppy",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
   },
   "apple": {
     "name": "Apple",

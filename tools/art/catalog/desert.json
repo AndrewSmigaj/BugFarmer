@@ -1,0 +1,105 @@
+{
+  "antenna": {
+    "look": "a tall radio ANTENNA: a slim grey metal lattice mast with guy-wires and a small dish/whip near the top.",
+    "materials": [
+      "metal"
+    ]
+  },
+  "cactus_barrel": {
+    "look": "a round BARREL CACTUS: a squat ribbed green barrel-shaped cactus with a ring of small pink flowers on top and stiff spines.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "cactus_prickly": {
+    "look": "a PRICKLY PEAR cactus: clusters of flat oval green paddles with spines and a couple of red fruit.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "cactus_saguaro": {
+    "look": "a tall SAGUARO cactus: a thick ribbed green column with two upraised arms, small spines, maybe a white flower on top.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "cow_skull": {
+    "look": "a bleached white COW SKULL resting on the sand, two curved horns, empty eye sockets.",
+    "materials": [
+      "stone"
+    ]
+  },
+  "dead_bush": {
+    "look": "a DEAD BUSH: a leafless tangle of brittle grey-brown twigs.",
+    "materials": [
+      "wood"
+    ]
+  },
+  "hand_pump": {
+    "look": "an old cast-iron HAND PUMP for water: a stout spout and a long lever handle on a small base.",
+    "materials": [
+      "metal"
+    ]
+  },
+  "neon_sign": {
+    "look": "a glowing NEON SIGN on a post: the word 'INN' in bright pink-and-blue glowing neon tubing.",
+    "materials": [
+      "metal"
+    ]
+  },
+  "radar_dish": {
+    "look": "a RADAR DISH: a white parabolic dish on a swivel mount, angled up at the sky.",
+    "materials": [
+      "metal"
+    ]
+  },
+  "sandstone_formation": {
+    "look": "a SANDSTONE ROCK FORMATION: a stack of weathered wind-carved tan rock layers.",
+    "materials": [
+      "stone"
+    ]
+  },
+  "sign_inn": {
+    "look": "a rustic wooden INN SIGN: a hanging board on a post showing a bed/mug symbol, weathered desert wood.",
+    "materials": [
+      "wood"
+    ]
+  },
+  "sign_weather": {
+    "look": "a metal WEATHER STATION SIGN: a standing sign with a sun/cloud symbol and an arrow.",
+    "materials": [
+      "metal"
+    ]
+  },
+  "tumbleweed": {
+    "look": "a round dry TUMBLEWEED: a loose tangled ball of dry brown twigs and branches.",
+    "materials": [
+      "wood"
+    ]
+  },
+  "water_bucket": {
+    "look": "a wooden BUCKET full of water, metal handle, water surface visible at the rim.",
+    "materials": [
+      "wood",
+      "metal"
+    ]
+  },
+  "weather_console": {
+    "look": "a WEATHER CONSOLE: a desk-height cabinet bank of small green monitor screens, dials and switches.",
+    "materials": [
+      "metal"
+    ]
+  },
+  "windmill": {
+    "look": "a modern WINDMILL: a tall slender white tubular tower on a square base with a three-blade rotor and nacelle at the very top.",
+    "materials": [
+      "metal"
+    ]
+  },
+  "windmill_tall": {
+    "look": "a tall modern WINDMILL: an extra-tall white tubular tower with a three-blade rotor at the top, taller than a normal windmill.",
+    "materials": [
+      "metal"
+    ]
+  }
+}

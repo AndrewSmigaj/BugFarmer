@@ -1,0 +1,11 @@
+{
+  "plant_corn": {
+    "look": "a tall CORN / maize plant: an upright green stalk with long arching leaves and one or two yellow CORN COBS, distinctly TALLER than it is wide. Clearly corn."
+  },
+  "plant_tomato": {
+    "look": "a mature TOMATO plant: a low leafy green bush with several round ripe RED TOMATOES hanging among the leaves. Clearly tomatoes (red)."
+  },
+  "plant_wheat": {
+    "look": "a clump of ripe golden WHEAT: several upright tan-GOLDEN stalks topped with bushy seed heads, dry straw colour. Clearly wheat, NOT green leafy."
+  }
+}

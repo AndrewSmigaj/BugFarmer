@@ -15,7 +15,15 @@ wall with a single door punched through it. Templates place furniture AGAINST th
 
 Reuse: import the templates into any house build script, or write new ones — the composer
 doesn't care which template fills a room.
+
+Furniture is chosen by COLLECTION (see features/furniture.py): each template takes a `coll`
+("basic" | "fancy" | ...) and asks the catalog for the right id per role, so the SAME template
+furnishes a plain or an upscale room. Bind the collection per room with `styled_rooms()`.
 """
+
+from functools import partial
+
+from .furniture import pick
 
 
 # ---- geometry helpers -------------------------------------------------------
@@ -138,6 +146,14 @@ def place_house(b, rooms, *, floor="wood_floor", wall="wall_wood",
     return rooms
 
 
+def styled_rooms(specs, collection="basic"):
+    """Build a `rooms` list for place_house, binding a furniture collection into each template.
+    `specs` = [(name, rect, template_fn), ...]. The collection threads in via the template's
+    `coll` kwarg, so place_house's fill(b, I, doors, doorways) contract is unchanged."""
+    return [{"name": n, "rect": r, "fill": partial(fn, coll=collection)}
+            for (n, r, fn) in specs]
+
+
 # ---- placement helpers ------------------------------------------------------
 # FACING RULE: every world sprite is drawn front-on (south-facing — we see its front).
 # So pieces with an obvious front/back — fridge, bookshelf, dresser, fireplace, the bug
@@ -191,76 +207,82 @@ def _center(I):
 
 
 # ---- room templates (reusable across houses) --------------------------------
-def living_template(b, I, doors, doorways):
+def living_template(b, I, doors, doorways, coll="basic"):
     """Main / sitting room (front door on the south wall): hearth + shelves + bug-trophy on
     the NORTH wall (front-facing), a sofa and armchairs around a rug in the middle, plants in
-    the south corners, entry kept clear."""
+    the south corners, entry kept clear. Furniture per the `coll` collection."""
     ix0, iy0, ix1, iy1 = I
     cx, cy = _center(I)
+    F = lambda role: pick(role, coll)
 
     def P(oid, x, y, **k):
-        return _safe(b, oid, x, y, doorways, **k)
+        return _safe(b, oid, x, y, doorways, **k) if oid else False
 
-    P("fireplace", cx - 1, iy1)            # 2x1 hearth, flush against the north (back) wall
-    P("bookshelf", ix0, iy1)               # north wall, west
-    P("bug_terrarium", ix1, iy1)           # north wall, east (show off your catches)
-    P("rug", cx - 1, cy - 1, reserve=False, surface=None)
-    P("sofa", cx - 1, cy)                   # centered, facing the camera
-    P("armchair", ix0, cy - 1)             # west, by the rug
-    P("armchair", ix1, cy - 1)             # east, by the rug
-    P("lamp_floor", ix0, iy1 - 1)          # west wall, by the shelf
-    P("grandfather_clock", ix1, cy + 1)    # east wall
-    P("vase", ix1, iy1 - 1)                # east wall, by the terrarium
-    P("potted_plant", ix0, iy0)            # south-west corner
-    P("potted_plant", ix1, iy0)            # south-east corner
+    P(F("hearth"), cx - 1, iy1)            # 2x1 hearth, flush against the north (back) wall
+    P(F("bookshelf"), ix0, iy1)            # north wall, west
+    P(F("display"), ix1, iy1)              # north wall, east (show off your catches)
+    P(F("rug"), cx - 1, cy - 1, reserve=False, surface=None)
+    P(F("lounge"), cx - 1, cy)             # centered sofa, facing the camera
+    P(F("armchair"), ix0, cy - 1)          # west, by the rug
+    P(F("armchair"), ix1, cy - 1)          # east, by the rug
+    P(F("light"), ix0, iy1 - 1)            # west wall, by the shelf
+    P(F("clock"), ix1, cy + 1)             # east wall (skipped if the collection has none)
+    P(F("accent_small"), ix1, iy1 - 1)     # east wall, by the terrarium
+    P(F("plant"), ix0, iy0)                # south-west corner
+    P(F("plant"), ix1, iy0)                # south-east corner
 
 
-def bedroom_template(b, I, doors, doorways):
+def bedroom_template(b, I, doors, doorways, coll="basic"):
     """Bed along a side wall, bookshelf + dresser on the NORTH wall (front-facing), a rug,
-    plant and lamp."""
+    plant and lamp. Furniture per the `coll` collection."""
     ix0, iy0, ix1, iy1 = I
+    F = lambda role: pick(role, coll)
 
     def P(oid, x, y, **k):
-        return _safe(b, oid, x, y, doorways, **k)
+        return _safe(b, oid, x, y, doorways, **k) if oid else False
 
-    P("bed_fancy", ix0, iy0)               # 2x4 along the west wall, foot toward the camera
-    P("nightstand", ix0 + 2, iy0)          # beside the foot of the bed
-    P("dresser", ix0, iy1)                 # north wall, west (front-facing)
-    P("bookshelf", ix0 + 2, iy1)           # north wall (front-facing)
-    P("potted_plant", ix1, iy1)            # north-east corner
-    P("rug", ix0 + 2, iy0 + 2, reserve=False, surface=None)
-    P("vase", ix1, iy1 - 1)                # east wall
-    P("lamp_floor", ix1, iy0)              # south-east corner
+    P(F("bed"), ix0, iy0)                  # 2x4 along the west wall, foot toward the camera
+    P(F("nightstand"), ix0 + 2, iy0)       # beside the foot of the bed
+    P(F("dresser"), ix0, iy1)              # north wall, west (front-facing)
+    P(F("bookshelf"), ix0 + 2, iy1)        # north wall (front-facing)
+    P(F("plant"), ix1, iy1)                # north-east corner
+    P(F("rug"), ix0 + 2, iy0 + 2, reserve=False, surface=None)
+    P(F("accent_small"), ix1, iy1 - 1)     # east wall
+    P(F("light"), ix1, iy0)                # south-east corner
 
 
-def kitchen_template(b, I, doors, doorways):
+def kitchen_template(b, I, doors, doorways, coll="basic"):
     """Flat appliances (counter/sink/stove) along the SOUTH wall; the fridge (front-facing)
     plus extra counter on the NORTH wall; kegs on a side wall; the 2x2 square table + chairs
-    in the middle."""
+    in the middle. Furniture per the `coll` collection."""
     ix0, iy0, ix1, iy1 = I
+    F = lambda role: pick(role, coll)
 
     def P(oid, x, y, **k):
-        return _safe(b, oid, x, y, doorways, **k)
+        return _safe(b, oid, x, y, doorways, **k) if oid else False
 
-    wall_run(b, ["counter", "sink", "counter", "stove"], side="top", I=I, doorways=doorways)
-    wall_run(b, ["fridge", "counter", "counter"], side="bottom", I=I, doorways=doorways)
+    wall_run(b, [F("counter"), F("sink"), F("counter"), F("stove")],
+             side="top", I=I, doorways=doorways)
+    wall_run(b, [F("fridge"), F("counter"), F("counter")],
+             side="bottom", I=I, doorways=doorways)
     wall_run(b, ["keg", "keg", "barrel"], side="right", I=I, start=1, doorways=doorways)
     cx, cy = _center(I)
-    P("table_wood", cx - 1, cy)            # 2x2 square table
-    P("chair_wood", cx - 2, cy)
-    P("chair_wood", cx + 1, cy)
-    P("potted_plant", ix1, iy1)            # north-east corner
-    P("lamp_floor", ix1, iy0)              # south-east corner
+    P(F("table"), cx - 1, cy)              # 2x2 square table
+    P(F("seating"), cx - 2, cy)
+    P(F("seating"), cx + 1, cy)
+    P(F("plant"), ix1, iy1)                # north-east corner
+    P(F("light"), ix1, iy0)                # south-east corner
 
 
-def crafting_template(b, I, doors, doorways):
+def crafting_template(b, I, doors, doorways, coll="basic"):
     """Workshop nook (door on the south wall): furnace + cauldron on the NORTH wall
     (front-facing), workbench + anvil as work surfaces flanking the entry, storage on a side
-    wall."""
+    wall. Crafting stations are functional (not collection-varied); `coll` is accepted for a
+    uniform template signature."""
     ix0, iy0, ix1, iy1 = I
 
     def P(oid, x, y, **k):
-        return _safe(b, oid, x, y, doorways, **k)
+        return _safe(b, oid, x, y, doorways, **k) if oid else False
 
     P("furnace", ix0, iy1 - 1)             # 2x2 north wall, west
     P("cauldron", ix1 - 1, iy1 - 1)        # 2x2 north wall, east

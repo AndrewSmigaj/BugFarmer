@@ -1,0 +1,446 @@
+{
+  "ant_eggs": {
+    "look": "a clutch of ANT EGGS: a small heap of glossy pale-white oval eggs piled together, top-down, on the nest floor."
+  },
+  "backswimmer_common": {
+    "look": "a BACKSWIMMER, top-down: a boat-shaped pale bug swimming upside-down with long oar-like hind legs.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "bee_carpenter": {
+    "look": "a CARPENTER BEE top-down: a large shiny black-and-gold robust bee, bigger than a bumblebee.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "beetle_rhino": {
+    "look": "a RHINOCEROS BEETLE, top-down: large glossy dark-brown oval body with a single curved horn on the head; tough.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "beetle_stag": {
+    "look": "a STAG BEETLE, top-down: large black beetle with big antler-like mandibles spread forward; elite.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "butterfly_emperor": {
+    "look": "an EMPEROR BUTTERFLY top-down: large iridescent purple-blue wings with white bands; elite, regal.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "butterfly_swallowtail": {
+    "look": "a SWALLOWTAIL BUTTERFLY top-down: broad yellow-and-black wings with blue spots and tail extensions.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "centipede_body_a": {
+    "look": "one repeating BODY SEGMENT of a centipede, top-down: a single flattened reddish-brown armored plate with ONE pair of long legs splayed left and right; FLAT top and bottom edges so it tiles into a chain.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "centipede_body_b": {
+    "look": "an alternate centipede body segment: a yellow-banded plate with orange legs; flat top and bottom edges.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "centipede_head_a": {
+    "look": "the HEAD end of a CENTIPEDE, top-down: a flattened reddish-brown armored head with two long antennae forward and a pair of curved fangs, one pair of legs; the BOTTOM edge is flat to connect to a body segment.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "centipede_head_b": {
+    "look": "an alternate CENTIPEDE HEAD, top-down: darker chitin, shorter antennae, broad curved mandibles; flat bottom edge.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "centipede_tail_a": {
+    "look": "the TAIL end of a centipede, top-down: a tapering reddish-brown segment ending in two long rear cerci, legs at the sides; FLAT top edge to connect.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "centipede_tail_b": {
+    "look": "an alternate centipede tail: darker, longer rear appendages; flat top edge.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "cicada_annual": {
+    "look": "a CICADA top-down: a stout green-brown body with broad clear veined wings folded over the back, big eyes.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "cicada_periodical": {
+    "look": "a PERIODICAL CICADA top-down: a black-bodied cicada with bright red eyes and orange wing veins; elite.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "dragonfly_emperor": {
+    "look": "an EMPEROR DRAGONFLY top-down: a large blue-green bodied dragonfly with long clear wings spread.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "dragonfly_hawker": {
+    "look": "a HAWKER DRAGONFLY top-down: a big patterned dragonfly, long wings, powerful; elite aerial hunter.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "dytiscid_giant": {
+    "look": "a GIANT diving beetle, top-down: a huge armored dark beetle with powerful paddle legs; an elite predator.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "dytiscid_great": {
+    "look": "a GREAT DIVING BEETLE, top-down: a large glossy olive-black oval beetle with broad paddle legs and a yellow rim; fierce.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "dytiscid_small": {
+    "look": "a small DIVING BEETLE, top-down: a smooth oval dark-olive beetle with paddle-like rear legs; aquatic.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "firefly_blue": {
+    "look": "a BLUE FIREFLY top-down: a slim dark beetle with a glowing blue-green abdomen tip.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "firefly_great": {
+    "look": "a GREAT FIREFLY top-down: a larger beetle with a bright bold glowing lantern abdomen; elite.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "fly_bot": {
+    "look": "a big robust BOTFLY, top-down: thick furry brown body, stubby wings, large; an elite tough fly.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "fly_horse": {
+    "look": "a chunky HORSEFLY, top-down: stout dark body, large iridescent green eyes, broad clear wings; bigger and meaner than a housefly.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "fly_house": {
+    "look": "a small common HOUSEFLY, top-down: grey-black oval body, two clear wings, six legs, tiny red eyes; small and harmless.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "fruitfly_common": {
+    "look": "a tiny COMMON FRUIT FLY, top-down: pale tan body, red eyes, two small clear wings; minuscule.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "fruitfly_spotwing": {
+    "look": "a SPOTTED-WING fruit fly, top-down: tan body, each wing marked with a dark spot; the elite pest.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "fruitfly_vinegar": {
+    "look": "a small VINEGAR FLY, top-down: darker tan body with faint stripes, red eyes, small wings.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "ladybug_giant": {
+    "look": "a GIANT LADYBUG top-down: a large red domed beetle with bold black spots; elite.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "ladybug_orange": {
+    "look": "an ORANGE LADYBUG top-down: a round orange domed beetle with many small black spots.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "leech_common": {
+    "look": "a LEECH, top-down: a flattened dark-brown segmented worm-like body, suckers at the ends; glistening.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "leech_giant": {
+    "look": "a GIANT LEECH, top-down: a large thick dark segmented body, big sucker, menacing.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "locust_swarm": {
+    "look": "a SWARM LOCUST top-down: a big angry brown-yellow locust with long wings and powerful hind legs; elite.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "mayfly_common": {
+    "look": "a MAYFLY, top-down: a slender pale body with upright lacy wings and two-three long tail filaments.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "mayfly_giant": {
+    "look": "a large MAYFLY, top-down: bigger lacy wings, long tail filaments, amber body.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "millipede_body_a": {
+    "look": "one repeating BODY SEGMENT of a millipede, top-down: a rounded dark-brown cylindrical segment with MANY tiny short legs along both sides; FLAT top and bottom edges to chain.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "millipede_body_b": {
+    "look": "an alternate millipede body segment: pale banded rings with dense little legs; flat top and bottom edges.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "millipede_head_a": {
+    "look": "the HEAD end of a MILLIPEDE, top-down: a small rounded dark-brown head with short antennae, gentle, many tiny legs; FLAT bottom edge to connect.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "millipede_head_b": {
+    "look": "an alternate millipede head: lighter tan, rounded, tiny eyes; flat bottom edge.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "millipede_tail_a": {
+    "look": "the TAIL end of a millipede, top-down: a small rounded tapering rear segment with tiny legs; FLAT top edge.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "millipede_tail_b": {
+    "look": "an alternate millipede tail: banded, blunt rear; flat top edge.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "mosquito_common": {
+    "look": "a thin COMMON MOSQUITO, top-down: slender greyish body, long dangling legs, narrow wings, a needle proboscis.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "mosquito_malaria": {
+    "look": "a large MALARIA MOSQUITO, top-down: long dark angled body, spotted narrow wings, very long legs; elite.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "mosquito_tiger": {
+    "look": "a TIGER MOSQUITO, top-down: black body with white stripes on legs and thorax, narrow wings.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "moth_atlas": {
+    "look": "a huge ATLAS MOTH, top-down: enormous patterned red-brown wings with pale window spots; elite, the biggest moth.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "moth_brown": {
+    "look": "a small BROWN MOTH, top-down: dull grey-brown fuzzy body, broad dusty folded wings.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "moth_luna": {
+    "look": "a LUNA MOTH, top-down: pale green broad wings with long trailing tails and a small furry body.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "roach_common": {
+    "look": "a COMMON COCKROACH top-down: a flat oval glossy brown roach with long antennae and spiny legs.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "roach_giant": {
+    "look": "a GIANT cave ROACH top-down: a huge pale armored roach with long antennae; elite.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "roach_hisser": {
+    "look": "a HISSING COCKROACH top-down: a large fat dark-brown wingless roach, armored segments; bigger.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "scorpion": {
+    "look": "a SCORPION top-down: a tan/brown armored body with two large front PINCERS, eight legs, and a curled segmented tail tipped with a stinger.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "scorpion_bark": {
+    "look": "a small BARK SCORPION top-down: a slender pale-tan scorpion with thin pincers and a long thin tail.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "scorpion_desert": {
+    "look": "a DESERT HAIRY SCORPION top-down: a large tan scorpion with thick pincers, hairy legs and a stout tail.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "scorpion_emperor": {
+    "look": "an EMPEROR SCORPION top-down: a massive glossy black scorpion with huge heavy pincers; elite.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "snail_apple": {
+    "look": "an APPLE SNAIL, top-down: a large round golden-brown spiral shell with a broad foot; big.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "snail_pond": {
+    "look": "a POND SNAIL, top-down: a small coiled brown spiral shell with a soft grey body and two tiny tentacles.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "spider_funnel": {
+    "look": "a FUNNEL-WEB spider top-down: a glossy dark heavy-bodied spider with thick fangs; aggressive elite.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "spider_huntsman": {
+    "look": "a HUNTSMAN SPIDER top-down: a very large flat tan spider with long crab-like legs splayed wide; fast elite hunter.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "spider_orb": {
+    "look": "an ORB-WEAVER spider top-down: a round-bodied yellow-and-black garden spider sitting at the hub of a hint of web.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "spider_wolf": {
+    "look": "a WOLF SPIDER top-down: a stout hairy brown spider with thick legs and eyeshine; no web, a ground hunter.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "strider_common": {
+    "look": "a WATER STRIDER on the surface, top-down: a thin dark thread-like body with long splayed legs dimpling the water; delicate.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "strider_giant": {
+    "look": "a GIANT WATER STRIDER, top-down: a larger thread body with very long splayed legs; bigger than common.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "wasp_paper": {
+    "look": "a PAPER WASP, top-down: slim yellow-and-black body, very narrow waist, long folded wings.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "wasp_yellowjacket": {
+    "look": "a YELLOWJACKET wasp, top-down: stocky bright yellow-and-black striped body, aggressive stance, short wings.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  }
+}

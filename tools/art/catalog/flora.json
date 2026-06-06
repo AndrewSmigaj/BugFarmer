@@ -1,0 +1,299 @@
+{
+  "agave": {
+    "look": "an AGAVE: a large rosette of thick spiky grey-green succulent leaves spreading out low.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "aloe": {
+    "look": "an ALOE: a rosette of thick pointed blue-green succulent leaves with toothed edges.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "bramble": {
+    "look": "a BRAMBLE: a tangled thorny shrub with dark green leaves and a few blackberries.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "broken_net": {
+    "look": "a BROKEN handheld bug net lying on the ground, seen from above: a wooden HANDLE with a round hoop at the end holding torn, frayed mesh full of holes. A damaged catching net."
+  },
+  "bush": {
+    "look": "a small round leafy BUSH: a compact mound of green foliage in rounded clusters, lighter on top, darker at the base. No trunk.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "bush_flowering": {
+    "look": "a FLOWERING BUSH: a rounded green shrub dotted with small white-and-pink blossoms.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "cattail": {
+    "look": "CATTAILS: tall narrow reed blades with one or two brown cylindrical seed-heads on stalks.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "chamomile": {
+    "look": "a small CHAMOMILE plant: a slender green stem with feathery leaves topped by one or two little white DAISY flowers with yellow centers.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "clover": {
+    "look": "a patch of CLOVER: low rounded trefoil green leaves with a couple of small round white-pink clover flower heads.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "clubmoss": {
+    "look": "CLUBMOSS: a low creeping mat of tiny scale-leaved green stems.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "dandelion": {
+    "look": "a DANDELION: a low rosette of jagged green leaves with one bright yellow flower and one round white seed PUFF on slender stems.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "duckweed": {
+    "look": "DUCKWEED: a flat scatter of tiny round green leaves covering the water surface.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "fallen_fruit": {
+    "look": "two or three small round red APPLES lying on the ground, seen from directly above, ripe and whole. Just apples — red."
+  },
+  "fallen_orange": {
+    "look": "two or three small round ORANGES lying on the ground, seen from directly above, ripe and whole. Just oranges — orange."
+  },
+  "fennel": {
+    "look": "FENNEL: a tall stalk with feathery green fronds and a flat yellow flower umbel on top.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "fern": {
+    "look": "a FERN: a clump of arching green FRONDS with feathery divided leaflets spreading up and out from the base. No flowers.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "flower_aster": {
+    "look": "an ASTER: a slender stem topped by a daisy-like flower with many thin purple petals around a yellow center.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "flower_blue": {
+    "look": "a small flowering plant: a short green stem with little leaves and one or two bright BLUE blossoms with a yellow center.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "flower_bluebell": {
+    "look": "BLUEBELLS: an arching stem with several drooping blue bell-shaped flowers.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "flower_foxglove": {
+    "look": "a FOXGLOVE: a tall spike hung with many tubular pink-purple bell flowers, broad leaves at the base.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "flower_red": {
+    "look": "a small flowering plant: a short green stem with little leaves and one or two bright RED blossoms with a yellow center.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "flower_yellow": {
+    "look": "a small flowering plant: a short green stem with little leaves and one or two bright YELLOW blossoms with a darker center.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "grapevine": {
+    "look": "a GRAPEVINE: a leafy vine with broad lobed leaves and a hanging cluster of purple grapes.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "ivy": {
+    "look": "IVY: a creeping vine of dark green lobed leaves trailing along the ground/wall.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "lavender": {
+    "look": "a LAVENDER plant: a small bushy clump of narrow grey-green leaves with several upright spikes of tiny PURPLE flowers.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "milkweed": {
+    "look": "a MILKWEED plant: a tall upright green stem with broad paired leaves topped by a rounded CLUSTER of small pink-mauve flowers.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "mint": {
+    "look": "a MINT herb: a low leafy clump of bright green serrated paired leaves on square stems.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "morning_glory": {
+    "look": "MORNING GLORY: a climbing vine with heart leaves and trumpet-shaped blue-purple flowers.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "moss_clump": {
+    "look": "a MOSS CLUMP: a soft low cushion of velvety green moss on the ground.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "mushroom_blue": {
+    "look": "a glowing BLUE cave mushroom cluster: several slender mushrooms with luminous cyan-blue caps casting a soft glow, on pale stems.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "mushroom_bracket": {
+    "look": "a BRACKET / shelf fungus: stacked half-round woody shelves banded brown and cream, as if growing from a surface.",
+    "materials": [
+      "wood"
+    ]
+  },
+  "mushroom_brown": {
+    "look": "a small brown MUSHROOM: a single round domed brown cap on a short pale stem. Simple woodland mushroom.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "mushroom_chanterelle": {
+    "look": "a golden CHANTERELLE mushroom: a funnel-shaped wavy-edged golden-yellow cap on a tapering pale stem.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "mushroom_cluster": {
+    "look": "a CLUSTER of tiny tan mushrooms: a dense little group of small round-capped mushrooms of varying height on a mossy base.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "mushroom_inkcap": {
+    "look": "an INKCAP mushroom: a tall thin shaggy white-grey bell-shaped cap on a slender stalk, edges darkening to ink.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "mushroom_morel": {
+    "look": "a MOREL mushroom: a tall conical honeycomb-textured tan cap (pitted and netted) on a pale hollow stalk.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "mushroom_puffball": {
+    "look": "a round white PUFFBALL mushroom: a smooth ball-shaped cream-white fungus low on the ground, with soft GREY shading on its underside and a thin darker grey OUTLINE so it reads clearly on a transparent background. A short stubby base.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "pampas": {
+    "look": "PAMPAS GRASS: a big fountain of arching grass blades topped with fluffy cream plumes.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "pondweed": {
+    "look": "PONDWEED: wispy submerged green strands and small floating leaves.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "poppy": {
+    "look": "a POPPY: a slender green stem topped by a single cup-shaped bright RED flower with a dark center, and one nodding bud.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "rotten_fruit": {
+    "look": "a piece of ROTTING FRUIT on the ground seen from above: brown, mushy and partly collapsed with dark spots and a faint haze — clearly spoiled (a fly attractant)."
+  },
+  "sage": {
+    "look": "a SAGE herb: a small woody clump of soft grey-green oval leaves, a few purple flower spikes.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "sunflower": {
+    "look": "a tall SUNFLOWER: an upright green stem with a couple of leaves, topped by a big round flower head of bright YELLOW petals around a dark brown center.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "tall_grass": {
+    "look": "a tuft of TALL GRASS: a clump of upright thin green grass blades fanning out, wild, denser at the base. Just grass blades, no flowers.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "thyme": {
+    "look": "a THYME herb: a low spreading mat of tiny green leaves with faint pink flowers.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "tree_apple": {
+    "look": "an APPLE TREE: a brown trunk and a round green leafy canopy dotted with small RED APPLES peeking through the leaves.",
+    "materials": [
+      "wood",
+      "foliage"
+    ]
+  },
+  "tree_oak": {
+    "look": "a leafy OAK TREE: a thick brown TRUNK at the bottom widening into a big round, full CANOPY of green leaves in rounded bumpy clusters, lighter green highlights on top, darker green underneath. Lush and full.",
+    "materials": [
+      "wood",
+      "foliage"
+    ]
+  },
+  "tree_pine": {
+    "look": "a PINE / EVERGREEN tree: a tall layered CONICAL stack of dark-green needled branches tapering to a point at the top, with a short brown trunk at the base.",
+    "materials": [
+      "wood",
+      "foliage"
+    ]
+  },
+  "water_lily": {
+    "look": "a WATER LILY: round flat green pads floating with a single white-pink open flower.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "wild_berry_bush": {
+    "look": "a small BERRY BUSH: a low rounded leafy green shrub dotted with clusters of small red BERRIES.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "yarrow": {
+    "look": "a YARROW plant: a slim stem with feathery leaves topped by a flat CLUSTER of tiny white flowers.",
+    "materials": [
+      "foliage"
+    ]
+  }
+}

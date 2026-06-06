@@ -314,6 +314,961 @@
       }
     }
   },
+  "mushroom_brown": {
+    "name": "Brown Mushroom",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "mushroom_brown", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "mushroom_chanterelle": {
+    "name": "Chanterelle",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "mushroom_chanterelle", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "mushroom_puffball": {
+    "name": "Puffball",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 14,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "mushroom_puffball", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "chamomile": {
+    "name": "Chamomile",
+    "category": "natural",
+    "sprite_w": 10,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "chamomile", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "lavender": {
+    "name": "Lavender",
+    "category": "natural",
+    "sprite_w": 12,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "lavender", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "yarrow": {
+    "name": "Yarrow",
+    "category": "natural",
+    "sprite_w": 12,
+    "sprite_h": 14,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "yarrow", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "wild_berry_bush": {
+    "name": "Wild Berry Bush",
+    "category": "natural",
+    "sprite_w": 20,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "berries", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "dandelion": {
+    "name": "Dandelion",
+    "category": "natural",
+    "sprite_w": 10,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "dandelion", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "fern": {
+    "name": "Fern",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "fern", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "clover": {
+    "name": "Clover",
+    "category": "natural",
+    "sprite_w": 12,
+    "sprite_h": 8,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "clover", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "milkweed": {
+    "name": "Milkweed",
+    "category": "natural",
+    "sprite_w": 14,
+    "sprite_h": 28,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "milkweed", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "poppy": {
+    "name": "Poppy",
+    "category": "natural",
+    "sprite_w": 10,
+    "sprite_h": 16,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "poppy", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "crystal_quartz": {
+    "name": "Quartz Crystal",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "pickaxe",
+        "drops": [
+          {"item_id": "crystal", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "rubble": {
+    "name": "Rubble",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "pickaxe",
+        "drops": [
+          {"item_id": "stone_block", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "mushroom_blue": {
+    "name": "Blue Glowmushroom",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "stackable": false,
+    "sell_price": 6,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "mushroom_blue",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "mushroom_cluster": {
+    "name": "Mushroom Cluster",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "stackable": false,
+    "sell_price": 3,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "mushroom_cluster",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "mushroom_morel": {
+    "name": "Morel",
+    "category": "natural",
+    "sprite_w": 14,
+    "sprite_h": 18,
+    "stackable": false,
+    "sell_price": 9,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "mushroom_morel",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "mushroom_bracket": {
+    "name": "Bracket Fungus",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 14,
+    "stackable": false,
+    "sell_price": 4,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "mushroom_bracket",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "mushroom_inkcap": {
+    "name": "Inkcap",
+    "category": "natural",
+    "sprite_w": 12,
+    "sprite_h": 18,
+    "stackable": false,
+    "sell_price": 5,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "mushroom_inkcap",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "geode": {
+    "name": "Geode",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "stackable": false,
+    "sell_price": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 3,
+        "required_tool_type": "pickaxe",
+        "drops": [
+          {
+            "item_id": "geode",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "cactus_saguaro": {
+    "name": "Cactus Saguaro",
+    "category": "natural",
+    "sprite_w": 20,
+    "sprite_h": 40,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "cactus_saguaro",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "cactus_barrel": {
+    "name": "Cactus Barrel",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "cactus_barrel",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "cactus_prickly": {
+    "name": "Cactus Prickly",
+    "category": "natural",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "cactus_prickly",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "flower_aster": {
+    "name": "Flower Aster",
+    "category": "natural",
+    "sprite_w": 12,
+    "sprite_h": 14,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "flower_foxglove": {
+    "name": "Flower Foxglove",
+    "category": "natural",
+    "sprite_w": 12,
+    "sprite_h": 24,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "flower_bluebell": {
+    "name": "Flower Bluebell",
+    "category": "natural",
+    "sprite_w": 10,
+    "sprite_h": 14,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "mint": {
+    "name": "Mint",
+    "category": "natural",
+    "sprite_w": 12,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "sage": {
+    "name": "Sage",
+    "category": "natural",
+    "sprite_w": 12,
+    "sprite_h": 14,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "thyme": {
+    "name": "Thyme",
+    "category": "natural",
+    "sprite_w": 10,
+    "sprite_h": 8,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "fennel": {
+    "name": "Fennel",
+    "category": "natural",
+    "sprite_w": 12,
+    "sprite_h": 22,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "cattail": {
+    "name": "Cattail",
+    "category": "natural",
+    "sprite_w": 10,
+    "sprite_h": 26,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "pampas": {
+    "name": "Pampas",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "water_lily": {
+    "name": "Water Lily",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 10,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "duckweed": {
+    "name": "Duckweed",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 6,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "pondweed": {
+    "name": "Pondweed",
+    "category": "natural",
+    "sprite_w": 14,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "ivy": {
+    "name": "Ivy",
+    "category": "natural",
+    "sprite_w": 14,
+    "sprite_h": 16,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "morning_glory": {
+    "name": "Morning Glory",
+    "category": "natural",
+    "sprite_w": 12,
+    "sprite_h": 18,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "grapevine": {
+    "name": "Grapevine",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 18,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "aloe": {
+    "name": "Aloe",
+    "category": "natural",
+    "sprite_w": 12,
+    "sprite_h": 14,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "agave": {
+    "name": "Agave",
+    "category": "natural",
+    "sprite_w": 18,
+    "sprite_h": 16,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "bush_flowering": {
+    "name": "Bush Flowering",
+    "category": "natural",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "bramble": {
+    "name": "Bramble",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "clubmoss": {
+    "name": "Clubmoss",
+    "category": "natural",
+    "sprite_w": 12,
+    "sprite_h": 8,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "moss_clump": {
+    "name": "Moss Clump",
+    "category": "natural",
+    "sprite_w": 12,
+    "sprite_h": 6,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
   "crystal_small": {
     "name": "Small Crystal",
     "category": "natural",
@@ -459,6 +1414,26 @@
       }
     }
   },
+  "ore_tin_block": {
+    "name": "Tin Deposit",
+    "category": "ore",
+    "sprite_w": 16,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 5,
+        "required_tool_type": "pickaxe",
+        "required_tool_tier": 1,
+        "drops": [
+          {"item_id": "tin_ore", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
   "ore_silver_block": {
     "name": "Silver Deposit",
     "category": "ore",
@@ -475,6 +1450,26 @@
         "required_tool_tier": 2,
         "drops": [
           {"item_id": "silver_ore", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "quartz_block": {
+    "name": "Quartz Block",
+    "category": "ore",
+    "sprite_w": 16,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 4,
+        "required_tool_type": "pickaxe",
+        "required_tool_tier": 1,
+        "drops": [
+          {"item_id": "quartz", "count": 1, "chance": 1.0}
         ]
       }
     }

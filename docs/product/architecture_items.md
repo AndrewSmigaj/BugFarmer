@@ -18,6 +18,40 @@ All items in BugFarmer have a footprint (grid cells for placement) and a sprite 
 
 ---
 
+## 0. Item & inventory model
+
+The kinds of thing in the world, where their data + art live, and how the inventory treats them:
+
+| Kind | Data file | Art | Notes |
+|------|-----------|-----|-------|
+| **Tile** (ground layer) | tiles config | `Resources/Tiles/{id}.png` (opaque) | grass, dirt, garden_plot, floors, paths — set per cell, not an inventory item. **A rug is NOT a tile.** |
+| **Placeable** | `placeables.json` | `Resources/Objects/{id}.png` | occupies a grid **footprint** (1+ cells), ownable/bought, can grant farm bonuses. Includes **flat placeables** (rug: `flat:true`, drawn on top of the floor) and **blocks** (dirt/stone/ore/wood/wall — a placeable subtype that tiles into a grid; breakable). |
+| **Free / collectible** | `items.json` (+ world occupant) | reuses the world sprite | placed anywhere, picked up: the bobbing drops — broken blocks, tree-drop wood, fallen fruit, **cut flowers/herbs/mushrooms**. |
+| **Tool / weapon** | `items.json` | `Items/{id}_icon.png` | held & swung; the swing visuals are an animation concern (player-held gear is hand-authored Pipeline B). |
+| **Resource / seed / consumable** | `items.json` | `Items/{id}_icon.png` | wood, fiber, ore, bars, crystal, seeds, potions, fish. |
+| **Bug** | bug data | bug sprite | free-placed in the world via a later **release mechanic**. |
+
+**Flowers / herbs / mushrooms are NOT grid-placeable** (too small to own a cell). They exist in the world
+as **occupants** (scatter); once cut they are inventory items that go into a receptacle (flowerpot/vase) or
+are sold/crafted — never placed back on bare ground.
+
+**Breaking a block** spawns a floating **mini of the actual block sprite** (not a generic icon) that bobs
+until picked up. Trees are destroyed and drop wood blocks the same way.
+
+**Inventory icons — two paths:**
+- **Derived (no art authored):** placeables, blocks, and cut flowers/herbs use a **mini of their world
+  sprite** as the icon (same art as the bobbing drop) — a downscale step, not a separate generation.
+- **Authored (`Items/{id}_icon.png`):** only items with **no world sprite** — raw resources, tools/weapons,
+  seeds, potions, fish.
+
+**Bonus system & item "type":** decorations/furniture grant small idle farm bonuses with **diminishing
+returns keyed off item `id`** ("a second sofa adds less than the first"; `category` is available as a
+coarser grouping). The inventory tracks items by `id`, so the "type" the bonus system needs is **already
+known — no schema change**. The per-item **bonus value** is a field added *with* that system, not before
+(see `game_design.md §11.5`).
+
+---
+
 ## 1. Basic Blocks
 
 Ground tiles and raw materials. Footprint always 1×1.
