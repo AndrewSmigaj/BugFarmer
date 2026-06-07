@@ -1,0 +1,117 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>BugFarmer Design Lab</title>
+<style>
+ body{font-family:system-ui,sans-serif;background:#222;color:#eee;margin:0;display:flex}
+ #side{width:360px;padding:14px;box-sizing:border-box;height:100vh;overflow:auto;background:#2b2b2b}
+ #main{flex:1;display:flex;align-items:flex-start;justify-content:center;background:#333;overflow:auto;height:100vh;padding:12px}
+ canvas{image-rendering:pixelated;background:#3a3a3a}
+ .row{margin:8px 0;padding:8px 10px;background:#333;border-radius:6px}
+ .lab{font-size:12px;color:#ffe08a;margin-top:5px;word-break:break-all}
+ h2{margin:.2em 0;font-size:18px} h3{margin:.6em 0 .2em;font-size:14px;color:#9cf}
+ select,button{font-size:13px;margin:2px} button{cursor:pointer}
+ #apply{font-size:15px;padding:7px 14px;background:#2e7d32;color:#fff;border:0;border-radius:6px;margin-top:6px}
+ #apply:disabled{background:#555}
+ #status{font-size:12px;color:#9f9;margin-left:8px}
+ #picks{margin-top:10px;padding:8px;background:#1d1d1d;border-radius:6px}
+</style></head>
+<body>
+<div id="side">
+ <h2>🎨 Design Lab</h2>
+ <label>Scene <select id="scene"></select></label>
+ <label style="display:block;margin-top:6px">Zoom <input type="range" id="zoom" min="0.25" max="6" step="0.25" value="1"> <span id="zlab">1x</span></label>
+ <h3>Variants</h3>
+ <div id="controls"></div>
+ <button id="apply">✔ Apply — set as live + re-render previews</button><span id="status"></span>
+ <div id="picks"><b>Current selection</b><div id="pickslist"></div></div>
+</div>
+<div id="main"><canvas id="cv"></canvas></div>
+<script>
+let S=null, scene=null;
+const sel={}, imgs={};
+const $=id=>document.getElementById(id);
+
+function img(url){ if(!imgs[url]){const i=new Image(); i.onload=draw; i.src=url; imgs[url]=i;} return imgs[url]; }
+function sceneUrl(sc){ return '/scene/'+sc.file+'?v='+(sc._v||0); }   // _v bumps after Apply -> reload preview
+function variantsFor(k){ return (S.variants[k]||{})[(sel[k]||{}).ap]||[]; }
+function curRel(k){ const vs=variantsFor(k); return vs.length?vs[sel[k].vi]:null; }
+
+function initSelection(){
+ for(const k in S.variants){
+  const aps=Object.keys(S.variants[k]); let ap=aps[0], vi=0;
+  const saved=S.selection[k];                         // remember what was applied last time
+  if(saved){ for(const a of aps){ const idx=S.variants[k][a].indexOf(saved); if(idx>=0){ap=a;vi=idx;break;} } }
+  sel[k]={ap,vi};
+ }
+}
+function preload(){
+ for(const k in S.variants) for(const a in S.variants[k]) for(const p of S.variants[k][a]) img('/variant/'+p);
+ for(const s in S.scenes) img(sceneUrl(S.scenes[s]));
+}
+
+function buildSceneSelect(){
+ const ss=$('scene'); ss.innerHTML='';
+ for(const s in S.scenes){ const o=document.createElement('option'); o.value=s; o.text=s; ss.add(o); }
+ scene=ss.value; ss.onchange=()=>{ scene=ss.value; buildControls(); draw(); };
+}
+function keysInScene(){ return S.scenes[scene].keys; }
+
+function buildControls(){
+ const c=$('controls'); c.innerHTML='';
+ for(const k of keysInScene()){
+  const row=document.createElement('div'); row.className='row';
+  row.innerHTML='<b>'+k+'</b><br>approach <select class="ap"></select> '+
+    'variant <button class="vm">&lt;</button> <span class="vn"></span> <button class="vp">&gt;</button>'+
+    '<div class="lab"></div>';
+  c.appendChild(row);
+  const ap=row.querySelector('.ap');
+  for(const a of Object.keys(S.variants[k]||{})){ const o=document.createElement('option'); o.value=a; o.text=a; ap.add(o); }
+  ap.value=sel[k].ap;
+  ap.onchange=e=>{ sel[k].ap=e.target.value; sel[k].vi=0; upd(k,row); draw(); };
+  row.querySelector('.vm').onclick=()=>step(k,-1,row);
+  row.querySelector('.vp').onclick=()=>step(k,1,row);
+  upd(k,row);
+ }
+ refreshPicks();
+}
+function step(k,d,row){ const n=variantsFor(k).length; if(!n)return; sel[k].vi=(sel[k].vi+d+n)%n; upd(k,row); draw(); }
+function upd(k,row){ const vs=variantsFor(k);
+ row.querySelector('.vn').textContent=(vs.length?sel[k].vi+1:0)+'/'+vs.length;
+ row.querySelector('.lab').textContent=vs.length?vs[sel[k].vi]:'(none)'; refreshPicks(); }
+function refreshPicks(){ const d=$('pickslist'); d.innerHTML='';
+ for(const k of keysInScene()){ const e=document.createElement('div'); e.className='lab';
+  e.textContent=k+'  →  '+(curRel(k)||'(none)'); d.appendChild(e); } }
+
+function applyZoom(){ const sc=S.scenes[scene], z=+$('zoom').value, cv=$('cv');
+ cv.style.width=(sc.w*z)+'px'; cv.style.height=(sc.h*z)+'px'; $('zlab').textContent=z+'x'; }
+$('zoom').oninput=applyZoom;
+
+function draw(){
+ const sc=S.scenes[scene], cv=$('cv'); cv.width=sc.w; cv.height=sc.h;
+ const ctx=cv.getContext('2d'); ctx.imageSmoothingEnabled=false; ctx.clearRect(0,0,sc.w,sc.h);
+ const bg=img(sceneUrl(sc)); if(bg.complete&&bg.naturalWidth) ctx.drawImage(bg,0,0,sc.w,sc.h);
+ for(const d of sc.draw){ const rel=curRel(d.key); if(!rel) continue;          // single BACK-TO-FRONT pass
+  const im=imgs['/variant/'+rel]; if(!im||!im.complete||!im.naturalWidth) continue;
+  ctx.drawImage(im,d.x,d.y,d.w,d.h); }
+ applyZoom();
+}
+
+async function apply(){
+ const selection={}; for(const k in sel){ const r=curRel(k); if(r) selection[k]=r; }
+ $('apply').disabled=true; $('status').textContent='applying…';
+ try{
+  const res=await fetch('/api/apply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({selection})});
+  const j=await res.json();
+  const bust=Date.now(); for(const s in j.state.scenes) j.state.scenes[s]._v=bust;  // force preview reload
+  S=j.state; preload();
+  $('status').textContent='✔ applied: '+(j.applied.join(', ')||'(none)');
+ }catch(e){ $('status').textContent='✖ '+e; }
+ $('apply').disabled=false; setTimeout(draw,300);
+}
+$('apply').onclick=apply;
+
+async function boot(){
+ S=await (await fetch('/api/state')).json();
+ initSelection(); preload(); buildSceneSelect(); buildControls(); draw();
+}
+boot();
+</script></body></html>

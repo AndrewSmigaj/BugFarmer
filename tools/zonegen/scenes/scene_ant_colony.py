@@ -3,7 +3,7 @@
 surface entrance, a meandering main shaft branching into chambers (queen / egg-brood / food), with
 files of ants on the trails. One branch opens into a BIG tunnel leading right into a mushroom-packed
 cavern, where a centipede and a millipede (assembled from head/body/tail segment sprites) crawl.
-See docs/guides/feature-ant-colony.md. Renders to previews/underground/scene_ant_colony.png.
+See docs/guides/feature-ant-colony.md. Renders to previews/scene_ant_colony.png.
 """
 import math
 import os
@@ -132,7 +132,7 @@ def build():
 
 if __name__ == "__main__":
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "underground", "scene_ant_colony.png"))
+    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "scene_ant_colony.png"))
     render_builder(b, out, scale=6)
     print("placeholders:", b.missing_art())
     print("warnings:", len(b.warnings))

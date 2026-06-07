@@ -28,7 +28,7 @@ working; this file is what survives between sessions.
 - **Underground scenes:** caves improved (quartz blocks, wider rail tunnel + wood supports, more dirt,
   shape labels); underground house rebuilt **flush in rock**; NEW **mining camp** (campfire+spit, tents,
   miners via a new player palette, custom sign); **ant colony 2×** (egg room + queen + tunnel to a
-  mushroom cavern). Previews organized under `previews/underground/` + labeled `contact_sheet.png`.
+  mushroom cavern). Previews in `previews/` (flat, one `scene_<name>.png` each).
 - **Bug pipeline:** `bugs` source → `Resources/Bugs/` + a `creature` art family; **segmented centipede &
   millipede** (head/body/tail ×2, mix-and-match) + **scorpion**.
 - **New surface scenes:** `scene_beefarm_woods` (apiary + meadow + woods + stream) and `scene_desert`

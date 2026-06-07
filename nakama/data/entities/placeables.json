@@ -325,7 +325,7 @@
     "name": "Wooden Wall",
     "category": "structure",
     "sprite_w": 16,
-    "sprite_h": 24,
+    "sprite_h": 32,
     "stackable": true,
     "max_stack": 99,
     "sell_price": 4,
@@ -343,6 +343,35 @@
         "drops": [
           {
             "item_id": "wall_wood",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "wall_sandstone": {
+    "name": "Sandstone Wall",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 6,
+        "required_tool_type": "pickaxe",
+        "drops": [
+          {
+            "item_id": "wall_sandstone",
             "count": 1,
             "chance": 1.0
           }
@@ -383,7 +412,7 @@
     "name": "Brick Wall",
     "category": "structure",
     "sprite_w": 16,
-    "sprite_h": 20,
+    "sprite_h": 32,
     "stackable": true,
     "max_stack": 99,
     "sell_price": 8,
@@ -3318,7 +3347,7 @@
     "name": "Log Wall",
     "category": "structure",
     "sprite_w": 16,
-    "sprite_h": 20,
+    "sprite_h": 32,
     "stackable": true,
     "max_stack": 99,
     "sell_price": 4,
@@ -3340,7 +3369,7 @@
     "name": "Stone-Brick Wall",
     "category": "structure",
     "sprite_w": 16,
-    "sprite_h": 20,
+    "sprite_h": 32,
     "stackable": true,
     "max_stack": 99,
     "sell_price": 4,

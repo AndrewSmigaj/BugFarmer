@@ -89,6 +89,9 @@
   "wall_brick2": {
     "surface": "mixed STONE-AND-BRICK masonry, rough banded courses of grey stone and red brick"
   },
+  "wall_sandstone": {
+    "surface": "fitted tan SANDSTONE blocks - sandy beige with faint horizontal striations"
+  },
   "wall_stone": {
     "surface": "fitted grey STONE masonry blocks"
   },

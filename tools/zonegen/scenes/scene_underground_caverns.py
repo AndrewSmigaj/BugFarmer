@@ -174,7 +174,7 @@ def _label(out):
 
 if __name__ == "__main__":
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "underground", "scene_underground_caverns.png"))
+    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "scene_underground_caverns.png"))
     render_builder(b, out, scale=5)
     _label(out)
     print("placeholders:", b.missing_art())

@@ -150,7 +150,7 @@ def _variant_pool(tid):
 
 # ---- core renderer (library) ------------------------------------------------
 def render_scene(ground, occupants, meta, scale, out_path, players=None, seed=7, bugs=None,
-                 decor=None):
+                 decor=None, record_tiles=None):
     """Render a scene to PNG.
       ground:    GH x GW grid of tile-id strings.
       occupants: list of (id, cx, cy) ANCHOR cells in local cell coords (floats OK).
@@ -166,6 +166,13 @@ def render_scene(ground, occupants, meta, scale, out_path, players=None, seed=7,
 
     pools, tcache, missing_tiles = {}, {}, set()
     rng = random.Random(seed)
+    block_rects = []                       # draw rects of swappable blocks/walls (+ requested ground tiles)
+    record_tiles = record_tiles or set()   # ground-tile ids to also record (e.g. {"cave_floor"}) for the viewer
+    _blockcells = set()                    # cells with a block on top — their ground tile is hidden, skip it
+    for (_oid, _cx, _cy) in occupants:
+        _c = (meta.get(_oid, {}) or {}).get("category", "")
+        if _c in ("block", "ore") or (_c == "structure" and _oid.startswith("wall")):
+            _blockcells.add((int(round(_cx)), int(round(_cy))))
     for y in range(GH):
         for x in range(GW):
             base = ground[y][x]
@@ -177,6 +184,9 @@ def render_scene(ground, occupants, meta, scale, out_path, players=None, seed=7,
             iy = (GH - 1 - y) * cpx   # flip vertically: zone row 0 at image BOTTOM (game +Y up)
             if t:
                 canvas.alpha_composite(t, (x * cpx, iy))
+                if base in record_tiles and (x, y) not in _blockcells:
+                    block_rects.append({"key": base, "cx": x, "cy": y,
+                                        "x": x * cpx, "y": iy, "w": cpx, "h": cpx})
             else:
                 missing_tiles.add(base)
                 ph = Image.new("RGBA", (cpx, cpx), MISSING_TILE)
@@ -228,6 +238,9 @@ def render_scene(ground, occupants, meta, scale, out_path, players=None, seed=7,
             front_edge_y = (GH - cy) * cpx
             px, py = int(anchor_x - rw / 2), int(front_edge_y - rh)
         canvas.alpha_composite(spr, (px, py))
+        _cat = (meta.get(oid, {}) or {}).get("category", "")
+        if _cat in ("block", "ore") or (_cat == "structure" and oid.startswith("wall")):
+            block_rects.append({"key": oid, "cx": cx, "cy": cy, "x": px, "y": py, "w": rw, "h": rh})
 
     for pid, cx, cy in (players or []):
         img = load_png(PLAYER, pid)
@@ -255,7 +268,8 @@ def render_scene(ground, occupants, meta, scale, out_path, players=None, seed=7,
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     canvas.convert("RGB").save(out_path)
     return {"w": GW * cpx, "h": GH * cpx, "gw": GW, "gh": GH,
-            "placeholders": sorted(set(placeholders)), "missing_tiles": sorted(missing_tiles)}
+            "placeholders": sorted(set(placeholders)), "missing_tiles": sorted(missing_tiles),
+            "block_rects": block_rects}
 
 
 # ---- load a built zone from disk into (ground, occupants) -------------------

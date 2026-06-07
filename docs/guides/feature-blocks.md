@@ -31,6 +31,9 @@ background (wrong).
 ## Adding / changing a block
 1. Entity row (lean): ore block → `occupants.json` (`category: ore`, pickaxe-breakable, drops its ore
    item); wall → `placeables.json` (`category: structure`, key `wall_*`). `[1,1]` footprint, `bc` pivot.
+   **All WALLS are `sprite_w 16 × sprite_h 32`** (2 cells tall = door height) so they line up with doors and
+   each other — keep every wall this size. (Ground/ore blocks are `16×20`.) A past bug left wood/brick walls
+   at 16×24 / 16×20 and they fell short of the door; standardized to 16×32.
 2. Catalog row in `tools/art/catalog/blocks.json`: `{ "surface": "..." }` (a full-frame material, e.g.
    `"rows of warm red-brown BRICKS with pale mortar"`) or `{ "fleck": "..." }` for an ore (renders as
    "grey STONE studded with {fleck}"). Make the surface a FULL, textured face — bland/low-contrast text

@@ -56,6 +56,13 @@
       "foliage"
     ]
   },
+  "compost_pile": {
+    "look": "a low mound of dark COMPOST — rotting brown leaves, vegetable scraps and dark crumbly soil heaped up; NOT a dirt block, NOT a bush",
+    "materials": [
+      "dirt",
+      "foliage"
+    ]
+  },
   "dandelion": {
     "look": "a DANDELION: a low rosette of jagged green leaves with one bright yellow flower and one round white seed PUFF on slender stems.",
     "materials": [
@@ -138,6 +145,12 @@
     "look": "a LAVENDER plant: a small bushy clump of narrow grey-green leaves with several upright spikes of tiny PURPLE flowers.",
     "materials": [
       "foliage"
+    ]
+  },
+  "log_pile": {
+    "look": "a neat STACK OF CUT LOGS — pale round cut ends facing the viewer, brown bark, stacked low; NOT a single log, NOT a fence",
+    "materials": [
+      "wood"
     ]
   },
   "milkweed": {
@@ -237,6 +250,12 @@
     "look": "a SAGE herb: a small woody clump of soft grey-green oval leaves, a few purple flower spikes.",
     "materials": [
       "foliage"
+    ]
+  },
+  "stump": {
+    "look": "a low TREE STUMP — a flat round cut top showing growth RINGS, short bark sides, a couple roots at the base; NOT a full tree, NOT a log",
+    "materials": [
+      "wood"
     ]
   },
   "sunflower": {

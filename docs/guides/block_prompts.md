@@ -8,34 +8,33 @@ front face is WRONG; a baked black/white background is WRONG.)
 The prompt that gets there is **still being tuned**, so we tune it with a bake-off instead of guessing.
 
 ## The bake-off
-- **Prompt approaches `P1 / P2 / P3`** — three *different prompts*, all aiming at the same block, **sharing
-  the style block** (so the look stays consistent) but using different technique. Defined in
-  `tools/blocklab.py` (`SHARED_STYLE` + `APPROACHES`).
-- **Variants `1 / 2 / 3`** — three random samples of one prompt (gpt-image-1 is stochastic, so the same
-  prompt gives different images each call). Variants are NOT different prompts.
-- Run: `python3 tools/blocklab.py` → fills `tools/_generated/blocklab/P{1,2,3}/{block}_{1,2,3}.png`.
-  Scope it with `--approaches P2 --blocks stone_block --variants 3`.
+- **Prompt approaches** — three *different prompts*, same block, **shared style block**, different technique;
+  defined in `tools/blocklab.py` (`SHARED_STYLE` + `APPROACHES`), in descriptively-named folders:
+  `01_described`, `02_explicit_dimensions`, `03_grid_check`.
+- **Variants `1 / 2 / 3`** — three random samples of one prompt (gpt-image-1 is stochastic). NOT different prompts.
+- Run: `python3 tools/blocklab.py` → fills `tools/_generated/blocklab/<approach>/<block>_{1,2,3}.png`.
+  Scope it: `--approaches 02_explicit_dimensions --blocks stone_block --variants 3`.
 
 ### The three approaches (technique differs, goal identical)
 - **Shared style (all):** front-on, slightly-above orthographic (not isometric/3D); wide lit top + short
   darker front; tops line up, fronts show; **grey stone (no green/blue)**; thin/soft seams (no thick black
   lines, no dark border); minimal bevel; full-width bleed; crisp.
-- **P1 — described:** plain prose describing the top/front and that stacked tops line up.
-- **P2 — explicit dimensions:** exact proportions (top ≈ upper 80%, front ≈ lower 20%, ≤1px bevel, front
+- **`01_described`:** plain prose describing the top/front and that stacked tops line up.
+- **`02_explicit_dimensions`:** exact proportions (top ≈ upper 80%, front ≈ lower 20%, ≤1px bevel, front
   ~15% darker, no outline).
-- **P3 — grid self-check:** describes the 3×3 tiling and tells the model to ensure the tops connect with no
+- **`03_grid_check`:** describes the 3×3 tiling and tells the model to ensure the tops connect with no
   gap/offset and seams stay thin — "would the tops line up? if not, widen the top, lighten the seam."
 
-## The variant-folder workflow (use this for any iterate-heavy art)
-1. Generate into a **lab folder**, not over the live sprite: `tools/_generated/blocklab/P{n}/`.
-2. **Review in context** — `scene_block_house.py` (walls in a room) and `scene_block_mine.py` (dirt/stone
-   cliff + cave floored with a tile + pond), rendered per approach by swapping the candidate sprite in.
-3. **Pick** the winning approach and the best variant per block (by looking — against the reference, never
-   a coverage number).
-4. **Promote:** copy the chosen `blocklab/P{n}/{block}_{i}.png` over the live placeholder
-   `BugFarmerClient/Assets/Resources/Objects/{block}.png`. Keep the rest of the folder as the variant
-   library so we can swap later.
-5. The live sprite is a **placeholder until replaced** — never overwrite it with an unreviewed gen.
+## The review + promote workflow (reusable for any iterate-heavy art)
+1. Generate variants into the lab folder (above) — never over the live sprite.
+2. **Run the Design Lab:** `python3 tools/lab_server.py` → open `http://localhost:8765`. It renders the
+   scenes (the SAME ones in `tools/_generated/previews/`), recording each block/tile's draw position.
+3. **Review in context:** pick a scene, zoom, step each block/tile's approach/variant — the scene redraws
+   live (variant overlaid back-to-front; nothing is pre-rendered per variant).
+4. **Apply (set live):** the **Apply** button promotes the chosen variants to the live game sprites
+   (`Resources/Objects|Tiles/{key}.png`, `.meta` patched) and re-renders the previews; the selection is
+   saved in `blocklab/selection.json` and remembered. See `tools/lab/README.md`.
+5. The live sprite is a **placeholder until replaced** — never overwritten by an unreviewed gen.
 
 ## Generation rules (don't drift again)
 - Blocks use `build_wall_prompt` (the cube/top+front prompt) + **transparent background + crop** (the same
@@ -50,9 +49,10 @@ The prompt that gets there is **still being tuned**, so we tune it with a bake-o
 slight softening). Some softness is expected and fine; a 16×20 PNG also looks blurry if your image viewer
 smooth-scales it (zoom with nearest-neighbor). Only sharpen the downscale if a block is clearly mushy.
 
-## Later (not built yet): Unity variant panel
-A small EditorWindow could list block types and step (slider/stepper) through `blocklab/*` variants,
-swapping the live sprite and re-rendering a preview scene — so variants can be compared in real scenes
-inside the editor. Feasible but a separate chunk of C# editor work; flagged for a decision, not started.
+## The viewer is reusable; a Unity panel is later-maybe
+The Design Lab server (`tools/lab_server.py`) is generic: add a variants folder + a scene
+that places the item, re-run it, and you get the same flip-and-pick flow for bugs/plants/furniture/etc. A
+Unity in-engine EditorWindow (sliders inside the running game) is a possible later addition — not built
+(the lightweight HTML viewer was chosen for now).
 
 See also [feature-blocks.md](feature-blocks.md) (block entity/catalog setup).

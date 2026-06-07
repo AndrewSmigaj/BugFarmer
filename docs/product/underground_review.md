@@ -1,7 +1,7 @@
 # Underground scenes — review & "what else?" proposals
 
 Quick review of the underground scenes + proposals for what to add next (you asked specifically about the
-mining camp and the ant colony). Previews live in `tools/_generated/previews/underground/`.
+mining camp and the ant colony). Previews live in `tools/_generated/previews/` (flat `scene_<name>.png`).
 
 ## Mining camp (`scene_underground_mining_camp.png`) — additions to consider
 Already has: rail track in, campfire+spit, second campfire, log seats, tents, mine cart, crates/barrels,

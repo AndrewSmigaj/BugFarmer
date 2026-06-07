@@ -26,14 +26,26 @@ The kinds of thing in the world, where their data + art live, and how the invent
 |------|-----------|-----|-------|
 | **Tile** (ground layer) | tiles config | `Resources/Tiles/{id}.png` (opaque) | grass, dirt, garden_plot, floors, paths — set per cell, not an inventory item. **A rug is NOT a tile.** |
 | **Placeable** | `placeables.json` | `Resources/Objects/{id}.png` | occupies a grid **footprint** (1+ cells), ownable/bought, can grant farm bonuses. Includes **flat placeables** (rug: `flat:true`, drawn on top of the floor) and **blocks** (dirt/stone/ore/wood/wall — a placeable subtype that tiles into a grid; breakable). |
+| **Plant / flora** (world) | `occupants.json` | `Resources/Objects/{id}.png` | small flora (flowers/herbs/mushrooms/grass) placed **freely anywhere** — sub-cell position, varied scale & shape, NOT grid-locked, NOT one-per-cell, NOT uniform size; blocked only by already-occupied space. Cut → inventory item. |
 | **Free / collectible** | `items.json` (+ world occupant) | reuses the world sprite | placed anywhere, picked up: the bobbing drops — broken blocks, tree-drop wood, fallen fruit, **cut flowers/herbs/mushrooms**. |
 | **Tool / weapon** | `items.json` | `Items/{id}_icon.png` | held & swung; the swing visuals are an animation concern (player-held gear is hand-authored Pipeline B). |
 | **Resource / seed / consumable** | `items.json` | `Items/{id}_icon.png` | wood, fiber, ore, bars, crystal, seeds, potions, fish. |
 | **Bug** | bug data | bug sprite | free-placed in the world via a later **release mechanic**. |
 
-**Flowers / herbs / mushrooms are NOT grid-placeable** (too small to own a cell). They exist in the world
-as **occupants** (scatter); once cut they are inventory items that go into a receptacle (flowerpot/vase) or
-are sold/crafted — never placed back on bare ground.
+**Plants (flowers / herbs / mushrooms / small flora) are FREELY placeable — not grid-locked.** The engine
+positions them at any sub-cell point (float coords), at **varied scale**, and they can be **different
+shapes/sizes** (some ~1 unit, some ~2 units tall, etc.) — they are NOT one-per-grid-square and NOT all the
+same size. The ONLY placement constraint is they can't overlap something already occupying that space (a
+block, a placeable footprint, deep water). On open ground they sit freely. (Cut plants are still inventory
+items — flowerpot / vase / sell / craft.)
+
+> Engine note (free placement vs the frontier-gated sync): this should be fine. Plants are static,
+> non-colliding world decor — they don't move, don't path, and don't participate in the bug-swarm
+> simulation that the frontier gating exists to throttle. Placement just needs an "is this point free?"
+> check (no overlap with occupant footprints / blocks / water); after that a plant is data + a sprite at a
+> float position, replicated like any other static occupant. The sync risk in this engine was *moving*
+> swarm entities and resync stalls, not static decor count. (Validate with the sync-harness once we wire a
+> real place-plant action, but I see no reason it would stress the frontier path.)
 
 **Breaking a block** spawns a floating **mini of the actual block sprite** (not a generic icon) that bobs
 until picked up. Trees are destroyed and drop wood blocks the same way.

@@ -5,11 +5,30 @@
   "autonet": {
     "look": "an AUTONET automatic fly-catcher seen front-on, WIDER than tall: on the left a round spinning electric FAN in a housing, and ATTACHED right beside it a cylindrical metal TANK/vat with a mesh intake; the fan sucks flies through the opening into a collection net inside the tank. A quirky two-part bug-suction machine on little legs."
   },
+  "bait_basket": {
+    "look": "a small round WICKER BASKET of fishing bait — woven tan straw sides, a few worms/grubs poking over the rim; NOT a trash bin",
+    "materials": [
+      "wood"
+    ]
+  },
   "chest_wood": {
     "look": "a closed wooden treasure CHEST: a rectangular wooden box with a rounded hinged LID, dark iron METAL BANDS and a metal latch/lock on the front.",
     "materials": [
       "wood",
       "metal"
+    ]
+  },
+  "chopping_block": {
+    "look": "a round WOOD CHOPPING BLOCK (a short log section) with a steel AXE embedded in the top and a few wood chips at its base; NOT a whole tree",
+    "materials": [
+      "wood",
+      "metal"
+    ]
+  },
+  "collection_tray": {
+    "look": "a shallow rectangular WOODEN TRAY on short legs, the top divided into small compartments holding tiny specimens (bugs/minerals); NOT a dining table",
+    "materials": [
+      "wood"
     ]
   },
   "compost_bin": {
@@ -52,8 +71,20 @@
   "hedge": {
     "look": "a section of trimmed HEDGE: a dense flat-topped block of green leafy shrubbery, like a low green wall. The foliage spans the FULL WIDTH and bleeds off the left and right edges so sections tile into one continuous hedge with no gap."
   },
+  "ladder": {
+    "look": "a tall WOODEN LADDER standing upright — two vertical side rails joined by evenly spaced horizontal rungs; NOT a fence, NOT a wall",
+    "materials": [
+      "wood"
+    ]
+  },
   "net_post": {
     "look": "a bug-catching NET STATION: a tall wooden POST with a round hoop NET of fine pale mesh mounted at the top (a butterfly-style net fixed upright on a stand). Clearly a net on a post."
+  },
+  "notice_board": {
+    "look": "a wooden NOTICE BOARD — a framed board on a post with a few pinned PAPER notes; NOT a door, NOT a blank post",
+    "materials": [
+      "wood"
+    ]
   },
   "signpost": {
     "look": "a wooden SIGNPOST: a vertical wooden POST with a rectangular wooden SIGN BOARD mounted near the top (blank, with a faint arrow), like a directional trail sign."

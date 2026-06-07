@@ -2,7 +2,7 @@
 """Scene — MINING CAMP: the N->S rail track descends into a cleared cavern that's the miners' camp,
 with tunnels leading out. Campfire + cooking spit, a second campfire, log seats, tents, crates/tools,
 a mine cart on the track, ore sacks/sluice, miners, and a custom camp sign.
-Renders to tools/_generated/previews/underground/scene_underground_mining_camp.png.
+Renders to tools/_generated/previews/scene_underground_mining_camp.png.
 """
 import os
 import random
@@ -102,8 +102,7 @@ def build():
 
 if __name__ == "__main__":
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "underground",
-                                       "scene_underground_mining_camp.png"))
+    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "scene_underground_mining_camp.png"))
     render_builder(b, out, scale=6)
     print("placeholders:", b.missing_art())
     print("warnings:", len(b.warnings))

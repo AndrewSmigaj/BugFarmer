@@ -73,9 +73,12 @@ The kinds of thing in the game, and how art maps to them:
 - **Bugs**: free-placed via a later RELEASE mechanic.
 
 Decisions (2026 session):
-- **Flowers/herbs/mushrooms are NOT grid-placeable** (too small to own a cell). They scatter as world
-  OCCUPANTS; when cut they're inventory items that go into a receptacle (flowerpot/vase) or are sold/
-  crafted — never placed back on bare ground.
+- **Plants are FREELY placeable (NOT grid-locked) — updated design.** The engine places flowers/herbs/
+  mushrooms/small flora at any sub-cell float position, at varied scale, in varied shapes/sizes (some ~2
+  units tall); NOT one-per-cell, NOT uniform. Only constraint: can't overlap occupied space (block /
+  placeable footprint / deep water). Cut plants are still inventory items. Engine: fine with the
+  frontier-gated sync — static non-colliding decor, not swarm entities; placement just needs an is-free
+  check. (See `architecture_items.md`.)
 - **Inventory icons split two ways:**
   - **Derived (no art authored):** placeables, blocks, cut flowers/herbs → icon = a MINI of the existing
     world `Objects/{id}.png` (same art as the bobbing drop). Build a downscale step when the inventory
@@ -118,6 +121,24 @@ Decisions (2026 session):
 
 ## → findings from the overnight block/bug/encyclopedia run (fold into object_pipeline.md + add-object)
 - **CORRECTION (final) — blocks use a SEAMLESS OPAQUE MATERIAL FACE, like a ground tile** (`build_block_prompt`, mirrors `build_tile_prompt`): opaque (transparent comes back BLANK ~half the time — verified raw `alpha[0-4]`), fills the whole frame with the material (no baked bg, no border), NO top-surface/front-lip (that cube prompt banded everything + put a non-brick top on the brick wall). 2 attempts each, pick the tiling one, verify by LOOKING (coverage==100% can be a baked bg). See `feature-blocks.md`. NEVER change the flow to fix a few sprites — reroll.
+
+## → PLANT art + placement system (brainstorm — fold into a plants guide + scaffolding)
+Start a PLANT section mirroring blocks (own prompt approaches + variants + viewer + guide). Approaches/Qs:
+- **Free placement (not grid):** a `scatter`-style feature that drops plants at FLOAT positions with jitter,
+  varied per-instance scale, and an **is-free check** (no overlap with occupant footprints / blocks / deep
+  water). Support patches (clusters) and lone plants. Reuse the existing sub-grid float path that
+  `place_decor` / `place_bug` already use (cx,cy floats + `mult` scale), instead of one-per-cell occupants.
+- **Scale & shape:** plants render sub-cell (often < 1 cell); some span ~2 cells tall (tall flora, saplings,
+  big mushrooms). Author art at a known unit height so the renderer scales correctly; allow non-uniform.
+- **Art prompt approaches (like block_prompts):** e.g. (a) single clear specimen on transparent, (b) a small
+  natural clump, (c) top-down vs 3/4 framing — choose per plant type. Variants in a plant-lab folder; same
+  viewer flips them (the viewer is already generic — needs a "free-placed decor" scene record, see below).
+- **Viewer wiring:** plants are decor (floats), not grid occupants — to make them swappable in the viewer
+  we'd record decor draw-rects too (like the block/tile rects) and overlay variants there. Small extension.
+- **Depth/biome variation** (the "floor/plants match as you go deeper" idea): a later ZONE-system behavior
+  (swap tile/flora sets by depth/biome), NOT a single sprite — capture as its own design item.
+- **Engine/sync:** static non-colliding decor, no swarm-sim load; validate a real place-plant action with
+  the sync-harness when it exists, but expect no frontier-gating stress.
 
 ## → general tooling TODO (separable, low-risk)
 - **`tools/format_entities.py`** — canonical pretty-printer for the entity JSONs so they

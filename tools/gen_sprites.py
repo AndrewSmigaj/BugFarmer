@@ -223,30 +223,6 @@ def is_block_like(key, category):
     return category in ("block", "ore") or (category == "structure" and key.startswith("wall"))
 
 
-def build_block_prompt(key, ent):
-    """Tiling blocks/walls = a SEAMLESS full-frame MATERIAL FACE generated OPAQUE, exactly like a ground
-    tile (build_tile_prompt). This is the proven seam-free recipe: opaque so the model can't return a blank
-    image, full-frame so there is no baked black/white background, no border so it tiles. NOT the old cube
-    prompt (top surface + front lip) — that banded and put non-material tops on walls."""
-    surf = block_surface(key)
-    return "\n".join([
-        "Create a seamless 2D game BLOCK FACE texture (pixel art).",
-        "",
-        f"Block surface: {surf}.",
-        "",
-        "Seamless front-on MATERIAL texture for a 2D game block, viewed STRAIGHT ON (flat, NO perspective, "
-        "NO angle, NOT isometric). The texture FILLS THE ENTIRE SQUARE FRAME edge to edge and bleeds off all "
-        "four sides so many copies tile seamlessly with NO visible seam. CRITICAL - NO grid lines: absolutely "
-        "NO border, NO frame, NO outline, NO dark edges, NO vignette, NO corner shadows, NO drop shadow, and "
-        "NO separate top surface or front lip - the WHOLE square is the material (a brick block is ALL brick, "
-        "a stone block is ALL rock, an ore block is rock studded with its flecks). Lighting is COMPLETELY "
-        "FLAT and EVEN across the whole tile, identical brightness in the center and at every edge and corner. "
-        "Chunky pixel-art, limited muted palette, low-contrast even variation, hard edges, no anti-aliasing.",
-        "",
-        "This image tiles in a grid; seam-free repetition is essential.",
-    ])
-
-
 def is_linear_connector(key, category):
     return category == "structure" and (
         key.startswith("fence") or key.startswith("wall"))

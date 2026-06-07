@@ -91,7 +91,7 @@ def build():
 
 if __name__ == "__main__":
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "underground", "scene_underground_house.png"))
+    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "scene_underground_house.png"))
     render_builder(b, out, scale=6)
     print("placeholders:", b.missing_art())
     print("warnings:", len(b.warnings))

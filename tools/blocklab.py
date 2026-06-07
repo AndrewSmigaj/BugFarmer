@@ -38,24 +38,25 @@ SHARED_STYLE = (
 )
 
 # The three techniques (go into WALL_BLOCK). Same goal, different wording.
+# Keys are the (descriptive, no-abbreviation) folder names under blocklab/.
 APPROACHES = {
-    # P1 — plain description (what we already had)
-    "P1": (
+    # plain description (what we already had)
+    "01_described": (
         "BLOCK SHAPE (described): the block is dominated by its big flat TOP; the FRONT face is a short band "
         "at the bottom, only slightly darker than the top. Stacked in a column the tops line up and the short "
         "fronts show as the wall face, reading as one tidy grid of blocks - no thick black seam lines, no dark "
         "outline around each block, and no bevel that narrows the top."
     ),
-    # P2 — explicit pixel dimensions
-    "P2": (
+    # explicit pixel dimensions
+    "02_explicit_dimensions": (
         "BLOCK SHAPE (exact proportions): in the sprite the TOP surface occupies the upper ~80% of the height "
         "and the FRONT face the lower ~20%. The top is a WIDE flat band reaching the full width; any bevel at "
         "its lit edge is at most 1px. The front face is only ~15% darker than the top - NOT a black band - and "
         "there is NO dark outline between blocks. Goal: stacked in a vertical grid, the wide tops align "
         "edge-to-edge into a continuous surface broken only by thin front-face lines."
     ),
-    # P3 — grid self-check
-    "P3": (
+    # grid self-check
+    "03_grid_check": (
         "BLOCK SHAPE (verify by tiling): picture 9 copies laid out in a 3x3 grid, each in one cell, every "
         "block's TOP meeting the next block directly above and its FRONT face just below. Design the block so "
         "that grid reads as a SEAMLESS wall: the tops connect with no offset and no gap, the fronts show as "
@@ -79,7 +80,7 @@ def gen_variant(key, ent, dest, api, save_raw=None):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--approaches", default="P1,P2,P3")
+    ap.add_argument("--approaches", default="01_described,02_explicit_dimensions,03_grid_check")
     ap.add_argument("--blocks", default=",".join(TEST_BLOCKS))
     ap.add_argument("--variants", type=int, default=3)
     args = ap.parse_args()

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Context render: a mining micro-scene for the GROUND blocks — a stepped cliff cross-section of dirt
 (upper layers) over stone (below), grass on top, a pond, and a cave opening floored with TILES (cave_floor),
-not blocks, as the ore test bed. Renders to previews/blocklab/block_mine.png (override $BLOCKLAB_OUT).
+not blocks, as the ore test bed. Renders to previews/scene_block_mine.png.
 Uses whatever block sprites are live so the harness can swap each approach's variant. Free (no API).
 """
 import os
@@ -48,8 +48,7 @@ def build():
 
 if __name__ == "__main__":
     b = build()
-    out = os.environ.get("BLOCKLAB_OUT") or os.path.abspath(
-        os.path.join(ZG, "..", "_generated", "previews", "blocklab", "block_mine.png"))
+    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "scene_block_mine.png"))
     os.makedirs(os.path.dirname(out), exist_ok=True)
     render_builder(b, out, scale=12)
     print("placeholders:", b.missing_art(), "warnings:", len(b.warnings))

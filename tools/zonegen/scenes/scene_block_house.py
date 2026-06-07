@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Context render: a one-room house for the WALL blocks — wood floor, grass outside, a bed + chair.
-Two rooms so we see wall_wood and wall_stone in-world. Renders to previews/blocklab/block_house.png
-(override with $BLOCKLAB_OUT). Uses whatever wall sprites are live, so the bake-off harness can swap
+Two rooms so we see wall_wood and wall_stone in-world. Renders to previews/scene_block_house.png. Uses whatever wall sprites are live, so the bake-off harness can swap
 in each approach's variant and re-render. Free (no API).
 """
 import os
@@ -35,8 +34,7 @@ def build():
 
 if __name__ == "__main__":
     b = build()
-    out = os.environ.get("BLOCKLAB_OUT") or os.path.abspath(
-        os.path.join(ZG, "..", "_generated", "previews", "blocklab", "block_house.png"))
+    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "scene_block_house.png"))
     os.makedirs(os.path.dirname(out), exist_ok=True)
     render_builder(b, out, scale=14)
     print("placeholders:", b.missing_art(), "warnings:", len(b.warnings))
