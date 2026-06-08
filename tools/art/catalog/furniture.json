@@ -232,5 +232,20 @@
   },
   "wine_rack": {
     "look": "a wooden WINE RACK: a small lattice/X-frame of diamond cubbies holding several wine BOTTLES lying on their sides (green and red glass)."
+  },
+  "specimen_shelf": {
+    "look": "a wooden SHELF unit lined with glass SPECIMEN JARS holding preserved bugs and leaves, seen front-on; a naturalist's display"
+  },
+  "bug_terrarium_big": {
+    "look": "a large glass BUG TERRARIUM tank on a wooden stand, green plants and a branch inside, seen front-on; a vivarium display"
+  },
+  "map_table_big": {
+    "look": "a large wooden MAP TABLE strewn with rolled charts and an open land MAP, seen front-on; a planning table"
+  },
+  "sofa_modern": {
+    "look": "a clean low-line MODERN SOFA with square cushions, neutral grey upholstery, seen front-on; minimalist couch"
+  },
+  "shop_shelving": {
+    "look": "tall wooden STORE SHELVING seen front-on: an upright frame of 3-4 horizontal SHELVES stocked with assorted general-store SUNDRIES - jars, sacks, bottles, folded cloth and tins in muted colors; a stocked shop shelf, NOT books, NOT a plain cabinet"
   }
 }

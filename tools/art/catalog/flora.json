@@ -314,5 +314,30 @@
     "materials": [
       "foliage"
     ]
+  },
+  "milkweed_giant": {
+    "look": "an OVERSIZED MILKWEED clump: several tall thick green stems with broad paired leaves, topped by big rounded CLUSTERS of pink-mauve flowers; lush and showy, much larger than a single milkweed.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "clover_red": {
+    "look": "a low RED CLOVER patch: trefoil leaves with deep pink-magenta rounded globe flower heads on short stems.",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "stump_mossy": {
+    "look": "a low TREE STUMP furred over with green MOSS on top and sides, a couple small toadstools at its base; cut rings barely visible under the moss. NOT a full tree.",
+    "materials": [
+      "wood",
+      "foliage"
+    ]
+  },
+  "log_fallen": {
+    "look": "a long single FALLEN TREE TRUNK lying horizontally on the ground, brown bark, one pale cut end, patches of green moss and a few bracket mushrooms along the top. NOT a stack of logs, NOT standing.",
+    "materials": [
+      "wood"
+    ]
   }
 }

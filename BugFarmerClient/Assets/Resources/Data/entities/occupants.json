@@ -490,6 +490,40 @@
       }
     }
   },
+  "milkweed_giant": {
+    "name": "Giant Milkweed",
+    "category": "natural",
+    "sprite_w": 28,
+    "sprite_h": 44,
+    "world": {
+      "footprint": [2, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 3,
+        "drops": [
+          {"item_id": "milkweed", "count": 3, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "clover_red": {
+    "name": "Red Clover",
+    "category": "natural",
+    "sprite_w": 12,
+    "sprite_h": 10,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {"item_id": "clover", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
   "poppy": {
     "name": "Poppy",
     "category": "natural",
@@ -1567,6 +1601,42 @@
         "required_tool_type": "axe",
         "drops": [
           {"item_id": "wood", "count": 3, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "stump_mossy": {
+    "name": "Mossy Stump",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "c",
+      "breakable": {
+        "hp": 3,
+        "required_tool_type": "axe",
+        "drops": [
+          {"item_id": "wood", "count": 1, "chance": 1.0}
+        ]
+      }
+    }
+  },
+  "log_fallen": {
+    "name": "Fallen Log",
+    "category": "natural",
+    "sprite_w": 64,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [4, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 6,
+        "required_tool_type": "axe",
+        "drops": [
+          {"item_id": "wood", "count": 5, "chance": 1.0}
         ]
       }
     }

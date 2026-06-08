@@ -6,7 +6,7 @@
     "look": "an AUTONET automatic fly-catcher seen front-on, WIDER than tall: on the left a round spinning electric FAN in a housing, and ATTACHED right beside it a cylindrical metal TANK/vat with a mesh intake; the fan sucks flies through the opening into a collection net inside the tank. A quirky two-part bug-suction machine on little legs."
   },
   "bait_basket": {
-    "look": "a small round WICKER BASKET of fishing bait — woven tan straw sides, a few worms/grubs poking over the rim; NOT a trash bin",
+    "look": "a small round WICKER BASKET of fishing bait \u2014 woven tan straw sides, a few worms/grubs poking over the rim; NOT a trash bin",
     "materials": [
       "wood"
     ]
@@ -60,7 +60,7 @@
     ]
   },
   "fly_netting": {
-    "look": "a square patch of NET hung up: a flat square panel of fine MESH — a simple GRID OF CROSSED STRINGS, slightly slack — with a few small dark FLIES caught on it. Just the open mesh grid, NO wooden frame, NO box, NO solid panel; you can see through the holes."
+    "look": "a square patch of NET hung up: a flat square panel of fine MESH \u2014 a simple GRID OF CROSSED STRINGS, slightly slack \u2014 with a few small dark FLIES caught on it. Just the open mesh grid, NO wooden frame, NO box, NO solid panel; you can see through the holes."
   },
   "garden_arch": {
     "look": "a GARDEN ARCH / trellis archway seen front-on: two slim posts joined by an arched top, with climbing green VINES and small flowers over it and an open walk-through gap in the middle. A decorative garden arch."
@@ -72,7 +72,7 @@
     "look": "a section of trimmed HEDGE: a dense flat-topped block of green leafy shrubbery, like a low green wall. The foliage spans the FULL WIDTH and bleeds off the left and right edges so sections tile into one continuous hedge with no gap."
   },
   "ladder": {
-    "look": "a tall WOODEN LADDER standing upright — two vertical side rails joined by evenly spaced horizontal rungs; NOT a fence, NOT a wall",
+    "look": "a tall WOODEN LADDER standing upright \u2014 two vertical side rails joined by evenly spaced horizontal rungs; NOT a fence, NOT a wall",
     "materials": [
       "wood"
     ]
@@ -81,7 +81,7 @@
     "look": "a bug-catching NET STATION: a tall wooden POST with a round hoop NET of fine pale mesh mounted at the top (a butterfly-style net fixed upright on a stand). Clearly a net on a post."
   },
   "notice_board": {
-    "look": "a wooden NOTICE BOARD — a framed board on a post with a few pinned PAPER notes; NOT a door, NOT a blank post",
+    "look": "a wooden NOTICE BOARD \u2014 a framed board on a post with a few pinned PAPER notes; NOT a door, NOT a blank post",
     "materials": [
       "wood"
     ]
@@ -108,5 +108,86 @@
   },
   "window_4pane": {
     "look": "a closed GLASS WINDOW set in a wooden frame, seen front-on, filling a tall wall-tile shape: a wooden frame divided by a cross MULLION into FOUR equal glass PANES, the glass pale blue-white with a soft diagonal reflection. Reads instantly as a window in a wall, NOT a painting, cabinet or door. The frame fills the tile; transparent outside it."
+  },
+  "wall_marble": {
+    "look": "a section of polished white MARBLE WALL block, faint grey veining, a clean fitted ashlar face seen front-on; pale and fancy, NOT plain grey stone"
+  },
+  "column_marble": {
+    "look": "a tall fluted white MARBLE COLUMN with a simple capital and round base, seen front-on; classical, pale, NOT a tree"
+  },
+  "sign_anchor": {
+    "look": "a hanging wooden SHOP SIGN on a post with a painted blue ANCHOR symbol; a fishing/boat-store sign"
+  },
+  "sign_anvil": {
+    "look": "a hanging wooden SHOP SIGN on a post with a black ANVIL silhouette painted on it; a blacksmith sign"
+  },
+  "sign_market": {
+    "look": "a wooden SHOP SIGN board on a post reading MARKET with a painted basket of produce; a market sign"
+  },
+  "sign_shop": {
+    "look": "a painted wooden SHOP SIGN board on a post with a basket-of-goods icon; a general-store sign"
+  },
+  "sign_crest": {
+    "look": "a carved heraldic TOWN CREST shield sign on a post, painted with a small coat of arms; a town-hall sign"
+  },
+  "sign_plank": {
+    "look": "a rough sawn-PLANK SIGN on a post with a hammer-and-saw carpenter icon; a workshop sign"
+  },
+  "sign_leaf": {
+    "look": "a wooden SHOP SIGN on a post painted with a green LEAF and a small bug; a naturalist/ecologist sign"
+  },
+  "market_stall": {
+    "look": "an open-air MARKET STALL \u2014 a wooden counter under a striped peaked AWNING roof on poles, seen front-on; a trading booth, NOT a tent"
+  },
+  "awning": {
+    "look": "a striped fabric AWNING projecting out from a shop front, scalloped front edge, seen front-on; a shade canopy strip"
+  },
+  "produce_crate": {
+    "look": "an angled wooden DISPLAY CRATE heaped with mixed colorful VEGETABLES and fruit; market produce"
+  },
+  "dock_plank": {
+    "look": "a square section of weathered grey wooden DOCK DECKING, planks running across, seen top-down; a flat pier walkway tile"
+  },
+  "boat": {
+    "look": "a small wooden ROWBOAT seen from above, pointed bow, two oars across the seats, brown hull; a moored boat, NOT a building"
+  },
+  "mooring_post": {
+    "look": "a thick wooden MOORING POST / piling rising from water, a rope loop around the top; a dock bollard"
+  },
+  "fish_crate": {
+    "look": "a wooden CRATE of fresh silver FISH on crushed ice; a fishmonger crate"
+  },
+  "fishing_net": {
+    "look": "a large fishing NET strung up on a wooden frame to DRY, draped mesh, seen front-on; NOT bug netting"
+  },
+  "coal_bin": {
+    "look": "an open iron BIN heaped with chunky black COAL beside a forge; a fuel bin"
+  },
+  "lumber_rack": {
+    "look": "a slanted wooden RACK holding stacked sawn PLANKS and boards, seen front-on; a carpenter's lumber store"
+  },
+  "bait_station": {
+    "look": "a post-mounted DISH of rotting fruit BAIT under a small peaked roof, a few flies hazing above; a fly attractant station"
+  },
+  "veg_patch_sign": {
+    "look": "a small hand-painted wooden garden SIGN on a stake reading a vegetable name, by a veg patch"
+  },
+  "broken_fence": {
+    "look": "a BROKEN SPLIT-RAIL FENCE section: a leaning grey weathered wooden post with one cracked, sagging rail, half-buried in grass; dilapidated and abandoned. NOT an intact fence.",
+    "materials": [
+      "wood"
+    ]
+  },
+  "sign_market_board": {
+    "look": "a wide 3-panel hanging MARKET sign board mounted across two posts spanning a shopfront, reading MARKET in painted letters with a small basket-of-produce icon; a big HORIZONTAL shop sign, NOT a single narrow signpost"
+  },
+  "fence_picket": {
+    "look": "a section of white PICKET fence: several evenly-spaced pointed-top vertical white PICKETS joined by two horizontal rails; a tidy painted cottage fence, seen front-on"
+  },
+  "gate_picket": {
+    "look": "a white PICKET fence GATE: a single hinged picket gate panel with pointed-top slats and a frame, set slightly to swing open, matching a white picket fence line"
+  },
+  "fence_picket_weathered": {
+    "look": "a section of weathered grey PICKET fence: pointed-top vertical pickets with peeling faded grey-white paint, one or two slats cracked or missing; a run-down cottage fence, seen front-on"
   }
 }

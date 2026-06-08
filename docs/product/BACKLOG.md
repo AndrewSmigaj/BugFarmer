@@ -6,6 +6,58 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Done (recent) — Village rebuild (guide-driven quality pass)
+- **Village authoring guide** `docs/guides/authoring/village.md` — 13 town-design principles (focal
+  point, road hierarchy, function clusters, density gradients, …) mapped to the primitives + a
+  build-order recipe; linked from `authoring/README.md` + the author-zone skill.
+- **New helpers** `tools/zonegen/features/village.py`: `shop_building()` (shell + wide sign + shelf
+  rows + counter + NPC) and `plaza()` (paved square + fountain + benches/lamps + corner beds).
+- **`place_bug` gains `flip=`** (zonebuilder + render + make_scene) so bugs face either way.
+- **`scene_village.py` rebuilt**: organic road hierarchy (main 4 → connector 3 → side lanes 2),
+  bigger lake, central fountain plaza, CLUSTERED buildings (civic: hall·market·grocer·store;
+  production: carpenter+smith adjacent; residential cottages; lakeside boat store), market is now a
+  shop building w/ merchant behind a counter, carpenter has the sawmill + goods in rows indoors,
+  picket-fenced cottage + garden, clumped meadow with a forest rim. 0 warnings, validate OK.
+- **New entities** (data + art): `sign_market_board`, `shop_shelving`, `fence_picket`/`gate_picket`/
+  `fence_picket_weathered`, `garden_border_stone`/`_log`.
+- FOLLOW-UP: build the real 256×256 `village_21` zone (save()-based) on this scene; iterate art.
+
+## Done (recent) — Butterfly Meadow scenes
+- **`tools/zonegen/scenes/scene_butterfly_meadow.py`** (64×52, **0 warnings**, validate OK) — the open
+  meadow for `butterfly_meadow_11`: south village-road entrance (flower arch, signpost, spring/puddle),
+  the **Flower-Clock Glade** (a colored-flower ring around a birdbath "sundial", composed from existing
+  flowers), the **Great Milkweed Stand** (`milkweed_giant` + a milkweed colony swarming with monarchs),
+  the **Basking Boulder**, the **Broken Fence Line** (split-rail run + leaning gate + orb-web), the
+  **Lepidopterist's Blind** (tent/specimen case/crate/net post/lantern), scattered open-grown oaks +
+  failed-farm relics, heavy flower/milkweed/tall-grass scatter, drifting butterflies/bees + a paper
+  wasp and a yellowjacket.
+- **`tools/zonegen/scenes/scene_meadow_forest_edge.py`** (60×46, **0 warnings**, validate OK) — the
+  northern transition (renderer is north-up): warm flowery meadow at the bottom darkening to **dirt**,
+  **threshold stumps** (`stump`/`stump_mossy`) with bracket fungus, the **fallen-log bridge**
+  (`log_fallen`) across a boggy seam, a thickening **tree band** of pine/oak/dead-tree clusters, log
+  piles + brambles + fern/mushroom understory, and the edge threats — a **millipede** and a
+  **centipede** assembled from the existing segmented head/body/tail part sprites.
+- **7 new lean placeholder entities** (catalog `look` rows in place): `milkweed_giant`, `clover_red`,
+  `stump_mossy`, `log_fallen` (occupants); `broken_fence`, `boulder`, `specimen_case` (placeables).
+  Queued in `art_needed.md`. PLACEHOLDERS only — no art generated.
+
+## Done (recent) — starting-village town scene
+- **`tools/zonegen/scenes/scene_village.py`** (80×80, **0 placement warnings**, validate OK): the
+  full lived-in town for `village_21` — a N–S × E–W stone road crossing at a central **civic square**
+  (well, fast-travel signpost, notice board, benches, founder statue, flower beds, lamp posts); the
+  **six shops** ringing it (Town Hall in marble w/ columns + map table + mirror; open-air Market w/
+  stalls + awnings + produce; General Store; Carpenter w/ furniture display + log/sawhorse/chopping
+  block; Smith w/ exterior forge + anvil + coal bin + tool rack; Boat & Fishing Store on the SW
+  **lake** with docks, a moored boat, anchor sign, nets, fish crates); an **Ecologist's cottage**
+  (specimen shelves, terrarium, test garden), **3 themed NPC cottages** (window boxes / cat statue /
+  laundry + veg patch) via `features/house` layouts + furniture collections; an **orchard** + **fly farm** on
+  the edges; meadow scatter, road lamps, pollinators. PLACEHOLDERS only — no art generated.
+- **24 new lean placeholder entities** added (`placeables.json` + catalog `look` rows): `wall_marble`,
+  `column_marble`, 7 shop signs, `market_stall`, `awning`, `produce_crate`, `dock_plank`, `boat`,
+  `mooring_post`, `fish_crate`, `fishing_net`, `coal_bin`, `lumber_rack`, `bait_station`,
+  `veg_patch_sign`, `statue_founder`, `laundry_line`, `cat_statue`, `window_box`, `specimen_shelf`,
+  `bug_terrarium_big`, `map_table_big`, `sofa_modern`. Queued for the art pass in `art_needed.md`.
+
 ## Done (recent) — sync stability + headless test infra
 - Fixed the frontier-gated freeze (spurious resync — "caught up" was wrongly treated as a stall)
   and the reconnect seq-desync (stale `PendingInfluence` leaked to the next client). Details in
@@ -39,14 +91,14 @@ working; this file is what survives between sessions.
 - `docs/product/underground_review.md` — proposals for camp + ant-colony additions.
 
 ## Done (recent) — underground zone scenes + guides + content
-- **Caves guide + primitives:** `docs/guides/feature-caves.md` + `features/cave.py`
+- **Caves guide + primitives:** `docs/guides/authoring/caves.md` + `features/cave.py`
   (`carve_tunnel` natural-meander/straight, `carve_cavern` shapes, `place_pool`, `fill_solid` with a
   rarity-tiered ore table). **Mineral art family** (catalog `"family":"mineral"`) so crystals/rubble/bone
   render as faceted rock, not plants. New entities: `ore_tin_block`+`tin_ore`, `mine_rail`, plus
   `crystal_quartz`/`rubble`/`hard_stone_block` and the mining props.
 - **Scenes (all 64×64-ish, full real art, 0 warnings):** `scene_underground_caverns` (man-made rail
   tunnel vs natural meandering tunnels, varied caverns, cave mouth, ore veins, pool, fauna),
-  `scene_underground_house` (stone house dug into a cave), `scene_ant_colony` (`feature-ant-colony.md`:
+  `scene_underground_house` (stone house dug into a cave), `scene_ant_colony` (`ant-colony.md`:
   branching nest + ant-file trails).
 - **Content batch (+27, art generated):** mushrooms (blue/cluster/morel/bracket/inkcap), geode, mining
   equipment (tool_rack, wheelbarrow, ore_pile, powder_keg, mining_bucket), furniture (ottoman,
@@ -63,8 +115,8 @@ working; this file is what survives between sessions.
 - **Furniture collections** (`features/furniture.py`, basic/fancy, `pick(role, coll)`, `styled_rooms`)
   — fancy/appropriate-for-wealth knowledge lives in the scaffolding, NOT game data. New scene
   `scenes/scene_houses.py` (room counts × collections, each in a yard). New primitives:
-  `features/{yard,terrain,garden}.py`, `houses/layouts.py` (3/4/5-room). Guides: `house-building.md`
-  (updated), `feature-yard.md` (new); `object_pipeline.md` + `add-object` skill rewritten around the catalog.
+  `features/{yard,terrain,garden}.py`, `features/house.py` layouts (3/4/5-room). Guides: `house.md`
+  (updated), `yard.md` (new); `object_pipeline.md` + `add-object` skill rewritten around the catalog.
 - **Item/inventory model written down** (`architecture_items.md §0`): placeable vs free/collectible,
   derived vs authored icons, bonus diminishing-returns keyed off `id`. Content-diversity philosophy
   (`game_design.md §19`). Power/cooking design (`§11.6/11.7`).
@@ -75,7 +127,7 @@ working; this file is what survives between sessions.
 - **House composer** (`features/house.py`): multi-room buildings from shared-wall rects (⊥/L),
   interior doors + windows + doorway-avoidance, and a reusable room-template library
   (living/bedroom/kitchen/crafting) following the south-facing **facing rule**. Guide:
-  `docs/guides/house-building.md`; reusable house `houses/player_house.py`; scenes live in
+  `docs/guides/authoring/house.md`; reusable house `scenes/player_house.py`; scenes live in
   `scenes/` and compose houses (e.g. `scenes/scene1_player_farm.py`).
 - New entities (data + `OBJECT_DESC` ready, art pending): fridge, stove, sink, counter, keg, sofa,
   armchair, nightstand, dresser, rug, bug_terrarium, vase, window_4pane, door_square.
@@ -115,8 +167,13 @@ front.
   add a bug art path + family + a bug species data file before generating. Then chain head→segments→tail.
 
 ## Next — Zone-design guides cleanup
-Consolidate the contradictory zone guides into one coherent set so we can design natural, non-rigid
-zones (no dead-straight roads, no uniform scatter). Gets its own plan when we start.
+- ~~Consolidate the scattered/contradictory guides into one coherent set~~ **DONE** — `docs/guides/`
+  split into `art/` (look & pipeline) + `authoring/` (zone/scene building, indexed by
+  `authoring/README.md`); the dead `generate_zone.py` system (+ its `ZONE_GENERATION_GUIDE`/
+  `BUILDING_TEMPLATES` guides) archived; zonegen code consolidated (`houses/`+`builds/` folded into
+  `features/`+`scenes/`; scene registry → `zonegen/registry.py`; `artlab/` is now purely the viewer).
+- REMAINING (design, its own plan): make generation **natural & non-rigid** — no dead-straight roads,
+  no uniform scatter; encode that into the authoring primitives + guides.
 
 ## Next — Zone graphics: 6 preview scenes
 Fill missing entity data, generate/clean remaining sprites, render 3 surface + 3 mining preview

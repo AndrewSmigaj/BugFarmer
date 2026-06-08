@@ -88,5 +88,29 @@
   },
   "vase": {
     "look": "a decorative ceramic VASE seen front-on: a rounded glazed pot with a narrow neck holding a small arrangement of flowers/stems. A small tabletop vase."
+  },
+  "statue_founder": {
+    "look": "a green-patina BRONZE STATUE of a robed standing town FOUNDER on a square stone plinth, seen front-on; a civic monument"
+  },
+  "laundry_line": {
+    "look": "a LAUNDRY LINE strung between two posts hung with a few shirts and sheets, seen front-on; washing drying"
+  },
+  "cat_statue": {
+    "look": "a small carved grey stone CAT STATUE sitting upright on a little base, seen front-on; a garden ornament"
+  },
+  "window_box": {
+    "look": "a wooden WINDOW BOX planter spilling trailing red and pink FLOWERS, seen front-on; mounts under a window"
+  },
+  "boulder": {
+    "look": "a big rounded grey BOULDER, smooth weathered stone with a patch of green MOSS on one side, sitting on the ground. A single large rock, NOT a wall or block."
+  },
+  "specimen_case": {
+    "look": "a glass-topped wooden DISPLAY CASE of pinned butterflies and moths, seen front-on: rows of colorful pinned specimens under glass in a shallow wooden frame on short legs."
+  },
+  "garden_border_stone": {
+    "look": "a short LOW row of small rounded grey EDGING STONES laid end-to-end to bound a garden bed, seen front-on; very short low decorative border stones, only a few pixels tall"
+  },
+  "garden_border_log": {
+    "look": "a short LOW half-LOG garden bed EDGING: a single split brown log laid lengthwise as a low rustic border along a bed edge, seen front-on; very short, only a few pixels tall"
   }
 }

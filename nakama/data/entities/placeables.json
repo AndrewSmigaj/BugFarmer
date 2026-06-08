@@ -147,6 +147,88 @@
       }
     }
   },
+  "broken_fence": {
+    "name": "Broken Fence",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 18,
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "fence_wood",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "boulder": {
+    "name": "Boulder",
+    "category": "natural",
+    "sprite_w": 32,
+    "sprite_h": 28,
+    "stackable": false,
+    "sell_price": 0,
+    "world": {
+      "footprint": [
+        2,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 12,
+        "required_tool_type": "pickaxe",
+        "drops": [
+          {
+            "item_id": "stone",
+            "count": 4,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "specimen_case": {
+    "name": "Specimen Case",
+    "category": "decoration",
+    "sprite_w": 24,
+    "sprite_h": 28,
+    "stackable": false,
+    "sell_price": 30,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "specimen_case",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
   "fence_stone": {
     "name": "Stone Fence",
     "category": "structure",
@@ -3352,7 +3434,10 @@
     "max_stack": 99,
     "sell_price": 4,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -3360,7 +3445,11 @@
         "hp": 4,
         "required_tool_type": "axe",
         "drops": [
-          {"item_id": "wall_wood2", "count": 1, "chance": 1.0}
+          {
+            "item_id": "wall_wood2",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -3374,7 +3463,10 @@
     "max_stack": 99,
     "sell_price": 4,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -3382,7 +3474,11 @@
         "hp": 4,
         "required_tool_type": "axe",
         "drops": [
-          {"item_id": "wall_brick2", "count": 1, "chance": 1.0}
+          {
+            "item_id": "wall_brick2",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -4748,6 +4844,961 @@
         1
       ],
       "pivot": "c"
+    }
+  },
+  "wall_marble": {
+    "name": "Marble Wall",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 14,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 8,
+        "required_tool_type": "pickaxe",
+        "drops": [
+          {
+            "item_id": "wall_marble",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "column_marble": {
+    "name": "Marble Column",
+    "category": "decoration",
+    "sprite_w": 16,
+    "sprite_h": 40,
+    "stackable": false,
+    "sell_price": 30,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 8,
+        "required_tool_type": "pickaxe",
+        "drops": [
+          {
+            "item_id": "column_marble",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "sign_anchor": {
+    "name": "Anchor Sign",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 6,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "sign_anchor",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "sign_anvil": {
+    "name": "Anvil Sign",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 6,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "sign_anvil",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "sign_market": {
+    "name": "Market Sign",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 6,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "sign_market",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "sign_shop": {
+    "name": "Shop Sign",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 6,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "sign_shop",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "sign_crest": {
+    "name": "Town Crest Sign",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 6,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "sign_crest",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "sign_plank": {
+    "name": "Plank Sign",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 6,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "sign_plank",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "sign_leaf": {
+    "name": "Naturalist Sign",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 6,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "sign_leaf",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "market_stall": {
+    "name": "Market Stall",
+    "category": "structure",
+    "sprite_w": 32,
+    "sprite_h": 32,
+    "stackable": false,
+    "sell_price": 35,
+    "world": {
+      "footprint": [
+        2,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 3,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "market_stall",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "awning": {
+    "name": "Awning",
+    "category": "decoration",
+    "sprite_w": 32,
+    "sprite_h": 16,
+    "stackable": false,
+    "sell_price": 15,
+    "world": {
+      "footprint": [
+        2,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "awning",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "produce_crate": {
+    "name": "Produce Crate",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "stackable": false,
+    "sell_price": 6,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "produce_crate",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "dock_plank": {
+    "name": "Dock Planks",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 8,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 3,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "dock_plank",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "boat": {
+    "name": "Rowboat",
+    "category": "structure",
+    "sprite_w": 32,
+    "sprite_h": 48,
+    "stackable": false,
+    "sell_price": 80,
+    "world": {
+      "footprint": [
+        2,
+        3
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 6,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "boat",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "mooring_post": {
+    "name": "Mooring Post",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 8,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "mooring_post",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "fish_crate": {
+    "name": "Fish Crate",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "stackable": false,
+    "sell_price": 8,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "fish_crate",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "fishing_net": {
+    "name": "Drying Net",
+    "category": "decoration",
+    "sprite_w": 32,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 10,
+    "world": {
+      "footprint": [
+        2,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "fishing_net",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "coal_bin": {
+    "name": "Coal Bin",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 20,
+    "stackable": false,
+    "sell_price": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 3,
+        "required_tool_type": "pickaxe",
+        "drops": [
+          {
+            "item_id": "coal_bin",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "lumber_rack": {
+    "name": "Lumber Rack",
+    "category": "structure",
+    "sprite_w": 32,
+    "sprite_h": 28,
+    "stackable": false,
+    "sell_price": 18,
+    "world": {
+      "footprint": [
+        2,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 3,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "lumber_rack",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "specimen_shelf": {
+    "name": "Specimen Shelf",
+    "category": "furniture",
+    "sprite_w": 32,
+    "sprite_h": 28,
+    "stackable": false,
+    "sell_price": 30,
+    "world": {
+      "footprint": [
+        2,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "specimen_shelf",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "bug_terrarium_big": {
+    "name": "Bug Terrarium",
+    "category": "furniture",
+    "sprite_w": 32,
+    "sprite_h": 28,
+    "stackable": false,
+    "sell_price": 40,
+    "world": {
+      "footprint": [
+        2,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "bug_terrarium_big",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "map_table_big": {
+    "name": "Map Table",
+    "category": "furniture",
+    "sprite_w": 32,
+    "sprite_h": 32,
+    "stackable": false,
+    "sell_price": 60,
+    "world": {
+      "footprint": [
+        2,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 3,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "map_table_big",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "sofa_modern": {
+    "name": "Modern Sofa",
+    "category": "furniture",
+    "sprite_w": 32,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 50,
+    "world": {
+      "footprint": [
+        2,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "sofa_modern",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "laundry_line": {
+    "name": "Laundry Line",
+    "category": "decoration",
+    "sprite_w": 32,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 8,
+    "world": {
+      "footprint": [
+        2,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "laundry_line",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "cat_statue": {
+    "name": "Cat Statue",
+    "category": "decoration",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 20,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 4,
+        "required_tool_type": "pickaxe",
+        "drops": [
+          {
+            "item_id": "cat_statue",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "window_box": {
+    "name": "Window Box",
+    "category": "decoration",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "stackable": false,
+    "sell_price": 6,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "window_box",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "veg_patch_sign": {
+    "name": "Veg Patch Sign",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 4,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "veg_patch_sign",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "statue_founder": {
+    "name": "Founder Statue",
+    "category": "decoration",
+    "sprite_w": 32,
+    "sprite_h": 48,
+    "stackable": false,
+    "sell_price": 150,
+    "world": {
+      "footprint": [
+        2,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 12,
+        "required_tool_type": "pickaxe",
+        "drops": [
+          {
+            "item_id": "statue_founder",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "bait_station": {
+    "name": "Bait Station",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 14,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "bait_station",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "sign_market_board": {
+    "name": "Market Board",
+    "category": "structure",
+    "sprite_w": 48,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 12,
+    "world": {
+      "footprint": [
+        3,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "sign_market_board",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "shop_shelving": {
+    "name": "Shop Shelving",
+    "category": "furniture",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 10,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "shop_shelving",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "fence_picket": {
+    "name": "Picket Fence",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 3,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "fence_picket",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "gate_picket": {
+    "name": "Picket Gate",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "door",
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "gate_picket",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "fence_picket_weathered": {
+    "name": "Weathered Picket Fence",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "fence_picket_weathered",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "garden_border_stone": {
+    "name": "Stone Bed Edging",
+    "category": "decoration",
+    "sprite_w": 16,
+    "sprite_h": 8,
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 2,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "garden_border_log": {
+    "name": "Log Bed Edging",
+    "category": "decoration",
+    "sprite_w": 16,
+    "sprite_h": 8,
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 2,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
     }
   }
 }
