@@ -254,10 +254,14 @@ def render_scene(ground, occupants, meta, scale, out_path, players=None, seed=7,
 
     # Bugs: small free-floating sprites (flies, butterflies) from Resources/Bugs, sub-grid
     # (cx,cy floats) and scaled by `mult`, drawn last so they sit on top of everything.
-    for bid, cx, cy, mult in (bugs or []):
+    for bug in (bugs or []):
+        bid, cx, cy, mult = bug[0], bug[1], bug[2], bug[3]
+        flip = bug[4] if len(bug) > 4 else False
         img = load_png(BUGS, bid)
         if img is None:
             continue
+        if flip:
+            img = img.transpose(Image.FLIP_LEFT_RIGHT)
         bw, bh = img.size
         rw, rh = max(1, int(bw * scale * mult)), max(1, int(bh * scale * mult))
         spr = img.resize((rw, rh), Image.NEAREST)

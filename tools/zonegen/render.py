@@ -22,8 +22,8 @@ def render_builder(b, out, scale=6, bounds=None, record_tiles=None):
            if c.get("anchor") and x0 <= x <= x1 and y0 <= y <= y1]
     players = [(s, x - x0, y - y0) for (s, x, y) in getattr(b, "players", [])
                if x0 <= x <= x1 and y0 <= y <= y1]
-    bugs = [(s, x - x0, y - y0, sc) for (s, x, y, sc) in getattr(b, "bugs", [])
-            if x0 <= x <= x1 and y0 <= y <= y1]
+    bugs = [(t[0], t[1] - x0, t[2] - y0, t[3], t[4] if len(t) > 4 else False)
+            for t in getattr(b, "bugs", []) if x0 <= t[1] <= x1 and y0 <= t[2] <= y1]
     decor = [(s, x - x0, y - y0, m) for (s, x, y, m) in getattr(b, "decor", [])
              if x0 <= x <= x1 and y0 <= y <= y1]
     r = make_scene.render_scene(ground, occ, b.meta, scale, out, players=players, bugs=bugs,

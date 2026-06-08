@@ -141,10 +141,10 @@ class ZoneBuilder:
         """A character sprite (from Resources/Player) for scene previews only."""
         self.players.append((sprite_id, x, y))
 
-    def place_bug(self, sprite_id, x, y, scale=1.0):
+    def place_bug(self, sprite_id, x, y, scale=1.0, flip=False):
         """A bug sprite (from Resources/Bugs) for scene previews only — sub-grid floats, scaled,
-        no reserve."""
-        self.bugs.append((sprite_id, x, y, scale))
+        no reserve. `flip=True` mirrors the sprite horizontally so bugs can face either way."""
+        self.bugs.append((sprite_id, x, y, scale, flip))
 
     def place_decor(self, oid, x, y, scale=1.0):
         """Free-floating ground decor (fruit) — sub-grid (x,y may be floats), scaled by `scale`,
