@@ -110,7 +110,10 @@
     "look": "a closed GLASS WINDOW set in a wooden frame, seen front-on, filling a tall wall-tile shape: a wooden frame divided by a cross MULLION into FOUR equal glass PANES, the glass pale blue-white with a soft diagonal reflection. Reads instantly as a window in a wall, NOT a painting, cabinet or door. The frame fills the tile; transparent outside it."
   },
   "wall_marble": {
-    "look": "a section of polished white MARBLE WALL block, faint grey veining, a clean fitted ashlar face seen front-on; pale and fancy, NOT plain grey stone"
+    "look": "a section of polished WHITE MARBLE wall block, bright pale cream-white with faint soft grey veining, a clean fitted ashlar face seen front-on; pale, bright and fancy, clearly much LIGHTER than wood or grey stone",
+    "materials": [
+      "marble"
+    ]
   },
   "column_marble": {
     "look": "a tall fluted white MARBLE COLUMN with a simple capital and round base, seen front-on; classical, pale, NOT a tree"
@@ -189,5 +192,8 @@
   },
   "fence_picket_weathered": {
     "look": "a section of weathered grey PICKET fence: pointed-top vertical pickets with peeling faded grey-white paint, one or two slats cracked or missing; a run-down cottage fence, seen front-on"
+  },
+  "sign_fish_board": {
+    "look": "a wide 3-panel hanging wooden FISHING-STORE sign board on two posts, spanning a shopfront; painted with a blue ANCHOR and a silver FISH; weathered seaside paint; a big HORIZONTAL shop sign, NOT a narrow signpost"
   }
 }

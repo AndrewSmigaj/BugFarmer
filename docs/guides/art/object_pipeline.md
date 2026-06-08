@@ -62,6 +62,14 @@ The prompt "knowledge" is **not** hardcoded in `gen_sprites.py` — it's data un
   optional — add it only when the keyword guesser is wrong (e.g. `range_stove` → metal). Files are
   organizational: the loader **globs and merges by id**, and special-cases `tiles.json` (`look`) and
   `blocks.json` (`surface`/`fleck`). Add an item = add a row (see the **add-object** skill).
+  - **Catalog rows are OBJECTS, never bare strings.** `"key": {"look": "..."}` — a bare
+    `"key": "..."` makes `_load_catalog` throw (`dictionary update sequence element ... length 1`).
+  - **A wall's COLOR comes from its `materials` palette, not its `look`.** Walls use the cube/block
+    prompt, which only reads the `materials` ramp from `style.json` — the `look` text ("white marble")
+    is ignored for color. To recolor a wall, add a ramp to `style.json` `palettes` (e.g. a `marble`
+    near-white ramp) and set the wall's `materials: ["marble"]`. `materials` must be **palette keys**
+    (`wood/stone/metal/marble/…`), not free text, or it `KeyError`s. Regenerating an existing sprite
+    needs `--force`.
 - **`tools/art/style.json`** — the GLOBAL look in one place: `palettes` (the 6 material ramps) and
   per-FAMILY art-direction blocks (`object` face-on, `flora` organic, `block`/wall cube-tiling, `tile`
   seamless, plus `connector` and `net`). Edit this to change how *everything* looks; you don't touch it

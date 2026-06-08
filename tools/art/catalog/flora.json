@@ -57,7 +57,7 @@
     ]
   },
   "compost_pile": {
-    "look": "a low mound of dark COMPOST — rotting brown leaves, vegetable scraps and dark crumbly soil heaped up; NOT a dirt block, NOT a bush",
+    "look": "a low mound of dark COMPOST \u2014 rotting brown leaves, vegetable scraps and dark crumbly soil heaped up; NOT a dirt block, NOT a bush",
     "materials": [
       "dirt",
       "foliage"
@@ -76,10 +76,10 @@
     ]
   },
   "fallen_fruit": {
-    "look": "two or three small round red APPLES lying on the ground, seen from directly above, ripe and whole. Just apples — red."
+    "look": "two or three small round red APPLES lying on the ground, seen from directly above, ripe and whole. Just apples \u2014 red."
   },
   "fallen_orange": {
-    "look": "two or three small round ORANGES lying on the ground, seen from directly above, ripe and whole. Just oranges — orange."
+    "look": "two or three small round ORANGES lying on the ground, seen from directly above, ripe and whole. Just oranges \u2014 orange."
   },
   "fennel": {
     "look": "FENNEL: a tall stalk with feathery green fronds and a flat yellow flower umbel on top.",
@@ -148,7 +148,7 @@
     ]
   },
   "log_pile": {
-    "look": "a neat STACK OF CUT LOGS — pale round cut ends facing the viewer, brown bark, stacked low; NOT a single log, NOT a fence",
+    "look": "a neat STACK OF CUT LOGS \u2014 pale round cut ends facing the viewer, brown bark, stacked low; NOT a single log, NOT a fence",
     "materials": [
       "wood"
     ]
@@ -244,7 +244,7 @@
     ]
   },
   "rotten_fruit": {
-    "look": "a piece of ROTTING FRUIT on the ground seen from above: brown, mushy and partly collapsed with dark spots and a faint haze — clearly spoiled (a fly attractant)."
+    "look": "a piece of ROTTING FRUIT on the ground seen from above: brown, mushy and partly collapsed with dark spots and a faint haze \u2014 clearly spoiled (a fly attractant)."
   },
   "sage": {
     "look": "a SAGE herb: a small woody clump of soft grey-green oval leaves, a few purple flower spikes.",
@@ -253,7 +253,7 @@
     ]
   },
   "stump": {
-    "look": "a low TREE STUMP — a flat round cut top showing growth RINGS, short bark sides, a couple roots at the base; NOT a full tree, NOT a log",
+    "look": "a low TREE STUMP \u2014 a flat round cut top showing growth RINGS, short bark sides, a couple roots at the base; NOT a full tree, NOT a log",
     "materials": [
       "wood"
     ]
@@ -339,5 +339,8 @@
     "materials": [
       "wood"
     ]
+  },
+  "marsh_plant": {
+    "look": "a clump of tall MARSH CATTAILS \u2014 slim green reed leaves with two or three brown sausage-shaped seed heads on thin upright stalks; waterside bulrushes"
   }
 }

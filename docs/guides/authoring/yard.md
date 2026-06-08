@@ -28,6 +28,22 @@ yard(b, x0, y0, x1, y1, gate=(gx, y0), path_to=(gx, y0 - 3),
 - `ground`: optional tile fill for the enclosed interior (e.g. `"dirt"` for a pen; omit for grass).
 - `decor`: `[(oid, x, y), …]` occupants placed inside/around (planters, benches, lamp_post, hedge).
 
+## `property_yard` — the standard yard around a home/shop (USE THIS)
+```python
+from features.yard import property_yard
+# building footprint is (bx0,by0)=SW .. (bx1,by1)=NE; by0 is the SOUTH/front wall with the door.
+property_yard(b, ox, oy, ox + BW - 1, oy + BH - 1, ox + DOORX,
+              side=2, front=5, back=4, fence="fence_picket", gate_id="gate_picket", flowers=FK, seed=4)
+```
+A real yard never hugs the house. `property_yard` fences a plot that **leaves `side` cells of side-yard
+on each side, a `front`-deep front garden, and a `back`-deep BACKYARD** (north of the house). It puts the
+**gate on the south fence aligned with `door_x`**, lays a stone path gate→door, drops **trees** in the
+back row + side yards, and **flower beds** either side of the front path. Call it AFTER `stamp`-ing the
+building. Make the canvas big enough: `W ≈ BW + 2*side + 4`, `H ≈ BH + front + back + 4`.
+- Pass the **actual door column** as `door_x`: the lint treats a gate as passable, but a gate one cell off
+  the door leaves a solid *fence* in front of the door — a real DOOR-blocked defect.
+- Leave side/back space + trees by default — a fence tight on the walls reads wrong.
+
 ## Gotchas
 - **Place dressing AFTER the fence**, and check `b.is_free(x, y)` then — checking *before* the fence is
   placed sees stale state and you'll drop lamps/signs onto the fence line (loud overlap warnings). In a

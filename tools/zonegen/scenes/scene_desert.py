@@ -31,7 +31,7 @@ def build():
 
     # --- old INN (south of the road, left) — brick/wood, neon sign out front ---
     inn = place_room(b, 5, 16, 19, 26, floor="wood_floor", wall="wall_brick",
-                     door="door_wood", door_side="bottom")
+                     door="door_square", door_side="bottom")
     ix0, iy0, ix1, iy1 = inn
     for oid, x, y in [("counter", ix0, iy1), ("keg", ix0 + 2, iy1), ("table_wood", ix0 + 4, iy0 + 2),
                       ("chair_wood", ix0 + 3, iy0 + 2), ("bed_basic", ix1 - 1, iy0),
@@ -43,7 +43,7 @@ def build():
 
     # --- WEATHER OUTPOST (north of the road, right) — brick/stone, with kit outside ---
     out = place_room(b, 46, 31, 60, 42, floor="stone_floor", wall="wall_brick",
-                     door="door_wood", door_side="top")
+                     door="door_square", door_side="top")
     ox0, oy0, ox1, oy1 = out
     for oid, x, y in [("weather_console", ox0, oy1), ("desk", ox0 + 3, oy1), ("chair_wood", ox0 + 4, oy0 + 2),
                       ("table_wood", ox1 - 2, oy0 + 2), ("lamp_floor", ox1, oy1)]:

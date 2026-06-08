@@ -172,6 +172,61 @@ class ZoneBuilder:
             issues.append(f"spawn point {self.spawn} is on a reserved/{self.surface[sy][sx]} cell")
         return issues
 
+    def lint(self):
+        """Programmatic SPATIAL QA — returns human-readable defect strings (text I can actually reason
+        about, vs eyeballing a render). Catches: blocked/oversized doors, walls on roads/water,
+        wall!=door!=window heights, checkered roads."""
+        m = self.meta
+        out = []
+
+        def world(o): return (m.get(o, {}) or {}).get("world", {}) or {}
+        def is_door(o): return world(o).get("interaction_type") == "door" or o.startswith("door")
+        def is_wall(o): return bool(o) and (o.startswith("wall") or (m.get(o, {}) or {}).get("category") == "block")
+        def oid(x, y):
+            c = self.occ.get((x, y)); return c["id"] if c else None
+        def passable(x, y):  # doors and gates are openings you walk through
+            o = oid(x, y); return bool(o) and (is_door(o) or o.startswith("gate"))
+        def blocked(x, y):  # a cell you can't stand in (off-grid, or reserved by something solid)
+            return (not self.in_bounds(x, y)) or (self.reserved[y][x] and not passable(x, y))
+
+        # doors: must be 1-wide and have a clear cell on BOTH sides (inside + outside the wall)
+        for (x, y), c in self.occ.items():
+            if not c.get("anchor") or not is_door(c["id"]):
+                continue
+            d = c["id"]
+            if self.footprint(d)[0] != 1:
+                out.append(f"DOOR {d} @({x},{y}) is {self.footprint(d)[0]}-wide — doors must be 1 wide")
+            horiz = is_wall(oid(x - 1, y)) or is_wall(oid(x + 1, y))   # wall runs L-R → door faces N/S
+            vert = is_wall(oid(x, y - 1)) or is_wall(oid(x, y + 1))
+            perp = [(x, y - 1), (x, y + 1)] if horiz else [(x - 1, y), (x + 1, y)] if vert else []
+            jammed = [p for p in perp if blocked(*p)]
+            if jammed:
+                out.append(f"DOOR {d} @({x},{y}) blocked in the doorway at {jammed} "
+                           f"(occupant/wall where you'd walk through)")
+
+        # walls/fences/gates sitting on a road/plaza/water tile
+        for (x, y), c in self.occ.items():
+            if c.get("anchor") and c["id"].startswith(("wall", "fence", "gate")) \
+                    and self.surface[y][x] in ("path", "water"):
+                out.append(f"{c['id']} @({x},{y}) sits on '{self.surface[y][x]}' (road/plaza/water under a wall)")
+
+        # wall / door / window heights must match
+        placed = {c["id"] for c in self.occ.values()}
+        def heights(pred): return sorted({(m.get(o, {}) or {}).get("sprite_h") for o in placed if pred(o)} - {None})
+        wh, dh, nh = heights(lambda o: o.startswith("wall")), heights(lambda o: o.startswith("door")), heights(lambda o: o.startswith("window"))
+        allh = set(wh) | set(dh) | set(nh)
+        if len(allh) > 1:
+            out.append(f"HEIGHT mismatch — walls{wh} doors{dh} windows{nh} (px); should all match")
+
+        # checkered/muddy roads: % of path cells that are dirt
+        path = [(x, y) for y in range(self.H) for x in range(self.W) if self.surface[y][x] == "path"]
+        if path:
+            dirt = sum(1 for (x, y) in path if self.ground[y][x] == "dirt")
+            pct = 100 * dirt // len(path)
+            if pct > 15:
+                out.append(f"ROADS {pct}% dirt ({dirt}/{len(path)} cells) — checkered/muddy, not a clean road")
+        return out
+
     # ---- persistence --------------------------------------------------------
     def _chunk_counts(self):
         return self.W // CHUNK, self.H // CHUNK

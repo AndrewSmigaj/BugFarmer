@@ -9,7 +9,7 @@ placing furniture. Coordinates are inclusive outer-wall bounds.
 
 
 def place_room(b, x0, y0, x1, y1, *, floor="wood_floor", wall="wall_wood",
-               door="door_wood", door_side="bottom", door_offset=None):
+               door="door_square", door_side="bottom", door_offset=None):
     if x1 - x0 < 2 or y1 - y0 < 2:
         b.warn(f"room {x0,y0,x1,y1} too small")
         return None

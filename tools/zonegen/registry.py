@@ -51,13 +51,21 @@ def preview_path(name):
     return os.path.join(PREVIEWS, REGISTRY[name][0], f"{name}.png")
 
 
-def render_one(name, record_tiles=None):
-    """Render scene `name` to its canonical preview path; returns the make_scene report (w,h,block_rects)."""
+def render_one(name, record_tiles=None, lint=True):
+    """Render scene `name` to its canonical preview path; returns the make_scene report (w,h,block_rects).
+    Also prints the spatial LINT (text defects) — the QA gate that doesn't depend on eyeballing pixels."""
     zone, scale = REGISTRY[name]
     mod = __import__(name)
+    b = mod.build()
     out = preview_path(name)
     os.makedirs(os.path.dirname(out), exist_ok=True)
-    return render_builder(mod.build(), out, scale=scale, record_tiles=record_tiles)
+    rep = render_builder(b, out, scale=scale, record_tiles=record_tiles)
+    if lint:
+        defects = b.lint()
+        print(f"  LINT {name}: {'0 defects ✓' if not defects else str(len(defects)) + ' defects:'}")
+        for d in defects:
+            print(f"      - {d}")
+    return rep
 
 
 def render_all(record_tiles=None, only=None):

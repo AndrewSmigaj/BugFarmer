@@ -5800,5 +5800,154 @@
       ],
       "pivot": "bc"
     }
+  },
+  "sign_fish_board": {
+    "name": "Fishing Store Sign",
+    "category": "structure",
+    "sprite_w": 48,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 12,
+    "world": {
+      "footprint": [
+        3,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "sign_fish_board",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "ship_wheel": {
+    "name": "Ship's Wheel",
+    "category": "decoration",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 18,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "ship_wheel",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "anchor_decor": {
+    "name": "Anchor",
+    "category": "decoration",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 15,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "anchor_decor",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "fishing_pole": {
+    "name": "Fishing Pole",
+    "category": "decoration",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 8,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "fishing_pole",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "marsh_plant": {
+    "name": "Marsh Cattails",
+    "category": "flora",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 2,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "notice_board": {
+    "name": "Notice Board",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "stackable": false,
+    "sell_price": 8,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "notice_board",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
   }
 }

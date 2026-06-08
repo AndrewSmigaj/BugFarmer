@@ -6,6 +6,29 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Done (recent) — Building pieces + village recompose (text-grid authoring + lint)
+- **Scaffolding for reliable buildings**: `features/tilemap.py` (`stamp`/`dump` — author + verify
+  buildings as CHARACTER GRIDS) and `zonebuilder.lint()` (text QA gate: blocked doors, 1-wide doors,
+  walls/fences on path/water, wall/door/window height, road dirt%). `registry.render_one` prints lint;
+  gates/doors count as passable. Working rule: no "looks good" without lint output + a crop I've seen.
+- **`features/yard.property_yard`** — the standard home yard (side yards + backyard + a couple
+  back-corner trees + front flower garden, gate auto-aligned to the door). HOMES are fenced; SHOPS are
+  open-fronted (no fence).
+- **Composable building pieces** (`place_*`, each a full multi-room home/shop, text-grid + lint, 0
+  warnings): `scene_smith` (forge+supply), `scene_carpenter` (workshop+timber), `scene_market`
+  (shop+storeroom), `scene_mayor` (4-room marble mansion + iron estate), `scene_ecologist` (4-room
+  study home — EAST zone), `scene_cottage` (NPC home), `scene_lakeside.place_boat_store` (shop+supply +
+  dock). Village reuses `player_house.place_player_house` (⊥ 4-room).
+- **`scene_village.py` recomposed** from the REAL pieces on STRAIGHT roads + central square: shops
+  cluster at the square (open-fronted), homes line a residential street (fenced, one cottage per NPC),
+  boat store on the SW lake, tree clumps + flower patches in the open. Buildings placed clear of roads.
+- **New entities/art** (gpt-image-1): `sign_fish_board` (3-wide), `ship_wheel`, `anchor_decor`,
+  `fishing_pole`, `marsh_plant`; wired the orphan `notice_board`; added a `marble` palette + re-baked
+  `wall_marble`. Conventions written into `house.md`/`yard.md`/`object_pipeline.md`.
+- FOLLOW-UP: **side-facing door variants** (grids currently put the door south) so buildings can face
+  N-S streets / the square from more sides; tighten village density + make roads less grid-like; the
+  wall(32)/door(24) 1.5-cell re-bake.
+
 ## Done (recent) — Village rebuild (guide-driven quality pass)
 - **Village authoring guide** `docs/guides/authoring/village.md` — 13 town-design principles (focal
   point, road hierarchy, function clusters, density gradients, …) mapped to the primitives + a

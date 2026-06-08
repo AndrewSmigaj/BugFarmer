@@ -19,12 +19,12 @@ W, H = 38, 22
 def build():
     b = ZoneBuilder("scene_block_house", W, H, base_tile="grass", name="Block house test")
     # left room: WOOD walls
-    place_room(b, 3, 4, 14, 13, floor="wood_floor", wall="wall_wood", door="door_wood", door_side="bottom")
+    place_room(b, 3, 4, 14, 13, floor="wood_floor", wall="wall_wood", door="door_square", door_side="bottom")
     for oid, x, y in [("bed_basic", 5, 5), ("chair_wood", 12, 6), ("table_wood", 10, 10)]:
         if b.is_free(x, y):
             b.place_occupant(oid, x, y, surface=None)
     # right room: STONE walls
-    place_room(b, 22, 4, 33, 13, floor="wood_floor", wall="wall_stone", door="door_wood", door_side="bottom")
+    place_room(b, 22, 4, 33, 13, floor="wood_floor", wall="wall_stone", door="door_square", door_side="bottom")
     for oid, x, y in [("bed_basic", 24, 5), ("chair_wood", 31, 6), ("table_wood", 29, 10)]:
         if b.is_free(x, y):
             b.place_occupant(oid, x, y, surface=None)

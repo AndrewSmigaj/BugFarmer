@@ -24,7 +24,7 @@ def shop_building(b, x0, y0, x1, y1, *, sign_id, npc=None, npc_dir="down",
     south frontage, rows of SHELVING against the back/side walls (facing rule), a COUNTER across
     the middle, and the shopkeeper NPC behind it facing the customer. `extra_fill(b, I)` adds
     shop-specific props. Returns the interior rect (ix0,iy0,ix1,iy1) or None if too small."""
-    I = place_room(b, x0, y0, x1, y1, floor=floor, wall=wall, door="door_wood", door_side=door_side)
+    I = place_room(b, x0, y0, x1, y1, floor=floor, wall=wall, door="door_square", door_side=door_side)
     if not I:
         return None
     ix0, iy0, ix1, iy1 = I

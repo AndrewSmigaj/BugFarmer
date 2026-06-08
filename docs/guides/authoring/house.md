@@ -121,6 +121,62 @@ python3 tools/zonegen/scenes/scene1_player_farm.py  # render the house inside th
 Read the PNG (and crop with `render_builder(b, out, scale, bounds=(x0,y0,x1,y1))` for detail).
 Aim for **0 placement warnings**; the builder refuses overlaps loudly.
 
+## Authoring a themed building by TEXT GRID (the verified workflow)
+For a **specific, themed building** (smith, carpenter, ecologist, market, boat store) author it as a
+**character grid** with `features/tilemap.py`, not by guessing coordinates. This is the method that holds
+up because it's **checkable in text** — I cannot reliably spot spatial defects in a big PNG, but I can
+read a grid and the lint.
+
+```python
+from features.tilemap import stamp, dump
+SMITH = """
+WWWWWWWWWWWW
+Wt........tW
+W..F...G..SW
+...
+WWWWWDWWWWWW
+"""
+LEG = {"W": ("occ", "wall_stone"), "D": ("occ", "door_square"), "F": ("occ", "furnace"), ...}
+stamp(b, SMITH, LEG, ox=ox, oy=oy)        # first line = NORTH/back; bottom = SOUTH/door
+print(dump(b, ox, oy, ox+11, oy+9))       # read it back north-on-top to verify
+print("LINT:", b.lint() or "0 defects")   # the QA gate — must be clean (bar the known height item)
+```
+Make each themed building a **`place_<thing>(b, ox, oy)` function** + a thin `build()` wrapper, so the
+**village composes the real piece** (one source of truth) instead of a cruder re-creation.
+
+### Full-home / full-building pattern (what "a building" means)
+A building is a **home or shop, not a single room**, wrapped in a [`property_yard`](yard.md):
+- **Houses** (ecologist, mayor, cottages) → a **main room + bedroom + kitchen + bathroom**, connected by
+  interior doors (put internal `W`/`D` right in the grid; the lint checks interior doors too). Bathroom =
+  `bathtub`+`vanity`+`sink`+`mirror` (no toilet sprite yet).
+- **Shops/workshops** (smith, carpenter, market, boat store) → a **main room + a back SUPPLY room**.
+- **Only HOMES are fenced.** A house sits in a `property_yard` (side yards + backyard + trees + front
+  garden). A **shop is OPEN-FRONTED — NO fence** — just the building, its sign, and outdoor goods
+  (ore/coal, lumber, produce stalls) out front. Fencing a shop reads wrong.
+- **Place buildings CLEAR of every road** — a building dropped on a road tile leaves the road running
+  visibly *through* it. In a composed scene, keep each footprint+yard off the road columns/rows.
+- Compose the village from the `place_*` pieces: shops cluster at the square (commercial), homes line a
+  residential street (each fenced), one cottage per NPC. Doors face south onto a street; a short `connect`
+  path joins each door/gate to the road. (Side-facing doors are a TODO — grids currently put the door south.)
+
+### Conventions the lint enforces — don't relearn these (each cost a correction)
+1. **Doors are 1 cell wide** (`door_square`, 16×24). The cell directly inside the door must be clear
+   floor — never run shelving/counters/buckets across the door wall. `lint()` flags blocked doorways.
+2. **NPC behind a counter/desk: set them 2 cells back**, not 1. Player sprites draw in a final on-top
+   pass, so an NPC one cell behind a (taller) counter renders *on the desk*.
+3. **Keep tall decor OFF the row just inside the SOUTH wall.** The 2-tall wall draws over that row and
+   clips lamps/vases/signs. Put tall pieces on the back/side walls or interior; leave the south row open.
+4. **Multi-cell items: ONE char at the anchor**, dots for the rest of the footprint. The anchor is the
+   **SW corner**; the footprint extends **NORTH (up) and EAST (right)** from it. Repeating the char
+   places N overlapping copies (loud warnings). A 2×4 bed's char goes at its *south-west* grid cell.
+5. **Every grid row must be the same width.** A stray extra char pokes a wall a cell out of the building
+   (overlap warnings / fence-on-wall). Count them.
+6. **Objects standing in water** (boat, mooring posts) need their footprint **un-reserved** first —
+   `safe()`/`is_free()` correctly refuse reserved water, so the object silently doesn't place.
+7. **Goods in rows; themed sign out front** (`sign_anvil`, `sign_plank`, `sign_leaf`, `sign_fish_board`).
+8. The single intentional lint item right now is the **wall(32)/door(24) height mismatch** — walls are
+   temporarily 2 cells tall pending a 1.5-cell re-bake; treat that one as expected.
+
 ## Cross-cutting
 - New furniture/appliance sprites are added via the **add-object** skill (gpt-image-1); missing
   ones render as labeled placeholder squares. Track them in [art_needed.md](../../product/art_needed.md).
