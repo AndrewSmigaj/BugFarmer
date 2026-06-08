@@ -13,14 +13,18 @@ Bug Farmer is a 2D multiplayer game where players farm bugs, build structures, a
 - [architecture_inventory.md](architecture_inventory.md) / [architecture_items.md](architecture_items.md) / [item_database.md](item_database.md) — items & inventory
 - [architecture_entity_sync.md](architecture_entity_sync.md) — entity replication
 - [architecture_swarm_sync.md](architecture_swarm_sync.md) — authoritative-client swarm sim + deterministic followers
+- [game_design.md](game_design.md) — the Game Design Document (GDD)
 - [requirements.md](requirements.md) — game design requirements
 - [BACKLOG.md](BACKLOG.md) — running queue of upcoming work (Now / Next / Later)
 - [zones/](zones/) — per-zone design notes
 
-**`docs/guides/` — how to operate the pipeline** (see [../guides/object_pipeline.md](../guides/object_pipeline.md))
-- [object_pipeline.md](../guides/object_pipeline.md) — **canonical** art/sprite pipeline (gen → clean → preview)
-- [MASTER_STYLE_GUIDE.md](../guides/MASTER_STYLE_GUIDE.md), [PERSPECTIVE_GUIDE.md](../guides/PERSPECTIVE_GUIDE.md), [CHARACTER_DESIGN_GUIDE.md](../guides/CHARACTER_DESIGN_GUIDE.md) — art direction
-- [BIOME_PALETTES.md](../guides/BIOME_PALETTES.md), [BUILDING_TEMPLATES.md](../guides/BUILDING_TEMPLATES.md), [ZONE_GENERATION_GUIDE.md](../guides/ZONE_GENERATION_GUIDE.md), [trees_and_ponds.md](../guides/trees_and_ponds.md) — world building
+**`docs/guides/art/` — how sprites look & get made**
+- [object_pipeline.md](../guides/art/object_pipeline.md) — **canonical** art/sprite pipeline (gen → clean → preview); read first
+- [MASTER_STYLE_GUIDE.md](../guides/art/MASTER_STYLE_GUIDE.md), [PERSPECTIVE_GUIDE.md](../guides/art/PERSPECTIVE_GUIDE.md), [CHARACTER_DESIGN_GUIDE.md](../guides/art/CHARACTER_DESIGN_GUIDE.md), [BIOME_PALETTES.md](../guides/art/BIOME_PALETTES.md) — art direction
+
+**`docs/guides/authoring/` — how to build zones & scenes**
+- [README.md](../guides/authoring/README.md) — the authoring **system** (builder · guides · scenes · art lab); read first
+- per-feature guides: [house](../guides/authoring/house.md), [building](../guides/authoring/building.md), [yard](../guides/authoring/yard.md), [vegetation](../guides/authoring/vegetation.md), [caves](../guides/authoring/caves.md), [blocks](../guides/authoring/blocks.md), [trees-and-ponds](../guides/authoring/trees-and-ponds.md), [biome-feature-map](../guides/authoring/biome-feature-map.md)
 
 ---
 

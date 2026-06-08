@@ -4,7 +4,7 @@
 A worked example for the zone-authoring guides and a catalog/QA vignette: it exercises
 the room, scatter, and occupant-placement primitives and shows feature interaction
 (scatter fills only free yard grass, avoiding the fence/path/buildings). Renders straight
-to a preview PNG (no zone files). Run: python3 tools/zonegen/builds/cottage.py
+to a preview PNG (no zone files). Run: python3 tools/zonegen/scenes/cottage.py
 """
 import os
 import sys

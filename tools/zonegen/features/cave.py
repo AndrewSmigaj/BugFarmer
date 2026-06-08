@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Underground primitives — carving tunnels/caverns out of solid rock + rarity-based ore fill.
-See docs/guides/feature-caves.md for the spatial heuristics these encode. The convention: the
+See docs/guides/authoring/caves.md for the spatial heuristics these encode. The convention: the
 builder's ground is `cave_floor`; "carving" = recording cells to LEAVE OPEN; everything else gets
 a block occupant via `fill_solid`. All coords are (x, y) cells.
 """

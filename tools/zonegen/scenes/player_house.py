@@ -3,7 +3,7 @@
 
 Reusable: `place_player_house(b, ox, oy)` drops the whole house into any builder at an
 offset, so scenes can compose it with the rest of the world. Run this file directly to
-render just the house. Guide: docs/guides/house-building.md.
+render just the house. Guide: docs/guides/authoring/house.md.
 """
 import os
 import sys

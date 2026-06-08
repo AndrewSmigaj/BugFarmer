@@ -7,7 +7,7 @@ the STYLE block (for consistency) and differ only in technique. For each approac
 random VARIANTS of each test block into tools/_generated/blocklab/P{n}/{block}_{i}.png.
 
 The deliverable never changes (a 3D block). Only the prompt wording is iterated. See
-docs/guides/block_prompts.md. Generation reuses gen_sprites (build_wall_prompt + transparent + crop)
+docs/guides/art/block_prompts.md. Generation reuses gen_sprites (build_wall_prompt + transparent + crop)
 and pixelclean — NOT opaque, NOT flat.
 
 Usage:

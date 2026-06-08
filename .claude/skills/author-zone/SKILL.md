@@ -10,6 +10,17 @@ shared occupancy model, compose with **placeholder squares** (never wait on art)
 **rendering a preview PNG and looking at it**. The preview is the test — there's no live game to
 watch here.
 
+## Where the world lives (orient here first)
+- **The system index:** `docs/guides/authoring/README.md` — the four parts (builder · guides · scenes ·
+  art lab) and how they fit. Read it first.
+- **The whole map:** `docs/product/architecture_world.md` — the 24-zone grid, layout, river/roads,
+  coordinates, per-zone species.
+- **Per-zone design docs:** `docs/product/zones/<zone_id>.md` (intent: biome, species, landmarks, ecology).
+  Start a new one from `docs/product/zones/_TEMPLATE.md`. Current build scope: `docs/product/zones/demo_slice.md`.
+- **Which primitives per biome:** `docs/guides/authoring/biome-feature-map.md`.
+- **Content to draw from:** `docs/brainstorms/<topic>/` (flora, fungus, trees, bugs, landmarks, decorations,
+  materials, …) — mine these for what to place; `ecology_proposal.md` for how species relate.
+
 ## Make it RICH — brainstorm, don't do the bare minimum (read this first)
 A scene is a crafted vignette, not a checklist. When asked for a new scene you are EXPECTED to
 **brainstorm interesting content yourself**, not just place the few things named:
@@ -50,9 +61,10 @@ This is an iterative craft loop, not a one-shot. Deliberately:
   `save()` (chunk-aligned zones) / `load(zone_id)` (edit an existing zone; derives masks).
 - `features/` — feature primitives: `room.place_room` (building shells), `house.place_house` +
   `styled_rooms` (multi-room houses), `furniture` (collection catalog: `pick(role, coll)`),
-  `yard.{fence_rect,yard}` (fenced enclosures), `terrain.{hpath,vpath,pond}`,
-  `garden.{crop_bed,flower_patch,fruit_around}`, `scatter.scatter` (decor). `houses/layouts.py`
-  has ready-made 3/4/5-room floor plans (`row_/t_/plus_house`). Each has a feature guide.
+  `yard.{fence_rect,yard}` (fenced enclosures), `terrain.{path,pond,stream,hpath,vpath}`
+  (`path`=organic road, NOT dead-straight), `garden.{crop_bed,flower_patch,fruit_around}`,
+  `scatter.scatter` (decor; `clumping` for organic patches). `house.py` also has
+  ready-made 3/4/5-room floor plans (`row_/t_/plus_house`). Each has a feature guide.
 - `render.render_builder(b, out, scale, bounds=None)` — render a builder straight to a preview PNG
   (for scene vignettes; no zone files written).
 - **Precedence — place HARD features first so later ones route around them:** biome base → water →
@@ -62,20 +74,26 @@ This is an iterative craft loop, not a one-shot. Deliberately:
 
 ## Build & render an example scene
 ```bash
-python3 tools/zonegen/builds/<scene>.py    # builds + renders to tools/_generated/previews/<scene>.png
+python3 tools/zonegen/scenes/<scene>.py    # build + render ONE scene to its preview PNG
+python3 tools/zonegen/registry.py          # render ALL registered scenes (canonical previews)
 ```
-`builds/cottage.py` is the worked example (a cottage interior + a fenced yard with scatter).
+`scenes/cottage.py` is the worked example (a cottage interior + a fenced yard with scatter). The
+canonical render scale per scene lives in `tools/zonegen/registry.py`.
 
 ## Feature guides
-- `docs/guides/feature-building.md` — rooms, walls, doors, building shells.
-- `docs/guides/house-building.md` — multi-room houses: the composer, the south-facing **facing
+**Full index + one-liners: `docs/guides/authoring/README.md`.** The ones you'll reach for most:
+- `docs/guides/authoring/building.md` — rooms, walls, doors, building shells.
+- `docs/guides/authoring/house.md` — multi-room houses: the composer, the south-facing **facing
   rule**, room templates, ⊥/L shapes, **furniture collections** (basic/fancy), and the 3/4/5-room
   layout generators.
-- `docs/guides/feature-yard.md` — fenced yards/pens: `fence_rect`, `yard` (gate + path + decor).
-- `docs/guides/feature-vegetation.md` — scatter (flowers/bushes/grass): density + spacing.
+- `docs/guides/authoring/yard.md` — fenced yards/pens: `fence_rect`, `yard` (gate + path + decor).
+- `docs/guides/authoring/roads.md` — organic roads: `terrain.path` (wander/fray/taper) — NOT dead-straight.
+- `docs/guides/authoring/vegetation.md` — scatter (flowers/bushes/grass): density, spacing, **clumping**.
+- `docs/guides/authoring/village.md` — composing a **town**: road hierarchy, function clusters,
+  `plaza()`/fountain, `shop_building()`, density gradients, build-order recipe.
+- `docs/guides/authoring/{caves,blocks,ant-colony,trees-and-ponds,biome-feature-map}.md` — the rest.
 - Worked multi-feature scene: `tools/zonegen/scenes/scene_houses.py` (room counts × collections, yards).
-- Cross-cutting style/perspective: `docs/guides/MASTER_STYLE_GUIDE.md` (+ the broader guide set,
-  being consolidated — see BACKLOG "Zone-design guides cleanup").
+- Cross-cutting art style/perspective: `docs/guides/art/MASTER_STYLE_GUIDE.md`.
 
 ## Notes
 - **Scenes are example vignettes** (rendered straight from the builder, no zone files); they double

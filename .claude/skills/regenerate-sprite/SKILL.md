@@ -5,7 +5,7 @@ description: Use when redoing the art for an existing world asset whose data ent
 
 # Regenerate an existing sprite
 
-Pipeline A (gpt-image-1). Canonical reference: `docs/guides/object_pipeline.md`.
+Pipeline A (gpt-image-1). Canonical reference: `docs/guides/art/object_pipeline.md`.
 The entity already exists in `nakama/data/entities/*.json`, so this only redoes the art.
 
 1. **(If the silhouette/material was the problem)** refine the `OBJECT_DESC` / `OBJECT_MATS`

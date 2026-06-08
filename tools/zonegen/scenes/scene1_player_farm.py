@@ -23,7 +23,7 @@ from features.scatter import scatter             # noqa: E402
 from features.yard import fence_rect              # noqa: E402
 from features.terrain import hpath, vpath, pond   # noqa: E402
 from features.garden import crop_bed, flower_patch, fruit_around  # noqa: E402
-from houses.player_house import place_player_house  # noqa: E402
+from scenes.player_house import place_player_house  # noqa: E402
 
 W, H = 46, 50
 

@@ -6,7 +6,7 @@ Working doc — not canonical; the skills/guides are.
 
 > **FOLDED (2026 session) — the sections below are now in the real docs:**
 > add-object/object_pipeline notes → `add-object` skill + `object_pipeline.md` (art data model);
-> author-zone/house notes → `author-zone` skill + `house-building.md` + `feature-yard.md`;
+> author-zone/house notes → `author-zone` skill + `house.md` + `yard.md`;
 > item & inventory model → `architecture_items.md §0` + `game_design.md §11.5/§19`.
 > Kept below for reference; the **general tooling TODO** at the bottom is the only still-open item.
 
@@ -32,7 +32,7 @@ Working doc — not canonical; the skills/guides are.
   wood: stone/marble tops (counter_fancy, dining_table_fancy), metal (range_stove, mirror),
   glass-ish (aquarium). Check the prompt with `--dry-run` before spending.
 
-## → author-zone skill + docs/guides/house-building.md
+## → author-zone skill + docs/guides/authoring/house.md
 - **Furniture COLLECTIONS** (`features/furniture.py`): a collection = a self-contained
   look/feel set mapping role→id; `pick(role, collection)` falls back to BASIC. Add/remove a
   collection as a UNIT (basic, fancy now; tropical/modern/rustic later — ideally own modules).
@@ -52,7 +52,7 @@ Working doc — not canonical; the skills/guides are.
 - The player house (`houses/player_house.py`) now uses the **fancy** collection (it's the
   "rich showcase"); scene1 re-renders fully once fancy art exists.
 
-## → docs/guides/game_design.md (design captured this session)
+## → docs/product/game_design.md (design captured this session)
 - §11.6 Power & electrification (windmill/hydro/generator, linked-placement line tool shared
   with rail/track, coverage-radius aura, fuel-fed vs electric machines).
 - §11.7 Cooking & stoves (wood stove 1 dish + fuel → bigger → electric range needs power).
@@ -120,7 +120,7 @@ Decisions (2026 session):
   if reused. `place_pool`/`fill_solid` guard against flooding/overwriting occupied cells.
 
 ## → findings from the overnight block/bug/encyclopedia run (fold into object_pipeline.md + add-object)
-- **CORRECTION (final) — blocks use a SEAMLESS OPAQUE MATERIAL FACE, like a ground tile** (`build_block_prompt`, mirrors `build_tile_prompt`): opaque (transparent comes back BLANK ~half the time — verified raw `alpha[0-4]`), fills the whole frame with the material (no baked bg, no border), NO top-surface/front-lip (that cube prompt banded everything + put a non-brick top on the brick wall). 2 attempts each, pick the tiling one, verify by LOOKING (coverage==100% can be a baked bg). See `feature-blocks.md`. NEVER change the flow to fix a few sprites — reroll.
+- **CORRECTION (final) — blocks use a SEAMLESS OPAQUE MATERIAL FACE, like a ground tile** (`build_block_prompt`, mirrors `build_tile_prompt`): opaque (transparent comes back BLANK ~half the time — verified raw `alpha[0-4]`), fills the whole frame with the material (no baked bg, no border), NO top-surface/front-lip (that cube prompt banded everything + put a non-brick top on the brick wall). 2 attempts each, pick the tiling one, verify by LOOKING (coverage==100% can be a baked bg). See `blocks.md`. NEVER change the flow to fix a few sprites — reroll.
 
 ## → PLANT art + placement system (brainstorm — fold into a plants guide + scaffolding)
 Start a PLANT section mirroring blocks (own prompt approaches + variants + viewer + guide). Approaches/Qs:

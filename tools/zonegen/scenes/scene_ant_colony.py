@@ -3,7 +3,7 @@
 surface entrance, a meandering main shaft branching into chambers (queen / egg-brood / food), with
 files of ants on the trails. One branch opens into a BIG tunnel leading right into a mushroom-packed
 cavern, where a centipede and a millipede (assembled from head/body/tail segment sprites) crawl.
-See docs/guides/feature-ant-colony.md. Renders to previews/scene_ant_colony.png.
+See docs/guides/authoring/ant-colony.md. Renders to previews/scene_ant_colony.png.
 """
 import math
 import os

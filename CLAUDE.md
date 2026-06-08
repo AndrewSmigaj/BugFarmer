@@ -15,8 +15,10 @@ for every step, not just the big ones.
 - `tools/` — Python sprite/world pipeline (gen → clean → preview → publish), the test-zone
   generator (`make_test_zone.py`), and the headless `.NET` netcode harness (`sync-harness/`).
   Art prompts are DATA: `tools/art/style.json` (global look) + `tools/art/catalog/*.json` (per-item).
-  Zone/scene authoring: `tools/zonegen/` (builder + `features/` primitives + `scenes/`).
-- `docs/` — `product/` (how the game works) and `guides/` (how to operate the pipeline).
+  Zone/scene authoring: `tools/zonegen/` (builder + `features/` primitives + `scenes/` + the
+  `registry.py` scene catalog); `tools/artlab/` is the variant-picker UI that renders those scenes.
+- `docs/` — `product/` (how the game works, incl. the GDD `game_design.md`) and `guides/`
+  (`art/` = how sprites look & are made; `authoring/` = how to build zones/scenes — start at its `README.md`).
 - `.claude/skills/` — task playbooks (`add-object`, `regenerate-sprite`, `run-backend`, `author-zone`).
 
 ## Where things live
@@ -29,7 +31,7 @@ for every step, not just the big ones.
 
 ## Hard rules (the gotchas that bite)
 - **Don't resize sprites by hand.** The runtime NEAREST-scales to `sprite_w × sprite_h`;
-  `pixelclean.py`'s downscale is the only intended resize. See [object_pipeline.md](docs/guides/object_pipeline.md).
+  `pixelclean.py`'s downscale is the only intended resize. See [object_pipeline.md](docs/guides/art/object_pipeline.md).
 - **No `jq`** — decode the gpt-image-1 base64 with Python (curl-piped large base64 fails).
 - **No ComfyUI** anywhere in the flow.
 - **Even-width occupants need the footprint-X shift** (`worldPos.x += (footprint.x-1)*0.5*cellSize`),
@@ -54,7 +56,7 @@ python3 tools/make_scene.py                         # render tools/_generated/pr
 - `docs/product/ARCHITECTURE.md` — top-level architecture + index to all product docs.
 - `docs/product/BACKLOG.md` — the live "what's next" queue (Now / Next / Later). The throwaway plan
   doc covers only the item we're actively working; the backlog is what persists between sessions.
-- `docs/guides/object_pipeline.md` — canonical art/sprite pipeline (the one to read first).
+- `docs/guides/art/object_pipeline.md` — canonical art/sprite pipeline (the one to read first).
 
 ## Keep the canonical docs in step with the code
 When you finish a plan's work — before you call it done — reconcile the docs the change touched:

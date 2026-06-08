@@ -17,7 +17,7 @@ from zonebuilder import ZoneBuilder                       # noqa: E402
 from render import render_builder                         # noqa: E402
 from features.house import place_house, styled_rooms      # noqa: E402
 from features.yard import yard                            # noqa: E402
-from houses.layouts import row_house, t_house, plus_house, bbox  # noqa: E402
+from features.house import row_house, t_house, plus_house, bbox  # noqa: E402
 
 LAYOUTS = [row_house, t_house, plus_house]   # 3, 4, 5 rooms
 COLLECTIONS = ["basic", "fancy"]

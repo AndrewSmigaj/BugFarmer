@@ -39,4 +39,4 @@ yard(b, x0, y0, x1, y1, gate=(gx, y0), path_to=(gx, y0 - 3),
 - Paths/ponds: `features/terrain.py` (`hpath`, `vpath`, `pond`).
 - Garden beds / collectible flowers / fallen fruit: `features/garden.py` (`crop_bed`, `flower_patch`,
   `fruit_around`).
-- Houses + collections: [house-building.md](house-building.md). Scatter (vegetation): [feature-vegetation.md](feature-vegetation.md).
+- Houses + collections: [house.md](house.md). Scatter (vegetation): [vegetation.md](vegetation.md).

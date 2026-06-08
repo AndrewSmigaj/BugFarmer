@@ -48,5 +48,5 @@ python3 tools/zonegen/scenes/scene_ant_colony.py
 - Bug *sprites* exist already; this scene places them with `place_bug` (free-floating, sub-grid). A
   proper colony in-game (queen laying, workers pathing the trails) is gameplay for later.
 - If the trail/file + branching-tunnel logic settles, promote it to `features/ant.py`
-  (`dig_nest`, `ant_file`). For generic cave tunnels/caverns see [feature-caves.md](feature-caves.md).
+  (`dig_nest`, `ant_file`). For generic cave tunnels/caverns see [caves.md](caves.md).
 - **Segmented bugs (centipede/millipede) are a separate sprite-sheet task** — head/body/tail chained.

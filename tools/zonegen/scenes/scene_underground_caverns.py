@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scene — UNDERGROUND mining features (the worked example for docs/guides/feature-caves.md).
+"""Scene — UNDERGROUND mining features (the worked example for docs/guides/authoring/caves.md).
 
 A ~1/16-zone slab of solid rock showing the underground vocabulary and the spatial rules:
 - a MAN-MADE straight RAIL tunnel crossing the map (rail + supports + a cart) — straight because built;
@@ -27,7 +27,7 @@ from features.cave import carve_tunnel, carve_cavern, place_pool, fill_solid  # 
 
 W, H = 64, 64
 
-# Beginning mining zone (underground_passages_31) ore table — see feature-caves.md §4.
+# Beginning mining zone (underground_passages_31) ore table — see authoring/caves.md §4.
 ORE_TABLE = {
     "base": "stone_block",
     "veins": [

@@ -4,7 +4,7 @@ How we make the **mineable/placeable BLOCKS** — the cube sprites that tile in 
 dirt/stone/clay, **resource/ore blocks**, and **wall blocks** like wood/brick/stone). They all share ONE
 recipe so any field of blocks or a wall reads as a coherent surface. Prompt text is data: per-block
 **surface/fleck** lives in `tools/art/catalog/blocks.json`; the shape prompt is `build_wall_prompt` (tuned
-via the bake-off in [block_prompts.md](block_prompts.md)).
+via the bake-off in [block_prompts.md](../art/block_prompts.md)).
 
 ## THE RECIPE
 A block is **3D: a wide lit TOP surface + a short, only-slightly-darker FRONT face beneath it.** Stacked in
@@ -13,7 +13,7 @@ wall / gold block. It is NOT a flat square (no front face = wrong) and NOT a blo
 background (wrong).
 - Generated via **`build_wall_prompt` (the cube/top+front prompt) + TRANSPARENT background + crop** — the
   same flow that made the walls. Blocks/walls keep **full width** (`vertical_only` trim) so they abut sideways.
-- The exact prompt wording is **still being tuned** — see **[block_prompts.md](block_prompts.md)** for the
+- The exact prompt wording is **still being tuned** — see **[block_prompts.md](../art/block_prompts.md)** for the
   active 3-approach bake-off and the variant-folder workflow. Tune the *wording*; never change the deliverable.
 
 ## HARD RULES
@@ -47,5 +47,5 @@ background (wrong).
 Wall **visual variants** (`wall_wood` planks vs `wall_wood2` logs) are for picking a look — keep them out of
 gameplay collections until one is chosen; delete the loser.
 
-Cross-cutting: art data model in [object_pipeline.md](object_pipeline.md); underground placement in
-[feature-caves.md](feature-caves.md).
+Cross-cutting: art data model in [object_pipeline.md](../art/object_pipeline.md); underground placement in
+[caves.md](caves.md).

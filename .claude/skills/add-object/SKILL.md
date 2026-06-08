@@ -68,4 +68,4 @@ PNG, and run the acceptance check.
 - Even-width objects sit on grid in the preview (footprint-X rule).
 - Tiles / linear connectors (fence, wall) tile seam-free.
 
-Canonical pipeline detail: `docs/guides/object_pipeline.md`.
+Canonical pipeline detail: `docs/guides/art/object_pipeline.md`.

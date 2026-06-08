@@ -18,7 +18,7 @@ from zonebuilder import ZoneBuilder                                   # noqa: E4
 from render import render_builder                                    # noqa: E402
 from features.house import place_house, styled_rooms                 # noqa: E402
 from features.cave import carve_tunnel, fill_solid                   # noqa: E402
-from houses.layouts import row_house, bbox                            # noqa: E402
+from features.house import row_house, bbox                            # noqa: E402
 
 W, H = 52, 44
 ORE = {"base": "stone_block",

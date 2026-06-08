@@ -1,12 +1,12 @@
 # Feature guide: houses (multi-room buildings)
 
 How to compose a **varied multi-room house** with `zonegen`'s house composer. Where
-[feature-building.md](feature-building.md) covers a single `place_room` shell, this covers
+[building.md](building.md) covers a single `place_room` shell, this covers
 stitching several differently-sized rooms into **one connected building** (an L, an
 upside-down-T) with shared walls, interior doors, windows, and furniture placed against the
 walls by reusable room templates.
 
-Module: `tools/zonegen/features/house.py`. Reusable house: `tools/zonegen/houses/player_house.py`
+Module: `tools/zonegen/features/house.py`. Reusable house: `tools/zonegen/scenes/player_house.py`
 (`place_player_house(b, ox, oy)` drops it into any scene). Worked use: `tools/zonegen/scenes/scene1_player_farm.py`.
 
 ## Orientation (read this first)
@@ -115,7 +115,7 @@ placeable as an independent item).
 
 ## Build → render → review loop
 ```bash
-python3 tools/zonegen/houses/player_house.py     # render the house on its own
+python3 tools/zonegen/scenes/player_house.py     # render the house on its own
 python3 tools/zonegen/scenes/scene1_player_farm.py  # render the house inside the full farm scene
 ```
 Read the PNG (and crop with `render_builder(b, out, scale, bounds=(x0,y0,x1,y1))` for detail).
@@ -123,9 +123,9 @@ Aim for **0 placement warnings**; the builder refuses overlaps loudly.
 
 ## Cross-cutting
 - New furniture/appliance sprites are added via the **add-object** skill (gpt-image-1); missing
-  ones render as labeled placeholder squares. Track them in [../product/art_needed.md](../product/art_needed.md).
+  ones render as labeled placeholder squares. Track them in [art_needed.md](../../product/art_needed.md).
 - Fenced **yards** (fence + gate + approach path + exterior decor) around a house:
-  [feature-yard.md](feature-yard.md) (`features/yard.py`). Worked multi-house example:
+  [yard.md](yard.md) (`features/yard.py`). Worked multi-house example:
   `tools/zonegen/scenes/scene_houses.py` (room counts × collections, each in a yard).
-- Single-room shells, doors, and the precedence order: [feature-building.md](feature-building.md).
-- Sprite/pipeline rules: [object_pipeline.md](object_pipeline.md).
+- Single-room shells, doors, and the precedence order: [building.md](building.md).
+- Sprite/pipeline rules: [object_pipeline.md](../art/object_pipeline.md).

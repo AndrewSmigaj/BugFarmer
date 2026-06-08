@@ -55,4 +55,4 @@ that places the item, re-run it, and you get the same flip-and-pick flow for bug
 Unity in-engine EditorWindow (sliders inside the running game) is a possible later addition — not built
 (the lightweight HTML viewer was chosen for now).
 
-See also [feature-blocks.md](feature-blocks.md) (block entity/catalog setup).
+See also [blocks.md](../authoring/blocks.md) (block entity/catalog setup).
