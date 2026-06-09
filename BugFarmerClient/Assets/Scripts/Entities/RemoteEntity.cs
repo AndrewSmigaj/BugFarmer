@@ -58,10 +58,12 @@ namespace BugFarmer.Entities
                 Vector2 newPos = Vector2.Lerp(_startPos, _targetPos, _interpProgress);
                 transform.position = new Vector3(newPos.x, newPos.y, transform.position.z);
 
-                // Update sorting order for Y-sorting
-                if (_spriteRenderer != null)
+                // Y-sort by the FEET, not the sprite centre. The character sprite is centre-pivoted
+                // (16x32 = 1x2 cells), so the feet are a cell below transform.position; bounds.min.y is
+                // the rendered sprite's bottom in world space (matches occupants' -cellPos.y = their feet).
+                if (_spriteRenderer != null && _spriteRenderer.sprite != null)
                 {
-                    _spriteRenderer.sortingOrder = -Mathf.FloorToInt(newPos.y);
+                    _spriteRenderer.sortingOrder = -Mathf.FloorToInt(_spriteRenderer.bounds.min.y);
                 }
             }
         }

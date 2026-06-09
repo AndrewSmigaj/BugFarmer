@@ -251,19 +251,32 @@ Server                                All Clients
    |                                       |
    |--tick: rot timer fires on ground item-|
    |--change item type to rotten_apple--   |
-   |--create RottenFruitState--            |
-   |--emit ITEM_ROTTED-------------------->|  (influence event)
+   |--FoodValue=100--                      |
+   |--emit ITEM_ROTTED (food_id+cell+lvl)->|  (influence event -> client FOOD REGISTRY)
    |                                       |--fly AI now targets this food
    |                                       |
-   |--authority client reports fly eating--|
-   |--validate & emit ROTTEN_FRUIT_CONSUMED->  (influence event)
-   |                                       |--update FoodValue
+   |--SERVER advances meters itself--      |  (IMPLEMENTED: no client reports — the server
+   |  (swarm centre at cached food target: |   knows centres+counts+food; ledger-first.
+   |   Satiation+, FoodValue -= rate*Count)|   The old "authority reports eating" sketch
+   |--emit FOOD_CONSUMED at 75/50/25/0---->|   and OpCode-70 are RETIRED.)
+   |                                       |--registry level updated (bugs land visuals)
+   |                                       |
+   |--Satiation 100 -> phase=reproducing-- |
+   |--meter fills AT a DEPLETABLE source-- |  (v1 rule: flora never depletes, so breeding
+   |--REPRODUCE: Count*=2, food-=50------- |   requires items/stations — bounded growth)
+   |--emit SWARM_REPRODUCED (n, idBase)--->|  (clients SpawnBugAt the centre, idempotent)
    |                                       |
    |--FoodValue reaches 0--                |
-   |--remove RottenFruitState--            |
-   |--emit final ROTTEN_FRUIT_CONSUMED---->|  (FoodValue=0 = despawn)
-   |                                       |--remove ground item
+   |--remove ground item------------------ |
+   |--emit FOOD_CONSUMED level=0---------->|  (registry drops it; OpCode 48 removes visual)
 ```
+**Stations (general pattern — composter first):** a placeable with `world.station =
+{accepts, capacity, food_per_unit, providers}`. The player right-clicks → a menu →
+deposits accepted items (`StationDeposit`, OpCode 85) → the fill meter rises
+(`StationUpdate`, OpCode 86, display-only). A non-empty station is a food+breeding
+provider drained by the SAME consumption path (its level changes ride `FOOD_CONSUMED`
+with `food_id = station_<gx>_<gy>`). Feed troughs / bait baskets are future instances —
+pure JSON.
 
 **Late Joiner Sync:**
 ```

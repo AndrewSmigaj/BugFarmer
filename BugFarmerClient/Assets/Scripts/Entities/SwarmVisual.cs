@@ -57,6 +57,7 @@ namespace BugFarmer.Entities
         public string SwarmId { get; private set; }
         public string SpeciesId { get; private set; }
         public int Count => _bugs.Count;
+        public float Radius => _radius;
         public bool IsWaitingForSnapshot => _waitingForSnapshot;
 
         /// <summary>
@@ -156,22 +157,10 @@ namespace BugFarmer.Entities
         /// </summary>
         private void SpawnBug(long worldSeed, int bugId, float radius)
         {
-            // Deterministic initial position using bug's RNG and fixed-point math
-            // IMPORTANT: Uses lookup tables instead of Mathf.Cos/Sin for cross-platform determinism
-            var rng = DeterministicRandom.ForBug(worldSeed, SwarmId, bugId);
-
-            // Direction from fixed-point lookup table (256 entries around unit circle)
-            int dirIndex = rng.RangeInt(0, FixedPointMath.TableSize);
-            var dir = FixedPointMath.DirectionFromIndex(dirIndex);
-
-            // Distance in fixed-point (0 to radius)
-            var radiusFixed = FixedPoint.FromFloat(radius);
-            int distValue = rng.RangeInt(0, radiusFixed.Value + 1);
-            var dist = new FixedPoint { Value = distValue };
-
-            // Calculate offset and start position entirely in fixed-point
-            var offset = dir * dist;
-            var startPos = _simCenter + offset;
+            // Phase B: spawn every bug AT the swarm center; they spread outward by seeded per-bug wander
+            // (there is no separation force). Deterministic — all clients place each bug at the same center.
+            // (`radius` is retained in the signature but no longer scatters the spawn.)
+            var startPos = _simCenter;
 
             // Create agent - MovementFactory.CreateMovement(SpeciesId) is called internally
             // fly → BrownianMovement, butterfly → GlidingMovement, etc.
@@ -371,6 +360,83 @@ namespace BugFarmer.Entities
                     _removedIds.Add(id);
                 }
             }
+        }
+
+        // === Split/Merge move machinery (SWARM_SPLIT / SWARM_MERGE influence events) ===
+        // Bugs are MOVED between swarms with their position/velocity/motion-state intact —
+        // never re-spawned (hard requirement: no visual resets). Safe because rendering is
+        // world-space per frame from Agent.Position (BugVisual.Interpolate), and the sim RNG
+        // keys live on (SwarmId, BugId), so reassignment only re-keys FUTURE wander.
+
+        /// <summary>
+        /// Extract the n highest-id bugs WITHOUT pooling their sprites — they are being moved
+        /// to another swarm. Returned in ascending old-id order (deterministic new-id mapping).
+        /// The extracted ids are marked removed here, mirroring the server's RemovedBugIDs.
+        /// </summary>
+        public List<KeyValuePair<int, BugVisual>> ExtractHighestBugs(int n)
+        {
+            var picked = _bugs.Keys.OrderByDescending(id => id).Take(n).OrderBy(id => id).ToList();
+            var result = new List<KeyValuePair<int, BugVisual>>(picked.Count);
+            foreach (int id in picked)
+            {
+                result.Add(new KeyValuePair<int, BugVisual>(id, _bugs[id]));
+                _bugs.Remove(id);
+                _removedIds.Add(id);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Extract ALL bugs (ascending id order) without pooling — used when this swarm is
+        /// absorbed by a merge and its bugs move to the survivor before this visual is destroyed.
+        /// </summary>
+        public List<KeyValuePair<int, BugVisual>> ExtractAllBugs()
+        {
+            var result = _bugs.OrderBy(kv => kv.Key).ToList();
+            _bugs.Clear();
+            return result;
+        }
+
+        /// <summary>
+        /// Insert a moved bug under a new id in THIS swarm: reassigns the agent's identity
+        /// (re-keys its counter-RNG for future ticks only), re-parents the visual, and pins the
+        /// world position (no jump — rendering is world-space).
+        /// </summary>
+        public void InsertBug(int newId, BugVisual bug)
+        {
+            bug.Agent.SwarmId = SwarmId;
+            bug.Agent.BugId = newId;
+            if (bug.Transform != null)
+                bug.Transform.SetParent(transform);
+            _bugs[newId] = bug;
+            if (newId >= _nextBugId)
+                _nextBugId = newId + 1;
+            bug.SyncPosition();
+        }
+
+        /// <summary>
+        /// Remove + pool every current bug (defensive idempotency: clears bugs that were
+        /// early-created by an on-receipt SwarmUpdate before the split event applied).
+        /// </summary>
+        public void ClearBugs()
+        {
+            foreach (var kvp in _bugs)
+                ReturnSpriteToPool(kvp.Value.Transform);
+            _bugs.Clear();
+        }
+
+        /// <summary>
+        /// Spawn one bug at the swarm centre under an explicit id. Deficit-fill for the
+        /// late-join window (the bugs to move don't exist locally). No-op if the id exists.
+        /// </summary>
+        public void SpawnBugAt(int bugId)
+        {
+            if (_bugs.ContainsKey(bugId)) return;
+            if (!(WorldSeedProvider.Instance?.IsInitialized ?? false)) return;
+            _removedIds.Remove(bugId); // the id is (re)alive in this swarm
+            SpawnBug(WorldSeedProvider.Instance.WorldSeed, bugId, _radius);
+            if (bugId >= _nextBugId)
+                _nextBugId = bugId + 1;
         }
 
         /// <summary>

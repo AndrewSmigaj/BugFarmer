@@ -68,6 +68,14 @@ func friendlyZoneName(zoneID string) string {
 		return "Normal"
 	case "sim_test":
 		return "Test"
+	case "collision_test":
+		return "Collision Test"
+	case "split_test2":
+		return "Split Test"
+	case "merge_test2":
+		return "Merge Test"
+	case "repro_test":
+		return "Fly Farm Test"
 	default:
 		return zoneID
 	}

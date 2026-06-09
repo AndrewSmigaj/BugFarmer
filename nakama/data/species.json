@@ -8,17 +8,24 @@
     "wander_change_rate": 0.3,
     "vision_range": 8.0,
     "attraction_strength": 0.6,
+    "forage_chance": 0.25,
     "attractions_by_phase": {
-      "feeding": ["compost_pile", "rotten_fruit", "bait_basket"],
-      "reproducing": ["rotten_fruit", "manure_pile"]
+      "feeding": [
+        "rotten_fruit",
+        "compost_bin"
+      ],
+      "reproducing": [
+        "rotten_fruit",
+        "compost_bin"
+      ]
     },
     "feed_amount": 5.0,
     "breed_amount": 10.0,
     "satiation_decay_rate": 0.5,
     "min_swarm_size": 5,
-    "max_swarm_size": 50,
+    "max_swarm_size": 20,
     "swarm_radius": 4.0,
-    "merge_radius": 4.0,
+    "merge_radius": 2.5,
     "split_threshold": 40,
     "split_chance": 0.01,
     "player_reaction": "flee",
@@ -32,9 +39,14 @@
     "condition_decay": 0,
     "condition_tools": {},
     "max_hp": 1,
-    "damage_tools": {"hand": 1},
+    "damage_tools": {
+      "hand": 1
+    },
     "sell_price": 1,
-    "breeding_plants": ["rotten_fruit", "manure_pile"],
+    "breeding_plants": [
+      "rotten_fruit",
+      "manure_pile"
+    ],
     "egg_count_min": 20,
     "egg_count_max": 40,
     "hatch_time": 30.0,
@@ -51,9 +63,17 @@
     "wander_change_rate": 0.05,
     "vision_range": 24.0,
     "attraction_strength": 0.8,
+    "forage_chance": 0.35,
     "attractions_by_phase": {
-      "feeding": ["flower_wild", "flower_red", "flower_blue", "flower_yellow"],
-      "reproducing": ["milkweed"]
+      "feeding": [
+        "flower_wild",
+        "flower_red",
+        "flower_blue",
+        "flower_yellow"
+      ],
+      "reproducing": [
+        "milkweed"
+      ]
     },
     "feed_amount": 3.0,
     "breed_amount": 8.0,
@@ -75,9 +95,13 @@
     "condition_decay": 0,
     "condition_tools": {},
     "max_hp": 2,
-    "damage_tools": {"hand": 1},
+    "damage_tools": {
+      "hand": 1
+    },
     "sell_price": 3,
-    "breeding_plants": ["milkweed"],
+    "breeding_plants": [
+      "milkweed"
+    ],
     "egg_count_min": 5,
     "egg_count_max": 12,
     "hatch_time": 60.0,

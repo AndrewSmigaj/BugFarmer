@@ -83,7 +83,7 @@ Read the PNG and verify:
 - **Caverns vary in shape** (not all round); rocky ones have interior columns; one clips the edge (mouth).
 - **Ore is in findable veins**, not lone specks, at a density that looks minable-but-not-everywhere.
 - **Water reads as pools** (deep core, shallow rim), not stray puddles, and avoids the rail tunnel.
-- `b.validate()` clean, **0 placement warnings**.
+- `b.lint()` clean, **0 placement warnings**.
 
 Cross-cutting: minerals/crystals use the **mineral** art family (set `"family": "mineral"` on the catalog
 row) so they render as faceted rock, not plants — see `object_pipeline.md`. New objects: **add-object** skill.

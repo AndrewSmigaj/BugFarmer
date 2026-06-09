@@ -49,14 +49,16 @@ DOORX = 9                 # front-door column (relative to ox)
 FKINDS = ["flower_red", "flower_blue", "flower_yellow", "poppy", "lavender"]
 
 
-def place_ecologist(b, ox, oy):
-    """Drop the home (SW corner at ox,oy) inside a fenced yard (side yards + backyard + trees + a
-    front garden). Door at ox+DOORX, oy."""
+def place_ecologist(b, ox, oy, fenced=True):
+    """Drop the home (SW corner at ox,oy). Door at ox+DOORX, oy. `fenced=True` wraps it in a garden
+    yard; `fenced=False` leaves it bare (e.g. a cabin set in the forest). Returns the footprint rect."""
     stamp(b, HOME, LEG, ox=ox, oy=oy)
     b.place_occupant("sign_leaf", ox + DOORX - 2, oy - 1, surface="grass")   # leaf sign by the door
-    return property_yard(b, ox, oy, ox + BW - 1, oy + BH - 1, ox + DOORX,
-                         side=2, front=5, back=4, fence="fence_picket", gate_id="gate_picket",
-                         flowers=FKINDS, seed=4)
+    if fenced:
+        return property_yard(b, ox, oy, ox + BW - 1, oy + BH - 1, ox + DOORX,
+                             side=2, front=5, back=4, fence="fence_picket", gate_id="gate_picket",
+                             flowers=FKINDS, seed=4)
+    return (ox, oy, ox + BW - 1, oy + BH - 1)
 
 
 def build():

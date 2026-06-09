@@ -80,20 +80,59 @@ namespace BugFarmer.Player
 
         private void FixedUpdate()
         {
+            // Resolve movement against blocked cells (occupants with blocks_players, water) so solids
+            // actually stop the player — slide along walls like the bug collision does.
+            Vector3 current = transform.position;
+            Vector3 proposed = current + (Vector3)Velocity * Time.fixedDeltaTime;
+            Vector3 next = ResolveCollision(current, proposed);
+
             if (_rb != null)
             {
-                _rb.linearVelocity = Velocity;
+                _rb.MovePosition(next);
             }
             else
             {
-                transform.position += (Vector3)Velocity * Time.fixedDeltaTime;
+                transform.position = next;
             }
 
-            // Update sorting order for Y-sorting
+            // Y-sort by the player's FEET (sprite is centre-pivoted, so feet are below transform.position).
             if (_spriteRenderer != null)
             {
-                _spriteRenderer.sortingOrder = -Mathf.FloorToInt(transform.position.y);
+                _spriteRenderer.sortingOrder = -Mathf.FloorToInt(FeetWorld(next).y);
             }
+        }
+
+        /// <summary>Block the player from entering cells with blocks_players occupants / impassable ground.
+        /// Tries the full move, then X-only, then Y-only (wall slide), else stays put.</summary>
+        private Vector3 ResolveCollision(Vector3 current, Vector3 proposed)
+        {
+            var tm = BugFarmer.World.TilemapManager.Instance;
+            if (tm == null) return proposed;
+            if (!FeetBlocked(tm, proposed)) return proposed;
+            var xOnly = new Vector3(proposed.x, current.y, current.z);
+            if (!FeetBlocked(tm, xOnly)) return xOnly;
+            var yOnly = new Vector3(current.x, proposed.y, current.z);
+            if (!FeetBlocked(tm, yOnly)) return yOnly;
+            return current;
+        }
+
+        private bool FeetBlocked(BugFarmer.World.TilemapManager tm, Vector3 worldPos)
+        {
+            Vector2 feet = FeetWorld(worldPos);
+            return tm.IsCellBlockedForPlayers(tm.WorldToCell(new Vector3(feet.x, feet.y, 0f)));
+        }
+
+        // The player's FEET = bottom-centre of the rendered sprite. The sprite is CENTER-pivoted, so the
+        // feet sit below transform.position; derive the offset from the sprite bounds (pivot/size-agnostic)
+        // so both collision and Y-sort use the true ground-contact point, not the sprite centre.
+        private Vector2 FeetWorld(Vector3 pos)
+        {
+            if (_spriteRenderer == null || _spriteRenderer.sprite == null)
+                return new Vector2(pos.x, pos.y);
+            Bounds b = _spriteRenderer.bounds;
+            float offX = b.center.x - transform.position.x;
+            float offY = b.min.y - transform.position.y;
+            return new Vector2(pos.x + offX, pos.y + offY);
         }
 
         private void UpdateFacing(float h, float v)

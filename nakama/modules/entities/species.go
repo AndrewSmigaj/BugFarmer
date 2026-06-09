@@ -23,6 +23,10 @@ type BugSpecies struct {
 	VisionRange        float32             `json:"vision_range"`
 	AttractionsByPhase map[string][]string `json:"attractions_by_phase"` // phase → resource IDs
 	AttractionStrength float32             `json:"attraction_strength"`
+	ForageChance       float32             `json:"forage_chance"`         // Chance a behavior chunk is FORAGE vs wander (0 = always forage)
+	ForageModeMinTicks int                 `json:"forage_mode_min_ticks"` // Behavior-chunk duration range (default 300-500 = 30-50s)
+	ForageModeMaxTicks int                 `json:"forage_mode_max_ticks"`
+	ConsumeRate        float32             `json:"consume_rate"` // Food drained per bug per second at a source (default 0.5)
 
 	// Lifecycle parameters
 	FeedAmount         float32 `json:"feed_amount"`          // Satiation per feeding event

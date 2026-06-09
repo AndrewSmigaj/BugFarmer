@@ -3,6 +3,7 @@ package entities
 // FruitTreeState tracks a fruit tree's current state
 type FruitTreeState struct {
 	TreeID          string
+	EntityID        string // Entity type id ("tree_apple") for def lookups (fruit_rot_ticks etc.)
 	GridX, GridY    int
 	FruitCount      int   // Current fruit on tree
 	MaxFruit        int   // Maximum fruit capacity

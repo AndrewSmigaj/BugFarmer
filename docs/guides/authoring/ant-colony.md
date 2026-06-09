@@ -33,7 +33,7 @@ python3 tools/zonegen/scenes/scene_ant_colony.py
 - Ants follow the tunnels as **columns** (you can trace the trail), not a random sprinkle.
 - The nest **branches like a tree** from one surface entrance; chambers are distinct rounded rooms.
 - Tunnels are **narrow + wandering** (never straight); soil (dirt) dominates over stone.
-- `b.validate()` clean, 0 warnings.
+- `b.lint()` clean (0 defects), 0 placement warnings.
 
 ## Iteration learnings (from building the example — keep these)
 - **Bug sprites are tiny (≈8×8, sized for in-game swarms).** At scale ≈1 they vanish on the dark tunnel

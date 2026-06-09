@@ -546,12 +546,25 @@ func (m *Match) dropFruitFromTree(
 	cx, cy, _, _ := GlobalToChunk(tree.GridX, tree.GridY)
 	cs := float32(state.Config.ChunkSize)
 
-	// Create ground item with slight offset from tree
+	// Drop position: scattered BESIDE and IN FRONT (south) of the trunk — never on the
+	// trunk cell itself, where the canopy y-sorts over the apple and hides it.
 	itemID := fmt.Sprintf("fruit_%d_%d_%d", tree.GridX, tree.GridY, time.Now().UnixNano())
-	worldX := float32(tree.GridX) + 0.5 + (rand.Float32()-0.5)*0.8
-	worldY := float32(tree.GridY) + 0.5 + (rand.Float32()-0.5)*0.8
+	side := float32(1)
+	if rand.Float32() < 0.5 {
+		side = -1
+	}
+	worldX := float32(tree.GridX) + 0.5 + side*(0.7+rand.Float32()*0.9) // 0.7-1.6 cells to a side
+	worldY := float32(tree.GridY) + 0.2 - rand.Float32()*1.2           // at/below the trunk = in front
 	localX := worldX - float32(cx)*cs
 	localY := worldY - float32(cy)*cs
+
+	// Rot time is data-driven per tree (world.fruit_rot_ticks; default 16800 ticks = 2 game-days
+	// = 28 min). NOTE Lifetime is in SECONDS (decremented by 0.1/tick) — convert ticks/10.
+	// (The old hardcoded value treated 16800 as seconds → fruit took ~4.7h to rot. Units fixed.)
+	rotTicks := 16800
+	if treeDef := state.Entities[tree.EntityID]; treeDef != nil && treeDef.World != nil && treeDef.World.FruitRotTicks > 0 {
+		rotTicks = treeDef.World.FruitRotTicks
+	}
 
 	groundItem := &entities.GroundItem{
 		ID:       itemID,
@@ -563,7 +576,7 @@ func (m *Match) dropFruitFromTree(
 			LocalX: localX,
 			LocalY: localY,
 		},
-		Lifetime: 16800, // ~28 minutes at 10Hz (time until rot)
+		Lifetime: float32(rotTicks) * 0.1, // seconds until rot
 		DecaysTo: "rotten_" + fruitType,
 	}
 	state.GroundItems[itemID] = groundItem
@@ -621,13 +634,15 @@ func (m *Match) processGroundItemDecay(state *WorldState, dispatcher runtime.Mat
 			item.FoodValue = 100          // Flies can eat this
 			item.Lifetime = 999999        // No more time decay
 
-			// Emit influence event (fly AI now targets this)
+			// Emit food-registry event (fly AI now targets this). WORLD cells + FoodID + level
+			// (the old emission used chunk-LOCAL coords and stuffed the id in swarm_id — fixed).
 			zoneID := ""
 			if state.CurrentZone != nil {
 				zoneID = state.CurrentZone.ZoneID
 			}
-			state.AddInfluenceEvent(zoneID, InfluenceItemRotted, "",
-				int(item.Position.LocalX), int(item.Position.LocalY), itemID, 0)
+			wcx := item.Position.ChunkX*state.Config.ChunkSize + int(item.Position.LocalX)
+			wcy := item.Position.ChunkY*state.Config.ChunkSize + int(item.Position.LocalY)
+			state.AddFoodEvent(zoneID, InfluenceItemRotted, itemID, wcx, wcy, item.FoodValue)
 
 			// Broadcast visual update (remove old, spawn new)
 			cx, cy := item.Position.ChunkX, item.Position.ChunkY
@@ -654,6 +669,277 @@ func (m *Match) processGroundItemDecay(state *WorldState, dispatcher runtime.Mat
 	// Remove expired items after iteration
 	for _, r := range toRemove {
 		m.removeGroundItem(state, dispatcher, r.id, r.item)
+	}
+}
+
+// initStationsInChunk scans a loaded chunk for station occupants (entities with world.station —
+// compost bins etc.) and registers their states. Mirrors initFruitTreesInChunk.
+func (m *Match) initStationsInChunk(
+	state *WorldState,
+	chunk *ChunkData,
+	cx, cy int,
+	logger runtime.Logger,
+) {
+	chunkSize := state.Config.ChunkSize
+
+	for ly := 0; ly < chunkSize; ly++ {
+		for lx := 0; lx < chunkSize; lx++ {
+			cell, _ := chunk.GetOccupantCell(lx, ly)
+			if cell.IsEmpty || cell.Occupant == nil || !cell.Occupant.Anchor {
+				continue
+			}
+			entityDef := state.Entities[cell.Occupant.ID]
+			if entityDef == nil || entityDef.World == nil || entityDef.World.Station == nil {
+				continue
+			}
+
+			gx := cx*chunkSize + lx
+			gy := cy*chunkSize + ly
+			key := entities.StationKey(gx, gy)
+			if state.Stations[key] != nil {
+				continue
+			}
+
+			state.Stations[key] = &entities.StationState{
+				Key:      key,
+				EntityID: cell.Occupant.ID,
+				GridX:    gx,
+				GridY:    gy,
+				Fill:     0,
+			}
+			logger.Debug("Initialized station %s (%s) at %d,%d", key, cell.Occupant.ID, gx, gy)
+		}
+	}
+}
+
+// handleStationDeposit processes a player depositing one inventory item into a station
+// (OpCode 85). Validates the item is accepted + capacity remains, consumes it from the
+// player's inventory, raises the fill meter, and publishes BOTH a display update (OpCode 86)
+// and a deterministic food-registry event (FOOD_CONSUMED with the new level — level semantics:
+// the registry just sets FoodID -> level; deposits move it UP, feeding moves it DOWN).
+func (m *Match) handleStationDeposit(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	userID string,
+	msg StationDepositMessage,
+) {
+	player := state.Players[userID]
+	if player == nil {
+		return
+	}
+
+	key := entities.StationKey(msg.GX, msg.GY)
+	st := state.Stations[key]
+	if st == nil {
+		m.sendWorldError(dispatcher, state, userID, "No station there")
+		return
+	}
+	def := state.Entities[st.EntityID]
+	if def == nil || def.World == nil || def.World.Station == nil {
+		return
+	}
+	sd := def.World.Station
+
+	// Range check (same allowance as pickup: 3.0 server-side)
+	cs := state.Config.ChunkSize
+	px, py := player.WorldX(cs), player.WorldY(cs)
+	dx, dy := px-(float32(msg.GX)+0.5), py-(float32(msg.GY)+0.5)
+	if dx*dx+dy*dy > 9.0 {
+		m.sendWorldError(dispatcher, state, userID, "Too far away")
+		return
+	}
+
+	// Accepted item?
+	accepted := false
+	for _, a := range sd.Accepts {
+		if a == msg.ItemID {
+			accepted = true
+			break
+		}
+	}
+	if !accepted {
+		m.sendWorldError(dispatcher, state, userID, "Can't compost that")
+		return
+	}
+
+	capacity := sd.Capacity
+	if capacity <= 0 {
+		capacity = 10
+	}
+	// Deposits land in the INPUT hopper (processing converts them to compost over time)
+	if st.InputCount >= capacity {
+		m.sendWorldError(dispatcher, state, userID, "The hopper is full")
+		return
+	}
+
+	// Consume one from the player's inventory
+	slot := player.FindItem(msg.ItemID)
+	if slot < 0 || !player.RemoveItem(slot, 1) {
+		m.sendWorldError(dispatcher, state, userID, "You don't have that")
+		return
+	}
+
+	st.InputCount++
+
+	// Per-player inventory update
+	slotMsg := SlotUpdateMessage{
+		SlotIndex: slot,
+		ItemID:    player.ItemSlots[slot].ItemID,
+		Count:     player.ItemSlots[slot].Count,
+	}
+	slotData, _ := json.Marshal(slotMsg)
+	if presence, ok := state.Presences[userID]; ok && presence != nil {
+		dispatcher.BroadcastMessage(OpCodeItemSlotUpdate, slotData, []runtime.Presence{presence}, nil, true)
+	}
+
+	// Display meter update (on-receipt, UI only). The deterministic FOOD event comes when a
+	// unit finishes PROCESSING (processStations), not on deposit — raw input isn't food yet.
+	m.broadcastStationUpdate(dispatcher, st, capacity)
+
+	logger.Debug("Player %s deposited %s into %s (input %d/%d, compost %d)", userID, msg.ItemID, key, st.InputCount, capacity, st.Fill)
+}
+
+// broadcastStationUpdate sends the display meters (input + compost fill) for a station.
+func (m *Match) broadcastStationUpdate(dispatcher runtime.MatchDispatcher, st *entities.StationState, capacity int) {
+	updMsg := StationUpdateMessage{GX: st.GridX, GY: st.GridY, Input: st.InputCount, Fill: st.Fill, Capacity: capacity}
+	updData, _ := json.Marshal(updMsg)
+	dispatcher.BroadcastMessage(OpCodeStationUpdate, updData, nil, nil, true)
+}
+
+// processStations advances every station's INPUT -> OUTPUT conversion (the material-processor
+// loop: one input unit becomes one compost unit every process_ticks). Newly produced compost
+// raises the station's food level on the deterministic ledger (bugs start targeting it).
+func (m *Match) processStations(state *WorldState, dispatcher runtime.MatchDispatcher) {
+	for key, st := range state.Stations {
+		if st.InputCount <= 0 {
+			st.ProcessProgress = 0
+			continue
+		}
+		def := state.Entities[st.EntityID]
+		if def == nil || def.World == nil || def.World.Station == nil {
+			continue
+		}
+		sd := def.World.Station
+		capacity := sd.Capacity
+		if capacity <= 0 {
+			capacity = 10
+		}
+		if st.Fill >= capacity {
+			continue // output full — processing stalls until bugs eat some compost
+		}
+		processTicks := sd.ProcessTicks
+		if processTicks <= 0 {
+			processTicks = 300 // default: 30s per unit at 10Hz
+		}
+
+		st.ProcessProgress++
+		if st.ProcessProgress < processTicks {
+			continue
+		}
+		st.ProcessProgress = 0
+		st.InputCount--
+		st.Fill++
+
+		m.broadcastStationUpdate(dispatcher, st, capacity)
+
+		// Deterministic food registry: compost level rose
+		foodPerUnit := sd.FoodPerUnit
+		if foodPerUnit <= 0 {
+			foodPerUnit = 100
+		}
+		level := st.Fill*foodPerUnit - int(st.FoodFrac)
+		if state.CurrentZone != nil {
+			state.AddFoodEvent(state.CurrentZone.ZoneID, InfluenceFoodConsumed, key, st.GridX, st.GridY, level)
+		}
+	}
+}
+
+// foodSourceAlive reports whether a depletable food source still exists with food left.
+func (m *Match) foodSourceAlive(state *WorldState, foodID string) bool {
+	if item, ok := state.GroundItems[foodID]; ok {
+		return item.FoodValue > 0
+	}
+	if st, ok := state.Stations[foodID]; ok {
+		return st.Fill > 0
+	}
+	return false
+}
+
+// consumeFood drains `amount` (fractional food units) from a depletable source — a rotten
+// ground item's FoodValue or a station's fill. Emits FOOD_CONSUMED on each 25-point threshold
+// crossing (75/50/25/0) so clients keep a coarse deterministic registry; at 0 a ground item is
+// removed from the world (stations keep their occupant, just empty).
+func (m *Match) consumeFood(state *WorldState, dispatcher runtime.MatchDispatcher, foodID string, amount float32) {
+	if amount <= 0 {
+		return
+	}
+	zoneID := ""
+	if state.CurrentZone != nil {
+		zoneID = state.CurrentZone.ZoneID
+	}
+	cs := state.Config.ChunkSize
+
+	crossed := func(old, new int) bool {
+		for _, t := range [...]int{75, 50, 25, 0} {
+			if old > t && new <= t {
+				return true
+			}
+		}
+		return false
+	}
+
+	if item, ok := state.GroundItems[foodID]; ok && item.FoodValue > 0 {
+		item.FoodFrac += amount
+		whole := int(item.FoodFrac)
+		if whole <= 0 {
+			return
+		}
+		item.FoodFrac -= float32(whole)
+		old := item.FoodValue
+		item.FoodValue -= whole
+		if item.FoodValue < 0 {
+			item.FoodValue = 0
+		}
+		if crossed(old, item.FoodValue) {
+			wcx := item.Position.ChunkX*cs + int(item.Position.LocalX)
+			wcy := item.Position.ChunkY*cs + int(item.Position.LocalY)
+			state.AddFoodEvent(zoneID, InfluenceFoodConsumed, foodID, wcx, wcy, item.FoodValue)
+		}
+		if item.FoodValue == 0 {
+			delete(state.GroundItems, foodID)
+			removeMsg := GroundItemRemoveMessage{ID: foodID}
+			m.broadcastToChunk(dispatcher, state, item.Position.ChunkX, item.Position.ChunkY, OpCodeGroundItemRemove, removeMsg)
+		}
+		return
+	}
+
+	if st, ok := state.Stations[foodID]; ok && st.Fill > 0 {
+		def := state.Entities[st.EntityID]
+		foodPerUnit := 100
+		if def != nil && def.World != nil && def.World.Station != nil && def.World.Station.FoodPerUnit > 0 {
+			foodPerUnit = def.World.Station.FoodPerUnit
+		}
+		levelOf := func() int {
+			l := st.Fill*foodPerUnit - int(st.FoodFrac)
+			if l < 0 {
+				l = 0
+			}
+			return l
+		}
+		oldLevel := levelOf()
+		st.FoodFrac += amount
+		for st.FoodFrac >= float32(foodPerUnit) && st.Fill > 0 {
+			st.FoodFrac -= float32(foodPerUnit)
+			st.Fill--
+		}
+		if st.Fill == 0 {
+			st.FoodFrac = 0
+		}
+		newLevel := levelOf()
+		if crossed(oldLevel, newLevel) {
+			state.AddFoodEvent(zoneID, InfluenceFoodConsumed, foodID, st.GridX, st.GridY, newLevel)
+		}
 	}
 }
 
@@ -715,6 +1001,7 @@ func (m *Match) initFruitTreesInChunk(
 
 			tree := &entities.FruitTreeState{
 				TreeID:   fmt.Sprintf("tree_%d_%d", gx, gy),
+				EntityID: cell.Occupant.ID, // entity type ("tree_apple") for def lookups (rot ticks etc.)
 				GridX:    gx,
 				GridY:    gy,
 				MaxFruit: maxFruit,

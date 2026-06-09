@@ -71,6 +71,21 @@ type WorldData struct {
 	MaxFruit       int    `json:"max_fruit,omitempty"`        // Maximum fruit capacity
 	FruitGrowTicks int    `json:"fruit_grow_ticks,omitempty"` // Ticks per fruit growth
 	FruitDropTicks int    `json:"fruit_drop_ticks,omitempty"` // Ticks until fruit drops
+	FruitRotTicks  int    `json:"fruit_rot_ticks,omitempty"`  // Ticks for dropped fruit to rot (default 16800 = 2 game-days)
+
+	// Station properties (player-fillable material processors — compost bin first; nil = not a station)
+	Station *StationData `json:"station,omitempty"`
+}
+
+// StationData describes a player-fillable station: deposit accepted items via a menu, the fill
+// meter rises, and the contents act as a provider other systems consume (e.g. flies feed/breed
+// from a compost bin, draining its fill).
+type StationData struct {
+	Accepts     []string `json:"accepts"`                 // Item types depositable here
+	Capacity    int      `json:"capacity"`                // Max units of fill
+	FoodPerUnit int      `json:"food_per_unit,omitempty"` // Food value each unit provides to bugs
+	Providers   []string `json:"providers,omitempty"`     // "food", "breeding"
+	ProcessTicks int     `json:"process_ticks,omitempty"` // Reserved: fresh->processed conversion time
 }
 
 // BreakableData describes how something can be broken/harvested.

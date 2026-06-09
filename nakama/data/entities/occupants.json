@@ -67,6 +67,33 @@
       }
     }
   },
+  "tree_apple_test": {
+    "name": "Apple Tree (test)",
+    "category": "natural",
+    "sprite_w": 32,
+    "sprite_h": 48,
+    "world": {
+      "footprint": [1, 1],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "fruit_tree",
+      "fruit_type": "apple",
+      "max_fruit": 5,
+      "fruit_grow_ticks": 100,
+      "fruit_drop_ticks": 150,
+      "fruit_rot_ticks": 300,
+      "breakable": {
+        "hp": 5,
+        "required_tool_type": "axe",
+        "required_tool_tier": 1,
+        "drops": [
+          {"item_id": "wood", "count": 3, "chance": 1.0}
+        ]
+      }
+    }
+  },
   "tree_orange": {
     "name": "Orange Tree",
     "category": "natural",

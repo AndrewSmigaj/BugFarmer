@@ -19,6 +19,39 @@ import (
 // Match implements runtime.Match for world simulation
 type Match struct{}
 
+// Ecology tunables (per-second rates at 10Hz). First-pass values — tune via the repro_test
+// population graph. Species-specific rates (feed/breed/decay) live in species.json.
+const (
+	feedRadius             = 2.0  // swarm centre within this distance of food = "at" it
+	consumePerBugPerSecond = 0.5  // food drained per bug per second while at a depletable source
+	reproduceFoodCost      = 50.0 // food consumed by one reproduction event
+)
+
+// reproduceSwarm doubles a sated swarm at a breeding source: Count new bugs (ids from
+// NextBugID), a SWARM_REPRODUCED ledger event (clients spawn them at the centre at the event
+// tick — idempotent, same pattern as split/merge), a chunk of food consumed, meters reset
+// (hungry again → CheckPhaseTransition falls back to feeding).
+func (m *Match) reproduceSwarm(state *WorldState, dispatcher runtime.MatchDispatcher,
+	swarm *entities.SwarmState, species *entities.BugSpecies, logger runtime.Logger) {
+
+	if swarm.NextBugID == 0 {
+		swarm.NextBugID = swarm.Count // lazy-init guard
+	}
+	count := swarm.Count // doubling: as many new bugs as there are now
+	base := swarm.NextBugID
+	swarm.NextBugID += count
+	swarm.Count += count
+	swarm.ReproductionMeter = 0
+	swarm.Satiation = 0
+	swarm.ReproduceCooldown = species.ReproduceCooldown
+
+	if state.CurrentZone != nil {
+		state.AddSwarmReproducedEvent(state.CurrentZone.ZoneID, swarm.ID, count, base)
+	}
+	m.consumeFood(state, dispatcher, swarm.TargetFoodID, reproduceFoodCost)
+	logger.Info("Swarm %s reproduced at %s: %d -> %d bugs", swarm.ID, swarm.TargetFoodID, count, swarm.Count)
+}
+
 // MatchLabel is the JSON structure for match listing
 type MatchLabel struct {
 	WorldID      string `json:"world_id"`
@@ -459,6 +492,14 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				logger.Warn("Invalid movement message from %s: %v", userID, err)
 				continue
 			}
+			// Authoritative collision: reject moves into cells that block players. The client position is
+			// the CENTRE of the 16x32 (1x2-cell) centre-pivoted sprite, so the feet (ground contact) are
+			// one cell below: (X, Y-1). The client predicts this too; this is the server backstop. Facing
+			// still updates so turning in place against a wall works.
+			if worldState.IsBlockedForPlayers(movement.X, movement.Y-1.0) {
+				player.Facing = entities.Direction(movement.Facing)
+				continue
+			}
 			// Update player state
 			player.SetWorldPosition(movement.X, movement.Y, chunkSize)
 			player.Facing = entities.Direction(movement.Facing)
@@ -550,13 +591,53 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			}
 			m.handlePickupItem(logger, dispatcher, worldState, userID, pickupMsg)
 
-		case OpCodeInteractionReport:
-			var reportMsg InteractionReportMessage
-			if err := json.Unmarshal(msg.GetData(), &reportMsg); err != nil {
-				logger.Warn("Invalid interaction report from %s: %v", userID, err)
+		// NOTE: OpCodeInteractionReport (70) RETIRED — no client ever sent it, and the
+		// lifecycle meters it fed are now SERVER-authoritative (advanced in the swarm loop
+		// from center-at-food checks; effects ride the influence ledger).
+
+		case OpCodeStationDeposit:
+			var depositMsg StationDepositMessage
+			if err := json.Unmarshal(msg.GetData(), &depositMsg); err != nil {
+				logger.Warn("Invalid station deposit from %s: %v", userID, err)
 				continue
 			}
-			m.handleInteractionReport(worldState, reportMsg)
+			m.handleStationDeposit(logger, dispatcher, worldState, userID, depositMsg)
+
+		case OpCodeEcologyTuning:
+			// DEV TOOL: live-override a species' ecology parameters from the Unity debug
+			// panel (server-decided values; determinism-safe).
+			var tuneMsg EcologyTuningMessage
+			if err := json.Unmarshal(msg.GetData(), &tuneMsg); err != nil {
+				logger.Warn("Invalid ecology tuning from %s: %v", userID, err)
+				continue
+			}
+			if sp := worldState.Species[tuneMsg.SpeciesID]; sp != nil {
+				sp.ForageChance = tuneMsg.ForageChance
+				if tuneMsg.ForageModeMinTicks > 0 {
+					sp.ForageModeMinTicks = tuneMsg.ForageModeMinTicks
+				}
+				if tuneMsg.ForageModeMaxTicks > 0 {
+					sp.ForageModeMaxTicks = tuneMsg.ForageModeMaxTicks
+				}
+				if tuneMsg.FeedAmount > 0 {
+					sp.FeedAmount = tuneMsg.FeedAmount
+				}
+				if tuneMsg.BreedAmount > 0 {
+					sp.BreedAmount = tuneMsg.BreedAmount
+				}
+				if tuneMsg.SatiationDecay > 0 {
+					sp.SatiationDecayRate = tuneMsg.SatiationDecay
+				}
+				if tuneMsg.ConsumeRate > 0 {
+					sp.ConsumeRate = tuneMsg.ConsumeRate
+				}
+				if tuneMsg.ReproduceCooldown > 0 {
+					sp.ReproduceCooldown = tuneMsg.ReproduceCooldown
+				}
+				logger.Info("ECOLOGY TUNED %s by %s: forage=%.2f mode=%d-%dt feed=%.1f breed=%.1f decay=%.2f consume=%.2f cd=%.0fs",
+					tuneMsg.SpeciesID, userID, sp.ForageChance, sp.ForageModeMinTicks, sp.ForageModeMaxTicks,
+					sp.FeedAmount, sp.BreedAmount, sp.SatiationDecayRate, sp.ConsumeRate, sp.ReproduceCooldown)
+			}
 
 		// Bug Sync (Late Joiner + Drift Detection)
 		case OpCodeSampleResponse:
@@ -618,6 +699,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 	// === Fruit Trees & Ground Item Decay ===
 	m.processFruitTrees(worldState, dispatcher, logger)
 	m.processGroundItemDecay(worldState, dispatcher)
+	m.processStations(worldState, dispatcher) // material processors: input -> compost
 
 	// === Swarm Simulation ===
 	deltaTime := 1.0 / float32(worldState.Config.TickRate)
@@ -634,15 +716,50 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			continue
 		}
 
-		// THINK: Every few seconds, pick new target (expensive)
+		// THINK: Every few seconds, pick new target (expensive). Food/breeding sources come
+		// from the unified query (rotten ground fruit + filled stations + flora occupants);
+		// the chosen source is CACHED on the swarm so the per-tick meter check is O(1).
+		// V1 RULE: a REPRODUCING swarm only targets DEPLETABLE sources (items/stations) —
+		// flora is infinite, so breeding on it would mean unbounded growth.
 		if worldState.TickCount >= swarm.NextThinkTick {
-			// Query resources only when thinking
 			var resourceX, resourceY float32 = float32(math.NaN()), float32(math.NaN())
+			swarm.TargetFoodID = ""
+			swarm.TargetFoodDepletable = false
+
+			// FORAGE DUTY CYCLE: the forage/wander MODE persists 30-50s (10x the leg cadence)
+			// so behavior doesn't flicker leg-to-leg — rolled by forage_chance (~25% for
+			// flies). Satiation/breeding fill across several feeding sessions with hunger
+			// decaying in between. OVERRIDE: once sated (reproducing phase) the swarm always
+			// seeks the breeding source and PARKS there until the reproduction fires.
+			if worldState.TickCount >= swarm.ModeUntilTick {
+				swarm.ForageMode = species.ForageChance <= 0 || rand.Float32() < species.ForageChance
+				modeMin, modeMax := int64(species.ForageModeMinTicks), int64(species.ForageModeMaxTicks)
+				if modeMin <= 0 {
+					modeMin = 300 // default 30s
+				}
+				if modeMax <= modeMin {
+					modeMax = modeMin + 200
+				}
+				swarm.ModeUntilTick = worldState.TickCount + modeMin + rand.Int63n(modeMax-modeMin+1)
+			}
+			forage := swarm.ForageMode || swarm.Phase == "reproducing"
 			attractions := swarm.GetCurrentAttractions(species)
-			if len(attractions) > 0 {
-				hits := FindNearbyResources(worldState, swarm.Position, species.VisionRange, attractions)
+			if forage && len(attractions) > 0 {
+				hits := FindNearbyFood(worldState, swarm.Position, species.VisionRange, attractions)
+				if swarm.Phase == "reproducing" {
+					kept := hits[:0]
+					for _, h := range hits {
+						if h.Depletable {
+							kept = append(kept, h)
+						}
+					}
+					hits = kept
+				}
 				if len(hits) > 0 {
 					resourceX, resourceY = hits[0].X, hits[0].Y
+					swarm.TargetFoodID = hits[0].ID
+					swarm.TargetFoodX, swarm.TargetFoodY = hits[0].X, hits[0].Y
+					swarm.TargetFoodDepletable = hits[0].Depletable
 				}
 			}
 
@@ -669,16 +786,71 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		// MOVE: Every tick, move toward target (cheap)
 		swarm.Move(deltaTime, species, chunkSize)
 
-		// Check phase transitions (metadata change → re-broadcast swarm set)
+		// === Lifecycle meters (server-authoritative; all effects ride the ledger) ===
+		swarm.ReproduceCooldown -= deltaTime // was never decremented before this system
+
+		atFood := false
+		if swarm.TargetFoodID != "" {
+			if swarm.TargetFoodDepletable && !m.foodSourceAlive(worldState, swarm.TargetFoodID) {
+				// Source depleted/picked up: drop it and re-Think immediately.
+				swarm.ClearFoodTarget(worldState.TickCount)
+			} else {
+				dx := swarm.WorldX(chunkSize) - swarm.TargetFoodX
+				dy := swarm.WorldY(chunkSize) - swarm.TargetFoodY
+				atFood = dx*dx+dy*dy <= feedRadius*feedRadius
+			}
+		}
+
+		if atFood {
+			consumeRate := species.ConsumeRate
+			if consumeRate <= 0 {
+				consumeRate = consumePerBugPerSecond
+			}
+			switch swarm.Phase {
+			case "feeding":
+				// Species rates are per-second (FeedAmount 5 => sated in 20s).
+				swarm.Satiation += species.FeedAmount * deltaTime
+				if swarm.Satiation > 100 {
+					swarm.Satiation = 100
+				}
+				if swarm.TargetFoodDepletable {
+					// More flies = faster consumption (architecture_farming.md).
+					m.consumeFood(worldState, dispatcher, swarm.TargetFoodID,
+						consumeRate*float32(swarm.Count)*deltaTime)
+				}
+			case "reproducing":
+				if swarm.TargetFoodDepletable { // v1: breeding requires a depletable source
+					swarm.ReproductionMeter += species.BreedAmount * deltaTime
+					m.consumeFood(worldState, dispatcher, swarm.TargetFoodID,
+						consumeRate*float32(swarm.Count)*deltaTime)
+					if swarm.ReproductionMeter >= 100 && swarm.CanReproduce() && swarm.Count > 0 {
+						m.reproduceSwarm(worldState, dispatcher, swarm, species, logger)
+					}
+				}
+			}
+		} else {
+			// Hunger: satiation drains when not feeding (wired for the first time —
+			// satiation_decay_rate existed in species.json but was never applied).
+			swarm.Satiation -= species.SatiationDecayRate * deltaTime
+			if swarm.Satiation < 0 {
+				swarm.Satiation = 0
+			}
+		}
+
+		// Phase transitions. NO SwarmsDirty here (clients never read phase; the old dirty
+		// flag only generated spurious full-set SwarmUpdate broadcasts). On a change the
+		// attractions differ, so retarget immediately instead of waiting out the think timer.
 		prevPhase := swarm.Phase
 		swarm.CheckPhaseTransition(species)
 		if swarm.Phase != prevPhase {
-			worldState.SwarmsDirty = true
+			swarm.ClearFoodTarget(worldState.TickCount)
 		}
 	}
 
 	// Check merge/split every 50 ticks (5 seconds)
-	if worldState.TickCount-worldState.LastMergeCheck >= 50 {
+	// Population pass once a minute (600 ticks at 10Hz): proximity-merge + size-split.
+	// Both travel as tick+seq SWARM_MERGE/SWARM_SPLIT influence events (deterministic).
+	if worldState.TickCount-worldState.LastMergeCheck >= 600 {
 		m.checkSwarmMerging(worldState, chunkSize, logger)
 		m.checkSwarmSplitting(worldState, chunkSize, logger)
 		worldState.LastMergeCheck = worldState.TickCount
@@ -724,8 +896,9 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		worldState.SwarmsDirty = false
 	}
 
-	// Update ground item lifetimes
-	m.updateGroundItemLifetimes(logger, dispatcher, worldState, deltaTime)
+	// NOTE: ground-item lifetimes are processed ONLY by processGroundItemDecay (farming pass,
+	// line ~628). The old updateGroundItemLifetimes here DOUBLE-decremented Lifetime and raced
+	// the rot transition (deleting fruit before it could rot) — removed.
 
 	// Bug sync: periodic drift sampling every 300 ticks (30 seconds at 10Hz)
 	if worldState.TickCount%300 == 0 {
@@ -1062,31 +1235,56 @@ func (m *Match) checkSwarmMerging(state *WorldState, chunkSize int, logger runti
 			// Calculate distance between swarm centers
 			dist := distBetweenSwarms(swarm1, swarm2, chunkSize)
 
-			// Merge if within merge radius (visual overlap)
+			// Merge if within merge radius (centers mostly overlapping)
 			if dist <= species1.MergeRadius {
 				combined := swarm1.Count + swarm2.Count
 				// Only merge if combined doesn't exceed max
 				if combined <= species1.MaxSwarmSize {
+					// The absorbed swarm's bugs become NEW survivor ids starting at the
+					// survivor's pre-merge NextBugID — they stay alive + catchable
+					// (IsBugAlive requires id < NextBugID). Lazy-init guard first.
+					if swarm1.NextBugID == 0 {
+						swarm1.NextBugID = swarm1.Count
+					}
+					newBugIDBase := swarm1.NextBugID
+					swarm1.NextBugID += swarm2.Count
 					swarm1.Count = combined
 					merged[id2] = true
 					toDelete = append(toDelete, id2)
+
+					// Tick+seq event: clients MOVE the absorbed bugs into the survivor at
+					// the event tick (positions preserved). NO SwarmsDirty — the lifecycle
+					// change travels only through the deterministic ledger.
+					if state.CurrentZone != nil {
+						state.AddSwarmMergeEvent(state.CurrentZone.ZoneID, id1, id2, swarm2.Count, newBugIDBase)
+					}
 				}
 			}
 		}
 	}
 
-	// Delete merged swarms after iteration
+	// Delete merged swarms after iteration (and keep SwarmsBySpecies consistent)
 	for _, id := range toDelete {
+		if sw, ok := state.Swarms[id]; ok {
+			ids := state.SwarmsBySpecies[sw.SpeciesID]
+			for i, sid := range ids {
+				if sid == id {
+					state.SwarmsBySpecies[sw.SpeciesID] = append(ids[:i], ids[i+1:]...)
+					break
+				}
+			}
+		}
 		delete(state.Swarms, id)
 	}
 
 	if len(toDelete) > 0 {
-		state.SwarmsDirty = true
-		logger.Info("Merged %d swarms", len(toDelete))
+		logger.Info("Merged %d swarms (via SWARM_MERGE events)", len(toDelete))
 	}
 }
 
-// checkSwarmSplitting randomly splits large swarms
+// checkSwarmSplitting splits any swarm whose size exceeds the species limit (deterministic
+// size rule — no random roll). The parent sheds its HIGHEST splitCount alive bug-ids into a
+// new child swarm; clients MOVE those exact bugs at the event tick (positions preserved).
 func (m *Match) checkSwarmSplitting(state *WorldState, chunkSize int, logger runtime.Logger) {
 	if state.StaticSim {
 		return // Skip splitting in debug mode
@@ -1100,44 +1298,75 @@ func (m *Match) checkSwarmSplitting(state *WorldState, chunkSize int, logger run
 			continue
 		}
 
-		// Only split if above threshold and passes random check
-		if swarm.Count > species.SplitThreshold && rand.Float32() < species.SplitChance {
-			// Split roughly in half with some variance
-			splitCount := swarm.Count/2 + rand.Intn(10) - 5
-			if splitCount < species.MinSwarmSize {
-				splitCount = species.MinSwarmSize
-			}
-			if swarm.Count-splitCount < species.MinSwarmSize {
-				continue // Would leave too few in original
+		// Deterministic size rule: split when over the limit (MaxSwarmSize IS the limit)
+		if swarm.Count > species.MaxSwarmSize {
+			splitCount := swarm.Count / 2
+			if splitCount < species.MinSwarmSize || swarm.Count-splitCount < species.MinSwarmSize {
+				continue // Either half would be too small
 			}
 
-			swarm.Count -= splitCount
+			// Shed the HIGHEST splitCount alive ids (the client mirrors this exact set:
+			// it moves its highest alive ids into the child, in sorted order).
+			if swarm.NextBugID == 0 {
+				swarm.NextBugID = swarm.Count // lazy-init guard (initial swarms are initialized at spawn)
+			}
+			shed := make([]int, 0, splitCount)
+			for id := swarm.NextBugID - 1; id >= 0 && len(shed) < splitCount; id-- {
+				if swarm.IsBugAlive(id) {
+					shed = append(shed, id)
+				}
+			}
+			swarm.RemoveBugs(shed) // marks RemovedBugIDs + decrements Count (no double-decrement)
 
-			// Create new swarm offset from original
+			// Create the child offset from the parent; NextThinkTick=0 -> it Thinks (and
+			// emits its first SWARM_SET_TARGET leg) on the next tick.
 			id, _ := uuid.NewV4()
 			newPos := offsetPosition(swarm.Position, 3.0, chunkSize)
+			// Clamp the child centre against walls/fences: offsetPosition is collision-blind,
+			// and a PENNED swarm that grows past the limit must split INSIDE the pen (else the
+			// child centre lands beyond the fence and its bugs strain at the wall forever).
+			{
+				px := swarm.WorldX(chunkSize)
+				py := swarm.WorldY(chunkSize)
+				nx := float32(newPos.ChunkX*chunkSize) + newPos.LocalX
+				ny := float32(newPos.ChunkY*chunkSize) + newPos.LocalY
+				cxw, cyw := entities.RaycastClamp(px, py, nx, ny, func(x, y float32) bool {
+					return state.IsBlocked(x, y)
+				})
+				newPos = entities.EntityPosition{LocalX: cxw, LocalY: cyw}
+				newPos.Normalize(chunkSize)
+			}
 
 			newSwarm := &entities.SwarmState{
 				ID:        fmt.Sprintf("swarm_%s", id.String()[:8]),
 				SpeciesID: swarm.SpeciesID,
 				Position:  newPos,
 				Radius:    swarm.Radius,
-				Count:     splitCount,
+				Count:     len(shed),
 				HomePos:   newPos,
 				WanderRad: swarm.WanderRad,
 			}
+			newSwarm.InitializeBugIDs() // child ids 0..count-1
 			newSwarms = append(newSwarms, newSwarm)
+
+			// Tick+seq event: lifecycle travels ONLY through the deterministic ledger
+			// (NO SwarmsDirty — avoids the on-receipt SwarmUpdate creation race).
+			if state.CurrentZone != nil {
+				state.AddSwarmSplitEvent(state.CurrentZone.ZoneID, swarm.ID, newSwarm.ID,
+					len(shed), swarm.Count, // swarm.Count is already POST-shed here
+					toFixed(newSwarm.WorldX(chunkSize)), toFixed(newSwarm.WorldY(chunkSize)))
+			}
 		}
 	}
 
-	// Add new swarms after iteration
+	// Add new swarms after iteration (and keep SwarmsBySpecies consistent — was missing)
 	for _, s := range newSwarms {
 		state.Swarms[s.ID] = s
+		state.SwarmsBySpecies[s.SpeciesID] = append(state.SwarmsBySpecies[s.SpeciesID], s.ID)
 	}
 
 	if len(newSwarms) > 0 {
-		state.SwarmsDirty = true
-		logger.Info("Split into %d new swarms", len(newSwarms))
+		logger.Info("Split %d over-limit swarms (via SWARM_SPLIT events)", len(newSwarms))
 	}
 }
 
@@ -1337,69 +1566,14 @@ func (m *Match) handleMoveSlot(
 		playerID, msg.SourceType, msg.SourceIndex, msg.DestType, msg.DestIndex)
 }
 
-// updateGroundItemLifetimes decrements item lifetimes and removes expired items
-func (m *Match) updateGroundItemLifetimes(
-	logger runtime.Logger,
-	dispatcher runtime.MatchDispatcher,
-	state *WorldState,
-	deltaTime float32,
-) {
-	var expired []string
+// updateGroundItemLifetimes REMOVED: it duplicated processGroundItemDecay (which handles both
+// decay-to-rot and plain expiry), double-decrementing every item's Lifetime and racing the rot
+// transition — dropped fruit frequently got deleted before it could become rotten. One processor now.
 
-	for id, item := range state.GroundItems {
-		item.Lifetime -= deltaTime
-		if item.Lifetime <= 0 {
-			expired = append(expired, id)
-		}
-	}
-
-	for _, id := range expired {
-		item := state.GroundItems[id]
-		delete(state.GroundItems, id)
-
-		removeMsg := GroundItemRemoveMessage{ID: id}
-		m.broadcastToChunk(dispatcher, state, item.Position.ChunkX, item.Position.ChunkY, OpCodeGroundItemRemove, removeMsg)
-	}
-}
-
-// handleInteractionReport processes aggregated bug-resource interactions from a client
-func (m *Match) handleInteractionReport(state *WorldState, msg InteractionReportMessage) {
-	for _, report := range msg.Reports {
-		swarm, exists := state.Swarms[report.SwarmID]
-		if !exists {
-			continue
-		}
-
-		species := state.Species[swarm.SpeciesID]
-		if species == nil {
-			continue
-		}
-
-		// Sanity check - cap at reasonable max per report period
-		foodCount := report.FoodCount
-		if foodCount > 50 {
-			foodCount = 50
-		}
-		breedCount := report.BreedCount
-		if breedCount > 50 {
-			breedCount = 50
-		}
-
-		// Update lifecycle meters based on current phase
-		if swarm.Phase == "feeding" && foodCount > 0 {
-			swarm.Satiation += float32(foodCount) * species.FeedAmount
-			if swarm.Satiation > 100 {
-				swarm.Satiation = 100
-			}
-		}
-		if swarm.Phase == "reproducing" && breedCount > 0 {
-			swarm.ReproductionMeter += float32(breedCount) * species.BreedAmount
-			if swarm.ReproductionMeter > 100 {
-				swarm.ReproductionMeter = 100
-			}
-		}
-	}
-}
+// handleInteractionReport REMOVED (OpCode 70 retired): no client ever sent it, and the
+// lifecycle meters are now SERVER-authoritative — advanced in the swarm simulation loop from
+// centre-at-food checks (see the Lifecycle meters block), with all effects on the ledger
+// (SWARM_REPRODUCED / FOOD_CONSUMED). This removes the multi-client double-count risk too.
 
 // === Bug Sync (Late Joiner + Drift Detection) ===
 

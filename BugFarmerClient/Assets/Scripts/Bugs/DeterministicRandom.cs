@@ -15,6 +15,8 @@ namespace BugFarmer.Bugs
         public const int SpawnDistance = 5;
         public const int MovementChange = 6;
         public const int TargetOffset = 7;
+        public const int Land = 8;        // feed-at-food: landing duration
+        public const int Participate = 9; // feed-at-food: per-bug per-window join roll
     }
 
     /// <summary>

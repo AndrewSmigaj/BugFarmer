@@ -49,6 +49,10 @@ namespace BugFarmer.Data
             public bool Interactable;
             public string InteractionType;
             public BreakableData Breakable;
+
+            // Station block (material processors: compost bin etc.)
+            public string[] StationAccepts;  // Item types depositable here (menu filter)
+            public int StationCapacity = 10;
         }
 
         public class EntityDef
@@ -219,6 +223,20 @@ namespace BugFarmer.Data
                     footprintArray[0].Value<int>(),
                     footprintArray[1].Value<int>()
                 };
+            }
+
+            // Parse station block (material processors — menu filter + capacity display)
+            var station = data["station"] as JObject;
+            if (station != null)
+            {
+                var accepts = station["accepts"] as JArray;
+                if (accepts != null)
+                {
+                    world.StationAccepts = new string[accepts.Count];
+                    for (int i = 0; i < accepts.Count; i++)
+                        world.StationAccepts[i] = accepts[i].Value<string>();
+                }
+                world.StationCapacity = station["capacity"]?.Value<int>() ?? 10;
             }
 
             // Parse breakable data
@@ -392,8 +410,12 @@ namespace BugFarmer.Data
             if (_spriteCache.TryGetValue(cacheKey, out var cached))
                 return cached;
 
-            // All icons use {id}_icon naming convention
+            // Icons use the {id}_icon naming convention, but some item art (apple, orange,
+            // rotten_*) ships as plain Items/{id}.png — fall back so dropped fruit isn't
+            // rendered sprite-less (invisible ground items).
             var sprite = Resources.Load<Sprite>($"Items/{id}_icon");
+            if (sprite == null)
+                sprite = Resources.Load<Sprite>($"Items/{id}");
             if (sprite != null)
                 _spriteCache[cacheKey] = sprite;
 

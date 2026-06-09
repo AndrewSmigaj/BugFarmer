@@ -68,6 +68,9 @@ type WorldState struct {
 	// Fruit trees
 	FruitTreeStates map[string]*entities.FruitTreeState // "gx,gy" -> fruit tree state
 
+	// Stations (player-fillable processors: compost bin etc.)
+	Stations map[string]*entities.StationState // StationKey(gx,gy) -> station state
+
 	// Bug spawn tracking (zone-level, per species)
 	SwarmsBySpecies  map[string][]string // speciesID → swarmIDs of that species
 	SpeciesNextSpawn map[string]float64  // speciesID → next spawn time (seconds since start)
@@ -236,6 +239,7 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		CropStates:      make(map[string]*entities.CropState),
 		CropDefs:        make(map[string]*entities.CropDef),
 		FruitTreeStates: make(map[string]*entities.FruitTreeState),
+		Stations:        make(map[string]*entities.StationState),
 		// Bug spawn tracking
 		SwarmsBySpecies:  make(map[string][]string),
 		SpeciesNextSpawn: make(map[string]float64),
@@ -349,6 +353,37 @@ func (w *WorldState) IsBlocked(worldX, worldY float32) bool {
 	return false
 }
 
+// IsBlockedForPlayers mirrors IsBlocked but for PLAYER movement (occupant blocks_players, or impassable
+// ground). Authoritative collision: the movement handler rejects moves into a blocked cell.
+func (w *WorldState) IsBlockedForPlayers(worldX, worldY float32) bool {
+	cs := w.Config.ChunkSize
+	gx := int(math.Floor(float64(worldX)))
+	gy := int(math.Floor(float64(worldY)))
+	cx := floorDiv(gx, cs)
+	cy := floorDiv(gy, cs)
+	lx := gx - cx*cs
+	ly := gy - cy*cs
+
+	chunk := w.Chunks[ChunkKey(cx, cy)]
+	if chunk == nil {
+		return true // out of bounds
+	}
+
+	cell, err := chunk.GetOccupantCell(lx, ly)
+	if err == nil && cell.Occupant != nil {
+		entityDef := w.Entities[cell.Occupant.ID]
+		if entityDef != nil && entityDef.World != nil && entityDef.World.BlocksPlayers {
+			return true
+		}
+	}
+
+	switch chunk.GetGroundTile(lx, ly) {
+	case "water_shallow", "water_deep", "lava":
+		return true
+	}
+	return false
+}
+
 // === Influence Event System ===
 
 // GetOrCreateZone returns existing zone state or creates a new one
@@ -411,6 +446,96 @@ func (s *WorldState) AddSwarmTargetEvent(zoneID, swarmID string, originX, origin
 		TargetX: targetX,
 		TargetY: targetY,
 		Speed:   speed,
+	}
+	zone.NextSeq++
+
+	zone.InfluenceLog = append(zone.InfluenceLog, event)
+	s.PendingInfluence = append(s.PendingInfluence, event)
+}
+
+// AddSwarmSplitEvent logs a SWARM_SPLIT through the seq-gated ledger: the parent swarm
+// sheds its highest `count` alive bug-ids into a NEW swarm seeded at (cx, cy) (fixed-point
+// ×1000). parentCount = the parent's POST-split count, so clients apply idempotently
+// (move exactly AliveCount−parentCount bugs — zero when the split is already reflected,
+// e.g. a late-joiner whose metadata is post-split). Bugs MOVE; positions preserved.
+func (s *WorldState) AddSwarmSplitEvent(zoneID, parentID, childID string, count, parentCount, cx, cy int) {
+	zone := s.GetOrCreateZone(zoneID)
+
+	event := InfluenceEvent{
+		Tick:        s.TickCount,
+		Seq:         zone.NextSeq,
+		Type:        InfluenceSwarmSplit,
+		ZoneID:      zoneID,
+		SwarmID:     parentID,
+		NewSwarmID:  childID,
+		SplitCount:  count,
+		ParentCount: parentCount,
+		CenterX:     cx,
+		CenterY:     cy,
+	}
+	zone.NextSeq++
+
+	zone.InfluenceLog = append(zone.InfluenceLog, event)
+	s.PendingInfluence = append(s.PendingInfluence, event)
+}
+
+// AddSwarmMergeEvent logs a SWARM_MERGE: the absorbed swarm's bugs MOVE into the survivor
+// as ids newBugIDBase..newBugIDBase+count-1 (the survivor's pre-merge NextBugID), then the
+// absorbed swarm is deleted. Clients apply it at the event tick, preserving bug positions.
+func (s *WorldState) AddSwarmMergeEvent(zoneID, survivorID, absorbedID string, count, newBugIDBase int) {
+	zone := s.GetOrCreateZone(zoneID)
+
+	event := InfluenceEvent{
+		Tick:         s.TickCount,
+		Seq:          zone.NextSeq,
+		Type:         InfluenceSwarmMerge,
+		ZoneID:       zoneID,
+		SwarmID:      survivorID,
+		NewSwarmID:   absorbedID,
+		SplitCount:   count,
+		NewBugIDBase: newBugIDBase,
+	}
+	zone.NextSeq++
+
+	zone.InfluenceLog = append(zone.InfluenceLog, event)
+	s.PendingInfluence = append(s.PendingInfluence, event)
+}
+
+// AddFoodEvent logs a food-registry change (ITEM_ROTTED = new food appeared; FOOD_CONSUMED =
+// level crossed a threshold, 0 = gone). cellX/cellY are WORLD cells; level is the remaining food.
+func (s *WorldState) AddFoodEvent(zoneID, eventType, foodID string, cellX, cellY, level int) {
+	zone := s.GetOrCreateZone(zoneID)
+
+	event := InfluenceEvent{
+		Tick:   s.TickCount,
+		Seq:    zone.NextSeq,
+		Type:   eventType,
+		ZoneID: zoneID,
+		CellX:  cellX,
+		CellY:  cellY,
+		FoodID: foodID,
+		Level:  level,
+	}
+	zone.NextSeq++
+
+	zone.InfluenceLog = append(zone.InfluenceLog, event)
+	s.PendingInfluence = append(s.PendingInfluence, event)
+}
+
+// AddSwarmReproducedEvent logs a reproduction: the swarm bred at a food source and gains
+// `count` new bugs with ids newBugIDBase..newBugIDBase+count-1. Clients spawn them at the
+// swarm centre at the event tick (idempotent SpawnBugAt — same pattern as split/merge).
+func (s *WorldState) AddSwarmReproducedEvent(zoneID, swarmID string, count, newBugIDBase int) {
+	zone := s.GetOrCreateZone(zoneID)
+
+	event := InfluenceEvent{
+		Tick:         s.TickCount,
+		Seq:          zone.NextSeq,
+		Type:         InfluenceSwarmReproduced,
+		ZoneID:       zoneID,
+		SwarmID:      swarmID,
+		SplitCount:   count,
+		NewBugIDBase: newBugIDBase,
 	}
 	zone.NextSeq++
 

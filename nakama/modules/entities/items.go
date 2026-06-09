@@ -9,6 +9,7 @@ type GroundItem struct {
 	Lifetime  float32        // Seconds until despawn (60.0 default)
 	DecaysTo  string         // Item type this decays into ("apple" -> "rotten_apple")
 	FoodValue int            // Food value for bugs (100 for rotten fruit, consumed by flies)
+	FoodFrac  float32        // Fractional food drained (consumption accumulator)
 }
 
 // GetID implements Entity interface

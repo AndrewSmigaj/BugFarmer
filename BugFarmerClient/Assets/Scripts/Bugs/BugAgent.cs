@@ -104,6 +104,76 @@ namespace BugFarmer.Bugs
             return CounterRng.Float(_worldSeed, SwarmId, BugId, _currentTick, purposeId);
         }
 
+        // === Feed-at-food visual (deterministic) ===
+        private int _landTicks; // >0 = landed (paused) on a food source
+
+        private const float FeedVisualRadius = 2.5f; // centre within this of food => bugs engage
+        private static readonly int LandDistSqr =
+            (FixedPoint.FromFloat(0.35f) * FixedPoint.FromFloat(0.35f)).Value;
+
+        // Per-bug feeding participation re-rolls every 8s window, so bugs drift in and out of
+        // feeding INDIVIDUALLY — the swarm never flips between modes as one block.
+        private const long ParticipationWindowTicks = 80;
+        private static readonly FixedPoint ApproachRadiusSqr =
+            FixedPoint.FromFloat(0.4f * 0.4f);
+
+        /// <summary>
+        /// If the swarm centre is at a food source (deterministic event-driven registry),
+        /// SOME bugs (per-bug per-window roll) approach it with their normal buzzy Brownian
+        /// motion pulled toward a personal landing point, land for a few ticks, and resume;
+        /// the rest keep wandering. Returns true when feeding owns this tick's movement.
+        /// </summary>
+        private bool TryFeedAtFood(FixedPoint2 swarmCenter)
+        {
+            var im = InfluenceManager.Instance;
+            if (im == null) return false;
+
+            if (!im.TryGetNearestFood(swarmCenter, FeedVisualRadius, out var foodPos))
+            {
+                _landTicks = 0;
+                return false;
+            }
+
+            // INDIVIDUAL participation: each bug rolls per 8s window (counter-RNG on the
+            // window index — deterministic on every client). ~60% feed in any window; the
+            // others keep their normal wander, so the crowd looks staggered and alive.
+            long window = _currentTick / ParticipationWindowTicks;
+            bool joining = CounterRng.Chance(_worldSeed, SwarmId, BugId, window, RngPurpose.Participate, 3, 5);
+            if (!joining)
+            {
+                _landTicks = 0;
+                return false;
+            }
+
+            if (_landTicks > 0)
+            {
+                _landTicks--;
+                Velocity = default; // landed: hold position
+                return true;
+            }
+
+            // Per-bug landing point: a stable ring offset derived from BugId (no RNG burn) —
+            // bugs encircle the fruit/bin instead of stacking on one pixel.
+            var dir = FixedPointMath.DirectionFromIndex((BugId * 37) & (FixedPointMath.TableSize - 1));
+            var ring = FixedPoint.FromFloat(0.3f);
+            var target = new FixedPoint2(foodPos.X + dir.X * ring, foodPos.Y + dir.Y * ring);
+
+            if (Position.SqrDistanceTo(target).Value <= LandDistSqr)
+            {
+                _landTicks = RandomInt(RngPurpose.Land, 10, 31); // land 1-3 seconds
+                Velocity = default;
+            }
+            else
+            {
+                // BUZZY approach: the bug's normal Brownian movement with its "home" set to
+                // the landing point and a tiny radius — identical visual character to regular
+                // wandering (random jinks + gentle pull), just drifting onto the fruit,
+                // instead of a robotic straight-line glide.
+                Movement.UpdateMovement(this, target, ApproachRadiusSqr);
+            }
+            return true;
+        }
+
         /// <summary>
         /// Simulate one tick of bug behavior and movement.
         /// </summary>
@@ -155,17 +225,23 @@ namespace BugFarmer.Bugs
                     break;
 
                 default: // "wander" or "ignore"
-                    Movement.UpdateMovement(this, swarmCenter, _wanderRadiusSqr);
+                    // FEEDING VISUAL: when the swarm centre is at a registered food source,
+                    // bugs approach it, LAND (pause), then resume — driven purely by
+                    // deterministic inputs (event-driven food registry + derived centre +
+                    // counter-RNG + a per-bug-id ring offset), so all clients stay identical.
+                    if (!TryFeedAtFood(swarmCenter))
+                        Movement.UpdateMovement(this, swarmCenter, _wanderRadiusSqr);
                     break;
             }
 
-            // 3. Apply velocity to position (velocity = units per tick)
-            Position = new FixedPoint2(
+            // 3. Apply velocity, resolving collision against blocks_bugs cells so individual bugs can't
+            //    pass through walls/fences. Deterministic: integer cell lookups + slide X-then-Y.
+            //    All clients run this identically, so the per-tick state-hash stays in agreement.
+            var proposed = new FixedPoint2(
                 Position.X + Velocity.X,
                 Position.Y + Velocity.Y
             );
-
-            // 4. Collision resolved by BugAgentManager after this
+            Position = BugCollision.Resolve(Position, proposed);
         }
 
         /// <summary>

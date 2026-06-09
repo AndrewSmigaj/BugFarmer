@@ -84,7 +84,48 @@ const (
 const (
 	OpCodeCropUpdate    int64 = 50 // S→C: Crop state changed (water, stage, HP)
 	OpCodePlantInteract int64 = 55 // C→S: Harvest or destroy plant
+
+	// Stations (player-fillable processors: compost bin etc.)
+	OpCodeStationDeposit int64 = 85 // C→S: Deposit an inventory item into a station
+	OpCodeStationUpdate  int64 = 86 // S→C: Station fill changed (UI meter; display-only)
+
+	// Dev tuning (debug builds): live-override ecology parameters on the server
+	OpCodeEcologyTuning int64 = 87 // C→S: apply EcologyTuningMessage to a species
 )
+
+// EcologyTuningMessage (OpCode 87, DEV TOOL): live-overrides a species' ecology parameters so
+// they can be tuned from the Unity debug panel without a rebuild. The server is the sole
+// decider for all of these, so live changes are determinism-safe (effects still ride the
+// ledger). Values <= 0 leave the field unchanged (except forage_chance, where 0 is valid only
+// via the explicit set flag... keep it simple: send the full desired state, all > 0).
+type EcologyTuningMessage struct {
+	SpeciesID          string  `json:"species_id"`
+	ForageChance       float32 `json:"forage_chance"`         // 0..1
+	ForageModeMinTicks int     `json:"forage_mode_min_ticks"` // chunk duration range
+	ForageModeMaxTicks int     `json:"forage_mode_max_ticks"`
+	FeedAmount         float32 `json:"feed_amount"`       // satiation/s at food
+	BreedAmount        float32 `json:"breed_amount"`      // breed meter/s at source
+	SatiationDecay     float32 `json:"satiation_decay"`   // satiation/s away from food
+	ConsumeRate        float32 `json:"consume_rate"`      // food/bug/s
+	ReproduceCooldown  float32 `json:"reproduce_cooldown"` // seconds between reproductions
+}
+
+// StationDepositMessage (OpCode 85): deposit one unit of item_id into the station at (gx, gy).
+type StationDepositMessage struct {
+	GX     int    `json:"gx"`
+	GY     int    `json:"gy"`
+	ItemID string `json:"item_id"`
+}
+
+// StationUpdateMessage (OpCode 86): a station's meters changed (deposit, processing tick, or
+// consumption). Display-only — bug AI reads the deterministic FOOD_CONSUMED ledger instead.
+type StationUpdateMessage struct {
+	GX       int `json:"gx"`
+	GY       int `json:"gy"`
+	Input    int `json:"input"`    // Raw deposits awaiting processing
+	Fill     int `json:"fill"`     // Processed output (compost) — the food provider
+	Capacity int `json:"capacity"`
+}
 
 // === Client → Server Messages ===
 
@@ -410,10 +451,14 @@ const (
 	InfluenceSwarmSetTarget  = "SWARM_SET_TARGET" // Re-anchoring movement leg for a swarm center
 	InfluenceBugRemoved      = "BUG_REMOVED"
 	InfluenceBugSpawned      = "BUG_SPAWNED"
+	InfluenceSwarmSplit      = "SWARM_SPLIT" // Over-size swarm sheds its highest bug-ids into a new swarm
+	InfluenceSwarmMerge      = "SWARM_MERGE" // Overlapping swarm absorbed into a survivor
 	// Farming/ecology events
 	InfluenceTreeFruitGrow = "TREE_FRUIT_GROW"
 	InfluenceTreeFruitDrop = "TREE_FRUIT_DROP"
-	InfluenceItemRotted    = "ITEM_ROTTED"
+	InfluenceItemRotted    = "ITEM_ROTTED"     // a ground item became bug food (FoodID + world cell + Level=food value)
+	InfluenceFoodConsumed  = "FOOD_CONSUMED"   // a food source's level crossed a threshold (Level=remaining; 0 = gone)
+	InfluenceSwarmReproduced = "SWARM_REPRODUCED" // sated swarm bred at a food source: SplitCount new bugs at NewBugIDBase
 )
 
 // InfluenceEvent represents a discrete, replayable signal for bug AI
@@ -436,6 +481,24 @@ type InfluenceEvent struct {
 	TargetX int `json:"target_x,omitempty"`
 	TargetY int `json:"target_y,omitempty"`
 	Speed   int `json:"speed,omitempty"` // World units per tick (×1000)
+
+	// SWARM_SPLIT / SWARM_MERGE fields. Flat + count/id-based so clients can apply the
+	// change deterministically by MOVING existing bugs (positions preserved, never re-spawned).
+	//   SWARM_SPLIT: SwarmID=parent, NewSwarmID=child, SplitCount=bugs moved (parent's highest
+	//     alive ids → child ids 0..SplitCount-1), CenterX/Y=child seed center (fixed-point ×1000).
+	//   SWARM_MERGE: SwarmID=survivor, NewSwarmID=absorbed, SplitCount=bugs moved,
+	//     NewBugIDBase=survivor.NextBugID before the merge (moved bugs become these survivor ids).
+	NewSwarmID   string `json:"new_swarm_id,omitempty"`
+	SplitCount   int    `json:"split_count,omitempty"`
+	CenterX      int    `json:"center_x,omitempty"`
+	CenterY      int    `json:"center_y,omitempty"`
+	NewBugIDBase int    `json:"new_bug_id_base,omitempty"`
+	ParentCount  int    `json:"parent_count,omitempty"` // SWARM_SPLIT: parent's POST-split count — lets clients apply idempotently (move AliveCount−ParentCount bugs; 0 if already applied)
+
+	// FOOD events (ITEM_ROTTED / FOOD_CONSUMED): clients maintain a deterministic food registry
+	// from these (positions in cell_x/cell_y = WORLD cells).
+	FoodID string `json:"food_id,omitempty"` // Ground-item id, or station cell-key "station_x_y"
+	Level  int    `json:"level,omitempty"`   // Remaining food value after the change (0 = depleted/removed)
 }
 
 // InfluenceBroadcastMessage sent to all clients (OpCode 71)

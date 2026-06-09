@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Garden/farm primitives + free-floating collectible decor (flowers, fallen fruit).
-Crop beds claim surface='farm'; flowers/fruit are sub-grid `place_decor` (NOT grid occupants),
-so they read as gatherable ground dressing rather than blocking furniture."""
+"""Garden/farm primitives. EVERYTHING snaps to the grid except bugs — flowers and crops are real
+grid OCCUPANTS (one per cell, saved to the zone), since the player plants them. (Only `fruit_around`
+stays sub-grid: fallen fruit is a dropped pickup, not a planted thing.)"""
 import random
 
 
@@ -15,16 +15,16 @@ def crop_bed(b, x0, y0, x1, y1, crops):
                 b.place_occupant(crop, x, y, surface="farm")
 
 
-def flower_patch(b, x0, y0, x1, y1, kinds, n, seed=0, scale=0.8):
-    """Flowers as free-floating COLLECTIBLE decor — sub-grid (not snapped to cells), on grass."""
+def flower_patch(b, x0, y0, x1, y1, kinds, n, seed=0):
+    """Flowers PLANTED on the GRID — one occupant per cell on grass (saved to the zone). Everything
+    snaps to the grid except bugs; the player can plant flowers, so they're real grid occupants."""
     rng = random.Random(seed)
     placed = tries = 0
-    while placed < n and tries < n * 10:
+    while placed < n and tries < n * 12:
         tries += 1
-        fx, fy = rng.uniform(x0, x1), rng.uniform(y0, y1)
-        ix, iy = int(round(fx)), int(round(fy))
+        ix, iy = rng.randint(int(x0), int(x1)), rng.randint(int(y0), int(y1))
         if b.in_bounds(ix, iy) and b.is_free(ix, iy) and b.surface[iy][ix] == "grass":
-            b.place_decor(rng.choice(kinds), fx, fy, scale=scale)
+            b.place_occupant(rng.choice(kinds), ix, iy)
             placed += 1
 
 

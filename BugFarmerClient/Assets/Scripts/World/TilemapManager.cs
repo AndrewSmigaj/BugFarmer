@@ -918,6 +918,27 @@ namespace BugFarmer.World
             return false;
         }
 
+        /// <summary>
+        /// Check if a cell blocks PLAYER movement (occupant with blocks_players, or impassable ground).
+        /// Mirrors IsCellBlockedForBugs but reads blocks_players. Used by PlayerController for collision.
+        /// </summary>
+        public bool IsCellBlockedForPlayers(Vector2Int cellPos)
+        {
+            string occupantId = GetOccupantAt(cellPos);
+            if (!string.IsNullOrEmpty(occupantId))
+            {
+                var def = Data.EntityDatabase.Get(occupantId);
+                if (def?.World != null && def.World.BlocksPlayers)
+                    return true;
+            }
+
+            string groundId = GetGroundAt(cellPos);
+            if (groundId == "water_shallow" || groundId == "water_deep" || groundId == "lava")
+                return true;
+
+            return false;
+        }
+
         #endregion
     }
 

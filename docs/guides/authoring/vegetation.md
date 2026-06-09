@@ -31,6 +31,15 @@ scatter(b, x0, y0, x1, y1,
 - **Match the biome:** meadow → flowers + tall grass; forest understory → bushes + mushrooms;
   near water → reeds/flowers. (Per-biome weight tables: `art/BIOME_PALETTES.md`, being consolidated.)
 
+## EVERYTHING snaps to the grid except BUGS
+- **One grid cell per placed thing.** Trees, plants, flowers, crops — the player plants/places them, so
+  they are real grid OCCUPANTS (`place_occupant`, integer cells), and they're saved to the zone. Only
+  **bugs** are free-floating/sub-grid (they move). `flower_patch` plants flowers on the grid;
+  `place_decor` (sub-grid) is for non-grid dressing only (fallen fruit pickups, lily pads on water).
+- **Trees are grid-aligned but their sprite is ~2 cells tall** — scatter them with **`min_spacing` ≥ 3**
+  (modest `density`, ~0.15) so the tall sprites don't overlap into a solid mass. Put trees in **clumps in
+  the open, where there are no houses** (a yard gets at most a couple of back-corner trees).
+
 ## Interaction with other features
 - Reads `reserved`/`surface`, so it inherently skips fences, paths, water, and building footprints —
   no trees in the pond, none on the road. Verify by rendering: scattered decor should sit only on

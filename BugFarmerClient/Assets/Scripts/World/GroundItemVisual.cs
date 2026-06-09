@@ -65,8 +65,10 @@ namespace BugFarmer.World
             spriteRenderer.sortingLayerName = "Occupants";
             spriteRenderer.sortingOrder = -Mathf.RoundToInt(worldPosition.y);
 
-            // 2x scale for visibility
-            transform.localScale = new Vector3(2f, 2f, 1f);
+            // ~0.9-cell ground items — clearly visible without rivaling occupants. (The old 2x
+            // dated from when item icons imported at the Unity-default PPU 100 and rendered as
+            // near-invisible dots; icons are now normalized to the world PPU 16.)
+            transform.localScale = new Vector3(0.9f, 0.9f, 1f);
 
             // Randomize bob phase so items don't sync
             bobOffset = Random.Range(0f, Mathf.PI * 2f);

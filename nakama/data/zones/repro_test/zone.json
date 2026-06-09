@@ -1,0 +1,36 @@
+{
+  "zone_id": "repro_test",
+  "name": "Repro Test",
+  "row": 0,
+  "col": 0,
+  "width": 96,
+  "height": 96,
+  "spawn_point": [
+    48,
+    32
+  ],
+  "biome_type": "meadow",
+  "seed": 42,
+  "bug_spawning": {
+    "species_caps": {
+      "fly_common": {
+        "initial": 1,
+        "max": 8,
+        "spawn_interval": 999999.0,
+        "swarm_size": 6
+      }
+    },
+    "spawn_areas": [
+      {
+        "id": "pen",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 48,
+        "cy": 48,
+        "radius": 3
+      }
+    ]
+  }
+}

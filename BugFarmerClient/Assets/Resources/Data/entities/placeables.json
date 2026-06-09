@@ -359,6 +359,7 @@
         1
       ],
       "pivot": "bc",
+      "blocks_bugs": true,
       "interactable": true,
       "interaction_type": "door",
       "breakable": {
@@ -388,6 +389,7 @@
         1
       ],
       "pivot": "bc",
+      "blocks_bugs": true,
       "interactable": true,
       "interaction_type": "door",
       "breakable": {
@@ -4581,8 +4583,8 @@
   "compost_bin": {
     "name": "Compost Bin",
     "category": "structure",
-    "sprite_w": 16,
-    "sprite_h": 20,
+    "sprite_w": 28,
+    "sprite_h": 36,
     "stackable": false,
     "sell_price": 18,
     "world": {
@@ -4594,7 +4596,14 @@
       "blocks_players": true,
       "blocks_bugs": true,
       "interactable": true,
-      "interaction_type": "storage",
+      "interaction_type": "station",
+      "station": {
+        "accepts": ["apple", "orange", "rotten_apple", "rotten_orange"],
+        "capacity": 10,
+        "food_per_unit": 100,
+        "process_ticks": 300,
+        "providers": ["food", "breeding"]
+      },
       "breakable": {
         "hp": 3,
         "required_tool_type": "axe",
@@ -5725,6 +5734,7 @@
         1
       ],
       "pivot": "bc",
+      "blocks_bugs": true,
       "interactable": true,
       "interaction_type": "door",
       "breakable": {

@@ -27,6 +27,13 @@ namespace BugFarmer.Networking
         public const int RequestSnapshot = 66;    // C->S: Client requests full snapshot (drift)
         public const int FullSnapshot = 67;       // S->C: Full bug positions for resync
 
+        // Stations (player-fillable processors: compost bin etc.)
+        public const int StationDeposit = 85;     // C->S: Deposit an inventory item into a station
+        public const int StationUpdate = 86;      // S->C: Station fill changed (UI meter)
+
+        // Dev tuning (debug): live-override ecology parameters on the server
+        public const int EcologyTuning = 87;      // C->S: EcologyTuningMessage
+
         // Influence Event OpCodes (Server-Authored Bug Sync)
         public const int InfluenceBroadcast = 71; // S->C: Player cell change events
         public const int LateJoinSnapshot = 72;   // S->C: Full state for late joiner
@@ -255,6 +262,23 @@ namespace BugFarmer.Networking
         public int target_x;               // Center destination
         public int target_y;
         public int speed;                  // Distance per tick (fixed-point)
+
+        // For SWARM_SPLIT / SWARM_MERGE (position-preserving bug MOVES between swarms).
+        //   SWARM_SPLIT: swarm_id=parent, new_swarm_id=child, split_count=bugs moved
+        //     (parent's highest alive ids -> child ids 0..split_count-1), center_x/y=child seed.
+        //   SWARM_MERGE: swarm_id=survivor, new_swarm_id=absorbed, split_count=bugs moved,
+        //     new_bug_id_base=survivor ids the moved bugs become.
+        public string new_swarm_id;
+        public int split_count;
+        public int center_x;               // fixed-point ×1000
+        public int center_y;
+        public int new_bug_id_base;
+        public int parent_count;           // SWARM_SPLIT: parent's POST-split count (idempotent apply)
+
+        // FOOD events (ITEM_ROTTED / FOOD_CONSUMED): the deterministic food registry.
+        // cell_x/cell_y are WORLD cells; level = remaining food value (0 = gone).
+        public string food_id;
+        public int level;
     }
 
     /// <summary>
@@ -264,6 +288,50 @@ namespace BugFarmer.Networking
     public class InfluenceBroadcastMessage
     {
         public InfluenceEvent[] events;
+    }
+
+    /// <summary>
+    /// Deposit one item into a station (OpCode 85, C->S). Server validates acceptance,
+    /// capacity, range, and inventory, then raises the fill meter.
+    /// </summary>
+    [Serializable]
+    public class StationDepositMessage
+    {
+        public int gx;
+        public int gy;
+        public string item_id;
+    }
+
+    /// <summary>
+    /// A station's fill meter changed (OpCode 86, S->C). Display-only — bug AI reads the
+    /// deterministic FOOD_CONSUMED ledger instead.
+    /// </summary>
+    [Serializable]
+    public class StationUpdateMessage
+    {
+        public int gx;
+        public int gy;
+        public int input;    // raw deposits awaiting processing
+        public int fill;     // processed compost (the food provider)
+        public int capacity;
+    }
+
+    /// <summary>
+    /// DEV TOOL (OpCode 87, C->S): live-override a species' ecology parameters on the server
+    /// (foraging duty cycle, feed/breed rates, consumption) — tuned from the F6 debug panel.
+    /// </summary>
+    [Serializable]
+    public class EcologyTuningMessage
+    {
+        public string species_id;
+        public float forage_chance;
+        public int forage_mode_min_ticks;
+        public int forage_mode_max_ticks;
+        public float feed_amount;
+        public float breed_amount;
+        public float satiation_decay;
+        public float consume_rate;
+        public float reproduce_cooldown;
     }
 
     /// <summary>

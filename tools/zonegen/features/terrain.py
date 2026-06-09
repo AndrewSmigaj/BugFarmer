@@ -2,6 +2,7 @@
 """Ground/terrain primitives shared across scenes: paths and an organic pond.
 All coordinate through the builder's ground grid + surface mask (paths -> surface 'path',
 water -> reserved 'water'), so roads route around water and scatter avoids both."""
+import math
 import random
 
 
@@ -114,3 +115,126 @@ def pond(b, cx, cy, rx, ry, seed=3):
     for (x, y) in bank:
         if b.is_free(x, y) and b.surface[y][x] == "grass" and rng.random() < 0.3:
             b.place_occupant("reeds", x, y)
+
+
+def forest(b, cx, cy, rx, ry, *, species=("tree_oak", "tree_pine"),
+           understory=("bush", "bush", "bush", "fern", "mushroom_cluster"),
+           density=0.6, seed=0, spacing=2, dirt=False):
+    """An organic FOREST blob centred at (cx,cy), radii (rx,ry). Trees thin from a DENSE CORE to a
+    ragged, sparse EDGE (so it reads as a natural stand, not a uniform spray); they're grid-aligned and
+    kept `spacing` apart so the ~2-tall sprites don't overlap. Scattered understory (bushes/ferns) fills
+    some gaps and natural clearings are left where the falloff/noise dips. Skips reserved/path/water and
+    only plants on grass. `dirt=True` darkens the forest floor to dirt under the canopy. Returns the
+    placed tree cells."""
+    rng = random.Random(seed)
+    placed = set()
+
+    def spaced(x, y):
+        return all((x + dx, y + dy) not in placed
+                   for dx in range(-(spacing - 1), spacing) for dy in range(-(spacing - 1), spacing))
+
+    cells = []
+    for y in range(cy - ry - 2, cy + ry + 3):
+        for x in range(cx - rx - 2, cx + rx + 3):
+            if not b.in_bounds(x, y):
+                continue
+            nx, ny = (x - cx) / (rx + 0.5), (y - cy) / (ry + 0.5)
+            d = (nx * nx + ny * ny) ** 0.5
+            if d <= 1.0 + rng.uniform(-0.28, 0.18):                  # ragged organic edge
+                cells.append((x, y, d))
+    if dirt:
+        for (x, y, d) in cells:
+            if b.is_free(x, y) and b.surface[y][x] == "grass" and rng.random() < 0.5:
+                b.set_ground(x, y, "dirt")
+    rng.shuffle(cells)
+    for (x, y, d) in cells:
+        if not b.is_free(x, y) or b.surface[y][x] not in ("grass",):
+            continue
+        p = density * (1.18 - d)                                    # dense core -> ~0 at the rim
+        if rng.random() < p and spaced(x, y):
+            b.place_occupant(rng.choice(species), x, y)
+            placed.add((x, y))
+        elif understory and rng.random() < 0.12:                    # understory + clearings in the gaps
+            b.place_occupant(rng.choice(understory), x, y)
+    return placed
+
+
+def lake(b, cx, cy, radius, *, seed=0, shore="sand", reeds=16):
+    """A natural LAKE with an ORGANIC, lobed shoreline (per trees-and-ponds.md) — NOT a circle. Multiple
+    angular harmonics (freqs 2..n) bump the radius around the perimeter for bays + spits; deep core ->
+    shallow rim -> a `shore` beach ring (sand/mud) with gaps -> reeds clumped just outside the water,
+    following the shape. Reserves the water. Returns reeds placed."""
+    rng = random.Random(seed)
+    n = rng.randint(4, 7)
+    phases = [rng.random() * 2 * math.pi for _ in range(n)]
+    amps = [rng.uniform(0.15, 0.30) for _ in range(n)]
+
+    def rad(angle):
+        r = radius
+        for i in range(n):
+            r += radius * amps[i] * math.sin((i + 2) * angle + phases[i])
+        return max(radius * 0.5, min(radius * 1.45, r))
+
+    mr = int(radius * 1.5) + 2
+    for dy in range(-mr, mr + 1):
+        for dx in range(-mr, mr + 1):
+            x, y = cx + dx, cy + dy
+            if not b.in_bounds(x, y) or b.reserved[y][x]:
+                continue                                            # preserve buildings + flow INTO existing water
+            dist = max(0.1, (dx * dx + dy * dy) ** 0.5)
+            local = rad(math.atan2(dy, dx))
+            if dist <= local * 0.6:
+                b.set_ground(x, y, "water_deep", surface="water"); b.reserve(x, y, surface="water")
+            elif dist <= local:
+                b.set_ground(x, y, "water_shallow", surface="water"); b.reserve(x, y, surface="water")
+            elif dist <= local + 2.2 and b.is_free(x, y) and b.surface[y][x] == "grass" and rng.random() < 0.72:
+                b.set_ground(x, y, shore)                            # beach ring with gaps
+    placed = 0
+    for _ in range(reeds * 5):
+        a = rng.random() * 2 * math.pi
+        d = rad(a) + rng.uniform(0.4, 2.4)
+        x, y = int(round(cx + d * math.cos(a))), int(round(cy + d * math.sin(a)))
+        if b.in_bounds(x, y) and b.is_free(x, y) and b.surface[y][x] != "water" and rng.random() < 0.6:
+            if b.place_occupant("reeds", x, y):
+                placed += 1
+                if placed >= reeds:
+                    break
+    return placed
+
+
+def rock_patch(b, cx, cy, radius, *, ground="stone_floor", seed=0, ore_chance=0.28):
+    """A rocky OUTCROP / quarry that introduces MINING: bare rocky ground (stone/dirt) replaces the
+    grass, with a DENSE CORE of mineable stone blocks thinning to a ragged edge, salted with ore
+    deposits (coal/copper/iron/tin) and the odd crystal/geode. Everything is grid-aligned + spaced
+    (pickaxe targets). Skips reserved/path/water. Returns the placed block cells."""
+    rng = random.Random(seed)
+    placed = set()
+
+    def spaced(x, y):
+        return all((x + dx, y + dy) not in placed for dx in (-1, 0, 1) for dy in (-1, 0, 1))
+
+    cells = []
+    for y in range(cy - radius - 2, cy + radius + 3):
+        for x in range(cx - radius - 2, cx + radius + 3):
+            if not b.in_bounds(x, y):
+                continue
+            d = ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5 / (radius + 0.5)
+            if d <= 1.0 + rng.uniform(-0.25, 0.15):
+                cells.append((x, y, d))
+    for (x, y, d) in cells:                                          # bare rocky ground (stony core, dirt rim)
+        if b.is_free(x, y) and b.surface[y][x] == "grass":
+            b.set_ground(x, y, ground if d < 0.7 else "dirt")
+    rng.shuffle(cells)
+    ores = ["ore_coal_block", "ore_coal_block", "ore_copper_block", "ore_iron_block", "ore_tin_block"]
+    gems = ["crystal_small", "geode", "ore_pile"]
+    for (x, y, d) in cells:
+        if not b.is_free(x, y) or b.surface[y][x] in ("water", "path"):
+            continue                                                # never drop rocks on roads/paths
+        if rng.random() < 0.78 * (1.12 - d) and spaced(x, y):       # dense core -> sparse edge
+            r = rng.random()
+            oid = (rng.choice(gems) if r < ore_chance * 0.35
+                   else rng.choice(ores) if r < ore_chance
+                   else rng.choice(["stone_block", "stone_block", "hard_stone_block"]))
+            b.place_occupant(oid, x, y)
+            placed.add((x, y))
+    return placed

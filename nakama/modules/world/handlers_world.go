@@ -34,6 +34,8 @@ func (m *Match) handleChunkSubscribe(
 
 		// Initialize fruit tree states for any fruit trees in this chunk
 		m.initFruitTreesInChunk(state, chunk, cx, cy, logger)
+		// Initialize stations (compost bins etc. — entities with world.station)
+		m.initStationsInChunk(state, chunk, cx, cy, logger)
 	}
 
 	// NOTE: bug state for late joiners is delivered zone-wide via LateJoinSnapshot (OpCode 72)
@@ -614,6 +616,14 @@ func (m *Match) handlePickupItem(
 
 	// Remove from ground
 	delete(state.GroundItems, msg.ID)
+
+	// If this was registered BUG FOOD (rotten fruit), tell the deterministic food registry
+	// it's gone — bug AI must forget it at a tick boundary, not just visually.
+	if item.FoodValue > 0 && state.CurrentZone != nil {
+		wcx := item.Position.ChunkX*cs + int(item.Position.LocalX)
+		wcy := item.Position.ChunkY*cs + int(item.Position.LocalY)
+		state.AddFoodEvent(state.CurrentZone.ZoneID, InfluenceFoodConsumed, msg.ID, wcx, wcy, 0)
+	}
 
 	// Send inventory update to player
 	slotMsg := SlotUpdateMessage{

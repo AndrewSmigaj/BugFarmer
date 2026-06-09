@@ -20,39 +20,55 @@ The system is **four parts**, each with one home:
 1. Decide the contents — from a zone doc (`docs/product/zones/<zone>.md`) or the scene's theme.
    Mine `docs/brainstorms/<topic>/` for what to place.
 2. Read the **feature guide(s)** for what you're building (below).
-3. Build with `ZoneBuilder` + the `features/` primitives.
-4. **Render a preview PNG and look at it.** The preview is the test — there's no live game here.
-   Run `b.validate()`; aim for 0 placement warnings. Iterate the layout (and the guide).
-5. New object with no art? It renders as a placeholder — log it in `docs/product/art_needed.md`.
+3. Build with `ZoneBuilder` + the `features/` primitives. **Author themed buildings as TEXT GRIDS**
+   (`features/tilemap.stamp`/`dump`) — reasoned cell-by-cell, not by guessing coordinates.
+4. **`b.lint()` is the QA gate** — it returns TEXT defect strings (door blocked, wall/door/window height
+   mismatch, fence/wall on path/water, road dirt %). `registry.render_one` prints it. Rule: **verify in
+   TEXT (lint + `dump`), then look at a rendered crop** — never call it good off a giant PNG. (`validate()`
+   is the older bare overlap check; `lint()` supersedes it.) The one expected lint item now is the
+   wall-32/door-24 height (pending a 1.5-cell re-bake).
+5. New object with no art renders as a labeled placeholder — log it in `docs/product/art_needed.md`.
 
 ```bash
-python3 tools/zonegen/scenes/<scene>.py     # build + render ONE scene to its preview PNG
-python3 tools/zonegen/registry.py           # render ALL registered scenes (canonical previews)
-python3 tools/artlab/server.py              # Art Lab → http://localhost:8765
+python3 tools/zonegen/scenes/<scene>.py     # build + render ONE scene to its preview PNG + print lint
+python3 tools/zonegen/registry.py <scene>   # render via the canonical registry path (prints lint)
 ```
 
-### Art Lab — picking sprite variants
-Art Lab shows art **variants** (candidates) for a key overlaid in real scenes, so you can pick which
-to keep. Variants live in `tools/_generated/variants/<key>/<key>_<n>.png` (gitignored — repopulate
-after a clean). Populate the lab (no API spend):
-```bash
-python3 tools/artlab/library.py seed <key>…          # seed a key's CURRENT live sprite as a baseline
-python3 tools/artlab/library.py import-blocklab       # pull block bake-off output (_generated/blocklab/) into the lab
-python3 tools/artlab/library.py list                  # show the library
-```
-Get real alternatives to choose between by generating candidates (costs API): block bake-off is
-`python3 tools/blocklab.py` → then `import-blocklab`. In the web UI, pick a variant per key and
-**Apply** to promote it over the live game sprite.
+> **Art Lab is deprecated for layout work** — render previews directly and read them. (`tools/artlab/`
+> still exists for picking sprite *variants*, but don't run it for zone authoring.)
+
+## From scenes to a real ZONE (the full pipeline)
+A **scene** is a small render-only vignette; a **ZONE** is the 256×256 world the game loads. Composing:
+1. **Building pieces** — each themed building is a `place_<thing>(b, ox, oy)` function + a thin `build()`
+   wrapper (`scenes/scene_smith.py`, `_carpenter`, `_market`, `_mayor`, `_ecologist`, `_cottage`,
+   `_lakeside.place_boat_store`, `player_house.place_player_house`). One source of truth per building.
+2. **A composed scene** — `scenes/scene_village.py` drops those pieces along straight roads + a square.
+3. **The zone** — `scenes/zone_village.py`: blit the scene into the centre of a 256×256 `ZoneBuilder`,
+   add organic terrain (`lake`/`forest`/`rock_patch`), extend roads to the edges, set `Z.bug_spawning`,
+   then `Z.save()` → `nakama/data/zones/<id>/` (size must be a multiple of 32; `save()` writes row/col 0,0
+   so patch them after for real zones).
+4. **View the whole zone** — `python3 tools/view_world.py <zone>` → `tools/output/<zone>_detail.png`
+   (a north-up colour minimap; it reads the SAVED chunks, so save first).
+5. **Test in-game (no Unity needed)** — `run-backend` skill to start the server, then the sync-harness
+   joins the zone and verifies it loads + ticks + spawns (see `tools/sync-harness/`).
+
+**Quick mechanic-test zones:** `python3 tools/make_test_zone.py --zone-id <id> --species <s> --occupant 'id@x,y' …`
+builds a tiny deterministic zone with a bug spawn + placed occupants — for isolating one mechanic.
+**Spawning gotcha:** only species DEFINED in `nakama/data/species.json` spawn (currently just
+`fly_common` + `butterfly_meadow`); `bugs.json` ids that lack a species spec silently don't spawn.
 
 ## The builder — `tools/zonegen/`
 - `zonebuilder.py` — `ZoneBuilder(zone_id, W, H, base_tile=…)`: the on-disk grids + the coordination
   masks `surface[]` (`water|path|building|farm|forest|grass`) and `reserved[]`. `place_occupant`
-  (writes anchor + footprint cells, **refuses overlaps loudly**), `set_ground`, `validate()`,
-  `save()` (real zones, size multiple of 32) / `load()` (edit an existing zone).
-- `render.py` — `render_builder(b, out, scale, bounds=None)`: builder → preview PNG.
-- `registry.py` — the **scene catalog** (which scenes exist, their zone + canonical render scale).
-- `features/` — the primitives (one guide each, below).
-- `scenes/` — every example scene + the reusable `player_house` preset.
+  (writes anchor + footprint cells, **refuses overlaps loudly**), `set_ground`, **`lint()`** (the text
+  QA gate), `place_player`/`place_bug` (render-only dressing), `save()`/`load()`.
+- `render.py` — `render_builder(b, out, scale, bounds=None)`: builder → full-art preview PNG.
+- `registry.py` — the **scene catalog** + canonical render (prints lint).
+- `features/` — the primitives (one guide each, below): `tilemap` (text-grid stamp/dump), `terrain`
+  (`lake`/`forest`/`pond`/`rock_patch`/`path`/`stream`), `scatter`, `garden`, `yard`, `room`, `house`,
+  `village`, `furniture`, `cave`.
+- `scenes/` — three kinds: **building pieces** (`place_*` + `build()`), **vignette scenes** (registered
+  previews), and **zone builders** (`zone_village.py` → `save()`).
 - **Precedence — place HARD features first so later ones route around them:** biome base → water →
   roads → buildings → farms → scatter.
 
@@ -79,5 +95,6 @@ Get real alternatives to choose between by generating candidates (costs API): bl
 - **Content to draw from:** `docs/brainstorms/<topic>/` + `ecology_proposal.md`.
 - **Operational playbook:** the `author-zone` skill (`.claude/skills/author-zone/`) drives this loop.
 
-> Worked example to read: `tools/zonegen/scenes/cottage.py` (a cottage interior + a fenced yard with
-> scatter) and `scenes/scene_houses.py` (room counts × collections, yards).
+> Worked examples to read: `scenes/scene_cottage.py` (a text-grid 2-room home + `property_yard`),
+> `scenes/scene_village.py` (composing the building pieces into a town), and `scenes/zone_village.py`
+> (a scene → full 256×256 zone: terrain + roads + bug spawning + `save()`).

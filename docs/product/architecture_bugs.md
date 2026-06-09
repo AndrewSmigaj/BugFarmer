@@ -51,14 +51,28 @@ The server owns all game state and validates all actions:
 - **Hostile/alerted state**: Which swarms are reacting to players
 - **Catching validation**: Verifies net size, condition thresholds met, range
 - **Reproduction logic**: When swarms breed, egg hatching
-- **Merge/split decisions**: When swarms combine or separate
+- **Merge/split decisions** *(IMPLEMENTED — deterministic population pass)*: once a minute
+  (600 ticks), a swarm **splits when `Count > max_swarm_size`** (sheds its HIGHEST alive
+  bug-ids into a new child swarm) and two same-species swarms **merge when their centers are
+  within `merge_radius`** and `combined ≤ max_swarm_size`. Both are carried as tick+seq
+  **`SWARM_SPLIT` / `SWARM_MERGE` influence events** (never via `SwarmsDirty`/SwarmUpdate —
+  lifecycle changes travel only through the deterministic ledger). Clients apply them at the
+  event tick by **MOVING the actual bugs between swarms** — position/velocity/motion preserved
+  (a moved bug just starts drifting toward its new center; its counter-RNG re-keys on the new
+  swarm-id/bug-id). Handlers are idempotent (move what exists, spawn the deficit, no-op on
+  count match), which also covers late-join replay. Bookkeeping: split parent marks shed ids
+  in `RemovedBugIDs` (event carries `split_count` + post-split `parent_count`); merge advances
+  the survivor's `NextBugID` (event carries `new_bug_id_base`) so moved bugs stay catchable.
 - **Inventory**: What bugs each player has caught
 
 ### Client (Visual Only)
 
 The client handles rendering and sends inputs to server:
 
-- **Individual fly positions**: Brownian motion within swarm bounds (purely visual)
+- **Individual fly positions**: Brownian motion within swarm bounds — deterministic on every
+  client (fixed-point + counter-RNG), with **per-bug collision** against `blocks_bugs` cells
+  (`BugCollision.Resolve` in `BugAgent.SimulateTick`: slide X-then-Y; bugs cannot pass fences/
+  walls, so a closed pen physically contains them). Bugs spawn AT the center and drift out.
 - **Fly sprite animation**: Wing flapping, direction facing
 - **Swarm visual interpolation**: Smooth movement between server updates
 - **Click detection**: Detects clicks on individual fly sprites

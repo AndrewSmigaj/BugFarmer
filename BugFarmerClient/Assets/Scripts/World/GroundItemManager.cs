@@ -68,6 +68,13 @@ namespace BugFarmer.World
             var worldPos = new Vector3(msg.x, msg.y, 0f);
             visual.Initialize(msg.id, msg.item_type, msg.count, sprite, worldPos);
             _items[msg.id] = visual;
+
+            // Join-time food-registry HYDRATION: chunk-subscribe re-sends existing ground
+            // items; ones that are ALREADY rotten are bug food a joiner would otherwise miss
+            // (their ITEM_ROTTED events may be pruned). Live mutations stay event-driven —
+            // HydrateFood is a no-op for ids already registered.
+            if (msg.item_type.StartsWith("rotten_"))
+                Bugs.InfluenceManager.Instance?.HydrateFood(msg.id, new Vector2(msg.x, msg.y), 100);
         }
 
         private void HandleItemRemove(IMatchState state)
@@ -92,11 +99,31 @@ namespace BugFarmer.World
         /// </summary>
         public GroundItemVisual GetItemAtPosition(Vector3 worldPosition, float radius)
         {
+            return GetClosestItem(worldPosition, radius, includeBugFood: true);
+        }
+
+        /// <summary>
+        /// True for items that are registered BUG FOOD (rotten fruit). The gathering rule:
+        /// "what the bugs eat belongs to the bugs unless you deliberately take it" — bug food
+        /// is excluded from walk-over auto-pickup and only collected with the explicit E key.
+        /// </summary>
+        public static bool IsBugFood(string itemType)
+        {
+            return !string.IsNullOrEmpty(itemType) && itemType.StartsWith("rotten_");
+        }
+
+        /// <summary>
+        /// Closest ground item within radius, optionally skipping bug food (auto-pickup).
+        /// </summary>
+        public GroundItemVisual GetClosestItem(Vector3 worldPosition, float radius, bool includeBugFood)
+        {
             GroundItemVisual closest = null;
             float closestDist = radius;
 
             foreach (var item in _items.Values)
             {
+                if (!includeBugFood && IsBugFood(item.ItemType))
+                    continue;
                 float dist = Vector2.Distance(worldPosition, item.transform.position);
                 if (dist < closestDist)
                 {

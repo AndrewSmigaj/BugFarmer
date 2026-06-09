@@ -37,9 +37,29 @@ type SwarmState struct {
 	// Think timer - swarms make decisions every few seconds, not every tick
 	NextThinkTick int64 // Tick when swarm next evaluates targets
 
+	// Cached food target (set at Think time; lets the per-tick at-food check be O(1) —
+	// distance to this point + a registry validity lookup — instead of a chunk scan).
+	TargetFoodID         string  // Ground-item id or station cell-key; "" = none
+	TargetFoodX          float32 // World position of the food source
+	TargetFoodY          float32
+	TargetFoodDepletable bool // True for ground items/stations (required for BREEDING)
+
+	// Forage duty cycle: the forage/wander MODE persists ~30-50s (10x the think cadence) so
+	// behavior doesn't flicker leg-to-leg; movement legs within a mode stay short (3-5s).
+	ForageMode    bool  // Current mode: seek food vs pure wander
+	ModeUntilTick int64 // Tick when the mode rerolls
+
 	// Bug ID tracking for deterministic catching
 	RemovedBugIDs map[int]bool // Set of removed bug IDs (not serialized)
 	NextBugID     int          // Next ID to assign for new bugs (reproduction)
+}
+
+// ClearFoodTarget drops the cached food target (depleted / phase change) and forces an
+// immediate re-Think so the swarm retargets without the 3-5s think lag.
+func (s *SwarmState) ClearFoodTarget(currentTick int64) {
+	s.TargetFoodID = ""
+	s.TargetFoodDepletable = false
+	s.NextThinkTick = currentTick
 }
 
 // CanReproduce returns true if reproduction cooldown has elapsed
@@ -182,6 +202,12 @@ func (s *SwarmState) Move(deltaTime float32, species *BugSpecies, chunkSize int)
 	s.Facing = VelocityToDirection(s.Velocity)
 }
 
+// RaycastClamp exposes raycastToBlock for callers outside this package (e.g. placing a
+// split-child swarm centre so it can't land through a fence/wall — penned swarms split INSIDE).
+func RaycastClamp(startX, startY, endX, endY float32, isBlocked BlockedChecker) (float32, float32) {
+	return raycastToBlock(startX, startY, endX, endY, isBlocked)
+}
+
 // raycastToBlock walks from start toward end, returning position just before first blocked cell.
 // If path is clear, returns the end position. If isBlocked is nil, returns end directly.
 func raycastToBlock(startX, startY, endX, endY float32, isBlocked BlockedChecker) (float32, float32) {
@@ -233,11 +259,13 @@ func (s *SwarmState) CheckPhaseTransition(species *BugSpecies) {
 			s.Phase = "reproducing"
 		}
 	case "reproducing":
-		if s.ReproductionMeter >= 100 {
-			// TODO: Spawn eggs based on species config
+		// The reproduction itself happens in the match loop (it needs food-source access:
+		// meter fills only AT a depletable source, then Count doubles + SWARM_REPRODUCED is
+		// emitted and meters reset). Here we only handle STARVATION: if satiation decayed
+		// away while hunting for a breeding source, fall back to feeding.
+		if s.Satiation <= 0 {
 			s.Phase = "feeding"
 			s.ReproductionMeter = 0
-			s.Satiation = 0 // Hungry again after breeding
 		}
 	case "", "idle":
 		s.Phase = "feeding" // Default to feeding

@@ -233,9 +233,12 @@ def scan_available_zones(zones_dir: Path) -> Dict[Tuple[int, int], str]:
 
 def render_zone(zone_data: Dict[str, Any], scale: int = 2,
                 show_chunks: bool = False) -> Image.Image:
-    """Render a single zone to an image."""
-    img_size = ZONE_SIZE * scale
-    img = Image.new('RGB', (img_size, img_size), DEFAULT_GROUND_COLOR)
+    """Render a single zone to an image at the zone's ACTUAL size (not a fixed 512 canvas)."""
+    cfg = zone_data.get("config", {})
+    zw = int(cfg.get("width", ZONE_SIZE))
+    zh = int(cfg.get("height", ZONE_SIZE))
+    img_w, img_h = zw * scale, zh * scale
+    img = Image.new('RGB', (img_w, img_h), GROUND_COLORS["grass"])
     draw = ImageDraw.Draw(img)
 
     chunks = zone_data["chunks"]
@@ -281,12 +284,16 @@ def render_zone(zone_data: Dict[str, Any], scale: int = 2,
 
     # Draw chunk grid if requested
     if show_chunks:
-        for i in range(1, 16):
+        for i in range(1, zw // CHUNK_SIZE):
             pos = i * CHUNK_SIZE * scale
-            draw.line([(pos, 0), (pos, img_size - 1)], fill=CHUNK_GRID_COLOR, width=1)
-            draw.line([(0, pos), (img_size - 1, pos)], fill=CHUNK_GRID_COLOR, width=1)
+            draw.line([(pos, 0), (pos, img_h - 1)], fill=CHUNK_GRID_COLOR, width=1)
+        for i in range(1, zh // CHUNK_SIZE):
+            pos = i * CHUNK_SIZE * scale
+            draw.line([(0, pos), (img_w - 1, pos)], fill=CHUNK_GRID_COLOR, width=1)
 
-    return img
+    # The game/scene renders are NORTH-up (high +Y at the top); view_world builds rows top-down from
+    # y=0 (south-up), so flip vertically to match the rest of the toolchain.
+    return img.transpose(Image.FLIP_TOP_BOTTOM)
 
 
 def add_legend(img: Image.Image, scale: int) -> Image.Image:

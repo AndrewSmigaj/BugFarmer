@@ -742,6 +742,136 @@ namespace BugFarmer.Entities
             }
         }
 
+        // === Swarm Split/Merge (SWARM_SPLIT / SWARM_MERGE influence events) ===
+        // Applied at the event's tick inside ProcessEventsForTick (deterministic on every
+        // client). Bugs are MOVED between swarms — positions/velocity/motion preserved, never
+        // re-spawned. Both handlers are IDEMPOTENT (move what exists, spawn the deficit, no-op
+        // on ids that already exist) so they are safe against the on-receipt SwarmUpdate window
+        // AND late-join replay where the metadata already reflects the post-split/merge state.
+
+        /// <summary>
+        /// SWARM_SPLIT: the parent (evt.swarm_id) sheds its highest-id bugs into a new child
+        /// (evt.new_swarm_id, seeded at evt.center). evt.parent_count = parent's POST-split
+        /// count, so the move count derives idempotently: AliveCount − parent_count (0 when
+        /// the split is already reflected, e.g. late-join metadata).
+        /// </summary>
+        public void HandleSwarmSplit(InfluenceEvent evt)
+        {
+            var parent = GetSwarm(evt.swarm_id);
+            var center = new Vector2(evt.center_x / 1000f, evt.center_y / 1000f);
+
+            var child = GetSwarm(evt.new_swarm_id);
+            if (child == null)
+            {
+                child = SpawnEmptySwarm(evt.new_swarm_id,
+                    parent != null ? parent.SpeciesId : "",
+                    center,
+                    parent != null ? parent.Radius : 4f);
+            }
+            else
+            {
+                // Defensive: early-created by an on-receipt SwarmUpdate (auto-scattered bugs).
+                // Clear so the child's bugs come ONLY from this deterministic event.
+                child.ClearBugs();
+            }
+
+            int toMove = parent != null
+                ? Mathf.Clamp(parent.Count - evt.parent_count, 0, evt.split_count)
+                : 0;
+
+            int newId = 0;
+            if (toMove > 0)
+            {
+                foreach (var kv in parent.ExtractHighestBugs(toMove))
+                    child.InsertBug(newId++, kv.Value); // position/motion preserved; RNG re-keys
+            }
+            for (; newId < evt.split_count; newId++)
+                child.SpawnBugAt(newId); // deficit fill (late-join window) — converges on count
+
+            Debug.Log($"[SwarmManager] SWARM_SPLIT {evt.swarm_id} -> {evt.new_swarm_id}: moved {toMove}, spawned {evt.split_count - toMove}, parent now {parent?.Count ?? -1}");
+        }
+
+        /// <summary>
+        /// SWARM_MERGE: every bug of the absorbed swarm (evt.new_swarm_id) MOVES into the
+        /// survivor (evt.swarm_id) as ids new_bug_id_base.. (server-stated base), then the
+        /// absorbed swarm is destroyed. SpawnBugAt deficit-fills if the absorbed swarm was
+        /// already gone (early on-receipt deletion / late-join).
+        /// </summary>
+        public void HandleSwarmMerge(InfluenceEvent evt)
+        {
+            var survivor = GetSwarm(evt.swarm_id);
+            if (survivor == null)
+            {
+                Debug.LogWarning($"[SwarmManager] SWARM_MERGE survivor {evt.swarm_id} missing - skipping (late-join metadata already post-merge)");
+                return;
+            }
+
+            var absorbed = GetSwarm(evt.new_swarm_id);
+            int newId = evt.new_bug_id_base;
+            int moved = 0;
+            if (absorbed != null)
+            {
+                foreach (var kv in absorbed.ExtractAllBugs())
+                {
+                    survivor.InsertBug(newId++, kv.Value); // positions preserved
+                    moved++;
+                }
+                absorbed.Cleanup(); // its _bugs is empty (extracted) - pools nothing
+                Destroy(absorbed.gameObject);
+                _swarms.Remove(evt.new_swarm_id);
+            }
+
+            // Deficit fill to the server-stated id range (no-op for ids already inserted)
+            for (int id = evt.new_bug_id_base; id < evt.new_bug_id_base + evt.split_count; id++)
+                survivor.SpawnBugAt(id);
+
+            Debug.Log($"[SwarmManager] SWARM_MERGE {evt.new_swarm_id} -> {evt.swarm_id}: moved {moved}/{evt.split_count}, survivor now {survivor.Count}");
+        }
+
+        /// <summary>
+        /// SWARM_REPRODUCED: a sated swarm bred at a food source — spawn evt.split_count new
+        /// bugs with ids new_bug_id_base.. at the swarm's deterministic centre, at the event
+        /// tick. SpawnBugAt is idempotent (no-op on existing ids), covering late-join replay.
+        /// </summary>
+        public void HandleSwarmReproduced(InfluenceEvent evt)
+        {
+            var swarm = GetSwarm(evt.swarm_id);
+            if (swarm == null)
+            {
+                Debug.LogWarning($"[SwarmManager] SWARM_REPRODUCED for unknown swarm {evt.swarm_id} - skipping");
+                return;
+            }
+            for (int id = evt.new_bug_id_base; id < evt.new_bug_id_base + evt.split_count; id++)
+                swarm.SpawnBugAt(id);
+            Debug.Log($"[SwarmManager] SWARM_REPRODUCED {evt.swarm_id}: +{evt.split_count} bugs (now {swarm.Count})");
+        }
+
+        /// <summary>
+        /// Create an EMPTY swarm shell for a split child: count=0 means Initialize's
+        /// SpawnInitialBugs is a natural no-op; the SWARM_SPLIT event populates it by moving
+        /// bugs. Center seeds _fallbackCenter until the child's first SWARM_SET_TARGET leg
+        /// (the server Thinks for it within ~1 tick).
+        /// </summary>
+        private SwarmVisual SpawnEmptySwarm(string swarmId, string speciesId, Vector2 center, float radius)
+        {
+            var data = new SwarmData
+            {
+                id = swarmId,
+                species_id = speciesId,
+                sprite_id = "",
+                x = center.x,
+                y = center.y,
+                radius = radius,
+                count = 0,
+                next_bug_id = 0,
+            };
+            var obj = new GameObject($"Swarm_{swarmId}");
+            var visual = obj.AddComponent<SwarmVisual>();
+            visual.Initialize(data, _simulationTick);
+            _swarms[swarmId] = visual;
+            return visual;
+        }
+
         // === Bug Sync Handlers (Late Joiner + Drift Detection) ===
 
         /// <summary>

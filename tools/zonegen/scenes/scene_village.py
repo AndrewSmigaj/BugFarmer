@@ -26,7 +26,7 @@ from scene_cottage import place_cottage                               # noqa: E4
 from scene_lakeside import place_boat_store                           # noqa: E402
 from player_house import place_player_house                           # noqa: E402
 from features.yard import property_yard                               # noqa: E402
-from features.garden import flower_patch                              # noqa: E402
+from features.garden import flower_patch, crop_bed                    # noqa: E402
 
 W, H = 120, 116
 MAINX = 58                                   # N-S main street (x57-59)
@@ -103,18 +103,30 @@ def build():
     place_player_house(b, 58, 85)                                       # ⊥ 4-room cottage (like the player's), E
     property_yard(b, 62, 93, 92, 110, 76, side=2, front=5, back=4,
                   fence="fence_picket", gate_id="gate_picket", seed=3); connect(b, 76, 88, RES_Y)
+    crop_bed(b, 64, 104, 71, 107, ["plant_tomato", "plant_corn"])       # veg beds behind the player's house
+    crop_bed(b, 83, 104, 90, 107, ["plant_corn", "plant_tomato"])
+    flower_patch(b, 64, 111, 90, 113, ["flower_red", "flower_yellow", "poppy"], 14, seed=8)
     place_cottage(b, 98, 92, npc="merchant_down"); connect(b, 102, 88, RES_Y)  # far E
 
     # 5) BOAT STORE on the SW lake, reached by a dirt path up to the commercial street
     place_boat_store(b, 8, 26)
     connect(b, 13, 38, COMM_Y - 1, tile="dirt")
 
+    # 5b) ROADSIDE DETAIL — lamp posts flanking the main street, a south ENTRANCE, a SE pond
+    for y in (10, 24, 38, 72, 104):                                  # lamps line the main N-S street
+        safe(b, "lamp_post", MAINX - 2, y); safe(b, "lamp_post", MAINX + 2, y)
+    for x in (32, 48, 70, 96):                                       # lamps line the commercial street
+        safe(b, "lamp_post", x, COMM_Y + 2)
+    safe(b, "notice_board", MAINX - 3, 6); safe(b, "signpost", MAINX + 2, 6)   # village entrance
+    safe(b, "bench", MAINX - 2, 9); safe(b, "bench", MAINX + 1, 9)
+    pond(b, 99, 16, 7, 5)                                            # a small pond fills the open SE
+
     # 6) TREE CLUMPS in the open areas (where there are no houses) + a few flower patches
-    forest = {"tree_oak": 4, "tree_pine": 2, "bush": 1}
+    forest = {"tree_oak": 4, "tree_pine": 2}                         # trees are grid-aligned; space them so the
     for (a, c, e, f, sd) in [(30, 30, 50, 48, 11), (66, 30, 84, 48, 12), (98, 28, 116, 50, 13),
                              (98, 60, 116, 82, 14), (28, 8, 50, 22, 16), (104, 96, 118, 114, 5),
                              (2, 96, 18, 114, 9), (104, 0, 118, 18, 7)]:
-        scatter(b, a, c, e, f, forest, density=0.22, min_spacing=1, seed=sd, clumping=0.85, cluster_radius=4)
+        scatter(b, a, c, e, f, forest, density=0.16, min_spacing=3, seed=sd, clumping=0.8, cluster_radius=4)
     meadow = {"tall_grass": 6, "flower_wild": 2, "bush": 1}
     for (a, c, e, f, sd) in [(34, 50, 82, 58, 21), (34, 78, 56, 84, 22), (90, 60, 116, 82, 23)]:
         scatter(b, a, c, e, f, meadow, density=0.10, min_spacing=2, seed=sd, clumping=0.85)

@@ -6,6 +6,60 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Done (recent) — FLY LIFECYCLE: feed → reproduce on rotten fruit/compost until the food runs out
+- **The ecology loop is LIVE and verified e2e** (headless, 6-min run): tree drops fruit → rots
+  (`ITEM_ROTTED`) → flies feed (`FOOD_CONSUMED` thresholds 75/50/25/0; drain ∝ fly count) → satiation
+  fills → phase flips → breeding at a DEPLETABLE source → **`SWARM_REPRODUCED` doubles the swarm**
+  (6→12→24→48) → over the 20 limit → minute-pass **SIZE SPLIT** → children feed/breed too →
+  **13 swarms / 168 bugs from 6 in ~6 min**; graph at `tools/output/fly_counts.png`.
+- **Server-authoritative lifecycle** (replaced the dead OpCode-70 client-report sketch): meters advance in
+  the swarm loop from centre-at-cached-food checks (O(1)/tick); `FindNearbyFood` unifies rotten ground
+  items (the old occupant-only query NEVER matched dropped fruit) + station fill + flora; satiation decay
+  wired; v1 rule: REPRODUCTION requires a depletable source (flora is infinite — no unbounded butterflies).
+- **FIXED a pre-existing breaker**: ground-item lifetimes were processed by TWO per-tick functions — double
+  decrement + a deleter racing the rot transition (fruit usually VANISHED instead of rotting). One
+  processor now; rot time data-driven (`fruit_rot_ticks`, units fixed to real 28min default).
+- **STATIONS (general pattern, composter first)**: data-driven `world.station` block (accepts/capacity/
+  food_per_unit/providers); player deposits via a right-click menu (`StationController`, OpCodes 85/86);
+  fill = food+breeding provider for flies, drained by the same consumption path. Item PICKUP existed
+  (research wrong) — added the food-registry removal event on pickup of rotten fruit.
+- **Client**: deterministic event-driven FOOD REGISTRY (ITEM_ROTTED/FOOD_CONSUMED upserts; join-time
+  hydration from chunk-resent ground items); `SWARM_REPRODUCED` → idempotent `SpawnBugAt`; per-bug
+  **land-on-food behavior** (approach, ring offset by bug-id, pause, resume — all deterministic inputs);
+  **debug overlay**: F4 swarm centres/counts markers, F5 live population graph.
+- **Gates block bugs** (wood/iron/picket — `blocks_bugs: true`): bug-tight pens players can walk into.
+- Test zone `repro_test` (gated pen + fast `tree_apple_test` + compost bin + 6 flies); 3 new Go unit tests
+  (consumption thresholds/depletion, reproduce bookkeeping, station drain); harness decodes the lifecycle
+  events + writes the population CSV (`tools/plot_fly_counts.py`).
+- **GATHERING MODEL settled (Terraria-style)**: LEFT-CLICK breaks (hand for soft flora — flowers are 1-HP
+  with drops already; axe for trees), drops float as ground items, **WALK-OVER AUTO-PICKUP** collects
+  ordinary drops (magnet 1.25, rate-limited + per-item backoff). **EXCEPTION: bug food (rotten_*) is never
+  auto-collected** — deliberate E only ("what the bugs eat belongs to the bugs"), so you can't strip your
+  fly farm by walking through it. **CLICK PRIORITY: catch beats break** — a bug within net-catch range of
+  the cursor claims the click (BreakingController defers), so clicking a fly on a flower catches the fly
+  instead of smashing the flower. No gathering tool needed; the net stays equipped.
+- **Unity to verify**: add `StationController` to the player/systems object; F4/F5 overlays; deposit menu;
+  bugs visibly landing on fruit/bin; auto-pickup feel + the catch-over-break priority. **Next/tuning**:
+  real-tree scarcity pacing, station processing-over-time (`process_ticks` reserved), eggs for other
+  species, butterfly reproduction via flora-capacity design, tree-shake harvest (`TREE_FRUIT_HARVEST`).
+
+## Done (recent) — Bug collision + deterministic swarm split/merge (Phases 1+2)
+- **Per-bug collision wired** (`BugAgent.SimulateTick` → `BugCollision.Resolve`, slide vs `blocks_bugs`);
+  **player collision** added client (`IsCellBlockedForPlayers` + PlayerController feet-gate) + server
+  (`IsBlockedForPlayers`, authoritative reject in `OpCodeMovement`); **spawn-at-center** (bugs drift out).
+- **Population model**: once-a-minute pass (600 ticks) — swarm **splits when `Count > max_swarm_size`**
+  (sheds its HIGHEST alive bug-ids into a child) and **merges when centers within `merge_radius`** if
+  `combined ≤ max`. Carried as tick+seq **`SWARM_SPLIT`/`SWARM_MERGE` influence events** (no `SwarmsDirty`
+  — lifecycle travels only via the deterministic ledger); clients **MOVE the actual bugs** between swarms
+  (positions/motion preserved — never re-spawned), idempotent handlers cover the on-receipt window +
+  late-join replay. fly_common tuned: `max_swarm_size 20`, `merge_radius 2.5`.
+- **Verified**: 4 Go unit tests (bookkeeping: conservation, shed=highest, `SwarmsBySpecies`, event fields,
+  no dirty) + headless e2e (`SWARM_SPLIT … count=15 parentCount=15 (tick=600)`, 30→15+15 conserved;
+  `SWARM_MERGE … count=8 idBase=8 (tick=600)`); `collision_test` zone (in the client picker as
+  "Collision Test") proves walk-over-corn/blocked-by-tree + a closed pen holds a swarm.
+- **Still to confirm in a Unity build**: the visual move (bugs staying put on split/merge) — client C#
+  can't run headless. Note: size-splits activate for real once reproduction grows swarms (stub today).
+
 ## Done (recent) — Building pieces + village recompose (text-grid authoring + lint)
 - **Scaffolding for reliable buildings**: `features/tilemap.py` (`stamp`/`dump` — author + verify
   buildings as CHARACTER GRIDS) and `zonebuilder.lint()` (text QA gate: blocked doors, 1-wide doors,

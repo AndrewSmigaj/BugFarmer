@@ -36,14 +36,14 @@ urban-design writing on settlement form:
 | Generic building shell (door any side) | `room.place_room(b, x0,y0,x1,y1, door_side∈{top,bottom,left,right})` |
 | Interior rows of furniture/goods | `house.wall_run(b, items, side=, I=)` (`side="bottom"`=back/north wall, per the facing rule) |
 | Fenced yards / picket gardens | `yard.fence_rect(b, ..., fence="fence_picket", gate_id="gate_picket")`, `yard.yard(...)` |
-| Garden beds + free-floating flowers/fruit | `garden.crop_bed`, `garden.flower_patch` (sub-grid), `garden.fruit_around` (sub-grid) |
+| Garden beds + flower patches (grid) + fallen fruit | `garden.crop_bed`, `garden.flower_patch` (grid occupants), `garden.fruit_around` (sub-grid pickups) |
 | Clumped meadow | `scatter.scatter(b, ..., clumping≈0.85, density=, seed=)` |
 | NPCs / shopkeepers (render-only) | `b.place_player("merchant_down", x, y)` (sprites: merchant/farmer/scholar/ranger × dir) |
 | Bugs facing either way (render-only) | `b.place_bug(sprite_id, x, y, scale, flip=)` |
 
 > **Doors on any side already work** — vary `front=(room, side)` / `door_side` for orientation variety
-> (Principle 13). **Plants are NOT grid-locked** — `flower_patch`/`fruit_around`/`place_decor` place at
-> sub-grid float coords. **Bugs** take `flip=True` to mirror their facing.
+> (Principle 13). **Plants ARE grid-locked** — trees/flowers/crops are grid occupants (`flower_patch` now
+> plants on the grid), saved to the zone; only **bugs** are sub-grid (and `flip=True` mirrors their facing).
 
 ## The build-order recipe (and why this order)
 Each step coordinates through `reserved[]`/`surface[]`, so later features route around earlier ones:
@@ -58,20 +58,20 @@ Each step coordinates through `reserved[]`/`surface[]`, so later features route 
 7. **Orchard + fly farm (edges)** — `fence_rect` + tree rows + `fruit_around` (the fly-emergence loop).
 8. **Clumped meadow scatter (LAST)** — only fills free grass; density **rises toward the rim** (forest
    edge = the town's boundary). Distinct `seed` per region.
-9. **Free-floating decor** — `flower_patch` ribbons along roads/meadow gaps; `place_decor` lily pads.
+9. **Flower patches (grid occupants)** — `flower_patch` ribbons along roads/meadow gaps; `place_decor` only for lily pads on water.
 10. **Bugs** — `place_bug(..., flip=…)` with mixed facing/scale: butterflies/bees at the plaza,
     dragonflies over the lake, flies at orchard/fly-farm.
 
 ## Review checklist (run each iteration)
-- `b.validate() == []` and **0 placement warnings**.
+- `b.lint()` clean and **0 placement warnings**.
 - Lake is **big**; the **main road bends** (not a ruled line); the **plaza is centred** with the
   fountain dead-centre; the **4 clusters** are legible and separated.
 - Per building, ask **"is this good quality?"** — the market reads as a market (wide sign, shelf rows,
   NPC behind the counter); the carpenter's sawmill is **indoors** with goods in tidy **rows**; smith is
   **adjacent** to carpenter; the civic three are near each other; **orientations vary**; the
   picket-fenced cottage is enclosed with its garden.
-- Vegetation is **patchy** (clumping, not confetti/grid); free-floating flowers sit **off-grid**; bugs
-  **face different ways**; the density gradient walls the town with forest at the rim; worn variants
+- Vegetation is **patchy** (clumping, not confetti); flowers/plants are **grid occupants** (only bugs are
+  off-grid); bugs **face different ways**; the density gradient walls the town with forest at the rim; worn variants
   present; the orchard fly loop is visible.
 
 ## Cross-references

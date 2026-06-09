@@ -43,6 +43,54 @@ namespace BugFarmer.Bugs
         public const string EventSwarmSetTarget = "SWARM_SET_TARGET";
         public const string EventBugRemoved = "BUG_REMOVED";
         public const string EventBugSpawned = "BUG_SPAWNED";
+        public const string EventSwarmSplit = "SWARM_SPLIT";
+        public const string EventSwarmMerge = "SWARM_MERGE";
+        public const string EventSwarmReproduced = "SWARM_REPRODUCED";
+        public const string EventItemRotted = "ITEM_ROTTED";
+        public const string EventFoodConsumed = "FOOD_CONSUMED";
+
+        // === Deterministic FOOD REGISTRY ===
+        // food_id -> (world position, remaining level). Maintained ONLY from tick+seq events
+        // (ITEM_ROTTED registers; FOOD_CONSUMED sets the level, 0 removes) plus one documented
+        // exception: on-receipt HYDRATION of already-rotten ground items re-sent on chunk
+        // subscribe (join-time bootstrap, same approximate-until-resync class as snapshots).
+        // Bug landing visuals read this; it must never be mutated from OpCode-47/48 directly.
+        private readonly Dictionary<string, (FixedPoint2 pos, int level)> _food = new();
+
+        /// <summary>Join-time bootstrap for an already-rotten ground item (see note above).</summary>
+        public void HydrateFood(string foodId, Vector2 worldPos, int level)
+        {
+            if (level <= 0 || _food.ContainsKey(foodId)) return;
+            _food[foodId] = (FixedPoint2.FromVector2(worldPos), level);
+        }
+
+        /// <summary>
+        /// Deterministic nearest food source within maxDist of a point (the swarm centre).
+        /// Ties broken by food id. Returns false if none in range.
+        /// </summary>
+        public bool TryGetNearestFood(FixedPoint2 from, float maxDist, out FixedPoint2 pos)
+        {
+            pos = default;
+            int bestSqr = int.MaxValue;
+            string bestId = null;
+            var maxFixed = FixedPoint.FromFloat(maxDist);
+            int maxSqr = (maxFixed * maxFixed).Value;
+            foreach (var kv in _food)
+            {
+                int sqr = kv.Value.pos.SqrDistanceTo(from).Value;
+                if (sqr > maxSqr) continue;
+                if (sqr < bestSqr || (sqr == bestSqr && string.CompareOrdinal(kv.Key, bestId) < 0))
+                {
+                    bestSqr = sqr;
+                    bestId = kv.Key;
+                    pos = kv.Value.pos;
+                }
+            }
+            return bestId != null;
+        }
+
+        /// <summary>Clear the registry (late-join resync re-bootstraps it).</summary>
+        public void ClearFood() => _food.Clear();
 
         private void Awake()
         {
@@ -95,6 +143,42 @@ namespace BugFarmer.Bugs
 
                 case EventBugSpawned:
                     // Future: handle bug spawning for reproduction
+                    break;
+
+                case EventSwarmSplit:
+                    // Over-limit swarm sheds its highest bug-ids into a new child swarm.
+                    // Applied at the event tick on every client; bugs MOVE (positions preserved).
+                    SwarmManager.Instance?.HandleSwarmSplit(evt);
+                    break;
+
+                case EventSwarmMerge:
+                    // Overlapping swarm absorbed into a survivor; its bugs MOVE across.
+                    SwarmManager.Instance?.HandleSwarmMerge(evt);
+                    break;
+
+                case EventSwarmReproduced:
+                    // Sated swarm bred at a food source: spawn the new bugs at the centre.
+                    SwarmManager.Instance?.HandleSwarmReproduced(evt);
+                    break;
+
+                case EventItemRotted:
+                    // A ground item became bug food: register it (world cell centre).
+                    if (!string.IsNullOrEmpty(evt.food_id) && evt.level > 0)
+                        _food[evt.food_id] = (FixedPoint2.FromVector2(
+                            new Vector2(evt.cell_x + 0.5f, evt.cell_y + 0.5f)), evt.level);
+                    break;
+
+                case EventFoodConsumed:
+                    // Level semantics: set FoodID -> level (deposits raise it, feeding lowers
+                    // it); 0 removes the source from the registry.
+                    if (!string.IsNullOrEmpty(evt.food_id))
+                    {
+                        if (evt.level <= 0)
+                            _food.Remove(evt.food_id);
+                        else
+                            _food[evt.food_id] = (FixedPoint2.FromVector2(
+                                new Vector2(evt.cell_x + 0.5f, evt.cell_y + 0.5f)), evt.level);
+                    }
                     break;
 
                 default:

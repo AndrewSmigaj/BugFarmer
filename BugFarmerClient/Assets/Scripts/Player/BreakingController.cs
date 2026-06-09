@@ -20,6 +20,9 @@ namespace BugFarmer.Player
         [Tooltip("Maximum distance from player to break an object (Terraria-style reach)")]
         [SerializeField] private float maxBreakDistance = 8f;
 
+        [Tooltip("If a bug is within this radius of the cursor, the click catches instead of breaking (matches netCatchRadius)")]
+        [SerializeField] private float bugPriorityRadius = 1.5f;
+
         private Vector2Int? _breakingCell;
         private float _lastBreakTime;
         private bool _isBreaking;
@@ -63,6 +66,20 @@ namespace BugFarmer.Player
             // Get world position under mouse
             Vector3 mouseWorld = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
             mouseWorld.z = 0;
+
+            // LEFT-CLICK PRIORITY: catching beats breaking. If a bug is under the cursor
+            // (within net-catch range), this click belongs to the CatchingController — don't
+            // smash the flower/fruit the bug is sitting on.
+            var swarmManager = BugFarmer.Entities.SwarmManager.Instance;
+            if (swarmManager != null)
+            {
+                var bugs = swarmManager.GetBugsAtPosition(mouseWorld, bugPriorityRadius);
+                if (bugs != null && bugs.Count > 0)
+                {
+                    StopBreaking();
+                    return;
+                }
+            }
 
             // Find occupant collider at mouse position
             Collider2D hitCollider = Physics2D.OverlapPoint(mouseWorld);

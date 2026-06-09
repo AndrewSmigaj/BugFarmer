@@ -120,6 +120,23 @@ python3 tools/make_scene.py            # -> tools/_generated/previews/scene.png
 
 ---
 
+## Unity import: PPU 16 or the sprite renders MICRO (the gotcha that bit us)
+World sprites are sized in-game as `sprite_w / PPU` world units — `TilemapManager` scales by
+`targetSize / sprite.rect` with **no PPU compensation**, so the `.meta`'s
+`spritePixelsToUnits` MUST be **16** (1 cell = 16px = 1 world unit). Unity auto-imports any
+NEW png at the default **PPU 100**, which renders it at **16% size** — a "micro tree". This
+is a *latent* bug: it only fires the first time the sprite is actually placed in a zone
+(225 of 315 Objects sat broken until the fly-farm zone used one).
+
+**After adding/copying ANY sprite into `Resources/Objects` or `Resources/Items`:**
+```bash
+python3 tools/fix_sprite_ppu.py        # normalizes every .png.meta to PPU 16
+```
+(Also: ground-item icons may be `Items/{id}.png` OR `Items/{id}_icon.png` — the client
+falls back from `_icon`; `GroundItemVisual` renders them at 0.75× = ~¾ cell.)
+
+---
+
 ## Placement: the footprint-X rule
 
 `CellToWorld` returns a cell's **center**. A multi-cell-wide footprint occupies cells to

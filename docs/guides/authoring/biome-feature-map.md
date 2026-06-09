@@ -16,7 +16,8 @@ Precedence always: **biome base → water → roads → buildings → farms → 
 | **Water / pond edge** | shallow/deep water | `terrain.pond`/`stream`, `garden` (lily pads), reeds | Use for lakes, streams, oases | docks, reeds, frogs |
 
 Notes
-- **Collectibles are NOT grid occupants** — flowers, fruit, bugs go via `place_decor`/`place_bug` (sub-grid
-  floats), scattered, not snapped. Only structures/furniture/fences/walls/crops use `place_occupant`.
+- **EVERYTHING snaps to the grid except BUGS.** Trees, plants, flowers and crops are grid `place_occupant`s
+  (the player plants them; they're saved to the zone). Only **bugs** (`place_bug`) — plus incidental pickups
+  like fallen fruit / lily-pads-on-water (`place_decor`) — are sub-grid floats.
 - Aim for **variety + little features** in every zone (a poor→nice range, named landmarks) — a sparse map
   reads as a tech demo. Brainstorm the content first (`docs/brainstorms/<topic>/`).
