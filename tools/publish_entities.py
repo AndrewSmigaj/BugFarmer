@@ -20,6 +20,13 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "nakama", "data", "entities")
 DST = os.path.join(ROOT, "BugFarmerClient", "Assets", "Resources", "Data", "entities")
 
+# Beyond entities/: species.json is also published (the client needs the species->sprite_id
+# map so caught bugs render in inventory slots — bug slots store SPECIES ids).
+EXTRA = [
+    (os.path.join(ROOT, "nakama", "data", "species.json"),
+     os.path.join(ROOT, "BugFarmerClient", "Assets", "Resources", "Data", "species.json")),
+]
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -32,10 +39,12 @@ def main():
     if not sources:
         raise SystemExit(f"No entity JSON found in {SRC}")
 
+    pairs = [(src, os.path.join(DST, os.path.basename(src))) for src in sources]
+    pairs += EXTRA
+
     drift, copied = [], []
-    for src in sources:
+    for src, dst in pairs:
         name = os.path.basename(src)
-        dst = os.path.join(DST, name)
         same = os.path.exists(dst) and filecmp.cmp(src, dst, shallow=False)
         if same:
             continue

@@ -89,7 +89,7 @@
     "family": "icon"
   },
   "bug_parts": {
-    "look": "a small pile of beetle BUG PARTS: one cracked glossy brown chitin SHELL HALF and one veined translucent insect WING lying beside it; simple, readable, earthy brown and pale grey",
+    "look": "a cartoon DEAD FLY lying flat on its BACK, viewed from above: one plump dark-grey oval BODY centered, six short black LEGS sticking stiffly straight up/outward, two small round red EYES, a pair of flat translucent WINGS splayed to the sides - instantly readable as a dead bug, slightly comical",
     "family": "icon"
   },
   "berries": {
@@ -117,5 +117,21 @@
       "stone",
       "metal"
     ]
+  },
+  "apple": {
+    "look": "a single shiny red APPLE with one small green LEAF on a short stem: simple round silhouette, bright highlight on the upper-left",
+    "family": "icon"
+  },
+  "orange": {
+    "look": "a single ORANGE with dimpled peel texture and one small green leaf: round, warm orange, soft highlight",
+    "family": "icon"
+  },
+  "rotten_apple": {
+    "look": "a ROTTEN APPLE: dull brown-red with a sunken bruised side, a few dark spots, slightly collapsed silhouette, drooping wilted leaf",
+    "family": "icon"
+  },
+  "rotten_orange": {
+    "look": "a ROTTEN ORANGE: dull brownish peel with grey-green MOLD patches, slightly deflated and sagging",
+    "family": "icon"
   }
 }

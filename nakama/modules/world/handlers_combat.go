@@ -12,9 +12,9 @@ import (
 	"bugfarmer/entities"
 )
 
-// Chance that a killed bug drops bug_parts (v1: one hardcoded drop for all species;
-// per-species kill_drops waits for real loot-table design — see BACKLOG).
-const killDropChance = 0.5
+// EVERY killed bug drops exactly one dead bug (bug_parts) — its only drop. Per-species
+// kill_drops waits for real loot-table design — see BACKLOG.
+const killDropChance = 1.0
 const killDropItem = "bug_parts"
 
 // handleMeleeAttack processes one melee SWING (OpCode 88). Mirrors the catch trust

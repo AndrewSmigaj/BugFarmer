@@ -137,6 +137,9 @@ namespace BugFarmer.Data
         private static Dictionary<string, EntityDef> _entities;
         private static Dictionary<string, Sprite> _spriteCache;
         private static Sprite[] _breakStageSprites;
+        // Species id -> sprite_id (from the published Data/species.json): bug slots store
+        // SPECIES ids, so inventory display needs this map to find Bugs/{sprite_id}.
+        private static Dictionary<string, string> _speciesSprites;
         private static bool _initialized;
 
         #region Initialization
@@ -151,6 +154,7 @@ namespace BugFarmer.Data
             int itemCount = LoadEntityFile("Data/entities/items", "item");
             int occupantCount = LoadEntityFile("Data/entities/occupants", "occupant");
             int placeableCount = LoadEntityFile("Data/entities/placeables", "placeable");
+            LoadSpeciesSprites();
 
             // Load break stage sprites
             _breakStageSprites = new Sprite[4];
@@ -161,6 +165,36 @@ namespace BugFarmer.Data
 
             _initialized = true;
             Debug.Log($"[EntityDatabase] Loaded {itemCount} items, {occupantCount} occupants, {placeableCount} placeables");
+        }
+
+        /// <summary>
+        /// Load the species id -> sprite_id map from the published Data/species.json
+        /// (e.g. butterfly_meadow -> butterfly_common). Missing file = empty map (the
+        /// GetItemSprite fallback then tries Bugs/{species id} directly).
+        /// </summary>
+        private static void LoadSpeciesSprites()
+        {
+            _speciesSprites = new Dictionary<string, string>();
+            var textAsset = Resources.Load<TextAsset>("Data/species");
+            if (textAsset == null)
+            {
+                Debug.LogWarning("[EntityDatabase] Data/species.json not found — bug-slot icons fall back to Bugs/{species id}");
+                return;
+            }
+            try
+            {
+                var root = JObject.Parse(textAsset.text);
+                foreach (var prop in root.Properties())
+                {
+                    if (prop.Name.StartsWith("_")) continue;
+                    var spriteId = (prop.Value as JObject)?["sprite_id"]?.Value<string>();
+                    _speciesSprites[prop.Name] = string.IsNullOrEmpty(spriteId) ? prop.Name : spriteId;
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[EntityDatabase] Failed to parse Data/species: {e.Message}");
+            }
         }
 
         private static int LoadEntityFile(string resourcePath, string entityType)
@@ -481,7 +515,11 @@ namespace BugFarmer.Data
         ///   1. Objects/{icon_from}   (explicit borrow for id mismatches, from items.json)
         ///   2. Objects/{id}          (placeables/blocks/cut flora — the original object art)
         ///   3. Items/{id}_icon       (authored icons: tools, seeds, raw resources)
-        ///   4. Items/{id}            (legacy plain files: apple, orange, rotten_*)
+        ///   4. Items/{id}            (legacy plain files)
+        ///   5. Bugs/{species sprite} (BUG SLOTS store species ids — without this, caught
+        ///                             flies render as invisible slots and catching looks
+        ///                             broken; the species->sprite_id map comes from the
+        ///                             published Data/species.json)
         /// </summary>
         public static Sprite GetItemSprite(string id)
         {
@@ -501,6 +539,12 @@ namespace BugFarmer.Data
                 sprite = Resources.Load<Sprite>($"Items/{id}_icon");
             if (sprite == null)
                 sprite = Resources.Load<Sprite>($"Items/{id}");
+            if (sprite == null)
+            {
+                string bugSprite = (_speciesSprites != null &&
+                                    _speciesSprites.TryGetValue(id, out var mapped)) ? mapped : id;
+                sprite = Resources.Load<Sprite>($"Bugs/{bugSprite}");
+            }
             if (sprite != null)
                 _spriteCache[cacheKey] = sprite;
 

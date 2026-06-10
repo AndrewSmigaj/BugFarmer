@@ -4637,7 +4637,8 @@
           "apple",
           "orange",
           "rotten_apple",
-          "rotten_orange"
+          "rotten_orange",
+          "bug_parts"
         ],
         "capacity": 10,
         "food_per_unit": 100,

@@ -52,7 +52,9 @@ until picked up. Trees are destroyed and drop wood blocks the same way.
 
 **Inventory icons — two paths (IMPLEMENTED):** `EntityDatabase.GetItemSprite(id)` resolves every item
 display sprite (inventory slots, hotbar, drag cursor, AND floating ground drops) through one chain:
-`Objects/{icon_from}` → `Objects/{id}` → `Items/{id}_icon` → `Items/{id}`.
+`Objects/{icon_from}` → `Objects/{id}` → `Items/{id}_icon` → `Items/{id}` →
+`Bugs/{species sprite_id}` (bug slots store SPECIES ids; the species→sprite_id map comes from
+the now-PUBLISHED `Data/species.json` — publish_entities.py copies it beside the entity JSONs).
 - **Derived (no art authored):** placeables, blocks, and cut flowers/herbs use a **mini of their world
   sprite** as the icon (same art as the bobbing drop). Scaling is the consumer's job: UI Images use
   `preserveAspect`; ground drops fit-box to ≤0.75 cell (`GroundItemVisual`).

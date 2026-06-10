@@ -17,7 +17,7 @@ import sys
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
                     "BugFarmerClient", "Assets", "Resources")
-FOLDERS = ["Objects", "Items"]
+FOLDERS = ["Objects", "Items", "Bugs"]
 PPU = "16"
 
 dry = "--dry-run" in sys.argv

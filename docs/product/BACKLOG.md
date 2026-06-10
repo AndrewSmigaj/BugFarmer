@@ -326,9 +326,8 @@ scenes. Depends on the two items above.
   (architecture_swarm_sync §12).
 - Higher tool tiers (steel→diamond): items.json entries + `recolor_sprites.py --family ...`
   (ramps already inline; the legacy reference art was cleaned out of Items/).
-- **Bug-slot icons are blank** (pre-existing): caught bugs store item_id = species id
-  (`fly_common`), which matches no Items/ or Objects/ art — the display chain needs a
-  species→`Bugs/{sprite_id}` step (or `icon_from` on a per-species item entry).
+- Tiles still import Bilinear (Objects/Items/Bugs are Point now) — flipping the ground's
+  filtering is a deliberate style decision to make with eyes on it.
 - Staggered per-bug catch/kill pops along the sweep arc (cosmetic, no protocol change).
 - Client EditMode test infra (first candidates: icon resolution chain, sector math as a
   pure function, the cursor echo-interception rule).

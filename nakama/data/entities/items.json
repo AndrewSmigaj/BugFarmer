@@ -606,7 +606,7 @@
     }
   },
   "bug_parts": {
-    "name": "Bug Parts",
+    "name": "Dead Bug",
     "category": "resource",
     "stackable": true,
     "max_stack": 99,

@@ -571,3 +571,13 @@ swaps with swaps, never splits, and is cleared when a slot empties (RemoveItem/R
 MoveSlot echoes carry it for completeness, but the client cannot parse it (JsonUtility cannot
 deserialize the Dictionary) and nothing client-side reads it — do not "complete" the client path.
 Cross-type (bug↔item) moves are rejected server-side as well as in the UI.
+
+## Bug-slot display (2026-06, the "not gaining flies" bug — RESOLVED)
+Bug slots store SPECIES ids (`fly_common`); before this fix no display path could resolve them
+to art, so a single caught fly rendered as a completely INVISIBLE slot (icon disabled on null
+sprite, count text hidden at 1) and catching looked broken — the pipeline was verified intact
+end-to-end. Fix: `species.json` is now PUBLISHED to the client and `GetItemSprite` gained a
+final `Bugs/{sprite_id}` step (species→sprite_id map, so butterfly_meadow renders
+butterfly_common's art). Bugs/ sprites also import Point-filtered now (they were Bilinear —
+blurry when scaled in slots). Count text still hides at 1 — acceptable, the icon makes singles
+visible.
