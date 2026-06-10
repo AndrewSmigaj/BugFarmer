@@ -8,7 +8,7 @@ import (
 	"math"
 	"math/rand"
 	"runtime/debug"
-	"time"
+	"sort"
 
 	"bugfarmer/entities"
 
@@ -524,6 +524,14 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				continue
 			}
 			m.handleCatchBug(logger, dispatcher, worldState, catchMsg, userID, chunkSize)
+
+		case OpCodeMeleeAttack:
+			var meleeMsg MeleeAttackMessage
+			if err := json.Unmarshal(msg.GetData(), &meleeMsg); err != nil {
+				logger.Warn("Invalid melee message from %s: %v", userID, err)
+				continue
+			}
+			m.handleMeleeAttack(logger, dispatcher, worldState, meleeMsg, userID, chunkSize)
 
 		case OpCodeEquipTool:
 			var equipMsg EquipToolMessage
@@ -1270,6 +1278,27 @@ func (m *Match) checkSwarmMerging(state *WorldState, chunkSize int, logger runti
 					merged[id2] = true
 					toDelete = append(toDelete, id2)
 
+					// Transfer damaged HP along the exact mapping the client applies:
+					// absorbed alive ids ASCENDING -> survivor ids newBugIDBase+k.
+					if len(swarm2.BugHP) > 0 {
+						if swarm2.NextBugID == 0 {
+							swarm2.NextBugID = swarm2.Count
+						}
+						k := 0
+						for aid := 0; aid < swarm2.NextBugID; aid++ {
+							if !swarm2.IsBugAlive(aid) {
+								continue
+							}
+							if hp, ok := swarm2.BugHP[aid]; ok {
+								if swarm1.BugHP == nil {
+									swarm1.BugHP = make(map[int]int)
+								}
+								swarm1.BugHP[newBugIDBase+k] = hp
+							}
+							k++
+						}
+					}
+
 					// Tick+seq event: clients MOVE the absorbed bugs into the survivor at
 					// the event tick (positions preserved). NO SwarmsDirty — the lifecycle
 					// change travels only through the deterministic ledger.
@@ -1334,6 +1363,24 @@ func (m *Match) checkSwarmSplitting(state *WorldState, chunkSize int, logger run
 					shed = append(shed, id)
 				}
 			}
+
+			// Harvest damaged HP BEFORE RemoveBugs deletes the entries. The client maps
+			// the shed ids ASCENDING -> child ids 0..n-1; mirror that mapping exactly
+			// (shed was collected descending above).
+			var shedHP map[int]int
+			if len(swarm.BugHP) > 0 {
+				asc := append([]int(nil), shed...)
+				sort.Ints(asc)
+				for childID, oldID := range asc {
+					if hp, ok := swarm.BugHP[oldID]; ok {
+						if shedHP == nil {
+							shedHP = make(map[int]int)
+						}
+						shedHP[childID] = hp
+					}
+				}
+			}
+
 			swarm.RemoveBugs(shed) // marks RemovedBugIDs + decrements Count (no double-decrement)
 
 			// Create the child offset from the parent; NextThinkTick=0 -> it Thinks (and
@@ -1365,6 +1412,7 @@ func (m *Match) checkSwarmSplitting(state *WorldState, chunkSize int, logger run
 				WanderRad: swarm.WanderRad,
 			}
 			newSwarm.InitializeBugIDs() // child ids 0..count-1
+			newSwarm.BugHP = shedHP     // damaged HP follows the moved bugs (nil if none)
 			newSwarms = append(newSwarms, newSwarm)
 
 			// Tick+seq event: lifecycle travels ONLY through the deterministic ledger
@@ -1429,25 +1477,43 @@ func (m *Match) handleCatchBug(
 		return
 	}
 
-	// Rate limit: 200ms between catches
-	now := time.Now().UnixMilli()
-	if now-player.LastCatchTime < 200 {
-		return
+	// Tool stats are DATA (items.json), not hardcoded ids — any net works, and new
+	// tiers need zero code. Hand defaults when no net is equipped.
+	maxReach := float32(2.0)
+	maxCatch := 5
+	cooldown := int64(2) // hand: 2 ticks = the old 200ms at 10Hz
+	if toolDef := state.Entities[player.EquippedTool]; toolDef != nil && toolDef.ToolType == "net" {
+		if toolDef.Reach > 0 {
+			maxReach = toolDef.Reach
+		}
+		if toolDef.CatchCap > 0 {
+			maxCatch = toolDef.CatchCap
+		}
+		if toolDef.CooldownTicks > 0 {
+			cooldown = int64(toolDef.CooldownTicks)
+		}
 	}
-	player.LastCatchTime = now
+
+	// Rate limit per SWING: one swing's messages arrive as a same-tick burst (one per
+	// hit swarm) and share the slot — stamping per-message used to silently drop every
+	// swarm after the first, ghost-removing those bugs on the catching client.
+	tick := state.TickCount
+	if tick != player.LastCatchTick {
+		if tick-player.LastCatchTick < cooldown {
+			return
+		}
+		player.LastCatchTick = tick
+	}
 
 	// Get player world position using existing method
 	playerX := player.WorldX(chunkSize)
 	playerY := player.WorldY(chunkSize)
 
-	// Validate click is within reach (hand=2 blocks, small_net=4.5 blocks)
-	maxReach := float32(2.0)
-	if player.EquippedTool == "small_net" {
-		maxReach = 4.5
-	}
+	// Validate click is within reach (+slack for swing geometry/latency)
 	dx := msg.ClickX - playerX
 	dy := msg.ClickY - playerY
-	if dx*dx+dy*dy > maxReach*maxReach {
+	reachSlack := maxReach + 0.5
+	if dx*dx+dy*dy > reachSlack*reachSlack {
 		return // Too far
 	}
 
@@ -1457,11 +1523,6 @@ func (m *Match) handleCatchBug(
 		return
 	}
 
-	// Cap bug IDs by tool (hand=5, small_net=15)
-	maxCatch := 5
-	if player.EquippedTool == "small_net" {
-		maxCatch = 15
-	}
 	bugIDs := msg.BugIDs
 	if len(bugIDs) > maxCatch {
 		bugIDs = bugIDs[:maxCatch]
@@ -1819,6 +1880,20 @@ func (m *Match) sendLateJoinSnapshot(
 				Phase:      swarm.Phase,
 				NextBugID:  swarm.NextBugID,
 				RemovedIDs: swarm.GetRemovedIDs(),
+			}
+
+			// Seed the joiner's display-only HP for damaged bugs (server-owned truth,
+			// the RemovedIDs precedent). Subsequent MeleeResultMessages converge it.
+			if len(swarm.BugHP) > 0 {
+				ids := make([]int, 0, len(swarm.BugHP))
+				for bugID := range swarm.BugHP {
+					ids = append(ids, bugID)
+				}
+				sort.Ints(ids)
+				meta.BugHP = make([]BugHPEntry, 0, len(ids))
+				for _, bugID := range ids {
+					meta.BugHP = append(meta.BugHP, BugHPEntry{BugID: bugID, HP: swarm.BugHP[bugID]})
+				}
 			}
 
 			// Hydrate the leg active AT snapshotTick: the most recent SWARM_SET_TARGET for

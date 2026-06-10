@@ -1,6 +1,5 @@
 {
   "_comment": "Inventory-only items: resources, tools, consumables. Sprites load from Resources/Sprites/Items/{id}.png",
-
   "wood": {
     "name": "Wood",
     "category": "resource",
@@ -274,7 +273,6 @@
     "max_stack": 99,
     "sell_price": 4
   },
-
   "seed_tomato": {
     "name": "Tomato Seeds",
     "category": "seed",
@@ -302,24 +300,29 @@
     "buy_price": 5,
     "sell_price": 1
   },
-
   "small_net": {
     "name": "Small Net",
     "category": "tool",
     "tool_type": "net",
-    "reach": 4.5,
-    "catch_radius": 1.5,
+    "reach": 2.5,
     "buy_price": 0,
-    "sell_price": 25
+    "sell_price": 25,
+    "arc_degrees": 80,
+    "catch_cap": 10,
+    "cooldown_ticks": 3,
+    "swing_time": 0.25
   },
   "large_net": {
     "name": "Large Net",
     "category": "tool",
     "tool_type": "net",
-    "reach": 5.5,
-    "catch_radius": 2.5,
+    "reach": 3.5,
     "buy_price": 100,
-    "sell_price": 50
+    "sell_price": 50,
+    "arc_degrees": 120,
+    "catch_cap": 20,
+    "cooldown_ticks": 3,
+    "swing_time": 0.25
   },
   "pickaxe_wood": {
     "name": "Wooden Pickaxe",
@@ -470,7 +473,10 @@
     "tool_type": "watering_can",
     "reach": 3.5,
     "cooldown_ticks": 3,
-    "metadata_defaults": {"uses": 40, "capacity": 40},
+    "metadata_defaults": {
+      "uses": 40,
+      "capacity": 40
+    },
     "buy_price": 30,
     "sell_price": 12
   },
@@ -480,11 +486,13 @@
     "tool_type": "watering_can",
     "reach": 4.0,
     "cooldown_ticks": 2,
-    "metadata_defaults": {"uses": 80, "capacity": 80},
+    "metadata_defaults": {
+      "uses": 80,
+      "capacity": 80
+    },
     "buy_price": 100,
     "sell_price": 40
   },
-
   "calm_spray": {
     "name": "Calm Spray",
     "category": "consumable",
@@ -494,5 +502,42 @@
     "effect": "calm",
     "buy_price": 20,
     "sell_price": 10
+  },
+  "sword_wood": {
+    "name": "Wooden Sword",
+    "category": "tool",
+    "tool_type": "sword",
+    "tool_tier": 1,
+    "damage": 1,
+    "arc_degrees": 100,
+    "reach": 2.5,
+    "swing_time": 0.2,
+    "max_targets": 6,
+    "cooldown_ticks": 4,
+    "durability": 50,
+    "buy_price": 30,
+    "sell_price": 12
+  },
+  "spear_wood": {
+    "name": "Wooden Spear",
+    "category": "tool",
+    "tool_type": "spear",
+    "tool_tier": 1,
+    "damage": 1,
+    "arc_degrees": 20,
+    "reach": 4.0,
+    "swing_time": 0.22,
+    "max_targets": 3,
+    "cooldown_ticks": 5,
+    "durability": 50,
+    "buy_price": 35,
+    "sell_price": 14
+  },
+  "bug_parts": {
+    "name": "Bug Parts",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 2
   }
 }

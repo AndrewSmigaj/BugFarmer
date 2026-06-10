@@ -1,13 +1,15 @@
 {
   "_comment": "World-only occupants: natural objects that cannot be placed by players. Sprites load from Resources/Objects/{id}.png",
-
   "tree_oak": {
     "name": "Oak Tree",
     "category": "natural",
     "sprite_w": 32,
     "sprite_h": 48,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -16,7 +18,11 @@
         "required_tool_type": "axe",
         "required_tool_tier": 1,
         "drops": [
-          {"item_id": "wood", "count": 4, "chance": 1.0}
+          {
+            "item_id": "wood",
+            "count": 4,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -27,7 +33,10 @@
     "sprite_w": 32,
     "sprite_h": 52,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -36,7 +45,11 @@
         "required_tool_type": "axe",
         "required_tool_tier": 1,
         "drops": [
-          {"item_id": "wood", "count": 4, "chance": 1.0}
+          {
+            "item_id": "wood",
+            "count": 4,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -47,7 +60,10 @@
     "sprite_w": 32,
     "sprite_h": 48,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -62,7 +78,11 @@
         "required_tool_type": "axe",
         "required_tool_tier": 1,
         "drops": [
-          {"item_id": "wood", "count": 3, "chance": 1.0}
+          {
+            "item_id": "wood",
+            "count": 3,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -73,7 +93,10 @@
     "sprite_w": 32,
     "sprite_h": 48,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -89,7 +112,11 @@
         "required_tool_type": "axe",
         "required_tool_tier": 1,
         "drops": [
-          {"item_id": "wood", "count": 3, "chance": 1.0}
+          {
+            "item_id": "wood",
+            "count": 3,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -100,7 +127,10 @@
     "sprite_w": 32,
     "sprite_h": 48,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -115,7 +145,11 @@
         "required_tool_type": "axe",
         "required_tool_tier": 1,
         "drops": [
-          {"item_id": "wood", "count": 3, "chance": 1.0}
+          {
+            "item_id": "wood",
+            "count": 3,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -126,7 +160,10 @@
     "sprite_w": 16,
     "sprite_h": 32,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -135,7 +172,11 @@
         "required_tool_type": "axe",
         "required_tool_tier": 1,
         "drops": [
-          {"item_id": "wood", "count": 2, "chance": 1.0}
+          {
+            "item_id": "wood",
+            "count": 2,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -146,7 +187,10 @@
     "sprite_w": 32,
     "sprite_h": 48,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -155,7 +199,11 @@
         "required_tool_type": "axe",
         "required_tool_tier": 1,
         "drops": [
-          {"item_id": "wood", "count": 3, "chance": 1.0}
+          {
+            "item_id": "wood",
+            "count": 3,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -166,7 +214,10 @@
     "sprite_w": 32,
     "sprite_h": 44,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -175,8 +226,16 @@
         "required_tool_type": "axe",
         "required_tool_tier": 1,
         "drops": [
-          {"item_id": "wood", "count": 3, "chance": 1.0},
-          {"item_id": "apple", "count": 1, "chance": 0.25}
+          {
+            "item_id": "wood",
+            "count": 3,
+            "chance": 1.0
+          },
+          {
+            "item_id": "apple",
+            "count": 1,
+            "chance": 0.25
+          }
         ]
       }
     }
@@ -187,12 +246,24 @@
     "sprite_w": 16,
     "sprite_h": 16,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "c",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "fiber", "count": 1, "chance": 1.0}
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          },
+          {
+            "item_id": "seed_tomato",
+            "count": 1,
+            "chance": 0.08
+          }
         ]
       }
     }
@@ -203,12 +274,24 @@
     "sprite_w": 16,
     "sprite_h": 24,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "fiber", "count": 1, "chance": 1.0}
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          },
+          {
+            "item_id": "seed_wheat",
+            "count": 1,
+            "chance": 0.15
+          }
         ]
       }
     }
@@ -219,12 +302,19 @@
     "sprite_w": 16,
     "sprite_h": 24,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "fiber", "count": 1, "chance": 1.0}
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -235,12 +325,19 @@
     "sprite_w": 16,
     "sprite_h": 16,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "mushroom_red", "count": 1, "chance": 1.0}
+          {
+            "item_id": "mushroom_red",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -251,12 +348,19 @@
     "sprite_w": 16,
     "sprite_h": 16,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "mushroom_glow", "count": 1, "chance": 1.0}
+          {
+            "item_id": "mushroom_glow",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -267,12 +371,29 @@
     "sprite_w": 10,
     "sprite_h": 10,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "c",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "flower", "count": 1, "chance": 1.0}
+          {
+            "item_id": "flower",
+            "count": 1,
+            "chance": 1.0
+          },
+          {
+            "item_id": "seed_tomato",
+            "count": 1,
+            "chance": 0.1
+          },
+          {
+            "item_id": "seed_corn",
+            "count": 1,
+            "chance": 0.1
+          }
         ]
       }
     }
@@ -283,12 +404,19 @@
     "sprite_w": 10,
     "sprite_h": 10,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "c",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "flower", "count": 1, "chance": 1.0}
+          {
+            "item_id": "flower",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -299,12 +427,19 @@
     "sprite_w": 10,
     "sprite_h": 10,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "c",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "flower", "count": 1, "chance": 1.0}
+          {
+            "item_id": "flower",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -315,12 +450,19 @@
     "sprite_w": 10,
     "sprite_h": 10,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "c",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "flower", "count": 1, "chance": 1.0}
+          {
+            "item_id": "flower",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -331,12 +473,19 @@
     "sprite_w": 16,
     "sprite_h": 32,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "sunflower_seed", "count": 1, "chance": 1.0}
+          {
+            "item_id": "sunflower_seed",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -347,12 +496,19 @@
     "sprite_w": 16,
     "sprite_h": 16,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "mushroom_brown", "count": 1, "chance": 1.0}
+          {
+            "item_id": "mushroom_brown",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -363,12 +519,19 @@
     "sprite_w": 16,
     "sprite_h": 16,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "mushroom_chanterelle", "count": 1, "chance": 1.0}
+          {
+            "item_id": "mushroom_chanterelle",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -379,12 +542,19 @@
     "sprite_w": 16,
     "sprite_h": 14,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "mushroom_puffball", "count": 1, "chance": 1.0}
+          {
+            "item_id": "mushroom_puffball",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -395,12 +565,19 @@
     "sprite_w": 10,
     "sprite_h": 12,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "c",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "chamomile", "count": 1, "chance": 1.0}
+          {
+            "item_id": "chamomile",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -411,12 +588,19 @@
     "sprite_w": 12,
     "sprite_h": 20,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "lavender", "count": 1, "chance": 1.0}
+          {
+            "item_id": "lavender",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -427,12 +611,19 @@
     "sprite_w": 12,
     "sprite_h": 14,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "yarrow", "count": 1, "chance": 1.0}
+          {
+            "item_id": "yarrow",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -443,12 +634,19 @@
     "sprite_w": 20,
     "sprite_h": 20,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "berries", "count": 1, "chance": 1.0}
+          {
+            "item_id": "berries",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -459,12 +657,19 @@
     "sprite_w": 10,
     "sprite_h": 12,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "c",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "dandelion", "count": 1, "chance": 1.0}
+          {
+            "item_id": "dandelion",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -475,12 +680,19 @@
     "sprite_w": 16,
     "sprite_h": 16,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "fern", "count": 1, "chance": 1.0}
+          {
+            "item_id": "fern",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -491,12 +703,19 @@
     "sprite_w": 12,
     "sprite_h": 8,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "c",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "clover", "count": 1, "chance": 1.0}
+          {
+            "item_id": "clover",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -507,12 +726,19 @@
     "sprite_w": 14,
     "sprite_h": 28,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "milkweed", "count": 1, "chance": 1.0}
+          {
+            "item_id": "milkweed",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -523,14 +749,21 @@
     "sprite_w": 28,
     "sprite_h": 44,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
       "breakable": {
         "hp": 3,
         "drops": [
-          {"item_id": "milkweed", "count": 3, "chance": 1.0}
+          {
+            "item_id": "milkweed",
+            "count": 3,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -541,12 +774,19 @@
     "sprite_w": 12,
     "sprite_h": 10,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "c",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "clover", "count": 1, "chance": 1.0}
+          {
+            "item_id": "clover",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -557,12 +797,19 @@
     "sprite_w": 10,
     "sprite_h": 16,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "poppy", "count": 1, "chance": 1.0}
+          {
+            "item_id": "poppy",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -573,13 +820,20 @@
     "sprite_w": 16,
     "sprite_h": 20,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 2,
         "required_tool_type": "pickaxe",
         "drops": [
-          {"item_id": "crystal", "count": 1, "chance": 1.0}
+          {
+            "item_id": "crystal",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -590,13 +844,20 @@
     "sprite_w": 16,
     "sprite_h": 12,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "required_tool_type": "pickaxe",
         "drops": [
-          {"item_id": "stone_block", "count": 1, "chance": 1.0}
+          {
+            "item_id": "stone_block",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -1336,14 +1597,21 @@
     "sprite_w": 16,
     "sprite_h": 24,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 4,
         "required_tool_type": "pickaxe",
         "required_tool_tier": 2,
         "drops": [
-          {"item_id": "crystal", "count": 1, "chance": 1.0}
+          {
+            "item_id": "crystal",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -1354,7 +1622,10 @@
     "sprite_w": 32,
     "sprite_h": 40,
     "world": {
-      "footprint": [2, 2],
+      "footprint": [
+        2,
+        2
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -1363,7 +1634,11 @@
         "required_tool_type": "pickaxe",
         "required_tool_tier": 3,
         "drops": [
-          {"item_id": "crystal", "count": 3, "chance": 1.0}
+          {
+            "item_id": "crystal",
+            "count": 3,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -1374,12 +1649,19 @@
     "sprite_w": 16,
     "sprite_h": 16,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "c",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "bone", "count": 1, "chance": 1.0}
+          {
+            "item_id": "bone",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -1390,12 +1672,19 @@
     "sprite_w": 16,
     "sprite_h": 24,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "torch_wall", "count": 1, "chance": 1.0}
+          {
+            "item_id": "torch_wall",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -1406,7 +1695,10 @@
     "sprite_w": 32,
     "sprite_h": 32,
     "world": {
-      "footprint": [2, 2],
+      "footprint": [
+        2,
+        2
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 5,
@@ -1414,14 +1706,16 @@
       }
     }
   },
-
   "ore_coal_block": {
     "name": "Coal Deposit",
     "category": "ore",
     "sprite_w": 16,
     "sprite_h": 20,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -1430,7 +1724,11 @@
         "required_tool_type": "pickaxe",
         "required_tool_tier": 1,
         "drops": [
-          {"item_id": "coal", "count": 1, "chance": 1.0}
+          {
+            "item_id": "coal",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -1441,7 +1739,10 @@
     "sprite_w": 16,
     "sprite_h": 20,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -1450,7 +1751,11 @@
         "required_tool_type": "pickaxe",
         "required_tool_tier": 1,
         "drops": [
-          {"item_id": "copper_ore", "count": 1, "chance": 1.0}
+          {
+            "item_id": "copper_ore",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -1461,7 +1766,10 @@
     "sprite_w": 16,
     "sprite_h": 20,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -1470,7 +1778,11 @@
         "required_tool_type": "pickaxe",
         "required_tool_tier": 2,
         "drops": [
-          {"item_id": "iron_ore", "count": 1, "chance": 1.0}
+          {
+            "item_id": "iron_ore",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -1481,7 +1793,10 @@
     "sprite_w": 16,
     "sprite_h": 20,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -1490,7 +1805,11 @@
         "required_tool_type": "pickaxe",
         "required_tool_tier": 1,
         "drops": [
-          {"item_id": "tin_ore", "count": 1, "chance": 1.0}
+          {
+            "item_id": "tin_ore",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -1501,7 +1820,10 @@
     "sprite_w": 16,
     "sprite_h": 20,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -1510,7 +1832,11 @@
         "required_tool_type": "pickaxe",
         "required_tool_tier": 2,
         "drops": [
-          {"item_id": "silver_ore", "count": 1, "chance": 1.0}
+          {
+            "item_id": "silver_ore",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -1521,7 +1847,10 @@
     "sprite_w": 16,
     "sprite_h": 20,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -1530,7 +1859,11 @@
         "required_tool_type": "pickaxe",
         "required_tool_tier": 1,
         "drops": [
-          {"item_id": "quartz", "count": 1, "chance": 1.0}
+          {
+            "item_id": "quartz",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -1541,7 +1874,10 @@
     "sprite_w": 16,
     "sprite_h": 20,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -1550,7 +1886,11 @@
         "required_tool_type": "pickaxe",
         "required_tool_tier": 3,
         "drops": [
-          {"item_id": "gold_ore", "count": 1, "chance": 1.0}
+          {
+            "item_id": "gold_ore",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -1561,7 +1901,10 @@
     "sprite_w": 16,
     "sprite_h": 20,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -1570,7 +1913,11 @@
         "required_tool_type": "pickaxe",
         "required_tool_tier": 4,
         "drops": [
-          {"item_id": "platinum_ore", "count": 1, "chance": 1.0}
+          {
+            "item_id": "platinum_ore",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -1581,7 +1928,10 @@
     "sprite_w": 16,
     "sprite_h": 20,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -1590,25 +1940,35 @@
         "required_tool_type": "pickaxe",
         "required_tool_tier": 5,
         "drops": [
-          {"item_id": "diamond", "count": 1, "chance": 1.0}
+          {
+            "item_id": "diamond",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
   },
-
   "stump": {
     "name": "Tree Stump",
     "category": "natural",
     "sprite_w": 16,
     "sprite_h": 16,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "c",
       "breakable": {
         "hp": 3,
         "required_tool_type": "axe",
         "drops": [
-          {"item_id": "wood", "count": 1, "chance": 1.0}
+          {
+            "item_id": "wood",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -1619,7 +1979,10 @@
     "sprite_w": 32,
     "sprite_h": 20,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -1627,7 +1990,11 @@
         "hp": 4,
         "required_tool_type": "axe",
         "drops": [
-          {"item_id": "wood", "count": 3, "chance": 1.0}
+          {
+            "item_id": "wood",
+            "count": 3,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -1638,13 +2005,20 @@
     "sprite_w": 16,
     "sprite_h": 16,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "c",
       "breakable": {
         "hp": 3,
         "required_tool_type": "axe",
         "drops": [
-          {"item_id": "wood", "count": 1, "chance": 1.0}
+          {
+            "item_id": "wood",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -1655,7 +2029,10 @@
     "sprite_w": 64,
     "sprite_h": 20,
     "world": {
-      "footprint": [4, 1],
+      "footprint": [
+        4,
+        1
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -1663,7 +2040,11 @@
         "hp": 6,
         "required_tool_type": "axe",
         "drops": [
-          {"item_id": "wood", "count": 5, "chance": 1.0}
+          {
+            "item_id": "wood",
+            "count": 5,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -1674,13 +2055,20 @@
     "sprite_w": 32,
     "sprite_h": 24,
     "world": {
-      "footprint": [2, 2],
+      "footprint": [
+        2,
+        2
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 2,
         "required_tool_type": "shovel",
         "drops": [
-          {"item_id": "fiber", "count": 2, "chance": 1.0}
+          {
+            "item_id": "fiber",
+            "count": 2,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -1691,14 +2079,25 @@
     "sprite_w": 16,
     "sprite_h": 18,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc",
       "breakable": {
         "hp": 1,
         "required_tool_type": "axe",
         "drops": [
-          {"item_id": "apple", "count": 2, "chance": 1.0},
-          {"item_id": "wood", "count": 1, "chance": 0.5}
+          {
+            "item_id": "apple",
+            "count": 2,
+            "chance": 1.0
+          },
+          {
+            "item_id": "wood",
+            "count": 1,
+            "chance": 0.5
+          }
         ]
       }
     }
@@ -1709,12 +2108,19 @@
     "sprite_w": 32,
     "sprite_h": 16,
     "world": {
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "pivot": "c",
       "breakable": {
         "hp": 1,
         "drops": [
-          {"item_id": "fiber", "count": 1, "chance": 1.0}
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 1.0
+          }
         ]
       }
     }
@@ -1725,7 +2131,10 @@
     "sprite_w": 16,
     "sprite_h": 32,
     "world": {
-      "footprint": [1, 2],
+      "footprint": [
+        1,
+        2
+      ],
       "pivot": "bc",
       "blocks_players": true,
       "blocks_bugs": true,
@@ -1735,19 +2144,25 @@
         "hp": 3,
         "required_tool_type": "axe",
         "drops": [
-          {"item_id": "wood", "count": 2, "chance": 1.0}
+          {
+            "item_id": "wood",
+            "count": 2,
+            "chance": 1.0
+          }
         ]
       }
     }
   },
-
   "plant_tomato": {
     "name": "Tomato Plant",
     "category": "crop",
     "sprite_w": 16,
     "sprite_h": 24,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc"
     }
   },
@@ -1757,7 +2172,10 @@
     "sprite_w": 16,
     "sprite_h": 32,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc"
     }
   },
@@ -1767,23 +2185,193 @@
     "sprite_w": 16,
     "sprite_h": 20,
     "world": {
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_tomato_stage0": {
+    "name": "Tomato Sprout",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_tomato_stage1": {
+    "name": "Tomato Seedling",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_tomato_stage2": {
+    "name": "Tomato Plant (growing)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_tomato_stage3": {
+    "name": "Tomato Plant (ripe)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_corn_stage0": {
+    "name": "Corn Sprout",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_corn_stage1": {
+    "name": "Corn Seedling",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_corn_stage2": {
+    "name": "Corn Stalk (growing)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 28,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_corn_stage3": {
+    "name": "Corn Plant (ripe)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_wheat_stage0": {
+    "name": "Wheat Sprouts",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 10,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_wheat_stage1": {
+    "name": "Young Wheat",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_wheat_stage2": {
+    "name": "Ripe Wheat",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
       "pivot": "bc"
     }
   },
   "fallen_fruit": {
-    "name": "Fallen Apples", "category": "natural",
-    "sprite_w": 16, "sprite_h": 16,
-    "world": {"footprint": [1, 1], "pivot": "c"}
+    "name": "Fallen Apples",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "c"
+    }
   },
   "fallen_orange": {
-    "name": "Fallen Oranges", "category": "natural",
-    "sprite_w": 16, "sprite_h": 16,
-    "world": {"footprint": [1, 1], "pivot": "c"}
+    "name": "Fallen Oranges",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "c"
+    }
   },
   "rotten_fruit": {
-    "name": "Rotten Fruit", "category": "natural",
-    "sprite_w": 16, "sprite_h": 16,
-    "world": {"footprint": [1, 1], "pivot": "c"}
+    "name": "Rotten Fruit",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "c"
+    }
   }
 }

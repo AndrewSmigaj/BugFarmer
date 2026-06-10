@@ -92,6 +92,14 @@ const (
 
 	// Dev tuning (debug builds): live-override ecology parameters on the server
 	OpCodeEcologyTuning int64 = 87 // C→S: apply EcologyTuningMessage to a species
+
+	// Combat (melee weapons: sword/spear). One message per SWING — a swing may hit
+	// multiple swarms, carried as entries of one payload (NOT one message per swarm,
+	// which would trip the per-player rate limit like the old catch burst did).
+	OpCodeMeleeAttack int64 = 88 // C→S: swing with client-detected (swarm, bug-id) hits
+	OpCodeMeleeResult int64 = 89 // S→C: validated damage/kills — the SOLE HP display
+	// channel + all combat cosmetics. Kills ALSO flow as BUG_REMOVED ledger events
+	// (sim-state); damaged HP deliberately does NOT (display-only, never in the ledger).
 )
 
 // TreeWaterUpdateMessage (OpCode 51): a fruit tree's water charges changed. Display-only —
@@ -176,6 +184,8 @@ type SwarmData struct {
 	Phase      string  `json:"phase"`                 // "feeding", "reproducing", "idle"
 	NextBugID  int     `json:"next_bug_id,omitempty"` // Total bugs ever spawned (for late joiners)
 	RemovedIDs []int   `json:"removed_ids,omitempty"` // Bug IDs to skip when spawning (for late joiners)
+	BugHP      []BugHPEntry `json:"bug_hp,omitempty"` // Damaged bugs' remaining HP (late-join display seed;
+	// populated ONLY by sendLateJoinSnapshot — the regular SwarmUpdate leaves it nil/omitted)
 	// NOTE: X,Y is the swarm's CURRENT center, used by a client only as the initial/fallback
 	// center until the first SWARM_SET_TARGET leg event arrives. Per-tick motion is NOT here.
 
@@ -219,6 +229,48 @@ type BugCaughtMessage struct {
 	NewTotal  int     `json:"new_total"` // Swarm's new count
 	X         float32 `json:"x"`         // Catch position for animation
 	Y         float32 `json:"y"`
+}
+
+// MeleeAttackMessage is sent by client (OpCode 88): ONE swing. hits lists every swarm
+// the swept sector intercepted with the client-detected bug ids (per-bug positions are
+// client-deterministic; the server validates alive-ids + player→click reach + caps).
+type MeleeAttackMessage struct {
+	ClickX float32          `json:"click_x"`
+	ClickY float32          `json:"click_y"`
+	Hits   []MeleeSwarmHits `json:"hits"`
+}
+
+// MeleeSwarmHits is one swarm's worth of hits inside a single swing.
+type MeleeSwarmHits struct {
+	SwarmID string `json:"swarm_id"`
+	BugIDs  []int  `json:"bug_ids"`
+}
+
+// MeleeResultMessage is broadcast to all clients (OpCode 89). It is the SOLE channel for
+// per-bug HP display (clients keep a display-only copy; the deterministic ledger never
+// carries HP) and for combat cosmetics (hit flash, kill pop, attacker attribution).
+// Kills land authoritatively via BUG_REMOVED ledger events in the same network flush.
+// NOTE: slices are always initialized server-side — Go marshals nil as JSON null and
+// the client's JsonUtility would surface null arrays.
+type MeleeResultMessage struct {
+	AttackerID string             `json:"attacker_id"`
+	ClickX     float32            `json:"click_x"`
+	ClickY     float32            `json:"click_y"`
+	Results    []MeleeSwarmResult `json:"results"`
+}
+
+// MeleeSwarmResult is one swarm's validated outcome within a swing.
+type MeleeSwarmResult struct {
+	SwarmID string       `json:"swarm_id"`
+	Damaged []BugHPEntry `json:"damaged"` // survivors: absolute hp_left (last-writer-wins)
+	Killed  []int        `json:"killed"`  // removed ids (cosmetic timing; removal = ledger)
+}
+
+// BugHPEntry is a (bug id, remaining hp) pair — an ARRAY entry, not a map, because the
+// client's JsonUtility cannot deserialize dictionaries (same reason RemovedIDs is []int).
+type BugHPEntry struct {
+	BugID int `json:"bug_id"`
+	HP    int `json:"hp"`
 }
 
 // EquipToolMessage is sent by client (OpCode 27)

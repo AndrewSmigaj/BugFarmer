@@ -52,6 +52,12 @@ type SwarmState struct {
 	// Bug ID tracking for deterministic catching
 	RemovedBugIDs map[int]bool // Set of removed bug IDs (not serialized)
 	NextBugID     int          // Next ID to assign for new bugs (reproduction)
+
+	// Combat: sparse per-bug HP — stores ONLY damaged bugs (absent = full species MaxHP).
+	// Server-authoritative; clients hold a display-only copy fed by MeleeResultMessage.
+	// Cleaned inside RemoveBugs; transferred along the deterministic id mappings at
+	// split/merge (see checkSwarmSplitting/checkSwarmMerging).
+	BugHP map[int]int
 }
 
 // ClearFoodTarget drops the cached food target (depleted / phase change) and forces an
@@ -99,10 +105,39 @@ func (s *SwarmState) RemoveBugs(bugIDs []int) []int {
 		if s.IsBugAlive(id) {
 			s.RemovedBugIDs[id] = true
 			removed = append(removed, id)
+			// Centralized BugHP cleanup: a removed bug (caught, killed, split-shed)
+			// never leaks a stale damaged-HP entry.
+			delete(s.BugHP, id)
 		}
 	}
 	s.Count -= len(removed)
 	return removed
+}
+
+// DamageBug applies damage to an alive bug. Returns (hpLeft, true) when the bug survives
+// with hpLeft > 0, or (0, false) when the hit kills it (caller removes via RemoveBugs) —
+// also (0, false) for dead/invalid ids with killed=false semantics handled by IsBugAlive
+// at the call site. maxHP <= 0 is treated as 1.
+func (s *SwarmState) DamageBug(bugID, damage, maxHP int) (int, bool) {
+	if maxHP <= 0 {
+		maxHP = 1
+	}
+	hp, damaged := 0, false
+	if s.BugHP != nil {
+		hp, damaged = s.BugHP[bugID]
+	}
+	if !damaged {
+		hp = maxHP
+	}
+	hp -= damage
+	if hp <= 0 {
+		return 0, false // kill — caller removes (RemoveBugs deletes the HP entry)
+	}
+	if s.BugHP == nil {
+		s.BugHP = make(map[int]int)
+	}
+	s.BugHP[bugID] = hp
+	return hp, true
 }
 
 // GetRemovedIDs returns a slice of all removed bug IDs (for late joiner sync).

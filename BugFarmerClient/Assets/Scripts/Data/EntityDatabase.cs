@@ -83,7 +83,14 @@ namespace BugFarmer.Data
             public float Reach;
             public float MiningSpeed;
             public int Durability;
-            public float CatchRadius;
+
+            // Weapon / sweep properties (swords, spears, nets): the hit/catch area is a
+            // swept sector (ArcDegrees x Reach); caps are per-swing.
+            public int Damage;
+            public float ArcDegrees;
+            public float SwingTime;
+            public int MaxTargets;
+            public int CatchCap;
 
             // Consumable
             public string Effect;
@@ -186,7 +193,11 @@ namespace BugFarmer.Data
                 Reach = data["reach"]?.Value<float>() ?? 0f,
                 MiningSpeed = data["mining_speed"]?.Value<float>() ?? 1f,
                 Durability = data["durability"]?.Value<int>() ?? 0,
-                CatchRadius = data["catch_radius"]?.Value<float>() ?? 0f,
+                Damage = data["damage"]?.Value<int>() ?? 0,
+                ArcDegrees = data["arc_degrees"]?.Value<float>() ?? 0f,
+                SwingTime = data["swing_time"]?.Value<float>() ?? 0f,
+                MaxTargets = data["max_targets"]?.Value<int>() ?? 0,
+                CatchCap = data["catch_cap"]?.Value<int>() ?? 0,
                 Effect = data["effect"]?.Value<string>(),
                 PlacesCrop = data["places_crop"]?.Value<string>(),
                 IconFrom = data["icon_from"]?.Value<string>(),

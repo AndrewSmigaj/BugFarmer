@@ -55,7 +55,7 @@ type BugSpecies struct {
 	ConditionDecay     float32            `json:"condition_decay"`
 	ConditionTools     map[string]float32 `json:"condition_tools"`
 
-	// HP (for "weakened" condition)
+	// Combat: per-bug max HP (weapons subtract their damage; 0/absent = 1).
 	MaxHP       int            `json:"max_hp"`
 	DamageTools map[string]int `json:"damage_tools"`
 

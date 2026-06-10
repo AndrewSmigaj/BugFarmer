@@ -31,9 +31,17 @@ type EntityDef struct {
 	Reach            float32        `json:"reach,omitempty"`
 	MiningSpeed      float32        `json:"mining_speed,omitempty"`
 	Durability       int            `json:"durability,omitempty"`
-	CatchRadius      float32        `json:"catch_radius,omitempty"`      // For nets
-	CooldownTicks    int            `json:"cooldown_ticks,omitempty"`    // Ticks between uses (farming tools)
+	CooldownTicks    int            `json:"cooldown_ticks,omitempty"`    // Ticks between uses (tools incl. weapons)
 	MetadataDefaults map[string]int `json:"metadata_defaults,omitempty"` // Initial metadata (watering can capacity)
+
+	// Weapon / sweep properties (swords, spears, nets). The hit/catch AREA is a swept
+	// sector (arc_degrees x reach) detected client-side; the server validates alive
+	// bug IDs + player->click reach + caps only (it holds no per-bug positions).
+	Damage     int     `json:"damage,omitempty"`      // HP per hit (vs species max_hp)
+	ArcDegrees float32 `json:"arc_degrees,omitempty"` // Total swept arc
+	SwingTime  float32 `json:"swing_time,omitempty"`  // Seconds (animation + client feel)
+	MaxTargets int     `json:"max_targets,omitempty"` // Per-SWING hit cap (weapons)
+	CatchCap   int     `json:"catch_cap,omitempty"`   // Per-swing catch cap (nets)
 
 	// Seed properties
 	PlacesCrop string `json:"places_crop,omitempty"` // Crop type this seed plants

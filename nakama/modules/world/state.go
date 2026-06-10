@@ -162,8 +162,9 @@ type PlayerState struct {
 	BugSlots  [20]InventorySlot // Bug inventory (20 slots)
 	ItemSlots [20]InventorySlot // Tool inventory (20 slots, first 10 = hotbar)
 
-	// Bug catching
-	LastCatchTime int64  // Unix millis, rate limiting
+	// Bug catching. One swing may hit multiple swarms and arrives as a same-tick BURST of
+	// messages (one per swarm) — burst messages share the swing's rate-limit slot.
+	LastCatchTick int64  // Tick of the last catch swing
 	EquippedTool  string // "" (hand), "small_net", etc.
 
 	// Tool use
