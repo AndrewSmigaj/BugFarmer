@@ -46,6 +46,24 @@ namespace BugFarmer.Networking
     }
 
     /// <summary>
+    /// Place an occupant FROM A NAMED SLOT (OpCode 5) — cursor-place: the server consumes
+    /// from this exact slot (the drag cursor's source). A SEPARATE class deliberately:
+    /// the server's source_slot is a *int where absent == "use FindItem"; JsonUtility
+    /// serializes every field of one class, so an int on the base message would always be
+    /// sent and 0 would mean "eat hotbar slot 0". Two classes = the field exists only
+    /// when it means something.
+    /// </summary>
+    [Serializable]
+    public class TilePlaceFromSlotMessage
+    {
+        public int grid_x;
+        public int grid_y;
+        public string occupant_id;
+        public int direction;
+        public int source_slot;
+    }
+
+    /// <summary>
     /// Break an occupant (OpCode 6).
     /// Matches server TileBreakMessage in messages.go
     /// </summary>

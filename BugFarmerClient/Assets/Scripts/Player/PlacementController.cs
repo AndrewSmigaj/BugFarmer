@@ -24,6 +24,8 @@ namespace BugFarmer.Player
         private string _currentPlaceableId;
         private int _placementDirection;
         private bool _isPlacing;
+        private bool _cursorMode;       // placing FROM the drag cursor (panel item)
+        private int _cursorSourceSlot;  // the cursor stack's server-side home slot
         private Camera _mainCamera;
 
         private void Start()
@@ -83,7 +85,25 @@ namespace BugFarmer.Player
 
         private void UpdatePlacementMode()
         {
-            string itemId = InventoryManager.Instance?.GetEquippedToolId() ?? "";
+            // CURSOR-EXCLUSIVE resolution: while the drag cursor holds anything, the
+            // equipped-item fallback is disabled (dragging a sword while dirt is hotbar-
+            // selected must not leave an equipped-mode ghost that right-click places).
+            // Cursor item placeable -> cursor-place mode; cursor non-placeable -> no ghost.
+            string itemId;
+            var drag = DragDropController.Instance;
+            if (drag != null && drag.HasCursorItem)
+            {
+                bool cursorPlaceable = drag.CursorSourceType == SlotType.Item &&
+                                       EntityDatabase.IsPlaceable(drag.CursorItemId);
+                itemId = cursorPlaceable ? drag.CursorItemId : "";
+                _cursorMode = cursorPlaceable;
+                _cursorSourceSlot = drag.CursorSourceIndex;
+            }
+            else
+            {
+                itemId = InventoryManager.Instance?.GetEquippedToolId() ?? "";
+                _cursorMode = false;
+            }
             bool isPlaceable = !string.IsNullOrEmpty(itemId) && EntityDatabase.IsPlaceable(itemId);
 
             if (isPlaceable && itemId != _currentPlaceableId)
@@ -130,6 +150,20 @@ namespace BugFarmer.Player
         {
             if (ghostPreview == null || TilemapManager.Instance == null || _mainCamera == null)
                 return;
+
+            // Cursor mode: the ghost lives over the WORLD only — over UI the drag-cursor
+            // icon is the feedback (a ghost under the inventory panel just reads as noise).
+            if (_cursorMode)
+            {
+                bool overUI = UnityEngine.EventSystems.EventSystem.current != null &&
+                              UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
+                ghostPreview.enabled = !overUI;
+                if (overUI) return;
+            }
+            else if (!ghostPreview.enabled)
+            {
+                ghostPreview.enabled = true; // don't inherit a cursor-mode over-UI hide
+            }
 
             Vector3 mouseWorld = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
             mouseWorld.z = 0;
@@ -188,16 +222,33 @@ namespace BugFarmer.Player
                 return;
             }
 
-            // Send the item ID as-is - server handles seed->plant conversion
-            var msg = new TilePlaceMessage
+            // Send the item ID as-is - server handles seed->plant conversion.
+            // Cursor mode names its source slot (separate message class: the field must
+            // only exist on the wire when it means something — server-side it's a *int).
+            string json;
+            if (_cursorMode)
             {
-                grid_x = cellPos.x,
-                grid_y = cellPos.y,
-                occupant_id = _currentPlaceableId,
-                direction = _placementDirection
-            };
-            _ = socket.SendMatchStateAsync(match.Id, OpCodes.TilePlace, JsonUtility.ToJson(msg));
-            Debug.Log($"[PlacementController] Placing {_currentPlaceableId} at ({cellPos.x}, {cellPos.y})");
+                json = JsonUtility.ToJson(new TilePlaceFromSlotMessage
+                {
+                    grid_x = cellPos.x,
+                    grid_y = cellPos.y,
+                    occupant_id = _currentPlaceableId,
+                    direction = _placementDirection,
+                    source_slot = _cursorSourceSlot
+                });
+            }
+            else
+            {
+                json = JsonUtility.ToJson(new TilePlaceMessage
+                {
+                    grid_x = cellPos.x,
+                    grid_y = cellPos.y,
+                    occupant_id = _currentPlaceableId,
+                    direction = _placementDirection
+                });
+            }
+            _ = socket.SendMatchStateAsync(match.Id, OpCodes.TilePlace, json);
+            Debug.Log($"[PlacementController] Placing {_currentPlaceableId} at ({cellPos.x}, {cellPos.y}) cursorMode={_cursorMode}");
         }
 
         public bool IsPlacing => _isPlacing;

@@ -132,12 +132,25 @@ func (m *Match) handleTilePlace(
 	}
 	logger.Info("TilePlace: Found entity def, PlacesCrop=%s", def.PlacesCrop)
 
-	// Validate player has item in inventory
+	// Validate player has item in inventory. Cursor-place names its slot explicitly
+	// (the drag cursor's source — resolved HERE, before the seed branch, so seed
+	// cursor-place consumes the cursor's slot too); otherwise FindItem's first match.
 	player := state.Players[userID]
 	if player == nil {
 		return
 	}
-	slotIndex := player.FindItem(msg.OccupantID)
+	slotIndex := -1
+	if msg.SourceSlot != nil {
+		// Bounds-check before indexing: a hostile value would panic the match loop.
+		// No FindItem fallback on mismatch — a stale client gets a visible failure.
+		s := *msg.SourceSlot
+		if s >= 0 && s < len(player.ItemSlots) &&
+			player.ItemSlots[s].ItemID == msg.OccupantID && player.ItemSlots[s].Count > 0 {
+			slotIndex = s
+		}
+	} else {
+		slotIndex = player.FindItem(msg.OccupantID)
+	}
 	if slotIndex < 0 {
 		m.sendWorldError(dispatcher, state, userID, "You don't have this item")
 		return

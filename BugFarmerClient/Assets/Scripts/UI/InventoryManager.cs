@@ -114,6 +114,10 @@ namespace BugFarmer.UI
         /// </summary>
         private void HandleFullInventorySync(FullInventorySyncMessage msg)
         {
+            // Full sync repaints everything from server truth (reconnect) and bypasses the
+            // echo interception — a held cursor stack would double-render. Drop it.
+            DragDropController.Instance?.ForceClearCursor();
+
             // Sync bug slots
             if (msg.bug_slots != null)
             {
@@ -168,6 +172,17 @@ namespace BugFarmer.UI
                 return;
             }
 
+            // Cursor-source echo interception (inline, pre-write — see DragDropController):
+            // a catch can stack bugs into the very slot the cursor is dragging from.
+            if (DragDropController.Instance != null &&
+                DragDropController.Instance.TryInterceptSlotEcho(
+                    SlotType.Bug, msg.slot_index, msg.item_id ?? "", msg.count))
+            {
+                OnBugSlotChanged?.Invoke(msg.slot_index);
+                OnInventoryChanged?.Invoke();
+                return; // slot value stays local (remainder); the count rode the cursor
+            }
+
             BugSlots[msg.slot_index].item_id = msg.item_id ?? "";
             BugSlots[msg.slot_index].count = msg.count;
 
@@ -186,6 +201,18 @@ namespace BugFarmer.UI
             {
                 Debug.LogWarning($"[Inventory] Invalid item slot index: {msg.slot_index}");
                 return;
+            }
+
+            // Cursor-source echo interception (inline, pre-write — see DragDropController):
+            // cursor-place consumes, walk-over pickups stack, watering uses tick — all into
+            // the slot the cursor is dragging from; the count belongs on the cursor.
+            if (DragDropController.Instance != null &&
+                DragDropController.Instance.TryInterceptSlotEcho(
+                    SlotType.Item, msg.slot_index, msg.item_id ?? "", msg.count))
+            {
+                OnItemSlotChanged?.Invoke(msg.slot_index);
+                OnInventoryChanged?.Invoke();
+                return; // slot value stays local (remainder); the count rode the cursor
             }
 
             ItemSlots[msg.slot_index].item_id = msg.item_id ?? "";

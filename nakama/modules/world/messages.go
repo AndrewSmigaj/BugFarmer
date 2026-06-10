@@ -328,6 +328,11 @@ type TilePlaceMessage struct {
 	GridY      int    `json:"grid_y"`      // Global cell Y
 	OccupantID string `json:"occupant_id"` // What to place
 	Direction  int    `json:"direction"`   // 0-3 facing direction
+	// Cursor-place: consume from THIS item slot (the drag cursor's source) instead of
+	// FindItem's first match. A POINTER deliberately — an absent field decodes to nil,
+	// never to the falsy-but-valid slot 0 (an int-with-default design would let any
+	// field-omitting sender silently eat hotbar slot 0).
+	SourceSlot *int `json:"source_slot,omitempty"`
 }
 
 // TileBreakMessage is sent by client (OpCode 6)

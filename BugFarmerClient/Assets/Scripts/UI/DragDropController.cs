@@ -298,6 +298,76 @@ namespace BugFarmer.UI
             UpdateCursorDisplay();
         }
 
+        // === Cursor-place support (PlacementController + InventoryManager) ===
+
+        /// <summary>Item id on the drag cursor ("" when empty).</summary>
+        public string CursorItemId => _cursorItemId;
+        /// <summary>The cursor stack's server-side home slot.</summary>
+        public int CursorSourceIndex => _sourceIndex;
+        public SlotType CursorSourceType => _sourceType;
+
+        /// <summary>
+        /// Server-echo interception for the cursor's SOURCE slot — called by
+        /// InventoryManager.HandleItemSlotUpdate AND HandleBugSlotUpdate INLINE, before
+        /// writing the slot / firing events (deterministic ordering — never an event
+        /// subscription). While the cursor holds a stack picked from slot S, the server
+        /// still has that stack IN S; any server-side write of S (cursor-place consume,
+        /// walk-over pickup stacking, a caught bug merging in, watering use) is therefore
+        /// "the stack the cursor is holding" and its count must flow ONTO the cursor.
+        ///
+        /// Invariant: server S = local S remainder (half-pickups) + cursor count.
+        /// Returns true = caller leaves the slot value UNTOUCHED (events still fire);
+        /// false = caller writes the echo normally.
+        /// </summary>
+        public bool TryInterceptSlotEcho(SlotType slotType, int index, string itemId, int count)
+        {
+            // Slot TYPE must match too — bug and item indexes overlap 0-19.
+            if (!HasCursorItem || slotType != _sourceType || index != _sourceIndex)
+                return false;
+
+            if (count == 0)
+            {
+                // Last-item case (e.g. cursor-placed the final block): server truth wins.
+                ClearCursor();
+                return false;
+            }
+
+            if (itemId != _cursorItemId)
+            {
+                // Defensive (unreachable under ordered delivery): a different item landed
+                // in our source slot — surrender to server truth rather than corrupt.
+                Debug.LogWarning($"[DragDrop] Source-slot echo item mismatch ({itemId} != {_cursorItemId}) — cancelling cursor");
+                ClearCursor();
+                return false;
+            }
+
+            // Remainder-preserving: the local slot may hold a half-pickup remainder that
+            // stays IN the slot; only the cursor's share of the echoed count updates.
+            var localSlot = GetSlotData(slotType, index);
+            int remainder = (localSlot != null && !localSlot.IsEmpty) ? localSlot.count : 0;
+            int newCursor = count - remainder;
+            if (newCursor <= 0)
+            {
+                ClearCursor();
+                return false; // server truth wins; echo writes normally
+            }
+
+            _cursorCount = newCursor;
+            UpdateCursorDisplay();
+            return true;
+        }
+
+        /// <summary>
+        /// Drop the cursor WITHOUT restoring to a slot — used when a FullInventorySync
+        /// repaints everything from server truth (reconnect); restoring locally on top of
+        /// that would duplicate the stack.
+        /// </summary>
+        public void ForceClearCursor()
+        {
+            if (HasCursorItem)
+                ClearCursor();
+        }
+
         private void CancelDrag()
         {
             if (!HasCursorItem) return;
