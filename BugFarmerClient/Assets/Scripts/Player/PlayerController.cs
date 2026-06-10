@@ -53,6 +53,8 @@ namespace BugFarmer.Player
                 gameObject.AddComponent<PlayerToolAnimator>();
             if (GetComponent<MeleeController>() == null)
                 gameObject.AddComponent<MeleeController>();
+            if (GetComponent<BugReleaseController>() == null)
+                gameObject.AddComponent<BugReleaseController>();
             if (GetComponent<PlayerInputRouter>() == null)
                 gameObject.AddComponent<PlayerInputRouter>();
         }

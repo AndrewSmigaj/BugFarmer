@@ -380,12 +380,12 @@
     "sell_price": 10,
     "moves": {
       "secondary": {
-        "kind": "swing",
+        "kind": "stab",
         "damage": 1,
-        "arc_degrees": 90,
-        "reach": 2.5,
+        "arc_degrees": 20,
+        "reach": 3.0,
         "swing_time": 0.18,
-        "max_targets": 3,
+        "max_targets": 2,
         "cooldown_ticks": 5
       }
     }
@@ -402,12 +402,12 @@
     "sell_price": 30,
     "moves": {
       "secondary": {
-        "kind": "swing",
+        "kind": "stab",
         "damage": 2,
-        "arc_degrees": 90,
-        "reach": 2.5,
+        "arc_degrees": 20,
+        "reach": 3.0,
         "swing_time": 0.18,
-        "max_targets": 3,
+        "max_targets": 2,
         "cooldown_ticks": 5
       }
     }
@@ -424,12 +424,12 @@
     "sell_price": 60,
     "moves": {
       "secondary": {
-        "kind": "swing",
+        "kind": "stab",
         "damage": 3,
-        "arc_degrees": 90,
-        "reach": 2.5,
+        "arc_degrees": 20,
+        "reach": 3.0,
         "swing_time": 0.18,
-        "max_targets": 3,
+        "max_targets": 2,
         "cooldown_ticks": 5
       }
     }
@@ -446,12 +446,12 @@
     "sell_price": 120,
     "moves": {
       "secondary": {
-        "kind": "swing",
+        "kind": "stab",
         "damage": 4,
-        "arc_degrees": 90,
-        "reach": 2.5,
+        "arc_degrees": 20,
+        "reach": 3.0,
         "swing_time": 0.18,
-        "max_targets": 3,
+        "max_targets": 2,
         "cooldown_ticks": 5
       }
     }

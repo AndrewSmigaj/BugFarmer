@@ -37,6 +37,8 @@ namespace BugFarmer.Player
         /// Run one held frame of breaking (called by PlayerInputRouter while the latched
         /// left-click is held). The router guarantees tool routing and the UI guard.
         /// </summary>
+        private float _lastSwingTime;
+
         public void HoldBreak()
         {
             if (_mainCamera == null)
@@ -45,6 +47,22 @@ namespace BugFarmer.Player
             // Get world position under mouse
             Vector3 mouseWorld = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
             mouseWorld.z = 0;
+
+            // SWING ON EVERY ATTEMPT, target or not (Terraria: holding swings at air) —
+            // without this, clicking with an axe at nothing shows NOTHING and the tool
+            // reads as broken. Throttled at the break cadence; phase-offset vs the break
+            // timer (which resets per target for instant first hits) is a sub-interval
+            // cosmetic, accepted.
+            if (Time.time - _lastSwingTime >= breakClickInterval)
+            {
+                var swingDef = EntityDatabase.Get(InventoryManager.Instance?.GetEquippedToolId() ?? "");
+                if (_animator != null && swingDef?.ToolType != null)
+                {
+                    Vector2 aim = (Vector2)(mouseWorld - transform.position);
+                    _animator.Play(swingDef.ToolType, EntityDatabase.GetItemSprite(swingDef.Id), aim);
+                    _lastSwingTime = Time.time;
+                }
+            }
 
             // Find occupant collider at mouse position
             Collider2D hitCollider = Physics2D.OverlapPoint(mouseWorld);
@@ -105,19 +123,11 @@ namespace BugFarmer.Player
 
             _isBreaking = true;
 
-            // Send break message at interval (one tool swing per hit, not per held frame)
+            // Send break message at interval (the swing already played above)
             if (Time.time - _lastBreakTime >= breakClickInterval)
             {
                 SendBreakRequest(anchorCell);
                 _lastBreakTime = Time.time;
-
-                var toolDef = EntityDatabase.Get(InventoryManager.Instance?.GetEquippedToolId() ?? "");
-                if (_animator != null && toolDef?.ToolType != null)
-                {
-                    Vector2 aim = (Vector2)(mouseWorld - transform.position);
-                    _animator.Play(toolDef.ToolType,
-                        EntityDatabase.GetItemSprite(toolDef.Id), aim);
-                }
             }
         }
 

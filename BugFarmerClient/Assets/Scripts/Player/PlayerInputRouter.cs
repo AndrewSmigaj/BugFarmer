@@ -18,10 +18,13 @@ namespace BugFarmer.Player
     ///    runs every frame until release, then StopBreaking(). (Preserves hold-to-break;
     ///    prevents held-click machine-gunning of single-fire actions.)
     /// RIGHT-CLICK (priority chain — the verb depends on world context, not just the tool):
-    ///  UI guard → Station (a station under the cursor wins; CLOSING an open menu also
-    ///  CONSUMES the click) → Placement (mode-based: consumes whenever placing mode is
-    ///  active, even on a red ghost) → weapon "secondary" move (sword jab, axe combat
-    ///  swing, spear sweep).
+    ///  UI guard → bug-cursor RELEASE (one) → Station (a station under the cursor wins;
+    ///  CLOSING an open menu also CONSUMES the click) → Placement (mode-based: consumes
+    ///  whenever placing mode is active, even on a red ghost) → weapon "secondary" move
+    ///  (sword jab, axe combat swing, spear sweep).
+    /// BUG-CURSOR RELEASE: while the drag cursor holds a BUG stack, world clicks are the
+    /// cursor's verb — LEFT releases the whole stack at the click, RIGHT releases one
+    /// (slot deposit-verb parity). Checked FIRST in both routes.
     /// </summary>
     public class PlayerInputRouter : MonoBehaviour
     {
@@ -31,6 +34,7 @@ namespace BugFarmer.Player
         private MeleeController _melee;
         private PlacementController _placement;
         private StationController _station;
+        private BugReleaseController _bugRelease;
         private Camera _mainCamera;
 
         private bool _holdLatchedToBreaking;
@@ -44,6 +48,7 @@ namespace BugFarmer.Player
             _melee = GetComponent<MeleeController>();
             _placement = GetComponent<PlacementController>();
             _station = GetComponent<StationController>();
+            _bugRelease = GetComponent<BugReleaseController>();
             _mainCamera = Camera.main;
         }
 
@@ -74,6 +79,10 @@ namespace BugFarmer.Player
         {
             // UI always wins.
             if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+                return;
+
+            // Bug stack on the cursor: world clicks are the cursor's verb (release ALL).
+            if (_bugRelease != null && _bugRelease.TryHandleClick(releaseAll: true))
                 return;
 
             string toolId = InventoryManager.Instance?.GetEquippedToolId() ?? "";
@@ -120,6 +129,10 @@ namespace BugFarmer.Player
             }
             Vector3 mouseWorld = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
             mouseWorld.z = 0;
+
+            // 0. Bug stack on the cursor: release ONE at the click (deposit-verb parity).
+            if (_bugRelease != null && _bugRelease.TryHandleClick(releaseAll: false))
+                return;
 
             // 1. Stations: interact beats attack/place; closing an open menu consumes too.
             if (_station != null && _station.TryHandleRightClick(mouseWorld))

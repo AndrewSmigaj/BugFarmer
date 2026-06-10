@@ -46,9 +46,9 @@ func combatTestState() *WorldState {
 			"primary":   {Kind: "stab", Damage: 1, ArcDegrees: 20, Reach: 4.0, MaxTargets: 3, CooldownTicks: 5},
 			"secondary": {Kind: "sweep", Damage: 1, ArcDegrees: 140, Reach: 2.0, MaxTargets: 5, CooldownTicks: 6},
 		}},
-		// Axes alt-attack via a secondary move ONLY (left-click stays breaking)
+		// Axes alt-attack via a secondary JAB only (left-click stays breaking)
 		"axe_wood": {ToolType: "axe", Reach: 3.5, Moves: map[string]*MoveDef{
-			"secondary": {Kind: "swing", Damage: 1, ArcDegrees: 90, Reach: 2.5, MaxTargets: 3, CooldownTicks: 5},
+			"secondary": {Kind: "stab", Damage: 1, ArcDegrees: 20, Reach: 3.0, MaxTargets: 2, CooldownTicks: 5},
 		}},
 	}
 	return state

@@ -302,6 +302,8 @@ namespace BugFarmer.UI
 
         /// <summary>Item id on the drag cursor ("" when empty).</summary>
         public string CursorItemId => _cursorItemId;
+        /// <summary>The cursor stack's count (release-all sends THIS, never -1).</summary>
+        public int CursorCount => _cursorCount;
         /// <summary>The cursor stack's server-side home slot.</summary>
         public int CursorSourceIndex => _sourceIndex;
         public SlotType CursorSourceType => _sourceType;

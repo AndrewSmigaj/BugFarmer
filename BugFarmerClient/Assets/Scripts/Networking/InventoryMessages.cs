@@ -119,13 +119,17 @@ namespace BugFarmer.Networking
     }
 
     /// <summary>
-    /// Release bugs from a slot (OpCode 29).
-    /// Released bugs form swarms at player position.
+    /// Release bugs from a slot AT a world point (OpCode 29). Released bugs join a nearby
+    /// same-species swarm (within max(merge radius, the swarm's visual radius) of the
+    /// click) or form a new swarm there.
     /// </summary>
     [Serializable]
     public class ReleaseBugsMessage
     {
         public int slot_index;
-        public int count;  // -1 = all
+        public int count;  // -1 = all (the client sends the CURSOR count, never -1 —
+                           // a half-pickup's remainder belongs to the slot)
+        public float x;    // world release point (the click)
+        public float y;
     }
 }
