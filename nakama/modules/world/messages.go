@@ -314,6 +314,15 @@ type MoveSlotMessage struct {
 	Count       int    `json:"count"` // -1 = all, else specific amount
 }
 
+// ReleaseBugsMessage is sent by client (OpCode 29): release n bugs from a bug slot AT a
+// world point (the click) — growing a nearby same-species swarm or creating a new one.
+type ReleaseBugsMessage struct {
+	SlotIndex int     `json:"slot_index"`
+	Count     int     `json:"count"` // -1 = all in slot
+	X         float32 `json:"x"`     // world release point (the click)
+	Y         float32 `json:"y"`
+}
+
 // ErrorMessage is sent when an operation fails (OpCode 40)
 type ErrorMessage struct {
 	Error string `json:"error"`

@@ -531,6 +531,9 @@ func (s *WorldState) AddFoodEvent(zoneID, eventType, foodID string, cellX, cellY
 // AddSwarmReproducedEvent logs a reproduction: the swarm bred at a food source and gains
 // `count` new bugs with ids newBugIDBase..newBugIDBase+count-1. Clients spawn them at the
 // swarm centre at the event tick (idempotent SpawnBugAt — same pattern as split/merge).
+// AddSwarmReproducedEvent: the swarm gains count new bugs with ids newBugIDBase.. —
+// emitted by reproduction (bred at a food source) AND by player bug-release into an
+// existing swarm (the client handler is the same deterministic spawn loop either way).
 func (s *WorldState) AddSwarmReproducedEvent(zoneID, swarmID string, count, newBugIDBase int) {
 	zone := s.GetOrCreateZone(zoneID)
 

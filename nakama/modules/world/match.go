@@ -533,6 +533,14 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			}
 			m.handleMeleeAttack(logger, dispatcher, worldState, meleeMsg, userID, chunkSize)
 
+		case OpCodeReleaseBugs:
+			var releaseMsg ReleaseBugsMessage
+			if err := json.Unmarshal(msg.GetData(), &releaseMsg); err != nil {
+				logger.Warn("Invalid release message from %s: %v", userID, err)
+				continue
+			}
+			m.handleReleaseBugs(logger, dispatcher, worldState, releaseMsg, userID, chunkSize)
+
 		case OpCodeEquipTool:
 			var equipMsg EquipToolMessage
 			if err := json.Unmarshal(msg.GetData(), &equipMsg); err != nil {

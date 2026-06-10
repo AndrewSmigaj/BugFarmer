@@ -905,9 +905,10 @@ namespace BugFarmer.Entities
         }
 
         /// <summary>
-        /// SWARM_REPRODUCED: a sated swarm bred at a food source — spawn evt.split_count new
-        /// bugs with ids new_bug_id_base.. at the swarm's deterministic centre, at the event
-        /// tick. SpawnBugAt is idempotent (no-op on existing ids), covering late-join replay.
+        /// SWARM_REPRODUCED: the swarm gains evt.split_count new bugs (bred at a food source
+        /// OR released by a player into it) — spawn ids new_bug_id_base.. at the swarm's
+        /// deterministic centre, at the event tick. SpawnBugAt is idempotent (no-op on
+        /// existing ids), covering late-join replay.
         /// </summary>
         public void HandleSwarmReproduced(InfluenceEvent evt)
         {
