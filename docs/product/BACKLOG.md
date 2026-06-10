@@ -291,8 +291,11 @@ scenes. Depends on the two items above.
 - **Bug HP affecting BEHAVIOR is a determinism boundary**: today HP is display-only; if
   damaged bugs should flee/slow, HP must enter the deterministic sim + state hash
   (architecture_swarm_sync §12).
-- Recolor-sweep the legacy tier families (axe/pickaxe/hoe/shovel steel→diamond already
-  have proven palette-swap art in Items/).
+- Higher tool tiers (steel→diamond): items.json entries + `recolor_sprites.py --family ...`
+  (ramps already inline; the legacy reference art was cleaned out of Items/).
+- **Bug-slot icons are blank** (pre-existing): caught bugs store item_id = species id
+  (`fly_common`), which matches no Items/ or Objects/ art — the display chain needs a
+  species→`Bugs/{sprite_id}` step (or `icon_from` on a per-species item entry).
 - Remote players show tool-swing animations (89/BugCaught carry attacker + position; play
   a swing on the RemoteEntity).
 - Staggered per-bug catch/kill pops along the sweep arc (cosmetic, no protocol change).
