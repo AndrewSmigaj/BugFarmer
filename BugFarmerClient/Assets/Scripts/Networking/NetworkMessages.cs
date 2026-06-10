@@ -69,6 +69,8 @@ namespace BugFarmer.Networking
         public float x;
         public float y;
         public int facing;
+        public string eq;   // equipped item id; NULL when absent (omitempty + JsonUtility),
+                            // not "" — consumers must null-coalesce
     }
 
     /// <summary>

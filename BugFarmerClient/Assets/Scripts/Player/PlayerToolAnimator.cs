@@ -138,7 +138,14 @@ namespace BugFarmer.Player
                 }
             }
 
-            if (_routine != null) StopCoroutine(_routine);
+            if (_routine != null)
+            {
+                // Interrupt contract: a mid-flight sweep leaves the trail EMITTING (the
+                // routine's own cleanup never runs) — kill it here; the new routine
+                // re-enables it if it's a sweep.
+                StopCoroutine(_routine);
+                _trail.emitting = false;
+            }
 
             float arc = arcDegrees > 0f ? arcDegrees : profile.ArcDegrees;
             float dur = duration > 0f ? duration : profile.Duration;
@@ -147,16 +154,63 @@ namespace BugFarmer.Player
             _behindPlayer = Mathf.Abs(aimDir.y) > Mathf.Abs(aimDir.x) && aimDir.y > 0f;
 
             _held.sprite = toolSprite;
-            FitSprite(toolSprite);
+            FitSprite(toolSprite, 1f);
 
             _routine = StartCoroutine(AnimateRoutine(profile, arc, dur, aimDir.normalized));
         }
 
-        private void FitSprite(Sprite sprite)
+        // === Idle held-at-rest display ===
+        // _idleToolType/_idleSprite are the SINGLE source of idle truth: SetIdleItem only
+        // writes them (+ applies immediately when not animating); every animation end and
+        // interrupt path converges on RestoreIdle().
+
+        private string _idleToolType;
+        private Sprite _idleSprite;
+        private const float IdleScale = 0.75f;     // smaller at rest than mid-swing
+        private const float IdleAngle = -35f;      // down-forward at the player's side
+        private const float IdleOffset = 0.4f;
+
+        /// <summary>
+        /// Set (or clear, with nulls) the equipped item shown in-hand at rest. Gating is
+        /// the CALLER's job (v1: tools only — ToolType != null). Applies immediately when
+        /// idle; mid-swing it takes effect when the animation restores.
+        /// </summary>
+        public void SetIdleItem(string toolType, Sprite sprite)
+        {
+            _idleToolType = toolType;
+            _idleSprite = (toolType != null) ? sprite : null;
+            if (!IsPlaying)
+                RestoreIdle();
+        }
+
+        /// <summary>
+        /// THE single restore path (routine end + every interrupt): trail off, then the
+        /// idle pose or hidden.
+        /// </summary>
+        private void RestoreIdle()
+        {
+            _trail.emitting = false;
+
+            if (_idleSprite == null)
+            {
+                _held.enabled = false;
+                return;
+            }
+
+            _behindPlayer = false;
+            _held.sprite = _idleSprite;
+            FitSprite(_idleSprite, IdleScale);
+            _pivot.localRotation = Quaternion.Euler(0f, 0f, IdleAngle);
+            _held.transform.localPosition = new Vector3(IdleOffset, 0f, 0f);
+            _held.transform.localRotation = Quaternion.Euler(0f, 0f, -SpriteArtAngle);
+            _held.enabled = true;
+        }
+
+        private void FitSprite(Sprite sprite, float multiplier)
         {
             float w = sprite.rect.width / sprite.pixelsPerUnit;
             float h = sprite.rect.height / sprite.pixelsPerUnit;
-            float scale = Mathf.Min(1f, MaxSpriteCells / Mathf.Max(w, h));
+            float scale = Mathf.Min(1f, MaxSpriteCells / Mathf.Max(w, h)) * multiplier;
             _held.transform.localScale = new Vector3(scale, scale, 1f);
         }
 
@@ -225,9 +279,9 @@ namespace BugFarmer.Player
                 }
             }
 
-            _held.enabled = false;
             IsPlaying = false;
             _routine = null;
+            RestoreIdle(); // back to the held-at-rest pose (or hidden when nothing equipped)
         }
     }
 }

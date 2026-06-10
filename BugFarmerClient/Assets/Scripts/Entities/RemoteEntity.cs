@@ -1,11 +1,13 @@
 using UnityEngine;
+using BugFarmer.Data;
 using BugFarmer.Networking;
 
 namespace BugFarmer.Entities
 {
     /// <summary>
     /// Base component for networked entities (players, bugs, etc.).
-    /// Handles position interpolation and sprite direction updates.
+    /// Handles position interpolation, sprite direction updates, and the equipped-tool
+    /// display (held at rest + swing replays via the attached PlayerToolAnimator).
     /// </summary>
     public class RemoteEntity : MonoBehaviour
     {
@@ -16,13 +18,25 @@ namespace BugFarmer.Entities
         private Vector2 _startPos;
         private Vector2 _targetPos;
         private float _interpProgress = 1f; // Start complete (no interpolation until first update)
+        private Player.PlayerToolAnimator _toolAnimator;
+        private string _equipped;
 
         public string EntityId { get; set; }
         public Direction Facing { get; private set; } = Direction.Down;
+        /// <summary>Last-known equipped item id (from EntityData.eq); "" = bare hand.</summary>
+        public string Equipped => _equipped ?? "";
+        /// <summary>The remote player's tool animator (swing replays).</summary>
+        public Player.PlayerToolAnimator ToolAnimator => _toolAnimator;
 
         private void Awake()
         {
             _spriteRenderer = GetComponent<SpriteRenderer>();
+
+            // Held-at-rest display + swing replays (the animator depends only on this
+            // sibling SpriteRenderer; sorting is owned in its code).
+            _toolAnimator = GetComponent<Player.PlayerToolAnimator>();
+            if (_toolAnimator == null)
+                _toolAnimator = gameObject.AddComponent<Player.PlayerToolAnimator>();
 
             // Set sorting layer for proper rendering with Y-sorting
             if (_spriteRenderer != null)
@@ -91,6 +105,25 @@ namespace BugFarmer.Entities
             {
                 _spriteRenderer.sprite = directionSprites[(int)Facing];
             }
+        }
+
+        /// <summary>
+        /// Set the remote player's equipped item (arrives every tick via EntityData.eq —
+        /// null when absent/bare-handed). Change-checked: no per-tick sprite lookups.
+        /// Unknown ids show nothing (EquipTool relays arbitrary client strings).
+        /// </summary>
+        public void SetEquipped(string itemId)
+        {
+            itemId ??= ""; // omitempty + JsonUtility => null, not ""
+            if (itemId == _equipped) return;
+            _equipped = itemId;
+
+            if (_toolAnimator == null) return;
+            var def = EntityDatabase.Get(itemId);
+            if (def?.ToolType != null)
+                _toolAnimator.SetIdleItem(def.ToolType, EntityDatabase.GetItemSprite(itemId));
+            else
+                _toolAnimator.SetIdleItem(null, null); // bare hand / non-tool / unknown id
         }
     }
 }

@@ -736,6 +736,10 @@ namespace BugFarmer.Entities
             if (!string.IsNullOrEmpty(localUserId) && msg.catcher_id == localUserId)
                 return;
 
+            // Replay the catcher's net sweep on their remote player (their cached eq —
+            // a mid-catch net swap is an acceptable cosmetic race).
+            PlayRemoteSwing(msg.catcher_id, new Vector2(msg.x, msg.y), null, null);
+
             // Other players: remove by ID (deterministic - all clients see same bugs disappear)
             var swarm = GetSwarm(msg.swarm_id);
             if (swarm != null)
@@ -743,6 +747,33 @@ namespace BugFarmer.Entities
                 swarm.RemoveBugsById(msg.bug_ids);
                 swarm.ShowCatchAnimation(new Vector2(msg.x, msg.y), msg.catcher_id);
             }
+        }
+
+        /// <summary>
+        /// Cosmetic swing replay on a remote player's tool animator. weaponId/moveName
+        /// null = use the remote's cached equipped item with its tool_type profile (net
+        /// catches); otherwise resolve the named weapon move (melee — self-describing
+        /// from MeleeResultMessage, no eq race). Unknown defs skip silently.
+        /// </summary>
+        private void PlayRemoteSwing(string userId, Vector2 target, string weaponId, string moveName)
+        {
+            var players = EntityManager.Instance?.GetRemotePlayers();
+            if (players == null || !players.TryGetValue("player_" + userId, out var remote))
+                return;
+            var animator = remote.ToolAnimator;
+            if (animator == null) return;
+
+            string itemId = weaponId ?? remote.Equipped;
+            var def = Data.EntityDatabase.Get(itemId);
+            if (def?.ToolType == null) return;
+
+            Vector2 aim = target - (Vector2)remote.transform.position;
+            var move = moveName != null ? def.GetMove(moveName) : null;
+            if (move != null)
+                animator.Play(def.ToolType, Data.EntityDatabase.GetItemSprite(itemId), aim,
+                              move.ArcDegrees, move.SwingTime, move.Kind);
+            else
+                animator.Play(def.ToolType, Data.EntityDatabase.GetItemSprite(itemId), aim);
         }
 
         /// <summary>
@@ -761,6 +792,12 @@ namespace BugFarmer.Entities
 
             var localUserId = WorldManager.Instance?.Self?.UserId;
             bool ownEcho = !string.IsNullOrEmpty(localUserId) && msg.attacker_id == localUserId;
+
+            // Replay the attacker's swing on their remote player — self-describing from the
+            // message (weapon + resolved move), so no eq-lookup race after a weapon swap.
+            if (!ownEcho)
+                PlayRemoteSwing(msg.attacker_id, new Vector2(msg.click_x, msg.click_y),
+                                msg.weapon, msg.move);
 
             foreach (var result in msg.results)
             {

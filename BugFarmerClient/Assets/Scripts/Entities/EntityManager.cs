@@ -83,6 +83,8 @@ namespace BugFarmer.Entities
                 {
                     // Update existing entity
                     entity.SetTargetState(data.x, data.y, data.facing);
+                    if (data.type == "player")
+                        entity.SetEquipped(data.eq); // held-at-rest display (change-checked)
                 }
                 else
                 {
@@ -102,6 +104,7 @@ namespace BugFarmer.Entities
                             if (data.type == "player")
                             {
                                 _players[data.id] = remote;
+                                remote.SetEquipped(data.eq); // joiner bootstrap: equips ride op11
                                 Debug.Log($"[EntityManager] Spawned REMOTE PLAYER: {data.id} at ({data.x}, {data.y})");
                             }
                         }

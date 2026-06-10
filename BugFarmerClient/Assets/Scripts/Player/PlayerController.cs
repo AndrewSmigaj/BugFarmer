@@ -1,7 +1,9 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using Nakama;
+using BugFarmer.Data;
 using BugFarmer.Networking;
+using BugFarmer.UI;
 
 namespace BugFarmer.Player
 {
@@ -53,6 +55,48 @@ namespace BugFarmer.Player
                 gameObject.AddComponent<MeleeController>();
             if (GetComponent<PlayerInputRouter>() == null)
                 gameObject.AddComponent<PlayerInputRouter>();
+        }
+
+        private PlayerToolAnimator _toolAnimator;
+
+        private void Start()
+        {
+            // Held-at-rest display: show the equipped tool in-hand whenever it changes.
+            _toolAnimator = GetComponent<PlayerToolAnimator>();
+            var inv = InventoryManager.Instance;
+            if (inv != null)
+            {
+                inv.OnSelectedSlotChanged += OnEquipMaybeChanged;
+                inv.OnItemSlotChanged += OnEquipMaybeChanged;
+                inv.OnInventoryChanged += RefreshHeldItem;
+                RefreshHeldItem();
+            }
+        }
+
+        private void OnDestroy()
+        {
+            var inv = InventoryManager.Instance;
+            if (inv != null)
+            {
+                inv.OnSelectedSlotChanged -= OnEquipMaybeChanged;
+                inv.OnItemSlotChanged -= OnEquipMaybeChanged;
+                inv.OnInventoryChanged -= RefreshHeldItem;
+            }
+        }
+
+        private void OnEquipMaybeChanged(int _) => RefreshHeldItem();
+
+        private void RefreshHeldItem()
+        {
+            if (_toolAnimator == null) return;
+            string id = InventoryManager.Instance?.GetEquippedToolId() ?? "";
+            var def = EntityDatabase.Get(id);
+            // v1 gating: TOOLS only (a held torch already shows via its personal light;
+            // placeables show the ghost instead).
+            if (def?.ToolType != null)
+                _toolAnimator.SetIdleItem(def.ToolType, EntityDatabase.GetItemSprite(id));
+            else
+                _toolAnimator.SetIdleItem(null, null);
         }
 
         private void Update()

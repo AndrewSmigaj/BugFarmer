@@ -686,11 +686,12 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		entityData := make([]EntityData, 0, len(worldState.Players))
 		for userID, player := range worldState.Players {
 			entityData = append(entityData, EntityData{
-				ID:     "player_" + userID,
-				Type:   "player",
-				X:      player.WorldX(chunkSize),
-				Y:      player.WorldY(chunkSize),
-				Facing: int(player.Facing),
+				ID:       "player_" + userID,
+				Type:     "player",
+				X:        player.WorldX(chunkSize),
+				Y:        player.WorldY(chunkSize),
+				Facing:   int(player.Facing),
+				Equipped: player.EquippedTool,
 			})
 		}
 

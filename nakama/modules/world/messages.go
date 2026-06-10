@@ -162,6 +162,11 @@ type EntityData struct {
 	X      float32 `json:"x"`      // World X coordinate
 	Y      float32 `json:"y"`      // World Y coordinate
 	Facing int     `json:"facing"` // Direction enum (0-3)
+	// Equipped item id (players): drives the held-at-rest display on remote clients.
+	// Riding the per-tick broadcast solves change-sync AND joiner bootstrap in one
+	// path (~15 bytes/player/tick; omitted bare-handed). If EntityData ever grows a
+	// 3rd rarely-changing field, introduce a player-state snapshot message instead.
+	Equipped string `json:"eq,omitempty"`
 }
 
 // EntityUpdateMessage is broadcast to clients (OpCode 11)
