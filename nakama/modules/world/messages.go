@@ -82,8 +82,9 @@ const (
 
 // Farming OpCodes
 const (
-	OpCodeCropUpdate    int64 = 50 // S→C: Crop state changed (water, stage, HP)
-	OpCodePlantInteract int64 = 55 // C→S: Harvest or destroy plant
+	OpCodeCropUpdate      int64 = 50 // S→C: Crop state changed (water, stage, HP)
+	OpCodeTreeWaterUpdate int64 = 51 // S→C: Tree water charges changed (droplet indicator; display-only)
+	OpCodePlantInteract   int64 = 55 // C→S: Harvest or destroy plant
 
 	// Stations (player-fillable processors: compost bin etc.)
 	OpCodeStationDeposit int64 = 85 // C→S: Deposit an inventory item into a station
@@ -92,6 +93,14 @@ const (
 	// Dev tuning (debug builds): live-override ecology parameters on the server
 	OpCodeEcologyTuning int64 = 87 // C→S: apply EcologyTuningMessage to a species
 )
+
+// TreeWaterUpdateMessage (OpCode 51): a fruit tree's water charges changed. Display-only —
+// clients show a droplet indicator over dry trees (charges == 0); bug AI doesn't read this.
+type TreeWaterUpdateMessage struct {
+	GridX        int `json:"grid_x"`
+	GridY        int `json:"grid_y"`
+	WaterCharges int `json:"water_charges"`
+}
 
 // EcologyTuningMessage (OpCode 87, DEV TOOL): live-overrides a species' ecology parameters so
 // they can be tuned from the Unity debug panel without a rebuild. The server is the sole

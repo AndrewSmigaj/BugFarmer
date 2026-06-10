@@ -1771,6 +1771,61 @@
       "pivot": "bc"
     }
   },
+  "plant_tomato_stage0": {
+    "name": "Tomato Sprout", "category": "crop",
+    "sprite_w": 16, "sprite_h": 12,
+    "world": {"footprint": [1, 1], "pivot": "bc"}
+  },
+  "plant_tomato_stage1": {
+    "name": "Tomato Seedling", "category": "crop",
+    "sprite_w": 16, "sprite_h": 16,
+    "world": {"footprint": [1, 1], "pivot": "bc"}
+  },
+  "plant_tomato_stage2": {
+    "name": "Tomato Plant (growing)", "category": "crop",
+    "sprite_w": 16, "sprite_h": 20,
+    "world": {"footprint": [1, 1], "pivot": "bc"}
+  },
+  "plant_tomato_stage3": {
+    "name": "Tomato Plant (ripe)", "category": "crop",
+    "sprite_w": 16, "sprite_h": 24,
+    "world": {"footprint": [1, 1], "pivot": "bc"}
+  },
+  "plant_corn_stage0": {
+    "name": "Corn Sprout", "category": "crop",
+    "sprite_w": 16, "sprite_h": 12,
+    "world": {"footprint": [1, 1], "pivot": "bc"}
+  },
+  "plant_corn_stage1": {
+    "name": "Corn Seedling", "category": "crop",
+    "sprite_w": 16, "sprite_h": 20,
+    "world": {"footprint": [1, 1], "pivot": "bc"}
+  },
+  "plant_corn_stage2": {
+    "name": "Corn Stalk (growing)", "category": "crop",
+    "sprite_w": 16, "sprite_h": 28,
+    "world": {"footprint": [1, 1], "pivot": "bc"}
+  },
+  "plant_corn_stage3": {
+    "name": "Corn Plant (ripe)", "category": "crop",
+    "sprite_w": 16, "sprite_h": 32,
+    "world": {"footprint": [1, 1], "pivot": "bc"}
+  },
+  "plant_wheat_stage0": {
+    "name": "Wheat Sprouts", "category": "crop",
+    "sprite_w": 16, "sprite_h": 10,
+    "world": {"footprint": [1, 1], "pivot": "bc"}
+  },
+  "plant_wheat_stage1": {
+    "name": "Young Wheat", "category": "crop",
+    "sprite_w": 16, "sprite_h": 16,
+    "world": {"footprint": [1, 1], "pivot": "bc"}
+  },
+  "plant_wheat_stage2": {
+    "name": "Ripe Wheat", "category": "crop",
+    "sprite_w": 16, "sprite_h": 20,
+    "world": {"footprint": [1, 1], "pivot": "bc"}
+  },
   "fallen_fruit": {
     "name": "Fallen Apples", "category": "natural",
     "sprite_w": 16, "sprite_h": 16,

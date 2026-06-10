@@ -47,6 +47,9 @@ func newTestState(maxSwarm int) *WorldState {
 		GroundItems: map[string]*entities.GroundItem{},
 		Stations:    map[string]*entities.StationState{},
 		Entities:    map[string]*EntityDef{},
+		// Farming maps (tree water-gating tests)
+		FruitTreeStates: map[string]*entities.FruitTreeState{},
+		Chunks:          map[string]*ChunkData{},
 	}
 }
 
@@ -266,6 +269,60 @@ func TestReproduceSwarmDoubles(t *testing.T) {
 	// Breeding consumed food (reproduceFoodCost = 50)
 	if state.GroundItems["food1"].FoodValue != 50 {
 		t.Fatalf("food after breed = %d, want 50", state.GroundItems["food1"].FoodValue)
+	}
+}
+
+// === Water-gated fruit trees ===
+
+func TestTreeWaterGating(t *testing.T) {
+	state := newTestState(20)
+	m := &Match{}
+
+	// A fast tree at (5,5): grow every 2 ticks, drop every 3 — with ONE water charge.
+	// MaxFruit=1 because growing RESETS the drop timer (fruit accumulates to max before
+	// any drop — intended behavior); max 1 lets the drop fire promptly in the test.
+	state.Entities["tree_test"] = &EntityDef{World: &WorldData{
+		FruitType: "apple", MaxFruit: 1, FruitGrowTicks: 2, FruitDropTicks: 3,
+	}}
+	chunk := NewEmptyChunk(0, 0, "grass")
+	chunk.SetOccupant(5, 5, &PlacedOccupant{ID: "tree_test", Anchor: true})
+	state.Chunks[ChunkKey(0, 0)] = chunk
+	tree := &entities.FruitTreeState{
+		TreeID: "tree_5_5", EntityID: "tree_test", GridX: 5, GridY: 5,
+		MaxFruit: 1, WaterCharges: 1,
+	}
+	state.FruitTreeStates["5,5"] = tree
+
+	tick := func(n int) {
+		for i := 0; i < n; i++ {
+			m.processFruitTrees(state, nil, nopRuntimeLogger())
+		}
+	}
+
+	// Watered: fruit grows (2 ticks) then drops (3 more) — consuming the only charge.
+	tick(2)
+	if tree.FruitCount != 1 {
+		t.Fatalf("watered tree should grow: FruitCount=%d, want 1", tree.FruitCount)
+	}
+	tick(3)
+	if tree.FruitCount != 0 || tree.WaterCharges != 0 {
+		t.Fatalf("drop should fire + consume the charge: fruit=%d charges=%d", tree.FruitCount, tree.WaterCharges)
+	}
+	if len(state.GroundItems) != 1 {
+		t.Fatalf("dropped fruit should be a ground item: %d", len(state.GroundItems))
+	}
+
+	// DRY: many more ticks — no new fruit ever grows.
+	tick(50)
+	if tree.FruitCount != 0 || len(state.GroundItems) != 1 {
+		t.Fatalf("dry tree must not produce: fruit=%d items=%d", tree.FruitCount, len(state.GroundItems))
+	}
+
+	// Re-watered: production resumes.
+	tree.WaterCharges = treeWaterPerCan
+	tick(2)
+	if tree.FruitCount != 1 {
+		t.Fatalf("re-watered tree should grow again: FruitCount=%d", tree.FruitCount)
 	}
 }
 

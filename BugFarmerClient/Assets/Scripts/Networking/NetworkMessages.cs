@@ -24,6 +24,7 @@ namespace BugFarmer.Networking
 
         // Farming - Server -> Client
         public const int CropUpdate = 50;
+        public const int TreeWaterUpdate = 51; // tree water charges (droplet indicator)
 
         // Farming - Client -> Server
         public const int PlantInteract = 55;
@@ -118,5 +119,17 @@ namespace BugFarmer.Networking
         public int hp;
         public int water;
         public int flags;  // fertilized, etc.
+    }
+
+    /// <summary>
+    /// Tree water charges changed (OpCode 51, display-only): show a droplet indicator over
+    /// dry trees (water_charges == 0). Watering a tree grants 5 fruit worth of charges.
+    /// </summary>
+    [Serializable]
+    public class TreeWaterUpdateMessage
+    {
+        public int grid_x;
+        public int grid_y;
+        public int water_charges;
     }
 }

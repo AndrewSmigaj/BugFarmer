@@ -286,8 +286,10 @@ func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presenc
 		Metadata: map[string]int{"uses": 40, "capacity": 40},
 	}
 	player.ItemSlots[7] = InventorySlot{ItemID: "seed_tomato", Count: 10}
-	player.ItemSlots[8] = InventorySlot{ItemID: "seed_corn", Count: 10}
-	player.ItemSlots[9] = InventorySlot{ItemID: "seed_wheat", Count: 10}
+	player.ItemSlots[8] = InventorySlot{ItemID: "scythe_wood", Count: 1}
+	// Torches: HELD for light at night (select the hotbar slot — the personal night light
+	// grows warm and wide), or placed as fixed lamps. Seeds for wheat come from the shop.
+	player.ItemSlots[9] = InventorySlot{ItemID: "torch", Count: 3}
 	player.EquippedTool = "small_net"
 
 	s.Players[userID] = player

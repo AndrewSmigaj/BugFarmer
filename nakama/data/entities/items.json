@@ -442,6 +442,17 @@
     "buy_price": 20,
     "sell_price": 8
   },
+  "scythe_wood": {
+    "name": "Wooden Scythe",
+    "category": "tool",
+    "tool_type": "scythe",
+    "tool_tier": 1,
+    "reach": 3.5,
+    "cooldown_ticks": 8,
+    "durability": 50,
+    "buy_price": 25,
+    "sell_price": 10
+  },
   "hoe_stone": {
     "name": "Stone Hoe",
     "category": "tool",

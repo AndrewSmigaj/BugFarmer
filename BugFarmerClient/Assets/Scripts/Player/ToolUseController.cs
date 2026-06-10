@@ -61,8 +61,8 @@ namespace BugFarmer.Player
             string toolType = toolDef.ToolType;
             Debug.Log($"[ToolUseController] Tool {toolId} has type: {toolType}");
 
-            // Only handle hoe and watering_can - other tools use BreakingController
-            if (toolType != "hoe" && toolType != "watering_can")
+            // Only handle farming tools - other tools use BreakingController
+            if (toolType != "hoe" && toolType != "watering_can" && toolType != "scythe")
             {
                 Debug.Log($"[ToolUseController] Tool type {toolType} not handled (use BreakingController)");
                 return;

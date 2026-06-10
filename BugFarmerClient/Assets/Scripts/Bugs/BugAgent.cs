@@ -116,6 +116,10 @@ namespace BugFarmer.Bugs
         private const long ParticipationWindowTicks = 80;
         private static readonly FixedPoint ApproachRadiusSqr =
             FixedPoint.FromFloat(0.4f * 0.4f);
+        // Non-landing bugs HOVER in a tight halo around the food (instead of the ±8-cell
+        // swarm wander) — this is what makes "buzzing around the fruit/bin" visible.
+        private static readonly FixedPoint HoverRadiusSqr =
+            FixedPoint.FromFloat(1.2f * 1.2f);
 
         /// <summary>
         /// If the swarm centre is at a food source (deterministic event-driven registry),
@@ -135,14 +139,16 @@ namespace BugFarmer.Bugs
             }
 
             // INDIVIDUAL participation: each bug rolls per 8s window (counter-RNG on the
-            // window index — deterministic on every client). ~60% feed in any window; the
-            // others keep their normal wander, so the crowd looks staggered and alive.
+            // window index — deterministic on every client). ~60% LAND in any window; the
+            // others don't land but HOVER in a tight halo around the food — the whole swarm
+            // visibly condenses onto the fruit/bin ("buzzing"), staggered and alive.
             long window = _currentTick / ParticipationWindowTicks;
             bool joining = CounterRng.Chance(_worldSeed, SwarmId, BugId, window, RngPurpose.Participate, 3, 5);
             if (!joining)
             {
                 _landTicks = 0;
-                return false;
+                Movement.UpdateMovement(this, foodPos, HoverRadiusSqr);
+                return true;
             }
 
             if (_landTicks > 0)

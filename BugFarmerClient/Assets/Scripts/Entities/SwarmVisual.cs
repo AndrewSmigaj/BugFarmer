@@ -174,6 +174,7 @@ namespace BugFarmer.Entities
                 var sr = obj.AddComponent<SpriteRenderer>();
                 sr.sprite = _bugSprite;
                 sr.sortingLayerName = "Occupants";
+                World.LitMaterials.Apply(sr); // bugs receive day/night lighting
                 visual = obj.transform;
             }
             else

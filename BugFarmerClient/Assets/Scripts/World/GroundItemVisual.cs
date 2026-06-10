@@ -36,6 +36,7 @@ namespace BugFarmer.World
 
             // Match occupant sorting layer
             spriteRenderer.sortingLayerName = "Occupants";
+            LitMaterials.Apply(spriteRenderer); // receive day/night lighting
         }
 
         /// <summary>

@@ -53,6 +53,11 @@ namespace BugFarmer.Data
             // Station block (material processors: compost bin etc.)
             public string[] StationAccepts;  // Item types depositable here (menu filter)
             public int StationCapacity = 10;
+
+            // Light block (lamps/torches glow at night; 0 radius = no light)
+            public float LightRadius;
+            public Color LightColor = new Color(1f, 0.82f, 0.55f);
+            public float LightIntensity = 1f;
         }
 
         public class EntityDef
@@ -237,6 +242,17 @@ namespace BugFarmer.Data
                         world.StationAccepts[i] = accepts[i].Value<string>();
                 }
                 world.StationCapacity = station["capacity"]?.Value<int>() ?? 10;
+            }
+
+            // Parse light block (lamps/torches glow at night)
+            var light = data["light"] as JObject;
+            if (light != null)
+            {
+                world.LightRadius = light["radius"]?.Value<float>() ?? 4f;
+                world.LightIntensity = light["intensity"]?.Value<float>() ?? 1f;
+                var hex = light["color"]?.Value<string>();
+                if (!string.IsNullOrEmpty(hex) && ColorUtility.TryParseHtmlString(hex, out var c))
+                    world.LightColor = c;
             }
 
             // Parse breakable data

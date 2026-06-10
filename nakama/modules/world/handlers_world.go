@@ -76,6 +76,28 @@ func (m *Match) handleChunkSubscribe(
 				dispatcher.BroadcastMessage(OpCodeGroundItemSpawn, spawnData, []runtime.Presence{presence}, nil, true)
 			}
 		}
+
+		// Send DRY fruit trees in this chunk (droplet indicators for joiners)
+		for _, tree := range state.FruitTreeStates {
+			if tree.WaterCharges == 0 && tree.GridX/cs == cx && tree.GridY/cs == cy {
+				wMsg := TreeWaterUpdateMessage{GridX: tree.GridX, GridY: tree.GridY, WaterCharges: 0}
+				wData, _ := json.Marshal(wMsg)
+				dispatcher.BroadcastMessage(OpCodeTreeWaterUpdate, wData, []runtime.Presence{presence}, nil, true)
+			}
+		}
+
+		// Send crop states in this chunk (stage visuals for joiners — without this a grown
+		// crop renders as the base sprite until its next stage change)
+		for _, crop := range state.CropStates {
+			if crop.GridX/cs == cx && crop.GridY/cs == cy {
+				cMsg := CropUpdateMessage{
+					GridX: crop.GridX, GridY: crop.GridY,
+					Stage: crop.Stage, HP: crop.HP, Water: crop.Water, Flags: int(crop.Flags),
+				}
+				cData, _ := json.Marshal(cMsg)
+				dispatcher.BroadcastMessage(OpCodeCropUpdate, cData, []runtime.Presence{presence}, nil, true)
+			}
+		}
 	}
 }
 

@@ -28,6 +28,7 @@ namespace BugFarmer.Entities
             if (_spriteRenderer != null)
             {
                 _spriteRenderer.sortingLayerName = "Occupants";
+                World.LitMaterials.Apply(_spriteRenderer); // receive day/night lighting
             }
 
             // Load sprites from Resources if not assigned in prefab

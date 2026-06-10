@@ -56,7 +56,7 @@ namespace BugFarmer.Player
             if (!string.IsNullOrEmpty(toolId))
             {
                 var toolDef = EntityDatabase.Get(toolId);
-                if (toolDef != null && (toolDef.ToolType == "hoe" || toolDef.ToolType == "watering_can"))
+                if (toolDef != null && (toolDef.ToolType == "hoe" || toolDef.ToolType == "watering_can" || toolDef.ToolType == "scythe"))
                 {
                     StopBreaking();
                     return;

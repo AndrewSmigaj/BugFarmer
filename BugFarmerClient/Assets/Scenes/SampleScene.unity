@@ -646,6 +646,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  worldDropdown: {fileID: 12993603}
 --- !u!224 &69514363
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3149,6 +3150,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8372036298024693223, guid: c72f45ef2638d1c45a7a501f991b680a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1941498167}
+    - targetCorrespondingSourceObject: {fileID: 8372036298024693223, guid: c72f45ef2638d1c45a7a501f991b680a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1941498172}
   m_SourcePrefab: {fileID: 100100000, guid: c72f45ef2638d1c45a7a501f991b680a, type: 3}
 --- !u!1 &1765566269 stripped
 GameObject:
@@ -3251,6 +3255,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1799073068}
   - component: {fileID: 1799073067}
+  - component: {fileID: 1799073069}
   m_Layer: 0
   m_Name: Debug
   m_TagString: Untagged
@@ -3285,6 +3290,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1799073069
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1799073066}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd1b56e4d0ddee2438ee5ed22b95c71a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BugFarmer.World.DayNightController
+  nightIntensity: 0.22
+  nightColor: {r: 0.35, g: 0.42, b: 0.75, a: 1}
+  dawnDuskColor: {r: 1, g: 0.8, b: 0.58, a: 1}
 --- !u!114 &1800073770 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8544905415264441370, guid: cf11ef66b9d992647ba96cb7885faa5d, type: 3}
@@ -3342,6 +3362,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BugFarmer.Player.BreakingController
   breakClickInterval: 0.5
   maxBreakDistance: 2
+  bugPriorityRadius: 1.5
 --- !u!114 &1941498162
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3356,6 +3377,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BugFarmer.Player.PickupController
   pickupRange: 2
   highlightRange: 3
+  autoPickupRange: 1.25
+  autoPickupInterval: 0.25
 --- !u!114 &1941498167
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3370,6 +3393,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BugFarmer.Player.ToolUseController
   toolUseCooldown: 0.3
   maxToolDistance: 4
+--- !u!114 &1941498172
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1765566269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74113a7be21de204c8fa15913cded354, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BugFarmer.Player.StationController
+  maxInteractDistance: 2.5
 --- !u!1 &1989836697
 GameObject:
   m_ObjectHideFlags: 0

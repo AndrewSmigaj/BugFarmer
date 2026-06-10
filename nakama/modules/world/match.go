@@ -27,6 +27,12 @@ const (
 	reproduceFoodCost      = 50.0 // food consumed by one reproduction event
 )
 
+// DayLengthTicks: one in-game day = 8400 ticks = 14 minutes at 10Hz (architecture_farming.md).
+// The authoritative tick IS the shared clock — clients derive time-of-day from it directly
+// (tick % DayLengthTicks), so the day/night cycle needs no extra netcode. Time pauses with
+// the tick when a zone empties and restarts with the match (persistence later).
+const DayLengthTicks = 8400
+
 // reproduceSwarm doubles a sated swarm at a breeding source: Count new bugs (ids from
 // NextBugID), a SWARM_REPRODUCED ledger event (clients spawn them at the centre at the event
 // tick — idempotent, same pattern as split/merge), a chunk of food consumed, meters reset
@@ -859,6 +865,18 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 	// Check continuous spawning every 100 ticks (10 seconds)
 	if worldState.TickCount%100 == 0 {
 		m.checkContinuousSpawning(worldState, worldState.TickCount, logger)
+	}
+
+	// === Day rollover (one day = DayLengthTicks = 14 min) ===
+	// Resets every crop's daily watering count — the max_daily_waterings cap existed but
+	// nothing ever reset it (documented gap, architecture_farming.md). Clients derive the
+	// same day boundary from the tick for their lighting cycle.
+	if worldState.TickCount > 0 && worldState.TickCount%DayLengthTicks == 0 {
+		for _, crop := range worldState.CropStates {
+			crop.WateringsToday = 0
+		}
+		logger.Info("DAY %d begins (tick %d): daily watering counts reset for %d crops",
+			worldState.TickCount/DayLengthTicks+1, worldState.TickCount, len(worldState.CropStates))
 	}
 
 	// Broadcast swarm SET/metadata only when it changes (NOT per tick). Positions are

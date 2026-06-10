@@ -7,5 +7,41 @@
   },
   "plant_wheat": {
     "look": "a clump of ripe golden WHEAT: several upright tan-GOLDEN stalks topped with bushy seed heads, dry straw colour. Clearly wheat, NOT green leafy."
+  },
+
+  "plant_tomato_stage0": {
+    "look": "a tiny TOMATO SPROUT just emerging from dark tilled soil: one thin pale-green stem with TWO small round seed leaves. Tiny and delicate, mostly bare soil visible."
+  },
+  "plant_tomato_stage1": {
+    "look": "a young TOMATO seedling: a short green stem with a few small jagged tomato leaves, NO fruit, NO flowers. Clearly a juvenile leafy plant."
+  },
+  "plant_tomato_stage2": {
+    "look": "a growing TOMATO plant: a leafy green bush with small round UNRIPE GREEN tomatoes and a couple of tiny yellow blossoms. Fruit clearly green/unripe."
+  },
+  "plant_tomato_stage3": {
+    "look": "a mature TOMATO plant ready to harvest: a lush leafy green bush heavy with several round ripe RED TOMATOES. Clearly ripe red fruit."
+  },
+
+  "plant_corn_stage0": {
+    "look": "a tiny CORN SPROUT just emerging from dark tilled soil: a single thin grass-like green blade folded at the tip. Tiny, mostly bare soil visible."
+  },
+  "plant_corn_stage1": {
+    "look": "a young knee-high CORN plant: a short green stalk with a few long arching young leaves, NO cobs, NO tassel. Clearly juvenile corn."
+  },
+  "plant_corn_stage2": {
+    "look": "a tall growing CORN stalk with long arching leaves and a pale TASSEL forming at the top, but NO cobs yet. Tall and slender."
+  },
+  "plant_corn_stage3": {
+    "look": "a mature CORN / maize plant ready to harvest: an upright green stalk with long arching leaves and TWO plump yellow CORN COBS with visible kernels. Clearly corn."
+  },
+
+  "plant_wheat_stage0": {
+    "look": "tiny WHEAT SPROUTS just emerging from dark tilled soil: a few thin bright-green grass blades in a small clump. Tiny, mostly bare soil visible."
+  },
+  "plant_wheat_stage1": {
+    "look": "young green WHEAT: a denser clump of upright GREEN grass-like stalks, taller, still fully green with no seed heads."
+  },
+  "plant_wheat_stage2": {
+    "look": "ripe golden WHEAT ready to harvest: several upright tan-GOLDEN stalks topped with bushy seed heads, dry straw colour. Clearly wheat."
   }
 }

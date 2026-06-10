@@ -40,6 +40,9 @@ namespace BugFarmer.World
         // Breaking visuals by global cell position
         private Dictionary<Vector2Int, BreakingVisual> _breakingVisuals = new Dictionary<Vector2Int, BreakingVisual>();
 
+        // "Needs water" droplets over dry fruit trees (OpCode 51), by tree anchor cell
+        private Dictionary<Vector2Int, WaterDroplet> _waterDroplets = new Dictionary<Vector2Int, WaterDroplet>();
+
         // Object pooling for occupants
         private Stack<GameObject> _occupantPool = new Stack<GameObject>();
 
@@ -58,6 +61,10 @@ namespace BugFarmer.World
 
         private void Start()
         {
+            // Ground tiles must receive Light2D (day/night + lamps) like everything else
+            if (groundTilemap != null)
+                LitMaterials.Apply(groundTilemap.GetComponent<Renderer>());
+
             if (WorldManager.Instance != null)
             {
                 WorldManager.Instance.OnMatchData += HandleMatchData;
@@ -200,7 +207,45 @@ namespace BugFarmer.World
                 case OpCodes.CropUpdate:
                     HandleCropUpdate(state);
                     break;
+                case OpCodes.TreeWaterUpdate:
+                    HandleTreeWaterUpdate(state);
+                    break;
             }
+        }
+
+        /// <summary>
+        /// OpCode 51: a fruit tree's water charges changed. Show a bobbing droplet indicator
+        /// above DRY trees (charges == 0); remove it once watered.
+        /// </summary>
+        private void HandleTreeWaterUpdate(IMatchState state)
+        {
+            var json = System.Text.Encoding.UTF8.GetString(state.State);
+            var msg = JsonUtility.FromJson<TreeWaterUpdateMessage>(json);
+            if (msg == null) return;
+
+            var cell = new Vector2Int(msg.grid_x, msg.grid_y);
+
+            if (msg.water_charges > 0)
+            {
+                // Watered: remove the indicator
+                if (_waterDroplets.TryGetValue(cell, out var existing) && existing != null)
+                    Destroy(existing.gameObject);
+                _waterDroplets.Remove(cell);
+                return;
+            }
+
+            // Dry: spawn the droplet just above the tree's sprite
+            if (_waterDroplets.ContainsKey(cell)) return;
+            if (!_occupantObjects.TryGetValue(cell, out var occupantGo) || occupantGo == null) return;
+
+            var sr = occupantGo.GetComponent<SpriteRenderer>();
+            float topY = sr != null ? sr.bounds.max.y + 0.15f : cell.y + 2f;
+            float midX = sr != null ? sr.bounds.center.x : cell.x + 0.5f;
+
+            var go = new GameObject($"WaterDroplet_{cell.x}_{cell.y}");
+            var droplet = go.AddComponent<WaterDroplet>();
+            droplet.AttachAbove(new Vector3(midX, topY, 0f));
+            _waterDroplets[cell] = droplet;
         }
 
         private void HandleChunkData(IMatchState state)
@@ -440,12 +485,31 @@ namespace BugFarmer.World
             }
 
             var cellPos = new Vector2Int(msg.grid_x, msg.grid_y);
-            Debug.Log($"[TilemapManager] CropUpdate at {cellPos}: stage={msg.stage}, water={msg.water}");
 
-            // Update crop visual based on stage
-            // The occupant sprite path includes stage: plant_tomato_stage0, etc.
-            // For now, just log - full visual update would require sprite swapping
-            // TODO: Implement crop stage visualization
+            // Crop STAGE visualization: re-render the cell as the stage entity
+            // (plant_tomato_stage{n} etc. — each stage has its own sprite + size, so a sprout
+            // really is small and the ripe plant tall). Falls back to the base plant sprite
+            // when stage art is missing.
+            if (!_occupantObjects.TryGetValue(cellPos, out var go) || go == null)
+                return;
+            var clickTarget = go.GetComponent<OccupantClickTarget>();
+            string curId = clickTarget != null ? clickTarget.OccupantId : null;
+            if (string.IsNullOrEmpty(curId))
+                return;
+
+            // Base plant id: strip a previous "_stageN" suffix if present
+            int stageIdx = curId.IndexOf("_stage");
+            string baseId = stageIdx >= 0 ? curId.Substring(0, stageIdx) : curId;
+            string stageId = $"{baseId}_stage{msg.stage}";
+            string renderId = EntityDatabase.GetWorldSprite(stageId) != null ? stageId : baseId;
+            if (renderId == curId)
+                return; // already showing this stage
+
+            RenderOccupant(cellPos, new OccupantCellData
+            {
+                IsEmpty = false,
+                Occupant = new Networking.PlacedOccupant { id = renderId, anchor = true }
+            });
         }
 
         #endregion
@@ -650,6 +714,7 @@ namespace BugFarmer.World
             if (sr == null)
                 sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
+            LitMaterials.Apply(sr); // receive day/night + lamp Light2D
 
             // Scale sprite to match target size from database
             float scaleX = targetSize.x / sprite.rect.width;
@@ -659,6 +724,24 @@ namespace BugFarmer.World
             sr.sortingLayerName = "Occupants"; // Must create this sorting layer in Unity
             // Y-sorting: lower Y = higher sorting order (appears in front)
             sr.sortingOrder = -cellPos.y;
+
+            // Lamp/torch glow: data-driven world.light block -> a LampLight child whose
+            // Light2D fades with daylight. Pooled objects may carry a stale light from a
+            // previous occupant type — remove it first.
+            var stale = go.transform.Find("LampLight");
+            if (stale != null)
+                Destroy(stale.gameObject);
+            var def = EntityDatabase.Get(occupantId);
+            if (def?.World != null && def.World.LightRadius > 0f)
+            {
+                var lightGo = new GameObject("LampLight");
+                lightGo.transform.SetParent(go.transform, false);
+                // counter the occupant's sprite scale so the light radius stays in world units
+                lightGo.transform.localScale = new Vector3(
+                    scaleX != 0 ? 1f / scaleX : 1f, scaleY != 0 ? 1f / scaleY : 1f, 1f);
+                var lamp = lightGo.AddComponent<LampLight>();
+                lamp.Configure(def.World.LightRadius, def.World.LightColor, def.World.LightIntensity);
+            }
 
             // Configure collider to match sprite bounds
             var collider = go.GetComponent<BoxCollider2D>();

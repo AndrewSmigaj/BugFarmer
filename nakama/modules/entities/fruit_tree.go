@@ -10,4 +10,5 @@ type FruitTreeState struct {
 	GrowthProgress  int   // Ticks since last fruit grew
 	DropTimer       int   // Ticks since fruit ripened (drops if too long)
 	LastHarvestTick int64 // Last time player harvested
+	WaterCharges    int   // Fruit-drops remaining before the tree needs watering (5/watering)
 }

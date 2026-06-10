@@ -12,6 +12,13 @@ import (
 )
 
 // handleToolUse routes tool actions based on equipped tool type
+// Tree watering: one can-use grants 5 fruit worth of charges; trees bank at most 2 waterings.
+// Without water charges a tree grows NO new fruit — the brake on infinite fly food.
+const (
+	treeWaterPerCan = 5
+	treeWaterCap    = 10
+)
+
 func (m *Match) handleToolUse(
 	logger runtime.Logger,
 	dispatcher runtime.MatchDispatcher,
@@ -48,6 +55,8 @@ func (m *Match) handleToolUse(
 		m.handleHoe(logger, dispatcher, state, userID, msg.GridX, msg.GridY, tick)
 	case "watering_can":
 		m.handleWatering(logger, dispatcher, state, userID, msg.GridX, msg.GridY, tick)
+	case "scythe":
+		m.handleScythe(logger, dispatcher, state, userID, msg.GridX, msg.GridY, tick)
 	default:
 		m.sendWorldError(dispatcher, state, userID, "Use left-click for this tool")
 	}
@@ -209,6 +218,23 @@ func (m *Match) handleWatering(
 	cropKey := fmt.Sprintf("%d,%d", gx, gy)
 	crop := state.CropStates[cropKey]
 	if crop == nil {
+		// Not a crop — a FRUIT TREE? Trees require water to produce: one watering grants
+		// 5 fruit worth of charges (banked to 10 max). Without this, flies are infinite.
+		if tree := state.FruitTreeStates[cropKey]; tree != nil {
+			if tree.WaterCharges >= treeWaterCap {
+				m.sendWorldError(dispatcher, state, userID, "The tree is well watered")
+				return
+			}
+			tree.WaterCharges += treeWaterPerCan
+			if tree.WaterCharges > treeWaterCap {
+				tree.WaterCharges = treeWaterCap
+			}
+			slot.Metadata["uses"]--
+			m.sendSlotUpdate(dispatcher, state, userID, slotIndex, slot)
+			m.broadcastTreeWaterUpdate(dispatcher, state, tree)
+			logger.Debug("Player %s watered tree at %d,%d (charges=%d)", userID, gx, gy, tree.WaterCharges)
+			return
+		}
 		m.sendWorldError(dispatcher, state, userID, "No crop here")
 		return
 	}
@@ -331,11 +357,40 @@ func (m *Match) handlePlantInteract(
 		return
 	}
 
-	// Harvest attempt
+	// Harvest attempt (hand-click). The scythe uses the same helper over a 3x3 area.
 	matureStage := cropDef.GrowthStages - 1
 	if crop.Stage < matureStage {
 		m.sendWorldError(dispatcher, state, userID, "Crop is not ready")
 		return
+	}
+	m.harvestMatureCrop(logger, dispatcher, state, userID, msg.GridX, msg.GridY)
+}
+
+// harvestMatureCrop harvests the crop at (gx,gy) IF it is mature: spawns produce + seed
+// chance, then multi-harvest-resets or removes the plant. Returns true if harvested.
+// Shared by hand-clicking (handlePlantInteract) and the scythe's area swing.
+func (m *Match) harvestMatureCrop(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	userID string,
+	gx, gy int,
+) bool {
+	cropKey := fmt.Sprintf("%d,%d", gx, gy)
+	crop := state.CropStates[cropKey]
+	if crop == nil {
+		return false
+	}
+	cropDef := state.CropDefs[crop.PlantType]
+	if cropDef == nil {
+		return false
+	}
+	cx, cy, lx, ly := GlobalToChunk(gx, gy)
+	if state.Chunks[ChunkKey(cx, cy)] == nil {
+		return false
+	}
+	if crop.Stage < cropDef.GrowthStages-1 {
+		return false // not mature
 	}
 
 	// Calculate drops
@@ -345,12 +400,12 @@ func (m *Match) handlePlantInteract(
 	}
 
 	// Spawn harvest items on ground
-	m.spawnHarvestDrops(dispatcher, state, cropDef.HarvestItem, dropCount, msg.GridX, msg.GridY, cx, cy)
+	m.spawnHarvestDrops(dispatcher, state, cropDef.HarvestItem, dropCount, gx, gy, cx, cy)
 
 	// Seed drop chance
 	if cropDef.SeedDropChance > 0 && rand.Float32() < cropDef.SeedDropChance {
 		seedID := "seed_" + crop.PlantType
-		m.spawnHarvestDrops(dispatcher, state, seedID, 1, msg.GridX, msg.GridY, cx, cy)
+		m.spawnHarvestDrops(dispatcher, state, seedID, 1, gx, gy, cx, cy)
 	}
 
 	// Handle multi-harvest vs single-harvest
@@ -359,13 +414,48 @@ func (m *Match) handlePlantInteract(
 		crop.HarvestsRemaining--
 		crop.Stage = 1 // Reset to sprout stage
 		crop.Water = 0 // Reset water
-		m.broadcastCropUpdate(dispatcher, state, msg.GridX, msg.GridY, crop)
+		m.broadcastCropUpdate(dispatcher, state, gx, gy, crop)
 		logger.Debug("Player %s harvested %s (multi), %d harvests remaining",
 			userID, crop.PlantType, crop.HarvestsRemaining)
 	} else {
 		// Single harvest or last harvest: remove crop
 		m.destroyCrop(logger, dispatcher, state, crop, cropKey, cx, cy, lx, ly)
 		logger.Debug("Player %s harvested %s (final)", userID, crop.PlantType)
+	}
+	return true
+}
+
+// handleScythe: the scythe's perk over hand-harvesting — one swing harvests every MATURE
+// crop in the 3x3 around the target cell (immature crops are untouched; no destroy risk).
+func (m *Match) handleScythe(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	userID string,
+	gx, gy int,
+	tick int64,
+) {
+	player := state.Players[userID]
+	if player == nil {
+		return
+	}
+	if !m.validateToolCooldown(state, player, tick) {
+		return
+	}
+	player.LastToolTick = tick
+
+	harvested := 0
+	for dy := -1; dy <= 1; dy++ {
+		for dx := -1; dx <= 1; dx++ {
+			if m.harvestMatureCrop(logger, dispatcher, state, userID, gx+dx, gy+dy) {
+				harvested++
+			}
+		}
+	}
+	if harvested == 0 {
+		m.sendWorldError(dispatcher, state, userID, "Nothing ready to scythe")
+	} else {
+		logger.Debug("Player %s scythed %d crops around %d,%d", userID, harvested, gx, gy)
 	}
 }
 
@@ -500,28 +590,38 @@ func (m *Match) processFruitTrees(
 			continue // Not a fruit tree
 		}
 
-		// Fruit growth
-		tree.GrowthProgress++
-		if tree.GrowthProgress >= treeDef.World.FruitGrowTicks && tree.FruitCount < tree.MaxFruit {
-			tree.FruitCount++
-			tree.GrowthProgress = 0
-			tree.DropTimer = 0 // Reset drop timer when new fruit grows
+		// Fruit growth — WATER-GATED: a dry tree (no charges) grows NO new fruit. One
+		// watering grants treeWaterPerCan (5) drops; this is the brake on infinite fly food.
+		if tree.WaterCharges > 0 {
+			tree.GrowthProgress++
+			if tree.GrowthProgress >= treeDef.World.FruitGrowTicks && tree.FruitCount < tree.MaxFruit {
+				tree.FruitCount++
+				tree.GrowthProgress = 0
+				tree.DropTimer = 0 // Reset drop timer when new fruit grows
 
-			// Emit influence event for deterministic sync
-			zoneID := ""
-			if state.CurrentZone != nil {
-				zoneID = state.CurrentZone.ZoneID
+				// Emit influence event for deterministic sync
+				zoneID := ""
+				if state.CurrentZone != nil {
+					zoneID = state.CurrentZone.ZoneID
+				}
+				state.AddInfluenceEvent(zoneID, InfluenceTreeFruitGrow, "",
+					tree.GridX, tree.GridY, tree.TreeID, tree.FruitCount)
 			}
-			state.AddInfluenceEvent(zoneID, InfluenceTreeFruitGrow, "",
-				tree.GridX, tree.GridY, tree.TreeID, tree.FruitCount)
 		}
 
-		// Fruit drop (overripe)
+		// Fruit drop (overripe) — existing fruit still drops when dry; each drop costs a charge
 		if tree.FruitCount > 0 {
 			tree.DropTimer++
 			if tree.DropTimer >= treeDef.World.FruitDropTicks {
 				tree.FruitCount--
 				tree.DropTimer = 0
+				if tree.WaterCharges > 0 {
+					tree.WaterCharges--
+					if tree.WaterCharges == 0 {
+						// Just ran dry: tell clients to show the droplet indicator
+						m.broadcastTreeWaterUpdate(dispatcher, state, tree)
+					}
+				}
 
 				// Drop fruit on ground (will eventually rot)
 				m.dropFruitFromTree(dispatcher, state, tree, treeDef.World.FruitType, logger)
@@ -800,6 +900,14 @@ func (m *Match) handleStationDeposit(
 	logger.Debug("Player %s deposited %s into %s (input %d/%d, compost %d)", userID, msg.ItemID, key, st.InputCount, capacity, st.Fill)
 }
 
+// broadcastTreeWaterUpdate sends a tree's water state (display-only — drives the client's
+// droplet indicator; bug AI doesn't read tree water).
+func (m *Match) broadcastTreeWaterUpdate(dispatcher runtime.MatchDispatcher, state *WorldState, tree *entities.FruitTreeState) {
+	cx, cy, _, _ := GlobalToChunk(tree.GridX, tree.GridY)
+	msg := TreeWaterUpdateMessage{GridX: tree.GridX, GridY: tree.GridY, WaterCharges: tree.WaterCharges}
+	m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeTreeWaterUpdate, msg)
+}
+
 // broadcastStationUpdate sends the display meters (input + compost fill) for a station.
 func (m *Match) broadcastStationUpdate(dispatcher runtime.MatchDispatcher, st *entities.StationState, capacity int) {
 	updMsg := StationUpdateMessage{GX: st.GridX, GY: st.GridY, Input: st.InputCount, Fill: st.Fill, Capacity: capacity}
@@ -1008,6 +1116,9 @@ func (m *Match) initFruitTreesInChunk(
 				// Start with some random fruit and progress
 				FruitCount:     rand.Intn(maxFruit + 1),
 				GrowthProgress: rand.Intn(entityDef.World.FruitGrowTicks / 2),
+				// One free watering's worth: zones produce before anyone waters, then run
+				// dry — fly food is finite until the player tends the trees.
+				WaterCharges: treeWaterPerCan,
 			}
 			state.FruitTreeStates[treeKey] = tree
 
