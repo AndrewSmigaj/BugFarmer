@@ -641,6 +641,9 @@ namespace BugFarmer.Entities
                 case OpCodes.BugCaught:
                     HandleBugCaught(state);
                     break;
+                case OpCodes.MeleeResult:
+                    HandleMeleeResult(state);
+                    break;
                 // Bug sync (late joiner + drift detection)
                 case OpCodes.RequestSample:
                     HandleSampleRequest(state);
@@ -739,6 +742,42 @@ namespace BugFarmer.Entities
             {
                 swarm.RemoveBugsById(msg.bug_ids);
                 swarm.ShowCatchAnimation(new Vector2(msg.x, msg.y), msg.catcher_id);
+            }
+        }
+
+        /// <summary>
+        /// Handle melee result (OpCode 89) — the SOLE per-bug HP display channel plus
+        /// combat cosmetics. HP (absolute hp_left, last-writer-wins) is applied from
+        /// one's OWN echo too — another player may have hit the same bug — only the
+        /// cosmetic flash is skipped (the attacker already flashed optimistically).
+        /// Kills arrive here as a pop cue only; authoritative removal is the
+        /// BUG_REMOVED ledger event in the same network flush.
+        /// </summary>
+        private void HandleMeleeResult(IMatchState state)
+        {
+            var json = System.Text.Encoding.UTF8.GetString(state.State);
+            var msg = JsonUtility.FromJson<MeleeResultMessage>(json);
+            if (msg?.results == null) return;
+
+            var localUserId = WorldManager.Instance?.Self?.UserId;
+            bool ownEcho = !string.IsNullOrEmpty(localUserId) && msg.attacker_id == localUserId;
+
+            foreach (var result in msg.results)
+            {
+                if (result == null) continue;
+                var swarm = GetSwarm(result.swarm_id);
+                if (swarm == null) continue;
+
+                if (result.damaged != null)
+                {
+                    foreach (var entry in result.damaged)
+                        swarm.SetDisplayHP(entry.bug_id, entry.hp, flash: !ownEcho);
+                }
+                if (result.killed != null && !ownEcho)
+                {
+                    foreach (var bugId in result.killed)
+                        swarm.FlashBug(bugId); // pop cue; the ledger removes ≤1 tick later
+                }
             }
         }
 
@@ -961,6 +1000,14 @@ namespace BugFarmer.Entities
             visual.Initialize(data, snapshotTick);
             _swarms[data.id] = visual;
             // Note: Bug positions will be applied via ApplySnapshot after this
+
+            // Seed display-only HP for damaged bugs (populated only by the late-join
+            // snapshot; subsequent MeleeResultMessages converge it).
+            if (data.bug_hp != null)
+            {
+                foreach (var entry in data.bug_hp)
+                    visual.SetDisplayHP(entry.bug_id, entry.hp, flash: false);
+            }
         }
 
         // ==========================================================================
@@ -1482,6 +1529,27 @@ namespace BugFarmer.Entities
             foreach (var kvp in _swarms)
             {
                 int[] bugIds = kvp.Value.GetBugsInRadius(worldPosition, catchRadius);
+                if (bugIds.Length > 0)
+                {
+                    results.Add(new CatchResult { swarmId = kvp.Key, bugIds = bugIds });
+                }
+            }
+
+            return results;
+        }
+
+        /// <summary>
+        /// Get bug IDs inside a swept SECTOR across all swarms (does NOT remove them) —
+        /// the melee/net hit area: within reach of origin AND within arc/2 of the aim
+        /// angle. Queries render positions (see SwarmVisual.GetBugsInSector).
+        /// </summary>
+        public List<CatchResult> GetBugsInSector(Vector2 origin, float aimDegrees, float arcDegrees, float reach)
+        {
+            var results = new List<CatchResult>();
+
+            foreach (var kvp in _swarms)
+            {
+                int[] bugIds = kvp.Value.GetBugsInSector(origin, aimDegrees, arcDegrees, reach);
                 if (bugIds.Length > 0)
                 {
                     results.Add(new CatchResult { swarmId = kvp.Key, bugIds = bugIds });

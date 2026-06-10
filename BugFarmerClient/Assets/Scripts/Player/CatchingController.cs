@@ -1,35 +1,30 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Nakama;
+using BugFarmer.Data;
 using BugFarmer.Networking;
 using BugFarmer.Entities;
 
 namespace BugFarmer.Player
 {
     /// <summary>
-    /// Handles catching bugs. Two modes:
-    /// - Hand catch (no net): Click near swarm, catch exactly 1
-    /// - Net swing (net equipped): arc swing, AoE catch multiple
-    /// Input arrives via PlayerInputRouter (which owns tool routing + the UI guard);
-    /// the swing visual is PlayerToolAnimator (sorting owned in code — the old SmallNet
-    /// prefab rendered invisibly on the Default sorting layer).
+    /// Handles catching bugs. Two modes, routed by PlayerInputRouter:
+    /// - Hand catch (no tool): precision grab — a small circle at the click (catch 1-ish).
+    /// - Net sweep (net equipped): a physical SWING at the player — one full-sector query
+    ///   (arc_degrees × reach from the net's data) at swing start; the PlayerToolAnimator
+    ///   sweep + trail traces the exact queried arc, so the visual IS the honest catch area.
+    /// A swing that hits multiple swarms sends its messages back-to-back; the server's
+    /// per-swing rate limit treats the same-tick burst as one swing.
     /// </summary>
     public class CatchingController : MonoBehaviour
     {
         [Header("Catch Settings")]
         [SerializeField] private float catchCooldown = 0.2f;
         [SerializeField] private float handReach = 2.0f;
-        [SerializeField] private float netReach = 4.5f;
-
-        [Header("Catch Indicator")]
-        [SerializeField] private float netCatchRadius = 1.5f;
         [SerializeField] private float handCatchRadius = 0.5f;
-        [SerializeField] private Color catchIndicatorColor = new Color(1f, 1f, 0f, 0.3f); // Yellow, 30% opacity
-        [SerializeField] private float indicatorDuration = 0.2f;
 
         private float _lastCatchTime;
-        private LineRenderer _catchIndicator;
         private Camera _mainCamera;
         private PlayerToolAnimator _animator;
 
@@ -37,57 +32,6 @@ namespace BugFarmer.Player
         {
             _mainCamera = Camera.main;
             _animator = GetComponent<PlayerToolAnimator>();
-
-            // Create catch radius indicator (circle using LineRenderer)
-            CreateCatchIndicator();
-        }
-
-        private void CreateCatchIndicator()
-        {
-            var indicatorObj = new GameObject("CatchIndicator");
-            indicatorObj.transform.SetParent(null); // World space, not child of player
-
-            _catchIndicator = indicatorObj.AddComponent<LineRenderer>();
-            _catchIndicator.useWorldSpace = true;
-            _catchIndicator.loop = true;
-            _catchIndicator.startWidth = 0.05f;
-            _catchIndicator.endWidth = 0.05f;
-            _catchIndicator.sortingOrder = 5;
-
-            // Create a simple unlit material
-            _catchIndicator.material = new Material(Shader.Find("Sprites/Default"));
-            _catchIndicator.startColor = catchIndicatorColor;
-            _catchIndicator.endColor = catchIndicatorColor;
-
-            // Generate circle points
-            int segments = 32;
-            _catchIndicator.positionCount = segments;
-
-            _catchIndicator.enabled = false;
-        }
-
-        private void UpdateCirclePositions(Vector2 center, float radius)
-        {
-            int segments = _catchIndicator.positionCount;
-            for (int i = 0; i < segments; i++)
-            {
-                float angle = (float)i / segments * Mathf.PI * 2f;
-                float x = center.x + Mathf.Cos(angle) * radius;
-                float y = center.y + Mathf.Sin(angle) * radius;
-                _catchIndicator.SetPosition(i, new Vector3(x, y, 0));
-            }
-        }
-
-        private IEnumerator ShowCatchIndicator(Vector2 position, float radius)
-        {
-            if (_catchIndicator == null) yield break;
-
-            UpdateCirclePositions(position, radius);
-            _catchIndicator.enabled = true;
-
-            yield return new WaitForSeconds(indicatorDuration);
-
-            _catchIndicator.enabled = false;
         }
 
         /// <summary>
@@ -111,7 +55,13 @@ namespace BugFarmer.Player
                 return false;
             }
 
-            if (!CanCatch())
+            // Cooldown mirrors the server's per-swing gate (net cooldown_ticks ≈ 3 = 0.3s;
+            // hand keeps the legacy 0.2s).
+            string toolId = netMode ? UI.InventoryManager.Instance?.GetEquippedToolId() : null;
+            var net = netMode ? EntityDatabase.Get(toolId) : null;
+            float cooldown = (net != null && net.CooldownTicks > 0)
+                ? net.CooldownTicks / 10f : catchCooldown;
+            if (Time.time - _lastCatchTime < cooldown)
                 return false;
 
             if (_mainCamera == null)
@@ -120,84 +70,85 @@ namespace BugFarmer.Player
                 if (_mainCamera == null) return false;
             }
 
+            Vector2 origin = transform.position;
             Vector2 clickPos = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            Vector2 playerPos = transform.position;
-            float dist = (clickPos - playerPos).magnitude;
 
-            // Check reach based on mode
-            float maxReach = netMode ? netReach : handReach;
-            if (dist > maxReach)
-            {
-                Debug.Log($"[Catch] Too far! dist={dist:F2} > maxReach={maxReach}");
-                return false;
-            }
+            List<CatchResult> catches;
+            Vector2 reportPos; // position sent for server reach validation + echo anims
 
-            float catchRadius = netMode ? netCatchRadius : handCatchRadius;
-
-            // CLIENT-SIDE: Detect bugs at click position (returns IDs)
-            var swarmManager = SwarmManager.Instance;
-            List<CatchResult> catches = null;
-            if (swarmManager != null)
-            {
-                catches = swarmManager.GetBugsAtPosition(clickPos, catchRadius);
-
-                // Optimistic removal - remove bugs immediately for instant feedback
-                foreach (var result in catches)
-                {
-                    var swarm = swarmManager.GetSwarm(result.swarmId);
-                    swarm?.RemoveBugsById(result.bugIds);
-                }
-            }
-
-            // Play animation (even on miss) — the net icon swept in-hand by the animator
             if (netMode)
             {
-                Vector2 direction = (clickPos - playerPos).normalized;
-                string toolId = UI.InventoryManager.Instance?.GetEquippedToolId();
-                _animator?.Play("net", Data.EntityDatabase.GetItemSprite(toolId), direction);
-                StartCoroutine(ShowCatchIndicator(clickPos, catchRadius));
+                // Physical sweep: arc/reach are the NET'S DATA (small 80°/2.5, large
+                // 120°/3.5) — the old click-anywhere circle is gone.
+                float reach = (net != null && net.Reach > 0) ? net.Reach : 2.5f;
+                float arc = (net != null && net.ArcDegrees > 0) ? net.ArcDegrees : 80f;
+                int cap = (net != null && net.CatchCap > 0) ? net.CatchCap : 10;
+
+                Vector2 aim = clickPos - origin;
+                if (aim.sqrMagnitude < 0.0001f) aim = Vector2.right;
+                float aimDeg = Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg;
+
+                catches = SwarmManager.Instance?.GetBugsInSector(origin, aimDeg, arc, reach);
+                reportPos = origin + aim.normalized * Mathf.Min(aim.magnitude, reach);
+
+                // Cap the SWING total client-side in deterministic order (the server caps
+                // per message; an honest client respects the swing cap across swarms).
+                if (catches != null && catches.Count > 0)
+                {
+                    var capped = new List<CatchResult>();
+                    int taken = 0;
+                    foreach (var c in catches.OrderBy(c => c.swarmId))
+                    {
+                        if (taken >= cap) break;
+                        var ids = c.bugIds.OrderBy(id => id).Take(cap - taken).ToArray();
+                        taken += ids.Length;
+                        capped.Add(new CatchResult { swarmId = c.swarmId, bugIds = ids });
+                    }
+                    catches = capped;
+                }
+
+                // The sweep + trail plays even on a miss; the trail IS the catch area.
+                _animator?.Play("net", EntityDatabase.GetItemSprite(toolId), aim,
+                                arc, net != null ? net.SwingTime : 0f);
+            }
+            else
+            {
+                // Hand: precision grab, unchanged (small circle at the click, short reach).
+                if ((clickPos - origin).magnitude > handReach)
+                    return false;
+                catches = SwarmManager.Instance?.GetBugsAtPosition(clickPos, handCatchRadius);
+                reportPos = clickPos;
             }
 
-            // Send bug IDs to server for validation
+            // Optimistic removal - remove bugs immediately for instant feedback
             bool caughtAny = false;
             if (catches != null)
             {
                 foreach (var result in catches)
                 {
+                    var swarm = SwarmManager.Instance.GetSwarm(result.swarmId);
+                    swarm?.RemoveBugsById(result.bugIds);
+                }
+
+                // Send bug IDs to server for validation (one message per swarm — the
+                // server's same-tick burst rule treats them as one swing)
+                foreach (var result in catches)
+                {
                     caughtAny = true;
                     var msg = new CatchBugMessage
                     {
-                        click_x = clickPos.x,
-                        click_y = clickPos.y,
+                        click_x = reportPos.x,
+                        click_y = reportPos.y,
                         swarm_id = result.swarmId,
                         bug_ids = result.bugIds
                     };
-                    Debug.Log($"[Catch] Sent: swarm={result.swarmId}, bugIds={result.bugIds.Length}");
-                    SendCatchRequest(msg, world.CurrentMatch.Id, socket);
+                    var json = JsonUtility.ToJson(msg);
+                    _ = socket.SendMatchStateAsync(world.CurrentMatch.Id, OpCodes.CatchBug, json);
                 }
             }
 
             _lastCatchTime = Time.time;
             return caughtAny;
-        }
-
-        private bool CanCatch()
-        {
-            return Time.time - _lastCatchTime >= catchCooldown;
-        }
-
-        private void SendCatchRequest(CatchBugMessage msg, string matchId, ISocket socket)
-        {
-            var json = JsonUtility.ToJson(msg);
-            _ = socket.SendMatchStateAsync(matchId, OpCodes.CatchBug, json);
-        }
-
-        private void OnDestroy()
-        {
-            if (_catchIndicator != null)
-            {
-                Destroy(_catchIndicator.gameObject);
-            }
         }
     }
 }

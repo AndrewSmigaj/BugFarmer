@@ -344,6 +344,54 @@ namespace BugFarmer.Entities
         }
 
         /// <summary>
+        /// Get bug IDs inside a swept SECTOR (the melee/net hit area: |angle to bug −
+        /// aim| ≤ arc/2 within reach of origin). Queries RENDER positions (the
+        /// interpolated transform — what the player actually sees mid-lerp), a deliberate
+        /// divergence from GetBugsInRadius's sim positions: hit detection is feel, and the
+        /// IDs-are-trusted protocol (server validates alive-ids) makes both safe.
+        /// </summary>
+        public int[] GetBugsInSector(Vector2 origin, float aimDegrees, float arcDegrees, float reach)
+        {
+            float reachSq = reach * reach;
+            float halfArc = arcDegrees / 2f;
+            var result = new List<int>();
+
+            foreach (var kvp in _bugs)
+            {
+                Vector2 bugPos = kvp.Value.Transform != null
+                    ? (Vector2)kvp.Value.Transform.position
+                    : kvp.Value.CurrPos;
+                Vector2 delta = bugPos - origin;
+                if (delta.sqrMagnitude > reachSq)
+                    continue;
+                float bugAngle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
+                if (Mathf.Abs(Mathf.DeltaAngle(aimDegrees, bugAngle)) <= halfArc)
+                    result.Add(kvp.Key);
+            }
+
+            return result.ToArray();
+        }
+
+        /// <summary>
+        /// Set a bug's DISPLAY-ONLY HP (fed by MeleeResultMessage / the late-join seed)
+        /// and play the hit flash. Never touches the deterministic sim.
+        /// </summary>
+        public void SetDisplayHP(int bugId, int hp, bool flash)
+        {
+            if (!_bugs.TryGetValue(bugId, out var bug)) return;
+            bug.DisplayHP = hp;
+            if (flash)
+                bug.FlashUntil = Time.time + 0.15f;
+        }
+
+        /// <summary>Cosmetic hit flash only (e.g. a killed bug, pre-ledger-removal).</summary>
+        public void FlashBug(int bugId)
+        {
+            if (_bugs.TryGetValue(bugId, out var bug))
+                bug.FlashUntil = Time.time + 0.15f;
+        }
+
+        /// <summary>
         /// Remove bugs by ID (deterministic removal).
         /// All clients call this with the same IDs from server broadcast,
         /// ensuring everyone sees the exact same bugs disappear.

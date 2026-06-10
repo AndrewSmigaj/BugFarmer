@@ -34,6 +34,20 @@ namespace BugFarmer.Bugs
         /// </summary>
         public Vector2 CurrPos;
 
+        /// <summary>
+        /// DISPLAY ONLY — never read by the deterministic sim or the state hash.
+        /// Authoritative HP lives server-side in SwarmState.BugHP; this copy is fed by
+        /// MeleeResultMessage (OpCode 89) and the late-join snapshot seed. -1 = full HP.
+        /// Living on the BugVisual means it rides split/merge bug-moves for free.
+        /// </summary>
+        public int DisplayHP = -1;
+
+        /// <summary>Hit-flash end time (Time.time); cosmetic only.</summary>
+        public float FlashUntil;
+
+        private static readonly Color DamagedTint = new Color(1f, 0.6f, 0.6f, 1f);
+        private static readonly Color FlashTint = new Color(1f, 0.25f, 0.25f, 1f);
+
         public BugVisual(BugAgent agent, Transform transform)
         {
             Agent = agent;
@@ -76,8 +90,20 @@ namespace BugFarmer.Bugs
                 if (Renderer != null)
                 {
                     Renderer.sortingOrder = -Mathf.FloorToInt(pos.y) + 1;
+                    UpdateTint();
                 }
             }
+        }
+
+        /// <summary>
+        /// Combat display tint: brief flash on hit, persistent light-red while damaged
+        /// (DisplayHP set), white otherwise. Pure cosmetics over the display HP copy.
+        /// </summary>
+        private void UpdateTint()
+        {
+            Renderer.color = Time.time < FlashUntil
+                ? FlashTint
+                : (DisplayHP > 0 ? DamagedTint : Color.white);
         }
 
         /// <summary>

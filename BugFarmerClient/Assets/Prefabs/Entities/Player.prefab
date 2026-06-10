@@ -152,4 +152,3 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BugFarmer.Player.CatchingController
   catchCooldown: 0.2
   handReach: 2
-  netReach: 4.5

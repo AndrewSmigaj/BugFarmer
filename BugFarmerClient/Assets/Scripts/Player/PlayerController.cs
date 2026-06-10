@@ -49,6 +49,8 @@ namespace BugFarmer.Player
             // the in-hand tool animator and the single left-click owner.
             if (GetComponent<PlayerToolAnimator>() == null)
                 gameObject.AddComponent<PlayerToolAnimator>();
+            if (GetComponent<MeleeController>() == null)
+                gameObject.AddComponent<MeleeController>();
             if (GetComponent<PlayerInputRouter>() == null)
                 gameObject.AddComponent<PlayerInputRouter>();
         }

@@ -34,6 +34,13 @@ namespace BugFarmer.Networking
         // Dev tuning (debug): live-override ecology parameters on the server
         public const int EcologyTuning = 87;      // C->S: EcologyTuningMessage
 
+        // Combat (melee weapons: sword/spear). ONE message per swing — a swing may hit
+        // multiple swarms, carried as entries of one payload.
+        public const int MeleeAttack = 88;        // C->S: swing with detected (swarm, ids) hits
+        public const int MeleeResult = 89;        // S->C: validated damage/kills — the SOLE
+                                                  // per-bug HP display channel + cosmetics
+                                                  // (kills ALSO arrive as BUG_REMOVED ledger events)
+
         // Influence Event OpCodes (Server-Authored Bug Sync)
         public const int InfluenceBroadcast = 71; // S->C: Player cell change events
         public const int LateJoinSnapshot = 72;   // S->C: Full state for late joiner
@@ -73,6 +80,8 @@ namespace BugFarmer.Networking
         public string phase;           // "feeding", "reproducing", "idle"
         public int next_bug_id;        // Total bugs ever spawned (for late joiners)
         public int[] removed_ids;      // Bug IDs to skip when spawning (for late joiners)
+        public BugHPEntry[] bug_hp;    // Damaged bugs' remaining HP (display seed; populated
+                                       // ONLY by the late-join snapshot, else null)
 
         // In-flight movement leg active at snapshot_tick (late-join hydration only).
         // Fixed-point (value/1000 = actual), identical to the originating SWARM_SET_TARGET
@@ -125,6 +134,58 @@ namespace BugFarmer.Networking
         public int new_total;
         public float x;
         public float y;
+    }
+
+    /// <summary>
+    /// Melee swing sent to server (OpCode 88): ONE message per swing; hits lists every
+    /// swarm the swept sector intercepted with the client-detected bug IDs.
+    /// </summary>
+    [Serializable]
+    public class MeleeAttackMessage
+    {
+        public float click_x;
+        public float click_y;
+        public MeleeSwarmHits[] hits;
+    }
+
+    [Serializable]
+    public class MeleeSwarmHits
+    {
+        public string swarm_id;
+        public int[] bug_ids;
+    }
+
+    /// <summary>
+    /// Melee result broadcast to all clients (OpCode 89): the SOLE channel for per-bug HP
+    /// display (DisplayHP on BugVisual — HP never rides the deterministic ledger) plus all
+    /// combat cosmetics. hp values are ABSOLUTE (last-writer-wins converges when two
+    /// players hit the same bug). Kills land authoritatively via BUG_REMOVED ledger events
+    /// in the same network flush; killed[] here is only the cosmetic pop + attribution.
+    /// </summary>
+    [Serializable]
+    public class MeleeResultMessage
+    {
+        public string attacker_id;
+        public float click_x;
+        public float click_y;
+        public MeleeSwarmResult[] results;
+    }
+
+    [Serializable]
+    public class MeleeSwarmResult
+    {
+        public string swarm_id;
+        public BugHPEntry[] damaged;   // survivors: absolute hp_left
+        public int[] killed;           // removed ids (cosmetic; removal = ledger)
+    }
+
+    /// <summary>(bug id, remaining hp) pair — an array entry because JsonUtility cannot
+    /// deserialize dictionaries (same reason removed_ids is int[]).</summary>
+    [Serializable]
+    public class BugHPEntry
+    {
+        public int bug_id;
+        public int hp;
     }
 
     // BugInventoryUpdateMessage removed - replaced by SlotUpdateMessage in InventoryMessages.cs
