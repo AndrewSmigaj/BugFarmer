@@ -34,14 +34,20 @@ type EntityDef struct {
 	CooldownTicks    int            `json:"cooldown_ticks,omitempty"`    // Ticks between uses (tools incl. weapons)
 	MetadataDefaults map[string]int `json:"metadata_defaults,omitempty"` // Initial metadata (watering can capacity)
 
-	// Weapon / sweep properties (swords, spears, nets). The hit/catch AREA is a swept
-	// sector (arc_degrees x reach) detected client-side; the server validates alive
-	// bug IDs + player->click reach + caps only (it holds no per-bug positions).
-	Damage     int     `json:"damage,omitempty"`      // HP per hit (vs species max_hp)
+	// NET sweep properties (top-level — nets have exactly one move with their own cap
+	// semantics and rate-limit slot; they migrate to Moves only if they grow a secondary).
+	// The catch AREA is a swept sector (arc_degrees x reach) detected client-side; the
+	// server validates alive bug IDs + player->click reach + caps only.
 	ArcDegrees float32 `json:"arc_degrees,omitempty"` // Total swept arc
 	SwingTime  float32 `json:"swing_time,omitempty"`  // Seconds (animation + client feel)
-	MaxTargets int     `json:"max_targets,omitempty"` // Per-SWING hit cap (weapons)
 	CatchCap   int     `json:"catch_cap,omitempty"`   // Per-swing catch cap (nets)
+
+	// WEAPON movesets (swords, spears, axes' combat swing; future whips): per-MOVE combat
+	// stats keyed by the input slot ("primary" = left click, "secondary" = right click).
+	// The move's kind maps to a client animation profile + hit geometry; the server
+	// validates only move-existence + reach + caps (it holds no positions/shapes), so new
+	// kinds are data + client code only.
+	Moves map[string]*MoveDef `json:"moves,omitempty"`
 
 	// Seed properties
 	PlacesCrop string `json:"places_crop,omitempty"` // Crop type this seed plants
@@ -54,6 +60,28 @@ type EntityDef struct {
 
 	// Entity type set during loading: "item", "occupant", or "placeable"
 	EntityType string `json:"-"`
+}
+
+// MoveDef is one weapon move (an input slot's attack): stats the server validates with
+// plus the animation kind the client renders with.
+type MoveDef struct {
+	Kind          string  `json:"kind"`           // "swing" | "stab" | "sweep" (client anim + geometry)
+	Damage        int     `json:"damage"`         // HP per hit (vs species max_hp); <=0 -> 1
+	ArcDegrees    float32 `json:"arc_degrees"`    // Client hit geometry only (server has no positions)
+	Reach         float32 `json:"reach"`          // Server-validated: player->click <= reach+0.5
+	SwingTime     float32 `json:"swing_time"`     // Seconds (animation + client feel)
+	MaxTargets    int     `json:"max_targets"`    // Per-SWING hit cap; <=0 -> 1
+	CooldownTicks int     `json:"cooldown_ticks"` // Vs the shared LastToolTick; <=0 -> 3
+}
+
+// GetMove resolves a weapon move by input-slot name. NIL-RECEIVER-SAFE by design: the
+// melee gate is exactly `weapon.GetMove(name) != nil`, and `weapon` is nil for a bare
+// hand ("") or any id absent from Entities (EquipTool relays arbitrary client strings).
+func (e *EntityDef) GetMove(name string) *MoveDef {
+	if e == nil || e.Moves == nil {
+		return nil
+	}
+	return e.Moves[name]
 }
 
 // WorldData describes how an entity appears/behaves in the world.

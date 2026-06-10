@@ -377,7 +377,18 @@
     "mining_speed": 1.0,
     "durability": 50,
     "buy_price": 25,
-    "sell_price": 10
+    "sell_price": 10,
+    "moves": {
+      "secondary": {
+        "kind": "swing",
+        "damage": 1,
+        "arc_degrees": 90,
+        "reach": 2.5,
+        "swing_time": 0.18,
+        "max_targets": 3,
+        "cooldown_ticks": 5
+      }
+    }
   },
   "axe_stone": {
     "name": "Stone Axe",
@@ -388,7 +399,18 @@
     "mining_speed": 1.3,
     "durability": 100,
     "buy_price": 75,
-    "sell_price": 30
+    "sell_price": 30,
+    "moves": {
+      "secondary": {
+        "kind": "swing",
+        "damage": 2,
+        "arc_degrees": 90,
+        "reach": 2.5,
+        "swing_time": 0.18,
+        "max_targets": 3,
+        "cooldown_ticks": 5
+      }
+    }
   },
   "axe_copper": {
     "name": "Copper Axe",
@@ -399,7 +421,18 @@
     "mining_speed": 1.6,
     "durability": 150,
     "buy_price": 150,
-    "sell_price": 60
+    "sell_price": 60,
+    "moves": {
+      "secondary": {
+        "kind": "swing",
+        "damage": 3,
+        "arc_degrees": 90,
+        "reach": 2.5,
+        "swing_time": 0.18,
+        "max_targets": 3,
+        "cooldown_ticks": 5
+      }
+    }
   },
   "axe_iron": {
     "name": "Iron Axe",
@@ -410,7 +443,18 @@
     "mining_speed": 2.0,
     "durability": 250,
     "buy_price": 300,
-    "sell_price": 120
+    "sell_price": 120,
+    "moves": {
+      "secondary": {
+        "kind": "swing",
+        "damage": 4,
+        "arc_degrees": 90,
+        "reach": 2.5,
+        "swing_time": 0.18,
+        "max_targets": 3,
+        "cooldown_ticks": 5
+      }
+    }
   },
   "shovel_wood": {
     "name": "Wooden Shovel",
@@ -508,30 +552,58 @@
     "category": "tool",
     "tool_type": "sword",
     "tool_tier": 1,
-    "damage": 1,
-    "arc_degrees": 100,
-    "reach": 2.5,
-    "swing_time": 0.2,
-    "max_targets": 6,
-    "cooldown_ticks": 4,
     "durability": 50,
     "buy_price": 30,
-    "sell_price": 12
+    "sell_price": 12,
+    "moves": {
+      "primary": {
+        "kind": "swing",
+        "damage": 1,
+        "arc_degrees": 100,
+        "reach": 2.5,
+        "swing_time": 0.2,
+        "max_targets": 6,
+        "cooldown_ticks": 4
+      },
+      "secondary": {
+        "kind": "stab",
+        "damage": 2,
+        "arc_degrees": 20,
+        "reach": 3.5,
+        "swing_time": 0.18,
+        "max_targets": 2,
+        "cooldown_ticks": 5
+      }
+    }
   },
   "spear_wood": {
     "name": "Wooden Spear",
     "category": "tool",
     "tool_type": "spear",
     "tool_tier": 1,
-    "damage": 1,
-    "arc_degrees": 20,
-    "reach": 4.0,
-    "swing_time": 0.22,
-    "max_targets": 3,
-    "cooldown_ticks": 5,
     "durability": 50,
     "buy_price": 35,
-    "sell_price": 14
+    "sell_price": 14,
+    "moves": {
+      "primary": {
+        "kind": "stab",
+        "damage": 1,
+        "arc_degrees": 20,
+        "reach": 4.0,
+        "swing_time": 0.22,
+        "max_targets": 3,
+        "cooldown_ticks": 5
+      },
+      "secondary": {
+        "kind": "sweep",
+        "damage": 1,
+        "arc_degrees": 140,
+        "reach": 2.0,
+        "swing_time": 0.25,
+        "max_targets": 5,
+        "cooldown_ticks": 6
+      }
+    }
   },
   "bug_parts": {
     "name": "Bug Parts",

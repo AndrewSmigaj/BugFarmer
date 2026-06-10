@@ -36,30 +36,39 @@ func (m *Match) handleMeleeAttack(
 		return
 	}
 
-	// Equipped weapon gates the action; all stats are data (items.json).
+	// MOVE-EXISTENCE is the entire gate: GetMove is nil-receiver-safe, so a bare hand
+	// (""), an Entities-absent id (EquipTool relays arbitrary client strings), a tool
+	// without moves (hoe, net), and an unknown move name all fall out of one expression.
+	// This is also what lets axes alt-attack without being "weapons".
+	moveName := msg.Move
+	if moveName == "" {
+		moveName = "primary"
+	}
 	weapon := state.Entities[player.EquippedTool]
-	if weapon == nil || (weapon.ToolType != "sword" && weapon.ToolType != "spear") {
+	move := weapon.GetMove(moveName)
+	if move == nil {
 		return
 	}
 
-	// Per-weapon cooldown — shared LastToolTick also closes the weapon-swap bypass.
-	if !m.validateToolCooldown(state, player, state.TickCount) {
-		return
-	}
-
-	// Reach: player → click distance (+slack for swing geometry/latency).
+	// Reach BEFORE the cooldown stamp — a too-far click must not eat the cooldown.
 	dx := msg.ClickX - player.WorldX(chunkSize)
 	dy := msg.ClickY - player.WorldY(chunkSize)
-	reach := weapon.Reach + 0.5
+	reach := move.Reach + 0.5
 	if dx*dx+dy*dy > reach*reach {
 		return
 	}
 
-	maxTargets := weapon.MaxTargets
+	// Per-MOVE cooldown on the shared LastToolTick (sword<->hoe<->jab throttle each
+	// other; closes alternating-spam and the weapon-swap bypass).
+	if !m.validateCooldownTicks(player, state.TickCount, move.CooldownTicks) {
+		return
+	}
+
+	maxTargets := move.MaxTargets
 	if maxTargets <= 0 {
 		maxTargets = 1
 	}
-	damage := weapon.Damage
+	damage := move.Damage
 	if damage <= 0 {
 		damage = 1
 	}
@@ -141,6 +150,8 @@ func (m *Match) handleMeleeAttack(
 		AttackerID: playerID,
 		ClickX:     msg.ClickX,
 		ClickY:     msg.ClickY,
+		Weapon:     player.EquippedTool, // self-describing: remote replay needs no eq lookup
+		Move:       moveName,            // resolved name ("" was normalized to "primary")
 		Results:    results,
 	}
 	data, _ := json.Marshal(resultMsg)

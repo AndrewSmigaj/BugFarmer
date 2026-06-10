@@ -237,6 +237,7 @@ type BugCaughtMessage struct {
 type MeleeAttackMessage struct {
 	ClickX float32          `json:"click_x"`
 	ClickY float32          `json:"click_y"`
+	Move   string           `json:"move,omitempty"` // input slot ("primary"/"secondary"); empty = primary
 	Hits   []MeleeSwarmHits `json:"hits"`
 }
 
@@ -256,6 +257,8 @@ type MeleeResultMessage struct {
 	AttackerID string             `json:"attacker_id"`
 	ClickX     float32            `json:"click_x"`
 	ClickY     float32            `json:"click_y"`
+	Weapon     string             `json:"weapon"` // self-describing remote replay: no eq-lookup race
+	Move       string             `json:"move"`   // RESOLVED move name ("" normalized to "primary")
 	Results    []MeleeSwarmResult `json:"results"`
 }
 

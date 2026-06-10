@@ -34,10 +34,22 @@ func combatTestState() *WorldState {
 	state.Presences = map[string]runtime.Presence{}
 	state.ChunkSubs = map[string]map[string]bool{}
 	state.Entities = map[string]*EntityDef{
-		"small_net":  {ToolType: "net", Reach: 2.5, CatchCap: 10, CooldownTicks: 3},
-		"large_net":  {ToolType: "net", Reach: 3.5, CatchCap: 20, CooldownTicks: 3},
-		"sword_wood": {ToolType: "sword", Damage: 1, Reach: 2.5, MaxTargets: 6, CooldownTicks: 4},
-		"spear_wood": {ToolType: "spear", Damage: 1, Reach: 4.0, MaxTargets: 3, CooldownTicks: 5},
+		// Nets stay TOP-LEVEL (one move, own cap semantics + own rate-limit slot)
+		"small_net": {ToolType: "net", Reach: 2.5, CatchCap: 10, CooldownTicks: 3},
+		"large_net": {ToolType: "net", Reach: 3.5, CatchCap: 20, CooldownTicks: 3},
+		// Weapons: combat stats live in MOVES (mirrors prod items.json)
+		"sword_wood": {ToolType: "sword", Moves: map[string]*MoveDef{
+			"primary":   {Kind: "swing", Damage: 1, ArcDegrees: 100, Reach: 2.5, MaxTargets: 6, CooldownTicks: 4},
+			"secondary": {Kind: "stab", Damage: 2, ArcDegrees: 20, Reach: 3.5, MaxTargets: 2, CooldownTicks: 5},
+		}},
+		"spear_wood": {ToolType: "spear", Moves: map[string]*MoveDef{
+			"primary":   {Kind: "stab", Damage: 1, ArcDegrees: 20, Reach: 4.0, MaxTargets: 3, CooldownTicks: 5},
+			"secondary": {Kind: "sweep", Damage: 1, ArcDegrees: 140, Reach: 2.0, MaxTargets: 5, CooldownTicks: 6},
+		}},
+		// Axes alt-attack via a secondary move ONLY (left-click stays breaking)
+		"axe_wood": {ToolType: "axe", Reach: 3.5, Moves: map[string]*MoveDef{
+			"secondary": {Kind: "swing", Damage: 1, ArcDegrees: 90, Reach: 2.5, MaxTargets: 3, CooldownTicks: 5},
+		}},
 	}
 	return state
 }
@@ -323,6 +335,8 @@ func TestMeleeTwoAttackersOneBug(t *testing.T) {
 }
 
 func TestMeleeRejectsNonWeaponTool(t *testing.T) {
+	// The gate is move-existence: a net has NO moves map, so any melee attempt is
+	// rejected (it used to be a tool_type check; same outcome, new reason).
 	state, swarm := meleeState(1)
 	state.Players["p1"].EquippedTool = "small_net"
 	msg := MeleeAttackMessage{ClickX: 11, ClickY: 10,
@@ -330,6 +344,152 @@ func TestMeleeRejectsNonWeaponTool(t *testing.T) {
 	(&Match{}).handleMeleeAttack(nopRuntimeLogger(), nopDispatcher{}, state, msg, "p1", 32)
 	if swarm.Count != 10 {
 		t.Fatal("a net performed a melee attack — tool gate failed")
+	}
+}
+
+// --- Movesets ---
+
+func TestMeleeSecondaryUsesItsMoveStats(t *testing.T) {
+	// Sword secondary: reach 3.5 (primary 2.5 would reject the 3.3 click), damage 2.
+	state := combatTestState()
+	state.Species["fly_common"].MaxHP = 3
+	state.Players["p1"] = testPlayer(10, 10, "sword_wood")
+	swarm := newTestSwarm("s1", 5, 13.3, 10) // 3.3 away
+	state.Swarms["s1"] = swarm
+
+	msg := MeleeAttackMessage{ClickX: 13.3, ClickY: 10, Move: "secondary",
+		Hits: []MeleeSwarmHits{{SwarmID: "s1", BugIDs: []int{0}}}}
+	(&Match{}).handleMeleeAttack(nopRuntimeLogger(), nopDispatcher{}, state, msg, "p1", 32)
+
+	if swarm.BugHP[0] != 1 {
+		t.Fatalf("BugHP[0]=%d, want 1 (3 maxHP − 2 jab damage)", swarm.BugHP[0])
+	}
+}
+
+func TestMeleePrimaryBeyondItsReachRejectedWithoutStamp(t *testing.T) {
+	// The same 3.3-unit click: primary (reach 2.5+0.5) rejects — and must NOT stamp
+	// the cooldown (a far click that eats your cooldown is the bug the reorder fixes);
+	// secondary (3.5+0.5) immediately lands.
+	state := combatTestState()
+	state.Species["fly_common"].MaxHP = 1
+	state.Players["p1"] = testPlayer(10, 10, "sword_wood")
+	swarm := newTestSwarm("s1", 5, 13.3, 10)
+	state.Swarms["s1"] = swarm
+	m := &Match{}
+
+	primary := MeleeAttackMessage{ClickX: 13.3, ClickY: 10, Move: "primary",
+		Hits: []MeleeSwarmHits{{SwarmID: "s1", BugIDs: []int{0}}}}
+	m.handleMeleeAttack(nopRuntimeLogger(), nopDispatcher{}, state, primary, "p1", 32)
+	if swarm.Count != 5 {
+		t.Fatal("primary landed beyond its reach")
+	}
+	if state.Players["p1"].LastToolTick == state.TickCount {
+		t.Fatal("rejected-by-reach swing stamped the cooldown")
+	}
+
+	secondary := MeleeAttackMessage{ClickX: 13.3, ClickY: 10, Move: "secondary",
+		Hits: []MeleeSwarmHits{{SwarmID: "s1", BugIDs: []int{0}}}}
+	m.handleMeleeAttack(nopRuntimeLogger(), nopDispatcher{}, state, secondary, "p1", 32)
+	if swarm.Count != 4 {
+		t.Fatal("secondary at the same distance should land (its reach is 3.5)")
+	}
+}
+
+func TestMeleeUnknownMoveRejectedWithoutStamp(t *testing.T) {
+	state, swarm := meleeState(1)
+	msg := MeleeAttackMessage{ClickX: 11, ClickY: 10, Move: "tertiary",
+		Hits: []MeleeSwarmHits{{SwarmID: "s1", BugIDs: []int{0}}}}
+	(&Match{}).handleMeleeAttack(nopRuntimeLogger(), nopDispatcher{}, state, msg, "p1", 32)
+	if swarm.Count != 10 {
+		t.Fatal("unknown move performed an attack")
+	}
+	if state.Players["p1"].LastToolTick == state.TickCount {
+		t.Fatal("unknown move stamped the cooldown")
+	}
+}
+
+func TestMeleeEmptyMoveDefaultsToPrimary(t *testing.T) {
+	state, swarm := meleeState(1)
+	msg := MeleeAttackMessage{ClickX: 11, ClickY: 10, // Move omitted
+		Hits: []MeleeSwarmHits{{SwarmID: "s1", BugIDs: []int{0}}}}
+	(&Match{}).handleMeleeAttack(nopRuntimeLogger(), nopDispatcher{}, state, msg, "p1", 32)
+	if swarm.Count != 9 {
+		t.Fatal("empty move did not resolve to primary")
+	}
+}
+
+func TestMeleeAxeSecondaryOnly(t *testing.T) {
+	// Axes have ONLY a secondary combat move (left-click stays breaking).
+	state, swarm := meleeState(1)
+	state.Players["p1"].EquippedTool = "axe_wood"
+	m := &Match{}
+
+	primary := MeleeAttackMessage{ClickX: 11, ClickY: 10, Move: "primary",
+		Hits: []MeleeSwarmHits{{SwarmID: "s1", BugIDs: []int{0}}}}
+	m.handleMeleeAttack(nopRuntimeLogger(), nopDispatcher{}, state, primary, "p1", 32)
+	if swarm.Count != 10 {
+		t.Fatal("axe primary melee should be rejected (no such move)")
+	}
+
+	secondary := MeleeAttackMessage{ClickX: 11, ClickY: 10, Move: "secondary",
+		Hits: []MeleeSwarmHits{{SwarmID: "s1", BugIDs: []int{0}}}}
+	m.handleMeleeAttack(nopRuntimeLogger(), nopDispatcher{}, state, secondary, "p1", 32)
+	if swarm.Count != 9 {
+		t.Fatal("axe secondary should damage bugs")
+	}
+}
+
+func TestMeleeSharedCooldownAcrossMoves(t *testing.T) {
+	// primary (cd 4) at tick T, then secondary at T+1: the SHARED LastToolTick gates it
+	// (alternating jab/swing spam is closed); secondary at T+5 lands (its cd is 5).
+	state, swarm := meleeState(1)
+	m := &Match{}
+
+	m.handleMeleeAttack(nopRuntimeLogger(), nopDispatcher{}, state,
+		MeleeAttackMessage{ClickX: 11, ClickY: 10, Move: "primary",
+			Hits: []MeleeSwarmHits{{SwarmID: "s1", BugIDs: []int{0}}}}, "p1", 32)
+	if swarm.Count != 9 {
+		t.Fatal("setup: primary should land")
+	}
+
+	state.TickCount++
+	m.handleMeleeAttack(nopRuntimeLogger(), nopDispatcher{}, state,
+		MeleeAttackMessage{ClickX: 11, ClickY: 10, Move: "secondary",
+			Hits: []MeleeSwarmHits{{SwarmID: "s1", BugIDs: []int{1}}}}, "p1", 32)
+	if swarm.Count != 9 {
+		t.Fatal("secondary inside the shared cooldown should be rejected")
+	}
+
+	state.TickCount += 4 // now T+5 since the stamp
+	m.handleMeleeAttack(nopRuntimeLogger(), nopDispatcher{}, state,
+		MeleeAttackMessage{ClickX: 11, ClickY: 10, Move: "secondary",
+			Hits: []MeleeSwarmHits{{SwarmID: "s1", BugIDs: []int{1}}}}, "p1", 32)
+	if swarm.Count != 8 {
+		t.Fatal("secondary past the cooldown should land")
+	}
+}
+
+func TestMeleeBareHandRejected(t *testing.T) {
+	state, swarm := meleeState(1)
+	state.Players["p1"].EquippedTool = ""
+	msg := MeleeAttackMessage{ClickX: 11, ClickY: 10,
+		Hits: []MeleeSwarmHits{{SwarmID: "s1", BugIDs: []int{0}}}}
+	(&Match{}).handleMeleeAttack(nopRuntimeLogger(), nopDispatcher{}, state, msg, "p1", 32)
+	if swarm.Count != 10 {
+		t.Fatal("bare hand performed a melee attack")
+	}
+}
+
+func TestMeleeUnknownWeaponIdNoPanic(t *testing.T) {
+	// EquipTool relays arbitrary client strings; an Entities-absent id must be a clean
+	// rejection (nil-receiver-safe GetMove), never a panic in the match loop.
+	state, swarm := meleeState(1)
+	state.Players["p1"].EquippedTool = "ghost_sword"
+	msg := MeleeAttackMessage{ClickX: 11, ClickY: 10,
+		Hits: []MeleeSwarmHits{{SwarmID: "s1", BugIDs: []int{0}}}}
+	(&Match{}).handleMeleeAttack(nopRuntimeLogger(), nopDispatcher{}, state, msg, "p1", 32)
+	if swarm.Count != 10 {
+		t.Fatal("unknown weapon id performed a melee attack")
 	}
 }
 

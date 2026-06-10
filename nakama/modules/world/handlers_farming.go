@@ -62,24 +62,30 @@ func (m *Match) handleToolUse(
 	}
 }
 
-// validateToolCooldown checks if enough time has passed since last tool use
-func (m *Match) validateToolCooldown(state *WorldState, player *PlayerState, tick int64) bool {
-	toolDef := state.Entities[player.EquippedTool]
-	if toolDef == nil {
-		return true // No tool = no cooldown
-	}
-
-	cooldown := int64(toolDef.CooldownTicks)
+// validateCooldownTicks is THE cooldown gate: one body enforcing the shared LastToolTick
+// invariant (farming tools, weapon moves — sword<->hoe<->jab all throttle each other,
+// which closes alternating-spam and the weapon-swap bypass). Stamps ONLY on success.
+// cooldownTicks <= 0 falls back to the 3-tick default (0.3s at 10Hz).
+func (m *Match) validateCooldownTicks(player *PlayerState, tick int64, cooldownTicks int) bool {
+	cooldown := int64(cooldownTicks)
 	if cooldown <= 0 {
-		cooldown = 3 // Default 3 ticks (0.3s at 10Hz)
+		cooldown = 3
 	}
-
 	if tick-player.LastToolTick < cooldown {
 		return false
 	}
-
 	player.LastToolTick = tick
 	return true
+}
+
+// validateToolCooldown checks the equipped tool's top-level cooldown (farming tools).
+// Thin delegate over validateCooldownTicks — weapons use their per-MOVE cooldowns.
+func (m *Match) validateToolCooldown(state *WorldState, player *PlayerState, tick int64) bool {
+	toolDef := state.Entities[player.EquippedTool]
+	if toolDef == nil {
+		return true // No tool = no cooldown (and no stamp)
+	}
+	return m.validateCooldownTicks(player, tick, toolDef.CooldownTicks)
 }
 
 // handleHoe converts grass/dirt to garden_plot
@@ -442,7 +448,6 @@ func (m *Match) handleScythe(
 	if !m.validateToolCooldown(state, player, tick) {
 		return
 	}
-	player.LastToolTick = tick
 
 	harvested := 0
 	for dy := -1; dy <= 1; dy++ {

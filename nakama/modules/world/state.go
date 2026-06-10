@@ -278,7 +278,7 @@ func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presenc
 	player.ItemSlots[1] = InventorySlot{ItemID: "pickaxe_wood", Count: 1}
 	player.ItemSlots[2] = InventorySlot{ItemID: "axe_wood", Count: 1}
 	player.ItemSlots[3] = InventorySlot{ItemID: "shovel_wood", Count: 1}
-	player.ItemSlots[4] = InventorySlot{ItemID: "dirt_block", Count: 10}
+	player.ItemSlots[4] = InventorySlot{ItemID: "sword_wood", Count: 1}
 	// Farming tools and seeds
 	player.ItemSlots[5] = InventorySlot{ItemID: "hoe_wood", Count: 1}
 	player.ItemSlots[6] = InventorySlot{
@@ -291,6 +291,9 @@ func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presenc
 	// Torches: HELD for light at night (select the hotbar slot — the personal night light
 	// grows warm and wide), or placed as fixed lamps. Seeds for wheat come from the shop.
 	player.ItemSlots[9] = InventorySlot{ItemID: "torch", Count: 3}
+	// Panel slots (10-19): blocks live here now — also exercises panel drag + cursor-place
+	player.ItemSlots[10] = InventorySlot{ItemID: "dirt_block", Count: 10}
+	player.ItemSlots[11] = InventorySlot{ItemID: "spear_wood", Count: 1}
 	player.EquippedTool = "small_net"
 
 	s.Players[userID] = player
