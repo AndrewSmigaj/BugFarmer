@@ -28,7 +28,7 @@ The kinds of thing in the world, where their data + art live, and how the invent
 | **Placeable** | `placeables.json` | `Resources/Objects/{id}.png` | occupies a grid **footprint** (1+ cells), ownable/bought, can grant farm bonuses. Includes **flat placeables** (rug: `flat:true`, drawn on top of the floor) and **blocks** (dirt/stone/ore/wood/wall — a placeable subtype that tiles into a grid; breakable). |
 | **Plant / flora** (world) | `occupants.json` | `Resources/Objects/{id}.png` | small flora (flowers/herbs/mushrooms/grass) placed **freely anywhere** — sub-cell position, varied scale & shape, NOT grid-locked, NOT one-per-cell, NOT uniform size; blocked only by already-occupied space. Cut → inventory item. |
 | **Free / collectible** | `items.json` (+ world occupant) | reuses the world sprite | placed anywhere, picked up: the bobbing drops — broken blocks, tree-drop wood, fallen fruit, **cut flowers/herbs/mushrooms**. |
-| **Tool / weapon** | `items.json` | `Items/{id}_icon.png` | held & swung; the swing visuals are an animation concern (player-held gear is hand-authored Pipeline B). |
+| **Tool / weapon** | `items.json` | `Items/{id}_icon.png` | held & swung: the SAME icon sprite is animated in-hand by `PlayerToolAnimator` (swing/sweep/stab/pour by `tool_type`) — pipeline A art, NOT pipeline B (only the player body/gear sprites are hand-authored). |
 | **Resource / seed / consumable** | `items.json` | `Items/{id}_icon.png` | wood, fiber, ore, bars, crystal, seeds, potions, fish. |
 | **Bug** | bug data | bug sprite | free-placed in the world via a later **release mechanic**. |
 
@@ -50,11 +50,16 @@ items — flowerpot / vase / sell / craft.)
 **Breaking a block** spawns a floating **mini of the actual block sprite** (not a generic icon) that bobs
 until picked up. Trees are destroyed and drop wood blocks the same way.
 
-**Inventory icons — two paths:**
+**Inventory icons — two paths (IMPLEMENTED):** `EntityDatabase.GetItemSprite(id)` resolves every item
+display sprite (inventory slots, hotbar, drag cursor, AND floating ground drops) through one chain:
+`Objects/{icon_from}` → `Objects/{id}` → `Items/{id}_icon` → `Items/{id}`.
 - **Derived (no art authored):** placeables, blocks, and cut flowers/herbs use a **mini of their world
-  sprite** as the icon (same art as the bobbing drop) — a downscale step, not a separate generation.
-- **Authored (`Items/{id}_icon.png`):** only items with **no world sprite** — raw resources, tools/weapons,
-  seeds, potions, fish.
+  sprite** as the icon (same art as the bobbing drop). Scaling is the consumer's job: UI Images use
+  `preserveAspect`; ground drops fit-box to ≤0.75 cell (`GroundItemVisual`).
+- **Authored (`Items/{id}_icon.png`):** only items with **no world sprite** — raw resources, tools/weapons
+  (drawn 16×16 diagonal: grip bottom-left, head top-right, so one sprite serves as icon AND the in-hand
+  swing art via `PlayerToolAnimator`), seed packets, potions, fish.
+- `icon_from` (optional, items.json) borrows another entity's world sprite when ids mismatch.
 
 **Bonus system & item "type":** decorations/furniture grant small idle farm bonuses with **diminishing
 returns keyed off item `id`** ("a second sofa adds less than the first"; `category` is available as a

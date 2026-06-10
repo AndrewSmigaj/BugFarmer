@@ -37,6 +37,12 @@ Total server egress = Entities × Updates/sec × Bytes × Users
 5. **Click-to-catch** - Players click directly on bug sprites; server validates and broadcasts
 6. **Data-driven species** - Species definitions loaded from config, extensible
 7. **Merge priority** - Swarms prefer to merge over splitting to minimize entity count
+8. **Combat v1 *(IMPLEMENTED)*** - swords/spears damage bugs in a swept sector (per-bug HP:
+   sparse server `SwarmState.BugHP` vs species `max_hp`; weapon stats are items.json data);
+   nets catch via the same sector geometry. Kills remove through the catch path (`RemoveBugs`
+   + `BUG_REMOVED` ledger); HP display rides `MeleeResultMessage` (OpCode 89), never the
+   ledger. Full design + sync contract: `architecture_swarm_sync.md §12`; input routing:
+   `architecture_input.md`.
 
 ---
 

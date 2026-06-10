@@ -617,3 +617,51 @@ source of truth (`static` = no spawn/merge/split, `swarm_size` = fixed count, `s
 seed). There is no separate `debug_mode` flag or `species_debug.json` anymore.
 
 If it triggers, logs immediately show whether it’s epoch mismatch, gap in seq, or tick contract mismatch.
+## 12. Combat v1: per-bug HP + melee (2026-06)
+
+**Design rule: the ledger carries SIM-STATE only.** Bug *removal* (kill = catch = shed) flows
+through `RemoveBugs` + `BUG_REMOVED` influence events exactly like catching — deterministic
+application at the event tick, late-joiner replay included. Per-bug *HP* is **display-only**
+(nothing in the sim reads it, it is not in the state hash) and deliberately does NOT ride the
+ledger: it flows through `MeleeResultMessage` (OpCode 89) + a late-join seed.
+
+**Opcodes:**
+- **88 `MeleeAttack` (C→S)** — ONE message per swing: `{click_x, click_y, hits:[{swarm_id,
+  bug_ids[]}]}`. A swing that intercepts several swarms is one payload (per-swarm messages would
+  trip the per-player rate limit — see the catch-burst fix below).
+- **89 `MeleeResult` (S→C)** — `{attacker_id, click, results:[{swarm_id, damaged:[{bug_id,hp}],
+  killed:[]}]}`. The SOLE per-bug HP display channel + combat cosmetics. `hp` is ABSOLUTE
+  (last-writer-wins converges when two players hit the same bug); clients apply HP from their OWN
+  echo too and skip only the cosmetic flash. `killed[]` is the pop cue/attribution — authoritative
+  removal is the `BUG_REMOVED` event in the same network flush (89 → events → ZoneTickBroadcast).
+
+**Server state:** `SwarmState.BugHP map[int]int` — sparse, stores only damaged bugs (absent =
+species `max_hp`; the `RemovedBugIDs` precedent). Cleanup is centralized **inside `RemoveBugs`**
+(catch, melee kill, and split-shed all clean their entries). At split/merge, HP transfers along the
+deterministic id mappings (shed ids sorted ASCENDING → child `0..n-1`, harvested BEFORE the
+`RemoveBugs(shed)` call; absorbed alive ids ascending → `newBugIDBase+k`).
+
+**Validation (the catch trust model):** the server holds no per-bug positions, so it validates
+alive-ids (`IsBugAlive`), player→click reach (+0.5 slack), per-weapon `cooldown_ticks` via the
+shared `validateToolCooldown`/`LastToolTick` (also closes weapon-swap bypass), and a per-SWING
+`max_targets` cap applied across swarms in sorted order. Hit GEOMETRY (the swept sector,
+`arc_degrees × reach`) is client-detected — `SwarmVisual.GetBugsInSector` queries RENDER transform
+positions (deliberate divergence from catch's sim-position circle; both safe since only validated
+ids matter). One full-sector query at swing START (no per-frame accumulation): zero perceived
+latency, and the animator's sweep trail traces the exact queried arc.
+
+**Client display:** `BugVisual.DisplayHP` (-1 = full) — display-only by contract, persists the
+damaged tint + hit flash, and **rides split/merge bug-moves for free** (the BugVisual object moves
+between swarms). Late joiners seed it from `SwarmData.bug_hp []BugHPEntry` (an ARRAY — JsonUtility
+cannot parse dictionaries), populated only by `sendLateJoinSnapshot` from server-owned `BugHP`;
+subsequent 89s converge it. No InfluenceLog dependency → pruning is irrelevant to HP.
+
+**Catch-burst fix (pre-existing ghost bug):** `handleCatchBug` stamped its rate limit BEFORE
+validation, per message — a single net swing hitting two swarms sent two messages and the second
+was silently dropped, leaving optimistically-removed bugs as client-side ghosts until drift resync.
+Now: tool stats are data-driven (`state.Entities[EquippedTool]` — this also fixed large_net being
+treated as a bare hand), and the rate limit is per-SWING (`LastCatchTick`): same-tick messages
+share the swing's slot.
+
+**Future boundary (BACKLOG):** if bugs ever *behave* differently when damaged (flee at low HP),
+HP becomes sim-state and must move into the deterministic path + state hash.

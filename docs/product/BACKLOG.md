@@ -6,6 +6,21 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Done (recent) — Combat v1 + icon unification + tool animations + mouse facing
+- **Icon unification (architecture_items §0 now real):** every icon/drop = the scaled-down
+  original sprite via one resolution chain in `GetItemSprite` (Objects→Items fallbacks,
+  optional `icon_from`); preserveAspect in UI; ground drops fit-box ≤0.75 cell.
+- **Mouse facing** (run backwards), **PlayerToolAnimator** (in-hand swing/sweep/stab/pour
+  with arc trail; killed the invisible-net sorting bug class), **PlayerInputRouter**
+  (single left-click owner — see `architecture_input.md`).
+- **Combat v1:** per-bug HP (sparse server `BugHP`, display-only client copy on
+  `BugVisual`), sword/spear swept-sector melee (OpCodes 88/89), net = physical sweep with
+  data-driven arc/reach/caps, `bug_parts` kill drops, seed drops from wild flora. Fixed:
+  large_net-as-hand, multi-swarm catch ghosting, stale `EquippedTool`, UI click-through.
+  13 new Go tests; sync-harness regression clean. Design: `architecture_swarm_sync.md §12`.
+- **Remaining for the slice:** Phase 2 art (tool families + recolored tiers + seed packets
+  + 6 art-less items) and in-game verification (Phase 5 checklist in the plan).
+
 ## Done (recent) — FLY LIFECYCLE: feed → reproduce on rotten fruit/compost until the food runs out
 - **The ecology loop is LIVE and verified e2e** (headless, 6-min run): tree drops fruit → rots
   (`ITEM_ROTTED`) → flies feed (`FOOD_CONSUMED` thresholds 75/50/25/0; drain ∝ fly count) → satiation
@@ -271,7 +286,20 @@ scenes. Depends on the two items above.
   fancy, rug_bearskin/fancy-patterns/simple, piano & gilded valuables (data + art via the catalog).
 - Bug behaviour / AI.
 - Authoring brand-new zones.
-- Weapons / tools rework (currently weak).
+- More weapons + loot tables: per-species `kill_drops` schema (v1 hardcodes `bug_parts`),
+  higher weapon tiers via the recolor pipeline, rarity tiers per the weapons brainstorm.
+- **Bug HP affecting BEHAVIOR is a determinism boundary**: today HP is display-only; if
+  damaged bugs should flee/slow, HP must enter the deterministic sim + state hash
+  (architecture_swarm_sync §12).
+- Recolor-sweep the legacy tier families (axe/pickaxe/hoe/shovel steel→diamond already
+  have proven palette-swap art in Items/).
+- Remote players show tool-swing animations (89/BugCaught carry attacker + position; play
+  a swing on the RemoteEntity).
+- Staggered per-bug catch/kill pops along the sweep arc (cosmetic, no protocol change).
+- Client EditMode test infra (first candidates: icon resolution chain, sector math as a
+  pure function).
+- Placement vs Station right-click overlap (both can fire on one click — see
+  architecture_input.md).
 - An enemy.
 - Active/inactive zones: simulate bugs in detail only in zones that have players; cheaply
   aggregate the rest; pause a zone entirely when it has no one. Finer-grained than today's

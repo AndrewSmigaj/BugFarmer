@@ -10,7 +10,8 @@ Bug Farmer is a 2D multiplayer game where players farm bugs, build structures, a
 - [architecture_world.md](architecture_world.md) — zones, chunks, tile/occupant rendering
 - [architecture_bugs.md](architecture_bugs.md) — bug species, AI, lifecycle
 - [architecture_farming.md](architecture_farming.md) — crops, planting, watering, growth
-- [architecture_inventory.md](architecture_inventory.md) / [architecture_items.md](architecture_items.md) / [item_database.md](item_database.md) — items & inventory
+- [architecture_inventory.md](architecture_inventory.md) / [architecture_items.md](architecture_items.md) — items & inventory (item_database.md is DEPRECATED — de-indexed)
+- [architecture_input.md](architecture_input.md) — client input ownership (left-click router, combat/catch/tools)
 - [architecture_entity_sync.md](architecture_entity_sync.md) — entity replication
 - [architecture_swarm_sync.md](architecture_swarm_sync.md) — authoritative-client swarm sim + deterministic followers
 - [game_design.md](game_design.md) — the Game Design Document (GDD)

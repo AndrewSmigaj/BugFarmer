@@ -132,8 +132,19 @@ is a *latent* bug: it only fires the first time the sprite is actually placed in
 ```bash
 python3 tools/fix_sprite_ppu.py        # normalizes every .png.meta to PPU 16
 ```
-(Also: ground-item icons may be `Items/{id}.png` OR `Items/{id}_icon.png` — the client
-falls back from `_icon`; `GroundItemVisual` renders them at 0.75× = ~¾ cell.)
+**Item display sprites are unified** (`EntityDatabase.GetItemSprite`): the resolution chain is
+`Objects/{icon_from}` → `Objects/{id}` → `Items/{id}_icon` → `Items/{id}` — an item WITH world
+art uses it directly (icon = drop = the scaled-down original; no separate icon generation).
+Only items with no world sprite get authored `Items/{id}_icon.png` art. `GroundItemVisual`
+fit-boxes drops to ≤0.75 cell preserving aspect.
+
+**Tool/weapon icon contract:** one **16×16-logical DIAGONAL sprite per tool family** — grip
+bottom-left, head top-right — because the same sprite is the inventory icon AND the in-hand
+swing art (`PlayerToolAnimator` rotates it; the diagonal reads correctly through the arc).
+Tiers are PALETTE RECOLORS of the family's wood base (`tools/recolor_sprites.py`, ramps
+measured from the existing same-shape tier sets in Items/), not separate generations.
+Watering cans are the one non-diagonal exception (3/4 view). Seed icons are APICO-style
+paper SEED PACKETS.
 
 ---
 
