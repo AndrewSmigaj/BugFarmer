@@ -6,4 +6,4 @@ cd "$(dirname "$0")/.."
 docker compose run --rm \
   --volume "$(pwd)/nakama/modules:/backend" \
   --entrypoint sh builder \
-  -c "cd /backend && go test ./world/ -v" 2>&1 | tail -30
+  -c "cd /backend && go test ./world/ -count=1 -v" 2>&1 | tail -30

@@ -92,6 +92,17 @@ namespace BugFarmer.UI
         private void OnSlotClicked(int index, PointerEventData eventData)
         {
             Debug.Log($"[HotbarUI] Slot {index} clicked, button={eventData.button}");
+
+            // Two-mode button (Terraria convention): while the inventory panel is open,
+            // hotbar clicks are ITEM OPERATIONS (drag/drop pick/place/swap — this is what
+            // makes moving items in/out of the hotbar possible); selection while open is
+            // number-keys only. Panel closed = click selects, as always.
+            if (InventoryPanel.IsOpen && DragDropController.Instance != null)
+            {
+                DragDropController.Instance.OnSlotClicked(slots[index], eventData);
+                return;
+            }
+
             if (eventData.button == PointerEventData.InputButton.Left)
             {
                 SelectSlot(index);

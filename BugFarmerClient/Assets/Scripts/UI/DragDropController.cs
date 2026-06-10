@@ -159,10 +159,13 @@ namespace BugFarmer.UI
                         SetSlotData(slot.SlotType, slot.SlotIndex, _cursorItemId, _cursorCount);
                         SendMoveSlot(_sourceType, _sourceIndex, slot.SlotType, slot.SlotIndex, -1);
 
+                        // SWAP: the server deposits the taken item into the ORIGINAL SOURCE
+                        // slot (MoveSlot case 3 swaps in place) — so the cursor's new item
+                        // lives server-side at _sourceIndex, NOT at the clicked slot. Do NOT
+                        // re-point the source here (doing so corrupted every continuation
+                        // after a swap: duplicates + items landing in the wrong slots).
                         _cursorItemId = targetId;
                         _cursorCount = targetCount;
-                        _sourceType = slot.SlotType;
-                        _sourceIndex = slot.SlotIndex;
 
                         UpdateCursorDisplay();
                     }
@@ -275,6 +278,11 @@ namespace BugFarmer.UI
             {
                 slot.item_id = itemId;
                 slot.count = count;
+
+                // Local mutation (no server echo will repaint this) — every cursor
+                // operation funnels through here: pickup, place, swap, half, drop-one,
+                // cancel. Fires the slot events + keeps the server's equipped tool fresh.
+                inventory.NotifyLocalSlotMutation(type, index);
             }
         }
 

@@ -239,6 +239,28 @@ namespace BugFarmer.UI
         }
 
         /// <summary>
+        /// Local (client-only) slot mutations — DragDropController moving stacks onto/off
+        /// the cursor — bypass the server-echo path, so the UI repaint + equipped-tool sync
+        /// the echo tail normally provides must be triggered explicitly. Picking the equipped
+        /// item onto the cursor correctly equips "" server-side (and cancel re-equips it;
+        /// SyncEquippedTool dedupes by value).
+        /// </summary>
+        public void NotifyLocalSlotMutation(SlotType slotType, int index)
+        {
+            if (slotType == SlotType.Bug)
+            {
+                OnBugSlotChanged?.Invoke(index);
+            }
+            else
+            {
+                OnItemSlotChanged?.Invoke(index);
+                if (index == SelectedSlot)
+                    SyncEquippedTool();
+            }
+            OnInventoryChanged?.Invoke();
+        }
+
+        /// <summary>
         /// Clear inventory. Used when leaving world.
         /// </summary>
         public void Clear()

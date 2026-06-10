@@ -45,6 +45,7 @@ func (p *PlayerState) RemoveBugs(slotIndex int, count int) bool {
 	if slot.Count <= 0 {
 		slot.ItemID = ""
 		slot.Count = 0
+		slot.Metadata = nil // stale tool state must not attach to the next item placed here
 	}
 	return true
 }
@@ -103,6 +104,7 @@ func (p *PlayerState) RemoveItem(slotIndex int, count int) bool {
 	if slot.Count <= 0 {
 		slot.ItemID = ""
 		slot.Count = 0
+		slot.Metadata = nil // stale tool state must not attach to the next item placed here
 	}
 	return true
 }
@@ -112,6 +114,14 @@ func (p *PlayerState) RemoveItem(slotIndex int, count int) bool {
 // count: -1 = all, else specific amount
 // Returns true if move was successful.
 func (p *PlayerState) MoveSlot(srcType string, srcIdx int, dstType string, dstIdx int, count int) bool {
+	// Cross-type moves (bug<->item) are invalid. The client blocks them in the UI
+	// (CanPlaceInSlot), but the server must too: a hostile client could otherwise move
+	// bugs into item slots, and handleMoveSlot's echoes would mislabel both slots
+	// (the echo opcode is chosen from SourceType alone).
+	if srcType != dstType {
+		return false
+	}
+
 	// Get source and destination slots
 	var src, dst *InventorySlot
 
@@ -154,6 +164,10 @@ func (p *PlayerState) MoveSlot(srcType string, srcIdx int, dstType string, dstId
 		moveCount = src.Count
 	}
 
+	// Metadata rules (tool state like the watering can's uses): the map travels WITH the
+	// full stack, never with a partial split (stackables carry no metadata today). The map
+	// is a reference — always nil the donor on transfer to avoid aliasing.
+
 	// Case 1: Destination is empty - just move
 	if dst.ItemID == "" {
 		dst.ItemID = src.ItemID
@@ -162,6 +176,8 @@ func (p *PlayerState) MoveSlot(srcType string, srcIdx int, dstType string, dstId
 		if src.Count <= 0 {
 			src.ItemID = ""
 			src.Count = 0
+			dst.Metadata = src.Metadata // full move: tool state follows the item
+			src.Metadata = nil
 		}
 		return true
 	}
@@ -173,6 +189,7 @@ func (p *PlayerState) MoveSlot(srcType string, srcIdx int, dstType string, dstId
 		if src.Count <= 0 {
 			src.ItemID = ""
 			src.Count = 0
+			src.Metadata = nil // dest keeps its own; emptied src must not strand state
 		}
 		return true
 	}
@@ -181,6 +198,7 @@ func (p *PlayerState) MoveSlot(srcType string, srcIdx int, dstType string, dstId
 	if moveCount == src.Count {
 		src.ItemID, dst.ItemID = dst.ItemID, src.ItemID
 		src.Count, dst.Count = dst.Count, src.Count
+		src.Metadata, dst.Metadata = dst.Metadata, src.Metadata
 		return true
 	}
 

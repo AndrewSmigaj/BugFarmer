@@ -1622,6 +1622,7 @@ func (m *Match) handleMoveSlot(
 		SlotIndex: msg.SourceIndex,
 		ItemID:    srcSlot.ItemID,
 		Count:     srcSlot.Count,
+		Metadata:  srcSlot.Metadata, // tool state travels with the move (sendSlotUpdate precedent)
 	}
 	srcData, _ := json.Marshal(srcMsg)
 	dispatcher.BroadcastMessage(opCode, srcData, []runtime.Presence{presence}, nil, true)
@@ -1637,6 +1638,7 @@ func (m *Match) handleMoveSlot(
 		SlotIndex: msg.DestIndex,
 		ItemID:    dstSlot.ItemID,
 		Count:     dstSlot.Count,
+		Metadata:  dstSlot.Metadata,
 	}
 	dstData, _ := json.Marshal(dstMsg)
 	dispatcher.BroadcastMessage(opCode, dstData, []runtime.Presence{presence}, nil, true)
