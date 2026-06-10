@@ -679,3 +679,21 @@ still rides 89 only.
 Related, pre-existing and unchanged by cursor-place: occupant placement reaches clients via the
 chunk-scoped, NON-tick-gated `WorldUpdate` (46) and mutates bug-relevant collision
 (`blocks_bugs`) mid-sim; equal-tick drift detection is the standing backstop.
+
+### 12.2 Player bug release (2026-06)
+Releasing caught bugs (OpCode 29, drag a bug stack onto the cursor → click the world) reuses
+the existing machinery end-to-end:
+- **Join** (a same-species swarm within `max(species.MergeRadius, swarm.Radius)` of the click —
+  the max() matters: fly merge_radius 2.5 < swarm_radius 4.0, so clicking VISIBLE fringe bugs
+  must join, not spawn an overlapping duplicate the merge pass would never fuse): the server
+  applies reproduceSwarm's exact id math (meters untouched) and emits the SAME
+  `SWARM_REPRODUCED` ledger event — deterministic application at the event tick, late-join
+  replay included. Ledger = sim-state rule intact.
+- **New swarm** (open ground): the continuous-spawning path — spawn template + `SwarmsDirty`;
+  live clients spawn deterministic visuals from the SwarmUpdate metadata; the new swarm Thinks
+  the SAME tick so its anchoring leg lands after the SwarmUpdate and before the frontier;
+  late joiners reconcile via MatchJoin's `SwarmsDirty = true` bootstrap. Shares continuous
+  spawning's accepted on-receipt-vs-hash caveat (~sub-1% chance of one self-healing minority
+  resync per creation for a lagging client).
+- Slot decrement echoes to the releaser only; the client's cursor count rides the standard
+  echo interception. BACKLOG: zone swarm-count cap for releases.

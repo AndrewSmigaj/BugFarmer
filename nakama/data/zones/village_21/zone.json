@@ -14,7 +14,7 @@
   "bug_spawning": {
     "species_caps": {
       "fly_common": {
-        "initial": 25,
+        "initial": 40,
         "max": 75,
         "spawn_interval": 45.0
       },

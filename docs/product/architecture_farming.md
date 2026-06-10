@@ -1901,3 +1901,11 @@ docker compose build --no-cache builder && docker compose down && docker compose
 | 2026-06-02 | Claude | Swarm-center determinism: server emits sparse SWARM_SET_TARGET legs (origin+target+speed); clients march centers in fixed-point. Per-tick center firehose removed; SwarmUpdate made event-driven (SwarmsDirty). |
 | 2026-06-02 | Claude | Recovery routed through zone late-join resync (RequestResync → LateJoinSnapshot); removed legacy chunk-scoped FullSnapshot path. Wired frontier-stall + handshake-wait timers. |
 | 2026-06-02 | Claude | Alert roll now integer-only (CounterRng.Chance 3/10) — removed last float from sim hot path. |
+
+## Watering visuals — RESOLVED (2026-06)
+The "watered beds look blocked out" report: the wet-ground flow was correct all along
+(handleWatering swaps garden_plot → garden_plot_wet AND broadcasts the WorldUpdate; the tile
+art exists) — the blocker was the crop-stage PLACEHOLDER sprites (52%-opaque 32×32 labeled
+blobs) that the CropUpdate stage-swap rendered over the cell. All 11 stage sprites
+(tomato/corn 0-3, wheat 0-2) are now real generated art (catalog looks in
+tools/art/catalog/crops.json); the wet tile is visible under the alpha-trimmed plants.

@@ -84,3 +84,13 @@ net catches use the catcher's cached eq; melee replays are self-describing from
 `MeleeResultMessage.weapon`+`move`. Notes: the remote idle sprite renders at a fixed side
 regardless of facing (v1); picking your equipped item onto the drag cursor equips "" — others
 see you bare-handed mid-drag.
+
+## Bug release gesture (2026-06)
+While the drag cursor holds a **BUG stack**, world clicks are the cursor's verb — checked FIRST
+in both router routes: **LEFT = release the whole stack** at the click (deposit-verb parity
+with "left places the stack"), **RIGHT = release one**. Mode-based always-consume; a
+reach-tinted circle (green/red at 4.0) follows the mouse over the world as the affordance.
+Whole-stack sends the CURSOR count (half-pickup remainders stay in the slot). Out-of-reach
+clicks consume (the red circle is the feedback). BreakingController now swings on EVERY
+attempt (throttled at the break cadence) — swinging at air is visible, Terraria-style; axes'
+right-click secondary is a JAB (stab kind).

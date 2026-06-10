@@ -294,6 +294,10 @@ func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presenc
 	// Panel slots (10-19): blocks live here now — also exercises panel drag + cursor-place
 	player.ItemSlots[10] = InventorySlot{ItemID: "dirt_block", Count: 10}
 	player.ItemSlots[11] = InventorySlot{ItemID: "spear_wood", Count: 1}
+	// Decorations for placement testing (the bookshelf's 2x1 footprint exercises
+	// multi-cell cursor-place)
+	player.ItemSlots[12] = InventorySlot{ItemID: "bookshelf", Count: 1}
+	player.ItemSlots[13] = InventorySlot{ItemID: "bench", Count: 1}
 	player.EquippedTool = "small_net"
 
 	s.Players[userID] = player

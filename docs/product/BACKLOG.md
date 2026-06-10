@@ -6,6 +6,23 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Done (recent) — Bug release + axe feel + real crop-stage art + more flies
+- **Release caught bugs** (OpCode 29): bug stack on the drag cursor → click the world —
+  joins a nearby same-species swarm (within max(merge radius, VISUAL radius) — the max()
+  prevents overlapping duplicates) via the same SWARM_REPRODUCED ledger event, or spawns a
+  new swarm at the wall-clamped click (continuous-spawning path). Left=all, right=one;
+  reach-tinted release circle. 12 Go tests. Design: architecture_swarm_sync §12.2.
+- **Axe feel**: swings play at air (the tool no longer reads as broken); axe right-click is
+  a jab. **Crop stage art is REAL now** — the watered-bed "blocked out" bug was the 52%-opaque
+  placeholder blobs; garden_plot_wet was working underneath all along.
+- village_21 flies: initial 25→40. Starter panel: bookshelf + bench (placement testing).
+
+## Later additions from this slice
+- **Zone swarm-count cap for releases**: above N swarms, force add-to-nearest (or reject) —
+  the spam guard for 1-fly swarm flooding. Optional per-player release cooldown
+  (validateCooldownTicks one-liner).
+- Release-moment feedback polish (a "−N flies" popup like CatchPopup).
+
 ## Done (recent) — Inventory polish + cursor-place + weapon movesets + equip visibility
 - **Hotbar drag/drop** (two-mode button: panel open = item ops) + the LIVE swap-source
   corruption fix + server cross-type guard + Metadata travels with moves/swaps and clears on
