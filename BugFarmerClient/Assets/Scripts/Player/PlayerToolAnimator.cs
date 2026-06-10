@@ -99,13 +99,44 @@ namespace BugFarmer.Player
 
         /// <summary>
         /// Play the tool animation for the equipped tool toward aimDir. Plays even on a miss.
-        /// arcDegrees/duration of 0 use the tool_type profile defaults (combat passes item data).
+        /// arcDegrees/duration of 0 use the tool_type profile defaults (combat passes item
+        /// data). kindOverride lets a MOVE pick its animation independent of the tool_type
+        /// profile (a sword jab plays Stab on a "sword"): "swing" | "stab" | "sweep".
         /// </summary>
         public void Play(string toolType, Sprite toolSprite, Vector2 aimDir,
-                         float arcDegrees = 0f, float duration = 0f)
+                         float arcDegrees = 0f, float duration = 0f, string kindOverride = null)
         {
             if (toolSprite == null || string.IsNullOrEmpty(toolType)) return;
             if (!Profiles.TryGetValue(toolType, out var profile)) return;
+
+            if (!string.IsNullOrEmpty(kindOverride))
+            {
+                AnimKind? kind = kindOverride switch
+                {
+                    "swing" => AnimKind.Swing,
+                    "stab" => AnimKind.Stab,
+                    "sweep" => AnimKind.Sweep,
+                    _ => null
+                };
+                if (kind == null)
+                {
+                    // Typo'd data must be VISIBLE, not silently the profile default
+                    Debug.LogWarning($"[ToolAnimator] Unknown move kind '{kindOverride}' for {toolType}");
+                }
+                else if (kind != profile.Kind)
+                {
+                    // Shallow per-call profile with the overridden kind. Stab on a
+                    // non-spear profile (sword jab) has no authored StabReach — derive one.
+                    profile = new Profile
+                    {
+                        Kind = kind.Value,
+                        Duration = profile.Duration,
+                        ArcDegrees = profile.ArcDegrees,
+                        Offset = profile.Offset,
+                        StabReach = profile.StabReach > 0f ? profile.StabReach : profile.Offset + 0.65f
+                    };
+                }
+            }
 
             if (_routine != null) StopCoroutine(_routine);
 

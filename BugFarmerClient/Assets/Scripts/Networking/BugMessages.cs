@@ -145,6 +145,7 @@ namespace BugFarmer.Networking
     {
         public float click_x;
         public float click_y;
+        public string move;        // input slot ("primary"/"secondary"); empty = primary
         public MeleeSwarmHits[] hits;
     }
 
@@ -168,6 +169,8 @@ namespace BugFarmer.Networking
         public string attacker_id;
         public float click_x;
         public float click_y;
+        public string weapon;      // attacker's weapon id — self-describing remote replay
+        public string move;        // RESOLVED move name (server normalizes ""->"primary")
         public MeleeSwarmResult[] results;
     }
 

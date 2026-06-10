@@ -57,20 +57,25 @@ namespace BugFarmer.Player
             {
                 UpdateGhostPreview();
 
-                // Right-click to place (never through UI)
-                if (Input.GetMouseButtonDown(1) &&
-                    !(UnityEngine.EventSystems.EventSystem.current != null &&
-                      UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()))
-                {
-                    TryPlace();
-                }
-
-                // R to rotate
+                // R to rotate (right-click placement arrives via PlayerInputRouter)
                 if (Input.GetKeyDown(KeyCode.R))
                 {
                     _placementDirection = (_placementDirection + 1) % 4;
                 }
             }
+        }
+
+        /// <summary>
+        /// Handle a routed right-click (PlayerInputRouter owns right-click). MODE-BASED, not
+        /// success-based: returns true whenever placing mode is active — even when the spot
+        /// is invalid (red ghost) — because a misclicked placement must NEVER fall through
+        /// to a weapon jab. Returns false only when not in placing mode at all.
+        /// </summary>
+        public bool TryHandleRightClick()
+        {
+            if (!_isPlacing) return false;
+            TryPlace();
+            return true;
         }
 
         private void OnSlotChanged(int slot) => UpdatePlacementMode();

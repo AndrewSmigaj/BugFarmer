@@ -18,7 +18,6 @@ namespace BugFarmer.Player
     {
         [SerializeField] private float maxInteractDistance = 2.5f;
 
-        private Camera _mainCamera;
 
         // Open panel state
         private bool _open;
@@ -32,7 +31,6 @@ namespace BugFarmer.Player
 
         private void Start()
         {
-            _mainCamera = Camera.main;
             var net = NetworkManager.Instance;
             if (net?.Socket != null)
                 net.Socket.ReceivedMatchState += OnMatchState;
@@ -54,40 +52,40 @@ namespace BugFarmer.Player
             _meters[new Vector2Int(msg.gx, msg.gy)] = (msg.input, msg.fill, msg.capacity);
         }
 
-        private void Update()
+        /// <summary>
+        /// Handle a routed right-click (PlayerInputRouter owns right-click; this controller
+        /// no longer polls Input). Returns TRUE on any menu STATE TRANSITION — opening,
+        /// toggling, OR closing because the click landed elsewhere — so the click is
+        /// CONSUMED and never also jabs/places ("closed a menu and accidentally placed a
+        /// chest" is the bug class this prevents). Returns false only when there was
+        /// nothing to interact with and nothing to close.
+        /// </summary>
+        public bool TryHandleRightClick(Vector3 mouseWorld)
         {
-            // Right-click opens/closes the station menu (never through UI)
-            if (!Input.GetMouseButtonDown(1)) return;
-            if (UnityEngine.EventSystems.EventSystem.current != null &&
-                UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()) return;
-            if (_mainCamera == null) return;
-
-            Vector3 mouseWorld = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            mouseWorld.z = 0;
-
             var hit = Physics2D.OverlapPoint(mouseWorld);
             var target = hit != null ? hit.GetComponent<OccupantClickTarget>() : null;
             if (target == null)
             {
-                _open = false;
-                return;
+                if (_open) { _open = false; return true; } // closing consumes the click
+                return false;
             }
 
             var def = EntityDatabase.Get(target.OccupantId);
             if (def?.World == null || def.World.InteractionType != "station")
             {
-                _open = false;
-                return;
+                if (_open) { _open = false; return true; }
+                return false;
             }
 
-            // Range check (client-side convenience; server re-validates)
+            // Range check (client-side convenience; server re-validates). An out-of-range
+            // station click falls through (router footnote: may jab/place) — accepted.
             var player = FindObjectOfType<PlayerController>();
             if (player != null)
             {
                 var d = (Vector2)player.transform.position -
                         new Vector2(target.AnchorCell.x + 0.5f, target.AnchorCell.y + 0.5f);
                 if (d.sqrMagnitude > maxInteractDistance * maxInteractDistance)
-                    return;
+                    return false;
             }
 
             _cell = target.AnchorCell;
@@ -95,6 +93,7 @@ namespace BugFarmer.Player
             _accepts = def.World.StationAccepts;
             _capacity = def.World.StationCapacity;
             _open = !_open;
+            return true;
         }
 
         private bool IsAccepted(string itemId)

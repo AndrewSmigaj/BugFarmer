@@ -60,6 +60,21 @@ namespace BugFarmer.Data
             public float LightIntensity = 1f;
         }
 
+        /// <summary>
+        /// One weapon move (an input slot's attack). The kind maps to a PlayerToolAnimator
+        /// profile + a hit geometry; the server validates only move-existence + reach.
+        /// </summary>
+        public class MoveDef
+        {
+            public string Kind;       // "swing" | "stab" | "sweep"
+            public int Damage;
+            public float ArcDegrees;
+            public float Reach;
+            public float SwingTime;
+            public int MaxTargets;
+            public int CooldownTicks;
+        }
+
         public class EntityDef
         {
             public string Id;
@@ -84,13 +99,21 @@ namespace BugFarmer.Data
             public float MiningSpeed;
             public int Durability;
 
-            // Weapon / sweep properties (swords, spears, nets): the hit/catch area is a
-            // swept sector (ArcDegrees x Reach); caps are per-swing.
-            public int Damage;
+            // NET sweep properties (top-level — nets have one move; weapons use Moves).
+            // The catch area is a swept sector (ArcDegrees x Reach); cap is per-swing.
             public float ArcDegrees;
             public float SwingTime;
-            public int MaxTargets;
             public int CatchCap;
+
+            // WEAPON movesets keyed by input slot ("primary" = left, "secondary" = right).
+            public Dictionary<string, MoveDef> Moves;
+
+            /// <summary>Resolve a weapon move; null for non-weapons / unknown names.</summary>
+            public MoveDef GetMove(string name)
+            {
+                if (Moves == null || string.IsNullOrEmpty(name)) return null;
+                return Moves.TryGetValue(name, out var m) ? m : null;
+            }
 
             // Consumable
             public string Effect;
@@ -193,10 +216,8 @@ namespace BugFarmer.Data
                 Reach = data["reach"]?.Value<float>() ?? 0f,
                 MiningSpeed = data["mining_speed"]?.Value<float>() ?? 1f,
                 Durability = data["durability"]?.Value<int>() ?? 0,
-                Damage = data["damage"]?.Value<int>() ?? 0,
                 ArcDegrees = data["arc_degrees"]?.Value<float>() ?? 0f,
                 SwingTime = data["swing_time"]?.Value<float>() ?? 0f,
-                MaxTargets = data["max_targets"]?.Value<int>() ?? 0,
                 CatchCap = data["catch_cap"]?.Value<int>() ?? 0,
                 Effect = data["effect"]?.Value<string>(),
                 PlacesCrop = data["places_crop"]?.Value<string>(),
@@ -215,6 +236,26 @@ namespace BugFarmer.Data
                 entity.SpriteH = spriteH.Value;
             else if (entityType != "item")
                 Debug.LogWarning($"[EntityDatabase] {id} missing sprite_h");
+
+            // Parse weapon moves if present (per-move combat stats keyed by input slot)
+            if (data["moves"] is JObject movesObj)
+            {
+                entity.Moves = new Dictionary<string, MoveDef>();
+                foreach (var moveProp in movesObj.Properties())
+                {
+                    if (moveProp.Value is not JObject mv) continue;
+                    entity.Moves[moveProp.Name] = new MoveDef
+                    {
+                        Kind = mv["kind"]?.Value<string>() ?? "swing",
+                        Damage = mv["damage"]?.Value<int>() ?? 1,
+                        ArcDegrees = mv["arc_degrees"]?.Value<float>() ?? 90f,
+                        Reach = mv["reach"]?.Value<float>() ?? 2f,
+                        SwingTime = mv["swing_time"]?.Value<float>() ?? 0.2f,
+                        MaxTargets = mv["max_targets"]?.Value<int>() ?? 1,
+                        CooldownTicks = mv["cooldown_ticks"]?.Value<int>() ?? 3
+                    };
+                }
+            }
 
             // Parse world data if present
             var worldData = data["world"] as JObject;

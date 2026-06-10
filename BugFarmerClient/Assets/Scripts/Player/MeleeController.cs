@@ -30,8 +30,12 @@ namespace BugFarmer.Player
             _animator = GetComponent<PlayerToolAnimator>();
         }
 
-        /// <summary>Handle a routed left-click. Returns true if the swing was performed.</summary>
-        public bool TryHandleClick()
+        /// <summary>
+        /// Handle a routed click with the named MOVE ("primary" = left, "secondary" = right).
+        /// The gate mirrors the server's: the equipped item must HAVE the move.
+        /// Returns true if the swing was performed.
+        /// </summary>
+        public bool TryHandleClick(string moveName = "primary")
         {
             var world = WorldManager.Instance;
             if (world?.CurrentMatch == null) return false;
@@ -40,11 +44,13 @@ namespace BugFarmer.Player
 
             string toolId = InventoryManager.Instance?.GetEquippedToolId();
             var weapon = EntityDatabase.Get(toolId);
-            if (weapon == null || (weapon.ToolType != "sword" && weapon.ToolType != "spear"))
+            var move = weapon?.GetMove(moveName);
+            if (move == null)
                 return false;
 
-            // Client mirrors the server's cooldown_ticks gate (validateToolCooldown).
-            float cooldown = weapon.CooldownTicks > 0 ? weapon.CooldownTicks / 10f : 0.3f;
+            // Client mirrors the server's per-move cooldown on one shared swing timer
+            // (matching the server's shared LastToolTick: jab/swing throttle each other).
+            float cooldown = move.CooldownTicks > 0 ? move.CooldownTicks / 10f : 0.3f;
             if (Time.time - _lastSwingTime < cooldown)
                 return false;
 
@@ -59,8 +65,8 @@ namespace BugFarmer.Player
             Vector2 aim = clickPos - origin;
             if (aim.sqrMagnitude < 0.0001f) aim = Vector2.right;
 
-            float reach = weapon.Reach > 0 ? weapon.Reach : 2f;
-            float arc = weapon.ArcDegrees > 0 ? weapon.ArcDegrees : 90f;
+            float reach = move.Reach > 0 ? move.Reach : 2f;
+            float arc = move.ArcDegrees > 0 ? move.ArcDegrees : 90f;
             float aimDeg = Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg;
 
             // You swing toward the cursor regardless of its distance (Terraria-style);
@@ -71,9 +77,10 @@ namespace BugFarmer.Player
             // Single full-arc query at swing START (render positions — what the player sees).
             var hits = SwarmManager.Instance?.GetBugsInSector(origin, aimDeg, arc, reach);
 
-            // Swing plays even on a complete miss.
+            // Swing plays even on a complete miss; the MOVE picks the animation kind
+            // (a sword jab plays Stab on a "sword" profile).
             _animator?.Play(weapon.ToolType, EntityDatabase.GetItemSprite(toolId), aim,
-                            arc, weapon.SwingTime);
+                            arc, move.SwingTime, move.Kind);
             _lastSwingTime = Time.time;
 
             if (hits == null || hits.Count == 0)
@@ -82,7 +89,7 @@ namespace BugFarmer.Player
             // Truncate to the per-SWING cap in the same deterministic order the server
             // applies (swarm id ascending, bug ids ascending) so client expectation and
             // server outcome agree.
-            int cap = weapon.MaxTargets > 0 ? weapon.MaxTargets : 1;
+            int cap = move.MaxTargets > 0 ? move.MaxTargets : 1;
             var entries = new List<MeleeSwarmHits>();
             int taken = 0;
             foreach (var hit in hits.OrderBy(h => h.swarmId))
@@ -106,6 +113,7 @@ namespace BugFarmer.Player
             {
                 click_x = strikePos.x,
                 click_y = strikePos.y,
+                move = moveName,
                 hits = entries.ToArray()
             };
             _ = socket.SendMatchStateAsync(world.CurrentMatch.Id, OpCodes.MeleeAttack,

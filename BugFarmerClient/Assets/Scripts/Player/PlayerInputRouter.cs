@@ -6,26 +6,32 @@ using BugFarmer.UI;
 namespace BugFarmer.Player
 {
     /// <summary>
-    /// The single owner of the LEFT-CLICK. Exactly one controller handles any click, chosen
-    /// by the equipped tool's type — replacing the old pattern of four controllers each
-    /// polling Input and guessing (which is how "every click near a swarm hand-catches even
-    /// with a pickaxe equipped" happened).
+    /// The single owner of BOTH mouse buttons' world clicks. Exactly one controller handles
+    /// any click — replacing the old pattern of controllers each polling Input and guessing
+    /// (which is how "every click near a swarm hand-catches even with a pickaxe equipped"
+    /// and the Placement+Station right-click double-fire happened).
     ///
-    /// Contract:
+    /// LEFT-CLICK (resolved ONCE on mouse-down by equipped tool_type; never re-dispatched
+    /// mid-hold):
     ///  - UI always wins: clicks over UI reach nobody.
-    ///  - The route is resolved ONCE on mouse-down and never re-dispatched mid-hold.
     ///  - If Breaking is the resolved owner, the hold is LATCHED to Breaking: its held path
     ///    runs every frame until release, then StopBreaking(). (Preserves hold-to-break;
     ///    prevents held-click machine-gunning of single-fire actions.)
-    ///  - Right-click stays with PlacementController/StationController (interact/place is a
-    ///    different verb family).
+    /// RIGHT-CLICK (priority chain — the verb depends on world context, not just the tool):
+    ///  UI guard → Station (a station under the cursor wins; CLOSING an open menu also
+    ///  CONSUMES the click) → Placement (mode-based: consumes whenever placing mode is
+    ///  active, even on a red ghost) → weapon "secondary" move (sword jab, axe combat
+    ///  swing, spear sweep).
     /// </summary>
     public class PlayerInputRouter : MonoBehaviour
     {
         private CatchingController _catching;
         private ToolUseController _toolUse;
         private BreakingController _breaking;
-        private MeleeController _melee; // lands with combat; router tolerates absence
+        private MeleeController _melee;
+        private PlacementController _placement;
+        private StationController _station;
+        private Camera _mainCamera;
 
         private bool _holdLatchedToBreaking;
 
@@ -36,11 +42,14 @@ namespace BugFarmer.Player
             _toolUse = GetComponent<ToolUseController>();
             _breaking = GetComponent<BreakingController>();
             _melee = GetComponent<MeleeController>();
+            _placement = GetComponent<PlacementController>();
+            _station = GetComponent<StationController>();
+            _mainCamera = Camera.main;
         }
 
         private void Update()
         {
-            // An in-progress break owns the button until release.
+            // An in-progress break owns the left button until release.
             if (_holdLatchedToBreaking)
             {
                 if (Input.GetMouseButton(0))
@@ -55,9 +64,14 @@ namespace BugFarmer.Player
                 return;
             }
 
-            if (!Input.GetMouseButtonDown(0))
-                return;
+            if (Input.GetMouseButtonDown(0))
+                RouteLeftClick();
+            else if (Input.GetMouseButtonDown(1))
+                RouteRightClick();
+        }
 
+        private void RouteLeftClick()
+        {
             // UI always wins.
             if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
                 return;
@@ -69,12 +83,7 @@ namespace BugFarmer.Player
             {
                 case "sword":
                 case "spear":
-                    if (_melee != null)
-                    {
-                        _melee.TryHandleClick();
-                        return;
-                    }
-                    LatchBreaking(); // until MeleeController exists
+                    _melee?.TryHandleClick("primary");
                     return;
 
                 case "net":
@@ -96,6 +105,35 @@ namespace BugFarmer.Player
                     LatchBreaking();
                     return;
             }
+        }
+
+        private void RouteRightClick()
+        {
+            // UI always wins.
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+                return;
+
+            if (_mainCamera == null)
+            {
+                _mainCamera = Camera.main;
+                if (_mainCamera == null) return;
+            }
+            Vector3 mouseWorld = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            mouseWorld.z = 0;
+
+            // 1. Stations: interact beats attack/place; closing an open menu consumes too.
+            if (_station != null && _station.TryHandleRightClick(mouseWorld))
+                return;
+
+            // 2. Placement (equipped placeable, or the cursor-place mode): mode-based
+            //    consume — a misclicked red-ghost placement must never fall through to a jab.
+            if (_placement != null && _placement.TryHandleRightClick())
+                return;
+
+            // 3. Weapon secondary move (sword jab, axe combat swing, spear sweep).
+            string toolId = InventoryManager.Instance?.GetEquippedToolId() ?? "";
+            if (EntityDatabase.Get(toolId)?.GetMove("secondary") != null)
+                _melee?.TryHandleClick("secondary");
         }
 
         private void LatchBreaking()
