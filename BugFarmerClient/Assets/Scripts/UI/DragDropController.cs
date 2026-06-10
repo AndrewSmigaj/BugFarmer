@@ -335,6 +335,8 @@ namespace BugFarmer.UI
                 if (HasCursorItem)
                 {
                     cursorIcon.sprite = EntityDatabase.GetItemSprite(_cursorItemId);
+                    // World-art display sprites have arbitrary aspect ratios — letterbox.
+                    cursorIcon.preserveAspect = true;
                     cursorIcon.enabled = cursorIcon.sprite != null;
                 }
                 else

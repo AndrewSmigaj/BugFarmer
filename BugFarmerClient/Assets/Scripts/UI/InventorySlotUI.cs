@@ -50,6 +50,9 @@ namespace BugFarmer.UI
             {
                 var sprite = EntityDatabase.GetItemSprite(slot.item_id);
                 iconImage.sprite = sprite;
+                // Display sprites are now scaled-down world art with arbitrary aspect ratios
+                // (a tall plant letterboxes in the square slot instead of stretching).
+                iconImage.preserveAspect = true;
                 iconImage.enabled = sprite != null;
             }
 

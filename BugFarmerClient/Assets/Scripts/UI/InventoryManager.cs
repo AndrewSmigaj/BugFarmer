@@ -154,6 +154,7 @@ namespace BugFarmer.UI
             OnInventoryChanged?.Invoke();
             OnCoinsChanged?.Invoke(Coins);
             OnSelectedSlotChanged?.Invoke(SelectedSlot);
+            SyncEquippedTool();
         }
 
         /// <summary>
@@ -194,6 +195,10 @@ namespace BugFarmer.UI
 
             OnItemSlotChanged?.Invoke(msg.slot_index);
             OnInventoryChanged?.Invoke();
+
+            // Slot contents changed under the selection → keep the server's equipped tool fresh.
+            if (msg.slot_index == SelectedSlot)
+                SyncEquippedTool();
         }
 
         /// <summary>
@@ -209,7 +214,20 @@ namespace BugFarmer.UI
 
             SelectedSlot = slot;
             OnSelectedSlotChanged?.Invoke(slot);
-            SendEquipTool(GetEquippedToolId());
+            SyncEquippedTool();
+        }
+
+        // The server's player.EquippedTool must track the equipped item's VALUE, not just the
+        // selected index — dragging a tool into the selected slot (or consuming the held stack)
+        // changes what's equipped without a slot switch. Resend whenever the value changes.
+        private string _lastSentToolId;
+
+        private void SyncEquippedTool()
+        {
+            string toolId = GetEquippedToolId();
+            if (toolId == _lastSentToolId) return;
+            _lastSentToolId = toolId;
+            SendEquipTool(toolId);
         }
 
         /// <summary>

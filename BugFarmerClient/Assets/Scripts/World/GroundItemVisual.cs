@@ -66,10 +66,19 @@ namespace BugFarmer.World
             spriteRenderer.sortingLayerName = "Occupants";
             spriteRenderer.sortingOrder = -Mathf.RoundToInt(worldPosition.y);
 
-            // ~0.9-cell ground items — clearly visible without rivaling occupants. (The old 2x
-            // dated from when item icons imported at the Unity-default PPU 100 and rendered as
-            // near-invisible dots; icons are now normalized to the world PPU 16.)
-            transform.localScale = new Vector3(0.9f, 0.9f, 1f);
+            // Fit-box: drops are scaled-down ORIGINAL sprites (often full world art now, e.g.
+            // a 16x24 plant), so uniformly fit within 0.75 cell preserving aspect — clearly a
+            // pickup, never rivaling placed occupants. Never upscale small icons above 1x.
+            const float maxCells = 0.75f;
+            float scale = 1f;
+            if (sprite != null)
+            {
+                // World size in cells at the sprite's own PPU (icons & objects are PPU 16 = 1 cell).
+                float w = sprite.rect.width / sprite.pixelsPerUnit;
+                float h = sprite.rect.height / sprite.pixelsPerUnit;
+                scale = Mathf.Min(1f, maxCells / Mathf.Max(w, h));
+            }
+            transform.localScale = new Vector3(scale, scale, 1f);
 
             // Randomize bob phase so items don't sync
             bobOffset = Random.Range(0f, Mathf.PI * 2f);

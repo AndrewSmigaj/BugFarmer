@@ -91,6 +91,13 @@ namespace BugFarmer.Data
             // Seed properties - places a crop when used on garden_plot
             public string PlacesCrop;
 
+            // Optional: borrow another entity's Objects/ sprite as this item's display
+            // sprite (icon/drop) when the ids mismatch. See GetItemSprite.
+            public string IconFrom;
+
+            // Tool-use cooldown in server ticks (10Hz); 0 = server default (3).
+            public int CooldownTicks;
+
             // World presence (null for inventory-only items)
             public WorldData World;
         }
@@ -181,7 +188,9 @@ namespace BugFarmer.Data
                 Durability = data["durability"]?.Value<int>() ?? 0,
                 CatchRadius = data["catch_radius"]?.Value<float>() ?? 0f,
                 Effect = data["effect"]?.Value<string>(),
-                PlacesCrop = data["places_crop"]?.Value<string>()
+                PlacesCrop = data["places_crop"]?.Value<string>(),
+                IconFrom = data["icon_from"]?.Value<string>(),
+                CooldownTicks = data["cooldown_ticks"]?.Value<int>() ?? 0
             };
 
             // Parse sprite dimensions (required for occupants/placeables)
@@ -414,8 +423,13 @@ namespace BugFarmer.Data
         #region Sprite Loading
 
         /// <summary>
-        /// Get the inventory icon sprite for an item.
-        /// Convention: Resources/Items/{id}_icon
+        /// Get the DISPLAY sprite for an item — used by inventory slots, the hotbar, the
+        /// drag cursor, and floating ground drops. The item's visual IS its world sprite,
+        /// scaled down by the consumer (architecture_items.md §0): resolution order is
+        ///   1. Objects/{icon_from}   (explicit borrow for id mismatches, from items.json)
+        ///   2. Objects/{id}          (placeables/blocks/cut flora — the original object art)
+        ///   3. Items/{id}_icon       (authored icons: tools, seeds, raw resources)
+        ///   4. Items/{id}            (legacy plain files: apple, orange, rotten_*)
         /// </summary>
         public static Sprite GetItemSprite(string id)
         {
@@ -426,10 +440,13 @@ namespace BugFarmer.Data
             if (_spriteCache.TryGetValue(cacheKey, out var cached))
                 return cached;
 
-            // Icons use the {id}_icon naming convention, but some item art (apple, orange,
-            // rotten_*) ships as plain Items/{id}.png — fall back so dropped fruit isn't
-            // rendered sprite-less (invisible ground items).
-            var sprite = Resources.Load<Sprite>($"Items/{id}_icon");
+            Sprite sprite = null;
+            if (_entities.TryGetValue(id, out var def) && !string.IsNullOrEmpty(def.IconFrom))
+                sprite = Resources.Load<Sprite>($"Objects/{def.IconFrom}");
+            if (sprite == null)
+                sprite = Resources.Load<Sprite>($"Objects/{id}");
+            if (sprite == null)
+                sprite = Resources.Load<Sprite>($"Items/{id}_icon");
             if (sprite == null)
                 sprite = Resources.Load<Sprite>($"Items/{id}");
             if (sprite != null)

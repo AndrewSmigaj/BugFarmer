@@ -13,9 +13,6 @@ namespace BugFarmer.Player
     public class ToolUseController : MonoBehaviour
     {
         [Header("Settings")]
-        [Tooltip("Time between tool use messages (cooldown)")]
-        [SerializeField] private float toolUseCooldown = 0.3f;
-
         [Tooltip("Maximum distance from player to use tool")]
         [SerializeField] private float maxToolDistance = 4f;
 
@@ -38,10 +35,6 @@ namespace BugFarmer.Player
 
         private void TryUseTool()
         {
-            // Check cooldown
-            if (Time.time - _lastUseTime < toolUseCooldown)
-                return;
-
             // Check if we have a farming tool equipped
             string toolId = InventoryManager.Instance?.GetEquippedToolId();
             if (string.IsNullOrEmpty(toolId))
@@ -57,6 +50,12 @@ namespace BugFarmer.Player
                 Debug.LogWarning($"[ToolUseController] Tool definition not found for: {toolId}");
                 return;
             }
+
+            // Cooldown is the tool's own data (cooldown_ticks at the server's 10Hz), so the
+            // client throttle agrees with validateToolCooldown server-side. 0 = server default.
+            float cooldown = toolDef.CooldownTicks > 0 ? toolDef.CooldownTicks / 10f : 0.3f;
+            if (Time.time - _lastUseTime < cooldown)
+                return;
 
             string toolType = toolDef.ToolType;
             Debug.Log($"[ToolUseController] Tool {toolId} has type: {toolType}");
