@@ -3362,7 +3362,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BugFarmer.Player.BreakingController
   breakClickInterval: 0.5
   maxBreakDistance: 2
-  bugPriorityRadius: 1.5
 --- !u!114 &1941498162
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3391,7 +3390,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79726fe54254a6e4283dd88c1d4dc185, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BugFarmer.Player.ToolUseController
-  toolUseCooldown: 0.3
   maxToolDistance: 4
 --- !u!114 &1941498172
 MonoBehaviour:

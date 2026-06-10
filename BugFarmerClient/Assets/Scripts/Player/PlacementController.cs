@@ -57,8 +57,10 @@ namespace BugFarmer.Player
             {
                 UpdateGhostPreview();
 
-                // Right-click to place
-                if (Input.GetMouseButtonDown(1))
+                // Right-click to place (never through UI)
+                if (Input.GetMouseButtonDown(1) &&
+                    !(UnityEngine.EventSystems.EventSystem.current != null &&
+                      UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()))
                 {
                     TryPlace();
                 }

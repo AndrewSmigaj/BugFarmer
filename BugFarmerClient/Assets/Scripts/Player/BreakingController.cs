@@ -7,8 +7,9 @@ using BugFarmer.UI;
 namespace BugFarmer.Player
 {
     /// <summary>
-    /// Handles player breaking/mining of world objects.
-    /// Right-click on a breakable occupant to mine it.
+    /// Handles player breaking/mining of world objects (hold left-click on a breakable
+    /// occupant). Input arrives via PlayerInputRouter, which latches the held click to this
+    /// controller — routing by equipped tool type lives in the router, not here.
     /// Server validates tool requirements and tracks breaking progress.
     /// </summary>
     public class BreakingController : MonoBehaviour
@@ -20,66 +21,30 @@ namespace BugFarmer.Player
         [Tooltip("Maximum distance from player to break an object (Terraria-style reach)")]
         [SerializeField] private float maxBreakDistance = 8f;
 
-        [Tooltip("If a bug is within this radius of the cursor, the click catches instead of breaking (matches netCatchRadius)")]
-        [SerializeField] private float bugPriorityRadius = 1.5f;
-
         private Vector2Int? _breakingCell;
         private float _lastBreakTime;
         private bool _isBreaking;
         private Camera _mainCamera;
+        private PlayerToolAnimator _animator;
 
         private void Start()
         {
             _mainCamera = Camera.main;
+            _animator = GetComponent<PlayerToolAnimator>();
         }
 
-        private void Update()
-        {
-            // Left-click to break/mine when holding a tool
-            if (Input.GetMouseButton(0))
-            {
-                TryBreak();
-            }
-            else if (_isBreaking)
-            {
-                StopBreaking();
-            }
-        }
-
-        private void TryBreak()
+        /// <summary>
+        /// Run one held frame of breaking (called by PlayerInputRouter while the latched
+        /// left-click is held). The router guarantees tool routing and the UI guard.
+        /// </summary>
+        public void HoldBreak()
         {
             if (_mainCamera == null)
                 return;
 
-            // Skip if equipped tool is a farming tool (handled by ToolUseController)
-            string toolId = InventoryManager.Instance?.GetEquippedToolId();
-            if (!string.IsNullOrEmpty(toolId))
-            {
-                var toolDef = EntityDatabase.Get(toolId);
-                if (toolDef != null && (toolDef.ToolType == "hoe" || toolDef.ToolType == "watering_can" || toolDef.ToolType == "scythe"))
-                {
-                    StopBreaking();
-                    return;
-                }
-            }
-
             // Get world position under mouse
             Vector3 mouseWorld = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
             mouseWorld.z = 0;
-
-            // LEFT-CLICK PRIORITY: catching beats breaking. If a bug is under the cursor
-            // (within net-catch range), this click belongs to the CatchingController — don't
-            // smash the flower/fruit the bug is sitting on.
-            var swarmManager = BugFarmer.Entities.SwarmManager.Instance;
-            if (swarmManager != null)
-            {
-                var bugs = swarmManager.GetBugsAtPosition(mouseWorld, bugPriorityRadius);
-                if (bugs != null && bugs.Count > 0)
-                {
-                    StopBreaking();
-                    return;
-                }
-            }
 
             // Find occupant collider at mouse position
             Collider2D hitCollider = Physics2D.OverlapPoint(mouseWorld);
@@ -140,15 +105,24 @@ namespace BugFarmer.Player
 
             _isBreaking = true;
 
-            // Send break message at interval
+            // Send break message at interval (one tool swing per hit, not per held frame)
             if (Time.time - _lastBreakTime >= breakClickInterval)
             {
                 SendBreakRequest(anchorCell);
                 _lastBreakTime = Time.time;
+
+                var toolDef = EntityDatabase.Get(InventoryManager.Instance?.GetEquippedToolId() ?? "");
+                if (_animator != null && toolDef?.ToolType != null)
+                {
+                    Vector2 aim = (Vector2)(mouseWorld - transform.position);
+                    _animator.Play(toolDef.ToolType,
+                        EntityDatabase.GetItemSprite(toolDef.Id), aim);
+                }
             }
         }
 
-        private void StopBreaking()
+        /// <summary>Clear breaking state (called by the router on click release/cancel).</summary>
+        public void StopBreaking()
         {
             _isBreaking = false;
             _breakingCell = null;

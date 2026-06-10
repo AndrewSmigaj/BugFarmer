@@ -10,7 +10,10 @@ namespace BugFarmer.Player
     /// <summary>
     /// Handles catching bugs. Two modes:
     /// - Hand catch (no net): Click near swarm, catch exactly 1
-    /// - Net swing (net equipped): Terraria-style arc swing, AoE catch multiple
+    /// - Net swing (net equipped): arc swing, AoE catch multiple
+    /// Input arrives via PlayerInputRouter (which owns tool routing + the UI guard);
+    /// the swing visual is PlayerToolAnimator (sorting owned in code — the old SmallNet
+    /// prefab rendered invisibly on the Default sorting layer).
     /// </summary>
     public class CatchingController : MonoBehaviour
     {
@@ -19,12 +22,6 @@ namespace BugFarmer.Player
         [SerializeField] private float handReach = 2.0f;
         [SerializeField] private float netReach = 4.5f;
 
-        [Header("Net Animation")]
-        [SerializeField] private GameObject netSwingPrefab;
-        [SerializeField] private float swingDuration = 0.15f;
-        [SerializeField] private float swingArc = 90f; // Total arc in degrees
-        [SerializeField] private float netOffset = 0.5f; // Distance from player center
-
         [Header("Catch Indicator")]
         [SerializeField] private float netCatchRadius = 1.5f;
         [SerializeField] private float handCatchRadius = 0.5f;
@@ -32,48 +29,14 @@ namespace BugFarmer.Player
         [SerializeField] private float indicatorDuration = 0.2f;
 
         private float _lastCatchTime;
-        private Transform _netTransform;
-        private SpriteRenderer _netVisual;
-        private bool _isSwinging;
         private LineRenderer _catchIndicator;
-
-        /// <summary>
-        /// Check if a net is equipped via hotbar selection.
-        /// </summary>
-        private bool HasNetEquipped
-        {
-            get
-            {
-                var inventory = UI.InventoryManager.Instance;
-                if (inventory == null) return false;
-                var toolId = inventory.GetEquippedToolId();
-                return toolId == "small_net" || toolId == "large_net";
-            }
-        }
+        private Camera _mainCamera;
+        private PlayerToolAnimator _animator;
 
         private void Start()
         {
-            // Create net swing visual as child (disabled initially)
-            if (netSwingPrefab != null)
-            {
-                var netObj = Instantiate(netSwingPrefab, transform);
-                _netTransform = netObj.transform;
-                _netTransform.localPosition = Vector3.zero;
-                _netVisual = netObj.GetComponent<SpriteRenderer>();
-                if (_netVisual != null)
-                {
-                    _netVisual.enabled = false;
-                    Debug.Log($"[Catch] Net visual created: {_netVisual.sprite?.name ?? "NO SPRITE"}");
-                }
-                else
-                {
-                    Debug.LogWarning("[Catch] Net prefab has no SpriteRenderer!");
-                }
-            }
-            else
-            {
-                Debug.LogWarning("[Catch] No net prefab assigned!");
-            }
+            _mainCamera = Camera.main;
+            _animator = GetComponent<PlayerToolAnimator>();
 
             // Create catch radius indicator (circle using LineRenderer)
             CreateCatchIndicator();
@@ -127,130 +90,100 @@ namespace BugFarmer.Player
             _catchIndicator.enabled = false;
         }
 
-        private void Update()
+        /// <summary>
+        /// Handle a routed left-click. netMode is resolved by PlayerInputRouter from the
+        /// equipped tool's type. Returns true if any bugs were caught — the router uses
+        /// this for the bare-hand fallthrough (no bug under cursor → the click breaks).
+        /// </summary>
+        public bool TryHandleClick(bool netMode)
         {
-            if (_isSwinging) return;
-
             var world = WorldManager.Instance;
             if (world?.CurrentMatch == null)
             {
-                if (Input.GetMouseButtonDown(0))
-                    Debug.Log("[Catch] No match - connect to world first");
-                return;
+                Debug.Log("[Catch] No match - connect to world first");
+                return false;
             }
 
             var socket = NetworkManager.Instance?.Socket;
             if (socket == null || !socket.IsConnected)
             {
-                if (Input.GetMouseButtonDown(0))
-                    Debug.Log("[Catch] Socket not connected");
-                return;
+                Debug.Log("[Catch] Socket not connected");
+                return false;
             }
 
-            if (Input.GetMouseButtonDown(0) && CanCatch())
+            if (!CanCatch())
+                return false;
+
+            if (_mainCamera == null)
             {
-                Vector2 clickPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                Vector2 playerPos = transform.position;
-                float dist = (clickPos - playerPos).magnitude;
-
-                Debug.Log($"[Catch] Click at {clickPos}, player at {playerPos}, dist={dist:F2}, netEquipped={HasNetEquipped}");
-
-                // Check reach based on mode
-                float maxReach = HasNetEquipped ? netReach : handReach;
-                if (dist > maxReach)
-                {
-                    Debug.Log($"[Catch] Too far! dist={dist:F2} > maxReach={maxReach}");
-                    return;
-                }
-
-                float catchRadius = HasNetEquipped ? netCatchRadius : handCatchRadius;
-
-                // CLIENT-SIDE: Detect bugs at click position (returns IDs)
-                var swarmManager = SwarmManager.Instance;
-                List<CatchResult> catches = null;
-                if (swarmManager != null)
-                {
-                    catches = swarmManager.GetBugsAtPosition(clickPos, catchRadius);
-
-                    // Optimistic removal - remove bugs immediately for instant feedback
-                    foreach (var result in catches)
-                    {
-                        var swarm = swarmManager.GetSwarm(result.swarmId);
-                        swarm?.RemoveBugsById(result.bugIds);
-                    }
-                }
-
-                // Play animation (even on miss)
-                if (HasNetEquipped)
-                {
-                    Debug.Log("[Catch] Playing net swing animation");
-                    Vector2 direction = (clickPos - playerPos).normalized;
-                    StartCoroutine(NetSwingRoutine(direction));
-                    StartCoroutine(ShowCatchIndicator(clickPos, catchRadius));
-                }
-
-                // Send bug IDs to server for validation
-                if (catches != null)
-                {
-                    foreach (var result in catches)
-                    {
-                        var msg = new CatchBugMessage
-                        {
-                            click_x = clickPos.x,
-                            click_y = clickPos.y,
-                            swarm_id = result.swarmId,
-                            bug_ids = result.bugIds
-                        };
-                        Debug.Log($"[Catch] Sent: swarm={result.swarmId}, bugIds={result.bugIds.Length}");
-                        SendCatchRequest(msg, world.CurrentMatch.Id, socket);
-                    }
-                }
-
-                _lastCatchTime = Time.time;
+                _mainCamera = Camera.main;
+                if (_mainCamera == null) return false;
             }
+
+            Vector2 clickPos = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            Vector2 playerPos = transform.position;
+            float dist = (clickPos - playerPos).magnitude;
+
+            // Check reach based on mode
+            float maxReach = netMode ? netReach : handReach;
+            if (dist > maxReach)
+            {
+                Debug.Log($"[Catch] Too far! dist={dist:F2} > maxReach={maxReach}");
+                return false;
+            }
+
+            float catchRadius = netMode ? netCatchRadius : handCatchRadius;
+
+            // CLIENT-SIDE: Detect bugs at click position (returns IDs)
+            var swarmManager = SwarmManager.Instance;
+            List<CatchResult> catches = null;
+            if (swarmManager != null)
+            {
+                catches = swarmManager.GetBugsAtPosition(clickPos, catchRadius);
+
+                // Optimistic removal - remove bugs immediately for instant feedback
+                foreach (var result in catches)
+                {
+                    var swarm = swarmManager.GetSwarm(result.swarmId);
+                    swarm?.RemoveBugsById(result.bugIds);
+                }
+            }
+
+            // Play animation (even on miss) — the net icon swept in-hand by the animator
+            if (netMode)
+            {
+                Vector2 direction = (clickPos - playerPos).normalized;
+                string toolId = UI.InventoryManager.Instance?.GetEquippedToolId();
+                _animator?.Play("net", Data.EntityDatabase.GetItemSprite(toolId), direction);
+                StartCoroutine(ShowCatchIndicator(clickPos, catchRadius));
+            }
+
+            // Send bug IDs to server for validation
+            bool caughtAny = false;
+            if (catches != null)
+            {
+                foreach (var result in catches)
+                {
+                    caughtAny = true;
+                    var msg = new CatchBugMessage
+                    {
+                        click_x = clickPos.x,
+                        click_y = clickPos.y,
+                        swarm_id = result.swarmId,
+                        bug_ids = result.bugIds
+                    };
+                    Debug.Log($"[Catch] Sent: swarm={result.swarmId}, bugIds={result.bugIds.Length}");
+                    SendCatchRequest(msg, world.CurrentMatch.Id, socket);
+                }
+            }
+
+            _lastCatchTime = Time.time;
+            return caughtAny;
         }
 
         private bool CanCatch()
         {
             return Time.time - _lastCatchTime >= catchCooldown;
-        }
-
-        private IEnumerator NetSwingRoutine(Vector2 swingDirection)
-        {
-            if (_netVisual == null || _netTransform == null) yield break;
-
-            _isSwinging = true;
-            _netVisual.enabled = true;
-
-            // Calculate base angle from direction
-            float baseAngle = Mathf.Atan2(swingDirection.y, swingDirection.x) * Mathf.Rad2Deg;
-            float halfArc = swingArc / 2f;
-
-            float elapsed = 0f;
-
-            while (elapsed < swingDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = elapsed / swingDuration;
-
-                // Swing from start of arc to end of arc
-                float currentAngle = Mathf.Lerp(baseAngle + halfArc, baseAngle - halfArc, t);
-
-                // Position net at offset from player in current direction
-                float radAngle = currentAngle * Mathf.Deg2Rad;
-                Vector2 offset = new Vector2(Mathf.Cos(radAngle), Mathf.Sin(radAngle)) * netOffset;
-                _netTransform.localPosition = offset;
-
-                // Rotate net to point outward
-                _netTransform.localRotation = Quaternion.Euler(0, 0, currentAngle - 90f);
-
-                yield return null;
-            }
-
-            _netVisual.enabled = false;
-            _netTransform.localPosition = Vector3.zero;
-            _netTransform.localRotation = Quaternion.identity;
-            _isSwinging = false;
         }
 
         private void SendCatchRequest(CatchBugMessage msg, string matchId, ISocket socket)

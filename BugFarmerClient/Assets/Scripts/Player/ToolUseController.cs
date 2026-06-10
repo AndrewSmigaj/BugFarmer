@@ -18,32 +18,21 @@ namespace BugFarmer.Player
 
         private float _lastUseTime;
         private Camera _mainCamera;
+        private PlayerToolAnimator _animator;
 
         private void Start()
         {
             _mainCamera = Camera.main;
+            _animator = GetComponent<PlayerToolAnimator>();
         }
 
-        private void Update()
+        /// <summary>
+        /// Handle a routed left-click with a farming tool equipped. PlayerInputRouter
+        /// guarantees the tool_type (hoe/watering_can/scythe) and the UI guard.
+        /// </summary>
+        public void TryHandleClick()
         {
-            // Left-click when holding a farming tool
-            if (Input.GetMouseButtonDown(0))
-            {
-                TryUseTool();
-            }
-        }
-
-        private void TryUseTool()
-        {
-            // Check if we have a farming tool equipped
             string toolId = InventoryManager.Instance?.GetEquippedToolId();
-            if (string.IsNullOrEmpty(toolId))
-            {
-                Debug.Log("[ToolUseController] No tool equipped");
-                return;
-            }
-
-            // Get tool definition to check if it's a farming tool
             var toolDef = EntityDatabase.Get(toolId);
             if (toolDef == null)
             {
@@ -56,16 +45,6 @@ namespace BugFarmer.Player
             float cooldown = toolDef.CooldownTicks > 0 ? toolDef.CooldownTicks / 10f : 0.3f;
             if (Time.time - _lastUseTime < cooldown)
                 return;
-
-            string toolType = toolDef.ToolType;
-            Debug.Log($"[ToolUseController] Tool {toolId} has type: {toolType}");
-
-            // Only handle farming tools - other tools use BreakingController
-            if (toolType != "hoe" && toolType != "watering_can" && toolType != "scythe")
-            {
-                Debug.Log($"[ToolUseController] Tool type {toolType} not handled (use BreakingController)");
-                return;
-            }
 
             if (_mainCamera == null)
                 return;
@@ -85,9 +64,16 @@ namespace BugFarmer.Player
             if (Vector3.Distance(transform.position, cellWorld) > maxToolDistance)
                 return;
 
-            // Send tool use message
+            // Send tool use message + swing the tool in-hand (plays even if the server
+            // rejects — the swing is feedback for the attempt, like the net)
             SendToolUse(cellPos);
             _lastUseTime = Time.time;
+
+            if (_animator != null)
+            {
+                Vector2 aim = (Vector2)(mouseWorld - transform.position);
+                _animator.Play(toolDef.ToolType, EntityDatabase.GetItemSprite(toolDef.Id), aim);
+            }
         }
 
         private void SendToolUse(Vector2Int cellPos)

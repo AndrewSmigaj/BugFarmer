@@ -153,7 +153,3 @@ MonoBehaviour:
   catchCooldown: 0.2
   handReach: 2
   netReach: 4.5
-  netSwingPrefab: {fileID: 1418093535466043949, guid: 027df635f9e8e0b44b64261575b2dd83, type: 3}
-  swingDuration: 0.15
-  swingArc: 90
-  netOffset: 0.5

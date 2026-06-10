@@ -21,6 +21,7 @@ namespace BugFarmer.Player
 
         private Rigidbody2D _rb;
         private SpriteRenderer _spriteRenderer;
+        private Camera _mainCamera;
 
         // Movement sending state
         private const float SendInterval = 0.1f; // 100ms
@@ -42,6 +43,14 @@ namespace BugFarmer.Player
             {
                 _spriteRenderer.sortingLayerName = "Occupants";
             }
+
+            // Code-attached player systems (controllers are split between Player.prefab and
+            // scene-added components — attaching these in code sidesteps both):
+            // the in-hand tool animator and the single left-click owner.
+            if (GetComponent<PlayerToolAnimator>() == null)
+                gameObject.AddComponent<PlayerToolAnimator>();
+            if (GetComponent<PlayerInputRouter>() == null)
+                gameObject.AddComponent<PlayerInputRouter>();
         }
 
         private void Update()
@@ -71,8 +80,9 @@ namespace BugFarmer.Player
 
             Velocity = input * moveSpeed;
 
-            // Update facing direction based on dominant axis
-            UpdateFacing(horizontal, vertical);
+            // Face the MOUSE, not the movement direction (aim-driven: press A while the
+            // mouse points right and you run backwards). Movement never sets facing.
+            UpdateFacingFromMouse();
 
             // Send position to server
             TrySendMovement();
@@ -135,22 +145,27 @@ namespace BugFarmer.Player
             return new Vector2(pos.x + offX, pos.y + offY);
         }
 
-        private void UpdateFacing(float h, float v)
+        private void UpdateFacingFromMouse()
         {
-            // Only update facing if there's input
-            if (Mathf.Abs(h) < 0.01f && Mathf.Abs(v) < 0.01f)
+            // Freeze facing while the cursor is over UI — browsing the inventory
+            // shouldn't spin the player.
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
                 return;
 
-            Direction newFacing;
-            // Prioritize horizontal if both pressed equally, else use dominant
-            if (Mathf.Abs(h) >= Mathf.Abs(v))
+            if (_mainCamera == null)
             {
-                newFacing = h > 0 ? Direction.Right : Direction.Left;
+                _mainCamera = Camera.main;
+                if (_mainCamera == null) return;
             }
-            else
-            {
-                newFacing = v > 0 ? Direction.Up : Direction.Down;
-            }
+
+            Vector3 mouseWorld = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            float dx = mouseWorld.x - transform.position.x;
+            float dy = mouseWorld.y - transform.position.y;
+
+            // Quadrant by dominant axis (4-direction sprites); ties go horizontal.
+            Direction newFacing = Mathf.Abs(dx) >= Mathf.Abs(dy)
+                ? (dx > 0 ? Direction.Right : Direction.Left)
+                : (dy > 0 ? Direction.Up : Direction.Down);
 
             if (newFacing != Facing)
             {
@@ -177,11 +192,15 @@ namespace BugFarmer.Player
             if (socket == null || !socket.IsConnected) return;
 
             bool isMoving = Velocity.sqrMagnitude > 0.01f;
-            bool stateChanged = isMoving != _wasMoving || Facing != _lastSentFacing;
             bool intervalElapsed = Time.time - _lastSendTime >= SendInterval;
 
-            // Send on: state change OR interval elapsed while moving
-            if (stateChanged || (isMoving && intervalElapsed))
+            // Move-state changes send immediately; facing-only changes are rate-limited to
+            // SendInterval (mouse-driven facing flips quadrants constantly while standing
+            // still — don't spam a packet per flip).
+            bool moveStateChanged = isMoving != _wasMoving;
+            bool facingChanged = Facing != _lastSentFacing;
+
+            if (moveStateChanged || (isMoving && intervalElapsed) || (facingChanged && intervalElapsed))
             {
                 SendMovement(world.CurrentMatch.Id, socket);
                 _wasMoving = isMoving;

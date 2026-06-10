@@ -56,8 +56,10 @@ namespace BugFarmer.Player
 
         private void Update()
         {
-            // Right-click opens/closes the station menu
+            // Right-click opens/closes the station menu (never through UI)
             if (!Input.GetMouseButtonDown(1)) return;
+            if (UnityEngine.EventSystems.EventSystem.current != null &&
+                UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()) return;
             if (_mainCamera == null) return;
 
             Vector3 mouseWorld = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
