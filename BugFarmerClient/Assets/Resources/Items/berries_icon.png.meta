@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 14e529df84a7046409dbcc497d27c47f
+guid: 7bed150c7317da84b8ed52285e640f71
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 966850310879116799
-    second: hoe_wood_0
+      213: -456267250675397203
+    second: berries_icon_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: hoe_wood_0
+      name: berries_icon_0
       rect:
         serializedVersion: 2
-        x: 1
+        x: 0
         y: 0
-        width: 12
-        height: 15
+        width: 32
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: ffdfce23c31fa6d00800000000000000
-      internalID: 966850310879116799
+      spriteID: dad49d85a530ba9f0800000000000000
+      internalID: -456267250675397203
       vertices: []
       indices: 
       edges: []
@@ -138,7 +138,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      hoe_wood_0: 966850310879116799
+      berries_icon_0: -456267250675397203
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
