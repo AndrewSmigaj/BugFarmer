@@ -49,7 +49,12 @@ python3 tools/publish_entities.py
 ```bash
 python3 tools/gen_sprites.py --source <placeables|occupants|items|terrain> --keys <id> --dry-run  # read the prompt, no spend
 python3 tools/gen_sprites.py --source <...> --keys <id>      # generate
-python3 tools/pixelclean.py                                  # downscale + quantize in place
+python3 tools/pixelclean.py                                  # downscale + quantize in place (Tiles+Objects)
+```
+**Item icons clean differently** — opt-in per key, harder quantize (a bare `pixelclean.py`
+run never touches `Items/`, which holds finished icons a re-clean would mangle):
+```bash
+python3 tools/pixelclean.py --k 8 --items <id1,id2>
 ```
 
 ## 5. Preview
@@ -60,7 +65,14 @@ PNG, and run the acceptance check.
 - **Derived (no art to author):** placeables, blocks, and cut flowers/herbs reuse their world sprite as the
   icon (a mini) — same art as the bobbing drop. Do NOT generate a separate `_icon.png` for these.
 - **Authored:** only items with NO world sprite (raw resources, tools/weapons, seeds, potions) get
-  `Resources/Items/<id>_icon.png` — `--source items` + an icon catalog row.
+  `Resources/Items/<id>_icon.png` — `--source items` + a catalog row with **`"family": "icon"`**
+  (selects the item-icon prompt: transparent background, fills the frame, Stardew-style).
+- **Hand tools/weapons follow the DIAGONAL contract** (grip bottom-left, head top-right) — the same
+  sprite is the in-hand swing art (`PlayerToolAnimator`). Say it in the look ("...HANDLE running to
+  the bottom-left"). Watering cans are the 3/4-view exception.
+- **Tool TIERS are recolors, not generations**: author + generate only the `{family}_wood` base, then
+  `python3 tools/recolor_sprites.py --family <family>` derives every `{family}_{tier}` in items.json
+  (material ramps live inline in that script). Adding a new tier = items.json entry + re-run recolor.
 
 ## Acceptance checklist (per sprite)
 - Reads instantly as the intended object at game zoom; correct silhouette.

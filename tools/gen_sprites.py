@@ -103,6 +103,8 @@ MINERAL_ART_DIRECTION = _join(_STYLE.get("mineral", {}).get("art_direction", "")
 MINERAL_DESIGN = _join(_STYLE.get("mineral", {}).get("design", ""))
 CREATURE_ART_DIRECTION = _join(_STYLE.get("creature", {}).get("art_direction", ""))
 CREATURE_DESIGN = _join(_STYLE.get("creature", {}).get("design", ""))
+ICON_ART_DIRECTION = _join(_STYLE.get("icon", {}).get("art_direction", ""))
+ICON_DESIGN = _join(_STYLE.get("icon", {}).get("design", ""))
 
 OBJECT_DESC = {k: e["look"] for k, e in _OBJCAT.items() if "look" in e}
 OBJECT_MATS = {k: e["materials"] for k, e in {**_OBJCAT, **_BLOCKCAT}.items() if "materials" in e}
@@ -302,6 +304,18 @@ def build_prompt(key, ent):
             spatial_block(pivot, category),
             "",
             CREATURE_DESIGN,
+        ]
+    elif family == "icon":                           # inventory item icon (tools: diagonal contract)
+        parts = [
+            "Create a 2D game sprite (single inventory ITEM ICON, pixel art).",
+            "",
+            ICON_ART_DIRECTION,
+            "",
+            f"Asset: {name}",
+            f"Category: {category}",
+            *desc_lines,
+            "",
+            ICON_DESIGN,
         ]
     elif is_natural:
         parts = [

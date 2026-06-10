@@ -146,6 +146,20 @@ measured from the existing same-shape tier sets in Items/), not separate generat
 Watering cans are the one non-diagonal exception (3/4 view). Seed icons are APICO-style
 paper SEED PACKETS.
 
+**Icon workflow** (catalog rows take `"family": "icon"` — the item-icon prompt family in
+`style.json`; `pixelclean --items` is OPT-IN so a bare run can never mangle finished icons):
+```bash
+python3 tools/gen_sprites.py --source items --keys <ids> [--force]
+python3 tools/pixelclean.py --k 8 --items <ids>          # 32px, 8-color quantize
+python3 tools/recolor_sprites.py --family pickaxe        # derive {family}_{tier} icons
+python3 tools/fix_sprite_ppu.py                          # AFTER Unity has imported once
+```
+The recolor's head zone is GEOMETRIC (top-right of the diagonal) — `--head-frac` tightens it,
+`--tolerance` widens ramp matching (the shovel's pale blade needed `--tolerance 140
+--head-frac 0.12`). `fix_sprite_ppu.py` also normalizes `filterMode: 0` (Point — pixel art
+must not import Bilinear); metas only exist after Unity's first import, so the order is
+generate → focus Unity (import) → fix_sprite_ppu → focus Unity (reimport).
+
 ---
 
 ## Placement: the footprint-X rule

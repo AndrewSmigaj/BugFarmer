@@ -35,6 +35,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(ROOT, "BugFarmerClient", "Assets", "Resources")
 TILES_IN = os.path.join(RES, "Tiles")
 OBJS_IN = os.path.join(RES, "Objects")
+ITEMS_IN = os.path.join(RES, "Items")
 ENT_DIR = os.path.join(ROOT, "nakama", "data", "entities")
 # Clean IN PLACE: overwrite the canonical game sprites under Resources/{Tiles,Objects}
 # (single source of truth, no side dir to hand-copy). Re-running is ~idempotent: the
@@ -49,7 +50,7 @@ TILE_PX = 32     # cleaned tile resolution (square)
 
 def load_meta():
     meta = {}
-    for fn in ("occupants.json", "placeables.json"):
+    for fn in ("occupants.json", "placeables.json", "items.json"):
         p = os.path.join(ENT_DIR, fn)
         if not os.path.exists(p):
             continue
@@ -168,6 +169,11 @@ def main():
                     help="one shared palette across the whole set (more cohesive, less true color)")
     ap.add_argument("--k", type=int, default=20, help="colors per asset (or total if --shared)")
     ap.add_argument("--compare", default="", help="comma ids to also render before/after")
+    ap.add_argument("--items", default="",
+                    help="comma item ids: ALSO clean Resources/Items/{id}_icon.png (or {id}.png). "
+                         "OPT-IN ONLY — never sweeps all of Items/, which holds legacy already-"
+                         "clean 16px icons that a re-clean would upscale and mangle. Items have "
+                         "no sprite_w/h, so they clean to the 16-logical default = 32px.")
     args = ap.parse_args()
 
     meta = load_meta()
@@ -175,15 +181,28 @@ def main():
     os.makedirs(os.path.join(OUT, "Objects"), exist_ok=True)
 
     jobs = []  # (key, src, out, tw, th, is_tile)
-    for src in sorted(glob.glob(os.path.join(TILES_IN, "*.png"))):
-        key = os.path.splitext(os.path.basename(src))[0]
-        base = key.split("_v")[0]
-        tw, th = target_size(base, meta, True)
-        jobs.append((key, src, os.path.join(OUT, "Tiles", key + ".png"), tw, th, True))
-    for src in sorted(glob.glob(os.path.join(OBJS_IN, "*.png"))):
-        key = os.path.splitext(os.path.basename(src))[0]
-        tw, th = target_size(key, meta, False)
-        jobs.append((key, src, os.path.join(OUT, "Objects", key + ".png"), tw, th, False))
+    if args.items:
+        # EXCLUSIVE items mode: clean only the named freshly-generated icons; do not
+        # touch Tiles/Objects (or the legacy Items/) in the same run.
+        for key in [k.strip() for k in args.items.split(",") if k.strip()]:
+            src = os.path.join(ITEMS_IN, key + "_icon.png")
+            if not os.path.exists(src):
+                src = os.path.join(ITEMS_IN, key + ".png")
+            if not os.path.exists(src):
+                print(f"  !! no Items png for '{key}' — skipped")
+                continue
+            tw, th = target_size(key, meta, False)
+            jobs.append((key, src, src, tw, th, False))  # clean in place
+    else:
+        for src in sorted(glob.glob(os.path.join(TILES_IN, "*.png"))):
+            key = os.path.splitext(os.path.basename(src))[0]
+            base = key.split("_v")[0]
+            tw, th = target_size(base, meta, True)
+            jobs.append((key, src, os.path.join(OUT, "Tiles", key + ".png"), tw, th, True))
+        for src in sorted(glob.glob(os.path.join(OBJS_IN, "*.png"))):
+            key = os.path.splitext(os.path.basename(src))[0]
+            tw, th = target_size(key, meta, False)
+            jobs.append((key, src, os.path.join(OUT, "Objects", key + ".png"), tw, th, False))
 
     shared_pal = None
     if args.shared:

@@ -21,7 +21,11 @@ FOLDERS = ["Objects", "Items"]
 PPU = "16"
 
 dry = "--dry-run" in sys.argv
-pattern = re.compile(r"(spritePixelsToUnits:\s*)(\d+)")
+ppu_pat = re.compile(r"(spritePixelsToUnits:\s*)(\d+)")
+# Pixel art must import POINT-filtered (filterMode: 0); Unity's default is Bilinear (1),
+# which renders new icons/sprites blurry. NOTE: metas only exist after Unity has imported
+# the png once — generate → open/focus Unity (import) → run this → Unity reimports on focus.
+filt_pat = re.compile(r"(filterMode:\s*)(-?\d+)")
 
 total = fixed = 0
 for folder in FOLDERS:
@@ -33,15 +37,25 @@ for folder in FOLDERS:
             continue
         path = os.path.join(base, name)
         text = open(path).read()
-        m = pattern.search(text)
+        m = ppu_pat.search(text)
         if not m:
             continue
         total += 1
-        if m.group(2) != PPU:
+        f = filt_pat.search(text)
+        bad_ppu = m.group(2) != PPU
+        bad_filt = f is not None and f.group(2) != "0"
+        if bad_ppu or bad_filt:
             fixed += 1
             if dry:
-                print(f"  would fix {folder}/{name}: {m.group(2)} -> {PPU}")
+                what = " ".join(filter(None, [
+                    f"PPU {m.group(2)}->{PPU}" if bad_ppu else "",
+                    f"filterMode {f.group(2)}->0" if bad_filt else ""]))
+                print(f"  would fix {folder}/{name}: {what}")
             else:
-                open(path, "w").write(pattern.sub(rf"\g<1>{PPU}", text, count=1))
+                if bad_ppu:
+                    text = ppu_pat.sub(rf"\g<1>{PPU}", text, count=1)
+                if bad_filt:
+                    text = filt_pat.sub(r"\g<1>0", text, count=1)
+                open(path, "w").write(text)
 
-print(f"{'would fix' if dry else 'fixed'} {fixed}/{total} sprite metas -> PPU {PPU}")
+print(f"{'would fix' if dry else 'fixed'} {fixed}/{total} sprite metas -> PPU {PPU}, filterMode 0")

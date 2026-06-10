@@ -1,5 +1,121 @@
 {
   "scythe_wood": {
-    "look": "a farming SCYTHE: a long curved wooden handle with a broad crescent steel BLADE at the top, angled for mowing. Clearly a scythe, held diagonally."
+    "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of pale wood sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
+    "family": "icon",
+    "materials": [
+      "wood"
+    ]
+  },
+  "pickaxe_wood": {
+    "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of pale wood at the top-right, straight wooden HANDLE running to the bottom-left",
+    "family": "icon",
+    "materials": [
+      "wood"
+    ]
+  },
+  "axe_wood": {
+    "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of pale wood at the top-right, straight wooden HANDLE running to the bottom-left",
+    "family": "icon",
+    "materials": [
+      "wood"
+    ]
+  },
+  "shovel_wood": {
+    "look": "a digging SHOVEL: rounded pointed SPADE BLADE of pale wood at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
+    "family": "icon",
+    "materials": [
+      "wood"
+    ]
+  },
+  "hoe_wood": {
+    "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
+    "family": "icon",
+    "materials": [
+      "wood"
+    ]
+  },
+  "sword_wood": {
+    "look": "a training SWORD: straight tapered wooden BLADE with a visible center ridge pointing to the top-right, small CROSSGUARD and wrapped GRIP with a round pommel at the bottom-left",
+    "family": "icon",
+    "materials": [
+      "wood"
+    ]
+  },
+  "spear_wood": {
+    "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, with a leaf-shaped sharpened wooden SPEARHEAD at the top-right and a blunt butt at the bottom-left",
+    "family": "icon",
+    "materials": [
+      "wood"
+    ]
+  },
+  "small_net": {
+    "look": "a small BUG NET: a round HOOP with a visible crosshatch MESH bag at the top-right, short wooden HANDLE to the bottom-left",
+    "family": "icon",
+    "materials": [
+      "wood"
+    ]
+  },
+  "large_net": {
+    "look": "a large BUG NET: a WIDE round HOOP at the top-right with a deep baggy NET BAG of fine diagonal MESH lines hanging from it (thin woven net texture, NOT a checkerboard), sturdy wooden HANDLE with a wrapped grip to the bottom-left",
+    "family": "icon",
+    "materials": [
+      "wood"
+    ]
+  },
+  "watering_can_basic": {
+    "look": "a small metal WATERING CAN in 3/4 view: rounded body, top handle, long SPOUT with a sprinkler ROSE tip pointing right; dull grey tin",
+    "family": "icon",
+    "materials": [
+      "metal"
+    ]
+  },
+  "watering_can_large": {
+    "look": "a BIG metal WATERING CAN in 3/4 view: wide barrel body with a riveted seam, top handle, long SPOUT with a sprinkler ROSE tip pointing right; dull grey tin with a copper band",
+    "family": "icon",
+    "materials": [
+      "metal"
+    ]
+  },
+  "seed_tomato": {
+    "look": "a paper SEED PACKET, upright rectangle with a TORN-OPEN top edge and a few seeds spilling: cream paper, a simple round red TOMATO illustration on the front, thin green border",
+    "family": "icon"
+  },
+  "seed_corn": {
+    "look": "a paper SEED PACKET, upright rectangle with a TORN-OPEN top edge and a few seeds spilling: cream paper, a yellow CORN COB with green husk illustrated on the front, thin yellow border",
+    "family": "icon"
+  },
+  "seed_wheat": {
+    "look": "a paper SEED PACKET, upright rectangle with a TORN-OPEN top edge and a few seeds spilling: cream paper, three golden WHEAT STALKS illustrated on the front, thin brown border",
+    "family": "icon"
+  },
+  "bug_parts": {
+    "look": "a small pile of beetle BUG PARTS: one cracked glossy brown chitin SHELL HALF and one veined translucent insect WING lying beside it; simple, readable, earthy brown and pale grey",
+    "family": "icon"
+  },
+  "berries": {
+    "look": "a small cluster of round red BERRIES, three or four plump berries with a single green leaf on top",
+    "family": "icon"
+  },
+  "quartz": {
+    "look": "a single MILKY WHITE quartz crystal SHARD: six-sided prism with a pointed tip, pale white with faint icy blue facet shading - bright and translucent, NOT dark, NOT black, NOT grey rock",
+    "family": "icon",
+    "materials": [
+      "stone"
+    ]
+  },
+  "sand": {
+    "look": "a small conical PILE OF SAND, pale tan with a few darker speckles and a soft heaped silhouette",
+    "family": "icon",
+    "materials": [
+      "dirt"
+    ]
+  },
+  "tin_ore": {
+    "look": "a rough grey ORE CHUNK studded with dull silvery TIN flecks, angular blocky rock",
+    "family": "icon",
+    "materials": [
+      "stone",
+      "metal"
+    ]
   }
 }

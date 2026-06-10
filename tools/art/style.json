@@ -7,7 +7,7 @@
     "foliage": "Foliage: dark (40,85,40), base (55,120,55), light (80,150,70)",
     "dirt": "Dirt: dark (110,75,40), base (140,95,50), light (165,120,70)",
     "fabric": "Fabric: dark (100,70,100), base (140,100,140), light (180,140,180)",
-    "marble": "Marble: dark/veining (175,172,180), base (224,222,228), light (245,246,250) \u2014 a bright near-WHITE polished marble with faint cool-grey veining; clearly pale and luminous"
+    "marble": "Marble: dark/veining (175,172,180), base (224,222,228), light (245,246,250) — a bright near-WHITE polished marble with faint cool-grey veining; clearly pale and luminous"
   },
   "object": {
     "style_block": [
@@ -65,17 +65,17 @@
   ],
   "net": [
     "Create a 2D game sprite (pixel art): a FLAT square of NETTING that fills the entire frame.",
-    "ART DIRECTION: viewed perfectly STRAIGHT-ON and FLAT \u2014 absolutely NO perspective, NO angle, NO 3D, NO isometric, NO top face, NO drop shadow, NO shading or depth. Just a flat 2D mesh.",
+    "ART DIRECTION: viewed perfectly STRAIGHT-ON and FLAT — absolutely NO perspective, NO angle, NO 3D, NO isometric, NO top face, NO drop shadow, NO shading or depth. Just a flat 2D mesh.",
     "DESIGN:",
     "- A regular GRID of crossed ROPE STRINGS (a square net mesh) spanning the whole frame, edge to edge: roughly a 5x5 grid of strings.",
-    "- The strings are a light PALE-GREY / off-white rope (around RGB 225,225,228) with a slightly darker grey edge so they read clearly. The strings MUST be solid and OPAQUE and 1-2 px thick \u2014 the mesh must be CLEARLY VISIBLE. Do NOT output a blank, faint, or nearly-transparent image.",
+    "- The strings are a light PALE-GREY / off-white rope (around RGB 225,225,228) with a slightly darker grey edge so they read clearly. The strings MUST be solid and OPAQUE and 1-2 px thick — the mesh must be CLEARLY VISIBLE. Do NOT output a blank, faint, or nearly-transparent image.",
     "- The square HOLES between the strings are FULLY TRANSPARENT (empty alpha) so the game background shows straight through.",
-    "- Reads instantly as a piece of NET. NO wooden frame, NO posts, NO box, NO solid fabric panel, NO bugs drawn on it \u2014 only the pale rope string mesh.",
+    "- Reads instantly as a piece of NET. NO wooden frame, NO posts, NO box, NO solid fabric panel, NO bugs drawn on it — only the pale rope string mesh.",
     "This is a flat net overlay placed on a tile in a 2D game."
   ],
   "mineral": {
     "art_direction": [
-      "ART DIRECTION: 2D pixel-art MINERAL / ROCK formation in the style of Stardew Valley / Terraria mining art. Top-down 3/4 view, seen from the front and slightly above as it sits on the ground. HARD, ANGULAR, crystalline or chunky-rock forms (faceted crystal clusters or blocky rubble) \u2014 NOT organic, NOT leafy, NOT a plant, NOT a 3D render. Chunky hard pixel edges, no anti-aliasing, limited muted palette."
+      "ART DIRECTION: 2D pixel-art MINERAL / ROCK formation in the style of Stardew Valley / Terraria mining art. Top-down 3/4 view, seen from the front and slightly above as it sits on the ground. HARD, ANGULAR, crystalline or chunky-rock forms (faceted crystal clusters or blocky rubble) — NOT organic, NOT leafy, NOT a plant, NOT a 3D render. Chunky hard pixel edges, no anti-aliasing, limited muted palette."
     ],
     "design": [
       "DESIGN REQUIREMENTS:",
@@ -99,6 +99,21 @@
       "  pieces stack into a continuous chain; legs splay out to the left and right sides.",
       "- 2-3 shades, soft cel shading, light from top-left.",
       "- Render ONLY the creature - no ground, no cast shadow."
+    ]
+  },
+  "icon": {
+    "_comment": "Inventory ITEM ICONS (tools/weapons/seed packets/resources). The same sprite is the in-hand swing art (PlayerToolAnimator rotates it), so hand tools follow the DIAGONAL contract: grip bottom-left, head top-right. See object_pipeline.md.",
+    "art_direction": [
+      "ART DIRECTION: 2D pixel-art ITEM ICON in the style of STARDEW VALLEY / Terraria inventory items. ONE single hand-held item, centered, floating on a fully TRANSPARENT background - no ground, no shadow, no frame, no hand holding it. Read instantly at 16x16 pixels: big simple shapes, chunky hard pixel edges, no anti-aliasing, limited muted palette, a single brighter highlight edge on the upper-left of the head."
+    ],
+    "design": [
+      "DESIGN REQUIREMENTS:",
+      "- HAND TOOLS AND WEAPONS are drawn DIAGONALLY: the grip/handle points to the BOTTOM-LEFT corner,",
+      "  the working head/blade/hoop to the TOP-RIGHT corner (like Stardew Valley tool icons).",
+      "- The item fills most of the frame along that diagonal; thick readable handle (2-3px at game scale).",
+      "- Non-tool items (packets, parts, chunks) are drawn upright/3-4 view, centered, filling the frame.",
+      "- ONE item only - no duplicates, no scattered extras, no decorative sparkles.",
+      "- NOT furniture, NOT a scene, NOT isometric, NOT a 3D render, NO text or labels unless the look says so."
     ]
   }
 }
