@@ -6,6 +6,22 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Done (recent) — Inventory polish + cursor-place + weapon movesets + equip visibility
+- **Hotbar drag/drop** (two-mode button: panel open = item ops) + the LIVE swap-source
+  corruption fix + server cross-type guard + Metadata travels with moves/swaps and clears on
+  empty + echoes carry it.
+- **Cursor-place (Terraria)**: drag a placeable from the panel → ghost over the world →
+  right-click places from THAT slot (`TilePlace.source_slot` *int; remainder-preserving echo
+  interception on BOTH slot types — the full contract is in architecture_inventory.md).
+- **Weapon movesets**: per-move stats in items.json `moves {primary, secondary}` — sword
+  L=swing/R=jab, spear L=stab/R=sweep, axes R=combat swing (L stays breaking); nil-safe
+  move-existence gate; reach-before-stamp; ONE shared cooldown body. Router owns right-click
+  (station close-consumes → placement mode-consumes → weapon secondary). 8 new Go tests.
+- **Equip visibility**: held-at-rest tool display local + remote (EntityData.eq on op11),
+  remote swing replays self-describing from MeleeResult.weapon+move; animator RestoreIdle
+  contract (also fixed the interrupted-sweep trail leak). Starter kit: sword (slot 4),
+  spear + dirt in the panel.
+
 ## Done (recent) — Combat v1 + icon unification + tool animations + mouse facing
 - **Icon unification (architecture_items §0 now real):** every icon/drop = the scaled-down
   original sprite via one resolution chain in `GetItemSprite` (Objects→Items fallbacks,
@@ -296,13 +312,19 @@ scenes. Depends on the two items above.
 - **Bug-slot icons are blank** (pre-existing): caught bugs store item_id = species id
   (`fly_common`), which matches no Items/ or Objects/ art — the display chain needs a
   species→`Bugs/{sprite_id}` step (or `icon_from` on a per-species item entry).
-- Remote players show tool-swing animations (89/BugCaught carry attacker + position; play
-  a swing on the RemoteEntity).
 - Staggered per-bug catch/kill pops along the sweep arc (cosmetic, no protocol change).
 - Client EditMode test infra (first candidates: icon resolution chain, sector math as a
-  pure function).
-- Placement vs Station right-click overlap (both can fire on one click — see
-  architecture_input.md).
+  pure function, the cursor echo-interception rule).
+- Weapon tiers as moves data (sword_stone+, spear_iron — items.json entries + recolored
+  icons; the design-target table lives in architecture_items §3). Durability still unenforced.
+- Whip weapon kind: one new AnimKind/profile + one client line/tip hit query — server-free
+  (reach-only validation). First whip proves the moveset schema's extensibility claim.
+- Idle-held display for torches/lights (v1 gates on ToolType; the held torch already glows).
+- Facing-aware idle held pose (remote + local render at a fixed side regardless of facing).
+- TilePlace server range check (none exists — you can place from any distance).
+- "Cursor hold as server-visible state" if inventory grows sort/quick-stack/shift-click —
+  each new server-side slot writer must re-prove the echo-interception invariant
+  (architecture_inventory.md).
 - An enemy.
 - Active/inactive zones: simulate bugs in detail only in zones that have players; cheaply
   aggregate the rest; pause a zone entirely when it has no one. Finer-grained than today's

@@ -50,3 +50,37 @@ equipped item's display sprite in-hand: **swing** (axe/pickaxe/hoe/shovel/sword)
 order = player ± 1 tracked per-frame (the old SmallNet prefab sat on the Default layer and
 rendered invisibly behind the ground — that failure class is retired). Arc/duration come
 from item data (`arc_degrees`, `swing_time`) with per-`tool_type` defaults.
+
+## Right-click ownership + movesets (2026-06)
+
+**Right-click is also router-owned** (the Placement+Station double-fire is RESOLVED). The verb
+depends on world context, so it's a priority CHAIN, not a tool table:
+
+| order | owner | consumes when |
+|---|---|---|
+| 0 | UI guard | pointer over UI |
+| 1 | `StationController.TryHandleRightClick` | a station is under the cursor (toggle), **or an open menu was closed by the click** (state transition = consumed — never "close menu AND jab/place") |
+| 2 | `PlacementController.TryHandleRightClick` | placing mode is active (equipped placeable OR cursor-place) — **mode-based, not success-based**: a red-ghost misclick consumes; it never falls through to a jab |
+| 3 | weapon `secondary` move | the equipped item's `moves` map has a `"secondary"` |
+
+*Footnote:* an out-of-range station click returns false and falls through (may jab/place) — accepted.
+
+**Weapon MOVESETS:** combat stats live per-move in `items.json` `moves: {primary, secondary}`
+(kind/damage/arc/reach/swing_time/max_targets/cooldown_ticks). Left-click routes weapons to
+`MeleeController.TryHandleClick("primary")`; right-click (chain step 3) to `"secondary"`.
+Axes have ONLY a secondary (left-click stays breaking — Stardew-strict). The move's `kind`
+("swing"/"stab"/"sweep") picks the animation via `Play`'s kindOverride — a sword jab plays
+Stab on a "sword" profile; unknown kinds LogWarning. New weapon kinds (whip) = data + one
+AnimKind + one client hit-geometry query; the server validates only move-existence + reach.
+Cooldowns share ONE `LastToolTick` server-side (sword↔hoe↔jab throttle each other; closes
+alternating-spam + swap bypass); the client mirrors with one shared swing timer.
+
+**Held-at-rest display:** the equipped TOOL's sprite rests in-hand (animator `SetIdleItem`;
+restored by the single `RestoreIdle()` after every animation/interrupt — which also turns the
+sweep trail off, fixing a latent leak). Local: PlayerController watches inventory events.
+Remote: equips ride `EntityData.eq` on the per-tick op11 broadcast (change-sync + joiner
+bootstrap in one path); RemoteEntity attaches its own PlayerToolAnimator. Remote SWING replays:
+net catches use the catcher's cached eq; melee replays are self-describing from
+`MeleeResultMessage.weapon`+`move`. Notes: the remote idle sprite renders at a fixed side
+regardless of facing (v1); picking your equipped item onto the drag cursor equips "" — others
+see you bare-handed mid-drag.

@@ -665,3 +665,17 @@ share the swing's slot.
 
 **Future boundary (BACKLOG):** if bugs ever *behave* differently when damaged (flee at low HP),
 HP becomes sim-state and must move into the deterministic path + state hash.
+
+### 12.1 Movesets wire amendment (2026-06)
+OpCode 88 (`MeleeAttack`) gains `move` (input slot name; empty normalizes to `"primary"`).
+OpCode 89 (`MeleeResult`) gains `weapon` + the RESOLVED `move` — replay on remote clients is
+self-describing (no lookup race against the per-tick `eq`). Validation is per-MOVE
+(reach/damage/max_targets/cooldown duration) on the same shared `LastToolTick`; the gate is
+move-EXISTENCE via a nil-receiver-safe `GetMove` (bare hand, unknown ids, move-less tools and
+unknown move names all reject through one expression), and reach is validated BEFORE the
+cooldown stamps. All ledger semantics are unchanged: kills still ride `BUG_REMOVED`, HP display
+still rides 89 only.
+
+Related, pre-existing and unchanged by cursor-place: occupant placement reaches clients via the
+chunk-scoped, NON-tick-gated `WorldUpdate` (46) and mutates bug-relevant collision
+(`blocks_bugs`) mid-sim; equal-tick drift detection is the standing backstop.

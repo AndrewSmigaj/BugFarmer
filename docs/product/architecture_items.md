@@ -171,6 +171,31 @@ Handheld items, no footprint (inventory only). Sprite shown in hotbar/hand.
 
 Combat items for dealing with aggressive bugs.
 
+**LIVE SCHEMA (implemented): per-MOVE stats in `items.json`.** A weapon's combat stats live in
+`moves`, keyed by input slot — `"primary"` (left click) and `"secondary"` (right click):
+
+```json
+"sword_wood": {
+  "name": "Wooden Sword", "category": "tool", "tool_type": "sword", "tool_tier": 1,
+  "durability": 50, "buy_price": 30, "sell_price": 12,
+  "moves": {
+    "primary":   { "kind": "swing", "damage": 1, "arc_degrees": 100, "reach": 2.5,
+                   "swing_time": 0.20, "max_targets": 6, "cooldown_ticks": 4 },
+    "secondary": { "kind": "stab",  "damage": 2, "arc_degrees": 20,  "reach": 3.5,
+                   "swing_time": 0.18, "max_targets": 2, "cooldown_ticks": 5 }
+  }
+}
+```
+`kind` ("swing"/"stab"/"sweep", later "whip"...) selects the client animation + hit geometry;
+the server validates only move-existence + reach + caps. AXES carry only a `secondary` (their
+left-click is breaking). Tier damage values are AUTHORED data per entry (axe secondary dmg
+1/2/3/4 by tier) — never a runtime ToolTier lookup. NETS deliberately stay top-level
+(`arc_degrees`/`reach`/`catch_cap` — one move, own cap semantics + own rate-limit slot); they
+migrate into `moves` only if they ever grow a secondary.
+
+The tier table below is the DESIGN TARGET (tiers beyond wood are future content — each is an
+items.json entry with its own authored moves + a recolored icon):
+
 | Item | Description | Sprite | Tier | Damage | Range |
 |------|-------------|--------|------|--------|-------|
 | stick | Basic melee | 16×16 | 0 | 1 | 1 cell |

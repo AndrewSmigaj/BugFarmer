@@ -524,3 +524,50 @@ Not in scope for Phase 3, but needed eventually:
 - Load inventory on MatchJoin
 - Periodic auto-save (every 60 seconds)
 - Currently: inventory resets each session
+
+## Drag/Drop, Hotbar Moves & Cursor-Place (2026-06)
+
+**Hotbar is a two-mode button (Terraria convention):** panel CLOSED → left-click selects; panel
+OPEN → both buttons are ITEM OPERATIONS forwarded to DragDropController (this is what makes
+moving items in/out of the hotbar possible). Selection while the panel is open = number keys
+only (scroll is already disabled while open).
+
+**Cursor pickup is CLIENT-ONLY.** Picking a stack onto the drag cursor sends nothing; the server
+still holds the stack in the source slot S. The standing invariant:
+**server S = local S remainder (half-pickups) + cursor count.**
+On SWAP, the server deposits the taken item back into S — the cursor's source therefore NEVER
+re-points to the clicked slot (re-pointing was a live corruption bug: chained swaps duplicated
+and misplaced items).
+
+**Cursor-place (place directly from the inventory):** while the cursor holds a PLACEABLE and the
+mouse is over the world, the placement ghost shows (hidden over UI — the cursor icon is the
+feedback there) and right-click places. The message names the slot (`TilePlaceMessage.source_slot`,
+a Go `*int` — absent decodes nil, never the falsy-but-valid slot 0; the client sends a separate
+`TilePlaceFromSlotMessage` so the field exists only when meaningful). The server validates
+bounds + id + count and consumes THAT slot — no FindItem fallback on mismatch (a stale client
+gets error 40, and since the client never optimistically decrements the cursor, an error means
+nothing anywhere to roll back). Resolution happens BEFORE the seed branch, so seed cursor-place
+consumes the cursor's slot too. **Cursor-place lives only while the panel is open** (the cursor
+auto-cancels on close). **Cursor-EXCLUSIVE ghost:** while the cursor holds anything, the
+equipped-item ghost is disabled (a non-placeable on the cursor = no ghost at all).
+
+**Echo interception (the reconciliation mechanism):** while the cursor holds from slot S, every
+server-side writer of S — cursor-place consume, walk-over pickups stacking, caught bugs merging,
+watering uses — is "the stack the cursor is holding," so `DragDropController.TryInterceptSlotEcho`
+(called INLINE from BOTH HandleItemSlotUpdate and HandleBugSlotUpdate, before the write — never
+an event subscription, ordering must be deterministic) adopts the count onto the cursor:
+`newCursor = echoCount − localRemainder` (remainder-preserving — half-pickup leftovers stay in
+the slot); `count == 0` clears the cursor (last-item; the ghost hides); slot-TYPE-checked (bug
+and item indexes overlap 0-19). **Intended behaviors this produces:** walking over a drop of the
+dragged item type makes it appear ON the cursor; picking the equipped item onto the cursor
+equips "" (remote players see you bare-handed mid-drag). FullInventorySync force-clears the
+cursor (reconnect repaint would double-render).
+**Future-feature invariant:** "only cursor-driven writers and same-item merges touch a held
+slot" — any new inventory feature (sort, quick-stack, shift-click) must re-prove or route
+through this, or promote the cursor hold to server-visible state (BACKLOG).
+
+**Metadata (tool state like watering-can uses) is SERVER-ONLY:** it travels with full moves,
+swaps with swaps, never splits, and is cleared when a slot empties (RemoveItem/RemoveBugs).
+MoveSlot echoes carry it for completeness, but the client cannot parse it (JsonUtility cannot
+deserialize the Dictionary) and nothing client-side reads it — do not "complete" the client path.
+Cross-type (bug↔item) moves are rejected server-side as well as in the UI.

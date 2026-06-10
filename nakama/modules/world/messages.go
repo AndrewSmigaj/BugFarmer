@@ -300,7 +300,7 @@ type SlotUpdateMessage struct {
 // Uses InventorySlot from state.go
 type FullInventorySyncMessage struct {
 	BugSlots  []InventorySlot `json:"bug_slots"`  // All 20 bug slots
-	ItemSlots []InventorySlot `json:"item_slots"` // All 10 item slots (= hotbar)
+	ItemSlots []InventorySlot `json:"item_slots"` // All 20 item slots (0-9 hotbar, 10-19 panel) (= hotbar)
 	Coins     int64           `json:"coins"`
 }
 
