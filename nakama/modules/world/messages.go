@@ -109,6 +109,12 @@ const (
 	OpCodeTreeHarvest     int64 = 92 // C→S: hands-pick one fruit from a tree
 	OpCodeTreeFruitUpdate int64 = 93 // S→C: a tree's fruit count changed (display-only;
 	// the OpCode-51 droplet pattern: broadcast on change + chunk-subscribe re-send)
+
+	// Predators
+	OpCodePlayerDamage int64 = 94 // S→C: a bug hurt a player — PRESENCE-TARGETED to the
+	// victim only (HP is private; an unfiltered broadcast would knock back every client)
+	OpCodeBugTelegraph int64 = 95 // S→C: display-only attack telegraph (windup/strike) —
+	// a late joiner missing one in flight loses nothing
 )
 
 // TreeWaterUpdateMessage (OpCode 51): a fruit tree's water/tank state changed. Display-only.
@@ -153,6 +159,27 @@ type DebugWorldMessage struct {
 	SpawnCount   int     `json:"spawn_count"`
 	SpawnX       float32 `json:"spawn_x"`
 	SpawnY       float32 `json:"spawn_y"`
+}
+
+// BugTelegraphMessage (OpCode 95): display-only attack telegraphs. kind = "strike"
+// (a predator snatch — flash + THWACK at the attacker) or "windup" (the centipede's
+// pre-surge rear-up — flash + hiss). Chunk-scoped; pure cosmetics.
+type BugTelegraphMessage struct {
+	SwarmID string `json:"swarm_id"`
+	Kind    string `json:"kind"`
+}
+
+// PlayerDamageMessage (OpCode 94): a bug attack landed (or a regen/join echo with
+// damage 0). Sent ONLY to the victim's presence. Player HP is sim-inert — bug AI reads
+// player CELLS, which already ride the ledger (the MeleeResult display precedent).
+type PlayerDamageMessage struct {
+	HP            int     `json:"hp"`
+	MaxHP         int     `json:"max_hp"`
+	Damage        int     `json:"damage"`
+	SourceSpecies string  `json:"source_species"`
+	KnockDX       float32 `json:"knock_dx"` // unit vector away from the attacker
+	KnockDY       float32 `json:"knock_dy"`
+	Faint         bool    `json:"faint"` // HP hit 0: client fades + snaps to spawn
 }
 
 // WorldEnvMessage (OpCode 91): the world's environment display state — broadcast on any

@@ -793,10 +793,20 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		// the chosen source is CACHED on the swarm so the per-tick meter check is O(1).
 		// V1 RULE: a REPRODUCING swarm only targets DEPLETABLE sources (items/stations) —
 		// flora is infinite, so breeding on it would mean unbounded growth.
-		if worldState.TickCount >= swarm.NextThinkTick {
+		// Predation branches (prey FLEE / predator hunt+wander) REPLACE the shared
+		// forage block when they fire — they emit their own leg, write their own
+		// SpeedMult, and own NextThinkTick (hunt/flee re-aim every 10-15 ticks).
+		if worldState.TickCount >= swarm.NextThinkTick &&
+			!m.predationThink(worldState, swarm, species, chunkSize, deltaTime, logger) {
 			var resourceX, resourceY float32 = float32(math.NaN()), float32(math.NaN())
 			swarm.TargetFoodID = ""
 			swarm.TargetFoodDepletable = false
+			// The shared path resets the per-leg speed (sync contract: EVERY leg-emitting
+			// path writes SpeedMult — without this a swarm that fled keeps the flee speed
+			// forever, consistently on both sides and invisible to every harness) and the
+			// hunt cache (exclusivity: dining and hunting never coexist).
+			swarm.SpeedMult = 1.0
+			swarm.TargetPreyID = ""
 
 			// FORAGE DUTY CYCLE: the forage/wander MODE persists 30-50s (10x the leg cadence)
 			// so behavior doesn't flicker leg-to-leg — rolled by forage_chance (~25% for
@@ -847,7 +857,9 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 					worldState.CurrentZone.ZoneID, swarm.ID,
 					toFixed(originX), toFixed(originY),
 					toFixed(swarm.TargetX), toFixed(swarm.TargetY),
-					toFixed(species.BaseSpeed*deltaTime),
+					// SpeedMult is 1.0 on this path (reset above); carried explicitly
+					// so the event ALWAYS equals the speed Move will use (§14).
+					toFixed(species.BaseSpeed*swarm.EffectiveSpeedMult()*deltaTime),
 				)
 			}
 
@@ -857,6 +869,12 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 
 		// MOVE: Every tick, move toward target (cheap)
 		swarm.Move(deltaTime, species, chunkSize)
+
+		// Predation strike: PER-TICK (centers can cross between the 10-15-tick re-aims).
+		// O(1): cached TargetPreyID validity + one distance + the cooldown.
+		if species.Predation != nil {
+			m.checkPredationStrike(logger, dispatcher, worldState, swarm, species, chunkSize)
+		}
 
 		// === Lifecycle meters (server-authoritative; all effects ride the ledger) ===
 		swarm.ReproduceCooldown -= deltaTime // was never decremented before this system
@@ -912,10 +930,18 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		// Phase transitions. NO SwarmsDirty here (clients never read phase; the old dirty
 		// flag only generated spurious full-set SwarmUpdate broadcasts). On a change the
 		// attractions differ, so retarget immediately instead of waiting out the think timer.
-		prevPhase := swarm.Phase
-		swarm.CheckPhaseTransition(species)
-		if swarm.Phase != prevPhase {
-			swarm.ClearFoodTarget(worldState.TickCount)
+		//
+		// NEST predators (Predation.NestOccupant != "") skip this: their lifecycle is the
+		// custom feeding/homing/defending machine — the standard sated→"reproducing" flip
+		// would strand them (no breeding attractions; brood goes to the nest instead).
+		// NESTLESS predators (centipede) KEEP the standard lifecycle — it's exactly what
+		// makes them park at carrion and reproduce there.
+		if species.Predation == nil || species.Predation.NestOccupant == "" {
+			prevPhase := swarm.Phase
+			swarm.CheckPhaseTransition(species)
+			if swarm.Phase != prevPhase {
+				swarm.ClearFoodTarget(worldState.TickCount)
+			}
 		}
 	}
 

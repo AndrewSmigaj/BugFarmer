@@ -115,31 +115,19 @@ func (m *Match) handleMeleeAttack(
 				continue
 			}
 
-			// Kill: removal flows through the SAME path as catching — RemoveBugs
-			// (which also cleans the BugHP entry) + a BUG_REMOVED ledger event for
-			// deterministic application and late-joiner replay.
-			removed := swarm.RemoveBugs([]int{bugID})
+			// Kill: removal flows through the SHARED kill path (RemoveBugs +
+			// BUG_REMOVED + drops + empty-swarm despawn) — the same function
+			// predation strikes use.
+			removed := m.killBugsInSwarm(logger, dispatcher, state, swarm, species,
+				[]int{bugID}, msg.ClickX, msg.ClickY, chunkSize)
 			if len(removed) == 0 {
 				continue
 			}
 			result.Killed = append(result.Killed, bugID)
-			if state.CurrentZone != nil {
-				state.AddInfluenceEvent(state.CurrentZone.ZoneID, InfluenceBugRemoved,
-					"", 0, 0, swarm.ID, bugID)
-			}
-			m.spawnKillDrops(logger, dispatcher, state, species,
-				msg.ClickX, msg.ClickY,
-				swarm.WorldX(chunkSize), swarm.WorldY(chunkSize), chunkSize)
 		}
 
 		if len(result.Damaged) > 0 || len(result.Killed) > 0 {
 			results = append(results, result)
-		}
-
-		// Empty swarm despawns exactly like the catch path.
-		if swarm.Count <= 0 {
-			delete(state.Swarms, swarm.ID)
-			state.SwarmsDirty = true
 		}
 	}
 
@@ -159,6 +147,48 @@ func (m *Match) handleMeleeAttack(
 	dispatcher.BroadcastMessage(OpCodeMeleeResult, data, nil, nil, true)
 
 	logger.Debug("Player %s melee: %d struck across %d swarms", playerID, struck, len(results))
+}
+
+// killBugsInSwarm is THE shared kill path (melee + predation strikes): RemoveBugs
+// (cleans BugHP), one BUG_REMOVED ledger event per id (deterministic application +
+// late-join replay), the victim species' kill drops at (dropX, dropY) with the swarm
+// center as the blocked-cell fallback, and the empty-swarm despawn (the catch
+// convention: delete + SwarmsDirty; stale SwarmsBySpecies ids are cleaned lazily).
+// Returns the ids actually removed.
+func (m *Match) killBugsInSwarm(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	swarm *entities.SwarmState,
+	species *entities.BugSpecies,
+	bugIDs []int,
+	dropX, dropY float32,
+	chunkSize int,
+) []int {
+	removed := swarm.RemoveBugs(bugIDs)
+	if len(removed) == 0 {
+		return removed
+	}
+
+	zoneID := ""
+	if state.CurrentZone != nil {
+		zoneID = state.CurrentZone.ZoneID
+	}
+	for _, id := range removed {
+		if zoneID != "" {
+			state.AddInfluenceEvent(zoneID, InfluenceBugRemoved, "", 0, 0, swarm.ID, id)
+		}
+		m.spawnKillDrops(logger, dispatcher, state, species,
+			dropX, dropY,
+			swarm.WorldX(chunkSize), swarm.WorldY(chunkSize), chunkSize)
+	}
+
+	// Empty swarm despawns exactly like the catch path.
+	if swarm.Count <= 0 {
+		delete(state.Swarms, swarm.ID)
+		state.SwarmsDirty = true
+	}
+	return removed
 }
 
 // spawnKillDrops rolls the VICTIM species' kill_drops loot table at (dropX, dropY)

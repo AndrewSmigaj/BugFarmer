@@ -336,6 +336,20 @@ func floorDiv(a, b int) int {
 // IsBlocked checks if a world position blocks swarm center movement.
 // Returns true if the position has a blocking occupant or impassable ground.
 func (w *WorldState) IsBlocked(worldX, worldY float32) bool {
+	return w.isBlockedImpl(worldX, worldY, false)
+}
+
+// IsBlockedForSpecies is the species-aware blocking check: flies_over_fences species
+// skip the OCCUPANT branch ONLY (fences, walls, houses — there are no roofs yet).
+// Water/impassable ground and the nil-chunk zone edge STILL block fliers — never hand
+// movement code a nil checker. The client per-bug collision applies the identical rule
+// (architecture_swarm_sync.md §14: the flag acts at BOTH collision sites).
+func (w *WorldState) IsBlockedForSpecies(worldX, worldY float32, species *entities.BugSpecies) bool {
+	skipOccupants := species != nil && species.FliesOverFences
+	return w.isBlockedImpl(worldX, worldY, skipOccupants)
+}
+
+func (w *WorldState) isBlockedImpl(worldX, worldY float32, skipOccupants bool) bool {
 	cs := w.Config.ChunkSize
 
 	// Convert to integer grid coordinates using floor (consistent for negative coords)
@@ -356,12 +370,14 @@ func (w *WorldState) IsBlocked(worldX, worldY float32) bool {
 		return true // Out of bounds = blocked
 	}
 
-	// Check occupant layer (fences, walls, trees)
-	cell, err := chunk.GetOccupantCell(lx, ly)
-	if err == nil && cell.Occupant != nil {
-		entityDef := w.Entities[cell.Occupant.ID]
-		if entityDef != nil && entityDef.World != nil && entityDef.World.BlocksBugs {
-			return true
+	// Check occupant layer (fences, walls, trees) — skipped for flying species
+	if !skipOccupants {
+		cell, err := chunk.GetOccupantCell(lx, ly)
+		if err == nil && cell.Occupant != nil {
+			entityDef := w.Entities[cell.Occupant.ID]
+			if entityDef != nil && entityDef.World != nil && entityDef.World.BlocksBugs {
+				return true
+			}
 		}
 	}
 

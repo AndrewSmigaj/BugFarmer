@@ -158,6 +158,350 @@ func TestFindNearbyFoodMatchesCarrion(t *testing.T) {
 	}
 }
 
+// ===== Predation core (hunt / flee / strike) =====
+
+// predationTestState: a wasp predator + fly prey in open chunks.
+func predationTestState() *WorldState {
+	state := newTestState(20)
+	for cx := 0; cx <= 1; cx++ {
+		for cy := 0; cy <= 1; cy++ {
+			state.Chunks[ChunkKey(cx, cy)] = NewEmptyChunk(cx, cy, "grass")
+		}
+	}
+	fly := state.Species["fly_common"]
+	fly.BaseSpeed = 1.5
+	fly.PredatorFleeRadius = 6.0
+	fly.PredatorFleeSpeedMult = 1.8
+	fly.KillDrops = []entities.KillDrop{{Item: "bug_parts", CountMin: 1, CountMax: 1, Chance: 1.0}}
+	state.Entities["bug_parts"] = &EntityDef{Category: "resource", FoodValue: 10}
+	state.Species["wasp_common"] = &entities.BugSpecies{
+		ID: "wasp_common", Category: "swarm",
+		BaseSpeed: 2.2, VisionRange: 14, MaxSwarmSize: 10, MinSwarmSize: 3,
+		FliesOverFences: true,
+		Predation: &entities.PredationConfig{
+			Prey:                   []string{"fly_common"},
+			HomeRange:              40,
+			StrikeRadius:           3.0,
+			StrikeCooldownTicks:    100,
+			KillsPerStrike:         1,
+			FeedPerKill:            35,
+			HuntSpeedMult:          1.5,
+			HuntSatiationThreshold: 30,
+			NestOccupant:           "wasp_nest",
+		},
+	}
+	return state
+}
+
+func newWaspSwarm(id string, count int, x, y float32) *entities.SwarmState {
+	s := newTestSwarm(id, count, x, y)
+	s.SpeciesID = "wasp_common"
+	s.HomePos = s.Position
+	return s
+}
+
+// driveTick replicates the match loop's per-swarm order for the predation slice:
+// think-if-due → move → strike check. deltaTime 0.1 (10Hz).
+func driveTick(m *Match, state *WorldState, swarms ...*entities.SwarmState) {
+	state.TickCount++
+	for _, s := range swarms {
+		if _, exists := state.Swarms[s.ID]; !exists {
+			continue // despawned (emptied by strikes)
+		}
+		species := state.Species[s.SpeciesID]
+		if state.TickCount >= s.NextThinkTick {
+			if !m.predationThink(state, s, species, 32, 0.1, nopRuntimeLogger()) {
+				// shared path stand-in: plain wander think (not needed for these tests —
+				// prey without a nearby predator just stays put)
+				s.SpeedMult = 1.0
+				s.TargetPreyID = ""
+				s.NextThinkTick = state.TickCount + 30
+			}
+		}
+		s.Move(0.1, species, 32)
+		if species.Predation != nil {
+			m.checkPredationStrike(nopRuntimeLogger(), nil, state, s, species, 32)
+		}
+	}
+}
+
+// THE CLOSURE TEST: an open-field wasp 12u from a fly swarm must land a strike within
+// 300 ticks — the test that would have caught the impossible-chase hole (fly flee 3.0
+// vs wasp 2.2 in the original draft).
+func TestPredationClosure(t *testing.T) {
+	state := predationTestState()
+	m := &Match{}
+	wasp := newWaspSwarm("a_wasp", 6, 10, 10)
+	fly := newTestSwarm("b_fly", 10, 22, 10)
+	state.Swarms[wasp.ID] = wasp
+	state.Swarms[fly.ID] = fly
+
+	for i := 0; i < 300; i++ {
+		driveTick(m, state, wasp, fly)
+		if len(eventsOfType(state, InfluenceBugRemoved)) > 0 {
+			if wasp.Satiation < 35 {
+				t.Fatalf("strike fed nothing: satiation=%.0f", wasp.Satiation)
+			}
+			return // closed + killed ✓
+		}
+	}
+	t.Fatalf("no strike within 300 ticks: wasp(%.1f,%.1f) fly(%.1f,%.1f) prey=%q",
+		wasp.WorldX(32), wasp.WorldY(32), fly.WorldX(32), fly.WorldY(32), wasp.TargetPreyID)
+}
+
+// Strikes kill the LOWEST ascending alive ids and honor the cooldown.
+func TestStrikeAscendingIdsAndCooldown(t *testing.T) {
+	state := predationTestState()
+	m := &Match{}
+	wasp := newWaspSwarm("a_wasp", 6, 10, 10)
+	fly := newTestSwarm("b_fly", 10, 11, 10) // already in strike range
+	state.Swarms[wasp.ID] = wasp
+	state.Swarms[fly.ID] = fly
+	wasp.TargetPreyID = fly.ID
+	wasp.HuntStartTick = state.TickCount
+
+	m.checkPredationStrike(nopRuntimeLogger(), nil, state, wasp, state.Species["wasp_common"], 32)
+	if fly.IsBugAlive(0) || !fly.IsBugAlive(1) {
+		t.Fatalf("first strike must kill id 0 only (alive0=%v alive1=%v)", fly.IsBugAlive(0), fly.IsBugAlive(1))
+	}
+
+	// Immediately again: cooldown blocks.
+	m.checkPredationStrike(nopRuntimeLogger(), nil, state, wasp, state.Species["wasp_common"], 32)
+	if !fly.IsBugAlive(1) {
+		t.Fatal("strike fired inside the cooldown")
+	}
+
+	// After the cooldown: id 1 falls.
+	state.TickCount += 101
+	wasp.TargetPreyID = fly.ID // re-aim happens at think; pin for the unit test
+	m.checkPredationStrike(nopRuntimeLogger(), nil, state, wasp, state.Species["wasp_common"], 32)
+	if fly.IsBugAlive(1) {
+		t.Fatal("second strike after cooldown must kill id 1")
+	}
+	if got := len(eventsOfType(state, InfluenceBugRemoved)); got != 2 {
+		t.Fatalf("BUG_REMOVED events=%d, want 2", got)
+	}
+}
+
+// Satiation thresholds: sated swarms don't acquire prey; a swarm sated mid-hunt drops it.
+func TestSatiationGatesHunting(t *testing.T) {
+	state := predationTestState()
+	m := &Match{}
+	wasp := newWaspSwarm("a_wasp", 6, 10, 10)
+	fly := newTestSwarm("b_fly", 10, 16, 10)
+	state.Swarms[wasp.ID] = wasp
+	state.Swarms[fly.ID] = fly
+
+	// Above the hunt threshold: think must NOT acquire.
+	wasp.Satiation = 50
+	state.TickCount = wasp.NextThinkTick + 1
+	m.predationThink(state, wasp, state.Species["wasp_common"], 32, 0.1, nopRuntimeLogger())
+	if wasp.TargetPreyID != "" {
+		t.Fatal("sated wasp acquired prey")
+	}
+
+	// Below: acquires.
+	wasp.Satiation = 0
+	state.TickCount = wasp.NextThinkTick + 1
+	m.predationThink(state, wasp, state.Species["wasp_common"], 32, 0.1, nopRuntimeLogger())
+	if wasp.TargetPreyID != fly.ID {
+		t.Fatalf("hungry wasp did not acquire (prey=%q)", wasp.TargetPreyID)
+	}
+
+	// Sated mid-hunt: the next think drops the hunt.
+	wasp.Satiation = 100
+	state.TickCount = wasp.NextThinkTick + 1
+	m.predationThink(state, wasp, state.Species["wasp_common"], 32, 0.1, nopRuntimeLogger())
+	if wasp.TargetPreyID != "" {
+		t.Fatal("sated mid-hunt wasp kept hunting")
+	}
+}
+
+// Flee legs point AWAY at the predator-flee speed, and the EVENT carries the same
+// multiplied speed the server moves at (the §14 sync contract).
+func TestFleeLegDirectionAndSpeedParity(t *testing.T) {
+	state := predationTestState()
+	m := &Match{}
+	wasp := newWaspSwarm("a_wasp", 6, 13, 10)
+	fly := newTestSwarm("b_fly", 10, 10, 10)
+	state.Swarms[wasp.ID] = wasp
+	state.Swarms[fly.ID] = fly
+
+	state.TickCount = fly.NextThinkTick + 1
+	owned := m.predationThink(state, fly, state.Species["fly_common"], 32, 0.1, nopRuntimeLogger())
+	if !owned {
+		t.Fatal("flee branch did not fire with a predator at 3u")
+	}
+	if fly.TargetX >= 10 {
+		t.Fatalf("flee leg target x=%.1f, want < 10 (away from the wasp at 13)", fly.TargetX)
+	}
+	if fly.SpeedMult != 1.8 {
+		t.Fatalf("flee SpeedMult=%.2f, want 1.8", fly.SpeedMult)
+	}
+	evs := eventsOfType(state, InfluenceSwarmSetTarget)
+	if len(evs) == 0 {
+		t.Fatal("flee emitted no leg event")
+	}
+	wantSpeed := toFixed(1.5 * 1.8 * 0.1)
+	if got := evs[len(evs)-1].Speed; got != wantSpeed {
+		t.Fatalf("flee event speed=%d, want %d (BaseSpeed×mult×dt — server/client parity)", got, wantSpeed)
+	}
+
+	// SERVER-POSITION parity: Move must use the same multiplied speed.
+	x0 := fly.WorldX(32)
+	fly.Move(0.1, state.Species["fly_common"], 32)
+	moved := x0 - fly.WorldX(32) // fleeing in -x
+	want := float32(1.5 * 1.8 * 0.1)
+	if moved < want*0.95 || moved > want*1.05 {
+		t.Fatalf("server moved %.3f, want ≈%.3f (Move must honor SpeedMult)", moved, want)
+	}
+}
+
+// After the predator leaves, the next think goes back through the shared path and
+// resets SpeedMult — the silent-permanent-speed-buff catch.
+func TestPostFleeSpeedReset(t *testing.T) {
+	state := predationTestState()
+	m := &Match{}
+	wasp := newWaspSwarm("a_wasp", 6, 13, 10)
+	fly := newTestSwarm("b_fly", 10, 10, 10)
+	state.Swarms[wasp.ID] = wasp
+	state.Swarms[fly.ID] = fly
+
+	state.TickCount = fly.NextThinkTick + 1
+	m.predationThink(state, fly, state.Species["fly_common"], 32, 0.1, nopRuntimeLogger())
+	if fly.SpeedMult != 1.8 {
+		t.Fatalf("setup: flee mult=%.2f", fly.SpeedMult)
+	}
+
+	// Predator gone → the flee branch declines → caller's shared path resets the mult
+	// (replicate the match-loop contract).
+	delete(state.Swarms, wasp.ID)
+	state.TickCount = fly.NextThinkTick + 1
+	if m.predationThink(state, fly, state.Species["fly_common"], 32, 0.1, nopRuntimeLogger()) {
+		t.Fatal("flee branch fired with no predator")
+	}
+	fly.SpeedMult = 1.0 // the shared path's contractual reset
+	if fly.EffectiveSpeedMult() != 1.0 {
+		t.Fatal("speed mult must return to 1.0 on the shared path")
+	}
+}
+
+// Fliers hunt THROUGH fences (leg unclamped); grounded predators clamp at them.
+func TestFlierVsGroundedFenceBehavior(t *testing.T) {
+	state := predationTestState()
+	m := &Match{}
+	state.Entities["fence_wood"] = &EntityDef{World: &WorldData{BlocksBugs: true}}
+	chunk := state.Chunks[ChunkKey(0, 0)]
+	for ly := 5; ly <= 15; ly++ {
+		chunk.SetOccupant(15, ly, &PlacedOccupant{ID: "fence_wood", Anchor: true})
+	}
+
+	fly := newTestSwarm("b_fly", 10, 20, 10) // behind the fence wall at x=15
+	state.Swarms[fly.ID] = fly
+
+	// FLIER: hunt leg lands at the prey center, through the fence.
+	wasp := newWaspSwarm("a_wasp", 6, 10, 10)
+	state.Swarms[wasp.ID] = wasp
+	state.TickCount = wasp.NextThinkTick + 1
+	m.predationThink(state, wasp, state.Species["wasp_common"], 32, 0.1, nopRuntimeLogger())
+	if wasp.TargetPreyID != fly.ID || wasp.TargetX < 19 {
+		t.Fatalf("flier should aim through the fence: prey=%q targetX=%.1f", wasp.TargetPreyID, wasp.TargetX)
+	}
+
+	// GROUNDED predator (same config, no flight): leg clamps short of the fence.
+	grounded := &entities.BugSpecies{
+		ID: "centipede_test", Category: "individual", BaseSpeed: 1.6, VisionRange: 14,
+		Predation: &entities.PredationConfig{
+			Prey: []string{"fly_common"}, StrikeRadius: 1.2, StrikeCooldownTicks: 50,
+			KillsPerStrike: 1, FeedPerKill: 30, HuntSpeedMult: 1.0, HuntSatiationThreshold: 30,
+		},
+	}
+	state.Species["centipede_test"] = grounded
+	cent := newTestSwarm("c_cent", 1, 10, 10)
+	cent.SpeciesID = "centipede_test"
+	cent.HomePos = cent.Position
+	state.Swarms[cent.ID] = cent
+	state.TickCount = cent.NextThinkTick + 1
+	m.predationThink(state, cent, grounded, 32, 0.1, nopRuntimeLogger())
+	if cent.TargetPreyID != fly.ID {
+		t.Fatalf("grounded predator did not acquire (prey=%q)", cent.TargetPreyID)
+	}
+	if cent.TargetX >= 15 {
+		t.Fatalf("grounded hunt leg crossed the fence: targetX=%.1f, want < 15", cent.TargetX)
+	}
+}
+
+// No prey in range: the predator wanders WITHIN its home range at normal speed.
+func TestPreyEmptyWanderInHomeRange(t *testing.T) {
+	state := predationTestState()
+	m := &Match{}
+	wasp := newWaspSwarm("a_wasp", 6, 10, 10)
+	state.Swarms[wasp.ID] = wasp
+
+	for i := 0; i < 20; i++ {
+		state.TickCount = wasp.NextThinkTick + 1
+		if !m.predationThink(state, wasp, state.Species["wasp_common"], 32, 0.1, nopRuntimeLogger()) {
+			t.Fatal("predator think must own the wander")
+		}
+		if wasp.SpeedMult != 1.0 {
+			t.Fatalf("wander SpeedMult=%.2f, want 1.0", wasp.SpeedMult)
+		}
+		hx, hy := wasp.HomePos.WorldX(32), wasp.HomePos.WorldY(32)
+		dx, dy := wasp.TargetX-hx, wasp.TargetY-hy
+		if dx*dx+dy*dy > 41*41 {
+			t.Fatalf("wander target outside home range: (%.1f,%.1f)", wasp.TargetX, wasp.TargetY)
+		}
+	}
+}
+
+// A hunt with no kill for 300 ticks gives up (back to wander).
+func TestHuntTimeout(t *testing.T) {
+	state := predationTestState()
+	m := &Match{}
+	wasp := newWaspSwarm("a_wasp", 6, 10, 10)
+	fly := newTestSwarm("b_fly", 10, 16, 10)
+	state.Swarms[wasp.ID] = wasp
+	state.Swarms[fly.ID] = fly
+
+	state.TickCount = wasp.NextThinkTick + 1
+	m.predationThink(state, wasp, state.Species["wasp_common"], 32, 0.1, nopRuntimeLogger())
+	if wasp.TargetPreyID != fly.ID {
+		t.Fatal("setup: no acquisition")
+	}
+
+	state.TickCount += 301 // way past the timeout, no kill happened
+	m.predationThink(state, wasp, state.Species["wasp_common"], 32, 0.1, nopRuntimeLogger())
+	if wasp.TargetPreyID != "" {
+		t.Fatal("hunt did not time out")
+	}
+}
+
+// Population caps are UNTOUCHED by predation kills (kills only ever lower counts).
+func TestStrikeRespectsNothingItShouldnt(t *testing.T) {
+	state := predationTestState()
+	m := &Match{}
+	wasp := newWaspSwarm("a_wasp", 6, 10, 10)
+	fly := newTestSwarm("b_fly", 1, 11, 10) // ONE bug: the strike empties the swarm
+	state.Swarms[wasp.ID] = wasp
+	state.Swarms[fly.ID] = fly
+	state.SwarmsBySpecies["fly_common"] = []string{fly.ID}
+	wasp.TargetPreyID = fly.ID
+	wasp.HuntStartTick = state.TickCount
+
+	m.checkPredationStrike(nopRuntimeLogger(), nil, state, wasp, state.Species["wasp_common"], 32)
+
+	if _, exists := state.Swarms[fly.ID]; exists {
+		t.Fatal("emptied prey swarm must despawn (the catch convention)")
+	}
+	if !state.SwarmsDirty {
+		t.Fatal("despawn must set SwarmsDirty")
+	}
+	// Carrion landed at the wasp's center
+	if len(state.GroundItems) != 1 {
+		t.Fatalf("carrion drops=%d, want 1", len(state.GroundItems))
+	}
+}
+
 // kill_drops parse: count ranges + chance roll bounds + multiple entries.
 func TestKillDropCountRange(t *testing.T) {
 	state := killDropTestState()

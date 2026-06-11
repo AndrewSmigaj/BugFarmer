@@ -26,6 +26,16 @@ type Entity interface {
 	GetType() string
 }
 
+// WorldX returns the world X coordinate (ChunkX * chunkSize + LocalX).
+func (p EntityPosition) WorldX(chunkSize int) float32 {
+	return float32(p.ChunkX*chunkSize) + p.LocalX
+}
+
+// WorldY returns the world Y coordinate (ChunkY * chunkSize + LocalY).
+func (p EntityPosition) WorldY(chunkSize int) float32 {
+	return float32(p.ChunkY*chunkSize) + p.LocalY
+}
+
 // Normalize adjusts position if outside chunk bounds.
 // chunkSize is passed from world config.
 func (p *EntityPosition) Normalize(chunkSize int) {

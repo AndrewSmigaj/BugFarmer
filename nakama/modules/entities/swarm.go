@@ -49,6 +49,25 @@ type SwarmState struct {
 	ForageMode    bool  // Current mode: seek food vs pure wander
 	ModeUntilTick int64 // Tick when the mode rerolls
 
+	// Per-leg speed multiplier (hunt ×1.5, prey-flee ×1.8, surge ×3.5...). SYNC CONTRACT
+	// (architecture_swarm_sync.md §14): Move multiplies by it AND the leg-event emission
+	// carries BaseSpeed*SpeedMult — server position and client leg interpolation must
+	// agree. It is written ONLY in code paths that immediately emit a leg (never
+	// mid-leg: clients capture speed per-leg), and EVERY leg-emitting path writes it
+	// (the shared forage path writes 1.0 — otherwise a swarm that fled keeps the flee
+	// speed forever, consistently on both sides and invisible to every harness).
+	// 0 means "unset" and reads as 1.0.
+	SpeedMult float32
+
+	// Predation (server-only; outputs ride the existing event vocabulary).
+	// TargetPreyID is the Think-cached hunt target (the TargetFoodID pattern: the
+	// per-tick strike check is O(1)). MUTUALLY EXCLUSIVE with TargetFoodID — setting
+	// one clears the other, else a strike could fire while parked on carrion.
+	TargetPreyID   string // prey swarm id; "" = not hunting
+	HuntStartTick  int64  // when the current hunt began (timeout)
+	LastStrikeTick int64  // strike cooldown anchor
+	LastAttackTick int64  // player-sting/bite cooldown anchor
+
 	// Bug ID tracking for deterministic catching
 	RemovedBugIDs map[int]bool // Set of removed bug IDs (not serialized)
 	NextBugID     int          // Next ID to assign for new bugs (reproduction)
@@ -224,10 +243,12 @@ func (s *SwarmState) Move(deltaTime float32, species *BugSpecies, chunkSize int)
 		s.HasTarget = false
 		s.Velocity = Vec2{X: 0, Y: 0}
 	} else {
-		// Move toward target
+		// Move toward target at the LEG's speed (BaseSpeed × the per-leg SpeedMult —
+		// the leg event carries the same product, keeping client interpolation in step)
+		speed := species.BaseSpeed * s.EffectiveSpeedMult()
 		s.Velocity = Vec2{
-			X: dx / dist * species.BaseSpeed,
-			Y: dy / dist * species.BaseSpeed,
+			X: dx / dist * speed,
+			Y: dy / dist * speed,
 		}
 		s.Position.LocalX += s.Velocity.X * deltaTime
 		s.Position.LocalY += s.Velocity.Y * deltaTime
@@ -284,6 +305,31 @@ func raycastToBlock(startX, startY, endX, endY float32, isBlocked BlockedChecker
 	}
 
 	return endX, endY
+}
+
+// EffectiveSpeedMult reads the per-leg speed multiplier (0 = unset = 1.0).
+func (s *SwarmState) EffectiveSpeedMult() float32 {
+	if s.SpeedMult <= 0 {
+		return 1.0
+	}
+	return s.SpeedMult
+}
+
+// FirstAliveBugIDs returns the n lowest alive bug ids (ascending) — the deterministic
+// predation-kill pick. Mirrors IsBugAlive's logic with RemoveBugs' lazy-init bound:
+// a swarm that never grew/lost bugs has NextBugID 0 and live ids 0..Count-1.
+func (s *SwarmState) FirstAliveBugIDs(n int) []int {
+	bound := s.NextBugID
+	if bound == 0 {
+		bound = s.Count
+	}
+	ids := make([]int, 0, n)
+	for id := 0; id < bound && len(ids) < n; id++ {
+		if !s.RemovedBugIDs[id] { // nil-map-safe read
+			ids = append(ids, id)
+		}
+	}
+	return ids
 }
 
 // CheckPhaseTransition checks if swarm should transition to a new lifecycle phase
