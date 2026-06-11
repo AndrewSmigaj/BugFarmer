@@ -243,11 +243,16 @@ namespace BugFarmer.Bugs
             // 3. Apply velocity, resolving collision against blocks_bugs cells so individual bugs can't
             //    pass through walls/fences. Deterministic: integer cell lookups + slide X-then-Y.
             //    All clients run this identically, so the per-tick state-hash stays in agreement.
+            //    SPECIES-AWARE (§14, both collision sites): flies_over_fences skips the
+            //    occupant branch only (water still blocks); crawling individuals skip
+            //    Resolve entirely (the head rides the server-clamped center verbatim).
             var proposed = new FixedPoint2(
                 Position.X + Velocity.X,
                 Position.Y + Velocity.Y
             );
-            Position = BugCollision.Resolve(Position, proposed);
+            Position = _behavior.SkipCollision
+                ? proposed
+                : BugCollision.Resolve(Position, proposed, _behavior.FliesOverFences);
         }
 
         /// <summary>

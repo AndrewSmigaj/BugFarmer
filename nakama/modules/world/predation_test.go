@@ -11,6 +11,8 @@ import (
 	"testing"
 
 	"bugfarmer/entities"
+
+	"github.com/heroiclabs/nakama-common/runtime"
 )
 
 func killDropTestState() *WorldState {
@@ -500,6 +502,56 @@ func TestStrikeRespectsNothingItShouldnt(t *testing.T) {
 	// Carrion landed at the wasp's center
 	if len(state.GroundItems) != 1 {
 		t.Fatalf("carrion drops=%d, want 1", len(state.GroundItems))
+	}
+}
+
+// ===== Net-tier catch matrix (the first enforcement of species net_size) =====
+// hand ≡ small_net = tier 1 (hand-catching flies AND butterflies stays core early
+// game); wasps (medium) need the large net (tier 3 — no medium net exists);
+// trap_only (centipede) rejects EVERYTHING including hands.
+func TestCatchNetTierMatrix(t *testing.T) {
+	cases := []struct {
+		name     string
+		tool     string // "" = bare hands
+		netSize  string
+		caught   bool
+	}{
+		{"hand x fly(small) MUST PASS", "", "small", true},
+		{"hand x butterfly(small) MUST PASS", "", "small", true},
+		{"small_net x fly", "small_net", "small", true},
+		{"hand x wasp(medium)", "", "medium", false},
+		{"small_net x wasp(medium)", "small_net", "medium", false},
+		{"large_net x wasp(medium)", "large_net", "medium", true},
+		{"large_net x centipede(trap_only)", "large_net", "trap_only", false},
+		{"hand x centipede(trap_only)", "", "trap_only", false},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			state := predationTestState()
+			state.Entities["small_net"] = &EntityDef{Category: "tool", ToolType: "net", ToolTier: 1, Reach: 2.5, CatchCap: 10}
+			state.Entities["large_net"] = &EntityDef{Category: "tool", ToolType: "net", ToolTier: 3, Reach: 3.5, CatchCap: 20}
+			state.Species["fly_common"].NetSize = c.netSize
+
+			player := &PlayerState{
+				UserID: "p1", EquippedTool: c.tool,
+				Position: entities.EntityPosition{LocalX: 10, LocalY: 10},
+			}
+			state.Players = map[string]*PlayerState{"p1": player}
+			state.Presences = map[string]runtime.Presence{}
+			swarm := newTestSwarm("s1", 5, 11, 10)
+			state.Swarms[swarm.ID] = swarm
+
+			m := &Match{}
+			m.handleCatchBug(nopRuntimeLogger(), nopDispatcher{}, state,
+				CatchBugMessage{ClickX: 11, ClickY: 10, SwarmID: swarm.ID, BugIDs: []int{0, 1}},
+				"p1", 32)
+
+			caught := swarm.Count < 5
+			if caught != c.caught {
+				t.Fatalf("caught=%v, want %v (tool=%q vs net_size=%q)", caught, c.caught, c.tool, c.netSize)
+			}
+		})
 	}
 }
 

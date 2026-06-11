@@ -28,9 +28,13 @@ namespace BugFarmer.Player
         private float _faintFadeUntil;
         private SpriteRenderer _sprite;
 
+        private float _firstDamageToastUntil;
+        private static bool _everDamaged;
+
         private void Start()
         {
             _sprite = GetComponent<SpriteRenderer>();
+            BugFarmer.Audio.AudioFx.Ensure(); // the audio singleton boots with the player
             if (WorldManager.Instance != null)
                 WorldManager.Instance.OnMatchData += HandleMatchData;
         }
@@ -57,6 +61,7 @@ namespace BugFarmer.Player
                 // confirms the new position to the server.
                 transform.position = new Vector3(msg.respawn_x, msg.respawn_y, transform.position.z);
                 _faintFadeUntil = Time.time + 1.5f;
+                BugFarmer.Audio.AudioFx.PlayerFaint();
                 return;
             }
 
@@ -64,6 +69,13 @@ namespace BugFarmer.Player
             {
                 _redFlashUntil = Time.time + 0.2f;
                 _invulnBlinkUntil = Time.time + 1.0f;
+                BugFarmer.Audio.AudioFx.PlayerSting();
+                if (!_everDamaged)
+                {
+                    // The one-time onboarding line: nothing else ever names the sword.
+                    _everDamaged = true;
+                    _firstDamageToastUntil = Time.time + 6f;
+                }
                 StopAllCoroutines();
                 StartCoroutine(Knockback(new Vector2(msg.knock_dx, msg.knock_dy)));
             }
@@ -104,6 +116,14 @@ namespace BugFarmer.Player
             var style = new GUIStyle(GUI.skin.label) { fontSize = 16 };
             style.normal.textColor = new Color(0.95f, 0.3f, 0.35f);
             GUI.Label(new Rect(12, 8, 400, 24), sb.ToString(), style);
+
+            if (Time.time < _firstDamageToastUntil)
+            {
+                var hint = new GUIStyle(GUI.skin.label) { fontSize = 13 };
+                hint.normal.textColor = Color.white;
+                GUI.Label(new Rect(12, 30, 520, 22),
+                    "Ouch — a sting! Your sword (hotbar) swings with left-click.", hint);
+            }
 
             // Faint fade-to-black
             if (Time.time < _faintFadeUntil)

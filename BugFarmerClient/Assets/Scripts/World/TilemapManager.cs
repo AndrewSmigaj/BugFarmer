@@ -1134,18 +1134,23 @@ namespace BugFarmer.World
         /// Check if a cell blocks bug movement.
         /// Returns true if occupied by a blocking occupant or blocking ground tile.
         /// </summary>
-        public bool IsCellBlockedForBugs(Vector2Int cellPos)
+        public bool IsCellBlockedForBugs(Vector2Int cellPos, bool ignoreOccupants = false)
         {
-            // Check occupant
-            string occupantId = GetOccupantAt(cellPos);
-            if (!string.IsNullOrEmpty(occupantId))
+            // Check occupant — skipped for flies_over_fences species (§14: the flag
+            // applies identically at BOTH collision sites; water below still blocks)
+            if (!ignoreOccupants)
             {
-                var def = Data.EntityDatabase.Get(occupantId);
-                if (def?.World != null && def.World.BlocksBugs)
-                    return true;
+                string occupantId = GetOccupantAt(cellPos);
+                if (!string.IsNullOrEmpty(occupantId))
+                {
+                    var def = Data.EntityDatabase.Get(occupantId);
+                    if (def?.World != null && def.World.BlocksBugs)
+                        return true;
+                }
             }
 
-            // Check ground tile
+            // Check ground tile (NOTE: hardcoded list — tiles.json has no lava entry;
+            // keep these in step with the server TileDefs' blocks_bugs)
             string groundId = GetGroundAt(cellPos);
             if (groundId == "water_shallow" || groundId == "water_deep" || groundId == "lava")
                 return true;

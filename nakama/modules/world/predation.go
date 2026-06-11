@@ -430,6 +430,26 @@ func (m *Match) nearestPlayer(state *WorldState, x, y, radius float32) (string, 
 	return bestID, bestX, bestY, bestID != ""
 }
 
+// netTierTrapOnly: the "no net works" sentinel tier.
+const netTierTrapOnly = 99
+
+// netSizeTier maps species net_size to the tool_tier ordering: hands ≡ small_net = 1,
+// (no medium net exists yet) large_net = 3, trap_only = never nettable.
+func netSizeTier(netSize string) int {
+	switch netSize {
+	case "", "small":
+		return 1
+	case "medium":
+		return 2
+	case "large":
+		return 3
+	case "trap_only":
+		return netTierTrapOnly
+	default:
+		return 1
+	}
+}
+
 func containsString(list []string, s string) bool {
 	for _, v := range list {
 		if v == s {

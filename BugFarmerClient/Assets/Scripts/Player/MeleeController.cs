@@ -99,13 +99,17 @@ namespace BugFarmer.Player
                 taken += ids.Length;
                 entries.Add(new MeleeSwarmHits { swarm_id = hit.swarmId, bug_ids = ids });
 
-                // Optimistic feedback: FLASH only (HP/kill truth arrives via OpCode 89 +
-                // the BUG_REMOVED ledger).
+                // Optimistic feedback: FLASH + THWACK (HP/kill truth arrives via OpCode
+                // 89 + the BUG_REMOVED ledger; the echo's sounds are !ownEcho-gated so
+                // the attacker never double-hears).
                 var swarm = SwarmManager.Instance.GetSwarm(hit.swarmId);
                 if (swarm != null)
                 {
                     foreach (var id in ids)
+                    {
                         swarm.FlashBug(id);
+                        BugFarmer.Audio.AudioFx.BugHit();
+                    }
                 }
             }
 

@@ -8,11 +8,18 @@ namespace BugFarmer.Bugs
         public string PlayerReaction;  // "ignore", "flee", "attack", "curious"
         public float ReactionRadius;   // Distance at which bug reacts to players
         public float WanderRadius;     // How far bugs wander from swarm center
+        public bool FliesOverFences;   // HASH-BEARING: per-bug collision skips occupants
+        public bool SkipCollision;     // crawling individuals: head = center verbatim
     }
 
     /// <summary>
-    /// Factory for creating movement behaviors and getting species config.
-    /// Hardcoded for Phase 1 - could later load from species.json.
+    /// Factory for creating movement behaviors and getting species config — DATA-DRIVEN
+    /// via the published Data/species.json (movement_style / player_reaction /
+    /// flies_over_fences through EntityDatabase): a new species is one data row + a
+    /// sprite. The per-STYLE numeric tuning lives here; the old per-species-id switch
+    /// remains as the fallback for rows without a movement_style. These values feed the
+    /// deterministic per-bug sim — same-build clients parse the same published file
+    /// (the established class; publish_entities.py is the drift tripwire).
     /// </summary>
     public static class MovementFactory
     {
@@ -23,6 +30,20 @@ namespace BugFarmer.Bugs
         /// </summary>
         public static IBugMovement CreateMovement(string speciesId)
         {
+            var info = Data.EntityDatabase.GetSpecies(speciesId);
+            switch (info?.MovementStyle)
+            {
+                case "brownian":
+                    return new BrownianMovement(speed: 0.2f, changeRate: 0.3f);
+                case "gliding":
+                    return new GlidingMovement(speed: 0.15f, intentRange: 10f, changeRate: 0.05f, turnRate: 0.1f);
+                case "darting":
+                    // dash 0.35 ≥ the ×1.5 hunt-leg center speed (0.33) — visuals never trail
+                    return new DartingMovement(dashSpeed: 0.35f, hoverSpeed: 0.06f);
+                case "crawling":
+                    return new CrawlingMovement();
+            }
+            // Fallback: the legacy per-species-id switch (rows without movement_style)
             return speciesId switch
             {
                 "fly_common" => new BrownianMovement(
@@ -57,6 +78,31 @@ namespace BugFarmer.Bugs
         /// </summary>
         public static SpeciesBehavior GetBehavior(string speciesId)
         {
+            // DATA branch: rows with a movement_style carry their full behavior config
+            // in the published species.json (player_reaction/reaction_radius/
+            // flies_over_fences) — the wasp ships as pure data.
+            var info = Data.EntityDatabase.GetSpecies(speciesId);
+            if (info != null && !string.IsNullOrEmpty(info.MovementStyle))
+            {
+                // Per-bug wander leash is DISPLAY tuning, set per style (the previously
+                // hardcoded per-species values, preserved):
+                float wander = info.MovementStyle switch
+                {
+                    "gliding" => 5.0f,
+                    "darting" => 1.5f, // strike formation: tight
+                    "crawling" => 0f,  // the head IS the center
+                    _ => 4.0f,         // brownian
+                };
+                return new SpeciesBehavior
+                {
+                    PlayerReaction = string.IsNullOrEmpty(info.PlayerReaction) ? "ignore" : info.PlayerReaction,
+                    ReactionRadius = info.ReactionRadius,
+                    WanderRadius = wander,
+                    FliesOverFences = info.FliesOverFences,
+                    SkipCollision = info.MovementStyle == "crawling",
+                };
+            }
+
             return speciesId switch
             {
                 "fly_common" => new SpeciesBehavior

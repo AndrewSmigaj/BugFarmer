@@ -1625,6 +1625,26 @@ func (m *Match) handleCatchBug(
 		return
 	}
 
+	// NET-TIER gate (the first enforcement of species net_size): hand ≡ tier 1
+	// (small) — hand-catching flies AND butterflies stays core early game; wasps
+	// need the large net; trap_only (centipede) rejects EVERYTHING incl. hands.
+	if catchSpecies := state.Species[swarm.SpeciesID]; catchSpecies != nil {
+		required := netSizeTier(catchSpecies.NetSize)
+		netTier := 1 // bare hands / the hands tool
+		if toolDef := state.Entities[player.EquippedTool]; toolDef != nil &&
+			toolDef.ToolType == "net" && toolDef.ToolTier > 0 {
+			netTier = toolDef.ToolTier
+		}
+		if netTier < required {
+			if required >= netTierTrapOnly {
+				m.sendWorldError(dispatcher, state, playerID, "Far too big for any net!")
+			} else {
+				m.sendWorldError(dispatcher, state, playerID, "You need a larger net for that bug!")
+			}
+			return
+		}
+	}
+
 	bugIDs := msg.BugIDs
 	if len(bugIDs) > maxCatch {
 		bugIDs = bugIDs[:maxCatch]

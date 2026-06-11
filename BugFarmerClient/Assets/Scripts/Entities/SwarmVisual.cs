@@ -192,6 +192,29 @@ namespace BugFarmer.Entities
             visual.SetParent(transform);
             visual.position = startPos.ToVector2();
 
+            // FLYING TELL (display-only): species that ignore fences get a drop shadow
+            // offset below the sprite — the universal "airborne" read. Without it, a
+            // wasp crossing your fence looks like broken collision. Pooled visuals may
+            // carry a stale shadow from another species — sync its presence.
+            var behavior = Bugs.MovementFactory.GetBehavior(SpeciesId);
+            var shadow = visual.Find("Shadow");
+            if (behavior.FliesOverFences && shadow == null)
+            {
+                var shadowGo = new GameObject("Shadow");
+                shadowGo.transform.SetParent(visual, false);
+                shadowGo.transform.localPosition = new Vector3(0.06f, -0.22f, 0f);
+                shadowGo.transform.localScale = new Vector3(0.8f, 0.45f, 1f);
+                var ssr = shadowGo.AddComponent<SpriteRenderer>();
+                ssr.sprite = _bugSprite;
+                ssr.color = new Color(0f, 0f, 0f, 0.35f);
+                ssr.sortingLayerName = "Occupants";
+                ssr.sortingOrder = -1000; // always under the bug
+            }
+            else if (!behavior.FliesOverFences && shadow != null)
+            {
+                Object.Destroy(shadow.gameObject);
+            }
+
             var bugVisual = new BugVisual(agent, visual);
             _bugs[bugId] = bugVisual;
         }
@@ -388,6 +411,13 @@ namespace BugFarmer.Entities
         public void FlashBug(int bugId)
         {
             if (_bugs.TryGetValue(bugId, out var bug))
+                bug.FlashUntil = Time.time + 0.15f;
+        }
+
+        /// <summary>Flash the whole swarm (predator telegraphs — strike snatch, windup).</summary>
+        public void FlashAllBugs()
+        {
+            foreach (var bug in _bugs.Values)
                 bug.FlashUntil = Time.time + 0.15f;
         }
 

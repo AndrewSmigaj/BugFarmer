@@ -644,6 +644,9 @@ namespace BugFarmer.Entities
                 case OpCodes.MeleeResult:
                     HandleMeleeResult(state);
                     break;
+                case OpCodes.BugTelegraph:
+                    HandleBugTelegraph(state);
+                    break;
                 // Bug sync (late joiner + drift detection)
                 case OpCodes.RequestSample:
                     HandleSampleRequest(state);
@@ -808,13 +811,53 @@ namespace BugFarmer.Entities
                 if (result.damaged != null)
                 {
                     foreach (var entry in result.damaged)
+                    {
                         swarm.SetDisplayHP(entry.bug_id, entry.hp, flash: !ownEcho);
+                        if (!ownEcho)
+                            BugFarmer.Audio.AudioFx.BugHit(); // remotes: echo-driven (dedup)
+                    }
                 }
-                if (result.killed != null && !ownEcho)
+                if (result.killed != null)
                 {
                     foreach (var bugId in result.killed)
-                        swarm.FlashBug(bugId); // pop cue; the ledger removes ≤1 tick later
+                    {
+                        if (!ownEcho)
+                            swarm.FlashBug(bugId); // pop cue; the ledger removes ≤1 tick later
+                        // The kill POP plays UNCONDITIONALLY: there is no optimistic kill
+                        // (per-bug HP makes prediction wrong by design), so no double —
+                        // and NEVER from BUG_REMOVED application (catches ride it too;
+                        // late-join replay would fire a sound storm).
+                        BugFarmer.Audio.AudioFx.BugKill();
+                    }
                 }
+            }
+        }
+
+        /// <summary>
+        /// OpCode 95 (display-only): predator attack telegraphs. "strike" = a snatch
+        /// THWACK at the attacker (the eye goes to the predator; the victim shrink-fades
+        /// unnoticed); "windup" = the centipede's pre-surge HISS + flash. A late joiner
+        /// missing one in flight loses nothing.
+        /// </summary>
+        private void HandleBugTelegraph(IMatchState state)
+        {
+            var json = System.Text.Encoding.UTF8.GetString(state.State);
+            var msg = JsonUtility.FromJson<BugTelegraphMessage>(json);
+            if (msg == null) return;
+            var swarm = GetSwarm(msg.swarm_id);
+            if (swarm == null) return;
+
+            Vector2 pos = swarm.transform.position;
+            switch (msg.kind)
+            {
+                case "strike":
+                    BugFarmer.Audio.AudioFx.ThwackAt(pos);
+                    swarm.FlashAllBugs();
+                    break;
+                case "windup":
+                    BugFarmer.Audio.AudioFx.HissAt(pos);
+                    swarm.FlashAllBugs();
+                    break;
             }
         }
 

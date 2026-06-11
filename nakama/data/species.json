@@ -29,7 +29,7 @@
     "split_threshold": 40,
     "split_chance": 0.01,
     "player_reaction": "flee",
-    "reaction_radius": 2.5,
+    "reaction_radius": 6.0,
     "flee_speed_mult": 2.0,
     "attack_damage": 0,
     "attack_cooldown": 0,

@@ -147,7 +147,33 @@ namespace BugFarmer.Data
         // Species id -> sprite_id (from the published Data/species.json): bug slots store
         // SPECIES ids, so inventory display needs this map to find Bugs/{sprite_id}.
         private static Dictionary<string, string> _speciesSprites;
+
+        /// <summary>
+        /// Per-species client config from the PUBLISHED species.json. HASH-BEARING:
+        /// movement_style and flies_over_fences feed the deterministic per-bug sim —
+        /// same-build clients parse the same published file (the established class;
+        /// publish_entities.py is the drift tripwire). Replaces MovementFactory's
+        /// hardcoding so a new species is one data row + a sprite ("dragonfly = pure
+        /// data").
+        /// </summary>
+        public class SpeciesInfo
+        {
+            public string SpriteId;
+            public string MovementStyle = "";       // brownian | gliding | darting | crawling
+            public string PlayerReaction = "ignore";
+            public float ReactionRadius;
+            public bool FliesOverFences;
+            public string NetSize = "small";
+        }
+        private static Dictionary<string, SpeciesInfo> _species;
         private static bool _initialized;
+
+        /// <summary>Published per-species config (null for unknown ids).</summary>
+        public static SpeciesInfo GetSpecies(string speciesId)
+        {
+            EnsureInitialized();
+            return _species != null && _species.TryGetValue(speciesId, out var info) ? info : null;
+        }
 
         #region Initialization
 
@@ -182,6 +208,7 @@ namespace BugFarmer.Data
         private static void LoadSpeciesSprites()
         {
             _speciesSprites = new Dictionary<string, string>();
+            _species = new Dictionary<string, SpeciesInfo>();
             var textAsset = Resources.Load<TextAsset>("Data/species");
             if (textAsset == null)
             {
@@ -194,8 +221,19 @@ namespace BugFarmer.Data
                 foreach (var prop in root.Properties())
                 {
                     if (prop.Name.StartsWith("_")) continue;
-                    var spriteId = (prop.Value as JObject)?["sprite_id"]?.Value<string>();
+                    var obj = prop.Value as JObject;
+                    var spriteId = obj?["sprite_id"]?.Value<string>();
                     _speciesSprites[prop.Name] = string.IsNullOrEmpty(spriteId) ? prop.Name : spriteId;
+
+                    _species[prop.Name] = new SpeciesInfo
+                    {
+                        SpriteId = _speciesSprites[prop.Name],
+                        MovementStyle = obj?["movement_style"]?.Value<string>() ?? "",
+                        PlayerReaction = obj?["player_reaction"]?.Value<string>() ?? "ignore",
+                        ReactionRadius = obj?["reaction_radius"]?.Value<float>() ?? 0f,
+                        FliesOverFences = obj?["flies_over_fences"]?.Value<bool>() ?? false,
+                        NetSize = obj?["net_size"]?.Value<string>() ?? "small",
+                    };
                 }
             }
             catch (System.Exception e)
