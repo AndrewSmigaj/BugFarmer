@@ -793,10 +793,18 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		// the chosen source is CACHED on the swarm so the per-tick meter check is O(1).
 		// V1 RULE: a REPRODUCING swarm only targets DEPLETABLE sources (items/stations) —
 		// flora is infinite, so breeding on it would mean unbounded growth.
+		// ActionState machine (centipede windup/surge/recover/gnaw): PER TICK, BEFORE
+		// the think gate — surges are 25 ticks vs 8-30-tick thinks, and the bite check
+		// must run every tick of flight. Owns the swarm while active.
+		actionActive := false
+		if species.Predation != nil && species.Category == "individual" {
+			actionActive = m.processActionState(logger, dispatcher, worldState, swarm, species, chunkSize, deltaTime)
+		}
+
 		// Predation branches (prey FLEE / predator hunt+wander) REPLACE the shared
 		// forage block when they fire — they emit their own leg, write their own
 		// SpeedMult, and own NextThinkTick (hunt/flee re-aim every 10-15 ticks).
-		if worldState.TickCount >= swarm.NextThinkTick &&
+		if !actionActive && worldState.TickCount >= swarm.NextThinkTick &&
 			!m.predationThink(worldState, swarm, species, chunkSize, deltaTime, logger) {
 			var resourceX, resourceY float32 = float32(math.NaN()), float32(math.NaN())
 			swarm.TargetFoodID = ""
@@ -1348,8 +1356,8 @@ func (m *Match) checkSwarmMerging(state *WorldState, chunkSize int, logger runti
 			continue
 		}
 		species1 := state.Species[swarm1.SpeciesID]
-		if species1 == nil {
-			continue
+		if species1 == nil || species1.Category == "individual" {
+			continue // individuals (centipede) never merge
 		}
 
 		for id2, swarm2 := range state.Swarms {
@@ -1443,8 +1451,8 @@ func (m *Match) checkSwarmSplitting(state *WorldState, chunkSize int, logger run
 
 	for _, swarm := range state.Swarms {
 		species := state.Species[swarm.SpeciesID]
-		if species == nil {
-			continue
+		if species == nil || species.Category == "individual" {
+			continue // individuals (centipede) never split — belt+braces over the sizes
 		}
 
 		// Deterministic size rule: split when over the limit (MaxSwarmSize IS the limit)

@@ -77,6 +77,21 @@ type SwarmState struct {
 	DefendUntilTick int64  // defending exits at this tick (or by distance hysteresis)
 	DefendTargetID  string // player being chased while defending
 
+	// ActionState (centipede): what the bug is FORCIBLY DOING right now — orthogonal
+	// to the lifecycle Phase (what it WANTS). "" | "windup" | "surge" | "recover" |
+	// "gnaw". Runs per-tick BEFORE the think gate and owns the swarm while active.
+	ActionState       string
+	ActionUntilTick   int64   // current action ends/advances at this tick
+	SurgeCooldownUntil int64  // no new windup before this
+	WindupTargetID    string  // the player being lunged at
+	WindupStartX      float32 // their position at windup START (the velocity sample)
+	WindupStartY      float32
+	WanderHeading     float32 // serpentine wander heading (radians)
+	ClampedLegStreak  int     // dead-end escape hatch: 3 fully-clamped legs => free roll
+	GnawKey           string  // "gx,gy" of the fence being chewed
+	GnawNextTick      int64   // next gnaw damage tick
+	GnawCooldownUntil int64   // armed on ABANDONED gnaws only (successful breaks chain)
+
 	// Bug ID tracking for deterministic catching
 	RemovedBugIDs map[int]bool // Set of removed bug IDs (not serialized)
 	NextBugID     int          // Next ID to assign for new bugs (reproduction)
@@ -271,6 +286,40 @@ func (s *SwarmState) Move(deltaTime float32, species *BugSpecies, chunkSize int)
 // split-child swarm centre so it can't land through a fence/wall — penned swarms split INSIDE).
 func RaycastClamp(startX, startY, endX, endY float32, isBlocked BlockedChecker) (float32, float32) {
 	return raycastToBlock(startX, startY, endX, endY, isBlocked)
+}
+
+// RaycastClampWithBlock is RaycastClamp that ALSO reports the first blocking cell
+// (integer grid coords) when the ray was clamped. hit=false means the path was clear.
+// Consumers (the gnaw trigger, the bite LOS gate) need the cell — deriving it outside
+// would couple to the internal step size.
+func RaycastClampWithBlock(startX, startY, endX, endY float32, isBlocked BlockedChecker) (cx, cy float32, blockX, blockY int, hit bool) {
+	if isBlocked == nil {
+		return endX, endY, 0, 0, false
+	}
+	dx := endX - startX
+	dy := endY - startY
+	dist := float32(math.Sqrt(float64(dx*dx + dy*dy)))
+	if dist < 0.5 {
+		return endX, endY, 0, 0, false
+	}
+	dirX := dx / dist
+	dirY := dy / dist
+	const stepSize float32 = 0.5
+	steps := int(dist / stepSize)
+
+	prevX, prevY := startX, startY
+	for i := 1; i <= steps; i++ {
+		checkX := startX + dirX*stepSize*float32(i)
+		checkY := startY + dirY*stepSize*float32(i)
+		if isBlocked(checkX, checkY) {
+			return prevX, prevY, int(math.Floor(float64(checkX))), int(math.Floor(float64(checkY))), true
+		}
+		prevX, prevY = checkX, checkY
+	}
+	if isBlocked(endX, endY) {
+		return prevX, prevY, int(math.Floor(float64(endX))), int(math.Floor(float64(endY))), true
+	}
+	return endX, endY, 0, 0, false
 }
 
 // raycastToBlock walks from start toward end, returning position just before first blocked cell.

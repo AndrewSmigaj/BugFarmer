@@ -164,6 +164,25 @@ func (m *Match) predationThink(
 		}
 	}
 
+	// INDIVIDUAL ground predators (centipede): CARRION-FIRST — if food is visible,
+	// decline ownership so the SHARED forage block dines/breeds normally (it clears
+	// TargetPreyID + resets SpeedMult on entry). Hunting is the fallback for a hungry
+	// centipede with nothing to scavenge.
+	isIndividual := species.Category == "individual"
+	if isIndividual && swarm.TargetPreyID == "" {
+		// A fresh swarm's Phase is "" until the first CheckPhaseTransition — default
+		// to "feeding" for the attraction lookup (the transition's own default).
+		phase := swarm.Phase
+		if phase == "" || phase == "idle" {
+			phase = "feeding"
+		}
+		if attractions := species.AttractionsByPhase[phase]; len(attractions) > 0 {
+			if hits := FindNearbyFood(state, swarm.Position, species.VisionRange, attractions); len(hits) > 0 {
+				return false
+			}
+		}
+	}
+
 	// Continue or acquire a hunt. Hunting persists once started (re-aim each think)
 	// until: sated, prey gone/out-of-range, or timeout without a kill.
 	hunting := swarm.TargetPreyID != ""
@@ -195,7 +214,9 @@ func (m *Match) predationThink(
 		if !ok || !inRange || timedOut || sated {
 			swarm.TargetPreyID = "" // hunt over; wander below
 		} else {
-			// Re-aim at the prey's CURRENT center. Fliers go straight; grounded clamp.
+			// Re-aim at the prey's CURRENT center. Fliers go straight; grounded clamp —
+			// and a GNAWABLE blocker turns a clamped individual's hunt into a gnaw
+			// (penned prey is acquired through the fence; the break-in motive).
 			mult := p.HuntSpeedMult
 			if mult <= 0 {
 				mult = 1.0
@@ -203,14 +224,25 @@ func (m *Match) predationThink(
 			tx, ty := preyX, preyY
 			if !species.FliesOverFences {
 				sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
-				tx, ty = entities.RaycastClamp(sx, sy, tx, ty, func(x, y float32) bool {
+				cxp, cyp, bx, by, blocked := entities.RaycastClampWithBlock(sx, sy, tx, ty, func(x, y float32) bool {
 					return state.IsBlockedForSpecies(x, y, species)
 				})
+				if blocked && isIndividual && m.tryStartGnaw(state, swarm, species, bx, by, chunkSize, deltaTime) {
+					return true
+				}
+				tx, ty = cxp, cyp
 			}
 			m.emitLeg(state, swarm, species, tx, ty, mult, chunkSize, deltaTime)
 			swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + rand.Int63n(huntReaimJitter)
 			return true
 		}
+	}
+
+	// Idle: individuals wander SERPENTINE (heading-constrained short legs + the
+	// dead-end escape hatch); swarm predators rest-wander in their home range.
+	if isIndividual {
+		m.centipedeWander(state, swarm, species, chunkSize, deltaTime)
+		return true
 	}
 
 	// Wander within the home range (rest between trips; the readable loiter).

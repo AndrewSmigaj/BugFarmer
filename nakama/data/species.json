@@ -191,5 +191,66 @@
       "hunt_satiation_threshold": 30.0,
       "nest_occupant": "wasp_nest"
     }
+  },
+  "centipede_garden": {
+    "name": "Garden Centipede",
+    "description": "A long, fast, venomous hunter. Wanders in lazy serpentines, lunges at anything warm, chews through wooden fences, and scavenges the fallen. Stone walls stop it. Far too big for any net.",
+    "category": "individual",
+    "base_speed": 1.6,
+    "wander_radius": 15.0,
+    "wander_change_rate": 0.1,
+    "vision_range": 10.0,
+    "attractions_by_phase": {
+      "feeding": [
+        "bug_parts"
+      ],
+      "reproducing": [
+        "bug_parts"
+      ]
+    },
+    "forage_chance": 0.0,
+    "feed_amount": 6.0,
+    "breed_amount": 8.0,
+    "satiation_decay_rate": 0.3,
+    "consume_rate": 0.5,
+    "min_swarm_size": 1,
+    "max_swarm_size": 1,
+    "swarm_radius": 0.5,
+    "merge_radius": 0.0,
+    "player_reaction": "ignore",
+    "reaction_radius": 0.0,
+    "flee_speed_mult": 1.0,
+    "attack_damage": 2,
+    "attack_cooldown": 5.0,
+    "net_size": "trap_only",
+    "catch_condition": "always",
+    "max_hp": 6,
+    "sell_price": 25,
+    "reproduce_cooldown": 600.0,
+    "sprite_id": "centipede_head_a",
+    "movement_style": "crawling",
+    "flies_over_fences": false,
+    "kill_drops": [
+      {
+        "item": "centipede_parts",
+        "count_min": 3,
+        "count_max": 5,
+        "chance": 1.0
+      }
+    ],
+    "predation": {
+      "prey": [
+        "fly_common"
+      ],
+      "home_range": 0.0,
+      "strike_radius": 1.2,
+      "strike_cooldown_ticks": 50,
+      "kills_per_strike": 1,
+      "feed_per_kill": 30.0,
+      "hunt_speed_mult": 1.0,
+      "deposit_satiation": 0.0,
+      "hunt_satiation_threshold": 30.0,
+      "nest_occupant": ""
+    }
   }
 }
