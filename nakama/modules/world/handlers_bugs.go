@@ -27,6 +27,24 @@ import (
 // on receipt while state hashing is per-tick, so a lagging client can theoretically trip
 // one drift-sample round per creation (~0.3-1%/release) — minority resync self-heals.
 // BACKLOG: zone swarm-count cap for releases (force add-to-nearest / reject above N).
+// growSwarm is THE single id-math for adding n bugs to an existing swarm: lazy
+// NextBugID init, ascending new ids from the base, Count, and the SWARM_REPRODUCED
+// ledger event (clients SpawnBugAt the center at the event tick — idempotent).
+// Three callers share it (reproduceSwarm, release-join, nest hatch); callers own
+// caps, meters, cooldowns, and food costs. Returns the first new bug id.
+func (m *Match) growSwarm(state *WorldState, swarm *entities.SwarmState, n int) int {
+	if swarm.NextBugID == 0 {
+		swarm.NextBugID = swarm.Count // lazy-init guard
+	}
+	base := swarm.NextBugID
+	swarm.NextBugID += n
+	swarm.Count += n
+	if state.CurrentZone != nil {
+		state.AddSwarmReproducedEvent(state.CurrentZone.ZoneID, swarm.ID, n, base)
+	}
+	return base
+}
+
 // spawnSwarmAt creates a new swarm of n bugs at a world point — the single mint path
 // shared by player releases and the F8 debug spawn (same on-receipt mid-tick class as
 // §12.2 releases: the swarm Thinks THIS tick and anchors via SWARM_SET_TARGET).
@@ -165,19 +183,11 @@ func (m *Match) handleReleaseBugs(
 	}
 
 	if target != nil {
-		// JOIN: mirror reproduceSwarm's id math exactly, WITHOUT touching meters.
+		// JOIN: the shared growSwarm id-math, WITHOUT touching meters.
 		// Over MaxSwarmSize is fine — the population pass (600-tick cadence) splits it;
 		// note the split pair sums past MaxSwarmSize, so merges never re-fuse it (the
 		// documented, bounded swarm-count overage — see SpeciesCap).
-		if target.NextBugID == 0 {
-			target.NextBugID = target.Count // lazy-init guard (reproduceSwarm parity)
-		}
-		base := target.NextBugID
-		target.NextBugID += n
-		target.Count += n
-		if state.CurrentZone != nil {
-			state.AddSwarmReproducedEvent(state.CurrentZone.ZoneID, target.ID, n, base)
-		}
+		m.growSwarm(state, target, n)
 		logger.Info("Player %s released %d %s into swarm %s (now %d)",
 			playerID, n, speciesID, target.ID, target.Count)
 	} else {

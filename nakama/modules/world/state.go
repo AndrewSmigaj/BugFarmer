@@ -77,6 +77,7 @@ type WorldState struct {
 
 	// Fruit trees
 	FruitTreeStates map[string]*entities.FruitTreeState // "gx,gy" -> fruit tree state
+	NestStates      map[string]*entities.NestState      // "gx,gy" -> wasp-nest brood state
 
 	// Stations (player-fillable processors: compost bin etc.)
 	Stations map[string]*entities.StationState // StationKey(gx,gy) -> station state
@@ -250,6 +251,7 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		CropStates:      make(map[string]*entities.CropState),
 		CropDefs:        make(map[string]*entities.CropDef),
 		FruitTreeStates: make(map[string]*entities.FruitTreeState),
+		NestStates:      make(map[string]*entities.NestState),
 		Stations:        make(map[string]*entities.StationState),
 		// Bug spawn tracking
 		SwarmsBySpecies:  make(map[string][]string),

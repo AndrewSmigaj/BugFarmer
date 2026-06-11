@@ -68,6 +68,15 @@ type SwarmState struct {
 	LastStrikeTick int64  // strike cooldown anchor
 	LastAttackTick int64  // player-sting/bite cooldown anchor
 
+	// Nest membership (wasps). Phase strings for nest predators: "feeding" (hunt),
+	// "homing" (carry brood back), "defending" (chase a nest threat). An ORPHAN
+	// (NestKey == "") never breeds, tethers to its last HomePos, still hunts/stings.
+	NestKey         string // "gx,gy" of the home nest; "" = orphan
+	CarryingBrood   bool   // sated trip in progress (a bool-carry, not a meter)
+	HomingStartTick int64  // homing timeout anchor (600 ticks drops the brood)
+	DefendUntilTick int64  // defending exits at this tick (or by distance hysteresis)
+	DefendTargetID  string // player being chased while defending
+
 	// Bug ID tracking for deterministic catching
 	RemovedBugIDs map[int]bool // Set of removed bug IDs (not serialized)
 	NextBugID     int          // Next ID to assign for new bugs (reproduction)

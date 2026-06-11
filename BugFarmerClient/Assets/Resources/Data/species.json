@@ -131,5 +131,65 @@
     "movement_style": "gliding",
     "predator_flee_radius": 6.0,
     "predator_flee_speed_mult": 1.5
+  },
+  "wasp_common": {
+    "name": "Wasp",
+    "description": "An aggressive aerial predator. Hunts flies and butterflies, carries its kills home, and breeds at a paper nest. Fences mean nothing to wings.",
+    "category": "swarm",
+    "base_speed": 2.2,
+    "wander_radius": 10.0,
+    "wander_change_rate": 0.2,
+    "vision_range": 14.0,
+    "attractions_by_phase": {},
+    "forage_chance": 0.0,
+    "feed_amount": 0.0,
+    "breed_amount": 0.0,
+    "satiation_decay_rate": 0.4,
+    "min_swarm_size": 3,
+    "max_swarm_size": 10,
+    "swarm_radius": 1.5,
+    "merge_radius": 1.5,
+    "player_reaction": "ignore",
+    "reaction_radius": 0.0,
+    "flee_speed_mult": 1.0,
+    "attack_damage": 1,
+    "attack_cooldown": 2.0,
+    "net_size": "medium",
+    "catch_condition": "always",
+    "max_hp": 3,
+    "sell_price": 8,
+    "reproduce_cooldown": 30.0,
+    "sprite_id": "wasp_common",
+    "movement_style": "darting",
+    "flies_over_fences": true,
+    "kill_drops": [
+      {
+        "item": "bug_parts",
+        "count_min": 1,
+        "count_max": 1,
+        "chance": 1.0
+      },
+      {
+        "item": "wasp_stinger",
+        "count_min": 1,
+        "count_max": 1,
+        "chance": 0.3
+      }
+    ],
+    "predation": {
+      "prey": [
+        "fly_common",
+        "butterfly_meadow"
+      ],
+      "home_range": 40.0,
+      "strike_radius": 3.0,
+      "strike_cooldown_ticks": 100,
+      "kills_per_strike": 1,
+      "feed_per_kill": 35.0,
+      "hunt_speed_mult": 1.5,
+      "deposit_satiation": 80.0,
+      "hunt_satiation_threshold": 30.0,
+      "nest_occupant": "wasp_nest"
+    }
   }
 }

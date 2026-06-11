@@ -186,6 +186,7 @@ func predationTestState() *WorldState {
 			KillsPerStrike:         1,
 			FeedPerKill:            35,
 			HuntSpeedMult:          1.5,
+			DepositSatiation:       80,
 			HuntSatiationThreshold: 30,
 			NestOccupant:           "wasp_nest",
 		},

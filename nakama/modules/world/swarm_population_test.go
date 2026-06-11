@@ -49,6 +49,7 @@ func newTestState(maxSwarm int) *WorldState {
 		Entities:    map[string]*EntityDef{},
 		// Farming maps (tree water-gating tests)
 		FruitTreeStates: map[string]*entities.FruitTreeState{},
+		NestStates:      map[string]*entities.NestState{},
 		Chunks:          map[string]*ChunkData{},
 	}
 }

@@ -34,6 +34,7 @@ func (m *Match) handleChunkSubscribe(
 
 		// Initialize fruit tree states for any fruit trees in this chunk
 		m.initFruitTreesInChunk(state, chunk, cx, cy, logger)
+		m.initNestsInChunk(state, chunk, cx, cy, logger)
 		// Initialize stations (compost bins etc. — entities with world.station)
 		m.initStationsInChunk(state, chunk, cx, cy, logger)
 	}
@@ -439,6 +440,11 @@ func (m *Match) handleTileBreak(
 	progress.CurrentHP--
 	progress.LastTick = tick
 
+	// AGGRO-ON-DAMAGE: hitting a wasp nest recalls its resident onto the attacker
+	// regardless of distance — axing while the patrol hunts is a head start, not
+	// immunity (the loiter window LOOKS safe; the sign warns it isn't).
+	m.recallNestDefenders(state, msg.GridX, msg.GridY, userID)
+
 	// Tool hits KNOCK fruit off a fruit tree — one per registered hit, straight to the
 	// ground via the normal drop path (the evening window doesn't apply: a hit is a hit).
 	// Picking by hand (OpCode 92) is how fruit enters the inventory; tools shake it loose.
@@ -462,39 +468,62 @@ func (m *Match) handleTileBreak(
 
 	// Check if broken
 	if progress.CurrentHP <= 0 {
-		// Remove occupant
-		chunk.ClearOccupant(lx, ly)
+		m.breakOccupantAt(logger, dispatcher, state, msg.GridX, msg.GridY, true)
+		logger.Debug("Player %s broke %s at %d,%d", userID, occ.ID, msg.GridX, msg.GridY)
+	}
+}
 
-		// Clear blocked cells for multi-cell
-		w, h := def.GetFootprint(occ.Dir)
-		for dy := 0; dy < h; dy++ {
-			for dx := 0; dx < w; dx++ {
-				bx, by := msg.GridX+dx, msg.GridY+dy
-				bcx, bcy, blx, bly := GlobalToChunk(bx, by)
-				bChunk := state.Chunks[ChunkKey(bcx, bcy)]
-				if bChunk != nil {
-					bChunk.ClearOccupant(blx, bly)
-				}
+// breakOccupantAt is THE shared occupant-removal completion path (player breaks +
+// centipede gnaw + any future server-side destruction): clears the footprint cells,
+// optionally rolls the def's drops (gnawed fences are CONSUMED — withDrops=false),
+// clears breaking state, runs the nest-destruction hook, and broadcasts the removal.
+func (m *Match) breakOccupantAt(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	gx, gy int,
+	withDrops bool,
+) {
+	cx, cy, lx, ly := GlobalToChunk(gx, gy)
+	chunk := state.Chunks[ChunkKey(cx, cy)]
+	if chunk == nil {
+		return
+	}
+	cell, _ := chunk.GetOccupantCell(lx, ly)
+	if cell.IsEmpty || cell.Occupant == nil {
+		return
+	}
+	occ := cell.Occupant
+	def := state.Entities[occ.ID]
+	if def == nil {
+		return
+	}
+
+	// Remove occupant + clear the full footprint
+	chunk.ClearOccupant(lx, ly)
+	w, h := def.GetFootprint(occ.Dir)
+	for dy := 0; dy < h; dy++ {
+		for dx := 0; dx < w; dx++ {
+			bx, by := gx+dx, gy+dy
+			bcx, bcy, blx, bly := GlobalToChunk(bx, by)
+			bChunk := state.Chunks[ChunkKey(bcx, bcy)]
+			if bChunk != nil {
+				bChunk.ClearOccupant(blx, bly)
 			}
 		}
+	}
 
-		// Drop items to ground (with chance-based multi-drop)
+	// Drop items to ground (with chance-based multi-drop)
+	if withDrops {
 		drops := def.GetDrops()
 		cs := float32(state.Config.ChunkSize)
 		for _, drop := range drops {
-			// Roll for chance
 			if rand.Float32() > drop.Chance {
 				continue
 			}
-
-			// Create unique ground item ID
-			itemID := fmt.Sprintf("item_%d_%d_%d", msg.GridX, msg.GridY, time.Now().UnixNano())
-
-			// World position at cell center with random offset to prevent stacking
-			worldX := float32(msg.GridX) + 0.5 + (rand.Float32()-0.5)*0.3
-			worldY := float32(msg.GridY) + 0.5 + (rand.Float32()-0.5)*0.3
-
-			// Local position within chunk
+			itemID := fmt.Sprintf("item_%d_%d_%d", gx, gy, time.Now().UnixNano())
+			worldX := float32(gx) + 0.5 + (rand.Float32()-0.5)*0.3
+			worldY := float32(gy) + 0.5 + (rand.Float32()-0.5)*0.3
 			localX := worldX - float32(cx)*cs
 			localY := worldY - float32(cy)*cs
 
@@ -503,36 +532,29 @@ func (m *Match) handleTileBreak(
 				ItemType: drop.ItemID,
 				Count:    drop.Count,
 				Position: entities.EntityPosition{
-					ChunkX: cx,
-					ChunkY: cy,
-					LocalX: localX,
-					LocalY: localY,
+					ChunkX: cx, ChunkY: cy, LocalX: localX, LocalY: localY,
 				},
 				Lifetime: 60.0,
 			}
 			state.GroundItems[itemID] = groundItem
 
-			// Broadcast spawn to chunk subscribers
 			spawnMsg := GroundItemSpawnMessage{
-				ID:       itemID,
-				ItemType: drop.ItemID,
-				Count:    drop.Count,
-				X:        worldX,
-				Y:        worldY,
+				ID: itemID, ItemType: drop.ItemID, Count: drop.Count, X: worldX, Y: worldY,
 			}
 			m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeGroundItemSpawn, spawnMsg)
-
 			logger.Debug("Spawned ground item %s x%d at %.1f,%.1f", drop.ItemID, drop.Count, worldX, worldY)
 		}
-
-		logger.Debug("Player %s broke %s at %d,%d", userID, occ.ID, msg.GridX, msg.GridY)
-
-		// Clear breaking state
-		delete(state.BreakingState, breakKey)
-
-		// Broadcast removal (clear occupant)
-		m.broadcastWorldUpdate(dispatcher, state, cx, cy, msg.GridX, msg.GridY, "", nil, true)
 	}
+
+	// Clear breaking state for this cell
+	delete(state.BreakingState, fmt.Sprintf("%d,%d", gx, gy))
+
+	// Nest destruction: clear the state + ORPHAN the resident (it never breeds again,
+	// tethers to its last home, still hunts/stings — a decaying patrol).
+	m.onNestOccupantRemoved(state, gx, gy, logger)
+
+	// Broadcast removal (clear occupant)
+	m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, "", nil, true)
 }
 
 // canPlace checks if an occupant can be placed at the given location

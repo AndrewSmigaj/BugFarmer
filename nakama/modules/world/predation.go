@@ -85,6 +85,85 @@ func (m *Match) predationThink(
 
 	homeX, homeY := swarm.HomePos.WorldX(chunkSize), swarm.HomePos.WorldY(chunkSize)
 
+	// NEST predators run the custom lifecycle tree: defending > homing > hunt > rest.
+	if p.NestOccupant != "" {
+		// DEFENDING — entry: recalled by nest damage (recallNestDefenders) OR a player
+		// loitering within NestDefendRadius of the nest. Exit: hysteresis distance or
+		// the timer. Defenders chase at hunt speed (scary NEAR the nest only).
+		nest := state.NestStates[swarm.NestKey]
+		if swarm.Phase != "defending" && nest != nil {
+			if pid, px, py, found := m.nearestPlayer(state, float32(nest.GridX)+0.5, float32(nest.GridY)+0.5, entities.NestDefendRadius); found {
+				_ = px
+				_ = py
+				swarm.Phase = "defending"
+				swarm.DefendTargetID = pid
+				swarm.DefendUntilTick = state.TickCount + entities.NestDefendTicks
+			}
+		}
+		if swarm.Phase == "defending" {
+			exit := state.TickCount >= swarm.DefendUntilTick || nest == nil
+			var tx, ty float32
+			if !exit {
+				if target, ok := state.Players[swarm.DefendTargetID]; ok {
+					tx, ty = target.WorldX(chunkSize), target.WorldY(chunkSize)
+					ndx, ndy := tx-(float32(nest.GridX)+0.5), ty-(float32(nest.GridY)+0.5)
+					if ndx*ndx+ndy*ndy > entities.NestDefendRelease*entities.NestDefendRelease {
+						exit = true // the threat left the nest area
+					}
+				} else {
+					exit = true // attacker gone
+				}
+			}
+			if exit {
+				swarm.Phase = "feeding"
+				swarm.DefendTargetID = ""
+			} else {
+				mult := p.HuntSpeedMult
+				if mult <= 0 {
+					mult = 1.0
+				}
+				swarm.TargetPreyID = ""
+				m.emitLeg(state, swarm, species, tx, ty, mult, chunkSize, deltaTime)
+				swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + rand.Int63n(huntReaimJitter)
+				return true
+			}
+		}
+
+		// HOMING — entry: sated with a live nest. Carry one brood home; deposit on
+		// arrival (satiation drops to deposit_satiation: the readable rest window);
+		// a trip over the timeout drops the brood (a bool-carry can't deadlock).
+		if swarm.Phase != "homing" && swarm.Satiation >= 100 && swarm.NestKey != "" && nest != nil {
+			swarm.Phase = "homing"
+			swarm.CarryingBrood = true
+			swarm.HomingStartTick = state.TickCount
+			swarm.TargetPreyID = ""
+		}
+		if swarm.Phase == "homing" {
+			if nest == nil || state.TickCount-swarm.HomingStartTick > entities.NestHomingTimeout {
+				swarm.Phase = "feeding" // brood dropped / nest gone
+				swarm.CarryingBrood = false
+			} else {
+				nx, ny := float32(nest.GridX)+0.5, float32(nest.GridY)+0.5
+				sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
+				ddx, ddy := nx-sx, ny-sy
+				if ddx*ddx+ddy*ddy <= entities.NestDepositRange*entities.NestDepositRange {
+					// Arrived: deposit + hatch check, then rest (hunt resumes only when
+					// satiation decays below the hunt threshold — the trip pacing knob)
+					if swarm.CarryingBrood {
+						m.depositBrood(state, swarm, nest, logger)
+					}
+					swarm.CarryingBrood = false
+					swarm.Phase = "feeding"
+					swarm.Satiation = p.DepositSatiation
+				} else {
+					m.emitLeg(state, swarm, species, nx, ny, 1.0, chunkSize, deltaTime)
+					swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + rand.Int63n(huntReaimJitter)
+					return true
+				}
+			}
+		}
+	}
+
 	// Continue or acquire a hunt. Hunting persists once started (re-aim each think)
 	// until: sated, prey gone/out-of-range, or timeout without a kill.
 	hunting := swarm.TargetPreyID != ""
@@ -329,6 +408,26 @@ func (m *Match) broadcastBugTelegraph(
 	cy := swarm.Position.ChunkY
 	msg := BugTelegraphMessage{SwarmID: swarm.ID, Kind: kind}
 	m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeBugTelegraph, msg)
+}
+
+// nearestPlayer finds the closest player to a world point within radius (ascending
+// user-id tiebreak for determinism in logs/tests; the value is server-only).
+func (m *Match) nearestPlayer(state *WorldState, x, y, radius float32) (string, float32, float32, bool) {
+	chunkSize := state.Config.ChunkSize
+	bestID := ""
+	var bestX, bestY float32
+	bestDistSq := radius * radius
+	for id, p := range state.Players {
+		px, py := p.WorldX(chunkSize), p.WorldY(chunkSize)
+		dx, dy := px-x, py-y
+		distSq := dx*dx + dy*dy
+		if distSq < bestDistSq || (distSq == bestDistSq && bestID != "" && id < bestID) {
+			bestID = id
+			bestX, bestY = px, py
+			bestDistSq = distSq
+		}
+	}
+	return bestID, bestX, bestY, bestID != ""
 }
 
 func containsString(list []string, s string) bool {

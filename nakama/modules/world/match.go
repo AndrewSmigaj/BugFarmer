@@ -69,19 +69,10 @@ func (m *Match) reproduceSwarm(state *WorldState, dispatcher runtime.MatchDispat
 		}
 	}
 
-	if swarm.NextBugID == 0 {
-		swarm.NextBugID = swarm.Count // lazy-init guard
-	}
-	base := swarm.NextBugID
-	swarm.NextBugID += count
-	swarm.Count += count
+	m.growSwarm(state, swarm, count) // the shared id-math + SWARM_REPRODUCED event
 	swarm.ReproductionMeter = 0
 	swarm.Satiation = 0
 	swarm.ReproduceCooldown = species.ReproduceCooldown
-
-	if state.CurrentZone != nil {
-		state.AddSwarmReproducedEvent(state.CurrentZone.ZoneID, swarm.ID, count, base)
-	}
 	m.consumeFood(state, dispatcher, swarm.TargetFoodID, reproduceFoodCost)
 	logger.Info("Swarm %s reproduced at %s: +%d -> %d bugs", swarm.ID, swarm.TargetFoodID, count, swarm.Count)
 }
@@ -770,6 +761,9 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 
 	// === Fruit Trees & Ground Item Decay ===
 	m.processFruitTrees(worldState, dispatcher, logger)
+	if worldState.TickCount%30 == 0 {
+		m.processNests(worldState, logger) // occupant-gone sweep + brood-drain re-hatch
+	}
 	m.processGroundItemDecay(worldState, dispatcher)
 	m.processStations(worldState, dispatcher) // material processors: input -> compost
 
