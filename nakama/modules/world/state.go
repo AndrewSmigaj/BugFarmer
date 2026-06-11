@@ -283,11 +283,13 @@ func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presenc
 	}
 	player.SetWorldPosition(spawnX, spawnY, s.Config.ChunkSize)
 
-	// Give new player starting tools in hotbar
-	player.ItemSlots[0] = InventorySlot{ItemID: "small_net", Count: 1}
-	player.ItemSlots[1] = InventorySlot{ItemID: "pickaxe_wood", Count: 1}
-	player.ItemSlots[2] = InventorySlot{ItemID: "axe_wood", Count: 1}
-	player.ItemSlots[3] = InventorySlot{ItemID: "shovel_wood", Count: 1}
+	// Give new player starting tools in hotbar. Slot 0 = HANDS: the visible grab verb
+	// (bug-catch -> tree-pick -> gather fallthrough) — empty slots behave identically;
+	// the icon is the affordance. Shovel moved to the panel to make room.
+	player.ItemSlots[0] = InventorySlot{ItemID: "hands", Count: 1}
+	player.ItemSlots[1] = InventorySlot{ItemID: "small_net", Count: 1}
+	player.ItemSlots[2] = InventorySlot{ItemID: "pickaxe_wood", Count: 1}
+	player.ItemSlots[3] = InventorySlot{ItemID: "axe_wood", Count: 1}
 	player.ItemSlots[4] = InventorySlot{ItemID: "sword_wood", Count: 1}
 	// Farming tools and seeds
 	player.ItemSlots[5] = InventorySlot{ItemID: "hoe_wood", Count: 1}
@@ -308,7 +310,8 @@ func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presenc
 	// multi-cell cursor-place)
 	player.ItemSlots[12] = InventorySlot{ItemID: "bookshelf", Count: 1}
 	player.ItemSlots[13] = InventorySlot{ItemID: "bench", Count: 1}
-	player.EquippedTool = "small_net"
+	player.ItemSlots[14] = InventorySlot{ItemID: "shovel_wood", Count: 1}
+	player.EquippedTool = "hands"
 
 	s.Players[userID] = player
 	s.Presences[userID] = presence

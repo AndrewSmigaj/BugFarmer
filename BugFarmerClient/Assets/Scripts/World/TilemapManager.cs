@@ -48,6 +48,13 @@ namespace BugFarmer.World
         private Dictionary<Vector2Int, TreeWaterUpdateMessage> _treeWaterStates = new Dictionary<Vector2Int, TreeWaterUpdateMessage>();
         private long _lastDropletDay = -1;
 
+        // Canopy fruit overlays (OpCode 93) — SEPARATE GameObjects keyed by anchor cell,
+        // NEVER children of the occupant GO: occupant objects are POOLED (RenderOccupant/
+        // UnloadChunk ReturnToPool) and child fruit would ride a pooled tree into its next
+        // life. Same reasoning as the droplet.
+        private Dictionary<Vector2Int, GameObject> _fruitOverlays = new Dictionary<Vector2Int, GameObject>();
+        private Dictionary<Vector2Int, TreeFruitUpdateMessage> _treeFruitStates = new Dictionary<Vector2Int, TreeFruitUpdateMessage>();
+
         // Object pooling for occupants
         private Stack<GameObject> _occupantPool = new Stack<GameObject>();
 
@@ -224,6 +231,9 @@ namespace BugFarmer.World
                 case OpCodes.TreeWaterUpdate:
                     HandleTreeWaterUpdate(state);
                     break;
+                case OpCodes.TreeFruitUpdate:
+                    HandleTreeFruitUpdate(state);
+                    break;
             }
         }
 
@@ -276,6 +286,113 @@ namespace BugFarmer.World
         {
             foreach (var kv in _treeWaterStates)
                 RefreshDroplet(kv.Key, kv.Value);
+        }
+
+        /// <summary>
+        /// OpCode 93: a tree's canopy fruit count changed (grew / fell / picked / knocked).
+        /// Rebuild the fruit overlay for that tree.
+        /// </summary>
+        private void HandleTreeFruitUpdate(IMatchState state)
+        {
+            var json = System.Text.Encoding.UTF8.GetString(state.State);
+            var msg = JsonUtility.FromJson<TreeFruitUpdateMessage>(json);
+            if (msg == null) return;
+
+            var cell = new Vector2Int(msg.grid_x, msg.grid_y);
+            _treeFruitStates[cell] = msg;
+            RefreshFruitOverlay(cell, msg);
+        }
+
+        /// <summary>
+        /// (Re)build the canopy fruit overlay for one tree: a separate GameObject with one
+        /// small fruit sprite per count, at DETERMINISTIC hash-jittered anchors over the
+        /// upper 60% of the tree sprite's bounds — every client renders identical canopies,
+        /// and a count change only ever adds/removes the highest-index fruit visually.
+        /// </summary>
+        private void RefreshFruitOverlay(Vector2Int cell, TreeFruitUpdateMessage msg)
+        {
+            if (_fruitOverlays.TryGetValue(cell, out var old) && old != null)
+                Destroy(old);
+            _fruitOverlays.Remove(cell);
+
+            if (msg.fruit_count <= 0)
+            {
+                _treeFruitStates.Remove(cell);
+                return;
+            }
+
+            if (!_occupantObjects.TryGetValue(cell, out var occupantGo) || occupantGo == null)
+                return; // tree not rendered yet — the chunk re-send refreshes us on load
+
+            var treeSr = occupantGo.GetComponent<SpriteRenderer>();
+            if (treeSr == null) return;
+
+            var fruitSprite = EntityDatabase.GetItemSprite(msg.fruit_type);
+            if (fruitSprite == null) return;
+
+            var bounds = treeSr.bounds;
+            var overlay = new GameObject($"TreeFruit_{cell.x}_{cell.y}");
+            overlay.transform.position = bounds.center;
+
+            const float fruitSize = 0.35f; // world units
+            float spriteWorld = Mathf.Max(fruitSprite.bounds.size.x, fruitSprite.bounds.size.y);
+            float scale = spriteWorld > 0f ? fruitSize / spriteWorld : 1f;
+
+            for (int i = 0; i < msg.fruit_count; i++)
+            {
+                // Deterministic per-(cell, index) jitter — stable across clients/frames
+                float hx = Hash01(cell.x * 73856093 ^ cell.y * 19349663 ^ (i * 83492791));
+                float hy = Hash01(cell.x * 19349663 ^ cell.y * 83492791 ^ (i * 73856093 + 1));
+                float x = Mathf.Lerp(bounds.min.x + bounds.size.x * 0.18f,
+                                     bounds.max.x - bounds.size.x * 0.18f, hx);
+                float y = Mathf.Lerp(bounds.min.y + bounds.size.y * 0.42f,
+                                     bounds.max.y - bounds.size.y * 0.08f, hy);
+
+                var fruitGo = new GameObject($"fruit_{i}");
+                fruitGo.transform.SetParent(overlay.transform, false);
+                fruitGo.transform.position = new Vector3(x, y, -0.15f);
+                fruitGo.transform.localScale = new Vector3(scale, scale, 1f);
+
+                var sr = fruitGo.AddComponent<SpriteRenderer>();
+                sr.sprite = fruitSprite;
+                sr.sortingLayerName = "Occupants";
+                sr.sortingOrder = -cell.y + 1; // just in front of the canopy
+                LitMaterials.Apply(sr);
+            }
+
+            _fruitOverlays[cell] = overlay;
+        }
+
+        private static float Hash01(int n)
+        {
+            unchecked
+            {
+                uint x = (uint)n;
+                x = (x ^ 61u) ^ (x >> 16);
+                x *= 9u;
+                x ^= x >> 4;
+                x *= 0x27d4eb2du;
+                x ^= x >> 15;
+                return (x & 0xFFFFFF) / (float)0x1000000;
+            }
+        }
+
+        /// <summary>Destroy the fruit overlay + droplet at a cell (occupant removed/unloaded).</summary>
+        private void RemoveTreeVisuals(Vector2Int cell, bool forgetState)
+        {
+            if (_fruitOverlays.TryGetValue(cell, out var overlay) && overlay != null)
+                Destroy(overlay);
+            _fruitOverlays.Remove(cell);
+
+            if (_waterDroplets.TryGetValue(cell, out var droplet) && droplet != null)
+                Destroy(droplet.gameObject);
+            _waterDroplets.Remove(cell);
+
+            if (forgetState)
+            {
+                _treeFruitStates.Remove(cell);
+                _treeWaterStates.Remove(cell);
+            }
         }
 
         private void HandleChunkData(IMatchState state)
@@ -678,11 +795,13 @@ namespace BugFarmer.World
 
         private void RenderOccupant(Vector2Int cellPos, OccupantCellData occData)
         {
-            // Remove existing occupant at this cell
+            // Remove existing occupant at this cell — and its tree visuals (separate GOs;
+            // a pooled occupant must never carry fruit/droplets into its next life).
             if (_occupantObjects.TryGetValue(cellPos, out var existing))
             {
                 ReturnToPool(existing);
                 _occupantObjects.Remove(cellPos);
+                RemoveTreeVisuals(cellPos, forgetState: true);
             }
 
             // Skip if empty
@@ -818,8 +937,11 @@ namespace BugFarmer.World
                         _occupantObjects.Remove(cellPos);
                     }
 
-                    // Remove breaking visual
+                    // Remove breaking visual + tree visuals (fruit overlay, droplet,
+                    // retained 51/93 state — the chunk re-send repopulates on resubscribe;
+                    // without this the droplet dict leaked on every chunk unload)
                     RemoveBreakingVisual(cellPos);
+                    RemoveTreeVisuals(cellPos, forgetState: true);
                 }
             }
 

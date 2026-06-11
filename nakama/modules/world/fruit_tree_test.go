@@ -250,6 +250,106 @@ func TestWildInitUnripe(t *testing.T) {
 	}
 }
 
+// Hands-pick (OpCode 92): one fruit per harvest into the inventory; rejects keep both
+// the tree and the inventory intact (range, empty tree, full inventory).
+func TestTreeHarvest(t *testing.T) {
+	state, tree := treeTestState(4, 2, 4200)
+	m := &Match{}
+	tree.FruitCount = 2
+
+	player := &PlayerState{
+		UserID:   "p1",
+		Position: entities.EntityPosition{LocalX: 6.0, LocalY: 5.5}, // ~1.1 from tree center (5.5,5.5)
+	}
+	state.Players = map[string]*PlayerState{"p1": player}
+
+	// Pick one: fruit moves tree -> inventory.
+	m.handleTreeHarvest(nopRuntimeLogger(), nil, state, "p1", TreeHarvestMessage{GX: 5, GY: 5})
+	if tree.FruitCount != 1 {
+		t.Fatalf("tree fruit=%d, want 1", tree.FruitCount)
+	}
+	if player.ItemSlots[0].ItemID != "apple" || player.ItemSlots[0].Count != 1 {
+		t.Fatalf("inventory got %q x%d, want apple x1", player.ItemSlots[0].ItemID, player.ItemSlots[0].Count)
+	}
+
+	// Out of range: no change.
+	player.Position.LocalX = 20
+	m.handleTreeHarvest(nopRuntimeLogger(), nil, state, "p1", TreeHarvestMessage{GX: 5, GY: 5})
+	if tree.FruitCount != 1 || player.ItemSlots[0].Count != 1 {
+		t.Fatal("out-of-range harvest mutated state")
+	}
+	player.Position.LocalX = 6.0
+
+	// Empty the tree: harvest refuses.
+	m.handleTreeHarvest(nopRuntimeLogger(), nil, state, "p1", TreeHarvestMessage{GX: 5, GY: 5})
+	if tree.FruitCount != 0 {
+		t.Fatalf("tree fruit=%d, want 0", tree.FruitCount)
+	}
+	m.handleTreeHarvest(nopRuntimeLogger(), nil, state, "p1", TreeHarvestMessage{GX: 5, GY: 5})
+	if player.ItemSlots[0].Count != 2 {
+		t.Fatalf("empty-tree harvest changed inventory: count=%d, want 2", player.ItemSlots[0].Count)
+	}
+
+	// Full inventory: fruit STAYS on the tree.
+	tree.FruitCount = 1
+	for i := range player.ItemSlots {
+		if player.ItemSlots[i].ItemID == "" {
+			player.ItemSlots[i] = InventorySlot{ItemID: "stone_block", Count: 1}
+		}
+	}
+	m.handleTreeHarvest(nopRuntimeLogger(), nil, state, "p1", TreeHarvestMessage{GX: 5, GY: 5})
+	// apple already stacks in slot 0 — make the stack check honest by using a fruit the
+	// player does NOT hold: an orange tree.
+	if tree.FruitCount != 0 || player.ItemSlots[0].Count != 3 {
+		// apple stacked onto the existing apple slot — allowed; full means "no slot AND
+		// no stack". Verify the genuinely-full case below.
+		t.Fatalf("stacking pick failed: fruit=%d apples=%d", tree.FruitCount, player.ItemSlots[0].Count)
+	}
+
+	state.Entities["tree_test"].World.FruitType = "orange"
+	tree.FruitCount = 1
+	m.handleTreeHarvest(nopRuntimeLogger(), nil, state, "p1", TreeHarvestMessage{GX: 5, GY: 5})
+	if tree.FruitCount != 1 {
+		t.Fatalf("full-inventory pick removed fruit from the tree: %d", tree.FruitCount)
+	}
+}
+
+// Tool hits knock one fruit to the GROUND per hit (never into the inventory), ignoring
+// the evening window; an empty tree just takes break damage.
+func TestKnockdownOnToolHit(t *testing.T) {
+	state, tree := treeTestState(4, 2, 4200)
+	m := &Match{}
+	tree.FruitCount = 2
+
+	// Make the tree breakable by hand so handleTileBreak engages.
+	state.Entities["tree_test"].World.Breakable = &BreakableData{HP: 10}
+	state.BreakingState = map[string]*BreakingProgress{}
+	player := &PlayerState{
+		UserID:   "p1",
+		Position: entities.EntityPosition{LocalX: 6.0, LocalY: 5.5},
+	}
+	state.Players = map[string]*PlayerState{"p1": player}
+
+	// Morning (outside the evening fall window): hits still knock fruit down.
+	m.handleTileBreak(nopRuntimeLogger(), nil, state, "p1", TileBreakMessage{GridX: 5, GridY: 5}, state.TickCount)
+	if tree.FruitCount != 1 {
+		t.Fatalf("first hit should knock one fruit: %d", tree.FruitCount)
+	}
+	if len(state.GroundItems) != 1 {
+		t.Fatalf("knocked fruit should hit the ground: %d items", len(state.GroundItems))
+	}
+	m.handleTileBreak(nopRuntimeLogger(), nil, state, "p1", TileBreakMessage{GridX: 5, GridY: 5}, state.TickCount)
+	if tree.FruitCount != 0 || len(state.GroundItems) != 2 {
+		t.Fatalf("second hit: fruit=%d items=%d", tree.FruitCount, len(state.GroundItems))
+	}
+
+	// Empty tree: more hits, no underflow, no items.
+	m.handleTileBreak(nopRuntimeLogger(), nil, state, "p1", TileBreakMessage{GridX: 5, GridY: 5}, state.TickCount)
+	if tree.FruitCount != 0 || len(state.GroundItems) != 2 {
+		t.Fatalf("empty-tree hit mutated fruit: fruit=%d items=%d", tree.FruitCount, len(state.GroundItems))
+	}
+}
+
 // Rain filling the tank DURING a growing batch banks it — exactly one new batch fires,
 // and only after the canopy fully empties.
 func TestRainBanksDuringGrowthSingleTrigger(t *testing.T) {

@@ -35,6 +35,7 @@ namespace BugFarmer.Player
         private PlacementController _placement;
         private StationController _station;
         private BugReleaseController _bugRelease;
+        private TreeHarvestController _treeHarvest;
         private Camera _mainCamera;
 
         private bool _holdLatchedToBreaking;
@@ -49,6 +50,7 @@ namespace BugFarmer.Player
             _placement = GetComponent<PlacementController>();
             _station = GetComponent<StationController>();
             _bugRelease = GetComponent<BugReleaseController>();
+            _treeHarvest = GetComponent<TreeHarvestController>();
             _mainCamera = Camera.main;
         }
 
@@ -106,10 +108,14 @@ namespace BugFarmer.Player
                     return;
 
                 default:
-                    // Bare hand (or a non-tool item): try to grab a bug first; if no bug was
-                    // under the cursor, the click falls through to breaking. This ordered
-                    // fallthrough replaces BreakingController's old bug-priority probe.
-                    if (toolType == null && _catching != null && _catching.TryHandleClick(netMode: false))
+                    // Bare hand, the HANDS tool, or a non-tool item: GRAB verbs in order —
+                    // bug-catch, then tree-pick, then the breaking fallthrough. This ordered
+                    // fallthrough replaces BreakingController's old bug-priority probe; the
+                    // hands item is the visible affordance for what empty-handed already means.
+                    bool grabby = toolType == null || toolType == "hands";
+                    if (grabby && _catching != null && _catching.TryHandleClick(netMode: false))
+                        return;
+                    if (grabby && _treeHarvest != null && _treeHarvest.TryHandleClick())
                         return;
                     LatchBreaking();
                     return;

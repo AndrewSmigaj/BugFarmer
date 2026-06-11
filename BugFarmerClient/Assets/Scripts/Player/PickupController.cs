@@ -24,6 +24,9 @@ namespace BugFarmer.Player
 
         private GroundItemVisual _highlightedItem;
 
+        // Floating "[E]" prompt above the highlighted item (one reusable world-space label)
+        private TextMesh _ePrompt;
+
         // Auto-pickup guards: don't spam the server while a request is in flight, and back
         // off items that keep failing (inventory full / contested pickup).
         private float _nextAutoPickup;
@@ -91,6 +94,43 @@ namespace BugFarmer.Player
                 {
                     _highlightedItem.SetHighlight(true);
                 }
+            }
+
+            UpdatePrompt();
+        }
+
+        /// <summary>
+        /// "[E]" floating above the highlighted item — the standard "press to pick up"
+        /// affordance. Repositioned every frame (items bob); hidden when nothing is
+        /// highlighted or the highlighted visual despawns.
+        /// </summary>
+        private void UpdatePrompt()
+        {
+            bool show = _highlightedItem != null && _highlightedItem.gameObject.activeInHierarchy;
+
+            if (_ePrompt == null)
+            {
+                if (!show) return;
+                var go = new GameObject("PickupPromptE");
+                _ePrompt = go.AddComponent<TextMesh>();
+                _ePrompt.text = "[E]";
+                _ePrompt.fontSize = 48;
+                _ePrompt.characterSize = 0.045f;
+                _ePrompt.anchor = TextAnchor.LowerCenter;
+                _ePrompt.alignment = TextAlignment.Center;
+                _ePrompt.color = new Color(1f, 1f, 1f, 0.95f);
+                var mr = go.GetComponent<MeshRenderer>();
+                mr.sortingLayerName = "Occupants";
+                mr.sortingOrder = 950; // above world objects
+            }
+
+            _ePrompt.gameObject.SetActive(show);
+            if (show)
+            {
+                var sr = _highlightedItem.GetComponentInChildren<SpriteRenderer>();
+                float topY = sr != null ? sr.bounds.max.y : _highlightedItem.transform.position.y + 0.4f;
+                float x = sr != null ? sr.bounds.center.x : _highlightedItem.transform.position.x;
+                _ePrompt.transform.position = new Vector3(x, topY + 0.12f, -0.2f);
             }
         }
 

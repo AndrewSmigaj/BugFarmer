@@ -617,6 +617,14 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			}
 			m.handlePickupItem(logger, dispatcher, worldState, userID, pickupMsg)
 
+		case OpCodeTreeHarvest:
+			var harvestMsg TreeHarvestMessage
+			if err := json.Unmarshal(msg.GetData(), &harvestMsg); err != nil {
+				logger.Warn("Invalid tree harvest from %s: %v", userID, err)
+				continue
+			}
+			m.handleTreeHarvest(logger, dispatcher, worldState, userID, harvestMsg)
+
 		// NOTE: OpCodeInteractionReport (70) RETIRED — no client ever sent it, and the
 		// lifecycle meters it fed are now SERVER-authoritative (advanced in the swarm loop
 		// from center-at-food checks; effects ride the influence ledger).

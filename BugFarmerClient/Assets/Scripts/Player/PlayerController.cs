@@ -55,6 +55,8 @@ namespace BugFarmer.Player
                 gameObject.AddComponent<MeleeController>();
             if (GetComponent<BugReleaseController>() == null)
                 gameObject.AddComponent<BugReleaseController>();
+            if (GetComponent<TreeHarvestController>() == null)
+                gameObject.AddComponent<TreeHarvestController>();
             if (GetComponent<PlayerInputRouter>() == null)
                 gameObject.AddComponent<PlayerInputRouter>();
         }
@@ -94,8 +96,9 @@ namespace BugFarmer.Player
             string id = InventoryManager.Instance?.GetEquippedToolId() ?? "";
             var def = EntityDatabase.Get(id);
             // v1 gating: TOOLS only (a held torch already shows via its personal light;
-            // placeables show the ghost instead).
-            if (def?.ToolType != null)
+            // placeables show the ghost instead). HANDS show nothing in-hand — the slot
+            // icon is the affordance, the hand itself is the tool.
+            if (def?.ToolType != null && def.ToolType != "hands")
                 _toolAnimator.SetIdleItem(def.ToolType, EntityDatabase.GetItemSprite(id));
             else
                 _toolAnimator.SetIdleItem(null, null);

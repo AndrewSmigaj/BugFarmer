@@ -300,6 +300,14 @@
     "buy_price": 5,
     "sell_price": 1
   },
+  "hands": {
+    "name": "Hands",
+    "category": "tool",
+    "tool_type": "hands",
+    "reach": 2.5,
+    "buy_price": 0,
+    "sell_price": 0
+  },
   "small_net": {
     "name": "Small Net",
     "category": "tool",

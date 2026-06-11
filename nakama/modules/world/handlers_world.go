@@ -439,6 +439,16 @@ func (m *Match) handleTileBreak(
 	progress.CurrentHP--
 	progress.LastTick = tick
 
+	// Tool hits KNOCK fruit off a fruit tree — one per registered hit, straight to the
+	// ground via the normal drop path (the evening window doesn't apply: a hit is a hit).
+	// Picking by hand (OpCode 92) is how fruit enters the inventory; tools shake it loose.
+	if tree := state.FruitTreeStates[breakKey]; tree != nil && tree.FruitCount > 0 &&
+		def.World != nil && def.World.FruitType != "" {
+		tree.FruitCount--
+		m.dropFruitFromTree(dispatcher, state, tree, def.World.FruitType, logger)
+		m.broadcastTreeFruitUpdate(dispatcher, state, tree, def.World.FruitType)
+	}
+
 	// Broadcast progress
 	progressMsg := BreakProgressMessage{
 		GridX:     msg.GridX,

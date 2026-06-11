@@ -276,6 +276,63 @@ func (m *Match) handleWatering(
 	logger.Debug("Player %s watered crop at %d,%d (water=%d)", userID, gx, gy, crop.Water)
 }
 
+// handleTreeHarvest (OpCode 92): hands-pick ONE fruit from the tree at (gx, gy) into the
+// player's inventory. Full inventory = error with NO decrement; fruit in a slot is inert
+// (never rots). Display rides the 93 broadcast.
+func (m *Match) handleTreeHarvest(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	userID string,
+	msg TreeHarvestMessage,
+) {
+	player := state.Players[userID]
+	if player == nil {
+		return
+	}
+
+	tree := state.FruitTreeStates[fmt.Sprintf("%d,%d", msg.GX, msg.GY)]
+	if tree == nil {
+		m.sendWorldError(dispatcher, state, userID, "No fruit tree here")
+		return
+	}
+
+	// Range: client checks 2.5, server allows 3.0 for latency (the pickup convention)
+	cs := state.Config.ChunkSize
+	dx := player.WorldX(cs) - (float32(tree.GridX) + 0.5)
+	dy := player.WorldY(cs) - (float32(tree.GridY) + 0.5)
+	if dx*dx+dy*dy > 9.0 {
+		m.sendWorldError(dispatcher, state, userID, "Too far away")
+		return
+	}
+
+	if tree.FruitCount <= 0 {
+		m.sendWorldError(dispatcher, state, userID, "No fruit on the tree")
+		return
+	}
+
+	fruitType := ""
+	if def := state.Entities[tree.EntityID]; def != nil && def.World != nil {
+		fruitType = def.World.FruitType
+	}
+	if fruitType == "" {
+		return
+	}
+
+	slotIndex := player.AddItem(fruitType, 1)
+	if slotIndex < 0 {
+		m.sendWorldError(dispatcher, state, userID, "Inventory full")
+		return // fruit stays on the tree
+	}
+
+	tree.FruitCount--
+	tree.LastHarvestTick = state.TickCount
+	m.sendSlotUpdate(dispatcher, state, userID, slotIndex, &player.ItemSlots[slotIndex])
+	m.broadcastTreeFruitUpdate(dispatcher, state, tree, fruitType)
+	logger.Debug("Player %s picked %s from tree at %d,%d (%d left)",
+		userID, fruitType, tree.GridX, tree.GridY, tree.FruitCount)
+}
+
 // treeDefDropTicks reads a tree def's ripeness threshold with a sane floor (rand.Intn
 // panics on 0 — a def without fruit_drop_ticks must not crash wild init).
 func treeDefDropTicks(def *EntityDef) int {

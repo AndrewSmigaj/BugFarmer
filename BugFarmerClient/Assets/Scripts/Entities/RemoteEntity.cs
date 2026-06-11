@@ -120,10 +120,10 @@ namespace BugFarmer.Entities
 
             if (_toolAnimator == null) return;
             var def = EntityDatabase.Get(itemId);
-            if (def?.ToolType != null)
+            if (def?.ToolType != null && def.ToolType != "hands")
                 _toolAnimator.SetIdleItem(def.ToolType, EntityDatabase.GetItemSprite(itemId));
             else
-                _toolAnimator.SetIdleItem(null, null); // bare hand / non-tool / unknown id
+                _toolAnimator.SetIdleItem(null, null); // bare hand / hands tool / non-tool
         }
     }
 }
