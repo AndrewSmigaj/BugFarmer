@@ -272,24 +272,25 @@ func TestReproduceSwarmDoubles(t *testing.T) {
 	}
 }
 
-// === Water-gated fruit trees ===
+// === Water-gated fruit trees (tank model) ===
+// A FULL tank (3 waterings) buys exactly ONE batch of MaxFruit, triggered only when the
+// tree is EMPTY. Growth is a Pending countdown; ripe fruit falls only in the evening
+// window. Deep coverage lives in fruit_tree_test.go — this pins the water GATE itself.
 
 func TestTreeWaterGating(t *testing.T) {
 	state := newTestState(20)
 	m := &Match{}
 
-	// A fast tree at (5,5): grow every 2 ticks, drop every 3 — with ONE water charge.
-	// MaxFruit=1 because growing RESETS the drop timer (fruit accumulates to max before
-	// any drop — intended behavior); max 1 lets the drop fire promptly in the test.
+	// A fast tree at (5,5): batch of 2, grow every 2 ticks.
 	state.Entities["tree_test"] = &EntityDef{World: &WorldData{
-		FruitType: "apple", MaxFruit: 1, FruitGrowTicks: 2, FruitDropTicks: 3,
+		FruitType: "apple", MaxFruit: 2, FruitGrowTicks: 2, FruitDropTicks: 3,
 	}}
 	chunk := NewEmptyChunk(0, 0, "grass")
 	chunk.SetOccupant(5, 5, &PlacedOccupant{ID: "tree_test", Anchor: true})
 	state.Chunks[ChunkKey(0, 0)] = chunk
 	tree := &entities.FruitTreeState{
 		TreeID: "tree_5_5", EntityID: "tree_test", GridX: 5, GridY: 5,
-		MaxFruit: 1, WaterCharges: 1,
+		MaxFruit: 2, LastWaterDay: -1,
 	}
 	state.FruitTreeStates["5,5"] = tree
 
@@ -299,30 +300,39 @@ func TestTreeWaterGating(t *testing.T) {
 		}
 	}
 
-	// Watered: fruit grows (2 ticks) then drops (3 more) — consuming the only charge.
-	tick(2)
-	if tree.FruitCount != 1 {
-		t.Fatalf("watered tree should grow: FruitCount=%d, want 1", tree.FruitCount)
-	}
-	tick(3)
-	if tree.FruitCount != 0 || tree.WaterCharges != 0 {
-		t.Fatalf("drop should fire + consume the charge: fruit=%d charges=%d", tree.FruitCount, tree.WaterCharges)
-	}
-	if len(state.GroundItems) != 1 {
-		t.Fatalf("dropped fruit should be a ground item: %d", len(state.GroundItems))
-	}
-
-	// DRY: many more ticks — no new fruit ever grows.
+	// DRY: nothing ever grows.
 	tick(50)
-	if tree.FruitCount != 0 || len(state.GroundItems) != 1 {
-		t.Fatalf("dry tree must not produce: fruit=%d items=%d", tree.FruitCount, len(state.GroundItems))
+	if tree.FruitCount != 0 || tree.PendingGrowth != 0 {
+		t.Fatalf("dry tree must not produce: fruit=%d pending=%d", tree.FruitCount, tree.PendingGrowth)
 	}
 
-	// Re-watered: production resumes.
-	tree.WaterCharges = treeWaterPerCan
+	// Partially watered (below the cap): still gated.
+	tree.WaterLevel = treeTankCap - 1
+	tick(50)
+	if tree.FruitCount != 0 || tree.PendingGrowth != 0 {
+		t.Fatalf("partial tank must not trigger: fruit=%d pending=%d", tree.FruitCount, tree.PendingGrowth)
+	}
+
+	// Full tank: the batch triggers (tank consumed) and grows one fruit per 2 ticks.
+	tree.WaterLevel = treeTankCap
+	tick(1) // trigger pass
+	if tree.WaterLevel != 0 || tree.PendingGrowth != 2 {
+		t.Fatalf("full tank should buy a batch: level=%d pending=%d", tree.WaterLevel, tree.PendingGrowth)
+	}
 	tick(2)
 	if tree.FruitCount != 1 {
-		t.Fatalf("re-watered tree should grow again: FruitCount=%d", tree.FruitCount)
+		t.Fatalf("first fruit should grow: FruitCount=%d", tree.FruitCount)
+	}
+	tick(2)
+	if tree.FruitCount != 2 || tree.PendingGrowth != 0 {
+		t.Fatalf("batch should complete: fruit=%d pending=%d", tree.FruitCount, tree.PendingGrowth)
+	}
+
+	// Fruit on the canopy NEVER rots/disappears outside the evening window: ticks pass
+	// at MORNING (the test tick count sits at t≈0.12), no falls.
+	tick(100)
+	if tree.FruitCount != 2 || len(state.GroundItems) != 0 {
+		t.Fatalf("no falls outside the evening window: fruit=%d items=%d", tree.FruitCount, len(state.GroundItems))
 	}
 }
 

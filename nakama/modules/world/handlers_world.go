@@ -77,12 +77,33 @@ func (m *Match) handleChunkSubscribe(
 			}
 		}
 
-		// Send DRY fruit trees in this chunk (droplet indicators for joiners)
+		// Send EVERY tracked tree's water + fruit display state in this chunk: the
+		// client's default is "no droplet, no fruit", so subscribers need both messages
+		// to render existing trees correctly (the snapshot carries neither).
 		for _, tree := range state.FruitTreeStates {
-			if tree.WaterCharges == 0 && tree.GridX/cs == cx && tree.GridY/cs == cy {
-				wMsg := TreeWaterUpdateMessage{GridX: tree.GridX, GridY: tree.GridY, WaterCharges: 0}
-				wData, _ := json.Marshal(wMsg)
-				dispatcher.BroadcastMessage(OpCodeTreeWaterUpdate, wData, []runtime.Presence{presence}, nil, true)
+			if tree.GridX/cs != cx || tree.GridY/cs != cy {
+				continue
+			}
+			wMsg := TreeWaterUpdateMessage{
+				GridX: tree.GridX, GridY: tree.GridY,
+				WaterLevel:    tree.WaterLevel,
+				PendingGrowth: tree.PendingGrowth,
+				LastWaterDay:  tree.LastWaterDay,
+			}
+			wData, _ := json.Marshal(wMsg)
+			dispatcher.BroadcastMessage(OpCodeTreeWaterUpdate, wData, []runtime.Presence{presence}, nil, true)
+
+			if tree.FruitCount > 0 {
+				fruitType := ""
+				if def := state.Entities[tree.EntityID]; def != nil && def.World != nil {
+					fruitType = def.World.FruitType
+				}
+				fMsg := TreeFruitUpdateMessage{
+					GridX: tree.GridX, GridY: tree.GridY,
+					FruitCount: tree.FruitCount, FruitType: fruitType,
+				}
+				fData, _ := json.Marshal(fMsg)
+				dispatcher.BroadcastMessage(OpCodeTreeFruitUpdate, fData, []runtime.Presence{presence}, nil, true)
 			}
 		}
 

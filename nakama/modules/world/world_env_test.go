@@ -97,10 +97,14 @@ func TestRainWaterAllRespectsCaps(t *testing.T) {
 	state.CropStates["3,3"] = thirsty
 	state.CropStates["4,4"] = capped
 
-	dryTree := &entities.FruitTreeState{TreeID: "t1", GridX: 6, GridY: 6, WaterCharges: 0}
-	fullTree := &entities.FruitTreeState{TreeID: "t2", GridX: 7, GridY: 7, WaterCharges: treeWaterCap}
+	dryTree := &entities.FruitTreeState{TreeID: "t1", GridX: 6, GridY: 6, WaterLevel: 0, LastWaterDay: -1}
+	fullTree := &entities.FruitTreeState{TreeID: "t2", GridX: 7, GridY: 7, WaterLevel: treeTankCap, LastWaterDay: -1}
+	// A tree the player ALREADY watered today: rain must still top it up (no daily stamp)
+	wateredToday := &entities.FruitTreeState{TreeID: "t3", GridX: 8, GridY: 8, WaterLevel: 1,
+		LastWaterDay: (state.TickCount + state.DayOffsetTicks) / DayLengthTicks}
 	state.FruitTreeStates["6,6"] = dryTree
 	state.FruitTreeStates["7,7"] = fullTree
+	state.FruitTreeStates["8,8"] = wateredToday
 
 	watered := m.rainWaterAll(state, nil)
 
@@ -110,14 +114,20 @@ func TestRainWaterAllRespectsCaps(t *testing.T) {
 	if capped.Water != 5 || capped.WateringsToday != 2 {
 		t.Errorf("capped crop mutated: water=%d today=%d", capped.Water, capped.WateringsToday)
 	}
-	if dryTree.WaterCharges != treeWaterPerCan {
-		t.Errorf("dry tree charges=%d, want %d", dryTree.WaterCharges, treeWaterPerCan)
+	if dryTree.WaterLevel != 1 {
+		t.Errorf("dry tree level=%d, want 1", dryTree.WaterLevel)
 	}
-	if fullTree.WaterCharges != treeWaterCap {
-		t.Errorf("full tree charges=%d, want cap %d", fullTree.WaterCharges, treeWaterCap)
+	if dryTree.LastWaterDay != -1 {
+		t.Errorf("rain stamped the daily watering (LastWaterDay=%d)", dryTree.LastWaterDay)
 	}
-	if watered != 2 {
-		t.Errorf("watered=%d, want 2 (one crop + one tree)", watered)
+	if fullTree.WaterLevel != treeTankCap {
+		t.Errorf("full tree level=%d, want cap %d", fullTree.WaterLevel, treeTankCap)
+	}
+	if wateredToday.WaterLevel != 2 {
+		t.Errorf("already-watered-today tree level=%d, want 2 (rain ignores the daily cap)", wateredToday.WaterLevel)
+	}
+	if watered != 3 {
+		t.Errorf("watered=%d, want 3 (one crop + two trees)", watered)
 	}
 }
 

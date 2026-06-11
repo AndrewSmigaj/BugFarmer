@@ -12,11 +12,16 @@ import (
 )
 
 // handleToolUse routes tool actions based on equipped tool type
-// Tree watering: one can-use grants 5 fruit worth of charges; trees bank at most 2 waterings.
-// Without water charges a tree grows NO new fruit — the brake on infinite fly food.
+// Fruit tree tuning. A tree's tank holds 3 waterings (max 1 manual/day; rain adds 1 free)
+// and a FULL tank buys exactly ONE batch of MaxFruit — triggered only when the tree is
+// EMPTY, so a banked tank is never wasted on a partial batch. Without water a tree grows
+// NO new fruit — the brake on infinite fly food. Ripe fruit falls only during the evening
+// window, staggered >= treeFallSpacingTicks apart (you watch the tree shed).
 const (
-	treeWaterPerCan = 5
-	treeWaterCap    = 10
+	treeTankCap          = 3
+	treeFallSpacingTicks = 500
+	treeEveningStart     = 0.40 // ~15:30 on the clock (t of the 8400-tick day)
+	treeEveningEnd       = 0.62 // ~21:00
 )
 
 func (m *Match) handleToolUse(
@@ -224,21 +229,18 @@ func (m *Match) handleWatering(
 	cropKey := fmt.Sprintf("%d,%d", gx, gy)
 	crop := state.CropStates[cropKey]
 	if crop == nil {
-		// Not a crop — a FRUIT TREE? Trees require water to produce: one watering grants
-		// 5 fruit worth of charges (banked to 10 max). Without this, flies are infinite.
+		// Not a crop — a FRUIT TREE? Trees fill a 3-watering tank (one manual watering
+		// per day) that buys one full fruit batch. Without water, flies are finite.
 		if tree := state.FruitTreeStates[cropKey]; tree != nil {
-			if tree.WaterCharges >= treeWaterCap {
-				m.sendWorldError(dispatcher, state, userID, "The tree is well watered")
+			if ok, errMsg := waterTree(state, tree, true); !ok {
+				m.sendWorldError(dispatcher, state, userID, errMsg)
 				return
-			}
-			tree.WaterCharges += treeWaterPerCan
-			if tree.WaterCharges > treeWaterCap {
-				tree.WaterCharges = treeWaterCap
 			}
 			slot.Metadata["uses"]--
 			m.sendSlotUpdate(dispatcher, state, userID, slotIndex, slot)
 			m.broadcastTreeWaterUpdate(dispatcher, state, tree)
-			logger.Debug("Player %s watered tree at %d,%d (charges=%d)", userID, gx, gy, tree.WaterCharges)
+			logger.Debug("Player %s watered tree at %d,%d (tank=%d/%d)",
+				userID, gx, gy, tree.WaterLevel, treeTankCap)
 			return
 		}
 		m.sendWorldError(dispatcher, state, userID, "No crop here")
@@ -272,6 +274,43 @@ func (m *Match) handleWatering(
 	m.broadcastCropUpdate(dispatcher, state, gx, gy, crop)
 
 	logger.Debug("Player %s watered crop at %d,%d (water=%d)", userID, gx, gy, crop.Water)
+}
+
+// treeDefDropTicks reads a tree def's ripeness threshold with a sane floor (rand.Intn
+// panics on 0 — a def without fruit_drop_ticks must not crash wild init).
+func treeDefDropTicks(def *EntityDef) int {
+	if def != nil && def.World != nil && def.World.FruitDropTicks > 0 {
+		return def.World.FruitDropTicks
+	}
+	return 4200
+}
+
+// waterTree pours one watering into the tree's tank. Manual waterings are capped at one
+// per APPARENT day; rain (manual=false) skips the daily stamp and clamps silently.
+// The daily gate is `LastWaterDay == currentDay` — equality, NOT >= — so a debug
+// set-time jumping the day index BACKWARD can never block watering for days.
+func waterTree(state *WorldState, tree *entities.FruitTreeState, manual bool) (bool, string) {
+	if tree.WaterLevel >= treeTankCap {
+		if manual {
+			return false, "The tree is well watered"
+		}
+		return false, ""
+	}
+	if manual {
+		currentDay := (state.TickCount + state.DayOffsetTicks) / DayLengthTicks
+		if tree.LastWaterDay == currentDay {
+			return false, "Already watered today"
+		}
+		tree.LastWaterDay = currentDay
+	}
+	tree.WaterLevel++
+	return true, ""
+}
+
+// inEveningWindow reports whether the APPARENT time of day sits in the fruit-fall window.
+func inEveningWindow(state *WorldState) bool {
+	t := float64((state.TickCount+state.DayOffsetTicks)%DayLengthTicks) / float64(DayLengthTicks)
+	return t >= treeEveningStart && t < treeEveningEnd
 }
 
 // sendSlotUpdate sends an item slot update to a specific player
@@ -595,41 +634,57 @@ func (m *Match) processFruitTrees(
 			continue // Not a fruit tree
 		}
 
-		// Fruit growth — WATER-GATED: a dry tree (no charges) grows NO new fruit. One
-		// watering grants treeWaterPerCan (5) drops; this is the brake on infinite fly food.
-		if tree.WaterCharges > 0 {
+		// 1) BATCH TRIGGER — only when the tree is EMPTY: a full tank buys exactly one
+		// full batch of MaxFruit. The FruitCount==0 guard closes two holes: a fruited
+		// tree can't eat the tank for nothing, and a banked tank can't auto-fire a
+		// 1-fruit "batch" the instant a single fruit leaves. Evening falls empty trees
+		// nightly, so a banked tank waits at most ~a day.
+		if tree.WaterLevel >= treeTankCap && tree.PendingGrowth == 0 && tree.FruitCount == 0 {
+			tree.WaterLevel = 0
+			tree.PendingGrowth = tree.MaxFruit
+			tree.GrowthProgress = 0
+			m.broadcastTreeWaterUpdate(dispatcher, state, tree)
+			logger.Debug("Tree at %d,%d starts a batch of %d", tree.GridX, tree.GridY, tree.MaxFruit)
+		}
+
+		// 2) GROWTH — Pending counts DOWN, one fruit per FruitGrowTicks. The ripeness
+		// clock (DropTimer) resets ONLY on the 0->1 transition: a fresh batch gets its
+		// full shelf life; later fruit shares the batch's clock (mixed-age canopies
+		// approximate — documented).
+		if tree.PendingGrowth > 0 {
 			tree.GrowthProgress++
 			if tree.GrowthProgress >= treeDef.World.FruitGrowTicks && tree.FruitCount < tree.MaxFruit {
+				if tree.FruitCount == 0 {
+					tree.DropTimer = 0
+				}
 				tree.FruitCount++
+				tree.PendingGrowth--
 				tree.GrowthProgress = 0
-				tree.DropTimer = 0 // Reset drop timer when new fruit grows
 
-				// Emit influence event for deterministic sync
+				// Influence event kept for the ledger (clients display via OpCode 93)
 				zoneID := ""
 				if state.CurrentZone != nil {
 					zoneID = state.CurrentZone.ZoneID
 				}
 				state.AddInfluenceEvent(zoneID, InfluenceTreeFruitGrow, "",
 					tree.GridX, tree.GridY, tree.TreeID, tree.FruitCount)
+				m.broadcastTreeFruitUpdate(dispatcher, state, tree, treeDef.World.FruitType)
 			}
 		}
 
-		// Fruit drop (overripe) — existing fruit still drops when dry; each drop costs a charge
+		// 3) EVENING FALLS — ripe fruit drops one at a time, >= treeFallSpacingTicks
+		// apart, only inside the evening window (you watch the tree shed into dusk).
+		// DropTimer is NOT reset by falls: once the batch is ripe, the whole canopy
+		// sheds across evenings until empty.
 		if tree.FruitCount > 0 {
 			tree.DropTimer++
-			if tree.DropTimer >= treeDef.World.FruitDropTicks {
+			if tree.DropTimer >= treeDef.World.FruitDropTicks &&
+				inEveningWindow(state) &&
+				state.TickCount-tree.LastFallTick >= treeFallSpacingTicks {
 				tree.FruitCount--
-				tree.DropTimer = 0
-				if tree.WaterCharges > 0 {
-					tree.WaterCharges--
-					if tree.WaterCharges == 0 {
-						// Just ran dry: tell clients to show the droplet indicator
-						m.broadcastTreeWaterUpdate(dispatcher, state, tree)
-					}
-				}
-
-				// Drop fruit on ground (will eventually rot)
+				tree.LastFallTick = state.TickCount
 				m.dropFruitFromTree(dispatcher, state, tree, treeDef.World.FruitType, logger)
+				m.broadcastTreeFruitUpdate(dispatcher, state, tree, treeDef.World.FruitType)
 			}
 		}
 	}
@@ -909,8 +964,25 @@ func (m *Match) handleStationDeposit(
 // droplet indicator; bug AI doesn't read tree water).
 func (m *Match) broadcastTreeWaterUpdate(dispatcher runtime.MatchDispatcher, state *WorldState, tree *entities.FruitTreeState) {
 	cx, cy, _, _ := GlobalToChunk(tree.GridX, tree.GridY)
-	msg := TreeWaterUpdateMessage{GridX: tree.GridX, GridY: tree.GridY, WaterCharges: tree.WaterCharges}
+	msg := TreeWaterUpdateMessage{
+		GridX: tree.GridX, GridY: tree.GridY,
+		WaterLevel:    tree.WaterLevel,
+		PendingGrowth: tree.PendingGrowth,
+		LastWaterDay:  tree.LastWaterDay,
+	}
 	m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeTreeWaterUpdate, msg)
+}
+
+// broadcastTreeFruitUpdate sends a tree's fruit count (OpCode 93, display-only): drives
+// the canopy fruit overlay. The droplet twin's pattern: on change + chunk-subscribe re-send.
+func (m *Match) broadcastTreeFruitUpdate(dispatcher runtime.MatchDispatcher, state *WorldState, tree *entities.FruitTreeState, fruitType string) {
+	cx, cy, _, _ := GlobalToChunk(tree.GridX, tree.GridY)
+	msg := TreeFruitUpdateMessage{
+		GridX: tree.GridX, GridY: tree.GridY,
+		FruitCount: tree.FruitCount,
+		FruitType:  fruitType,
+	}
+	m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeTreeFruitUpdate, msg)
 }
 
 // broadcastStationUpdate sends the display meters (input + compost fill) for a station.
@@ -1112,18 +1184,24 @@ func (m *Match) initFruitTreesInChunk(
 				maxFruit = 5
 			}
 
+			// Wild trees spawn PRE-FRUITED (the early-game forage -> pen loop) but all
+			// UNRIPE: DropTimer randomized below the ripeness threshold staggers when
+			// each tree starts shedding (some shed the first evening — the deliberate
+			// day-1 fly-food bootstrap). The tank starts empty: wild trees re-fruit via
+			// RAIN ONLY unless a player tends them. LastWaterDay = -1, NOT 0 — the zero
+			// value would read as "already watered on day 0".
 			tree := &entities.FruitTreeState{
-				TreeID:   fmt.Sprintf("tree_%d_%d", gx, gy),
-				EntityID: cell.Occupant.ID, // entity type ("tree_apple") for def lookups (rot ticks etc.)
-				GridX:    gx,
-				GridY:    gy,
-				MaxFruit: maxFruit,
-				// Start with some random fruit and progress
-				FruitCount:     rand.Intn(maxFruit + 1),
-				GrowthProgress: rand.Intn(entityDef.World.FruitGrowTicks / 2),
-				// One free watering's worth: zones produce before anyone waters, then run
-				// dry — fly food is finite until the player tends the trees.
-				WaterCharges: treeWaterPerCan,
+				TreeID:       fmt.Sprintf("tree_%d_%d", gx, gy),
+				EntityID:     cell.Occupant.ID, // entity type ("tree_apple") for def lookups (rot ticks etc.)
+				GridX:        gx,
+				GridY:        gy,
+				MaxFruit:     maxFruit,
+				FruitCount:   2 + rand.Intn(2),
+				DropTimer:    rand.Intn(treeDefDropTicks(entityDef)),
+				LastWaterDay: -1,
+			}
+			if tree.FruitCount > maxFruit {
+				tree.FruitCount = maxFruit
 			}
 			state.FruitTreeStates[treeKey] = tree
 

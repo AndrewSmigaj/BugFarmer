@@ -43,6 +43,11 @@ namespace BugFarmer.World
         // "Needs water" droplets over dry fruit trees (OpCode 51), by tree anchor cell
         private Dictionary<Vector2Int, WaterDroplet> _waterDroplets = new Dictionary<Vector2Int, WaterDroplet>();
 
+        // Last-known tree water state per anchor cell (OpCode 51): droplet visibility is
+        // recomputed from this + the current day, so rollovers refresh with no message.
+        private Dictionary<Vector2Int, TreeWaterUpdateMessage> _treeWaterStates = new Dictionary<Vector2Int, TreeWaterUpdateMessage>();
+        private long _lastDropletDay = -1;
+
         // Object pooling for occupants
         private Stack<GameObject> _occupantPool = new Stack<GameObject>();
 
@@ -98,6 +103,15 @@ namespace BugFarmer.World
 
         private void Update()
         {
+            // Droplets are day-dependent ("waterable today"): when the apparent day
+            // rolls over, re-evaluate every tracked tree with NO new message needed.
+            long day = DayNightController.CurrentDayIndex;
+            if (day != _lastDropletDay)
+            {
+                _lastDropletDay = day;
+                RefreshAllDroplets();
+            }
+
             if (Time.time - _lastChunkCheck < chunkCheckInterval)
                 return;
             _lastChunkCheck = Time.time;
@@ -214,8 +228,10 @@ namespace BugFarmer.World
         }
 
         /// <summary>
-        /// OpCode 51: a fruit tree's water charges changed. Show a bobbing droplet indicator
-        /// above DRY trees (charges == 0); remove it once watered.
+        /// OpCode 51: a fruit tree's tank state changed. The droplet means "this tree can
+        /// drink TODAY": water_level below the cap AND not already manually watered this
+        /// apparent day. Visibility is re-derived at every day rollover (see Update) —
+        /// last_water_day is a day index, so no extra server message is needed.
         /// </summary>
         private void HandleTreeWaterUpdate(IMatchState state)
         {
@@ -224,17 +240,24 @@ namespace BugFarmer.World
             if (msg == null) return;
 
             var cell = new Vector2Int(msg.grid_x, msg.grid_y);
+            _treeWaterStates[cell] = msg;
+            RefreshDroplet(cell, msg);
+        }
 
-            if (msg.water_charges > 0)
+        /// <summary>Show/hide the droplet for one tree from its last-known water state.</summary>
+        private void RefreshDroplet(Vector2Int cell, TreeWaterUpdateMessage msg)
+        {
+            bool waterableToday = msg.water_level < 3 &&
+                                  msg.last_water_day != DayNightController.CurrentDayIndex;
+
+            if (!waterableToday)
             {
-                // Watered: remove the indicator
                 if (_waterDroplets.TryGetValue(cell, out var existing) && existing != null)
                     Destroy(existing.gameObject);
                 _waterDroplets.Remove(cell);
                 return;
             }
 
-            // Dry: spawn the droplet just above the tree's sprite
             if (_waterDroplets.ContainsKey(cell)) return;
             if (!_occupantObjects.TryGetValue(cell, out var occupantGo) || occupantGo == null) return;
 
@@ -246,6 +269,13 @@ namespace BugFarmer.World
             var droplet = go.AddComponent<WaterDroplet>();
             droplet.AttachAbove(new Vector3(midX, topY, 0f));
             _waterDroplets[cell] = droplet;
+        }
+
+        /// <summary>Re-evaluate every tracked tree's droplet (called at the day rollover).</summary>
+        private void RefreshAllDroplets()
+        {
+            foreach (var kv in _treeWaterStates)
+                RefreshDroplet(kv.Key, kv.Value);
         }
 
         private void HandleChunkData(IMatchState state)

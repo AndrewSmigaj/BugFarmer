@@ -179,16 +179,13 @@ func (m *Match) rainWaterAll(state *WorldState, dispatcher runtime.MatchDispatch
 		m.broadcastCropUpdate(dispatcher, state, crop.GridX, crop.GridY, crop)
 	}
 
+	// Trees: rain pours one FREE watering into the tank (no daily stamp, silent clamp)
+	// — the wild-tree restock path: untended trees re-fruit only through showers.
 	for _, tree := range state.FruitTreeStates {
-		if tree.WaterCharges >= treeWaterCap {
-			continue
+		if ok, _ := waterTree(state, tree, false); ok {
+			watered++
+			m.broadcastTreeWaterUpdate(dispatcher, state, tree)
 		}
-		tree.WaterCharges += treeWaterPerCan
-		if tree.WaterCharges > treeWaterCap {
-			tree.WaterCharges = treeWaterCap
-		}
-		watered++
-		m.broadcastTreeWaterUpdate(dispatcher, state, tree)
 	}
 
 	return watered

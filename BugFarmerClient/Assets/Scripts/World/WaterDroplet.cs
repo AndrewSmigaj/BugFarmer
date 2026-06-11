@@ -3,8 +3,9 @@ using UnityEngine;
 namespace BugFarmer.World
 {
     /// <summary>
-    /// "Needs water" indicator: a small bobbing water-drop drawn above a dry fruit tree
-    /// (water_charges == 0). Clones the BreakingVisual overlay pattern — a child
+    /// "Can drink today" indicator: a small bobbing water-drop drawn above a fruit tree
+    /// whose tank isn't full and that hasn't been manually watered this apparent day
+    /// (TilemapManager.RefreshDroplet owns the rule). Clones the BreakingVisual pattern — a child
     /// SpriteRenderer on the occupant GameObject, "Occupants" layer, high sortingOrder.
     /// The droplet sprite is GENERATED AT RUNTIME (a 9x12 teardrop) so there is no
     /// art-pipeline or PPU-meta dependency.

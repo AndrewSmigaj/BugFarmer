@@ -111,13 +111,19 @@ const (
 	// the OpCode-51 droplet pattern: broadcast on change + chunk-subscribe re-send)
 )
 
-// TreeWaterUpdateMessage (OpCode 51): a fruit tree's water charges changed. Display-only —
-// clients show a droplet indicator over dry trees (charges == 0); bug AI doesn't read this.
-// (W3 amends this to the tank model: water_level/pending_growth/last_water_day.)
+// TreeWaterUpdateMessage (OpCode 51): a fruit tree's water/tank state changed. Display-only.
+// The droplet ("waterable now") rule is computed CLIENT-side each frame:
+//
+//	show iff water_level < 3 && last_water_day != clientCurrentDay
+//
+// where clientCurrentDay = (SimulationTick + day_offset) / 8400 — so the droplet reappears
+// at the day rollover with NO extra message (last_water_day is a day index, not a stale bool).
 type TreeWaterUpdateMessage struct {
-	GridX        int `json:"grid_x"`
-	GridY        int `json:"grid_y"`
-	WaterCharges int `json:"water_charges"`
+	GridX         int   `json:"grid_x"`
+	GridY         int   `json:"grid_y"`
+	WaterLevel    int   `json:"water_level"`    // 0..3 tank
+	PendingGrowth int   `json:"pending_growth"` // fruits left to grow in the current batch
+	LastWaterDay  int64 `json:"last_water_day"` // day index of the last MANUAL watering (-1 = never)
 }
 
 // TreeFruitUpdateMessage (OpCode 93): a tree's fruit count changed (grew, fell, picked,

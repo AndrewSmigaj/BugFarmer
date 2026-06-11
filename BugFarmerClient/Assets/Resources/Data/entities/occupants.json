@@ -70,7 +70,7 @@
       "interactable": true,
       "interaction_type": "fruit_tree",
       "fruit_type": "apple",
-      "max_fruit": 5,
+      "max_fruit": 4,
       "fruit_grow_ticks": 840,
       "fruit_drop_ticks": 4200,
       "breakable": {
@@ -103,7 +103,7 @@
       "interactable": true,
       "interaction_type": "fruit_tree",
       "fruit_type": "apple",
-      "max_fruit": 5,
+      "max_fruit": 4,
       "fruit_grow_ticks": 100,
       "fruit_drop_ticks": 150,
       "fruit_rot_ticks": 300,
