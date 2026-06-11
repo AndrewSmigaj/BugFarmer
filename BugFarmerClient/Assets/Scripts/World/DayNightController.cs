@@ -34,7 +34,7 @@ namespace BugFarmer.World
         public static long CurrentDayIndex { get; private set; }
 
         [Header("Ambient")]
-        [SerializeField] private float nightIntensity = 0.22f;
+        [SerializeField] private float nightIntensity = 0.20f; // DEEP night — you can't see past light radii
         [SerializeField] private Color nightColor = new Color(0.35f, 0.42f, 0.75f); // moonlit blue
         [SerializeField] private Color dawnDuskColor = new Color(1.0f, 0.80f, 0.58f); // warm amber
 
@@ -120,21 +120,23 @@ namespace BugFarmer.World
 
         /// <summary>
         /// Daylight curve over the day (t=0 is morning):
-        ///   0.00-0.45 day -> 0.45-0.55 dusk -> 0.55-0.90 night -> 0.90-1.00 dawn.
+        ///   0.00-0.42 day -> 0.42-0.58 golden dusk (smoothstep — the fruit-fall evening
+        ///   window t∈[0.40,0.62) lives inside it) -> 0.58-0.88 deep night -> 0.88-1.00
+        ///   smoothstep dawn. Smoothstep replaces the old abrupt linear ramps.
         /// </summary>
         private static float DaylightAt(float t)
         {
-            if (t < 0.45f) return 1f;
-            if (t < 0.55f) return 1f - (t - 0.45f) / 0.10f; // dusk fade
-            if (t < 0.90f) return 0f;
-            return (t - 0.90f) / 0.10f; // dawn ramp
+            if (t < 0.42f) return 1f;
+            if (t < 0.58f) return 1f - Mathf.SmoothStep(0f, 1f, (t - 0.42f) / 0.16f); // dusk
+            if (t < 0.88f) return 0f;
+            return Mathf.SmoothStep(0f, 1f, (t - 0.88f) / 0.12f); // dawn
         }
 
         /// <summary>1 in the middle of a dawn/dusk transition, 0 elsewhere (for the warm tint).</summary>
         private static float TransitionAmount(float t)
         {
-            if (t >= 0.45f && t < 0.55f) return 1f - Mathf.Abs((t - 0.50f) / 0.05f);
-            if (t >= 0.90f) return 1f - Mathf.Abs((t - 0.95f) / 0.05f);
+            if (t >= 0.42f && t < 0.58f) return 1f - Mathf.Abs((t - 0.50f) / 0.08f);
+            if (t >= 0.88f) return 1f - Mathf.Abs((t - 0.94f) / 0.06f);
             return 0f;
         }
 

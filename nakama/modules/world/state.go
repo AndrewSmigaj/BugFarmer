@@ -311,6 +311,7 @@ func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presenc
 	player.ItemSlots[12] = InventorySlot{ItemID: "bookshelf", Count: 1}
 	player.ItemSlots[13] = InventorySlot{ItemID: "bench", Count: 1}
 	player.ItemSlots[14] = InventorySlot{ItemID: "shovel_wood", Count: 1}
+	player.ItemSlots[15] = InventorySlot{ItemID: "flashlight", Count: 1}
 	player.EquippedTool = "hands"
 
 	s.Players[userID] = player

@@ -32,6 +32,27 @@ namespace BugFarmer.Player
         private float _nextAutoPickup;
         private readonly Dictionary<string, (int attempts, float nextTry)> _requested = new();
 
+        // Magnet marks: ids WE requested, with timestamps. When the remove broadcast for a
+        // marked id arrives, GroundItemManager plays the fly-to-player tween instead of the
+        // plain fade. TTL ~2s: pickup REJECTIONS are generic errors with no item id, so a
+        // mark can leak — without the TTL, another player winning the race later would
+        // magnet the item toward the LOSER. (Within the TTL that residual race is an
+        // accepted cosmetic.)
+        private const float MarkTTL = 2f;
+        private static readonly Dictionary<string, float> _magnetMarks = new();
+
+        /// <summary>
+        /// True (and consumes the mark) if this id was requested by US within the TTL.
+        /// Called by GroundItemManager on every remove broadcast.
+        /// </summary>
+        public static bool ConsumeMark(string itemId)
+        {
+            if (!_magnetMarks.TryGetValue(itemId, out float at))
+                return false;
+            _magnetMarks.Remove(itemId);
+            return Time.time - at <= MarkTTL;
+        }
+
         private void Update()
         {
             UpdateHighlight();
@@ -152,6 +173,18 @@ namespace BugFarmer.Player
             var match = WorldManager.Instance?.CurrentMatch;
             if (socket == null || match == null)
                 return;
+
+            // Mark for the magnet tween + prune anything stale (rejections never NACK by id)
+            _magnetMarks[itemId] = Time.time;
+            if (_magnetMarks.Count > 32)
+            {
+                var stale = new List<string>();
+                foreach (var kv in _magnetMarks)
+                    if (Time.time - kv.Value > MarkTTL)
+                        stale.Add(kv.Key);
+                foreach (var k in stale)
+                    _magnetMarks.Remove(k);
+            }
 
             var msg = new PickupItemMessage { id = itemId };
             var json = JsonUtility.ToJson(msg);

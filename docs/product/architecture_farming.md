@@ -234,20 +234,27 @@ Server (during swarm.Think)           All Clients
          |                                  |--replay event in bug sim
 ```
 
-**Fruit Tree Lifecycle (Influence Events):**
+**Fruit Tree Lifecycle (the TANK model — implemented):**
 ```
+DORMANT --(3 waterings fill the tank; max 1 MANUAL/day, rain adds 1 free)--> tank full
+   --> BATCH TRIGGER (only when the tree is EMPTY: tank consumed, Pending = MaxFruit)
+   --> GROWING (one fruit per fruit_grow_ticks; Pending counts DOWN — harvest mid-batch
+       loses nothing; the ripeness clock DropTimer resets ONLY on the 0->1 transition)
+   --> FRUITING (fruit sits on the canopy, never rots there;
+       HANDS left-click picks one [OpCode 92]; TOOL hits knock one to the ground per hit)
+   --> ripe fruit falls STAGGERED: only in the evening window t in [0.40,0.62),
+       >= 500 ticks apart — the tree sheds into dusk, one fruit at a time
+   --> ground fruit rots in fruit_rot_ticks (16800 = ~2 days) --> fly food.
+
+Wild trees init pre-fruited (2-3, all UNRIPE) with an EMPTY tank: day-1 forage exists,
+but re-fruiting needs rain (the only untended water source) or a player.
+Display: OpCode 51 {water_level, pending_growth, last_water_day} drives the droplet
+("can drink today", re-derived client-side at each rollover); OpCode 93 {fruit_count,
+fruit_type} drives the canopy fruit overlay. Both: broadcast on change + chunk-subscribe
+re-send. The TREE_FRUIT_* influence events still ride the ledger (clients don't consume
+them yet — display is 51/93).
+
 Server                                All Clients
-   |                                       |
-   |--tick: fruit growth timer fires--     |
-   |--increment FruitCount--               |
-   |--emit TREE_FRUIT_GROW---------------->|  (influence event)
-   |                                       |--update local FruitTreeState
-   |                                       |
-   |--tick: drop timer fires (unharvested)-|
-   |--decrement FruitCount--               |
-   |--create GroundItem (apple)--          |
-   |--emit TREE_FRUIT_DROP---------------->|  (influence event)
-   |                                       |--spawn ground item visual
    |                                       |
    |--tick: rot timer fires on ground item-|
    |--change item type to rotten_apple--   |
@@ -263,8 +270,12 @@ Server                                All Clients
    |                                       |
    |--Satiation 100 -> phase=reproducing-- |
    |--meter fills AT a DEPLETABLE source-- |  (v1 rule: flora never depletes, so breeding
-   |--REPRODUCE: Count*=2, food-=50------- |   requires items/stations — bounded growth)
-   |--emit SWARM_REPRODUCED (n, idBase)--->|  (clients SpawnBugAt the centre, idempotent)
+   |--REPRODUCE: +1-2 bugs, food-=40------ |   requires items/stations — bounded growth;
+   |  (randomized, NOT doubling; capped    |   at species_caps.max_population the event is
+   |   by max_population — see swarm_sync  |   SKIPPED: meters reset + cooldown armed,
+   |   §13 for the 3-layer control)        |   no food charge)
+   |--emit SWARM_REPRODUCED (n, idBase)--->|  (clients SpawnBugAt the centre, idempotent;
+   |                                       |   the count rides the event — replay-safe)
    |                                       |
    |--FoodValue reaches 0--                |
    |--remove ground item------------------ |
@@ -387,20 +398,40 @@ const (
 )
 ```
 
-**Fruit Tree State (separate from PlantState):**
+**Fruit Tree State (separate from PlantState — the tank model, as implemented):**
 ```go
-// In WorldState - tracks fruit production on trees
+// In WorldState - tracks fruit production on trees (in-memory; no migration needed)
 FruitTreeStates map[string]*FruitTreeState  // "gx,gy" -> state
 
 type FruitTreeState struct {
-    TreeID          string  // Unique ID for this tree instance
-    GridX, GridY    int     // Cell position
-    FruitCount      int     // Current fruit on tree (0-max)
-    MaxFruit        int     // Maximum fruit capacity (e.g., 5)
-    GrowthProgress  int     // Ticks until next fruit appears
-    LastHarvestTick int64   // For regrowth timing
+    TreeID          string // Unique ID for this tree instance
+    EntityID        string // Entity type ("tree_apple") for def lookups
+    GridX, GridY    int    // Cell position
+    FruitCount      int    // Current fruit on the canopy
+    MaxFruit        int    // Batch size (a full tank buys exactly one full batch)
+    GrowthProgress  int    // Ticks toward the next fruit while a batch grows
+    PendingGrowth   int    // Fruits left in the current batch (COUNTDOWN, never recomputed)
+    DropTimer       int    // Ripeness clock; resets ONLY on the FruitCount 0->1 growth
+    LastFallTick    int64  // Raw tick of the last evening fall (>=500-tick stagger)
+    LastHarvestTick int64  // Last player pick
+    WaterLevel      int    // Tank 0..3 (3 waterings = one batch)
+    LastWaterDay    int64  // Day index of the last MANUAL watering (1/day; -1 = never;
+                           //  the gate is == equality, so backward debug time-jumps
+                           //  can never wedge watering)
 }
 ```
+
+**Fruit tree numbers (all data, occupants.json + handlers_farming.go consts):**
+| Knob | Value | Meaning |
+|---|---|---|
+| tank cap | 3 | waterings per batch (1 manual/day + rain) |
+| max_fruit | 4 (apple/orange) | batch size |
+| fruit_grow_ticks | 840 (~84s) | one fruit sprouts, visibly, per interval |
+| fruit_drop_ticks | 4200 (~7 min) | ripeness before evening falls begin |
+| evening window | t in [0.40, 0.62) | ~15:30-21:00 on the clock |
+| fall spacing | 500 ticks (~50s) | one-at-a-time shedding |
+| fruit_rot_ticks | 16800 (~2 days) | ground fruit -> rotten (fly food) |
+| tended yield | ~1.3 fruit/day/tree | tend several + forage wild for tempo |
 
 **Rotten Fruit State (ground items with FoodValue):**
 ```go

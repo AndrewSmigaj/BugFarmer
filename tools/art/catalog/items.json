@@ -140,5 +140,12 @@
   "materials": [
    "fabric"
   ]
+ },
+ "flashlight": {
+  "look": "a chunky handheld FLASHLIGHT seen at a 3/4 angle: cylindrical metal body with a wide head, glass lens face glowing pale yellow, small button on the side",
+  "family": "icon",
+  "materials": [
+   "metal"
+  ]
  }
 }

@@ -696,4 +696,44 @@ the existing machinery end-to-end:
   spawning's accepted on-receipt-vs-hash caveat (~sub-1% chance of one self-healing minority
   resync per creation for a lagging client).
 - Slot decrement echoes to the releaser only; the client's cursor count rides the standard
-  echo interception. BACKLOG: zone swarm-count cap for releases.
+  echo interception.
+- **Caps (2026-06, closes the old BACKLOG caveat):** releases are gated by §13's
+  population cap BEFORE any mutation (visible error, slot untouched — both branches);
+  at the swarm-COUNT cap a release can't mint a new swarm and instead FORCE-JOINS the
+  nearest same-species swarm at any distance (the player keeps their bugs; the split
+  pass rebalances). `spawnSwarmAt` is the single mint path shared with the F8 debug
+  spawn (same on-receipt class).
+
+## 13. Ecology population control (2026-06)
+
+An orchard must not exponentially explode the fly population, and "release a jar of
+flies into a nearly-full zone" must never crash the match. Three layers:
+
+1. **SOFT — food economics (the real thermostat).** One rotten apple (100 food) funds
+   exactly one breed event: at fly `consume_rate` 0.2, a 10-fly swarm drains 2/s —
+   feeding 0→100 satiation (20s) = 40 food, breeding the meter (10s) = 20, plus the
+   event cost `reproduceFoodCost` = 40. Cost-per-new-fly RISES with population (bigger
+   swarms drain faster per capita): growth is inherently self-braking.
+2. **MEDIUM — gentle reproduction.** A breed event adds **1-2 flies (randomized)**,
+   not doubling. Replay-safe: the count rides the `SWARM_REPRODUCED` event.
+3. **HARD — `species_caps.max_population` (the crash guard).** Village: fly 400,
+   butterfly 300; **0 = uncapped** (test zones rely on the zero value). Enforced at
+   every entity-minting point:
+   - `reproduceSwarm`: partial litter at the boundary; at the cap — meters reset, the
+     cooldown ARMED (else the meter refills every ~30s and the skip spams), no event,
+     no food charge (continuous drain is the honest cost of camping a source).
+   - `handleReleaseBugs`: rejected with a visible error before ANY mutation.
+   - `checkContinuousSpawning` + the F8 debug spawn skip saturated zones.
+
+**The two ceilings are different kinds of guarantee.** `max_population` is the hard
+invariant. `species_caps.max` (swarm COUNT) is spawn BACK-PRESSURE only: a force-join
+can push a swarm over MaxSwarmSize, the 600-tick split pass then makes +1 swarm over
+the count cap, and the split pair sums past MaxSwarmSize so the merge pass can never
+re-fuse it. That overage is bounded (absolute worst case max_population/MinSwarmSize
+swarms), decays via catches, and is never refilled by spawning — accepted and
+documented rather than papered over.
+
+**Why a release near the limit is safe:** it either joins an existing swarm (bounded
+entity count), or is rejected with no mutation. There is no path that mints unbounded
+swarms or bugs; a huge orchard plateaus at the soft/hard ceilings instead of crashing
+the match.

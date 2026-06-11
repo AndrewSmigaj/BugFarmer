@@ -26,6 +26,9 @@ namespace BugFarmer.World
         private Vector3 basePosition;
         private float bobOffset;
 
+        /// <summary>True while the despawn tween runs (suppresses the bob; pickup queries skip it).</summary>
+        public bool Despawning { get; private set; }
+
         private void Awake()
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
@@ -87,16 +90,63 @@ namespace BugFarmer.World
         }
 
         /// <summary>
-        /// Reset for object pooling.
+        /// Reset for object pooling. MUST restore everything the despawn tween touches
+        /// (scale, alpha, the flag, running coroutines) — the rot transition is a real
+        /// same-id REMOVE+SPAWN pair, so a pooled visual can be re-issued immediately and
+        /// must not respawn shrunken/transparent.
         /// </summary>
         public void ResetVisual()
         {
+            StopAllCoroutines();
+            Despawning = false;
             ItemId = null;
             ItemType = null;
             Count = 0;
             spriteRenderer.sprite = null;
             spriteRenderer.color = normalColor;
+            transform.localScale = Vector3.one;
             gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// Play the despawn tween, then hand the visual back via onDone (the manager pools
+        /// it). magnetTarget != null = picked up by the local player: fly into them while
+        /// shrinking (the E-pickup magnet). null = a plain remove: quick shrink-fade.
+        /// </summary>
+        public void Despawn(Vector3? magnetTarget, System.Action onDone)
+        {
+            if (Despawning) { onDone?.Invoke(); return; }
+            if (!gameObject.activeInHierarchy) { onDone?.Invoke(); return; }
+            Despawning = true;
+            StartCoroutine(DespawnRoutine(magnetTarget, onDone));
+        }
+
+        private System.Collections.IEnumerator DespawnRoutine(Vector3? magnetTarget, System.Action onDone)
+        {
+            float duration = magnetTarget.HasValue ? 0.15f : 0.1f;
+            Vector3 startPos = transform.position;
+            Vector3 startScale = transform.localScale;
+            Color startColor = spriteRenderer.color;
+
+            for (float t = 0f; t < duration; t += Time.deltaTime)
+            {
+                float k = t / duration;
+                if (magnetTarget.HasValue)
+                {
+                    // Ease-in toward the player: slow start, fast arrival (magnet feel)
+                    transform.position = Vector3.Lerp(startPos, magnetTarget.Value, k * k);
+                }
+                else
+                {
+                    var c = startColor;
+                    c.a = 1f - k;
+                    spriteRenderer.color = c;
+                }
+                transform.localScale = startScale * (1f - 0.8f * k);
+                yield return null;
+            }
+
+            onDone?.Invoke(); // ResetVisual restores scale/alpha/flag before pooling
         }
 
         /// <summary>
@@ -109,6 +159,8 @@ namespace BugFarmer.World
 
         private void Update()
         {
+            if (Despawning) return; // the despawn tween owns the transform
+
             // Sinusoidal bob animation
             float bob = Mathf.Sin((Time.time * bobFrequency) + bobOffset) * bobAmplitude;
             transform.position = basePosition + new Vector3(0f, bob, 0f);

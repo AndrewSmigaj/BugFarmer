@@ -6,6 +6,37 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Done (recent) — Orchard redesign + weather v1 + deep night/flashlight + F8 + ecology caps
+- **F8 world-debug panel**: set time of day (epoch-compare rollover — a set-time can't skip
+  the daily reset), force rain/stop, spawn a fly swarm at the player (cap-aware). OpCodes 90/91.
+- **Rain v1**: 30%/day one 2.5-5min shower; one-shot watering of crops (daily cap) + fruit
+  trees (the wild-orchard restock path); streak particles + overcast dim + ☔ clock glyph.
+  NEW architecture_weather.md is the system of record.
+- **Fruit tree TANK model**: 3 waterings (1 manual/day, == day gate) buy ONE batch of 4 that
+  grows fruit-by-fruit onto the canopy; fruit never rots on the tree; HANDS (new visible
+  slot-0 tool) left-click picks one; tool hits knock one down per hit; unpicked fruit sheds
+  STAGGERED (≥50s apart) into the evening window; ground rot ~2 days. Canopy overlay =
+  separate GOs (occupant GOs are POOLED — children would ride them); droplet now means
+  "can drink today" and self-refreshes at rollover.
+- **Ecology safety, 3 layers (architecture_swarm_sync §13)**: one-apple-per-breed food budget
+  (consume 0.2, event cost 40); reproduction +1-2 randomized (NOT doubling); HARD
+  max_population (fly 400 / butterfly 300, 0=uncapped) gating reproduce/release/continuous/
+  debug spawns — a release at the swarm-count cap force-joins the nearest swarm (closes the
+  §12.2 caveat item from the release slice).
+- **Deep night** (floor 0.20, smoothstep golden dusk/dawn) + **flashlight** (cone Light2D
+  aimed at the mouse; PlayerNightLight fully data-driven). **Pickup polish**: fresh fruit
+  no_auto_pickup (the auto-picking bug), E-pickup magnet tween (TTL marks, pool-safe), [E]
+  prompt over the highlighted item. ~30 new Go tests across env/trees/harvest/caps.
+
+## Later additions from this slice
+- Falling-fruit tween (canopy → ground arc) — falls currently just spawn the ground item.
+- Underground full-dark zone ambient flag (flashlight required) — designed, not built.
+- Weather ledger v2 (per-cell deterministic rain — designed in architecture_weather.md).
+- Rain audio; sun/moon arc dial to replace the text clock.
+- Tree-shake harvest animation + canopy rustle on knockdown.
+- Shop entry for the flashlight (starter panel slot 15 has one for now).
+- Hands as a permanent un-droppable slot-0 fixture (v1: a normal loseable item).
+
 ## Done (recent) — Bug release + axe feel + real crop-stage art + more flies
 - **Release caught bugs** (OpCode 29): bug stack on the drag cursor → click the world —
   joins a nearby same-species swarm (within max(merge radius, VISUAL radius) — the max()
@@ -18,9 +49,8 @@ working; this file is what survives between sessions.
 - village_21 flies: initial 25→40. Starter panel: bookshelf + bench (placement testing).
 
 ## Later additions from this slice
-- **Zone swarm-count cap for releases**: above N swarms, force add-to-nearest (or reject) —
-  the spam guard for 1-fly swarm flooding. Optional per-player release cooldown
-  (validateCooldownTicks one-liner).
+- ~~Zone swarm-count cap for releases~~ DONE (force-join nearest + max_population hard cap —
+  see §13). Optional per-player release cooldown still open (validateCooldownTicks one-liner).
 - Release-moment feedback polish (a "−N flies" popup like CatchPopup).
 
 ## Done (recent) — Inventory polish + cursor-place + weapon movesets + equip visibility

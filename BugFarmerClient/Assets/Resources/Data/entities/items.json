@@ -229,14 +229,16 @@
     "category": "resource",
     "stackable": true,
     "max_stack": 99,
-    "sell_price": 5
+    "sell_price": 5,
+    "no_auto_pickup": true
   },
   "orange": {
     "name": "Orange",
     "category": "resource",
     "stackable": true,
     "max_stack": 99,
-    "sell_price": 6
+    "sell_price": 6,
+    "no_auto_pickup": true
   },
   "rotten_apple": {
     "name": "Rotten Apple",
@@ -619,5 +621,12 @@
     "stackable": true,
     "max_stack": 99,
     "sell_price": 2
+  },
+  "flashlight": {
+    "name": "Flashlight",
+    "category": "tool",
+    "tool_type": "flashlight",
+    "buy_price": 50,
+    "sell_price": 20
   }
 }

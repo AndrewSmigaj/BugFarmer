@@ -17,6 +17,7 @@ namespace BugFarmer.World
 
         private readonly Dictionary<string, GroundItemVisual> _items = new();
         private readonly Queue<GroundItemVisual> _pool = new();
+        private Transform _player; // magnet-tween target (cached lazily)
 
         private void Awake()
         {
@@ -89,8 +90,21 @@ namespace BugFarmer.World
 
             if (_items.TryGetValue(msg.id, out var visual))
             {
-                ReturnToPool(visual);
                 _items.Remove(msg.id);
+
+                // OUR pending pickup (TTL-marked by PickupController)? Magnet the item
+                // into the player. Anything else (another player's grab, rot's same-id
+                // remove+respawn) gets a quick shrink-fade. Either way the visual pools
+                // only AFTER the tween — and ResetVisual restores scale/alpha first.
+                Vector3? magnetTarget = null;
+                if (Player.PickupController.ConsumeMark(msg.id))
+                {
+                    if (_player == null)
+                        _player = FindObjectOfType<Player.PlayerController>()?.transform;
+                    if (_player != null)
+                        magnetTarget = _player.position;
+                }
+                visual.Despawn(magnetTarget, () => ReturnToPool(visual));
             }
         }
 
@@ -103,17 +117,23 @@ namespace BugFarmer.World
         }
 
         /// <summary>
-        /// True for items that are registered BUG FOOD (rotten fruit). The gathering rule:
-        /// "what the bugs eat belongs to the bugs unless you deliberately take it" — bug food
-        /// is excluded from walk-over auto-pickup and only collected with the explicit E key.
+        /// True for items the walk-over magnet must NOT collect — only the deliberate
+        /// E key takes them. Two sources: registered BUG FOOD (rotten fruit — "what the
+        /// bugs eat belongs to the bugs"), and items flagged no_auto_pickup in items.json
+        /// (fresh fruit: tree fruit is farmed deliberately, not hoovered in passing —
+        /// the 'it auto-picks my apples' fix).
         /// </summary>
-        public static bool IsBugFood(string itemType)
+        public static bool IsAutoPickupExcluded(string itemType)
         {
-            return !string.IsNullOrEmpty(itemType) && itemType.StartsWith("rotten_");
+            if (string.IsNullOrEmpty(itemType)) return false;
+            if (itemType.StartsWith("rotten_")) return true;
+            var def = EntityDatabase.Get(itemType);
+            return def != null && def.NoAutoPickup;
         }
 
         /// <summary>
-        /// Closest ground item within radius, optionally skipping bug food (auto-pickup).
+        /// Closest ground item within radius, optionally skipping auto-pickup-excluded
+        /// items (the walk-over magnet path).
         /// </summary>
         public GroundItemVisual GetClosestItem(Vector3 worldPosition, float radius, bool includeBugFood)
         {
@@ -122,7 +142,9 @@ namespace BugFarmer.World
 
             foreach (var item in _items.Values)
             {
-                if (!includeBugFood && IsBugFood(item.ItemType))
+                if (item.Despawning)
+                    continue;
+                if (!includeBugFood && IsAutoPickupExcluded(item.ItemType))
                     continue;
                 float dist = Vector2.Distance(worldPosition, item.transform.position);
                 if (dist < closestDist)

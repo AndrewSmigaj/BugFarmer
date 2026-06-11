@@ -688,6 +688,25 @@ No disasters
 Weather nudges ecology subtly
 
 
+IMPLEMENTED (2026-06, see architecture_weather.md for the system of record):
+- One day = 14 real minutes, tick-derived on every client identically; a clock
+  (sun/moon/rain glyph + Day N HH:MM) sits center-top.
+- Nights are DEEP dark (ambient floor 0.20 — you cannot see past light radii),
+  with smoothstep golden dusk/dawn. Light sources: placed lamps/torches, a held
+  torch's glow, and the FLASHLIGHT tool (a cone aimed at the mouse) for night
+  exploration. Underground will be fully dark (flashlight required).
+- Rain v1: ~30% of days get one 2.5-5 minute shower; at its start every crop and
+  fruit tree drinks once (the only water untended wild trees ever get — rain is
+  how the wild orchard restocks). Visuals: streaks + overcast dim + clock glyph.
+- Fruit trees: water a tree 3 days running (or let rain help) -> a batch of 4
+  fruit grows one-by-one onto the canopy -> pick by hand (fruit never rots on the
+  tree, never auto-picks off the ground), knock down with tools, or let it shed
+  one fruit at a time into the evening dusk; ground fruit rots in ~2 days into
+  fly food. Each apple supports roughly two flies; breeding adds 1-2 flies per
+  event (never doubling) and hard zone population caps make even a huge orchard
+  plateau instead of overwhelming the server.
+
+
 
 17. Learning & Discovery
 17.1 Magnifying Glass

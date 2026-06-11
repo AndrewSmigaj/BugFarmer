@@ -92,6 +92,9 @@ namespace BugFarmer.Data
             public int SellPrice;
             public int BuyPrice;
 
+            // Walk-over magnet exclusion: deliberate-E-only pickups (fresh tree fruit)
+            public bool NoAutoPickup;
+
             // Tool properties
             public string ToolType;
             public int ToolTier;
@@ -245,6 +248,7 @@ namespace BugFarmer.Data
                 MaxStack = data["max_stack"]?.Value<int>() ?? 99,
                 SellPrice = data["sell_price"]?.Value<int>() ?? 0,
                 BuyPrice = data["buy_price"]?.Value<int>() ?? 0,
+                NoAutoPickup = data["no_auto_pickup"]?.Value<bool>() ?? false,
                 ToolType = data["tool_type"]?.Value<string>(),
                 ToolTier = data["tool_tier"]?.Value<int>() ?? 0,
                 Reach = data["reach"]?.Value<float>() ?? 0f,
