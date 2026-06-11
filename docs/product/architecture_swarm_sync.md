@@ -737,3 +737,100 @@ documented rather than papered over.
 entity count), or is rejected with no mutation. There is no path that mints unbounded
 swarms or bugs; a huge orchard plateaus at the soft/hard ceilings instead of crashing
 the match.
+
+## 14. Predation: wasps, nests, the centipede, player HP (2026-06)
+
+The first predators. The design's correctness backbone: **clients never replay AI
+decisions — they replay AI OUTPUTS.** The deterministic client sim consumes exactly
+SWARM_SET_TARGET legs, bug add/remove events, player cells, and the food registry;
+satiation, prey targeting, strike cooldowns, brood, and gnaw counters are SERVER-ONLY
+state (the forage-duty-cycle convention — server rand at Think time is replay-safe).
+The entire slice shipped with **zero new ledger event types**.
+
+### 14.1 The sync invariants this slice added
+- **SpeedMult (per-leg speed multipliers — hunt ×1.5, flee ×1.8, surge ×4.8):**
+  `swarm.Move` multiplies by it AND the leg-event emission carries
+  `BaseSpeed × SpeedMult × dt` — the server position and the client's closed-form leg
+  interpolation always agree. It is written ONLY by code that immediately emits a leg
+  (never mid-leg: clients capture speed per-leg), and EVERY leg-emitting path writes it
+  (the shared forage path writes 1.0 — otherwise a swarm that fled keeps the flee speed
+  forever, consistently on both sides and invisible to every harness). Late-join leg
+  hydration copies the event's speed verbatim → correct by construction.
+- **flies_over_fences acts at BOTH collision sites:** the server leg clamp
+  (IsBlockedForSpecies) AND the client per-bug collision (BugCollision/
+  IsCellBlockedForBugs) — per-bug positions are hash state. The flag skips the
+  OCCUPANT branch ONLY: water and the nil-chunk zone edge still block fliers, and it
+  means ALL occupants (walls, houses — there is no roof concept; B-future
+  `blocks_flying` adds one). Never hand movement code a nil checker.
+- **Movement-class determinism contract** (DartingMovement/CrawlingMovement and all
+  future classes): fixed-point math only; CounterRng via bug.RandomInt (tick+purpose
+  keyed) only; every cross-tick field round-trips GetState/SetState through
+  MovementState (extend MovementState + BugSampleData in Go AND C# lockstep if more
+  state is needed); visual effects (trail, smoothing, shadows) never write Position.
+  Client movement tuning lives in the PUBLISHED species.json (movement_style etc.) —
+  same-build clients parse the same file; publish_entities.py is the drift tripwire.
+- **Carrion is hash-bearing food:** edible kill-drops (item def food_value > 0) emit
+  ITEM_ROTTED at spawn; lifetime EXPIRY emits FOOD_CONSUMED(0) in removeGroundItem
+  (carrion is the first edible item that expires — without it, phantom registry
+  entries + a joiner-vs-veteran resync loop); the client hydration fallback reads the
+  published item def's food_value (the rotten_ prefix can't cover carrion).
+
+### 14.2 Wasps + nests
+Hunt trips: hunt below satiation 30 (legs ×1.5 re-aimed every 10-15 ticks, strike at
+3.0 with a 10s cooldown — THE anti-snowball knob — killing the LOWEST alive ids via
+the shared melee kill path, +35 satiation/kill) → sated at 100 → HOMING (one brood
+carried; 60s timeout drops it) → deposit (satiation → 80; hunting resumes below 30 ≈
+a 125s readable rest loiter) → repeat. Nests: brood clamps at 6; +2 wasps per 3 brood
+into the resident (the shared growSwarm id-math + SWARM_REPRODUCED, §13 partial-litter
+at the cap); a culled resident RE-HATCHES after 2 min at brood-consumed size — ~3
+culls = readable dormancy (bounds the culling treadmill, the catch money pump, and
+farm net-growth at once). Destroying the nest (axe, aggro-on-damage recalls the
+resident from ANY distance) orphans the patrol: never breeds, still hunts. NO
+starvation v1: prey can't go extinct (continuous spawning refills), so wasp decline is
+always the player's doing — readable. Containment asymmetry: wasps fly over fences
+(defense = kill/denest/roofs-later); centipedes respect fences but GNAW WOOD (defense
+= stone). Penned prey corners against its own fence — penned flies are MORE vulnerable
+to raids, intentionally.
+
+### 14.3 The centipede
+A SWARM OF ONE (category "individual" — reuses combat/catch/caps/sync wholesale; never
+merges/splits). Phase = what it WANTS (the standard feeding/reproducing lifecycle — the
+CheckPhaseTransition skip applies ONLY to nest predators, so the centipede parks at
+carrion and breeds there); ActionState = what it's DOING (windup 0.8s zero-leg freeze →
+SURGE at the launch position + a 0.8 velocity half-lead, clamped, ×4.8 → bite 1.6 with
+a line-of-sight gate (no through-fence bites — "stone is the answer" stays true) →
+recover + 5s cooldown). Gnaw: its own GnawState damage pool (NOT BreakingState — the
+owner-reset would let players "repair" by hitting), 1 dmg/80 ticks → wood HP 2 = 16
+visible+audible seconds (the crunch is the NIGHT tell: audible past the light radius);
+breaks via breakOccupantAt with no drops; the cooldown arms only on ABANDONS
+(successful breaks chain layered walls). Serpentine wander = heading-constrained short
+legs (±60°, widening to ±120° once clamped, free 360° after 3 — the dead-end escape).
+Segments are PURE display (CentipedeTrail follows the head's rendered path; segment
+hits map to bug 0 in the client sector query — the server validates click-vs-player
+reach only and needs no change). Known v1 behaviors: no pathfinding (chews the wall 3
+cells from an open gate — the dumb-relentless fantasy); trap_only = uncatchable until
+the subdue system.
+
+### 14.4 Player HP
+Sim-inert display state (bug AI reads player CELLS, already ledgered): HP 10, sting 1 /
+bite 2, per-swarm attack cooldown + a SHARED 1s invuln, +1 HP/30s regen 10s after
+damage, faint = refill + respawn (client snaps itself — it is movement-authoritative).
+PlayerDamage (94) is PRESENCE-TARGETED to the victim (broadcast would knock back every
+client); BugTelegraph (95) is broadcast cosmetics. Audio dedup: THWACK mirrors the
+hit-flash gating (optimistic self / !ownEcho remote); the kill POP plays
+unconditionally from MeleeResult killed[] (no optimistic kill exists) and NEVER from
+BUG_REMOVED application (catches ride it; replay would storm).
+
+### 14.5 Known v1 properties (documented, not bugs)
+- No persistence: a destroyed nest RESURRECTS on server restart (true of all broken
+  occupants; this one is the headline counterplay, so it's named here).
+- Nests come alive on first chunk-touch (the fruit-tree class); wild prey spawns
+  zone-wide from match start — accepted asymmetry.
+- Releasing caught wasps into another player's farm mints a permanent orphan patrol
+  (no starvation) — known grief vector, revisit with starvation.
+- Per-SWARM sting cooldown caps any swarm at 0.5 player-DPS regardless of size — right
+  for wasps, wrong for future bees (damage-scaling-by-count is a one-formula change).
+- The client hardcodes water_shallow|water_deep|lava in IsCellBlockedForBugs while
+  tiles.json has no lava — keep the lists in step when tiles gain blocks_bugs.
+- Content-update workflow: zone files are read at chunk-touch and never written back —
+  regenerate → restart the server → visible on next approach.

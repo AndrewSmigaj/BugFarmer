@@ -147,5 +147,33 @@
   "materials": [
    "metal"
   ]
+ },
+ "centipede_parts": {
+  "look": "a few curved CENTIPEDE BODY SEGMENTS: glossy reddish-brown chitin plates with little legs attached, stacked loosely",
+  "family": "icon",
+  "materials": [
+   "wood"
+  ]
+ },
+ "paper_nest": {
+  "look": "a torn chunk of grey papery WASP NEST material: layered swirled bands of grey paper",
+  "family": "icon",
+  "materials": [
+   "stone"
+  ]
+ },
+ "wasp_larvae": {
+  "look": "three plump pale WASP LARVAE: cream-white segmented grubs curled in a row",
+  "family": "icon",
+  "materials": [
+   "marble"
+  ]
+ },
+ "wasp_stinger": {
+  "look": "a single sharp WASP STINGER: a curved black needle-like point with a small amber venom drop at the tip",
+  "family": "icon",
+  "materials": [
+   "metal"
+  ]
  }
 }

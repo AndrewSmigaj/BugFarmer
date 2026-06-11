@@ -407,6 +407,29 @@ Predators: frogs, spiders
 Wasps migrate from adjacent zones
 
 
+IMPLEMENTED (2026-06, predators v1 — see architecture_swarm_sync.md §14):
+- WASPS hunt flies/butterflies in visible chases (watch a raid: strike flashes,
+  THWACK sounds, carrion dropping), carry kills home to a destroyable paper NEST
+  (brood → +2 wasps/hatch, ~1 hatch/day; ~3 patrol culls exhaust a nest into
+  dormancy; axing it orphans the patrol — aggro-on-damage recalls defenders from
+  any distance). Wasps FLY OVER FENCES: fences protect nothing from wings —
+  defense = swords, the nest, or future roofed enclosures. v1 wasp FARMING =
+  ranching the wild nest (leave it alive, harvest hatches with the LARGE net —
+  small nets can't take wasps). Drops: bug_parts + a 30% wasp_stinger (the
+  future smoker reagent). Carrion attracts flies AND the centipede — battlefields
+  briefly come alive.
+- The CENTIPEDE (beginner forest; 1-2 in the village test patch): a serpentine
+  individual that lunges with a 0.8s hiss telegraph (change direction to dodge —
+  bite 2), scavenges carrion, breeds rarely at it, and GNAWS THROUGH WOODEN
+  fences in 16 audible seconds per segment — the crunch carries past your light
+  radius at night (grab the flashlight). Stone stops it. Far too big for any
+  net: subduing comes with the smoker. Killing it scatters centipede parts.
+- PLAYER HP v1: 10 hearts, sting 1 / bite 2, knockback + 1s invuln, slow regen,
+  faint = respawn at the village with no loss. The first sting names the sword.
+- Frogs/spiders + cross-zone wasp migration remain future; one wasp type ships
+  (the yellowjacket ground-nester is a future data row).
+
+
 
 10. Shared World vs Private Plot
 10.1 Shared World

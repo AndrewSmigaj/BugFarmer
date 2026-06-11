@@ -6,6 +6,46 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Done (recent) — PREDATORS v1: wasps + nests, the centipede, player HP, first audio
+- **Predation core** (architecture_swarm_sync §14 — the system of record): predators hunt
+  prey SWARMS via ordinary legs + the existing BUG_REMOVED/SWARM_REPRODUCED/ITEM_ROTTED
+  vocabulary — ZERO new ledger event types across the whole slice. SpeedMult per-leg
+  multipliers (Move + emission, written by every emitter), flies_over_fences at BOTH
+  collision sites, the movement-class determinism contract, carrion as hash-bearing food
+  (ITEM_ROTTED at spawn, FOOD_CONSUMED(0) at expiry, def-driven client hydration).
+- **Wasps**: chase kinematics that close (the closure test pins it), 3 HP, sting 1,
+  large-net-only (the first net_size enforcement; hand-catching flies/butterflies
+  preserved), hive trips (hunt → home → deposit → 125s rest), nest brood economy
+  (+2/hatch, clamp 6, brood-drain re-hatch = 3 culls to dormancy), aggro-on-damage
+  recall, orphan patrols, wasp_stinger drops. Village: ONE nest at (124,232) inside the
+  fly-farm buffer.
+- **Centipede**: a swarm-of-one with an ActionState machine (windup hiss → leading surge
+  ×4.8 clamped + LOS-gated bite 2 → recover), serpentine wander with a graduated
+  dead-end escape, carrion-first foraging + rare breeding, GNAW through wood (16s,
+  audible past the night light radius — the night tell; stone immune; successful breaks
+  chain layers), scattered centipede_parts, segment trail + segment-hit mapping
+  client-side. Village test patch: forest at (90,225), cap 2.
+- **Player HP v1**: 10 hearts, invuln, knockback, faint-respawn, regen, presence-targeted
+  OpCode 94, first-damage toast naming the sword.
+- **First audio**: runtime-synthesized AudioFx (thwack/pop/sting/thud/hiss/crunch) with
+  the dedup rules; the gnaw crunch is the deep-night × predator cross-system moment.
+- ~34 new Go tests (closure, speed parity, catch matrix, nest economy, surge lead,
+  gnaw, escape — flake-checked 8x); sync-harness clean after every server phase.
+
+## Later additions from this slice
+- Subdue/drag/revive (smoke tool) — the centipede capture path (trap_only reserves it).
+- Millipede: the peaceful detritivore on the same individual chassis (eats rot, makes
+  compost). Dragonfly: prey:[wasp_common] — pure data + sprite (the chassis proof).
+- Second wasp type (yellowjacket ground-nester); craftable hive box; roofed enclosures
+  (blocks_flying); predator starvation (needed for finite-prey private plots);
+  nocturnal centipede aggression; bee mass-sting damage scaling (per-swarm cooldown is
+  the v1 cap); eat-fruit-to-heal (regen is the placeholder).
+- Forest zone proper (docs/guides/authoring/forest.md collects the rules); village
+  remake folds the test patches into real content.
+- P8 curved legs (protocol bezier) — default-skipped; revisit only if the serpentine
+  read disappoints; gate = sync-harness hash parity.
+- spawnKillDrops directional scatter along the death trail (drops currently burst-jitter).
+
 ## Done (recent) — Orchard redesign + weather v1 + deep night/flashlight + F8 + ecology caps
 - **F8 world-debug panel**: set time of day (epoch-compare rollover — a set-time can't skip
   the daily reset), force rain/stop, spawn a fly swarm at the player (cap-aware). OpCodes 90/91.
