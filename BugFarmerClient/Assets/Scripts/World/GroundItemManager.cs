@@ -71,11 +71,23 @@ namespace BugFarmer.World
             _items[msg.id] = visual;
 
             // Join-time food-registry HYDRATION: chunk-subscribe re-sends existing ground
-            // items; ones that are ALREADY rotten are bug food a joiner would otherwise miss
-            // (their ITEM_ROTTED events may be pruned). Live mutations stay event-driven —
-            // HydrateFood is a no-op for ids already registered.
+            // items; ones that are bug food would otherwise be missed by a joiner (their
+            // ITEM_ROTTED events get pruned after 200 ticks). Two sources of edibility:
+            // the rotten_ prefix (rotten fruit — the server assigns 100 at rot time; the
+            // published item rows carry no food_value) and a def-level food_value
+            // (CARRION: bug_parts etc. — the prefix can't cover it, and without this a
+            // joiner's registry lacks the corpse while veterans' flies land on it = a
+            // hash-resync loop). Hydrating at the full def value while the real level is
+            // part-drained is the same accepted class as the rotten 100: the registry
+            // level is an existence gate only, and FOOD_CONSUMED(0) removes it.
             if (msg.item_type.StartsWith("rotten_"))
                 Bugs.InfluenceManager.Instance?.HydrateFood(msg.id, new Vector2(msg.x, msg.y), 100);
+            else
+            {
+                var def = EntityDatabase.Get(msg.item_type);
+                if (def != null && def.FoodValue > 0)
+                    Bugs.InfluenceManager.Instance?.HydrateFood(msg.id, new Vector2(msg.x, msg.y), def.FoodValue);
+            }
         }
 
         private void HandleItemRemove(IMatchState state)

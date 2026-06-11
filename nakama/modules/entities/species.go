@@ -72,6 +72,52 @@ type BugSpecies struct {
 	// Sprites - lookup keys for client to load sprite sheets
 	SpriteID    string `json:"sprite_id"`
 	EggSpriteID string `json:"egg_sprite_id"`
+
+	// Kill drops: per-species loot table (replaces the old hardcoded bug_parts).
+	// Empty = drops nothing.
+	KillDrops []KillDrop `json:"kill_drops"`
+
+	// Prey-side predation fields (set on species that GET hunted)
+	PredatorFleeRadius    float32 `json:"predator_flee_radius"`     // flee when a predator swarm is this close
+	PredatorFleeSpeedMult float32 `json:"predator_flee_speed_mult"` // flee-from-predator speed (decoupled from the player flee mult)
+
+	// Movement trait: this species' swarm centers AND client bug visuals skip the
+	// OCCUPANT collision branch only (fences, walls, houses — there are no roofs yet).
+	// Water and zone edges still block. Named so nobody "fixes" flies, which also fly
+	// but must respect pens. Applies identically at BOTH collision sites (server leg
+	// clamp + client per-bug collision) — per-bug positions are hash state.
+	FliesOverFences bool `json:"flies_over_fences"`
+
+	// Client movement class key ("brownian", "gliding", "darting", "crawling").
+	// Hash-bearing same-build data (the client reads the published species.json).
+	MovementStyle string `json:"movement_style"`
+
+	// Predator configuration. The NIL POINTER is the predator gate — non-predators
+	// never enter the predation branch.
+	Predation *PredationConfig `json:"predation"`
+}
+
+// KillDrop is one entry of a species' kill loot table.
+type KillDrop struct {
+	Item     string  `json:"item"`
+	CountMin int     `json:"count_min"`
+	CountMax int     `json:"count_max"`
+	Chance   float32 `json:"chance"`
+}
+
+// PredationConfig holds the predator-only knobs (architecture_swarm_sync.md §14).
+// All server-only state machinery; outputs ride the existing event vocabulary.
+type PredationConfig struct {
+	Prey                   []string `json:"prey"`                     // species ids this predator hunts
+	HomeRange              float32  `json:"home_range"`               // hunt/wander tether radius around the nest/HomePos
+	StrikeRadius           float32  `json:"strike_radius"`            // center-to-center kill range
+	StrikeCooldownTicks    int64    `json:"strike_cooldown_ticks"`    // min ticks between kills (the anti-snowball knob)
+	KillsPerStrike         int      `json:"kills_per_strike"`         // prey bugs killed per strike
+	FeedPerKill            float32  `json:"feed_per_kill"`            // satiation gained per kill
+	HuntSpeedMult          float32  `json:"hunt_speed_mult"`          // leg speed multiplier while hunting
+	DepositSatiation       float32  `json:"deposit_satiation"`        // satiation set after a nest deposit (rest pacing)
+	HuntSatiationThreshold float32  `json:"hunt_satiation_threshold"` // hunts only below this satiation
+	NestOccupant           string   `json:"nest_occupant"`            // occupant id of this species' nest ("" = nestless)
 }
 
 // LoadSpecies reads species definitions from JSON config

@@ -95,6 +95,10 @@ namespace BugFarmer.Data
             // Walk-over magnet exclusion: deliberate-E-only pickups (fresh tree fruit)
             public bool NoAutoPickup;
 
+            // Bug-food value when this item lies on the ground (carrion). Drives the
+            // join-time food-registry hydration (the rotten_ prefix can't cover carrion).
+            public int FoodValue;
+
             // Tool properties
             public string ToolType;
             public int ToolTier;
@@ -249,6 +253,7 @@ namespace BugFarmer.Data
                 SellPrice = data["sell_price"]?.Value<int>() ?? 0,
                 BuyPrice = data["buy_price"]?.Value<int>() ?? 0,
                 NoAutoPickup = data["no_auto_pickup"]?.Value<bool>() ?? false,
+                FoodValue = data["food_value"]?.Value<int>() ?? 0,
                 ToolType = data["tool_type"]?.Value<string>(),
                 ToolTier = data["tool_tier"]?.Value<int>() ?? 0,
                 Reach = data["reach"]?.Value<float>() ?? 0f,

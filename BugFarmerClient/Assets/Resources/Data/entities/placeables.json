@@ -144,7 +144,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "gnawable": true
     }
   },
   "broken_fence": {
@@ -171,7 +172,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "gnawable": true
     }
   },
   "boulder": {
@@ -342,7 +344,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "gnawable": true
     }
   },
   "gate_wood": {
@@ -372,7 +375,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "gnawable": true
     }
   },
   "gate_iron": {
@@ -5766,7 +5770,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "gnawable": true
     }
   },
   "gate_picket": {
@@ -5796,7 +5801,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "gnawable": true
     }
   },
   "fence_picket_weathered": {
@@ -5825,7 +5831,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "gnawable": true
     }
   },
   "garden_border_stone": {

@@ -320,7 +320,8 @@
     "arc_degrees": 80,
     "catch_cap": 10,
     "cooldown_ticks": 3,
-    "swing_time": 0.25
+    "swing_time": 0.25,
+    "tool_tier": 1
   },
   "large_net": {
     "name": "Large Net",
@@ -332,7 +333,8 @@
     "arc_degrees": 120,
     "catch_cap": 20,
     "cooldown_ticks": 3,
-    "swing_time": 0.25
+    "swing_time": 0.25,
+    "tool_tier": 3
   },
   "pickaxe_wood": {
     "name": "Wooden Pickaxe",
@@ -620,7 +622,8 @@
     "category": "resource",
     "stackable": true,
     "max_stack": 99,
-    "sell_price": 2
+    "sell_price": 2,
+    "food_value": 10
   },
   "flashlight": {
     "name": "Flashlight",
@@ -628,5 +631,33 @@
     "tool_type": "flashlight",
     "buy_price": 50,
     "sell_price": 20
+  },
+  "centipede_parts": {
+    "name": "Centipede Parts",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 2
+  },
+  "paper_nest": {
+    "name": "Paper Nest",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 10
+  },
+  "wasp_larvae": {
+    "name": "Wasp Larvae",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 3
+  },
+  "wasp_stinger": {
+    "name": "Wasp Stinger",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
   }
 }

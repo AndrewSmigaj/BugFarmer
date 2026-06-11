@@ -2373,5 +2373,37 @@
       ],
       "pivot": "c"
     }
+  },
+  "wasp_nest": {
+    "name": "Wasp Nest",
+    "category": "nature",
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "sprite_w": 24,
+      "sprite_h": 28,
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 4,
+        "required_tool_type": "axe",
+        "required_tool_tier": 1,
+        "drops": [
+          {
+            "item_id": "paper_nest",
+            "count": 2,
+            "chance": 1.0
+          },
+          {
+            "item_id": "wasp_larvae",
+            "count": 2,
+            "chance": 0.8
+          }
+        ]
+      }
+    }
   }
 }

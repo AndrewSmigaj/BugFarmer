@@ -12,10 +12,9 @@ import (
 	"bugfarmer/entities"
 )
 
-// EVERY killed bug drops exactly one dead bug (bug_parts) — its only drop. Per-species
-// kill_drops waits for real loot-table design — see BACKLOG.
-const killDropChance = 1.0
-const killDropItem = "bug_parts"
+// Kill drops are per-species loot tables (species.json kill_drops); carrion lifetime in
+// seconds before a ground drop despawns (emitting FOOD_CONSUMED(0) if it was edible).
+const killDropLifetime = 60.0
 
 // handleMeleeAttack processes one melee SWING (OpCode 88). Mirrors the catch trust
 // model: the client detects bug ids against its deterministic positions; the server
@@ -128,7 +127,9 @@ func (m *Match) handleMeleeAttack(
 				state.AddInfluenceEvent(state.CurrentZone.ZoneID, InfluenceBugRemoved,
 					"", 0, 0, swarm.ID, bugID)
 			}
-			m.spawnKillDrop(logger, dispatcher, state, msg.ClickX, msg.ClickY, chunkSize)
+			m.spawnKillDrops(logger, dispatcher, state, species,
+				msg.ClickX, msg.ClickY,
+				swarm.WorldX(chunkSize), swarm.WorldY(chunkSize), chunkSize)
 		}
 
 		if len(result.Damaged) > 0 || len(result.Killed) > 0 {
@@ -160,49 +161,83 @@ func (m *Match) handleMeleeAttack(
 	logger.Debug("Player %s melee: %d struck across %d swarms", playerID, struck, len(results))
 }
 
-// spawnKillDrop chance-rolls a bug_parts ground item at the strike position (+jitter) —
-// the break-drop spawn pattern. No DecaysTo and FoodValue stays 0, so kill drops are
-// never bug food (bug-food gates on FoodValue > 0).
-func (m *Match) spawnKillDrop(
+// spawnKillDrops rolls the VICTIM species' kill_drops loot table at (dropX, dropY)
+// (+jitter per item). Player kills pass the strike position; predation kills pass the
+// predator's center; the centipede's death scatters along its trail (the caller spreads
+// positions). If the drop point is blocked (a flying predator can legally strike while
+// hovering OVER a fence cell), fall back to fallbackX/Y — the victim's center, always
+// clear ground by construction — because an EDIBLE drop inside a blocks_bugs cell would
+// become a permanent wall-attractor for fly visuals and an unreachable gnaw lure.
+//
+// Edible drops (item def food_value > 0) get a FoodValue and MUST emit ITEM_ROTTED:
+// follower clients build the deterministic food registry from the ledger, and fly
+// display clustering at food feeds bug positions = the state hash.
+func (m *Match) spawnKillDrops(
 	logger runtime.Logger,
 	dispatcher runtime.MatchDispatcher,
 	state *WorldState,
-	clickX, clickY float32,
+	species *entities.BugSpecies,
+	dropX, dropY, fallbackX, fallbackY float32,
 	chunkSize int,
 ) {
-	if rand.Float32() > killDropChance {
+	if species == nil || len(species.KillDrops) == 0 {
 		return
 	}
 
-	cs := float32(chunkSize)
-	worldX := clickX + (rand.Float32()-0.5)*0.6
-	worldY := clickY + (rand.Float32()-0.5)*0.6
-	cx := int(worldX / cs)
-	cy := int(worldY / cs)
-
-	itemID := fmt.Sprintf("item_kill_%d", time.Now().UnixNano())
-	groundItem := &entities.GroundItem{
-		ID:       itemID,
-		ItemType: killDropItem,
-		Count:    1,
-		Position: entities.EntityPosition{
-			ChunkX: cx,
-			ChunkY: cy,
-			LocalX: worldX - float32(cx)*cs,
-			LocalY: worldY - float32(cy)*cs,
-		},
-		Lifetime: 60.0,
+	if state.IsBlocked(dropX, dropY) {
+		dropX, dropY = fallbackX, fallbackY
 	}
-	state.GroundItems[itemID] = groundItem
 
-	spawnMsg := GroundItemSpawnMessage{
-		ID:       itemID,
-		ItemType: killDropItem,
-		Count:    1,
-		X:        worldX,
-		Y:        worldY,
+	for _, drop := range species.KillDrops {
+		if drop.Chance < 1.0 && rand.Float32() > drop.Chance {
+			continue
+		}
+		count := drop.CountMin
+		if drop.CountMax > drop.CountMin {
+			count += rand.Intn(drop.CountMax - drop.CountMin + 1)
+		}
+		if count <= 0 {
+			continue
+		}
+
+		worldX := dropX + (rand.Float32()-0.5)*0.6
+		worldY := dropY + (rand.Float32()-0.5)*0.6
+		// Normalize like spawnSwarmAt (the old int(x/cs) truncation was wrong for
+		// negative coords)
+		pos := entities.EntityPosition{LocalX: worldX, LocalY: worldY}
+		pos.Normalize(chunkSize)
+
+		foodValue := 0
+		if def := state.Entities[drop.Item]; def != nil {
+			foodValue = def.FoodValue
+		}
+
+		itemID := fmt.Sprintf("item_kill_%d", time.Now().UnixNano())
+		groundItem := &entities.GroundItem{
+			ID:        itemID,
+			ItemType:  drop.Item,
+			Count:     count,
+			Position:  pos,
+			Lifetime:  killDropLifetime,
+			FoodValue: foodValue,
+		}
+		state.GroundItems[itemID] = groundItem
+
+		spawnMsg := GroundItemSpawnMessage{
+			ID:       itemID,
+			ItemType: drop.Item,
+			Count:    count,
+			X:        worldX,
+			Y:        worldY,
+		}
+		m.broadcastToChunk(dispatcher, state, pos.ChunkX, pos.ChunkY, OpCodeGroundItemSpawn, spawnMsg)
+
+		// Edible carrion enters the deterministic food registry (hash-bearing)
+		if foodValue > 0 && state.CurrentZone != nil {
+			state.AddFoodEvent(state.CurrentZone.ZoneID, InfluenceItemRotted, itemID,
+				int(worldX), int(worldY), foodValue)
+		}
+
+		logger.Debug("Kill drop %s x%d at %.1f,%.1f (food=%d)", drop.Item, count, worldX, worldY, foodValue)
 	}
-	m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeGroundItemSpawn, spawnMsg)
-
-	logger.Debug("Kill drop %s at %.1f,%.1f", killDropItem, worldX, worldY)
 }

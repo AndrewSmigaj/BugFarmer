@@ -1195,6 +1195,20 @@ func (m *Match) removeGroundItem(
 	cx, cy := item.Position.ChunkX, item.Position.ChunkY
 	delete(state.GroundItems, itemID)
 
+	// An EDIBLE item leaving the world MUST clear the deterministic food registry.
+	// This path is reached by LIFETIME EXPIRY — and carrion (bug_parts, food_value 10,
+	// Lifetime 60s) is the first edible item that expires. Without this event every
+	// uneaten corpse leaves a permanent phantom registry entry on all live clients
+	// (flies eternally landing on bare ground) and a joiner-vs-veteran hash-resync
+	// loop. Pickup and eat-to-zero already emit it; expiry didn't (unreachable until
+	// carrion existed).
+	if item.FoodValue > 0 && state.CurrentZone != nil {
+		cs := state.Config.ChunkSize
+		wcx := cx*cs + int(item.Position.LocalX)
+		wcy := cy*cs + int(item.Position.LocalY)
+		state.AddFoodEvent(state.CurrentZone.ZoneID, InfluenceFoodConsumed, itemID, wcx, wcy, 0)
+	}
+
 	removeMsg := GroundItemRemoveMessage{ID: itemID}
 	m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeGroundItemRemove, removeMsg)
 }

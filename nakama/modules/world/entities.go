@@ -52,6 +52,11 @@ type EntityDef struct {
 	// Seed properties
 	PlacesCrop string `json:"places_crop,omitempty"` // Crop type this seed plants
 
+	// Bug-food value when this item lies on the ground (carrion: bug_parts etc.).
+	// > 0 makes a ground drop EDIBLE: it registers in the deterministic food registry
+	// (ITEM_ROTTED at spawn, FOOD_CONSUMED(0) at expiry — both hash-bearing).
+	FoodValue int `json:"food_value,omitempty"`
+
 	// Consumable properties
 	Effect string `json:"effect,omitempty"`
 
@@ -90,6 +95,7 @@ type WorldData struct {
 	Pivot         string `json:"pivot"`     // "bc" (bottom-center), "c" (center)
 	BlocksPlayers bool   `json:"blocks_players,omitempty"`
 	BlocksBugs    bool   `json:"blocks_bugs,omitempty"`
+	Gnawable      bool   `json:"gnawable,omitempty"` // centipedes chew through it (wood fences/gates)
 
 	// Rotation
 	Rotatable  bool `json:"rotatable,omitempty"`
