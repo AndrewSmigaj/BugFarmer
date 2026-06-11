@@ -272,11 +272,17 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 		// can't derive from the tick alone
 		m.sendWorldEnv(dispatcher, worldState, presence)
 
+		// Seed the hearts UI (damage-0 echo; presence-targeted)
 		// Send full inventory sync to the joining player
 		player := worldState.Players[userID]
 		if err := m.sendInventorySync(logger, dispatcher, player, presence); err != nil {
 			logger.Warn("Failed to send inventory sync to %s: %v", userID, err)
 		}
+
+		// Seed the hearts UI (damage-0 echo; presence-targeted)
+		m.sendPlayerDamage(dispatcher, worldState, userID, PlayerDamageMessage{
+			HP: player.HP, MaxHP: player.MaxHP, Damage: 0,
+		})
 
 		// Emit initial cell event for spawn position (deterministic bug AI)
 		zoneID := ""
@@ -870,6 +876,11 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			m.checkPredationStrike(logger, dispatcher, worldState, swarm, species, chunkSize)
 		}
 
+		// Bug-vs-player attacks (stings/bites): contact range, cooldown + invuln gated
+		if species.AttackDamage > 0 {
+			m.checkBugAttacks(logger, dispatcher, worldState, swarm, species, chunkSize)
+		}
+
 		// === Lifecycle meters (server-authoritative; all effects ride the ledger) ===
 		swarm.ReproduceCooldown -= deltaTime // was never decremented before this system
 
@@ -972,6 +983,9 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 	// Weather: start the scheduled shower / end an expired one (display + one-shot
 	// watering; frontier-neutral)
 	m.processWeather(worldState, dispatcher, logger)
+
+	// Player HP regen: +1 per 30s, gated on damage recency (echoed to the owner)
+	m.processPlayerRegen(dispatcher, worldState)
 
 	// Broadcast swarm SET/metadata only when it changes (NOT per tick). Positions are
 	// derived deterministically on clients from SWARM_SET_TARGET events, so this carries

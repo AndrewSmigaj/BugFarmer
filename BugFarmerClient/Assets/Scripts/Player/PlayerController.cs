@@ -57,6 +57,8 @@ namespace BugFarmer.Player
                 gameObject.AddComponent<BugReleaseController>();
             if (GetComponent<TreeHarvestController>() == null)
                 gameObject.AddComponent<TreeHarvestController>();
+            if (GetComponent<PlayerHealth>() == null)
+                gameObject.AddComponent<PlayerHealth>();
             if (GetComponent<PlayerInputRouter>() == null)
                 gameObject.AddComponent<PlayerInputRouter>();
         }

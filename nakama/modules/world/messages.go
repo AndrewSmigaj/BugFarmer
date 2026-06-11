@@ -179,7 +179,9 @@ type PlayerDamageMessage struct {
 	SourceSpecies string  `json:"source_species"`
 	KnockDX       float32 `json:"knock_dx"` // unit vector away from the attacker
 	KnockDY       float32 `json:"knock_dy"`
-	Faint         bool    `json:"faint"` // HP hit 0: client fades + snaps to spawn
+	Faint         bool    `json:"faint"`     // HP hit 0: client fades + snaps to respawn
+	RespawnX      float32 `json:"respawn_x"` // where the client teleports itself on faint
+	RespawnY      float32 `json:"respawn_y"` // (the client is movement-authoritative)
 }
 
 // WorldEnvMessage (OpCode 91): the world's environment display state — broadcast on any

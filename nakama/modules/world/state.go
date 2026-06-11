@@ -180,6 +180,13 @@ type PlayerState struct {
 
 	// Tool use
 	LastToolTick int64 // Tick of last tool use (cooldown)
+
+	// Health (predators v1). HP is SIM-INERT: bug AI reads player CELLS (already on
+	// the ledger); HP travels as the presence-targeted PlayerDamage message (the
+	// MeleeResult display class). 1s invuln is server-enforced across ALL attackers.
+	HP             int   // current health
+	MaxHP          int   // 10 v1
+	LastDamageTick int64 // invuln window + regen gating
 }
 
 // WorldX returns the world X coordinate (ChunkX * chunkSize + LocalX)
@@ -283,6 +290,8 @@ func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presenc
 		// BugSlots are zero-initialized (empty)
 		// Coins defaults to 0
 	}
+	player.MaxHP = 10
+	player.HP = 10
 	player.SetWorldPosition(spawnX, spawnY, s.Config.ChunkSize)
 
 	// Give new player starting tools in hotbar. Slot 0 = HANDS: the visible grab verb

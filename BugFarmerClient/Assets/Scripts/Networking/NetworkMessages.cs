@@ -34,6 +34,10 @@ namespace BugFarmer.Networking
         public const int WorldEnv = 91;         // S->C: day offset + weather (on change + join)
         public const int TreeHarvest = 92;      // C->S: hands-pick one fruit
         public const int TreeFruitUpdate = 93;  // S->C: a tree's fruit count (canopy overlay)
+
+        // Predators
+        public const int PlayerDamage = 94;     // S->C (victim only): bug attack / regen echo
+        public const int BugTelegraph = 95;     // S->C: display-only attack telegraph
     }
 
     /// <summary>
@@ -192,5 +196,31 @@ namespace BugFarmer.Networking
     {
         public int gx;
         public int gy;
+    }
+
+    /// <summary>
+    /// A bug attack landed on the LOCAL player (OpCode 94 — the server targets the
+    /// victim's presence only). damage 0 = a regen/join echo for the hearts UI.
+    /// </summary>
+    [Serializable]
+    public class PlayerDamageMessage
+    {
+        public int hp;
+        public int max_hp;
+        public int damage;
+        public string source_species;
+        public float knock_dx;
+        public float knock_dy;
+        public bool faint;
+        public float respawn_x;
+        public float respawn_y;
+    }
+
+    /// <summary>Display-only attack telegraph (OpCode 95): "strike" or "windup".</summary>
+    [Serializable]
+    public class BugTelegraphMessage
+    {
+        public string swarm_id;
+        public string kind;
     }
 }
