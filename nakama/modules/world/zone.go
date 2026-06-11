@@ -19,9 +19,17 @@ type BugSpawnConfig struct {
 }
 
 // SpeciesCap defines spawn limits for one species in a zone.
+//
+// Two distinct ceilings (architecture_swarm_sync.md §13):
+//   - Max counts SWARMS and is spawn BACK-PRESSURE, not an invariant: continuous
+//     spawning skips at/above it, but forced release-joins + the split pass can
+//     overshoot it temporarily (bounded; decays via catches; never refilled).
+//   - MaxPopulation counts BUGS and is the HARD guard: reproduction and releases are
+//     gated against it before any mutation. 0 = uncapped (test zones rely on this).
 type SpeciesCap struct {
 	Initial       int     `json:"initial"`        // Swarms to spawn on match init
-	Max           int     `json:"max"`            // Zone-wide max for this species
+	Max           int     `json:"max"`            // Zone-wide max SWARM COUNT (spawn back-pressure)
+	MaxPopulation int     `json:"max_population"` // Zone-wide max BUGS (hard cap; 0 = uncapped)
 	SpawnInterval float32 `json:"spawn_interval"` // Seconds between continuous spawn attempts
 	SwarmSize     int     `json:"swarm_size"`     // Fixed bugs per swarm (0 = use species Min/Max range)
 }

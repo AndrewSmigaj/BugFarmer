@@ -45,6 +45,39 @@ func (m *Match) sendWorldEnv(dispatcher runtime.MatchDispatcher, state *WorldSta
 	dispatcher.BroadcastMessage(OpCodeWorldEnv, data, targets, nil, true)
 }
 
+// SpeciesPopulation counts living bugs of a species across all swarms. O(#swarms) —
+// call at event rate (reproduce/release/spawn), never per-tick-per-swarm.
+func (s *WorldState) SpeciesPopulation(speciesID string) int {
+	total := 0
+	for _, id := range s.SwarmsBySpecies[speciesID] {
+		if sw, ok := s.Swarms[id]; ok {
+			total += sw.Count
+		}
+	}
+	return total
+}
+
+// SpeciesMaxPopulation returns the zone's HARD population cap for a species
+// (species_caps.max_population). 0 = uncapped — test zones depend on the zero value.
+func (s *WorldState) SpeciesMaxPopulation(speciesID string) int {
+	if s.CurrentZone == nil || s.CurrentZone.BugSpawning == nil {
+		return 0
+	}
+	return s.CurrentZone.BugSpawning.SpeciesCaps[speciesID].MaxPopulation
+}
+
+// AliveSwarmCount counts a species' swarms that still exist (SwarmsBySpecies may hold
+// stale ids of caught/dead swarms).
+func (s *WorldState) AliveSwarmCount(speciesID string) int {
+	n := 0
+	for _, id := range s.SwarmsBySpecies[speciesID] {
+		if _, ok := s.Swarms[id]; ok {
+			n++
+		}
+	}
+	return n
+}
+
 // AdvanceDayIfNeeded fires the day rollover when the APPARENT day index changes.
 // Epoch compare, not modulo: a forward set-time can move the apparent day past the
 // `% DayLengthTicks == 0` boundary without landing on it — modulo would silently skip
@@ -95,9 +128,10 @@ func (m *Match) handleDebugWorld(
 		}
 	}
 
-	// Spawn a swarm ("" = no spawn) — wired in with the cap-aware spawn path (W5)
+	// Spawn a swarm ("" = no spawn) — cap-aware (defense in depth: the dev tool obeys
+	// the same ceilings the game does)
 	if msg.SpawnSpecies != "" {
-		m.debugSpawnSwarm(logger, state, msg, userID)
+		m.debugSpawnSwarm(logger, state, msg, userID, chunkSize)
 	}
 
 	if changed {
@@ -215,14 +249,46 @@ func (m *Match) forceWeather(
 	return false
 }
 
-// debugSpawnSwarm handles the F8 spawn button. Stub until the cap-aware spawn extraction
-// lands (W5): logs and ignores.
+// debugSpawnSwarm handles the F8 spawn button: a new swarm at (spawn_x, spawn_y),
+// respecting BOTH zone ceilings — the population cap blocks outright; the swarm-count
+// cap blocks minting (use a release to force-join instead).
 func (m *Match) debugSpawnSwarm(
 	logger runtime.Logger,
 	state *WorldState,
 	msg DebugWorldMessage,
 	userID string,
+	chunkSize int,
 ) {
-	logger.Info("DEBUG WORLD: %s requested spawn %dx %s — cap-aware spawn not built yet (W5)",
-		userID, msg.SpawnCount, msg.SpawnSpecies)
+	speciesID := msg.SpawnSpecies
+	species := state.Species[speciesID]
+	if species == nil {
+		logger.Warn("DEBUG WORLD: %s requested unknown species %q", userID, speciesID)
+		return
+	}
+
+	n := msg.SpawnCount
+	if n <= 0 {
+		n = species.MinSwarmSize
+		if n <= 0 {
+			n = 8
+		}
+	}
+
+	if maxPop := state.SpeciesMaxPopulation(speciesID); maxPop > 0 &&
+		state.SpeciesPopulation(speciesID)+n > maxPop {
+		logger.Info("DEBUG WORLD: spawn blocked — %s at population cap %d", speciesID, maxPop)
+		return
+	}
+	if state.CurrentZone != nil && state.CurrentZone.BugSpawning != nil {
+		if cap, ok := state.CurrentZone.BugSpawning.SpeciesCaps[speciesID]; ok && cap.Max > 0 &&
+			state.AliveSwarmCount(speciesID) >= cap.Max {
+			logger.Info("DEBUG WORLD: spawn blocked — %s at swarm-count cap %d", speciesID, cap.Max)
+			return
+		}
+	}
+
+	if swarm := m.spawnSwarmAt(state, speciesID, n, msg.SpawnX, msg.SpawnY, chunkSize); swarm != nil {
+		logger.Info("DEBUG WORLD: %s spawned %d %s as %s at (%.1f, %.1f)",
+			userID, n, speciesID, swarm.ID, msg.SpawnX, msg.SpawnY)
+	}
 }

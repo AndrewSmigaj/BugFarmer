@@ -27,6 +27,39 @@ import (
 // on receipt while state hashing is per-tick, so a lagging client can theoretically trip
 // one drift-sample round per creation (~0.3-1%/release) — minority resync self-heals.
 // BACKLOG: zone swarm-count cap for releases (force add-to-nearest / reject above N).
+// spawnSwarmAt creates a new swarm of n bugs at a world point — the single mint path
+// shared by player releases and the F8 debug spawn (same on-receipt mid-tick class as
+// §12.2 releases: the swarm Thinks THIS tick and anchors via SWARM_SET_TARGET).
+// Callers do their own cap checks and wall clamping. Returns nil for unknown species.
+func (m *Match) spawnSwarmAt(state *WorldState, speciesID string, n int, x, y float32, chunkSize int) *entities.SwarmState {
+	species := state.Species[speciesID]
+	if species == nil || n <= 0 {
+		return nil
+	}
+
+	pos := entities.EntityPosition{LocalX: x, LocalY: y}
+	pos.Normalize(chunkSize)
+
+	id, _ := uuid.NewV4()
+	swarm := &entities.SwarmState{
+		ID:        fmt.Sprintf("swarm_%s", id.String()[:8]),
+		SpeciesID: speciesID,
+		Position:  pos,
+		Radius:    species.SwarmRadius,
+		Count:     n,
+		WanderRad: species.WanderRadius,
+		HomePos:   pos,
+	}
+	swarm.InitializeBugIDs()
+
+	state.Swarms[swarm.ID] = swarm
+	state.SwarmsBySpecies[speciesID] = append(state.SwarmsBySpecies[speciesID], swarm.ID)
+	state.SwarmsDirty = true
+	// NextThinkTick stays 0: the swarm Thinks THIS tick, emitting its anchoring
+	// SWARM_SET_TARGET leg after the SwarmUpdate and before the frontier.
+	return swarm
+}
+
 func (m *Match) handleReleaseBugs(
 	logger runtime.Logger,
 	dispatcher runtime.MatchDispatcher,
@@ -74,14 +107,22 @@ func (m *Match) handleReleaseBugs(
 		return
 	}
 
-	// The only fallible op — do it first.
-	if !player.RemoveBugs(msg.SlotIndex, n) {
+	// HARD population cap (the crash guard, §13): a release near the cap must reject
+	// VISIBLY with the slot untouched — before any mutation, covering BOTH branches
+	// (join and new-swarm). Without this, "catch a jar of flies, walk to the overrun
+	// orchard, release" would mint unbounded entities.
+	if maxPop := state.SpeciesMaxPopulation(speciesID); maxPop > 0 &&
+		state.SpeciesPopulation(speciesID)+n > maxPop {
+		m.sendWorldError(dispatcher, state, playerID, "The zone is overrun — they won't stay")
 		return
 	}
 
 	// Nearest same-species swarm whose snap radius covers the click → the bugs JOIN it.
-	var target *entities.SwarmState
-	bestDistSq := float32(0)
+	// Track the nearest swarm at ANY distance too: at the swarm-COUNT cap a release
+	// can't mint a new swarm, so the bugs force-join the nearest one instead (§12.2
+	// resolved — the player keeps their bugs; the split pass rebalances overgrowth).
+	var target, nearest *entities.SwarmState
+	bestDistSq, nearestDistSq := float32(0), float32(0)
 	for _, swarmID := range state.SwarmsBySpecies[speciesID] {
 		swarm, ok := state.Swarms[swarmID]
 		if !ok {
@@ -90,6 +131,10 @@ func (m *Match) handleReleaseBugs(
 		sdx := msg.X - swarm.WorldX(chunkSize)
 		sdy := msg.Y - swarm.WorldY(chunkSize)
 		distSq := sdx*sdx + sdy*sdy
+		if nearest == nil || distSq < nearestDistSq {
+			nearest = swarm
+			nearestDistSq = distSq
+		}
 		snap := species.MergeRadius
 		if swarm.Radius > snap {
 			snap = swarm.Radius
@@ -100,9 +145,30 @@ func (m *Match) handleReleaseBugs(
 		}
 	}
 
+	// Swarm-count cap (spawn back-pressure): no new swarm at/over it — force-join.
+	if target == nil && state.CurrentZone != nil && state.CurrentZone.BugSpawning != nil {
+		if cap, ok := state.CurrentZone.BugSpawning.SpeciesCaps[speciesID]; ok && cap.Max > 0 &&
+			state.AliveSwarmCount(speciesID) >= cap.Max {
+			if nearest == nil {
+				// Unreachable while Max > 0 (at-cap implies swarms exist) — belt+braces.
+				m.sendWorldError(dispatcher, state, playerID, "The zone is overrun — they won't stay")
+				return
+			}
+			target = nearest
+			logger.Info("Release at the %s swarm cap: force-joining nearest swarm %s", speciesID, nearest.ID)
+		}
+	}
+
+	// The only fallible op — after every reject path, before every mutation.
+	if !player.RemoveBugs(msg.SlotIndex, n) {
+		return
+	}
+
 	if target != nil {
 		// JOIN: mirror reproduceSwarm's id math exactly, WITHOUT touching meters.
-		// Over MaxSwarmSize is fine — the deterministic split pass rebalances next tick.
+		// Over MaxSwarmSize is fine — the population pass (600-tick cadence) splits it;
+		// note the split pair sums past MaxSwarmSize, so merges never re-fuse it (the
+		// documented, bounded swarm-count overage — see SpeciesCap).
 		if target.NextBugID == 0 {
 			target.NextBugID = target.Count // lazy-init guard (reproduceSwarm parity)
 		}
@@ -119,27 +185,11 @@ func (m *Match) handleReleaseBugs(
 		rx, ry := entities.RaycastClamp(px, py, msg.X, msg.Y, func(x, y float32) bool {
 			return state.IsBlocked(x, y)
 		})
-		pos := entities.EntityPosition{LocalX: rx, LocalY: ry}
-		pos.Normalize(chunkSize)
-
-		id, _ := uuid.NewV4()
-		swarm := &entities.SwarmState{
-			ID:        fmt.Sprintf("swarm_%s", id.String()[:8]),
-			SpeciesID: speciesID,
-			Position:  pos,
-			Radius:    species.SwarmRadius,
-			Count:     n,
-			WanderRad: species.WanderRadius,
-			HomePos:   pos,
+		swarm := m.spawnSwarmAt(state, speciesID, n, rx, ry, chunkSize)
+		if swarm == nil {
+			player.AddBugs(speciesID, n) // shouldn't happen; don't eat the bugs
+			return
 		}
-		swarm.InitializeBugIDs()
-
-		state.Swarms[swarm.ID] = swarm
-		state.SwarmsBySpecies[speciesID] = append(state.SwarmsBySpecies[speciesID], swarm.ID)
-		state.SwarmsDirty = true
-		// NextThinkTick stays 0: the swarm Thinks THIS tick, emitting its anchoring
-		// SWARM_SET_TARGET leg after the SwarmUpdate and before the frontier.
-
 		logger.Info("Player %s released %d %s as new swarm %s at (%.1f, %.1f)",
 			playerID, n, speciesID, swarm.ID, rx, ry)
 	}

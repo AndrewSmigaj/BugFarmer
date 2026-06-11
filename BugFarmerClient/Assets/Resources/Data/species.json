@@ -52,7 +52,8 @@
     "hatch_time": 30.0,
     "reproduce_cooldown": 30.0,
     "sprite_id": "fly_common",
-    "egg_sprite_id": "fly_eggs"
+    "egg_sprite_id": "fly_eggs",
+    "consume_rate": 0.2
   },
   "butterfly_meadow": {
     "name": "Meadow Butterfly",

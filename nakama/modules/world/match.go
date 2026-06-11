@@ -24,7 +24,12 @@ type Match struct{}
 const (
 	feedRadius             = 2.0  // swarm centre within this distance of food = "at" it
 	consumePerBugPerSecond = 0.5  // food drained per bug per second while at a depletable source
-	reproduceFoodCost      = 50.0 // food consumed by one reproduction event
+	reproduceFoodCost      = 40.0 // food consumed by one reproduction event
+	// The one-apple budget (architecture_swarm_sync.md §13): a rotten apple = 100 food.
+	// At fly consume_rate 0.2, a 10-fly swarm drains 2/s: feeding 0->100 sat (20s) = 40,
+	// breeding 0->100 meter (10s) = 20, event cost = 40 -> exactly one breed event per
+	// apple, growing 1-2 flies. Cost-per-fly RISES with population (bigger swarms drain
+	// faster per capita) — growth is self-braking even before the hard caps.
 )
 
 // DayLengthTicks: one in-game day = 8400 ticks = 14 minutes at 10Hz (architecture_farming.md).
@@ -33,17 +38,40 @@ const (
 // the tick when a zone empties and restarts with the match (persistence later).
 const DayLengthTicks = 8400
 
-// reproduceSwarm doubles a sated swarm at a breeding source: Count new bugs (ids from
-// NextBugID), a SWARM_REPRODUCED ledger event (clients spawn them at the centre at the event
-// tick — idempotent, same pattern as split/merge), a chunk of food consumed, meters reset
-// (hungry again → CheckPhaseTransition falls back to feeding).
+// reproduceSwarm adds 1-2 bugs (randomized — NOT doubling: gentle, sub-exponential
+// growth) to a sated swarm at a breeding source: new ids from NextBugID, a
+// SWARM_REPRODUCED ledger event (clients spawn them at the centre at the event tick —
+// idempotent, same pattern as split/merge; the count rides the event, so server rand is
+// replay-safe), a chunk of food consumed, meters reset (hungry again →
+// CheckPhaseTransition falls back to feeding).
+//
+// HARD population cap (species_caps.max_population, 0 = uncapped): at the cap the event
+// is SKIPPED — meters reset AND the cooldown is armed (without it the meter refills in
+// ~30s and the skip fires per swarm per cycle), but the 40-food event cost is NOT charged:
+// the continuous feeding drain is the honest cost of a capped population camping a source.
 func (m *Match) reproduceSwarm(state *WorldState, dispatcher runtime.MatchDispatcher,
 	swarm *entities.SwarmState, species *entities.BugSpecies, logger runtime.Logger) {
+
+	count := 1 + rand.Intn(2) // 1-2 offspring
+
+	if maxPop := state.SpeciesMaxPopulation(swarm.SpeciesID); maxPop > 0 {
+		room := maxPop - state.SpeciesPopulation(swarm.SpeciesID)
+		if room < count {
+			count = room // partial litter rather than all-or-nothing at the boundary
+		}
+		if count <= 0 {
+			swarm.ReproductionMeter = 0
+			swarm.Satiation = 0
+			swarm.ReproduceCooldown = species.ReproduceCooldown
+			logger.Debug("Swarm %s at the %s population cap (%d): reproduction skipped",
+				swarm.ID, swarm.SpeciesID, maxPop)
+			return
+		}
+	}
 
 	if swarm.NextBugID == 0 {
 		swarm.NextBugID = swarm.Count // lazy-init guard
 	}
-	count := swarm.Count // doubling: as many new bugs as there are now
 	base := swarm.NextBugID
 	swarm.NextBugID += count
 	swarm.Count += count
@@ -55,7 +83,7 @@ func (m *Match) reproduceSwarm(state *WorldState, dispatcher runtime.MatchDispat
 		state.AddSwarmReproducedEvent(state.CurrentZone.ZoneID, swarm.ID, count, base)
 	}
 	m.consumeFood(state, dispatcher, swarm.TargetFoodID, reproduceFoodCost)
-	logger.Info("Swarm %s reproduced at %s: %d -> %d bugs", swarm.ID, swarm.TargetFoodID, count, swarm.Count)
+	logger.Info("Swarm %s reproduced at %s: +%d -> %d bugs", swarm.ID, swarm.TargetFoodID, count, swarm.Count)
 }
 
 // MatchLabel is the JSON structure for match listing
@@ -1257,8 +1285,10 @@ func (m *Match) checkContinuousSpawning(state *WorldState, tick int64, logger ru
 		}
 		state.SwarmsBySpecies[speciesID] = aliveSwarms
 
-		// Spawn one new swarm if below cap
-		if len(aliveSwarms) < cap.Max {
+		// Spawn one new swarm if below the swarm-count cap AND the population cap
+		// (defense in depth — natural spawns stop refilling a saturated zone).
+		atPopCap := cap.MaxPopulation > 0 && state.SpeciesPopulation(speciesID) >= cap.MaxPopulation
+		if len(aliveSwarms) < cap.Max && !atPopCap {
 			if swarm := m.spawnSwarmForSpecies(state, speciesID, logger); swarm != nil {
 				logger.Debug("Continuous spawn: %s (%s) [%d/%d]",
 					swarm.ID, speciesID, len(aliveSwarms)+1, cap.Max)

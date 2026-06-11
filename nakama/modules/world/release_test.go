@@ -187,6 +187,9 @@ func TestReleaseDifferentSpeciesIgnored(t *testing.T) {
 	}
 }
 
+// Joining over MaxSwarmSize is allowed: the population pass (600-tick cadence) splits
+// the overgrown swarm. NB: releaseTestState has NO zone caps — MaxPopulation zero-value
+// = uncapped is pinned behavior (test zones depend on it).
 func TestReleaseOverCapStillJoins(t *testing.T) {
 	state := releaseTestState()
 	releasePlayer(state, 10, 10, "fly_common", 10)
@@ -200,6 +203,152 @@ func TestReleaseOverCapStillJoins(t *testing.T) {
 
 	if swarm.Count != 60 {
 		t.Fatalf("swarm.Count = %d, want 60 (over-cap adds; split pass rebalances)", swarm.Count)
+	}
+}
+
+// Continuous spawning respects the population cap: a saturated zone stops being
+// refilled by natural spawns (back-pressure half of the §13 design); the same setup
+// under the cap DOES spawn (the gate, not the harness, is what blocks).
+func TestContinuousSpawnRespectsPopulationCap(t *testing.T) {
+	mkState := func(maxPop int) *WorldState {
+		state := releaseTestState()
+		state.SpeciesNextSpawn = map[string]float64{}
+		state.CurrentZone.Width = 32
+		state.CurrentZone.Height = 32
+		state.CurrentZone.BugSpawning = &BugSpawnConfig{
+			SpeciesCaps: map[string]SpeciesCap{
+				"fly_common": {Max: 10, MaxPopulation: maxPop, SpawnInterval: 1, SwarmSize: 5},
+			},
+			SpawnAreas: []SpawnArea{{Type: "zone", Species: []string{"fly_common"}}},
+		}
+		s := newTestSwarm("s1", 20, 10, 10)
+		state.Swarms["s1"] = s
+		state.SwarmsBySpecies["fly_common"] = []string{"s1"}
+		return state
+	}
+	m := &Match{}
+
+	// At the cap (pop 20 >= 20): no spawn.
+	capped := mkState(20)
+	m.checkContinuousSpawning(capped, capped.TickCount, nopRuntimeLogger())
+	if len(capped.Swarms) != 1 {
+		t.Fatalf("continuous spawn leaked past the population cap: %d swarms", len(capped.Swarms))
+	}
+
+	// Under the cap: the identical harness spawns (proves the gate is what blocked).
+	open := mkState(100)
+	m.checkContinuousSpawning(open, open.TickCount, nopRuntimeLogger())
+	if len(open.Swarms) != 2 {
+		t.Fatalf("control failed — harness can't spawn at all: %d swarms", len(open.Swarms))
+	}
+}
+
+// The F8 debug spawn obeys both ceilings (defense in depth).
+func TestDebugSpawnRespectsCaps(t *testing.T) {
+	state := releaseTestState()
+	state.CurrentZone.BugSpawning = &BugSpawnConfig{SpeciesCaps: map[string]SpeciesCap{
+		"fly_common": {Max: 1, MaxPopulation: 25},
+	}}
+	s := newTestSwarm("s1", 20, 10, 10)
+	state.Swarms["s1"] = s
+	state.SwarmsBySpecies["fly_common"] = []string{"s1"}
+	m := &Match{}
+
+	// Population cap: 20 + 8 > 25 — blocked.
+	m.debugSpawnSwarm(nopRuntimeLogger(), state,
+		DebugWorldMessage{SpawnSpecies: "fly_common", SpawnCount: 8, SpawnX: 12, SpawnY: 12}, "dev", 32)
+	if len(state.Swarms) != 1 {
+		t.Fatalf("debug spawn leaked past the population cap: %d", len(state.Swarms))
+	}
+
+	// Swarm-count cap (room in population, none in count): still blocked.
+	m.debugSpawnSwarm(nopRuntimeLogger(), state,
+		DebugWorldMessage{SpawnSpecies: "fly_common", SpawnCount: 2, SpawnX: 12, SpawnY: 12}, "dev", 32)
+	if len(state.Swarms) != 1 {
+		t.Fatalf("debug spawn leaked past the swarm-count cap: %d", len(state.Swarms))
+	}
+
+	// Raise both: it spawns.
+	state.CurrentZone.BugSpawning.SpeciesCaps["fly_common"] = SpeciesCap{Max: 5, MaxPopulation: 100}
+	m.debugSpawnSwarm(nopRuntimeLogger(), state,
+		DebugWorldMessage{SpawnSpecies: "fly_common", SpawnCount: 8, SpawnX: 12, SpawnY: 12}, "dev", 32)
+	if len(state.Swarms) != 2 {
+		t.Fatalf("debug spawn control failed: %d swarms", len(state.Swarms))
+	}
+}
+
+// HARD population cap: a release that would push the species over is rejected before
+// ANY mutation — slot intact, no swarm growth, no new swarm — on BOTH branches.
+func TestReleaseRejectedAtPopulationCap(t *testing.T) {
+	state := releaseTestState()
+	state.CurrentZone.BugSpawning = &BugSpawnConfig{SpeciesCaps: map[string]SpeciesCap{
+		"fly_common": {Max: 10, MaxPopulation: 55},
+	}}
+
+	// JOIN branch: a swarm of 50 at the click; releasing 10 would hit 60 > 55.
+	p := releasePlayer(state, 10, 10, "fly_common", 10)
+	swarm := newTestSwarm("s1", 50, 11, 10)
+	swarm.Radius = 4.0
+	state.Swarms["s1"] = swarm
+	state.SwarmsBySpecies["fly_common"] = []string{"s1"}
+
+	(&Match{}).handleReleaseBugs(nopRuntimeLogger(), nopDispatcher{}, state,
+		releaseMsg(0, 10, 11, 10), "p1", 32)
+
+	if p.BugSlots[0].Count != 10 {
+		t.Fatalf("rejected release mutated the slot: %d", p.BugSlots[0].Count)
+	}
+	if swarm.Count != 50 || len(state.Swarms) != 1 {
+		t.Fatalf("rejected release mutated swarms: count=%d swarms=%d", swarm.Count, len(state.Swarms))
+	}
+
+	// NEW-SWARM branch: same cap, click far from the swarm — still rejected.
+	(&Match{}).handleReleaseBugs(nopRuntimeLogger(), nopDispatcher{}, state,
+		releaseMsg(0, 10, 7, 10), "p1", 32)
+	if p.BugSlots[0].Count != 10 || len(state.Swarms) != 1 {
+		t.Fatalf("new-swarm branch leaked past the population cap: slot=%d swarms=%d",
+			p.BugSlots[0].Count, len(state.Swarms))
+	}
+
+	// Under the cap: the same release works (the gate is the SUM, not the state).
+	state.CurrentZone.BugSpawning.SpeciesCaps["fly_common"] = SpeciesCap{Max: 10, MaxPopulation: 100}
+	(&Match{}).handleReleaseBugs(nopRuntimeLogger(), nopDispatcher{}, state,
+		releaseMsg(0, 10, 11, 10), "p1", 32)
+	if p.BugSlots[0].Count != 0 || swarm.Count != 60 {
+		t.Fatalf("under-cap release should join: slot=%d count=%d", p.BugSlots[0].Count, swarm.Count)
+	}
+}
+
+// Swarm-COUNT cap: at the cap a release can't mint a new swarm — it force-joins the
+// NEAREST same-species swarm at ANY distance (the player keeps their bugs; §12.2).
+func TestReleaseForceJoinsAtSwarmCountCap(t *testing.T) {
+	state := releaseTestState()
+	state.CurrentZone.BugSpawning = &BugSpawnConfig{SpeciesCaps: map[string]SpeciesCap{
+		"fly_common": {Max: 2}, // count cap only; population uncapped
+	}}
+	p := releasePlayer(state, 10, 10, "fly_common", 5)
+	near := newTestSwarm("near", 10, 13, 13) // ~4.6 from the click — outside snap
+	far := newTestSwarm("far", 10, 30, 30)
+	near.Radius, far.Radius = 1.0, 1.0 // tiny visual radii: nothing snaps at the click
+	state.Swarms["near"], state.Swarms["far"] = near, far
+	state.SwarmsBySpecies["fly_common"] = []string{"near", "far"}
+
+	(&Match{}).handleReleaseBugs(nopRuntimeLogger(), nopDispatcher{}, state,
+		releaseMsg(0, 5, 10, 10), "p1", 32)
+
+	if len(state.Swarms) != 2 {
+		t.Fatalf("at the swarm-count cap a new swarm was minted: %d", len(state.Swarms))
+	}
+	if near.Count != 15 {
+		t.Fatalf("force-join must pick the NEAREST swarm: near=%d far=%d", near.Count, far.Count)
+	}
+	if p.BugSlots[0].Count != 0 {
+		t.Fatalf("force-join must keep the player's bugs (slot=%d released)", p.BugSlots[0].Count)
+	}
+	// And it rides the ledger like any join.
+	evs := eventsOfType(state, InfluenceSwarmReproduced)
+	if len(evs) != 1 || evs[0].SwarmID != "near" || evs[0].SplitCount != 5 {
+		t.Fatalf("force-join event wrong: %+v", evs)
 	}
 }
 

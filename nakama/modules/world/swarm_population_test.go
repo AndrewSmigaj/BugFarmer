@@ -234,12 +234,15 @@ func TestConsumeFoodThresholdsAndDepletion(t *testing.T) {
 	}
 }
 
-func TestReproduceSwarmDoubles(t *testing.T) {
+// Reproduction adds 1-2 bugs (randomized, NOT doubling — sub-exponential growth), with
+// exact id/event bookkeeping, meters reset, cooldown armed, and the 40-food event cost.
+func TestReproduceSwarmDoubles(t *testing.T) { // name kept for history greps; semantics: AddsOneOrTwo
 	state := newTestState(20)
 	m := &Match{}
 	swarm := newTestSwarm("s", 6, 10, 10)
 	swarm.TargetFoodID = "food1"
 	state.Swarms["s"] = swarm
+	state.SwarmsBySpecies["fly_common"] = []string{"s"}
 	state.GroundItems["food1"] = &entities.GroundItem{
 		ID: "food1", ItemType: "rotten_apple", Count: 1,
 		Position:  entities.EntityPosition{LocalX: 10, LocalY: 10},
@@ -250,25 +253,79 @@ func TestReproduceSwarmDoubles(t *testing.T) {
 
 	m.reproduceSwarm(state, nil, swarm, species, nopRuntimeLogger())
 
-	// Doubled: 6 -> 12, new ids 6..11 alive + catchable
-	if swarm.Count != 12 || swarm.NextBugID != 12 {
-		t.Fatalf("count=%d nextBugID=%d, want 12/12", swarm.Count, swarm.NextBugID)
+	added := swarm.Count - 6
+	if added < 1 || added > 2 {
+		t.Fatalf("added=%d, want 1-2 (gentle growth, not doubling)", added)
 	}
-	if !swarm.IsBugAlive(6) || !swarm.IsBugAlive(11) {
+	if swarm.NextBugID != 6+added {
+		t.Fatalf("nextBugID=%d, want %d", swarm.NextBugID, 6+added)
+	}
+	if !swarm.IsBugAlive(6) || !swarm.IsBugAlive(6+added-1) {
 		t.Fatal("reproduced bugs must be alive (catchable)")
 	}
 	// Meters reset + cooldown armed
 	if swarm.Satiation != 0 || swarm.ReproductionMeter != 0 || swarm.ReproduceCooldown != 30 {
 		t.Fatalf("meters/cooldown wrong: sat=%f meter=%f cd=%f", swarm.Satiation, swarm.ReproductionMeter, swarm.ReproduceCooldown)
 	}
-	// One SWARM_REPRODUCED event with exact id bookkeeping
+	// One SWARM_REPRODUCED event with exact id bookkeeping (the count rides the event —
+	// server rand stays replay-safe)
 	evs := eventsOfType(state, InfluenceSwarmReproduced)
-	if len(evs) != 1 || evs[0].SwarmID != "s" || evs[0].SplitCount != 6 || evs[0].NewBugIDBase != 6 {
+	if len(evs) != 1 || evs[0].SwarmID != "s" || evs[0].SplitCount != added || evs[0].NewBugIDBase != 6 {
 		t.Fatalf("reproduce event wrong: %+v", evs)
 	}
-	// Breeding consumed food (reproduceFoodCost = 50)
-	if state.GroundItems["food1"].FoodValue != 50 {
-		t.Fatalf("food after breed = %d, want 50", state.GroundItems["food1"].FoodValue)
+	// Breeding consumed food (reproduceFoodCost = 40: the one-apple budget)
+	if state.GroundItems["food1"].FoodValue != 60 {
+		t.Fatalf("food after breed = %d, want 60", state.GroundItems["food1"].FoodValue)
+	}
+}
+
+// At the population cap: NO event, NO food cost, meters reset AND the cooldown armed
+// (else the meter refills every breed cycle and the skip spams); a partial litter fits
+// when there's room for one.
+func TestReproduceSkipsAtPopulationCap(t *testing.T) {
+	state := newTestState(20)
+	m := &Match{}
+	swarm := newTestSwarm("s", 10, 10, 10)
+	swarm.TargetFoodID = "food1"
+	swarm.Satiation = 100
+	swarm.ReproductionMeter = 100
+	state.Swarms["s"] = swarm
+	state.SwarmsBySpecies["fly_common"] = []string{"s"}
+	state.GroundItems["food1"] = &entities.GroundItem{
+		ID: "food1", ItemType: "rotten_apple", Count: 1,
+		Position:  entities.EntityPosition{LocalX: 10, LocalY: 10},
+		FoodValue: 100,
+	}
+	species := state.Species["fly_common"]
+	species.ReproduceCooldown = 30
+	state.CurrentZone.BugSpawning = &BugSpawnConfig{SpeciesCaps: map[string]SpeciesCap{
+		"fly_common": {Max: 10, MaxPopulation: 10}, // exactly at cap
+	}}
+
+	m.reproduceSwarm(state, nil, swarm, species, nopRuntimeLogger())
+
+	if swarm.Count != 10 {
+		t.Fatalf("capped swarm grew: %d", swarm.Count)
+	}
+	if len(eventsOfType(state, InfluenceSwarmReproduced)) != 0 {
+		t.Fatal("capped reproduction emitted an event")
+	}
+	if state.GroundItems["food1"].FoodValue != 100 {
+		t.Fatalf("capped skip charged food: %d", state.GroundItems["food1"].FoodValue)
+	}
+	if swarm.Satiation != 0 || swarm.ReproductionMeter != 0 || swarm.ReproduceCooldown != 30 {
+		t.Fatalf("capped skip must reset meters + ARM the cooldown: sat=%f meter=%f cd=%f",
+			swarm.Satiation, swarm.ReproductionMeter, swarm.ReproduceCooldown)
+	}
+
+	// Room for exactly one: a partial litter of 1 fits (never overshoots).
+	state.CurrentZone.BugSpawning.SpeciesCaps["fly_common"] = SpeciesCap{Max: 10, MaxPopulation: 11}
+	m.reproduceSwarm(state, nil, swarm, species, nopRuntimeLogger())
+	if swarm.Count != 11 {
+		t.Fatalf("partial litter should fit exactly one: count=%d", swarm.Count)
+	}
+	if state.SpeciesPopulation("fly_common") != 11 {
+		t.Fatalf("population=%d, want 11", state.SpeciesPopulation("fly_common"))
 	}
 }
 

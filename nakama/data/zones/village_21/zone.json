@@ -16,12 +16,14 @@
       "fly_common": {
         "initial": 40,
         "max": 75,
-        "spawn_interval": 45.0
+        "spawn_interval": 45.0,
+        "max_population": 400
       },
       "butterfly_meadow": {
         "initial": 15,
         "max": 50,
-        "spawn_interval": 90.0
+        "spawn_interval": 90.0,
+        "max_population": 300
       }
     },
     "spawn_areas": [
