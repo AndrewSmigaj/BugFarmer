@@ -235,7 +235,10 @@ namespace BugFarmer.Bugs
                     // bugs approach it, LAND (pause), then resume — driven purely by
                     // deterministic inputs (event-driven food registry + derived centre +
                     // counter-RNG + a per-bug-id ring offset), so all clients stay identical.
-                    if (!TryFeedAtFood(swarmCenter))
+                    // Crawling individuals skip the fly hover-land feed dance — the
+                    // centipede head must ride the center verbatim (it still EATS via
+                    // the server meters; this is display only).
+                    if (_behavior.SkipCollision || !TryFeedAtFood(swarmCenter))
                         Movement.UpdateMovement(this, swarmCenter, _wanderRadiusSqr);
                     break;
             }

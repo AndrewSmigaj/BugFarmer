@@ -217,7 +217,19 @@ namespace BugFarmer.Entities
 
             var bugVisual = new BugVisual(agent, visual);
             _bugs[bugId] = bugVisual;
+
+            // INDIVIDUALS (centipede): the head (bug 0) drags a pure-display segment
+            // trail; segment positions also feed the melee sector query (a body that's
+            // unhittable on 6/8ths of its length reads as broken).
+            var info = Data.EntityDatabase.GetSpecies(SpeciesId);
+            if (bugId == 0 && info != null && info.MovementStyle == "crawling" && _trail == null)
+            {
+                _trail = gameObject.AddComponent<Bugs.CentipedeTrail>();
+                _trail.Initialize(visual, SpeciesId);
+            }
         }
+
+        private Bugs.CentipedeTrail _trail;
 
         /// <summary>
         /// Update from server data. SwarmUpdate is now event-driven (spawn/despawn/merge/split/
@@ -390,6 +402,27 @@ namespace BugFarmer.Entities
                 float bugAngle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
                 if (Mathf.Abs(Mathf.DeltaAngle(aimDegrees, bugAngle)) <= halfArc)
                     result.Add(kvp.Key);
+            }
+
+            // INDIVIDUALS: the segment trail is hittable too — any segment inside the
+            // sector maps to bug 0 (the only id). Without this, 6/8ths of the
+            // centipede's body whiffs. The server validates click-vs-PLAYER reach only
+            // (it holds no per-bug positions), so no server change is needed — the rule
+            // is "stand within reach of whichever body part you slash".
+            if (_trail != null && !result.Contains(0) && _bugs.ContainsKey(0))
+            {
+                foreach (var seg in _trail.SegmentPositions())
+                {
+                    Vector2 delta = seg - origin;
+                    if (delta.sqrMagnitude > reachSq)
+                        continue;
+                    float segAngle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
+                    if (Mathf.Abs(Mathf.DeltaAngle(aimDegrees, segAngle)) <= halfArc)
+                    {
+                        result.Add(0);
+                        break;
+                    }
+                }
             }
 
             return result.ToArray();

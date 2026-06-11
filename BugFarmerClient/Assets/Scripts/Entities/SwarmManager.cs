@@ -858,6 +858,12 @@ namespace BugFarmer.Entities
                     BugFarmer.Audio.AudioFx.HissAt(pos);
                     swarm.FlashAllBugs();
                     break;
+                case "gnaw":
+                    // The night tell: the crunch is audible past the light radius —
+                    // you HEAR chewing in the dark, grab the flashlight, sweep the
+                    // fence line (the cracks anchor at the fence via BreakProgress).
+                    BugFarmer.Audio.AudioFx.CrunchAt(pos);
+                    break;
             }
         }
 
