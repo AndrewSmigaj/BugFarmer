@@ -93,8 +93,8 @@
           "centipede_garden"
         ],
         "type": "circle",
-        "cx": 90,
-        "cy": 225,
+        "cx": 105,
+        "cy": 240,
         "radius": 8
       }
     ]
