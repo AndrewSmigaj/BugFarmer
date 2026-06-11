@@ -100,14 +100,64 @@ const (
 	OpCodeMeleeResult int64 = 89 // S→C: validated damage/kills — the SOLE HP display
 	// channel + all combat cosmetics. Kills ALSO flow as BUG_REMOVED ledger events
 	// (sim-state); damaged HP deliberately does NOT (display-only, never in the ledger).
+
+	// World environment (dev tool + display; frontier-neutral by construction)
+	OpCodeDebugWorld int64 = 90 // C→S: set time / force weather / spawn swarm (dev, like 87)
+	OpCodeWorldEnv   int64 = 91 // S→C: day offset + weather — on change AND per-joiner
+
+	// Fruit trees
+	OpCodeTreeHarvest     int64 = 92 // C→S: hands-pick one fruit from a tree
+	OpCodeTreeFruitUpdate int64 = 93 // S→C: a tree's fruit count changed (display-only;
+	// the OpCode-51 droplet pattern: broadcast on change + chunk-subscribe re-send)
 )
 
 // TreeWaterUpdateMessage (OpCode 51): a fruit tree's water charges changed. Display-only —
 // clients show a droplet indicator over dry trees (charges == 0); bug AI doesn't read this.
+// (W3 amends this to the tank model: water_level/pending_growth/last_water_day.)
 type TreeWaterUpdateMessage struct {
 	GridX        int `json:"grid_x"`
 	GridY        int `json:"grid_y"`
 	WaterCharges int `json:"water_charges"`
+}
+
+// TreeFruitUpdateMessage (OpCode 93): a tree's fruit count changed (grew, fell, picked,
+// knocked). Display-only — drives the canopy fruit overlay; broadcast on change and
+// re-sent per chunk-subscribe for trees with fruit.
+type TreeFruitUpdateMessage struct {
+	GridX      int    `json:"grid_x"`
+	GridY      int    `json:"grid_y"`
+	FruitCount int    `json:"fruit_count"`
+	FruitType  string `json:"fruit_type"` // item id for the overlay sprite ("apple")
+}
+
+// TreeHarvestMessage (OpCode 92): hands-pick ONE fruit from the tree at (gx, gy).
+type TreeHarvestMessage struct {
+	GX int `json:"gx"`
+	GY int `json:"gy"`
+}
+
+// DebugWorldMessage (OpCode 90, DEV TOOL like EcologyTuning): set the apparent time of
+// day, force weather, or spawn a swarm. Ungated by convention (trusted dev environment),
+// loudly logged. JsonUtility can't do optionals → sentinels: set_time_ticks -1 = no-op,
+// weather "" = no-op, spawn_species "" = no spawn.
+type DebugWorldMessage struct {
+	SetTimeTicks int     `json:"set_time_ticks"` // -1 or 0..8399 (position within the day)
+	Weather      string  `json:"weather"`        // "" | "rain" | "stop"
+	SpawnSpecies string  `json:"spawn_species"`  // "" or a species id
+	SpawnCount   int     `json:"spawn_count"`
+	SpawnX       float32 `json:"spawn_x"`
+	SpawnY       float32 `json:"spawn_y"`
+}
+
+// WorldEnvMessage (OpCode 91): the world's environment display state — broadcast on any
+// change (set-time, rain start/stop) AND sent to each joiner right after WorldInit.
+// weather_until_tick is in the SAME tick domain as the frontier (SimulationTick), so a
+// client self-terminates rain visuals even if the stop broadcast is missed; clients apply
+// the weather field ON RECEIPT ("" = stop immediately) and use until only as the fallback.
+type WorldEnvMessage struct {
+	DayOffsetTicks   int64  `json:"day_offset_ticks"`
+	Weather          string `json:"weather"` // "" or "rain"
+	WeatherUntilTick int64  `json:"weather_until_tick"`
 }
 
 // EcologyTuningMessage (OpCode 87, DEV TOOL): live-overrides a species' ecology parameters so

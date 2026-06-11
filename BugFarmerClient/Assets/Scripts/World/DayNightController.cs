@@ -6,8 +6,10 @@ namespace BugFarmer.World
 {
     /// <summary>
     /// Day/night cycle driven by the AUTHORITATIVE TICK — the tick is already synced to every
-    /// client (ZoneTickBroadcast, 10Hz), so time-of-day needs zero extra netcode:
-    ///   timeOfDay = (SimulationTick % 8400) / 8400      (one day = 14 minutes)
+    /// client (ZoneTickBroadcast, 10Hz), so time-of-day needs almost zero extra netcode:
+    ///   timeOfDay = ((SimulationTick + DayOffsetTicks) % 8400) / 8400   (one day = 14 min)
+    /// DayOffsetTicks arrives via WorldEnv (OpCode 91, on change + per-joiner) — the debug
+    /// set-time shifts the APPARENT time on every client identically; the tick never jumps.
     /// A match starts at tick 0 = MORNING (fresh zones are lit). Creates a Global Light2D at
     /// runtime and drives its intensity/color through dawn/day/dusk/night; exposes
     /// Daylight (0..1) for lamp lights (LampLight) and the player's night light.
@@ -17,6 +19,19 @@ namespace BugFarmer.World
     public class DayNightController : MonoBehaviour
     {
         public const long DayTicks = 8400; // must match server DayLengthTicks
+
+        // === World environment (OpCode 91) — shared display state ===
+        /// <summary>Debug set-time offset; added to the tick for the apparent time of day.</summary>
+        public static long DayOffsetTicks { get; private set; }
+        /// <summary>"" or "rain" — applied on receipt; until-tick is the missed-stop fallback.</summary>
+        public static string Weather { get; private set; } = "";
+        public static long WeatherUntilTick { get; private set; }
+
+        /// <summary>Apparent time within the day, 0..1 (0 = morning). The shared clock.</summary>
+        public static float TimeOfDay { get; private set; }
+
+        /// <summary>Current apparent day index (the server's rollover epoch).</summary>
+        public static long CurrentDayIndex { get; private set; }
 
         [Header("Ambient")]
         [SerializeField] private float nightIntensity = 0.22f;
@@ -46,6 +61,26 @@ namespace BugFarmer.World
             _globalLight.lightType = Light2D.LightType.Global;
             _globalLight.intensity = 1f;
             _globalLight.color = Color.white;
+
+            if (BugFarmer.Networking.WorldManager.Instance != null)
+                BugFarmer.Networking.WorldManager.Instance.OnMatchData += HandleMatchData;
+        }
+
+        private void OnDestroy()
+        {
+            if (BugFarmer.Networking.WorldManager.Instance != null)
+                BugFarmer.Networking.WorldManager.Instance.OnMatchData -= HandleMatchData;
+        }
+
+        private void HandleMatchData(Nakama.IMatchState state)
+        {
+            if (state.OpCode != BugFarmer.Networking.OpCodes.WorldEnv) return;
+            var json = System.Text.Encoding.UTF8.GetString(state.State);
+            var msg = JsonUtility.FromJson<BugFarmer.Networking.WorldEnvMessage>(json);
+            if (msg == null) return;
+            DayOffsetTicks = msg.day_offset_ticks;
+            Weather = msg.weather ?? "";
+            WeatherUntilTick = msg.weather_until_tick;
         }
 
         private void Update()
@@ -54,10 +89,13 @@ namespace BugFarmer.World
                 _previewIndex = (_previewIndex + 1) % _previewStops.Length;
 
             long tick = SwarmManager.Instance != null ? SwarmManager.Instance.SimulationTick : 0;
-            float t = (tick % DayTicks) / (float)DayTicks; // 0 = morning
+            long apparent = tick + DayOffsetTicks;
+            float t = (apparent % DayTicks) / (float)DayTicks; // 0 = morning
             if (_previewStops[_previewIndex] >= 0f)
                 t = _previewStops[_previewIndex]; // F7 visual preview (this client only)
-            DayNumber = (int)(tick / DayTicks) + 1;
+            CurrentDayIndex = apparent / DayTicks;
+            DayNumber = (int)CurrentDayIndex + 1;
+            TimeOfDay = t;
 
             Daylight = DaylightAt(t);
 
@@ -111,7 +149,7 @@ namespace BugFarmer.World
         {
             // Tiny clock: day number + phase glyph + HH:MM of the in-game day (F7 = preview)
             long tick = SwarmManager.Instance != null ? SwarmManager.Instance.SimulationTick : 0;
-            float t = (tick % DayTicks) / (float)DayTicks;
+            float t = ((tick + DayOffsetTicks) % DayTicks) / (float)DayTicks;
             string suffix = "";
             if (_previewStops[_previewIndex] >= 0f)
             {
@@ -120,6 +158,7 @@ namespace BugFarmer.World
             }
             int mins = (int)(t * 24f * 60f);
             string glyph = Daylight > 0.5f ? "☀" : "☽"; // sun / moon
+            if (Weather == "rain") glyph = "☔";        // weather wins the glyph slot
             GUI.Label(new Rect(Screen.width / 2f - 60, 8, 320, 22),
                 $"{glyph} Day {DayNumber}  {(6 + mins / 60) % 24:D2}:{mins % 60:D2}{suffix}");
         }

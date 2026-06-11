@@ -20,6 +20,8 @@ namespace BugFarmer.Tracing
         private bool _showSwarms = false;
         private bool _showGraph = false;
         private bool _showTuning = false;
+        private bool _showWorld = false;   // F8: world debug (time / weather / spawn)
+        private string _wStatus = "";
 
         // Ecology tuning state (initialized to the species.json fly defaults)
         private float _tForage = 0.25f;       // chance a behavior chunk is FORAGE
@@ -52,6 +54,7 @@ namespace BugFarmer.Tracing
             if (Input.GetKeyDown(KeyCode.F4)) _showSwarms = !_showSwarms;
             if (Input.GetKeyDown(KeyCode.F5)) _showGraph = !_showGraph;
             if (Input.GetKeyDown(KeyCode.F6)) _showTuning = !_showTuning;
+            if (Input.GetKeyDown(KeyCode.F8)) _showWorld = !_showWorld;
 
             // Population time-series: one sample per second (10 ticks)
             var sm = SwarmManager.Instance;
@@ -104,7 +107,7 @@ namespace BugFarmer.Tracing
             GUILayout.Label($"Recording: {_isRecording} (Buffer: {_traceBuffer?.Count ?? 0})");
             GUILayout.Label($"Tick: {sm?.SimulationTick ?? 0}");
             GUILayout.Label($"Swarms: {sm?.SwarmCount ?? 0}   Bugs: {sm?.TotalBugCount ?? 0}");
-            GUILayout.Label("F1=Record F2=Dump F3=Log F4=Swarms F5=Graph");
+            GUILayout.Label("F1=Record F2=Dump F3=Log F4=Swarms F5=Graph F6=Tuning F8=World");
             GUILayout.EndArea();
 
             if (_showSwarms && sm != null)
@@ -113,6 +116,68 @@ namespace BugFarmer.Tracing
                 DrawPopulationGraph();
             if (_showTuning)
                 DrawEcologyTuning();
+            if (_showWorld)
+                DrawWorldDebug();
+        }
+
+        /// <summary>
+        /// F8: world debug (OpCode 90 — server-decided, loudly logged, the F6 convention).
+        /// Set the apparent time of day, force weather, spawn a fly swarm at the player.
+        /// </summary>
+        void DrawWorldDebug()
+        {
+            const int W = 340;
+            GUILayout.BeginArea(new Rect(Screen.width - W - 12, 500, W, 190), GUI.skin.box);
+            GUILayout.Label("=== WORLD DEBUG — F8 ===");
+
+            // Time of day: tick positions within the 8400-tick day (0 = morning).
+            // Evening (4200) lands at the top of the fruit-fall window t∈[0.40,0.62).
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Morning")) SendWorldDebug(t => t.set_time_ticks = 0);
+            if (GUILayout.Button("Noon")) SendWorldDebug(t => t.set_time_ticks = 2100);
+            if (GUILayout.Button("Evening")) SendWorldDebug(t => t.set_time_ticks = 4200);
+            if (GUILayout.Button("Night")) SendWorldDebug(t => t.set_time_ticks = 5880);
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Rain")) SendWorldDebug(t => t.weather = "rain");
+            if (GUILayout.Button("Stop weather")) SendWorldDebug(t => t.weather = "stop");
+            GUILayout.EndHorizontal();
+
+            if (GUILayout.Button("Spawn fly swarm at player"))
+                SendWorldDebug(t =>
+                {
+                    var player = FindObjectOfType<BugFarmer.Player.PlayerController>();
+                    t.spawn_species = "fly_common";
+                    t.spawn_count = 8;
+                    if (player != null)
+                    {
+                        t.spawn_x = player.transform.position.x;
+                        t.spawn_y = player.transform.position.y;
+                    }
+                });
+
+            GUILayout.Label($"time now: {BugFarmer.World.DayNightController.TimeOfDay:F2}  " +
+                            $"weather: {BugFarmer.World.DayNightController.Weather}");
+            if (!string.IsNullOrEmpty(_wStatus))
+                GUILayout.Label(_wStatus);
+            GUILayout.EndArea();
+        }
+
+        void SendWorldDebug(System.Action<BugFarmer.Networking.DebugWorldMessage> fill)
+        {
+            var world = BugFarmer.Networking.WorldManager.Instance;
+            var socket = BugFarmer.Networking.NetworkManager.Instance?.Socket;
+            if (world?.CurrentMatch == null || socket == null || !socket.IsConnected)
+            {
+                _wStatus = "not connected";
+                return;
+            }
+            var msg = new BugFarmer.Networking.DebugWorldMessage();
+            fill(msg);
+            _ = socket.SendMatchStateAsync(world.CurrentMatch.Id,
+                BugFarmer.Networking.OpCodes.DebugWorld, JsonUtility.ToJson(msg));
+            _wStatus = $"sent @ {System.DateTime.Now:HH:mm:ss}";
         }
 
         /// <summary>

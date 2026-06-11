@@ -249,6 +249,10 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 		initData, _ := json.Marshal(worldInit)
 		dispatcher.BroadcastMessage(OpCodeWorldInit, initData, []runtime.Presence{presence}, nil, true)
 
+		// World environment (time-of-day offset + weather) — display state the joiner
+		// can't derive from the tick alone
+		m.sendWorldEnv(dispatcher, worldState, presence)
+
 		// Send full inventory sync to the joining player
 		player := worldState.Players[userID]
 		if err := m.sendInventorySync(logger, dispatcher, player, presence); err != nil {
@@ -661,6 +665,15 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 					sp.FeedAmount, sp.BreedAmount, sp.SatiationDecayRate, sp.ConsumeRate, sp.ReproduceCooldown)
 			}
 
+		case OpCodeDebugWorld:
+			// DEV TOOL (the EcologyTuning convention: ungated, loudly logged).
+			var dwMsg DebugWorldMessage
+			if err := json.Unmarshal(msg.GetData(), &dwMsg); err != nil {
+				logger.Warn("Invalid debug-world from %s: %v", userID, err)
+				continue
+			}
+			m.handleDebugWorld(logger, dispatcher, worldState, dwMsg, userID, chunkSize)
+
 		// Bug Sync (Late Joiner + Drift Detection)
 		case OpCodeSampleResponse:
 			var respMsg SampleResponseMessage
@@ -887,13 +900,16 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 	// === Day rollover (one day = DayLengthTicks = 14 min) ===
 	// Resets every crop's daily watering count — the max_daily_waterings cap existed but
 	// nothing ever reset it (documented gap, architecture_farming.md). Clients derive the
-	// same day boundary from the tick for their lighting cycle.
-	if worldState.TickCount > 0 && worldState.TickCount%DayLengthTicks == 0 {
+	// same day boundary from (tick + DayOffsetTicks) for their lighting cycle.
+	//
+	// Epoch compare (AdvanceDayIfNeeded), not modulo — a debug set-time crossing the
+	// boundary must not skip/double the daily reset.
+	if currentDay, rolled := worldState.AdvanceDayIfNeeded(); rolled {
 		for _, crop := range worldState.CropStates {
 			crop.WateringsToday = 0
 		}
 		logger.Info("DAY %d begins (tick %d): daily watering counts reset for %d crops",
-			worldState.TickCount/DayLengthTicks+1, worldState.TickCount, len(worldState.CropStates))
+			currentDay+1, worldState.TickCount, len(worldState.CropStates))
 	}
 
 	// Broadcast swarm SET/metadata only when it changes (NOT per tick). Positions are

@@ -47,6 +47,16 @@ type WorldState struct {
 	// Timing
 	LastMergeCheck int64 // Tick of last merge/split check
 
+	// World environment (time-of-day debug offset + weather). NONE of this feeds the
+	// deterministic bug sim — time's only server consumer is the day rollover, and rain
+	// lands as ordinary server-side watering. Time-of-day = ((TickCount+DayOffsetTicks)
+	// % DayLengthTicks) on BOTH sides (clients get the offset via WorldEnv, OpCode 91).
+	DayOffsetTicks    int64  // Debug set-time shifts the APPARENT time; the tick never jumps
+	LastRolloverDay   int64  // Epoch compare (NOT modulo): a set-time crossing a boundary must not skip/double the daily reset
+	WeatherKind       string // "" or "rain"
+	WeatherUntilTick  int64  // Raw-tick end of the current weather
+	ScheduledRainTick int64  // Raw tick the next shower starts (0 = none scheduled)
+
 	// SwarmUpdate (OpCode 20) is event-driven, not per-tick: set true whenever the
 	// swarm SET or metadata changes (spawn/despawn/merge/split/phase). Bug centers are
 	// derived deterministically from SWARM_SET_TARGET events, so positions are NOT

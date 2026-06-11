@@ -28,6 +28,12 @@ namespace BugFarmer.Networking
 
         // Farming - Client -> Server
         public const int PlantInteract = 55;
+
+        // World environment (dev tool + display) - must match server messages.go
+        public const int DebugWorld = 90;       // C->S: set time / force weather / spawn swarm
+        public const int WorldEnv = 91;         // S->C: day offset + weather (on change + join)
+        public const int TreeHarvest = 92;      // C->S: hands-pick one fruit
+        public const int TreeFruitUpdate = 93;  // S->C: a tree's fruit count (canopy overlay)
     }
 
     /// <summary>
@@ -133,5 +139,55 @@ namespace BugFarmer.Networking
         public int grid_x;
         public int grid_y;
         public int water_charges;
+    }
+
+    /// <summary>
+    /// World environment display state (OpCode 91): sent on change and to each joiner.
+    /// Time of day on both sides: ((tick + day_offset_ticks) % 8400) / 8400.
+    /// weather_until_tick shares the SimulationTick domain — the missed-stop fallback;
+    /// the weather field applies ON RECEIPT ("" = stop now).
+    /// </summary>
+    [Serializable]
+    public class WorldEnvMessage
+    {
+        public long day_offset_ticks;
+        public string weather;            // "" or "rain"
+        public long weather_until_tick;
+    }
+
+    /// <summary>
+    /// Debug world controls (OpCode 90, dev tool — the F8 panel). Sentinels for "leave
+    /// alone": set_time_ticks -1, weather "", spawn_species "".
+    /// </summary>
+    [Serializable]
+    public class DebugWorldMessage
+    {
+        public int set_time_ticks = -1;   // -1 or 0..8399
+        public string weather = "";       // "" | "rain" | "stop"
+        public string spawn_species = "";
+        public int spawn_count;
+        public float spawn_x;
+        public float spawn_y;
+    }
+
+    /// <summary>
+    /// A tree's fruit count changed (OpCode 93, display-only): drives the canopy fruit
+    /// overlay. Broadcast on change + re-sent per chunk-subscribe for fruited trees.
+    /// </summary>
+    [Serializable]
+    public class TreeFruitUpdateMessage
+    {
+        public int grid_x;
+        public int grid_y;
+        public int fruit_count;
+        public string fruit_type;         // item id for the overlay sprite ("apple")
+    }
+
+    /// <summary>Hands-pick one fruit from the tree at (gx, gy) (OpCode 92).</summary>
+    [Serializable]
+    public class TreeHarvestMessage
+    {
+        public int gx;
+        public int gy;
     }
 }
