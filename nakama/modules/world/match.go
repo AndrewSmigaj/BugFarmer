@@ -908,9 +908,14 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		for _, crop := range worldState.CropStates {
 			crop.WateringsToday = 0
 		}
+		m.scheduleDailyRain(worldState, logger)
 		logger.Info("DAY %d begins (tick %d): daily watering counts reset for %d crops",
 			currentDay+1, worldState.TickCount, len(worldState.CropStates))
 	}
+
+	// Weather: start the scheduled shower / end an expired one (display + one-shot
+	// watering; frontier-neutral)
+	m.processWeather(worldState, dispatcher, logger)
 
 	// Broadcast swarm SET/metadata only when it changes (NOT per tick). Positions are
 	// derived deterministically on clients from SWARM_SET_TARGET events, so this carries

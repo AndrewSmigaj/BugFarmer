@@ -1,6 +1,10 @@
 package world
 
-import "testing"
+import (
+	"testing"
+
+	"bugfarmer/entities"
+)
 
 // setTimeOfDay: the apparent time-of-day must equal the target after the shift, for any
 // current tick, and the offset must always be mod-positive.
@@ -76,6 +80,92 @@ func TestAdvanceDayForwardJumpDoesNotSkip(t *testing.T) {
 	// And it fires only once.
 	if _, rolled := s.AdvanceDayIfNeeded(); rolled {
 		t.Fatal("rollover double-fired after the jump")
+	}
+}
+
+// Rain's one-shot watering: crops drink +1 within the daily cap (capped crops skip),
+// trees gain a can's worth of charges (capped), and nothing else mutates.
+func TestRainWaterAllRespectsCaps(t *testing.T) {
+	state := newTestState(20)
+	m := &Match{}
+	state.CropStates = map[string]*entities.CropState{}
+	state.CropDefs = map[string]*entities.CropDef{
+		"tomato": {CropType: "tomato", MaxDailyWaterings: 2},
+	}
+	thirsty := &entities.CropState{PlantType: "tomato", GridX: 3, GridY: 3, Water: 1, WateringsToday: 1}
+	capped := &entities.CropState{PlantType: "tomato", GridX: 4, GridY: 4, Water: 5, WateringsToday: 2}
+	state.CropStates["3,3"] = thirsty
+	state.CropStates["4,4"] = capped
+
+	dryTree := &entities.FruitTreeState{TreeID: "t1", GridX: 6, GridY: 6, WaterCharges: 0}
+	fullTree := &entities.FruitTreeState{TreeID: "t2", GridX: 7, GridY: 7, WaterCharges: treeWaterCap}
+	state.FruitTreeStates["6,6"] = dryTree
+	state.FruitTreeStates["7,7"] = fullTree
+
+	watered := m.rainWaterAll(state, nil)
+
+	if thirsty.Water != 2 || thirsty.WateringsToday != 2 {
+		t.Errorf("thirsty crop: water=%d today=%d, want 2/2", thirsty.Water, thirsty.WateringsToday)
+	}
+	if capped.Water != 5 || capped.WateringsToday != 2 {
+		t.Errorf("capped crop mutated: water=%d today=%d", capped.Water, capped.WateringsToday)
+	}
+	if dryTree.WaterCharges != treeWaterPerCan {
+		t.Errorf("dry tree charges=%d, want %d", dryTree.WaterCharges, treeWaterPerCan)
+	}
+	if fullTree.WaterCharges != treeWaterCap {
+		t.Errorf("full tree charges=%d, want cap %d", fullTree.WaterCharges, treeWaterCap)
+	}
+	if watered != 2 {
+		t.Errorf("watered=%d, want 2 (one crop + one tree)", watered)
+	}
+}
+
+// Scheduler bounds + lifecycle: a scheduled shower starts at/after its tick (>=, never
+// ==), runs within the duration bounds, and clears itself; force-stop ends it.
+func TestRainSchedulerStartStop(t *testing.T) {
+	state := newTestState(20)
+	m := &Match{}
+	logger := nopRuntimeLogger()
+
+	// Schedule deterministically (bypass the 30% roll).
+	state.ScheduledRainTick = state.TickCount + 10
+
+	// Before the tick: nothing starts.
+	m.processWeather(state, nil, logger)
+	if state.WeatherKind != "" {
+		t.Fatal("rain started early")
+	}
+
+	// Jump PAST the scheduled tick (the >= guard: an exact-tick miss must not wedge).
+	state.TickCount += 25
+	m.processWeather(state, nil, logger)
+	if state.WeatherKind != "rain" {
+		t.Fatal("rain did not start at/after its scheduled tick")
+	}
+	if state.ScheduledRainTick != 0 {
+		t.Fatal("scheduled tick not cleared after start")
+	}
+	dur := state.WeatherUntilTick - state.TickCount
+	if dur < rainMinTicks || dur > rainMaxTicks {
+		t.Fatalf("duration %d outside [%d,%d]", dur, rainMinTicks, rainMaxTicks)
+	}
+
+	// Run to the end: it stops on its own.
+	state.TickCount = state.WeatherUntilTick
+	m.processWeather(state, nil, logger)
+	if state.WeatherKind != "" || state.WeatherUntilTick != 0 {
+		t.Fatalf("rain did not stop: kind=%q until=%d", state.WeatherKind, state.WeatherUntilTick)
+	}
+
+	// Force path: start + stop.
+	m.forceWeather(logger, nil, state, "rain", "tester")
+	if state.WeatherKind != "rain" {
+		t.Fatal("forceWeather(rain) did not start rain")
+	}
+	m.forceWeather(logger, nil, state, "stop", "tester")
+	if state.WeatherKind != "" {
+		t.Fatal("forceWeather(stop) did not stop rain")
 	}
 }
 

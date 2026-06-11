@@ -64,6 +64,10 @@ namespace BugFarmer.World
 
             if (BugFarmer.Networking.WorldManager.Instance != null)
                 BugFarmer.Networking.WorldManager.Instance.OnMatchData += HandleMatchData;
+
+            // Rain visuals live on a sibling component (programmatic, no scene setup)
+            if (GetComponent<RainController>() == null)
+                gameObject.AddComponent<RainController>();
         }
 
         private void OnDestroy()
@@ -101,7 +105,10 @@ namespace BugFarmer.World
 
             if (_globalLight != null)
             {
-                _globalLight.intensity = Mathf.Lerp(nightIntensity, 1f, Daylight);
+                float intensity = Mathf.Lerp(nightIntensity, 1f, Daylight);
+                if (RainController.Raining)
+                    intensity *= 0.85f; // overcast dim while it rains
+                _globalLight.intensity = intensity;
                 // Near the transitions, tint warm (dawn/dusk); at night go moonlit blue.
                 float transition = TransitionAmount(t);
                 var dayCol = Color.Lerp(Color.white, dawnDuskColor, transition);

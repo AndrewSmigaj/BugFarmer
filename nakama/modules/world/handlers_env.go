@@ -2,8 +2,17 @@ package world
 
 import (
 	"encoding/json"
+	"math/rand"
 
 	"github.com/heroiclabs/nakama-common/runtime"
+)
+
+// Rain v1 tuning (a shower is a one-shot watering event + visuals; per-cell deterministic
+// rain is the designed-later v2, see architecture_weather.md)
+const (
+	rainDailyChance = 0.30 // chance each apparent day gets one shower
+	rainMinTicks    = 1500 // 2.5 min
+	rainMaxTicks    = 3000 // 5 min
 )
 
 // World environment: the apparent time of day (debug offset) and weather.
@@ -20,6 +29,9 @@ import (
 // sendWorldEnv sends the WorldEnv display state (OpCode 91). presence != nil targets one
 // joiner; nil broadcasts the change to everyone.
 func (m *Match) sendWorldEnv(dispatcher runtime.MatchDispatcher, state *WorldState, presence runtime.Presence) {
+	if dispatcher == nil {
+		return // unit tests drive the state machines without a dispatcher
+	}
 	msg := WorldEnvMessage{
 		DayOffsetTicks:   state.DayOffsetTicks,
 		Weather:          state.WeatherKind,
@@ -93,8 +105,97 @@ func (m *Match) handleDebugWorld(
 	}
 }
 
-// forceWeather handles the F8 weather buttons. Returns true if the env state changed.
-// Stub until the rain scheduler lands (W2): logs and ignores.
+// scheduleDailyRain rolls the day's weather at the rollover: 30% chance of ONE shower at
+// a random raw tick within the next day-length. The scheduled tick is RAW (monotonic) —
+// a debug set-time shifts only the apparent time, so the shower never skips; it may just
+// land at an odd apparent hour (and a backward jump's rollover re-fire may re-roll —
+// accepted dev behavior, logged).
+func (m *Match) scheduleDailyRain(state *WorldState, logger runtime.Logger) {
+	if rand.Float64() >= rainDailyChance {
+		state.ScheduledRainTick = 0
+		return
+	}
+	state.ScheduledRainTick = state.TickCount + 1 + rand.Int63n(DayLengthTicks)
+	logger.Info("WEATHER: rain scheduled for tick %d (now %d)", state.ScheduledRainTick, state.TickCount)
+}
+
+// processWeather runs every tick: starts the scheduled shower, ends an expired one.
+// `>=` comparisons everywhere — never `==` (a missed exact tick must not wedge a state).
+func (m *Match) processWeather(state *WorldState, dispatcher runtime.MatchDispatcher, logger runtime.Logger) {
+	if state.ScheduledRainTick > 0 && state.TickCount >= state.ScheduledRainTick && state.WeatherKind == "" {
+		state.ScheduledRainTick = 0
+		m.startRain(state, dispatcher, logger, rainMinTicks+rand.Int63n(rainMaxTicks-rainMinTicks+1))
+	}
+	if state.WeatherKind != "" && state.TickCount >= state.WeatherUntilTick {
+		m.stopWeather(state, dispatcher, logger)
+	}
+}
+
+// startRain begins a shower: ONE-SHOT watering of every crop (daily cap respected) and
+// every fruit tree (the wild-tree restock path), through the same state the watering-can
+// path uses — rain is ordinary watering as far as the sim is concerned (frontier-neutral).
+// Broadcasts WorldEnv so clients start the visuals.
+func (m *Match) startRain(state *WorldState, dispatcher runtime.MatchDispatcher, logger runtime.Logger, durationTicks int64) {
+	state.WeatherKind = "rain"
+	state.WeatherUntilTick = state.TickCount + durationTicks
+	watered := m.rainWaterAll(state, dispatcher)
+	m.sendWorldEnv(dispatcher, state, nil)
+	logger.Info("RAIN starts at tick %d for %d ticks (watered %d crops/trees)",
+		state.TickCount, durationTicks, watered)
+}
+
+// stopWeather clears the current weather and tells clients.
+func (m *Match) stopWeather(state *WorldState, dispatcher runtime.MatchDispatcher, logger runtime.Logger) {
+	state.WeatherKind = ""
+	state.WeatherUntilTick = 0
+	m.sendWorldEnv(dispatcher, state, nil)
+	logger.Info("RAIN ends at tick %d", state.TickCount)
+}
+
+// rainWaterAll applies the one-shot shower watering. Crops: +1 water within the daily
+// cap, with the wet-tile visual and crop broadcast (the handleWatering pattern). Trees:
+// +1 can's worth of charges (capped) — the droplet indicator clears via the existing
+// tree-water broadcast. Returns how many things drank.
+func (m *Match) rainWaterAll(state *WorldState, dispatcher runtime.MatchDispatcher) int {
+	watered := 0
+
+	for _, crop := range state.CropStates {
+		cropDef := state.CropDefs[crop.PlantType]
+		if cropDef == nil || crop.WateringsToday >= cropDef.MaxDailyWaterings {
+			continue
+		}
+		crop.Water++
+		crop.WateringsToday++
+		watered++
+
+		cx, cy, lx, ly := GlobalToChunk(crop.GridX, crop.GridY)
+		if chunk := state.Chunks[ChunkKey(cx, cy)]; chunk != nil {
+			if chunk.Ground[ly][lx] == "garden_plot" {
+				chunk.Ground[ly][lx] = "garden_plot_wet"
+				m.broadcastWorldUpdate(dispatcher, state, cx, cy, crop.GridX, crop.GridY,
+					"garden_plot_wet", nil, false)
+			}
+		}
+		m.broadcastCropUpdate(dispatcher, state, crop.GridX, crop.GridY, crop)
+	}
+
+	for _, tree := range state.FruitTreeStates {
+		if tree.WaterCharges >= treeWaterCap {
+			continue
+		}
+		tree.WaterCharges += treeWaterPerCan
+		if tree.WaterCharges > treeWaterCap {
+			tree.WaterCharges = treeWaterCap
+		}
+		watered++
+		m.broadcastTreeWaterUpdate(dispatcher, state, tree)
+	}
+
+	return watered
+}
+
+// forceWeather handles the F8 weather buttons. Broadcasts internally (start/stop both
+// send WorldEnv), so it returns false to avoid a duplicate 91 from the caller.
 func (m *Match) forceWeather(
 	logger runtime.Logger,
 	dispatcher runtime.MatchDispatcher,
@@ -102,7 +203,18 @@ func (m *Match) forceWeather(
 	kind string,
 	userID string,
 ) bool {
-	logger.Info("DEBUG WORLD: %s requested weather %q — scheduler not built yet (W2)", userID, kind)
+	switch kind {
+	case "rain":
+		logger.Info("DEBUG WORLD: %s forces rain", userID)
+		m.startRain(state, dispatcher, logger, rainMinTicks+rand.Int63n(rainMaxTicks-rainMinTicks+1))
+	case "stop":
+		logger.Info("DEBUG WORLD: %s stops weather", userID)
+		if state.WeatherKind != "" {
+			m.stopWeather(state, dispatcher, logger)
+		}
+	default:
+		logger.Warn("DEBUG WORLD: %s sent unknown weather %q", userID, kind)
+	}
 	return false
 }
 
