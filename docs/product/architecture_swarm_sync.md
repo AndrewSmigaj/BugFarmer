@@ -759,9 +759,12 @@ The entire slice shipped with **zero new ledger event types**.
 - **flies_over_fences acts at BOTH collision sites:** the server leg clamp
   (IsBlockedForSpecies) AND the client per-bug collision (BugCollision/
   IsCellBlockedForBugs) — per-bug positions are hash state. The flag skips the
-  OCCUPANT branch ONLY: water and the nil-chunk zone edge still block fliers, and it
-  means ALL occupants (walls, houses — there is no roof concept; B-future
-  `blocks_flying` adds one). Never hand movement code a nil checker.
+  OCCUPANT branch ONLY, and it means ALL occupants (walls, houses — there is no roof
+  concept; B-future `blocks_flying` adds one). The nil-chunk zone edge still blocks
+  everyone — never hand movement code a nil checker. GROUND never blocks bugs (2026-06
+  playtest rule: water stops PEOPLE only — bugs fly over it; the old water blocking
+  pinned shoreline flies visibly). The server ground branch stays data-driven via
+  tiles.json blocks_bugs (currently none set).
 - **Movement-class determinism contract** (DartingMovement/CrawlingMovement and all
   future classes): fixed-point math only; CounterRng via bug.RandomInt (tick+purpose
   keyed) only; every cross-tick field round-trips GetState/SetState through
@@ -830,7 +833,9 @@ BUG_REMOVED application (catches ride it; replay would storm).
   (no starvation) — known grief vector, revisit with starvation.
 - Per-SWARM sting cooldown caps any swarm at 0.5 player-DPS regardless of size — right
   for wasps, wrong for future bees (damage-scaling-by-count is a one-formula change).
-- The client hardcodes water_shallow|water_deep|lava in IsCellBlockedForBugs while
-  tiles.json has no lava — keep the lists in step when tiles gain blocks_bugs.
+- The client's IsCellBlockedForBugs checks OCCUPANTS only (ground never blocks bugs);
+  the server's ground branch reads tiles.json blocks_bugs. If a tile ever needs to
+  block bugs again, set the flag server-side AND restore a matching client check —
+  both sites or neither (per-bug positions are hash state).
 - Content-update workflow: zone files are read at chunk-touch and never written back —
   regenerate → restart the server → visible on next approach.

@@ -21,8 +21,8 @@ namespace BugFarmer.Bugs
 
         /// <summary>
         /// Species-aware resolve (§14, the client half of flies_over_fences):
-        /// ignoreOccupants skips ONLY the occupant blocking branch — water/impassable
-        /// ground still blocks fliers, mirroring the server rule exactly.
+        /// ignoreOccupants skips the occupant blocking branch. Ground never blocks
+        /// bugs (water stops people only) — mirroring the server rule exactly.
         /// </summary>
         public static FixedPoint2 Resolve(FixedPoint2 current, FixedPoint2 proposed, bool ignoreOccupants)
         {

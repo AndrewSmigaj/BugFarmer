@@ -4,14 +4,18 @@
     "movement_mult": 1.0,
     "accepts_furniture": true,
     "accepts_structure": true,
-    "tool_actions": {"hoe": "garden_plot"}
+    "tool_actions": {
+      "hoe": "garden_plot"
+    }
   },
   "dirt": {
     "sprite_path": "Sprites/Terrain/dirt.png",
     "movement_mult": 0.9,
     "accepts_furniture": true,
     "accepts_structure": true,
-    "tool_actions": {"hoe": "garden_plot"}
+    "tool_actions": {
+      "hoe": "garden_plot"
+    }
   },
   "stone_path": {
     "sprite_path": "Sprites/Terrain/stone_path.png",
@@ -41,13 +45,17 @@
     "sprite_path": "Sprites/Terrain/garden_plot.png",
     "movement_mult": 0.8,
     "accepts_plant": true,
-    "tool_actions": {"hoe": "garden_plot"}
+    "tool_actions": {
+      "hoe": "garden_plot"
+    }
   },
   "garden_plot_wet": {
     "sprite_path": "Sprites/Terrain/garden_plot_wet.png",
     "movement_mult": 0.8,
     "accepts_plant": true,
-    "tool_actions": {"hoe": "garden_plot_wet"}
+    "tool_actions": {
+      "hoe": "garden_plot_wet"
+    }
   },
   "mud": {
     "sprite_path": "Sprites/Terrain/mud.png",
@@ -63,12 +71,12 @@
   "water_shallow": {
     "sprite_path": "Sprites/Terrain/water_shallow.png",
     "movement_mult": 0.5,
-    "blocks_bugs": true
+    "blocks_bugs": false
   },
   "water_deep": {
     "sprite_path": "Sprites/Terrain/water_deep.png",
     "blocks_players": true,
-    "blocks_bugs": true
+    "blocks_bugs": false
   },
   "bridge_wood": {
     "sprite_path": "Sprites/Terrain/bridge_wood.png",

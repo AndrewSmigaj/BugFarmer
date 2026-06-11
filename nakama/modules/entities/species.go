@@ -83,9 +83,10 @@ type BugSpecies struct {
 
 	// Movement trait: this species' swarm centers AND client bug visuals skip the
 	// OCCUPANT collision branch only (fences, walls, houses — there are no roofs yet).
-	// Water and zone edges still block. Named so nobody "fixes" flies, which also fly
-	// but must respect pens. Applies identically at BOTH collision sites (server leg
-	// clamp + client per-bug collision) — per-bug positions are hash state.
+	// The zone edge still blocks; ground never blocks bugs (water stops people only).
+	// Named so nobody "fixes" flies, which also fly but must respect pens. Applies
+	// identically at BOTH collision sites (server leg clamp + client per-bug
+	// collision) — per-bug positions are hash state.
 	FliesOverFences bool `json:"flies_over_fences"`
 
 	// Client movement class key ("brownian", "gliding", "darting", "crawling").

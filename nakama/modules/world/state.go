@@ -358,9 +358,10 @@ func (w *WorldState) IsBlocked(worldX, worldY float32) bool {
 
 // IsBlockedForSpecies is the species-aware blocking check: flies_over_fences species
 // skip the OCCUPANT branch ONLY (fences, walls, houses — there are no roofs yet).
-// Water/impassable ground and the nil-chunk zone edge STILL block fliers — never hand
-// movement code a nil checker. The client per-bug collision applies the identical rule
-// (architecture_swarm_sync.md §14: the flag acts at BOTH collision sites).
+// The nil-chunk zone edge STILL blocks everyone — never hand movement code a nil
+// checker. Ground tiles block bugs only via tiles.json blocks_bugs (currently NONE:
+// water stops PEOPLE only — bugs fly over it). The client per-bug collision applies
+// the identical rule (architecture_swarm_sync.md §14: BOTH collision sites).
 func (w *WorldState) IsBlockedForSpecies(worldX, worldY float32, species *entities.BugSpecies) bool {
 	skipOccupants := species != nil && species.FliesOverFences
 	return w.isBlockedImpl(worldX, worldY, skipOccupants)

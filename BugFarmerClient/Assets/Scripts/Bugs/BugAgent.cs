@@ -247,8 +247,9 @@ namespace BugFarmer.Bugs
             //    pass through walls/fences. Deterministic: integer cell lookups + slide X-then-Y.
             //    All clients run this identically, so the per-tick state-hash stays in agreement.
             //    SPECIES-AWARE (§14, both collision sites): flies_over_fences skips the
-            //    occupant branch only (water still blocks); crawling individuals skip
-            //    Resolve entirely (the head rides the server-clamped center verbatim).
+            //    occupant branch (ground never blocks bugs — water stops people only);
+            //    crawling individuals skip Resolve entirely (the head rides the
+            //    server-clamped center verbatim).
             var proposed = new FixedPoint2(
                 Position.X + Velocity.X,
                 Position.Y + Velocity.Y

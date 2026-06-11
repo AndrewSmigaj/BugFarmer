@@ -1137,7 +1137,11 @@ namespace BugFarmer.World
         public bool IsCellBlockedForBugs(Vector2Int cellPos, bool ignoreOccupants = false)
         {
             // Check occupant — skipped for flies_over_fences species (§14: the flag
-            // applies identically at BOTH collision sites; water below still blocks)
+            // applies identically at BOTH collision sites).
+            // GROUND never blocks bugs (water stops PEOPLE only — bugs fly over it;
+            // the old hardcoded water check pinned shoreline flies visibly). The
+            // server's data-driven tiles.json blocks_bugs flags are false on water to
+            // match — keep both sides in step if a tile ever needs to block bugs.
             if (!ignoreOccupants)
             {
                 string occupantId = GetOccupantAt(cellPos);
@@ -1148,12 +1152,6 @@ namespace BugFarmer.World
                         return true;
                 }
             }
-
-            // Check ground tile (NOTE: hardcoded list — tiles.json has no lava entry;
-            // keep these in step with the server TileDefs' blocks_bugs)
-            string groundId = GetGroundAt(cellPos);
-            if (groundId == "water_shallow" || groundId == "water_deep" || groundId == "lava")
-                return true;
 
             return false;
         }
