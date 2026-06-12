@@ -49,6 +49,12 @@ namespace BugFarmer.UI
         {
             if (itemSlots != null && itemSlots.Length > 0) return; // scene-built
 
+            // CRITICAL: stretch OUR OWN rect to fill the canvas first. The
+            // bootstrap creates this GO with a default RectTransform (a
+            // 100x100 box in the screen CENTER) — anchoring docks to its
+            // edges piled everything mid-screen (2026-06 round-2 bug).
+            UIFactory.Stretch((RectTransform)transform, 0);
+
             var root = UIFactory.MakeRect(transform, "Docks");
             UIFactory.Stretch(root, 0);
             canvasGroup = root.gameObject.AddComponent<CanvasGroup>();
