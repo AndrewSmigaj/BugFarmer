@@ -412,6 +412,14 @@ F6 cycles debug outfits. Remaining from the old item:
   shaped for the research mechanic. Pickup polish: drops 0.9-cell fit +
   0.6 floor, honest keycap-E badge. Starting inventory freed (E-pickup fix).
 
+## Next — Tool ANIMATION improvement (Andrew, 2026-06-12)
+The in-hand tool animations (PlayerToolAnimator swing/sweep/stab/pour) need a
+quality pass — the profiles are functional but stiff. Candidates: anticipation
+frames (wind-up before the arc), easing curves instead of linear sweeps, a
+small body lean on swing (the walk-frame rig makes 1px shifts cheap via
+pixkit), impact pause/flash on hit, tool-specific follow-through. Pairs well
+with the existing walk-cycle rig since both are code-driven.
+
 ## Next — Bug RESEARCH mechanic (the magnifying glass) + food boosts
 The bug info card ships with locked rows ("Breeding: ???", "Favorite foods:
 ???") — this fills them:

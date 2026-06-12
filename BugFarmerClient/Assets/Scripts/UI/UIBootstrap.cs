@@ -56,6 +56,18 @@ namespace BugFarmer.UI
             hotbarGO.transform.SetParent(canvasGO.transform, false);
             hotbarGO.AddComponent<HotbarUI>();
 
+            // Retire leftover hand-built drag pieces: the old CursorRoot +
+            // DragDropController lived OUTSIDE the deleted prefab instances, so
+            // the old controller wins the singleton race (the new one self-
+            // destructs, taking EquipmentController/BugInfoCard with it) and its
+            // cursor renders on the LOW scene canvas — BEHIND the new hotbar.
+            // DestroyImmediate so the singleton slot is free before our Awake.
+            foreach (var old in Object.FindObjectsOfType<DragDropController>())
+                Object.DestroyImmediate(old);
+            var oldCursor = GameObject.Find("CursorRoot");
+            if (oldCursor != null)
+                Object.DestroyImmediate(oldCursor);
+
             var dragGO = new GameObject("DragDrop(Code)", typeof(RectTransform));
             dragGO.transform.SetParent(canvasGO.transform, false);
             dragGO.AddComponent<DragDropController>();
