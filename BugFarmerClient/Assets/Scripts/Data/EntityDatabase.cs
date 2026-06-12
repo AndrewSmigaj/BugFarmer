@@ -169,6 +169,11 @@ namespace BugFarmer.Data
             public float ReactionRadius;
             public bool FliesOverFences;
             public string NetSize = "small";
+
+            // Display fields (the bug info card; freely known tier)
+            public string Name = "";
+            public string Description = "";
+            public int SellPrice;
         }
         private static Dictionary<string, SpeciesInfo> _species;
         private static bool _initialized;
@@ -237,6 +242,9 @@ namespace BugFarmer.Data
                         PlayerReaction = obj?["player_reaction"]?.Value<string>() ?? "ignore",
                         ReactionRadius = obj?["reaction_radius"]?.Value<float>() ?? 0f,
                         FliesOverFences = obj?["flies_over_fences"]?.Value<bool>() ?? false,
+                        Name = obj?["name"]?.Value<string>() ?? prop.Name,
+                        Description = obj?["description"]?.Value<string>() ?? "",
+                        SellPrice = obj?["sell_price"]?.Value<int>() ?? 0,
                         NetSize = obj?["net_size"]?.Value<string>() ?? "small",
                     };
                 }

@@ -212,6 +212,15 @@ namespace BugFarmer.UI
             var targetSlot = GetSlotData(slot.SlotType, slot.SlotIndex);
             bool targetEmpty = targetSlot == null || targetSlot.IsEmpty;
 
+            // Bug slot, empty cursor: right-click opens the INFO CARD (species
+            // knowledge; the half-stack pickup stays on item slots).
+            if (!HasCursorItem && !targetEmpty && slot.SlotType == SlotType.Bug &&
+                BugInfoCard.Instance != null)
+            {
+                BugInfoCard.Instance.Show(slot.CurrentItemId, slot.CurrentCount);
+                return;
+            }
+
             // Armor in an item slot: right-click = QUICK-EQUIP (armor is
             // unstackable, so the half-pickup this replaces was equivalent to a
             // full pickup anyway).

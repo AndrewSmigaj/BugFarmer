@@ -57,6 +57,7 @@ namespace BugFarmer.UI
             dragGO.transform.SetParent(canvasGO.transform, false);
             dragGO.AddComponent<DragDropController>();
             dragGO.AddComponent<EquipmentController>();
+            dragGO.AddComponent<BugInfoCard>();
 
             Debug.Log("[UIBootstrap] code-built UI canvas constructed.");
         }

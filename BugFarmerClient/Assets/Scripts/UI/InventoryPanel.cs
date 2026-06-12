@@ -199,7 +199,11 @@ namespace BugFarmer.UI
 
             if (_isOpen && Input.GetKeyDown(KeyCode.Escape))
             {
-                SetOpen(false);
+                // layered close: the bug info card first, then the panel
+                if (BugInfoCard.Instance != null && BugInfoCard.Instance.IsShowing)
+                    BugInfoCard.Instance.Hide();
+                else
+                    SetOpen(false);
             }
         }
 
@@ -229,6 +233,10 @@ namespace BugFarmer.UI
                 RefreshAllSlots();
                 RefreshCoins();
                 RefreshEquipment();
+            }
+            else
+            {
+                BugInfoCard.Instance?.Hide();
             }
         }
 
