@@ -58,4 +58,43 @@ for folder in FOLDERS:
                     text = filt_pat.sub(r"\g<1>0", text, count=1)
                 open(path, "w").write(text)
 
-print(f"{'would fix' if dry else 'fixed'} {fixed}/{total} sprite metas -> PPU {PPU}, filterMode 0")
+# ---- Player/ (recursive: covers layers/ subfolders) -------------------------
+# Same PPU/point rules; ADDITIONALLY layer sprites must be CPU-readable
+# (isReadable: 1) — CharacterComposer blends them with GetPixels32 at runtime.
+read_pat = re.compile(r"(isReadable:\s*)(\d+)")
+player_base = os.path.join(ROOT, "Player")
+for dirpath, _dirs, names in os.walk(player_base):
+    needs_read = f"{os.sep}layers" in dirpath or dirpath.endswith("layers")
+    for name in sorted(names):
+        if not name.endswith(".png.meta"):
+            continue
+        path = os.path.join(dirpath, name)
+        text = open(path).read()
+        m = ppu_pat.search(text)
+        if not m:
+            continue
+        total += 1
+        f = filt_pat.search(text)
+        r = read_pat.search(text)
+        bad_ppu = m.group(2) != PPU
+        bad_filt = f is not None and f.group(2) != "0"
+        bad_read = needs_read and r is not None and r.group(2) != "1"
+        if bad_ppu or bad_filt or bad_read:
+            fixed += 1
+            rel = os.path.relpath(path, player_base)
+            if dry:
+                what = " ".join(filter(None, [
+                    f"PPU {m.group(2)}->{PPU}" if bad_ppu else "",
+                    f"filterMode {f.group(2)}->0" if bad_filt else "",
+                    "isReadable->1" if bad_read else ""]))
+                print(f"  would fix Player/{rel}: {what}")
+            else:
+                if bad_ppu:
+                    text = ppu_pat.sub(rf"\g<1>{PPU}", text, count=1)
+                if bad_filt:
+                    text = filt_pat.sub(r"\g<1>0", text, count=1)
+                if bad_read:
+                    text = read_pat.sub(r"\g<1>1", text, count=1)
+                open(path, "w").write(text)
+
+print(f"{'would fix' if dry else 'fixed'} {fixed}/{total} sprite metas -> PPU {PPU}, filterMode 0 (+isReadable on Player/layers)")

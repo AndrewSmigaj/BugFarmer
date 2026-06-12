@@ -14,12 +14,19 @@ namespace BugFarmer.Entities
         [SerializeField] private Sprite[] directionSprites; // 0=Down, 1=Left, 2=Right, 3=Up
 
         private const float InterpDuration = 0.15f; // 150ms
+        private const float WalkFps = 7f;
         private SpriteRenderer _spriteRenderer;
         private Vector2 _startPos;
         private Vector2 _targetPos;
         private float _interpProgress = 1f; // Start complete (no interpolation until first update)
         private Player.PlayerToolAnimator _toolAnimator;
         private string _equipped;
+
+        // Walk frames [dir][contact, idle, contact, idle] (baked farmer set);
+        // falls back to the static directionSprites when frames are missing.
+        private Sprite[][] _frames;
+        private float _walkClock;
+        private int _frameIndex = 1;
 
         public string EntityId { get; set; }
         public Direction Facing { get; private set; } = Direction.Down;
@@ -63,10 +70,32 @@ namespace BugFarmer.Entities
                     Debug.LogWarning("[RemoteEntity] No farmer sprites found in Resources/Player/");
                 }
             }
+
+            // Walk frames (idle + _w1/_w3); remote players animate while lerping.
+            _frames = Player.CharacterComposer.LoadBaked("farmer");
         }
 
         private void Update()
         {
+            // Walking = interpolation in progress over a non-trivial distance.
+            bool walking = _interpProgress < 1f &&
+                           (_targetPos - _startPos).sqrMagnitude > 0.0004f;
+            int frame = 1;
+            if (walking)
+            {
+                _walkClock += Time.deltaTime * WalkFps;
+                frame = (int)_walkClock % 4;
+            }
+            else
+            {
+                _walkClock = 0f;
+            }
+            if (frame != _frameIndex)
+            {
+                _frameIndex = frame;
+                UpdateSprite();
+            }
+
             if (_interpProgress < 1f)
             {
                 _interpProgress = Mathf.Min(_interpProgress + Time.deltaTime / InterpDuration, 1f);
@@ -100,11 +129,13 @@ namespace BugFarmer.Entities
 
         private void UpdateSprite()
         {
-            if (_spriteRenderer != null && directionSprites != null &&
-                (int)Facing < directionSprites.Length && directionSprites[(int)Facing] != null)
-            {
-                _spriteRenderer.sprite = directionSprites[(int)Facing];
-            }
+            if (_spriteRenderer == null) return;
+            var s = _frames != null ? _frames[(int)Facing][_frameIndex] : null;
+            if (s == null && directionSprites != null &&
+                (int)Facing < directionSprites.Length)
+                s = directionSprites[(int)Facing];
+            if (s != null)
+                _spriteRenderer.sprite = s;
         }
 
         /// <summary>

@@ -21,6 +21,14 @@ namespace BugFarmer.Player
         public Direction Facing { get; private set; } = Direction.Down;
         public Vector2 Velocity { get; private set; }
 
+        // Walk animation: [dir][frame] with frame order [contact, idle, contact, idle].
+        // Composed via CharacterComposer (paper-doll layers) or LoadBaked; falls back
+        // to the static directionSprites when neither is available.
+        private const float WalkFps = 7f;
+        private Sprite[][] _frames;
+        private float _walkClock;
+        private int _frameIndex = 1;
+
         private Rigidbody2D _rb;
         private SpriteRenderer _spriteRenderer;
         private Camera _mainCamera;
@@ -77,6 +85,46 @@ namespace BugFarmer.Player
                 inv.OnInventoryChanged += RefreshHeldItem;
                 RefreshHeldItem();
             }
+
+            // Walk frames: baked farmer set (idle + _w1/_w3). The paper-doll
+            // composer takes over when an outfit is set (F6 debug below;
+            // appearance sync is the follow-up).
+            _frames = CharacterComposer.LoadBaked("farmer");
+            UpdateSprite();
+        }
+
+        // ---- F6 debug: cycle paper-doll outfits on the LOCAL player (layer
+        // registration check in-game; server appearance sync is a follow-up).
+        private static readonly CharacterComposer.Outfit[] DebugOutfits =
+        {
+            null, // baked farmer (the default)
+            new CharacterComposer.Outfit { Helmet = "straw_hat" },
+            new CharacterComposer.Outfit { Chest = "leather_chest", Helmet = "straw_hat" },
+            new CharacterComposer.Outfit { Body = "tan", Hair = "black", Shirt = "scholar",
+                                           Pants = "scholar", Helmet = "copper_helmet" },
+            new CharacterComposer.Outfit { Body = "deep", Shirt = "miner", Pants = "miner",
+                                           Chest = "iron_chest", Helmet = "iron_helmet" },
+            new CharacterComposer.Outfit { Hair = "long_brown", Shirt = "ranger",
+                                           Pants = "ranger" },
+        };
+        private int _debugOutfit;
+
+        private void CycleDebugOutfit()
+        {
+            _debugOutfit = (_debugOutfit + 1) % DebugOutfits.Length;
+            var outfit = DebugOutfits[_debugOutfit];
+            var composed = outfit == null ? CharacterComposer.LoadBaked("farmer")
+                                          : CharacterComposer.Compose(outfit);
+            if (composed == null)
+            {
+                Debug.LogWarning("[PlayerController] outfit compose failed (layers missing " +
+                                 "or not CPU-readable — run tools/fix_sprite_ppu.py); keeping current.");
+                return;
+            }
+            _frames = composed;
+            UpdateSprite();
+            Debug.Log($"[PlayerController] outfit {_debugOutfit}: " +
+                      (outfit == null ? "baked farmer" : outfit.Key));
         }
 
         private void OnDestroy()
@@ -136,6 +184,27 @@ namespace BugFarmer.Player
             // Face the MOUSE, not the movement direction (aim-driven: press A while the
             // mouse points right and you run backwards). Movement never sets facing.
             UpdateFacingFromMouse();
+
+            // Walk-cycle clock: cycle [contact, idle, contact, idle] while moving,
+            // rest on the idle frame when still.
+            int frame = 1;
+            if (Velocity.sqrMagnitude > 0.01f)
+            {
+                _walkClock += Time.deltaTime * WalkFps;
+                frame = (int)_walkClock % 4;
+            }
+            else
+            {
+                _walkClock = 0f;
+            }
+            if (frame != _frameIndex)
+            {
+                _frameIndex = frame;
+                UpdateSprite();
+            }
+
+            if (Input.GetKeyDown(KeyCode.F6))
+                CycleDebugOutfit();
 
             // Send position to server
             TrySendMovement();
@@ -229,11 +298,14 @@ namespace BugFarmer.Player
 
         private void UpdateSprite()
         {
-            if (_spriteRenderer != null && directionSprites != null &&
-                (int)Facing < directionSprites.Length && directionSprites[(int)Facing] != null)
-            {
-                _spriteRenderer.sprite = directionSprites[(int)Facing];
-            }
+            if (_spriteRenderer == null) return;
+            // Composed/baked frame set first; static directionSprites as the fallback.
+            var s = _frames != null ? _frames[(int)Facing][_frameIndex] : null;
+            if (s == null && directionSprites != null &&
+                (int)Facing < directionSprites.Length)
+                s = directionSprites[(int)Facing];
+            if (s != null)
+                _spriteRenderer.sprite = s;
         }
 
         private void TrySendMovement()
