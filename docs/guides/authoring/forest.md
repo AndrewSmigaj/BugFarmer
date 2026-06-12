@@ -33,5 +33,8 @@ This guide collects the rules as we learn them; the first real forest zone will 
 ## TODO as the real forest zone lands
 - Forest ground tiles (leaf litter / forest_floor) + a tree-density brush in zonegen.
 - A scene primitive for "nest clearing" (nest + prey flowers + a carrion spot).
-- Centipede density tuning (village cap 2 = "a problem"; forest = "their home").
+- Centipede density tuning — PARTIALLY DONE 2026-06: centipedes are now KNOTS
+  (swarms of 1-3 sharing a center; max_swarm_size is data); the village runs
+  initial 2×2 / max 3 swarms / pop 8. Forest zones can push the knobs higher
+  ("their home").
 - Underbrush occupants that block players but NOT bugs (ambush grass).

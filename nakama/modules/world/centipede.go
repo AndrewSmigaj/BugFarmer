@@ -10,11 +10,15 @@ import (
 	"bugfarmer/entities"
 )
 
-// The centipede (architecture_swarm_sync.md §14): a SWARM OF ONE ("individual"
-// category) that reuses combat/catch/caps/sync wholesale. Its ActionState machine
-// (windup → surge → recover, plus gnaw) runs PER TICK before the think gate — surges
-// are 25 ticks vs 8-30-tick thinks — and owns the swarm while active. All outputs are
-// ordinary legs + the existing damage/break paths.
+// The centipede (architecture_swarm_sync.md §14): an "individual"-category swarm
+// that reuses combat/catch/caps/sync wholesale. "Individual" means GROUND CRAWLER
+// WITH AN ACTION-STATE MACHINE — swarm sizes are data (max_swarm_size, now 1-3: a
+// small KNOT of centipedes shares one center and lunges together; merge/split stay
+// disabled for the category, so a full knot's litter mints a new swarm instead —
+// see reproduceSwarm). The ActionState machine (windup → surge → recover, plus gnaw)
+// runs PER TICK before the think gate — surges are 25 ticks vs 8-30-tick thinks —
+// and owns the swarm while active. All outputs are ordinary legs + the existing
+// damage/break paths.
 //
 // Doc rule: Phase = what it WANTS (the standard feeding/reproducing lifecycle — it
 // parks at carrion and breeds there); ActionState = what it's forcibly DOING.

@@ -214,7 +214,7 @@
     "satiation_decay_rate": 0.3,
     "consume_rate": 0.5,
     "min_swarm_size": 1,
-    "max_swarm_size": 1,
+    "max_swarm_size": 3,
     "swarm_radius": 0.5,
     "merge_radius": 0.0,
     "player_reaction": "ignore",

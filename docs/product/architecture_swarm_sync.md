@@ -796,23 +796,35 @@ always the player's doing — readable. Containment asymmetry: wasps fly over fe
 to raids, intentionally.
 
 ### 14.3 The centipede
-A SWARM OF ONE (category "individual" — reuses combat/catch/caps/sync wholesale; never
-merges/splits). Phase = what it WANTS (the standard feeding/reproducing lifecycle — the
-CheckPhaseTransition skip applies ONLY to nest predators, so the centipede parks at
-carrion and breeds there); ActionState = what it's DOING (windup 0.8s zero-leg freeze →
-SURGE at the launch position + a 0.8 velocity half-lead, clamped, ×4.8 → bite 1.6 with
-a line-of-sight gate (no through-fence bites — "stone is the answer" stays true) →
-recover + 5s cooldown). Gnaw: its own GnawState damage pool (NOT BreakingState — the
-owner-reset would let players "repair" by hitting), 1 dmg/80 ticks → wood HP 2 = 16
-visible+audible seconds (the crunch is the NIGHT tell: audible past the light radius);
-breaks via breakOccupantAt with no drops; the cooldown arms only on ABANDONS
-(successful breaks chain layered walls). Serpentine wander = heading-constrained short
-legs (±60°, widening to ±120° once clamped, free 360° after 3 — the dead-end escape).
-Segments are PURE display (CentipedeTrail follows the head's rendered path; segment
-hits map to bug 0 in the client sector query — the server validates click-vs-player
-reach only and needs no change). Known v1 behaviors: no pathfinding (chews the wall 3
-cells from an open gate — the dumb-relentless fantasy); trap_only = uncatchable until
-the subdue system.
+Category "individual" — reuses combat/catch/caps/sync wholesale; never merges/splits
+(the category guards). "Individual" means GROUND CRAWLER WITH AN ACTION-STATE MACHINE;
+swarm sizes are DATA: max_swarm_size is now 3, so a swarm is a small KNOT of 1-3
+centipedes sharing one center (one leg stream per knot — the server-traffic lever; the
+2026-06 design decision was to KEEP predator AI server-side: the server must stay
+authoritative over kills/HP/caps/brood, wire traffic is identical wherever the AI
+runs, and multi-bug knots are the real traffic win). Because splits are disabled, a
+FULL knot's litter mints a NEW swarm beside the parent in reproduceSwarm (zone
+swarm-count capped, arm-the-cooldown skip at the cap). Phase = what it WANTS (the
+standard feeding/reproducing lifecycle — the CheckPhaseTransition skip applies ONLY to
+nest predators, so the centipede parks at carrion and breeds there); ActionState =
+what it's DOING (windup 0.8s zero-leg freeze → SURGE at the launch position + a 0.8
+velocity half-lead, clamped, ×4.8 → bite 1.6 with a line-of-sight gate (no
+through-fence bites — "stone is the answer" stays true) → recover + 5s cooldown); the
+whole knot lunges together (members are center+offset). Gnaw: its own GnawState
+damage pool (NOT BreakingState — the owner-reset would let players "repair" by
+hitting), 1 dmg/80 ticks → wood HP 2 = 16 visible+audible seconds (the crunch is the
+NIGHT tell: audible past the light radius); breaks via breakOccupantAt with no drops;
+the cooldown arms only on ABANDONS (successful breaks chain layered walls). Serpentine
+wander = heading-constrained short legs (±60°, widening to ±120° once clamped, free
+360° after 3 — the dead-end escape). CLIENT: CrawlingMovement = center + a
+slowly-wandering per-bug OFFSET (position-based, so members track surge legs exactly;
+CounterRng; offset/target/timer round-trip MovementState — per-bug positions are hash
+state). Segments are PURE display (one CentipedeTrail per member; parts scaled 0.35 —
+the sprites are 2.0 world units raw — spacing 0.5, art-angle offset −90°, the head
+rotates along its motion; segment hits map to THAT trail's bug id in the client
+sector query — the server validates click-vs-player reach only and needs no change).
+Known v1 behaviors: no pathfinding (chews the wall 3 cells from an open gate — the
+dumb-relentless fantasy); trap_only = uncatchable until the subdue system.
 
 ### 14.4 Player HP
 Sim-inert display state (bug AI reads player CELLS, already ledgered): HP 10, sting 1 /

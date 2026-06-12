@@ -218,18 +218,50 @@ namespace BugFarmer.Entities
             var bugVisual = new BugVisual(agent, visual);
             _bugs[bugId] = bugVisual;
 
-            // INDIVIDUALS (centipede): the head (bug 0) drags a pure-display segment
-            // trail; segment positions also feed the melee sector query (a body that's
-            // unhittable on 6/8ths of its length reads as broken).
+            // INDIVIDUALS (centipede knots, §14.3): EVERY member drags its own
+            // pure-display segment trail (a child GO so its segments die with it);
+            // segment positions also feed the melee sector query (a body that's
+            // unhittable on 6/8ths of its length reads as broken). The head sprite is
+            // 2.0 world units raw — scale it down to match the trail parts. Pooled
+            // visuals may arrive from a non-crawling species (or go back to one), so
+            // BOTH branches set scale/rotation explicitly.
             var info = Data.EntityDatabase.GetSpecies(SpeciesId);
-            if (bugId == 0 && info != null && info.MovementStyle == "crawling" && _trail == null)
+            bool crawling = info != null && info.MovementStyle == "crawling";
+            if (crawling)
             {
-                _trail = gameObject.AddComponent<Bugs.CentipedeTrail>();
-                _trail.Initialize(visual, SpeciesId);
+                visual.localScale = new Vector3(CrawlerHeadScale, CrawlerHeadScale, 1f);
+                if (!_trails.ContainsKey(bugId))
+                {
+                    var trailGo = new GameObject($"trail_{bugId}");
+                    trailGo.transform.SetParent(transform, false);
+                    var trail = trailGo.AddComponent<Bugs.CentipedeTrail>();
+                    trail.Initialize(visual, SpeciesId);
+                    _trails[bugId] = trail;
+                }
+            }
+            else
+            {
+                visual.localScale = Vector3.one;
+                visual.rotation = Quaternion.identity;
             }
         }
 
-        private Bugs.CentipedeTrail _trail;
+        // Matches CentipedeTrail.PartScale: head and body parts read as one creature.
+        private const float CrawlerHeadScale = 0.35f;
+
+        // One segment trail per crawling bug, keyed by bug id (1-3 per knot).
+        private readonly Dictionary<int, Bugs.CentipedeTrail> _trails = new();
+
+        /// <summary>Destroy a bug's trail (its segment GOs die with the child GO).</summary>
+        private void DestroyTrail(int bugId)
+        {
+            if (_trails.TryGetValue(bugId, out var trail))
+            {
+                if (trail != null)
+                    Destroy(trail.gameObject);
+                _trails.Remove(bugId);
+            }
+        }
 
         /// <summary>
         /// Update from server data. SwarmUpdate is now event-driven (spawn/despawn/merge/split/
@@ -404,14 +436,18 @@ namespace BugFarmer.Entities
                     result.Add(kvp.Key);
             }
 
-            // INDIVIDUALS: the segment trail is hittable too — any segment inside the
-            // sector maps to bug 0 (the only id). Without this, 6/8ths of the
-            // centipede's body whiffs. The server validates click-vs-PLAYER reach only
-            // (it holds no per-bug positions), so no server change is needed — the rule
-            // is "stand within reach of whichever body part you slash".
-            if (_trail != null && !result.Contains(0) && _bugs.ContainsKey(0))
+            // INDIVIDUALS: the segment trails are hittable too — a segment inside the
+            // sector maps to ITS OWN bug id (knots are 1-3 centipedes, each with a
+            // trail). Without this, 6/8ths of every body whiffs. The server validates
+            // click-vs-PLAYER reach only (it holds no per-bug positions), so no server
+            // change is needed — the rule is "stand within reach of whichever body
+            // part you slash".
+            foreach (var kvp in _trails)
             {
-                foreach (var seg in _trail.SegmentPositions())
+                int bugId = kvp.Key;
+                if (kvp.Value == null || result.Contains(bugId) || !_bugs.ContainsKey(bugId))
+                    continue;
+                foreach (var seg in kvp.Value.SegmentPositions())
                 {
                     Vector2 delta = seg - origin;
                     if (delta.sqrMagnitude > reachSq)
@@ -419,7 +455,7 @@ namespace BugFarmer.Entities
                     float segAngle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
                     if (Mathf.Abs(Mathf.DeltaAngle(aimDegrees, segAngle)) <= halfArc)
                     {
-                        result.Add(0);
+                        result.Add(bugId);
                         break;
                     }
                 }
@@ -467,6 +503,7 @@ namespace BugFarmer.Entities
             {
                 if (_bugs.TryGetValue(id, out var bug))
                 {
+                    DestroyTrail(id); // resets the pooled head's rotation on destroy
                     ReturnSpriteToPool(bug.Transform);
                     _bugs.Remove(id);
                     _removedIds.Add(id);
@@ -491,6 +528,9 @@ namespace BugFarmer.Entities
             var result = new List<KeyValuePair<int, BugVisual>>(picked.Count);
             foreach (int id in picked)
             {
+                // Defensive: individuals never split/merge (category guards), but if a
+                // trailed bug ever moved swarms its trail must not dangle here.
+                DestroyTrail(id);
                 result.Add(new KeyValuePair<int, BugVisual>(id, _bugs[id]));
                 _bugs.Remove(id);
                 _removedIds.Add(id);
@@ -743,6 +783,12 @@ namespace BugFarmer.Entities
         /// </summary>
         public void Cleanup()
         {
+            foreach (var kvp in _trails)
+            {
+                if (kvp.Value != null)
+                    Destroy(kvp.Value.gameObject); // resets pooled head rotations
+            }
+            _trails.Clear();
             foreach (var kvp in _bugs)
             {
                 ReturnSpriteToPool(kvp.Value.Transform);

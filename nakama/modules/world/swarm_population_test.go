@@ -331,6 +331,75 @@ func TestReproduceSkipsAtPopulationCap(t *testing.T) {
 	}
 }
 
+// Individuals (ground crawlers, merge/split disabled): a FULL swarm's litter mints a
+// NEW swarm beside the parent (growth past MaxSwarmSize would overcap the knot
+// forever), still subject to the zone swarm-count cap (arm-the-cooldown skip).
+func TestReproduceIndividualAtSwarmSizeCapMintsNewSwarm(t *testing.T) {
+	state := newTestState(20)
+	m := &Match{}
+	state.Species["centi"] = &entities.BugSpecies{
+		Category: "individual", MinSwarmSize: 1, MaxSwarmSize: 3,
+		ReproduceCooldown: 60,
+	}
+	swarm := &entities.SwarmState{
+		ID: "knot", SpeciesID: "centi",
+		Position: entities.EntityPosition{ChunkX: 0, ChunkY: 0, LocalX: 10, LocalY: 10},
+		Count:    3, // full knot
+	}
+	swarm.InitializeBugIDs()
+	swarm.TargetFoodID = "food1"
+	swarm.Satiation = 100
+	swarm.ReproductionMeter = 100
+	state.Swarms["knot"] = swarm
+	state.SwarmsBySpecies["centi"] = []string{"knot"}
+	state.GroundItems["food1"] = &entities.GroundItem{
+		ID: "food1", ItemType: "carrion", Count: 1,
+		Position:  entities.EntityPosition{LocalX: 10, LocalY: 10},
+		FoodValue: 100,
+	}
+	state.CurrentZone.BugSpawning = &BugSpawnConfig{SpeciesCaps: map[string]SpeciesCap{
+		"centi": {Max: 3, MaxPopulation: 8}, // room for more swarms
+	}}
+
+	m.reproduceSwarm(state, nil, swarm, state.Species["centi"], nopRuntimeLogger())
+
+	if swarm.Count != 3 {
+		t.Fatalf("full knot must not grow: %d", swarm.Count)
+	}
+	if state.AliveSwarmCount("centi") != 2 {
+		t.Fatalf("litter should mint a new swarm: alive=%d", state.AliveSwarmCount("centi"))
+	}
+	var child *entities.SwarmState
+	for id, s := range state.Swarms {
+		if id != "knot" {
+			child = s
+		}
+	}
+	if child == nil || child.Count < 1 || child.Count > 2 {
+		t.Fatalf("child litter should be 1-2 bugs: %+v", child)
+	}
+	if state.GroundItems["food1"].FoodValue != 100-reproduceFoodCost {
+		t.Fatalf("mint must charge the food cost: %d", state.GroundItems["food1"].FoodValue)
+	}
+	if swarm.Satiation != 0 || swarm.ReproductionMeter != 0 || swarm.ReproduceCooldown != 60 {
+		t.Fatal("mint must reset meters + arm the cooldown on the parent")
+	}
+
+	// Now AT the swarm-count cap: the same arm-the-cooldown skip as the population cap.
+	state.CurrentZone.BugSpawning.SpeciesCaps["centi"] = SpeciesCap{Max: 2, MaxPopulation: 8}
+	swarm.Satiation, swarm.ReproductionMeter, swarm.ReproduceCooldown = 100, 100, 0
+	m.reproduceSwarm(state, nil, swarm, state.Species["centi"], nopRuntimeLogger())
+	if state.AliveSwarmCount("centi") != 2 {
+		t.Fatalf("capped mint still spawned: alive=%d", state.AliveSwarmCount("centi"))
+	}
+	if state.GroundItems["food1"].FoodValue != 100-reproduceFoodCost {
+		t.Fatal("capped skip must not charge food")
+	}
+	if swarm.ReproduceCooldown != 60 {
+		t.Fatal("capped skip must arm the cooldown")
+	}
+}
+
 // === Water-gated fruit trees (tank model) ===
 // A FULL tank (3 waterings) buys exactly ONE batch of MaxFruit, triggered only when the
 // tree is EMPTY. Growth is a Pending countdown; ripe fruit falls only in the evening

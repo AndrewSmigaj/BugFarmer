@@ -69,6 +69,44 @@ func (m *Match) reproduceSwarm(state *WorldState, dispatcher runtime.MatchDispat
 		}
 	}
 
+	// Individuals (ground crawlers, §14.3): merge/split are disabled for the
+	// category, so a full swarm can never shed members — growth past MaxSwarmSize
+	// would overcap the knot forever. At the swarm-size cap the litter becomes a
+	// NEW swarm beside the parent instead, subject to the zone's swarm-count cap
+	// (the same arm-the-cooldown skip as the population cap when no room).
+	if species.Category == "individual" && species.MaxSwarmSize > 0 &&
+		swarm.Count >= species.MaxSwarmSize {
+		atSwarmCap := false
+		if state.CurrentZone != nil && state.CurrentZone.BugSpawning != nil {
+			if zcap, ok := state.CurrentZone.BugSpawning.SpeciesCaps[swarm.SpeciesID]; ok &&
+				zcap.Max > 0 && state.AliveSwarmCount(swarm.SpeciesID) >= zcap.Max {
+				atSwarmCap = true
+			}
+		}
+		if atSwarmCap {
+			swarm.ReproductionMeter = 0
+			swarm.Satiation = 0
+			swarm.ReproduceCooldown = species.ReproduceCooldown
+			logger.Debug("Swarm %s at the %s swarm-count cap: reproduction skipped",
+				swarm.ID, swarm.SpeciesID)
+			return
+		}
+		chunkSize := state.Config.ChunkSize
+		child := m.spawnSwarmAt(state, swarm.SpeciesID, count,
+			swarm.Position.WorldX(chunkSize)+1.5, swarm.Position.WorldY(chunkSize),
+			chunkSize)
+		if child == nil {
+			return
+		}
+		swarm.ReproductionMeter = 0
+		swarm.Satiation = 0
+		swarm.ReproduceCooldown = species.ReproduceCooldown
+		m.consumeFood(state, dispatcher, swarm.TargetFoodID, reproduceFoodCost)
+		logger.Info("Swarm %s reproduced at %s: minted new swarm %s (+%d, parent full at %d)",
+			swarm.ID, swarm.TargetFoodID, child.ID, count, swarm.Count)
+		return
+	}
+
 	m.growSwarm(state, swarm, count) // the shared id-math + SWARM_REPRODUCED event
 	swarm.ReproductionMeter = 0
 	swarm.Satiation = 0
