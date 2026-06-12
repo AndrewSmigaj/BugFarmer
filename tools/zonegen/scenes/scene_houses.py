@@ -20,18 +20,21 @@ from zonebuilder import ZoneBuilder                                    # noqa: E
 from render import render_builder                                      # noqa: E402
 from features.house import (place_house, styled_rooms, bbox, porch,    # noqa: E402
                             l_house, u_house, z_house, sculpt_plan, courtyard_rect)
-from features.yard import yard                                         # noqa: E402
+from features.yard import yard, styled_yard                            # noqa: E402
 
 W, H = 150, 105
 
 
-def place_one(b, specs, front, coll, *, with_porch=False, court=None):
+def place_one(b, specs, front, coll, *, with_porch=False, court=None, yard_style="modest"):
     rooms = styled_rooms(specs, collection=coll)
     place_house(b, rooms, front=front)
     bx0, by0, bx1, by1 = bbox(specs)
-    gx = (bx0 + bx1) // 2
-    yard(b, bx0 - 2, by0 - 4, bx1 + 2, by1 + 2, gate=(gx, by0 - 4),
-         path_to=(gx, max(0, by0 - 6)))
+    # the gate aligns with the ACTUAL front door (the front room's south-wall
+    # middle — the bbox center is wrong for offset shapes like the Z)
+    south = min(r[1][1] for r in specs)
+    fr = max((r for r in specs if r[1][1] == south), key=lambda r: r[1][2] - r[1][0])
+    gx = (fr[1][0] + fr[1][2]) // 2
+    styled_yard(b, bx0, by0, bx1, by1, gx, style=yard_style)
     if with_porch:
         porch(b, specs)
     if court:
@@ -46,16 +49,16 @@ def build():
     b = ZoneBuilder("scene_houses", W, H, base_tile="grass", name="House shapes")
     # Row 1 (south): the fixed natural shapes
     specs, front = l_house(8, 8)
-    place_one(b, specs, front, "basic", with_porch=True)
+    place_one(b, specs, front, "basic", with_porch=True, yard_style="modest")
     specs, front = u_house(42, 8)
-    place_one(b, specs, front, "fancy", court=courtyard_rect(specs))
+    place_one(b, specs, front, "fancy", court=courtyard_rect(specs), yard_style="grand")
     specs, front = z_house(82, 8)
-    place_one(b, specs, front, "basic")
+    place_one(b, specs, front, "basic", yard_style="small_plot")
     # Row 2 (north): generative seeds — a different silhouette every seed
     specs, front = sculpt_plan(10, 58, seed=3, rooms=4)
-    place_one(b, specs, front, "fancy", with_porch=True)
+    place_one(b, specs, front, "fancy", with_porch=True, yard_style="unfenced")
     specs, front = sculpt_plan(75, 58, seed=11, rooms=5)
-    place_one(b, specs, front, "basic")
+    place_one(b, specs, front, "basic", yard_style="modest")
     return b
 
 

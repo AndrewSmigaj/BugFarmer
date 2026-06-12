@@ -51,9 +51,22 @@ ORDER = ["zones", "surface", "pieces", "tests", "underground", "desert"]
 
 # the playable ZONES (maps rendered by view_world + the annotation pass) — shown
 # first; these are what the game actually loads.
+# (zone_id, [(image, caption), ...]) — REAL-ART renders first, the annotated
+# minimap last. zones/<id>/ renders regenerate on every zone --save.
 ZONE_MAPS = [
-    ("village_21_B", "maps/village_21_B_map.png", "THE NEW VILLAGE (candidate replacement) — grid streets, fly farm, orchard, rock belt"),
-    ("village_21", "maps/predators_map_full.png", "the original village (kept for comparison)"),
+    ("village_21_B", [
+        ("zones/village_21_B/full.png", "the full zone (real art)"),
+        ("zones/village_21_B/plaza.png", "the plaza + civic core"),
+        ("zones/village_21_B/residential.png", "the residential street (yard styles)"),
+        ("zones/village_21_B/fly_farm.png", "the fly farm (the loop)"),
+        ("zones/village_21_B/farms_orchard.png", "farms + orchard rows"),
+        ("zones/village_21_B/lake_boatstore.png", "the lake + boat store"),
+        ("zones/village_21_B/mining.png", "the rock belt + rails"),
+        ("maps/village_21_B_map.png", "annotated minimap (landmarks)"),
+    ]),
+    ("village_21", [
+        ("maps/predators_map_full.png", "the original village (kept for comparison)"),
+    ]),
 ]
 
 
@@ -72,11 +85,13 @@ def generate():
             "<p>Cards re-render via <code>python3 tools/zonegen/registry.py</code>. "
             "Zone maps live in <a href='maps/'>maps/</a>; one-off art QA in "
             "<a href='art_review/'>art_review/</a>.</p>"]
-    rows.append("<h2>zones (the playable maps)</h2>")
-    for zid, png, cap in ZONE_MAPS:
-        exists = os.path.exists(os.path.join(PREVIEWS, png))
-        img = f"<img src='{png}' loading='lazy'>" if exists else "<i>map not rendered</i>"
-        rows.append(f"<div class='card'><b>{zid}</b><br><i>{html.escape(cap)}</i><br>{img}</div>")
+    rows.append("<h2>zones (the playable maps — real art)</h2>")
+    for zid, imgs in ZONE_MAPS:
+        rows.append(f"<h3>{zid}</h3>")
+        for png, cap in imgs:
+            exists = os.path.exists(os.path.join(PREVIEWS, png))
+            img = f"<img src='{png}' loading='lazy'>" if exists else "<i>not rendered — run the zone --save</i>"
+            rows.append(f"<div class='card'><b>{html.escape(cap)}</b><br>{img}</div>")
     for cat in ORDER + sorted(set(by_cat) - set(ORDER)):
         if cat == "zones":
             continue

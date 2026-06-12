@@ -48,8 +48,12 @@ def place_carpenter(b, ox, oy):
     """Drop the carpenter's shop (SW corner ox,oy). Open-fronted (no fence) — building, sign, and a
     lumber stack out front. Door faces south at ox+DOORX. Returns the building rect."""
     stamp(b, SHOP, LEG, ox=ox, oy=oy)
-    b.place_occupant("sign_plank", ox + DOORX - 2, oy - 1, surface="grass")
-    for (oid, x, y) in [("lumber_rack", ox + 1, oy - 2), ("sawhorse", ox + BW - 3, oy - 2)]:  # lumber outside, no fence
+    from features.village import shop_frontage
+    # the furniture DISPLAY ROW out front + the lumber line
+    shop_frontage(b, ox, oy, sign_id="sign_plank", sign_x=DOORX - 2,
+                  items=[("lumber_rack", 1, -2), ("chair_wood", DOORX + 2, -1),
+                         ("table_wood", DOORX + 3, -2), ("sawhorse", BW - 3, -2)])
+    for (oid, x, y) in []:                                            # (folded into the frontage line)
         fw, fh = b.footprint(oid)
         if all(b.in_bounds(x + dx, y + dy) and b.is_free(x + dx, y + dy)
                for dx in range(fw) for dy in range(fh)):

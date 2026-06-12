@@ -68,6 +68,8 @@ def place_boat_store(b, ox, oy, *, dock_len=14):
     dx0, dx1 = ox + 4, ox + 5                        # the door is at ox+5
     b.place_occupant("sign_fish_board", ox + 1, oy - 1, surface="grass")
     _safe(b, "anchor_decor", ox + 8, oy - 1, surface="grass")
+    for i, fx in enumerate(range(ox + 7, ox + 10)):       # the catch, crated in a line
+        _safe(b, "fish_crate", fx, oy - 2, surface="grass")
     end = None
     for y in range(oy - 1, oy - 1 - dock_len, -1):
         if not b.in_bounds(dx1, y):

@@ -57,8 +57,9 @@ def _safe(b, oid, x, y, **k):
 def place_mayor(b, ox, oy):
     """Drop the mansion (SW corner ox,oy) in an iron-fenced estate with a formal front garden."""
     stamp(b, HALL, LEG, ox=ox, oy=oy)
-    rect = property_yard(b, ox, oy, ox + BW - 1, oy + BH - 1, ox + DOORX,
-                         side=3, front=7, back=4, fence="fence_iron", gate_id="gate_iron", flowers=None)
+    from features.yard import styled_yard
+    rect = styled_yard(b, ox, oy, ox + BW - 1, oy + BH - 1, ox + DOORX,
+                       style="grand", seed=4)   # the GRAND estate yard (big backyard, garden rows)
     # formal front garden: a fountain + flanking statues + edged beds (front yard is 7 deep)
     _safe(b, "fountain", ox + 2, oy - 4)
     _safe(b, "statue_founder", ox + DOORX - 4, oy - 3); _safe(b, "statue_founder", ox + DOORX + 3, oy - 3)

@@ -295,6 +295,22 @@ def crafting_template(b, I, doors, doorways, coll="basic"):
     P("torch", ix1, iy0 + 1)                # east wall light, above the entry
 
 
+def bathroom_template(b, I, doors, doorways, coll="basic"):
+    """A BATHROOM (the full-home standard 2026-06: EVERY house has one — no
+    toilet sprite yet, per house.md): bathtub along the west wall, vanity + sink
+    on the north (back) wall per the facing rule, a standing mirror east, a rug.
+    All pieces have art (bathtub 2×1, vanity, sink, mirror_standing)."""
+    ix0, iy0, ix1, iy1 = I
+
+    def P(oid, x, y, **k):
+        return _safe(b, oid, x, y, doorways, **k) if oid else False
+
+    P("bathtub", ix0, iy1 - 1)                              # west wall, toward the back
+    wall_run(b, ["vanity", "sink"], side="bottom", I=I, doorways=doorways)
+    P("mirror_standing", ix1, iy1 - 1)                      # east wall
+    P("rug", _center(I)[0], _center(I)[1], reserve=False)
+
+
 # ---- floor-plan layouts -----------------------------------------------------
 # Reusable house FLOOR-PLAN generators — pure geometry, no furniture/collection choice.
 # Each returns (specs, front) where specs = [(name, rect, template_fn), ...] with inclusive

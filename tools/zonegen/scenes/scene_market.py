@@ -47,15 +47,12 @@ def place_market(b, ox, oy):
     """Drop the market (SW corner ox,oy). Open-fronted (no fence) — building, a 3-wide sign, and produce
     stalls out front. Door faces south at ox+DOORX. Returns the building rect."""
     stamp(b, MARKET, LEG, ox=ox, oy=oy)
-    b.place_occupant("sign_market_board", ox + 1, oy - 1, surface="grass")   # 3-wide sign, left of the door
-    # the produce STALL LINE: one straight row under the frontage (rows discipline —
-    # market goods sit in a line, not sprinkled)
-    for (oid, x, y) in [("produce_crate", ox + DOORX + 2, oy - 1), ("produce_crate", ox + DOORX + 3, oy - 1),
-                        ("produce_crate", ox + DOORX + 4, oy - 1), ("barrel", ox + DOORX + 5, oy - 1)]:
-        fw, fh = b.footprint(oid)
-        if all(b.in_bounds(x + dx, y + dy) and b.is_free(x + dx, y + dy)
-               for dx in range(fw) for dy in range(fh)):
-            b.place_occupant(oid, x, y, surface="grass")
+    # REAL MARKET STANDS (2026-06): two market_stall units in a line east of the
+    # door + a produce box between — a market, not crates on the grass.
+    from features.village import shop_frontage
+    shop_frontage(b, ox, oy, sign_id="sign_market_board",
+                  items=[("market_stall", DOORX + 2, -3), ("produce_crate", DOORX + 4, -2),
+                         ("market_stall", DOORX + 5, -3)])
     return (ox, oy, ox + BW - 1, oy + BH - 1)
 
 

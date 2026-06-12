@@ -47,9 +47,10 @@ def place_smith(b, ox, oy):
     """Drop the smithy (SW corner ox,oy). A workshop is OPEN-FRONTED (no fence) — just the building, its
     sign, and outdoor ore/coal out front. Door faces south at ox+DOORX. Returns the building rect."""
     stamp(b, SMITH, LEG, ox=ox, oy=oy)
-    b.place_occupant("sign_anvil", ox + DOORX - 2, oy - 1, surface="grass")
-    for (oid, x, y) in [("ore_pile", ox + 1, oy - 2), ("coal_bin", ox + BW - 3, oy - 2),
-                        ("barrel", ox + BW - 2, oy - 2)]:             # outdoor materials, no fence
+    from features.village import shop_frontage
+    shop_frontage(b, ox, oy, sign_id="sign_anvil", sign_x=DOORX - 2,
+                  items=[("ore_pile", 1, -2), ("coal_bin", BW - 4, -2), ("barrel", BW - 2, -2)])
+    for (oid, x, y) in []:                                            # (folded into the frontage line)
         fw, fh = b.footprint(oid)
         if all(b.in_bounds(x + dx, y + dy) and b.is_free(x + dx, y + dy)
                for dx in range(fw) for dy in range(fh)):

@@ -13,7 +13,7 @@ ZG = os.path.dirname(HERE)
 sys.path.insert(0, ZG)
 from zonebuilder import ZoneBuilder                                    # noqa: E402
 from render import render_builder                                      # noqa: E402
-from features.house import (place_house, styled_rooms, living_template,   # noqa: E402
+from features.house import (bathroom_template, place_house, styled_rooms, living_template,   # noqa: E402
                             bedroom_template, kitchen_template, crafting_template)
 
 # Bounding box of the house (incl. the approach path) in its own local frame.
@@ -32,6 +32,7 @@ def place_player_house(b, ox=0, oy=0):
         ("main",     R(13, 8, 24, 17), living_template),
         ("kitchen",  R(24, 8, 34, 17), kitchen_template),
         ("crafting", R(15, 17, 23, 25), crafting_template),
+        ("bathroom", R(23, 17, 31, 24), bathroom_template),  # the full-home standard
     ], collection="fancy")
     place_house(b, rooms, floor="wood_floor", front=("main", "top"))
     for y in range(4, 8):  # approach path south of the front door
@@ -48,7 +49,7 @@ def build():
 
 if __name__ == "__main__":
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "scene_player_house.png"))
+    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "tests", "scene_player_house.png"))
     render_builder(b, out, scale=7)
     print("missing_art:", b.missing_art())
     print("warnings:", len(b.warnings))

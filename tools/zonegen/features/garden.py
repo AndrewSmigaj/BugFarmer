@@ -28,7 +28,7 @@ def flower_patch(b, x0, y0, x1, y1, kinds, n, seed=0):
             placed += 1
 
 
-def orchard(b, x0, y0, x1, y1, *, tree="tree_apple", row_spacing=4, tree_spacing=3,
+def orchard(b, x0, y0, x1, y1, *, tree="tree_apple", row_spacing=6, tree_spacing=2,
             jitter=0, crates=2, ladders=1, fruit=True, seed=0):
     """A worked ORCHARD: rows of fruit trees with human intent but organic variation —
     jittered rows (never a perfect grid), walking lanes between them, crates and a
@@ -45,6 +45,9 @@ def orchard(b, x0, y0, x1, y1, *, tree="tree_apple", row_spacing=4, tree_spacing
     planted = []
 
     def spaced(x, y):
+        # in-row neighbors sit tree_spacing apart; rows are row_spacing apart —
+        # tight rows + wide lanes is what makes ROWS read (2026-06: an even grid
+        # of trees reads as a grid, not an orchard).
         return all(max(abs(x - px), abs(y - py)) >= tree_spacing for (px, py) in planted)
 
     # ROWS DISCIPLINE (2026-06): an orchard is a human-planted thing — constant row

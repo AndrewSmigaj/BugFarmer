@@ -97,3 +97,17 @@ def plaza(b, cx, cy, *, r=4, tile="stone_path", fountain_id="fountain",
         flower_patch(b, x0 - 2, y0 - 2, x0, y0, kinds, n=5, seed=seed)
         flower_patch(b, x1, y1, x1 + 2, y1 + 2, kinds, n=5, seed=seed + 1)
     return (x0, y0, x1, y1)
+
+
+def shop_frontage(b, ox, oy, *, sign_id, sign_x=1, items=()):
+    """THE shared shop frontage (2026-06 consistency rule): the sign by the door +
+    the goods DISPLAY LINE — one straight row, never sprinkled. `items` =
+    [(oid, dx, dy), ...] relative to (ox, oy); keep dy in {-1, -2, -3} (the
+    frontage strip) and dx ascending (a line)."""
+    fw, fh = b.footprint(sign_id)
+    if all(b.is_free(ox + sign_x + dx, oy - 1 + dy) for dx in range(fw) for dy in range(fh)):
+        b.place_occupant(sign_id, ox + sign_x, oy - 1, surface="grass")
+    for (oid, dx, dy) in items:
+        fw, fh = b.footprint(oid)
+        if all(b.is_free(ox + dx + ddx, oy + dy + ddy) for ddx in range(fw) for ddy in range(fh)):
+            b.place_occupant(oid, ox + dx, oy + dy, surface="grass")

@@ -410,3 +410,18 @@ if __name__ == "__main__":
         cfg["row"], cfg["col"] = 2, 1
         json.dump(cfg, open(zj, "w"), indent=2)
         print("saved ->", out_dir)
+        # THE VISIBLE VILLAGE: real-art renders land in the previews on every
+        # save (full overview + readable region crops) — they can never go
+        # stale relative to the shipped chunks.
+        zdir = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews",
+                                            "zones", "village_21_B"))
+        os.makedirs(zdir, exist_ok=True)
+        render_builder(b, os.path.join(zdir, "full.png"), scale=2)
+        for nm, bounds in [("plaza", (100, 100, 165, 150)),
+                           ("residential", (10, 140, 120, 195)),
+                           ("fly_farm", (105, 185, 160, 245)),
+                           ("farms_orchard", (55, 175, 120, 240)),
+                           ("lake_boatstore", (5, 55, 105, 125)),
+                           ("mining", (80, 5, 200, 60))]:
+            render_builder(b, os.path.join(zdir, f"{nm}.png"), scale=5, bounds=bounds)
+        print("zone renders ->", zdir)

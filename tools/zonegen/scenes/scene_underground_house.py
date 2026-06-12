@@ -16,7 +16,7 @@ ZG = os.path.dirname(HERE)
 sys.path.insert(0, ZG)
 from zonebuilder import ZoneBuilder                                   # noqa: E402
 from render import render_builder                                    # noqa: E402
-from features.house import place_house, styled_rooms                 # noqa: E402
+from features.house import place_house, styled_rooms, bathroom_template  # noqa: E402
 from features.cave import carve_tunnel, fill_solid                   # noqa: E402
 from features.house import row_house, bbox                            # noqa: E402
 
@@ -38,6 +38,9 @@ def build():
 
     # stone house (3-room bar) DUG INTO the rock
     specs, front = row_house(12, 16)
+    # the full-home standard: even underground, a home has a bathroom (a stem
+    # off the middle room, north)
+    specs = specs + [("bathroom", (12 + 11, 16 + 9, 12 + 19, 16 + 16), bathroom_template)]
     bx0, by0, bx1, by1 = bbox(specs)
     door_x = (bx0 + bx1) // 2
 

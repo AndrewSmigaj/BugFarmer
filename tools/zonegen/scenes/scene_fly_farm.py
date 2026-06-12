@@ -62,15 +62,14 @@ def place_fly_farm(b, ox, oy):
             b.place_bug("fly_common", px + 2.5 + i * 1.2, a0y + PH - 3.5 - (i % 3) * 0.8,
                         scale=1.6, flip=(i % 2 == 0))
 
-    # --- the catch lines: net posts + netting in straight rows on the outer flanks
-    westx, easty = a0x - 2, b0x + PW + 1
-    for i, y in enumerate(range(a0y + 1, a0y + PH - 1, 3)):
-        _row(b, "net_post", [(westx, y), (easty, y)])
-        if i < 3:
-            _row(b, "fly_netting", [(westx, y + 1), (easty, y + 1)])
-    # auto-catchers at each pen's far (north) corner — emptied on rounds (visual
-    # now; mechanics later)
-    _row(b, "autonet", [(a0x, a0y + PH + 1), (b0x + PW - 2, a0y + PH + 1)])
+    # --- the catch gear lives INSIDE the pens (2026-06: where the flies are —
+    # no net posts): NETTING runs along each pen's inner side walls (flies
+    # accumulate on it — sticky-net mechanics later), and the AUTONET
+    # auto-catcher sits in each pen's back corner (emptied on rounds).
+    for px in (a0x, b0x):
+        for y in range(a0y + 2, a0y + PH - 3, 2):
+            _row(b, "fly_netting", [(px + 1, y), (px + PW - 2, y)])
+        _row(b, "autonet", [(px + 1, a0y + PH - 4)])
 
     # --- the emptying station: collection trays in a ROW beside the gates + crates
     _row(b, "collection_tray", [(a0x + PW // 2 + 2, oy + 3), (a0x + PW // 2 + 5, oy + 3),

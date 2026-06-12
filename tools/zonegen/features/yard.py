@@ -81,3 +81,43 @@ def property_yard(b, bx0, by0, bx1, by1, door_x, *, side=2, front=5, back=4,
         if fx1 - 1 >= door_x + 2:
             flower_patch(b, door_x + 2, fy0 + 1, fx1 - 1, by0 - 1, list(flowers), 8, seed=seed + 3)
     return (fx0, fy0, fx1, fy1)
+
+
+# ---- YARD STYLES (2026-06: "yards are also not good" — variety is deliberate) --
+def styled_yard(b, bx0, by0, bx1, by1, door_x, *, style="modest", seed=0):
+    """A yard with a deliberate STYLE — every home picks one; streets MIX them:
+    - "grand":      BIG backyard (back=7) with garden rows + a hedge walk; iron fence.
+    - "modest":     the standard picket yard (back=4) + a veggie plot out back.
+    - "small_plot": tight working-family margins (side=1, front=3, back=2).
+    - "unfenced":   NO fence at all — a door path, a flower bed, a bench.
+    Returns the yard rect (or the building rect for unfenced)."""
+    from .garden import crop_bed, flower_patch
+    if style == "grand":
+        rect = property_yard(b, bx0, by0, bx1, by1, door_x, side=3, front=6, back=7,
+                             fence="fence_iron", gate_id="gate_iron", seed=seed)
+        # garden ROWS across the backyard + a hedge walk up the middle
+        gy = by1 + 2
+        crop_bed(b, bx0 + 1, gy, bx0 + 6, gy + 2, ["chamomile", "lavender"])
+        for hx in range(bx0 + 8, min(bx1, bx0 + 14)):
+            if b.is_free(hx, gy + 1):
+                b.place_occupant("hedge", hx, gy + 1)
+        return rect
+    if style == "small_plot":
+        return property_yard(b, bx0, by0, bx1, by1, door_x, side=1, front=3, back=2,
+                             fence="fence_picket_weathered", gate_id="gate_picket",
+                             tree=None, seed=seed)
+    if style == "unfenced":
+        # no fence: just the door path + a flower bed + a bench by the door
+        for y in range(by0 - 3, by0):
+            for x in (door_x - 1, door_x):
+                if b.in_bounds(x, y) and b.is_free(x, y):
+                    b.set_ground(x, y, "stone_path", surface="path")
+        flower_patch(b, bx0, by0 - 3, bx0 + 4, by0 - 1,
+                     ["poppy", "chamomile", "flower_blue"], 5, seed=seed)
+        if b.is_free(door_x + 2, by0 - 1):
+            b.place_occupant("bench", door_x + 2, by0 - 1, reserve=False, surface=None)
+        return (bx0, by0, bx1, by1)
+    # modest (default): picket + a veggie plot behind
+    rect = property_yard(b, bx0, by0, bx1, by1, door_x, side=2, front=4, back=4, seed=seed)
+    crop_bed(b, bx0 + 1, by1 + 2, bx0 + 4, by1 + 3, ["plant_tomato", "plant_corn"])
+    return rect
