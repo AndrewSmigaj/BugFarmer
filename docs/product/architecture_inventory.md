@@ -467,7 +467,24 @@ public class CatchPopup : MonoBehaviour
 
 ## Files Summary
 
-### New Client Files (11)
+### AS BUILT 2026-06: programmatic UI + the ARMOR/equipment system
+The UI is now CODE-BUILT (no scene prefabs): `UIBootstrap`
+([RuntimeInitializeOnLoadMethod]) constructs its own scaled canvas
+(ScaleWithScreenSize, ref 800x600) + HotbarUI + InventoryPanel +
+DragDropController/EquipmentController/BugInfoCard, and retires any
+leftover hand-built pieces. Layout = EDGE DOCKS (bugs left; equipment
+strip + item storage + coins right) so the screen CENTER stays open world —
+the camera keeps the real player visible while you equip. `UIFactory` holds
+the style block + sprite loader (9-slice borders passed to Sprite.Create;
+art from tools/ui_sprites.py in Resources/UI/).
+ARMOR (cosmetic + synced): PlayerState.Equipment[7] server-side; OpCode 96
+EquipArmor{equip_slot, inv_slot} (swap-safe), OpCode 97 EquipmentUpdate
+echo/join-sync, EntityData.eqa per tick; client mirrors in
+InventoryManager.Equipment + OnEquipmentChanged; CharacterComposer
+re-composes local AND remote players live. Right-click armor = quick-equip;
+right-click a bug stack = the BugInfoCard (locked research rows).
+
+### New Client Files (11) — the original slice (several now code-built, see above)
 
 | Path | Purpose |
 |------|---------|
