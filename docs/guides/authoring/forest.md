@@ -31,10 +31,14 @@ This guide collects the rules as we learn them; the first real forest zone will 
    back. Edit/regenerate → restart the server → walk there.
 
 ## Forest composition (absorbed from trees-and-ponds.md; what's primitive-backed)
-- **Masses, not scatter**: a forest boundary is `terrain.forest()` blobs (density
-  ≈0.5-0.6) CHAINED along the rim with gaps only at road mouths; scatter is only the
-  FADE between masses. (PRIMITIVE-BACKED. The old guide's noise-density-field
-  approach remains ASPIRATIONAL — don't reach for functions that don't exist.)
+- **The RING is a NOISE MASK now** (`terrain.ring_mask` + `noise_field` — the old
+  guide's aspiration, made real 2026-06; research_procgen.md §1): an edge-distance
+  band jittered by fBm. Tree probability + the dirt floor deepen with the field
+  (`p ≈ 0.30 + depth·0.35`, dirt where depth > 0.55), so the rim thins inward like
+  a real forest edge, and roads cut through automatically (painted cells are
+  skipped). Calibration: wavelength 24 / 3 octaves; threshold 0.60 ≈ 25% coverage.
+- **Standalone masses**: `terrain.forest()` blobs (density ≈0.5-0.6, `dirt=True`
+  for deep floors) for deliberate stands (the NE gloom, accent groves).
 - **Deep forest floor**: pass `dirt=True` — the canopy core darkens to dirt, the
   edge stays grass (the scene_meadow_forest_edge gradient; a dedicated
   leaf-litter/forest_floor TILE is still future art).

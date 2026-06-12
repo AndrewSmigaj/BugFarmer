@@ -92,6 +92,9 @@ lack a species spec silently don't spawn.
 - [ant-colony.md](ant-colony.md) — a worked underground nest ("creatures shape the underground").
 - [blocks.md](blocks.md) — mineable/placeable cube blocks that tile in a grid.
 - [biome-feature-map.md](biome-feature-map.md) — which primitives to reach for per biome.
+- [research_procgen.md](research_procgen.md) — HOW OTHERS DO IT: the 2026-06 research sweep
+  (noise fields, least-cost-path roads, building-footprint grammars) with the adopted/passed-on
+  scoreboard — the rationale behind `noise_field`/`route_road`/`sculpt_plan`.
 
 ## Orient yourself
 - **The whole map:** `docs/product/architecture_world.md` — the 24-zone grid, layout, river/roads,

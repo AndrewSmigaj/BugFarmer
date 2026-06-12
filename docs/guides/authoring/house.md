@@ -67,15 +67,26 @@ Ready-made shared-wall floor plans so you don't hand-place every rect — each r
 - `plus_house(ox, oy)` — 5 rooms (bar + study & sunroom stems north).
 `bbox(specs)` returns the overall rect (handy for wrapping the house in a yard).
 
-### VARIETY IS THE RULE (a residential street is never three clone boxes)
-Houses are NOT perfect squares, and a street of identical cottages reads as a tech
-demo (2026-06 playtest correction). On any street of 3+ homes, mix ALL of:
-- **Shape**: at least one non-rectangular plan (⊥/L/+ via the layout generators or
-  hand specs) beside the simple cottage/bar.
-- **Collection**: at least one `basic` and one `fancy` home (the poor→nice range).
-- **Fence**: vary the family — `fence_picket`, `fence_picket_weathered` (+
-  `gate_wood_weathered`), hedge lines; the worn yard tells a story.
-- **Setback**: stagger ox/oy a few cells; gates land at different lane offsets.
+### NATURAL SHAPES + THE LANDMARK BUDGET (research_procgen.md §3)
+Houses are NOT perfect squares — but complexity is a **budget, not a dice roll**
+(Stardew/Watabou evidence: ~80-90% of a village is simple rects with a porch about
+half the time; L-shapes are the next tier; only 1-2 buildings per village EARN
+T/U/courtyard massing). The shape tools:
+- **`l_house` / `u_house` / `z_house`** — true L, courtyard U (dress the court via
+  `courtyard_rect(specs)`: birdbath + flowers), Z with an annex shed.
+- **`sculpt_plan(seed, rooms=N)`** — generative: rooms attach to random hosts with
+  PERPENDICULAR OFFSETS (the offsets are what make non-convex silhouettes);
+  ≥6-cell shared walls, interior-overlap + corner-only-touch rejection. Every
+  seed is a different silhouette; 20-seed sweeps compose warning-free.
+- **`porch(b, specs)`** — a wood-floor veranda + posts + bench outside the front
+  door (the classic Stardew silhouette break; zero new art). Call after
+  place_house + property_yard.
+- The showcase card: `scene_houses` (L+porch · U+court · Z+annex · 2 sculpted
+  seeds — none a box).
+
+On any street of 3+ homes, ALSO mix: **collection** (basic + fancy), **fence
+family** (picket / weathered+gate_picket / hedge), and **setback** (stagger
+ox/oy; gates land at different lane offsets).
 
 **SLOT SIZES (measured — budget these before placing, footprint + property_yard
 side=2/front=4/back=3):** text-grid cottage ≈ **16×21** · `row_house` ≈ **33×18** ·

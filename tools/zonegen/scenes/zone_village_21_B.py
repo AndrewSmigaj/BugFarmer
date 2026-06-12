@@ -19,12 +19,14 @@ sys.path.insert(0, ZG)
 sys.path.insert(0, HERE)
 from zonebuilder import ZoneBuilder                                   # noqa: E402
 from render import render_builder                                     # noqa: E402
-from features.terrain import path, lake, shore_dress, smooth_paths, rock_mass, forest, stream  # noqa: E402
+from features.terrain import (path, lake, shore_dress, smooth_paths, rock_mass,  # noqa: E402
+                              forest, stream, route_road, ring_mask, noise_field, _hash_noise)
 from features.scatter import scatter                                  # noqa: E402
 from features.garden import crop_bed, flower_patch, orchard           # noqa: E402
 from features.village import plaza, shop_building                     # noqa: E402
 from features.yard import fence_rect, property_yard                   # noqa: E402
-from features.house import place_house, styled_rooms, t_house, row_house, bbox  # noqa: E402
+from features.house import (place_house, styled_rooms, bbox, porch,  # noqa: E402
+                            l_house, u_house, courtyard_rect)
 from scene_smith import place_smith                                   # noqa: E402
 from scene_carpenter import place_carpenter                           # noqa: E402
 from scene_market import place_market                                 # noqa: E402
@@ -63,11 +65,11 @@ def hedgerow(b, x0, y0, x1, y1, seed=0):
     rng = random.Random(seed)
     if abs(x1 - x0) >= abs(y1 - y0):
         for x in range(min(x0, x1), max(x0, x1) + 1):
-            if rng.random() < 0.7 and b.is_free(x, y0):
+            if rng.random() < 0.7 and b.is_free(x, y0) and b.surface[y0][x] == "grass":
                 safe(b, "bush", x, y0)
     else:
         for y in range(min(y0, y1), max(y0, y1) + 1):
-            if rng.random() < 0.7 and b.is_free(x0, y):
+            if rng.random() < 0.7 and b.is_free(x0, y) and b.surface[y][x0] == "grass":
                 safe(b, "bush", x0, y)
 
 
@@ -96,17 +98,26 @@ def build(zone_id="village_21_B", vseed=0):
 
     # ================= 2) ROADS (one bending main + lanes) =================
     # Main road: S edge → quarry fork → THE BEND at the plaza → farm fork → N taper.
-    path(b, (118, 2), (140, 48), width=4, edge_tile="dirt", wobble=0.10, seed=21, taper_ends=6)
-    path(b, (140, 48), (128, 116), width=4, wobble=0.10, seed=22)
-    path(b, (126, 130), (114, 180), width=4, wobble=0.10, seed=23)
-    path(b, (114, 180), (100, 253), width=3, wobble=0.12, seed=24, taper_ends=10)
+    # The main road is ROUTED, not walked (research_procgen.md §2): least-cost
+    # path over noise hills — it meanders purposefully and avoids the water by
+    # cost. Waypointed through the quarry fork, the plaza bend and the farm fork.
+    route_road(b, (118, 2), (140, 48), width=4, seed=21)
+    route_road(b, (140, 48), (128, 116), width=4, seed=22)
+    # Through TOWN the road is nearly straight (settlements straighten roads —
+    # and the civic block sits at fixed coords); it goes wild again past the core.
+    route_road(b, (126, 130), (122, 162), width=4, seed=23, noise_amp=0.15)
+    route_road(b, (122, 162), (114, 180), width=4, seed=35)
+    # Pinned through the FARM BELT (fields + the pen sit at fixed coords;
+    # roads through cultivated land run straight), wild again past it.
+    route_road(b, (114, 180), (108, 226), width=3, seed=24, noise_amp=0.15)
+    route_road(b, (108, 226), (100, 253), width=3, seed=36)
     # Lanes (dirt): W to the edge, E past the ecologist, quarry spur, farm lane, lake lane.
     path(b, (120, 125), (60, 127), width=2, tile="dirt", wobble=0.07, seed=25)
     path(b, (60, 127), (2, 128), width=2, tile="dirt", wobble=0.07, seed=33, taper_ends=8)
     path(b, (134, 124), (192, 142), width=2, tile="dirt", wobble=0.16, seed=26)
     path(b, (192, 142), (253, 148), width=2, tile="dirt", wobble=0.16, seed=27, taper_ends=8)
     path(b, (138, 50), (154, 42), width=2, tile="dirt", wobble=0.12, seed=28)
-    path(b, (114, 182), (88, 196), width=2, tile="dirt", wobble=0.15, seed=29)
+    route_road(b, (114, 182), (88, 196), width=2, tile="dirt", seed=29)
     path(b, (43, 128), (42, 122), width=2, tile="dirt", wobble=0.10, seed=30)
     # (the residential lane is laid AFTER its cottages — see §4: path() routes
     # around their reserved yards, so the lane hugs the fences naturally)
@@ -144,27 +155,35 @@ def build(zone_id="village_21_B", vseed=0):
     # text-grid cottage (picket), and a 3-room bar house (fancy, weathered
     # fence). The lane is routed past their gates AFTER (path() flows around
     # the reserved yards). Main-road corridor is x≈117-124 here: yards ≤ x115.
-    # (the composer bars are WIDE: row_house 28×10, t_house 31×18 — slots sized
-    # accordingly, everything west of the main-road corridor at x≈117-124)
-    specs, front = t_house(78, 158)                  # ⊥: bar + crafting stem north
-    place_house(b, styled_rooms(specs, collection="basic"), front=front)
+    # The LANDMARK BUDGET (research: most homes simple, ONE showpiece): a U
+    # courtyard house (fancy, the street's landmark), an L with a PORCH
+    # (mid-tier), and the proven cottage (simple). No clone boxes, no bars.
+    specs, front = u_house(78, 158)                  # the showpiece: courtyard U
+    place_house(b, styled_rooms(specs, collection="fancy"), front=front)
     tb = bbox(specs)
-    property_yard(b, tb[0], tb[1], tb[2], tb[3], 92,
+    property_yard(b, tb[0], tb[1], tb[2], tb[3], 89,
                   side=2, front=4, back=3, seed=7)
-    b.place_player("farmer_down", 92.0, 162)
+    court = courtyard_rect(specs)
+    if court:
+        cx0, cy0, cx1, cy1 = court
+        for (oid, x, y) in [("birdbath", (cx0 + cx1) // 2, cy0 + 1),
+                            ("poppy", cx0, cy0 + 3), ("chamomile", cx1, cy0 + 5)]:
+            safe(b, oid, x, y)
+    b.place_player("scholar_down", 89.0, 162)
 
-    place_cottage(b, 58, 162, npc="merchant_down")   # the proven 2-room cottage
+    place_cottage(b, 56, 162, npc="merchant_down")   # simple tier
 
-    specs2, front2 = row_house(16, 168)              # a 3-room bar, upscale
-    place_house(b, styled_rooms(specs2, collection="fancy"), front=front2)
+    specs2, front2 = l_house(18, 168)                # mid-tier: a true L + porch
+    place_house(b, styled_rooms(specs2, collection="basic"), front=front2)
     rb = bbox(specs2)
-    property_yard(b, rb[0], rb[1], rb[2], rb[3], 29,
-                  side=2, front=4, back=3,
+    property_yard(b, rb[0], rb[1], rb[2], rb[3], 24,
+                  side=2, front=5, back=3,
                   fence="fence_picket_weathered", gate_id="gate_picket", seed=8)
-    b.place_player("scholar_down", 29.0, 172)
+    porch(b, specs2)
+    b.place_player("farmer_down", 24.0, 172)
 
     path(b, (123, 131), (12, 170), width=2, wobble=0.12, seed=31)
-    for gx, gy in ((92, 152), (62, 156), (29, 162)):    # gate → lane spurs
+    for gx, gy in ((89, 152), (60, 156), (24, 161)):    # gate → lane spurs
         spur(b, gx, gy, gx, gy - 6, tile="stone_path")
     smooth_paths(b)   # the road-angle pass: stair-steps → 45° bevels (after ALL roads)
 
@@ -186,7 +205,7 @@ def build(zone_id="village_21_B", vseed=0):
     hedgerow(b, 86, 200, 112, 200, seed=41)
     crop_bed(b, 92, 202, 112, 212, ["plant_corn", "plant_corn", "plant_tomato"])
     hedgerow(b, 88, 214, 110, 214, seed=42)
-    crop_bed(b, 96, 216, 114, 224, ["plant_tomato", "plant_corn"])
+    crop_bed(b, 90, 216, 106, 224, ["plant_tomato", "plant_corn"])
     safe(b, "scarecrow", 100, 193)
     for (x, y) in [(87, 190), (88, 192), (112, 195)]:     # hay bales by the wheat
         safe(b, "hay_bale", x, y)
@@ -273,29 +292,32 @@ def build(zone_id="village_21_B", vseed=0):
         flank_road(y)
 
     # ================= 10) FOREST RING + MEADOW SCATTER (last) =================
-    # The RING is real forest MASSES (a chain of overlapping blobs around the rim,
-    # gaps only at the four road mouths) — scatter alone read as speckle, not a
-    # boundary. Density-gradient: the masses are the wall, the scatter between
-    # them is the fade.
-    rim = [
-        # south rim (gap at the main road mouth x≈110-126)
-        (24, 8, 22, 9), (66, 8, 20, 8), (150, 8, 20, 9), (196, 8, 22, 9), (242, 10, 16, 9),
-        # east rim (gap at the E lane mouth y≈140-156)
-        (246, 40, 14, 12), (244, 86, 13, 14), (246, 120, 12, 9),
-        (246, 178, 13, 13), (244, 215, 14, 12),
-        # north rim (gap at the main road mouth x≈92-108)
-        (240, 248, 18, 8), (140, 250, 22, 7), (60, 250, 24, 7), (16, 248, 16, 8),
-        # west rim above the lake (the lake itself walls the SW)
-        (8, 130, 10, 12), (10, 168, 11, 13), (8, 242, 12, 8),
-    ]
-    for i, (cx, cy, rx, ry) in enumerate(rim):
-        forest(b, cx, cy, rx, ry, density=0.55, seed=70 + i, dirt=True)  # deep = dirt floor
-    ring = {"tree_oak": 4, "tree_pine": 3, "bush": 2}
-    # The fade between the masses (sparser, clumped).
-    for (x0, y0, x1, y1, sd) in [(0, 0, 255, 20, 51), (0, 235, 255, 255, 52),
-                                 (0, 100, 18, 234, 53), (234, 21, 255, 234, 54)]:
-        scatter(b, x0, y0, x1, y1, ring, density=0.12, min_spacing=3, seed=sd,
-                clumping=0.85, cluster_radius=5)
+    # The RING is a NOISE MASK (research_procgen.md §1: an edge-distance band
+    # jittered by fBm — ragged inner edge, natural gaps; roads cut through it
+    # automatically because painted/reserved cells are skipped). Tree probability
+    # and the dirt floor deepen with the field, so the rim thins inward exactly
+    # like a real forest edge.
+    mask = ring_mask(ZW, ZH, lo=0.64, hi=0.99, jitter=0.24, wavelength=24, seed=70)
+    fld = noise_field(ZW, ZH, wavelength=24, seed=70)
+    placed_trees = []
+
+    def spaced2(x, y):
+        return all(abs(x - px) > 1 or abs(y - py) > 1 for (px, py) in placed_trees[-60:])
+
+    for y in range(ZH):
+        for x in range(ZW):
+            if not mask[y][x] or not b.is_free(x, y) or b.surface[y][x] != "grass":
+                continue
+            depth = float(fld[y][x])
+            r = _hash_noise(x, y, 71)
+            if r < 0.30 + depth * 0.35 and spaced2(x, y):
+                tree = "tree_pine" if _hash_noise(x, y, 72) < 0.45 else "tree_oak"
+                if b.place_occupant(tree, x, y, surface="forest"):
+                    placed_trees.append((x, y))
+                    if depth > 0.55:
+                        b.set_ground(x, y, "dirt")
+            elif r > 0.93:
+                safe(b, "bush", x, y, surface="forest")
     # Inner accent groves.
     for (cx, cy, rx, ry, sd) in [(70, 150, 12, 9, 56), (160, 80, 13, 9, 57),
                                  (60, 70, 10, 8, 58), (210, 110, 12, 9, 59),

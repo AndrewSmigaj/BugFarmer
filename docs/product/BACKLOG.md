@@ -43,7 +43,19 @@ working; this file is what survives between sessions.
 - Centipede knots (multi-centipede swarms) + overshoot lunge + turnaround re-attack;
   water stops people only (bugs fly over).
 
+## Done 2026-06 (overnight): procgen research + routed roads + natural houses
+- research_procgen.md (3-track web sweep, adopted/passed-on scoreboard).
+- terrain.route_road (least-cost-path: network discount, turn penalties,
+  multiplicative noise hills, route-to-network spurs); main road + farm lane
+  routed in village_21_B; town segments pinned (settlements straighten roads).
+- terrain.noise_field/ring_mask: the forest rim is a noise mask (calibrated).
+- house.sculpt_plan + l/u/z_house + porch + the LANDMARK BUDGET; scene_houses
+  v2 card; village_21_B street = U showpiece + L+porch + cottage.
+
 ## Later additions from this slice
+- route_road taper option (band narrows at zone edges, like path(taper_ends)).
+- Chaikin smoothing pass on route_road centerlines (research; only if 45°
+  quantization ever shows through smooth_paths' bevels).
 - **The river-zone slice**: the stream + `terrain.bridge(b, start, end)` (engine-free —
   walkability is the tile-id switch; bridge tiles replacing water are walkable both
   sides). Recorded geometry from review: a gx≈40-50 stream needs TWO bridges

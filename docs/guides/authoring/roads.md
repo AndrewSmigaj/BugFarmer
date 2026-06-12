@@ -4,7 +4,26 @@ How to lay roads/paths with `zonegen`'s `terrain` primitives. Roads come **after
 buildings** in the precedence order: water is carved first, the road parts around it, then buildings
 reserve their footprints along the road.
 
-## Primitives
+## ROUTED roads — `route_road` (preferred for long/wild spines)
+```python
+from features.terrain import route_road
+route_road(b, (118, 2), (140, 48), width=4, seed=21)          # point-to-point
+route_road(b, (140, 30), None, width=2, tile="dirt", seed=9)  # spur → the NETWORK
+```
+Least-cost-path roads (see research_procgen.md §2): A* over (cell, heading) with a
+terrain cost field — water/reserved prohibitive, forest ×2.5, sand ×1.5, EXISTING
+ROADS ×0.3 (later roads hug earlier ones; junctions emerge), turn penalties (one
+90° > two spaced 45°s → S-curves), MULTIPLICATIVE noise hills for deterministic
+meander. `end=None` routes to the whole existing network (spurs/lanes/driveways —
+believable T-junctions with no destination guessing).
+- **Pin the road through TOWN** (`noise_amp≈0.15` for the core segment) — real
+  settlements straighten roads, and your civic block sits at fixed coords; let it
+  go wild again past the core (2026-06 correction: a meandering town segment
+  walked through the hall's yard).
+- Roads are laid BEFORE buildings, so routing can't avoid them — pinning is the
+  answer near fixed architecture; cost does the avoiding everywhere else.
+
+## Walked primitives (spurs + deliberate lanes)
 ```python
 from features.terrain import path, hpath, vpath
 
