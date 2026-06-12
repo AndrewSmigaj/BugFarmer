@@ -1,0 +1,103 @@
+{
+  "zone_id": "village_21_B",
+  "name": "Starting Village B",
+  "row": 2,
+  "col": 1,
+  "width": 256,
+  "height": 256,
+  "spawn_point": [
+    126,
+    118
+  ],
+  "biome_type": "village",
+  "seed": 0,
+  "bug_spawning": {
+    "species_caps": {
+      "fly_common": {
+        "initial": 40,
+        "max": 75,
+        "spawn_interval": 45.0,
+        "swarm_size": 2,
+        "max_population": 400
+      },
+      "butterfly_meadow": {
+        "initial": 15,
+        "max": 50,
+        "spawn_interval": 90.0,
+        "max_population": 300
+      },
+      "wasp_common": {
+        "initial": 0,
+        "max": 3,
+        "spawn_interval": 9999.0,
+        "max_population": 12
+      },
+      "centipede_garden": {
+        "initial": 2,
+        "max": 3,
+        "spawn_interval": 600.0,
+        "swarm_size": 2,
+        "max_population": 8
+      }
+    },
+    "spawn_areas": [
+      {
+        "id": "zone_wide",
+        "species": [
+          "fly_common"
+        ],
+        "type": "zone"
+      },
+      {
+        "id": "fly_farm",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 121,
+        "cy": 205,
+        "radius": 14
+      },
+      {
+        "id": "beehive_meadow",
+        "species": [
+          "butterfly_meadow"
+        ],
+        "type": "circle",
+        "cx": 215,
+        "cy": 72,
+        "radius": 20
+      },
+      {
+        "id": "meadow_w",
+        "species": [
+          "butterfly_meadow"
+        ],
+        "type": "circle",
+        "cx": 28,
+        "cy": 134,
+        "radius": 28
+      },
+      {
+        "id": "meadow_sw",
+        "species": [
+          "butterfly_meadow"
+        ],
+        "type": "circle",
+        "cx": 30,
+        "cy": 196,
+        "radius": 22
+      },
+      {
+        "id": "ne_gloom",
+        "species": [
+          "centipede_garden"
+        ],
+        "type": "circle",
+        "cx": 170,
+        "cy": 238,
+        "radius": 12
+      }
+    ]
+  }
+}

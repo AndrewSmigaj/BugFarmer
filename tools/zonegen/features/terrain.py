@@ -52,6 +52,23 @@ def smooth_paths(b):
     for (x, y, tile) in todo:
         b.set_ground(x, y, tile, surface="path")
         filled.append((x, y))
+
+    # POTHOLE HEAL: edge_tile fraying on a WOBBLING centerline leaves dirt specks
+    # that end up interior once the line moves on — exactly what the checkered-road
+    # lint flags. A dirt path cell with ≥3 orthogonal stone-road path neighbors is
+    # inside the road, not on its shoulder: repave it.
+    heal = []
+    for y in range(b.H):
+        for x in range(b.W):
+            if b.surface[y][x] != "path" or b.ground[y][x] != "dirt":
+                continue
+            stony = sum(1 for (nx, ny) in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1))
+                        if b.in_bounds(nx, ny) and b.surface[ny][nx] == "path"
+                        and b.ground[ny][nx].startswith("stone_path"))
+            if stony >= 3:
+                heal.append((x, y))
+    for (x, y) in heal:
+        b.set_ground(x, y, "stone_path", surface="path")
     return filled
 
 

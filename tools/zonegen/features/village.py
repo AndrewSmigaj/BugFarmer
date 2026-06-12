@@ -73,21 +73,23 @@ def plaza(b, cx, cy, *, r=4, tile="stone_path", fountain_id="fountain",
             return b.place_occupant(oid, x, y, **kw)
         return False
 
+    # Plaza furniture is DELIBERATELY on the paving: surface=None keeps the cells
+    # classified "path" (truthful mask, and no building-over-road warn).
     # centerpiece (2x2) centered on (cx,cy)
-    _put(fountain_id, cx - 1, cy - 1)
+    _put(fountain_id, cx - 1, cy - 1, surface=None)
     # benches in facing pairs flanking the fountain (south + north rows)
     for by in (y0 + 1, y1 - 1):
-        _put(bench_id, cx - 3, by, reserve=False)
-        _put(bench_id, cx + 1, by, reserve=False)
+        _put(bench_id, cx - 3, by, reserve=False, surface=None)
+        _put(bench_id, cx + 1, by, reserve=False, surface=None)
     # lamp posts at the four corners
     for (lx, ly) in [(x0, y0), (x1, y0), (x0, y1), (x1, y1)]:
-        _put(lamp_id, lx, ly, reserve=False)
+        _put(lamp_id, lx, ly, reserve=False, surface=None)
     # civic props: board SE, signpost NW (one cell in from the corners' lamps),
     # statue NE — all just inside the paving so they read as part of the square
-    _put("notice_board", x1 - 1, y0 + 1)
-    _put("signpost", x0 + 1, y1 - 1)
+    _put("notice_board", x1 - 1, y0 + 1, surface=None)
+    _put("signpost", x0 + 1, y1 - 1, surface=None)
     if statue_id:
-        _put(statue_id, x1 - 2, y1 - 2)
+        _put(statue_id, x1 - 2, y1 - 2, surface=None)
 
     # corner flower beds (sub-grid free-floating, off the paving onto the SW/NE grass corners)
     if flowers:
