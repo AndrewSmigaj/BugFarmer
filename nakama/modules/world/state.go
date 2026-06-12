@@ -329,6 +329,12 @@ func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presenc
 	player.ItemSlots[13] = InventorySlot{ItemID: "bench", Count: 1}
 	player.ItemSlots[14] = InventorySlot{ItemID: "shovel_wood", Count: 1}
 	player.ItemSlots[15] = InventorySlot{ItemID: "flashlight", Count: 1}
+	// New vegetable seeds (no shop system yet — starting inventory is the
+	// seed source; seed_drop_chance keeps them renewable after that)
+	player.ItemSlots[16] = InventorySlot{ItemID: "seed_carrot", Count: 6}
+	player.ItemSlots[17] = InventorySlot{ItemID: "seed_pumpkin", Count: 6}
+	player.ItemSlots[18] = InventorySlot{ItemID: "seed_cabbage", Count: 6}
+	player.ItemSlots[19] = InventorySlot{ItemID: "seed_eggplant", Count: 6}
 	player.EquippedTool = "hands"
 
 	s.Players[userID] = player

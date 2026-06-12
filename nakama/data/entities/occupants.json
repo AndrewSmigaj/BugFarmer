@@ -2435,5 +2435,265 @@
       "blocks_players": true,
       "blocks_bugs": true
     }
+  },
+  "plant_carrot": {
+    "name": "Carrot Plant",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_carrot_stage0": {
+    "name": "Carrot Plant (stage 0)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_carrot_stage1": {
+    "name": "Carrot Plant (stage 1)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_carrot_stage2": {
+    "name": "Carrot Plant (stage 2)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_carrot_stage3": {
+    "name": "Carrot Plant (stage 3)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_pumpkin": {
+    "name": "Pumpkin Plant",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_pumpkin_stage0": {
+    "name": "Pumpkin Plant (stage 0)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_pumpkin_stage1": {
+    "name": "Pumpkin Plant (stage 1)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_pumpkin_stage2": {
+    "name": "Pumpkin Plant (stage 2)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_pumpkin_stage3": {
+    "name": "Pumpkin Plant (stage 3)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_cabbage": {
+    "name": "Cabbage Plant",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_cabbage_stage0": {
+    "name": "Cabbage Plant (stage 0)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_cabbage_stage1": {
+    "name": "Cabbage Plant (stage 1)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_cabbage_stage2": {
+    "name": "Cabbage Plant (stage 2)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_cabbage_stage3": {
+    "name": "Cabbage Plant (stage 3)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_eggplant": {
+    "name": "Eggplant Plant",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_eggplant_stage0": {
+    "name": "Eggplant Plant (stage 0)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_eggplant_stage1": {
+    "name": "Eggplant Plant (stage 1)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_eggplant_stage2": {
+    "name": "Eggplant Plant (stage 2)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
+  },
+  "plant_eggplant_stage3": {
+    "name": "Eggplant Plant (stage 3)",
+    "category": "crop",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc"
+    }
   }
 }

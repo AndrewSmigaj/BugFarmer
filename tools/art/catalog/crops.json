@@ -8,7 +8,6 @@
   "plant_wheat": {
     "look": "a clump of ripe golden WHEAT: several upright tan-GOLDEN stalks topped with bushy seed heads, dry straw colour. Clearly wheat, NOT green leafy."
   },
-
   "plant_tomato_stage0": {
     "look": "a tiny TOMATO SPROUT just emerging from dark tilled soil: one thin pale-green stem with TWO small round seed leaves. Tiny and delicate, mostly bare soil visible."
   },
@@ -21,7 +20,6 @@
   "plant_tomato_stage3": {
     "look": "a mature TOMATO plant ready to harvest: a lush leafy green bush heavy with several round ripe RED TOMATOES. Clearly ripe red fruit."
   },
-
   "plant_corn_stage0": {
     "look": "a tiny CORN SPROUT just emerging from dark tilled soil: a single thin grass-like green blade folded at the tip. Tiny, mostly bare soil visible."
   },
@@ -34,7 +32,6 @@
   "plant_corn_stage3": {
     "look": "a mature CORN / maize plant ready to harvest: an upright green stalk with long arching leaves and TWO plump yellow CORN COBS with visible kernels. Clearly corn."
   },
-
   "plant_wheat_stage0": {
     "look": "tiny WHEAT SPROUTS just emerging from dark tilled soil: a few thin bright-green grass blades in a small clump. Tiny, mostly bare soil visible."
   },
@@ -43,5 +40,69 @@
   },
   "plant_wheat_stage2": {
     "look": "ripe golden WHEAT ready to harvest: several upright tan-GOLDEN stalks topped with bushy seed heads, dry straw colour. Clearly wheat."
+  },
+  "plant_carrot_stage0": {
+    "look": "tiny CARROT sprouts just emerging from dark tilled soil: a pair of thin feathery green shoots. Tiny, mostly bare soil visible.",
+    "family": "flora"
+  },
+  "plant_carrot_stage1": {
+    "look": "young CARROT plant: small clump of feathery ferny green tops, NO root visible.",
+    "family": "flora"
+  },
+  "plant_carrot_stage2": {
+    "look": "growing CARROT: fuller feathery green tops with a hint of ORANGE root crown peeking from the soil.",
+    "family": "flora"
+  },
+  "plant_carrot_stage3": {
+    "look": "mature CARROT ready to pull: lush feathery tops and a fat ORANGE root shoulder clearly poking out of the soil.",
+    "family": "flora"
+  },
+  "plant_pumpkin_stage0": {
+    "look": "tiny PUMPKIN sprout just emerging from dark tilled soil: one short stem with two round seed leaves.",
+    "family": "flora"
+  },
+  "plant_pumpkin_stage1": {
+    "look": "young PUMPKIN vine: a few big rounded green leaves on a low vine, NO fruit.",
+    "family": "flora"
+  },
+  "plant_pumpkin_stage2": {
+    "look": "growing PUMPKIN: sprawling vine with a small round GREEN immature gourd.",
+    "family": "flora"
+  },
+  "plant_pumpkin_stage3": {
+    "look": "mature PUMPKIN ready to harvest: big ribbed ORANGE pumpkin with a brown stem under broad vine leaves.",
+    "family": "flora"
+  },
+  "plant_cabbage_stage0": {
+    "look": "tiny CABBAGE sprouts just emerging from dark tilled soil: two small seed leaves.",
+    "family": "flora"
+  },
+  "plant_cabbage_stage1": {
+    "look": "young CABBAGE rosette: open loose pale-green leaves, NO head yet.",
+    "family": "flora"
+  },
+  "plant_cabbage_stage2": {
+    "look": "growing CABBAGE: a small pale head forming at the center of the rosette.",
+    "family": "flora"
+  },
+  "plant_cabbage_stage3": {
+    "look": "mature CABBAGE ready to harvest: a big tight pale-green head wrapped by open outer leaves.",
+    "family": "flora"
+  },
+  "plant_eggplant_stage0": {
+    "look": "tiny EGGPLANT sprout just emerging from dark tilled soil: one thin stem with two leaves.",
+    "family": "flora"
+  },
+  "plant_eggplant_stage1": {
+    "look": "young EGGPLANT bush: short leafy green bush, NO fruit, NO flowers.",
+    "family": "flora"
+  },
+  "plant_eggplant_stage2": {
+    "look": "growing EGGPLANT: leafy bush with small PURPLE blossoms, no fruit yet.",
+    "family": "flora"
+  },
+  "plant_eggplant_stage3": {
+    "look": "mature EGGPLANT ready to harvest: leafy bush with TWO glossy deep-PURPLE hanging fruits.",
+    "family": "flora"
   }
 }

@@ -37,5 +37,57 @@
     "multi_harvest": false,
     "max_harvests": 1,
     "regrow_ticks": 0
+  },
+  "carrot": {
+    "crop_type": "carrot",
+    "growth_stages": 4,
+    "waterings_per_stage": 2,
+    "max_daily_waterings": 2,
+    "harvest_item": "carrot",
+    "harvest_count_min": 1,
+    "harvest_count_max": 3,
+    "seed_drop_chance": 0.4,
+    "multi_harvest": false,
+    "max_harvests": 1,
+    "regrow_ticks": 0
+  },
+  "pumpkin": {
+    "crop_type": "pumpkin",
+    "growth_stages": 4,
+    "waterings_per_stage": 4,
+    "max_daily_waterings": 2,
+    "harvest_item": "pumpkin",
+    "harvest_count_min": 1,
+    "harvest_count_max": 1,
+    "seed_drop_chance": 0.5,
+    "multi_harvest": false,
+    "max_harvests": 1,
+    "regrow_ticks": 0
+  },
+  "cabbage": {
+    "crop_type": "cabbage",
+    "growth_stages": 4,
+    "waterings_per_stage": 3,
+    "max_daily_waterings": 2,
+    "harvest_item": "cabbage",
+    "harvest_count_min": 1,
+    "harvest_count_max": 2,
+    "seed_drop_chance": 0.3,
+    "multi_harvest": false,
+    "max_harvests": 1,
+    "regrow_ticks": 0
+  },
+  "eggplant": {
+    "crop_type": "eggplant",
+    "growth_stages": 4,
+    "waterings_per_stage": 3,
+    "max_daily_waterings": 2,
+    "harvest_item": "eggplant",
+    "harvest_count_min": 1,
+    "harvest_count_max": 3,
+    "seed_drop_chance": 0.25,
+    "multi_harvest": true,
+    "max_harvests": 3,
+    "regrow_ticks": 500
   }
 }
