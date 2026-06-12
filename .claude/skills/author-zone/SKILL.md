@@ -12,7 +12,7 @@ watch here.
 
 ## Where the world lives (orient here first)
 - **The system index:** `docs/guides/authoring/README.md` — the parts (builder · guides · scenes · the
-  scene→zone→`view_world`→test pipeline) and how they fit. Read it first. (Art Lab is deprecated for layout.)
+  scene→zone→`view_world`→test pipeline) and how they fit. Read it first. (The gallery replaced the old Art Lab.)
 - **The whole map:** `docs/product/architecture_world.md` — the 24-zone grid, layout, river/roads,
   coordinates, per-zone species.
 - **Per-zone design docs:** `docs/product/zones/<zone_id>.md` (intent: biome, species, landmarks, ecology).
@@ -124,7 +124,7 @@ canonical render scale per scene lives in `tools/zonegen/registry.py`.
   roads (+`smooth_paths` once, after all of them) → buildings → farms → scatter, then
   `Z.bug_spawning` and `Z.save()`. Size must be ×32; `save()` writes row/col 0,0 so patch them after
   for a real world-grid zone.
-- **View the whole zone:** `python3 tools/view_world.py <zone>` → `tools/output/<zone>_detail.png`
+- **View the whole zone:** `python3 tools/view_world.py <zone>` → `tools/_generated/previews/maps/<zone>_detail.png`
   (north-up colour minimap; reads SAVED chunks, so save first).
 - **Test in-game (no Unity):** `run-backend` skill starts the server, then the sync-harness joins +
   confirms load/tick/spawn (`tools/sync-harness`, `dotnet run -- --zone <id> --duration 20`). Edit zone

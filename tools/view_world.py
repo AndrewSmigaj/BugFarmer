@@ -475,9 +475,9 @@ Examples:
     project_root = script_dir.parent
     zones_dir = project_root / "nakama" / "data" / "zones"
 
-    # Create output directory
-    output_dir = script_dir / "output"
-    output_dir.mkdir(exist_ok=True)
+    # Output lands in THE one generated tree (tools/README.md): previews/maps.
+    output_dir = script_dir / "_generated" / "previews" / "maps"
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     if not zones_dir.exists():
         print(f"Error: Zones directory not found: {zones_dir}")

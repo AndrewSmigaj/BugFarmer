@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Plot the fly population over time from the sync-harness CSV (written to the temp dir as
-fly_counts.csv at the end of a run). Output: tools/output/fly_counts.png.
+fly_counts.csv at the end of a run). Output: tools/_generated/scratch/fly_counts.png.
 
   python3 tools/plot_fly_counts.py [path/to/fly_counts.csv]
 """
@@ -26,7 +26,7 @@ ax.set_xlabel("time (s)")
 ax.set_ylabel("total bugs")
 ax.set_title("Fly population over time (feed -> reproduce -> split -> plateau when food runs out)")
 ax.grid(True, alpha=0.3)
-out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", "fly_counts.png")
+out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_generated", "scratch", "fly_counts.png")
 os.makedirs(os.path.dirname(out), exist_ok=True)
 fig.tight_layout()
 fig.savefig(out, dpi=120)

@@ -12,9 +12,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) 
 import make_scene  # noqa: E402
 
 
-def render_builder(b, out, scale=6, bounds=None, record_tiles=None):
+def render_builder(b, out, scale=6, bounds=None):
     """Render builder `b` (optionally a (x0,y0,x1,y1) cell viewport) to `out`.
-    record_tiles: optional set of ground-tile ids to also record draw-rects for (variant viewer)."""
+    """
     x0, y0, x1, y1 = bounds or (0, 0, b.W - 1, b.H - 1)
     gw, gh = x1 - x0 + 1, y1 - y0 + 1
     ground = [[b.ground[y0 + yy][x0 + xx] for xx in range(gw)] for yy in range(gh)]
@@ -27,7 +27,7 @@ def render_builder(b, out, scale=6, bounds=None, record_tiles=None):
     decor = [(s, x - x0, y - y0, m) for (s, x, y, m) in getattr(b, "decor", [])
              if x0 <= x <= x1 and y0 <= y <= y1]
     r = make_scene.render_scene(ground, occ, b.meta, scale, out, players=players, bugs=bugs,
-                                decor=decor, record_tiles=record_tiles)
+                                decor=decor)
     print(f"  rendered {r['gw']}x{r['gh']} -> {r['w']}x{r['h']}px  {out}")
     if r["placeholders"]:
         print(f"  placeholders: {', '.join(r['placeholders'])}")

@@ -16,7 +16,8 @@ for every step, not just the big ones.
   generator (`make_test_zone.py`), and the headless `.NET` netcode harness (`sync-harness/`).
   Art prompts are DATA: `tools/art/style.json` (global look) + `tools/art/catalog/*.json` (per-item).
   Zone/scene authoring: `tools/zonegen/` (builder + `features/` primitives + `scenes/` + the
-  `registry.py` scene catalog); `tools/artlab/` is the variant-picker UI that renders those scenes.
+  `registry.py` scene catalog + `gallery.py` → `_generated/previews/index.html`, THE visual
+  entry point). `tools/README.md` is the map of every script + where outputs go.
 - `docs/` — `product/` (how the game works, incl. the GDD `game_design.md`) and `guides/`
   (`art/` = how sprites look & are made; `authoring/` = how to build zones/scenes — start at its `README.md`).
 - `.claude/skills/` — task playbooks (`add-object`, `regenerate-sprite`, `run-backend`, `author-zone`).

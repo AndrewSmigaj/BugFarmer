@@ -10,7 +10,7 @@ The system is **four parts**, each with one home:
 | **① The builder** | The Python library you compose zones/scenes with — feature primitives that coordinate through a shared occupancy model (a road routes around a pond; scatter avoids water). | `tools/zonegen/` |
 | **② These guides** | How to do each world-building task (build a house, a yard, a cave…). Read & iterate on them as we learn. | `docs/guides/authoring/` |
 | **③ Example scenes** | Small curated vignettes built with ①, rendered to preview PNGs. They double as the worked examples for these guides and the visual catalog/QA. | `tools/zonegen/scenes/` |
-| **④ Art Lab** | A local web tool to view art **variants** in real scenes and pick which to keep. Consumes ③. | `tools/artlab/` |
+| **④ The Gallery** | `previews/index.html` — every scene card + zone render in one page. | `tools/zonegen/gallery.py` |
 
 > **Art is separate.** How sprites *look* and get made is `docs/guides/art/` (start with
 > `art/object_pipeline.md`). These guides assume art already exists — or use a **placeholder**
@@ -41,8 +41,7 @@ python3 tools/zonegen/gallery.py            # regenerate previews/index.html (th
 > — every scene card with the guide it illustrates. Zone maps live in `previews/maps/`,
 > one-off art QA in `previews/art_review/`. The previews root holds only directories.
 
-> **Art Lab is deprecated for layout work** — render previews directly and read them. (`tools/artlab/`
-> still exists for picking sprite *variants*, but don't run it for zone authoring.)
+> (The old Art Lab variant viewer was removed 2026-06 — the gallery + direct renders replaced it.)
 
 ## From scenes to a real ZONE (the full pipeline)
 A **scene** is a small render-only vignette; a **ZONE** is the 256×256 world the game loads. Composing:
@@ -54,7 +53,7 @@ A **scene** is a small render-only vignette; a **ZONE** is the 256×256 world th
    add organic terrain (`lake`/`forest`/`rock_patch`), extend roads to the edges, set `Z.bug_spawning`,
    then `Z.save()` → `nakama/data/zones/<id>/` (size must be a multiple of 32; `save()` writes row/col 0,0
    so patch them after for real zones).
-4. **View the whole zone** — `python3 tools/view_world.py <zone>` → `tools/output/<zone>_detail.png`
+4. **View the whole zone** — `python3 tools/view_world.py <zone>` → `tools/_generated/previews/maps/<zone>_detail.png`
    (a north-up colour minimap; it reads the SAVED chunks, so save first).
 5. **Test in-game (no Unity needed)** — `run-backend` skill to start the server, then the sync-harness
    joins the zone and verifies it loads + ticks + spawns (see `tools/sync-harness/`).
