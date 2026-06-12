@@ -31,7 +31,13 @@ namespace BugFarmer.UI
         [Serializable]
         public class StatusEvent : UnityEvent<string> { }
 
-        [Tooltip("World options. Order must match your dropdown's option order.")]
+        // CODE IS THE SOURCE OF TRUTH for the world list — deliberately NOT
+        // serialized. A serialized array gets baked into the scene file and then
+        // silently overrides any new defaults added here (exactly how "Village B"
+        // kept vanishing: the open scene's old 2-entry copy won every save). The
+        // dropdown is rebuilt from this list in Start(), so adding a zone in code
+        // is all it takes.
+        [NonSerialized]
         public WorldChoice[] worlds =
         {
             new WorldChoice { label = "Normal",         zoneId = "village_21" },

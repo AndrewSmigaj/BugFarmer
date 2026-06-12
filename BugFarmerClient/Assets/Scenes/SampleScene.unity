@@ -629,8 +629,6 @@ MonoBehaviour:
   worlds:
   - label: Normal
     zoneId: village_21
-  - label: Village B
-    zoneId: village_21_B
   - label: Test
     zoneId: sim_test
   onStatus:
@@ -3264,7 +3262,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1799073067
 MonoBehaviour:
   m_ObjectHideFlags: 0
