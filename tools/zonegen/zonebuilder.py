@@ -266,7 +266,8 @@ class ZoneBuilder:
 
         # walls/fences/gates sitting on a road/plaza/water tile
         for (x, y), c in self.occ.items():
-            if c.get("anchor") and c["id"].startswith(("wall", "fence", "gate")) \
+            # gates excluded: a gate sits over its approach path by design
+            if c.get("anchor") and c["id"].startswith(("wall", "fence")) \
                     and self.surface[y][x] in ("path", "water"):
                 out.append(f"{c['id']} @({x},{y}) sits on '{self.surface[y][x]}' (road/plaza/water under a wall)")
 

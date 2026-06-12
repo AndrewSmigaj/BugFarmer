@@ -21,6 +21,7 @@ Furniture is chosen by COLLECTION (see features/furniture.py): each template tak
 furnishes a plain or an upscale room. Bind the collection per room with `styled_rooms()`.
 """
 
+import random
 from functools import partial
 
 from .furniture import pick
@@ -345,3 +346,143 @@ def plus_house(ox=0, oy=0):
         ("sunroom", (21, 9, 29, 17), living_template),
     ]
     return _shift(specs, ox, oy), ("main", "top")
+
+
+# ---- NATURAL shapes (2026-06: "not squares — natural, and mostly square") -----
+# Bars-of-rects still read boxy; these outlines are NON-CONVEX — wings attach with
+# a perpendicular OFFSET so corners don't align (the offset is what makes an L/Z/U
+# silhouette instead of a longer bar). All rectilinear (no diagonal wall art).
+
+def l_house(ox=0, oy=0):
+    """A true L: the main room with a kitchen east, and a bedroom wing rising NORTH
+    off the main's WEST end only — the outline is an L, not a bar."""
+    specs = [
+        ("main",    (0, 0, 11, 9),   living_template),
+        ("kitchen", (11, 0, 20, 9),  kitchen_template),
+        ("bedroom", (0, 9, 9, 18),   bedroom_template),
+    ]
+    return _shift(specs, ox, oy), ("main", "top")
+
+
+def u_house(ox=0, oy=0):
+    """A courtyard U (⊓ opening north): a wide south bar with two wings rising
+    NORTH at its ENDS; the gap between the wings is a private COURTYARD — dress it
+    (flower bed / birdbath) with `courtyard_rect(specs)`."""
+    specs = [
+        ("main",     (0, 0, 22, 8),   living_template),
+        ("bedroom",  (0, 8, 9, 17),   bedroom_template),
+        ("kitchen",  (13, 8, 22, 17), kitchen_template),
+    ]
+    return _shift(specs, ox, oy), ("main", "top")
+
+
+def courtyard_rect(specs):
+    """The open court of a `u_house` specs list (the gap between the two north
+    wings, INSIDE the bbox): returns (x0, y0, x1, y1) in the same coords."""
+    ys = sorted({r[1][1] for r in specs})
+    bar = next(r for r in specs if r[1][1] == ys[0])
+    wings = sorted((r for r in specs if r[1][1] > ys[0]), key=lambda r: r[1][0])
+    if len(wings) < 2:
+        return None
+    return (wings[0][1][2] + 1, bar[1][3] + 1, wings[1][1][0] - 1, wings[0][1][3])
+
+
+def z_house(ox=0, oy=0):
+    """A Z/S offset pair: two rooms sharing a vertical wall but OFFSET along it,
+    plus a small annex shed off the back — three corners bitten out of the bbox."""
+    specs = [
+        ("main",    (0, 0, 11, 10),  living_template),
+        ("kitchen", (11, 4, 21, 14), kitchen_template),
+        ("annex",   (2, 10, 10, 18), crafting_template),
+    ]
+    return _shift(specs, ox, oy), ("main", "top")
+
+
+def sculpt_plan(ox=0, oy=0, *, seed=0, rooms=4):
+    """GENERATIVE floor plans (the research recipe: core rect + grammar ops): start
+    from a core room, then attach each new room to a random existing room on a
+    random side with a random PERPENDICULAR OFFSET — offsets ≠ 0 make non-convex
+    L/T/Z/U outlines naturally. Validity: every attachment shares a ≥5-cell wall
+    line (so place_house punches a door), interiors never overlap, all rooms reach
+    the core through shared walls (attachment guarantees it). The FRONT room is
+    whichever has the longest south exterior. Returns (specs, front)."""
+    rng = random.Random(seed)
+    temps = [living_template, bedroom_template, kitchen_template, crafting_template,
+             bedroom_template]
+    names = ["main", "bedroom", "kitchen", "crafting", "study"]
+
+    def dims():
+        return rng.randint(9, 12), rng.randint(8, 11)
+
+    w, h = dims()
+    placed = [("main", (0, 0, w, h), temps[0])]
+
+    def interiors_clash(rect):
+        x0, y0, x1, y1 = rect
+        for (_, (a0, b0, a1, b1), _) in placed:
+            if x0 + 1 <= a1 - 1 and x1 - 1 >= a0 + 1 and y0 + 1 <= b1 - 1 and y1 - 1 >= b0 + 1:
+                return True
+            # corner-only touch (rects meeting at exactly one point) makes a weird
+            # 4-way wall junction — reject (research: kills wall autotiling reads)
+            if ((x0 == a1 or x1 == a0) and (y0 == b1 or y1 == b0)):
+                return True
+        return False
+
+    for i in range(1, max(2, min(rooms, 5))):
+        ok = False
+        for _ in range(30):                     # try attachments until one fits
+            host = placed[rng.randrange(len(placed))][1]
+            hx0, hy0, hx1, hy1 = host
+            side = rng.choice(("top", "bottom", "left", "right"))
+            nw, nh = dims()
+            if side in ("top", "bottom"):
+                span = hx1 - hx0
+                off = rng.randint(-(nw - 6), span - 6)   # ≥6-cell shared wall (door + jambs)
+                x0 = hx0 + off
+                rect = (x0, hy1, x0 + nw, hy1 + nh) if side == "top" \
+                    else (x0, hy0 - nh, x0 + nw, hy0)
+            else:
+                span = hy1 - hy0
+                off = rng.randint(-(nh - 6), span - 6)
+                y0 = hy0 + off
+                rect = (hx1, y0, hx1 + nw, y0 + nh) if side == "right" \
+                    else (hx0 - nw, y0, hx0, y0 + nh)
+            if not interiors_clash(rect):
+                placed.append((names[i], rect, temps[i]))
+                ok = True
+                break
+        if not ok:
+            break
+
+    # normalize to non-negative coords, then pick the front room: longest exterior
+    # south (min-y) wall span.
+    minx = min(r[1][0] for r in placed)
+    miny = min(r[1][1] for r in placed)
+    placed = [(n, (x0 - minx, y0 - miny, x1 - minx, y1 - miny), f)
+              for (n, (x0, y0, x1, y1), f) in placed]
+    south = min(r[1][1] for r in placed)
+    front_room = max((r for r in placed if r[1][1] == south),
+                     key=lambda r: r[1][2] - r[1][0])[0]
+    return _shift(placed, ox, oy), (front_room, "top")
+
+
+def porch(b, specs, *, depth=2):
+    """A VERANDA outside the front door: a wood-floor apron `depth` deep along the
+    front room's south wall, post (fence) at each outer corner, a bench beside the
+    door. Zero new art; not reserved (walkable). Call AFTER place_house and AFTER
+    property_yard (the apron overwrites the yard path under it)."""
+    x0, y0, x1, y1 = bbox(specs)
+    south = min(r[1][1] for r in specs)
+    fr = max((r for r in specs if r[1][1] == south), key=lambda r: r[1][2] - r[1][0])
+    fx0, fy0, fx1, _ = fr[1]
+    px0, px1 = fx0 + 1, fx1 - 1
+    for y in range(fy0 - depth, fy0):
+        for x in range(px0, px1 + 1):
+            if b.in_bounds(x, y) and not b.reserved[y][x]:
+                b.set_ground(x, y, "wood_floor", surface="building")
+    for px in (px0, px1):                       # corner posts
+        if b.in_bounds(px, fy0 - depth) and b.is_free(px, fy0 - depth):
+            b.place_occupant("fence_wood", px, fy0 - depth, surface=None)
+    doorx = (fx0 + fx1) // 2
+    if b.is_free(doorx + 2, fy0 - 1):
+        b.place_occupant("bench", doorx + 2, fy0 - 1, reserve=False, surface=None)

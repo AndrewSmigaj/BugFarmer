@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Scene — HOUSE SHOWCASE: a grid of houses varying by room count and furniture collection,
-each in a fenced yard with an approach path. This is the worked example + visual QA for the
-house system (layouts + collections + yards).
+"""scene_houses — the HOUSE-SHAPE showcase (house.md's test card).
 
-Grid: columns = room count (3 / 4 / 5 via row_/t_/plus_house), rows = collection (basic, fancy).
-A standing signpost marks each yard. Renders to tools/_generated/previews/scene_houses.png.
+v2 (2026-06, "not squares — natural, and mostly square"): the grid shows the
+NON-CONVEX shapes — a true L (with a PORCH), a courtyard U (dressed court), a Z
+with an annex shed — and two GENERATIVE `sculpt_plan` seeds, across basic/fancy
+collections, each in a yard. Rendering this card is the proof that a street built
+from these never reads as clone boxes.
+
 Run: python3 tools/zonegen/scenes/scene_houses.py
 """
 import os
@@ -13,50 +15,50 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ZG = os.path.dirname(HERE)
 sys.path.insert(0, ZG)
-from zonebuilder import ZoneBuilder                       # noqa: E402
-from render import render_builder                         # noqa: E402
-from features.house import place_house, styled_rooms      # noqa: E402
-from features.yard import yard                            # noqa: E402
-from features.house import row_house, t_house, plus_house, bbox  # noqa: E402
+sys.path.insert(0, HERE)
+from zonebuilder import ZoneBuilder                                    # noqa: E402
+from render import render_builder                                      # noqa: E402
+from features.house import (place_house, styled_rooms, bbox, porch,    # noqa: E402
+                            l_house, u_house, z_house, sculpt_plan, courtyard_rect)
+from features.yard import yard                                         # noqa: E402
 
-LAYOUTS = [row_house, t_house, plus_house]   # 3, 4, 5 rooms
-COLLECTIONS = ["basic", "fancy"]
-COL_X = [3, 46, 89]      # local origin x of each column's house
-ROW_Y = [3, 33]          # local origin y of each row's house (basic, fancy)
-W, H = 128, 60
+W, H = 150, 105
 
 
-def place_one(b, layout_fn, coll, ox, oy):
-    specs, front = layout_fn(ox, oy)
+def place_one(b, specs, front, coll, *, with_porch=False, court=None):
     rooms = styled_rooms(specs, collection=coll)
     place_house(b, rooms, front=front)
-
-    # fenced yard one cell around the house bbox, gate centered on the south wall
     bx0, by0, bx1, by1 = bbox(specs)
-    yx0, yy0, yx1, yy1 = bx0 - 1, by0 - 1, bx1 + 1, by1 + 1
-    gx = (yx0 + yx1) // 2
-    yard(b, yx0, yy0, yx1, yy1, gate=(gx, yy0), path_to=(gx, max(0, yy0 - 2)))
-    # dressings OUTSIDE the south fence, flanking the path (placed after the fence so
-    # is_free reflects it); a standing signpost labels the plot.
-    for (oid, x, y) in [("lamp_post", gx - 2, yy0 - 1), ("lamp_post", gx + 2, yy0 - 1),
-                        ("signpost", gx + 3, yy0 - 1), ("planter_box", yx0 + 1, yy0 + 1)]:
-        if b.in_bounds(x, y) and b.is_free(x, y):
-            b.place_occupant(oid, x, y, surface="grass")
+    gx = (bx0 + bx1) // 2
+    yard(b, bx0 - 2, by0 - 4, bx1 + 2, by1 + 2, gate=(gx, by0 - 4),
+         path_to=(gx, max(0, by0 - 6)))
+    if with_porch:
+        porch(b, specs)
+    if court:
+        cx0, cy0, cx1, cy1 = court
+        for (oid, x, y) in [("birdbath", (cx0 + cx1) // 2, cy0 + 1),
+                            ("poppy", cx0, cy0), ("chamomile", cx1, min(cy1, cy0 + 3))]:
+            if b.in_bounds(x, y) and b.is_free(x, y):
+                b.place_occupant(oid, x, y)
 
 
 def build():
-    b = ZoneBuilder("scene_houses", W, H, base_tile="grass", name="House showcase")
-    for ri, coll in enumerate(COLLECTIONS):
-        for ci, layout_fn in enumerate(LAYOUTS):
-            place_one(b, layout_fn, coll, COL_X[ci], ROW_Y[ri])
+    b = ZoneBuilder("scene_houses", W, H, base_tile="grass", name="House shapes")
+    # Row 1 (south): the fixed natural shapes
+    specs, front = l_house(8, 8)
+    place_one(b, specs, front, "basic", with_porch=True)
+    specs, front = u_house(42, 8)
+    place_one(b, specs, front, "fancy", court=courtyard_rect(specs))
+    specs, front = z_house(82, 8)
+    place_one(b, specs, front, "basic")
+    # Row 2 (north): generative seeds — a different silhouette every seed
+    specs, front = sculpt_plan(10, 58, seed=3, rooms=4)
+    place_one(b, specs, front, "fancy", with_porch=True)
+    specs, front = sculpt_plan(75, 58, seed=11, rooms=5)
+    place_one(b, specs, front, "basic")
     return b
 
 
 if __name__ == "__main__":
-    b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "scene_houses.png"))
-    r = render_builder(b, out, scale=5)
-    print("missing_art:", b.missing_art())
-    print("warnings:", len(b.warnings))
-    issues = b.validate()
-    print("validate:", issues if issues else "OK")
+    from registry import render_one
+    render_one("scene_houses")
