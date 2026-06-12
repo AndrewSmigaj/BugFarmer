@@ -397,7 +397,32 @@ registration by construction), wearables, and 4 hand-authored vegetable crops wi
 F6 cycles debug outfits. Remaining from the old item:
 - **Segmented bugs (centipede/millipede) head/body/tail sheets** — could now be pixkit grids too.
 
-## Next — Player appearance + armor SERVER SYNC (the follow-up this slice scoped out)
+## Done 2026-06: programmatic UI + ARMOR SYSTEM + bug info card
+- ALL inventory UI now code-built (UIFactory/UIBootstrap own canvas; zero scene
+  wiring): hotbar strip + EDGE-DOCK inventory screen — the center stays open
+  world so you SEE your real player while equipping (the game never pauses).
+  Hand-authored UI art kit (tools/ui_sprites.py: wood/parchment 9-slice, slot
+  frames, ghost silhouettes, keycap-E).
+- ARMOR (cosmetic + synced): leather + iron sets (region-derived legs/feet fit
+  the walking legs by construction) + 2 accessories; items.json armor entries;
+  PlayerState.Equipment[7], OpCode 96 {equip_slot, inv_slot} (swap-safe),
+  OpCode 97 echo, EntityData.eqa; spawn wearing leather; click/drag +
+  right-click quick-equip; local AND remote players re-compose live. 5 Go tests.
+- Bug info card (right-click a bug slot): freely-known tier + locked rows
+  shaped for the research mechanic. Pickup polish: drops 0.9-cell fit +
+  0.6 floor, honest keycap-E badge. Starting inventory freed (E-pickup fix).
+
+## Next — Bug RESEARCH mechanic (the magnifying glass) + food boosts
+The bug info card ships with locked rows ("Breeding: ???", "Favorite foods:
+???") — this fills them:
+- magnifying_glass item; per-species research level on PlayerState (use it X
+  times on a species to unlock tiers: breeding plants -> favorite foods)
+- food-source boosts: flowers/foods grant swarm bonuses (data per species)
+- BEES (later): produce honey; gain more from some flowers — the info card's
+  foods tier is where players learn this in-game
+- armor DEFENSE (cosmetic now): armor_class per piece, server damage reduction
+
+## Superseded 2026-06 (this slice shipped it) — was: armor server sync
 Art + local rendering shipped; making OTHER players see your outfit needs:
 - `PlayerState.Appearance { SkinTone, Hair }` + equipment slots `{ Head, Chest }` in Go
 - items.json wearables get `equip_slot` (+ the armor pieces as obtainable items)

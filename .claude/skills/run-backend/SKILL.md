@@ -88,5 +88,9 @@ The client lives in `BugFarmerClient/` and connects via `Assets/Scripts/Networki
 
 - An **Exited (0)** builder is success, not failure — it's a one-shot copy job.
 - After Go changes, a plain `up -d`/`restart` keeps the **old** `backend.so`; you must `build builder` first.
+- **Never rebuild while someone is PLAYING**: `build builder` + `up -d` swaps `backend.so`
+  under the running match — the match goroutine panics (SIGSEGV at pc=0x0), nakama restarts,
+  and any connected client is left bound to the DEAD match (every action silently fails until
+  the client reconnects). Rebuild between sessions, or tell the player to rejoin after.
 - Don't `down -v` unless you mean to wipe the database.
 - If Nakama won't go healthy, the cause is almost always the builder (compile error) — read `docker compose logs builder` before touching Nakama.

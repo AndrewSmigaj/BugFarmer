@@ -101,7 +101,9 @@ def generate():
             ("player/wearables.png", "armor / hats / hair styles composed"),
             ("player/walk_down.gif", "walk cycle (down)"),
             ("player/walk_iron.gif", "armored walk cycle"),
-            ("veg/stages.png", "vegetable growth stages + icons (carrot/pumpkin/cabbage/eggplant)")]:
+            ("veg/stages.png", "vegetable growth stages + icons (carrot/pumpkin/cabbage/eggplant)"),
+            ("ui/kit.png", "the UI art kit (wood/parchment, slots, ghosts, keycap-E)"),
+            ("player/armor_sets.png", "leather + iron armor sets composed + all icons")]:
         exists = os.path.exists(os.path.join(PREVIEWS, png))
         img = f"<img src='{png}' loading='lazy'>" if exists else "<i>not rendered — run the generator</i>"
         rows.append(f"<div class='card'><b>{html.escape(cap)}</b><br>{img}</div>")
