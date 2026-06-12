@@ -6,6 +6,55 @@ import math
 import random
 
 
+# Road material -> its diagonal-transition tile family (made by
+# tools/make_diagonal_tiles.py; ids carry "path" so load() classifies them).
+_DIAG_FAMILY = {"stone_path": "stone_path_d", "dirt": "dirt_path_d"}
+
+
+def smooth_paths(b):
+    """The road-angle pass (run AFTER all roads, BEFORE buildings): every stair-step
+    corner a wobbling `path()` leaves — a grass cell whose N/S and E/W neighbors are
+    both road of one material — gets the matching 45° diagonal-transition tile
+    (road_d_<corner>, road triangle pointing into the corner the road wraps), so
+    curves render as bevelled edges instead of hard right angles.
+
+    Fill-concave only: it only ever ADDS road surface, never narrows one. The cell
+    becomes surface='path' (scatter then avoids it). Only plain-grass cells qualify
+    (the diagonal art is grass-backed — shores/floors are left alone), and mixed-
+    material corners (stone meets dirt) are skipped. Returns the filled cells."""
+    filled = []
+    todo = []
+    for y in range(b.H):
+        for x in range(b.W):
+            if b.surface[y][x] != "grass" or b.reserved[y][x] or (x, y) in b.occ:
+                continue
+            if b.ground[y][x] != "grass":
+                continue
+
+            def road_mat(nx, ny):
+                if not b.in_bounds(nx, ny) or b.surface[ny][nx] != "path":
+                    return None
+                return _DIAG_FAMILY.get(b.ground[ny][nx])
+
+            north = road_mat(x, y + 1)   # +y is NORTH (game orientation)
+            south = road_mat(x, y - 1)
+            east = road_mat(x + 1, y)
+            west = road_mat(x - 1, y)
+
+            # exactly one vertical + one horizontal road neighbor, same material
+            vs = [(m, c) for m, c in ((north, "n"), (south, "s")) if m]
+            hs = [(m, c) for m, c in ((east, "e"), (west, "w")) if m]
+            if len(vs) != 1 or len(hs) != 1 or vs[0][0] != hs[0][0]:
+                continue
+            todo.append((x, y, f"{vs[0][0]}_{vs[0][1]}{hs[0][1]}"))
+
+    # apply after the scan so fills don't cascade off each other within one pass
+    for (x, y, tile) in todo:
+        b.set_ground(x, y, tile, surface="path")
+        filled.append((x, y))
+    return filled
+
+
 def hpath(b, x0, x1, y, tile="stone_path"):
     """Horizontal path strip on row y from x0..x1 (inclusive), surface='path'."""
     for x in range(x0, x1 + 1):
@@ -163,7 +212,9 @@ def lake(b, cx, cy, radius, *, seed=0, shore="sand", reeds=16):
     """A natural LAKE with an ORGANIC, lobed shoreline (per trees-and-ponds.md) — NOT a circle. Multiple
     angular harmonics (freqs 2..n) bump the radius around the perimeter for bays + spits; deep core ->
     shallow rim -> a `shore` beach ring (sand/mud) with gaps -> reeds clumped just outside the water,
-    following the shape. Reserves the water. Returns reeds placed."""
+    following the shape. Reserves the water. Returns an info dict
+    {"center": (cx, cy), "radius": radius, "reeds": placed} — feed it to
+    `shore_dress()` for per-arc shoreline treatments."""
     rng = random.Random(seed)
     n = rng.randint(4, 7)
     phases = [rng.random() * 2 * math.pi for _ in range(n)]
@@ -199,7 +250,80 @@ def lake(b, cx, cy, radius, *, seed=0, shore="sand", reeds=16):
                 placed += 1
                 if placed >= reeds:
                     break
-    return placed
+    return {"center": (cx, cy), "radius": radius, "reeds": placed}
+
+
+def shore_dress(b, info, arcs, *, seed=0):
+    """Per-arc shoreline treatments — the trees-and-ponds rule ("split the shoreline
+    into arcs, no two banks identical") as a primitive. `info` is the dict `lake()`
+    returns, or a plain (cx, cy, radius) tuple. `arcs` is [(a0_deg, a1_deg,
+    treatment), ...] with treatment in {"sand", "mud", "reeds", "forest", "rocks"}.
+
+    ANGLES (read this twice): the builder's +y is NORTH, and angles are standard
+    math atan2(dy, dx) — so 0° = the EAST shore, 90° = the NORTH shore, 180° = WEST,
+    270° = SOUTH. An arc may wrap (e.g. (300, 60, "sand") spans east through north).
+
+    The shoreline is RE-DERIVED by adjacency scan (dry, unreserved cells 8-adjacent
+    to water), NOT taken from the lake call — lakes merge into existing water by
+    design, so only the scan sees the composite bank. Treatments: sand/mud retile
+    the ring (+ a sparse outer fringe); reeds plant clumped reeds/cattail; forest
+    pulls trees + bushes down to the bank; rocks scatter small mineable
+    stone_block clusters. Returns the dressed cells."""
+    if isinstance(info, dict):
+        (cx, cy), radius = info["center"], info["radius"]
+    else:
+        cx, cy, radius = info
+    rng = random.Random(seed)
+
+    def in_arc(angle_deg, a0, a1):
+        a = angle_deg % 360
+        a0, a1 = a0 % 360, a1 % 360
+        return (a0 <= a <= a1) if a0 <= a1 else (a >= a0 or a <= a1)
+
+    # the composite shoreline by adjacency scan
+    mr = int(radius * 1.7) + 3
+    shore = []  # (x, y, angle_deg)
+    for dy in range(-mr, mr + 1):
+        for dx in range(-mr, mr + 1):
+            x, y = cx + dx, cy + dy
+            if not b.in_bounds(x, y) or b.surface[y][x] == "water" or b.reserved[y][x]:
+                continue
+            touches = any(
+                b.in_bounds(x + ax, y + ay) and b.surface[y + ay][x + ax] == "water"
+                for ay in (-1, 0, 1) for ax in (-1, 0, 1) if (ax, ay) != (0, 0))
+            if touches:
+                shore.append((x, y, math.degrees(math.atan2(dy, dx))))
+
+    dressed = []
+    for (x, y, ang) in shore:
+        treatment = next((t for (a0, a1, t) in arcs if in_arc(ang, a0, a1)), None)
+        if treatment is None:
+            continue
+        if treatment in ("sand", "mud"):
+            b.set_ground(x, y, treatment)
+            # sparse outer fringe so the ring isn't a hard band
+            ox, oy = x + (1 if math.cos(math.radians(ang)) > 0.3 else -1 if math.cos(math.radians(ang)) < -0.3 else 0), \
+                     y + (1 if math.sin(math.radians(ang)) > 0.3 else -1 if math.sin(math.radians(ang)) < -0.3 else 0)
+            if b.in_bounds(ox, oy) and b.surface[oy][ox] == "grass" and rng.random() < 0.45:
+                b.set_ground(ox, oy, treatment)
+        elif treatment == "reeds":
+            # streaks, not singles: run-length clumping along the scan order
+            if rng.random() < 0.5 and b.is_free(x, y):
+                b.place_occupant(rng.choice(["reeds", "reeds", "cattail"]), x, y)
+        elif treatment == "forest":
+            # trees pulled down to the bank (spaced), bushes filling between
+            if rng.random() < 0.35 and b.is_free(x, y):
+                near_tree = any(c["id"].startswith("tree") for (px, py), c in b.occ.items()
+                                if abs(px - x) <= 2 and abs(py - y) <= 2 and c.get("anchor"))
+                if not near_tree:
+                    b.place_occupant(rng.choice(["tree_oak", "tree_pine"]), x, y, surface="forest")
+                elif rng.random() < 0.5:
+                    b.place_occupant("bush", x, y, surface="forest")
+        elif treatment == "rocks":
+            if rng.random() < 0.25 and b.is_free(x, y):
+                b.place_occupant("stone_block", x, y)
+        dressed.append((x, y))
+    return dressed
 
 
 def rock_patch(b, cx, cy, radius, *, ground="stone_floor", seed=0, ore_chance=0.28):

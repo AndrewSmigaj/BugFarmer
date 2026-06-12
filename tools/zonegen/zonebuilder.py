@@ -126,6 +126,14 @@ class ZoneBuilder:
         if clash:
             self.warn(f"place {oid} @({x},{y}) overlaps reserved cells: {clash}")
             return False
+        # Place-time road check (the lint can't see this later: we overwrite the
+        # surface mask below, destroying the 'path' evidence — roads also aren't
+        # reserved, so the clash check above never fires for them).
+        if surface == "building":
+            on_road = [c for c in cells if self.surface[c[1]][c[0]] == "path"]
+            if on_road:
+                self.warn(f"{oid} @({x},{y}) placed over road cells {on_road} "
+                          f"(the road will run visibly through it)")
         self.occ[(x, y)] = {"id": oid, "dir": direction, "anchor": True}
         for (cx, cy) in cells:
             if (cx, cy) != (x, y):
@@ -135,6 +143,58 @@ class ZoneBuilder:
             if surface:
                 self.surface[cy][cx] = surface
         return True
+
+    # ---- composition ---------------------------------------------------------
+    def blit(self, src, ox, oy, *, transparent=False, on_conflict="skip"):
+        """Copy another builder's content into this one at offset (ox,oy) — the
+        scene→zone composition API. Ground/surface/reserved copy per cell (out-of-
+        bounds cells clip with one summary warn). Occupants copy ANCHOR-GROUPED
+        through place_occupant (occ body cells carry no anchor back-pointer, so a
+        per-cell copy could shear a footprint in half): a conflicting occupant is
+        skipped whole with the usual loud warn (`on_conflict="raise"` raises
+        instead, for strict scenes). `transparent=True` skips src cells that are
+        untouched base tile — the dst terrain shows through, so a vignette drops in
+        without stamping a rectangle. Render-only dressing (players/bugs/decor)
+        offsets along. Does NOT merge spawn/bug_spawning — zone config stays the
+        caller's. Returns the number of skipped occupants."""
+        clipped = 0
+        for y in range(src.H):
+            for x in range(src.W):
+                dx, dy = ox + x, oy + y
+                if not self.in_bounds(dx, dy):
+                    clipped += 1
+                    continue
+                occ_cell = (x, y) in src.occ
+                if transparent and not occ_cell and not src.reserved[y][x] \
+                        and src.ground[y][x] == src.base_tile:
+                    continue
+                self.ground[dy][dx] = src.ground[y][x]
+                self.surface[dy][dx] = src.surface[y][x]
+                # Occupant cells re-reserve via place_occupant below, so a SKIPPED
+                # occupant doesn't leave phantom reservations behind.
+                if src.reserved[y][x] and not occ_cell:
+                    self.reserved[dy][dx] = True
+        if clipped:
+            self.warn(f"blit {src.zone_id} @({ox},{oy}): {clipped} cells clipped out of bounds")
+
+        skipped = 0
+        for (x, y), c in sorted(src.occ.items()):  # sorted: deterministic order
+            if not c.get("anchor"):
+                continue
+            ok = self.place_occupant(c["id"], ox + x, oy + y, direction=c.get("dir", 0),
+                                     surface=src.surface[y][x])
+            if not ok:
+                skipped += 1
+                if on_conflict == "raise":
+                    raise ValueError(f"blit conflict: {c['id']} @({ox + x},{oy + y})")
+
+        for (sid, px, py) in src.players:
+            self.players.append((sid, px + ox, py + oy))
+        for tup in src.bugs:
+            self.bugs.append((tup[0], tup[1] + ox, tup[2] + oy) + tuple(tup[3:]))
+        for (did, fx, fy, mult) in src.decor:
+            self.decor.append((did, fx + ox, fy + oy, mult))
+        return skipped
 
     # ---- scene dressing (render-only; not persisted to chunks) --------------
     def place_player(self, sprite_id, x, y):
@@ -218,13 +278,63 @@ class ZoneBuilder:
         if len(allh) > 1:
             out.append(f"HEIGHT mismatch — walls{wh} doors{dh} windows{nh} (px); should all match")
 
-        # checkered/muddy roads: % of path cells that are dirt
-        path = [(x, y) for y in range(self.H) for x in range(self.W) if self.surface[y][x] == "path"]
-        if path:
-            dirt = sum(1 for (x, y) in path if self.ground[y][x] == "dirt")
-            pct = 100 * dirt // len(path)
-            if pct > 15:
-                out.append(f"ROADS {pct}% dirt ({dirt}/{len(path)} cells) — checkered/muddy, not a clean road")
+        # checkered roads: dirt POTHOLES inside stone roads (a dirt path cell mostly
+        # surrounded by stone path = checkering). LOCAL, not a global ratio — a zone
+        # legitimately mixes stone roads with all-dirt lanes (the road hierarchy), and
+        # edge_tile fraying puts dirt on shoulders (≤1 stone neighbor), so only
+        # interior specks (≥3 stone path neighbors) count.
+        stone_cells = potholes = 0
+        for y in range(self.H):
+            for x in range(self.W):
+                if self.surface[y][x] != "path":
+                    continue
+                g = self.ground[y][x]
+                if g.startswith("stone_path"):
+                    stone_cells += 1
+                elif g == "dirt":
+                    stony = sum(1 for (nx, ny) in ((x+1, y), (x-1, y), (x, y+1), (x, y-1))
+                                if self.in_bounds(nx, ny) and self.surface[ny][nx] == "path"
+                                and self.ground[ny][nx].startswith("stone_path"))
+                    if stony >= 3:
+                        potholes += 1
+        if stone_cells and potholes * 20 > stone_cells:  # >5% potholes
+            out.append(f"ROADS checkered: {potholes} dirt potholes inside {stone_cells} "
+                       f"stone road cells — muddy, not a clean road")
+
+        # walls/fences standing on a road TILE — the safety net behind the place-time
+        # warn (place_occupant overwrites the surface mask, so this reads the GROUND,
+        # which buildings never touch). Gates/doors are excluded: a path running
+        # through an opening is correct. Plain "dirt" is excluded too (forest floors
+        # use it without being roads).
+        road_tiles = {"stone_path", "dirt_path", "cobblestone"}
+        for (x, y), c in self.occ.items():
+            if not c.get("anchor") or not c["id"].startswith(("wall", "fence")):
+                continue
+            fw, fh = self.footprint(c["id"])
+            on_road = [(x + dx, y + dy) for dy in range(fh) for dx in range(fw)
+                       if self.in_bounds(x + dx, y + dy)
+                       and self.ground[y + dy][x + dx] in road_tiles]
+            if on_road:
+                out.append(f"{c['id']} @({x},{y}) stands on road tiles {on_road} "
+                           f"(wall/fence over a road)")
+
+        # spawn circles mostly over water (the lakeside forest-patch lesson, 2026-06:
+        # a circle's content must be REACHABLE habitat). bug_spawning is set on the
+        # builder before lint in the standard flow; scenes without it no-op.
+        for area in (self.bug_spawning or {}).get("spawn_areas", []):
+            if area.get("type") != "circle":
+                continue
+            acx, acy, r = area.get("cx", 0), area.get("cy", 0), area.get("radius", 0)
+            cells = wet = 0
+            for yy in range(max(0, int(acy - r)), min(self.H, int(acy + r) + 1)):
+                for xx in range(max(0, int(acx - r)), min(self.W, int(acx + r) + 1)):
+                    if (xx - acx) ** 2 + (yy - acy) ** 2 <= r * r:
+                        cells += 1
+                        if self.surface[yy][xx] == "water":
+                            wet += 1
+            if cells and wet * 2 > cells:
+                out.append(f"SPAWN AREA '{area.get('id', '?')}' circle ({acx},{acy} r{r}) "
+                           f"is {100 * wet // cells}% water — bugs spawn over a lake")
         return out
 
     # ---- persistence --------------------------------------------------------

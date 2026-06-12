@@ -101,5 +101,53 @@
     "movement_mult": 1.0,
     "accepts_furniture": true,
     "accepts_structure": true
+  },
+  "stone_path_d_ne": {
+    "sprite_path": "Sprites/Terrain/stone_path_d_ne.png",
+    "movement_mult": 1.1,
+    "accepts_furniture": true,
+    "accepts_structure": true
+  },
+  "stone_path_d_nw": {
+    "sprite_path": "Sprites/Terrain/stone_path_d_nw.png",
+    "movement_mult": 1.1,
+    "accepts_furniture": true,
+    "accepts_structure": true
+  },
+  "stone_path_d_se": {
+    "sprite_path": "Sprites/Terrain/stone_path_d_se.png",
+    "movement_mult": 1.1,
+    "accepts_furniture": true,
+    "accepts_structure": true
+  },
+  "stone_path_d_sw": {
+    "sprite_path": "Sprites/Terrain/stone_path_d_sw.png",
+    "movement_mult": 1.1,
+    "accepts_furniture": true,
+    "accepts_structure": true
+  },
+  "dirt_path_d_ne": {
+    "sprite_path": "Sprites/Terrain/dirt_path_d_ne.png",
+    "movement_mult": 0.9,
+    "accepts_furniture": true,
+    "accepts_structure": true
+  },
+  "dirt_path_d_nw": {
+    "sprite_path": "Sprites/Terrain/dirt_path_d_nw.png",
+    "movement_mult": 0.9,
+    "accepts_furniture": true,
+    "accepts_structure": true
+  },
+  "dirt_path_d_se": {
+    "sprite_path": "Sprites/Terrain/dirt_path_d_se.png",
+    "movement_mult": 0.9,
+    "accepts_furniture": true,
+    "accepts_structure": true
+  },
+  "dirt_path_d_sw": {
+    "sprite_path": "Sprites/Terrain/dirt_path_d_sw.png",
+    "movement_mult": 0.9,
+    "accepts_furniture": true,
+    "accepts_structure": true
   }
 }

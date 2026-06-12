@@ -55,10 +55,15 @@ def shop_building(b, x0, y0, x1, y1, *, sign_id, npc=None, npc_dir="down",
 
 
 def plaza(b, cx, cy, *, r=4, tile="stone_path", fountain_id="fountain",
-          bench_id="bench", lamp_id="lamp_post", flowers=True, flower_kinds=None, seed=0):
-    """A civic square centered at (cx,cy): pave an (2r+1)-square (surface='path'), drop a centerpiece
-    (fountain, 2x2) dead-center, ring it with benches at the N/S edges + lamp posts at the corners,
-    and tuck flower beds in two corners. Returns the paved rect."""
+          bench_id="bench", lamp_id="lamp_post", statue_id="statue_founder",
+          flowers=True, flower_kinds=None, seed=0):
+    """A civic square centered at (cx,cy): pave an (2r+1)-square (surface='path'), drop
+    a centerpiece (fountain, 2x2) dead-center, FOUR benches in facing pairs, lamp posts
+    at the corners, the CIVIC PROPS the intent doc requires — notice_board (SE, the
+    village's message hub) + signpost (NW, the wayfinding anchor) + a founder statue
+    (NE) — and flower beds in two corners. (These props existed only in
+    scene_village's local square() before; composing a core without them shipped a
+    poorer civic heart than the blit it replaced.) Returns the paved rect."""
     x0, y0, x1, y1 = cx - r, cy - r, cx + r, cy + r
     b.fill_ground(x0, y0, x1, y1, tile, surface="path")
 
@@ -70,12 +75,19 @@ def plaza(b, cx, cy, *, r=4, tile="stone_path", fountain_id="fountain",
 
     # centerpiece (2x2) centered on (cx,cy)
     _put(fountain_id, cx - 1, cy - 1)
-    # benches at the south & north edges (2-wide, just inside the paving), facing the fountain
+    # benches in facing pairs flanking the fountain (south + north rows)
     for by in (y0 + 1, y1 - 1):
-        _put(bench_id, cx - 1, by, reserve=False)
+        _put(bench_id, cx - 3, by, reserve=False)
+        _put(bench_id, cx + 1, by, reserve=False)
     # lamp posts at the four corners
     for (lx, ly) in [(x0, y0), (x1, y0), (x0, y1), (x1, y1)]:
         _put(lamp_id, lx, ly, reserve=False)
+    # civic props: board SE, signpost NW (one cell in from the corners' lamps),
+    # statue NE — all just inside the paving so they read as part of the square
+    _put("notice_board", x1 - 1, y0 + 1)
+    _put("signpost", x0 + 1, y1 - 1)
+    if statue_id:
+        _put(statue_id, x1 - 2, y1 - 2)
 
     # corner flower beds (sub-grid free-floating, off the paving onto the SW/NE grass corners)
     if flowers:

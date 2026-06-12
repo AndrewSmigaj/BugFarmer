@@ -26,22 +26,9 @@ ZW = ZH = 256
 
 
 def blit(dst, src, ox, oy):
-    """Copy a small builder's ground/surface/reserved/occupants (+ render-only dressing) into `dst`
-    at offset (ox, oy)."""
-    for y in range(src.H):
-        gy, sy, ry = src.ground[y], src.surface[y], src.reserved[y]
-        for x in range(src.W):
-            dst.ground[oy + y][ox + x] = gy[x]
-            dst.surface[oy + y][ox + x] = sy[x]
-            dst.reserved[oy + y][ox + x] = ry[x]
-    for (x, y), c in src.occ.items():
-        dst.occ[(ox + x, oy + y)] = c
-    for (sid, px, py) in src.players:
-        dst.players.append((sid, px + ox, py + oy))
-    for t in src.bugs:
-        dst.bugs.append((t[0], t[1] + ox, t[2] + oy) + tuple(t[3:]))
-    for t in src.decor:
-        dst.decor.append((t[0], t[1] + ox, t[2] + oy) + tuple(t[3:]))
+    """Legacy wrapper — composition is now `ZoneBuilder.blit` (anchor-grouped occupant
+    collision, bounds clipping, optional transparency)."""
+    dst.blit(src, ox, oy)
 
 
 def build(zone_id="village_21", vseed=0):
