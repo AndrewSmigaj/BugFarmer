@@ -730,3 +730,85 @@ func (m *Match) handlePickupItem(
 
 	logger.Debug("Player %s picked up %s x%d", userID, item.ItemType, item.Count)
 }
+
+// handleEquipArmor (OpCode 96): equip/unequip/swap worn armor. The message is
+// {equip_slot, inv_slot} — no item search, duplicate-safe:
+//   - equip:  ItemSlots[inv_slot] must be category "armor" with the matching
+//     armor_slot; the piece moves INTO Equipment[equip_slot]; if that slot was
+//     occupied, the old piece goes into inv_slot (just vacated) — a swap can
+//     never hit "inventory full".
+//   - unequip: inv_slot == -1 → AddItem back (the only rejectable case).
+//
+// Echoes the authoritative truth (EquipmentUpdate + ItemSlotUpdate) so the
+// client always converges; the per-tick EntityData.eqa shows it to everyone.
+func (m *Match) handleEquipArmor(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	userID string,
+	msg EquipArmorMessage,
+) {
+	player := state.Players[userID]
+	if player == nil || msg.EquipSlot < 0 || msg.EquipSlot >= len(player.Equipment) {
+		return
+	}
+
+	slotNames := [7]string{"head", "body", "arms", "legs", "feet", "accessory", "accessory"}
+	echoInv := -1
+
+	if msg.InvSlot == -1 {
+		// UNEQUIP -> inventory
+		worn := player.Equipment[msg.EquipSlot]
+		if worn == "" {
+			return
+		}
+		slotIndex := player.AddItem(worn, 1)
+		if slotIndex < 0 {
+			m.sendWorldError(dispatcher, state, userID, "Inventory full")
+			return
+		}
+		player.Equipment[msg.EquipSlot] = ""
+		echoInv = slotIndex
+	} else {
+		// EQUIP from inv_slot (swap-safe)
+		if msg.InvSlot < 0 || msg.InvSlot >= len(player.ItemSlots) {
+			return
+		}
+		item := player.ItemSlots[msg.InvSlot]
+		if item.ItemID == "" {
+			return
+		}
+		def := state.Entities[item.ItemID]
+		if def == nil || def.Category != "armor" || def.ArmorSlot != slotNames[msg.EquipSlot] {
+			m.sendWorldError(dispatcher, state, userID, "That doesn't go there")
+			return
+		}
+		old := player.Equipment[msg.EquipSlot]
+		player.Equipment[msg.EquipSlot] = item.ItemID
+		// the equipped piece leaves the inventory; an old piece takes its slot
+		player.ItemSlots[msg.InvSlot] = InventorySlot{}
+		if old != "" {
+			player.ItemSlots[msg.InvSlot] = InventorySlot{ItemID: old, Count: 1}
+		}
+		echoInv = msg.InvSlot
+	}
+
+	// ---- echoes: equipment truth + the touched inventory slot
+	if presence, ok := state.Presences[userID]; ok && presence != nil {
+		eqMsg := EquipmentUpdateMessage{Equipment: player.Equipment[:]}
+		if data, err := json.Marshal(eqMsg); err == nil {
+			dispatcher.BroadcastMessage(OpCodeEquipmentUpdate, data, []runtime.Presence{presence}, nil, true)
+		}
+		if echoInv >= 0 {
+			slotMsg := SlotUpdateMessage{
+				SlotIndex: echoInv,
+				ItemID:    player.ItemSlots[echoInv].ItemID,
+				Count:     player.ItemSlots[echoInv].Count,
+			}
+			if data, err := json.Marshal(slotMsg); err == nil {
+				dispatcher.BroadcastMessage(OpCodeItemSlotUpdate, data, []runtime.Presence{presence}, nil, true)
+			}
+		}
+	}
+	logger.Debug("Player %s equipment: %v", userID, player.Equipment)
+}

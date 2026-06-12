@@ -138,6 +138,29 @@ namespace BugFarmer.Entities
                 _spriteRenderer.sprite = s;
         }
 
+        private string _armor;
+
+        /// <summary>
+        /// Set the remote player's WORN ARMOR (EntityData.eqa: 7 comma-joined
+        /// slot ids, "" = naked). Change-checked; re-composes the paper-doll
+        /// outfit (baked farmer fallback when layers are unavailable).
+        /// </summary>
+        public void SetArmor(string eqa)
+        {
+            eqa ??= "";
+            if (eqa == _armor) return;
+            _armor = eqa;
+
+            Sprite[][] composed = null;
+            if (eqa.Length > 0)
+            {
+                var outfit = Player.CharacterComposer.OutfitFromEquipment(eqa.Split(','));
+                composed = Player.CharacterComposer.Compose(outfit);
+            }
+            _frames = composed ?? Player.CharacterComposer.LoadBaked("farmer");
+            UpdateSprite();
+        }
+
         /// <summary>
         /// Set the remote player's equipped item (arrives every tick via EntityData.eq —
         /// null when absent/bare-handed). Change-checked: no per-tick sprite lookups.

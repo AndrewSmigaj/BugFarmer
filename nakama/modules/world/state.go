@@ -182,6 +182,10 @@ type PlayerState struct {
 	// messages (one per swarm) — burst messages share the swing's rate-limit slot.
 	LastCatchTick int64  // Tick of the last catch swing
 	EquippedTool  string // "" (hand), "small_net", etc.
+	// Worn armor by slot: 0 head, 1 body, 2 arms, 3 legs, 4 feet, 5 acc1,
+	// 6 acc2 ("" = empty). Cosmetic + synced (EntityData.eqa); items live
+	// HERE when worn, not in ItemSlots.
+	Equipment [7]string
 
 	// Tool use
 	LastToolTick int64 // Tick of last tool use (cooldown)
@@ -323,19 +327,21 @@ func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presenc
 	// Panel slots (10-19): blocks live here now — also exercises panel drag + cursor-place
 	player.ItemSlots[10] = InventorySlot{ItemID: "dirt_block", Count: 10}
 	player.ItemSlots[11] = InventorySlot{ItemID: "spear_wood", Count: 1}
-	// Decorations for placement testing (the bookshelf's 2x1 footprint exercises
-	// multi-cell cursor-place)
-	player.ItemSlots[12] = InventorySlot{ItemID: "bookshelf", Count: 1}
-	player.ItemSlots[13] = InventorySlot{ItemID: "bench", Count: 1}
+	// (bookshelf/bench test decorations removed 2026-06 — pickups need
+	// free slots; cursor-place is exercised by dirt blocks already)
 	player.ItemSlots[14] = InventorySlot{ItemID: "shovel_wood", Count: 1}
 	player.ItemSlots[15] = InventorySlot{ItemID: "flashlight", Count: 1}
 	// New vegetable seeds (no shop system yet — starting inventory is the
 	// seed source; seed_drop_chance keeps them renewable after that)
 	player.ItemSlots[16] = InventorySlot{ItemID: "seed_carrot", Count: 6}
-	player.ItemSlots[17] = InventorySlot{ItemID: "seed_pumpkin", Count: 6}
-	player.ItemSlots[18] = InventorySlot{ItemID: "seed_cabbage", Count: 6}
-	player.ItemSlots[19] = InventorySlot{ItemID: "seed_eggplant", Count: 6}
+	player.ItemSlots[17] = InventorySlot{ItemID: "seed_eggplant", Count: 6}
+	// (pumpkin/cabbage seeds come from drops — slots 12-13 + 18-19 stay FREE
+	// so pickups work at spawn)
 	player.EquippedTool = "hands"
+	// Spawn WEARING the leather set (cosmetic armor v1): visible immediately,
+	// zero inventory slots used; unequipping exercises the free slots.
+	player.Equipment = [7]string{"leather_cap", "leather_chest", "leather_gloves",
+		"leather_pants", "leather_boots", "", ""}
 
 	s.Players[userID] = player
 	s.Presences[userID] = presence

@@ -87,6 +87,58 @@ def main():
                     _emit(pixkit.compose(_blank(), im, dy),
                           "layers", slot, f"{item}_{d}{suffix}.png")
 
+    # ---- region-derived armor (legs/feet): the master's pants/boots region
+    # pixels rendered with the armor material ramp — fits the WALKING legs by
+    # construction (each frame's region re-renders with the moved legs)
+    for item, (layer, regname, ramp) in wearables.REGION_ARMOR.items():
+        reg = pixkit.PANTS if regname == "pants" else pixkit.BOOTS
+        apal = dict(pal)
+        if len(ramp) == 3:
+            apal["L"], apal["l"], apal["v"] = apal[ramp[0]], apal[ramp[1]], apal[ramp[2]]
+        else:
+            apal["B"], apal["b"] = apal[ramp[0]], apal[ramp[1]]
+        for d in DIRS:
+            for fi, suffix in FRAME_SUFFIX.items():
+                im = pixkit.render(frames[d][fi], apal, mode="region", region=reg)
+                _emit(im, "layers", layer, f"{item}_{d}{suffix}.png")
+
+    # ---- armor item ICONS: auto-cropped from the down-idle overlay art
+    # (Items/{id}_icon.png — the EntityDatabase icon chain)
+    from PIL import Image as PILImage
+
+    def _icon_from(im, out_name):
+        bbox = im.getbbox()
+        if bbox is None:
+            return
+        crop = im.crop(bbox)
+        if crop.width > 14 or crop.height > 14:
+            crop.thumbnail((14, 14), PILImage.NEAREST)
+        else:
+            # tiny pieces (gloves are a few px) — integer-upscale to read
+            k = max(1, min(3, 12 // max(crop.width, crop.height)))
+            if k > 1:
+                crop = crop.resize((crop.width * k, crop.height * k), PILImage.NEAREST)
+        c = PILImage.new("RGBA", (16, 16), (0, 0, 0, 0))
+        c.paste(crop, ((16 - crop.width) // 2, (16 - crop.height) // 2), crop)
+        pixkit.save(c.resize((32, 32), PILImage.NEAREST),
+                    os.path.join(PLAYER_DIR, "..", "Items", f"{out_name}_icon.png"))
+
+    for slot, items in wearables.ARMOR.items():
+        for item, grids in items.items():
+            _icon_from(pixkit.render(pixkit.parse(grids["down"]), pal, mode="baked"),
+                       item)
+    for item, (layer, regname, ramp) in wearables.REGION_ARMOR.items():
+        reg = pixkit.PANTS if regname == "pants" else pixkit.BOOTS
+        apal = dict(pal)
+        if len(ramp) == 3:
+            apal["L"], apal["l"], apal["v"] = apal[ramp[0]], apal[ramp[1]], apal[ramp[2]]
+        else:
+            apal["B"], apal["b"] = apal[ramp[0]], apal[ramp[1]]
+        _icon_from(pixkit.render(frames["down"][1], apal, mode="region", region=reg),
+                   item)
+    for item, grid in wearables.ACCESSORY_ICONS.items():
+        _icon_from(pixkit.render(pixkit.parse(grid), pal, mode="baked"), item)
+
     # ---- hair STYLES (style replacement grids x every color ramp)
     for style, grids in wearables.HAIR_STYLES.items():
         for cls, (hair_name, hair, shirt, pants) in CLASSES.items():

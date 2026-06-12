@@ -52,6 +52,11 @@ type EntityDef struct {
 	// Seed properties
 	PlacesCrop string `json:"places_crop,omitempty"` // Crop type this seed plants
 
+	// Armor properties (category = "armor"): which equipment slot the piece
+	// occupies (head/body/arms/legs/feet/accessory). Cosmetic-only for now —
+	// defense math is a planned follow-up.
+	ArmorSlot string `json:"armor_slot,omitempty"`
+
 	// Bug-food value when this item lies on the ground (carrion: bug_parts etc.).
 	// > 0 makes a ground drop EDIBLE: it registers in the deterministic food registry
 	// (ITEM_ROTTED at spawn, FOOD_CONSUMED(0) at expiry — both hash-bearing).

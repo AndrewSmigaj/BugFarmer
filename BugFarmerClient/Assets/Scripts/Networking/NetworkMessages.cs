@@ -38,6 +38,8 @@ namespace BugFarmer.Networking
         // Predators
         public const int PlayerDamage = 94;     // S->C (victim only): bug attack / regen echo
         public const int BugTelegraph = 95;     // S->C: display-only attack telegraph
+        public const int EquipArmor = 96;       // C->S: {equip_slot, inv_slot} equip/unequip/swap
+        public const int EquipmentUpdate = 97;  // S->C: the 7 worn-armor slots (echo + join)
     }
 
     /// <summary>
@@ -80,6 +82,7 @@ namespace BugFarmer.Networking
         public float y;
         public int facing;
         public string eq;   // equipped item id; NULL when absent (omitempty + JsonUtility),
+        public string eqa;    // worn armor: 7 comma-joined ids (head,body,arms,legs,feet,acc1,acc2)
                             // not "" — consumers must null-coalesce
     }
 

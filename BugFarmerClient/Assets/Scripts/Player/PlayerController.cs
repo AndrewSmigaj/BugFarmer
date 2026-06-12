@@ -86,45 +86,30 @@ namespace BugFarmer.Player
                 RefreshHeldItem();
             }
 
-            // Walk frames: baked farmer set (idle + _w1/_w3). The paper-doll
-            // composer takes over when an outfit is set (F6 debug below;
-            // appearance sync is the follow-up).
+            // Walk frames: composed from the worn equipment (server echoes it
+            // on join); baked farmer until then / as fallback.
             _frames = CharacterComposer.LoadBaked("farmer");
             UpdateSprite();
+            if (inv != null)
+                inv.OnEquipmentChanged += RebuildOutfit;
         }
 
-        // ---- F6 debug: cycle paper-doll outfits on the LOCAL player (layer
-        // registration check in-game; server appearance sync is a follow-up).
-        private static readonly CharacterComposer.Outfit[] DebugOutfits =
+        // ---- worn armor: re-compose the LOCAL player when equipment changes
+        // (the open-center inventory layout exists so you SEE this happen).
+        private void RebuildOutfit()
         {
-            null, // baked farmer (the default)
-            new CharacterComposer.Outfit { Helmet = "straw_hat" },
-            new CharacterComposer.Outfit { Chest = "leather_chest", Helmet = "straw_hat" },
-            new CharacterComposer.Outfit { Body = "tan", Hair = "black", Shirt = "scholar",
-                                           Pants = "scholar", Helmet = "copper_helmet" },
-            new CharacterComposer.Outfit { Body = "deep", Shirt = "miner", Pants = "miner",
-                                           Chest = "iron_chest", Helmet = "iron_helmet" },
-            new CharacterComposer.Outfit { Hair = "long_brown", Shirt = "ranger",
-                                           Pants = "ranger" },
-        };
-        private int _debugOutfit;
-
-        private void CycleDebugOutfit()
-        {
-            _debugOutfit = (_debugOutfit + 1) % DebugOutfits.Length;
-            var outfit = DebugOutfits[_debugOutfit];
-            var composed = outfit == null ? CharacterComposer.LoadBaked("farmer")
-                                          : CharacterComposer.Compose(outfit);
+            var inv = InventoryManager.Instance;
+            var outfit = CharacterComposer.OutfitFromEquipment(inv?.Equipment);
+            var composed = CharacterComposer.Compose(outfit);
             if (composed == null)
             {
                 Debug.LogWarning("[PlayerController] outfit compose failed (layers missing " +
-                                 "or not CPU-readable — run tools/fix_sprite_ppu.py); keeping current.");
-                return;
+                                 "or not CPU-readable — run tools/fix_sprite_ppu.py); baked fallback.");
+                composed = CharacterComposer.LoadBaked("farmer");
+                if (composed == null) return;
             }
             _frames = composed;
             UpdateSprite();
-            Debug.Log($"[PlayerController] outfit {_debugOutfit}: " +
-                      (outfit == null ? "baked farmer" : outfit.Key));
         }
 
         private void OnDestroy()
@@ -135,6 +120,7 @@ namespace BugFarmer.Player
                 inv.OnSelectedSlotChanged -= OnEquipMaybeChanged;
                 inv.OnItemSlotChanged -= OnEquipMaybeChanged;
                 inv.OnInventoryChanged -= RefreshHeldItem;
+                inv.OnEquipmentChanged -= RebuildOutfit;
             }
         }
 
@@ -202,9 +188,6 @@ namespace BugFarmer.Player
                 _frameIndex = frame;
                 UpdateSprite();
             }
-
-            if (Input.GetKeyDown(KeyCode.F6))
-                CycleDebugOutfit();
 
             // Send position to server
             TrySendMovement();

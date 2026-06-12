@@ -24,9 +24,41 @@ namespace BugFarmer.Player
             public string Shirt = "farmer";   // class outfit sets
             public string Pants = "farmer";
             public string Chest;              // leather_chest | iron_chest
-            public string Helmet;             // straw_hat | copper_helmet | iron_helmet
+            public string Helmet;             // straw_hat | copper_helmet | iron_helmet | leather_cap
+            public string Arms;               // leather_gloves | iron_gauntlets
+            public string Legs;               // leather_pants | iron_greaves
+            public string Feet;               // leather_boots | iron_boots
 
-            public string Key => $"{Body}|{Hair}|{Shirt}|{Pants}|{Chest}|{Helmet}";
+            public string Key =>
+                $"{Body}|{Hair}|{Shirt}|{Pants}|{Chest}|{Helmet}|{Arms}|{Legs}|{Feet}";
+        }
+
+        /// <summary>
+        /// Build the outfit for a worn-armor set (the 7 equipment slot ids,
+        /// order head/body/arms/legs/feet/acc1/acc2; accessories are invisible).
+        /// Layer-set names come from each item's `overlay` in items.json.
+        /// </summary>
+        public static Outfit OutfitFromEquipment(string[] equipment, string cls = "farmer",
+                                                 string hair = "brown", string skin = "default")
+        {
+            string OverlayOf(string itemId)
+            {
+                if (string.IsNullOrEmpty(itemId)) return null;
+                var def = BugFarmer.Data.EntityDatabase.Get(itemId);
+                return string.IsNullOrEmpty(def?.Overlay) ? null : def.Overlay;
+            }
+            return new Outfit
+            {
+                Body = skin,
+                Hair = hair,
+                Shirt = cls,
+                Pants = cls,
+                Helmet = equipment != null && equipment.Length > 0 ? OverlayOf(equipment[0]) : null,
+                Chest = equipment != null && equipment.Length > 1 ? OverlayOf(equipment[1]) : null,
+                Arms = equipment != null && equipment.Length > 2 ? OverlayOf(equipment[2]) : null,
+                Legs = equipment != null && equipment.Length > 3 ? OverlayOf(equipment[3]) : null,
+                Feet = equipment != null && equipment.Length > 4 ? OverlayOf(equipment[4]) : null,
+            };
         }
 
         // Full helms replace hair (mirrors wearables.HIDES_HAIR in the generator).
@@ -83,10 +115,16 @@ namespace BugFarmer.Player
             yield return $"Player/layers/body/{o.Body}_{dir}{suffix}";
             if (!string.IsNullOrEmpty(o.Pants))
                 yield return $"Player/layers/pants/{o.Pants}_{dir}{suffix}";
+            if (!string.IsNullOrEmpty(o.Legs))                       // leg armor over cloth
+                yield return $"Player/layers/legs/{o.Legs}_{dir}{suffix}";
+            if (!string.IsNullOrEmpty(o.Feet))                       // boots over the body's
+                yield return $"Player/layers/feet/{o.Feet}_{dir}{suffix}";
             if (!string.IsNullOrEmpty(o.Shirt))
                 yield return $"Player/layers/shirt/{o.Shirt}_{dir}{suffix}";
             if (!string.IsNullOrEmpty(o.Chest))
                 yield return $"Player/layers/chest/{o.Chest}_{dir}{suffix}";
+            if (!string.IsNullOrEmpty(o.Arms))                       // gloves over sleeves
+                yield return $"Player/layers/arms/{o.Arms}_{dir}{suffix}";
             bool hideHair = o.Helmet != null && HidesHair.Contains(o.Helmet);
             if (!string.IsNullOrEmpty(o.Hair) && !hideHair)
                 yield return $"Player/layers/hair/{o.Hair}_{dir}{suffix}";

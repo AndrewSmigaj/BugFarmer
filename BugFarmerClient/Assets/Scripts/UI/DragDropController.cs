@@ -212,6 +212,16 @@ namespace BugFarmer.UI
             var targetSlot = GetSlotData(slot.SlotType, slot.SlotIndex);
             bool targetEmpty = targetSlot == null || targetSlot.IsEmpty;
 
+            // Armor in an item slot: right-click = QUICK-EQUIP (armor is
+            // unstackable, so the half-pickup this replaces was equivalent to a
+            // full pickup anyway).
+            if (!HasCursorItem && !targetEmpty && slot.SlotType == SlotType.Item &&
+                EquipmentController.Instance != null &&
+                EquipmentController.Instance.TryQuickEquip(slot))
+            {
+                return;
+            }
+
             if (!HasCursorItem)
             {
                 if (!targetEmpty)

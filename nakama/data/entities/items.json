@@ -723,5 +723,129 @@
     "places_crop": "eggplant",
     "buy_price": 12,
     "sell_price": 2
+  },
+  "straw_hat": {
+    "name": "Straw Hat",
+    "category": "armor",
+    "armor_slot": "head",
+    "stackable": false,
+    "buy_price": 15,
+    "sell_price": 3,
+    "overlay": "straw_hat"
+  },
+  "leather_cap": {
+    "name": "Leather Cap",
+    "category": "armor",
+    "armor_slot": "head",
+    "stackable": false,
+    "buy_price": 30,
+    "sell_price": 8,
+    "overlay": "leather_cap"
+  },
+  "copper_helmet": {
+    "name": "Copper Helmet",
+    "category": "armor",
+    "armor_slot": "head",
+    "stackable": false,
+    "buy_price": 60,
+    "sell_price": 15,
+    "overlay": "copper_helmet"
+  },
+  "iron_helmet": {
+    "name": "Iron Helmet",
+    "category": "armor",
+    "armor_slot": "head",
+    "stackable": false,
+    "buy_price": 120,
+    "sell_price": 30,
+    "overlay": "iron_helmet"
+  },
+  "leather_chest": {
+    "name": "Leather Tunic",
+    "category": "armor",
+    "armor_slot": "body",
+    "stackable": false,
+    "buy_price": 45,
+    "sell_price": 12,
+    "overlay": "leather_chest"
+  },
+  "iron_chest": {
+    "name": "Iron Chestplate",
+    "category": "armor",
+    "armor_slot": "body",
+    "stackable": false,
+    "buy_price": 160,
+    "sell_price": 40,
+    "overlay": "iron_chest"
+  },
+  "leather_gloves": {
+    "name": "Leather Gloves",
+    "category": "armor",
+    "armor_slot": "arms",
+    "stackable": false,
+    "buy_price": 20,
+    "sell_price": 5,
+    "overlay": "leather_gloves"
+  },
+  "iron_gauntlets": {
+    "name": "Iron Gauntlets",
+    "category": "armor",
+    "armor_slot": "arms",
+    "stackable": false,
+    "buy_price": 80,
+    "sell_price": 20,
+    "overlay": "iron_gauntlets"
+  },
+  "leather_pants": {
+    "name": "Leather Pants",
+    "category": "armor",
+    "armor_slot": "legs",
+    "stackable": false,
+    "buy_price": 35,
+    "sell_price": 10,
+    "overlay": "leather_pants"
+  },
+  "iron_greaves": {
+    "name": "Iron Greaves",
+    "category": "armor",
+    "armor_slot": "legs",
+    "stackable": false,
+    "buy_price": 110,
+    "sell_price": 28,
+    "overlay": "iron_greaves"
+  },
+  "leather_boots": {
+    "name": "Leather Boots",
+    "category": "armor",
+    "armor_slot": "feet",
+    "stackable": false,
+    "buy_price": 25,
+    "sell_price": 7,
+    "overlay": "leather_boots"
+  },
+  "iron_boots": {
+    "name": "Iron Boots",
+    "category": "armor",
+    "armor_slot": "feet",
+    "stackable": false,
+    "buy_price": 90,
+    "sell_price": 22,
+    "overlay": "iron_boots"
+  },
+  "bee_charm": {
+    "name": "Bee Charm",
+    "category": "armor",
+    "armor_slot": "accessory",
+    "stackable": false,
+    "buy_price": 75,
+    "sell_price": 20
+  },
+  "lucky_clover": {
+    "name": "Lucky Clover",
+    "category": "armor",
+    "armor_slot": "accessory",
+    "stackable": false,
+    "buy_price": 75,
+    "sell_price": 20
   }
 }

@@ -132,4 +132,20 @@ namespace BugFarmer.Networking
         public float x;    // world release point (the click)
         public float y;
     }
+
+    /// <summary>OpCode 96 (C->S): equip ItemSlots[inv_slot] into equipment slot
+    /// equip_slot (0 head..4 feet, 5/6 accessories); inv_slot -1 = unequip.</summary>
+    [System.Serializable]
+    public class EquipArmorMessage
+    {
+        public int equip_slot;
+        public int inv_slot;
+    }
+
+    /// <summary>OpCode 97 (S->C): the authoritative 7 worn-armor slot ids.</summary>
+    [System.Serializable]
+    public class EquipmentUpdateMessage
+    {
+        public string[] equipment;
+    }
 }

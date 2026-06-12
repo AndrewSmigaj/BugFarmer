@@ -19,6 +19,11 @@ namespace BugFarmer.UI
         // Slot-based inventory
         public InventorySlot[] BugSlots { get; private set; }
         public InventorySlot[] ItemSlots { get; private set; }
+
+        /// <summary>Worn armor by slot: 0 head, 1 body, 2 arms, 3 legs, 4 feet,
+        /// 5/6 accessories ("" = empty). Server-authoritative (OpCode 97 echoes).</summary>
+        public string[] Equipment { get; private set; } = new string[7];
+        public event System.Action OnEquipmentChanged;
         public long Coins { get; private set; }
         public int SelectedSlot { get; private set; }
 
@@ -104,6 +109,17 @@ namespace BugFarmer.UI
                         var json = System.Text.Encoding.UTF8.GetString(state.State);
                         var msg = JsonUtility.FromJson<SlotUpdateMessage>(json);
                         if (msg != null) HandleItemSlotUpdate(msg);
+                    }
+                    break;
+                case OpCodes.EquipmentUpdate:
+                    {
+                        var json = System.Text.Encoding.UTF8.GetString(state.State);
+                        var msg = JsonUtility.FromJson<EquipmentUpdateMessage>(json);
+                        if (msg?.equipment != null && msg.equipment.Length == 7)
+                        {
+                            Equipment = msg.equipment;
+                            OnEquipmentChanged?.Invoke();
+                        }
                     }
                     break;
             }
@@ -319,6 +335,18 @@ namespace BugFarmer.UI
             var msg = new EquipToolMessage { tool_id = toolId };
             var json = JsonUtility.ToJson(msg);
             _ = socket.SendMatchStateAsync(world.CurrentMatch.Id, OpCodes.EquipTool, json);
+        }
+
+        /// <summary>Send an armor equip/unequip (OpCode 96); the server echoes
+        /// EquipmentUpdate + the touched ItemSlotUpdate — state changes on echo.</summary>
+        public void SendEquipArmor(int equipSlot, int invSlot)
+        {
+            var world = BugFarmer.Networking.WorldManager.Instance;
+            var socket = BugFarmer.Networking.NetworkManager.Instance?.Socket;
+            if (world?.CurrentMatch == null || socket == null) return;
+            var msg = new EquipArmorMessage { equip_slot = equipSlot, inv_slot = invSlot };
+            _ = socket.SendMatchStateAsync(world.CurrentMatch.Id, OpCodes.EquipArmor,
+                                           JsonUtility.ToJson(msg));
         }
 
         private static int CountNonEmptySlots(InventorySlot[] slots)

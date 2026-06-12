@@ -99,6 +99,11 @@ namespace BugFarmer.Data
             // join-time food-registry hydration (the rotten_ prefix can't cover carrion).
             public int FoodValue;
 
+            // Armor properties (category = "armor"): equipment slot + the
+            // CharacterComposer overlay layer-set name ("" = invisible, e.g. accessories)
+            public string ArmorSlot;
+            public string Overlay;
+
             // Tool properties
             public string ToolType;
             public int ToolTier;
@@ -302,6 +307,8 @@ namespace BugFarmer.Data
                 CatchCap = data["catch_cap"]?.Value<int>() ?? 0,
                 Effect = data["effect"]?.Value<string>(),
                 PlacesCrop = data["places_crop"]?.Value<string>(),
+                ArmorSlot = data["armor_slot"]?.Value<string>(),
+                Overlay = data["overlay"]?.Value<string>(),
                 IconFrom = data["icon_from"]?.Value<string>(),
                 CooldownTicks = data["cooldown_ticks"]?.Value<int>() ?? 0
             };

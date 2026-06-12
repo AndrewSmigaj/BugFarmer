@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
+using BugFarmer.Networking;
 
 namespace BugFarmer.UI
 {
@@ -167,6 +168,7 @@ namespace BugFarmer.UI
                 InventoryManager.Instance.OnItemSlotChanged += OnItemSlotChanged;
                 InventoryManager.Instance.OnBugSlotChanged += OnBugSlotChanged;
                 InventoryManager.Instance.OnCoinsChanged += OnCoinsChanged;
+                InventoryManager.Instance.OnEquipmentChanged += RefreshEquipment;
             }
 
             // Start closed
@@ -184,6 +186,7 @@ namespace BugFarmer.UI
                 InventoryManager.Instance.OnItemSlotChanged -= OnItemSlotChanged;
                 InventoryManager.Instance.OnBugSlotChanged -= OnBugSlotChanged;
                 InventoryManager.Instance.OnCoinsChanged -= OnCoinsChanged;
+                InventoryManager.Instance.OnEquipmentChanged -= RefreshEquipment;
             }
         }
 
@@ -225,6 +228,7 @@ namespace BugFarmer.UI
             {
                 RefreshAllSlots();
                 RefreshCoins();
+                RefreshEquipment();
             }
         }
 
@@ -305,6 +309,22 @@ namespace BugFarmer.UI
             if (coinsText != null && InventoryManager.Instance != null)
             {
                 coinsText.text = $"Coins: {InventoryManager.Instance.Coins:N0}";
+            }
+        }
+
+        /// <summary>Repaint the 7 equipment slots from InventoryManager.Equipment
+        /// (worn pieces render as 1-count slots; empties show their ghost).</summary>
+        private void RefreshEquipment()
+        {
+            var inv = InventoryManager.Instance;
+            if (_equipSlots == null || inv?.Equipment == null) return;
+            for (int i = 0; i < _equipSlots.Length && i < inv.Equipment.Length; i++)
+            {
+                var id = inv.Equipment[i];
+                if (string.IsNullOrEmpty(id))
+                    _equipSlots[i].Clear();
+                else
+                    _equipSlots[i].SetSlot(new InventorySlot { item_id = id, count = 1 });
             }
         }
 

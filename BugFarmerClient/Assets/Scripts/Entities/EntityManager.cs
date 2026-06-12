@@ -85,6 +85,7 @@ namespace BugFarmer.Entities
                     entity.SetTargetState(data.x, data.y, data.facing);
                     if (data.type == "player")
                         entity.SetEquipped(data.eq); // held-at-rest display (change-checked)
+                    entity.SetArmor(data.eqa);   // worn-armor outfit (change-checked)
                 }
                 else
                 {
@@ -105,6 +106,7 @@ namespace BugFarmer.Entities
                             {
                                 _players[data.id] = remote;
                                 remote.SetEquipped(data.eq); // joiner bootstrap: equips ride op11
+                                remote.SetArmor(data.eqa);
                                 Debug.Log($"[EntityManager] Spawned REMOTE PLAYER: {data.id} at ({data.x}, {data.y})");
                             }
                         }

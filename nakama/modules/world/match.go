@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"runtime/debug"
 	"sort"
+	"strings"
 
 	"bugfarmer/entities"
 
@@ -395,6 +396,14 @@ func (m *Match) sendInventorySync(logger runtime.Logger, dispatcher runtime.Matc
 	}
 
 	dispatcher.BroadcastMessage(OpCodeFullInventorySync, data, []runtime.Presence{presence}, nil, true)
+
+	// Worn armor (cosmetic equipment) rides its own message so the client's
+	// EquipmentState initializes alongside the inventory.
+	eqMsg := EquipmentUpdateMessage{Equipment: player.Equipment[:]}
+	if eqData, eqErr := json.Marshal(eqMsg); eqErr == nil {
+		dispatcher.BroadcastMessage(OpCodeEquipmentUpdate, eqData, []runtime.Presence{presence}, nil, true)
+	}
+
 	logger.Info("Sent inventory sync to %s: %d bug slots, %d item slots, %d coins",
 		presence.GetUserId(), len(bugSlots), len(itemSlots), player.Coins)
 	return nil
@@ -608,6 +617,14 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			}
 			m.handleReleaseBugs(logger, dispatcher, worldState, releaseMsg, userID, chunkSize)
 
+		case OpCodeEquipArmor:
+			var armorMsg EquipArmorMessage
+			if err := json.Unmarshal(msg.GetData(), &armorMsg); err != nil {
+				logger.Warn("Invalid equip-armor message from %s: %v", userID, err)
+				continue
+			}
+			m.handleEquipArmor(logger, dispatcher, worldState, userID, armorMsg)
+
 		case OpCodeEquipTool:
 			var equipMsg EquipToolMessage
 			if err := json.Unmarshal(msg.GetData(), &equipMsg); err != nil {
@@ -777,6 +794,13 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 	if len(worldState.Players) > 0 {
 		entityData := make([]EntityData, 0, len(worldState.Players))
 		for userID, player := range worldState.Players {
+			eqa := ""
+			for _, piece := range player.Equipment {
+				if piece != "" {
+					eqa = strings.Join(player.Equipment[:], ",")
+					break
+				}
+			}
 			entityData = append(entityData, EntityData{
 				ID:       "player_" + userID,
 				Type:     "player",
@@ -784,6 +808,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				Y:        player.WorldY(chunkSize),
 				Facing:   int(player.Facing),
 				Equipped: player.EquippedTool,
+				Eqa:      eqa,
 			})
 		}
 

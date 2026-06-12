@@ -115,6 +115,10 @@ const (
 	// victim only (HP is private; an unfiltered broadcast would knock back every client)
 	OpCodeBugTelegraph int64 = 95 // S→C: display-only attack telegraph (windup/strike) —
 	// a late joiner missing one in flight loses nothing
+
+	// ARMOR (cosmetic + synced; defense math is a follow-up)
+	OpCodeEquipArmor      int64 = 96 // C->S: {equip_slot, inv_slot} equip/unequip/swap
+	OpCodeEquipmentUpdate int64 = 97 // S->C: the player's 7 worn-armor slots (echo on change + join)
 )
 
 // TreeWaterUpdateMessage (OpCode 51): a fruit tree's water/tank state changed. Display-only.
@@ -252,6 +256,7 @@ type EntityData struct {
 	// path (~15 bytes/player/tick; omitted bare-handed). If EntityData ever grows a
 	// 3rd rarely-changing field, introduce a player-state snapshot message instead.
 	Equipped string `json:"eq,omitempty"`
+	Eqa      string `json:"eqa,omitempty"` // worn armor: 7 comma-joined ids (head,body,arms,legs,feet,acc1,acc2)
 }
 
 // EntityUpdateMessage is broadcast to clients (OpCode 11)
@@ -369,6 +374,21 @@ type BugHPEntry struct {
 // EquipToolMessage is sent by client (OpCode 27)
 type EquipToolMessage struct {
 	ToolID string `json:"tool_id"` // "" for hand, "small_net" for small net, etc.
+}
+
+// EquipArmorMessage (OpCode 96, C->S): equip the armor item in ItemSlots[inv_slot]
+// into equipment slot equip_slot (0 head, 1 body, 2 arms, 3 legs, 4 feet,
+// 5/6 accessories). inv_slot = -1 unequips equip_slot back to the inventory.
+// A swap (slot occupied) puts the old piece INTO inv_slot — never "full".
+type EquipArmorMessage struct {
+	EquipSlot int `json:"equip_slot"`
+	InvSlot   int `json:"inv_slot"`
+}
+
+// EquipmentUpdateMessage (OpCode 97, S->C): the authoritative worn-armor state,
+// echoed to the owner on every change (and on join via full sync).
+type EquipmentUpdateMessage struct {
+	Equipment []string `json:"equipment"` // 7 entries
 }
 
 // === Inventory Messages (Phase 3) ===
