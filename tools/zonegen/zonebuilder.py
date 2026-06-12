@@ -247,7 +247,14 @@ class ZoneBuilder:
         def passable(x, y):  # doors and gates are openings you walk through
             o = oid(x, y); return bool(o) and (is_door(o) or o.startswith("gate"))
         def blocked(x, y):  # a cell you can't stand in (off-grid, or reserved by something solid)
-            return (not self.in_bounds(x, y)) or (self.reserved[y][x] and not passable(x, y))
+            if not self.in_bounds(x, y):
+                return True
+            if not self.reserved[y][x] or passable(x, y):
+                return False
+            # Reserved-but-EMPTY interior floor is walkable: interiors reserve at
+            # place-time so later passes can't paint/place inside a finished
+            # building (the living-room road) — that's authoring, not collision.
+            return bool(self.occ.get((x, y))) or self.surface[y][x] != "building"
 
         # doors: must be 1-wide and have a clear cell on BOTH sides (inside + outside the wall)
         for (x, y), c in self.occ.items():
@@ -318,6 +325,23 @@ class ZoneBuilder:
             if on_road:
                 out.append(f"{c['id']} @({x},{y}) stands on road tiles {on_road} "
                            f"(wall/fence over a road)")
+
+        # ROAD THROUGH A BUILDING (2026-06, the living-room road): a path cell
+        # with building WALLS on both OPPOSITE sides means a road threaded a
+        # building's interior (path() skip-paints reserved cells but marches
+        # on). place_house/shop_building now reserve interiors and path()
+        # warns on crossings; this is the net behind both.
+        # (constructed walls only — a tunnel path between cave ROCK blocks is
+        # correct, so category=="block" must not count here)
+        def is_built_wall(o): return bool(o) and o.startswith("wall")
+        for y in range(self.H):
+            for x in range(self.W):
+                if self.surface[y][x] != "path":
+                    continue
+                if (is_built_wall(oid(x - 1, y)) and is_built_wall(oid(x + 1, y))) or \
+                        (is_built_wall(oid(x, y - 1)) and is_built_wall(oid(x, y + 1))):
+                    out.append(f"road at ({x},{y}) runs THROUGH a building "
+                               f"(walls on both sides)")
 
         # TALL-SPRITE OVERHANG: a tree directly SOUTH of a road cell draws its
         # ~2-cell-tall canopy OVER the roadway (the visual-clipping class that

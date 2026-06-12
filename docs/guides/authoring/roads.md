@@ -91,9 +91,17 @@ ONCE after ALL roads (before buildings):
   never on it. The place-time warn + the wall/fence-on-road-tile lint catch the hard
   cases; the wobble band is ±2 around the centerline, so budget clearance against the
   CORRIDOR, not the nominal line.
-- **A lane can be laid AFTER its buildings**: `path()` skips reserved cells, so a
-  residential lane routed past already-placed yards hugs the fences naturally — use
-  this when houses define the street, then connect gates with short straight `spur`s.
+- **`path()` does NOT route around buildings — never aim it across a built-up
+  band** (2026-06, the living-room road): the walker skip-paints blocked cells but
+  keeps MARCHING toward its goal, so a lane aimed across a residential block
+  threads road tiles straight through interiors and yards. House/shop interiors
+  now RESERVE at place-time, `path()` warns loudly when its band crosses a
+  building or a large reserved area, and lint flags any road cell walled on both
+  sides — but the real fix is layout: SCAN for a clear corridor first (dump the
+  blocked intervals row by row), lay the lane STRAIGHT inside it, and connect
+  gates with short `spur`s. If no clear corridor exists between two rows of
+  buildings, the answer is to MOVE a building or connect the street on its open
+  side — not to thread the needle.
 - **A landmark at every fork** (signpost minimum) — junction legibility is what makes
   a map navigable, not distant sightlines.
 

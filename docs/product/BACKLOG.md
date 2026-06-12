@@ -42,6 +42,11 @@ working; this file is what survives between sessions.
   lint v2 (road-tile net, spawn-circle-water, potholes), 3 test-scene cards.
 - Centipede knots (multi-centipede swarms) + overshoot lunge + turnaround re-attack;
   water stops people only (bugs fly over).
+- THE ROAD-THROUGH-BUILDING root fix (the 4x "buildings overlap roads" class): house/shop
+  interiors RESERVE at place-time, path() refuses building cells + warns loudly on
+  reserved crossings, lint flags road cells walled on both sides; residential lane
+  re-laid STRAIGHT in a scan-verified corridor (W-lane connector at x44), farm lane
+  y186, U-house +2 (zero warnings). Player-farm pond pulled off the fence row.
 
 ## Done 2026-06 (overnight): procgen research + routed roads + natural houses
 - research_procgen.md (3-track web sweep, adopted/passed-on scoreboard).

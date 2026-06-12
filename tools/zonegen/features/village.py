@@ -51,6 +51,13 @@ def shop_building(b, x0, y0, x1, y1, *, sign_id, npc=None, npc_dir="down",
 
     if extra_fill:
         extra_fill(b, I)
+
+    # RESERVE the interior — a finished shop is solid; later passes (roads,
+    # scatter) must never paint or place inside it (see place_house step 7).
+    for y in range(iy0, iy1 + 1):
+        for x in range(ix0, ix1 + 1):
+            if b.in_bounds(x, y) and not b.reserved[y][x]:
+                b.reserved[y][x] = True
     return I
 
 

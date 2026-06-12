@@ -144,6 +144,14 @@ def place_house(b, rooms, *, floor="wood_floor", wall="wall_wood",
         if fill:
             rdoors = [c for c in doors if c in _border(r["rect"])]
             fill(b, interior, rdoors, doorways)
+
+    # 7. RESERVE the interiors (2026-06: a lane got paved straight through a
+    # living room — path() skip-paints reserved cells, but interior FLOOR cells
+    # were never reserved, so the road threaded between the furniture). A
+    # finished house is SOLID: nothing places or paints inside it afterwards.
+    for (x, y) in interiors:
+        if b.in_bounds(x, y) and not b.reserved[y][x]:
+            b.reserved[y][x] = True
     return rooms
 
 

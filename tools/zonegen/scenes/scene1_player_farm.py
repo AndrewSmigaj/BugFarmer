@@ -116,7 +116,7 @@ def build():
     b.fill_ground(31, 1, 36, 5, "garden_plot", surface="farm")  # an EMPTY tilled bed (no crops)
 
     # --- organic POND (bottom-left) with lily pads ---
-    pond(b, 8, 4, 5, 3)
+    pond(b, 8, 3, 5, 2)   # jitter reaches cy+ry+1: keep water clear of the y8 fence row
     for lp in [(7, 4), (9.3, 3), (8, 5.5), (6, 4.5)]:
         b.place_decor("lily_pad", lp[0], lp[1], scale=0.8)
     b.place_bug("dragonfly", 9, 6, scale=0.7)

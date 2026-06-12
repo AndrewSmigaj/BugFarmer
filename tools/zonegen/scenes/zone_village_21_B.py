@@ -121,10 +121,11 @@ def build(zone_id="village_21_B", vseed=0):
     path(b, (206, 124), (206, 144), width=2, tile="dirt", wobble=0.0, seed=26)
     route_road(b, (206, 144), (253, 148), width=2, tile="dirt", seed=27)         # WILD: past the cabin
     path(b, (138, 50), (154, 42), width=2, tile="dirt", wobble=0.12, seed=28)
-    path(b, (113, 183), (86, 183), width=2, tile="dirt", wobble=0.0, seed=29)  # straight farm lane
+    path(b, (113, 186), (86, 186), width=2, tile="dirt", wobble=0.0, seed=29)  # straight farm lane
     path(b, (43, 128), (42, 122), width=2, tile="dirt", wobble=0.10, seed=30)
-    # (the residential lane is laid AFTER its cottages — see §4: path() routes
-    # around their reserved yards, so the lane hugs the fences naturally)
+    # (the residential lane is laid in §4 — STRAIGHT, in a scan-verified clear
+    # corridor. path() does NOT route around reserved areas, it skip-paints and
+    # marches on — never lay it across a built-up band.)
 
     # ================= 3) THE PLAZA (at the bend) + spawn =================
     px, py = PLAZA
@@ -157,17 +158,17 @@ def build(zone_id="village_21_B", vseed=0):
     # Residential houses NW of the plaza, NORTH of the town hall's compound —
     # VARIED, not three clone boxes: a ⊥ 4-room composer house (basic), the
     # text-grid cottage (picket), and a 3-room bar house (fancy, weathered
-    # fence). The lane is routed past their gates AFTER (path() flows around
-    # the reserved yards). Main-road corridor is x≈117-124 here: yards ≤ x115.
+    # fence). The lane runs STRAIGHT at y≈154 under their gates and connects
+    # SOUTH to the W lane via the clear x≈44 column (the mayor estate + this
+    # U-house's yard interlock at x76-116, so no east connection exists).
+    # Main-road corridor is x≈117-124 here: yards ≤ x115.
     # The LANDMARK BUDGET (research: most homes simple, ONE showpiece): a U
     # courtyard house (fancy, the street's landmark), an L with a PORCH
     # (mid-tier), and the proven cottage (simple). No clone boxes, no bars.
-    specs, front = u_house(78, 158)                  # the showpiece: courtyard U
+    specs, front = u_house(78, 160)                  # the showpiece: courtyard U
     place_house(b, styled_rooms(specs, collection="fancy"), front=front)
     tb = bbox(specs)
     from features.yard import styled_yard
-    # NOTE: 3 picket cells of this yard abut the mayor estate's iron fence and
-    # skip (adjoining properties share that boundary — the iron line fills it).
     # grand belongs to the MAYOR estate (this slot is too tight for a 7-deep
     # backyard vs the farm lane); the courtyard already crowns this house.
     styled_yard(b, tb[0], tb[1], tb[2], tb[3], 89, style="modest", seed=7)
@@ -177,7 +178,7 @@ def build(zone_id="village_21_B", vseed=0):
         for (oid, x, y) in [("birdbath", (cx0 + cx1) // 2, cy0 + 1),
                             ("poppy", cx0, cy0 + 3), ("chamomile", cx1, cy0 + 5)]:
             safe(b, oid, x, y)
-    b.place_player("scholar_down", 89.0, 162)
+    b.place_player("scholar_down", 89.0, 164)
 
     place_cottage(b, 49, 162, npc="merchant_down", yard_style="small_plot")  # simple tier, tight plot
 
@@ -188,9 +189,16 @@ def build(zone_id="village_21_B", vseed=0):
     porch(b, specs2)
     b.place_player("farmer_down", 24.0, 164)
 
-    path(b, (123, 131), (12, 170), width=2, wobble=0.12, seed=31)
-    for gx, gy in ((89, 153), (56, 156), (24, 154)):    # gate → lane spurs
-        spur(b, gx, gy, gx, gy - 6, tile="stone_path")
+    # The residential lane: STRAIGHT at y154 under the three gates (scan-
+    # verified clear band — civic backs end y152, yard fronts start y156+),
+    # joined SOUTH to the W lane through the clear column at x44. The previous
+    # diagonal path((123,131),(12,170)) threaded the L-house's living room,
+    # two civic interiors and the mayor's backyard — path() skip-paints
+    # reserved cells but marches straight on. NEVER route a lane across a
+    # built-up band; lay it in a clear corridor and spur the gates to it.
+    path(b, (91, 154), (16, 154), width=2, wobble=0.0, seed=31)
+    path(b, (44, 154), (44, 128), width=2, wobble=0.0, seed=31)   # connector to the W lane
+    spur(b, 59, 158, 59, 155, tile="stone_path")        # cottage gate (x59) → lane
     smooth_paths(b)   # the road-angle pass: stair-steps → 45° bevels (after ALL roads)
 
     # Boat store on the big lake's N shore, dock running S into the water (the

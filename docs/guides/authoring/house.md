@@ -49,6 +49,10 @@ terse form that also binds the collection. For ready-made shapes use the layout 
   `"left"`/`"right"` = side walls. For a south-facing entrance use `"top"`.
 - The composer also scatters **windows** on long exterior walls (`window_4pane`), and computes
   **doorways** (the interior cell just inside each door) which templates keep clear.
+- **A finished house is SOLID**: `place_house` (and `shop_building`) RESERVE every interior
+  floor cell as their last step (2026-06: a lane got paved straight through a living room —
+  `path()` skip-paints reserved cells but interior floors weren't reserved). Anything that must
+  go INSIDE a house goes through the room templates, never placed after the composer returns.
 - `fill` is the room's furniture template; it receives `(b, interior_rect, doors, doorways)`.
 
 ### Shapes

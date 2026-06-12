@@ -309,7 +309,7 @@ def path(b, start, end, *, width=3, tile="stone_path", edge_tile=None,
     (x, y), (ex, ey) = start, end
     total = abs(ex - x) + abs(ey - y)
     heading = math.atan2(ey - y, ex - x)
-    cells, steps, traveled = set(), 0, 0
+    cells, blocked, steps, traveled = set(), set(), 0, 0
     while abs(x - ex) + abs(y - ey) > 1 and steps < 4 * total + 60:
         steps += 1
         traveled += 1
@@ -330,13 +330,28 @@ def path(b, start, end, *, width=3, tile="stone_path", edge_tile=None,
             for dx in range(-rr, rr + 1):
                 px, py = x + dx, y + dy
                 dd = (dx * dx + dy * dy) ** 0.5
-                if dd > r + 0.4 or not b.in_bounds(px, py) or b.reserved[py][px]:
+                if dd > r + 0.4 or not b.in_bounds(px, py):
+                    continue
+                if b.reserved[py][px] or b.surface[py][px] == "building":
+                    blocked.add((px, py))
                     continue
                 t = tile
                 if edge_tile and dd > r - 0.7 and rng.random() < 0.45:   # fray the shoulders
                     t = edge_tile
                 b.set_ground(px, py, t, surface="path")
                 cells.add((px, py))
+
+    # LOUD failure on crossings (2026-06: a lane got paved straight through a
+    # living room — the walker skip-paints blocked cells but keeps MARCHING, so
+    # a path routed across a building threads road tiles between the furniture).
+    # path() can't reroute; the LAYOUT is wrong — warn so the build loop blocks.
+    bldg = sorted(c for c in blocked if b.surface[c[1]][c[0]] == "building")
+    if bldg:
+        b.warn(f"path {start}->{end} runs THROUGH a building near {bldg[0]} "
+               f"({len(bldg)} interior cells) — re-route it, don't thread it")
+    elif len(blocked) > 3 * width:
+        b.warn(f"path {start}->{end} crosses a reserved area ({len(blocked)} cells "
+               f"skipped — the road has gaps) — re-route it or lay it earlier")
     return cells
 
 
