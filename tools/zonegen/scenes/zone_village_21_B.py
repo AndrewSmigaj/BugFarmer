@@ -87,6 +87,7 @@ def build(zone_id="village_21_B", vseed=0):
         (135, 225, "forest"),    # W forested bank
     ], seed=vseed + 1)           # N arc stays plain — the boat store + dock live there
     shore_dress(b, nw, [(0, 360, "reeds")], seed=vseed + 2)
+    safe(b, "rowboat_beached", 66, 14)    # abandoned on the lake's S beach (story prop)
     shore_dress(b, se, [(180, 300, "sand"), (300, 60, "reeds")], seed=vseed + 4)
 
     # ================= 2) ROADS (one bending main + lanes) =================
@@ -162,6 +163,8 @@ def build(zone_id="village_21_B", vseed=0):
     hedgerow(b, 88, 214, 110, 214, seed=42)
     crop_bed(b, 96, 216, 114, 224, ["plant_tomato", "plant_corn"])
     safe(b, "scarecrow", 100, 193)
+    for (x, y) in [(87, 190), (88, 192), (112, 195)]:     # hay bales by the wheat
+        safe(b, "hay_bale", x, y)
     # Farmhouse NW of the fields.
     place_cottage(b, 70, 226, npc="farmer_down")
     for (oid, x, y) in [("compost_bin", 88, 228), ("wheelbarrow", 90, 224), ("water_bucket", 92, 226)]:
@@ -273,8 +276,7 @@ def build(zone_id="village_21_B", vseed=0):
     safe(b, "log_pile", 70, 148)
     for (x, y) in [(160, 78), (162, 80), (158, 81)]:
         safe(b, "mushroom_cluster", x, y)
-    for (x, y) in [(196, 168), (197, 169), (195, 169)]:   # a cairn on the knoll —
-        safe(b, "stone_block", x, y)                      # standing_stone lands here (V4)
+    safe(b, "standing_stone", 196, 168)                   # the lone megalith on the knoll
     # Meadow flowers, clumped, per region; tall-grass ribbons along the roads.
     scatter(b, 4, 100, 60, 170, {"poppy": 3, "clover": 3, "tall_grass": 4, "bush": 1},
             density=0.13, min_spacing=2, seed=61, clumping=0.85)        # W meadow

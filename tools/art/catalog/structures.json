@@ -195,5 +195,17 @@
   },
   "sign_fish_board": {
     "look": "a wide 3-panel hanging wooden FISHING-STORE sign board on two posts, spanning a shopfront; painted with a blue ANCHOR and a silver FISH; weathered seaside paint; a big HORIZONTAL shop sign, NOT a narrow signpost"
+  },
+  "hay_bale": {
+    "look": "a rolled golden HAY BALE seen front-on: a fat cylinder of tightly rolled straw lying on its side, visible spiral coil on the round face, a few loose straws sticking out; warm golden yellow"
+  },
+  "standing_stone": {
+    "look": "a single ancient STANDING STONE monolith: one tall weathered grey stone slab set upright in the grass, slightly tapered top, moss patches and faint carved grooves near the base; a lone megalith, NOT a wall, NOT stacked rocks",
+    "materials": [
+      "stone"
+    ]
+  },
+  "rowboat_beached": {
+    "look": "a small weathered wooden ROWBOAT seen from above, pulled up on land and resting slightly TILTED to one side: faded sun-bleached planks, no oars, a little sand spilling over the bow; abandoned and beached, NOT floating"
   }
 }

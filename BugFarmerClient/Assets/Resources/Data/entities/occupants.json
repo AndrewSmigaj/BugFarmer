@@ -2405,5 +2405,35 @@
         ]
       }
     }
+  },
+  "standing_stone": {
+    "name": "Standing Stone",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true
+    }
+  },
+  "rowboat_beached": {
+    "name": "Beached Rowboat",
+    "category": "structure",
+    "sprite_w": 32,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [
+        2,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true
+    }
   }
 }

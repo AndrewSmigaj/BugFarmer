@@ -6015,5 +6015,21 @@
         ]
       }
     }
+  },
+  "hay_bale": {
+    "name": "Hay Bale",
+    "category": "decoration",
+    "sprite_w": 16,
+    "sprite_h": 20,
+    "sell_price": 4,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true
+    }
   }
 }
