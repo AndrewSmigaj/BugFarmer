@@ -35,6 +35,7 @@ namespace BugFarmer.UI
         public WorldChoice[] worlds =
         {
             new WorldChoice { label = "Normal",         zoneId = "village_21" },
+            new WorldChoice { label = "Village B",      zoneId = "village_21_B" },
             new WorldChoice { label = "Test",           zoneId = "sim_test" },
             new WorldChoice { label = "Collision Test", zoneId = "collision_test" },
             new WorldChoice { label = "Split Test",     zoneId = "split_test2" },
