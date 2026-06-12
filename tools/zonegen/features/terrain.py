@@ -11,6 +11,187 @@ import random
 _DIAG_FAMILY = {"stone_path": "stone_path_d", "dirt": "dirt_path_d"}
 
 
+def _hash_noise(x, y, seed):
+    """Deterministic per-lattice-point pseudo-random in [0,1) (no RNG state)."""
+    n = (x * 374761393 + y * 668265263 + seed * 2147483647) & 0xFFFFFFFF
+    n = (n ^ (n >> 13)) * 1274126177 & 0xFFFFFFFF
+    return ((n ^ (n >> 16)) & 0xFFFF) / 65536.0
+
+
+def _value_noise_at(x, y, wavelength, seed):
+    """One octave of 2D value noise sampled at a single point (lazy — used by
+    route_road's cost; the array version for masks is noise_field())."""
+    fx, fy = x / wavelength, y / wavelength
+    x0, y0 = int(fx), int(fy)
+    tx, ty = fx - x0, fy - y0
+    tx = tx * tx * (3 - 2 * tx)
+    ty = ty * ty * (3 - 2 * ty)
+    v00 = _hash_noise(x0, y0, seed)
+    v10 = _hash_noise(x0 + 1, y0, seed)
+    v01 = _hash_noise(x0, y0 + 1, seed)
+    v11 = _hash_noise(x0 + 1, y0 + 1, seed)
+    top = v00 + (v10 - v00) * tx
+    bot = v01 + (v11 - v01) * tx
+    return top + (bot - top) * ty
+
+
+def route_road(b, start, end=None, *, width=3, tile="stone_path", seed=0,
+               noise_amp=1.4, road_mult=0.30, turn45=4, turn90=12):
+    """A road by LEAST-COST PATH (research_procgen.md §2 — the Galin/Azgaar
+    technique): A* over (cell, heading) with a terrain cost field, so the road
+    AVOIDS water/reserved/forest because cost makes it, hugs EXISTING roads
+    (×`road_mult` discount — networks merge into believable junctions), bends
+    around invisible noise hills (organic wiggle that's still deterministic), and
+    pays OpenTTD-ratio turn penalties (one 90° costs more than two spaced 45°s →
+    gentle S-curves).
+
+    `end=None` routes to THE EXISTING ROAD NETWORK instead (multi-target — for
+    spurs/lanes: terminates on touching any surface=='path' cell). The centerline
+    is painted as a `width`-wide dilated band (an extra stamp between diagonal
+    steps keeps the band full width). Returns the painted cells; run
+    `smooth_paths(b)` once after ALL roads as usual."""
+    import heapq
+    DIRS = [(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1)]
+
+    def step_cost(x, y, diag):
+        if not b.in_bounds(x, y) or b.reserved[y][x] or b.surface[y][x] == "water":
+            return None
+        base = 14 if diag else 10
+        s = b.surface[y][x]
+        g = b.ground[y][x]
+        if s == "path":
+            mult = road_mult
+        elif s == "forest":
+            mult = 2.5
+        elif g in ("sand", "mud"):
+            mult = 1.5
+        else:
+            mult = 1.0
+        # MULTIPLICATIVE noise = invisible hills (additive bumps barely move an
+        # optimal path; Azgaar's terrain multipliers reach ×3 — that's the scale
+        # that actually bends roads).
+        n = _value_noise_at(x, y, 20, seed)
+        return base * mult * (1.0 + n * noise_amp)
+
+    sx, sy = start
+    to_network = end is None
+
+    # admissible heuristic: min possible per-cell cost is road_mult ONLY if a
+    # road network already exists to ride; otherwise plain grass (×1.0) is the floor.
+    has_network = any(b.surface[y][x] == "path" for y in range(0, b.H, 4)
+                      for x in range(0, b.W, 4))
+    hmult = road_mult if has_network else 1.0
+
+    def h(x, y):
+        if to_network:
+            return 0.0
+        dx, dy = abs(x - end[0]), abs(y - end[1])
+        return (max(dx, dy) * 10 + min(dx, dy) * 4) * hmult  # octile, admissible
+
+    pq = [(h(sx, sy), 0.0, sx, sy, -1, None)]
+    best = {}
+    parent = {}
+    goal_state = None
+    while pq:
+        f, gcost, x, y, hd, par = heapq.heappop(pq)
+        key = (x, y, hd)
+        if key in best and best[key] <= gcost:
+            continue
+        best[key] = gcost
+        parent[key] = par
+        if (not to_network and (x, y) == tuple(end)) or \
+                (to_network and b.surface[y][x] == "path" and (x, y) != (sx, sy)):
+            goal_state = key
+            break
+        for nd, (dx, dy) in enumerate(DIRS):
+            nx, ny = x + dx, y + dy
+            c = step_cost(nx, ny, dx != 0 and dy != 0)
+            if c is None:
+                continue
+            turn = 0 if hd < 0 else min((nd - hd) % 8, (hd - nd) % 8)
+            tc = (0, turn45, turn90, 40, 40)[min(turn, 4)]
+            ng = gcost + c + tc
+            nkey = (nx, ny, nd)
+            if nkey in best and best[nkey] <= ng:
+                continue
+            heapq.heappush(pq, (ng + h(nx, ny), ng, nx, ny, nd, key))
+    if goal_state is None:
+        b.warn(f"route_road {start}->{end if not to_network else 'NETWORK'}: no path")
+        return []
+
+    # walk back the centerline
+    line = []
+    k = goal_state
+    while k is not None:
+        line.append((k[0], k[1]))
+        k = parent[k]
+    line.reverse()
+
+    # dilate to a band (extra stamp between diagonal steps — no 1-cell waists)
+    half = width // 2
+    cells = []
+
+    def stamp(cx, cy):
+        for dy in range(-half, width - half):
+            for dx in range(-half, width - half):
+                px, py = cx + dx, cy + dy
+                if b.in_bounds(px, py) and not b.reserved[py][px] \
+                        and b.surface[py][px] != "water":
+                    b.set_ground(px, py, tile, surface="path")
+                    cells.append((px, py))
+
+    prev = None
+    for (cx, cy) in line:
+        if prev and abs(cx - prev[0]) == 1 and abs(cy - prev[1]) == 1:
+            stamp(cx, prev[1])     # the orthogonal in-between cell
+        stamp(cx, cy)
+        prev = (cx, cy)
+    return cells
+
+
+def noise_field(w, h, *, wavelength=24, octaves=3, persistence=0.5, seed=0):
+    """fBm VALUE-NOISE field in [0,1) (research_procgen.md §1 — the calibrated
+    recipe: on a 256² map, wavelength 24 / 3 octaves / threshold 0.60 gives ~25
+    natural masses of ~20-cell diameter; threshold sets coverage: 0.55→~36%,
+    0.60→~25%, 0.65→~16%). Use a different seed per feature field. Returns a numpy
+    (h, w) array — index [y][x]."""
+    import numpy as np
+    rng_total = np.zeros((h, w))
+    amp, amp_sum = 1.0, 0.0
+    for i in range(octaves):
+        wl = max(1, wavelength >> i)
+        rng = np.random.default_rng(seed + i * 1013)
+        lattice = rng.random((h // wl + 2, w // wl + 2))
+        xs = np.arange(w) / wl
+        ys = np.arange(h) / wl
+        x0 = xs.astype(int); y0 = ys.astype(int)
+        fx = (xs - x0); fy = (ys - y0)
+        fx = fx * fx * (3 - 2 * fx); fy = fy * fy * (3 - 2 * fy)
+        fx = fx[None, :]; fy = fy[:, None]
+        v00 = lattice[np.ix_(y0, x0)];     v10 = lattice[np.ix_(y0, x0 + 1)]
+        v01 = lattice[np.ix_(y0 + 1, x0)]; v11 = lattice[np.ix_(y0 + 1, x0 + 1)]
+        top = v00 + (v10 - v00) * fx
+        bot = v01 + (v11 - v01) * fx
+        rng_total += amp * (top + (bot - top) * fy)
+        amp_sum += amp
+        amp *= persistence
+    return rng_total / amp_sum
+
+
+def ring_mask(w, h, *, lo=0.62, hi=0.97, jitter=0.2, wavelength=24, seed=0):
+    """The FOREST-RING recipe from the research: a square-bump edge-distance field
+    jittered by fBm — True where the (noisy) distance falls in [lo, hi]. lo sets
+    how far the ring reaches inward; jitter makes the inner edge wander and tears
+    natural gaps. Returns a boolean (h, w) numpy mask."""
+    import numpy as np
+    nx = 2 * np.arange(w) / (w - 1) - 1
+    ny = 2 * np.arange(h) / (h - 1) - 1
+    d = 1 - (1 - nx[None, :] ** 2) * (1 - ny[:, None] ** 2)  # 0 center → 1 edge
+    n = noise_field(w, h, wavelength=wavelength, seed=seed)
+    dj = d + jitter * (n - 0.5)
+    return (dj > lo) & (dj < hi)
+
+
 def smooth_paths(b):
     """The road-angle pass (run AFTER all roads, BEFORE buildings): every stair-step
     corner a wobbling `path()` leaves — a grass cell whose N/S and E/W neighbors are
