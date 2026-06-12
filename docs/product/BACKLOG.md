@@ -388,17 +388,22 @@ Tidy what's clearly safe; leave anything risky alone.
 - No structural refactors, no god-class splits — those are deferred until we have a way to verify
   them (there are currently no automated tests).
 
-## Next — Get multi-frame sprites working (hands-on, together)
-Experimental and human-in-the-loop — we try things and look at the output together, not plan it up
-front.
-- First: see if gpt-image-1 will output a clean sprite sheet we can crop. Start with the garden
-  bed (dry vs watered).
-- If it won't: fall back to a base bed plus a separate water-drops layer (procedural or old-style).
-  The plant is drawn on top as its own layer either way.
-- Once a method works, reuse it for crop growth stages, then later bug animation frames.
-- **Segmented bugs (centipede/millipede): head/body/tail sprite sheets** — the agreed next hands-on task.
-  BLOCKER: `gen_sprites.py` has no `bugs` source/dest yet (bug sprites are hand-made in `Resources/Bugs/`);
-  add a bug art path + family + a bug species data file before generating. Then chain head→segments→tail.
+## Done 2026-06: multi-frame sprites SOLVED via pixkit (hand-authored, not gpt sheets)
+The text-grid toolkit (tools/player_sprites/pixkit.py) made animation a derivation, not an
+art problem: player walk cycle (4 frames x 4 dirs, mechanical leg-shift+bob from one master
+grid per direction), paper-doll layers (body/hair/shirt/pants/chest/helmet, region-filtered,
+registration by construction), wearables, and 4 hand-authored vegetable crops with stage art
+(carrot/pumpkin/cabbage/eggplant). CharacterComposer.cs composites layers at runtime;
+F6 cycles debug outfits. Remaining from the old item:
+- **Segmented bugs (centipede/millipede) head/body/tail sheets** — could now be pixkit grids too.
+
+## Next — Player appearance + armor SERVER SYNC (the follow-up this slice scoped out)
+Art + local rendering shipped; making OTHER players see your outfit needs:
+- `PlayerState.Appearance { SkinTone, Hair }` + equipment slots `{ Head, Chest }` in Go
+- items.json wearables get `equip_slot` (+ the armor pieces as obtainable items)
+- EntityData join/update payload carries appearance + visible equipment
+- RemoteEntity feeds CharacterComposer instead of LoadBaked("farmer")
+- An equip UI (replace the F6 debug cycle)
 
 ## Next — Zone-design guides cleanup
 - ~~Consolidate the scattered/contradictory guides into one coherent set~~ **DONE** — `docs/guides/`

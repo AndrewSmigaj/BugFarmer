@@ -92,6 +92,19 @@ def generate():
             exists = os.path.exists(os.path.join(PREVIEWS, png))
             img = f"<img src='{png}' loading='lazy'>" if exists else "<i>not rendered — run the zone --save</i>"
             rows.append(f"<div class='card'><b>{html.escape(cap)}</b><br>{img}</div>")
+
+    # hand-authored sprites (Pipeline B: tools/generate_player_sprites.py + veg_sprites.py)
+    rows.append("<h2>hand-authored sprites (player + crops)</h2>")
+    for png, cap in [
+            ("player/classes.png", "the 5 classes x 4 directions (v2 bodies)"),
+            ("player/gate_down.png", "old vs new + walk frames + paper-doll layers"),
+            ("player/wearables.png", "armor / hats / hair styles composed"),
+            ("player/walk_down.gif", "walk cycle (down)"),
+            ("player/walk_iron.gif", "armored walk cycle"),
+            ("veg/stages.png", "vegetable growth stages + icons (carrot/pumpkin/cabbage/eggplant)")]:
+        exists = os.path.exists(os.path.join(PREVIEWS, png))
+        img = f"<img src='{png}' loading='lazy'>" if exists else "<i>not rendered — run the generator</i>"
+        rows.append(f"<div class='card'><b>{html.escape(cap)}</b><br>{img}</div>")
     for cat in ORDER + sorted(set(by_cat) - set(ORDER)):
         if cat == "zones":
             continue

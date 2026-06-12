@@ -10,12 +10,15 @@ The pipeline is chosen by the asset type — you never pick per-task:
 
 | Pipeline | Use for | Tooling | API? |
 |----------|---------|---------|------|
-| **A — gpt-image-1** | **All world art**: objects, occupants, placeables, tiles, items, bugs | `gen_sprites.py` → `pixelclean.py` → `make_scene.py` | yes (OpenAI) |
-| **B — hand-authored** | **Player sprite + player armor/clothing only** | `generate_player_sprites.py` | no |
+| **A — gpt-image-1** | **World art default**: objects, occupants, placeables, tiles, items, bugs | `gen_sprites.py` → `pixelclean.py` → `make_scene.py` | yes (OpenAI) |
+| **B — hand-authored** | **Player sprite + player armor/clothing** + (2026-06, Andrew's call) **vegetable crops** | `generate_player_sprites.py`, `veg_sprites.py` (both on `tools/player_sprites/pixkit.py`) | no |
 
-Pipeline B writes explicit RGBA pixel grids in Python (no API, no cleanup) sized to the
-entity's `sprite_w × sprite_h`, saving straight to `Resources/Player/`. It is a narrow,
-dedicated lane — never use it for world objects. Everything else is Pipeline A.
+Pipeline B authors **text-grid** sprites (char-per-pixel, `pixkit.py`) — no API, no
+cleanup, animatable (the walk cycle derives from the grids). Player art saves to
+`Resources/Player/` (+ `layers/` for the paper-doll); the hand-authored crops
+(carrot/pumpkin/cabbage/eggplant stages at 16px-wide native) save to `Resources/Objects/`
++ `Items/` under the same names Pipeline A would use, and their catalog look-rows exist so
+they CAN be regenerated via Pipeline A later if wanted. Other world objects stay Pipeline A.
 
 ---
 

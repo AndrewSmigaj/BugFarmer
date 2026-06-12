@@ -1,5 +1,33 @@
 # Character Design Guide for Bug Farmer
 
+## AS BUILT (2026-06-12): 16x32 region-template paper-doll — READ THIS FIRST
+The layered player SHIPPED at the game's existing **16x32** canvas (Andrew's
+call: keep the current resolution), not the 32x48 proposed below. How it works
+(`tools/player_sprites/`):
+- Sprites are **text grids** (char-per-pixel, `pixkit.py` legend); every body
+  pixel carries a REGION tag (skin/hair/shirt/pants/boots). ONE hand-authored
+  idle master per direction (`body_frames.py`); right = mirrored left.
+- **Layers derive from the master by region filtering** (each layer carries the
+  outline pixels adjacent to its region) — registration is perfect by
+  construction. The body layer substitutes clothing regions to skin + a linen
+  shorts band (row-aware), so the unclothed base has no holes.
+- **Walk cycle** [contact-L, idle, contact-R, idle] derives mechanically:
+  half-row leg shifts (rows 25-31) + 1px head bob (rows 0-13). NO arm swing
+  (read as an artifact). Files: `{set}_{dir}.png` (idle, the pre-existing
+  names) + `_w1`/`_w3` contacts.
+- **Wearables** (`wearables.py`): overlay grids on the same canvas; head items
+  are pre-composed with the bob per frame; `HIDES_HAIR` lists full helms.
+- **16x32 anchor rows**: hair 1-5 · face 6-12 (eyes 8-9) · neck 13 ·
+  shoulders 14 · torso 15-22 · waistband 23 · legs 24-28 · boots 29-31.
+- Unity: `CharacterComposer.cs` alpha-blends `Resources/Player/layers/**` into
+  cached per-(dir,frame) sprites at runtime (single SpriteRenderer; layer metas
+  need `isReadable: 1` — `fix_sprite_ppu.py` sets it). Appearance/equip server
+  sync is a backlog follow-up; F6 cycles debug outfits locally.
+
+The sections below are the ORIGINAL 32x48 proposal — kept for the proportions/
+perspective/palette guidance, which still applies. Dimensions there are
+superseded by the as-built 16x32 above.
+
 ## Architecture Decision: LAYERED / Modular Player (2026-06-02)
 
 The player is **composited at runtime from stacked layers**, not a single baked sprite.
