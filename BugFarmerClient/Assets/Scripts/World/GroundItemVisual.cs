@@ -70,16 +70,20 @@ namespace BugFarmer.World
             spriteRenderer.sortingOrder = -Mathf.RoundToInt(worldPosition.y);
 
             // Fit-box: drops are scaled-down ORIGINAL sprites (often full world art now, e.g.
-            // a 16x24 plant), so uniformly fit within 0.75 cell preserving aspect — clearly a
-            // pickup, never rivaling placed occupants. Never upscale small icons above 1x.
-            const float maxCells = 0.75f;
+            // a 16x24 plant), so uniformly fit within 0.9 cell preserving aspect — clearly a
+            // pickup, never rivaling placed occupants. SMALL sprites get upscaled to a
+            // 0.6-cell floor (2026-06: tiny drops were too hard to see).
+            const float maxCells = 0.9f;
+            const float minCells = 0.6f;
             float scale = 1f;
             if (sprite != null)
             {
                 // World size in cells at the sprite's own PPU (icons & objects are PPU 16 = 1 cell).
                 float w = sprite.rect.width / sprite.pixelsPerUnit;
                 float h = sprite.rect.height / sprite.pixelsPerUnit;
-                scale = Mathf.Min(1f, maxCells / Mathf.Max(w, h));
+                float big = Mathf.Max(w, h);
+                scale = big > maxCells ? maxCells / big
+                      : big < minCells ? minCells / big : 1f;
             }
             transform.localScale = new Vector3(scale, scale, 1f);
 

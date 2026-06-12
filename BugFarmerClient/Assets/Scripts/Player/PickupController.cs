@@ -24,8 +24,9 @@ namespace BugFarmer.Player
 
         private GroundItemVisual _highlightedItem;
 
-        // Floating "[E]" prompt above the highlighted item (one reusable world-space label)
-        private TextMesh _ePrompt;
+        // Floating keycap-E badge above the grabbable item (one reusable
+        // world-space sprite; honest-range rules in UpdatePrompt)
+        private SpriteRenderer _ePrompt;
 
         // Auto-pickup guards: don't spam the server while a request is in flight, and back
         // off items that keep failing (inventory full / contested pickup).
@@ -121,37 +122,52 @@ namespace BugFarmer.Player
         }
 
         /// <summary>
-        /// "[E]" floating above the highlighted item — the standard "press to pick up"
-        /// affordance. Repositioned every frame (items bob); hidden when nothing is
-        /// highlighted or the highlighted visual despawns.
+        /// The KEYCAP-E badge above an item — HONEST: it only appears when E
+        /// would actually work (within pickupRange, NOT highlightRange — the
+        /// old [E] text showed at 3.0 while pickup works at 2.0, a lie), and
+        /// only where the deliberate grab MATTERS:
+        ///   - E-required items (bug food / no-auto-pickup fruit): always in reach
+        ///   - ordinary drops: only when the walk-over magnet is failing for
+        ///     that item (backoff after rejections — e.g. inventory full)
+        /// Repositioned every frame (items bob).
         /// </summary>
         private void UpdatePrompt()
         {
-            bool show = _highlightedItem != null && _highlightedItem.gameObject.activeInHierarchy;
+            GroundItemVisual target = null;
+            if (GroundItemManager.Instance != null)
+            {
+                var closest = GroundItemManager.Instance.GetItemAtPosition(
+                    transform.position, pickupRange);
+                if (closest != null && closest.gameObject.activeInHierarchy)
+                {
+                    var def = BugFarmer.Data.EntityDatabase.Get(closest.ItemType);
+                    bool eRequired = def != null && (def.FoodValue > 0 || def.NoAutoPickup);
+                    bool magnetFailing = _requested.TryGetValue(closest.ItemId, out var r)
+                                         && r.attempts >= 2;
+                    if (eRequired || magnetFailing)
+                        target = closest;
+                }
+            }
 
             if (_ePrompt == null)
             {
-                if (!show) return;
+                if (target == null) return;
                 var go = new GameObject("PickupPromptE");
-                _ePrompt = go.AddComponent<TextMesh>();
-                _ePrompt.text = "[E]";
-                _ePrompt.fontSize = 48;
-                _ePrompt.characterSize = 0.045f;
-                _ePrompt.anchor = TextAnchor.LowerCenter;
-                _ePrompt.alignment = TextAlignment.Center;
-                _ePrompt.color = new Color(1f, 1f, 1f, 0.95f);
-                var mr = go.GetComponent<MeshRenderer>();
-                mr.sortingLayerName = "Occupants";
-                mr.sortingOrder = 950; // above world objects
+                _ePrompt = go.AddComponent<SpriteRenderer>();
+                _ePrompt.sprite = Resources.Load<Sprite>("UI/keycap_e");
+                _ePrompt.sortingLayerName = "Occupants";
+                _ePrompt.sortingOrder = 950; // above world objects
+                // keycap art is 14px at PPU 100 (0.14 units) — scale to ~0.5 cell
+                go.transform.localScale = Vector3.one * 3.5f;
             }
 
-            _ePrompt.gameObject.SetActive(show);
-            if (show)
+            _ePrompt.gameObject.SetActive(target != null);
+            if (target != null)
             {
-                var sr = _highlightedItem.GetComponentInChildren<SpriteRenderer>();
-                float topY = sr != null ? sr.bounds.max.y : _highlightedItem.transform.position.y + 0.4f;
-                float x = sr != null ? sr.bounds.center.x : _highlightedItem.transform.position.x;
-                _ePrompt.transform.position = new Vector3(x, topY + 0.12f, -0.2f);
+                var sr = target.GetComponentInChildren<SpriteRenderer>();
+                float topY = sr != null ? sr.bounds.max.y : target.transform.position.y + 0.4f;
+                float x = sr != null ? sr.bounds.center.x : target.transform.position.x;
+                _ePrompt.transform.position = new Vector3(x, topY + 0.34f, -0.2f);
             }
         }
 
