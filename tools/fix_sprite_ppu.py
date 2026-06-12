@@ -97,4 +97,23 @@ for dirpath, _dirs, names in os.walk(player_base):
                     text = read_pat.sub(r"\g<1>1", text, count=1)
                 open(path, "w").write(text)
 
-print(f"{'would fix' if dry else 'fixed'} {fixed}/{total} sprite metas -> PPU {PPU}, filterMode 0 (+isReadable on Player/layers)")
+# ---- UI/ (point filter only — Unity's bilinear default blurs pixel-art UI;
+# PPU is irrelevant: UI Images scale by RectTransform, and 9-slice borders are
+# passed in code via Sprite.Create, never stored in metas)
+ui_base = os.path.join(ROOT, "UI")
+if os.path.isdir(ui_base):
+    for name in sorted(os.listdir(ui_base)):
+        if not name.endswith(".png.meta"):
+            continue
+        path = os.path.join(ui_base, name)
+        text = open(path).read()
+        f = filt_pat.search(text)
+        total += 1
+        if f is not None and f.group(2) != "0":
+            fixed += 1
+            if dry:
+                print(f"  would fix UI/{name}: filterMode {f.group(2)}->0")
+            else:
+                open(path, "w").write(filt_pat.sub(r"\g<1>0", text, count=1))
+
+print(f"{'would fix' if dry else 'fixed'} {fixed}/{total} sprite metas -> PPU {PPU}, filterMode 0 (+isReadable on Player/layers, point on UI)")
