@@ -113,7 +113,8 @@ def build(zone_id="village_21_B", vseed=0):
     path(b, (115, 178), (115, 240), width=3, wobble=0.0, seed=24) # V through the farm belt
     route_road(b, (114, 240), (100, 253), width=3, seed=36)       # WILD: the N taper
     # Lanes (dirt): W to the edge, E past the ecologist, quarry spur, farm lane, lake lane.
-    path(b, (120, 127), (2, 127), width=2, tile="dirt", wobble=0.0, seed=25, taper_ends=8)
+    path(b, (120, 127), (60, 127), width=2, tile="dirt", wobble=0.0, seed=25)  # straight past the civic row
+    route_road(b, (60, 127), (2, 124), width=2, tile="dirt", seed=25)           # dirt is informal: meanders west
     # E lane: straight past EVERYTHING built (incl. the ecologist — the rule),
     # one elbow up to the cabin's row, wild only beyond it.
     path(b, (134, 124), (206, 124), width=2, tile="dirt", wobble=0.0, seed=26)
@@ -164,8 +165,12 @@ def build(zone_id="village_21_B", vseed=0):
     specs, front = u_house(78, 158)                  # the showpiece: courtyard U
     place_house(b, styled_rooms(specs, collection="fancy"), front=front)
     tb = bbox(specs)
-    property_yard(b, tb[0], tb[1], tb[2], tb[3], 89,
-                  side=2, front=4, back=3, seed=7)
+    from features.yard import styled_yard
+    # NOTE: 3 picket cells of this yard abut the mayor estate's iron fence and
+    # skip (adjoining properties share that boundary — the iron line fills it).
+    # grand belongs to the MAYOR estate (this slot is too tight for a 7-deep
+    # backyard vs the farm lane); the courtyard already crowns this house.
+    styled_yard(b, tb[0], tb[1], tb[2], tb[3], 89, style="modest", seed=7)
     court = courtyard_rect(specs)
     if court:
         cx0, cy0, cx1, cy1 = court
@@ -174,19 +179,17 @@ def build(zone_id="village_21_B", vseed=0):
             safe(b, oid, x, y)
     b.place_player("scholar_down", 89.0, 162)
 
-    place_cottage(b, 56, 162, npc="merchant_down")   # simple tier
+    place_cottage(b, 49, 162, npc="merchant_down", yard_style="small_plot")  # simple tier, tight plot
 
     specs2, front2 = l_house(18, 160)                # mid-tier: a true L + porch
     place_house(b, styled_rooms(specs2, collection="basic"), front=front2)
     rb = bbox(specs2)
-    property_yard(b, rb[0], rb[1], rb[2], rb[3], 24,
-                  side=2, front=5, back=3,
-                  fence="fence_picket_weathered", gate_id="gate_picket", seed=8)
+    styled_yard(b, rb[0], rb[1], rb[2], rb[3], 24, style="modest", seed=8)
     porch(b, specs2)
     b.place_player("farmer_down", 24.0, 164)
 
     path(b, (123, 131), (12, 170), width=2, wobble=0.12, seed=31)
-    for gx, gy in ((89, 153), (60, 156), (24, 154)):    # gate → lane spurs
+    for gx, gy in ((89, 153), (56, 156), (24, 154)):    # gate → lane spurs
         spur(b, gx, gy, gx, gy - 6, tile="stone_path")
     smooth_paths(b)   # the road-angle pass: stair-steps → 45° bevels (after ALL roads)
 
@@ -213,7 +216,7 @@ def build(zone_id="village_21_B", vseed=0):
     for (x, y) in [(87, 190), (88, 192), (112, 195)]:     # hay bales by the wheat
         safe(b, "hay_bale", x, y)
     # Farmhouse NW of the fields.
-    place_cottage(b, 70, 226, npc="farmer_down")
+    place_cottage(b, 68, 226, npc="farmer_down", yard_style="small_plot")
     for (oid, x, y) in [("compost_bin", 88, 228), ("wheelbarrow", 90, 224), ("water_bucket", 92, 226)]:
         safe(b, oid, x, y)
 
@@ -290,8 +293,15 @@ def build(zone_id="village_21_B", vseed=0):
     # automatically because painted/reserved cells are skipped). Tree probability
     # and the dirt floor deepen with the field, so the rim thins inward exactly
     # like a real forest edge.
-    mask = ring_mask(ZW, ZH, lo=0.64, hi=0.99, jitter=0.24, wavelength=24, seed=70)
-    fld = noise_field(ZW, ZH, wavelength=24, seed=70)
+    # FOREST MASSES, not a donut (2026-06): edge-favoring noise — big distinct
+    # forests with real gaps; the world continues past the edges.
+    import numpy as np
+    fld = noise_field(ZW, ZH, wavelength=28, seed=70)
+    nx = 2 * np.arange(ZW) / (ZW - 1) - 1
+    ny = 2 * np.arange(ZH) / (ZH - 1) - 1
+    dd = 1 - (1 - nx[None, :] ** 2) * (1 - ny[:, None] ** 2)   # 0 center -> 1 edge
+    score = fld + 0.45 * dd
+    mask = score > 1.02
     placed_trees = []
 
     def spaced2(x, y):

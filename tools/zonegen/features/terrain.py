@@ -472,20 +472,35 @@ def lake(b, cx, cy, radius, *, seed=0, shore="sand", reeds=16):
     # bite inward). Convex blob unions alone read as clouds; bays are what make a
     # shoreline read as a lake's.
     bays = []
-    for _ in range(rng.randint(2, 3)):
+    nbays = rng.randint(3, 5)
+    for i in range(nbays):
         a = rng.random() * 2 * math.pi
         d = 1.0
         while d < radius * 1.5 and union(cx + d * math.cos(a), cy + d * math.sin(a)) > 0:
             d += 1.0
         bx = cx + (d - 1.0) * math.cos(a)
         by = cy + (d - 1.0) * math.sin(a)
-        bays.append((bx, by, radius * rng.uniform(0.16, 0.28)))
+        # one bay per lake is ELONGATED — it reads as a PENINSULA splitting the water
+        r = radius * (rng.uniform(0.30, 0.42) if i == 0 else rng.uniform(0.16, 0.28))
+        bays.append((bx, by, r))
+    # one small ISLAND inside larger lakes (a land disk the water wraps; the
+    # beach roll rings it with sand automatically)
+    island = None
+    if radius >= 20:
+        ia = axis + rng.uniform(-0.5, 0.5)
+        island = (cx + math.cos(ia) * radius * 0.45,
+                  cy + math.sin(ia) * radius * 0.45, radius * rng.uniform(0.10, 0.16))
 
     def signed(x, y):
-        """>0 inside; bays subtract from the union field to carve inlets."""
+        """>0 inside; bays/peninsula/island subtract land from the water field."""
         s = union(x, y)
         for (bx, by, br) in bays:
             cut = 1.0 - math.hypot(x - bx, y - by) / br
+            if cut > 0:
+                s = min(s, -cut)
+        if island:
+            ix, iy, ir = island
+            cut = 1.0 - math.hypot(x - ix, y - iy) / ir
             if cut > 0:
                 s = min(s, -cut)
         return s
