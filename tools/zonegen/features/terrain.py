@@ -226,47 +226,68 @@ def forest(b, cx, cy, rx, ry, *, species=("tree_oak", "tree_pine"),
 
 
 def lake(b, cx, cy, radius, *, seed=0, shore="sand", reeds=16):
-    """A natural LAKE with an ORGANIC, lobed shoreline (per trees-and-ponds.md) — NOT a circle. Multiple
-    angular harmonics (freqs 2..n) bump the radius around the perimeter for bays + spits; deep core ->
-    shallow rim -> a `shore` beach ring (sand/mud) with gaps -> reeds clumped just outside the water,
-    following the shape. Reserves the water. Returns an info dict
-    {"center": (cx, cy), "radius": radius, "reeds": placed} — feed it to
-    `shore_dress()` for per-arc shoreline treatments."""
+    """A natural LAKE shaped like one: the UNION of 2-4 elongated, offset blobs strung
+    along a random long axis — a real lake's read (a long body with bays and a bowed
+    shoreline), never the symmetric harmonic STAR the old version produced (high-freq
+    radius bumps made 5-7 evenly spaced points). Each blob is a mild ellipse with its
+    own tilt; two low-frequency, low-amplitude harmonics roughen the union's edge just
+    enough to kill any geometry read. Deep core -> shallow rim -> a `shore` beach ring
+    with gaps -> reeds clumped on the banks. Reserves the water; flows INTO existing
+    water (skips reserved). Returns {"center", "radius", "reeds"} — feed it to
+    `shore_dress()` for per-arc treatments."""
     rng = random.Random(seed)
-    n = rng.randint(4, 7)
-    phases = [rng.random() * 2 * math.pi for _ in range(n)]
-    amps = [rng.uniform(0.15, 0.30) for _ in range(n)]
+    axis = rng.random() * 2 * math.pi
+    nblobs = rng.randint(2, 4)
+    blobs = []
+    for i in range(nblobs):
+        t = (i / max(1, nblobs - 1) - 0.5) * 1.15        # spread along the long axis
+        bx = cx + math.cos(axis) * radius * t * 0.85 + rng.uniform(-0.18, 0.18) * radius
+        by = cy + math.sin(axis) * radius * t * 0.85 + rng.uniform(-0.18, 0.18) * radius
+        br = radius * rng.uniform(0.45, 0.68)
+        ecc = rng.uniform(0.65, 0.95)                    # mild per-blob ellipse
+        ang = axis + rng.uniform(-0.6, 0.6)
+        blobs.append((bx, by, br, ecc, ang))
+    ph1, ph2 = rng.random() * 2 * math.pi, rng.random() * 2 * math.pi
 
-    def rad(angle):
-        r = radius
-        for i in range(n):
-            r += radius * amps[i] * math.sin((i + 2) * angle + phases[i])
-        return max(radius * 0.5, min(radius * 1.45, r))
+    def signed(x, y):
+        """>0 inside the union; ~0 at the shoreline (max blob field, noisy edge)."""
+        best = -9.0
+        for (bx, by, br, ecc, ang) in blobs:
+            dx, dy = x - bx, y - by
+            ca, sa = math.cos(-ang), math.sin(-ang)
+            u = dx * ca - dy * sa
+            v = (dx * sa + dy * ca) / ecc
+            a = math.atan2(dy, dx)
+            rr = br * (1 + 0.07 * math.sin(2 * a + ph1) + 0.05 * math.sin(3 * a + ph2))
+            best = max(best, 1.0 - math.hypot(u, v) / rr)
+        return best
 
-    mr = int(radius * 1.5) + 2
+    mr = int(radius * 1.6) + 3
     for dy in range(-mr, mr + 1):
         for dx in range(-mr, mr + 1):
             x, y = cx + dx, cy + dy
             if not b.in_bounds(x, y) or b.reserved[y][x]:
-                continue                                            # preserve buildings + flow INTO existing water
-            dist = max(0.1, (dx * dx + dy * dy) ** 0.5)
-            local = rad(math.atan2(dy, dx))
-            if dist <= local * 0.6:
+                continue                                  # preserve buildings + merge with existing water
+            s = signed(x, y)
+            if s > 0.40:
                 b.set_ground(x, y, "water_deep", surface="water"); b.reserve(x, y, surface="water")
-            elif dist <= local:
+            elif s > 0.0:
                 b.set_ground(x, y, "water_shallow", surface="water"); b.reserve(x, y, surface="water")
-            elif dist <= local + 2.2 and b.is_free(x, y) and b.surface[y][x] == "grass" and rng.random() < 0.72:
-                b.set_ground(x, y, shore)                            # beach ring with gaps
+            elif s > -0.14 and b.is_free(x, y) and b.surface[y][x] == "grass" and rng.random() < 0.72:
+                b.set_ground(x, y, shore)                 # beach ring with gaps
+    # Reeds: shape-agnostic — random dry cells touching the water.
     placed = 0
-    for _ in range(reeds * 5):
-        a = rng.random() * 2 * math.pi
-        d = rad(a) + rng.uniform(0.4, 2.4)
-        x, y = int(round(cx + d * math.cos(a))), int(round(cy + d * math.sin(a)))
-        if b.in_bounds(x, y) and b.is_free(x, y) and b.surface[y][x] != "water" and rng.random() < 0.6:
-            if b.place_occupant("reeds", x, y):
-                placed += 1
-                if placed >= reeds:
-                    break
+    for _ in range(reeds * 12):
+        if placed >= reeds:
+            break
+        x = cx + rng.randint(-mr, mr)
+        y = cy + rng.randint(-mr, mr)
+        if not b.in_bounds(x, y) or not b.is_free(x, y) or b.surface[y][x] == "water":
+            continue
+        touches = any(b.in_bounds(x + ax, y + ay) and b.surface[y + ay][x + ax] == "water"
+                      for ax in (-1, 0, 1) for ay in (-1, 0, 1))
+        if touches and rng.random() < 0.6 and b.place_occupant("reeds", x, y):
+            placed += 1
     return {"center": (cx, cy), "radius": radius, "reeds": placed}
 
 
@@ -341,6 +362,71 @@ def shore_dress(b, info, arcs, *, seed=0):
                 b.place_occupant("stone_block", x, y)
         dressed.append((x, y))
     return dressed
+
+
+def rock_mass(b, cx, cy, rx, ry, *, seed=0, veins=4):
+    """A SOLID rock mass — the surface sneak-peek of the mining underworld. Unlike
+    `rock_patch` (a sparse quarry floor you walk through), this is FILLED: every
+    interior cell carries a mineable block (stone, hard stone toward the core — the
+    insides go dark later), salted with short ORE VEINS (runs of 3-5, the caves.md
+    rule: veins, not specks). The shape is the same multi-blob union as `lake()`, so
+    masses read as rocky hills, not circles. Edges get a ragged dirt apron with
+    spilled blocks. Returns the filled cells."""
+    rng = random.Random(seed)
+    axis = rng.random() * 2 * math.pi
+    nblobs = rng.randint(2, 3)
+    blobs = []
+    for i in range(nblobs):
+        t = (i / max(1, nblobs - 1) - 0.5)
+        bx = cx + math.cos(axis) * rx * t * 0.8 + rng.uniform(-0.15, 0.15) * rx
+        by = cy + math.sin(axis) * ry * t * 0.8 + rng.uniform(-0.15, 0.15) * ry
+        blobs.append((bx, by, rx * rng.uniform(0.5, 0.75), ry * rng.uniform(0.5, 0.75)))
+    ph = rng.random() * 2 * math.pi
+
+    def signed(x, y):
+        best = -9.0
+        for (bx, by, brx, bry) in blobs:
+            dx, dy = (x - bx) / max(1.0, brx), (y - by) / max(1.0, bry)
+            a = math.atan2(y - by, x - bx)
+            n = 1 + 0.08 * math.sin(3 * a + ph)
+            best = max(best, 1.0 - math.hypot(dx, dy) / n)
+        return best
+
+    filled = []
+    mr = int(max(rx, ry) * 1.4) + 2
+    for dy in range(-mr, mr + 1):
+        for dx in range(-mr, mr + 1):
+            x, y = cx + dx, cy + dy
+            if not b.in_bounds(x, y):
+                continue
+            s = signed(x, y)
+            if s > 0 and b.is_free(x, y) and b.surface[y][x] == "grass":
+                b.set_ground(x, y, "stone_floor")
+                block = "hard_stone_block" if (s > 0.45 and rng.random() < 0.6) else "stone_block"
+                if b.place_occupant(block, x, y):
+                    filled.append((x, y))
+            elif -0.12 < s <= 0 and b.is_free(x, y) and b.surface[y][x] == "grass":
+                if rng.random() < 0.5:
+                    b.set_ground(x, y, "dirt")            # the ragged apron
+                if rng.random() < 0.12:
+                    b.place_occupant("stone_block", x, y)  # spilled blocks
+
+    # Ore veins: short random-walk runs through the filled mass.
+    ores = ["ore_copper_block", "ore_coal_block", "ore_copper_block", "ore_iron_block"]
+    for v in range(veins):
+        if not filled:
+            break
+        x, y = filled[rng.randrange(len(filled))]
+        ore = ores[v % len(ores)]
+        for _ in range(rng.randint(3, 5)):
+            cell = b.occ.get((x, y))
+            if cell and cell["id"] in ("stone_block", "hard_stone_block"):
+                cell["id"] = ore                          # swap the block in place
+            x += rng.choice((-1, 0, 1))
+            y += rng.choice((-1, 0, 1))
+            if not b.in_bounds(x, y):
+                break
+    return filled
 
 
 def rock_patch(b, cx, cy, radius, *, ground="stone_floor", seed=0, ore_chance=0.28):

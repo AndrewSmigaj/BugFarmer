@@ -24,7 +24,7 @@ interior = place_room(b, x0, y0, x1, y1, floor="wood_floor", wall="wall_wood",
   must be placed so their footprint stays off the walls — keep their anchor ≥1 cell inside the wall
   on the wide/tall axis, or `place_occupant` will refuse it (loudly). Let the warnings guide you.
 - **Furniture against walls:** beds/bookshelves/fireplaces along the back wall, table+chairs toward
-  the center/front, a light in a corner — see `builds/cottage.py` for a worked layout.
+  the center/front, a light in a corner — see `scenes/scene_cottage.py` for a worked layout.
 - **Door + path:** put the door on the side facing the approach, and lay a `stone_path` from the
   door outward so the building connects to the rest of the zone.
 

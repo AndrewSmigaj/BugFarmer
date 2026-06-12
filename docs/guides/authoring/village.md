@@ -41,9 +41,12 @@ urban-design writing on settlement form:
 | NPCs / shopkeepers (render-only) | `b.place_player("merchant_down", x, y)` (sprites: merchant/farmer/scholar/ranger × dir) |
 | Bugs facing either way (render-only) | `b.place_bug(sprite_id, x, y, scale, flip=)` |
 
-> **Doors on any side already work** — vary `front=(room, side)` / `door_side` for orientation variety
-> (Principle 13). **Plants ARE grid-locked** — trees/flowers/crops are grid occupants (`flower_patch` now
-> plants on the grid), saved to the zone; only **bugs** are sub-grid (and `flip=True` mirrors their facing).
+> **Doors on any side work in the COMPOSER + `place_room`** — vary `front=(room, side)`
+> / `door_side` for orientation variety (Principle 13). TEXT-GRID pieces are the
+> exception: their doors are south-only (a TODO in house.md) — get variety there from
+> setbacks and the road's curve. **Plants ARE grid-locked** — trees/flowers/crops are
+> grid occupants (`flower_patch` now plants on the grid), saved to the zone; only
+> **bugs** are sub-grid (and `flip=True` mirrors their facing).
 
 ## The build-order recipe (and why this order)
 Each step coordinates through `reserved[]`/`surface[]`, so later features route around earlier ones:
@@ -53,7 +56,10 @@ Each step coordinates through `reserved[]`/`surface[]`, so later features route 
    around the lake. Offset endpoints + `wobble` so it bends.
 4. **Building clusters** — `shop_building`/`place_house`/`place_room` reserve footprints (refuse-on-
    overlap keeps it warning-free) and sit beside the roads. Vary door sides for orientation.
-5. **Plaza + fountain** — `plaza()` at the road crossing = the focal point; set `b.spawn` on its paving.
+5. **Plaza + fountain** — `plaza()` at the main junction OR THE ROAD'S MAIN BEND (a
+   bend-anchored plaza is how village_21_B reads; a crossing isn't required) = the
+   focal point; set `b.spawn` on its paving. `plaza()` now carries the civic props
+   (notice board, signpost, founder statue, bench pairs) itself.
 6. **Yards & gardens** — picket `fence_rect` + `crop_bed`/`flower_patch`/`garden_border_*`.
 7. **Orchard + fly farm (edges)** — `fence_rect` + tree rows + `fruit_around` (the fly-emergence loop).
 8. **Clumped meadow scatter (LAST)** — only fills free grass; density **rises toward the rim** (forest

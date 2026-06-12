@@ -6,7 +6,7 @@ Precedence always: **biome base → water → roads → buildings → farms → 
 
 | Biome | Base tile | Primary features | Density / feel | Signature props |
 |-------|-----------|------------------|----------------|-----------------|
-| **Village / town** | grass | `terrain.hpath/vpath` (roads), `room`/`house` + `houses/layouts`, `yard`, `garden`, `terrain.pond` (lake) | Buildings clustered on roads; open meadow around; lake SW | signs, stalls, well, statues, docks, fences |
+| **Village / town** | grass | `terrain.path` + `smooth_paths` (bending roads, bevelled curves), `room`/`house` + `houses/layouts`, `yard`, `garden.orchard`/`crop_bed`, `terrain.lake` + `shore_dress`, `village.plaza`/`shop_building` | Buildings clustered along ONE bending main road; open meadow around; lake SW | signs, stalls, well, statues, docks, fences, windmill at the farm fork |
 | **Flowering meadow** | grass (lush) | heavy `scatter` (flowers + milkweed + tall grass + bushes), tree **clusters**, `place_bug` (pollinators/wasps) | Flowers dominant; few dirt patches; airy | milkweed stand, flower glade, boulder, broken fence |
 | **Forest / forest-edge** | grass→dirt | dense tree clusters, `scatter` (ferns, mushrooms, bushes), stumps, fallen logs | Darker, denser northward; canopy gaps | fallen-log bridge, stumps, mushroom rings |
 | **Cave / mining** | cave_floor | `cave.carve_tunnel` (meander + straight rail), `carve_cavern`, `fill_solid` (ore veins), `place_pool` | Mostly solid rock carved into tunnels/caverns; ore veins ~12–18% | rail track, mine cart, camp (workbench/torches), glow pool |

@@ -19,11 +19,12 @@ sys.path.insert(0, ZG)
 sys.path.insert(0, HERE)
 from zonebuilder import ZoneBuilder                                   # noqa: E402
 from render import render_builder                                     # noqa: E402
-from features.terrain import path, lake, shore_dress, smooth_paths, rock_patch, forest  # noqa: E402
+from features.terrain import path, lake, shore_dress, smooth_paths, rock_mass, forest  # noqa: E402
 from features.scatter import scatter                                  # noqa: E402
 from features.garden import crop_bed, flower_patch, orchard           # noqa: E402
 from features.village import plaza, shop_building                     # noqa: E402
-from features.yard import fence_rect                                  # noqa: E402
+from features.yard import fence_rect, property_yard                   # noqa: E402
+from features.house import place_house, styled_rooms, t_house, row_house, bbox  # noqa: E402
 from scene_smith import place_smith                                   # noqa: E402
 from scene_carpenter import place_carpenter                           # noqa: E402
 from scene_market import place_market                                 # noqa: E402
@@ -102,7 +103,7 @@ def build(zone_id="village_21_B", vseed=0):
     path(b, (192, 142), (253, 148), width=2, tile="dirt", wobble=0.16, seed=27, taper_ends=8)
     path(b, (138, 50), (154, 42), width=2, tile="dirt", wobble=0.12, seed=28)
     path(b, (114, 182), (88, 196), width=2, tile="dirt", wobble=0.15, seed=29)
-    path(b, (47, 128), (44, 112), width=2, tile="dirt", wobble=0.10, seed=30)
+    path(b, (43, 128), (42, 122), width=2, tile="dirt", wobble=0.10, seed=30)
     # (the residential lane is laid AFTER its cottages — see §4: path() routes
     # around their reserved yards, so the lane hugs the fences naturally)
 
@@ -117,35 +118,55 @@ def build(zone_id="village_21_B", vseed=0):
     spur(b, 105, 133, 105, 128, tile="stone_path")
     place_market(b, 72, 134)
     spur(b, 77, 133, 77, 129, tile="stone_path")
-    # The general store — composed (no piece existed; intent doc lists it separately).
-    shop_building(b, 52, 134, 62, 145, sign_id="sign_plank", npc="merchant_down",
+    # The general store — composed (no piece existed; intent doc lists it
+    # separately). Set back 2 from the lane so frontage clutter sits BESIDE the
+    # spur, never on the roadway.
+    shop_building(b, 52, 136, 62, 147, sign_id="sign_plank", npc="merchant_down",
                   wall="wall_wood", shelf_rows=2)
-    for (oid, x, y) in [("barrel", 53, 132), ("crate", 55, 132), ("crate", 56, 132)]:
+    for (oid, x, y) in [("barrel", 53, 134), ("crate", 55, 134), ("crate", 60, 134)]:
         safe(b, oid, x, y)                                   # delivery clutter out front
-    spur(b, 57, 133, 57, 130, tile="stone_path")
+    spur(b, 57, 135, 57, 130, tile="stone_path")
 
-    # Production cluster SE of the plaza on its own short lane off the main road.
+    # Production cluster SE of the plaza on its own short lane off the main road
+    # (set back so the smith's ore/coal frontage at oy-2 stays off the roadway).
     path(b, (133, 106), (170, 104), width=2, tile="dirt", wobble=0.10, seed=32)
-    place_smith(b, 138, 108)
-    spur(b, 143, 107, 143, 106, tile="dirt")
-    place_carpenter(b, 156, 108)
-    spur(b, 161, 107, 161, 106, tile="dirt")
+    place_smith(b, 138, 111)
+    spur(b, 143, 110, 143, 105, tile="dirt")
+    place_carpenter(b, 156, 111)
+    spur(b, 161, 110, 161, 105, tile="dirt")
 
-    # Residential cottages NW of the plaza, NORTH of the town hall's compound
-    # (the hall + yard spans ≈(92-117, 127-151) — iteration 2 put cottage 1 right
-    # on it). THEN the lane is routed past their gates — path() flows around the
-    # reserved yards, hugging the fences.
-    place_cottage(b, 100, 158, npc="farmer_down")   # the main road slants NW: its
-    place_cottage(b, 84, 162, npc="merchant_down")  # corridor is x≈117-124 at these
-    place_cottage(b, 68, 166, npc="scholar_down")   # rows — yards stay ≤ x115
-    path(b, (123, 131), (66, 160), width=2, wobble=0.12, seed=31)
-    for gx, gy in ((104, 152), (88, 156), (72, 160)):   # gate → lane spurs
-        spur(b, gx, gy, gx, gy - 4, tile="stone_path")
+    # Residential houses NW of the plaza, NORTH of the town hall's compound —
+    # VARIED, not three clone boxes: a ⊥ 4-room composer house (basic), the
+    # text-grid cottage (picket), and a 3-room bar house (fancy, weathered
+    # fence). The lane is routed past their gates AFTER (path() flows around
+    # the reserved yards). Main-road corridor is x≈117-124 here: yards ≤ x115.
+    # (the composer bars are WIDE: row_house 28×10, t_house 31×18 — slots sized
+    # accordingly, everything west of the main-road corridor at x≈117-124)
+    specs, front = t_house(78, 158)                  # ⊥: bar + crafting stem north
+    place_house(b, styled_rooms(specs, collection="basic"), front=front)
+    tb = bbox(specs)
+    property_yard(b, tb[0], tb[1], tb[2], tb[3], 92,
+                  side=2, front=4, back=3, seed=7)
+    b.place_player("farmer_down", 92.0, 162)
+
+    place_cottage(b, 58, 162, npc="merchant_down")   # the proven 2-room cottage
+
+    specs2, front2 = row_house(16, 168)              # a 3-room bar, upscale
+    place_house(b, styled_rooms(specs2, collection="fancy"), front=front2)
+    rb = bbox(specs2)
+    property_yard(b, rb[0], rb[1], rb[2], rb[3], 29,
+                  side=2, front=4, back=3,
+                  fence="fence_picket_weathered", gate_id="gate_picket", seed=8)
+    b.place_player("scholar_down", 29.0, 172)
+
+    path(b, (123, 131), (12, 170), width=2, wobble=0.12, seed=31)
+    for gx, gy in ((92, 152), (62, 156), (29, 162)):    # gate → lane spurs
+        spur(b, gx, gy, gx, gy - 6, tile="stone_path")
     smooth_paths(b)   # the road-angle pass: stair-steps → 45° bevels (after ALL roads)
 
     # Boat store on the big lake's N shore, dock running S into the water (the
     # store hugs the shore so the dock actually crosses onto it).
-    place_boat_store(b, 40, 103, dock_len=18)
+    place_boat_store(b, 38, 108, dock_len=14)
 
     # Ecologist in its grove on the E lane (unfenced — the documented exception).
     place_ecologist(b, 188, 146, fenced=False)
@@ -155,7 +176,7 @@ def build(zone_id="village_21_B", vseed=0):
     # ================= 5) FARMS + ORCHARD + FLY FARM + PREDATORS (N) =================
     # Windmill AT the farm fork (the landmark at the decision point) + signpost.
     safe(b, "windmill", 117, 184)
-    safe(b, "signpost", 113, 178)
+    safe(b, "signpost", 113, 178, surface=None)
     # Three irregular fields, hedgerows between, wheat beside the windmill.
     crop_bed(b, 90, 188, 110, 198, ["plant_wheat"])
     hedgerow(b, 86, 200, 112, 200, seed=41)
@@ -198,11 +219,12 @@ def build(zone_id="village_21_B", vseed=0):
 
     # ================= 6) THE NE FOREST-EDGE GLOOM (centipede country) =================
     forest(b, 168, 236, 26, 14, species=("tree_pine", "tree_pine", "tree_oak"),
-           density=0.6, seed=vseed + 19)
-    forest(b, 200, 246, 20, 9, species=("tree_pine",), density=0.55, seed=vseed + 20)
+           density=0.6, seed=vseed + 19, dirt=True)    # DEEP forest: dark dirt floor
+    forest(b, 200, 246, 20, 9, species=("tree_pine",), density=0.55, seed=vseed + 20,
+           dirt=True)
     scatter(b, 150, 222, 215, 252, {"fern": 4, "mushroom_cluster": 3, "stump": 1, "bush": 2},
             density=0.10, min_spacing=2, seed=44, clumping=0.85)
-    safe(b, "log_fallen", 160, 230)
+    safe(b, "log_pile", 160, 230); safe(b, "stump", 162, 229)
     safe(b, "wasp_nest", 178, 244)                            # nest №2, deep in
     # The carrion gully + the ruined stone pen (the "stone is the answer" story).
     b.fill_ground(163, 233, 167, 235, "dirt")
@@ -210,19 +232,22 @@ def build(zone_id="village_21_B", vseed=0):
     for (x, y) in [(156, 240), (157, 240), (158, 240), (156, 241), (156, 242)]:
         safe(b, "stone_block", x, y)                          # a broken L of old pen wall
 
-    # ================= 7) MINING (S): terraced quarry + rails + camp =================
-    rock_patch(b, 152, 38, 16, seed=vseed + 23)
-    rock_patch(b, 172, 52, 11, seed=vseed + 24)
-    rock_patch(b, 136, 26, 9, seed=vseed + 25)
-    for y in range(20, 42, 1):                                # the rail line into the quarry
+    # ================= 7) MINING (S): SOLID rock masses (the sneak peek of the
+    # underworld — filled, not walkable quarries; insides go dark later), the first
+    # ABUTTING the big lake's SE shore like the original map. Rails go down FIRST so
+    # the masses form around the line — a rail cutting into the rock face.
+    for y in range(18, 40):
         safe(b, "mine_rail", 154, y, surface=None)
-    safe(b, "mine_cart", 154, 24)
-    for y in (22, 30, 38):
+    safe(b, "mine_cart", 154, 22)
+    for y in (20, 28, 36):
         safe(b, "mine_support", 153, y)
+    rock_mass(b, 100, 24, 17, 12, seed=vseed + 23)            # against the lake's SE shore
+    rock_mass(b, 146, 32, 17, 13, seed=vseed + 24)            # the rail face
+    rock_mass(b, 178, 18, 14, 10, seed=vseed + 25)            # third, further east
     for (oid, x, y) in [("tent", 162, 46), ("campfire", 166, 44), ("crate", 165, 47),
                         ("lantern", 163, 44), ("ore_sack", 167, 46)]:
-        safe(b, oid, x, y)                                    # the workers' camp
-    safe(b, "signpost", 137, 52)                              # the quarry fork
+        safe(b, oid, x, y)                                    # the workers' camp at the face
+    safe(b, "signpost", 137, 52, surface=None)                              # the quarry fork
 
     # ================= 8) SE BEEHIVE MEADOW (future-bees hook) =================
     for i, (x, y) in enumerate([(212, 70), (215, 71), (218, 70), (221, 71)]):
@@ -259,7 +284,7 @@ def build(zone_id="village_21_B", vseed=0):
         (8, 130, 10, 12), (10, 168, 11, 13), (8, 242, 12, 8),
     ]
     for i, (cx, cy, rx, ry) in enumerate(rim):
-        forest(b, cx, cy, rx, ry, density=0.55, seed=70 + i)
+        forest(b, cx, cy, rx, ry, density=0.55, seed=70 + i, dirt=True)  # deep = dirt floor
     ring = {"tree_oak": 4, "tree_pine": 3, "bush": 2}
     # The fade between the masses (sparser, clumped).
     for (x0, y0, x1, y1, sd) in [(0, 0, 255, 20, 51), (0, 235, 255, 255, 52),
@@ -293,6 +318,25 @@ def build(zone_id="village_21_B", vseed=0):
     for (x0, y0, x1, y1, sd) in [(30, 150, 40, 158, 68), (200, 90, 212, 98, 69),
                                  (140, 168, 152, 176, 75)]:             # flower patches
         flower_patch(b, x0, y0, x1, y1, ["poppy", "flower_blue", "chamomile"], 10, seed=sd)
+
+    # ---- NO DEAD GRASS: little finds in the in-between spaces (a walk should keep
+    # passing SOMETHING — berry clumps, a picnic log, an old fence line, glades).
+    for (x, y) in [(36, 172), (37, 173), (150, 188), (151, 190), (222, 122), (223, 124),
+                   (58, 132), (96, 96), (97, 95)]:
+        safe(b, "wild_berry_bush", x, y)
+    safe(b, "log_seat", 64, 118); safe(b, "campfire", 66, 117)      # an old picnic spot
+    for x in range(176, 188, 2):                                     # a broken fence line
+        safe(b, "fence_picket_weathered", x, 124)
+    for (x, y) in [(48, 178), (50, 180), (47, 181)]:                 # a mushroom patch
+        safe(b, "mushroom_puffball", x, y)
+    safe(b, "log_pile", 210, 150)
+    safe(b, "stump", 213, 152)
+    scatter(b, 120, 60, 180, 100, {"tall_grass": 4, "clover": 2, "bush": 1},
+            density=0.10, min_spacing=2, seed=76, clumping=0.85)     # S-center fill
+    scatter(b, 60, 110, 115, 135, {"tall_grass": 3, "poppy": 2, "flower_wild": 1},
+            density=0.10, min_spacing=2, seed=77, clumping=0.85)     # between core + lake
+    scatter(b, 130, 215, 165, 250, {"fern": 2, "tall_grass": 3, "bush": 2},
+            density=0.11, min_spacing=2, seed=78, clumping=0.85)     # farm→gloom seam
 
     # ================= 11) BUG SPAWNING (habitat-tied circles) =================
     b.bug_spawning = {

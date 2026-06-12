@@ -67,6 +67,25 @@ Ready-made shared-wall floor plans so you don't hand-place every rect — each r
 - `plus_house(ox, oy)` — 5 rooms (bar + study & sunroom stems north).
 `bbox(specs)` returns the overall rect (handy for wrapping the house in a yard).
 
+### VARIETY IS THE RULE (a residential street is never three clone boxes)
+Houses are NOT perfect squares, and a street of identical cottages reads as a tech
+demo (2026-06 playtest correction). On any street of 3+ homes, mix ALL of:
+- **Shape**: at least one non-rectangular plan (⊥/L/+ via the layout generators or
+  hand specs) beside the simple cottage/bar.
+- **Collection**: at least one `basic` and one `fancy` home (the poor→nice range).
+- **Fence**: vary the family — `fence_picket`, `fence_picket_weathered` (+
+  `gate_wood_weathered`), hedge lines; the worn yard tells a story.
+- **Setback**: stagger ox/oy a few cells; gates land at different lane offsets.
+
+**SLOT SIZES (measured — budget these before placing, footprint + property_yard
+side=2/front=4/back=3):** text-grid cottage ≈ **16×21** · `row_house` ≈ **33×18** ·
+`t_house`/`plus_house` ≈ **36×26**. The composer bars are 3× wider than the cottage —
+a slot sized by eye for the cottage WILL collide (this exact mistake cost an
+iteration: interiors landed inside the neighbor's yard and the lint lit up with
+fence-on-fence overlaps). Verify with `bbox(specs)` before committing positions, and
+keep every slot clear of road corridors (the wobble band is ±2 around the
+centerline).
+
 ## Furniture: templates + `wall_run`
 Templates place furniture **against walls** using `wall_run` and a doorway-safe `_safe`:
 ```python

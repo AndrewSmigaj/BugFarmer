@@ -60,15 +60,20 @@ This is an iterative craft loop, not a one-shot. Deliberately:
   coordination masks `surface[]` (`water|path|building|farm|forest|grass`) and `reserved[]`.
   Key methods: `place_occupant(id, x, y)` (writes anchor + footprint cells; **refuses overlaps
   loudly** — no silent overwrite), `set_ground`/`fill_ground`, `place_player`/`place_bug`/`place_decor`
-  (render-only dressing), `missing_art()`, **`lint()`** (text QA gate), `save()` (chunk-aligned zones) /
+  (render-only dressing), `missing_art()`, **`lint()`** (text QA gate), **`blit(src, ox, oy)`**
+  (scene→zone composition: anchor-grouped occupant collision, bounds clipping, optional
+  base-tile transparency), `save()` (chunk-aligned zones) /
   `load(zone_id)` (edit an existing zone; derives masks).
 - `features/` — feature primitives: **`tilemap.{stamp,dump}`** (author/verify a building as a char grid),
   `room.place_room` (building shells), `house.place_house` + `styled_rooms` (multi-room houses),
   `furniture` (collection catalog: `pick(role, coll)`), `yard.{fence_rect,yard,property_yard}` (fenced
-  enclosures), `terrain.{path,pond,stream,hpath,vpath,lake,forest,rock_patch}` (`lake`/`forest`/
-  `rock_patch` = organic natural masses; `path` = organic road, NOT dead-straight),
-  `garden.{crop_bed,flower_patch,fruit_around}`, `scatter.scatter` (decor; `clumping` for organic
-  patches). `house.py` also has ready-made 3/4/5-room floor plans (`row_/t_/plus_house`). Each has a guide.
+  enclosures), `terrain.{path,smooth_paths,pond,stream,hpath,vpath,lake,shore_dress,forest,rock_patch,
+  rock_mass}` (`lake` = multi-blob natural shapes + `shore_dress` per-arc banks; `smooth_paths` = the
+  road-angle pass, run once after ALL roads; `rock_mass` = SOLID mineable masses; `path` = organic road,
+  NOT dead-straight), `garden.{crop_bed,flower_patch,fruit_around,orchard}`, `scatter.scatter` (decor;
+  `clumping` for organic patches), `village.{plaza,shop_building}` (plaza carries the civic props).
+  `house.py` also has ready-made 3/4/5-room floor plans (`row_/t_/plus_house` — WIDE: budget slots per
+  house.md's measured sizes). Each has a guide.
 - `render.render_builder(b, out, scale, bounds=None)` — render a builder straight to a preview PNG
   (for scene vignettes; no zone files written). For a saved ZONE, use `tools/view_world.py` instead.
 - **Precedence — place HARD features first so later ones route around them:** biome base → water →
@@ -96,7 +101,9 @@ canonical render scale per scene lives in `tools/zonegen/registry.py`.
 - `docs/guides/authoring/vegetation.md` — scatter (flowers/bushes/grass): density, spacing, **clumping**.
 - `docs/guides/authoring/village.md` — composing a **town**: road hierarchy, function clusters,
   `plaza()`/fountain, `shop_building()`, density gradients, build-order recipe.
-- `docs/guides/authoring/{caves,blocks,ant-colony,trees-and-ponds,biome-feature-map}.md` — the rest.
+- `docs/guides/authoring/water.md` — lakes (multi-blob shapes), `shore_dress` arcs, docks
+  (bridge_wood over water). Supersedes trees-and-ponds.md.
+- `docs/guides/authoring/{caves,blocks,ant-colony,forest,biome-feature-map}.md` — the rest.
 - Worked multi-feature scene: `tools/zonegen/scenes/scene_houses.py` (room counts × collections, yards).
 - Cross-cutting art style/perspective: `docs/guides/art/MASTER_STYLE_GUIDE.md`.
 
@@ -106,10 +113,13 @@ canonical render scale per scene lives in `tools/zonegen/registry.py`.
   wrapper (`scenes/scene_smith.py`, `_carpenter`, `_market`, `_mayor`, `_ecologist`, `_cottage`,
   `_lakeside.place_boat_store`, `player_house`). ONE source of truth per building; the village/zone
   compose the REAL pieces, never cruder re-creations.
-- **Compose → zone → save:** `scenes/zone_village.py` is the worked example — blit a composed scene into
-  the centre of a 256×256 `ZoneBuilder`, add organic terrain (`lake`/`forest`/`rock_patch`), extend
-  roads to the edges, set `Z.bug_spawning`, then `Z.save()`. Size must be ×32; `save()` writes row/col 0,0
-  so patch them after for a real world-grid zone.
+- **Compose → zone → save — TWO worked examples:** `scenes/zone_village.py` (the blit pattern: a
+  composed scene blitted into a 256×256 builder via `ZoneBuilder.blit`) and
+  **`scenes/zone_village_21_B.py` (the COMPOSE-IN-PLACE pattern — preferred for new zones):** real
+  `place_*` pieces laid along organic roads directly in the zone builder, no stamped square; water →
+  roads (+`smooth_paths` once, after all of them) → buildings → farms → scatter, then
+  `Z.bug_spawning` and `Z.save()`. Size must be ×32; `save()` writes row/col 0,0 so patch them after
+  for a real world-grid zone.
 - **View the whole zone:** `python3 tools/view_world.py <zone>` → `tools/output/<zone>_detail.png`
   (north-up colour minimap; reads SAVED chunks, so save first).
 - **Test in-game (no Unity):** `run-backend` skill starts the server, then the sync-harness joins +
@@ -124,7 +134,7 @@ fruit, lily-pads-on-water via `place_decor`) — are sub-grid floats. Space tree
 
 ## Bug spawning gotcha
 A zone spawns NOTHING without a `bug_spawning` block, and **only species in `nakama/data/species.json`
-spawn** (currently `fly_common` + `butterfly_meadow`); `bugs.json` ids lacking a species spec silently
+spawn** (currently `fly_common`, `butterfly_meadow`, `wasp_common`, `centipede_garden`); `bugs.json` ids lacking a species spec silently
 fail. Use a `"zone"`-type area + generous `initial` for ambient bugs; `circle` areas on OPEN grass for
 habitats (water/forest/buildings reject spawns).
 

@@ -629,6 +629,8 @@ MonoBehaviour:
   worlds:
   - label: Normal
     zoneId: village_21
+  - label: Village B
+    zoneId: village_21_B
   - label: Test
     zoneId: sim_test
   onStatus:

@@ -30,8 +30,22 @@ This guide collects the rules as we learn them; the first real forest zone will 
 5. **Content-update workflow:** chunk files are read at chunk-touch and never written
    back. Edit/regenerate → restart the server → walk there.
 
+## Forest composition (absorbed from trees-and-ponds.md; what's primitive-backed)
+- **Masses, not scatter**: a forest boundary is `terrain.forest()` blobs (density
+  ≈0.5-0.6) CHAINED along the rim with gaps only at road mouths; scatter is only the
+  FADE between masses. (PRIMITIVE-BACKED. The old guide's noise-density-field
+  approach remains ASPIRATIONAL — don't reach for functions that don't exist.)
+- **Deep forest floor**: pass `dirt=True` — the canopy core darkens to dirt, the
+  edge stays grass (the scene_meadow_forest_edge gradient; a dedicated
+  leaf-litter/forest_floor TILE is still future art).
+- **Edge gradient + clearings + understory**: forest() thins to a ragged edge and
+  leaves noise clearings; give 1-2 clearings a feature (log pile, mushroom ring,
+  stump circle). Understory (fern/mushroom/bush/stump) scatters at clumping ≈0.85.
+- Bands per the old checklist: core = trees, mid = trees+bushes, edge = bushes +
+  tall grass + the odd tree.
+
 ## TODO as the real forest zone lands
-- Forest ground tiles (leaf litter / forest_floor) + a tree-density brush in zonegen.
+- A leaf-litter / forest_floor ground TILE (art) — `dirt=True` is the stand-in.
 - A scene primitive for "nest clearing" (nest + prey flowers + a carrion spot).
 - Centipede density tuning — PARTIALLY DONE 2026-06: centipedes are now KNOTS
   (swarms of 1-3 sharing a center; max_swarm_size is data); the village runs

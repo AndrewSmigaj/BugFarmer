@@ -32,7 +32,29 @@ working; this file is what survives between sessions.
 - ~34 new Go tests (closure, speed parity, catch matrix, nest economy, surge lead,
   gnaw, escape — flake-checked 8x); sync-harness clean after every server phase.
 
+## Done 2026-06: village_21_B (the natural rebuild) + zone-authoring scaffolding v2
+- The candidate-replacement zone (joinable as "Village B"): one bending main road with
+  bevelled curves (the road-angle system: composited diagonal tiles + smooth_paths),
+  multi-blob lakes + shore_dress arcs, compose-in-place core (upgraded plaza at the
+  bend, general store composed, varied composer houses), solid rock_mass mining
+  sneak-peeks abutting the lake, forest-ring masses with dirt floors, orchard/wheat/
+  fly-farm belt, NE centipede gloom, no-dead-grass fill. Scaffolding: ZoneBuilder.blit,
+  lint v2 (road-tile net, spawn-circle-water, potholes), 3 test-scene cards.
+- Centipede knots (multi-centipede swarms) + overshoot lunge + turnaround re-attack;
+  water stops people only (bugs fly over).
+
 ## Later additions from this slice
+- **The river-zone slice**: the stream + `terrain.bridge(b, start, end)` (engine-free —
+  walkability is the tile-id switch; bridge tiles replacing water are walkable both
+  sides). Recorded geometry from review: a gx≈40-50 stream needs TWO bridges
+  (≈(44,130) + ≈(47,182)) or it walls off the west third.
+- **Player-placed road AUTOTILE**: when tile placement lands, run the smooth_paths
+  neighbor rule server-side on placement — no manual sprite flipping.
+- Occupant-on-water support so lily pads can live in SAVED zones (today decor =
+  render-only; the boat-store furniture un-reserves water as a special case).
+- Side-door TEXT-GRID pieces (composer + place_room already do all sides).
+- A leaf-litter/forest_floor ground tile (deep forest uses dirt=True meanwhile).
+- A frog ambient critter for the lake (intent doc wish).
 - Subdue/drag/revive (smoke tool) — the centipede capture path (trap_only reserves it).
 - Millipede: the peaceful detritivore on the same individual chassis (eats rot, makes
   compost). Dragonfly: prey:[wasp_common] — pure data + sprite (the chassis proof).

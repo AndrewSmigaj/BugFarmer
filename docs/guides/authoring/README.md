@@ -23,10 +23,12 @@ The system is **four parts**, each with one home:
 3. Build with `ZoneBuilder` + the `features/` primitives. **Author themed buildings as TEXT GRIDS**
    (`features/tilemap.stamp`/`dump`) — reasoned cell-by-cell, not by guessing coordinates.
 4. **`b.lint()` is the QA gate** — it returns TEXT defect strings (door blocked, wall/door/window height
-   mismatch, fence/wall on path/water, road dirt %). `registry.render_one` prints it. Rule: **verify in
-   TEXT (lint + `dump`), then look at a rendered crop** — never call it good off a giant PNG. (`validate()`
-   is the older bare overlap check; `lint()` supersedes it.) The one expected lint item now is the
-   wall-32/door-24 height (pending a 1.5-cell re-bake).
+   mismatch, fence/wall on path/water, wall/fence on a road TILE, dirt potholes inside stone roads,
+   spawn circles mostly over water). `registry.render_one` prints it. `place_occupant` additionally
+   warns AT PLACEMENT when a building lands on road surface (lint can't see it later — the mask is
+   overwritten). Rule: **verify in TEXT (lint + `dump`), then look at a rendered crop** — never call it
+   good off a giant PNG. (`validate()` is the older bare overlap check; `lint()` supersedes it.) The one
+   expected lint item now is the wall-32/door-24 height (pending a 1.5-cell re-bake).
 5. New object with no art renders as a labeled placeholder — log it in `docs/product/art_needed.md`.
 
 ```bash
@@ -54,8 +56,9 @@ A **scene** is a small render-only vignette; a **ZONE** is the 256×256 world th
 
 **Quick mechanic-test zones:** `python3 tools/make_test_zone.py --zone-id <id> --species <s> --occupant 'id@x,y' …`
 builds a tiny deterministic zone with a bug spawn + placed occupants — for isolating one mechanic.
-**Spawning gotcha:** only species DEFINED in `nakama/data/species.json` spawn (currently just
-`fly_common` + `butterfly_meadow`); `bugs.json` ids that lack a species spec silently don't spawn.
+**Spawning gotcha:** only species DEFINED in `nakama/data/species.json` spawn (currently
+`fly_common`, `butterfly_meadow`, `wasp_common`, `centipede_garden`); `bugs.json` ids that
+lack a species spec silently don't spawn.
 
 ## The builder — `tools/zonegen/`
 - `zonebuilder.py` — `ZoneBuilder(zone_id, W, H, base_tile=…)`: the on-disk grids + the coordination
@@ -79,9 +82,12 @@ builds a tiny deterministic zone with a bug spawn + placed occupants — for iso
 - [village.md](village.md) — composing a believable **town**: road hierarchy, function clusters, the
   `plaza()`/fountain focal point, `shop_building()`, density gradients, and the build-order recipe.
 - [yard.md](yard.md) — fenced yards/pens: `fence_rect`, `yard` (gate + path + decor).
-- [roads.md](roads.md) — organic roads/paths: `terrain.path` (wander + fray + taper), `hpath`/`vpath`.
-- [vegetation.md](vegetation.md) — `scatter` (flowers/bushes/grass): density, spacing, **clumping**.
-- [trees-and-ponds.md](trees-and-ponds.md) — `terrain.pond` + tree placement.
+- [roads.md](roads.md) — organic roads/paths: `terrain.path` (wander + fray + taper), THE ROAD-ANGLE
+  SYSTEM (`smooth_paths` + diagonal tiles — curves on square tiles), junction/adjacency rules.
+- [vegetation.md](vegetation.md) — `scatter` (flowers/bushes/grass): density, spacing, **clumping**,
+  grove metrics, the no-dead-grass rule.
+- [water.md](water.md) — lakes (`terrain.lake` multi-blob shapes), `shore_dress` per-arc banks, docks.
+  (Supersedes trees-and-ponds.md; its forest half lives in forest.md.)
 - [caves.md](caves.md) — underground space (solid rock carved out).
 - [ant-colony.md](ant-colony.md) — a worked underground nest ("creatures shape the underground").
 - [blocks.md](blocks.md) — mineable/placeable cube blocks that tile in a grid.

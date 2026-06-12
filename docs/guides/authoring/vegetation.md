@@ -39,6 +39,15 @@ scatter(b, x0, y0, x1, y1,
 - **Trees are grid-aligned but their sprite is ~2 cells tall** — scatter them with **`min_spacing` ≥ 3**
   (modest `density`, ~0.15) so the tall sprites don't overlap into a solid mass. Put trees in **clumps in
   the open, where there are no houses** (a yard gets at most a couple of back-corner trees).
+- **GROVE METRICS (measured in village_21_B):** a clump = **3-7 trees**, spacing ≥3;
+  budget **1-2 clumps per 30×30 of open meadow**. For a forest BOUNDARY use
+  `terrain.forest()` MASSES chained along the rim (density ≈0.55, `dirt=True` for the
+  deep-floor read) with scatter only as the FADE between them — rim scatter alone
+  reads as speckle, never as a forest wall (2026-06 correction).
+- **NO DEAD GRASS:** a player walking any 30-cell stretch should pass SOMETHING — a
+  berry clump, a stump, an old fence line, a flower glade, a picnic log. Empty grass
+  is a bad game experience; fill the in-between spaces with small finds, not just
+  even scatter.
 
 ## Interaction with other features
 - Reads `reserved`/`surface`, so it inherently skips fences, paths, water, and building footprints —
