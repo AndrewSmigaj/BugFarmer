@@ -68,6 +68,10 @@ for dirpath, _dirs, names in os.walk(player_base):
     for name in sorted(names):
         if not name.endswith(".png.meta"):
             continue
+        # TRIAL (2026-06): the vector-Scout farmer_* sprites are 36x44 at
+        # PPU 28 (~1.3x1.6 cells) — don't force them back to 16.
+        if name.startswith("farmer_"):
+            continue
         path = os.path.join(dirpath, name)
         text = open(path).read()
         m = ppu_pat.search(text)

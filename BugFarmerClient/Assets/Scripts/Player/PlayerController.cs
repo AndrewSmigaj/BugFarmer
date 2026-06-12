@@ -98,6 +98,8 @@ namespace BugFarmer.Player
         // (the open-center inventory layout exists so you SEE this happen).
         private void RebuildOutfit()
         {
+            if (!CharacterComposer.ComposedOutfitsEnabled)
+                return; // trial: stay on the baked vector-Scout frames
             var inv = InventoryManager.Instance;
             var outfit = CharacterComposer.OutfitFromEquipment(inv?.Equipment);
             var composed = CharacterComposer.Compose(outfit);

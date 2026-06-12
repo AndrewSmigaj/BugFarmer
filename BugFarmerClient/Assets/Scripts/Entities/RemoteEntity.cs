@@ -151,6 +151,9 @@ namespace BugFarmer.Entities
             if (eqa == _armor) return;
             _armor = eqa;
 
+            if (!Player.CharacterComposer.ComposedOutfitsEnabled)
+                return; // trial: stay on the baked vector-Scout frames
+
             Sprite[][] composed = null;
             if (eqa.Length > 0)
             {
