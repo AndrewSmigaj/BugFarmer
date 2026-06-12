@@ -40,9 +40,12 @@ namespace BugFarmer.UI
             var canvas = canvasGO.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 10; // above the old scene canvas (order 0)
-            // Match the existing UI: constant pixel size (the scene canvas uses it).
-            canvasGO.GetComponent<CanvasScaler>().uiScaleMode =
-                CanvasScaler.ScaleMode.ConstantPixelSize;
+            // Scale with the window (Andrew's screen is much larger than the
+            // 800x600 reference — ConstantPixelSize left the docks tiny).
+            var scaler = canvasGO.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(800, 600);
+            scaler.matchWidthOrHeight = 0.5f;
 
             // Build order = render order: panel docks, hotbar, drag cursor on top.
             var panelGO = new GameObject("InventoryPanel(Code)", typeof(RectTransform));

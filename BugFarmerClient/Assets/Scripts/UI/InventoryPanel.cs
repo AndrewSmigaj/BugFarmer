@@ -33,10 +33,10 @@ namespace BugFarmer.UI
         // pass) and the right-dock content root the bug info card swaps with.
         private InventorySlotUI[] _equipSlots;
         private GameObject _bugGridRoot;
-        private RectTransform _rightDock;
+        private RectTransform _bugDock;
         public InventorySlotUI[] EquipSlots => _equipSlots;
         public GameObject BugGridRoot => _bugGridRoot;
-        public RectTransform RightDock => _rightDock;
+        public RectTransform BugDock => _bugDock;
 
         /// <summary>
         /// Programmatic construction (2026-06): EDGE DOCKS, the screen center
@@ -54,10 +54,10 @@ namespace BugFarmer.UI
             canvasGroup = root.gameObject.AddComponent<CanvasGroup>();
             panelRoot = root.gameObject;
 
-            // ---- LEFT DOCK: equipment + items + coins ----
-            var left = UIFactory.MakeDock(root, "LeftDock", new Vector2(0f, 0.5f),
-                                          new Vector2(0f, 0.5f), new Vector2(168, 392),
-                                          new Vector2(8, 0));
+            // ---- RIGHT DOCK: equipment + items + coins (Andrew: items right) ----
+            var left = UIFactory.MakeDock(root, "GearDock", new Vector2(1f, 0.5f),
+                                          new Vector2(1f, 0.5f), new Vector2(168, 392),
+                                          new Vector2(-8, 0));
             var equipHead = UIFactory.MakeText(left, "EquipHeader", UIFactory.HeaderSize,
                                                UIFactory.HeaderColor, TextAlignmentOptions.Left);
             Place(equipHead.rectTransform, 12, -8, 60, 16);
@@ -94,11 +94,12 @@ namespace BugFarmer.UI
                                            TextAlignmentOptions.Left);
             Place(coinsText.rectTransform, 38, -360, 110, 18);
 
-            // ---- RIGHT DOCK: bugs (the info card swaps with the grid) ----
-            _rightDock = UIFactory.MakeDock(root, "RightDock", new Vector2(1f, 0.5f),
-                                            new Vector2(1f, 0.5f), new Vector2(208, 280),
-                                            new Vector2(-8, 0));
-            var bugsRoot = UIFactory.MakeRect(_rightDock, "BugGridRoot");
+            // ---- LEFT DOCK: bugs (the info card swaps with the grid; Andrew:
+            // bugs left — hearts sit top-LEFT corner, this dock is middle-left) ----
+            _bugDock = UIFactory.MakeDock(root, "BugDock", new Vector2(0f, 0.5f),
+                                            new Vector2(0f, 0.5f), new Vector2(208, 280),
+                                            new Vector2(8, 0));
+            var bugsRoot = UIFactory.MakeRect(_bugDock, "BugGridRoot");
             UIFactory.Stretch(bugsRoot, 0);
             _bugGridRoot = bugsRoot.gameObject;
             var bugsHead = UIFactory.MakeText(bugsRoot, "BugsHeader", UIFactory.HeaderSize,

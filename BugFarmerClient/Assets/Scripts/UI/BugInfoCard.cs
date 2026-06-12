@@ -36,14 +36,28 @@ namespace BugFarmer.UI
 
         public bool IsShowing => _root != null && _root.activeSelf;
 
+        /// <summary>
+        /// Find-or-create (2026-06: right-click fell through to the half-stack
+        /// pickup when no instance existed — the card must work regardless of
+        /// which path constructed the UI).
+        /// </summary>
+        public static BugInfoCard Ensure()
+        {
+            if (Instance != null) return Instance;
+            var host = InventoryPanel.Instance != null
+                ? InventoryPanel.Instance.gameObject
+                : FindObjectOfType<Canvas>()?.gameObject;
+            return host != null ? host.AddComponent<BugInfoCard>() : null;
+        }
+
         /// <summary>Build (once) inside the right dock, hidden.</summary>
         private void BuildIfEmpty()
         {
             if (_root != null) return;
             var panel = InventoryPanel.Instance;
-            if (panel == null || panel.RightDock == null) return;
+            if (panel == null || panel.BugDock == null) return;
 
-            var rt = UIFactory.MakeRect(panel.RightDock, "BugInfoCard");
+            var rt = UIFactory.MakeRect(panel.BugDock, "BugInfoCard");
             UIFactory.Stretch(rt, 4);
             var bg = rt.gameObject.AddComponent<Image>();
             bg.sprite = UIFactory.UISprite("panel_parchment");

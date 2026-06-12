@@ -214,11 +214,14 @@ namespace BugFarmer.UI
 
             // Bug slot, empty cursor: right-click opens the INFO CARD (species
             // knowledge; the half-stack pickup stays on item slots).
-            if (!HasCursorItem && !targetEmpty && slot.SlotType == SlotType.Bug &&
-                BugInfoCard.Instance != null)
+            if (!HasCursorItem && !targetEmpty && slot.SlotType == SlotType.Bug)
             {
-                BugInfoCard.Instance.Show(slot.CurrentItemId, slot.CurrentCount);
-                return;
+                var card = BugInfoCard.Ensure();
+                if (card != null)
+                {
+                    card.Show(slot.CurrentItemId, slot.CurrentCount);
+                    return;
+                }
             }
 
             // Armor in an item slot: right-click = QUICK-EQUIP (armor is
