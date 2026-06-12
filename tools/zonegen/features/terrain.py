@@ -249,8 +249,7 @@ def lake(b, cx, cy, radius, *, seed=0, shore="sand", reeds=16):
         blobs.append((bx, by, br, ecc, ang))
     ph1, ph2 = rng.random() * 2 * math.pi, rng.random() * 2 * math.pi
 
-    def signed(x, y):
-        """>0 inside the union; ~0 at the shoreline (max blob field, noisy edge)."""
+    def union(x, y):
         best = -9.0
         for (bx, by, br, ecc, ang) in blobs:
             dx, dy = x - bx, y - by
@@ -261,6 +260,29 @@ def lake(b, cx, cy, radius, *, seed=0, shore="sand", reeds=16):
             rr = br * (1 + 0.07 * math.sin(2 * a + ph1) + 0.05 * math.sin(3 * a + ph2))
             best = max(best, 1.0 - math.hypot(u, v) / rr)
         return best
+
+    # LITTLE BAYS: carve 2-3 concave notches by SUBTRACTING small blobs seated on
+    # the shoreline (march out from the center until the field crosses zero, then
+    # bite inward). Convex blob unions alone read as clouds; bays are what make a
+    # shoreline read as a lake's.
+    bays = []
+    for _ in range(rng.randint(2, 3)):
+        a = rng.random() * 2 * math.pi
+        d = 1.0
+        while d < radius * 1.5 and union(cx + d * math.cos(a), cy + d * math.sin(a)) > 0:
+            d += 1.0
+        bx = cx + (d - 1.0) * math.cos(a)
+        by = cy + (d - 1.0) * math.sin(a)
+        bays.append((bx, by, radius * rng.uniform(0.16, 0.28)))
+
+    def signed(x, y):
+        """>0 inside; bays subtract from the union field to carve inlets."""
+        s = union(x, y)
+        for (bx, by, br) in bays:
+            cut = 1.0 - math.hypot(x - bx, y - by) / br
+            if cut > 0:
+                s = min(s, -cut)
+        return s
 
     mr = int(radius * 1.6) + 3
     for dy in range(-mr, mr + 1):
@@ -400,12 +422,16 @@ def rock_mass(b, cx, cy, rx, ry, *, seed=0, veins=4):
             if not b.in_bounds(x, y):
                 continue
             s = signed(x, y)
-            if s > 0 and b.is_free(x, y) and b.surface[y][x] == "grass":
+            # Masses may OVERLAP beaches (sand/dirt shore ground) so rock can run
+            # right down to the waterline — a rocky lakeside cliff reads great.
+            on_ground = b.is_free(x, y) and b.surface[y][x] == "grass" \
+                and b.ground[y][x] in ("grass", "sand", "dirt", "mud")
+            if s > 0 and on_ground:
                 b.set_ground(x, y, "stone_floor")
                 block = "hard_stone_block" if (s > 0.45 and rng.random() < 0.6) else "stone_block"
                 if b.place_occupant(block, x, y):
                     filled.append((x, y))
-            elif -0.12 < s <= 0 and b.is_free(x, y) and b.surface[y][x] == "grass":
+            elif -0.12 < s <= 0 and on_ground:
                 if rng.random() < 0.5:
                     b.set_ground(x, y, "dirt")            # the ragged apron
                 if rng.random() < 0.12:

@@ -19,7 +19,7 @@ sys.path.insert(0, ZG)
 sys.path.insert(0, HERE)
 from zonebuilder import ZoneBuilder                                   # noqa: E402
 from render import render_builder                                     # noqa: E402
-from features.terrain import path, lake, shore_dress, smooth_paths, rock_mass, forest  # noqa: E402
+from features.terrain import path, lake, shore_dress, smooth_paths, rock_mass, forest, stream  # noqa: E402
 from features.scatter import scatter                                  # noqa: E402
 from features.garden import crop_bed, flower_patch, orchard           # noqa: E402
 from features.village import plaza, shop_building                     # noqa: E402
@@ -90,15 +90,19 @@ def build(zone_id="village_21_B", vseed=0):
     shore_dress(b, nw, [(0, 360, "reeds")], seed=vseed + 2)
     safe(b, "rowboat_beached", 66, 14)    # abandoned on the lake's S beach (story prop)
     shore_dress(b, se, [(180, 300, "sand"), (300, 60, "reeds")], seed=vseed + 4)
+    # A stream entering from the WEST edge and feeding the big lake (it continues
+    # into the neighbor zone; laid after the lake so it merges into the water).
+    stream(b, (0, 76), (28, 66), width=2, seed=vseed + 6, wobble=0.3)
 
     # ================= 2) ROADS (one bending main + lanes) =================
     # Main road: S edge → quarry fork → THE BEND at the plaza → farm fork → N taper.
     path(b, (118, 2), (140, 48), width=4, edge_tile="dirt", wobble=0.10, seed=21, taper_ends=6)
-    path(b, (140, 48), (128, 116), width=4, edge_tile="dirt", wobble=0.10, seed=22)
-    path(b, (126, 130), (114, 180), width=4, edge_tile="dirt", wobble=0.10, seed=23)
-    path(b, (114, 180), (100, 253), width=3, edge_tile="dirt", wobble=0.12, seed=24, taper_ends=10)
+    path(b, (140, 48), (128, 116), width=4, wobble=0.10, seed=22)
+    path(b, (126, 130), (114, 180), width=4, wobble=0.10, seed=23)
+    path(b, (114, 180), (100, 253), width=3, wobble=0.12, seed=24, taper_ends=10)
     # Lanes (dirt): W to the edge, E past the ecologist, quarry spur, farm lane, lake lane.
-    path(b, (120, 124), (2, 130), width=2, tile="dirt", wobble=0.16, seed=25, taper_ends=8)
+    path(b, (120, 125), (60, 127), width=2, tile="dirt", wobble=0.07, seed=25)
+    path(b, (60, 127), (2, 128), width=2, tile="dirt", wobble=0.07, seed=33, taper_ends=8)
     path(b, (134, 124), (192, 142), width=2, tile="dirt", wobble=0.16, seed=26)
     path(b, (192, 142), (253, 148), width=2, tile="dirt", wobble=0.16, seed=27, taper_ends=8)
     path(b, (138, 50), (154, 42), width=2, tile="dirt", wobble=0.12, seed=28)
@@ -114,26 +118,26 @@ def build(zone_id="village_21_B", vseed=0):
 
     # ================= 4) BUILDINGS (real pieces, clear of roads) =================
     # Civic cluster W of the plaza, fronting the W lane (doors south → gate spurs).
-    place_mayor(b, 96, 134)                                  # the town hall (grandest)
-    spur(b, 105, 133, 105, 128, tile="stone_path")
-    place_market(b, 72, 134)
-    spur(b, 77, 133, 77, 129, tile="stone_path")
+    place_mayor(b, 96, 136)                                  # the town hall (grandest)
+    spur(b, 105, 135, 105, 127, tile="stone_path")
+    place_market(b, 72, 138)
+    spur(b, 77, 137, 77, 127, tile="stone_path")
     # The general store — composed (no piece existed; intent doc lists it
     # separately). Set back 2 from the lane so frontage clutter sits BESIDE the
     # spur, never on the roadway.
-    shop_building(b, 52, 136, 62, 147, sign_id="sign_plank", npc="merchant_down",
+    shop_building(b, 52, 140, 62, 151, sign_id="sign_plank", npc="merchant_down",
                   wall="wall_wood", shelf_rows=2)
-    for (oid, x, y) in [("barrel", 53, 134), ("crate", 55, 134), ("crate", 60, 134)]:
+    for (oid, x, y) in [("barrel", 53, 138), ("crate", 55, 138), ("crate", 60, 138)]:
         safe(b, oid, x, y)                                   # delivery clutter out front
-    spur(b, 57, 135, 57, 130, tile="stone_path")
+    spur(b, 57, 139, 57, 127, tile="stone_path")
 
     # Production cluster SE of the plaza on its own short lane off the main road
     # (set back so the smith's ore/coal frontage at oy-2 stays off the roadway).
-    path(b, (133, 106), (170, 104), width=2, tile="dirt", wobble=0.10, seed=32)
-    place_smith(b, 138, 111)
-    spur(b, 143, 110, 143, 105, tile="dirt")
-    place_carpenter(b, 156, 111)
-    spur(b, 161, 110, 161, 105, tile="dirt")
+    path(b, (133, 104), (170, 102), width=2, tile="dirt", wobble=0.10, seed=32)
+    place_smith(b, 138, 109)
+    spur(b, 143, 108, 143, 103, tile="dirt")
+    place_carpenter(b, 156, 109)
+    spur(b, 161, 108, 161, 103, tile="dirt")
 
     # Residential houses NW of the plaza, NORTH of the town hall's compound —
     # VARIED, not three clone boxes: a ⊥ 4-room composer house (basic), the
@@ -241,9 +245,9 @@ def build(zone_id="village_21_B", vseed=0):
     safe(b, "mine_cart", 154, 22)
     for y in (20, 28, 36):
         safe(b, "mine_support", 153, y)
-    rock_mass(b, 100, 24, 17, 12, seed=vseed + 23)            # against the lake's SE shore
-    rock_mass(b, 146, 32, 17, 13, seed=vseed + 24)            # the rail face
-    rock_mass(b, 178, 18, 14, 10, seed=vseed + 25)            # third, further east
+    rock_mass(b, 88, 24, 21, 15, seed=vseed + 23)             # OVERLAPS the lake's SE shore
+    rock_mass(b, 130, 30, 20, 15, seed=vseed + 24)            # the rail face (touches #1)
+    rock_mass(b, 162, 24, 19, 13, seed=vseed + 25)            # third, completing the belt
     for (oid, x, y) in [("tent", 162, 46), ("campfire", 166, 44), ("crate", 165, 47),
                         ("lantern", 163, 44), ("ore_sack", 167, 46)]:
         safe(b, oid, x, y)                                    # the workers' camp at the face
@@ -258,12 +262,13 @@ def build(zone_id="village_21_B", vseed=0):
     for (x, y) in [(119, 126), (134, 125)]:                   # W + E lane mouths
         safe(b, "signpost", x, y, surface=None)
 
-    def flank_road(y, scan=(112, 142)):
+    def flank_road(y, scan=(118, 137)):
         """Lamps at the road's actual edges on row y (the road wobbles)."""
         cells = [x for x in range(*scan) if b.surface[y][x] == "path"]
         if cells:
-            safe(b, "lamp_post", cells[0] - 1, y)
-            safe(b, "lamp_post", cells[-1] + 1, y)
+            for lx in (cells[0] - 1, cells[-1] + 1):
+                if b.in_bounds(lx, y) and b.surface[y][lx] != "path":
+                    safe(b, "lamp_post", lx, y)
     for y in (98, 110, 136, 148, 160):                        # the town stretch
         flank_road(y)
 
