@@ -79,7 +79,8 @@ type SwarmState struct {
 
 	// ActionState (centipede): what the bug is FORCIBLY DOING right now — orthogonal
 	// to the lifecycle Phase (what it WANTS). "" | "windup" | "surge" | "recover" |
-	// "gnaw". Runs per-tick BEFORE the think gate and owns the swarm while active.
+	// "turnaround" | "gnaw". Runs per-tick BEFORE the think gate and owns the swarm
+	// while active.
 	ActionState       string
 	ActionUntilTick   int64   // current action ends/advances at this tick
 	SurgeCooldownUntil int64  // no new windup before this
@@ -88,6 +89,7 @@ type SwarmState struct {
 	WindupStartY      float32
 	WanderHeading     float32 // serpentine wander heading (radians)
 	ClampedLegStreak  int     // dead-end escape hatch: 3 fully-clamped legs => free roll
+	TurnLegsLeft      int     // turnaround arc legs remaining after a missed surge
 	GnawKey           string  // "gx,gy" of the fence being chewed
 	GnawNextTick      int64   // next gnaw damage tick
 	GnawCooldownUntil int64   // armed on ABANDONED gnaws only (successful breaks chain)

@@ -118,10 +118,18 @@ func TestCentSurgeLead(t *testing.T) {
 
 		const strafeSpeed = 0.25 // half walk speed: circling while fighting
 		dir := float32(strafeSpeed)
+		surged := false
 		for i := 0; i < 80 && p.HP == 10; i++ {
 			driveCentTick(m, state, cent)
-			if reverse && cent.ActionState == "surge" {
-				dir = -strafeSpeed // direction change at launch
+			if cent.ActionState == "surge" {
+				surged = true
+				if reverse {
+					dir = -strafeSpeed // direction change at launch
+				}
+			} else if surged {
+				break // the FIRST surge ended — this test judges only that lunge
+				// (the turnaround now presses a second attack by design; the
+				// keep-dodging loop is TestCentMissTurnaround's subject)
 			}
 			p.Position.LocalY += dir
 			p.Position.Normalize(32)
@@ -134,6 +142,92 @@ func TestCentSurgeLead(t *testing.T) {
 	}
 	if run(true) {
 		t.Fatal("a direction-change at launch must dodge the surge")
+	}
+}
+
+// The surge OVERSHOOTS: its leg target lies BEYOND the player along the launch line —
+// it charges THROUGH their spot (the per-tick flight check bites mid-pass) and ends
+// past them, set up for the turnaround.
+func TestCentSurgeOvershoot(t *testing.T) {
+	state, cent := centTestState()
+	m := &Match{}
+	p := &PlayerState{UserID: "p1", HP: 10, MaxHP: 10,
+		Position: entities.EntityPosition{LocalX: 13, LocalY: 10}} // standing, 3u east
+	state.Players = map[string]*PlayerState{"p1": p}
+
+	for i := 0; i < centWindupTicks+2 && cent.ActionState != "surge"; i++ {
+		driveCentTick(m, state, cent)
+	}
+	if cent.ActionState != "surge" {
+		t.Fatalf("state=%q, want surge", cent.ActionState)
+	}
+	// Zero player velocity → aim = the player; target = aim + overshoot along the line.
+	if cent.TargetX < 13+centSurgeOvershoot-0.5 {
+		t.Fatalf("surge target X=%.2f, want ≥ %.2f (past the player at 13)",
+			cent.TargetX, 13+centSurgeOvershoot-0.5)
+	}
+}
+
+// A MISSED surge banks back toward the player (turnaround: chained arc legs, the
+// heading converging on them) and re-engages on the SHORT cooldown — it presses the
+// attack instead of retreating. A player who RUNS (beyond de-aggro) ends it with the
+// full cooldown instead.
+func TestCentMissTurnaround(t *testing.T) {
+	state, cent := centTestState()
+	m := &Match{}
+	p := &PlayerState{UserID: "p1", HP: 10, MaxHP: 10,
+		Position: entities.EntityPosition{LocalX: 14, LocalY: 10}}
+	state.Players = map[string]*PlayerState{"p1": p}
+
+	for i := 0; i < centWindupTicks+2 && cent.ActionState != "surge"; i++ {
+		driveCentTick(m, state, cent)
+	}
+	if cent.ActionState != "surge" {
+		t.Fatalf("state=%q, want surge", cent.ActionState)
+	}
+	// DODGE: sidestep well off the flight line (still inside de-aggro 12).
+	p.Position.LocalY = 16
+	p.Position.Normalize(32)
+
+	sawTurnaround := false
+	for i := 0; i < centSurgeMaxTicks+centTurnLegs*centTurnLegTicks+8; i++ {
+		driveCentTick(m, state, cent)
+		if cent.ActionState == "turnaround" {
+			sawTurnaround = true
+		}
+		if sawTurnaround && cent.ActionState == "" {
+			break
+		}
+	}
+	if !sawTurnaround {
+		t.Fatal("missed surge never entered turnaround")
+	}
+	if cent.ActionState != "" {
+		t.Fatalf("state=%q, want idle after the turnaround", cent.ActionState)
+	}
+	// Short re-engage cooldown (presses the attack), not the full 50.
+	if cd := cent.SurgeCooldownUntil - state.TickCount; cd > centTurnCooldown {
+		t.Fatalf("cooldown after turnaround = %d ticks, want ≤ %d (short)", cd, centTurnCooldown)
+	}
+	if p.HP != 10 {
+		t.Fatalf("dodged player took damage: HP=%d", p.HP)
+	}
+
+	// --- The runner: dodge AND flee beyond de-aggro → full cooldown, no pursuit.
+	state2, cent2 := centTestState()
+	p2 := &PlayerState{UserID: "p1", HP: 10, MaxHP: 10,
+		Position: entities.EntityPosition{LocalX: 14, LocalY: 10}}
+	state2.Players = map[string]*PlayerState{"p1": p2}
+	for i := 0; i < centWindupTicks+2 && cent2.ActionState != "surge"; i++ {
+		driveCentTick(m, state2, cent2)
+	}
+	p2.Position.LocalX, p2.Position.LocalY = 40, 40 // gone
+	p2.Position.Normalize(32)
+	for i := 0; i < centSurgeMaxTicks+centTurnLegs*centTurnLegTicks+8 && cent2.ActionState != ""; i++ {
+		driveCentTick(m, state2, cent2)
+	}
+	if cd := cent2.SurgeCooldownUntil - state2.TickCount; cd <= centTurnCooldown {
+		t.Fatalf("runner-escape cooldown = %d ticks, want the FULL backoff", cd)
 	}
 }
 

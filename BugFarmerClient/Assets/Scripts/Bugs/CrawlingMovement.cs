@@ -16,9 +16,11 @@ namespace BugFarmer.Bugs
     /// </summary>
     public class CrawlingMovement : IBugMovement
     {
-        // The knot hugs its center: offsets re-target inside this radius and creep
-        // toward the new spot at crawl speed (per-tick step).
-        private static readonly FixedPoint KnotRadius = FixedPoint.FromFloat(1.1f);
+        // Offsets re-target inside this radius and creep toward the new spot at crawl
+        // speed (per-tick step). 2.4 (was 1.1) after playtest: members glued to one
+        // spot read as "three centipedes in the same area" — they should patrol a
+        // loose territory around the shared center, not a huddle.
+        private static readonly FixedPoint KnotRadius = FixedPoint.FromFloat(2.4f);
         private static readonly FixedPoint OffsetStep = FixedPoint.FromFloat(0.035f);
         private const int RetargetMinTicks = 40;  // 4-8s between repositions
         private const int RetargetMaxTicks = 81;
@@ -64,8 +66,9 @@ namespace BugFarmer.Bugs
         {
             int dirIndex = bug.RandomInt(RngPurpose.Direction, 0, FixedPointMath.TableSize);
             var dir = FixedPointMath.DirectionFromIndex(dirIndex);
-            // Radius fraction in [25%, 100%] of KnotRadius so members spread, not pile.
-            int pct = bug.RandomInt(RngPurpose.TargetOffset, 25, 101);
+            // Radius fraction in [45%, 100%] of KnotRadius so members spread, not pile
+            // (the floor keeps them off the center, where they'd stack).
+            int pct = bug.RandomInt(RngPurpose.TargetOffset, 45, 101);
             var r = KnotRadius * FixedPoint.FromFloat(pct / 100f);
             _offsetTarget = new FixedPoint2(dir.X * r, dir.Y * r);
             _ticksUntilChange = bug.RandomInt(RngPurpose.MovementChange, RetargetMinTicks, RetargetMaxTicks);

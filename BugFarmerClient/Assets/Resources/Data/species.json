@@ -197,7 +197,7 @@
     "description": "A long, fast, venomous hunter. Wanders in lazy serpentines, lunges at anything warm, chews through wooden fences, and scavenges the fallen. Stone walls stop it. Far too big for any net.",
     "category": "individual",
     "base_speed": 1.6,
-    "wander_radius": 15.0,
+    "wander_radius": 20.0,
     "wander_change_rate": 0.1,
     "vision_range": 10.0,
     "attractions_by_phase": {

@@ -808,9 +808,14 @@ swarm-count capped, arm-the-cooldown skip at the cap). Phase = what it WANTS (th
 standard feeding/reproducing lifecycle — the CheckPhaseTransition skip applies ONLY to
 nest predators, so the centipede parks at carrion and breeds there); ActionState =
 what it's DOING (windup 0.8s zero-leg freeze → SURGE at the launch position + a 0.8
-velocity half-lead, clamped, ×4.8 → bite 1.6 with a line-of-sight gate (no
-through-fence bites — "stone is the answer" stays true) → recover + 5s cooldown); the
-whole knot lunges together (members are center+offset). Gnaw: its own GnawState
+velocity half-lead **+ a 3.5 OVERSHOOT past the aim point** — it charges THROUGH the
+player's spot unless they dodge; the per-tick flight check bites mid-pass at 1.6 with
+a line-of-sight gate (no through-fence bites — "stone is the answer" stays true) →
+on a BITE: recover + the full 5s cooldown; on a MISS: **"turnaround"** — up to 3
+chained ~2.5-cell arc legs, heading rotating ≤75°/leg toward the player (the trail
+renders the chain as a banked curve), then re-engage on a SHORT 1.5s cooldown — it
+presses the attack; a player beyond de-aggro 12 ends it on the full cooldown); the
+whole knot lunges together (members are center+offset, knot radius 2.4). Gnaw: its own GnawState
 damage pool (NOT BreakingState — the owner-reset would let players "repair" by
 hitting), 1 dmg/80 ticks → wood HP 2 = 16 visible+audible seconds (the crunch is the
 NIGHT tell: audible past the light radius); breaks via breakOccupantAt with no drops;
