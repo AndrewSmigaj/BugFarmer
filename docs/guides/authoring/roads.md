@@ -5,8 +5,10 @@ buildings** in the precedence order: water is carved first, the road parts aroun
 reserve their footprints along the road.
 
 ## THE TOWN GRID RULE (the governing rule — read first)
-**Wherever anything is BUILT (buildings, yards, pens, fields, orchards), roads run
-STRAIGHT horizontal or vertical**, with L-elbow corners (an H segment meeting a V
+**STONE roads: wherever anything is BUILT (buildings, yards, pens, fields,
+orchards), they run STRAIGHT horizontal or vertical**. **DIRT lanes are
+informal — diagonals and meander are fine (they're dirt)**, EXCEPT the segment
+directly fronting buildings, which stays straight, with L-elbow corners (an H segment meeting a V
 segment — `smooth_paths` bevels the corner). Organic meander is for EMPTY wilds
 only. This rule exists because THREE successive attempts at organic-roads-meet-
 rectangular-architecture each produced clipping (wobble climbing into frontages,

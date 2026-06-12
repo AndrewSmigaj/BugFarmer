@@ -79,6 +79,15 @@ lack a species spec silently don't spawn.
 - **Precedence — place HARD features first so later ones route around them:** biome base → water →
   roads → buildings → farms → scatter.
 
+## THE STANDARDS CHECKLIST (review every card against this — lint can't catch taste)
+- ROWS: human-made things in rows/columns (orchards = tight rows + wide lanes; shelves, stalls, bins, nets, trays).
+- YARDS: every home picks a style (grand / modest / small_plot / unfenced); streets MIX them.
+- FULL HOME: every house has bedroom + kitchen + BATHROOM. Shops: backroom, no bathroom.
+- FRONTAGE: shops use shop_frontage (sign + one display LINE).
+- ROADS: stone straight near built things; dirt lanes informal except at frontages; nothing tall within 1 cell of a road.
+- FLY GEAR: netting + autonet INSIDE pens (no net posts).
+- NO DEAD GRASS · clumped wild vegetation · forests as masses, not rings.
+
 ## Feature guides
 - [building.md](building.md) — rooms, walls, doors, building shells (`room.place_room`).
 - [house.md](house.md) — multi-room houses: the composer, the south-facing facing rule, room
