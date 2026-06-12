@@ -38,9 +38,23 @@ GUIDE_OF = {
     "scene_block_mine":              ("blocks.md", "ore blocks in rock"),
     "scene_block_tiling":            ("blocks.md", "block tiling QA (no seams)"),
     "scene_catalog":                 ("README.md", "every world entity, placed once"),
+    "scene_smith":                   ("house.md", "the smith piece (text-grid building)"),
+    "scene_carpenter":               ("house.md", "the carpenter piece"),
+    "scene_market":                  ("village.md", "the market piece (stall line out front)"),
+    "scene_mayor":                   ("village.md", "the town hall / mayor estate piece"),
+    "scene_cottage":                 ("house.md", "the 2-room cottage piece + yard"),
+    "scene_ecologist":               ("village.md", "the ecologist cabin (unfenced)"),
+    "scene_lakeside":                ("water.md", "the boat store + dock over water"),
 }
 
-ORDER = ["surface", "tests", "underground", "desert"]
+ORDER = ["zones", "surface", "pieces", "tests", "underground", "desert"]
+
+# the playable ZONES (maps rendered by view_world + the annotation pass) — shown
+# first; these are what the game actually loads.
+ZONE_MAPS = [
+    ("village_21_B", "maps/village_21_B_map.png", "THE NEW VILLAGE (candidate replacement) — grid streets, fly farm, orchard, rock belt"),
+    ("village_21", "maps/predators_map_full.png", "the original village (kept for comparison)"),
+]
 
 
 def generate():
@@ -58,7 +72,14 @@ def generate():
             "<p>Cards re-render via <code>python3 tools/zonegen/registry.py</code>. "
             "Zone maps live in <a href='maps/'>maps/</a>; one-off art QA in "
             "<a href='art_review/'>art_review/</a>.</p>"]
+    rows.append("<h2>zones (the playable maps)</h2>")
+    for zid, png, cap in ZONE_MAPS:
+        exists = os.path.exists(os.path.join(PREVIEWS, png))
+        img = f"<img src='{png}' loading='lazy'>" if exists else "<i>map not rendered</i>"
+        rows.append(f"<div class='card'><b>{zid}</b><br><i>{html.escape(cap)}</i><br>{img}</div>")
     for cat in ORDER + sorted(set(by_cat) - set(ORDER)):
+        if cat == "zones":
+            continue
         if cat not in by_cat:
             continue
         rows.append(f"<h2>{cat}</h2>")

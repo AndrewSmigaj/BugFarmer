@@ -52,7 +52,7 @@ def build():
     b.place_occupant("log_fallen", 22, 27)              # 4x1 fallen trunk
     b.place_occupant("mushroom_bracket", 21, 26)        # oyster/turkeytail fungus on the log
     b.place_occupant("mushroom_cluster", 27, 26)
-    b.place_bug("moth_brown", 25, 28.4, scale=0.6)
+    b.place_bug("moth_brown", 25, 28.4)
 
     # --- THRESHOLD STUMPS: where the old clearing ends (mid-band) ---
     for sx, sy, sid in [(8, 24, "stump"), (12, 26, "stump_mossy"), (40, 25, "stump"),
@@ -100,27 +100,27 @@ def build():
             density=0.12, min_spacing=2, seed=8, surfaces=("grass",))
     flower_patch(b, 0, 0, W - 1, 18,
                  ["flower_red", "flower_blue", "flower_yellow", "flower_aster", "poppy", "dandelion"],
-                 28, seed=3, scale=0.7)
+                 28, seed=3)
 
     # --- THE EDGE THREATS: a millipede + a centipede, assembled from segmented part sprites ---
-    def chain(parts, x, y, dx, dy, step=0.7, scale=1.3):
+    def chain(parts, x, y, dx, dy, step=0.7, scale=1.6):
         for i, p in enumerate(parts):
             b.place_bug(p, x + dx * step * i, y + dy * step * i, scale=scale)
 
     # millipede — slow, armored, longer/rounder; crawling out from under the log-pile deadwood
     chain(["millipede_head_a"] + ["millipede_body_a"] * 6 + ["millipede_tail_a"],
-          12, 33, 1, 0.25, scale=1.25)
+          12, 33, 1, 0.25)
     # centipede — fast, venomous, flatter; emerging from the boggy seam by the fallen-log bridge
     chain(["centipede_head_a", "centipede_body_a", "centipede_body_a", "centipede_body_a",
-           "centipede_tail_a"], 30, 30, -1, 0.3, scale=1.3)
+           "centipede_tail_a"], 30, 30, -1, 0.3)
 
     # --- a few LINGERING pollinators down south + dusk life at the gloom ---
     for _ in range(3):
         b.place_bug(rng.choice(["butterfly_monarch", "butterfly_common"]),
-                    rng.uniform(2, 56), rng.uniform(2, 18), scale=0.8)
-    b.place_bug("butterfly_swallowtail", 40, 14, scale=0.85)
-    b.place_bug("firefly_blue", 50, 39, scale=0.6)      # dusk glow at the forest edge
-    b.place_bug("moth_luna", 20, 41, scale=0.8)         # a forest-edge dusk moth
+                    rng.uniform(2, 56), rng.uniform(2, 18))
+    b.place_bug("butterfly_swallowtail", 40, 14)
+    b.place_bug("firefly_blue", 50, 39)      # dusk glow at the forest edge
+    b.place_bug("moth_luna", 20, 41)         # a forest-edge dusk moth
 
     b.spawn = [30, 2]                                   # enter from the warm meadow (south)
     return b
@@ -129,7 +129,7 @@ def build():
 if __name__ == "__main__":
     b = build()
     out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "scene_meadow_forest_edge.png"))
-    render_builder(b, out, scale=6)
+    render_builder(b, out)
     print("missing_art:", b.missing_art())
     print("warnings:", len(b.warnings))
     print("validate:", b.validate() or "OK")
