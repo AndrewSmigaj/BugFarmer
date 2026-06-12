@@ -13,8 +13,40 @@ namespace BugFarmer.UI
 
         private int _selectedSlot;
 
+        /// <summary>
+        /// Programmatic construction: a wood strip bottom-center holding the
+        /// 10 hotbar slots (scene-built arrays win if present).
+        /// </summary>
+        private void BuildIfEmpty()
+        {
+            if (slots != null && slots.Length > 0) return;
+
+            var rt = (RectTransform)transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
+            rt.pivot = new Vector2(0.5f, 0f);
+            rt.anchoredPosition = new Vector2(0, 6);
+            rt.sizeDelta = new Vector2(10 * 44 + 2 * UIFactory.Pad - 4, 56);
+            var bg = gameObject.AddComponent<UnityEngine.UI.Image>();
+            bg.sprite = UIFactory.UISprite("panel_wood");
+            bg.type = UnityEngine.UI.Image.Type.Sliced;
+            bg.raycastTarget = true;
+
+            var grid = UIFactory.MakeGrid(transform, "HotbarGrid", 10, UIFactory.Slot);
+            var grt = (RectTransform)grid.transform;
+            grt.anchorMin = grt.anchorMax = new Vector2(0.5f, 0.5f);
+            grt.pivot = new Vector2(0.5f, 0.5f);
+            grt.anchoredPosition = Vector2.zero;
+            grt.sizeDelta = new Vector2(10 * 44 - 4, UIFactory.Slot);
+
+            slots = new InventorySlotUI[10];
+            for (int i = 0; i < 10; i++)
+                slots[i] = UIFactory.MakeSlot(grid.transform, "slot_frame");
+        }
+
         private void Start()
         {
+            BuildIfEmpty();
+
             // Initialize slots with type and index
             for (int i = 0; i < slots.Length && i < InventoryManager.ItemSlotCount; i++)
             {

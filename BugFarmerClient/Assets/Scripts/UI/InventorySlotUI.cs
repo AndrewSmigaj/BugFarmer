@@ -8,7 +8,7 @@ using BugFarmer.Networking;
 
 namespace BugFarmer.UI
 {
-    public enum SlotType { Bug, Item }
+    public enum SlotType { Bug, Item, Equipment }
 
     /// <summary>
     /// Reusable inventory slot UI component.
@@ -20,6 +20,21 @@ namespace BugFarmer.UI
         [SerializeField] private TMP_Text countText;
         [SerializeField] private Image selectionHighlight;
         [SerializeField] private Image background;
+        [SerializeField] private Image ghostImage; // equipment slots: faint silhouette when empty
+
+        /// <summary>
+        /// Programmatic construction path (UIFactory.MakeSlot) — assigns the
+        /// parts the prefab used to wire in the inspector.
+        /// </summary>
+        public void InitParts(Image icon, TMP_Text count, Image selection,
+                              Image bg, Image ghost = null)
+        {
+            iconImage = icon;
+            countText = count;
+            selectionHighlight = selection;
+            background = bg;
+            ghostImage = ghost;
+        }
 
         public SlotType SlotType { get; private set; }
         public int SlotIndex { get; private set; }
@@ -45,6 +60,9 @@ namespace BugFarmer.UI
 
             CurrentItemId = slot.item_id;
             CurrentCount = slot.count;
+
+            if (ghostImage != null)
+                ghostImage.enabled = false;
 
             if (iconImage != null)
             {
@@ -99,6 +117,9 @@ namespace BugFarmer.UI
             {
                 countText.enabled = false;
             }
+
+            if (ghostImage != null)
+                ghostImage.enabled = true; // empty equipment slot shows its silhouette
         }
 
         public void OnPointerClick(PointerEventData eventData)

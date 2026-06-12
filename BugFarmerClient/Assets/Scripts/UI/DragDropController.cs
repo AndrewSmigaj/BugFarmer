@@ -37,8 +37,31 @@ namespace BugFarmer.UI
             Instance = this;
         }
 
+        /// <summary>
+        /// Programmatic construction of the drag cursor (icon + count that
+        /// follow the mouse); scene-built refs win if present.
+        /// </summary>
+        private void BuildIfEmpty()
+        {
+            if (cursorRoot != null) return;
+
+            var rt = UIFactory.MakeRect(transform, "CursorRoot");
+            rt.sizeDelta = new Vector2(UIFactory.Slot, UIFactory.Slot);
+            cursorRoot = rt.gameObject;
+            cursorIcon = UIFactory.MakeImage(rt, "Icon", null);
+            UIFactory.Stretch(cursorIcon.rectTransform, 2);
+            cursorIcon.preserveAspect = true;
+            cursorCountText = UIFactory.MakeText(rt, "Count", UIFactory.CountSize,
+                                                 UIFactory.CountColor,
+                                                 TMPro.TextAlignmentOptions.BottomRight);
+            UIFactory.Stretch(cursorCountText.rectTransform, 1);
+            cursorCountText.fontStyle = TMPro.FontStyles.Bold;
+        }
+
         private void Start()
         {
+            BuildIfEmpty();
+
             // Ensure cursor elements don't block raycasts to slots below
             if (cursorRoot != null)
             {
@@ -82,6 +105,14 @@ namespace BugFarmer.UI
         public void OnSlotClicked(InventorySlotUI slot, PointerEventData eventData)
         {
             Debug.Log($"[DragDrop] OnSlotClicked: {slot.SlotType}[{slot.SlotIndex}], button={eventData.button}, hasCursor={HasCursorItem}");
+
+            // Equipment slots route through the armor equip flow (wired in the
+            // armor pass); inert until then.
+            if (slot.SlotType == SlotType.Equipment)
+            {
+                EquipmentController.Instance?.OnEquipSlotClicked(slot, eventData, this);
+                return;
+            }
 
             if (eventData.button == PointerEventData.InputButton.Left)
             {

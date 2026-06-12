@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 using TMPro;
 
 namespace BugFarmer.UI
@@ -26,6 +27,98 @@ namespace BugFarmer.UI
 
         private bool _isOpen;
 
+        // Code-built parts (UIFactory path): the 7 equipment slots (order:
+        // head, body, arms, legs, feet, acc1, acc2 — wired up in the armor
+        // pass) and the right-dock content root the bug info card swaps with.
+        private InventorySlotUI[] _equipSlots;
+        private GameObject _bugGridRoot;
+        private RectTransform _rightDock;
+        public InventorySlotUI[] EquipSlots => _equipSlots;
+        public GameObject BugGridRoot => _bugGridRoot;
+        public RectTransform RightDock => _rightDock;
+
+        /// <summary>
+        /// Programmatic construction (2026-06): EDGE DOCKS, the screen center
+        /// stays open world — the game never pauses and the camera keeps the
+        /// REAL player centered; you watch your actual character change as
+        /// you equip. Left dock: equipment strip + item storage + coins.
+        /// Right dock: the bug grid (the info card swaps in here).
+        /// </summary>
+        private void BuildIfEmpty()
+        {
+            if (itemSlots != null && itemSlots.Length > 0) return; // scene-built
+
+            var root = UIFactory.MakeRect(transform, "Docks");
+            UIFactory.Stretch(root, 0);
+            canvasGroup = root.gameObject.AddComponent<CanvasGroup>();
+            panelRoot = root.gameObject;
+
+            // ---- LEFT DOCK: equipment + items + coins ----
+            var left = UIFactory.MakeDock(root, "LeftDock", new Vector2(0f, 0.5f),
+                                          new Vector2(0f, 0.5f), new Vector2(168, 392),
+                                          new Vector2(8, 0));
+            var equipHead = UIFactory.MakeText(left, "EquipHeader", UIFactory.HeaderSize,
+                                               UIFactory.HeaderColor, TextAlignmentOptions.Left);
+            Place(equipHead.rectTransform, 12, -8, 60, 16);
+            equipHead.text = "EQUIP";
+
+            string[] ghosts = { "ghost_head", "ghost_body", "ghost_arms",
+                                "ghost_legs", "ghost_feet" };
+            _equipSlots = new InventorySlotUI[7];
+            var equipGrid = UIFactory.MakeGrid(left, "EquipGrid", 1, UIFactory.EquipSlot);
+            Place((RectTransform)equipGrid.transform, 10, -26, UIFactory.EquipSlot, 5 * 52);
+            for (int i = 0; i < 5; i++)
+                _equipSlots[i] = UIFactory.MakeSlot(equipGrid.transform,
+                                                    "slot_frame_equip", ghosts[i]);
+            var accGrid = UIFactory.MakeGrid(left, "AccessoryGrid", 2, UIFactory.EquipSlot);
+            Place((RectTransform)accGrid.transform, 10, -26 - 5 * 52 - 4,
+                  2 * 52, UIFactory.EquipSlot);
+            for (int i = 5; i < 7; i++)
+                _equipSlots[i] = UIFactory.MakeSlot(accGrid.transform,
+                                                    "slot_frame_equip", "ghost_accessory");
+
+            var itemsHead = UIFactory.MakeText(left, "ItemsHeader", UIFactory.HeaderSize,
+                                               UIFactory.HeaderColor, TextAlignmentOptions.Left);
+            Place(itemsHead.rectTransform, 70, -8, 60, 16);
+            itemsHead.text = "ITEMS";
+            var itemGrid = UIFactory.MakeGrid(left, "ItemGrid", 2, UIFactory.Slot);
+            Place((RectTransform)itemGrid.transform, 70, -26, 2 * 44, 5 * 44);
+            itemSlots = new InventorySlotUI[10];
+            for (int i = 0; i < 10; i++)
+                itemSlots[i] = UIFactory.MakeSlot(itemGrid.transform, "slot_frame");
+
+            var coinIcon = UIFactory.MakeImage(left, "CoinIcon", "icon_coin");
+            Place(coinIcon.rectTransform, 12, -358, 22, 22);
+            coinsText = UIFactory.MakeText(left, "Coins", 12f, UIFactory.TextColor,
+                                           TextAlignmentOptions.Left);
+            Place(coinsText.rectTransform, 38, -360, 110, 18);
+
+            // ---- RIGHT DOCK: bugs (the info card swaps with the grid) ----
+            _rightDock = UIFactory.MakeDock(root, "RightDock", new Vector2(1f, 0.5f),
+                                            new Vector2(1f, 0.5f), new Vector2(208, 280),
+                                            new Vector2(-8, 0));
+            var bugsRoot = UIFactory.MakeRect(_rightDock, "BugGridRoot");
+            UIFactory.Stretch(bugsRoot, 0);
+            _bugGridRoot = bugsRoot.gameObject;
+            var bugsHead = UIFactory.MakeText(bugsRoot, "BugsHeader", UIFactory.HeaderSize,
+                                              UIFactory.HeaderColor, TextAlignmentOptions.Left);
+            Place(bugsHead.rectTransform, 12, -8, 60, 16);
+            bugsHead.text = "BUGS";
+            var bugGrid = UIFactory.MakeGrid(bugsRoot, "BugGrid", 4, UIFactory.Slot);
+            Place((RectTransform)bugGrid.transform, 12, -26, 4 * 44, 5 * 44);
+            bugSlots = new InventorySlotUI[20];
+            for (int i = 0; i < 20; i++)
+                bugSlots[i] = UIFactory.MakeSlot(bugGrid.transform, "slot_frame_bug");
+        }
+
+        private static void Place(RectTransform rt, float x, float y, float w, float h)
+        {
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f); // top-left
+            rt.pivot = new Vector2(0f, 1f);
+            rt.anchoredPosition = new Vector2(x, y);
+            rt.sizeDelta = new Vector2(w, h);
+        }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -38,6 +131,8 @@ namespace BugFarmer.UI
 
         private void Start()
         {
+            BuildIfEmpty();
+
             // Initialize item slots (10-19, the non-hotbar storage)
             // Hotbar handles slots 0-9, inventory panel handles 10-19
             const int itemSlotOffset = 10;
@@ -52,6 +147,17 @@ namespace BugFarmer.UI
             {
                 bugSlots[i].Initialize(SlotType.Bug, i);
                 bugSlots[i].OnSlotClicked += OnSlotClicked;
+            }
+
+            // Equipment slots (code-built only; indices 0-6 = head, body,
+            // arms, legs, feet, acc1, acc2)
+            if (_equipSlots != null)
+            {
+                for (int i = 0; i < _equipSlots.Length; i++)
+                {
+                    _equipSlots[i].Initialize(SlotType.Equipment, i);
+                    _equipSlots[i].OnSlotClicked += OnSlotClicked;
+                }
             }
 
             // Subscribe to inventory events
