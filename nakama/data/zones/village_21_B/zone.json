@@ -54,9 +54,9 @@
           "fly_common"
         ],
         "type": "circle",
-        "cx": 121,
-        "cy": 205,
-        "radius": 14
+        "cx": 134,
+        "cy": 206,
+        "radius": 13
       },
       {
         "id": "beehive_meadow",

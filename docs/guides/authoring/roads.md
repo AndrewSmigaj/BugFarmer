@@ -4,7 +4,19 @@ How to lay roads/paths with `zonegen`'s `terrain` primitives. Roads come **after
 buildings** in the precedence order: water is carved first, the road parts around it, then buildings
 reserve their footprints along the road.
 
-## ROUTED roads — `route_road` (preferred for long/wild spines)
+## THE TOWN GRID RULE (the governing rule — read first)
+**Wherever anything is BUILT (buildings, yards, pens, fields, orchards), roads run
+STRAIGHT horizontal or vertical**, with L-elbow corners (an H segment meeting a V
+segment — `smooth_paths` bevels the corner). Organic meander is for EMPTY wilds
+only. This rule exists because THREE successive attempts at organic-roads-meet-
+rectangular-architecture each produced clipping (wobble climbing into frontages,
+routed meander through yards and pens); straight roads beside rectangular plots is
+also simply what the genre's best (Stardew) does. Pair it with:
+- `clear_road_margins(b)` once after all scatter — deletes vegetation within 1 cell
+  of any road (tall sprites overhang the roadway from adjacent cells), and
+- the tall-sprite-overhang lint (a tree directly south of a road cell = defect).
+
+## ROUTED roads — `route_road` (EMPTY-WILDS spines only, per the rule above)
 ```python
 from features.terrain import route_road
 route_road(b, (118, 2), (140, 48), width=4, seed=21)          # point-to-point

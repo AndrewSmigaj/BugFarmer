@@ -39,6 +39,7 @@ REGISTRY = {
     "scene_road_angles":             ("tests", 4),
     "scene_shore_arcs":              ("tests", 3),
     "scene_orchard":                 ("surface", 3),
+    "scene_fly_farm":                ("surface", 4),
     "scene_block_house":             ("tests", 4),
     "scene_block_mine":              ("tests", 4),
     "scene_block_tiling":            ("tests", 4),
@@ -72,12 +73,18 @@ def render_one(name, record_tiles=None, lint=True):
 
 
 def render_all(record_tiles=None, only=None):
+    """Renders every registered scene, then regenerates the gallery (index.html)."""
     reports = {}
     for name in (only or REGISTRY):
         try:
             reports[name] = render_one(name, record_tiles)
         except Exception as e:
             print(f"  SKIP {name}: {str(e)[:140]}")
+    try:
+        from gallery import generate as _gallery
+        _gallery()
+    except Exception as e:
+        print(f"  gallery skipped: {e}")
     return reports
 
 

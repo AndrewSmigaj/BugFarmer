@@ -48,8 +48,10 @@ def place_market(b, ox, oy):
     stalls out front. Door faces south at ox+DOORX. Returns the building rect."""
     stamp(b, MARKET, LEG, ox=ox, oy=oy)
     b.place_occupant("sign_market_board", ox + 1, oy - 1, surface="grass")   # 3-wide sign, left of the door
+    # the produce STALL LINE: one straight row under the frontage (rows discipline —
+    # market goods sit in a line, not sprinkled)
     for (oid, x, y) in [("produce_crate", ox + DOORX + 2, oy - 1), ("produce_crate", ox + DOORX + 3, oy - 1),
-                        ("barrel", ox + BW - 2, oy - 2), ("produce_crate", ox + 4, oy - 1)]:  # stalls, no fence
+                        ("produce_crate", ox + DOORX + 4, oy - 1), ("barrel", ox + DOORX + 5, oy - 1)]:
         fw, fh = b.footprint(oid)
         if all(b.in_bounds(x + dx, y + dy) and b.is_free(x + dx, y + dy)
                for dx in range(fw) for dy in range(fh)):

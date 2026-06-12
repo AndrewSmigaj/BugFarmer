@@ -98,7 +98,15 @@ the road, footprints ≥2 cells off the path edge. Orientation variety via
   compost_bin.
 - **Orchard:** `orchard()` rows + crates/ladder + compost_pile pair on the fly-farm
   side; fallen fruit (live, from the server sim).
-- **Fly farm (a landscape, not a building):** compost piles, net_post pairs +
+- **Fly farm — THE GAME LOOP, built (scenes/scene_fly_farm.py):** grow fruit
+  trees (the mini orchard) → fruit drops + rots → COMPOST BINS in the pens feed
+  the flies → flies REPRODUCE inside TWO large fenced pens (fences genuinely
+  contain flies: flies_over_fences=false + fences block bugs; the spawn circle
+  centers on the pens) → catch by hand, on the NET LINES along the flanks
+  (flies accumulate — sticky-net mechanics later), or from the AUTONET
+  auto-catchers at the far corners (emptied on rounds — mechanics later).
+  Collection trays in a row by the gates; one earned broken net. Everything in
+  rows. The OLD list (superseded): compost piles, net_post pairs +
   fly_netting, bait_basket hangs, collection_tray rows, darkened soil (dirt),
   shallow puddle (2-3 water_shallow cells), **failure evidence**: broken_net ×2 +
   one overrun patch (dense flies + rotten fruit decor).

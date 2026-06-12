@@ -34,7 +34,12 @@ The system is **four parts**, each with one home:
 ```bash
 python3 tools/zonegen/scenes/<scene>.py     # build + render ONE scene to its preview PNG + print lint
 python3 tools/zonegen/registry.py <scene>   # render via the canonical registry path (prints lint)
+python3 tools/zonegen/gallery.py            # regenerate previews/index.html (the GALLERY)
 ```
+
+> **THE GALLERY is the visual entry point**: open `tools/_generated/previews/index.html`
+> — every scene card with the guide it illustrates. Zone maps live in `previews/maps/`,
+> one-off art QA in `previews/art_review/`. The previews root holds only directories.
 
 > **Art Lab is deprecated for layout work** — render previews directly and read them. (`tools/artlab/`
 > still exists for picking sprite *variants*, but don't run it for zone authoring.)

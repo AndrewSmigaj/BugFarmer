@@ -29,7 +29,7 @@ def flower_patch(b, x0, y0, x1, y1, kinds, n, seed=0):
 
 
 def orchard(b, x0, y0, x1, y1, *, tree="tree_apple", row_spacing=4, tree_spacing=3,
-            jitter=1, crates=2, ladders=1, fruit=True, seed=0):
+            jitter=0, crates=2, ladders=1, fruit=True, seed=0):
     """A worked ORCHARD: rows of fruit trees with human intent but organic variation —
     jittered rows (never a perfect grid), walking lanes between them, crates and a
     ladder at the row ends, fallen fruit under some trees. Restores the village
@@ -47,29 +47,31 @@ def orchard(b, x0, y0, x1, y1, *, tree="tree_apple", row_spacing=4, tree_spacing
     def spaced(x, y):
         return all(max(abs(x - px), abs(y - py)) >= tree_spacing for (px, py) in planted)
 
+    # ROWS DISCIPLINE (2026-06): an orchard is a human-planted thing — constant row
+    # lines, EVEN tree spacing (jitter=0 default; pass jitter for a wild/old
+    # orchard). Gaps appear only where the ground is blocked — honest, not random.
     for row_i, ry in enumerate(range(y0 + 1, y1, row_spacing)):
-        # each row starts with its own phase so rows don't align vertically
-        x = x0 + 1 + (row_i % 2)
-        while x <= x1 - 1:
-            jx = x + rng.randint(-jitter, jitter)
-            jy = ry + rng.randint(-jitter, jitter)
+        for x in range(x0 + 1, x1, tree_spacing):
+            jx = x + (rng.randint(-jitter, jitter) if jitter else 0)
+            jy = ry + (rng.randint(-jitter, jitter) if jitter else 0)
             if b.in_bounds(jx, jy) and b.is_free(jx, jy) \
                     and b.surface[jy][jx] == "grass" and spaced(jx, jy):
                 if b.place_occupant(tree, jx, jy, surface="farm"):
                     planted.append((jx, jy))
                     if fruit and rng.random() < 0.3:
                         fruit_around(b, jx, jy, n=rng.randint(2, 4))
-            x += tree_spacing + rng.randint(0, 1)
 
-    # working clutter at the row ends (crates near the first row, ladder mid-orchard)
+    # working clutter IN LINE at the row ends (a crate/ladder column down the east
+    # edge — ordered, like everything human-made here)
     props = (["apple_crate"] * crates) + (["ladder"] * ladders)
-    for i, prop in enumerate(props):
-        for _ in range(12):  # a few tries each; skip quietly if the edge is crowded
-            px = x1 - 1 - rng.randint(0, 2) if i % 2 == 0 else x0 + 1 + rng.randint(0, 2)
-            py = y0 + 1 + rng.randint(0, max(1, y1 - y0 - 2))
-            if b.in_bounds(px, py) and b.is_free(px, py) and b.surface[py][px] == "grass":
-                b.place_occupant(prop, px, py)
+    py = y0 + 2
+    for prop in props:
+        while py < y1 - 1:
+            if b.in_bounds(x1, py) and b.is_free(x1, py) and b.surface[py][x1] == "grass":
+                b.place_occupant(prop, x1, py)
+                py += 3
                 break
+            py += 1
     return planted
 
 

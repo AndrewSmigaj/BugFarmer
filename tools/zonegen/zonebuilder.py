@@ -319,6 +319,15 @@ class ZoneBuilder:
                 out.append(f"{c['id']} @({x},{y}) stands on road tiles {on_road} "
                            f"(wall/fence over a road)")
 
+        # TALL-SPRITE OVERHANG: a tree directly SOUTH of a road cell draws its
+        # ~2-cell-tall canopy OVER the roadway (the visual-clipping class that
+        # on-tile checks miss). clear_road_margins() removes these; this is the net.
+        for (x, y), c in self.occ.items():
+            if c.get("anchor") and c["id"].startswith("tree") and self.in_bounds(x, y + 1) \
+                    and self.surface[y + 1][x] == "path":
+                out.append(f"{c['id']} @({x},{y}) overhangs the road north of it "
+                           f"(tall sprite over the roadway)")
+
         # spawn circles mostly over water (the lakeside forest-patch lesson, 2026-06:
         # a circle's content must be REACHABLE habitat). bug_spawning is set on the
         # builder before lint in the standard flow; scenes without it no-op.

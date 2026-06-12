@@ -20,7 +20,8 @@ sys.path.insert(0, HERE)
 from zonebuilder import ZoneBuilder                                   # noqa: E402
 from render import render_builder                                     # noqa: E402
 from features.terrain import (path, lake, shore_dress, smooth_paths, rock_mass,  # noqa: E402
-                              forest, stream, route_road, ring_mask, noise_field, _hash_noise)
+                              forest, stream, route_road, ring_mask, noise_field,
+                              _hash_noise, clear_road_margins)
 from features.scatter import scatter                                  # noqa: E402
 from features.garden import crop_bed, flower_patch, orchard           # noqa: E402
 from features.village import plaza, shop_building                     # noqa: E402
@@ -34,6 +35,7 @@ from scene_mayor import place_mayor                                   # noqa: E4
 from scene_cottage import place_cottage                               # noqa: E402
 from scene_lakeside import place_boat_store                           # noqa: E402
 from scene_ecologist import place_ecologist                           # noqa: E402
+from scene_fly_farm import place_fly_farm                             # noqa: E402
 
 ZW = ZH = 256
 PLAZA = (127, 123)          # the road's main bend; spawn snaps to its S paving
@@ -98,26 +100,27 @@ def build(zone_id="village_21_B", vseed=0):
 
     # ================= 2) ROADS (one bending main + lanes) =================
     # Main road: S edge → quarry fork → THE BEND at the plaza → farm fork → N taper.
-    # The main road is ROUTED, not walked (research_procgen.md §2): least-cost
-    # path over noise hills — it meanders purposefully and avoids the water by
-    # cost. Waypointed through the quarry fork, the plaza bend and the farm fork.
-    route_road(b, (118, 2), (140, 48), width=4, seed=21)
-    route_road(b, (140, 48), (128, 116), width=4, seed=22)
-    # Through TOWN the road is nearly straight (settlements straighten roads —
-    # and the civic block sits at fixed coords); it goes wild again past the core.
-    route_road(b, (126, 130), (122, 162), width=4, seed=23, noise_amp=0.15)
-    route_road(b, (122, 162), (114, 180), width=4, seed=35)
-    # Pinned through the FARM BELT (fields + the pen sit at fixed coords;
-    # roads through cultivated land run straight), wild again past it.
-    route_road(b, (114, 180), (108, 226), width=3, seed=24, noise_amp=0.15)
-    route_road(b, (108, 226), (100, 253), width=3, seed=36)
+    # THE TOWN GRID RULE (roads.md, 2026-06 — after three failed rounds of
+    # organic-meets-buildings, Emily's call adopted): wherever anything is BUILT,
+    # roads are STRAIGHT horizontal/vertical with L-elbow corners (smooth_paths
+    # bevels them). route_road meander lives ONLY in the empty wilds.
+    route_road(b, (118, 2), (140, 48), width=4, seed=21)          # WILD: S approach
+    # quarry fork -> town: one elbow onto the straight main street
+    path(b, (140, 48), (127, 50), width=4, wobble=0.0, seed=22)
+    path(b, (127, 50), (127, 116), width=4, wobble=0.0, seed=22)  # MAIN STREET (V)
+    path(b, (127, 130), (127, 176), width=4, wobble=0.0, seed=23) # V north of plaza
+    path(b, (127, 176), (115, 178), width=4, wobble=0.0, seed=23) # elbow at the farm fork
+    path(b, (115, 178), (115, 240), width=3, wobble=0.0, seed=24) # V through the farm belt
+    route_road(b, (114, 240), (100, 253), width=3, seed=36)       # WILD: the N taper
     # Lanes (dirt): W to the edge, E past the ecologist, quarry spur, farm lane, lake lane.
-    path(b, (120, 125), (60, 127), width=2, tile="dirt", wobble=0.07, seed=25)
-    path(b, (60, 127), (2, 128), width=2, tile="dirt", wobble=0.07, seed=33, taper_ends=8)
-    path(b, (134, 124), (192, 142), width=2, tile="dirt", wobble=0.16, seed=26)
-    path(b, (192, 142), (253, 148), width=2, tile="dirt", wobble=0.16, seed=27, taper_ends=8)
+    path(b, (120, 127), (2, 127), width=2, tile="dirt", wobble=0.0, seed=25, taper_ends=8)
+    # E lane: straight past EVERYTHING built (incl. the ecologist — the rule),
+    # one elbow up to the cabin's row, wild only beyond it.
+    path(b, (134, 124), (206, 124), width=2, tile="dirt", wobble=0.0, seed=26)
+    path(b, (206, 124), (206, 144), width=2, tile="dirt", wobble=0.0, seed=26)
+    route_road(b, (206, 144), (253, 148), width=2, tile="dirt", seed=27)         # WILD: past the cabin
     path(b, (138, 50), (154, 42), width=2, tile="dirt", wobble=0.12, seed=28)
-    route_road(b, (114, 182), (88, 196), width=2, tile="dirt", seed=29)
+    path(b, (113, 183), (86, 183), width=2, tile="dirt", wobble=0.0, seed=29)  # straight farm lane
     path(b, (43, 128), (42, 122), width=2, tile="dirt", wobble=0.10, seed=30)
     # (the residential lane is laid AFTER its cottages — see §4: path() routes
     # around their reserved yards, so the lane hugs the fences naturally)
@@ -138,13 +141,13 @@ def build(zone_id="village_21_B", vseed=0):
     # spur, never on the roadway.
     shop_building(b, 52, 140, 62, 151, sign_id="sign_plank", npc="merchant_down",
                   wall="wall_wood", shelf_rows=2)
-    for (oid, x, y) in [("barrel", 53, 138), ("crate", 55, 138), ("crate", 60, 138)]:
+    for (oid, x, y) in [("barrel", 53, 138), ("crate", 54, 138), ("crate", 55, 138)]:
         safe(b, oid, x, y)                                   # delivery clutter out front
     spur(b, 57, 139, 57, 127, tile="stone_path")
 
     # Production cluster SE of the plaza on its own short lane off the main road
     # (set back so the smith's ore/coal frontage at oy-2 stays off the roadway).
-    path(b, (133, 104), (170, 102), width=2, tile="dirt", wobble=0.10, seed=32)
+    path(b, (133, 104), (170, 104), width=2, tile="dirt", wobble=0.0, seed=32)
     place_smith(b, 138, 109)
     spur(b, 143, 108, 143, 103, tile="dirt")
     place_carpenter(b, 156, 109)
@@ -173,17 +176,17 @@ def build(zone_id="village_21_B", vseed=0):
 
     place_cottage(b, 56, 162, npc="merchant_down")   # simple tier
 
-    specs2, front2 = l_house(18, 168)                # mid-tier: a true L + porch
+    specs2, front2 = l_house(18, 160)                # mid-tier: a true L + porch
     place_house(b, styled_rooms(specs2, collection="basic"), front=front2)
     rb = bbox(specs2)
     property_yard(b, rb[0], rb[1], rb[2], rb[3], 24,
                   side=2, front=5, back=3,
                   fence="fence_picket_weathered", gate_id="gate_picket", seed=8)
     porch(b, specs2)
-    b.place_player("farmer_down", 24.0, 172)
+    b.place_player("farmer_down", 24.0, 164)
 
     path(b, (123, 131), (12, 170), width=2, wobble=0.12, seed=31)
-    for gx, gy in ((89, 152), (60, 156), (24, 161)):    # gate → lane spurs
+    for gx, gy in ((89, 153), (60, 156), (24, 154)):    # gate → lane spurs
         spur(b, gx, gy, gx, gy - 6, tile="stone_path")
     smooth_paths(b)   # the road-angle pass: stair-steps → 45° bevels (after ALL roads)
 
@@ -198,8 +201,8 @@ def build(zone_id="village_21_B", vseed=0):
 
     # ================= 5) FARMS + ORCHARD + FLY FARM + PREDATORS (N) =================
     # Windmill AT the farm fork (the landmark at the decision point) + signpost.
-    safe(b, "windmill", 117, 184)
-    safe(b, "signpost", 113, 178, surface=None)
+    safe(b, "windmill", 118, 186)
+    safe(b, "signpost", 111, 180, surface=None)
     # Three irregular fields, hedgerows between, wheat beside the windmill.
     crop_bed(b, 90, 188, 110, 198, ["plant_wheat"])
     hedgerow(b, 86, 200, 112, 200, seed=41)
@@ -217,28 +220,18 @@ def build(zone_id="village_21_B", vseed=0):
     # Orchard W of the fields (compact: keeps the wasp buffer geometry).
     orchard(b, 62, 196, 86, 214, seed=vseed + 17)
 
-    # Fly farm E of the main road (a landscape, with FAILURE evidence).
-    b.fill_ground(116, 200, 126, 210, "dirt")                 # darkened worked soil
-    for (x, y) in [(118, 202), (122, 206), (119, 209)]:
-        safe(b, "compost_pile", x, y)
-    for (x, y) in [(117, 200), (125, 200), (117, 210), (125, 210)]:
-        safe(b, "net_post", x, y)
-    for (x, y) in [(120, 200), (121, 210)]:
-        safe(b, "fly_netting", x, y)
-    for (x, y) in [(118, 205), (124, 203)]:
-        safe(b, "bait_basket", x, y)
-    for (x, y) in [(120, 204), (123, 208)]:
-        safe(b, "collection_tray", x, y)
-    safe(b, "broken_net", 126, 207)                           # failure reads
-    safe(b, "broken_net", 116, 203)
-    b.set_ground(121, 203, "water_shallow")                   # a puddle (1 cell, walk-around)
+    # THE FLY FARM (the piece — scenes/scene_fly_farm.py): mini orchard feeding
+    # two big pens (compost-bin rows inside; fences genuinely CONTAIN flies), net
+    # lines, auto-catchers, trays. The spawn circle centers on the pens below.
+    ff_center, ff_r = place_fly_farm(b, 118, 194)
+    spur(b, 117, 200, 117, 199, tile="dirt")  # joins the V road at x113-116
 
     # Wasp nest №1 in the wild-fly buffer between orchard and fly farm + the
     # observation pen (deliberately WOOD: fences don't stop wings — the lesson).
     # North of crop field 3 (iteration 2 overlapped its rows).
-    safe(b, "wasp_nest", 98, 232)
-    fence_rect(b, 94, 228, 103, 236, gate=(98, 228))
-    flower_patch(b, 93, 225, 104, 227, ["chamomile", "clover", "poppy"], 8, seed=43)
+    safe(b, "wasp_nest", 104, 230)
+    fence_rect(b, 100, 226, 109, 234, gate=(104, 226))
+    flower_patch(b, 99, 223, 110, 225, ["chamomile", "clover", "poppy"], 8, seed=43)
 
     # ================= 6) THE NE FOREST-EDGE GLOOM (centipede country) =================
     forest(b, 168, 236, 26, 14, species=("tree_pine", "tree_pine", "tree_oak"),
@@ -353,17 +346,22 @@ def build(zone_id="village_21_B", vseed=0):
         safe(b, "wild_berry_bush", x, y)
     safe(b, "log_seat", 64, 118); safe(b, "campfire", 66, 117)      # an old picnic spot
     for x in range(176, 188, 2):                                     # a broken fence line
-        safe(b, "fence_picket_weathered", x, 124)
+        safe(b, "fence_picket_weathered", x, 119)
     for (x, y) in [(48, 178), (50, 180), (47, 181)]:                 # a mushroom patch
         safe(b, "mushroom_puffball", x, y)
-    safe(b, "log_pile", 210, 150)
-    safe(b, "stump", 213, 152)
+    safe(b, "log_pile", 210, 157)
+    safe(b, "stump", 213, 159)
     scatter(b, 120, 60, 180, 100, {"tall_grass": 4, "clover": 2, "bush": 1},
             density=0.10, min_spacing=2, seed=76, clumping=0.85)     # S-center fill
     scatter(b, 60, 110, 115, 135, {"tall_grass": 3, "poppy": 2, "flower_wild": 1},
             density=0.10, min_spacing=2, seed=77, clumping=0.85)     # between core + lake
     scatter(b, 130, 215, 165, 250, {"fern": 2, "tall_grass": 3, "bush": 2},
             density=0.11, min_spacing=2, seed=78, clumping=0.85)     # farm→gloom seam
+
+    # The visual-clipping guarantee: nothing tall within 1 cell of a road.
+    cleared = clear_road_margins(b)
+    if cleared:
+        print(f"  clear_road_margins: removed {len(cleared)} road-margin plants")
 
     # ================= 11) BUG SPAWNING (habitat-tied circles) =================
     b.bug_spawning = {
@@ -380,7 +378,7 @@ def build(zone_id="village_21_B", vseed=0):
         "spawn_areas": [
             {"id": "zone_wide", "species": ["fly_common"], "type": "zone"},
             {"id": "fly_farm", "species": ["fly_common"], "type": "circle",
-             "cx": 121, "cy": 205, "radius": 14},
+             "cx": ff_center[0], "cy": ff_center[1], "radius": ff_r},
             {"id": "beehive_meadow", "species": ["butterfly_meadow"], "type": "circle",
              "cx": 215, "cy": 72, "radius": 20},
             {"id": "meadow_w", "species": ["butterfly_meadow"], "type": "circle",

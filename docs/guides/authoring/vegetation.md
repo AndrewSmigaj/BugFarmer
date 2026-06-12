@@ -44,6 +44,11 @@ scatter(b, x0, y0, x1, y1,
   `terrain.forest()` MASSES chained along the rim (density ≈0.55, `dirt=True` for the
   deep-floor read) with scatter only as the FADE between them — rim scatter alone
   reads as speckle, never as a forest wall (2026-06 correction).
+- **THE ROWS RULE (2026-06)**: HUMAN-MADE arrangements sit in ROWS/COLUMNS —
+  orchard trees, shop shelves, market stalls, compost bins, net lines, collection
+  trays, crop beds. Even-spread/scatter is ONLY for deliberately wild nature
+  (meadows, understory). If a person would have placed it, a person would have
+  lined it up.
 - **NO DEAD GRASS:** a player walking any 30-cell stretch should pass SOMETHING — a
   berry clump, a stump, an old fence line, a flower glade, a picnic log. Empty grass
   is a bad game experience; fill the in-between spaces with small finds, not just

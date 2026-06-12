@@ -149,6 +149,31 @@ def route_road(b, start, end=None, *, width=3, tile="stone_path", seed=0,
     return cells
 
 
+def clear_road_margins(b, *, margin=1):
+    """The VISUAL-clipping guarantee (2026-06: houses/fences/orchards kept clipping
+    roads through three rounds of on-tile checks — the missed class was TALL SPRITES
+    overhanging the roadway from adjacent cells). Deletes 1×1 VEGETATION occupants
+    (trees, bushes, tall grass) within `margin` cells of any road cell. Run once,
+    after all scatter, before saving. Deliberate roadside furniture (lamps, signs,
+    benches) is untouched."""
+    veg = ("tree", "bush", "tall_grass", "fern")
+    doomed = []
+    for (x, y), c in b.occ.items():
+        if not c.get("anchor") or not c["id"].startswith(veg):
+            continue
+        near = any(b.in_bounds(x + dx, y + dy) and b.surface[y + dy][x + dx] == "path"
+                   for dy in range(-margin, margin + 1)
+                   for dx in range(-margin, margin + 1))
+        if near:
+            doomed.append((x, y))
+    for (x, y) in doomed:
+        del b.occ[(x, y)]
+        b.reserved[y][x] = False
+        if b.surface[y][x] in ("forest", "building"):
+            b.surface[y][x] = "grass"
+    return doomed
+
+
 def noise_field(w, h, *, wavelength=24, octaves=3, persistence=0.5, seed=0):
     """fBm VALUE-NOISE field in [0,1) (research_procgen.md §1 — the calibrated
     recipe: on a 256² map, wavelength 24 / 3 octaves / threshold 0.60 gives ~25
