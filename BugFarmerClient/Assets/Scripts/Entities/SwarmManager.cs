@@ -214,7 +214,6 @@ namespace BugFarmer.Entities
         // Debug: track last logged state to avoid spam
         private SyncState _lastLoggedState = SyncState.Joining;
         private long _lastLoggedTick = -1;
-        private bool _lastLoggedCanAdvance = true;
         private bool _loggedInitialState = false;
 
         private void Update()
@@ -299,18 +298,18 @@ namespace BugFarmer.Entities
             bool canAdvance = _simulationTick < _authoritativeTick
                            && HasAllEventsUpTo(_frontierWatermark);
 
-            // Debug: log gate conditions only when important changes occur
-            // - Every 50 ticks (~5 sec) for periodic status
-            // - When canAdvance changes (stuck/unstuck transition)
-            bool shouldLog = (_simulationTick % 50 == 0 && _simulationTick != _lastLoggedTick)
-                          || (canAdvance != _lastLoggedCanAdvance);
-            if (shouldLog)
+            // Debug: periodic gate status, every 50 ticks (~5 sec). Do NOT key
+            // this on canAdvance transitions — canAdvance legitimately toggles
+            // True/False every tick in normal Live play, so a transition clause
+            // fires every tick (this was a primary source of the log storm).
+            // Genuine stalls are surfaced by the frontier-stall watchdog below.
+            if (DebugConfig.Verbose
+                && _simulationTick % 50 == 0 && _simulationTick != _lastLoggedTick)
             {
                 var gateMsg = $"[SwarmManager] Tick gate: state={_syncState}, simTick={_simulationTick}, authTick={_authoritativeTick}, lastSeq={_lastReceivedSeq}, watermark={_frontierWatermark}, canAdvance={canAdvance}";
                 Debug.Log(gateMsg);
                 DebugFileLogger.Log(gateMsg);
                 _lastLoggedTick = _simulationTick;
-                _lastLoggedCanAdvance = canAdvance;
             }
 
             while (_tickAccumulator >= SecondsPerTick && canAdvance)
@@ -621,12 +620,14 @@ namespace BugFarmer.Entities
             _lastMatchMsgTime = Time.time;
             _receptionGapLogged = false;
 
-            // Debug: log zone-related opcodes
-            if (state.OpCode == OpCodes.ZoneAuthority ||
-                state.OpCode == OpCodes.ZoneTickBroadcast ||
-                state.OpCode == OpCodes.ZoneHandoff ||
-                state.OpCode == OpCodes.LateJoinSnapshot ||
-                state.OpCode == OpCodes.InfluenceBroadcast)
+            // Debug: log zone-related opcodes (ZoneTickBroadcast arrives every
+            // tick — gated off by default to avoid the per-message log storm)
+            if (DebugConfig.Verbose &&
+                (state.OpCode == OpCodes.ZoneAuthority ||
+                 state.OpCode == OpCodes.ZoneTickBroadcast ||
+                 state.OpCode == OpCodes.ZoneHandoff ||
+                 state.OpCode == OpCodes.LateJoinSnapshot ||
+                 state.OpCode == OpCodes.InfluenceBroadcast))
             {
                 var logMsg = $"[SwarmManager] Received OpCode {state.OpCode}";
                 Debug.Log(logMsg);
@@ -1467,7 +1468,8 @@ namespace BugFarmer.Entities
             // Update frontier AND watermark (FIX #7)
             if (msg.authoritative_tick > _authoritativeTick)
             {
-                Debug.Log($"[SwarmManager] ZoneTickBroadcast: frontier {_authoritativeTick} -> {msg.authoritative_tick}, watermark={msg.last_event_seq}");
+                if (DebugConfig.Verbose)
+                    Debug.Log($"[SwarmManager] ZoneTickBroadcast: frontier {_authoritativeTick} -> {msg.authoritative_tick}, watermark={msg.last_event_seq}");
                 _authoritativeTick = msg.authoritative_tick;
                 _frontierWatermark = msg.last_event_seq;
             }

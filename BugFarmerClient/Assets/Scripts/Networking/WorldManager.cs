@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Nakama;
 using UnityEngine;
+using BugFarmer.Util;
 
 namespace BugFarmer.Networking
 {
@@ -194,7 +195,7 @@ namespace BugFarmer.Networking
         private void HandleMatchState(IMatchState state)
         {
             // Debug: log all incoming opcodes except frequent ones
-            if (state.OpCode != OpCodes.EntityUpdate && state.OpCode != 20) // 20 = SwarmUpdate
+            if (DebugConfig.Verbose && state.OpCode != OpCodes.EntityUpdate && state.OpCode != 20) // 20 = SwarmUpdate
             {
                 Debug.Log($"[WorldManager] Received OpCode {state.OpCode}");
             }

@@ -19,7 +19,10 @@ namespace BugFarmer.UI
         /// </summary>
         private void BuildIfEmpty()
         {
-            if (slots != null && slots.Length > 0) return;
+            // A leftover scene HotbarUI can carry a length-10 slots array whose
+            // elements were never assigned (the half-deleted prefab instances);
+            // BuildIfEmpty must rebuild in that case or Start() NREs on slots[i].
+            if (slots != null && slots.Length > 0 && System.Array.TrueForAll(slots, s => s != null)) return;
 
             var rt = (RectTransform)transform;
             rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);

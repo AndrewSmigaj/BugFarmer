@@ -19,6 +19,13 @@ namespace BugFarmer.UI
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Init()
         {
+            // Info/Warning logs in the Editor otherwise force a synchronous
+            // StackTraceUtility.ExtractStackTrace() per call — the dominant cost
+            // behind the per-tick logging stall that froze the client. Keep
+            // stacks for Error/Exception/Assert (left at their default).
+            Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.None);
+            Application.SetStackTraceLogType(LogType.Warning, StackTraceLogType.None);
+
             if (Object.FindObjectOfType<HotbarUI>() != null)
             {
                 Debug.Log("[UIBootstrap] scene still has the old hand-built UI — " +

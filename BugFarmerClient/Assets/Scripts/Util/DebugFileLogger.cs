@@ -35,6 +35,10 @@ namespace BugFarmer.Util
 
         public static void Log(string message)
         {
+            // Off by default: this does synchronous per-call file I/O on the
+            // calling (main) thread. Gated here so all callers go quiet at once.
+            if (!DebugConfig.Verbose) return;
+
             if (!_initialized) Initialize();
 
             try

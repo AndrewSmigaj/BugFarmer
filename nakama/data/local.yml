@@ -12,6 +12,10 @@ socket:
   max_request_size_bytes: 8388608   # 8MB
   read_buffer_size_bytes: 1048576   # 1MB
   write_buffer_size_bytes: 1048576  # 1MB
+  outgoing_queue_size: 1024         # default 64 — too small for our per-tick
+                                    # reliable EntityUpdate/SwarmUpdate broadcasts;
+                                    # a brief client hitch overflowed it and the
+                                    # server closed the session ("outgoing queue full")
 
 runtime:
   js_entrypoint: ""

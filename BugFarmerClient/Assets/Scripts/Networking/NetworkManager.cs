@@ -58,12 +58,17 @@ namespace BugFarmer.Networking
         {
             // Initialize Client and Socket here (not in constructor)
             // because NewSocket creates a GameObject internally
-            Client = new Client("http", "127.0.0.1", 7350, "defaultkey")
-            {
+            Client = new Client("http", "127.0.0.1", 7350, "defaultkey");
 #if UNITY_EDITOR
-                Logger = new UnityLogger()
+            // Nakama's SDK logger logs EVERY socket message with its full JSON
+            // payload via Debug.LogFormat — on the main thread. At the per-tick
+            // EntityUpdate/SwarmUpdate rate that both spams the console AND slows
+            // the client enough to fill the server's outgoing queue (the
+            // "session outgoing queue full" disconnect). Off by default; flip
+            // DebugConfig.Verbose to bring it back for debugging.
+            if (DebugConfig.Verbose)
+                Client.Logger = new UnityLogger();
 #endif
-            };
             Socket = Client.NewSocket(useMainThread: true);
             Socket.Connected += () =>
             {

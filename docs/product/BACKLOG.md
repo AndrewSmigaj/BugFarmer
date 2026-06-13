@@ -6,6 +6,18 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Done 2026-06-13 — client freeze fix: the logging storm (investigation + cause fix)
+Overnight investigation (`crash_investigation.md`) found the in-Editor client freeze was a
+**client-side synchronous-logging storm**, not a server bug. With `useMainThread:true` (NetworkManager.cs:67)
+every match-state callback runs on the Unity main thread; per-tick/per-message logging there did
+~125 lines/tick, each a `Debug.Log` → synchronous `ExtractStackTrace` **and** a `DebugFileLogger`
+file open/append/close. The session Editor.log was 2.4 GB / 31.7 M lines. The stalled main thread
+couldn't drain the socket → Nakama closed the session `session outgoing queue full` (×10) → no client
+reconnect → frozen client, live server. Fix (client-only, no `.so`): `SetStackTraceLogType(Log/Warning,None)`
+in UIBootstrap; a default-off `DebugConfig.Verbose` gating the hot Debug.Log sites + DebugFileLogger
+internally; removed the defeated tick-gate throttle (canAdvance toggles every tick); plus an
+unrelated `HotbarUI.Start` NRE guard (leftover-scene null `slots`). **Verify pending: in-Editor soak.**
+
 ## Done (recent) — PREDATORS v1: wasps + nests, the centipede, player HP, first audio
 - **Predation core** (architecture_swarm_sync §14 — the system of record): predators hunt
   prey SWARMS via ordinary legs + the existing BUG_REMOVED/SWARM_REPRODUCED/ITEM_ROTTED
@@ -411,6 +423,14 @@ F6 cycles debug outfits. Remaining from the old item:
 - Bug info card (right-click a bug slot): freely-known tier + locked rows
   shaped for the research mechanic. Pickup polish: drops 0.9-cell fit +
   0.6 floor, honest keycap-E badge. Starting inventory freed (E-pickup fix).
+
+## Next — client reconnect / self-heal (deferred from the 2026-06-13 freeze fix)
+The logging fix removes the *cause* of the `session outgoing queue full` close, but the client still
+has NO reconnect — `NetworkManager.Socket.Closed` only logs + invokes `OnDisconnected` (sole
+subscriber: DebugPanel). Make a server-side close self-heal instead of freezing. Done correctly it
+must: clear `WorldManager.CurrentMatch`, reset SwarmManager via the existing `RequestResync()`
+(SwarmManager.cs ~580), re-check session expiry before reconnecting, and wait for
+`ZoneAuthority`/`LateJoinSnapshot` before resuming ticks. Repro: kill/restart the server mid-session.
 
 ## Next — Tool ANIMATION improvement (Andrew, 2026-06-12)
 The in-hand tool animations (PlayerToolAnimator swing/sweep/stab/pour) need a
