@@ -88,7 +88,7 @@ namespace BugFarmer.Player
 
             // Walk frames: composed from the worn equipment (server echoes it
             // on join); baked farmer until then / as fallback.
-            _frames = CharacterComposer.LoadBaked("farmer");
+            _frames = CharacterComposer.LoadBaked("merchant");
             UpdateSprite();
             if (inv != null)
                 inv.OnEquipmentChanged += RebuildOutfit;
