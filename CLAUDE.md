@@ -9,6 +9,19 @@ and well-designed. **Never guess — always read and verify the actual code invo
 function, the real call site, the real data shape) before relying on how it behaves. This holds
 for every step, not just the big ones.
 
+## Build for quality — this is a real product, not a prototype
+This is a serious indie game aiming for **professional, shippable quality**. Do NOT default to
+bare-minimum or "prototype-first" work — prototyping then reimplementing the real thing wastes
+time (you end up building every feature twice). For every feature:
+- **Research best practices first.** Web-search how good 2D games actually do this (real
+  techniques, modern approaches), then design something professional BEFORE writing code.
+- **Aim for the bar of a polished commercial 2D game**, not a placeholder. When a cheap version
+  and a good version both exist, build the good version once. (e.g. weather "fog" is layered
+  scrolling noise + depth/parallax + light interaction, NOT a flat color tint.)
+- **Take the time to design it properly** — you're run on high effort deliberately. Surface the
+  design and trade-offs; don't silently ship the easy path or call something "modern" that isn't.
+- **"Done" = professional-quality AND verified**, never "technically works."
+
 ## Repo map
 - `BugFarmerClient/` — Unity 6 client (C#); all art lives under `Assets/Resources/`.
 - `nakama/` — Nakama Go server (authoritative game logic) + canonical entity data.

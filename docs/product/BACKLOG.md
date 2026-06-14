@@ -6,6 +6,40 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Done 2026-06-14 — heavy/light rain + lightning/thunder, torch placement tool, dry-soil + hands
+- **Weather v2 visuals**: rain Light/Heavy presets (parallax streaks + splash layer + gusting wind +
+  overcast tint), Heavy = lightning flash (global-light) + synth thunder; F8 intensity toggle + Strike.
+- **Torch = the first "placer" tool**: `tool_type:"placer"` → left-click places the occupant centered
+  on the target cell (no ghost; blocks keep right-click+ghost), shown in-hand + glows. Tall sprite fix
+  (was square 16×16 → mushroom; now 10×20). See `architecture_items.md`.
+- **Dry tilled soil** lightened (distinct from wet). **`hands`** removed from the starting hotbar
+  (grab verb → the grabbing/pushing/shoving backlog item).
+- Scaffolding: CLAUDE.md quality directive; `regenerate-sprite` skill hardened (aspect-ratio check,
+  missing-catalog-row, pixelclean churn).
+
+## Next — HUD: bigger hearts + access-button bar (planned, not built)
+Plan exists (`~/.claude/plans` / the torch+HUD plan). Bigger/nudged hearts; bottom rounded-square
+access buttons (Inventory works; Ecologist/Mayor/Herbalist locked w/ toasts); Apico-style layout
+(hotbar→top) OR keep bottom — DECISION pending. Needs `UIFactory.MakeButton` + `btn_square` art + a
+reusable `ToastUI`. Also backlog: how players learn WHERE those NPCs are.
+
+## Later — sprite review (manual, by hand)
+Go through EVERY sprite by hand and fix/redo the ones that read wrong (Andrew edits on his end). Many
+were auto-generated; quality varies. NB: a bare `pixelclean.py` re-cleans ALL sprites — regenerate +
+clean ONE key at a time and revert incidental churn.
+
+## Done 2026-06-13 — day/night lighting actually works (root-caused after 2 failed passes)
+Night was never dark — only point-lights were added, so deep night was the *brightest* time.
+ROOT CAUSE: TWO global Light2D at runtime — a static `Global Light 2D` baked in `SampleScene`
+(intensity 1, never touched by code) plus the controller's ramped one; URP 2D accumulates globals,
+so the static one pinned the world bright and defeated the night ramp (prior fixes wrongly
+brightened point-lights). Fix (client-only, no new art/data — see `architecture_weather.md`):
+(1) `DayNightController.Start` adopt-one-global pattern — drive the first global, disable extras,
+never leave zero; (2) removed the always-on `PlayerNightLight` base glow → no light unless a torch/
+lamp is the selected hotbar item (already in the starting kit) or a torch is placed (Terraria-style);
+(3) `DebugNightIntensityOverride` + an F8 "Night darkness" slider to tune the floor live. **Verify
+pending: in-Editor F8 (Night → dark; hold/place torch → pool of light; never pure black).**
+
 ## Done 2026-06-13 — client freeze fix: the logging storm (investigation + cause fix)
 Overnight investigation (`crash_investigation.md`) found the in-Editor client freeze was a
 **client-side synchronous-logging storm**, not a server bug. With `useMainThread:true` (NetworkManager.cs:67)
@@ -472,6 +506,21 @@ Fill missing entity data, generate/clean remaining sprites, render 3 surface + 3
 scenes. Depends on the two items above.
 
 ## Later — captured, not scoped yet
+- **Grabbing / pushing / shoving** (Andrew has the design; to detail later). Replaces the old
+  "hands" slot-0 grab verb, which was pulled from the starting kit 2026-06-14 pending this rework
+  (empty slots still bare-hand grab in the meantime).
+- **Weather system expansion** (rain light/heavy + lightning/thunder shipped 2026-06-13; the
+  client preset is a seam for the below):
+  - **Intentional droughts** — gameplay weather; Andrew has design ideas (his to scope).
+  - **Fog** — layered scrolling noise + depth/parallax + 2D-light interaction (NOT a flat tint);
+    own research pass. A SEPARATE self-activating component reading the weather state, not a
+    branch in RainController.
+  - **Dust storms** — horizontal driven sheet; same component pattern.
+  - **Per-zone / server-driven weather + intensity** — when the multi-zone system lands, the
+    server picks weather kind + intensity per zone (today `RainController.Intensity` is a client
+    F8 toggle and "rain" is one state).
+  - **Rain polish** — URP post-process color-grade while raining (desaturate/vignette), puddle
+    accumulation; extract a shared `WeatherVisual` base once fog/dust make it rule-of-three.
 - **Power & electrification + cooking progression** (design captured in `game_design.md §11.6/11.7`):
   windmill/hydro/generator → power unit with a coverage-radius aura (highlight covered cells at
   placement); a shared "linked placement" line tool (power lines AND rail/track — click start/end,
