@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using BugFarmer.Networking; // Direction
 
 namespace BugFarmer.Player
 {
@@ -54,11 +55,13 @@ namespace BugFarmer.Player
         private TrailRenderer _trail;
         private SpriteRenderer _playerRenderer;
         private bool _behindPlayer; // aiming up -> tool renders behind the head
+        private PlayerController _player; // for the idle pose's facing direction
         private Coroutine _routine;
 
         private void Awake()
         {
             _playerRenderer = GetComponent<SpriteRenderer>();
+            _player = GetComponent<PlayerController>();
 
             var pivotObj = new GameObject("ToolPivot");
             pivotObj.transform.SetParent(transform, false);
@@ -88,6 +91,10 @@ namespace BugFarmer.Player
 
         private void LateUpdate()
         {
+            // Idle tool tracks the (mouse-driven) facing live, not just on equip/swing.
+            if (!IsPlaying && _held.enabled && _idleSprite != null)
+                OrientIdleByFacing();
+
             // The player rewrites its Y-sorted order every FixedUpdate — track it.
             if (_playerRenderer != null)
             {
@@ -197,13 +204,31 @@ namespace BugFarmer.Player
                 return;
             }
 
-            _behindPlayer = false;
             _held.sprite = _idleSprite;
             FitSprite(_idleSprite, IdleScale);
-            _pivot.localRotation = Quaternion.Euler(0f, 0f, IdleAngle);
             _held.transform.localPosition = new Vector3(IdleOffset, 0f, 0f);
             _held.transform.localRotation = Quaternion.Euler(0f, 0f, -SpriteArtAngle);
             _held.enabled = true;
+            OrientIdleByFacing();
+        }
+
+        /// <summary>
+        /// Point the at-rest tool by the player's (mouse-driven) facing: down-forward at the side
+        /// (Right = base <see cref="IdleAngle"/>), mirrored when facing Left, straight down when
+        /// facing Down, and up + behind the head when facing Up. Re-applied every frame in
+        /// LateUpdate so the idle pose tracks facing live — not just on equip/swing-restore.
+        /// </summary>
+        private void OrientIdleByFacing()
+        {
+            float angle;
+            switch (_player != null ? _player.Facing : Direction.Down)
+            {
+                case Direction.Right: angle = IdleAngle;          _behindPlayer = false; break; // down-right
+                case Direction.Left:  angle = -180f - IdleAngle;  _behindPlayer = false; break; // mirror: down-left
+                case Direction.Up:    angle = 90f;                _behindPlayer = true;  break; // up, behind head
+                default:              angle = -90f;               _behindPlayer = false; break; // Down: straight down
+            }
+            _pivot.localRotation = Quaternion.Euler(0f, 0f, angle);
         }
 
         private void FitSprite(Sprite sprite, float multiplier)
