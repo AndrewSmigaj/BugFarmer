@@ -178,6 +178,8 @@ namespace BugFarmer.Networking
         public int spawn_count;
         public float spawn_x;
         public float spawn_y;
+        public string give_item = "";     // "" no-op | "kit" (crafting bundle) | an item id
+        public int give_count;            // count for a single item id (kit ignores it)
     }
 
     /// <summary>

@@ -59,6 +59,11 @@ namespace BugFarmer.UI
             panelGO.transform.SetParent(canvasGO.transform, false);
             panelGO.AddComponent<InventoryPanel>();
 
+            // Crafting / container panel (workbench/furnace/anvil/… + chests/dressers).
+            var craftGO = new GameObject("CraftingPanel(Code)", typeof(RectTransform));
+            craftGO.transform.SetParent(canvasGO.transform, false);
+            craftGO.AddComponent<CraftingPanel>();
+
             var hotbarGO = new GameObject("Hotbar(Code)", typeof(RectTransform));
             hotbarGO.transform.SetParent(canvasGO.transform, false);
             hotbarGO.AddComponent<HotbarUI>();

@@ -119,6 +119,22 @@ Styling rules wired into `gen_sprites.py` and applied:
 `plant_corn`, `plant_tomato`, `plant_wheat` + their `_stage0..3` and `plant_stage0`: staged growth
 frames, reconvert as part of the **multi-frame sprites** backlog item, not one-off.
 
+### TODO — crafting outputs (NEW item icons; batch with `add-object`)
+Stage-1 recipes deliberately output EXISTING-art items so crafting shipped without an art batch. As
+recipes expand (see [crafting_design.md](crafting_design.md)) these new outputs need icons:
+- **Metal bars:** `copper_bar`, `tin_bar`, `silver_bar`, `gold_bar`, `platinum_bar`, `steel`
+  (only `iron_bar` exists). Recolor pipeline can likely do the bar set from one base.
+- **Materials:** `wood_plank`, `glass`, `charcoal`, `coal_dust`, `sawdust`, `thread`, `cloth`,
+  `nails`, `fittings`.
+- **Dyes** (color set — recolor pipeline), `potion` set.
+- **Food:** `flour`, `bread`, `meal_*`.
+- **Beekeeping:** `honey`, `honey_wine`.
+
+### TODO — crafting UI art (hand-authored, `tools/ui_sprites.py` → `Resources/UI/`)
+Stage 1 ships a generic panel built from existing UI sprites. The Apico-touch polish pass:
+- `panel_craft` frame; per-station header/theming (the smelter's fuel + ore input slots, a fire/heat
+  meter, a fuel tank, a themed progress-bar fill). Drives the per-station look (currently identical).
+
 ### Excluded (do NOT regenerate)
 - `chandelier` — skip (hard to read from overhead).
 - `torch_wall` — skip.

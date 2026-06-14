@@ -1080,6 +1080,11 @@
             "chance": 1.0
           }
         ]
+      },
+      "interaction_type": "storage",
+      "container": {
+        "slots": 12,
+        "filter": "book"
       }
     }
   },
@@ -1186,6 +1191,9 @@
             "chance": 1.0
           }
         ]
+      },
+      "container": {
+        "slots": 24
       }
     }
   },
@@ -1214,6 +1222,9 @@
             "chance": 1.0
           }
         ]
+      },
+      "container": {
+        "slots": 30
       }
     }
   },
@@ -1242,6 +1253,9 @@
             "chance": 1.0
           }
         ]
+      },
+      "container": {
+        "slots": 12
       }
     }
   },
@@ -1270,6 +1284,9 @@
             "chance": 1.0
           }
         ]
+      },
+      "container": {
+        "slots": 12
       }
     }
   },
@@ -1981,6 +1998,10 @@
             "chance": 1.0
           }
         ]
+      },
+      "interaction_type": "storage",
+      "container": {
+        "slots": 8
       }
     }
   },
@@ -2093,6 +2114,10 @@
             "chance": 1.0
           }
         ]
+      },
+      "interaction_type": "storage",
+      "container": {
+        "slots": 6
       }
     }
   },
@@ -2121,6 +2146,11 @@
             "chance": 1.0
           }
         ]
+      },
+      "interaction_type": "storage",
+      "container": {
+        "slots": 12,
+        "filter": "clothing"
       }
     }
   },
@@ -2149,6 +2179,11 @@
             "chance": 1.0
           }
         ]
+      },
+      "interaction_type": "storage",
+      "container": {
+        "slots": 12,
+        "filter": "book"
       }
     }
   },
@@ -2177,6 +2212,11 @@
             "chance": 1.0
           }
         ]
+      },
+      "interaction_type": "storage",
+      "container": {
+        "slots": 12,
+        "filter": "clothing"
       }
     }
   },
@@ -2205,6 +2245,10 @@
             "chance": 1.0
           }
         ]
+      },
+      "interaction_type": "storage",
+      "container": {
+        "slots": 12
       }
     }
   },
@@ -2233,6 +2277,11 @@
             "chance": 1.0
           }
         ]
+      },
+      "interaction_type": "storage",
+      "container": {
+        "slots": 8,
+        "filter": "drink"
       }
     }
   },
@@ -2388,6 +2437,10 @@
             "chance": 1.0
           }
         ]
+      },
+      "interaction_type": "storage",
+      "container": {
+        "slots": 12
       }
     }
   },
@@ -2614,6 +2667,11 @@
             "chance": 1.0
           }
         ]
+      },
+      "interaction_type": "storage",
+      "container": {
+        "slots": 8,
+        "filter": "clothing"
       }
     }
   },
@@ -2812,6 +2870,9 @@
             "chance": 1.0
           }
         ]
+      },
+      "container": {
+        "slots": 18
       }
     }
   },
@@ -4281,6 +4342,10 @@
             "chance": 1.0
           }
         ]
+      },
+      "container": {
+        "slots": 12,
+        "filter": "food"
       }
     }
   },
@@ -4480,6 +4545,10 @@
             "chance": 1.0
           }
         ]
+      },
+      "interaction_type": "storage",
+      "container": {
+        "slots": 6
       }
     }
   },
@@ -4508,6 +4577,11 @@
             "chance": 1.0
           }
         ]
+      },
+      "interaction_type": "storage",
+      "container": {
+        "slots": 12,
+        "filter": "clothing"
       }
     }
   },
@@ -5225,6 +5299,11 @@
             "chance": 1.0
           }
         ]
+      },
+      "interaction_type": "storage",
+      "container": {
+        "slots": 8,
+        "filter": "food"
       }
     }
   },
@@ -5332,6 +5411,11 @@
             "chance": 1.0
           }
         ]
+      },
+      "interaction_type": "storage",
+      "container": {
+        "slots": 8,
+        "filter": "food"
       }
     }
   },

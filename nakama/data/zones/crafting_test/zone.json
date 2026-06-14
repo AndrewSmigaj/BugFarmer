@@ -1,0 +1,14 @@
+{
+  "zone_id": "crafting_test",
+  "name": "Crafting Test",
+  "row": 0,
+  "col": 0,
+  "width": 64,
+  "height": 64,
+  "spawn_point": [
+    22,
+    18
+  ],
+  "biome_type": "meadow",
+  "seed": 7
+}

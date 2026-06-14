@@ -225,6 +225,14 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 		logger.Info("Loaded %d crop definitions", len(state.CropDefs))
 	}
 
+	// Load crafting recipes
+	state.Recipes, state.RecipesByStation, err = LoadRecipes("data")
+	if err != nil {
+		logger.Warn("Failed to load crafting recipes: %v", err)
+	} else {
+		logger.Info("Loaded %d crafting recipes across %d stations", len(state.Recipes), len(state.RecipesByStation))
+	}
+
 	// Spawn initial swarms for testing
 	m.spawnInitialSwarms(state, logger)
 
@@ -717,6 +725,14 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			}
 			m.handleStationDeposit(logger, dispatcher, worldState, userID, depositMsg)
 
+		case OpCodeContainer:
+			var caMsg ContainerActionMessage
+			if err := json.Unmarshal(msg.GetData(), &caMsg); err != nil {
+				logger.Warn("Invalid container action from %s: %v", userID, err)
+				continue
+			}
+			m.handleContainerAction(logger, dispatcher, worldState, userID, caMsg)
+
 		case OpCodeEcologyTuning:
 			// DEV TOOL: live-override a species' ecology parameters from the Unity debug
 			// panel (server-decided values; determinism-safe).
@@ -834,7 +850,8 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		m.processNests(worldState, logger) // occupant-gone sweep + brood-drain re-hatch
 	}
 	m.processGroundItemDecay(worldState, dispatcher)
-	m.processStations(worldState, dispatcher) // material processors: input -> compost
+	m.processStations(worldState, dispatcher)      // material processors: input -> compost
+	m.processCraftStations(worldState, dispatcher) // recipe processors: queued batches -> output grid
 
 	// === Swarm Simulation ===
 	deltaTime := 1.0 / float32(worldState.Config.TickRate)

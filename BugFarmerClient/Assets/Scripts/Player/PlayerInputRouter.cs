@@ -146,7 +146,13 @@ namespace BugFarmer.Player
             if (_bugRelease != null && _bugRelease.TryHandleClick(releaseAll: false))
                 return;
 
-            // 1. Stations: interact beats attack/place; closing an open menu consumes too.
+            // 1. Craft stations + storage containers (workbench/furnace/… + chests/dressers):
+            //    the panel opens/closes; a state transition consumes the click.
+            if (BugFarmer.UI.CraftingPanel.Instance != null &&
+                BugFarmer.UI.CraftingPanel.Instance.TryHandleRightClick(mouseWorld))
+                return;
+
+            // 1b. Stations (compost): interact beats attack/place; closing an open menu consumes too.
             if (_station != null && _station.TryHandleRightClick(mouseWorld))
                 return;
 

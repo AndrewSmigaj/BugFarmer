@@ -3,6 +3,9 @@
   "wood": {
     "name": "Wood",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 2
@@ -10,6 +13,9 @@
   "fiber": {
     "name": "Plant Fiber",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 1
@@ -17,6 +23,9 @@
   "flower": {
     "name": "Flower",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 3
@@ -24,6 +33,9 @@
   "crystal": {
     "name": "Crystal",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 15
@@ -31,6 +43,9 @@
   "bone": {
     "name": "Bone",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 5
@@ -38,6 +53,9 @@
   "coal": {
     "name": "Coal",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 4
@@ -45,6 +63,10 @@
   "copper_ore": {
     "name": "Copper Ore",
     "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 8
@@ -52,6 +74,10 @@
   "iron_ore": {
     "name": "Iron Ore",
     "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 12
@@ -59,6 +85,10 @@
   "tin_ore": {
     "name": "Tin Ore",
     "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 4
@@ -66,6 +96,9 @@
   "quartz": {
     "name": "Quartz",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 5
@@ -73,6 +106,9 @@
   "sand": {
     "name": "Sand",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 1
@@ -80,6 +116,10 @@
   "silver_ore": {
     "name": "Silver Ore",
     "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 20
@@ -87,6 +127,10 @@
   "gold_ore": {
     "name": "Gold Ore",
     "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 30
@@ -94,6 +138,10 @@
   "platinum_ore": {
     "name": "Platinum Ore",
     "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 50
@@ -101,6 +149,9 @@
   "diamond": {
     "name": "Diamond",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 100
@@ -108,6 +159,10 @@
   "iron_bar": {
     "name": "Iron Bar",
     "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 25
@@ -115,6 +170,9 @@
   "brick": {
     "name": "Brick",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 5
@@ -122,6 +180,9 @@
   "sunflower_seed": {
     "name": "Sunflower Seed",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 2
@@ -129,6 +190,10 @@
   "mushroom_red": {
     "name": "Red Mushroom",
     "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 5
@@ -136,6 +201,9 @@
   "mushroom_glow": {
     "name": "Glowing Mushroom",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 10
@@ -143,6 +211,10 @@
   "mushroom_brown": {
     "name": "Brown Mushroom",
     "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 4
@@ -150,6 +222,10 @@
   "mushroom_chanterelle": {
     "name": "Chanterelle",
     "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 8
@@ -157,6 +233,10 @@
   "mushroom_puffball": {
     "name": "Puffball",
     "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 5
@@ -164,6 +244,9 @@
   "chamomile": {
     "name": "Chamomile",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 5
@@ -171,6 +254,9 @@
   "lavender": {
     "name": "Lavender",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 7
@@ -178,6 +264,9 @@
   "yarrow": {
     "name": "Yarrow",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 6
@@ -185,6 +274,10 @@
   "berries": {
     "name": "Wild Berries",
     "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 4
@@ -192,6 +285,9 @@
   "dandelion": {
     "name": "Dandelion Greens",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 2
@@ -199,6 +295,9 @@
   "fern": {
     "name": "Fern Frond",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 4
@@ -206,6 +305,9 @@
   "clover": {
     "name": "Clover",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 2
@@ -213,6 +315,9 @@
   "milkweed": {
     "name": "Milkweed",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 6
@@ -220,6 +325,9 @@
   "poppy": {
     "name": "Poppy",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 5
@@ -227,6 +335,10 @@
   "apple": {
     "name": "Apple",
     "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 5,
@@ -235,6 +347,10 @@
   "orange": {
     "name": "Orange",
     "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 6,
@@ -243,6 +359,10 @@
   "rotten_apple": {
     "name": "Rotten Apple",
     "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 1
@@ -250,6 +370,10 @@
   "rotten_orange": {
     "name": "Rotten Orange",
     "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 1
@@ -257,6 +381,10 @@
   "tomato": {
     "name": "Tomato",
     "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 8
@@ -264,6 +392,10 @@
   "corn": {
     "name": "Corn",
     "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 6
@@ -271,6 +403,10 @@
   "wheat": {
     "name": "Wheat",
     "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 4
@@ -278,6 +414,9 @@
   "seed_tomato": {
     "name": "Tomato Seeds",
     "category": "seed",
+    "tags": [
+      "seed"
+    ],
     "stackable": true,
     "max_stack": 99,
     "places_crop": "tomato",
@@ -287,6 +426,9 @@
   "seed_corn": {
     "name": "Corn Seeds",
     "category": "seed",
+    "tags": [
+      "seed"
+    ],
     "stackable": true,
     "max_stack": 99,
     "places_crop": "corn",
@@ -296,6 +438,9 @@
   "seed_wheat": {
     "name": "Wheat Seeds",
     "category": "seed",
+    "tags": [
+      "seed"
+    ],
     "stackable": true,
     "max_stack": 99,
     "places_crop": "wheat",
@@ -305,6 +450,9 @@
   "hands": {
     "name": "Hands",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "hands",
     "reach": 2.5,
     "buy_price": 0,
@@ -313,6 +461,9 @@
   "small_net": {
     "name": "Small Net",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "net",
     "reach": 2.5,
     "buy_price": 0,
@@ -326,6 +477,9 @@
   "large_net": {
     "name": "Large Net",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "net",
     "reach": 3.5,
     "buy_price": 100,
@@ -339,6 +493,9 @@
   "pickaxe_wood": {
     "name": "Wooden Pickaxe",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "pickaxe",
     "tool_tier": 1,
     "reach": 3.5,
@@ -350,6 +507,9 @@
   "pickaxe_stone": {
     "name": "Stone Pickaxe",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "pickaxe",
     "tool_tier": 2,
     "reach": 3.5,
@@ -361,6 +521,9 @@
   "pickaxe_copper": {
     "name": "Copper Pickaxe",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "pickaxe",
     "tool_tier": 3,
     "reach": 4.0,
@@ -372,6 +535,9 @@
   "pickaxe_iron": {
     "name": "Iron Pickaxe",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "pickaxe",
     "tool_tier": 4,
     "reach": 4.0,
@@ -383,6 +549,9 @@
   "axe_wood": {
     "name": "Wooden Axe",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "axe",
     "tool_tier": 1,
     "reach": 3.5,
@@ -405,6 +574,9 @@
   "axe_stone": {
     "name": "Stone Axe",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "axe",
     "tool_tier": 2,
     "reach": 3.5,
@@ -427,6 +599,9 @@
   "axe_copper": {
     "name": "Copper Axe",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "axe",
     "tool_tier": 3,
     "reach": 4.0,
@@ -449,6 +624,9 @@
   "axe_iron": {
     "name": "Iron Axe",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "axe",
     "tool_tier": 4,
     "reach": 4.0,
@@ -471,6 +649,9 @@
   "shovel_wood": {
     "name": "Wooden Shovel",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "shovel",
     "tool_tier": 1,
     "reach": 3.5,
@@ -482,6 +663,9 @@
   "shovel_stone": {
     "name": "Stone Shovel",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "shovel",
     "tool_tier": 2,
     "reach": 3.5,
@@ -493,6 +677,9 @@
   "hoe_wood": {
     "name": "Wooden Hoe",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "hoe",
     "tool_tier": 1,
     "reach": 3.5,
@@ -504,6 +691,9 @@
   "scythe_wood": {
     "name": "Wooden Scythe",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "scythe",
     "tool_tier": 1,
     "reach": 3.5,
@@ -515,6 +705,9 @@
   "hoe_stone": {
     "name": "Stone Hoe",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "hoe",
     "tool_tier": 2,
     "reach": 3.5,
@@ -526,6 +719,9 @@
   "watering_can_basic": {
     "name": "Watering Can",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "watering_can",
     "reach": 3.5,
     "cooldown_ticks": 3,
@@ -539,6 +735,9 @@
   "watering_can_large": {
     "name": "Large Watering Can",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "watering_can",
     "reach": 4.0,
     "cooldown_ticks": 2,
@@ -552,6 +751,9 @@
   "calm_spray": {
     "name": "Calm Spray",
     "category": "consumable",
+    "tags": [
+      "consumable"
+    ],
     "stackable": true,
     "max_stack": 20,
     "reach": 3.0,
@@ -562,6 +764,9 @@
   "sword_wood": {
     "name": "Wooden Sword",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "sword",
     "tool_tier": 1,
     "durability": 50,
@@ -591,6 +796,9 @@
   "spear_wood": {
     "name": "Wooden Spear",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "spear",
     "tool_tier": 1,
     "durability": 50,
@@ -620,6 +828,9 @@
   "bug_parts": {
     "name": "Dead Bug",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 2,
@@ -628,6 +839,9 @@
   "flashlight": {
     "name": "Flashlight",
     "category": "tool",
+    "tags": [
+      "tool"
+    ],
     "tool_type": "flashlight",
     "buy_price": 50,
     "sell_price": 20
@@ -635,6 +849,9 @@
   "centipede_parts": {
     "name": "Centipede Parts",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 2
@@ -642,6 +859,9 @@
   "paper_nest": {
     "name": "Paper Nest",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 10
@@ -649,6 +869,9 @@
   "wasp_larvae": {
     "name": "Wasp Larvae",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 3
@@ -656,6 +879,9 @@
   "wasp_stinger": {
     "name": "Wasp Stinger",
     "category": "resource",
+    "tags": [
+      "material"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 5
@@ -663,6 +889,10 @@
   "carrot": {
     "name": "Carrot",
     "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 6
@@ -670,6 +900,9 @@
   "seed_carrot": {
     "name": "Carrot Seeds",
     "category": "seed",
+    "tags": [
+      "seed"
+    ],
     "stackable": true,
     "max_stack": 99,
     "places_crop": "carrot",
@@ -679,6 +912,10 @@
   "pumpkin": {
     "name": "Pumpkin",
     "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 18
@@ -686,6 +923,9 @@
   "seed_pumpkin": {
     "name": "Pumpkin Seeds",
     "category": "seed",
+    "tags": [
+      "seed"
+    ],
     "stackable": true,
     "max_stack": 99,
     "places_crop": "pumpkin",
@@ -695,6 +935,10 @@
   "cabbage": {
     "name": "Cabbage",
     "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 10
@@ -702,6 +946,9 @@
   "seed_cabbage": {
     "name": "Cabbage Seeds",
     "category": "seed",
+    "tags": [
+      "seed"
+    ],
     "stackable": true,
     "max_stack": 99,
     "places_crop": "cabbage",
@@ -711,6 +958,10 @@
   "eggplant": {
     "name": "Eggplant",
     "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
     "stackable": true,
     "max_stack": 99,
     "sell_price": 12
@@ -718,6 +969,9 @@
   "seed_eggplant": {
     "name": "Eggplant Seeds",
     "category": "seed",
+    "tags": [
+      "seed"
+    ],
     "stackable": true,
     "max_stack": 99,
     "places_crop": "eggplant",
@@ -727,6 +981,9 @@
   "straw_hat": {
     "name": "Straw Hat",
     "category": "armor",
+    "tags": [
+      "clothing"
+    ],
     "armor_slot": "head",
     "stackable": false,
     "buy_price": 15,
@@ -736,6 +993,9 @@
   "leather_cap": {
     "name": "Leather Cap",
     "category": "armor",
+    "tags": [
+      "clothing"
+    ],
     "armor_slot": "head",
     "stackable": false,
     "buy_price": 30,
@@ -745,6 +1005,9 @@
   "copper_helmet": {
     "name": "Copper Helmet",
     "category": "armor",
+    "tags": [
+      "clothing"
+    ],
     "armor_slot": "head",
     "stackable": false,
     "buy_price": 60,
@@ -754,6 +1017,9 @@
   "iron_helmet": {
     "name": "Iron Helmet",
     "category": "armor",
+    "tags": [
+      "clothing"
+    ],
     "armor_slot": "head",
     "stackable": false,
     "buy_price": 120,
@@ -763,6 +1029,9 @@
   "leather_chest": {
     "name": "Leather Tunic",
     "category": "armor",
+    "tags": [
+      "clothing"
+    ],
     "armor_slot": "body",
     "stackable": false,
     "buy_price": 45,
@@ -772,6 +1041,9 @@
   "iron_chest": {
     "name": "Iron Chestplate",
     "category": "armor",
+    "tags": [
+      "clothing"
+    ],
     "armor_slot": "body",
     "stackable": false,
     "buy_price": 160,
@@ -781,6 +1053,9 @@
   "leather_gloves": {
     "name": "Leather Gloves",
     "category": "armor",
+    "tags": [
+      "clothing"
+    ],
     "armor_slot": "arms",
     "stackable": false,
     "buy_price": 20,
@@ -790,6 +1065,9 @@
   "iron_gauntlets": {
     "name": "Iron Gauntlets",
     "category": "armor",
+    "tags": [
+      "clothing"
+    ],
     "armor_slot": "arms",
     "stackable": false,
     "buy_price": 80,
@@ -799,6 +1077,9 @@
   "leather_pants": {
     "name": "Leather Pants",
     "category": "armor",
+    "tags": [
+      "clothing"
+    ],
     "armor_slot": "legs",
     "stackable": false,
     "buy_price": 35,
@@ -808,6 +1089,9 @@
   "iron_greaves": {
     "name": "Iron Greaves",
     "category": "armor",
+    "tags": [
+      "clothing"
+    ],
     "armor_slot": "legs",
     "stackable": false,
     "buy_price": 110,
@@ -817,6 +1101,9 @@
   "leather_boots": {
     "name": "Leather Boots",
     "category": "armor",
+    "tags": [
+      "clothing"
+    ],
     "armor_slot": "feet",
     "stackable": false,
     "buy_price": 25,
@@ -826,6 +1113,9 @@
   "iron_boots": {
     "name": "Iron Boots",
     "category": "armor",
+    "tags": [
+      "clothing"
+    ],
     "armor_slot": "feet",
     "stackable": false,
     "buy_price": 90,
@@ -835,6 +1125,9 @@
   "bee_charm": {
     "name": "Bee Charm",
     "category": "armor",
+    "tags": [
+      "clothing"
+    ],
     "armor_slot": "accessory",
     "stackable": false,
     "buy_price": 75,
@@ -843,6 +1136,9 @@
   "lucky_clover": {
     "name": "Lucky Clover",
     "category": "armor",
+    "tags": [
+      "clothing"
+    ],
     "armor_slot": "accessory",
     "stackable": false,
     "buy_price": 75,

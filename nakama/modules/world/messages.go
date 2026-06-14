@@ -119,6 +119,12 @@ const (
 	// ARMOR (cosmetic + synced; defense math is a follow-up)
 	OpCodeEquipArmor      int64 = 96 // C->S: {equip_slot, inv_slot} equip/unequip/swap
 	OpCodeEquipmentUpdate int64 = 97 // S->C: the player's 7 worn-armor slots (echo on change + join)
+
+	// Containers & crafting (chests/dressers + craft stations). One C->S action opcode (the Op
+	// field switches move/quick/get_all/collect/set_recipe/craft) + one S->C state echo.
+	// NON-deterministic display/inventory state — never enters the sim hash.
+	OpCodeContainer       int64 = 98 // C->S: a container/craft-station action (see ContainerActionMessage.Op)
+	OpCodeContainerUpdate int64 = 99 // S->C: a container/craft-station's contents + craft progress
 )
 
 // TreeWaterUpdateMessage (OpCode 51): a fruit tree's water/tank state changed. Display-only.
@@ -163,6 +169,8 @@ type DebugWorldMessage struct {
 	SpawnCount   int     `json:"spawn_count"`
 	SpawnX       float32 `json:"spawn_x"`
 	SpawnY       float32 `json:"spawn_y"`
+	GiveItem     string  `json:"give_item"`  // "" no-op | "kit" (crafting starter bundle) | an item id
+	GiveCount    int     `json:"give_count"` // count for a single item id (kit ignores it)
 }
 
 // BugTelegraphMessage (OpCode 95): display-only attack telegraphs. kind = "strike"
@@ -231,6 +239,47 @@ type StationUpdateMessage struct {
 	Input    int `json:"input"`    // Raw deposits awaiting processing
 	Fill     int `json:"fill"`     // Processed output (compost) — the food provider
 	Capacity int `json:"capacity"`
+}
+
+// ContainerActionMessage (OpCode 98, C→S): one action on the container/craft-station at (gx,gy).
+// Op selects the behavior; only the fields that op needs are read:
+//   - "quick"      {zone, slot}                  — move a WHOLE stack to the opposite side
+//                                                  (double-/shift-click; chest <-> player)
+//   - "move"       {zone, slot, to_zone, to_slot, count} — precise drag-drop placement (-1=all)
+//   - "set_recipe" {recipe}                       — craft station: select the active recipe
+//   - "craft"      {recipe, qty}                  — craft station: pull inputs, queue qty batches
+//   - "collect"    {slot}                         — craft station: take ONE output cell's stack
+//   - "get_all"    {}                             — craft station: sweep the whole output grid
+//                                                  (overflow stays)
+// zone/to_zone are "player" | "container". Server is authoritative for every transfer.
+type ContainerActionMessage struct {
+	GX     int    `json:"gx"`
+	GY     int    `json:"gy"`
+	Op     string `json:"op"`
+	Zone   string `json:"zone,omitempty"`
+	Slot   int    `json:"slot,omitempty"`
+	ToZone string `json:"to_zone,omitempty"`
+	ToSlot int    `json:"to_slot,omitempty"`
+	Count  int    `json:"count,omitempty"`  // -1 = whole stack
+	Recipe string `json:"recipe,omitempty"`
+	Qty    int    `json:"qty,omitempty"`
+}
+
+// ContainerUpdateMessage (OpCode 99, S→C): the full contents of a container/craft-station after
+// any change (plus craft progress when it's a station). Display/inventory state only — never in
+// the sim hash. Re-sent on open and on every mutation.
+type ContainerUpdateMessage struct {
+	GX     int             `json:"gx"`
+	GY     int             `json:"gy"`
+	Slots  []InventorySlot `json:"slots"`            // chest contents OR craft output grid
+	Filter string          `json:"filter,omitempty"` // tag filter (chests)
+
+	// Craft-station fields (zero/absent for plain chests)
+	IsCraft  bool   `json:"is_craft,omitempty"`
+	Recipe   string `json:"recipe,omitempty"`   // active recipe id
+	Progress int    `json:"progress,omitempty"` // ticks into the current batch
+	Total    int    `json:"total,omitempty"`    // process_ticks of the current batch
+	Queue    int    `json:"queue,omitempty"`    // batches remaining (incl current)
 }
 
 // === Client → Server Messages ===

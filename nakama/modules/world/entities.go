@@ -65,6 +65,11 @@ type EntityDef struct {
 	// Consumable properties
 	Effect string `json:"effect,omitempty"`
 
+	// Item classes/tags: "clothing", "food", "material", "metal", "tool", "seed", "book",
+	// "drink"… A filtered container only accepts items carrying its tag; tags also seed future
+	// inventory sort/filter. Pure data — no behavior beyond the filter check.
+	Tags []string `json:"tags,omitempty"`
+
 	// World data (nil for inventory-only items)
 	World *WorldData `json:"world,omitempty"`
 
@@ -122,6 +127,19 @@ type WorldData struct {
 
 	// Station properties (player-fillable material processors — compost bin first; nil = not a station)
 	Station *StationData `json:"station,omitempty"`
+
+	// Container properties (item storage — chests, dressers, racks; nil = not a container).
+	// Craft stations are NOT declared here — they're detected by being a key in
+	// RecipesByStation, and their output-grid size is a code constant (§ craft station).
+	Container *ContainerData `json:"container,omitempty"`
+}
+
+// ContainerData makes a placeable an item store: Slots cells, optionally restricted to items
+// carrying Filter (a tag). interaction_type:"storage" opens its panel. Non-deterministic
+// display/inventory state — never in the sim hash.
+type ContainerData struct {
+	Slots  int    `json:"slots"`            // number of storage cells
+	Filter string `json:"filter,omitempty"` // tag a deposited item must carry; "" = accept anything
 }
 
 // StationData describes a player-fillable station: deposit accepted items via a menu, the fill
@@ -189,6 +207,19 @@ func (e *EntityDef) IsPlaceable() bool {
 // IsItem returns true if this entity can exist in inventory.
 func (e *EntityDef) IsItem() bool {
 	return e.EntityType == "item" || e.EntityType == "placeable"
+}
+
+// HasTag reports whether this entity carries the given item class/tag (container filtering).
+func (e *EntityDef) HasTag(tag string) bool {
+	if e == nil {
+		return false
+	}
+	for _, t := range e.Tags {
+		if t == tag {
+			return true
+		}
+	}
+	return false
 }
 
 // HasWorldPresence returns true if this entity can exist in the world.
@@ -398,4 +429,48 @@ func LoadCropDefs(basePath string) (map[string]*entities.CropDef, error) {
 	}
 
 	return crops, nil
+}
+
+// LoadRecipes loads crafting recipes from recipes.json into a by-id map AND a by-station index
+// (the panel needs "every recipe craftable at station X"). Mirrors LoadCropDefs. The recipe table
+// is pure data — zero code per recipe; publish_entities.py ships recipes.json by glob.
+func LoadRecipes(basePath string) (map[string]*entities.RecipeDef, map[string][]*entities.RecipeDef, error) {
+	recipes := make(map[string]*entities.RecipeDef)
+	byStation := make(map[string][]*entities.RecipeDef)
+
+	path := filepath.Join(basePath, "entities", "recipes.json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to read recipes.json: %w", err)
+	}
+
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return nil, nil, fmt.Errorf("failed to parse recipes.json: %w", err)
+	}
+
+	for id, recipeData := range raw {
+		if id == "_comment" {
+			continue
+		}
+
+		var def entities.RecipeDef
+		if err := json.Unmarshal(recipeData, &def); err != nil {
+			return nil, nil, fmt.Errorf("failed to parse recipe %s: %w", id, err)
+		}
+		def.ID = id
+
+		// Defaults
+		if def.Output.Count == 0 {
+			def.Output.Count = 1
+		}
+		if def.ProcessTicks < 0 {
+			def.ProcessTicks = 0
+		}
+
+		recipes[id] = &def
+		byStation[def.Station] = append(byStation[def.Station], &def)
+	}
+
+	return recipes, byStation, nil
 }

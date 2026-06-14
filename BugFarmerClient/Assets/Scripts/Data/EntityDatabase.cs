@@ -54,6 +54,11 @@ namespace BugFarmer.Data
             public string[] StationAccepts;  // Item types depositable here (menu filter)
             public int StationCapacity = 10;
 
+            // Container block (item storage: chests/dressers/racks). ContainerSlots > 0 marks a
+            // storage occupant; ContainerFilter (a tag) restricts what it accepts ("" = anything).
+            public int ContainerSlots;
+            public string ContainerFilter;
+
             // Light block (lamps/torches glow at night; 0 radius = no light)
             public float LightRadius;
             public Color LightColor = new Color(1f, 0.82f, 0.55f);
@@ -399,6 +404,14 @@ namespace BugFarmer.Data
                         world.StationAccepts[i] = accepts[i].Value<string>();
                 }
                 world.StationCapacity = station["capacity"]?.Value<int>() ?? 10;
+            }
+
+            // Parse container block (item storage: chests/dressers/racks)
+            var container = data["container"] as JObject;
+            if (container != null)
+            {
+                world.ContainerSlots = container["slots"]?.Value<int>() ?? 12;
+                world.ContainerFilter = container["filter"]?.Value<string>() ?? "";
             }
 
             // Parse light block (lamps/torches glow at night)

@@ -179,6 +179,11 @@ namespace BugFarmer.Tracing
                     }
                 });
 
+            // Crafting: stock the player with the Stage-1 recipe materials (+ a couple of items
+            // for the filtered-container tests). Use in the "Crafting Test" zone.
+            if (GUILayout.Button("Give crafting kit"))
+                SendWorldDebug(t => t.give_item = "kit");
+
             GUILayout.Label($"time now: {BugFarmer.World.DayNightController.TimeOfDay:F2}  " +
                             $"weather: {BugFarmer.World.DayNightController.Weather}");
             if (!string.IsNullOrEmpty(_wStatus))

@@ -134,9 +134,53 @@ func (m *Match) handleDebugWorld(
 		m.debugSpawnSwarm(logger, state, msg, userID, chunkSize)
 	}
 
+	// Give items ("" = no-op): "kit" = the crafting starter bundle, else one item id.
+	if msg.GiveItem != "" {
+		m.debugGiveItem(logger, dispatcher, state, userID, msg.GiveItem, msg.GiveCount)
+	}
+
 	if changed {
 		m.sendWorldEnv(dispatcher, state, nil)
 	}
+}
+
+// debugGiveItem (DEV TOOL) drops items straight into the player's inventory and re-syncs it.
+// "kit" hands over a crafting starter bundle (the Stage-1 recipe materials + a couple of items
+// for the filtered-container tests); any other id gives `count` of that item.
+func (m *Match) debugGiveItem(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	userID string,
+	item string,
+	count int,
+) {
+	player := state.Players[userID]
+	if player == nil {
+		return
+	}
+	if count <= 0 {
+		count = 1
+	}
+
+	give := map[string]int{}
+	if item == "kit" {
+		give = map[string]int{
+			"wood": 99, "coal": 50, "iron_ore": 40, "copper_ore": 40,
+			"stone_block": 40, "iron_bar": 20, "fiber": 30,
+			"straw_hat": 1, "leather_cap": 1, "apple": 20, // filtered-container (clothing/food) tests
+		}
+	} else {
+		give[item] = count
+	}
+
+	for id, n := range give {
+		player.AddItem(id, n)
+	}
+	if presence, ok := state.Presences[userID]; ok && presence != nil {
+		_ = m.sendInventorySync(logger, dispatcher, player, presence)
+	}
+	logger.Info("DEBUG WORLD: %s gave items %v", userID, give)
 }
 
 // scheduleDailyRain rolls the day's weather at the rollover: 30% chance of ONE shower at

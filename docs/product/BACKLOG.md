@@ -6,6 +6,39 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Done 2026-06-14 — crafting system (Stage 1) + item containers
+Recipes-as-data + a unified craft model (no quick/slow split — one `process_ticks` speed knob), item
+containers, and the determinism boundary. See [architecture_crafting.md](architecture_crafting.md)
+(system) + [crafting_design.md](crafting_design.md) (content).
+- **Recipes** (`data/entities/recipes.json`, published by glob) → `LoadRecipes` + `RecipesByStation`;
+  client `RecipeDatabase`. ~10 Stage-1 recipes on EXISTING art (workbench/stonecutter/anvil fast,
+  furnace slow, multi-input).
+- **One craft model**: right-click → recipe grid → have/need + qty → Craft (inputs leave the bag) →
+  process at `process_ticks` (a bar fills) → **output grid** → "Get all" / double-click (overflow stays).
+- **Container primitive** (`ContainerState`) + **`CraftStationState`** — lazily created on first open;
+  one `OpCodeContainer` (98) action opcode (`quick`/`move`/`craft`/`collect`/`get_all`/`set_recipe`) +
+  `OpCodeContainerUpdate` (99) echo. Double-/shift-click quick-moves stacks.
+- **Item tags** (`clothing`/`food`/`metal`/…) + a **storage audit**: 20 furniture pieces got
+  `world.container {slots, filter}` (chests generic; wardrobe→clothing, bookshelf→book, fridge→food, …).
+- **Determinism**: crafting/containers are display/inventory state, NEVER in the sim hash; compost +
+  the food ledger untouched.
+- **Test**: `crafting_test` zone (in the WorldMenu) + an F8 "Give crafting kit" debug button.
+- ⚠ **Needs a server rebuild** (Go) + an **in-Editor C# compile pass** (the new client UI was written
+  without a local Unity compiler — expect to iron out small panel issues on first run).
+
+### Crafting — deferred (Stage 2 / later)
+- **Player persistence → learned/bought recipes** + the NPC recipe economy (the `unlock` field is in
+  the data, unused by the gate). Ties to the locked HUD NPC buttons.
+- **Themed station UI** (the Apico touch): per-station panel art — the smelter's fuel + ore input
+  slots + fire/heat meter + fuel tank; `panel_craft` frame (see art_needed.md). Stage 1 = generic panel.
+- **Precise drag-drop** between container/bag (server `move` op exists; client drag wiring deferred —
+  Stage 1 is double-/shift-click quick-move only).
+- **Sawmill/loom recipes** (placed in the test zone but no Stage-1 recipes yet) + the new-output art
+  batch (bars, plank, glass, cloth, …).
+- **Fridge food rot-prevention**, a persistent **fuel tank + heat meter**, **inventory expansion**
+  (bigger backpack → tag-based sort/filter), **craft-from-nearby-chests** QoL, **station-chaining**.
+- **Bee/honey**, **leather source** (no bug-leather), **electronics bench** (when electricity lands).
+
 ## Done 2026-06-14 — heavy/light rain + lightning/thunder, torch placement tool, dry-soil + hands
 - **Weather v2 visuals**: rain Light/Heavy presets (parallax streaks + splash layer + gusting wind +
   overcast tint), Heavy = lightning flash (global-light) + synth thunder; F8 intensity toggle + Strike.

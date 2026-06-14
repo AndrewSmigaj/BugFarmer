@@ -87,6 +87,23 @@ type WorldState struct {
 	// Stations (player-fillable processors: compost bin etc.)
 	Stations map[string]*entities.StationState // StationKey(gx,gy) -> station state
 
+	// Crafting (recipes-as-data; loaded once at MatchInit). Recipe processing and item
+	// containers are NON-deterministic display/inventory state and NEVER enter the sim hash
+	// (only a station whose output is an insect food/breeding source registers on the food
+	// ledger — that path stays on StationState above, not here).
+	Recipes          map[string]*entities.RecipeDef   // recipeID -> recipe
+	RecipesByStation map[string][]*entities.RecipeDef // station entity id -> its recipes
+
+	// Item containers (chests/dressers/racks) — lazily created on first open from the
+	// occupant's world.container block. Display/inventory state, NOT in the sim hash.
+	Containers map[string]*ContainerState // ContainerKey(gx,gy) -> container state
+
+	// Craft stations (recipe processors: furnace/anvil/workbench…) — lazily created on first
+	// open for any occupant present in RecipesByStation. Output items are display/inventory
+	// state, NOT in the sim hash (an insect-food output would register on the food ledger via
+	// StationState instead — separate path).
+	CraftStations map[string]*CraftStationState // CraftStationKey(gx,gy) -> craft station state
+
 	// Bug spawn tracking (zone-level, per species)
 	SwarmsBySpecies  map[string][]string // speciesID → swarmIDs of that species
 	SpeciesNextSpawn map[string]float64  // speciesID → next spawn time (seconds since start)
@@ -270,6 +287,11 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		NestStates:      make(map[string]*entities.NestState),
 		GnawDamage:      make(map[string]int),
 		Stations:        make(map[string]*entities.StationState),
+		// Crafting
+		Recipes:          make(map[string]*entities.RecipeDef),
+		RecipesByStation: make(map[string][]*entities.RecipeDef),
+		Containers:       make(map[string]*ContainerState),
+		CraftStations:    make(map[string]*CraftStationState),
 		// Bug spawn tracking
 		SwarmsBySpecies:  make(map[string][]string),
 		SpeciesNextSpawn: make(map[string]float64),

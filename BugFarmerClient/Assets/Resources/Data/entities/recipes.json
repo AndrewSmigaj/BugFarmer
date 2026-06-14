@@ -1,0 +1,77 @@
+{
+  "_comment": "Crafting recipes. Keyed by recipe id (usually = output item id). station = the placeable entity id whose panel offers this recipe. process_ticks is the ONLY speed knob (10Hz: tiny ~= instant, 200 = 20s). catalyst (optional) is a required+consumed extra input. unlock: '' (or 'default') = always available at the station; 'recipe:<id>'/'shop:<npc>' are future seams honored once player persistence lands (gating today is implicit: you must own/build the station). Stage-1 set uses existing-art I/O only.",
+
+  "torch": {
+    "station": "workbench",
+    "inputs": [{ "item": "wood", "count": 3 }, { "item": "coal", "count": 1 }],
+    "output": { "item": "torch", "count": 3 },
+    "process_ticks": 8,
+    "unlock": "default"
+  },
+  "chair_wood": {
+    "station": "workbench",
+    "inputs": [{ "item": "wood", "count": 4 }],
+    "output": { "item": "chair_wood", "count": 1 },
+    "process_ticks": 8,
+    "unlock": "default"
+  },
+  "table_wood": {
+    "station": "workbench",
+    "inputs": [{ "item": "wood", "count": 6 }],
+    "output": { "item": "table_wood", "count": 1 },
+    "process_ticks": 8,
+    "unlock": "default"
+  },
+  "fence_wood": {
+    "station": "workbench",
+    "inputs": [{ "item": "wood", "count": 2 }],
+    "output": { "item": "fence_wood", "count": 3 },
+    "process_ticks": 8,
+    "unlock": "default"
+  },
+  "sword_wood": {
+    "station": "workbench",
+    "inputs": [{ "item": "wood", "count": 8 }],
+    "output": { "item": "sword_wood", "count": 1 },
+    "process_ticks": 8,
+    "unlock": "default"
+  },
+
+  "brick": {
+    "station": "stonecutter",
+    "inputs": [{ "item": "stone_block", "count": 2 }],
+    "output": { "item": "brick", "count": 4 },
+    "process_ticks": 10,
+    "unlock": "default"
+  },
+  "wall_stone": {
+    "station": "stonecutter",
+    "inputs": [{ "item": "stone_block", "count": 2 }],
+    "output": { "item": "wall_stone", "count": 2 },
+    "process_ticks": 10,
+    "unlock": "default"
+  },
+
+  "iron_bar": {
+    "station": "furnace",
+    "inputs": [{ "item": "iron_ore", "count": 2 }, { "item": "coal", "count": 1 }],
+    "output": { "item": "iron_bar", "count": 1 },
+    "process_ticks": 200,
+    "unlock": "default"
+  },
+
+  "pickaxe_iron": {
+    "station": "anvil",
+    "inputs": [{ "item": "iron_bar", "count": 2 }, { "item": "wood", "count": 2 }],
+    "output": { "item": "pickaxe_iron", "count": 1 },
+    "process_ticks": 30,
+    "unlock": "default"
+  },
+  "axe_iron": {
+    "station": "anvil",
+    "inputs": [{ "item": "iron_bar", "count": 2 }, { "item": "wood", "count": 2 }],
+    "output": { "item": "axe_iron", "count": 1 },
+    "process_ticks": 30,
+    "unlock": "default"
+  }
+}
