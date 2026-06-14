@@ -33,6 +33,16 @@ namespace BugFarmer.World
         /// <summary>Current apparent day index (the server's rollover epoch).</summary>
         public static long CurrentDayIndex { get; private set; }
 
+        /// <summary>Debug-only live override for the night-floor intensity (F8 slider).
+        /// When non-null it wins over the serialized <see cref="nightIntensity"/>; remove with the
+        /// debug overlay before ship.</summary>
+        public static float? DebugNightIntensityOverride;
+
+        /// <summary>Additive over-bright on the global light for a lightning strike (0 = none).
+        /// Set by RainController on a strike; decayed here each frame. Reuses the single global
+        /// light, so the whole screen flashes blue-white for a beat.</summary>
+        public static float LightningFlash;
+
         [Header("Ambient")]
         [SerializeField] private float nightIntensity = 0.20f; // DEEP night — you can't see past light radii
         [SerializeField] private Color nightColor = new Color(0.35f, 0.42f, 0.75f); // moonlit blue
@@ -55,10 +65,26 @@ namespace BugFarmer.World
 
         private void Start()
         {
-            var go = new GameObject("GlobalLight2D");
-            go.transform.SetParent(transform);
-            _globalLight = go.AddComponent<Light2D>();
-            _globalLight.lightType = Light2D.LightType.Global;
+            // EXACTLY ONE global light. URP 2D accumulates all global lights into the
+            // Multiply blend texture, so a stray scene global at full intensity pins the
+            // world bright and defeats the night ramp (the long-standing "night isn't
+            // dark" bug — SampleScene shipped a static Global Light 2D at intensity 1).
+            // Adopt the first existing global and DISABLE the rest; create one only if
+            // none exist. Never leave zero enabled — lit sprites with no global render black.
+            foreach (var l in FindObjectsByType<Light2D>(FindObjectsSortMode.None))
+            {
+                if (l.lightType != Light2D.LightType.Global) continue;
+                if (_globalLight == null) _globalLight = l;
+                else l.enabled = false;
+            }
+            if (_globalLight == null)
+            {
+                var go = new GameObject("GlobalLight2D");
+                go.transform.SetParent(transform);
+                _globalLight = go.AddComponent<Light2D>();
+                _globalLight.lightType = Light2D.LightType.Global;
+            }
+            _globalLight.enabled = true;
             _globalLight.intensity = 1f;
             _globalLight.color = Color.white;
 
@@ -105,14 +131,23 @@ namespace BugFarmer.World
 
             if (_globalLight != null)
             {
-                float intensity = Mathf.Lerp(nightIntensity, 1f, Daylight);
+                float nightFloor = DebugNightIntensityOverride ?? nightIntensity;
+                float intensity = Mathf.Lerp(nightFloor, 1f, Daylight);
                 if (RainController.Raining)
                     intensity *= 0.85f; // overcast dim while it rains
+                intensity += LightningFlash; // additive over-bright on a strike
                 _globalLight.intensity = intensity;
                 // Near the transitions, tint warm (dawn/dusk); at night go moonlit blue.
                 float transition = TransitionAmount(t);
                 var dayCol = Color.Lerp(Color.white, dawnDuskColor, transition);
-                _globalLight.color = Color.Lerp(nightColor, dayCol, Daylight);
+                var col = Color.Lerp(nightColor, dayCol, Daylight);
+                if (RainController.Raining) // overcast: cooler, desaturated
+                    col = Color.Lerp(col, new Color(0.62f, 0.66f, 0.72f), 0.32f);
+                if (LightningFlash > 0f) // strikes are blue-white
+                    col = Color.Lerp(col, Color.white, Mathf.Min(1f, LightningFlash));
+                _globalLight.color = col;
+                // Snappy decay: a ~1.0 flash fades in ~0.2s.
+                LightningFlash = Mathf.MoveTowards(LightningFlash, 0f, Time.deltaTime * 5f);
             }
 
             EnsurePlayerLight();

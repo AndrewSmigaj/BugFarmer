@@ -104,7 +104,10 @@ namespace BugFarmer.Player
                 itemId = InventoryManager.Instance?.GetEquippedToolId() ?? "";
                 _cursorMode = false;
             }
-            bool isPlaceable = !string.IsNullOrEmpty(itemId) && EntityDatabase.IsPlaceable(itemId);
+            // "placer" tools (torch) place on LEFT-click with no ghost (PlayerInputRouter ->
+            // PlaceEquippedNow); keep them OUT of the generic ghost/right-click placing mode.
+            bool isPlaceable = !string.IsNullOrEmpty(itemId) && EntityDatabase.IsPlaceable(itemId)
+                               && EntityDatabase.Get(itemId)?.ToolType != "placer";
 
             if (isPlaceable && itemId != _currentPlaceableId)
             {
@@ -172,7 +175,10 @@ namespace BugFarmer.Player
             ghostPreview.color = CanPlaceAt(cellPos) ? validColor : invalidColor;
         }
 
-        private bool CanPlaceAt(Vector2Int cellPos)
+        private bool CanPlaceAt(Vector2Int cellPos) =>
+            CanPlaceAt(_currentPlaceableId, _placementDirection, cellPos);
+
+        private bool CanPlaceAt(string placeableId, int direction, Vector2Int cellPos)
         {
             if (TilemapManager.Instance == null)
                 return false;
@@ -182,7 +188,7 @@ namespace BugFarmer.Player
                 return false;
 
             // Seeds can only be placed on garden_plot tiles
-            var def = EntityDatabase.Get(_currentPlaceableId);
+            var def = EntityDatabase.Get(placeableId);
             if (def != null && !string.IsNullOrEmpty(def.PlacesCrop))
             {
                 string groundTile = TilemapManager.Instance.GetGroundAt(cellPos);
@@ -190,7 +196,7 @@ namespace BugFarmer.Player
                     return false;
             }
 
-            Vector2Int size = EntityDatabase.GetFootprint(_currentPlaceableId, _placementDirection);
+            Vector2Int size = EntityDatabase.GetFootprint(placeableId, direction);
             for (int dy = 0; dy < size.y; dy++)
             {
                 for (int dx = 0; dx < size.x; dx++)
@@ -214,6 +220,35 @@ namespace BugFarmer.Player
             if (!CanPlaceAt(cellPos))
                 return;
 
+            SendPlace(_currentPlaceableId, cellPos, _placementDirection, _cursorMode, _cursorSourceSlot);
+        }
+
+        /// <summary>
+        /// Left-click placement for "placer" tools (e.g. torch): place the EQUIPPED occupant at the
+        /// mouse cell immediately — no ghost, no placing-mode. Called by PlayerInputRouter on a
+        /// left-click when the equipped tool_type is "placer".
+        /// </summary>
+        public void PlaceEquippedNow()
+        {
+            if (TilemapManager.Instance == null || _mainCamera == null)
+                return;
+            string itemId = InventoryManager.Instance?.GetEquippedToolId() ?? "";
+            if (string.IsNullOrEmpty(itemId) || !EntityDatabase.IsPlaceable(itemId))
+                return;
+
+            Vector3 mouseWorld = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            mouseWorld.z = 0;
+            Vector2Int cellPos = TilemapManager.Instance.WorldToCell(mouseWorld);
+            if (!CanPlaceAt(itemId, 0, cellPos))
+                return;
+
+            SendPlace(itemId, cellPos, 0, cursorMode: false, sourceSlot: 0);
+        }
+
+        /// <summary>The single send path: TilePlace (or TilePlaceFromSlot in cursor mode).</summary>
+        private void SendPlace(string occupantId, Vector2Int cellPos, int direction,
+                               bool cursorMode, int sourceSlot)
+        {
             var socket = NetworkManager.Instance?.Socket;
             var match = WorldManager.Instance?.CurrentMatch;
             if (socket == null || !socket.IsConnected || match == null)
@@ -226,15 +261,15 @@ namespace BugFarmer.Player
             // Cursor mode names its source slot (separate message class: the field must
             // only exist on the wire when it means something — server-side it's a *int).
             string json;
-            if (_cursorMode)
+            if (cursorMode)
             {
                 json = JsonUtility.ToJson(new TilePlaceFromSlotMessage
                 {
                     grid_x = cellPos.x,
                     grid_y = cellPos.y,
-                    occupant_id = _currentPlaceableId,
-                    direction = _placementDirection,
-                    source_slot = _cursorSourceSlot
+                    occupant_id = occupantId,
+                    direction = direction,
+                    source_slot = sourceSlot
                 });
             }
             else
@@ -243,12 +278,12 @@ namespace BugFarmer.Player
                 {
                     grid_x = cellPos.x,
                     grid_y = cellPos.y,
-                    occupant_id = _currentPlaceableId,
-                    direction = _placementDirection
+                    occupant_id = occupantId,
+                    direction = direction
                 });
             }
             _ = socket.SendMatchStateAsync(match.Id, OpCodes.TilePlace, json);
-            Debug.Log($"[PlacementController] Placing {_currentPlaceableId} at ({cellPos.x}, {cellPos.y}) cursorMode={_cursorMode}");
+            Debug.Log($"[PlacementController] Placing {occupantId} at ({cellPos.x}, {cellPos.y}) cursorMode={cursorMode}");
         }
 
         public bool IsPlacing => _isPlacing;

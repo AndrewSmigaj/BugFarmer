@@ -115,6 +115,25 @@ Ground tiles and raw materials. Footprint always 1×1.
 
 Handheld items, no footprint (inventory only). Sprite shown in hotbar/hand.
 
+### `tool_type` → left-click behavior (the dispatch)
+`PlayerInputRouter.RouteLeftClick` resolves the equipped item's `tool_type` and routes to exactly
+one behavior (the single seam for "different tools, different behaviors"):
+
+| `tool_type` | left-click behavior |
+|---|---|
+| `sword`, `spear` | melee primary (`MeleeController`) |
+| `net` | catch (`CatchingController`) |
+| `hoe`, `watering_can`, `scythe` | farm action (`ToolUseController`) |
+| `placer` | **place the item's occupant at the target cell, no ghost** (`PlacementController.PlaceEquippedNow`) |
+| `flashlight` | none (passive held light, `PlayerNightLight`) |
+| `hands` / null / other | grab fallthrough: catch → tree-pick → break |
+
+**`placer`** is the held quick-place behavior (Terraria-style torches): left-click places one occupant
+centered on the target cell with no preview. The torch is the first placer; future lanterns/lamps/
+electric placeables reuse the SAME `tool_type` (no new code). It contrasts with **blocks** (no
+`tool_type`), which keep the generic right-click + ghost placement. A placer item is still a normal
+placeable occupant (it has `world.*`); the `tool_type` only changes how it's PLACED from the hotbar.
+
 ### Axes (Wood harvesting)
 
 | Item | Description | Sprite | Tier | Durability |

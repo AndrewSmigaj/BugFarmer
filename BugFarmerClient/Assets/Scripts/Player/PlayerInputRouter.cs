@@ -107,6 +107,12 @@ namespace BugFarmer.Player
                     _toolUse?.TryHandleClick();
                     return;
 
+                case "placer":
+                    // Placement tools (torch, future lanterns/lamps): left-click places the
+                    // equipped occupant at the target cell, no ghost. See PlacementController.
+                    _placement?.PlaceEquippedNow();
+                    return;
+
                 default:
                     // Bare hand, the HANDS tool, or a non-tool item: GRAB verbs in order —
                     // bug-catch, then tree-pick, then the breaking fallthrough. This ordered

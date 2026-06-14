@@ -127,7 +127,11 @@ namespace BugFarmer.Tracing
         void DrawWorldDebug()
         {
             const int W = 340;
-            GUILayout.BeginArea(new Rect(Screen.width - W - 12, 500, W, 190), GUI.skin.box);
+            const int H = 290;
+            // Vertically centred on the right edge so the whole panel is visible at any
+            // view height (it used to be anchored low and ran off the bottom of the screen).
+            float y = Mathf.Max(12f, (Screen.height - H) * 0.5f);
+            GUILayout.BeginArea(new Rect(Screen.width - W - 12, y, W, H), GUI.skin.box);
             GUILayout.Label("=== WORLD DEBUG — F8 ===");
 
             // Time of day: tick positions within the 8400-tick day (0 = morning).
@@ -142,6 +146,24 @@ namespace BugFarmer.Tracing
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Rain")) SendWorldDebug(t => t.weather = "rain");
             if (GUILayout.Button("Stop weather")) SendWorldDebug(t => t.weather = "stop");
+            GUILayout.EndHorizontal();
+
+            // Night darkness: live, client-only tune of the global night-floor intensity
+            // (lower = darker). Set "Night" above to see the effect. Debug-only.
+            float ni = BugFarmer.World.DayNightController.DebugNightIntensityOverride ?? 0.20f;
+            BugFarmer.World.DayNightController.DebugNightIntensityOverride =
+                Slider("Night darkness", ni, 0.02f, 0.6f, "F2");
+
+            // Rain intensity preset (client-side for now) + a manual lightning strike.
+            var ri = BugFarmer.World.RainController.Intensity;
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Rain:", GUILayout.Width(40));
+            if (GUILayout.Button(ri == BugFarmer.World.RainController.RainIntensity.Light ? "[Light]" : "Light"))
+                BugFarmer.World.RainController.Intensity = BugFarmer.World.RainController.RainIntensity.Light;
+            if (GUILayout.Button(ri == BugFarmer.World.RainController.RainIntensity.Heavy ? "[Heavy]" : "Heavy"))
+                BugFarmer.World.RainController.Intensity = BugFarmer.World.RainController.RainIntensity.Heavy;
+            if (GUILayout.Button("Strike"))
+                BugFarmer.World.RainController.RequestStrike();
             GUILayout.EndHorizontal();
 
             if (GUILayout.Button("Spawn fly swarm at player"))

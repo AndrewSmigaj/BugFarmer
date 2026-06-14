@@ -1276,8 +1276,9 @@
   "torch": {
     "name": "Torch",
     "category": "lighting",
-    "sprite_w": 16,
-    "sprite_h": 16,
+    "tool_type": "placer",
+    "sprite_w": 10,
+    "sprite_h": 20,
     "stackable": true,
     "max_stack": 99,
     "sell_price": 2,

@@ -25,5 +25,11 @@
     "materials": [
       "metal"
     ]
+  },
+  "torch": {
+    "look": "a handheld TORCH: a straight vertical wooden STICK/handle topped with a bright orange-yellow FLAME wrapped in rag. TALL and thin, clearly torch-shaped (NOT round, NOT a mushroom) — the slim handle and the pointed flame must read at a glance even when tiny. Flame distinct from the handle.",
+    "materials": [
+      "wood"
+    ]
   }
 }

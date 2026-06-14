@@ -21,7 +21,7 @@ namespace BugFarmer.Audio
     {
         public static AudioFx Instance { get; private set; }
 
-        private AudioClip _thwack, _pop, _sting, _thud, _hiss, _crunch;
+        private AudioClip _thwack, _pop, _sting, _thud, _hiss, _crunch, _thunder;
         private AudioSource[] _pool;
         private int _next;
 
@@ -52,6 +52,15 @@ namespace BugFarmer.Audio
                 Noise(t) * Mathf.Lerp(0.15f, 0.55f, t / dur) * Decay(t, dur, 3f));
             _crunch = Synth("fx_crunch", sr, 0.18f, (t, dur) =>
                 Noise(t) * (Mathf.PingPong(t * 30f, 1f) > 0.5f ? 1f : 0.25f) * Decay(t, dur, 6f) * 0.65f);
+            // THUNDER (heavy-rain lightning): a low boom sweep + amplitude-wobbled rumble noise,
+            // quick attack and a long decaying tail. Long enough to feel distant after the flash.
+            _thunder = Synth("fx_thunder", sr, 1.4f, (t, dur) =>
+            {
+                float boom = Mathf.Sin(2f * Mathf.PI * Mathf.Lerp(70f, 38f, t / dur) * t);
+                float rumble = Noise(t) * (0.5f + 0.5f * Mathf.Sin(2f * Mathf.PI * 7f * t));
+                float env = Decay(t, dur, 4.5f) * Mathf.Min(1f, t / 0.04f); // fast attack, long tail
+                return (boom * 0.55f + rumble * 0.55f) * env * 0.9f;
+            });
 
             _pool = new AudioSource[6];
             for (int i = 0; i < _pool.Length; i++)
@@ -68,6 +77,7 @@ namespace BugFarmer.Audio
         public static void BugKill() => Instance?.Play(Instance._pop, 0.9f);
         public static void PlayerSting() => Instance?.Play(Instance._sting, 1.0f);
         public static void PlayerFaint() => Instance?.Play(Instance._thud, 1.0f);
+        public static void Thunder() => Instance?.Play(Instance._thunder, 0.9f);
 
         /// <summary>Positional one-shots: volume falls off with distance to the local
         /// player; audibleRadius > the night light radius makes sound the night tell.</summary>

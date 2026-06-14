@@ -62,7 +62,9 @@ namespace BugFarmer.World
         private void Start()
         {
             _lamp = gameObject.AddComponent<LampLight>();
-            _lamp.Configure(2.5f, new Color(0.9f, 0.9f, 1f), 0.55f);
+            // Off by default — the player only emits light when a torch/lamp item is the
+            // selected hotbar slot (Update drives it). No free glow at night.
+            _lamp.Configure(0f, Color.clear, 0f);
 
             // Flashlight cone: a child Light2D point light with a narrow angle (URP 17),
             // rotated toward the mouse while the flashlight is equipped.
@@ -89,9 +91,12 @@ namespace BugFarmer.World
 
             bool flashlight = def?.ToolType == "flashlight";
             if (def?.World != null && def.World.LightRadius > 0f)
+                // Held torch/lamp (e.g. "torch", radius 3.5): a radial glow around the player.
                 _lamp.Configure(def.World.LightRadius, def.World.LightColor, def.World.LightIntensity);
             else
-                _lamp.Configure(2.5f, new Color(0.9f, 0.9f, 1f), 0.55f);
+                // Not holding a light source -> no player glow (hard to see at night unless you
+                // select a torch or stand by a placed one). Terraria-style.
+                _lamp.Configure(0f, Color.clear, 0f);
 
             if (_cone == null) return;
             float night = 1f - DayNightController.Daylight;

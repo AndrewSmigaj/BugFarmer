@@ -304,10 +304,9 @@ func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presenc
 	player.HP = 10
 	player.SetWorldPosition(spawnX, spawnY, s.Config.ChunkSize)
 
-	// Give new player starting tools in hotbar. Slot 0 = HANDS: the visible grab verb
-	// (bug-catch -> tree-pick -> gather fallthrough) — empty slots behave identically;
-	// the icon is the affordance. Shovel moved to the panel to make room.
-	player.ItemSlots[0] = InventorySlot{ItemID: "hands", Count: 1}
+	// Slot 0 left EMPTY for now — the "hands" grab verb is pulled pending the
+	// grabbing/pushing/shoving rework (BACKLOG). Empty slots still behave as a bare-hand
+	// grab, so nothing is lost functionally; this just removes the hands icon.
 	player.ItemSlots[1] = InventorySlot{ItemID: "small_net", Count: 1}
 	player.ItemSlots[2] = InventorySlot{ItemID: "pickaxe_wood", Count: 1}
 	player.ItemSlots[3] = InventorySlot{ItemID: "axe_wood", Count: 1}
