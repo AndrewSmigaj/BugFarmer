@@ -38,6 +38,7 @@ namespace BugFarmer.SyncHarness
         private static long _recvCount, _authTick = -1, _lastSeq = -1, _maxAuthTick = -1;
         private static long _maxInflSeq = -1, _minInflSeqPhase = long.MaxValue, _maxInflSeqPhase = -1;
         private static string _myUserId, _phase = "P1";
+        public static string MyUserId => _myUserId; // WorldModel matches the local player entity
         private static bool _isAuthority, _loggedFirstInflThisPhase, _loggedStaleHigh;
 
         // Phase-1 collision-test observation
@@ -79,6 +80,20 @@ namespace BugFarmer.SyncHarness
 
             // Phase 1
             var matchId = await Enter(client, socket, session, o.Zone);
+
+            // Scripted scenario mode: run actions + asserts, then exit with WorldModel.ExitCode.
+            if (!string.IsNullOrEmpty(o.Scenario))
+            {
+                var scn = Scenarios.Get(o.Scenario);
+                if (scn == null) { Log($"unknown scenario '{o.Scenario}'"); await socket.CloseAsync(); return 2; }
+                Log($"=== SCENARIO {o.Scenario} ===");
+                await scn.RunAsync(socket, matchId);
+                Summary();
+                await socket.CloseAsync();
+                Log($"=== scenario '{o.Scenario}' exit={WorldModel.ExitCode} ===");
+                return WorldModel.ExitCode;
+            }
+
             if (_walk != null) _ = DriveWalk(socket, matchId, _walk.Value); // fire-and-forget path drive
             await Observe(socket, o.Duration);
 
@@ -165,6 +180,9 @@ namespace BugFarmer.SyncHarness
             _recvCount++;
             try
             {
+                // Feed the scripted-client world-model (farm/inventory/entity opcodes; ignores the rest).
+                WorldModel.Apply(st.OpCode, Encoding.UTF8.GetString(st.State));
+
                 if (st.OpCode == OpZoneTickBroadcast || st.OpCode == OpZoneAuthority)
                 {
                     using var doc = JsonDocument.Parse(Encoding.UTF8.GetString(st.State));
@@ -355,7 +373,7 @@ namespace BugFarmer.SyncHarness
 
         private sealed class Args
         {
-            public string Host = "127.0.0.1", Key = "defaultkey", Zone = "village_21", Tag = "p1", Walk = "";
+            public string Host = "127.0.0.1", Key = "defaultkey", Zone = "village_21", Tag = "p1", Walk = "", Scenario = "";
             public int Port = 7350, Duration = 15, Chunks = 8;
             public bool Reconnect;
             public static Args Parse(string[] a)
@@ -373,6 +391,7 @@ namespace BugFarmer.SyncHarness
                         case "--tag": o.Tag = a[++i]; break;
                         case "--walk": o.Walk = a[++i]; break;
                         case "--chunks": o.Chunks = int.Parse(a[++i]); break;
+                        case "--scenario": o.Scenario = a[++i]; break;
                         case "--reconnect": o.Reconnect = true; break;
                     }
                 }
