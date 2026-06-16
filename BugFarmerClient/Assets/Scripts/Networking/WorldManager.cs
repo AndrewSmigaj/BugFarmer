@@ -19,6 +19,10 @@ namespace BugFarmer.Networking
         public IUserPresence Self { get; private set; }
         public List<IUserPresence> Players { get; } = new();
 
+        // Current zone + its edge neighbors (from the world_enter response) — drives CrossZoneController.
+        public string CurrentZoneId { get; private set; }
+        public ZoneNeighbors CurrentNeighbors { get; private set; }
+
         public event Action<IUserPresence> OnPlayerJoined;
         public event Action<IUserPresence> OnPlayerLeft;
         public event Action<IMatchState> OnMatchData;
@@ -126,7 +130,8 @@ namespace BugFarmer.Networking
         /// world_enter RPC, which finds-or-creates a singleton world server-side. No world
         /// creation happens client-side. Mirrors JoinWorld once it has the match id.
         /// </summary>
-        public async Task<IMatch> EnterWorld(string zoneId, string charId = null)
+        public async Task<IMatch> EnterWorld(string zoneId, string charId = null,
+                                             float? entryX = null, float? entryY = null)
         {
             var session = await NetworkManager.Instance.Session;
             var socket = NetworkManager.Instance.Socket;
@@ -139,14 +144,23 @@ namespace BugFarmer.Networking
                 var result = await NetworkManager.Instance.Client.RpcAsync(session, "world_enter", payload);
                 var response = JsonUtility.FromJson<WorldJoinResponse>(result.Payload);
 
-                // Pass the chosen character to the match via JOIN METADATA. MatchJoinAttempt reads
-                // metadata["char_id"], validates ownership, and stashes it for MatchJoin to load the
-                // save. A null/empty charId joins with the ephemeral default (sync-harness/debug path).
-                if (!string.IsNullOrEmpty(charId))
-                    CurrentMatch = await socket.JoinMatchAsync(response.match_id,
-                        new Dictionary<string, string> { { "char_id", charId } });
-                else
-                    CurrentMatch = await socket.JoinMatchAsync(response.match_id);
+                // JOIN METADATA: char_id (load the save) + optional entry_x/entry_y (cross-zone edge
+                // entry — places the player at the matching edge instead of the save's spawn).
+                var meta = new Dictionary<string, string>();
+                if (!string.IsNullOrEmpty(charId)) meta["char_id"] = charId;
+                if (entryX.HasValue && entryY.HasValue)
+                {
+                    meta["entry_x"] = entryX.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+                    meta["entry_y"] = entryY.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+                }
+                CurrentMatch = meta.Count > 0
+                    ? await socket.JoinMatchAsync(response.match_id, meta)
+                    : await socket.JoinMatchAsync(response.match_id);
+
+                CurrentZoneId = zoneId;
+                CurrentNeighbors = response.neighbors;
+                Debug.Log($"[WorldManager] zone '{zoneId}' neighbors: N={CurrentNeighbors?.north} " +
+                          $"S={CurrentNeighbors?.south} E={CurrentNeighbors?.east} W={CurrentNeighbors?.west}");
                 Self = CurrentMatch.Self;
                 Players.Clear();
                 Players.AddRange(CurrentMatch.Presences);
@@ -179,6 +193,23 @@ namespace BugFarmer.Networking
             }
         }
 
+        /// <summary>
+        /// Tear down ALL of the current zone's client state before a cross-zone swap. Both zones share
+        /// coords 0..255, so without this zone A's remote players, bugs, influence registry, and terrain
+        /// ghost into zone B. Call this right before EnterWorld(neighbor). Zone B re-bootstraps from its
+        /// own join messages (PlayerSpawn/SwarmUpdate/ChunkData), exactly like a fresh join.
+        /// </summary>
+        public void ResetForZoneSwap()
+        {
+            Entities.EntityManager.Instance?.ClearAllEntities();      // remote players/entities + re-arm spawn snap
+            Entities.SwarmManager.Instance?.ClearAllSwarms();         // bug visuals + the seq/inbox frontier state
+            Bugs.InfluenceManager.Instance?.ClearPlayerCells();       // event-sourced bug-AI context
+            Bugs.InfluenceManager.Instance?.ClearSwarmLegs();
+            Bugs.InfluenceManager.Instance?.ClearFood();
+            World.TilemapManager.Instance?.UnloadAllChunks();         // terrain + occupant pool
+            Debug.Log("[WorldManager] ResetForZoneSwap: cleared entities/swarms/influence/tiles");
+        }
+
         private void HandlePresence(IMatchPresenceEvent ev)
         {
             foreach (var leave in ev.Leaves)
@@ -201,6 +232,12 @@ namespace BugFarmer.Networking
 
         private void HandleMatchState(IMatchState state)
         {
+            // CROSS-ZONE GUARD: drop messages not for the current match. On a fast zone swap, stale
+            // zone-A messages can still be buffered; applied to zone B they ghost entities AND inject
+            // A's influence seqs into B's frontier (a sync stall). The match id is the definitive filter.
+            if (CurrentMatch == null || state.MatchId != CurrentMatch.Id)
+                return;
+
             // Debug: log all incoming opcodes except frequent ones
             if (DebugConfig.Verbose && state.OpCode != OpCodes.EntityUpdate && state.OpCode != 20) // 20 = SwarmUpdate
             {
@@ -288,6 +325,17 @@ namespace BugFarmer.Networking
     public class WorldJoinResponse
     {
         public string match_id;
+        public ZoneNeighbors neighbors;   // cross-zone adjacency (may be null)
+    }
+
+    /// <summary>A zone's edge neighbors (zoneID per direction; "" = a hard edge). Fixed fields so JsonUtility parses it.</summary>
+    [Serializable]
+    public class ZoneNeighbors
+    {
+        public string north;
+        public string south;
+        public string east;
+        public string west;
     }
 
     [Serializable]

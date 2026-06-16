@@ -11,6 +11,9 @@
   ],
   "biome_type": "village",
   "seed": 0,
+  "neighbors": {
+    "south": "underground_passages_31"
+  },
   "bug_spawning": {
     "species_caps": {
       "fly_common": {

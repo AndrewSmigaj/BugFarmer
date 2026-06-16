@@ -6,6 +6,32 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Testing backlog (deferred test coverage — not blocking)
+- **Cross-zone determinism check**: a player leaves a zone and re-enters; assert the bug-sim STATE HASH
+  is identical across the leave/join (same bug positions/phase) — i.e. the swap didn't perturb the
+  deterministic tick. Extend the sync-harness `crosszone` scenario to capture + compare zone hashes
+  before/after. (The crossing is *designed* to be determinism-inert; this proves it.)
+
+## Done 2026-06-16 — cross-zone movement (walk off a zone edge → hidden swap into the neighbor)
+Walk to a zone edge that has an authored neighbor → quick fade → tear down zone A → join the neighbor at
+its matching edge → fade back. Each zone is an independent Nakama match/sync domain, so a crossing is a
+normal leave-A/join-B (zero cross-zone determinism surface; player position is not in the sim hash).
+- **Adjacency as data**: `ZoneConfig.Neighbors {north/south/east/west}` (zone.go); `world_enter` returns
+  the entered zone's neighbors (rpc/world.go). Authored pair: `village_21_B` (south) ↔ `underground_passages_31` (north).
+- **Server entry-override**: join metadata `entry_x/entry_y` → `MatchJoinAttempt` validates (clamp +
+  anti-forge: within 4 cells of an edge) → `PendingEntryPositions` → `MatchJoin` places the player at the
+  neighbor's matching edge (overrides the char-save spawn). `PlayerSpawn` (102) broadcasts it.
+- **Client**: `CrossZoneController` edge-detect + `ScreenFade` cover; `WorldManager.ResetForZoneSwap`
+  tears down entities/swarms/influence/tiles (zones share coords 0..255 — avoids ghosting); match-id guard
+  on `HandleMatchState`. **Authoritative entry placement**: the swap sets the player position itself
+  (`SetLocalPlayerSpawn(ex,ey)`) — position is client-authoritative and the join-time `PlayerSpawn` races
+  with the `JoinMatchAsync` `CurrentMatch` assignment (gets dropped), so the swap can't depend on it;
+  movement-send suppressed while `InputLocked`; entry insets off the seam (Lo=4/Hi=251).
+- **Content**: a walkable grass strip across the mine's north edge (entry apron) so a crossing lands on
+  walkable ground, not the rock wall.
+- **Verified**: sync-harness `crosszone` scenario (server entry-override, headless) + in-Editor rapid
+  up→down crossing — root-caused a stale-snap race from the Editor.log and fixed it client-side.
+
 ## Done 2026-06-16 — zone / farm persistence (farm + bug population survive a server restart)
 A zone's player-built farm AND its cultivated bug population now persist to Nakama storage and restore on
 match (re)create — previously everything evaporated on restart / `MatchTerminate`. NEW

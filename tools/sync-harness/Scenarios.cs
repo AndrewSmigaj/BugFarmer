@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Nakama;
 
@@ -19,6 +21,7 @@ namespace BugFarmer.SyncHarness
             {
                 case "farm-build": return new FarmBuildScenario();
                 case "farm-verify": return new FarmVerifyScenario();
+                case "crosszone": return new CrossZoneScenario();
                 default: return null;
             }
         }
@@ -64,6 +67,48 @@ namespace BugFarmer.SyncHarness
                               $"bench={WorldModel.OccupantAt(FarmCells.BenchX, FarmCells.BenchY)} " +
                               $"fence={WorldModel.OccupantAt(FarmCells.FenceX, FarmCells.FenceY)}");
             await Task.Delay(1200); // let final echoes settle before the socket closes
+        }
+    }
+
+    // CROSS-ZONE: enter village_21 (via Program.Enter), then leave + enter the south neighbor
+    // (underground_passages_31) with an entry position on its NORTH edge, and assert the server placed
+    // us there (PlayerSpawn 102) instead of the zone spawn_point. Proves the entry-override end to end.
+    internal sealed class CrossZoneScenario : IScenario
+    {
+        private const string Neighbor = "underground_passages_31";
+        private const float EntryX = 128f, EntryY = 253f; // north edge (y=255) inset 2
+
+        public async Task RunAsync(ISocket s, string m)
+        {
+            Console.WriteLine("[scenario] crosszone: village_21 -> underground (south neighbor) at its north edge");
+            await Task.Delay(700); // village PlayerSpawn arrives first
+
+            await s.LeaveMatchAsync(m);          // leave village
+            await Task.Delay(400);
+            WorldModel.ResetSpawn();             // ignore village's spawn; capture the neighbor's
+
+            var enter = JsonSerializer.Serialize(new Dictionary<string, object> { ["zone_id"] = Neighbor });
+            var rpc = await Program.Client.RpcAsync(Program.Session, "world_enter", enter);
+            string m2; using (var d = JsonDocument.Parse(rpc.Payload)) m2 = d.RootElement.GetProperty("match_id").GetString();
+
+            var meta = new Dictionary<string, string>
+            {
+                ["entry_x"] = EntryX.ToString("F1", System.Globalization.CultureInfo.InvariantCulture),
+                ["entry_y"] = EntryY.ToString("F1", System.Globalization.CultureInfo.InvariantCulture),
+            };
+            await s.JoinMatchAsync(m2, meta);
+            Console.WriteLine($"[scenario] joined {Neighbor} with entry ({EntryX},{EntryY})");
+
+            bool got = await Actions.WaitFor(() => WorldModel.SpawnSeen(), 6000);
+            WorldModel.Assert(got, "received PlayerSpawn in the neighbor zone");
+            if (got)
+            {
+                var (sx, sy) = WorldModel.LastSpawn();
+                Console.WriteLine($"[scenario] neighbor PlayerSpawn = ({sx:F1},{sy:F1})");
+                WorldModel.Assert(Math.Abs(sx - EntryX) < 1.5 && Math.Abs(sy - EntryY) < 1.5,
+                    $"spawned at the cross-zone entry ({EntryX},{EntryY}) [got ({sx:F1},{sy:F1})]");
+            }
+            await Task.Delay(1500); // let a few ticks confirm no sync gap on the join
         }
     }
 

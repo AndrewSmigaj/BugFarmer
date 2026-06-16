@@ -39,6 +39,11 @@ type WorldState struct {
 	// race-free without a mutex.
 	PendingCharacters map[string]string // userID -> charID
 
+	// Cross-zone entry position from join metadata (entry_x/entry_y): when a player walks off a zone
+	// edge, they join the neighbor at the matching edge instead of the save's last-pos. Stashed in
+	// MatchJoinAttempt, consumed in MatchJoin (top-priority spawn). Same serial-callback safety as above.
+	PendingEntryPositions map[string][2]float32 // userID -> (worldX, worldY)
+
 	// Entity maps (Phase 1)
 	Swarms      map[string]*entities.SwarmState
 	EggClusters map[string]*entities.EggClusterState
@@ -294,7 +299,8 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		TickCount:         0,
 		Players:           make(map[string]*PlayerState),
 		Presences:         make(map[string]runtime.Presence),
-		PendingCharacters: make(map[string]string),
+		PendingCharacters:     make(map[string]string),
+		PendingEntryPositions: make(map[string][2]float32),
 		// Entity maps
 		Swarms:      make(map[string]*entities.SwarmState),
 		EggClusters: make(map[string]*entities.EggClusterState),

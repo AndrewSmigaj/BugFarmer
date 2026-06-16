@@ -913,6 +913,21 @@ namespace BugFarmer.World
             _occupantObjects[cellPos] = go;
         }
 
+        /// <summary>
+        /// Unload EVERY loaded/subscribed chunk immediately — for a cross-zone swap, so zone A's terrain +
+        /// occupants don't linger at the same coords while zone B streams in. Resets the chunk-check anchor
+        /// so the next UpdateChunkSubscriptions re-subscribes fresh around the new player position.
+        /// </summary>
+        public void UnloadAllChunks()
+        {
+            var all = new HashSet<Vector2Int>(_subscribedChunks);
+            foreach (var c in _loadedChunks.Keys) all.Add(c);
+            foreach (var c in all) UnloadChunk(c);
+            _subscribedChunks.Clear();
+            _loadedChunks.Clear();
+            _lastPlayerChunk = new Vector2Int(int.MinValue, int.MinValue); // force a fresh resubscribe
+        }
+
         private void UnloadChunk(Vector2Int chunkPos)
         {
             int baseX = chunkPos.x * ChunkSize;

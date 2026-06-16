@@ -576,6 +576,27 @@ namespace BugFarmer.Entities
         /// transitions back to LIVE. Used for protocol violations, frontier stalls, handshake
         /// timeouts, and large drift. Bounded by MaxResyncAttempts in the Update loop.
         /// </summary>
+        /// <summary>
+        /// Wipe ALL bug-sim state for a cross-zone swap: destroy swarm visuals + reset the frontier
+        /// (inbox/seq/watermark) to a fresh-join slate. The next zone's ZoneAuthority re-bootstraps.
+        /// Mirrors the RequestResync clears. Call from WorldManager.ResetForZoneSwap before EnterWorld.
+        /// </summary>
+        public void ClearAllSwarms()
+        {
+            foreach (var swarm in _swarms.Values)
+            {
+                if (swarm != null) { swarm.Cleanup(); Destroy(swarm.gameObject); }
+            }
+            _swarms.Clear();
+            _inboxBySeq.Clear();
+            _pendingEvents.Clear();
+            _pendingEventsDirty = false;
+            _lastAppliedSeq = -1;
+            _lastReceivedSeq = -1;
+            _frontierWatermark = -1;
+            _syncState = SyncState.Joining;
+        }
+
         private void RequestResync()
         {
             Debug.LogWarning($"[SwarmManager] Requesting zone resync (late-join path)");

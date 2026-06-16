@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"runtime/debug"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -305,6 +306,43 @@ func (m *Match) MatchJoinAttempt(ctx context.Context, logger runtime.Logger, db 
 		worldState.PendingCharacters[presence.GetUserId()] = charID
 	}
 
+	// Cross-zone entry: if the client passed entry_x/entry_y (walking off an adjacent zone's edge),
+	// stash a validated, edge-anchored entry position for MatchJoin to use INSTEAD of the save's spawn.
+	// Clamp to the zone + require a near-edge cell so it can't be a forged teleport into the interior.
+	if exs, eys := metadata["entry_x"], metadata["entry_y"]; exs != "" && eys != "" {
+		ex, errX := strconv.ParseFloat(exs, 32)
+		ey, errY := strconv.ParseFloat(eys, 32)
+		if errX == nil && errY == nil {
+			w, h := 256.0, 256.0
+			if worldState.CurrentZone != nil {
+				if worldState.CurrentZone.Width > 0 {
+					w = float64(worldState.CurrentZone.Width)
+				}
+				if worldState.CurrentZone.Height > 0 {
+					h = float64(worldState.CurrentZone.Height)
+				}
+			}
+			cl := func(v, max float64) float32 {
+				if v < 0 {
+					return 0
+				}
+				if v > max-1 {
+					return float32(max - 1)
+				}
+				return float32(v)
+			}
+			cx, cy := cl(ex, w), cl(ey, h)
+			const edge = 4.0 // must be within 4 cells of some edge (anti-forge)
+			nearEdge := float64(cx) <= edge || float64(cx) >= w-1-edge ||
+				float64(cy) <= edge || float64(cy) >= h-1-edge
+			if nearEdge {
+				worldState.PendingEntryPositions[presence.GetUserId()] = [2]float32{cx, cy}
+			} else {
+				logger.Warn("MatchJoinAttempt: rejecting non-edge entry pos (%.1f,%.1f) from %s", cx, cy, presence.GetUserId())
+			}
+		}
+	}
+
 	logger.Info("Player %s approved to join world %s", presence.GetUserId(), worldState.WorldID)
 	return state, true, ""
 }
@@ -364,6 +402,16 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 				// A different zone (or first login) keeps AddPlayer's zone spawn_point.
 				logger.Info("Loaded character %q (%s) for %s in zone %s", save.Name, charID, userID, zoneID)
 			}
+		}
+
+		// CROSS-ZONE ENTRY (top priority): if the player walked off an adjacent zone's edge, place them
+		// at the matching edge of THIS zone — overrides the character save's spawn decision above (it's
+		// the last SetWorldPosition, so it wins). Still inventory-loaded from the char save. Set BEFORE
+		// the PLAYER_CELL event below, so the deterministic bug sim sees only the final entry cell.
+		if entry, staged := worldState.PendingEntryPositions[userID]; staged {
+			delete(worldState.PendingEntryPositions, userID)
+			player.SetWorldPosition(entry[0], entry[1], worldState.Config.ChunkSize)
+			logger.Info("Player %s cross-zone entered %s at edge (%.1f,%.1f)", userID, zoneID, entry[0], entry[1])
 		}
 
 		logger.Info("Player %s joined world %s", presence.GetUsername(), worldState.WorldID)

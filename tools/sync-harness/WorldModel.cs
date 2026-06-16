@@ -32,6 +32,8 @@ namespace BugFarmer.SyncHarness
         private static readonly HashSet<string> _swarmIds = new();
         private static int _swarmBugTotal;
         private static double _myX, _myY;
+        private static double _spawnX, _spawnY;   // last PlayerSpawn (102) — for cross-zone entry asserts
+        private static bool _spawnSeen;
 
         // 0 = all asserts passed; set to 1 by a failing Assert (drives the process exit code).
         public static int ExitCode = 0;
@@ -208,8 +210,13 @@ namespace BugFarmer.SyncHarness
             {
                 _myX = r.TryGetProperty("x", out var xp) ? xp.GetDouble() : _myX;
                 _myY = r.TryGetProperty("y", out var yp) ? yp.GetDouble() : _myY;
+                _spawnX = _myX; _spawnY = _myY; _spawnSeen = true;
             }
         }
+
+        public static void ResetSpawn() { lock (_gate) { _spawnSeen = false; } }
+        public static bool SpawnSeen() { lock (_gate) return _spawnSeen; }
+        public static (double x, double y) LastSpawn() { lock (_gate) return (_spawnX, _spawnY); }
 
         private static void ApplySwarmUpdate(string json)
         {

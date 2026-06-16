@@ -21,6 +21,10 @@ namespace BugFarmer.Player
         public Direction Facing { get; private set; } = Direction.Down;
         public Vector2 Velocity { get; private set; }
 
+        /// <summary>Freezes local movement input (set during a cross-zone swap so the player holds still
+        /// behind the fade). Static: one local player.</summary>
+        public static bool InputLocked = false;
+
         // Walk animation: [dir][frame] with frame order [contact, idle, contact, idle].
         // Composed via CharacterComposer (paper-doll layers) or LoadBaked; falls back
         // to the static directionSprites when neither is available.
@@ -69,6 +73,8 @@ namespace BugFarmer.Player
                 gameObject.AddComponent<PlayerHealth>();
             if (GetComponent<SleepController>() == null)
                 gameObject.AddComponent<SleepController>();
+            if (GetComponent<CrossZoneController>() == null)
+                gameObject.AddComponent<CrossZoneController>();
             if (GetComponent<PlayerInputRouter>() == null)
                 gameObject.AddComponent<PlayerInputRouter>();
         }
@@ -198,9 +204,9 @@ namespace BugFarmer.Player
                 return;
             }
 
-            // Read input
-            float horizontal = Input.GetAxisRaw("Horizontal");
-            float vertical = Input.GetAxisRaw("Vertical");
+            // Read input (suppressed while a cross-zone swap is mid-flight — see CrossZoneController).
+            float horizontal = InputLocked ? 0f : Input.GetAxisRaw("Horizontal");
+            float vertical = InputLocked ? 0f : Input.GetAxisRaw("Vertical");
 
             // Calculate velocity
             Vector2 input = new Vector2(horizontal, vertical);
@@ -335,6 +341,12 @@ namespace BugFarmer.Player
 
         private void TrySendMovement()
         {
+            // Don't push a position to the server while input is locked (e.g. during a cross-zone
+            // swap). Position is client-authoritative, so a stray facing-only send here would
+            // overwrite the server with our PRE-swap position before CrossZoneController places us
+            // at the entry. After the swap unlocks, the first send carries the correct entry cell.
+            if (InputLocked) return;
+
             var world = WorldManager.Instance;
             if (world?.CurrentMatch == null) return;
 

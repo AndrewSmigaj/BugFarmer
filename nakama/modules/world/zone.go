@@ -59,6 +59,11 @@ type ZoneConfig struct {
 	BiomeType   string          `json:"biome_type"`     // "meadow", "forest", "cave", etc.
 	Seed        int64           `json:"seed,omitempty"` // Fixed world seed for deterministic runs (0 = random)
 	BugSpawning *BugSpawnConfig `json:"bug_spawning"`   // Zone-level bug spawn config (optional)
+
+	// Cross-zone adjacency: edge direction ("north"/"south"/"east"/"west") -> neighbor zoneID.
+	// Walking off an edge with a neighbor hidden-swaps into it (see CrossZoneController). Absent/""
+	// = a hard edge (no crossing). +Y = north, so south edge = y0, north edge = y255.
+	Neighbors map[string]string `json:"neighbors,omitempty"`
 }
 
 // ChunkData stores the two-layer tile data for a 32x32 cell chunk.

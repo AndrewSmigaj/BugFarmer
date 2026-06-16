@@ -39,6 +39,8 @@ namespace BugFarmer.SyncHarness
         private static long _maxInflSeq = -1, _minInflSeqPhase = long.MaxValue, _maxInflSeqPhase = -1;
         private static string _myUserId, _phase = "P1";
         public static string MyUserId => _myUserId; // WorldModel matches the local player entity
+        private static IClient _client; private static ISession _session;
+        public static IClient Client => _client; public static ISession Session => _session; // scenarios re-enter zones
         private static bool _isAuthority, _loggedFirstInflThisPhase, _loggedStaleHigh;
 
         // Phase-1 collision-test observation
@@ -66,8 +68,10 @@ namespace BugFarmer.SyncHarness
             Log($"connect {o.Host}:{o.Port} zone={o.Zone} duration={o.Duration}s reconnect={o.Reconnect} walk={o.Walk}");
 
             var client = new Client("http", o.Host, o.Port, o.Key) { Timeout = 10 };
+            _client = client;
             var deviceId = $"sim-{o.Tag}-{Guid.NewGuid():N}".Substring(0, 24);
             var session = await client.AuthenticateDeviceAsync(deviceId);
+            _session = session;
             _myUserId = session.UserId;
             Log($"authenticated user={session.UserId}");
 
