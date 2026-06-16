@@ -228,4 +228,142 @@ namespace BugFarmer.Networking
         public string swarm_id;
         public string kind;
     }
+
+    /// <summary>Sleep in a bed → set this character's home (OpCode 100, C→S): the bed's anchor cell.</summary>
+    [Serializable]
+    public class SetHomeMessage
+    {
+        public int gx;
+        public int gy;
+    }
+
+    /// <summary>Home-set confirmation (OpCode 101, S→C): shown as a brief toast.</summary>
+    [Serializable]
+    public class SetHomeAckMessage
+    {
+        public bool ok;
+        public string message;
+        public float home_x;
+        public float home_y;
+    }
+
+    /// <summary>Authoritative local-player spawn on join (OpCode 102, S→C).</summary>
+    [Serializable]
+    public class PlayerSpawnMessage
+    {
+        public float x;
+        public float y;
+    }
+
+    /// <summary>One remote player's cosmetic identity — drives the paper-doll + nameplate (OpCode 103).</summary>
+    [Serializable]
+    public class PlayerInfoEntry
+    {
+        public string user_id;
+        public string name;
+        public string char_class;
+        public string char_hair;
+        public string char_skin;
+    }
+
+    /// <summary>Per-player appearance + name, sent once on join (roster, or a single newcomer). OpCode 103.</summary>
+    [Serializable]
+    public class PlayerInfoMessage
+    {
+        public PlayerInfoEntry[] players;
+    }
+
+    // === Character RPCs (per-account roster; see nakama/modules/rpc/character.go) ===
+
+    /// <summary>Server RPC error envelope ({"error","code"}, returned with HTTP 200).</summary>
+    [Serializable]
+    public class ErrorResponse
+    {
+        public string error;
+        public string code;
+    }
+
+    /// <summary>Cosmetic identity for the paper-doll composer (server: world.Appearance).</summary>
+    [Serializable]
+    public class CharacterAppearance
+    {
+        public string @class;  // "class" is a C# keyword — JsonUtility maps the field name verbatim
+        public string hair;
+        public string skin;
+    }
+
+    /// <summary>Lightweight character view for the select screen (server: world.CharacterSummary).</summary>
+    [Serializable]
+    public class CharacterSummary
+    {
+        public string char_id;
+        public string name;
+        public CharacterAppearance appearance;
+        public string last_zone;
+        public long last_played_at;
+    }
+
+    /// <summary>Response of character_list (wrapper — JsonUtility can't parse a top-level array).</summary>
+    [Serializable]
+    public class CharacterListResponse
+    {
+        public CharacterSummary[] characters;
+    }
+
+    /// <summary>Request of character_create.</summary>
+    [Serializable]
+    public class CharacterCreateRequest
+    {
+        public string name;
+        public string @class;
+        public string hair;
+        public string skin;
+    }
+
+    /// <summary>Response of character_create.</summary>
+    [Serializable]
+    public class CharacterCreateResponse
+    {
+        public CharacterSummary character;
+    }
+
+    /// <summary>Request of character_delete.</summary>
+    [Serializable]
+    public class CharacterDeleteRequest
+    {
+        public string char_id;
+    }
+
+    /// <summary>Response of character_delete.</summary>
+    [Serializable]
+    public class CharacterDeleteResponse
+    {
+        public string deleted;
+    }
+
+    /// <summary>
+    /// The character chosen on the select screen, for this session. Read by WorldManager.EnterWorld
+    /// (join metadata) and the WorldMenu gate. Appearance is authoritative from the server on join
+    /// (FullInventorySync), so this only needs to carry the id + a label for the menu.
+    /// </summary>
+    public static class CharacterSession
+    {
+        public static string SelectedCharID;
+        public static string SelectedCharName;
+
+        // Chosen appearance (the LOCAL player renders this immediately — the client picked it).
+        // Defaults match the baked merchant body so a no-selection join still looks right.
+        public static string Class = "merchant";
+        public static string Hair = "blonde";
+        public static string Skin = "default";
+
+        public static bool HasSelection => !string.IsNullOrEmpty(SelectedCharID);
+
+        public static void SetAppearance(CharacterAppearance app)
+        {
+            Class = !string.IsNullOrEmpty(app?.@class) ? app.@class : "merchant";
+            Hair = !string.IsNullOrEmpty(app?.hair) ? app.hair : "blonde";
+            Skin = !string.IsNullOrEmpty(app?.skin) ? app.skin : "default";
+        }
+    }
 }

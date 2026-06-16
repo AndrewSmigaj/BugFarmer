@@ -2074,6 +2074,8 @@
         4
       ],
       "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "sleep",
       "blocks_players": true,
       "blocks_bugs": true,
       "breakable": {
@@ -3200,6 +3202,8 @@
         3
       ],
       "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "sleep",
       "blocks_players": true,
       "blocks_bugs": true,
       "breakable": {

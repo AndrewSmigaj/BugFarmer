@@ -17,6 +17,7 @@ namespace BugFarmer.Tracing
 
         // F4: per-swarm overlay (world-space centre markers + counts). F5: population graph.
         // F6: live ecology tuning (sends overrides to the server — the server is the decider).
+        private bool _showStats = false;   // F9: the corner stats readout (tick/swarms/bugs) — OFF by default
         private bool _showSwarms = false;
         private bool _showGraph = false;
         private bool _showTuning = false;
@@ -55,6 +56,7 @@ namespace BugFarmer.Tracing
             if (Input.GetKeyDown(KeyCode.F5)) _showGraph = !_showGraph;
             if (Input.GetKeyDown(KeyCode.F6)) _showTuning = !_showTuning;
             if (Input.GetKeyDown(KeyCode.F8)) _showWorld = !_showWorld;
+            if (Input.GetKeyDown(KeyCode.F9)) _showStats = !_showStats;
 
             // Population time-series: one sample per second (10 ticks)
             var sm = SwarmManager.Instance;
@@ -102,13 +104,17 @@ namespace BugFarmer.Tracing
         {
             var sm = SwarmManager.Instance;
 
-            GUILayout.BeginArea(new Rect(10, 10, 320, 200));
-            GUILayout.Label($"Client: {_clientId}");
-            GUILayout.Label($"Recording: {_isRecording} (Buffer: {_traceBuffer?.Count ?? 0})");
-            GUILayout.Label($"Tick: {sm?.SimulationTick ?? 0}");
-            GUILayout.Label($"Swarms: {sm?.SwarmCount ?? 0}   Bugs: {sm?.TotalBugCount ?? 0}");
-            GUILayout.Label("F1=Record F2=Dump F3=Log F4=Swarms F5=Graph F6=Tuning F8=World");
-            GUILayout.EndArea();
+            // Corner stats readout — hidden by default; F9 toggles it (no debug text on screen normally).
+            if (_showStats)
+            {
+                GUILayout.BeginArea(new Rect(10, 10, 320, 200));
+                GUILayout.Label($"Client: {_clientId}");
+                GUILayout.Label($"Recording: {_isRecording} (Buffer: {_traceBuffer?.Count ?? 0})");
+                GUILayout.Label($"Tick: {sm?.SimulationTick ?? 0}");
+                GUILayout.Label($"Swarms: {sm?.SwarmCount ?? 0}   Bugs: {sm?.TotalBugCount ?? 0}");
+                GUILayout.Label("F1=Record F2=Dump F3=Log F4=Swarms F5=Graph F6=Tuning F8=World F9=Stats");
+                GUILayout.EndArea();
+            }
 
             if (_showSwarms && sm != null)
                 DrawSwarmOverlay(sm);

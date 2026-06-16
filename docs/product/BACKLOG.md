@@ -6,6 +6,48 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Done 2026-06-16 (pending Editor compile) — Terraria-style characters + per-character persistence
+An account (one device-auth `userID`) owns multiple **characters**, each persisting independently
+(inventory, equipment, coins, unlocked slots, appearance, position). Pick a character → join a world
+with it → it persists for that character. Determinism-safe: character data is NOT in the bug-sim
+state hash; save/load happen only at the MatchJoin/MatchLeave boundaries.
+
+**Done + server-rebuild-verified (Go compiles in the Docker builder):**
+- **Storage model** `world/character_persist.go`: `CharacterSave`/`Appearance`/`CharacterSummary`,
+  `applyStartingKit` (extracted from `AddPlayer` — single source of truth for the starting kit),
+  `DefaultCharacterSave`/`applyCharacterSave`/`buildCharacterSave` + load/write/list/delete helpers.
+  Collection `character/<charID>`, user-owned, `PermissionWrite:0` (server-only — clients can't forge).
+- **RPCs** `rpc/character.go`: `character_list` / `character_create` (name 1-20, max 8/account, unique
+  name, appearance defaults) / `character_delete`; registered in `main.go`.
+- **charID bridge**: client `JoinMatchAsync(matchId, {char_id})` → `MatchJoinAttempt` validates
+  ownership + stashes `WorldState.PendingCharacters[userID]` → `MatchJoin` consumes it, overlays the
+  save, picks the spawn (first login = zone spawn_point + `IntroSeen`; else last-logout pos if same
+  zone). `MatchLeave` builds the save + writes it async. No-char joins (sync-harness) still work.
+
+**Done, NEEDS an in-Editor C# compile pass (written without a local Unity compiler):**
+- **Char select UI** `UI/CharacterSelectPanel.cs` (own top canvas, code-built like UIBootstrap): lists
+  characters, Create (name + class/hair/skin picker w/ live paper-doll preview), Delete; on pick stores
+  `CharacterSession` + hides → reveals WorldMenu. DTOs in `NetworkMessages.cs`; `WorldMenu.Play` gated.
+- **`EnterWorld(zone, charID)`** passes the join metadata. **Local appearance** renders the chosen
+  class/hair/skin (`PlayerController.RebuildOutfit` reads `CharacterSession`).
+- **Bed = set-home + respawn + first-login intro** (Part E): the existing beds already carry
+  `interaction_type:"sleep"` (added it to canopy+bunk too; republished) — NO new art. `OpCodeSetHome`
+  (100) + `handleSetHome` (validates a sleepable occupant in range, sets `PlayerState.Home*`, saves
+  async) + `SetHomeAck` (101) toast. `handlers_player.go` respawn now wakes at the bed's home when set
+  in-zone. First-login intro rides a new `intro` flag on `FullInventorySync` (no join race) →
+  `IntroOverlay`. Client `SleepController` routes the bed right-click (PlayerInputRouter chain 1c).
+
+- **Remote appearance + nameplates** (Part F remote): a dedicated `PlayerInfo` snapshot message
+  (`OpCode 103`, sent once on join — NOT the per-tick `EntityData`, per that struct's own comment) carries
+  each player's class/hair/skin + name. Server emits a roster→joiner + the joiner→everyone in `MatchJoin`;
+  client `EntityManager._playerInfo` dict applies it to a live `RemoteEntity` or on spawn (handles
+  ordering). `RemoteEntity` gained a shared `RecomposeOutfit()` (kills the hardcoded merchant/blonde;
+  armor + appearance converge) + a world-space `TextMeshPro` nameplate (LiberationSans SDF, Occupants
+  layer order 960, above the head). Display-only — zero determinism surface.
+
+**Whole character system is now feature-complete** — pending the in-Editor C# compile pass (the client
+batch was written without a local Unity compiler) + a nameplate fontSize/scale visual tweak.
+
 ## Done 2026-06-14 — crafting system (Stage 1) + item containers
 Recipes-as-data + a unified craft model (no quick/slow split — one `process_ticks` speed knob), item
 containers, and the determinism boundary. See [architecture_crafting.md](architecture_crafting.md)

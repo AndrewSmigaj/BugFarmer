@@ -125,7 +125,61 @@ const (
 	// NON-deterministic display/inventory state — never enters the sim hash.
 	OpCodeContainer       int64 = 98 // C->S: a container/craft-station action (see ContainerActionMessage.Op)
 	OpCodeContainerUpdate int64 = 99 // S->C: a container/craft-station's contents + craft progress
+
+	// Character home (sleep in a bed → set this character's respawn/login anchor). Character state,
+	// NOT in the sim hash; persisted with the rest of the save.
+	OpCodeSetHome    int64 = 100 // C->S: {gx,gy} — set home to the bed at this cell
+	OpCodeSetHomeAck int64 = 101 // S->C: {ok,message,home_x,home_y} — confirmation toast
+
+	// AUTHORITATIVE local-player spawn, sent once per join (fresh OR reconnect). The client snaps
+	// its local player here — the only reliable signal (the passive entity-update snap races with
+	// client movement and is gated by a one-shot flag that survives a reconnect). Mirrors how the
+	// faint/respawn path authoritatively repositions the client.
+	OpCodePlayerSpawn int64 = 102 // S->C: {x,y} — place the local player on join
+
+	// Per-player appearance + character name. STATIC for the session, so it's sent once on join
+	// (roster → joiner, joiner → everyone) instead of riding the per-tick EntityData. Display state
+	// only — never in the sim hash; the tick loop is untouched.
+	OpCodePlayerInfo int64 = 103 // S->C: {players:[{user_id,name,char_class,char_hair,char_skin}]}
 )
+
+// PlayerSpawnMessage (OpCode 102): where the server placed this player on join (the character's
+// last-logout position, bed home, or the zone spawn — already decided in MatchJoin).
+type PlayerSpawnMessage struct {
+	X float32 `json:"x"`
+	Y float32 `json:"y"`
+}
+
+// PlayerInfoEntry is one player's cosmetic identity for remote clients (drives the paper-doll +
+// the nameplate). Empty fields (a no-character / sync-harness join) → the client defaults to merchant.
+type PlayerInfoEntry struct {
+	UserID    string `json:"user_id"`
+	Name      string `json:"name,omitempty"`
+	CharClass string `json:"char_class,omitempty"`
+	CharHair  string `json:"char_hair,omitempty"`
+	CharSkin  string `json:"char_skin,omitempty"`
+}
+
+// PlayerInfoMessage (OpCode 103): one or more players' appearance+name (a roster on join, or a
+// single newcomer broadcast to everyone).
+type PlayerInfoMessage struct {
+	Players []PlayerInfoEntry `json:"players"`
+}
+
+// SetHomeMessage (OpCode 100): the anchor cell of the bed the player slept in.
+type SetHomeMessage struct {
+	GX int `json:"gx"`
+	GY int `json:"gy"`
+}
+
+// SetHomeAckMessage (OpCode 101): result of a set-home; the client shows Message as a toast and,
+// on ok, can update any "home here" indicator.
+type SetHomeAckMessage struct {
+	OK      bool    `json:"ok"`
+	Message string  `json:"message"`
+	HomeX   float32 `json:"home_x"`
+	HomeY   float32 `json:"home_y"`
+}
 
 // TreeWaterUpdateMessage (OpCode 51): a fruit tree's water/tank state changed. Display-only.
 // The droplet ("waterable now") rule is computed CLIENT-side each frame:
@@ -453,9 +507,11 @@ type SlotUpdateMessage struct {
 // FullInventorySyncMessage is sent on player join (OpCode 38)
 // Uses InventorySlot from state.go
 type FullInventorySyncMessage struct {
-	BugSlots  []InventorySlot `json:"bug_slots"`  // All 20 bug slots
-	ItemSlots []InventorySlot `json:"item_slots"` // All 20 item slots (0-9 hotbar, 10-19 panel) (= hotbar)
-	Coins     int64           `json:"coins"`
+	BugSlots          []InventorySlot `json:"bug_slots"`            // All 20 bug slots
+	ItemSlots         []InventorySlot `json:"item_slots"`           // All item slots (0-9 hotbar, 10+ panel)
+	Coins             int64           `json:"coins"`
+	ItemSlotsUnlocked int             `json:"item_slots_unlocked"` // usable item slots (base + backpack)
+	Intro             bool            `json:"intro,omitempty"`     // first login of this character → show the intro
 }
 
 // MoveSlotMessage is sent by client (OpCode 28)

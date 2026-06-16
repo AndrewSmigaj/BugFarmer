@@ -34,6 +34,11 @@ type WorldState struct {
 	Players      map[string]*PlayerState
 	Presences    map[string]runtime.Presence
 
+	// Active character per joining user, set in MatchJoinAttempt (from join metadata) and
+	// consumed in MatchJoin — Nakama runs both serially on the match goroutine, so this is
+	// race-free without a mutex.
+	PendingCharacters map[string]string // userID -> charID
+
 	// Entity maps (Phase 1)
 	Swarms      map[string]*entities.SwarmState
 	EggClusters map[string]*entities.EggClusterState
@@ -193,16 +198,20 @@ type PlayerState struct {
 	// Inventory (Phase 3)
 	Coins     int64             // Currency
 	BugSlots  [20]InventorySlot // Bug inventory (20 slots)
-	ItemSlots [20]InventorySlot // Tool inventory (20 slots, first 10 = hotbar)
+	ItemSlots [40]InventorySlot // Tool inventory (first 10 = hotbar; 10..ItemSlotsUnlocked-1 = panel)
+
+	// How many ItemSlots are usable right now: base (baseUnlockedItemSlots) + the equipped
+	// backpack's slot_bonus. Items never auto-land in (and can't be dragged to) a locked slot.
+	ItemSlotsUnlocked int
 
 	// Bug catching. One swing may hit multiple swarms and arrives as a same-tick BURST of
 	// messages (one per swarm) — burst messages share the swing's rate-limit slot.
 	LastCatchTick int64  // Tick of the last catch swing
 	EquippedTool  string // "" (hand), "small_net", etc.
 	// Worn armor by slot: 0 head, 1 body, 2 arms, 3 legs, 4 feet, 5 acc1,
-	// 6 acc2 ("" = empty). Cosmetic + synced (EntityData.eqa); items live
-	// HERE when worn, not in ItemSlots.
-	Equipment [7]string
+	// 6 acc2, 7 backpack ("" = empty). Cosmetic + synced (EntityData.eqa); items
+	// live HERE when worn, not in ItemSlots. The backpack (slot 7) drives capacity.
+	Equipment [8]string
 
 	// Tool use
 	LastToolTick int64 // Tick of last tool use (cooldown)
@@ -213,6 +222,18 @@ type PlayerState struct {
 	HP             int   // current health
 	MaxHP          int   // 10 v1
 	LastDamageTick int64 // invuln window + regen gating
+
+	// Character identity (Terraria-style). "" = ephemeral default (no-char join, e.g. the
+	// sync-harness). Set in MatchJoin from the join metadata; drives save-on-leave. None of
+	// these are sim state — they never enter the bug-sim hash.
+	CharacterID   string
+	CharCreatedAt int64
+	IntroSeen     bool
+	PendingIntro  bool // transient: first login this session → ride the next FullInventorySync
+	Appearance    Appearance
+	HomeZone      string // bed-set respawn/login zone ("" = use the zone spawn_point)
+	HomeX         float32
+	HomeY         float32
 }
 
 // WorldX returns the world X coordinate (ChunkX * chunkSize + LocalX)
@@ -258,15 +279,16 @@ func DefaultConfig() WorldConfig {
 // NewWorldState creates an initialized WorldState
 func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 	return &WorldState{
-		Config:       DefaultConfig(),
-		WorldID:      worldID,
-		OwnerID:      ownerID,
-		Name:         name,
-		AccessPolicy: accessPolicy,
-		CreatedAt:    time.Now().Unix(),
-		TickCount:    0,
-		Players:      make(map[string]*PlayerState),
-		Presences:    make(map[string]runtime.Presence),
+		Config:            DefaultConfig(),
+		WorldID:           worldID,
+		OwnerID:           ownerID,
+		Name:              name,
+		AccessPolicy:      accessPolicy,
+		CreatedAt:         time.Now().Unix(),
+		TickCount:         0,
+		Players:           make(map[string]*PlayerState),
+		Presences:         make(map[string]runtime.Presence),
+		PendingCharacters: make(map[string]string),
 		// Entity maps
 		Swarms:      make(map[string]*entities.SwarmState),
 		EggClusters: make(map[string]*entities.EggClusterState),
@@ -305,6 +327,30 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 	}
 }
 
+// Item-slot capacity. The hotbar is slots 0-9; base unlocks slots 10..29 (the panel). A worn
+// backpack (Equipment[backpackSlotIndex]) adds its slot_bonus on top, up to len(ItemSlots).
+const (
+	baseUnlockedItemSlots = 30
+	backpackSlotIndex     = 7
+)
+
+// recomputeItemCapacity sets player.ItemSlotsUnlocked from the equipped backpack's slot_bonus.
+// Returns the new value. (Items already sitting in slots that become locked stay there but are
+// hidden client-side until a pack is re-equipped — nothing is lost.)
+func (s *WorldState) recomputeItemCapacity(player *PlayerState) int {
+	unlocked := baseUnlockedItemSlots
+	if bp := player.Equipment[backpackSlotIndex]; bp != "" {
+		if def := s.Entities[bp]; def != nil && def.SlotBonus > 0 {
+			unlocked += def.SlotBonus
+		}
+	}
+	if unlocked > len(player.ItemSlots) {
+		unlocked = len(player.ItemSlots)
+	}
+	player.ItemSlotsUnlocked = unlocked
+	return unlocked
+}
+
 // AddPlayer adds a new player to the world
 func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presence) {
 	// Use zone's spawn point, or default to center if not set
@@ -322,9 +368,19 @@ func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presenc
 		// BugSlots are zero-initialized (empty)
 		// Coins defaults to 0
 	}
+	applyStartingKit(player)
+	player.SetWorldPosition(spawnX, spawnY, s.Config.ChunkSize)
+
+	s.Players[userID] = player
+	s.Presences[userID] = presence
+}
+
+// applyStartingKit stamps a fresh PlayerState with the new-player starting inventory/equipment/HP.
+// SINGLE source of truth shared by AddPlayer (the no-character fallback) and DefaultCharacterSave (a
+// newly-created character). Does NOT set position/facing/identity.
+func applyStartingKit(player *PlayerState) {
 	player.MaxHP = 10
 	player.HP = 10
-	player.SetWorldPosition(spawnX, spawnY, s.Config.ChunkSize)
 
 	// Slot 0 left EMPTY for now — the "hands" grab verb is pulled pending the
 	// grabbing/pushing/shoving rework (BACKLOG). Empty slots still behave as a bare-hand
@@ -348,24 +404,24 @@ func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presenc
 	// Panel slots (10-19): blocks live here now — also exercises panel drag + cursor-place
 	player.ItemSlots[10] = InventorySlot{ItemID: "dirt_block", Count: 10}
 	player.ItemSlots[11] = InventorySlot{ItemID: "spear_wood", Count: 1}
-	// (bookshelf/bench test decorations removed 2026-06 — pickups need
-	// free slots; cursor-place is exercised by dirt blocks already)
+	// Building/decor starter set (placeables to exercise cursor-place + fences/gates).
+	player.ItemSlots[12] = InventorySlot{ItemID: "bench", Count: 1}
+	player.ItemSlots[13] = InventorySlot{ItemID: "fence_wood", Count: 50}
 	player.ItemSlots[14] = InventorySlot{ItemID: "shovel_wood", Count: 1}
 	player.ItemSlots[15] = InventorySlot{ItemID: "flashlight", Count: 1}
 	// New vegetable seeds (no shop system yet — starting inventory is the
 	// seed source; seed_drop_chance keeps them renewable after that)
 	player.ItemSlots[16] = InventorySlot{ItemID: "seed_carrot", Count: 6}
 	player.ItemSlots[17] = InventorySlot{ItemID: "seed_eggplant", Count: 6}
-	// (pumpkin/cabbage seeds come from drops — slots 12-13 + 18-19 stay FREE
-	// so pickups work at spawn)
+	player.ItemSlots[18] = InventorySlot{ItemID: "gate_wood", Count: 1}
+	// Slots 19-29 stay FREE so pickups + crafting output work at spawn (panel grew to 30).
 	player.EquippedTool = "hands"
 	// Spawn WEARING the leather set (cosmetic armor v1): visible immediately,
-	// zero inventory slots used; unequipping exercises the free slots.
-	player.Equipment = [7]string{"leather_cap", "leather_chest", "leather_gloves",
-		"leather_pants", "leather_boots", "", ""}
-
-	s.Players[userID] = player
-	s.Presences[userID] = presence
+	// zero inventory slots used; unequipping exercises the free slots. Slot 7
+	// (backpack) starts empty.
+	player.Equipment = [8]string{"leather_cap", "leather_chest", "leather_gloves",
+		"leather_pants", "leather_boots", "", "", ""}
+	player.ItemSlotsUnlocked = baseUnlockedItemSlots // grows when a backpack is worn
 }
 
 // RemovePlayer removes a player from the world

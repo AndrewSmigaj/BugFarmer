@@ -57,6 +57,10 @@ type EntityDef struct {
 	// defense math is a planned follow-up.
 	ArmorSlot string `json:"armor_slot,omitempty"`
 
+	// Backpack properties (category = "backpack", armor_slot = "backpack"): how many extra
+	// item-inventory slots wearing it unlocks.
+	SlotBonus int `json:"slot_bonus,omitempty"`
+
 	// Bug-food value when this item lies on the ground (carrion: bug_parts etc.).
 	// > 0 makes a ground drop EDIBLE: it registers in the deterministic food registry
 	// (ITEM_ROTTED at spawn, FOOD_CONSUMED(0) at expiry — both hash-bearing).

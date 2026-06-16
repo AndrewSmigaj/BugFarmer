@@ -14,16 +14,21 @@ namespace BugFarmer.UI
         public static InventoryManager Instance { get; private set; }
 
         public const int BugSlotCount = 20;
-        public const int ItemSlotCount = 20;
+        public const int ItemSlotCount = 40;
 
         // Slot-based inventory
         public InventorySlot[] BugSlots { get; private set; }
         public InventorySlot[] ItemSlots { get; private set; }
 
+        /// <summary>How many ItemSlots are usable right now (hotbar 0-9 + panel). Base 30, grows
+        /// with a worn backpack. Server-authoritative (FullInventorySync).</summary>
+        public int ItemSlotsUnlocked { get; private set; } = 30;
+
         /// <summary>Worn armor by slot: 0 head, 1 body, 2 arms, 3 legs, 4 feet,
-        /// 5/6 accessories ("" = empty). Server-authoritative (OpCode 97 echoes).</summary>
-        public string[] Equipment { get; private set; } = new string[7];
+        /// 5/6 accessories, 7 backpack ("" = empty). Server-authoritative (OpCode 97 echoes).</summary>
+        public string[] Equipment { get; private set; } = new string[8];
         public event System.Action OnEquipmentChanged;
+        public event System.Action OnCapacityChanged; // ItemSlotsUnlocked changed (backpack)
         public long Coins { get; private set; }
         public int SelectedSlot { get; private set; }
 
@@ -115,9 +120,9 @@ namespace BugFarmer.UI
                     {
                         var json = System.Text.Encoding.UTF8.GetString(state.State);
                         var msg = JsonUtility.FromJson<EquipmentUpdateMessage>(json);
-                        if (msg?.equipment != null && msg.equipment.Length == 7)
+                        if (msg?.equipment != null && msg.equipment.Length >= 7)
                         {
-                            Equipment = msg.equipment;
+                            Equipment = msg.equipment; // 8 slots now (7 armor + backpack)
                             OnEquipmentChanged?.Invoke();
                         }
                     }
@@ -133,6 +138,10 @@ namespace BugFarmer.UI
             // Full sync repaints everything from server truth (reconnect) and bypasses the
             // echo interception — a held cursor stack would double-render. Drop it.
             DragDropController.Instance?.ForceClearCursor();
+
+            // First login of this character (server-flagged) → welcome overlay at the central square.
+            if (msg.intro)
+                IntroOverlay.Show();
 
             // Sync bug slots
             if (msg.bug_slots != null)
@@ -164,6 +173,13 @@ namespace BugFarmer.UI
                 }
             }
 
+            // Sync usable-slot capacity (base + backpack); fire OnCapacityChanged if it moved so
+            // the panel can add/remove its dynamic item rows.
+            int prevUnlocked = ItemSlotsUnlocked;
+            if (msg.item_slots_unlocked > 0)
+                ItemSlotsUnlocked = msg.item_slots_unlocked;
+            bool capacityChanged = ItemSlotsUnlocked != prevUnlocked;
+
             // Sync coins and reset selection to slot 0
             Coins = msg.coins;
             SelectedSlot = 0;
@@ -171,6 +187,8 @@ namespace BugFarmer.UI
             Debug.Log($"[Inventory] Synced: {CountNonEmptySlots(BugSlots)} bug stacks, " +
                       $"{CountNonEmptySlots(ItemSlots)} item stacks, {Coins} coins");
 
+            if (capacityChanged)
+                OnCapacityChanged?.Invoke();
             OnInventoryChanged?.Invoke();
             OnCoinsChanged?.Invoke(Coins);
             OnSelectedSlotChanged?.Invoke(SelectedSlot);

@@ -33,6 +33,7 @@ namespace BugFarmer.UI
         private Vector2Int _cell;
         private string _occupantId = "";
         private bool _isCraft;
+        private bool _openedInventory; // true when opening this container also opened the inventory
 
         // UI frame
         private CanvasGroup _group;
@@ -164,9 +165,30 @@ namespace BugFarmer.UI
         private void Open()
         {
             _title.text = (EntityDatabase.Get(_occupantId)?.Name) ?? _occupantId;
+            ConfigureDock(_isCraft);
+            // Storage opens your inventory too (so you can drag items into the chest), and the
+            // container docks top-center between the bug + gear docks. If the inventory wasn't
+            // already open, WE opened it → close it when the container closes.
+            if (!_isCraft && InventoryPanel.Instance != null && !InventoryPanel.IsOpen)
+            {
+                _openedInventory = true;
+                InventoryPanel.Instance.SetOpen(true);
+            }
             BuildContent();
             SetOpen(true);
             Send(new ContainerActionMessage { gx = _cell.x, gy = _cell.y, op = "open" });
+        }
+
+        // Craft stations get the big center panel; storage containers get a compact top-center dock
+        // (the real inventory shows your side).
+        private void ConfigureDock(bool craft)
+        {
+            // Both dock at the TOP so the screen center stays open for the player. Craft stations
+            // need the wider panel (recipes + I/O); containers are a compact grid.
+            _dock.anchorMin = _dock.anchorMax = new Vector2(0.5f, 1f);
+            _dock.pivot = new Vector2(0.5f, 1f);
+            _dock.sizeDelta = craft ? new Vector2(600, 320) : new Vector2(312, 220);
+            _dock.anchoredPosition = new Vector2(0, -8);
         }
 
         private void SetOpen(bool open)
@@ -179,6 +201,12 @@ namespace BugFarmer.UI
                 _group.interactable = open;
             }
             _dock.gameObject.SetActive(open);
+
+            if (!open && _openedInventory)
+            {
+                _openedInventory = false;
+                InventoryPanel.Instance?.SetOpen(false);
+            }
         }
 
         // ---------------------------------------------------------------- build content
@@ -277,50 +305,46 @@ namespace BugFarmer.UI
 
         private void BuildStorageContent()
         {
+            // Only the CONTAINER grid here — your inventory (the real left/right docks) is the
+            // player side. Move items by double-/shift-click (quick) or by drag (pick a stack up
+            // in your inventory → click a container cell to deposit it).
             var def = EntityDatabase.Get(_occupantId);
+            var head = UIFactory.MakeText(_content, "ChestHeader", UIFactory.CountSize + 1f,
+                                          UIFactory.TextColor, TextAlignmentOptions.Left);
+            Place(head.rectTransform, 0, 0, 300, 14);
+            head.text = "Double-/shift-click or drag a stack to move it";
 
-            var head = UIFactory.MakeText(_content, "ChestHeader", UIFactory.HeaderSize,
-                                          UIFactory.HeaderColor, TextAlignmentOptions.Left);
-            Place(head.rectTransform, 0, 0, 400, 16);
-            head.text = "STORAGE — double-click to move a stack";
-
-            // container grid (size from the last echo if we have it, else a reasonable default)
             int slotCount = _last?.slots?.Length ?? (def?.World?.ContainerSlots ?? 12);
             var cGrid = UIFactory.MakeGrid(_content, "ContainerGrid", 6, UIFactory.Slot);
-            Place((RectTransform)cGrid.transform, 0, -20, 6 * 44, 4 * 44);
+            Place((RectTransform)cGrid.transform, 0, -18, 6 * 44, 5 * 44);
             for (int i = 0; i < slotCount; i++)
             {
                 var s = UIFactory.MakeSlot(cGrid.transform, "slot_frame");
                 int idx = i;
-                s.OnSlotClicked += (slot, ev) =>
-                {
-                    if (IsQuickClick(ev))
-                        Send(new ContainerActionMessage { gx = _cell.x, gy = _cell.y, op = "quick", zone = "container", slot = idx });
-                };
+                s.OnSlotClicked += (slot, ev) => OnContainerSlotClicked(idx, ev);
                 _containerSlots.Add(s);
             }
-
-            // your items
-            var yh = UIFactory.MakeText(_content, "YourHeader", UIFactory.HeaderSize,
-                                        UIFactory.HeaderColor, TextAlignmentOptions.Left);
-            Place(yh.rectTransform, 0, -210, 200, 16);
-            yh.text = "YOUR ITEMS";
-            var pGrid = UIFactory.MakeGrid(_content, "PlayerGrid", 10, UIFactory.Slot);
-            Place((RectTransform)pGrid.transform, 0, -230, 10 * 44, 2 * 44);
-            int playerCount = InventoryManager.Instance?.ItemSlots?.Length ?? 20;
-            for (int i = 0; i < playerCount; i++)
-            {
-                var s = UIFactory.MakeSlot(pGrid.transform, "slot_frame");
-                int idx = i;
-                s.OnSlotClicked += (slot, ev) =>
-                {
-                    if (IsQuickClick(ev))
-                        Send(new ContainerActionMessage { gx = _cell.x, gy = _cell.y, op = "quick", zone = "player", slot = idx });
-                };
-                _playerSlots.Add(s);
-            }
-
             RefreshStorageSlots();
+        }
+
+        // Container cell click: a held cursor (a stack picked up from your inventory) DEPOSITS into
+        // this cell; otherwise a double-/shift-click quick-moves the cell's stack to your bag.
+        private void OnContainerSlotClicked(int idx, PointerEventData ev)
+        {
+            var drag = DragDropController.Instance;
+            if (drag != null && drag.HasCursorItem && drag.CursorSourceType == SlotType.Item)
+            {
+                Send(new ContainerActionMessage
+                {
+                    gx = _cell.x, gy = _cell.y, op = "move",
+                    zone = "player", slot = drag.CursorSourceIndex,
+                    to_zone = "container", to_slot = idx, count = drag.CursorCount
+                });
+                drag.ForceClearCursor(); // the container handler's full inv-sync reconciles the bag
+                return;
+            }
+            if (IsQuickClick(ev))
+                Send(new ContainerActionMessage { gx = _cell.x, gy = _cell.y, op = "quick", zone = "container", slot = idx });
         }
 
         // ---------------------------------------------------------------- craft refresh
@@ -427,10 +451,6 @@ namespace BugFarmer.UI
                     else _containerSlots[i].Clear();
                 }
             }
-            var inv = InventoryManager.Instance;
-            if (inv?.ItemSlots != null)
-                for (int i = 0; i < _playerSlots.Count && i < inv.ItemSlots.Length; i++)
-                    _playerSlots[i].SetSlot(inv.ItemSlots[i]);
         }
 
         private void OnInventoryChanged()

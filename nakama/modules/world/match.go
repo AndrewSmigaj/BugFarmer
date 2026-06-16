@@ -10,6 +10,7 @@ import (
 	"runtime/debug"
 	"sort"
 	"strings"
+	"time"
 
 	"bugfarmer/entities"
 
@@ -280,6 +281,23 @@ func (m *Match) MatchJoinAttempt(ctx context.Context, logger runtime.Logger, db 
 		}
 	}
 
+	// Character bridge: if the client passed a char_id in the join metadata, verify it belongs to
+	// this account and STASH it for MatchJoin to consume (the two callbacks are decoupled — MatchJoin
+	// gets no metadata). Match callbacks run serially on one goroutine per match, so PendingCharacters
+	// needs no lock. Absent char_id = ephemeral default join (sync-harness / debug) — still accepted.
+	if charID := metadata["char_id"]; charID != "" {
+		save, err := LoadCharacterSave(ctx, nk, presence.GetUserId(), charID)
+		if err != nil {
+			logger.Error("MatchJoinAttempt: character load failed for %s/%s: %v", presence.GetUserId(), charID, err)
+			return state, false, "character load failed"
+		}
+		if save == nil {
+			logger.Warn("MatchJoinAttempt: %s requested unknown character %s", presence.GetUserId(), charID)
+			return state, false, "character not found"
+		}
+		worldState.PendingCharacters[presence.GetUserId()] = charID
+	}
+
 	logger.Info("Player %s approved to join world %s", presence.GetUserId(), worldState.WorldID)
 	return state, true, ""
 }
@@ -305,6 +323,42 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 		}
 
 		worldState.AddPlayer(userID, presence.GetUsername(), presence)
+		player := worldState.Players[userID]
+
+		// Zone id for cell events + per-character spawn placement.
+		zoneID := ""
+		if worldState.CurrentZone != nil {
+			zoneID = worldState.CurrentZone.ZoneID
+		}
+
+		// CHARACTER LOAD (Part C): if a character was staged in MatchJoinAttempt, overlay its
+		// persisted inventory/equipment/coins/appearance/home onto AddPlayer's fresh defaults and
+		// choose the spawn. Character data is NOT in the bug-sim hash, and we set the spawn cell
+		// BEFORE the PLAYER_CELL event below — so this is invisible to the deterministic tick.
+		if charID, staged := worldState.PendingCharacters[userID]; staged {
+			delete(worldState.PendingCharacters, userID)
+			if save, err := LoadCharacterSave(ctx, nk, userID, charID); err != nil {
+				logger.Error("MatchJoin: character load failed for %s/%s: %v", userID, charID, err)
+			} else if save != nil {
+				applyCharacterSave(player, save)
+				if !save.IntroSeen {
+					// First login: keep AddPlayer's spawn_point (the central square) + flag the
+					// intro to ride this join's FullInventorySync (guaranteed-delivered; no race).
+					player.IntroSeen = true
+					player.PendingIntro = true
+				} else if save.HomeZone == zoneID {
+					// Returning with a bed home in this zone → wake at the bed (Minecraft-style
+					// save point: "wherever you last saved, via a bed").
+					player.SetWorldPosition(save.HomeX, save.HomeY, worldState.Config.ChunkSize)
+				} else if save.LastZone == zoneID {
+					// No bed home here yet → drop back where they logged out.
+					player.SetWorldPosition(save.LastX, save.LastY, worldState.Config.ChunkSize)
+				}
+				// A different zone (or first login) keeps AddPlayer's zone spawn_point.
+				logger.Info("Loaded character %q (%s) for %s in zone %s", save.Name, charID, userID, zoneID)
+			}
+		}
+
 		logger.Info("Player %s joined world %s", presence.GetUsername(), worldState.WorldID)
 
 		// Send WorldInit for deterministic bug simulation
@@ -320,8 +374,7 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 		m.sendWorldEnv(dispatcher, worldState, presence)
 
 		// Seed the hearts UI (damage-0 echo; presence-targeted)
-		// Send full inventory sync to the joining player
-		player := worldState.Players[userID]
+		// Send full inventory sync to the joining player (carries the restored character inventory)
 		if err := m.sendInventorySync(logger, dispatcher, player, presence); err != nil {
 			logger.Warn("Failed to send inventory sync to %s: %v", userID, err)
 		}
@@ -332,13 +385,31 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 		})
 
 		// Emit initial cell event for spawn position (deterministic bug AI)
-		zoneID := ""
-		if worldState.CurrentZone != nil {
-			zoneID = worldState.CurrentZone.ZoneID
-		}
 		spawnX := player.WorldX(worldState.Config.ChunkSize)
 		spawnY := player.WorldY(worldState.Config.ChunkSize)
 		worldState.CheckPlayerCellChange(userID, spawnX, spawnY, zoneID)
+
+		// Authoritatively place the local player on the client at the position decided above (last
+		// logout / bed home / zone spawn). The passive entity-update snap is racy (client movement
+		// can clobber the server position first) AND one-shot across a reconnect — this is reliable.
+		if spawnData, sErr := json.Marshal(PlayerSpawnMessage{X: spawnX, Y: spawnY}); sErr == nil {
+			dispatcher.BroadcastMessage(OpCodePlayerSpawn, spawnData, []runtime.Presence{presence}, nil, true)
+		}
+
+		// PLAYER INFO (appearance + name; static per session, so sent once on join, not per tick):
+		//   1) roster of everyone already here → the joiner, so it can render the existing players.
+		//   2) the joiner's own entry → everyone, so existing clients learn the newcomer.
+		// Display-only (never in the sim hash). A reconnect re-runs this, so it self-corrects.
+		roster := make([]PlayerInfoEntry, 0, len(worldState.Players))
+		for uid, p := range worldState.Players {
+			roster = append(roster, playerInfoEntry(uid, p))
+		}
+		if rData, rErr := json.Marshal(PlayerInfoMessage{Players: roster}); rErr == nil {
+			dispatcher.BroadcastMessage(OpCodePlayerInfo, rData, []runtime.Presence{presence}, nil, true)
+		}
+		if jData, jErr := json.Marshal(PlayerInfoMessage{Players: []PlayerInfoEntry{playerInfoEntry(userID, player)}}); jErr == nil {
+			dispatcher.BroadcastMessage(OpCodePlayerInfo, jData, nil, nil, true)
+		}
 
 		// === ZONE AUTHORITY ASSIGNMENT ===
 		// First player in zone becomes authority, late joiners get snapshot
@@ -383,6 +454,18 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 	return worldState
 }
 
+// playerInfoEntry builds the cosmetic identity (appearance + name) broadcast for a player. Reads the
+// already-loaded character state; empty for a no-character join (the client then defaults to merchant).
+func playerInfoEntry(userID string, p *PlayerState) PlayerInfoEntry {
+	return PlayerInfoEntry{
+		UserID:    userID,
+		Name:      p.Username,
+		CharClass: p.Appearance.Class,
+		CharHair:  p.Appearance.Hair,
+		CharSkin:  p.Appearance.Skin,
+	}
+}
+
 // sendInventorySync sends the player's full inventory state
 func (m *Match) sendInventorySync(logger runtime.Logger, dispatcher runtime.MatchDispatcher, player *PlayerState, presence runtime.Presence) error {
 	// Convert fixed arrays to slices for JSON
@@ -392,11 +475,18 @@ func (m *Match) sendInventorySync(logger runtime.Logger, dispatcher runtime.Matc
 	itemSlots := make([]InventorySlot, len(player.ItemSlots))
 	copy(itemSlots, player.ItemSlots[:])
 
-	msg := FullInventorySyncMessage{
-		BugSlots:  bugSlots,
-		ItemSlots: itemSlots,
-		Coins:     player.Coins,
+	unlocked := player.ItemSlotsUnlocked
+	if unlocked <= 0 {
+		unlocked = baseUnlockedItemSlots
 	}
+	msg := FullInventorySyncMessage{
+		BugSlots:          bugSlots,
+		ItemSlots:         itemSlots,
+		Coins:             player.Coins,
+		ItemSlotsUnlocked: unlocked,
+		Intro:             player.PendingIntro,
+	}
+	player.PendingIntro = false // one-shot
 
 	data, err := json.Marshal(msg)
 	if err != nil {
@@ -438,6 +528,24 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 					userID, presence.GetSessionId(), currentPresence.GetSessionId())
 				continue
 			}
+		}
+
+		// CHARACTER SAVE (Part C): persist this character before removing it. Build the snapshot
+		// synchronously here (race-free — the match goroutine is single-threaded, and player is
+		// freed by RemovePlayer just below), then write to storage in a detached goroutine so the
+		// leave path doesn't block on I/O. The stale-session guard above already prevents a
+		// reconnect's leave from clobbering the live session.
+		if player, ok := worldState.Players[userID]; ok && player.CharacterID != "" {
+			zoneID := ""
+			if worldState.CurrentZone != nil {
+				zoneID = worldState.CurrentZone.ZoneID
+			}
+			save := buildCharacterSave(player, zoneID, worldState.Config.ChunkSize, time.Now().Unix())
+			go func() {
+				if err := WriteCharacterSave(context.Background(), nk, userID, save); err != nil {
+					logger.Error("MatchLeave: character save failed for %s/%s: %v", userID, save.CharID, err)
+				}
+			}()
 		}
 
 		worldState.RemovePlayer(userID)
@@ -732,6 +840,14 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				continue
 			}
 			m.handleContainerAction(logger, dispatcher, worldState, userID, caMsg)
+
+		case OpCodeSetHome:
+			var shMsg SetHomeMessage
+			if err := json.Unmarshal(msg.GetData(), &shMsg); err != nil {
+				logger.Warn("Invalid set-home from %s: %v", userID, err)
+				continue
+			}
+			m.handleSetHome(logger, dispatcher, nk, worldState, userID, shMsg)
 
 		case OpCodeEcologyTuning:
 			// DEV TOOL: live-override a species' ecology parameters from the Unity debug

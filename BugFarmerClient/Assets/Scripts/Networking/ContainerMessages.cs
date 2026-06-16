@@ -10,6 +10,10 @@ namespace BugFarmer.Networking
     {
         public const int Container = 98;       // C->S: a container / craft-station action (Op switches behavior)
         public const int ContainerUpdate = 99; // S->C: a container / craft-station's contents + craft progress
+        public const int SetHome = 100;        // C->S: sleep in a bed → set this character's home {gx,gy}
+        public const int SetHomeAck = 101;     // S->C: home-set confirmation {ok,message,home_x,home_y}
+        public const int PlayerSpawn = 102;    // S->C: authoritative local-player spawn on join {x,y}
+        public const int PlayerInfo = 103;     // S->C: per-player appearance + name (static; on join)
     }
 
     /// <summary>

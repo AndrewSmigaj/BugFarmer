@@ -86,6 +86,11 @@ namespace BugFarmer.UI
             dragGO.AddComponent<EquipmentController>();
             dragGO.AddComponent<BugInfoCard>();
 
+            // Hover tooltip — last child so it draws above every panel.
+            var tipGO = new GameObject("Tooltip(Code)", typeof(RectTransform));
+            tipGO.transform.SetParent(canvasGO.transform, false);
+            tipGO.AddComponent<TooltipUI>();
+
             Debug.Log("[UIBootstrap] code-built UI canvas constructed.");
         }
     }

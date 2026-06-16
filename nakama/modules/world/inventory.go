@@ -61,23 +61,34 @@ func (p *PlayerState) FindItem(itemID string) int {
 	return -1
 }
 
-// AddItem adds a tool to the player's item inventory.
+// itemCap is how many ItemSlots are currently usable (defensive: an unset/over-large
+// ItemSlotsUnlocked falls back to the full array so nothing locks unexpectedly).
+func (p *PlayerState) itemCap() int {
+	c := p.ItemSlotsUnlocked
+	if c <= 0 || c > len(p.ItemSlots) {
+		c = len(p.ItemSlots)
+	}
+	return c
+}
+
+// AddItem adds a tool to the player's item inventory (only into UNLOCKED slots).
 // Returns the slot index that was modified, or -1 if inventory is full.
 func (p *PlayerState) AddItem(itemID string, count int) int {
 	if count <= 0 {
 		return -1
 	}
+	cap := p.itemCap()
 
 	// First, find existing stack of same item
-	for i := range p.ItemSlots {
+	for i := 0; i < cap; i++ {
 		if p.ItemSlots[i].ItemID == itemID {
 			p.ItemSlots[i].Count += count
 			return i
 		}
 	}
 
-	// No existing stack, find first empty slot
-	for i := range p.ItemSlots {
+	// No existing stack, find first empty UNLOCKED slot
+	for i := 0; i < cap; i++ {
 		if p.ItemSlots[i].ItemID == "" {
 			p.ItemSlots[i].ItemID = itemID
 			p.ItemSlots[i].Count = count
@@ -145,7 +156,8 @@ func (p *PlayerState) MoveSlot(srcType string, srcIdx int, dstType string, dstId
 		}
 		dst = &p.BugSlots[dstIdx]
 	} else if dstType == "item" {
-		if dstIdx < 0 || dstIdx >= len(p.ItemSlots) {
+		// Can't place INTO a locked slot (>= unlocked capacity). Moving OUT of one is fine.
+		if dstIdx < 0 || dstIdx >= len(p.ItemSlots) || dstIdx >= p.itemCap() {
 			return false
 		}
 		dst = &p.ItemSlots[dstIdx]

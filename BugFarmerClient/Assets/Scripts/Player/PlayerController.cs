@@ -67,6 +67,8 @@ namespace BugFarmer.Player
                 gameObject.AddComponent<TreeHarvestController>();
             if (GetComponent<PlayerHealth>() == null)
                 gameObject.AddComponent<PlayerHealth>();
+            if (GetComponent<SleepController>() == null)
+                gameObject.AddComponent<SleepController>();
             if (GetComponent<PlayerInputRouter>() == null)
                 gameObject.AddComponent<PlayerInputRouter>();
         }
@@ -86,12 +88,14 @@ namespace BugFarmer.Player
                 RefreshHeldItem();
             }
 
-            // Walk frames: composed from the worn equipment (server echoes it
-            // on join); baked farmer until then / as fallback.
+            // Walk frames: composed from the worn equipment (server echoes it on
+            // join). Baked MERCHANT is the pre-echo fallback; RebuildOutfit() then
+            // composes the merchant base immediately (and re-composes on each echo).
             _frames = CharacterComposer.LoadBaked("merchant");
             UpdateSprite();
             if (inv != null)
                 inv.OnEquipmentChanged += RebuildOutfit;
+            RebuildOutfit(); // seed the composed merchant body now (armor layers add on the echo)
         }
 
         // ---- worn armor: re-compose the LOCAL player when equipment changes
@@ -99,19 +103,50 @@ namespace BugFarmer.Player
         private void RebuildOutfit()
         {
             if (!CharacterComposer.ComposedOutfitsEnabled)
-                return; // trial: stay on the baked vector-Scout frames
+                return;
             var inv = InventoryManager.Instance;
-            var outfit = CharacterComposer.OutfitFromEquipment(inv?.Equipment);
+            // The in-game player wears the CHARACTER's chosen class/hair/skin (from the select
+            // screen, via CharacterSession); worn armor layers compose on top. Defaults are
+            // merchant/blonde/default for a no-selection join (sync-harness/debug).
+            var outfit = CharacterComposer.OutfitFromEquipment(inv?.Equipment,
+                Networking.CharacterSession.Class, Networking.CharacterSession.Hair,
+                Networking.CharacterSession.Skin);
             var composed = CharacterComposer.Compose(outfit);
             if (composed == null)
             {
                 Debug.LogWarning("[PlayerController] outfit compose failed (layers missing " +
                                  "or not CPU-readable — run tools/fix_sprite_ppu.py); baked fallback.");
-                composed = CharacterComposer.LoadBaked("farmer");
+                composed = CharacterComposer.LoadBaked(Networking.CharacterSession.Class);
+                if (composed == null) composed = CharacterComposer.LoadBaked("merchant");
                 if (composed == null) return;
             }
             _frames = composed;
             UpdateSprite();
+        }
+
+        // ---- DEBUG: cycle a few representative outfits to eyeball every wearable
+        // (F7; client-only preview — the next equipment echo restores the truth).
+        private static readonly CharacterComposer.Outfit[] _debugOutfits =
+        {
+            new CharacterComposer.Outfit { Shirt = "merchant", Pants = "merchant", Hair = "blonde" },
+            new CharacterComposer.Outfit { Shirt = "merchant", Pants = "merchant", Hair = "blonde",
+                Helmet = "leather_cap", Chest = "leather_chest", Arms = "leather_gloves",
+                Legs = "leather_pants", Feet = "leather_boots" },
+            new CharacterComposer.Outfit { Shirt = "merchant", Pants = "merchant", Hair = "blonde",
+                Helmet = "iron_helmet", Chest = "iron_chest", Arms = "iron_gauntlets",
+                Legs = "iron_greaves", Feet = "iron_boots" },
+            new CharacterComposer.Outfit { Shirt = "merchant", Pants = "merchant", Hair = "blonde",
+                Helmet = "straw_hat", Chest = "leather_chest", Legs = "iron_greaves",
+                Feet = "iron_boots" },
+        };
+        private int _debugOutfit;
+
+        private void CycleDebugOutfit()
+        {
+            if (!CharacterComposer.ComposedOutfitsEnabled) return;
+            _debugOutfit = (_debugOutfit + 1) % _debugOutfits.Length;
+            var composed = CharacterComposer.Compose(_debugOutfits[_debugOutfit]);
+            if (composed != null) { _frames = composed; UpdateSprite(); }
         }
 
         private void OnDestroy()
@@ -150,6 +185,11 @@ namespace BugFarmer.Player
                 Velocity = Vector2.zero;
                 return;
             }
+
+            // DEBUG: F10 cycles outfits so you can eyeball every wearable on the player.
+            // (F7 is the day/night preview; F9 the stats readout — keep them distinct.)
+            if (Input.GetKeyDown(KeyCode.F10))
+                CycleDebugOutfit();
 
             // Skip input when typing in UI
             if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject != null)

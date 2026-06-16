@@ -87,9 +87,11 @@ namespace BugFarmer.Networking
     [Serializable]
     public class FullInventorySyncMessage
     {
-        public InventorySlot[] bug_slots;   // All 20 bug slots
-        public InventorySlot[] item_slots;  // All 10 item slots (= hotbar)
+        public InventorySlot[] bug_slots;       // All 20 bug slots
+        public InventorySlot[] item_slots;      // All item slots (0-9 hotbar, 10+ panel)
         public long coins;
+        public int item_slots_unlocked;         // usable item slots (base + backpack)
+        public bool intro;                      // first login of this character → show the intro overlay
     }
 
     /// <summary>

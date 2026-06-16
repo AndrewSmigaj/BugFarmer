@@ -17,12 +17,13 @@ namespace BugFarmer.Player
     public static class CharacterComposer
     {
         /// <summary>
-        /// TRIAL (2026-06): the vector-Scout baked sprites are 36x44 — the
-        /// paper-doll layers are still the old 16x32 canvas, so composing an
-        /// outfit would VISUALLY REVERT the player. Disabled until the
-        /// wearables are re-anchored to the new template.
+        /// RE-ENABLED (2026-06): the player body is back on the 16x32 baked
+        /// MERCHANT sprite, which matches the 16x32 paper-doll layers, so worn
+        /// armor composes correctly again. (The 36x44 vector-Scout trial that
+        /// forced this off is retired in-game — it couldn't wear armor without
+        /// redrawing every wearable at 36x44.)
         /// </summary>
-        public const bool ComposedOutfitsEnabled = false;
+        public const bool ComposedOutfitsEnabled = true;
 
         /// <summary>An outfit: layer set names (null/empty = layer absent).</summary>
         public class Outfit

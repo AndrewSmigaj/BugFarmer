@@ -119,6 +119,7 @@ namespace BugFarmer.UI
         {
             if (_busy) return;
             if (worlds == null || worlds.Length == 0) { SetStatus("No worlds configured."); return; }
+            if (!CharacterSession.HasSelection) { SetStatus("Select a character first."); return; }
 
             _busy = true;
             var choice = worlds[Mathf.Clamp(_choice, 0, worlds.Length - 1)];
@@ -126,8 +127,8 @@ namespace BugFarmer.UI
             {
                 SetStatus("Connecting...");
                 await NetworkManager.Instance.ConnectSocketAsync();
-                SetStatus($"Entering {choice.label}...");
-                await WorldManager.Instance.EnterWorld(choice.zoneId);
+                SetStatus($"Entering {choice.label} as {CharacterSession.SelectedCharName}...");
+                await WorldManager.Instance.EnterWorld(choice.zoneId, CharacterSession.SelectedCharID);
                 SetStatus($"In world: {choice.label}");
             }
             catch (Exception ex)

@@ -169,6 +169,7 @@ func (m *Match) debugGiveItem(
 			"wood": 99, "coal": 50, "iron_ore": 40, "copper_ore": 40,
 			"stone_block": 40, "iron_bar": 20, "fiber": 30,
 			"straw_hat": 1, "leather_cap": 1, "apple": 20, // filtered-container (clothing/food) tests
+			"backpack": 1, // equip → +10 panel slots
 		}
 	} else {
 		give[item] = count

@@ -126,7 +126,7 @@ namespace BugFarmer.Networking
         /// world_enter RPC, which finds-or-creates a singleton world server-side. No world
         /// creation happens client-side. Mirrors JoinWorld once it has the match id.
         /// </summary>
-        public async Task<IMatch> EnterWorld(string zoneId)
+        public async Task<IMatch> EnterWorld(string zoneId, string charId = null)
         {
             var session = await NetworkManager.Instance.Session;
             var socket = NetworkManager.Instance.Socket;
@@ -139,7 +139,14 @@ namespace BugFarmer.Networking
                 var result = await NetworkManager.Instance.Client.RpcAsync(session, "world_enter", payload);
                 var response = JsonUtility.FromJson<WorldJoinResponse>(result.Payload);
 
-                CurrentMatch = await socket.JoinMatchAsync(response.match_id);
+                // Pass the chosen character to the match via JOIN METADATA. MatchJoinAttempt reads
+                // metadata["char_id"], validates ownership, and stashes it for MatchJoin to load the
+                // save. A null/empty charId joins with the ephemeral default (sync-harness/debug path).
+                if (!string.IsNullOrEmpty(charId))
+                    CurrentMatch = await socket.JoinMatchAsync(response.match_id,
+                        new Dictionary<string, string> { { "char_id", charId } });
+                else
+                    CurrentMatch = await socket.JoinMatchAsync(response.match_id);
                 Self = CurrentMatch.Self;
                 Players.Clear();
                 Players.AddRange(CurrentMatch.Presences);
@@ -209,6 +216,20 @@ namespace BugFarmer.Networking
                     {
                         OnEntityUpdate?.Invoke(update.entities);
                     }
+                    break;
+
+                case OpCodes.PlayerSpawn:
+                    var spawnJson = System.Text.Encoding.UTF8.GetString(state.State);
+                    var spawn = JsonUtility.FromJson<PlayerSpawnMessage>(spawnJson);
+                    if (spawn != null)
+                        Entities.EntityManager.Instance?.SetLocalPlayerSpawn(spawn.x, spawn.y);
+                    break;
+
+                case OpCodes.PlayerInfo:
+                    var infoJson = System.Text.Encoding.UTF8.GetString(state.State);
+                    var info = JsonUtility.FromJson<PlayerInfoMessage>(infoJson);
+                    if (info?.players != null)
+                        Entities.EntityManager.Instance?.ApplyPlayerInfo(info.players);
                     break;
 
                 default:

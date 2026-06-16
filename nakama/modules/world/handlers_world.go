@@ -753,8 +753,33 @@ func (m *Match) handleEquipArmor(
 		return
 	}
 
-	slotNames := [7]string{"head", "body", "arms", "legs", "feet", "accessory", "accessory"}
+	slotNames := [8]string{"head", "body", "arms", "legs", "feet", "accessory", "accessory", "backpack"}
 	echoInv := -1
+	isBackpack := msg.EquipSlot == backpackSlotIndex
+
+	// Backpack capacity safety: if this action would SHRINK usable item slots, the
+	// to-be-locked slots must be empty (else worn items would strand). Check BEFORE mutating.
+	if isBackpack {
+		newBackpack := ""
+		if msg.InvSlot != -1 && msg.InvSlot >= 0 && msg.InvSlot < len(player.ItemSlots) {
+			newBackpack = player.ItemSlots[msg.InvSlot].ItemID
+		}
+		newCap := baseUnlockedItemSlots
+		if newBackpack != "" {
+			if d := state.Entities[newBackpack]; d != nil && d.SlotBonus > 0 {
+				newCap += d.SlotBonus
+			}
+		}
+		if newCap > len(player.ItemSlots) {
+			newCap = len(player.ItemSlots)
+		}
+		for i := newCap; i < player.ItemSlotsUnlocked && i < len(player.ItemSlots); i++ {
+			if player.ItemSlots[i].ItemID != "" {
+				m.sendWorldError(dispatcher, state, userID, "Empty your backpack's extra slots first")
+				return
+			}
+		}
+	}
 
 	if msg.InvSlot == -1 {
 		// UNEQUIP -> inventory
@@ -779,7 +804,11 @@ func (m *Match) handleEquipArmor(
 			return
 		}
 		def := state.Entities[item.ItemID]
-		if def == nil || def.Category != "armor" || def.ArmorSlot != slotNames[msg.EquipSlot] {
+		wantCat := "armor"
+		if isBackpack {
+			wantCat = "backpack"
+		}
+		if def == nil || def.Category != wantCat || def.ArmorSlot != slotNames[msg.EquipSlot] {
 			m.sendWorldError(dispatcher, state, userID, "That doesn't go there")
 			return
 		}
@@ -793,13 +822,21 @@ func (m *Match) handleEquipArmor(
 		echoInv = msg.InvSlot
 	}
 
+	// A backpack change alters usable capacity — recompute it.
+	if isBackpack {
+		state.recomputeItemCapacity(player)
+	}
+
 	// ---- echoes: equipment truth + the touched inventory slot
 	if presence, ok := state.Presences[userID]; ok && presence != nil {
 		eqMsg := EquipmentUpdateMessage{Equipment: player.Equipment[:]}
 		if data, err := json.Marshal(eqMsg); err == nil {
 			dispatcher.BroadcastMessage(OpCodeEquipmentUpdate, data, []runtime.Presence{presence}, nil, true)
 		}
-		if echoInv >= 0 {
+		if isBackpack {
+			// capacity (ItemSlotsUnlocked) + possibly several slots changed → full re-sync
+			_ = m.sendInventorySync(logger, dispatcher, player, presence)
+		} else if echoInv >= 0 {
 			slotMsg := SlotUpdateMessage{
 				SlotIndex: echoInv,
 				ItemID:    player.ItemSlots[echoInv].ItemID,
