@@ -12,6 +12,12 @@ working; this file is what survives between sessions.
   deterministic tick. Extend the sync-harness `crosszone` scenario to capture + compare zone hashes
   before/after. (The crossing is *designed* to be determinism-inert; this proves it.)
 
+## Now — Bug ecology / farming (livestock loop on a living-ecosystem engine)
+Design of record: [bug_ecology_plan.md](../brainstorms/ecology/bug_ecology_plan.md). Phased build P0–P11
+(P1 Bug Lab DONE). **Verify every sim-touching phase with the `test-changes` skill** (Go tests +
+sync-harness + the determinism / "all players in sync" checks — the testing methodology is now captured as a
+skill so it stops getting lost between sessions).
+
 ## Done 2026-06-16 — cross-zone movement (walk off a zone edge → hidden swap into the neighbor)
 Walk to a zone edge that has an authored neighbor → quick fade → tear down zone A → join the neighbor at
 its matching edge → fade back. Each zone is an independent Nakama match/sync domain, so a crossing is a

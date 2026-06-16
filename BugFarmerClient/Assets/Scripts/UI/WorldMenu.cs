@@ -72,6 +72,7 @@ namespace BugFarmer.UI
             EnsureWorld("Merge Test", "merge_test2");
             EnsureWorld("Fly Farm Test", "repro_test");
             EnsureWorld("Crafting Test", "crafting_test");
+            EnsureWorld("Bug Lab", "bug_lab");
         }
 
         private void Start()

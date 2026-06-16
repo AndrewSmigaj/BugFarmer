@@ -170,6 +170,19 @@ namespace BugFarmer.Entities
             }
         }
 
+        /// <summary>Live bug count per species — drives the multi-species population graph.</summary>
+        public Dictionary<string, int> BugCountBySpecies()
+        {
+            var d = new Dictionary<string, int>();
+            foreach (var swarm in _swarms.Values)
+            {
+                var sp = string.IsNullOrEmpty(swarm.SpeciesId) ? "?" : swarm.SpeciesId;
+                d.TryGetValue(sp, out int c);
+                d[sp] = c + swarm.Count;
+            }
+            return d;
+        }
+
         private void Awake()
         {
             Instance = this;

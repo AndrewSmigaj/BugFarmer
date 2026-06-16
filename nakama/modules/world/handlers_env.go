@@ -171,6 +171,12 @@ func (m *Match) debugGiveItem(
 			"straw_hat": 1, "leather_cap": 1, "apple": 20, // filtered-container (clothing/food) tests
 			"backpack": 1, // equip → +10 panel slots
 		}
+	} else if item == "buglab" {
+		// Bug Lab loadout: 100 fruit to feed the pens + 10 of each catchable species to release.
+		give = map[string]int{"apple": 100}
+		for _, sp := range []string{"fly_common", "butterfly_meadow", "wasp_common", "centipede_garden"} {
+			player.AddBugs(sp, 10)
+		}
 	} else {
 		give[item] = count
 	}

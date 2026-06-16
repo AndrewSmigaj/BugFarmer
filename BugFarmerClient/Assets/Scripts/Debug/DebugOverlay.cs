@@ -33,8 +33,14 @@ namespace BugFarmer.Tracing
         private float _tConsume = 0.5f;       // food/bug/s
         private float _tCooldown = 30f;       // s between reproductions
         private string _tStatus = "";
-        private readonly List<int> _popSamples = new();   // total bug count, sampled every 10 ticks
+        private readonly Dictionary<string, List<int>> _popBySpecies = new();  // species -> samples, every 10 ticks
+        private int _popLen = 0;                           // aligned sample length across species
         private long _lastSampleTick = -1;
+        // stable per-species line colors
+        private static readonly Color[] _palette = {
+            Color.green, Color.cyan, Color.yellow, Color.magenta,
+            new Color(1f, 0.55f, 0f), Color.red, new Color(0.6f, 0.8f, 1f),
+        };
         private Texture2D _px;                            // 1x1 white for graph drawing
         private const int MaxSamples = 600;               // 10 minutes at 1 sample/second
 
@@ -58,14 +64,23 @@ namespace BugFarmer.Tracing
             if (Input.GetKeyDown(KeyCode.F8)) _showWorld = !_showWorld;
             if (Input.GetKeyDown(KeyCode.F9)) _showStats = !_showStats;
 
-            // Population time-series: one sample per second (10 ticks)
+            // Population time-series: one sample per second (10 ticks), per species
             var sm = SwarmManager.Instance;
             if (sm != null && sm.SimulationTick >= _lastSampleTick + 10)
             {
                 _lastSampleTick = sm.SimulationTick;
-                _popSamples.Add(sm.TotalBugCount);
-                if (_popSamples.Count > MaxSamples)
-                    _popSamples.RemoveAt(0);
+                var counts = sm.BugCountBySpecies();
+                foreach (var sp in counts.Keys)              // backfill new species with zeros so series align
+                    if (!_popBySpecies.ContainsKey(sp))
+                        _popBySpecies[sp] = new List<int>(new int[_popLen]);
+                foreach (var kv in _popBySpecies)
+                    kv.Value.Add(counts.TryGetValue(kv.Key, out int c) ? c : 0);
+                _popLen++;
+                if (_popLen > MaxSamples)
+                {
+                    foreach (var kv in _popBySpecies) kv.Value.RemoveAt(0);
+                    _popLen--;
+                }
             }
         }
 
@@ -190,6 +205,10 @@ namespace BugFarmer.Tracing
             if (GUILayout.Button("Give crafting kit"))
                 SendWorldDebug(t => t.give_item = "kit");
 
+            // Bug Lab loadout: 100 fruit + 10 of each catchable species to release into the pens.
+            if (GUILayout.Button("Stock Bug Lab"))
+                SendWorldDebug(t => t.give_item = "buglab");
+
             GUILayout.Label($"time now: {BugFarmer.World.DayNightController.TimeOfDay:F2}  " +
                             $"weather: {BugFarmer.World.DayNightController.Weather}");
             if (!string.IsNullOrEmpty(_wStatus))
@@ -313,30 +332,59 @@ namespace BugFarmer.Tracing
         }
 
         /// <summary>
-        /// F5: total-bug-population over time (1 sample/second) — the fly-boom graph.
+        /// F5: per-species bug population over time (1 sample/second) — one colored line per species
+        /// + a legend with live counts. The ecology tuning instrument.
         /// </summary>
         void DrawPopulationGraph()
         {
             const int W = 320, H = 110;
             float x0 = Screen.width - W - 12, y0 = 12;
+            int legendRows = Mathf.Max(1, _popBySpecies.Count);
 
-            GUI.color = new Color(0f, 0f, 0f, 0.55f);
-            GUI.DrawTexture(new Rect(x0 - 4, y0 - 4, W + 8, H + 26), _px);
+            GUI.color = new Color(0f, 0f, 0f, 0.6f);
+            GUI.DrawTexture(new Rect(x0 - 4, y0 - 4, W + 8, H + 26 + legendRows * 16), _px);
             GUI.color = Color.white;
 
             int max = 1;
-            foreach (var v in _popSamples) if (v > max) max = v;
+            foreach (var kv in _popBySpecies)
+                foreach (var v in kv.Value) if (v > max) max = v;
 
-            GUI.Label(new Rect(x0, y0 + H + 2, W, 18), $"bugs over time (max {max}, {_popSamples.Count}s)");
-            GUI.color = Color.green;
-            int n = _popSamples.Count;
-            for (int s = 0; s < n; s++)
+            GUI.Label(new Rect(x0, y0 + H + 2, W, 18), $"bugs/species over time (max {max}, {_popLen}s)");
+
+            foreach (var kv in _popBySpecies)            // one line per species
             {
-                float px = x0 + (float)s / MaxSamples * W;
-                float ph = (float)_popSamples[s] / max * (H - 4);
-                GUI.DrawTexture(new Rect(px, y0 + H - ph, 2, 2), _px);
+                GUI.color = SpeciesColor(kv.Key);
+                var s = kv.Value;
+                for (int i = 0; i < s.Count; i++)
+                {
+                    float px = x0 + (float)i / MaxSamples * W;
+                    float ph = (float)s[i] / max * (H - 4);
+                    GUI.DrawTexture(new Rect(px, y0 + H - ph, 2, 2), _px);
+                }
+            }
+
+            int li = 0;                                   // legend
+            foreach (var kv in _popBySpecies)
+            {
+                GUI.color = SpeciesColor(kv.Key);
+                int cur = kv.Value.Count > 0 ? kv.Value[kv.Value.Count - 1] : 0;
+                GUI.Label(new Rect(x0, y0 + H + 20 + li * 16, W, 16), $"■ {ShortSpecies(kv.Key)}: {cur}");
+                li++;
             }
             GUI.color = Color.white;
+        }
+
+        private static Color SpeciesColor(string sp)
+        {
+            int h = 0;
+            foreach (char c in sp) h = h * 31 + c;
+            return _palette[Mathf.Abs(h) % _palette.Length];
+        }
+
+        private static string ShortSpecies(string sp)
+        {
+            int i = sp.IndexOf('_');
+            return i > 0 ? sp.Substring(0, i) : sp;
         }
     }
 }
