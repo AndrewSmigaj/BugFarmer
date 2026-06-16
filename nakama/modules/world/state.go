@@ -121,6 +121,12 @@ type WorldState struct {
 	PlayerCells      map[string]*PlayerCellState // playerID → current cell
 	ZoneStates       map[string]*ZoneState       // zoneID → zone authority/sync state
 	PendingInfluence []InfluenceEvent            // Events to broadcast this tick
+
+	// Zone/farm persistence (see zone_persist.go). ZoneChunkCache is the prefetched per-chunk save
+	// records (loaded once at MatchInit), consumed by handleChunkSubscribe (which has no ctx/nk).
+	// LastZoneSaveTick gates the periodic autosave. None of this is in the bug-sim hash.
+	ZoneChunkCache   map[string]*ChunkSave // ChunkKey -> persisted delta to apply on chunk load
+	LastZoneSaveTick int64
 }
 
 // DriftCheck accumulates per-client state-hash responses for one settled-tick drift round.

@@ -234,8 +234,15 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 		logger.Info("Loaded %d crafting recipes across %d stations", len(state.Recipes), len(state.RecipesByStation))
 	}
 
-	// Spawn initial swarms for testing
-	m.spawnInitialSwarms(state, logger)
+	// ZONE PERSISTENCE: prefetch this zone's saved farm delta (consumed lazily per chunk in
+	// handleChunkSubscribe). Must run after CurrentZone is set; before the swarm restore below.
+	m.prefetchZoneState(ctx, nk, state, logger)
+
+	// Restore the saved bug population if this zone was persisted; else spawn fresh initial swarms.
+	// Restored swarms are CLEAN (IDs 0..Count-1) and enter before any client joins — determinism-safe.
+	if !m.restoreSwarms(ctx, nk, state, logger) {
+		m.spawnInitialSwarms(state, logger)
+	}
 
 	// Create label for match listing
 	label := MatchLabel{
@@ -591,6 +598,13 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 					// leaving a seq gap the client's HasAllEventsUpTo can never close (it stalls).
 					worldState.ClearPendingInfluence()
 					logger.Info("Zone %s is now empty - reset all sync state (NextSeq, InfluenceLog, Snapshot, Authority, PendingInfluence)", zoneID)
+
+					// ZONE PERSISTENCE: the zone just went quiet — snapshot its farm (+ bug population)
+					// and write it async. The live paused match stays the source of truth until terminate,
+					// so this is a restart backup. Snapshot is built synchronously on the match goroutine.
+					if recs := m.snapshotZoneState(worldState); len(recs) > 0 {
+						go writeZoneRecords(context.Background(), nk, logger, recs)
+					}
 				} else if zone.AuthorityUserID == userID {
 					// Authority is leaving but zone still has members - reassign
 					zone.AuthorityUserID = ""
@@ -668,6 +682,16 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 
 	worldState.TickCount++
 	chunkSize := worldState.Config.ChunkSize
+
+	// ZONE PERSISTENCE: periodic autosave while occupied (crash safety between the on-empty/terminate
+	// saves). Snapshot synchronously on the match goroutine, write async. Only fires past the pause
+	// guard, so it never runs on an empty zone.
+	if worldState.TickCount-worldState.LastZoneSaveTick >= zoneAutosaveTicks {
+		worldState.LastZoneSaveTick = worldState.TickCount
+		if recs := m.snapshotZoneState(worldState); len(recs) > 0 {
+			go writeZoneRecords(context.Background(), nk, logger, recs)
+		}
+	}
 
 	// Process incoming messages
 	for _, msg := range messages {
@@ -1296,7 +1320,12 @@ func (m *Match) MatchTerminate(ctx context.Context, logger runtime.Logger, db *s
 
 	logger.Info("World %s terminating, grace period %d seconds", worldState.WorldID, graceSeconds)
 
-	// TODO: Persist world state to storage
+	// ZONE PERSISTENCE: the authoritative save for a clean restart. SYNCHRONOUS — a detached
+	// goroutine could be killed during teardown; graceSeconds gives the window to finish the write.
+	if recs := m.snapshotZoneState(worldState); len(recs) > 0 {
+		writeZoneRecords(ctx, nk, logger, recs)
+		logger.Info("Zone %s: persisted %d record(s) on terminate", worldState.ZoneID, len(recs))
+	}
 
 	return worldState
 }

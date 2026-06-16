@@ -32,6 +32,11 @@ func (m *Match) handleChunkSubscribe(
 		}
 		state.Chunks[chunkKey] = chunk
 
+		// ZONE PERSISTENCE: overlay this chunk's saved farm delta + hydrate its sidecar state
+		// (crops/trees/containers/stations/items) BEFORE the init scans — those scans randomize
+		// untracked trees/stations, so restored state must be in the maps first (skip-if-present).
+		m.applyChunkSave(state, chunk, cx, cy)
+
 		// Initialize fruit tree states for any fruit trees in this chunk
 		m.initFruitTreesInChunk(state, chunk, cx, cy, logger)
 		m.initNestsInChunk(state, chunk, cx, cy, logger)

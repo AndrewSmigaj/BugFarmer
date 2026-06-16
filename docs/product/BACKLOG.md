@@ -6,6 +6,32 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Done 2026-06-16 — zone / farm persistence (farm + bug population survive a server restart)
+A zone's player-built farm AND its cultivated bug population now persist to Nakama storage and restore on
+match (re)create — previously everything evaporated on restart / `MatchTerminate`. NEW
+`world/zone_persist.go` (mirrors `character_persist.go`): `zone_state` collection, `ZoneStateKey(zone,
+instance)` (forward-compatible with future private plots), per-chunk delta records + a `:meta` index +
+a `:swarms` population record.
+- **Farm** = a DELTA on the authored base: per-chunk `CellEdit`s (ground/occupant, semantic diff so authored
+  formatting never false-positives; `OccSet` encodes a broken authored occupant) + the crops/trees/
+  containers/stations/craft-stations/ground-items anchored in the chunk. Applied in `handleChunkSubscribe`
+  BEFORE the init scans (which randomize untracked trees). Prefetched once at `MatchInit` (no per-subscribe I/O).
+- **Bugs** = minimal per-swarm descriptors (species/pos/count/phase/satiation/breeding); restored as CLEAN
+  swarms via `spawnSwarmAt`+`InitializeBugIDs` (skips `spawnInitialSwarms`). Determinism-safe: the server is
+  the swarm authority, restored swarms enter at the cold-start boundary identical to fresh spawns, food
+  re-discovers via `FindNearbyFood`. Only `FruitTreeState.LastFallTick` needed a tick-reset clamp (crops are
+  water-driven).
+- **Triggers:** prefetch on `MatchInit`; save on transition-to-empty (async) + `MatchTerminate` (sync,
+  replaced the old TODO) + a 10-min autosave while occupied. Determinism surface = zero (farm not hashed;
+  swarms enter cold; tick loop/ledger/food-registry untouched).
+- **Verified autonomously** via the sync-harness: join `village_21` → leave wrote 59 swarms + chunk records
+  (`cells:0` = no false positives, authored base safe); restart → `restored 59 swarm(s)` + frontier-gated
+  sync ran clean (no RECEPTION GAP, ticks advanced) → the determinism check passes; merge-preserve keeps
+  unvisited chunks; zero panics. (Farm-modification visual confirmation — placed objects/crops/chests across a
+  restart — is the one remaining check, needs the Unity client.)
+- **Deferred (separate feature):** the two-tier-LOD "empty-zone ecology" — bugs *evolving while you're away*
+  in zones with no players. This milestone preserves state as-of-last-player, not active offline simulation.
+
 ## Done 2026-06-16 (pending Editor compile) — Terraria-style characters + per-character persistence
 An account (one device-auth `userID`) owns multiple **characters**, each persisting independently
 (inventory, equipment, coins, unlocked slots, appearance, position). Pick a character → join a world
