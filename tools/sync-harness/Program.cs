@@ -49,10 +49,11 @@ namespace BugFarmer.SyncHarness
         private static long _playerCellX = long.MinValue, _playerCellY = long.MinValue;
         private static long _playerMaxCellY = long.MinValue, _playerMinCellY = long.MaxValue;
         private static double _confirmedY = double.NaN;                         // server-confirmed centre Y (from cell events)
-        private static readonly Dictionary<string, (double x, double y, int count)> _swarmSpawn = new();    // id -> spawn centre+count (OpCode 20)
+        private static readonly Dictionary<string, (double x, double y, int count, string sp)> _swarmSpawn = new(); // id -> spawn centre+count+species (OpCode 20)
         private static readonly Dictionary<string, (double minx, double miny, double maxx, double maxy)> _swarmTgt = new(); // id -> SWARM_SET_TARGET bounds
         private static readonly List<string> _populationEvents = new();         // SWARM_SPLIT / SWARM_MERGE observed
-        private static readonly List<(long tick, int total)> _popSeries = new(); // population time-series (1 sample/sec)
+        private static readonly List<(long tick, Dictionary<string,int> bySpecies)> _popSeries = new(); // per-species population time-series
+        private static readonly SortedSet<string> _speciesSeen = new();          // all species ids seen (CSV columns)
         private static long _lastPopSampleTick = -1;
 
         private static async Task<int> Main(string[] args)
@@ -196,9 +197,10 @@ namespace BugFarmer.SyncHarness
                     if (_authTick >= _lastPopSampleTick + 10)
                     {
                         _lastPopSampleTick = _authTick;
-                        int total = 0;
-                        foreach (var kv in _swarmSpawn) total += kv.Value.count;
-                        _popSeries.Add((_authTick, total));
+                        var bySpecies = new Dictionary<string,int>();
+                        foreach (var kv in _swarmSpawn)
+                            bySpecies[kv.Value.sp] = bySpecies.GetValueOrDefault(kv.Value.sp) + kv.Value.count;
+                        _popSeries.Add((_authTick, bySpecies));
                     }
                     if (root.TryGetProperty("last_event_seq", out var ls)) _lastSeq = ls.GetInt64();
                     if (st.OpCode == OpZoneAuthority && root.TryGetProperty("authority_id", out var aid))
@@ -219,9 +221,11 @@ namespace BugFarmer.SyncHarness
                             double x = s.TryGetProperty("x", out var xp) ? xp.GetDouble() : 0;
                             double y = s.TryGetProperty("y", out var yp) ? yp.GetDouble() : 0;
                             int cnt = s.TryGetProperty("count", out var cp) ? cp.GetInt32() : 0;
+                            string sp = s.TryGetProperty("species_id", out var spp) ? (spp.GetString() ?? "?") : "?";
+                            _speciesSeen.Add(sp);
                             if (!_swarmSpawn.ContainsKey(id))
-                                Log($"[{_phase}] SWARM {id} center=({x:F1},{y:F1}) count={cnt}");
-                            _swarmSpawn[id] = (x, y, cnt);
+                                Log($"[{_phase}] SWARM {id} center=({x:F1},{y:F1}) count={cnt} sp={sp}");
+                            _swarmSpawn[id] = (x, y, cnt, sp);
                         }
                 }
                 else if (st.OpCode == OpInfluenceBroadcast)
@@ -269,18 +273,19 @@ namespace BugFarmer.SyncHarness
 
                                 // Maintain live per-swarm counts for the population CSV
                                 if (type == "SWARM_REPRODUCED" && _swarmSpawn.TryGetValue(srcId, out var rs))
-                                    _swarmSpawn[srcId] = (rs.x, rs.y, rs.count + (int)cnt);
+                                    _swarmSpawn[srcId] = (rs.x, rs.y, rs.count + (int)cnt, rs.sp);
                                 else if (type == "SWARM_SPLIT")
                                 {
-                                    if (_swarmSpawn.TryGetValue(srcId, out var ps))
-                                        _swarmSpawn[srcId] = (ps.x, ps.y, (int)pcnt);
+                                    string sp = _swarmSpawn.TryGetValue(srcId, out var ps) ? ps.sp : "?";
+                                    if (_swarmSpawn.TryGetValue(srcId, out var ps2))
+                                        _swarmSpawn[srcId] = (ps2.x, ps2.y, (int)pcnt, ps2.sp);
                                     if (!_swarmSpawn.ContainsKey(dstId))
-                                        _swarmSpawn[dstId] = (0, 0, (int)cnt);
+                                        _swarmSpawn[dstId] = (0, 0, (int)cnt, sp); // child inherits parent species
                                 }
                                 else if (type == "SWARM_MERGE")
                                 {
                                     if (_swarmSpawn.TryGetValue(srcId, out var ss) && _swarmSpawn.TryGetValue(dstId, out var ab))
-                                        _swarmSpawn[srcId] = (ss.x, ss.y, ss.count + ab.count);
+                                        _swarmSpawn[srcId] = (ss.x, ss.y, ss.count + ab.count, ss.sp);
                                     _swarmSpawn.Remove(dstId);
                                 }
                             }
@@ -364,10 +369,17 @@ namespace BugFarmer.SyncHarness
             }
             if (_popSeries.Count > 0)
             {
-                // CSV for tools/plot_fly_counts.py
+                // Per-species CSV for tools/plot_fly_counts.py: tick,<species…>,total_bugs
                 var csvPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "fly_counts.csv");
-                var sb = new StringBuilder("tick,total_bugs\n");
-                foreach (var (tick, total) in _popSeries) sb.Append(tick).Append(',').Append(total).Append('\n');
+                var cols = new List<string>(_speciesSeen);
+                var sb = new StringBuilder("tick,").Append(string.Join(",", cols)).Append(",total_bugs\n");
+                foreach (var (tick, bySpecies) in _popSeries)
+                {
+                    sb.Append(tick);
+                    int total = 0;
+                    foreach (var c in cols) { int v = bySpecies.GetValueOrDefault(c); total += v; sb.Append(',').Append(v); }
+                    sb.Append(',').Append(total).Append('\n');
+                }
                 System.IO.File.WriteAllText(csvPath, sb.ToString());
                 Log($"POPULATION series: {_popSeries.Count} samples -> {csvPath} (plot with tools/plot_fly_counts.py)");
             }
