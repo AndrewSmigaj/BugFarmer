@@ -37,6 +37,12 @@
         "max": 12,
         "spawn_interval": 999999.0,
         "swarm_size": 6
+      },
+      "millipede": {
+        "initial": 2,
+        "max": 4,
+        "spawn_interval": 999999.0,
+        "swarm_size": 1
       }
     },
     "spawn_areas": [
@@ -77,6 +83,16 @@
         ],
         "type": "circle",
         "cx": 144,
+        "cy": 24,
+        "radius": 6
+      },
+      {
+        "id": "fly_pen_millipede",
+        "species": [
+          "millipede"
+        ],
+        "type": "circle",
+        "cx": 24,
         "cy": 24,
         "radius": 6
       }

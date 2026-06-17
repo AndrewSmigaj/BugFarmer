@@ -76,6 +76,11 @@ type BugSpecies struct {
 	LifespanSpreadSecs float32 `json:"lifespan_spread_secs"`
 	CarcassItem        string  `json:"carcass_item"`
 
+	// Detritivore: while feeding on a carcass, periodically deposit compost INPUT into the nearest
+	// compost bin (the existing station pipeline converts input→compost→fly food). Closes the
+	// death→carcass→compost→fly loop. millipede=true; others false.
+	ProducesCompost bool `json:"produces_compost"`
+
 	// Sprites - lookup keys for client to load sprite sheets
 	SpriteID    string `json:"sprite_id"`
 	EggSpriteID string `json:"egg_sprite_id"`

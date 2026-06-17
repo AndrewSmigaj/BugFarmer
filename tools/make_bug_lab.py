@@ -67,6 +67,11 @@ for label, sp, cx, cy, r in pens:
     species_caps[sp] = {"initial": 2, "max": 12, "spawn_interval": 999999.0, "swarm_size": 6}
     spawn_areas.append({"id": label, "species": [sp], "type": "circle", "cx": cx, "cy": cy, "radius": r})
 
+# Millipede detritivore co-located in the FLY pen (compost bin at 24,24): the recycle loop —
+# flies die of old age → carcasses → millipede eats them → compost bin fills → flies feed.
+species_caps["millipede"] = {"initial": 2, "max": 4, "spawn_interval": 999999.0, "swarm_size": 1}
+spawn_areas.append({"id": "fly_pen_millipede", "species": ["millipede"], "type": "circle", "cx": 24, "cy": 24, "radius": 6})
+
 zone = {
     "zone_id": "bug_lab", "name": "Bug Lab", "row": 0, "col": 0,
     "width": W, "height": H, "spawn_point": [W // 2, H - 20],

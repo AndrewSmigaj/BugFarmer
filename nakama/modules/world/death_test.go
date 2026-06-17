@@ -119,3 +119,30 @@ func TestProcessNaturalDeathCullsAgedBugs(t *testing.T) {
 		t.Fatalf("Count=%d after culling 2 of 5, want 3", sw.Count)
 	}
 }
+
+// --- detritivore compost (millipede) ---
+
+func TestDepositCompostNearBumpsInput(t *testing.T) {
+	state := newTestState(20)
+	state.Entities["compost_bin"] = &EntityDef{World: &WorldData{Station: &StationData{Capacity: 10, FoodPerUnit: 100}}}
+	state.Stations["station_5_5"] = &entities.StationState{EntityID: "compost_bin", GridX: 5, GridY: 5}
+	m := &Match{}
+	if !m.depositCompostNear(state, nopDispatcher{}, 5.5, 5.5) {
+		t.Fatal("expected a compost deposit at the nearby bin")
+	}
+	if state.Stations["station_5_5"].InputCount != 1 {
+		t.Fatalf("InputCount=%d, want 1", state.Stations["station_5_5"].InputCount)
+	}
+	if m.depositCompostNear(state, nopDispatcher{}, 100, 100) {
+		t.Fatal("compost bin out of range — want no deposit")
+	}
+}
+
+func TestDepositCompostIgnoresNonFoodStation(t *testing.T) {
+	state := newTestState(20)
+	state.Entities["plain"] = &EntityDef{World: &WorldData{Station: &StationData{Capacity: 10, FoodPerUnit: 0}}}
+	state.Stations["station_5_5"] = &entities.StationState{EntityID: "plain", GridX: 5, GridY: 5}
+	if (&Match{}).depositCompostNear(state, nopDispatcher{}, 5.5, 5.5) {
+		t.Fatal("a non-food station should not accept compost")
+	}
+}

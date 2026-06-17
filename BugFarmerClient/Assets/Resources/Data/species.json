@@ -264,5 +264,64 @@
     "lifespan_secs": 0,
     "lifespan_spread_secs": 0,
     "carcass_item": "dead_centipede"
+  },
+  "millipede": {
+    "name": "Garden Millipede",
+    "description": "A slow, gentle detritivore. Trundles between corpses, eating the fallen and packing the rot into compost. Harmless.",
+    "category": "individual",
+    "base_speed": 0.6,
+    "wander_radius": 16.0,
+    "wander_change_rate": 0.1,
+    "vision_range": 12.0,
+    "attractions_by_phase": {
+      "feeding": [
+        "dead_fly",
+        "dead_butterfly",
+        "dead_wasp",
+        "dead_centipede",
+        "bug_parts"
+      ],
+      "reproducing": [
+        "dead_fly",
+        "dead_butterfly",
+        "dead_wasp",
+        "dead_centipede",
+        "bug_parts"
+      ]
+    },
+    "forage_chance": 0.0,
+    "feed_amount": 6.0,
+    "breed_amount": 8.0,
+    "satiation_decay_rate": 0.3,
+    "consume_rate": 0.5,
+    "min_swarm_size": 1,
+    "max_swarm_size": 2,
+    "swarm_radius": 0.5,
+    "merge_radius": 0.0,
+    "player_reaction": "ignore",
+    "reaction_radius": 0.0,
+    "flee_speed_mult": 1.0,
+    "attack_damage": 0,
+    "attack_cooldown": 0.0,
+    "net_size": "small",
+    "catch_condition": "always",
+    "max_hp": 3,
+    "sell_price": 15,
+    "reproduce_cooldown": 600.0,
+    "sprite_id": "millipede",
+    "movement_style": "crawling",
+    "flies_over_fences": false,
+    "kill_drops": [
+      {
+        "item": "bug_parts",
+        "count_min": 1,
+        "count_max": 2,
+        "chance": 1.0
+      }
+    ],
+    "lifespan_secs": 0,
+    "lifespan_spread_secs": 0,
+    "carcass_item": "",
+    "produces_compost": true
   }
 }

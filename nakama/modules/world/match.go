@@ -1159,6 +1159,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 
 		// === Lifecycle meters (server-authoritative; all effects ride the ledger) ===
 		swarm.ReproduceCooldown -= deltaTime // was never decremented before this system
+		swarm.CompostCooldown -= deltaTime   // detritivore compost-deposit pacing
 
 		atFood := false
 		if swarm.TargetFoodID != "" {
@@ -1196,6 +1197,16 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 						consumeRate*float32(swarm.Count)*deltaTime)
 					if swarm.ReproductionMeter >= 100 && swarm.CanReproduce() && swarm.Count > 0 {
 						m.reproduceSwarm(worldState, dispatcher, swarm, species, logger)
+					}
+				}
+			}
+			// Detritivore: eating a carcass (in ANY phase — they sate fast and dine in 'reproducing')
+			// produces compost: periodically drop a compost INPUT into the nearest bin; the station
+			// pipeline turns it into fly food.
+			if species.ProducesCompost && swarm.CompostCooldown <= 0 {
+				if it, ok := worldState.GroundItems[swarm.TargetFoodID]; ok && it.IsCarrion {
+					if m.depositCompostNear(worldState, dispatcher, swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)) {
+						swarm.CompostCooldown = 10.0 // ~1 compost input / 10s while at carrion
 					}
 				}
 			}
@@ -1622,6 +1633,42 @@ func (m *Match) checkContinuousSpawning(state *WorldState, tick int64, logger ru
 }
 
 // checkSwarmMerging merges nearby swarms of the same species
+// depositCompostNear bumps the INPUT of the nearest food-producing station (compost bin) within
+// range of (x,y) by one — the existing processStations pipeline converts input→compost→fly food (a
+// deterministic food-level event). Detritivores call this while eating carrion. Returns true if a
+// deposit happened. Server-authoritative; InputCount is display state, the food rise rides the ledger.
+func (m *Match) depositCompostNear(state *WorldState, dispatcher runtime.MatchDispatcher, x, y float32) bool {
+	const compostRadius2 = 12.0 * 12.0
+	var best *entities.StationState
+	var bestCap int
+	bestD := float32(compostRadius2)
+	for _, st := range state.Stations {
+		def := state.Entities[st.EntityID]
+		if def == nil || def.World == nil || def.World.Station == nil || def.World.Station.FoodPerUnit <= 0 {
+			continue // only food-producing stations (compost bins)
+		}
+		capacity := def.World.Station.Capacity
+		if capacity <= 0 {
+			capacity = 10
+		}
+		if st.InputCount >= capacity {
+			continue // input backlog full
+		}
+		sx := float32(st.GridX) + 0.5
+		sy := float32(st.GridY) + 0.5
+		dx, dy := sx-x, sy-y
+		if d := dx*dx + dy*dy; d < bestD {
+			bestD, best, bestCap = d, st, capacity
+		}
+	}
+	if best == nil {
+		return false
+	}
+	best.InputCount++
+	m.broadcastStationUpdate(dispatcher, best, bestCap)
+	return true
+}
+
 // processNaturalDeath culls bugs that have reached their scheduled DeathTick (set at birth from the
 // species lifespan). Server-authoritative: emits BUG_REMOVED per culled bug (clients replay) + drops
 // a species carcass. Collects culls first, then acts (so it never mutates state.Swarms mid-range —
