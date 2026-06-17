@@ -42,8 +42,10 @@ join/form a swarm there (`growSwarm`/`SWARM_REPRODUCED`). Larvae feed on the hos
 brood lost (suppression verb). Hosts (milkweed) lightly regrow so it's never a permanent dead-end.
 
 ## Ecology = the husbandry engine
-- **Natural death / lifespan** (swarm-cohort `AdultAge`, slow clock): bugs age + die → drop a **species
-  carcass** `dead_<species>` (separate from player-kill `bug_parts` loot). Meaning: harvest at peak or lose the
+- **Natural death / lifespan** (PER-BUG ages — each bug gets a `DeathTick` at birth, carried through
+  merge/split like `BugHP`; a slow-clock pass culls bugs past it. NOT swarm-cohort aging — a swarm is a mix
+  of ages): bugs age + die → drop a **species carcass** `dead_<species>` flagged carrion (detritivore food,
+  excluded from the fly food wildcard; separate from player-kill `bug_parts` loot). Meaning: harvest at peak or lose the
   meat; unharvested deaths feed the recycle loop.
 - **Millipede detritivore** (centipede individual chassis, no attack/gnaw): eats carcasses → **compost** →
   feeds trees/soil (recycling).

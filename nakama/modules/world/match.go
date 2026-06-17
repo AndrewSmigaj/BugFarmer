@@ -1240,6 +1240,11 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		m.checkContinuousSpawning(worldState, worldState.TickCount, logger)
 	}
 
+	// Natural death (per-bug aging) every 100 ticks (10s): cull bugs past their DeathTick.
+	if worldState.TickCount%100 == 0 {
+		m.processNaturalDeath(logger, dispatcher, worldState, chunkSize)
+	}
+
 	// === Day rollover (one day = DayLengthTicks = 14 min) ===
 	// Resets every crop's daily watering count — the max_daily_waterings cap existed but
 	// nothing ever reset it (documented gap, architecture_farming.md). Clients derive the
@@ -1560,6 +1565,7 @@ func (m *Match) spawnSwarmForSpecies(state *WorldState, speciesID string, logger
 		HomePos:   pos,
 	}
 	swarm.InitializeBugIDs()
+	assignDeathTicks(swarm, species, 0, count, state.TickCount, state.Config.TickRate)
 
 	state.Swarms[swarm.ID] = swarm
 	state.SwarmsBySpecies[speciesID] = append(state.SwarmsBySpecies[speciesID], swarm.ID)
@@ -1616,6 +1622,36 @@ func (m *Match) checkContinuousSpawning(state *WorldState, tick int64, logger ru
 }
 
 // checkSwarmMerging merges nearby swarms of the same species
+// processNaturalDeath culls bugs that have reached their scheduled DeathTick (set at birth from the
+// species lifespan). Server-authoritative: emits BUG_REMOVED per culled bug (clients replay) + drops
+// a species carcass. Collects culls first, then acts (so it never mutates state.Swarms mid-range —
+// matches the merge/split style). Removal order is irrelevant: BUG_REMOVED events commute.
+func (m *Match) processNaturalDeath(logger runtime.Logger, dispatcher runtime.MatchDispatcher, state *WorldState, chunkSize int) {
+	now := state.TickCount
+	type cull struct {
+		swarm *entities.SwarmState
+		ids   []int
+	}
+	var culls []cull
+	for _, swarm := range state.Swarms {
+		if len(swarm.DeathTick) == 0 || swarm.Count <= 0 {
+			continue
+		}
+		var dead []int
+		for id, dt := range swarm.DeathTick {
+			if dt <= now && swarm.IsBugAlive(id) {
+				dead = append(dead, id)
+			}
+		}
+		if len(dead) > 0 {
+			culls = append(culls, cull{swarm, dead})
+		}
+	}
+	for _, c := range culls {
+		m.killBugsNaturally(logger, dispatcher, state, c.swarm, state.Species[c.swarm.SpeciesID], c.ids, chunkSize)
+	}
+}
+
 func (m *Match) checkSwarmMerging(state *WorldState, chunkSize int, logger runtime.Logger) {
 	if state.StaticSim {
 		return // Skip merging in debug mode
@@ -1624,8 +1660,19 @@ func (m *Match) checkSwarmMerging(state *WorldState, chunkSize int, logger runti
 	merged := make(map[string]bool)
 	toDelete := []string{}
 
-	for id1, swarm1 := range state.Swarms {
-		if merged[id1] {
+	// Deterministic order: the lower-id swarm is always the survivor (id1). Map iteration order is
+	// randomized, so without this the merge survivor — and thus the id remapping — would vary run to
+	// run (non-reproducible; flaked the transfer tests). Server-authoritative either way; pinning it
+	// keeps merges reproducible.
+	mergeIDs := make([]string, 0, len(state.Swarms))
+	for id := range state.Swarms {
+		mergeIDs = append(mergeIDs, id)
+	}
+	sort.Strings(mergeIDs)
+
+	for _, id1 := range mergeIDs {
+		swarm1 := state.Swarms[id1]
+		if swarm1 == nil || merged[id1] {
 			continue
 		}
 		species1 := state.Species[swarm1.SpeciesID]
@@ -1633,8 +1680,9 @@ func (m *Match) checkSwarmMerging(state *WorldState, chunkSize int, logger runti
 			continue // individuals (centipede) never merge
 		}
 
-		for id2, swarm2 := range state.Swarms {
-			if id1 == id2 || merged[id2] {
+		for _, id2 := range mergeIDs {
+			swarm2 := state.Swarms[id2]
+			if swarm2 == nil || id1 == id2 || merged[id2] {
 				continue
 			}
 			if swarm1.SpeciesID != swarm2.SpeciesID {
@@ -1661,9 +1709,9 @@ func (m *Match) checkSwarmMerging(state *WorldState, chunkSize int, logger runti
 					merged[id2] = true
 					toDelete = append(toDelete, id2)
 
-					// Transfer damaged HP along the exact mapping the client applies:
-					// absorbed alive ids ASCENDING -> survivor ids newBugIDBase+k.
-					if len(swarm2.BugHP) > 0 {
+					// Transfer damaged HP + natural-death schedule along the exact mapping the
+					// client applies: absorbed alive ids ASCENDING -> survivor ids newBugIDBase+k.
+					if len(swarm2.BugHP) > 0 || len(swarm2.DeathTick) > 0 {
 						if swarm2.NextBugID == 0 {
 							swarm2.NextBugID = swarm2.Count
 						}
@@ -1672,11 +1720,18 @@ func (m *Match) checkSwarmMerging(state *WorldState, chunkSize int, logger runti
 							if !swarm2.IsBugAlive(aid) {
 								continue
 							}
+							newID := newBugIDBase + k
 							if hp, ok := swarm2.BugHP[aid]; ok {
 								if swarm1.BugHP == nil {
 									swarm1.BugHP = make(map[int]int)
 								}
-								swarm1.BugHP[newBugIDBase+k] = hp
+								swarm1.BugHP[newID] = hp
+							}
+							if dt, ok := swarm2.DeathTick[aid]; ok {
+								if swarm1.DeathTick == nil {
+									swarm1.DeathTick = make(map[int]int64)
+								}
+								swarm1.DeathTick[newID] = dt
 							}
 							k++
 						}
@@ -1751,7 +1806,8 @@ func (m *Match) checkSwarmSplitting(state *WorldState, chunkSize int, logger run
 			// the shed ids ASCENDING -> child ids 0..n-1; mirror that mapping exactly
 			// (shed was collected descending above).
 			var shedHP map[int]int
-			if len(swarm.BugHP) > 0 {
+			var shedDeath map[int]int64
+			if len(swarm.BugHP) > 0 || len(swarm.DeathTick) > 0 {
 				asc := append([]int(nil), shed...)
 				sort.Ints(asc)
 				for childID, oldID := range asc {
@@ -1760,6 +1816,12 @@ func (m *Match) checkSwarmSplitting(state *WorldState, chunkSize int, logger run
 							shedHP = make(map[int]int)
 						}
 						shedHP[childID] = hp
+					}
+					if dt, ok := swarm.DeathTick[oldID]; ok {
+						if shedDeath == nil {
+							shedDeath = make(map[int]int64)
+						}
+						shedDeath[childID] = dt
 					}
 				}
 			}
@@ -1796,6 +1858,7 @@ func (m *Match) checkSwarmSplitting(state *WorldState, chunkSize int, logger run
 			}
 			newSwarm.InitializeBugIDs() // child ids 0..count-1
 			newSwarm.BugHP = shedHP     // damaged HP follows the moved bugs (nil if none)
+			newSwarm.DeathTick = shedDeath // natural-death schedule follows the moved bugs too
 			newSwarms = append(newSwarms, newSwarm)
 
 			// Tick+seq event: lifecycle travels ONLY through the deterministic ledger

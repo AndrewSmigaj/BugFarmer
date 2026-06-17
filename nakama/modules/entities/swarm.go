@@ -28,6 +28,10 @@ type SwarmState struct {
 	Phase             string  // "feeding", "reproducing", "idle"
 	Satiation         float32 // 0-100, increases when bugs feed
 	ReproductionMeter float32 // 0-100, increases when bugs visit breeding sites
+	// Per-bug natural-death schedule: bugID -> absolute tick the bug dies of old age. Set at birth,
+	// carried through merge/split like BugHP, cleaned in RemoveBugs. Server-only, NOT in the state hash
+	// (clients learn of deaths only via BUG_REMOVED events). Absent / lifespan<=0 = the bug is immortal.
+	DeathTick map[int]int64
 
 	// Movement target (pre-validated path)
 	TargetX   float32 // Destination X (validated to be reachable)
@@ -153,6 +157,8 @@ func (s *SwarmState) RemoveBugs(bugIDs []int) []int {
 			// Centralized BugHP cleanup: a removed bug (caught, killed, split-shed)
 			// never leaks a stale damaged-HP entry.
 			delete(s.BugHP, id)
+			delete(s.DeathTick, id) // same: no stale natural-death schedule for a gone bug
+
 		}
 	}
 	s.Count -= len(removed)

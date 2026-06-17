@@ -39,10 +39,49 @@ func (m *Match) growSwarm(state *WorldState, swarm *entities.SwarmState, n int) 
 	base := swarm.NextBugID
 	swarm.NextBugID += n
 	swarm.Count += n
+	// New bugs are born now → schedule their natural death.
+	assignDeathTicks(swarm, state.Species[swarm.SpeciesID], base, base+n, state.TickCount, state.Config.TickRate)
 	if state.CurrentZone != nil {
 		state.AddSwarmReproducedEvent(state.CurrentZone.ZoneID, swarm.ID, n, base)
 	}
 	return base
+}
+
+// assignDeathTicks schedules natural death for bug ids [idStart,idEnd) born at bornTick: each gets
+// DeathTick = bornTick + lifespan ± a deterministic per-bug spread (so a cohort doesn't all die at
+// once). No-op for immortal species (lifespan_secs<=0). The value is stored + carried with the bug
+// (NOT recomputed from ids, which change on merge/split).
+func assignDeathTicks(swarm *entities.SwarmState, species *entities.BugSpecies, idStart, idEnd int, bornTick int64, tickRate int) {
+	if species == nil || species.LifespanSecs <= 0 || idEnd <= idStart {
+		return
+	}
+	if tickRate <= 0 {
+		tickRate = 10
+	}
+	if swarm.DeathTick == nil {
+		swarm.DeathTick = make(map[int]int64)
+	}
+	lifeTicks := int64(species.LifespanSecs * float32(tickRate))
+	spreadTicks := int64(species.LifespanSpreadSecs * float32(tickRate))
+	for id := idStart; id < idEnd; id++ {
+		off := int64(0)
+		if spreadTicks > 0 {
+			off = (deathVarianceHash(swarm.ID, id) % (2*spreadTicks + 1)) - spreadTicks
+		}
+		swarm.DeathTick[id] = bornTick + lifeTicks + off
+	}
+}
+
+// deathVarianceHash: deterministic non-negative hash of (swarmID, bugID) → per-bug lifespan spread.
+func deathVarianceHash(swarmID string, bugID int) int64 {
+	h := uint64(14695981039346656037) // FNV-1a 64 offset basis
+	for i := 0; i < len(swarmID); i++ {
+		h ^= uint64(swarmID[i])
+		h *= 1099511628211
+	}
+	h ^= uint64(bugID)
+	h *= 1099511628211
+	return int64(h & 0x7fffffffffffffff)
 }
 
 // spawnSwarmAt creates a new swarm of n bugs at a world point — the single mint path
@@ -69,6 +108,7 @@ func (m *Match) spawnSwarmAt(state *WorldState, speciesID string, n int, x, y fl
 		HomePos:   pos,
 	}
 	swarm.InitializeBugIDs()
+	assignDeathTicks(swarm, species, 0, n, state.TickCount, state.Config.TickRate)
 
 	state.Swarms[swarm.ID] = swarm
 	state.SwarmsBySpecies[speciesID] = append(state.SwarmsBySpecies[speciesID], swarm.ID)

@@ -10,6 +10,7 @@ type GroundItem struct {
 	DecaysTo  string         // Item type this decays into ("apple" -> "rotten_apple")
 	FoodValue int            // Food value for bugs (100 for rotten fruit, consumed by flies)
 	FoodFrac  float32        // Fractional food drained (consumption accumulator)
+	IsCarrion bool           // A bug carcass: detritivore food only — excluded from the "rotten_fruit" wildcard
 }
 
 // GetID implements Entity interface

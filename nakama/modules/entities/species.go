@@ -69,6 +69,13 @@ type BugSpecies struct {
 	HatchTime         float32  `json:"hatch_time"`
 	ReproduceCooldown float32  `json:"reproduce_cooldown"`
 
+	// Natural death (per-bug aging). LifespanSecs <= 0 = immortal. At birth each bug gets a
+	// DeathTick = now + lifespan ± LifespanSpreadSecs (so a cohort doesn't all die at once). On
+	// death it drops CarcassItem (a dead_<species> food item — detritivore food, not loot).
+	LifespanSecs       float32 `json:"lifespan_secs"`
+	LifespanSpreadSecs float32 `json:"lifespan_spread_secs"`
+	CarcassItem        string  `json:"carcass_item"`
+
 	// Sprites - lookup keys for client to load sprite sheets
 	SpriteID    string `json:"sprite_id"`
 	EggSpriteID string `json:"egg_sprite_id"`

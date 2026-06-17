@@ -55,7 +55,10 @@ func FindNearbyFood(state *WorldState, pos entities.EntityPosition, visionRange 
 		if item.FoodValue <= 0 {
 			continue
 		}
-		if !wantRotten && !targetSet[item.ItemType] {
+		// The "rotten_fruit" wildcard matches any rotted food EXCEPT bug carcasses (carrion is
+		// detritivore food — flies don't breed on their own dead). Carrion matches only a species
+		// that lists the exact dead_<species> id (e.g. the millipede).
+		if !targetSet[item.ItemType] && (!wantRotten || item.IsCarrion) {
 			continue
 		}
 		ix := float32(item.Position.ChunkX*chunkSize) + item.Position.LocalX

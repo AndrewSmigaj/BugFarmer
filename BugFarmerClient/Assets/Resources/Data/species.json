@@ -64,7 +64,10 @@
     ],
     "movement_style": "brownian",
     "predator_flee_radius": 6.0,
-    "predator_flee_speed_mult": 1.8
+    "predator_flee_speed_mult": 1.8,
+    "lifespan_secs": 90,
+    "lifespan_spread_secs": 30,
+    "carcass_item": "dead_fly"
   },
   "butterfly_meadow": {
     "name": "Meadow Butterfly",
@@ -130,7 +133,10 @@
     ],
     "movement_style": "gliding",
     "predator_flee_radius": 6.0,
-    "predator_flee_speed_mult": 1.5
+    "predator_flee_speed_mult": 1.5,
+    "lifespan_secs": 120,
+    "lifespan_spread_secs": 40,
+    "carcass_item": "dead_butterfly"
   },
   "wasp_common": {
     "name": "Wasp",
@@ -190,7 +196,10 @@
       "deposit_satiation": 80.0,
       "hunt_satiation_threshold": 30.0,
       "nest_occupant": "wasp_nest"
-    }
+    },
+    "lifespan_secs": 0,
+    "lifespan_spread_secs": 0,
+    "carcass_item": "dead_wasp"
   },
   "centipede_garden": {
     "name": "Garden Centipede",
@@ -251,6 +260,9 @@
       "deposit_satiation": 0.0,
       "hunt_satiation_threshold": 30.0,
       "nest_occupant": ""
-    }
+    },
+    "lifespan_secs": 0,
+    "lifespan_spread_secs": 0,
+    "carcass_item": "dead_centipede"
   }
 }

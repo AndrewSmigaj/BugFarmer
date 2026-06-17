@@ -271,3 +271,81 @@ func (m *Match) spawnKillDrops(
 		logger.Debug("Kill drop %s x%d at %.1f,%.1f (food=%d)", drop.Item, count, worldX, worldY, foodValue)
 	}
 }
+
+// killBugsNaturally removes aged-out bugs like killBugsInSwarm (one BUG_REMOVED ledger event per
+// id + empty-swarm despawn) but drops the species' CarcassItem (a dead_<species> food item)
+// instead of the kill_drops loot table — natural death feeds the detritivore loop, not the player
+// loot economy. Drops at the swarm center (clear ground by construction).
+func (m *Match) killBugsNaturally(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	swarm *entities.SwarmState,
+	species *entities.BugSpecies,
+	bugIDs []int,
+	chunkSize int,
+) []int {
+	removed := swarm.RemoveBugs(bugIDs)
+	if len(removed) == 0 {
+		return removed
+	}
+	zoneID := ""
+	if state.CurrentZone != nil {
+		zoneID = state.CurrentZone.ZoneID
+	}
+	cx, cy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
+	for _, id := range removed {
+		if zoneID != "" {
+			state.AddInfluenceEvent(zoneID, InfluenceBugRemoved, "", 0, 0, swarm.ID, id)
+		}
+		if species != nil && species.CarcassItem != "" {
+			m.spawnCarcass(logger, dispatcher, state, species.CarcassItem, cx, cy, chunkSize)
+		}
+	}
+	if swarm.Count <= 0 {
+		delete(state.Swarms, swarm.ID)
+		state.SwarmsDirty = true
+	}
+	return removed
+}
+
+// spawnCarcass drops one carcass (a dead_<species> ground item) at (x,y): edible (food_value>0) so
+// detritivores find it via the food registry, and flagged IsCarrion so the fly "rotten_fruit"
+// wildcard skips it. Mirrors a single spawnKillDrops item (ground item + ITEM_ROTTED).
+func (m *Match) spawnCarcass(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	carcassItem string,
+	x, y float32,
+	chunkSize int,
+) {
+	if carcassItem == "" {
+		return
+	}
+	pos := entities.EntityPosition{LocalX: x, LocalY: y}
+	pos.Normalize(chunkSize)
+
+	foodValue := 0
+	if def := state.Entities[carcassItem]; def != nil {
+		foodValue = def.FoodValue
+	}
+
+	itemID := fmt.Sprintf("item_carcass_%d", time.Now().UnixNano())
+	state.GroundItems[itemID] = &entities.GroundItem{
+		ID:        itemID,
+		ItemType:  carcassItem,
+		Count:     1,
+		Position:  pos,
+		Lifetime:  killDropLifetime,
+		FoodValue: foodValue,
+		IsCarrion: true,
+	}
+	m.broadcastToChunk(dispatcher, state, pos.ChunkX, pos.ChunkY, OpCodeGroundItemSpawn,
+		GroundItemSpawnMessage{ID: itemID, ItemType: carcassItem, Count: 1, X: x, Y: y})
+
+	if foodValue > 0 && state.CurrentZone != nil {
+		state.AddFoodEvent(state.CurrentZone.ZoneID, InfluenceItemRotted, itemID,
+			int(x), int(y), foodValue)
+	}
+}
