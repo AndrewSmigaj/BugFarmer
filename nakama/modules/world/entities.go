@@ -129,6 +129,11 @@ type WorldData struct {
 	FruitDropTicks int    `json:"fruit_drop_ticks,omitempty"` // Ticks until fruit drops
 	FruitRotTicks  int    `json:"fruit_rot_ticks,omitempty"`  // Ticks for dropped fruit to rot (default 16800 = 2 game-days)
 
+	// Host-plant breeding (milkweed): butterflies lay eggs here, depleting per breed (it regrows). A
+	// HostPlantState tracks capacity per cell; FindNearbyFood treats it as a depletable breeding source
+	// while capacity > 0 (and skips it when grazed out). Flowers are NOT host plants — just nectar.
+	HostPlant bool `json:"host_plant,omitempty"`
+
 	// Station properties (player-fillable material processors — compost bin first; nil = not a station)
 	Station *StationData `json:"station,omitempty"`
 

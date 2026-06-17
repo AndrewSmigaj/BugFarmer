@@ -17,6 +17,10 @@ Design of record: [bug_ecology_plan.md](../brainstorms/ecology/bug_ecology_plan.
 (P1 Bug Lab DONE). **Verify every sim-touching phase with the `test-changes` skill** (Go tests +
 sync-harness + the determinism / "all players in sync" checks — the testing methodology is now captured as a
 skill so it stops getting lost between sessions).
+Progress: **P1 Bug Lab**, **P3 natural death + carcasses** (per-bug `DeathTick`, `dead_<species>` carrion),
+**P6 millipede detritivore→compost**, and **P7 butterfly milkweed host loop** (milkweed = depletable host
+occupant) are DONE + verified (Go tests + headless lab). Up next: P2 stabilizers · P4 right-click stations +
+nursery breeding · P5 harvest + market core loop · P8–P11.
 
 ## Done 2026-06-16 — cross-zone movement (walk off a zone edge → hidden swap into the neighbor)
 Walk to a zone edge that has an authored neighbor → quick fade → tear down zone A → join the neighbor at

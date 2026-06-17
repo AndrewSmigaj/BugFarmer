@@ -726,6 +726,7 @@
     "sprite_w": 14,
     "sprite_h": 28,
     "world": {
+      "host_plant": true,
       "footprint": [
         1,
         1

@@ -1,6 +1,7 @@
 package world
 
 import (
+	"fmt"
 	"math"
 	"sort"
 
@@ -84,9 +85,18 @@ func FindNearbyFood(state *WorldState, pos entities.EntityPosition, visionRange 
 		}
 	}
 
-	// 3) Flora occupants (existing attraction behavior) — non-depletable.
+	// 3) Flora occupants. Most are infinite nectar (non-depletable). HOST PLANTS (milkweed) are a
+	//    DEPLETABLE breeding source while they have capacity — and are SKIPPED when grazed out, so a
+	//    reproducing butterfly stops breeding there until it regrows.
 	for _, r := range FindNearbyResources(state, pos, visionRange, targetIDs) {
-		hits = append(hits, FoodHit{ID: r.ID, Kind: "occupant", X: r.X, Y: r.Y, Dist: r.Dist, Depletable: false})
+		depletable := false
+		if hp := state.HostPlantStates[fmt.Sprintf("%d,%d", int(r.X), int(r.Y))]; hp != nil {
+			if hp.Capacity <= 0 {
+				continue
+			}
+			depletable = true
+		}
+		hits = append(hits, FoodHit{ID: r.ID, Kind: "occupant", X: r.X, Y: r.Y, Dist: r.Dist, Depletable: depletable})
 	}
 
 	sort.Slice(hits, func(i, j int) bool {

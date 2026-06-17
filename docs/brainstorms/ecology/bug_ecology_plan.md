@@ -78,9 +78,11 @@ multi-species F5 graph + F4 markers.
 
 ## Phased build order (BACKLOG tasks #49–56)
 P0 art+data (lean: `dead_<species>`, aphid; brood/larva-slot fields; host `Depletable` + soil-fertility +
-market-price fields; publish) · **P1 Bug Lab DONE** · P2 stabilizer layer · P3 natural death + carcasses · P4
+market-price fields; publish) · **P1 Bug Lab DONE** · P2 stabilizer layer · **P3 natural death + carcasses DONE**
+(per-bug DeathTick; dead_<species> carrion) · P4
 right-click stations + nursery breeding (flies) · P5 harvest + market core loop (autocatchers, sell-as-meat,
-sprinklers) · P6 millipede detritivore→compost→fertility · P7 butterfly milkweed host loop + larva-relocate ·
+sprinklers) · **P6 millipede detritivore→compost DONE** (carrion→millipede→station compost; soil-fertility
+deferred) · **P7 butterfly milkweed host loop DONE** (milkweed = depletable host occupant; larva-relocate deferred to P4) ·
 P8 aphids↔ladybugs · P9 pollination/flower bonuses + crop pests · P10 Ecology tab (Apico-style, Ecologist-
 unlock) + magnifier research · P11 balance pass + docs. **Deferred to own plans:** ants (nest refactor),
 locusts, seasons, breeding-for-rarity.

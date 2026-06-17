@@ -281,6 +281,23 @@ Server                                All Clients
    |--remove ground item------------------ |
    |--emit FOOD_CONSUMED level=0---------->|  (registry drops it; OpCode 48 removes visual)
 ```
+**Host plants (milkweed) — the depletable-flora exception (P7).** The "flora never depletes" line
+above holds for nectar flowers, but a `world.host_plant` occupant (milkweed) is the one breeding-
+capable plant. `initHostPlantsInChunk` registers a server-only `HostPlantState{Capacity}` per cell
+(keyed `"gx,gy"`, soft state — not hashed, resets on restart like nests). `FindNearbyFood` reports a
+milkweed as **depletable while `Capacity>0`** and **skips it when grazed out**; each butterfly breed
+drains `hostBreedCost` and `processHostPlants` slowly regrows it. Because the target is depletable it
+runs the per-tick "is my food still alive?" clear-check, so `foodSourceAlive` must also resolve host
+plants by position (else the milkweed target is cleared every tick and the butterfly can never park
+to breed). Butterflies thus feed at diffuse flowers (non-depletable) but breed at milkweed.
+
+**Hunger override on the forage duty cycle.** `forage_chance` makes a *comfortably-fed* bug wander
+idly between feeding sessions (looks alive). But a genuinely hungry bug must always seek food —
+otherwise a slow-feeding forager on diffuse food (the butterfly) ignores nearby flowers for a whole
+30–50s mode window and never sates. Rule: a forager force-enters forage mode when `Satiation <
+hungerForageThreshold` (or it's reproducing); only above that does the duty cycle apply. Predators
+take the `predationThink` path and are unaffected.
+
 **Stations (general pattern — composter first):** a placeable with `world.station =
 {accepts, capacity, food_per_unit, providers}`. The player right-clicks → a menu →
 deposits accepted items (`StationDeposit`, OpCode 85) → the fill meter rises
@@ -1917,6 +1934,7 @@ docker compose build --no-cache builder && docker compose down && docker compose
 | 2026-01-18 | Claude | Clarified: corn=single harvest, tomato=multi harvest (realistic) |
 | 2026-01-18 | Claude | Clarified: only flies and butterflies implemented; neither damages crops |
 | 2026-01-18 | Claude | Flies eat rotten fruit only; butterflies sip nectar, breed on milkweed |
+| 2026-06-16 | Claude | **P7:** milkweed = depletable host-plant occupant (HostPlantState capacity); `foodSourceAlive` resolves host plants by position; hunger override on the forage duty cycle (butterflies now feed→breed reliably) |
 | 2026-01-18 | Claude | **CODEBASE REVIEW:** Added integration analysis section |
 | 2026-01-18 | Claude | Documented: tiles.json already has garden_plot, hoe tool_actions |
 | 2026-01-18 | Claude | Documented: species.json has fly_common attracted to rotten_fruit |

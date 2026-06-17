@@ -47,7 +47,11 @@ pens.append(("fly_pen", "fly_common", 24, 22, 7))
 fence_rect(48, 8, 80, 40, "fence_wood", gap=(64, 40))
 for (x, y) in [(58, 18), (70, 20), (64, 30)]:
     place(x, y, "milkweed")
-for (x, y) in [(54, 14), (76, 14), (54, 34), (76, 34)]:
+# A dense nectar meadow — butterflies feed on diffuse flowers, so they need several to reliably
+# find one while foraging (a single sparse flower starves the pen).
+for (x, y) in [(52, 12), (60, 14), (68, 14), (76, 12),
+               (54, 22), (74, 22),
+               (52, 34), (60, 36), (68, 36), (76, 34)]:
     place(x, y, "flower_wild")
 pens.append(("butterfly_pen", "butterfly_meadow", 64, 24, 7))
 

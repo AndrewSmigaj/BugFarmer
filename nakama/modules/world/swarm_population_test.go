@@ -50,6 +50,7 @@ func newTestState(maxSwarm int) *WorldState {
 		// Farming maps (tree water-gating tests)
 		FruitTreeStates: map[string]*entities.FruitTreeState{},
 		NestStates:      map[string]*entities.NestState{},
+		HostPlantStates: map[string]*entities.HostPlantState{},
 		GnawDamage:      map[string]int{},
 		Chunks:          map[string]*ChunkData{},
 	}
@@ -482,7 +483,7 @@ func TestStationConsumption(t *testing.T) {
 	if len(evs) == 0 || evs[len(evs)-1].Level != 50 {
 		t.Fatalf("station level event wrong: %+v", evs)
 	}
-	if !m.foodSourceAlive(state, st.Key) {
+	if !m.foodSourceAlive(state, st.Key, float32(st.GridX), float32(st.GridY)) {
 		t.Fatal("station with fill must be alive")
 	}
 }

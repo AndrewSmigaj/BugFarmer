@@ -1098,12 +1098,20 @@ func (m *Match) processStations(state *WorldState, dispatcher runtime.MatchDispa
 }
 
 // foodSourceAlive reports whether a depletable food source still exists with food left.
-func (m *Match) foodSourceAlive(state *WorldState, foodID string) bool {
+// fx,fy are the target's world position — needed for host-plant occupants (milkweed), which are
+// depletable food keyed by position (not a unique item/station id).
+func (m *Match) foodSourceAlive(state *WorldState, foodID string, fx, fy float32) bool {
 	if item, ok := state.GroundItems[foodID]; ok {
 		return item.FoodValue > 0
 	}
 	if st, ok := state.Stations[foodID]; ok {
 		return st.Fill > 0
+	}
+	// Host-plant occupant (milkweed): "alive" as a breeding source while it has capacity. Without
+	// this, a depletable milkweed target is cleared every tick (it's neither item nor station), so a
+	// reproducing butterfly can never park on it to breed.
+	if hp := state.HostPlantStates[fmt.Sprintf("%d,%d", int(fx), int(fy))]; hp != nil {
+		return hp.Capacity > 0
 	}
 	return false
 }
@@ -1214,6 +1222,53 @@ func (m *Match) removeGroundItem(
 }
 
 // initFruitTreesInChunk scans a loaded chunk for fruit trees and creates states
+// --- Host plants (milkweed): depletable butterfly breeding sites ---
+
+const (
+	maxHostCapacity  = 100.0
+	hostRegenPerTick = 0.05 // 0.5/s at 10Hz → ~200s to refill a grazed-out milkweed
+	hostBreedCost    = 25.0 // capacity drained per butterfly breed event (≈4 breeds to exhaust)
+)
+
+// initHostPlantsInChunk registers milkweed (world.host_plant) occupants in a loaded chunk at full
+// breeding capacity. Mirrors initFruitTreesInChunk; idempotent.
+func (m *Match) initHostPlantsInChunk(state *WorldState, chunk *ChunkData, cx, cy int, logger runtime.Logger) {
+	chunkSize := state.Config.ChunkSize
+	for ly := 0; ly < chunkSize; ly++ {
+		for lx := 0; lx < chunkSize; lx++ {
+			cell, _ := chunk.GetOccupantCell(lx, ly)
+			if cell.IsEmpty || cell.Occupant == nil || !cell.Occupant.Anchor {
+				continue
+			}
+			def := state.Entities[cell.Occupant.ID]
+			if def == nil || def.World == nil || !def.World.HostPlant {
+				continue
+			}
+			gx, gy := cx*chunkSize+lx, cy*chunkSize+ly
+			key := fmt.Sprintf("%d,%d", gx, gy)
+			if state.HostPlantStates[key] != nil {
+				continue
+			}
+			state.HostPlantStates[key] = &entities.HostPlantState{
+				EntityID: cell.Occupant.ID, GridX: gx, GridY: gy, Capacity: maxHostCapacity,
+			}
+		}
+	}
+}
+
+// processHostPlants regrows host-plant breeding capacity each tick (a grazed-out milkweed slowly
+// becomes breedable again). Server-only soft state.
+func (m *Match) processHostPlants(state *WorldState) {
+	for _, hp := range state.HostPlantStates {
+		if hp.Capacity < maxHostCapacity {
+			hp.Capacity += hostRegenPerTick
+			if hp.Capacity > maxHostCapacity {
+				hp.Capacity = maxHostCapacity
+			}
+		}
+	}
+}
+
 func (m *Match) initFruitTreesInChunk(
 	state *WorldState,
 	chunk *ChunkData,

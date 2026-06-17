@@ -28,6 +28,12 @@ const (
 	feedRadius             = 2.0  // swarm centre within this distance of food = "at" it
 	consumePerBugPerSecond = 0.5  // food drained per bug per second while at a depletable source
 	reproduceFoodCost      = 40.0 // food consumed by one reproduction event
+	// HUNGER OVERRIDE: the forage/wander duty cycle (forage_chance) is for COMFORTABLY-FED bugs —
+	// it makes them wander idly so they look alive. A genuinely hungry bug must always seek food,
+	// or it stalls (a butterfly's flowers are diffuse + slow to feed on, so under the plain duty
+	// cycle it ignores food for a full 30-50s mode window and never sates → never breeds). Below
+	// this satiation a forager force-enters forage mode regardless of the duty-cycle roll.
+	hungerForageThreshold = 60.0
 	// The one-apple budget (architecture_swarm_sync.md §13): a rotten apple = 100 food.
 	// At fly consume_rate 0.2, a 10-fly swarm drains 2/s: feeding 0->100 sat (20s) = 40,
 	// breeding 0->100 meter (10s) = 20, event cost = 40 -> exactly one breed event per
@@ -1034,6 +1040,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 
 	// === Fruit Trees & Ground Item Decay ===
 	m.processFruitTrees(worldState, dispatcher, logger)
+	m.processHostPlants(worldState) // milkweed breeding capacity regrows
 	if worldState.TickCount%30 == 0 {
 		m.processNests(worldState, logger) // occupant-gone sweep + brood-drain re-hatch
 	}
@@ -1100,7 +1107,9 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				}
 				swarm.ModeUntilTick = worldState.TickCount + modeMin + rand.Int63n(modeMax-modeMin+1)
 			}
-			forage := swarm.ForageMode || swarm.Phase == "reproducing"
+			// Hungry OR breeding bugs always forage; only comfortably-fed ones follow the idle
+			// wander duty cycle. (Predators take the predationThink path above, not this one.)
+			forage := swarm.ForageMode || swarm.Phase == "reproducing" || swarm.Satiation < hungerForageThreshold
 			attractions := swarm.GetCurrentAttractions(species)
 			if forage && len(attractions) > 0 {
 				hits := FindNearbyFood(worldState, swarm.Position, species.VisionRange, attractions)
@@ -1163,7 +1172,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 
 		atFood := false
 		if swarm.TargetFoodID != "" {
-			if swarm.TargetFoodDepletable && !m.foodSourceAlive(worldState, swarm.TargetFoodID) {
+			if swarm.TargetFoodDepletable && !m.foodSourceAlive(worldState, swarm.TargetFoodID, swarm.TargetFoodX, swarm.TargetFoodY) {
 				// Source depleted/picked up: drop it and re-Think immediately.
 				swarm.ClearFoodTarget(worldState.TickCount)
 			} else {
@@ -1197,6 +1206,14 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 						consumeRate*float32(swarm.Count)*deltaTime)
 					if swarm.ReproductionMeter >= 100 && swarm.CanReproduce() && swarm.Count > 0 {
 						m.reproduceSwarm(worldState, dispatcher, swarm, species, logger)
+						// Host-plant breeding (butterfly on milkweed) drains the milkweed's capacity;
+						// grazed-out milkweed stops being a breeding source until it regrows.
+						if hp := worldState.HostPlantStates[fmt.Sprintf("%d,%d", int(swarm.TargetFoodX), int(swarm.TargetFoodY))]; hp != nil {
+							hp.Capacity -= hostBreedCost
+							if hp.Capacity < 0 {
+								hp.Capacity = 0
+							}
+						}
 					}
 				}
 			}
