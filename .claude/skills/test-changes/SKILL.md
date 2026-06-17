@@ -65,6 +65,24 @@ clients' `ComputeStateHash` (FNV over bug positions/velocities) match at the sam
   porting the client sim). Cross-player POSITION hashes therefore use real clients (live or trace-diff),
   optionally two **headless Unity** (`-batchmode -nographics`) instances.
 
+## 3.5. Debugging WHY a behavior stalls (temporary server diagnostics)
+The harness reports the event ledger and dumps swarm positions only at t=0 — it does NOT show a bug's
+internal state over time (phase / satiation / target / why it isn't breeding). When a sim behavior
+silently doesn't happen (e.g. "butterflies never breed"), the fastest way to find the break is a
+**temporary server `logger.Info`**, then a short harness run + `grep`:
+- Gate it tightly so the log isn't a flood: by species (`if swarm.SpeciesID == "butterfly_meadow"`)
+  and a slow clock (`worldState.TickCount%50 == 0`) for periodic state, or fire it once per decision
+  (e.g. at the forage/target choice) to see inputs→output.
+- Log the decision INPUTS and the RESULT (phase, satiation, the FindNearbyFood hits + their flags,
+  the chosen target) — that pins which stage of the chain breaks (e.g. "reaches `reproducing` but
+  `target=""`" ⇒ the target is found then cleared, not a discovery failure).
+- `docker compose up -d --build nakama` to load it; `dotnet run -- --zone bug_lab --duration 90`;
+  `docker compose logs nakama --since 3m | grep <TAG>`. Tag logs distinctively (`P7DIAG …`) to grep.
+- **STRIP every diagnostic before committing** (`grep -rn '<TAG>\|TEMP-' nakama/modules` must be
+  empty) and fold the finding into a permanent `*_test.go` + a code comment so it can't regress.
+  (P7 found two bugs this way: `foodSourceAlive` didn't know occupant-backed food; the forage duty
+  cycle starved slow feeders — both now have regression tests + comments.)
+
 ## 4. Unity Editor pass (client C#)
 Client C# is often written headlessly (no local Unity compiler) — it needs an **Editor compile + visual
 check**. In-game debug keys (DebugOverlay): **F1** record · **F2** dump trace · **F3** log state · **F4**
