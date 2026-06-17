@@ -63,6 +63,21 @@ func (m *Match) reproduceSwarm(state *WorldState, dispatcher runtime.MatchDispat
 
 	count := 1 + rand.Intn(2) // 1-2 offspring
 
+	// VISIBLE BROOD path (flies/butterflies): a non-predator swarm LAYS eggs into the nursery at its
+	// breeding source instead of growing instantly. processBroods matures + hatches them, and the
+	// population/swarm caps apply at HATCH time (eggs are not bugs). Predators (wasp nest, centipede)
+	// and individuals fall through to the instant-growth path below, unchanged.
+	if species.Predation == nil && species.Category == "swarm" {
+		laid := m.layIntoBrood(state, dispatcher, swarm, count)
+		swarm.ReproductionMeter = 0
+		swarm.Satiation = 0
+		swarm.ReproduceCooldown = species.ReproduceCooldown
+		if laid {
+			m.consumeFood(state, dispatcher, swarm.TargetFoodID, reproduceFoodCost)
+		}
+		return
+	}
+
 	if maxPop := state.SpeciesMaxPopulation(swarm.SpeciesID); maxPop > 0 {
 		room := maxPop - state.SpeciesPopulation(swarm.SpeciesID)
 		if room < count {
@@ -1042,7 +1057,8 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 	m.processFruitTrees(worldState, dispatcher, logger)
 	m.processHostPlants(worldState) // milkweed breeding capacity regrows
 	if worldState.TickCount%30 == 0 {
-		m.processNests(worldState, logger) // occupant-gone sweep + brood-drain re-hatch
+		m.processNests(worldState, logger)                     // occupant-gone sweep + brood-drain re-hatch
+		m.processBroods(worldState, dispatcher, logger)        // visible nurseries: mature eggs -> maggots -> hatch
 	}
 	m.processGroundItemDecay(worldState, dispatcher)
 	m.processStations(worldState, dispatcher)      // material processors: input -> compost

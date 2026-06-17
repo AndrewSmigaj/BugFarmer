@@ -89,6 +89,7 @@ type WorldState struct {
 	FruitTreeStates map[string]*entities.FruitTreeState // "gx,gy" -> fruit tree state
 	NestStates      map[string]*entities.NestState      // "gx,gy" -> wasp-nest brood state
 	HostPlantStates map[string]*entities.HostPlantState // "gx,gy" -> milkweed host-plant breeding capacity
+	BroodStates     map[string]*entities.BroodState     // "gx,gy" -> visible nursery (compost/milkweed/ground pile)
 
 	// Gnaw damage per occupant cell — its OWN pool, NOT BreakingState (whose owner-
 	// reset would let a player "repair" a gnawed fence by hitting it, and vice versa).
@@ -321,6 +322,7 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		FruitTreeStates: make(map[string]*entities.FruitTreeState),
 		NestStates:      make(map[string]*entities.NestState),
 		HostPlantStates: make(map[string]*entities.HostPlantState),
+		BroodStates:     make(map[string]*entities.BroodState),
 		GnawDamage:      make(map[string]int),
 		Stations:        make(map[string]*entities.StationState),
 		// Crafting

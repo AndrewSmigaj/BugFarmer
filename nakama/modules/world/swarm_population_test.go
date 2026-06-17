@@ -36,6 +36,7 @@ func newTestState(maxSwarm int) *WorldState {
 		SwarmsBySpecies: map[string][]string{},
 		Species: map[string]*entities.BugSpecies{
 			"fly_common": {
+				Category:     "swarm", // production-faithful: flies lay into a visible brood (brood.go)
 				MinSwarmSize: 5,
 				MaxSwarmSize: maxSwarm,
 				MergeRadius:  2.5,
@@ -51,6 +52,7 @@ func newTestState(maxSwarm int) *WorldState {
 		FruitTreeStates: map[string]*entities.FruitTreeState{},
 		NestStates:      map[string]*entities.NestState{},
 		HostPlantStates: map[string]*entities.HostPlantState{},
+		BroodStates:     map[string]*entities.BroodState{},
 		GnawDamage:      map[string]int{},
 		Chunks:          map[string]*ChunkData{},
 	}
@@ -239,11 +241,12 @@ func TestConsumeFoodThresholdsAndDepletion(t *testing.T) {
 
 // Reproduction adds 1-2 bugs (randomized, NOT doubling — sub-exponential growth), with
 // exact id/event bookkeeping, meters reset, cooldown armed, and the 40-food event cost.
-func TestReproduceSwarmDoubles(t *testing.T) { // name kept for history greps; semantics: AddsOneOrTwo
+func TestReproduceSwarmDoubles(t *testing.T) { // name kept for history greps; semantics: LaysEggsIntoBrood
 	state := newTestState(20)
 	m := &Match{}
 	swarm := newTestSwarm("s", 6, 10, 10)
 	swarm.TargetFoodID = "food1"
+	swarm.TargetFoodX, swarm.TargetFoodY = 10, 10
 	state.Swarms["s"] = swarm
 	state.SwarmsBySpecies["fly_common"] = []string{"s"}
 	state.GroundItems["food1"] = &entities.GroundItem{
@@ -256,40 +259,36 @@ func TestReproduceSwarmDoubles(t *testing.T) { // name kept for history greps; s
 
 	m.reproduceSwarm(state, nil, swarm, species, nopRuntimeLogger())
 
-	added := swarm.Count - 6
-	if added < 1 || added > 2 {
-		t.Fatalf("added=%d, want 1-2 (gentle growth, not doubling)", added)
+	// A swarm species LAYS eggs into the brood at the food cell — it does NOT grow instantly, and
+	// no SWARM_REPRODUCED fires until processBroods hatches the matured maggots later.
+	if swarm.Count != 6 {
+		t.Fatalf("laying must NOT grow the swarm instantly: count=%d", swarm.Count)
 	}
-	if swarm.NextBugID != 6+added {
-		t.Fatalf("nextBugID=%d, want %d", swarm.NextBugID, 6+added)
+	if len(eventsOfType(state, InfluenceSwarmReproduced)) != 0 {
+		t.Fatal("laying eggs must not emit SWARM_REPRODUCED (that's deferred to hatch)")
 	}
-	if !swarm.IsBugAlive(6) || !swarm.IsBugAlive(6+added-1) {
-		t.Fatal("reproduced bugs must be alive (catchable)")
+	b := state.BroodStates["10,10"]
+	if b == nil || b.Eggs < 1 || b.Eggs > 2 || b.SpeciesID != "fly_common" || b.SourceKind != "ground_pile" {
+		t.Fatalf("expected 1-2 fly eggs in a ground_pile brood at 10,10, got %+v", b)
 	}
-	// Meters reset + cooldown armed
+	// Meters reset + cooldown armed (the lay still costs the swarm its meter, exactly as a breed did)
 	if swarm.Satiation != 0 || swarm.ReproductionMeter != 0 || swarm.ReproduceCooldown != 30 {
 		t.Fatalf("meters/cooldown wrong: sat=%f meter=%f cd=%f", swarm.Satiation, swarm.ReproductionMeter, swarm.ReproduceCooldown)
 	}
-	// One SWARM_REPRODUCED event with exact id bookkeeping (the count rides the event —
-	// server rand stays replay-safe)
-	evs := eventsOfType(state, InfluenceSwarmReproduced)
-	if len(evs) != 1 || evs[0].SwarmID != "s" || evs[0].SplitCount != added || evs[0].NewBugIDBase != 6 {
-		t.Fatalf("reproduce event wrong: %+v", evs)
-	}
-	// Breeding consumed food (reproduceFoodCost = 40: the one-apple budget)
+	// Laying consumed food (reproduceFoodCost = 40: the one-apple budget is unchanged)
 	if state.GroundItems["food1"].FoodValue != 60 {
-		t.Fatalf("food after breed = %d, want 60", state.GroundItems["food1"].FoodValue)
+		t.Fatalf("food after lay = %d, want 60", state.GroundItems["food1"].FoodValue)
 	}
 }
 
-// At the population cap: NO event, NO food cost, meters reset AND the cooldown armed
-// (else the meter refills every breed cycle and the skip spams); a partial litter fits
-// when there's room for one.
-func TestReproduceSkipsAtPopulationCap(t *testing.T) {
+// LAYING is uncapped (eggs are not bugs): even at the population cap a swarm lays eggs into the brood
+// and pays the food cost; the population cap is enforced later, at HATCH (see TestBroodHatchHoldsAtCap).
+func TestReproduceLaysUncappedAtPopulationCap(t *testing.T) {
 	state := newTestState(20)
 	m := &Match{}
 	swarm := newTestSwarm("s", 10, 10, 10)
 	swarm.TargetFoodID = "food1"
+	swarm.TargetFoodX, swarm.TargetFoodY = 10, 10
 	swarm.Satiation = 100
 	swarm.ReproductionMeter = 100
 	state.Swarms["s"] = swarm
@@ -302,33 +301,23 @@ func TestReproduceSkipsAtPopulationCap(t *testing.T) {
 	species := state.Species["fly_common"]
 	species.ReproduceCooldown = 30
 	state.CurrentZone.BugSpawning = &BugSpawnConfig{SpeciesCaps: map[string]SpeciesCap{
-		"fly_common": {Max: 10, MaxPopulation: 10}, // exactly at cap
+		"fly_common": {Max: 10, MaxPopulation: 10}, // already at the population cap
 	}}
 
 	m.reproduceSwarm(state, nil, swarm, species, nopRuntimeLogger())
 
 	if swarm.Count != 10 {
-		t.Fatalf("capped swarm grew: %d", swarm.Count)
+		t.Fatalf("laying must not grow the swarm: %d", swarm.Count)
 	}
-	if len(eventsOfType(state, InfluenceSwarmReproduced)) != 0 {
-		t.Fatal("capped reproduction emitted an event")
+	if b := state.BroodStates["10,10"]; b == nil || b.Eggs < 1 {
+		t.Fatalf("at-cap laying must still deposit eggs into the brood, got %+v", b)
 	}
-	if state.GroundItems["food1"].FoodValue != 100 {
-		t.Fatalf("capped skip charged food: %d", state.GroundItems["food1"].FoodValue)
+	if state.GroundItems["food1"].FoodValue != 60 {
+		t.Fatalf("at-cap laying must still cost food (40): FoodValue=%d", state.GroundItems["food1"].FoodValue)
 	}
 	if swarm.Satiation != 0 || swarm.ReproductionMeter != 0 || swarm.ReproduceCooldown != 30 {
-		t.Fatalf("capped skip must reset meters + ARM the cooldown: sat=%f meter=%f cd=%f",
+		t.Fatalf("lay must reset meters + ARM the cooldown: sat=%f meter=%f cd=%f",
 			swarm.Satiation, swarm.ReproductionMeter, swarm.ReproduceCooldown)
-	}
-
-	// Room for exactly one: a partial litter of 1 fits (never overshoots).
-	state.CurrentZone.BugSpawning.SpeciesCaps["fly_common"] = SpeciesCap{Max: 10, MaxPopulation: 11}
-	m.reproduceSwarm(state, nil, swarm, species, nopRuntimeLogger())
-	if swarm.Count != 11 {
-		t.Fatalf("partial litter should fit exactly one: count=%d", swarm.Count)
-	}
-	if state.SpeciesPopulation("fly_common") != 11 {
-		t.Fatalf("population=%d, want 11", state.SpeciesPopulation("fly_common"))
 	}
 }
 

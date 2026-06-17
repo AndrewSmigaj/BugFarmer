@@ -114,6 +114,20 @@ func (m *Match) handleChunkSubscribe(
 			}
 		}
 
+		// Send this chunk's visible nurseries (compost/milkweed/pile eggs+maggots) so a player
+		// walking up to a breeding source sees its current brood (the snapshot carries none).
+		for _, b := range state.BroodStates {
+			if b.GridX/cs != cx || b.GridY/cs != cy {
+				continue
+			}
+			bMsg := BroodUpdateMessage{
+				GX: b.GridX, GY: b.GridY, Species: b.SpeciesID,
+				Eggs: b.Eggs, Maggots: b.Maggots, Kind: b.SourceKind,
+			}
+			bData, _ := json.Marshal(bMsg)
+			dispatcher.BroadcastMessage(OpCodeBroodUpdate, bData, []runtime.Presence{presence}, nil, true)
+		}
+
 		// Send crop states in this chunk (stage visuals for joiners — without this a grown
 		// crop renders as the base sprite until its next stage change)
 		for _, crop := range state.CropStates {
@@ -558,6 +572,9 @@ func (m *Match) breakOccupantAt(
 	// Nest destruction: clear the state + ORPHAN the resident (it never breeds again,
 	// tethers to its last home, still hunts/stings — a decaying patrol).
 	m.onNestOccupantRemoved(state, gx, gy, logger)
+
+	// A broken compost bin / milkweed loses its in-progress nursery (its eggs/maggots vanish).
+	m.onBroodSourceRemoved(state, dispatcher, gx, gy)
 
 	// Broadcast removal (clear occupant)
 	m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, "", nil, true)

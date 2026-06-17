@@ -141,7 +141,22 @@ const (
 	// (roster → joiner, joiner → everyone) instead of riding the per-tick EntityData. Display state
 	// only — never in the sim hash; the tick loop is untouched.
 	OpCodePlayerInfo int64 = 103 // S->C: {players:[{user_id,name,char_class,char_hair,char_skin}]}
+
+	OpCodeBroodUpdate int64 = 104 // S->C: a brood's egg/maggot counts changed (display-only nursery, like StationUpdate)
 )
+
+// BroodUpdateMessage (OpCode 104): a visible nursery's eggs/maggots changed (a lay, a maturation, a
+// hatch, or removal). Display-only — the actual births ride the deterministic SWARM_REPRODUCED ledger,
+// so a dropped/late BroodUpdate only delays the on-screen egg/maggot count, never the bug positions.
+type BroodUpdateMessage struct {
+	GX      int    `json:"gx"`
+	GY      int    `json:"gy"`
+	Species string `json:"species"`
+	Eggs    int    `json:"eggs"`
+	Maggots int    `json:"maggots"`
+	Kind    string `json:"kind"`    // "station" | "host_plant" | "ground_pile" | "nest" — drives the client visual
+	Removed bool   `json:"removed"` // true when the brood/pile is cleared (source gone)
+}
 
 // PlayerSpawnMessage (OpCode 102): where the server placed this player on join (the character's
 // last-logout position, bed home, or the zone spawn — already decided in MatchJoin).
