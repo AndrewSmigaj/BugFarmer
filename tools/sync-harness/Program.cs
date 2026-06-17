@@ -289,6 +289,14 @@ namespace BugFarmer.SyncHarness
                                     _swarmSpawn.Remove(dstId);
                                 }
                             }
+                            else if (type == "BUG_REMOVED")
+                            {
+                                // A death/catch removes ONE bug; without this the population CSV drifts
+                                // UPWARD (births counted, deaths ignored) — wrong for ecology tuning.
+                                string srcId = e.TryGetProperty("swarm_id", out var brid) ? brid.GetString() : "?";
+                                if (_swarmSpawn.TryGetValue(srcId, out var rs))
+                                    _swarmSpawn[srcId] = (rs.x, rs.y, Math.Max(0, rs.count - 1), rs.sp);
+                            }
                             else if (type == "FOOD_CONSUMED" || type == "ITEM_ROTTED")
                             {
                                 string fid = e.TryGetProperty("food_id", out var ff) ? ff.GetString() : "?";

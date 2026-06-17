@@ -89,10 +89,16 @@ func FindNearbyFood(state *WorldState, pos entities.EntityPosition, visionRange 
 	//    DEPLETABLE breeding source while they have capacity — and are SKIPPED when grazed out, so a
 	//    reproducing butterfly stops breeding there until it regrows.
 	for _, r := range FindNearbyResources(state, pos, visionRange, targetIDs) {
+		cellKey := fmt.Sprintf("%d,%d", int(r.X), int(r.Y))
 		depletable := false
-		if hp := state.HostPlantStates[fmt.Sprintf("%d,%d", int(r.X), int(r.Y))]; hp != nil {
+		if hp := state.HostPlantStates[cellKey]; hp != nil { // milkweed breeding capacity
 			if hp.Capacity <= 0 {
 				continue
+			}
+			depletable = true
+		} else if fp := state.ForagePools[cellKey]; fp != nil { // flower nectar (feeding) — depletes + regrows
+			if fp.Nectar <= 0 {
+				continue // grazed out: not a food source until it regrows → over-large pop starves
 			}
 			depletable = true
 		}

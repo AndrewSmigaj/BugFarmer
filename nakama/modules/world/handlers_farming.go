@@ -1113,6 +1113,11 @@ func (m *Match) foodSourceAlive(state *WorldState, foodID string, fx, fy float32
 	if hp := state.HostPlantStates[fmt.Sprintf("%d,%d", int(fx), int(fy))]; hp != nil {
 		return hp.Capacity > 0
 	}
+	// Flower nectar pool (depletable FEEDING source): alive while it has nectar; grazed-out flowers are
+	// cleared as a target so a starving bug re-thinks instead of camping a dry flower.
+	if fp := state.ForagePools[fmt.Sprintf("%d,%d", int(fx), int(fy))]; fp != nil {
+		return fp.Nectar > 0
+	}
 	return false
 }
 
@@ -1226,8 +1231,9 @@ func (m *Match) removeGroundItem(
 
 const (
 	maxHostCapacity  = 100.0
-	hostRegenPerTick = 0.05 // 0.5/s at 10Hz → ~200s to refill a grazed-out milkweed
-	hostBreedCost    = 25.0 // capacity drained per butterfly breed event (≈4 breeds to exhaust)
+	hostRegenPerTick = 0.025 // ~0.25/s → ~400s to refill: throttles butterfly BIRTHS so the population
+	// settles below the hard cap (breeding-food-limited) instead of pinning it.
+	hostBreedCost = 25.0 // capacity drained per butterfly breed event (≈4 breeds to exhaust)
 )
 
 // initHostPlantsInChunk registers milkweed (world.host_plant) occupants in a loaded chunk at full
@@ -1264,6 +1270,53 @@ func (m *Match) processHostPlants(state *WorldState) {
 			hp.Capacity += hostRegenPerTick
 			if hp.Capacity > maxHostCapacity {
 				hp.Capacity = maxHostCapacity
+			}
+		}
+	}
+}
+
+// --- Forage pools (flower nectar): depletable FEEDING food (the boom-bust engine) ---
+
+const (
+	maxNectar          = 100.0
+	nectarRegenPerTick = 0.012 // ~0.12/s → ~830s to refill (slow regen =
+	// bigger, slower oscillation — this is the master boom-bust dial, tuned on the population graph).
+)
+
+// initForagePoolsInChunk registers flower (world.nectar) occupants in a loaded chunk at full nectar.
+// Mirrors initHostPlantsInChunk; idempotent.
+func (m *Match) initForagePoolsInChunk(state *WorldState, chunk *ChunkData, cx, cy int, logger runtime.Logger) {
+	chunkSize := state.Config.ChunkSize
+	for ly := 0; ly < chunkSize; ly++ {
+		for lx := 0; lx < chunkSize; lx++ {
+			cell, _ := chunk.GetOccupantCell(lx, ly)
+			if cell.IsEmpty || cell.Occupant == nil || !cell.Occupant.Anchor {
+				continue
+			}
+			def := state.Entities[cell.Occupant.ID]
+			if def == nil || def.World == nil || !def.World.Nectar {
+				continue
+			}
+			gx, gy := cx*chunkSize+lx, cy*chunkSize+ly
+			key := fmt.Sprintf("%d,%d", gx, gy)
+			if state.ForagePools[key] != nil {
+				continue
+			}
+			state.ForagePools[key] = &entities.ForagePoolState{
+				EntityID: cell.Occupant.ID, GridX: gx, GridY: gy, Nectar: maxNectar,
+			}
+		}
+	}
+}
+
+// processForagePools regrows flower nectar each tick (a grazed-out flower slowly becomes a food source
+// again). Server-only soft state. The regen rate is the master boom-bust dial.
+func (m *Match) processForagePools(state *WorldState) {
+	for _, fp := range state.ForagePools {
+		if fp.Nectar < maxNectar {
+			fp.Nectar += nectarRegenPerTick
+			if fp.Nectar > maxNectar {
+				fp.Nectar = maxNectar
 			}
 		}
 	}

@@ -40,7 +40,8 @@ func (m *Match) handleChunkSubscribe(
 		// Initialize fruit tree states for any fruit trees in this chunk
 		m.initFruitTreesInChunk(state, chunk, cx, cy, logger)
 		m.initNestsInChunk(state, chunk, cx, cy, logger)
-		m.initHostPlantsInChunk(state, chunk, cx, cy, logger) // milkweed breeding capacity
+		m.initHostPlantsInChunk(state, chunk, cx, cy, logger)  // milkweed breeding capacity
+		m.initForagePoolsInChunk(state, chunk, cx, cy, logger) // flower nectar (depletable feeding)
 		// Initialize stations (compost bins etc. — entities with world.station)
 		m.initStationsInChunk(state, chunk, cx, cy, logger)
 	}

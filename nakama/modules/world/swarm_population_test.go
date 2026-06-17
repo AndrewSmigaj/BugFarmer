@@ -53,6 +53,7 @@ func newTestState(maxSwarm int) *WorldState {
 		NestStates:      map[string]*entities.NestState{},
 		HostPlantStates: map[string]*entities.HostPlantState{},
 		BroodStates:     map[string]*entities.BroodState{},
+		ForagePools:     map[string]*entities.ForagePoolState{},
 		GnawDamage:      map[string]int{},
 		Chunks:          map[string]*ChunkData{},
 	}

@@ -134,6 +134,11 @@ type WorldData struct {
 	// while capacity > 0 (and skips it when grazed out). Flowers are NOT host plants — just nectar.
 	HostPlant bool `json:"host_plant,omitempty"`
 
+	// Nectar (flowers): a depletable FEEDING pool. Bugs that feed here drain it; it regrows slowly and is
+	// skipped when grazed out — so an over-large population exhausts its food and starves back (boom-bust).
+	// A ForagePoolState tracks nectar per cell. The feeding analogue of host_plant.
+	Nectar bool `json:"nectar,omitempty"`
+
 	// Station properties (player-fillable material processors — compost bin first; nil = not a station)
 	Station *StationData `json:"station,omitempty"`
 

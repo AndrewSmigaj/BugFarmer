@@ -371,6 +371,7 @@
     "sprite_w": 10,
     "sprite_h": 10,
     "world": {
+      "nectar": true,
       "footprint": [
         1,
         1
@@ -404,6 +405,7 @@
     "sprite_w": 10,
     "sprite_h": 10,
     "world": {
+      "nectar": true,
       "footprint": [
         1,
         1
@@ -427,6 +429,7 @@
     "sprite_w": 10,
     "sprite_h": 10,
     "world": {
+      "nectar": true,
       "footprint": [
         1,
         1
@@ -450,6 +453,7 @@
     "sprite_w": 10,
     "sprite_h": 10,
     "world": {
+      "nectar": true,
       "footprint": [
         1,
         1

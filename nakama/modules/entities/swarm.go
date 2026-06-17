@@ -29,6 +29,7 @@ type SwarmState struct {
 	Satiation         float32 // 0-100, increases when bugs feed
 	ReproductionMeter float32 // 0-100, increases when bugs visit breeding sites
 	CompostCooldown   float32 // Detritivores: seconds until the next compost-input deposit (server-only)
+	StarveTimer       float32 // Seconds the swarm has been at 0 satiation; past a threshold it starves (server-only)
 	// Per-bug natural-death schedule: bugID -> absolute tick the bug dies of old age. Set at birth,
 	// carried through merge/split like BugHP, cleaned in RemoveBugs. Server-only, NOT in the state hash
 	// (clients learn of deaths only via BUG_REMOVED events). Absent / lifespan<=0 = the bug is immortal.

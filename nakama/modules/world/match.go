@@ -1081,6 +1081,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 	// === Fruit Trees & Ground Item Decay ===
 	m.processFruitTrees(worldState, dispatcher, logger)
 	m.processHostPlants(worldState) // milkweed breeding capacity regrows
+	m.processForagePools(worldState) // flower nectar regrows (the boom-bust food)
 	if worldState.TickCount%30 == 0 {
 		m.processNests(worldState, logger)                     // occupant-gone sweep + brood-drain re-hatch
 		m.processBroods(worldState, dispatcher, logger)        // visible nurseries: mature eggs -> maggots -> hatch
@@ -1237,8 +1238,16 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				}
 				if swarm.TargetFoodDepletable {
 					// More flies = faster consumption (architecture_farming.md).
-					m.consumeFood(worldState, dispatcher, swarm.TargetFoodID,
-						consumeRate*float32(swarm.Count)*deltaTime)
+					drain := consumeRate * float32(swarm.Count) * deltaTime
+					m.consumeFood(worldState, dispatcher, swarm.TargetFoodID, drain) // ground items / stations
+					// Flower nectar (occupant-backed depletable feeding pool, keyed by cell, like the
+					// milkweed-capacity drain): a big swarm exhausts it → the flower is skipped → starve.
+					if fp := worldState.ForagePools[fmt.Sprintf("%d,%d", int(swarm.TargetFoodX), int(swarm.TargetFoodY))]; fp != nil {
+						fp.Nectar -= drain
+						if fp.Nectar < 0 {
+							fp.Nectar = 0
+						}
+					}
 				}
 			case "reproducing":
 				if swarm.TargetFoodDepletable { // v1: breeding requires a depletable source
@@ -1277,6 +1286,15 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			}
 		}
 
+		// STARVATION: a swarm pinned at 0 satiation can't find food; processStarvation culls it once
+		// the timer passes the threshold. Any satiation (recently fed) resets it. This turns
+		// "over-large population exhausts its food" into a real BUST (vs a slow old-age drift).
+		if swarm.Satiation <= 0 {
+			swarm.StarveTimer += deltaTime
+		} else {
+			swarm.StarveTimer = 0
+		}
+
 		// Phase transitions. NO SwarmsDirty here (clients never read phase; the old dirty
 		// flag only generated spurious full-set SwarmUpdate broadcasts). On a change the
 		// attractions differ, so retarget immediately instead of waiting out the think timer.
@@ -1312,6 +1330,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 	// Natural death (per-bug aging) every 100 ticks (10s): cull bugs past their DeathTick.
 	if worldState.TickCount%100 == 0 {
 		m.processNaturalDeath(logger, dispatcher, worldState, chunkSize)
+		m.processStarvation(logger, dispatcher, worldState, chunkSize)
 	}
 
 	// === Day rollover (one day = DayLengthTicks = 14 min) ===
@@ -1751,6 +1770,43 @@ func (m *Match) processNaturalDeath(logger runtime.Logger, dispatcher runtime.Ma
 		if len(dead) > 0 {
 			culls = append(culls, cull{swarm, dead})
 		}
+	}
+	for _, c := range culls {
+		m.killBugsNaturally(logger, dispatcher, state, c.swarm, state.Species[c.swarm.SpeciesID], c.ids, chunkSize)
+	}
+}
+
+// Starvation tuning — a swarm that can't find food (StarveTimer accumulating at 0 satiation) dies back.
+// This is what turns an over-large population into a real BUST (the down-swing of the boom-bust). The
+// cull fraction + pause set how sharp the bust is (tuned on the population graph). Deaths drop carcasses
+// (killBugsNaturally) so the recycle loop still runs.
+const (
+	starvationDeathSecs = 60.0 // sim-seconds at 0 satiation before a swarm starts to starve to death
+	starvationCullFrac  = 0.10 // fraction of the swarm culled per starvation event (min 1 bug)
+	starvationCullPause = 10.0 // sim-seconds between successive culls while still starving
+)
+
+// processStarvation culls a fraction of any swarm that has been starving past the threshold, then
+// re-arms its timer so it keeps dying back (gradually) until it finds food again. Collect-then-act
+// (no map mutation mid-range), mirroring processNaturalDeath.
+func (m *Match) processStarvation(logger runtime.Logger, dispatcher runtime.MatchDispatcher, state *WorldState, chunkSize int) {
+	type cull struct {
+		swarm *entities.SwarmState
+		ids   []int
+	}
+	var culls []cull
+	for _, swarm := range state.Swarms {
+		if swarm.Count <= 0 || swarm.StarveTimer < starvationDeathSecs {
+			continue
+		}
+		n := int(float32(swarm.Count) * starvationCullFrac)
+		if n < 1 {
+			n = 1
+		}
+		if ids := swarm.FirstAliveBugIDs(n); len(ids) > 0 {
+			culls = append(culls, cull{swarm, ids})
+		}
+		swarm.StarveTimer = starvationDeathSecs - starvationCullPause // re-arm: cull again after the pause if still starving
 	}
 	for _, c := range culls {
 		m.killBugsNaturally(logger, dispatcher, state, c.swarm, state.Species[c.swarm.SpeciesID], c.ids, chunkSize)
