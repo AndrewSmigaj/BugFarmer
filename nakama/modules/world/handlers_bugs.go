@@ -40,7 +40,7 @@ func (m *Match) growSwarm(state *WorldState, swarm *entities.SwarmState, n int) 
 	swarm.NextBugID += n
 	swarm.Count += n
 	// New bugs are born now → schedule their natural death.
-	assignDeathTicks(swarm, state.Species[swarm.SpeciesID], base, base+n, state.TickCount, state.Config.TickRate)
+	assignDeathTicks(swarm, state.Species[swarm.SpeciesID], base, base+n, state.TickCount, SimRate)
 	if state.CurrentZone != nil {
 		state.AddSwarmReproducedEvent(state.CurrentZone.ZoneID, swarm.ID, n, base)
 	}
@@ -108,7 +108,7 @@ func (m *Match) spawnSwarmAt(state *WorldState, speciesID string, n int, x, y fl
 		HomePos:   pos,
 	}
 	swarm.InitializeBugIDs()
-	assignDeathTicks(swarm, species, 0, n, state.TickCount, state.Config.TickRate)
+	assignDeathTicks(swarm, species, 0, n, state.TickCount, SimRate)
 
 	state.Swarms[swarm.ID] = swarm
 	state.SwarmsBySpecies[speciesID] = append(state.SwarmsBySpecies[speciesID], swarm.ID)

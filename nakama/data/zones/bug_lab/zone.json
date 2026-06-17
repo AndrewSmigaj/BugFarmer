@@ -11,36 +11,42 @@
   ],
   "biome_type": "test",
   "seed": 4242,
+  "call_rate": 60,
   "bug_spawning": {
     "static": false,
     "species_caps": {
       "fly_common": {
         "initial": 2,
         "max": 12,
+        "max_population": 150,
         "spawn_interval": 999999.0,
         "swarm_size": 6
       },
       "butterfly_meadow": {
         "initial": 2,
         "max": 12,
+        "max_population": 100,
         "spawn_interval": 999999.0,
         "swarm_size": 6
       },
       "wasp_common": {
         "initial": 2,
         "max": 12,
+        "max_population": 30,
         "spawn_interval": 999999.0,
         "swarm_size": 6
       },
       "centipede_garden": {
         "initial": 2,
         "max": 12,
+        "max_population": 20,
         "spawn_interval": 999999.0,
         "swarm_size": 6
       },
       "millipede": {
         "initial": 2,
         "max": 4,
+        "max_population": 20,
         "spawn_interval": 999999.0,
         "swarm_size": 1
       }

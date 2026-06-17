@@ -65,8 +65,8 @@
     "movement_style": "brownian",
     "predator_flee_radius": 6.0,
     "predator_flee_speed_mult": 1.8,
-    "lifespan_secs": 90,
-    "lifespan_spread_secs": 30,
+    "lifespan_secs": 2520,
+    "lifespan_spread_secs": 840,
     "carcass_item": "dead_fly"
   },
   "butterfly_meadow": {
@@ -134,8 +134,8 @@
     "movement_style": "gliding",
     "predator_flee_radius": 6.0,
     "predator_flee_speed_mult": 1.5,
-    "lifespan_secs": 120,
-    "lifespan_spread_secs": 40,
+    "lifespan_secs": 3360,
+    "lifespan_spread_secs": 1120,
     "carcass_item": "dead_butterfly"
   },
   "wasp_common": {

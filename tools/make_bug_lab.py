@@ -36,11 +36,15 @@ def fence_rect(x0, y0, x1, y1, fid, gap=None):
 # --- pens across the top band (y 8..40), 4 AI species ---
 pens = []  # (label, species, spawn_cx, spawn_cy, radius)
 
-# Fly pen: compost bin + fast apple trees (food + breeding)
+# Fly pen: compost bin (center) ringed by fast apple trees. Flies have vision 8 in a 32-wide pen, so
+# food must be DENSE or they wander hungry and never top off to the breed point (the meadow needed the
+# same density fix). An 8-tree ring keeps rotten fruit within a fly's vision almost everywhere.
 fence_rect(8, 8, 40, 40, "fence_wood", gap=(24, 40))
 place(24, 24, "compost_bin")
-for (x, y) in [(16, 16), (33, 16), (16, 33)]:
-    place(x, y, "tree_apple_test")
+for (x, y) in [(14, 14), (24, 14), (34, 14),
+               (14, 24), (34, 24),
+               (14, 34), (24, 34), (34, 34)]:
+    place(x, y, "tree_apple")  # REAL slow tree (rain-gated, ~7min/fruit) — not the fast test tree
 pens.append(("fly_pen", "fly_common", 24, 22, 7))
 
 # Butterfly pen: milkweed (host) + nectar flowers
@@ -66,20 +70,28 @@ pens.append(("centipede_pen", "centipede_garden", 144, 24, 6))
 # Arena = the open lower two-thirds (no fence) for staging drops.
 # (millipede + aphid pens reserved; added when those species land.)
 
+# HARD per-species BUG cap (max_population) = the crash-guard. The server mints ZERO bugs past it,
+# no matter how much food a player supplies — food only paces how fast a pen climbs to the cap, and
+# death/predators turn it over there. Without this, a renewable food source (milkweed) explodes a pen
+# (butterflies hit 932 in the first long run). These are the test-pen ceilings; real zones set their own.
+MAX_POP = {"fly_common": 150, "butterfly_meadow": 100, "wasp_common": 30, "centipede_garden": 20}
 species_caps, spawn_areas = {}, []
 for label, sp, cx, cy, r in pens:
-    species_caps[sp] = {"initial": 2, "max": 12, "spawn_interval": 999999.0, "swarm_size": 6}
+    species_caps[sp] = {"initial": 2, "max": 12, "max_population": MAX_POP[sp], "spawn_interval": 999999.0, "swarm_size": 6}
     spawn_areas.append({"id": label, "species": [sp], "type": "circle", "cx": cx, "cy": cy, "radius": r})
 
 # Millipede detritivore co-located in the FLY pen (compost bin at 24,24): the recycle loop —
 # flies die of old age → carcasses → millipede eats them → compost bin fills → flies feed.
-species_caps["millipede"] = {"initial": 2, "max": 4, "spawn_interval": 999999.0, "swarm_size": 1}
+species_caps["millipede"] = {"initial": 2, "max": 4, "max_population": 20, "spawn_interval": 999999.0, "swarm_size": 1}
 spawn_areas.append({"id": "fly_pen_millipede", "species": ["millipede"], "type": "circle", "cx": 24, "cy": 24, "radius": 6})
 
 zone = {
     "zone_id": "bug_lab", "name": "Bug Lab", "row": 0, "col": 0,
     "width": W, "height": H, "spawn_point": [W // 2, H - 20],
     "biome_type": "test", "seed": 4242,
+    # Run the sim 6x faster in wall-clock (sim-time fixed by SimRate) so a many-game-day ecology run
+    # finishes in minutes. Balance-neutral; test zone only. Set 10 to compare at normal speed.
+    "call_rate": 60,
     "bug_spawning": {"static": False, "species_caps": species_caps, "spawn_areas": spawn_areas},
 }
 

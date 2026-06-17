@@ -60,6 +60,11 @@ type ZoneConfig struct {
 	Seed        int64           `json:"seed,omitempty"` // Fixed world seed for deterministic runs (0 = random)
 	BugSpawning *BugSpawnConfig `json:"bug_spawning"`   // Zone-level bug spawn config (optional)
 
+	// CallRate: Nakama match tick rate (calls/sec) for THIS zone, 1..60. 0/absent = default 10.
+	// TEST ZONES ONLY raise it (e.g. 60) to run the SAME sim ~6× faster in wall-clock — sim-TIME is
+	// fixed by SimRate, so balance is unchanged (byte-identical tick sequence). Production zones omit it.
+	CallRate int `json:"call_rate,omitempty"`
+
 	// Cross-zone adjacency: edge direction ("north"/"south"/"east"/"west") -> neighbor zoneID.
 	// Walking off an edge with a neighbor hidden-swaps into it (see CrossZoneController). Absent/""
 	// = a hard edge (no crossing). +Y = north, so south edge = y0, north edge = y255.

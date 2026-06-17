@@ -28,12 +28,15 @@ const (
 	feedRadius             = 2.0  // swarm centre within this distance of food = "at" it
 	consumePerBugPerSecond = 0.5  // food drained per bug per second while at a depletable source
 	reproduceFoodCost      = 40.0 // food consumed by one reproduction event
-	// HUNGER OVERRIDE: the forage/wander duty cycle (forage_chance) is for COMFORTABLY-FED bugs —
-	// it makes them wander idly so they look alive. A genuinely hungry bug must always seek food,
-	// or it stalls (a butterfly's flowers are diffuse + slow to feed on, so under the plain duty
-	// cycle it ignores food for a full 30-50s mode window and never sates → never breeds). Below
-	// this satiation a forager force-enters forage mode regardless of the duty-cycle roll.
-	hungerForageThreshold = 60.0
+	// HUNGER OVERRIDE: the forage/wander duty cycle (forage_chance) is for WELL-FED bugs — it makes
+	// them wander idly so they look alive. A bug that isn't nearly full must always seek food, or it
+	// STALLS BELOW THE BREED POINT: satiation 100 is what flips a bug to "reproducing", but under the
+	// plain duty cycle a forager (esp. flies — small vision 8, low forage_chance) plateaus right at
+	// this threshold (nibble up, wander, decay back) and NEVER reaches 100 → never breeds. So the
+	// threshold must sit just under 100: a bug force-forages until nearly sated, reliably tips into
+	// reproducing, breeds, resets to 0, and repeats — the livestock loop. Only the last sliver
+	// (90-100) and the sated/reproducing bugs follow the idle duty cycle.
+	hungerForageThreshold = 90.0
 	// The one-apple budget (architecture_swarm_sync.md §13): a rotten apple = 100 food.
 	// At fly consume_rate 0.2, a 10-fly swarm drains 2/s: feeding 0->100 sat (20s) = 40,
 	// breeding 0->100 meter (10s) = 20, event cost = 40 -> exactly one breed event per
@@ -46,6 +49,15 @@ const (
 // (tick % DayLengthTicks), so the day/night cycle needs no extra netcode. Time pauses with
 // the tick when a zone empties and restarts with the match (persistence later).
 const DayLengthTicks = 8400
+
+// SimRate is the CANONICAL ticks-per-sim-second: it defines sim-TIME and drives deltaTime + every
+// seconds↔ticks conversion (feeding/breeding rates, lifespan, spawn intervals). It NEVER changes —
+// all balance is anchored to it. The value returned to Nakama (Config.TickRate = the "call rate", how
+// often MatchLoop actually runs in wall-clock) is SEPARATE: a test zone can raise it (≤60, Nakama's
+// cap) to run the SAME sim faster in real time, byte-identical (same tick sequence). Decoupling them is
+// what lets us watch many game-days of the food-bounded ecology settle in minutes, with zero balance
+// change. Everything else in the sim is already counted in raw ticks and scales uniformly.
+const SimRate = 10
 
 // reproduceSwarm adds 1-2 bugs (randomized — NOT doubling: gentle, sub-exponential
 // growth) to a sated swarm at a breeding source: new ids from NextBugID, a
@@ -206,6 +218,19 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 		zoneConfig = &ZoneConfig{ZoneID: "village_21", BiomeType: "village"}
 	}
 	state.CurrentZone = zoneConfig
+
+	// Test-zone sim speedup: a zone may raise the Nakama CALL rate (≤60) to run the SAME sim faster in
+	// wall-clock. sim-TIME stays anchored to SimRate, so this is balance-neutral (see SimRate). Clamp to
+	// Nakama's 1..60 match-tick-rate range; 0/absent leaves the default 10.
+	if zoneConfig.CallRate > 0 {
+		callRate := zoneConfig.CallRate
+		if callRate > 60 {
+			callRate = 60
+		}
+		state.Config.TickRate = callRate
+		logger.Info("Zone %s runs at CallRate=%d (sim-time fixed at SimRate=%d → %d× wall-clock)",
+			zoneConfig.ZoneID, callRate, SimRate, callRate/SimRate)
+	}
 
 	// Static-sim zones (test/deterministic) disable continuous spawn, merge, and split.
 	if zoneConfig.BugSpawning != nil {
@@ -1065,7 +1090,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 	m.processCraftStations(worldState, dispatcher) // recipe processors: queued batches -> output grid
 
 	// === Swarm Simulation ===
-	deltaTime := 1.0 / float32(worldState.Config.TickRate)
+	deltaTime := 1.0 / float32(SimRate) // sim-seconds per tick — fixed, NOT 1/CallRate (see SimRate)
 
 	// Blocked checker for collision detection
 	isBlocked := func(x, y float32) bool {
@@ -1609,7 +1634,7 @@ func (m *Match) spawnSwarmForSpecies(state *WorldState, speciesID string, logger
 		HomePos:   pos,
 	}
 	swarm.InitializeBugIDs()
-	assignDeathTicks(swarm, species, 0, count, state.TickCount, state.Config.TickRate)
+	assignDeathTicks(swarm, species, 0, count, state.TickCount, SimRate)
 
 	state.Swarms[swarm.ID] = swarm
 	state.SwarmsBySpecies[speciesID] = append(state.SwarmsBySpecies[speciesID], swarm.ID)
@@ -1633,7 +1658,7 @@ func (m *Match) checkContinuousSpawning(state *WorldState, tick int64, logger ru
 		return
 	}
 
-	currentTime := float64(tick) / float64(state.Config.TickRate)
+	currentTime := float64(tick) / float64(SimRate) // sim-seconds (spawn-interval clock) — fixed
 
 	for speciesID, cap := range cfg.SpeciesCaps {
 		// Check if it's time to try spawning
