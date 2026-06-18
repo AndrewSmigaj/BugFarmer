@@ -16,7 +16,7 @@ A config (tools/bug_lab_configs/<name>.json) is a DELTA, deep-merged over the ba
   "fruit":   tree rates  → nakama/data/entities/occupants.json (merged under each tree's "world")
 Outputs land in tools/_generated/ecology_charts/ tagged with the config name (then compare_configs.py).
 """
-import argparse, copy, json, os, shutil, subprocess, sys, time
+import argparse, copy, datetime, json, os, shutil, subprocess, sys, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "tools"))
@@ -195,18 +195,57 @@ def run_harness(duration, tag, zone="bug_lab", retries=3):
     return None, ""
 
 
-def chart(csv, tag, run_log):
+def chart(csv, tag, run_log, zone, description=""):
+    """Plot the run, then FILE the charts into the per-zone tuning structure (see
+    tools/_generated/ecology_charts/README.md + the ecology-tuning skill):
+      <zone>/archive/<YYYY-MM-DD_HHMM>_<tag>/{population,interactions}.png + note.md   (every run, kept)
+      <zone>/current/{population,interactions,phase_portraits}.png                      (baseline runs only)
+      _data/ ← raw nakama log + telemetry CSVs."""
     os.makedirs(CHARTS, exist_ok=True)
+    data_dir = os.path.join(CHARTS, "_data")
+    os.makedirs(data_dir, exist_ok=True)
+
+    # 1) generate plots (flat, by tag, as the plot_*.py scripts expect)
     if csv and _csv_ok(csv):
         subprocess.run(["python3", os.path.join(ROOT, "tools", "plot_fly_counts.py"), csv, tag,
-                        f"Config {tag}"], cwd=ROOT)
-    # Per-run log file → plot_interactions parses ONLY this run's ECOSTATS (no docker-logs --since
-    # cross-run contamination). Written under the charts dir so it's auditable.
-    log_path = os.path.join(CHARTS, f"nakama_{tag}.log")
+                        f"{zone} / {tag}"], cwd=ROOT)
+    # Per-run log → _data/; plot_interactions parses ONLY this run's ECOSTATS (no docker-logs cross-run mix).
+    log_path = os.path.join(data_dir, f"nakama_{tag}.log")
     with open(log_path, "w") as f:
         f.write(run_log)
     subprocess.run(["python3", os.path.join(ROOT, "tools", "plot_interactions.py"), "--tag", tag,
                     "--log", log_path], cwd=ROOT)
+
+    # 2) file population + interactions into <zone>/archive/<timestamp>_<tag>/
+    ts = datetime.datetime.now().strftime("%Y-%m-%d_%H%M")
+    run_dir = os.path.join(CHARTS, zone, "archive", f"{ts}_{tag}")
+    os.makedirs(run_dir, exist_ok=True)
+    for src, dst in ((f"{tag}.png", "population.png"), (f"interactions_{tag}.png", "interactions.png")):
+        s = os.path.join(CHARTS, src)
+        if os.path.exists(s):
+            shutil.move(s, os.path.join(run_dir, dst))
+    with open(os.path.join(run_dir, "note.md"), "w") as f:
+        f.write(f"# {ts}_{tag}\n\n{description or '(no description)'}\n")
+
+    # 3) a baseline run defines the zone's CURRENT setup → refresh <zone>/current/ (+ phase portraits)
+    if "baseline" in tag:
+        cur = os.path.join(CHARTS, zone, "current")
+        os.makedirs(cur, exist_ok=True)
+        for name in ("population.png", "interactions.png"):
+            s = os.path.join(run_dir, name)
+            if os.path.exists(s):
+                shutil.copy(s, os.path.join(cur, name))
+        subprocess.run(["python3", os.path.join(ROOT, "tools", "plot_phase.py"), "--log", log_path,
+                        "--tag", f"{zone}_current"], cwd=ROOT)
+        ph = os.path.join(CHARTS, f"phase_{zone}_current.png")
+        if os.path.exists(ph):
+            shutil.move(ph, os.path.join(cur, "phase_portraits.png"))
+
+    # 4) tuck the telemetry CSV sidecars into _data/ so the chart folders stay PNG-only
+    for f in os.listdir(CHARTS):
+        if (f.startswith("interaction_log_") or f.startswith("predation_log_")) and f.endswith(".csv"):
+            shutil.move(os.path.join(CHARTS, f), os.path.join(data_dir, f))
+    print(f"  charts → ecology_charts/{zone}/archive/{ts}_{tag}/" + ("  (+ current/)" if "baseline" in tag else ""))
 
 
 def main():
@@ -228,7 +267,7 @@ def main():
         csv, run_log = run_harness(args.duration, name, args.zone)
         if csv is None:
             print("  ERROR: harness produced no CSV after retries — skipping charts for this config", file=sys.stderr)
-        chart(csv, name, run_log)
+        chart(csv, name, run_log, args.zone, cfg.get("description", ""))
     finally:
         if args.keep:
             print("  --keep: canonical data LEFT MUTATED (restore with `git checkout nakama/data`)")

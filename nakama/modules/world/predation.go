@@ -23,10 +23,19 @@ import (
 const (
 	huntReaimMinTicks  = 10  // hunt/flee legs re-aim fast (floor — also the leg-spam floor)
 	huntReaimJitter    = 6   // +rand(6)
-	huntTimeoutTicks   = 300 // a hunt with no kill for 30s gives up
+	huntTimeoutTicks   = 300 // a hunt with no kill for 30s: re-target a fresh prey (nest predators) / give up (others)
 	wanderThinkMin     = 30  // the existing wander cadence
 	wanderThinkJitter  = 21
 	predWanderDistance = 6.0 // predator wander leg length
+	// predatorFullSatiation: a nest predator's "caught a full load" point. It is BOTH the homing trigger
+	// (carry the load home, deposit brood) AND the forage ceiling (keep hunting until you reach it). Tying
+	// the two together is the whole 2-state forager loop — FORAGE while < full, PROVISION at full — with no
+	// dead zone between "too fed to start a hunt" and "full enough to go home", and no idling while hungry.
+	// It MUST sit below the 100 satiation cap: a kill clamps satiation AT 100, so a trigger of 100 is never
+	// observed at a think (satiation decays a hair below 100 in the 1-3s between the kill and the next
+	// think) and the wasp forages forever without ever heading home. 90 leaves the post-kill overshoot
+	// comfortably above it (decay-per-think ≈ 0.3), so the provision reliably fires.
+	predatorFullSatiation = 90.0
 )
 
 // predationThink runs the species-specific Think branches that REPLACE the shared
@@ -128,10 +137,11 @@ func (m *Match) predationThink(
 			}
 		}
 
-		// HOMING — entry: sated with a live nest. Carry one brood home; deposit on
-		// arrival (satiation drops to deposit_satiation: the readable rest window);
-		// a trip over the timeout drops the brood (a bool-carry can't deadlock).
-		if swarm.Phase != "homing" && swarm.Satiation >= 100 && swarm.NestKey != "" && nest != nil {
+		// PROVISION — entry: a full load with a live nest. Carry the brood home; deposit on
+		// arrival (satiation drops to deposit_satiation, the post-provision level); a trip over
+		// the timeout drops the brood (a bool-carry can't deadlock). FULL is the same threshold the
+		// forage block hunts toward, so there is no gap between stopping the hunt and heading home.
+		if swarm.Phase != "homing" && swarm.Satiation >= predatorFullSatiation && swarm.NestKey != "" && nest != nil {
 			swarm.Phase = "homing"
 			swarm.CarryingBrood = true
 			swarm.HomingStartTick = state.TickCount
@@ -184,8 +194,18 @@ func (m *Match) predationThink(
 
 	// Continue or acquire a hunt. Hunting persists once started (re-aim each think)
 	// until: sated, prey gone/out-of-range, or timeout without a kill.
+	//
+	// FORAGE ceiling: a NEST predator hunts until it has a full load (predatorFullSatiation) — the SAME
+	// point that sends it home to provision — so whenever it isn't full it re-acquires the nearest prey
+	// (a lost/elusive prey just means "pick the next one"), and it never sits idle while still hungry. That
+	// closes the old dead zone (too fed to start a hunt at 45, not full enough to home at 100). Free-roaming
+	// individuals (centipede) keep their own hunt_satiation_threshold so they still get rest-wander beats.
+	huntCeiling := p.HuntSatiationThreshold
+	if p.NestOccupant != "" {
+		huntCeiling = predatorFullSatiation
+	}
 	hunting := swarm.TargetPreyID != ""
-	if !hunting && swarm.Satiation < p.HuntSatiationThreshold {
+	if !hunting && swarm.Satiation < huntCeiling {
 		if preyID, found := m.nearestPreySwarm(state, swarm, p, chunkSize); found {
 			swarm.TargetPreyID = preyID
 			swarm.TargetFoodID = "" // exclusivity: never hunt and dine at once
