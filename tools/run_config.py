@@ -142,28 +142,51 @@ def restart_nakama():
         h = subprocess.run(["docker", "inspect", "bugfarmer-nakama", "--format",
                             "{{.State.Health.Status}}"], capture_output=True, text=True).stdout.strip()
         if h == "healthy":
-            return
+            time.sleep(6)  # SETTLE: health passes before the socket API truly accepts joins — the
+            return         # post-restart race that made 15/20 sweep-1 harness runs write no CSV.
         time.sleep(1)
     raise SystemExit("nakama did not become healthy after restart")
 
 
-def run_harness(duration, tag):
+def _csv_ok(path):
+    return os.path.exists(path) and sum(1 for _ in open(path)) >= 2  # header + ≥1 data row
+
+
+def run_harness(duration, tag, retries=3):
+    """Run the harness; on an empty/missing CSV (the post-restart connection race) restart + retry.
+    Returns (csv_path_or_None, run_log_text) where run_log_text is the nakama log for EXACTLY this run's
+    window (so plot_interactions can't pick up a prior run's ECOSTATS — the sweep-1 contamination bug)."""
     csv = "/tmp/fly_counts.csv"
-    if os.path.exists(csv):
-        os.remove(csv)
-    print(f"  running harness ({duration}s ≈ {duration*0.057:.1f} game-days)…")
-    subprocess.run([DOTNET, "run", "--project", os.path.join(ROOT, "tools", "sync-harness"),
-                    "--", "--zone", "bug_lab", "--duration", str(duration), "--tag", tag],
-                   cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    return csv
+    for attempt in range(1, retries + 1):
+        if os.path.exists(csv):
+            os.remove(csv)
+        t0 = time.time()
+        print(f"  running harness ({duration}s ≈ {duration*0.057:.1f} game-days), attempt {attempt}…")
+        subprocess.run([DOTNET, "run", "--project", os.path.join(ROOT, "tools", "sync-harness"),
+                        "--", "--zone", "bug_lab", "--duration", str(duration), "--tag", tag],
+                       cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        window = int(time.time() - t0) + 8
+        run_log = subprocess.run(["docker", "compose", "logs", "--no-color", "--since", f"{window}s",
+                                  "nakama"], cwd=ROOT, capture_output=True, text=True).stdout
+        if _csv_ok(csv):
+            return csv, run_log
+        print(f"  attempt {attempt}: harness produced no CSV — restarting + retrying", file=sys.stderr)
+        restart_nakama()
+    return None, ""
 
 
-def chart(csv, tag, duration):
+def chart(csv, tag, run_log):
     os.makedirs(CHARTS, exist_ok=True)
-    subprocess.run(["python3", os.path.join(ROOT, "tools", "plot_fly_counts.py"), csv, tag,
-                    f"Config {tag}"], cwd=ROOT)
+    if csv and _csv_ok(csv):
+        subprocess.run(["python3", os.path.join(ROOT, "tools", "plot_fly_counts.py"), csv, tag,
+                        f"Config {tag}"], cwd=ROOT)
+    # Per-run log file → plot_interactions parses ONLY this run's ECOSTATS (no docker-logs --since
+    # cross-run contamination). Written under the charts dir so it's auditable.
+    log_path = os.path.join(CHARTS, f"nakama_{tag}.log")
+    with open(log_path, "w") as f:
+        f.write(run_log)
     subprocess.run(["python3", os.path.join(ROOT, "tools", "plot_interactions.py"), "--tag", tag,
-                    "--since", f"{duration + 60}s"], cwd=ROOT)
+                    "--log", log_path], cwd=ROOT)
 
 
 def main():
@@ -181,10 +204,10 @@ def main():
     try:
         apply_config(cfg)
         restart_nakama()
-        csv = run_harness(args.duration, name)
-        if not os.path.exists(csv):
-            print("  WARNING: harness wrote no CSV (connection issue?) — charts may be empty", file=sys.stderr)
-        chart(csv, name, args.duration)
+        csv, run_log = run_harness(args.duration, name)
+        if csv is None:
+            print("  ERROR: harness produced no CSV after retries — skipping charts for this config", file=sys.stderr)
+        chart(csv, name, run_log)
     finally:
         if args.keep:
             print("  --keep: canonical data LEFT MUTATED (restore with `git checkout nakama/data`)")
