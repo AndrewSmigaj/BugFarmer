@@ -42,14 +42,33 @@ above the re-seed floor → `b_reseed` births ≈ 0). The RIG (all committed, se
   byte-identical defaults); **interaction-log telemetry** (`ECOSTATS`/`PREDLOG` → `plot_interactions.py`,
   births-by-source / deaths-by-cause / predation matrix); **config system** (`tools/bug_lab_configs/` +
   `run_config.py` snapshot→apply→run→chart→restore + `compare_configs.py` scoring).
-- **First data point — `01_no_cull` (14 game-days, natural equilibria):** butterfly self-regulates at
-  ~100 (**PASS**); fly oscillates 25↔148 self-sustaining (**center ~60, below target → needs more food**);
-  millipede PASS (~18 on leaf_litter). **Predators FAIL (FLOOR, re-seed-propped):** the predation matrix
-  shows `centipede→fly = 7 kills / 14 days` (≈not hunting; avg_sat never reaches the 70 breed threshold →
-  87% of its births are re-seed) and `wasp→butterfly = 98 kills` (it hunts BUTTERFLIES leaked into the open
-  arena, not flies, and its NEST breeding is anemic: 4 hatches/14 days). Beetle climbing (2→14) but still
-  starve-limited. **→ Next: predator hunt-effectiveness / prey-access is the blocker (the owner's reserved
-  "ineffective bugs / clustered hunting" area); then `02_fly_food_up` to lift the fly center to 100.**
+- **40-run sweep (3 batches, configs in `tools/bug_lab_configs/`, charts in `_generated/ecology_charts/`):**
+  - **Harness reliability fix (infra):** the sweeps exposed a real bug — Nakama's `socket.outgoing_queue_size`
+    (1024) overflowed on the whole-zone chunk-subscribe burst → server closed the socket → runs froze (no
+    CSV). Raised to **8192** (`nakama/data/local.yml`). Also hardened `run_config.py` (retry + per-run log
+    isolation so `plot_interactions` can't read a prior run's ECOSTATS).
+  - **SOLVED ✅ fly → 100:** `C3` lever = faster fly breeding (`reproduce_cooldown` 30→18, `breed_amount`
+    10→16). Oscillating, 0% re-seed.
+  - **SOLVED ✅ butterfly → ~90:** robust across nearly every config (host/nectar-limited, self-maintained).
+  - **SOLVED ✅ centipede → 30** (the breakthrough): the predator FLOOR was **structural, not behavioral** —
+    proven because NO predator/prey/food parameter (vision, speed, strike, feed, breed-bar, lifespan, decay)
+    moved it across 30 runs (at fly=100 GLOBAL the predation log showed `centipede→fly = 0 kills` — its pen
+    had no prey; a predator eats its small fly seed to extinction in ~3 days then starves = small-system
+    predator-prey collapse). **Fix = prey immigration** (`fly_common` `spawn_interval` 999999→20s; since
+    `spawnSwarmForSpecies` picks a random spawn area, fresh flies trickle into every predator pen). With
+    sustained prey the centipede hunts→breeds→reaches 30, **0% re-seed, oscillating** (configs `G4`-`G7`).
+  - **PARTIAL ◐ beetle ~12, millipede ~18:** both now self-maintained (0% re-seed) but below the 30 target —
+    need higher caps + more food (beetle: corpse supply / cap 20→40; millipede: more `leaf_litter`).
+  - **NOT SOLVED ❌ wasp (FLOOR ~10):** the one holdout. It's a FLYING nest-predator — `flies_over_fences:
+    true`, so it leaves its (immigration-stocked) pen for the open arena/butterflies, AND its nest breeding
+    is anemic (`spawn`/`reseed`-born, not `nest`). Distinct from the centipede; needs its own investigation
+    (nest-hatch mechanics + flyer containment / a wasp-specific prey arrangement).
+  - **Open balance items:** immigration overshoots fly to ~390 — dial `spawn_interval`/cap so fly sits at
+    100 while still feeding predators; then re-add the Director culls as far guardrails (`G10` showed culls
+    reshape via re-seed, not self-maintenance — keep them last-resort).
+  - **Best config so far: `G6_immig_breedbar` / `G4_immig_reach`** (centipede PASS + decomposers
+    self-maintained); fly/wasp still need the two balance items above.
+  - **→ Next: (1) wasp investigation; (2) beetle/millipede caps+food → 30; (3) balance immigration so fly=100.**
 
 **Up next (the roadmap remainder, mostly client → needs the Unity Editor):**
 - **Brood CLIENT layer** — right-click a source → eggs/maggots panel + on-world maggot-pile/egg visuals + sprites.
