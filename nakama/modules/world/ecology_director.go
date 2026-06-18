@@ -75,7 +75,7 @@ func (m *Match) processEcologyDirector(logger runtime.Logger, dispatcher runtime
 	if wantRain {
 		m.requestExtraRain(state, dispatcher, logger)
 	} else if wantDrought {
-		m.requestDrought(state, logger, droughtDays)
+		m.requestDrought(state, logger, state.Tuning.DroughtDays)
 	}
 }
 

@@ -69,6 +69,10 @@ type WorldState struct {
 	ScheduledRainTick int64  // Raw tick the next shower starts (0 = none scheduled)
 	DroughtUntilTick  int64  // Raw tick a Director-triggered drought lifts (0 = none); while active, the daily rain roll auto-fails
 
+	// Tuning: the ecology balance dials (data/ecology_tuning.json), loaded at MatchInit. Soft, never hashed.
+	// Defaults = the compiled consts (byte-identical baseline); a config sweep overrides them without a rebuild.
+	Tuning *Tuning
+
 	// SwarmUpdate (OpCode 20) is event-driven, not per-tick: set true whenever the
 	// swarm SET or metadata changes (spawn/despawn/merge/split/phase). Bug centers are
 	// derived deterministically from SWARM_SET_TARGET events, so positions are NOT

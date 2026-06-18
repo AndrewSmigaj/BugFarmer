@@ -31,6 +31,7 @@ func nopRuntimeLogger() runtime.Logger { return nopLogger{} }
 func newTestState(maxSwarm int) *WorldState {
 	return &WorldState{
 		Config:          WorldConfig{ChunkSize: 32, TickRate: 10},
+		Tuning:          DefaultTuning(), // ecology dials (production loads from JSON; tests use compiled defaults)
 		TickCount:       1000,
 		Swarms:          map[string]*entities.SwarmState{},
 		SwarmsBySpecies: map[string][]string{},

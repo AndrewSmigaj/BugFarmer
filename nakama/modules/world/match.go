@@ -268,6 +268,8 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 
 	// Load entity definitions from unified entity system
 	var warnings []string
+	state.Tuning = LoadTuning("data/ecology_tuning.json", logger)
+
 	state.Entities, warnings, err = LoadAllEntities("data")
 	if err != nil {
 		logger.Warn("Failed to load entity definitions: %v", err)
@@ -1284,7 +1286,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 							// Host-plant breeding (butterfly on milkweed) drains the milkweed's capacity;
 							// grazed-out milkweed stops being a breeding source until it regrows.
 							if hp := worldState.HostPlantStates[fmt.Sprintf("%d,%d", int(swarm.TargetFoodX), int(swarm.TargetFoodY))]; hp != nil {
-								hp.Capacity -= hostBreedCost
+								hp.Capacity -= worldState.Tuning.HostBreedCost
 								if hp.Capacity < 0 {
 									hp.Capacity = 0
 								}
@@ -1348,7 +1350,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		}
 
 		// Check continuous spawning every 100 ticks (10 seconds)
-		if worldState.TickCount%directorIntervalTicks == 0 {
+		if worldState.TickCount%worldState.Tuning.DirectorIntervalTicks == 0 {
 			m.processEcologyDirector(logger, dispatcher, worldState, chunkSize) // bands: re-seed low / cull high
 		}
 		if worldState.TickCount%100 == 0 {
@@ -1680,7 +1682,7 @@ func (m *Match) spawnSwarmForSpecies(state *WorldState, speciesID string, logger
 		Count:     count,
 		WanderRad: species.WanderRadius,
 		HomePos:   pos,
-		Satiation: spawnSatiation, // born half-fed (see const) — natural-spawn + Director re-seed path
+		Satiation: state.Tuning.SpawnSatiation, // born half-fed (see const) — natural-spawn + Director re-seed path
 	}
 	swarm.InitializeBugIDs()
 	assignDeathTicks(swarm, species, 0, count, state.TickCount, SimRate)
@@ -1833,10 +1835,10 @@ func (m *Match) processStarvation(logger runtime.Logger, dispatcher runtime.Matc
 	}
 	var culls []cull
 	for _, swarm := range state.Swarms {
-		if swarm.Count <= 0 || swarm.StarveTimer < starvationDeathSecs {
+		if swarm.Count <= 0 || swarm.StarveTimer < state.Tuning.StarvationDeathSecs {
 			continue
 		}
-		n := int(float32(swarm.Count) * starvationCullFrac)
+		n := int(float32(swarm.Count) * state.Tuning.StarvationCullFrac)
 		if n < 1 {
 			n = 1
 		}

@@ -106,7 +106,7 @@ func (m *Match) spawnSwarmAt(state *WorldState, speciesID string, n int, x, y fl
 		Count:     n,
 		WanderRad: species.WanderRadius,
 		HomePos:   pos,
-		Satiation: spawnSatiation, // born half-fed so it isn't culled before it can reach food (see const)
+		Satiation: state.Tuning.SpawnSatiation, // born half-fed so it isn't culled before it can reach food (see const)
 	}
 	swarm.InitializeBugIDs()
 	assignDeathTicks(swarm, species, 0, n, state.TickCount, SimRate)

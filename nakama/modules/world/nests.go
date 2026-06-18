@@ -8,6 +8,14 @@ import (
 	"bugfarmer/entities"
 )
 
+// Daughter-nest founding distance (Chebyshev rings searched for an empty cell). This is the predator
+// CLUSTERING dial: too small → all hives pile near the parent and patrols overlap the same prey; wider →
+// territories spread. Overridable via Tuning.NestFoundDistMin/Max. Defaults preserve current behavior.
+const (
+	nestFoundDistMin = 2
+	nestFoundDistMax = 6
+)
+
 // Wasp nests (architecture_swarm_sync.md §14): the fruit-tree pattern — occupant-backed
 // in-memory states scanned at chunk load, swept when the occupant disappears, no
 // persistence (a destroyed nest resurrects on server restart, like every broken
@@ -66,7 +74,7 @@ func (m *Match) registerNestAt(state *WorldState, gx, gy int, occupantID, specie
 	}
 	nest := &entities.NestState{GridX: gx, GridY: gy, EntityID: occupantID, SpeciesID: speciesID}
 	state.NestStates[key] = nest
-	m.nestSpawnResident(state, nest, species, entities.NestFoundingSize, logger)
+	m.nestSpawnResident(state, nest, species, state.Tuning.NestFoundingSize, logger)
 	logger.Debug("Registered %s nest at %d,%d (resident=%q)", speciesID, gx, gy, nest.ResidentSwarmID)
 	return nest
 }
@@ -133,7 +141,7 @@ func (m *Match) processNests(state *WorldState, logger runtime.Logger) {
 		}
 
 		// Resident dead (caught/killed). Brood-drain re-hatch:
-		if nest.Brood < entities.NestHatchCost {
+		if nest.Brood < state.Tuning.NestHatchCost {
 			nest.RehatchAtTick = 0 // dormant — a readable axe-at-leisure target
 			continue
 		}
@@ -143,8 +151,8 @@ func (m *Match) processNests(state *WorldState, logger runtime.Logger) {
 		}
 		if state.TickCount >= nest.RehatchAtTick {
 			size := nest.Brood
-			if size > entities.NestHatchCost {
-				size = entities.NestHatchCost
+			if size > state.Tuning.NestHatchCost {
+				size = state.Tuning.NestHatchCost
 			}
 			nest.Brood -= size
 			species := state.Species[nest.SpeciesID]
@@ -169,12 +177,12 @@ func (m *Match) depositBrood(
 	nest *entities.NestState,
 	logger runtime.Logger,
 ) {
-	if nest.Brood < entities.NestBroodCap {
+	if nest.Brood < state.Tuning.NestBroodCap {
 		nest.Brood++
 	}
 
-	if nest.Brood >= entities.NestHatchCost {
-		n := entities.NestHatchCount
+	if nest.Brood >= state.Tuning.NestHatchCost {
+		n := state.Tuning.NestHatchCount
 		if maxPop := state.SpeciesMaxPopulation(swarm.SpeciesID); maxPop > 0 {
 			room := maxPop - state.SpeciesPopulation(swarm.SpeciesID)
 			if room < n {
@@ -182,7 +190,7 @@ func (m *Match) depositBrood(
 			}
 		}
 		if n > 0 {
-			nest.Brood -= entities.NestHatchCost
+			nest.Brood -= state.Tuning.NestHatchCost
 			m.growSwarm(state, swarm, n)
 			logger.Info("Nest %d,%d hatched +%d into %s (now %d; brood %d)",
 				nest.GridX, nest.GridY, n, swarm.ID, swarm.Count, nest.Brood)
@@ -237,10 +245,10 @@ func (m *Match) processNestFounding(state *WorldState, dispatcher runtime.MatchD
 	}
 
 	type founding struct {
-		gx, gy        int
-		occupantID    string
-		speciesID     string
-		species       *entities.BugSpecies
+		gx, gy     int
+		occupantID string
+		speciesID  string
+		species    *entities.BugSpecies
 	}
 	var todo []founding
 
@@ -255,7 +263,7 @@ func (m *Match) processNestFounding(state *WorldState, dispatcher runtime.MatchD
 		}
 		// Thriving: saturated patrol + banked surplus brood (brood only accrues from successful
 		// post-kill homing, so a full bank means the colony is well-fed).
-		if resident.Count < species.MaxSwarmSize || nest.Brood < entities.NestBroodCap {
+		if resident.Count < species.MaxSwarmSize || nest.Brood < state.Tuning.NestBroodCap {
 			continue
 		}
 		maxNests := state.CurrentZone.BugSpawning.SpeciesCaps[nest.SpeciesID].MaxNests
@@ -264,16 +272,16 @@ func (m *Match) processNestFounding(state *WorldState, dispatcher runtime.MatchD
 		}
 		// Population headroom for the daughter patrol (don't found a dormant hive at the cap).
 		if maxPop := state.SpeciesMaxPopulation(nest.SpeciesID); maxPop > 0 &&
-			state.SpeciesPopulation(nest.SpeciesID)+entities.NestFoundingSize > maxPop {
+			state.SpeciesPopulation(nest.SpeciesID)+state.Tuning.NestFoundingSize > maxPop {
 			continue
 		}
-		gx, gy, ok := m.findEmptyCellNear(state, nest.GridX, nest.GridY, 2, 6)
+		gx, gy, ok := m.findEmptyCellNear(state, nest.GridX, nest.GridY, state.Tuning.NestFoundDistMin, state.Tuning.NestFoundDistMax)
 		if !ok {
 			continue
 		}
 		todo = append(todo, founding{gx, gy, nest.EntityID, nest.SpeciesID, species})
-		nest.Brood = 0                  // drain the surplus -> founding cooldown (rebuild to NestBroodCap first)
-		nestCount[nest.SpeciesID]++     // reserve the slot so two parents can't both overshoot MaxNests this pass
+		nest.Brood = 0              // drain the surplus -> founding cooldown (rebuild to NestBroodCap first)
+		nestCount[nest.SpeciesID]++ // reserve the slot so two parents can't both overshoot MaxNests this pass
 	}
 
 	for _, f := range todo {

@@ -512,7 +512,7 @@ func (m *Match) processPredatorBreeding(state *WorldState, dispatcher runtime.Ma
 		if species == nil || species.Predation == nil || species.Predation.NestOccupant != "" {
 			continue
 		}
-		if swarm.Count > 0 && swarm.Satiation >= predatorBreedSatiation && swarm.CanReproduce() {
+		if swarm.Count > 0 && swarm.Satiation >= state.Tuning.PredatorBreedSatiation && swarm.CanReproduce() {
 			breeders = append(breeders, swarm)
 		}
 	}

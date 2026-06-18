@@ -771,7 +771,7 @@ func (m *Match) dropFruitFromTree(
 		side = -1
 	}
 	worldX := float32(tree.GridX) + 0.5 + side*(0.7+rand.Float32()*0.9) // 0.7-1.6 cells to a side
-	worldY := float32(tree.GridY) + 0.2 - rand.Float32()*1.2           // at/below the trunk = in front
+	worldY := float32(tree.GridY) + 0.2 - rand.Float32()*1.2            // at/below the trunk = in front
 	localX := worldX - float32(cx)*cs
 	localY := worldY - float32(cy)*cs
 
@@ -1256,7 +1256,7 @@ func (m *Match) initHostPlantsInChunk(state *WorldState, chunk *ChunkData, cx, c
 				continue
 			}
 			state.HostPlantStates[key] = &entities.HostPlantState{
-				EntityID: cell.Occupant.ID, GridX: gx, GridY: gy, Capacity: maxHostCapacity,
+				EntityID: cell.Occupant.ID, GridX: gx, GridY: gy, Capacity: state.Tuning.MaxHostCapacity,
 			}
 		}
 	}
@@ -1265,15 +1265,15 @@ func (m *Match) initHostPlantsInChunk(state *WorldState, chunk *ChunkData, cx, c
 // processHostPlants regrows host-plant breeding capacity each tick (a grazed-out milkweed slowly
 // becomes breedable again). Server-only soft state.
 func (m *Match) processHostPlants(state *WorldState) {
-	regen := float32(hostRegenPerTick)
+	regen := state.Tuning.HostRegenPerTick
 	if state.DroughtUntilTick > state.TickCount {
-		regen *= droughtFoodRegenMult // drought: milkweed regrows slower → fewer butterfly births
+		regen *= state.Tuning.DroughtFoodRegenMult // drought: milkweed regrows slower → fewer butterfly births
 	}
 	for _, hp := range state.HostPlantStates {
-		if hp.Capacity < maxHostCapacity {
+		if hp.Capacity < state.Tuning.MaxHostCapacity {
 			hp.Capacity += regen
-			if hp.Capacity > maxHostCapacity {
-				hp.Capacity = maxHostCapacity
+			if hp.Capacity > state.Tuning.MaxHostCapacity {
+				hp.Capacity = state.Tuning.MaxHostCapacity
 			}
 		}
 	}
@@ -1312,7 +1312,7 @@ func (m *Match) initForagePoolsInChunk(state *WorldState, chunk *ChunkData, cx, 
 				continue
 			}
 			state.ForagePools[key] = &entities.ForagePoolState{
-				EntityID: cell.Occupant.ID, GridX: gx, GridY: gy, Nectar: maxNectar,
+				EntityID: cell.Occupant.ID, GridX: gx, GridY: gy, Nectar: state.Tuning.MaxNectar,
 			}
 		}
 	}
@@ -1321,15 +1321,15 @@ func (m *Match) initForagePoolsInChunk(state *WorldState, chunk *ChunkData, cx, 
 // processForagePools regrows flower nectar each tick (a grazed-out flower slowly becomes a food source
 // again). Server-only soft state. The regen rate is the master boom-bust dial.
 func (m *Match) processForagePools(state *WorldState) {
-	regen := float32(nectarRegenPerTick)
+	regen := state.Tuning.NectarRegenPerTick
 	if state.DroughtUntilTick > state.TickCount {
-		regen *= droughtFoodRegenMult // drought: flowers give far less nectar → butterflies food-limited
+		regen *= state.Tuning.DroughtFoodRegenMult // drought: flowers give far less nectar → butterflies food-limited
 	}
 	for _, fp := range state.ForagePools {
-		if fp.Nectar < maxNectar {
+		if fp.Nectar < state.Tuning.MaxNectar {
 			fp.Nectar += regen
-			if fp.Nectar > maxNectar {
-				fp.Nectar = maxNectar
+			if fp.Nectar > state.Tuning.MaxNectar {
+				fp.Nectar = state.Tuning.MaxNectar
 			}
 		}
 	}
