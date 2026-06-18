@@ -1,0 +1,17 @@
+{
+  "name": "01_no_cull",
+  "description": "Disable every hard cull (cull_at=0) so we see the NATURAL equilibria + oscillation with no Director clipping the peaks. The owner's first ask — find out where populations settle on their own before tuning. Re-seed floors + drought/extra-rain stay (those shape, they don't clip).",
+  "lab": {
+    "director": {
+      "fly_common":       {"cull_at": 0, "cull_with": ""},
+      "butterfly_meadow": {"cull_at": 0},
+      "wasp_common":      {"cull_at": 0},
+      "centipede_garden": {"cull_at": 0},
+      "millipede":        {"cull_at": 0},
+      "beetle_carrion":   {"cull_at": 0}
+    }
+  },
+  "tuning": {},
+  "species": {},
+  "fruit": {}
+}

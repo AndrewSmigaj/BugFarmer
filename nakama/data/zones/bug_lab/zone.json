@@ -18,10 +18,10 @@
     "static": false,
     "species_caps": {
       "fly_common": {
-        "initial": 2,
-        "max": 12,
         "max_population": 150,
         "spawn_interval": 999999.0,
+        "initial": 2,
+        "max": 12,
         "swarm_size": 6,
         "min_population": 8,
         "event_low": 25,
@@ -30,10 +30,10 @@
         "cull_with": "wasp_common"
       },
       "butterfly_meadow": {
-        "initial": 2,
-        "max": 12,
         "max_population": 100,
         "spawn_interval": 999999.0,
+        "initial": 2,
+        "max": 12,
         "swarm_size": 6,
         "min_population": 12,
         "event_low": 18,
@@ -41,38 +41,38 @@
         "cull_at": 80
       },
       "wasp_common": {
-        "initial": 2,
-        "max": 12,
         "max_population": 40,
         "spawn_interval": 999999.0,
+        "initial": 2,
+        "max": 12,
         "swarm_size": 6,
         "min_population": 6,
         "cull_at": 32,
         "max_nests": 3
       },
       "centipede_garden": {
-        "initial": 2,
-        "max": 12,
         "max_population": 30,
         "spawn_interval": 999999.0,
+        "initial": 2,
+        "max": 12,
         "swarm_size": 6,
         "min_population": 5,
         "cull_at": 24
       },
       "millipede": {
-        "initial": 2,
-        "max": 8,
         "max_population": 30,
         "spawn_interval": 999999.0,
+        "initial": 2,
+        "max": 8,
         "swarm_size": 1,
         "min_population": 3,
         "cull_at": 24
       },
       "beetle_carrion": {
-        "initial": 2,
-        "max": 4,
         "max_population": 20,
         "spawn_interval": 999999.0,
+        "initial": 2,
+        "max": 4,
         "swarm_size": 1,
         "min_population": 2,
         "cull_at": 16
