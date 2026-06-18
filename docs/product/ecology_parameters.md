@@ -5,6 +5,16 @@ Tune populations by **adjusting these parameters** — NOT by bolting on new foo
 already has enough levers; the art is finding the right values on the 6× `bug_lab` chart (see the
 `test-changes` skill §2.5).
 
+**The tuning rig (Phase 4c).** The Go balance consts below are overridable as DATA via
+`nakama/data/ecology_tuning.json` (`Tuning` struct, loaded at MatchInit; absent file → compiled
+defaults = byte-identical). A run is a CONFIG — `tools/bug_lab_configs/<name>.json` deep-merged over the
+baseline (sections: `tuning`→ecology_tuning.json, `species`→species.json, `fruit`→occupants.json tree
+rates, `lab`→Director bands/caps) — applied + run + restored by `tools/run_config.py <name>`. The
+**interaction log** (`ECOSTATS`/`PREDLOG` → `tools/plot_interactions.py`) is the "why": per-day
+births-by-source / deaths-by-cause + the predation matrix. `tools/compare_configs.py` scores each config
+on the objective (mean vs target center, amplitude, **%re-seed births → 0 = self-maintained**). Change
+ONE dial per config; diagnose with the interaction log; never guess.
+
 **Mental model — a population sits where BIRTHS = DEATHS, capped by FOOD.** To move a species:
 raise/lower its **birth rate**, its **death rate**, or its **food supply** (carrying capacity). The
 Director **bands** are the last-resort guardrails, not the primary bound — if a species only sits where
@@ -70,9 +80,22 @@ prey species is starving** — bound it by FOOD instead (§3), and keep the drou
 Director clock: `directorIntervalTicks` (how often it acts), `directorPredatorCount`, `droughtDays`
 (`ecology_director.go`).
 
-## 5. MOVEMENT / HUNT EFFECTIVENESS (indirect — affects who eats)
-`base_speed`, `vision_range`, `wander_radius`, `home_range`, `hunt_speed_mult` (`species.json`). A faster /
-longer-sighted predator catches more prey (↓prey, ↑predator); a faster prey flees better.
+## 5. MOVEMENT / SPATIAL / CLUSTERING (indirect — affects who eats whom, and where)
+**Hunt effectiveness** (`species.json`): `base_speed`, `vision_range`, `wander_radius`, `home_range`,
+`hunt_speed_mult`. A faster / longer-sighted predator catches more prey (↓prey, ↑predator); a faster prey
+flees better.
+
+**Swarm grain** (`species.json`): `max_swarm_size` (a swarm past this SPLITS — `category:individual`
+splits a daughter beside it, swarms shed a child), `min_swarm_size`, `merge_radius` (two same-species
+swarms within this distance FUSE), `swarm_radius` (visual/strike spread). Bigger swarms = fewer, denser
+hunt decisions (one swarm = one target choice); smaller = more, more-distributed coverage.
+
+**Predator clustering — the nest-found distance dial** (`Tuning.nest_found_dist_min/max`, default 2..6).
+Daughter wasp nests are founded this many Chebyshev rings from the parent (`findEmptyCellNear`,
+`nests.go`). Too small → every hive's patrol overlaps the SAME prey disc (co-located swarms over-serve the
+nearest prey cloud and ignore the rest = "all clustered, bad hunting"); wider → territories spread and the
+predators cover more prey. This — NOT `home_range` — is the real lever for the "predators bunched up"
+symptom. Raise the max (and/or min) to spread hives across the arena.
 
 ## 6. GLOBAL SIM (do not retune for balance)
 - `SimRate` (`match.go`) = the canonical balance anchor (sim ticks/sec of GAME time). **Never change** —
