@@ -60,6 +60,10 @@ type SpawnArea struct {
 	ID      string   `json:"id"`
 	Species []string `json:"species"` // Which species can spawn here
 	Type    string   `json:"type"`    // "zone" or "circle"
+	// Relative selection weight when a species has multiple areas (default 1.0 when absent/<=0).
+	// Habitat circles get a high weight, the zone-wide wild-card a low one — e.g. habitat circles
+	// summing to ~3 + a zone area at ~1 → ~3:1 habitat-vs-anywhere. See spawnSwarmForSpecies.
+	Weight float64 `json:"weight,omitempty"`
 	// Circle fields (only used if Type == "circle")
 	CX     int `json:"cx,omitempty"`
 	CY     int `json:"cy,omitempty"`
@@ -71,11 +75,11 @@ type SpawnArea struct {
 type ZoneConfig struct {
 	ZoneID      string          `json:"zone_id"`
 	Name        string          `json:"name"`
-	Row         int             `json:"row"`          // Zone grid row
-	Col         int             `json:"col"`          // Zone grid column
-	Width       int             `json:"width"`        // Width in cells (default 512)
-	Height      int             `json:"height"`       // Height in cells (default 512)
-	SpawnPoint  [2]int          `json:"spawn_point"`  // Default spawn (cell coords)
+	Row         int             `json:"row"`            // Zone grid row
+	Col         int             `json:"col"`            // Zone grid column
+	Width       int             `json:"width"`          // Width in cells (default 512)
+	Height      int             `json:"height"`         // Height in cells (default 512)
+	SpawnPoint  [2]int          `json:"spawn_point"`    // Default spawn (cell coords)
 	BiomeType   string          `json:"biome_type"`     // "meadow", "forest", "cave", etc.
 	Seed        int64           `json:"seed,omitempty"` // Fixed world seed for deterministic runs (0 = random)
 	BugSpawning *BugSpawnConfig `json:"bug_spawning"`   // Zone-level bug spawn config (optional)

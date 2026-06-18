@@ -318,6 +318,13 @@ func TestNestFoundingSplitsDaughterHive(t *testing.T) {
 		"wasp_common": {MaxNests: 2, MaxPopulation: 100},
 	}}
 
+	// A daughter now founds NEXT TO A PREY CLUSTER an adequate distance from the parent (nest at 10,10).
+	// Drop a fly swarm at world (55,10) ≈ 44 cells away — inside the 40..120 band + the loaded chunks.
+	prey := &entities.SwarmState{ID: "prey_fly", SpeciesID: "fly_common", Count: 6,
+		Position: entities.EntityPosition{ChunkX: 1, ChunkY: 0, LocalX: 23, LocalY: 10}}
+	prey.InitializeBugIDs()
+	state.Swarms["prey_fly"] = prey
+
 	// Not yet thriving (brood not full) → no founding.
 	resident.Count = species.MaxSwarmSize
 	nest.Brood = entities.NestBroodCap - 1

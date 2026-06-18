@@ -1642,21 +1642,52 @@ func (m *Match) spawnSwarmForSpecies(state *WorldState, speciesID string, logger
 		return nil
 	}
 
-	// Pick random area
-	area := validAreas[rand.Intn(len(validAreas))]
+	// WEIGHTED area pick: a species' habitat circles carry a high weight, the zone-wide wild-card a low
+	// one (SpawnArea.Weight, default 1.0) — so most spawns land in-habitat and a minority wander in
+	// anywhere (the ~3:1 model). Same path serves initial seed AND Director re-seed.
+	totalW := 0.0
+	for _, a := range validAreas {
+		w := a.Weight
+		if w <= 0 {
+			w = 1.0
+		}
+		totalW += w
+	}
+	area := validAreas[len(validAreas)-1] // fallback for float rounding
+	roll := rand.Float64() * totalW
+	for _, a := range validAreas {
+		w := a.Weight
+		if w <= 0 {
+			w = 1.0
+		}
+		if roll < w {
+			area = a
+			break
+		}
+		roll -= w
+	}
 
-	// Generate position based on area type
+	// Generate a position, RETRYING for a walkable cell so a zone-wide (or water-overlapping circle)
+	// spawn never lands in the lake / a wall — natural death still handles merely-suboptimal spots.
 	var worldX, worldY float32
-	if area.Type == "zone" {
-		// Anywhere in zone
-		worldX = float32(rand.Intn(state.CurrentZone.Width))
-		worldY = float32(rand.Intn(state.CurrentZone.Height))
-	} else {
-		// Circle: random point within radius
-		angle := rand.Float64() * 2 * math.Pi
-		r := float64(area.Radius) * math.Sqrt(rand.Float64()) // sqrt for uniform distribution
-		worldX = float32(area.CX) + float32(r*math.Cos(angle))
-		worldY = float32(area.CY) + float32(r*math.Sin(angle))
+	placed := false
+	for attempt := 0; attempt < 12; attempt++ {
+		if area.Type == "zone" {
+			worldX = float32(rand.Intn(state.CurrentZone.Width))
+			worldY = float32(rand.Intn(state.CurrentZone.Height))
+		} else {
+			angle := rand.Float64() * 2 * math.Pi
+			r := float64(area.Radius) * math.Sqrt(rand.Float64()) // sqrt for uniform distribution
+			worldX = float32(area.CX) + float32(r*math.Cos(angle))
+			worldY = float32(area.CY) + float32(r*math.Sin(angle))
+		}
+		if !state.IsBlocked(worldX, worldY) {
+			placed = true
+			break
+		}
+	}
+	if !placed {
+		return nil // no walkable cell found (rare) — skip this spawn rather than drop a bug in terrain
 	}
 
 	// Convert to chunk position

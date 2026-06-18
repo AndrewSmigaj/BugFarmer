@@ -2,18 +2,21 @@ package world
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 
 	"bugfarmer/entities"
 )
 
-// Daughter-nest founding distance (Chebyshev rings searched for an empty cell). This is the predator
-// CLUSTERING dial: too small → all hives pile near the parent and patrols overlap the same prey; wider →
-// territories spread. Overridable via Tuning.NestFoundDistMin/Max. Defaults preserve current behavior.
+// Daughter-nest founding SEPARATION from the parent (cells). The owner's model: a founding hornet travels
+// an ADEQUATE distance to a NEW area, THEN hunts for prey there, and forms the nest where it finds prey —
+// so a daughter settles beside a prey cluster that is min..max cells from the parent (≈ the wasp's
+// home_range 40 / the authored ~74-cell inter-nest spacing), and the colony WAITS if no such prey exists
+// (no doomed hive in an empty field). Overridable via Tuning.NestFoundDistMin/Max. See findNestSiteWithPrey.
 const (
-	nestFoundDistMin = 2
-	nestFoundDistMax = 6
+	nestFoundDistMin = 40
+	nestFoundDistMax = 120
 )
 
 // Wasp nests (architecture_swarm_sync.md §14): the fruit-tree pattern — occupant-backed
@@ -276,9 +279,10 @@ func (m *Match) processNestFounding(state *WorldState, dispatcher runtime.MatchD
 			state.SpeciesPopulation(nest.SpeciesID)+state.Tuning.NestFoundingSize > maxPop {
 			continue
 		}
-		gx, gy, ok := m.findEmptyCellNear(state, nest.GridX, nest.GridY, state.Tuning.NestFoundDistMin, state.Tuning.NestFoundDistMax)
+		gx, gy, ok := m.findNestSiteWithPrey(state, nest.GridX, nest.GridY, species,
+			state.Tuning.NestFoundDistMin, state.Tuning.NestFoundDistMax)
 		if !ok {
-			continue
+			continue // no prey cluster an adequate distance away yet — the colony WAITS (no doomed hive)
 		}
 		todo = append(todo, founding{gx, gy, nest.EntityID, nest.SpeciesID, species})
 		nest.Brood = 0              // drain the surplus -> founding cooldown (rebuild to NestBroodCap first)
@@ -297,6 +301,42 @@ func (m *Match) processNestFounding(state *WorldState, dispatcher runtime.MatchD
 		m.registerNestAt(state, f.gx, f.gy, f.occupantID, f.speciesID, f.species, logger)
 		logger.Info("Nest founding: %s colony split a new hive at %d,%d", f.speciesID, f.gx, f.gy)
 	}
+}
+
+// findNestSiteWithPrey picks a daughter-nest site in a NEW area with prey: the NEAREST prey cluster that
+// sits an adequate distance from the parent (minD..maxD cells), then an empty walkable cell beside it.
+// Returns !ok when no qualifying prey cluster exists — the colony WAITS rather than found a doomed hive in
+// an empty field. (Owner's model: travel an adequate distance, THEN hunt for prey, THEN form the nest.)
+// O(swarms); only runs on the slow nest-founding clock for a thriving colony.
+func (m *Match) findNestSiteWithPrey(state *WorldState, parentGX, parentGY int, species *entities.BugSpecies, minD, maxD int) (int, int, bool) {
+	p := species.Predation
+	if p == nil || len(p.Prey) == 0 {
+		return 0, 0, false
+	}
+	cs := state.Config.ChunkSize
+	px, py := float32(parentGX)+0.5, float32(parentGY)+0.5
+	minSq, maxSq := float32(minD*minD), float32(maxD*maxD)
+	bestID := ""
+	var bestX, bestY float32
+	bestSq := float32(math.MaxFloat32)
+	for id, sw := range state.Swarms {
+		if sw.Count <= 0 || !containsString(p.Prey, sw.SpeciesID) {
+			continue
+		}
+		sx, sy := sw.WorldX(cs), sw.WorldY(cs)
+		dx, dy := sx-px, sy-py
+		dsq := dx*dx + dy*dy
+		if dsq < minSq || dsq > maxSq {
+			continue // too close to the parent (overlapping turf) or too far across the map
+		}
+		if dsq < bestSq || (dsq == bestSq && id < bestID) { // nearest qualifying prey (deterministic tiebreak)
+			bestSq, bestX, bestY, bestID = dsq, sx, sy, id
+		}
+	}
+	if bestID == "" {
+		return 0, 0, false
+	}
+	return m.findEmptyCellNear(state, int(bestX), int(bestY), 1, 8) // an empty cell beside that prey cluster
 }
 
 // findEmptyCellNear spirals out (Chebyshev rings minR..maxR, deterministic order) from (gx,gy) for the
