@@ -1,0 +1,37 @@
+{
+  "name": "G5_immig_lethal",
+  "description": "IMMIG: immigration(20s) + sealed + cap400 + C3 + LETHALITY \u2014 convert each encounter to a kill+meal.",
+  "extends": "01_no_cull",
+  "species": {
+    "fly_common": {
+      "reproduce_cooldown": 18.0,
+      "breed_amount": 16.0
+    },
+    "centipede_garden": {
+      "predation": {
+        "feed_per_kill": 65.0,
+        "strike_cooldown_ticks": 20,
+        "strike_radius": 3.2
+      }
+    },
+    "wasp_common": {
+      "predation": {
+        "feed_per_kill": 65.0,
+        "strike_cooldown_ticks": 55,
+        "strike_radius": 3.8
+      }
+    }
+  },
+  "lab": {
+    "caps": {
+      "fly_common": {
+        "spawn_interval": 20.0,
+        "max": 40
+      }
+    },
+    "seal_pens": true,
+    "max_pop": {
+      "fly_common": 400
+    }
+  }
+}
