@@ -2,10 +2,7 @@ package world
 
 import (
 	"encoding/json"
-	"fmt"
-	"math/rand"
 	"sort"
-	"time"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 
@@ -219,19 +216,19 @@ func (m *Match) spawnKillDrops(
 	}
 
 	for _, drop := range species.KillDrops {
-		if drop.Chance < 1.0 && rand.Float32() > drop.Chance {
+		if drop.Chance < 1.0 && state.Rng.Float32() > drop.Chance {
 			continue
 		}
 		count := drop.CountMin
 		if drop.CountMax > drop.CountMin {
-			count += rand.Intn(drop.CountMax - drop.CountMin + 1)
+			count += state.Rng.Intn(drop.CountMax - drop.CountMin + 1)
 		}
 		if count <= 0 {
 			continue
 		}
 
-		worldX := dropX + (rand.Float32()-0.5)*0.6
-		worldY := dropY + (rand.Float32()-0.5)*0.6
+		worldX := dropX + (state.Rng.Float32()-0.5)*0.6
+		worldY := dropY + (state.Rng.Float32()-0.5)*0.6
 		// Normalize like spawnSwarmAt (the old int(x/cs) truncation was wrong for
 		// negative coords)
 		pos := entities.EntityPosition{LocalX: worldX, LocalY: worldY}
@@ -242,7 +239,7 @@ func (m *Match) spawnKillDrops(
 			foodValue = def.FoodValue
 		}
 
-		itemID := fmt.Sprintf("item_kill_%d", time.Now().UnixNano())
+		itemID := state.nextItemID("item_kill")
 		groundItem := &entities.GroundItem{
 			ID:        itemID,
 			ItemType:  drop.Item,
@@ -331,7 +328,7 @@ func (m *Match) spawnCarcass(
 		foodValue = def.FoodValue
 	}
 
-	itemID := fmt.Sprintf("item_carcass_%d", time.Now().UnixNano())
+	itemID := state.nextItemID("item_carcass")
 	state.GroundItems[itemID] = &entities.GroundItem{
 		ID:        itemID,
 		ItemType:  carcassItem,

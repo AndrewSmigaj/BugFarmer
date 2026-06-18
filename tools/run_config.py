@@ -140,7 +140,11 @@ def apply_config(cfg, zone="bug_lab"):
     # (restored from the snapshot after the run, so the shipped zone.json stays production-clean).
     zone_json = os.path.join(DATA, "zones", zone, "zone.json")
     z = json.load(open(zone_json))
-    flags = {"ephemeral_swarms": True, "call_rate": 60, "sim_batch": 2, **(cfg.get("flags") or {})}
+    # seed: a FIXED non-zero seed makes the whole run reproducible (the server seeds its per-match RNG from
+    # zone.seed, and the sim iterates entities in sorted order) — so a config's effect is measurable, not
+    # drowned in run-to-run noise. Production zones keep seed 0 (random per match). A config may override.
+    flags = {"ephemeral_swarms": True, "call_rate": 60, "sim_batch": 2, "seed": 1337,
+             **(cfg.get("flags") or {})}
     z.update(flags)
     bs_delta = cfg.get("bug_spawning") or {}
     if bs_delta:

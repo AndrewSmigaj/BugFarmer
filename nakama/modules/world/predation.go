@@ -2,7 +2,6 @@ package world
 
 import (
 	"math"
-	"math/rand"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 
@@ -70,7 +69,7 @@ func (m *Match) predationThink(
 			swarm.TargetFoodID = "" // fleeing abandons the meal (meters pause)
 			swarm.TargetPreyID = ""
 			m.emitLeg(state, swarm, species, cx, cy, mult, chunkSize, deltaTime)
-			swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + rand.Int63n(huntReaimJitter)
+			swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)
 			return true
 		}
 		// No predator near: fall through (prey species may also be predators in
@@ -124,7 +123,7 @@ func (m *Match) predationThink(
 				}
 				swarm.TargetPreyID = ""
 				m.emitLeg(state, swarm, species, tx, ty, mult, chunkSize, deltaTime)
-				swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + rand.Int63n(huntReaimJitter)
+				swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)
 				return true
 			}
 		}
@@ -157,7 +156,7 @@ func (m *Match) predationThink(
 					swarm.Satiation = p.DepositSatiation
 				} else {
 					m.emitLeg(state, swarm, species, nx, ny, 1.0, chunkSize, deltaTime)
-					swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + rand.Int63n(huntReaimJitter)
+					swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)
 					return true
 				}
 			}
@@ -233,7 +232,7 @@ func (m *Match) predationThink(
 				tx, ty = cxp, cyp
 			}
 			m.emitLeg(state, swarm, species, tx, ty, mult, chunkSize, deltaTime)
-			swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + rand.Int63n(huntReaimJitter)
+			swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)
 			return true
 		}
 	}
@@ -247,7 +246,7 @@ func (m *Match) predationThink(
 
 	// Wander within the home range (rest between trips; the readable loiter).
 	sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
-	angle := rand.Float64() * 2 * math.Pi
+	angle := state.Rng.Float64() * 2 * math.Pi
 	tx := sx + float32(math.Cos(angle))*predWanderDistance
 	ty := sy + float32(math.Sin(angle))*predWanderDistance
 	if p.HomeRange > 0 {
@@ -262,7 +261,7 @@ func (m *Match) predationThink(
 		return state.IsBlockedForSpecies(x, y, species)
 	})
 	m.emitLeg(state, swarm, species, cxp, cyp, 1.0, chunkSize, deltaTime)
-	swarm.NextThinkTick = state.TickCount + wanderThinkMin + rand.Int63n(wanderThinkJitter)
+	swarm.NextThinkTick = state.TickCount + wanderThinkMin + state.Rng.Int63n(wanderThinkJitter)
 	return true
 }
 
@@ -509,7 +508,8 @@ func (m *Match) processPredatorBreeding(state *WorldState, dispatcher runtime.Ma
 		return
 	}
 	var breeders []*entities.SwarmState
-	for _, swarm := range state.Swarms {
+	for _, id := range sortedStringKeys(state.Swarms) { // sorted: reproduceSwarm draws rand per breeder
+		swarm := state.Swarms[id]
 		species := state.Species[swarm.SpeciesID]
 		if species == nil || species.Predation == nil || species.Predation.NestOccupant != "" {
 			continue

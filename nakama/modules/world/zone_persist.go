@@ -344,9 +344,14 @@ func (m *Match) buildChunkSave(state *WorldState, cx, cy int) *ChunkSave {
 			cs.CraftStations = append(cs.CraftStations, cf)
 		}
 	}
-	for _, gi := range state.GroundItems {
-		if gi.Position.ChunkX == cx && gi.Position.ChunkY == cy {
-			cs.GroundItems = append(cs.GroundItems, gi)
+	// Don't persist transient ground items (dropped/rotting fruit, carcasses) for fresh-start test zones —
+	// pairs with the restore skip above so tuning runs neither inherit nor accumulate a ground pile, and
+	// the next save overwrites any stale pile left in the DB by the immortal-rotten-fruit bug.
+	if state.CurrentZone == nil || !state.CurrentZone.EphemeralSwarms {
+		for _, gi := range state.GroundItems {
+			if gi.Position.ChunkX == cx && gi.Position.ChunkY == cy {
+				cs.GroundItems = append(cs.GroundItems, gi)
+			}
 		}
 	}
 
@@ -492,7 +497,13 @@ func (m *Match) applyChunkSave(state *WorldState, chunk *ChunkData, cx, cy int) 
 	for _, cf := range cs.CraftStations {
 		state.CraftStations[CraftStationKey(cf.GridX, cf.GridY)] = cf
 	}
-	for _, gi := range cs.GroundItems {
-		state.GroundItems[gi.ID] = gi
+	// Ground items (dropped/rotting fruit, bug carcasses) are TRANSIENT ecology state, not authored
+	// content. On a fresh-start test zone, skip restoring them so a tuning run never inherits the prior
+	// run's accumulated pile — the immortal-rotten-fruit bug let this grow to 40k+ across runs and made
+	// runs non-reproducible (each started dirtier than the last). Production zones restore normally.
+	if state.CurrentZone == nil || !state.CurrentZone.EphemeralSwarms {
+		for _, gi := range cs.GroundItems {
+			state.GroundItems[gi.ID] = gi
+		}
 	}
 }

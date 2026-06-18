@@ -2,7 +2,6 @@ package world
 
 import (
 	"encoding/json"
-	"math/rand"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 )
@@ -202,11 +201,11 @@ func (m *Match) scheduleDailyRain(state *WorldState, logger runtime.Logger) {
 		state.ScheduledRainTick = 0
 		return
 	}
-	if rand.Float64() >= rainDailyChance {
+	if state.Rng.Float64() >= rainDailyChance {
 		state.ScheduledRainTick = 0
 		return
 	}
-	state.ScheduledRainTick = state.TickCount + 1 + rand.Int63n(DayLengthTicks)
+	state.ScheduledRainTick = state.TickCount + 1 + state.Rng.Int63n(DayLengthTicks)
 	logger.Info("WEATHER: rain scheduled for tick %d (now %d)", state.ScheduledRainTick, state.TickCount)
 }
 
@@ -232,7 +231,7 @@ func (m *Match) requestExtraRain(state *WorldState, dispatcher runtime.MatchDisp
 	if state.WeatherKind == "drought" {
 		m.stopWeather(state, dispatcher, logger) // drop the drought visual so the shower shows
 	}
-	m.startRain(state, dispatcher, logger, rainMinTicks+rand.Int63n(rainMaxTicks-rainMinTicks+1))
+	m.startRain(state, dispatcher, logger, rainMinTicks+state.Rng.Int63n(rainMaxTicks-rainMinTicks+1))
 	logger.Info("Director: EXTRA RAIN (relief, now %d)", state.TickCount)
 }
 
@@ -243,7 +242,7 @@ func (m *Match) processWeather(state *WorldState, dispatcher runtime.MatchDispat
 	// ScheduledRainTick is 0 then anyway; this also won't interrupt the "drought" visual).
 	if state.ScheduledRainTick > 0 && state.TickCount >= state.ScheduledRainTick && state.WeatherKind == "" {
 		state.ScheduledRainTick = 0
-		m.startRain(state, dispatcher, logger, rainMinTicks+rand.Int63n(rainMaxTicks-rainMinTicks+1))
+		m.startRain(state, dispatcher, logger, rainMinTicks+state.Rng.Int63n(rainMaxTicks-rainMinTicks+1))
 	}
 	// End the current weather (a shower OR an expired drought visual) when its window closes.
 	if state.WeatherKind != "" && state.TickCount >= state.WeatherUntilTick {
@@ -331,7 +330,7 @@ func (m *Match) forceWeather(
 	switch kind {
 	case "rain":
 		logger.Info("DEBUG WORLD: %s forces rain", userID)
-		m.startRain(state, dispatcher, logger, rainMinTicks+rand.Int63n(rainMaxTicks-rainMinTicks+1))
+		m.startRain(state, dispatcher, logger, rainMinTicks+state.Rng.Int63n(rainMaxTicks-rainMinTicks+1))
 	case "stop":
 		logger.Info("DEBUG WORLD: %s stops weather", userID)
 		if state.WeatherKind != "" {

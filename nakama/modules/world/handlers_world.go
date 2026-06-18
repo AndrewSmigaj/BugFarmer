@@ -3,8 +3,6 @@ package world
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
-	"time"
 
 	"bugfarmer/entities"
 
@@ -539,12 +537,12 @@ func (m *Match) breakOccupantAt(
 		drops := def.GetDrops()
 		cs := float32(state.Config.ChunkSize)
 		for _, drop := range drops {
-			if rand.Float32() > drop.Chance {
+			if state.Rng.Float32() > drop.Chance {
 				continue
 			}
-			itemID := fmt.Sprintf("item_%d_%d_%d", gx, gy, time.Now().UnixNano())
-			worldX := float32(gx) + 0.5 + (rand.Float32()-0.5)*0.3
-			worldY := float32(gy) + 0.5 + (rand.Float32()-0.5)*0.3
+			itemID := state.nextItemID(fmt.Sprintf("item_%d_%d", gx, gy))
+			worldX := float32(gx) + 0.5 + (state.Rng.Float32()-0.5)*0.3
+			worldY := float32(gy) + 0.5 + (state.Rng.Float32()-0.5)*0.3
 			localX := worldX - float32(cx)*cs
 			localY := worldY - float32(cy)*cs
 

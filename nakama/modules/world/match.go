@@ -73,7 +73,7 @@ const SimRate = 10
 func (m *Match) reproduceSwarm(state *WorldState, dispatcher runtime.MatchDispatcher,
 	swarm *entities.SwarmState, species *entities.BugSpecies, logger runtime.Logger) {
 
-	count := 1 + rand.Intn(2) // 1-2 offspring
+	count := 1 + state.Rng.Intn(2) // 1-2 offspring
 
 	// VISIBLE BROOD path (flies/butterflies): a non-predator swarm LAYS eggs into the nursery at its
 	// breeding source instead of growing instantly. processBroods matures + hatches them, and the
@@ -258,6 +258,10 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 	} else {
 		state.WorldSeed = rand.Int63()
 	}
+	// Seed the per-match RNG from WorldSeed so the whole sim is a pure function of (seed, ticks): a fixed
+	// seed reproduces the run exactly (the tuning harness relies on this). All server rand.* below now go
+	// through state.Rng — NOT the unseeded global math/rand, which Go auto-seeds randomly per process.
+	state.Rng = rand.New(rand.NewSource(state.WorldSeed))
 	logger.Info("Loaded zone: %s (static=%v, seed=%d)", zoneConfig.ZoneID, state.StaticSim, state.WorldSeed)
 
 	// Load tile definitions (Phase 4)
@@ -1128,8 +1132,15 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			return worldState.IsBlocked(x, y)
 		}
 
-		// Simulate swarms
-		for _, swarm := range worldState.Swarms {
+		// Simulate swarms — sorted-ID order (not raw map range) so rand draws, shared-food grabs, and the
+		// IDs minted by breeding are a pure function of which swarms exist, not Go's randomized map order.
+		// Snapshotting the IDs first also fixes the unspecified behavior of adding to a map mid-range:
+		// swarms born from breeding THIS tick aren't processed until next tick (deterministic).
+		for _, swarmID := range sortedStringKeys(worldState.Swarms) {
+			swarm := worldState.Swarms[swarmID]
+			if swarm == nil {
+				continue // removed earlier this tick (predation/merge)
+			}
 			species := worldState.Species[swarm.SpeciesID]
 			if species == nil {
 				continue
@@ -1169,7 +1180,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				// decaying in between. OVERRIDE: once sated (reproducing phase) the swarm always
 				// seeks the breeding source and PARKS there until the reproduction fires.
 				if worldState.TickCount >= swarm.ModeUntilTick {
-					swarm.ForageMode = species.ForageChance <= 0 || rand.Float32() < species.ForageChance
+					swarm.ForageMode = species.ForageChance <= 0 || worldState.Rng.Float32() < species.ForageChance
 					modeMin, modeMax := int64(species.ForageModeMinTicks), int64(species.ForageModeMaxTicks)
 					if modeMin <= 0 {
 						modeMin = 300 // default 30s
@@ -1177,7 +1188,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 					if modeMax <= modeMin {
 						modeMax = modeMin + 200
 					}
-					swarm.ModeUntilTick = worldState.TickCount + modeMin + rand.Int63n(modeMax-modeMin+1)
+					swarm.ModeUntilTick = worldState.TickCount + modeMin + worldState.Rng.Int63n(modeMax-modeMin+1)
 				}
 				// Hungry OR breeding bugs always forage; only comfortably-fed ones follow the idle
 				// wander duty cycle. (Predators take the predationThink path above, not this one.)
@@ -1207,7 +1218,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				originX := swarm.WorldX(chunkSize)
 				originY := swarm.WorldY(chunkSize)
 
-				swarm.Think(species, chunkSize, resourceX, resourceY, isBlocked)
+				swarm.Think(species, chunkSize, resourceX, resourceY, isBlocked, worldState.Rng)
 
 				if worldState.CurrentZone != nil {
 					worldState.AddSwarmTargetEvent(
@@ -1221,7 +1232,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				}
 
 				// Schedule next think: 30-50 ticks (3-5 seconds at 10 ticks/sec)
-				swarm.NextThinkTick = worldState.TickCount + 30 + rand.Int63n(21)
+				swarm.NextThinkTick = worldState.TickCount + 30 + worldState.Rng.Int63n(21)
 			}
 
 			// MOVE: Every tick, move toward target (cheap)
@@ -1583,7 +1594,8 @@ func (m *Match) spawnInitialSwarms(state *WorldState, logger runtime.Logger) {
 	totalSpawned := 0
 
 	// Initialize species tracking and spawn initial swarms
-	for speciesID, cap := range cfg.SpeciesCaps {
+	for _, speciesID := range sortedStringKeys(cfg.SpeciesCaps) { // sorted: initial spawn mints IDs in order
+		cap := cfg.SpeciesCaps[speciesID]
 		state.SwarmsBySpecies[speciesID] = []string{}
 
 		// Schedule first continuous spawn check
@@ -1655,7 +1667,7 @@ func (m *Match) spawnSwarmForSpecies(state *WorldState, speciesID string, logger
 		totalW += w
 	}
 	area := validAreas[len(validAreas)-1] // fallback for float rounding
-	roll := rand.Float64() * totalW
+	roll := state.Rng.Float64() * totalW
 	for _, a := range validAreas {
 		w := a.Weight
 		if w <= 0 {
@@ -1674,11 +1686,11 @@ func (m *Match) spawnSwarmForSpecies(state *WorldState, speciesID string, logger
 	placed := false
 	for attempt := 0; attempt < 12; attempt++ {
 		if area.Type == "zone" {
-			worldX = float32(rand.Intn(state.CurrentZone.Width))
-			worldY = float32(rand.Intn(state.CurrentZone.Height))
+			worldX = float32(state.Rng.Intn(state.CurrentZone.Width))
+			worldY = float32(state.Rng.Intn(state.CurrentZone.Height))
 		} else {
-			angle := rand.Float64() * 2 * math.Pi
-			r := float64(area.Radius) * math.Sqrt(rand.Float64()) // sqrt for uniform distribution
+			angle := state.Rng.Float64() * 2 * math.Pi
+			r := float64(area.Radius) * math.Sqrt(state.Rng.Float64()) // sqrt for uniform distribution
 			worldX = float32(area.CX) + float32(r*math.Cos(angle))
 			worldY = float32(area.CY) + float32(r*math.Sin(angle))
 		}
@@ -1706,7 +1718,7 @@ func (m *Match) spawnSwarmForSpecies(state *WorldState, speciesID string, logger
 	if countRange < 1 {
 		countRange = 1
 	}
-	count := species.MinSwarmSize + rand.Intn(countRange)
+	count := species.MinSwarmSize + state.Rng.Intn(countRange)
 	if cap.SwarmSize > 0 {
 		count = cap.SwarmSize
 	}
@@ -1748,7 +1760,8 @@ func (m *Match) checkContinuousSpawning(state *WorldState, tick int64, logger ru
 
 	currentTime := float64(tick) / float64(SimRate) // sim-seconds (spawn-interval clock) — fixed
 
-	for speciesID, cap := range cfg.SpeciesCaps {
+	for _, speciesID := range sortedStringKeys(cfg.SpeciesCaps) { // sorted: continuous spawn mints IDs in order
+		cap := cfg.SpeciesCaps[speciesID]
 		// Check if it's time to try spawning
 		if currentTime < state.SpeciesNextSpawn[speciesID] {
 			continue
@@ -1827,7 +1840,8 @@ func (m *Match) processNaturalDeath(logger runtime.Logger, dispatcher runtime.Ma
 		ids   []int
 	}
 	var culls []cull
-	for _, swarm := range state.Swarms {
+	for _, swID := range sortedStringKeys(state.Swarms) { // sorted: carcass spawns consume deterministic item IDs
+		swarm := state.Swarms[swID]
 		if len(swarm.DeathTick) == 0 || swarm.Count <= 0 {
 			continue
 		}
@@ -1873,7 +1887,8 @@ func (m *Match) processStarvation(logger runtime.Logger, dispatcher runtime.Matc
 		ids   []int
 	}
 	var culls []cull
-	for _, swarm := range state.Swarms {
+	for _, swID := range sortedStringKeys(state.Swarms) { // sorted: starvation carcasses consume deterministic item IDs
+		swarm := state.Swarms[swID]
 		if swarm.Count <= 0 || swarm.StarveTimer < state.Tuning.StarvationDeathSecs {
 			continue
 		}
@@ -2017,7 +2032,11 @@ func (m *Match) checkSwarmSplitting(state *WorldState, chunkSize int, logger run
 
 	newSwarms := []*entities.SwarmState{}
 
-	for _, swarm := range state.Swarms {
+	for _, swarmID := range sortedStringKeys(state.Swarms) { // sorted: child IDs + offsetPosition rand are order-dependent
+		swarm := state.Swarms[swarmID]
+		if swarm == nil {
+			continue
+		}
 		species := state.Species[swarm.SpeciesID]
 		if species == nil || species.Category == "individual" {
 			continue // individuals (centipede) never split — belt+braces over the sizes
@@ -2071,7 +2090,7 @@ func (m *Match) checkSwarmSplitting(state *WorldState, chunkSize int, logger run
 			// Create the child offset from the parent; NextThinkTick=0 -> it Thinks (and
 			// emits its first SWARM_SET_TARGET leg) on the next tick.
 			id, _ := uuid.NewV4()
-			newPos := offsetPosition(swarm.Position, 3.0, chunkSize)
+			newPos := offsetPosition(swarm.Position, 3.0, chunkSize, state.Rng)
 			// Clamp the child centre against walls/fences: offsetPosition is collision-blind,
 			// and a PENNED swarm that grows past the limit must split INSIDE the pen (else the
 			// child centre lands beyond the fence and its bugs strain at the wall forever).
@@ -2137,8 +2156,8 @@ func distBetweenSwarms(s1, s2 *entities.SwarmState, chunkSize int) float32 {
 }
 
 // offsetPosition creates a new position offset by the given distance
-func offsetPosition(pos entities.EntityPosition, offset float32, chunkSize int) entities.EntityPosition {
-	angle := rand.Float64() * 2 * math.Pi
+func offsetPosition(pos entities.EntityPosition, offset float32, chunkSize int, rng *rand.Rand) entities.EntityPosition {
+	angle := rng.Float64() * 2 * math.Pi
 	newPos := entities.EntityPosition{
 		ChunkX: pos.ChunkX,
 		ChunkY: pos.ChunkY,

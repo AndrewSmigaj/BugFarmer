@@ -3,7 +3,6 @@ package world
 import (
 	"fmt"
 	"math"
-	"math/rand"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 
@@ -423,17 +422,17 @@ func (m *Match) centipedeWander(
 	var turn float64
 	switch {
 	case swarm.ClampedLegStreak >= centEscapeStreak:
-		turn = rand.Float64()*2*math.Pi - math.Pi // free 360°
+		turn = state.Rng.Float64()*2*math.Pi - math.Pi // free 360°
 		swarm.ClampedLegStreak = 0
 	case swarm.ClampedLegStreak >= 1:
-		turn = (rand.Float64()*2 - 1) * centWanderTurnMax * 2 // ±120°
+		turn = (state.Rng.Float64()*2 - 1) * centWanderTurnMax * 2 // ±120°
 	default:
-		turn = (rand.Float64()*2 - 1) * centWanderTurnMax
+		turn = (state.Rng.Float64()*2 - 1) * centWanderTurnMax
 	}
 	heading := float64(swarm.WanderHeading) + turn
 	swarm.WanderHeading = float32(heading)
 
-	dist := centWanderDistMin + rand.Float64()*(centWanderDistMax-centWanderDistMin)
+	dist := centWanderDistMin + state.Rng.Float64()*(centWanderDistMax-centWanderDistMin)
 	sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
 	tx := sx + float32(math.Cos(heading)*dist)
 	ty := sy + float32(math.Sin(heading)*dist)
@@ -469,5 +468,5 @@ func (m *Match) centipedeWander(
 	}
 
 	m.emitLeg(state, swarm, species, cx, cy, 1.0, chunkSize, deltaTime)
-	swarm.NextThinkTick = state.TickCount + 20 + rand.Int63n(11) // short serpentine legs
+	swarm.NextThinkTick = state.TickCount + 20 + state.Rng.Int63n(11) // short serpentine legs
 }

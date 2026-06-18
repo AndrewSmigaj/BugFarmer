@@ -20,9 +20,25 @@ const broodHatchJoinRadius = 4.0 // a hatch grows a same-species swarm camped th
 // broodKey is the "gx,gy" map key for a brood at a cell.
 func broodKey(gx, gy int) string { return fmt.Sprintf("%d,%d", gx, gy) }
 
+// broodAreaSize: ground-pile maggot broods are SHARED across this NxN-cell area (≈ one pile per tree's
+// windfall) instead of one-per-apple, so every local fly lays into a single persistent, maturing pile.
+const broodAreaSize = 4
+
+// broodAreaKey snaps a cell to its area origin — the shared ground-pile maggot-brood cell for that area.
+func broodAreaKey(gx, gy int) (int, int) {
+	return (gx / broodAreaSize) * broodAreaSize, (gy / broodAreaSize) * broodAreaSize
+}
+
 // getOrCreateBrood returns the brood at (gx,gy), creating it bound to its source if absent.
+// Ground-pile (fly) broods get a "g:" key namespace so an area-snapped fly pile can never collide with a
+// host-plant (milkweed) or station brood that uses the SAME exact cell — without it, a milkweed sitting on
+// an area-origin cell (gx,gy both %4==0) would share a map slot with a fly pile and one species would lay
+// into / hatch from the other's brood.
 func (m *Match) getOrCreateBrood(state *WorldState, gx, gy int, speciesID, sourceKind, sourceID string, capEggs int) *entities.BroodState {
 	key := broodKey(gx, gy)
+	if sourceKind == "ground_pile" {
+		key = "g:" + key
+	}
 	b := state.BroodStates[key]
 	if b == nil {
 		b = &entities.BroodState{
@@ -62,16 +78,15 @@ func (m *Match) layIntoBrood(state *WorldState, dispatcher runtime.MatchDispatch
 	} else if state.HostPlantStates[broodKey(gx, gy)] != nil {
 		kind = "host_plant"
 	} else if it, ok := state.GroundItems[swarm.TargetFoodID]; ok && it.FoodValue > 0 {
-		kind, sourceID = "ground_pile", swarm.TargetFoodID
-		// A maggot pile is sized by the food it sits on: ~1 egg-slot per 10 food, so a single rotten
-		// apple (100 food) seeds a small pile that produces a few flies and vanishes with the food.
-		capEggs = it.FoodValue / 10
-		if capEggs < 2 {
-			capEggs = 2
-		}
-		if capEggs > entities.BroodDefaultCapEggs {
-			capEggs = entities.BroodDefaultCapEggs
-		}
+		// SHARED per-AREA maggot pile (≈ one per tree's windfall), NOT bound to this single apple. The
+		// apple is eaten within seconds (feeding drain + the breed food-cost), but the maggots laid in it
+		// must keep developing (10s+ each to mature). So we snap the brood to a coarse area cell — every
+		// local fly lays into the SAME persistent pile — and detach it from the apple's lifetime: the food
+		// is already paid at lay time, so broodSourceGone never fires for a ground pile and processBroods
+		// retires the pile only once it has fully hatched out. capEggs stays the shared default (set above).
+		kind, sourceID = "ground_pile", ""
+		gx, gy = broodAreaKey(gx, gy)
+		_ = it
 	} else {
 		return false // no recognizable breeding source at the target
 	}
@@ -86,7 +101,8 @@ func (m *Match) processBroods(state *WorldState, dispatcher runtime.MatchDispatc
 	const interval = 30 // call cadence (ticks); matches the processNests slow clock
 	var toDelete []string
 
-	for key, b := range state.BroodStates {
+	for _, key := range sortedStringKeys(state.BroodStates) { // sorted: hatches mint swarm IDs
+		b := state.BroodStates[key]
 		// 1) Source-gone sweep: hatch whatever matured, then clear.
 		if m.broodSourceGone(state, b) {
 			for b.Maggots > 0 {
@@ -122,6 +138,14 @@ func (m *Match) processBroods(state *WorldState, dispatcher runtime.MatchDispatc
 		if changed {
 			m.broadcastBroodUpdate(dispatcher, state, b, false)
 		}
+
+		// A ground pile isn't tied to a vanishing apple: retire it once it has fully hatched out (no eggs
+		// or maggots left) so a tree's between-fruitings don't leave empty piles lingering. Active piles
+		// (a fly bred there this cycle) keep ≥1 egg and survive.
+		if b.SourceKind == "ground_pile" && b.Eggs == 0 && b.Maggots == 0 {
+			m.broadcastBroodUpdate(dispatcher, state, b, true)
+			toDelete = append(toDelete, key)
+		}
 	}
 
 	for _, key := range toDelete {
@@ -133,8 +157,9 @@ func (m *Match) processBroods(state *WorldState, dispatcher runtime.MatchDispatc
 func (m *Match) broodSourceGone(state *WorldState, b *entities.BroodState) bool {
 	switch b.SourceKind {
 	case "ground_pile":
-		it, ok := state.GroundItems[b.SourceID]
-		return !ok || it.FoodValue <= 0
+		// A laid maggot pile develops on its own (the food was consumed at lay time); it is never
+		// "source-gone". processBroods retires it once empty (all eggs matured + hatched out).
+		return false
 	case "station":
 		return state.Stations[b.SourceID] == nil
 	case "host_plant":

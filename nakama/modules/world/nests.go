@@ -125,7 +125,8 @@ func (m *Match) processNests(state *WorldState, logger runtime.Logger) {
 	chunkSize := state.Config.ChunkSize
 	var toDelete []string
 
-	for key, nest := range state.NestStates {
+	for _, key := range sortedStringKeys(state.NestStates) { // sorted: nest hatches mint IDs / draw rand
+		nest := state.NestStates[key]
 		// Occupant-gone sweep (the processFruitTrees pattern)
 		cx, cy, lx, ly := GlobalToChunk(nest.GridX, nest.GridY)
 		chunk := state.Chunks[ChunkKey(cx, cy)]
@@ -256,7 +257,8 @@ func (m *Match) processNestFounding(state *WorldState, dispatcher runtime.MatchD
 	}
 	var todo []founding
 
-	for _, nest := range state.NestStates {
+	for _, nkey := range sortedStringKeys(state.NestStates) { // sorted: daughter founding draws rand / mints IDs
+		nest := state.NestStates[nkey]
 		resident, alive := state.Swarms[nest.ResidentSwarmID]
 		if !alive || nest.ResidentSwarmID == "" {
 			continue

@@ -37,7 +37,8 @@ func (m *Match) processEcologyDirector(logger runtime.Logger, dispatcher runtime
 	}
 	wantRain, wantDrought := false, false
 
-	for speciesID, cap := range state.CurrentZone.BugSpawning.SpeciesCaps {
+	for _, speciesID := range sortedStringKeys(state.CurrentZone.BugSpawning.SpeciesCaps) { // sorted: reseed mints IDs
+		cap := state.CurrentZone.BugSpawning.SpeciesCaps[speciesID]
 		if cap.MinPopulation <= 0 && cap.EventLow <= 0 && cap.EventHigh <= 0 && cap.CullAt <= 0 {
 			continue // no director bands configured for this species
 		}

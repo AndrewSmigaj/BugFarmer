@@ -3,8 +3,6 @@ package world
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
-	"time"
 
 	"bugfarmer/entities"
 
@@ -22,6 +20,13 @@ const (
 	treeFallSpacingTicks = 500
 	treeEveningStart     = 0.40 // ~15:30 on the clock (t of the 8400-tick day)
 	treeEveningEnd       = 0.62 // ~21:00
+	// rottenFruitDecaySeconds: how long rotted fruit lies on the ground before it decomposes away (if
+	// uneaten). Lifetime is in seconds (0.1/tick), so 5040s = 50400 ticks = 6 game-days ≈ 2× a fly's
+	// 3-game-day lifespan — long enough to be a STABLE food source (not popping in/out within minutes),
+	// short enough that the standing pile is bounded to "what dropped in the last ~6 game-days" instead of
+	// piling up forever. Replaces an earlier "Lifetime = 999999 (never decay)" hack that made fly food
+	// effectively infinite and let the rotten count balloon past 30k.
+	rottenFruitDecaySeconds = 5040
 )
 
 func (m *Match) handleToolUse(
@@ -333,7 +338,7 @@ func (m *Match) handleTreeHarvest(
 		userID, fruitType, tree.GridX, tree.GridY, tree.FruitCount)
 }
 
-// treeDefDropTicks reads a tree def's ripeness threshold with a sane floor (rand.Intn
+// treeDefDropTicks reads a tree def's ripeness threshold with a sane floor (Rng.Intn
 // panics on 0 — a def without fruit_drop_ticks must not crash wild init).
 func treeDefDropTicks(def *EntityDef) int {
 	if def != nil && def.World != nil && def.World.FruitDropTicks > 0 {
@@ -498,14 +503,14 @@ func (m *Match) harvestMatureCrop(
 	// Calculate drops
 	dropCount := cropDef.HarvestCountMin
 	if cropDef.HarvestCountMax > cropDef.HarvestCountMin {
-		dropCount += rand.Intn(cropDef.HarvestCountMax - cropDef.HarvestCountMin + 1)
+		dropCount += state.Rng.Intn(cropDef.HarvestCountMax - cropDef.HarvestCountMin + 1)
 	}
 
 	// Spawn harvest items on ground
 	m.spawnHarvestDrops(dispatcher, state, cropDef.HarvestItem, dropCount, gx, gy, cx, cy)
 
 	// Seed drop chance
-	if cropDef.SeedDropChance > 0 && rand.Float32() < cropDef.SeedDropChance {
+	if cropDef.SeedDropChance > 0 && state.Rng.Float32() < cropDef.SeedDropChance {
 		seedID := "seed_" + crop.PlantType
 		m.spawnHarvestDrops(dispatcher, state, seedID, 1, gx, gy, cx, cy)
 	}
@@ -593,9 +598,9 @@ func (m *Match) spawnHarvestDrops(
 	cs := float32(state.Config.ChunkSize)
 
 	// Create ground item with slight random offset
-	itemID := fmt.Sprintf("harvest_%d_%d_%d", gx, gy, time.Now().UnixNano())
-	worldX := float32(gx) + 0.5 + (rand.Float32()-0.5)*0.3
-	worldY := float32(gy) + 0.5 + (rand.Float32()-0.5)*0.3
+	itemID := state.nextItemID(fmt.Sprintf("harvest_%d_%d", gx, gy))
+	worldX := float32(gx) + 0.5 + (state.Rng.Float32()-0.5)*0.3
+	worldY := float32(gy) + 0.5 + (state.Rng.Float32()-0.5)*0.3
 	localX := worldX - float32(cx)*cs
 	localY := worldY - float32(cy)*cs
 
@@ -671,7 +676,8 @@ func (m *Match) processFruitTrees(
 	// Collect keys to delete after iteration to avoid map modification during range
 	var toDelete []string
 
-	for treeKey, tree := range state.FruitTreeStates {
+	for _, treeKey := range sortedStringKeys(state.FruitTreeStates) { // sorted: dropFruitFromTree draws rand per drop
+		tree := state.FruitTreeStates[treeKey]
 		// Get tree entity definition
 		cx, cy, lx, ly := GlobalToChunk(tree.GridX, tree.GridY)
 		chunk := state.Chunks[ChunkKey(cx, cy)]
@@ -765,13 +771,13 @@ func (m *Match) dropFruitFromTree(
 
 	// Drop position: scattered BESIDE and IN FRONT (south) of the trunk — never on the
 	// trunk cell itself, where the canopy y-sorts over the apple and hides it.
-	itemID := fmt.Sprintf("fruit_%d_%d_%d", tree.GridX, tree.GridY, time.Now().UnixNano())
+	itemID := state.nextItemID(fmt.Sprintf("fruit_%d_%d", tree.GridX, tree.GridY))
 	side := float32(1)
-	if rand.Float32() < 0.5 {
+	if state.Rng.Float32() < 0.5 {
 		side = -1
 	}
-	worldX := float32(tree.GridX) + 0.5 + side*(0.7+rand.Float32()*0.9) // 0.7-1.6 cells to a side
-	worldY := float32(tree.GridY) + 0.2 - rand.Float32()*1.2            // at/below the trunk = in front
+	worldX := float32(tree.GridX) + 0.5 + side*(0.7+state.Rng.Float32()*0.9) // 0.7-1.6 cells to a side
+	worldY := float32(tree.GridY) + 0.2 - state.Rng.Float32()*1.2            // at/below the trunk = in front
 	localX := worldX - float32(cx)*cs
 	localY := worldY - float32(cy)*cs
 
@@ -847,9 +853,10 @@ func (m *Match) processGroundItemDecay(state *WorldState, dispatcher runtime.Mat
 			// Transform to rotten version
 			oldType := item.ItemType
 			item.ItemType = item.DecaysTo // "apple" -> "rotten_apple"
-			item.DecaysTo = ""            // No further decay
-			item.FoodValue = 100          // Flies can eat this
-			item.Lifetime = 999999        // No more time decay
+			item.DecaysTo = ""                          // No further chain-decay (already rotten)
+			item.FoodValue = 100                        // Flies can eat/breed on this
+			item.Lifetime = rottenFruitDecaySeconds     // decomposes after ~6 game-days if uneaten (was an
+			//                                             immortal "999999" hack → infinite fly food)
 
 			// Emit food-registry event (fly AI now targets this). WORLD cells + FoodID + level
 			// (the old emission used chunk-LOCAL coords and stuffed the id in swarm_id — fixed).
@@ -1388,8 +1395,11 @@ func (m *Match) initFruitTreesInChunk(
 				GridX:        gx,
 				GridY:        gy,
 				MaxFruit:     maxFruit,
-				FruitCount:   2 + rand.Intn(2),
-				DropTimer:    rand.Intn(treeDefDropTicks(entityDef)),
+				// Position-seeded (NOT the shared sequential Rng): chunks load lazily in non-deterministic
+				// order, so drawing per-tree init from the shared stream made FruitCount/DropTimer — and
+				// thus the whole fruit-drop schedule — vary run to run. posHash keys it to (seed,gx,gy).
+				FruitCount:   2 + posHash(state.WorldSeed, gx, gy, 1)%2,
+				DropTimer:    posHash(state.WorldSeed, gx, gy, 2) % treeDefDropTicks(entityDef),
 				LastWaterDay: -1,
 			}
 			if tree.FruitCount > maxFruit {

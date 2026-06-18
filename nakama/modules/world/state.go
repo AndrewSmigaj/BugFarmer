@@ -1,13 +1,53 @@
 package world
 
 import (
+	"fmt"
 	"math"
+	"math/rand"
+	"sort"
 	"time"
 
 	"bugfarmer/entities"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 )
+
+// sortedStringKeys returns a map's string keys in sorted order. Iterate THIS instead of ranging a sim map
+// directly in any loop that draws from state.Rng, mints entity IDs, or grabs a shared depletable resource
+// — Go randomizes map iteration order per run, which would scramble both the rand-draw sequence and the
+// resource-grab order and make runs non-reproducible (defeating seeded RNG). Determinism pairs with the
+// seeded Rng: same seed + sorted iteration → same run. (Output-only loops — broadcasts, counting — don't
+// need it.)
+// nextItemID returns a deterministic, unique ground-item id from the per-match counter (NOT wall-clock).
+// Deterministic as long as the spawn happens in a deterministic loop order (fruit drops: sorted tree
+// loop; carcasses: sorted death/predation loops) — see GroundItemSeq.
+func (s *WorldState) nextItemID(prefix string) string {
+	s.GroundItemSeq++
+	return fmt.Sprintf("%s_%d", prefix, s.GroundItemSeq)
+}
+
+// posHash returns a deterministic non-negative pseudo-random int from (seed, gx, gy, salt) — for per-cell
+// world init (e.g. a tree's initial FruitCount/DropTimer) that must NOT depend on chunk-LOAD order. Chunks
+// load lazily in non-deterministic order, so drawing such init from the shared sequential Rng made it vary
+// run to run; keying off position instead makes it reproducible. FNV-1a; `salt` separates distinct draws
+// for the same cell. (Mirrors the client's counter-RNG idea.)
+func posHash(seed int64, gx, gy, salt int) int {
+	h := uint64(14695981039346656037)
+	for _, v := range []int64{seed, int64(gx), int64(gy), int64(salt)} {
+		h ^= uint64(v)
+		h *= 1099511628211
+	}
+	return int(h & 0x7fffffff)
+}
+
+func sortedStringKeys[V any](m map[string]V) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
 
 // WorldConfig holds configurable world parameters
 type WorldConfig struct {
@@ -30,7 +70,21 @@ type WorldState struct {
 	CreatedAt    int64  // Unix timestamp
 	TickCount    int64
 	WorldSeed    int64  // Global seed for deterministic bug simulation
-	ZoneID       string // Which zone was loaded (for logging)
+	// Rng is the per-match seeded RNG for ALL server-side sim randomness (breeding counts, forage rolls,
+	// wander angles, spawn positions, predation re-aims, weather rolls). Seeded from WorldSeed at match
+	// init so a fixed seed reproduces a run byte-for-byte — the tuning harness pins the seed; production
+	// leaves it random. Per-match instance (NOT global math/rand) so concurrent matches don't share a
+	// stream. The authoritative swarm legs we broadcast are what clients replay, so changing this stream
+	// only changes WHICH legs broadcast (identically to all clients) — it never desyncs the frontier-gated
+	// tick. MUST be paired with deterministic iteration order (sorted swarm/nest/brood loops) for true
+	// reproducibility — map range order alone would still scramble which swarm draws which value.
+	Rng          *rand.Rand
+	// GroundItemSeq: per-match monotonic counter for ground-item ids. Item ids used to be
+	// fmt.Sprintf("...%d", time.Now().UnixNano()) — WALL-CLOCK, so they varied run to run; since ids are
+	// the FindNearbyFood distance-tiebreak key, that made food selection (and the whole sim) irreproducible.
+	// A deterministic counter (incremented in the sorted spawn loops) fixes it. Soft state, never hashed.
+	GroundItemSeq int64
+	ZoneID        string // Which zone was loaded (for logging)
 	StaticSim    bool   // Disables split/merge, continuous spawning (set from zone bug_spawning.static)
 	Players      map[string]*PlayerState
 	Presences    map[string]runtime.Presence

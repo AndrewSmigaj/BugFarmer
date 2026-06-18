@@ -236,7 +236,7 @@ type BlockedChecker func(worldX, worldY float32) bool
 // Think is called every few seconds (not every tick) to pick a new target.
 // resourceX/resourceY are the closest resource, or NaN if none visible.
 func (s *SwarmState) Think(species *BugSpecies, chunkSize int,
-	resourceX, resourceY float32, isBlocked BlockedChecker) {
+	resourceX, resourceY float32, isBlocked BlockedChecker, rng *rand.Rand) {
 
 	currX := s.WorldX(chunkSize)
 	currY := s.WorldY(chunkSize)
@@ -247,8 +247,8 @@ func (s *SwarmState) Think(species *BugSpecies, chunkSize int,
 		rawTargetX, rawTargetY = resourceX, resourceY
 	} else {
 		// Random direction within vision range
-		angle := rand.Float32() * 2 * math.Pi
-		dist := rand.Float32() * species.VisionRange
+		angle := rng.Float32() * 2 * math.Pi
+		dist := rng.Float32() * species.VisionRange
 		rawTargetX = currX + float32(math.Cos(float64(angle)))*dist
 		rawTargetY = currY + float32(math.Sin(float64(angle)))*dist
 	}
