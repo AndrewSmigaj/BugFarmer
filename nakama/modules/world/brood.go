@@ -185,6 +185,7 @@ func (m *Match) hatchFromBrood(state *WorldState, b *entities.BroodState) int {
 			return 0
 		}
 	}
+	state.Stats.recordBirth(b.SpeciesID, BirthBrood, n) // both paths minted n bugs from the brood
 	b.Maggots -= n
 	return n
 }

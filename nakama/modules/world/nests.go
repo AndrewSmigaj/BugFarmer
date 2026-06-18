@@ -104,6 +104,7 @@ func (m *Match) nestSpawnResident(
 	if swarm == nil {
 		return
 	}
+	state.Stats.recordBirth(nest.SpeciesID, BirthNest, n)
 	nestKey := fmt.Sprintf("%d,%d", nest.GridX, nest.GridY)
 	swarm.NestKey = nestKey
 	swarm.HomePos = swarm.Position

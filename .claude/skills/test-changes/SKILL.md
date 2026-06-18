@@ -57,7 +57,16 @@ docker compose build builder && docker compose up -d --force-recreate nakama   #
 rm -f /tmp/fly_counts.csv
 ~/.dotnet/dotnet run --project tools/sync-harness -- --zone bug_lab --duration 150 --tag eco   # see below: 150s ≈ 8.5 game-days
 python3 tools/plot_fly_counts.py /tmp/fly_counts.csv <chart_name> "<Title>"   # → tools/_generated/ecology_charts/<chart_name>.png
+python3 tools/plot_interactions.py --tag <chart_name> --since 10m            # the "WHY": births-by-source / deaths-by-cause
 ```
+- **WHY a population is off-target (interaction log):** the server emits one `ECOSTATS day=N sp=… pop=…
+  b_*=… d_*=… avg_sat=…` line per species + `PREDLOG …` per predator-prey pair at each game-day rollover
+  (soft state, never hashed — `ecology_stats.go`). `plot_interactions.py` greps `docker compose logs
+  nakama` (use `--since` to bound the window; it keeps only the last run), writes
+  `interaction_log_<tag>.csv` + `predation_log_<tag>.csv`, and charts births-up / deaths-down per species
+  with pop+avg_sat overlaid. Read it to diagnose: below target because births are food-limited (low
+  brood/reproduce) vs. dying to predation/starvation; **self-maintenance = drive `b_reseed`→0** (a
+  population held up by the red `reseed` bars is propped by the Director, not self-sustaining = a FAIL).
 - **SPEED:** bug_lab sets `sim_batch: 8` (8 sim-ticks/Nakama call) on top of `call_rate: 60` → **48×
   real-time**. So **`--duration` seconds × ~0.057 = game-days** (a 150s run ≈ 8.5 game-days; a 250s run ≈
   14 days — enough for a full predator lifecycle of 7.5 days + turnover). `sim_batch` is a gated test-zone

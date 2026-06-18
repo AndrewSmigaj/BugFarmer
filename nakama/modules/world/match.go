@@ -134,6 +134,7 @@ func (m *Match) reproduceSwarm(state *WorldState, dispatcher runtime.MatchDispat
 		if child == nil {
 			return
 		}
+		state.Stats.recordBirth(swarm.SpeciesID, BirthReproduce, count)
 		swarm.ReproductionMeter = 0
 		swarm.Satiation = 0
 		swarm.ReproduceCooldown = species.ReproduceCooldown
@@ -144,6 +145,7 @@ func (m *Match) reproduceSwarm(state *WorldState, dispatcher runtime.MatchDispat
 	}
 
 	m.growSwarm(state, swarm, count) // the shared id-math + SWARM_REPRODUCED event
+	state.Stats.recordBirth(swarm.SpeciesID, BirthReproduce, count)
 	swarm.ReproductionMeter = 0
 	swarm.Satiation = 0
 	swarm.ReproduceCooldown = species.ReproduceCooldown
@@ -269,6 +271,7 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 	// Load entity definitions from unified entity system
 	var warnings []string
 	state.Tuning = LoadTuning("data/ecology_tuning.json", logger)
+	state.Stats = NewEcologyStats() // interaction-log telemetry (soft state, flushed per game-day)
 
 	state.Entities, warnings, err = LoadAllEntities("data")
 	if err != nil {
@@ -1375,6 +1378,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				crop.WateringsToday = 0
 			}
 			m.scheduleDailyRain(worldState, logger)
+			m.emitEcologyStats(worldState, currentDay, logger) // flush the day's interaction log, then reset
 			logger.Info("DAY %d begins (tick %d): daily watering counts reset for %d crops",
 				currentDay+1, worldState.TickCount, len(worldState.CropStates))
 		}
@@ -1588,6 +1592,7 @@ func (m *Match) spawnInitialSwarms(state *WorldState, logger runtime.Logger) {
 		for i := 0; i < cap.Initial; i++ {
 			if swarm := m.spawnSwarmForSpecies(state, speciesID, logger); swarm != nil {
 				totalSpawned++
+				state.Stats.recordBirth(speciesID, BirthSpawn, swarm.Count)
 			}
 		}
 
@@ -1731,6 +1736,7 @@ func (m *Match) checkContinuousSpawning(state *WorldState, tick int64, logger ru
 		atPopCap := cap.MaxPopulation > 0 && state.SpeciesPopulation(speciesID) >= cap.MaxPopulation
 		if len(aliveSwarms) < cap.Max && !atPopCap {
 			if swarm := m.spawnSwarmForSpecies(state, speciesID, logger); swarm != nil {
+				state.Stats.recordBirth(speciesID, BirthSpawn, swarm.Count)
 				logger.Debug("Continuous spawn: %s (%s) [%d/%d]",
 					swarm.ID, speciesID, len(aliveSwarms)+1, cap.Max)
 			}
@@ -1804,6 +1810,7 @@ func (m *Match) processNaturalDeath(logger runtime.Logger, dispatcher runtime.Ma
 		}
 	}
 	for _, c := range culls {
+		state.Stats.recordDeath(c.swarm.SpeciesID, DeathOldAge, len(c.ids))
 		m.killBugsNaturally(logger, dispatcher, state, c.swarm, state.Species[c.swarm.SpeciesID], c.ids, chunkSize)
 	}
 }
@@ -1848,6 +1855,7 @@ func (m *Match) processStarvation(logger runtime.Logger, dispatcher runtime.Matc
 		swarm.StarveTimer = starvationDeathSecs - starvationCullPause // re-arm: cull again after the pause if still starving
 	}
 	for _, c := range culls {
+		state.Stats.recordDeath(c.swarm.SpeciesID, DeathStarve, len(c.ids))
 		m.killBugsNaturally(logger, dispatcher, state, c.swarm, state.Species[c.swarm.SpeciesID], c.ids, chunkSize)
 	}
 }

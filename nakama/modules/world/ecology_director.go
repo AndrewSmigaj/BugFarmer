@@ -47,6 +47,7 @@ func (m *Match) processEcologyDirector(logger runtime.Logger, dispatcher runtime
 		// help is additive with a re-seed — a critically low prey base needs both bugs AND fruit).
 		if cap.MinPopulation > 0 && pop < cap.MinPopulation {
 			if sw := m.spawnSwarmForSpecies(state, speciesID, logger); sw != nil {
+				state.Stats.recordBirth(speciesID, BirthReseed, sw.Count)
 				logger.Info("Director: re-seeded %s (pop %d < min %d)", speciesID, pop, cap.MinPopulation)
 			}
 		}
@@ -60,6 +61,7 @@ func (m *Match) processEcologyDirector(logger runtime.Logger, dispatcher runtime
 			if cap.CullWith != "" {
 				cx, cy := m.speciesCentroid(state, speciesID, chunkSize)
 				if sw := m.spawnSwarmAt(state, cap.CullWith, directorPredatorCount, cx, cy, chunkSize); sw != nil {
+					state.Stats.recordBirth(cap.CullWith, BirthReseed, sw.Count)
 					logger.Info("Director: released %s on %s (pop %d > cull_at %d)", cap.CullWith, speciesID, pop, cap.CullAt)
 				}
 			} else {
@@ -131,6 +133,7 @@ func (m *Match) directorCull(logger runtime.Logger, dispatcher runtime.MatchDisp
 		}
 	}
 	for _, c := range culls {
+		state.Stats.recordDeath(c.swarm.SpeciesID, DeathCull, len(c.ids))
 		m.killBugsNaturally(logger, dispatcher, state, c.swarm, species, c.ids, chunkSize)
 	}
 }

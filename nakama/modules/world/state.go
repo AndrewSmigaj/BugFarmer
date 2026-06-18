@@ -73,6 +73,10 @@ type WorldState struct {
 	// Defaults = the compiled consts (byte-identical baseline); a config sweep overrides them without a rebuild.
 	Tuning *Tuning
 
+	// Stats: the interaction log (births-by-source / deaths-by-cause / predation matrix), accumulated per
+	// game-day and flushed at the rollover (ecology_stats.go). Soft, never hashed; tuning telemetry only.
+	Stats *EcologyStats
+
 	// SwarmUpdate (OpCode 20) is event-driven, not per-tick: set true whenever the
 	// swarm SET or metadata changes (spawn/despawn/merge/split/phase). Bug centers are
 	// derived deterministically from SWARM_SET_TARGET events, so positions are NOT
@@ -92,10 +96,10 @@ type WorldState struct {
 	CropDefs   map[string]*entities.CropDef   // cropType -> crop definition
 
 	// Fruit trees
-	FruitTreeStates map[string]*entities.FruitTreeState // "gx,gy" -> fruit tree state
-	NestStates      map[string]*entities.NestState      // "gx,gy" -> wasp-nest brood state
-	HostPlantStates map[string]*entities.HostPlantState // "gx,gy" -> milkweed host-plant breeding capacity
-	BroodStates     map[string]*entities.BroodState     // "gx,gy" -> visible nursery (compost/milkweed/ground pile)
+	FruitTreeStates map[string]*entities.FruitTreeState  // "gx,gy" -> fruit tree state
+	NestStates      map[string]*entities.NestState       // "gx,gy" -> wasp-nest brood state
+	HostPlantStates map[string]*entities.HostPlantState  // "gx,gy" -> milkweed host-plant breeding capacity
+	BroodStates     map[string]*entities.BroodState      // "gx,gy" -> visible nursery (compost/milkweed/ground pile)
 	ForagePools     map[string]*entities.ForagePoolState // "gx,gy" -> flower nectar feeding pool (depletable)
 
 	// Gnaw damage per occupant cell — its OWN pool, NOT BreakingState (whose owner-
@@ -299,15 +303,15 @@ func DefaultConfig() WorldConfig {
 // NewWorldState creates an initialized WorldState
 func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 	return &WorldState{
-		Config:            DefaultConfig(),
-		WorldID:           worldID,
-		OwnerID:           ownerID,
-		Name:              name,
-		AccessPolicy:      accessPolicy,
-		CreatedAt:         time.Now().Unix(),
-		TickCount:         0,
-		Players:           make(map[string]*PlayerState),
-		Presences:         make(map[string]runtime.Presence),
+		Config:                DefaultConfig(),
+		WorldID:               worldID,
+		OwnerID:               ownerID,
+		Name:                  name,
+		AccessPolicy:          accessPolicy,
+		CreatedAt:             time.Now().Unix(),
+		TickCount:             0,
+		Players:               make(map[string]*PlayerState),
+		Presences:             make(map[string]runtime.Presence),
 		PendingCharacters:     make(map[string]string),
 		PendingEntryPositions: make(map[string][2]float32),
 		// Entity maps

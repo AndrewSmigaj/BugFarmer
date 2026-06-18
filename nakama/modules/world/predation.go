@@ -309,6 +309,8 @@ func (m *Match) checkPredationStrike(
 	if len(removed) == 0 {
 		return
 	}
+	state.Stats.recordDeath(prey.SpeciesID, DeathPredation, len(removed))
+	state.Stats.recordPredation(swarm.SpeciesID, prey.SpeciesID, len(removed))
 
 	swarm.LastStrikeTick = state.TickCount
 	swarm.HuntStartTick = state.TickCount // a kill is progress: the timeout re-arms
