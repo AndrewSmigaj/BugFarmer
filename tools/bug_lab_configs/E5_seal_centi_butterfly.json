@@ -1,0 +1,25 @@
+{
+  "name": "E5_seal_centi_butterfly",
+  "description": "STRUCT: seal + cap 400 + C3 + centipede eats butterflies too (a second prey inside its sealed pen has none, so this tests diet vs containment).",
+  "extends": "01_no_cull",
+  "species": {
+    "fly_common": {
+      "reproduce_cooldown": 18.0,
+      "breed_amount": 16.0
+    },
+    "centipede_garden": {
+      "predation": {
+        "prey": [
+          "fly_common",
+          "butterfly_meadow"
+        ]
+      }
+    }
+  },
+  "lab": {
+    "seal_pens": true,
+    "max_pop": {
+      "fly_common": 400
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "E1_flycap400",
+  "description": "STRUCT: fly cap 150\u2192400 headroom + C3 fast fly breeding, pens still OPEN. Does global headroom alone reach the predator pens? (expect NO \u2014 leakage).",
+  "extends": "01_no_cull",
+  "species": {
+    "fly_common": {
+      "reproduce_cooldown": 18.0,
+      "breed_amount": 16.0
+    }
+  },
+  "lab": {
+    "max_pop": {
+      "fly_common": 400
+    }
+  }
+}

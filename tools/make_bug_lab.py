@@ -32,6 +32,11 @@ TREE_MIX = ["tree_plum", "tree_cherry", "tree_apple", "tree_cherry", "tree_plum"
 DEFAULT_LAB = {
     "call_rate": 60,   # 6x wall-clock (sim-time fixed by SimRate). Test zone only.
     "sim_batch": 8,    # 8 sim-ticks/Nakama call -> 48x total. Balance-neutral; test zone only.
+    # seal_pens: close the player-entrance gap in every pen → each pen is a CLOSED ecosystem (no bugs
+    # leak into the foodless open arena). Sweep-1 proved the predator FLOOR is structural: flies + wasps
+    # leak out the gaps, so predator pens hold no sustained prey (centipede→fly = 0 kills even at fly=100
+    # global). Sealing contains each predator with its own prey. Headless tuning only (no player needs in).
+    "seal_pens": False,
     # HARD per-species BUG cap (max_population) = the crash-guard. The server mints ZERO bugs past it;
     # food only paces how fast a pen climbs. Without it a renewable food source explodes a pen.
     "max_pop": {"fly_common": 150, "butterfly_meadow": 100, "wasp_common": 40,
@@ -65,6 +70,10 @@ def build_lab(lab):
     only the caps/bands/sim_batch come from `lab`. Writes zone.json + chunk_X_Y.json under
     nakama/data/zones/bug_lab/. Returns the zone dict."""
     occ = {}  # (gx, gy) -> occupant id
+    seal = lab.get("seal_pens", False)
+
+    def pen_gap(x, y):
+        return None if seal else (x, y)  # sealed → no entrance gap (closed-ecosystem pens)
 
     def place(gx, gy, oid):
         if 0 <= gx < W and 0 <= gy < H:
@@ -99,7 +108,7 @@ def build_lab(lab):
     # Fly pen: prey + recycle loop. Flies eat rotten fruit (compost bin + tree ring). The MILLIPEDE eats
     # its OWN food — leaf_litter piles — so it does NOT compete with the flies. The carrion BEETLE eats
     # dead_<bug> corpses.
-    fence_rect(8, 8, 40, 40, "fence_wood", gap=(24, 40))
+    fence_rect(8, 8, 40, 40, "fence_wood", gap=pen_gap(24, 40))
     tree_ring(24, 24)
     for (x, y) in [(16, 16), (32, 16), (16, 24), (32, 24), (16, 32), (32, 32)]:
         place(x, y, "leaf_litter")  # millipede detritus food (separate from the flies' rotten fruit)
@@ -107,7 +116,7 @@ def build_lab(lab):
 
     # Butterfly pen: milkweed (host) + nectar flowers. Fewer milkweed/flowers makes them FOOD-limited so
     # they oscillate below the cap and the Director's drought tier can engage.
-    fence_rect(48, 8, 80, 40, "fence_wood", gap=(64, 40))
+    fence_rect(48, 8, 80, 40, "fence_wood", gap=pen_gap(64, 40))
     for (x, y) in [(64, 24)]:
         place(x, y, "milkweed")  # 1 host plant (breeding bottleneck)
     for (x, y) in [(54, 14), (74, 34)]:
@@ -116,14 +125,14 @@ def build_lab(lab):
 
     # Wasp arena: predator-prey loop. Flies feed on the fruit-tree ring; a wasp_nest anchors the resident
     # patrol (HomePos/homing-breed + seeds nest-splitting). Stone walls.
-    fence_rect(88, 8, 120, 40, "fence_stone", gap=(104, 40))
+    fence_rect(88, 8, 120, 40, "fence_stone", gap=pen_gap(104, 40))
     tree_ring(104, 24)
     place(104, 16, "wasp_nest")
     pens.append(("wasp_pen", "wasp_common", 104, 16, 5))
     extra_spawns.append(("wasp_pen_prey", "fly_common", 104, 30, 8))
 
     # Centipede arena: pure hunter (hunts flies; breeds via the well-fed timer). Stone walls.
-    fence_rect(128, 8, 160, 40, "fence_stone", gap=(144, 40))
+    fence_rect(128, 8, 160, 40, "fence_stone", gap=pen_gap(144, 40))
     tree_ring(144, 24)
     pens.append(("centipede_pen", "centipede_garden", 144, 16, 6))
     extra_spawns.append(("centipede_pen_prey", "fly_common", 144, 30, 8))

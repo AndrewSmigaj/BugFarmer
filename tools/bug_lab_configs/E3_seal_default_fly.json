@@ -1,0 +1,11 @@
+{
+  "name": "E3_seal_default_fly",
+  "description": "STRUCT: seal + cap 400 but DEFAULT fly breeding (no C3) \u2014 isolate sealing's effect from the fly-breeding boost.",
+  "extends": "01_no_cull",
+  "lab": {
+    "seal_pens": true,
+    "max_pop": {
+      "fly_common": 400
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "E2_seal",
+  "description": "STRUCT: SEAL pens (closed ecosystems, no leak) + cap 400 + C3. THE key test \u2014 contained predator+prey should let wasp/centipede sustain on their own flies.",
+  "extends": "01_no_cull",
+  "species": {
+    "fly_common": {
+      "reproduce_cooldown": 18.0,
+      "breed_amount": 16.0
+    }
+  },
+  "lab": {
+    "seal_pens": true,
+    "max_pop": {
+      "fly_common": 400
+    }
+  }
+}
