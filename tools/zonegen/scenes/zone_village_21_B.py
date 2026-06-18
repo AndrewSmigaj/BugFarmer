@@ -393,6 +393,23 @@ def build(zone_id="village_21_B", vseed=0):
                         ("tree_cherry", 82, 198), ("tree_plum", 70, 222), ("tree_cherry", 78, 220)]:
         safe(b, oid, x, y)                                                 # fruit variety by the orchard
 
+    # FRUIT TREES (~10×): the zone was fruit-poor (~50). Thicken with VARIED fruit (apple/plum/cherry/
+    # orange) across the open grass — a few worked orchards (one fenced, one broken-fenced) + scattered
+    # wild clumps. The builder skips occupied/road/water cells, so coords degrade safely. This is the wild
+    # fly-food SUPPLY (rotten fruit); fly ACCESS (vision/decay/spawn dispersion) is a separate lever.
+    fence_rect(b, 184, 99, 222, 127, gate=(203, 127))                                     # fenced SE orchard
+    orchard(b, 187, 102, 219, 124, tree="tree_orange", row_spacing=5, tree_spacing=2, seed=vseed + 91)
+    orchard(b, 64, 114, 94, 132, tree="tree_cherry", row_spacing=5, tree_spacing=2, seed=vseed + 92)
+    for x in range(64, 94, 3):                                                            # broken weathered fence
+        safe(b, "fence_picket_weathered", x, 112)
+    orchard(b, 150, 130, 184, 152, tree="tree_plum", row_spacing=5, tree_spacing=2, seed=vseed + 93)
+    orchard(b, 58, 166, 90, 184, tree="tree_apple", row_spacing=5, tree_spacing=2, seed=vseed + 94)
+    FRUITW = {"tree_apple": 3, "tree_plum": 2, "tree_cherry": 2, "tree_orange": 2}
+    for (x0, y0, x1, y1, sd) in [(20, 150, 50, 178, 95), (120, 64, 158, 92, 96),
+                                 (185, 150, 225, 180, 97), (95, 62, 132, 95, 98),
+                                 (40, 196, 72, 222, 99)]:
+        scatter(b, x0, y0, x1, y1, FRUITW, density=0.06, min_spacing=2, seed=sd, clumping=0.7)
+
     # The visual-clipping guarantee: nothing tall within 1 cell of a road.
     cleared = clear_road_margins(b)
     if cleared:
