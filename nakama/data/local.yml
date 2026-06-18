@@ -12,10 +12,13 @@ socket:
   max_request_size_bytes: 8388608   # 8MB
   read_buffer_size_bytes: 1048576   # 1MB
   write_buffer_size_bytes: 1048576  # 1MB
-  outgoing_queue_size: 1024         # default 64 — too small for our per-tick
-                                    # reliable EntityUpdate/SwarmUpdate broadcasts;
-                                    # a brief client hitch overflowed it and the
-                                    # server closed the session ("outgoing queue full")
+  outgoing_queue_size: 8192         # default 64 — too small for our per-tick reliable
+                                    # EntityUpdate/SwarmUpdate broadcasts AND the initial whole-zone
+                                    # chunk-subscribe burst (the headless tuning harness subscribes to
+                                    # all chunks at once; sim_batch amplifies per-call broadcasts).
+                                    # 1024 still intermittently overflowed on a fresh-restart bug_lab
+                                    # join → "outgoing queue full" → server closed the session, run
+                                    # froze (no CSV). 8192 absorbs the one-time burst (cheap: ptr queue).
 
 runtime:
   js_entrypoint: ""
