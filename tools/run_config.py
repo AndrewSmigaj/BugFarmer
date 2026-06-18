@@ -45,10 +45,25 @@ def deep_merge(base, delta):
     return out
 
 
-def load_config(name):
+def load_config(name, _seen=None):
+    """Load a config, resolving an optional "extends": "<parent>" chain (child deep-merged OVER parent),
+    so sweep configs inherit a base (e.g. 01_no_cull's cull-off director) and specify only their delta."""
+    _seen = _seen or set()
     path = os.path.join(CFG_DIR, name if name.endswith(".json") else name + ".json")
     with open(path) as f:
-        return json.load(f)
+        cfg = json.load(f)
+    parent = cfg.get("extends")
+    if parent:
+        if parent in _seen:
+            raise SystemExit(f"config extends cycle at '{parent}'")
+        _seen.add(parent)
+        base = load_config(parent, _seen)
+        merged = deep_merge(base, cfg)
+        merged.pop("extends", None)
+        merged["name"] = cfg.get("name", name)
+        merged["description"] = cfg.get("description", base.get("description", ""))
+        return merged
+    return cfg
 
 
 def snapshot(paths):

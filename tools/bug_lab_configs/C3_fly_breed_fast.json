@@ -1,0 +1,11 @@
+{
+  "name": "C3_fly_breed_fast",
+  "description": "PREY BASE: flies breed faster (repro_cd 30\u219218, breed_amt 10\u219216) \u2192 more prey per unit food.",
+  "extends": "01_no_cull",
+  "species": {
+    "fly_common": {
+      "reproduce_cooldown": 18.0,
+      "breed_amount": 16.0
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "D1_decay_slow",
+  "description": "SURVIVAL: predators/decomposers lose satiation slower \u2192 survive longer between meals (cent/wasp/beetle decay \u21920.05).",
+  "extends": "01_no_cull",
+  "species": {
+    "centipede_garden": {
+      "satiation_decay_rate": 0.05
+    },
+    "wasp_common": {
+      "satiation_decay_rate": 0.05
+    },
+    "beetle_carrion": {
+      "satiation_decay_rate": 0.05
+    }
+  }
+}

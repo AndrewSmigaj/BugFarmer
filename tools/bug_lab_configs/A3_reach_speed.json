@@ -1,0 +1,19 @@
+{
+  "name": "A3_reach_speed",
+  "description": "REACH: faster chase + roam (cent base 1.9\u21922.5 hunt_mult 1.9\u21922.6; wasp base 2.2\u21922.8 hunt_mult 1.5\u21922.2).",
+  "extends": "01_no_cull",
+  "species": {
+    "centipede_garden": {
+      "base_speed": 2.5,
+      "predation": {
+        "hunt_speed_mult": 2.6
+      }
+    },
+    "wasp_common": {
+      "base_speed": 2.8,
+      "predation": {
+        "hunt_speed_mult": 2.2
+      }
+    }
+  }
+}

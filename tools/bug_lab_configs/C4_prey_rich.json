@@ -1,0 +1,22 @@
+{
+  "name": "C4_prey_rich",
+  "description": "PREY BASE: fast + plenty fruit together (denser, bigger fly-food supply).",
+  "extends": "01_no_cull",
+  "fruit": {
+    "tree_plum": {
+      "fruit_grow_ticks": 360,
+      "fruit_drop_ticks": 2100,
+      "max_fruit": 8
+    },
+    "tree_cherry": {
+      "fruit_grow_ticks": 430,
+      "fruit_drop_ticks": 2520,
+      "max_fruit": 9
+    },
+    "tree_apple": {
+      "fruit_grow_ticks": 500,
+      "fruit_drop_ticks": 2940,
+      "max_fruit": 7
+    }
+  }
+}

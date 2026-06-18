@@ -1,0 +1,19 @@
+{
+  "name": "B2_strike_fast",
+  "description": "LETHALITY: strike more often + bigger reach (cent cd 40\u219220 r 2.3\u21923.2; wasp cd 100\u219255 r 3.0\u21923.8).",
+  "extends": "01_no_cull",
+  "species": {
+    "centipede_garden": {
+      "predation": {
+        "strike_cooldown_ticks": 20,
+        "strike_radius": 3.2
+      }
+    },
+    "wasp_common": {
+      "predation": {
+        "strike_cooldown_ticks": 55,
+        "strike_radius": 3.8
+      }
+    }
+  }
+}

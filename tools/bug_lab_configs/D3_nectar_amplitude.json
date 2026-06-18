@@ -1,0 +1,8 @@
+{
+  "name": "D3_nectar_amplitude",
+  "description": "PLANT: slower nectar regen (0.012\u21920.006) \u2192 bigger, slower butterfly boom-bust swings.",
+  "extends": "01_no_cull",
+  "tuning": {
+    "nectar_regen_per_tick": 0.006
+  }
+}

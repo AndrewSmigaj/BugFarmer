@@ -1,0 +1,19 @@
+{
+  "name": "C1_fruit_fast",
+  "description": "PREY BASE: fruit grows/drops faster (\u00d70.6 grow, \u00d70.7 drop) \u2192 denser rotten-fruit fly food.",
+  "extends": "01_no_cull",
+  "fruit": {
+    "tree_plum": {
+      "fruit_grow_ticks": 360,
+      "fruit_drop_ticks": 2100
+    },
+    "tree_cherry": {
+      "fruit_grow_ticks": 430,
+      "fruit_drop_ticks": 2520
+    },
+    "tree_apple": {
+      "fruit_grow_ticks": 500,
+      "fruit_drop_ticks": 2940
+    }
+  }
+}

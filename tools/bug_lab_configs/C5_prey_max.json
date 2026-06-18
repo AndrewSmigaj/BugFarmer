@@ -1,0 +1,28 @@
+{
+  "name": "C5_prey_max",
+  "description": "PREY BASE: fast+plenty fruit + fast fly breeding \u2014 max prey base.",
+  "extends": "01_no_cull",
+  "species": {
+    "fly_common": {
+      "reproduce_cooldown": 18.0,
+      "breed_amount": 16.0
+    }
+  },
+  "fruit": {
+    "tree_plum": {
+      "fruit_grow_ticks": 360,
+      "fruit_drop_ticks": 2100,
+      "max_fruit": 8
+    },
+    "tree_cherry": {
+      "fruit_grow_ticks": 430,
+      "fruit_drop_ticks": 2520,
+      "max_fruit": 9
+    },
+    "tree_apple": {
+      "fruit_grow_ticks": 500,
+      "fruit_drop_ticks": 2940,
+      "max_fruit": 7
+    }
+  }
+}

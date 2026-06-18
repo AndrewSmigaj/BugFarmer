@@ -1,0 +1,17 @@
+{
+  "name": "B1_feed_up",
+  "description": "LETHALITY: each kill sates more so fewer kills \u2192 breed (cent feed 45\u219265, wasp 48\u219265).",
+  "extends": "01_no_cull",
+  "species": {
+    "centipede_garden": {
+      "predation": {
+        "feed_per_kill": 65.0
+      }
+    },
+    "wasp_common": {
+      "predation": {
+        "feed_per_kill": 65.0
+      }
+    }
+  }
+}

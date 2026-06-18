@@ -1,0 +1,13 @@
+{
+  "name": "A1_reach_vision_lo",
+  "description": "REACH: modest vision bump so predators spot prey further (cent 13\u219218, wasp 16\u219222).",
+  "extends": "01_no_cull",
+  "species": {
+    "centipede_garden": {
+      "vision_range": 18
+    },
+    "wasp_common": {
+      "vision_range": 22
+    }
+  }
+}

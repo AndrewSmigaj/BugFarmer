@@ -1,0 +1,17 @@
+{
+  "name": "B4_hunt_always",
+  "description": "LETHALITY: hunt almost always instead of resting (cent hunt_thresh 50\u219290, wasp 45\u219285).",
+  "extends": "01_no_cull",
+  "species": {
+    "centipede_garden": {
+      "predation": {
+        "hunt_satiation_threshold": 90.0
+      }
+    },
+    "wasp_common": {
+      "predation": {
+        "hunt_satiation_threshold": 85.0
+      }
+    }
+  }
+}
