@@ -124,6 +124,22 @@ __pycache__/
 # Sprite/world pipeline output: regenerable, kept on disk but out of git.
 # raw API images, cleaned-sprite staging, scene previews, world renders.
 tools/_generated/
+# EXCEPT the ecology tuning structure: keep the per-zone READMEs + the CURRENT-setup and comparison charts
+# in git so the live ecology is visible in the repo. The bulky per-run archive + raw logs/CSVs stay ignored.
+# Un-ignore-nested pattern: re-include each ANCESTOR dir (git won't descend into an excluded dir), re-ignore
+# its other contents, then re-include the wanted leaves.
+!tools/_generated/
+tools/_generated/*
+!tools/_generated/ecology_charts/
+tools/_generated/ecology_charts/*
+!tools/_generated/ecology_charts/README.md
+!tools/_generated/ecology_charts/*/
+tools/_generated/ecology_charts/*/*
+!tools/_generated/ecology_charts/*/README.md
+!tools/_generated/ecology_charts/*/current/
+!tools/_generated/ecology_charts/*/current/**
+!tools/_generated/ecology_charts/*/comparisons/
+!tools/_generated/ecology_charts/*/comparisons/**
 
 # One-off API response dumps and scratch sprite iterations
 tools/response*.json
