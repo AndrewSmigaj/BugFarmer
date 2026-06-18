@@ -19,7 +19,9 @@
         "spawn_interval": 2000.0,
         "swarm_size": 8,
         "max_population": 1500,
-        "min_population": 12
+        "min_population": 12,
+        "event_low": 40,
+        "event_high": 400
       },
       "butterfly_meadow": {
         "initial": 20,
@@ -27,7 +29,9 @@
         "spawn_interval": 3000.0,
         "swarm_size": 6,
         "max_population": 800,
-        "min_population": 10
+        "min_population": 10,
+        "event_low": 30,
+        "event_high": 250
       },
       "wasp_common": {
         "initial": 4,

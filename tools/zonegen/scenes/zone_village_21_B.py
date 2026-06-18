@@ -422,19 +422,22 @@ def build(zone_id="village_21_B", vseed=0):
     #    the 45s pump that masked everything. `initial` seeds the breeding stock.
     #  - WEIGHTED spawn areas: high-weight habitat circles at each species' food + a low-weight zone-wide
     #    wild-card (~3:1) → mostly clusters at its habitat, a few wander in anywhere; survival sorts the rest.
-    #  - NO culls / drought bands (nothing deletes bugs). The ONLY Director action is the `min_population`
-    #    re-seed floor (anti-extinction ADD). max_population is a generous safety ceiling, not the target.
+    #  - RAIN/DROUGHT events ON for the plant-eaters (event_low→extra-rain, event_high→drought) — these
+    #    shape FOOD via weather and never delete bugs. NO culls (cull_at unset → the delete-path stays OFF).
+    #    The population ADDs are: breeding, the rare spawn trickle, and the `min_population` re-seed floor.
     #  - wasps are nest-driven: hand-placed nests (104,230 / 178,244) seed colonies; thriving ones found
     #    daughter hives beside distant prey (findNestSiteWithPrey).
     HAB, WILD = 2.0, 1.0  # habitat-circle vs zone-wide weights (predators/decomposers use 3:1, set inline)
     b.bug_spawning = {
         "species_caps": {
-            # prey base — flies breed on the orchard/fly-farm/compost rot
-            "fly_common":       {"initial": 30, "max": 200, "spawn_interval": 2000.0,
-                                 "swarm_size": 8, "max_population": 1500, "min_population": 12},
+            # prey base — flies breed on the orchard/fly-farm/compost rot. RAIN/DROUGHT events ON
+            # (event_low → Director forces EXTRA-RAIN so dipping flies get fruit & recover; event_high →
+            # DROUGHT suppresses rain so a glut eases off). Both are FOOD/environment, never delete bugs.
+            "fly_common":       {"initial": 30, "max": 200, "spawn_interval": 2000.0, "swarm_size": 8,
+                                 "max_population": 1500, "min_population": 12, "event_low": 40, "event_high": 400},
             # nectar/host — butterflies breed on milkweed in the meadows
-            "butterfly_meadow": {"initial": 20, "max": 140, "spawn_interval": 3000.0,
-                                 "swarm_size": 6, "max_population": 800, "min_population": 10},
+            "butterfly_meadow": {"initial": 20, "max": 140, "spawn_interval": 3000.0, "swarm_size": 6,
+                                 "max_population": 800, "min_population": 10, "event_low": 30, "event_high": 250},
             # predators (nest / hunter) + decomposers — small populations, rare trickle, low floor
             "wasp_common":      {"initial": 4, "max": 12, "spawn_interval": 9000.0,
                                  "swarm_size": 4, "max_population": 120, "min_population": 3, "max_nests": 5},
