@@ -12,13 +12,16 @@ socket:
   max_request_size_bytes: 8388608   # 8MB
   read_buffer_size_bytes: 1048576   # 1MB
   write_buffer_size_bytes: 1048576  # 1MB
-  outgoing_queue_size: 8192         # default 64 — too small for our per-tick reliable
+  outgoing_queue_size: 65536        # default 64 — too small for our per-tick reliable
                                     # EntityUpdate/SwarmUpdate broadcasts AND the initial whole-zone
                                     # chunk-subscribe burst (the headless tuning harness subscribes to
                                     # all chunks at once; sim_batch amplifies per-call broadcasts).
                                     # 1024 still intermittently overflowed on a fresh-restart bug_lab
                                     # join → "outgoing queue full" → server closed the session, run
-                                    # froze (no CSV). 8192 absorbs the one-time burst (cheap: ptr queue).
+                                    # froze (no CSV). 8192 absorbed bug_lab but the DENSE village_21_B
+                                    # whole-zone subscribe (64 chunks, ~11.5k msgs in <1s) still overflowed
+                                    # it intermittently → 65536 for the bigger authored zones (cheap: ptr
+                                    # queue, only grows if actually filled).
 
 runtime:
   js_entrypoint: ""
