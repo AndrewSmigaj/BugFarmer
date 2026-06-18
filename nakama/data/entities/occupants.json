@@ -154,6 +154,72 @@
       }
     }
   },
+  "tree_plum": {
+    "name": "Plum Tree",
+    "category": "natural",
+    "sprite_w": 32,
+    "sprite_h": 48,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "fruit_tree",
+      "fruit_type": "plum",
+      "max_fruit": 5,
+      "fruit_grow_ticks": 600,
+      "fruit_drop_ticks": 3000,
+      "breakable": {
+        "hp": 5,
+        "required_tool_type": "axe",
+        "required_tool_tier": 1,
+        "drops": [
+          {
+            "item_id": "wood",
+            "count": 3,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "tree_cherry": {
+    "name": "Cherry Tree",
+    "category": "natural",
+    "sprite_w": 32,
+    "sprite_h": 48,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "fruit_tree",
+      "fruit_type": "cherry",
+      "max_fruit": 6,
+      "fruit_grow_ticks": 720,
+      "fruit_drop_ticks": 3600,
+      "breakable": {
+        "hp": 5,
+        "required_tool_type": "axe",
+        "required_tool_tier": 1,
+        "drops": [
+          {
+            "item_id": "wood",
+            "count": 3,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
   "tree_dead": {
     "name": "Dead Tree",
     "category": "natural",
@@ -360,6 +426,30 @@
             "item_id": "mushroom_glow",
             "count": 1,
             "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "leaf_litter": {
+    "name": "Leaf Litter",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 10,
+    "world": {
+      "nectar": true,
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "c",
+      "breakable": {
+        "hp": 1,
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 1,
+            "chance": 0.5
           }
         ]
       }

@@ -20,9 +20,9 @@ type NestState struct {
 
 // Nest tuning (architecture_swarm_sync.md §14).
 const (
-	NestBroodCap      = 6    // two banked hatch events — no chain-hatching after a cull
+	NestBroodCap      = 9    // banked hatch events (raised so a thriving colony grows faster)
 	NestHatchCost     = 3    // brood consumed per hatch
-	NestHatchCount    = 2    // wasps added per hatch (+2 flat: countable growth)
+	NestHatchCount    = 3    // wasps added per hatch (+3: more wasps per cycle — the "more wasps" tuning)
 	NestRehatchDelay  = 1200 // 2 min from resident death to re-hatch
 	NestFoundingSize  = 4    // the initial resident patrol
 	NestDefendRadius  = 5.0  // players this close to the nest aggro the resident

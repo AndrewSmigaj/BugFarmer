@@ -385,6 +385,52 @@
     "max_stack": 99,
     "sell_price": 1
   },
+  "plum": {
+    "name": "Plum",
+    "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5,
+    "no_auto_pickup": true
+  },
+  "rotten_plum": {
+    "name": "Rotten Plum",
+    "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1
+  },
+  "cherry": {
+    "name": "Cherry",
+    "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 4,
+    "no_auto_pickup": true
+  },
+  "rotten_cherry": {
+    "name": "Rotten Cherry",
+    "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1
+  },
   "tomato": {
     "name": "Tomato",
     "category": "resource",
@@ -832,17 +878,6 @@
       }
     }
   },
-  "bug_parts": {
-    "name": "Dead Bug",
-    "category": "resource",
-    "tags": [
-      "material"
-    ],
-    "stackable": true,
-    "max_stack": 99,
-    "sell_price": 2,
-    "food_value": 10
-  },
   "dead_fly": {
     "name": "Dead Fly",
     "category": "resource",
@@ -878,6 +913,28 @@
   },
   "dead_centipede": {
     "name": "Dead Centipede",
+    "category": "resource",
+    "tags": [
+      "carrion"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1,
+    "food_value": 10
+  },
+  "dead_millipede": {
+    "name": "Dead Millipede",
+    "category": "resource",
+    "tags": [
+      "carrion"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1,
+    "food_value": 10
+  },
+  "dead_beetle": {
+    "name": "Dead Beetle",
     "category": "resource",
     "tags": [
       "carrion"

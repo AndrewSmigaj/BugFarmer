@@ -123,7 +123,7 @@ func TestNestHatchAtThreeBrood(t *testing.T) {
 	}
 }
 
-// Brood clamps at 6 — no banked chain-hatching after a cull.
+// Brood clamps at NestBroodCap — no banked chain-hatching after a cull.
 func TestNestBroodClamp(t *testing.T) {
 	state := nestTestState()
 	m := &Match{}
@@ -299,5 +299,48 @@ func TestGrowSwarmParity(t *testing.T) {
 	evs := eventsOfType(state, InfluenceSwarmReproduced)
 	if len(evs) != 1 || evs[0].SplitCount != 3 || evs[0].NewBugIDBase != 5 {
 		t.Fatalf("event wrong: %+v", evs)
+	}
+}
+
+// Phase 3: a THRIVING colony (saturated patrol + full brood bank) splits off a daughter hive — up to
+// the per-zone MaxNests — and draining the parent's brood arms a founding cooldown.
+func TestNestFoundingSplitsDaughterHive(t *testing.T) {
+	state := nestTestState()
+	m := &Match{}
+	nest, resident := initTestNest(m, state)
+	if nest == nil || resident == nil {
+		t.Fatal("parent nest/resident not founded")
+	}
+	species := state.Species["wasp_common"]
+
+	// Allow up to 2 hives, ample population headroom.
+	state.CurrentZone.BugSpawning = &BugSpawnConfig{SpeciesCaps: map[string]SpeciesCap{
+		"wasp_common": {MaxNests: 2, MaxPopulation: 100},
+	}}
+
+	// Not yet thriving (brood not full) → no founding.
+	resident.Count = species.MaxSwarmSize
+	nest.Brood = entities.NestBroodCap - 1
+	m.processNestFounding(state, nil, nopRuntimeLogger())
+	if len(state.NestStates) != 1 {
+		t.Fatalf("a non-thriving colony must not found (nests=%d)", len(state.NestStates))
+	}
+
+	// Thriving: saturated patrol + full brood → founds exactly one daughter, draining the parent brood.
+	nest.Brood = entities.NestBroodCap
+	m.processNestFounding(state, nil, nopRuntimeLogger())
+	if len(state.NestStates) != 2 {
+		t.Fatalf("a thriving colony under MaxNests must found one daughter hive, got %d nests", len(state.NestStates))
+	}
+	if nest.Brood != 0 {
+		t.Fatalf("founding must drain the parent brood (cooldown), got %d", nest.Brood)
+	}
+
+	// At the cap (2 nests): re-arm the parent, still no further founding.
+	nest.Brood = entities.NestBroodCap
+	resident.Count = species.MaxSwarmSize
+	m.processNestFounding(state, nil, nopRuntimeLogger())
+	if len(state.NestStates) != 2 {
+		t.Fatalf("at MaxNests no more hives may be founded, got %d", len(state.NestStates))
 	}
 }

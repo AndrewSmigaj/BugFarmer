@@ -232,6 +232,19 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 			zoneConfig.ZoneID, callRate, SimRate, callRate/SimRate)
 	}
 
+	// Sim-batch (TEST zones only): advance N sim-ticks per Nakama call. call_rate caps at 60, so this is
+	// the only way past 6× — a 15-game-day tuning run finishes in minutes. Default/clamped to 1 = no
+	// batching = byte-identical to one tick per call (production zones omit sim_batch).
+	state.Config.SimBatch = 1
+	if zoneConfig.SimBatch > 1 {
+		state.Config.SimBatch = zoneConfig.SimBatch
+		if state.Config.SimBatch > 64 {
+			state.Config.SimBatch = 64
+		}
+		logger.Info("Zone %s runs SimBatch=%d sim-ticks/call (test-zone headless speedup; %d× on top of call_rate)",
+			zoneConfig.ZoneID, state.Config.SimBatch, state.Config.SimBatch)
+	}
+
 	// Static-sim zones (test/deterministic) disable continuous spawn, merge, and split.
 	if zoneConfig.BugSpawning != nil {
 		state.StaticSim = zoneConfig.BugSpawning.Static
@@ -774,678 +787,694 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		return worldState
 	}
 
-	worldState.TickCount++
-	chunkSize := worldState.Config.ChunkSize
+	// SIM BATCH (test zones only; SimBatch=1 in production = ONE iteration = byte-identical behavior):
+	// advance N full sim-ticks per Nakama call so a headless tuning run covers many game-days fast. Each
+	// iteration is a complete, unchanged tick (TickCount++, sim, per-tick broadcast); the messages slice
+	// re-processes each sub-tick (harmless for the observer/test use — don't send mutating messages to a
+	// batched zone). VERIFIED: no early `return` between here and the loop close, so the wrap is safe.
+	for simStep := 0; simStep < worldState.Config.SimBatch; simStep++ {
+		worldState.TickCount++
+		chunkSize := worldState.Config.ChunkSize
 
-	// ZONE PERSISTENCE: periodic autosave while occupied (crash safety between the on-empty/terminate
-	// saves). Snapshot synchronously on the match goroutine, write async. Only fires past the pause
-	// guard, so it never runs on an empty zone.
-	if worldState.TickCount-worldState.LastZoneSaveTick >= zoneAutosaveTicks {
-		worldState.LastZoneSaveTick = worldState.TickCount
-		if recs := m.snapshotZoneState(worldState); len(recs) > 0 {
-			go writeZoneRecords(context.Background(), nk, logger, recs)
-		}
-	}
-
-	// Process incoming messages
-	for _, msg := range messages {
-		userID := msg.GetUserId()
-		player, exists := worldState.Players[userID]
-		if !exists {
-			continue
+		// ZONE PERSISTENCE: periodic autosave while occupied (crash safety between the on-empty/terminate
+		// saves). Snapshot synchronously on the match goroutine, write async. Only fires past the pause
+		// guard, so it never runs on an empty zone.
+		if worldState.TickCount-worldState.LastZoneSaveTick >= zoneAutosaveTicks {
+			worldState.LastZoneSaveTick = worldState.TickCount
+			if recs := m.snapshotZoneState(worldState); len(recs) > 0 {
+				go writeZoneRecords(context.Background(), nk, logger, recs)
+			}
 		}
 
-		opCode := msg.GetOpCode()
-		// Don't log high-frequency messages
-		if opCode != OpCodeMovement && opCode != OpCodeChunkSubscribe && opCode != OpCodeChunkUnsub {
-			logger.Info("Received OpCode %d from %s", opCode, userID)
-		}
-
-		switch opCode {
-		case OpCodeMovement:
-			var movement MovementMessage
-			if err := json.Unmarshal(msg.GetData(), &movement); err != nil {
-				logger.Warn("Invalid movement message from %s: %v", userID, err)
+		// Process incoming messages
+		for _, msg := range messages {
+			if simStep > 0 {
+				break // process player input only ONCE per call (re-processing each sub-tick re-floods
+				// chunk-subscribes etc.); sub-ticks 1..N are pure simulation
+			}
+			userID := msg.GetUserId()
+			player, exists := worldState.Players[userID]
+			if !exists {
 				continue
 			}
-			// Authoritative collision: reject moves into cells that block players. The client position is
-			// the CENTRE of the 16x32 (1x2-cell) centre-pivoted sprite, so the feet (ground contact) are
-			// one cell below: (X, Y-1). The client predicts this too; this is the server backstop. Facing
-			// still updates so turning in place against a wall works.
-			if worldState.IsBlockedForPlayers(movement.X, movement.Y-1.0) {
+
+			opCode := msg.GetOpCode()
+			// Don't log high-frequency messages
+			if opCode != OpCodeMovement && opCode != OpCodeChunkSubscribe && opCode != OpCodeChunkUnsub {
+				logger.Info("Received OpCode %d from %s", opCode, userID)
+			}
+
+			switch opCode {
+			case OpCodeMovement:
+				var movement MovementMessage
+				if err := json.Unmarshal(msg.GetData(), &movement); err != nil {
+					logger.Warn("Invalid movement message from %s: %v", userID, err)
+					continue
+				}
+				// Authoritative collision: reject moves into cells that block players. The client position is
+				// the CENTRE of the 16x32 (1x2-cell) centre-pivoted sprite, so the feet (ground contact) are
+				// one cell below: (X, Y-1). The client predicts this too; this is the server backstop. Facing
+				// still updates so turning in place against a wall works.
+				if worldState.IsBlockedForPlayers(movement.X, movement.Y-1.0) {
+					player.Facing = entities.Direction(movement.Facing)
+					continue
+				}
+				// Update player state
+				player.SetWorldPosition(movement.X, movement.Y, chunkSize)
 				player.Facing = entities.Direction(movement.Facing)
-				continue
-			}
-			// Update player state
-			player.SetWorldPosition(movement.X, movement.Y, chunkSize)
-			player.Facing = entities.Direction(movement.Facing)
 
-			// Track cell changes for deterministic bug AI
-			zoneID := ""
-			if worldState.CurrentZone != nil {
-				zoneID = worldState.CurrentZone.ZoneID
-			}
-			worldState.CheckPlayerCellChange(userID, movement.X, movement.Y, zoneID)
-
-		case OpCodeCatchBug:
-			var catchMsg CatchBugMessage
-			if err := json.Unmarshal(msg.GetData(), &catchMsg); err != nil {
-				logger.Warn("Invalid catch message from %s: %v", userID, err)
-				continue
-			}
-			m.handleCatchBug(logger, dispatcher, worldState, catchMsg, userID, chunkSize)
-
-		case OpCodeMeleeAttack:
-			var meleeMsg MeleeAttackMessage
-			if err := json.Unmarshal(msg.GetData(), &meleeMsg); err != nil {
-				logger.Warn("Invalid melee message from %s: %v", userID, err)
-				continue
-			}
-			m.handleMeleeAttack(logger, dispatcher, worldState, meleeMsg, userID, chunkSize)
-
-		case OpCodeReleaseBugs:
-			var releaseMsg ReleaseBugsMessage
-			if err := json.Unmarshal(msg.GetData(), &releaseMsg); err != nil {
-				logger.Warn("Invalid release message from %s: %v", userID, err)
-				continue
-			}
-			m.handleReleaseBugs(logger, dispatcher, worldState, releaseMsg, userID, chunkSize)
-
-		case OpCodeEquipArmor:
-			var armorMsg EquipArmorMessage
-			if err := json.Unmarshal(msg.GetData(), &armorMsg); err != nil {
-				logger.Warn("Invalid equip-armor message from %s: %v", userID, err)
-				continue
-			}
-			m.handleEquipArmor(logger, dispatcher, worldState, userID, armorMsg)
-
-		case OpCodeEquipTool:
-			var equipMsg EquipToolMessage
-			if err := json.Unmarshal(msg.GetData(), &equipMsg); err != nil {
-				logger.Warn("Invalid equip message from %s: %v", userID, err)
-				continue
-			}
-			player.EquippedTool = equipMsg.ToolID
-			logger.Info("Player %s equipped tool: %q", userID, equipMsg.ToolID)
-
-		case OpCodeMoveSlot:
-			var moveMsg MoveSlotMessage
-			if err := json.Unmarshal(msg.GetData(), &moveMsg); err != nil {
-				logger.Warn("Invalid move slot message from %s: %v", userID, err)
-				continue
-			}
-			m.handleMoveSlot(logger, dispatcher, worldState, moveMsg, userID)
-
-		// World Building (Phase 4)
-		case OpCodeChunkSubscribe:
-			var subMsg ChunkSubscribeMessage
-			if err := json.Unmarshal(msg.GetData(), &subMsg); err != nil {
-				logger.Warn("Invalid chunk subscribe from %s: %v", userID, err)
-				continue
-			}
-			m.handleChunkSubscribe(logger, dispatcher, worldState, userID, subMsg.ChunkX, subMsg.ChunkY)
-
-		case OpCodeChunkUnsub:
-			var subMsg ChunkSubscribeMessage
-			if err := json.Unmarshal(msg.GetData(), &subMsg); err != nil {
-				continue
-			}
-			m.handleChunkUnsub(worldState, userID, subMsg.ChunkX, subMsg.ChunkY)
-
-		case OpCodeTilePlace:
-			var placeMsg TilePlaceMessage
-			if err := json.Unmarshal(msg.GetData(), &placeMsg); err != nil {
-				logger.Warn("Invalid tile place from %s: %v", userID, err)
-				continue
-			}
-			m.handleTilePlace(logger, dispatcher, worldState, userID, placeMsg)
-
-		case OpCodeTileBreak:
-			var breakMsg TileBreakMessage
-			if err := json.Unmarshal(msg.GetData(), &breakMsg); err != nil {
-				logger.Warn("Invalid tile break from %s: %v", userID, err)
-				continue
-			}
-			m.handleTileBreak(logger, dispatcher, worldState, userID, breakMsg, worldState.TickCount)
-
-		case OpCodeToolUse:
-			var toolMsg ToolUseMessage
-			if err := json.Unmarshal(msg.GetData(), &toolMsg); err != nil {
-				logger.Warn("Invalid tool use from %s: %v", userID, err)
-				continue
-			}
-			m.handleToolUse(logger, dispatcher, worldState, userID, toolMsg, worldState.TickCount)
-
-		case OpCodePlantInteract:
-			var plantMsg PlantInteractMessage
-			if err := json.Unmarshal(msg.GetData(), &plantMsg); err != nil {
-				logger.Warn("Invalid plant interact from %s: %v", userID, err)
-				continue
-			}
-			m.handlePlantInteract(logger, dispatcher, worldState, userID, plantMsg, worldState.TickCount)
-
-		case OpCodePickupItem:
-			var pickupMsg PickupItemMessage
-			if err := json.Unmarshal(msg.GetData(), &pickupMsg); err != nil {
-				continue
-			}
-			m.handlePickupItem(logger, dispatcher, worldState, userID, pickupMsg)
-
-		case OpCodeTreeHarvest:
-			var harvestMsg TreeHarvestMessage
-			if err := json.Unmarshal(msg.GetData(), &harvestMsg); err != nil {
-				logger.Warn("Invalid tree harvest from %s: %v", userID, err)
-				continue
-			}
-			m.handleTreeHarvest(logger, dispatcher, worldState, userID, harvestMsg)
-
-		// NOTE: OpCodeInteractionReport (70) RETIRED — no client ever sent it, and the
-		// lifecycle meters it fed are now SERVER-authoritative (advanced in the swarm loop
-		// from center-at-food checks; effects ride the influence ledger).
-
-		case OpCodeStationDeposit:
-			var depositMsg StationDepositMessage
-			if err := json.Unmarshal(msg.GetData(), &depositMsg); err != nil {
-				logger.Warn("Invalid station deposit from %s: %v", userID, err)
-				continue
-			}
-			m.handleStationDeposit(logger, dispatcher, worldState, userID, depositMsg)
-
-		case OpCodeContainer:
-			var caMsg ContainerActionMessage
-			if err := json.Unmarshal(msg.GetData(), &caMsg); err != nil {
-				logger.Warn("Invalid container action from %s: %v", userID, err)
-				continue
-			}
-			m.handleContainerAction(logger, dispatcher, worldState, userID, caMsg)
-
-		case OpCodeSetHome:
-			var shMsg SetHomeMessage
-			if err := json.Unmarshal(msg.GetData(), &shMsg); err != nil {
-				logger.Warn("Invalid set-home from %s: %v", userID, err)
-				continue
-			}
-			m.handleSetHome(logger, dispatcher, nk, worldState, userID, shMsg)
-
-		case OpCodeEcologyTuning:
-			// DEV TOOL: live-override a species' ecology parameters from the Unity debug
-			// panel (server-decided values; determinism-safe).
-			var tuneMsg EcologyTuningMessage
-			if err := json.Unmarshal(msg.GetData(), &tuneMsg); err != nil {
-				logger.Warn("Invalid ecology tuning from %s: %v", userID, err)
-				continue
-			}
-			if sp := worldState.Species[tuneMsg.SpeciesID]; sp != nil {
-				sp.ForageChance = tuneMsg.ForageChance
-				if tuneMsg.ForageModeMinTicks > 0 {
-					sp.ForageModeMinTicks = tuneMsg.ForageModeMinTicks
+				// Track cell changes for deterministic bug AI
+				zoneID := ""
+				if worldState.CurrentZone != nil {
+					zoneID = worldState.CurrentZone.ZoneID
 				}
-				if tuneMsg.ForageModeMaxTicks > 0 {
-					sp.ForageModeMaxTicks = tuneMsg.ForageModeMaxTicks
+				worldState.CheckPlayerCellChange(userID, movement.X, movement.Y, zoneID)
+
+			case OpCodeCatchBug:
+				var catchMsg CatchBugMessage
+				if err := json.Unmarshal(msg.GetData(), &catchMsg); err != nil {
+					logger.Warn("Invalid catch message from %s: %v", userID, err)
+					continue
 				}
-				if tuneMsg.FeedAmount > 0 {
-					sp.FeedAmount = tuneMsg.FeedAmount
+				m.handleCatchBug(logger, dispatcher, worldState, catchMsg, userID, chunkSize)
+
+			case OpCodeMeleeAttack:
+				var meleeMsg MeleeAttackMessage
+				if err := json.Unmarshal(msg.GetData(), &meleeMsg); err != nil {
+					logger.Warn("Invalid melee message from %s: %v", userID, err)
+					continue
 				}
-				if tuneMsg.BreedAmount > 0 {
-					sp.BreedAmount = tuneMsg.BreedAmount
+				m.handleMeleeAttack(logger, dispatcher, worldState, meleeMsg, userID, chunkSize)
+
+			case OpCodeReleaseBugs:
+				var releaseMsg ReleaseBugsMessage
+				if err := json.Unmarshal(msg.GetData(), &releaseMsg); err != nil {
+					logger.Warn("Invalid release message from %s: %v", userID, err)
+					continue
 				}
-				if tuneMsg.SatiationDecay > 0 {
-					sp.SatiationDecayRate = tuneMsg.SatiationDecay
+				m.handleReleaseBugs(logger, dispatcher, worldState, releaseMsg, userID, chunkSize)
+
+			case OpCodeEquipArmor:
+				var armorMsg EquipArmorMessage
+				if err := json.Unmarshal(msg.GetData(), &armorMsg); err != nil {
+					logger.Warn("Invalid equip-armor message from %s: %v", userID, err)
+					continue
 				}
-				if tuneMsg.ConsumeRate > 0 {
-					sp.ConsumeRate = tuneMsg.ConsumeRate
+				m.handleEquipArmor(logger, dispatcher, worldState, userID, armorMsg)
+
+			case OpCodeEquipTool:
+				var equipMsg EquipToolMessage
+				if err := json.Unmarshal(msg.GetData(), &equipMsg); err != nil {
+					logger.Warn("Invalid equip message from %s: %v", userID, err)
+					continue
 				}
-				if tuneMsg.ReproduceCooldown > 0 {
-					sp.ReproduceCooldown = tuneMsg.ReproduceCooldown
+				player.EquippedTool = equipMsg.ToolID
+				logger.Info("Player %s equipped tool: %q", userID, equipMsg.ToolID)
+
+			case OpCodeMoveSlot:
+				var moveMsg MoveSlotMessage
+				if err := json.Unmarshal(msg.GetData(), &moveMsg); err != nil {
+					logger.Warn("Invalid move slot message from %s: %v", userID, err)
+					continue
 				}
-				logger.Info("ECOLOGY TUNED %s by %s: forage=%.2f mode=%d-%dt feed=%.1f breed=%.1f decay=%.2f consume=%.2f cd=%.0fs",
-					tuneMsg.SpeciesID, userID, sp.ForageChance, sp.ForageModeMinTicks, sp.ForageModeMaxTicks,
-					sp.FeedAmount, sp.BreedAmount, sp.SatiationDecayRate, sp.ConsumeRate, sp.ReproduceCooldown)
-			}
+				m.handleMoveSlot(logger, dispatcher, worldState, moveMsg, userID)
 
-		case OpCodeDebugWorld:
-			// DEV TOOL (the EcologyTuning convention: ungated, loudly logged).
-			var dwMsg DebugWorldMessage
-			if err := json.Unmarshal(msg.GetData(), &dwMsg); err != nil {
-				logger.Warn("Invalid debug-world from %s: %v", userID, err)
-				continue
-			}
-			m.handleDebugWorld(logger, dispatcher, worldState, dwMsg, userID, chunkSize)
-
-		// Bug Sync (Late Joiner + Drift Detection)
-		case OpCodeSampleResponse:
-			var respMsg SampleResponseMessage
-			if err := json.Unmarshal(msg.GetData(), &respMsg); err != nil {
-				logger.Warn("Invalid sample response from %s: %v", userID, err)
-				continue
-			}
-			m.handleSampleResponse(logger, dispatcher, worldState, userID, respMsg)
-
-		case OpCodeRequestSnapshot:
-			var reqMsg SnapshotRequestMessage
-			if err := json.Unmarshal(msg.GetData(), &reqMsg); err != nil {
-				logger.Warn("Invalid snapshot request from %s: %v", userID, err)
-				continue
-			}
-			m.handleSnapshotRequest(logger, dispatcher, worldState, userID, reqMsg)
-
-		case OpCodeZoneSnapshot:
-			// Authority client sends periodic snapshots (OpCode 75)
-			var snapMsg ZoneSnapshotMessage
-			if err := json.Unmarshal(msg.GetData(), &snapMsg); err != nil {
-				logger.Warn("Invalid zone snapshot from %s: %v", userID, err)
-				continue
-			}
-			m.handleZoneSnapshot(logger, worldState, userID, snapMsg)
-		}
-	}
-
-	// Broadcast entity updates to all clients
-	if len(worldState.Players) > 0 {
-		entityData := make([]EntityData, 0, len(worldState.Players))
-		for userID, player := range worldState.Players {
-			eqa := ""
-			for _, piece := range player.Equipment {
-				if piece != "" {
-					eqa = strings.Join(player.Equipment[:], ",")
-					break
+			// World Building (Phase 4)
+			case OpCodeChunkSubscribe:
+				var subMsg ChunkSubscribeMessage
+				if err := json.Unmarshal(msg.GetData(), &subMsg); err != nil {
+					logger.Warn("Invalid chunk subscribe from %s: %v", userID, err)
+					continue
 				}
-			}
-			entityData = append(entityData, EntityData{
-				ID:       "player_" + userID,
-				Type:     "player",
-				X:        player.WorldX(chunkSize),
-				Y:        player.WorldY(chunkSize),
-				Facing:   int(player.Facing),
-				Equipped: player.EquippedTool,
-				Eqa:      eqa,
-			})
-		}
+				m.handleChunkSubscribe(logger, dispatcher, worldState, userID, subMsg.ChunkX, subMsg.ChunkY)
 
-		update := EntityUpdateMessage{Entities: entityData}
-		data, err := json.Marshal(update)
-		if err != nil {
-			logger.Error("Failed to marshal entity update: %v", err)
-		} else {
-			dispatcher.BroadcastMessage(OpCodeEntityUpdate, data, nil, nil, true)
-		}
-	}
-
-	// === Crop Growth ===
-	cropCount := len(worldState.CropStates)
-	if cropCount > 0 && worldState.TickCount%100 == 0 {
-		logger.Debug("DEBUG: processCropGrowth starting with %d crops at tick %d", cropCount, worldState.TickCount)
-	}
-	m.processCropGrowth(worldState, dispatcher)
-
-	// === Fruit Trees & Ground Item Decay ===
-	m.processFruitTrees(worldState, dispatcher, logger)
-	m.processHostPlants(worldState) // milkweed breeding capacity regrows
-	m.processForagePools(worldState) // flower nectar regrows (the boom-bust food)
-	if worldState.TickCount%30 == 0 {
-		m.processNests(worldState, logger)                     // occupant-gone sweep + brood-drain re-hatch
-		m.processBroods(worldState, dispatcher, logger)        // visible nurseries: mature eggs -> maggots -> hatch
-	}
-	m.processGroundItemDecay(worldState, dispatcher)
-	m.processStations(worldState, dispatcher)      // material processors: input -> compost
-	m.processCraftStations(worldState, dispatcher) // recipe processors: queued batches -> output grid
-
-	// === Swarm Simulation ===
-	deltaTime := 1.0 / float32(SimRate) // sim-seconds per tick — fixed, NOT 1/CallRate (see SimRate)
-
-	// Blocked checker for collision detection
-	isBlocked := func(x, y float32) bool {
-		return worldState.IsBlocked(x, y)
-	}
-
-	// Simulate swarms
-	for _, swarm := range worldState.Swarms {
-		species := worldState.Species[swarm.SpeciesID]
-		if species == nil {
-			continue
-		}
-
-		// THINK: Every few seconds, pick new target (expensive). Food/breeding sources come
-		// from the unified query (rotten ground fruit + filled stations + flora occupants);
-		// the chosen source is CACHED on the swarm so the per-tick meter check is O(1).
-		// V1 RULE: a REPRODUCING swarm only targets DEPLETABLE sources (items/stations) —
-		// flora is infinite, so breeding on it would mean unbounded growth.
-		// ActionState machine (centipede windup/surge/recover/gnaw): PER TICK, BEFORE
-		// the think gate — surges are 25 ticks vs 8-30-tick thinks, and the bite check
-		// must run every tick of flight. Owns the swarm while active.
-		actionActive := false
-		if species.Predation != nil && species.Category == "individual" {
-			actionActive = m.processActionState(logger, dispatcher, worldState, swarm, species, chunkSize, deltaTime)
-		}
-
-		// Predation branches (prey FLEE / predator hunt+wander) REPLACE the shared
-		// forage block when they fire — they emit their own leg, write their own
-		// SpeedMult, and own NextThinkTick (hunt/flee re-aim every 10-15 ticks).
-		if !actionActive && worldState.TickCount >= swarm.NextThinkTick &&
-			!m.predationThink(worldState, swarm, species, chunkSize, deltaTime, logger) {
-			var resourceX, resourceY float32 = float32(math.NaN()), float32(math.NaN())
-			swarm.TargetFoodID = ""
-			swarm.TargetFoodDepletable = false
-			// The shared path resets the per-leg speed (sync contract: EVERY leg-emitting
-			// path writes SpeedMult — without this a swarm that fled keeps the flee speed
-			// forever, consistently on both sides and invisible to every harness) and the
-			// hunt cache (exclusivity: dining and hunting never coexist).
-			swarm.SpeedMult = 1.0
-			swarm.TargetPreyID = ""
-
-			// FORAGE DUTY CYCLE: the forage/wander MODE persists 30-50s (10x the leg cadence)
-			// so behavior doesn't flicker leg-to-leg — rolled by forage_chance (~25% for
-			// flies). Satiation/breeding fill across several feeding sessions with hunger
-			// decaying in between. OVERRIDE: once sated (reproducing phase) the swarm always
-			// seeks the breeding source and PARKS there until the reproduction fires.
-			if worldState.TickCount >= swarm.ModeUntilTick {
-				swarm.ForageMode = species.ForageChance <= 0 || rand.Float32() < species.ForageChance
-				modeMin, modeMax := int64(species.ForageModeMinTicks), int64(species.ForageModeMaxTicks)
-				if modeMin <= 0 {
-					modeMin = 300 // default 30s
+			case OpCodeChunkUnsub:
+				var subMsg ChunkSubscribeMessage
+				if err := json.Unmarshal(msg.GetData(), &subMsg); err != nil {
+					continue
 				}
-				if modeMax <= modeMin {
-					modeMax = modeMin + 200
+				m.handleChunkUnsub(worldState, userID, subMsg.ChunkX, subMsg.ChunkY)
+
+			case OpCodeTilePlace:
+				var placeMsg TilePlaceMessage
+				if err := json.Unmarshal(msg.GetData(), &placeMsg); err != nil {
+					logger.Warn("Invalid tile place from %s: %v", userID, err)
+					continue
 				}
-				swarm.ModeUntilTick = worldState.TickCount + modeMin + rand.Int63n(modeMax-modeMin+1)
-			}
-			// Hungry OR breeding bugs always forage; only comfortably-fed ones follow the idle
-			// wander duty cycle. (Predators take the predationThink path above, not this one.)
-			forage := swarm.ForageMode || swarm.Phase == "reproducing" || swarm.Satiation < hungerForageThreshold
-			attractions := swarm.GetCurrentAttractions(species)
-			if forage && len(attractions) > 0 {
-				hits := FindNearbyFood(worldState, swarm.Position, species.VisionRange, attractions)
-				if swarm.Phase == "reproducing" {
-					kept := hits[:0]
-					for _, h := range hits {
-						if h.Depletable {
-							kept = append(kept, h)
-						}
+				m.handleTilePlace(logger, dispatcher, worldState, userID, placeMsg)
+
+			case OpCodeTileBreak:
+				var breakMsg TileBreakMessage
+				if err := json.Unmarshal(msg.GetData(), &breakMsg); err != nil {
+					logger.Warn("Invalid tile break from %s: %v", userID, err)
+					continue
+				}
+				m.handleTileBreak(logger, dispatcher, worldState, userID, breakMsg, worldState.TickCount)
+
+			case OpCodeToolUse:
+				var toolMsg ToolUseMessage
+				if err := json.Unmarshal(msg.GetData(), &toolMsg); err != nil {
+					logger.Warn("Invalid tool use from %s: %v", userID, err)
+					continue
+				}
+				m.handleToolUse(logger, dispatcher, worldState, userID, toolMsg, worldState.TickCount)
+
+			case OpCodePlantInteract:
+				var plantMsg PlantInteractMessage
+				if err := json.Unmarshal(msg.GetData(), &plantMsg); err != nil {
+					logger.Warn("Invalid plant interact from %s: %v", userID, err)
+					continue
+				}
+				m.handlePlantInteract(logger, dispatcher, worldState, userID, plantMsg, worldState.TickCount)
+
+			case OpCodePickupItem:
+				var pickupMsg PickupItemMessage
+				if err := json.Unmarshal(msg.GetData(), &pickupMsg); err != nil {
+					continue
+				}
+				m.handlePickupItem(logger, dispatcher, worldState, userID, pickupMsg)
+
+			case OpCodeTreeHarvest:
+				var harvestMsg TreeHarvestMessage
+				if err := json.Unmarshal(msg.GetData(), &harvestMsg); err != nil {
+					logger.Warn("Invalid tree harvest from %s: %v", userID, err)
+					continue
+				}
+				m.handleTreeHarvest(logger, dispatcher, worldState, userID, harvestMsg)
+
+			// NOTE: OpCodeInteractionReport (70) RETIRED — no client ever sent it, and the
+			// lifecycle meters it fed are now SERVER-authoritative (advanced in the swarm loop
+			// from center-at-food checks; effects ride the influence ledger).
+
+			case OpCodeStationDeposit:
+				var depositMsg StationDepositMessage
+				if err := json.Unmarshal(msg.GetData(), &depositMsg); err != nil {
+					logger.Warn("Invalid station deposit from %s: %v", userID, err)
+					continue
+				}
+				m.handleStationDeposit(logger, dispatcher, worldState, userID, depositMsg)
+
+			case OpCodeContainer:
+				var caMsg ContainerActionMessage
+				if err := json.Unmarshal(msg.GetData(), &caMsg); err != nil {
+					logger.Warn("Invalid container action from %s: %v", userID, err)
+					continue
+				}
+				m.handleContainerAction(logger, dispatcher, worldState, userID, caMsg)
+
+			case OpCodeSetHome:
+				var shMsg SetHomeMessage
+				if err := json.Unmarshal(msg.GetData(), &shMsg); err != nil {
+					logger.Warn("Invalid set-home from %s: %v", userID, err)
+					continue
+				}
+				m.handleSetHome(logger, dispatcher, nk, worldState, userID, shMsg)
+
+			case OpCodeEcologyTuning:
+				// DEV TOOL: live-override a species' ecology parameters from the Unity debug
+				// panel (server-decided values; determinism-safe).
+				var tuneMsg EcologyTuningMessage
+				if err := json.Unmarshal(msg.GetData(), &tuneMsg); err != nil {
+					logger.Warn("Invalid ecology tuning from %s: %v", userID, err)
+					continue
+				}
+				if sp := worldState.Species[tuneMsg.SpeciesID]; sp != nil {
+					sp.ForageChance = tuneMsg.ForageChance
+					if tuneMsg.ForageModeMinTicks > 0 {
+						sp.ForageModeMinTicks = tuneMsg.ForageModeMinTicks
 					}
-					hits = kept
+					if tuneMsg.ForageModeMaxTicks > 0 {
+						sp.ForageModeMaxTicks = tuneMsg.ForageModeMaxTicks
+					}
+					if tuneMsg.FeedAmount > 0 {
+						sp.FeedAmount = tuneMsg.FeedAmount
+					}
+					if tuneMsg.BreedAmount > 0 {
+						sp.BreedAmount = tuneMsg.BreedAmount
+					}
+					if tuneMsg.SatiationDecay > 0 {
+						sp.SatiationDecayRate = tuneMsg.SatiationDecay
+					}
+					if tuneMsg.ConsumeRate > 0 {
+						sp.ConsumeRate = tuneMsg.ConsumeRate
+					}
+					if tuneMsg.ReproduceCooldown > 0 {
+						sp.ReproduceCooldown = tuneMsg.ReproduceCooldown
+					}
+					logger.Info("ECOLOGY TUNED %s by %s: forage=%.2f mode=%d-%dt feed=%.1f breed=%.1f decay=%.2f consume=%.2f cd=%.0fs",
+						tuneMsg.SpeciesID, userID, sp.ForageChance, sp.ForageModeMinTicks, sp.ForageModeMaxTicks,
+						sp.FeedAmount, sp.BreedAmount, sp.SatiationDecayRate, sp.ConsumeRate, sp.ReproduceCooldown)
 				}
-				if len(hits) > 0 {
-					resourceX, resourceY = hits[0].X, hits[0].Y
-					swarm.TargetFoodID = hits[0].ID
-					swarm.TargetFoodX, swarm.TargetFoodY = hits[0].X, hits[0].Y
-					swarm.TargetFoodDepletable = hits[0].Depletable
+
+			case OpCodeDebugWorld:
+				// DEV TOOL (the EcologyTuning convention: ungated, loudly logged).
+				var dwMsg DebugWorldMessage
+				if err := json.Unmarshal(msg.GetData(), &dwMsg); err != nil {
+					logger.Warn("Invalid debug-world from %s: %v", userID, err)
+					continue
 				}
+				m.handleDebugWorld(logger, dispatcher, worldState, dwMsg, userID, chunkSize)
+
+			// Bug Sync (Late Joiner + Drift Detection)
+			case OpCodeSampleResponse:
+				var respMsg SampleResponseMessage
+				if err := json.Unmarshal(msg.GetData(), &respMsg); err != nil {
+					logger.Warn("Invalid sample response from %s: %v", userID, err)
+					continue
+				}
+				m.handleSampleResponse(logger, dispatcher, worldState, userID, respMsg)
+
+			case OpCodeRequestSnapshot:
+				var reqMsg SnapshotRequestMessage
+				if err := json.Unmarshal(msg.GetData(), &reqMsg); err != nil {
+					logger.Warn("Invalid snapshot request from %s: %v", userID, err)
+					continue
+				}
+				m.handleSnapshotRequest(logger, dispatcher, worldState, userID, reqMsg)
+
+			case OpCodeZoneSnapshot:
+				// Authority client sends periodic snapshots (OpCode 75)
+				var snapMsg ZoneSnapshotMessage
+				if err := json.Unmarshal(msg.GetData(), &snapMsg); err != nil {
+					logger.Warn("Invalid zone snapshot from %s: %v", userID, err)
+					continue
+				}
+				m.handleZoneSnapshot(logger, worldState, userID, snapMsg)
+			}
+		}
+
+		// Broadcast entity updates to all clients
+		if len(worldState.Players) > 0 {
+			entityData := make([]EntityData, 0, len(worldState.Players))
+			for userID, player := range worldState.Players {
+				eqa := ""
+				for _, piece := range player.Equipment {
+					if piece != "" {
+						eqa = strings.Join(player.Equipment[:], ",")
+						break
+					}
+				}
+				entityData = append(entityData, EntityData{
+					ID:       "player_" + userID,
+					Type:     "player",
+					X:        player.WorldX(chunkSize),
+					Y:        player.WorldY(chunkSize),
+					Facing:   int(player.Facing),
+					Equipped: player.EquippedTool,
+					Eqa:      eqa,
+				})
 			}
 
-			// Origin = center BEFORE this leg starts (pre-Move). Emit a sparse,
-			// self-describing leg event so clients re-anchor + move deterministically.
-			originX := swarm.WorldX(chunkSize)
-			originY := swarm.WorldY(chunkSize)
-
-			swarm.Think(species, chunkSize, resourceX, resourceY, isBlocked)
-
-			if worldState.CurrentZone != nil {
-				worldState.AddSwarmTargetEvent(
-					worldState.CurrentZone.ZoneID, swarm.ID,
-					toFixed(originX), toFixed(originY),
-					toFixed(swarm.TargetX), toFixed(swarm.TargetY),
-					// SpeedMult is 1.0 on this path (reset above); carried explicitly
-					// so the event ALWAYS equals the speed Move will use (§14).
-					toFixed(species.BaseSpeed*swarm.EffectiveSpeedMult()*deltaTime),
-				)
-			}
-
-			// Schedule next think: 30-50 ticks (3-5 seconds at 10 ticks/sec)
-			swarm.NextThinkTick = worldState.TickCount + 30 + rand.Int63n(21)
-		}
-
-		// MOVE: Every tick, move toward target (cheap)
-		swarm.Move(deltaTime, species, chunkSize)
-
-		// Predation strike: PER-TICK (centers can cross between the 10-15-tick re-aims).
-		// O(1): cached TargetPreyID validity + one distance + the cooldown.
-		if species.Predation != nil {
-			m.checkPredationStrike(logger, dispatcher, worldState, swarm, species, chunkSize)
-		}
-
-		// Bug-vs-player attacks (stings/bites): contact range, cooldown + invuln gated
-		if species.AttackDamage > 0 {
-			m.checkBugAttacks(logger, dispatcher, worldState, swarm, species, chunkSize)
-		}
-
-		// === Lifecycle meters (server-authoritative; all effects ride the ledger) ===
-		swarm.ReproduceCooldown -= deltaTime // was never decremented before this system
-		swarm.CompostCooldown -= deltaTime   // detritivore compost-deposit pacing
-
-		atFood := false
-		if swarm.TargetFoodID != "" {
-			if swarm.TargetFoodDepletable && !m.foodSourceAlive(worldState, swarm.TargetFoodID, swarm.TargetFoodX, swarm.TargetFoodY) {
-				// Source depleted/picked up: drop it and re-Think immediately.
-				swarm.ClearFoodTarget(worldState.TickCount)
+			update := EntityUpdateMessage{Entities: entityData}
+			data, err := json.Marshal(update)
+			if err != nil {
+				logger.Error("Failed to marshal entity update: %v", err)
 			} else {
-				dx := swarm.WorldX(chunkSize) - swarm.TargetFoodX
-				dy := swarm.WorldY(chunkSize) - swarm.TargetFoodY
-				atFood = dx*dx+dy*dy <= feedRadius*feedRadius
+				dispatcher.BroadcastMessage(OpCodeEntityUpdate, data, nil, nil, true)
 			}
 		}
 
-		if atFood {
-			consumeRate := species.ConsumeRate
-			if consumeRate <= 0 {
-				consumeRate = consumePerBugPerSecond
+		// === Crop Growth ===
+		cropCount := len(worldState.CropStates)
+		if cropCount > 0 && worldState.TickCount%100 == 0 {
+			logger.Debug("DEBUG: processCropGrowth starting with %d crops at tick %d", cropCount, worldState.TickCount)
+		}
+		m.processCropGrowth(worldState, dispatcher)
+
+		// === Fruit Trees & Ground Item Decay ===
+		m.processFruitTrees(worldState, dispatcher, logger)
+		m.processHostPlants(worldState)  // milkweed breeding capacity regrows
+		m.processForagePools(worldState) // flower nectar regrows (the boom-bust food)
+		if worldState.TickCount%30 == 0 {
+			m.processNests(worldState, logger)                        // occupant-gone sweep + brood-drain re-hatch
+			m.processNestFounding(worldState, dispatcher, logger)     // a thriving colony splits off a daughter hive
+			m.processPredatorBreeding(worldState, dispatcher, logger) // nestless carnivores breed when well-fed
+			m.processBroods(worldState, dispatcher, logger)           // visible nurseries: mature eggs -> maggots -> hatch
+		}
+		m.processGroundItemDecay(worldState, dispatcher)
+		m.processStations(worldState, dispatcher)      // material processors: input -> compost
+		m.processCraftStations(worldState, dispatcher) // recipe processors: queued batches -> output grid
+
+		// === Swarm Simulation ===
+		deltaTime := 1.0 / float32(SimRate) // sim-seconds per tick — fixed, NOT 1/CallRate (see SimRate)
+
+		// Blocked checker for collision detection
+		isBlocked := func(x, y float32) bool {
+			return worldState.IsBlocked(x, y)
+		}
+
+		// Simulate swarms
+		for _, swarm := range worldState.Swarms {
+			species := worldState.Species[swarm.SpeciesID]
+			if species == nil {
+				continue
 			}
-			switch swarm.Phase {
-			case "feeding":
-				// Species rates are per-second (FeedAmount 5 => sated in 20s).
-				swarm.Satiation += species.FeedAmount * deltaTime
-				if swarm.Satiation > 100 {
-					swarm.Satiation = 100
+
+			// THINK: Every few seconds, pick new target (expensive). Food/breeding sources come
+			// from the unified query (rotten ground fruit + filled stations + flora occupants);
+			// the chosen source is CACHED on the swarm so the per-tick meter check is O(1).
+			// V1 RULE: a REPRODUCING swarm only targets DEPLETABLE sources (items/stations) —
+			// flora is infinite, so breeding on it would mean unbounded growth.
+			// ActionState machine (centipede windup/surge/recover/gnaw): PER TICK, BEFORE
+			// the think gate — surges are 25 ticks vs 8-30-tick thinks, and the bite check
+			// must run every tick of flight. Owns the swarm while active.
+			actionActive := false
+			if species.Predation != nil && species.Category == "individual" {
+				actionActive = m.processActionState(logger, dispatcher, worldState, swarm, species, chunkSize, deltaTime)
+			}
+
+			// Predation branches (prey FLEE / predator hunt+wander) REPLACE the shared
+			// forage block when they fire — they emit their own leg, write their own
+			// SpeedMult, and own NextThinkTick (hunt/flee re-aim every 10-15 ticks).
+			if !actionActive && worldState.TickCount >= swarm.NextThinkTick &&
+				!m.predationThink(worldState, swarm, species, chunkSize, deltaTime, logger) {
+				var resourceX, resourceY float32 = float32(math.NaN()), float32(math.NaN())
+				swarm.TargetFoodID = ""
+				swarm.TargetFoodDepletable = false
+				// The shared path resets the per-leg speed (sync contract: EVERY leg-emitting
+				// path writes SpeedMult — without this a swarm that fled keeps the flee speed
+				// forever, consistently on both sides and invisible to every harness) and the
+				// hunt cache (exclusivity: dining and hunting never coexist).
+				swarm.SpeedMult = 1.0
+				swarm.TargetPreyID = ""
+
+				// FORAGE DUTY CYCLE: the forage/wander MODE persists 30-50s (10x the leg cadence)
+				// so behavior doesn't flicker leg-to-leg — rolled by forage_chance (~25% for
+				// flies). Satiation/breeding fill across several feeding sessions with hunger
+				// decaying in between. OVERRIDE: once sated (reproducing phase) the swarm always
+				// seeks the breeding source and PARKS there until the reproduction fires.
+				if worldState.TickCount >= swarm.ModeUntilTick {
+					swarm.ForageMode = species.ForageChance <= 0 || rand.Float32() < species.ForageChance
+					modeMin, modeMax := int64(species.ForageModeMinTicks), int64(species.ForageModeMaxTicks)
+					if modeMin <= 0 {
+						modeMin = 300 // default 30s
+					}
+					if modeMax <= modeMin {
+						modeMax = modeMin + 200
+					}
+					swarm.ModeUntilTick = worldState.TickCount + modeMin + rand.Int63n(modeMax-modeMin+1)
 				}
-				if swarm.TargetFoodDepletable {
-					// More flies = faster consumption (architecture_farming.md).
-					drain := consumeRate * float32(swarm.Count) * deltaTime
-					m.consumeFood(worldState, dispatcher, swarm.TargetFoodID, drain) // ground items / stations
-					// Flower nectar (occupant-backed depletable feeding pool, keyed by cell, like the
-					// milkweed-capacity drain): a big swarm exhausts it → the flower is skipped → starve.
-					if fp := worldState.ForagePools[fmt.Sprintf("%d,%d", int(swarm.TargetFoodX), int(swarm.TargetFoodY))]; fp != nil {
-						fp.Nectar -= drain
-						if fp.Nectar < 0 {
-							fp.Nectar = 0
+				// Hungry OR breeding bugs always forage; only comfortably-fed ones follow the idle
+				// wander duty cycle. (Predators take the predationThink path above, not this one.)
+				forage := swarm.ForageMode || swarm.Phase == "reproducing" || swarm.Satiation < hungerForageThreshold
+				attractions := swarm.GetCurrentAttractions(species)
+				if forage && len(attractions) > 0 {
+					hits := FindNearbyFood(worldState, swarm.Position, species.VisionRange, attractions)
+					if swarm.Phase == "reproducing" {
+						kept := hits[:0]
+						for _, h := range hits {
+							if h.Depletable {
+								kept = append(kept, h)
+							}
 						}
+						hits = kept
+					}
+					if len(hits) > 0 {
+						resourceX, resourceY = hits[0].X, hits[0].Y
+						swarm.TargetFoodID = hits[0].ID
+						swarm.TargetFoodX, swarm.TargetFoodY = hits[0].X, hits[0].Y
+						swarm.TargetFoodDepletable = hits[0].Depletable
 					}
 				}
-			case "reproducing":
-				if swarm.TargetFoodDepletable { // v1: breeding requires a depletable source
-					swarm.ReproductionMeter += species.BreedAmount * deltaTime
-					m.consumeFood(worldState, dispatcher, swarm.TargetFoodID,
-						consumeRate*float32(swarm.Count)*deltaTime)
-					if swarm.ReproductionMeter >= 100 && swarm.CanReproduce() && swarm.Count > 0 {
-						m.reproduceSwarm(worldState, dispatcher, swarm, species, logger)
-						// Host-plant breeding (butterfly on milkweed) drains the milkweed's capacity;
-						// grazed-out milkweed stops being a breeding source until it regrows.
-						if hp := worldState.HostPlantStates[fmt.Sprintf("%d,%d", int(swarm.TargetFoodX), int(swarm.TargetFoodY))]; hp != nil {
-							hp.Capacity -= hostBreedCost
-							if hp.Capacity < 0 {
-								hp.Capacity = 0
+
+				// Origin = center BEFORE this leg starts (pre-Move). Emit a sparse,
+				// self-describing leg event so clients re-anchor + move deterministically.
+				originX := swarm.WorldX(chunkSize)
+				originY := swarm.WorldY(chunkSize)
+
+				swarm.Think(species, chunkSize, resourceX, resourceY, isBlocked)
+
+				if worldState.CurrentZone != nil {
+					worldState.AddSwarmTargetEvent(
+						worldState.CurrentZone.ZoneID, swarm.ID,
+						toFixed(originX), toFixed(originY),
+						toFixed(swarm.TargetX), toFixed(swarm.TargetY),
+						// SpeedMult is 1.0 on this path (reset above); carried explicitly
+						// so the event ALWAYS equals the speed Move will use (§14).
+						toFixed(species.BaseSpeed*swarm.EffectiveSpeedMult()*deltaTime),
+					)
+				}
+
+				// Schedule next think: 30-50 ticks (3-5 seconds at 10 ticks/sec)
+				swarm.NextThinkTick = worldState.TickCount + 30 + rand.Int63n(21)
+			}
+
+			// MOVE: Every tick, move toward target (cheap)
+			swarm.Move(deltaTime, species, chunkSize)
+
+			// Predation strike: PER-TICK (centers can cross between the 10-15-tick re-aims).
+			// O(1): cached TargetPreyID validity + one distance + the cooldown.
+			if species.Predation != nil {
+				m.checkPredationStrike(logger, dispatcher, worldState, swarm, species, chunkSize)
+			}
+
+			// Bug-vs-player attacks (stings/bites): contact range, cooldown + invuln gated
+			if species.AttackDamage > 0 {
+				m.checkBugAttacks(logger, dispatcher, worldState, swarm, species, chunkSize)
+			}
+
+			// === Lifecycle meters (server-authoritative; all effects ride the ledger) ===
+			swarm.ReproduceCooldown -= deltaTime // was never decremented before this system
+			swarm.CompostCooldown -= deltaTime   // detritivore compost-deposit pacing
+
+			atFood := false
+			if swarm.TargetFoodID != "" {
+				if swarm.TargetFoodDepletable && !m.foodSourceAlive(worldState, swarm.TargetFoodID, swarm.TargetFoodX, swarm.TargetFoodY) {
+					// Source depleted/picked up: drop it and re-Think immediately.
+					swarm.ClearFoodTarget(worldState.TickCount)
+				} else {
+					dx := swarm.WorldX(chunkSize) - swarm.TargetFoodX
+					dy := swarm.WorldY(chunkSize) - swarm.TargetFoodY
+					atFood = dx*dx+dy*dy <= feedRadius*feedRadius
+				}
+			}
+
+			if atFood {
+				consumeRate := species.ConsumeRate
+				if consumeRate <= 0 {
+					consumeRate = consumePerBugPerSecond
+				}
+				switch swarm.Phase {
+				case "feeding":
+					// Species rates are per-second (FeedAmount 5 => sated in 20s).
+					swarm.Satiation += species.FeedAmount * deltaTime
+					if swarm.Satiation > 100 {
+						swarm.Satiation = 100
+					}
+					if swarm.TargetFoodDepletable {
+						// More flies = faster consumption (architecture_farming.md).
+						drain := consumeRate * float32(swarm.Count) * deltaTime
+						m.consumeFood(worldState, dispatcher, swarm.TargetFoodID, drain) // ground items / stations
+						// Flower nectar (occupant-backed depletable feeding pool, keyed by cell, like the
+						// milkweed-capacity drain): a big swarm exhausts it → the flower is skipped → starve.
+						if fp := worldState.ForagePools[fmt.Sprintf("%d,%d", int(swarm.TargetFoodX), int(swarm.TargetFoodY))]; fp != nil {
+							fp.Nectar -= drain
+							if fp.Nectar < 0 {
+								fp.Nectar = 0
+							}
+						}
+					}
+				case "reproducing":
+					if swarm.TargetFoodDepletable { // v1: breeding requires a depletable source
+						swarm.ReproductionMeter += species.BreedAmount * deltaTime
+						m.consumeFood(worldState, dispatcher, swarm.TargetFoodID,
+							consumeRate*float32(swarm.Count)*deltaTime)
+						if swarm.ReproductionMeter >= 100 && swarm.CanReproduce() && swarm.Count > 0 {
+							m.reproduceSwarm(worldState, dispatcher, swarm, species, logger)
+							// Host-plant breeding (butterfly on milkweed) drains the milkweed's capacity;
+							// grazed-out milkweed stops being a breeding source until it regrows.
+							if hp := worldState.HostPlantStates[fmt.Sprintf("%d,%d", int(swarm.TargetFoodX), int(swarm.TargetFoodY))]; hp != nil {
+								hp.Capacity -= hostBreedCost
+								if hp.Capacity < 0 {
+									hp.Capacity = 0
+								}
 							}
 						}
 					}
 				}
-			}
-			// Detritivore: eating a carcass (in ANY phase — they sate fast and dine in 'reproducing')
-			// produces compost: periodically drop a compost INPUT into the nearest bin; the station
-			// pipeline turns it into fly food.
-			if species.ProducesCompost && swarm.CompostCooldown <= 0 {
-				if it, ok := worldState.GroundItems[swarm.TargetFoodID]; ok && it.IsCarrion {
-					if m.depositCompostNear(worldState, dispatcher, swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)) {
-						swarm.CompostCooldown = 10.0 // ~1 compost input / 10s while at carrion
+				// Detritivore: eating a carcass (in ANY phase — they sate fast and dine in 'reproducing')
+				// produces compost: periodically drop a compost INPUT into the nearest bin; the station
+				// pipeline turns it into fly food.
+				if species.ProducesCompost && swarm.CompostCooldown <= 0 {
+					if it, ok := worldState.GroundItems[swarm.TargetFoodID]; ok && it.IsCarrion {
+						if m.depositCompostNear(worldState, dispatcher, swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)) {
+							swarm.CompostCooldown = 10.0 // ~1 compost input / 10s while at carrion
+						}
 					}
 				}
+			} else {
+				// Hunger: satiation drains when not feeding (wired for the first time —
+				// satiation_decay_rate existed in species.json but was never applied).
+				swarm.Satiation -= species.SatiationDecayRate * deltaTime
+				if swarm.Satiation < 0 {
+					swarm.Satiation = 0
+				}
 			}
-		} else {
-			// Hunger: satiation drains when not feeding (wired for the first time —
-			// satiation_decay_rate existed in species.json but was never applied).
-			swarm.Satiation -= species.SatiationDecayRate * deltaTime
-			if swarm.Satiation < 0 {
-				swarm.Satiation = 0
+
+			// STARVATION: a swarm pinned at 0 satiation can't find food; processStarvation culls it once
+			// the timer passes the threshold. Any satiation (recently fed) resets it. This turns
+			// "over-large population exhausts its food" into a real BUST (vs a slow old-age drift).
+			if swarm.Satiation <= 0 {
+				swarm.StarveTimer += deltaTime
+			} else {
+				swarm.StarveTimer = 0
+			}
+
+			// Phase transitions. NO SwarmsDirty here (clients never read phase; the old dirty
+			// flag only generated spurious full-set SwarmUpdate broadcasts). On a change the
+			// attractions differ, so retarget immediately instead of waiting out the think timer.
+			//
+			// NEST predators (Predation.NestOccupant != "") skip this: their lifecycle is the
+			// custom feeding/homing/defending machine — the standard sated→"reproducing" flip
+			// would strand them (no breeding attractions; brood goes to the nest instead).
+			// NESTLESS predators (centipede) KEEP the standard lifecycle — it's exactly what
+			// makes them park at carrion and reproduce there.
+			if species.Predation == nil || species.Predation.NestOccupant == "" {
+				prevPhase := swarm.Phase
+				swarm.CheckPhaseTransition(species)
+				if swarm.Phase != prevPhase {
+					swarm.ClearFoodTarget(worldState.TickCount)
+				}
 			}
 		}
 
-		// STARVATION: a swarm pinned at 0 satiation can't find food; processStarvation culls it once
-		// the timer passes the threshold. Any satiation (recently fed) resets it. This turns
-		// "over-large population exhausts its food" into a real BUST (vs a slow old-age drift).
-		if swarm.Satiation <= 0 {
-			swarm.StarveTimer += deltaTime
-		} else {
-			swarm.StarveTimer = 0
+		// Check merge/split every 50 ticks (5 seconds)
+		// Population pass once a minute (600 ticks at 10Hz): proximity-merge + size-split.
+		// Both travel as tick+seq SWARM_MERGE/SWARM_SPLIT influence events (deterministic).
+		if worldState.TickCount-worldState.LastMergeCheck >= 600 {
+			m.checkSwarmMerging(worldState, chunkSize, logger)
+			m.checkSwarmSplitting(worldState, chunkSize, logger)
+			worldState.LastMergeCheck = worldState.TickCount
 		}
 
-		// Phase transitions. NO SwarmsDirty here (clients never read phase; the old dirty
-		// flag only generated spurious full-set SwarmUpdate broadcasts). On a change the
-		// attractions differ, so retarget immediately instead of waiting out the think timer.
+		// Check continuous spawning every 100 ticks (10 seconds)
+		if worldState.TickCount%directorIntervalTicks == 0 {
+			m.processEcologyDirector(logger, dispatcher, worldState, chunkSize) // bands: re-seed low / cull high
+		}
+		if worldState.TickCount%100 == 0 {
+			m.checkContinuousSpawning(worldState, worldState.TickCount, logger)
+		}
+
+		// Natural death (per-bug aging) every 100 ticks (10s): cull bugs past their DeathTick.
+		if worldState.TickCount%100 == 0 {
+			m.processNaturalDeath(logger, dispatcher, worldState, chunkSize)
+			m.processStarvation(logger, dispatcher, worldState, chunkSize)
+		}
+
+		// === Day rollover (one day = DayLengthTicks = 14 min) ===
+		// Resets every crop's daily watering count — the max_daily_waterings cap existed but
+		// nothing ever reset it (documented gap, architecture_farming.md). Clients derive the
+		// same day boundary from (tick + DayOffsetTicks) for their lighting cycle.
 		//
-		// NEST predators (Predation.NestOccupant != "") skip this: their lifecycle is the
-		// custom feeding/homing/defending machine — the standard sated→"reproducing" flip
-		// would strand them (no breeding attractions; brood goes to the nest instead).
-		// NESTLESS predators (centipede) KEEP the standard lifecycle — it's exactly what
-		// makes them park at carrion and reproduce there.
-		if species.Predation == nil || species.Predation.NestOccupant == "" {
-			prevPhase := swarm.Phase
-			swarm.CheckPhaseTransition(species)
-			if swarm.Phase != prevPhase {
-				swarm.ClearFoodTarget(worldState.TickCount)
+		// Epoch compare (AdvanceDayIfNeeded), not modulo — a debug set-time crossing the
+		// boundary must not skip/double the daily reset.
+		if currentDay, rolled := worldState.AdvanceDayIfNeeded(); rolled {
+			for _, crop := range worldState.CropStates {
+				crop.WateringsToday = 0
+			}
+			m.scheduleDailyRain(worldState, logger)
+			logger.Info("DAY %d begins (tick %d): daily watering counts reset for %d crops",
+				currentDay+1, worldState.TickCount, len(worldState.CropStates))
+		}
+
+		// Weather: start the scheduled shower / end an expired one (display + one-shot
+		// watering; frontier-neutral)
+		m.processWeather(worldState, dispatcher, logger)
+
+		// Player HP regen: +1 per 30s, gated on damage recency (echoed to the owner)
+		m.processPlayerRegen(dispatcher, worldState)
+
+		// Broadcast swarm SET/metadata only when it changes (NOT per tick). Positions are
+		// derived deterministically on clients from SWARM_SET_TARGET events, so this carries
+		// lifecycle/metadata + the current leg for clients creating a swarm's visual.
+		if worldState.SwarmsDirty {
+			swarmData := make([]SwarmData, 0, len(worldState.Swarms))
+			for _, swarm := range worldState.Swarms {
+				spriteID := swarm.SpeciesID // fallback
+				if species, ok := worldState.Species[swarm.SpeciesID]; ok {
+					spriteID = species.SpriteID
+				}
+				swarmData = append(swarmData, SwarmData{
+					ID:         swarm.ID,
+					SpeciesID:  swarm.SpeciesID,
+					SpriteID:   spriteID,
+					X:          swarm.WorldX(chunkSize),
+					Y:          swarm.WorldY(chunkSize),
+					Radius:     swarm.Radius,
+					Count:      swarm.Count,
+					Facing:     int(swarm.Facing),
+					Phase:      swarm.Phase,
+					NextBugID:  swarm.NextBugID,
+					RemovedIDs: swarm.GetRemovedIDs(),
+				})
+			}
+
+			swarmUpdate := SwarmUpdateMessage{Tick: worldState.TickCount, Swarms: swarmData}
+			data, err := json.Marshal(swarmUpdate)
+			if err != nil {
+				logger.Error("Failed to marshal swarm update: %v", err)
+			} else {
+				dispatcher.BroadcastMessage(OpCodeSwarmUpdate, data, nil, nil, true)
+			}
+			worldState.SwarmsDirty = false
+		}
+
+		// NOTE: ground-item lifetimes are processed ONLY by processGroundItemDecay (farming pass,
+		// line ~628). The old updateGroundItemLifetimes here DOUBLE-decremented Lifetime and raced
+		// the rot transition (deleting fruit before it could rot) — removed.
+
+		// Bug sync: periodic drift sampling every 300 ticks (30 seconds at 10Hz)
+		if worldState.TickCount%300 == 0 {
+			m.checkDriftSampling(logger, dispatcher, worldState)
+		}
+
+		// Broadcast pending influence events (server-authored bug sync)
+		if len(worldState.PendingInfluence) > 0 {
+			influenceMsg := InfluenceBroadcastMessage{Events: worldState.PendingInfluence}
+			data, err := json.Marshal(influenceMsg)
+			if err != nil {
+				logger.Error("Failed to marshal influence broadcast: %v", err)
+			} else {
+				dispatcher.BroadcastMessage(OpCodeInfluenceBroadcast, data, nil, nil, true)
+			}
+			worldState.ClearPendingInfluence()
+		}
+
+		// === TICK FRONTIER BROADCAST (OpCode 78) ===
+		// CRITICAL: Must be broadcast EVERY tick, AFTER influence events
+		// This is the safety mechanism for frontier-gated simulation:
+		// Server guarantees all events for tick t are broadcast BEFORE frontier t
+		// DEBUG: Log when broadcast is skipped
+		if worldState.CurrentZone == nil {
+			if worldState.TickCount%100 == 0 {
+				logger.Warn("ZoneTickBroadcast SKIPPED: CurrentZone is nil at tick %d", worldState.TickCount)
+			}
+		} else if len(worldState.Players) == 0 && len(worldState.Presences) == 0 {
+			if worldState.TickCount%100 == 0 {
+				logger.Warn("ZoneTickBroadcast SKIPPED: No players/presences at tick %d", worldState.TickCount)
 			}
 		}
-	}
-
-	// Check merge/split every 50 ticks (5 seconds)
-	// Population pass once a minute (600 ticks at 10Hz): proximity-merge + size-split.
-	// Both travel as tick+seq SWARM_MERGE/SWARM_SPLIT influence events (deterministic).
-	if worldState.TickCount-worldState.LastMergeCheck >= 600 {
-		m.checkSwarmMerging(worldState, chunkSize, logger)
-		m.checkSwarmSplitting(worldState, chunkSize, logger)
-		worldState.LastMergeCheck = worldState.TickCount
-	}
-
-	// Check continuous spawning every 100 ticks (10 seconds)
-	if worldState.TickCount%100 == 0 {
-		m.checkContinuousSpawning(worldState, worldState.TickCount, logger)
-	}
-
-	// Natural death (per-bug aging) every 100 ticks (10s): cull bugs past their DeathTick.
-	if worldState.TickCount%100 == 0 {
-		m.processNaturalDeath(logger, dispatcher, worldState, chunkSize)
-		m.processStarvation(logger, dispatcher, worldState, chunkSize)
-	}
-
-	// === Day rollover (one day = DayLengthTicks = 14 min) ===
-	// Resets every crop's daily watering count — the max_daily_waterings cap existed but
-	// nothing ever reset it (documented gap, architecture_farming.md). Clients derive the
-	// same day boundary from (tick + DayOffsetTicks) for their lighting cycle.
-	//
-	// Epoch compare (AdvanceDayIfNeeded), not modulo — a debug set-time crossing the
-	// boundary must not skip/double the daily reset.
-	if currentDay, rolled := worldState.AdvanceDayIfNeeded(); rolled {
-		for _, crop := range worldState.CropStates {
-			crop.WateringsToday = 0
-		}
-		m.scheduleDailyRain(worldState, logger)
-		logger.Info("DAY %d begins (tick %d): daily watering counts reset for %d crops",
-			currentDay+1, worldState.TickCount, len(worldState.CropStates))
-	}
-
-	// Weather: start the scheduled shower / end an expired one (display + one-shot
-	// watering; frontier-neutral)
-	m.processWeather(worldState, dispatcher, logger)
-
-	// Player HP regen: +1 per 30s, gated on damage recency (echoed to the owner)
-	m.processPlayerRegen(dispatcher, worldState)
-
-	// Broadcast swarm SET/metadata only when it changes (NOT per tick). Positions are
-	// derived deterministically on clients from SWARM_SET_TARGET events, so this carries
-	// lifecycle/metadata + the current leg for clients creating a swarm's visual.
-	if worldState.SwarmsDirty {
-		swarmData := make([]SwarmData, 0, len(worldState.Swarms))
-		for _, swarm := range worldState.Swarms {
-			spriteID := swarm.SpeciesID // fallback
-			if species, ok := worldState.Species[swarm.SpeciesID]; ok {
-				spriteID = species.SpriteID
+		if worldState.CurrentZone != nil && (len(worldState.Players) > 0 || len(worldState.Presences) > 0) {
+			zone := worldState.GetOrCreateZone(worldState.CurrentZone.ZoneID)
+			tickMsg := ZoneTickBroadcastMessage{
+				ZoneID:            worldState.CurrentZone.ZoneID,
+				AuthoritativeTick: worldState.TickCount,
+				LastEventSeq:      zone.NextSeq - 1, // Last assigned seq (NextSeq is next to assign)
+				AuthorityID:       zone.AuthorityUserID,
 			}
-			swarmData = append(swarmData, SwarmData{
-				ID:         swarm.ID,
-				SpeciesID:  swarm.SpeciesID,
-				SpriteID:   spriteID,
-				X:          swarm.WorldX(chunkSize),
-				Y:          swarm.WorldY(chunkSize),
-				Radius:     swarm.Radius,
-				Count:      swarm.Count,
-				Facing:     int(swarm.Facing),
-				Phase:      swarm.Phase,
-				NextBugID:  swarm.NextBugID,
-				RemovedIDs: swarm.GetRemovedIDs(),
-			})
+			tickData, err := json.Marshal(tickMsg)
+			if err != nil {
+				logger.Error("Failed to marshal tick broadcast: %v", err)
+			} else {
+				dispatcher.BroadcastMessage(OpCodeZoneTickBroadcast, tickData, nil, nil, true)
+			}
 		}
 
-		swarmUpdate := SwarmUpdateMessage{Tick: worldState.TickCount, Swarms: swarmData}
-		data, err := json.Marshal(swarmUpdate)
-		if err != nil {
-			logger.Error("Failed to marshal swarm update: %v", err)
-		} else {
-			dispatcher.BroadcastMessage(OpCodeSwarmUpdate, data, nil, nil, true)
+		// Prune influence log periodically (every 100 ticks)
+		if worldState.TickCount%100 == 0 && worldState.CurrentZone != nil {
+			worldState.PruneInfluenceLog(worldState.CurrentZone.ZoneID, worldState.TickCount)
 		}
-		worldState.SwarmsDirty = false
-	}
-
-	// NOTE: ground-item lifetimes are processed ONLY by processGroundItemDecay (farming pass,
-	// line ~628). The old updateGroundItemLifetimes here DOUBLE-decremented Lifetime and raced
-	// the rot transition (deleting fruit before it could rot) — removed.
-
-	// Bug sync: periodic drift sampling every 300 ticks (30 seconds at 10Hz)
-	if worldState.TickCount%300 == 0 {
-		m.checkDriftSampling(logger, dispatcher, worldState)
-	}
-
-	// Broadcast pending influence events (server-authored bug sync)
-	if len(worldState.PendingInfluence) > 0 {
-		influenceMsg := InfluenceBroadcastMessage{Events: worldState.PendingInfluence}
-		data, err := json.Marshal(influenceMsg)
-		if err != nil {
-			logger.Error("Failed to marshal influence broadcast: %v", err)
-		} else {
-			dispatcher.BroadcastMessage(OpCodeInfluenceBroadcast, data, nil, nil, true)
-		}
-		worldState.ClearPendingInfluence()
-	}
-
-	// === TICK FRONTIER BROADCAST (OpCode 78) ===
-	// CRITICAL: Must be broadcast EVERY tick, AFTER influence events
-	// This is the safety mechanism for frontier-gated simulation:
-	// Server guarantees all events for tick t are broadcast BEFORE frontier t
-	// DEBUG: Log when broadcast is skipped
-	if worldState.CurrentZone == nil {
-		if worldState.TickCount%100 == 0 {
-			logger.Warn("ZoneTickBroadcast SKIPPED: CurrentZone is nil at tick %d", worldState.TickCount)
-		}
-	} else if len(worldState.Players) == 0 && len(worldState.Presences) == 0 {
-		if worldState.TickCount%100 == 0 {
-			logger.Warn("ZoneTickBroadcast SKIPPED: No players/presences at tick %d", worldState.TickCount)
-		}
-	}
-	if worldState.CurrentZone != nil && (len(worldState.Players) > 0 || len(worldState.Presences) > 0) {
-		zone := worldState.GetOrCreateZone(worldState.CurrentZone.ZoneID)
-		tickMsg := ZoneTickBroadcastMessage{
-			ZoneID:            worldState.CurrentZone.ZoneID,
-			AuthoritativeTick: worldState.TickCount,
-			LastEventSeq:      zone.NextSeq - 1, // Last assigned seq (NextSeq is next to assign)
-			AuthorityID:       zone.AuthorityUserID,
-		}
-		tickData, err := json.Marshal(tickMsg)
-		if err != nil {
-			logger.Error("Failed to marshal tick broadcast: %v", err)
-		} else {
-			dispatcher.BroadcastMessage(OpCodeZoneTickBroadcast, tickData, nil, nil, true)
-		}
-	}
-
-	// Prune influence log periodically (every 100 ticks)
-	if worldState.TickCount%100 == 0 && worldState.CurrentZone != nil {
-		worldState.PruneInfluenceLog(worldState.CurrentZone.ZoneID, worldState.TickCount)
-	}
+	} // end SIM BATCH loop
 
 	// Return state to continue (never nil for persistent world)
 	return worldState
@@ -1651,6 +1680,7 @@ func (m *Match) spawnSwarmForSpecies(state *WorldState, speciesID string, logger
 		Count:     count,
 		WanderRad: species.WanderRadius,
 		HomePos:   pos,
+		Satiation: spawnSatiation, // born half-fed (see const) — natural-spawn + Director re-seed path
 	}
 	swarm.InitializeBugIDs()
 	assignDeathTicks(swarm, species, 0, count, state.TickCount, SimRate)
@@ -1784,6 +1814,13 @@ const (
 	starvationDeathSecs = 60.0 // sim-seconds at 0 satiation before a swarm starts to starve to death
 	starvationCullFrac  = 0.10 // fraction of the swarm culled per starvation event (min 1 bug)
 	starvationCullPause = 10.0 // sim-seconds between successive culls while still starving
+
+	// A newly spawned swarm starts half-fed — a bug entering the world has eaten recently. Without this,
+	// every swarm is born at Satiation 0 and its StarveTimer accrues immediately; a PREDATOR (no food
+	// at its feet, must hunt) is then culled ~starvationDeathSecs after spawn before it can reach prey.
+	// At a wasp's 0.4/s decay, 50 satiation = ~125 sim-s of runway to find a meal. The StarveTimer
+	// self-resets the moment satiation rises (match.go:1294), so this is the only guard newborns need.
+	spawnSatiation = 50.0
 )
 
 // processStarvation culls a fraction of any swarm that has been starving past the threshold, then
@@ -2016,9 +2053,10 @@ func (m *Match) checkSwarmSplitting(state *WorldState, chunkSize int, logger run
 				Count:     len(shed),
 				HomePos:   newPos,
 				WanderRad: swarm.WanderRad,
+				Satiation: swarm.Satiation, // a split inherits the parent's fed-ness (they were one swarm)
 			}
-			newSwarm.InitializeBugIDs() // child ids 0..count-1
-			newSwarm.BugHP = shedHP     // damaged HP follows the moved bugs (nil if none)
+			newSwarm.InitializeBugIDs()    // child ids 0..count-1
+			newSwarm.BugHP = shedHP        // damaged HP follows the moved bugs (nil if none)
 			newSwarm.DeathTick = shedDeath // natural-death schedule follows the moved bugs too
 			newSwarms = append(newSwarms, newSwarm)
 

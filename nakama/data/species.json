@@ -54,14 +54,7 @@
     "sprite_id": "fly_common",
     "egg_sprite_id": "fly_eggs",
     "consume_rate": 0.2,
-    "kill_drops": [
-      {
-        "item": "bug_parts",
-        "count_min": 1,
-        "count_max": 1,
-        "chance": 1.0
-      }
-    ],
+    "kill_drops": [],
     "movement_style": "brownian",
     "predator_flee_radius": 6.0,
     "predator_flee_speed_mult": 1.8,
@@ -91,7 +84,7 @@
       ]
     },
     "feed_amount": 3.0,
-    "breed_amount": 8.0,
+    "breed_amount": 5.0,
     "satiation_decay_rate": 0.3,
     "min_swarm_size": 2,
     "max_swarm_size": 15,
@@ -120,17 +113,10 @@
     "egg_count_min": 5,
     "egg_count_max": 12,
     "hatch_time": 60.0,
-    "reproduce_cooldown": 45.0,
+    "reproduce_cooldown": 90.0,
     "sprite_id": "butterfly_common",
     "egg_sprite_id": "butterfly_eggs",
-    "kill_drops": [
-      {
-        "item": "bug_parts",
-        "count_min": 1,
-        "count_max": 1,
-        "chance": 1.0
-      }
-    ],
+    "kill_drops": [],
     "movement_style": "gliding",
     "predator_flee_radius": 6.0,
     "predator_flee_speed_mult": 1.5,
@@ -145,12 +131,12 @@
     "base_speed": 2.2,
     "wander_radius": 10.0,
     "wander_change_rate": 0.2,
-    "vision_range": 14.0,
+    "vision_range": 16.0,
     "attractions_by_phase": {},
     "forage_chance": 0.0,
     "feed_amount": 0.0,
     "breed_amount": 0.0,
-    "satiation_decay_rate": 0.4,
+    "satiation_decay_rate": 0.11,
     "min_swarm_size": 3,
     "max_swarm_size": 10,
     "swarm_radius": 1.5,
@@ -170,12 +156,6 @@
     "flies_over_fences": true,
     "kill_drops": [
       {
-        "item": "bug_parts",
-        "count_min": 1,
-        "count_max": 1,
-        "chance": 1.0
-      },
-      {
         "item": "wasp_stinger",
         "count_min": 1,
         "count_max": 1,
@@ -191,36 +171,29 @@
       "strike_radius": 3.0,
       "strike_cooldown_ticks": 100,
       "kills_per_strike": 1,
-      "feed_per_kill": 35.0,
+      "feed_per_kill": 48.0,
       "hunt_speed_mult": 1.5,
       "deposit_satiation": 80.0,
-      "hunt_satiation_threshold": 30.0,
+      "hunt_satiation_threshold": 45.0,
       "nest_occupant": "wasp_nest"
     },
-    "lifespan_secs": 0,
-    "lifespan_spread_secs": 0,
+    "lifespan_secs": 6300,
+    "lifespan_spread_secs": 1680,
     "carcass_item": "dead_wasp"
   },
   "centipede_garden": {
     "name": "Garden Centipede",
-    "description": "A long, fast, venomous hunter. Wanders in lazy serpentines, lunges at anything warm, chews through wooden fences, and scavenges the fallen. Stone walls stop it. Far too big for any net.",
+    "description": "A long, fast, venomous hunter. Wanders in lazy serpentines, lunges at anything warm, chews through wooden fences. Stone walls stop it. Far too big for any net.",
     "category": "individual",
-    "base_speed": 1.6,
+    "base_speed": 1.9,
     "wander_radius": 20.0,
     "wander_change_rate": 0.1,
-    "vision_range": 10.0,
-    "attractions_by_phase": {
-      "feeding": [
-        "bug_parts"
-      ],
-      "reproducing": [
-        "bug_parts"
-      ]
-    },
+    "vision_range": 13.0,
+    "attractions_by_phase": {},
     "forage_chance": 0.0,
     "feed_amount": 6.0,
     "breed_amount": 8.0,
-    "satiation_decay_rate": 0.3,
+    "satiation_decay_rate": 0.10,
     "consume_rate": 0.5,
     "min_swarm_size": 1,
     "max_swarm_size": 3,
@@ -235,7 +208,7 @@
     "catch_condition": "always",
     "max_hp": 6,
     "sell_price": 25,
-    "reproduce_cooldown": 600.0,
+    "reproduce_cooldown": 300.0,
     "sprite_id": "centipede_head_a",
     "movement_style": "crawling",
     "flies_over_fences": false,
@@ -252,47 +225,39 @@
         "fly_common"
       ],
       "home_range": 0.0,
-      "strike_radius": 1.2,
-      "strike_cooldown_ticks": 50,
+      "strike_radius": 2.3,
+      "strike_cooldown_ticks": 40,
       "kills_per_strike": 1,
-      "feed_per_kill": 30.0,
-      "hunt_speed_mult": 1.0,
+      "feed_per_kill": 45.0,
+      "hunt_speed_mult": 1.9,
       "deposit_satiation": 0.0,
-      "hunt_satiation_threshold": 30.0,
+      "hunt_satiation_threshold": 50.0,
       "nest_occupant": ""
     },
-    "lifespan_secs": 0,
-    "lifespan_spread_secs": 0,
+    "lifespan_secs": 6300,
+    "lifespan_spread_secs": 1680,
     "carcass_item": "dead_centipede"
   },
   "millipede": {
     "name": "Garden Millipede",
     "description": "A slow, gentle detritivore. Trundles between corpses, eating the fallen and packing the rot into compost. Harmless.",
     "category": "individual",
-    "base_speed": 0.6,
+    "base_speed": 1.1,
     "wander_radius": 16.0,
     "wander_change_rate": 0.1,
     "vision_range": 12.0,
     "attractions_by_phase": {
       "feeding": [
-        "dead_fly",
-        "dead_butterfly",
-        "dead_wasp",
-        "dead_centipede",
-        "bug_parts"
+        "leaf_litter"
       ],
       "reproducing": [
-        "dead_fly",
-        "dead_butterfly",
-        "dead_wasp",
-        "dead_centipede",
-        "bug_parts"
+        "leaf_litter"
       ]
     },
     "forage_chance": 0.0,
     "feed_amount": 6.0,
     "breed_amount": 8.0,
-    "satiation_decay_rate": 0.3,
+    "satiation_decay_rate": 0.10,
     "consume_rate": 0.5,
     "min_swarm_size": 1,
     "max_swarm_size": 2,
@@ -307,21 +272,67 @@
     "catch_condition": "always",
     "max_hp": 3,
     "sell_price": 15,
-    "reproduce_cooldown": 600.0,
+    "reproduce_cooldown": 300.0,
     "sprite_id": "millipede",
     "movement_style": "crawling",
     "flies_over_fences": false,
-    "kill_drops": [
-      {
-        "item": "bug_parts",
-        "count_min": 1,
-        "count_max": 2,
-        "chance": 1.0
-      }
-    ],
-    "lifespan_secs": 0,
-    "lifespan_spread_secs": 0,
-    "carcass_item": "",
+    "kill_drops": [],
+    "lifespan_secs": 5040,
+    "lifespan_spread_secs": 1260,
+    "carcass_item": "dead_millipede"
+  },
+  "beetle_carrion": {
+    "name": "Carrion Beetle",
+    "description": "A glossy black scavenger beetle. Trundles between corpses, eating the fallen and packing the rot into compost. Harmless.",
+    "category": "individual",
+    "base_speed": 1.0,
+    "wander_radius": 16.0,
+    "wander_change_rate": 0.1,
+    "vision_range": 12.0,
+    "attractions_by_phase": {
+      "feeding": [
+        "dead_fly",
+        "dead_butterfly",
+        "dead_wasp",
+        "dead_centipede",
+        "dead_millipede",
+        "dead_beetle"
+      ],
+      "reproducing": [
+        "dead_fly",
+        "dead_butterfly",
+        "dead_wasp",
+        "dead_centipede",
+        "dead_millipede",
+        "dead_beetle"
+      ]
+    },
+    "forage_chance": 0.0,
+    "feed_amount": 6.0,
+    "breed_amount": 8.0,
+    "satiation_decay_rate": 0.10,
+    "consume_rate": 0.5,
+    "min_swarm_size": 1,
+    "max_swarm_size": 3,
+    "swarm_radius": 0.5,
+    "merge_radius": 0.0,
+    "player_reaction": "ignore",
+    "reaction_radius": 0.0,
+    "flee_speed_mult": 1.0,
+    "attack_damage": 0,
+    "attack_cooldown": 0.0,
+    "net_size": "small",
+    "catch_condition": "always",
+    "max_hp": 4,
+    "sell_price": 20,
+    "reproduce_cooldown": 300.0,
+    "sprite_id": "beetle_carrion",
+    "movement_style": "crawling",
+    "flies_over_fences": false,
+    "kill_drops": [],
+    "lifespan_secs": 5040,
+    "lifespan_spread_secs": 1260,
+    "carcass_item": "dead_beetle",
     "produces_compost": true
   }
 }

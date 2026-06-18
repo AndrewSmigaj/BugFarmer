@@ -23,7 +23,8 @@ If you add a test, **also add its one-liner to §1–§4 below** so it's discove
 ```bash
 bash tools/run_go_tests.sh        # go test ./world/ -count=1 -v inside the builder image (live source)
 ```
-Suite: `centipede combat predation nest fruit_tree release swarm_population player_hp equip world_env` (`*_test.go`).
+Suite: `centipede combat predation nest fruit_tree release swarm_population player_hp equip world_env
+host_plant brood forage_pool ecology_director predator_starvation` (`*_test.go`).
 Run after ANY server-logic change. Add a `*_test.go` for new sim/economy logic (mirror `predation_test.go`).
 
 ## 2. Headless sync-harness (`tools/sync-harness/`, real Nakama .NET client, no Unity)
@@ -42,6 +43,56 @@ stale-high) and server behavior; it does NOT itself compute bug-position hashes 
 ```bash
 bash tools/harness_persist_test.sh   # PERSISTENCE regression: build farm → restart server → rejoin → assert (PASS/FAIL)
 ```
+
+## 2.5. Ecology population tuning — the 6× `bug_lab` chart loop (THE living-ecology rig)
+The one you run for ANY bug-ecology/balance change (predator survival, oscillation, Director bands, food
+regen). `bug_lab` runs the sim **6× wall-clock** (`call_rate:60`) so a many-game-day run finishes in
+minutes; the chart x-axis is GAME-TIME (`tick/SimRate`) so 6× and normal-speed runs plot identically.
+The harness records a per-species population series and writes `fly_counts.csv` to the **temp dir at run
+END** (not live). Full loop:
+```bash
+python3 tools/make_bug_lab.py                                   # (re)author the lab zone (pens + predator-prey arenas)
+docker compose build builder && docker compose up -d --force-recreate nakama   # server-CODE change: recompile plugin
+#   …OR just `docker compose restart nakama` if you ONLY edited bug_lab DATA (zone.json is read at startup)
+rm -f /tmp/fly_counts.csv
+~/.dotnet/dotnet run --project tools/sync-harness -- --zone bug_lab --duration 150 --tag eco   # see below: 150s ≈ 8.5 game-days
+python3 tools/plot_fly_counts.py /tmp/fly_counts.csv <chart_name> "<Title>"   # → tools/_generated/ecology_charts/<chart_name>.png
+```
+- **SPEED:** bug_lab sets `sim_batch: 8` (8 sim-ticks/Nakama call) on top of `call_rate: 60` → **48×
+  real-time**. So **`--duration` seconds × ~0.057 = game-days** (a 150s run ≈ 8.5 game-days; a 250s run ≈
+  14 days — enough for a full predator lifecycle of 7.5 days + turnover). `sim_batch` is a gated test-zone
+  field (production zones omit it → batch=1 → byte-identical). Don't send mutating player messages to a
+  batched zone (input is processed only on the first sub-tick of each call).
+- **dotnet path:** `~/.dotnet/dotnet` here (not on PATH). If you set a var, use `DOTNET=$(command -v
+  dotnet || echo ~/.dotnet/dotnet)` — do NOT wrap it in a `(...)` subshell (the assignment won't persist;
+  the run then executes bare `run` → "run: command not found").
+- **CSV:** `tick,<species…>,total_bugs`; written once at run end. Plot args: `[csv] [chart_name]
+  [title]` — a `chart_name` saves a persistent named copy under `tools/_generated/ecology_charts/`
+  (tuning runs accumulate there for review; index in that dir's `README.md`). The harness also writes
+  `fly_weather.csv` (rain/drought spans) + `fly_corpses.csv` (live `dead_<bug>` carrion count); the plot
+  shades the weather + draws a dotted "corpses" line automatically when those files sit beside the pop CSV.
+- **FRESH START (reproducible runs):** bug_lab sets `ephemeral_swarms: true` so MatchInit skips
+  `restoreSwarms` and re-spawns the `initial` population every run — otherwise the prior run's saved
+  populations reload (e.g. butterflies pinned at their cap), and runs aren't comparable. A normal restart
+  is therefore a clean slate; you do NOT need to wipe storage. (Server log confirms: "Seeded world with N
+  swarms across M species" = fresh; "restored N swarm(s) from save" = a persisted zone.)
+- **TIMESCALE (don't make the 10× mistake):** `DayLengthTicks = 8400` → **1 game-day = 8400 ticks = 840
+  sim-seconds = 14 game-minutes.** A `--duration 600` run at 6× = 36000 ticks = **~4.3 game-days** (NOT 42
+  — game-days = `tick / 8400`, the plot's x-axis is sim-seconds = `tick/10`). This matters: predator
+  `lifespan_secs` ≈ 6300 = **7.5 game-days**, so a 4-day run NEVER shows old-age death — predators only
+  starve in a short run. To see a full multi-day lifecycle/turnover, run LONGER (a 15-game-day run ≈ 2100s
+  wall ≈ 35 min at 6×; this is why batching sim-steps per call is worth doing).
+- **All the tuning dials live in `docs/product/ecology_parameters.md`** (the control panel: every birth /
+  death / food / Director-band parameter, what it does, where it is, which way to tweak). Tune populations
+  by adjusting those params — NOT by adding new food items/occupants (a hack). The whole web keys off the
+  **fly prey base**; fix it first.
+- **Read the shape**, not just survival: predators should PERSIST (not crash to 0 in ~60s — the old
+  spawn-at-0-satiation bug), populations should OSCILLATE in-band (a flat line pinned at a cap = dead
+  dynamics), and `total` should stay under the hard `max_population` caps. The lab layout (per-species
+  pens + the wasp/centipede predator-prey-detritivore arenas) is authored in `tools/make_bug_lab.py`.
+- **Master dials** (the tuning knobs): food regen (`nectarRegenPerTick`/`hostRegenPerTick` in
+  `handlers_farming.go`), flower/tree density + Director bands in `make_bug_lab.py`'s `MAX_POP`/`DIRECTOR`.
+- Per-species live overlay in-game is DebugOverlay **F5**; this headless loop is the persistent record.
 
 ## 3. Determinism — "is everyone in sync?" (same bug positions across players)
 Bugs are simulated deterministically on each client from the event ledger; the success criterion is that all

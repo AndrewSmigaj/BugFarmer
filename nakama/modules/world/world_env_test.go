@@ -179,6 +179,53 @@ func TestRainSchedulerStartStop(t *testing.T) {
 	}
 }
 
+// A Director drought suppresses the daily rain roll, surfaces a "drought" visual, lifts on its timer,
+// and is overridden by a relief shower (requestExtraRain).
+func TestDroughtSuppressesAndLifts(t *testing.T) {
+	state := newTestState(20)
+	m := &Match{}
+	logger := nopRuntimeLogger()
+
+	// Arm a 2-day drought.
+	m.requestDrought(state, logger, 2)
+	if state.DroughtUntilTick != state.TickCount+2*DayLengthTicks {
+		t.Fatalf("drought window wrong: %d", state.DroughtUntilTick)
+	}
+
+	// The daily roll schedules NOTHING while the drought is active (even though we force the dice
+	// by setting a tick first — scheduleDailyRain must early-return).
+	state.ScheduledRainTick = 12345
+	m.scheduleDailyRain(state, logger)
+	if state.ScheduledRainTick != 0 {
+		t.Fatalf("drought must suppress the daily rain roll, got ScheduledRainTick %d", state.ScheduledRainTick)
+	}
+
+	// processWeather surfaces the drought as a distinct WeatherKind.
+	m.processWeather(state, nil, logger)
+	if state.WeatherKind != "drought" {
+		t.Fatalf("active drought must surface as WeatherKind=drought, got %q", state.WeatherKind)
+	}
+
+	// Relief beats suppression: an extra-rain request lifts the drought and starts a shower.
+	m.requestExtraRain(state, nil, logger)
+	if state.DroughtUntilTick != 0 {
+		t.Fatalf("requestExtraRain must lift the drought, DroughtUntilTick=%d", state.DroughtUntilTick)
+	}
+	if state.WeatherKind != "rain" {
+		t.Fatalf("requestExtraRain must start a shower, got %q", state.WeatherKind)
+	}
+
+	// Re-arm, let it run out, confirm it clears back to clear sky.
+	m.stopWeather(state, nil, logger)
+	m.requestDrought(state, logger, 2)
+	m.processWeather(state, nil, logger) // surfaces drought
+	state.TickCount = state.DroughtUntilTick + 1
+	m.processWeather(state, nil, logger) // past the window → clears
+	if state.WeatherKind != "" {
+		t.Fatalf("an expired drought must clear, got %q", state.WeatherKind)
+	}
+}
+
 // A backward set-time re-fires the rollover when the day index drops (documented,
 // harmless: everything it resets is idempotent-class), then does not fire again.
 func TestAdvanceDayBackwardJumpRefires(t *testing.T) {

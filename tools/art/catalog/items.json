@@ -88,10 +88,6 @@
     "look": "a paper SEED PACKET, upright rectangle with a TORN-OPEN top edge and a few seeds spilling: cream paper, three golden WHEAT STALKS illustrated on the front, thin brown border",
     "family": "icon"
   },
-  "bug_parts": {
-    "look": "a cartoon DEAD FLY lying flat on its BACK, viewed from above: one plump dark-grey oval BODY centered, six short black LEGS sticking stiffly straight up/outward, two small round red EYES, a pair of flat translucent WINGS splayed to the sides - instantly readable as a dead bug, slightly comical",
-    "family": "icon"
-  },
   "berries": {
     "look": "a small cluster of round red BERRIES, three or four plump berries with a single green leaf on top",
     "family": "icon"

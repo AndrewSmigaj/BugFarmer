@@ -51,23 +51,24 @@ func (m *Match) initNestsInChunk(
 
 			gx := cx*chunkSize + lx
 			gy := cy*chunkSize + ly
-			key := fmt.Sprintf("%d,%d", gx, gy)
-			if state.NestStates[key] != nil {
-				continue
-			}
-
-			nest := &entities.NestState{
-				GridX: gx, GridY: gy,
-				EntityID:  cell.Occupant.ID,
-				SpeciesID: speciesID,
-			}
-			state.NestStates[key] = nest
-
-			// Found the resident patrol (cap-aware; a saturated zone founds dormant)
-			m.nestSpawnResident(state, nest, species, entities.NestFoundingSize, logger)
-			logger.Debug("Initialized %s nest at %d,%d (resident=%q)", speciesID, gx, gy, nest.ResidentSwarmID)
+			m.registerNestAt(state, gx, gy, cell.Occupant.ID, speciesID, species, logger)
 		}
 	}
+}
+
+// registerNestAt creates the NestState for a nest occupant at (gx,gy) and founds its resident patrol
+// (cap-aware). Shared by chunk-load scanning (initNestsInChunk) and DYNAMIC founding (a colony splitting
+// off a daughter hive — processNestFounding). No-op if a nest is already registered there.
+func (m *Match) registerNestAt(state *WorldState, gx, gy int, occupantID, speciesID string, species *entities.BugSpecies, logger runtime.Logger) *entities.NestState {
+	key := fmt.Sprintf("%d,%d", gx, gy)
+	if state.NestStates[key] != nil {
+		return state.NestStates[key]
+	}
+	nest := &entities.NestState{GridX: gx, GridY: gy, EntityID: occupantID, SpeciesID: speciesID}
+	state.NestStates[key] = nest
+	m.nestSpawnResident(state, nest, species, entities.NestFoundingSize, logger)
+	logger.Debug("Registered %s nest at %d,%d (resident=%q)", speciesID, gx, gy, nest.ResidentSwarmID)
+	return nest
 }
 
 // nestSpawnResident mints a resident swarm of up to n at the nest, honoring the §13
@@ -215,6 +216,109 @@ func (m *Match) orphanNestResident(state *WorldState, nest *entities.NestState) 
 // recallNestDefenders is the AGGRO-ON-DAMAGE hook (called from handleTileBreak's
 // damage path): any hit on a nest occupant recalls the resident onto the attacker
 // REGARDLESS of distance — axing while the patrol hunts is a head start, not immunity.
+// processNestFounding lets a THRIVING colony split off a daughter hive — how a nest-based predator
+// population GROWS and SPREADS (the owner's "split and make another hive"). A nest founds when its
+// resident patrol is saturated (Count >= MaxSwarmSize) AND it has banked surplus brood (>= NestBroodCap,
+// the proxy for "well-fed from many kills"), the zone is under its MaxNests cap, and there's population
+// headroom for the daughter patrol. Founding drains the parent's brood — a natural cooldown (it must
+// rebuild to NestBroodCap before founding again). Collect-then-act (registerNestAt mutates NestStates).
+//
+// Determinism: placing the wasp_nest occupant is a server-authoritative world-cell mutation broadcast via
+// broadcastWorldUpdate (the crop/torch-placement class, replayed not re-decided); the daughter resident
+// rides SwarmUpdate. Bug positions — the only hashed state — are untouched by the placement itself.
+func (m *Match) processNestFounding(state *WorldState, dispatcher runtime.MatchDispatcher, logger runtime.Logger) {
+	if state.CurrentZone == nil || state.CurrentZone.BugSpawning == nil {
+		return
+	}
+
+	nestCount := map[string]int{}
+	for _, n := range state.NestStates {
+		nestCount[n.SpeciesID]++
+	}
+
+	type founding struct {
+		gx, gy        int
+		occupantID    string
+		speciesID     string
+		species       *entities.BugSpecies
+	}
+	var todo []founding
+
+	for _, nest := range state.NestStates {
+		resident, alive := state.Swarms[nest.ResidentSwarmID]
+		if !alive || nest.ResidentSwarmID == "" {
+			continue
+		}
+		species := state.Species[nest.SpeciesID]
+		if species == nil {
+			continue
+		}
+		// Thriving: saturated patrol + banked surplus brood (brood only accrues from successful
+		// post-kill homing, so a full bank means the colony is well-fed).
+		if resident.Count < species.MaxSwarmSize || nest.Brood < entities.NestBroodCap {
+			continue
+		}
+		maxNests := state.CurrentZone.BugSpawning.SpeciesCaps[nest.SpeciesID].MaxNests
+		if maxNests <= 0 || nestCount[nest.SpeciesID] >= maxNests {
+			continue
+		}
+		// Population headroom for the daughter patrol (don't found a dormant hive at the cap).
+		if maxPop := state.SpeciesMaxPopulation(nest.SpeciesID); maxPop > 0 &&
+			state.SpeciesPopulation(nest.SpeciesID)+entities.NestFoundingSize > maxPop {
+			continue
+		}
+		gx, gy, ok := m.findEmptyCellNear(state, nest.GridX, nest.GridY, 2, 6)
+		if !ok {
+			continue
+		}
+		todo = append(todo, founding{gx, gy, nest.EntityID, nest.SpeciesID, species})
+		nest.Brood = 0                  // drain the surplus -> founding cooldown (rebuild to NestBroodCap first)
+		nestCount[nest.SpeciesID]++     // reserve the slot so two parents can't both overshoot MaxNests this pass
+	}
+
+	for _, f := range todo {
+		cx, cy, lx, ly := GlobalToChunk(f.gx, f.gy)
+		chunk := state.Chunks[ChunkKey(cx, cy)]
+		if chunk == nil {
+			continue
+		}
+		occ := &PlacedOccupant{ID: f.occupantID, Dir: 0}
+		chunk.SetOccupant(lx, ly, occ)
+		m.broadcastWorldUpdate(dispatcher, state, cx, cy, f.gx, f.gy, "", occ, false)
+		m.registerNestAt(state, f.gx, f.gy, f.occupantID, f.speciesID, f.species, logger)
+		logger.Info("Nest founding: %s colony split a new hive at %d,%d", f.speciesID, f.gx, f.gy)
+	}
+}
+
+// findEmptyCellNear spirals out (Chebyshev rings minR..maxR, deterministic order) from (gx,gy) for the
+// first empty, walkable cell. Used to place a founded daughter nest near its parent.
+func (m *Match) findEmptyCellNear(state *WorldState, gx, gy, minR, maxR int) (int, int, bool) {
+	for r := minR; r <= maxR; r++ {
+		for dy := -r; dy <= r; dy++ {
+			for dx := -r; dx <= r; dx++ {
+				if dx > -r && dx < r && dy > -r && dy < r {
+					continue // ring only: cells at Chebyshev distance exactly r
+				}
+				nx, ny := gx+dx, gy+dy
+				cx, cy, lx, ly := GlobalToChunk(nx, ny)
+				chunk := state.Chunks[ChunkKey(cx, cy)]
+				if chunk == nil {
+					continue
+				}
+				cell, _ := chunk.GetOccupantCell(lx, ly)
+				if !cell.IsEmpty {
+					continue
+				}
+				if state.IsBlocked(float32(nx)+0.5, float32(ny)+0.5) {
+					continue // a fence/wall cell
+				}
+				return nx, ny, true
+			}
+		}
+	}
+	return 0, 0, false
+}
+
 func (m *Match) recallNestDefenders(state *WorldState, gx, gy int, attackerID string) {
 	key := fmt.Sprintf("%d,%d", gx, gy)
 	nest := state.NestStates[key]

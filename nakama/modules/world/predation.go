@@ -490,3 +490,33 @@ func containsString(list []string, s string) bool {
 	}
 	return false
 }
+
+// predatorBreedSatiation — a NESTLESS predator this well-fed reproduces (the carnivore "well-fed timer").
+const predatorBreedSatiation = 70.0
+
+// processPredatorBreeding lets nestless predators (centipede, future carnivores) reproduce when well-fed.
+// A pure HUNTER never breeds through the standard sated→reproducing→dine path: a kill tops satiation to
+// only ~95 (the flip needs 100), and it has no carrion attraction to dine at — so it would die as a
+// same-age re-seeded cohort. Instead a well-fed hunter breeds on its reproduce cooldown via the EXISTING
+// reproduceSwarm (grows the swarm below MaxSwarmSize, splits a child at it). reproduceSwarm resets
+// satiation→0 + the cooldown, so it must re-hunt to breed again (natural pacing) and is cap-aware;
+// consumeFood with an empty TargetFoodID is a no-op. NEST predators (wasps) breed at the nest, skipped.
+// Collect-then-act: reproduceSwarm can mint a new swarm (mutates state.Swarms) mid-range.
+func (m *Match) processPredatorBreeding(state *WorldState, dispatcher runtime.MatchDispatcher, logger runtime.Logger) {
+	if state.StaticSim {
+		return
+	}
+	var breeders []*entities.SwarmState
+	for _, swarm := range state.Swarms {
+		species := state.Species[swarm.SpeciesID]
+		if species == nil || species.Predation == nil || species.Predation.NestOccupant != "" {
+			continue
+		}
+		if swarm.Count > 0 && swarm.Satiation >= predatorBreedSatiation && swarm.CanReproduce() {
+			breeders = append(breeders, swarm)
+		}
+	}
+	for _, swarm := range breeders {
+		m.reproduceSwarm(state, dispatcher, swarm, state.Species[swarm.SpeciesID], logger)
+	}
+}

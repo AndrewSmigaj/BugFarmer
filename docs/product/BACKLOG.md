@@ -17,25 +17,29 @@ Design of record: [bug_ecology_plan.md](../brainstorms/ecology/bug_ecology_plan.
 (P1 Bug Lab DONE). **Verify every sim-touching phase with the `test-changes` skill** (Go tests +
 sync-harness + the determinism / "all players in sync" checks — the testing methodology is now captured as a
 skill so it stops getting lost between sessions).
-Progress (DONE + verified — Go tests + headless lab): **Bug Lab**, **natural death + carcasses** (per-bug
-`DeathTick`, `dead_<species>` carrion), **millipede detritivore→compost**, **butterfly milkweed host loop**,
-and **visible breeding broods (server)** — flies/butterflies LAY eggs into a brood at the source (compost /
-rotten-fruit maggot pile / milkweed) that matures (eggs→maggots) and hatches via `SWARM_REPRODUCED`; a
-compost bin "builds flies", a single rotten apple makes a small short-lived maggot pile (`entities/brood.go`,
-`world/brood.go`). **Bug lifespans lengthened** (fly 90→360s, butterfly 120→480s — 90s killed bugs
-mid-breed). **Up next (the actually-discussed work):** the brood CLIENT layer — right-click a source → see the
-eggs/maggots panel + on-world maggot-pile/egg visuals + sprites (needs the Unity Editor). Then expose the
-existing wasp-nest brood through the same broadcast.
+The **SERVER ecology is built + verified** (Go tests + 6× headless lab + per-species charts in
+`tools/_generated/ecology_charts/`). The living system = **depletable food → boom-bust → the Director →
+(future) the Ecologist restores → progression**. Done:
+- **Visible breeding broods** — flies/butterflies lay eggs into a brood (compost / rotten-fruit maggot pile /
+  milkweed) that matures + hatches (`entities/brood.go`, `world/brood.go`).
+- **Natural death + carcass recycle** (per-bug `DeathTick`, `dead_<species>`, millipede→compost).
+- **Hard `max_population` crash-guard** (per species per zone; the only guaranteed bound — food is
+  player-controlled, so it can't be the guard).
+- **Depletable food** — flower `ForagePoolState` nectar + milkweed `HostPlantState` (deplete + regrow).
+- **Starvation death** (`StarveTimer`/`processStarvation`) — the bust.
+- **The Ecology Director** (`world/ecology_director.go`) — per-species bands: re-seed below `min_population`,
+  cull above `cull_at` (release `cull_with` predator else overcrowding cull). The oscillation engine + the
+  universal "add a layer when out of range" lever.
+- **Test sim-speed control** (`SimRate`/`call_rate`, 6×, balance-neutral) + **per-species population graphs**.
+- Design of record: see architecture_farming.md "Living ecology — population dynamics" + the roadmap plan.
 
-### Backlog — Ecology director (heuristic anti-staleness events)
-A light "director" that nudges the ecosystem so it never looks static or collapses: watch each species'
-population and fire **artificial events** — population too BIG → release a predator (e.g. extra hornets to cull
-the flies); too SMALL → release more of that species (the anti-extinction re-seed). Keeps populations dynamic
-without the player babysitting. This is the active counterpart to the passive caps (`species_caps`,
-soft/hard population control in architecture_swarm_sync §13) and the natural-spawn `spawn_interval`. Determinism:
-releases mint swarms via the proven `spawnSwarmAt`/`SWARM_REPRODUCED` path (server-authoritative). Discussed
-briefly; **plan it properly before building** (thresholds, cadence, which predator culls which prey, per-zone
-config). NOT built yet.
+**Up next (the roadmap remainder, mostly client → needs the Unity Editor):**
+- **Brood CLIENT layer** — right-click a source → eggs/maggots panel + on-world maggot-pile/egg visuals + sprites.
+- **Plant repopulation** — player planting (seeds from destroying milkweed/flowers) + rare bounded natural spread.
+- **Ecologist meta** — the Ecology TAB dashboard (per-species graph + band status + tasks, reusing the same
+  per-species data), restorative TASKS (the Director's player-facing tier: a task + grace window before the
+  auto-event fires), and progression (CharacterSave XP/unlocks).
+- (Optional) natural predator-prey oscillator — the Director's predator pulse already covers the culling.
 
 ## Done 2026-06-16 — cross-zone movement (walk off a zone edge → hidden swap into the neighbor)
 Walk to a zone edge that has an authored neighbor → quick fade → tear down zone A → join the neighbor at

@@ -4721,7 +4721,13 @@
           "orange",
           "rotten_apple",
           "rotten_orange",
-          "bug_parts"
+          "rotten_plum",
+          "rotten_cherry",
+          "dead_fly",
+          "dead_butterfly",
+          "dead_wasp",
+          "dead_centipede",
+          "dead_beetle"
         ],
         "capacity": 10,
         "food_per_unit": 100,

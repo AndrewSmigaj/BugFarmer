@@ -17,6 +17,7 @@ type WorldConfig struct {
 	MaxPlayers  int // Default: 100
 	WorldWidth  int // Default: 16 (chunks per zone)
 	WorldHeight int // Default: 16 (chunks per zone)
+	SimBatch    int // Sim-ticks advanced per Nakama call (TEST zones only; default 1 = no batching)
 }
 
 // WorldState is the match state for a world instance
@@ -63,9 +64,10 @@ type WorldState struct {
 	// % DayLengthTicks) on BOTH sides (clients get the offset via WorldEnv, OpCode 91).
 	DayOffsetTicks    int64  // Debug set-time shifts the APPARENT time; the tick never jumps
 	LastRolloverDay   int64  // Epoch compare (NOT modulo): a set-time crossing a boundary must not skip/double the daily reset
-	WeatherKind       string // "" or "rain"
+	WeatherKind       string // "" or "rain" or "drought" (drought = the Director suppressing rain; soft, display-only)
 	WeatherUntilTick  int64  // Raw-tick end of the current weather
 	ScheduledRainTick int64  // Raw tick the next shower starts (0 = none scheduled)
+	DroughtUntilTick  int64  // Raw tick a Director-triggered drought lifts (0 = none); while active, the daily rain roll auto-fails
 
 	// SwarmUpdate (OpCode 20) is event-driven, not per-tick: set true whenever the
 	// swarm SET or metadata changes (spawn/despawn/merge/split/phase). Bug centers are

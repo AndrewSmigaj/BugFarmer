@@ -17,10 +17,10 @@ import (
 
 func killDropTestState() *WorldState {
 	state := newTestState(20)
-	state.Entities["bug_parts"] = &EntityDef{Category: "resource", FoodValue: 10}
+	state.Entities["dead_fly"] = &EntityDef{Category: "resource", FoodValue: 10}
 	state.Entities["wasp_stinger"] = &EntityDef{Category: "resource"} // inedible
 	state.Species["fly_common"].KillDrops = []entities.KillDrop{
-		{Item: "bug_parts", CountMin: 1, CountMax: 1, Chance: 1.0},
+		{Item: "dead_fly", CountMin: 1, CountMax: 1, Chance: 1.0},
 	}
 	// Open chunk so IsBlocked doesn't trip on nil chunks at the drop point
 	state.Chunks[ChunkKey(0, 0)] = NewEmptyChunk(0, 0, "grass")
@@ -40,8 +40,8 @@ func TestKillDropEdibleEmitsItemRotted(t *testing.T) {
 		t.Fatalf("drops=%d, want 1", len(state.GroundItems))
 	}
 	for _, item := range state.GroundItems {
-		if item.ItemType != "bug_parts" || item.FoodValue != 10 {
-			t.Fatalf("drop %s food=%d, want bug_parts food=10", item.ItemType, item.FoodValue)
+		if item.ItemType != "dead_fly" || item.FoodValue != 10 {
+			t.Fatalf("drop %s food=%d, want dead_fly food=10", item.ItemType, item.FoodValue)
 		}
 		if item.Lifetime <= 0 {
 			t.Fatal("carrion must have a finite lifetime")
@@ -103,7 +103,7 @@ func TestCarrionExpiryEmitsFoodConsumedZero(t *testing.T) {
 	state := killDropTestState()
 	m := &Match{}
 	state.GroundItems["c1"] = &entities.GroundItem{
-		ID: "c1", ItemType: "bug_parts", Count: 1,
+		ID: "c1", ItemType: "dead_fly", Count: 1,
 		Position:  entities.EntityPosition{LocalX: 10, LocalY: 10},
 		FoodValue: 10,
 		Lifetime:  0.05, // expires on the first decay tick
@@ -142,14 +142,14 @@ func TestInedibleExpiryStaysSilent(t *testing.T) {
 func TestFindNearbyFoodMatchesCarrion(t *testing.T) {
 	state := killDropTestState()
 	state.GroundItems["c1"] = &entities.GroundItem{
-		ID: "c1", ItemType: "bug_parts", Count: 1,
+		ID: "c1", ItemType: "dead_fly", Count: 1,
 		Position:  entities.EntityPosition{LocalX: 12, LocalY: 10},
 		FoodValue: 10,
 	}
 	pos := entities.EntityPosition{LocalX: 10, LocalY: 10}
 
 	// Exact match (centipede)
-	hits := FindNearbyFood(state, pos, 8, []string{"bug_parts"})
+	hits := FindNearbyFood(state, pos, 8, []string{"dead_fly"})
 	if len(hits) != 1 || hits[0].ID != "c1" {
 		t.Fatalf("exact-match hits=%v, want c1", hits)
 	}
@@ -174,8 +174,8 @@ func predationTestState() *WorldState {
 	fly.BaseSpeed = 1.5
 	fly.PredatorFleeRadius = 6.0
 	fly.PredatorFleeSpeedMult = 1.8
-	fly.KillDrops = []entities.KillDrop{{Item: "bug_parts", CountMin: 1, CountMax: 1, Chance: 1.0}}
-	state.Entities["bug_parts"] = &EntityDef{Category: "resource", FoodValue: 10}
+	fly.KillDrops = []entities.KillDrop{{Item: "dead_fly", CountMin: 1, CountMax: 1, Chance: 1.0}}
+	state.Entities["dead_fly"] = &EntityDef{Category: "resource", FoodValue: 10}
 	state.Species["wasp_common"] = &entities.BugSpecies{
 		ID: "wasp_common", Category: "swarm",
 		BaseSpeed: 2.2, VisionRange: 14, MaxSwarmSize: 10, MinSwarmSize: 3,

@@ -120,6 +120,11 @@ func (m *Match) restoreSwarms(ctx context.Context, nk runtime.NakamaModule, stat
 	if state.CurrentZone == nil {
 		return false
 	}
+	if state.CurrentZone.EphemeralSwarms {
+		// Test zone: always start fresh (caller spawns the `initial` population). Keeps tuning runs
+		// reproducible — no carry-over of the prior run's saved populations.
+		return false
+	}
 	zoneKey := ZoneStateKey(state.CurrentZone.ZoneID, "")
 	objs, err := nk.StorageRead(ctx, []*runtime.StorageRead{{
 		Collection: ZoneStateCollection, Key: zoneSwarmKey(zoneKey), UserID: "",

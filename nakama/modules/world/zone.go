@@ -32,6 +32,26 @@ type SpeciesCap struct {
 	MaxPopulation int     `json:"max_population"` // Zone-wide max BUGS (hard cap; 0 = uncapped)
 	SpawnInterval float32 `json:"spawn_interval"` // Seconds between continuous spawn attempts
 	SwarmSize     int     `json:"swarm_size"`     // Fixed bugs per swarm (0 = use species Min/Max range)
+
+	// Ecology Director bands — a per-species THREE-TIER control ladder (ecology_director.go). Natural
+	// dynamics (food/predation/starvation) own the middle band [EventLow..EventHigh] and the Director does
+	// NOTHING there; it only acts at the edges, gentlest-first:
+	//   pop < MinPopulation (extreme low)  -> RE-SEED the species          (last-resort anti-extinction floor)
+	//   pop < EventLow      (moderate low) -> EXTRA-RAIN event             (environmental: more fruit/nectar -> food up)
+	//   pop > EventHigh     (moderate high)-> DROUGHT event                (environmental: suppress rain -> food tightens)
+	//   pop > CullAt        (extreme high) -> HARD CULL (predator/direct)  (last resort, well above EventHigh)
+	// Ordering invariant (validated at load): MinPopulation < EventLow < EventHigh < CullAt < MaxPopulation.
+	// Any unset (0) tier is simply skipped. CullWith = a predator to release at the prey; "" = direct cull.
+	MinPopulation int    `json:"min_population,omitempty"`
+	EventLow      int    `json:"event_low,omitempty"`
+	EventHigh     int    `json:"event_high,omitempty"`
+	CullAt        int    `json:"cull_at,omitempty"`
+	CullWith      string `json:"cull_with,omitempty"`
+
+	// MaxNests caps how many hives of a nest-based predator (wasp) the zone may hold. A thriving colony
+	// FOUNDS a daughter hive (processNestFounding) up to this many — how the predator population GROWS and
+	// SPREADS. 0 = no dynamic founding (only the hand-placed nest occupants exist).
+	MaxNests int `json:"max_nests,omitempty"`
 }
 
 // SpawnArea defines where a species can spawn.
@@ -64,6 +84,16 @@ type ZoneConfig struct {
 	// TEST ZONES ONLY raise it (e.g. 60) to run the SAME sim ~6× faster in wall-clock — sim-TIME is
 	// fixed by SimRate, so balance is unchanged (byte-identical tick sequence). Production zones omit it.
 	CallRate int `json:"call_rate,omitempty"`
+
+	// EphemeralSwarms: TEST ZONES ONLY — skip restoring the saved bug population at MatchInit so the zone
+	// always starts from its `initial` spawns. Tuning runs are then reproducible + comparable (without it,
+	// a restart reloads the PRIOR run's populations, e.g. butterflies reload pinned at their cap).
+	EphemeralSwarms bool `json:"ephemeral_swarms,omitempty"`
+
+	// SimBatch: TEST ZONES ONLY — advance N sim-ticks per Nakama call (1..64). call_rate is capped at
+	// Nakama's 60Hz, so this is how a headless tuning run covers many game-days fast (e.g. 8 → 48× with
+	// call_rate 60). Production zones omit it → 1 → no batching → byte-identical to a single tick/call.
+	SimBatch int `json:"sim_batch,omitempty"`
 
 	// Cross-zone adjacency: edge direction ("north"/"south"/"east"/"west") -> neighbor zoneID.
 	// Walking off an edge with a neighbor hidden-swaps into it (see CrossZoneController). Absent/""

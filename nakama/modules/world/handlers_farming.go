@@ -1231,9 +1231,9 @@ func (m *Match) removeGroundItem(
 
 const (
 	maxHostCapacity  = 100.0
-	hostRegenPerTick = 0.025 // ~0.25/s → ~400s to refill: throttles butterfly BIRTHS so the population
+	hostRegenPerTick = 0.012 // ~0.12/s → ~830s to refill: throttles butterfly BIRTHS so the population
 	// settles below the hard cap (breeding-food-limited) instead of pinning it.
-	hostBreedCost = 25.0 // capacity drained per butterfly breed event (≈4 breeds to exhaust)
+	hostBreedCost = 40.0 // capacity drained per butterfly breed event (≈2-3 breeds to exhaust the host)
 )
 
 // initHostPlantsInChunk registers milkweed (world.host_plant) occupants in a loaded chunk at full
@@ -1265,9 +1265,13 @@ func (m *Match) initHostPlantsInChunk(state *WorldState, chunk *ChunkData, cx, c
 // processHostPlants regrows host-plant breeding capacity each tick (a grazed-out milkweed slowly
 // becomes breedable again). Server-only soft state.
 func (m *Match) processHostPlants(state *WorldState) {
+	regen := float32(hostRegenPerTick)
+	if state.DroughtUntilTick > state.TickCount {
+		regen *= droughtFoodRegenMult // drought: milkweed regrows slower → fewer butterfly births
+	}
 	for _, hp := range state.HostPlantStates {
 		if hp.Capacity < maxHostCapacity {
-			hp.Capacity += hostRegenPerTick
+			hp.Capacity += regen
 			if hp.Capacity > maxHostCapacity {
 				hp.Capacity = maxHostCapacity
 			}
@@ -1281,6 +1285,11 @@ const (
 	maxNectar          = 100.0
 	nectarRegenPerTick = 0.012 // ~0.12/s → ~830s to refill (slow regen =
 	// bigger, slower oscillation — this is the master boom-bust dial, tuned on the population graph).
+
+	// During a Director DROUGHT, ALL plant food regrows far slower (flowers give less nectar, milkweed
+	// regrows slower) — so a drought brakes the NECTAR/HOST-fed populations (butterflies) via FOOD, the
+	// same way it brakes the fruit-fed flies via the rain-gated trees. The brake is natural, not a cull.
+	droughtFoodRegenMult = 0.15
 )
 
 // initForagePoolsInChunk registers flower (world.nectar) occupants in a loaded chunk at full nectar.
@@ -1312,9 +1321,13 @@ func (m *Match) initForagePoolsInChunk(state *WorldState, chunk *ChunkData, cx, 
 // processForagePools regrows flower nectar each tick (a grazed-out flower slowly becomes a food source
 // again). Server-only soft state. The regen rate is the master boom-bust dial.
 func (m *Match) processForagePools(state *WorldState) {
+	regen := float32(nectarRegenPerTick)
+	if state.DroughtUntilTick > state.TickCount {
+		regen *= droughtFoodRegenMult // drought: flowers give far less nectar → butterflies food-limited
+	}
 	for _, fp := range state.ForagePools {
 		if fp.Nectar < maxNectar {
-			fp.Nectar += nectarRegenPerTick
+			fp.Nectar += regen
 			if fp.Nectar > maxNectar {
 				fp.Nectar = maxNectar
 			}
