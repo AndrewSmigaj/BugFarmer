@@ -96,7 +96,7 @@ def restore(snap):
                     fh.write(b)
 
 
-def apply_config(cfg):
+def apply_config(cfg, zone="bug_lab"):
     # tuning → ecology_tuning.json (empty/absent → remove so the server uses compiled defaults)
     tuning = cfg.get("tuning") or {}
     if tuning:
@@ -129,9 +129,25 @@ def apply_config(cfg):
         json.dump(occ, open(OCCUPANTS_JSON, "w"), indent=2)
         print(f"  fruit: patched {', '.join(fr_delta)}")
 
-    # lab → bug_lab zone (deep-merge the lab delta over DEFAULT_LAB, then build)
-    lab = deep_merge(make_bug_lab.DEFAULT_LAB, cfg.get("lab") or {})
-    make_bug_lab.build_lab(lab)
+    if zone == "bug_lab":
+        # lab → bug_lab zone (deep-merge the lab delta over DEFAULT_LAB, then build)
+        lab = deep_merge(make_bug_lab.DEFAULT_LAB, cfg.get("lab") or {})
+        make_bug_lab.build_lab(lab)
+        return
+
+    # Authored zone (e.g. village_21_B): DON'T regenerate. Patch its zone.json — deep-merge the config's
+    # `bug_spawning` delta (caps / spawn weights / Director bands) + inject the temp tuning-speed flags
+    # (restored from the snapshot after the run, so the shipped zone.json stays production-clean).
+    zone_json = os.path.join(DATA, "zones", zone, "zone.json")
+    z = json.load(open(zone_json))
+    flags = {"ephemeral_swarms": True, "call_rate": 60, "sim_batch": 2, **(cfg.get("flags") or {})}
+    z.update(flags)
+    bs_delta = cfg.get("bug_spawning") or {}
+    if bs_delta:
+        z["bug_spawning"] = deep_merge(z.get("bug_spawning", {}), bs_delta)
+        print(f"  bug_spawning: patched {zone} ({', '.join(bs_delta)})")
+    json.dump(z, open(zone_json, "w"), indent=2)
+    print(f"  zone {zone}: temp flags {flags}")
 
 
 def restart_nakama():
@@ -152,7 +168,7 @@ def _csv_ok(path):
     return os.path.exists(path) and sum(1 for _ in open(path)) >= 2  # header + ≥1 data row
 
 
-def run_harness(duration, tag, retries=3):
+def run_harness(duration, tag, zone="bug_lab", retries=3):
     """Run the harness; on an empty/missing CSV (the post-restart connection race) restart + retry.
     Returns (csv_path_or_None, run_log_text) where run_log_text is the nakama log for EXACTLY this run's
     window (so plot_interactions can't pick up a prior run's ECOSTATS — the sweep-1 contamination bug)."""
@@ -163,7 +179,7 @@ def run_harness(duration, tag, retries=3):
         t0 = time.time()
         print(f"  running harness ({duration}s ≈ {duration*0.057:.1f} game-days), attempt {attempt}…")
         subprocess.run([DOTNET, "run", "--project", os.path.join(ROOT, "tools", "sync-harness"),
-                        "--", "--zone", "bug_lab", "--duration", str(duration), "--tag", tag],
+                        "--", "--zone", zone, "--duration", str(duration), "--tag", tag],
                        cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         window = int(time.time() - t0) + 8
         run_log = subprocess.run(["docker", "compose", "logs", "--no-color", "--since", f"{window}s",
@@ -192,19 +208,20 @@ def chart(csv, tag, run_log):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("config", help="config name under tools/bug_lab_configs/ (with or without .json)")
+    ap.add_argument("--zone", default="bug_lab", help="zone to run (bug_lab regenerates; others are authored)")
     ap.add_argument("--duration", type=int, default=250, help="harness seconds (×0.057 = game-days)")
     ap.add_argument("--keep", action="store_true", help="don't restore canonical data after the run (debug)")
     args = ap.parse_args()
 
     cfg = load_config(args.config)
     name = cfg.get("name", args.config)
-    print(f"=== config {name}: {cfg.get('description', '')}")
+    print(f"=== config {name} [{args.zone}]: {cfg.get('description', '')}")
 
-    snap = snapshot([TUNING_JSON, SPECIES_JSON, OCCUPANTS_JSON, ZONE_DIR])
+    snap = snapshot([TUNING_JSON, SPECIES_JSON, OCCUPANTS_JSON, os.path.join(DATA, "zones", args.zone)])
     try:
-        apply_config(cfg)
+        apply_config(cfg, args.zone)
         restart_nakama()
-        csv, run_log = run_harness(args.duration, name)
+        csv, run_log = run_harness(args.duration, name, args.zone)
         if csv is None:
             print("  ERROR: harness produced no CSV after retries — skipping charts for this config", file=sys.stderr)
         chart(csv, name, run_log)
