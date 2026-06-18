@@ -376,35 +376,84 @@ def build(zone_id="village_21_B", vseed=0):
     scatter(b, 130, 215, 165, 250, {"fern": 2, "tall_grass": 3, "bush": 2},
             density=0.11, min_spacing=2, seed=78, clumping=0.85)     # farm→gloom seam
 
+    # ================= 10.5) FOOD for the 6-species bug ECOLOGY (breeding substrate) =========
+    # Populations are BRED, not spawned, so each species needs its food where it lives:
+    #  - butterflies BREED on milkweed (host) → milkweed patches inside each nectar meadow
+    #  - millipedes eat leaf_litter (forest-floor detritus) → leaf_litter in the NE gloom + a grove
+    #  - flies breed on rotten fruit → orchard variety (mixed rot waves) by the farm belt
+    flower_patch(b, 18, 120, 44, 148, ["milkweed"], 7, seed=vseed + 81)    # W meadow
+    flower_patch(b, 24, 196, 52, 222, ["milkweed"], 6, seed=vseed + 82)    # SW meadow
+    flower_patch(b, 204, 60, 226, 82, ["milkweed"], 6, seed=vseed + 83)    # SE beehive meadow
+    flower_patch(b, 160, 162, 196, 198, ["milkweed"], 7, seed=vseed + 84)  # E meadow
+    scatter(b, 150, 224, 212, 250, {"leaf_litter": 5}, density=0.09, min_spacing=2,
+            seed=vseed + 85, clumping=0.85)                                # NE gloom detritus
+    scatter(b, 58, 142, 84, 164, {"leaf_litter": 4}, density=0.07, min_spacing=2,
+            seed=vseed + 86, clumping=0.8)                                 # SW grove detritus
+    for (oid, x, y) in [("tree_plum", 60, 198), ("tree_plum", 84, 210), ("tree_cherry", 64, 212),
+                        ("tree_cherry", 82, 198), ("tree_plum", 70, 222), ("tree_cherry", 78, 220)]:
+        safe(b, oid, x, y)                                                 # fruit variety by the orchard
+
     # The visual-clipping guarantee: nothing tall within 1 cell of a road.
     cleared = clear_road_margins(b)
     if cleared:
         print(f"  clear_road_margins: removed {len(cleared)} road-margin plants")
 
-    # ================= 11) BUG SPAWNING (habitat-tied circles) =================
+    # ================= 11) BUG SPAWNING — BREEDING-DRIVEN, habitat-clustered =================
+    # MODEL (2026-06, the real-zone rebuild): populations grow by BREEDING on the food placed above and
+    # decline by natural death/predation/starvation — NOT by a spawner pump. So:
+    #  - spawn_interval is a RARE wild-immigration TRICKLE (thousands of sim-sec; 1 game-day = 840s), not
+    #    the 45s pump that masked everything. `initial` seeds the breeding stock.
+    #  - WEIGHTED spawn areas: high-weight habitat circles at each species' food + a low-weight zone-wide
+    #    wild-card (~3:1) → mostly clusters at its habitat, a few wander in anywhere; survival sorts the rest.
+    #  - NO culls / drought bands (nothing deletes bugs). The ONLY Director action is the `min_population`
+    #    re-seed floor (anti-extinction ADD). max_population is a generous safety ceiling, not the target.
+    #  - wasps are nest-driven: hand-placed nests (104,230 / 178,244) seed colonies; thriving ones found
+    #    daughter hives beside distant prey (findNestSiteWithPrey).
+    HAB, WILD = 2.0, 1.0  # habitat-circle vs zone-wide weights (predators/decomposers use 3:1, set inline)
     b.bug_spawning = {
         "species_caps": {
-            "fly_common":       {"initial": 40, "max": 75, "spawn_interval": 45.0,
-                                 "swarm_size": 2, "max_population": 400},
-            "butterfly_meadow": {"initial": 15, "max": 50, "spawn_interval": 90.0,
-                                 "max_population": 300},
-            "wasp_common":      {"initial": 0, "max": 3, "spawn_interval": 9999.0,
-                                 "max_population": 12},
-            "centipede_garden": {"initial": 2, "max": 3, "spawn_interval": 600.0,
-                                 "swarm_size": 2, "max_population": 8},
+            # prey base — flies breed on the orchard/fly-farm/compost rot
+            "fly_common":       {"initial": 30, "max": 200, "spawn_interval": 2000.0,
+                                 "swarm_size": 8, "max_population": 1500, "min_population": 12},
+            # nectar/host — butterflies breed on milkweed in the meadows
+            "butterfly_meadow": {"initial": 20, "max": 140, "spawn_interval": 3000.0,
+                                 "swarm_size": 6, "max_population": 800, "min_population": 10},
+            # predators (nest / hunter) + decomposers — small populations, rare trickle, low floor
+            "wasp_common":      {"initial": 4, "max": 12, "spawn_interval": 9000.0,
+                                 "swarm_size": 4, "max_population": 120, "min_population": 3, "max_nests": 5},
+            "centipede_garden": {"initial": 8, "max": 40, "spawn_interval": 6000.0,
+                                 "swarm_size": 2, "max_population": 140, "min_population": 3},
+            "millipede":        {"initial": 10, "max": 60, "spawn_interval": 6000.0,
+                                 "swarm_size": 2, "max_population": 200, "min_population": 3},
+            "beetle_carrion":   {"initial": 6, "max": 40, "spawn_interval": 6000.0,
+                                 "swarm_size": 2, "max_population": 140, "min_population": 2},
         },
         "spawn_areas": [
-            {"id": "zone_wide", "species": ["fly_common"], "type": "zone"},
-            {"id": "fly_farm", "species": ["fly_common"], "type": "circle",
-             "cx": ff_center[0], "cy": ff_center[1], "radius": ff_r},
-            {"id": "beehive_meadow", "species": ["butterfly_meadow"], "type": "circle",
-             "cx": 215, "cy": 72, "radius": 20},
-            {"id": "meadow_w", "species": ["butterfly_meadow"], "type": "circle",
-             "cx": 28, "cy": 134, "radius": 28},
-            {"id": "meadow_sw", "species": ["butterfly_meadow"], "type": "circle",
-             "cx": 30, "cy": 196, "radius": 22},
-            {"id": "ne_gloom", "species": ["centipede_garden"], "type": "circle",
-             "cx": 170, "cy": 238, "radius": 12},
+            # FLY — orchard + fly farm + farmhouse compost (the searchable hotspots) + sparse wild
+            {"id": "fly_orchard",  "species": ["fly_common"], "type": "circle", "cx": 74, "cy": 205, "radius": 14, "weight": HAB},
+            {"id": "fly_farm",     "species": ["fly_common"], "type": "circle", "cx": ff_center[0], "cy": ff_center[1], "radius": ff_r, "weight": HAB},
+            {"id": "fly_compost",  "species": ["fly_common"], "type": "circle", "cx": 88, "cy": 228, "radius": 10, "weight": HAB},
+            {"id": "fly_wild",     "species": ["fly_common"], "type": "zone", "weight": WILD},
+            # BUTTERFLY — the four nectar+milkweed meadows + sparse wild
+            {"id": "bf_meadow_w",  "species": ["butterfly_meadow"], "type": "circle", "cx": 30, "cy": 134, "radius": 24, "weight": HAB},
+            {"id": "bf_meadow_sw", "species": ["butterfly_meadow"], "type": "circle", "cx": 38, "cy": 209, "radius": 22, "weight": HAB},
+            {"id": "bf_beehive",   "species": ["butterfly_meadow"], "type": "circle", "cx": 215, "cy": 71, "radius": 20, "weight": HAB},
+            {"id": "bf_meadow_e",  "species": ["butterfly_meadow"], "type": "circle", "cx": 178, "cy": 180, "radius": 28, "weight": HAB},
+            {"id": "bf_wild",      "species": ["butterfly_meadow"], "type": "zone", "weight": WILD},
+            # WASP — at the two nests (near the farm-belt fly prey) + sparse wild
+            {"id": "wasp_n1",      "species": ["wasp_common"], "type": "circle", "cx": 104, "cy": 230, "radius": 12, "weight": HAB},
+            {"id": "wasp_n2",      "species": ["wasp_common"], "type": "circle", "cx": 178, "cy": 244, "radius": 12, "weight": HAB},
+            {"id": "wasp_wild",    "species": ["wasp_common"], "type": "zone", "weight": WILD},
+            # CENTIPEDE — the NE forest gloom (hunts flies that stray in) + sparse wild
+            {"id": "cent_gloom",   "species": ["centipede_garden"], "type": "circle", "cx": 178, "cy": 240, "radius": 16, "weight": 3.0},
+            {"id": "cent_wild",    "species": ["centipede_garden"], "type": "zone", "weight": WILD},
+            # MILLIPEDE — the leaf-litter detritus (gloom + SW grove) + sparse wild
+            {"id": "milli_gloom",  "species": ["millipede"], "type": "circle", "cx": 178, "cy": 238, "radius": 18, "weight": 3.0},
+            {"id": "milli_grove",  "species": ["millipede"], "type": "circle", "cx": 70, "cy": 152, "radius": 14, "weight": 2.0},
+            {"id": "milli_wild",   "species": ["millipede"], "type": "zone", "weight": WILD},
+            # BEETLE — the carrion gully + predator areas (eats dead_<bug> corpses) + sparse wild
+            {"id": "beetle_gully", "species": ["beetle_carrion"], "type": "circle", "cx": 165, "cy": 234, "radius": 16, "weight": 3.0},
+            {"id": "beetle_wild",  "species": ["beetle_carrion"], "type": "zone", "weight": WILD},
         ],
     }
     return b
