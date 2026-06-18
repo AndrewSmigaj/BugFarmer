@@ -185,6 +185,49 @@ func (m *Match) emitEcologyStats(state *WorldState, day int64, logger runtime.Lo
 	state.Stats.reset()
 }
 
+// emitResourceStats logs one RESSTATS line per game-day with the totals of every DEPLETABLE food STOCK
+// — the supply side of the food-competition bound. These are what bug breeding actually competes for, so
+// reading them next to ECOSTATS tells us whether a population is breeding-substrate-STARVED (e.g. flies
+// well-fed but b_brood low because `rotten` is tiny) vs. genuinely food-bounded. SOFT STATE, never hashed
+// (it only sums existing soft stocks — ground items / forage pools / host plants). Paired with
+// tools/plot_phase.py to plot population-vs-its-food (closed loop = alive cycle).
+//
+// Fields: rotten = ready fly/detritivore substrate (rotted ground food, FoodValue>0, NOT carrion);
+// unripe = the rot-pipeline backlog (dropped fruit not yet rotted); carrion = bug carcasses (beetle/
+// millipede food); nectar = butterfly FEEDING stock (sum ForagePools); milkweed = butterfly BREEDING
+// stock (sum HostPlantStates capacity) with msites = host plants still breedable (capacity>0).
+func (m *Match) emitResourceStats(state *WorldState, day int64, logger runtime.Logger) {
+	var rotten, unripe, carrion int
+	var rottenFood int64
+	for _, it := range state.GroundItems {
+		switch {
+		case it.IsCarrion:
+			carrion++
+		case it.FoodValue > 0:
+			rotten++
+			rottenFood += int64(it.FoodValue)
+		default:
+			unripe++ // dropped fruit still ripening into rotten substrate
+		}
+	}
+	var nectar float32
+	for _, fp := range state.ForagePools {
+		nectar += fp.Nectar
+	}
+	var milkweed float32
+	msites := 0
+	for _, hp := range state.HostPlantStates {
+		milkweed += hp.Capacity
+		if hp.Capacity > 0 {
+			msites++
+		}
+	}
+	logger.Info("RESSTATS day=" + itoa(day) +
+		" rotten=" + itoa(int64(rotten)) + " rotten_food=" + itoa(rottenFood) +
+		" unripe=" + itoa(int64(unripe)) + " carrion=" + itoa(int64(carrion)) +
+		" nectar=" + ftoa(nectar) + " milkweed=" + ftoa(milkweed) + " msites=" + itoa(int64(msites)))
+}
+
 // itoa / ftoa — local formatters for the flat key=val log line (one decimal place for satiation).
 func itoa(n int64) string { return strconv.FormatInt(n, 10) }
 func ftoa(f float32) string {

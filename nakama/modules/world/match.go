@@ -1378,7 +1378,8 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				crop.WateringsToday = 0
 			}
 			m.scheduleDailyRain(worldState, logger)
-			m.emitEcologyStats(worldState, currentDay, logger) // flush the day's interaction log, then reset
+			m.emitEcologyStats(worldState, currentDay, logger)  // flush the day's interaction log, then reset
+			m.emitResourceStats(worldState, currentDay, logger) // + the depletable food-stock totals (supply side)
 			logger.Info("DAY %d begins (tick %d): daily watering counts reset for %d crops",
 				currentDay+1, worldState.TickCount, len(worldState.CropStates))
 		}
