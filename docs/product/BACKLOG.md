@@ -33,6 +33,24 @@ The **SERVER ecology is built + verified** (Go tests + 6× headless lab + per-sp
 - **Test sim-speed control** (`SimRate`/`call_rate`, 6×, balance-neutral) + **per-species population graphs**.
 - Design of record: see architecture_farming.md "Living ecology — population dynamics" + the roadmap plan.
 
+### Phase 4c — TUNING RIG (built + committed) + the sweep (in progress)
+The ecology is structurally complete but UNTUNED; targets are the CENTERS of an oscillation (boom-bust
+for ecologist gameplay), NOT flat lines: **fly 100, butterfly 100, wasp/centipede/beetle/millipede 30**.
+Two acceptance criteria/species — **oscillates** (visible amplitude/period) + **self-maintained** (troughs
+above the re-seed floor → `b_reseed` births ≈ 0). The RIG (all committed, see `ecology_parameters.md`):
+- **Tick batching** (`sim_batch`) → 48× runs; **tunable consts** → `data/ecology_tuning.json` (`Tuning`,
+  byte-identical defaults); **interaction-log telemetry** (`ECOSTATS`/`PREDLOG` → `plot_interactions.py`,
+  births-by-source / deaths-by-cause / predation matrix); **config system** (`tools/bug_lab_configs/` +
+  `run_config.py` snapshot→apply→run→chart→restore + `compare_configs.py` scoring).
+- **First data point — `01_no_cull` (14 game-days, natural equilibria):** butterfly self-regulates at
+  ~100 (**PASS**); fly oscillates 25↔148 self-sustaining (**center ~60, below target → needs more food**);
+  millipede PASS (~18 on leaf_litter). **Predators FAIL (FLOOR, re-seed-propped):** the predation matrix
+  shows `centipede→fly = 7 kills / 14 days` (≈not hunting; avg_sat never reaches the 70 breed threshold →
+  87% of its births are re-seed) and `wasp→butterfly = 98 kills` (it hunts BUTTERFLIES leaked into the open
+  arena, not flies, and its NEST breeding is anemic: 4 hatches/14 days). Beetle climbing (2→14) but still
+  starve-limited. **→ Next: predator hunt-effectiveness / prey-access is the blocker (the owner's reserved
+  "ineffective bugs / clustered hunting" area); then `02_fly_food_up` to lift the fly center to 100.**
+
 **Up next (the roadmap remainder, mostly client → needs the Unity Editor):**
 - **Brood CLIENT layer** — right-click a source → eggs/maggots panel + on-world maggot-pile/egg visuals + sprites.
 - **Plant repopulation** — player planting (seeds from destroying milkweed/flowers) + rare bounded natural spread.
