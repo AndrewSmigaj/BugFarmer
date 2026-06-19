@@ -1,0 +1,30 @@
+{
+  "name": "vlab_E6_fly_immig",
+  "description": "E6 prey IMMIGRATION: fly spawn_interval 2000->800 (faster trickle). Lens: does more immigration soften the fly bust / raise the fly trough (resilience)?",
+  "flags": {
+    "sim_batch": 6
+  },
+  "bug_spawning": {
+    "species_caps": {
+      "fly_common": {
+        "max_population": 0,
+        "spawn_interval": 800.0
+      },
+      "butterfly_meadow": {
+        "max_population": 0
+      },
+      "wasp_common": {
+        "max_population": 0
+      },
+      "centipede_garden": {
+        "max_population": 0
+      },
+      "millipede": {
+        "max_population": 0
+      },
+      "beetle_carrion": {
+        "max_population": 0
+      }
+    }
+  }
+}

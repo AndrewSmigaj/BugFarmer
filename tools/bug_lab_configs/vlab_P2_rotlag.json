@@ -1,0 +1,43 @@
+{
+  "name": "vlab_P2_rotlag",
+  "description": "P2 fruit_rot_ticks 16800->8400 (halve the rot LAG) on all 4 fruit trees. Sweep: does faster food replenishment fix the slow fly takeoff + soften the bust?",
+  "flags": {
+    "sim_batch": 6
+  },
+  "bug_spawning": {
+    "species_caps": {
+      "fly_common": {
+        "max_population": 0
+      },
+      "butterfly_meadow": {
+        "max_population": 0
+      },
+      "wasp_common": {
+        "max_population": 0
+      },
+      "centipede_garden": {
+        "max_population": 0
+      },
+      "millipede": {
+        "max_population": 0
+      },
+      "beetle_carrion": {
+        "max_population": 0
+      }
+    }
+  },
+  "fruit": {
+    "tree_apple": {
+      "fruit_rot_ticks": 8400
+    },
+    "tree_orange": {
+      "fruit_rot_ticks": 8400
+    },
+    "tree_cherry": {
+      "fruit_rot_ticks": 8400
+    },
+    "tree_plum": {
+      "fruit_rot_ticks": 8400
+    }
+  }
+}

@@ -398,9 +398,11 @@ def build(zone_id="village_21_B", vseed=0):
     flower_patch(b, 24, 196, 52, 222, ["milkweed"], 6, seed=vseed + 82)    # SW meadow
     flower_patch(b, 204, 60, 226, 82, ["milkweed"], 6, seed=vseed + 83)    # SE beehive meadow
     flower_patch(b, 160, 162, 196, 198, ["milkweed"], 7, seed=vseed + 84)  # E meadow
-    scatter(b, 150, 224, 212, 250, {"leaf_litter": 5}, density=0.09, min_spacing=2,
+    # leaf_litter THINNED (2026-06-18): millipede was food-saturated, flat at ~135; it's litter-bounded, so
+    # cutting the substrate to ~40% pulls its ceiling toward the ~50 target (owner: "millipedes to ~50").
+    scatter(b, 150, 224, 212, 250, {"leaf_litter": 5}, density=0.035, min_spacing=3,
             seed=vseed + 85, clumping=0.85)                                # NE gloom detritus
-    scatter(b, 58, 142, 84, 164, {"leaf_litter": 4}, density=0.07, min_spacing=2,
+    scatter(b, 58, 142, 84, 164, {"leaf_litter": 4}, density=0.025, min_spacing=3,
             seed=vseed + 86, clumping=0.8)                                 # SW grove detritus
     for (oid, x, y) in [("tree_plum", 60, 198), ("tree_plum", 84, 210), ("tree_cherry", 64, 212),
                         ("tree_cherry", 82, 198), ("tree_plum", 70, 222), ("tree_cherry", 78, 220)]:
@@ -457,7 +459,7 @@ def build(zone_id="village_21_B", vseed=0):
             # DROUGHT suppresses rain so a glut eases off). Both are FOOD/environment, never delete bugs.
             # LIVED-IN START (2026-06): higher initials, spread across ALL habitat circles (the server
             # seeds one swarm per circle), so the ecology runs from day 1 instead of building from near-zero.
-            "fly_common":       {"initial": 60, "max": 200, "spawn_interval": 2000.0, "swarm_size": 8,
+            "fly_common":       {"initial": 78, "max": 200, "spawn_interval": 2000.0, "swarm_size": 8,
                                  "max_population": 1500, "min_population": 12, "event_low": 40, "event_high": 400},
             # nectar/host — butterflies breed on milkweed in the meadows
             "butterfly_meadow": {"initial": 30, "max": 140, "spawn_interval": 3000.0, "swarm_size": 6,
@@ -466,7 +468,7 @@ def build(zone_id="village_21_B", vseed=0):
             # skips wasps in the free-swarm spawn path so there are NO nestless reseeds (the root bug).
             "wasp_common":      {"initial": 0, "max": 12, "spawn_interval": 9000.0,
                                  "swarm_size": 4, "max_population": 120, "min_population": 3, "max_nests": 8},
-            "centipede_garden": {"initial": 12, "max": 40, "spawn_interval": 6000.0,
+            "centipede_garden": {"initial": 16, "max": 40, "spawn_interval": 6000.0,
                                  "swarm_size": 2, "max_population": 140, "min_population": 3},
             "millipede":        {"initial": 16, "max": 60, "spawn_interval": 6000.0,
                                  "swarm_size": 2, "max_population": 200, "min_population": 3},
@@ -487,6 +489,12 @@ def build(zone_id="village_21_B", vseed=0):
             {"id": "fly_eorange",  "species": ["fly_common"], "type": "circle", "cx": 220, "cy": 114, "radius": 9, "weight": HAB},  # E-of-orange patch (w5 prey)
             {"id": "fly_nff",      "species": ["fly_common"], "type": "circle", "cx": 127, "cy": 226, "radius": 9, "weight": HAB},  # N-of-fly-farm patch (w3 prey)
             {"id": "fly_newoods",  "species": ["fly_common"], "type": "circle", "cx": 195, "cy": 238, "radius": 11, "weight": HAB}, # NE woods carrion (w2 prey)
+            # +3 more fly seeds (2026-06-18, owner: flies have a hard time taking off) — reinforce the 3
+            # biggest rotten-fruit zones so more flies seed ONTO food early and breed before the rot-lag
+            # starves them: the crop-field/farm belt, the plum orchard (centre), the orange orchard (E, w5 prey).
+            {"id": "fly_fields",   "species": ["fly_common"], "type": "circle", "cx": 100, "cy": 210, "radius": 12, "weight": HAB},
+            {"id": "fly_plum2",    "species": ["fly_common"], "type": "circle", "cx": 160, "cy": 139, "radius": 10, "weight": HAB},
+            {"id": "fly_orange2",  "species": ["fly_common"], "type": "circle", "cx": 210, "cy": 118, "radius": 10, "weight": HAB},
             {"id": "fly_wild",     "species": ["fly_common"], "type": "zone", "weight": WILD},
             # BUTTERFLY — the four nectar+milkweed meadows + sparse wild
             {"id": "bf_meadow_w",  "species": ["butterfly_meadow"], "type": "circle", "cx": 30, "cy": 134, "radius": 24, "weight": HAB},
@@ -506,7 +514,14 @@ def build(zone_id="village_21_B", vseed=0):
             {"id": "wasp_n7", "species": ["wasp_common"], "type": "circle", "cx": 33,  "cy": 142, "radius": 12, "weight": HAB},  # W butterfly meadow
             {"id": "wasp_n8", "species": ["wasp_common"], "type": "circle", "cx": 178, "cy": 178, "radius": 12, "weight": HAB},  # E butterfly meadow
             # CENTIPEDE — the NE forest gloom (hunts flies that stray in) + sparse wild
-            {"id": "cent_gloom",   "species": ["centipede_garden"], "type": "circle", "cx": 178, "cy": 240, "radius": 16, "weight": 3.0},
+            # CENTIPEDES REPOSITIONED (2026-06-18): cent_gloom (NE woods) gave them no fly density and
+            # overlapped wasp w2 -> they stayed pinned at the reseed floor (~4). Move the ground-hunter to
+            # the SOUTH/central fruit ORCHARDS (fly-dense from the rot loop) that the wasp nests DON'T cover
+            # -> wasps and centipedes partition the prey base (owner: "wasps at some sources, centipedes at
+            # others"). cherry & orange & plum are >30 cells from the nearest nest.
+            {"id": "cent_cherry",  "species": ["centipede_garden"], "type": "circle", "cx": 79,  "cy": 113, "radius": 14, "weight": 3.0},
+            {"id": "cent_orange",  "species": ["centipede_garden"], "type": "circle", "cx": 203, "cy": 113, "radius": 14, "weight": 3.0},
+            {"id": "cent_plum",    "species": ["centipede_garden"], "type": "circle", "cx": 167, "cy": 141, "radius": 12, "weight": 2.0},
             {"id": "cent_wild",    "species": ["centipede_garden"], "type": "zone", "weight": WILD},
             # MILLIPEDE — the leaf-litter detritus (gloom + SW grove) + sparse wild
             {"id": "milli_gloom",  "species": ["millipede"], "type": "circle", "cx": 178, "cy": 238, "radius": 18, "weight": 3.0},

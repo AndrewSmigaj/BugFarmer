@@ -76,6 +76,16 @@ above the re-seed floor → `b_reseed` births ≈ 0). The RIG (all committed, se
     (3) beetle/centipede establishment (still reseed-reliant); (4) re-confirm same-seed reproducibility gate.
 
 **Up next (the roadmap remainder, mostly client → needs the Unity Editor):**
+### Ecology mechanic fixes (from the village_21_lab control campaign, 2026-06-18)
+The 15-run controllability campaign (`docs/product/ecology_control_campaign.md`) proved two species are
+STUCK for MECHANIC reasons, not tunable by any param:
+- **Make `leaf_litter` DEPLETABLE** (a ForagePool like milkweed/nectar, deplete + regrow) — millipede's only
+  food is non-depletable flora, so it's "food-limited" by infinite food → pins flat-high (~130) and never
+  oscillates. Depletable litter makes it genuinely food-bounded → it'll sit in a real oscillating band.
+- **Buff centipede kills→breeding CONVERSION** — centipede hunts fine (144 kills/run) but can't convert
+  kills to population (stuck at the founding floor ~4 under every param). Likely `predator_breed_satiation`
+  too high / `max_swarm_size` 3 too small to accumulate / well-fed-split too slow. A ground-predator
+  breeding pass would let it climb. (Tuning vision/position/seed-count all FAILED — it's a breeding bottleneck.)
 - **Brood CLIENT layer** — right-click a source → eggs/maggots panel + on-world maggot-pile/egg visuals + sprites.
 - **Plant repopulation** — player planting (seeds from destroying milkweed/flowers) + rare bounded natural spread.
 - **Ecologist meta** — the Ecology TAB dashboard (per-species graph + band status + tasks, reusing the same

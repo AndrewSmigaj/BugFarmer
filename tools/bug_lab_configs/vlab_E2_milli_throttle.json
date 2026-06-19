@@ -1,0 +1,34 @@
+{
+  "name": "vlab_E2_milli_throttle",
+  "description": "E2 millipede breeding throttle: reproduce_cooldown 300->900 (3x slower). Tests Finding 1 (litter is non-depletable, so breeding rate\u2014not food count\u2014should set the millipede band; target ~50).",
+  "flags": {
+    "sim_batch": 6
+  },
+  "bug_spawning": {
+    "species_caps": {
+      "fly_common": {
+        "max_population": 0
+      },
+      "butterfly_meadow": {
+        "max_population": 0
+      },
+      "wasp_common": {
+        "max_population": 0
+      },
+      "centipede_garden": {
+        "max_population": 0
+      },
+      "millipede": {
+        "max_population": 0
+      },
+      "beetle_carrion": {
+        "max_population": 0
+      }
+    }
+  },
+  "species": {
+    "millipede": {
+      "reproduce_cooldown": 900.0
+    }
+  }
+}

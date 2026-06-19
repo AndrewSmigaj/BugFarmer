@@ -1,0 +1,2 @@
+2026-06-18_2341_vlab_base
+village_21_lab baseline: caps OFF (max_population 0 all species) + sim_batch 6 (3x faster wall-clock than B's 2, for the multi-run control campaign). The lab's reference run.

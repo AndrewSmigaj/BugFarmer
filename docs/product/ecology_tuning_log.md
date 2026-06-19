@@ -282,3 +282,33 @@ The unlock. Putting 2 nests INSIDE the butterfly meadows gave wasps the stable p
 **Watch / next:** butterfly amplitude is large (13<->137) and the crash to 13 is deep — may be too violent;
 a full multi-cycle run would show whether it settles into a stable limit cycle or over-crops. Wasp mean 44
 is now ABOVE the old 30 target — could thin to 1 butterfly nest, or accept the higher band. Owner's call.
+
+### 2026-06-18 · spawn · +3 fly spawn circles + fly initial 60->78 + run 2x (duration 1200, owner)
+Owner: flies have a hard time taking off (stuck ~12-17 for days before the boom). Added 3 fly habitat
+circles at the biggest rotten-fruit zones (fly_fields 100,210 / fly_plum2 160,139 / fly_orange2 210,118)
+so more flies seed ONTO food early, and bumped fly initial 60->78 so the extra circles are additive
+(keeps ~5-6 swarms/circle across 14 circles instead of thinning). CAVEAT logged for the owner: the slow
+takeoff's ROOT is the early food shortage (2-day rot lag), so more spawns = more flies competing for thin
+early food; this helps via more chances to land on a windfall pile + breed, but may not fully fix takeoff
+without a food lever (longer-lived rotten / faster rot / windfall amount). Run doubled to 1200 (~16 game-
+days) to watch whether butterflies RECOVER after each wasp-driven crash (do the wasp<->butterfly cycles
+repeat into a stable limit cycle, or does the predator over-crop the prey to extinction?). Result pending.
+
+### 2026-06-18 · RESULT: 17-day run (+3 fly spawns, fly init 78, 8 nests) — butterflies DO recover
+Owner's question answered: YES, butterflies recover after each wasp crash — it's a repeating LIMIT CYCLE,
+not extinction. Trajectories (17 game-days):
+- **butterfly: 14,17,47,105,76,50,26,12,13,12,26,39,10,12,17,14,64** — boom 105 → wasp-crash to 12 →
+  RECOVER to 39 → crash to 10 → recover to 64. Stable predator-prey cycle (boom→crash→recover, repeating).
+- **fly: ...30,47,153,332,275,359,60,201,53** — the extra spawns + init 78 let flies finally take off BIG
+  (peak 359) with multi-cycle boom-bust, but still slow for the first ~10 days (the rot-lag gates early).
+- **wasp: 11..67** oscillating, healthy. **beetle: 2-9** grows on carrion during crashes (fine).
+- **centipede: 4,5,4,4,...,4 — PINNED at the reseed floor.** Did NOT establish anywhere → bad positioning
+  (cent_gloom NE woods has no fly density + overlaps wasp w2). Part-A target.
+- **millipede: 41 then 130-141 flat** — food(leaf_litter)-SATURATED. Part-A target → cut litter to reach ~50.
+
+### 2026-06-18 · Part-A result: millipede & centipede RESIST the obvious lever (root-caused → lab)
+millipede stayed ~135 (leaf_litter is non-depletable → patch count is a weak lever; need breeding throttle/
+lifespan); centipede stayed ~4 with 0 kills (cold-starves at the reseed floor before it can hunt, not a
+positioning issue). Wasp 25-135 healthy, butterfly cycles 12-184, fly booms to 280, beetle 2-9 fine.
+Proper fixes (breeding throttle for millipede; cold-start fix for centipede) moved to the village_21_lab
+control campaign (docs/product/ecology_control_campaign.md), then port back to B.

@@ -1,0 +1,30 @@
+{
+  "name": "vlab_E1_centi40",
+  "description": "E1 centipede cold-start: initial 16->40 (more seeds survive to find flies). Tests Finding 2 (does seed COUNT alone beat the cold-start, or does it need prey-ahead?).",
+  "flags": {
+    "sim_batch": 6
+  },
+  "bug_spawning": {
+    "species_caps": {
+      "fly_common": {
+        "max_population": 0
+      },
+      "butterfly_meadow": {
+        "max_population": 0
+      },
+      "wasp_common": {
+        "max_population": 0
+      },
+      "centipede_garden": {
+        "max_population": 0,
+        "initial": 40
+      },
+      "millipede": {
+        "max_population": 0
+      },
+      "beetle_carrion": {
+        "max_population": 0
+      }
+    }
+  }
+}

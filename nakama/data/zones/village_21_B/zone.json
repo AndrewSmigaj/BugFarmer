@@ -14,7 +14,7 @@
   "bug_spawning": {
     "species_caps": {
       "fly_common": {
-        "initial": 60,
+        "initial": 78,
         "max": 200,
         "spawn_interval": 2000.0,
         "swarm_size": 8,
@@ -43,7 +43,7 @@
         "max_nests": 8
       },
       "centipede_garden": {
-        "initial": 12,
+        "initial": 16,
         "max": 40,
         "spawn_interval": 6000.0,
         "swarm_size": 2,
@@ -187,6 +187,39 @@
         "cx": 195,
         "cy": 238,
         "radius": 11,
+        "weight": 2.0
+      },
+      {
+        "id": "fly_fields",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 100,
+        "cy": 210,
+        "radius": 12,
+        "weight": 2.0
+      },
+      {
+        "id": "fly_plum2",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 160,
+        "cy": 139,
+        "radius": 10,
+        "weight": 2.0
+      },
+      {
+        "id": "fly_orange2",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 210,
+        "cy": 118,
+        "radius": 10,
         "weight": 2.0
       },
       {
@@ -338,15 +371,37 @@
         "weight": 2.0
       },
       {
-        "id": "cent_gloom",
+        "id": "cent_cherry",
         "species": [
           "centipede_garden"
         ],
         "type": "circle",
-        "cx": 178,
-        "cy": 240,
-        "radius": 16,
+        "cx": 79,
+        "cy": 113,
+        "radius": 14,
         "weight": 3.0
+      },
+      {
+        "id": "cent_orange",
+        "species": [
+          "centipede_garden"
+        ],
+        "type": "circle",
+        "cx": 203,
+        "cy": 113,
+        "radius": 14,
+        "weight": 3.0
+      },
+      {
+        "id": "cent_plum",
+        "species": [
+          "centipede_garden"
+        ],
+        "type": "circle",
+        "cx": 167,
+        "cy": 141,
+        "radius": 12,
+        "weight": 2.0
       },
       {
         "id": "cent_wild",

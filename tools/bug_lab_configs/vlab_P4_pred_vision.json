@@ -1,0 +1,37 @@
+{
+  "name": "vlab_P4_pred_vision",
+  "description": "P4 predator vision +50% (wasp 16->24, centipede 13->19.5). Sweep: does longer detection raise predation RATE -> predators up, prey amplitude up?",
+  "flags": {
+    "sim_batch": 6
+  },
+  "bug_spawning": {
+    "species_caps": {
+      "fly_common": {
+        "max_population": 0
+      },
+      "butterfly_meadow": {
+        "max_population": 0
+      },
+      "wasp_common": {
+        "max_population": 0
+      },
+      "centipede_garden": {
+        "max_population": 0
+      },
+      "millipede": {
+        "max_population": 0
+      },
+      "beetle_carrion": {
+        "max_population": 0
+      }
+    }
+  },
+  "species": {
+    "wasp_common": {
+      "vision_range": 24.0
+    },
+    "centipede_garden": {
+      "vision_range": 19.5
+    }
+  }
+}

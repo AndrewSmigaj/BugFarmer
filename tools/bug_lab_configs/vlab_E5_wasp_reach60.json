@@ -1,0 +1,36 @@
+{
+  "name": "vlab_E5_wasp_reach60",
+  "description": "E5 predator REACH: wasp predation.home_range 40->60 (+50%). Lens: does wider coupling raise wasp / over-crop prey / widen the oscillation amplitude?",
+  "flags": {
+    "sim_batch": 6
+  },
+  "bug_spawning": {
+    "species_caps": {
+      "fly_common": {
+        "max_population": 0
+      },
+      "butterfly_meadow": {
+        "max_population": 0
+      },
+      "wasp_common": {
+        "max_population": 0
+      },
+      "centipede_garden": {
+        "max_population": 0
+      },
+      "millipede": {
+        "max_population": 0
+      },
+      "beetle_carrion": {
+        "max_population": 0
+      }
+    }
+  },
+  "species": {
+    "wasp_common": {
+      "predation": {
+        "home_range": 60.0
+      }
+    }
+  }
+}

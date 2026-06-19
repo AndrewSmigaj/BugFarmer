@@ -1,0 +1,40 @@
+{
+  "name": "vlab_S1_synth",
+  "description": "SYNTHESIS: centipede vision 13->19 (fix its cold-start WITHOUT touching wasp vision, so butterflies keep their cycle) + fly lifespan +30% (lift the web, soften the bust) + millipede reproduce_cooldown 300->700 (pull it down). Tests whether the targeted combo gets all 6 into good bands.",
+  "flags": {
+    "sim_batch": 6
+  },
+  "bug_spawning": {
+    "species_caps": {
+      "fly_common": {
+        "max_population": 0
+      },
+      "butterfly_meadow": {
+        "max_population": 0
+      },
+      "wasp_common": {
+        "max_population": 0
+      },
+      "centipede_garden": {
+        "max_population": 0
+      },
+      "millipede": {
+        "max_population": 0
+      },
+      "beetle_carrion": {
+        "max_population": 0
+      }
+    }
+  },
+  "species": {
+    "centipede_garden": {
+      "vision_range": 19.0
+    },
+    "fly_common": {
+      "lifespan_secs": 3276
+    },
+    "millipede": {
+      "reproduce_cooldown": 700.0
+    }
+  }
+}
