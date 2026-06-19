@@ -1,0 +1,40 @@
+{
+  "name": "vlab_C1_centi_breed",
+  "description": "CORRECTION test: is centipede TUNABLE after all? Buff the kills->breeding CONVERSION (the lever I never tested): predator_breed_satiation 70->45 (breed after fewer kills) + centipede max_swarm_size 3->8 (swarms accumulate) + feed_per_kill 45->60 (more satiation per kill). All TUNING/data, no code. Does it climb off the floor of 4?",
+  "flags": {
+    "sim_batch": 6
+  },
+  "tuning": {
+    "predator_breed_satiation": 45.0
+  },
+  "bug_spawning": {
+    "species_caps": {
+      "fly_common": {
+        "max_population": 0
+      },
+      "butterfly_meadow": {
+        "max_population": 0
+      },
+      "wasp_common": {
+        "max_population": 0
+      },
+      "centipede_garden": {
+        "max_population": 0
+      },
+      "millipede": {
+        "max_population": 0
+      },
+      "beetle_carrion": {
+        "max_population": 0
+      }
+    }
+  },
+  "species": {
+    "centipede_garden": {
+      "max_swarm_size": 8,
+      "predation": {
+        "feed_per_kill": 60.0
+      }
+    }
+  }
+}

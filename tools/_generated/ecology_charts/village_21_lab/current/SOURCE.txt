@@ -1,2 +1,2 @@
-2026-06-18_2341_vlab_base
-village_21_lab baseline: caps OFF (max_population 0 all species) + sim_batch 6 (3x faster wall-clock than B's 2, for the multi-run control campaign). The lab's reference run.
+2026-06-19_0604_vlab_C1_centi_breed
+CORRECTION test: is centipede TUNABLE after all? Buff the kills->breeding CONVERSION (the lever I never tested): predator_breed_satiation 70->45 (breed after fewer kills) + centipede max_swarm_size 3->8 (swarms accumulate) + feed_per_kill 45->60 (more satiation per kill). All TUNING/data, no code. Does it climb off the floor of 4?
