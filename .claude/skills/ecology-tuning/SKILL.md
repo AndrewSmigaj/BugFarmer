@@ -46,7 +46,12 @@ python3 tools/run_config.py <config> --zone village_21_B --duration 600   # ~8 g
 - **`<zone>/comparisons/`** — overlay charts (one line per run): `python3 tools/plot_compare.py out.png
   "label=_data/nakama_<tag>.log" ...`. The fastest before/after read.
 - **`_data/`** — raw `nakama_*.log` + telemetry CSVs (regenerate plots from these).
-- **ALWAYS surface the chart path to the owner** after a run — don't just grep the log silently.
+- **ALWAYS DISPLAY the charts to the owner after EVERY run — `Read` the PNG images so they render inline,
+  don't just print the path or grep ECOSTATS text.** Minimum to show each run: `population.png`,
+  `interactions.png`, and the bug-map `_contact_sheet.png` (or a key day map). Reading the raw log is for
+  YOUR analysis; the owner wants to SEE the charts. run_config.py already generates them every run (the
+  archive dir is printed at the end) — there is no reason to skip showing them. If a run ever finishes
+  WITHOUT these PNGs, that's a charting bug to fix, not a reason to fall back to text.
 
 ### Reading the charts
 - **population.png** — in-band & oscillating? or flat / runaway / crashed / pinned at the cap?
