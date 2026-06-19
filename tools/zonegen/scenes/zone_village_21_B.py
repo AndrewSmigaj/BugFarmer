@@ -247,7 +247,10 @@ def build(zone_id="village_21_B", vseed=0):
     #   w4 SE-of-rocks (+1/4 grove)     w5 E-of-ecologist (near E-orange patch)  w6 E-of-lake (near its clump)
     # 2026-06-18: each nest nudged ~30% CLOSER to its nearest fly source (owner: wasps weren't close enough
     # to the flies). The far southern/eastern ones (w4/w5/w6) move most; w2/w3 already sat on their prey.
-    for (wx, wy) in [(66, 217), (195, 238), (130, 230), (187, 72), (224, 139), (84, 67)]:
+    # + w7/w8 added INSIDE the W and E butterfly meadows — wasps prey on butterflies too (butterfly_meadow
+    # is in wasp.prey), and butterflies are a HUGE stable prey base the fly-side nests never reach; these
+    # two give colonies a steady food source to grow on (and crop the runaway butterfly pop).
+    for (wx, wy) in [(66, 217), (195, 238), (130, 230), (187, 72), (224, 139), (84, 67), (33, 142), (178, 178)]:
         safe(b, "wasp_nest", wx, wy)
     # w3 is the player-facing OBSERVATION pen (WOOD fence — fences don't stop wings, the lesson; the
     # fence is for the watcher, not the wasps) with a little nectar so it reads as a kept colony.
@@ -462,7 +465,7 @@ def build(zone_id="village_21_B", vseed=0):
             # WASPS ARE NEST-ONLY: initial 0 (the 6 placed nests seed the founding residents); the server
             # skips wasps in the free-swarm spawn path so there are NO nestless reseeds (the root bug).
             "wasp_common":      {"initial": 0, "max": 12, "spawn_interval": 9000.0,
-                                 "swarm_size": 4, "max_population": 120, "min_population": 3, "max_nests": 6},
+                                 "swarm_size": 4, "max_population": 120, "min_population": 3, "max_nests": 8},
             "centipede_garden": {"initial": 12, "max": 40, "spawn_interval": 6000.0,
                                  "swarm_size": 2, "max_population": 140, "min_population": 3},
             "millipede":        {"initial": 16, "max": 60, "spawn_interval": 6000.0,
@@ -500,6 +503,8 @@ def build(zone_id="village_21_B", vseed=0):
             {"id": "wasp_n4", "species": ["wasp_common"], "type": "circle", "cx": 187, "cy": 72,  "radius": 12, "weight": HAB},
             {"id": "wasp_n5", "species": ["wasp_common"], "type": "circle", "cx": 224, "cy": 139, "radius": 12, "weight": HAB},
             {"id": "wasp_n6", "species": ["wasp_common"], "type": "circle", "cx": 84,  "cy": 67,  "radius": 12, "weight": HAB},
+            {"id": "wasp_n7", "species": ["wasp_common"], "type": "circle", "cx": 33,  "cy": 142, "radius": 12, "weight": HAB},  # W butterfly meadow
+            {"id": "wasp_n8", "species": ["wasp_common"], "type": "circle", "cx": 178, "cy": 178, "radius": 12, "weight": HAB},  # E butterfly meadow
             # CENTIPEDE — the NE forest gloom (hunts flies that stray in) + sparse wild
             {"id": "cent_gloom",   "species": ["centipede_garden"], "type": "circle", "cx": 178, "cy": 240, "radius": 16, "weight": 3.0},
             {"id": "cent_wild",    "species": ["centipede_garden"], "type": "zone", "weight": WILD},

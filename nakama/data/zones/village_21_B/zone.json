@@ -40,7 +40,7 @@
         "swarm_size": 4,
         "max_population": 120,
         "min_population": 3,
-        "max_nests": 6
+        "max_nests": 8
       },
       "centipede_garden": {
         "initial": 12,
@@ -312,6 +312,28 @@
         "type": "circle",
         "cx": 84,
         "cy": 67,
+        "radius": 12,
+        "weight": 2.0
+      },
+      {
+        "id": "wasp_n7",
+        "species": [
+          "wasp_common"
+        ],
+        "type": "circle",
+        "cx": 33,
+        "cy": 142,
+        "radius": 12,
+        "weight": 2.0
+      },
+      {
+        "id": "wasp_n8",
+        "species": [
+          "wasp_common"
+        ],
+        "type": "circle",
+        "cx": 178,
+        "cy": 178,
         "radius": 12,
         "weight": 2.0
       },

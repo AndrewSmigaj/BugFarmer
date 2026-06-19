@@ -254,3 +254,31 @@ current/ now reflects this run (the refresh-every-run fix). 8 game-days = a FULL
 grow during a boom — e.g. soften the fly bust (more/longer-lived rotten substrate, or stagger fruit drop so
 the boom plateaus instead of spiking-then-crashing), OR speed nest growth (lower NestBroodCap / founding
 threshold) so a short boom still grows a colony. One lever, measure, repeat.
+
+### 2026-06-18 · spawn · +2 wasp nests in the butterfly meadows (owner directive) + fly-timing reference
+Wasps hunt BOTH fly_common AND butterfly_meadow, but in the run they killed 0 butterflies (PREDLOG: only
+fly kills; butterfly d_predation=0 all days) while butterflies ran to 386 — because all 6 nests sat by the
+FLY sources, out of home_range (40) of the butterfly meadows. So:
+- Added **w7 (33,142)** inside the W butterfly meadow + **w8 (178,178)** inside the E butterfly meadow
+  (both uncovered by existing nests); max_nests 6->8. Gives wasps a STABLE prey base (butterflies, ~386 and
+  steady) to grow on between the brief fly booms, and a natural check on the runaway butterfly pop.
+**Fly-timing reference (1 game-day = 8400t = 840s):** fly lifespan 2520s = ~3 days (±1). Fruit pipeline:
+ripe fruit falls after fruit_drop_ticks (apple 4200t ≈ 0.5 day), a FALLEN fruit rots into fly food after
+rotTicks 16800t = ~2 days, then the rotten food lasts rottenFruitDecaySeconds 5040s = ~6 days (or until
+eaten). So the 2-day rot LAG is ~2/3 of a fly's 3-day life → when a boom eats the standing rotten stock,
+replenishment can't arrive before the flies starve = the sharp bust. (Lever options for later, owner's call:
+flies live longer / fruit_rot_ticks faster / more standing rotten — NOT changed yet.)
+
+### 2026-06-18 · RESULT: +2 butterfly-meadow nests BROKE the wasp ceiling (8 nests, seed 1337, 8 days)
+The unlock. Putting 2 nests INSIDE the butterfly meadows gave wasps the stable prey base they lacked:
+- **Wasps: 24→35→38→36→57→74→54→39** — min 18, mean 44, max 79 (was mean 8, max 24 with 6 fly-side nests).
+  The floor is broken; wasps now sustain a healthy population, fed by the butterfly supply (avg_sat 35-77).
+  Still 100% b_nest (hatch + recovery), 0 reseed/spawn.
+- **Butterflies CROPPED from runaway to oscillating**: 12→56→125→121→81→13→13 — min 0, mean 50, max 137
+  (was a flat runaway to 386). PREDLOG shows wasps now eat butterflies HARD: day5=68, day6=105, day7=71
+  kills. d_predation is the dominant butterfly death cause → real predator-prey control.
+- **This is the predator-prey oscillator** (P-ECO-3): wasp boom tracks the butterfly boom, then crops it →
+  butterfly crash → wasp dip. Wasps also still take flies (PREDLOG day3 fly=12, day6 fly=10).
+**Watch / next:** butterfly amplitude is large (13<->137) and the crash to 13 is deep — may be too violent;
+a full multi-cycle run would show whether it settles into a stable limit cycle or over-crops. Wasp mean 44
+is now ABOVE the old 30 target — could thin to 1 butterfly nest, or accept the higher band. Owner's call.
