@@ -199,7 +199,7 @@ def chart(csv, tag, run_log, zone, description=""):
     """Plot the run, then FILE the charts into the per-zone tuning structure (see
     tools/_generated/ecology_charts/README.md + the ecology-tuning skill):
       <zone>/archive/<YYYY-MM-DD_HHMM>_<tag>/{population,interactions}.png + note.md   (every run, kept)
-      <zone>/current/{population,interactions,phase_portraits}.png                      (baseline runs only)
+      <zone>/current/{population,interactions,phase_portraits,bugmap_contact_sheet}.png (EVERY run = latest)
       _data/ ← raw nakama log + telemetry CSVs."""
     os.makedirs(CHARTS, exist_ok=True)
     data_dir = os.path.join(CHARTS, "_data")
@@ -231,28 +231,33 @@ def chart(csv, tag, run_log, zone, description=""):
     subprocess.run(["python3", os.path.join(ROOT, "tools", "plot_bugmap.py"), "--log", log_path,
                     "--zone", zone, "--out", os.path.join(run_dir, "bugmap")], cwd=ROOT)
 
-    # 3) a baseline run defines the zone's CURRENT setup → refresh <zone>/current/ (+ phase + bugmap)
-    if "baseline" in tag:
-        cur = os.path.join(CHARTS, zone, "current")
-        os.makedirs(cur, exist_ok=True)
-        for name in ("population.png", "interactions.png"):
-            s = os.path.join(run_dir, name)
-            if os.path.exists(s):
-                shutil.copy(s, os.path.join(cur, name))
-        subprocess.run(["python3", os.path.join(ROOT, "tools", "plot_phase.py"), "--log", log_path,
-                        "--tag", f"{zone}_current"], cwd=ROOT)
-        ph = os.path.join(CHARTS, f"phase_{zone}_current.png")
-        if os.path.exists(ph):
-            shutil.move(ph, os.path.join(cur, "phase_portraits.png"))
-        cs = os.path.join(run_dir, "bugmap", "_contact_sheet.png")
-        if os.path.exists(cs):
-            shutil.copy(cs, os.path.join(cur, "bugmap_contact_sheet.png"))
+    # 3) EVERY run refreshes <zone>/current/ → the latest tuning run IS the zone's current picture, so the
+    #    owner can always look in current/ and see where the zone sits NOW (population + interactions + phase
+    #    + bugmap contact sheet). The dated archive/ copy is the history; current/ is "latest". (Previously
+    #    this only ran for `baseline`-tagged runs, which left current/ stale through a whole tuning session.)
+    cur = os.path.join(CHARTS, zone, "current")
+    os.makedirs(cur, exist_ok=True)
+    for name in ("population.png", "interactions.png"):
+        s = os.path.join(run_dir, name)
+        if os.path.exists(s):
+            shutil.copy(s, os.path.join(cur, name))
+    subprocess.run(["python3", os.path.join(ROOT, "tools", "plot_phase.py"), "--log", log_path,
+                    "--tag", f"{zone}_current"], cwd=ROOT)
+    ph = os.path.join(CHARTS, f"phase_{zone}_current.png")
+    if os.path.exists(ph):
+        shutil.move(ph, os.path.join(cur, "phase_portraits.png"))
+    cs = os.path.join(run_dir, "bugmap", "_contact_sheet.png")
+    if os.path.exists(cs):
+        shutil.copy(cs, os.path.join(cur, "bugmap_contact_sheet.png"))
+    # record WHICH run current/ reflects, so it's never ambiguous whether it's stale.
+    with open(os.path.join(cur, "SOURCE.txt"), "w") as f:
+        f.write(f"{ts}_{tag}\n{description or ''}\n")
 
     # 4) tuck the telemetry CSV sidecars into _data/ so the chart folders stay PNG-only
     for f in os.listdir(CHARTS):
         if (f.startswith("interaction_log_") or f.startswith("predation_log_")) and f.endswith(".csv"):
             shutil.move(os.path.join(CHARTS, f), os.path.join(data_dir, f))
-    print(f"  charts → ecology_charts/{zone}/archive/{ts}_{tag}/" + ("  (+ current/)" if "baseline" in tag else ""))
+    print(f"  charts → ecology_charts/{zone}/archive/{ts}_{tag}/  (+ current/ refreshed → latest)")
 
 
 def main():

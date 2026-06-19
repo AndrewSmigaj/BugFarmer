@@ -39,19 +39,20 @@ python3 tools/run_config.py <config> --zone village_21_B --duration 600   # ~8 g
 
 ## 3. Where the charts go (per-zone layout)
 `tools/_generated/ecology_charts/` (see its README.md). Per ZONE:
-- **`<zone>/current/`** — the CURRENT setup: `population.png`, `interactions.png`, `phase_portraits.png`
-  from the latest baseline run = where the zone sits now. Refreshed automatically on any `baseline` run.
+- **`<zone>/current/`** — WHERE THE ZONE SITS NOW: `population.png`, `interactions.png`,
+  `phase_portraits.png`, `bugmap_contact_sheet.png` + `SOURCE.txt` (which run they're from). **Refreshed on
+  EVERY run** — the latest tuning run IS the current picture. This is THE folder to keep up to date and to
+  look in: as you tune a zone, `current/` must always reflect the most recent run (the tooling does this
+  automatically now; if you ever see `current/` older than your last run, that's a bug — fix it, don't
+  leave stale charts there). `archive/<ts>_<tag>/` keeps the dated history; `current/` is "latest".
 - **`<zone>/archive/<timestamp>_<tag>/`** — every run, with a `note.md` (what it changed + result), for
   comparing which settings were better.
 - **`<zone>/comparisons/`** — overlay charts (one line per run): `python3 tools/plot_compare.py out.png
   "label=_data/nakama_<tag>.log" ...`. The fastest before/after read.
 - **`_data/`** — raw `nakama_*.log` + telemetry CSVs (regenerate plots from these).
-- **ALWAYS DISPLAY the charts to the owner after EVERY run — `Read` the PNG images so they render inline,
-  don't just print the path or grep ECOSTATS text.** Minimum to show each run: `population.png`,
-  `interactions.png`, and the bug-map `_contact_sheet.png` (or a key day map). Reading the raw log is for
-  YOUR analysis; the owner wants to SEE the charts. run_config.py already generates them every run (the
-  archive dir is printed at the end) — there is no reason to skip showing them. If a run ever finishes
-  WITHOUT these PNGs, that's a charting bug to fix, not a reason to fall back to text.
+- **After every run: refresh `current/` (the tooling does this) AND show the owner those charts** —
+  `Read` `current/{population,interactions,bugmap_contact_sheet}.png` so they render. Reading the raw
+  ECOSTATS log is for YOUR analysis; the owner looks in `current/` and wants the charts to be the latest.
 
 ### Reading the charts
 - **population.png** — in-band & oscillating? or flat / runaway / crashed / pinned at the cap?
