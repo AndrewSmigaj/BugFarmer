@@ -210,9 +210,13 @@ func (m *Match) emitResourceStats(state *WorldState, day int64, logger runtime.L
 			unripe++ // dropped fruit still ripening into rotten substrate
 		}
 	}
-	var nectar float32
+	var nectar, litter float32 // butterfly feeding pool vs millipede detritus pool (both ForagePools)
 	for _, fp := range state.ForagePools {
-		nectar += fp.Nectar
+		if fp.EntityID == litterOccupantID {
+			litter += fp.Nectar
+		} else {
+			nectar += fp.Nectar
+		}
 	}
 	var milkweed float32
 	msites := 0
@@ -225,7 +229,8 @@ func (m *Match) emitResourceStats(state *WorldState, day int64, logger runtime.L
 	logger.Info("RESSTATS day=" + itoa(day) +
 		" rotten=" + itoa(int64(rotten)) + " rotten_food=" + itoa(rottenFood) +
 		" unripe=" + itoa(int64(unripe)) + " carrion=" + itoa(int64(carrion)) +
-		" nectar=" + ftoa(nectar) + " milkweed=" + ftoa(milkweed) + " msites=" + itoa(int64(msites)))
+		" nectar=" + ftoa(nectar) + " litter=" + ftoa(litter) +
+		" milkweed=" + ftoa(milkweed) + " msites=" + itoa(int64(msites)))
 }
 
 // emitSwarmSnapshot logs one SWARMSNAP line per live swarm once per game-day — species + world position +

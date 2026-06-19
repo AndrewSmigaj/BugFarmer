@@ -1,0 +1,23 @@
+{
+  "name": "v21b_rebalance3",
+  "description": "Phase 2 rebalance r3. r2 nailed butterfly ~52; fly ~76 (climbing); wasp CRASHING to 0 (prey-starved limit cycle); millipede ~9 (cooldown-bound, litter plentiful); beetle ~4 (carrion-starved); centipede ~3 (Go-bound, stop tuning). RESSTATS: nectar+milkweed full (butterfly is rate-limited), litter plentiful (millipede cooldown-limited), carrion~5 (beetle food-limited). r3: fly cooldown 45->35 (push to 100); wasp satiation_decay 0.14->0.10 (stop extinction crashes); millipede reproduce_cooldown 2000->1200; beetle 300->200. Butterfly untouched (on band). Longer run.",
+  "extends": "v21b_rebalance2",
+  "flags": { "sim_batch": 6 },
+  "tuning": {
+    "max_nectar": 30.0,
+    "nectar_regen_per_tick": 0.004,
+    "max_host_capacity": 35.0,
+    "host_regen_per_tick": 0.007,
+    "host_breed_cost": 70.0,
+    "predator_breed_satiation": 32.0,
+    "litter_regen_per_tick": 0.0008
+  },
+  "species": {
+    "butterfly_meadow": { "reproduce_cooldown": 190.0 },
+    "fly_common": { "reproduce_cooldown": 35.0 },
+    "centipede_garden": { "max_swarm_size": 10 },
+    "wasp_common": { "satiation_decay_rate": 0.10 },
+    "millipede": { "reproduce_cooldown": 1200.0 },
+    "beetle_carrion": { "reproduce_cooldown": 200.0 }
+  }
+}

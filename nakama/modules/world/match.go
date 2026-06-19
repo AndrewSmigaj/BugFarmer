@@ -79,7 +79,11 @@ func (m *Match) reproduceSwarm(state *WorldState, dispatcher runtime.MatchDispat
 	// breeding source instead of growing instantly. processBroods matures + hatches them, and the
 	// population/swarm caps apply at HATCH time (eggs are not bugs). Predators (wasp nest, centipede)
 	// and individuals fall through to the instant-growth path below, unchanged.
-	if species.Predation == nil && species.Category == "swarm" {
+	// GATED on an egg sprite: only species with a nursery (EggSpriteID) brood. Swarm-category
+	// DETRITIVORES (millipede/beetle — no egg art, and they breed on forage pools / carrion that
+	// layIntoBrood can't resolve) fall through to instant-growth + merge, which is the food-bounded
+	// "fewer fat swarms" behavior we want for them without a fake egg nursery.
+	if species.Predation == nil && species.Category == "swarm" && species.EggSpriteID != "" {
 		laid := m.layIntoBrood(state, dispatcher, swarm, count)
 		swarm.ReproductionMeter = 0
 		swarm.Satiation = 0
@@ -275,7 +279,8 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 	// Load entity definitions from unified entity system
 	var warnings []string
 	state.Tuning = LoadTuning("data/ecology_tuning.json", logger)
-	state.Stats = NewEcologyStats() // interaction-log telemetry (soft state, flushed per game-day)
+	state.Stats = NewEcologyStats()             // interaction-log telemetry (soft state, flushed per game-day)
+	state.Perf = NewPerfStats(zoneConfig.Profile) // cost profiler (soft, never hashed; no-op unless profile=true)
 
 	state.Entities, warnings, err = LoadAllEntities("data")
 	if err != nil {
@@ -1113,15 +1118,21 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 
 		// === Fruit Trees & Ground Item Decay ===
 		m.processFruitTrees(worldState, dispatcher, logger)
-		m.processHostPlants(worldState)  // milkweed breeding capacity regrows
+		m.processHostPlants(worldState) // milkweed breeding capacity regrows
+		fgt := worldState.Perf.Start()
 		m.processForagePools(worldState) // flower nectar regrows (the boom-bust food)
+		worldState.Perf.StopSys("forage", fgt)
 		if worldState.TickCount%30 == 0 {
+			nst := worldState.Perf.Start()
 			m.processNests(worldState, logger)                        // occupant-gone sweep + brood-drain re-hatch
 			m.processNestFounding(worldState, dispatcher, logger)     // a thriving colony splits off a daughter hive
 			m.processPredatorBreeding(worldState, dispatcher, logger) // nestless carnivores breed when well-fed
 			m.processBroods(worldState, dispatcher, logger)           // visible nurseries: mature eggs -> maggots -> hatch
+			worldState.Perf.StopSys("nests", nst)
 		}
+		dct := worldState.Perf.Start()
 		m.processGroundItemDecay(worldState, dispatcher)
+		worldState.Perf.StopSys("decay", dct)
 		m.processStations(worldState, dispatcher)      // material processors: input -> compost
 		m.processCraftStations(worldState, dispatcher) // recipe processors: queued batches -> output grid
 
@@ -1157,7 +1168,9 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			// must run every tick of flight. Owns the swarm while active.
 			actionActive := false
 			if species.Predation != nil && species.Category == "individual" {
+				pt := worldState.Perf.Start()
 				actionActive = m.processActionState(logger, dispatcher, worldState, swarm, species, chunkSize, deltaTime)
+				worldState.Perf.StopSpecies(swarm.SpeciesID, "action", pt)
 			}
 
 			// Predation branches (prey FLEE / predator hunt+wander) REPLACE the shared
@@ -1196,7 +1209,10 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				forage := swarm.ForageMode || swarm.Phase == "reproducing" || swarm.Satiation < hungerForageThreshold
 				attractions := swarm.GetCurrentAttractions(species)
 				if forage && len(attractions) > 0 {
+					ft := worldState.Perf.Start()
 					hits := FindNearbyFood(worldState, swarm.Position, species.VisionRange, attractions)
+					worldState.Perf.StopSpecies(swarm.SpeciesID, "food", ft)
+					worldState.Perf.Count(swarm.SpeciesID, "food_calls")
 					if swarm.Phase == "reproducing" {
 						kept := hits[:0]
 						for _, h := range hits {
@@ -1306,6 +1322,15 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 									hp.Capacity = 0
 								}
 							}
+							// Detritus breeding (millipede on leaf litter) drains the litter pool, the same way
+							// host-plant breeding drains milkweed — so a breeding boom eats out the forest floor
+							// and the millipede bust follows (the food-bound oscillation). Litter pools only.
+							if fp := worldState.ForagePools[fmt.Sprintf("%d,%d", int(swarm.TargetFoodX), int(swarm.TargetFoodY))]; fp != nil && fp.EntityID == litterOccupantID {
+								fp.Nectar -= worldState.Tuning.HostBreedCost
+								if fp.Nectar < 0 {
+									fp.Nectar = 0
+								}
+							}
 						}
 					}
 				}
@@ -1359,8 +1384,10 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		// Population pass once a minute (600 ticks at 10Hz): proximity-merge + size-split.
 		// Both travel as tick+seq SWARM_MERGE/SWARM_SPLIT influence events (deterministic).
 		if worldState.TickCount-worldState.LastMergeCheck >= 600 {
-			m.checkSwarmMerging(worldState, chunkSize, logger)
+			mgt := worldState.Perf.Start()
+			m.checkSwarmMerging(worldState, chunkSize, logger) // the O(S²) all-pairs the audit flagged
 			m.checkSwarmSplitting(worldState, chunkSize, logger)
+			worldState.Perf.StopSys("merge", mgt)
 			worldState.LastMergeCheck = worldState.TickCount
 		}
 
@@ -1393,6 +1420,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			m.emitEcologyStats(worldState, currentDay, logger)  // flush the day's interaction log, then reset
 			m.emitResourceStats(worldState, currentDay, logger) // + the depletable food-stock totals (supply side)
 			m.emitSwarmSnapshot(worldState, currentDay, logger) // + per-swarm positions for the daily bug-map
+			m.emitPerfStats(worldState, currentDay, logger)     // + the cost profiler (no-op unless profile=true)
 			logger.Info("DAY %d begins (tick %d): daily watering counts reset for %d crops",
 				currentDay+1, worldState.TickCount, len(worldState.CropStates))
 		}
@@ -1435,6 +1463,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				logger.Error("Failed to marshal swarm update: %v", err)
 			} else {
 				dispatcher.BroadcastMessage(OpCodeSwarmUpdate, data, nil, nil, true)
+				worldState.Perf.AddRosterBytes(len(data)) // cost profiler: roster wire size
 			}
 			worldState.SwarmsDirty = false
 		}
@@ -1456,6 +1485,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				logger.Error("Failed to marshal influence broadcast: %v", err)
 			} else {
 				dispatcher.BroadcastMessage(OpCodeInfluenceBroadcast, data, nil, nil, true)
+				worldState.Perf.AddInfluenceBytes(len(data)) // cost profiler: leg-batch wire size
 			}
 			worldState.ClearPendingInfluence()
 		}
@@ -2172,8 +2202,15 @@ func (m *Match) checkSwarmSplitting(state *WorldState, chunkSize int, logger run
 			continue // individuals (centipede) never split — belt+braces over the sizes
 		}
 
-		// Deterministic size rule: split when over the limit (MaxSwarmSize IS the limit)
-		if swarm.Count > species.MaxSwarmSize {
+		// Deterministic size rule: split when over the split limit. SplitThreshold (if set) decouples the
+		// split POINT from MaxSwarmSize (the nominal spawn/merge size) — a swarm grows to SplitThreshold
+		// before halving into smaller, more-dispersed swarms. Falls back to MaxSwarmSize when 0/unset, so it's
+		// a no-op until tuned. (Keep SplitThreshold >= MaxSwarmSize to avoid merge↔split churn.)
+		splitLimit := species.MaxSwarmSize
+		if species.SplitThreshold > 0 {
+			splitLimit = species.SplitThreshold
+		}
+		if swarm.Count > splitLimit {
 			splitCount := swarm.Count / 2
 			if splitCount < species.MinSwarmSize || swarm.Count-splitCount < species.MinSwarmSize {
 				continue // Either half would be too small

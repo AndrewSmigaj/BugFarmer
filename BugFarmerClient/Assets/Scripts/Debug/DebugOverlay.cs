@@ -22,7 +22,11 @@ namespace BugFarmer.Tracing
         private bool _showGraph = false;
         private bool _showTuning = false;
         private bool _showWorld = false;   // F8: world debug (time / weather / spawn)
+        private bool _showPerf = false;    // F7: client cost profiler (FPS + per-subsystem ms + GC heap)
         private string _wStatus = "";
+
+        // Perf panel state: a smoothed frame-time so the FPS readout doesn't flicker.
+        private float _frameMsEMA = 0f;
 
         // Ecology tuning state (initialized to the species.json fly defaults)
         private float _tForage = 0.25f;       // chance a behavior chunk is FORAGE
@@ -61,8 +65,17 @@ namespace BugFarmer.Tracing
             if (Input.GetKeyDown(KeyCode.F4)) _showSwarms = !_showSwarms;
             if (Input.GetKeyDown(KeyCode.F5)) _showGraph = !_showGraph;
             if (Input.GetKeyDown(KeyCode.F6)) _showTuning = !_showTuning;
+            if (Input.GetKeyDown(KeyCode.F7))
+            {
+                _showPerf = !_showPerf;
+                BugFarmer.Util.PerfProfiler.Enabled = _showPerf; // only pay the Stopwatch cost while shown
+            }
             if (Input.GetKeyDown(KeyCode.F8)) _showWorld = !_showWorld;
             if (Input.GetKeyDown(KeyCode.F9)) _showStats = !_showStats;
+
+            // Smoothed frame time for the F7 panel (unscaled so a paused timeScale doesn't skew it).
+            float frameMs = Time.unscaledDeltaTime * 1000f;
+            _frameMsEMA = _frameMsEMA <= 0f ? frameMs : _frameMsEMA * 0.9f + frameMs * 0.1f;
 
             // Population time-series: one sample per second (10 ticks), per species
             var sm = SwarmManager.Instance;
@@ -127,7 +140,7 @@ namespace BugFarmer.Tracing
                 GUILayout.Label($"Recording: {_isRecording} (Buffer: {_traceBuffer?.Count ?? 0})");
                 GUILayout.Label($"Tick: {sm?.SimulationTick ?? 0}");
                 GUILayout.Label($"Swarms: {sm?.SwarmCount ?? 0}   Bugs: {sm?.TotalBugCount ?? 0}");
-                GUILayout.Label("F1=Record F2=Dump F3=Log F4=Swarms F5=Graph F6=Tuning F8=World F9=Stats");
+                GUILayout.Label("F1=Rec F2=Dump F3=Log F4=Swarms F5=Graph F6=Tuning F7=Perf F8=World F9=Stats");
                 GUILayout.EndArea();
             }
 
@@ -139,6 +152,53 @@ namespace BugFarmer.Tracing
                 DrawEcologyTuning();
             if (_showWorld)
                 DrawWorldDebug();
+            if (_showPerf)
+                DrawPerf(sm);
+        }
+
+        /// <summary>
+        /// F7: client cost profiler. FPS + smoothed frame-time, managed-heap size, and the per-subsystem
+        /// ms/frame breakdown from <see cref="BugFarmer.Util.PerfProfiler"/> (Net.* / Sim.* / Render.*),
+        /// plus live bugs-by-species. For DEEP analysis (per-method CPU + GC alloc) record the Unity
+        /// Profiler window in the editor — the same markers feed it. Toggling F7 flips PerfProfiler.Enabled.
+        /// </summary>
+        void DrawPerf(SwarmManager sm)
+        {
+            const int W = 330;
+            GUILayout.BeginArea(new Rect(Screen.width - W - 12, 12, W, 460), GUI.skin.box);
+            GUILayout.Label("=== CLIENT PERF — F7 ===");
+            float fps = _frameMsEMA > 0f ? 1000f / _frameMsEMA : 0f;
+            GUILayout.Label($"FPS: {fps:F0}    frame: {_frameMsEMA:F2} ms");
+            float heapMB = System.GC.GetTotalMemory(false) / (1024f * 1024f);
+            GUILayout.Label($"heap: {heapMB:F1} MB    swarms: {sm?.SwarmCount ?? 0}   bugs: {sm?.TotalBugCount ?? 0}");
+
+            GUILayout.Space(4);
+            GUILayout.Label("— bug subsystems (ms this frame ×calls) —");
+            var disp = BugFarmer.Util.PerfProfiler.Display;
+            if (disp.Count == 0)
+            {
+                GUILayout.Label("  (no samples yet — needs bug activity)");
+            }
+            else
+            {
+                double total = 0;
+                var keys = new List<string>(disp.Keys);
+                keys.Sort();
+                foreach (var k in keys)
+                {
+                    var s = disp[k];
+                    total += s.ms;
+                    GUILayout.Label($"  {k,-18} {s.ms,6:F2} ms  x{s.calls}");
+                }
+                GUILayout.Label($"  {"TOTAL",-18} {total,6:F2} ms");
+            }
+
+            GUILayout.Space(4);
+            GUILayout.Label("— bugs by species —");
+            if (sm != null)
+                foreach (var kv in sm.BugCountBySpecies())
+                    GUILayout.Label($"  {ShortSpecies(kv.Key)}: {kv.Value}");
+            GUILayout.EndArea();
         }
 
         /// <summary>

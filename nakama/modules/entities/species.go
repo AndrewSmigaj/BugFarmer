@@ -92,6 +92,13 @@ type BugSpecies struct {
 	// Prey-side predation fields (set on species that GET hunted)
 	PredatorFleeRadius    float32 `json:"predator_flee_radius"`     // flee when a predator swarm is this close
 	PredatorFleeSpeedMult float32 `json:"predator_flee_speed_mult"` // flee-from-predator speed (decoupled from the player flee mult)
+	// RELOCATE: instead of the short directly-away flee, a swarm has RelocateChance (per flee think) to make a
+	// long BREAK-CONTACT jump of RelocateDistance (away from predator + a random angle), to actually escape a
+	// hunter's vision rather than be out-chased. NOT all swarms do it (chance) — some stay and get eaten (the
+	// crash). RelocateCooldownTicks gates re-jumping. 0/absent = off (plain flee). Determinism-safe (state.Rng).
+	RelocateChance        float32 `json:"relocate_chance"`
+	RelocateDistance      float32 `json:"relocate_distance"`
+	RelocateCooldownTicks int64   `json:"relocate_cooldown_ticks"`
 
 	// Movement trait: this species' swarm centers AND client bug visuals skip the
 	// OCCUPANT collision branch only (fences, walls, houses — there are no roofs yet).

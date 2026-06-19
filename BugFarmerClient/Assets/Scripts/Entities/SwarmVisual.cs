@@ -316,6 +316,7 @@ namespace BugFarmer.Entities
         /// <param name="players">Player targets from InfluenceManager (deterministic, sorted by playerId)</param>
         public void SimulateTick(long tick, List<PlayerTarget> players)
         {
+            using var _perf = PerfProfiler.Sample("Sim.SwarmTick");
             if (!WorldSeedProvider.Instance?.IsInitialized ?? true)
                 return;
 

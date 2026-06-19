@@ -312,3 +312,56 @@ lifespan); centipede stayed ~4 with 0 kills (cold-starves at the reseed floor be
 positioning issue). Wasp 25-135 healthy, butterfly cycles 12-184, fly booms to 280, beetle 2-9 fine.
 Proper fixes (breeding throttle for millipede; cold-start fix for centipede) moved to the village_21_lab
 control campaign (docs/product/ecology_control_campaign.md), then port back to B.
+
+### 2026-06-19 · COST PROFILER built (PERFSTATS) + Phase-2 rebalance r1 — perf-driven, measured
+Built the full-stack cost profiler FIRST (measure before optimizing): server `PERFSTATS`/`PERFSYS`
+(per-species CPU by sub-phase + leg counts + global passes + broadcast bytes, gated by zone `profile`
+flag, soft/never-hashed — profiler.go), `tools/plot_perf.py`, run_config wiring, and a client F7 overlay +
+Unity-Profiler markers. **Baseline finding overturned the audit's guess:** `FindNearbyFood` (scan-all-
+ground-items per think) DOMINATES server CPU — butterfly **11.7 CPU-s/day**, fly 6.5s — while the predicted
+O(S²) merge is **negligible (5 ms/day)**. Cost is per-CALL not per-bug (millipede: 4 bugs burned 0.45s on
+577 food-calls). So the real Phase-3 server target is a **spatial index for ground-item/station queries**,
+NOT merge-bucketing.
+
+**Rebalance r1 (structural baked into species.json + match.go, then tuned via config):**
+- fly/butterfly **3× swarm size** (20→60, 15→45); millipede+beetle **category individual→swarm** (max 12,
+  merge 2.0); brood gated on `EggSpriteID` so detritivores (no egg art, breed on forage-pool/carrion that
+  layIntoBrood can't resolve) instant-grow+merge instead of a broken nursery.
+- Tuned butterfly via BOTH food + breeding (joint constraints): nectar 50→30/regen 0.004, milkweed cap
+  100→45/regen 0.007/breed_cost 55, butterfly cooldown 90→150; fly cooldown 30→70.
+- **Result (day 10):** butterfly **450→94**, fly **438→48**, wasp 26, centipede 3, millipede 5, beetle 3.
+- **Perf delivered as predicted:** butterfly cpu_food **11.7s→1.1s (10×)**, legs **5.9MB→1.1MB/day (5×)**,
+  roster 2.2MB→0.15MB, swarms butterfly 68→4. The detritivore flip works (1 swarm each, breeding intact).
+- **RESSTATS settled the nectar question with DATA:** `nectar=4804`, FLAT across days 8-10 → sitting full,
+  NOT depleting → nectar is SLACK, breeding is the binding butterfly lever. (Don't cut a lever and assume;
+  read the depletion curve.) r2: tighten butterfly breeding only; relax fly (breeding-limited, rotten food
+  abundant at 2515); push centipede (predator_breed_satiation 45→32) + millipede (litter_regen up); longer run.
+
+### 2026-06-19 · Phase-2 rebalance r2-r6 → BAKED (perf-first, profiler-guided)
+Six data-guided runs, each lever chosen from the profiler/interaction-log, not guesswork. Key diagnoses
+(all from telemetry, correcting earlier assumptions):
+- **Butterfly is breeding-bound, not nectar-bound:** RESSTATS showed `nectar` sitting FULL/flat (4800,
+  not depleting) across every run → nectar is SLACK; the binding levers are milkweed cap + reproduce
+  cooldown. (Don't conclude a lever fails from one under-powered cut — read the depletion curve.)
+- **Fly is food-ACCESS + predation bound, not breeding-bound:** cooldown 45→70 never moved it (~50). The
+  interaction log showed `d_starve` 22-101/day WITH `rotten=2300` abundant — flies starving amid plenty
+  (vision 8 too short to reach the spatially-concentrated rotten) + 2-4 centipedes killing 19-28 flies/day.
+  Fixes: vision_range 8→13 + starvation_death_secs 60→90 → `d_starve` collapsed to 2-24, fly climbs to 112.
+- **System is coupled/chaotic:** butterfly swung 52→72→91→40 from OTHER species' RNG-stream shifts at a
+  FIXED seed → exact per-band targeting is impractical; tune to ballpark + correct ordering.
+- **Wasp extinction fixed** by satiation_decay 0.14→0.10 (stable ~16, no more 0-crashes).
+
+**BAKED into canonical** (species.json + new ecology_tuning.json; zone caps left as non-binding backstops):
+- Structural: fly/butterfly max_swarm 20→60 / 15→45 (3×); millipede+beetle category→swarm (max 12, merge
+  2.0) + match.go brood-gate on EggSpriteID so detritivores instant-grow+merge (no fake egg nursery).
+- Tuned: nectar 30/0.004, milkweed cap 25/regen 0.007/breed_cost 70, predator_breed_satiation 32,
+  litter_regen 0.0008, starvation_death_secs 90; fly cooldown 35/vision 13/lifespan 5500, butterfly
+  cooldown 280, wasp decay 0.10, millipede cooldown 1150, beetle cooldown 120/breed 12, centipede max_swarm 10.
+- **Result (ballpark):** fly dominant + recovering to 112 (the most, ✅ "flies most"); butterfly ~45;
+  millipede ~19; centipede ~4 (≤20 ✓); wasp ~16 stable; beetle ~3 (carrion-starved — accepted, logged).
+- **THE WIN (primary goal):** legs **5.9 MB → 1.1 MB/day (5×)**, butterfly `cpu_food` **11.7s → ~0.5s
+  (20×)**, total swarms **68 → 20**, roster 2.2MB → 0.1MB. The 1000-bug skipping/lag is gone.
+
+**Follow-ups logged (structural, not tunable):** beetle carrion supply (zone change); wasp prey-base→30-50;
+centipede kills→breeding-conversion (Go fix); and the Phase-3 perf target the profiler proved: a spatial
+index for FindNearbyFood (the dominant cost; merge is negligible at 5ms/day).

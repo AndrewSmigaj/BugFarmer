@@ -33,6 +33,29 @@ The **SERVER ecology is built + verified** (Go tests + 6× headless lab + per-sp
 - **Test sim-speed control** (`SimRate`/`call_rate`, 6×, balance-neutral) + **per-species population graphs**.
 - Design of record: see architecture_farming.md "Living ecology — population dynamics" + the roadmap plan.
 
+### Phase W2 — Cost profiler + perf-first rebalance (DONE 2026-06-19)
+Built the full-stack bug **cost profiler** (measure before optimizing) + rebalanced village_21_B to fix the
+~1000-bug lag. All committed-ready (see ecology_tuning_log.md 2026-06-19 + the plan doc).
+- **Profiler:** server `PERFSTATS`/`PERFSYS` (per-species CPU by sub-phase + leg counts + global passes +
+  broadcast bytes; gated by zone `profile` flag; soft/never-hashed — `world/profiler.go`), `tools/plot_perf.py`,
+  `run_config.py` wiring, and a client **F7 overlay + Unity-Profiler markers** (`Util/PerfProfiler.cs`,
+  `DebugOverlay`). **Finding:** `FindNearbyFood` dominates server CPU (butterfly 11.7s/day); the predicted
+  O(S²) merge is negligible (5ms/day).
+- **Rebalance (baked):** fly/butterfly 3× swarm size; millipede+beetle category→swarm + brood-gate on
+  `EggSpriteID` (detritivores instant-grow+merge); tuned to ballpark bands. **Win: legs 5.9→1.1 MB/day,
+  butterfly cpu_food 11.7s→~0.5s, swarms 68→20 — lag gone.**
+- **Follow-ups surfaced (NOT done — structural, not tunable):**
+  - **[PERF, high] FindNearbyFood spatial index** — bucket `GroundItems`/`Stations` by chunk; route the
+    food query + `nearestPredator/PreySwarm` + merge through it (O(S·I)→O(S·k)). The profiler-proven #1.
+  - **[PERF] Chunk-scoped broadcasts = per-chunk-frontier redesign** — NOT safe routing (the client gate
+    `HasAllEventsUpTo` needs a contiguous global seq stream; dropping a chunk's legs stalls it). Per-chunk
+    seq+watermark+gating+handoff. Gate behind the profiler showing the global stream is still the bottleneck.
+  - **[ECO] beetle carrion supply** — beetle stuck ~3 (carrion-starved); needs distributed carrion sources
+    (zone change), not a breeding param.
+  - **[ECO] wasp prey base** — stable ~16; reaches 30-50 only if fly settles higher.
+  - **[ECO/Go] centipede kills→breeding conversion** — pinned ~4 across two breeding-lever runs; needs a Go
+    fix (it can't convert kills to offspring), not tuning.
+
 ### Phase 4c — TUNING RIG (built + committed) + the sweep (in progress)
 The ecology is structurally complete but UNTUNED; targets are the CENTERS of an oscillation (boom-bust
 for ecologist gameplay), NOT flat lines: **fly 100, butterfly 100, wasp/centipede/beetle/millipede 30**.

@@ -15,8 +15,38 @@ Before EVERY change, say out loud: **is this sane? does it make sense? will it a
 ONE lever, predict the effect, run, measure, and write it in the log. Do NOT lurch to 10×/100×/∞ values, and
 do NOT stack changes you can't separate. The owner has repeatedly caught kneejerk extremes — don't.
 
+### HARD RULES (each one was learned by screwing it up — do not repeat)
+1. **ONE run at a time.** There is a single nakama server + one harness, and `run_config` RESTARTS nakama as
+   its first step — so launching a second run while one is in flight CORRUPTS BOTH (and the data
+   snapshot/restore). Before launching: `pgrep -f run_config` must be empty. Never start a second. Set a
+   watcher on the running one's completion (`pgrep -f "run_config.py <tag>"` gone), don't poll-and-launch.
+2. **Widen the window before tuning a slow system.** If a metric is still drifting at the END of the run
+   (not flat), it has NOT settled — DO NOT tune to force it faster. Re-run LONGER (e.g. duration 1200 @
+   sim_batch 6 ≈ 48 game-days) and read the true equilibrium. Tuning against a transient = chasing a number
+   that was never real. (Millipede looked like it'd crash at day 16; at 47 days it was a stable equilibrium.)
+3. **No hard caps to manage populations — caps are a LAST-RESORT backstop.** Populations must be bounded
+   EMERGENTLY (food / predation / space). If a species pins at exactly its `cap.Max` band, that's the cap
+   binding, not ecology — RAISE the cap to a backstop and find the real emergent bound. NB: `individual`-
+   category species (millipede, centipede) hit the **swarm-count cap (`cap.Max`) before food can bind**
+   (match.go ~113) — so check the cap FIRST when a species ignores every food/lifespan lever.
+4. **Never aim predator spawns at the "densest" area.** The densest bug cluster will be the PLAYER'S PEN, and
+   persistently spawning predators there is untrackable + unwanted (accidental drift is fine). Place spawns
+   the WASP way: deliberate, hand-picked, SPREAD points near (not on) prey, partitioned across species. Bugs
+   SHOULD spread over the map via many small tree/flower patches and eventually pressure player farms — that's
+   the intended world experience; provide the patches, don't point spawns at density.
+5. **Enumerate ALL levers before tuning; don't tunnel.** List every knob first (§4) — species fields, the 18
+   tuning dials, spawn/zone caps, fruit ticks, AND placement — then pick. PLACEMENT is a first-class lever
+   (count=level, placement=spread/stability, co-location=coupling); we tuned through it for the wasps. Don't
+   fire single params run-after-run; find the BINDING CONSTRAINT (read code/data) before choosing a lever.
+6. **Distinct tag per run.** Reusing a config name overwrites its `_data/nakama_<tag>.log` and makes the
+   archive folders ambiguous. One experiment = one name. Report run counts/durations/coverage HONESTLY.
+
 - **Strategy log (append-only):** `docs/product/ecology_tuning_log.md`. EVERY move + its measured result
   goes here (category, exact change, seed, per-species outcome). Read it first so you don't retread.
+- **Controllability map:** `docs/product/ecology_control_campaign.md` — which lever moves which band (and
+  whether it moves CENTRE vs AMPLITUDE), the 6 analysis lenses, and the two hardest species (millipede =
+  cap-bound until you raise the cap + scarce litter; centipede = reaches its cap only when SPAWNED NEAR PREY
+  + the kills→breeding conversion). Read before re-investigating a "stuck" species.
 - Tune in ISOLATION then couple: get a consumer↔food pair into a good band before adding predators on top.
 
 ## 1. Zones — tune the REAL one
@@ -67,8 +97,19 @@ python3 tools/run_config.py <config> --zone village_21_B --duration 600   # ~8 g
   `satiation_decay_rate`, `feed_amount`, `vision_range`, `lifespan_secs`, `forage_chance`,
   `attractions_by_phase`, and the `predation` block (`home_range`, `feed_per_kill`, `strike_*`,
   `deposit_satiation`, `hunt_satiation_threshold`, prey list).
-- **Shared dials** (`nakama/data/ecology_tuning.json`): nectar/host regen, `host_breed_cost`, caps,
-  predator breed satiation, nest-found distances.
+- **Shared dials** (`nakama/data/ecology_tuning.json`): nectar/host regen (`nectar_regen_per_tick`,
+  `max_nectar`, `host_regen_per_tick`, `host_breed_cost`, `max_host_capacity`), `predator_breed_satiation`
+  (centipede & other nestless predators breed when this well-fed — the kills→population conversion knob),
+  `spawn_satiation`, nest economy (`nest_brood_cap`/`nest_hatch_*`/`nest_founding_size`/`nest_found_dist_*`),
+  and **`max_litter`/`litter_regen_per_tick`** — leaf_litter is a DEPLETABLE forage pool (millipede's
+  detritus food, the forest-floor analogue of nectar); millipede ≈ food-limited by litter THROUGHPUT only
+  once its cap isn't binding. RESSTATS reports `litter=` next to `nectar=`.
+- **Fruit timing** (`nakama/data/entities/occupants.json`, `fruit` config delta): `fruit_grow_ticks`,
+  `fruit_drop_ticks`, `fruit_rot_ticks`. The rot LAG (~2 game-days fallen→rotten) is the fly boom-bust
+  AMPLITUDE knob; fly lifespan ~3 days, so the lag is most of a fly's life = sharp busts.
+- **Placement (first-class — `tools/zonegen/scenes/zone_*.py` + regen):** spawn-circle positions/count/radius,
+  nest positions, refugia (a prey source with NO predator in range = stops crash-to-zero), co-location of
+  predator-with-prey. Count→band LEVEL, placement→spread/STABILITY, home_range→coupling strength.
 - **Plants/world** (`tools/zonegen/scenes/zone_village_21_B.py` + regen): counts of fruit trees, milkweed,
   flowers, leaf-litter. Fruit→rot pipeline timing lives in `handlers_farming.go`.
 - **Spawn/Director** (zone.json `bug_spawning.species_caps`: initial/max/`max_population`/`min_population`/

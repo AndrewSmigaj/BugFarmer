@@ -1,0 +1,23 @@
+{
+  "name": "v21b_rebalance4",
+  "description": "Phase 2 rebalance r4 (convergence). r3 means: fly 54, butterfly 72, wasp 17 (stable, extinction FIXED), centipede 4 (Go-bound), millipede 13, beetle 5. Issues: butterfly>fly (violates 'flies most'); beetle low. System is coupled/chaotic (butterfly moved 52->72 from OTHER species' RNG-stream shift) so target ballpark. r4: fly lifespan 3780->5500 + cooldown 35->40 (lift standing avg, keep oscillation); butterfly cooldown 190->215 (down to ~50); millipede cooldown 1200->900 (->20); beetle cooldown 200->120 + breed_amount 8->12 (->20 on scarce carrion). Caps off, sim_batch 6.",
+  "extends": "v21b_rebalance3",
+  "flags": { "sim_batch": 6 },
+  "tuning": {
+    "max_nectar": 30.0,
+    "nectar_regen_per_tick": 0.004,
+    "max_host_capacity": 35.0,
+    "host_regen_per_tick": 0.007,
+    "host_breed_cost": 70.0,
+    "predator_breed_satiation": 32.0,
+    "litter_regen_per_tick": 0.0008
+  },
+  "species": {
+    "butterfly_meadow": { "reproduce_cooldown": 215.0 },
+    "fly_common": { "reproduce_cooldown": 40.0, "lifespan_secs": 5500 },
+    "centipede_garden": { "max_swarm_size": 10 },
+    "wasp_common": { "satiation_decay_rate": 0.10 },
+    "millipede": { "reproduce_cooldown": 900.0 },
+    "beetle_carrion": { "reproduce_cooldown": 120.0, "breed_amount": 12.0 }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "v21b_rebalance2",
+  "description": "Phase 2 rebalance r2. r1 hit butterfly 94 (still 2x), fly 48 (overcorrected, breeding-limited - rotten food abundant), detritivores+centipede low. RESSTATS showed nectar FULL (4804, flat) = NOT binding, so butterfly lever is breeding not food. r2: butterfly down via breeding only (cooldown 150->190, host cap 45->35, breed_cost 55->70); fly up (cooldown 70->45); centipede up (predator_breed_satiation 45->32, max_swarm 8->10); millipede food up (litter_regen 0.0003->0.0008). Longer run (400s) for equilibrium. Caps off, sim_batch 6.",
+  "extends": "v21b_rebalance",
+  "flags": { "sim_batch": 6 },
+  "tuning": {
+    "max_nectar": 30.0,
+    "nectar_regen_per_tick": 0.004,
+    "max_host_capacity": 35.0,
+    "host_regen_per_tick": 0.007,
+    "host_breed_cost": 70.0,
+    "predator_breed_satiation": 32.0,
+    "litter_regen_per_tick": 0.0008
+  },
+  "species": {
+    "butterfly_meadow": { "reproduce_cooldown": 190.0 },
+    "fly_common": { "reproduce_cooldown": 45.0 },
+    "centipede_garden": { "max_swarm_size": 10 }
+  }
+}

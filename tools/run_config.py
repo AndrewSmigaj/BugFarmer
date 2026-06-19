@@ -144,6 +144,7 @@ def apply_config(cfg, zone="bug_lab"):
     # zone.seed, and the sim iterates entities in sorted order) — so a config's effect is measurable, not
     # drowned in run-to-run noise. Production zones keep seed 0 (random per match). A config may override.
     flags = {"ephemeral_swarms": True, "call_rate": 60, "sim_batch": 2, "seed": 1337,
+             "profile": True,  # PERFSTATS cost profiler (temp flag, restored after the run → prod stays clean)
              **(cfg.get("flags") or {})}
     z.update(flags)
     bs_delta = cfg.get("bug_spawning") or {}
@@ -215,12 +216,16 @@ def chart(csv, tag, run_log, zone, description=""):
         f.write(run_log)
     subprocess.run(["python3", os.path.join(ROOT, "tools", "plot_interactions.py"), "--tag", tag,
                     "--log", log_path], cwd=ROOT)
+    # cost profiler (PERFSTATS/PERFSYS) — only emits when the zone's `profile` flag is on (rig sets it)
+    subprocess.run(["python3", os.path.join(ROOT, "tools", "plot_perf.py"), "--tag", tag,
+                    "--log", log_path], cwd=ROOT)
 
     # 2) file population + interactions into <zone>/archive/<timestamp>_<tag>/
     ts = datetime.datetime.now().strftime("%Y-%m-%d_%H%M")
     run_dir = os.path.join(CHARTS, zone, "archive", f"{ts}_{tag}")
     os.makedirs(run_dir, exist_ok=True)
-    for src, dst in ((f"{tag}.png", "population.png"), (f"interactions_{tag}.png", "interactions.png")):
+    for src, dst in ((f"{tag}.png", "population.png"), (f"interactions_{tag}.png", "interactions.png"),
+                     (f"perf_{tag}.png", "perf.png")):
         s = os.path.join(CHARTS, src)
         if os.path.exists(s):
             shutil.move(s, os.path.join(run_dir, dst))
@@ -237,7 +242,7 @@ def chart(csv, tag, run_log, zone, description=""):
     #    this only ran for `baseline`-tagged runs, which left current/ stale through a whole tuning session.)
     cur = os.path.join(CHARTS, zone, "current")
     os.makedirs(cur, exist_ok=True)
-    for name in ("population.png", "interactions.png"):
+    for name in ("population.png", "interactions.png", "perf.png"):
         s = os.path.join(run_dir, name)
         if os.path.exists(s):
             shutil.copy(s, os.path.join(cur, name))
@@ -255,7 +260,7 @@ def chart(csv, tag, run_log, zone, description=""):
 
     # 4) tuck the telemetry CSV sidecars into _data/ so the chart folders stay PNG-only
     for f in os.listdir(CHARTS):
-        if (f.startswith("interaction_log_") or f.startswith("predation_log_")) and f.endswith(".csv"):
+        if (f.startswith(("interaction_log_", "predation_log_", "perf_log_", "perf_sys_"))) and f.endswith(".csv"):
             shutil.move(os.path.join(CHARTS, f), os.path.join(data_dir, f))
     print(f"  charts → ecology_charts/{zone}/archive/{ts}_{tag}/  (+ current/ refreshed → latest)")
 

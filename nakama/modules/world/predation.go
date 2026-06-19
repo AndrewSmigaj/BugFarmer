@@ -53,6 +53,12 @@ func (m *Match) predationThink(
 	deltaTime float32,
 	logger runtime.Logger,
 ) bool {
+	// Cost profiler: time the whole predationThink (flee scan + hunt) per species. The flee branch's
+	// nearestPredatorPos is the O(S²) the audit flagged — this quantifies it. Nil/disabled = no-op.
+	pt := state.Perf.Start()
+	state.Perf.Count(species.ID, "pred_thinks")
+	defer state.Perf.StopSpecies(species.ID, "pred", pt)
+
 	// --- 1. PREY FLEE -------------------------------------------------------------
 	if species.PredatorFleeRadius > 0 {
 		if px, py, found := m.nearestPredatorPos(state, swarm, species, species.PredatorFleeRadius); found {
@@ -64,7 +70,22 @@ func (m *Match) predationThink(
 			if dist < 0.01 {
 				dx, dy, dist = 1, 0, 1 // predator exactly on us: pick a direction
 			}
-			const fleeDistance = 8.0
+			// Default: the short directly-away flee (out-chased by a faster hunter). But with RelocateChance
+			// (and off cooldown) a swarm instead makes a long BREAK-CONTACT jump — RelocateDistance away, with
+			// a random angle so relocating swarms scatter to DIFFERENT spots — to clear the hunter's vision and
+			// actually escape. Not all roll it → some stay and get eaten (the crash). Determinism-safe: state.Rng.
+			fleeDistance := float32(8.0)
+			if species.RelocateChance > 0 && state.TickCount >= swarm.RelocateReadyTick &&
+				state.Rng.Float32() < species.RelocateChance {
+				fleeDistance = species.RelocateDistance
+				if fleeDistance <= 0 {
+					fleeDistance = 22.0
+				}
+				ang := (state.Rng.Float32()*2 - 1) // ±~57° jitter on the away direction (rotation preserves length)
+				ca, sa := float32(math.Cos(float64(ang))), float32(math.Sin(float64(ang)))
+				dx, dy = dx*ca-dy*sa, dx*sa+dy*ca
+				swarm.RelocateReadyTick = state.TickCount + species.RelocateCooldownTicks
+			}
 			tx := sx + dx/dist*fleeDistance
 			ty := sy + dy/dist*fleeDistance
 			cx, cy := entities.RaycastClamp(sx, sy, tx, ty, func(x, y float32) bool {

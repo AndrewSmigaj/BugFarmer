@@ -1,0 +1,23 @@
+{
+  "name": "v21b_rebalance5",
+  "description": "Phase 2 rebalance r5 (keystone fix). Interaction log diagnosed fly: NOT breeding-limited (cooldown 45-70 never moved it ~50); it's STARVING amid plenty (d_starve 22-41/day with rotten=2326 unreached, vision_range only 8) + predation (2-4 centipedes kill 19-28 flies/day). Fix the access: fly vision_range 8->13 (find the abundant rotten -> kill starvation deaths), cooldown 40->35. As fly rises to ~100, wasp (prey) + beetle (corpses) recover downstream. butterfly cooldown 215->230 (62->50). millipede ON BAND (23) - left at cooldown 900. Caps off, sim_batch 6.",
+  "extends": "v21b_rebalance4",
+  "flags": { "sim_batch": 6 },
+  "tuning": {
+    "max_nectar": 30.0,
+    "nectar_regen_per_tick": 0.004,
+    "max_host_capacity": 35.0,
+    "host_regen_per_tick": 0.007,
+    "host_breed_cost": 70.0,
+    "predator_breed_satiation": 32.0,
+    "litter_regen_per_tick": 0.0008
+  },
+  "species": {
+    "butterfly_meadow": { "reproduce_cooldown": 230.0 },
+    "fly_common": { "reproduce_cooldown": 35.0, "lifespan_secs": 5500, "vision_range": 13.0 },
+    "centipede_garden": { "max_swarm_size": 10 },
+    "wasp_common": { "satiation_decay_rate": 0.10 },
+    "millipede": { "reproduce_cooldown": 900.0 },
+    "beetle_carrion": { "reproduce_cooldown": 120.0, "breed_amount": 12.0 }
+  }
+}

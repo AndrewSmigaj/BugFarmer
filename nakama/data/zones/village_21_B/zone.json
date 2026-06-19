@@ -40,7 +40,7 @@
         "swarm_size": 4,
         "max_population": 120,
         "min_population": 3,
-        "max_nests": 8
+        "max_nests": 7
       },
       "centipede_garden": {
         "initial": 16,
@@ -52,7 +52,7 @@
       },
       "millipede": {
         "initial": 16,
-        "max": 60,
+        "max": 250,
         "spawn_interval": 6000.0,
         "swarm_size": 2,
         "max_population": 200,
@@ -223,6 +223,17 @@
         "weight": 2.0
       },
       {
+        "id": "fly_south",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 116,
+        "cy": 77,
+        "radius": 10,
+        "weight": 2.0
+      },
+      {
         "id": "fly_wild",
         "species": [
           "fly_common"
@@ -272,6 +283,17 @@
         "cx": 178,
         "cy": 180,
         "radius": 28,
+        "weight": 2.0
+      },
+      {
+        "id": "bf_south",
+        "species": [
+          "butterfly_meadow"
+        ],
+        "type": "circle",
+        "cx": 139,
+        "cy": 73,
+        "radius": 14,
         "weight": 2.0
       },
       {
@@ -360,17 +382,6 @@
         "weight": 2.0
       },
       {
-        "id": "wasp_n8",
-        "species": [
-          "wasp_common"
-        ],
-        "type": "circle",
-        "cx": 178,
-        "cy": 178,
-        "radius": 12,
-        "weight": 2.0
-      },
-      {
         "id": "cent_cherry",
         "species": [
           "centipede_garden"
@@ -378,18 +389,7 @@
         "type": "circle",
         "cx": 79,
         "cy": 113,
-        "radius": 14,
-        "weight": 3.0
-      },
-      {
-        "id": "cent_orange",
-        "species": [
-          "centipede_garden"
-        ],
-        "type": "circle",
-        "cx": 203,
-        "cy": 113,
-        "radius": 14,
+        "radius": 13,
         "weight": 3.0
       },
       {
@@ -401,7 +401,40 @@
         "cx": 167,
         "cy": 141,
         "radius": 12,
+        "weight": 3.0
+      },
+      {
+        "id": "cent_south",
+        "species": [
+          "centipede_garden"
+        ],
+        "type": "circle",
+        "cx": 116,
+        "cy": 77,
+        "radius": 12,
+        "weight": 3.0
+      },
+      {
+        "id": "cent_belt",
+        "species": [
+          "centipede_garden"
+        ],
+        "type": "circle",
+        "cx": 105,
+        "cy": 200,
+        "radius": 12,
         "weight": 2.0
+      },
+      {
+        "id": "cent_emeadow",
+        "species": [
+          "centipede_garden"
+        ],
+        "type": "circle",
+        "cx": 180,
+        "cy": 172,
+        "radius": 12,
+        "weight": 3.0
       },
       {
         "id": "cent_wild",
@@ -421,17 +454,6 @@
         "cy": 238,
         "radius": 18,
         "weight": 3.0
-      },
-      {
-        "id": "milli_grove",
-        "species": [
-          "millipede"
-        ],
-        "type": "circle",
-        "cx": 70,
-        "cy": 152,
-        "radius": 14,
-        "weight": 2.0
       },
       {
         "id": "milli_wild",

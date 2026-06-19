@@ -131,6 +131,11 @@ type WorldState struct {
 	// game-day and flushed at the rollover (ecology_stats.go). Soft, never hashed; tuning telemetry only.
 	Stats *EcologyStats
 
+	// Perf: the cost profiler (per-species server-CPU by sub-phase + leg counts + global pass timings +
+	// broadcast byte totals), flushed per game-day (profiler.go). Soft, never hashed; nil/disabled unless the
+	// zone sets `profile` → zero overhead in production. Pure observation, so a profiled run still reproduces.
+	Perf *PerfStats
+
 	// SwarmUpdate (OpCode 20) is event-driven, not per-tick: set true whenever the
 	// swarm SET or metadata changes (spawn/despawn/merge/split/phase). Bug centers are
 	// derived deterministically from SWARM_SET_TARGET events, so positions are NOT
@@ -682,6 +687,11 @@ func (s *WorldState) AddSwarmTargetEvent(zoneID, swarmID string, originX, origin
 
 	zone.InfluenceLog = append(zone.InfluenceLog, event)
 	s.PendingInfluence = append(s.PendingInfluence, event)
+
+	// Cost profiler: attribute this movement leg (the dominant per-tick traffic) to its species.
+	if sw := s.Swarms[swarmID]; sw != nil {
+		s.Perf.Count(sw.SpeciesID, "legs")
+	}
 }
 
 // AddSwarmSplitEvent logs a SWARM_SPLIT through the seq-gated ledger: the parent swarm

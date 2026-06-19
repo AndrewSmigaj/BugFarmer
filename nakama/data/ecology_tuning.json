@@ -1,0 +1,10 @@
+{
+  "max_nectar": 30.0,
+  "nectar_regen_per_tick": 0.004,
+  "max_host_capacity": 25.0,
+  "host_regen_per_tick": 0.007,
+  "host_breed_cost": 70.0,
+  "predator_breed_satiation": 32.0,
+  "litter_regen_per_tick": 0.0008,
+  "starvation_death_secs": 90.0
+}

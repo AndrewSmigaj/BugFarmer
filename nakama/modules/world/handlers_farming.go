@@ -1288,10 +1288,20 @@ func (m *Match) processHostPlants(state *WorldState) {
 
 // --- Forage pools (flower nectar): depletable FEEDING food (the boom-bust engine) ---
 
+// litterOccupantID is the forest-floor detritus that millipedes eat. Treated as a depletable forage pool
+// (like flower nectar) so the millipede population is food-bounded: woods trees "drop" piles that regrow
+// slowly + capped, millipedes deplete them. There is exactly one detritus type, so we key on the id.
+const litterOccupantID = "leaf_litter"
+
 const (
 	maxNectar          = 100.0
 	nectarRegenPerTick = 0.012 // ~0.12/s → ~830s to refill (slow regen =
 	// bigger, slower oscillation — this is the master boom-bust dial, tuned on the population graph).
+
+	// Leaf litter is SCARCER + SLOWER than nectar (fewer piles, ~3× slower refill) so the millipede sits
+	// in a real oscillating band instead of pinning flat. Tuned on the population graph (millipede target ~50).
+	maxLitter          = 100.0
+	litterRegenPerTick = 0.004
 
 	// During a Director DROUGHT, ALL plant food regrows far slower (flowers give less nectar, milkweed
 	// regrows slower) — so a drought brakes the NECTAR/HOST-fed populations (butterflies) via FOOD, the
@@ -1310,7 +1320,9 @@ func (m *Match) initForagePoolsInChunk(state *WorldState, chunk *ChunkData, cx, 
 				continue
 			}
 			def := state.Entities[cell.Occupant.ID]
-			if def == nil || def.World == nil || !def.World.Nectar {
+			isNectar := def != nil && def.World != nil && def.World.Nectar
+			isLitter := cell.Occupant.ID == litterOccupantID // forest-floor detritus (millipede food)
+			if !isNectar && !isLitter {
 				continue
 			}
 			gx, gy := cx*chunkSize+lx, cy*chunkSize+ly
@@ -1318,8 +1330,12 @@ func (m *Match) initForagePoolsInChunk(state *WorldState, chunk *ChunkData, cx, 
 			if state.ForagePools[key] != nil {
 				continue
 			}
+			amount := state.Tuning.MaxNectar
+			if isLitter {
+				amount = state.Tuning.MaxLitter
+			}
 			state.ForagePools[key] = &entities.ForagePoolState{
-				EntityID: cell.Occupant.ID, GridX: gx, GridY: gy, Nectar: state.Tuning.MaxNectar,
+				EntityID: cell.Occupant.ID, GridX: gx, GridY: gy, Nectar: amount,
 			}
 		}
 	}
@@ -1333,10 +1349,16 @@ func (m *Match) processForagePools(state *WorldState) {
 		regen *= state.Tuning.DroughtFoodRegenMult // drought: flowers give far less nectar → butterflies food-limited
 	}
 	for _, fp := range state.ForagePools {
-		if fp.Nectar < state.Tuning.MaxNectar {
-			fp.Nectar += regen
-			if fp.Nectar > state.Tuning.MaxNectar {
-				fp.Nectar = state.Tuning.MaxNectar
+		// Leaf litter (millipede detritus) regrows on its OWN slower clock + cap, and is NOT rain/drought-
+		// gated (the forest floor doesn't care about weather). Nectar keeps the existing drought brake.
+		maxAmt, r := state.Tuning.MaxNectar, regen
+		if fp.EntityID == litterOccupantID {
+			maxAmt, r = state.Tuning.MaxLitter, state.Tuning.LitterRegenPerTick
+		}
+		if fp.Nectar < maxAmt {
+			fp.Nectar += r
+			if fp.Nectar > maxAmt {
+				fp.Nectar = maxAmt
 			}
 		}
 	}

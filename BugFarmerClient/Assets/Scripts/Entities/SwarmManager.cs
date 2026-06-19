@@ -231,6 +231,9 @@ namespace BugFarmer.Entities
 
         private void Update()
         {
+            // Cost profiler: roll up the previous full frame (incl. LateUpdate trails) for the F7 panel.
+            PerfProfiler.EndFrame();
+
             // Debug: one-time log of initial state
             if (!_loggedInitialState)
             {
@@ -576,6 +579,7 @@ namespace BugFarmer.Entities
         /// </summary>
         private void InterpolateAllSwarms(float t)
         {
+            using var _perf = PerfProfiler.Sample("Render.Interpolate");
             foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
             {
                 _swarms[swarmId].Interpolate(t);
@@ -708,6 +712,7 @@ namespace BugFarmer.Entities
 
         private void HandleSwarmUpdate(IMatchState state)
         {
+            using var _perf = PerfProfiler.Sample("Net.SwarmUpdate");
             var json = System.Text.Encoding.UTF8.GetString(state.State);
             var update = JsonUtility.FromJson<SwarmUpdateMessage>(json);
 
@@ -1143,6 +1148,7 @@ namespace BugFarmer.Entities
         /// </summary>
         private void HandleInfluenceBroadcast(IMatchState state)
         {
+            using var _perf = PerfProfiler.Sample("Net.Influence");
             var json = System.Text.Encoding.UTF8.GetString(state.State);
             var msg = JsonUtility.FromJson<InfluenceBroadcastMessage>(json);
             if (msg?.events == null) return;

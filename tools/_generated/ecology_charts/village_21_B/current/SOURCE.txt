@@ -1,2 +1,2 @@
-2026-06-18_2141_v21b_nocaps
-Remove the hard max_population caps (set 0 = uncapped) for ALL species, so populations are bounded only by EMERGENT food competition / predation / aging — to see the natural oscillation instead of the cap flatten. Everything else = current baseline.
+2026-06-19_1635_v21b_rebalance6
+Phase 2 rebalance r6. Coupled/chaotic system: r5 butterfly jumped 62->91 from fly's RNG-stream shift; fly peaks 109 but d_starve spikes to 101 (locally food-limited - overcrowds concentrated rotten). r6 diagnosed levers: starvation_death_secs 60->90 (fly survives between meals -> kill d_starve, no extra food=no perf cost); butterfly hard down (cooldown 230->280, host cap 35->25, target ~50); millipede throttle (cooldown 900->1150, was 28 -> ~20). Keep fly vision 13/cooldown 35, wasp 0.10, beetle 120. Caps off, sim_batch 6.

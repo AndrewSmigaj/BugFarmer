@@ -42,6 +42,7 @@ namespace BugFarmer.UI
         {
             new WorldChoice { label = "Normal",         zoneId = "village_21" },
             new WorldChoice { label = "Village B",      zoneId = "village_21_B" },
+            new WorldChoice { label = "Eco Lab",        zoneId = "village_21_lab" },
             new WorldChoice { label = "Test",           zoneId = "sim_test" },
             new WorldChoice { label = "Collision Test", zoneId = "collision_test" },
             new WorldChoice { label = "Split Test",     zoneId = "split_test2" },
@@ -66,6 +67,8 @@ namespace BugFarmer.UI
             // it can lag behind. Make sure the built-in zones are always present even if the Inspector value
             // is stale (this is why a newly-added zone may not "show up" after only editing the code default).
             EnsureWorld("Normal", "village_21");
+            EnsureWorld("Village B", "village_21_B");
+            EnsureWorld("Eco Lab", "village_21_lab");
             EnsureWorld("Test", "sim_test");
             EnsureWorld("Collision Test", "collision_test");
             EnsureWorld("Split Test", "split_test2");

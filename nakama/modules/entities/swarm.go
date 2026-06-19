@@ -42,6 +42,7 @@ type SwarmState struct {
 
 	// Think timer - swarms make decisions every few seconds, not every tick
 	NextThinkTick int64 // Tick when swarm next evaluates targets
+	RelocateReadyTick int64 // earliest tick this swarm may make another break-contact relocate jump (server-only; not hashed)
 
 	// Cached food target (set at Think time; lets the per-tick at-food check be O(1) —
 	// distance to this point + a registry validity lookup — instead of a chunk scan).

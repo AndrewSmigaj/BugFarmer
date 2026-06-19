@@ -110,6 +110,11 @@ type ZoneConfig struct {
 	// call_rate 60). Production zones omit it → 1 → no batching → byte-identical to a single tick/call.
 	SimBatch int `json:"sim_batch,omitempty"`
 
+	// Profile: TEST/TUNING ZONES ONLY — enable the PERFSTATS cost profiler (per-species server-CPU by
+	// sub-phase + per-species leg counts + global pass timings + broadcast byte totals, flushed per game-day).
+	// Pure observation, never hashed; production omits it → zero overhead (see profiler.go).
+	Profile bool `json:"profile,omitempty"`
+
 	// Cross-zone adjacency: edge direction ("north"/"south"/"east"/"west") -> neighbor zoneID.
 	// Walking off an edge with a neighbor hidden-swaps into it (see CrossZoneController). Absent/""
 	// = a hard edge (no crossing). +Y = north, so south edge = y0, north edge = y255.

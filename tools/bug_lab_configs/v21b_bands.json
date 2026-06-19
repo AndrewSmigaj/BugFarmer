@@ -1,0 +1,10 @@
+{
+  "name": "v21b_bands",
+  "description": "Bands via clean levers: butterfly~50 by cutting NECTAR (its FOOD) max_nectar 100->50 + regen 0.012->0.005 (refugium kept, no wasp, milkweed untouched=breeding not food); centipede~20 by breeding (predator_breed_satiation 45 + max_swarm 8); wasp~50 (decay 0.14); millipede WAY down by FOOD (litter ~10 piles + regen 0.0003 + throttle); relocate 0.12. Caps off, sim_batch 6, LONG.",
+  "flags": { "sim_batch": 6 },
+  "tuning": { "max_nectar": 50.0, "nectar_regen_per_tick": 0.005, "predator_breed_satiation": 45.0, "litter_regen_per_tick": 0.0003 },
+  "bug_spawning": { "species_caps": {
+    "fly_common": {"max_population":0}, "butterfly_meadow": {"max_population":0},
+    "wasp_common": {"max_population":0}, "centipede_garden": {"max_population":0},
+    "millipede": {"max_population":0}, "beetle_carrion": {"max_population":0} } }
+}

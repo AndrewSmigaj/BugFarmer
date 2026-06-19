@@ -1,0 +1,10 @@
+{
+  "name": "v21b_milli_life",
+  "description": "Millipede is intrinsically ~135, NOT food-limited (litter amount/piles/regen all ruled out at long timescale). For a death-balanced population pop_eq ~ birth_rate x lifespan, so lifespan is the linear lever. Cut millipede lifespan_secs 6300->2400 (~38%). Default litter. LONG window to read the true equilibrium. Target ~50.",
+  "flags": { "sim_batch": 6 },
+  "species": { "millipede": { "lifespan_secs": 2400 } },
+  "bug_spawning": { "species_caps": {
+    "fly_common": {"max_population":0}, "butterfly_meadow": {"max_population":0},
+    "wasp_common": {"max_population":0}, "centipede_garden": {"max_population":0},
+    "millipede": {"max_population":0}, "beetle_carrion": {"max_population":0} } }
+}

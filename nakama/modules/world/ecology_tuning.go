@@ -22,6 +22,12 @@ type Tuning struct {
 	MaxHostCapacity      float32 `json:"max_host_capacity"`
 	DroughtFoodRegenMult float32 `json:"drought_food_regen_mult"`
 
+	// Leaf-litter forage pool — the millipede's DEPLETABLE detritus food (the forest-floor analogue of
+	// flower nectar). Scarcer + slower-regrowing than nectar by design, so millipede is genuinely
+	// food-bounded and OSCILLATES instead of pinning flat on infinite litter.
+	MaxLitter          float32 `json:"max_litter"`
+	LitterRegenPerTick float32 `json:"litter_regen_per_tick"`
+
 	// Lifecycle / Director (match.go, predation.go, ecology_director.go)
 	SpawnSatiation         float32 `json:"spawn_satiation"`
 	StarvationDeathSecs    float32 `json:"starvation_death_secs"`
@@ -49,6 +55,9 @@ func DefaultTuning() *Tuning {
 		HostBreedCost:        hostBreedCost,
 		MaxHostCapacity:      maxHostCapacity,
 		DroughtFoodRegenMult: droughtFoodRegenMult,
+
+		MaxLitter:          maxLitter,
+		LitterRegenPerTick: litterRegenPerTick,
 
 		SpawnSatiation:         spawnSatiation,
 		StarvationDeathSecs:    starvationDeathSecs,
