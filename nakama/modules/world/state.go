@@ -182,8 +182,9 @@ type WorldState struct {
 	CraftStations map[string]*CraftStationState // CraftStationKey(gx,gy) -> craft station state
 
 	// Bug spawn tracking (zone-level, per species)
-	SwarmsBySpecies  map[string][]string // speciesID → swarmIDs of that species
-	SpeciesNextSpawn map[string]float64  // speciesID → next spawn time (seconds since start)
+	SwarmsBySpecies   map[string][]string // speciesID → swarmIDs of that species
+	SpeciesNextSpawn  map[string]float64  // speciesID → next spawn time (seconds since start)
+	SpeciesSpawnCursor map[string]int     // speciesID → round-robin habitat-circle index (continuous immigration spread)
 
 	// Bug sync (drift detection)
 	LastSampleTick map[string]int64       // swarmID → last sample tick
@@ -397,8 +398,9 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		Containers:       make(map[string]*ContainerState),
 		CraftStations:    make(map[string]*CraftStationState),
 		// Bug spawn tracking
-		SwarmsBySpecies:  make(map[string][]string),
-		SpeciesNextSpawn: make(map[string]float64),
+		SwarmsBySpecies:    make(map[string][]string),
+		SpeciesNextSpawn:   make(map[string]float64),
+		SpeciesSpawnCursor: make(map[string]int),
 		// Bug sync
 		LastSampleTick: make(map[string]int64),
 		DriftChecks:    make(map[string]*DriftCheck),

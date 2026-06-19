@@ -147,7 +147,24 @@ func (m *Match) processNests(state *WorldState, logger runtime.Logger) {
 
 		// Resident dead (caught/killed). Brood-drain re-hatch:
 		if nest.Brood < state.Tuning.NestHatchCost {
-			nest.RehatchAtTick = 0 // dormant — a readable axe-at-leisure target
+			// Brood exhausted → the colony would otherwise be permanently dormant (the bug behind the
+			// collapsing wasp colonies). Since wasps are NEST-ONLY, this is their sole way back, so a dead
+			// colony RE-FOUNDS a fresh founding patrol — but PREY-GATED (only if live prey is within home
+			// range) and after a longer recovery delay, so we never re-staff a hive in an emptied field and
+			// dormancy stays readable where the prey is genuinely gone (owner's "new ~5 batch if the first die").
+			species := state.Species[nest.SpeciesID]
+			if species == nil || !m.nestHasPreyNearby(state, nest, species) {
+				nest.RehatchAtTick = 0 // no prey — stay dormant (axe-at-leisure / wait for the prey base)
+				continue
+			}
+			if nest.RehatchAtTick == 0 {
+				nest.RehatchAtTick = state.TickCount + entities.NestRecoveryDelay
+				continue
+			}
+			if state.TickCount >= nest.RehatchAtTick {
+				m.nestSpawnResident(state, nest, species, state.Tuning.NestFoundingSize, logger)
+				logger.Info("Nest %s recovered: re-founded a %d-patrol (prey returned)", key, state.Tuning.NestFoundingSize)
+			}
 			continue
 		}
 		if nest.RehatchAtTick == 0 {
@@ -303,6 +320,33 @@ func (m *Match) processNestFounding(state *WorldState, dispatcher runtime.MatchD
 		m.registerNestAt(state, f.gx, f.gy, f.occupantID, f.speciesID, f.species, logger)
 		logger.Info("Nest founding: %s colony split a new hive at %d,%d", f.speciesID, f.gx, f.gy)
 	}
+}
+
+// nestHasPreyNearby reports whether any live prey swarm sits within the species' home range of the nest —
+// the gate for re-founding a brood-exhausted colony. Reuses species.Predation.Prey / HomeRange (the same
+// tether the resident hunts within), so "recover here" means exactly "this nest can feed a patrol again".
+func (m *Match) nestHasPreyNearby(state *WorldState, nest *entities.NestState, species *entities.BugSpecies) bool {
+	p := species.Predation
+	if p == nil || len(p.Prey) == 0 {
+		return false
+	}
+	reach := p.HomeRange
+	if reach <= 0 {
+		reach = 40 // sane default tether if a species omits home_range
+	}
+	reachSq := reach * reach
+	cs := state.Config.ChunkSize
+	nx, ny := float32(nest.GridX)+0.5, float32(nest.GridY)+0.5
+	for _, sw := range state.Swarms {
+		if sw.Count <= 0 || !containsString(p.Prey, sw.SpeciesID) {
+			continue
+		}
+		dx, dy := sw.WorldX(cs)-nx, sw.WorldY(cs)-ny
+		if dx*dx+dy*dy <= reachSq {
+			return true
+		}
+	}
+	return false
 }
 
 // findNestSiteWithPrey picks a daughter-nest site in a NEW area with prey: the NEAREST prey cluster that

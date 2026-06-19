@@ -24,6 +24,7 @@ const (
 	NestHatchCost     = 3    // brood consumed per hatch
 	NestHatchCount    = 3    // wasps added per hatch (+3: more wasps per cycle — the "more wasps" tuning)
 	NestRehatchDelay  = 1200 // 2 min from resident death to re-hatch
+	NestRecoveryDelay = 3000 // 5 min: a brood-exhausted colony re-founds a fresh patrol IF prey is near
 	NestFoundingSize  = 4    // the initial resident patrol
 	NestDefendRadius  = 5.0  // players this close to the nest aggro the resident
 	NestDefendRelease = 10.0 // hysteresis: defending ends beyond this

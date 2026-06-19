@@ -311,6 +311,7 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 	// Restored swarms are CLEAN (IDs 0..Count-1) and enter before any client joins — determinism-safe.
 	if !m.restoreSwarms(ctx, nk, state, logger) {
 		m.spawnInitialSwarms(state, logger)
+		m.seedInitialCarrion(state, logger)
 	}
 
 	// Create label for match listing
@@ -1391,6 +1392,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			m.scheduleDailyRain(worldState, logger)
 			m.emitEcologyStats(worldState, currentDay, logger)  // flush the day's interaction log, then reset
 			m.emitResourceStats(worldState, currentDay, logger) // + the depletable food-stock totals (supply side)
+			m.emitSwarmSnapshot(worldState, currentDay, logger) // + per-swarm positions for the daily bug-map
 			logger.Info("DAY %d begins (tick %d): daily watering counts reset for %d crops",
 				currentDay+1, worldState.TickCount, len(worldState.CropStates))
 		}
@@ -1601,19 +1603,105 @@ func (m *Match) spawnInitialSwarms(state *WorldState, logger runtime.Logger) {
 		// Schedule first continuous spawn check
 		state.SpeciesNextSpawn[speciesID] = float64(cap.SpawnInterval)
 
-		// Initial seeding
+		// NEST species (wasp): population comes ONLY from the placed nest occupants — their founding
+		// residents are staffed at chunk-load by registerNestAt, and dead colonies recover via the
+		// prey-gated nest path (processNests). NEVER a free swarm. Skipping them here removes the
+		// "nestless wasp" reseeds at the root (the bug we traced: fat-but-sterile free-spawned wasps).
+		if cap.MaxNests > 0 {
+			continue
+		}
+
+		// SPREAD START (2026-06): distribute the Initial swarms round-robin across ALL of the species'
+		// habitat circles, so the populated start is spatially spread — every grove/meadow/patch gets
+		// seeded — instead of piled into one weighted-random spot. Falls back to the weighted pick for a
+		// species with no circle habitat (only a zone-wide area).
+		circles := m.habitatCirclesForSpecies(cfg, speciesID)
+		species := state.Species[speciesID]
 		for i := 0; i < cap.Initial; i++ {
-			if swarm := m.spawnSwarmForSpecies(state, speciesID, logger); swarm != nil {
+			var swarm *entities.SwarmState
+			if len(circles) > 0 && species != nil {
+				swarm = m.spawnSwarmInArea(state, speciesID, species, cap, circles[i%len(circles)], logger)
+			} else {
+				swarm = m.spawnSwarmForSpecies(state, speciesID, logger)
+			}
+			if swarm != nil {
 				totalSpawned++
 				state.Stats.recordBirth(speciesID, BirthSpawn, swarm.Count)
 			}
 		}
 
-		logger.Debug("Species %s: seeded %d/%d swarms", speciesID, cap.Initial, cap.Max)
+		logger.Debug("Species %s: seeded %d swarms across %d habitat circles", speciesID, cap.Initial, len(circles))
 	}
 
 	logger.Info("Seeded world with %d swarms across %d species",
 		totalSpawned, len(cfg.SpeciesCaps))
+}
+
+// seedInitialCarrion drops the zone's authored carrion ground items (BugSpawnConfig.InitialCarrion) at
+// match start — the day-1 food bootstrap (e.g. dead millipedes in the woods so the local flies breed and
+// the beetles feed from tick 0, instead of waiting for the first natural deaths). Created directly into
+// state.GroundItems (no dispatcher: this runs at MatchInit before any client joins, like restoreSwarms);
+// clients receive them on chunk subscribe. Deterministic: fixed positions + the GroundItemSeq counter.
+func (m *Match) seedInitialCarrion(state *WorldState, logger runtime.Logger) {
+	cfg := state.CurrentZone.BugSpawning
+	if cfg == nil || len(cfg.InitialCarrion) == 0 {
+		return
+	}
+	chunkSize := state.Config.ChunkSize
+	seeded := 0
+	for _, seed := range cfg.InitialCarrion {
+		if seed.Item == "" {
+			continue
+		}
+		n := seed.Count
+		if n <= 0 {
+			n = 1
+		}
+		foodValue := 0
+		if def := state.Entities[seed.Item]; def != nil {
+			foodValue = def.FoodValue
+		}
+		for i := 0; i < n; i++ {
+			// Fan multiples out along X so they don't stack on one cell (deterministic offset).
+			pos := entities.EntityPosition{LocalX: float32(seed.X + i), LocalY: float32(seed.Y)}
+			pos.Normalize(chunkSize)
+			itemID := state.nextItemID("item_carcass")
+			state.GroundItems[itemID] = &entities.GroundItem{
+				ID:        itemID,
+				ItemType:  seed.Item,
+				Count:     1,
+				Position:  pos,
+				Lifetime:  killDropLifetime,
+				FoodValue: foodValue,
+				IsCarrion: true,
+			}
+			if foodValue > 0 && state.CurrentZone != nil {
+				state.AddFoodEvent(state.CurrentZone.ZoneID, InfluenceItemRotted, itemID,
+					seed.X+i, seed.Y, foodValue)
+			}
+			seeded++
+		}
+	}
+	logger.Info("Seeded %d authored carrion ground items", seeded)
+}
+
+// habitatCirclesForSpecies returns the species' circle-type spawn areas (its named habitats), in authored
+// order — the targets for spread-on-spawn seeding. Zone-wide (wild-card) areas are excluded so the spread
+// hits actual habitats, not random map cells.
+func (m *Match) habitatCirclesForSpecies(cfg *BugSpawnConfig, speciesID string) []SpawnArea {
+	var out []SpawnArea
+	for _, area := range cfg.SpawnAreas {
+		if area.Type != "circle" {
+			continue
+		}
+		for _, s := range area.Species {
+			if s == speciesID {
+				out = append(out, area)
+				break
+			}
+		}
+	}
+	return out
 }
 
 // spawnSwarmForSpecies creates a new swarm for the given species in a valid spawn area.
@@ -1657,7 +1745,8 @@ func (m *Match) spawnSwarmForSpecies(state *WorldState, speciesID string, logger
 
 	// WEIGHTED area pick: a species' habitat circles carry a high weight, the zone-wide wild-card a low
 	// one (SpawnArea.Weight, default 1.0) — so most spawns land in-habitat and a minority wander in
-	// anywhere (the ~3:1 model). Same path serves initial seed AND Director re-seed.
+	// anywhere (the ~3:1 model). Used by the Director re-seed; the initial/continuous paths spread across
+	// all circles instead (spawnSwarmInArea).
 	totalW := 0.0
 	for _, a := range validAreas {
 		w := a.Weight
@@ -1678,6 +1767,26 @@ func (m *Match) spawnSwarmForSpecies(state *WorldState, speciesID string, logger
 			break
 		}
 		roll -= w
+	}
+
+	return m.spawnSwarmInArea(state, speciesID, species, cap, area, logger)
+}
+
+// spawnSwarmInArea mints ONE swarm of the species inside a specific spawn area — the shared core of the
+// weighted single-pick (spawnSwarmForSpecies) and the spread-across-all-habitats seeding. Honors the
+// per-species swarm-count cap and retries for a walkable cell. Returns nil at cap or if no walkable cell is
+// found. Does NOT record a birth — the caller attributes the source (BirthSpawn vs BirthReseed).
+// Determinism: draws state.Rng in a fixed order (count, then position retries).
+func (m *Match) spawnSwarmInArea(state *WorldState, speciesID string, species *entities.BugSpecies, cap SpeciesCap, area SpawnArea, logger runtime.Logger) *entities.SwarmState {
+	// Per-species swarm-count cap (spawn back-pressure).
+	aliveCount := 0
+	for _, swarmID := range state.SwarmsBySpecies[speciesID] {
+		if _, exists := state.Swarms[swarmID]; exists {
+			aliveCount++
+		}
+	}
+	if aliveCount >= cap.Max {
+		return nil
 	}
 
 	// Generate a position, RETRYING for a walkable cell so a zone-wide (or water-overlapping circle)
@@ -1766,6 +1875,14 @@ func (m *Match) checkContinuousSpawning(state *WorldState, tick int64, logger ru
 		if currentTime < state.SpeciesNextSpawn[speciesID] {
 			continue
 		}
+		// Schedule next attempt up front (so the nest-species `continue` below doesn't skip the clock).
+		nextAt := currentTime + float64(cap.SpawnInterval)
+
+		// NEST species (wasp): no free immigration — nests + recovery own the population.
+		if cap.MaxNests > 0 {
+			state.SpeciesNextSpawn[speciesID] = nextAt
+			continue
+		}
 
 		// Clean up dead/caught swarms from species tracking
 		var aliveSwarms []string
@@ -1777,10 +1894,23 @@ func (m *Match) checkContinuousSpawning(state *WorldState, tick int64, logger ru
 		state.SwarmsBySpecies[speciesID] = aliveSwarms
 
 		// Spawn one new swarm if below the swarm-count cap AND the population cap
-		// (defense in depth — natural spawns stop refilling a saturated zone).
+		// (defense in depth — natural spawns stop refilling a saturated zone). SPREAD: the immigration
+		// trickle rotates through the species' habitat circles round-robin (a per-species cursor), so over
+		// time fresh bugs reach EVERY grove/patch — keeping each predator region's prey topped up — rather
+		// than always landing in the weighted-random favourite. Same gentle volume (one swarm per interval).
 		atPopCap := cap.MaxPopulation > 0 && state.SpeciesPopulation(speciesID) >= cap.MaxPopulation
 		if len(aliveSwarms) < cap.Max && !atPopCap {
-			if swarm := m.spawnSwarmForSpecies(state, speciesID, logger); swarm != nil {
+			circles := m.habitatCirclesForSpecies(cfg, speciesID)
+			species := state.Species[speciesID]
+			var swarm *entities.SwarmState
+			if len(circles) > 0 && species != nil {
+				idx := state.SpeciesSpawnCursor[speciesID] % len(circles)
+				state.SpeciesSpawnCursor[speciesID] = idx + 1
+				swarm = m.spawnSwarmInArea(state, speciesID, species, cap, circles[idx], logger)
+			} else {
+				swarm = m.spawnSwarmForSpecies(state, speciesID, logger)
+			}
+			if swarm != nil {
 				state.Stats.recordBirth(speciesID, BirthSpawn, swarm.Count)
 				logger.Debug("Continuous spawn: %s (%s) [%d/%d]",
 					swarm.ID, speciesID, len(aliveSwarms)+1, cap.Max)
@@ -1788,7 +1918,7 @@ func (m *Match) checkContinuousSpawning(state *WorldState, tick int64, logger ru
 		}
 
 		// Schedule next spawn attempt
-		state.SpeciesNextSpawn[speciesID] = currentTime + float64(cap.SpawnInterval)
+		state.SpeciesNextSpawn[speciesID] = nextAt
 	}
 }
 

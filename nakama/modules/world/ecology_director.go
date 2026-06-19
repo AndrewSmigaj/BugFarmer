@@ -46,7 +46,10 @@ func (m *Match) processEcologyDirector(logger runtime.Logger, dispatcher runtime
 
 		// LOW side. Re-seed only at the extreme floor; request extra-rain anywhere below EventLow (food
 		// help is additive with a re-seed — a critically low prey base needs both bugs AND fruit).
-		if cap.MinPopulation > 0 && pop < cap.MinPopulation {
+		// NEST species (wasp) are NEVER free-reseeded — that produced the sterile nestless wasps. A dead
+		// colony recovers through the prey-gated nest path (processNests); the floor here just drives the
+		// extra-rain food help (more flies → the nest's own recovery has prey to hunt).
+		if cap.MinPopulation > 0 && pop < cap.MinPopulation && cap.MaxNests == 0 {
 			if sw := m.spawnSwarmForSpecies(state, speciesID, logger); sw != nil {
 				state.Stats.recordBirth(speciesID, BirthReseed, sw.Count)
 				logger.Info("Director: re-seeded %s (pop %d < min %d)", speciesID, pop, cap.MinPopulation)

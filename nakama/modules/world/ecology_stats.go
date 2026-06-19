@@ -228,6 +228,21 @@ func (m *Match) emitResourceStats(state *WorldState, day int64, logger runtime.L
 		" nectar=" + ftoa(nectar) + " milkweed=" + ftoa(milkweed) + " msites=" + itoa(int64(msites)))
 }
 
+// emitSwarmSnapshot logs one SWARMSNAP line per live swarm once per game-day — species + world position +
+// size — so tools/plot_bugmap.py can render a top-down bug-distribution map per day (WHERE the bugs are,
+// not just the per-species totals). Sorted by id for stable output. SOFT STATE, never hashed.
+func (m *Match) emitSwarmSnapshot(state *WorldState, day int64, logger runtime.Logger) {
+	cs := state.Config.ChunkSize
+	for _, id := range sortedStringKeys(state.Swarms) {
+		sw := state.Swarms[id]
+		if sw.Count <= 0 {
+			continue
+		}
+		logger.Info("SWARMSNAP day=" + itoa(day) + " sp=" + sw.SpeciesID +
+			" x=" + ftoa(sw.WorldX(cs)) + " y=" + ftoa(sw.WorldY(cs)) + " count=" + itoa(int64(sw.Count)))
+	}
+}
+
 // itoa / ftoa — local formatters for the flat key=val log line (one decimal place for satiation).
 func itoa(n int64) string { return strconv.FormatInt(n, 10) }
 func ftoa(f float32) string {

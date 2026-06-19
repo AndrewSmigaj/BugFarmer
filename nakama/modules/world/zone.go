@@ -13,9 +13,20 @@ const ChunkSize = 32
 // BugSpawnConfig holds zone-level bug spawning configuration.
 // Species caps are zone-wide (not per-area). Spawn areas define WHERE bugs appear.
 type BugSpawnConfig struct {
-	SpeciesCaps map[string]SpeciesCap `json:"species_caps"` // species_id → cap config
-	SpawnAreas  []SpawnArea           `json:"spawn_areas"`  // WHERE species can spawn
-	Static      bool                  `json:"static"`       // If true: no continuous spawn, merge, or split (test/deterministic zones)
+	SpeciesCaps    map[string]SpeciesCap `json:"species_caps"`              // species_id → cap config
+	SpawnAreas     []SpawnArea           `json:"spawn_areas"`               // WHERE species can spawn
+	Static         bool                  `json:"static"`                    // If true: no continuous spawn, merge, or split (test/deterministic zones)
+	InitialCarrion []CarrionSeed         `json:"initial_carrion,omitempty"` // authored carrion ground items seeded at match start (e.g. dead millipedes in the woods)
+}
+
+// CarrionSeed places authored carrion ground items at match start — a breeding/feeding substrate that
+// would otherwise only appear once bugs start dying (the day-1 bootstrap, e.g. dead millipedes so the
+// woods' flies/beetles have food from tick 0). Seeded deterministically before any client joins.
+type CarrionSeed struct {
+	Item  string `json:"item"`            // ground-item id (e.g. "dead_millipede")
+	X     int    `json:"x"`               // world cell X
+	Y     int    `json:"y"`               // world cell Y
+	Count int    `json:"count,omitempty"` // how many to drop near (x,y); default 1
 }
 
 // SpeciesCap defines spawn limits for one species in a zone.

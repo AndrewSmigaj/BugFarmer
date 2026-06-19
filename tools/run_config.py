@@ -227,7 +227,11 @@ def chart(csv, tag, run_log, zone, description=""):
     with open(os.path.join(run_dir, "note.md"), "w") as f:
         f.write(f"# {ts}_{tag}\n\n{description or '(no description)'}\n")
 
-    # 3) a baseline run defines the zone's CURRENT setup → refresh <zone>/current/ (+ phase portraits)
+    # 2b) daily bug-distribution maps (WHERE the bugs are) → this run's bugmap/ subfolder
+    subprocess.run(["python3", os.path.join(ROOT, "tools", "plot_bugmap.py"), "--log", log_path,
+                    "--zone", zone, "--out", os.path.join(run_dir, "bugmap")], cwd=ROOT)
+
+    # 3) a baseline run defines the zone's CURRENT setup → refresh <zone>/current/ (+ phase + bugmap)
     if "baseline" in tag:
         cur = os.path.join(CHARTS, zone, "current")
         os.makedirs(cur, exist_ok=True)
@@ -240,6 +244,9 @@ def chart(csv, tag, run_log, zone, description=""):
         ph = os.path.join(CHARTS, f"phase_{zone}_current.png")
         if os.path.exists(ph):
             shutil.move(ph, os.path.join(cur, "phase_portraits.png"))
+        cs = os.path.join(run_dir, "bugmap", "_contact_sheet.png")
+        if os.path.exists(cs):
+            shutil.copy(cs, os.path.join(cur, "bugmap_contact_sheet.png"))
 
     # 4) tuck the telemetry CSV sidecars into _data/ so the chart folders stay PNG-only
     for f in os.listdir(CHARTS):

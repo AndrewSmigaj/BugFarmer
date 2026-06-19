@@ -1407,6 +1407,30 @@ func (m *Match) initFruitTreesInChunk(
 			}
 			state.FruitTreeStates[treeKey] = tree
 
+			// WINDFALL PRIMING: a FRACTION of fruit trees start with one already-rotted windfall on the
+			// ground, so the day-1 populated start has fly breeding substrate from tick 0. Without it the
+			// seeded flies STARVE before any fresh fruit drops+rots (RESSTATS showed rotten=0 on days 1–2 →
+			// a mass cold-start die-off + Director reseed). posHash-gated (deterministic, NOT the shared
+			// Rng, since chunks load in arbitrary order) and modest — ≈1/3 of trees, one item each — so it
+			// bootstraps the start without re-creating the old rot glut. Same shape as the rot pipeline's
+			// output (rotten_<fruit>, FoodValue 100, decays after rottenFruitDecaySeconds if uneaten).
+			if posHash(state.WorldSeed, gx, gy, 3)%3 == 0 {
+				pos := entities.EntityPosition{LocalX: float32(gx), LocalY: float32(gy)}
+				pos.Normalize(chunkSize)
+				itemID := state.nextItemID("item_windfall")
+				state.GroundItems[itemID] = &entities.GroundItem{
+					ID:        itemID,
+					ItemType:  "rotten_" + entityDef.World.FruitType,
+					Count:     1,
+					Position:  pos,
+					Lifetime:  rottenFruitDecaySeconds,
+					FoodValue: 100, // matches the rot pipeline (dropFruitFromTree → rotted)
+				}
+				if state.CurrentZone != nil {
+					state.AddFoodEvent(state.CurrentZone.ZoneID, InfluenceItemRotted, itemID, gx, gy, 100)
+				}
+			}
+
 			logger.Debug("Initialized fruit tree at %d,%d (%s) with %d fruit",
 				gx, gy, entityDef.World.FruitType, tree.FruitCount)
 		}

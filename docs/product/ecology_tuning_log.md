@@ -137,8 +137,93 @@ The point it stops hunting IS the point it heads home, so there's no gap. Naviga
 individuals (centipede) are untouched (keep their own threshold + rest-wander). Expect: wasps deposit
 reliably → colony grows → founds daughters → crops the fly boom (the predator-prey oscillation). [testing]
 
+### 2026-06-18 · spawn · Remove hard max_population caps → natural oscillation appears (v21b_nocaps)
+Owner wants populations bounded by emergent dynamics, not the hard cap. Set `max_population: 0` (uncapped)
+for all 6 species. Result over ~12 game-days: flies show a real boom-bust — 12→185→1084→**2322** (past the
+old 1500 cap) → crash to 433→109 → recover 308→436 — and RESSTATS confirms the mechanism: rotten-fruit
+stock builds to ~6.6k while flies are low, then the boom eats it down (6635→5311→3843→2537) and the flies
+crash with it. The 1500 cap was clipping this flat (`current` flatlines at 1500; `wasp_range` archive
+oscillated ~1000–1300 under heavier predation). Butterflies also oscillate (24→362→250→349); millipede
+stable ~130; wasp STILL flat 4 (recovery problem is independent of caps). Keep caps off while tuning.
+
+### 2026-06-18 · investigation · WHY wasps are frozen at 4 (for owner review — no change made yet)
+Three compounding problems, none fixable by one number:
+1. EARLY STARVATION (phenology): the starter nest hatches ~8 wasps on day 1 but flies are only ~12 then →
+   they starve before the prey boom. The colony dies in the lean early window.
+2. NO RECOVERY: nests are created ONLY at chunk-load or by a THRIVING nest splitting a daughter
+   (processNestFounding). Once the starter nest dies, the orphaned + Director-reseeded wasps are
+   permanently NESTLESS — no path for a lone wasp to found a new nest. So when flies finally boom, wasps
+   can't re-establish. (Chart sawtooth = Director reseeding the floor, wasps dying, repeat.)
+3. FRAGILE PROVISION RHYTHM: deposit_satiation (80) sits just under the 100 satiation cap, so the forage
+   window is tiny — wasps either never provision (trigger at the cap) or provision after every kill (too
+   much travel → starve). Needs deposit_satiation lowered for a real load-per-trip.
+Proposed (pending owner OK): let a well-fed NESTLESS wasp FOUND a nest near prey (the founding-hornet
+mechanic) for recovery, + lower deposit_satiation. NOT implemented — checking in first.
+
 ### 2026-06-18 · observation · Food is massively over-supplied (the next lever)
 **RESSTATS (per game-day):** `rotten` ~19–29k items, `nectar` ~28.5k, `milkweed` ~2.6k — none of it ever
 depletes. So the food-competition bound never engages and populations run away. The dominant tuning lever
 going forward is to tighten the plant/food side (windfall accumulation / rot decay / flower + milkweed
 counts & regen) until food becomes a real, depleting constraint and boom-bust emerges. _(Not yet tuned.)_
+
+### 2026-06-18 · spawn+mechanic+food · LIVING-ZONE redesign (owner-approved layout v3) — built, not yet run
+The big structural pass: seed the zone already ALIVE and spatially distributed, fix wasps behaviorally
+(nest-only + recovery), and give every predator nearby prey. Determinism preserved throughout (round-robin
++ posHash + sorted loops). All caps stay OFF (the nocaps config). Changes:
+- **Zonegen (`zone_village_21_B.py`):** orchards QUARTERED (apple/orange/cherry/plum) + a mini apple grove W
+  of town; appleSW removed; fruit-tree total 193→**115**. 5 small fruit PATCHES (a handful of trees each) at
+  the fly-spread points. **6 wasp nests** spread to woods/corners EACH within ~r40 of a fly source
+  (w1 NW-pond shore, w2 NE-woods, w3 farm-seam observation pen, w4 SE-of-rocks +¼grove, w5 E-ecologist,
+  w6 E-of-lake). 12 fly habitat circles (one per grove+patch), 6 wasp founding regions (no wasp wild).
+- **Initials (lived-in start):** fly 30→60, butterfly 20→30, centi 8→12, milli 10→16, beetle 6→12; **wasp
+  initial 0** (nests staff it). max_nests 5→6.
+- **Spread on spawn (`match.go`):** initial seed distributes each species' Initial swarms ROUND-ROBIN across
+  all its habitat circles (spatially-spread populated start); continuous immigration rotates a per-species
+  cursor through the circles (every grove/patch gets topped up over time). New `spawnSwarmInArea` core.
+- **Wasps from nests only (`match.go`/`ecology_director.go`):** nest species (MaxNests>0) SKIPPED in the
+  initial/continuous/Director free-spawn paths → zero nestless reseeds (the root of the frozen-wasp bug).
+- **Prey-gated nest RECOVERY (`nests.go`):** a brood-exhausted (dormant) colony now re-founds a fresh
+  NestFoundingSize patrol after NestRecoveryDelay=3000t IF live prey is within home range — else it WAITS.
+  This is the missing recovery path (owner's "new ~5 batch if the first die"); wasps are no longer a dead end.
+- **Large-carrion fly food (`species.json` + `match.go`):** flies now list `dead_millipede` in feeding/
+  reproducing/breeding (the matcher already let an EXACT carrion id through the IsCarrion exclusion) +
+  authored `initial_carrion` seeds 5 dead millipedes in the NE woods (new `CarrionSeed`/`seedInitialCarrion`)
+  → day-1 substrate for the woods' flies (w2 prey) and beetles; natural millipede deaths take over after.
+- **Observability:** daily bug-distribution map (`plot_bugmap.py`) renders WHERE each species is, per game-day.
+**Next:** run the nocaps config → read the bug-map (do all 6 wasp colonies hold? are flies spread, not piled?)
++ RESSTATS rotten (the 19–29k glut should drop hard with 115 trees) → iterate counts against the map.
+
+### 2026-06-18 · RESULT of the living-zone redesign (v21b_nocaps, seed 1337, 5 game-days captured)
+First run of the redesign. **The headline fixes are VERIFIED working:**
+- **Wasps are nest-only** ✓ — day 1 `b_nest=24` (6 nests × 4), `b_reseed=0 b_spawn=0`. Zero nestless wasps
+  (the root bug is gone).
+- **Prey-gated nest RECOVERY works** ✓ — wasps crashed to 0 on day 2 (cold start), then day 3 `b_nest=4`
+  with logs "Nest 62,222 / 180,55 / 132,231 recovered: re-founded a 4-patrol (prey returned)". Wasps are no
+  longer a dead end — dormant colonies re-found once flies return. Peak wasp 24.
+- **Spatial spread works** ✓ — bug-map shows millipedes in the NE woods, butterflies in the E/W meadows,
+  flies top-center, beetles scattered — NOT piled in the SW belt. Round-robin seeding + cursor immigration.
+- **Fruit/rot way down** ✓ — 115 trees; rotten peaked ~700 in this window (vs the old 19–29k glut).
+**The one clear problem — COLD START (the deferred windfall priming):** RESSTATS shows `rotten=0` on days 1–2
+(dropped fruit hasn't rotted yet), so the populated start has NOTHING to eat → mass day-1 starvation
+(fly `d_starve=22`, wasp 24→1, Director force-reseeds flies). Flies don't breed (`b_brood=0`) until rotten
+appears day 3+ (228→578→714), then recover to peak 93. So the spatial/nest design is sound but the start
+STARVES before the trees rot. **Next lever (one, diagnosed — not a kneejerk): prime a MODEST amount of
+pre-rotted windfall at the orchards on day 1** (Phase 2c, `initFruitTreesInChunk`, posHash-gated) so the
+seeded bugs have substrate from tick 0. Also: this run only advanced **5 game-days in 400s** (sim_batch=2) —
+too short to see steady-state oscillation; needs a longer wall-clock run or higher batch to judge the bands.
+
+### 2026-06-18 · windfall priming added → cold start fixed, ecology now ALIVE (v21b_nocaps, seed 1337)
+Added modest windfall priming (`initFruitTreesInChunk`: ≈1/3 of trees start with one rotten_<fruit>,
+posHash-gated, FoodValue 100). Result over the first 5 game-days:
+- **Flies breed + boom** (breeding-driven, not reseed): pop 16→18→**73→198**, `b_brood` 5→65→172,
+  `b_reseed`→0 by day 5 (self-sustaining). day-5 avg_sat=3 = the boom topping out → bust incoming = the
+  boom-bust we want. (Cold start is much softer: flies hold ~12-18 and breed instead of total collapse.)
+- **Wasps persist via nests + recovery ONLY**: pop 7→10→4→12→4, **all `b_nest`**, `b_reseed=0 b_spawn=0`
+  every day — colonies re-found near the booming flies (multiple "recovered" logs). No nestless wasps, no
+  permanent collapse. avg_sat climbs to 67. The frozen-wasp problem is SOLVED structurally.
+- Butterfly ~124-242, millipede ~135 (thriving on leaf-litter), centipede/beetle low (reseeding).
+**Verdict: the living-zone redesign works** — spatial, breeding-driven, nest-only wasps with recovery, all
+caps off. **Open (tuning, next session):** (1) runs only capture ~5 game-days at sim_batch=2 — need longer
+wall-clock or higher batch to see the full fly boom→bust→wasp-dip→recovery oscillation and judge the bands;
+(2) the fly boom to ~198 is steep — may dial initial counts / food down once we can watch a full cycle;
+(3) re-confirm the same-seed reproducibility gate after the windfall + spread changes.

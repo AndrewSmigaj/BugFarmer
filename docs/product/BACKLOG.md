@@ -59,16 +59,21 @@ above the re-seed floor → `b_reseed` births ≈ 0). The RIG (all committed, se
     sustained prey the centipede hunts→breeds→reaches 30, **0% re-seed, oscillating** (configs `G4`-`G7`).
   - **PARTIAL ◐ beetle ~12, millipede ~18:** both now self-maintained (0% re-seed) but below the 30 target —
     need higher caps + more food (beetle: corpse supply / cap 20→40; millipede: more `leaf_litter`).
-  - **NOT SOLVED ❌ wasp (FLOOR ~10):** the one holdout. It's a FLYING nest-predator — `flies_over_fences:
-    true`, so it leaves its (immigration-stocked) pen for the open arena/butterflies, AND its nest breeding
-    is anemic (`spawn`/`reseed`-born, not `nest`). Distinct from the centipede; needs its own investigation
-    (nest-hatch mechanics + flyer containment / a wasp-specific prey arrangement).
+  - **SOLVED ✅ wasp (2026-06-18, the living-zone redesign):** the frozen-wasp holdout was STRUCTURAL —
+    nestless free-spawned/reseeded wasps (sterile, can't deposit brood) + dead colonies going permanently
+    dormant. Fix = **wasps nest-only** (skip nest species in every free-spawn path → zero nestless wasps)
+    + **prey-gated nest recovery** (a brood-exhausted colony re-founds a fresh patrol when live prey is
+    within home range, else WAITS) + **6 nests spread to woods/corners each near a fly source**. Verified:
+    wasp pop sustained ENTIRELY by `b_nest` (hatches + recoveries), `b_reseed=0 b_spawn=0`, colonies
+    re-found as flies boom (run v21b_nocaps, seed 1337). Remaining = oscillation-band tuning, not structure.
   - **Open balance items:** immigration overshoots fly to ~390 — dial `spawn_interval`/cap so fly sits at
     100 while still feeding predators; then re-add the Director culls as far guardrails (`G10` showed culls
     reshape via re-seed, not self-maintenance — keep them last-resort).
   - **Best config so far: `G6_immig_breedbar` / `G4_immig_reach`** (centipede PASS + decomposers
     self-maintained); fly/wasp still need the two balance items above.
-  - **→ Next: (1) wasp investigation; (2) beetle/millipede caps+food → 30; (3) balance immigration so fly=100.**
+  - **→ Next (post living-zone redesign, 2026-06-18):** (1) longer runs (sim_batch>2) to watch a full fly
+    boom→bust→wasp-dip→recovery oscillation and judge the bands; (2) dial fly initial/food (boomed to ~198);
+    (3) beetle/centipede establishment (still reseed-reliant); (4) re-confirm same-seed reproducibility gate.
 
 **Up next (the roadmap remainder, mostly client → needs the Unity Editor):**
 - **Brood CLIENT layer** — right-click a source → eggs/maggots panel + on-world maggot-pile/egg visuals + sprites.
@@ -77,6 +82,17 @@ above the re-seed floor → `b_reseed` births ≈ 0). The RIG (all committed, se
   per-species data), restorative TASKS (the Director's player-facing tier: a task + grace window before the
   auto-event fires), and progression (CharacterSave XP/unlocks).
 - (Optional) natural predator-prey oscillator — the Director's predator pulse already covers the culling.
+
+### Bugs at zone boundaries (owner has ideas incl. heuristics)
+- **Problem:** bug swarms wander to / spawn near the zone edge (x|y → 0 or 256) — half a swarm's
+  habitat falls off the map, predators chase prey that "leaks" past the boundary, and edge clusters
+  read badly on the bug-map. The sim treats the 256×256 box as a hard wall with no edge behavior.
+- **Direction (owner):** handle this with **heuristics** rather than a hard clamp — e.g. soft
+  repulsion / reflect wander targets away from the border, weight spawn-area picks toward the interior,
+  keep nest home-ranges off the edge, possibly hand swarms that cross to the neighbor zone (cross-zone
+  movement already exists for players). Owner to detail the specific heuristics.
+- **Why now:** the spatial multi-region seeding (below) puts clusters near the NE/NW corners, so edge
+  behavior starts to matter; capture it before it bites the ecology tuning.
 
 ## Done 2026-06-16 — cross-zone movement (walk off a zone edge → hidden swap into the neighbor)
 Walk to a zone edge that has an authored neighbor → quick fade → tear down zone A → join the neighbor at
