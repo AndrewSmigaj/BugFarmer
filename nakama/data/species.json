@@ -180,8 +180,8 @@
    "hunt_satiation_threshold": 45.0,
    "nest_occupant": "wasp_nest"
   },
-  "lifespan_secs": 6300,
-  "lifespan_spread_secs": 1680,
+  "lifespan_secs": 9450,
+  "lifespan_spread_secs": 2520,
   "carcass_item": "dead_wasp"
  },
  "centipede_garden": {

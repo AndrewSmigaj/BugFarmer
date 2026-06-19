@@ -227,3 +227,30 @@ caps off. **Open (tuning, next session):** (1) runs only capture ~5 game-days at
 wall-clock or higher batch to see the full fly boom→bust→wasp-dip→recovery oscillation and judge the bands;
 (2) the fly boom to ~198 is steep — may dial initial counts / food down once we can watch a full cycle;
 (3) re-confirm the same-seed reproducibility gate after the windfall + spread changes.
+
+### 2026-06-18 · spawn+behavior · wasps closer to flies + live 50% longer + longer run (owner directive)
+Three bounded changes after reading the bug-map (wasps not close enough to the flies):
+- **Nests moved ~30% CLOSER to their nearest fly source** (zonegen, NOT a home_range change — owner was
+  explicit "closer to flies does not mean increase home range"): w1 (62,222)->(66,217), w3 (132,231)->
+  (130,230), w4 (180,55)->(187,72), w5 (226,150)->(224,139), w6 (86,55)->(84,67); w2 already on its prey.
+  The far southern/eastern nests (w4/w5/w6) move most. Observation pen + wasp_n* circles tracked the moves.
+- **Wasp lifespan +50%** (species.json): lifespan_secs 6300->9450, spread 1680->2520 (home_range UNCHANGED).
+- **Sim run +50%**: duration 400->600 (more game-days to see the oscillation settle).
+Expectation: wasps spend less travel to reach prey + survive longer between kills -> colonies hold higher,
+oscillate against the fly boom-bust instead of cold-recovering each cycle. (Result pending the run.)
+
+### 2026-06-18 · RESULT: nests-30%-closer + wasp life +50% + duration 600 (8 game-days, seed 1337)
+current/ now reflects this run (the refresh-every-run fix). 8 game-days = a FULL cycle visible.
+- **Fly boom-BUST now complete**: 12→17→13→17→66→**188**→113→57 — booms day 6, busts day 7-8
+  (d_starve 148/116 as the rotten substrate is exhausted). avg_sat crashes day 7 (9.7). The oscillation.
+- **Wasps survive longer + stay fed** (the lifespan + closer-nest changes worked as intended): avg_sat
+  climbs 0→40→…→**50.6** (vs bouncing off 0 before), recovery fires at the NEW nest spots (w3 130,230 /
+  w4 187,72), and they DO kill flies (fly d_predation day5=8). Sustained 100% by b_nest, 0 reseed/spawn.
+- **BUT wasps still floor-bound**: 0,4,8,4,4,4,4,12 (mean 8, max 24) — NOT climbing to 30. Root cause: the
+  fly boom (day 6) is too BRIEF — it busts before a colony can bank enough brood to grow/split past the
+  founding floor. Wasps are alive+fed+oscillating but capped by prey-window length, not by nest mechanics.
+- Butterfly ~396 (high), millipede ~130, centipede/beetle low.
+**Next lever to break the wasp ceiling (for owner): lengthen the fly prey-window** so colonies have time to
+grow during a boom — e.g. soften the fly bust (more/longer-lived rotten substrate, or stagger fruit drop so
+the boom plateaus instead of spiking-then-crashing), OR speed nest growth (lower NestBroodCap / founding
+threshold) so a short boom still grows a colony. One lever, measure, repeat.

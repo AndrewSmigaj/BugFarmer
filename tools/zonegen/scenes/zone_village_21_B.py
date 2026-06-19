@@ -245,12 +245,14 @@ def build(zone_id="village_21_B", vseed=0):
     # kept starving in empty arena. Placement (owner-approved layout v3):
     #   w1 NW-pond NE shore (near orchW)  w2 NE-woods (on the carrion patch)  w3 farm-seam observation pen
     #   w4 SE-of-rocks (+1/4 grove)     w5 E-of-ecologist (near E-orange patch)  w6 E-of-lake (near its clump)
-    for (wx, wy) in [(62, 222), (195, 238), (132, 231), (180, 55), (226, 150), (86, 55)]:
+    # 2026-06-18: each nest nudged ~30% CLOSER to its nearest fly source (owner: wasps weren't close enough
+    # to the flies). The far southern/eastern ones (w4/w5/w6) move most; w2/w3 already sat on their prey.
+    for (wx, wy) in [(66, 217), (195, 238), (130, 230), (187, 72), (224, 139), (84, 67)]:
         safe(b, "wasp_nest", wx, wy)
     # w3 is the player-facing OBSERVATION pen (WOOD fence — fences don't stop wings, the lesson; the
     # fence is for the watcher, not the wasps) with a little nectar so it reads as a kept colony.
-    fence_rect(b, 128, 227, 137, 235, gate=(132, 227))
-    flower_patch(b, 127, 224, 138, 226, ["chamomile", "clover", "poppy"], 8, seed=43)
+    fence_rect(b, 126, 226, 135, 234, gate=(130, 226))
+    flower_patch(b, 125, 223, 136, 225, ["chamomile", "clover", "poppy"], 8, seed=43)
 
     # ================= 6) THE NE FOREST-EDGE GLOOM (centipede country) =================
     forest(b, 168, 236, 26, 14, species=("tree_pine", "tree_pine", "tree_oak"),
@@ -492,12 +494,12 @@ def build(zone_id="village_21_B", vseed=0):
             # WASP — the 6 nest regions (= the placed nests). NO wild circle: wasps are nest-only, so
             # these areas are the Director's recovery-founding sites (each near a fly source), not a
             # free-spawn pump. The server skips wasp in the generic spawn path entirely.
-            {"id": "wasp_n1", "species": ["wasp_common"], "type": "circle", "cx": 62,  "cy": 222, "radius": 12, "weight": HAB},
+            {"id": "wasp_n1", "species": ["wasp_common"], "type": "circle", "cx": 66,  "cy": 217, "radius": 12, "weight": HAB},
             {"id": "wasp_n2", "species": ["wasp_common"], "type": "circle", "cx": 195, "cy": 238, "radius": 12, "weight": HAB},
-            {"id": "wasp_n3", "species": ["wasp_common"], "type": "circle", "cx": 132, "cy": 231, "radius": 12, "weight": HAB},
-            {"id": "wasp_n4", "species": ["wasp_common"], "type": "circle", "cx": 180, "cy": 55,  "radius": 12, "weight": HAB},
-            {"id": "wasp_n5", "species": ["wasp_common"], "type": "circle", "cx": 226, "cy": 150, "radius": 12, "weight": HAB},
-            {"id": "wasp_n6", "species": ["wasp_common"], "type": "circle", "cx": 86,  "cy": 55,  "radius": 12, "weight": HAB},
+            {"id": "wasp_n3", "species": ["wasp_common"], "type": "circle", "cx": 130, "cy": 230, "radius": 12, "weight": HAB},
+            {"id": "wasp_n4", "species": ["wasp_common"], "type": "circle", "cx": 187, "cy": 72,  "radius": 12, "weight": HAB},
+            {"id": "wasp_n5", "species": ["wasp_common"], "type": "circle", "cx": 224, "cy": 139, "radius": 12, "weight": HAB},
+            {"id": "wasp_n6", "species": ["wasp_common"], "type": "circle", "cx": 84,  "cy": 67,  "radius": 12, "weight": HAB},
             # CENTIPEDE — the NE forest gloom (hunts flies that stray in) + sparse wild
             {"id": "cent_gloom",   "species": ["centipede_garden"], "type": "circle", "cx": 178, "cy": 240, "radius": 16, "weight": 3.0},
             {"id": "cent_wild",    "species": ["centipede_garden"], "type": "zone", "weight": WILD},

@@ -1,2 +1,2 @@
-2026-06-18_1853_v21b_nocaps
-Living-zone redesign: nest-only wasps + recovery, spatial start, windfall priming (caps off)
+2026-06-18_2017_v21b_nocaps
+Remove the hard max_population caps (set 0 = uncapped) for ALL species, so populations are bounded only by EMERGENT food competition / predation / aging — to see the natural oscillation instead of the cap flatten. Everything else = current baseline.

@@ -255,8 +255,8 @@
           "wasp_common"
         ],
         "type": "circle",
-        "cx": 62,
-        "cy": 222,
+        "cx": 66,
+        "cy": 217,
         "radius": 12,
         "weight": 2.0
       },
@@ -277,8 +277,8 @@
           "wasp_common"
         ],
         "type": "circle",
-        "cx": 132,
-        "cy": 231,
+        "cx": 130,
+        "cy": 230,
         "radius": 12,
         "weight": 2.0
       },
@@ -288,8 +288,8 @@
           "wasp_common"
         ],
         "type": "circle",
-        "cx": 180,
-        "cy": 55,
+        "cx": 187,
+        "cy": 72,
         "radius": 12,
         "weight": 2.0
       },
@@ -299,8 +299,8 @@
           "wasp_common"
         ],
         "type": "circle",
-        "cx": 226,
-        "cy": 150,
+        "cx": 224,
+        "cy": 139,
         "radius": 12,
         "weight": 2.0
       },
@@ -310,8 +310,8 @@
           "wasp_common"
         ],
         "type": "circle",
-        "cx": 86,
-        "cy": 55,
+        "cx": 84,
+        "cy": 67,
         "radius": 12,
         "weight": 2.0
       },
