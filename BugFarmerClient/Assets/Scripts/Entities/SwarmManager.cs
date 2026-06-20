@@ -65,6 +65,11 @@ namespace BugFarmer.Entities
         /// </summary>
         private long _simulationTick;
 
+        // DIAGNOSTIC ONLY (re-root investigation): the current sim tick + an ambient "how was this bug
+        // created" tag that SpawnBug stamps onto each new BugAgent. Set before each spawn-triggering op.
+        public long CurrentSimTick => _simulationTick;
+        public string SpawnSourceTag = "init";
+
         /// <summary>
         /// Server's authoritative tick frontier.
         /// Meaning: "All authoritative inputs/events for ticks <= this are finalized and broadcast."
@@ -922,6 +927,7 @@ namespace BugFarmer.Entities
         /// </summary>
         public void HandleSwarmSplit(InfluenceEvent evt)
         {
+            SpawnSourceTag = "splitMerge"; // DIAGNOSTIC
             var parent = GetSwarm(evt.swarm_id);
             var center = new Vector2(evt.center_x / 1000f, evt.center_y / 1000f);
 
@@ -964,6 +970,7 @@ namespace BugFarmer.Entities
         /// </summary>
         public void HandleSwarmMerge(InfluenceEvent evt)
         {
+            SpawnSourceTag = "splitMerge"; // DIAGNOSTIC
             var survivor = GetSwarm(evt.swarm_id);
             if (survivor == null)
             {
@@ -1007,6 +1014,7 @@ namespace BugFarmer.Entities
                 Debug.LogWarning($"[SwarmManager] SWARM_REPRODUCED for unknown swarm {evt.swarm_id} - skipping");
                 return;
             }
+            SpawnSourceTag = "reproduce"; // DIAGNOSTIC
             for (int id = evt.new_bug_id_base; id < evt.new_bug_id_base + evt.split_count; id++)
                 swarm.SpawnBugAt(id);
             Debug.Log($"[SwarmManager] SWARM_REPRODUCED {evt.swarm_id}: +{evt.split_count} bugs (now {swarm.Count})");
@@ -1092,6 +1100,7 @@ namespace BugFarmer.Entities
 
         private void SpawnSwarm(SwarmData data, long serverTick)
         {
+            SpawnSourceTag = "liveSwarmUpdate"; // DIAGNOSTIC
             var obj = new GameObject($"Swarm_{data.id}");
             var visual = obj.AddComponent<SwarmVisual>();
             visual.Initialize(data, serverTick);
@@ -1122,6 +1131,7 @@ namespace BugFarmer.Entities
         /// </summary>
         private void SpawnSwarmFromMetadata(SwarmData data, long snapshotTick)
         {
+            SpawnSourceTag = "metadataPrespawn"; // DIAGNOSTIC
             var obj = new GameObject($"Swarm_{data.id}");
             var visual = obj.AddComponent<SwarmVisual>();
             visual.Initialize(data, snapshotTick);
@@ -1611,13 +1621,21 @@ namespace BugFarmer.Entities
                 }
             }
 
-            // FIX: snapshot_tick must be the tick whose simulation is COMPLETE in this snapshot.
-            // _simulationTick is the tick we're ABOUT TO simulate (next tick), so subtract 1.
-            // Contract: snapshot_tick = T means "state after SimulateTick(T) with events at T applied"
+            // snapshot_tick = the tick whose SimulateTick is COMPLETE in this serialized state.
+            // After AdvanceOneTick, `_simulationTick` IS the most-recently-simulated tick (it increments
+            // BEFORE SimulateTick), and the bug positions captured here are the state after SimulateTick(
+            // _simulationTick). So snapshot_tick = _simulationTick. (The old `-1` mislabeled the snapshot one
+            // tick behind the state it contained, so late-joiners re-simulated that tick on replay → a 1-tick
+            // cycle/position shift that compounded into cross-client divergence. Confirmed by boundary trace:
+            // the captured state matched THIS client's trace at snapshot_tick+1, 5/5. See
+            // docs/product/architecture_swarm_sync.md:103/111/137.)
+            // snapshot_last_event_seq stays _lastAppliedSeq: events@_simulationTick are still pending (applied
+            // at the start of the next AdvanceOneTick) and ride the replay log, so a joiner that starts at
+            // snapshot_tick=_simulationTick applies them before simulating _simulationTick+1 — in lockstep.
             var snapshot = new ZoneSnapshotMessage
             {
                 zone_id = _currentZoneId,
-                snapshot_tick = _simulationTick - 1,
+                snapshot_tick = _simulationTick,
                 snapshot_last_event_seq = _lastAppliedSeq, // Last seq whose effects are in this snapshot
                 swarms = swarmSnapshots.ToArray(),
                 state_hash = "" // TODO: Implement state hash

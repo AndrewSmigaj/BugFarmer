@@ -27,6 +27,11 @@ namespace BugFarmer.Bugs
         public string SwarmId;
         public string SpeciesId;
 
+        // DIAGNOSTIC ONLY (never hashed): provenance for the determinism re-root investigation —
+        // which global tick this client first created/positioned the bug, and via which path.
+        public long SpawnTick = -1;
+        public string SpawnSource = "?";
+
         // Spawn-time RNG (stateful, OK because runs once per bug)
         public DeterministicRandom Rng;
 
@@ -94,6 +99,7 @@ namespace BugFarmer.Bugs
         {
             return CounterRng.RangeInt(_worldSeed, SwarmId, BugId, _currentTick, purposeId, min, max);
         }
+
 
         /// <summary>
         /// Counter-based random float [0,1) for simulation logic.

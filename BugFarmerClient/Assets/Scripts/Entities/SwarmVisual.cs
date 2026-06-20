@@ -165,6 +165,10 @@ namespace BugFarmer.Entities
             // Create agent - MovementFactory.CreateMovement(SpeciesId) is called internally
             // fly → BrownianMovement, butterfly → GlidingMovement, etc.
             var agent = new BugAgent(worldSeed, SwarmId, SpeciesId, bugId, startPos);
+            // DIAGNOSTIC (re-root investigation): stamp when/how this client first created the bug.
+            var sm = SwarmManager.Instance;
+            agent.SpawnTick = sm != null ? sm.CurrentSimTick : -1;
+            agent.SpawnSource = sm != null ? sm.SpawnSourceTag : "?";
 
             // Get or create visual
             var visual = GetSpriteFromPool();
@@ -654,7 +658,10 @@ namespace BugFarmer.Entities
                 intent_target_x = movementState.IntentTargetX,
                 intent_target_y = movementState.IntentTargetY,
                 current_dir_x = movementState.CurrentDirX,
-                current_dir_y = movementState.CurrentDirY
+                current_dir_y = movementState.CurrentDirY,
+                // DIAGNOSTIC (re-root investigation)
+                spawn_tick = agent.SpawnTick,
+                spawn_source = agent.SpawnSource
             };
         }
 
@@ -699,6 +706,7 @@ namespace BugFarmer.Entities
                         Y = new FixedPoint { Value = data.vy }
                     };
                     agent.Rng.State = data.rng_state;
+                    agent.SpawnSource = "snapshotApply"; // DIAGNOSTIC: got authoritative per-bug state
 
                     // Behavior state
                     agent.CurrentBehavior = string.IsNullOrEmpty(data.behavior) ? "wander" : data.behavior;

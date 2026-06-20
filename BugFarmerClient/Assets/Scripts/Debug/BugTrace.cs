@@ -22,11 +22,13 @@ namespace BugFarmer.Tracing
         public int ticksUntilChange; // Brownian wander-cycle phase (key desync signal)
         public int intentDirX;
         public int intentDirY;
+        public long spawnTick;     // DIAGNOSTIC (re-root investigation): when this client created the bug
+        public string spawnSource; // DIAGNOSTIC: via which path (metadataPrespawn/liveSwarmUpdate/reproduce/...)
 
         public string ToCsv() =>
-            $"{tick},{swarmId},{bugId},{x},{y},{vx},{vy},{behavior},{alertCooldown},{rngState},{ticksUntilChange},{intentDirX},{intentDirY}";
+            $"{tick},{swarmId},{bugId},{x},{y},{vx},{vy},{behavior},{alertCooldown},{rngState},{ticksUntilChange},{intentDirX},{intentDirY},{spawnTick},{spawnSource}";
 
-        public static string CsvHeader => "tick,swarmId,bugId,x,y,vx,vy,behavior,alertCooldown,rngState,ticksUntilChange,intentDirX,intentDirY";
+        public static string CsvHeader => "tick,swarmId,bugId,x,y,vx,vy,behavior,alertCooldown,rngState,ticksUntilChange,intentDirX,intentDirY,spawnTick,spawnSource";
 
         /// <summary>
         /// Create from existing BugSampleData.
@@ -47,7 +49,9 @@ namespace BugFarmer.Tracing
                 rngState = data.rng_state,
                 ticksUntilChange = data.ticks_until_change,
                 intentDirX = data.intent_dir_x,
-                intentDirY = data.intent_dir_y
+                intentDirY = data.intent_dir_y,
+                spawnTick = data.spawn_tick,
+                spawnSource = data.spawn_source
             };
         }
     }

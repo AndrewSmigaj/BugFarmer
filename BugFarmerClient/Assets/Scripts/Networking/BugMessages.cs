@@ -242,6 +242,10 @@ namespace BugFarmer.Networking
         public int intent_dir_x, intent_dir_y;       // Brownian: intent direction
         public int intent_target_x, intent_target_y; // Gliding: intent target
         public int current_dir_x, current_dir_y;     // Gliding: current direction
+
+        // DIAGNOSTIC ONLY (re-root investigation; never hashed): provenance of this bug on this client.
+        public long spawn_tick = -1;
+        public string spawn_source = "?";
     }
 
     /// <summary>
