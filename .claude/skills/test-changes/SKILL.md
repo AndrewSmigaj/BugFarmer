@@ -125,6 +125,14 @@ is ① — two REAL clients, full system. The others are pre-checks/backstops, N
   change to the bug sim, sync, or species data. (Gotcha: a *headless build* needs the Editor closed — a held
   `BugFarmerClient/Temp/UnityLockfile` makes batchmode exit 1; *running* the built players is fine with the
   Editor open.)
+  **VALIDITY GATE (learned the hard way, 2026-06-20):** a client only has bugs once it receives the world
+  seed (`WorldInit`, OpCode 68 → `WorldSeedProvider.IsInitialized`). If a client shows **0 swarms** the whole
+  run, the result is NOT determinism data — it's a dead client; do not compare it. `HeadlessSyncTest` now
+  fails fast (exit 4 = seed never initialized, exit 5 = 0 bugs seen) so this can't masquerade as a run. Sanity
+  every run: each client's log should have `[WorldSeedProvider] Initialized with seed: …` and
+  `Tick N: >0 swarms`. (The bug that taught us this: the one-shot `WorldInit` was dropped during the join
+  handshake by `WorldManager`'s `CurrentMatch==null` guard — fixed in commit `1c1b251` by buffering
+  pre-join match-state. A 0-swarm authority gave a bogus "96% divergence" that wasn't real.)
 - **② sim-determinism pre-check (FAST, no Unity, no server):** `~/.dotnet/dotnet run --project
   tools/sim-determinism` (`--selftest` proves it detects divergence). Links the real per-bug sim source and
   runs it twice — catches wall-clock / unordered-collection / static / float nondeterminism in seconds. But
