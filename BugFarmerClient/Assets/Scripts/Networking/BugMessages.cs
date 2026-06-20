@@ -291,6 +291,15 @@ namespace BugFarmer.Networking
     {
         public string swarm_id;
         public BugSampleData[] bugs;
+
+        // Current movement leg AT the snapshot tick (authoritative). Lets late-join hydrate the swarm
+        // center coherently — the server's InfluenceLog is pruned, so a slow swarm's last SWARM_SET_TARGET
+        // may be gone. has_leg=false means the swarm has no leg yet (use the fallback center).
+        public bool has_leg;
+        public int leg_origin_x, leg_origin_y;
+        public int leg_target_x, leg_target_y;
+        public int leg_speed;
+        public long leg_start_tick;
     }
 
     /// <summary>

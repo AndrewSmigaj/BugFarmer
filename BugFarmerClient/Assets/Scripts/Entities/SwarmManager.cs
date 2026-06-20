@@ -1613,11 +1613,23 @@ namespace BugFarmer.Entities
                 var bugData = kvp.Value.GetAllBugPositions();
                 if (bugData.Length > 0)
                 {
-                    swarmSnapshots.Add(new SwarmSnapshotData
+                    var snap = new SwarmSnapshotData
                     {
                         swarm_id = kvp.Key,
                         bugs = bugData
-                    });
+                    };
+                    // Embed the swarm's current leg (authoritative @ snapshot tick) so late-joiners hydrate
+                    // the center coherently regardless of InfluenceLog pruning.
+                    if (InfluenceManager.Instance != null &&
+                        InfluenceManager.Instance.TryGetSwarmLeg(kvp.Key, out int lox, out int loy,
+                            out int ltx, out int lty, out int lspd, out long lst))
+                    {
+                        snap.has_leg = true;
+                        snap.leg_origin_x = lox; snap.leg_origin_y = loy;
+                        snap.leg_target_x = ltx; snap.leg_target_y = lty;
+                        snap.leg_speed = lspd; snap.leg_start_tick = lst;
+                    }
+                    swarmSnapshots.Add(snap);
                 }
             }
 

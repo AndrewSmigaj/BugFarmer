@@ -252,6 +252,26 @@ namespace BugFarmer.Bugs
         }
 
         /// <summary>
+        /// Read a swarm's current movement leg (fixed-point Values) so the authority can embed it in its
+        /// ZoneSnapshot. This is the AUTHORITATIVE source for late-join leg hydration — the InfluenceLog is
+        /// pruned each tick, so a slow swarm's last SWARM_SET_TARGET may be gone; the live leg never is.
+        /// Returns false if the swarm has not yet received a leg (caller leaves has_target=false).
+        /// </summary>
+        public bool TryGetSwarmLeg(string swarmId, out int originX, out int originY,
+                                   out int targetX, out int targetY, out int speed, out long startTick)
+        {
+            if (_swarmLegs.TryGetValue(swarmId, out var leg))
+            {
+                originX = leg.Origin.X.Value; originY = leg.Origin.Y.Value;
+                targetX = leg.Target.X.Value; targetY = leg.Target.Y.Value;
+                speed = leg.Speed.Value; startTick = leg.StartTick;
+                return true;
+            }
+            originX = originY = targetX = targetY = speed = 0; startTick = 0;
+            return false;
+        }
+
+        /// <summary>
         /// Clear all swarm legs. Called during late join initialization (mirrors ClearPlayerCells).
         /// </summary>
         public void ClearSwarmLegs()

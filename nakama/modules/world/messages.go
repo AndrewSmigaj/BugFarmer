@@ -725,6 +725,17 @@ type SnapshotRequestMessage struct {
 type SwarmSnapshotData struct {
 	SwarmID string          `json:"swarm_id"`
 	Bugs    []BugSampleData `json:"bugs"` // All bugs in swarm
+
+	// Current movement leg AT the snapshot tick (authority-embedded). Used for late-join center
+	// hydration: the InfluenceLog is pruned each tick, so a slow swarm's last SWARM_SET_TARGET may
+	// be gone — the authority's live leg is the reliable source. HasLeg=false ⇒ no leg yet.
+	HasLeg      bool  `json:"has_leg,omitempty"`
+	LegOriginX  int   `json:"leg_origin_x,omitempty"`
+	LegOriginY  int   `json:"leg_origin_y,omitempty"`
+	LegTargetX  int   `json:"leg_target_x,omitempty"`
+	LegTargetY  int   `json:"leg_target_y,omitempty"`
+	LegSpeed    int   `json:"leg_speed,omitempty"`
+	LegStartTick int64 `json:"leg_start_tick,omitempty"`
 }
 
 // FullSnapshotMessage for late joiners or drift correction (OpCode 67)

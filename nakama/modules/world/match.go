@@ -2791,22 +2791,33 @@ func (m *Match) sendLateJoinSnapshot(
 				}
 			}
 
-			// Hydrate the leg active AT snapshotTick: the most recent SWARM_SET_TARGET for
-			// this swarm with Tick <= snapshotTick. Legs started after snapshotTick are NOT
-			// included here - they replay from influenceLog and overwrite the hydrated leg at
-			// their own tick. Carrying the event's exact fixed-point values keeps the client's
-			// closed-form center march bit-identical to the live clients'.
-			for i := len(zone.InfluenceLog) - 1; i >= 0; i-- {
-				evt := zone.InfluenceLog[i]
-				if evt.Type == InfluenceSwarmSetTarget && evt.SwarmID == swarm.ID && evt.Tick <= snapshotTick {
-					meta.HasTarget = true
-					meta.LegOriginX = evt.OriginX
-					meta.LegOriginY = evt.OriginY
-					meta.LegTargetX = evt.TargetX
-					meta.LegTargetY = evt.TargetY
-					meta.LegSpeed = evt.Speed
-					meta.LegStartTick = evt.Tick
-					break
+			// Hydrate the leg active AT snapshotTick. PREFERRED source: the authority embedded its live
+			// leg in the snapshot (swarmSnapshot.HasLeg) — this is reliable even for slow swarms whose last
+			// SWARM_SET_TARGET has been pruned from the InfluenceLog. (The old log-scan below missed those,
+			// so late-joiners fell back to the metadata center and the swarm center diverged.) Legs started
+			// after snapshotTick still replay from influenceLog and overwrite this at their own tick.
+			if swarmSnapshot.HasLeg {
+				meta.HasTarget = true
+				meta.LegOriginX = swarmSnapshot.LegOriginX
+				meta.LegOriginY = swarmSnapshot.LegOriginY
+				meta.LegTargetX = swarmSnapshot.LegTargetX
+				meta.LegTargetY = swarmSnapshot.LegTargetY
+				meta.LegSpeed = swarmSnapshot.LegSpeed
+				meta.LegStartTick = swarmSnapshot.LegStartTick
+			} else {
+				// Fallback (pre-leg-embedding snapshots, or bootstrap): scan the pruned InfluenceLog.
+				for i := len(zone.InfluenceLog) - 1; i >= 0; i-- {
+					evt := zone.InfluenceLog[i]
+					if evt.Type == InfluenceSwarmSetTarget && evt.SwarmID == swarm.ID && evt.Tick <= snapshotTick {
+						meta.HasTarget = true
+						meta.LegOriginX = evt.OriginX
+						meta.LegOriginY = evt.OriginY
+						meta.LegTargetX = evt.TargetX
+						meta.LegTargetY = evt.TargetY
+						meta.LegSpeed = evt.Speed
+						meta.LegStartTick = evt.Tick
+						break
+					}
 				}
 			}
 
