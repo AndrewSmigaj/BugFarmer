@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using BugFarmer.Networking;
 using BugFarmer.Entities;
+using BugFarmer.Bugs;
 using BugFarmer.Tracing;
 
 namespace BugFarmer.Testing
@@ -70,16 +71,42 @@ namespace BugFarmer.Testing
                     await Task.Yield();
                 if (SwarmManager.Instance == null) { Log("ERROR: SwarmManager never appeared"); Quit(2); return; }
 
+                // FAIL FAST on a broken harness: the bug sim can only run once the world seed (OpCode 68
+                // WorldInit) has arrived. If it never does, the client caches swarm rosters forever and shows
+                // 0 swarms — that is a DEAD client, not determinism data, and must not be silently recorded.
+                // (This was the real bug: the one-shot WorldInit was dropped during join; the WorldManager
+                // pre-join buffer fixes it. We keep this guard so a regression can never masquerade as a run.)
+                float ts0 = Time.realtimeSinceStartup;
+                while (WorldSeedProvider.Instance?.IsInitialized != true && Time.realtimeSinceStartup - ts0 < 10f)
+                    await Task.Yield();
+                if (WorldSeedProvider.Instance?.IsInitialized != true)
+                {
+                    Log("ERROR: WorldSeed never initialized (no WorldInit) — client would show 0 swarms. Aborting as INVALID.");
+                    Quit(4);
+                    return;
+                }
+                Log($"world seed ready ({WorldSeedProvider.Instance.WorldSeed}); recording…");
+
                 // Record per-tick state hashes exactly like DebugOverlay F1 (SetTraceCallback -> TickTraceBuffer).
                 var buffer = new TickTraceBuffer();
+                int maxBugs = 0;
                 SwarmManager.Instance.SetTraceCallback((tick, hash, bugs, players) =>
-                    buffer.RecordTick(tick, hash, bugs, players));
+                {
+                    if (bugs != null && bugs.Count > maxBugs) maxBugs = bugs.Count;
+                    buffer.RecordTick(tick, hash, bugs, players);
+                });
                 Log($"recording {duration}s of tick hashes…");
                 await Task.Delay(duration * 1000);
 
                 SwarmManager.Instance.SetTraceCallback(null);
                 buffer.DumpToFile(clientId);                       // -> persistentDataPath/trace_<clientId>_*.csv
-                Log($"DONE: dumped {buffer.Count} ticks for client {clientId}");
+                Log($"DONE: dumped {buffer.Count} ticks for client {clientId} (max bugs seen: {maxBugs})");
+                if (maxBugs == 0)
+                {
+                    Log("WARNING: recorded 0 bugs the whole window — client saw no swarms; treating run as INVALID.");
+                    Quit(5);
+                    return;
+                }
                 Quit(0);
             }
             catch (Exception e)

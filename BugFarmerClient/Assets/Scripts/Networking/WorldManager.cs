@@ -23,6 +23,16 @@ namespace BugFarmer.Networking
         public string CurrentZoneId { get; private set; }
         public ZoneNeighbors CurrentNeighbors { get; private set; }
 
+        // JOIN-HANDSHAKE BUFFER: match-data frames can arrive BEFORE JoinMatchAsync returns and assigns
+        // CurrentMatch — Nakama dispatches them through one FIFO together with the join response
+        // (Assets/Nakama/Runtime/UnitySocket.cs). The HandleMatchState guard would otherwise DROP them,
+        // and the one-shot WorldInit (OpCode 68, the world seed) has no second chance → the authority
+        // client never seeds its bug sim and shows 0 swarms. We buffer frames for the match we're joining
+        // and replay them once CurrentMatch/Self are set. See docs/product/determinism_audit_2026-06-20.md.
+        private string _joiningMatchId;
+        private readonly List<IMatchState> _preJoinBuffer = new();
+        private const int MaxPreJoinBuffer = 256;
+
         public event Action<IUserPresence> OnPlayerJoined;
         public event Action<IUserPresence> OnPlayerLeft;
         public event Action<IMatchState> OnMatchData;
@@ -94,11 +104,15 @@ namespace BugFarmer.Networking
             var request = new WorldJoinRequest { world_id = worldId };
             var payload = JsonUtility.ToJson(request);
 
+            _joiningMatchId = null;
+            _preJoinBuffer.Clear();
+
             try
             {
                 var result = await NetworkManager.Instance.Client.RpcAsync(session, "world_join", payload);
                 var response = JsonUtility.FromJson<WorldJoinResponse>(result.Payload);
 
+                _joiningMatchId = response.match_id;
                 CurrentMatch = await socket.JoinMatchAsync(response.match_id);
                 Self = CurrentMatch.Self;
                 Players.Clear();
@@ -115,11 +129,14 @@ namespace BugFarmer.Networking
                     Debug.LogError("[WorldManager] EntityManager.Instance is null! Remote players will not be filtered correctly.");
                 }
 
+                FlushPreJoinBuffer();
                 Debug.Log($"[WorldManager] Joined match: {CurrentMatch.Id} with {Players.Count} player(s)");
                 return CurrentMatch;
             }
             catch (ApiResponseException ex)
             {
+                _joiningMatchId = null;
+                _preJoinBuffer.Clear();
                 Debug.LogError($"[WorldManager] JoinWorld failed: {ex.Message}");
                 throw;
             }
@@ -135,6 +152,11 @@ namespace BugFarmer.Networking
         {
             var session = await NetworkManager.Instance.Session;
             var socket = NetworkManager.Instance.Socket;
+
+            // Start clean: discard any frames buffered for a previous join (e.g. before a zone swap). We
+            // only begin buffering once _joiningMatchId is set to THIS match below, right before the join.
+            _joiningMatchId = null;
+            _preJoinBuffer.Clear();
 
             var request = new WorldEnterRequest { zone_id = zoneId };
             var payload = JsonUtility.ToJson(request);
@@ -153,6 +175,8 @@ namespace BugFarmer.Networking
                     meta["entry_x"] = entryX.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
                     meta["entry_y"] = entryY.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
                 }
+                // Buffer (don't drop) match-data that arrives for THIS match during the join handshake.
+                _joiningMatchId = response.match_id;
                 CurrentMatch = meta.Count > 0
                     ? await socket.JoinMatchAsync(response.match_id, meta)
                     : await socket.JoinMatchAsync(response.match_id);
@@ -170,11 +194,17 @@ namespace BugFarmer.Networking
                     Entities.EntityManager.Instance.SetLocalPlayerId(Self.UserId);
                 }
 
+                // Now fully joined (CurrentMatch/Self/local-player set): replay anything that arrived during
+                // the handshake — notably the one-shot WorldInit that seeds the bug sim.
+                FlushPreJoinBuffer();
+
                 Debug.Log($"[WorldManager] Entered zone '{zoneId}': match {CurrentMatch.Id} with {Players.Count} player(s)");
                 return CurrentMatch;
             }
             catch (ApiResponseException ex)
             {
+                _joiningMatchId = null;
+                _preJoinBuffer.Clear();
                 Debug.LogError($"[WorldManager] EnterWorld('{zoneId}') failed: {ex.Message}");
                 throw;
             }
@@ -190,6 +220,8 @@ namespace BugFarmer.Networking
                 CurrentMatch = null;
                 Self = null;
                 Players.Clear();
+                _joiningMatchId = null;
+                _preJoinBuffer.Clear();
             }
         }
 
@@ -232,10 +264,24 @@ namespace BugFarmer.Networking
 
         private void HandleMatchState(IMatchState state)
         {
+            // JOIN-HANDSHAKE: frames for the match we're currently joining can arrive before
+            // JoinMatchAsync returns (CurrentMatch still null). Dropping them loses the one-shot WorldInit
+            // (seed) → 0-swarm authority. Buffer them and replay after the join completes (FlushPreJoinBuffer).
+            if (CurrentMatch == null)
+            {
+                if (_joiningMatchId != null && state.MatchId == _joiningMatchId && _preJoinBuffer.Count < MaxPreJoinBuffer)
+                {
+                    if (DebugConfig.Verbose)
+                        Debug.Log($"[WorldManager] Buffering pre-join OpCode {state.OpCode} for match {state.MatchId}");
+                    _preJoinBuffer.Add(state);
+                }
+                return;
+            }
+
             // CROSS-ZONE GUARD: drop messages not for the current match. On a fast zone swap, stale
             // zone-A messages can still be buffered; applied to zone B they ghost entities AND inject
             // A's influence seqs into B's frontier (a sync stall). The match id is the definitive filter.
-            if (CurrentMatch == null || state.MatchId != CurrentMatch.Id)
+            if (state.MatchId != CurrentMatch.Id)
                 return;
 
             // Debug: log all incoming opcodes except frequent ones
@@ -273,6 +319,23 @@ namespace BugFarmer.Networking
                     OnMatchData?.Invoke(state);
                     break;
             }
+        }
+
+        // Replay match-data buffered during the join handshake, now that CurrentMatch/Self/local-player are
+        // set so every handler sees a fully-joined client. Order is preserved (WorldInit before ZoneAuthority,
+        // etc.). Re-entry is safe: CurrentMatch is non-null now, so these flow through the normal path.
+        private void FlushPreJoinBuffer()
+        {
+            _joiningMatchId = null;
+            if (_preJoinBuffer.Count == 0) return;
+            var buffered = _preJoinBuffer.ToArray();
+            _preJoinBuffer.Clear();
+            // Unconditional (low-volume: once per join): names the opcodes recovered. This is the evidence
+            // that the one-shot WorldInit (OpCode 68) was arriving during the handshake and would otherwise
+            // have been dropped — i.e. the fix is doing real work.
+            Debug.Log($"[WorldManager] Flushing {buffered.Length} buffered pre-join message(s); opcodes=[{string.Join(",", buffered.Select(s => s.OpCode))}]");
+            foreach (var st in buffered)
+                HandleMatchState(st);
         }
 
         private void OnDestroy()
