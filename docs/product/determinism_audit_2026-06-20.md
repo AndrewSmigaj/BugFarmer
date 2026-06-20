@@ -1,5 +1,37 @@
 # Cross-client determinism regression — root-cause audit (2026-06-20)
 
+> ⚠️ **CORRECTION (under revision — do not trust the headline below).** Follow-up verification with
+> 2 real headless clients showed the original "96% per-bug divergence ⇒ the ecology broke determinism"
+> conclusion is **NOT supported**. The 96% was a **test-harness seeding asymmetry**, not a determinism
+> break: the **authority** client (first to join) and the **late joiner** were never seeded from the
+> same population, so the per-bug diff compared two different populations.
+> Verified facts: (a) the late-join snapshot apply path works correctly (`ApplySnapshot … 0 not found`,
+> 57 swarms / 156 bugs reconstructed); (b) `zone.LatestSnapshot` is set ONLY by an authority `ZoneSnapshot`
+> push (`match.go:2666`) or an EMPTY bootstrap (`match.go:2700`) — it is **never** loaded from zone
+> persistence (which restores into live `state.Swarms` only, `zone_persist.go:115`); (c) `handleZoneSnapshot`
+> stores the authority's push **unconditionally** (`match.go:2659-2676`), so an authority that pushes
+> `swarms=0` overwrites a good snapshot; (d) in every test run the **authority client ended with 0 local
+> bugs** (in one populated run it demonstrably HAD 156 bugs at tick ~97 — it pushed them, the joiner got
+ them — then dropped to 0 by tick ~600).
+>
+> **Authority-empty root cause (diagnosed 2026-06-20, headless 2-client + server logs):** the server
+> restores the population into live `state.Swarms` (`restored 23 swarm(s)`), and the authority is supposed
+> to receive its entire swarm set from a **single, one-shot `SwarmUpdate` broadcast** right after join
+> (`match.go:578-581`; comment: *"this re-broadcast is … the ONLY swarm set the first/authority client
+> receives"*). In every headless/ephemeral run the authority ended with **0 swarms for 850+ ticks** while
+> still applying the ongoing leg/event stream (`lastAppliedSeq` climbs 23→78→164…) — i.e. it dropped that
+> one-shot roster. The client gates `SwarmUpdate` on `WorldSeedProvider.IsInitialized` and stashes a SINGLE
+> `_pendingUpdate` to replay later (`SwarmManager.cs:724-731`, `:267-273`); the one-shot roster + single-slot
+> cache + ephemeral-join timing is the fragile path. **Late joiners are immune** — they get the explicit
+> `LateJoinSnapshot` per-bug state (works: `0 not found`). NOT an ecology collapse (server keeps 23 swarms);
+> NOT a determinism break in the sim. Whether this bites a REAL first player (character join, full UI init,
+> different timing) vs only the headless ephemeral harness is **unconfirmed**.
+>
+> A clean two-equally-populated-client comparison has
+> **not yet been achieved**, so determinism is currently **neither proven broken nor proven intact**.
+> The sections below are the ORIGINAL audit, retained for the mechanism research; treat the root-cause
+> headline as superseded by this banner until a clean measurement exists.
+
 ## Symptom (measured, not assumed)
 Two real headless Unity clients in ONE live `village_21_B` match, compared **per-bug** (matched by
 `(swarmId,bugId)`, comparing fixed-point `x,y,vx,vy` at the same sim tick, intersection only):
