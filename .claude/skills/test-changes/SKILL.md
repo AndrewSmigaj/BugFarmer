@@ -103,42 +103,43 @@ python3 tools/plot_interactions.py --tag <chart_name> --since 10m            # t
   `handlers_farming.go`), flower/tree density + Director bands in `make_bug_lab.py`'s `MAX_POP`/`DIRECTOR`.
 - Per-species live overlay in-game is DebugOverlay **F5**; this headless loop is the persistent record.
 
-## 3. Determinism — "is everyone in sync?" (same bug positions across players)
-Bugs are simulated deterministically on each client from the event ledger; the success criterion is that all
-clients' `ComputeStateHash` (FNV over bug positions/velocities) match at the same tick. There are FOUR ways
-to check it — run the cheap headless ones first.
+## 3. Determinism — "do two players see the SAME bugs?" (the whole point of the frontier-gated system)
+Bugs are simulated deterministically on each client from the broadcast leg ledger; the success criterion is
+that all clients' `ComputeStateHash` (FNV over bug positions/velocities) match at the same tick. **THE test
+is ① — two REAL clients, full system. The others are pre-checks/backstops, NOT substitutes.**
 
-- **① sim-determinism harness (FAST, headless, no Unity, COMMITTED — start here):**
+- **① CROSS-CLIENT SYNC TEST — two real headless Unity players, full system (THE proof). COMMITTED.**
+  Real client + real server, merge/split/spawn all live. Built standalone players don't take the Unity
+  project lock, so they run alongside an open Editor (this is how "N players, Editor open" works).
   ```bash
-  ~/.dotnet/dotnet run --project tools/sim-determinism            # exit 0 = deterministic, 1 = DIVERGED
-  ~/.dotnet/dotnet run --project tools/sim-determinism -- --selftest   # proves it can SEE divergence
+  # one-time per code change: build a CURRENT player (needs the project lock free for a headless build):
+  #   Editor menu  BugFarmer ▸ Build Sync-Test Player        (build from the open Editor), OR with Editor closed:
+  #   "Unity.exe" -batchmode -quit -projectPath BugFarmerClient -executeMethod SyncTestBuild.Build -logFile -
+  docker compose up -d                         # server (rebuild if Go changed)
+  tools/run_sync_test.sh village_21_B 60       # launches 2 players, diffs their per-tick hash streams
   ```
-  It **links the real client sim source** (FixedPoint / DeterministicRandom / movement behaviors /
-  MovementFactory / BugAgent / BugCollision — all Unity-independent; `Shims.cs` stubs the null-checked Unity
-  singletons) and drives every species for 600 ticks TWICE, asserting byte-identical per-tick hashes. Catches
-  the real desync causes (wall-clock, Dictionary/HashSet iteration, shared statics, float math) in seconds.
-  **Covers** the per-bug MOVEMENT sim (the fragile core). **Does NOT** replay server merge/split/spawn
-  orchestration or prove two *machines* agree — use ②③④ for those. See `tools/sim-determinism/README.md`.
-- **② server reproducibility gate (headless):** same seed → identical `ECOSTATS` across two runs proves the
-  SERVER sim is deterministic (`run_config.py`; see §1). (Known limit: not byte-identical because the harness
-  player's wall-clock join timing perturbs the start — directional, not exact.)
-- **③ live drift detector (real clients, the standing backstop):** connect ≥2 clients to one zone, play, then
-  ```bash
-  docker compose logs nakama | grep -i "Drift detected"     # nothing logged = all clients' hashes agree
-  ```
-  The server samples each client's `ComputeStateHash` at the SAME settled tick (~every 300 ticks) and logs
-  divergence (`match.go` `checkDriftSampling`/`handleSampleResponse`, OpCodes 61/62). Use real Unity clients
-  OR **headless Unity** (`-batchmode -nographics`, two instances) — Unity 6000.2.9f1 is installed at
-  `/mnt/c/Program Files/Unity/Hub/Editor/`, runnable from WSL (close the Editor / clear
-  `BugFarmerClient/Temp/UnityLockfile` first — a held lock makes batchmode exit 1 immediately).
-- **④ client tick-hash trace + diff (precise — exact first-divergence tick):** each client DebugOverlay
-  **F1** (record) → run → **F2** (dump) writes `trace_<clientId>_<HHmmss>.csv` to `persistentDataPath` with a
-  `# TICK n HASH xxxx` line per tick (`TickTraceBuffer.cs`); diff two clients' files — first mismatch = where
-  it broke. This is the tool that produced "hashes match tick-for-tick."
+  Each player (`HeadlessSyncTest.cs`, flag `-synctest`) auth's as a distinct account (NetworkManager reads
+  `-clientid`), enters the zone ephemerally, records its tick hashes (the F1/F2 `TickTraceBuffer`), quits.
+  The script diffs the two `trace_<id>_*.csv` streams → **IDENTICAL = players see the same bugs**; first
+  mismatch = exact divergence tick. Backstop: it also greps the server drift detector. Run this after ANY
+  change to the bug sim, sync, or species data. (Gotcha: a *headless build* needs the Editor closed — a held
+  `BugFarmerClient/Temp/UnityLockfile` makes batchmode exit 1; *running* the built players is fine with the
+  Editor open.)
+- **② sim-determinism pre-check (FAST, no Unity, no server):** `~/.dotnet/dotnet run --project
+  tools/sim-determinism` (`--selftest` proves it detects divergence). Links the real per-bug sim source and
+  runs it twice — catches wall-clock / unordered-collection / static / float nondeterminism in seconds. But
+  it ONLY covers the per-bug movement core (no merge/split/spawn, single process) — a green here does NOT
+  replace ①. See `tools/sim-determinism/README.md`.
+- **③ server reproducibility gate (headless):** same seed → identical `ECOSTATS` across two `run_config.py`
+  runs proves the SERVER sim is deterministic (§1). Known limit: not byte-identical (harness join timing).
+- **④ live drift detector (manual, real GUI clients):** connect ≥2 clients, play,
+  `docker compose logs nakama | grep -i "Drift detected"` (server samples each client's hash every ~300
+  ticks; `match.go` `checkDriftSampling`). ① automates exactly this with headless players + an exact trace diff.
 
-**Correcting an old note:** earlier this section claimed "no headless tool compares bug-position hashes." That
-was only ever true of the *§2 observer harness* (which doesn't run the bug sim). Tool ① above DOES run the
-real per-bug sim headlessly and compare hashes — it is the committed answer. Don't write throwaway versions.
+**Why ① is THE test (do not skip to ②):** ② is a single-process run-twice of only the movement core; the
+owner's requirement is two REAL clients agreeing on the ENTIRE system. Do not present a movement-only or
+seed-run-twice check as "players are in sync." And do not build any of this as throwaway scripts — it lives
+in the repo (`HeadlessSyncTest.cs`, `SyncTestBuild.cs`, `tools/run_sync_test.sh`).
 
 ## 3.5. Debugging WHY a behavior stalls (temporary server diagnostics)
 The harness reports the event ledger and dumps swarm positions only at t=0 — it does NOT show a bug's
