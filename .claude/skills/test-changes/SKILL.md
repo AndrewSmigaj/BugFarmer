@@ -105,25 +105,40 @@ python3 tools/plot_interactions.py --tag <chart_name> --since 10m            # t
 
 ## 3. Determinism — "is everyone in sync?" (same bug positions across players)
 Bugs are simulated deterministically on each client from the event ledger; the success criterion is that all
-clients' `ComputeStateHash` (FNV over bug positions/velocities) match at the same tick.
-- **Live drift detector (real clients, the standing backstop):** connect ≥2 clients to one zone, play, then
+clients' `ComputeStateHash` (FNV over bug positions/velocities) match at the same tick. There are FOUR ways
+to check it — run the cheap headless ones first.
+
+- **① sim-determinism harness (FAST, headless, no Unity, COMMITTED — start here):**
+  ```bash
+  ~/.dotnet/dotnet run --project tools/sim-determinism            # exit 0 = deterministic, 1 = DIVERGED
+  ~/.dotnet/dotnet run --project tools/sim-determinism -- --selftest   # proves it can SEE divergence
+  ```
+  It **links the real client sim source** (FixedPoint / DeterministicRandom / movement behaviors /
+  MovementFactory / BugAgent / BugCollision — all Unity-independent; `Shims.cs` stubs the null-checked Unity
+  singletons) and drives every species for 600 ticks TWICE, asserting byte-identical per-tick hashes. Catches
+  the real desync causes (wall-clock, Dictionary/HashSet iteration, shared statics, float math) in seconds.
+  **Covers** the per-bug MOVEMENT sim (the fragile core). **Does NOT** replay server merge/split/spawn
+  orchestration or prove two *machines* agree — use ②③④ for those. See `tools/sim-determinism/README.md`.
+- **② server reproducibility gate (headless):** same seed → identical `ECOSTATS` across two runs proves the
+  SERVER sim is deterministic (`run_config.py`; see §1). (Known limit: not byte-identical because the harness
+  player's wall-clock join timing perturbs the start — directional, not exact.)
+- **③ live drift detector (real clients, the standing backstop):** connect ≥2 clients to one zone, play, then
   ```bash
   docker compose logs nakama | grep -i "Drift detected"     # nothing logged = all clients' hashes agree
   ```
-  The server samples each client's `ComputeStateHash` at the SAME settled tick (~20 behind frontier, ~every
-  300 ticks) and logs divergence (`match.go` `checkDriftSampling`/`handleSampleResponse`, OpCodes 61/62).
-- **Client tick-hash trace + diff (precise — finds the exact first-divergence tick):** in each client,
-  DebugOverlay **F1** (start recording) → run the scenario → **F2** (dump) → writes
-  `trace_<clientId>_<HHmmss>.csv` to `Application.persistentDataPath`, with a `# TICK n HASH xxxx PLAYERS k`
-  line per tick (`TickTraceBuffer.cs`). Run on two clients (authority↔follower, or the same client before/
-  after a reconnect) and **diff the `# TICK … HASH …` lines** — the first mismatch is where determinism broke.
-  This is the tool that produced "hashes match tick-for-tick."
-- **Headless proxy:** the §2 harness confirms every client receives the SAME in-order event ledger (no gaps /
-  no stale-high) — identical inputs ⇒ identical positions, so it catches *server-side* divergence headlessly.
-- **HONEST GAP:** there is NO single headless tool that simulates N players AND compares bug-position hashes
-  (the harness is an observer; a `--clients N` hash mode was once proposed but never built — it would mean
-  porting the client sim). Cross-player POSITION hashes therefore use real clients (live or trace-diff),
-  optionally two **headless Unity** (`-batchmode -nographics`) instances.
+  The server samples each client's `ComputeStateHash` at the SAME settled tick (~every 300 ticks) and logs
+  divergence (`match.go` `checkDriftSampling`/`handleSampleResponse`, OpCodes 61/62). Use real Unity clients
+  OR **headless Unity** (`-batchmode -nographics`, two instances) — Unity 6000.2.9f1 is installed at
+  `/mnt/c/Program Files/Unity/Hub/Editor/`, runnable from WSL (close the Editor / clear
+  `BugFarmerClient/Temp/UnityLockfile` first — a held lock makes batchmode exit 1 immediately).
+- **④ client tick-hash trace + diff (precise — exact first-divergence tick):** each client DebugOverlay
+  **F1** (record) → run → **F2** (dump) writes `trace_<clientId>_<HHmmss>.csv` to `persistentDataPath` with a
+  `# TICK n HASH xxxx` line per tick (`TickTraceBuffer.cs`); diff two clients' files — first mismatch = where
+  it broke. This is the tool that produced "hashes match tick-for-tick."
+
+**Correcting an old note:** earlier this section claimed "no headless tool compares bug-position hashes." That
+was only ever true of the *§2 observer harness* (which doesn't run the bug sim). Tool ① above DOES run the
+real per-bug sim headlessly and compare hashes — it is the committed answer. Don't write throwaway versions.
 
 ## 3.5. Debugging WHY a behavior stalls (temporary server diagnostics)
 The harness reports the event ledger and dumps swarm positions only at t=0 — it does NOT show a bug's
