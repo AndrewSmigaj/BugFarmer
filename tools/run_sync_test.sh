@@ -34,17 +34,17 @@ echo "traces: $PDATA"
 # clear old traces so we pick up only this run's
 rm -f "$PDATA"/trace_A_*.csv "$PDATA"/trace_B_*.csv 2>/dev/null
 
-run_client () {  # $1 = clientId
-  "$PLAYER" -batchmode -nographics -synctest -zone "$ZONE" -clientid "$1" -duration "$DUR" \
-    -logFile "$PDATA/player_$1.log" &
-  echo $!
-}
-
-echo "launching 2 headless clients…"
-PA=$(run_client A)
-PB=$(run_client B)
-# wait out the run + connect/enter + dump margin
-wait "$PA"; wait "$PB"
+echo "launching 2 headless clients CONCURRENTLY (must share the same live match/ticks)…"
+# Redirect the player's stdout/stderr to a file — otherwise command substitution / the pipe blocks until
+# the player exits, which serializes the two clients (they then sync to different match ticks → no overlap).
+"$PLAYER" -batchmode -nographics -synctest -zone "$ZONE" -clientid A -duration "$DUR" \
+  -logFile "$PDATA/player_A.log" >"$PDATA/player_A.out" 2>&1 &
+PA=$!
+"$PLAYER" -batchmode -nographics -synctest -zone "$ZONE" -clientid B -duration "$DUR" \
+  -logFile "$PDATA/player_B.log" >"$PDATA/player_B.out" 2>&1 &
+PB=$!
+echo "  client A pid=$PA  client B pid=$PB ; waiting for both…"
+wait "$PA" "$PB"
 echo "both clients exited; comparing hash streams…"
 
 TA=$(ls -t "$PDATA"/trace_A_*.csv 2>/dev/null | head -1)
@@ -54,27 +54,45 @@ if [ -z "$TA" ] || [ -z "$TB" ]; then
   exit 1
 fi
 
+# PER-BUG comparison on the INTERSECTION of bugs both clients have. NOTE: a whole-client ComputeStateHash
+# is the WRONG comparison here — clients are interest-managed (each subscribes to chunks around its own
+# player), so two clients hash DIFFERENT bug SETS and "diverge" even when every shared bug is identical.
+# The honest check: for each shared (swarmId,bugId) at each common tick, do (x,y,vx,vy) match?
 python3 - "$TA" "$TB" <<'PY'
-import re, sys
+import sys
 def load(p):
-    h={}
+    d={}  # tick -> {(swarm,bug): (x,y,vx,vy)}
     for line in open(p, encoding="utf-8", errors="replace"):
-        m=re.match(r"# TICK (\d+) HASH ([0-9A-Fa-f]+)", line)
-        if m: h[int(m.group(1))]=m.group(2)
-    return h
+        if not line[:1].isdigit(): continue
+        f=line.rstrip("\n").split(",")
+        if len(f)<7: continue
+        try: t=int(f[0])
+        except ValueError: continue
+        d.setdefault(t,{})[(f[1],f[2])]=(f[3],f[4],f[5],f[6])
+    return d
 A=load(sys.argv[1]); B=load(sys.argv[2])
 common=sorted(set(A)&set(B))
 if not common:
-    print("INCONCLUSIVE: no overlapping ticks between the two clients (did both reach the sim?)"); sys.exit(2)
-diff=[t for t in common if A[t]!=B[t]]
-print(f"compared {len(common)} common ticks (range {common[0]}..{common[-1]})")
-if diff:
-    t=diff[0]
-    print(f"SYNC: ❌ DIVERGED — first mismatch at tick {t}: A={A[t]} B={B[t]}  ({len(diff)} ticks differ)")
-    print("The two players do NOT see the same bugs => determinism is broken.")
-    sys.exit(1)
-print("SYNC: ✅ IDENTICAL — both clients computed the same bug hashes on every common tick.")
-print("Two players see the same bugs. The frontier-gated deterministic system holds.")
+    print("INCONCLUSIVE: no overlapping ticks (clients never co-simulated)."); sys.exit(2)
+shared=mismatch=0; first=None
+for t in common:
+    a=A[t]; b=B[t]
+    for k in (a.keys()&b.keys()):
+        shared+=1
+        if a[k]!=b[k]:
+            mismatch+=1
+            if first is None: first=(t,k,a[k],b[k])
+print(f"common ticks={len(common)} ({common[0]}..{common[-1]});  shared-bug comparisons={shared}")
+if shared==0:
+    print("INCONCLUSIVE: clients shared NO bugs (disjoint chunk subscriptions — co-locate the players)."); sys.exit(2)
+if mismatch==0:
+    print(f"SYNC: ✅ IDENTICAL — all {shared} shared-bug states match. Two players see the same bugs.")
+    sys.exit(0)
+pct=100*mismatch/shared
+t,k,va,vb=first
+print(f"SYNC: ❌ DIVERGED — {mismatch}/{shared} shared-bug states differ ({pct:.1f}%). First: tick {t} bug {k} A={va} B={vb}")
+print("The two players do NOT agree on shared bugs => cross-client determinism is NOT holding.")
+sys.exit(1)
 PY
 RC=$?
 
