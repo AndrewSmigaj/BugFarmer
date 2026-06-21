@@ -851,6 +851,11 @@ type ZoneAuthorityMessage struct {
 	AuthorityID       string `json:"authority_id"`
 	AuthoritativeTick int64  `json:"authoritative_tick"` // Bootstrap tick for first client
 	LastEventSeq      int64  `json:"last_event_seq"`     // FIX #7: Initial watermark
+	// Seed-baseline for the FIRST joiner: it has no authority snapshot to adopt, so it CREATES the
+	// initial swarms from this metadata and seeds their bugs from (worldSeed, swarmId, bugId) at the
+	// swarm centre. SwarmUpdate no longer creates swarms — every swarm is born via this baseline,
+	// the late-join snapshot, or a SWARM_SPAWNED event. omitempty: only the first joiner gets it.
+	Swarms []SwarmData `json:"swarms,omitempty"`
 }
 
 // ZoneTickBroadcastMessage sent EVERY tick (10Hz) by server (OpCode 78)

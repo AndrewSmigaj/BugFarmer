@@ -357,6 +357,11 @@ namespace BugFarmer.Networking
         // cell_x/cell_y are WORLD cells; level = remaining food value (0 = gone).
         public string food_id;
         public int level;
+
+        // SWARM_SPAWNED: a new swarm minted at runtime. swarm_id=new swarm, species_id=its species
+        // (client derives sprite/radius), split_count=bug count, center_x/y=spawn centre (×1000).
+        // Applied at evt.tick so every client (live + late-join replay) creates it at the same tick.
+        public string species_id;
     }
 
     /// <summary>
@@ -423,6 +428,10 @@ namespace BugFarmer.Networking
         public string authority_id;
         public long authoritative_tick;  // Bootstrap tick for first client
         public long last_event_seq;      // FIX #7: Initial watermark for bootstrap
+        // Seed-baseline for the FIRST joiner (or reconnecting authority): it has no snapshot to
+        // adopt, so it CREATES these swarms and seeds their bugs from (worldSeed,swarmId,bugId) at
+        // the centre. Empty for everyone else (they get swarms via the snapshot / SWARM_SPAWNED).
+        public SwarmData[] swarms;
     }
 
     /// <summary>

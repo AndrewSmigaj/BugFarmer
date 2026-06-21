@@ -561,6 +561,10 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 					AuthorityID:       userID,
 					AuthoritativeTick: worldState.TickCount,
 					LastEventSeq:      -1, // FIRST CLIENT BOOTSTRAP - no prior events
+					// Seed-baseline so the first joiner (or a reconnecting authority) CREATES the current
+					// swarms itself — SwarmUpdate no longer creates. Bugs seed from (worldSeed,swarmId,bugId)
+					// at the centre; this client is the origin of truth, so seed-from-centre is exact.
+					Swarms: m.buildSwarmSeedBaseline(worldState, zone, worldState.Config.ChunkSize),
 				}
 				authData, _ := json.Marshal(authMsg)
 				dispatcher.BroadcastMessage(OpCodeZoneAuthority, authData, []runtime.Presence{presence}, nil, true)
@@ -2682,6 +2686,62 @@ func (m *Match) handleZoneSnapshot(
 	logger.Debug("Stored snapshot from authority %s at tick %d, last_event_seq=%d", senderID, msg.SnapshotTick, msg.SnapshotLastEventSeq)
 }
 
+// buildSwarmSeedBaseline returns swarm METADATA (no per-bug positions) for every live swarm, so a
+// joiner with no per-bug snapshot can CREATE the swarms and seed their bugs deterministically from
+// (worldSeed, swarmId, bugId) at the swarm centre. Two callers:
+//   - the FIRST joiner (ZoneAuthority): it IS the origin of truth, so seed-from-centre is exactly
+//     right (no client has simulated, no per-bug positions exist anywhere yet); and
+//   - a late joiner in the rare window before the authority's first snapshot (empty bootstrap): it
+//     gets seed-from-centre too — no worse than the pre-existing SwarmUpdate bootstrap, and the
+//     drift-resync converges it to the authority's exact state (see task: on-demand snapshot).
+// The live leg (last SWARM_SET_TARGET) is hydrated so the centre marches from tick one.
+func (m *Match) buildSwarmSeedBaseline(state *WorldState, zone *ZoneState, chunkSize int) []SwarmData {
+	ids := make([]string, 0, len(state.Swarms))
+	for id := range state.Swarms {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids) // deterministic order (cosmetic; keeps logs/diffs stable)
+
+	baseline := make([]SwarmData, 0, len(ids))
+	for _, id := range ids {
+		swarm := state.Swarms[id]
+		spriteID := swarm.SpeciesID
+		if species, ok := state.Species[swarm.SpeciesID]; ok {
+			spriteID = species.SpriteID
+		}
+		meta := SwarmData{
+			ID:         swarm.ID,
+			SpeciesID:  swarm.SpeciesID,
+			SpriteID:   spriteID,
+			X:          swarm.WorldX(chunkSize),
+			Y:          swarm.WorldY(chunkSize),
+			Radius:     swarm.Radius,
+			Count:      swarm.Count,
+			Facing:     int(swarm.Facing),
+			Phase:      swarm.Phase,
+			NextBugID:  swarm.NextBugID,
+			RemovedIDs: swarm.GetRemovedIDs(),
+		}
+		// Hydrate the leg active now (latest SWARM_SET_TARGET in the unpruned log) so the closed-form
+		// centre march starts correct; swarms with no leg yet get one via their first live event.
+		for i := len(zone.InfluenceLog) - 1; i >= 0; i-- {
+			evt := zone.InfluenceLog[i]
+			if evt.Type == InfluenceSwarmSetTarget && evt.SwarmID == swarm.ID {
+				meta.HasTarget = true
+				meta.LegOriginX = evt.OriginX
+				meta.LegOriginY = evt.OriginY
+				meta.LegTargetX = evt.TargetX
+				meta.LegTargetY = evt.TargetY
+				meta.LegSpeed = evt.Speed
+				meta.LegStartTick = evt.Tick
+				break
+			}
+		}
+		baseline = append(baseline, meta)
+	}
+	return baseline
+}
+
 // sendLateJoinSnapshot sends a LateJoinSnapshot (OpCode 72) to a joining player.
 // This contains the authority's snapshot plus the influence log for replay.
 func (m *Match) sendLateJoinSnapshot(
@@ -2699,15 +2759,19 @@ func (m *Match) sendLateJoinSnapshot(
 	zoneID := state.CurrentZone.ZoneID
 	zone := state.GetOrCreateZone(zoneID)
 
-	// Check if we have a snapshot from authority
-	// If no snapshot yet, create bootstrap snapshot - client will get swarms via SwarmUpdate
+	// Check if we have a snapshot from authority.
+	// If no snapshot yet (rare ~1-frame window before the authority's first snapshot), bootstrap:
+	// the joiner CREATES the current swarms from a seed-baseline (see buildSwarmSeedBaseline) and
+	// drift-resync converges it to the authority's exact per-bug state. NOT via SwarmUpdate anymore.
+	bootstrap := false
 	if zone.LatestSnapshot == nil {
-		logger.Info("No authority snapshot yet, creating bootstrap for late joiner %s in zone %s", joinerID, zoneID)
+		bootstrap = true
+		logger.Info("No authority snapshot yet, creating seed-baseline bootstrap for late joiner %s in zone %s", joinerID, zoneID)
 		zone.LatestSnapshot = &ZoneSnapshot{
 			ZoneID:               zoneID,
 			SnapshotTick:         state.TickCount,
 			SnapshotLastEventSeq: zone.NextSeq - 1,      // All events to date are "in" the bootstrap state
-			Swarms:               []SwarmSnapshotData{}, // Empty - SwarmUpdate provides swarm data
+			Swarms:               []SwarmSnapshotData{}, // No per-bug data; swarm_metadata carries the seed-baseline
 			StateHash:            "",
 		}
 		zone.LatestSnapshotTick = state.TickCount
@@ -2775,6 +2839,10 @@ func (m *Match) sendLateJoinSnapshot(
 	// This allows clients to create swarms BEFORE replay, so snapshot positions can be applied
 	chunkSize := state.Config.ChunkSize
 	var swarmMetadata []SwarmData
+	if bootstrap {
+		// No authority snapshot: deliver the seed-baseline (client creates + seeds from centre).
+		swarmMetadata = m.buildSwarmSeedBaseline(state, zone, chunkSize)
+	}
 	for _, swarmSnapshot := range zone.LatestSnapshot.Swarms {
 		if swarm, ok := state.Swarms[swarmSnapshot.SwarmID]; ok {
 			spriteID := swarm.SpeciesID // fallback

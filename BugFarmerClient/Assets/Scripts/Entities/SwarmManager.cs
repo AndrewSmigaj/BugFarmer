@@ -120,6 +120,14 @@ namespace BugFarmer.Entities
         private string _pendingAuthorityId;
         private long _pendingAuthorityTick;
         private long _pendingAuthoritySeq;
+        private SwarmData[] _pendingAuthoritySwarms; // seed-baseline carried with a cached ZoneAuthority
+
+        // First-joiner seed-baseline awaiting the world seed: ProcessZoneAuthority stashes the swarm
+        // baseline here; Update() creates the swarms (seed-from-centre) once WorldSeedProvider is ready,
+        // before the tick loop advances. SwarmUpdate no longer creates swarms, so this IS the first
+        // joiner's swarm bootstrap (late joiners get theirs from the snapshot instead).
+        private SwarmData[] _pendingBaselineSwarms;
+        private long _pendingBaselineTick;
 
         // Cause #6 fix: defer the late-join bug replay until the joiner's view-chunk OCCUPANT data is loaded.
         // Bug collision (BugCollision -> TilemapManager.IsCellBlockedForBugs) reads occupant data from loaded
@@ -277,8 +285,9 @@ namespace BugFarmer.Entities
                 {
                     Debug.Log($"[SwarmManager] Processing DEFERRED ZoneAuthority now that localUserId={localUserId} is known");
                     DebugFileLogger.Log($"[SwarmManager] Processing DEFERRED ZoneAuthority: authority={_pendingAuthorityId}, localUserId={localUserId}");
-                    ProcessZoneAuthority(_pendingAuthorityId, _pendingAuthorityTick, _pendingAuthoritySeq, _currentZoneId, localUserId);
+                    ProcessZoneAuthority(_pendingAuthorityId, _pendingAuthorityTick, _pendingAuthoritySeq, _currentZoneId, localUserId, _pendingAuthoritySwarms);
                     _pendingAuthorityId = null;  // Clear pending - processed
+                    _pendingAuthoritySwarms = null;
                 }
             }
 
@@ -289,6 +298,14 @@ namespace BugFarmer.Entities
                 ProcessSwarmUpdate(_pendingUpdate);
                 _hasPendingUpdate = false;
                 _pendingUpdate = null;
+            }
+
+            // First-joiner seed-baseline: create the swarms once the world seed is ready (before the tick
+            // loop runs this frame). This is the deterministic replacement for SwarmUpdate-create.
+            if (_pendingBaselineSwarms != null && WorldSeedProvider.Instance?.IsInitialized == true)
+            {
+                CreateBaselineSwarms(_pendingBaselineSwarms, _pendingBaselineTick);
+                _pendingBaselineSwarms = null;
             }
 
             // Cause #6: run the deferred late-join bug replay once the view-chunk occupant data has loaded
@@ -780,14 +797,14 @@ namespace BugFarmer.Entities
 
                 if (_swarms.TryGetValue(data.id, out var existing))
                 {
-                    // Update existing swarm
+                    // Metadata refresh only (count/radius/sprite/phase). SwarmUpdate NO LONGER creates
+                    // swarms — creation is deterministic via the join baseline (first joiner / late-join
+                    // snapshot) or a SWARM_SPAWNED event at its tick. Creating here on-receipt (an
+                    // arbitrary local tick) is exactly the spawn-tick desync this whole change removes.
                     existing.UpdateFromServer(data);
                 }
-                else
-                {
-                    // Spawn new swarm visual
-                    SpawnSwarm(data, update.tick);
-                }
+                // else: not yet created on this client — it will arrive via SWARM_SPAWNED (at its event
+                // tick) or the join baseline. Deliberately do nothing (see comment above).
             }
 
             // Remove swarms not in this update (merged/despawned)
@@ -1052,6 +1069,42 @@ namespace BugFarmer.Entities
         }
 
         /// <summary>
+        /// SWARM_SPAWNED: a swarm minted at runtime (continuous spawn, release, nest hatch, reproduce-
+        /// at-cap, director). Create the visual and seed its bugs from (worldSeed, swarmId, bugId) at the
+        /// event centre, AT this event's tick (ProcessEventsForTick runs at evt.tick in both live and
+        /// replay). Every client therefore creates it at the SAME tick → identical wander-step count.
+        /// Idempotent: a swarm that already exists (snapshot adopt, double-delivery) is left untouched.
+        /// Radius/sprite are cosmetic and refreshed by the next SwarmUpdate; only the centre + count +
+        /// seed drive the deterministic sim, so they are all that's needed here.
+        /// </summary>
+        public void HandleSwarmSpawned(InfluenceEvent evt)
+        {
+            if (_swarms.ContainsKey(evt.swarm_id))
+                return; // already created (snapshot/baseline/duplicate) — never re-seed
+
+            var data = new SwarmData
+            {
+                id = evt.swarm_id,
+                species_id = evt.species_id,
+                sprite_id = "", // Initialize falls back to species_id; SwarmUpdate refreshes the real sprite
+                x = evt.center_x / 1000f, // fixed-point ×1000 → world; same int on every client
+                y = evt.center_y / 1000f,
+                radius = 0f, // cosmetic; SwarmUpdate sets the real radius (SpawnBug seeds at centre regardless)
+                count = evt.split_count,
+                next_bug_id = evt.split_count,
+            };
+
+            SpawnSourceTag = "swarmSpawned"; // DIAGNOSTIC
+            var obj = new GameObject($"Swarm_{evt.swarm_id}");
+            var visual = obj.AddComponent<SwarmVisual>();
+            visual.Initialize(data, evt.tick);
+            _swarms[evt.swarm_id] = visual;
+
+            Debug.Log($"[SwarmManager] SWARM_SPAWNED {evt.swarm_id} ({evt.species_id}) x{evt.split_count} at tick {evt.tick}");
+            DebugFileLogger.Log($"[SwarmManager] SWARM_SPAWNED {evt.swarm_id} ({evt.species_id}) x{evt.split_count} at tick {evt.tick}");
+        }
+
+        /// <summary>
         /// Create an EMPTY swarm shell for a split child: count=0 means Initialize's
         /// SpawnInitialBugs is a natural no-op; the SWARM_SPLIT event populates it by moving
         /// bugs. Center seeds _fallbackCenter until the child's first SWARM_SET_TARGET leg
@@ -1175,6 +1228,43 @@ namespace BugFarmer.Entities
             {
                 foreach (var entry in data.bug_hp)
                     visual.SetDisplayHP(entry.bug_id, entry.hp, flash: false);
+            }
+        }
+
+        /// <summary>
+        /// Create the FIRST joiner's initial swarms from the ZoneAuthority seed-baseline. No per-bug
+        /// data exists yet (this client is the origin of truth), so bugs seed from (worldSeed,swarmId,
+        /// bugId) at the swarm centre — exactly what the server has authority over. Mirrors the late-
+        /// join metadata path: hydrate the in-flight leg first so the centre marches from tick one.
+        /// Idempotent (skips already-created swarms). Called from Update() once the world seed is ready.
+        /// </summary>
+        private void CreateBaselineSwarms(SwarmData[] baseline, long baselineTick)
+        {
+            Debug.Log($"[SwarmManager] Creating {baseline.Length} swarms from authority seed-baseline at tick {baselineTick}");
+            DebugFileLogger.Log($"[SwarmManager] Creating {baseline.Length} swarms from authority seed-baseline at tick {baselineTick}");
+
+            foreach (var meta in baseline)
+            {
+                // Hydrate the leg BEFORE creating (the closed-form centre march reads it immediately).
+                if (meta.has_target)
+                {
+                    InfluenceManager.Instance?.SetSwarmLeg(
+                        meta.id,
+                        new FixedPoint2(
+                            new FixedPoint { Value = meta.leg_origin_x },
+                            new FixedPoint { Value = meta.leg_origin_y }),
+                        new FixedPoint2(
+                            new FixedPoint { Value = meta.leg_target_x },
+                            new FixedPoint { Value = meta.leg_target_y }),
+                        new FixedPoint { Value = meta.leg_speed },
+                        meta.leg_start_tick);
+                }
+
+                if (_swarms.ContainsKey(meta.id))
+                    continue; // already created (defensive)
+
+                SpawnSourceTag = "authorityBaseline"; // DIAGNOSTIC
+                SpawnSwarmFromMetadata(meta, baselineTick);
             }
         }
 
@@ -1519,26 +1609,27 @@ namespace BugFarmer.Entities
                 _pendingAuthorityId = msg.authority_id;
                 _pendingAuthorityTick = msg.authoritative_tick;
                 _pendingAuthoritySeq = msg.last_event_seq;
+                _pendingAuthoritySwarms = msg.swarms;
                 _currentZoneId = msg.zone_id;
                 Debug.LogWarning($"[SwarmManager] ZoneAuthority received but localUserId not yet known - caching. authority={msg.authority_id}, tick={msg.authoritative_tick}");
                 DebugFileLogger.Log($"[SwarmManager] ZoneAuthority CACHED (localUserId empty): authority={msg.authority_id}, tick={msg.authoritative_tick}");
                 return;
             }
 
-            ProcessZoneAuthority(msg.authority_id, msg.authoritative_tick, msg.last_event_seq, msg.zone_id, localUserId);
+            ProcessZoneAuthority(msg.authority_id, msg.authoritative_tick, msg.last_event_seq, msg.zone_id, localUserId, msg.swarms);
         }
 
         /// <summary>
         /// Process zone authority assignment. Called immediately from HandleZoneAuthority
         /// or deferred from Update() when localUserId becomes available.
         /// </summary>
-        private void ProcessZoneAuthority(string authorityId, long authoritativeTick, long lastEventSeq, string zoneId, string localUserId)
+        private void ProcessZoneAuthority(string authorityId, long authoritativeTick, long lastEventSeq, string zoneId, string localUserId, SwarmData[] baselineSwarms)
         {
             bool wasAuthority = _isAuthority;
             _isAuthority = (authorityId == localUserId);
             _currentZoneId = zoneId;
 
-            var authLog = $"[SwarmManager] ZoneAuthority: authority={authorityId}, tick={authoritativeTick}, seq={lastEventSeq}, localUser={localUserId}, isLocalAuthority={_isAuthority}, currentState={_syncState}";
+            var authLog = $"[SwarmManager] ZoneAuthority: authority={authorityId}, tick={authoritativeTick}, seq={lastEventSeq}, localUser={localUserId}, isLocalAuthority={_isAuthority}, currentState={_syncState}, baselineSwarms={baselineSwarms?.Length ?? 0}";
             Debug.Log(authLog);
             DebugFileLogger.Log(authLog);
 
@@ -1551,6 +1642,14 @@ namespace BugFarmer.Entities
                 _lastReceivedSeq = lastEventSeq;     // FIX #7: Assume all prior events received
                 TransitionToLive();
                 DebugFileLogger.Log($"[SwarmManager] First client -> LIVE at tick {_simulationTick}");
+
+                // Bootstrap the initial swarms from the seed-baseline (SwarmUpdate no longer creates).
+                // Deferred to Update() so it runs once the world seed is initialized, before the tick loop.
+                if (baselineSwarms != null && baselineSwarms.Length > 0)
+                {
+                    _pendingBaselineSwarms = baselineSwarms;
+                    _pendingBaselineTick = authoritativeTick;
+                }
             }
 
             // Handle authority handoff
@@ -1599,6 +1698,17 @@ namespace BugFarmer.Entities
                     _lastReceivedSeq = msg.last_event_seq;
                     TransitionToLive();
                     DebugFileLogger.Log($"[SwarmManager] Authority (from tick) -> LIVE at tick {_simulationTick}");
+
+                    // ZoneAuthority was lost, so its seed-baseline never arrived → we have no swarms.
+                    // Recover via the resync path: the server's bootstrap snapshot now carries the same
+                    // seed-baseline (swarm_metadata), so a snapshot request rebuilds the initial swarms.
+                    // (SwarmUpdate no longer creates them.) Reliable in-order delivery makes this rare.
+                    if (_swarms.Count == 0 && _pendingBaselineSwarms == null)
+                    {
+                        Debug.LogWarning("[SwarmManager] Authority via tick broadcast with no seed-baseline — requesting snapshot to rebuild initial swarms");
+                        DebugFileLogger.Log("[SwarmManager] Authority-from-tick: no baseline, requesting snapshot recovery");
+                        SendToServer(OpCodes.RequestSnapshot, new SnapshotRequestMessage());
+                    }
                 }
                 else
                 {

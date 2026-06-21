@@ -46,6 +46,7 @@ namespace BugFarmer.Bugs
         public const string EventSwarmSplit = "SWARM_SPLIT";
         public const string EventSwarmMerge = "SWARM_MERGE";
         public const string EventSwarmReproduced = "SWARM_REPRODUCED";
+        public const string EventSwarmSpawned = "SWARM_SPAWNED";
         public const string EventItemRotted = "ITEM_ROTTED";
         public const string EventFoodConsumed = "FOOD_CONSUMED";
 
@@ -181,6 +182,13 @@ namespace BugFarmer.Bugs
                 case EventSwarmReproduced:
                     // Sated swarm bred at a food source: spawn the new bugs at the centre.
                     SwarmManager.Instance?.HandleSwarmReproduced(evt);
+                    break;
+
+                case EventSwarmSpawned:
+                    // A new swarm minted at runtime: create it + seed its bugs from the spawn seed at
+                    // THIS event tick (idempotent). Replaces SwarmUpdate-create so live followers and
+                    // late-join replay all create it at the same tick → identical wander-step count.
+                    SwarmManager.Instance?.HandleSwarmSpawned(evt);
                     break;
 
                 case EventItemRotted:
