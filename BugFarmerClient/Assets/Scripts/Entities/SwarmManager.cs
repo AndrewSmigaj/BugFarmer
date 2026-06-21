@@ -8,6 +8,7 @@ using BugFarmer.Bugs;
 using BugFarmer.Networking;
 using BugFarmer.Util;
 using BugFarmer.Tracing;
+using BugFarmer.World;
 
 namespace BugFarmer.Entities
 {
@@ -119,6 +120,19 @@ namespace BugFarmer.Entities
         private string _pendingAuthorityId;
         private long _pendingAuthorityTick;
         private long _pendingAuthoritySeq;
+
+        // Cause #6 fix: defer the late-join bug replay until the joiner's view-chunk OCCUPANT data is loaded.
+        // Bug collision (BugCollision -> TilemapManager.IsCellBlockedForBugs) reads occupant data from loaded
+        // chunks, which arrive ASYNC via chunk subscription. Replaying before they load makes bugs near walls
+        // collide differently than the authority (X-then-Y slide), a sub-cell error the position-relative
+        // wander then amplifies into a permanent per-bug divergence. Confirmed against a wall_wood row.
+        private bool _deferredReplayPending;
+        private long _deferredReplayEndTick;
+        private float _deferredReplayDeadline;
+        private bool _cachedHandoff;          // the one-shot ZoneHandoff can arrive during the deferred wait
+        private long _cachedHandoffTick;
+        private long _cachedHandoffSeq;
+        private const float DeferredReplayTimeout = 8f; // fallback: replay anyway (accept divergence) vs freeze
 
         // Safety net timeouts
         private float _frontierStallTimer;
@@ -275,6 +289,23 @@ namespace BugFarmer.Entities
                 ProcessSwarmUpdate(_pendingUpdate);
                 _hasPendingUpdate = false;
                 _pendingUpdate = null;
+            }
+
+            // Cause #6: run the deferred late-join bug replay once the view-chunk occupant data has loaded
+            // (or after a timeout fallback, accepting possible divergence rather than freezing the joiner).
+            if (_deferredReplayPending)
+            {
+                bool chunksReady = TilemapManager.Instance == null || TilemapManager.Instance.ViewChunksReady;
+                bool timedOut = Time.realtimeSinceStartup >= _deferredReplayDeadline;
+                if (chunksReady || timedOut)
+                {
+                    _deferredReplayPending = false;
+                    if (timedOut && !chunksReady)
+                        DebugFileLogger.Log("[SwarmManager] Deferred replay TIMEOUT — replaying without full chunk load (bugs near walls may diverge until resync)");
+                    else
+                        DebugFileLogger.Log($"[SwarmManager] View chunks ready — running deferred late-join replay to {_deferredReplayEndTick}");
+                    RunLateJoinReplay(_deferredReplayEndTick);
+                }
             }
 
             // Debug: log state changes
@@ -1370,8 +1401,34 @@ namespace BugFarmer.Entities
             Debug.Log($"[SwarmManager] {inboxLog}");
             DebugFileLogger.Log($"[SwarmManager] {inboxLog}");
 
+            // Cause #6: gate the bug replay on the view-chunk OCCUPANT data being loaded. Bug collision
+            // during replay reads occupants from TilemapManager, which fill ASYNC via chunk subscription.
+            // Replaying first makes bugs near walls collide differently than the authority (permanent
+            // per-bug divergence). If the chunks aren't ready, defer to Update(); else replay now.
+            if (TilemapManager.Instance != null && !TilemapManager.Instance.ViewChunksReady)
+            {
+                _deferredReplayPending = true;
+                _deferredReplayEndTick = msg.end_tick;
+                _deferredReplayDeadline = Time.realtimeSinceStartup + DeferredReplayTimeout;
+                _cachedHandoff = false;
+                Debug.Log($"[SwarmManager] Late-join replay DEFERRED until view chunks load (end_tick={msg.end_tick})");
+                DebugFileLogger.Log($"[SwarmManager] Late-join replay DEFERRED (view chunks not ready), end_tick={msg.end_tick}");
+                return;
+            }
+
+            RunLateJoinReplay(msg.end_tick);
+        }
+
+        /// <summary>
+        /// Replay the late-join snapshot to endTick and enter HandshakeWait. Split out of
+        /// HandleLateJoinSnapshot so it can run either immediately or DEFERRED from Update() once the
+        /// view-chunk occupant data has loaded (cause #6). If the one-shot ZoneHandoff arrived during the
+        /// deferred wait it was cached; apply it here so the joiner still reaches LIVE.
+        /// </summary>
+        private void RunLateJoinReplay(long endTick)
+        {
             // Replay to end_tick
-            ReplayToTick(msg.end_tick);
+            ReplayToTick(endTick);
 
             // Spec §7.3: REPLAY_DONE checkpoint
             var replayHash = ComputeStateHash();
@@ -1389,6 +1446,16 @@ namespace BugFarmer.Entities
             _syncState = SyncState.HandshakeWait;
             Debug.Log($"[SwarmManager] Replay complete at tick {_simulationTick}, waiting for handshake");
             DebugFileLogger.Log($"[SwarmManager] STATE -> HandshakeWait at simTick={_simulationTick} (awaiting ZoneHandoff)");
+
+            // Handoff may have arrived while we were waiting for chunks — apply the cached one now.
+            if (_cachedHandoff)
+            {
+                _cachedHandoff = false;
+                _authoritativeTick = Math.Max(_authoritativeTick, _cachedHandoffTick);
+                _frontierWatermark = Math.Max(_frontierWatermark, _cachedHandoffSeq);
+                TransitionToLive();
+                DebugFileLogger.Log($"[SwarmManager] Applied cached ZoneHandoff after deferred replay -> LIVE at simTick={_simulationTick}");
+            }
         }
 
         /// <summary>
@@ -1405,6 +1472,17 @@ namespace BugFarmer.Entities
             var handoffLog = $"HANDOFF live_start_tick={msg.live_start_tick} last_event_seq={msg.last_event_seq} simTick={_simulationTick} state={_syncState}";
             Debug.Log($"[SwarmManager] {handoffLog}");
             DebugFileLogger.Log($"[SwarmManager] {handoffLog}");
+
+            // Cause #6: if the replay is deferred (waiting for view chunks), the one-shot handoff would be
+            // lost (we're still Replaying, not HandshakeWait). Cache it; RunLateJoinReplay applies it.
+            if (_deferredReplayPending)
+            {
+                _cachedHandoff = true;
+                _cachedHandoffTick = msg.live_start_tick;
+                _cachedHandoffSeq = msg.last_event_seq;
+                DebugFileLogger.Log($"[SwarmManager] ZoneHandoff CACHED during deferred replay (live_start_tick={msg.live_start_tick})");
+                return;
+            }
 
             if (_syncState == SyncState.HandshakeWait)
             {

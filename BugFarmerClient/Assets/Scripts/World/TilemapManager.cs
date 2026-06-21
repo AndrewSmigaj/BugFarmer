@@ -1146,6 +1146,25 @@ namespace BugFarmer.World
         }
 
         /// <summary>
+        /// True once every chunk this client has subscribed to (its view grid) has its data loaded.
+        /// The late-join bug replay gates on this: bug collision reads occupant data from loaded chunks,
+        /// so replaying before the view chunks arrive makes bugs near walls collide differently than the
+        /// authority (a permanent per-bug divergence). Bugs OUTSIDE the view have no occupants on any client
+        /// (consistently), so the view grid is the right readiness bound. Returns false until the player has
+        /// spawned and subscribed (empty set). See architecture_swarm_sync.md.
+        /// </summary>
+        public bool ViewChunksReady
+        {
+            get
+            {
+                if (_subscribedChunks.Count == 0) return false;
+                foreach (var c in _subscribedChunks)
+                    if (!_loadedChunks.ContainsKey(c)) return false;
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Check if a cell blocks bug movement.
         /// Returns true if occupied by a blocking occupant or blocking ground tile.
         /// </summary>
