@@ -33,6 +33,12 @@ if [ ! -f "$PLAYER" ]; then
 fi
 echo "=== late-join sync test: zone=$ZONE A-duration=${DUR}s B-joins-after=${DELAY}s ==="
 
+# CONTAMINATION GUARD (cost real debugging time once): a stray player from a prior run keeps the
+# server match ALIVE and ticking; the next "A" then joins that persisted, player-empty-but-state-full
+# match as a second authority/late-joiner → FALSE divergence. Kill strays here, AND for a definitive
+# run restart the server first so the match starts at tick 0:  docker compose restart nakama
+taskkill.exe /F /IM BugFarmerClient.exe >/dev/null 2>&1 || true
+
 rm -f "$PDATA"/trace_A_*.csv "$PDATA"/trace_B_*.csv 2>/dev/null
 rm -f "$PDATA"/player_A.log "$PDATA"/player_B.log 2>/dev/null
 
