@@ -93,7 +93,9 @@ namespace BugFarmer.Testing
                 SwarmManager.Instance.SetTraceCallback((tick, hash, bugs, players) =>
                 {
                     if (bugs != null && bugs.Count > maxBugs) maxBugs = bugs.Count;
-                    buffer.RecordTick(tick, hash, bugs, players);
+                    // DIAGNOSTIC: also capture per-swarm leg+center each tick (leg/center divergence pin).
+                    var legs = SwarmManager.Instance.CollectSwarmLegTraces();
+                    buffer.RecordTick(tick, hash, bugs, players, legs);
                 });
                 Log($"recording {duration}s of tick hashes…");
                 await Task.Delay(duration * 1000);

@@ -92,6 +92,28 @@ namespace BugFarmer.Bugs
         /// <summary>Clear the registry (late-join resync re-bootstraps it).</summary>
         public void ClearFood() => _food.Clear();
 
+        /// <summary>
+        /// Export the full food registry so the AUTHORITY can embed it in its ZoneSnapshot. The registry is
+        /// event-sourced and pruned, so (like swarm legs) the live registry is the reliable late-join source.
+        /// Raw FixedPoint.Value coords — bit-exact hydration, no float round-trip.
+        /// </summary>
+        public IEnumerable<(string id, int x, int y, int level)> ExportFood()
+        {
+            foreach (var kv in _food)
+                yield return (kv.Key, kv.Value.pos.X.Value, kv.Value.pos.Y.Value, kv.Value.level);
+        }
+
+        /// <summary>
+        /// Hydrate one food entry from a snapshot (late-join), using raw FixedPoint.Value coords for bit-exact
+        /// determinism. Overwrites unconditionally (authoritative); subsequent replay events converge it.
+        /// </summary>
+        public void HydrateFoodExact(string foodId, int x, int y, int level)
+        {
+            if (string.IsNullOrEmpty(foodId) || level <= 0) return;
+            _food[foodId] = (new FixedPoint2(
+                new FixedPoint { Value = x }, new FixedPoint { Value = y }), level);
+        }
+
         private void Awake()
         {
             Instance = this;

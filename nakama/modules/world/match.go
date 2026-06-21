@@ -2668,6 +2668,7 @@ func (m *Match) handleZoneSnapshot(
 		SnapshotTick:         msg.SnapshotTick,
 		SnapshotLastEventSeq: msg.SnapshotLastEventSeq,
 		Swarms:               msg.Swarms,
+		Food:                 msg.Food, // relay the authoritative food registry (opaque to server)
 		StateHash:            msg.StateHash,
 	}
 	zone.LatestSnapshotTick = msg.SnapshotTick
@@ -2731,6 +2732,18 @@ func (m *Match) sendLateJoinSnapshot(
 		logger.Info("LateJoinSnapshot packaging: seq interval (%d, %d], events=0 (empty)",
 			snapshotLastSeq, endLastSeq)
 	}
+
+	// Late-join coherence summary (one line): how many swarms are leg-less at snapshot (their first leg
+	// arrives during replay) and how many food-registry entries ride the snapshot. Both must hydrate
+	// coherently or fresh swarms feeding at a food source desync — see architecture_swarm_sync.md.
+	noLegCount := 0
+	for _, s := range zone.LatestSnapshot.Swarms {
+		if !s.HasLeg {
+			noLegCount++
+		}
+	}
+	logger.Info("LateJoinSnapshot coherence: swarms=%d (leg-less=%d) food_entries=%d",
+		len(zone.LatestSnapshot.Swarms), noLegCount, len(zone.LatestSnapshot.Food))
 
 	// Collect current player cell positions from authoritative state
 	// This is snapshot state, NOT event reconstruction
@@ -2837,6 +2850,7 @@ func (m *Match) sendLateJoinSnapshot(
 		InfluenceLog:         influenceLog,
 		AuthorityID:          zone.AuthorityUserID,
 		PlayerCells:          playerCells,
+		Food:                 zone.LatestSnapshot.Food, // authoritative food registry for late-join hydration
 	}
 
 	data, err := json.Marshal(msg)

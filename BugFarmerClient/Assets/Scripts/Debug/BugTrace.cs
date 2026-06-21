@@ -55,4 +55,31 @@ namespace BugFarmer.Tracing
             };
         }
     }
+
+    /// <summary>
+    /// DIAGNOSTIC (leg/center late-join divergence): per-swarm movement-leg + derived center, captured each
+    /// traced tick. Comparing this A-vs-B at common ticks pins whether the residual is leg-CONTENT divergence
+    /// (origin/target/speed/startTick differ) or a no-leg fallback-center mismatch (hasLeg differs / fallback
+    /// differs). All ints are FixedPoint.Value (no floats — determinism). See architecture_swarm_sync.md.
+    /// </summary>
+    [System.Serializable]
+    public struct SwarmLegTrace
+    {
+        public long tick;
+        public string swarmId;
+        public bool hasLeg;        // did InfluenceManager hold a leg (vs falling back to metadata center)?
+        public int originX, originY;
+        public int targetX, targetY;
+        public int speed;
+        public long startTick;     // leg start tick (closed-form march reference)
+        public int centerX, centerY;     // the center bug AI actually used this tick (_simCenter)
+        public int fallbackX, fallbackY; // metadata/initial center (used when hasLeg == false)
+        public bool foodNear;            // is a food source within feed range of the center? (food-registry coherence)
+
+        public string ToCsv() =>
+            $"{tick},{swarmId},{(hasLeg ? 1 : 0)},{originX},{originY},{targetX},{targetY},{speed},{startTick},{centerX},{centerY},{fallbackX},{fallbackY},{(foodNear ? 1 : 0)}";
+
+        public static string CsvHeader =>
+            "tick,swarmId,hasLeg,originX,originY,targetX,targetY,speed,startTick,centerX,centerY,fallbackX,fallbackY,foodNear";
+    }
 }

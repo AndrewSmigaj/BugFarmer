@@ -262,6 +262,7 @@ type ZoneSnapshot struct {
 	SnapshotTick         int64
 	SnapshotLastEventSeq int64 // Last applied seq included in snapshot state
 	Swarms               []SwarmSnapshotData
+	Food                 []FoodSnapshotData // Authoritative food registry @ snapshot (late-join hydration)
 	StateHash            string
 }
 

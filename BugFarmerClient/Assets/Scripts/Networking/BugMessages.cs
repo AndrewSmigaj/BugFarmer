@@ -242,6 +242,7 @@ namespace BugFarmer.Networking
         public int intent_dir_x, intent_dir_y;       // Brownian: intent direction
         public int intent_target_x, intent_target_y; // Gliding: intent target
         public int current_dir_x, current_dir_y;     // Gliding: current direction
+        public int land_ticks;                       // Feed land/hold timer (>0 = landed on food); history-dependent
 
         // DIAGNOSTIC ONLY (re-root investigation; never hashed): provenance of this bug on this client.
         public long spawn_tick = -1;
@@ -461,7 +462,24 @@ namespace BugFarmer.Networking
         public long snapshot_tick;
         public long snapshot_last_event_seq; // Last applied seq included in snapshot state
         public SwarmSnapshotData[] swarms;
+        public FoodSnapshotData[] food;      // Authoritative food registry @ snapshot (late-join hydration)
         public string state_hash;
+    }
+
+    /// <summary>
+    /// One entry of the deterministic food registry, embedded in the snapshot so late-joiners hydrate it
+    /// coherently. The registry is event-sourced (ITEM_ROTTED/FOOD_CONSUMED) and pruned, so — like swarm legs —
+    /// the authority's live registry is the reliable source. Coordinates are raw FixedPoint.Value (×1000) so
+    /// hydration is bit-exact (no float round-trip). Bugs at a food source FEED (position-affecting), so a
+    /// missing entry desyncs per-bug positions on the late-joiner.
+    /// </summary>
+    [Serializable]
+    public class FoodSnapshotData
+    {
+        public string food_id;
+        public int x;      // FixedPoint.Value
+        public int y;      // FixedPoint.Value
+        public int level;  // remaining food value (>0)
     }
 
     /// <summary>
@@ -505,5 +523,6 @@ namespace BugFarmer.Networking
         public InfluenceEvent[] influence_log; // Events in (snapshot_last_seq, end_last_seq]
         public string authority_id;
         public PlayerCellData[] player_cells;  // Current player positions (state, not events)
+        public FoodSnapshotData[] food;        // Authoritative food registry @ snapshot (hydrate before replay)
     }
 }

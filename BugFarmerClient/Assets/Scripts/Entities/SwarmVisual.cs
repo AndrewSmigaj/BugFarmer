@@ -57,6 +57,10 @@ namespace BugFarmer.Entities
         public string SwarmId { get; private set; }
         public string SpeciesId { get; private set; }
         public int Count => _bugs.Count;
+
+        // DIAGNOSTIC (leg/center trace): the center bug AI used this tick, and the metadata fallback center.
+        public FixedPoint2 SimCenter => _simCenter;
+        public FixedPoint2 FallbackCenter => _fallbackCenter;
         public float Radius => _radius;
         public bool IsWaitingForSnapshot => _waitingForSnapshot;
 
@@ -659,6 +663,7 @@ namespace BugFarmer.Entities
                 intent_target_y = movementState.IntentTargetY,
                 current_dir_x = movementState.CurrentDirX,
                 current_dir_y = movementState.CurrentDirY,
+                land_ticks = agent.LandTicks, // feed land/hold timer (history-dependent — must ride snapshot)
                 // DIAGNOSTIC (re-root investigation)
                 spawn_tick = agent.SpawnTick,
                 spawn_source = agent.SpawnSource
@@ -706,6 +711,7 @@ namespace BugFarmer.Entities
                         Y = new FixedPoint { Value = data.vy }
                     };
                     agent.Rng.State = data.rng_state;
+                    agent.LandTicks = data.land_ticks; // restore feed land/hold timer (else feeding bugs desync)
                     agent.SpawnSource = "snapshotApply"; // DIAGNOSTIC: got authoritative per-bug state
 
                     // Behavior state

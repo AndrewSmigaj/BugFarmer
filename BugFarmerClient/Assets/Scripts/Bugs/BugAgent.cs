@@ -112,6 +112,9 @@ namespace BugFarmer.Bugs
 
         // === Feed-at-food visual (deterministic) ===
         private int _landTicks; // >0 = landed (paused) on a food source
+        // Per-bug feed land/hold timer. History-dependent, so it MUST ride the snapshot (BugSampleData.land_ticks)
+        // or a bug mid-landing at snapshot re-roots with 0 and desyncs. See architecture_swarm_sync.md.
+        public int LandTicks { get => _landTicks; set => _landTicks = value; }
 
         private const float FeedVisualRadius = 2.5f; // centre within this of food => bugs engage
         private static readonly int LandDistSqr =

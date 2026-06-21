@@ -1219,6 +1219,20 @@ namespace BugFarmer.Entities
             // next Think - acceptable, sub-cell, and self-correcting.
             InfluenceManager.Instance?.ClearSwarmLegs();
 
+            // Hydrate the deterministic FOOD REGISTRY from the snapshot BEFORE replay. The registry is
+            // event-sourced (ITEM_ROTTED/FOOD_CONSUMED) and pruned, and was cleared on join — without this,
+            // a late-joiner replays with food it never registered, so swarms sitting at a food source FEED on
+            // the authority but plain-wander here, desyncing per-bug positions permanently (no absolute resync).
+            // Replay-window FOOD events ride influence_log and converge on top of this. (Leg-embed pattern.)
+            InfluenceManager.Instance?.ClearFood();
+            if (msg.food != null)
+            {
+                foreach (var f in msg.food)
+                    InfluenceManager.Instance?.HydrateFoodExact(f.food_id, f.x, f.y, f.level);
+                Debug.Log($"[SwarmManager] Hydrated {msg.food.Length} food registry entries from snapshot");
+                DebugFileLogger.Log($"[SwarmManager] Hydrated {msg.food.Length} food entries from snapshot");
+            }
+
             // Hydrate player cells from snapshot STATE (not events)
             // This restores the point-in-time player positions at snapshot_tick
             if (msg.player_cells != null)
@@ -1644,12 +1658,24 @@ namespace BugFarmer.Entities
             // snapshot_last_event_seq stays _lastAppliedSeq: events@_simulationTick are still pending (applied
             // at the start of the next AdvanceOneTick) and ride the replay log, so a joiner that starts at
             // snapshot_tick=_simulationTick applies them before simulating _simulationTick+1 — in lockstep.
+            // Embed the deterministic food registry so late-joiners hydrate it coherently. It is event-sourced
+            // (ITEM_ROTTED/FOOD_CONSUMED) and pruned, so — exactly like swarm legs — the authority's live registry
+            // is the reliable source. Bugs at a food source FEED (position-affecting), so a missing entry desyncs
+            // per-bug positions on a late-joiner. (Confirmed cause of the residual late-join divergence.)
+            var foodSnapshots = new List<FoodSnapshotData>();
+            if (InfluenceManager.Instance != null)
+            {
+                foreach (var (id, fx, fy, level) in InfluenceManager.Instance.ExportFood())
+                    foodSnapshots.Add(new FoodSnapshotData { food_id = id, x = fx, y = fy, level = level });
+            }
+
             var snapshot = new ZoneSnapshotMessage
             {
                 zone_id = _currentZoneId,
                 snapshot_tick = _simulationTick,
                 snapshot_last_event_seq = _lastAppliedSeq, // Last seq whose effects are in this snapshot
                 swarms = swarmSnapshots.ToArray(),
+                food = foodSnapshots.ToArray(),
                 state_hash = "" // TODO: Implement state hash
             };
 
@@ -1743,6 +1769,39 @@ namespace BugFarmer.Entities
                 }
             }
             return traces;
+        }
+
+        /// <summary>
+        /// DIAGNOSTIC (leg/center late-join divergence): collect each swarm's current movement leg + derived
+        /// center at this tick. Compared A-vs-B at common ticks to pin whether the residual is leg-CONTENT
+        /// divergence or a no-leg fallback-center mismatch. Mirrors what SwarmVisual.SimulateTick reads.
+        /// </summary>
+        public List<SwarmLegTrace> CollectSwarmLegTraces()
+        {
+            var legs = new List<SwarmLegTrace>();
+            var im = InfluenceManager.Instance;
+            foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
+            {
+                var sv = _swarms[swarmId];
+                var rec = new SwarmLegTrace { tick = _simulationTick, swarmId = swarmId };
+
+                if (im != null && im.TryGetSwarmLeg(swarmId, out int ox, out int oy,
+                        out int tx, out int ty, out int spd, out long st))
+                {
+                    rec.hasLeg = true;
+                    rec.originX = ox; rec.originY = oy;
+                    rec.targetX = tx; rec.targetY = ty;
+                    rec.speed = spd; rec.startTick = st;
+                }
+
+                var center = sv.SimCenter;
+                rec.centerX = center.X.Value; rec.centerY = center.Y.Value;
+                var fb = sv.FallbackCenter;
+                rec.fallbackX = fb.X.Value; rec.fallbackY = fb.Y.Value;
+                rec.foodNear = im != null && im.TryGetNearestFood(center, 2.5f, out _);
+                legs.Add(rec);
+            }
+            return legs;
         }
 
         /// <summary>

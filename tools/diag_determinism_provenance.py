@@ -27,6 +27,8 @@ def load(path):
     per_tick = {}
     prov = {}  # (swarm,bug) -> (spawnTick, spawnSource)
     for line in open(path, encoding="utf-8", errors="replace"):
+        if line.startswith("# SWARMLEGS"):
+            break  # leg section (digit-led rows w/ different schema) — see diag_leg_divergence.py
         if not line[:1].isdigit():
             continue
         f = line.rstrip("\n").split(",")

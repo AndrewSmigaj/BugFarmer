@@ -693,6 +693,18 @@ type BugSampleData struct {
 	IntentTargetY    int `json:"intent_target_y"`
 	CurrentDirX      int `json:"current_dir_x"` // Gliding: current direction
 	CurrentDirY      int `json:"current_dir_y"`
+	LandTicks        int `json:"land_ticks,omitempty"` // feed land/hold timer (history-dependent — rides snapshot)
+}
+
+// FoodSnapshotData is one entry of the deterministic food registry, embedded in the authority's ZoneSnapshot
+// and relayed in the late-join package. The registry is event-sourced (ITEM_ROTTED/FOOD_CONSUMED) and pruned,
+// so — like swarm legs — the authority's live registry is the reliable late-join source. Coords are raw
+// FixedPoint values (×1000) for bit-exact hydration. The server relays these opaquely (never interprets them).
+type FoodSnapshotData struct {
+	FoodID string `json:"food_id"`
+	X      int    `json:"x"`     // FixedPoint value
+	Y      int    `json:"y"`     // FixedPoint value
+	Level  int    `json:"level"` // remaining food value (>0)
 }
 
 // SampleRequestMessage sent to every client in a chunk (OpCode 61).
@@ -858,6 +870,7 @@ type ZoneSnapshotMessage struct {
 	SnapshotTick         int64               `json:"snapshot_tick"`
 	SnapshotLastEventSeq int64               `json:"snapshot_last_event_seq"` // Last applied seq included in snapshot state
 	Swarms               []SwarmSnapshotData `json:"swarms"`
+	Food                 []FoodSnapshotData  `json:"food,omitempty"` // Authoritative food registry @ snapshot
 	StateHash            string              `json:"state_hash"`
 }
 
@@ -889,4 +902,5 @@ type LateJoinSnapshot struct {
 	InfluenceLog         []InfluenceEvent    `json:"influence_log"`           // Events in (snapshot_last_seq, end_last_seq]
 	AuthorityID          string              `json:"authority_id"`
 	PlayerCells          []PlayerCellData    `json:"player_cells"` // Current player positions (state, not events)
+	Food                 []FoodSnapshotData  `json:"food,omitempty"` // Authoritative food registry @ snapshot
 }
