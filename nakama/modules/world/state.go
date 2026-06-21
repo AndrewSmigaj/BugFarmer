@@ -770,6 +770,30 @@ func (s *WorldState) AddFoodEvent(zoneID, eventType, foodID string, cellX, cellY
 // AddSwarmReproducedEvent: the swarm gains count new bugs with ids newBugIDBase.. —
 // emitted by reproduction (bred at a food source) AND by player bug-release into an
 // existing swarm (the client handler is the same deterministic spawn loop either way).
+// AddSwarmSpawnedEvent logs a SWARM_SPAWNED leg through the same seq-gated ledger so every client
+// (live + late-join replay) creates the new swarm at the SAME tick with the same seed → bit-identical
+// spawn-seeded wander. centerX/centerY are the spawn world pos ×1000 (== the swarm's first leg origin,
+// via toFixed(WorldX)), so the fallback center matches when the first leg arrives. count = initial bug count.
+func (s *WorldState) AddSwarmSpawnedEvent(zoneID, swarmID, speciesID string, count, centerX, centerY int) {
+	zone := s.GetOrCreateZone(zoneID)
+
+	event := InfluenceEvent{
+		Tick:       s.TickCount,
+		Seq:        zone.NextSeq,
+		Type:       InfluenceSwarmSpawned,
+		ZoneID:     zoneID,
+		SwarmID:    swarmID,
+		SpeciesID:  speciesID,
+		SplitCount: count,
+		CenterX:    centerX,
+		CenterY:    centerY,
+	}
+	zone.NextSeq++
+
+	zone.InfluenceLog = append(zone.InfluenceLog, event)
+	s.PendingInfluence = append(s.PendingInfluence, event)
+}
+
 func (s *WorldState) AddSwarmReproducedEvent(zoneID, swarmID string, count, newBugIDBase int) {
 	zone := s.GetOrCreateZone(zoneID)
 

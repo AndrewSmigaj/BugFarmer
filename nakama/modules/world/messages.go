@@ -790,6 +790,12 @@ const (
 	InfluenceItemRotted    = "ITEM_ROTTED"     // a ground item became bug food (FoodID + world cell + Level=food value)
 	InfluenceFoodConsumed  = "FOOD_CONSUMED"   // a food source's level crossed a threshold (Level=remaining; 0 = gone)
 	InfluenceSwarmReproduced = "SWARM_REPRODUCED" // sated swarm bred at a food source: SplitCount new bugs at NewBugIDBase
+	// A brand-new swarm appears (continuous spawn, initial seed, release-new, nest hatch, director, reproduce-at-cap
+	// child). Rides the tick-ordered ledger so EVERY client (live + late-join replay) creates it at the SAME tick
+	// with the same seed → bit-identical spawn-seeded wander. SwarmID=new id, SpeciesID, SplitCount=count,
+	// CenterX/CenterY=spawn world pos (×1000, == the swarm's first leg origin). NOT used for split (SWARM_SPLIT)
+	// or reproduce-into-existing (SWARM_REPRODUCED).
+	InfluenceSwarmSpawned = "SWARM_SPAWNED"
 )
 
 // InfluenceEvent represents a discrete, replayable signal for bug AI
@@ -804,6 +810,7 @@ type InfluenceEvent struct {
 	CellY    int    `json:"cell_y,omitempty"`
 	SwarmID  string `json:"swarm_id,omitempty"` // For BUG_* and SWARM_* events
 	BugID    int    `json:"bug_id,omitempty"`   // For BUG_* events
+	SpeciesID string `json:"species_id,omitempty"` // For SWARM_SPAWNED (client derives radius/sprite/wander from species data)
 
 	// SWARM_SET_TARGET leg fields (fixed-point ×1000). Self-describes one movement
 	// leg so clients re-anchor center to Origin and walk toward Target at Speed/tick.

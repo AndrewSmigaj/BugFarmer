@@ -114,6 +114,13 @@ func (m *Match) spawnSwarmAt(state *WorldState, speciesID string, n int, x, y fl
 	state.Swarms[swarm.ID] = swarm
 	state.SwarmsBySpecies[speciesID] = append(state.SwarmsBySpecies[speciesID], swarm.ID)
 	state.SwarmsDirty = true
+	// Deterministic spawn: ride the ledger so every client (live + late-join replay) creates this swarm at the
+	// SAME tick with the same seed. center ×1000 == the swarm's first leg origin (toFixed(WorldX)), so the
+	// fallback center matches when the leg arrives.
+	if state.CurrentZone != nil {
+		state.AddSwarmSpawnedEvent(state.CurrentZone.ZoneID, swarm.ID, speciesID, n,
+			toFixed(swarm.WorldX(chunkSize)), toFixed(swarm.WorldY(chunkSize)))
+	}
 	// NextThinkTick stays 0: the swarm Thinks THIS tick, emitting its anchoring
 	// SWARM_SET_TARGET leg after the SwarmUpdate and before the frontier.
 	return swarm

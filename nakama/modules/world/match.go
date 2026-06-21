@@ -1878,6 +1878,11 @@ func (m *Match) spawnSwarmInArea(state *WorldState, speciesID string, species *e
 	state.Swarms[swarm.ID] = swarm
 	state.SwarmsBySpecies[speciesID] = append(state.SwarmsBySpecies[speciesID], swarm.ID)
 	state.SwarmsDirty = true
+	// Deterministic spawn via the ledger (see AddSwarmSpawnedEvent) — all clients create at the same tick.
+	if state.CurrentZone != nil {
+		state.AddSwarmSpawnedEvent(state.CurrentZone.ZoneID, swarm.ID, speciesID, count,
+			toFixed(swarm.WorldX(chunkSize)), toFixed(swarm.WorldY(chunkSize)))
+	}
 
 	logger.Debug("Spawned swarm %s (%s) in %s at (%.0f, %.0f)",
 		swarm.ID, speciesID, area.ID, worldX, worldY)
