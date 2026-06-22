@@ -39,12 +39,30 @@ echo "=== late-join sync test: zone=$ZONE A-duration=${DUR}s B-joins-after=${DEL
 # run restart the server first so the match starts at tick 0:  docker compose restart nakama
 taskkill.exe /F /IM BugFarmerClient.exe >/dev/null 2>&1 || true
 
+# FRESH MATCH (required for a DEFINITIVE run): a build DEPLOY is not a restart, and a restart is not a fresh
+# match. FRESH=1 force-recreates the plugin + server (so the match starts at tick 0 on the CURRENT backend.so)
+# and waits for "Startup done". See memory: sync-test-fresh-match, server-chunks-lazy-loaded.
+if [ "${FRESH:-0}" = "1" ]; then
+  echo "FRESH=1: redeploying plugin + server (force-recreate) and waiting for Startup done…"
+  docker compose -f "$ROOT/docker-compose.yml" up -d --force-recreate builder nakama >/dev/null 2>&1
+  ok=0
+  for i in $(seq 1 60); do
+    docker compose -f "$ROOT/docker-compose.yml" ps --format '{{.Name}} {{.Status}}' 2>/dev/null \
+      | grep -q "nakama.*healthy" && { echo "  nakama healthy (after ~${i}s)"; ok=1; break; }
+    sleep 2
+  done
+  [ "$ok" = 1 ] || { echo "  ERROR: nakama not healthy after FRESH redeploy"; exit 1; }
+fi
+
 rm -f "$PDATA"/trace_A_*.csv "$PDATA"/trace_B_*.csv 2>/dev/null
 rm -f "$PDATA"/player_A.log "$PDATA"/player_B.log 2>/dev/null
 
 # Optional spawn-apart (Phase 1b proof): SPAWN_A / SPAWN_B = "gx,gy" place each client at a chosen edge so
-# they load DIFFERENT chunk sets. Collision is now zone-wide, so fence-adjacent bugs must stay bit-identical
-# even on the client that never loaded the fence. Unset = default spawn (co-located regression).
+# they load DISJOINT chunk sets (collision is zone-wide, so fence-adjacent bugs must stay bit-identical even
+# on the client that never loaded the fence). Use cells WITHIN 4 of an edge or the server rejects the entry
+# (anti-forge) and the client silently falls back to centre. For village_21_B (256x256): SPAWN_A=126,2
+# (top edge → chunk rows 0-2) and SPAWN_B=126,253 (bottom edge → rows 5-7) are genuinely disjoint. The
+# disjointness is ASSERTED below. Unset = default spawn (co-located regression).
 A_SPAWN_ARG=(); B_SPAWN_ARG=()
 [ -n "${SPAWN_A:-}" ] && A_SPAWN_ARG=(-spawn "$SPAWN_A")
 [ -n "${SPAWN_B:-}" ] && B_SPAWN_ARG=(-spawn "$SPAWN_B")
@@ -87,43 +105,36 @@ if [ -z "$TA" ] || [ -z "$TB" ]; then
   exit 1
 fi
 
-# PER-BUG comparison on the INTERSECTION of bugs both clients have, at each common tick (same diff as
-# run_sync_test.sh — a whole-client hash is wrong here because clients are interest-managed).
-python3 - "$TA" "$TB" <<'PY'
-import sys
-def load(p):
-    d={}
+# NON-VACUITY GUARD for spawn-apart: when BOTH SPAWN_A and SPAWN_B are set, the whole point is that the two
+# clients loaded DIFFERENT chunks (so zone-wide collision is actually exercised). Parse each client's
+# "Subscribe chunk x,y" log lines and FAIL LOUD if the subscribed sets are not disjoint — otherwise a
+# silently-rejected entry (clients both at centre) would masquerade as a passing spawn-apart proof.
+if [ -n "${SPAWN_A:-}" ] && [ -n "${SPAWN_B:-}" ]; then
+  python3 - "$PDATA/player_A.log" "$PDATA/player_B.log" <<'PY' || exit 2
+import re, sys
+def chunks(p):
+    s=set()
     for line in open(p, encoding="utf-8", errors="replace"):
-        if not line[:1].isdigit(): continue
-        f=line.rstrip("\n").split(",")
-        if len(f)<7: continue
-        try: t=int(f[0])
-        except ValueError: continue
-        d.setdefault(t,{})[(f[1],f[2])]=(f[3],f[4],f[5],f[6])
-    return d
-A=load(sys.argv[1]); B=load(sys.argv[2])
-common=sorted(set(A)&set(B))
-if not common:
-    print("INCONCLUSIVE: no overlapping ticks (B never co-simulated with A)."); sys.exit(2)
-shared=mismatch=0; first=None
-for t in common:
-    a=A[t]; b=B[t]
-    for k in (a.keys()&b.keys()):
-        shared+=1
-        if a[k]!=b[k]:
-            mismatch+=1
-            if first is None: first=(t,k,a[k],b[k])
-print(f"common ticks={len(common)} ({common[0]}..{common[-1]});  shared-bug comparisons={shared}")
-if shared==0:
-    print("INCONCLUSIVE: clients shared NO bugs (disjoint chunk subscriptions)."); sys.exit(2)
-if mismatch==0:
-    print(f"SYNC: ✅ IDENTICAL — all {shared} shared-bug states match across the late join.")
-    sys.exit(0)
-pct=100*mismatch/shared
-t,k,va,vb=first
-print(f"SYNC: ❌ DIVERGED — {mismatch}/{shared} shared-bug states differ ({pct:.1f}%). First: tick {t} bug {k} A={va} B={vb}")
-sys.exit(1)
+        m=re.search(r"Subscribe chunk (\-?\d+),(\-?\d+)", line)
+        if m: s.add((int(m.group(1)), int(m.group(2))))
+    return s
+A=chunks(sys.argv[1]); B=chunks(sys.argv[2])
+inter=A&B
+ra=sorted({c[1] for c in A}); rb=sorted({c[1] for c in B})
+print(f"spawn-apart chunk check: A loaded {len(A)} chunks (rows {ra}); B loaded {len(B)} chunks (rows {rb})")
+if not A or not B:
+    print("INCONCLUSIVE: a client subscribed to NO chunks (no PlayerController / entry failed)."); sys.exit(2)
+if inter:
+    print(f"INCONCLUSIVE: clients are NOT disjoint — {len(inter)} shared chunks {sorted(inter)[:6]}. "
+          f"Entry likely rejected (anti-forge) → fell back to centre. Use edge cells (e.g. 126,2 / 126,253)."); sys.exit(2)
+print("OK: clients loaded DISJOINT chunk sets — zone-wide collision is genuinely exercised.")
 PY
+fi
+
+# Cross-client determinism diff — canonical shared impl (tools/sync_diff.py), unit-tested by
+# tools/test_sync_diff.py. PRIMARY = per-tick whole-state HASH stream; LOCALIZER = per-bug intersection.
+# (Stops at the "# SWARMLEGS" marker so 14-col leg rows can't collide with bug-id 0/1 keys.)
+python3 "$ROOT/tools/sync_diff.py" "$TA" "$TB"
 RC=$?
 
 echo "--- backstop: server drift detector ---"

@@ -54,46 +54,10 @@ if [ -z "$TA" ] || [ -z "$TB" ]; then
   exit 1
 fi
 
-# PER-BUG comparison on the INTERSECTION of bugs both clients have. NOTE: a whole-client ComputeStateHash
-# is the WRONG comparison here — clients are interest-managed (each subscribes to chunks around its own
-# player), so two clients hash DIFFERENT bug SETS and "diverge" even when every shared bug is identical.
-# The honest check: for each shared (swarmId,bugId) at each common tick, do (x,y,vx,vy) match?
-python3 - "$TA" "$TB" <<'PY'
-import sys
-def load(p):
-    d={}  # tick -> {(swarm,bug): (x,y,vx,vy)}
-    for line in open(p, encoding="utf-8", errors="replace"):
-        if not line[:1].isdigit(): continue
-        f=line.rstrip("\n").split(",")
-        if len(f)<7: continue
-        try: t=int(f[0])
-        except ValueError: continue
-        d.setdefault(t,{})[(f[1],f[2])]=(f[3],f[4],f[5],f[6])
-    return d
-A=load(sys.argv[1]); B=load(sys.argv[2])
-common=sorted(set(A)&set(B))
-if not common:
-    print("INCONCLUSIVE: no overlapping ticks (clients never co-simulated)."); sys.exit(2)
-shared=mismatch=0; first=None
-for t in common:
-    a=A[t]; b=B[t]
-    for k in (a.keys()&b.keys()):
-        shared+=1
-        if a[k]!=b[k]:
-            mismatch+=1
-            if first is None: first=(t,k,a[k],b[k])
-print(f"common ticks={len(common)} ({common[0]}..{common[-1]});  shared-bug comparisons={shared}")
-if shared==0:
-    print("INCONCLUSIVE: clients shared NO bugs (disjoint chunk subscriptions — co-locate the players)."); sys.exit(2)
-if mismatch==0:
-    print(f"SYNC: ✅ IDENTICAL — all {shared} shared-bug states match. Two players see the same bugs.")
-    sys.exit(0)
-pct=100*mismatch/shared
-t,k,va,vb=first
-print(f"SYNC: ❌ DIVERGED — {mismatch}/{shared} shared-bug states differ ({pct:.1f}%). First: tick {t} bug {k} A={va} B={vb}")
-print("The two players do NOT agree on shared bugs => cross-client determinism is NOT holding.")
-sys.exit(1)
-PY
+# Cross-client determinism diff — canonical shared impl (tools/sync_diff.py), unit-tested by
+# tools/test_sync_diff.py. PRIMARY = per-tick whole-state HASH stream; LOCALIZER = per-bug intersection.
+# (Stops at the "# SWARMLEGS" marker so 14-col leg rows can't collide with bug-id 0/1 keys.)
+python3 "$ROOT/tools/sync_diff.py" "$TA" "$TB"
 RC=$?
 
 echo "--- backstop: server drift detector ---"
