@@ -295,12 +295,13 @@ func TestSatiationGatesHunting(t *testing.T) {
 	state.Swarms[wasp.ID] = wasp
 	state.Swarms[fly.ID] = fly
 
-	// Above the hunt threshold: think must NOT acquire.
-	wasp.Satiation = 50
+	// At/above the full-load ceiling (a nest predator hunts until predatorFullSatiation=90, the forager
+	// loop that deliberately removed the old rest-at-HuntSatiationThreshold dead zone): must NOT acquire.
+	wasp.Satiation = 95
 	state.TickCount = wasp.NextThinkTick + 1
 	m.predationThink(state, wasp, state.Species["wasp_common"], 32, 0.1, nopRuntimeLogger())
 	if wasp.TargetPreyID != "" {
-		t.Fatal("sated wasp acquired prey")
+		t.Fatal("full-load wasp (satiation 95 >= ceiling 90) acquired prey")
 	}
 
 	// Below: acquires.
@@ -511,10 +512,10 @@ func TestStrikeRespectsNothingItShouldnt(t *testing.T) {
 // trap_only (centipede) rejects EVERYTHING including hands.
 func TestCatchNetTierMatrix(t *testing.T) {
 	cases := []struct {
-		name     string
-		tool     string // "" = bare hands
-		netSize  string
-		caught   bool
+		name    string
+		tool    string // "" = bare hands
+		netSize string
+		caught  bool
 	}{
 		{"hand x fly(small) MUST PASS", "", "small", true},
 		{"hand x butterfly(small) MUST PASS", "", "small", true},

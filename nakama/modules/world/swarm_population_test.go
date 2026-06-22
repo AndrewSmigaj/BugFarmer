@@ -19,20 +19,20 @@ import (
 // nopLogger satisfies runtime.Logger for tests.
 type nopLogger struct{}
 
-func (nopLogger) Debug(string, ...interface{})                          {}
-func (nopLogger) Info(string, ...interface{})                           {}
-func (nopLogger) Warn(string, ...interface{})                           {}
-func (nopLogger) Error(string, ...interface{})                          {}
-func (l nopLogger) WithField(string, interface{}) runtime.Logger        { return l }
-func (l nopLogger) WithFields(map[string]interface{}) runtime.Logger    { return l }
-func (nopLogger) Fields() map[string]interface{}                        { return nil }
+func (nopLogger) Debug(string, ...interface{})                       {}
+func (nopLogger) Info(string, ...interface{})                        {}
+func (nopLogger) Warn(string, ...interface{})                        {}
+func (nopLogger) Error(string, ...interface{})                       {}
+func (l nopLogger) WithField(string, interface{}) runtime.Logger     { return l }
+func (l nopLogger) WithFields(map[string]interface{}) runtime.Logger { return l }
+func (nopLogger) Fields() map[string]interface{}                     { return nil }
 
 func nopRuntimeLogger() runtime.Logger { return nopLogger{} }
 
 func newTestState(maxSwarm int) *WorldState {
 	return &WorldState{
-		Config:          WorldConfig{ChunkSize: 32, TickRate: 10},
-		Tuning:          DefaultTuning(), // ecology dials (production loads from JSON; tests use compiled defaults)
+		Config: WorldConfig{ChunkSize: 32, TickRate: 10},
+		Tuning: DefaultTuning(), // ecology dials (production loads from JSON; tests use compiled defaults)
 		// Seeded RNG so server-side draws (kill-drop jitter, predation re-aims, wander angles) don't nil-panic;
 		// fixed seed keeps tests reproducible. Production seeds from WorldSeed at MatchInit.
 		Rng:             rand.New(rand.NewSource(1)),
@@ -262,6 +262,7 @@ func TestReproduceSwarmDoubles(t *testing.T) { // name kept for history greps; s
 	}
 	species := state.Species["fly_common"]
 	species.ReproduceCooldown = 30
+	species.EggSpriteID = "fly_egg" // brood-lay is gated on a nursery egg sprite (match.go reproduceSwarm)
 
 	m.reproduceSwarm(state, nil, swarm, species, nopRuntimeLogger())
 
@@ -273,9 +274,10 @@ func TestReproduceSwarmDoubles(t *testing.T) { // name kept for history greps; s
 	if len(eventsOfType(state, InfluenceSwarmReproduced)) != 0 {
 		t.Fatal("laying eggs must not emit SWARM_REPRODUCED (that's deferred to hatch)")
 	}
-	b := state.BroodStates["10,10"]
+	// Ground-pile broods snap to the shared area-origin cell (broodAreaSize=4), so 10,10 → 8,8.
+	b := state.BroodStates["g:"+broodKey(broodAreaKey(10, 10))]
 	if b == nil || b.Eggs < 1 || b.Eggs > 2 || b.SpeciesID != "fly_common" || b.SourceKind != "ground_pile" {
-		t.Fatalf("expected 1-2 fly eggs in a ground_pile brood at 10,10, got %+v", b)
+		t.Fatalf("expected 1-2 fly eggs in a ground_pile brood at the 10,10 area cell, got %+v", b)
 	}
 	// Meters reset + cooldown armed (the lay still costs the swarm its meter, exactly as a breed did)
 	if swarm.Satiation != 0 || swarm.ReproductionMeter != 0 || swarm.ReproduceCooldown != 30 {
@@ -306,6 +308,7 @@ func TestReproduceLaysUncappedAtPopulationCap(t *testing.T) {
 	}
 	species := state.Species["fly_common"]
 	species.ReproduceCooldown = 30
+	species.EggSpriteID = "fly_egg" // brood-lay is gated on a nursery egg sprite (match.go reproduceSwarm)
 	state.CurrentZone.BugSpawning = &BugSpawnConfig{SpeciesCaps: map[string]SpeciesCap{
 		"fly_common": {Max: 10, MaxPopulation: 10}, // already at the population cap
 	}}
@@ -315,7 +318,7 @@ func TestReproduceLaysUncappedAtPopulationCap(t *testing.T) {
 	if swarm.Count != 10 {
 		t.Fatalf("laying must not grow the swarm: %d", swarm.Count)
 	}
-	if b := state.BroodStates["10,10"]; b == nil || b.Eggs < 1 {
+	if b := state.BroodStates["g:"+broodKey(broodAreaKey(10, 10))]; b == nil || b.Eggs < 1 {
 		t.Fatalf("at-cap laying must still deposit eggs into the brood, got %+v", b)
 	}
 	if state.GroundItems["food1"].FoodValue != 60 {

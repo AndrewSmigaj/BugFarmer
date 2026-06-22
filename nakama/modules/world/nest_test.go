@@ -92,13 +92,15 @@ func TestNestHomingDepositCycle(t *testing.T) {
 		t.Fatalf("post-deposit satiation=%.0f, want deposit_satiation 80", resident.Satiation)
 	}
 
-	// Resting (satiation 80 > threshold 30): the next think must NOT hunt.
+	// After depositing, satiation drops to deposit_satiation (80) — still BELOW the full-load ceiling
+	// (predatorFullSatiation=90), so the forager loop immediately RESUMES hunting (the old rest-at-
+	// HuntSatiationThreshold dead zone was deliberately removed; see predation.go). Re-acquires the prey.
 	fly := newTestSwarm("b_fly", 10, 14, 12)
 	state.Swarms[fly.ID] = fly
 	state.TickCount = resident.NextThinkTick + 1
 	m.predationThink(state, resident, species, 32, 0.1, nopRuntimeLogger())
-	if resident.TargetPreyID != "" {
-		t.Fatal("resting wasp (satiation 80) acquired prey — the rest window is broken")
+	if resident.TargetPreyID != fly.ID {
+		t.Fatalf("post-deposit wasp (satiation 80 < ceiling 90) should resume hunting, got prey=%q", resident.TargetPreyID)
 	}
 }
 
