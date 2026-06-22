@@ -8,6 +8,7 @@ package world
 // Run inside the builder image:  go test ./modules/world/ -run TestSwarm -v
 
 import (
+	"math/rand"
 	"testing"
 
 	"bugfarmer/entities"
@@ -32,6 +33,9 @@ func newTestState(maxSwarm int) *WorldState {
 	return &WorldState{
 		Config:          WorldConfig{ChunkSize: 32, TickRate: 10},
 		Tuning:          DefaultTuning(), // ecology dials (production loads from JSON; tests use compiled defaults)
+		// Seeded RNG so server-side draws (kill-drop jitter, predation re-aims, wander angles) don't nil-panic;
+		// fixed seed keeps tests reproducible. Production seeds from WorldSeed at MatchInit.
+		Rng:             rand.New(rand.NewSource(1)),
 		TickCount:       1000,
 		Swarms:          map[string]*entities.SwarmState{},
 		SwarmsBySpecies: map[string][]string{},
