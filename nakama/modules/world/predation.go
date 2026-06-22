@@ -355,7 +355,7 @@ func (m *Match) applyPredationStrike(
 	// so the snatch plays AT each eaten fly (individual strike reads on screen); nil = predator-centre.
 	m.broadcastBugStrikeTelegraph(dispatcher, state, predator, victimX, victimY, chunkSize)
 
-	logger.Debug("Predation: %s struck %s (-%d, satiation %.0f)",
+	logger.Info("Predation: %s struck %s (-%d, satiation %.0f)",
 		predator.ID, prey.ID, len(removed), predator.Satiation)
 	return len(removed)
 }
