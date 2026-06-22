@@ -23,11 +23,13 @@ namespace BugFarmer.Tracing
             public long StateHash;
             public List<BugTrace> Bugs;
             public List<PlayerTarget> Players;
+            public List<SwarmLegTrace> Legs;  // DIAGNOSTIC: per-swarm leg+center (may be null)
         }
 
         public int Count => _buffer.Count;
 
-        public void RecordTick(long tick, long hash, List<BugTrace> bugs, List<PlayerTarget> players)
+        public void RecordTick(long tick, long hash, List<BugTrace> bugs, List<PlayerTarget> players,
+                               List<SwarmLegTrace> legs = null)
         {
             if (_buffer.Count >= BufferSize)
                 _buffer.Dequeue();  // Drop oldest
@@ -37,7 +39,8 @@ namespace BugFarmer.Tracing
                 Tick = tick,
                 StateHash = hash,
                 Bugs = new List<BugTrace>(bugs),
-                Players = new List<PlayerTarget>(players)
+                Players = new List<PlayerTarget>(players),
+                Legs = legs != null ? new List<SwarmLegTrace>(legs) : null
             });
         }
 
@@ -59,6 +62,23 @@ namespace BugFarmer.Tracing
             {
                 foreach (var bug in snap.Bugs)
                     sb.AppendLine(bug.ToCsv());
+            }
+
+            // DIAGNOSTIC: per-swarm leg+center section (leg/center late-join divergence). Separate section so
+            // the existing per-bug parser is unaffected; the leg-diff tool reads after the "# SWARMLEGS" marker.
+            bool anyLegs = false;
+            foreach (var snap in _buffer) { if (snap.Legs != null && snap.Legs.Count > 0) { anyLegs = true; break; } }
+            if (anyLegs)
+            {
+                sb.AppendLine();
+                sb.AppendLine("# SWARMLEGS");
+                sb.AppendLine(SwarmLegTrace.CsvHeader);
+                foreach (var snap in _buffer)
+                {
+                    if (snap.Legs == null) continue;
+                    foreach (var leg in snap.Legs)
+                        sb.AppendLine(leg.ToCsv());
+                }
             }
 
             File.WriteAllText(path, sb.ToString());

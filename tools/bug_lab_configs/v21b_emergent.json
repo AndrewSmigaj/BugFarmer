@@ -1,0 +1,10 @@
+{
+  "name": "v21b_emergent",
+  "description": "Millipede cap raised to backstop (250); now SCARCE depletable litter (regen 0.001) should bind it emergently (food-limited, no hard cap). Centipede deliberately spread to 4 spawns near small fruit patches (not densest/pen). Caps off, sim_batch 6, LONG window to see where bugs settle + the bug map.",
+  "flags": { "sim_batch": 6 },
+  "tuning": { "litter_regen_per_tick": 0.001 },
+  "bug_spawning": { "species_caps": {
+    "fly_common": {"max_population":0}, "butterfly_meadow": {"max_population":0},
+    "wasp_common": {"max_population":0}, "centipede_garden": {"max_population":0},
+    "millipede": {"max_population":0}, "beetle_carrion": {"max_population":0} } }
+}

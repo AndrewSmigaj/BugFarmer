@@ -1,0 +1,19 @@
+{
+  "name": "v21b_rebalance",
+  "description": "Phase 2 rebalance r1 (perf-driven). Structural (baked in species.json): fly/butterfly 3x swarm size (20->60, 15->45); millipede+beetle category individual->swarm (max 12, merge 2.0) + brood-gate on egg sprite so detritivores instant-grow+merge. Tuning: bound butterfly via BOTH food AND breeding (the constraints are joint) - nectar max 50->30 + regen 0.005->0.004, milkweed max_host_capacity 100->45 + host_regen 0.012->0.007 + host_breed_cost 40->55 + butterfly cooldown 90->150; fly cooldown 30->70. Detritivores food-bounded (litter scarce 0.0003). Centipede breeding (predator_breed_satiation 45). Caps off, sim_batch 6.",
+  "extends": "v21b_bands",
+  "flags": { "sim_batch": 6 },
+  "tuning": {
+    "max_nectar": 30.0,
+    "nectar_regen_per_tick": 0.004,
+    "max_host_capacity": 45.0,
+    "host_regen_per_tick": 0.007,
+    "host_breed_cost": 55.0,
+    "predator_breed_satiation": 45.0,
+    "litter_regen_per_tick": 0.0003
+  },
+  "species": {
+    "butterfly_meadow": { "reproduce_cooldown": 150.0 },
+    "fly_common": { "reproduce_cooldown": 70.0 }
+  }
+}

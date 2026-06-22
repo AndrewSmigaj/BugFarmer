@@ -1,0 +1,46 @@
+{
+  "name": "F4_seal_full",
+  "description": "COMBINE: sealed + cap 400 + C3 + reach + lethality + low breed bar + beetle survival + beetle cap 20\u219240 \u2014 the full predator/decomposer push.",
+  "extends": "01_no_cull",
+  "species": {
+    "fly_common": {
+      "reproduce_cooldown": 18.0,
+      "breed_amount": 16.0
+    },
+    "centipede_garden": {
+      "vision_range": 26,
+      "base_speed": 2.5,
+      "predation": {
+        "hunt_speed_mult": 2.6,
+        "feed_per_kill": 65.0,
+        "strike_cooldown_ticks": 20,
+        "strike_radius": 3.2
+      }
+    },
+    "wasp_common": {
+      "vision_range": 32,
+      "base_speed": 2.8,
+      "predation": {
+        "hunt_speed_mult": 2.2,
+        "home_range": 70.0,
+        "feed_per_kill": 65.0,
+        "strike_cooldown_ticks": 55,
+        "strike_radius": 3.8,
+        "deposit_satiation": 55.0
+      }
+    },
+    "beetle_carrion": {
+      "satiation_decay_rate": 0.05
+    }
+  },
+  "tuning": {
+    "predator_breed_satiation": 50.0
+  },
+  "lab": {
+    "seal_pens": true,
+    "max_pop": {
+      "fly_common": 400,
+      "beetle_carrion": 40
+    }
+  }
+}

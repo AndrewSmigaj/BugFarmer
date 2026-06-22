@@ -1,0 +1,25 @@
+{
+  "name": "D5_survival_combo",
+  "description": "SURVIVAL+PLANT: slow decay + long lifespan + nectar amplitude together.",
+  "extends": "01_no_cull",
+  "species": {
+    "centipede_garden": {
+      "satiation_decay_rate": 0.05,
+      "lifespan_secs": 9450.0,
+      "lifespan_spread_secs": 2520.0
+    },
+    "wasp_common": {
+      "satiation_decay_rate": 0.05,
+      "lifespan_secs": 9450.0,
+      "lifespan_spread_secs": 2520.0
+    },
+    "beetle_carrion": {
+      "satiation_decay_rate": 0.05,
+      "lifespan_secs": 7560.0,
+      "lifespan_spread_secs": 1890.0
+    }
+  },
+  "tuning": {
+    "nectar_regen_per_tick": 0.006
+  }
+}

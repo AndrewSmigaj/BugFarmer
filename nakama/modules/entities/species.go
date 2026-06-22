@@ -69,6 +69,18 @@ type BugSpecies struct {
 	HatchTime         float32  `json:"hatch_time"`
 	ReproduceCooldown float32  `json:"reproduce_cooldown"`
 
+	// Natural death (per-bug aging). LifespanSecs <= 0 = immortal. At birth each bug gets a
+	// DeathTick = now + lifespan ± LifespanSpreadSecs (so a cohort doesn't all die at once). On
+	// death it drops CarcassItem (a dead_<species> food item — detritivore food, not loot).
+	LifespanSecs       float32 `json:"lifespan_secs"`
+	LifespanSpreadSecs float32 `json:"lifespan_spread_secs"`
+	CarcassItem        string  `json:"carcass_item"`
+
+	// Detritivore: while feeding on a carcass, periodically deposit compost INPUT into the nearest
+	// compost bin (the existing station pipeline converts input→compost→fly food). Closes the
+	// death→carcass→compost→fly loop. millipede=true; others false.
+	ProducesCompost bool `json:"produces_compost"`
+
 	// Sprites - lookup keys for client to load sprite sheets
 	SpriteID    string `json:"sprite_id"`
 	EggSpriteID string `json:"egg_sprite_id"`
@@ -80,6 +92,13 @@ type BugSpecies struct {
 	// Prey-side predation fields (set on species that GET hunted)
 	PredatorFleeRadius    float32 `json:"predator_flee_radius"`     // flee when a predator swarm is this close
 	PredatorFleeSpeedMult float32 `json:"predator_flee_speed_mult"` // flee-from-predator speed (decoupled from the player flee mult)
+	// RELOCATE: instead of the short directly-away flee, a swarm has RelocateChance (per flee think) to make a
+	// long BREAK-CONTACT jump of RelocateDistance (away from predator + a random angle), to actually escape a
+	// hunter's vision rather than be out-chased. NOT all swarms do it (chance) — some stay and get eaten (the
+	// crash). RelocateCooldownTicks gates re-jumping. 0/absent = off (plain flee). Determinism-safe (state.Rng).
+	RelocateChance        float32 `json:"relocate_chance"`
+	RelocateDistance      float32 `json:"relocate_distance"`
+	RelocateCooldownTicks int64   `json:"relocate_cooldown_ticks"`
 
 	// Movement trait: this species' swarm centers AND client bug visuals skip the
 	// OCCUPANT collision branch only (fences, walls, houses — there are no roofs yet).

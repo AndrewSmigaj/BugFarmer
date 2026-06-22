@@ -14,7 +14,8 @@ namespace BugFarmer.UI
     /// Reusable inventory slot UI component.
     /// Displays item icon and count, handles click events.
     /// </summary>
-    public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
+    public class InventorySlotUI : MonoBehaviour, IPointerClickHandler,
+                                   IPointerEnterHandler, IPointerExitHandler
     {
         [SerializeField] private Image iconImage;
         [SerializeField] private TMP_Text countText;
@@ -125,6 +126,18 @@ namespace BugFarmer.UI
         public void OnPointerClick(PointerEventData eventData)
         {
             OnSlotClicked?.Invoke(this, eventData);
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (string.IsNullOrEmpty(CurrentItemId)) return;
+            var def = EntityDatabase.Get(CurrentItemId);
+            TooltipUI.Instance?.Show(def?.Name ?? CurrentItemId);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            TooltipUI.Instance?.Hide();
         }
     }
 }

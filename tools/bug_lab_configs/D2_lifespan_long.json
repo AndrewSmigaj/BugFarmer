@@ -1,0 +1,19 @@
+{
+  "name": "D2_lifespan_long",
+  "description": "SURVIVAL: predators live ~50% longer (cent/wasp lifespan 6300\u21929450; beetle 5040\u21927560) \u2192 more lifetime to feed+breed.",
+  "extends": "01_no_cull",
+  "species": {
+    "centipede_garden": {
+      "lifespan_secs": 9450.0,
+      "lifespan_spread_secs": 2520.0
+    },
+    "wasp_common": {
+      "lifespan_secs": 9450.0,
+      "lifespan_spread_secs": 2520.0
+    },
+    "beetle_carrion": {
+      "lifespan_secs": 7560.0,
+      "lifespan_spread_secs": 1890.0
+    }
+  }
+}

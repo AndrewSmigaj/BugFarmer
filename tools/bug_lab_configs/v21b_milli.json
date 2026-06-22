@@ -1,0 +1,11 @@
+{
+  "name": "v21b_milli",
+  "description": "Directed pull-down of the stubborn millipede (resilient ~130). Stack: reproduce_cooldown 300->1200 (slower breeding) + lifespan 6300->4200 (faster turnover) + scarce litter (max_litter 50, regen 0.0016) on the 20-pile zone. Target ~50.",
+  "flags": { "sim_batch": 6 },
+  "tuning": { "max_litter": 50.0, "litter_regen_per_tick": 0.0016 },
+  "species": { "millipede": { "reproduce_cooldown": 1200.0, "lifespan_secs": 4200 } },
+  "bug_spawning": { "species_caps": {
+    "fly_common": {"max_population":0}, "butterfly_meadow": {"max_population":0},
+    "wasp_common": {"max_population":0}, "centipede_garden": {"max_population":0},
+    "millipede": {"max_population":0}, "beetle_carrion": {"max_population":0} } }
+}

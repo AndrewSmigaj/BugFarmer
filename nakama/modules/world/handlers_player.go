@@ -71,11 +71,17 @@ func (m *Match) applyBugAttackToPlayer(
 	}
 
 	if player.HP <= 0 {
-		// FAINT: refill + respawn at the zone spawn, no item loss (v1)
+		// FAINT: refill + respawn, no item loss (v1). Default = the zone spawn; if this character
+		// has slept in a bed IN THIS zone, wake at that home instead (Minecraft-style).
 		spawnX, spawnY := float32(256), float32(256)
+		zoneID := ""
 		if state.CurrentZone != nil {
 			spawnX = float32(state.CurrentZone.SpawnPoint[0])
 			spawnY = float32(state.CurrentZone.SpawnPoint[1])
+			zoneID = state.CurrentZone.ZoneID
+		}
+		if player.HomeZone != "" && player.HomeZone == zoneID {
+			spawnX, spawnY = player.HomeX, player.HomeY
 		}
 		player.HP = player.MaxHP
 		player.SetWorldPosition(spawnX, spawnY, chunkSize)

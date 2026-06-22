@@ -1,0 +1,14 @@
+{
+  "name": "v21b_fly_carrion",
+  "description": "Flies breed on LARGE carrion (dead_millipede/dead_centipede), not dead_fly — a non-rain-gated food node off the abundant decomposers (the owner's idea). Pure data: add them to fly attractions in both phases. One lever — read whether fly b_brood/b_reproduce rises.",
+  "species": {
+    "fly_common": {
+      "attractions_by_phase": {
+        "feeding": ["rotten_fruit", "compost_bin", "dead_millipede", "dead_centipede"],
+        "reproducing": ["rotten_fruit", "compost_bin", "dead_millipede", "dead_centipede"]
+      }
+    }
+  },
+  "tuning": {},
+  "bug_spawning": {}
+}

@@ -53,6 +53,7 @@
   "coal": {
     "name": "Coal",
     "category": "resource",
+    "icon_from": "ore_coal_block",
     "tags": [
       "material"
     ],
@@ -63,6 +64,7 @@
   "copper_ore": {
     "name": "Copper Ore",
     "category": "resource",
+    "icon_from": "ore_copper_block",
     "tags": [
       "material",
       "metal"
@@ -74,6 +76,7 @@
   "iron_ore": {
     "name": "Iron Ore",
     "category": "resource",
+    "icon_from": "ore_iron_block",
     "tags": [
       "material",
       "metal"
@@ -85,6 +88,7 @@
   "tin_ore": {
     "name": "Tin Ore",
     "category": "resource",
+    "icon_from": "ore_tin_block",
     "tags": [
       "material",
       "metal"
@@ -116,6 +120,7 @@
   "silver_ore": {
     "name": "Silver Ore",
     "category": "resource",
+    "icon_from": "ore_silver_block",
     "tags": [
       "material",
       "metal"
@@ -127,6 +132,7 @@
   "gold_ore": {
     "name": "Gold Ore",
     "category": "resource",
+    "icon_from": "ore_gold_block",
     "tags": [
       "material",
       "metal"
@@ -138,6 +144,7 @@
   "platinum_ore": {
     "name": "Platinum Ore",
     "category": "resource",
+    "icon_from": "ore_platinum_block",
     "tags": [
       "material",
       "metal"
@@ -369,6 +376,52 @@
   },
   "rotten_orange": {
     "name": "Rotten Orange",
+    "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1
+  },
+  "plum": {
+    "name": "Plum",
+    "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5,
+    "no_auto_pickup": true
+  },
+  "rotten_plum": {
+    "name": "Rotten Plum",
+    "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1
+  },
+  "cherry": {
+    "name": "Cherry",
+    "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 4,
+    "no_auto_pickup": true
+  },
+  "rotten_cherry": {
+    "name": "Rotten Cherry",
     "category": "resource",
     "tags": [
       "material",
@@ -825,15 +878,70 @@
       }
     }
   },
-  "bug_parts": {
-    "name": "Dead Bug",
+  "dead_fly": {
+    "name": "Dead Fly",
     "category": "resource",
     "tags": [
-      "material"
+      "carrion"
     ],
     "stackable": true,
     "max_stack": 99,
-    "sell_price": 2,
+    "sell_price": 1,
+    "food_value": 10
+  },
+  "dead_butterfly": {
+    "name": "Dead Butterfly",
+    "category": "resource",
+    "tags": [
+      "carrion"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1,
+    "food_value": 10
+  },
+  "dead_wasp": {
+    "name": "Dead Wasp",
+    "category": "resource",
+    "tags": [
+      "carrion"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1,
+    "food_value": 10
+  },
+  "dead_centipede": {
+    "name": "Dead Centipede",
+    "category": "resource",
+    "tags": [
+      "carrion"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1,
+    "food_value": 10
+  },
+  "dead_millipede": {
+    "name": "Dead Millipede",
+    "category": "resource",
+    "tags": [
+      "carrion"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1,
+    "food_value": 10
+  },
+  "dead_beetle": {
+    "name": "Dead Beetle",
+    "category": "resource",
+    "tags": [
+      "carrion"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1,
     "food_value": 10
   },
   "flashlight": {
@@ -1143,5 +1251,13 @@
     "stackable": false,
     "buy_price": 75,
     "sell_price": 20
+  },
+  "backpack": {
+    "name": "Backpack",
+    "category": "backpack",
+    "armor_slot": "backpack",
+    "icon_from": "ore_sack",
+    "slot_bonus": 10,
+    "stackable": false
   }
 }

@@ -13,9 +13,20 @@ const ChunkSize = 32
 // BugSpawnConfig holds zone-level bug spawning configuration.
 // Species caps are zone-wide (not per-area). Spawn areas define WHERE bugs appear.
 type BugSpawnConfig struct {
-	SpeciesCaps map[string]SpeciesCap `json:"species_caps"` // species_id → cap config
-	SpawnAreas  []SpawnArea           `json:"spawn_areas"`  // WHERE species can spawn
-	Static      bool                  `json:"static"`       // If true: no continuous spawn, merge, or split (test/deterministic zones)
+	SpeciesCaps    map[string]SpeciesCap `json:"species_caps"`              // species_id → cap config
+	SpawnAreas     []SpawnArea           `json:"spawn_areas"`               // WHERE species can spawn
+	Static         bool                  `json:"static"`                    // If true: no continuous spawn, merge, or split (test/deterministic zones)
+	InitialCarrion []CarrionSeed         `json:"initial_carrion,omitempty"` // authored carrion ground items seeded at match start (e.g. dead millipedes in the woods)
+}
+
+// CarrionSeed places authored carrion ground items at match start — a breeding/feeding substrate that
+// would otherwise only appear once bugs start dying (the day-1 bootstrap, e.g. dead millipedes so the
+// woods' flies/beetles have food from tick 0). Seeded deterministically before any client joins.
+type CarrionSeed struct {
+	Item  string `json:"item"`            // ground-item id (e.g. "dead_millipede")
+	X     int    `json:"x"`               // world cell X
+	Y     int    `json:"y"`               // world cell Y
+	Count int    `json:"count,omitempty"` // how many to drop near (x,y); default 1
 }
 
 // SpeciesCap defines spawn limits for one species in a zone.
@@ -32,6 +43,26 @@ type SpeciesCap struct {
 	MaxPopulation int     `json:"max_population"` // Zone-wide max BUGS (hard cap; 0 = uncapped)
 	SpawnInterval float32 `json:"spawn_interval"` // Seconds between continuous spawn attempts
 	SwarmSize     int     `json:"swarm_size"`     // Fixed bugs per swarm (0 = use species Min/Max range)
+
+	// Ecology Director bands — a per-species THREE-TIER control ladder (ecology_director.go). Natural
+	// dynamics (food/predation/starvation) own the middle band [EventLow..EventHigh] and the Director does
+	// NOTHING there; it only acts at the edges, gentlest-first:
+	//   pop < MinPopulation (extreme low)  -> RE-SEED the species          (last-resort anti-extinction floor)
+	//   pop < EventLow      (moderate low) -> EXTRA-RAIN event             (environmental: more fruit/nectar -> food up)
+	//   pop > EventHigh     (moderate high)-> DROUGHT event                (environmental: suppress rain -> food tightens)
+	//   pop > CullAt        (extreme high) -> HARD CULL (predator/direct)  (last resort, well above EventHigh)
+	// Ordering invariant (validated at load): MinPopulation < EventLow < EventHigh < CullAt < MaxPopulation.
+	// Any unset (0) tier is simply skipped. CullWith = a predator to release at the prey; "" = direct cull.
+	MinPopulation int    `json:"min_population,omitempty"`
+	EventLow      int    `json:"event_low,omitempty"`
+	EventHigh     int    `json:"event_high,omitempty"`
+	CullAt        int    `json:"cull_at,omitempty"`
+	CullWith      string `json:"cull_with,omitempty"`
+
+	// MaxNests caps how many hives of a nest-based predator (wasp) the zone may hold. A thriving colony
+	// FOUNDS a daughter hive (processNestFounding) up to this many — how the predator population GROWS and
+	// SPREADS. 0 = no dynamic founding (only the hand-placed nest occupants exist).
+	MaxNests int `json:"max_nests,omitempty"`
 }
 
 // SpawnArea defines where a species can spawn.
@@ -40,6 +71,10 @@ type SpawnArea struct {
 	ID      string   `json:"id"`
 	Species []string `json:"species"` // Which species can spawn here
 	Type    string   `json:"type"`    // "zone" or "circle"
+	// Relative selection weight when a species has multiple areas (default 1.0 when absent/<=0).
+	// Habitat circles get a high weight, the zone-wide wild-card a low one — e.g. habitat circles
+	// summing to ~3 + a zone area at ~1 → ~3:1 habitat-vs-anywhere. See spawnSwarmForSpecies.
+	Weight float64 `json:"weight,omitempty"`
 	// Circle fields (only used if Type == "circle")
 	CX     int `json:"cx,omitempty"`
 	CY     int `json:"cy,omitempty"`
@@ -51,14 +86,39 @@ type SpawnArea struct {
 type ZoneConfig struct {
 	ZoneID      string          `json:"zone_id"`
 	Name        string          `json:"name"`
-	Row         int             `json:"row"`          // Zone grid row
-	Col         int             `json:"col"`          // Zone grid column
-	Width       int             `json:"width"`        // Width in cells (default 512)
-	Height      int             `json:"height"`       // Height in cells (default 512)
-	SpawnPoint  [2]int          `json:"spawn_point"`  // Default spawn (cell coords)
+	Row         int             `json:"row"`            // Zone grid row
+	Col         int             `json:"col"`            // Zone grid column
+	Width       int             `json:"width"`          // Width in cells (default 512)
+	Height      int             `json:"height"`         // Height in cells (default 512)
+	SpawnPoint  [2]int          `json:"spawn_point"`    // Default spawn (cell coords)
 	BiomeType   string          `json:"biome_type"`     // "meadow", "forest", "cave", etc.
 	Seed        int64           `json:"seed,omitempty"` // Fixed world seed for deterministic runs (0 = random)
 	BugSpawning *BugSpawnConfig `json:"bug_spawning"`   // Zone-level bug spawn config (optional)
+
+	// CallRate: Nakama match tick rate (calls/sec) for THIS zone, 1..60. 0/absent = default 10.
+	// TEST ZONES ONLY raise it (e.g. 60) to run the SAME sim ~6× faster in wall-clock — sim-TIME is
+	// fixed by SimRate, so balance is unchanged (byte-identical tick sequence). Production zones omit it.
+	CallRate int `json:"call_rate,omitempty"`
+
+	// EphemeralSwarms: TEST ZONES ONLY — skip restoring the saved bug population at MatchInit so the zone
+	// always starts from its `initial` spawns. Tuning runs are then reproducible + comparable (without it,
+	// a restart reloads the PRIOR run's populations, e.g. butterflies reload pinned at their cap).
+	EphemeralSwarms bool `json:"ephemeral_swarms,omitempty"`
+
+	// SimBatch: TEST ZONES ONLY — advance N sim-ticks per Nakama call (1..64). call_rate is capped at
+	// Nakama's 60Hz, so this is how a headless tuning run covers many game-days fast (e.g. 8 → 48× with
+	// call_rate 60). Production zones omit it → 1 → no batching → byte-identical to a single tick/call.
+	SimBatch int `json:"sim_batch,omitempty"`
+
+	// Profile: TEST/TUNING ZONES ONLY — enable the PERFSTATS cost profiler (per-species server-CPU by
+	// sub-phase + per-species leg counts + global pass timings + broadcast byte totals, flushed per game-day).
+	// Pure observation, never hashed; production omits it → zero overhead (see profiler.go).
+	Profile bool `json:"profile,omitempty"`
+
+	// Cross-zone adjacency: edge direction ("north"/"south"/"east"/"west") -> neighbor zoneID.
+	// Walking off an edge with a neighbor hidden-swaps into it (see CrossZoneController). Absent/""
+	// = a hard edge (no crossing). +Y = north, so south edge = y0, north edge = y255.
+	Neighbors map[string]string `json:"neighbors,omitempty"`
 }
 
 // ChunkData stores the two-layer tile data for a 32x32 cell chunk.

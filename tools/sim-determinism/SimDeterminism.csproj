@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Headless determinism harness for the bug simulation.
+
+    It LINKS (does not copy) the real deterministic per-bug sim source from the Unity client, so it can
+    never drift from what players actually run. Those files (FixedPoint, DeterministicRandom, the movement
+    behaviors, MovementFactory, BugAgent, BugCollision) are deliberately Unity-INDEPENDENT (fixed-point
+    math, counter-based RNG) — the only Unity touch-points are a Vector2 render helper and two singletons
+    (InfluenceManager/TilemapManager) that are null-checked, so Shims.cs stubs them to null and the sim runs
+    pure + deterministic. Program.cs drives every species for N ticks TWICE and asserts identical state
+    hashes — the headless proxy for "all clients compute the same bug positions" (see the test-changes skill).
+
+    Run it with: dotnet run, project tools/sim-determinism  (exit 0 = deterministic). See Program.cs header.
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>sim-determinism</AssemblyName>
+    <RootNamespace>SimDeterminism</RootNamespace>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <!-- The linked client files live outside this dir; don't glob the whole tree. -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Shims.cs" />
+    <Compile Include="Program.cs" />
+    <!-- THE REAL CLIENT SIM (linked, not copied) — keep this list in sync if files are added. -->
+    <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/FixedPoint.cs" Link="client/FixedPoint.cs" />
+    <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/FixedPointMath.cs" Link="client/FixedPointMath.cs" />
+    <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/DeterministicRandom.cs" Link="client/DeterministicRandom.cs" />
+    <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/IBugMovement.cs" Link="client/IBugMovement.cs" />
+    <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/BrownianMovement.cs" Link="client/BrownianMovement.cs" />
+    <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/GlidingMovement.cs" Link="client/GlidingMovement.cs" />
+    <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/CrawlingMovement.cs" Link="client/CrawlingMovement.cs" />
+    <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/DartingMovement.cs" Link="client/DartingMovement.cs" />
+    <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/MovementFactory.cs" Link="client/MovementFactory.cs" />
+    <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/BugAgent.cs" Link="client/BugAgent.cs" />
+    <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/BugCollision.cs" Link="client/BugCollision.cs" />
+  </ItemGroup>
+
+</Project>

@@ -1,179 +1,252 @@
 {
- "scythe_wood": {
-  "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of pale wood sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
-  "family": "icon",
-  "materials": [
-   "wood"
-  ]
- },
- "pickaxe_wood": {
-  "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of pale wood at the top-right, straight wooden HANDLE running to the bottom-left",
-  "family": "icon",
-  "materials": [
-   "wood"
-  ]
- },
- "axe_wood": {
-  "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of pale wood at the top-right, straight wooden HANDLE running to the bottom-left",
-  "family": "icon",
-  "materials": [
-   "wood"
-  ]
- },
- "shovel_wood": {
-  "look": "a digging SHOVEL: rounded pointed SPADE BLADE of pale wood at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
-  "family": "icon",
-  "materials": [
-   "wood"
-  ]
- },
- "hoe_wood": {
-  "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
-  "family": "icon",
-  "materials": [
-   "wood"
-  ]
- },
- "sword_wood": {
-  "look": "a training SWORD: straight tapered wooden BLADE with a visible center ridge pointing to the top-right, small CROSSGUARD and wrapped GRIP with a round pommel at the bottom-left",
-  "family": "icon",
-  "materials": [
-   "wood"
-  ]
- },
- "spear_wood": {
-  "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, with a leaf-shaped sharpened wooden SPEARHEAD at the top-right and a blunt butt at the bottom-left",
-  "family": "icon",
-  "materials": [
-   "wood"
-  ]
- },
- "small_net": {
-  "look": "a small BUG NET: a round HOOP with a visible crosshatch MESH bag at the top-right, short wooden HANDLE to the bottom-left",
-  "family": "icon",
-  "materials": [
-   "wood"
-  ]
- },
- "large_net": {
-  "look": "a large BUG NET: a WIDE round HOOP at the top-right with a deep baggy NET BAG of fine diagonal MESH lines hanging from it (thin woven net texture, NOT a checkerboard), sturdy wooden HANDLE with a wrapped grip to the bottom-left",
-  "family": "icon",
-  "materials": [
-   "wood"
-  ]
- },
- "watering_can_basic": {
-  "look": "a small metal WATERING CAN in 3/4 view: rounded body, top handle, long SPOUT with a sprinkler ROSE tip pointing right; dull grey tin",
-  "family": "icon",
-  "materials": [
-   "metal"
-  ]
- },
- "watering_can_large": {
-  "look": "a BIG metal WATERING CAN in 3/4 view: wide barrel body with a riveted seam, top handle, long SPOUT with a sprinkler ROSE tip pointing right; dull grey tin with a copper band",
-  "family": "icon",
-  "materials": [
-   "metal"
-  ]
- },
- "seed_tomato": {
-  "look": "a paper SEED PACKET, upright rectangle with a TORN-OPEN top edge and a few seeds spilling: cream paper, a simple round red TOMATO illustration on the front, thin green border",
-  "family": "icon"
- },
- "seed_corn": {
-  "look": "a paper SEED PACKET, upright rectangle with a TORN-OPEN top edge and a few seeds spilling: cream paper, a yellow CORN COB with green husk illustrated on the front, thin yellow border",
-  "family": "icon"
- },
- "seed_wheat": {
-  "look": "a paper SEED PACKET, upright rectangle with a TORN-OPEN top edge and a few seeds spilling: cream paper, three golden WHEAT STALKS illustrated on the front, thin brown border",
-  "family": "icon"
- },
- "bug_parts": {
-  "look": "a cartoon DEAD FLY lying flat on its BACK, viewed from above: one plump dark-grey oval BODY centered, six short black LEGS sticking stiffly straight up/outward, two small round red EYES, a pair of flat translucent WINGS splayed to the sides - instantly readable as a dead bug, slightly comical",
-  "family": "icon"
- },
- "berries": {
-  "look": "a small cluster of round red BERRIES, three or four plump berries with a single green leaf on top",
-  "family": "icon"
- },
- "quartz": {
-  "look": "a single MILKY WHITE quartz crystal SHARD: six-sided prism with a pointed tip, pale white with faint icy blue facet shading - bright and translucent, NOT dark, NOT black, NOT grey rock",
-  "family": "icon",
-  "materials": [
-   "stone"
-  ]
- },
- "sand": {
-  "look": "a small conical PILE OF SAND, pale tan with a few darker speckles and a soft heaped silhouette",
-  "family": "icon",
-  "materials": [
-   "dirt"
-  ]
- },
- "tin_ore": {
-  "look": "a rough grey ORE CHUNK studded with dull silvery TIN flecks, angular blocky rock",
-  "family": "icon",
-  "materials": [
-   "stone",
-   "metal"
-  ]
- },
- "apple": {
-  "look": "a single shiny red APPLE with one small green LEAF on a short stem: simple round silhouette, bright highlight on the upper-left",
-  "family": "icon"
- },
- "orange": {
-  "look": "a single ORANGE with dimpled peel texture and one small green leaf: round, warm orange, soft highlight",
-  "family": "icon"
- },
- "rotten_apple": {
-  "look": "a ROTTEN APPLE: dull brown-red with a sunken bruised side, a few dark spots, slightly collapsed silhouette, drooping wilted leaf",
-  "family": "icon"
- },
- "rotten_orange": {
-  "look": "a ROTTEN ORANGE: dull brownish peel with grey-green MOLD patches, slightly deflated and sagging",
-  "family": "icon"
- },
- "hands": {
-  "look": "a pair of open HANDS seen palm-up, fingers slightly spread as if ready to grab or gather, warm tan skin with a soft outline \u2014 wearing a thin FABRIC wrist cuff",
-  "family": "icon",
-  "materials": [
-   "fabric"
-  ]
- },
- "flashlight": {
-  "look": "a chunky handheld FLASHLIGHT seen at a 3/4 angle: cylindrical metal body with a wide head, glass lens face glowing pale yellow, small button on the side",
-  "family": "icon",
-  "materials": [
-   "metal"
-  ]
- },
- "centipede_parts": {
-  "look": "a few curved CENTIPEDE BODY SEGMENTS: glossy reddish-brown chitin plates with little legs attached, stacked loosely",
-  "family": "icon",
-  "materials": [
-   "wood"
-  ]
- },
- "paper_nest": {
-  "look": "a torn chunk of grey papery WASP NEST material: layered swirled bands of grey paper",
-  "family": "icon",
-  "materials": [
-   "stone"
-  ]
- },
- "wasp_larvae": {
-  "look": "three plump pale WASP LARVAE: cream-white segmented grubs curled in a row",
-  "family": "icon",
-  "materials": [
-   "marble"
-  ]
- },
- "wasp_stinger": {
-  "look": "a single sharp WASP STINGER: a curved black needle-like point with a small amber venom drop at the tip",
-  "family": "icon",
-  "materials": [
-   "metal"
-  ]
- }
+  "scythe_wood": {
+    "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of pale wood sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
+    "family": "icon",
+    "materials": [
+      "wood"
+    ]
+  },
+  "pickaxe_wood": {
+    "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of pale wood at the top-right, straight wooden HANDLE running to the bottom-left",
+    "family": "icon",
+    "materials": [
+      "wood"
+    ]
+  },
+  "axe_wood": {
+    "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of pale wood at the top-right, straight wooden HANDLE running to the bottom-left",
+    "family": "icon",
+    "materials": [
+      "wood"
+    ]
+  },
+  "shovel_wood": {
+    "look": "a digging SHOVEL: rounded pointed SPADE BLADE of pale wood at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
+    "family": "icon",
+    "materials": [
+      "wood"
+    ]
+  },
+  "hoe_wood": {
+    "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
+    "family": "icon",
+    "materials": [
+      "wood"
+    ]
+  },
+  "sword_wood": {
+    "look": "a training SWORD: straight tapered wooden BLADE with a visible center ridge pointing to the top-right, small CROSSGUARD and wrapped GRIP with a round pommel at the bottom-left",
+    "family": "icon",
+    "materials": [
+      "wood"
+    ]
+  },
+  "spear_wood": {
+    "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, with a leaf-shaped sharpened wooden SPEARHEAD at the top-right and a blunt butt at the bottom-left",
+    "family": "icon",
+    "materials": [
+      "wood"
+    ]
+  },
+  "small_net": {
+    "look": "a small BUG NET: a round HOOP with a visible crosshatch MESH bag at the top-right, short wooden HANDLE to the bottom-left",
+    "family": "icon",
+    "materials": [
+      "wood"
+    ]
+  },
+  "large_net": {
+    "look": "a large BUG NET: a WIDE round HOOP at the top-right with a deep baggy NET BAG of fine diagonal MESH lines hanging from it (thin woven net texture, NOT a checkerboard), sturdy wooden HANDLE with a wrapped grip to the bottom-left",
+    "family": "icon",
+    "materials": [
+      "wood"
+    ]
+  },
+  "watering_can_basic": {
+    "look": "a small metal WATERING CAN in 3/4 view: rounded body, top handle, long SPOUT with a sprinkler ROSE tip pointing right; dull grey tin",
+    "family": "icon",
+    "materials": [
+      "metal"
+    ]
+  },
+  "watering_can_large": {
+    "look": "a BIG metal WATERING CAN in 3/4 view: wide barrel body with a riveted seam, top handle, long SPOUT with a sprinkler ROSE tip pointing right; dull grey tin with a copper band",
+    "family": "icon",
+    "materials": [
+      "metal"
+    ]
+  },
+  "seed_tomato": {
+    "look": "a paper SEED PACKET, upright rectangle with a TORN-OPEN top edge and a few seeds spilling: cream paper, a simple round red TOMATO illustration on the front, thin green border",
+    "family": "icon"
+  },
+  "seed_corn": {
+    "look": "a paper SEED PACKET, upright rectangle with a TORN-OPEN top edge and a few seeds spilling: cream paper, a yellow CORN COB with green husk illustrated on the front, thin yellow border",
+    "family": "icon"
+  },
+  "seed_wheat": {
+    "look": "a paper SEED PACKET, upright rectangle with a TORN-OPEN top edge and a few seeds spilling: cream paper, three golden WHEAT STALKS illustrated on the front, thin brown border",
+    "family": "icon"
+  },
+  "berries": {
+    "look": "a small cluster of round red BERRIES, three or four plump berries with a single green leaf on top",
+    "family": "icon"
+  },
+  "quartz": {
+    "look": "a single MILKY WHITE quartz crystal SHARD: six-sided prism with a pointed tip, pale white with faint icy blue facet shading - bright and translucent, NOT dark, NOT black, NOT grey rock",
+    "family": "icon",
+    "materials": [
+      "stone"
+    ]
+  },
+  "sand": {
+    "look": "a small conical PILE OF SAND, pale tan with a few darker speckles and a soft heaped silhouette",
+    "family": "icon",
+    "materials": [
+      "dirt"
+    ]
+  },
+  "tin_ore": {
+    "look": "a rough grey ORE CHUNK studded with dull silvery TIN flecks, angular blocky rock",
+    "family": "icon",
+    "materials": [
+      "stone",
+      "metal"
+    ]
+  },
+  "apple": {
+    "look": "a single shiny red APPLE with one small green LEAF on a short stem: simple round silhouette, bright highlight on the upper-left",
+    "family": "icon"
+  },
+  "orange": {
+    "look": "a single ORANGE with dimpled peel texture and one small green leaf: round, warm orange, soft highlight",
+    "family": "icon"
+  },
+  "rotten_apple": {
+    "look": "a ROTTEN APPLE: dull brown-red with a sunken bruised side, a few dark spots, slightly collapsed silhouette, drooping wilted leaf",
+    "family": "icon"
+  },
+  "rotten_orange": {
+    "look": "a ROTTEN ORANGE: dull brownish peel with grey-green MOLD patches, slightly deflated and sagging",
+    "family": "icon"
+  },
+  "hands": {
+    "look": "a pair of open HANDS seen palm-up, fingers slightly spread as if ready to grab or gather, warm tan skin with a soft outline — wearing a thin FABRIC wrist cuff",
+    "family": "icon",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "flashlight": {
+    "look": "a chunky handheld FLASHLIGHT seen at a 3/4 angle: cylindrical metal body with a wide head, glass lens face glowing pale yellow, small button on the side",
+    "family": "icon",
+    "materials": [
+      "metal"
+    ]
+  },
+  "centipede_parts": {
+    "look": "a few curved CENTIPEDE BODY SEGMENTS: glossy reddish-brown chitin plates with little legs attached, stacked loosely",
+    "family": "icon",
+    "materials": [
+      "wood"
+    ]
+  },
+  "paper_nest": {
+    "look": "a torn chunk of grey papery WASP NEST material: layered swirled bands of grey paper",
+    "family": "icon",
+    "materials": [
+      "stone"
+    ]
+  },
+  "wasp_larvae": {
+    "look": "three plump pale WASP LARVAE: cream-white segmented grubs curled in a row",
+    "family": "icon",
+    "materials": [
+      "marble"
+    ]
+  },
+  "wasp_stinger": {
+    "look": "a single sharp WASP STINGER: a curved black needle-like point with a small amber venom drop at the tip",
+    "family": "icon",
+    "materials": [
+      "metal"
+    ]
+  },
+  "iron_helmet": {
+    "look": "a knight's IRON HELMET seen front-on: rounded steel dome, dark T-shaped visor slit, riveted plates, cool grey sheen",
+    "family": "icon",
+    "materials": [
+      "metal"
+    ]
+  },
+  "copper_helmet": {
+    "look": "a COPPER HELMET front-on: rounded burnished orange-brown dome with a vertical nose guard and a riveted rim",
+    "family": "icon",
+    "materials": [
+      "metal"
+    ]
+  },
+  "leather_cap": {
+    "look": "a soft LEATHER CAP/hood front-on: rounded brown headpiece with a short stitched brim",
+    "family": "icon",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "straw_hat": {
+    "look": "a wide-brimmed STRAW HAT: golden woven straw, low conical crown, broad flat brim with a darker band",
+    "family": "icon",
+    "materials": [
+      "foliage"
+    ]
+  },
+  "iron_chest": {
+    "look": "an IRON BREASTPLATE: grey steel torso armor, rounded shoulder plates, a central ridge, riveted edges",
+    "family": "icon",
+    "materials": [
+      "metal"
+    ]
+  },
+  "leather_chest": {
+    "look": "a brown LEATHER tunic / chest armor: layered stitched leather vest with a belt",
+    "family": "icon",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "iron_gauntlets": {
+    "look": "a PAIR of IRON GAUNTLETS side by side: grey steel armored gloves with segmented finger plates",
+    "family": "icon",
+    "materials": [
+      "metal"
+    ]
+  },
+  "leather_gloves": {
+    "look": "a PAIR of brown LEATHER GLOVES side by side, with stitched cuffs",
+    "family": "icon",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "leather_pants": {
+    "look": "brown LEATHER leggings: a pair of stitched leather trouser legs",
+    "family": "icon",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "iron_boots": {
+    "look": "a PAIR of IRON BOOTS side by side: grey steel armored boots with plated shins",
+    "family": "icon",
+    "materials": [
+      "metal"
+    ]
+  },
+  "leather_boots": {
+    "look": "a PAIR of brown LEATHER BOOTS side by side, with stitched soles",
+    "family": "icon",
+    "materials": [
+      "fabric"
+    ]
+  }
 }

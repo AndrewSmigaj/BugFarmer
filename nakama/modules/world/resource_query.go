@@ -1,6 +1,7 @@
 package world
 
 import (
+	"fmt"
 	"math"
 	"sort"
 
@@ -55,7 +56,10 @@ func FindNearbyFood(state *WorldState, pos entities.EntityPosition, visionRange 
 		if item.FoodValue <= 0 {
 			continue
 		}
-		if !wantRotten && !targetSet[item.ItemType] {
+		// The "rotten_fruit" wildcard matches any rotted food EXCEPT bug carcasses (carrion is
+		// detritivore food — flies don't breed on their own dead). Carrion matches only a species
+		// that lists the exact dead_<species> id (e.g. the millipede).
+		if !targetSet[item.ItemType] && (!wantRotten || item.IsCarrion) {
 			continue
 		}
 		ix := float32(item.Position.ChunkX*chunkSize) + item.Position.LocalX
@@ -81,9 +85,24 @@ func FindNearbyFood(state *WorldState, pos entities.EntityPosition, visionRange 
 		}
 	}
 
-	// 3) Flora occupants (existing attraction behavior) — non-depletable.
+	// 3) Flora occupants. Most are infinite nectar (non-depletable). HOST PLANTS (milkweed) are a
+	//    DEPLETABLE breeding source while they have capacity — and are SKIPPED when grazed out, so a
+	//    reproducing butterfly stops breeding there until it regrows.
 	for _, r := range FindNearbyResources(state, pos, visionRange, targetIDs) {
-		hits = append(hits, FoodHit{ID: r.ID, Kind: "occupant", X: r.X, Y: r.Y, Dist: r.Dist, Depletable: false})
+		cellKey := fmt.Sprintf("%d,%d", int(r.X), int(r.Y))
+		depletable := false
+		if hp := state.HostPlantStates[cellKey]; hp != nil { // milkweed breeding capacity
+			if hp.Capacity <= 0 {
+				continue
+			}
+			depletable = true
+		} else if fp := state.ForagePools[cellKey]; fp != nil { // flower nectar (feeding) — depletes + regrows
+			if fp.Nectar <= 0 {
+				continue // grazed out: not a food source until it regrows → over-large pop starves
+			}
+			depletable = true
+		}
+		hits = append(hits, FoodHit{ID: r.ID, Kind: "occupant", X: r.X, Y: r.Y, Dist: r.Dist, Depletable: depletable})
 	}
 
 	sort.Slice(hits, func(i, j int) bool {

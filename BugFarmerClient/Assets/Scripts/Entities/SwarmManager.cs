@@ -8,6 +8,7 @@ using BugFarmer.Bugs;
 using BugFarmer.Networking;
 using BugFarmer.Util;
 using BugFarmer.Tracing;
+using BugFarmer.World;
 
 namespace BugFarmer.Entities
 {
@@ -65,6 +66,11 @@ namespace BugFarmer.Entities
         /// </summary>
         private long _simulationTick;
 
+        // DIAGNOSTIC ONLY (re-root investigation): the current sim tick + an ambient "how was this bug
+        // created" tag that SpawnBug stamps onto each new BugAgent. Set before each spawn-triggering op.
+        public long CurrentSimTick => _simulationTick;
+        public string SpawnSourceTag = "init";
+
         /// <summary>
         /// Server's authoritative tick frontier.
         /// Meaning: "All authoritative inputs/events for ticks <= this are finalized and broadcast."
@@ -114,6 +120,34 @@ namespace BugFarmer.Entities
         private string _pendingAuthorityId;
         private long _pendingAuthorityTick;
         private long _pendingAuthoritySeq;
+        private SwarmData[] _pendingAuthoritySwarms; // seed-baseline carried with a cached ZoneAuthority
+
+        // First-joiner seed-baseline awaiting the world seed: ProcessZoneAuthority stashes the swarm
+        // baseline here; Update() creates the swarms (seed-from-centre) once WorldSeedProvider is ready,
+        // before the tick loop advances. SwarmUpdate no longer creates swarms, so this IS the first
+        // joiner's swarm bootstrap (late joiners get theirs from the snapshot instead).
+        private SwarmData[] _pendingBaselineSwarms;
+        private long _pendingBaselineTick;
+
+        // Cause #6 fix (Phase 1b): defer the late-join bug replay until the joiner's ZONE-WIDE blocks_bugs
+        // collision map has arrived. Bug collision (BugCollision -> TilemapManager.IsCellBlockedForBugs) reads
+        // that zone-wide set; replaying before it loads makes bugs near walls collide differently than the
+        // authority (X-then-Y slide), a sub-cell error the position-relative wander then amplifies into a
+        // permanent per-bug divergence. (Previously gated on view chunks, when collision was view-scoped.)
+        private bool _deferredReplayPending;
+        private long _deferredReplayEndTick;
+        private float _deferredReplayDeadline;
+        private bool _cachedHandoff;          // the one-shot ZoneHandoff can arrive during the deferred wait
+        private long _cachedHandoffTick;
+        private long _cachedHandoffSeq;
+        private const float DeferredReplayTimeout = 8f; // fallback: replay anyway (accept divergence) vs freeze
+
+        // Phase 1b: the live (first-joiner) bug sim must not advance before the zone-wide blocks_bugs collision
+        // map (OpCodeZoneCollisionMap) arrives, or bugs near walls pass through for a few ticks and diverge.
+        // Armed lazily the first frame we'd tick without it; a timeout fallback ensures a lost map can't freeze
+        // the sim forever (it self-heals on the next resync). Reset per-zone when the map becomes ready.
+        private float _collisionMapDeadline = -1f;
+        private const float CollisionMapTimeout = 8f;
 
         // Safety net timeouts
         private float _frontierStallTimer;
@@ -170,6 +204,19 @@ namespace BugFarmer.Entities
             }
         }
 
+        /// <summary>Live bug count per species — drives the multi-species population graph.</summary>
+        public Dictionary<string, int> BugCountBySpecies()
+        {
+            var d = new Dictionary<string, int>();
+            foreach (var swarm in _swarms.Values)
+            {
+                var sp = string.IsNullOrEmpty(swarm.SpeciesId) ? "?" : swarm.SpeciesId;
+                d.TryGetValue(sp, out int c);
+                d[sp] = c + swarm.Count;
+            }
+            return d;
+        }
+
         private void Awake()
         {
             Instance = this;
@@ -218,6 +265,9 @@ namespace BugFarmer.Entities
 
         private void Update()
         {
+            // Cost profiler: roll up the previous full frame (incl. LateUpdate trails) for the F7 panel.
+            PerfProfiler.EndFrame();
+
             // Debug: one-time log of initial state
             if (!_loggedInitialState)
             {
@@ -242,8 +292,9 @@ namespace BugFarmer.Entities
                 {
                     Debug.Log($"[SwarmManager] Processing DEFERRED ZoneAuthority now that localUserId={localUserId} is known");
                     DebugFileLogger.Log($"[SwarmManager] Processing DEFERRED ZoneAuthority: authority={_pendingAuthorityId}, localUserId={localUserId}");
-                    ProcessZoneAuthority(_pendingAuthorityId, _pendingAuthorityTick, _pendingAuthoritySeq, _currentZoneId, localUserId);
+                    ProcessZoneAuthority(_pendingAuthorityId, _pendingAuthorityTick, _pendingAuthoritySeq, _currentZoneId, localUserId, _pendingAuthoritySwarms);
                     _pendingAuthorityId = null;  // Clear pending - processed
+                    _pendingAuthoritySwarms = null;
                 }
             }
 
@@ -254,6 +305,34 @@ namespace BugFarmer.Entities
                 ProcessSwarmUpdate(_pendingUpdate);
                 _hasPendingUpdate = false;
                 _pendingUpdate = null;
+            }
+
+            // First-joiner seed-baseline: create the swarms once the world seed is ready (before the tick
+            // loop runs this frame). This is the deterministic replacement for SwarmUpdate-create.
+            if (_pendingBaselineSwarms != null && WorldSeedProvider.Instance?.IsInitialized == true)
+            {
+                CreateBaselineSwarms(_pendingBaselineSwarms, _pendingBaselineTick);
+                _pendingBaselineSwarms = null;
+            }
+
+            // Cause #6: run the deferred late-join bug replay once the view-chunk occupant data has loaded
+            // (or after a timeout fallback, accepting possible divergence rather than freezing the joiner).
+            if (_deferredReplayPending)
+            {
+                // Phase 1b: gate the deferred replay on the ZONE-WIDE collision map, not the view chunks. The
+                // old reason for waiting (bug collision read view-scoped occupant data) is gone — collision now
+                // reads _blocksBugsZoneWide, so the map is exactly what the replay needs present to be correct.
+                bool chunksReady = TilemapManager.Instance == null || TilemapManager.Instance.CollisionMapReady;
+                bool timedOut = Time.realtimeSinceStartup >= _deferredReplayDeadline;
+                if (chunksReady || timedOut)
+                {
+                    _deferredReplayPending = false;
+                    if (timedOut && !chunksReady)
+                        DebugFileLogger.Log("[SwarmManager] Deferred replay TIMEOUT — replaying without the collision map (bugs near walls may diverge until resync)");
+                    else
+                        DebugFileLogger.Log($"[SwarmManager] Collision map ready — running deferred late-join replay to {_deferredReplayEndTick}");
+                    RunLateJoinReplay(_deferredReplayEndTick);
+                }
             }
 
             // Debug: log state changes
@@ -295,7 +374,28 @@ namespace BugFarmer.Entities
             // 1. SimulationTick < AuthoritativeTick  (frontier check)
             // 2. _lastReceivedSeq >= _frontierWatermark  (watermark check - all events received)
             _tickAccumulator += Time.deltaTime;
-            bool canAdvance = _simulationTick < _authoritativeTick
+
+            // Phase 1b: don't simulate before the zone-wide collision map arrives (bugs would pass through
+            // walls on this client only). Arm a timeout the first frame we'd otherwise stall, so a lost map
+            // degrades to "run anyway, self-heal on resync" rather than freezing the sim.
+            bool collisionReady = TilemapManager.Instance == null || TilemapManager.Instance.CollisionMapReady;
+            if (collisionReady)
+            {
+                _collisionMapDeadline = -1f; // ready: disarm + re-arm fresh for the next zone
+            }
+            else
+            {
+                if (_collisionMapDeadline < 0f)
+                    _collisionMapDeadline = Time.realtimeSinceStartup + CollisionMapTimeout;
+                if (Time.realtimeSinceStartup >= _collisionMapDeadline)
+                {
+                    collisionReady = true; // fallback: don't freeze; bugs near walls may diverge until resync
+                    DebugFileLogger.Log("[SwarmManager] Collision-map TIMEOUT — advancing sim without it (bugs near walls may diverge until resync)");
+                }
+            }
+
+            bool canAdvance = collisionReady
+                           && _simulationTick < _authoritativeTick
                            && HasAllEventsUpTo(_frontierWatermark);
 
             // Debug: periodic gate status, every 50 ticks (~5 sec). Do NOT key
@@ -476,6 +576,16 @@ namespace BugFarmer.Entities
                 _swarms[swarmId].SimulateTick(_simulationTick, players);
             }
 
+            // 4b. Phase 2 — individual-fly predation strike (AUTHORITY ONLY, LIVE only). Positions are
+            // final for the tick; this detects which individual prey a predator struck and REPORTS it to
+            // the server (it does NOT remove anything locally — the kill comes back as a frontier-gated
+            // BUG_REMOVED applied identically on every client, so the hash stays bit-identical). Gated to
+            // Live so a catching-up authority doesn't fire stale strikes for replayed ticks.
+            if (_isAuthority && _syncState == SyncState.Live)
+            {
+                RunPredationStrikes();
+            }
+
             // Record this tick's state hash for tick-aligned drift checks (always on, cheap).
             var hash = ComputeStateHash();
             RecordTickHash(_simulationTick, hash);
@@ -485,6 +595,97 @@ namespace BugFarmer.Entities
             {
                 var bugs = CollectBugTraces();
                 _traceCallback(_simulationTick, hash, bugs, players);
+            }
+        }
+
+        // Phase 2: per-predator local re-send throttle (the SERVER cooldown is authoritative; this just
+        // avoids spamming a strike message every tick while a predator sits in range). Key: predator swarm_id.
+        private readonly Dictionary<string, long> _lastLocalStrikeTick = new();
+
+        /// <summary>
+        /// AUTHORITY-ONLY per-tick strike pass (Phase 2). For each hunting predator, find the nearest
+        /// individual prey fly within strike_radius of a predator individual (fixed-point, ascending-id
+        /// tie-break, claimed-set so two predators never take the same fly) and REPORT the victims to the
+        /// server. NO RNG, NO local removal — the kill returns as a frontier-gated BUG_REMOVED applied
+        /// identically on every client (incl. this authority), so the hash stays bit-identical and an
+        /// authority handoff is safe (any client computes the same victims from identical positions).
+        /// </summary>
+        private void RunPredationStrikes()
+        {
+            var im = InfluenceManager.Instance;
+            if (im == null) return;
+
+            foreach (var kv in im.GetHuntingSwarms().OrderBy(k => k.Key))
+            {
+                string predatorId = kv.Key;
+                var strike = kv.Value;
+                if (string.IsNullOrEmpty(strike.TargetPreyId)) continue;
+
+                // Local cooldown throttle (server is authoritative).
+                if (_lastLocalStrikeTick.TryGetValue(predatorId, out var last) &&
+                    _simulationTick - last < strike.StrikeCooldownTicks)
+                    continue;
+
+                var predator = GetSwarm(predatorId);
+                var prey = GetSwarm(strike.TargetPreyId);
+                if (predator == null || prey == null || predator.Count == 0 || prey.Count == 0) continue;
+
+                // strike_radius arrives ×1000 → square via FixedPoint multiply (a*b/1000), NOT raw int².
+                var rFixed = new FixedPoint { Value = strike.StrikeRadiusFixed };
+                long radiusSqr = (rFixed * rFixed).Value;
+
+                // BROAD-PHASE: skip the O(P×Q) per-bug scan unless the swarm CENTRES are within
+                // strike_radius + both cloud radii (threshold squared via FixedPoint too, same ×1000 scale).
+                var broadFixed = FixedPoint.FromFloat((strike.StrikeRadiusFixed / 1000f) + predator.Radius + prey.Radius);
+                long broadSqr = (broadFixed * broadFixed).Value;
+                if (predator.SimCenter.SqrDistanceTo(prey.SimCenter).Value > broadSqr) continue;
+
+                int kills = strike.KillsPerStrike > 0 ? strike.KillsPerStrike : 1;
+                var preyBugs = prey.GetAllBugsAliveSorted().ToList();
+                var claimed = new HashSet<int>();
+                var victimIds = new List<int>();
+                var victimX = new List<float>();
+                var victimY = new List<float>();
+
+                // NARROW-PHASE: each predator individual (ascending id) claims the nearest UNCLAIMED prey
+                // individual within strike_radius; ascending-bug-id tie-break; up to kills_per_strike total.
+                foreach (var (pbId, pbPos) in predator.GetAllBugsAliveSorted())
+                {
+                    if (victimIds.Count >= kills) break;
+                    int bestId = -1;
+                    long bestSqr = long.MaxValue;
+                    FixedPoint2 bestPos = default;
+                    foreach (var (qbId, qbPos) in preyBugs)
+                    {
+                        if (claimed.Contains(qbId)) continue;
+                        long d = pbPos.SqrDistanceTo(qbPos).Value;
+                        if (d > radiusSqr) continue;
+                        if (d < bestSqr || (d == bestSqr && (bestId < 0 || qbId < bestId)))
+                        {
+                            bestSqr = d; bestId = qbId; bestPos = qbPos;
+                        }
+                    }
+                    if (bestId >= 0)
+                    {
+                        claimed.Add(bestId);
+                        victimIds.Add(bestId);
+                        victimX.Add(bestPos.X.Value / 1000f);
+                        victimY.Add(bestPos.Y.Value / 1000f);
+                    }
+                }
+
+                if (victimIds.Count == 0) continue;
+
+                _lastLocalStrikeTick[predatorId] = _simulationTick;
+                SendToServer(OpCodes.PredationStrike, new PredationStrikeMessage
+                {
+                    predator_swarm_id = predatorId,
+                    prey_swarm_id = strike.TargetPreyId,
+                    bug_ids = victimIds.ToArray(),
+                    bug_x = victimX.ToArray(),
+                    bug_y = victimY.ToArray(),
+                    tick = _simulationTick,
+                });
             }
         }
 
@@ -563,6 +764,7 @@ namespace BugFarmer.Entities
         /// </summary>
         private void InterpolateAllSwarms(float t)
         {
+            using var _perf = PerfProfiler.Sample("Render.Interpolate");
             foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
             {
                 _swarms[swarmId].Interpolate(t);
@@ -576,6 +778,27 @@ namespace BugFarmer.Entities
         /// transitions back to LIVE. Used for protocol violations, frontier stalls, handshake
         /// timeouts, and large drift. Bounded by MaxResyncAttempts in the Update loop.
         /// </summary>
+        /// <summary>
+        /// Wipe ALL bug-sim state for a cross-zone swap: destroy swarm visuals + reset the frontier
+        /// (inbox/seq/watermark) to a fresh-join slate. The next zone's ZoneAuthority re-bootstraps.
+        /// Mirrors the RequestResync clears. Call from WorldManager.ResetForZoneSwap before EnterWorld.
+        /// </summary>
+        public void ClearAllSwarms()
+        {
+            foreach (var swarm in _swarms.Values)
+            {
+                if (swarm != null) { swarm.Cleanup(); Destroy(swarm.gameObject); }
+            }
+            _swarms.Clear();
+            _inboxBySeq.Clear();
+            _pendingEvents.Clear();
+            _pendingEventsDirty = false;
+            _lastAppliedSeq = -1;
+            _lastReceivedSeq = -1;
+            _frontierWatermark = -1;
+            _syncState = SyncState.Joining;
+        }
+
         private void RequestResync()
         {
             Debug.LogWarning($"[SwarmManager] Requesting zone resync (late-join path)");
@@ -668,12 +891,16 @@ namespace BugFarmer.Entities
                 case OpCodes.ZoneTickBroadcast:
                     HandleZoneTickBroadcast(state);
                     break;
+                case OpCodes.ZoneCollisionMap:
+                    HandleZoneCollisionMap(state);
+                    break;
                 // Inventory messages (26, 37, 38) handled by InventoryManager
             }
         }
 
         private void HandleSwarmUpdate(IMatchState state)
         {
+            using var _perf = PerfProfiler.Sample("Net.SwarmUpdate");
             var json = System.Text.Encoding.UTF8.GetString(state.State);
             var update = JsonUtility.FromJson<SwarmUpdateMessage>(json);
 
@@ -705,14 +932,14 @@ namespace BugFarmer.Entities
 
                 if (_swarms.TryGetValue(data.id, out var existing))
                 {
-                    // Update existing swarm
+                    // Metadata refresh only (count/radius/sprite/phase). SwarmUpdate NO LONGER creates
+                    // swarms — creation is deterministic via the join baseline (first joiner / late-join
+                    // snapshot) or a SWARM_SPAWNED event at its tick. Creating here on-receipt (an
+                    // arbitrary local tick) is exactly the spawn-tick desync this whole change removes.
                     existing.UpdateFromServer(data);
                 }
-                else
-                {
-                    // Spawn new swarm visual
-                    SpawnSwarm(data, update.tick);
-                }
+                // else: not yet created on this client — it will arrive via SWARM_SPAWNED (at its event
+                // tick) or the join baseline. Deliberately do nothing (see comment above).
             }
 
             // Remove swarms not in this update (merged/despawned)
@@ -852,8 +1079,19 @@ namespace BugFarmer.Entities
             switch (msg.kind)
             {
                 case "strike":
-                    BugFarmer.Audio.AudioFx.ThwackAt(pos);
-                    swarm.FlashAllBugs();
+                    swarm.FlashAllBugs(); // the predator lunges
+                    // Phase 2: per-victim snatch — a positioned THWACK AT each eaten fly (the kill itself
+                    // vanishes the exact individual deterministically; this is the audible per-victim cue).
+                    if (msg.victim_x != null && msg.victim_y != null && msg.victim_x.Length > 0)
+                    {
+                        int n = Mathf.Min(msg.victim_x.Length, msg.victim_y.Length);
+                        for (int i = 0; i < n; i++)
+                            BugFarmer.Audio.AudioFx.ThwackAt(new Vector2(msg.victim_x[i], msg.victim_y[i]));
+                    }
+                    else
+                    {
+                        BugFarmer.Audio.AudioFx.ThwackAt(pos); // legacy/centre fallback
+                    }
                     break;
                 case "windup":
                     BugFarmer.Audio.AudioFx.HissAt(pos);
@@ -883,6 +1121,7 @@ namespace BugFarmer.Entities
         /// </summary>
         public void HandleSwarmSplit(InfluenceEvent evt)
         {
+            SpawnSourceTag = "splitMerge"; // DIAGNOSTIC
             var parent = GetSwarm(evt.swarm_id);
             var center = new Vector2(evt.center_x / 1000f, evt.center_y / 1000f);
 
@@ -925,6 +1164,7 @@ namespace BugFarmer.Entities
         /// </summary>
         public void HandleSwarmMerge(InfluenceEvent evt)
         {
+            SpawnSourceTag = "splitMerge"; // DIAGNOSTIC
             var survivor = GetSwarm(evt.swarm_id);
             if (survivor == null)
             {
@@ -968,9 +1208,46 @@ namespace BugFarmer.Entities
                 Debug.LogWarning($"[SwarmManager] SWARM_REPRODUCED for unknown swarm {evt.swarm_id} - skipping");
                 return;
             }
+            SpawnSourceTag = "reproduce"; // DIAGNOSTIC
             for (int id = evt.new_bug_id_base; id < evt.new_bug_id_base + evt.split_count; id++)
                 swarm.SpawnBugAt(id);
             Debug.Log($"[SwarmManager] SWARM_REPRODUCED {evt.swarm_id}: +{evt.split_count} bugs (now {swarm.Count})");
+        }
+
+        /// <summary>
+        /// SWARM_SPAWNED: a swarm minted at runtime (continuous spawn, release, nest hatch, reproduce-
+        /// at-cap, director). Create the visual and seed its bugs from (worldSeed, swarmId, bugId) at the
+        /// event centre, AT this event's tick (ProcessEventsForTick runs at evt.tick in both live and
+        /// replay). Every client therefore creates it at the SAME tick → identical wander-step count.
+        /// Idempotent: a swarm that already exists (snapshot adopt, double-delivery) is left untouched.
+        /// Radius/sprite are cosmetic and refreshed by the next SwarmUpdate; only the centre + count +
+        /// seed drive the deterministic sim, so they are all that's needed here.
+        /// </summary>
+        public void HandleSwarmSpawned(InfluenceEvent evt)
+        {
+            if (_swarms.ContainsKey(evt.swarm_id))
+                return; // already created (snapshot/baseline/duplicate) — never re-seed
+
+            var data = new SwarmData
+            {
+                id = evt.swarm_id,
+                species_id = evt.species_id,
+                sprite_id = "", // Initialize falls back to species_id; SwarmUpdate refreshes the real sprite
+                x = evt.center_x / 1000f, // fixed-point ×1000 → world; same int on every client
+                y = evt.center_y / 1000f,
+                radius = 0f, // cosmetic; SwarmUpdate sets the real radius (SpawnBug seeds at centre regardless)
+                count = evt.split_count,
+                next_bug_id = evt.split_count,
+            };
+
+            SpawnSourceTag = "swarmSpawned"; // DIAGNOSTIC
+            var obj = new GameObject($"Swarm_{evt.swarm_id}");
+            var visual = obj.AddComponent<SwarmVisual>();
+            visual.Initialize(data, evt.tick);
+            _swarms[evt.swarm_id] = visual;
+
+            Debug.Log($"[SwarmManager] SWARM_SPAWNED {evt.swarm_id} ({evt.species_id}) x{evt.split_count} at tick {evt.tick}");
+            DebugFileLogger.Log($"[SwarmManager] SWARM_SPAWNED {evt.swarm_id} ({evt.species_id}) x{evt.split_count} at tick {evt.tick}");
         }
 
         /// <summary>
@@ -1053,6 +1330,7 @@ namespace BugFarmer.Entities
 
         private void SpawnSwarm(SwarmData data, long serverTick)
         {
+            SpawnSourceTag = "liveSwarmUpdate"; // DIAGNOSTIC
             var obj = new GameObject($"Swarm_{data.id}");
             var visual = obj.AddComponent<SwarmVisual>();
             visual.Initialize(data, serverTick);
@@ -1083,6 +1361,7 @@ namespace BugFarmer.Entities
         /// </summary>
         private void SpawnSwarmFromMetadata(SwarmData data, long snapshotTick)
         {
+            SpawnSourceTag = "metadataPrespawn"; // DIAGNOSTIC
             var obj = new GameObject($"Swarm_{data.id}");
             var visual = obj.AddComponent<SwarmVisual>();
             visual.Initialize(data, snapshotTick);
@@ -1098,6 +1377,43 @@ namespace BugFarmer.Entities
             }
         }
 
+        /// <summary>
+        /// Create the FIRST joiner's initial swarms from the ZoneAuthority seed-baseline. No per-bug
+        /// data exists yet (this client is the origin of truth), so bugs seed from (worldSeed,swarmId,
+        /// bugId) at the swarm centre — exactly what the server has authority over. Mirrors the late-
+        /// join metadata path: hydrate the in-flight leg first so the centre marches from tick one.
+        /// Idempotent (skips already-created swarms). Called from Update() once the world seed is ready.
+        /// </summary>
+        private void CreateBaselineSwarms(SwarmData[] baseline, long baselineTick)
+        {
+            Debug.Log($"[SwarmManager] Creating {baseline.Length} swarms from authority seed-baseline at tick {baselineTick}");
+            DebugFileLogger.Log($"[SwarmManager] Creating {baseline.Length} swarms from authority seed-baseline at tick {baselineTick}");
+
+            foreach (var meta in baseline)
+            {
+                // Hydrate the leg BEFORE creating (the closed-form centre march reads it immediately).
+                if (meta.has_target)
+                {
+                    InfluenceManager.Instance?.SetSwarmLeg(
+                        meta.id,
+                        new FixedPoint2(
+                            new FixedPoint { Value = meta.leg_origin_x },
+                            new FixedPoint { Value = meta.leg_origin_y }),
+                        new FixedPoint2(
+                            new FixedPoint { Value = meta.leg_target_x },
+                            new FixedPoint { Value = meta.leg_target_y }),
+                        new FixedPoint { Value = meta.leg_speed },
+                        meta.leg_start_tick);
+                }
+
+                if (_swarms.ContainsKey(meta.id))
+                    continue; // already created (defensive)
+
+                SpawnSourceTag = "authorityBaseline"; // DIAGNOSTIC
+                SpawnSwarmFromMetadata(meta, baselineTick);
+            }
+        }
+
         // ==========================================================================
         // ZONE AUTHORITY + LATE JOIN HANDLERS
         // ==========================================================================
@@ -1109,6 +1425,7 @@ namespace BugFarmer.Entities
         /// </summary>
         private void HandleInfluenceBroadcast(IMatchState state)
         {
+            using var _perf = PerfProfiler.Sample("Net.Influence");
             var json = System.Text.Encoding.UTF8.GetString(state.State);
             var msg = JsonUtility.FromJson<InfluenceBroadcastMessage>(json);
             if (msg?.events == null) return;
@@ -1117,6 +1434,20 @@ namespace BugFarmer.Entities
             {
                 EnqueueEvent(evt);
             }
+        }
+
+        /// <summary>
+        /// Handle the zone-wide blocks_bugs collision map (OpCode 106, Phase 1b). Sent to each joiner on join
+        /// and on resync. Hydrates TilemapManager's zone-complete collision set so the bug sim collides against
+        /// walls IDENTICALLY on every client regardless of camera, and releases the readiness gate so the sim
+        /// may run. Dynamic placements/removals after this ride frontier-gated OCCUPANT_BLOCKS_BUGS events.
+        /// </summary>
+        private void HandleZoneCollisionMap(IMatchState state)
+        {
+            var json = System.Text.Encoding.UTF8.GetString(state.State);
+            var msg = JsonUtility.FromJson<ZoneCollisionMapMessage>(json);
+            if (msg == null) return;
+            BugFarmer.World.TilemapManager.Instance?.HandleZoneCollisionMap(msg.cx, msg.cy);
         }
 
         /// <summary>
@@ -1169,6 +1500,20 @@ namespace BugFarmer.Entities
             // next Think - acceptable, sub-cell, and self-correcting.
             InfluenceManager.Instance?.ClearSwarmLegs();
 
+            // Hydrate the deterministic FOOD REGISTRY from the snapshot BEFORE replay. The registry is
+            // event-sourced (ITEM_ROTTED/FOOD_CONSUMED) and pruned, and was cleared on join — without this,
+            // a late-joiner replays with food it never registered, so swarms sitting at a food source FEED on
+            // the authority but plain-wander here, desyncing per-bug positions permanently (no absolute resync).
+            // Replay-window FOOD events ride influence_log and converge on top of this. (Leg-embed pattern.)
+            InfluenceManager.Instance?.ClearFood();
+            if (msg.food != null)
+            {
+                foreach (var f in msg.food)
+                    InfluenceManager.Instance?.HydrateFoodExact(f.food_id, f.x, f.y, f.level);
+                Debug.Log($"[SwarmManager] Hydrated {msg.food.Length} food registry entries from snapshot");
+                DebugFileLogger.Log($"[SwarmManager] Hydrated {msg.food.Length} food entries from snapshot");
+            }
+
             // Hydrate player cells from snapshot STATE (not events)
             // This restores the point-in-time player positions at snapshot_tick
             if (msg.player_cells != null)
@@ -1186,6 +1531,23 @@ namespace BugFarmer.Entities
             int metadataCount = msg.swarm_metadata?.Length ?? 0;
             Debug.Log($"[SwarmManager] LateJoinSnapshot contains {metadataCount} swarm metadata entries");
             DebugFileLogger.Log($"[SwarmManager] LateJoinSnapshot contains {metadataCount} swarm metadata entries");
+
+            // #127: the exact bug-ids the snapshot carries, per swarm. A swarm WITH snapshot bugs is created
+            // with EXACTLY those ids below (ApplySnapshot then gives them full state); bugs that reproduced or
+            // spawned in the snapshot-lag window are NOT prespawned from the live metadata.count — they are
+            // minted by the replayed SWARM_REPRODUCED/SWARM_SPAWNED at their OWN tick (else they integrate
+            // from the wrong tick → permanent ~1-cell drift). Bootstrap (no snapshot bugs) keeps metadata.count.
+            var snapBugIds = new Dictionary<string, List<int>>();
+            if (msg.swarms != null)
+            {
+                foreach (var sd in msg.swarms)
+                {
+                    if (sd?.bugs == null) continue;
+                    var ids = new List<int>(sd.bugs.Length);
+                    foreach (var b in sd.bugs) ids.Add(b.bug_id);
+                    snapBugIds[sd.swarm_id] = ids;
+                }
+            }
 
             if (msg.swarm_metadata != null)
             {
@@ -1220,8 +1582,25 @@ namespace BugFarmer.Entities
                     Debug.Log($"[SwarmManager] Creating swarm {metadata.id} from metadata before replay");
                     DebugFileLogger.Log($"[SwarmManager] Creating swarm {metadata.id} from metadata before replay");
 
-                    // Create swarm visual using the snapshot_tick (they'll be positioned at snapshot state)
-                    SpawnSwarmFromMetadata(metadata, msg.snapshot_tick);
+                    // Create swarm visual using the snapshot_tick (ApplySnapshot positions the bugs next).
+                    if (snapBugIds.TryGetValue(metadata.id, out var ids) && ids.Count > 0)
+                    {
+                        // #127: create EXACTLY the snapshot's bug-ids. A count=0 shell keeps the correct
+                        // _nextBugId (Initialize: next_bug_id>0 ? next_bug_id : count) and spawns no bugs;
+                        // then spawn the snapshot ids (ApplySnapshot overwrites their full state, so the
+                        // SpawnBugAt seed tick is irrelevant). Window-created bugs are minted by replay.
+                        metadata.count = 0; // SwarmData is a class, but this entry isn't reused after here
+                        SpawnSwarmFromMetadata(metadata, msg.snapshot_tick);
+                        var sv = GetSwarm(metadata.id);
+                        if (sv != null)
+                            foreach (var id in ids)
+                                sv.SpawnBugAt(id);
+                    }
+                    else
+                    {
+                        // No snapshot bugs (empty-bootstrap / seed-baseline) → prespawn from metadata.count.
+                        SpawnSwarmFromMetadata(metadata, msg.snapshot_tick);
+                    }
                 }
             }
 
@@ -1306,8 +1685,35 @@ namespace BugFarmer.Entities
             Debug.Log($"[SwarmManager] {inboxLog}");
             DebugFileLogger.Log($"[SwarmManager] {inboxLog}");
 
+            // Cause #6 (Phase 1b): gate the bug replay on the ZONE-WIDE collision map being loaded. Bug
+            // collision during replay reads TilemapManager's blocks_bugs set; replaying before it arrives makes
+            // bugs near walls collide differently than the authority (permanent per-bug divergence). The map
+            // (OpCodeZoneCollisionMap) is sent alongside the late-join snapshot. If it's not here yet, defer to
+            // Update(); else replay now. (Was gated on view chunks; collision is now zone-wide, not view-scoped.)
+            if (TilemapManager.Instance != null && !TilemapManager.Instance.CollisionMapReady)
+            {
+                _deferredReplayPending = true;
+                _deferredReplayEndTick = msg.end_tick;
+                _deferredReplayDeadline = Time.realtimeSinceStartup + DeferredReplayTimeout;
+                _cachedHandoff = false;
+                Debug.Log($"[SwarmManager] Late-join replay DEFERRED until the zone collision map loads (end_tick={msg.end_tick})");
+                DebugFileLogger.Log($"[SwarmManager] Late-join replay DEFERRED (collision map not ready), end_tick={msg.end_tick}");
+                return;
+            }
+
+            RunLateJoinReplay(msg.end_tick);
+        }
+
+        /// <summary>
+        /// Replay the late-join snapshot to endTick and enter HandshakeWait. Split out of
+        /// HandleLateJoinSnapshot so it can run either immediately or DEFERRED from Update() once the
+        /// view-chunk occupant data has loaded (cause #6). If the one-shot ZoneHandoff arrived during the
+        /// deferred wait it was cached; apply it here so the joiner still reaches LIVE.
+        /// </summary>
+        private void RunLateJoinReplay(long endTick)
+        {
             // Replay to end_tick
-            ReplayToTick(msg.end_tick);
+            ReplayToTick(endTick);
 
             // Spec §7.3: REPLAY_DONE checkpoint
             var replayHash = ComputeStateHash();
@@ -1325,6 +1731,16 @@ namespace BugFarmer.Entities
             _syncState = SyncState.HandshakeWait;
             Debug.Log($"[SwarmManager] Replay complete at tick {_simulationTick}, waiting for handshake");
             DebugFileLogger.Log($"[SwarmManager] STATE -> HandshakeWait at simTick={_simulationTick} (awaiting ZoneHandoff)");
+
+            // Handoff may have arrived while we were waiting for chunks — apply the cached one now.
+            if (_cachedHandoff)
+            {
+                _cachedHandoff = false;
+                _authoritativeTick = Math.Max(_authoritativeTick, _cachedHandoffTick);
+                _frontierWatermark = Math.Max(_frontierWatermark, _cachedHandoffSeq);
+                TransitionToLive();
+                DebugFileLogger.Log($"[SwarmManager] Applied cached ZoneHandoff after deferred replay -> LIVE at simTick={_simulationTick}");
+            }
         }
 
         /// <summary>
@@ -1341,6 +1757,17 @@ namespace BugFarmer.Entities
             var handoffLog = $"HANDOFF live_start_tick={msg.live_start_tick} last_event_seq={msg.last_event_seq} simTick={_simulationTick} state={_syncState}";
             Debug.Log($"[SwarmManager] {handoffLog}");
             DebugFileLogger.Log($"[SwarmManager] {handoffLog}");
+
+            // Cause #6: if the replay is deferred (waiting for view chunks), the one-shot handoff would be
+            // lost (we're still Replaying, not HandshakeWait). Cache it; RunLateJoinReplay applies it.
+            if (_deferredReplayPending)
+            {
+                _cachedHandoff = true;
+                _cachedHandoffTick = msg.live_start_tick;
+                _cachedHandoffSeq = msg.last_event_seq;
+                DebugFileLogger.Log($"[SwarmManager] ZoneHandoff CACHED during deferred replay (live_start_tick={msg.live_start_tick})");
+                return;
+            }
 
             if (_syncState == SyncState.HandshakeWait)
             {
@@ -1377,26 +1804,27 @@ namespace BugFarmer.Entities
                 _pendingAuthorityId = msg.authority_id;
                 _pendingAuthorityTick = msg.authoritative_tick;
                 _pendingAuthoritySeq = msg.last_event_seq;
+                _pendingAuthoritySwarms = msg.swarms;
                 _currentZoneId = msg.zone_id;
                 Debug.LogWarning($"[SwarmManager] ZoneAuthority received but localUserId not yet known - caching. authority={msg.authority_id}, tick={msg.authoritative_tick}");
                 DebugFileLogger.Log($"[SwarmManager] ZoneAuthority CACHED (localUserId empty): authority={msg.authority_id}, tick={msg.authoritative_tick}");
                 return;
             }
 
-            ProcessZoneAuthority(msg.authority_id, msg.authoritative_tick, msg.last_event_seq, msg.zone_id, localUserId);
+            ProcessZoneAuthority(msg.authority_id, msg.authoritative_tick, msg.last_event_seq, msg.zone_id, localUserId, msg.swarms);
         }
 
         /// <summary>
         /// Process zone authority assignment. Called immediately from HandleZoneAuthority
         /// or deferred from Update() when localUserId becomes available.
         /// </summary>
-        private void ProcessZoneAuthority(string authorityId, long authoritativeTick, long lastEventSeq, string zoneId, string localUserId)
+        private void ProcessZoneAuthority(string authorityId, long authoritativeTick, long lastEventSeq, string zoneId, string localUserId, SwarmData[] baselineSwarms)
         {
             bool wasAuthority = _isAuthority;
             _isAuthority = (authorityId == localUserId);
             _currentZoneId = zoneId;
 
-            var authLog = $"[SwarmManager] ZoneAuthority: authority={authorityId}, tick={authoritativeTick}, seq={lastEventSeq}, localUser={localUserId}, isLocalAuthority={_isAuthority}, currentState={_syncState}";
+            var authLog = $"[SwarmManager] ZoneAuthority: authority={authorityId}, tick={authoritativeTick}, seq={lastEventSeq}, localUser={localUserId}, isLocalAuthority={_isAuthority}, currentState={_syncState}, baselineSwarms={baselineSwarms?.Length ?? 0}";
             Debug.Log(authLog);
             DebugFileLogger.Log(authLog);
 
@@ -1409,6 +1837,14 @@ namespace BugFarmer.Entities
                 _lastReceivedSeq = lastEventSeq;     // FIX #7: Assume all prior events received
                 TransitionToLive();
                 DebugFileLogger.Log($"[SwarmManager] First client -> LIVE at tick {_simulationTick}");
+
+                // Bootstrap the initial swarms from the seed-baseline (SwarmUpdate no longer creates).
+                // Deferred to Update() so it runs once the world seed is initialized, before the tick loop.
+                if (baselineSwarms != null && baselineSwarms.Length > 0)
+                {
+                    _pendingBaselineSwarms = baselineSwarms;
+                    _pendingBaselineTick = authoritativeTick;
+                }
             }
 
             // Handle authority handoff
@@ -1457,6 +1893,17 @@ namespace BugFarmer.Entities
                     _lastReceivedSeq = msg.last_event_seq;
                     TransitionToLive();
                     DebugFileLogger.Log($"[SwarmManager] Authority (from tick) -> LIVE at tick {_simulationTick}");
+
+                    // ZoneAuthority was lost, so its seed-baseline never arrived → we have no swarms.
+                    // Recover via the resync path: the server's bootstrap snapshot now carries the same
+                    // seed-baseline (swarm_metadata), so a snapshot request rebuilds the initial swarms.
+                    // (SwarmUpdate no longer creates them.) Reliable in-order delivery makes this rare.
+                    if (_swarms.Count == 0 && _pendingBaselineSwarms == null)
+                    {
+                        Debug.LogWarning("[SwarmManager] Authority via tick broadcast with no seed-baseline — requesting snapshot to rebuild initial swarms");
+                        DebugFileLogger.Log("[SwarmManager] Authority-from-tick: no baseline, requesting snapshot recovery");
+                        SendToServer(OpCodes.RequestSnapshot, new SnapshotRequestMessage());
+                    }
                 }
                 else
                 {
@@ -1563,23 +2010,55 @@ namespace BugFarmer.Entities
                 var bugData = kvp.Value.GetAllBugPositions();
                 if (bugData.Length > 0)
                 {
-                    swarmSnapshots.Add(new SwarmSnapshotData
+                    var snap = new SwarmSnapshotData
                     {
                         swarm_id = kvp.Key,
                         bugs = bugData
-                    });
+                    };
+                    // Embed the swarm's current leg (authoritative @ snapshot tick) so late-joiners hydrate
+                    // the center coherently regardless of InfluenceLog pruning.
+                    if (InfluenceManager.Instance != null &&
+                        InfluenceManager.Instance.TryGetSwarmLeg(kvp.Key, out int lox, out int loy,
+                            out int ltx, out int lty, out int lspd, out long lst))
+                    {
+                        snap.has_leg = true;
+                        snap.leg_origin_x = lox; snap.leg_origin_y = loy;
+                        snap.leg_target_x = ltx; snap.leg_target_y = lty;
+                        snap.leg_speed = lspd; snap.leg_start_tick = lst;
+                    }
+                    swarmSnapshots.Add(snap);
                 }
             }
 
-            // FIX: snapshot_tick must be the tick whose simulation is COMPLETE in this snapshot.
-            // _simulationTick is the tick we're ABOUT TO simulate (next tick), so subtract 1.
-            // Contract: snapshot_tick = T means "state after SimulateTick(T) with events at T applied"
+            // snapshot_tick = the tick whose SimulateTick is COMPLETE in this serialized state.
+            // After AdvanceOneTick, `_simulationTick` IS the most-recently-simulated tick (it increments
+            // BEFORE SimulateTick), and the bug positions captured here are the state after SimulateTick(
+            // _simulationTick). So snapshot_tick = _simulationTick. (The old `-1` mislabeled the snapshot one
+            // tick behind the state it contained, so late-joiners re-simulated that tick on replay → a 1-tick
+            // cycle/position shift that compounded into cross-client divergence. Confirmed by boundary trace:
+            // the captured state matched THIS client's trace at snapshot_tick+1, 5/5. See
+            // docs/product/architecture_swarm_sync.md:103/111/137.)
+            // snapshot_last_event_seq stays _lastAppliedSeq: events@_simulationTick are still pending (applied
+            // at the start of the next AdvanceOneTick) and ride the replay log, so a joiner that starts at
+            // snapshot_tick=_simulationTick applies them before simulating _simulationTick+1 — in lockstep.
+            // Embed the deterministic food registry so late-joiners hydrate it coherently. It is event-sourced
+            // (ITEM_ROTTED/FOOD_CONSUMED) and pruned, so — exactly like swarm legs — the authority's live registry
+            // is the reliable source. Bugs at a food source FEED (position-affecting), so a missing entry desyncs
+            // per-bug positions on a late-joiner. (Confirmed cause of the residual late-join divergence.)
+            var foodSnapshots = new List<FoodSnapshotData>();
+            if (InfluenceManager.Instance != null)
+            {
+                foreach (var (id, fx, fy, level) in InfluenceManager.Instance.ExportFood())
+                    foodSnapshots.Add(new FoodSnapshotData { food_id = id, x = fx, y = fy, level = level });
+            }
+
             var snapshot = new ZoneSnapshotMessage
             {
                 zone_id = _currentZoneId,
-                snapshot_tick = _simulationTick - 1,
+                snapshot_tick = _simulationTick,
                 snapshot_last_event_seq = _lastAppliedSeq, // Last seq whose effects are in this snapshot
                 swarms = swarmSnapshots.ToArray(),
+                food = foodSnapshots.ToArray(),
                 state_hash = "" // TODO: Implement state hash
             };
 
@@ -1673,6 +2152,39 @@ namespace BugFarmer.Entities
                 }
             }
             return traces;
+        }
+
+        /// <summary>
+        /// DIAGNOSTIC (leg/center late-join divergence): collect each swarm's current movement leg + derived
+        /// center at this tick. Compared A-vs-B at common ticks to pin whether the residual is leg-CONTENT
+        /// divergence or a no-leg fallback-center mismatch. Mirrors what SwarmVisual.SimulateTick reads.
+        /// </summary>
+        public List<SwarmLegTrace> CollectSwarmLegTraces()
+        {
+            var legs = new List<SwarmLegTrace>();
+            var im = InfluenceManager.Instance;
+            foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
+            {
+                var sv = _swarms[swarmId];
+                var rec = new SwarmLegTrace { tick = _simulationTick, swarmId = swarmId };
+
+                if (im != null && im.TryGetSwarmLeg(swarmId, out int ox, out int oy,
+                        out int tx, out int ty, out int spd, out long st))
+                {
+                    rec.hasLeg = true;
+                    rec.originX = ox; rec.originY = oy;
+                    rec.targetX = tx; rec.targetY = ty;
+                    rec.speed = spd; rec.startTick = st;
+                }
+
+                var center = sv.SimCenter;
+                rec.centerX = center.X.Value; rec.centerY = center.Y.Value;
+                var fb = sv.FallbackCenter;
+                rec.fallbackX = fb.X.Value; rec.fallbackY = fb.Y.Value;
+                rec.foodNear = im != null && im.TryGetNearestFood(center, 2.5f, out _);
+                legs.Add(rec);
+            }
+            return legs;
         }
 
         /// <summary>

@@ -1,0 +1,7 @@
+{
+  "name": "v21b_wasp_range",
+  "description": "Wasps starve at 4 despite 1300 fly prey — nest-bound with home_range 40, can't reach the dispersed flies (free-roaming centipedes, no range limit, thrive on the same flies). Widen wasp predation.home_range 40->80 so the nest can hunt the abundant flies. One lever; expect wasps to feed -> found daughter nests -> crop the fly boom (emergent predator-prey).",
+  "species": {
+    "wasp_common": { "predation": { "home_range": 80.0 } }
+  }
+}

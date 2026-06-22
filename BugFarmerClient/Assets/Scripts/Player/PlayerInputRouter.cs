@@ -34,6 +34,7 @@ namespace BugFarmer.Player
         private MeleeController _melee;
         private PlacementController _placement;
         private StationController _station;
+        private SleepController _sleep;
         private BugReleaseController _bugRelease;
         private TreeHarvestController _treeHarvest;
         private Camera _mainCamera;
@@ -49,6 +50,7 @@ namespace BugFarmer.Player
             _melee = GetComponent<MeleeController>();
             _placement = GetComponent<PlacementController>();
             _station = GetComponent<StationController>();
+            _sleep = GetComponent<SleepController>();
             _bugRelease = GetComponent<BugReleaseController>();
             _treeHarvest = GetComponent<TreeHarvestController>();
             _mainCamera = Camera.main;
@@ -154,6 +156,11 @@ namespace BugFarmer.Player
 
             // 1b. Stations (compost): interact beats attack/place; closing an open menu consumes too.
             if (_station != null && _station.TryHandleRightClick(mouseWorld))
+                return;
+
+            // 1c. Beds: right-click sets the character's home (interact beats place). Consumes the
+            //     click only when a bed is actually under the cursor.
+            if (_sleep != null && _sleep.TryHandleRightClick(mouseWorld))
                 return;
 
             // 2. Placement (equipped placeable, or the cursor-place mode): mode-based

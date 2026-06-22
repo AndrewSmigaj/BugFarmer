@@ -28,6 +28,12 @@ type SwarmState struct {
 	Phase             string  // "feeding", "reproducing", "idle"
 	Satiation         float32 // 0-100, increases when bugs feed
 	ReproductionMeter float32 // 0-100, increases when bugs visit breeding sites
+	CompostCooldown   float32 // Detritivores: seconds until the next compost-input deposit (server-only)
+	StarveTimer       float32 // Seconds the swarm has been at 0 satiation; past a threshold it starves (server-only)
+	// Per-bug natural-death schedule: bugID -> absolute tick the bug dies of old age. Set at birth,
+	// carried through merge/split like BugHP, cleaned in RemoveBugs. Server-only, NOT in the state hash
+	// (clients learn of deaths only via BUG_REMOVED events). Absent / lifespan<=0 = the bug is immortal.
+	DeathTick map[int]int64
 
 	// Movement target (pre-validated path)
 	TargetX   float32 // Destination X (validated to be reachable)
@@ -36,6 +42,7 @@ type SwarmState struct {
 
 	// Think timer - swarms make decisions every few seconds, not every tick
 	NextThinkTick int64 // Tick when swarm next evaluates targets
+	RelocateReadyTick int64 // earliest tick this swarm may make another break-contact relocate jump (server-only; not hashed)
 
 	// Cached food target (set at Think time; lets the per-tick at-food check be O(1) —
 	// distance to this point + a registry validity lookup — instead of a chunk scan).
@@ -153,6 +160,8 @@ func (s *SwarmState) RemoveBugs(bugIDs []int) []int {
 			// Centralized BugHP cleanup: a removed bug (caught, killed, split-shed)
 			// never leaks a stale damaged-HP entry.
 			delete(s.BugHP, id)
+			delete(s.DeathTick, id) // same: no stale natural-death schedule for a gone bug
+
 		}
 	}
 	s.Count -= len(removed)
@@ -228,7 +237,7 @@ type BlockedChecker func(worldX, worldY float32) bool
 // Think is called every few seconds (not every tick) to pick a new target.
 // resourceX/resourceY are the closest resource, or NaN if none visible.
 func (s *SwarmState) Think(species *BugSpecies, chunkSize int,
-	resourceX, resourceY float32, isBlocked BlockedChecker) {
+	resourceX, resourceY float32, isBlocked BlockedChecker, rng *rand.Rand) {
 
 	currX := s.WorldX(chunkSize)
 	currY := s.WorldY(chunkSize)
@@ -239,8 +248,8 @@ func (s *SwarmState) Think(species *BugSpecies, chunkSize int,
 		rawTargetX, rawTargetY = resourceX, resourceY
 	} else {
 		// Random direction within vision range
-		angle := rand.Float32() * 2 * math.Pi
-		dist := rand.Float32() * species.VisionRange
+		angle := rng.Float32() * 2 * math.Pi
+		dist := rng.Float32() * species.VisionRange
 		rawTargetX = currX + float32(math.Cos(float64(angle)))*dist
 		rawTargetY = currY + float32(math.Sin(float64(angle)))*dist
 	}

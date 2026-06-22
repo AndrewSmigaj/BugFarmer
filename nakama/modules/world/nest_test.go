@@ -92,13 +92,15 @@ func TestNestHomingDepositCycle(t *testing.T) {
 		t.Fatalf("post-deposit satiation=%.0f, want deposit_satiation 80", resident.Satiation)
 	}
 
-	// Resting (satiation 80 > threshold 30): the next think must NOT hunt.
+	// After depositing, satiation drops to deposit_satiation (80) — still BELOW the full-load ceiling
+	// (predatorFullSatiation=90), so the forager loop immediately RESUMES hunting (the old rest-at-
+	// HuntSatiationThreshold dead zone was deliberately removed; see predation.go). Re-acquires the prey.
 	fly := newTestSwarm("b_fly", 10, 14, 12)
 	state.Swarms[fly.ID] = fly
 	state.TickCount = resident.NextThinkTick + 1
 	m.predationThink(state, resident, species, 32, 0.1, nopRuntimeLogger())
-	if resident.TargetPreyID != "" {
-		t.Fatal("resting wasp (satiation 80) acquired prey — the rest window is broken")
+	if resident.TargetPreyID != fly.ID {
+		t.Fatalf("post-deposit wasp (satiation 80 < ceiling 90) should resume hunting, got prey=%q", resident.TargetPreyID)
 	}
 }
 
@@ -123,7 +125,7 @@ func TestNestHatchAtThreeBrood(t *testing.T) {
 	}
 }
 
-// Brood clamps at 6 — no banked chain-hatching after a cull.
+// Brood clamps at NestBroodCap — no banked chain-hatching after a cull.
 func TestNestBroodClamp(t *testing.T) {
 	state := nestTestState()
 	m := &Match{}
@@ -299,5 +301,55 @@ func TestGrowSwarmParity(t *testing.T) {
 	evs := eventsOfType(state, InfluenceSwarmReproduced)
 	if len(evs) != 1 || evs[0].SplitCount != 3 || evs[0].NewBugIDBase != 5 {
 		t.Fatalf("event wrong: %+v", evs)
+	}
+}
+
+// Phase 3: a THRIVING colony (saturated patrol + full brood bank) splits off a daughter hive — up to
+// the per-zone MaxNests — and draining the parent's brood arms a founding cooldown.
+func TestNestFoundingSplitsDaughterHive(t *testing.T) {
+	state := nestTestState()
+	m := &Match{}
+	nest, resident := initTestNest(m, state)
+	if nest == nil || resident == nil {
+		t.Fatal("parent nest/resident not founded")
+	}
+	species := state.Species["wasp_common"]
+
+	// Allow up to 2 hives, ample population headroom.
+	state.CurrentZone.BugSpawning = &BugSpawnConfig{SpeciesCaps: map[string]SpeciesCap{
+		"wasp_common": {MaxNests: 2, MaxPopulation: 100},
+	}}
+
+	// A daughter now founds NEXT TO A PREY CLUSTER an adequate distance from the parent (nest at 10,10).
+	// Drop a fly swarm at world (55,10) ≈ 44 cells away — inside the 40..120 band + the loaded chunks.
+	prey := &entities.SwarmState{ID: "prey_fly", SpeciesID: "fly_common", Count: 6,
+		Position: entities.EntityPosition{ChunkX: 1, ChunkY: 0, LocalX: 23, LocalY: 10}}
+	prey.InitializeBugIDs()
+	state.Swarms["prey_fly"] = prey
+
+	// Not yet thriving (brood not full) → no founding.
+	resident.Count = species.MaxSwarmSize
+	nest.Brood = entities.NestBroodCap - 1
+	m.processNestFounding(state, nil, nopRuntimeLogger())
+	if len(state.NestStates) != 1 {
+		t.Fatalf("a non-thriving colony must not found (nests=%d)", len(state.NestStates))
+	}
+
+	// Thriving: saturated patrol + full brood → founds exactly one daughter, draining the parent brood.
+	nest.Brood = entities.NestBroodCap
+	m.processNestFounding(state, nil, nopRuntimeLogger())
+	if len(state.NestStates) != 2 {
+		t.Fatalf("a thriving colony under MaxNests must found one daughter hive, got %d nests", len(state.NestStates))
+	}
+	if nest.Brood != 0 {
+		t.Fatalf("founding must drain the parent brood (cooldown), got %d", nest.Brood)
+	}
+
+	// At the cap (2 nests): re-arm the parent, still no further founding.
+	nest.Brood = entities.NestBroodCap
+	resident.Count = species.MaxSwarmSize
+	m.processNestFounding(state, nil, nopRuntimeLogger())
+	if len(state.NestStates) != 2 {
+		t.Fatalf("at MaxNests no more hives may be founded, got %d", len(state.NestStates))
 	}
 }

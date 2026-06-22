@@ -57,6 +57,10 @@ type EntityDef struct {
 	// defense math is a planned follow-up.
 	ArmorSlot string `json:"armor_slot,omitempty"`
 
+	// Backpack properties (category = "backpack", armor_slot = "backpack"): how many extra
+	// item-inventory slots wearing it unlocks.
+	SlotBonus int `json:"slot_bonus,omitempty"`
+
 	// Bug-food value when this item lies on the ground (carrion: bug_parts etc.).
 	// > 0 makes a ground drop EDIBLE: it registers in the deterministic food registry
 	// (ITEM_ROTTED at spawn, FOOD_CONSUMED(0) at expiry — both hash-bearing).
@@ -124,6 +128,16 @@ type WorldData struct {
 	FruitGrowTicks int    `json:"fruit_grow_ticks,omitempty"` // Ticks per fruit growth
 	FruitDropTicks int    `json:"fruit_drop_ticks,omitempty"` // Ticks until fruit drops
 	FruitRotTicks  int    `json:"fruit_rot_ticks,omitempty"`  // Ticks for dropped fruit to rot (default 16800 = 2 game-days)
+
+	// Host-plant breeding (milkweed): butterflies lay eggs here, depleting per breed (it regrows). A
+	// HostPlantState tracks capacity per cell; FindNearbyFood treats it as a depletable breeding source
+	// while capacity > 0 (and skips it when grazed out). Flowers are NOT host plants — just nectar.
+	HostPlant bool `json:"host_plant,omitempty"`
+
+	// Nectar (flowers): a depletable FEEDING pool. Bugs that feed here drain it; it regrows slowly and is
+	// skipped when grazed out — so an over-large population exhausts its food and starves back (boom-bust).
+	// A ForagePoolState tracks nectar per cell. The feeding analogue of host_plant.
+	Nectar bool `json:"nectar,omitempty"`
 
 	// Station properties (player-fillable material processors — compost bin first; nil = not a station)
 	Station *StationData `json:"station,omitempty"`

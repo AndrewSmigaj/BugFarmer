@@ -1,0 +1,10 @@
+{
+  "name": "v21b_litter_scarce",
+  "description": "Litter mechanic was in but not biting (millipede ~130, litter held at 76% full). Make litter SCARCE: max_litter 100->45, litter_regen_per_tick 0.004->0.0014 (~3x slower). Does millipede now drop toward ~50 and oscillate as the litter stock cycles?",
+  "flags": { "sim_batch": 6 },
+  "tuning": { "max_litter": 45.0, "litter_regen_per_tick": 0.0014 },
+  "bug_spawning": { "species_caps": {
+    "fly_common": {"max_population":0}, "butterfly_meadow": {"max_population":0},
+    "wasp_common": {"max_population":0}, "centipede_garden": {"max_population":0},
+    "millipede": {"max_population":0}, "beetle_carrion": {"max_population":0} } }
+}

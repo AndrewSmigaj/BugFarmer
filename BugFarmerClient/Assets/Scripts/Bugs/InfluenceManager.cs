@@ -37,6 +37,20 @@ namespace BugFarmer.Bugs
             public long StartTick;     // Tick the leg began
         }
 
+        // Phase 2 individual-fly predation: which prey a predator swarm is hunting + its strike params,
+        // read from the hunt SWARM_SET_TARGET fields. The AUTHORITY uses this to pick the nearest
+        // individual fly to strike. Populated only while a predator is actively hunting; cleared otherwise.
+        // Key: predator swarm_id.
+        private readonly Dictionary<string, SwarmStrike> _swarmStrikes = new();
+
+        public struct SwarmStrike
+        {
+            public string TargetPreyId;
+            public int StrikeRadiusFixed; // ×1000 (compare via FixedPoint multiply, NOT raw int²)
+            public int KillsPerStrike;
+            public int StrikeCooldownTicks;
+        }
+
         // Event type constants (must match server)
         public const string EventPlayerCellEnter = "PLAYER_CELL_ENTER";
         public const string EventPlayerCellLeave = "PLAYER_CELL_LEAVE";
@@ -46,8 +60,10 @@ namespace BugFarmer.Bugs
         public const string EventSwarmSplit = "SWARM_SPLIT";
         public const string EventSwarmMerge = "SWARM_MERGE";
         public const string EventSwarmReproduced = "SWARM_REPRODUCED";
+        public const string EventSwarmSpawned = "SWARM_SPAWNED";
         public const string EventItemRotted = "ITEM_ROTTED";
         public const string EventFoodConsumed = "FOOD_CONSUMED";
+        public const string EventOccupantBlocksBugs = "OCCUPANT_BLOCKS_BUGS"; // Phase 1b: fence/wall placed (level=1) or removed (0)
 
         // === Deterministic FOOD REGISTRY ===
         // food_id -> (world position, remaining level). Maintained ONLY from tick+seq events
@@ -92,6 +108,28 @@ namespace BugFarmer.Bugs
         /// <summary>Clear the registry (late-join resync re-bootstraps it).</summary>
         public void ClearFood() => _food.Clear();
 
+        /// <summary>
+        /// Export the full food registry so the AUTHORITY can embed it in its ZoneSnapshot. The registry is
+        /// event-sourced and pruned, so (like swarm legs) the live registry is the reliable late-join source.
+        /// Raw FixedPoint.Value coords — bit-exact hydration, no float round-trip.
+        /// </summary>
+        public IEnumerable<(string id, int x, int y, int level)> ExportFood()
+        {
+            foreach (var kv in _food)
+                yield return (kv.Key, kv.Value.pos.X.Value, kv.Value.pos.Y.Value, kv.Value.level);
+        }
+
+        /// <summary>
+        /// Hydrate one food entry from a snapshot (late-join), using raw FixedPoint.Value coords for bit-exact
+        /// determinism. Overwrites unconditionally (authoritative); subsequent replay events converge it.
+        /// </summary>
+        public void HydrateFoodExact(string foodId, int x, int y, int level)
+        {
+            if (string.IsNullOrEmpty(foodId) || level <= 0) return;
+            _food[foodId] = (new FixedPoint2(
+                new FixedPoint { Value = x }, new FixedPoint { Value = y }), level);
+        }
+
         private void Awake()
         {
             Instance = this;
@@ -134,6 +172,22 @@ namespace BugFarmer.Bugs
                         Speed = new FixedPoint { Value = evt.speed },
                         StartTick = evt.tick
                     };
+                    // Phase 2: a HUNT leg carries the prey + strike params (empty on every other leg) —
+                    // store for the authority's strike pass; clear when this predator stops hunting.
+                    if (!string.IsNullOrEmpty(evt.target_prey_id))
+                    {
+                        _swarmStrikes[evt.swarm_id] = new SwarmStrike
+                        {
+                            TargetPreyId = evt.target_prey_id,
+                            StrikeRadiusFixed = evt.strike_radius,
+                            KillsPerStrike = evt.kills_per_strike,
+                            StrikeCooldownTicks = evt.strike_cooldown_ticks,
+                        };
+                    }
+                    else
+                    {
+                        _swarmStrikes.Remove(evt.swarm_id);
+                    }
                     break;
 
                 case EventBugRemoved:
@@ -161,6 +215,13 @@ namespace BugFarmer.Bugs
                     SwarmManager.Instance?.HandleSwarmReproduced(evt);
                     break;
 
+                case EventSwarmSpawned:
+                    // A new swarm minted at runtime: create it + seed its bugs from the spawn seed at
+                    // THIS event tick (idempotent). Replaces SwarmUpdate-create so live followers and
+                    // late-join replay all create it at the same tick → identical wander-step count.
+                    SwarmManager.Instance?.HandleSwarmSpawned(evt);
+                    break;
+
                 case EventItemRotted:
                     // A ground item became bug food: register it (world cell centre).
                     if (!string.IsNullOrEmpty(evt.food_id) && evt.level > 0)
@@ -179,6 +240,15 @@ namespace BugFarmer.Bugs
                             _food[evt.food_id] = (FixedPoint2.FromVector2(
                                 new Vector2(evt.cell_x + 0.5f, evt.cell_y + 0.5f)), evt.level);
                     }
+                    break;
+
+                case EventOccupantBlocksBugs:
+                    // Phase 1b: a blocks_bugs occupant (fence/wall) was placed (level=1) or removed (0) at a
+                    // cell. Update the ZONE-WIDE bug-collision set so every client (incl. far ones the
+                    // chunk-scoped WorldUpdate never reaches) toggles this cell at the SAME tick → the bug sim
+                    // collides identically. Idempotent (HashSet add/remove).
+                    BugFarmer.World.TilemapManager.Instance?.SetBlocksBugs(
+                        new Vector2Int(evt.cell_x, evt.cell_y), evt.level > 0);
                     break;
 
                 default:
@@ -203,6 +273,12 @@ namespace BugFarmer.Bugs
         /// Get player count for debugging/validation.
         /// </summary>
         public int PlayerCellCount => _playerCells.Count;
+
+        /// <summary>
+        /// Phase 2: the predator swarms currently hunting (predator swarm_id → strike params), for the
+        /// authority's per-tick strike pass. Caller iterates in a deterministic order (sort by key).
+        /// </summary>
+        public IEnumerable<KeyValuePair<string, SwarmStrike>> GetHuntingSwarms() => _swarmStrikes;
 
         /// <summary>
         /// Compute a swarm's center deterministically for a given tick via closed-form march
@@ -249,6 +325,26 @@ namespace BugFarmer.Bugs
         public void SetSwarmLeg(string swarmId, FixedPoint2 origin, FixedPoint2 target, FixedPoint speed, long startTick)
         {
             _swarmLegs[swarmId] = new SwarmLeg { Origin = origin, Target = target, Speed = speed, StartTick = startTick };
+        }
+
+        /// <summary>
+        /// Read a swarm's current movement leg (fixed-point Values) so the authority can embed it in its
+        /// ZoneSnapshot. This is the AUTHORITATIVE source for late-join leg hydration — the InfluenceLog is
+        /// pruned each tick, so a slow swarm's last SWARM_SET_TARGET may be gone; the live leg never is.
+        /// Returns false if the swarm has not yet received a leg (caller leaves has_target=false).
+        /// </summary>
+        public bool TryGetSwarmLeg(string swarmId, out int originX, out int originY,
+                                   out int targetX, out int targetY, out int speed, out long startTick)
+        {
+            if (_swarmLegs.TryGetValue(swarmId, out var leg))
+            {
+                originX = leg.Origin.X.Value; originY = leg.Origin.Y.Value;
+                targetX = leg.Target.X.Value; targetY = leg.Target.Y.Value;
+                speed = leg.Speed.Value; startTick = leg.StartTick;
+                return true;
+            }
+            originX = originY = targetX = targetY = speed = 0; startTick = 0;
+            return false;
         }
 
         /// <summary>

@@ -1,0 +1,16 @@
+{
+  "name": "C2_fruit_plenty",
+  "description": "PREY BASE: more fruit per tree (max_fruit +3) \u2192 bigger fly-food batches.",
+  "extends": "01_no_cull",
+  "fruit": {
+    "tree_plum": {
+      "max_fruit": 8
+    },
+    "tree_cherry": {
+      "max_fruit": 9
+    },
+    "tree_apple": {
+      "max_fruit": 7
+    }
+  }
+}

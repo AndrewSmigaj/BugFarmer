@@ -1,0 +1,23 @@
+{
+  "name": "G3_immig_fast",
+  "description": "IMMIG: faster immigration (10s) + sealed + cap400 + C3. More prey turnover.",
+  "extends": "01_no_cull",
+  "species": {
+    "fly_common": {
+      "reproduce_cooldown": 18.0,
+      "breed_amount": 16.0
+    }
+  },
+  "lab": {
+    "caps": {
+      "fly_common": {
+        "spawn_interval": 10.0,
+        "max": 40
+      }
+    },
+    "seal_pens": true,
+    "max_pop": {
+      "fly_common": 400
+    }
+  }
+}

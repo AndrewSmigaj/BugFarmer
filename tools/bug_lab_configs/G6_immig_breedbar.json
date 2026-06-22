@@ -1,0 +1,31 @@
+{
+  "name": "G6_immig_breedbar",
+  "description": "IMMIG: immigration(20s) + sealed + cap400 + C3 + low breed bar (predator_breed_satiation 50, wasp deposit 55).",
+  "extends": "01_no_cull",
+  "species": {
+    "fly_common": {
+      "reproduce_cooldown": 18.0,
+      "breed_amount": 16.0
+    },
+    "wasp_common": {
+      "predation": {
+        "deposit_satiation": 55.0
+      }
+    }
+  },
+  "tuning": {
+    "predator_breed_satiation": 50.0
+  },
+  "lab": {
+    "caps": {
+      "fly_common": {
+        "spawn_interval": 20.0,
+        "max": 40
+      }
+    },
+    "seal_pens": true,
+    "max_pop": {
+      "fly_common": 400
+    }
+  }
+}

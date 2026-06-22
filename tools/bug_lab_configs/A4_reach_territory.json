@@ -1,0 +1,16 @@
+{
+  "name": "A4_reach_territory",
+  "description": "REACH: spread predators out \u2014 wasp home_range 40\u219270 + daughter nests founded 4..10 cells out (anti-clustering).",
+  "extends": "01_no_cull",
+  "species": {
+    "wasp_common": {
+      "predation": {
+        "home_range": 70.0
+      }
+    }
+  },
+  "tuning": {
+    "nest_found_dist_min": 4,
+    "nest_found_dist_max": 10
+  }
+}

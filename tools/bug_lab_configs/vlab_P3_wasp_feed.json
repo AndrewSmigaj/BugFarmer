@@ -1,0 +1,36 @@
+{
+  "name": "vlab_P3_wasp_feed",
+  "description": "P3 wasp predation.feed_per_kill 48->72 (+50%). Sweep: does more food-per-kill grow wasp colonies faster (raise wasp centre) and crop prey harder (deeper prey troughs)?",
+  "flags": {
+    "sim_batch": 6
+  },
+  "bug_spawning": {
+    "species_caps": {
+      "fly_common": {
+        "max_population": 0
+      },
+      "butterfly_meadow": {
+        "max_population": 0
+      },
+      "wasp_common": {
+        "max_population": 0
+      },
+      "centipede_garden": {
+        "max_population": 0
+      },
+      "millipede": {
+        "max_population": 0
+      },
+      "beetle_carrion": {
+        "max_population": 0
+      }
+    }
+  },
+  "species": {
+    "wasp_common": {
+      "predation": {
+        "feed_per_kill": 72.0
+      }
+    }
+  }
+}

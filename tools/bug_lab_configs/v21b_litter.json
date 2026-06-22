@@ -1,0 +1,9 @@
+{
+  "name": "v21b_litter",
+  "description": "village_21_B with the depletable-leaf-litter mechanic + P1 fly lifespan + refugium + millipede single NE habitat + southern patches. Caps off, sim_batch 6 (fast). Watching: does millipede come DOWN + oscillate (litter stock cycles), butterfly refugium hold, south populated.",
+  "flags": { "sim_batch": 6 },
+  "bug_spawning": { "species_caps": {
+    "fly_common": {"max_population":0}, "butterfly_meadow": {"max_population":0},
+    "wasp_common": {"max_population":0}, "centipede_garden": {"max_population":0},
+    "millipede": {"max_population":0}, "beetle_carrion": {"max_population":0} } }
+}

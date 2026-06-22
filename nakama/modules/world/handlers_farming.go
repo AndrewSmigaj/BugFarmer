@@ -3,8 +3,6 @@ package world
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
-	"time"
 
 	"bugfarmer/entities"
 
@@ -22,6 +20,13 @@ const (
 	treeFallSpacingTicks = 500
 	treeEveningStart     = 0.40 // ~15:30 on the clock (t of the 8400-tick day)
 	treeEveningEnd       = 0.62 // ~21:00
+	// rottenFruitDecaySeconds: how long rotted fruit lies on the ground before it decomposes away (if
+	// uneaten). Lifetime is in seconds (0.1/tick), so 5040s = 50400 ticks = 6 game-days ≈ 2× a fly's
+	// 3-game-day lifespan — long enough to be a STABLE food source (not popping in/out within minutes),
+	// short enough that the standing pile is bounded to "what dropped in the last ~6 game-days" instead of
+	// piling up forever. Replaces an earlier "Lifetime = 999999 (never decay)" hack that made fly food
+	// effectively infinite and let the rotten count balloon past 30k.
+	rottenFruitDecaySeconds = 5040
 )
 
 func (m *Match) handleToolUse(
@@ -333,7 +338,7 @@ func (m *Match) handleTreeHarvest(
 		userID, fruitType, tree.GridX, tree.GridY, tree.FruitCount)
 }
 
-// treeDefDropTicks reads a tree def's ripeness threshold with a sane floor (rand.Intn
+// treeDefDropTicks reads a tree def's ripeness threshold with a sane floor (Rng.Intn
 // panics on 0 — a def without fruit_drop_ticks must not crash wild init).
 func treeDefDropTicks(def *EntityDef) int {
 	if def != nil && def.World != nil && def.World.FruitDropTicks > 0 {
@@ -498,14 +503,14 @@ func (m *Match) harvestMatureCrop(
 	// Calculate drops
 	dropCount := cropDef.HarvestCountMin
 	if cropDef.HarvestCountMax > cropDef.HarvestCountMin {
-		dropCount += rand.Intn(cropDef.HarvestCountMax - cropDef.HarvestCountMin + 1)
+		dropCount += state.Rng.Intn(cropDef.HarvestCountMax - cropDef.HarvestCountMin + 1)
 	}
 
 	// Spawn harvest items on ground
 	m.spawnHarvestDrops(dispatcher, state, cropDef.HarvestItem, dropCount, gx, gy, cx, cy)
 
 	// Seed drop chance
-	if cropDef.SeedDropChance > 0 && rand.Float32() < cropDef.SeedDropChance {
+	if cropDef.SeedDropChance > 0 && state.Rng.Float32() < cropDef.SeedDropChance {
 		seedID := "seed_" + crop.PlantType
 		m.spawnHarvestDrops(dispatcher, state, seedID, 1, gx, gy, cx, cy)
 	}
@@ -593,9 +598,9 @@ func (m *Match) spawnHarvestDrops(
 	cs := float32(state.Config.ChunkSize)
 
 	// Create ground item with slight random offset
-	itemID := fmt.Sprintf("harvest_%d_%d_%d", gx, gy, time.Now().UnixNano())
-	worldX := float32(gx) + 0.5 + (rand.Float32()-0.5)*0.3
-	worldY := float32(gy) + 0.5 + (rand.Float32()-0.5)*0.3
+	itemID := state.nextItemID(fmt.Sprintf("harvest_%d_%d", gx, gy))
+	worldX := float32(gx) + 0.5 + (state.Rng.Float32()-0.5)*0.3
+	worldY := float32(gy) + 0.5 + (state.Rng.Float32()-0.5)*0.3
 	localX := worldX - float32(cx)*cs
 	localY := worldY - float32(cy)*cs
 
@@ -671,7 +676,8 @@ func (m *Match) processFruitTrees(
 	// Collect keys to delete after iteration to avoid map modification during range
 	var toDelete []string
 
-	for treeKey, tree := range state.FruitTreeStates {
+	for _, treeKey := range sortedStringKeys(state.FruitTreeStates) { // sorted: dropFruitFromTree draws rand per drop
+		tree := state.FruitTreeStates[treeKey]
 		// Get tree entity definition
 		cx, cy, lx, ly := GlobalToChunk(tree.GridX, tree.GridY)
 		chunk := state.Chunks[ChunkKey(cx, cy)]
@@ -765,13 +771,13 @@ func (m *Match) dropFruitFromTree(
 
 	// Drop position: scattered BESIDE and IN FRONT (south) of the trunk — never on the
 	// trunk cell itself, where the canopy y-sorts over the apple and hides it.
-	itemID := fmt.Sprintf("fruit_%d_%d_%d", tree.GridX, tree.GridY, time.Now().UnixNano())
+	itemID := state.nextItemID(fmt.Sprintf("fruit_%d_%d", tree.GridX, tree.GridY))
 	side := float32(1)
-	if rand.Float32() < 0.5 {
+	if state.Rng.Float32() < 0.5 {
 		side = -1
 	}
-	worldX := float32(tree.GridX) + 0.5 + side*(0.7+rand.Float32()*0.9) // 0.7-1.6 cells to a side
-	worldY := float32(tree.GridY) + 0.2 - rand.Float32()*1.2           // at/below the trunk = in front
+	worldX := float32(tree.GridX) + 0.5 + side*(0.7+state.Rng.Float32()*0.9) // 0.7-1.6 cells to a side
+	worldY := float32(tree.GridY) + 0.2 - state.Rng.Float32()*1.2            // at/below the trunk = in front
 	localX := worldX - float32(cx)*cs
 	localY := worldY - float32(cy)*cs
 
@@ -847,9 +853,10 @@ func (m *Match) processGroundItemDecay(state *WorldState, dispatcher runtime.Mat
 			// Transform to rotten version
 			oldType := item.ItemType
 			item.ItemType = item.DecaysTo // "apple" -> "rotten_apple"
-			item.DecaysTo = ""            // No further decay
-			item.FoodValue = 100          // Flies can eat this
-			item.Lifetime = 999999        // No more time decay
+			item.DecaysTo = ""                          // No further chain-decay (already rotten)
+			item.FoodValue = 100                        // Flies can eat/breed on this
+			item.Lifetime = rottenFruitDecaySeconds     // decomposes after ~6 game-days if uneaten (was an
+			//                                             immortal "999999" hack → infinite fly food)
 
 			// Emit food-registry event (fly AI now targets this). WORLD cells + FoodID + level
 			// (the old emission used chunk-LOCAL coords and stuffed the id in swarm_id — fixed).
@@ -1098,12 +1105,25 @@ func (m *Match) processStations(state *WorldState, dispatcher runtime.MatchDispa
 }
 
 // foodSourceAlive reports whether a depletable food source still exists with food left.
-func (m *Match) foodSourceAlive(state *WorldState, foodID string) bool {
+// fx,fy are the target's world position — needed for host-plant occupants (milkweed), which are
+// depletable food keyed by position (not a unique item/station id).
+func (m *Match) foodSourceAlive(state *WorldState, foodID string, fx, fy float32) bool {
 	if item, ok := state.GroundItems[foodID]; ok {
 		return item.FoodValue > 0
 	}
 	if st, ok := state.Stations[foodID]; ok {
 		return st.Fill > 0
+	}
+	// Host-plant occupant (milkweed): "alive" as a breeding source while it has capacity. Without
+	// this, a depletable milkweed target is cleared every tick (it's neither item nor station), so a
+	// reproducing butterfly can never park on it to breed.
+	if hp := state.HostPlantStates[fmt.Sprintf("%d,%d", int(fx), int(fy))]; hp != nil {
+		return hp.Capacity > 0
+	}
+	// Flower nectar pool (depletable FEEDING source): alive while it has nectar; grazed-out flowers are
+	// cleared as a target so a starving bug re-thinks instead of camping a dry flower.
+	if fp := state.ForagePools[fmt.Sprintf("%d,%d", int(fx), int(fy))]; fp != nil {
+		return fp.Nectar > 0
 	}
 	return false
 }
@@ -1214,6 +1234,136 @@ func (m *Match) removeGroundItem(
 }
 
 // initFruitTreesInChunk scans a loaded chunk for fruit trees and creates states
+// --- Host plants (milkweed): depletable butterfly breeding sites ---
+
+const (
+	maxHostCapacity  = 100.0
+	hostRegenPerTick = 0.012 // ~0.12/s → ~830s to refill: throttles butterfly BIRTHS so the population
+	// settles below the hard cap (breeding-food-limited) instead of pinning it.
+	hostBreedCost = 40.0 // capacity drained per butterfly breed event (≈2-3 breeds to exhaust the host)
+)
+
+// initHostPlantsInChunk registers milkweed (world.host_plant) occupants in a loaded chunk at full
+// breeding capacity. Mirrors initFruitTreesInChunk; idempotent.
+func (m *Match) initHostPlantsInChunk(state *WorldState, chunk *ChunkData, cx, cy int, logger runtime.Logger) {
+	chunkSize := state.Config.ChunkSize
+	for ly := 0; ly < chunkSize; ly++ {
+		for lx := 0; lx < chunkSize; lx++ {
+			cell, _ := chunk.GetOccupantCell(lx, ly)
+			if cell.IsEmpty || cell.Occupant == nil || !cell.Occupant.Anchor {
+				continue
+			}
+			def := state.Entities[cell.Occupant.ID]
+			if def == nil || def.World == nil || !def.World.HostPlant {
+				continue
+			}
+			gx, gy := cx*chunkSize+lx, cy*chunkSize+ly
+			key := fmt.Sprintf("%d,%d", gx, gy)
+			if state.HostPlantStates[key] != nil {
+				continue
+			}
+			state.HostPlantStates[key] = &entities.HostPlantState{
+				EntityID: cell.Occupant.ID, GridX: gx, GridY: gy, Capacity: state.Tuning.MaxHostCapacity,
+			}
+		}
+	}
+}
+
+// processHostPlants regrows host-plant breeding capacity each tick (a grazed-out milkweed slowly
+// becomes breedable again). Server-only soft state.
+func (m *Match) processHostPlants(state *WorldState) {
+	regen := state.Tuning.HostRegenPerTick
+	if state.DroughtUntilTick > state.TickCount {
+		regen *= state.Tuning.DroughtFoodRegenMult // drought: milkweed regrows slower → fewer butterfly births
+	}
+	for _, hp := range state.HostPlantStates {
+		if hp.Capacity < state.Tuning.MaxHostCapacity {
+			hp.Capacity += regen
+			if hp.Capacity > state.Tuning.MaxHostCapacity {
+				hp.Capacity = state.Tuning.MaxHostCapacity
+			}
+		}
+	}
+}
+
+// --- Forage pools (flower nectar): depletable FEEDING food (the boom-bust engine) ---
+
+// litterOccupantID is the forest-floor detritus that millipedes eat. Treated as a depletable forage pool
+// (like flower nectar) so the millipede population is food-bounded: woods trees "drop" piles that regrow
+// slowly + capped, millipedes deplete them. There is exactly one detritus type, so we key on the id.
+const litterOccupantID = "leaf_litter"
+
+const (
+	maxNectar          = 100.0
+	nectarRegenPerTick = 0.012 // ~0.12/s → ~830s to refill (slow regen =
+	// bigger, slower oscillation — this is the master boom-bust dial, tuned on the population graph).
+
+	// Leaf litter is SCARCER + SLOWER than nectar (fewer piles, ~3× slower refill) so the millipede sits
+	// in a real oscillating band instead of pinning flat. Tuned on the population graph (millipede target ~50).
+	maxLitter          = 100.0
+	litterRegenPerTick = 0.004
+
+	// During a Director DROUGHT, ALL plant food regrows far slower (flowers give less nectar, milkweed
+	// regrows slower) — so a drought brakes the NECTAR/HOST-fed populations (butterflies) via FOOD, the
+	// same way it brakes the fruit-fed flies via the rain-gated trees. The brake is natural, not a cull.
+	droughtFoodRegenMult = 0.15
+)
+
+// initForagePoolsInChunk registers flower (world.nectar) occupants in a loaded chunk at full nectar.
+// Mirrors initHostPlantsInChunk; idempotent.
+func (m *Match) initForagePoolsInChunk(state *WorldState, chunk *ChunkData, cx, cy int, logger runtime.Logger) {
+	chunkSize := state.Config.ChunkSize
+	for ly := 0; ly < chunkSize; ly++ {
+		for lx := 0; lx < chunkSize; lx++ {
+			cell, _ := chunk.GetOccupantCell(lx, ly)
+			if cell.IsEmpty || cell.Occupant == nil || !cell.Occupant.Anchor {
+				continue
+			}
+			def := state.Entities[cell.Occupant.ID]
+			isNectar := def != nil && def.World != nil && def.World.Nectar
+			isLitter := cell.Occupant.ID == litterOccupantID // forest-floor detritus (millipede food)
+			if !isNectar && !isLitter {
+				continue
+			}
+			gx, gy := cx*chunkSize+lx, cy*chunkSize+ly
+			key := fmt.Sprintf("%d,%d", gx, gy)
+			if state.ForagePools[key] != nil {
+				continue
+			}
+			amount := state.Tuning.MaxNectar
+			if isLitter {
+				amount = state.Tuning.MaxLitter
+			}
+			state.ForagePools[key] = &entities.ForagePoolState{
+				EntityID: cell.Occupant.ID, GridX: gx, GridY: gy, Nectar: amount,
+			}
+		}
+	}
+}
+
+// processForagePools regrows flower nectar each tick (a grazed-out flower slowly becomes a food source
+// again). Server-only soft state. The regen rate is the master boom-bust dial.
+func (m *Match) processForagePools(state *WorldState) {
+	regen := state.Tuning.NectarRegenPerTick
+	if state.DroughtUntilTick > state.TickCount {
+		regen *= state.Tuning.DroughtFoodRegenMult // drought: flowers give far less nectar → butterflies food-limited
+	}
+	for _, fp := range state.ForagePools {
+		// Leaf litter (millipede detritus) regrows on its OWN slower clock + cap, and is NOT rain/drought-
+		// gated (the forest floor doesn't care about weather). Nectar keeps the existing drought brake.
+		maxAmt, r := state.Tuning.MaxNectar, regen
+		if fp.EntityID == litterOccupantID {
+			maxAmt, r = state.Tuning.MaxLitter, state.Tuning.LitterRegenPerTick
+		}
+		if fp.Nectar < maxAmt {
+			fp.Nectar += r
+			if fp.Nectar > maxAmt {
+				fp.Nectar = maxAmt
+			}
+		}
+	}
+}
+
 func (m *Match) initFruitTreesInChunk(
 	state *WorldState,
 	chunk *ChunkData,
@@ -1267,14 +1417,41 @@ func (m *Match) initFruitTreesInChunk(
 				GridX:        gx,
 				GridY:        gy,
 				MaxFruit:     maxFruit,
-				FruitCount:   2 + rand.Intn(2),
-				DropTimer:    rand.Intn(treeDefDropTicks(entityDef)),
+				// Position-seeded (NOT the shared sequential Rng): chunks load lazily in non-deterministic
+				// order, so drawing per-tree init from the shared stream made FruitCount/DropTimer — and
+				// thus the whole fruit-drop schedule — vary run to run. posHash keys it to (seed,gx,gy).
+				FruitCount:   2 + posHash(state.WorldSeed, gx, gy, 1)%2,
+				DropTimer:    posHash(state.WorldSeed, gx, gy, 2) % treeDefDropTicks(entityDef),
 				LastWaterDay: -1,
 			}
 			if tree.FruitCount > maxFruit {
 				tree.FruitCount = maxFruit
 			}
 			state.FruitTreeStates[treeKey] = tree
+
+			// WINDFALL PRIMING: a FRACTION of fruit trees start with one already-rotted windfall on the
+			// ground, so the day-1 populated start has fly breeding substrate from tick 0. Without it the
+			// seeded flies STARVE before any fresh fruit drops+rots (RESSTATS showed rotten=0 on days 1–2 →
+			// a mass cold-start die-off + Director reseed). posHash-gated (deterministic, NOT the shared
+			// Rng, since chunks load in arbitrary order) and modest — ≈1/3 of trees, one item each — so it
+			// bootstraps the start without re-creating the old rot glut. Same shape as the rot pipeline's
+			// output (rotten_<fruit>, FoodValue 100, decays after rottenFruitDecaySeconds if uneaten).
+			if posHash(state.WorldSeed, gx, gy, 3)%3 == 0 {
+				pos := entities.EntityPosition{LocalX: float32(gx), LocalY: float32(gy)}
+				pos.Normalize(chunkSize)
+				itemID := state.nextItemID("item_windfall")
+				state.GroundItems[itemID] = &entities.GroundItem{
+					ID:        itemID,
+					ItemType:  "rotten_" + entityDef.World.FruitType,
+					Count:     1,
+					Position:  pos,
+					Lifetime:  rottenFruitDecaySeconds,
+					FoodValue: 100, // matches the rot pipeline (dropFruitFromTree → rotted)
+				}
+				if state.CurrentZone != nil {
+					state.AddFoodEvent(state.CurrentZone.ZoneID, InfluenceItemRotted, itemID, gx, gy, 100)
+				}
+			}
 
 			logger.Debug("Initialized fruit tree at %d,%d (%s) with %d fruit",
 				gx, gy, entityDef.World.FruitType, tree.FruitCount)

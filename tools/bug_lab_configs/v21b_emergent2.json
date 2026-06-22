@@ -1,0 +1,10 @@
+{
+  "name": "v21b_emergent2",
+  "description": "Fly resistance (flee 9/2.4, split 30) + wasp faster starvation (decay 0.20) so wasps crash after eating a patch instead of 100% wiping it; millipede breeding throttled (cooldown 2000) + scarcer litter (regen 0.0005) so food binds below the cap; +5 wild fruit patches for fly spread. Caps off, sim_batch 6, HALF window.",
+  "flags": { "sim_batch": 6 },
+  "tuning": { "litter_regen_per_tick": 0.0005 },
+  "bug_spawning": { "species_caps": {
+    "fly_common": {"max_population":0}, "butterfly_meadow": {"max_population":0},
+    "wasp_common": {"max_population":0}, "centipede_garden": {"max_population":0},
+    "millipede": {"max_population":0}, "beetle_carrion": {"max_population":0} } }
+}

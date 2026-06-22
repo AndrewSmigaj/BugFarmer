@@ -1,0 +1,25 @@
+{
+  "name": "F3_seal_breedbar",
+  "description": "COMBINE: sealed + cap 400 + C3 + low breed bar (predator_breed_satiation 70\u219250, wasp deposit 80\u219255) \u2014 breed on fewer contained meals.",
+  "extends": "01_no_cull",
+  "species": {
+    "fly_common": {
+      "reproduce_cooldown": 18.0,
+      "breed_amount": 16.0
+    },
+    "wasp_common": {
+      "predation": {
+        "deposit_satiation": 55.0
+      }
+    }
+  },
+  "tuning": {
+    "predator_breed_satiation": 50.0
+  },
+  "lab": {
+    "seal_pens": true,
+    "max_pop": {
+      "fly_common": 400
+    }
+  }
+}

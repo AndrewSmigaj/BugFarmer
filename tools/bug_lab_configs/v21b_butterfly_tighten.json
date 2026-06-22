@@ -1,0 +1,15 @@
+{
+  "name": "v21b_butterfly_tighten",
+  "description": "Bound the butterfly runaway (275+) by TIGHTENING its food stock so scarcity bites: slower milkweed+nectar regen, higher host_breed_cost, lower ceilings, slower butterfly breeding. One lever group (butterfly food) — flies don't use nectar/host so this is butterfly-specific.",
+  "tuning": {
+    "host_regen_per_tick": 0.005,
+    "host_breed_cost": 60.0,
+    "max_host_capacity": 70.0,
+    "nectar_regen_per_tick": 0.006,
+    "max_nectar": 70.0
+  },
+  "species": {
+    "butterfly_meadow": { "reproduce_cooldown": 120.0, "breed_amount": 4.0 }
+  },
+  "bug_spawning": {}
+}

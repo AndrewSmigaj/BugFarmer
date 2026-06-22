@@ -16,6 +16,13 @@
     ],
     "family": "creature"
   },
+  "beetle_carrion": {
+    "look": "a CARRION BEETLE (sexton/burying beetle), top-down: a glossy black oval beetle with bold ORANGE-and-black bands across its back, short clubbed antennae and sturdy digging legs; chunky and low to the ground.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
   "beetle_rhino": {
     "look": "a RHINOCEROS BEETLE, top-down: large glossy dark-brown oval body with a single curved horn on the head; tough.",
     "materials": [

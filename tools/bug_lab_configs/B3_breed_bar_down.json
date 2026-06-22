@@ -1,0 +1,15 @@
+{
+  "name": "B3_breed_bar_down",
+  "description": "LETHALITY: breed on fewer meals \u2014 predator_breed_satiation 70\u219250; wasp deposits brood sooner (80\u219255).",
+  "extends": "01_no_cull",
+  "species": {
+    "wasp_common": {
+      "predation": {
+        "deposit_satiation": 55.0
+      }
+    }
+  },
+  "tuning": {
+    "predator_breed_satiation": 50.0
+  }
+}

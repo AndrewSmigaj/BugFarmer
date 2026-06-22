@@ -228,8 +228,9 @@ def build(zone_id="village_21_B", vseed=0):
     for (oid, x, y) in [("compost_bin", 88, 228), ("wheelbarrow", 90, 224), ("water_bucket", 92, 226)]:
         safe(b, oid, x, y)
 
-    # Orchard W of the fields (compact: keeps the wasp buffer geometry).
-    orchard(b, 62, 196, 86, 214, seed=vseed + 17)
+    # Orchard W of the fields — QUARTER size (2026-06: the zone was fruit/rot-glutted;
+    # small groves promote fly MOVEMENT without flooding rotten substrate). Tight rows.
+    orchard(b, 66, 200, 82, 210, row_spacing=4, tree_spacing=2, seed=vseed + 17)
 
     # THE FLY FARM (the piece — scenes/scene_fly_farm.py): mini orchard feeding
     # two big pens (compost-bin rows inside; fences genuinely CONTAIN flies), net
@@ -237,12 +238,27 @@ def build(zone_id="village_21_B", vseed=0):
     ff_center, ff_r = place_fly_farm(b, 118, 194)
     spur(b, 117, 200, 117, 199, tile="dirt")  # joins the V road at x113-116
 
-    # Wasp nest №1 in the wild-fly buffer between orchard and fly farm + the
-    # observation pen (deliberately WOOD: fences don't stop wings — the lesson).
-    # North of crop field 3 (iteration 2 overlapped its rows).
-    safe(b, "wasp_nest", 104, 230)
-    fence_rect(b, 100, 226, 109, 234, gate=(104, 226))
-    flower_patch(b, 99, 223, 110, 225, ["chamomile", "clover", "poppy"], 8, seed=43)
+    # ===== WASP NESTS (6) — spread to woods/corners NEAR fly prey (2026-06 redesign) =====
+    # Wasps come ONLY from nests (the server skips them in the free-swarm spawn path) and the
+    # Director founds recovery hives at these same regions when a colony dies. Each nest sits within
+    # ~r40 home-range of a fly source so a colony has prey from day 1 — the fix for the colonies that
+    # kept starving in empty arena. Placement (owner-approved layout v3):
+    #   w1 NW-pond NE shore (near orchW)  w2 NE-woods (on the carrion patch)  w3 farm-seam observation pen
+    #   w4 SE-of-rocks (+1/4 grove)     w5 E-of-ecologist (near E-orange patch)  w6 E-of-lake (near its clump)
+    # 2026-06-18: each nest nudged ~30% CLOSER to its nearest fly source (owner: wasps weren't close enough
+    # to the flies). The far southern/eastern ones (w4/w5/w6) move most; w2/w3 already sat on their prey.
+    # + w7/w8 added INSIDE the W and E butterfly meadows — wasps prey on butterflies too (butterfly_meadow
+    # is in wasp.prey), and butterflies are a HUGE stable prey base the fly-side nests never reach; these
+    # two give colonies a steady food source to grow on (and crop the runaway butterfly pop).
+    # REFUGIUM (2026-06-19, owner: don't always put wasps on prey): the E butterfly meadow (~178,180) is
+    # left UNHUNTED — no nest there — so it's a safe source that re-seeds the cropped meadows and stops the
+    # butterfly crash-to-zero (proven in the E4 lab run). 7 nests (w8 dropped).
+    for (wx, wy) in [(66, 217), (195, 238), (130, 230), (187, 72), (224, 139), (84, 67), (33, 142)]:
+        safe(b, "wasp_nest", wx, wy)
+    # w3 is the player-facing OBSERVATION pen (WOOD fence — fences don't stop wings, the lesson; the
+    # fence is for the watcher, not the wasps) with a little nectar so it reads as a kept colony.
+    fence_rect(b, 126, 226, 135, 234, gate=(130, 226))
+    flower_patch(b, 125, 223, 136, 225, ["chamomile", "clover", "poppy"], 8, seed=43)
 
     # ================= 6) THE NE FOREST-EDGE GLOOM (centipede country) =================
     forest(b, 168, 236, 26, 14, species=("tree_pine", "tree_pine", "tree_oak"),
@@ -252,7 +268,7 @@ def build(zone_id="village_21_B", vseed=0):
     scatter(b, 150, 222, 215, 252, {"fern": 4, "mushroom_cluster": 3, "stump": 1, "bush": 2},
             density=0.10, min_spacing=2, seed=44, clumping=0.85)
     safe(b, "log_pile", 160, 230); safe(b, "stump", 162, 229)
-    safe(b, "wasp_nest", 178, 244)                            # nest №2, deep in
+    # (wasp nest w2 sits just E at 195,238 — placed with the other 5 in §5.)
     # The carrion gully + the ruined stone pen (the "stone is the answer" story).
     b.fill_ground(163, 233, 167, 235, "dirt")
     safe(b, "bone_pile", 165, 234)
@@ -376,35 +392,191 @@ def build(zone_id="village_21_B", vseed=0):
     scatter(b, 130, 215, 165, 250, {"fern": 2, "tall_grass": 3, "bush": 2},
             density=0.11, min_spacing=2, seed=78, clumping=0.85)     # farm→gloom seam
 
+    # ================= 10.5) FOOD for the 6-species bug ECOLOGY (breeding substrate) =========
+    # Populations are BRED, not spawned, so each species needs its food where it lives:
+    #  - butterflies BREED on milkweed (host) → milkweed patches inside each nectar meadow
+    #  - millipedes eat leaf_litter (forest-floor detritus) → ONE habitat, the NE woods gloom (the dirt floor)
+    #  - flies breed on rotten fruit → orchard variety (mixed rot waves) by the farm belt
+    flower_patch(b, 18, 120, 44, 148, ["milkweed"], 7, seed=vseed + 81)    # W meadow
+    flower_patch(b, 24, 196, 52, 222, ["milkweed"], 6, seed=vseed + 82)    # SW meadow
+    flower_patch(b, 204, 60, 226, 82, ["milkweed"], 6, seed=vseed + 83)    # SE beehive meadow
+    flower_patch(b, 160, 162, 196, 198, ["milkweed"], 7, seed=vseed + 84)  # E meadow
+    # leaf_litter — ONE habitat, the NE woods gloom (2026-06-19: owner — millipedes belong in the NE dirt-
+    # floor woods, not a second grove). Litter is now a DEPLETABLE forage pool (server: it regrows slowly +
+    # capped, the forest-floor analogue of nectar) so millipede is genuinely food-bounded and OSCILLATES.
+    # Keep ~the same pile COUNT as before; the regrow/cap params (ecology_tuning litter dials) set the band.
+    # FEWER piles (2026-06-19): millipede ≈ ~2.5 per litter pile (it's pile-COUNT-bound, not litter-amount-
+    # bound — proven: it pinned ~135 even with scarce litter). ~20 piles → the ~50 target. The depletable
+    # forage-pool mechanic stays (local over-grazing during a boom can still bite); count sets the band.
+    scatter(b, 150, 224, 212, 250, {"leaf_litter": 5}, density=0.009, min_spacing=5,
+            seed=vseed + 85, clumping=0.8)                                 # NE gloom detritus (the only litter)
+    for (oid, x, y) in [("tree_plum", 60, 198), ("tree_plum", 84, 210), ("tree_cherry", 64, 212),
+                        ("tree_cherry", 82, 198), ("tree_plum", 70, 222), ("tree_cherry", 78, 220)]:
+        safe(b, oid, x, y)                                                 # fruit variety by the orchard
+
+    # FRUIT TREES (~10×): the zone was fruit-poor (~50). Thicken with VARIED fruit (apple/plum/cherry/
+    # orange) across the open grass — a few worked orchards (one fenced, one broken-fenced) + scattered
+    # wild clumps. The builder skips occupied/road/water cells, so coords degrade safely. This is the wild
+    # fly-food SUPPLY (rotten fruit); fly ACCESS (vision/decay/spawn dispersion) is a separate lever.
+    # QUARTER-size orchards, each a DIFFERENT pattern (2026-06 owner call: the old full-size
+    # orchards over-supplied rot; flies need spread-out groves to MOVE between, not one glut). The
+    # type-distinct orchards stay (apple/orange/cherry/plum) but tiny. appleSW removed entirely.
+    fence_rect(b, 192, 105, 214, 121, gate=(203, 121))                                    # fenced SE orange grove
+    orchard(b, 195, 108, 211, 118, tree="tree_orange", row_spacing=5, tree_spacing=2, seed=vseed + 91)
+    orchard(b, 71, 108, 87, 118, tree="tree_cherry", row_spacing=4, tree_spacing=3, seed=vseed + 92)  # lowered 10
+    for x in range(72, 86, 3):                                                            # broken weathered fence
+        safe(b, "fence_picket_weathered", x, 107)
+    orchard(b, 159, 136, 175, 146, tree="tree_plum", row_spacing=5, tree_spacing=2, jitter=1, seed=vseed + 93)  # old/wild
+    orchard(b, 17, 135, 31, 145, tree="tree_apple", row_spacing=4, tree_spacing=2, seed=vseed + 94)  # mini, W of town
+    # Small fruit PATCHES — a HANDFUL of trees each (explicit, not a dense scatter), at the fly-spread
+    # points, so flies have a little wild rotten-fruit to breed+disperse from and the southern wasps
+    # (w4/w6) get nearby prey. Deliberately tiny: the zone was rot-glutted, these PROMOTE movement.
+    for (oid, x, y) in [
+        ("tree_cherry", 76, 94), ("tree_apple", 80, 97), ("tree_cherry", 84, 95),          # S of cherry orchard
+        ("tree_orange", 217, 112), ("tree_apple", 221, 115), ("tree_orange", 224, 113),    # E of orange (w5 prey)
+        ("tree_apple", 124, 224), ("tree_plum", 128, 227), ("tree_apple", 131, 225),       # N of fly farm (w3 prey)
+        ("tree_plum", 175, 51), ("tree_apple", 179, 54), ("tree_plum", 183, 52),           # w4 1/4 grove (SE of rocks)
+        ("tree_apple", 176, 58), ("tree_cherry", 181, 59), ("tree_apple", 184, 56),
+        ("tree_apple", 92, 64), ("tree_plum", 96, 67), ("tree_apple", 99, 65)]:            # E-of-lake (w6 prey)
+        safe(b, oid, x, y)
+
+    # SOUTHERN patches (2026-06-19, owner: the lower half is sparse) — a couple of SMALL flower + fruit
+    # patches in the south so the bottom isn't dead. Smaller than the northern orchards/meadows.
+    flower_patch(b, 128, 66, 150, 80, ["lavender", "flower_aster", "clover"], 10, seed=46)  # S-central nectar
+    flower_patch(b, 130, 70, 146, 78, ["milkweed"], 3, seed=47)                              # + a little host
+    for (oid, x, y) in [("tree_apple", 112, 76), ("tree_plum", 116, 79), ("tree_cherry", 119, 75),
+                        ("tree_apple", 158, 70), ("tree_plum", 162, 73)]:                    # two small fruit clumps S
+        safe(b, oid, x, y)
+
+    # WILD fruit patches (2026-06-19, owner) — 5 tiny clumps (2-3 trees), NO spawn circles, scattered where
+    # there are no orchards/meadows: forest EDGES + a couple by the southern rocks. These give flies somewhere
+    # to SPREAD to (the wild fly trickle + breeding populate them over time → bugs disperse over the whole map
+    # and eventually pressure player farms). Placed within plausible fly-spread reach of existing fly flow.
+    for (oid, x, y) in [
+        ("tree_apple", 134, 42), ("tree_plum", 138, 44),                 # S rocks (central)
+        ("tree_cherry", 166, 46), ("tree_apple", 170, 48),               # S rocks (E, by the rail)
+        ("tree_plum", 14, 102), ("tree_apple", 17, 105), ("tree_cherry", 13, 108),  # W forest edge
+        ("tree_orange", 230, 158), ("tree_apple", 233, 161),             # E forest edge (not the E meadow)
+        ("tree_apple", 58, 248), ("tree_plum", 62, 250), ("tree_cherry", 55, 246)]: # N forest edge (NW of gloom)
+        safe(b, oid, x, y)
+
     # The visual-clipping guarantee: nothing tall within 1 cell of a road.
     cleared = clear_road_margins(b)
     if cleared:
         print(f"  clear_road_margins: removed {len(cleared)} road-margin plants")
 
-    # ================= 11) BUG SPAWNING (habitat-tied circles) =================
+    # ================= 11) BUG SPAWNING — BREEDING-DRIVEN, habitat-clustered =================
+    # MODEL (2026-06, the real-zone rebuild): populations grow by BREEDING on the food placed above and
+    # decline by natural death/predation/starvation — NOT by a spawner pump. So:
+    #  - spawn_interval is a RARE wild-immigration TRICKLE (thousands of sim-sec; 1 game-day = 840s), not
+    #    the 45s pump that masked everything. `initial` seeds the breeding stock.
+    #  - WEIGHTED spawn areas: high-weight habitat circles at each species' food + a low-weight zone-wide
+    #    wild-card (~3:1) → mostly clusters at its habitat, a few wander in anywhere; survival sorts the rest.
+    #  - RAIN/DROUGHT events ON for the plant-eaters (event_low→extra-rain, event_high→drought) — these
+    #    shape FOOD via weather and never delete bugs. NO culls (cull_at unset → the delete-path stays OFF).
+    #    The population ADDs are: breeding, the rare spawn trickle, and the `min_population` re-seed floor.
+    #  - wasps are NEST-ONLY: 6 hand-placed nests seed colonies; the Director founds recovery hives at the
+    #    wasp_n* regions (each near a fly source) when a colony dies — no free-spawned nestless wasps.
+    HAB, WILD = 2.0, 1.0  # habitat-circle vs zone-wide weights (predators/decomposers use 3:1, set inline)
     b.bug_spawning = {
         "species_caps": {
-            "fly_common":       {"initial": 40, "max": 75, "spawn_interval": 45.0,
-                                 "swarm_size": 2, "max_population": 400},
-            "butterfly_meadow": {"initial": 15, "max": 50, "spawn_interval": 90.0,
-                                 "max_population": 300},
-            "wasp_common":      {"initial": 0, "max": 3, "spawn_interval": 9999.0,
-                                 "max_population": 12},
-            "centipede_garden": {"initial": 2, "max": 3, "spawn_interval": 600.0,
-                                 "swarm_size": 2, "max_population": 8},
+            # prey base — flies breed on the orchard/fly-farm/compost rot. RAIN/DROUGHT events ON
+            # (event_low → Director forces EXTRA-RAIN so dipping flies get fruit & recover; event_high →
+            # DROUGHT suppresses rain so a glut eases off). Both are FOOD/environment, never delete bugs.
+            # LIVED-IN START (2026-06): higher initials, spread across ALL habitat circles (the server
+            # seeds one swarm per circle), so the ecology runs from day 1 instead of building from near-zero.
+            "fly_common":       {"initial": 78, "max": 200, "spawn_interval": 2000.0, "swarm_size": 8,
+                                 "max_population": 1500, "min_population": 12, "event_low": 40, "event_high": 400},
+            # nectar/host — butterflies breed on milkweed in the meadows
+            "butterfly_meadow": {"initial": 30, "max": 140, "spawn_interval": 3000.0, "swarm_size": 6,
+                                 "max_population": 800, "min_population": 10, "event_low": 30, "event_high": 250},
+            # WASPS ARE NEST-ONLY: initial 0 (the 6 placed nests seed the founding residents); the server
+            # skips wasps in the free-swarm spawn path so there are NO nestless reseeds (the root bug).
+            "wasp_common":      {"initial": 0, "max": 12, "spawn_interval": 9000.0,
+                                 "swarm_size": 4, "max_population": 120, "min_population": 3, "max_nests": 7},
+            "centipede_garden": {"initial": 16, "max": 40, "spawn_interval": 6000.0,
+                                 "swarm_size": 2, "max_population": 140, "min_population": 3},
+            # max is a BACKSTOP only (not the manager — owner: no hard caps): raised 60->250 so the
+            # swarm-count cap stops pinning millipede at ~135; the DEPLETABLE leaf-litter food now sets the
+            # band emergently (scarce litter → food-limited ~50). 60 was binding before food ever could.
+            "millipede":        {"initial": 16, "max": 250, "spawn_interval": 6000.0,
+                                 "swarm_size": 2, "max_population": 200, "min_population": 3},
+            "beetle_carrion":   {"initial": 12, "max": 40, "spawn_interval": 6000.0,
+                                 "swarm_size": 2, "max_population": 140, "min_population": 2},
         },
         "spawn_areas": [
-            {"id": "zone_wide", "species": ["fly_common"], "type": "zone"},
-            {"id": "fly_farm", "species": ["fly_common"], "type": "circle",
-             "cx": ff_center[0], "cy": ff_center[1], "radius": ff_r},
-            {"id": "beehive_meadow", "species": ["butterfly_meadow"], "type": "circle",
-             "cx": 215, "cy": 72, "radius": 20},
-            {"id": "meadow_w", "species": ["butterfly_meadow"], "type": "circle",
-             "cx": 28, "cy": 134, "radius": 28},
-            {"id": "meadow_sw", "species": ["butterfly_meadow"], "type": "circle",
-             "cx": 30, "cy": 196, "radius": 22},
-            {"id": "ne_gloom", "species": ["centipede_garden"], "type": "circle",
-             "cx": 170, "cy": 238, "radius": 12},
+            # FLY — one circle at EVERY fruit grove + patch + the fly farm + compost, so the spread-on-spawn
+            # seeds flies across the whole map (owner: "more fly spawns, notably where fruit clusters are").
+            {"id": "fly_orchW",    "species": ["fly_common"], "type": "circle", "cx": 74, "cy": 205, "radius": 12, "weight": HAB},
+            {"id": "fly_farm",     "species": ["fly_common"], "type": "circle", "cx": ff_center[0], "cy": ff_center[1], "radius": ff_r, "weight": HAB},
+            {"id": "fly_compost",  "species": ["fly_common"], "type": "circle", "cx": 88, "cy": 228, "radius": 10, "weight": HAB},
+            {"id": "fly_orange",   "species": ["fly_common"], "type": "circle", "cx": 203, "cy": 113, "radius": 10, "weight": HAB},
+            {"id": "fly_cherry",   "species": ["fly_common"], "type": "circle", "cx": 79, "cy": 113, "radius": 10, "weight": HAB},
+            {"id": "fly_plum",     "species": ["fly_common"], "type": "circle", "cx": 167, "cy": 141, "radius": 10, "weight": HAB},
+            {"id": "fly_miniW",    "species": ["fly_common"], "type": "circle", "cx": 24, "cy": 140, "radius": 9,  "weight": HAB},
+            {"id": "fly_scherry",  "species": ["fly_common"], "type": "circle", "cx": 80, "cy": 96,  "radius": 9,  "weight": HAB},  # S-of-cherry patch
+            {"id": "fly_eorange",  "species": ["fly_common"], "type": "circle", "cx": 220, "cy": 114, "radius": 9, "weight": HAB},  # E-of-orange patch (w5 prey)
+            {"id": "fly_nff",      "species": ["fly_common"], "type": "circle", "cx": 127, "cy": 226, "radius": 9, "weight": HAB},  # N-of-fly-farm patch (w3 prey)
+            {"id": "fly_newoods",  "species": ["fly_common"], "type": "circle", "cx": 195, "cy": 238, "radius": 11, "weight": HAB}, # NE woods carrion (w2 prey)
+            # +3 more fly seeds (2026-06-18, owner: flies have a hard time taking off) — reinforce the 3
+            # biggest rotten-fruit zones so more flies seed ONTO food early and breed before the rot-lag
+            # starves them: the crop-field/farm belt, the plum orchard (centre), the orange orchard (E, w5 prey).
+            {"id": "fly_fields",   "species": ["fly_common"], "type": "circle", "cx": 100, "cy": 210, "radius": 12, "weight": HAB},
+            {"id": "fly_plum2",    "species": ["fly_common"], "type": "circle", "cx": 160, "cy": 139, "radius": 10, "weight": HAB},
+            {"id": "fly_orange2",  "species": ["fly_common"], "type": "circle", "cx": 210, "cy": 118, "radius": 10, "weight": HAB},
+            {"id": "fly_south",    "species": ["fly_common"], "type": "circle", "cx": 116, "cy": 77,  "radius": 10, "weight": HAB},  # southern fruit clumps
+            {"id": "fly_wild",     "species": ["fly_common"], "type": "zone", "weight": WILD},
+            # BUTTERFLY — the four nectar+milkweed meadows + sparse wild
+            {"id": "bf_meadow_w",  "species": ["butterfly_meadow"], "type": "circle", "cx": 30, "cy": 134, "radius": 24, "weight": HAB},
+            {"id": "bf_meadow_sw", "species": ["butterfly_meadow"], "type": "circle", "cx": 38, "cy": 209, "radius": 22, "weight": HAB},
+            {"id": "bf_beehive",   "species": ["butterfly_meadow"], "type": "circle", "cx": 215, "cy": 71, "radius": 20, "weight": HAB},
+            {"id": "bf_meadow_e",  "species": ["butterfly_meadow"], "type": "circle", "cx": 178, "cy": 180, "radius": 28, "weight": HAB},
+            {"id": "bf_south",     "species": ["butterfly_meadow"], "type": "circle", "cx": 139, "cy": 73,  "radius": 14, "weight": HAB},  # southern flower patch
+            {"id": "bf_wild",      "species": ["butterfly_meadow"], "type": "zone", "weight": WILD},
+            # WASP — the 6 nest regions (= the placed nests). NO wild circle: wasps are nest-only, so
+            # these areas are the Director's recovery-founding sites (each near a fly source), not a
+            # free-spawn pump. The server skips wasp in the generic spawn path entirely.
+            {"id": "wasp_n1", "species": ["wasp_common"], "type": "circle", "cx": 66,  "cy": 217, "radius": 12, "weight": HAB},
+            {"id": "wasp_n2", "species": ["wasp_common"], "type": "circle", "cx": 195, "cy": 238, "radius": 12, "weight": HAB},
+            {"id": "wasp_n3", "species": ["wasp_common"], "type": "circle", "cx": 130, "cy": 230, "radius": 12, "weight": HAB},
+            {"id": "wasp_n4", "species": ["wasp_common"], "type": "circle", "cx": 187, "cy": 72,  "radius": 12, "weight": HAB},
+            {"id": "wasp_n5", "species": ["wasp_common"], "type": "circle", "cx": 224, "cy": 139, "radius": 12, "weight": HAB},
+            {"id": "wasp_n6", "species": ["wasp_common"], "type": "circle", "cx": 84,  "cy": 67,  "radius": 12, "weight": HAB},
+            {"id": "wasp_n7", "species": ["wasp_common"], "type": "circle", "cx": 33,  "cy": 142, "radius": 12, "weight": HAB},  # W butterfly meadow
+            # (w8 / wasp_n8 stays removed — E meadow is the unhunted refugium; butterflies bounded by NECTAR.)
+            # CENTIPEDE — the NE forest gloom (hunts flies that stray in) + sparse wild
+            # CENTIPEDES REPOSITIONED (2026-06-18): cent_gloom (NE woods) gave them no fly density and
+            # overlapped wasp w2 -> they stayed pinned at the reseed floor (~4). Move the ground-hunter to
+            # the SOUTH/central fruit ORCHARDS (fly-dense from the rot loop) that the wasp nests DON'T cover
+            # -> wasps and centipedes partition the prey base (owner: "wasps at some sources, centipedes at
+            # others"). cherry & orange & plum are >30 cells from the nearest nest.
+            # CENTIPEDE — deliberate, SPREAD hand-placed spawns near small fruit patches (windfall-primed →
+            # flies present early, not just at the boom), PARTITIONED from the wasp nests (wasps own other
+            # sources). NOT aimed at the densest cluster (that's the player's pen — never target it). Four
+            # spread spots: W-central, central, south, NW farm-belt — so centipedes reach prey, climb, and
+            # spread across the map like the wasps do.
+            {"id": "cent_cherry",  "species": ["centipede_garden"], "type": "circle", "cx": 79,  "cy": 113, "radius": 13, "weight": 3.0},  # W-central cherry
+            {"id": "cent_plum",    "species": ["centipede_garden"], "type": "circle", "cx": 167, "cy": 141, "radius": 12, "weight": 3.0},  # central plum
+            {"id": "cent_south",   "species": ["centipede_garden"], "type": "circle", "cx": 116, "cy": 77,  "radius": 12, "weight": 3.0},  # southern patch
+            {"id": "cent_belt",    "species": ["centipede_garden"], "type": "circle", "cx": 105, "cy": 200, "radius": 12, "weight": 2.0},  # NW farm belt
+            {"id": "cent_emeadow", "species": ["centipede_garden"], "type": "circle", "cx": 180, "cy": 172, "radius": 12, "weight": 3.0},  # near E meadow (owner)
+            {"id": "cent_wild",    "species": ["centipede_garden"], "type": "zone", "weight": WILD},
+            # MILLIPEDE — the leaf-litter detritus (gloom + SW grove) + sparse wild
+            # millipede — ONE habitat, the NE woods gloom (owner: not a second grove). Its leaf_litter food is here.
+            {"id": "milli_gloom",  "species": ["millipede"], "type": "circle", "cx": 178, "cy": 238, "radius": 18, "weight": 3.0},
+            {"id": "milli_wild",   "species": ["millipede"], "type": "zone", "weight": WILD},
+            # BEETLE — the carrion gully + predator areas (eats dead_<bug> corpses) + sparse wild
+            {"id": "beetle_gully", "species": ["beetle_carrion"], "type": "circle", "cx": 165, "cy": 234, "radius": 16, "weight": 3.0},
+            {"id": "beetle_wild",  "species": ["beetle_carrion"], "type": "zone", "weight": WILD},
+        ],
+        # Seed a few DEAD MILLIPEDES in the NE woods (by w2 + the fly_newoods patch) — day-1 carrion so the
+        # woods' beetles feed and the flies BREED on large carrion (fly attractions now include dead_millipede)
+        # from tick 0, instead of waiting for the seeded millipedes to start dying. The natural supply takes
+        # over after the first deaths. (Owner: "seed the woods with a few dead millipedes so they can feed on them".)
+        "initial_carrion": [
+            {"item": "dead_millipede", "x": 193, "y": 238, "count": 2},
+            {"item": "dead_millipede", "x": 198, "y": 241, "count": 2},
+            {"item": "dead_millipede", "x": 188, "y": 236, "count": 1},
         ],
     }
     return b

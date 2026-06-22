@@ -1,0 +1,463 @@
+{
+  "zone_id": "village_21_lab",
+  "name": "Eco Lab (village_21 copy)",
+  "row": 3,
+  "col": 3,
+  "width": 256,
+  "height": 256,
+  "spawn_point": [
+    126,
+    118
+  ],
+  "biome_type": "village",
+  "seed": 0,
+  "bug_spawning": {
+    "species_caps": {
+      "fly_common": {
+        "initial": 78,
+        "max": 200,
+        "spawn_interval": 2000.0,
+        "swarm_size": 8,
+        "max_population": 1500,
+        "min_population": 12,
+        "event_low": 40,
+        "event_high": 400
+      },
+      "butterfly_meadow": {
+        "initial": 30,
+        "max": 140,
+        "spawn_interval": 3000.0,
+        "swarm_size": 6,
+        "max_population": 800,
+        "min_population": 10,
+        "event_low": 30,
+        "event_high": 250
+      },
+      "wasp_common": {
+        "initial": 0,
+        "max": 12,
+        "spawn_interval": 9000.0,
+        "swarm_size": 4,
+        "max_population": 120,
+        "min_population": 3,
+        "max_nests": 8
+      },
+      "centipede_garden": {
+        "initial": 12,
+        "max": 40,
+        "spawn_interval": 6000.0,
+        "swarm_size": 2,
+        "max_population": 140,
+        "min_population": 3
+      },
+      "millipede": {
+        "initial": 16,
+        "max": 60,
+        "spawn_interval": 6000.0,
+        "swarm_size": 2,
+        "max_population": 200,
+        "min_population": 3
+      },
+      "beetle_carrion": {
+        "initial": 12,
+        "max": 40,
+        "spawn_interval": 6000.0,
+        "swarm_size": 2,
+        "max_population": 140,
+        "min_population": 2
+      }
+    },
+    "spawn_areas": [
+      {
+        "id": "fly_orchW",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 74,
+        "cy": 205,
+        "radius": 12,
+        "weight": 2.0
+      },
+      {
+        "id": "fly_farm",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 134,
+        "cy": 206,
+        "radius": 13,
+        "weight": 2.0
+      },
+      {
+        "id": "fly_compost",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 88,
+        "cy": 228,
+        "radius": 10,
+        "weight": 2.0
+      },
+      {
+        "id": "fly_orange",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 203,
+        "cy": 113,
+        "radius": 10,
+        "weight": 2.0
+      },
+      {
+        "id": "fly_cherry",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 79,
+        "cy": 113,
+        "radius": 10,
+        "weight": 2.0
+      },
+      {
+        "id": "fly_plum",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 167,
+        "cy": 141,
+        "radius": 10,
+        "weight": 2.0
+      },
+      {
+        "id": "fly_miniW",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 24,
+        "cy": 140,
+        "radius": 9,
+        "weight": 2.0
+      },
+      {
+        "id": "fly_scherry",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 80,
+        "cy": 96,
+        "radius": 9,
+        "weight": 2.0
+      },
+      {
+        "id": "fly_eorange",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 220,
+        "cy": 114,
+        "radius": 9,
+        "weight": 2.0
+      },
+      {
+        "id": "fly_nff",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 127,
+        "cy": 226,
+        "radius": 9,
+        "weight": 2.0
+      },
+      {
+        "id": "fly_newoods",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 195,
+        "cy": 238,
+        "radius": 11,
+        "weight": 2.0
+      },
+      {
+        "id": "fly_fields",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 100,
+        "cy": 210,
+        "radius": 12,
+        "weight": 2.0
+      },
+      {
+        "id": "fly_plum2",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 160,
+        "cy": 139,
+        "radius": 10,
+        "weight": 2.0
+      },
+      {
+        "id": "fly_orange2",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 210,
+        "cy": 118,
+        "radius": 10,
+        "weight": 2.0
+      },
+      {
+        "id": "fly_wild",
+        "species": [
+          "fly_common"
+        ],
+        "type": "zone",
+        "weight": 1.0
+      },
+      {
+        "id": "bf_meadow_w",
+        "species": [
+          "butterfly_meadow"
+        ],
+        "type": "circle",
+        "cx": 30,
+        "cy": 134,
+        "radius": 24,
+        "weight": 2.0
+      },
+      {
+        "id": "bf_meadow_sw",
+        "species": [
+          "butterfly_meadow"
+        ],
+        "type": "circle",
+        "cx": 38,
+        "cy": 209,
+        "radius": 22,
+        "weight": 2.0
+      },
+      {
+        "id": "bf_beehive",
+        "species": [
+          "butterfly_meadow"
+        ],
+        "type": "circle",
+        "cx": 215,
+        "cy": 71,
+        "radius": 20,
+        "weight": 2.0
+      },
+      {
+        "id": "bf_meadow_e",
+        "species": [
+          "butterfly_meadow"
+        ],
+        "type": "circle",
+        "cx": 178,
+        "cy": 180,
+        "radius": 28,
+        "weight": 2.0
+      },
+      {
+        "id": "bf_wild",
+        "species": [
+          "butterfly_meadow"
+        ],
+        "type": "zone",
+        "weight": 1.0
+      },
+      {
+        "id": "wasp_n1",
+        "species": [
+          "wasp_common"
+        ],
+        "type": "circle",
+        "cx": 66,
+        "cy": 217,
+        "radius": 12,
+        "weight": 2.0
+      },
+      {
+        "id": "wasp_n2",
+        "species": [
+          "wasp_common"
+        ],
+        "type": "circle",
+        "cx": 195,
+        "cy": 238,
+        "radius": 12,
+        "weight": 2.0
+      },
+      {
+        "id": "wasp_n3",
+        "species": [
+          "wasp_common"
+        ],
+        "type": "circle",
+        "cx": 130,
+        "cy": 230,
+        "radius": 12,
+        "weight": 2.0
+      },
+      {
+        "id": "wasp_n4",
+        "species": [
+          "wasp_common"
+        ],
+        "type": "circle",
+        "cx": 187,
+        "cy": 72,
+        "radius": 12,
+        "weight": 2.0
+      },
+      {
+        "id": "wasp_n5",
+        "species": [
+          "wasp_common"
+        ],
+        "type": "circle",
+        "cx": 224,
+        "cy": 139,
+        "radius": 12,
+        "weight": 2.0
+      },
+      {
+        "id": "wasp_n6",
+        "species": [
+          "wasp_common"
+        ],
+        "type": "circle",
+        "cx": 84,
+        "cy": 67,
+        "radius": 12,
+        "weight": 2.0
+      },
+      {
+        "id": "wasp_n7",
+        "species": [
+          "wasp_common"
+        ],
+        "type": "circle",
+        "cx": 33,
+        "cy": 142,
+        "radius": 12,
+        "weight": 2.0
+      },
+      {
+        "id": "wasp_n8",
+        "species": [
+          "wasp_common"
+        ],
+        "type": "circle",
+        "cx": 178,
+        "cy": 178,
+        "radius": 12,
+        "weight": 2.0
+      },
+      {
+        "id": "cent_gloom",
+        "species": [
+          "centipede_garden"
+        ],
+        "type": "circle",
+        "cx": 178,
+        "cy": 240,
+        "radius": 16,
+        "weight": 3.0
+      },
+      {
+        "id": "cent_wild",
+        "species": [
+          "centipede_garden"
+        ],
+        "type": "zone",
+        "weight": 1.0
+      },
+      {
+        "id": "milli_gloom",
+        "species": [
+          "millipede"
+        ],
+        "type": "circle",
+        "cx": 178,
+        "cy": 238,
+        "radius": 18,
+        "weight": 3.0
+      },
+      {
+        "id": "milli_grove",
+        "species": [
+          "millipede"
+        ],
+        "type": "circle",
+        "cx": 70,
+        "cy": 152,
+        "radius": 14,
+        "weight": 2.0
+      },
+      {
+        "id": "milli_wild",
+        "species": [
+          "millipede"
+        ],
+        "type": "zone",
+        "weight": 1.0
+      },
+      {
+        "id": "beetle_gully",
+        "species": [
+          "beetle_carrion"
+        ],
+        "type": "circle",
+        "cx": 165,
+        "cy": 234,
+        "radius": 16,
+        "weight": 3.0
+      },
+      {
+        "id": "beetle_wild",
+        "species": [
+          "beetle_carrion"
+        ],
+        "type": "zone",
+        "weight": 1.0
+      }
+    ],
+    "initial_carrion": [
+      {
+        "item": "dead_millipede",
+        "x": 193,
+        "y": 238,
+        "count": 2
+      },
+      {
+        "item": "dead_millipede",
+        "x": 198,
+        "y": 241,
+        "count": 2
+      },
+      {
+        "item": "dead_millipede",
+        "x": 188,
+        "y": 236,
+        "count": 1
+      }
+    ]
+  }
+}

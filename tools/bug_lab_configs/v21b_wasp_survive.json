@@ -1,0 +1,8 @@
+{
+  "name": "v21b_wasp_survive",
+  "description": "home_range 80 (validated: wasp kills up, flies cropped) but wasp pop still stuck ~5 — the resident patrol starves in troughs (sat 10<->74) and culls before it can reach MaxSwarmSize, the daughter-nest founding trigger (nests.go:273). Lower wasp satiation_decay 0.11->0.06 so the swarm survives between hunt bursts, grows to MaxSwarmSize, founds daughters -> colony spreads -> real predation on the fly boom.",
+  "extends": "v21b_wasp_range",
+  "species": {
+    "wasp_common": { "satiation_decay_rate": 0.06 }
+  }
+}

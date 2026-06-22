@@ -135,6 +135,8 @@ namespace BugFarmer.World
                 float intensity = Mathf.Lerp(nightFloor, 1f, Daylight);
                 if (RainController.Raining)
                     intensity *= 0.85f; // overcast dim while it rains
+                else if (Weather == "drought")
+                    intensity *= 1.08f; // parched: harsh, glaring sun (a Director drought)
                 intensity += LightningFlash; // additive over-bright on a strike
                 _globalLight.intensity = intensity;
                 // Near the transitions, tint warm (dawn/dusk); at night go moonlit blue.
@@ -143,6 +145,8 @@ namespace BugFarmer.World
                 var col = Color.Lerp(nightColor, dayCol, Daylight);
                 if (RainController.Raining) // overcast: cooler, desaturated
                     col = Color.Lerp(col, new Color(0.62f, 0.66f, 0.72f), 0.32f);
+                else if (Weather == "drought") // parched: warm, washed-out, dusty
+                    col = Color.Lerp(col, new Color(1.0f, 0.90f, 0.66f), 0.34f);
                 if (LightningFlash > 0f) // strikes are blue-white
                     col = Color.Lerp(col, Color.white, Mathf.Min(1f, LightningFlash));
                 _globalLight.color = col;

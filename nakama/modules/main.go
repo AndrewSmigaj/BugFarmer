@@ -28,6 +28,17 @@ func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 	}
 	// world_leave removed - socket disconnect handles leaving
 
+	// Register character RPCs (per-account roster; inventory writes happen only in the match)
+	if err := initializer.RegisterRpc("character_list", rpc.CharacterList); err != nil {
+		return err
+	}
+	if err := initializer.RegisterRpc("character_create", rpc.CharacterCreate); err != nil {
+		return err
+	}
+	if err := initializer.RegisterRpc("character_delete", rpc.CharacterDelete); err != nil {
+		return err
+	}
+
 	// Register authoritative match handler for world simulation
 	if err := initializer.RegisterMatch("world", world.NewMatch); err != nil {
 		return err

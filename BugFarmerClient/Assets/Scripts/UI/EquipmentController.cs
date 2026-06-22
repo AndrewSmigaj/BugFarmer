@@ -19,7 +19,7 @@ namespace BugFarmer.UI
         public static EquipmentController Instance { get; private set; }
 
         public static readonly string[] SlotNames =
-            { "head", "body", "arms", "legs", "feet", "acc1", "acc2" };
+            { "head", "body", "arms", "legs", "feet", "acc1", "acc2", "backpack" };
 
         private void Awake()
         {
@@ -34,7 +34,12 @@ namespace BugFarmer.UI
 
         /// <summary>The armor_slot name an equipment slot index accepts.</summary>
         private static string AcceptsSlot(int equipIndex) =>
+            equipIndex == 7 ? "backpack" :
             equipIndex >= 5 ? "accessory" : SlotNames[equipIndex];
+
+        /// <summary>Item category a given equipment slot accepts ("backpack" slot vs "armor").</summary>
+        private static string AcceptsCategory(int equipIndex) =>
+            equipIndex == 7 ? "backpack" : "armor";
 
         /// <summary>Equipment slot clicks (routed by DragDropController).</summary>
         public void OnEquipSlotClicked(InventorySlotUI slot, PointerEventData eventData,
@@ -48,7 +53,8 @@ namespace BugFarmer.UI
                 // place the held armor into this slot (must match; must have come
                 // from the ITEM inventory — the server takes it from there)
                 var def = EntityDatabase.Get(drag.CursorItemId);
-                if (def?.Category != "armor" || def.ArmorSlot != AcceptsSlot(slot.SlotIndex))
+                if (def == null || def.Category != AcceptsCategory(slot.SlotIndex) ||
+                    def.ArmorSlot != AcceptsSlot(slot.SlotIndex))
                     return; // wrong slot — keep holding
                 if (drag.CursorSourceType != SlotType.Item)
                     return;
@@ -73,9 +79,9 @@ namespace BugFarmer.UI
             var inv = InventoryManager.Instance;
             if (inv == null || slot.SlotType != SlotType.Item) return false;
             var def = EntityDatabase.Get(slot.CurrentItemId);
-            if (def?.Category != "armor") return false;
+            if (def == null || (def.Category != "armor" && def.Category != "backpack")) return false;
 
-            int equipIndex = System.Array.IndexOf(SlotNames, def.ArmorSlot);
+            int equipIndex = def.ArmorSlot == "backpack" ? 7 : System.Array.IndexOf(SlotNames, def.ArmorSlot);
             if (def.ArmorSlot == "accessory")
                 equipIndex = string.IsNullOrEmpty(inv.Equipment[5]) || !string.IsNullOrEmpty(inv.Equipment[6]) ? 5 : 6;
             if (equipIndex < 0) return false;

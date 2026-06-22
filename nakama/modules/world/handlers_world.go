@@ -3,8 +3,6 @@ package world
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
-	"time"
 
 	"bugfarmer/entities"
 
@@ -32,9 +30,16 @@ func (m *Match) handleChunkSubscribe(
 		}
 		state.Chunks[chunkKey] = chunk
 
+		// ZONE PERSISTENCE: overlay this chunk's saved farm delta + hydrate its sidecar state
+		// (crops/trees/containers/stations/items) BEFORE the init scans — those scans randomize
+		// untracked trees/stations, so restored state must be in the maps first (skip-if-present).
+		m.applyChunkSave(state, chunk, cx, cy)
+
 		// Initialize fruit tree states for any fruit trees in this chunk
 		m.initFruitTreesInChunk(state, chunk, cx, cy, logger)
 		m.initNestsInChunk(state, chunk, cx, cy, logger)
+		m.initHostPlantsInChunk(state, chunk, cx, cy, logger)  // milkweed breeding capacity
+		m.initForagePoolsInChunk(state, chunk, cx, cy, logger) // flower nectar (depletable feeding)
 		// Initialize stations (compost bins etc. — entities with world.station)
 		m.initStationsInChunk(state, chunk, cx, cy, logger)
 	}
@@ -106,6 +111,20 @@ func (m *Match) handleChunkSubscribe(
 				fData, _ := json.Marshal(fMsg)
 				dispatcher.BroadcastMessage(OpCodeTreeFruitUpdate, fData, []runtime.Presence{presence}, nil, true)
 			}
+		}
+
+		// Send this chunk's visible nurseries (compost/milkweed/pile eggs+maggots) so a player
+		// walking up to a breeding source sees its current brood (the snapshot carries none).
+		for _, b := range state.BroodStates {
+			if b.GridX/cs != cx || b.GridY/cs != cy {
+				continue
+			}
+			bMsg := BroodUpdateMessage{
+				GX: b.GridX, GY: b.GridY, Species: b.SpeciesID,
+				Eggs: b.Eggs, Maggots: b.Maggots, Kind: b.SourceKind,
+			}
+			bData, _ := json.Marshal(bMsg)
+			dispatcher.BroadcastMessage(OpCodeBroodUpdate, bData, []runtime.Presence{presence}, nil, true)
 		}
 
 		// Send crop states in this chunk (stage visuals for joiners — without this a grown
@@ -513,17 +532,28 @@ func (m *Match) breakOccupantAt(
 		}
 	}
 
+	// Phase 1b: a REMOVED blocks_bugs occupant (player break OR centipede gnaw — this is the shared path)
+	// unblocks its cells for per-bug collision zone-wide. Ride the tick-ordered ledger so every client
+	// (incl. far ones) clears these cells at the SAME tick. w,h are the removed occupant's footprint.
+	if def.World != nil && def.World.BlocksBugs && state.CurrentZone != nil {
+		for dy := 0; dy < h; dy++ {
+			for dx := 0; dx < w; dx++ {
+				state.AddOccupantBlocksBugsEvent(state.CurrentZone.ZoneID, gx+dx, gy+dy, false)
+			}
+		}
+	}
+
 	// Drop items to ground (with chance-based multi-drop)
 	if withDrops {
 		drops := def.GetDrops()
 		cs := float32(state.Config.ChunkSize)
 		for _, drop := range drops {
-			if rand.Float32() > drop.Chance {
+			if state.Rng.Float32() > drop.Chance {
 				continue
 			}
-			itemID := fmt.Sprintf("item_%d_%d_%d", gx, gy, time.Now().UnixNano())
-			worldX := float32(gx) + 0.5 + (rand.Float32()-0.5)*0.3
-			worldY := float32(gy) + 0.5 + (rand.Float32()-0.5)*0.3
+			itemID := state.nextItemID(fmt.Sprintf("item_%d_%d", gx, gy))
+			worldX := float32(gx) + 0.5 + (state.Rng.Float32()-0.5)*0.3
+			worldY := float32(gy) + 0.5 + (state.Rng.Float32()-0.5)*0.3
 			localX := worldX - float32(cx)*cs
 			localY := worldY - float32(cy)*cs
 
@@ -552,6 +582,9 @@ func (m *Match) breakOccupantAt(
 	// Nest destruction: clear the state + ORPHAN the resident (it never breeds again,
 	// tethers to its last home, still hunts/stings — a decaying patrol).
 	m.onNestOccupantRemoved(state, gx, gy, logger)
+
+	// A broken compost bin / milkweed loses its in-progress nursery (its eggs/maggots vanish).
+	m.onBroodSourceRemoved(state, dispatcher, gx, gy)
 
 	// Broadcast removal (clear occupant)
 	m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, "", nil, true)
@@ -633,6 +666,21 @@ func (m *Match) broadcastWorldUpdate(
 	}
 	// If neither: msg.Occupant stays as true nil interface, field is omitted (no change)
 	m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeWorldUpdate, msg)
+
+	// Phase 1b: a PLACED blocks_bugs occupant changes per-bug COLLISION zone-wide. The WorldUpdate above is
+	// chunk-scoped (can't reach far clients), so ALSO ride the tick-ordered ledger here — central to EVERY
+	// placement path (player place, seed, runtime nest spawn). One event per footprint cell (anchor incl.).
+	// Removal is emitted by breakOccupantAt (which has the removed occupant's def/footprint; here occ is nil).
+	if occupant != nil && !clearOccupant && state.CurrentZone != nil {
+		if def := state.Entities[occupant.ID]; def != nil && def.World != nil && def.World.BlocksBugs {
+			w, h := def.GetFootprint(occupant.Dir)
+			for dy := 0; dy < h; dy++ {
+				for dx := 0; dx < w; dx++ {
+					state.AddOccupantBlocksBugsEvent(state.CurrentZone.ZoneID, gx+dx, gy+dy, true)
+				}
+			}
+		}
+	}
 }
 
 // getToolStats returns the tool type and tier for a given tool ID
@@ -753,8 +801,33 @@ func (m *Match) handleEquipArmor(
 		return
 	}
 
-	slotNames := [7]string{"head", "body", "arms", "legs", "feet", "accessory", "accessory"}
+	slotNames := [8]string{"head", "body", "arms", "legs", "feet", "accessory", "accessory", "backpack"}
 	echoInv := -1
+	isBackpack := msg.EquipSlot == backpackSlotIndex
+
+	// Backpack capacity safety: if this action would SHRINK usable item slots, the
+	// to-be-locked slots must be empty (else worn items would strand). Check BEFORE mutating.
+	if isBackpack {
+		newBackpack := ""
+		if msg.InvSlot != -1 && msg.InvSlot >= 0 && msg.InvSlot < len(player.ItemSlots) {
+			newBackpack = player.ItemSlots[msg.InvSlot].ItemID
+		}
+		newCap := baseUnlockedItemSlots
+		if newBackpack != "" {
+			if d := state.Entities[newBackpack]; d != nil && d.SlotBonus > 0 {
+				newCap += d.SlotBonus
+			}
+		}
+		if newCap > len(player.ItemSlots) {
+			newCap = len(player.ItemSlots)
+		}
+		for i := newCap; i < player.ItemSlotsUnlocked && i < len(player.ItemSlots); i++ {
+			if player.ItemSlots[i].ItemID != "" {
+				m.sendWorldError(dispatcher, state, userID, "Empty your backpack's extra slots first")
+				return
+			}
+		}
+	}
 
 	if msg.InvSlot == -1 {
 		// UNEQUIP -> inventory
@@ -779,7 +852,11 @@ func (m *Match) handleEquipArmor(
 			return
 		}
 		def := state.Entities[item.ItemID]
-		if def == nil || def.Category != "armor" || def.ArmorSlot != slotNames[msg.EquipSlot] {
+		wantCat := "armor"
+		if isBackpack {
+			wantCat = "backpack"
+		}
+		if def == nil || def.Category != wantCat || def.ArmorSlot != slotNames[msg.EquipSlot] {
 			m.sendWorldError(dispatcher, state, userID, "That doesn't go there")
 			return
 		}
@@ -793,13 +870,21 @@ func (m *Match) handleEquipArmor(
 		echoInv = msg.InvSlot
 	}
 
+	// A backpack change alters usable capacity — recompute it.
+	if isBackpack {
+		state.recomputeItemCapacity(player)
+	}
+
 	// ---- echoes: equipment truth + the touched inventory slot
 	if presence, ok := state.Presences[userID]; ok && presence != nil {
 		eqMsg := EquipmentUpdateMessage{Equipment: player.Equipment[:]}
 		if data, err := json.Marshal(eqMsg); err == nil {
 			dispatcher.BroadcastMessage(OpCodeEquipmentUpdate, data, []runtime.Presence{presence}, nil, true)
 		}
-		if echoInv >= 0 {
+		if isBackpack {
+			// capacity (ItemSlotsUnlocked) + possibly several slots changed → full re-sync
+			_ = m.sendInventorySync(logger, dispatcher, player, presence)
+		} else if echoInv >= 0 {
 			slotMsg := SlotUpdateMessage{
 				SlotIndex: echoInv,
 				ItemID:    player.ItemSlots[echoInv].ItemID,

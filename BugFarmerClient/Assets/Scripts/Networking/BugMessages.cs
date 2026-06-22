@@ -242,6 +242,11 @@ namespace BugFarmer.Networking
         public int intent_dir_x, intent_dir_y;       // Brownian: intent direction
         public int intent_target_x, intent_target_y; // Gliding: intent target
         public int current_dir_x, current_dir_y;     // Gliding: current direction
+        public int land_ticks;                       // Feed land/hold timer (>0 = landed on food); history-dependent
+
+        // DIAGNOSTIC ONLY (re-root investigation; never hashed): provenance of this bug on this client.
+        public long spawn_tick = -1;
+        public string spawn_source = "?";
     }
 
     /// <summary>
@@ -287,6 +292,15 @@ namespace BugFarmer.Networking
     {
         public string swarm_id;
         public BugSampleData[] bugs;
+
+        // Current movement leg AT the snapshot tick (authoritative). Lets late-join hydrate the swarm
+        // center coherently — the server's InfluenceLog is pruned, so a slow swarm's last SWARM_SET_TARGET
+        // may be gone. has_leg=false means the swarm has no leg yet (use the fallback center).
+        public bool has_leg;
+        public int leg_origin_x, leg_origin_y;
+        public int leg_target_x, leg_target_y;
+        public int leg_speed;
+        public long leg_start_tick;
     }
 
     /// <summary>
@@ -343,6 +357,19 @@ namespace BugFarmer.Networking
         // cell_x/cell_y are WORLD cells; level = remaining food value (0 = gone).
         public string food_id;
         public int level;
+
+        // SWARM_SPAWNED: a new swarm minted at runtime. swarm_id=new swarm, species_id=its species
+        // (client derives sprite/radius), split_count=bug count, center_x/y=spawn centre (×1000).
+        // Applied at evt.tick so every client (live + late-join replay) creates it at the same tick.
+        public string species_id;
+
+        // HUNT-leg fields (Phase 2): set ONLY on a predator's hunt SWARM_SET_TARGET so the AUTHORITY can
+        // run the individual-fly strike selection. Empty/0 on every other leg. strike_radius is ×1000 —
+        // compare via FixedPoint multiply, NOT raw int² (FixedPoint.cs).
+        public string target_prey_id;       // which prey SWARM this predator hunts ("" = not hunting)
+        public int strike_radius;           // ×1000; a predator individual within this of a prey individual strikes
+        public int kills_per_strike;        // victims per strike
+        public int strike_cooldown_ticks;   // client-side re-send throttle (server cooldown is authoritative)
     }
 
     /// <summary>
@@ -409,6 +436,10 @@ namespace BugFarmer.Networking
         public string authority_id;
         public long authoritative_tick;  // Bootstrap tick for first client
         public long last_event_seq;      // FIX #7: Initial watermark for bootstrap
+        // Seed-baseline for the FIRST joiner (or reconnecting authority): it has no snapshot to
+        // adopt, so it CREATES these swarms and seeds their bugs from (worldSeed,swarmId,bugId) at
+        // the centre. Empty for everyone else (they get swarms via the snapshot / SWARM_SPAWNED).
+        public SwarmData[] swarms;
     }
 
     /// <summary>
@@ -448,7 +479,24 @@ namespace BugFarmer.Networking
         public long snapshot_tick;
         public long snapshot_last_event_seq; // Last applied seq included in snapshot state
         public SwarmSnapshotData[] swarms;
+        public FoodSnapshotData[] food;      // Authoritative food registry @ snapshot (late-join hydration)
         public string state_hash;
+    }
+
+    /// <summary>
+    /// One entry of the deterministic food registry, embedded in the snapshot so late-joiners hydrate it
+    /// coherently. The registry is event-sourced (ITEM_ROTTED/FOOD_CONSUMED) and pruned, so — like swarm legs —
+    /// the authority's live registry is the reliable source. Coordinates are raw FixedPoint.Value (×1000) so
+    /// hydration is bit-exact (no float round-trip). Bugs at a food source FEED (position-affecting), so a
+    /// missing entry desyncs per-bug positions on the late-joiner.
+    /// </summary>
+    [Serializable]
+    public class FoodSnapshotData
+    {
+        public string food_id;
+        public int x;      // FixedPoint.Value
+        public int y;      // FixedPoint.Value
+        public int level;  // remaining food value (>0)
     }
 
     /// <summary>
@@ -492,5 +540,6 @@ namespace BugFarmer.Networking
         public InfluenceEvent[] influence_log; // Events in (snapshot_last_seq, end_last_seq]
         public string authority_id;
         public PlayerCellData[] player_cells;  // Current player positions (state, not events)
+        public FoodSnapshotData[] food;        // Authoritative food registry @ snapshot (hydrate before replay)
     }
 }

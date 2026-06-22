@@ -1,0 +1,26 @@
+{
+  "name": "A5_reach_all",
+  "description": "REACH: everything \u2014 big vision + fast chase + wide territory + spread nests.",
+  "extends": "01_no_cull",
+  "species": {
+    "centipede_garden": {
+      "vision_range": 26,
+      "base_speed": 2.5,
+      "predation": {
+        "hunt_speed_mult": 2.6
+      }
+    },
+    "wasp_common": {
+      "vision_range": 32,
+      "base_speed": 2.8,
+      "predation": {
+        "hunt_speed_mult": 2.2,
+        "home_range": 70.0
+      }
+    }
+  },
+  "tuning": {
+    "nest_found_dist_min": 4,
+    "nest_found_dist_max": 10
+  }
+}

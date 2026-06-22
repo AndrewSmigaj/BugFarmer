@@ -1,0 +1,38 @@
+{
+  "name": "G4_immig_reach",
+  "description": "IMMIG: immigration(20s) + sealed + cap400 + C3 + REACH \u2014 predators find the immigrants fast.",
+  "extends": "01_no_cull",
+  "species": {
+    "fly_common": {
+      "reproduce_cooldown": 18.0,
+      "breed_amount": 16.0
+    },
+    "centipede_garden": {
+      "vision_range": 26,
+      "base_speed": 2.5,
+      "predation": {
+        "hunt_speed_mult": 2.6
+      }
+    },
+    "wasp_common": {
+      "vision_range": 32,
+      "base_speed": 2.8,
+      "predation": {
+        "hunt_speed_mult": 2.2,
+        "home_range": 70.0
+      }
+    }
+  },
+  "lab": {
+    "caps": {
+      "fly_common": {
+        "spawn_interval": 20.0,
+        "max": 40
+      }
+    },
+    "seal_pens": true,
+    "max_pop": {
+      "fly_common": 400
+    }
+  }
+}

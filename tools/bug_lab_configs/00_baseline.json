@@ -1,0 +1,8 @@
+{
+  "name": "00_baseline",
+  "description": "The current tuned state (make_bug_lab.DEFAULT_LAB + compiled tuning defaults). Every other config is a delta over this. No overrides = the reference run the sweep is measured against.",
+  "lab": {},
+  "tuning": {},
+  "species": {},
+  "fruit": {}
+}

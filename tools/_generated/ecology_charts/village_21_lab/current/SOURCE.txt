@@ -1,0 +1,2 @@
+2026-06-19_0604_vlab_C1_centi_breed
+CORRECTION test: is centipede TUNABLE after all? Buff the kills->breeding CONVERSION (the lever I never tested): predator_breed_satiation 70->45 (breed after fewer kills) + centipede max_swarm_size 3->8 (swarms accumulate) + feed_per_kill 45->60 (more satiation per kill). All TUNING/data, no code. Does it climb off the floor of 4?

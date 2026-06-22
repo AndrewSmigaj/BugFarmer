@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"time"
 
+	"bugfarmer/world"
+
 	"github.com/gofrs/uuid"
 	"github.com/heroiclabs/nakama-common/runtime"
 )
@@ -53,8 +55,17 @@ type WorldJoinRequest struct {
 	WorldID string `json:"world_id"`
 }
 
+// ZoneNeighbors is the fixed-field form of a zone's adjacency (Unity's JsonUtility can't parse a map).
+type ZoneNeighbors struct {
+	North string `json:"north,omitempty"`
+	South string `json:"south,omitempty"`
+	East  string `json:"east,omitempty"`
+	West  string `json:"west,omitempty"`
+}
+
 type WorldJoinResponse struct {
-	MatchID string `json:"match_id"`
+	MatchID   string         `json:"match_id"`
+	Neighbors *ZoneNeighbors `json:"neighbors,omitempty"` // cross-zone adjacency (edge -> neighbor zoneID)
 }
 
 type WorldEnterRequest struct {
@@ -382,7 +393,16 @@ func WorldEnter(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 		logger.Info("WorldEnter: zone %s -> match %s (reused)", req.ZoneID, matchID)
 	}
 
-	responseJSON, _ := json.Marshal(WorldJoinResponse{MatchID: matchID})
+	// Include the zone's cross-zone neighbors so the client can hidden-swap at edges (best-effort).
+	var neighbors *ZoneNeighbors
+	if zc, err := world.LoadZoneConfig("data/zones/" + req.ZoneID); err == nil && zc != nil && zc.Neighbors != nil {
+		neighbors = &ZoneNeighbors{
+			North: zc.Neighbors["north"], South: zc.Neighbors["south"],
+			East: zc.Neighbors["east"], West: zc.Neighbors["west"],
+		}
+	}
+
+	responseJSON, _ := json.Marshal(WorldJoinResponse{MatchID: matchID, Neighbors: neighbors})
 	return string(responseJSON), nil
 }
 

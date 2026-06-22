@@ -1,0 +1,10 @@
+{
+  "name": "v21b_milli50",
+  "description": "Long-window model: millipede settles ~ proportional to litter throughput (regen x piles). 20 piles x 0.004 -> ~135. Target ~50 => throughput ~0.03 => litter_regen_per_tick 0.0015. Verify at LONG timescale (the equilibrium takes ~24 game-days to reach). No species throttles.",
+  "flags": { "sim_batch": 6 },
+  "tuning": { "litter_regen_per_tick": 0.0015 },
+  "bug_spawning": { "species_caps": {
+    "fly_common": {"max_population":0}, "butterfly_meadow": {"max_population":0},
+    "wasp_common": {"max_population":0}, "centipede_garden": {"max_population":0},
+    "millipede": {"max_population":0}, "beetle_carrion": {"max_population":0} } }
+}

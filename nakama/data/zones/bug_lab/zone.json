@@ -1,0 +1,164 @@
+{
+  "zone_id": "bug_lab",
+  "name": "Bug Lab",
+  "row": 0,
+  "col": 0,
+  "width": 192,
+  "height": 192,
+  "spawn_point": [
+    96,
+    172
+  ],
+  "biome_type": "test",
+  "seed": 4242,
+  "ephemeral_swarms": true,
+  "call_rate": 60,
+  "sim_batch": 8,
+  "bug_spawning": {
+    "static": false,
+    "species_caps": {
+      "fly_common": {
+        "max_population": 150,
+        "spawn_interval": 999999.0,
+        "initial": 2,
+        "max": 12,
+        "swarm_size": 6,
+        "min_population": 8,
+        "event_low": 25,
+        "event_high": 90,
+        "cull_at": 120,
+        "cull_with": "wasp_common"
+      },
+      "butterfly_meadow": {
+        "max_population": 100,
+        "spawn_interval": 999999.0,
+        "initial": 2,
+        "max": 12,
+        "swarm_size": 6,
+        "min_population": 12,
+        "event_low": 18,
+        "event_high": 45,
+        "cull_at": 80
+      },
+      "wasp_common": {
+        "max_population": 40,
+        "spawn_interval": 999999.0,
+        "initial": 2,
+        "max": 12,
+        "swarm_size": 6,
+        "min_population": 6,
+        "cull_at": 32,
+        "max_nests": 3
+      },
+      "centipede_garden": {
+        "max_population": 30,
+        "spawn_interval": 999999.0,
+        "initial": 2,
+        "max": 12,
+        "swarm_size": 6,
+        "min_population": 5,
+        "cull_at": 24
+      },
+      "millipede": {
+        "max_population": 30,
+        "spawn_interval": 999999.0,
+        "initial": 2,
+        "max": 8,
+        "swarm_size": 1,
+        "min_population": 3,
+        "cull_at": 24
+      },
+      "beetle_carrion": {
+        "max_population": 20,
+        "spawn_interval": 999999.0,
+        "initial": 2,
+        "max": 4,
+        "swarm_size": 1,
+        "min_population": 2,
+        "cull_at": 16
+      }
+    },
+    "spawn_areas": [
+      {
+        "id": "fly_pen",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 24,
+        "cy": 22,
+        "radius": 7
+      },
+      {
+        "id": "butterfly_pen",
+        "species": [
+          "butterfly_meadow"
+        ],
+        "type": "circle",
+        "cx": 64,
+        "cy": 24,
+        "radius": 7
+      },
+      {
+        "id": "wasp_pen",
+        "species": [
+          "wasp_common"
+        ],
+        "type": "circle",
+        "cx": 104,
+        "cy": 16,
+        "radius": 5
+      },
+      {
+        "id": "centipede_pen",
+        "species": [
+          "centipede_garden"
+        ],
+        "type": "circle",
+        "cx": 144,
+        "cy": 16,
+        "radius": 6
+      },
+      {
+        "id": "wasp_pen_prey",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 104,
+        "cy": 30,
+        "radius": 8
+      },
+      {
+        "id": "centipede_pen_prey",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 144,
+        "cy": 30,
+        "radius": 8
+      },
+      {
+        "id": "fly_pen_millipede",
+        "species": [
+          "millipede"
+        ],
+        "type": "circle",
+        "cx": 24,
+        "cy": 20,
+        "radius": 6
+      },
+      {
+        "id": "fly_pen_beetle",
+        "species": [
+          "beetle_carrion"
+        ],
+        "type": "circle",
+        "cx": 24,
+        "cy": 28,
+        "radius": 6
+      }
+    ]
+  }
+}

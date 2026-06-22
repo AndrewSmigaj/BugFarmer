@@ -42,6 +42,7 @@ namespace BugFarmer.UI
         {
             new WorldChoice { label = "Normal",         zoneId = "village_21" },
             new WorldChoice { label = "Village B",      zoneId = "village_21_B" },
+            new WorldChoice { label = "Eco Lab",        zoneId = "village_21_lab" },
             new WorldChoice { label = "Test",           zoneId = "sim_test" },
             new WorldChoice { label = "Collision Test", zoneId = "collision_test" },
             new WorldChoice { label = "Split Test",     zoneId = "split_test2" },
@@ -66,12 +67,15 @@ namespace BugFarmer.UI
             // it can lag behind. Make sure the built-in zones are always present even if the Inspector value
             // is stale (this is why a newly-added zone may not "show up" after only editing the code default).
             EnsureWorld("Normal", "village_21");
+            EnsureWorld("Village B", "village_21_B");
+            EnsureWorld("Eco Lab", "village_21_lab");
             EnsureWorld("Test", "sim_test");
             EnsureWorld("Collision Test", "collision_test");
             EnsureWorld("Split Test", "split_test2");
             EnsureWorld("Merge Test", "merge_test2");
             EnsureWorld("Fly Farm Test", "repro_test");
             EnsureWorld("Crafting Test", "crafting_test");
+            EnsureWorld("Bug Lab", "bug_lab");
         }
 
         private void Start()
@@ -119,6 +123,7 @@ namespace BugFarmer.UI
         {
             if (_busy) return;
             if (worlds == null || worlds.Length == 0) { SetStatus("No worlds configured."); return; }
+            if (!CharacterSession.HasSelection) { SetStatus("Select a character first."); return; }
 
             _busy = true;
             var choice = worlds[Mathf.Clamp(_choice, 0, worlds.Length - 1)];
@@ -126,8 +131,8 @@ namespace BugFarmer.UI
             {
                 SetStatus("Connecting...");
                 await NetworkManager.Instance.ConnectSocketAsync();
-                SetStatus($"Entering {choice.label}...");
-                await WorldManager.Instance.EnterWorld(choice.zoneId);
+                SetStatus($"Entering {choice.label} as {CharacterSession.SelectedCharName}...");
+                await WorldManager.Instance.EnterWorld(choice.zoneId, CharacterSession.SelectedCharID);
                 SetStatus($"In world: {choice.label}");
             }
             catch (Exception ex)

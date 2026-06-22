@@ -125,7 +125,83 @@ const (
 	// NON-deterministic display/inventory state — never enters the sim hash.
 	OpCodeContainer       int64 = 98 // C->S: a container/craft-station action (see ContainerActionMessage.Op)
 	OpCodeContainerUpdate int64 = 99 // S->C: a container/craft-station's contents + craft progress
+
+	// Character home (sleep in a bed → set this character's respawn/login anchor). Character state,
+	// NOT in the sim hash; persisted with the rest of the save.
+	OpCodeSetHome    int64 = 100 // C->S: {gx,gy} — set home to the bed at this cell
+	OpCodeSetHomeAck int64 = 101 // S->C: {ok,message,home_x,home_y} — confirmation toast
+
+	// AUTHORITATIVE local-player spawn, sent once per join (fresh OR reconnect). The client snaps
+	// its local player here — the only reliable signal (the passive entity-update snap races with
+	// client movement and is gated by a one-shot flag that survives a reconnect). Mirrors how the
+	// faint/respawn path authoritatively repositions the client.
+	OpCodePlayerSpawn int64 = 102 // S->C: {x,y} — place the local player on join
+
+	// Per-player appearance + character name. STATIC for the session, so it's sent once on join
+	// (roster → joiner, joiner → everyone) instead of riding the per-tick EntityData. Display state
+	// only — never in the sim hash; the tick loop is untouched.
+	OpCodePlayerInfo int64 = 103 // S->C: {players:[{user_id,name,char_class,char_hair,char_skin}]}
+
+	OpCodeBroodUpdate int64 = 104 // S->C: a brood's egg/maggot counts changed (display-only nursery, like StationUpdate)
+
+	OpCodeZoneCollisionMap int64 = 106 // S->C (on join + resync): the zone's COMPLETE blocks_bugs cell set, so
+	// every client runs per-bug collision zone-wide + identically (decoupled from its camera's chunk view).
+
+	OpCodePredationStrike int64 = 105 // C->S (authority only): the authority client picked the individual flies a
+	// predator struck (it has per-bug positions; the server does not). Server validates + applies via the
+	// existing kill path (killBugsInSwarm → BUG_REMOVED + carrion + satiation). See PredationStrikeMessage.
 )
+
+// BroodUpdateMessage (OpCode 104): a visible nursery's eggs/maggots changed (a lay, a maturation, a
+// hatch, or removal). Display-only — the actual births ride the deterministic SWARM_REPRODUCED ledger,
+// so a dropped/late BroodUpdate only delays the on-screen egg/maggot count, never the bug positions.
+type BroodUpdateMessage struct {
+	GX      int    `json:"gx"`
+	GY      int    `json:"gy"`
+	Species string `json:"species"`
+	Eggs    int    `json:"eggs"`
+	Maggots int    `json:"maggots"`
+	Kind    string `json:"kind"`    // "station" | "host_plant" | "ground_pile" | "nest" — drives the client visual
+	Removed bool   `json:"removed"` // true when the brood/pile is cleared (source gone)
+}
+
+// PlayerSpawnMessage (OpCode 102): where the server placed this player on join (the character's
+// last-logout position, bed home, or the zone spawn — already decided in MatchJoin).
+type PlayerSpawnMessage struct {
+	X float32 `json:"x"`
+	Y float32 `json:"y"`
+}
+
+// PlayerInfoEntry is one player's cosmetic identity for remote clients (drives the paper-doll +
+// the nameplate). Empty fields (a no-character / sync-harness join) → the client defaults to merchant.
+type PlayerInfoEntry struct {
+	UserID    string `json:"user_id"`
+	Name      string `json:"name,omitempty"`
+	CharClass string `json:"char_class,omitempty"`
+	CharHair  string `json:"char_hair,omitempty"`
+	CharSkin  string `json:"char_skin,omitempty"`
+}
+
+// PlayerInfoMessage (OpCode 103): one or more players' appearance+name (a roster on join, or a
+// single newcomer broadcast to everyone).
+type PlayerInfoMessage struct {
+	Players []PlayerInfoEntry `json:"players"`
+}
+
+// SetHomeMessage (OpCode 100): the anchor cell of the bed the player slept in.
+type SetHomeMessage struct {
+	GX int `json:"gx"`
+	GY int `json:"gy"`
+}
+
+// SetHomeAckMessage (OpCode 101): result of a set-home; the client shows Message as a toast and,
+// on ok, can update any "home here" indicator.
+type SetHomeAckMessage struct {
+	OK      bool    `json:"ok"`
+	Message string  `json:"message"`
+	HomeX   float32 `json:"home_x"`
+	HomeY   float32 `json:"home_y"`
+}
 
 // TreeWaterUpdateMessage (OpCode 51): a fruit tree's water/tank state changed. Display-only.
 // The droplet ("waterable now") rule is computed CLIENT-side each frame:
@@ -179,6 +255,35 @@ type DebugWorldMessage struct {
 type BugTelegraphMessage struct {
 	SwarmID string `json:"swarm_id"`
 	Kind    string `json:"kind"`
+	// Per-victim strike points (Phase 2): world positions where the snatch/THWACK should play, so an
+	// individual-fly strike reads on screen (vs the old predator-centre flash). Display-only.
+	VictimX []float32 `json:"victim_x,omitempty"`
+	VictimY []float32 `json:"victim_y,omitempty"`
+}
+
+// PredationStrikeMessage (OpCode 105, C->S, AUTHORITY ONLY): the authority client ran the strike
+// selection on individual bug positions (which the server lacks) and reports the victims. The server
+// validates (sender is authority, predator hunting this prey, cooldown elapsed, ids alive) then applies
+// the kill via the existing path (killBugsInSwarm → BUG_REMOVED + carrion + satiation + telegraph), so
+// followers/late-joiners stay in sync via the relayed BUG_REMOVED. bug_x/bug_y are the victims' positions
+// for the display-only per-victim snatch (not used for the kill itself).
+type PredationStrikeMessage struct {
+	PredatorSwarmID string    `json:"predator_swarm_id"`
+	PreySwarmID     string    `json:"prey_swarm_id"`
+	BugIDs          []int     `json:"bug_ids"`
+	BugX            []float32 `json:"bug_x,omitempty"`
+	BugY            []float32 `json:"bug_y,omitempty"`
+	Tick            int64     `json:"tick,omitempty"`
+}
+
+// ZoneCollisionMapMessage (OpCode 106, S->C, on join + resync): the zone's COMPLETE set of cells that
+// block bugs (occupants with World.BlocksBugs). Clients run per-bug collision against this zone-wide set
+// instead of their view-scoped chunks, so a bug near a fence collides IDENTICALLY on every client
+// regardless of camera position. Cx[i],Cy[i] = a blocked world cell. Dynamic changes ride
+// OCCUPANT_BLOCKS_BUGS influence events (frontier-gated) after this baseline.
+type ZoneCollisionMapMessage struct {
+	Cx []int `json:"cx"`
+	Cy []int `json:"cy"`
 }
 
 // PlayerDamageMessage (OpCode 94): a bug attack landed (or a regen/join echo with
@@ -453,9 +558,11 @@ type SlotUpdateMessage struct {
 // FullInventorySyncMessage is sent on player join (OpCode 38)
 // Uses InventorySlot from state.go
 type FullInventorySyncMessage struct {
-	BugSlots  []InventorySlot `json:"bug_slots"`  // All 20 bug slots
-	ItemSlots []InventorySlot `json:"item_slots"` // All 20 item slots (0-9 hotbar, 10-19 panel) (= hotbar)
-	Coins     int64           `json:"coins"`
+	BugSlots          []InventorySlot `json:"bug_slots"`            // All 20 bug slots
+	ItemSlots         []InventorySlot `json:"item_slots"`           // All item slots (0-9 hotbar, 10+ panel)
+	Coins             int64           `json:"coins"`
+	ItemSlotsUnlocked int             `json:"item_slots_unlocked"` // usable item slots (base + backpack)
+	Intro             bool            `json:"intro,omitempty"`     // first login of this character → show the intro
 }
 
 // MoveSlotMessage is sent by client (OpCode 28)
@@ -622,6 +729,18 @@ type BugSampleData struct {
 	IntentTargetY    int `json:"intent_target_y"`
 	CurrentDirX      int `json:"current_dir_x"` // Gliding: current direction
 	CurrentDirY      int `json:"current_dir_y"`
+	LandTicks        int `json:"land_ticks,omitempty"` // feed land/hold timer (history-dependent — rides snapshot)
+}
+
+// FoodSnapshotData is one entry of the deterministic food registry, embedded in the authority's ZoneSnapshot
+// and relayed in the late-join package. The registry is event-sourced (ITEM_ROTTED/FOOD_CONSUMED) and pruned,
+// so — like swarm legs — the authority's live registry is the reliable late-join source. Coords are raw
+// FixedPoint values (×1000) for bit-exact hydration. The server relays these opaquely (never interprets them).
+type FoodSnapshotData struct {
+	FoodID string `json:"food_id"`
+	X      int    `json:"x"`     // FixedPoint value
+	Y      int    `json:"y"`     // FixedPoint value
+	Level  int    `json:"level"` // remaining food value (>0)
 }
 
 // SampleRequestMessage sent to every client in a chunk (OpCode 61).
@@ -654,6 +773,17 @@ type SnapshotRequestMessage struct {
 type SwarmSnapshotData struct {
 	SwarmID string          `json:"swarm_id"`
 	Bugs    []BugSampleData `json:"bugs"` // All bugs in swarm
+
+	// Current movement leg AT the snapshot tick (authority-embedded). Used for late-join center
+	// hydration: the InfluenceLog is pruned each tick, so a slow swarm's last SWARM_SET_TARGET may
+	// be gone — the authority's live leg is the reliable source. HasLeg=false ⇒ no leg yet.
+	HasLeg      bool  `json:"has_leg,omitempty"`
+	LegOriginX  int   `json:"leg_origin_x,omitempty"`
+	LegOriginY  int   `json:"leg_origin_y,omitempty"`
+	LegTargetX  int   `json:"leg_target_x,omitempty"`
+	LegTargetY  int   `json:"leg_target_y,omitempty"`
+	LegSpeed    int   `json:"leg_speed,omitempty"`
+	LegStartTick int64 `json:"leg_start_tick,omitempty"`
 }
 
 // FullSnapshotMessage for late joiners or drift correction (OpCode 67)
@@ -696,6 +826,18 @@ const (
 	InfluenceItemRotted    = "ITEM_ROTTED"     // a ground item became bug food (FoodID + world cell + Level=food value)
 	InfluenceFoodConsumed  = "FOOD_CONSUMED"   // a food source's level crossed a threshold (Level=remaining; 0 = gone)
 	InfluenceSwarmReproduced = "SWARM_REPRODUCED" // sated swarm bred at a food source: SplitCount new bugs at NewBugIDBase
+	// A brand-new swarm appears (continuous spawn, initial seed, release-new, nest hatch, director, reproduce-at-cap
+	// child). Rides the tick-ordered ledger so EVERY client (live + late-join replay) creates it at the SAME tick
+	// with the same seed → bit-identical spawn-seeded wander. SwarmID=new id, SpeciesID, SplitCount=count,
+	// CenterX/CenterY=spawn world pos (×1000, == the swarm's first leg origin). NOT used for split (SWARM_SPLIT)
+	// or reproduce-into-existing (SWARM_REPRODUCED).
+	InfluenceSwarmSpawned = "SWARM_SPAWNED"
+
+	// A blocks_bugs occupant (fence/wall) was placed or removed at a cell — the per-bug COLLISION change,
+	// rides the tick-ordered ledger so every client updates its zone-wide collision set at the SAME tick
+	// (the chunk-scoped WorldUpdate that renders it can't reach far clients). CellX/CellY = world cell;
+	// Level = 1 (now blocks bugs) or 0 (no longer). Phase 1b — see architecture_swarm_sync.md.
+	InfluenceOccupantBlocksBugs = "OCCUPANT_BLOCKS_BUGS"
 )
 
 // InfluenceEvent represents a discrete, replayable signal for bug AI
@@ -710,6 +852,7 @@ type InfluenceEvent struct {
 	CellY    int    `json:"cell_y,omitempty"`
 	SwarmID  string `json:"swarm_id,omitempty"` // For BUG_* and SWARM_* events
 	BugID    int    `json:"bug_id,omitempty"`   // For BUG_* events
+	SpeciesID string `json:"species_id,omitempty"` // For SWARM_SPAWNED (client derives radius/sprite/wander from species data)
 
 	// SWARM_SET_TARGET leg fields (fixed-point ×1000). Self-describes one movement
 	// leg so clients re-anchor center to Origin and walk toward Target at Speed/tick.
@@ -718,6 +861,14 @@ type InfluenceEvent struct {
 	TargetX int `json:"target_x,omitempty"`
 	TargetY int `json:"target_y,omitempty"`
 	Speed   int `json:"speed,omitempty"` // World units per tick (×1000)
+
+	// HUNT-leg fields (Phase 2 individual-fly predation): set ONLY on a predator's hunt leg so the
+	// authority client can run the strike selection on individual positions. Empty/0 on every other leg.
+	// strike_radius is fixed-point ×1000 (compare via FixedPoint multiply, NOT raw int²).
+	TargetPreyID      string `json:"target_prey_id,omitempty"`      // which prey SWARM this predator is hunting
+	StrikeRadius      int    `json:"strike_radius,omitempty"`       // ×1000; a predator individual within this of a prey individual strikes
+	KillsPerStrike    int    `json:"kills_per_strike,omitempty"`    // victims per strike
+	StrikeCooldownTks int    `json:"strike_cooldown_ticks,omitempty"` // client-side re-send throttle (server cooldown is authoritative)
 
 	// SWARM_SPLIT / SWARM_MERGE fields. Flat + count/id-based so clients can apply the
 	// change deterministically by MOVING existing bugs (positions preserved, never re-spawned).
@@ -750,6 +901,11 @@ type ZoneAuthorityMessage struct {
 	AuthorityID       string `json:"authority_id"`
 	AuthoritativeTick int64  `json:"authoritative_tick"` // Bootstrap tick for first client
 	LastEventSeq      int64  `json:"last_event_seq"`     // FIX #7: Initial watermark
+	// Seed-baseline for the FIRST joiner: it has no authority snapshot to adopt, so it CREATES the
+	// initial swarms from this metadata and seeds their bugs from (worldSeed, swarmId, bugId) at the
+	// swarm centre. SwarmUpdate no longer creates swarms — every swarm is born via this baseline,
+	// the late-join snapshot, or a SWARM_SPAWNED event. omitempty: only the first joiner gets it.
+	Swarms []SwarmData `json:"swarms,omitempty"`
 }
 
 // ZoneTickBroadcastMessage sent EVERY tick (10Hz) by server (OpCode 78)
@@ -776,6 +932,7 @@ type ZoneSnapshotMessage struct {
 	SnapshotTick         int64               `json:"snapshot_tick"`
 	SnapshotLastEventSeq int64               `json:"snapshot_last_event_seq"` // Last applied seq included in snapshot state
 	Swarms               []SwarmSnapshotData `json:"swarms"`
+	Food                 []FoodSnapshotData  `json:"food,omitempty"` // Authoritative food registry @ snapshot
 	StateHash            string              `json:"state_hash"`
 }
 
@@ -807,4 +964,5 @@ type LateJoinSnapshot struct {
 	InfluenceLog         []InfluenceEvent    `json:"influence_log"`           // Events in (snapshot_last_seq, end_last_seq]
 	AuthorityID          string              `json:"authority_id"`
 	PlayerCells          []PlayerCellData    `json:"player_cells"` // Current player positions (state, not events)
+	Food                 []FoodSnapshotData  `json:"food,omitempty"` // Authoritative food registry @ snapshot
 }

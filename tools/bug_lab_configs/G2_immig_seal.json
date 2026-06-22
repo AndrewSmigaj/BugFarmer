@@ -1,0 +1,23 @@
+{
+  "name": "G2_immig_seal",
+  "description": "IMMIG: immigration(20s) + SEALED + cap400 + C3. Contained pens kept stocked with fresh prey \u2014 the key test.",
+  "extends": "01_no_cull",
+  "species": {
+    "fly_common": {
+      "reproduce_cooldown": 18.0,
+      "breed_amount": 16.0
+    }
+  },
+  "lab": {
+    "caps": {
+      "fly_common": {
+        "spawn_interval": 20.0,
+        "max": 40
+      }
+    },
+    "seal_pens": true,
+    "max_pop": {
+      "fly_common": 400
+    }
+  }
+}

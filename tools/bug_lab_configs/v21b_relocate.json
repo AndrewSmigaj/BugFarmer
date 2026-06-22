@@ -1,0 +1,10 @@
+{
+  "name": "v21b_relocate",
+  "description": "First test of the RELOCATE mechanic (fly relocate_chance 0.15 / distance 22 / cooldown 200) — does a random break-contact jump let SOME fly swarms escape a wasp (lower fly d_predation, fewer total wipes) while others still get eaten? Same base as emergent2 (caps off, scarce litter, millipede throttle). sim_batch 6, half window.",
+  "flags": { "sim_batch": 6 },
+  "tuning": { "litter_regen_per_tick": 0.0005 },
+  "bug_spawning": { "species_caps": {
+    "fly_common": {"max_population":0}, "butterfly_meadow": {"max_population":0},
+    "wasp_common": {"max_population":0}, "centipede_garden": {"max_population":0},
+    "millipede": {"max_population":0}, "beetle_carrion": {"max_population":0} } }
+}

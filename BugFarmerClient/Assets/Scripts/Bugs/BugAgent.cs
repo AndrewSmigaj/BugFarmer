@@ -27,6 +27,11 @@ namespace BugFarmer.Bugs
         public string SwarmId;
         public string SpeciesId;
 
+        // DIAGNOSTIC ONLY (never hashed): provenance for the determinism re-root investigation —
+        // which global tick this client first created/positioned the bug, and via which path.
+        public long SpawnTick = -1;
+        public string SpawnSource = "?";
+
         // Spawn-time RNG (stateful, OK because runs once per bug)
         public DeterministicRandom Rng;
 
@@ -95,6 +100,7 @@ namespace BugFarmer.Bugs
             return CounterRng.RangeInt(_worldSeed, SwarmId, BugId, _currentTick, purposeId, min, max);
         }
 
+
         /// <summary>
         /// Counter-based random float [0,1) for simulation logic.
         /// Same inputs always produce same output - prevents desync from conditional branches.
@@ -106,6 +112,9 @@ namespace BugFarmer.Bugs
 
         // === Feed-at-food visual (deterministic) ===
         private int _landTicks; // >0 = landed (paused) on a food source
+        // Per-bug feed land/hold timer. History-dependent, so it MUST ride the snapshot (BugSampleData.land_ticks)
+        // or a bug mid-landing at snapshot re-roots with 0 and desyncs. See architecture_swarm_sync.md.
+        public int LandTicks { get => _landTicks; set => _landTicks = value; }
 
         private const float FeedVisualRadius = 2.5f; // centre within this of food => bugs engage
         private static readonly int LandDistSqr =

@@ -32,12 +32,17 @@ namespace BugFarmer.SyncHarness
         private const long OpZoneHandoff = 73;
         private const long OpZoneAuthority = 76;
         private const long OpZoneTickBroadcast = 78;
+        private const long OpWorldEnv = 91;
+        private const long OpGroundItemSpawn = 47;
 
         // Shared observer state (closed over by the message handler).
         private static readonly Stopwatch Sw = Stopwatch.StartNew();
         private static long _recvCount, _authTick = -1, _lastSeq = -1, _maxAuthTick = -1;
         private static long _maxInflSeq = -1, _minInflSeqPhase = long.MaxValue, _maxInflSeqPhase = -1;
         private static string _myUserId, _phase = "P1";
+        public static string MyUserId => _myUserId; // WorldModel matches the local player entity
+        private static IClient _client; private static ISession _session;
+        public static IClient Client => _client; public static ISession Session => _session; // scenarios re-enter zones
         private static bool _isAuthority, _loggedFirstInflThisPhase, _loggedStaleHigh;
 
         // Phase-1 collision-test observation
@@ -46,11 +51,19 @@ namespace BugFarmer.SyncHarness
         private static long _playerCellX = long.MinValue, _playerCellY = long.MinValue;
         private static long _playerMaxCellY = long.MinValue, _playerMinCellY = long.MaxValue;
         private static double _confirmedY = double.NaN;                         // server-confirmed centre Y (from cell events)
-        private static readonly Dictionary<string, (double x, double y, int count)> _swarmSpawn = new();    // id -> spawn centre+count (OpCode 20)
+        private static readonly Dictionary<string, (double x, double y, int count, string sp)> _swarmSpawn = new(); // id -> spawn centre+count+species (OpCode 20)
         private static readonly Dictionary<string, (double minx, double miny, double maxx, double maxy)> _swarmTgt = new(); // id -> SWARM_SET_TARGET bounds
         private static readonly List<string> _populationEvents = new();         // SWARM_SPLIT / SWARM_MERGE observed
-        private static readonly List<(long tick, int total)> _popSeries = new(); // population time-series (1 sample/sec)
+        private static readonly List<(long tick, Dictionary<string,int> bySpecies)> _popSeries = new(); // per-species population time-series
+        private static readonly SortedSet<string> _speciesSeen = new();          // all species ids seen (CSV columns)
         private static long _lastPopSampleTick = -1;
+        // Weather spans (OpCode 91 WorldEnv) for the chart overlay: rain/drought windows on the pop x-axis.
+        private static readonly List<(long start, long end, string kind)> _weatherSpans = new();
+        private static string _curWeather = "";                                  // current WeatherKind ("" = clear)
+        private static long _curWeatherStart = -1;
+        // Live carrion (dead_<bug> ground items): spawn (OpCode 47) adds, FOOD_CONSUMED/ITEM_ROTTED removes.
+        private static readonly HashSet<string> _liveCorpses = new();
+        private static readonly List<(long tick, int corpses)> _corpseSeries = new();
 
         private static async Task<int> Main(string[] args)
         {
@@ -65,8 +78,10 @@ namespace BugFarmer.SyncHarness
             Log($"connect {o.Host}:{o.Port} zone={o.Zone} duration={o.Duration}s reconnect={o.Reconnect} walk={o.Walk}");
 
             var client = new Client("http", o.Host, o.Port, o.Key) { Timeout = 10 };
+            _client = client;
             var deviceId = $"sim-{o.Tag}-{Guid.NewGuid():N}".Substring(0, 24);
             var session = await client.AuthenticateDeviceAsync(deviceId);
+            _session = session;
             _myUserId = session.UserId;
             Log($"authenticated user={session.UserId}");
 
@@ -79,6 +94,20 @@ namespace BugFarmer.SyncHarness
 
             // Phase 1
             var matchId = await Enter(client, socket, session, o.Zone);
+
+            // Scripted scenario mode: run actions + asserts, then exit with WorldModel.ExitCode.
+            if (!string.IsNullOrEmpty(o.Scenario))
+            {
+                var scn = Scenarios.Get(o.Scenario);
+                if (scn == null) { Log($"unknown scenario '{o.Scenario}'"); await socket.CloseAsync(); return 2; }
+                Log($"=== SCENARIO {o.Scenario} ===");
+                await scn.RunAsync(socket, matchId);
+                Summary();
+                await socket.CloseAsync();
+                Log($"=== scenario '{o.Scenario}' exit={WorldModel.ExitCode} ===");
+                return WorldModel.ExitCode;
+            }
+
             if (_walk != null) _ = DriveWalk(socket, matchId, _walk.Value); // fire-and-forget path drive
             await Observe(socket, o.Duration);
 
@@ -165,6 +194,9 @@ namespace BugFarmer.SyncHarness
             _recvCount++;
             try
             {
+                // Feed the scripted-client world-model (farm/inventory/entity opcodes; ignores the rest).
+                WorldModel.Apply(st.OpCode, Encoding.UTF8.GetString(st.State));
+
                 if (st.OpCode == OpZoneTickBroadcast || st.OpCode == OpZoneAuthority)
                 {
                     using var doc = JsonDocument.Parse(Encoding.UTF8.GetString(st.State));
@@ -174,9 +206,11 @@ namespace BugFarmer.SyncHarness
                     if (_authTick >= _lastPopSampleTick + 10)
                     {
                         _lastPopSampleTick = _authTick;
-                        int total = 0;
-                        foreach (var kv in _swarmSpawn) total += kv.Value.count;
-                        _popSeries.Add((_authTick, total));
+                        var bySpecies = new Dictionary<string,int>();
+                        foreach (var kv in _swarmSpawn)
+                            bySpecies[kv.Value.sp] = bySpecies.GetValueOrDefault(kv.Value.sp) + kv.Value.count;
+                        _popSeries.Add((_authTick, bySpecies));
+                        _corpseSeries.Add((_authTick, _liveCorpses.Count)); // live dead_<bug> carrion on the ground
                     }
                     if (root.TryGetProperty("last_event_seq", out var ls)) _lastSeq = ls.GetInt64();
                     if (st.OpCode == OpZoneAuthority && root.TryGetProperty("authority_id", out var aid))
@@ -197,10 +231,36 @@ namespace BugFarmer.SyncHarness
                             double x = s.TryGetProperty("x", out var xp) ? xp.GetDouble() : 0;
                             double y = s.TryGetProperty("y", out var yp) ? yp.GetDouble() : 0;
                             int cnt = s.TryGetProperty("count", out var cp) ? cp.GetInt32() : 0;
+                            string sp = s.TryGetProperty("species_id", out var spp) ? (spp.GetString() ?? "?") : "?";
+                            _speciesSeen.Add(sp);
                             if (!_swarmSpawn.ContainsKey(id))
-                                Log($"[{_phase}] SWARM {id} center=({x:F1},{y:F1}) count={cnt}");
-                            _swarmSpawn[id] = (x, y, cnt);
+                                Log($"[{_phase}] SWARM {id} center=({x:F1},{y:F1}) count={cnt} sp={sp}");
+                            _swarmSpawn[id] = (x, y, cnt, sp);
                         }
+                }
+                else if (st.OpCode == OpGroundItemSpawn)
+                {
+                    // Track live carrion: a dead_<bug> dropped on the ground (old-age/starvation death).
+                    using var doc = JsonDocument.Parse(Encoding.UTF8.GetString(st.State));
+                    var r = doc.RootElement;
+                    string itemType = r.TryGetProperty("item_type", out var itp) ? (itp.GetString() ?? "") : "";
+                    string itemId = r.TryGetProperty("id", out var idp2) ? (idp2.GetString() ?? "") : "";
+                    if (itemType.StartsWith("dead_") && itemId != "") _liveCorpses.Add(itemId);
+                }
+                else if (st.OpCode == OpWorldEnv)
+                {
+                    // WorldEnv (weather/time-of-day). Record rain/drought windows on the population x-axis
+                    // (_authTick) so the chart can shade them against the population curves.
+                    using var doc = JsonDocument.Parse(Encoding.UTF8.GetString(st.State));
+                    string kind = doc.RootElement.TryGetProperty("weather", out var wp) ? (wp.GetString() ?? "") : "";
+                    if (kind != _curWeather)
+                    {
+                        if (_curWeather != "" && _curWeatherStart >= 0)
+                            _weatherSpans.Add((_curWeatherStart, _authTick, _curWeather)); // close the open span
+                        _curWeather = kind;
+                        _curWeatherStart = kind != "" ? _authTick : -1;
+                        Log($"[{_phase}] WEATHER -> {(kind == "" ? "clear" : kind)} @authTick={_authTick}");
+                    }
                 }
                 else if (st.OpCode == OpInfluenceBroadcast)
                 {
@@ -247,25 +307,40 @@ namespace BugFarmer.SyncHarness
 
                                 // Maintain live per-swarm counts for the population CSV
                                 if (type == "SWARM_REPRODUCED" && _swarmSpawn.TryGetValue(srcId, out var rs))
-                                    _swarmSpawn[srcId] = (rs.x, rs.y, rs.count + (int)cnt);
+                                    _swarmSpawn[srcId] = (rs.x, rs.y, rs.count + (int)cnt, rs.sp);
                                 else if (type == "SWARM_SPLIT")
                                 {
-                                    if (_swarmSpawn.TryGetValue(srcId, out var ps))
-                                        _swarmSpawn[srcId] = (ps.x, ps.y, (int)pcnt);
+                                    string sp = _swarmSpawn.TryGetValue(srcId, out var ps) ? ps.sp : "?";
+                                    if (_swarmSpawn.TryGetValue(srcId, out var ps2))
+                                        _swarmSpawn[srcId] = (ps2.x, ps2.y, (int)pcnt, ps2.sp);
                                     if (!_swarmSpawn.ContainsKey(dstId))
-                                        _swarmSpawn[dstId] = (0, 0, (int)cnt);
+                                        _swarmSpawn[dstId] = (0, 0, (int)cnt, sp); // child inherits parent species
                                 }
                                 else if (type == "SWARM_MERGE")
                                 {
                                     if (_swarmSpawn.TryGetValue(srcId, out var ss) && _swarmSpawn.TryGetValue(dstId, out var ab))
-                                        _swarmSpawn[srcId] = (ss.x, ss.y, ss.count + ab.count);
+                                        _swarmSpawn[srcId] = (ss.x, ss.y, ss.count + ab.count, ss.sp);
                                     _swarmSpawn.Remove(dstId);
                                 }
+                            }
+                            else if (type == "BUG_REMOVED")
+                            {
+                                // A death/catch removes ONE bug; without this the population CSV drifts
+                                // UPWARD (births counted, deaths ignored) — wrong for ecology tuning.
+                                string srcId = e.TryGetProperty("swarm_id", out var brid) ? brid.GetString() : "?";
+                                if (_swarmSpawn.TryGetValue(srcId, out var rs))
+                                    _swarmSpawn[srcId] = (rs.x, rs.y, Math.Max(0, rs.count - 1), rs.sp);
                             }
                             else if (type == "FOOD_CONSUMED" || type == "ITEM_ROTTED")
                             {
                                 string fid = e.TryGetProperty("food_id", out var ff) ? ff.GetString() : "?";
                                 long lvl = e.TryGetProperty("level", out var lv) ? lv.GetInt64() : -1;
+                                // Live carrion via the ZONE-WIDE food ledger (OpCode 47 is per-chunk and the
+                                // harness isn't subscribed to the pens). ITEM_ROTTED registers a carcass as
+                                // food (it appears); FOOD_CONSUMED removes it (beetle ate it or it expired).
+                                // Carcass ids are "item_carcass_*"; fruit/other food ids are ignored.
+                                if (type == "ITEM_ROTTED" && fid.StartsWith("item_carcass_")) _liveCorpses.Add(fid);
+                                else if (type == "FOOD_CONSUMED") _liveCorpses.Remove(fid);
                                 Log($"[{_phase}] {type}: {fid} level={lvl} (seq={s})");
                             }
                         }
@@ -342,12 +417,35 @@ namespace BugFarmer.SyncHarness
             }
             if (_popSeries.Count > 0)
             {
-                // CSV for tools/plot_fly_counts.py
+                // Per-species CSV for tools/plot_fly_counts.py: tick,<species…>,total_bugs
                 var csvPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "fly_counts.csv");
-                var sb = new StringBuilder("tick,total_bugs\n");
-                foreach (var (tick, total) in _popSeries) sb.Append(tick).Append(',').Append(total).Append('\n');
+                var cols = new List<string>(_speciesSeen);
+                var sb = new StringBuilder("tick,").Append(string.Join(",", cols)).Append(",total_bugs\n");
+                foreach (var (tick, bySpecies) in _popSeries)
+                {
+                    sb.Append(tick);
+                    int total = 0;
+                    foreach (var c in cols) { int v = bySpecies.GetValueOrDefault(c); total += v; sb.Append(',').Append(v); }
+                    sb.Append(',').Append(total).Append('\n');
+                }
                 System.IO.File.WriteAllText(csvPath, sb.ToString());
                 Log($"POPULATION series: {_popSeries.Count} samples -> {csvPath} (plot with tools/plot_fly_counts.py)");
+
+                // Weather spans for the chart overlay (rain/drought windows on the same tick x-axis).
+                if (_curWeather != "" && _curWeatherStart >= 0)
+                    _weatherSpans.Add((_curWeatherStart, _authTick, _curWeather)); // close the still-open span
+                var wPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "fly_weather.csv");
+                var wb = new StringBuilder("tick_start,tick_end,kind\n");
+                foreach (var (s0, s1, kind) in _weatherSpans) wb.Append(s0).Append(',').Append(s1).Append(',').Append(kind).Append('\n');
+                System.IO.File.WriteAllText(wPath, wb.ToString());
+                Log($"WEATHER spans: {_weatherSpans.Count} -> {wPath}");
+
+                // Carrion (dead_<bug>) on the ground over time — the decomposer's food supply vs uptake.
+                var cPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "fly_corpses.csv");
+                var cb = new StringBuilder("tick,corpses\n");
+                foreach (var (tick, corpses) in _corpseSeries) cb.Append(tick).Append(',').Append(corpses).Append('\n');
+                System.IO.File.WriteAllText(cPath, cb.ToString());
+                Log($"CORPSE series: {_corpseSeries.Count} samples -> {cPath}");
             }
         }
 
@@ -355,7 +453,7 @@ namespace BugFarmer.SyncHarness
 
         private sealed class Args
         {
-            public string Host = "127.0.0.1", Key = "defaultkey", Zone = "village_21", Tag = "p1", Walk = "";
+            public string Host = "127.0.0.1", Key = "defaultkey", Zone = "village_21", Tag = "p1", Walk = "", Scenario = "";
             public int Port = 7350, Duration = 15, Chunks = 8;
             public bool Reconnect;
             public static Args Parse(string[] a)
@@ -373,6 +471,7 @@ namespace BugFarmer.SyncHarness
                         case "--tag": o.Tag = a[++i]; break;
                         case "--walk": o.Walk = a[++i]; break;
                         case "--chunks": o.Chunks = int.Parse(a[++i]); break;
+                        case "--scenario": o.Scenario = a[++i]; break;
                         case "--reconnect": o.Reconnect = true; break;
                     }
                 }

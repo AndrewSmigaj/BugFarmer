@@ -1,0 +1,13 @@
+{
+  "name": "A2_reach_vision_hi",
+  "description": "REACH: large vision so predators see prey across the whole pen (cent 13\u219226, wasp 16\u219232).",
+  "extends": "01_no_cull",
+  "species": {
+    "centipede_garden": {
+      "vision_range": 26
+    },
+    "wasp_common": {
+      "vision_range": 32
+    }
+  }
+}

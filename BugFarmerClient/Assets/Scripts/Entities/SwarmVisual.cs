@@ -57,6 +57,10 @@ namespace BugFarmer.Entities
         public string SwarmId { get; private set; }
         public string SpeciesId { get; private set; }
         public int Count => _bugs.Count;
+
+        // DIAGNOSTIC (leg/center trace): the center bug AI used this tick, and the metadata fallback center.
+        public FixedPoint2 SimCenter => _simCenter;
+        public FixedPoint2 FallbackCenter => _fallbackCenter;
         public float Radius => _radius;
         public bool IsWaitingForSnapshot => _waitingForSnapshot;
 
@@ -165,6 +169,10 @@ namespace BugFarmer.Entities
             // Create agent - MovementFactory.CreateMovement(SpeciesId) is called internally
             // fly → BrownianMovement, butterfly → GlidingMovement, etc.
             var agent = new BugAgent(worldSeed, SwarmId, SpeciesId, bugId, startPos);
+            // DIAGNOSTIC (re-root investigation): stamp when/how this client first created the bug.
+            var sm = SwarmManager.Instance;
+            agent.SpawnTick = sm != null ? sm.CurrentSimTick : -1;
+            agent.SpawnSource = sm != null ? sm.SpawnSourceTag : "?";
 
             // Get or create visual
             var visual = GetSpriteFromPool();
@@ -316,6 +324,7 @@ namespace BugFarmer.Entities
         /// <param name="players">Player targets from InfluenceManager (deterministic, sorted by playerId)</param>
         public void SimulateTick(long tick, List<PlayerTarget> players)
         {
+            using var _perf = PerfProfiler.Sample("Sim.SwarmTick");
             if (!WorldSeedProvider.Instance?.IsInitialized ?? true)
                 return;
 
@@ -653,7 +662,11 @@ namespace BugFarmer.Entities
                 intent_target_x = movementState.IntentTargetX,
                 intent_target_y = movementState.IntentTargetY,
                 current_dir_x = movementState.CurrentDirX,
-                current_dir_y = movementState.CurrentDirY
+                current_dir_y = movementState.CurrentDirY,
+                land_ticks = agent.LandTicks, // feed land/hold timer (history-dependent — must ride snapshot)
+                // DIAGNOSTIC (re-root investigation)
+                spawn_tick = agent.SpawnTick,
+                spawn_source = agent.SpawnSource
             };
         }
 
@@ -668,6 +681,17 @@ namespace BugFarmer.Entities
                 result.Add(CreateBugSampleData(kvp.Value, kvp.Key));
             }
             return result.ToArray();
+        }
+
+        /// <summary>
+        /// Phase 2 predation strike: iterate ALIVE bugs as (bugId, fixed-point position) in ASCENDING
+        /// bug-id order — deterministic so any client (e.g. a new authority after handoff) selects the
+        /// same victim. _bugs is alive-only (RemoveBugsById deletes from it).
+        /// </summary>
+        public IEnumerable<(int bugId, FixedPoint2 pos)> GetAllBugsAliveSorted()
+        {
+            foreach (var bugId in _bugs.Keys.OrderBy(id => id))
+                yield return (bugId, _bugs[bugId].Agent.Position);
         }
 
         /// <summary>
@@ -698,6 +722,8 @@ namespace BugFarmer.Entities
                         Y = new FixedPoint { Value = data.vy }
                     };
                     agent.Rng.State = data.rng_state;
+                    agent.LandTicks = data.land_ticks; // restore feed land/hold timer (else feeding bugs desync)
+                    agent.SpawnSource = "snapshotApply"; // DIAGNOSTIC: got authoritative per-bug state
 
                     // Behavior state
                     agent.CurrentBehavior = string.IsNullOrEmpty(data.behavior) ? "wander" : data.behavior;

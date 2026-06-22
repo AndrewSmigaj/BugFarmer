@@ -39,6 +39,31 @@ summary prints `maxAuthTick`, `recvCount`, `gaps`, and a per-opcode tally
 `static` (no spawn/merge/split). Scale toward production load with `--initial N` there, then point
 the harness at it. See that script's `--help`.
 
+## Scripted scenarios (`--scenario`) — a full headless client
+
+Beyond observing, the harness can now **act like a player** and **assert** on world state — it sends the
+exact C→S messages the Unity client sends (place/hoe/plant/break/deposit/equip/set-home/catch) and parses
+the farm/inventory S→C messages into a world-model. This makes autonomous end-to-end tests possible with
+no Unity. The send API is `Actions.cs`, the received-state + asserts are `WorldModel.cs`, and tests are
+`IScenario` classes in `Scenarios.cs` (register a new one in `Scenarios.Get`). The process exit code is
+`WorldModel.ExitCode` (0 = all asserts passed). A no-character join already has the starting kit
+(bench/fence/hoe/seeds), so a scenario can build a farm with zero setup.
+
+```bash
+dotnet run -- --scenario farm-build  --zone sim_test   # till+plant+place bench/fence, then leave
+dotnet run -- --scenario farm-verify --zone sim_test   # rejoin + assert it all restored (exit 1 on fail)
+```
+
+**Zone/farm-persistence regression test** (one command, fully autonomous):
+
+```bash
+bash tools/harness_persist_test.sh     # wipe → restart → build → restart → verify → PASS/FAIL
+```
+
+It builds a farm headlessly, forces a real server restart (`--force-recreate`, which clears the
+in-memory match so the zone must reload from storage), rejoins, and asserts the bench/fence/tilled-soil/
+crop + the bug population all came back. This is the farm-modification check the observer couldn't do.
+
 ## Finding (2026-06-04)
 
 Both `sim_test` (1 swarm) and `village_21` (~40 swarms, full dynamics) ran hundreds of ticks with

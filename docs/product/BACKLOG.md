@@ -6,6 +6,215 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Testing backlog (deferred test coverage — not blocking)
+- **Cross-zone determinism check**: a player leaves a zone and re-enters; assert the bug-sim STATE HASH
+  is identical across the leave/join (same bug positions/phase) — i.e. the swap didn't perturb the
+  deterministic tick. Extend the sync-harness `crosszone` scenario to capture + compare zone hashes
+  before/after. (The crossing is *designed* to be determinism-inert; this proves it.)
+
+## Now — Bug ecology / farming (livestock loop on a living-ecosystem engine)
+Design of record: [bug_ecology_plan.md](../brainstorms/ecology/bug_ecology_plan.md). Phased build P0–P11
+(P1 Bug Lab DONE). **Verify every sim-touching phase with the `test-changes` skill** (Go tests +
+sync-harness + the determinism / "all players in sync" checks — the testing methodology is now captured as a
+skill so it stops getting lost between sessions).
+The **SERVER ecology is built + verified** (Go tests + 6× headless lab + per-species charts in
+`tools/_generated/ecology_charts/`). The living system = **depletable food → boom-bust → the Director →
+(future) the Ecologist restores → progression**. Done:
+- **Visible breeding broods** — flies/butterflies lay eggs into a brood (compost / rotten-fruit maggot pile /
+  milkweed) that matures + hatches (`entities/brood.go`, `world/brood.go`).
+- **Natural death + carcass recycle** (per-bug `DeathTick`, `dead_<species>`, millipede→compost).
+- **Hard `max_population` crash-guard** (per species per zone; the only guaranteed bound — food is
+  player-controlled, so it can't be the guard).
+- **Depletable food** — flower `ForagePoolState` nectar + milkweed `HostPlantState` (deplete + regrow).
+- **Starvation death** (`StarveTimer`/`processStarvation`) — the bust.
+- **The Ecology Director** (`world/ecology_director.go`) — per-species bands: re-seed below `min_population`,
+  cull above `cull_at` (release `cull_with` predator else overcrowding cull). The oscillation engine + the
+  universal "add a layer when out of range" lever.
+- **Test sim-speed control** (`SimRate`/`call_rate`, 6×, balance-neutral) + **per-species population graphs**.
+- Design of record: see architecture_farming.md "Living ecology — population dynamics" + the roadmap plan.
+
+### Phase W2 — Cost profiler + perf-first rebalance (DONE 2026-06-19)
+Built the full-stack bug **cost profiler** (measure before optimizing) + rebalanced village_21_B to fix the
+~1000-bug lag. All committed-ready (see ecology_tuning_log.md 2026-06-19 + the plan doc).
+- **Profiler:** server `PERFSTATS`/`PERFSYS` (per-species CPU by sub-phase + leg counts + global passes +
+  broadcast bytes; gated by zone `profile` flag; soft/never-hashed — `world/profiler.go`), `tools/plot_perf.py`,
+  `run_config.py` wiring, and a client **F7 overlay + Unity-Profiler markers** (`Util/PerfProfiler.cs`,
+  `DebugOverlay`). **Finding:** `FindNearbyFood` dominates server CPU (butterfly 11.7s/day); the predicted
+  O(S²) merge is negligible (5ms/day).
+- **Rebalance (baked):** fly/butterfly 3× swarm size; millipede+beetle category→swarm + brood-gate on
+  `EggSpriteID` (detritivores instant-grow+merge); tuned to ballpark bands. **Win: legs 5.9→1.1 MB/day,
+  butterfly cpu_food 11.7s→~0.5s, swarms 68→20 — lag gone.**
+- **Follow-ups surfaced (NOT done — structural, not tunable):**
+  - **[PERF, high] FindNearbyFood spatial index** — bucket `GroundItems`/`Stations` by chunk; route the
+    food query + `nearestPredator/PreySwarm` + merge through it (O(S·I)→O(S·k)). The profiler-proven #1.
+  - **[PERF] Chunk-scoped broadcasts = per-chunk-frontier redesign** — NOT safe routing (the client gate
+    `HasAllEventsUpTo` needs a contiguous global seq stream; dropping a chunk's legs stalls it). Per-chunk
+    seq+watermark+gating+handoff. Gate behind the profiler showing the global stream is still the bottleneck.
+  - **[ECO] beetle carrion supply** — beetle stuck ~3 (carrion-starved); needs distributed carrion sources
+    (zone change), not a breeding param.
+  - **[ECO] wasp prey base** — stable ~16; reaches 30-50 only if fly settles higher.
+  - **[ECO/Go] centipede kills→breeding conversion** — pinned ~4 across two breeding-lever runs; needs a Go
+    fix (it can't convert kills to offspring), not tuning.
+
+### Phase 4c — TUNING RIG (built + committed) + the sweep (in progress)
+The ecology is structurally complete but UNTUNED; targets are the CENTERS of an oscillation (boom-bust
+for ecologist gameplay), NOT flat lines: **fly 100, butterfly 100, wasp/centipede/beetle/millipede 30**.
+Two acceptance criteria/species — **oscillates** (visible amplitude/period) + **self-maintained** (troughs
+above the re-seed floor → `b_reseed` births ≈ 0). The RIG (all committed, see `ecology_parameters.md`):
+- **Tick batching** (`sim_batch`) → 48× runs; **tunable consts** → `data/ecology_tuning.json` (`Tuning`,
+  byte-identical defaults); **interaction-log telemetry** (`ECOSTATS`/`PREDLOG` → `plot_interactions.py`,
+  births-by-source / deaths-by-cause / predation matrix); **config system** (`tools/bug_lab_configs/` +
+  `run_config.py` snapshot→apply→run→chart→restore + `compare_configs.py` scoring).
+- **40-run sweep (3 batches, configs in `tools/bug_lab_configs/`, charts in `_generated/ecology_charts/`):**
+  - **Harness reliability fix (infra):** the sweeps exposed a real bug — Nakama's `socket.outgoing_queue_size`
+    (1024) overflowed on the whole-zone chunk-subscribe burst → server closed the socket → runs froze (no
+    CSV). Raised to **8192** (`nakama/data/local.yml`). Also hardened `run_config.py` (retry + per-run log
+    isolation so `plot_interactions` can't read a prior run's ECOSTATS).
+  - **SOLVED ✅ fly → 100:** `C3` lever = faster fly breeding (`reproduce_cooldown` 30→18, `breed_amount`
+    10→16). Oscillating, 0% re-seed.
+  - **SOLVED ✅ butterfly → ~90:** robust across nearly every config (host/nectar-limited, self-maintained).
+  - **SOLVED ✅ centipede → 30** (the breakthrough): the predator FLOOR was **structural, not behavioral** —
+    proven because NO predator/prey/food parameter (vision, speed, strike, feed, breed-bar, lifespan, decay)
+    moved it across 30 runs (at fly=100 GLOBAL the predation log showed `centipede→fly = 0 kills` — its pen
+    had no prey; a predator eats its small fly seed to extinction in ~3 days then starves = small-system
+    predator-prey collapse). **Fix = prey immigration** (`fly_common` `spawn_interval` 999999→20s; since
+    `spawnSwarmForSpecies` picks a random spawn area, fresh flies trickle into every predator pen). With
+    sustained prey the centipede hunts→breeds→reaches 30, **0% re-seed, oscillating** (configs `G4`-`G7`).
+  - **PARTIAL ◐ beetle ~12, millipede ~18:** both now self-maintained (0% re-seed) but below the 30 target —
+    need higher caps + more food (beetle: corpse supply / cap 20→40; millipede: more `leaf_litter`).
+  - **SOLVED ✅ wasp (2026-06-18, the living-zone redesign):** the frozen-wasp holdout was STRUCTURAL —
+    nestless free-spawned/reseeded wasps (sterile, can't deposit brood) + dead colonies going permanently
+    dormant. Fix = **wasps nest-only** (skip nest species in every free-spawn path → zero nestless wasps)
+    + **prey-gated nest recovery** (a brood-exhausted colony re-founds a fresh patrol when live prey is
+    within home range, else WAITS) + **6 nests spread to woods/corners each near a fly source**. Verified:
+    wasp pop sustained ENTIRELY by `b_nest` (hatches + recoveries), `b_reseed=0 b_spawn=0`, colonies
+    re-found as flies boom (run v21b_nocaps, seed 1337). Remaining = oscillation-band tuning, not structure.
+  - **Open balance items:** immigration overshoots fly to ~390 — dial `spawn_interval`/cap so fly sits at
+    100 while still feeding predators; then re-add the Director culls as far guardrails (`G10` showed culls
+    reshape via re-seed, not self-maintenance — keep them last-resort).
+  - **Best config so far: `G6_immig_breedbar` / `G4_immig_reach`** (centipede PASS + decomposers
+    self-maintained); fly/wasp still need the two balance items above.
+  - **→ Next (post living-zone redesign, 2026-06-18):** (1) longer runs (sim_batch>2) to watch a full fly
+    boom→bust→wasp-dip→recovery oscillation and judge the bands; (2) dial fly initial/food (boomed to ~198);
+    (3) beetle/centipede establishment (still reseed-reliant); (4) re-confirm same-seed reproducibility gate.
+
+**Up next (the roadmap remainder, mostly client → needs the Unity Editor):**
+### Ecology mechanic fixes (from the village_21_lab control campaign, 2026-06-18)
+The 15-run controllability campaign (`docs/product/ecology_control_campaign.md`) proved two species are
+STUCK for MECHANIC reasons, not tunable by any param:
+- **Make `leaf_litter` DEPLETABLE** (a ForagePool like milkweed/nectar, deplete + regrow) — millipede's only
+  food is non-depletable flora, so it's "food-limited" by infinite food → pins flat-high (~130) and never
+  oscillates. Depletable litter makes it genuinely food-bounded → it'll sit in a real oscillating band.
+- **Buff centipede kills→breeding CONVERSION** — centipede hunts fine (144 kills/run) but can't convert
+  kills to population (stuck at the founding floor ~4 under every param). Likely `predator_breed_satiation`
+  too high / `max_swarm_size` 3 too small to accumulate / well-fed-split too slow. A ground-predator
+  breeding pass would let it climb. (Tuning vision/position/seed-count all FAILED — it's a breeding bottleneck.)
+- **Brood CLIENT layer** — right-click a source → eggs/maggots panel + on-world maggot-pile/egg visuals + sprites.
+- **Plant repopulation** — player planting (seeds from destroying milkweed/flowers) + rare bounded natural spread.
+- **Ecologist meta** — the Ecology TAB dashboard (per-species graph + band status + tasks, reusing the same
+  per-species data), restorative TASKS (the Director's player-facing tier: a task + grace window before the
+  auto-event fires), and progression (CharacterSave XP/unlocks).
+- (Optional) natural predator-prey oscillator — the Director's predator pulse already covers the culling.
+
+### Bugs at zone boundaries (owner has ideas incl. heuristics)
+- **Problem:** bug swarms wander to / spawn near the zone edge (x|y → 0 or 256) — half a swarm's
+  habitat falls off the map, predators chase prey that "leaks" past the boundary, and edge clusters
+  read badly on the bug-map. The sim treats the 256×256 box as a hard wall with no edge behavior.
+- **Direction (owner):** handle this with **heuristics** rather than a hard clamp — e.g. soft
+  repulsion / reflect wander targets away from the border, weight spawn-area picks toward the interior,
+  keep nest home-ranges off the edge, possibly hand swarms that cross to the neighbor zone (cross-zone
+  movement already exists for players). Owner to detail the specific heuristics.
+- **Why now:** the spatial multi-region seeding (below) puts clusters near the NE/NW corners, so edge
+  behavior starts to matter; capture it before it bites the ecology tuning.
+
+## Done 2026-06-16 — cross-zone movement (walk off a zone edge → hidden swap into the neighbor)
+Walk to a zone edge that has an authored neighbor → quick fade → tear down zone A → join the neighbor at
+its matching edge → fade back. Each zone is an independent Nakama match/sync domain, so a crossing is a
+normal leave-A/join-B (zero cross-zone determinism surface; player position is not in the sim hash).
+- **Adjacency as data**: `ZoneConfig.Neighbors {north/south/east/west}` (zone.go); `world_enter` returns
+  the entered zone's neighbors (rpc/world.go). Authored pair: `village_21_B` (south) ↔ `underground_passages_31` (north).
+- **Server entry-override**: join metadata `entry_x/entry_y` → `MatchJoinAttempt` validates (clamp +
+  anti-forge: within 4 cells of an edge) → `PendingEntryPositions` → `MatchJoin` places the player at the
+  neighbor's matching edge (overrides the char-save spawn). `PlayerSpawn` (102) broadcasts it.
+- **Client**: `CrossZoneController` edge-detect + `ScreenFade` cover; `WorldManager.ResetForZoneSwap`
+  tears down entities/swarms/influence/tiles (zones share coords 0..255 — avoids ghosting); match-id guard
+  on `HandleMatchState`. **Authoritative entry placement**: the swap sets the player position itself
+  (`SetLocalPlayerSpawn(ex,ey)`) — position is client-authoritative and the join-time `PlayerSpawn` races
+  with the `JoinMatchAsync` `CurrentMatch` assignment (gets dropped), so the swap can't depend on it;
+  movement-send suppressed while `InputLocked`; entry insets off the seam (Lo=4/Hi=251).
+- **Content**: a walkable grass strip across the mine's north edge (entry apron) so a crossing lands on
+  walkable ground, not the rock wall.
+- **Verified**: sync-harness `crosszone` scenario (server entry-override, headless) + in-Editor rapid
+  up→down crossing — root-caused a stale-snap race from the Editor.log and fixed it client-side.
+
+## Done 2026-06-16 — zone / farm persistence (farm + bug population survive a server restart)
+A zone's player-built farm AND its cultivated bug population now persist to Nakama storage and restore on
+match (re)create — previously everything evaporated on restart / `MatchTerminate`. NEW
+`world/zone_persist.go` (mirrors `character_persist.go`): `zone_state` collection, `ZoneStateKey(zone,
+instance)` (forward-compatible with future private plots), per-chunk delta records + a `:meta` index +
+a `:swarms` population record.
+- **Farm** = a DELTA on the authored base: per-chunk `CellEdit`s (ground/occupant, semantic diff so authored
+  formatting never false-positives; `OccSet` encodes a broken authored occupant) + the crops/trees/
+  containers/stations/craft-stations/ground-items anchored in the chunk. Applied in `handleChunkSubscribe`
+  BEFORE the init scans (which randomize untracked trees). Prefetched once at `MatchInit` (no per-subscribe I/O).
+- **Bugs** = minimal per-swarm descriptors (species/pos/count/phase/satiation/breeding); restored as CLEAN
+  swarms via `spawnSwarmAt`+`InitializeBugIDs` (skips `spawnInitialSwarms`). Determinism-safe: the server is
+  the swarm authority, restored swarms enter at the cold-start boundary identical to fresh spawns, food
+  re-discovers via `FindNearbyFood`. Only `FruitTreeState.LastFallTick` needed a tick-reset clamp (crops are
+  water-driven).
+- **Triggers:** prefetch on `MatchInit`; save on transition-to-empty (async) + `MatchTerminate` (sync,
+  replaced the old TODO) + a 10-min autosave while occupied. Determinism surface = zero (farm not hashed;
+  swarms enter cold; tick loop/ledger/food-registry untouched).
+- **Verified autonomously** via the sync-harness: join `village_21` → leave wrote 59 swarms + chunk records
+  (`cells:0` = no false positives, authored base safe); restart → `restored 59 swarm(s)` + frontier-gated
+  sync ran clean (no RECEPTION GAP, ticks advanced) → the determinism check passes; merge-preserve keeps
+  unvisited chunks; zero panics. (Farm-modification visual confirmation — placed objects/crops/chests across a
+  restart — is the one remaining check, needs the Unity client.)
+- **Deferred (separate feature):** the two-tier-LOD "empty-zone ecology" — bugs *evolving while you're away*
+  in zones with no players. This milestone preserves state as-of-last-player, not active offline simulation.
+
+## Done 2026-06-16 (pending Editor compile) — Terraria-style characters + per-character persistence
+An account (one device-auth `userID`) owns multiple **characters**, each persisting independently
+(inventory, equipment, coins, unlocked slots, appearance, position). Pick a character → join a world
+with it → it persists for that character. Determinism-safe: character data is NOT in the bug-sim
+state hash; save/load happen only at the MatchJoin/MatchLeave boundaries.
+
+**Done + server-rebuild-verified (Go compiles in the Docker builder):**
+- **Storage model** `world/character_persist.go`: `CharacterSave`/`Appearance`/`CharacterSummary`,
+  `applyStartingKit` (extracted from `AddPlayer` — single source of truth for the starting kit),
+  `DefaultCharacterSave`/`applyCharacterSave`/`buildCharacterSave` + load/write/list/delete helpers.
+  Collection `character/<charID>`, user-owned, `PermissionWrite:0` (server-only — clients can't forge).
+- **RPCs** `rpc/character.go`: `character_list` / `character_create` (name 1-20, max 8/account, unique
+  name, appearance defaults) / `character_delete`; registered in `main.go`.
+- **charID bridge**: client `JoinMatchAsync(matchId, {char_id})` → `MatchJoinAttempt` validates
+  ownership + stashes `WorldState.PendingCharacters[userID]` → `MatchJoin` consumes it, overlays the
+  save, picks the spawn (first login = zone spawn_point + `IntroSeen`; else last-logout pos if same
+  zone). `MatchLeave` builds the save + writes it async. No-char joins (sync-harness) still work.
+
+**Done, NEEDS an in-Editor C# compile pass (written without a local Unity compiler):**
+- **Char select UI** `UI/CharacterSelectPanel.cs` (own top canvas, code-built like UIBootstrap): lists
+  characters, Create (name + class/hair/skin picker w/ live paper-doll preview), Delete; on pick stores
+  `CharacterSession` + hides → reveals WorldMenu. DTOs in `NetworkMessages.cs`; `WorldMenu.Play` gated.
+- **`EnterWorld(zone, charID)`** passes the join metadata. **Local appearance** renders the chosen
+  class/hair/skin (`PlayerController.RebuildOutfit` reads `CharacterSession`).
+- **Bed = set-home + respawn + first-login intro** (Part E): the existing beds already carry
+  `interaction_type:"sleep"` (added it to canopy+bunk too; republished) — NO new art. `OpCodeSetHome`
+  (100) + `handleSetHome` (validates a sleepable occupant in range, sets `PlayerState.Home*`, saves
+  async) + `SetHomeAck` (101) toast. `handlers_player.go` respawn now wakes at the bed's home when set
+  in-zone. First-login intro rides a new `intro` flag on `FullInventorySync` (no join race) →
+  `IntroOverlay`. Client `SleepController` routes the bed right-click (PlayerInputRouter chain 1c).
+
+- **Remote appearance + nameplates** (Part F remote): a dedicated `PlayerInfo` snapshot message
+  (`OpCode 103`, sent once on join — NOT the per-tick `EntityData`, per that struct's own comment) carries
+  each player's class/hair/skin + name. Server emits a roster→joiner + the joiner→everyone in `MatchJoin`;
+  client `EntityManager._playerInfo` dict applies it to a live `RemoteEntity` or on spawn (handles
+  ordering). `RemoteEntity` gained a shared `RecomposeOutfit()` (kills the hardcoded merchant/blonde;
+  armor + appearance converge) + a world-space `TextMeshPro` nameplate (LiberationSans SDF, Occupants
+  layer order 960, above the head). Display-only — zero determinism surface.
+
+**Whole character system is now feature-complete** — pending the in-Editor C# compile pass (the client
+batch was written without a local Unity compiler) + a nameplate fontSize/scale visual tweak.
+
 ## Done 2026-06-14 — crafting system (Stage 1) + item containers
 Recipes-as-data + a unified craft model (no quick/slow split — one `process_ticks` speed knob), item
 containers, and the determinism boundary. See [architecture_crafting.md](architecture_crafting.md)
@@ -84,6 +293,46 @@ reconnect → frozen client, live server. Fix (client-only, no `.so`): `SetStack
 in UIBootstrap; a default-off `DebugConfig.Verbose` gating the hot Debug.Log sites + DebugFileLogger
 internally; removed the defeated tick-gate throttle (canAdvance toggles every tick); plus an
 unrelated `HotbarUI.Start` NRE guard (leftover-scene null `slots`). **Verify pending: in-Editor soak.**
+
+## Done (recent) — DETERMINISTIC SPAWNS + INDIVIDUAL-FLY PREDATION (deterministic lockstep)
+- **Phase 1 — deterministic swarm creation:** swarms are now CREATED at a deterministic, cross-client-agreed
+  tick (new `SWARM_SPAWNED` ledger event + first-joiner/reconnect `ZoneAuthority` seed-baseline + the
+  late-join snapshot); `SwarmUpdate` no longer creates swarms (creating on-receipt at an arbitrary local
+  tick was the pinned spawn-tick desync). Proven: the staggered late-join harness (`tools/run_sync_latejoin.sh`)
+  shows 19,074/19,074 shared-bug states bit-identical across a late join with runtime spawns.
+- **Phase 2 — individual-fly predation:** hornets/wasps/centipedes now strike the actual NEAREST INDIVIDUAL
+  fly by its position (not the swarm centre). The hunt economy stays server-side; the AUTHORITY client (which
+  has bit-identical per-bug positions) computes the strike and reports victims via `OpCodePredationStrike` →
+  `handlePredationStrike` → `applyPredationStrike`; the kill rides `BUG_REMOVED` (frontier-gated) so all
+  clients stay bit-identical. Per-victim snatch telegraph. Proven: harness IDENTICAL (21,734/21,734) through
+  9 real strikes; `go test ./world/` green; `tools/sim-determinism` PASS.
+- **Phase 1b — zone-complete `blocks_bugs` collision (DONE):** the bug sim now collides against a ZONE-WIDE
+  collision set on every client, decoupled from the camera — closing the last cross-player desync (bugs near
+  a fence that only some players had loaded used to diverge). The server sends each joiner the complete
+  blocks_bugs cell set on join + resync (`OpCodeZoneCollisionMap` 106, built from ALL zone chunks incl. those
+  not yet in memory — loaded transiently from disk, no RNG init); dynamic place/break rides a frontier-gated
+  `OCCUPANT_BLOCKS_BUGS` ledger event so every client toggles the same cell at the same tick. Client reads
+  `TilemapManager._blocksBugsZoneWide` (was view-scoped `_loadedChunks`); the bug sim gates on the map being
+  ready (timeout fallback). **Proven:** spawn-apart harness — two clients loading DISJOINT chunk halves both
+  hydrate the identical 4322-cell map → collision is camera-independent; co-located regression unchanged;
+  residual divergence is the pre-existing late-join snapshot leg residual (confirmed identical pre-1b at 1.2%
+  via a baseline build, so NOT introduced here — see [[#127]]); `go test ./world/` green; `sim-determinism` PASS.
+- **Determinism hardening + teachability (DONE 2026-06):**
+  - **Test framework (sacred):** found+fixed a real harness defect — both `run_sync_*.sh` inlined a diff that
+    let 14-col leg rows collide with bug-id 0/1 keys (could MASK a divergence). Extracted one canonical
+    `tools/sync_diff.py` (stops at `# SWARMLEGS`, requires the 15-col bug shape, adds the per-tick whole-state
+    HASH stream as the PRIMARY gate), unit-tested by `tools/test_sync_diff.py`. Harness now asserts spawn-apart
+    clients are DISJOINT (non-vacuity) + has a `FRESH=1` redeploy helper.
+  - **#127 (DONE):** late-join now mints window-created bugs by REPLAY at evt.tick (not metadata prespawn),
+    so a bug reproduced in the snapshot-lag window no longer drifts. Proven: co-located AND genuinely-disjoint
+    spawn-apart late-joins are bit-identical — 0 bug + 0 hash divergence; `sim-determinism` PASS.
+  - **Docs/skill:** `architecture_swarm_sync.md` §0 as-built quick reference (guarantee + the one invariant +
+    ledger glossary + add-a-mechanic recipe); new `frontier-sync` skill; `determinism_audit_2026-06-20.md`
+    marked SUPERSEDED + indexed in ARCHITECTURE.md; `lenses.md`/`complex-change-review.md` cross-linked.
+- **Accepted (self-healing, not fixed):** the empty-bootstrap window (#137 — a late-joiner in the ~1-frame
+  gap before the authority's first snapshot; converges via drift-resync; the on-demand-snapshot round-trip
+  costs more than it's worth for a self-healing transient) and the continuous-spawn on-receipt-vs-hash sub-1%
+  caveat. Both documented in `architecture_swarm_sync.md` §0.
 
 ## Done (recent) — PREDATORS v1: wasps + nests, the centipede, player HP, first audio
 - **Predation core** (architecture_swarm_sync §14 — the system of record): predators hunt

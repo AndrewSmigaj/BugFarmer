@@ -2,19 +2,22 @@ package world
 
 import (
 	"math"
-	"math/rand"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 
 	"bugfarmer/entities"
 )
 
-// Predation (architecture_swarm_sync.md §14): predators hunt prey SWARMS; prey flee
-// predators. ALL of it is server-side state machinery whose outputs ride the EXISTING
-// event vocabulary — hunt/flee legs are ordinary SWARM_SET_TARGET events, kills are
-// BUG_REMOVED (the melee path verbatim via killBugsInSwarm), carrion is ITEM_ROTTED.
-// Clients replay outputs, never decisions, so server-side rand here is replay-safe
-// (the established Think-time convention).
+// Predation (architecture_swarm_sync.md §14): predators hunt prey SWARMS; prey flee predators. The hunt
+// ECONOMY is server-side state machinery whose outputs ride the EXISTING event vocabulary — hunt/flee legs
+// are ordinary SWARM_SET_TARGET events (now also carrying target_prey_id + strike params on a hunt leg),
+// kills are BUG_REMOVED (the melee path verbatim via killBugsInSwarm), carrion is ITEM_ROTTED. Server-side
+// rand here is replay-safe (clients replay outputs, never decisions — the Think-time convention).
+//
+// Phase 2 EXCEPTION — the STRIKE SELECTION (which individual flies die) is computed by the AUTHORITY
+// CLIENT, which has bit-identical per-bug positions; it reports victims via OpCodePredationStrike →
+// handlePredationStrike → applyPredationStrike (the server has only centres). The kill still rides
+// BUG_REMOVED so followers/late-joiners stay in sync.
 //
 // Pacing layers (why wasps can't annihilate a zone): satiation budgets the trip
 // (hunt only below hunt_satiation_threshold, ~3 kills to sated), the strike cooldown
@@ -24,10 +27,19 @@ import (
 const (
 	huntReaimMinTicks  = 10  // hunt/flee legs re-aim fast (floor — also the leg-spam floor)
 	huntReaimJitter    = 6   // +rand(6)
-	huntTimeoutTicks   = 300 // a hunt with no kill for 30s gives up
+	huntTimeoutTicks   = 300 // a hunt with no kill for 30s: re-target a fresh prey (nest predators) / give up (others)
 	wanderThinkMin     = 30  // the existing wander cadence
 	wanderThinkJitter  = 21
 	predWanderDistance = 6.0 // predator wander leg length
+	// predatorFullSatiation: a nest predator's "caught a full load" point. It is BOTH the homing trigger
+	// (carry the load home, deposit brood) AND the forage ceiling (keep hunting until you reach it). Tying
+	// the two together is the whole 2-state forager loop — FORAGE while < full, PROVISION at full — with no
+	// dead zone between "too fed to start a hunt" and "full enough to go home", and no idling while hungry.
+	// It MUST sit below the 100 satiation cap: a kill clamps satiation AT 100, so a trigger of 100 is never
+	// observed at a think (satiation decays a hair below 100 in the 1-3s between the kill and the next
+	// think) and the wasp forages forever without ever heading home. 90 leaves the post-kill overshoot
+	// comfortably above it (decay-per-think ≈ 0.3), so the provision reliably fires.
+	predatorFullSatiation = 90.0
 )
 
 // predationThink runs the species-specific Think branches that REPLACE the shared
@@ -45,6 +57,12 @@ func (m *Match) predationThink(
 	deltaTime float32,
 	logger runtime.Logger,
 ) bool {
+	// Cost profiler: time the whole predationThink (flee scan + hunt) per species. The flee branch's
+	// nearestPredatorPos is the O(S²) the audit flagged — this quantifies it. Nil/disabled = no-op.
+	pt := state.Perf.Start()
+	state.Perf.Count(species.ID, "pred_thinks")
+	defer state.Perf.StopSpecies(species.ID, "pred", pt)
+
 	// --- 1. PREY FLEE -------------------------------------------------------------
 	if species.PredatorFleeRadius > 0 {
 		if px, py, found := m.nearestPredatorPos(state, swarm, species, species.PredatorFleeRadius); found {
@@ -56,7 +74,22 @@ func (m *Match) predationThink(
 			if dist < 0.01 {
 				dx, dy, dist = 1, 0, 1 // predator exactly on us: pick a direction
 			}
-			const fleeDistance = 8.0
+			// Default: the short directly-away flee (out-chased by a faster hunter). But with RelocateChance
+			// (and off cooldown) a swarm instead makes a long BREAK-CONTACT jump — RelocateDistance away, with
+			// a random angle so relocating swarms scatter to DIFFERENT spots — to clear the hunter's vision and
+			// actually escape. Not all roll it → some stay and get eaten (the crash). Determinism-safe: state.Rng.
+			fleeDistance := float32(8.0)
+			if species.RelocateChance > 0 && state.TickCount >= swarm.RelocateReadyTick &&
+				state.Rng.Float32() < species.RelocateChance {
+				fleeDistance = species.RelocateDistance
+				if fleeDistance <= 0 {
+					fleeDistance = 22.0
+				}
+				ang := (state.Rng.Float32()*2 - 1) // ±~57° jitter on the away direction (rotation preserves length)
+				ca, sa := float32(math.Cos(float64(ang))), float32(math.Sin(float64(ang)))
+				dx, dy = dx*ca-dy*sa, dx*sa+dy*ca
+				swarm.RelocateReadyTick = state.TickCount + species.RelocateCooldownTicks
+			}
 			tx := sx + dx/dist*fleeDistance
 			ty := sy + dy/dist*fleeDistance
 			cx, cy := entities.RaycastClamp(sx, sy, tx, ty, func(x, y float32) bool {
@@ -70,7 +103,7 @@ func (m *Match) predationThink(
 			swarm.TargetFoodID = "" // fleeing abandons the meal (meters pause)
 			swarm.TargetPreyID = ""
 			m.emitLeg(state, swarm, species, cx, cy, mult, chunkSize, deltaTime)
-			swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + rand.Int63n(huntReaimJitter)
+			swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)
 			return true
 		}
 		// No predator near: fall through (prey species may also be predators in
@@ -124,15 +157,16 @@ func (m *Match) predationThink(
 				}
 				swarm.TargetPreyID = ""
 				m.emitLeg(state, swarm, species, tx, ty, mult, chunkSize, deltaTime)
-				swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + rand.Int63n(huntReaimJitter)
+				swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)
 				return true
 			}
 		}
 
-		// HOMING — entry: sated with a live nest. Carry one brood home; deposit on
-		// arrival (satiation drops to deposit_satiation: the readable rest window);
-		// a trip over the timeout drops the brood (a bool-carry can't deadlock).
-		if swarm.Phase != "homing" && swarm.Satiation >= 100 && swarm.NestKey != "" && nest != nil {
+		// PROVISION — entry: a full load with a live nest. Carry the brood home; deposit on
+		// arrival (satiation drops to deposit_satiation, the post-provision level); a trip over
+		// the timeout drops the brood (a bool-carry can't deadlock). FULL is the same threshold the
+		// forage block hunts toward, so there is no gap between stopping the hunt and heading home.
+		if swarm.Phase != "homing" && swarm.Satiation >= predatorFullSatiation && swarm.NestKey != "" && nest != nil {
 			swarm.Phase = "homing"
 			swarm.CarryingBrood = true
 			swarm.HomingStartTick = state.TickCount
@@ -157,7 +191,7 @@ func (m *Match) predationThink(
 					swarm.Satiation = p.DepositSatiation
 				} else {
 					m.emitLeg(state, swarm, species, nx, ny, 1.0, chunkSize, deltaTime)
-					swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + rand.Int63n(huntReaimJitter)
+					swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)
 					return true
 				}
 			}
@@ -185,8 +219,18 @@ func (m *Match) predationThink(
 
 	// Continue or acquire a hunt. Hunting persists once started (re-aim each think)
 	// until: sated, prey gone/out-of-range, or timeout without a kill.
+	//
+	// FORAGE ceiling: a NEST predator hunts until it has a full load (predatorFullSatiation) — the SAME
+	// point that sends it home to provision — so whenever it isn't full it re-acquires the nearest prey
+	// (a lost/elusive prey just means "pick the next one"), and it never sits idle while still hungry. That
+	// closes the old dead zone (too fed to start a hunt at 45, not full enough to home at 100). Free-roaming
+	// individuals (centipede) keep their own hunt_satiation_threshold so they still get rest-wander beats.
+	huntCeiling := p.HuntSatiationThreshold
+	if p.NestOccupant != "" {
+		huntCeiling = predatorFullSatiation
+	}
 	hunting := swarm.TargetPreyID != ""
-	if !hunting && swarm.Satiation < p.HuntSatiationThreshold {
+	if !hunting && swarm.Satiation < huntCeiling {
 		if preyID, found := m.nearestPreySwarm(state, swarm, p, chunkSize); found {
 			swarm.TargetPreyID = preyID
 			swarm.TargetFoodID = "" // exclusivity: never hunt and dine at once
@@ -233,7 +277,7 @@ func (m *Match) predationThink(
 				tx, ty = cxp, cyp
 			}
 			m.emitLeg(state, swarm, species, tx, ty, mult, chunkSize, deltaTime)
-			swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + rand.Int63n(huntReaimJitter)
+			swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)
 			return true
 		}
 	}
@@ -247,7 +291,7 @@ func (m *Match) predationThink(
 
 	// Wander within the home range (rest between trips; the readable loiter).
 	sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
-	angle := rand.Float64() * 2 * math.Pi
+	angle := state.Rng.Float64() * 2 * math.Pi
 	tx := sx + float32(math.Cos(angle))*predWanderDistance
 	ty := sy + float32(math.Sin(angle))*predWanderDistance
 	if p.HomeRange > 0 {
@@ -262,39 +306,107 @@ func (m *Match) predationThink(
 		return state.IsBlockedForSpecies(x, y, species)
 	})
 	m.emitLeg(state, swarm, species, cxp, cyp, 1.0, chunkSize, deltaTime)
-	swarm.NextThinkTick = state.TickCount + wanderThinkMin + rand.Int63n(wanderThinkJitter)
+	swarm.NextThinkTick = state.TickCount + wanderThinkMin + state.Rng.Int63n(wanderThinkJitter)
 	return true
 }
 
-// checkPredationStrike is the PER-TICK kill check (re-aims happen at think cadence, but
-// centers can cross between thinks): cached prey within strike_radius + cooldown →
-// kill the LOWEST ascending alive ids via the shared melee kill path, spawn carrion at
-// the PREDATOR's center (the strike point — falls back to the victim's center if
-// blocked), feed the predator.
-func (m *Match) checkPredationStrike(
+// (The legacy autonomous centre-distance strike `checkPredationStrike` was removed in Phase 2 — the
+// authority CLIENT now selects which individual flies are struck, using real per-bug positions, and reports
+// them via handlePredationStrike → applyPredationStrike. The server has only swarm centres, so it can no
+// longer choose individual victims.)
+
+// applyPredationStrike APPLIES a chosen set of victim ids (the caller owns SELECTION): kill via the
+// shared melee path, record stats, advance the predator's cooldown/hunt-progress + satiation, telegraph.
+// Shared by the legacy autonomous centre-strike (checkPredationStrike) and the Phase-2 client-reported
+// PredationStrike handler. victimX/victimY (optional) are the per-victim world positions for the
+// display-only snatch — nil falls back to the predator-centre flash. Returns the number actually removed.
+func (m *Match) applyPredationStrike(
 	logger runtime.Logger,
 	dispatcher runtime.MatchDispatcher,
 	state *WorldState,
-	swarm *entities.SwarmState,
-	species *entities.BugSpecies,
+	predator *entities.SwarmState,
+	predatorSpecies *entities.BugSpecies,
+	prey *entities.SwarmState,
+	ids []int,
+	victimX, victimY []float32,
 	chunkSize int,
-) {
-	p := species.Predation
-	if p == nil || swarm.TargetPreyID == "" {
-		return
+) int {
+	p := predatorSpecies.Predation
+	if p == nil {
+		return 0
 	}
-	if state.TickCount-swarm.LastStrikeTick < p.StrikeCooldownTicks {
-		return
+	preySpecies := state.Species[prey.SpeciesID]
+	removed := m.killBugsInSwarm(logger, dispatcher, state, prey, preySpecies, ids,
+		predator.WorldX(chunkSize), predator.WorldY(chunkSize), chunkSize)
+	if len(removed) == 0 {
+		return 0
 	}
-	prey, ok := state.Swarms[swarm.TargetPreyID]
-	if !ok || prey.Count <= 0 {
-		swarm.TargetPreyID = ""
-		return
+	state.Stats.recordDeath(prey.SpeciesID, DeathPredation, len(removed))
+	state.Stats.recordPredation(predator.SpeciesID, prey.SpeciesID, len(removed))
+
+	predator.LastStrikeTick = state.TickCount
+	predator.HuntStartTick = state.TickCount // a kill is progress: the timeout re-arms
+	predator.Satiation += p.FeedPerKill * float32(len(removed))
+	if predator.Satiation > 100 {
+		predator.Satiation = 100
 	}
 
-	dx := swarm.WorldX(chunkSize) - prey.WorldX(chunkSize)
-	dy := swarm.WorldY(chunkSize) - prey.WorldY(chunkSize)
-	if dx*dx+dy*dy > p.StrikeRadius*p.StrikeRadius {
+	// Strike telegraph (display-only): the snatch flash + THWACK. Phase 2 carries the victim positions
+	// so the snatch plays AT each eaten fly (individual strike reads on screen); nil = predator-centre.
+	m.broadcastBugStrikeTelegraph(dispatcher, state, predator, victimX, victimY, chunkSize)
+
+	logger.Info("Predation: %s struck %s (-%d, satiation %.0f)",
+		predator.ID, prey.ID, len(removed), predator.Satiation)
+	return len(removed)
+}
+
+// handlePredationStrike validates + applies an AUTHORITY-reported individual-fly strike (OpCode 105).
+// The authority client did the SELECTION (it has per-bug positions; the server has only centres); the
+// server is the gate and applies the kill via the shared path so followers/late-joiners sync through the
+// relayed BUG_REMOVED. Idempotent-ish: the server cooldown throttles the authority's per-tick re-sends.
+func (m *Match) handlePredationStrike(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	senderID string,
+	msg PredationStrikeMessage,
+) {
+	if state.CurrentZone == nil {
+		return
+	}
+	zone := state.GetOrCreateZone(state.CurrentZone.ZoneID)
+	// AUTHORITY ONLY — the authority drives strikes; ignore everyone else (anti-cheat + de-dupe).
+	if zone.AuthorityUserID != senderID {
+		logger.Warn("Ignoring predation strike from non-authority %s (authority is %s)", senderID, zone.AuthorityUserID)
+		return
+	}
+	chunkSize := state.Config.ChunkSize
+
+	predator, ok := state.Swarms[msg.PredatorSwarmID]
+	if !ok || predator.Count <= 0 {
+		return
+	}
+	prey, ok := state.Swarms[msg.PreySwarmID]
+	if !ok || prey.Count <= 0 {
+		return
+	}
+	predSpecies := state.Species[predator.SpeciesID]
+	if predSpecies == nil || predSpecies.Predation == nil {
+		return
+	}
+	p := predSpecies.Predation
+	if !containsString(p.Prey, prey.SpeciesID) { // predator must actually hunt this prey species
+		return
+	}
+	if state.TickCount-predator.LastStrikeTick < p.StrikeCooldownTicks { // server cooldown is authoritative
+		return
+	}
+	// Loose centre-range sanity (the server has only centres): a legitimate individual strike has the two
+	// centres within StrikeRadius + both cloud radii. Rejects obviously-bogus reports, not real ones.
+	dx := predator.WorldX(chunkSize) - prey.WorldX(chunkSize)
+	dy := predator.WorldY(chunkSize) - prey.WorldY(chunkSize)
+	maxR := p.StrikeRadius + predator.Radius + prey.Radius
+	if dx*dx+dy*dy > maxR*maxR {
 		return
 	}
 
@@ -302,27 +414,32 @@ func (m *Match) checkPredationStrike(
 	if kills <= 0 {
 		kills = 1
 	}
-	preySpecies := state.Species[prey.SpeciesID]
-	ids := prey.FirstAliveBugIDs(kills)
-	removed := m.killBugsInSwarm(logger, dispatcher, state, prey, preySpecies, ids,
-		swarm.WorldX(chunkSize), swarm.WorldY(chunkSize), chunkSize)
-	if len(removed) == 0 {
+	// Keep only ids ALIVE in the prey swarm (a victim may have died between the authority's select and
+	// now — e.g. natural death), clamp to KillsPerStrike. Victim positions ride along for the snatch.
+	hasPos := len(msg.BugX) == len(msg.BugIDs) && len(msg.BugY) == len(msg.BugIDs)
+	ids := make([]int, 0, len(msg.BugIDs))
+	var vx, vy []float32
+	if hasPos {
+		vx = make([]float32, 0, len(msg.BugIDs))
+		vy = make([]float32, 0, len(msg.BugIDs))
+	}
+	for i, id := range msg.BugIDs {
+		if len(ids) >= kills {
+			break
+		}
+		if !prey.IsBugAlive(id) {
+			continue
+		}
+		ids = append(ids, id)
+		if hasPos {
+			vx = append(vx, msg.BugX[i])
+			vy = append(vy, msg.BugY[i])
+		}
+	}
+	if len(ids) == 0 {
 		return
 	}
-
-	swarm.LastStrikeTick = state.TickCount
-	swarm.HuntStartTick = state.TickCount // a kill is progress: the timeout re-arms
-	swarm.Satiation += p.FeedPerKill * float32(len(removed))
-	if swarm.Satiation > 100 {
-		swarm.Satiation = 100
-	}
-
-	// Strike telegraph (display-only): the snatch flash + THWACK at the PREDATOR —
-	// the eye goes to the attacker; the victim shrink-fades unnoticed.
-	m.broadcastBugTelegraph(dispatcher, state, swarm, "strike", chunkSize)
-
-	logger.Debug("Predation: %s struck %s (-%d, satiation %.0f)",
-		swarm.ID, prey.ID, len(removed), swarm.Satiation)
+	m.applyPredationStrike(logger, dispatcher, state, predator, predSpecies, prey, ids, vx, vy, chunkSize)
 }
 
 // nearestPreySwarm finds the closest living prey swarm within vision AND home range.
@@ -418,12 +535,25 @@ func (m *Match) emitLeg(
 	swarm.TargetX, swarm.TargetY = targetX, targetY
 	swarm.HasTarget = true
 
+	// Phase 2: tag a HUNT leg with the prey + strike params so the authority client can run the
+	// individual-fly strike selection. swarm.TargetPreyID is set only while actively hunting (incl. a
+	// centipede gnaw); cleared on flee/home/wander/hunt-end — so every non-hunt leg sends empty/0.
+	targetPreyID := ""
+	strikeRadius, killsPerStrike, strikeCooldownTicks := 0, 0, 0
+	if swarm.TargetPreyID != "" && species.Predation != nil {
+		targetPreyID = swarm.TargetPreyID
+		strikeRadius = toFixed(species.Predation.StrikeRadius)
+		killsPerStrike = species.Predation.KillsPerStrike
+		strikeCooldownTicks = int(species.Predation.StrikeCooldownTicks)
+	}
+
 	if state.CurrentZone != nil {
 		state.AddSwarmTargetEvent(
 			state.CurrentZone.ZoneID, swarm.ID,
 			toFixed(originX), toFixed(originY),
 			toFixed(targetX), toFixed(targetY),
 			toFixed(species.BaseSpeed*swarm.EffectiveSpeedMult()*deltaTime),
+			targetPreyID, strikeRadius, killsPerStrike, strikeCooldownTicks,
 		)
 	}
 }
@@ -440,6 +570,20 @@ func (m *Match) broadcastBugTelegraph(
 	cy := swarm.Position.ChunkY
 	msg := BugTelegraphMessage{SwarmID: swarm.ID, Kind: kind}
 	m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeBugTelegraph, msg)
+}
+
+// broadcastBugStrikeTelegraph is the predation-strike telegraph (display-only): the snatch/THWACK plays
+// AT each victim position (victimX/victimY) so an individual-fly strike reads on screen; nil victims fall
+// back to the predator-centre flash. Chunk-scoped on the predator's chunk like the other telegraphs.
+func (m *Match) broadcastBugStrikeTelegraph(
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	predator *entities.SwarmState,
+	victimX, victimY []float32,
+	chunkSize int,
+) {
+	msg := BugTelegraphMessage{SwarmID: predator.ID, Kind: "strike", VictimX: victimX, VictimY: victimY}
+	m.broadcastToChunk(dispatcher, state, predator.Position.ChunkX, predator.Position.ChunkY, OpCodeBugTelegraph, msg)
 }
 
 // nearestPlayer finds the closest player to a world point within radius (ascending
@@ -489,4 +633,35 @@ func containsString(list []string, s string) bool {
 		}
 	}
 	return false
+}
+
+// predatorBreedSatiation — a NESTLESS predator this well-fed reproduces (the carnivore "well-fed timer").
+const predatorBreedSatiation = 70.0
+
+// processPredatorBreeding lets nestless predators (centipede, future carnivores) reproduce when well-fed.
+// A pure HUNTER never breeds through the standard sated→reproducing→dine path: a kill tops satiation to
+// only ~95 (the flip needs 100), and it has no carrion attraction to dine at — so it would die as a
+// same-age re-seeded cohort. Instead a well-fed hunter breeds on its reproduce cooldown via the EXISTING
+// reproduceSwarm (grows the swarm below MaxSwarmSize, splits a child at it). reproduceSwarm resets
+// satiation→0 + the cooldown, so it must re-hunt to breed again (natural pacing) and is cap-aware;
+// consumeFood with an empty TargetFoodID is a no-op. NEST predators (wasps) breed at the nest, skipped.
+// Collect-then-act: reproduceSwarm can mint a new swarm (mutates state.Swarms) mid-range.
+func (m *Match) processPredatorBreeding(state *WorldState, dispatcher runtime.MatchDispatcher, logger runtime.Logger) {
+	if state.StaticSim {
+		return
+	}
+	var breeders []*entities.SwarmState
+	for _, id := range sortedStringKeys(state.Swarms) { // sorted: reproduceSwarm draws rand per breeder
+		swarm := state.Swarms[id]
+		species := state.Species[swarm.SpeciesID]
+		if species == nil || species.Predation == nil || species.Predation.NestOccupant != "" {
+			continue
+		}
+		if swarm.Count > 0 && swarm.Satiation >= state.Tuning.PredatorBreedSatiation && swarm.CanReproduce() {
+			breeders = append(breeders, swarm)
+		}
+	}
+	for _, swarm := range breeders {
+		m.reproduceSwarm(state, dispatcher, swarm, state.Species[swarm.SpeciesID], logger)
+	}
 }

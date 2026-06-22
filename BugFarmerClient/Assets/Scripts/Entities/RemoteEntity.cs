@@ -1,4 +1,5 @@
 using UnityEngine;
+using TMPro;
 using BugFarmer.Data;
 using BugFarmer.Networking;
 
@@ -71,8 +72,9 @@ namespace BugFarmer.Entities
                 }
             }
 
-            // Walk frames (idle + _w1/_w3); remote players animate while lerping.
-            _frames = Player.CharacterComposer.LoadBaked("farmer");
+            // Walk frames (idle + _w1/_w3); remote players animate while lerping. Default merchant
+            // base until PlayerInfo arrives (SetAppearance) / SetArmor composes worn gear on top.
+            _frames = Player.CharacterComposer.LoadBaked(_charClass);
         }
 
         private void Update()
@@ -139,29 +141,94 @@ namespace BugFarmer.Entities
         }
 
         private string _armor;
+        // Character appearance (from the PlayerInfo snapshot); defaults match the baked merchant body.
+        private string _charClass = "merchant";
+        private string _charHair = "blonde";
+        private string _charSkin = "default";
 
         /// <summary>
         /// Set the remote player's WORN ARMOR (EntityData.eqa: 7 comma-joined
-        /// slot ids, "" = naked). Change-checked; re-composes the paper-doll
-        /// outfit (baked farmer fallback when layers are unavailable).
+        /// slot ids, "" = naked). Change-checked; re-composes the paper-doll outfit.
         /// </summary>
         public void SetArmor(string eqa)
         {
             eqa ??= "";
             if (eqa == _armor) return;
             _armor = eqa;
+            RecomposeOutfit();
+        }
 
-            if (!Player.CharacterComposer.ComposedOutfitsEnabled)
-                return; // trial: stay on the baked vector-Scout frames
+        /// <summary>
+        /// Set the remote player's character appearance (class/hair/skin, from the PlayerInfo
+        /// snapshot). Change-checked; re-composes the paper-doll outfit (armor layers on top).
+        /// </summary>
+        public void SetAppearance(string charClass, string charHair, string charSkin)
+        {
+            charClass = string.IsNullOrEmpty(charClass) ? "merchant" : charClass;
+            charHair = string.IsNullOrEmpty(charHair) ? "blonde" : charHair;
+            charSkin = string.IsNullOrEmpty(charSkin) ? "default" : charSkin;
+            if (charClass == _charClass && charHair == _charHair && charSkin == _charSkin) return;
+            _charClass = charClass;
+            _charHair = charHair;
+            _charSkin = charSkin;
+            RecomposeOutfit();
+        }
 
-            Sprite[][] composed = null;
-            if (eqa.Length > 0)
-            {
-                var outfit = Player.CharacterComposer.OutfitFromEquipment(eqa.Split(','));
-                composed = Player.CharacterComposer.Compose(outfit);
-            }
-            _frames = composed ?? Player.CharacterComposer.LoadBaked("farmer");
+        /// <summary>
+        /// Re-compose the paper-doll from the STORED appearance + armor (the single convergence both
+        /// SetArmor and SetAppearance feed; order-independent, so whichever arrives first/last is fine).
+        /// Baked fallback (the chosen class, then merchant) when layers are unavailable.
+        /// </summary>
+        private void RecomposeOutfit()
+        {
+            if (!Player.CharacterComposer.ComposedOutfitsEnabled) return;
+            var slots = (_armor != null && _armor.Length > 0) ? _armor.Split(',') : new string[7];
+            var outfit = Player.CharacterComposer.OutfitFromEquipment(slots, _charClass, _charHair, _charSkin);
+            var composed = Player.CharacterComposer.Compose(outfit);
+            _frames = composed
+                      ?? Player.CharacterComposer.LoadBaked(_charClass)
+                      ?? Player.CharacterComposer.LoadBaked("merchant");
             UpdateSprite();
+        }
+
+        private TextMeshPro _nameplate;
+        private string _name;
+
+        /// <summary>
+        /// Set the character-name label above this remote player (from the PlayerInfo snapshot).
+        /// Change-checked; lazily builds a world-space TextMeshPro child the first time. Empty → hidden.
+        /// </summary>
+        public void SetName(string name)
+        {
+            name ??= "";
+            if (name == _name) return;
+            _name = name;
+
+            if (_nameplate == null)
+            {
+                if (name.Length == 0) return; // nothing to show yet — don't build the object
+                var go = new GameObject("Nameplate");
+                go.transform.SetParent(transform, false);
+                // Sprite is 16x32 @ PPU 16 = 1x2 world units, centre-pivoted → top at +1.0; sit just above the head.
+                go.transform.localPosition = new Vector3(0f, 1.2f, 0f);
+                _nameplate = go.AddComponent<TextMeshPro>();
+                _nameplate.alignment = TextAlignmentOptions.Center;
+                _nameplate.enableAutoSizing = false;
+                _nameplate.fontSize = 3f;          // TMP-3D fontSize→world mapping; tuned in-Editor
+                _nameplate.enableWordWrapping = false;
+                _nameplate.rectTransform.sizeDelta = new Vector2(6f, 1f);
+                _nameplate.transform.localScale = Vector3.one * 0.18f;
+                // Draw above all world sprites (mirrors the keycap-E badge: Occupants layer, high order).
+                var r = _nameplate.renderer;
+                if (r != null)
+                {
+                    r.sortingLayerID = SortingLayer.NameToID("Occupants");
+                    r.sortingOrder = 960;
+                }
+            }
+
+            _nameplate.gameObject.SetActive(name.Length > 0);
+            _nameplate.text = name;
         }
 
         /// <summary>

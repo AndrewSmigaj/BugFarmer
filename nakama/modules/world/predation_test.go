@@ -17,10 +17,10 @@ import (
 
 func killDropTestState() *WorldState {
 	state := newTestState(20)
-	state.Entities["bug_parts"] = &EntityDef{Category: "resource", FoodValue: 10}
+	state.Entities["dead_fly"] = &EntityDef{Category: "resource", FoodValue: 10}
 	state.Entities["wasp_stinger"] = &EntityDef{Category: "resource"} // inedible
 	state.Species["fly_common"].KillDrops = []entities.KillDrop{
-		{Item: "bug_parts", CountMin: 1, CountMax: 1, Chance: 1.0},
+		{Item: "dead_fly", CountMin: 1, CountMax: 1, Chance: 1.0},
 	}
 	// Open chunk so IsBlocked doesn't trip on nil chunks at the drop point
 	state.Chunks[ChunkKey(0, 0)] = NewEmptyChunk(0, 0, "grass")
@@ -40,8 +40,8 @@ func TestKillDropEdibleEmitsItemRotted(t *testing.T) {
 		t.Fatalf("drops=%d, want 1", len(state.GroundItems))
 	}
 	for _, item := range state.GroundItems {
-		if item.ItemType != "bug_parts" || item.FoodValue != 10 {
-			t.Fatalf("drop %s food=%d, want bug_parts food=10", item.ItemType, item.FoodValue)
+		if item.ItemType != "dead_fly" || item.FoodValue != 10 {
+			t.Fatalf("drop %s food=%d, want dead_fly food=10", item.ItemType, item.FoodValue)
 		}
 		if item.Lifetime <= 0 {
 			t.Fatal("carrion must have a finite lifetime")
@@ -103,7 +103,7 @@ func TestCarrionExpiryEmitsFoodConsumedZero(t *testing.T) {
 	state := killDropTestState()
 	m := &Match{}
 	state.GroundItems["c1"] = &entities.GroundItem{
-		ID: "c1", ItemType: "bug_parts", Count: 1,
+		ID: "c1", ItemType: "dead_fly", Count: 1,
 		Position:  entities.EntityPosition{LocalX: 10, LocalY: 10},
 		FoodValue: 10,
 		Lifetime:  0.05, // expires on the first decay tick
@@ -142,14 +142,14 @@ func TestInedibleExpiryStaysSilent(t *testing.T) {
 func TestFindNearbyFoodMatchesCarrion(t *testing.T) {
 	state := killDropTestState()
 	state.GroundItems["c1"] = &entities.GroundItem{
-		ID: "c1", ItemType: "bug_parts", Count: 1,
+		ID: "c1", ItemType: "dead_fly", Count: 1,
 		Position:  entities.EntityPosition{LocalX: 12, LocalY: 10},
 		FoodValue: 10,
 	}
 	pos := entities.EntityPosition{LocalX: 10, LocalY: 10}
 
 	// Exact match (centipede)
-	hits := FindNearbyFood(state, pos, 8, []string{"bug_parts"})
+	hits := FindNearbyFood(state, pos, 8, []string{"dead_fly"})
 	if len(hits) != 1 || hits[0].ID != "c1" {
 		t.Fatalf("exact-match hits=%v, want c1", hits)
 	}
@@ -174,8 +174,8 @@ func predationTestState() *WorldState {
 	fly.BaseSpeed = 1.5
 	fly.PredatorFleeRadius = 6.0
 	fly.PredatorFleeSpeedMult = 1.8
-	fly.KillDrops = []entities.KillDrop{{Item: "bug_parts", CountMin: 1, CountMax: 1, Chance: 1.0}}
-	state.Entities["bug_parts"] = &EntityDef{Category: "resource", FoodValue: 10}
+	fly.KillDrops = []entities.KillDrop{{Item: "dead_fly", CountMin: 1, CountMax: 1, Chance: 1.0}}
+	state.Entities["dead_fly"] = &EntityDef{Category: "resource", FoodValue: 10}
 	state.Species["wasp_common"] = &entities.BugSpecies{
 		ID: "wasp_common", Category: "swarm",
 		BaseSpeed: 2.2, VisionRange: 14, MaxSwarmSize: 10, MinSwarmSize: 3,
@@ -193,7 +193,37 @@ func predationTestState() *WorldState {
 			NestOccupant:           "wasp_nest",
 		},
 	}
+	// Phase 2: the strike is authority-client-driven; tests act AS the authority via handlePredationStrike.
+	state.GetOrCreateZone("testzone").AuthorityUserID = testAuthority
 	return state
+}
+
+// testAuthority is the zone-authority user id the predation tests impersonate when reporting strikes.
+const testAuthority = "auth"
+
+// emulateAuthorityStrike does what the Phase-2 authority client does: if the predator is hunting a prey
+// that exists, report the victims (lowest alive ids — a stand-in for nearest-individual selection, exact
+// for these point-like test swarms) to handlePredationStrike, which validates (authority, prey species,
+// cooldown, centre-range, alive ids) and applies the kill. Replaces the old autonomous checkPredationStrike.
+func emulateAuthorityStrike(m *Match, state *WorldState, predator *entities.SwarmState) {
+	if predator.TargetPreyID == "" {
+		return
+	}
+	species := state.Species[predator.SpeciesID]
+	if species == nil || species.Predation == nil {
+		return
+	}
+	prey, ok := state.Swarms[predator.TargetPreyID]
+	if !ok || prey.Count <= 0 {
+		return
+	}
+	kills := species.Predation.KillsPerStrike
+	if kills <= 0 {
+		kills = 1
+	}
+	m.handlePredationStrike(nopRuntimeLogger(), nil, state, testAuthority, PredationStrikeMessage{
+		PredatorSwarmID: predator.ID, PreySwarmID: prey.ID, BugIDs: prey.FirstAliveBugIDs(kills),
+	})
 }
 
 func newWaspSwarm(id string, count int, x, y float32) *entities.SwarmState {
@@ -223,7 +253,7 @@ func driveTick(m *Match, state *WorldState, swarms ...*entities.SwarmState) {
 		}
 		s.Move(0.1, species, 32)
 		if species.Predation != nil {
-			m.checkPredationStrike(nopRuntimeLogger(), nil, state, s, species, 32)
+			emulateAuthorityStrike(m, state, s) // Phase 2: authority reports the strike; server validates+applies
 		}
 	}
 }
@@ -263,21 +293,27 @@ func TestStrikeAscendingIdsAndCooldown(t *testing.T) {
 	wasp.TargetPreyID = fly.ID
 	wasp.HuntStartTick = state.TickCount
 
-	m.checkPredationStrike(nopRuntimeLogger(), nil, state, wasp, state.Species["wasp_common"], 32)
+	// The authority reports the victim id; the server validates (cooldown/range/alive) + applies.
+	strike := func(ids ...int) {
+		m.handlePredationStrike(nopRuntimeLogger(), nil, state, testAuthority, PredationStrikeMessage{
+			PredatorSwarmID: wasp.ID, PreySwarmID: fly.ID, BugIDs: ids,
+		})
+	}
+
+	strike(0) // authority picks id 0 (its nearest individual)
 	if fly.IsBugAlive(0) || !fly.IsBugAlive(1) {
 		t.Fatalf("first strike must kill id 0 only (alive0=%v alive1=%v)", fly.IsBugAlive(0), fly.IsBugAlive(1))
 	}
 
-	// Immediately again: cooldown blocks.
-	m.checkPredationStrike(nopRuntimeLogger(), nil, state, wasp, state.Species["wasp_common"], 32)
+	// Immediately again: the SERVER cooldown blocks (authoritative throttle).
+	strike(1)
 	if !fly.IsBugAlive(1) {
 		t.Fatal("strike fired inside the cooldown")
 	}
 
 	// After the cooldown: id 1 falls.
 	state.TickCount += 101
-	wasp.TargetPreyID = fly.ID // re-aim happens at think; pin for the unit test
-	m.checkPredationStrike(nopRuntimeLogger(), nil, state, wasp, state.Species["wasp_common"], 32)
+	strike(1)
 	if fly.IsBugAlive(1) {
 		t.Fatal("second strike after cooldown must kill id 1")
 	}
@@ -295,12 +331,13 @@ func TestSatiationGatesHunting(t *testing.T) {
 	state.Swarms[wasp.ID] = wasp
 	state.Swarms[fly.ID] = fly
 
-	// Above the hunt threshold: think must NOT acquire.
-	wasp.Satiation = 50
+	// At/above the full-load ceiling (a nest predator hunts until predatorFullSatiation=90, the forager
+	// loop that deliberately removed the old rest-at-HuntSatiationThreshold dead zone): must NOT acquire.
+	wasp.Satiation = 95
 	state.TickCount = wasp.NextThinkTick + 1
 	m.predationThink(state, wasp, state.Species["wasp_common"], 32, 0.1, nopRuntimeLogger())
 	if wasp.TargetPreyID != "" {
-		t.Fatal("sated wasp acquired prey")
+		t.Fatal("full-load wasp (satiation 95 >= ceiling 90) acquired prey")
 	}
 
 	// Below: acquires.
@@ -491,7 +528,9 @@ func TestStrikeRespectsNothingItShouldnt(t *testing.T) {
 	wasp.TargetPreyID = fly.ID
 	wasp.HuntStartTick = state.TickCount
 
-	m.checkPredationStrike(nopRuntimeLogger(), nil, state, wasp, state.Species["wasp_common"], 32)
+	m.handlePredationStrike(nopRuntimeLogger(), nil, state, testAuthority, PredationStrikeMessage{
+		PredatorSwarmID: wasp.ID, PreySwarmID: fly.ID, BugIDs: []int{0},
+	})
 
 	if _, exists := state.Swarms[fly.ID]; exists {
 		t.Fatal("emptied prey swarm must despawn (the catch convention)")
@@ -511,10 +550,10 @@ func TestStrikeRespectsNothingItShouldnt(t *testing.T) {
 // trap_only (centipede) rejects EVERYTHING including hands.
 func TestCatchNetTierMatrix(t *testing.T) {
 	cases := []struct {
-		name     string
-		tool     string // "" = bare hands
-		netSize  string
-		caught   bool
+		name    string
+		tool    string // "" = bare hands
+		netSize string
+		caught  bool
 	}{
 		{"hand x fly(small) MUST PASS", "", "small", true},
 		{"hand x butterfly(small) MUST PASS", "", "small", true},

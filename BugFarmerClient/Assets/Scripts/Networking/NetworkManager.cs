@@ -94,8 +94,27 @@ namespace BugFarmer.Networking
             RestoreOrAuthenticateSession();
         }
 
+        // SYNC-TEST hook: the -clientid <id> command-line flag (set by tools/run_sync_test.sh) makes each
+        // headless instance a DISTINCT account with its own stable device id. Two instances of one BUILD
+        // share PlayerPrefs, so without this they'd auth as the same device/account and the server would
+        // treat them as one player. Returns null in normal runs (no flag) -> unchanged behavior.
+        private static string SyncTestClientId()
+        {
+            var args = System.Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length - 1; i++)
+                if (args[i] == "-clientid") return args[i + 1];
+            return null;
+        }
+
         private void RestoreOrAuthenticateSession()
         {
+            // Sync-test instances must NOT restore the shared PlayerPrefs session — force a fresh device auth.
+            if (!string.IsNullOrEmpty(SyncTestClientId()))
+            {
+                Session = AuthenticateAsync();
+                return;
+            }
+
             var authToken = PlayerPrefs.GetString(SessionPrefName, string.Empty);
             ISession session = null;
 
@@ -133,6 +152,15 @@ namespace BugFarmer.Networking
 
         private Task<ISession> AuthenticateAsync()
         {
+            // Sync-test: distinct, stable device id per -clientid (no PlayerPrefs — two build instances share it).
+            var syncId = SyncTestClientId();
+            if (!string.IsNullOrEmpty(syncId))
+            {
+                var dev = "synctest_" + syncId;
+                Debug.Log($"[NetworkManager] SYNC-TEST device id: {dev}");
+                return Client.AuthenticateDeviceAsync(dev);
+            }
+
             // Use different device ID for build vs editor to allow local multiplayer testing
             var prefKey = DeviceIdPrefName;
 #if !UNITY_EDITOR

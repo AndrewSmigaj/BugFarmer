@@ -9,5 +9,8 @@
     128,
     55
   ],
-  "biome_type": "cave"
+  "biome_type": "cave",
+  "neighbors": {
+    "north": "village_21_B"
+  }
 }

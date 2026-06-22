@@ -1,0 +1,9 @@
+{
+  "name": "D4_nectar_rich",
+  "description": "PLANT: richer nectar (regen 0.012\u21920.025, max 100\u2192150) \u2192 butterflies overshoot/oscillate higher.",
+  "extends": "01_no_cull",
+  "tuning": {
+    "nectar_regen_per_tick": 0.025,
+    "max_nectar": 150.0
+  }
+}

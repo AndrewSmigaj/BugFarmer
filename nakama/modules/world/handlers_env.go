@@ -2,7 +2,6 @@ package world
 
 import (
 	"encoding/json"
-	"math/rand"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 )
@@ -169,6 +168,13 @@ func (m *Match) debugGiveItem(
 			"wood": 99, "coal": 50, "iron_ore": 40, "copper_ore": 40,
 			"stone_block": 40, "iron_bar": 20, "fiber": 30,
 			"straw_hat": 1, "leather_cap": 1, "apple": 20, // filtered-container (clothing/food) tests
+			"backpack": 1, // equip → +10 panel slots
+		}
+	} else if item == "buglab" {
+		// Bug Lab loadout: 100 fruit to feed the pens + 10 of each catchable species to release.
+		give = map[string]int{"apple": 100}
+		for _, sp := range []string{"fly_common", "butterfly_meadow", "wasp_common", "centipede_garden"} {
+			player.AddBugs(sp, 10)
 		}
 	} else {
 		give[item] = count
@@ -189,23 +195,66 @@ func (m *Match) debugGiveItem(
 // land at an odd apparent hour (and a backward jump's rollover re-fire may re-roll —
 // accepted dev behavior, logged).
 func (m *Match) scheduleDailyRain(state *WorldState, logger runtime.Logger) {
-	if rand.Float64() >= rainDailyChance {
+	if state.TickCount < state.DroughtUntilTick {
+		// A Director drought suppresses the daily roll: untended trees stop refilling, so fruit/nectar
+		// thin out and the over-large population that triggered the drought eases off naturally.
 		state.ScheduledRainTick = 0
 		return
 	}
-	state.ScheduledRainTick = state.TickCount + 1 + rand.Int63n(DayLengthTicks)
+	if state.Rng.Float64() >= rainDailyChance {
+		state.ScheduledRainTick = 0
+		return
+	}
+	state.ScheduledRainTick = state.TickCount + 1 + state.Rng.Int63n(DayLengthTicks)
 	logger.Info("WEATHER: rain scheduled for tick %d (now %d)", state.ScheduledRainTick, state.TickCount)
+}
+
+// requestDrought starts (or extends) a Director drought: the daily rain roll is suppressed for `days`
+// game-days. The mechanic is DroughtUntilTick (read by scheduleDailyRain); WeatherKind="drought" is a
+// display/chart label that processWeather maintains. No-op if a longer drought is already running.
+func (m *Match) requestDrought(state *WorldState, logger runtime.Logger, days int64) {
+	until := state.TickCount + days*DayLengthTicks
+	if until <= state.DroughtUntilTick {
+		return
+	}
+	state.DroughtUntilTick = until
+	logger.Info("Director: DROUGHT until tick %d (%d game-days, now %d)", until, days, state.TickCount)
+}
+
+// requestExtraRain forces a relief shower NOW and lifts any active drought (the relief-over-suppression
+// rule: a species near collapse outranks an overshoot we can still hard-cull). Reuses startRain.
+func (m *Match) requestExtraRain(state *WorldState, dispatcher runtime.MatchDispatcher, logger runtime.Logger) {
+	state.DroughtUntilTick = 0
+	if state.WeatherKind == "rain" {
+		return // already raining
+	}
+	if state.WeatherKind == "drought" {
+		m.stopWeather(state, dispatcher, logger) // drop the drought visual so the shower shows
+	}
+	m.startRain(state, dispatcher, logger, rainMinTicks+state.Rng.Int63n(rainMaxTicks-rainMinTicks+1))
+	logger.Info("Director: EXTRA RAIN (relief, now %d)", state.TickCount)
 }
 
 // processWeather runs every tick: starts the scheduled shower, ends an expired one.
 // `>=` comparisons everywhere — never `==` (a missed exact tick must not wedge a state).
 func (m *Match) processWeather(state *WorldState, dispatcher runtime.MatchDispatcher, logger runtime.Logger) {
+	// Start a scheduled shower (only when clear — the daily roll is suppressed during a drought, so
+	// ScheduledRainTick is 0 then anyway; this also won't interrupt the "drought" visual).
 	if state.ScheduledRainTick > 0 && state.TickCount >= state.ScheduledRainTick && state.WeatherKind == "" {
 		state.ScheduledRainTick = 0
-		m.startRain(state, dispatcher, logger, rainMinTicks+rand.Int63n(rainMaxTicks-rainMinTicks+1))
+		m.startRain(state, dispatcher, logger, rainMinTicks+state.Rng.Int63n(rainMaxTicks-rainMinTicks+1))
 	}
+	// End the current weather (a shower OR an expired drought visual) when its window closes.
 	if state.WeatherKind != "" && state.TickCount >= state.WeatherUntilTick {
 		m.stopWeather(state, dispatcher, logger)
+	}
+	// Surface an active drought as a distinct WeatherKind once the sky is otherwise clear (display + chart
+	// only; the actual suppression is DroughtUntilTick in scheduleDailyRain). Re-asserts after a relief
+	// shower ends if the drought hasn't lifted.
+	if state.WeatherKind == "" && state.DroughtUntilTick > state.TickCount {
+		state.WeatherKind = "drought"
+		state.WeatherUntilTick = state.DroughtUntilTick
+		m.sendWorldEnv(dispatcher, state, nil)
 	}
 }
 
@@ -281,7 +330,7 @@ func (m *Match) forceWeather(
 	switch kind {
 	case "rain":
 		logger.Info("DEBUG WORLD: %s forces rain", userID)
-		m.startRain(state, dispatcher, logger, rainMinTicks+rand.Int63n(rainMaxTicks-rainMinTicks+1))
+		m.startRain(state, dispatcher, logger, rainMinTicks+state.Rng.Int63n(rainMaxTicks-rainMinTicks+1))
 	case "stop":
 		logger.Info("DEBUG WORLD: %s stops weather", userID)
 		if state.WeatherKind != "" {

@@ -1,0 +1,14 @@
+{
+  "name": "v21b_nocaps",
+  "description": "Remove the hard max_population caps (set 0 = uncapped) for ALL species, so populations are bounded only by EMERGENT food competition / predation / aging — to see the natural oscillation instead of the cap flatten. Everything else = current baseline.",
+  "bug_spawning": {
+    "species_caps": {
+      "fly_common": { "max_population": 0 },
+      "butterfly_meadow": { "max_population": 0 },
+      "wasp_common": { "max_population": 0 },
+      "centipede_garden": { "max_population": 0 },
+      "millipede": { "max_population": 0 },
+      "beetle_carrion": { "max_population": 0 }
+    }
+  }
+}

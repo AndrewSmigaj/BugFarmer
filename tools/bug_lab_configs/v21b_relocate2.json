@@ -1,0 +1,10 @@
+{
+  "name": "v21b_relocate2",
+  "description": "relocate_chance 0.15->0.30 (more flies break contact) + a centipede spawn near the E meadow (cent_emeadow 180,172). Same base (caps off, scarce litter, millipede throttle). sim_batch 6, half window.",
+  "flags": { "sim_batch": 6 },
+  "tuning": { "litter_regen_per_tick": 0.0005 },
+  "bug_spawning": { "species_caps": {
+    "fly_common": {"max_population":0}, "butterfly_meadow": {"max_population":0},
+    "wasp_common": {"max_population":0}, "centipede_garden": {"max_population":0},
+    "millipede": {"max_population":0}, "beetle_carrion": {"max_population":0} } }
+}

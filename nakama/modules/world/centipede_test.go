@@ -19,7 +19,7 @@ func centTestState() (*WorldState, *entities.SwarmState) {
 		MinSwarmSize: 1, MaxSwarmSize: 1,
 		AttackDamage: 2, AttackCooldown: 5.0,
 		MaxHP: 6, NetSize: "trap_only",
-		AttractionsByPhase: map[string][]string{"feeding": {"bug_parts"}},
+		AttractionsByPhase: map[string][]string{}, // pure hunter — no scavenging (breeds via the well-fed timer)
 		Predation: &entities.PredationConfig{
 			Prey: []string{"fly_common"}, StrikeRadius: 1.2, StrikeCooldownTicks: 50,
 			KillsPerStrike: 1, FeedPerKill: 30, HuntSpeedMult: 1.0,
@@ -404,13 +404,13 @@ func TestCentKeepsStandardLifecycle(t *testing.T) {
 	}
 }
 
-// Carrion-first: a hungry centipede with BOTH carrion and prey visible declines the
-// hunt (the shared forage path takes it).
-func TestCentCarrionFirst(t *testing.T) {
+// Pure hunter: the centipede no longer scavenges (empty attractions), so a hungry
+// centipede HUNTS prey even with carrion sitting right next to it (it ignores it).
+func TestCentHuntsIgnoringCarrion(t *testing.T) {
 	state, cent := centTestState()
 	m := &Match{}
 	state.GroundItems["c1"] = &entities.GroundItem{
-		ID: "c1", ItemType: "bug_parts", Count: 1,
+		ID: "c1", ItemType: "dead_fly", Count: 1,
 		Position:  entities.EntityPosition{LocalX: 13, LocalY: 10},
 		FoodValue: 10,
 	}
@@ -420,15 +420,7 @@ func TestCentCarrionFirst(t *testing.T) {
 
 	state.TickCount = cent.NextThinkTick + 1
 	owned := m.predationThink(state, cent, state.Species[cent.SpeciesID], 32, 0.1, nopRuntimeLogger())
-	if owned {
-		t.Fatal("with carrion visible the centipede must DECLINE (shared forage dines)")
-	}
-
-	// Carrion gone → the hunt fires.
-	delete(state.GroundItems, "c1")
-	state.TickCount = cent.NextThinkTick + 1
-	owned = m.predationThink(state, cent, state.Species[cent.SpeciesID], 32, 0.1, nopRuntimeLogger())
 	if !owned || cent.TargetPreyID != prey.ID {
-		t.Fatalf("hungry + no carrion must hunt (owned=%v prey=%q)", owned, cent.TargetPreyID)
+		t.Fatalf("a pure-hunter centipede must HUNT even with carrion present (owned=%v prey=%q)", owned, cent.TargetPreyID)
 	}
 }

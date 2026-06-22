@@ -29,7 +29,7 @@ The kinds of thing in the world, where their data + art live, and how the invent
 | **Plant / flora** (world) | `occupants.json` | `Resources/Objects/{id}.png` | small flora (flowers/herbs/mushrooms/grass) placed **freely anywhere** — sub-cell position, varied scale & shape, NOT grid-locked, NOT one-per-cell, NOT uniform size; blocked only by already-occupied space. Cut → inventory item. |
 | **Free / collectible** | `items.json` (+ world occupant) | reuses the world sprite | placed anywhere, picked up: the bobbing drops — broken blocks, tree-drop wood, fallen fruit, **cut flowers/herbs/mushrooms**. |
 | **Tool / weapon** | `items.json` | `Items/{id}_icon.png` | held & swung: the SAME icon sprite is animated in-hand by `PlayerToolAnimator` (swing/sweep/stab/pour by `tool_type`) — pipeline A art, NOT pipeline B (only the player body/gear sprites are hand-authored). |
-| **Resource / seed / consumable** | `items.json` | `Items/{id}_icon.png` | wood, fiber, ore, bars, crystal, seeds, potions, fish. |
+| **Resource / seed / consumable** | `items.json` | `Items/{id}_icon.png` | wood, fiber, bars, crystal, seeds, potions, fish. **Ore CHUNKS** (`iron_ore`, `coal`, …) are the exception: they carry NO authored icon — they **borrow their deposit's world sprite** via `icon_from: "ore_*_block"` (a scaled-down `Objects/{block}.png`), so the bag shows the same art you mined. The mineable deposit **veins** themselves (`ore_iron_block` = "Iron Deposit", 16×20) are **world occupants** (`occupants.json`, cave-gen-spawned, pickaxe-tier-gated), NOT placeables. |
 | **Bug** | bug data | bug sprite | free-placed in the world via a later **release mechanic**. |
 
 **Plants (flowers / herbs / mushrooms / small flora) are FREELY placeable — not grid-locked.** The engine

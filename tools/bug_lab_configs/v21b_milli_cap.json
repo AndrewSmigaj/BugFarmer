@@ -1,0 +1,9 @@
+{
+  "name": "v21b_milli_cap",
+  "description": "ROOT CAUSE: millipede (individual category) is hard-capped at cap.Max SWARMS (60) -> ~135 bugs; the swarm-count cap binds BEFORE food, which is why every food/lifespan lever failed. Set millipede max 60->22 (x~2.25 bugs/swarm => ~50). Default litter. LONG window.",
+  "flags": { "sim_batch": 6 },
+  "bug_spawning": { "species_caps": {
+    "fly_common": {"max_population":0}, "butterfly_meadow": {"max_population":0},
+    "wasp_common": {"max_population":0}, "centipede_garden": {"max_population":0},
+    "millipede": {"max":22, "max_population":0}, "beetle_carrion": {"max_population":0} } }
+}

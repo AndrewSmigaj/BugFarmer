@@ -281,6 +281,23 @@ Server                                All Clients
    |--remove ground item------------------ |
    |--emit FOOD_CONSUMED level=0---------->|  (registry drops it; OpCode 48 removes visual)
 ```
+**Host plants (milkweed) — the depletable-flora exception (P7).** The "flora never depletes" line
+above holds for nectar flowers, but a `world.host_plant` occupant (milkweed) is the one breeding-
+capable plant. `initHostPlantsInChunk` registers a server-only `HostPlantState{Capacity}` per cell
+(keyed `"gx,gy"`, soft state — not hashed, resets on restart like nests). `FindNearbyFood` reports a
+milkweed as **depletable while `Capacity>0`** and **skips it when grazed out**; each butterfly breed
+drains `hostBreedCost` and `processHostPlants` slowly regrows it. Because the target is depletable it
+runs the per-tick "is my food still alive?" clear-check, so `foodSourceAlive` must also resolve host
+plants by position (else the milkweed target is cleared every tick and the butterfly can never park
+to breed). Butterflies thus feed at diffuse flowers (non-depletable) but breed at milkweed.
+
+**Hunger override on the forage duty cycle.** `forage_chance` makes a *comfortably-fed* bug wander
+idly between feeding sessions (looks alive). But a genuinely hungry bug must always seek food —
+otherwise a slow-feeding forager on diffuse food (the butterfly) ignores nearby flowers for a whole
+30–50s mode window and never sates. Rule: a forager force-enters forage mode when `Satiation <
+hungerForageThreshold` (or it's reproducing); only above that does the duty cycle apply. Predators
+take the `predationThink` path and are unaffected.
+
 **Stations (general pattern — composter first):** a placeable with `world.station =
 {accepts, capacity, food_per_unit, providers}`. The player right-clicks → a menu →
 deposits accepted items (`StationDeposit`, OpCode 85) → the fill meter rises
@@ -1876,6 +1893,39 @@ docker compose build --no-cache builder && docker compose down && docker compose
 
 ---
 
+## Living ecology — population dynamics (2026-06)
+The bug populations are a living, bounded, oscillating system. Four layers, server-authoritative, all
+riding the existing event vocabulary (no new sim event types; bug positions stay the only hashed state):
+
+1. **Hard caps = the crash-guard.** `species_caps.<sp>.max_population` per zone is the absolute ceiling —
+   the server mints ZERO bugs past it at every birth point (`reproduceSwarm`, brood hatch, spawn, release).
+   This is the ONLY guaranteed bound (food is player-controlled and unbounded, so food can't be the
+   crash-guard). Set caps WELL ABOVE the natural peaks so they're a rare safety, not the normal state.
+2. **Depletable food = the down-pressure.** Flowers have a `ForagePoolState` nectar pool (`world.nectar`,
+   `entities/forage_pool.go`) and milkweed a `HostPlantState` breeding capacity — both deplete as bugs
+   feed/breed and regrow slowly (`processForagePools`/`processHostPlants`; `resource_query` skips a
+   grazed-out plant; `foodSourceAlive` resolves them by cell). The regen rate is the master dial for how
+   hard food limits the population.
+3. **Starvation death = the bust.** A swarm pinned at 0 satiation past `starvationDeathSecs` loses a
+   fraction of its bugs (`SwarmState.StarveTimer` + `processStarvation` → `killBugsNaturally` →
+   `BUG_REMOVED` + carcasses → the recycle loop). Turns "too many for the food" into a real die-back.
+4. **The Ecology Director = the engine of the visible oscillation + anti-extinction.**
+   `world/ecology_director.go`, slow clock (`directorIntervalTicks`). Per species `species_caps` bands:
+   below `min_population` it RE-SEEDS (`spawnSwarmForSpecies` — a few wander in); above `cull_at` (a soft
+   ceiling below the hard cap) it CULLS — releasing `cull_with` (a predator dropped on the prey centroid)
+   if set, else an "overcrowding" cull down to the band. Re-seed-low + cull-high = a sawtooth oscillation
+   that never goes extinct. This is also the universal "add a layer when a population goes out of range"
+   lever. (The player-facing TASK tier — restorative quests with a grace window before the auto-event
+   fires — layers on in the Ecologist work.)
+
+**Testing the slow ecology fast:** a test zone may set `call_rate` (≤60) in `zone.json` to run the SAME
+sim faster in wall-clock — sim-time is fixed by the canonical `SimRate=10` (drives deltaTime + every
+secs↔ticks conversion), so the speedup is balance-neutral (identical tick sequence). bug_lab runs at 60
+(6×). Tune on the per-species population graph: `tools/sync-harness` → CSV → `tools/plot_fly_counts.py`
+(charts saved under `tools/_generated/ecology_charts/`).
+
+---
+
 ## Revision History
 
 | Date | Author | Changes |
@@ -1917,6 +1967,8 @@ docker compose build --no-cache builder && docker compose down && docker compose
 | 2026-01-18 | Claude | Clarified: corn=single harvest, tomato=multi harvest (realistic) |
 | 2026-01-18 | Claude | Clarified: only flies and butterflies implemented; neither damages crops |
 | 2026-01-18 | Claude | Flies eat rotten fruit only; butterflies sip nectar, breed on milkweed |
+| 2026-06-16 | Claude | **P7:** milkweed = depletable host-plant occupant (HostPlantState capacity); `foodSourceAlive` resolves host plants by position; hunger override on the forage duty cycle (butterflies now feed→breed reliably) |
+| 2026-06-17 | Claude | **Living ecology:** visible breeding broods (eggs→maggots→hatch); per-bug natural death + carcass recycle; hard `max_population` crash-guard; depletable flower nectar + starvation death; the Ecology Director (re-seed/cull bands); the `call_rate`/`SimRate` test sim-speed control + per-species population charts. See "Living ecology — population dynamics". |
 | 2026-01-18 | Claude | **CODEBASE REVIEW:** Added integration analysis section |
 | 2026-01-18 | Claude | Documented: tiles.json already has garden_plot, hoe tool_actions |
 | 2026-01-18 | Claude | Documented: species.json has fly_common attracted to rotten_fruit |

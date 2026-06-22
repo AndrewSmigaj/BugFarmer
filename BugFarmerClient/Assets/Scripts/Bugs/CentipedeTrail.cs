@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using BugFarmer.Util;
 
 namespace BugFarmer.Bugs
 {
@@ -67,6 +68,7 @@ namespace BugFarmer.Bugs
 
         private void LateUpdate()
         {
+            using var _perf = PerfProfiler.Sample("Render.Trail");
             if (_head == null || _segments == null) return;
 
             // Record the head's rendered path
