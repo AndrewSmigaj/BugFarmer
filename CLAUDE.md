@@ -38,7 +38,9 @@ time (you end up building every feature twice). For every feature:
   entry point). `tools/README.md` is the map of every script + where outputs go.
 - `docs/` — `product/` (how the game works, incl. the GDD `game_design.md`) and `guides/`
   (`art/` = how sprites look & are made; `authoring/` = how to build zones/scenes — start at its `README.md`).
-- `.claude/skills/` — task playbooks (`add-object`, `regenerate-sprite`, `run-backend`, `author-zone`).
+- `.claude/skills/` — task playbooks: `test-changes` (verify ANY change — every test/determinism gate),
+  `frontier-sync` (wire a new deterministic bug-sim mechanic), `ecology-tuning` (balance the bug food web),
+  `run-backend` (the Nakama/Postgres/Go stack), `add-object` / `regenerate-sprite` (world art), `author-zone` (zones).
 
 ## Where things live
 - World art (loaded by `key` at runtime): `Assets/Resources/{Objects,Tiles,Items,Bugs,Effects}/`.
@@ -70,6 +72,16 @@ python3 tools/gen_sprites.py --keys <key>           # generate (default source =
 python3 tools/pixelclean.py                         # clean sprites in place under Resources/
 python3 tools/make_scene.py                         # render tools/_generated/previews/scene.png
 ```
+
+## Entry points for an AI coder (start here)
+- **Verify ANY change / run tests:** the `test-changes` skill — the single source of truth for every test
+  gate (Go unit tests, headless sync-harness, the determinism / "are all players in sync" checks, Unity pass).
+- **Understand the deterministic world + add a bug-sim mechanic:** `docs/product/architecture_swarm_sync.md`
+  **§0 as-built quick reference** (the guarantee, the one invariant, the ledger-event glossary, the recipe),
+  then the `frontier-sync` skill (the step-by-step recipe).
+- **Any complex / risky / determinism change:** run it through `.claude/complex-change-review.md` (stages ×
+  failure-modes + the BugFarmer invariant checklist) + `.claude/lenses.md` (review lenses) before coding.
+- **Git workflow (how we branch/commit/merge):** `.claude/git-guidelines.md`.
 
 ## Find depth in
 - `docs/product/ARCHITECTURE.md` — top-level architecture + index to all product docs.
