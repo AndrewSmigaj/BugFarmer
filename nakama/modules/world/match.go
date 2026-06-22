@@ -573,6 +573,10 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 				logger.Info("Late joiner %s in zone %s, authority is %s", userID, zoneID, zone.AuthorityUserID)
 				m.sendLateJoinSnapshot(logger, dispatcher, worldState, userID, presence)
 			}
+
+			// Phase 1b: every joiner (first or late) gets the zone-wide blocks_bugs collision map so its
+			// bug sim collides identically regardless of camera position. Dynamic changes ride the ledger.
+			m.sendZoneCollisionMap(dispatcher, worldState, presence)
 		}
 	}
 
@@ -2662,6 +2666,7 @@ func (m *Match) handleSnapshotRequest(
 
 	logger.Info("Zone resync requested by %s - sending late-join snapshot", requesterID)
 	m.sendLateJoinSnapshot(logger, dispatcher, state, requesterID, presence)
+	m.sendZoneCollisionMap(dispatcher, state, presence) // Phase 1b: refresh the zone-wide collision map too
 }
 
 // handleZoneSnapshot stores a snapshot from the authority client (OpCode 75).
@@ -2749,6 +2754,21 @@ func (m *Match) buildSwarmSeedBaseline(state *WorldState, zone *ZoneState, chunk
 		baseline = append(baseline, meta)
 	}
 	return baseline
+}
+
+// sendZoneCollisionMap sends one joiner the zone's COMPLETE blocks_bugs cell set (OpCodeZoneCollisionMap)
+// so its per-bug collision runs zone-wide + identically to every other client (decoupled from its camera's
+// loaded chunks). Sent on join AND on resync; dynamic changes after this ride OCCUPANT_BLOCKS_BUGS events.
+func (m *Match) sendZoneCollisionMap(dispatcher runtime.MatchDispatcher, state *WorldState, presence runtime.Presence) {
+	if state.CurrentZone == nil || presence == nil {
+		return
+	}
+	cx, cy := state.BlocksBugsCells()
+	data, err := json.Marshal(ZoneCollisionMapMessage{Cx: cx, Cy: cy})
+	if err != nil {
+		return
+	}
+	dispatcher.BroadcastMessage(OpCodeZoneCollisionMap, data, []runtime.Presence{presence}, nil, true)
 }
 
 // sendLateJoinSnapshot sends a LateJoinSnapshot (OpCode 72) to a joining player.

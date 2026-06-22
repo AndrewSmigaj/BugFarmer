@@ -31,6 +31,16 @@ namespace BugFarmer.World
         // Chunk tracking
         private HashSet<Vector2Int> _subscribedChunks = new HashSet<Vector2Int>();
         private Dictionary<Vector2Int, ChunkRenderData> _loadedChunks = new Dictionary<Vector2Int, ChunkRenderData>();
+
+        // Phase 1b: the ZONE-COMPLETE blocks_bugs collision set (every cell whose occupant blocks bugs,
+        // across the WHOLE zone — not just loaded chunks). The bug sim reads THIS so a fly near a fence
+        // collides identically on every client regardless of camera. Hydrated by OpCodeZoneCollisionMap on
+        // join/resync, then kept in step by frontier-gated OCCUPANT_BLOCKS_BUGS events (SetBlocksBugs).
+        // Rendering + player collision stay view-scoped (_loadedChunks) — only the bug sim went zone-wide.
+        private readonly HashSet<Vector2Int> _blocksBugsZoneWide = new HashSet<Vector2Int>();
+        private bool _collisionMapReady;
+        /// <summary>True once the zone-wide blocks_bugs map has arrived — the bug sim gates on this.</summary>
+        public bool CollisionMapReady => _collisionMapReady;
         private Vector2Int _lastPlayerChunk = new Vector2Int(int.MinValue, int.MinValue);
         private float _lastChunkCheck;
 
@@ -926,6 +936,10 @@ namespace BugFarmer.World
             _subscribedChunks.Clear();
             _loadedChunks.Clear();
             _lastPlayerChunk = new Vector2Int(int.MinValue, int.MinValue); // force a fresh resubscribe
+            // Phase 1b: the new zone sends its own OpCodeZoneCollisionMap on (re)join — drop the old zone's
+            // collision set and re-gate the bug sim until it arrives, so bugs don't collide against stale walls.
+            _blocksBugsZoneWide.Clear();
+            _collisionMapReady = false;
         }
 
         private void UnloadChunk(Vector2Int chunkPos)
@@ -1176,18 +1190,41 @@ namespace BugFarmer.World
             // the old hardcoded water check pinned shoreline flies visibly). The
             // server's data-driven tiles.json blocks_bugs flags are false on water to
             // match — keep both sides in step if a tile ever needs to block bugs.
+            // Phase 1b: read the ZONE-WIDE collision set (not view-scoped _loadedChunks). This is the whole
+            // point — every client must see the same blocks_bugs cells regardless of camera, or grounded bugs
+            // near a fence that only some clients loaded would diverge. Fliers (ignoreOccupants) still skip.
             if (!ignoreOccupants)
             {
-                string occupantId = GetOccupantAt(cellPos);
-                if (!string.IsNullOrEmpty(occupantId))
-                {
-                    var def = Data.EntityDatabase.Get(occupantId);
-                    if (def?.World != null && def.World.BlocksBugs)
-                        return true;
-                }
+                return _blocksBugsZoneWide.Contains(cellPos);
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Phase 1b: set/clear one cell in the zone-wide blocks_bugs collision set. Driven by frontier-gated
+        /// OCCUPANT_BLOCKS_BUGS events (InfluenceManager) so every client mutates the SAME cell at the SAME
+        /// tick. Idempotent (HashSet add/remove), so a placement event that also rode the join-snapshot is safe.
+        /// </summary>
+        public void SetBlocksBugs(Vector2Int cell, bool blocked)
+        {
+            if (blocked) _blocksBugsZoneWide.Add(cell);
+            else _blocksBugsZoneWide.Remove(cell);
+        }
+
+        /// <summary>
+        /// Phase 1b: hydrate the complete zone-wide blocks_bugs set from the server (OpCodeZoneCollisionMap,
+        /// sent on join + resync). Replaces the set wholesale (resync re-sends the authoritative current state),
+        /// then marks the bug sim free to run. Dynamic changes after this ride OCCUPANT_BLOCKS_BUGS events.
+        /// </summary>
+        public void HandleZoneCollisionMap(int[] cx, int[] cy)
+        {
+            _blocksBugsZoneWide.Clear();
+            int n = (cx != null && cy != null) ? System.Math.Min(cx.Length, cy.Length) : 0;
+            for (int i = 0; i < n; i++)
+                _blocksBugsZoneWide.Add(new Vector2Int(cx[i], cy[i]));
+            _collisionMapReady = true;
+            Debug.Log($"[TilemapManager] Zone collision map hydrated: {_blocksBugsZoneWide.Count} blocks_bugs cells");
         }
 
         /// <summary>

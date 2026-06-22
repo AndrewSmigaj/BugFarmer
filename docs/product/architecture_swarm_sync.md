@@ -676,9 +676,37 @@ unknown move names all reject through one expression), and reach is validated BE
 cooldown stamps. All ledger semantics are unchanged: kills still ride `BUG_REMOVED`, HP display
 still rides 89 only.
 
-Related, pre-existing and unchanged by cursor-place: occupant placement reaches clients via the
-chunk-scoped, NON-tick-gated `WorldUpdate` (46) and mutates bug-relevant collision
-(`blocks_bugs`) mid-sim; equal-tick drift detection is the standing backstop.
+Related: occupant placement reaches clients for RENDERING via the chunk-scoped, NON-tick-gated
+`WorldUpdate` (46). That path alone is insufficient for the bug SIM's collision — see §12.3.
+
+### 12.3 Zone-complete bug collision — Phase 1b (2026-06)
+**The gap it closes:** the bug sim is zone-wide (every client simulates every bug), but bug collision
+used to read VIEW-SCOPED occupant data (`TilemapManager._loadedChunks`, ~5×5 chunks around the camera).
+So a grounded bug near a fence that only SOME players had loaded collided on those clients and passed
+through on the rest → that bug's position diverged for players in different areas. (The chunk-scoped
+`WorldUpdate` 46 can't fix this — it never reaches far clients.)
+
+**The fix (mirrors the food-registry pattern):** the bug sim now reads a ZONE-WIDE collision set,
+identical on every client and decoupled from the camera:
+- **Static, on join + resync:** the server sends each joiner the COMPLETE blocks_bugs cell set via
+  `OpCodeZoneCollisionMap` (106) → client hydrates `TilemapManager._blocksBugsZoneWide`. Built by
+  `WorldState.BlocksBugsCells`, which scans EVERY chunk in the zone — including ones not yet in
+  `state.Chunks` (chunks load lazily per subscription, so the first joiner has none in memory). Missing
+  chunks are loaded TRANSIENTLY from disk (read-only, occupant-delta overlaid, NO RNG-bearing init, not
+  stored) so the map is zone-complete and identical for first + late joiners.
+- **Dynamic, on place/break:** a frontier-gated `OCCUPANT_BLOCKS_BUGS` ledger event (emitted centrally in
+  `broadcastWorldUpdate` for every placement path, and in `breakOccupantAt` for player-break + gnaw, one
+  per footprint cell) → client `SetBlocksBugs(cell, blocked)` at the SAME tick on every client.
+- **Readiness gate:** the bug sim won't advance (and the late-join replay won't run) until the map is
+  ready — `_collisionMapReady` / `CollisionMapReady` replaced the old `ViewChunksReady` gate, with an 8s
+  timeout fallback (degrade to "run anyway, self-heal on resync" rather than freeze).
+- **Semantics unchanged:** occupant-only; fliers still skip via `ignoreOccupants` (flies_over_fences);
+  rendering + `IsCellBlockedForPlayers` stay view-scoped. Only the bug-collision SCOPE changed (view→zone).
+
+**Proven:** spawn-apart harness (`SPAWN_A`/`SPAWN_B` in `tools/run_sync_latejoin.sh`) — two clients loading
+DISJOINT chunk halves both hydrate the identical 4322-cell map → collision is camera-independent. Residual
+divergence is the pre-existing late-join snapshot leg residual on reproduced/young swarms (identical pre-1b,
+so not introduced here). `go test ./world/` green; `sim-determinism` PASS.
 
 ### 12.2 Player bug release (2026-06)
 Releasing caught bugs (OpCode 29, drag a bug stack onto the cursor → click the world) reuses

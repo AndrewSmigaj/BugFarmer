@@ -532,6 +532,17 @@ func (m *Match) breakOccupantAt(
 		}
 	}
 
+	// Phase 1b: a REMOVED blocks_bugs occupant (player break OR centipede gnaw — this is the shared path)
+	// unblocks its cells for per-bug collision zone-wide. Ride the tick-ordered ledger so every client
+	// (incl. far ones) clears these cells at the SAME tick. w,h are the removed occupant's footprint.
+	if def.World != nil && def.World.BlocksBugs && state.CurrentZone != nil {
+		for dy := 0; dy < h; dy++ {
+			for dx := 0; dx < w; dx++ {
+				state.AddOccupantBlocksBugsEvent(state.CurrentZone.ZoneID, gx+dx, gy+dy, false)
+			}
+		}
+	}
+
 	// Drop items to ground (with chance-based multi-drop)
 	if withDrops {
 		drops := def.GetDrops()
@@ -655,6 +666,21 @@ func (m *Match) broadcastWorldUpdate(
 	}
 	// If neither: msg.Occupant stays as true nil interface, field is omitted (no change)
 	m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeWorldUpdate, msg)
+
+	// Phase 1b: a PLACED blocks_bugs occupant changes per-bug COLLISION zone-wide. The WorldUpdate above is
+	// chunk-scoped (can't reach far clients), so ALSO ride the tick-ordered ledger here — central to EVERY
+	// placement path (player place, seed, runtime nest spawn). One event per footprint cell (anchor incl.).
+	// Removal is emitted by breakOccupantAt (which has the removed occupant's def/footprint; here occ is nil).
+	if occupant != nil && !clearOccupant && state.CurrentZone != nil {
+		if def := state.Entities[occupant.ID]; def != nil && def.World != nil && def.World.BlocksBugs {
+			w, h := def.GetFootprint(occupant.Dir)
+			for dy := 0; dy < h; dy++ {
+				for dx := 0; dx < w; dx++ {
+					state.AddOccupantBlocksBugsEvent(state.CurrentZone.ZoneID, gx+dx, gy+dy, true)
+				}
+			}
+		}
+	}
 }
 
 // getToolStats returns the tool type and tier for a given tool ID

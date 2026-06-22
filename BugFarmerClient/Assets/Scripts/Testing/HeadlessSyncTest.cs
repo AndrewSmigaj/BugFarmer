@@ -56,14 +56,32 @@ namespace BugFarmer.Testing
             string zone = HeadlessSyncTest.GetArg("-zone", "village_21_B");
             string clientId = HeadlessSyncTest.GetArg("-clientid", "A");
             if (!int.TryParse(HeadlessSyncTest.GetArg("-duration", "60"), out int duration)) duration = 60;
-            Log($"start: zone={zone} clientId={clientId} duration={duration}s");
+
+            // Phase 1b proof: -spawn gx,gy places this client at a chosen cell so two instances load DIFFERENT
+            // chunk sets (one near a fly-farm fence, one far away). Collision is now zone-wide, so fence-adjacent
+            // bugs must stay bit-identical even on the client that never loaded the fence. Omitted = default spawn.
+            float? entryX = null, entryY = null;
+            string spawn = HeadlessSyncTest.GetArg("-spawn", null);
+            if (!string.IsNullOrEmpty(spawn))
+            {
+                var parts = spawn.Split(',');
+                if (parts.Length == 2
+                    && float.TryParse(parts[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float sx)
+                    && float.TryParse(parts[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float sy))
+                {
+                    entryX = sx + 0.5f; // cell centre
+                    entryY = sy + 0.5f;
+                }
+                else Log($"WARNING: could not parse -spawn '{spawn}' (want gx,gy); using default spawn");
+            }
+            Log($"start: zone={zone} clientId={clientId} duration={duration}s spawn={(entryX.HasValue ? $"{entryX},{entryY}" : "default")}");
 
             try
             {
                 await NetworkManager.Instance.Session;            // device auth (distinct per -clientid)
                 await NetworkManager.Instance.ConnectSocketAsync();
                 Log("socket connected; entering world (ephemeral, no character)…");
-                await WorldManager.Instance.EnterWorld(zone, null);
+                await WorldManager.Instance.EnterWorld(zone, null, entryX, entryY);
                 Log($"entered '{zone}'; waiting for the bug sim…");
 
                 float t0 = Time.realtimeSinceStartup;

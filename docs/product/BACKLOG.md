@@ -306,10 +306,20 @@ unrelated `HotbarUI.Start` NRE guard (leftover-scene null `slots`). **Verify pen
   `handlePredationStrike` → `applyPredationStrike`; the kill rides `BUG_REMOVED` (frontier-gated) so all
   clients stay bit-identical. Per-victim snatch telegraph. Proven: harness IDENTICAL (21,734/21,734) through
   9 real strikes; `go test ./world/` green; `tools/sim-determinism` PASS.
-- **Deferred hardening (filed, NOT blocking):** Phase 1b — make `blocks_bugs` collision zone-complete on
-  every client (only bites when players are in *different* areas; the strike is authority-only so it doesn't
-  need it). On-demand authority snapshot for the rare empty-bootstrap late-join window. The ~0.001-cell
-  late-join replay micro-drift (immaterial to nearest-fly selection). Also: rewrite `architecture_swarm_sync.md`
+- **Phase 1b — zone-complete `blocks_bugs` collision (DONE):** the bug sim now collides against a ZONE-WIDE
+  collision set on every client, decoupled from the camera — closing the last cross-player desync (bugs near
+  a fence that only some players had loaded used to diverge). The server sends each joiner the complete
+  blocks_bugs cell set on join + resync (`OpCodeZoneCollisionMap` 106, built from ALL zone chunks incl. those
+  not yet in memory — loaded transiently from disk, no RNG init); dynamic place/break rides a frontier-gated
+  `OCCUPANT_BLOCKS_BUGS` ledger event so every client toggles the same cell at the same tick. Client reads
+  `TilemapManager._blocksBugsZoneWide` (was view-scoped `_loadedChunks`); the bug sim gates on the map being
+  ready (timeout fallback). **Proven:** spawn-apart harness — two clients loading DISJOINT chunk halves both
+  hydrate the identical 4322-cell map → collision is camera-independent; co-located regression unchanged;
+  residual divergence is the pre-existing late-join snapshot leg residual (confirmed identical pre-1b at 1.2%
+  via a baseline build, so NOT introduced here — see [[#127]]); `go test ./world/` green; `sim-determinism` PASS.
+- **Deferred hardening (filed, NOT blocking):** on-demand authority snapshot for the rare empty-bootstrap
+  late-join window (#137). The pre-existing late-join snapshot leg residual on a reproduced/young swarm
+  (#127 — keep young-swarm SWARM_SPAWNED events until snapshotted). Also: rewrite `architecture_swarm_sync.md`
   as the as-built guide + a `frontier-sync` skill.
 
 ## Done (recent) — PREDATORS v1: wasps + nests, the centipede, player HP, first audio

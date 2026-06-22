@@ -42,8 +42,15 @@ taskkill.exe /F /IM BugFarmerClient.exe >/dev/null 2>&1 || true
 rm -f "$PDATA"/trace_A_*.csv "$PDATA"/trace_B_*.csv 2>/dev/null
 rm -f "$PDATA"/player_A.log "$PDATA"/player_B.log 2>/dev/null
 
-echo "launching client A (authority, creates the match)…"
-"$PLAYER" -batchmode -nographics -synctest -zone "$ZONE" -clientid A -duration "$DUR" \
+# Optional spawn-apart (Phase 1b proof): SPAWN_A / SPAWN_B = "gx,gy" place each client at a chosen edge so
+# they load DIFFERENT chunk sets. Collision is now zone-wide, so fence-adjacent bugs must stay bit-identical
+# even on the client that never loaded the fence. Unset = default spawn (co-located regression).
+A_SPAWN_ARG=(); B_SPAWN_ARG=()
+[ -n "${SPAWN_A:-}" ] && A_SPAWN_ARG=(-spawn "$SPAWN_A")
+[ -n "${SPAWN_B:-}" ] && B_SPAWN_ARG=(-spawn "$SPAWN_B")
+
+echo "launching client A (authority, creates the match)… spawn=${SPAWN_A:-default}"
+"$PLAYER" -batchmode -nographics -synctest -zone "$ZONE" -clientid A -duration "$DUR" "${A_SPAWN_ARG[@]}" \
   -logFile "$WPDATA/player_A.log" >"$PDATA/player_A.out" 2>&1 &
 PA=$!
 
@@ -64,8 +71,8 @@ sleep "$DELAY"
 # B_launch = A_recstart+DELAY → B records [A_recstart+DELAY+28, ...]. So BDUR = DUR-DELAY-28 ends B with A.
 BDUR=$(( DUR - DELAY - 30 ))
 [ "$BDUR" -lt 30 ] && BDUR=30
-echo "launching client B (LATE JOIN), duration=${BDUR}s…"
-"$PLAYER" -batchmode -nographics -synctest -zone "$ZONE" -clientid B -duration "$BDUR" \
+echo "launching client B (LATE JOIN), duration=${BDUR}s… spawn=${SPAWN_B:-default}"
+"$PLAYER" -batchmode -nographics -synctest -zone "$ZONE" -clientid B -duration "$BDUR" "${B_SPAWN_ARG[@]}" \
   -logFile "$WPDATA/player_B.log" >"$PDATA/player_B.out" 2>&1 &
 PB=$!
 

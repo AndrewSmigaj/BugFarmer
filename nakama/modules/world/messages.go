@@ -144,6 +144,9 @@ const (
 
 	OpCodeBroodUpdate int64 = 104 // S->C: a brood's egg/maggot counts changed (display-only nursery, like StationUpdate)
 
+	OpCodeZoneCollisionMap int64 = 106 // S->C (on join + resync): the zone's COMPLETE blocks_bugs cell set, so
+	// every client runs per-bug collision zone-wide + identically (decoupled from its camera's chunk view).
+
 	OpCodePredationStrike int64 = 105 // C->S (authority only): the authority client picked the individual flies a
 	// predator struck (it has per-bug positions; the server does not). Server validates + applies via the
 	// existing kill path (killBugsInSwarm → BUG_REMOVED + carrion + satiation). See PredationStrikeMessage.
@@ -271,6 +274,16 @@ type PredationStrikeMessage struct {
 	BugX            []float32 `json:"bug_x,omitempty"`
 	BugY            []float32 `json:"bug_y,omitempty"`
 	Tick            int64     `json:"tick,omitempty"`
+}
+
+// ZoneCollisionMapMessage (OpCode 106, S->C, on join + resync): the zone's COMPLETE set of cells that
+// block bugs (occupants with World.BlocksBugs). Clients run per-bug collision against this zone-wide set
+// instead of their view-scoped chunks, so a bug near a fence collides IDENTICALLY on every client
+// regardless of camera position. Cx[i],Cy[i] = a blocked world cell. Dynamic changes ride
+// OCCUPANT_BLOCKS_BUGS influence events (frontier-gated) after this baseline.
+type ZoneCollisionMapMessage struct {
+	Cx []int `json:"cx"`
+	Cy []int `json:"cy"`
 }
 
 // PlayerDamageMessage (OpCode 94): a bug attack landed (or a regen/join echo with
@@ -819,6 +832,12 @@ const (
 	// CenterX/CenterY=spawn world pos (×1000, == the swarm's first leg origin). NOT used for split (SWARM_SPLIT)
 	// or reproduce-into-existing (SWARM_REPRODUCED).
 	InfluenceSwarmSpawned = "SWARM_SPAWNED"
+
+	// A blocks_bugs occupant (fence/wall) was placed or removed at a cell — the per-bug COLLISION change,
+	// rides the tick-ordered ledger so every client updates its zone-wide collision set at the SAME tick
+	// (the chunk-scoped WorldUpdate that renders it can't reach far clients). CellX/CellY = world cell;
+	// Level = 1 (now blocks bugs) or 0 (no longer). Phase 1b — see architecture_swarm_sync.md.
+	InfluenceOccupantBlocksBugs = "OCCUPANT_BLOCKS_BUGS"
 )
 
 // InfluenceEvent represents a discrete, replayable signal for bug AI

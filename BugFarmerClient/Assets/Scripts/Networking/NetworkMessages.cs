@@ -41,6 +41,7 @@ namespace BugFarmer.Networking
         public const int EquipArmor = 96;       // C->S: {equip_slot, inv_slot} equip/unequip/swap
         public const int EquipmentUpdate = 97;  // S->C: the 7 worn-armor slots (echo + join)
         public const int PredationStrike = 105; // C->S (authority only): individual flies a predator struck
+        public const int ZoneCollisionMap = 106; // S->C (join + resync): zone-complete blocks_bugs cell set
     }
 
     /// <summary>
@@ -248,6 +249,18 @@ namespace BugFarmer.Networking
         public float[] bug_x;
         public float[] bug_y;
         public long tick;
+    }
+
+    /// <summary>
+    /// ZoneCollisionMap (OpCode 106, S→C, sent to one joiner on join + resync): the COMPLETE set of cells in
+    /// the zone whose occupant blocks bugs. The client hydrates TilemapManager._blocksBugsZoneWide so its bug
+    /// sim collides zone-wide + identically to every other client (Phase 1b). cx[i],cy[i] = one global cell.
+    /// </summary>
+    [Serializable]
+    public class ZoneCollisionMapMessage
+    {
+        public int[] cx;
+        public int[] cy;
     }
 
     /// <summary>Sleep in a bed → set this character's home (OpCode 100, C→S): the bed's anchor cell.</summary>

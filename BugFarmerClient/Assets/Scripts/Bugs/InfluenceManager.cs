@@ -63,6 +63,7 @@ namespace BugFarmer.Bugs
         public const string EventSwarmSpawned = "SWARM_SPAWNED";
         public const string EventItemRotted = "ITEM_ROTTED";
         public const string EventFoodConsumed = "FOOD_CONSUMED";
+        public const string EventOccupantBlocksBugs = "OCCUPANT_BLOCKS_BUGS"; // Phase 1b: fence/wall placed (level=1) or removed (0)
 
         // === Deterministic FOOD REGISTRY ===
         // food_id -> (world position, remaining level). Maintained ONLY from tick+seq events
@@ -239,6 +240,15 @@ namespace BugFarmer.Bugs
                             _food[evt.food_id] = (FixedPoint2.FromVector2(
                                 new Vector2(evt.cell_x + 0.5f, evt.cell_y + 0.5f)), evt.level);
                     }
+                    break;
+
+                case EventOccupantBlocksBugs:
+                    // Phase 1b: a blocks_bugs occupant (fence/wall) was placed (level=1) or removed (0) at a
+                    // cell. Update the ZONE-WIDE bug-collision set so every client (incl. far ones the
+                    // chunk-scoped WorldUpdate never reaches) toggles this cell at the SAME tick → the bug sim
+                    // collides identically. Idempotent (HashSet add/remove).
+                    BugFarmer.World.TilemapManager.Instance?.SetBlocksBugs(
+                        new Vector2Int(evt.cell_x, evt.cell_y), evt.level > 0);
                     break;
 
                 default:

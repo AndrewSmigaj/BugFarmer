@@ -129,11 +129,11 @@ namespace BugFarmer.Entities
         private SwarmData[] _pendingBaselineSwarms;
         private long _pendingBaselineTick;
 
-        // Cause #6 fix: defer the late-join bug replay until the joiner's view-chunk OCCUPANT data is loaded.
-        // Bug collision (BugCollision -> TilemapManager.IsCellBlockedForBugs) reads occupant data from loaded
-        // chunks, which arrive ASYNC via chunk subscription. Replaying before they load makes bugs near walls
-        // collide differently than the authority (X-then-Y slide), a sub-cell error the position-relative
-        // wander then amplifies into a permanent per-bug divergence. Confirmed against a wall_wood row.
+        // Cause #6 fix (Phase 1b): defer the late-join bug replay until the joiner's ZONE-WIDE blocks_bugs
+        // collision map has arrived. Bug collision (BugCollision -> TilemapManager.IsCellBlockedForBugs) reads
+        // that zone-wide set; replaying before it loads makes bugs near walls collide differently than the
+        // authority (X-then-Y slide), a sub-cell error the position-relative wander then amplifies into a
+        // permanent per-bug divergence. (Previously gated on view chunks, when collision was view-scoped.)
         private bool _deferredReplayPending;
         private long _deferredReplayEndTick;
         private float _deferredReplayDeadline;
@@ -141,6 +141,13 @@ namespace BugFarmer.Entities
         private long _cachedHandoffTick;
         private long _cachedHandoffSeq;
         private const float DeferredReplayTimeout = 8f; // fallback: replay anyway (accept divergence) vs freeze
+
+        // Phase 1b: the live (first-joiner) bug sim must not advance before the zone-wide blocks_bugs collision
+        // map (OpCodeZoneCollisionMap) arrives, or bugs near walls pass through for a few ticks and diverge.
+        // Armed lazily the first frame we'd tick without it; a timeout fallback ensures a lost map can't freeze
+        // the sim forever (it self-heals on the next resync). Reset per-zone when the map becomes ready.
+        private float _collisionMapDeadline = -1f;
+        private const float CollisionMapTimeout = 8f;
 
         // Safety net timeouts
         private float _frontierStallTimer;
@@ -312,15 +319,18 @@ namespace BugFarmer.Entities
             // (or after a timeout fallback, accepting possible divergence rather than freezing the joiner).
             if (_deferredReplayPending)
             {
-                bool chunksReady = TilemapManager.Instance == null || TilemapManager.Instance.ViewChunksReady;
+                // Phase 1b: gate the deferred replay on the ZONE-WIDE collision map, not the view chunks. The
+                // old reason for waiting (bug collision read view-scoped occupant data) is gone — collision now
+                // reads _blocksBugsZoneWide, so the map is exactly what the replay needs present to be correct.
+                bool chunksReady = TilemapManager.Instance == null || TilemapManager.Instance.CollisionMapReady;
                 bool timedOut = Time.realtimeSinceStartup >= _deferredReplayDeadline;
                 if (chunksReady || timedOut)
                 {
                     _deferredReplayPending = false;
                     if (timedOut && !chunksReady)
-                        DebugFileLogger.Log("[SwarmManager] Deferred replay TIMEOUT — replaying without full chunk load (bugs near walls may diverge until resync)");
+                        DebugFileLogger.Log("[SwarmManager] Deferred replay TIMEOUT — replaying without the collision map (bugs near walls may diverge until resync)");
                     else
-                        DebugFileLogger.Log($"[SwarmManager] View chunks ready — running deferred late-join replay to {_deferredReplayEndTick}");
+                        DebugFileLogger.Log($"[SwarmManager] Collision map ready — running deferred late-join replay to {_deferredReplayEndTick}");
                     RunLateJoinReplay(_deferredReplayEndTick);
                 }
             }
@@ -364,7 +374,28 @@ namespace BugFarmer.Entities
             // 1. SimulationTick < AuthoritativeTick  (frontier check)
             // 2. _lastReceivedSeq >= _frontierWatermark  (watermark check - all events received)
             _tickAccumulator += Time.deltaTime;
-            bool canAdvance = _simulationTick < _authoritativeTick
+
+            // Phase 1b: don't simulate before the zone-wide collision map arrives (bugs would pass through
+            // walls on this client only). Arm a timeout the first frame we'd otherwise stall, so a lost map
+            // degrades to "run anyway, self-heal on resync" rather than freezing the sim.
+            bool collisionReady = TilemapManager.Instance == null || TilemapManager.Instance.CollisionMapReady;
+            if (collisionReady)
+            {
+                _collisionMapDeadline = -1f; // ready: disarm + re-arm fresh for the next zone
+            }
+            else
+            {
+                if (_collisionMapDeadline < 0f)
+                    _collisionMapDeadline = Time.realtimeSinceStartup + CollisionMapTimeout;
+                if (Time.realtimeSinceStartup >= _collisionMapDeadline)
+                {
+                    collisionReady = true; // fallback: don't freeze; bugs near walls may diverge until resync
+                    DebugFileLogger.Log("[SwarmManager] Collision-map TIMEOUT — advancing sim without it (bugs near walls may diverge until resync)");
+                }
+            }
+
+            bool canAdvance = collisionReady
+                           && _simulationTick < _authoritativeTick
                            && HasAllEventsUpTo(_frontierWatermark);
 
             // Debug: periodic gate status, every 50 ticks (~5 sec). Do NOT key
@@ -859,6 +890,9 @@ namespace BugFarmer.Entities
                     break;
                 case OpCodes.ZoneTickBroadcast:
                     HandleZoneTickBroadcast(state);
+                    break;
+                case OpCodes.ZoneCollisionMap:
+                    HandleZoneCollisionMap(state);
                     break;
                 // Inventory messages (26, 37, 38) handled by InventoryManager
             }
@@ -1403,6 +1437,20 @@ namespace BugFarmer.Entities
         }
 
         /// <summary>
+        /// Handle the zone-wide blocks_bugs collision map (OpCode 106, Phase 1b). Sent to each joiner on join
+        /// and on resync. Hydrates TilemapManager's zone-complete collision set so the bug sim collides against
+        /// walls IDENTICALLY on every client regardless of camera, and releases the readiness gate so the sim
+        /// may run. Dynamic placements/removals after this ride frontier-gated OCCUPANT_BLOCKS_BUGS events.
+        /// </summary>
+        private void HandleZoneCollisionMap(IMatchState state)
+        {
+            var json = System.Text.Encoding.UTF8.GetString(state.State);
+            var msg = JsonUtility.FromJson<ZoneCollisionMapMessage>(json);
+            if (msg == null) return;
+            BugFarmer.World.TilemapManager.Instance?.HandleZoneCollisionMap(msg.cx, msg.cy);
+        }
+
+        /// <summary>
         /// Handle late join snapshot (OpCode 72).
         /// Contains snapshot + influence_log for deterministic replay.
         /// </summary>
@@ -1603,18 +1651,19 @@ namespace BugFarmer.Entities
             Debug.Log($"[SwarmManager] {inboxLog}");
             DebugFileLogger.Log($"[SwarmManager] {inboxLog}");
 
-            // Cause #6: gate the bug replay on the view-chunk OCCUPANT data being loaded. Bug collision
-            // during replay reads occupants from TilemapManager, which fill ASYNC via chunk subscription.
-            // Replaying first makes bugs near walls collide differently than the authority (permanent
-            // per-bug divergence). If the chunks aren't ready, defer to Update(); else replay now.
-            if (TilemapManager.Instance != null && !TilemapManager.Instance.ViewChunksReady)
+            // Cause #6 (Phase 1b): gate the bug replay on the ZONE-WIDE collision map being loaded. Bug
+            // collision during replay reads TilemapManager's blocks_bugs set; replaying before it arrives makes
+            // bugs near walls collide differently than the authority (permanent per-bug divergence). The map
+            // (OpCodeZoneCollisionMap) is sent alongside the late-join snapshot. If it's not here yet, defer to
+            // Update(); else replay now. (Was gated on view chunks; collision is now zone-wide, not view-scoped.)
+            if (TilemapManager.Instance != null && !TilemapManager.Instance.CollisionMapReady)
             {
                 _deferredReplayPending = true;
                 _deferredReplayEndTick = msg.end_tick;
                 _deferredReplayDeadline = Time.realtimeSinceStartup + DeferredReplayTimeout;
                 _cachedHandoff = false;
-                Debug.Log($"[SwarmManager] Late-join replay DEFERRED until view chunks load (end_tick={msg.end_tick})");
-                DebugFileLogger.Log($"[SwarmManager] Late-join replay DEFERRED (view chunks not ready), end_tick={msg.end_tick}");
+                Debug.Log($"[SwarmManager] Late-join replay DEFERRED until the zone collision map loads (end_tick={msg.end_tick})");
+                DebugFileLogger.Log($"[SwarmManager] Late-join replay DEFERRED (collision map not ready), end_tick={msg.end_tick}");
                 return;
             }
 

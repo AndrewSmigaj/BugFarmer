@@ -667,6 +667,103 @@ func (s *WorldState) AddInfluenceEvent(zoneID, eventType, playerID string, cellX
 	s.PendingInfluence = append(s.PendingInfluence, event)
 }
 
+// BlocksBugsCells returns every world cell in the zone whose occupant blocks bugs (World.BlocksBugs) —
+// the COMPLETE zone-wide collision set sent to each joiner (OpCodeZoneCollisionMap). Phase 1b: clients run
+// per-bug collision against this instead of their view-scoped chunks, so a bug near a fence collides
+// IDENTICALLY on every client regardless of camera. Deterministic order (sorted chunk keys). Anchor AND
+// footprint cells both carry the occupant id, so iterating every cell covers multi-cell occupants.
+func (s *WorldState) BlocksBugsCells() (cx []int, cy []int) {
+	if s.CurrentZone == nil {
+		return nil, nil
+	}
+	// Scan the WHOLE zone grid, not just s.Chunks — chunks load lazily (per subscription), so the first
+	// joiner has NONE in memory at MatchJoin. We load the missing ones transiently from disk (read-only,
+	// no RNG-bearing init, not stored) so the map is zone-COMPLETE and identical for first + late joiners.
+	chunksX := s.CurrentZone.Width / ChunkSize
+	chunksY := s.CurrentZone.Height / ChunkSize
+	if chunksX <= 0 {
+		chunksX = 8
+	}
+	if chunksY <= 0 {
+		chunksY = 8
+	}
+	zonePath := "data/zones/" + s.CurrentZone.ZoneID
+	for ccy := 0; ccy < chunksY; ccy++ {
+		for ccx := 0; ccx < chunksX; ccx++ {
+			chunk := s.chunkForCollision(zonePath, ccx, ccy)
+			if chunk == nil {
+				continue
+			}
+			for ly := 0; ly < len(chunk.Occupants); ly++ {
+				row := chunk.Occupants[ly]
+				for lx := 0; lx < len(row); lx++ {
+					cell, err := ParseOccupantCell(row[lx])
+					if err != nil || cell.Occupant == nil {
+						continue
+					}
+					def := s.Entities[cell.Occupant.ID]
+					if def != nil && def.World != nil && def.World.BlocksBugs {
+						cx = append(cx, ccx*ChunkSize+lx)
+						cy = append(cy, ccy*ChunkSize+ly)
+					}
+				}
+			}
+		}
+	}
+	return cx, cy
+}
+
+// chunkForCollision returns the chunk to scan for blocks_bugs occupants. If the chunk is already in memory
+// (subscribed → saved-delta + lazy init already applied) it's returned as-is. Otherwise it's loaded from
+// disk TRANSIENTLY with only the occupant delta overlaid (mirrors applyChunkSave's cell loop) — NOT stored
+// and NO init, so a later real subscription still runs initFruitTrees/Nests/etc. exactly once (their RNG
+// draws stay in their normal order). Result matches the in-memory form, so first + late joiners agree.
+func (s *WorldState) chunkForCollision(zonePath string, cx, cy int) *ChunkData {
+	if ch, ok := s.Chunks[ChunkKey(cx, cy)]; ok {
+		return ch
+	}
+	ch, err := LoadChunk(zonePath, cx, cy)
+	if err != nil {
+		return nil // no authored file → no authored occupants here
+	}
+	if s.ZoneChunkCache != nil {
+		if cs := s.ZoneChunkCache[ChunkKey(cx, cy)]; cs != nil {
+			for _, e := range cs.Cells {
+				if e.LY < 0 || e.LY >= ChunkSize || e.LX < 0 || e.LX >= ChunkSize {
+					continue
+				}
+				if e.OccSet {
+					ch.Occupants[e.LY][e.LX] = e.Occ // nil clears a broken authored occupant
+				}
+			}
+		}
+	}
+	return ch
+}
+
+// AddOccupantBlocksBugsEvent logs a tick-ordered OCCUPANT_BLOCKS_BUGS event (a blocks_bugs occupant placed
+// or removed at one cell) so every client updates its zone-wide bug-collision set at the SAME tick — the
+// chunk-scoped WorldUpdate that renders the change can't reach far clients. Level=1 blocks, 0 clears.
+func (s *WorldState) AddOccupantBlocksBugsEvent(zoneID string, cellX, cellY int, blocked bool) {
+	zone := s.GetOrCreateZone(zoneID)
+	level := 0
+	if blocked {
+		level = 1
+	}
+	event := InfluenceEvent{
+		Tick:   s.TickCount,
+		Seq:    zone.NextSeq,
+		Type:   InfluenceOccupantBlocksBugs,
+		ZoneID: zoneID,
+		CellX:  cellX,
+		CellY:  cellY,
+		Level:  level,
+	}
+	zone.NextSeq++
+	zone.InfluenceLog = append(zone.InfluenceLog, event)
+	s.PendingInfluence = append(s.PendingInfluence, event)
+}
+
 // AddSwarmTargetEvent logs a SWARM_SET_TARGET leg through the same seq-gated ledger
 // as AddInfluenceEvent. Coordinates/speed are fixed-point (×1000).
 func (s *WorldState) AddSwarmTargetEvent(zoneID, swarmID string, originX, originY, targetX, targetY, speed int,
