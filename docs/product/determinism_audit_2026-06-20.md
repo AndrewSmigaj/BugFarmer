@@ -26,8 +26,29 @@
 > in the sections below: **re-root on mid-session acquisition** (§ROOT CAUSE) and **merge/split/reproduce
 > id-mapping** (§contributing #3). So the original 96% was an invalid measurement, but the *finding* —
 > the recent lifecycle mechanics broke cross-client determinism — is **confirmed on a trustworthy harness**.
-> The fix for the divergence itself (snapshot-on-acquisition, food consistency, merge/split validation) is
-> **not yet done** — that is the next piece of work; the sections below are the (re-validated) mechanism map.
+> The fix for the divergence itself (snapshot-on-acquisition, food consistency, merge/split validation) was
+> the next piece of work — **now SUPERSEDED, see below.**
+>
+> **3. SUPERSEDED — the mechanism map below is FIXED (2026-06), this doc is historical.** Each vector this
+> audit identified was closed by the deterministic-lockstep work that followed; do NOT read the sections
+> below as open issues:
+> - **Re-root on mid-session acquisition / spawn-tick** → fixed by **Phase 1a**: the `SWARM_SPAWNED` ledger
+>   event creates swarms at a deterministic cross-client tick; `SwarmUpdate` no longer creates swarms (the
+>   on-receipt re-root is gone). [architecture_swarm_sync.md §swarm creation]
+> - **Merge/split/reproduce id-mapping** → the `SWARM_SPLIT`/`SWARM_MERGE`/`SWARM_REPRODUCED` events are
+>   frontier-gated and applied at the event tick on every client (identical id math).
+> - **Food registry as a chunk-scoped input to a zone-wide sim** → food is now event-sourced
+>   (`ITEM_ROTTED`/`FOOD_CONSUMED`) + hydrated bit-exact from the late-join snapshot (`HydrateFoodExact`).
+> - **View-scoped collision in a zone-wide sim** → fixed by **Phase 1b**: zone-complete `blocks_bugs`
+>   (`OpCodeZoneCollisionMap` + `OCCUPANT_BLOCKS_BUGS`).
+> - **Empty-authority / 0-bug harness artifact** (the original "96%") → the WorldManager pre-join buffer
+>   (commit `1c1b251`) + the harness fail-fast.
+>
+> **Proof (fixed, self-tested harness):** co-located AND genuinely-disjoint spawn-apart late-joins are
+> bit-identical — 0 divergent shared-bug states AND 0 per-tick hash mismatches (`tools/run_sync_latejoin.sh`
+> via `tools/sync_diff.py`, unit-tested by `tools/test_sync_diff.py`); `tools/sim-determinism` PASS. The one
+> remaining residual (#127, a reproduced bug at a late-join boundary) is a rare self-healing transient,
+> tracked separately. The sections below are the (re-validated) MECHANISM MAP that motivated the fixes.
 
 ## Symptom (measured, not assumed)
 Two real headless Unity clients in ONE live `village_21_B` match, compared **per-bug** (matched by

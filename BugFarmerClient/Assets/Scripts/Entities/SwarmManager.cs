@@ -1532,6 +1532,23 @@ namespace BugFarmer.Entities
             Debug.Log($"[SwarmManager] LateJoinSnapshot contains {metadataCount} swarm metadata entries");
             DebugFileLogger.Log($"[SwarmManager] LateJoinSnapshot contains {metadataCount} swarm metadata entries");
 
+            // #127: the exact bug-ids the snapshot carries, per swarm. A swarm WITH snapshot bugs is created
+            // with EXACTLY those ids below (ApplySnapshot then gives them full state); bugs that reproduced or
+            // spawned in the snapshot-lag window are NOT prespawned from the live metadata.count — they are
+            // minted by the replayed SWARM_REPRODUCED/SWARM_SPAWNED at their OWN tick (else they integrate
+            // from the wrong tick → permanent ~1-cell drift). Bootstrap (no snapshot bugs) keeps metadata.count.
+            var snapBugIds = new Dictionary<string, List<int>>();
+            if (msg.swarms != null)
+            {
+                foreach (var sd in msg.swarms)
+                {
+                    if (sd?.bugs == null) continue;
+                    var ids = new List<int>(sd.bugs.Length);
+                    foreach (var b in sd.bugs) ids.Add(b.bug_id);
+                    snapBugIds[sd.swarm_id] = ids;
+                }
+            }
+
             if (msg.swarm_metadata != null)
             {
                 foreach (var metadata in msg.swarm_metadata)
@@ -1565,8 +1582,25 @@ namespace BugFarmer.Entities
                     Debug.Log($"[SwarmManager] Creating swarm {metadata.id} from metadata before replay");
                     DebugFileLogger.Log($"[SwarmManager] Creating swarm {metadata.id} from metadata before replay");
 
-                    // Create swarm visual using the snapshot_tick (they'll be positioned at snapshot state)
-                    SpawnSwarmFromMetadata(metadata, msg.snapshot_tick);
+                    // Create swarm visual using the snapshot_tick (ApplySnapshot positions the bugs next).
+                    if (snapBugIds.TryGetValue(metadata.id, out var ids) && ids.Count > 0)
+                    {
+                        // #127: create EXACTLY the snapshot's bug-ids. A count=0 shell keeps the correct
+                        // _nextBugId (Initialize: next_bug_id>0 ? next_bug_id : count) and spawns no bugs;
+                        // then spawn the snapshot ids (ApplySnapshot overwrites their full state, so the
+                        // SpawnBugAt seed tick is irrelevant). Window-created bugs are minted by replay.
+                        metadata.count = 0; // SwarmData is a class, but this entry isn't reused after here
+                        SpawnSwarmFromMetadata(metadata, msg.snapshot_tick);
+                        var sv = GetSwarm(metadata.id);
+                        if (sv != null)
+                            foreach (var id in ids)
+                                sv.SpawnBugAt(id);
+                    }
+                    else
+                    {
+                        // No snapshot bugs (empty-bootstrap / seed-baseline) → prespawn from metadata.count.
+                        SpawnSwarmFromMetadata(metadata, msg.snapshot_tick);
+                    }
                 }
             }
 
