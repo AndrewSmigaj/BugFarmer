@@ -684,6 +684,17 @@ namespace BugFarmer.Entities
         }
 
         /// <summary>
+        /// Phase 2 predation strike: iterate ALIVE bugs as (bugId, fixed-point position) in ASCENDING
+        /// bug-id order — deterministic so any client (e.g. a new authority after handoff) selects the
+        /// same victim. _bugs is alive-only (RemoveBugsById deletes from it).
+        /// </summary>
+        public IEnumerable<(int bugId, FixedPoint2 pos)> GetAllBugsAliveSorted()
+        {
+            foreach (var bugId in _bugs.Keys.OrderBy(id => id))
+                yield return (bugId, _bugs[bugId].Agent.Position);
+        }
+
+        /// <summary>
         /// Apply snapshot from another client (late joiner or drift correction).
         /// Sets full state including position, velocity, RNG, behavior, and movement state.
         /// NOTE: SwarmManager owns ticks - this method only sets bug state.

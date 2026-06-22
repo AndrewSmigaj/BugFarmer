@@ -37,6 +37,20 @@ namespace BugFarmer.Bugs
             public long StartTick;     // Tick the leg began
         }
 
+        // Phase 2 individual-fly predation: which prey a predator swarm is hunting + its strike params,
+        // read from the hunt SWARM_SET_TARGET fields. The AUTHORITY uses this to pick the nearest
+        // individual fly to strike. Populated only while a predator is actively hunting; cleared otherwise.
+        // Key: predator swarm_id.
+        private readonly Dictionary<string, SwarmStrike> _swarmStrikes = new();
+
+        public struct SwarmStrike
+        {
+            public string TargetPreyId;
+            public int StrikeRadiusFixed; // ×1000 (compare via FixedPoint multiply, NOT raw int²)
+            public int KillsPerStrike;
+            public int StrikeCooldownTicks;
+        }
+
         // Event type constants (must match server)
         public const string EventPlayerCellEnter = "PLAYER_CELL_ENTER";
         public const string EventPlayerCellLeave = "PLAYER_CELL_LEAVE";
@@ -157,6 +171,22 @@ namespace BugFarmer.Bugs
                         Speed = new FixedPoint { Value = evt.speed },
                         StartTick = evt.tick
                     };
+                    // Phase 2: a HUNT leg carries the prey + strike params (empty on every other leg) —
+                    // store for the authority's strike pass; clear when this predator stops hunting.
+                    if (!string.IsNullOrEmpty(evt.target_prey_id))
+                    {
+                        _swarmStrikes[evt.swarm_id] = new SwarmStrike
+                        {
+                            TargetPreyId = evt.target_prey_id,
+                            StrikeRadiusFixed = evt.strike_radius,
+                            KillsPerStrike = evt.kills_per_strike,
+                            StrikeCooldownTicks = evt.strike_cooldown_ticks,
+                        };
+                    }
+                    else
+                    {
+                        _swarmStrikes.Remove(evt.swarm_id);
+                    }
                     break;
 
                 case EventBugRemoved:
@@ -233,6 +263,12 @@ namespace BugFarmer.Bugs
         /// Get player count for debugging/validation.
         /// </summary>
         public int PlayerCellCount => _playerCells.Count;
+
+        /// <summary>
+        /// Phase 2: the predator swarms currently hunting (predator swarm_id → strike params), for the
+        /// authority's per-tick strike pass. Caller iterates in a deterministic order (sort by key).
+        /// </summary>
+        public IEnumerable<KeyValuePair<string, SwarmStrike>> GetHuntingSwarms() => _swarmStrikes;
 
         /// <summary>
         /// Compute a swarm's center deterministically for a given tick via closed-form march

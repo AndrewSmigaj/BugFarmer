@@ -193,7 +193,37 @@ func predationTestState() *WorldState {
 			NestOccupant:           "wasp_nest",
 		},
 	}
+	// Phase 2: the strike is authority-client-driven; tests act AS the authority via handlePredationStrike.
+	state.GetOrCreateZone("testzone").AuthorityUserID = testAuthority
 	return state
+}
+
+// testAuthority is the zone-authority user id the predation tests impersonate when reporting strikes.
+const testAuthority = "auth"
+
+// emulateAuthorityStrike does what the Phase-2 authority client does: if the predator is hunting a prey
+// that exists, report the victims (lowest alive ids — a stand-in for nearest-individual selection, exact
+// for these point-like test swarms) to handlePredationStrike, which validates (authority, prey species,
+// cooldown, centre-range, alive ids) and applies the kill. Replaces the old autonomous checkPredationStrike.
+func emulateAuthorityStrike(m *Match, state *WorldState, predator *entities.SwarmState) {
+	if predator.TargetPreyID == "" {
+		return
+	}
+	species := state.Species[predator.SpeciesID]
+	if species == nil || species.Predation == nil {
+		return
+	}
+	prey, ok := state.Swarms[predator.TargetPreyID]
+	if !ok || prey.Count <= 0 {
+		return
+	}
+	kills := species.Predation.KillsPerStrike
+	if kills <= 0 {
+		kills = 1
+	}
+	m.handlePredationStrike(nopRuntimeLogger(), nil, state, testAuthority, PredationStrikeMessage{
+		PredatorSwarmID: predator.ID, PreySwarmID: prey.ID, BugIDs: prey.FirstAliveBugIDs(kills),
+	})
 }
 
 func newWaspSwarm(id string, count int, x, y float32) *entities.SwarmState {
@@ -223,7 +253,7 @@ func driveTick(m *Match, state *WorldState, swarms ...*entities.SwarmState) {
 		}
 		s.Move(0.1, species, 32)
 		if species.Predation != nil {
-			m.checkPredationStrike(nopRuntimeLogger(), nil, state, s, species, 32)
+			emulateAuthorityStrike(m, state, s) // Phase 2: authority reports the strike; server validates+applies
 		}
 	}
 }
@@ -263,21 +293,27 @@ func TestStrikeAscendingIdsAndCooldown(t *testing.T) {
 	wasp.TargetPreyID = fly.ID
 	wasp.HuntStartTick = state.TickCount
 
-	m.checkPredationStrike(nopRuntimeLogger(), nil, state, wasp, state.Species["wasp_common"], 32)
+	// The authority reports the victim id; the server validates (cooldown/range/alive) + applies.
+	strike := func(ids ...int) {
+		m.handlePredationStrike(nopRuntimeLogger(), nil, state, testAuthority, PredationStrikeMessage{
+			PredatorSwarmID: wasp.ID, PreySwarmID: fly.ID, BugIDs: ids,
+		})
+	}
+
+	strike(0) // authority picks id 0 (its nearest individual)
 	if fly.IsBugAlive(0) || !fly.IsBugAlive(1) {
 		t.Fatalf("first strike must kill id 0 only (alive0=%v alive1=%v)", fly.IsBugAlive(0), fly.IsBugAlive(1))
 	}
 
-	// Immediately again: cooldown blocks.
-	m.checkPredationStrike(nopRuntimeLogger(), nil, state, wasp, state.Species["wasp_common"], 32)
+	// Immediately again: the SERVER cooldown blocks (authoritative throttle).
+	strike(1)
 	if !fly.IsBugAlive(1) {
 		t.Fatal("strike fired inside the cooldown")
 	}
 
 	// After the cooldown: id 1 falls.
 	state.TickCount += 101
-	wasp.TargetPreyID = fly.ID // re-aim happens at think; pin for the unit test
-	m.checkPredationStrike(nopRuntimeLogger(), nil, state, wasp, state.Species["wasp_common"], 32)
+	strike(1)
 	if fly.IsBugAlive(1) {
 		t.Fatal("second strike after cooldown must kill id 1")
 	}
@@ -492,7 +528,9 @@ func TestStrikeRespectsNothingItShouldnt(t *testing.T) {
 	wasp.TargetPreyID = fly.ID
 	wasp.HuntStartTick = state.TickCount
 
-	m.checkPredationStrike(nopRuntimeLogger(), nil, state, wasp, state.Species["wasp_common"], 32)
+	m.handlePredationStrike(nopRuntimeLogger(), nil, state, testAuthority, PredationStrikeMessage{
+		PredatorSwarmID: wasp.ID, PreySwarmID: fly.ID, BugIDs: []int{0},
+	})
 
 	if _, exists := state.Swarms[fly.ID]; exists {
 		t.Fatal("emptied prey swarm must despawn (the catch convention)")

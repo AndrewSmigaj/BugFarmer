@@ -1269,11 +1269,10 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			// MOVE: Every tick, move toward target (cheap)
 			swarm.Move(deltaTime, species, chunkSize)
 
-			// Predation strike: PER-TICK (centers can cross between the 10-15-tick re-aims).
-			// O(1): cached TargetPreyID validity + one distance + the cooldown.
-			if species.Predation != nil {
-				m.checkPredationStrike(logger, dispatcher, worldState, swarm, species, chunkSize)
-			}
+			// Predation strike (Phase 2): the AUTHORITY CLIENT now selects which individual flies a
+			// predator strikes (it has per-bug positions; the server has only centres) and reports them
+			// via OpCodePredationStrike → handlePredationStrike → applyPredationStrike. No autonomous
+			// server-side centre-strike here anymore.
 
 			// Bug-vs-player attacks (stings/bites): contact range, cooldown + invuln gated
 			if species.AttackDamage > 0 {

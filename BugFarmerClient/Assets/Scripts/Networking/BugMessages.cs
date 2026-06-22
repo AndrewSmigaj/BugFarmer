@@ -362,6 +362,14 @@ namespace BugFarmer.Networking
         // (client derives sprite/radius), split_count=bug count, center_x/y=spawn centre (×1000).
         // Applied at evt.tick so every client (live + late-join replay) creates it at the same tick.
         public string species_id;
+
+        // HUNT-leg fields (Phase 2): set ONLY on a predator's hunt SWARM_SET_TARGET so the AUTHORITY can
+        // run the individual-fly strike selection. Empty/0 on every other leg. strike_radius is ×1000 —
+        // compare via FixedPoint multiply, NOT raw int² (FixedPoint.cs).
+        public string target_prey_id;       // which prey SWARM this predator hunts ("" = not hunting)
+        public int strike_radius;           // ×1000; a predator individual within this of a prey individual strikes
+        public int kills_per_strike;        // victims per strike
+        public int strike_cooldown_ticks;   // client-side re-send throttle (server cooldown is authoritative)
     }
 
     /// <summary>

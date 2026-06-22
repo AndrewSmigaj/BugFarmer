@@ -545,6 +545,16 @@ namespace BugFarmer.Entities
                 _swarms[swarmId].SimulateTick(_simulationTick, players);
             }
 
+            // 4b. Phase 2 — individual-fly predation strike (AUTHORITY ONLY, LIVE only). Positions are
+            // final for the tick; this detects which individual prey a predator struck and REPORTS it to
+            // the server (it does NOT remove anything locally — the kill comes back as a frontier-gated
+            // BUG_REMOVED applied identically on every client, so the hash stays bit-identical). Gated to
+            // Live so a catching-up authority doesn't fire stale strikes for replayed ticks.
+            if (_isAuthority && _syncState == SyncState.Live)
+            {
+                RunPredationStrikes();
+            }
+
             // Record this tick's state hash for tick-aligned drift checks (always on, cheap).
             var hash = ComputeStateHash();
             RecordTickHash(_simulationTick, hash);
@@ -554,6 +564,97 @@ namespace BugFarmer.Entities
             {
                 var bugs = CollectBugTraces();
                 _traceCallback(_simulationTick, hash, bugs, players);
+            }
+        }
+
+        // Phase 2: per-predator local re-send throttle (the SERVER cooldown is authoritative; this just
+        // avoids spamming a strike message every tick while a predator sits in range). Key: predator swarm_id.
+        private readonly Dictionary<string, long> _lastLocalStrikeTick = new();
+
+        /// <summary>
+        /// AUTHORITY-ONLY per-tick strike pass (Phase 2). For each hunting predator, find the nearest
+        /// individual prey fly within strike_radius of a predator individual (fixed-point, ascending-id
+        /// tie-break, claimed-set so two predators never take the same fly) and REPORT the victims to the
+        /// server. NO RNG, NO local removal — the kill returns as a frontier-gated BUG_REMOVED applied
+        /// identically on every client (incl. this authority), so the hash stays bit-identical and an
+        /// authority handoff is safe (any client computes the same victims from identical positions).
+        /// </summary>
+        private void RunPredationStrikes()
+        {
+            var im = InfluenceManager.Instance;
+            if (im == null) return;
+
+            foreach (var kv in im.GetHuntingSwarms().OrderBy(k => k.Key))
+            {
+                string predatorId = kv.Key;
+                var strike = kv.Value;
+                if (string.IsNullOrEmpty(strike.TargetPreyId)) continue;
+
+                // Local cooldown throttle (server is authoritative).
+                if (_lastLocalStrikeTick.TryGetValue(predatorId, out var last) &&
+                    _simulationTick - last < strike.StrikeCooldownTicks)
+                    continue;
+
+                var predator = GetSwarm(predatorId);
+                var prey = GetSwarm(strike.TargetPreyId);
+                if (predator == null || prey == null || predator.Count == 0 || prey.Count == 0) continue;
+
+                // strike_radius arrives ×1000 → square via FixedPoint multiply (a*b/1000), NOT raw int².
+                var rFixed = new FixedPoint { Value = strike.StrikeRadiusFixed };
+                long radiusSqr = (rFixed * rFixed).Value;
+
+                // BROAD-PHASE: skip the O(P×Q) per-bug scan unless the swarm CENTRES are within
+                // strike_radius + both cloud radii (threshold squared via FixedPoint too, same ×1000 scale).
+                var broadFixed = FixedPoint.FromFloat((strike.StrikeRadiusFixed / 1000f) + predator.Radius + prey.Radius);
+                long broadSqr = (broadFixed * broadFixed).Value;
+                if (predator.SimCenter.SqrDistanceTo(prey.SimCenter).Value > broadSqr) continue;
+
+                int kills = strike.KillsPerStrike > 0 ? strike.KillsPerStrike : 1;
+                var preyBugs = prey.GetAllBugsAliveSorted().ToList();
+                var claimed = new HashSet<int>();
+                var victimIds = new List<int>();
+                var victimX = new List<float>();
+                var victimY = new List<float>();
+
+                // NARROW-PHASE: each predator individual (ascending id) claims the nearest UNCLAIMED prey
+                // individual within strike_radius; ascending-bug-id tie-break; up to kills_per_strike total.
+                foreach (var (pbId, pbPos) in predator.GetAllBugsAliveSorted())
+                {
+                    if (victimIds.Count >= kills) break;
+                    int bestId = -1;
+                    long bestSqr = long.MaxValue;
+                    FixedPoint2 bestPos = default;
+                    foreach (var (qbId, qbPos) in preyBugs)
+                    {
+                        if (claimed.Contains(qbId)) continue;
+                        long d = pbPos.SqrDistanceTo(qbPos).Value;
+                        if (d > radiusSqr) continue;
+                        if (d < bestSqr || (d == bestSqr && (bestId < 0 || qbId < bestId)))
+                        {
+                            bestSqr = d; bestId = qbId; bestPos = qbPos;
+                        }
+                    }
+                    if (bestId >= 0)
+                    {
+                        claimed.Add(bestId);
+                        victimIds.Add(bestId);
+                        victimX.Add(bestPos.X.Value / 1000f);
+                        victimY.Add(bestPos.Y.Value / 1000f);
+                    }
+                }
+
+                if (victimIds.Count == 0) continue;
+
+                _lastLocalStrikeTick[predatorId] = _simulationTick;
+                SendToServer(OpCodes.PredationStrike, new PredationStrikeMessage
+                {
+                    predator_swarm_id = predatorId,
+                    prey_swarm_id = strike.TargetPreyId,
+                    bug_ids = victimIds.ToArray(),
+                    bug_x = victimX.ToArray(),
+                    bug_y = victimY.ToArray(),
+                    tick = _simulationTick,
+                });
             }
         }
 
@@ -944,8 +1045,19 @@ namespace BugFarmer.Entities
             switch (msg.kind)
             {
                 case "strike":
-                    BugFarmer.Audio.AudioFx.ThwackAt(pos);
-                    swarm.FlashAllBugs();
+                    swarm.FlashAllBugs(); // the predator lunges
+                    // Phase 2: per-victim snatch — a positioned THWACK AT each eaten fly (the kill itself
+                    // vanishes the exact individual deterministically; this is the audible per-victim cue).
+                    if (msg.victim_x != null && msg.victim_y != null && msg.victim_x.Length > 0)
+                    {
+                        int n = Mathf.Min(msg.victim_x.Length, msg.victim_y.Length);
+                        for (int i = 0; i < n; i++)
+                            BugFarmer.Audio.AudioFx.ThwackAt(new Vector2(msg.victim_x[i], msg.victim_y[i]));
+                    }
+                    else
+                    {
+                        BugFarmer.Audio.AudioFx.ThwackAt(pos); // legacy/centre fallback
+                    }
                     break;
                 case "windup":
                     BugFarmer.Audio.AudioFx.HissAt(pos);

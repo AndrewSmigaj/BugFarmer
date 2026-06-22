@@ -8,12 +8,16 @@ import (
 	"bugfarmer/entities"
 )
 
-// Predation (architecture_swarm_sync.md §14): predators hunt prey SWARMS; prey flee
-// predators. ALL of it is server-side state machinery whose outputs ride the EXISTING
-// event vocabulary — hunt/flee legs are ordinary SWARM_SET_TARGET events, kills are
-// BUG_REMOVED (the melee path verbatim via killBugsInSwarm), carrion is ITEM_ROTTED.
-// Clients replay outputs, never decisions, so server-side rand here is replay-safe
-// (the established Think-time convention).
+// Predation (architecture_swarm_sync.md §14): predators hunt prey SWARMS; prey flee predators. The hunt
+// ECONOMY is server-side state machinery whose outputs ride the EXISTING event vocabulary — hunt/flee legs
+// are ordinary SWARM_SET_TARGET events (now also carrying target_prey_id + strike params on a hunt leg),
+// kills are BUG_REMOVED (the melee path verbatim via killBugsInSwarm), carrion is ITEM_ROTTED. Server-side
+// rand here is replay-safe (clients replay outputs, never decisions — the Think-time convention).
+//
+// Phase 2 EXCEPTION — the STRIKE SELECTION (which individual flies die) is computed by the AUTHORITY
+// CLIENT, which has bit-identical per-bug positions; it reports victims via OpCodePredationStrike →
+// handlePredationStrike → applyPredationStrike (the server has only centres). The kill still rides
+// BUG_REMOVED so followers/late-joiners stay in sync.
 //
 // Pacing layers (why wasps can't annihilate a zone): satiation budgets the trip
 // (hunt only below hunt_satiation_threshold, ~3 kills to sated), the strike cooldown
@@ -306,45 +310,10 @@ func (m *Match) predationThink(
 	return true
 }
 
-// checkPredationStrike is the PER-TICK kill check (re-aims happen at think cadence, but
-// centers can cross between thinks): cached prey within strike_radius + cooldown →
-// kill the LOWEST ascending alive ids via the shared melee kill path, spawn carrion at
-// the PREDATOR's center (the strike point — falls back to the victim's center if
-// blocked), feed the predator.
-func (m *Match) checkPredationStrike(
-	logger runtime.Logger,
-	dispatcher runtime.MatchDispatcher,
-	state *WorldState,
-	swarm *entities.SwarmState,
-	species *entities.BugSpecies,
-	chunkSize int,
-) {
-	p := species.Predation
-	if p == nil || swarm.TargetPreyID == "" {
-		return
-	}
-	if state.TickCount-swarm.LastStrikeTick < p.StrikeCooldownTicks {
-		return
-	}
-	prey, ok := state.Swarms[swarm.TargetPreyID]
-	if !ok || prey.Count <= 0 {
-		swarm.TargetPreyID = ""
-		return
-	}
-
-	dx := swarm.WorldX(chunkSize) - prey.WorldX(chunkSize)
-	dy := swarm.WorldY(chunkSize) - prey.WorldY(chunkSize)
-	if dx*dx+dy*dy > p.StrikeRadius*p.StrikeRadius {
-		return
-	}
-
-	kills := p.KillsPerStrike
-	if kills <= 0 {
-		kills = 1
-	}
-	ids := prey.FirstAliveBugIDs(kills)
-	m.applyPredationStrike(logger, dispatcher, state, swarm, species, prey, ids, nil, nil, chunkSize)
-}
+// (The legacy autonomous centre-distance strike `checkPredationStrike` was removed in Phase 2 — the
+// authority CLIENT now selects which individual flies are struck, using real per-bug positions, and reports
+// them via handlePredationStrike → applyPredationStrike. The server has only swarm centres, so it can no
+// longer choose individual victims.)
 
 // applyPredationStrike APPLIES a chosen set of victim ids (the caller owns SELECTION): kill via the
 // shared melee path, record stats, advance the predator's cooldown/hunt-progress + satiation, telegraph.

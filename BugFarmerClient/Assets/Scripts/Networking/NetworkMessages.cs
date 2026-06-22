@@ -40,6 +40,7 @@ namespace BugFarmer.Networking
         public const int BugTelegraph = 95;     // S->C: display-only attack telegraph
         public const int EquipArmor = 96;       // C->S: {equip_slot, inv_slot} equip/unequip/swap
         public const int EquipmentUpdate = 97;  // S->C: the 7 worn-armor slots (echo + join)
+        public const int PredationStrike = 105; // C->S (authority only): individual flies a predator struck
     }
 
     /// <summary>
@@ -227,6 +228,26 @@ namespace BugFarmer.Networking
     {
         public string swarm_id;
         public string kind;
+        // Phase 2: per-victim world points so the strike snatch plays AT each eaten fly. Display-only.
+        public float[] victim_x;
+        public float[] victim_y;
+    }
+
+    /// <summary>
+    /// PredationStrike (OpCode 105, C→S, AUTHORITY ONLY): the authority client picked the individual flies a
+    /// predator struck (it has per-bug positions; the server does not) and reports them. The server
+    /// validates + applies the kill via the existing path, so followers/late-joiners sync via BUG_REMOVED.
+    /// bug_x/bug_y are the victims' positions for the display-only snatch.
+    /// </summary>
+    [Serializable]
+    public class PredationStrikeMessage
+    {
+        public string predator_swarm_id;
+        public string prey_swarm_id;
+        public int[] bug_ids;
+        public float[] bug_x;
+        public float[] bug_y;
+        public long tick;
     }
 
     /// <summary>Sleep in a bed → set this character's home (OpCode 100, C→S): the bed's anchor cell.</summary>
