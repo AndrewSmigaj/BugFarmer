@@ -30,8 +30,15 @@ Total server egress = Entities × Updates/sec × Bytes × Users
 
 ## Design Principles
 
-1. **Swarms are the networked unit** - Server simulates swarm center, not individual bugs
+1. **Swarms are the networked unit** - the server relays each swarm's *center* (movement legs) + the
+   tick/seq event ledger; every client simulates the *individual* bugs deterministically (fixed-point +
+   counter-RNG) from those same inputs, so all clients compute bit-identical per-bug positions. (The
+   server does NOT track individual bug positions.)
 2. **Client renders individuals** - Each client spawns local flies within swarm bounds
+   - **Individual-fly predation (Phase 2):** since every client has bit-identical individual positions,
+     a predator's *strike* targets the actual nearest individual fly (not the swarm center). The AUTHORITY
+     client computes the strike and reports the victims (`OpCodePredationStrike`); the server validates +
+     applies the kill via `BUG_REMOVED`, so followers/late-joiners stay in sync. See architecture_swarm_sync.md.
 3. **Brownian motion preserved** - Flies buzz naturally (client-side)
 4. **Server authority** - Positions, counts, reproduction are server-controlled
 5. **Click-to-catch** - Players click directly on bug sprites; server validates and broadcasts

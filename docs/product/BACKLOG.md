@@ -294,6 +294,24 @@ in UIBootstrap; a default-off `DebugConfig.Verbose` gating the hot Debug.Log sit
 internally; removed the defeated tick-gate throttle (canAdvance toggles every tick); plus an
 unrelated `HotbarUI.Start` NRE guard (leftover-scene null `slots`). **Verify pending: in-Editor soak.**
 
+## Done (recent) — DETERMINISTIC SPAWNS + INDIVIDUAL-FLY PREDATION (deterministic lockstep)
+- **Phase 1 — deterministic swarm creation:** swarms are now CREATED at a deterministic, cross-client-agreed
+  tick (new `SWARM_SPAWNED` ledger event + first-joiner/reconnect `ZoneAuthority` seed-baseline + the
+  late-join snapshot); `SwarmUpdate` no longer creates swarms (creating on-receipt at an arbitrary local
+  tick was the pinned spawn-tick desync). Proven: the staggered late-join harness (`tools/run_sync_latejoin.sh`)
+  shows 19,074/19,074 shared-bug states bit-identical across a late join with runtime spawns.
+- **Phase 2 — individual-fly predation:** hornets/wasps/centipedes now strike the actual NEAREST INDIVIDUAL
+  fly by its position (not the swarm centre). The hunt economy stays server-side; the AUTHORITY client (which
+  has bit-identical per-bug positions) computes the strike and reports victims via `OpCodePredationStrike` →
+  `handlePredationStrike` → `applyPredationStrike`; the kill rides `BUG_REMOVED` (frontier-gated) so all
+  clients stay bit-identical. Per-victim snatch telegraph. Proven: harness IDENTICAL (21,734/21,734) through
+  9 real strikes; `go test ./world/` green; `tools/sim-determinism` PASS.
+- **Deferred hardening (filed, NOT blocking):** Phase 1b — make `blocks_bugs` collision zone-complete on
+  every client (only bites when players are in *different* areas; the strike is authority-only so it doesn't
+  need it). On-demand authority snapshot for the rare empty-bootstrap late-join window. The ~0.001-cell
+  late-join replay micro-drift (immaterial to nearest-fly selection). Also: rewrite `architecture_swarm_sync.md`
+  as the as-built guide + a `frontier-sync` skill.
+
 ## Done (recent) — PREDATORS v1: wasps + nests, the centipede, player HP, first audio
 - **Predation core** (architecture_swarm_sync §14 — the system of record): predators hunt
   prey SWARMS via ordinary legs + the existing BUG_REMOVED/SWARM_REPRODUCED/ITEM_ROTTED
