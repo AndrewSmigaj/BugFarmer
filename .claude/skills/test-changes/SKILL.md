@@ -8,6 +8,11 @@ description: Use when verifying ANY change to the Bug Farmer server, bug simulat
 How to verify Bug Farmer changes. Most of this runs **headless (no Unity)**. Pick the section(s) that match
 what you changed (see §5), then add a durable test per §0.
 
+**Related (use together):** for a deterministic/sync change, design + review it with
+`.claude/complex-change-review.md` (the stages × failure-modes loop + the BugFarmer invariant checklist) and
+`.claude/lenses.md` (review lenses), and follow the `frontier-sync` skill to wire it. This skill is the
+EXECUTION GATES those reference — the model-independent arbiter that decides PASS/FAIL.
+
 ## 0. GOLDEN RULE — tests are durable artifacts, not throwaway scripts
 The recurring failure: run a one-off `/tmp` script, narrate the result, never write it down → the next
 session loses it and re-derives (badly). **Don't.** Every check you write goes in the repo AND gets a line

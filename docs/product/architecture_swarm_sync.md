@@ -5,6 +5,59 @@ runs the canonical simulation and relays tick frontier updates, an event ledger,
 periodic snapshots through the server; follower clients replay deterministically and
 recover from snapshots on late-join or drift.
 
+---
+
+## §0. As-built quick reference (read this first; §1–14 are the depth)
+
+**The guarantee.** The bug sim is **bit-identical in steady state** (the frontier-gated ledger makes every
+client replay the same events at the same tick) **and self-healing on any residual/transient** (a per-tick
+whole-state hash drift triggers `RequestResync` → `RequestSnapshot`). It is NOT "literally never diverges" —
+a new mechanic must preserve BOTH properties: deterministic steady state + resync-recoverable.
+
+**The ONE load-bearing invariant.** *Everything the deterministic bug sim READS must arrive via a
+frontier-gated influence event (zone-wide, epoch+seq, replayed identically on every client) OR a join/resync
+snapshot — NEVER via a chunk-scoped on-receipt message (`WorldUpdate` 46 / `SwarmUpdate` metadata, which are
+COSMETIC only).* The one sanctioned exception is join-time bootstrap hydration that the snapshot+events
+immediately supersede (e.g. `InfluenceManager.HydrateFood` for already-rotten ground items — an
+"approximate-until-resync" bootstrap). Reading view-scoped or on-receipt data into the sim is the classic
+desync (it caused the Phase 1b fence bug: collision read view-scoped chunks inside a zone-wide sim).
+
+**Ledger-event glossary** (source of truth: `nakama/modules/world/messages.go` const block +
+client `BugFarmerClient/.../Bugs/InfluenceManager.cs` `ProcessInfluenceEvent`). All carry `tick`+`seq`:
+| Event | Fields | Sim effect |
+|---|---|---|
+| `PLAYER_CELL_ENTER` / `_LEAVE` | player_id, cell_x/y | player position bugs flee/seek (ENTER overwrites; LEAVE is a no-op) |
+| `SWARM_SET_TARGET` | origin/target/speed (+hunt: target_prey_id, strike_radius, kills, cooldown) | re-anchors a swarm's movement leg; hunt fields drive the authority's predation strike |
+| `BUG_REMOVED` | swarm_id, bug_id | removes a bug on every client at the event tick (catch / melee / predation / gnaw) |
+| `SWARM_SPAWNED` | swarm_id, species, center, count | mints a NEW swarm at the event tick, seeded from (worldSeed,swarmId,bugId) |
+| `SWARM_REPRODUCED` | swarm_id, new_bug_id_base, split_count | adds bred bugs to an existing swarm at the event tick |
+| `SWARM_SPLIT` / `SWARM_MERGE` | swarm ids, id base/count | moves bugs between swarms (population pass) |
+| `ITEM_ROTTED` / `FOOD_CONSUMED` | food_id, cell, level | maintains the deterministic food registry (level 0 = gone) |
+| `OCCUPANT_BLOCKS_BUGS` | cell_x/y, level | toggles a cell in the zone-wide blocks_bugs collision set (Phase 1b) |
+| (`TREE_FRUIT_GROW` / `_DROP` | tree cell | farming; server-side, not bug-sim) |
+
+**Recipe — adding a new deterministic mechanic.** (1) Classify the state: ledgered sim-input /
+server-only / display-only (e.g. per-bug HP is display-only) / authority-only. (2) If a sim-input: define
+an influence event + fields in `messages.go`, mirror it in the client `InfluenceEvent` + `ProcessInfluenceEvent`.
+(3) Emit it server-side in ONE place, stamping `seq` via the zone's `NextSeq++`. (4) Broadcast zone-wide
+AND ensure it rides the late-join replay window AND — if it's persistent per-bug state — the snapshot.
+(5) Apply it on every client in seq order, idempotent, AT the event tick (`ProcessEventsForTick`).
+(6) Include its output in `ComputeStateHash` on both sides. (7) Run the gates (test-changes skill:
+`go test`, `sim-determinism`, `run_sync_latejoin.sh` co-located + disjoint spawn-apart). Two worked
+reference patterns: `OCCUPANT_BLOCKS_BUGS` (a new zone-wide input + readiness gate, §12.3) and the
+predation strike (authority-detect → relay via `BUG_REMOVED`, §14).
+
+**Residual status (2026-06).** Steady state + co-located AND genuinely-disjoint spawn-apart late-joins are
+proven bit-identical (0 bug + 0 hash divergence). Closed: #127 (a reproduced bug at a late-join boundary —
+late-join now mints window-created bugs by replay at evt.tick, not metadata prespawn). **Accepted (not
+fixed): the empty-bootstrap window (#137)** — a late-joiner that arrives in the ~1-frame gap before the
+authority's first snapshot reaches the server gets a seed-baseline bootstrap and converges via drift-resync;
+the fix (server asks the authority to snapshot on demand) is a non-trivial round-trip whose cost exceeds the
+benefit for a self-healing ~1-frame transient, so it is documented as accepted rather than shipped. Likewise
+the continuous-spawn on-receipt-vs-hash sub-1% self-healing caveat.
+
+---
+
 ## 1. Architecture
 
 ### 1.1 Roles

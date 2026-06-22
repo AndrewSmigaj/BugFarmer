@@ -317,10 +317,22 @@ unrelated `HotbarUI.Start` NRE guard (leftover-scene null `slots`). **Verify pen
   hydrate the identical 4322-cell map → collision is camera-independent; co-located regression unchanged;
   residual divergence is the pre-existing late-join snapshot leg residual (confirmed identical pre-1b at 1.2%
   via a baseline build, so NOT introduced here — see [[#127]]); `go test ./world/` green; `sim-determinism` PASS.
-- **Deferred hardening (filed, NOT blocking):** on-demand authority snapshot for the rare empty-bootstrap
-  late-join window (#137). The pre-existing late-join snapshot leg residual on a reproduced/young swarm
-  (#127 — keep young-swarm SWARM_SPAWNED events until snapshotted). Also: rewrite `architecture_swarm_sync.md`
-  as the as-built guide + a `frontier-sync` skill.
+- **Determinism hardening + teachability (DONE 2026-06):**
+  - **Test framework (sacred):** found+fixed a real harness defect — both `run_sync_*.sh` inlined a diff that
+    let 14-col leg rows collide with bug-id 0/1 keys (could MASK a divergence). Extracted one canonical
+    `tools/sync_diff.py` (stops at `# SWARMLEGS`, requires the 15-col bug shape, adds the per-tick whole-state
+    HASH stream as the PRIMARY gate), unit-tested by `tools/test_sync_diff.py`. Harness now asserts spawn-apart
+    clients are DISJOINT (non-vacuity) + has a `FRESH=1` redeploy helper.
+  - **#127 (DONE):** late-join now mints window-created bugs by REPLAY at evt.tick (not metadata prespawn),
+    so a bug reproduced in the snapshot-lag window no longer drifts. Proven: co-located AND genuinely-disjoint
+    spawn-apart late-joins are bit-identical — 0 bug + 0 hash divergence; `sim-determinism` PASS.
+  - **Docs/skill:** `architecture_swarm_sync.md` §0 as-built quick reference (guarantee + the one invariant +
+    ledger glossary + add-a-mechanic recipe); new `frontier-sync` skill; `determinism_audit_2026-06-20.md`
+    marked SUPERSEDED + indexed in ARCHITECTURE.md; `lenses.md`/`complex-change-review.md` cross-linked.
+- **Accepted (self-healing, not fixed):** the empty-bootstrap window (#137 — a late-joiner in the ~1-frame
+  gap before the authority's first snapshot; converges via drift-resync; the on-demand-snapshot round-trip
+  costs more than it's worth for a self-healing transient) and the continuous-spawn on-receipt-vs-hash sub-1%
+  caveat. Both documented in `architecture_swarm_sync.md` §0.
 
 ## Done (recent) — PREDATORS v1: wasps + nests, the centipede, player HP, first audio
 - **Predation core** (architecture_swarm_sync §14 — the system of record): predators hunt
