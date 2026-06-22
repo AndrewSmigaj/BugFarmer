@@ -143,6 +143,10 @@ const (
 	OpCodePlayerInfo int64 = 103 // S->C: {players:[{user_id,name,char_class,char_hair,char_skin}]}
 
 	OpCodeBroodUpdate int64 = 104 // S->C: a brood's egg/maggot counts changed (display-only nursery, like StationUpdate)
+
+	OpCodePredationStrike int64 = 105 // C->S (authority only): the authority client picked the individual flies a
+	// predator struck (it has per-bug positions; the server does not). Server validates + applies via the
+	// existing kill path (killBugsInSwarm → BUG_REMOVED + carrion + satiation). See PredationStrikeMessage.
 )
 
 // BroodUpdateMessage (OpCode 104): a visible nursery's eggs/maggots changed (a lay, a maturation, a
@@ -248,6 +252,25 @@ type DebugWorldMessage struct {
 type BugTelegraphMessage struct {
 	SwarmID string `json:"swarm_id"`
 	Kind    string `json:"kind"`
+	// Per-victim strike points (Phase 2): world positions where the snatch/THWACK should play, so an
+	// individual-fly strike reads on screen (vs the old predator-centre flash). Display-only.
+	VictimX []float32 `json:"victim_x,omitempty"`
+	VictimY []float32 `json:"victim_y,omitempty"`
+}
+
+// PredationStrikeMessage (OpCode 105, C->S, AUTHORITY ONLY): the authority client ran the strike
+// selection on individual bug positions (which the server lacks) and reports the victims. The server
+// validates (sender is authority, predator hunting this prey, cooldown elapsed, ids alive) then applies
+// the kill via the existing path (killBugsInSwarm → BUG_REMOVED + carrion + satiation + telegraph), so
+// followers/late-joiners stay in sync via the relayed BUG_REMOVED. bug_x/bug_y are the victims' positions
+// for the display-only per-victim snatch (not used for the kill itself).
+type PredationStrikeMessage struct {
+	PredatorSwarmID string    `json:"predator_swarm_id"`
+	PreySwarmID     string    `json:"prey_swarm_id"`
+	BugIDs          []int     `json:"bug_ids"`
+	BugX            []float32 `json:"bug_x,omitempty"`
+	BugY            []float32 `json:"bug_y,omitempty"`
+	Tick            int64     `json:"tick,omitempty"`
 }
 
 // PlayerDamageMessage (OpCode 94): a bug attack landed (or a regen/join echo with
@@ -819,6 +842,14 @@ type InfluenceEvent struct {
 	TargetX int `json:"target_x,omitempty"`
 	TargetY int `json:"target_y,omitempty"`
 	Speed   int `json:"speed,omitempty"` // World units per tick (×1000)
+
+	// HUNT-leg fields (Phase 2 individual-fly predation): set ONLY on a predator's hunt leg so the
+	// authority client can run the strike selection on individual positions. Empty/0 on every other leg.
+	// strike_radius is fixed-point ×1000 (compare via FixedPoint multiply, NOT raw int²).
+	TargetPreyID      string `json:"target_prey_id,omitempty"`      // which prey SWARM this predator is hunting
+	StrikeRadius      int    `json:"strike_radius,omitempty"`       // ×1000; a predator individual within this of a prey individual strikes
+	KillsPerStrike    int    `json:"kills_per_strike,omitempty"`    // victims per strike
+	StrikeCooldownTks int    `json:"strike_cooldown_ticks,omitempty"` // client-side re-send throttle (server cooldown is authoritative)
 
 	// SWARM_SPLIT / SWARM_MERGE fields. Flat + count/id-based so clients can apply the
 	// change deterministically by MOVING existing bugs (positions preserved, never re-spawned).

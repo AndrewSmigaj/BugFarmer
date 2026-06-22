@@ -342,29 +342,135 @@ func (m *Match) checkPredationStrike(
 	if kills <= 0 {
 		kills = 1
 	}
-	preySpecies := state.Species[prey.SpeciesID]
 	ids := prey.FirstAliveBugIDs(kills)
+	m.applyPredationStrike(logger, dispatcher, state, swarm, species, prey, ids, nil, nil, chunkSize)
+}
+
+// applyPredationStrike APPLIES a chosen set of victim ids (the caller owns SELECTION): kill via the
+// shared melee path, record stats, advance the predator's cooldown/hunt-progress + satiation, telegraph.
+// Shared by the legacy autonomous centre-strike (checkPredationStrike) and the Phase-2 client-reported
+// PredationStrike handler. victimX/victimY (optional) are the per-victim world positions for the
+// display-only snatch — nil falls back to the predator-centre flash. Returns the number actually removed.
+func (m *Match) applyPredationStrike(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	predator *entities.SwarmState,
+	predatorSpecies *entities.BugSpecies,
+	prey *entities.SwarmState,
+	ids []int,
+	victimX, victimY []float32,
+	chunkSize int,
+) int {
+	p := predatorSpecies.Predation
+	if p == nil {
+		return 0
+	}
+	preySpecies := state.Species[prey.SpeciesID]
 	removed := m.killBugsInSwarm(logger, dispatcher, state, prey, preySpecies, ids,
-		swarm.WorldX(chunkSize), swarm.WorldY(chunkSize), chunkSize)
+		predator.WorldX(chunkSize), predator.WorldY(chunkSize), chunkSize)
 	if len(removed) == 0 {
-		return
+		return 0
 	}
 	state.Stats.recordDeath(prey.SpeciesID, DeathPredation, len(removed))
-	state.Stats.recordPredation(swarm.SpeciesID, prey.SpeciesID, len(removed))
+	state.Stats.recordPredation(predator.SpeciesID, prey.SpeciesID, len(removed))
 
-	swarm.LastStrikeTick = state.TickCount
-	swarm.HuntStartTick = state.TickCount // a kill is progress: the timeout re-arms
-	swarm.Satiation += p.FeedPerKill * float32(len(removed))
-	if swarm.Satiation > 100 {
-		swarm.Satiation = 100
+	predator.LastStrikeTick = state.TickCount
+	predator.HuntStartTick = state.TickCount // a kill is progress: the timeout re-arms
+	predator.Satiation += p.FeedPerKill * float32(len(removed))
+	if predator.Satiation > 100 {
+		predator.Satiation = 100
 	}
 
-	// Strike telegraph (display-only): the snatch flash + THWACK at the PREDATOR —
-	// the eye goes to the attacker; the victim shrink-fades unnoticed.
-	m.broadcastBugTelegraph(dispatcher, state, swarm, "strike", chunkSize)
+	// Strike telegraph (display-only): the snatch flash + THWACK. Phase 2 carries the victim positions
+	// so the snatch plays AT each eaten fly (individual strike reads on screen); nil = predator-centre.
+	m.broadcastBugStrikeTelegraph(dispatcher, state, predator, victimX, victimY, chunkSize)
 
 	logger.Debug("Predation: %s struck %s (-%d, satiation %.0f)",
-		swarm.ID, prey.ID, len(removed), swarm.Satiation)
+		predator.ID, prey.ID, len(removed), predator.Satiation)
+	return len(removed)
+}
+
+// handlePredationStrike validates + applies an AUTHORITY-reported individual-fly strike (OpCode 105).
+// The authority client did the SELECTION (it has per-bug positions; the server has only centres); the
+// server is the gate and applies the kill via the shared path so followers/late-joiners sync through the
+// relayed BUG_REMOVED. Idempotent-ish: the server cooldown throttles the authority's per-tick re-sends.
+func (m *Match) handlePredationStrike(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	senderID string,
+	msg PredationStrikeMessage,
+) {
+	if state.CurrentZone == nil {
+		return
+	}
+	zone := state.GetOrCreateZone(state.CurrentZone.ZoneID)
+	// AUTHORITY ONLY — the authority drives strikes; ignore everyone else (anti-cheat + de-dupe).
+	if zone.AuthorityUserID != senderID {
+		logger.Warn("Ignoring predation strike from non-authority %s (authority is %s)", senderID, zone.AuthorityUserID)
+		return
+	}
+	chunkSize := state.Config.ChunkSize
+
+	predator, ok := state.Swarms[msg.PredatorSwarmID]
+	if !ok || predator.Count <= 0 {
+		return
+	}
+	prey, ok := state.Swarms[msg.PreySwarmID]
+	if !ok || prey.Count <= 0 {
+		return
+	}
+	predSpecies := state.Species[predator.SpeciesID]
+	if predSpecies == nil || predSpecies.Predation == nil {
+		return
+	}
+	p := predSpecies.Predation
+	if !containsString(p.Prey, prey.SpeciesID) { // predator must actually hunt this prey species
+		return
+	}
+	if state.TickCount-predator.LastStrikeTick < p.StrikeCooldownTicks { // server cooldown is authoritative
+		return
+	}
+	// Loose centre-range sanity (the server has only centres): a legitimate individual strike has the two
+	// centres within StrikeRadius + both cloud radii. Rejects obviously-bogus reports, not real ones.
+	dx := predator.WorldX(chunkSize) - prey.WorldX(chunkSize)
+	dy := predator.WorldY(chunkSize) - prey.WorldY(chunkSize)
+	maxR := p.StrikeRadius + predator.Radius + prey.Radius
+	if dx*dx+dy*dy > maxR*maxR {
+		return
+	}
+
+	kills := p.KillsPerStrike
+	if kills <= 0 {
+		kills = 1
+	}
+	// Keep only ids ALIVE in the prey swarm (a victim may have died between the authority's select and
+	// now — e.g. natural death), clamp to KillsPerStrike. Victim positions ride along for the snatch.
+	hasPos := len(msg.BugX) == len(msg.BugIDs) && len(msg.BugY) == len(msg.BugIDs)
+	ids := make([]int, 0, len(msg.BugIDs))
+	var vx, vy []float32
+	if hasPos {
+		vx = make([]float32, 0, len(msg.BugIDs))
+		vy = make([]float32, 0, len(msg.BugIDs))
+	}
+	for i, id := range msg.BugIDs {
+		if len(ids) >= kills {
+			break
+		}
+		if !prey.IsBugAlive(id) {
+			continue
+		}
+		ids = append(ids, id)
+		if hasPos {
+			vx = append(vx, msg.BugX[i])
+			vy = append(vy, msg.BugY[i])
+		}
+	}
+	if len(ids) == 0 {
+		return
+	}
+	m.applyPredationStrike(logger, dispatcher, state, predator, predSpecies, prey, ids, vx, vy, chunkSize)
 }
 
 // nearestPreySwarm finds the closest living prey swarm within vision AND home range.
@@ -460,12 +566,25 @@ func (m *Match) emitLeg(
 	swarm.TargetX, swarm.TargetY = targetX, targetY
 	swarm.HasTarget = true
 
+	// Phase 2: tag a HUNT leg with the prey + strike params so the authority client can run the
+	// individual-fly strike selection. swarm.TargetPreyID is set only while actively hunting (incl. a
+	// centipede gnaw); cleared on flee/home/wander/hunt-end — so every non-hunt leg sends empty/0.
+	targetPreyID := ""
+	strikeRadius, killsPerStrike, strikeCooldownTicks := 0, 0, 0
+	if swarm.TargetPreyID != "" && species.Predation != nil {
+		targetPreyID = swarm.TargetPreyID
+		strikeRadius = toFixed(species.Predation.StrikeRadius)
+		killsPerStrike = species.Predation.KillsPerStrike
+		strikeCooldownTicks = int(species.Predation.StrikeCooldownTicks)
+	}
+
 	if state.CurrentZone != nil {
 		state.AddSwarmTargetEvent(
 			state.CurrentZone.ZoneID, swarm.ID,
 			toFixed(originX), toFixed(originY),
 			toFixed(targetX), toFixed(targetY),
 			toFixed(species.BaseSpeed*swarm.EffectiveSpeedMult()*deltaTime),
+			targetPreyID, strikeRadius, killsPerStrike, strikeCooldownTicks,
 		)
 	}
 }
@@ -482,6 +601,20 @@ func (m *Match) broadcastBugTelegraph(
 	cy := swarm.Position.ChunkY
 	msg := BugTelegraphMessage{SwarmID: swarm.ID, Kind: kind}
 	m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeBugTelegraph, msg)
+}
+
+// broadcastBugStrikeTelegraph is the predation-strike telegraph (display-only): the snatch/THWACK plays
+// AT each victim position (victimX/victimY) so an individual-fly strike reads on screen; nil victims fall
+// back to the predator-centre flash. Chunk-scoped on the predator's chunk like the other telegraphs.
+func (m *Match) broadcastBugStrikeTelegraph(
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	predator *entities.SwarmState,
+	victimX, victimY []float32,
+	chunkSize int,
+) {
+	msg := BugTelegraphMessage{SwarmID: predator.ID, Kind: "strike", VictimX: victimX, VictimY: victimY}
+	m.broadcastToChunk(dispatcher, state, predator.Position.ChunkX, predator.Position.ChunkY, OpCodeBugTelegraph, msg)
 }
 
 // nearestPlayer finds the closest player to a world point within radius (ascending

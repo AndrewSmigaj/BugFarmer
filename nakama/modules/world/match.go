@@ -1079,6 +1079,15 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 					continue
 				}
 				m.handleZoneSnapshot(logger, worldState, userID, snapMsg)
+
+			case OpCodePredationStrike:
+				// Authority client reports which individual flies a predator struck (Phase 2).
+				var strikeMsg PredationStrikeMessage
+				if err := json.Unmarshal(msg.GetData(), &strikeMsg); err != nil {
+					logger.Warn("Invalid predation strike from %s: %v", userID, err)
+					continue
+				}
+				m.handlePredationStrike(logger, dispatcher, worldState, userID, strikeMsg)
 			}
 		}
 
@@ -1249,6 +1258,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 						// SpeedMult is 1.0 on this path (reset above); carried explicitly
 						// so the event ALWAYS equals the speed Move will use (§14).
 						toFixed(species.BaseSpeed*swarm.EffectiveSpeedMult()*deltaTime),
+						"", 0, 0, 0, // generic (non-hunt) leg — no prey/strike fields
 					)
 				}
 

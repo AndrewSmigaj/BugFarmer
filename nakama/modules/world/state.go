@@ -669,7 +669,8 @@ func (s *WorldState) AddInfluenceEvent(zoneID, eventType, playerID string, cellX
 
 // AddSwarmTargetEvent logs a SWARM_SET_TARGET leg through the same seq-gated ledger
 // as AddInfluenceEvent. Coordinates/speed are fixed-point (×1000).
-func (s *WorldState) AddSwarmTargetEvent(zoneID, swarmID string, originX, originY, targetX, targetY, speed int) {
+func (s *WorldState) AddSwarmTargetEvent(zoneID, swarmID string, originX, originY, targetX, targetY, speed int,
+	targetPreyID string, strikeRadius, killsPerStrike, strikeCooldownTicks int) {
 	zone := s.GetOrCreateZone(zoneID)
 
 	event := InfluenceEvent{
@@ -683,6 +684,11 @@ func (s *WorldState) AddSwarmTargetEvent(zoneID, swarmID string, originX, origin
 		TargetX: targetX,
 		TargetY: targetY,
 		Speed:   speed,
+		// Hunt-leg fields (Phase 2) — non-empty only when the predator is actively hunting this prey.
+		TargetPreyID:      targetPreyID,
+		StrikeRadius:      strikeRadius,
+		KillsPerStrike:    killsPerStrike,
+		StrikeCooldownTks: strikeCooldownTicks,
 	}
 	zone.NextSeq++
 
