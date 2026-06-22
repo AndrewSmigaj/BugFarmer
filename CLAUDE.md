@@ -9,6 +9,11 @@ and well-designed. **Never guess — always read and verify the actual code invo
 function, the real call site, the real data shape) before relying on how it behaves. This holds
 for every step, not just the big ones.
 
+**Always double-check sub-agent findings against the real code.** Sub-agents (Explore/Plan/etc.)
+are great for breadth but can be wrong or imprecise — re-read the load-bearing claims in the actual
+source before relying on them. (This has already caught a real agent error mid-task — a wrong claim
+about when a swarm clears its prey target during a gnaw.)
+
 ## Build for quality — this is a real product, not a prototype
 This is a serious indie game aiming for **professional, shippable quality**. Do NOT default to
 bare-minimum or "prototype-first" work — prototyping then reimplementing the real thing wastes
