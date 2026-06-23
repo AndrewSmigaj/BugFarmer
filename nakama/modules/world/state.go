@@ -105,6 +105,10 @@ type WorldState struct {
 	Individuals map[string]*entities.IndividualBugState
 	Plants      map[string]*entities.PlantState
 	GroundItems map[string]*entities.GroundItem
+	// ItemsByChunk is a chunk-bucketed index OVER GroundItems (ChunkKey -> itemID -> item), maintained
+	// incrementally via putGroundItem/deleteGroundItem (see item_index.go). Lets FindNearbyFood scan only
+	// the chunks near a swarm instead of the whole item map. Pure derived view — never the source of truth.
+	ItemsByChunk map[string]map[string]*entities.GroundItem
 
 	// Config
 	Species map[string]*entities.BugSpecies // Loaded from config
@@ -380,8 +384,9 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		EggClusters: make(map[string]*entities.EggClusterState),
 		Individuals: make(map[string]*entities.IndividualBugState),
 		Plants:      make(map[string]*entities.PlantState),
-		GroundItems: make(map[string]*entities.GroundItem),
-		Species:     make(map[string]*entities.BugSpecies),
+		GroundItems:  make(map[string]*entities.GroundItem),
+		ItemsByChunk: make(map[string]map[string]*entities.GroundItem),
+		Species:      make(map[string]*entities.BugSpecies),
 		// World building
 		Chunks:        make(map[string]*ChunkData),
 		ChunkSubs:     make(map[string]map[string]bool),

@@ -616,7 +616,7 @@ func (m *Match) spawnHarvestDrops(
 		},
 		Lifetime: 60.0,
 	}
-	state.GroundItems[itemID] = groundItem
+	state.putGroundItem(groundItem)
 
 	// Broadcast spawn
 	spawnMsg := GroundItemSpawnMessage{
@@ -802,7 +802,7 @@ func (m *Match) dropFruitFromTree(
 		Lifetime: float32(rotTicks) * 0.1, // seconds until rot
 		DecaysTo: "rotten_" + fruitType,
 	}
-	state.GroundItems[itemID] = groundItem
+	state.putGroundItem(groundItem)
 
 	// Emit influence event
 	zoneID := ""
@@ -1169,7 +1169,7 @@ func (m *Match) consumeFood(state *WorldState, dispatcher runtime.MatchDispatche
 			state.AddFoodEvent(zoneID, InfluenceFoodConsumed, foodID, wcx, wcy, item.FoodValue)
 		}
 		if item.FoodValue == 0 {
-			delete(state.GroundItems, foodID)
+			state.deleteGroundItem(foodID)
 			removeMsg := GroundItemRemoveMessage{ID: foodID}
 			m.broadcastToChunk(dispatcher, state, item.Position.ChunkX, item.Position.ChunkY, OpCodeGroundItemRemove, removeMsg)
 		}
@@ -1213,7 +1213,7 @@ func (m *Match) removeGroundItem(
 	item *entities.GroundItem,
 ) {
 	cx, cy := item.Position.ChunkX, item.Position.ChunkY
-	delete(state.GroundItems, itemID)
+	state.deleteGroundItem(itemID)
 
 	// An EDIBLE item leaving the world MUST clear the deterministic food registry.
 	// This path is reached by LIFETIME EXPIRY — and carrion (bug_parts, food_value 10,
@@ -1440,14 +1440,14 @@ func (m *Match) initFruitTreesInChunk(
 				pos := entities.EntityPosition{LocalX: float32(gx), LocalY: float32(gy)}
 				pos.Normalize(chunkSize)
 				itemID := state.nextItemID("item_windfall")
-				state.GroundItems[itemID] = &entities.GroundItem{
+				state.putGroundItem(&entities.GroundItem{
 					ID:        itemID,
 					ItemType:  "rotten_" + entityDef.World.FruitType,
 					Count:     1,
 					Position:  pos,
 					Lifetime:  rottenFruitDecaySeconds,
 					FoodValue: 100, // matches the rot pipeline (dropFruitFromTree → rotted)
-				}
+				})
 				if state.CurrentZone != nil {
 					state.AddFoodEvent(state.CurrentZone.ZoneID, InfluenceItemRotted, itemID, gx, gy, 100)
 				}

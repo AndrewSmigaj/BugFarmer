@@ -566,7 +566,7 @@ func (m *Match) breakOccupantAt(
 				},
 				Lifetime: 60.0,
 			}
-			state.GroundItems[itemID] = groundItem
+			state.putGroundItem(groundItem)
 
 			spawnMsg := GroundItemSpawnMessage{
 				ID: itemID, ItemType: drop.ItemID, Count: drop.Count, X: worldX, Y: worldY,
@@ -751,7 +751,7 @@ func (m *Match) handlePickupItem(
 	}
 
 	// Remove from ground
-	delete(state.GroundItems, msg.ID)
+	state.deleteGroundItem(msg.ID)
 
 	// If this was registered BUG FOOD (rotten fruit), tell the deterministic food registry
 	// it's gone — bug AI must forget it at a tick boundary, not just visually.

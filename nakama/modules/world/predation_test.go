@@ -141,11 +141,13 @@ func TestInedibleExpiryStaysSilent(t *testing.T) {
 // AND via the rotten_fruit wildcard (flies scavenge corpses — intended emergence).
 func TestFindNearbyFoodMatchesCarrion(t *testing.T) {
 	state := killDropTestState()
-	state.GroundItems["c1"] = &entities.GroundItem{
+	// Insert via putGroundItem so the ItemsByChunk index FindNearbyFood scans is populated (the
+	// production path; a direct map write would leave the item unindexed and invisible to the scan).
+	state.putGroundItem(&entities.GroundItem{
 		ID: "c1", ItemType: "dead_fly", Count: 1,
 		Position:  entities.EntityPosition{LocalX: 12, LocalY: 10},
 		FoodValue: 10,
-	}
+	})
 	pos := entities.EntityPosition{LocalX: 10, LocalY: 10}
 
 	// Exact match (centipede)

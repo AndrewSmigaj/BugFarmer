@@ -50,24 +50,40 @@ func FindNearbyFood(state *WorldState, pos entities.EntityPosition, visionRange 
 
 	var hits []FoodHit
 
-	// 1) Ground items (rotten fruit): the "rotten_fruit" wildcard or an exact item type.
+	// 1) Ground items (rotten fruit / carrion): scan only the chunk buckets that can hold an item
+	//    within visionRange, via the ItemsByChunk index (see item_index.go) — NOT the whole item map.
+	//    Result is IDENTICAL to a full scan: the inner dist filter is unchanged, and the scanned chunk
+	//    box [worldX±vision, worldY±vision] (PLUS a 1-chunk pad as float-rounding insurance) is a
+	//    superset of every chunk a within-vision item can fall in.
 	wantRotten := targetSet["rotten_fruit"]
-	for id, item := range state.GroundItems {
-		if item.FoodValue <= 0 {
-			continue
-		}
-		// The "rotten_fruit" wildcard matches any rotted food EXCEPT bug carcasses (carrion is
-		// detritivore food — flies don't breed on their own dead). Carrion matches only a species
-		// that lists the exact dead_<species> id (e.g. the millipede).
-		if !targetSet[item.ItemType] && (!wantRotten || item.IsCarrion) {
-			continue
-		}
-		ix := float32(item.Position.ChunkX*chunkSize) + item.Position.LocalX
-		iy := float32(item.Position.ChunkY*chunkSize) + item.Position.LocalY
-		dx, dy := ix-worldX, iy-worldY
-		dist := float32(math.Sqrt(float64(dx*dx + dy*dy)))
-		if dist <= visionRange {
-			hits = append(hits, FoodHit{ID: id, Kind: "item", X: ix, Y: iy, Dist: dist, Depletable: true})
+	minCX := floorDivF(worldX-visionRange, chunkSize) - 1
+	maxCX := floorDivF(worldX+visionRange, chunkSize) + 1
+	minCY := floorDivF(worldY-visionRange, chunkSize) - 1
+	maxCY := floorDivF(worldY+visionRange, chunkSize) + 1
+	for cy := minCY; cy <= maxCY; cy++ {
+		for cx := minCX; cx <= maxCX; cx++ {
+			bucket := state.ItemsByChunk[ChunkKey(cx, cy)]
+			if bucket == nil {
+				continue
+			}
+			for id, item := range bucket {
+				if item.FoodValue <= 0 {
+					continue
+				}
+				// The "rotten_fruit" wildcard matches any rotted food EXCEPT bug carcasses (carrion is
+				// detritivore food — flies don't breed on their own dead). Carrion matches only a species
+				// that lists the exact dead_<species> id (e.g. the millipede).
+				if !targetSet[item.ItemType] && (!wantRotten || item.IsCarrion) {
+					continue
+				}
+				ix := float32(item.Position.ChunkX*chunkSize) + item.Position.LocalX
+				iy := float32(item.Position.ChunkY*chunkSize) + item.Position.LocalY
+				dx, dy := ix-worldX, iy-worldY
+				dist := float32(math.Sqrt(float64(dx*dx + dy*dy)))
+				if dist <= visionRange {
+					hits = append(hits, FoodHit{ID: id, Kind: "item", X: ix, Y: iy, Dist: dist, Depletable: true})
+				}
+			}
 		}
 	}
 

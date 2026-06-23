@@ -1719,7 +1719,7 @@ func (m *Match) seedInitialCarrion(state *WorldState, logger runtime.Logger) {
 			pos := entities.EntityPosition{LocalX: float32(seed.X + i), LocalY: float32(seed.Y)}
 			pos.Normalize(chunkSize)
 			itemID := state.nextItemID("item_carcass")
-			state.GroundItems[itemID] = &entities.GroundItem{
+			state.putGroundItem(&entities.GroundItem{
 				ID:        itemID,
 				ItemType:  seed.Item,
 				Count:     1,
@@ -1727,7 +1727,7 @@ func (m *Match) seedInitialCarrion(state *WorldState, logger runtime.Logger) {
 				Lifetime:  killDropLifetime,
 				FoodValue: foodValue,
 				IsCarrion: true,
-			}
+			})
 			if foodValue > 0 && state.CurrentZone != nil {
 				state.AddFoodEvent(state.CurrentZone.ZoneID, InfluenceItemRotted, itemID,
 					seed.X+i, seed.Y, foodValue)

@@ -248,7 +248,7 @@ func (m *Match) spawnKillDrops(
 			Lifetime:  killDropLifetime,
 			FoodValue: foodValue,
 		}
-		state.GroundItems[itemID] = groundItem
+		state.putGroundItem(groundItem)
 
 		spawnMsg := GroundItemSpawnMessage{
 			ID:       itemID,
@@ -329,7 +329,7 @@ func (m *Match) spawnCarcass(
 	}
 
 	itemID := state.nextItemID("item_carcass")
-	state.GroundItems[itemID] = &entities.GroundItem{
+	state.putGroundItem(&entities.GroundItem{
 		ID:        itemID,
 		ItemType:  carcassItem,
 		Count:     1,
@@ -337,7 +337,7 @@ func (m *Match) spawnCarcass(
 		Lifetime:  killDropLifetime,
 		FoodValue: foodValue,
 		IsCarrion: true,
-	}
+	})
 	m.broadcastToChunk(dispatcher, state, pos.ChunkX, pos.ChunkY, OpCodeGroundItemSpawn,
 		GroundItemSpawnMessage{ID: itemID, ItemType: carcassItem, Count: 1, X: x, Y: y})
 

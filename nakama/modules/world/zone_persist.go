@@ -503,7 +503,7 @@ func (m *Match) applyChunkSave(state *WorldState, chunk *ChunkData, cx, cy int) 
 	// runs non-reproducible (each started dirtier than the last). Production zones restore normally.
 	if state.CurrentZone == nil || !state.CurrentZone.EphemeralSwarms {
 		for _, gi := range cs.GroundItems {
-			state.GroundItems[gi.ID] = gi
+			state.putGroundItem(gi)
 		}
 	}
 }
