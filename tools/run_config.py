@@ -258,6 +258,9 @@ def chart(csv, tag, run_log, zone, description=""):
     with open(os.path.join(cur, "SOURCE.txt"), "w") as f:
         f.write(f"{ts}_{tag}\n{description or ''}\n")
 
+    # 3b) one-page dashboard (perf + ecology) → current/index.html — open it to see everything at a glance.
+    subprocess.run(["python3", os.path.join(ROOT, "tools", "make_dashboard.py"), "--zone", zone], cwd=ROOT)
+
     # 4) tuck the telemetry CSV sidecars into _data/ so the chart folders stay PNG-only
     for f in os.listdir(CHARTS):
         if (f.startswith(("interaction_log_", "predation_log_", "perf_log_", "perf_sys_"))) and f.endswith(".csv"):
