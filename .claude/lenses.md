@@ -38,6 +38,21 @@ keep on this codebase (each caught a real, shipped-would-have-bitten issue).
   never breaks mid-way.)
 - **Security / Authority** — Who is allowed to do this? Is input validated? Can a client lie? (PredationStrike
   is authority-only + server-validated.)
+- ★ **Derived-State / Cache-Coherence** — When adding a cache/index that duplicates a source of truth, pick
+  the maintenance strategy by *coherence need*: does any reader observe the source **mid-update** (mutations
+  interleaved with reads inside the same tick/batch)? If yes, a rebuild-per-batch snapshot goes stale →
+  you need **incremental** maintenance (and must prove *every* mutation site updates the cache) or make the
+  cache the primary store. If no reader observes mid-batch, **rebuild-from-source** is simpler and immune to
+  missed sites. Either way, back incremental maintenance with an **invariant assertion** (rebuilt == maintained)
+  exercised by the determinism harness. (Earned: a chunk index over `GroundItems` — a sub-agent's "complete"
+  mutation-site list missed `handlers_farming.go:1443`, and feeding `delete`s items mid-swarm-loop, so a
+  once-per-tick cache would NOT have been byte-exact.)
+- ★ **Accounting-Artifact** — When a per-unit metric fingers a culprit, check whether it's a true cost driver
+  or an artifact of the metric's denominator/normalization *before* acting on it. (Earned: the per-bug perf
+  chart blamed carrion beetles at ~30× others, but they think at the normal cadence — they top the chart only
+  because their swarms hold ~1 bug each, so the per-think scan cost isn't amortized. The real lever was the
+  per-scan cost, fixed for *all* species by the index; nerfing the beetle would have starved a food-scarce
+  species for ~no gain.)
 
 ## Notes for automating this
 - A lens pass is cheap insurance before an expensive build/run. Run the high-value lenses (★) on any plan
