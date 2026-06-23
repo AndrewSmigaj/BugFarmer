@@ -281,6 +281,15 @@ sim-determinism + re-profile that `decay` flattens. Note: the FindNearbyFood chu
 the *food-search* sensitivity to this pile (committed); this item is specifically the decay-pass cost +
 the underlying unbounded accumulation.
 
+## Later — creatures: ants & spiders (DESIGNED, not built)
+Full approved design: **[design_ants_spiders.md](design_ants_spiders.md)**. Ants = a foraging colony
+(hill/queen/eggs reuse Nest+Brood; workers forage carrion → carry home via the wasp provisioning loop;
+scouts + server-only "colony memory" make trails emerge — no per-cell ACO grid). Spiders = a web-builder
+ambusher (web tiles slow prey via a server speed-debuff; reuse occupant placement + `OCCUPANT_BLOCKS_BUGS`)
++ a jumping/stalk-pounce hunter (reuse the centipede `ActionState` lunge). Determinism-light (ant trails add
+zero sync surface). Build spiders first (lower risk); ants are Med–High complexity. Includes Step 0 = the
+rotten-fruit decay fix (bound the pile).
+
 ## Later — content layer (agriculture + crafting depth) + station minigames
 - **Flesh out agriculture & crafting (finish the content layer):** the systems exist (crops, crafting
   stations, recipes, containers); this is the CONTENT pass — more crops/recipes/stations/products, the

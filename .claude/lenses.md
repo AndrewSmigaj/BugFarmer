@@ -54,6 +54,27 @@ keep on this codebase (each caught a real, shipped-would-have-bitten issue).
   per-scan cost, fixed for *all* species by the index; nerfing the beetle would have starved a food-scarce
   species for ~no gain.)
 
+## Design lenses (for feature/creature DESIGN, not just code review)
+- ★ **Unbounded-Growth / Accumulation** — Does this system create entities or state that grow without a
+  matching removal at steady rate? What bounds the standing count? (Generalized from the rotten-fruit pile:
+  6-day lifetime × tree production → a deep pile + an O(items) decay pass. Also caught: spider webs must
+  decay + not persist into saved zone data, colony-memory entries must age out.)
+- **Fun / Legibility** — Can the player SEE and ENJOY the behavior, or is it emergent-but-invisible? Design
+  for the readable moment. (Ant workers as small swarms so a trail reads as a *line*; reuse the centipede
+  windup as the pounce *telegraph*; webs are visible occupants. Cousin of the Requirements lens — "see
+  hornets attack" needed the visual.)
+- **Emergence-Equivalence** — Does the cheap heuristic produce the same end-user-visible outcome as the
+  complex thing it stands in for? Name where it's equivalent vs not. (Colony-memory ≈ ACO trails in open
+  terrain; NOT for obstacle-route optimization → that's the deferred pheromone layer. "Fun first, heuristics
+  great if the end user can't tell.")
+- **Ecology-Fit / Systemic-Balance** — Does the new element slot into the existing system (food web,
+  economy, difficulty curve) without breaking a hard-won equilibrium? Treat rates as dials; prove it in the
+  lab before production. (Ants compete with detritivores for carrion; spiders are another predator on flies →
+  balance in `ant_spider_lab` first, not `village_21_B`.)
+- **Graceful-Degradation** — When the inputs vanish (no food / no prey / base destroyed / agent orphaned),
+  does it degrade sanely instead of breaking or spinning? (No-carrion ant colony goes dormant + re-founds
+  (nest-recovery precedent); orphaned forager drops its load (homing timeout); web-destroyed spider re-spins.)
+
 ## Notes for automating this
 - A lens pass is cheap insurance before an expensive build/run. Run the high-value lenses (★) on any plan
   that touches sync, data formats, or the hot loop.
