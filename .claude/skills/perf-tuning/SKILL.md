@@ -42,7 +42,13 @@ CSV sidecars (for exact numbers): `tools/_generated/ecology_charts/_data/perf_lo
 3. **Behavior-preserving fix only** — a perf change to the sim must produce BYTE-IDENTICAL results (the sim
    is deterministic + cross-client hashed). E.g. `FindNearbyFood` output is sort-normalized by `(Dist, ID)`,
    so a chunk-bucket spatial index that finds the same in-range SET is identical. Prefer rebuild-from-source
-   over incremental index maintenance (can't miss a mutation site).
+   over incremental — UNLESS a reader observes the source mid-batch (feeding deletes items mid-swarm-loop),
+   which forces incremental (Cache-Coherence lens). Worked example (2026-06-22, DONE): `FindNearbyFood` had
+   two scans — `ItemsByChunk` (ground-item chunk index, `item_index.go`) and the dominant one,
+   `FindNearbyResources` parsing 1024 cells/chunk (a `json.Unmarshal` each) → cached per-chunk anchor index
+   (`ChunkData.anchors`, invalidated by `occVersion`). Net cpu_food/call 974→39 us (−96%). The profiler
+   named "FindNearbyFood #1" but the per-CALL cost (flat vs item count) revealed the flora cell-sweep, not
+   the item scan, was the real cost — measure per-call, not just totals (Accounting-Artifact lens).
 4. **Gate it as a determinism change** (it is one): an **equivalence test** (new path == brute-force for
    random states) + `go test ./world/` + `tools/sim-determinism` + a fresh-match `run_sync_latejoin`
    co-located AND disjoint = `SYNC: IDENTICAL`. See `frontier-sync` + `complex-change-review.md`.
