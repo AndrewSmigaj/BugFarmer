@@ -265,6 +265,22 @@ access buttons (Inventory works; Ecologist/Mayor/Herbalist locked w/ toasts); Ap
 (hotbar→top) OR keep bottom — DECISION pending. Needs `UIFactory.MakeButton` + `btn_square` art + a
 reusable `ToastUI`. Also backlog: how players learn WHERE those NPCs are.
 
+## Next — perf: bound the ground-item pile (decay pass grows O(items))
+**Diagnosis (2026-06-22, investigate-only):** the `decay` system pass climbs monotonically over a run
+(33k→435k µs/game-day on `village_21_B`, 8 days) because **ground-item count keeps growing** —
+`processGroundItemDecay` ages EVERY item each tick (inherently O(total items); a spatial index does NOT
+help it). The accumulator is **rotten fruit from fruit trees**: lifetime `rottenFruitDecaySeconds = 5040s
+= 6 game-days` (`handlers_farming.go:29`), produced continuously by trees + windfall, faster than flies
+eat or it expires, so it builds toward a high 6-day steady-state. Carcasses (`killDropLifetime = 60s`) are
+negligible. Matches the documented old "immortal-rot → 40k+ items" history (`zone_persist.go:500`).
+**Fix options (separate effort):** (a) **expiry-bucket the decay pass** — schedule each item's despawn
+tick in a per-tick bucket so decay processes only items expiring this tick (O(expiring) not O(all)); and/or
+(b) **bound the standing rotten-fruit count** — shorter rotten lifetime, a per-cell cap, or a lower tree
+drop rate (a gameplay/ecology lever — run it through the 6× bug_lab chart loop). Verify: equivalence /
+sim-determinism + re-profile that `decay` flattens. Note: the FindNearbyFood chunk index already removes
+the *food-search* sensitivity to this pile (committed); this item is specifically the decay-pass cost +
+the underlying unbounded accumulation.
+
 ## Later — content layer (agriculture + crafting depth) + station minigames
 - **Flesh out agriculture & crafting (finish the content layer):** the systems exist (crops, crafting
   stations, recipes, containers); this is the CONTENT pass — more crops/recipes/stations/products, the
