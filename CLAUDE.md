@@ -39,8 +39,9 @@ time (you end up building every feature twice). For every feature:
 - `docs/` — `product/` (how the game works, incl. the GDD `game_design.md`) and `guides/`
   (`art/` = how sprites look & are made; `authoring/` = how to build zones/scenes — start at its `README.md`).
 - `.claude/skills/` — task playbooks: `test-changes` (verify ANY change — every test/determinism gate),
-  `frontier-sync` (wire a new deterministic bug-sim mechanic), `ecology-tuning` (balance the bug food web),
-  `run-backend` (the Nakama/Postgres/Go stack), `add-object` / `regenerate-sprite` (world art), `author-zone` (zones).
+  `frontier-sync` (wire a new deterministic bug-sim mechanic), `perf-tuning` (profile + optimize the sim),
+  `ecology-tuning` (balance the bug food web), `run-backend` (the Nakama/Postgres/Go stack),
+  `add-object` / `regenerate-sprite` (world art), `author-zone` (zones).
 
 ## Where things live
 - World art (loaded by `key` at runtime): `Assets/Resources/{Objects,Tiles,Items,Bugs,Effects}/`.
@@ -79,6 +80,8 @@ python3 tools/make_scene.py                         # render tools/_generated/pr
 - **Understand the deterministic world + add a bug-sim mechanic:** `docs/product/architecture_swarm_sync.md`
   **§0 as-built quick reference** (the guarantee, the one invariant, the ledger-event glossary, the recipe),
   then the `frontier-sync` skill (the step-by-step recipe).
+- **Performance — profile or optimize the sim:** the `perf-tuning` skill (run a profiled session, read the
+  `current/index.html` dashboard, the safe-optimization discipline; sim-touching opts are determinism changes).
 - **Any complex / risky / determinism change:** run it through `.claude/complex-change-review.md` (stages ×
   failure-modes + the BugFarmer invariant checklist) + `.claude/lenses.md` (review lenses) before coding.
 - **Git workflow (how we branch/commit/merge):** `.claude/git-guidelines.md`.
