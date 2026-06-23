@@ -1,11 +1,16 @@
 package world
 
 import (
+	goruntime "runtime" // Go runtime (MemStats) — aliased; Nakama's runtime pkg owns the bare name
 	"sort"
 	"time"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 )
+
+// perfTickBudgetNs is the production per-tick wall-clock budget: 100 ms at SimRate=10 Hz. A tick whose
+// CPU work exceeds this can't sustain real-time on a single match. Used only for the over-budget counter.
+const perfTickBudgetNs int64 = 100 * 1000 * 1000
 
 // PerfStats — the COST telemetry: per-species server-CPU time by sub-phase, per-species call/leg counts,
 // global per-tick-pass timings, and broadcast byte/message totals, accumulated each tick and flushed once
@@ -28,6 +33,19 @@ type PerfStats struct {
 
 	influenceBytes, influenceMsgs int64 // SWARM leg broadcast (OpCode 71) wire totals
 	rosterBytes, rosterMsgs       int64 // SwarmUpdate roster broadcast (OpCode 20) wire totals
+
+	// WHOLE-TICK timing — the full sim-batch tick wrapped (match.go), so we see total cost (not just the
+	// instrumented sub-phases) → "dark time" = tickTotal − Σ(cpu+sys), throughput (µs/tick vs the 100ms
+	// budget), and spikes (max). RecordTick is called once per sim-tick AFTER the day-rollover emit, so the
+	// rollover tick lands in the NEXT day's bucket (a ~1-in-DayLengthTicks aggregate imprecision; fine).
+	tickTotalNs int64 // sum of per-tick wall-clock this day
+	tickCount   int64 // ticks recorded this day (use as the divisor, not DayLengthTicks)
+	tickMaxNs   int64 // fattest single tick this day (catches GC/boom spikes the daily average hides)
+	ticksOver   int64 // ticks whose work exceeded perfTickBudgetNs
+
+	// GC/memory baselines for per-day deltas (NOT reset daily — they're running totals from Go's runtime).
+	lastNumGC   uint32
+	lastPauseNs uint64
 }
 
 // Fixed column order so every PERFSTATS/PERFSYS line has identical fields (0 when absent) — trivial for
@@ -75,6 +93,23 @@ func (p *PerfStats) StopSys(phase string, t time.Time) {
 	p.sys[phase] += time.Since(t).Nanoseconds()
 }
 
+// RecordTick attributes one sim-tick's full wall-clock (since t, from Start() at the top of the tick) to
+// the whole-tick aggregates: total, count, max, and the over-budget counter. Gated + zero-Time-safe.
+func (p *PerfStats) RecordTick(t time.Time) {
+	if p == nil || !p.enabled || t.IsZero() {
+		return
+	}
+	dur := time.Since(t).Nanoseconds()
+	p.tickTotalNs += dur
+	p.tickCount++
+	if dur > p.tickMaxNs {
+		p.tickMaxNs = dur
+	}
+	if dur > perfTickBudgetNs {
+		p.ticksOver++
+	}
+}
+
 // Count bumps a per-species counter ("food_calls", "pred_thinks", "legs").
 func (p *PerfStats) Count(species, counter string) {
 	if p == nil || !p.enabled {
@@ -113,6 +148,8 @@ func (p *PerfStats) reset() {
 	p.sys = map[string]int64{}
 	p.influenceBytes, p.influenceMsgs = 0, 0
 	p.rosterBytes, p.rosterMsgs = 0, 0
+	p.tickTotalNs, p.tickCount, p.tickMaxNs, p.ticksOver = 0, 0, 0, 0
+	// NOTE: lastNumGC/lastPauseNs are NOT reset — they're the running baseline for next day's GC delta.
 }
 
 // emitPerfStats logs one PERFSTATS line per species (live swarms/bugs + CPU-by-subphase in µs + call/leg
@@ -176,6 +213,20 @@ func (m *Match) emitPerfStats(state *WorldState, day int64, logger runtime.Logge
 	}
 	sysLine += " influence_bytes=" + itoa(p.influenceBytes) + " influence_msgs=" + itoa(p.influenceMsgs) +
 		" roster_bytes=" + itoa(p.rosterBytes) + " roster_msgs=" + itoa(p.rosterMsgs)
+
+	// Whole-tick throughput (tick_total_us ÷ tick_count = avg µs/tick; vs 100ms budget) + spikes.
+	sysLine += " tick_total_us=" + itoa(p.tickTotalNs/1000) + " tick_count=" + itoa(p.tickCount) +
+		" tick_max_us=" + itoa(p.tickMaxNs/1000) + " ticks_over=" + itoa(p.ticksOver)
+
+	// GC/memory: instantaneous heap + this-day deltas of GC count + pause time (process-global; the rig
+	// runs a single match, so it's representative). Read BEFORE reset; advance the running baselines.
+	var ms goruntime.MemStats
+	goruntime.ReadMemStats(&ms)
+	gcDelta := int64(ms.NumGC - p.lastNumGC)
+	pauseDeltaUs := int64((ms.PauseTotalNs - p.lastPauseNs) / 1000)
+	p.lastNumGC, p.lastPauseNs = ms.NumGC, ms.PauseTotalNs
+	sysLine += " heap_alloc_mb=" + itoa(int64(ms.HeapAlloc/(1024*1024))) +
+		" num_gc=" + itoa(gcDelta) + " gc_pause_us=" + itoa(pauseDeltaUs)
 	logger.Info(sysLine)
 
 	p.reset()

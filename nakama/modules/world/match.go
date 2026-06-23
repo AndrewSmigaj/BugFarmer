@@ -817,6 +817,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 	// batched zone). VERIFIED: no early `return` between here and the loop close, so the wrap is safe.
 	for simStep := 0; simStep < worldState.Config.SimBatch; simStep++ {
 		worldState.TickCount++
+		tickStart := worldState.Perf.Start() // whole-tick timer (recorded at loop-body end; see profiler.go)
 		chunkSize := worldState.Config.ChunkSize
 
 		// ZONE PERSISTENCE: periodic autosave while occupied (crash safety between the on-empty/terminate
@@ -1541,6 +1542,11 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		if worldState.TickCount%100 == 0 && worldState.CurrentZone != nil {
 			worldState.PruneInfluenceLog(worldState.CurrentZone.ZoneID, worldState.TickCount)
 		}
+
+		// Whole-tick cost: record AFTER all per-tick work (incl. the day-rollover emit at ~L1440). On a
+		// rollover tick the emit already flushed+reset, so this tick lands in the next day's bucket — a
+		// ~1-in-DayLengthTicks aggregate imprecision (acceptable). See profiler.go RecordTick / dark-time.
+		worldState.Perf.RecordTick(tickStart)
 	} // end SIM BATCH loop
 
 	// Return state to continue (never nil for persistent world)
