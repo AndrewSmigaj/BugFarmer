@@ -135,6 +135,122 @@ func sameHits(a, b []FoodHit) bool {
 	return true
 }
 
+// ===== Occupant anchor index (FindNearbyResources) =====
+
+// bruteForceResources replicates the OLD full 32x32-cell FindNearbyResources scan as the reference oracle.
+func bruteForceResources(state *WorldState, pos entities.EntityPosition, vision float32, targets []string) []ResourceHit {
+	targetSet := make(map[string]bool, len(targets))
+	for _, id := range targets {
+		targetSet[id] = true
+	}
+	cs := state.Config.ChunkSize
+	worldX := float32(pos.ChunkX*cs) + pos.LocalX
+	worldY := float32(pos.ChunkY*cs) + pos.LocalY
+	chunksToSearch := int(math.Ceil(float64(vision) / float64(cs)))
+	var hits []ResourceHit
+	for cy := pos.ChunkY - chunksToSearch; cy <= pos.ChunkY+chunksToSearch; cy++ {
+		for cx := pos.ChunkX - chunksToSearch; cx <= pos.ChunkX+chunksToSearch; cx++ {
+			chunk := state.Chunks[ChunkKey(cx, cy)]
+			if chunk == nil {
+				continue
+			}
+			for ly := 0; ly < ChunkSize; ly++ {
+				for lx := 0; lx < ChunkSize; lx++ {
+					cell, err := chunk.GetOccupantCell(lx, ly)
+					if err != nil || cell.IsEmpty || cell.Occupant == nil || !cell.Occupant.Anchor {
+						continue
+					}
+					if !targetSet[cell.Occupant.ID] {
+						continue
+					}
+					occX := float32(cx*cs + lx)
+					occY := float32(cy*cs + ly)
+					dx, dy := occX-worldX, occY-worldY
+					dist := float32(math.Sqrt(float64(dx*dx + dy*dy)))
+					if dist <= vision {
+						hits = append(hits, ResourceHit{ID: cell.Occupant.ID, X: occX, Y: occY, Dist: dist})
+					}
+				}
+			}
+		}
+	}
+	sort.Slice(hits, func(i, j int) bool { return hits[i].Dist < hits[j].Dist })
+	return hits
+}
+
+func sameResHits(a, b []ResourceHit) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i].ID != b[i].ID || a[i].X != b[i].X || a[i].Y != b[i].Y || a[i].Dist != b[i].Dist {
+			return false
+		}
+	}
+	return true
+}
+
+func TestFindNearbyResourcesIndexEqualsBruteForce(t *testing.T) {
+	rng := rand.New(rand.NewSource(0xFEED))
+	occTypes := []string{"flower_wild", "milkweed", "tree_apple", "stone_block"}
+	targetSets := [][]string{
+		{"flower_wild"},
+		{"milkweed"},
+		{"flower_wild", "milkweed"},
+		{"dead_fly"},        // never an occupant — must return nothing (the skip-empty case)
+		{"tree_apple", "x"}, // mixed present/absent
+	}
+	for trial := 0; trial < 400; trial++ {
+		state := indexOnlyState()
+		// Populate a 3x3 chunk block with random anchor occupants.
+		for cy := 0; cy < 3; cy++ {
+			for cx := 0; cx < 3; cx++ {
+				ch := NewEmptyChunk(cx, cy, "grass")
+				nOcc := rng.Intn(20)
+				for k := 0; k < nOcc; k++ {
+					ch.SetOccupant(rng.Intn(ChunkSize), rng.Intn(ChunkSize),
+						&PlacedOccupant{ID: occTypes[rng.Intn(len(occTypes))]})
+				}
+				state.Chunks[ChunkKey(cx, cy)] = ch
+			}
+		}
+		qpos := entities.EntityPosition{ChunkX: 1, ChunkY: 1, LocalX: float32(rng.Intn(ChunkSize)), LocalY: float32(rng.Intn(ChunkSize))}
+		vision := 1 + rng.Float32()*40
+		targets := targetSets[rng.Intn(len(targetSets))]
+
+		got := FindNearbyResources(state, qpos, vision, targets)
+		want := bruteForceResources(state, qpos, vision, targets)
+		if !sameResHits(got, want) {
+			t.Fatalf("trial %d: anchor index != brute-force\n  vision=%.2f targets=%v\n  got =%v\n  want=%v",
+				trial, vision, targets, got, want)
+		}
+	}
+}
+
+// Mutations must invalidate the cached anchor index (occVersion bump → rebuild on next query).
+func TestAnchorIndexInvalidatesOnMutation(t *testing.T) {
+	state := indexOnlyState()
+	ch := NewEmptyChunk(0, 0, "grass")
+	state.Chunks[ChunkKey(0, 0)] = ch
+	pos := entities.EntityPosition{ChunkX: 0, ChunkY: 0, LocalX: 5, LocalY: 5}
+	tgt := []string{"flower_wild"}
+
+	// Empty → no hits, and the index is now built.
+	if got := FindNearbyResources(state, pos, 20, tgt); len(got) != 0 {
+		t.Fatalf("expected 0 hits on empty chunk, got %v", got)
+	}
+	// Place one → must appear (index invalidated by SetOccupant).
+	ch.SetOccupant(6, 5, &PlacedOccupant{ID: "flower_wild"})
+	if got := FindNearbyResources(state, pos, 20, tgt); !sameResHits(got, bruteForceResources(state, pos, 20, tgt)) || len(got) != 1 {
+		t.Fatalf("after SetOccupant: got %v (want exactly the new flower)", got)
+	}
+	// Remove it → must disappear (index invalidated by ClearOccupant).
+	ch.ClearOccupant(6, 5)
+	if got := FindNearbyResources(state, pos, 20, tgt); len(got) != 0 {
+		t.Fatalf("after ClearOccupant: expected 0 hits, got %v", got)
+	}
+}
+
 // The funnel-completeness backstop: random add/overwrite/delete churn must always leave ItemsByChunk an
 // exact mirror of GroundItems (this is what proves no production mutation site can quietly desync them).
 func TestItemIndexConsistencyUnderChurn(t *testing.T) {

@@ -157,25 +157,22 @@ func FindNearbyResources(state *WorldState, pos entities.EntityPosition, visionR
 				continue
 			}
 
-			for ly := 0; ly < ChunkSize; ly++ {
-				for lx := 0; lx < ChunkSize; lx++ {
-					cell, err := chunk.GetOccupantCell(lx, ly)
-					if err != nil || cell.IsEmpty || cell.Occupant == nil || !cell.Occupant.Anchor {
-						continue
-					}
+			// Iterate the chunk's cached ANCHOR index instead of all 32x32 cells (each of which would be a
+			// json.Unmarshal). Same (ly,lx) order + same dist test as the old cell scan → identical result,
+			// and species whose targets are never occupants (carrion/rotten-fruit eaters) just skip-filter
+			// a handful of anchors instead of parsing 1024 cells.
+			chunk.ensureAnchors()
+			for _, a := range chunk.anchors {
+				if !targetSet[a.id] {
+					continue
+				}
+				occX := float32(cx*chunkSize + a.lx)
+				occY := float32(cy*chunkSize + a.ly)
+				dx, dy := occX-worldX, occY-worldY
+				dist := float32(math.Sqrt(float64(dx*dx + dy*dy)))
 
-					if !targetSet[cell.Occupant.ID] {
-						continue
-					}
-
-					occX := float32(cx*chunkSize + lx)
-					occY := float32(cy*chunkSize + ly)
-					dx, dy := occX-worldX, occY-worldY
-					dist := float32(math.Sqrt(float64(dx*dx + dy*dy)))
-
-					if dist <= visionRange {
-						hits = append(hits, ResourceHit{ID: cell.Occupant.ID, X: occX, Y: occY, Dist: dist})
-					}
+				if dist <= visionRange {
+					hits = append(hits, ResourceHit{ID: a.id, X: occX, Y: occY, Dist: dist})
 				}
 			}
 		}
