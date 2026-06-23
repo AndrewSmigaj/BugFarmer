@@ -26,6 +26,8 @@ CPU_PHASES = ["food", "pred", "action"]          # per-species server-CPU sub-ph
 COUNTERS = ["food_calls", "pred_thinks", "legs"]  # per-species call/leg counts
 SYS_PHASES = ["merge", "decay", "forage", "nests"]  # global per-tick passes (µs)
 SYS_BYTES = ["influence_bytes", "influence_msgs", "roster_bytes", "roster_msgs"]
+SYS_TICK = ["tick_total_us", "tick_count", "tick_max_us", "ticks_over"]  # whole-tick throughput/spikes
+SYS_GC = ["heap_alloc_mb", "num_gc", "gc_pause_us"]  # GC/memory (instantaneous heap + per-day deltas)
 
 PHASE_COLOR = {"food": "#42a5f5", "pred": "#ab47bc", "action": "#ffb300"}
 SYS_COLOR = {"merge": "#ef5350", "decay": "#8d6e63", "forage": "#4caf50", "nests": "#26a69a"}
@@ -79,6 +81,8 @@ def parse(text):
                 row[f"sys_{ph}_us"] = kv.get(f"sys_{ph}_us", 0)
             for b in SYS_BYTES:
                 row[b] = kv.get(b, 0)
+            for k in SYS_TICK + SYS_GC:  # whole-tick + GC/mem (absent in pre-upgrade logs → 0)
+                row[k] = kv.get(k, 0)
             sysr.append(row)
     return perf, sysr
 
@@ -90,7 +94,7 @@ def write_csvs(perf, sysr, outdir, tag):
         w = csv.DictWriter(f, fieldnames=pcols)
         w.writeheader()
         w.writerows(sorted(perf, key=lambda r: (r["species"], r["day"])))
-    scols = ["day"] + [f"sys_{p}_us" for p in SYS_PHASES] + SYS_BYTES
+    scols = ["day"] + [f"sys_{p}_us" for p in SYS_PHASES] + SYS_BYTES + SYS_TICK + SYS_GC
     spath = os.path.join(outdir, f"perf_sys_{tag}.csv")
     with open(spath, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=scols)
@@ -115,8 +119,8 @@ def chart(perf, sysr, outdir, tag):
     spcol = {sp: SP_COLOR[i % len(SP_COLOR)] for i, sp in enumerate(species)}
 
     n = len(species)
-    # n per-species CPU panels + 1 system panel + 1 cost-vs-size scatter.
-    fig, axes = plt.subplots(n + 2, 1, figsize=(11, 2.6 * (n + 2)), squeeze=False)
+    # n per-species CPU panels + system + throughput + per-bug + GC + cost-vs-size scatter.
+    fig, axes = plt.subplots(n + 5, 1, figsize=(11, 2.6 * (n + 5)), squeeze=False)
 
     for i, sp in enumerate(species):
         ax = axes[i][0]
@@ -157,8 +161,66 @@ def chart(perf, sysr, outdir, tag):
     axs.set_title("system passes + broadcast bytes (global)", loc="left", fontsize=10, fontweight="bold")
     axs.legend(loc="upper left", fontsize=6, ncol=4, framealpha=0.6)
 
+    # Throughput / real-time: avg ms per tick vs the 100ms@10Hz budget + "dark" (un-instrumented) time.
+    axt = axes[n + 1][0]
+    if sysr:
+        srows = sorted(sysr, key=lambda r: r["day"])
+        days = [r["day"] for r in srows]
+        cpu_by_day = {}
+        for r in perf:
+            cpu_by_day[r["day"]] = cpu_by_day.get(r["day"], 0) + sum(r[f"cpu_{ph}_us"] for ph in CPU_PHASES)
+        ms_tick, instr_ms, dark_ms = [], [], []
+        for r in srows:
+            tc = max(r.get("tick_count", 0), 1)
+            total = r.get("tick_total_us", 0)
+            instr = cpu_by_day.get(r["day"], 0) + sum(r[f"sys_{ph}_us"] for ph in SYS_PHASES)
+            ms_tick.append(total / tc / 1000.0)
+            instr_ms.append(instr / tc / 1000.0)
+            dark_ms.append(max(total - instr, 0) / tc / 1000.0)
+        axt.bar(days, instr_ms, color="#42a5f5", width=0.8, label="instrumented ms/tick")
+        axt.bar(days, dark_ms, bottom=instr_ms, color="#bdbdbd", width=0.8, label="dark (un-measured)")
+        if any(m > 0 for m in ms_tick):
+            axt.axhline(100.0, color="#e53935", ls="--", lw=1, label="100ms @10Hz budget")
+        axt.set_ylabel("ms / tick")
+        axt2 = axt.twinx()
+        axt2.plot(days, [r.get("tick_max_us", 0) / 1000.0 for r in srows], color="#ff7043", ls=":", lw=1.3, label="max tick ms")
+        axt2.set_ylabel("max tick ms")
+        axt2.legend(loc="upper right", fontsize=6, framealpha=0.6)
+    axt.set_title("throughput — ms/tick vs 100ms budget + dark (un-instrumented) time",
+                  loc="left", fontsize=10, fontweight="bold")
+    axt.legend(loc="upper left", fontsize=6, ncol=3, framealpha=0.6)
+
+    # Per-bug cost over time — size-normalized (a big swarm isn't more complex per bug).
+    axb = axes[n + 2][0]
+    for sp in species:
+        rows = sorted([r for r in perf if r["species"] == sp and r["bugs"] > 0], key=lambda r: r["day"])
+        if not rows:
+            continue
+        axb.plot([r["day"] for r in rows],
+                 [sum(r[f"cpu_{ph}_us"] for ph in CPU_PHASES) / r["bugs"] for r in rows],
+                 "-o", ms=3, lw=1.3, color=spcol[sp], label=sp)
+    axb.set_ylabel("server µs per bug / day")
+    axb.set_title("cost per bug over time (size-normalized — fair across big vs small swarms)",
+                  loc="left", fontsize=10, fontweight="bold")
+    axb.legend(loc="upper right", fontsize=6, ncol=3, framealpha=0.6)
+
+    # GC / memory: per-day GC pause + heap + GC count.
+    axg = axes[n + 3][0]
+    if sysr:
+        srows = sorted(sysr, key=lambda r: r["day"])
+        days = [r["day"] for r in srows]
+        axg.bar(days, [r.get("gc_pause_us", 0) / 1000.0 for r in srows], color="#8d6e63", width=0.8, label="GC pause ms/day")
+        axg.set_ylabel("GC pause ms/day")
+        axg2 = axg.twinx()
+        axg2.plot(days, [r.get("heap_alloc_mb", 0) for r in srows], color="#26a69a", lw=1.4, label="heap MB")
+        axg2.plot(days, [r.get("num_gc", 0) for r in srows], color="#5c6bc0", ls=":", lw=1.2, label="num GC/day")
+        axg2.set_ylabel("heap MB / GC count")
+        axg2.legend(loc="upper right", fontsize=6, framealpha=0.6)
+    axg.set_title("GC / memory", loc="left", fontsize=10, fontweight="bold")
+    axg.legend(loc="upper left", fontsize=6, framealpha=0.6)
+
     # Cost-vs-size: CPU-per-bug vs avg swarm size (the "fatter swarms cost less per bug" proof).
-    axc = axes[n + 1][0]
+    axc = axes[n + 4][0]
     for sp in species:
         xs, ys = [], []
         for r in perf:
