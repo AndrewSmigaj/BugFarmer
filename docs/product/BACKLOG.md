@@ -265,6 +265,13 @@ access buttons (Inventory works; Ecologist/Mayor/Herbalist locked w/ toasts); Ap
 (hotbar→top) OR keep bottom — DECISION pending. Needs `UIFactory.MakeButton` + `btn_square` art + a
 reusable `ToastUI`. Also backlog: how players learn WHERE those NPCs are.
 
+## Later — content layer (agriculture + crafting depth) + station minigames
+- **Flesh out agriculture & crafting (finish the content layer):** the systems exist (crops, crafting
+  stations, recipes, containers); this is the CONTENT pass — more crops/recipes/stations/products, the
+  progression that ties them together, and the missing art. Needed eventually, not now.
+- **Station minigames:** interactive minigames at craft stations (e.g. a timing/skill step when smelting,
+  brewing, etc.) instead of a pure timer. Polish/engagement layer on top of the crafting system.
+
 ## Later — sprite review (manual, by hand)
 Go through EVERY sprite by hand and fix/redo the ones that read wrong (Andrew edits on his end). Many
 were auto-generated; quality varies. NB: a bare `pixelclean.py` re-cleans ALL sprites — regenerate +
