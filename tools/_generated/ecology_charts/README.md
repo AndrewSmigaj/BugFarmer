@@ -31,5 +31,5 @@ ecology_charts/
   a live boom-bust cycle; an inward spiral = damping to flat; outward = crash/runaway.
 
 ## The strategy log
-Every tuning move + its measured result is recorded in `docs/product/ecology_tuning_log.md` (append-only).
+Every tuning move + its measured result is recorded in `docs/product/ecology/ecology_tuning_log.md` (append-only).
 Read that to see what's been tried and why, before proposing a new lever.

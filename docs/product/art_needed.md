@@ -121,7 +121,7 @@ frames, reconvert as part of the **multi-frame sprites** backlog item, not one-o
 
 ### TODO — crafting outputs (NEW item icons; batch with `add-object`)
 Stage-1 recipes deliberately output EXISTING-art items so crafting shipped without an art batch. As
-recipes expand (see [crafting_design.md](crafting_design.md)) these new outputs need icons:
+recipes expand (see [crafting_design.md](design/crafting_design.md)) these new outputs need icons:
 - **Metal bars:** `copper_bar`, `tin_bar`, `silver_bar`, `gold_bar`, `platinum_bar`, `steel`
   (only `iron_bar` exists). Recolor pipeline can likely do the bar set from one base.
 - **Materials:** `wood_plank`, `glass`, `charcoal`, `coal_dust`, `sawdust`, `thread`, `cloth`,

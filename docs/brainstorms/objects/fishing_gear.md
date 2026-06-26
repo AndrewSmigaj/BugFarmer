@@ -4,7 +4,7 @@ Rods, bait, lures, tackle, fish traps, nets, boat/dock gear, and a fish list wit
 the village boat/fishing store on the SW lake. Design only.
 
 Read alongside:
-- `docs/product/game_design.md` (world/zones, village).
+- `docs/product/design/game_design.md` (world/zones, village).
 - `docs/product/zones/village_21.md` (the village + SW lake / fishing store).
 - Existing related ids: `bait_basket`, `dock`-adjacent village build, `aquarium` (display fish),
   `lily_pad`, `well`/`water_bucket` (water flavor).

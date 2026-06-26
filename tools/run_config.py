@@ -3,7 +3,7 @@
 server, run the fast bug_lab harness, chart it (population + interaction log), then RESTORE the canonical
 data. The runner MUTATES canonical files (species.json / occupants.json / ecology_tuning.json / the
 bug_lab zone) — the snapshot/restore around the run is the critical footgun guard so a tuning sweep never
-leaves the repo dirty. See docs/product/ecology_parameters.md and the test-changes skill §2.5.
+leaves the repo dirty. See docs/product/ecology/ecology_parameters.md and the test-changes skill §2.5.
 
   python3 tools/run_config.py 00_baseline                 # baseline (no deltas → compiled defaults)
   python3 tools/run_config.py 01_no_cull --duration 250   # ~14 game-days

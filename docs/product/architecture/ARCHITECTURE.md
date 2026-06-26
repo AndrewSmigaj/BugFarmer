@@ -13,22 +13,22 @@ Bug Farmer is a 2D multiplayer game where players farm bugs, build structures, a
 - [architecture_weather.md](architecture_weather.md) — time of day, day rollover, rain, deep night + flashlight
 - [architecture_inventory.md](architecture_inventory.md) / [architecture_items.md](architecture_items.md) — items & inventory (item_database.md is DEPRECATED — de-indexed)
 - [architecture_input.md](architecture_input.md) — client input ownership (left-click router, combat/catch/tools)
-- [architecture_crafting.md](architecture_crafting.md) — recipes-as-data, craft stations, item containers, the determinism boundary ([crafting_design.md](crafting_design.md) = content)
+- [architecture_crafting.md](architecture_crafting.md) — recipes-as-data, craft stations, item containers, the determinism boundary ([crafting_design.md](../design/crafting_design.md) = content)
 - [architecture_entity_sync.md](architecture_entity_sync.md) — entity replication
 - [architecture_swarm_sync.md](architecture_swarm_sync.md) — authoritative-client swarm sim + deterministic followers
-- [determinism_audit_2026-06-20.md](determinism_audit_2026-06-20.md) — HISTORICAL root-cause audit of the cross-client divergence; its vectors are now FIXED (see the SUPERSEDED note at the top). Read for the mechanism map, not as open issues.
-- [game_design.md](game_design.md) — the Game Design Document (GDD)
-- [requirements.md](requirements.md) — game design requirements
-- [BACKLOG.md](BACKLOG.md) — running queue of upcoming work (Now / Next / Later)
+- [determinism_audit_2026-06-20.md](../investigations/determinism_audit_2026-06-20.md) — HISTORICAL root-cause audit of the cross-client divergence; its vectors are now FIXED (see the SUPERSEDED note at the top). Read for the mechanism map, not as open issues.
+- [game_design.md](../design/game_design.md) — the Game Design Document (GDD)
+- [requirements.md](../design/requirements.md) — game design requirements
+- [BACKLOG.md](../BACKLOG.md) — running queue of upcoming work (Now / Next / Later)
 - [zones/](zones/) — per-zone design notes
 
 **`docs/guides/art/` — how sprites look & get made**
-- [object_pipeline.md](../guides/art/object_pipeline.md) — **canonical** art/sprite pipeline (gen → clean → preview); read first
-- [MASTER_STYLE_GUIDE.md](../guides/art/MASTER_STYLE_GUIDE.md), [PERSPECTIVE_GUIDE.md](../guides/art/PERSPECTIVE_GUIDE.md), [CHARACTER_DESIGN_GUIDE.md](../guides/art/CHARACTER_DESIGN_GUIDE.md), [BIOME_PALETTES.md](../guides/art/BIOME_PALETTES.md) — art direction
+- [object_pipeline.md](../../guides/art/object_pipeline.md) — **canonical** art/sprite pipeline (gen → clean → preview); read first
+- [MASTER_STYLE_GUIDE.md](../../guides/art/MASTER_STYLE_GUIDE.md), [PERSPECTIVE_GUIDE.md](../../guides/art/PERSPECTIVE_GUIDE.md), [CHARACTER_DESIGN_GUIDE.md](../../guides/art/CHARACTER_DESIGN_GUIDE.md), [BIOME_PALETTES.md](../../guides/art/BIOME_PALETTES.md) — art direction
 
 **`docs/guides/authoring/` — how to build zones & scenes**
-- [README.md](../guides/authoring/README.md) — the authoring **system** (builder · guides · scenes · art lab); read first
-- per-feature guides: [house](../guides/authoring/house.md), [building](../guides/authoring/building.md), [yard](../guides/authoring/yard.md), [vegetation](../guides/authoring/vegetation.md), [caves](../guides/authoring/caves.md), [blocks](../guides/authoring/blocks.md), [trees-and-ponds](../guides/authoring/trees-and-ponds.md), [biome-feature-map](../guides/authoring/biome-feature-map.md)
+- [README.md](../../guides/authoring/README.md) — the authoring **system** (builder · guides · scenes · art lab); read first
+- per-feature guides: [house](../../guides/authoring/house.md), [building](../../guides/authoring/building.md), [yard](../../guides/authoring/yard.md), [vegetation](../../guides/authoring/vegetation.md), [caves](../../guides/authoring/caves.md), [blocks](../../guides/authoring/blocks.md), [trees-and-ponds](../../guides/authoring/trees-and-ponds.md), [biome-feature-map](../../guides/authoring/biome-feature-map.md)
 
 ---
 

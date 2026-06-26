@@ -53,7 +53,7 @@ CSV sidecars (for exact numbers): `tools/_generated/ecology_charts/_data/perf_lo
    random states) + `go test ./world/` + `tools/sim-determinism` + a fresh-match `run_sync_latejoin`
    co-located AND disjoint = `SYNC: IDENTICAL`. See `frontier-sync` + `complex-change-review.md`.
 5. **Re-profile** — same command, new tag; confirm the measured drop; compare dashboards.
-6. **Log it** — before/after numbers in `docs/product/ecology_tuning_log.md` (or a perf note).
+6. **Log it** — before/after numbers in `docs/product/ecology/ecology_tuning_log.md` (or a perf note).
 
 ## 4. Gotchas / facts
 - Pure instrumentation (timing, `ReadMemStats`) is observation-only + never hashed → it cannot change the

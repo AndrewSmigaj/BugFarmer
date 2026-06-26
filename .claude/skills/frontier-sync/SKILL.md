@@ -6,7 +6,7 @@ description: Use when adding or changing anything the deterministic BUG SIMULATI
 # Wire a new deterministic mechanic (frontier-sync)
 
 How to add something the bug sim reads so it stays bit-identical across all players. The system of record is
-[`docs/product/architecture_swarm_sync.md`](../../../docs/product/architecture_swarm_sync.md) — read its
+[`docs/product/architecture/architecture_swarm_sync.md`](../../../docs/product/architecture/architecture_swarm_sync.md) — read its
 **§0 as-built quick reference** first. Verify with the **`test-changes`** skill (the execution gates). Review
 the design with [`.claude/lenses.md`](../../lenses.md) and [`.claude/complex-change-review.md`](../../complex-change-review.md)
 (the Determinism / Timing / Data-Contract lenses + STAGE-2 DESIGN cells).

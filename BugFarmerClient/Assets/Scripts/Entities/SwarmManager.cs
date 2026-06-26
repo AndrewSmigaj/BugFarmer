@@ -2042,7 +2042,7 @@ namespace BugFarmer.Entities
             // tick behind the state it contained, so late-joiners re-simulated that tick on replay → a 1-tick
             // cycle/position shift that compounded into cross-client divergence. Confirmed by boundary trace:
             // the captured state matched THIS client's trace at snapshot_tick+1, 5/5. See
-            // docs/product/architecture_swarm_sync.md:103/111/137.)
+            // docs/product/architecture/architecture_swarm_sync.md:103/111/137.)
             // snapshot_last_event_seq stays _lastAppliedSeq: events@_simulationTick are still pending (applied
             // at the start of the next AdvanceOneTick) and ride the replay log, so a joiner that starts at
             // snapshot_tick=_simulationTick applies them before simulating _simulationTick+1 — in lockstep.

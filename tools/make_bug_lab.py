@@ -11,7 +11,7 @@ Output: nakama/data/zones/bug_lab/zone.json + chunk_X_Y.json
 GEOMETRY (where pens/trees/flowers sit) is code; QUANTITIES (caps, Director bands, sim_batch,
 per-species initial/max/swarm_size) are the `lab` config dict so the Phase-4c config sweep can vary
 them without editing this file — `build_lab(lab)` takes that dict, `DEFAULT_LAB` is the baseline, and
-`tools/run_config.py` deep-merges a delta over it. See docs/product/ecology_parameters.md.
+`tools/run_config.py` deep-merges a delta over it. See docs/product/ecology/ecology_parameters.md.
 """
 import json, os, copy
 

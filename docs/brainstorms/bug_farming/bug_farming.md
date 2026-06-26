@@ -4,7 +4,7 @@ The objects/tools that turn the core fantasy ("ALL bugs farmable if penned stron
 into placeable content. This is a CONTENT brainstorm — design only, no code/data/art here.
 
 Read alongside:
-- `docs/product/game_design.md` §7 (capture), §8 (containment & escape), §11 (automation).
+- `docs/product/design/game_design.md` §7 (capture), §8 (containment & escape), §11 (automation).
 - `docs/brainstorms/materials/ores_metals.md` for the **pen-material ladder** (Wood → Iron →
   Steel → Advanced/exotic). Pen tiers below reference that ladder so containment strength stays
   one consistent progression across the game.

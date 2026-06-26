@@ -52,13 +52,13 @@ Working doc — not canonical; the skills/guides are.
 - The player house (`houses/player_house.py`) now uses the **fancy** collection (it's the
   "rich showcase"); scene1 re-renders fully once fancy art exists.
 
-## → docs/product/game_design.md (design captured this session)
+## → docs/product/design/game_design.md (design captured this session)
 - §11.6 Power & electrification (windmill/hydro/generator, linked-placement line tool shared
   with rail/track, coverage-radius aura, fuel-fed vs electric machines).
 - §11.7 Cooking & stoves (wood stove 1 dish + fuel → bigger → electric range needs power).
 - TODO still: content-diversity philosophy note (AI artists → lean into variety; price = quality).
 
-## → item & inventory model (fold into docs/product/architecture_items.md + add-object skill)
+## → item & inventory model (fold into docs/product/architecture/architecture_items.md + add-object skill)
 The kinds of thing in the game, and how art maps to them:
 - **Tiles** (`Resources/Tiles/`, opaque, per-cell ground): grass, dirt, garden_plot, floors, paths. NOT rugs.
 - **Placeables** (`Objects/`, `placeables.json`, grid footprint ≥1, ownable, can grant bonuses):

@@ -84,7 +84,7 @@ python3 tools/make_scene.py                         # render tools/_generated/pr
 ## Entry points for an AI coder (start here)
 - **Verify ANY change / run tests:** the `test-changes` skill — the single source of truth for every test
   gate (Go unit tests, headless sync-harness, the determinism / "are all players in sync" checks, Unity pass).
-- **Understand the deterministic world + add a bug-sim mechanic:** `docs/product/architecture_swarm_sync.md`
+- **Understand the deterministic world + add a bug-sim mechanic:** `docs/product/architecture/architecture_swarm_sync.md`
   **§0 as-built quick reference** (the guarantee, the one invariant, the ledger-event glossary, the recipe),
   then the `frontier-sync` skill (the step-by-step recipe).
 - **Performance — profile or optimize the sim:** the `perf-tuning` skill (run a profiled session, read the
@@ -94,7 +94,7 @@ python3 tools/make_scene.py                         # render tools/_generated/pr
 - **Git workflow (how we branch/commit/merge):** `.claude/git-guidelines.md`.
 
 ## Find depth in
-- `docs/product/ARCHITECTURE.md` — top-level architecture + index to all product docs.
+- `docs/product/architecture/ARCHITECTURE.md` — top-level architecture + index to all product docs.
 - `docs/product/BACKLOG.md` — the live "what's next" queue (Now / Next / Later). The throwaway plan
   doc covers only the item we're actively working; the backlog is what persists between sessions.
 - `docs/guides/art/object_pipeline.md` — canonical art/sprite pipeline (the one to read first).

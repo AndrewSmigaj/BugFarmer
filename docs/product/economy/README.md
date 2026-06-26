@@ -53,7 +53,7 @@ Content is intentionally **over-produced so you PRUNE down**, never beg for more
 
 ## Where geography lives (do NOT duplicate here)
 The world map, zones, mining depth, and the **resource/material dispersion** are canonical in
-**[`../architecture_world.md`](../architecture_world.md)** (§1, §1b). The economy docs link to it.
+**[`../architecture_world.md`](../architecture/architecture_world.md)** (§1, §1b). The economy docs link to it.
 
 ## Synthesis / prune notes (carried from the generation pass — see `DECISIONS.md`)
 - **Spider Vale East** generated before West finished, so it used a parallel silk/venom lineage — reconcile

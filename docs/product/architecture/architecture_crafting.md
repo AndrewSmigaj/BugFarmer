@@ -1,7 +1,7 @@
 # Architecture — crafting & containers
 
 How the crafting system and item containers work in code. The *content* (which recipes, which
-stations) lives in [`crafting_design.md`](crafting_design.md); this doc is the **system**.
+stations) lives in [`crafting_design.md`](../design/crafting_design.md); this doc is the **system**.
 
 The one rule that shapes everything: **crafting and container state are non-deterministic
 display/inventory state and NEVER enter the bug-sim state hash.** Only an insect food/breeding

@@ -100,7 +100,7 @@ above the re-seed floor → `b_reseed` births ≈ 0). The RIG (all committed, se
 
 **Up next (the roadmap remainder, mostly client → needs the Unity Editor):**
 ### Ecology mechanic fixes (from the village_21_lab control campaign, 2026-06-18)
-The 15-run controllability campaign (`docs/product/ecology_control_campaign.md`) proved two species are
+The 15-run controllability campaign (`docs/product/ecology/ecology_control_campaign.md`) proved two species are
 STUCK for MECHANIC reasons, not tunable by any param:
 - **Make `leaf_litter` DEPLETABLE** (a ForagePool like milkweed/nectar, deplete + regrow) — millipede's only
   food is non-depletable flora, so it's "food-limited" by infinite food → pins flat-high (~130) and never
@@ -217,8 +217,8 @@ batch was written without a local Unity compiler) + a nameplate fontSize/scale v
 
 ## Done 2026-06-14 — crafting system (Stage 1) + item containers
 Recipes-as-data + a unified craft model (no quick/slow split — one `process_ticks` speed knob), item
-containers, and the determinism boundary. See [architecture_crafting.md](architecture_crafting.md)
-(system) + [crafting_design.md](crafting_design.md) (content).
+containers, and the determinism boundary. See [architecture_crafting.md](architecture/architecture_crafting.md)
+(system) + [crafting_design.md](design/crafting_design.md) (content).
 - **Recipes** (`data/entities/recipes.json`, published by glob) → `LoadRecipes` + `RecipesByStation`;
   client `RecipeDatabase`. ~10 Stage-1 recipes on EXISTING art (workbench/stonecutter/anvil fast,
   furnace slow, multi-input).
@@ -282,7 +282,7 @@ the *food-search* sensitivity to this pile (committed); this item is specificall
 the underlying unbounded accumulation.
 
 ## Later — creatures: ants & spiders (DESIGNED, not built)
-Full approved design: **[design_ants_spiders.md](design_ants_spiders.md)**. Ants = a foraging colony
+Full approved design: **[design_ants_spiders.md](ecology/design_ants_spiders.md)**. Ants = a foraging colony
 (hill/queen/eggs reuse Nest+Brood; workers forage carrion → carry home via the wasp provisioning loop;
 scouts + server-only "colony memory" make trails emerge — no per-cell ACO grid). Spiders = a web-builder
 ambusher (web tiles slow prey via a server speed-debuff; reuse occupant placement + `OCCUPANT_BLOCKS_BUGS`)
@@ -680,9 +680,9 @@ unrelated `HotbarUI.Start` NRE guard (leftover-scene null `slots`). **Verify pen
 - **New surface scenes:** `scene_beefarm_woods` (apiary + meadow + woods + stream) and `scene_desert`
   (sand + sand_block, road, old inn w/ neon sign, weather outpost + antenna + windmill, oasis, cacti,
   scorpions) + ~20 desert entities.
-- **Encyclopedia (`docs/product/encyclopedia.md`) + `brainstorm_items.md`:** ~50 bugs (incl. water bugs)
+- **Encyclopedia (`docs/product/design/encyclopedia.md`) + `brainstorm_items.md`:** ~50 bugs (incl. water bugs)
   across ~16 families ×3 difficulty tiers + 21 new plants — data + catalog + A/B sprites being generated.
-- `docs/product/underground_review.md` — proposals for camp + ant-colony additions.
+- `docs/product/investigations/underground_review.md` — proposals for camp + ant-colony additions.
 
 ## Done (recent) — underground zone scenes + guides + content
 - **Caves guide + primitives:** `docs/guides/authoring/caves.md` + `features/cave.py`
@@ -833,7 +833,7 @@ Full design folder: [`docs/product/economy/`](economy/README.md) — **start at 
 `crafting.md` (the master recipe/cost table — all categories incl. sprinklers, bug-derived + artisan goods,
 target floors), `merchants.md` (the 3 shops + craft-vs-buy matrix), `production.md` (**build waves — start
 W1**), `DECISIONS.md` (every decision, resolved + open). Geography for it is in
-[`architecture_world.md`](architecture_world.md) (restructured 2026-06-25: **rows 0–4** with row 5 deferred,
+[`architecture_world.md`](architecture/architecture_world.md) (restructured 2026-06-25: **rows 0–4** with row 5 deferred,
 underground col-0 centipede→ants + Queen, Centipede Cavern→(4,1), + a resource/material dispersion map §1b).
 **Zone authoring of the new 0–4 layout is its own backlog effort.** The **content** is now designed in full:
 `economy/zones/` (17 per-zone content sheets) + `economy/catalogs/` (28 armor sets, 82 weapons, 88

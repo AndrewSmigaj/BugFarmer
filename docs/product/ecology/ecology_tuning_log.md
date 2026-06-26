@@ -311,7 +311,7 @@ millipede stayed ~135 (leaf_litter is non-depletable → patch count is a weak l
 lifespan); centipede stayed ~4 with 0 kills (cold-starves at the reseed floor before it can hunt, not a
 positioning issue). Wasp 25-135 healthy, butterfly cycles 12-184, fly booms to 280, beetle 2-9 fine.
 Proper fixes (breeding throttle for millipede; cold-start fix for centipede) moved to the village_21_lab
-control campaign (docs/product/ecology_control_campaign.md), then port back to B.
+control campaign (docs/product/ecology/ecology_control_campaign.md), then port back to B.
 
 ### 2026-06-19 · COST PROFILER built (PERFSTATS) + Phase-2 rebalance r1 — perf-driven, measured
 Built the full-stack cost profiler FIRST (measure before optimizing): server `PERFSTATS`/`PERFSYS`

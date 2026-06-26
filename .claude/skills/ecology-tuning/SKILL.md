@@ -41,9 +41,9 @@ do NOT stack changes you can't separate. The owner has repeatedly caught kneejer
 6. **Distinct tag per run.** Reusing a config name overwrites its `_data/nakama_<tag>.log` and makes the
    archive folders ambiguous. One experiment = one name. Report run counts/durations/coverage HONESTLY.
 
-- **Strategy log (append-only):** `docs/product/ecology_tuning_log.md`. EVERY move + its measured result
+- **Strategy log (append-only):** `docs/product/ecology/ecology_tuning_log.md`. EVERY move + its measured result
   goes here (category, exact change, seed, per-species outcome). Read it first so you don't retread.
-- **Controllability map:** `docs/product/ecology_control_campaign.md` — which lever moves which band (and
+- **Controllability map:** `docs/product/ecology/ecology_control_campaign.md` — which lever moves which band (and
   whether it moves CENTRE vs AMPLITUDE), the 6 analysis lenses, and the two hardest species (millipede =
   cap-bound until you raise the cap + scarce litter; centipede = reaches its cap only when SPAWNED NEAR PREY
   + the kills→breeding conversion). Read before re-investigating a "stuck" species.

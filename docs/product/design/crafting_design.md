@@ -1,7 +1,7 @@
 # Crafting — design & content
 
 How crafting works and the station/recipe content plan. The *system* architecture (opcodes, state,
-determinism boundary) lives in [`architecture_crafting.md`](architecture_crafting.md); this doc is the
+determinism boundary) lives in [`architecture_crafting.md`](../architecture/architecture_crafting.md); this doc is the
 **design + content** queue (what to craft, where).
 
 ## The model (one system, a speed knob)
@@ -24,7 +24,7 @@ on player persistence (see backlog).
 
 ## Stations & recipes (the content queue)
 Deliberately broad — prune later for fun. **Bold** = an EXISTING sprited item; _italic_ = a NEW item
-(see [`art_needed.md`](art_needed.md)). Speed in parens is just a `process_ticks` hint.
+(see [`art_needed.md`](../art_needed.md)). Speed in parens is just a `process_ticks` hint.
 
 - **workbench** (fast) — basics: **torch**, simple **furniture** (**chair_wood**/**table_wood**/
   **fence_wood**), **sword_wood**/wooden tools from **wood** (+ **fiber**). _wood_plank_ later.

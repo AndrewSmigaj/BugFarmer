@@ -4,7 +4,7 @@ Storage furniture (poor→fancy) plus the simple, slow, capacity-capped automati
 Design only.
 
 Read alongside:
-- `docs/product/game_design.md` §11 in full — especially §11.1 hard constraints (no fast/free
+- `docs/product/design/game_design.md` §11 in full — especially §11.1 hard constraints (no fast/free
   automation), §11.2 NPC workers, §11.4 autonet, §11.5 furniture idle boosts, §11.6 power/linked
   placement, §11.7 stove capacity.
 - Existing ids: `chest_wood`, `chest_iron`, `chest_mossy`, `barrel`, `crate`, `apple_crate`,

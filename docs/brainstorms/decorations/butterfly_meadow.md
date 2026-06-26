@@ -11,7 +11,7 @@ Two jobs:
 
 Bonus tags below are *proposed hooks* (the actual per-item value field is added with the §11.5 system).
 Existing ids marked **[exists]** (from `decor.json` / `structures.json` / `lighting.json` / `furniture.json`).
-EXTEND, don't duplicate. The "Decorations (passive-bonus hooks)" list in `docs/product/brainstorm_items.md`
+EXTEND, don't duplicate. The "Decorations (passive-bonus hooks)" list in `docs/product/design/brainstorm_items.md`
 is the cross-cutting menu; this is the meadow-flavored slice + new pollinator-themed props.
 
 ---
@@ -118,5 +118,5 @@ Small natural props that dress scenes and (a few) grant tiny comfort bonuses in 
 - Many entries above are **zone-dressing first** (failed-farm relics, the lepidopterist's camp) and only
   incidentally plot decor — flagged by their rustic/story framing. The scenes
   (`scene_butterfly_meadow.py`, `scene_meadow_forest_edge.py`) draw their props from here.
-- Cross-reference the cross-cutting decoration menu in `docs/product/brainstorm_items.md` to avoid
+- Cross-reference the cross-cutting decoration menu in `docs/product/design/brainstorm_items.md` to avoid
   duplicating generic items; this doc adds the **meadow/pollinator-specific** props it doesn't cover.

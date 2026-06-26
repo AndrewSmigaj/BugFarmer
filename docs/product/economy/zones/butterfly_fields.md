@@ -14,7 +14,7 @@ and the first **bonus set built around catching rather than fighting**.
 > Design contracts this obeys: cost model + stations from [`../crafting.md`](../crafting.md); stat vocab +
 > `bonuses{}` schema from [`../stats_and_bonuses.md`](../stats_and_bonuses.md); pacing/gating from
 > [`../progression.md`](../progression.md) (T2–T3 mid-game scope); shop seam from [`../merchants.md`](../merchants.md)
-> (Collector's Cabin = *"Mothwing's"*). Zone fiction from [`../../zones/butterfly_fields_11.md`](../../zones/butterfly_fields_11.md).
+> (Collector's Cabin = *"Mothwing's"*). Zone fiction from [`../../zones/butterfly_meadow_11.md`](../../zones/butterfly_meadow_11.md).
 
 ---
 

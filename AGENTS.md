@@ -7,7 +7,7 @@ world, review complex changes, and the git workflow). This file exists so non-Cl
 
 Quick pointers:
 - **Tests / verification:** the `.claude/skills/test-changes` skill (the single source of truth).
-- **Deterministic bug-sim model + adding a mechanic:** `docs/product/architecture_swarm_sync.md` §0, then
+- **Deterministic bug-sim model + adding a mechanic:** `docs/product/architecture/architecture_swarm_sync.md` §0, then
   the `.claude/skills/frontier-sync` skill.
 - **Complex/risky change review:** `.claude/complex-change-review.md` + `.claude/lenses.md`.
 - **Git workflow:** `.claude/git-guidelines.md`.

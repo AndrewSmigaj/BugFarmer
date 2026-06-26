@@ -96,7 +96,7 @@ python3 tools/plot_interactions.py --tag <chart_name> --since 10m            # t
   `lifespan_secs` ≈ 6300 = **7.5 game-days**, so a 4-day run NEVER shows old-age death — predators only
   starve in a short run. To see a full multi-day lifecycle/turnover, run LONGER (a 15-game-day run ≈ 2100s
   wall ≈ 35 min at 6×; this is why batching sim-steps per call is worth doing).
-- **All the tuning dials live in `docs/product/ecology_parameters.md`** (the control panel: every birth /
+- **All the tuning dials live in `docs/product/ecology/ecology_parameters.md`** (the control panel: every birth /
   death / food / Director-band parameter, what it does, where it is, which way to tweak). Tune populations
   by adjusting those params — NOT by adding new food items/occupants (a hack). The whole web keys off the
   **fly prey base**; fix it first.

@@ -123,7 +123,7 @@ lack a species spec silently don't spawn.
   scoreboard — the rationale behind `noise_field`/`route_road`/`sculpt_plan`.
 
 ## Orient yourself
-- **The whole map:** `docs/product/architecture_world.md` — the 24-zone grid, layout, river/roads,
+- **The whole map:** `docs/product/architecture/architecture_world.md` — the 24-zone grid, layout, river/roads,
   per-zone species, coordinates.
 - **Per-zone design docs:** `docs/product/zones/<zone>.md` (start from `_TEMPLATE.md`). Current build
   scope: `docs/product/zones/demo_slice.md`.

@@ -16,7 +16,7 @@ import (
 //
 // SOFT STATE, NEVER HASHED. It only counts events the sim already produced; it never feeds back into
 // bug positions (the only hashed state). All record* methods are nil-safe so the test states (which
-// don't construct Stats) are unaffected. See docs/product/ecology_parameters.md.
+// don't construct Stats) are unaffected. See docs/product/ecology/ecology_parameters.md.
 type EcologyStats struct {
 	Births    map[string]map[BirthSource]int // species -> source -> bugs born this day
 	Deaths    map[string]map[DeathCause]int  // species -> cause -> bugs lost this day
