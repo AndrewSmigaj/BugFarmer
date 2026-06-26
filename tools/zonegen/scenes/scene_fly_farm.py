@@ -91,7 +91,7 @@ def place_fly_farm(b, ox, oy):
     return ((cx, cy), 13)
 
 
-PREVIEW = "examples/farming"
+PREVIEW = "zones/village_21_B/scenes"
 SCALE = 4
 
 

@@ -607,11 +607,6 @@ if __name__ == "__main__":
                                             "zones", "village_21_B"))
         os.makedirs(zdir, exist_ok=True)
         render_builder(b, os.path.join(zdir, "full.png"), scale=2)
-        for nm, bounds in [("plaza", (100, 100, 165, 150)),
-                           ("residential", (10, 140, 120, 195)),
-                           ("fly_farm", (105, 185, 160, 245)),
-                           ("farms_orchard", (55, 175, 120, 240)),
-                           ("lake_boatstore", (5, 55, 105, 125)),
-                           ("mining", (80, 5, 200, 60))]:
-            render_builder(b, os.path.join(zdir, f"{nm}.png"), scale=5, bounds=bounds)
-        print("zone renders ->", zdir)
+        # The village's PARTS (plaza, orchard, fly farm, boat store, the buildings…) are previewed as
+        # SCENES in scenes/ — see ORGANIZATION.md. A zone is just full.png + scenes/; no region crops.
+        print("zone render ->", os.path.join(zdir, "full.png"))

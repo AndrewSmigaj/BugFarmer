@@ -18,7 +18,7 @@ from features.yard import fence_rect         # noqa: E402
 W, H = 56, 44
 
 
-PREVIEW = "examples/gardens"
+PREVIEW = "zones/village_21_B/scenes"
 SCALE = 3
 
 
