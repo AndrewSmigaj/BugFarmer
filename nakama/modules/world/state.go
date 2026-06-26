@@ -537,7 +537,17 @@ func floorDiv(a, b int) int {
 // IsBlocked checks if a world position blocks swarm center movement.
 // Returns true if the position has a blocking occupant or impassable ground.
 func (w *WorldState) IsBlocked(worldX, worldY float32) bool {
-	return w.isBlockedImpl(worldX, worldY, false)
+	return w.isBlockedImpl(worldX, worldY, false, false)
+}
+
+// IsBlockedForSpawn is the walkability check used when PLACING a swarm. Unlike the per-tick checks, it
+// consults the AUTHORED map — loading a not-yet-subscribed chunk transiently from disk (chunkForCollision)
+// when it isn't in the lazily-loaded state.Chunks cache. That cache is EMPTY at MatchInit (chunks load per
+// subscription), so the per-tick check would call every cell "blocked" and the initial spawn would place
+// zero bugs; this one sees the real walls and actually places them. Same authored source the zone collision
+// map uses — determinism-safe (read-only, no init, not stored). Only the spawn path pays the disk load.
+func (w *WorldState) IsBlockedForSpawn(worldX, worldY float32) bool {
+	return w.isBlockedImpl(worldX, worldY, false, true)
 }
 
 // IsBlockedForSpecies is the species-aware blocking check: flies_over_fences species
@@ -548,10 +558,10 @@ func (w *WorldState) IsBlocked(worldX, worldY float32) bool {
 // the identical rule (architecture_swarm_sync.md §14: BOTH collision sites).
 func (w *WorldState) IsBlockedForSpecies(worldX, worldY float32, species *entities.BugSpecies) bool {
 	skipOccupants := species != nil && species.FliesOverFences
-	return w.isBlockedImpl(worldX, worldY, skipOccupants)
+	return w.isBlockedImpl(worldX, worldY, skipOccupants, false)
 }
 
-func (w *WorldState) isBlockedImpl(worldX, worldY float32, skipOccupants bool) bool {
+func (w *WorldState) isBlockedImpl(worldX, worldY float32, skipOccupants, loadAuthored bool) bool {
 	cs := w.Config.ChunkSize
 
 	// Convert to integer grid coordinates using floor (consistent for negative coords)
@@ -566,10 +576,14 @@ func (w *WorldState) isBlockedImpl(worldX, worldY float32, skipOccupants bool) b
 	lx := gx - cx*cs
 	ly := gy - cy*cs
 
-	// Get chunk
+	// Get chunk. Spawn-time checks (loadAuthored) fall back to the authored map on disk when the chunk
+	// isn't subscribed yet — otherwise an unloaded chunk reads as "blocked" and spawning fails at MatchInit.
 	chunk := w.Chunks[ChunkKey(cx, cy)]
+	if chunk == nil && loadAuthored && w.CurrentZone != nil {
+		chunk = w.chunkForCollision("data/zones/"+w.CurrentZone.ZoneID, cx, cy)
+	}
 	if chunk == nil {
-		return true // Out of bounds = blocked
+		return true // Out of bounds / no authored chunk = blocked
 	}
 
 	// Check occupant layer (fences, walls, trees) — skipped for flying species

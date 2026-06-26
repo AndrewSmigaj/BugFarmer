@@ -1856,7 +1856,10 @@ func (m *Match) spawnSwarmInArea(state *WorldState, speciesID string, species *e
 			worldX = float32(area.CX) + float32(r*math.Cos(angle))
 			worldY = float32(area.CY) + float32(r*math.Sin(angle))
 		}
-		if !state.IsBlocked(worldX, worldY) {
+		// IsBlockedForSpawn consults the AUTHORED map (loads the chunk from disk if it's not subscribed
+		// yet), so this works at MatchInit before any chunk is in memory — the old IsBlocked checked the
+		// empty cache and reported every cell blocked, which is why initial spawn placed zero bugs.
+		if !state.IsBlockedForSpawn(worldX, worldY) {
 			placed = true
 			break
 		}
@@ -1865,15 +1868,7 @@ func (m *Match) spawnSwarmInArea(state *WorldState, speciesID string, species *e
 		return nil // no walkable cell found (rare) — skip this spawn rather than drop a bug in terrain
 	}
 
-	// Convert to chunk position
 	chunkSize := state.Config.ChunkSize
-	pos := entities.EntityPosition{
-		ChunkX: int(worldX) / chunkSize,
-		ChunkY: int(worldY) / chunkSize,
-		LocalX: worldX - float32(int(worldX)/chunkSize*chunkSize),
-		LocalY: worldY - float32(int(worldY)/chunkSize*chunkSize),
-	}
-
 	// Determine bug count: fixed swarm_size if set (deterministic test zones),
 	// else species MinSwarmSize plus a random amount in the lower-middle range.
 	countRange := species.MaxSwarmSize / 2
@@ -1884,32 +1879,15 @@ func (m *Match) spawnSwarmInArea(state *WorldState, speciesID string, species *e
 	if cap.SwarmSize > 0 {
 		count = cap.SwarmSize
 	}
-	id, _ := uuid.NewV4()
-	swarm := &entities.SwarmState{
-		ID:        fmt.Sprintf("swarm_%s", id.String()[:8]),
-		SpeciesID: speciesID,
-		Position:  pos,
-		Radius:    species.SwarmRadius,
-		Count:     count,
-		WanderRad: species.WanderRadius,
-		HomePos:   pos,
-		Satiation: state.Tuning.SpawnSatiation, // born half-fed (see const) — natural-spawn + Director re-seed path
+
+	// ONE creation path: spawnSwarmAt builds the swarm + registers it + emits the deterministic
+	// SWARM_SPAWNED ledger event. (This used to duplicate that logic inline.) RNG order is unchanged:
+	// position retries, then count, then spawnSwarmAt's uuid + assignDeathTicks.
+	swarm := m.spawnSwarmAt(state, speciesID, count, worldX, worldY, chunkSize)
+	if swarm != nil {
+		logger.Debug("Spawned swarm %s (%s) in %s at (%.0f, %.0f)",
+			swarm.ID, speciesID, area.ID, worldX, worldY)
 	}
-	swarm.InitializeBugIDs()
-	assignDeathTicks(swarm, species, 0, count, state.TickCount, SimRate)
-
-	state.Swarms[swarm.ID] = swarm
-	state.SwarmsBySpecies[speciesID] = append(state.SwarmsBySpecies[speciesID], swarm.ID)
-	state.SwarmsDirty = true
-	// Deterministic spawn via the ledger (see AddSwarmSpawnedEvent) — all clients create at the same tick.
-	if state.CurrentZone != nil {
-		state.AddSwarmSpawnedEvent(state.CurrentZone.ZoneID, swarm.ID, speciesID, count,
-			toFixed(swarm.WorldX(chunkSize)), toFixed(swarm.WorldY(chunkSize)))
-	}
-
-	logger.Debug("Spawned swarm %s (%s) in %s at (%.0f, %.0f)",
-		swarm.ID, speciesID, area.ID, worldX, worldY)
-
 	return swarm
 }
 

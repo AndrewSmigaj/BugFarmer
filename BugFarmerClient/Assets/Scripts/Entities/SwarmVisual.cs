@@ -28,6 +28,10 @@ namespace BugFarmer.Entities
 
         // Species sprite loaded from Resources/Bugs/{species_id}
         private Sprite _bugSprite;
+        // Cosmetic flap-animation frames (Bugs/{spriteId}_0.png, _1.png, ...). null = static sprite.
+        // DISPLAY-ONLY: the shown frame is never hashed, so animation is free to differ per client.
+        private Sprite[] _bugFrames;
+        private bool _isBuzzer;     // fly-type → fast continuous wing buzz (no glide)
 
         // Bug ID tracking (matches server)
         private int _nextBugId;
@@ -90,7 +94,19 @@ namespace BugFarmer.Entities
 
             // Load sprite from Resources using sprite_id from server
             var spriteId = !string.IsNullOrEmpty(data.sprite_id) ? data.sprite_id : data.species_id;
-            _bugSprite = Resources.Load<Sprite>($"Bugs/{spriteId}");
+            // Flies buzz continuously (fast, no glide); butterflies keep the graceful flap-glide default.
+            _isBuzzer = !string.IsNullOrEmpty(spriteId) &&
+                        spriteId.Contains("fly") && !spriteId.Contains("butterfly");
+            // Animation frames: Bugs/{spriteId}_0, _1, ... (contiguous). >=2 => animated (cosmetic flap).
+            var frames = new System.Collections.Generic.List<Sprite>();
+            for (int i = 0; i < 12; i++)
+            {
+                var f = Resources.Load<Sprite>($"Bugs/{spriteId}_{i}");
+                if (f == null) break;
+                frames.Add(f);
+            }
+            _bugFrames = frames.Count >= 2 ? frames.ToArray() : null;
+            _bugSprite = _bugFrames != null ? _bugFrames[0] : Resources.Load<Sprite>($"Bugs/{spriteId}");
             if (_bugSprite == null)
             {
                 Debug.LogWarning($"[SwarmVisual] No sprite found at Resources/Bugs/{spriteId}");
@@ -224,6 +240,16 @@ namespace BugFarmer.Entities
             }
 
             var bugVisual = new BugVisual(agent, visual);
+            bugVisual.Frames = _bugFrames; // cosmetic flap frames (null = static)
+            if (_isBuzzer)
+            {
+                // Fast, continuous wing buzz with a quick jittery hover — no butterfly glide.
+                bugVisual.FlapFps = 20f;
+                bugVisual.GlideSecs = 0f;
+                bugVisual.FlapsPerBurst = 1;
+                bugVisual.BobAmp = 0.03f;
+                bugVisual.BobHz = 3.6f;
+            }
             _bugs[bugId] = bugVisual;
 
             // INDIVIDUALS (centipede knots, §14.3): EVERY member drags its own
@@ -237,7 +263,9 @@ namespace BugFarmer.Entities
             bool crawling = info != null && info.MovementStyle == "crawling";
             if (crawling)
             {
-                visual.localScale = new Vector3(CrawlerHeadScale, CrawlerHeadScale, 1f);
+                // Head scale matches its trail segments — per species (millipede = 2x centipede).
+                float headScale = Bugs.CentipedeTrail.PartScaleFor(SpeciesId);
+                visual.localScale = new Vector3(headScale, headScale, 1f);
                 if (!_trails.ContainsKey(bugId))
                 {
                     var trailGo = new GameObject($"trail_{bugId}");
@@ -253,9 +281,6 @@ namespace BugFarmer.Entities
                 visual.rotation = Quaternion.identity;
             }
         }
-
-        // Matches CentipedeTrail.PartScale: head and body parts read as one creature.
-        private const float CrawlerHeadScale = 0.35f;
 
         // One segment trail per crawling bug, keyed by bug id (1-3 per knot).
         private readonly Dictionary<int, Bugs.CentipedeTrail> _trails = new();
@@ -490,6 +515,21 @@ namespace BugFarmer.Entities
         {
             if (_bugs.TryGetValue(bugId, out var bug))
                 bug.FlashUntil = Time.time + 0.15f;
+        }
+
+        /// <summary>Flash ONLY the member nearest a world position — one bug snatching its own prey,
+        /// so a strike reads as an individual lunge, not the whole swarm flashing at once. Display-only.</summary>
+        public void FlashNearest(Vector2 worldPos)
+        {
+            BugVisual best = null; float bestSqr = float.MaxValue;
+            foreach (var bug in _bugs.Values)
+            {
+                if (bug.Transform == null) continue;
+                float d = ((Vector2)bug.Transform.position - worldPos).sqrMagnitude;
+                if (d < bestSqr) { bestSqr = d; best = bug; }
+            }
+            if (best != null)
+                best.FlashUntil = Time.time + 0.15f;
         }
 
         /// <summary>Flash the whole swarm (predator telegraphs — strike snatch, windup).</summary>

@@ -9,8 +9,8 @@ The system is **four parts**, each with one home:
 |------|------------|----------|
 | **① The builder** | The Python library you compose zones/scenes with — feature primitives that coordinate through a shared occupancy model (a road routes around a pond; scatter avoids water). | `tools/zonegen/` |
 | **② These guides** | How to do each world-building task (build a house, a yard, a cave…). Read & iterate on them as we learn. | `docs/guides/authoring/` |
-| **③ Example scenes** | Small curated vignettes built with ①, rendered to preview PNGs. They double as the worked examples for these guides and the visual catalog/QA. | `tools/zonegen/scenes/` |
-| **④ The Gallery** | `previews/index.html` — every scene card + zone render in one page. | `tools/zonegen/gallery.py` |
+| **③ Example scenes** | Small curated vignettes built with ①, rendered to preview PNGs. They double as the worked examples for these guides and visual QA. | `tools/zonegen/scenes/` |
+| **④ The previews** | Plain PNG folders you browse in a file explorer (no html). `catalog/<group>/` = every in-game object by category; `zones/<zone>/` = a zone's full render + region crops + its `scenes/`. | `tools/_generated/previews/` |
 
 > **Art is separate.** How sprites *look* and get made is `docs/guides/art/` (start with
 > `art/object_pipeline.md`). These guides assume art already exists — or use a **placeholder**
@@ -33,15 +33,22 @@ The system is **four parts**, each with one home:
 
 ```bash
 python3 tools/zonegen/scenes/<scene>.py     # build + render ONE scene to its preview PNG + print lint
-python3 tools/zonegen/registry.py <scene>   # render via the canonical registry path (prints lint)
-python3 tools/zonegen/gallery.py            # regenerate previews/index.html (the GALLERY)
+python3 tools/previews.py                    # rebuild the content CATALOG (every object by category)
 ```
 
-> **THE GALLERY is the visual entry point**: open `tools/_generated/previews/index.html`
-> — every scene card with the guide it illustrates. Zone maps live in `previews/maps/`,
-> one-off art QA in `previews/art_review/`. The previews root holds only directories.
-
-> (The old Art Lab variant viewer was removed 2026-06 — the gallery + direct renders replaced it.)
+> **Where previews live** (`tools/_generated/previews/`, browse the folders — no html, no registry to
+> keep in sync):
+> - `catalog/<group>/` — every in-game object, by category (`furniture/`, `blocks/`, `nature/`, `bugs/`,
+>   `tiles/`…). Each group has a `_sheet.png` (all of it at a glance) **and** every object as its own
+>   `<id>.png` thumbnail. Generated from the entity data by `tools/previews.py`, so it always matches
+>   what's in the game — replace a sprite, re-run, it updates.
+> - `zones/<zone>/` — a zone's `full.png` + region crops + a `scenes/` folder of the vignettes that
+>   compose it (e.g. `zones/underground_passages_31/scenes/{mine_entrance,mining_camp,caverns}.png`).
+> - `examples/<theme>/` — generic example/test scenes (`surface/`, `underground/`, `desert/`, `pieces/`,
+>   `tests/`), rendered by `python3 tools/zonegen/registry.py`.
+>
+> A zone's composing scenes write into `zones/<zone>/scenes/`; generic example scenes go to
+> `examples/<theme>/` via `registry.py`. (The old html gallery + Art Lab were removed 2026-06.)
 
 ## From scenes to a real ZONE (the full pipeline)
 A **scene** is a small render-only vignette; a **ZONE** is the 256×256 world the game loads. Composing:
@@ -102,6 +109,8 @@ lack a species spec silently don't spawn.
 - [water.md](water.md) — lakes (`terrain.lake` multi-blob shapes), `shore_dress` per-arc banks, docks.
   (Supersedes trees-and-ponds.md; its forest half lives in forest.md.)
 - [caves.md](caves.md) — underground space (solid rock carved out).
+- [camps.md](camps.md) — cliff edges, mine entrances & **surface work-camps** (organised functional
+  clusters, the cliff/mouth/descent, the road in). The surface→underground transition.
 - [ant-colony.md](ant-colony.md) — a worked underground nest ("creatures shape the underground").
 - [blocks.md](blocks.md) — mineable/placeable cube blocks that tile in a grid.
 - [biome-feature-map.md](biome-feature-map.md) — which primitives to reach for per biome.

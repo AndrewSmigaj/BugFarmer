@@ -7,18 +7,21 @@ anywhere else.
 ## The three entry points
 | You want to… | Do |
 |---|---|
-| **SEE everything** (scene cards, zone renders, maps) | open `tools/_generated/previews/index.html` (regen: `python3 tools/zonegen/gallery.py`) |
+| **SEE everything that's in the game** | browse `tools/_generated/previews/catalog/` (rebuild: `python3 tools/previews.py`) |
+| **SEE the zones / scenes** | browse `tools/_generated/previews/zones/<id>/` + the theme folders |
 | **Build / iterate a zone or scene** | `tools/zonegen/` — see `docs/guides/authoring/README.md` |
 | **Make / fix sprites** | the art pipeline below — see `docs/guides/art/object_pipeline.md` |
 
 ## The output tree (`tools/_generated/`)
+Plain PNG folders — open them in a file explorer, no html.
 ```
 previews/
-  index.html        ← THE GALLERY (open this)
-  zones/<id>/       real-art zone renders: full.png + region crops
-  maps/             annotated + view_world minimaps
-  pieces/ surface/ tests/ underground/ desert/   scene cards by category
-  art_review/       one-off art QA images
+  catalog/<group>/  every IN-GAME object by category (furniture/ blocks/ nature/ bugs/ tiles/ …)
+                    each group: _sheet.png (all at a glance) + <id>.png per object.
+                    generated from entity data by tools/previews.py — never drifts.
+  zones/<id>/       full.png + region crops + scenes/ (the vignettes that compose the zone)
+  examples/<theme>/ generic example/test scene cards (surface/ underground/ desert/ pieces/ tests/ + ui/ veg/)
+  player/           player sprite + animation previews
 raw/                gen_sprites' raw API output (pre-clean)
 ab/  blocklab/      A/B + block bake-off staging
 variants/           sprite variant candidates
@@ -39,19 +42,19 @@ scratch/            transient QA (fly_counts.png etc.)
 | `publish_entities.py` | canonical `nakama/data/entities` → client Resources (one-way) |
 | `make_scene.py` | the renderer engine (zonegen calls it; rarely run directly) |
 | `make_test_zone.py` | tiny deterministic mechanic-test zones |
-| `view_world.py` | saved-zone minimap → `previews/maps/<zone>_detail.png` |
-| `contact_sheet.py` | sprite contact sheets for review |
+| `view_world.py` | saved-zone minimap → `previews/zones/<zone>/<zone>_detail.png` |
+| `previews.py` | the content CATALOG: every in-game object by category → `previews/catalog/` (from entity data) |
 | `plot_fly_counts.py` | population graph from a harness run → `scratch/` |
 | `run_go_tests.sh` | the Go suite in the builder container |
 
 ## Directories
 | Dir | What |
 |---|---|
-| `zonegen/` | the zone/scene builder library + `scenes/` + `registry.py` + `gallery.py` |
+| `zonegen/` | the zone/scene builder library + `scenes/` + `registry.py` (scene scale catalog) |
 | `art/` | art prompt DATA: `style.json` (global) + `catalog/*.json` (per-item) |
 | `sync-harness/` | the headless .NET netcode harness (`dotnet run -- --zone <id>`) |
 | `archive/` | retired one-off scripts (kept for reference, never run) |
 
-Removed 2026-06 (dead code): `artlab/`, `lab/`, `lab_server.py` (the old variant
-viewers — superseded by the gallery + direct renders), `tools/output/` (folded
-into `_generated/previews/maps/`).
+Removed (dead code): `artlab/`, `lab/`, `lab_server.py` (old variant viewers),
+`zonegen/gallery.py` + `previews/index.html` (the html gallery), `contact_sheet.py`
+(hand-listed sprite sheets — replaced by `previews.py`, which is generated from data).

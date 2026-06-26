@@ -25,13 +25,16 @@ Worked example: `tools/zonegen/scenes/scene_underground_caverns.py`.
   rail tunnel across the map past wandering burrowed tunnels).
 
 ## 2. Caverns & cave mouths
-`carve_cavern(b, cx, cy, shape=...)` — shapes, none of them a clean circle:
-- **blob** — union of several overlapping disks (metaball-ish) with a noise-perturbed edge.
-- **long / gallery** — an elongated, slightly curved chamber (a fat meander).
-- **rocky / jagged** — a blob with high-frequency boundary noise **plus interior rock nubs/columns**
-  left standing (place small `stone_block` clumps inside — these are the "stalagmite" columns; we do
-  NOT use separate spiky stalagmite objects).
-- **lobed** — two or three blobs merged into a peanut/clover outline.
+`carve_cavern(b, cx, cy, shape=..., size=N)` — carves a cavern of radius ≈ `size`, **never a clean circle**.
+**(2026-06 rewrite)** It blends a soft radial mask with an **fBm noise field** (`noise_field`), thresholds it,
+then runs a **cellular-automata smoothing** pass (the 4-5 rule) — the same recipe as the fixed lakes. The old
+version unioned overlapping circles and read as **symmetric lobes**; this reads as a natural irregular void.
+`shape` tunes elongation + edge roughness:
+- **blob** — round-ish but noise-irregular (the default).
+- **long / gallery** — an elongated, slightly curved chamber (a fat meander; delegates to `carve_tunnel`).
+- **rocky / jagged** — a rougher edge **plus a few interior rock columns** left standing automatically.
+- **lobed** — stretched on the x-axis into a peanut/clover outline.
+Tune `size` + `seed` and re-render; the per-shape `rough` weight (in code) sets how irregular the outline is.
 - **Cave mouth** = a cavern positioned so it **clips the zone edge** (opens to the outside world); a
   cave is just a cavern that touches the surface. Put the entrance there.
 Dress cavern **low spots with water** (§3), scatter crystals/mushrooms/rubble/bones, and leave a few
@@ -45,8 +48,11 @@ rock columns so the space isn't an empty bowl.
 
 ## 4. Ore placement — rarity + gameplay
 Ore is placed as **VEINS, not single specks**, so striking one gives a worthwhile haul.
-`scatter_ore(b, solid_cells, ore_table, seed)` lays each ore as a short **random-walk run** through the
-rock.
+`fill_solid(b, carved, ore_table, seed=, substrate=)` fills every non-carved cell with a block — ore in short
+**random-walk veins**, `pockets` as clusters, the rest the base block. Pass **`substrate(x, y) -> block_id`**
+to paint **dirt-left / rock-right / hard-stone-deep regions** (the dirt↔rock interface): e.g. the mining camp
+makes the left third `dirt_block` (where the ant tunnels reach in) blending into `stone_block`, and
+`hard_stone_block` deep. *(History note: this was once `scatter_ore`; the carve→fill flow is now one call.)*
 - **Veins are runs of ~3–6 cells.** Commons get more (and slightly longer) veins; rares get few short ones.
 - **Rarity tiers** (relative vein counts): **common** (copper, coal) — frequent; **uncommon** (iron) —
   fewer; **rare** (tin, silver) — sparse, short, scattered deeper.

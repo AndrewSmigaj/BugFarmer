@@ -1,0 +1,58 @@
+{
+  "zone_id": "crawler_lab",
+  "name": "Crawler Lab",
+  "row": 0,
+  "col": 0,
+  "width": 96,
+  "height": 96,
+  "spawn_point": [
+    38,
+    36
+  ],
+  "biome_type": "meadow",
+  "seed": 23,
+  "bug_spawning": {
+    "static": false,
+    "species_caps": {
+      "centipede_garden": {
+        "initial": 12,
+        "max": 40,
+        "swarm_size": 1,
+        "spawn_interval": 999999.0,
+        "min_population": 12,
+        "max_population": 40
+      },
+      "millipede": {
+        "initial": 16,
+        "max": 40,
+        "swarm_size": 1,
+        "spawn_interval": 999999.0,
+        "min_population": 16,
+        "max_population": 40
+      }
+    },
+    "spawn_areas": [
+      {
+        "id": "centipede_pen",
+        "species": [
+          "centipede_garden"
+        ],
+        "type": "circle",
+        "cx": 19,
+        "cy": 36,
+        "radius": 10
+      },
+      {
+        "id": "millipede_pen",
+        "species": [
+          "millipede"
+        ],
+        "type": "circle",
+        "cx": 57,
+        "cy": 36,
+        "radius": 10
+      }
+    ]
+  },
+  "ephemeral_swarms": true
+}

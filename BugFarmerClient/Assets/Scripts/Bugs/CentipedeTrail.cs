@@ -20,13 +20,23 @@ namespace BugFarmer.Bugs
     public class CentipedeTrail : MonoBehaviour
     {
         private const int BodySegments = 6;
-        private const float Spacing = 0.5f;       // arc-length between segments
         private const float MinSample = 0.04f;    // head must move this far to record
-        private const float MaxHistory = (BodySegments + 2) * Spacing + 2f;
 
-        // The centipede sprites are 32px = 2.0 world units raw (flies are 0.5): scaled
-        // here so each part reads ~0.7 units — a long bug, not a parade of plates.
-        private const float PartScale = 0.35f;
+        // Per-species size: millipedes render ~2x the centipede (bigger, chunkier body). Set in
+        // Initialize from the species id; the segment SPRITES are also chosen per species there.
+        private const float CentScale = 0.35f, MilliScale = 0.70f;
+        private const float CentSpacing = 0.5f;   // arc-length between centipede segments (millipede 2x)
+        private float _partScale = CentScale;
+        private float _spacing = CentSpacing;
+        private float _maxHistory = (BodySegments + 2) * CentSpacing + 2f;
+
+        /// <summary>The crawler head's display scale for this species — SwarmVisual sets the head
+        /// transform to this so the head matches its trail segments (millipede = 2x centipede).</summary>
+        public static float PartScaleFor(string speciesId) =>
+            (speciesId != null && speciesId.Contains("millipede")) ? MilliScale : CentScale;
+
+        // The segment sprites are 32px = 2.0 world units raw; CentScale (0.35) reads each part as
+        // ~0.7 units — a long bug, not a parade of plates. MilliScale doubles it for millipedes.
 
         // The sprites are drawn FACING UP (head/segment top = forward); the tangent
         // math yields right-facing angles, so offset by -90°. If a re-bake changes the
@@ -42,9 +52,18 @@ namespace BugFarmer.Bugs
         public void Initialize(Transform head, string speciesId)
         {
             _head = head;
-            var bodyA = Resources.Load<Sprite>("Bugs/centipede_body_a");
-            var bodyB = Resources.Load<Sprite>("Bugs/centipede_body_b");
-            var tail = Resources.Load<Sprite>("Bugs/centipede_tail_a");
+            // Pick the sprite family + size from the species (millipede has its own body/tail art
+            // and renders 2x bigger; everything else uses the centipede segments).
+            bool milli = speciesId != null && speciesId.Contains("millipede");
+            string fam = milli ? "millipede" : "centipede";
+            _partScale = milli ? MilliScale : CentScale;
+            _spacing = milli ? CentSpacing * 2f : CentSpacing;   // spacing scales with size
+            _maxHistory = (BodySegments + 2) * _spacing + 2f;
+            // ONE body design per creature: body_a/body_b are ALTERNATIVE looks, not strung together.
+            // Chosen look: centipede = the "b" set, millipede = the "a" set. (Head is the species sprite_id.)
+            string v = milli ? "a" : "b";
+            var body = Resources.Load<Sprite>($"Bugs/{fam}_body_{v}");
+            var tail = Resources.Load<Sprite>($"Bugs/{fam}_tail_{v}");
 
             int total = BodySegments + 1;
             _segments = new Transform[total];
@@ -53,9 +72,9 @@ namespace BugFarmer.Bugs
             {
                 var go = new GameObject(i < BodySegments ? $"seg_{i}" : "tail");
                 go.transform.SetParent(transform, false);
-                go.transform.localScale = new Vector3(PartScale, PartScale, 1f);
+                go.transform.localScale = new Vector3(_partScale, _partScale, 1f);
                 var sr = go.AddComponent<SpriteRenderer>();
-                sr.sprite = i >= BodySegments ? tail : (i % 2 == 0 ? bodyA : bodyB);
+                sr.sprite = i >= BodySegments ? tail : body;
                 sr.sortingLayerName = "Occupants";
                 World.LitMaterials.Apply(sr);
                 _segments[i] = go.transform;
@@ -90,7 +109,7 @@ namespace BugFarmer.Bugs
             // Place each segment at its arc-length offset along the history
             for (int i = 0; i < _segments.Length; i++)
             {
-                float target = Spacing * (i + 1);
+                float target = _spacing * (i + 1);
                 if (!SampleAt(target, out var pos, out var tangent))
                 {
                     // Not enough history yet: stack behind the head
@@ -135,7 +154,7 @@ namespace BugFarmer.Bugs
             for (int i = 0; i < _points.Count - 1; i++)
             {
                 walked += Vector3.Distance(_points[i], _points[i + 1]);
-                if (walked > MaxHistory)
+                if (walked > _maxHistory)
                 {
                     _points.RemoveRange(i + 1, _points.Count - i - 1);
                     return;

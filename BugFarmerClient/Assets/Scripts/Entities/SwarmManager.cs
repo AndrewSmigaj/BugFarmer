@@ -1079,18 +1079,23 @@ namespace BugFarmer.Entities
             switch (msg.kind)
             {
                 case "strike":
-                    swarm.FlashAllBugs(); // the predator lunges
-                    // Phase 2: per-victim snatch — a positioned THWACK AT each eaten fly (the kill itself
-                    // vanishes the exact individual deterministically; this is the audible per-victim cue).
+                    // Per-victim snatch: flash ONLY the member nearest each eaten prey (+ a positioned
+                    // THWACK) so a strike reads as individual lunges, not the whole swarm flashing at once.
+                    // The kill itself vanishes the exact individual deterministically via the ledger.
                     if (msg.victim_x != null && msg.victim_y != null && msg.victim_x.Length > 0)
                     {
                         int n = Mathf.Min(msg.victim_x.Length, msg.victim_y.Length);
                         for (int i = 0; i < n; i++)
-                            BugFarmer.Audio.AudioFx.ThwackAt(new Vector2(msg.victim_x[i], msg.victim_y[i]));
+                        {
+                            var vp = new Vector2(msg.victim_x[i], msg.victim_y[i]);
+                            swarm.FlashNearest(vp);
+                            BugFarmer.Audio.AudioFx.ThwackAt(vp);
+                        }
                     }
                     else
                     {
-                        BugFarmer.Audio.AudioFx.ThwackAt(pos); // legacy/centre fallback
+                        swarm.FlashAllBugs(); // no victim positions — fall back to the swarm lunge
+                        BugFarmer.Audio.AudioFx.ThwackAt(pos);
                     }
                     break;
                 case "windup":

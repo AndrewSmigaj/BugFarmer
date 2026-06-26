@@ -11,7 +11,7 @@ A ~1/16-zone slab of solid rock showing the underground vocabulary and the spati
 - cave dressing (crystals, glow/regular mushrooms, rubble, bones, moss, a mossy treasure chest) and
   fauna (ants in a burrow, a cave spider, a beetle, a cricket).
 
-Renders to tools/_generated/previews/scene_underground_caverns.png.
+Renders to tools/_generated/previews/underground/scene_underground_caverns.png (its theme folder).
 Run: python3 tools/zonegen/scenes/scene_underground_caverns.py
 """
 import os
@@ -89,7 +89,7 @@ def build():
     # --- interior rock columns in the rocky chamber (the "stalagmite" clumps) ---
     rocky_inner = [c for c in rocky if c not in pool
                    and all(is_rock(c[0] + dx, c[1] + dy) is False for dx, dy in ((0, 0),))]
-    for (clx, cly) in rng.sample(sorted(rocky), k=min(3, len(rocky))):
+    for (clx, cly) in rng.sample(sorted(rocky), k=min(5, len(rocky))):
         for dx, dy in ((0, 0), (1, 0), (0, 1)):
             x, y = clx + dx, cly + dy
             if (x, y) in rocky and (x, y) not in pool and b.is_free(x, y) and rng.random() < 0.7:
@@ -112,35 +112,52 @@ def build():
     for (x, y) in faces:
         if not b.is_free(x, y):
             continue
+        rock_nbrs = sum(is_rock(x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
         r = rng.random()
-        if r < 0.08:
-            b.place_occupant("quartz_block", x, y, surface=None)   # quartz in the walls (a block, not a crystal)
-        elif r < 0.13:
+        if r < 0.06 and rock_nbrs >= 2:
+            b.place_occupant("quartz_block", x, y, surface=None)   # quartz nestled in a wall seam (never open floor)
+        elif r < 0.10:
             b.place_occupant("torch_wall", x, y, surface=None)
 
     # --- mossy treasure chest by the pool, ringed with glow mushrooms + moss ---
     if free_fp("chest_mossy", 36, 31):
         b.place_occupant("chest_mossy", 36, 31, surface=None)
-    for _ in range(14):
+    for _ in range(8):
         x, y = 31 + rng.randint(-6, 7), 31 + rng.randint(-4, 4)
         if (x, y) in open_cells and b.is_free(x, y):
             b.place_occupant(rng.choice(["mushroom_glow", "mushroom_glow", "cave_moss"]),
                              x, y, surface=None)
 
-    # --- open-floor cave dressing (min-spaced) ---
-    bag = [k for k, n in [("rubble", 12), ("quartz_block", 3), ("mushroom_glow", 6),
-                          ("mushroom_blue", 4), ("mushroom_brown", 4), ("mushroom_red", 2),
-                          ("mushroom_puffball", 3), ("bone_pile", 4), ("cave_moss", 8)] for _ in range(n)]
+    # --- cave dressing: FUNGUS clusters in light-pools against the walls + a sparse earthtone floor scatter ---
+    # (quartz is a WALL mineral, embedded in faces above — never floor litter)
+    import math as _m
     cells = [c for c in open_cells if b.is_free(*c)]
-    rng.shuffle(cells)
-    placed = []
+    wall_cells = [c for c in cells if any(is_rock(c[0] + dx, c[1] + dy)
+                  for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))]
+    rng.shuffle(wall_cells)
+    clumps = []
+    for c in wall_cells:
+        if len(clumps) >= 9:
+            break
+        if any(_m.hypot(c[0] - gx, c[1] - gy) < 6 for gx, gy in clumps):
+            continue
+        clumps.append(c)
+    fungus = ["mushroom_glow", "mushroom_glow", "mushroom_blue", "mushroom_brown",
+              "mushroom_red", "mushroom_puffball", "cave_moss", "crystal_small"]   # the odd crystal sparkle
+    dressed = set()
+    for (gx, gy) in clumps:
+        for (x, y) in cells:
+            if _m.hypot(x - gx, y - gy) <= 2.2 and rng.random() < 0.55 and b.is_free(x, y):
+                if b.place_occupant(rng.choice(fungus), x, y, surface=None):
+                    dressed.add((x, y))
+    # sparse earthtone litter on the open floor (rubble/moss/bone) — keeps the cave readable
+    earth = [k for k, n in [("rubble", 6), ("cave_moss", 3), ("bone_pile", 2)] for _ in range(n)]
     for (x, y) in cells:
-        if rng.random() > 0.14:
+        if (x, y) in dressed or not b.is_free(x, y):
             continue
-        if any(abs(x - p) <= 1 and abs(y - q) <= 1 for p, q in placed):
-            continue
-        if b.place_occupant(rng.choice(bag), x, y, surface=None):
-            placed.append((x, y))
+        if rng.random() < 0.05 and not any(abs(x - p) <= 1 and abs(y - q) <= 1 for p, q in dressed):
+            if b.place_occupant(rng.choice(earth), x, y, surface=None):
+                dressed.add((x, y))
 
     # --- fauna (free-floating bug sprites) ---
     for i, (bx, by) in enumerate(sorted(nat)):
@@ -174,7 +191,9 @@ def _label(out):
 
 if __name__ == "__main__":
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "scene_underground_caverns.png"))
+    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "zones",
+                                       "underground_passages_31", "scenes", "caverns.png"))
+    os.makedirs(os.path.dirname(out), exist_ok=True)
     render_builder(b, out, scale=5)
     _label(out)
     print("placeholders:", b.missing_art())

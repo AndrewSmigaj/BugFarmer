@@ -7,9 +7,144 @@
   "height": 256,
   "spawn_point": [
     128,
-    55
+    10
   ],
   "biome_type": "cave",
+  "seed": 31,
+  "bug_spawning": {
+    "species_caps": {
+      "centipede_garden": {
+        "initial": 18,
+        "max": 60,
+        "spawn_interval": 6000.0,
+        "swarm_size": 2,
+        "max_population": 160,
+        "min_population": 4
+      },
+      "millipede": {
+        "initial": 20,
+        "max": 120,
+        "spawn_interval": 6000.0,
+        "swarm_size": 2,
+        "max_population": 180,
+        "min_population": 4
+      },
+      "beetle_carrion": {
+        "initial": 16,
+        "max": 60,
+        "spawn_interval": 6000.0,
+        "swarm_size": 2,
+        "max_population": 150,
+        "min_population": 3
+      }
+    },
+    "spawn_areas": [
+      {
+        "id": "milli_w",
+        "species": [
+          "millipede"
+        ],
+        "type": "circle",
+        "cx": 62,
+        "cy": 150,
+        "radius": 20,
+        "weight": 3.0
+      },
+      {
+        "id": "milli_sw",
+        "species": [
+          "millipede"
+        ],
+        "type": "circle",
+        "cx": 96,
+        "cy": 206,
+        "radius": 20,
+        "weight": 3.0
+      },
+      {
+        "id": "beetle_e",
+        "species": [
+          "beetle_carrion"
+        ],
+        "type": "circle",
+        "cx": 190,
+        "cy": 138,
+        "radius": 18,
+        "weight": 3.0
+      },
+      {
+        "id": "beetle_se",
+        "species": [
+          "beetle_carrion"
+        ],
+        "type": "circle",
+        "cx": 188,
+        "cy": 200,
+        "radius": 16,
+        "weight": 3.0
+      },
+      {
+        "id": "cent_camp",
+        "species": [
+          "centipede_garden"
+        ],
+        "type": "circle",
+        "cx": 128,
+        "cy": 112,
+        "radius": 22,
+        "weight": 3.0
+      },
+      {
+        "id": "cent_deep",
+        "species": [
+          "centipede_garden"
+        ],
+        "type": "circle",
+        "cx": 134,
+        "cy": 196,
+        "radius": 16,
+        "weight": 3.0
+      },
+      {
+        "id": "milli_wild",
+        "species": [
+          "millipede"
+        ],
+        "type": "zone",
+        "weight": 0.4
+      },
+      {
+        "id": "beetle_wild",
+        "species": [
+          "beetle_carrion"
+        ],
+        "type": "zone",
+        "weight": 0.4
+      },
+      {
+        "id": "cent_wild",
+        "species": [
+          "centipede_garden"
+        ],
+        "type": "zone",
+        "weight": 0.4
+      }
+    ],
+    "initial_carrion": [
+      {
+        "item": "dead_millipede",
+        "x": 96,
+        "y": 206,
+        "count": 2
+      },
+      {
+        "item": "dead_beetle",
+        "x": 190,
+        "y": 138,
+        "count": 2
+      }
+    ]
+  },
   "neighbors": {
     "north": "village_21_B"
   }

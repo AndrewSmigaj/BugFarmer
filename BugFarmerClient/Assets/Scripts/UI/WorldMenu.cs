@@ -43,6 +43,9 @@ namespace BugFarmer.UI
             new WorldChoice { label = "Normal",         zoneId = "village_21" },
             new WorldChoice { label = "Village B",      zoneId = "village_21_B" },
             new WorldChoice { label = "Eco Lab",        zoneId = "village_21_lab" },
+            new WorldChoice { label = "Butterfly Lab",  zoneId = "butterfly_lab" },
+            new WorldChoice { label = "Fly Lab",        zoneId = "fly_lab" },
+            new WorldChoice { label = "Crawler Lab",    zoneId = "crawler_lab" },
             new WorldChoice { label = "Test",           zoneId = "sim_test" },
             new WorldChoice { label = "Collision Test", zoneId = "collision_test" },
             new WorldChoice { label = "Split Test",     zoneId = "split_test2" },
@@ -76,6 +79,8 @@ namespace BugFarmer.UI
             EnsureWorld("Fly Farm Test", "repro_test");
             EnsureWorld("Crafting Test", "crafting_test");
             EnsureWorld("Bug Lab", "bug_lab");
+            EnsureWorld("Fly Lab", "fly_lab");
+            EnsureWorld("Crawler Lab", "crawler_lab");
         }
 
         private void Start()

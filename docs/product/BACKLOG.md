@@ -819,7 +819,99 @@ Art + local rendering shipped; making OTHER players see your outfit needs:
 Fill missing entity data, generate/clean remaining sprites, render 3 surface + 3 mining preview
 scenes. Depends on the two items above.
 
+## Decided against
+- **Sideways / rotated furniture (side + back facing variants + place-rotate)** — explored 2026-06-24
+  (gpt-image-1.5 re-edited 8 pieces to `_side`/`_back`, separate placeable keys, server `resolveFacing`,
+  a place-time R-rotate + a furnished showcase house). **Scrapped**: most JRPGs don't rotate furniture, and
+  in this strictly-flat 3/4 projection the side/back views add art + placement complexity for little payoff.
+  All variant sprites, the rotate code, and the showcase zone were removed. The reference-image re-angle
+  TECHNIQUE survives for animation (see the fly/butterfly flap work) — only the furniture product use is dead.
+
+## Now/Next — economy, gear & town NPCs (DESIGNED — see `economy/`)
+Full design folder: [`docs/product/economy/`](economy/README.md) — **start at the README map.** Reorganized
+2026-06-25, one-concern-per-file: `progression.md` (pacing/gating + village scope, lens-justified),
+`crafting.md` (the master recipe/cost table — all categories incl. sprinklers, bug-derived + artisan goods,
+target floors), `merchants.md` (the 3 shops + craft-vs-buy matrix), `production.md` (**build waves — start
+W1**), `DECISIONS.md` (every decision, resolved + open). Geography for it is in
+[`architecture_world.md`](architecture_world.md) (restructured 2026-06-25: **rows 0–4** with row 5 deferred,
+underground col-0 centipede→ants + Queen, Centipede Cavern→(4,1), + a resource/material dispersion map §1b).
+**Zone authoring of the new 0–4 layout is its own backlog effort.** The **content** is now designed in full:
+`economy/zones/` (17 per-zone content sheets) + `economy/catalogs/` (28 armor sets, 82 weapons, 88
+accessories, ~102 tools, 78 potions + 47 meals, ~315 materials) + `species_and_drops.md` (84 species) —
+intentionally over-produced to **prune down**, then wire via `production.md`'s waves. The big build items:
+- **Player bonus/stat layer** (the foundation) — add a `bonuses{}` block to the item schema + a derived
+  `PlayerStats` recompute on equip; wire `defense` + `damage_pct` into combat first so armor/accessories
+  finally DO something. Today the only working bonus is the backpack `slot_bonus`.
+- **Currency + merchant economy** — `coins` on `CharacterSave`, buy/sell RPCs + merchant panel (reuse the
+  crafting/container plumbing). `sell_price`/`buy_price` are already priced in data; no RPC/coins yet.
+- **Town NPCs (merchant, blacksmith, carpenter)** — new `interaction_type:"npc"` occupant + a dialogue
+  panel: intro line on first meet (track "met" in `CharacterSave`), random tip thereafter. Sprites exist
+  (`merchant_down`/`miner_down`/`farmer_down`); persist them via `place_occupant` instead of preview-only
+  `place_player`. Ecologist/Beekeeper reuse it later (GDD §13).
+- **Material stations + ladders** — sawmill (planks), loom (cloth), forge (steel/alloys), cauldron
+  (potions), stove (meals), jeweler (accessory gems), honey_extractor — data + recipes once art lands.
+- **Recipe acquisition** — per-character known-recipes set + the auto/buy@npc/find content split.
+- **Gear content** — armor tiers, utility outfits (bee suit, fisherman's vest, miner kit…), accessories,
+  trade-off ("bonus-while-detrimenting") items, consumables.
+
+## Later — mining depth (the loop is thin; flagged 2026-06-24)
+Mining is currently "tool_tier gates ore → break block → get ore" with no risk, variety, or reason to go
+deep — and several designed gear bonuses (`ore_fortune`, `gem_luck`, `light_radius`, `hazard_resist`,
+`fall_resist`, miner's kit) have nothing to hook onto. To make it a real loop (details: `economy/suggestions.md §4`):
+- **Depth + risk**: deeper layers = better ore + hazards (darkness, gas pockets, fall drops, cave-ins).
+- **Yield variety**: `ore_fortune` (double drops), `gem_luck` (gems/geodes in plain stone), rare nodes.
+- **Tools beyond the pick**: drill (fast/AoE, later electric §11.6), dynamite (already a concept), ore
+  cart/rail haul, prospector/vein-sense tools.
+- **Deep-only materials** (mithril/adamant) that gate the endgame gear in `economy/item_catalog.md`.
+- **Light as a real stat** — `light_radius` (lanterns/headlamp/placed torches); the flashlight is cosmetic today.
+
+## Later — mechanics flagged by the economy content pass (2026-06-25)
+These came out of designing `economy/zones/` + `catalogs/`; each needs its own design before wiring. See
+`economy/DECISIONS.md` D10–D16.
+- **Electricity (a whole EXPANSION)** — drills/powered mining run on **batteries** (buy, or find in chests) for
+  temporary power, until a **battery recharger** unlocks. Recharger is gated by **WEALTH, not zone**. Treat as
+  a large standalone expansion.
+- **Signposts** — fast-travel/landmark posts (per-zone hub, unlock-on-visit; `architecture_world.md` already
+  sketches the road+signpost system).
+- **Cart system** — rail carts go left/right/up/down (diagonal TBD); lots of payoffs to weigh. *Research how
+  Minecraft minecarts work* (powered/detector/booster rails, momentum) before designing.
+- **Dredge mechanic** — place-on-water → station "dredge" button → player drags a hose and clicks water to
+  dredge like a tool; weaker/stronger + condition variants (swamp dredge). Get the feel right (D14).
+- **Potions & alchemy system** — the cauldron potion-crafting + buff/cure layer. (Venom/poison combat
+  *effects* are assumed real mechanics, D16; this backlog item is just the potion-making system.)
+- **Fishing** — a fishing **mini-game** + rod tiers + passive capacity-capped fish traps (no harpoons). Bows
+  + **cast/thrown nets** + **bug-size matching** (a small net can't hold a big bug) ride along here.
+- **Beekeeping system** — multi-level beekeeping: faster/stronger bees, some **hostile**, smoker tiers (≥3),
+  hive management. The bee zones' content hangs on this.
+- **Armour balance** — tune per-set DEFENSE against each zone's enemy damage once combat numbers exist (D11).
+- **Home-plot décor bonuses** — the capped idle/comfort aura system (GDD §11.5) that décor + light décor feed.
+- **Mining processing** — rock crusher → `paydirt` (final name TBD) → sluice refine loop (D13).
+- **Bug Extractor** (D18) — a clean in-town station that processes `dead_<bug>` → materials (chitin, silk,
+  venom, leather…) AND feeds bug-based cooking. Replaces per-bug ground drops + the old bug-leather station.
+  Needs: the station + the extraction recipe table (which dead bug → which material).
+- **Food / cooking system** (D19) — cooking recipes are a separate system from crafting; the village ships one
+  starter meal (`forager_stew`) and the player cooks freely. Design the cooking system + recipe set later.
+- **Land deeds** (D20) — the Mayor's plot/land-ownership system (separate from the merchant economy).
+- **Boats / vehicles** — the Fisherman sells a boat (water traversal); design the boat mechanic + cost.
+- **Store inventory rotation** — randomized/rotating merchant stock with a few rare/expensive "teases" (a peek
+  at high-end gear from the start).
+- **Chests** (user request) — storage chest behaviour/UI pass.
+- **Size-by-growth** — centipedes/millipedes grow ~0.5→×2 as they eat (new deterministic sim mechanic; static
+  small/large variants ship in the meantime).
+- **Projectile-spit** — a deep tough-area **cave beetle** that spits projectiles (new ranged-combat sim
+  mechanic; frontier-sync + test-changes gates).
+- **Station "crank-to-charge" mini-game** — most stations take an active crank input that charges them to run a
+  while (the sluice hand-crank is the first); client mini-game + server charge state.
+- **Cave species + sprites** — `cave_beetle`, `glowworm` (green, catchable light), small `cave_spider`, the
+  **green garden centipede** (village) + **cave millipede** (millipede ×0.5); cave centipede reuses the current
+  centipede sprite. Plus a **`rock_crusher`** + tube/pipe sprite for the mining camp (stand-in `coal_bin` bins
+  used for now). Then wire the cave critters' real diets/breeding + the underground ecology tuning pass.
+
 ## Later — captured, not scoped yet
+- **Tune bug animations, including speed and size** — the cosmetic flap/buzz frames + the per-species
+  anim profile (FlapFps / GlideSecs / Bob, in BugVisual + SwarmVisual) and each animated species' frame
+  pixel size (the downscale target) want a pass for feel: wing-beat speed, hover jitter, and on-screen
+  scale per species (fly buzz + butterfly glide are the first two; more species as they get frames).
 - **Grabbing / pushing / shoving** (Andrew has the design; to detail later). Replaces the old
   "hands" slot-0 grab verb, which was pulled from the starting kit 2026-06-14 pending this rework
   (empty slots still bare-hand grab in the meantime).

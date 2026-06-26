@@ -33,15 +33,18 @@ time (you end up building every feature twice). For every feature:
 - `tools/` — Python sprite/world pipeline (gen → clean → preview → publish), the test-zone
   generator (`make_test_zone.py`), and the headless `.NET` netcode harness (`sync-harness/`).
   Art prompts are DATA: `tools/art/style.json` (global look) + `tools/art/catalog/*.json` (per-item).
-  Zone/scene authoring: `tools/zonegen/` (builder + `features/` primitives + `scenes/` + the
-  `registry.py` scene catalog + `gallery.py` → `_generated/previews/index.html`, THE visual
-  entry point). `tools/README.md` is the map of every script + where outputs go.
+  Zone/scene authoring: `tools/zonegen/` (builder + `features/` primitives + `scenes/`). Previews are
+  plain PNG folders under `tools/_generated/previews/` (browse in a file explorer — no html):
+  `catalog/<group>/` = every in-game object by category (rebuild: `python3 tools/previews.py`, generated
+  from entity data so it can't drift); `zones/<zone>/` = each zone's full render + region crops + its
+  composing `scenes/`. `tools/README.md` is the map of every script + where outputs go.
 - `docs/` — `product/` (how the game works, incl. the GDD `game_design.md`) and `guides/`
   (`art/` = how sprites look & are made; `authoring/` = how to build zones/scenes — start at its `README.md`).
 - `.claude/skills/` — task playbooks: `test-changes` (verify ANY change — every test/determinism gate),
   `frontier-sync` (wire a new deterministic bug-sim mechanic), `perf-tuning` (profile + optimize the sim),
-  `ecology-tuning` (balance the bug food web), `run-backend` (the Nakama/Postgres/Go stack),
-  `add-object` / `regenerate-sprite` (world art), `author-zone` (zones).
+  `ecology-tuning` (balance the bug food web), `bug-spawning` (why a zone has the wrong # of bugs —
+  spawn paths, the walkability + stale-save gotchas, populate/reset/persist), `run-backend`
+  (the Nakama/Postgres/Go stack), `add-object` / `regenerate-sprite` (world art), `author-zone` (zones).
 
 ## Where things live
 - World art (loaded by `key` at runtime): `Assets/Resources/{Objects,Tiles,Items,Bugs,Effects}/`.

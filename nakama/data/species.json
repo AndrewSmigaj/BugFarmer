@@ -215,7 +215,7 @@
     "max_hp": 6,
     "sell_price": 25,
     "reproduce_cooldown": 300.0,
-    "sprite_id": "centipede_head_a",
+    "sprite_id": "centipede_head_b",
     "movement_style": "crawling",
     "flies_over_fences": false,
     "kill_drops": [
@@ -279,7 +279,7 @@
     "max_hp": 3,
     "sell_price": 15,
     "reproduce_cooldown": 1150.0,
-    "sprite_id": "millipede",
+    "sprite_id": "millipede_head_a",
     "movement_style": "crawling",
     "flies_over_fences": false,
     "kill_drops": [],

@@ -45,6 +45,22 @@ namespace BugFarmer.Bugs
         /// <summary>Hit-flash end time (Time.time); cosmetic only.</summary>
         public float FlashUntil;
 
+        /// <summary>
+        /// Cosmetic flap-animation frames (set by SwarmVisual; null = static sprite). DISPLAY-ONLY —
+        /// the shown frame + the float offset are never part of the deterministic sim or state hash,
+        /// so they can run free of the 10Hz tick and even differ per client without breaking sync.
+        /// Real-butterfly feel: flap in short bursts, then GLIDE (hold wings-open frame 0) between bursts.
+        /// </summary>
+        public Sprite[] Frames;
+        private float _animTime = -1f; // <0 = uninitialised; seeded per-bug on first frame
+        // Per-species cosmetic flap profile (display-only). Defaults = the graceful butterfly
+        // flap-then-glide; SwarmVisual overrides these for fast continuous buzzers (flies).
+        public float FlapFps = 11f;      // frames/sec while flapping
+        public int FlapsPerBurst = 2;    // wing cycles per flap burst
+        public float GlideSecs = 0.5f;   // hold wings-open between bursts (0 = continuous, no glide)
+        public float BobAmp = 0.05f;     // gentle vertical float (world units)
+        public float BobHz = 2.2f;       // floats per second
+
         private static readonly Color DamagedTint = new Color(1f, 0.6f, 0.6f, 1f);
         private static readonly Color FlashTint = new Color(1f, 0.25f, 0.25f, 1f);
 
@@ -83,10 +99,32 @@ namespace BugFarmer.Bugs
             if (Transform != null)
             {
                 Vector2 pos = Vector2.Lerp(PrevPos, CurrPos, t);
-                Transform.position = pos;
 
-                // Y-sorting: lower Y = higher sorting order (appears in front)
-                // Add small offset to appear slightly above ground-level occupants
+                // Cosmetic flap animation + vertical float (display-only; never hashed).
+                float bobY = 0f;
+                if (Frames != null && Renderer != null && Frames.Length >= 2)
+                {
+                    if (_animTime < 0f)
+                    {
+                        // per-bug phase offset so the swarm doesn't flap in unison (golden-ratio spread)
+                        _animTime = ((Agent.BugId * 0.61803399f) % 1f) * 3f;
+                    }
+                    _animTime += Time.deltaTime;
+
+                    int n = Frames.Length;
+                    float burst = FlapsPerBurst * n / FlapFps; // seconds of flapping per burst
+                    float period = burst + GlideSecs;          // burst + glide
+                    float m = _animTime % period;
+                    int idx = m < burst ? Mathf.FloorToInt(m * FlapFps) % n : 0; // glide holds frame 0 (wings open)
+                    var frame = Frames[idx];
+                    if (Renderer.sprite != frame) Renderer.sprite = frame;
+
+                    bobY = Mathf.Sin(_animTime * BobHz * 6.2831853f) * BobAmp;
+                }
+
+                Transform.position = new Vector3(pos.x, pos.y + bobY, Transform.position.z);
+
+                // Y-sorting uses the SIM y (not the cosmetic float) to avoid sort flicker.
                 if (Renderer != null)
                 {
                     Renderer.sortingOrder = -Mathf.FloorToInt(pos.y) + 1;

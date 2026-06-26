@@ -28,21 +28,25 @@ Row 2  │   EASY    │   EASY    │  MEDIUM  ≈≈   HARD    │
        │  Meadow   │  (start)  │ Thicket  ≈≈  Swamp    │
        ╞═══════════╪═══════════╪══════════≋╪═══════════╡  ← CLIFF WALL
 Row 3  │   EASY    │   EASY    │  MEDIUM  ≋≋   HARD    │
-UNDER- │ Centipede │ Underground│ Underground│          │
-GROUND │  Cavern   │ Passages  │  River   ≋≋           │
+UNDER- │ Ant Colony│ Underground│ Underground│ Ant       │
+GROUND │  (intro)  │ Passages  │  River   ≋≋  Outpost   │
        ├───────────┼───────────┼──────────≈┼───────────┤
 Row 4  │  MEDIUM   │  MEDIUM   │   HARD    │ EXTRA HARD│
-       │ Centipede │ Underground│ Underground│  Deadly   │
-       │  Cavern   │ Passages  │  River    │   Ants    │
-       ├───────────┼───────────┼───────────┼───────────┤
-Row 5  │   HARD    │   HARD    │ EXTRA HARD│  EX-EX HD │
-DEEP   │ Centipede │  Deep     │  Deep     │   Ant     │
-CLIFF  │  Depths   │ Passages  │  River    │   Queen   │
+DEEP   │ Ant Colony│ Centipede │ Underground│  Deadly   │
+       │  +QUEEN   │  Cavern   │  River    │   Ants    │
        └───────────┴───────────┴───────────┴───────────┘
                                  SOUTH
 
 ≈ = River (shallow crossings, separates Medium from Hard areas)
 ≋ = Waterfall (river meets cliff edge)
+
+> **Restructure (2026-06-25, see `economy/DECISIONS.md` D2/D3/D9):** the world is currently **rows 0–4** —
+> the old **row 5** "deep cliff" tier (Centipede Depths / Deep Passages / Deep River / Ant Queen Chamber) is
+> **deferred** (re-add later). Underground **col 0** is now an **Ant Colony** (intro: easy + medium, the
+> medium tier holds a **Queen** mini-boss) instead of centipedes; the **Centipede Cavern** moved to **(4,1)**;
+> the **Deadly Ant** colony (col 3) shifted **up** with a **surface outpost** that forages into the col-3
+> Swamp. The big Ant **Queen Chamber** boss returns with row 5. **Two ant colonies** are intentional: a gentle
+> intro one (col 0 west) + the deadly endgame one (col 3 east).
 
 ## Zone Species Guide (0-indexed)
 
@@ -131,65 +135,33 @@ Dense brush east of river
 - Whirligig beetles
 - Leeches
 
-### Row 3-4 - UNDERGROUND (Cliff Entrance/Mid)
+### Row 3–4 - UNDERGROUND (Cliff Entrance / Deep)
 
-**Col 0 - Centipede Cavern** (EASY → MEDIUM)
-Large cavern with stalactites, smaller side caverns, 2+ tunnels to surface
-- Giant centipedes
-- Cave beetles
-- Glowworms
-- Camel crickets
+> Row 5 (deep cliff) is **deferred** — see the restructure note up top. Its rarest ores now compress into
+> **row 4**; the grand Ant Queen Chamber boss returns when row 5 does.
 
-**Col 1 - Underground Passages** (EASY → MEDIUM)
-Connecting tunnels, some ant activity
-- Cave spiders
-- Blind beetles
-- Mole crickets
-- Springtails
+**Col 0 - Ant Colony — intro** (EASY → MEDIUM, +Queen)
+The gentle introduction to ants: a tunneled colony of chambers and an `ant_mound` network, 2+ tunnels to
+surface. The **medium tier (row 4) holds the colony Queen** — a mid-game mini-boss, distinct from the
+deferred grand Queen.
+- Garden ants, black ants (easy, row 3)
+- Harvester ants, soldier ants (medium, row 4)
+- **Colony Queen** (mini-boss, row 4) + ant guards
+
+**Col 1 - Underground Passages → Centipede Cavern** (EASY → MEDIUM)
+Row 3 is connecting passages; **(4,1)** is the relocated **Centipede Cavern** (stalactites, side caverns).
+- Cave spiders, blind beetles, mole crickets, springtails (row 3 passages)
+- **Giant centipedes**, cave beetles, glowworms, camel crickets (row 4 cavern)
 
 **Col 2 - Underground River** (MEDIUM → HARD)
-Waterfall feeds into underground river system
-- Cave crayfish
-- Water beetles
-- Aquatic larvae
-- Albino insects
+Waterfall feeds into the underground river system.
+- Cave crayfish, water beetles, aquatic larvae, albino insects
 
-**Col 3 - Deadly Ant Colony** (HARD → EXTRA HARD)
-Tunnels mostly underground, some surface access for foraging
-- Bullet ants
-- Soldier ants
-- Army ants
-- Fire ants
-
-### Row 5 - DEEP CLIFF (Rarest ores here)
-
-**Col 0 - Centipede Depths** (HARD)
-Deepest part of centipede territory, larger and more dangerous
-- Giant cave centipedes (boss tier)
-- Crystal beetles
-- Bioluminescent worms
-- Cave scorpions
-
-**Col 1 - Deep Passages** (HARD)
-Ancient tunnels, rare mineral deposits
-- Albino centipedes
-- Deep cave spiders
-- Rock borers
-- Fossil bugs
-
-**Col 2 - Deep River** (EXTRA HARD)
-Underground lake, aquatic dangers
-- Giant cave crayfish
-- Cave eels
-- Bioluminescent fish
-- Water centipedes
-
-**Col 3 - Ant Queen Chamber** (EXTRA EXTRA HARD)
-Heart of the ant colony, heavily guarded
-- Ant Queen (boss)
-- Royal guards
-- Winged ants
-- Larvae chambers
+**Col 3 - Deadly Ants** (HARD → EXTRA HARD)
+A second, dangerous ant colony. The **outpost (row 3)** has surface access, foraging into the col-3 Swamp;
+the **core (row 4)** is the deadly heart.
+- Bullet ants, soldier ants (outpost, row 3)
+- Army ants, fire ants (deep core, row 4)
 
 ### Surface Zones (Rows 0-2)
 
@@ -199,17 +171,17 @@ Heart of the ant colony, heavily guarded
 - River separates Medium from Hard difficulty areas (shallow crossings allowed)
 - No barrier between Locust Farmland and Medium zones - locusts swarm freely
 
-### Underground Zones (Rows 3-5)
+### Underground Zones (Rows 3–4)
 
 - Cliff wall at Row 3 boundary (between surface and underground)
 - Players dig INTO the cliff horizontally (going south = deeper into cliff)
 - Top-down view, but represents carving into a cliff face
 - Pre-generated like Terraria:
-  - Ore veins placed at design time (rarer ores deeper south)
-  - Caverns carved out (Centipede Cavern, Ant Colony, Underground River)
-  - Tunnels connecting caverns to surface
-  - Boss areas in Row 5 (Centipede Depths, Ant Queen Chamber)
-- Difficulty scales with column AND row (Row 5 hardest, Col 3 hardest)
+  - Ore veins placed at design time (rarer ores deeper south — now bottoming out in **row 4**)
+  - Caverns carved out (Ant Colony col 0, Centipede Cavern at 4,1, Underground River, Deadly Ants col 3)
+  - Tunnels connecting caverns to surface (the col-0 & col-3 ant colonies forage up)
+  - Boss areas — the grand Ant Queen Chamber — **return with the deferred row 5**
+- Difficulty scales with column AND row (**row 4** hardest now, Col 3 hardest)
 
 ### Zone Connections
 
@@ -245,14 +217,14 @@ Roads branch out from the Starting Village (2,1) to each surface zone. Each zone
 
 | Zone | Hub Area | Structure | Purpose |
 |------|----------|-----------|---------|
-| Centipede Cavern (3,0) | Cavern entrance | Mushroom farmer's camp | Sells mushrooms, glowworm lanterns, signpost |
+| Ant Colony – intro (3,0) | Cavern entrance | Myrmecologist's camp | Ant lore, ant-egg trade, signpost |
 | Underground Passages (3,1) | Junction chamber | Miner's outpost | Sells picks, torches, mine goes deeper |
 | Underground River (3,2) | Waterfall pool | Fisher's platform | Aquatic gear, cave fish |
-| Ant Colony entrance (3,3) | Tunnel mouth | Exterminator's base | Ant repellent, warnings, bounty board |
-| Centipede Depths (4-5,0) | Deep cavern | Hermit researcher | Rare specimens, centipede lore |
-| Deep Passages (4-5,1) | Ancient tunnel | Abandoned mine shaft | Old equipment, ore veins |
-| Deep River (4-5,2) | Underground lake | Sunken ruins | Treasure, water bugs |
-| Ant Queen area (4-5,3) | Colony heart | (No friendly NPC) | Boss area, no signpost until cleared? |
+| Deadly Ants outpost (3,3) | Tunnel mouth | Exterminator's base | Ant repellent, warnings, bounty board |
+| Ant Colony + Queen (4,0) | Deep chamber | (mini-boss) | Colony Queen fight, ant-derived drops |
+| Centipede Cavern (4,1) | Stalactite hall | Hermit researcher | Rare specimens, centipede lore |
+| Underground River deep (4,2) | Underground lake | Sunken ruins | Treasure, water bugs |
+| Deadly Ants core (4,3) | Colony heart | (No friendly NPC) | Deadly endgame ant area |
 
 ### Road Layout
 
@@ -270,6 +242,53 @@ Roads branch out from the Starting Village (2,1) to each surface zone. Each zone
 ```
 
 Roads provide safe-ish travel corridors. Bugs generally avoid roads but may cross them.
+
+---
+
+## 1b. Resource & Material Dispersion
+
+Where each crafting material comes from — the geographic spine that paces progression. Per
+`economy/DECISIONS.md` **D7/D8**: surface **floor** tiles are never dug; materials come from diggable **block
+clumps** + harvestable **nature occupants** + the **mining cliff** + **bug drops**. "Terraforming" = *placing*
+a floor tile on top, never a hole. Water is placed with care — `water_shallow` (wade) vs `water_deep` (blocks).
+
+### Surface (rows 0–2) — harvest occupants & dig block-clumps on fixed floor
+| Material | Source | Where (zones) | Tool |
+|---|---|---|---|
+| wood | tree_oak/pine/palm, log, stump | Millipede Forest (0,1), village & meadow trees | Axe |
+| fiber | bush, tall_grass, **reeds**, clover | meadows everywhere; **reeds** in the Swamps (2,3 / 1,3) + riverbanks | Hand |
+| flower / herb / mushroom | flower, mushroom | Bee Meadow (2,0), Meadow (1,0), Butterfly Fields (1,1), Village | Hand |
+| stone (shallow) | rock_small/large, boulder | rocky surfaces, esp. Scorpion Rocks (1,2) | Pickaxe (Wood→Stone) |
+| clay | **clay_block** clumps | riverbanks (river, cols 1–2) | Shovel |
+| **sand** | **sand_block** clumps | **beach / sandy edges** (river mouth, swamp shore) | Shovel |
+| coal (shallow) | surface coal seams | scattered surface rock | Pickaxe (Wood) |
+
+### Underground (rows 3–4) — dig the cliff
+| Material | Source | Row | Tool tier |
+|---|---|---|---|
+| copper, coal, iron | ore_* tiles | row 3 | Wood → Stone |
+| iron, silver, gold | ore_* tiles | row 4 | Stone → Iron |
+| platinum, diamond | ore_* tiles | row 4 (east cols) | Gold → Platinum |
+| stone, hard_stone, granite | solid tiles | rows 3–4 | Pickaxe Wood → Iron |
+| crystal / gem | crystal_small/large | row 4 | Stone → Iron |
+| cave_mushroom, silk (web), bone | nature occupants | rows 3–4 | Hand |
+| ant_egg | ant_mound | ant colonies (col 0 & 3) | Shovel |
+
+### Bug-derived (from the species farmed/hunted in each region)
+| Material | From | Zones |
+|---|---|---|
+| honey, beeswax | bees | Bee Meadow (2,0), Meadow (1,0) |
+| silk | spiders, webs | Spider Vales (0,2 / 0,3), underground webs |
+| venom, stinger | wasps, scorpions, bees | Meadow (1,0), Wasp Thicket (2,2), Scorpion Rocks (1,2) |
+| chitin / carapace | beetles | forests, caverns |
+| ant_egg, formic acid | ants | Ant colonies (col 0 & 3) |
+
+*(The full bug-drop → item table lives in `economy/crafting.md`; this is the geographic key.)*
+
+**Starting-village basics:** the Village (2,1) and its immediate surrounds give only **wood, fiber, flowers,
+shallow stone & coal, and copper** — enough for tier-1 tools + basic furniture. Iron+, clay/sand artisan
+inputs, deeper ores, and bug-derived gear all require travelling to the regions above/below. This gating is
+the progression spine — paced in `economy/progression.md`.
 
 ---
 
@@ -415,7 +434,7 @@ Ground tiles fall into two categories:
 |------|-------|----------|-----------|-------|
 | grass | Meadow, Forest | Normal | No | Basic surface |
 | dirt | All | Normal | No | Paths, farmland base |
-| sand | Desert, Beach | Normal | No | |
+| sand | Desert, Beach | Normal | No | Decorative floor — NOT a material source; dig `sand_block` clumps for sand (see §1b) |
 | mud | Swamp | Slow | No | Reduces movement speed |
 | stone_path | Placed | Normal | Yes (pickaxe) | Player-built paths |
 | wood_floor | Placed | Normal | Yes (axe) | Player-built floors |
@@ -440,18 +459,19 @@ Embedded in solid tiles. Rarer ores found deeper into cliff (higher row numbers)
 
 | Tile | Rows | Tool | Tier | Drops |
 |------|------|------|------|-------|
-| ore_copper | 3-4 | Pickaxe | Wood | copper_ore ×1-2 |
-| ore_coal | 3-5 | Pickaxe | Wood | coal ×1-3 |
-| ore_iron | 3-5 | Pickaxe | Stone | iron_ore ×1-2 |
-| ore_silver | 4-5 | Pickaxe | Iron | silver_ore ×1-2 |
-| ore_gold | 4-5 | Pickaxe | Iron | gold_ore ×1-2 |
-| ore_platinum | 5 | Pickaxe | Gold | platinum_ore ×1 |
-| ore_diamond | 5 | Pickaxe | Platinum | diamond ×1 |
+| ore_copper | 3 | Pickaxe | Wood | copper_ore ×1-2 |
+| ore_coal | 3-4 | Pickaxe | Wood | coal ×1-3 |
+| ore_iron | 3-4 | Pickaxe | Stone | iron_ore ×1-2 |
+| ore_silver | 4 | Pickaxe | Iron | silver_ore ×1-2 |
+| ore_gold | 4 | Pickaxe | Iron | gold_ore ×1-2 |
+| ore_platinum | 4 (east cols) | Pickaxe | Gold | platinum_ore ×1 |
+| ore_diamond | 4 (east cols) | Pickaxe | Platinum | diamond ×1 |
 
-**Ore distribution by row:**
+**Ore distribution by row (rows 0–4 layout):**
 - Row 3 (cliff entrance): Copper, Coal, Iron (common)
-- Row 4 (mid-cliff): Iron, Coal, Silver, Gold
-- Row 5 (deep cliff): Gold, Platinum, Diamond (rare)
+- Row 4 (deep — now the deepest): Iron, Silver, Gold, **Platinum, Diamond** (rare) — the old row-5 ores
+  compress up here, concentrated in the harder **east columns** (col 2–3)
+- *(Row 5's dedicated rare-ore tier returns when row 5 is re-added)*
 
 **Column modifier:** Harder columns (2-3) have rarer ores appear slightly earlier.
 
@@ -705,12 +725,11 @@ The mining zone is fully pre-generated at design time:
 | Location | Typical Contents | Ores |
 |----------|------------------|------|
 | Row 3 (cliff entrance) | cave_mushroom, bone_pile, web, small caverns | Copper, Coal, Iron |
-| Row 4 (mid-cliff) | stalagmite, crystal_small, larger caverns | Iron, Silver, Gold |
-| Row 5 (deep cliff) | crystal_large, rare formations, boss areas | Gold, Platinum, Diamond |
-| Col 0 (Centipede) | Large open cavern, stalactites, glowworms, tunnels to surface | |
-| Col 1 (Passages) | Narrow tunnels, cave spiders, connecting routes | |
+| Row 4 (deep) | stalagmite, crystal_small/large, larger caverns, mini-boss chambers | Iron, Silver, Gold, Platinum, Diamond |
+| Col 0 (Ant Colony – intro) | Ant tunnels, ant_mound, chambers, Colony Queen mini-boss (row 4), tunnels to surface | |
+| Col 1 (Passages → Centipede Cavern) | Narrow tunnels + cave spiders (row 3); centipede cavern w/ stalactites + glowworms (row 4) | |
 | Col 2 (Underground River) | Water features, aquatic insects, wet cave floor | |
-| Col 3 (Ant Colony) | Ant tunnels, ant_mound, organized chamber structure, Queen in Row 5 | |
+| Col 3 (Deadly Ants) | Ant tunnels, ant_mound, organized chambers; outpost forages to the surface swamp | |
 
 No runtime spawning - everything is baked into the zone data.
 
@@ -987,7 +1006,7 @@ type WorldUpdateMessage struct {
 | Grid cell | 16×16 pixels |
 | Player | 48×32 pixels (3×2 cells) |
 | Layers | Ground + Occupant |
-| World layout | 6 rows × 4 cols: Surface (rows 0-2) + Underground (rows 3-5) |
+| World layout | **5 rows × 4 cols**: Surface (rows 0–2) + Underground (rows 3–4); row 5 deferred (see `economy/DECISIONS.md` D2) |
 | Difficulty | Easy/Medium west of river, Hard/Extra Hard east of river |
 | River | Separates Medium from Hard, becomes underground river at cliff |
 | Ground tiles | Floor (walkable) + Solid (breakable) |

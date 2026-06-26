@@ -31,9 +31,10 @@ REGISTRY = {
     "scene_village":                 ("surface", 2),
     "scene_butterfly_meadow":        ("surface", 3),
     "scene_meadow_forest_edge":      ("surface", 3),
-    "scene_underground_caverns":     ("underground", 3),
+    # NOTE: scenes that compose a REAL zone render to previews/zones/<zone>/scenes/ via their own
+    # build script (e.g. scene_mine_entrance / _mining_camp / _underground_caverns -> underground_passages_31).
+    # Only generic example scenes live here.
     "scene_underground_house":       ("underground", 3),
-    "scene_underground_mining_camp": ("underground", 3),
     "scene_ant_colony":              ("underground", 2),
     "scene_desert":                  ("desert", 3),
     "scene_road_angles":             ("tests", 4),
@@ -51,7 +52,7 @@ REGISTRY = {
     "scene_block_house":             ("tests", 4),
     "scene_block_mine":              ("tests", 4),
     "scene_block_tiling":            ("tests", 4),
-    "scene_catalog":                 ("tests", 3),
+    # scene_catalog removed — superseded by the data-driven content catalog (tools/previews.py).
 }
 
 
@@ -60,7 +61,8 @@ def zone_of(name):
 
 
 def preview_path(name):
-    return os.path.join(PREVIEWS, REGISTRY[name][0], f"{name}.png")
+    # Non-zone example/test scenes live under previews/examples/<theme>/ (zones get their own folder).
+    return os.path.join(PREVIEWS, "examples", REGISTRY[name][0], f"{name}.png")
 
 
 def render_one(name, lint=True):
@@ -81,18 +83,13 @@ def render_one(name, lint=True):
 
 
 def render_all(only=None):
-    """Renders every registered scene, then regenerates the gallery (index.html)."""
+    """Renders every registered example scene to previews/examples/<theme>/."""
     reports = {}
     for name in (only or REGISTRY):
         try:
             reports[name] = render_one(name)
         except Exception as e:
             print(f"  SKIP {name}: {str(e)[:140]}")
-    try:
-        from gallery import generate as _gallery
-        _gallery()
-    except Exception as e:
-        print(f"  gallery skipped: {e}")
     return reports
 
 
