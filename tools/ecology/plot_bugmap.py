@@ -9,8 +9,8 @@ Parses `SWARMSNAP day=.. sp=.. x=.. y=.. count=..` (server emitSwarmSnapshot) â†
 a contact-sheet grid. Also a `--reference` mode that draws just the backdrop (+ optional proposed points).
 
 Usage:
-  python3 tools/plot_bugmap.py --log <nakama.log> --zone village_21_B --out <dir>
-  python3 tools/plot_bugmap.py --reference --zone village_21_B --out file.png --mark "label:x,y" ...
+  python3 tools/ecology/plot_bugmap.py --log <nakama.log> --zone village_21_B --out <dir>
+  python3 tools/ecology/plot_bugmap.py --reference --zone village_21_B --out file.png --mark "label:x,y" ...
 """
 import argparse
 import glob
@@ -25,7 +25,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import Circle  # noqa: E402
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 SP = {  # species -> (colour, label)
     "fly_common": ("#d62728", "fly"), "butterfly_meadow": ("#ff7f0e", "butterfly"),

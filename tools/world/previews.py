@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Content CATALOG generator — the ONE command that rebuilds the "what's in the game" previews.
 
-    python3 tools/previews.py            # rebuild the whole catalog
+    python3 tools/world/previews.py            # rebuild the whole catalog
 
 Output (plain PNGs in folders — browse them in a file explorer, no html, no registry):
 
@@ -23,7 +23,7 @@ import sys
 
 from PIL import Image, ImageDraw, ImageFont
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RES = os.path.join(ROOT, "BugFarmerClient", "Assets", "Resources")
 DATA = os.path.join(ROOT, "nakama", "data")
 OUT = os.path.join(ROOT, "tools", "_generated", "previews", "catalog")

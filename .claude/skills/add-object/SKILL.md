@@ -42,19 +42,19 @@ merges by id, so any object file works; pick the intuitive one):
 
 ## 3. Publish data to the client
 ```bash
-python3 tools/publish_entities.py
+python3 tools/data/publish_entities.py
 ```
 
 ## 4. Generate + clean
 ```bash
-python3 tools/gen_sprites.py --source <placeables|occupants|items|terrain> --keys <id> --dry-run  # read the prompt, no spend
-python3 tools/gen_sprites.py --source <...> --keys <id>      # generate
-python3 tools/pixelclean.py                                  # downscale + quantize in place (Tiles+Objects)
+python3 tools/sprites/gen_sprites.py --source <placeables|occupants|items|terrain> --keys <id> --dry-run  # read the prompt, no spend
+python3 tools/sprites/gen_sprites.py --source <...> --keys <id>      # generate
+python3 tools/sprites/pixelclean.py                                  # downscale + quantize in place (Tiles+Objects)
 ```
 **Item icons clean differently** — opt-in per key, harder quantize (a bare `pixelclean.py`
 run never touches `Items/`, which holds finished icons a re-clean would mangle):
 ```bash
-python3 tools/pixelclean.py --k 8 --items <id1,id2>
+python3 tools/sprites/pixelclean.py --k 8 --items <id1,id2>
 ```
 
 ## 5. Preview
@@ -71,7 +71,7 @@ PNG, and run the acceptance check.
   sprite is the in-hand swing art (`PlayerToolAnimator`). Say it in the look ("...HANDLE running to
   the bottom-left"). Watering cans are the 3/4-view exception.
 - **Tool TIERS are recolors, not generations**: author + generate only the `{family}_wood` base, then
-  `python3 tools/recolor_sprites.py --family <family>` derives every `{family}_{tier}` in items.json
+  `python3 tools/sprites/recolor_sprites.py --family <family>` derives every `{family}_{tier}` in items.json
   (material ramps live inline in that script). Adding a new tier = items.json entry + re-run recolor.
 
 ## Acceptance checklist (per sprite)

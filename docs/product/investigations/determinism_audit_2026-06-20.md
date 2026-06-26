@@ -46,7 +46,7 @@
 >
 > **Proof (fixed, self-tested harness):** co-located AND genuinely-disjoint spawn-apart late-joins are
 > bit-identical — 0 divergent shared-bug states AND 0 per-tick hash mismatches (`tools/run_sync_latejoin.sh`
-> via `tools/sync_diff.py`, unit-tested by `tools/test_sync_diff.py`); `tools/sim-determinism` PASS. The one
+> via `tools/netcode/sync_diff.py`, unit-tested by `tools/netcode/test_sync_diff.py`); `tools/sim-determinism` PASS. The one
 > remaining residual (#127, a reproduced bug at a late-join boundary) is a rare self-healing transient,
 > tracked separately. The sections below are the (re-validated) MECHANISM MAP that motivated the fixes.
 

@@ -35,7 +35,7 @@ time (you end up building every feature twice). For every feature:
   Art prompts are DATA: `tools/art/style.json` (global look) + `tools/art/catalog/*.json` (per-item).
   Zone/scene authoring: `tools/zonegen/` (builder + `features/` primitives + `scenes/`). Previews are
   plain PNG folders under `tools/_generated/previews/` (browse in a file explorer — no html):
-  `catalog/<group>/` = every in-game object by category (rebuild: `python3 tools/previews.py`, generated
+  `catalog/<group>/` = every in-game object by category (rebuild: `python3 tools/world/previews.py`, generated
   from entity data so it can't drift); `zones/<zone>/` = each zone's full render + region crops + its
   composing `scenes/`. `tools/README.md` is the map of every script + where outputs go.
 - `docs/` — `product/` (how the game works, incl. the GDD `game_design.md`) and `guides/`
@@ -56,7 +56,7 @@ time (you end up building every feature twice). For every feature:
 - Entity data is **canonical** in `nakama/data/entities/{occupants,placeables,items,crops}.json`
   — the Go server and every Python tool read only from there.
 - The client's `Assets/Resources/Data/entities/` is **published output** — never hand-edit it;
-  run `python3 tools/publish_entities.py` after editing the canonical JSON.
+  run `python3 tools/data/publish_entities.py` after editing the canonical JSON.
 
 ## Hard rules (the gotchas that bite)
 - **Don't resize sprites by hand.** The runtime NEAREST-scales to `sprite_w × sprite_h`;
@@ -74,10 +74,10 @@ time (you end up building every feature twice). For every feature:
 
 ## Common commands
 ```bash
-python3 tools/publish_entities.py                  # canonical entity JSON -> client (run after editing)
-python3 tools/gen_sprites.py --keys <key> --dry-run # preview the prompt, no API spend
-python3 tools/gen_sprites.py --keys <key>           # generate (default source = placeables.json)
-python3 tools/pixelclean.py                         # clean sprites in place under Resources/
+python3 tools/data/publish_entities.py                  # canonical entity JSON -> client (run after editing)
+python3 tools/sprites/gen_sprites.py --keys <key> --dry-run # preview the prompt, no API spend
+python3 tools/sprites/gen_sprites.py --keys <key>           # generate (default source = placeables.json)
+python3 tools/sprites/pixelclean.py                         # clean sprites in place under Resources/
 python3 tools/make_scene.py                         # render tools/_generated/previews/scene.png
 ```
 

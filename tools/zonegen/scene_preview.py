@@ -3,7 +3,7 @@
 
 A scene file declares `PREVIEW = "<folder>"` (e.g. "examples/buildings" or "zones/village_21_B/scenes")
 and optionally `SCALE`. This module computes the output path from that and renders — used by each scene's
-`__main__` AND by `tools/previews.py` (which discovers + renders them all). No registry, no hand-typed
+`__main__` AND by `tools/world/previews.py` (which discovers + renders them all). No registry, no hand-typed
 output paths: the scene declares where it goes, in one place. See docs/guides/authoring/ORGANIZATION.md.
 """
 import importlib

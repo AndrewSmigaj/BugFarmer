@@ -665,7 +665,7 @@ stall. Fix: clear `PendingInfluence` in the empty-reset (and defensively in the 
 next client always gets a clean stream from seq 0.
 
 ### 11.4 Test/dev knobs
-Test zones are ordinary zones authored by `tools/make_test_zone.py`; the zone config is the single
+Test zones are ordinary zones authored by `tools/world/make_test_zone.py`; the zone config is the single
 source of truth (`static` = no spawn/merge/split, `swarm_size` = fixed count, `seed` = fixed world
 seed). There is no separate `debug_mode` flag or `species_debug.json` anymore.
 

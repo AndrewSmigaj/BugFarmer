@@ -7,7 +7,7 @@ food is consumed. The player can walk in through the gate, pick up fruit, and de
 compost bin (right-click) to sustain the colony.
 
   python3 tools/zonegen/scenes/zone_repro_test.py     # build + save + lint
-  python3 tools/view_world.py repro_test              # pixel overview
+  python3 tools/world/view_world.py repro_test              # pixel overview
 """
 import os
 import sys

@@ -26,7 +26,7 @@ for k,v in lights.items():
 json.dump(d,open(p,'w'),indent=2)
 print('light blocks added:', ', '.join(done))
 PY
-python3 tools/publish_entities.py | tail -1
+python3 tools/data/publish_entities.py | tail -1
 
 echo "=== 2. Go unit tests (incl. tree water gating) ==="
 sh tools/run_go_tests.sh | tail -22

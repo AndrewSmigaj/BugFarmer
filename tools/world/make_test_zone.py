@@ -13,13 +13,13 @@ production-like load (e.g. to reproduce a load-sensitive sync bug), just raise
 Examples
 --------
   # default: the canonical sim_test zone (3x3 chunks, 1 fly swarm of 2 bugs)
-  python3 tools/make_test_zone.py
+  python3 tools/world/make_test_zone.py
 
   # scale up to 39 swarms to approach village_21 load
-  python3 tools/make_test_zone.py --initial 39 --max 39
+  python3 tools/world/make_test_zone.py --initial 39 --max 39
 
   # a bigger arena with a plant in it
-  python3 tools/make_test_zone.py --zone-id sim_farm --chunks-w 4 --chunks-h 4 \
+  python3 tools/world/make_test_zone.py --zone-id sim_farm --chunks-w 4 --chunks-h 4 \
       --occupant compost_pile@70,70
 
 Output: nakama/data/zones/<zone-id>/zone.json + chunk_X_Y.json (one per chunk).

@@ -23,4 +23,4 @@ we learn.
 ## Notes
 - `--no-ff` for merges to `main` leaves a visible integration commit (clearer history).
 - Optional future hardening (not enforced yet): a git pre-push hook running the fast gates
-  (`python3 tools/test_sync_diff.py` + `go test ./world/`).
+  (`python3 tools/netcode/test_sync_diff.py` + `go test ./world/`).

@@ -52,8 +52,8 @@ sole sanctioned exception is join-time bootstrap hydration the snapshot+events i
    can't see its divergence.
 7. **Verify** (test-changes skill): `go test ./world/`; `tools/sim-determinism`; fresh-match
    `FRESH=1 tools/run_sync_latejoin.sh` co-located AND `SPAWN_A=126,2 SPAWN_B=126,253` disjoint spawn-apart
-   → must be `SYNC: IDENTICAL` (0 bug + 0 hash divergence). The diff is `tools/sync_diff.py` (unit-tested by
-   `tools/test_sync_diff.py`).
+   → must be `SYNC: IDENTICAL` (0 bug + 0 hash divergence). The diff is `tools/netcode/sync_diff.py` (unit-tested by
+   `tools/netcode/test_sync_diff.py`).
 
 ## Worked reference patterns (copy these shapes)
 - **New zone-wide input + readiness gate** — `OCCUPANT_BLOCKS_BUGS` + `OpCodeZoneCollisionMap` (Phase 1b):

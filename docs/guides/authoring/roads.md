@@ -76,7 +76,7 @@ ONCE after ALL roads (before buildings):
 - Every stair-step corner (a grass cell whose N/S + E/W neighbors are both road of one
   material) gets a **45° diagonal transition tile** (`stone_path_d_ne` …
   `dirt_path_d_sw` — composited from the two real tile PNGs by
-  `tools/make_diagonal_tiles.py`, so they match both materials by construction).
+  `tools/sprites/make_diagonal_tiles.py`, so they match both materials by construction).
 - It also HEALS POTHOLES: `edge_tile` fraying on a wobbling centerline leaves dirt
   specks that end up interior to the stone band — any dirt path cell with ≥3 stone
   road neighbors is repaved (the checkered-road lint's inverse).

@@ -10,7 +10,7 @@ with materials via the F8 debug "give crafting kit" button, then:
   - compost_bin: still works (deterministic food path — untouched by crafting)
 
   python3 tools/zonegen/scenes/zone_crafting_test.py   # build + save + lint
-  python3 tools/view_world.py crafting_test            # pixel overview
+  python3 tools/world/view_world.py crafting_test            # pixel overview
 """
 import os
 import sys

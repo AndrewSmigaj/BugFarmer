@@ -12,8 +12,8 @@ This reads them, writes tidy CSVs, and draws: per-species server-CPU by sub-phas
 driver); the global per-tick passes + broadcast bytes; and — the key chart — CPU-per-bug vs. average
 swarm size, which shows fewer/fatter swarms cost proportionally less per visible bug.
 
-  python3 tools/plot_perf.py --tag perf               # last run from `docker compose logs`
-  python3 tools/plot_perf.py --log run.log --tag perf  # parse a captured log file instead
+  python3 tools/ecology/plot_perf.py --tag perf               # last run from `docker compose logs`
+  python3 tools/ecology/plot_perf.py --log run.log --tag perf  # parse a captured log file instead
 
 Outputs (under tools/_generated/ecology_charts/):
   perf_log_<tag>.csv   day,species,swarms,bugs,cpu_food_us,cpu_pred_us,cpu_action_us,food_calls,pred_thinks,legs
@@ -40,7 +40,7 @@ KV_RE = re.compile(r"(\w+)=(\d+)")
 
 
 def _repo_root():
-    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def get_log_text(args):

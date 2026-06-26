@@ -2,7 +2,7 @@
 """Canonical cross-client sync diff for the headless 2-client determinism harness.
 
 SINGLE SOURCE OF TRUTH shared by tools/run_sync_test.sh + tools/run_sync_latejoin.sh, and unit-tested by
-tools/test_sync_diff.py — because the test harness is load-bearing and "tests have no tests".
+tools/netcode/test_sync_diff.py — because the test harness is load-bearing and "tests have no tests".
 
 Input: two TickTraceBuffer CSV dumps (BugFarmerClient .../Debug/TickTraceBuffer.cs). Each file is:
     # State hashes per tick ...

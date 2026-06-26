@@ -71,7 +71,7 @@ sprinklers/soil-fertility/crop-yield are ordinary shared state (outside the lock
 with the `test-changes` skill (drift detector / trace-diff for positions; harness for ledger + reconnect).
 
 ## Bug Lab world (the iteration engine — DONE, P1)
-`nakama/data/zones/bug_lab/` (zonegen via `tools/make_bug_lab.py`): a fenced pen per AI species
+`nakama/data/zones/bug_lab/` (zonegen via `tools/ecology/make_bug_lab.py`): a fenced pen per AI species
 (fly+compost+trees, butterfly+milkweed+flowers, wasp, centipede; millipede/aphid pens added with those
 species) + an open arena. WorldMenu "Bug Lab"; F8 "Stock Bug Lab" loadout (100 fruit + 10 of each species);
 multi-species F5 graph + F4 markers.

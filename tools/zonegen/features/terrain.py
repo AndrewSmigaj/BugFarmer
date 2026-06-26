@@ -7,7 +7,7 @@ import random
 
 
 # Road material -> its diagonal-transition tile family (made by
-# tools/make_diagonal_tiles.py; ids carry "path" so load() classifies them).
+# tools/sprites/make_diagonal_tiles.py; ids carry "path" so load() classifies them).
 _DIAG_FAMILY = {"stone_path": "stone_path_d", "dirt": "dirt_path_d"}
 
 

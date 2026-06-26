@@ -417,7 +417,7 @@ namespace BugFarmer.SyncHarness
             }
             if (_popSeries.Count > 0)
             {
-                // Per-species CSV for tools/plot_fly_counts.py: tick,<species…>,total_bugs
+                // Per-species CSV for tools/ecology/plot_fly_counts.py: tick,<species…>,total_bugs
                 var csvPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "fly_counts.csv");
                 var cols = new List<string>(_speciesSeen);
                 var sb = new StringBuilder("tick,").Append(string.Join(",", cols)).Append(",total_bugs\n");
@@ -429,7 +429,7 @@ namespace BugFarmer.SyncHarness
                     sb.Append(',').Append(total).Append('\n');
                 }
                 System.IO.File.WriteAllText(csvPath, sb.ToString());
-                Log($"POPULATION series: {_popSeries.Count} samples -> {csvPath} (plot with tools/plot_fly_counts.py)");
+                Log($"POPULATION series: {_popSeries.Count} samples -> {csvPath} (plot with tools/ecology/plot_fly_counts.py)");
 
                 // Weather spans for the chart overlay (rain/drought windows on the same tick x-axis).
                 if (_curWeather != "" && _curWeatherStart >= 0)

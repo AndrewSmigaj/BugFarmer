@@ -1,6 +1,6 @@
 # Ecology tuning charts
 
-Output of the bug-ecology tuning harness (`tools/run_config.py`). **Organized per ZONE**, because tuning is
+Output of the bug-ecology tuning harness (`tools/ecology/run_config.py`). **Organized per ZONE**, because tuning is
 per-zone (each zone has its own species mix, food, and spawn config). See the **`ecology-tuning` skill**
 (`.claude/skills/ecology-tuning/`) for the full workflow; this file just explains the layout.
 

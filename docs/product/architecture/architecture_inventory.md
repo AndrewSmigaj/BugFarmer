@@ -476,7 +476,7 @@ leftover hand-built pieces. Layout = EDGE DOCKS (bugs left; equipment
 strip + item storage + coins right) so the screen CENTER stays open world —
 the camera keeps the real player visible while you equip. `UIFactory` holds
 the style block + sprite loader (9-slice borders passed to Sprite.Create;
-art from tools/ui_sprites.py in Resources/UI/).
+art from tools/sprites/ui_sprites.py in Resources/UI/).
 ARMOR (cosmetic + synced): PlayerState.Equipment[7] server-side; OpCode 96
 EquipArmor{equip_slot, inv_slot} (swap-safe), OpCode 97 EquipmentUpdate
 echo/join-sync, EntityData.eqa per tick; client mirrors in

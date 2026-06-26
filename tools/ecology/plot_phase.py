@@ -12,7 +12,7 @@ and renders, for each consumer↔resource pair we care about, BOTH:
         inward spiral = damping to a flat fixed point
         outward       = a crash/runaway (food never bounds it)
 
-Usage:  python3 tools/plot_phase.py --log tools/_generated/ecology_charts/nakama_<tag>.log --tag <tag>
+Usage:  python3 tools/ecology/plot_phase.py --log tools/_generated/ecology_charts/nakama_<tag>.log --tag <tag>
 Output: tools/_generated/ecology_charts/phase_<tag>.png   (soft observation only; nothing is hashed)
 """
 import argparse
@@ -23,7 +23,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-CHARTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_generated", "ecology_charts")
+CHARTS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "_generated", "ecology_charts")
 
 # Which population is bounded by which food stock — the pairs we tune in isolation (plan §Method).
 # (species_id, food_key, human label for the food axis)

@@ -12,13 +12,13 @@ One-glance view: the dashboard. System of record for the determinism rules: `arc
 
 ## 1. Run a profiled session
 ```bash
-python3 tools/run_config.py <tag> --zone village_21_B --duration 600
+python3 tools/ecology/run_config.py <tag> --zone village_21_B --duration 600
 ```
 ~600 s ≈ 8 game-days, `profile:True` injected, restarts nakama, runs the harness, emits PERFSTATS/PERFSYS,
 charts everything, files into `tools/_generated/ecology_charts/<zone>/archive/<ts>_<tag>/`, refreshes
 `<zone>/current/`, and (re)builds **`<zone>/current/index.html`** — the dashboard. **Open that in a browser**
 (it embeds perf + population + interactions + phase + bugmap). For just a re-chart of an existing log:
-`python3 tools/plot_perf.py --log <run.log> --tag <tag>` (or `--since 10m` from docker logs).
+`python3 tools/ecology/plot_perf.py --log <run.log> --tag <tag>` (or `--since 10m` from docker logs).
 
 ## 2. Read the perf chart (top-to-bottom)
 - **Per-species CPU panels** — stacked `food`/`pred`/`action` µs/day + legs/bugs overlay. Which species + phase dominates?

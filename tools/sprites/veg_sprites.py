@@ -9,12 +9,12 @@ Outputs: Resources/Objects/plant_{veg}_stage{N}.png (+ plant_{veg}.png base
 fallback = stage3), Resources/Items/{veg}.png + seed_{veg}_icon.png.
 Preview -> tools/_generated/previews/veg/stages.png
 
-Run: python3 tools/veg_sprites.py
+Run: python3 tools/sprites/veg_sprites.py
 """
 import os
 import sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, HERE)
 from player_sprites import pixkit  # noqa: E402
 

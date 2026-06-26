@@ -32,17 +32,17 @@ saves into `Resources/`, and patches the `.meta` to pixel-art import settings
 
 ```bash
 # Preview the prompt only, no API spend:
-python3 tools/gen_sprites.py --keys table_wood --dry-run
+python3 tools/sprites/gen_sprites.py --keys table_wood --dry-run
 
 # Generate specific keys (default source = placeables.json):
-python3 tools/gen_sprites.py --keys table_wood,chair_wood
+python3 tools/sprites/gen_sprites.py --keys table_wood,chair_wood
 
 # Generate a whole category:
-python3 tools/gen_sprites.py --category furniture
+python3 tools/sprites/gen_sprites.py --category furniture
 
 # Other sources: occupants, items, terrain (tiles):
-python3 tools/gen_sprites.py --source items --keys wood,fiber
-python3 tools/gen_sprites.py --source terrain --keys grass --variants 3
+python3 tools/sprites/gen_sprites.py --source items --keys wood,fiber
+python3 tools/sprites/gen_sprites.py --source terrain --keys grass --variants 3
 ```
 
 Key flags: `--source {placeables,occupants,items,terrain}`, `--category`, `--keys`,
@@ -96,9 +96,9 @@ under `Resources/{Objects,Tiles}` (single source of truth — no side directory 
 3. **De-vignette** (flat-field) opaque tiles so they copy seam-free.
 
 ```bash
-python3 tools/pixelclean.py                  # clean all tiles + objects
-python3 tools/pixelclean.py --shared         # one shared palette (more cohesive)
-python3 tools/pixelclean.py --compare bookshelf,fireplace   # write a before/after PNG
+python3 tools/sprites/pixelclean.py                  # clean all tiles + objects
+python3 tools/sprites/pixelclean.py --shared         # one shared palette (more cohesive)
+python3 tools/sprites/pixelclean.py --compare bookshelf,fireplace   # write a before/after PNG
 ```
 
 Re-running is safe/idempotent (the BOX downscale to the same target size and the
@@ -133,7 +133,7 @@ is a *latent* bug: it only fires the first time the sprite is actually placed in
 
 **After adding/copying ANY sprite into `Resources/Objects` or `Resources/Items`:**
 ```bash
-python3 tools/fix_sprite_ppu.py        # normalizes every .png.meta to PPU 16
+python3 tools/sprites/fix_sprite_ppu.py        # normalizes every .png.meta to PPU 16
 ```
 **Item display sprites are unified** (`EntityDatabase.GetItemSprite`): the resolution chain is
 `Objects/{icon_from}` → `Objects/{id}` → `Items/{id}_icon` → `Items/{id}` — an item WITH world
@@ -144,7 +144,7 @@ fit-boxes drops to ≤0.75 cell preserving aspect.
 **Tool/weapon icon contract:** one **16×16-logical DIAGONAL sprite per tool family** — grip
 bottom-left, head top-right — because the same sprite is the inventory icon AND the in-hand
 swing art (`PlayerToolAnimator` rotates it; the diagonal reads correctly through the arc).
-Tiers are PALETTE RECOLORS of the family's wood base (`tools/recolor_sprites.py`, ramps
+Tiers are PALETTE RECOLORS of the family's wood base (`tools/sprites/recolor_sprites.py`, ramps
 measured from the existing same-shape tier sets in Items/), not separate generations.
 Watering cans are the one non-diagonal exception (3/4 view). Seed icons are APICO-style
 paper SEED PACKETS.
@@ -152,10 +152,10 @@ paper SEED PACKETS.
 **Icon workflow** (catalog rows take `"family": "icon"` — the item-icon prompt family in
 `style.json`; `pixelclean --items` is OPT-IN so a bare run can never mangle finished icons):
 ```bash
-python3 tools/gen_sprites.py --source items --keys <ids> [--force]
-python3 tools/pixelclean.py --k 8 --items <ids>          # 32px, 8-color quantize
-python3 tools/recolor_sprites.py --family pickaxe        # derive {family}_{tier} icons
-python3 tools/fix_sprite_ppu.py                          # AFTER Unity has imported once
+python3 tools/sprites/gen_sprites.py --source items --keys <ids> [--force]
+python3 tools/sprites/pixelclean.py --k 8 --items <ids>          # 32px, 8-color quantize
+python3 tools/sprites/recolor_sprites.py --family pickaxe        # derive {family}_{tier} icons
+python3 tools/sprites/fix_sprite_ppu.py                          # AFTER Unity has imported once
 ```
 The recolor's head zone is GEOMETRIC (top-right of the diagonal) — `--head-frac` tightens it,
 `--tolerance` widens ramp matching (the shovel's pale blade needed `--tolerance 140
@@ -190,8 +190,8 @@ needs its own runtime copy under `Resources/Data/entities/`, which is **publishe
 never hand-edit it**:
 
 ```bash
-python3 tools/publish_entities.py            # one-way copy canonical -> client
-python3 tools/publish_entities.py --check    # report drift, exit non-zero (CI/sanity)
+python3 tools/data/publish_entities.py            # one-way copy canonical -> client
+python3 tools/data/publish_entities.py --check    # report drift, exit non-zero (CI/sanity)
 ```
 
 ---
@@ -205,8 +205,8 @@ python3 tools/publish_entities.py --check    # report drift, exit non-zero (CI/s
    grounded objects, `c` = centered).
 3. If the silhouette isn't obvious from the name, add an `OBJECT_DESC` (and `OBJECT_MATS`
    if materials are non-default) entry in `gen_sprites.py`.
-4. `python3 tools/publish_entities.py` to push the data to the client.
-5. `python3 tools/gen_sprites.py --keys <key>` then `python3 tools/pixelclean.py`.
+4. `python3 tools/data/publish_entities.py` to push the data to the client.
+5. `python3 tools/sprites/gen_sprites.py --keys <key>` then `python3 tools/sprites/pixelclean.py`.
 6. `python3 tools/make_scene.py` and confirm the sprite reads correctly and sits on-grid.
 
 ## Acceptance checklist (per sprite)

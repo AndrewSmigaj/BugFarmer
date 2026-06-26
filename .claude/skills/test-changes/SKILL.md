@@ -56,13 +56,13 @@ minutes; the chart x-axis is GAME-TIME (`tick/SimRate`) so 6× and normal-speed 
 The harness records a per-species population series and writes `fly_counts.csv` to the **temp dir at run
 END** (not live). Full loop:
 ```bash
-python3 tools/make_bug_lab.py                                   # (re)author the lab zone (pens + predator-prey arenas)
+python3 tools/ecology/make_bug_lab.py                                   # (re)author the lab zone (pens + predator-prey arenas)
 docker compose build builder && docker compose up -d --force-recreate nakama   # server-CODE change: recompile plugin
 #   …OR just `docker compose restart nakama` if you ONLY edited bug_lab DATA (zone.json is read at startup)
 rm -f /tmp/fly_counts.csv
 ~/.dotnet/dotnet run --project tools/sync-harness -- --zone bug_lab --duration 150 --tag eco   # see below: 150s ≈ 8.5 game-days
-python3 tools/plot_fly_counts.py /tmp/fly_counts.csv <chart_name> "<Title>"   # → tools/_generated/ecology_charts/<chart_name>.png
-python3 tools/plot_interactions.py --tag <chart_name> --since 10m            # the "WHY": births-by-source / deaths-by-cause
+python3 tools/ecology/plot_fly_counts.py /tmp/fly_counts.csv <chart_name> "<Title>"   # → tools/_generated/ecology_charts/<chart_name>.png
+python3 tools/ecology/plot_interactions.py --tag <chart_name> --since 10m            # the "WHY": births-by-source / deaths-by-cause
 ```
 - **WHY a population is off-target (interaction log):** the server emits one `ECOSTATS day=N sp=… pop=…
   b_*=… d_*=… avg_sat=…` line per species + `PREDLOG …` per predator-prey pair at each game-day rollover
@@ -103,7 +103,7 @@ python3 tools/plot_interactions.py --tag <chart_name> --since 10m            # t
 - **Read the shape**, not just survival: predators should PERSIST (not crash to 0 in ~60s — the old
   spawn-at-0-satiation bug), populations should OSCILLATE in-band (a flat line pinned at a cap = dead
   dynamics), and `total` should stay under the hard `max_population` caps. The lab layout (per-species
-  pens + the wasp/centipede predator-prey-detritivore arenas) is authored in `tools/make_bug_lab.py`.
+  pens + the wasp/centipede predator-prey-detritivore arenas) is authored in `tools/ecology/make_bug_lab.py`.
 - **Master dials** (the tuning knobs): food regen (`nectarRegenPerTick`/`hostRegenPerTick` in
   `handlers_farming.go`), flower/tree density + Director bands in `make_bug_lab.py`'s `MAX_POP`/`DIRECTOR`.
 - Per-species live overlay in-game is DebugOverlay **F5**; this headless loop is the persistent record.

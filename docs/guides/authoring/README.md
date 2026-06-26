@@ -28,7 +28,7 @@ The system is **four parts**, each with one home:
    (`features/tilemap.stamp`/`dump`) — reasoned cell-by-cell, not by guessing coordinates.
 4. **`b.lint()` is the QA gate** — it returns TEXT defect strings (door blocked, wall/door/window height
    mismatch, fence/wall on path/water, wall/fence on a road TILE, dirt potholes inside stone roads,
-   spawn circles mostly over water). `tools/previews.py` prints it per scene. `place_occupant` additionally
+   spawn circles mostly over water). `tools/world/previews.py` prints it per scene. `place_occupant` additionally
    warns AT PLACEMENT when a building lands on road surface (lint can't see it later — the mask is
    overwritten). Rule: **verify in TEXT (lint + `dump`), then look at a rendered crop** — never call it
    good off a giant PNG. (`validate()` is the older bare overlap check; `lint()` supersedes it.) The one
@@ -37,20 +37,20 @@ The system is **four parts**, each with one home:
 
 ```bash
 python3 tools/zonegen/scenes/<scene>.py     # build + render ONE scene to its preview PNG + print lint
-python3 tools/previews.py                    # rebuild the content CATALOG + ALL scene previews
+python3 tools/world/previews.py                    # rebuild the content CATALOG + ALL scene previews
 ```
 
 > **Where previews live** — the rule is [ORGANIZATION.md](ORGANIZATION.md). `tools/_generated/previews/`
 > has exactly four folders (browse them — no html, no registry):
 > - `catalog/<category>/` — every in-game object, by category. Each group has a `_sheet.png` (all at a
->   glance) **and** every object as its own `<id>.png`. Generated from entity data by `tools/previews.py`,
+>   glance) **and** every object as its own `<id>.png`. Generated from entity data by `tools/world/previews.py`,
 >   so it always matches what's in the game.
 > - `examples/<feature>/` — reusable technique demos (`buildings/`, `blocks/`, `roads/`, `water/`, …).
 > - `zones/<zone>/` — a zone's `full.png` + region crops + a `scenes/` folder of the vignettes that
 >   compose it (e.g. `zones/underground_passages_31/scenes/{mine_entrance,underground_caverns,underground_mining_camp}.png`).
 > - `player/` — player sprites + animations.
 >
-> Each scene declares its destination in a `PREVIEW = "..."` constant; `tools/previews.py` discovers and
+> Each scene declares its destination in a `PREVIEW = "..."` constant; `tools/world/previews.py` discovers and
 > renders them all (one render path, no hand-typed output paths). (The old html gallery + registry were removed.)
 
 ## From scenes to a real ZONE (the full pipeline)
@@ -63,12 +63,12 @@ A **scene** is a small render-only vignette; a **ZONE** is the 256×256 world th
    add organic terrain (`lake`/`forest`/`rock_patch`), extend roads to the edges, set `Z.bug_spawning`,
    then `Z.save()` → `nakama/data/zones/<id>/` (size must be a multiple of 32; `save()` writes row/col 0,0
    so patch them after for real zones).
-4. **View the whole zone** — `python3 tools/view_world.py <zone>` → `tools/_generated/previews/maps/<zone>_detail.png`
+4. **View the whole zone** — `python3 tools/world/view_world.py <zone>` → `tools/_generated/previews/maps/<zone>_detail.png`
    (a north-up colour minimap; it reads the SAVED chunks, so save first).
 5. **Test in-game (no Unity needed)** — `run-backend` skill to start the server, then the sync-harness
    joins the zone and verifies it loads + ticks + spawns (see `tools/sync-harness/`).
 
-**Quick mechanic-test zones:** `python3 tools/make_test_zone.py --zone-id <id> --species <s> --occupant 'id@x,y' …`
+**Quick mechanic-test zones:** `python3 tools/world/make_test_zone.py --zone-id <id> --species <s> --occupant 'id@x,y' …`
 builds a tiny deterministic zone with a bug spawn + placed occupants — for isolating one mechanic.
 **Spawning gotcha:** only species DEFINED in `nakama/data/species.json` spawn (currently
 `fly_common`, `butterfly_meadow`, `wasp_common`, `centipede_garden`); `bugs.json` ids that
@@ -81,7 +81,7 @@ lack a species spec silently don't spawn.
   QA gate), `place_player`/`place_bug` (render-only dressing), `save()`/`load()`.
 - `render.py` — `render_builder(b, out, scale, bounds=None)`: builder → full-art preview PNG.
 - `scene_preview.py` — the ONE render path: a scene declares `PREVIEW`/`SCALE`; this renders it to the
-  right folder. `tools/previews.py` discovers + renders every scene (and the content catalog).
+  right folder. `tools/world/previews.py` discovers + renders every scene (and the content catalog).
 - `features/` — the primitives (one guide each, below): `tilemap` (text-grid stamp/dump), `terrain`
   (`lake`/`forest`/`pond`/`rock_patch`/`path`/`stream`), `scatter`, `garden`, `yard`, `room`, `house`,
   `village`, `furniture`, `cave`.

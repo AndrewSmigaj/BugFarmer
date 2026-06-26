@@ -4,7 +4,7 @@ clearing, its main road extended out to the zone edges (so it connects to neighb
 the surrounding land filled — a perimeter forest belt, meadow ring, scattered woods and ponds.
 
 Run directly to BUILD + save() the zone to nakama/data/zones/village_21, then view the whole-zone
-pixel overview with:  python3 tools/view_world.py village_21
+pixel overview with:  python3 tools/world/view_world.py village_21
 """
 import os
 import sys

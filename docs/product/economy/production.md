@@ -29,7 +29,7 @@ cooking_pot — already in `placeables.json`). These are pure data.
 - **Tier template (kills repetition):** for each metal tier, (1) `recolor_sprites.py --family <fam>` mints the
   icons from the base, (2) a small generator expands the bar→tool/armor recipes from `crafting.md §1`'s
   formula — so a tier is ~one command + one data block, not 15 hand-written rows.
-- **Canonical data home:** edit `nakama/data/entities/*.json`, then `python3 tools/publish_entities.py`. Décor
+- **Canonical data home:** edit `nakama/data/entities/*.json`, then `python3 tools/data/publish_entities.py`. Décor
   bonus VALUES are NOT authored until the §11.5 field ships — only the bonus TYPE tag.
 
 ## 3. Build waves (each bounded, shippable, verifiable)

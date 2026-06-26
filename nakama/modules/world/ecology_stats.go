@@ -46,7 +46,7 @@ const (
 )
 
 // allBirthSources / allDeathCauses fix the column order so every ECOSTATS line has the same fields
-// (0 when nothing happened) — trivial for tools/plot_interactions.py to parse into a CSV.
+// (0 when nothing happened) — trivial for tools/ecology/plot_interactions.py to parse into a CSV.
 var allBirthSources = []BirthSource{BirthBrood, BirthNest, BirthReproduce, BirthReseed, BirthSpawn}
 var allDeathCauses = []DeathCause{DeathOldAge, DeathStarve, DeathPredation, DeathCull}
 
@@ -102,7 +102,7 @@ func (s *EcologyStats) reset() {
 // emitEcologyStats logs one structured ECOSTATS line per species (current pop + avg satiation from the
 // live swarms + the day's births/deaths) and one PREDLOG line per predator→prey pair, then resets. The
 // species set is the union of everything seen this day (births/deaths/predation) ∪ live swarms, sorted
-// for stable output. Flat key=val so a grep+regex in tools/plot_interactions.py parses it directly.
+// for stable output. Flat key=val so a grep+regex in tools/ecology/plot_interactions.py parses it directly.
 func (m *Match) emitEcologyStats(state *WorldState, day int64, logger runtime.Logger) {
 	if state.Stats == nil {
 		return
@@ -190,7 +190,7 @@ func (m *Match) emitEcologyStats(state *WorldState, day int64, logger runtime.Lo
 // reading them next to ECOSTATS tells us whether a population is breeding-substrate-STARVED (e.g. flies
 // well-fed but b_brood low because `rotten` is tiny) vs. genuinely food-bounded. SOFT STATE, never hashed
 // (it only sums existing soft stocks — ground items / forage pools / host plants). Paired with
-// tools/plot_phase.py to plot population-vs-its-food (closed loop = alive cycle).
+// tools/ecology/plot_phase.py to plot population-vs-its-food (closed loop = alive cycle).
 //
 // Fields: rotten = ready fly/detritivore substrate (rotted ground food, FoodValue>0, NOT carrion);
 // unripe = the rot-pipeline backlog (dropped fruit not yet rotted); carrion = bug carcasses (beetle/
@@ -234,7 +234,7 @@ func (m *Match) emitResourceStats(state *WorldState, day int64, logger runtime.L
 }
 
 // emitSwarmSnapshot logs one SWARMSNAP line per live swarm once per game-day — species + world position +
-// size — so tools/plot_bugmap.py can render a top-down bug-distribution map per day (WHERE the bugs are,
+// size — so tools/ecology/plot_bugmap.py can render a top-down bug-distribution map per day (WHERE the bugs are,
 // not just the per-species totals). Sorted by id for stable output. SOFT STATE, never hashed.
 func (m *Match) emitSwarmSnapshot(state *WorldState, day int64, logger runtime.Logger) {
 	cs := state.Config.ChunkSize

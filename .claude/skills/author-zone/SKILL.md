@@ -61,7 +61,7 @@ This is an iterative craft loop, not a one-shot. Deliberately:
 4. **`b.lint()` (verify in TEXT) → then `Read` a rendered crop**; iterate the layout (and the guide).
    Previews are plain PNG folders under `tools/_generated/previews/` (no html): a scene renders to
    `zones/<zone>/scenes/` (if it composes a real zone) or its theme folder (`surface/`, `underground/`…);
-   the content catalog (`catalog/<group>/`) is rebuilt by `python3 tools/previews.py`.
+   the content catalog (`catalog/<group>/`) is rebuilt by `python3 tools/world/previews.py`.
    THE ROWS RULE: human-made things (orchard trees, shelves, stalls, bins, nets, trays) sit in
    rows/columns; even-spread is only for deliberately wild nature.
 5. Placed a new object with no art yet? It renders as a labeled placeholder — add it to
@@ -87,7 +87,7 @@ This is an iterative craft loop, not a one-shot. Deliberately:
   `house.py` also has ready-made 3/4/5-room floor plans (`row_/t_/plus_house` — WIDE: budget slots per
   house.md's measured sizes). Each has a guide.
 - `render.render_builder(b, out, scale, bounds=None)` — render a builder straight to a preview PNG
-  (for scene vignettes; no zone files written). For a saved ZONE, use `tools/view_world.py` instead.
+  (for scene vignettes; no zone files written). For a saved ZONE, use `tools/world/view_world.py` instead.
 - **Precedence — place HARD features first so later ones route around them:** biome base → water →
   roads → buildings → farms → scatter. (`place_road` will pathfind around `reserved`; `scatter`
   only fills free grass.) Out-of-order placement is refused/warned.
@@ -96,7 +96,7 @@ This is an iterative craft loop, not a one-shot. Deliberately:
 ## Build & render an example scene
 ```bash
 python3 tools/zonegen/scenes/<scene>.py    # build + render THAT scene to its PREVIEW folder + print lint
-python3 tools/previews.py                  # rebuild the content catalog + ALL scene previews
+python3 tools/world/previews.py                  # rebuild the content catalog + ALL scene previews
 ```
 `scenes/scene_cottage.py` is the worked piece (a text-grid 2-room home + `property_yard`); `scenes/
 zone_village.py` is the full scene→zone example. Each scene declares its destination + render scale in
@@ -132,11 +132,11 @@ zone_village.py` is the full scene→zone example. Each scene declares its desti
   roads (+`smooth_paths` once, after all of them) → buildings → farms → scatter, then
   `Z.bug_spawning` and `Z.save()`. Size must be ×32; `save()` writes row/col 0,0 so patch them after
   for a real world-grid zone.
-- **View the whole zone:** `python3 tools/view_world.py <zone>` → `tools/_generated/previews/maps/<zone>_detail.png`
+- **View the whole zone:** `python3 tools/world/view_world.py <zone>` → `tools/_generated/previews/maps/<zone>_detail.png`
   (north-up colour minimap; reads SAVED chunks, so save first).
 - **Test in-game (no Unity):** `run-backend` skill starts the server, then the sync-harness joins +
   confirms load/tick/spawn (`tools/sync-harness`, `dotnet run -- --zone <id> --duration 20`). Edit zone
-  DATA → `docker compose restart nakama`. Quick isolated mechanic test: `tools/make_test_zone.py`.
+  DATA → `docker compose restart nakama`. Quick isolated mechanic test: `tools/world/make_test_zone.py`.
 
 ## EVERYTHING snaps to the grid except BUGS (changed rule)
 Trees, plants, flowers, crops are real grid `place_occupant`s (the player plants them; saved to the

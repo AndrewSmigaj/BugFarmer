@@ -5,9 +5,9 @@ data. The runner MUTATES canonical files (species.json / occupants.json / ecolog
 bug_lab zone) — the snapshot/restore around the run is the critical footgun guard so a tuning sweep never
 leaves the repo dirty. See docs/product/ecology/ecology_parameters.md and the test-changes skill §2.5.
 
-  python3 tools/run_config.py 00_baseline                 # baseline (no deltas → compiled defaults)
-  python3 tools/run_config.py 01_no_cull --duration 250   # ~14 game-days
-  python3 tools/run_config.py 02_fly_food_up --keep       # leave the applied data in place (debug)
+  python3 tools/ecology/run_config.py 00_baseline                 # baseline (no deltas → compiled defaults)
+  python3 tools/ecology/run_config.py 01_no_cull --duration 250   # ~14 game-days
+  python3 tools/ecology/run_config.py 02_fly_food_up --keep       # leave the applied data in place (debug)
 
 A config (tools/bug_lab_configs/<name>.json) is a DELTA, deep-merged over the baseline:
   "lab":     quantities → make_bug_lab.DEFAULT_LAB (caps / Director bands / sim_batch)
@@ -18,7 +18,7 @@ Outputs land in tools/_generated/ecology_charts/ tagged with the config name (th
 """
 import argparse, copy, datetime, json, os, shutil, subprocess, sys, time
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 import make_bug_lab  # noqa: E402
 

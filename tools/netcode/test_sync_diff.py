@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Unit test for tools/sync_diff.py — the cross-client determinism DIFF is load-bearing, so it gets a test.
+"""Unit test for tools/netcode/sync_diff.py — the cross-client determinism DIFF is load-bearing, so it gets a test.
 
 Proves the leg-row/bug-id collision (Workstream-0 Defect #1) is actually closed, not just moved:
 constructs traces where bug 0 and bug 1 of a swarm DIVERGE behind a colliding leg row (hasLeg digit ==
 the bug id), and asserts the canonical loader returns the REAL bug state (catches the divergence) while the
 OLD buggy loader shadowed it with leg data. Plus identical (no false-fail) and hash-only (set-diff) cases.
 
-Run: python3 tools/test_sync_diff.py   (exit 0 = all pass, 1 = a test failed)
+Run: python3 tools/netcode/test_sync_diff.py   (exit 0 = all pass, 1 = a test failed)
 """
 import os
 import sys

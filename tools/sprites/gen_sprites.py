@@ -37,7 +37,7 @@ import urllib.error
 from PIL import Image
 
 # --- Paths -------------------------------------------------------------------
-TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
+TOOLS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPO = os.path.dirname(TOOLS_DIR)
 ENTITY_DIR = os.path.join(REPO, "nakama", "data", "entities")
 RESOURCES = os.path.join(REPO, "BugFarmerClient", "Assets", "Resources")

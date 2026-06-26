@@ -16,9 +16,9 @@ pickaxe_gold, ...). Scope guard: keep this a flat script — no config files, no
 a family's ramps stop fitting, fall back to per-tier generation (gen_sprites).
 
 Usage:
-  python3 tools/recolor_sprites.py --family pickaxe --tiers stone,copper,iron   # the trial
-  python3 tools/recolor_sprites.py --family axe,shovel,hoe                      # data-driven tiers
-  python3 tools/recolor_sprites.py --family pickaxe --tiers gold --dry-run      # report only
+  python3 tools/sprites/recolor_sprites.py --family pickaxe --tiers stone,copper,iron   # the trial
+  python3 tools/sprites/recolor_sprites.py --family axe,shovel,hoe                      # data-driven tiers
+  python3 tools/sprites/recolor_sprites.py --family pickaxe --tiers gold --dry-run      # report only
 Without --tiers, tiers come from items.json: every `{family}_{tier}` entry that exists
 (beyond wood) gets a recolor.
 """
@@ -28,7 +28,7 @@ import os
 import numpy as np
 from PIL import Image
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ITEMS = os.path.join(ROOT, "BugFarmerClient", "Assets", "Resources", "Items")
 ITEMS_JSON = os.path.join(ROOT, "nakama", "data", "entities", "items.json")
 

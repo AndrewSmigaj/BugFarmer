@@ -31,7 +31,7 @@ from PIL import Image
 from scipy.cluster.vq import kmeans2
 from scipy.ndimage import gaussian_filter, label
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RES = os.path.join(ROOT, "BugFarmerClient", "Assets", "Resources")
 TILES_IN = os.path.join(RES, "Tiles")
 OBJS_IN = os.path.join(RES, "Objects")

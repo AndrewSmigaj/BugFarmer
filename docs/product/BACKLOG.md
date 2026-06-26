@@ -37,7 +37,7 @@ The **SERVER ecology is built + verified** (Go tests + 6× headless lab + per-sp
 Built the full-stack bug **cost profiler** (measure before optimizing) + rebalanced village_21_B to fix the
 ~1000-bug lag. All committed-ready (see ecology_tuning_log.md 2026-06-19 + the plan doc).
 - **Profiler:** server `PERFSTATS`/`PERFSYS` (per-species CPU by sub-phase + leg counts + global passes +
-  broadcast bytes; gated by zone `profile` flag; soft/never-hashed — `world/profiler.go`), `tools/plot_perf.py`,
+  broadcast bytes; gated by zone `profile` flag; soft/never-hashed — `world/profiler.go`), `tools/ecology/plot_perf.py`,
   `run_config.py` wiring, and a client **F7 overlay + Unity-Profiler markers** (`Util/PerfProfiler.cs`,
   `DebugOverlay`). **Finding:** `FindNearbyFood` dominates server CPU (butterfly 11.7s/day); the predicted
   O(S²) merge is negligible (5ms/day).
@@ -352,8 +352,8 @@ unrelated `HotbarUI.Start` NRE guard (leftover-scene null `slots`). **Verify pen
 - **Determinism hardening + teachability (DONE 2026-06):**
   - **Test framework (sacred):** found+fixed a real harness defect — both `run_sync_*.sh` inlined a diff that
     let 14-col leg rows collide with bug-id 0/1 keys (could MASK a divergence). Extracted one canonical
-    `tools/sync_diff.py` (stops at `# SWARMLEGS`, requires the 15-col bug shape, adds the per-tick whole-state
-    HASH stream as the PRIMARY gate), unit-tested by `tools/test_sync_diff.py`. Harness now asserts spawn-apart
+    `tools/netcode/sync_diff.py` (stops at `# SWARMLEGS`, requires the 15-col bug shape, adds the per-tick whole-state
+    HASH stream as the PRIMARY gate), unit-tested by `tools/netcode/test_sync_diff.py`. Harness now asserts spawn-apart
     clients are DISJOINT (non-vacuity) + has a `FRESH=1` redeploy helper.
   - **#127 (DONE):** late-join now mints window-created bugs by REPLAY at evt.tick (not metadata prespawn),
     so a bug reproduced in the snapshot-lag window no longer drifts. Proven: co-located AND genuinely-disjoint
@@ -547,7 +547,7 @@ unrelated `HotbarUI.Start` NRE guard (leftover-scene null `slots`). **Verify pen
 - **Gates block bugs** (wood/iron/picket — `blocks_bugs: true`): bug-tight pens players can walk into.
 - Test zone `repro_test` (gated pen + fast `tree_apple_test` + compost bin + 6 flies); 3 new Go unit tests
   (consumption thresholds/depletion, reproduce bookkeeping, station drain); harness decodes the lifecycle
-  events + writes the population CSV (`tools/plot_fly_counts.py`).
+  events + writes the population CSV (`tools/ecology/plot_fly_counts.py`).
 - **GATHERING MODEL settled (Terraria-style)**: LEFT-CLICK breaks (hand for soft flora — flowers are 1-HP
   with drops already; axe for trees), drops float as ground items, **WALK-OVER AUTO-PICKUP** collects
   ordinary drops (magnet 1.25, rate-limited + per-item backoff). **EXCEPTION: bug food (rotten_*) is never
@@ -659,7 +659,7 @@ unrelated `HotbarUI.Start` NRE guard (leftover-scene null `slots`). **Verify pen
 - World lifecycle: pause-when-empty + `world_enter` (singleton Normal/Test worlds; the frontend no
   longer creates worlds).
 - Test infra: headless `.NET` sync-harness (`tools/sync-harness/`, incl. a reconnect scenario),
-  test-zone generator (`tools/make_test_zone.py`), `sim_test` zone; single-source zone config
+  test-zone generator (`tools/world/make_test_zone.py`), `sim_test` zone; single-source zone config
   (removed `debug_mode` + `species_debug.json`).
 - New world-select login (`WorldMenu`).
 
@@ -669,7 +669,7 @@ unrelated `HotbarUI.Start` NRE guard (leftover-scene null `slots`). **Verify pen
   related `ab_generate` bug turned `cave_floor` into a chest. Reverted to the standard transparent+crop
   flow; regenerating each block/wall as 2 variants matched to `wall_stone`, verified with
   `scene_block_tiling.py`. `wall_stone` (untouched) is the standard. Guide rewritten with HARD RULES.
-- **A/B sprite workflow:** `tools/ab_generate.py` (A live + B in `tools/_generated/ab/`) + `contact_sheet.py`
+- **A/B sprite workflow:** `tools/sprites/ab_generate.py` (A live + B in `tools/_generated/ab/`) + `contact_sheet.py`
   A/B sheets in `previews/ab_review/`. Every new sprite has an A/B pair to pick from.
 - **Underground scenes:** caves improved (quartz blocks, wider rail tunnel + wood supports, more dirt,
   shape labels); underground house rebuilt **flush in rock**; NEW **mining camp** (campfire+spit, tents,
@@ -761,7 +761,7 @@ F6 cycles debug outfits. Remaining from the old item:
 - ALL inventory UI now code-built (UIFactory/UIBootstrap own canvas; zero scene
   wiring): hotbar strip + EDGE-DOCK inventory screen — the center stays open
   world so you SEE your real player while equipping (the game never pauses).
-  Hand-authored UI art kit (tools/ui_sprites.py: wood/parchment 9-slice, slot
+  Hand-authored UI art kit (tools/sprites/ui_sprites.py: wood/parchment 9-slice, slot
   frames, ghost silhouettes, keycap-E).
 - ARMOR (cosmetic + synced): leather + iron sets (region-derived legs/feet fit
   the walking legs by construction) + 2 accessories; items.json armor entries;

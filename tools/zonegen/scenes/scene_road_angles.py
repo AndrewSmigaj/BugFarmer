@@ -5,7 +5,7 @@ Four road shapes, RAW on the left half vs SMOOTHED (terrain.smooth_paths) on the
 right, same seeds: a straight run, a gentle bend, a 45° diagonal run, and an S-curve.
 The smoothed side should show every stair-step corner bevelled by a diagonal
 transition tile (stone_path_d_*/dirt_path_d_*, composited by
-tools/make_diagonal_tiles.py) — curves read as curves, not staircases.
+tools/sprites/make_diagonal_tiles.py) — curves read as curves, not staircases.
 """
 import os
 import sys

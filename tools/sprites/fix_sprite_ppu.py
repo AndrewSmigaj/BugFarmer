@@ -8,14 +8,14 @@ the long tail of generated-but-not-yet-placed art (225 of 315 Objects at the tim
 fix) was still at 100 — a latent bug that fires the first time each one is placed.
 
 Run after adding any new sprite under Resources/Objects (or Items):
-  python3 tools/fix_sprite_ppu.py            # fix Objects/ + Items/
-  python3 tools/fix_sprite_ppu.py --dry-run  # report only
+  python3 tools/sprites/fix_sprite_ppu.py            # fix Objects/ + Items/
+  python3 tools/sprites/fix_sprite_ppu.py --dry-run  # report only
 """
 import os
 import re
 import sys
 
-ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..",
                     "BugFarmerClient", "Assets", "Resources")
 FOLDERS = ["Objects", "Items", "Bugs"]
 PPU = "16"

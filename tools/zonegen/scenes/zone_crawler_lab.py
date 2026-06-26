@@ -10,7 +10,7 @@ load). No band/cull fields -> the director ONLY refills, never culls or runs wea
 clean arena.
 
   python3 tools/zonegen/scenes/zone_crawler_lab.py    # build + save + lint
-  python3 tools/view_world.py crawler_lab             # pixel overview
+  python3 tools/world/view_world.py crawler_lab             # pixel overview
 """
 import os
 import sys

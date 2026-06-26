@@ -1,8 +1,8 @@
 # Bug Lab tuning configs
 
 Each `<NN_name>.json` is a **delta** over the baseline, deep-merged and applied by
-`tools/run_config.py <name>` (which snapshots → applies → restarts nakama → runs the fast `bug_lab`
-harness → charts → **restores** the canonical data). The sweep is scored by `tools/compare_configs.py`.
+`tools/ecology/run_config.py <name>` (which snapshots → applies → restarts nakama → runs the fast `bug_lab`
+harness → charts → **restores** the canonical data). The sweep is scored by `tools/ecology/compare_configs.py`.
 
 ## Schema (every section optional; absent = baseline)
 | section | merges into | what it tunes |

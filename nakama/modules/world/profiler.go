@@ -16,7 +16,7 @@ const perfTickBudgetNs int64 = 100 * 1000 * 1000
 // global per-tick-pass timings, and broadcast byte/message totals, accumulated each tick and flushed once
 // per game-day as PERFSTATS (one line per species) + PERFSYS (one global line). It answers "where does the
 // server spend time, and which species/subsystem drives network traffic" so we optimize from data, not
-// guesses (see docs/product/BACKLOG.md #88). Parsed by tools/plot_perf.py.
+// guesses (see docs/product/BACKLOG.md #88). Parsed by tools/ecology/plot_perf.py.
 //
 // Gated by `enabled` (the zone's `profile` flag). When OFF, every method is a cheap nil/flag check — Start()
 // returns the zero Time so the matching Stop is a no-op — so PRODUCTION pays nothing and stays byte-identical.
@@ -49,7 +49,7 @@ type PerfStats struct {
 }
 
 // Fixed column order so every PERFSTATS/PERFSYS line has identical fields (0 when absent) — trivial for
-// tools/plot_perf.py to regex into a CSV.
+// tools/ecology/plot_perf.py to regex into a CSV.
 var perfCPUPhases = []string{"food", "pred", "action"}
 var perfCounters = []string{"food_calls", "pred_thinks", "legs"}
 var perfSysPhases = []string{"merge", "decay", "forage", "nests"}

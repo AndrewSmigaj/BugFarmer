@@ -121,7 +121,7 @@ namespace BugFarmer.Player
             if (composed == null)
             {
                 Debug.LogWarning("[PlayerController] outfit compose failed (layers missing " +
-                                 "or not CPU-readable — run tools/fix_sprite_ppu.py); baked fallback.");
+                                 "or not CPU-readable — run tools/sprites/fix_sprite_ppu.py); baked fallback.");
                 composed = CharacterComposer.LoadBaked(Networking.CharacterSession.Class);
                 if (composed == null) composed = CharacterComposer.LoadBaked("merchant");
                 if (composed == null) return;

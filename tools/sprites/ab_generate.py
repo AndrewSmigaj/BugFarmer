@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """A/B sprite generation — generate each key TWICE (the model is stochastic, so two calls give two
 candidates). A goes LIVE (Resources/…, cleaned) so scenes render; B goes to tools/_generated/ab/{key}_B.png
-(also cleaned) for later picking. Reuses gen_sprites (prompt/API/trim) + pixelclean (clean). Build an
-A/B comparison contact sheet afterward with: python3 tools/contact_sheet.py --ab <keys...>.
+(also cleaned) for later picking. Reuses gen_sprites (prompt/API/trim) + pixelclean (clean).
 
-Usage: python3 tools/ab_generate.py --source placeables --keys stone_block,wall_wood
+Usage: python3 tools/sprites/ab_generate.py --source placeables --keys stone_block,wall_wood
 """
 import argparse
 import io

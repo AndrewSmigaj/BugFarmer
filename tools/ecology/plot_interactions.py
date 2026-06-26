@@ -9,9 +9,9 @@ bars with the population overlaid — so you can SEE why a species is below targ
 vs. predation/starvation deaths, and (the self-maintenance metric) how much of its births come from
 the Director's `reseed` safety net (should trend to ~0).
 
-  python3 tools/plot_interactions.py --tag eco              # last run from `docker compose logs`
-  python3 tools/plot_interactions.py --log run.log --tag eco  # parse a captured log file instead
-  python3 tools/plot_interactions.py --since 10m --tag eco   # bound the docker log window
+  python3 tools/ecology/plot_interactions.py --tag eco              # last run from `docker compose logs`
+  python3 tools/ecology/plot_interactions.py --log run.log --tag eco  # parse a captured log file instead
+  python3 tools/ecology/plot_interactions.py --since 10m --tag eco   # bound the docker log window
 
 Outputs (under tools/_generated/ecology_charts/):
   interaction_log_<tag>.csv   day,species,pop,b_*,d_*,avg_sat
@@ -44,7 +44,7 @@ def get_log_text(args):
 
 def _repo_root():
     # tools/ is one level under the repo root.
-    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def parse(text):

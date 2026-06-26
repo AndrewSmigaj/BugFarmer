@@ -16,7 +16,7 @@ import glob
 import os
 import shutil
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC = os.path.join(ROOT, "nakama", "data", "entities")
 DST = os.path.join(ROOT, "BugFarmerClient", "Assets", "Resources", "Data", "entities")
 

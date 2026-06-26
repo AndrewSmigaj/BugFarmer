@@ -130,7 +130,7 @@ recipes expand (see [crafting_design.md](design/crafting_design.md)) these new o
 - **Food:** `flour`, `bread`, `meal_*`.
 - **Beekeeping:** `honey`, `honey_wine`.
 
-### TODO — crafting UI art (hand-authored, `tools/ui_sprites.py` → `Resources/UI/`)
+### TODO — crafting UI art (hand-authored, `tools/sprites/ui_sprites.py` → `Resources/UI/`)
 Stage 1 ships a generic panel built from existing UI sprites. The Apico-touch polish pass:
 - `panel_craft` frame; per-station header/theming (the smelter's fuel + ore input slots, a fire/heat
   meter, a fuel tank, a themed progress-bar fill). Drives the per-station look (currently identical).

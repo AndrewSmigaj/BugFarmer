@@ -7,12 +7,12 @@ magnifier, divider, close button, coin. Borders for 9-slice are NOT stored in
 metas — UIFactory passes them to Sprite.Create (see UIFactory.BORDERS).
 
 Outputs -> Resources/UI/*.png ; preview -> tools/_generated/previews/ui/kit.png
-Run: python3 tools/ui_sprites.py
+Run: python3 tools/sprites/ui_sprites.py
 """
 import os
 import sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, HERE)
 from player_sprites import pixkit  # noqa: E402
 

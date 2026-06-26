@@ -12,12 +12,12 @@ written by run_config.py → plot_interactions.py) and prints a table per config
   born/died — the dominant birth source / death cause (the "why", at a glance)
   verdict — PASS (near target, oscillating, self-maintained) / OSC? / LOW / FLOOR / FLAT
 
-  python3 tools/compare_configs.py                 # every config with a log
-  python3 tools/compare_configs.py 00_baseline 01_no_cull
+  python3 tools/ecology/compare_configs.py                 # every config with a log
+  python3 tools/ecology/compare_configs.py 00_baseline 01_no_cull
 """
 import csv, glob, os, statistics, sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 import make_bug_lab  # noqa: E402  (DEFAULT_LAB → re-seed floors + Director bands)
 
@@ -91,7 +91,7 @@ def main():
         names = sorted(os.path.basename(p)[len("interaction_log_"):-4]
                        for p in glob.glob(os.path.join(CHARTS, "interaction_log_*.csv")))
     if not names:
-        print("no interaction_log_*.csv found — run tools/run_config.py first", file=sys.stderr)
+        print("no interaction_log_*.csv found — run tools/ecology/run_config.py first", file=sys.stderr)
         sys.exit(1)
 
     hdr = f"{'species':<17} {'mean':>6} {'min':>4} {'max':>4} {'σ':>5} {'amp%':>5} {'%rsd':>5} {'born':>9} {'died':>9}  verdict"

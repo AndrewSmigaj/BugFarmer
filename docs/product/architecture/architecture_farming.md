@@ -1921,7 +1921,7 @@ riding the existing event vocabulary (no new sim event types; bug positions stay
 **Testing the slow ecology fast:** a test zone may set `call_rate` (≤60) in `zone.json` to run the SAME
 sim faster in wall-clock — sim-time is fixed by the canonical `SimRate=10` (drives deltaTime + every
 secs↔ticks conversion), so the speedup is balance-neutral (identical tick sequence). bug_lab runs at 60
-(6×). Tune on the per-species population graph: `tools/sync-harness` → CSV → `tools/plot_fly_counts.py`
+(6×). Tune on the per-species population graph: `tools/sync-harness` → CSV → `tools/ecology/plot_fly_counts.py`
 (charts saved under `tools/_generated/ecology_charts/`).
 
 ---

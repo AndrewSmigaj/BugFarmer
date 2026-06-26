@@ -11,7 +11,7 @@ Layout (readable by design):
 The CSV is per-species: `tick,<species…>,total_bugs`. X-axis is GAME-TIME (sim seconds) = tick/SimRate
 (SimRate=10), so a 6× test run and a normal run plot identically.
 
-  python3 tools/plot_fly_counts.py [path/to/fly_counts.csv] [chart_name] ["Title"]
+  python3 tools/ecology/plot_fly_counts.py [path/to/fly_counts.csv] [chart_name] ["Title"]
 With a chart_name it also saves tools/_generated/ecology_charts/<chart_name>.png.
 """
 import csv
@@ -129,7 +129,7 @@ def main():
             ax.set_xlabel(f"game-time s  [1 day = {DAY_S:.0f}s]", fontsize=8)
 
     fig.suptitle("", y=0.995)
-    here = os.path.dirname(os.path.abspath(__file__))
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     out = os.path.join(here, "_generated", "scratch", "fly_counts.png")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     fig.savefig(out, dpi=120, bbox_inches="tight")

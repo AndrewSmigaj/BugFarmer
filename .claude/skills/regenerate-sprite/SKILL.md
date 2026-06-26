@@ -15,16 +15,16 @@ The entity already exists in `nakama/data/entities/*.json`, so this only redoes 
    real reason the art read wrong).
 2. **Regenerate, overwriting the existing PNG**:
    ```bash
-   python3 tools/gen_sprites.py --keys <key> --force
-   python3 tools/pixelclean.py
+   python3 tools/sprites/gen_sprites.py --keys <key> --force
+   python3 tools/sprites/pixelclean.py
    ```
    Add `--source <occupants|items|terrain>` if the asset isn't a placeable.
    **⚠ A bare `pixelclean.py` RE-CLEANS EVERY sprite under `Resources/`** (re-quantizes ~hundreds of
    PNGs) — after running it, `git status` and **revert every PNG except your key** so you don't churn
    unrelated art (`git checkout -- <those.png>`).
-   **Item icons**: pixelclean is OPT-IN per key — `python3 tools/pixelclean.py --k 8 --items <key>`
+   **Item icons**: pixelclean is OPT-IN per key — `python3 tools/sprites/pixelclean.py --k 8 --items <key>`
    (a bare run never touches Items/; icons quantize to 8 colors). **Tool TIER icons**
-   (`pickaxe_stone` etc.) are NOT generated — re-run `python3 tools/recolor_sprites.py
+   (`pickaxe_stone` etc.) are NOT generated — re-run `python3 tools/sprites/recolor_sprites.py
    --family <family>` after regenerating the family's `_wood` base.
 3. **Preview**: `python3 tools/make_scene.py` → open `tools/_generated/previews/scene.png`.
 4. **Run the acceptance checklist** in the guide. Do **not** hand-resize — the runtime scales to

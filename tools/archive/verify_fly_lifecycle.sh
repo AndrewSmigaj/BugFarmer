@@ -10,7 +10,7 @@ cd "$(dirname "$0")/.."
 
 echo "=== 1. sprite + publish ==="
 cp -f BugFarmerClient/Assets/Resources/Objects/tree_apple.png BugFarmerClient/Assets/Resources/Objects/tree_apple_test.png
-python3 tools/publish_entities.py | tail -1
+python3 tools/data/publish_entities.py | tail -1
 
 echo "=== 2. Go unit tests ==="
 sh tools/run_go_tests.sh | tail -16
@@ -29,7 +29,7 @@ DOTNET=$(command -v dotnet || echo "$HOME/.dotnet/dotnet")
   | grep -E "ITEM_ROTTED|FOOD_CONSUMED|SWARM_REPRODUCED|SWARM_SPLIT|SWARM_MERGE|SWARM swarm|POPULATION|reproduced|series" )
 
 echo "=== 5. plot ==="
-python3 tools/plot_fly_counts.py || echo "(matplotlib missing? pip install matplotlib)"
+python3 tools/ecology/plot_fly_counts.py || echo "(matplotlib missing? pip install matplotlib)"
 
 echo "=== server lifecycle log ==="
 docker compose logs nakama --since 420s 2>&1 | grep -E "reproduced|Split .*over-limit|rotted" | tail -8

@@ -470,8 +470,8 @@ Examples:
     parser.add_argument("--output", "-o", type=str, help="Output filename")
     args = parser.parse_args()
 
-    # Find zones directory
-    script_dir = Path(__file__).parent
+    # Find zones directory ("script_dir" stays = tools/, even though this file lives in tools/world/)
+    script_dir = Path(__file__).parent.parent
     project_root = script_dir.parent
     zones_dir = project_root / "nakama" / "data" / "zones"
 

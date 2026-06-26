@@ -17,12 +17,12 @@ IMAGE vs GAME orientation: PNG y runs DOWN; the game's +y is NORTH (up). So the
 image's top edge is the cell's NORTH edge — "NE corner" = image top-right.
 
 Writes: BugFarmerClient/Assets/Resources/Tiles/<road>_d_<corner>.png (32×32, opaque
-full-bleed like every ground tile). Run tools/fix_sprite_ppu.py after Unity imports.
+full-bleed like every ground tile). Run tools/sprites/fix_sprite_ppu.py after Unity imports.
 """
 import os
 from PIL import Image
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 TILES = os.path.join(ROOT, "BugFarmerClient", "Assets", "Resources", "Tiles")
 
 # (road tile id, output base name). dirt's diagonal gets a path-flavored name so

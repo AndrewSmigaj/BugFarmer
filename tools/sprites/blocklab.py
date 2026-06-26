@@ -11,8 +11,8 @@ docs/guides/art/block_prompts.md. Generation reuses gen_sprites (build_wall_prom
 and pixelclean — NOT opaque, NOT flat.
 
 Usage:
-  python3 tools/blocklab.py                         # P1,P2,P3 x 3 variants x the 4 test blocks
-  python3 tools/blocklab.py --approaches P2 --blocks stone_block --variants 3
+  python3 tools/sprites/blocklab.py                         # P1,P2,P3 x 3 variants x the 4 test blocks
+  python3 tools/sprites/blocklab.py --approaches P2 --blocks stone_block --variants 3
 """
 import argparse
 import io

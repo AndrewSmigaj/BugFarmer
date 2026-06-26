@@ -12,7 +12,7 @@ d['fly_common']['merge_radius']=12.0
 json.dump(d,open(p,'w'),indent=2)
 print('merge_radius -> 12.0 (temporary)')
 PY
-python3 tools/make_test_zone.py --zone-id merge_test3 --species fly_common \
+python3 tools/world/make_test_zone.py --zone-id merge_test3 --species fly_common \
   --initial 2 --max 2 --swarm-size 8 --spawn-radius 2 --dynamic | tail -1
 docker compose restart nakama > /dev/null 2>&1
 sleep 6

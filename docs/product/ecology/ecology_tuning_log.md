@@ -26,7 +26,7 @@ directional, not reproducible.
   flowers, leaf-litter; orchard layout. Fruit→rot pipeline timing in `handlers_farming.go`.
 - **Spawn/Director** — zone.json `bug_spawning.species_caps` (initial/max/`max_population`/`min_population`/
   `event_low`/`event_high`/`cull_at`/`spawn_interval`) + `ecology_director.go`.
-- **Run a config**: `python3 tools/run_config.py <cfg> --zone village_21_B --duration 300`
+- **Run a config**: `python3 tools/ecology/run_config.py <cfg> --zone village_21_B --duration 300`
   (charts → `tools/_generated/ecology_charts/`; food stocks via RESSTATS + `plot_phase.py`).
 
 ---
@@ -316,7 +316,7 @@ control campaign (docs/product/ecology/ecology_control_campaign.md), then port b
 ### 2026-06-19 · COST PROFILER built (PERFSTATS) + Phase-2 rebalance r1 — perf-driven, measured
 Built the full-stack cost profiler FIRST (measure before optimizing): server `PERFSTATS`/`PERFSYS`
 (per-species CPU by sub-phase + leg counts + global passes + broadcast bytes, gated by zone `profile`
-flag, soft/never-hashed — profiler.go), `tools/plot_perf.py`, run_config wiring, and a client F7 overlay +
+flag, soft/never-hashed — profiler.go), `tools/ecology/plot_perf.py`, run_config wiring, and a client F7 overlay +
 Unity-Profiler markers. **Baseline finding overturned the audit's guess:** `FindNearbyFood` (scan-all-
 ground-items per think) DOMINATES server CPU — butterfly **11.7 CPU-s/day**, fly 6.5s — while the predicted
 O(S²) merge is **negligible (5 ms/day)**. Cost is per-CALL not per-bug (millipede: 4 bugs burned 0.45s on

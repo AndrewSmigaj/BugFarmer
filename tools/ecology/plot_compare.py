@@ -2,7 +2,7 @@
 """Overlay per-species population trajectories from several run logs on one figure — so a tuning change's
 effect is visible at a glance (one small-multiple panel per species, one line per run).
 
-Usage: python3 tools/plot_compare.py out.png  "label1=/path/log1"  "label2=/path/log2"  ...
+Usage: python3 tools/ecology/plot_compare.py out.png  "label1=/path/log1"  "label2=/path/log2"  ...
 Each log is a nakama run-log containing the per-game-day `ECOSTATS day=.. sp=.. pop=..` lines.
 """
 import re

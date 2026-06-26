@@ -54,10 +54,10 @@ if [ -z "$TA" ] || [ -z "$TB" ]; then
   exit 1
 fi
 
-# Cross-client determinism diff — canonical shared impl (tools/sync_diff.py), unit-tested by
-# tools/test_sync_diff.py. PRIMARY = per-tick whole-state HASH stream; LOCALIZER = per-bug intersection.
+# Cross-client determinism diff — canonical shared impl (tools/netcode/sync_diff.py), unit-tested by
+# tools/netcode/test_sync_diff.py. PRIMARY = per-tick whole-state HASH stream; LOCALIZER = per-bug intersection.
 # (Stops at the "# SWARMLEGS" marker so 14-col leg rows can't collide with bug-id 0/1 keys.)
-python3 "$ROOT/tools/sync_diff.py" "$TA" "$TB"
+python3 "$ROOT/tools/netcode/sync_diff.py" "$TA" "$TB"
 RC=$?
 
 echo "--- backstop: server drift detector ---"

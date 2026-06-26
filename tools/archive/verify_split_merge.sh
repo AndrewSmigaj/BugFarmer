@@ -15,9 +15,9 @@ sleep 8
 docker compose logs nakama --since 15s 2>&1 | grep -E "module loaded successfully|Startup done" | tail -2
 
 echo "=== 2. test zones ==="
-python3 tools/make_test_zone.py --zone-id split_test --species fly_common \
+python3 tools/world/make_test_zone.py --zone-id split_test --species fly_common \
   --initial 1 --max 4 --swarm-size 30 --spawn-radius 3 --dynamic | tail -2
-python3 tools/make_test_zone.py --zone-id merge_test --species fly_common \
+python3 tools/world/make_test_zone.py --zone-id merge_test --species fly_common \
   --initial 2 --max 2 --swarm-size 8 --spawn-radius 1 --dynamic | tail -2
 docker compose restart nakama > /dev/null 2>&1
 sleep 6

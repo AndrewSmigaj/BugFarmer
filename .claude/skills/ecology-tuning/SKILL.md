@@ -56,7 +56,7 @@ do NOT stack changes you can't separate. The owner has repeatedly caught kneejer
 
 ## 2. Run a config
 ```bash
-python3 tools/run_config.py <config> --zone village_21_B --duration 600   # ~8 game-days
+python3 tools/ecology/run_config.py <config> --zone village_21_B --duration 600   # ~8 game-days
 ```
 - Configs live in `tools/bug_lab_configs/*.json` — a DELTA deep-merged over canonical data:
   `species` (species.json fields, incl. nested `predation`), `tuning` (ecology_tuning.json dials),
@@ -77,7 +77,7 @@ python3 tools/run_config.py <config> --zone village_21_B --duration 600   # ~8 g
   leave stale charts there). `archive/<ts>_<tag>/` keeps the dated history; `current/` is "latest".
 - **`<zone>/archive/<timestamp>_<tag>/`** — every run, with a `note.md` (what it changed + result), for
   comparing which settings were better.
-- **`<zone>/comparisons/`** — overlay charts (one line per run): `python3 tools/plot_compare.py out.png
+- **`<zone>/comparisons/`** — overlay charts (one line per run): `python3 tools/ecology/plot_compare.py out.png
   "label=_data/nakama_<tag>.log" ...`. The fastest before/after read.
 - **`_data/`** — raw `nakama_*.log` + telemetry CSVs (regenerate plots from these).
 - **After every run: refresh `current/` (the tooling does this) AND show the owner those charts** —
