@@ -32,6 +32,10 @@ def _ellipse(cx, cy, rx, ry):
             if ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1.0}
 
 
+PREVIEW = "examples/buildings"
+SCALE = 3
+
+
 def build():
     b = ZoneBuilder("scene_underground_house", W, H, base_tile="cave_floor", name="Underground home")
     rng = random.Random(5)
@@ -93,9 +97,7 @@ def build():
 
 
 if __name__ == "__main__":
+    from scene_preview import render
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "scene_underground_house.png"))
-    render_builder(b, out, scale=6)
-    print("placeholders:", b.missing_art())
-    print("warnings:", len(b.warnings))
-    print("validate:", b.validate() or "OK")
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

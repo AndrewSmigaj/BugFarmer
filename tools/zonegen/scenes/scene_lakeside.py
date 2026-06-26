@@ -90,6 +90,10 @@ def place_boat_store(b, ox, oy, *, dock_len=14):
     return (ox, oy)
 
 
+PREVIEW = "zones/village_21_B/scenes"
+SCALE = 4
+
+
 def build():
     b = ZoneBuilder("scene_lakeside", W, H, base_tile="grass", name="Lake & fishing dock")
     rng = random.Random(7)
@@ -124,12 +128,7 @@ def build():
 
 
 if __name__ == "__main__":
-    import importlib
-    sys.path.insert(0, HERE)
-    reg = importlib.import_module("registry") if os.path.exists(os.path.join(ZG, "registry.py")) else None
+    from scene_preview import render
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "tests", "scene_lakeside.png"))
-    render_builder(b, out, scale=8)
-    print(dump(b, 9, 20, 19, 28))
-    print("LINT:", b.lint() or "0 defects", "| warnings:", len(b.warnings), "| missing_art:", b.missing_art())
-    print("rendered ->", out)
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

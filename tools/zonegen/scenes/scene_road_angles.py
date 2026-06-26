@@ -29,6 +29,10 @@ def lay_roads(b, ox):
     path(b, (ox + 30, 34), (ox + 42, 58), width=2, tile="dirt", wobble=0.3, seed=11)
 
 
+PREVIEW = "examples/roads"
+SCALE = 4
+
+
 def build():
     b = ZoneBuilder("scene_road_angles", W, H, base_tile="grass")
     lay_roads(b, 0)            # RAW half
@@ -44,5 +48,7 @@ def build():
 
 
 if __name__ == "__main__":
-    from registry import render_one
-    render_one("scene_road_angles")
+    from scene_preview import render
+    b = build()
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

@@ -69,6 +69,10 @@ def place_mayor(b, ox, oy):
     return rect
 
 
+PREVIEW = "zones/village_21_B/scenes"
+SCALE = 5
+
+
 def build():
     b = ZoneBuilder("scene_mayor", BW + 10, BH + 15, base_tile="grass", name="Mayor's estate")
     place_mayor(b, 5, 9)
@@ -77,9 +81,7 @@ def build():
 
 
 if __name__ == "__main__":
+    from scene_preview import render
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "tests", "scene_mayor.png"))
-    render_builder(b, out, scale=8)
-    print(dump(b, 5, 9, 22, 21))
-    print("LINT:", b.lint() or "0 defects", "| warnings:", len(b.warnings), "| missing_art:", b.missing_art())
-    print("rendered ->", out)
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

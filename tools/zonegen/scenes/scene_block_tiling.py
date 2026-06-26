@@ -32,6 +32,10 @@ H = WALL_Y + 4 + MARGIN
 LABELS = []         # (text, cell_x, cell_y) filled during build
 
 
+PREVIEW = "examples/blocks"
+SCALE = 4
+
+
 def build():
     b = ZoneBuilder("scene_block_tiling", W, H, base_tile="grass", name="Block tiling check")
     # block patches
@@ -66,10 +70,7 @@ def label(out):
 
 
 if __name__ == "__main__":
+    from scene_preview import render
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "block_tiling.png"))
-    render_builder(b, out, scale=7)
-    label(out)
-    print("placeholders:", b.missing_art())
-    print("warnings:", len(b.warnings))
-    print("wrote", out)
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

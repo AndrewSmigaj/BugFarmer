@@ -36,6 +36,10 @@ ORE = {"base": "stone_block",
 FLOOR_BAG = [("rubble", 12), ("cave_moss", 7), ("bone_pile", 3)]
 
 
+PREVIEW = "zones/underground_passages_31/scenes"
+SCALE = 6
+
+
 def build():
     b = ZoneBuilder("scene_underground_mining_camp", W, H, base_tile="cave_floor", name="Mining hub")
     rng = random.Random(9)
@@ -193,11 +197,7 @@ def build():
 
 
 if __name__ == "__main__":
+    from scene_preview import render
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "zones",
-                                       "underground_passages_31", "scenes", "mining_camp.png"))
-    os.makedirs(os.path.dirname(out), exist_ok=True)
-    render_builder(b, out, scale=6)
-    print("LINT:", b.lint() or "0 defects")
-    print("placeholders:", b.missing_art())
-    print("warnings:", len(b.warnings))
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

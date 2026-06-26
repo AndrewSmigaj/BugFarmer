@@ -10,10 +10,16 @@ shared occupancy model, compose with **placeholder squares** (never wait on art)
 **rendering a preview PNG and looking at it**. The preview is the test — there's no live game to
 watch here.
 
+## Where things go — READ THIS FIRST (so you don't invent folders)
+**`docs/guides/authoring/ORGANIZATION.md`** is the rule. One question decides everything:
+**reusable technique → `examples/<feature>`; a specific place → `zones/<zone>`; game content → `catalog/`.**
+Previews live in exactly four folders (`catalog/ examples/ zones/ player/`); a scene renders to the folder
+named in its own `PREVIEW = "..."` constant, via `python3 tools/world/previews.py`. Don't make new
+top-level buckets, don't hand-type output paths — if a thing doesn't fit, it's a technique or a place; ask.
+
 ## Where the world lives (orient here first)
 - **The system index:** `docs/guides/authoring/README.md` — the parts (builder · guides · scenes · the
-  scene→zone→`view_world`→test pipeline) and how they fit. Read it first. (Previews are plain PNG folders
-  under `tools/_generated/previews/`; the content catalog is `python3 tools/previews.py`.)
+  scene→zone→`view_world`→test pipeline) and how they fit. Read it first.
 - **The whole map:** `docs/product/architecture_world.md` — the 24-zone grid, layout, river/roads,
   coordinates, per-zone species.
 - **Per-zone design docs:** `docs/product/zones/<zone_id>.md` (intent: biome, species, landmarks, ecology).
@@ -89,12 +95,12 @@ This is an iterative craft loop, not a one-shot. Deliberately:
 
 ## Build & render an example scene
 ```bash
-python3 tools/zonegen/scenes/<scene>.py    # build + render ONE scene to its preview PNG + print lint
-python3 tools/zonegen/registry.py <scene>  # render via the canonical registry path
+python3 tools/zonegen/scenes/<scene>.py    # build + render THAT scene to its PREVIEW folder + print lint
+python3 tools/previews.py                  # rebuild the content catalog + ALL scene previews
 ```
 `scenes/scene_cottage.py` is the worked piece (a text-grid 2-room home + `property_yard`); `scenes/
-zone_village.py` is the full scene→zone example. The
-canonical render scale per scene lives in `tools/zonegen/registry.py`.
+zone_village.py` is the full scene→zone example. Each scene declares its destination + render scale in
+`PREVIEW = "..."` / `SCALE = N` constants; `scene_preview.py` is the one render path.
 
 ## Feature guides
 **Full index + one-liners: `docs/guides/authoring/README.md`.** The ones you'll reach for most:

@@ -3,6 +3,10 @@
 This is the index for **world-building**: how we lay out zones, houses, yards, caves, and the
 example scenes that show them off. Read this first; it points at everything else.
 
+> **Where does X go?** → **[ORGANIZATION.md](ORGANIZATION.md)** — the one rule (reusable technique →
+> `examples/<feature>`, a specific place → `zones/<zone>`, content → `catalog/`). Read it before creating
+> a folder or saving a generated file.
+
 The system is **four parts**, each with one home:
 
 | Part | What it is | Lives in |
@@ -24,7 +28,7 @@ The system is **four parts**, each with one home:
    (`features/tilemap.stamp`/`dump`) — reasoned cell-by-cell, not by guessing coordinates.
 4. **`b.lint()` is the QA gate** — it returns TEXT defect strings (door blocked, wall/door/window height
    mismatch, fence/wall on path/water, wall/fence on a road TILE, dirt potholes inside stone roads,
-   spawn circles mostly over water). `registry.render_one` prints it. `place_occupant` additionally
+   spawn circles mostly over water). `tools/previews.py` prints it per scene. `place_occupant` additionally
    warns AT PLACEMENT when a building lands on road surface (lint can't see it later — the mask is
    overwritten). Rule: **verify in TEXT (lint + `dump`), then look at a rendered crop** — never call it
    good off a giant PNG. (`validate()` is the older bare overlap check; `lint()` supersedes it.) The one
@@ -33,22 +37,21 @@ The system is **four parts**, each with one home:
 
 ```bash
 python3 tools/zonegen/scenes/<scene>.py     # build + render ONE scene to its preview PNG + print lint
-python3 tools/previews.py                    # rebuild the content CATALOG (every object by category)
+python3 tools/previews.py                    # rebuild the content CATALOG + ALL scene previews
 ```
 
-> **Where previews live** (`tools/_generated/previews/`, browse the folders — no html, no registry to
-> keep in sync):
-> - `catalog/<group>/` — every in-game object, by category (`furniture/`, `blocks/`, `nature/`, `bugs/`,
->   `tiles/`…). Each group has a `_sheet.png` (all of it at a glance) **and** every object as its own
->   `<id>.png` thumbnail. Generated from the entity data by `tools/previews.py`, so it always matches
->   what's in the game — replace a sprite, re-run, it updates.
+> **Where previews live** — the rule is [ORGANIZATION.md](ORGANIZATION.md). `tools/_generated/previews/`
+> has exactly four folders (browse them — no html, no registry):
+> - `catalog/<category>/` — every in-game object, by category. Each group has a `_sheet.png` (all at a
+>   glance) **and** every object as its own `<id>.png`. Generated from entity data by `tools/previews.py`,
+>   so it always matches what's in the game.
+> - `examples/<feature>/` — reusable technique demos (`buildings/`, `blocks/`, `roads/`, `water/`, …).
 > - `zones/<zone>/` — a zone's `full.png` + region crops + a `scenes/` folder of the vignettes that
->   compose it (e.g. `zones/underground_passages_31/scenes/{mine_entrance,mining_camp,caverns}.png`).
-> - `examples/<theme>/` — generic example/test scenes (`surface/`, `underground/`, `desert/`, `pieces/`,
->   `tests/`), rendered by `python3 tools/zonegen/registry.py`.
+>   compose it (e.g. `zones/underground_passages_31/scenes/{mine_entrance,underground_caverns,underground_mining_camp}.png`).
+> - `player/` — player sprites + animations.
 >
-> A zone's composing scenes write into `zones/<zone>/scenes/`; generic example scenes go to
-> `examples/<theme>/` via `registry.py`. (The old html gallery + Art Lab were removed 2026-06.)
+> Each scene declares its destination in a `PREVIEW = "..."` constant; `tools/previews.py` discovers and
+> renders them all (one render path, no hand-typed output paths). (The old html gallery + registry were removed.)
 
 ## From scenes to a real ZONE (the full pipeline)
 A **scene** is a small render-only vignette; a **ZONE** is the 256×256 world the game loads. Composing:
@@ -77,7 +80,8 @@ lack a species spec silently don't spawn.
   (writes anchor + footprint cells, **refuses overlaps loudly**), `set_ground`, **`lint()`** (the text
   QA gate), `place_player`/`place_bug` (render-only dressing), `save()`/`load()`.
 - `render.py` — `render_builder(b, out, scale, bounds=None)`: builder → full-art preview PNG.
-- `registry.py` — the **scene catalog** + canonical render (prints lint).
+- `scene_preview.py` — the ONE render path: a scene declares `PREVIEW`/`SCALE`; this renders it to the
+  right folder. `tools/previews.py` discovers + renders every scene (and the content catalog).
 - `features/` — the primitives (one guide each, below): `tilemap` (text-grid stamp/dump), `terrain`
   (`lake`/`forest`/`pond`/`rock_patch`/`path`/`stream`), `scatter`, `garden`, `yard`, `room`, `house`,
   `village`, `furniture`, `cave`.

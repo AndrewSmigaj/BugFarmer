@@ -18,6 +18,10 @@ from features.yard import fence_rect         # noqa: E402
 W, H = 56, 44
 
 
+PREVIEW = "examples/gardens"
+SCALE = 3
+
+
 def build():
     b = ZoneBuilder("scene_orchard", W, H, base_tile="grass")
     # the lane FIRST (roads before farms), running past the south fence
@@ -30,5 +34,7 @@ def build():
 
 
 if __name__ == "__main__":
-    from registry import render_one
-    render_one("scene_orchard")
+    from scene_preview import render
+    b = build()
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

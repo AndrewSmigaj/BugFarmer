@@ -50,7 +50,7 @@ scratch/            transient QA (fly_counts.png etc.)
 ## Directories
 | Dir | What |
 |---|---|
-| `zonegen/` | the zone/scene builder library + `scenes/` + `registry.py` (scene scale catalog) |
+| `zonegen/` | the zone/scene builder library + `scenes/` + `scene_preview.py` (the one scene→preview render path) |
 | `art/` | art prompt DATA: `style.json` (global) + `catalog/*.json` (per-item) |
 | `sync-harness/` | the headless .NET netcode harness (`dotnet run -- --zone <id>`) |
 | `archive/` | retired one-off scripts (kept for reference, never run) |

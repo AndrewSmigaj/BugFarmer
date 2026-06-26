@@ -19,6 +19,7 @@ previews/examples/ — this tool only owns the content catalog.)
 """
 import json
 import os
+import sys
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -148,6 +149,13 @@ def main():
         print(f"  {group:14} {len(entries):3} items"
               + (f"  ({missing} missing art)" if missing else ""))
     print(f"\ncatalog -> {OUT}   ({total} objects across {len(groups)} groups)")
+
+    # --- scenes (each scene declares its own PREVIEW folder; one render path, no registry) ---
+    sys.path.insert(0, os.path.join(ROOT, "tools", "zonegen"))
+    from scene_preview import discover_and_render
+    print("\n=== scenes ===")
+    for name, status in discover_and_render():
+        print(f"  {name:30} {status}")
 
 
 if __name__ == "__main__":

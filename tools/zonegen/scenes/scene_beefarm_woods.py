@@ -21,6 +21,10 @@ from features.yard import fence_rect             # noqa: E402
 W, H = 70, 54
 
 
+PREVIEW = "zones/bee_meadow/scenes"
+SCALE = 3
+
+
 def build():
     b = ZoneBuilder("scene_beefarm_woods", W, H, base_tile="grass", name="Bee farm & woods", biome="meadow")
     rng = random.Random(4)
@@ -74,9 +78,7 @@ def build():
 
 
 if __name__ == "__main__":
+    from scene_preview import render
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "scene_beefarm_woods.png"))
-    render_builder(b, out, scale=6)
-    print("placeholders:", b.missing_art())
-    print("warnings:", len(b.warnings))
-    print("validate:", b.validate() or "OK")
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

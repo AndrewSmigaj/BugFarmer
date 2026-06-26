@@ -45,6 +45,10 @@ ORE_TABLE = {
 }
 
 
+PREVIEW = "zones/underground_passages_31/scenes"
+SCALE = 5
+
+
 def build():
     b = ZoneBuilder("scene_underground_caverns", W, H, base_tile="cave_floor",
                     name="Underground caverns")
@@ -190,12 +194,7 @@ def _label(out):
 
 
 if __name__ == "__main__":
+    from scene_preview import render
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "zones",
-                                       "underground_passages_31", "scenes", "caverns.png"))
-    os.makedirs(os.path.dirname(out), exist_ok=True)
-    render_builder(b, out, scale=5)
-    _label(out)
-    print("placeholders:", b.missing_art())
-    print("warnings:", len(b.warnings))
-    print("validate:", b.validate() or "OK")
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

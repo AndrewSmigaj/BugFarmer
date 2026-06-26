@@ -47,6 +47,10 @@ time (you end up building every feature twice). For every feature:
   (the Nakama/Postgres/Go stack), `add-object` / `regenerate-sprite` (world art), `author-zone` (zones).
 
 ## Where things live
+- **Repo organization rule (read before creating a folder or saving generated output):**
+  `docs/guides/authoring/ORGANIZATION.md`. One rule — **reusable technique → `examples/<feature>`,
+  a specific place → `zones/<zone>`, game content → `catalog/`** — mirrored across docs, previews, and
+  scene code. **Don't invent new top-level buckets.** Previews = exactly `catalog/ examples/ zones/ player/`.
 - World art (loaded by `key` at runtime): `Assets/Resources/{Objects,Tiles,Items,Bugs,Effects}/`.
 - Player + player gear (hand-authored): `Assets/Resources/Player/`.
 - Entity data is **canonical** in `nakama/data/entities/{occupants,placeables,items,crops}.json`

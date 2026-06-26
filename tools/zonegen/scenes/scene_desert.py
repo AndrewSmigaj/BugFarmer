@@ -21,6 +21,10 @@ from features.room import place_room             # noqa: E402
 W, H = 78, 56
 
 
+PREVIEW = "zones/desert/scenes"
+SCALE = 3
+
+
 def build():
     b = ZoneBuilder("scene_desert", W, H, base_tile="sand", name="Desert", biome="desert")
     rng = random.Random(6)
@@ -88,9 +92,7 @@ def build():
 
 
 if __name__ == "__main__":
+    from scene_preview import render
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "scene_desert.png"))
-    render_builder(b, out, scale=6)
-    print("placeholders:", b.missing_art())
-    print("warnings:", len(b.warnings))
-    print("validate:", b.validate() or "OK")
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

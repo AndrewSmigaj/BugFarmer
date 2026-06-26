@@ -91,6 +91,10 @@ def place_fly_farm(b, ox, oy):
     return ((cx, cy), 13)
 
 
+PREVIEW = "examples/farming"
+SCALE = 4
+
+
 def build():
     b = ZoneBuilder("scene_fly_farm", W, H, base_tile="grass", name="The fly farm")
     hpath(b, 2, W - 3, 2, tile="dirt")                  # the road it fronts
@@ -100,5 +104,7 @@ def build():
 
 
 if __name__ == "__main__":
-    from registry import render_one
-    render_one("scene_fly_farm")
+    from scene_preview import render
+    b = build()
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

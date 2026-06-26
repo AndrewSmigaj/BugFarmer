@@ -35,6 +35,10 @@ ORE = {"base": "stone_block",
        "pockets": [("dirt_block", 8, 4, "top")]}
 
 
+PREVIEW = "zones/underground_passages_31/scenes"
+SCALE = 8
+
+
 def build():
     b = ZoneBuilder("scene_mine_entrance", W, H, base_tile="cave_floor", name="Mine entrance")
     rng = random.Random(5)
@@ -227,11 +231,7 @@ def build():
 
 
 if __name__ == "__main__":
+    from scene_preview import render
     b = build()
-    print("LINT:", b.lint() or "0 defects")
-    print("warnings:", len(b.warnings), "| missing_art:", b.missing_art())
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "zones",
-                                       "underground_passages_31", "scenes", "mine_entrance.png"))
-    os.makedirs(os.path.dirname(out), exist_ok=True)
-    render_builder(b, out, scale=8)
-    print("preview ->", out)
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

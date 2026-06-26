@@ -20,6 +20,10 @@ W, H = 46, 26
 STEPS = [(0, 16, 17), (16, 31, 14), (31, 46, 11)]   # (x0, x1, surface_y)
 
 
+PREVIEW = "examples/blocks"
+SCALE = 4
+
+
 def build():
     b = ZoneBuilder("scene_block_mine", W, H, base_tile="grass", name="Block mine test")
 
@@ -47,9 +51,7 @@ def build():
 
 
 if __name__ == "__main__":
+    from scene_preview import render
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "scene_block_mine.png"))
-    os.makedirs(os.path.dirname(out), exist_ok=True)
-    render_builder(b, out, scale=12)
-    print("placeholders:", b.missing_art(), "warnings:", len(b.warnings))
-    print("wrote", out)
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)
