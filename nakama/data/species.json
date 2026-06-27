@@ -160,14 +160,7 @@
     "sprite_id": "wasp_common",
     "movement_style": "darting",
     "flies_over_fences": false,
-    "kill_drops": [
-      {
-        "item": "wasp_stinger",
-        "count_min": 1,
-        "count_max": 1,
-        "chance": 0.3
-      }
-    ],
+    "kill_drops": [],
     "predation": {
       "prey": [
         "fly_common",
@@ -218,14 +211,7 @@
     "sprite_id": "centipede_head_b",
     "movement_style": "crawling",
     "flies_over_fences": false,
-    "kill_drops": [
-      {
-        "item": "centipede_parts",
-        "count_min": 3,
-        "count_max": 5,
-        "chance": 1.0
-      }
-    ],
+    "kill_drops": [],
     "predation": {
       "prey": [
         "fly_common"

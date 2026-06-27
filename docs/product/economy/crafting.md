@@ -55,6 +55,7 @@ Derived numbers:
 | anvil | metal tools, weapons, armor | **craft** @ workbench (iron_bar ×5 + stone ×10) |
 | forge | steel/alloys, high-tier metal gear | **craft** @ anvil (iron_bar ×10 + brick ×5) |
 | cooking_pot | meals (timed buffs) | **craft** @ workbench (copper_bar ×2 + stone ×4) |
+| chopping_block | food/ingredient prep — chop produce & butcher carcasses (`dead_*`) into cooking inputs | **craft** @ workbench (wood ×6) |
 | cauldron | potions, dyes | **craft** @ anvil (copper_bar ×4 + stone ×6) |
 | keg / preserves_jar | artisan goods (wine, mead, pickles, jam) | **craft** @ sawmill (plank ×10 + copper_bar) |
 | honey_extractor | honeycomb → honey/beeswax | **craft** @ workbench (plank ×6 + copper_bar) |
@@ -65,6 +66,13 @@ Derived numbers:
 
 Bootstrap is clean (no circular gate): furnace smelts the first iron → anvil is built at the workbench from
 that iron → forge is built at the anvil. The one un-craftable station (electronics) is a **bought** coin sink.
+
+> **As-built reconcile (2026-06-26):** the **10 `crafting`-category placeables in the data today** are
+> `workbench`, `stonecutter`, `furnace`, `sawmill`, `loom`, `anvil`, `forge`, `cooking_pot`, `cauldron`,
+> `chopping_block`. The other rows above (`keg`/`preserves_jar`, `honey_extractor`, `compost_bin`, `jeweler`,
+> `dye_vat`, `electronics_bench`) are **designed** stations not yet `crafting`-category placeables —
+> `honey_extractor` exists as a `beekeeping` placeable, `compost_bin` as a `structure`. A station is "live" only
+> when `RecipesByStation[id]` is non-empty (see [`../architecture/architecture_crafting.md`](../architecture/architecture_crafting.md)).
 
 ---
 
@@ -149,7 +157,11 @@ grain→flour→bread. Sell at the **artisan multiplier** — the mid/late money
 else here is data.*
 
 ## 7. Decorations & structures (most craftable; some buy/find)
-- **Craft (~70%)** — the bulk of the 59 furniture + 48 decoration + 73 structure placeables become recipes at
+The full **per-item** catalogs (every id, with proposed source + village subset) live in
+[`catalogs/furniture.md`](catalogs/furniture.md), [`catalogs/containers.md`](catalogs/containers.md),
+[`catalogs/decoration.md`](catalogs/decoration.md), and [`catalogs/structures.md`](catalogs/structures.md).
+This section is just the **split policy**:
+- **Craft (~70%)** — the bulk of the furniture / decoration / structure placeables become recipes at
   workbench/sawmill/stonecutter/loom. Each tags a **bonus TYPE** (comfort/light/etc.) for the §11.5 system;
   values authored later.
 - **Buy (~20%, @ Carpenter/General Store)** — flavorful or fiddly pieces (fine paintings, fancy lamps, exotic

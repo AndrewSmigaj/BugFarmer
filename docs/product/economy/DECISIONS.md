@@ -189,7 +189,8 @@ do bugs drop things neatly": they don't — you extract.
   **`carrion beetle`** (`beetle_carrion`). (No pill bugs / ants / snails / aphids — later/forested zones, so no
   `honeydew`/`formic_*`.) Each drops only `dead_<bug>` → the Bug Extractor (D18).
 - **Flowers (actual):** `flower_red`/`flower_blue`/`flower_yellow`/`flower_wild`, `poppy`, `lavender` — use
-  these, **drop `wildflower_petals`**.
+  these; each drops its own flower ingredient (`flower` for the colored ones, `poppy`/`lavender` for the named
+  herbs). **No `wildflower_petals`** (that was a bad invented material — cut below).
 - **Crops:** a nice collection of **garden vegetables** — `tomato`, `corn`, carrot, cabbage, eggplant, pumpkin.
   **Wheat is PULLED from the village** — you **buy it up north** (fast-growing, good money — a travel gate);
   *zone-authoring TODO: remove `plant_wheat` from `village_21_B`*. **No cotton yet.** New crops debut in new zones.
@@ -246,3 +247,78 @@ do bugs drop things neatly": they don't — you extract.
     centipede/millipede + a mini-boss.
   - **New sprites needed:** garden centipede, cave millipede, cave beetle, glowworm, small cave spider.
     (Reuse: current centipede → cave centipede; `beetle` → recolor where useful; `mushroom_glow` exists.)
+
+---
+
+### D22 — Recurring rules logged so they stop getting re-litigated (2026-06-26)
+These were decided (some repeatedly) but kept getting dropped. Recorded here as the canonical reference:
+- **No rocks / boulders / stalagmites — only `stone_block` + mineral blocks.** Decided 3×. Depth shows via the
+  **floor tile + ore richness**, NOT harder block tiers (`hard_stone_block` was deleted). The lone `boulder`
+  placeable + rock décor are flagged in [`catalogs/materials.md`](catalogs/materials.md)/[`decoration.md`](catalogs/decoration.md)
+  for your keep/cut call — not auto-removed.
+- **D18 is APPLIED in `species.json`** (2026-06-26): every species' `kill_drops` is now `[]`; a killed bug drops
+  **only `dead_<species>`** (the carcass). The **Bug Extractor** (a normal station, still to build) turns dead
+  bugs → materials (chitin/silk/venom/leather). `wasp_stinger`/`centipede_parts` removed as direct drops.
+- **Plants/forage drop their own ingredient** (2026-06-26): flowers → `flower`; named herbs → themselves
+  (`mint`/`sage`/`thyme`/`fennel`/`aloe`/`agave` got real `resource` items); berries → `berries`; generic
+  greenery (grass/vines/debris) → `fiber`. See [`catalogs/plants.md`](catalogs/plants.md).
+- **Placeables & blocks drop THEMSELVES** (Terraria-style): break a `well` → get `well`; mine `stone_block` →
+  `stone_block`. Drops must be explicit in the entity def (no self-fallback in code).
+- **Unified entity registry:** the server merges `items.json` ∪ `occupants.json` ∪ `placeables.json` into ONE
+  `state.Entities` map. A valid carryable/drop/recipe id exists if it's in **any** of the three — never read one
+  file and conclude an id is missing. (`crops.json`/`recipes.json` are separate config layers, not entities.)
+
+---
+
+### D23 — Breeding stations (host + brood): the canonical model (2026-06-27)
+A **breeding station = a HOST that holds a BROOD** (eggs/larvae developing). The brood is a living thing
+separate from the host's material — larvae are **never loot/drops**.
+
+**Universal brood rule — a brood needs a host to develop:**
+- **Leave it** → larvae mature on the host → become adult bugs → **released into the world** (the default lifecycle).
+- **Open it → take & move the larvae** → relocate the brood to another host/nursery (the breeding-management
+  action, and the only way to keep them off a host you're about to remove).
+- **Destroy a ROOTED host while it's occupied** → the larvae have no host → they **DIE**. No free bugs, no magic
+  survival — destroying the habitat costs you the brood.
+- **Move a PORTABLE host** → the brood travels with it and survives.
+
+**Two host types:**
+- **Portable structure** (e.g. `wasp_nest`): NOT a resource plant. "Chop" = **pick it up and move it** (brood
+  goes with it). It does **NOT drop material** — no paper, no fiber, no larvae. Open → harvest/move the brood.
+- **Rooted host plant** (e.g. `milkweed`): an ordinary plant. Chop = **fiber + seed** (plant material).
+  Open → harvest/move the brood. Tearing it down while occupied **kills** the brood.
+
+**Status: DESIGN ONLY — not built.** Missing: the open-station brood UI, take/move-larvae, and the host-rule
+(mature / relocate / die). The brood *source* layer exists in `brood.go` (milkweed host-plant) / `nests.go`
+(wasp nest `NestState`); this is the player-facing harvest/teardown layer on top. Data changes for later:
+`wasp_nest` drop `paper_nest`+`wasp_larvae` → **none** (pick-up-and-move); `milkweed` drop `milkweed` → `fiber` + a *chance* `milkweed_seed` (per the D24 harvest rule), and milkweed is a **large plant** (several hits to fell, D24).
+
+---
+
+### D24 — Plant harvest & seed model: ONE rule for every plant (2026-06-27)
+After a long search for something non-clunky, the model is a single uniform rule (easy to learn; like Stardew):
+
+> **Harvest a plant → its resource (always) + its seed (a CHANCE, every now and then). Plant the seed to grow it back.**
+
+- **The seed is OCCASIONAL, not every harvest** — a tunable drop chance. Guaranteed seeds every time would flood
+  the world and break balance (cf. Stardew wheat → wheat always, seed/hay only sometimes). Start low, tune by feel.
+- Same rule for everything — no per-plant categories, no "pick-up-and-place vs seed vs extractor" to remember:
+  - flower → `dead_flower` (dye/craft) + *chance* `flower_seed`
+  - bush → `fiber` + *chance* seed · tree → `wood` + *chance* sapling/seed · wheat → `wheat` + *chance* seed
+  - milkweed → `fiber` + *chance* `milkweed_seed` (a big plant **and** a breeding station, grown from seed — see D23)
+- **Harvest effort scales with plant size (`breakable.hp`):** small flora (flowers, grass, small bushes) come up
+  in **one hit**; **large plants — milkweed, trees — take several hits** to fell (not instantly harvestable),
+  like trees already do (`hp: 5`). Raise `hp` on the big ones.
+- **Crops are not one-and-done:** many are **multi-harvest** (Stardew-style) — the plant **regrows and yields
+  repeatedly** before it's spent, not consumed on the first harvest. This already exists in `crops.json`
+  (`multi_harvest` / `max_harvests` / `regrow_ticks`, e.g. tomato); single-harvest crops are consumed.
+- **Living vs cut flower (free gameplay):** a flower **standing** in the world feeds pollinators (nectar/AoE);
+  **cutting** it gives `dead_flower` + a chance seed. Leave them for the bugs or cut them for dye — a real choice.
+- **No extractors required** — seeds drop directly. A **Seed Maker** is an OPTIONAL convenience (produce → extra
+  seeds), never a gate. Seeds are also **buyable** (NPC) for reliability and the first batch of a crop.
+- Supersedes the explored-and-dropped alternatives: per-resource extractors (clunky), Apico-style pick-up-and-place
+  flowers + transplanting (charming but created edge cases), and "every plant always drops a seed" (imbalanced).
+
+**Status: DESIGN ONLY — not built.** Implementation later: most flora gain a chance-based seed drop; the flower
+resource becomes `dead_flower`; large plants get higher `hp`; seed items get created (only crop `seed_*` exist
+today). "We'll see how it works out" — the seed-drop chance is the main balance knob.

@@ -33,6 +33,15 @@ Content is intentionally **over-produced so you PRUNE down**, never beg for more
 | [`catalogs/accessories.md`](catalogs/accessories.md) | 88 accessories covering the full stat vocab (+ trade-offs). |
 | [`catalogs/tools.md`](catalogs/tools.md) | 54 base tier tools + 48 special = ~102. |
 | [`catalogs/consumables.md`](catalogs/consumables.md) | 78 potions + 47 meals. |
+| [`catalogs/furniture.md`](catalogs/furniture.md) | 56 placed pieces (seating/tables/beds/kitchen/lighting) — **as-built**. |
+| [`catalogs/containers.md`](catalogs/containers.md) | 22 storage things (chests/wardrobes/shelves + backpack) — **as-built**. |
+| [`catalogs/decoration.md`](catalogs/decoration.md) | 47 cosmetic placeables (statues/rugs/garden/display) — **as-built**. |
+| [`catalogs/structures.md`](catalogs/structures.md) | 76 built things (fences/walls/signs/wells/mining/hives) — **as-built**. |
+| [`catalogs/plants.md`](catalogs/plants.md) | ~97 plants + natural features (trees/flowers/herbs/crops/forage drops) — **as-built**. |
+
+The five **as-built** pages (furniture/containers/decoration/structures/plants) are grounded in the real entity
+JSON and held drift-free by `tools/data/catalog_coverage.py` (no-orphan gate). They replace the retired
+`architecture_items.md §1–15`. `item_catalog.md` is fully **superseded** by `catalogs/` + `species_and_drops.md`.
 
 **Reading order:** `DECISIONS` → `progression` → a few `zones/` sheets → `catalogs/*` → `crafting`/`merchants`
 → `production`.

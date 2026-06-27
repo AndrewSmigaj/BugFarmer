@@ -1,5 +1,15 @@
 # Inventory & Shop System Architecture
 
+> ⚠️ **STATUS (2026-06): the SHOP / NPC half of this doc is a SUPERSEDED PLAN — not built.**
+> The original "Shop System" design below (OpCodes **30–37**, `ShopPanel.cs`/`NPCManager.cs`/`shop.go`,
+> Implementation Phases **3g–3h**, the buy/sell message structs) was **never implemented** and uses opcodes
+> that don't match reality. The **real, built** systems are: inventory/containers on **OpCode 98/99**
+> (see [`architecture_crafting.md`](architecture_crafting.md)) and armor on **96/97** (see the "AS BUILT
+> 2026-06" section near the bottom). **No NPC, dialogue, shop, or currency behavior exists yet** (only the
+> `coins` field on `CharacterSave`). When the shop IS built, follow the **container (98/99) pattern**, not the
+> 30–37 plan here. Current economy design lives in [`../economy/`](../economy/) (`merchants.md`, `DECISIONS.md`).
+> Trust the "AS BUILT 2026-06" sections; treat the rest as historical design.
+
 ## Overview
 
 Terraria-inspired system: hotbar for tools, separate bug collection, simple buy/sell shop.

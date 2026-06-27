@@ -268,6 +268,66 @@
     "max_stack": 99,
     "sell_price": 7
   },
+  "mint": {
+    "name": "Mint",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
+  },
+  "sage": {
+    "name": "Sage",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
+  },
+  "thyme": {
+    "name": "Thyme",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
+  },
+  "fennel": {
+    "name": "Fennel",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
+  },
+  "aloe": {
+    "name": "Aloe",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "agave": {
+    "name": "Agave",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
   "yarrow": {
     "name": "Yarrow",
     "category": "resource",
@@ -816,7 +876,7 @@
   },
   "sword_wood": {
     "name": "Wooden Sword",
-    "category": "tool",
+    "category": "weapon",
     "tags": [
       "tool"
     ],
@@ -848,7 +908,7 @@
   },
   "spear_wood": {
     "name": "Wooden Spear",
-    "category": "tool",
+    "category": "weapon",
     "tags": [
       "tool"
     ],
@@ -1085,18 +1145,6 @@
     "places_crop": "eggplant",
     "buy_price": 12,
     "sell_price": 2
-  },
-  "straw_hat": {
-    "name": "Straw Hat",
-    "category": "armor",
-    "tags": [
-      "clothing"
-    ],
-    "armor_slot": "head",
-    "stackable": false,
-    "buy_price": 15,
-    "sell_price": 3,
-    "overlay": "straw_hat"
   },
   "leather_cap": {
     "name": "Leather Cap",

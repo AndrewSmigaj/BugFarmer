@@ -324,11 +324,6 @@
             "item_id": "fiber",
             "count": 1,
             "chance": 1.0
-          },
-          {
-            "item_id": "seed_tomato",
-            "count": 1,
-            "chance": 0.08
           }
         ]
       }
@@ -352,11 +347,6 @@
             "item_id": "fiber",
             "count": 1,
             "chance": 1.0
-          },
-          {
-            "item_id": "seed_wheat",
-            "count": 1,
-            "chance": 0.15
           }
         ]
       }
@@ -377,7 +367,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "reeds",
             "count": 1,
             "chance": 1.0
           }
@@ -474,16 +464,6 @@
             "item_id": "flower",
             "count": 1,
             "chance": 1.0
-          },
-          {
-            "item_id": "seed_tomato",
-            "count": 1,
-            "chance": 0.1
-          },
-          {
-            "item_id": "seed_corn",
-            "count": 1,
-            "chance": 0.1
           }
         ]
       }
@@ -1218,7 +1198,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "flower",
             "count": 1,
             "chance": 1.0
           }
@@ -1241,7 +1221,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "flower",
             "count": 1,
             "chance": 1.0
           }
@@ -1264,7 +1244,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "flower",
             "count": 1,
             "chance": 1.0
           }
@@ -1287,7 +1267,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "mint",
             "count": 1,
             "chance": 1.0
           }
@@ -1310,7 +1290,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "sage",
             "count": 1,
             "chance": 1.0
           }
@@ -1333,7 +1313,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "thyme",
             "count": 1,
             "chance": 1.0
           }
@@ -1356,7 +1336,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "fennel",
             "count": 1,
             "chance": 1.0
           }
@@ -1379,7 +1359,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "reeds",
             "count": 1,
             "chance": 1.0
           }
@@ -1563,7 +1543,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "aloe",
             "count": 1,
             "chance": 1.0
           }
@@ -1586,7 +1566,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "agave",
             "count": 1,
             "chance": 1.0
           }
@@ -2170,7 +2150,7 @@
   },
   "apple_crate": {
     "name": "Apple Crate",
-    "category": "storage",
+    "category": "decoration",
     "sprite_w": 16,
     "sprite_h": 18,
     "world": {
@@ -2471,7 +2451,7 @@
   },
   "wasp_nest": {
     "name": "Wasp Nest",
-    "category": "nature",
+    "category": "natural",
     "world": {
       "footprint": [
         1,

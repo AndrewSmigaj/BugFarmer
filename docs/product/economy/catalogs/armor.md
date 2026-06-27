@@ -22,8 +22,12 @@ always out-tanks a same-tier bonus set (bonus sets buy power in a *signature sta
 | **gold** | T5 | forge | gold_bar | high |
 | **platinum** | T5 | forge | platinum_bar | **top** |
 
-**Cut:** ~~straw~~ (too hard to integrate), ~~diamond~~ (platinum is the top — diamond armour doesn't make
-sense). Existing `items.json` ids reused: the full `leather_*` and `iron_*` sets, `copper_helmet`.
+**Cut:** ~~straw~~ (too hard to integrate as a *set*), ~~diamond~~ (platinum is the top — diamond armour doesn't
+make sense). Existing `items.json` ids reused: the full `leather_*` and `iron_*` sets, `copper_helmet`.
+
+> **As-built note:** `straw_hat` ✅ still exists in `items.json` as a single **T0 starter head** piece (it
+> predates the "straw set cut" decision). It isn't part of the leather→platinum ladder — **your call** whether to
+> keep it as a one-off starter hat or remove the item. (Surfaced, not silently changed.)
 
 **New stations/materials this implies:** a **bug-leather station** (dead bugs → `leather`), **cotton** as a
 cloth source (D15).

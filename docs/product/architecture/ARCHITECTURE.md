@@ -11,7 +11,7 @@ Bug Farmer is a 2D multiplayer game where players farm bugs, build structures, a
 - [architecture_bugs.md](architecture_bugs.md) — bug species, AI, lifecycle
 - [architecture_farming.md](architecture_farming.md) — crops, planting, watering, growth, fruit trees
 - [architecture_weather.md](architecture_weather.md) — time of day, day rollover, rain, deep night + flashlight
-- [architecture_inventory.md](architecture_inventory.md) / [architecture_items.md](architecture_items.md) — items & inventory (item_database.md is DEPRECATED — de-indexed)
+- [architecture_inventory.md](architecture_inventory.md) / [architecture_items.md](architecture_items.md) — items & inventory. `architecture_items.md` is now just **§0 (the as-built item/inventory model)**; per-item enumeration moved to the economy catalogs: [`furniture`](../economy/catalogs/furniture.md) · [`containers`](../economy/catalogs/containers.md) · [`decoration`](../economy/catalogs/decoration.md) · [`structures`](../economy/catalogs/structures.md) · [`plants`](../economy/catalogs/plants.md) (+ tools/weapons/armor/accessories/materials/consumables). (item_database.md is DEPRECATED — de-indexed)
 - [architecture_input.md](architecture_input.md) — client input ownership (left-click router, combat/catch/tools)
 - [architecture_crafting.md](architecture_crafting.md) — recipes-as-data, craft stations, item containers, the determinism boundary ([crafting_design.md](../design/crafting_design.md) = content)
 - [architecture_entity_sync.md](architecture_entity_sync.md) — entity replication

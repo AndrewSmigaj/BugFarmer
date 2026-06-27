@@ -44,7 +44,8 @@ time (you end up building every feature twice). For every feature:
   `frontier-sync` (wire a new deterministic bug-sim mechanic), `perf-tuning` (profile + optimize the sim),
   `ecology-tuning` (balance the bug food web), `bug-spawning` (why a zone has the wrong # of bugs —
   spawn paths, the walkability + stale-save gotchas, populate/reset/persist), `run-backend`
-  (the Nakama/Postgres/Go stack), `add-object` / `regenerate-sprite` (world art), `author-zone` (zones).
+  (the Nakama/Postgres/Go stack), `add-object` / `regenerate-sprite` (world art), `author-zone` (zones),
+  `economy` (items/stores/crafting/drops — the unified entity registry + the `catalogs/` map + coverage audit).
 
 ## Where things live
 - **Repo organization rule (read before creating a folder or saving generated output):**

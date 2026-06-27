@@ -38,6 +38,7 @@ Each gathering verb upgrades by metal: **wood → stone → copper → iron → 
 | **`headlamp`** | anvil | hands-free cave light (`light_radius`+vein_sense). | T3 |
 | **`glowworm_lantern`** | workbench | the best natural light (green); from glowworm caves. | T3 |
 | **`torch`** ✅ | workbench | basic placed/held light (many torches are **cosmetic**). | T1 |
+| **`flashlight`** ✅ | workbench / buy | held directional light (`tool_type: flashlight`) — **as-built** early cave light. | T1–T2 |
 
 *Light is kept deliberately small — a few sources at different radii (D12). Decorative light + their bonuses
 are the separate **home-plot décor** system (backlog).*

@@ -59,36 +59,6 @@
       }
     }
   },
-  "hard_stone_block": {
-    "name": "Hard Stone Block",
-    "category": "block",
-    "sprite_w": 16,
-    "sprite_h": 20,
-    "stackable": true,
-    "max_stack": 99,
-    "sell_price": 3,
-    "world": {
-      "footprint": [
-        1,
-        1
-      ],
-      "pivot": "bc",
-      "blocks_players": true,
-      "blocks_bugs": true,
-      "breakable": {
-        "hp": 6,
-        "required_tool_type": "pickaxe",
-        "required_tool_tier": 2,
-        "drops": [
-          {
-            "item_id": "hard_stone_block",
-            "count": 1,
-            "chance": 1.0
-          }
-        ]
-      }
-    }
-  },
   "clay_block": {
     "name": "Clay Block",
     "category": "block",
@@ -174,34 +144,6 @@
         ]
       },
       "gnawable": true
-    }
-  },
-  "boulder": {
-    "name": "Boulder",
-    "category": "natural",
-    "sprite_w": 32,
-    "sprite_h": 28,
-    "stackable": false,
-    "sell_price": 0,
-    "world": {
-      "footprint": [
-        2,
-        2
-      ],
-      "pivot": "bc",
-      "blocks_players": true,
-      "blocks_bugs": true,
-      "breakable": {
-        "hp": 12,
-        "required_tool_type": "pickaxe",
-        "drops": [
-          {
-            "item_id": "stone",
-            "count": 4,
-            "chance": 1.0
-          }
-        ]
-      }
     }
   },
   "specimen_case": {
@@ -860,34 +802,6 @@
         "drops": [
           {
             "item_id": "stonecutter",
-            "count": 1,
-            "chance": 1.0
-          }
-        ]
-      }
-    }
-  },
-  "chopping_block": {
-    "name": "Chopping Block",
-    "category": "crafting",
-    "sprite_w": 16,
-    "sprite_h": 16,
-    "stackable": false,
-    "sell_price": 6,
-    "world": {
-      "footprint": [
-        1,
-        1
-      ],
-      "pivot": "c",
-      "interactable": true,
-      "interaction_type": "craft",
-      "breakable": {
-        "hp": 4,
-        "required_tool_type": "axe",
-        "drops": [
-          {
-            "item_id": "chopping_block",
             "count": 1,
             "chance": 1.0
           }
@@ -1574,8 +1488,8 @@
         "required_tool_type": "pickaxe",
         "drops": [
           {
-            "item_id": "stone",
-            "count": 4,
+            "item_id": "well",
+            "count": 1,
             "chance": 1.0
           }
         ]

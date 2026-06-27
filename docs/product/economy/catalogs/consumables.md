@@ -30,7 +30,7 @@ Alchemy consumables — **cures, timed buffs, weapon coatings, thrown bombs, sal
 
 | id | station | ingredients | effect (timed unless cure) | tier | source-zone |
 |---|---|---|---|---|---|
-| `petal_tincture` | cooking_pot→cauldron* | wildflower_petals 3 + chamomile 1 | short `calm_radius` self-buff (cheap intro potion) | T1 | village |
+| `petal_tincture` | cooking_pot→cauldron* | flower 3 + chamomile 1 | short `calm_radius` self-buff (cheap intro potion) | T1 | village |
 | `calm_spray` | cauldron / buy@general | nectar_bloom 2 + lavender 1 *(or chamomile 2 + lavender 1 + honeydew 1)* | `calm_radius` pulse — bees/wasps stop attacking (the catch-teaching staple) | T1 | bee_meadow / village |
 | `pollination_dust` | cauldron | pollen 4 + chamomile 1 | throwable — temporary `+pollination` over a crop area (faster bloom/yield) | T2 | bee_meadow |
 | `propolis_salve` | cauldron | propolis 2 + honey 1 + yarrow 1 | heal-over-time (`hp_regen`); the zone's first regen item | T2 | bee_meadow |
@@ -142,7 +142,7 @@ preservation/cured dish with an extended buff window.
 | `pollen_loaf` | cooking_pot / buy@apiarist | pollen 4 + bumble_nectar 1 | `move_speed_pct +3` + `max_hp +3` (also feeds the Apiary) | T2 | meadow |
 | `pollinators_loaf` | cooking_pot | clover_honey 1 + wheat 2 + pollen 1 | `pollination +5` + `harvest_yield +1` (farming-session buff) | T2 | meadow |
 | `bumble_butter` | cooking_pot | bumble_nectar 1 + apple 2 | `max_hp +5` + `hp_regen` (hearty) | T2 | meadow |
-| `garden_salad` | cooking_pot | cabbage 1 + carrot 1 + wildflower_petals 1 | `move_speed_pct +3` (short) | T1 | village |
+| `garden_salad` | cooking_pot | cabbage 1 + carrot 1 + flower 1 | `move_speed_pct +3` (short) | T1 | village |
 | `apple_tart` | cooking_pot | apple 2 + pressed_apple 1 + wheat 1 | `hp_regen` (short, hearty) | T1 | village |
 | `honeydew_bun` | cooking_pot | wheat 2 + honeydew 1 | `luck +1` (short, "lucky day") | T1 | village |
 | `snail_skewer` | cooking_pot | snail 2 + thyme 1 | `defense +1` (short) | T1 | village |

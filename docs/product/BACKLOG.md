@@ -302,6 +302,26 @@ Go through EVERY sprite by hand and fix/redo the ones that read wrong (Andrew ed
 were auto-generated; quality varies. NB: a bare `pixelclean.py` re-cleans ALL sprites — regenerate +
 clean ONE key at a time and revert incidental churn.
 
+## Later — economy reconciliation follow-ups + item-model tech debt (from the 2026-06-26 catalog pass)
+The catalog consolidation is **done**: 5 as-built pages (furniture/containers/decoration/structures/plants) +
+materials blocks&deposits, `architecture_items.md §1–15` retired, `tools/data/catalog_coverage.py` no-orphan gate
+green, the recurring rules logged as DECISIONS D22. Open follow-ups the user adjudicates:
+- **The economy FEATURE itself** — buy/sell/NPC/dialogue/trading + recipe-acquisition (default/bought/found
+  unlocks). The *data + catalogs* are ready; the *gameplay loop* (shops, dialogue, coin sink) is not built.
+- **Per-item recipes & costs** — `recipes.json` only has ~10; the catalogs propose `source` (🔵) but not the
+  ingredient lists. Author recipes per the crafting.md ~70/20/10 split.
+- **Rock-decor / cave-scene rework** — "leave decor as-is for now"; `boulder` + `sandstone_formation`/`cave_moss`
+  art/placement deferred. Decide keep/cut `boulder` + the `*_test`/look-alike entities the catalogs flag.
+- **Tech debt — capability-based gating (8a):** stop overloading `category` as a behavior gate. Resolve
+  tool/weapon/armor behavior from capability fields (`tool_type` present, `armor_slot` present) so recategorizing
+  an item can't silently break `getToolStats` (handlers_world.go:693) or the armor-equip gate (:859). (This pass
+  used the minimal `||"weapon"` fix deliberately; the clean refactor is here.)
+- **Tech debt — data-schema lint (8b):** a committed validator for the entity JSON (category ∈ known enum, every
+  drop/recipe id resolves in the unified registry, every drop has an item entry or is flagged). Extends
+  `catalog_coverage.py`'s reports into a CI gate so the class of bug behind the 2026-06 doc-drift can't recur.
+- **Icon polish (optional):** the 6 new herb items + the occupant-only drops (cacti, several mushrooms, `geode`,
+  `reeds`) render via world-sprite fallback; dedicated `_icon.png`s via Pipeline A when art has time.
+
 ## Done 2026-06-13 — day/night lighting actually works (root-caused after 2 failed passes)
 Night was never dark — only point-lights were added, so deep night was the *brightest* time.
 ROOT CAUSE: TWO global Light2D at runtime — a static `Global Light 2D` baked in `SampleScene`
@@ -954,7 +974,7 @@ These came out of designing `economy/zones/` + `catalogs/`; each needs its own d
 - Client EditMode test infra (first candidates: icon resolution chain, sector math as a
   pure function, the cursor echo-interception rule).
 - Weapon tiers as moves data (sword_stone+, spear_iron — items.json entries + recolored
-  icons; the design-target table lives in architecture_items §3). Durability still unenforced.
+  icons; the design-target table lives in [`economy/catalogs/weapons.md`](economy/catalogs/weapons.md)). Durability still unenforced.
 - Whip weapon kind: one new AnimKind/profile + one client line/tip hit query — server-free
   (reach-only validation). First whip proves the moveset schema's extensibility claim.
 - Idle-held display for torches/lights (v1 gates on ToolType; the held torch already glows).

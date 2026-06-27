@@ -51,6 +51,42 @@ steel → silver → gold → platinum, plus the cave/swamp "flavor" iron source
 
 ---
 
+## Blocks & deposits — AS-BUILT (the mineable/buildable world)
+
+The real placeables/occupants you mine and place today (an exception to the "excludes placeables" scope above —
+these *are* the raw mineral world, and they're the source of the `ore` rows). Blocks **drop themselves**
+(Terraria-style): mine a `stone_block` → get a `stone_block`. **Depth shows via the floor tile + ore richness,
+NOT harder block tiers** — there is exactly ONE rock, `stone_block` (no boulders/stalagmites; decided repeatedly).
+**✅ = exists in the data today.**
+
+### Building blocks (placeables — drop themselves)
+| id | name | source | notes |
+|---|---|---|---|
+| `dirt_block` ✅ | Dirt Block | dig (shovel) | surface substrate |
+| `stone_block` ✅ | Stone Block | mine (pickaxe) | **the one rock** — all stone is this |
+| `sand_block` ✅ | Sand Block | dig (shovel) | desert/beach |
+| `clay_block` ✅ | Clay Block | dig (shovel) | → bricks/pottery |
+| `sandstone_block` ✅ | Sandstone Block | mine | desert building stone |
+| `quartz_block` ✅ | Quartz Block | mine | gem-bearing stone (→ `quartz`) |
+| `boulder` ✅ | Boulder | — | a `natural`-category placeable; **rocks were retired** — flagged for **your** removal/keep call |
+
+### Ore deposits (occupants — mine for the raw ore, scaled deposit sprite via `icon_from`)
+| id | name | yields | notes |
+|---|---|---|---|
+| `ore_copper_block` ✅ | Copper Deposit | `copper_ore` | T2 |
+| `ore_tin_block` ✅ | Tin Deposit | `tin_ore` ✅ | T2 (bronze line) |
+| `ore_coal_block` ✅ | Coal Deposit | `coal` | fuel |
+| `ore_iron_block` ✅ | Iron Deposit | `iron_ore` | T3 |
+| `ore_silver_block` ✅ | Silver Deposit | `silver_ore` | T4–T5 |
+| `ore_gold_block` ✅ | Gold Deposit | `gold_ore` | T4 |
+| `ore_platinum_block` ✅ | Platinum Deposit | `platinum_ore` | T5 (top, no diamond tools) |
+| `ore_diamond_block` ✅ | Diamond Deposit | gem | richest deep deposit |
+
+*Depth ramps the **count/richness** of these deposits (richest in the deepest band), not the block hardness — see
+the underground-zone design. `tin_ore` ✅ is the as-built raw item.*
+
+---
+
 ## metal-bar (smelted / crafted intermediate)
 
 Smelted at the furnace, or alloyed/tempered at the forge. The bar ladder is the backbone tier gate.
@@ -170,7 +206,6 @@ Foraged plants — dye/alchemy/cooking ingredients. The canonical herb/flower se
 | `cave_moss` ✅ | flora (cave) | forage/strip | Ant Colony, Centipede Cavern, Underground Passages/River, Spider Vale West | T1 | green/glow dye/binder; poultice; soft décor moss |
 | `forest_moss` | flora (moss) | forage | Millipede Forest | T4 | green dye/binder; bark-salve poultice; décor moss |
 | `gloom_moss` | flora (luminescent) | forage | Spider Vale East | T5 | glow-lamp; night_vision tonic; glow-dye (cheap survival) |
-| `wildflower_petals` | flora (mixed bloom) | forage | Village | T1 | dye base; cooking garnish; pressed-flower décor |
 | `nectar_bloom` | flora (flower bundle) | forage@flower_patch | Bee Meadow | T1 | cooking sweetener; calm_spray base; floral mead |
 | `swamp_lotus` | flora (deep bloom) | forage/dive | Deep Swamp | T3–T4 | → `lotus_essence`; calm + anti-disease base; dye |
 | `litter_mulch` | flora (leaf-litter) | forage | Millipede Forest | T4 | premium compost; mushroom substrate; armor padding |
@@ -217,6 +252,17 @@ Tree fruit and pressed/specialty fruit. (Most fruit/crops are canonical farm pro
 | `pressed_apple` | fruit (pressed) | forage/press | Village | T1 | early "cider must" cooking input; sweet bait |
 | `plum` ✅ | fruit | farm/tree | (tree_plum art) | T1 | cooking; rot → fly food (ecology) |
 | `cherry` ✅ | fruit | farm/tree | (tree_cherry art) | T1 | cooking; rot → fly food (ecology) |
+
+### As-built rotten fruit + seeds (ecology / forage)
+| id | type | source | used for |
+|---|---|---|---|
+| `rotten_apple` ✅ | rotten fruit | fruit rots on ground | **detritivore/fly food** (ecology); compost |
+| `rotten_orange` ✅ | rotten fruit | fruit rots on ground | detritivore/fly food; compost |
+| `rotten_plum` ✅ | rotten fruit | fruit rots on ground | detritivore/fly food; compost |
+| `rotten_cherry` ✅ | rotten fruit | fruit rots on ground | detritivore/fly food; compost |
+| `sunflower_seed` ✅ | seed/forage | forage `sunflower` | bird/bug feed; oil; replant |
+
+*(Crop **seeds** — `seed_wheat`/`seed_carrot`/… — are catalogued with the grow loop in [`plants.md`](plants.md).)*
 
 ---
 
@@ -524,7 +570,7 @@ consumables catalog; these are the **intermediate** rung.
 |---|---|---|---|---|---|
 | `red_dye` | processed (dye) | craft@dye_vat (`ladybug_shell`+`poppy`) | Village | T1 | recolor gear/décor |
 | `yellow_dye` | processed (dye) | craft@dye_vat (`dandelion`) | Village | T1 | recolor |
-| `blue_dye` | processed (dye) | craft@dye_vat (`wildflower_petals`) | Village | T1 | recolor |
+| `blue_dye` | processed (dye) | craft@dye_vat (`flower_blue`) | Village | T1 | recolor |
 | `green_dye` | processed (dye) | craft@dye_vat (`clover`+`fennel`) | Village | T1 | recolor |
 | `pollen_dye` | processed (dye) | craft@dye_vat (`pollen`) | Bee Meadow | T1 | yellow/gold dye bath |
 | `gold_dye` | processed (dye) | craft@dye_vat (`pollen`+`bumble_nectar`) | Hilltop Meadow | T2 | rich gold/amber "honey gold" |

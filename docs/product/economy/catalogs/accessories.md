@@ -42,7 +42,8 @@ matching accessory" = the set's optional 4th/5th jewelry piece flagged in that z
 
 | id | zone · tier | source | bonus(es) |
 |----|-------------|--------|-----------|
-| `bee_charm` | bee_meadow · T1–T2 | buy@beekeeper / rare skep drop | `honey_yield_pct` |
+| `bee_charm` ✅ | bee_meadow · T1–T2 | buy@beekeeper / rare skep drop | `honey_yield_pct` |
+| `lucky_clover` ✅ | village · T1 | forage/find (rare `clover`) | `gem_luck` / drop-luck — **as-built** accessory item (`armor_slot: accessory`) |
 | `pollinator_ring` | bee_meadow · T1–T2 | jeweler (`copper_bar` ×2 + `pollen` ×4 + `quartz` ×1) | `pollination` (boosts crop/flower pollination; honey-adjacent) |
 | `reed_snorkel` | shallow_swamp · T2 (head) | workbench (`reed_stalk` ×4 + `reed_fiber` ×3 + `swamp_gas` ×1) | `water_breath` (short timer) |
 | `lily_glider` | shallow_swamp · T3 | find (recipe scroll in swamp) — jeweler/workbench | brief `water_walk` + `fall_resist` (pad-hop gaps) |

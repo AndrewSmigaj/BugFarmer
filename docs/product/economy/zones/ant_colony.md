@@ -81,7 +81,7 @@ drops). They give the zone non-combat reasons to explore the dark and feed the r
 | Id | Source (find@ant_colony) | Cost-pt | Use |
 |---|---|---|---|
 | `mushroom_glow` ✅ | forage — bioluminescent caps clustered on damp gallery walls (reuse the existing underground flora). Common. | 1 | The zone's **free light source** — feeds the early glow-lamp + glow-paint + a `light_radius`/`night_vision` cooking note; the "you can see by the mushrooms" teach. |
-| `cave_moss` ✅ | forage — soft luminescent moss on the cooler north walls (reuse). Common. | 1 | A cheap green dye/binder + a soft bedding/insulation décor + a mild glow note for paint; the underground's `wildflower_petals` analog. |
+| `cave_moss` ✅ | forage — soft luminescent moss on the cooler north walls (reuse). Common. | 1 | A cheap green dye/binder + a soft bedding/insulation décor + a mild glow note for paint; the underground's cheap-forage-flora analog. |
 | `ant_fungus` ✅ | forage from the **fungus gardens** (also spilled by `black_ant`) — the pale combs the ants farm on chewed leaf-mulch. Common in tended galleries. | 2 | The keystone **food-chain** ingredient (fungus bread/stew/jerky) **and** a **fungus-leather** binder for the chitin armor's soft layers. The unique ant-farmed material. |
 | `mycelium_mat` | forage — the dense root-web mat under a mature fungus garden (a richer, processed `ant_fungus`). Uncommon. | 2 | Premium fungus-leather + a `crop_growth`/compost substrate (the colony's farming wisdom) + the fungus-farm "seed" to start your own gallery. |
 | `fungal_spore` | forage — puffed spore pods on old combs; harvest a cloud. Uncommon. | 2 | Inoculant to **seed a new fungus garden** (the player's own underground farm) + a rare-bug/`luck` bait note + a spore-bomb throwable base. |
