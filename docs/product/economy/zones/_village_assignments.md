@@ -98,8 +98,17 @@ Add a **chest** in his house → **throne recipe** (find).
 - **Backlog mechanics:** player-plots/décor-on-farm, lighting finish, electricity, fishing, land deeds,
   fill-state containers, water-tile placement.
 
-## H. OPEN CALLS for Andrew (the `(review)` flags above)
-1. cot/bunk_bed → basic_furniture or individual?  2. planter_box → wood (carpenter) or stone (stonemason)?
-3. sofa_modern → advanced_furniture (carpenter) or Modern Wares only?  4. Which decorations does the General
-Store carry vs Weaver/Stonemason/Ecologist?  5. gardener_gloves slot — accessory vs hand armor?
-6. Collection names (basic_furniture/advanced_furniture/… → your preferred labels).
+## H. RESOLVED (Andrew, 2026-06-27)
+1. **cot** → sold finished at the **General Store** (entry-level bed) AND its recipe is in the
+   `basic_furniture` collection at the Carpenter. **bunk_bed** → basic_furniture.
+2. **planter_box** → **wood**, recipe at the **Carpenter** (basic_furniture).
+3. **sofa_modern** → **Modern Wares only**, sold finished (no craft recipe).
+4. **Decorations** → I assign each to the sensible vendor (Weaver=woven, Stonemason=stone, Ecologist=
+   science, General Store=a few generic, Modern Wares=modern) or defer to another zone — **tracked** in
+   the pending-art / assignment lists so none are forgotten.
+5. **gardener_gloves** → **hand slot** (gloves are hand armor; accessories = sunshades/necklaces/etc.,
+   a different slot — those are the backlogged accessories revisit).
+6. **Collection names** → my call. Working slugs: `basic_furniture`, `advanced_furniture`, `stone_works`,
+   `woven_goods`, `structures_wood`, `structures_stone` (rename freely later).
+- **Art** → new items ship NOW with **placeholder squares** (manual pipeline); real art batched in
+  `art_needed.md`.

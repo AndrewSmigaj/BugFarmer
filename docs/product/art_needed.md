@@ -142,3 +142,22 @@ Stage 1 ships a generic panel built from existing UI sprites. The Apico-touch po
 
 (Catalog coverage: as scenes are built, ensure every world entity appears in at least one scene —
 that's also what surfaces the items above and any new ones added to the catalog.)
+
+---
+
+## VILLAGE ECONOMY BUILDOUT (D26) — placeholder art needing real sprites
+These ship NOW as flat colored-square placeholders (`tools/sprites/placeholder_sprites.py`, no API) so the
+items/stations are fully functional in engine. Replace with real art in a batched pass — **materials/blocks =
+gpt-image-1 (Pipeline A); NPC characters = generate_player_sprites (Pipeline B)**.
+
+### Material icons (`Resources/Items/{id}_icon.png`, 16×16) — gpt-image-1
+- Metal bars: `copper_bar` `bronze_bar` `steel_bar` `silver_bar` `gold_bar` `platinum_bar`
+- Base mats: `plank` `thread` `cloth` `glass` `chitin` `leather` `silk`
+
+### Stations (`Resources/Objects/{id}.png`) — gpt-image-1
+- `bug_extractor` (32×24) — the dead-bug → materials station.
+
+### Design TODO (not art): the Bug Extractor dead→material recipe map
+`chitin` (from `dead_beetle`) is live. The full mapping — which `dead_<bug>` yields `leather` / `silk` /
+more `chitin` — is undecided (village has no spider, so `silk` likely belongs to spider zones). Items exist
+(placeholder) so armor recipes can reference them; their EXTRACTOR recipes await Andrew's call.

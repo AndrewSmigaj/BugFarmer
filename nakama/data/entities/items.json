@@ -1307,5 +1307,148 @@
     "icon_from": "ore_sack",
     "slot_bonus": 10,
     "stackable": false
+  },
+  "copper_bar": {
+    "name": "Copper Bar",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 16
+  },
+  "bronze_bar": {
+    "name": "Bronze Bar",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 22
+  },
+  "steel_bar": {
+    "name": "Steel Bar",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 45
+  },
+  "silver_bar": {
+    "name": "Silver Bar",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 55
+  },
+  "gold_bar": {
+    "name": "Gold Bar",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 95
+  },
+  "platinum_bar": {
+    "name": "Platinum Bar",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 160
+  },
+  "plank": {
+    "name": "Plank",
+    "category": "resource",
+    "tags": [
+      "material",
+      "wood"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 3
+  },
+  "thread": {
+    "name": "Thread",
+    "category": "resource",
+    "tags": [
+      "material",
+      "textile"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 4
+  },
+  "cloth": {
+    "name": "Cloth",
+    "category": "resource",
+    "tags": [
+      "material",
+      "textile"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 9
+  },
+  "glass": {
+    "name": "Glass",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "chitin": {
+    "name": "Chitin",
+    "category": "resource",
+    "tags": [
+      "material",
+      "bug"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 7
+  },
+  "leather": {
+    "name": "Leather",
+    "category": "resource",
+    "tags": [
+      "material",
+      "bug"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 10
+  },
+  "silk": {
+    "name": "Silk",
+    "category": "resource",
+    "tags": [
+      "material",
+      "textile",
+      "bug"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 12
   }
 }

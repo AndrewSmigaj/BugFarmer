@@ -6040,5 +6040,33 @@
       "blocks_players": true,
       "blocks_bugs": true
     }
+  },
+  "bug_extractor": {
+    "name": "Bug Extractor",
+    "category": "crafting",
+    "sprite_w": 32,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 45,
+    "world": {
+      "footprint": [
+        2,
+        1
+      ],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "craft",
+      "breakable": {
+        "hp": 8,
+        "required_tool_type": "pickaxe",
+        "drops": [
+          {
+            "item_id": "bug_extractor",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
   }
 }

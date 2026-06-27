@@ -56,6 +56,7 @@ Derived numbers:
 | forge | steel/alloys, high-tier metal gear | **craft** @ anvil (iron_bar ×10 + brick ×5) |
 | cooking_pot | meals (timed buffs) | **craft** @ workbench (copper_bar ×2 + stone ×4) |
 | chopping_block | food/ingredient prep — chop produce & butcher carcasses (`dead_*`) into cooking inputs | **craft** @ workbench (wood ×6) |
+| `bug_extractor` | processes `dead_<bug>` carcasses → bug materials (chitin/leather/silk) (D18) | **craft** @ workbench — **BUILT (placeholder art)**; chitin recipe live, full dead→material map = design TODO |
 | cauldron | potions, dyes | **craft** @ anvil (copper_bar ×4 + stone ×6) |
 | keg / preserves_jar | artisan goods (wine, mead, pickles, jam) | **craft** @ sawmill (plank ×10 + copper_bar) |
 | honey_extractor | honeycomb → honey/beeswax | **craft** @ workbench (plank ×6 + copper_bar) |

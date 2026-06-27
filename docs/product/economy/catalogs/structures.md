@@ -136,6 +136,15 @@ signs, wells, docks, mining rigs, bug-catching infrastructure, beehives. Cost/st
 
 *(Harvest with a `bee_smoker` (tools.md); process honeycomb at the `honey_extractor` station (crafting.md).)*
 
+## NPC vendors (shop occupants — category `structure`, `interaction_type:"shop"`)
+The village vendors are placed occupants, not crafted — listed here so the registry homes them. Roster +
+stock = `../DECISIONS.md` D25/D26 + `merchants.md`; placeholder player-model art until distinct NPC sprites land.
+| id | role | source 🔵 | notes |
+|---|---|---|---|
+| `general_store_merchant` ✅ | General Store (Marjoram) | placed (village) | items: seeds/tools/calm_spray; buys material/food |
+| `bug_dealer` ✅ | Bug Dealer | placed (village) | bugs: buy live (`species.sell_price`) + dead; sells a few back |
+| *(coming D26)* `blacksmith`/`carpenter`/`weaver`/`stonemason`/`modern_wares`/`fisherman`/`mayor`/`ecologist`/`miners_outpost` | village + mining vendors | placed | see `_village_assignments.md` |
+
 ---
 
 **Scope:** 76 — 13 fences/gates, 7 walls, 4 doors/windows, 16 signs, 4 wells/mills, 4 docks/boats, 6 mining rigs,
