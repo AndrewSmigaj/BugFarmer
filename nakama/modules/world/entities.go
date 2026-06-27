@@ -157,9 +157,11 @@ type WorldData struct {
 // sell_price; the bug dealer additionally buys ANY live species and any dead_<bug> item. Purely
 // per-player transaction state — never in the deterministic sim hash.
 type ShopData struct {
-	Kind  string      `json:"kind"`            // "items" | "bugs"
-	Sells []ShopEntry `json:"sells,omitempty"` // what the NPC sells (player buys)
-	Buys  []string    `json:"buys,omitempty"`  // item ids/tags the NPC buys (price = entity sell_price)
+	Kind    string      `json:"kind"`              // "items" | "bugs"
+	Sells   []ShopEntry `json:"sells,omitempty"`   // finished goods the NPC sells (player buys)
+	Buys    []string    `json:"buys,omitempty"`    // item ids/tags the NPC buys (price = entity sell_price)
+	Recipes []ShopEntry `json:"recipes,omitempty"` // individual recipe ids the NPC teaches (id = recipe id)
+	Books   []ShopEntry `json:"books,omitempty"`   // recipe-book entries (id = a recipe `collection`; learns the whole set)
 }
 
 // ShopEntry is one offered good: an item or species id and the coins to buy it.

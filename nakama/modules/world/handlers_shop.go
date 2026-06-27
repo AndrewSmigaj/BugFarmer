@@ -70,7 +70,14 @@ func (m *Match) handleShopAction(
 	var changed bool
 	switch msg.Op {
 	case "buy":
-		changed = m.shopBuy(dispatcher, state, userID, player, shop, msg.ID, qty)
+		switch msg.SlotType {
+		case "recipe":
+			changed = m.shopBuyRecipe(dispatcher, state, userID, player, shop, msg.ID)
+		case "book":
+			changed = m.shopBuyBook(dispatcher, state, userID, player, shop, msg.ID)
+		default:
+			changed = m.shopBuy(dispatcher, state, userID, player, shop, msg.ID, qty)
+		}
 	case "sell":
 		changed = m.shopSell(dispatcher, state, userID, player, shop, msg.ID, qty, msg.Slot, msg.SlotType)
 	default:
@@ -117,6 +124,78 @@ func (m *Match) shopBuy(dispatcher runtime.MatchDispatcher, state *WorldState, u
 		}
 	}
 	player.Coins -= cost
+	return true
+}
+
+// shopBuyRecipe: the player learns ONE gated recipe from the shop's `recipes` list. Price is the
+// shop's asking Price. No-op (no charge) if already known or the recipe id doesn't exist.
+func (m *Match) shopBuyRecipe(dispatcher runtime.MatchDispatcher, state *WorldState, userID string, player *PlayerState, shop *ShopData, id string) bool {
+	unit := int64(-1)
+	for _, e := range shop.Recipes {
+		if e.ID == id {
+			unit = e.Price
+			break
+		}
+	}
+	if unit < 0 || state.Recipes[id] == nil {
+		m.sendWorldError(dispatcher, state, userID, "No such recipe here")
+		return false
+	}
+	if player.KnownRecipes == nil {
+		player.KnownRecipes = make(map[string]bool)
+	}
+	if player.KnownRecipes[id] {
+		m.sendWorldError(dispatcher, state, userID, "You already know that recipe")
+		return false
+	}
+	if player.Coins < unit {
+		m.sendWorldError(dispatcher, state, userID, "Not enough coins")
+		return false
+	}
+	player.KnownRecipes[id] = true
+	player.Coins -= unit
+	return true
+}
+
+// shopBuyBook: the player buys a "recipe book" — a `books` entry whose ID is a recipe `collection`.
+// Learns EVERY recipe sharing that collection at once. No-op (no charge) if the player already knows
+// them all or the collection has no recipes.
+func (m *Match) shopBuyBook(dispatcher runtime.MatchDispatcher, state *WorldState, userID string, player *PlayerState, shop *ShopData, collection string) bool {
+	unit := int64(-1)
+	for _, e := range shop.Books {
+		if e.ID == collection {
+			unit = e.Price
+			break
+		}
+	}
+	if unit < 0 {
+		m.sendWorldError(dispatcher, state, userID, "No such book here")
+		return false
+	}
+	if player.KnownRecipes == nil {
+		player.KnownRecipes = make(map[string]bool)
+	}
+	// Gather the collection's recipes (deterministic iteration not required — per-player, off-sim).
+	learned := 0
+	for rid, r := range state.Recipes {
+		if r.Collection == collection && !player.KnownRecipes[rid] {
+			learned++
+		}
+	}
+	if learned == 0 {
+		m.sendWorldError(dispatcher, state, userID, "You already know that book")
+		return false
+	}
+	if player.Coins < unit {
+		m.sendWorldError(dispatcher, state, userID, "Not enough coins")
+		return false
+	}
+	for rid, r := range state.Recipes {
+		if r.Collection == collection {
+			player.KnownRecipes[rid] = true
+		}
+	}
+	player.Coins -= unit
 	return true
 }
 

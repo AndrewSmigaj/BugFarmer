@@ -27,6 +27,7 @@ namespace BugFarmer.Data
             public int processTicks;
             public RecipeIO catalyst; // null when none
             public string unlock;
+            public string collection; // "recipe book" group (a book grants the whole set); "" = standalone
         }
 
         private static Dictionary<string, Recipe> _byId;
@@ -65,7 +66,8 @@ namespace BugFarmer.Data
                     output = ParseIO(o["output"] as JObject),
                     processTicks = o["process_ticks"]?.Value<int>() ?? 0,
                     catalyst = ParseIO(o["catalyst"] as JObject),
-                    unlock = o["unlock"]?.Value<string>() ?? ""
+                    unlock = o["unlock"]?.Value<string>() ?? "",
+                    collection = o["collection"]?.Value<string>() ?? ""
                 };
                 if (o["inputs"] is JArray ins)
                 {

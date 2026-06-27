@@ -578,6 +578,7 @@ type FullInventorySyncMessage struct {
 	Coins             int64           `json:"coins"`
 	ItemSlotsUnlocked int             `json:"item_slots_unlocked"` // usable item slots (base + backpack)
 	Intro             bool            `json:"intro,omitempty"`     // first login of this character → show the intro
+	KnownRecipes      []string        `json:"known_recipes,omitempty"` // gated recipe ids the player has learned (for the crafting-panel filter)
 }
 
 // MoveSlotMessage is sent by client (OpCode 28)

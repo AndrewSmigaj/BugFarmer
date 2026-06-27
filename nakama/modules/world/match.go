@@ -621,12 +621,17 @@ func (m *Match) sendInventorySync(logger runtime.Logger, dispatcher runtime.Matc
 	if unlocked <= 0 {
 		unlocked = baseUnlockedItemSlots
 	}
+	known := make([]string, 0, len(player.KnownRecipes))
+	for id := range player.KnownRecipes {
+		known = append(known, id)
+	}
 	msg := FullInventorySyncMessage{
 		BugSlots:          bugSlots,
 		ItemSlots:         itemSlots,
 		Coins:             player.Coins,
 		ItemSlotsUnlocked: unlocked,
 		Intro:             player.PendingIntro,
+		KnownRecipes:      known,
 	}
 	player.PendingIntro = false // one-shot
 

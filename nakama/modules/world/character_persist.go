@@ -46,6 +46,8 @@ type CharacterSave struct {
 	IntroSeen    bool    `json:"intro_seen"`
 	CreatedAt    int64   `json:"created_at"`
 	LastPlayedAt int64   `json:"last_played_at"`
+	// Gated recipes the character has learned (bought/found). Basic auto-unlock recipes are NOT stored.
+	KnownRecipes []string `json:"known_recipes,omitempty"`
 }
 
 // CharacterSummary is the lightweight view for the select screen (no full inventory).
@@ -79,7 +81,17 @@ func DefaultCharacterSave(charID, name string, app Appearance, now int64) *Chara
 		IntroSeen:         false,
 		CreatedAt:         now,
 		LastPlayedAt:      now,
+		KnownRecipes:      knownRecipesSlice(&tmp), // empty for a fresh character
 	}
+}
+
+// knownRecipesSlice flattens a player's KnownRecipes map to a slice for persistence/sync.
+func knownRecipesSlice(p *PlayerState) []string {
+	out := make([]string, 0, len(p.KnownRecipes))
+	for id := range p.KnownRecipes {
+		out = append(out, id)
+	}
+	return out
 }
 
 // applyCharacterSave copies a save's persistent fields onto a live PlayerState (over AddPlayer's
@@ -109,6 +121,10 @@ func applyCharacterSave(p *PlayerState, save *CharacterSave) {
 	p.CharCreatedAt = save.CreatedAt
 	p.Appearance = save.Appearance
 	p.IntroSeen = save.IntroSeen
+	p.KnownRecipes = make(map[string]bool, len(save.KnownRecipes))
+	for _, id := range save.KnownRecipes {
+		p.KnownRecipes[id] = true
+	}
 	p.HomeZone = save.HomeZone
 	p.HomeX = save.HomeX
 	p.HomeY = save.HomeY
@@ -138,6 +154,7 @@ func buildCharacterSave(p *PlayerState, zoneID string, chunkSize int, now int64)
 		IntroSeen:         p.IntroSeen,
 		CreatedAt:         p.CharCreatedAt,
 		LastPlayedAt:      now,
+		KnownRecipes:      knownRecipesSlice(p),
 	}
 }
 

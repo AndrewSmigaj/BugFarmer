@@ -117,6 +117,16 @@ func playerConsume(player *PlayerState, itemID string, count int) bool {
 	return remaining == 0
 }
 
+// recipeKnown reports whether the player may craft r. Recipes with unlock "" / "default" are always
+// craftable (basic auto-unlock — all tool/weapon/armor tiers). Gated recipes (unlock "shop:<npc>" /
+// "find") require an entry in the player's KnownRecipes (bought from a vendor or found).
+func recipeKnown(player *PlayerState, id string, r *entities.RecipeDef) bool {
+	if r.Unlock == "" || r.Unlock == "default" {
+		return true
+	}
+	return player.KnownRecipes != nil && player.KnownRecipes[id]
+}
+
 // recipeAllInputs returns the recipe's inputs plus its catalyst (if any) — everything consumed
 // per batch.
 func recipeAllInputs(r *entities.RecipeDef) []entities.RecipeIO {
@@ -240,6 +250,10 @@ func (m *Match) handleCraftStationAction(
 				m.sendWorldError(dispatcher, state, userID, "That recipe isn't made here")
 				return
 			}
+			if !recipeKnown(player, msg.Recipe, r) {
+				m.sendWorldError(dispatcher, state, userID, "You haven't learned that recipe yet")
+				return
+			}
 		}
 		if s.Queue > 0 && msg.Recipe != s.Recipe {
 			m.sendWorldError(dispatcher, state, userID, "Finish or collect the current batch first")
@@ -286,6 +300,10 @@ func (m *Match) craftQueue(
 	r := state.Recipes[recipeID]
 	if r == nil || r.Station != s.EntityID {
 		m.sendWorldError(dispatcher, state, userID, "That recipe isn't made here")
+		return false
+	}
+	if !recipeKnown(player, recipeID, r) {
+		m.sendWorldError(dispatcher, state, userID, "You haven't learned that recipe yet")
 		return false
 	}
 	if s.Queue > 0 && s.Recipe != recipeID {

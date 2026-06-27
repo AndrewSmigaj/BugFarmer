@@ -319,7 +319,12 @@ type PlayerState struct {
 	CharCreatedAt int64
 	IntroSeen     bool
 	PendingIntro  bool // transient: first login this session → ride the next FullInventorySync
-	Appearance    Appearance
+	// KnownRecipes: recipe ids the player has LEARNED (bought/found). Recipes with unlock
+	// "" / "default" are always craftable and NOT tracked here; only gated recipes
+	// (unlock "shop:<npc>" / "find") need an entry. Persisted via CharacterSave. Per-player,
+	// never sim state.
+	KnownRecipes map[string]bool
+	Appearance   Appearance
 	HomeZone      string // bed-set respawn/login zone ("" = use the zone spawn_point)
 	HomeX         float32
 	HomeY         float32
@@ -476,6 +481,9 @@ func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presenc
 func applyStartingKit(player *PlayerState) {
 	player.MaxHP = 10
 	player.HP = 10
+	if player.KnownRecipes == nil {
+		player.KnownRecipes = make(map[string]bool)
+	}
 
 	// Slot 0 left EMPTY for now — the "hands" grab verb is pulled pending the
 	// grabbing/pushing/shoving rework (BACKLOG). Empty slots still behave as a bare-hand

@@ -232,6 +232,12 @@ namespace BugFarmer.UI
         private void BuildCraftContent()
         {
             var recipes = RecipeDatabase.ForStation(_occupantId);
+            // Hide gated recipes the player hasn't learned. Basic recipes (unlock "" / "default")
+            // are always craftable; "shop:<npc>"/"find" recipes appear only once in KnownRecipes.
+            var known = InventoryManager.Instance != null ? InventoryManager.Instance.KnownRecipes : null;
+            recipes = recipes.FindAll(r =>
+                string.IsNullOrEmpty(r.unlock) || r.unlock == "default" ||
+                (known != null && known.Contains(r.id)));
 
             // --- LEFT: recipe list ---
             var listHead = UIFactory.MakeText(_content, "RecipesHeader", UIFactory.HeaderSize,
