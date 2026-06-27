@@ -341,3 +341,67 @@ The buy/sell/NPC/currency foundation is implemented and unit-tested. As built:
 - **Server logic unit-tested** (`shop_test.go`, 11 cases). Deferred (still design): recipe-selling, the other
   village NPCs, the Mining-Outpost, NPC dialogue/wandering, rotating/exotic stock, the bug-market building+scene,
   and **distinct NPC art** (v1 reuses the player-model `merchant`/`scholar` sprites as placeholders).
+
+### D26 — Village economy buildout: full vendor roster + recipe system (2026-06-27)
+Andrew's calls from the `zones/_village_vendors.prune.md` review. **These are decided — do not re-litigate.**
+
+**Recipe acquisition rule (the one that keeps getting inverted):** **basic recipes AUTO-unlock at their
+station — ALL metal tool/weapon/armor tiers included.** Tools are NEVER gated. The **bought/found** layer is
+**décor / furniture / advanced / "rare teases"** (crafting.md §7). Recipe gating uses the recipe `unlock`
+seam (`default` vs `shop:<npc>`/`find`).
+
+**Recipe collections / "recipe books" (NEW mechanism):** recipes carry an optional `collection`; a vendor
+sells a **book ENTRY** (e.g. "Basic Furniture Vol. I") that grants **every recipe in that collection** into
+`KnownRecipes` at once (collection-grant, NOT a physical item). Individual recipes still sell one-off.
+Collections: `basic_furniture`, `advanced_furniture`, + stone/woven/etc. as lists settle.
+
+**Vendor roster (village) — buildings mayor/market/smith/carpenter/ecologist already placed:**
+- **General Store / Merchant** — wood tools, seeds, calm_spray (costs a bit), torch + lantern (buy; lantern
+  pricier), **candle recipe**, **fence (finished good)**, **magnifying_glass** (new starter tool),
+  **gardener_gloves** (decent price; harvest-bonus mechanic → backlog), some decorations + recipes/teases
+  (specific lists in `_village_assignments.md`), **rotating random higher-level items**. **NO metal
+  tools/weapons** (those are the Blacksmith's).
+- **Blacksmith** — iron+copper **bars**, iron/copper tools, **weapons beyond wood**, armor, **wood stove**
+  (`stove_wood` — it's metal), **candelabra recipe** (iron). **Buys metal BARS, not ore.** Remove
+  bee_charm/lucky_clover. **Accessories → BACKLOG** (revisit list; assign each to vendor/found/recipe).
+- **Carpenter** — **basic_furniture recipe book** (chair_wood, table_wood, stool_wood, bench, log_seat,
+  bookshelf, dresser, desk, cabinet, cupboard, wardrobe, nightstand, side_table, coffee_table, bed_basic,
+  rocking_chair, + the rest of basic). Individual: **keg** (basic; also sell kegs), grandfather_clock,
+  bed_canopy. **advanced_furniture set** (loveseat/sofa/sofa_modern/armchair/chaise_lounge/ottoman/
+  chair_cushioned/kitchen_island/map_table_big; sell the loveseat finished). **wall_wood** (default-unlock,
+  wood station) + **fence recipe**. (Name collections better.)
+- **Ecologist** (building exists, "we forgot him") — has recipes for his house items: telescope,
+  specimen_shelf, bug_terrarium(_big), specimen_case.
+- **Mayor** — land deeds → DEFERRED. Add a **chest in his house** holding the **throne recipe** (found-only).
+- **Fisherman** (NEW NPC) — poles + boat (**fishing mechanic deferred**), **reed_hat recipe** (workbench).
+  straw_hat → a later zone.
+- **Weaver** (NEW NPC + NEW shop scene) — woven goods (rugs/cloth/laundry_line) + **dyes** (dye station;
+  basic colors default-unlocked; special colors = recipes spread across zones).
+- **Stonemason** (NEW NPC + NEW building scene) — stone things: birdbath, fountain, statues, stone furniture,
+  brick/stone walls & paths.
+- **Modern Wares** (NEW NPC + NEW building scene; glass blocks/modern floors/shelves) — fridge, range_stove,
+  floor lamps (need **electricity → backlog**), modern furniture.
+
+**Mining mental model (corrected):** ore → `rock_crusher` → `paydirt` → `ore_sluice` → **bars**. So **raw ore
+sells at the mining areas (Miner's Outpost); the village Blacksmith buys BARS.**
+
+**Placeable taxonomy (adopted):** `category` = what it IS (art/org); behaviour = `interaction_type` +
+blocks (`container`/`shop`/recipes). **"decoration" = placeable with NO behaviour.** Reclassify: buckets/
+ore-bins/terraria → **containers**; fishing rod/net → **tools** (placeable form); `lily_pad` → **flora**;
+campfire → **cook-station**; `cow_skull`/`tumbleweed` → **find-only**; `dead_bush` → **cut**. (Container &
+tool conversions that need the fill-display / fishing mechanic ride with those backlog items.)
+
+**Sneak-peek / find principles:** anything already placed in a zone **stays** (players glimpse décor whose
+recipe lives elsewhere); part of furniture/décor is **find-only** (ties to **player plots / décor-on-farm →
+backlog**, in the design).
+
+**Build philosophy:** recipe creation is **mine to author, Andrew reviews** (too tedious by hand). The metal
+bar ladder and base mats (plank/cloth/glass/leather via Bug Extractor) **just get built** — not a blocker.
+Electronics = buy-only (no player recipe).
+
+**Backlog (so nothing is lost):** fill-state placeable containers (ore bins/buckets/carts) · player plots /
+décor-on-farm · finish lighting · electricity · fishing mechanic · land deeds · water-tile placement (one
+`dock_plank` for docks+bridges) · gardener-glove bonus · accessories revisit+assign · fancy furniture → a
+later zone (track bed_fancy/sofa_fancy/dresser_fancy/…) · wine_rack + bigger kegs → bee zone · garden_arch
+recipe → another town · special dye colors across zones · straw_hat later · tumbleweed (drier zones) · the
+stat `bonuses{}` engine.
