@@ -247,5 +247,23 @@
   },
   "shop_shelving": {
     "look": "tall wooden STORE SHELVING seen front-on: an upright frame of 3-4 horizontal SHELVES stocked with assorted general-store SUNDRIES - jars, sacks, bottles, folded cloth and tins in muted colors; a stocked shop shelf, NOT books, NOT a plain cabinet"
+  },
+  "dye_vat": {
+    "look": "a large round wooden DYE VAT on a low frame, brimming with deep blue-purple DYE, a wooden stir-paddle resting across the rim, faint steam rising. A dyer's tub, NOT a barrel or a well.",
+    "materials": [
+      "wood"
+    ]
+  },
+  "spinning_wheel": {
+    "look": "a traditional wooden SPINNING WHEEL: one large spoked WHEEL standing upright on a slanted treadle base, a small bobbin and a tuft of pale fiber on the spindle. NOT a cartwheel.",
+    "materials": [
+      "wood"
+    ]
+  },
+  "sewing_machine": {
+    "look": "an antique foot-treadle SEWING MACHINE: a black cast-iron machine head with a needle arm sitting on a small wooden TABLE, a cast-iron foot TREADLE and flywheel underneath. NOT a typewriter.",
+    "materials": [
+      "wood"
+    ]
   }
 }

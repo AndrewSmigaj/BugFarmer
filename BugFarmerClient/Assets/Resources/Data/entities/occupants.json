@@ -3095,6 +3095,22 @@
           {
             "id": "thread",
             "price": 8
+          },
+          {
+            "id": "red_dye",
+            "price": 10
+          },
+          {
+            "id": "yellow_dye",
+            "price": 10
+          },
+          {
+            "id": "blue_dye",
+            "price": 12
+          },
+          {
+            "id": "green_dye",
+            "price": 10
           }
         ],
         "buys": [
@@ -3105,6 +3121,24 @@
           {
             "id": "woven_goods",
             "price": 120
+          }
+        ],
+        "recipes": [
+          {
+            "id": "loom",
+            "price": 90
+          },
+          {
+            "id": "spinning_wheel",
+            "price": 60
+          },
+          {
+            "id": "sewing_machine",
+            "price": 110
+          },
+          {
+            "id": "dye_vat",
+            "price": 70
           }
         ]
       }

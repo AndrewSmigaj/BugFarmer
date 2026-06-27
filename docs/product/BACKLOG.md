@@ -1001,3 +1001,18 @@ v1 (DECISIONS D25) shipped currency + two working village vendors. Open follow-o
 - **Recipe-selling (Phase 2)** — `KnownRecipes` on the character + craft-station unlock enforcement, so shops
   can sell recipes (today all recipes are `unlock:"default"`).
 - **NPC dialogue / wandering**, rotating/rare stock (adds shared state → revisit concurrency), bug-slot UI polish.
+
+## Later — furniture / container / skill mechanics (from the Weaver scene pass, 2026-06-27)
+- **Placeable containers (world + char-slot):** a container item can be worn in the character's container
+  slot AND **placed in the world and used like a chest** — for the ones that make sense (a `dresser` holds
+  clothes; you shouldn't drop it as a generic world chest). Define which containers are placeable-as-storage.
+- **Furniture container filters:** make sure **all** furniture/decoration containers are actually set up as
+  containers and **filter correctly** (dresser → clothes/armor only, wardrobe → clothes, terrarium → bugs,
+  ore bin → blocks, etc.). Audit the `world.container.filter` on every container.
+- **Player skill system (passive, station-driven):** each station USE grants a little EXP toward a skill
+  (weaving, smithing, masonry, cooking…) — a nice passive, player-driven progression. Skills unlock perks /
+  speed / quality. Design + build later.
+- **Furniture-on-rug:** placing furniture **on top of a rug** must work (rug is a flat floor decoration that
+  doesn't block the cell; the furniture sits over it). Verify the flat-placeable + occupant stacking.
+- **Multi-square rug art:** rugs should visibly span **multiple cells** (`rug` 2×2 / `rug_large` 2×3) — the
+  current art reads as one tiny square; the sprite must fill its footprint. (Art fix, batched.)

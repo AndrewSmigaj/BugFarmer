@@ -248,5 +248,29 @@
     "materials": [
       "fabric"
     ]
+  },
+  "red_dye": {
+    "look": "a small round glass JAR of crimson powdered DYE, vivid red pigment filling it, a cork stopper on top. A clean inventory icon.",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "yellow_dye": {
+    "look": "a small round glass JAR of golden-yellow powdered DYE, vivid yellow pigment filling it, a cork stopper on top. A clean inventory icon.",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "blue_dye": {
+    "look": "a small round glass JAR of deep blue powdered DYE, vivid blue pigment filling it, a cork stopper on top. A clean inventory icon.",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "green_dye": {
+    "look": "a small round glass JAR of leaf-green powdered DYE, vivid green pigment filling it, a cork stopper on top. A clean inventory icon.",
+    "materials": [
+      "fabric"
+    ]
   }
 }

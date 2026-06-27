@@ -95,3 +95,10 @@ are tagged-but-unvalued (D5). Craftables route to workbench/sawmill/stonecutter/
 are buy/unlock; natural clutter is world-placed (find). Look-alikes (`rug`/`rug_large`/`rug_round`,
 `potted_plant`/`plant_large`, `specimen_case`/`specimen_shelf`, `campfire`/`campfire_spit`) carry overlap notes
 for **your** prune call. The rock/cave-decor **rework** stays backlogged — this page only documents.
+
+## Weaver shop décor (D26 — placeholder art)
+| id | role | source 🔵 |
+|---|---|---|
+| `dress_form` ✅ | tailor's mannequin / garment display | buy@weaver · craft@sewing_machine |
+| `fabric_bolt` ✅ | stacked bolt of woven cloth | buy@weaver · craft@loom |
+| `yarn_basket` ✅ | basket of dyed yarn (colour-pop clutter) | buy@weaver · find |

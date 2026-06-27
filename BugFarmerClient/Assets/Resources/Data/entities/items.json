@@ -1503,5 +1503,49 @@
     "stackable": false,
     "sell_price": 18,
     "buy_price": 60
+  },
+  "red_dye": {
+    "name": "Red Dye",
+    "category": "resource",
+    "tags": [
+      "material",
+      "dye"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "yellow_dye": {
+    "name": "Yellow Dye",
+    "category": "resource",
+    "tags": [
+      "material",
+      "dye"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "blue_dye": {
+    "name": "Blue Dye",
+    "category": "resource",
+    "tags": [
+      "material",
+      "dye"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "green_dye": {
+    "name": "Green Dye",
+    "category": "resource",
+    "tags": [
+      "material",
+      "dye"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
   }
 }

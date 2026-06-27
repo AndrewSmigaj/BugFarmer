@@ -117,9 +117,27 @@
     "look": "a wooden ship's STEERING WHEEL with eight turned spokes and a brass hub, mounted upright on a small stand, seen front-on; a nautical decoration"
   },
   "anchor_decor": {
-    "look": "an old iron ship's ANCHOR \u2014 a ring at top, a long shank, a crossbar, and two curved pointed flukes at the bottom \u2014 standing upright leaning slightly; a heavy nautical decoration, NOT a sign or a hook"
+    "look": "an old iron ship's ANCHOR — a ring at top, a long shank, a crossbar, and two curved pointed flukes at the bottom — standing upright leaning slightly; a heavy nautical decoration, NOT a sign or a hook"
   },
   "fishing_pole": {
     "look": "a single long thin fishing ROD with a small reel and a length of line, leaning at a slant; one slender fishing pole, mostly empty space around the thin rod"
+  },
+  "dress_form": {
+    "look": "a tailor's DRESS FORM: a fabric MANNEQUIN torso with NO head and NO arms, on a single slim wooden tripod stand, a half-pinned strip of cloth draped over the shoulder. A dressmaker's dummy.",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "fabric_bolt": {
+    "look": "a short stack of rolled BOLTS OF CLOTH: two or three cylindrical fabric rolls in different muted colours lying on their sides. NOT scrolls and NOT logs.",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "yarn_basket": {
+    "look": "a round woven wicker BASKET overflowing with balls of brightly coloured YARN, one knitting needle poking out of the top. NOT a fruit basket.",
+    "materials": [
+      "fabric"
+    ]
   }
 }

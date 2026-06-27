@@ -57,6 +57,9 @@ Derived numbers:
 | cooking_pot | meals (timed buffs) | **craft** @ workbench (copper_bar ×2 + stone ×4) |
 | chopping_block | food/ingredient prep — chop produce & butcher carcasses (`dead_*`) into cooking inputs | **craft** @ workbench (wood ×6) |
 | `bug_extractor` | processes `dead_<bug>` carcasses → bug materials (chitin/leather/silk) (D18) | **craft** @ workbench — **BUILT (placeholder art)**; chitin recipe live, full dead→material map = design TODO |
+| `spinning_wheel` | fiber → thread (the Weaver's thread station, D26) | **craft** @ workbench (recipe **buy@weaver**) |
+| `sewing_machine` | cloth → woven goods (the foot-cranked Weaver table, D26) | **craft** @ workbench (recipe **buy@weaver**) |
+| `dye_vat` | flora → dyes (basic colours auto; D26) | **craft** @ workbench (recipe **buy@weaver**) |
 | cauldron | potions, dyes | **craft** @ anvil (copper_bar ×4 + stone ×6) |
 | keg / preserves_jar | artisan goods (wine, mead, pickles, jam) | **craft** @ sawmill (plank ×10 + copper_bar) |
 | honey_extractor | honeycomb → honey/beeswax | **craft** @ workbench (plank ×6 + copper_bar) |

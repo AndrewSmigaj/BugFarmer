@@ -6072,5 +6072,193 @@
         ]
       }
     }
+  },
+  "dye_vat": {
+    "name": "Dye Vat",
+    "category": "crafting",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 30,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "craft",
+      "breakable": {
+        "hp": 3,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "dye_vat",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "spinning_wheel": {
+    "name": "Spinning Wheel",
+    "category": "crafting",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 14,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "spinning_wheel",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      },
+      "interactable": true,
+      "interaction_type": "craft"
+    }
+  },
+  "dress_form": {
+    "name": "Dress Form",
+    "category": "decoration",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "stackable": false,
+    "sell_price": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "dress_form",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "fabric_bolt": {
+    "name": "Fabric Bolt",
+    "category": "decoration",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "stackable": false,
+    "sell_price": 6,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "fabric_bolt",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "yarn_basket": {
+    "name": "Yarn Basket",
+    "category": "decoration",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "stackable": false,
+    "sell_price": 5,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "yarn_basket",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "sign_weaver": {
+    "name": "Weaver Sign",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 6,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "sign_weaver",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "sewing_machine": {
+    "name": "Sewing Machine",
+    "category": "crafting",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 30,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "craft",
+      "breakable": {
+        "hp": 3,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "sewing_machine",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
   }
 }

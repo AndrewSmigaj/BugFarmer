@@ -317,7 +317,7 @@
     "unlock": "default"
   },
   "thread": {
-    "station": "loom",
+    "station": "spinning_wheel",
     "inputs": [
       {
         "item": "fiber",
@@ -1035,7 +1035,7 @@
     "collection": "stone_works"
   },
   "rug": {
-    "station": "loom",
+    "station": "sewing_machine",
     "inputs": [
       {
         "item": "cloth",
@@ -1067,7 +1067,7 @@
     "collection": "woven_goods"
   },
   "rug_round": {
-    "station": "loom",
+    "station": "sewing_machine",
     "inputs": [
       {
         "item": "cloth",
@@ -1083,7 +1083,7 @@
     "collection": "woven_goods"
   },
   "laundry_line": {
-    "station": "loom",
+    "station": "sewing_machine",
     "inputs": [
       {
         "item": "thread",
@@ -1103,7 +1103,7 @@
     "collection": "woven_goods"
   },
   "room_divider": {
-    "station": "loom",
+    "station": "sewing_machine",
     "inputs": [
       {
         "item": "cloth",
@@ -1544,5 +1544,149 @@
     },
     "process_ticks": 12,
     "unlock": "default"
+  },
+  "red_dye": {
+    "station": "dye_vat",
+    "inputs": [
+      {
+        "item": "poppy",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "red_dye",
+      "count": 1
+    },
+    "process_ticks": 30,
+    "unlock": "default"
+  },
+  "yellow_dye": {
+    "station": "dye_vat",
+    "inputs": [
+      {
+        "item": "dandelion",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "yellow_dye",
+      "count": 1
+    },
+    "process_ticks": 30,
+    "unlock": "default"
+  },
+  "blue_dye": {
+    "station": "dye_vat",
+    "inputs": [
+      {
+        "item": "flower",
+        "count": 3
+      }
+    ],
+    "output": {
+      "item": "blue_dye",
+      "count": 1
+    },
+    "process_ticks": 30,
+    "unlock": "default"
+  },
+  "green_dye": {
+    "station": "dye_vat",
+    "inputs": [
+      {
+        "item": "clover",
+        "count": 3
+      }
+    ],
+    "output": {
+      "item": "green_dye",
+      "count": 1
+    },
+    "process_ticks": 30,
+    "unlock": "default"
+  },
+  "loom": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 8
+      },
+      {
+        "item": "iron_bar",
+        "count": 1
+      },
+      {
+        "item": "fiber",
+        "count": 10
+      }
+    ],
+    "output": {
+      "item": "loom",
+      "count": 1
+    },
+    "process_ticks": 20,
+    "unlock": "shop:weaver"
+  },
+  "spinning_wheel": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 6
+      },
+      {
+        "item": "iron_bar",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "spinning_wheel",
+      "count": 1
+    },
+    "process_ticks": 20,
+    "unlock": "shop:weaver"
+  },
+  "sewing_machine": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 6
+      },
+      {
+        "item": "iron_bar",
+        "count": 2
+      },
+      {
+        "item": "cloth",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "sewing_machine",
+      "count": 1
+    },
+    "process_ticks": 20,
+    "unlock": "shop:weaver"
+  },
+  "dye_vat": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 4
+      },
+      {
+        "item": "stone_block",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "dye_vat",
+      "count": 1
+    },
+    "process_ticks": 20,
+    "unlock": "shop:weaver"
   }
 }

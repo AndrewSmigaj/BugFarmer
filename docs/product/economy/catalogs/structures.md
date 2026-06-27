@@ -60,6 +60,7 @@ signs, wells, docks, mining rigs, bug-catching infrastructure, beehives. Cost/st
 | `sign_market` / `sign_market_board` ✅ | market signs | craft@workbench (wood) | market dressing |
 | `sign_shop` / `sign_inn` / `sign_camp` ✅ | shop/inn/camp signs | craft@workbench (wood) | building markers |
 | `sign_anchor` / `sign_fish_board` ✅ | dock/fishing signs | craft@workbench (wood) | dock dressing |
+| `sign_weaver` ✅ | weaver/textile shop sign (D26) | craft@workbench (wood) | weaver storefront |
 | `sign_anvil` / `sign_leaf` / `sign_crest` ✅ | smith/naturalist/town-crest signs | craft@workbench (wood) | themed markers |
 | `sign_weather` / `veg_patch_sign` ✅ | weather/veg-patch signs | craft@workbench (wood) | themed markers |
 | `neon_sign` ✅ | neon sign | **buy** (electricity expansion, D14) | powered sign |
