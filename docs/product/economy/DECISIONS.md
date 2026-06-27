@@ -322,3 +322,22 @@ After a long search for something non-clunky, the model is a single uniform rule
 **Status: DESIGN ONLY — not built.** Implementation later: most flora gain a chance-based seed drop; the flower
 resource becomes `dead_flower`; large plants get higher `hp`; seed items get created (only crop `seed_*` exist
 today). "We'll see how it works out" — the seed-drop chance is the main balance knob.
+
+---
+
+### D25 — Commerce spine v1 BUILT (2026-06-27)
+The buy/sell/NPC/currency foundation is implemented and unit-tested. As built:
+- **Currency live:** `PlayerState.Coins` is now mutated (earn on sell, spend on buy), persisted via
+  `CharacterSave`, synced to the HUD via the existing `sendInventorySync` echo. Players start at **0 coins** —
+  selling a caught bug is the first coin source (D24/onboarding).
+- **NPC = a `shop` occupant** (`occupants.json`, `interaction_type:"shop"`, `world.shop{kind,sells,buys}`),
+  resolved at its anchor cell. Server `handlers_shop.go` on **`OpCodeAction(2)`** (no new opcode); client
+  `ShopController` (OnGUI), routed via `PlayerInputRouter`. Stock is unlimited → no shared state, no races.
+- **Two vendors in the village:** **General Store** (`general_store_merchant`, kind items — sells seeds/tools,
+  buys material/food-tagged crops & forage) and **Bug Dealer** (`bug_dealer`, kind bugs — buys live bugs at
+  `species.sell_price` (1–25) + dead-bug items; sells a couple back at a markup). Placed at the storefront.
+- **Anti-exploit:** a load-time invariant rejects any shop selling a good cheaper than it buys it back
+  (`validateShopArbitrage`); fixed the `small_net` 0-buy/25-sell data bug.
+- **Server logic unit-tested** (`shop_test.go`, 11 cases). Deferred (still design): recipe-selling, the other
+  village NPCs, the Mining-Outpost, NPC dialogue/wandering, rotating/exotic stock, the bug-market building+scene,
+  and **distinct NPC art** (v1 reuses the player-model `merchant`/`scholar` sprites as placeholders).

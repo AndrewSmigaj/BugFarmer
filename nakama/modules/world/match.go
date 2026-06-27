@@ -292,6 +292,11 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 		}
 	}
 
+	// Economy invariant: no shop may sell a good cheaper than it buys it back (infinite-money pump).
+	if bad := validateShopArbitrage(state); len(bad) > 0 {
+		logger.Error("SHOP ARBITRAGE — sold cheaper than bought back: %v", bad)
+	}
+
 	// Load crop definitions
 	state.CropDefs, err = LoadCropDefs("data")
 	if err != nil {
@@ -1005,6 +1010,14 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 					continue
 				}
 				m.handleContainerAction(logger, dispatcher, worldState, userID, caMsg)
+
+			case OpCodeAction:
+				var shMsg ShopActionMessage
+				if err := json.Unmarshal(msg.GetData(), &shMsg); err != nil {
+					logger.Warn("Invalid shop action from %s: %v", userID, err)
+					continue
+				}
+				m.handleShopAction(logger, dispatcher, worldState, userID, shMsg)
 
 			case OpCodeSetHome:
 				var shMsg SetHomeMessage

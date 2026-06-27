@@ -29,7 +29,9 @@ from `items.json` alone (that error has happened repeatedly: `ore_copper_block` 
   removed.)
 - **Harvest**: crops (`crops.json harvest_item`); fruit trees (`fruit_type` on the tree occupant).
 - **Kill**: a bug drops **ONLY `dead_<species>`** (`carcass_item`; `spawnCarcass`, `handlers_combat.go`).
-- **Craft**: a recipe output (`recipes.json`). **Buy**: an NPC shop (designed, not built yet).
+- **Craft**: a recipe output (`recipes.json`). **Buy/Sell**: an NPC vendor — **BUILT v1** (D25):
+  a `shop` occupant (`world.shop{kind,sells,buys}`) on `OpCodeAction(2)` → `handlers_shop.go`; currency live.
+  Two village vendors (general store + bug dealer). More shops/recipe-selling still designed.
 
 ## 3. Decisions that keep getting dropped — DO NOT re-litigate
 - **D18 — bugs drop only `dead_<bug>`.** No per-bug ground parts. A **Bug Extractor** (a normal station,

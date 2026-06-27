@@ -2,8 +2,14 @@
 
 The three shops, the currency, and the **craft-vs-buy mix** (it's a mix, not either/or — `DECISIONS.md` D1).
 Recipes/costs live in `crafting.md`; pacing in `progression.md`; the NPC sketch this builds on is
-`suggestions.md §3`. **All of this is design — no shop code exists yet** (`findings.md`: no currency, no
-buy/sell RPC, no shop UI).
+`suggestions.md §3`.
+
+> **BUILT — commerce spine v1 (2026-06-27, DECISIONS D25):** currency is now live (earn/spend, persisted),
+> and **two NPC vendors** work end-to-end in the village — the **General Store** (`general_store_merchant`:
+> buy seeds/tools, sell crops/forage) and the **Bug Dealer** (`bug_dealer`: sell live bugs at
+> `species.sell_price` + dead bugs; buy a couple back). Server: `handlers_shop.go` on `OpCodeAction(2)` +
+> a load-time arbitrage invariant; client: `ShopController` (OnGUI). The full multi-shop roster + recipe-
+> selling + rotating stock below is still design.
 
 ---
 

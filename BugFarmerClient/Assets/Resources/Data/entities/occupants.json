@@ -2770,5 +2770,109 @@
       ],
       "pivot": "bc"
     }
+  },
+  "general_store_merchant": {
+    "name": "Marjoram (General Store)",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "shop": {
+        "kind": "items",
+        "sells": [
+          {
+            "id": "seed_tomato",
+            "price": 10
+          },
+          {
+            "id": "seed_corn",
+            "price": 8
+          },
+          {
+            "id": "seed_carrot",
+            "price": 8
+          },
+          {
+            "id": "seed_cabbage",
+            "price": 10
+          },
+          {
+            "id": "seed_pumpkin",
+            "price": 14
+          },
+          {
+            "id": "seed_wheat",
+            "price": 5
+          },
+          {
+            "id": "small_net",
+            "price": 30
+          },
+          {
+            "id": "watering_can_basic",
+            "price": 30
+          },
+          {
+            "id": "hoe_wood",
+            "price": 20
+          },
+          {
+            "id": "pickaxe_wood",
+            "price": 25
+          },
+          {
+            "id": "axe_wood",
+            "price": 25
+          },
+          {
+            "id": "calm_spray",
+            "price": 20
+          }
+        ],
+        "buys": [
+          "material",
+          "food"
+        ]
+      }
+    }
+  },
+  "bug_dealer": {
+    "name": "Bug Dealer",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "shop": {
+        "kind": "bugs",
+        "sells": [
+          {
+            "id": "fly_common",
+            "price": 3
+          },
+          {
+            "id": "butterfly_meadow",
+            "price": 8
+          }
+        ]
+      }
+    }
   }
 }

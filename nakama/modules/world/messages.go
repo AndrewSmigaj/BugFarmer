@@ -370,6 +370,21 @@ type ContainerActionMessage struct {
 	Qty    int    `json:"qty,omitempty"`
 }
 
+// ShopActionMessage (OpCode 2 / OpCodeAction, C→S): one buy/sell at the NPC vendor occupant at (gx,gy).
+//   - "buy"  {id, qty}            — buy `id` from the NPC's sells list (server-priced)
+//   - "sell" {id, qty, slot, slot_type} — sell `qty` from your own slot; slot_type "item"|"bug"
+// Server is authoritative: price comes from shop/entity data, never the client. The response is the
+// existing FullInventorySync echo (coins + item + bug slots) — no shop-specific S→C opcode.
+type ShopActionMessage struct {
+	GX       int    `json:"gx"`
+	GY       int    `json:"gy"`
+	Op       string `json:"op"`              // "buy" | "sell"
+	ID       string `json:"id"`              // item or species id
+	Qty      int    `json:"qty,omitempty"`   // default 1
+	Slot     int    `json:"slot,omitempty"`  // sell: which of the player's slots
+	SlotType string `json:"slot_type,omitempty"` // "item" | "bug" (sell)
+}
+
 // ContainerUpdateMessage (OpCode 99, S→C): the full contents of a container/craft-station after
 // any change (plus craft progress when it's a station). Display/inventory state only — never in
 // the sim hash. Re-sent on open and on every mutation.

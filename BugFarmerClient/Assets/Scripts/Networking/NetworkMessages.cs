@@ -271,6 +271,20 @@ namespace BugFarmer.Networking
         public int gy;
     }
 
+    /// <summary>Buy/sell at an NPC vendor (OpCode 2 / Action, C→S). The server is authoritative for
+    /// price + validation; the reply is the existing FullInventorySync echo (coins+items+bugs).</summary>
+    [Serializable]
+    public class ShopActionMessage
+    {
+        public int gx;
+        public int gy;
+        public string op;          // "buy" | "sell"
+        public string id;          // item or species id
+        public int qty;            // default 1
+        public int slot;           // sell: which player slot
+        public string slot_type;   // "item" | "bug" (sell)
+    }
+
     /// <summary>Home-set confirmation (OpCode 101, S→C): shown as a brief toast.</summary>
     [Serializable]
     public class SetHomeAckMessage

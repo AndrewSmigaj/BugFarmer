@@ -146,6 +146,10 @@ def build(zone_id="village_21_B", vseed=0):
     for (oid, x, y) in [("barrel", 53, 138), ("crate", 54, 138), ("crate", 55, 138)]:
         safe(b, oid, x, y)                                   # delivery clutter out front
     spur(b, 57, 139, 57, 127, tile="stone_path")
+    # Commerce v1 — interactive shop NPCs at the storefront: the general store keeper
+    # and the bug dealer next door (a proper bug-market building/scene comes later).
+    b.place_occupant("general_store_merchant", 60, 138)
+    b.place_occupant("bug_dealer", 64, 142)
 
     # Production cluster SE of the plaza on its own short lane off the main road
     # (set back so the smith's ore/coal frontage at oy-2 stays off the roadway).

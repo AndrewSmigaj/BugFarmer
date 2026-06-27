@@ -5,10 +5,16 @@
 > Implementation Phases **3g–3h**, the buy/sell message structs) was **never implemented** and uses opcodes
 > that don't match reality. The **real, built** systems are: inventory/containers on **OpCode 98/99**
 > (see [`architecture_crafting.md`](architecture_crafting.md)) and armor on **96/97** (see the "AS BUILT
-> 2026-06" section near the bottom). **No NPC, dialogue, shop, or currency behavior exists yet** (only the
-> `coins` field on `CharacterSave`). When the shop IS built, follow the **container (98/99) pattern**, not the
-> 30–37 plan here. Current economy design lives in [`../economy/`](../economy/) (`merchants.md`, `DECISIONS.md`).
-> Trust the "AS BUILT 2026-06" sections; treat the rest as historical design.
+> 2026-06" section near the bottom).
+>
+> **SHOP v1 IS NOW BUILT (2026-06-27, DECISIONS D25)** — but NOT the 30–37 plan below. As built: an **NPC
+> vendor is a `shop` occupant** (`world.shop{kind,sells,buys}`), opened via the existing **`OpCodeAction(2)`**
+> (`handlers_shop.go` → buy/sell, server-authoritative pricing from item/`species.sell_price`); the reply is
+> the existing **FullInventorySync (38)** echo (coins+items+bugs) — **no new opcodes**. Client: `ShopController`
+> (OnGUI). **Currency is now live** (earn/spend, persisted). Two vendors run in the village (general store +
+> bug dealer). NPC dialogue, recipe-selling, rotating stock are still unbuilt. Follow the **shop/container
+> pattern**, never the 30–37 plan here. Current economy design: [`../economy/`](../economy/).
+> Trust the "AS BUILT 2026-06" sections; treat the 30–37 design as historical.
 
 ## Overview
 

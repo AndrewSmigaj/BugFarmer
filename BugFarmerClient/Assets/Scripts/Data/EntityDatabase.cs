@@ -59,10 +59,22 @@ namespace BugFarmer.Data
             public int ContainerSlots;
             public string ContainerFilter;
 
+            // Shop block (NPC vendor; interaction_type "shop"). ShopKind "items"|"bugs"; ShopSells is
+            // what the NPC offers (id+price). Buys/pricing for selling is server-authoritative.
+            public string ShopKind;            // null = not a shop
+            public ShopOffer[] ShopSells;
+
             // Light block (lamps/torches glow at night; 0 radius = no light)
             public float LightRadius;
             public Color LightColor = new Color(1f, 0.82f, 0.55f);
             public float LightIntensity = 1f;
+        }
+
+        /// <summary>One good an NPC vendor sells: an item/species id and its coin price.</summary>
+        public class ShopOffer
+        {
+            public string Id;
+            public long Price;
         }
 
         /// <summary>
@@ -412,6 +424,24 @@ namespace BugFarmer.Data
             {
                 world.ContainerSlots = container["slots"]?.Value<int>() ?? 12;
                 world.ContainerFilter = container["filter"]?.Value<string>() ?? "";
+            }
+
+            // Parse shop block (NPC vendor: kind + the goods it sells)
+            var shop = data["shop"] as JObject;
+            if (shop != null)
+            {
+                world.ShopKind = shop["kind"]?.Value<string>() ?? "items";
+                var sells = shop["sells"] as JArray;
+                if (sells != null)
+                {
+                    world.ShopSells = new ShopOffer[sells.Count];
+                    for (int i = 0; i < sells.Count; i++)
+                        world.ShopSells[i] = new ShopOffer
+                        {
+                            Id = sells[i]["id"]?.Value<string>(),
+                            Price = sells[i]["price"]?.Value<long>() ?? 0,
+                        };
+                }
             }
 
             // Parse light block (lamps/torches glow at night)

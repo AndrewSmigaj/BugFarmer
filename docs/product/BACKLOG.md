@@ -989,3 +989,15 @@ These came out of designing `economy/zones/` + `catalogs/`; each needs its own d
   per-match pause-when-empty (which only idles when the *whole* world is empty).
 - Free long-idle matches + clean up accumulated world metadata (matches currently idle when
   empty but are never freed; harness `world_create` runs leave stale metadata).
+
+## Later — commerce spine follow-ons (after the 2026-06-27 v1: currency + general store + bug dealer)
+v1 (DECISIONS D25) shipped currency + two working village vendors. Open follow-ons:
+- **Distinct NPC art** — v1 reuses player-model sprites (`merchant`/`scholar`) as placeholders; the user wants
+  NPCs to look different from the player. Make proper NPC sprites (Pipeline B/A).
+- **The other 3 village NPCs** (Fisherman, Blacksmith, Carpenter) + the **Mining-Outpost** vendor — pure data
+  (new `shop` occupants) now that the spine works.
+- **Bug-market building + scene** — a dedicated building w/ unique decor + sign for the bug dealer, plus 1–2
+  pricier **exotic bugs from other zones** in its sell list to show the value ceiling (game-feel curation).
+- **Recipe-selling (Phase 2)** — `KnownRecipes` on the character + craft-station unlock enforcement, so shops
+  can sell recipes (today all recipes are `unlock:"default"`).
+- **NPC dialogue / wandering**, rotating/rare stock (adds shared state → revisit concurrency), bug-slot UI polish.

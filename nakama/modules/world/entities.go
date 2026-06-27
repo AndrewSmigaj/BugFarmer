@@ -117,7 +117,7 @@ type WorldData struct {
 
 	// Interaction
 	Interactable    bool   `json:"interactable,omitempty"`
-	InteractionType string `json:"interaction_type,omitempty"` // "craft", "storage", "door", "sleep", "sign", "well", "beehive"
+	InteractionType string `json:"interaction_type,omitempty"` // "craft", "storage", "door", "sleep", "sign", "well", "beehive", "shop"
 
 	// Breaking (nil = unbreakable)
 	Breakable *BreakableData `json:"breakable,omitempty"`
@@ -146,6 +146,26 @@ type WorldData struct {
 	// Craft stations are NOT declared here — they're detected by being a key in
 	// RecipesByStation, and their output-grid size is a code constant (§ craft station).
 	Container *ContainerData `json:"container,omitempty"`
+
+	// Shop properties (NPC vendor; nil = not a vendor). interaction_type:"shop" opens its panel.
+	Shop *ShopData `json:"shop,omitempty"`
+}
+
+// ShopData makes an occupant an NPC vendor. Kind "items" trades ItemSlots; kind "bugs" trades live
+// bugs (BugSlots, priced by species.sell_price) plus dead-bug items. Sells = what the NPC offers, each
+// with its asking Price (coins the player pays). Buys = item ids/tags the NPC purchases at the item's
+// sell_price; the bug dealer additionally buys ANY live species and any dead_<bug> item. Purely
+// per-player transaction state — never in the deterministic sim hash.
+type ShopData struct {
+	Kind  string      `json:"kind"`            // "items" | "bugs"
+	Sells []ShopEntry `json:"sells,omitempty"` // what the NPC sells (player buys)
+	Buys  []string    `json:"buys,omitempty"`  // item ids/tags the NPC buys (price = entity sell_price)
+}
+
+// ShopEntry is one offered good: an item or species id and the coins to buy it.
+type ShopEntry struct {
+	ID    string `json:"id"`
+	Price int64  `json:"price"`
 }
 
 // ContainerData makes a placeable an item store: Slots cells, optionally restricted to items
