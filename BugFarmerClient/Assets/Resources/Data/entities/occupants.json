@@ -2836,13 +2836,48 @@
           {
             "id": "calm_spray",
             "price": 20
+          },
+          {
+            "id": "magnifying_glass",
+            "price": 40
+          },
+          {
+            "id": "gardener_gloves",
+            "price": 60
+          },
+          {
+            "id": "cot",
+            "price": 55
+          },
+          {
+            "id": "torch",
+            "price": 6
+          },
+          {
+            "id": "lantern",
+            "price": 30
+          },
+          {
+            "id": "fence_wood",
+            "price": 12
+          },
+          {
+            "id": "watering_can_large",
+            "price": 90
           }
         ],
         "buys": [
           "material",
           "food"
+        ],
+        "recipes": [
+          {
+            "id": "candle",
+            "price": 20
+          }
         ]
-      }
+      },
+      "greeting": "Morning! Fresh seeds and supplies, right this way."
     }
   },
   "bug_dealer": {
@@ -2873,6 +2908,392 @@
           }
         ]
       }
+    }
+  },
+  "blacksmith": {
+    "name": "Brann (Blacksmith)",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "greeting": "Steel and sweat. Need a metal edge, or selling me some bars?",
+      "shop": {
+        "kind": "items",
+        "sells": [
+          {
+            "id": "iron_bar",
+            "price": 40
+          },
+          {
+            "id": "copper_bar",
+            "price": 28
+          },
+          {
+            "id": "bronze_bar",
+            "price": 40
+          },
+          {
+            "id": "steel_bar",
+            "price": 85
+          },
+          {
+            "id": "pickaxe_copper",
+            "price": 150
+          },
+          {
+            "id": "pickaxe_iron",
+            "price": 300
+          },
+          {
+            "id": "axe_copper",
+            "price": 140
+          },
+          {
+            "id": "axe_iron",
+            "price": 280
+          },
+          {
+            "id": "sword_copper",
+            "price": 90
+          },
+          {
+            "id": "spear_copper",
+            "price": 90
+          },
+          {
+            "id": "copper_helmet",
+            "price": 70
+          },
+          {
+            "id": "iron_chest",
+            "price": 160
+          }
+        ],
+        "buys": [
+          "metal"
+        ],
+        "recipes": [
+          {
+            "id": "candelabra",
+            "price": 40
+          },
+          {
+            "id": "stove_wood",
+            "price": 60
+          }
+        ]
+      }
+    }
+  },
+  "carpenter": {
+    "name": "Wynn (Carpenter)",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "greeting": "Fine joinery and honest planks. After a furniture book?",
+      "shop": {
+        "kind": "items",
+        "sells": [
+          {
+            "id": "plank",
+            "price": 6
+          },
+          {
+            "id": "loveseat",
+            "price": 120
+          }
+        ],
+        "buys": [
+          "wood",
+          "furniture"
+        ],
+        "recipes": [
+          {
+            "id": "keg",
+            "price": 60
+          },
+          {
+            "id": "grandfather_clock",
+            "price": 90
+          },
+          {
+            "id": "bed_canopy",
+            "price": 80
+          },
+          {
+            "id": "fence_wood",
+            "price": 30
+          },
+          {
+            "id": "fence_picket",
+            "price": 30
+          },
+          {
+            "id": "gate_wood",
+            "price": 35
+          },
+          {
+            "id": "gate_picket",
+            "price": 35
+          }
+        ],
+        "books": [
+          {
+            "id": "basic_furniture",
+            "price": 200
+          },
+          {
+            "id": "advanced_furniture",
+            "price": 350
+          }
+        ]
+      }
+    }
+  },
+  "weaver": {
+    "name": "Isolde (Weaver)",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "greeting": "Thread, cloth, and colour. The loom's always warm here.",
+      "shop": {
+        "kind": "items",
+        "sells": [
+          {
+            "id": "cloth",
+            "price": 18
+          },
+          {
+            "id": "thread",
+            "price": 8
+          }
+        ],
+        "buys": [
+          "textile",
+          "fiber"
+        ],
+        "books": [
+          {
+            "id": "woven_goods",
+            "price": 120
+          }
+        ]
+      }
+    }
+  },
+  "stonemason": {
+    "name": "Dougal (Stonemason)",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "greeting": "Stone lasts. Brick, statues, a fountain for the square?",
+      "shop": {
+        "kind": "items",
+        "sells": [
+          {
+            "id": "brick",
+            "price": 4
+          },
+          {
+            "id": "stone_block",
+            "price": 3
+          }
+        ],
+        "books": [
+          {
+            "id": "stone_works",
+            "price": 150
+          }
+        ]
+      }
+    }
+  },
+  "modern_wares": {
+    "name": "Pim (Modern Wares)",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "greeting": "The latest comforts — though some need the new electrics.",
+      "shop": {
+        "kind": "items",
+        "sells": [
+          {
+            "id": "fridge",
+            "price": 260
+          },
+          {
+            "id": "range_stove",
+            "price": 220
+          },
+          {
+            "id": "sofa_modern",
+            "price": 180
+          },
+          {
+            "id": "lamp_floor",
+            "price": 90
+          },
+          {
+            "id": "lamp_floor_fancy",
+            "price": 140
+          }
+        ]
+      }
+    }
+  },
+  "fisherman": {
+    "name": "Cael (Fisherman)",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "greeting": "Poles, a boat, and a reed hat to keep the sun off. Fishing's coming.",
+      "shop": {
+        "kind": "items",
+        "sells": [
+          {
+            "id": "fishing_pole",
+            "price": 40
+          },
+          {
+            "id": "fishing_net",
+            "price": 30
+          },
+          {
+            "id": "boat",
+            "price": 400
+          }
+        ],
+        "recipes": [
+          {
+            "id": "reed_hat",
+            "price": 25
+          }
+        ]
+      }
+    }
+  },
+  "ecologist": {
+    "name": "Dr. Vesper (Ecologist)",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "greeting": "Specimens, scopes, terraria — recipes for the curious naturalist.",
+      "shop": {
+        "kind": "items",
+        "recipes": [
+          {
+            "id": "telescope",
+            "price": 80
+          },
+          {
+            "id": "specimen_shelf",
+            "price": 60
+          },
+          {
+            "id": "bug_terrarium",
+            "price": 40
+          },
+          {
+            "id": "bug_terrarium_big",
+            "price": 70
+          },
+          {
+            "id": "specimen_case",
+            "price": 50
+          },
+          {
+            "id": "globe",
+            "price": 40
+          }
+        ]
+      }
+    }
+  },
+  "mayor": {
+    "name": "Mayor Aldous",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "npc",
+      "greeting": "Welcome to the village. Land deeds? Not just yet — soon."
     }
   }
 }

@@ -136,6 +136,7 @@ def build(zone_id="village_21_B", vseed=0):
     # Civic cluster W of the plaza, fronting the W lane (doors south → gate spurs).
     place_mayor(b, 96, 136)                                  # the town hall (grandest)
     spur(b, 105, 135, 105, 127, tile="stone_path")
+    b.place_occupant("mayor", 103, 134)                      # talk-only (land deeds deferred), front of the hall
     place_market(b, 72, 138)
     spur(b, 77, 137, 77, 127, tile="stone_path")
     # The general store — composed (no piece existed; intent doc lists it
@@ -158,6 +159,11 @@ def build(zone_id="village_21_B", vseed=0):
     spur(b, 143, 108, 143, 103, tile="dirt")
     place_carpenter(b, 156, 109)
     spur(b, 161, 108, 161, 103, tile="dirt")
+    # Commerce (D26): the metal + wood vendors at their storefronts (beside each south-facing door).
+    # TODO(scene session): these two skip on a footprint overlap with the smith/carpenter frontage —
+    # nudge to clear cells when we lay out the storefronts together (the 1x2 NPC needs 2 clear cells).
+    b.place_occupant("blacksmith", 141, 107)
+    b.place_occupant("carpenter", 159, 107)
 
     # Residential houses NW of the plaza, NORTH of the town hall's compound —
     # VARIED, not three clone boxes: a ⊥ 4-room composer house (basic), the
@@ -208,9 +214,11 @@ def build(zone_id="village_21_B", vseed=0):
     # Boat store on the big lake's N shore, dock running S into the water (the
     # store hugs the shore so the dock actually crosses onto it).
     place_boat_store(b, 38, 108, dock_len=14)
+    b.place_occupant("fisherman", 41, 109)                   # at the boat store (fishing mechanic deferred)
 
     # Ecologist in its grove on the E lane (unfenced — the documented exception).
     place_ecologist(b, 188, 146, fenced=False)
+    b.place_occupant("ecologist", 190, 144)                  # at the ecologist's house (D26 — sells his recipes)
     forest(b, 200, 160, 22, 14, density=0.5, seed=vseed + 13)
     forest(b, 172, 130, 14, 10, density=0.45, seed=vseed + 14)
 
