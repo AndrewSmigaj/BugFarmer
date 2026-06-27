@@ -24,45 +24,47 @@
     "inputs": [
       {
         "item": "wood",
-        "count": 4
+        "count": 5
       }
     ],
     "output": {
       "item": "chair_wood",
       "count": 1
     },
-    "process_ticks": 8,
-    "unlock": "default"
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "basic_furniture"
   },
   "table_wood": {
     "station": "workbench",
     "inputs": [
       {
         "item": "wood",
-        "count": 6
+        "count": 8
       }
     ],
     "output": {
       "item": "table_wood",
       "count": 1
     },
-    "process_ticks": 8,
-    "unlock": "default"
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "basic_furniture"
   },
   "fence_wood": {
     "station": "workbench",
     "inputs": [
       {
         "item": "wood",
-        "count": 2
+        "count": 3
       }
     ],
     "output": {
       "item": "fence_wood",
       "count": 3
     },
-    "process_ticks": 8,
-    "unlock": "default"
+    "process_ticks": 12,
+    "unlock": "shop:carpenter"
   },
   "sword_wood": {
     "station": "workbench",
@@ -357,6 +359,1190 @@
       "count": 1
     },
     "process_ticks": 60,
+    "unlock": "default"
+  },
+  "stool_wood": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "wood",
+        "count": 4
+      }
+    ],
+    "output": {
+      "item": "stool_wood",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "basic_furniture"
+  },
+  "bench": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "wood",
+        "count": 6
+      }
+    ],
+    "output": {
+      "item": "bench",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "basic_furniture"
+  },
+  "log_seat": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "wood",
+        "count": 4
+      }
+    ],
+    "output": {
+      "item": "log_seat",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "basic_furniture"
+  },
+  "rocking_chair": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 6
+      }
+    ],
+    "output": {
+      "item": "rocking_chair",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "basic_furniture"
+  },
+  "bookshelf": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 8
+      }
+    ],
+    "output": {
+      "item": "bookshelf",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "basic_furniture"
+  },
+  "dresser": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 8
+      }
+    ],
+    "output": {
+      "item": "dresser",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "basic_furniture"
+  },
+  "desk": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 8
+      }
+    ],
+    "output": {
+      "item": "desk",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "basic_furniture"
+  },
+  "cabinet": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 8
+      }
+    ],
+    "output": {
+      "item": "cabinet",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "basic_furniture"
+  },
+  "cupboard": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 8
+      }
+    ],
+    "output": {
+      "item": "cupboard",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "basic_furniture"
+  },
+  "wardrobe": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 10
+      }
+    ],
+    "output": {
+      "item": "wardrobe",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "basic_furniture"
+  },
+  "nightstand": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 5
+      }
+    ],
+    "output": {
+      "item": "nightstand",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "basic_furniture"
+  },
+  "side_table": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 5
+      }
+    ],
+    "output": {
+      "item": "side_table",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "basic_furniture"
+  },
+  "coffee_table": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 6
+      }
+    ],
+    "output": {
+      "item": "coffee_table",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "basic_furniture"
+  },
+  "bed_basic": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 10
+      },
+      {
+        "item": "cloth",
+        "count": 4
+      }
+    ],
+    "output": {
+      "item": "bed_basic",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "basic_furniture"
+  },
+  "cot": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "wood",
+        "count": 6
+      },
+      {
+        "item": "cloth",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "cot",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "basic_furniture"
+  },
+  "bunk_bed": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 12
+      },
+      {
+        "item": "cloth",
+        "count": 4
+      }
+    ],
+    "output": {
+      "item": "bunk_bed",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "basic_furniture"
+  },
+  "planter_box": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 4
+      }
+    ],
+    "output": {
+      "item": "planter_box",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "basic_furniture"
+  },
+  "loveseat": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 8
+      },
+      {
+        "item": "cloth",
+        "count": 6
+      }
+    ],
+    "output": {
+      "item": "loveseat",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "advanced_furniture"
+  },
+  "sofa": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 10
+      },
+      {
+        "item": "cloth",
+        "count": 8
+      }
+    ],
+    "output": {
+      "item": "sofa",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "advanced_furniture"
+  },
+  "armchair": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 6
+      },
+      {
+        "item": "cloth",
+        "count": 5
+      }
+    ],
+    "output": {
+      "item": "armchair",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "advanced_furniture"
+  },
+  "chaise_lounge": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 8
+      },
+      {
+        "item": "cloth",
+        "count": 6
+      }
+    ],
+    "output": {
+      "item": "chaise_lounge",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "advanced_furniture"
+  },
+  "ottoman": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 4
+      },
+      {
+        "item": "cloth",
+        "count": 3
+      }
+    ],
+    "output": {
+      "item": "ottoman",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "advanced_furniture"
+  },
+  "chair_cushioned": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 5
+      },
+      {
+        "item": "cloth",
+        "count": 3
+      }
+    ],
+    "output": {
+      "item": "chair_cushioned",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "advanced_furniture"
+  },
+  "kitchen_island": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 10
+      }
+    ],
+    "output": {
+      "item": "kitchen_island",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "advanced_furniture"
+  },
+  "map_table_big": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 12
+      }
+    ],
+    "output": {
+      "item": "map_table_big",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "advanced_furniture"
+  },
+  "keg": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 8
+      },
+      {
+        "item": "copper_bar",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "keg",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter"
+  },
+  "grandfather_clock": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 10
+      },
+      {
+        "item": "glass",
+        "count": 2
+      },
+      {
+        "item": "copper_bar",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "grandfather_clock",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter"
+  },
+  "bed_canopy": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 12
+      },
+      {
+        "item": "cloth",
+        "count": 8
+      }
+    ],
+    "output": {
+      "item": "bed_canopy",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter"
+  },
+  "bench_stone": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "stone_block",
+        "count": 6
+      }
+    ],
+    "output": {
+      "item": "bench_stone",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:stonemason",
+    "collection": "stone_works"
+  },
+  "stool_stone": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "stone_block",
+        "count": 4
+      }
+    ],
+    "output": {
+      "item": "stool_stone",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:stonemason",
+    "collection": "stone_works"
+  },
+  "table_stone": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "stone_block",
+        "count": 8
+      }
+    ],
+    "output": {
+      "item": "table_stone",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:stonemason",
+    "collection": "stone_works"
+  },
+  "statue_stone": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "stone_block",
+        "count": 10
+      }
+    ],
+    "output": {
+      "item": "statue_stone",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:stonemason",
+    "collection": "stone_works"
+  },
+  "statue_bug": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "stone_block",
+        "count": 6
+      }
+    ],
+    "output": {
+      "item": "statue_bug",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:stonemason",
+    "collection": "stone_works"
+  },
+  "statue_founder": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "stone_block",
+        "count": 12
+      }
+    ],
+    "output": {
+      "item": "statue_founder",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:stonemason",
+    "collection": "stone_works"
+  },
+  "cat_statue": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "stone_block",
+        "count": 6
+      }
+    ],
+    "output": {
+      "item": "cat_statue",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:stonemason",
+    "collection": "stone_works"
+  },
+  "column_marble": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "stone_block",
+        "count": 8
+      }
+    ],
+    "output": {
+      "item": "column_marble",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:stonemason",
+    "collection": "stone_works"
+  },
+  "birdbath": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "stone_block",
+        "count": 8
+      }
+    ],
+    "output": {
+      "item": "birdbath",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:stonemason",
+    "collection": "stone_works"
+  },
+  "fountain": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "stone_block",
+        "count": 12
+      }
+    ],
+    "output": {
+      "item": "fountain",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:stonemason",
+    "collection": "stone_works"
+  },
+  "garden_border_stone": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "stone_block",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "garden_border_stone",
+      "count": 2
+    },
+    "process_ticks": 12,
+    "unlock": "shop:stonemason",
+    "collection": "stone_works"
+  },
+  "rug": {
+    "station": "loom",
+    "inputs": [
+      {
+        "item": "cloth",
+        "count": 4
+      }
+    ],
+    "output": {
+      "item": "rug",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:weaver",
+    "collection": "woven_goods"
+  },
+  "rug_large": {
+    "station": "loom",
+    "inputs": [
+      {
+        "item": "cloth",
+        "count": 6
+      }
+    ],
+    "output": {
+      "item": "rug_large",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:weaver",
+    "collection": "woven_goods"
+  },
+  "rug_round": {
+    "station": "loom",
+    "inputs": [
+      {
+        "item": "cloth",
+        "count": 4
+      }
+    ],
+    "output": {
+      "item": "rug_round",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:weaver",
+    "collection": "woven_goods"
+  },
+  "laundry_line": {
+    "station": "loom",
+    "inputs": [
+      {
+        "item": "thread",
+        "count": 3
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "laundry_line",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:weaver",
+    "collection": "woven_goods"
+  },
+  "room_divider": {
+    "station": "loom",
+    "inputs": [
+      {
+        "item": "cloth",
+        "count": 4
+      },
+      {
+        "item": "wood",
+        "count": 4
+      }
+    ],
+    "output": {
+      "item": "room_divider",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:weaver",
+    "collection": "woven_goods"
+  },
+  "wall_wood": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "wall_wood",
+      "count": 2
+    },
+    "process_ticks": 12,
+    "unlock": "default"
+  },
+  "wall_wood2": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "wall_wood2",
+      "count": 2
+    },
+    "process_ticks": 12,
+    "unlock": "default"
+  },
+  "wall_brick": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "brick",
+        "count": 4
+      }
+    ],
+    "output": {
+      "item": "wall_brick",
+      "count": 2
+    },
+    "process_ticks": 12,
+    "unlock": "default"
+  },
+  "wall_brick2": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "brick",
+        "count": 4
+      }
+    ],
+    "output": {
+      "item": "wall_brick2",
+      "count": 2
+    },
+    "process_ticks": 12,
+    "unlock": "default"
+  },
+  "door_wood": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 4
+      }
+    ],
+    "output": {
+      "item": "door_wood",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "default"
+  },
+  "door_square": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 4
+      }
+    ],
+    "output": {
+      "item": "door_square",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "default"
+  },
+  "fence_picket": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "wood",
+        "count": 3
+      }
+    ],
+    "output": {
+      "item": "fence_picket",
+      "count": 3
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter"
+  },
+  "gate_wood": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "wood",
+        "count": 4
+      }
+    ],
+    "output": {
+      "item": "gate_wood",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter"
+  },
+  "gate_picket": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "wood",
+        "count": 4
+      }
+    ],
+    "output": {
+      "item": "gate_picket",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter"
+  },
+  "candle": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "fiber",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "candle",
+      "count": 2
+    },
+    "process_ticks": 12,
+    "unlock": "shop:general_store_merchant"
+  },
+  "candelabra": {
+    "station": "anvil",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "candelabra",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:blacksmith"
+  },
+  "stove_wood": {
+    "station": "anvil",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 3
+      }
+    ],
+    "output": {
+      "item": "stove_wood",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:blacksmith"
+  },
+  "reed_hat": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "fiber",
+        "count": 4
+      }
+    ],
+    "output": {
+      "item": "reed_hat",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:fisherman"
+  },
+  "magnifying_glass": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "glass",
+        "count": 1
+      },
+      {
+        "item": "copper_bar",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "magnifying_glass",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "default"
+  },
+  "gardener_gloves": {
+    "station": "loom",
+    "inputs": [
+      {
+        "item": "cloth",
+        "count": 2
+      },
+      {
+        "item": "leather",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "gardener_gloves",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "default"
+  },
+  "sword_copper": {
+    "station": "anvil",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "sword_copper",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "default"
+  },
+  "spear_copper": {
+    "station": "anvil",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "spear_copper",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "default"
+  },
+  "telescope": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 4
+      },
+      {
+        "item": "glass",
+        "count": 2
+      },
+      {
+        "item": "copper_bar",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "telescope",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:ecologist"
+  },
+  "specimen_shelf": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 6
+      },
+      {
+        "item": "glass",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "specimen_shelf",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:ecologist"
+  },
+  "bug_terrarium": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "glass",
+        "count": 4
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "bug_terrarium",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:ecologist"
+  },
+  "bug_terrarium_big": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "glass",
+        "count": 6
+      },
+      {
+        "item": "plank",
+        "count": 4
+      }
+    ],
+    "output": {
+      "item": "bug_terrarium_big",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:ecologist"
+  },
+  "specimen_case": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 4
+      },
+      {
+        "item": "glass",
+        "count": 3
+      }
+    ],
+    "output": {
+      "item": "specimen_case",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:ecologist"
+  },
+  "globe": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 2
+      },
+      {
+        "item": "glass",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "globe",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:ecologist"
+  },
+  "campfire": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "wood",
+        "count": 6
+      }
+    ],
+    "output": {
+      "item": "campfire",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "default"
+  },
+  "campfire_spit": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "wood",
+        "count": 4
+      },
+      {
+        "item": "iron_bar",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "campfire_spit",
+      "count": 1
+    },
+    "process_ticks": 12,
     "unlock": "default"
   }
 }

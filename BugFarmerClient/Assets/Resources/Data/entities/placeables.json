@@ -3529,7 +3529,9 @@
         "radius": 5.0,
         "color": "#FF9A3D",
         "intensity": 1.1
-      }
+      },
+      "interactable": true,
+      "interaction_type": "craft"
     }
   },
   "campfire_spit": {
@@ -3557,7 +3559,9 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "interactable": true,
+      "interaction_type": "craft"
     }
   },
   "tent": {
@@ -4893,7 +4897,7 @@
   },
   "lily_pad": {
     "name": "Lily Pad",
-    "category": "decoration",
+    "category": "flora",
     "sprite_w": 16,
     "sprite_h": 16,
     "stackable": true,

@@ -1450,5 +1450,58 @@
     "stackable": true,
     "max_stack": 99,
     "sell_price": 12
+  },
+  "magnifying_glass": {
+    "name": "Magnifying Glass",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "inspect",
+    "stackable": false,
+    "sell_price": 12,
+    "buy_price": 40
+  },
+  "gardener_gloves": {
+    "name": "Gardener's Gloves",
+    "category": "armor",
+    "tags": [
+      "armor"
+    ],
+    "armor_slot": "hands",
+    "stackable": false,
+    "sell_price": 15,
+    "buy_price": 60
+  },
+  "reed_hat": {
+    "name": "Reed Hat",
+    "category": "armor",
+    "tags": [
+      "armor"
+    ],
+    "armor_slot": "head",
+    "stackable": false,
+    "sell_price": 8,
+    "buy_price": 25
+  },
+  "sword_copper": {
+    "name": "Copper Sword",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "stackable": false,
+    "sell_price": 18,
+    "buy_price": 60
+  },
+  "spear_copper": {
+    "name": "Copper Spear",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "stackable": false,
+    "sell_price": 18,
+    "buy_price": 60
   }
 }

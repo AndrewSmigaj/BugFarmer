@@ -28,6 +28,10 @@ make sense). Existing `items.json` ids reused: the full `leather_*` and `iron_*`
 > **As-built note:** `straw_hat` ✅ still exists in `items.json` as a single **T0 starter head** piece (it
 > predates the "straw set cut" decision). It isn't part of the leather→platinum ladder — **your call** whether to
 > keep it as a one-off starter hat or remove the item. (Surfaced, not silently changed.)
+>
+> **Standalone head pieces (D26):** `reed_hat` ✅ — T0 woven sun-hat (head slot), recipe @ workbench (fiber),
+> bought from the Fisherman; `straw_hat` deferred to a later zone. `gardener_gloves` ✅ — a **hands**-slot
+> piece (a glove, not an accessory), recipe @ loom, sold at the General Store (harvest-bonus mechanic backlogged).
 
 **New stations/materials this implies:** a **bug-leather station** (dead bugs → `leather`), **cotton** as a
 cloth source (D15).
