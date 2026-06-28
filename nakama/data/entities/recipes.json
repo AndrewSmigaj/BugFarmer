@@ -306,6 +306,766 @@
     "process_ticks": 150,
     "unlock": "default"
   },
+  "pickaxe_steel": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "pickaxe_steel",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "pickaxe_silver": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "silver_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "pickaxe_silver",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "pickaxe_gold": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "gold_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "pickaxe_gold",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "pickaxe_platinum": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "platinum_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "pickaxe_platinum",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "axe_steel": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "axe_steel",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "axe_silver": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "silver_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "axe_silver",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "axe_gold": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "gold_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "axe_gold",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "axe_platinum": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "platinum_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "axe_platinum",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "hoe_copper": {
+    "station": "anvil",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "hoe_copper",
+      "count": 1
+    },
+    "process_ticks": 30,
+    "unlock": "default"
+  },
+  "hoe_iron": {
+    "station": "anvil",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "hoe_iron",
+      "count": 1
+    },
+    "process_ticks": 30,
+    "unlock": "default"
+  },
+  "hoe_steel": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "hoe_steel",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "hoe_silver": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "silver_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "hoe_silver",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "hoe_gold": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "gold_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "hoe_gold",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "hoe_platinum": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "platinum_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "hoe_platinum",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "scythe_copper": {
+    "station": "anvil",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "scythe_copper",
+      "count": 1
+    },
+    "process_ticks": 30,
+    "unlock": "default"
+  },
+  "scythe_iron": {
+    "station": "anvil",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "scythe_iron",
+      "count": 1
+    },
+    "process_ticks": 30,
+    "unlock": "default"
+  },
+  "scythe_steel": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "scythe_steel",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "scythe_silver": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "silver_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "scythe_silver",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "scythe_gold": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "gold_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "scythe_gold",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "scythe_platinum": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "platinum_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "scythe_platinum",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "shovel_copper": {
+    "station": "anvil",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "shovel_copper",
+      "count": 1
+    },
+    "process_ticks": 30,
+    "unlock": "default"
+  },
+  "shovel_iron": {
+    "station": "anvil",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "shovel_iron",
+      "count": 1
+    },
+    "process_ticks": 30,
+    "unlock": "default"
+  },
+  "shovel_steel": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "shovel_steel",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "shovel_silver": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "silver_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "shovel_silver",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "shovel_gold": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "gold_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "shovel_gold",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "shovel_platinum": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "platinum_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "shovel_platinum",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "sword_bronze": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "bronze_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "sword_bronze",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "sword_iron": {
+    "station": "anvil",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "sword_iron",
+      "count": 1
+    },
+    "process_ticks": 30,
+    "unlock": "default"
+  },
+  "sword_steel": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "sword_steel",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "sword_silver": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "silver_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "sword_silver",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "sword_gold": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "gold_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "sword_gold",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "sword_platinum": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "platinum_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "sword_platinum",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "spear_bronze": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "bronze_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "spear_bronze",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "spear_iron": {
+    "station": "anvil",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "spear_iron",
+      "count": 1
+    },
+    "process_ticks": 30,
+    "unlock": "default"
+  },
+  "spear_steel": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "steel_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "spear_steel",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "spear_silver": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "silver_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "spear_silver",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "spear_gold": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "gold_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "spear_gold",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "spear_platinum": {
+    "station": "forge",
+    "inputs": [
+      {
+        "item": "platinum_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "spear_platinum",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
+  },
+  "saw": {
+    "station": "anvil",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 3
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "saw",
+      "count": 1
+    },
+    "process_ticks": 30,
+    "unlock": "default"
+  },
+  "harvest_sickle": {
+    "station": "anvil",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "harvest_sickle",
+      "count": 1
+    },
+    "process_ticks": 30,
+    "unlock": "default"
+  },
   "iron_bar": {
     "station": "furnace",
     "inputs": [

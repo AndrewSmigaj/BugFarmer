@@ -1628,7 +1628,20 @@
     ],
     "stackable": false,
     "sell_price": 18,
-    "buy_price": 60
+    "buy_price": 60,
+    "tool_type": "sword",
+    "tool_tier": 3,
+    "moves": {
+      "primary": {
+        "kind": "swing",
+        "damage": 6,
+        "arc_degrees": 60,
+        "reach": 3.0,
+        "swing_time": 0.2,
+        "max_targets": 2,
+        "cooldown_ticks": 6
+      }
+    }
   },
   "spear_copper": {
     "name": "Copper Spear",
@@ -1638,7 +1651,20 @@
     ],
     "stackable": false,
     "sell_price": 18,
-    "buy_price": 60
+    "buy_price": 60,
+    "tool_type": "spear",
+    "tool_tier": 3,
+    "moves": {
+      "primary": {
+        "kind": "stab",
+        "damage": 6,
+        "arc_degrees": 20,
+        "reach": 3.6,
+        "swing_time": 0.2,
+        "max_targets": 1,
+        "cooldown_ticks": 6
+      }
+    }
   },
   "red_dye": {
     "name": "Red Dye",
@@ -1683,5 +1709,673 @@
     "stackable": true,
     "max_stack": 99,
     "sell_price": 6
+  },
+  "pickaxe_steel": {
+    "name": "Steel Pickaxe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "pickaxe",
+    "tool_tier": 5,
+    "reach": 4.0,
+    "durability": 380,
+    "buy_price": 500,
+    "sell_price": 200,
+    "mining_speed": 2.4
+  },
+  "pickaxe_silver": {
+    "name": "Silver Pickaxe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "pickaxe",
+    "tool_tier": 6,
+    "reach": 4.0,
+    "durability": 520,
+    "buy_price": 760,
+    "sell_price": 304,
+    "mining_speed": 2.8
+  },
+  "pickaxe_gold": {
+    "name": "Gold Pickaxe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "pickaxe",
+    "tool_tier": 7,
+    "reach": 4.0,
+    "durability": 680,
+    "buy_price": 1080,
+    "sell_price": 432,
+    "mining_speed": 3.2
+  },
+  "pickaxe_platinum": {
+    "name": "Platinum Pickaxe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "pickaxe",
+    "tool_tier": 8,
+    "reach": 4.0,
+    "durability": 880,
+    "buy_price": 1500,
+    "sell_price": 600,
+    "mining_speed": 3.6
+  },
+  "axe_steel": {
+    "name": "Steel Axe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "axe",
+    "tool_tier": 5,
+    "reach": 4.0,
+    "durability": 380,
+    "buy_price": 500,
+    "sell_price": 200,
+    "mining_speed": 2.4
+  },
+  "axe_silver": {
+    "name": "Silver Axe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "axe",
+    "tool_tier": 6,
+    "reach": 4.0,
+    "durability": 520,
+    "buy_price": 760,
+    "sell_price": 304,
+    "mining_speed": 2.8
+  },
+  "axe_gold": {
+    "name": "Gold Axe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "axe",
+    "tool_tier": 7,
+    "reach": 4.0,
+    "durability": 680,
+    "buy_price": 1080,
+    "sell_price": 432,
+    "mining_speed": 3.2
+  },
+  "axe_platinum": {
+    "name": "Platinum Axe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "axe",
+    "tool_tier": 8,
+    "reach": 4.0,
+    "durability": 880,
+    "buy_price": 1500,
+    "sell_price": 600,
+    "mining_speed": 3.6
+  },
+  "hoe_copper": {
+    "name": "Copper Hoe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "hoe",
+    "tool_tier": 3,
+    "reach": 3.5,
+    "durability": 150,
+    "buy_price": 150,
+    "sell_price": 60,
+    "cooldown_ticks": 5
+  },
+  "hoe_iron": {
+    "name": "Iron Hoe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "hoe",
+    "tool_tier": 4,
+    "reach": 3.5,
+    "durability": 250,
+    "buy_price": 300,
+    "sell_price": 120,
+    "cooldown_ticks": 4
+  },
+  "hoe_steel": {
+    "name": "Steel Hoe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "hoe",
+    "tool_tier": 5,
+    "reach": 3.5,
+    "durability": 380,
+    "buy_price": 500,
+    "sell_price": 200,
+    "cooldown_ticks": 3
+  },
+  "hoe_silver": {
+    "name": "Silver Hoe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "hoe",
+    "tool_tier": 6,
+    "reach": 3.5,
+    "durability": 520,
+    "buy_price": 760,
+    "sell_price": 304,
+    "cooldown_ticks": 2
+  },
+  "hoe_gold": {
+    "name": "Gold Hoe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "hoe",
+    "tool_tier": 7,
+    "reach": 3.5,
+    "durability": 680,
+    "buy_price": 1080,
+    "sell_price": 432,
+    "cooldown_ticks": 2
+  },
+  "hoe_platinum": {
+    "name": "Platinum Hoe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "hoe",
+    "tool_tier": 8,
+    "reach": 3.5,
+    "durability": 880,
+    "buy_price": 1500,
+    "sell_price": 600,
+    "cooldown_ticks": 2
+  },
+  "scythe_copper": {
+    "name": "Copper Scythe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "scythe",
+    "tool_tier": 3,
+    "reach": 3.5,
+    "durability": 150,
+    "buy_price": 150,
+    "sell_price": 60,
+    "cooldown_ticks": 5
+  },
+  "scythe_iron": {
+    "name": "Iron Scythe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "scythe",
+    "tool_tier": 4,
+    "reach": 3.5,
+    "durability": 250,
+    "buy_price": 300,
+    "sell_price": 120,
+    "cooldown_ticks": 4
+  },
+  "scythe_steel": {
+    "name": "Steel Scythe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "scythe",
+    "tool_tier": 5,
+    "reach": 3.5,
+    "durability": 380,
+    "buy_price": 500,
+    "sell_price": 200,
+    "cooldown_ticks": 3
+  },
+  "scythe_silver": {
+    "name": "Silver Scythe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "scythe",
+    "tool_tier": 6,
+    "reach": 3.5,
+    "durability": 520,
+    "buy_price": 760,
+    "sell_price": 304,
+    "cooldown_ticks": 2
+  },
+  "scythe_gold": {
+    "name": "Gold Scythe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "scythe",
+    "tool_tier": 7,
+    "reach": 3.5,
+    "durability": 680,
+    "buy_price": 1080,
+    "sell_price": 432,
+    "cooldown_ticks": 2
+  },
+  "scythe_platinum": {
+    "name": "Platinum Scythe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "scythe",
+    "tool_tier": 8,
+    "reach": 3.5,
+    "durability": 880,
+    "buy_price": 1500,
+    "sell_price": 600,
+    "cooldown_ticks": 2
+  },
+  "shovel_copper": {
+    "name": "Copper Shovel",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "shovel",
+    "tool_tier": 3,
+    "reach": 3.5,
+    "durability": 150,
+    "buy_price": 150,
+    "sell_price": 60,
+    "mining_speed": 1.6
+  },
+  "shovel_iron": {
+    "name": "Iron Shovel",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "shovel",
+    "tool_tier": 4,
+    "reach": 3.5,
+    "durability": 250,
+    "buy_price": 300,
+    "sell_price": 120,
+    "mining_speed": 2.0
+  },
+  "shovel_steel": {
+    "name": "Steel Shovel",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "shovel",
+    "tool_tier": 5,
+    "reach": 3.5,
+    "durability": 380,
+    "buy_price": 500,
+    "sell_price": 200,
+    "mining_speed": 2.4
+  },
+  "shovel_silver": {
+    "name": "Silver Shovel",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "shovel",
+    "tool_tier": 6,
+    "reach": 3.5,
+    "durability": 520,
+    "buy_price": 760,
+    "sell_price": 304,
+    "mining_speed": 2.8
+  },
+  "shovel_gold": {
+    "name": "Gold Shovel",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "shovel",
+    "tool_tier": 7,
+    "reach": 3.5,
+    "durability": 680,
+    "buy_price": 1080,
+    "sell_price": 432,
+    "mining_speed": 3.2
+  },
+  "shovel_platinum": {
+    "name": "Platinum Shovel",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "shovel",
+    "tool_tier": 8,
+    "reach": 3.5,
+    "durability": 880,
+    "buy_price": 1500,
+    "sell_price": 600,
+    "mining_speed": 3.6
+  },
+  "sword_bronze": {
+    "name": "Bronze Sword",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "sword",
+    "stackable": false,
+    "buy_price": 320,
+    "sell_price": 96,
+    "moves": {
+      "primary": {
+        "kind": "swing",
+        "damage": 8,
+        "arc_degrees": 60,
+        "reach": 3.0,
+        "swing_time": 0.2,
+        "max_targets": 2,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 4
+  },
+  "sword_iron": {
+    "name": "Iron Sword",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "sword",
+    "stackable": false,
+    "buy_price": 300,
+    "sell_price": 90,
+    "moves": {
+      "primary": {
+        "kind": "swing",
+        "damage": 10,
+        "arc_degrees": 60,
+        "reach": 3.0,
+        "swing_time": 0.2,
+        "max_targets": 2,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 4
+  },
+  "sword_steel": {
+    "name": "Steel Sword",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "sword",
+    "stackable": false,
+    "buy_price": 500,
+    "sell_price": 150,
+    "moves": {
+      "primary": {
+        "kind": "swing",
+        "damage": 14,
+        "arc_degrees": 60,
+        "reach": 3.0,
+        "swing_time": 0.2,
+        "max_targets": 2,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 5
+  },
+  "sword_silver": {
+    "name": "Silver Sword",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "sword",
+    "stackable": false,
+    "buy_price": 760,
+    "sell_price": 228,
+    "moves": {
+      "primary": {
+        "kind": "swing",
+        "damage": 18,
+        "arc_degrees": 60,
+        "reach": 3.0,
+        "swing_time": 0.2,
+        "max_targets": 2,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 6
+  },
+  "sword_gold": {
+    "name": "Gold Sword",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "sword",
+    "stackable": false,
+    "buy_price": 1080,
+    "sell_price": 324,
+    "moves": {
+      "primary": {
+        "kind": "swing",
+        "damage": 22,
+        "arc_degrees": 60,
+        "reach": 3.0,
+        "swing_time": 0.2,
+        "max_targets": 2,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 7
+  },
+  "sword_platinum": {
+    "name": "Platinum Sword",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "sword",
+    "stackable": false,
+    "buy_price": 1500,
+    "sell_price": 450,
+    "moves": {
+      "primary": {
+        "kind": "swing",
+        "damage": 28,
+        "arc_degrees": 60,
+        "reach": 3.0,
+        "swing_time": 0.2,
+        "max_targets": 2,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 8
+  },
+  "spear_bronze": {
+    "name": "Bronze Spear",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "spear",
+    "stackable": false,
+    "buy_price": 320,
+    "sell_price": 96,
+    "moves": {
+      "primary": {
+        "kind": "stab",
+        "damage": 8,
+        "arc_degrees": 20,
+        "reach": 3.6,
+        "swing_time": 0.2,
+        "max_targets": 1,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 4
+  },
+  "spear_iron": {
+    "name": "Iron Spear",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "spear",
+    "stackable": false,
+    "buy_price": 300,
+    "sell_price": 90,
+    "moves": {
+      "primary": {
+        "kind": "stab",
+        "damage": 10,
+        "arc_degrees": 20,
+        "reach": 3.6,
+        "swing_time": 0.2,
+        "max_targets": 1,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 4
+  },
+  "spear_steel": {
+    "name": "Steel Spear",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "spear",
+    "stackable": false,
+    "buy_price": 500,
+    "sell_price": 150,
+    "moves": {
+      "primary": {
+        "kind": "stab",
+        "damage": 14,
+        "arc_degrees": 20,
+        "reach": 3.6,
+        "swing_time": 0.2,
+        "max_targets": 1,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 5
+  },
+  "spear_silver": {
+    "name": "Silver Spear",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "spear",
+    "stackable": false,
+    "buy_price": 760,
+    "sell_price": 228,
+    "moves": {
+      "primary": {
+        "kind": "stab",
+        "damage": 18,
+        "arc_degrees": 20,
+        "reach": 3.6,
+        "swing_time": 0.2,
+        "max_targets": 1,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 6
+  },
+  "spear_gold": {
+    "name": "Gold Spear",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "spear",
+    "stackable": false,
+    "buy_price": 1080,
+    "sell_price": 324,
+    "moves": {
+      "primary": {
+        "kind": "stab",
+        "damage": 22,
+        "arc_degrees": 20,
+        "reach": 3.6,
+        "swing_time": 0.2,
+        "max_targets": 1,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 7
+  },
+  "spear_platinum": {
+    "name": "Platinum Spear",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "spear",
+    "stackable": false,
+    "buy_price": 1500,
+    "sell_price": 450,
+    "moves": {
+      "primary": {
+        "kind": "stab",
+        "damage": 28,
+        "arc_degrees": 20,
+        "reach": 3.6,
+        "swing_time": 0.2,
+        "max_targets": 1,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 8
+  },
+  "saw": {
+    "name": "Saw",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "axe",
+    "tool_tier": 5,
+    "reach": 4.0,
+    "mining_speed": 2.6,
+    "durability": 300,
+    "buy_price": 420,
+    "sell_price": 160
+  },
+  "harvest_sickle": {
+    "name": "Harvest Sickle",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "scythe",
+    "tool_tier": 3,
+    "reach": 3.5,
+    "cooldown_ticks": 5,
+    "durability": 180,
+    "buy_price": 160,
+    "sell_price": 60
   }
 }
