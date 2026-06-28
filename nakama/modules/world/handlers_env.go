@@ -170,6 +170,15 @@ func (m *Match) debugGiveItem(
 			"straw_hat": 1, "leather_cap": 1, "apple": 20, // filtered-container (clothing/food) tests
 			"backpack": 1, // equip → +10 panel slots
 		}
+	} else if item == "crafting" {
+		// FULL crafting-test loadout: every input to exercise the whole chain end to end —
+		// mining refine (ore→crusher→sluice→smelter), bars→tools/weapons, gems→cutter, dead bugs→extractor.
+		give = map[string]int{"wood": 99, "coal": 99, "sand": 40, "fiber": 40,
+			"iron_ore": 30, "copper_ore": 30, "tin_ore": 30, "silver_ore": 30, "gold_ore": 30, "platinum_ore": 30,
+			"iron_bar": 20, "copper_bar": 20, "bronze_bar": 10, "steel_bar": 10, "silver_bar": 10, "gold_bar": 10, "platinum_bar": 10,
+			"diamond": 5, "quartz": 5, "ruby": 5, "sapphire": 5, "emerald": 5,
+			"dead_beetle": 8, "dead_centipede": 8, "dead_millipede": 8, "dead_wasp": 8, "dead_fly": 8, "dead_butterfly": 8,
+			"backpack": 1}
 	} else if item == "buglab" {
 		// Bug Lab loadout: 100 fruit to feed the pens + 10 of each catchable species to release.
 		give = map[string]int{"apple": 100}

@@ -33,11 +33,19 @@ def build(zone_id="crafting_test"):
 
     # --- Row 1: craft stations (the Stage-1 set with recipes + a couple for show) ---
     Z.place_occupant("workbench", 8, 22)      # 2x1 — torch, furniture, sword_wood
-    Z.place_occupant("furnace", 12, 22)       # 2x2 — iron_bar (slow)
-    Z.place_occupant("anvil", 16, 22)         # 2x1 — pickaxe_iron, axe_iron
+    Z.place_occupant("furnace", 12, 22)       # 2x2 — {refined ore}+coal -> bars
+    Z.place_occupant("anvil", 16, 22)         # 2x1 — metal tools/weapons (<=iron)
     Z.place_occupant("stonecutter", 20, 22)   # 2x1 — brick, wall_stone
-    Z.place_occupant("sawmill", 24, 22)       # 2x1 — (no Stage-1 recipes yet; placed for layout)
-    Z.place_occupant("loom", 28, 22)          # 2x1 — (no Stage-1 recipes yet)
+    Z.place_occupant("sawmill", 24, 22)       # 2x1 — plank, furniture
+    Z.place_occupant("loom", 28, 22)          # 2x1 — thread/cloth
+
+    # --- Row 1b: the mining refine chain + gem cutter + forge + bug extractor (this pass) ---
+    Z.place_occupant("rock_crusher", 8, 19)   # 2x1 — {metal}_ore -> {metal}_paydirt
+    Z.place_occupant("ore_sluice", 12, 19)    # 2x1 — {metal}_paydirt -> refined_{metal}_ore
+    Z.place_occupant("forge", 16, 19)         # 2x1 — bronze/steel + high-tier tools/weapons
+    Z.place_occupant("gem_cutter", 20, 19)    # 2x1 — raw gem -> cut gem
+    Z.place_occupant("bug_extractor", 24, 19) # dead_<bug> -> chitin/leather
+    Z.place_occupant("mannequin_white", 28, 19)  # outfit display (right-click to dress)
 
     # --- Row 2: storage containers (generic + filtered) ---
     Z.place_occupant("chest_wood", 8, 26)     # 2x1 — generic 24
