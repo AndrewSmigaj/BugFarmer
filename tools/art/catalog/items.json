@@ -1,4 +1,46 @@
 {
+  "dead_fly": {
+    "look": "a dead HOUSEFLY lying on its BACK, six thin legs curled up in the air, dull desaturated grey-black body and limp translucent wings; a small dead-bug carcass on the ground",
+    "family": "icon",
+    "materials": [
+      "dirt"
+    ]
+  },
+  "dead_butterfly": {
+    "look": "a dead BUTTERFLY lying on the ground, wings folded crooked and faded to dull dusty muted colors, body limp and lifeless; clearly a carcass, NOT flying",
+    "family": "icon",
+    "materials": [
+      "dirt"
+    ]
+  },
+  "dead_wasp": {
+    "look": "a dead WASP on its BACK, legs curled up in the air, faded dull yellow-and-black striped body, wings limp; a dead-bug carcass on the ground",
+    "family": "icon",
+    "materials": [
+      "dirt"
+    ]
+  },
+  "dead_centipede": {
+    "look": "a dead CENTIPEDE curled into a loose C-shape on the ground, dull desaturated reddish-brown segmented body, legs limp; a lifeless carcass",
+    "family": "icon",
+    "materials": [
+      "dirt"
+    ]
+  },
+  "dead_millipede": {
+    "look": "a dead MILLIPEDE coiled into a tight flat SPIRAL on the ground, dull dark brown segmented body; a lifeless carcass",
+    "family": "icon",
+    "materials": [
+      "dirt"
+    ]
+  },
+  "dead_beetle": {
+    "look": "a dead BEETLE lying on its BACK with its six legs sticking up and curled inward, dull desaturated black shell; the classic dead-bug pose on the ground",
+    "family": "icon",
+    "materials": [
+      "dirt"
+    ]
+  },
   "scythe_wood": {
     "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of pale wood sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
     "family": "icon",

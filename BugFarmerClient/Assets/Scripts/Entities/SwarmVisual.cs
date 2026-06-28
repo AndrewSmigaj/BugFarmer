@@ -92,8 +92,16 @@ namespace BugFarmer.Entities
             SwarmId = data.id;
             SpeciesId = data.species_id;
 
-            // Load sprite from Resources using sprite_id from server
-            var spriteId = !string.IsNullOrEmpty(data.sprite_id) ? data.sprite_id : data.species_id;
+            // Load sprite from Resources using sprite_id from server. SWARM_SPAWNED-born swarms
+            // arrive with an EMPTY sprite_id (the later SwarmUpdate carries the real one) — resolve
+            // it from the species def so we never fall back to the raw species id, which has no
+            // Bugs/ sprite (e.g. butterfly_meadow -> butterfly_common). Display-only, never hashed.
+            var spriteId = data.sprite_id;
+            if (string.IsNullOrEmpty(spriteId))
+            {
+                var spInfo = Data.EntityDatabase.GetSpecies(data.species_id);
+                spriteId = !string.IsNullOrEmpty(spInfo?.SpriteId) ? spInfo.SpriteId : data.species_id;
+            }
             // Flies buzz continuously (fast, no glide); butterflies keep the graceful flap-glide default.
             _isBuzzer = !string.IsNullOrEmpty(spriteId) &&
                         spriteId.Contains("fly") && !spriteId.Contains("butterfly");
@@ -261,7 +269,12 @@ namespace BugFarmer.Entities
             // BOTH branches set scale/rotation explicitly.
             var info = Data.EntityDatabase.GetSpecies(SpeciesId);
             bool crawling = info != null && info.MovementStyle == "crawling";
-            if (crawling)
+            // Only the SEGMENTED crawlers (centipede/millipede) render the multi-part body trail.
+            // Single-body crawlers (e.g. beetle_carrion) fall through to the single-sprite path —
+            // without this they'd be drawn with the hardcoded centipede trail (CentipedeTrail.cs).
+            bool segmented = crawling &&
+                             (SpeciesId.Contains("centipede") || SpeciesId.Contains("millipede"));
+            if (segmented)
             {
                 // Head scale matches its trail segments — per species (millipede = 2x centipede).
                 float headScale = Bugs.CentipedeTrail.PartScaleFor(SpeciesId);

@@ -119,6 +119,18 @@
       "various"
     ]
   },
+  "beetle_carrion": {
+    "sprite_path": "Sprites/Bugs/beetle_carrion.png",
+    "sprite_w": 12,
+    "sprite_h": 12,
+    "category": "beetle",
+    "base_speed": 0.6,
+    "catch_difficulty": 1,
+    "value": 10,
+    "zones": [
+      "various"
+    ]
+  },
   "stag_beetle": {
     "sprite_path": "Sprites/Bugs/stag_beetle.png",
     "sprite_w": 14,

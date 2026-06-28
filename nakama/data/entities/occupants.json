@@ -2452,14 +2452,14 @@
   "wasp_nest": {
     "name": "Wasp Nest",
     "category": "natural",
+    "sprite_w": 24,
+    "sprite_h": 28,
     "world": {
       "footprint": [
         1,
         1
       ],
       "pivot": "bc",
-      "sprite_w": 24,
-      "sprite_h": 28,
       "blocks_players": false,
       "blocks_bugs": false,
       "breakable": {

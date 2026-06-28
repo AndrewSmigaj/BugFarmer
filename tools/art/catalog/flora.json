@@ -63,6 +63,13 @@
    "foliage"
   ]
  },
+ "leaf_litter": {
+  "look": "a flat scatter of dry fallen LEAVES on the ground \u2014 a loose low patch of overlapping brown, tan and faded-orange dead leaves; NO plant, NO stem, NO mound, just leaves lying flat",
+  "materials": [
+   "foliage",
+   "dirt"
+  ]
+ },
  "dandelion": {
   "look": "a DANDELION: a low rosette of jagged green leaves with one bright yellow flower and one round white seed PUFF on slender stems.",
   "materials": [

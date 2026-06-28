@@ -64,6 +64,8 @@ namespace BugFarmer.Bugs
         public const string EventItemRotted = "ITEM_ROTTED";
         public const string EventFoodConsumed = "FOOD_CONSUMED";
         public const string EventOccupantBlocksBugs = "OCCUPANT_BLOCKS_BUGS"; // Phase 1b: fence/wall placed (level=1) or removed (0)
+        public const string EventTreeFruitGrow = "TREE_FRUIT_GROW"; // server-only ledger; fruit shown via OpCode 93
+        public const string EventTreeFruitDrop = "TREE_FRUIT_DROP"; // server-only ledger; fruit shown via OpCode 93
 
         // === Deterministic FOOD REGISTRY ===
         // food_id -> (world position, remaining level). Maintained ONLY from tick+seq events
@@ -249,6 +251,13 @@ namespace BugFarmer.Bugs
                     // collides identically. Idempotent (HashSet add/remove).
                     BugFarmer.World.TilemapManager.Instance?.SetBlocksBugs(
                         new Vector2Int(evt.cell_x, evt.cell_y), evt.level > 0);
+                    break;
+
+                case EventTreeFruitGrow:
+                case EventTreeFruitDrop:
+                    // Server-only ledger events (replay/determinism). The client renders fruit on
+                    // trees via the separate OpCode 93 (TilemapManager.HandleTreeFruitUpdate), so
+                    // there's nothing to do here — just don't warn as "unknown".
                     break;
 
                 default:
