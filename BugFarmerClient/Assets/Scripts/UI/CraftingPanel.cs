@@ -46,12 +46,17 @@ namespace BugFarmer.UI
             new List<(InventorySlotUI, RecipeDatabase.Recipe)>();
         private RecipeDatabase.Recipe _selected;
         private int _qty = 1;
+        private const int MaxInputs = 4;   // recipes have <=3 inputs + an optional catalyst
         private TMP_Text _qtyText;
-        private TMP_Text _inputsText;
         private TMP_Text _recipeName;
         private Button _craftButton;
         private Image _progressFill;
         private TMP_Text _queueText;
+        // INPUT item-square row (icons + have/need labels) → arrow → output preview (replaces the old text)
+        private readonly List<InventorySlotUI> _inputSlots = new List<InventorySlotUI>();
+        private readonly List<TMP_Text> _inputLabels = new List<TMP_Text>();
+        private InventorySlotUI _outputPreview;
+        private TMP_Text _arrow;
         private readonly List<InventorySlotUI> _outputSlots = new List<InventorySlotUI>();
 
         // Storage-mode widgets
@@ -219,9 +224,12 @@ namespace BugFarmer.UI
                 DestroyImmediate(_content.GetChild(i).gameObject);
             _recipeSlots.Clear();
             _outputSlots.Clear();
+            _inputSlots.Clear();
+            _inputLabels.Clear();
             _containerSlots.Clear();
             _playerSlots.Clear();
-            _qtyText = _inputsText = _recipeName = _queueText = null;
+            _qtyText = _recipeName = _queueText = _arrow = null;
+            _outputPreview = null;
             _craftButton = null;
             _progressFill = null;
 
@@ -261,10 +269,26 @@ namespace BugFarmer.UI
                                              UIFactory.TextColor, TextAlignmentOptions.Left);
             Place(_recipeName.rectTransform, 160, 0, 230, 18);
 
-            _inputsText = UIFactory.MakeText(_content, "Inputs", UIFactory.CountSize + 1f,
-                                             UIFactory.TextColor, TextAlignmentOptions.TopLeft);
-            _inputsText.enableWordWrapping = true;
-            Place(_inputsText.rectTransform, 160, -22, 230, 90);
+            // INPUT squares (icon + have/need under each) → arrow → the recipe's OUTPUT preview.
+            var needHead = UIFactory.MakeText(_content, "NeedHead", UIFactory.CountSize,
+                                              UIFactory.HeaderColor, TextAlignmentOptions.Left);
+            Place(needHead.rectTransform, 160, -22, 230, 14);
+            needHead.text = "NEEDS";
+            for (int i = 0; i < MaxInputs; i++)
+            {
+                var s = UIFactory.MakeSlot(_content, "slot_frame");
+                Place((RectTransform)s.transform, 160 + i * 42, -40, UIFactory.Slot, UIFactory.Slot);
+                _inputSlots.Add(s);
+                var lbl = UIFactory.MakeText(_content, $"In{i}Lbl", UIFactory.CountSize,
+                                             UIFactory.TextColor, TextAlignmentOptions.Center);
+                Place(lbl.rectTransform, 160 + i * 42, -82, UIFactory.Slot, 14);
+                _inputLabels.Add(lbl);
+            }
+            _arrow = UIFactory.MakeText(_content, "Arrow", UIFactory.HeaderSize + 4f,
+                                        UIFactory.HeaderColor, TextAlignmentOptions.Center);
+            Place(_arrow.rectTransform, 160, -52, 24, 20);
+            _outputPreview = UIFactory.MakeSlot(_content, "slot_frame");
+            Place((RectTransform)_outputPreview.transform, 188, -40, UIFactory.Slot, UIFactory.Slot);
 
             // qty stepper
             MakeButton(_content, "Minus", "-", 160, -116, 28, 24, () => { _qty = Mathf.Max(1, _qty - 1); RefreshSelected(); });
@@ -365,13 +389,17 @@ namespace BugFarmer.UI
             RefreshSelected();
         }
 
+        private static readonly Color ShortColor = new Color32(0xE0, 0x66, 0x66, 0xFF);
+
         private void RefreshSelected()
         {
             if (_qtyText != null) _qtyText.text = _qty.ToString();
             if (_selected == null)
             {
                 if (_recipeName != null) _recipeName.text = "(select a recipe)";
-                if (_inputsText != null) _inputsText.text = "";
+                for (int i = 0; i < _inputSlots.Count; i++) { _inputSlots[i].Clear(); _inputLabels[i].text = ""; }
+                _outputPreview?.Clear();
+                if (_arrow != null) _arrow.text = "";
                 if (_craftButton != null) _craftButton.interactable = false;
                 return;
             }
@@ -381,20 +409,34 @@ namespace BugFarmer.UI
                 _recipeName.text = $"{(od?.Name ?? _selected.output.item)} x{_selected.output.count}";
             }
 
+            // Fill the input squares (icon + need badge) with a have/need label coloured red when short.
             bool affordable = true;
-            var sb = new System.Text.StringBuilder();
+            int n = 0;
             foreach (var io in EnumInputs(_selected))
             {
+                if (n >= MaxInputs) break;
                 int have = CountItem(io.item);
                 int need = io.count * Mathf.Max(1, _qty);
                 bool ok = have >= need;
                 if (!ok) affordable = false;
-                var nd = EntityDatabase.Get(io.item);
-                string name = nd?.Name ?? io.item;
-                string line = $"{name}  {have}/{need}";
-                sb.AppendLine(ok ? line : $"<color=#E06666>{line}</color>");
+                _inputSlots[n].SetSlot(new InventorySlot { item_id = io.item, count = need });
+                _inputLabels[n].text = $"{have}/{need}";
+                _inputLabels[n].color = ok ? UIFactory.TextColor : ShortColor;
+                n++;
             }
-            if (_inputsText != null) _inputsText.text = sb.ToString();
+            for (int i = n; i < _inputSlots.Count; i++) { _inputSlots[i].Clear(); _inputLabels[i].text = ""; }
+
+            // arrow after the last input → the output preview
+            if (_arrow != null)
+            {
+                _arrow.text = "→";
+                Place(_arrow.rectTransform, 160 + n * 42, -52, 24, 20);
+            }
+            if (_outputPreview != null)
+            {
+                Place((RectTransform)_outputPreview.transform, 160 + n * 42 + 24, -40, UIFactory.Slot, UIFactory.Slot);
+                _outputPreview.SetSlot(new InventorySlot { item_id = _selected.output.item, count = _selected.output.count });
+            }
             if (_craftButton != null) _craftButton.interactable = affordable;
         }
 
@@ -410,16 +452,20 @@ namespace BugFarmer.UI
             float total = _last != null ? _last.total : 0;
             int queue = _last != null ? _last.queue : 0;
             float t = 0f;
+            float remainingSec = 0f;
             if (queue > 0 && total > 0f)
             {
                 float baseProg = _last.progress;
                 float prog = Mathf.Min(total, baseProg + (Time.time - _lastStamp) * TickRate);
                 t = Mathf.Clamp01(prog / total);
+                remainingSec = Mathf.Max(0f, (total - prog) / TickRate);   // ticks → seconds (10 Hz)
             }
             var rt = _progressFill.rectTransform;
             rt.sizeDelta = new Vector2(226f * t, rt.sizeDelta.y);
             if (_queueText != null)
-                _queueText.text = queue > 0 ? $"Crafting… {queue} queued" : "Idle";
+                _queueText.text = queue > 0
+                    ? $"Crafting…  {Mathf.CeilToInt(remainingSec)}s left" + (queue > 1 ? $"   ·   x{queue} queued" : "")
+                    : "Idle";
         }
 
         // ---------------------------------------------------------------- echoes / refresh
