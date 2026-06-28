@@ -102,6 +102,27 @@ Smelted at the furnace, or alloyed/tempered at the forge. The bar ladder is the 
 | `platinum_bar` ✅ | metal-bar | craft@furnace | Deadly Ants | T5 | endgame heavy armor (`firewarden_plate`) |
 | `flame_alloy` | metal-bar (fire-tempered) | craft@forge (`steel_bar`+`ember_resin`×2+`fire_ant_gland`) | Deadly Ants | T5 | fire weapons + fire-resist armor cores; T4→T5 bridge |
 
+### Mining refine intermediates (the gather→process→refine chain, D13)
+
+The metal spine now runs `raw ore → [rock_crusher] → paydirt → [ore_sluice] → refined ore → [furnace/forge +coal] → bar`
+(per-mineral, all 6 metals). Paydirt + refined-ore are the two new intermediate rungs between ore and bar.
+
+| id | type | source | tier | used for |
+|---|---|---|---|---|
+| `copper_paydirt` ✅ | refine-intermediate | craft@rock_crusher (`copper_ore`) | T2 | → `refined_copper_ore` @ ore_sluice |
+| `iron_paydirt` ✅ | refine-intermediate | craft@rock_crusher (`iron_ore`) | T3 | → `refined_iron_ore` @ ore_sluice |
+| `tin_paydirt` ✅ | refine-intermediate | craft@rock_crusher (`tin_ore`) | T2 | → `refined_tin_ore` @ ore_sluice |
+| `silver_paydirt` ✅ | refine-intermediate | craft@rock_crusher (`silver_ore`) | T4 | → `refined_silver_ore` @ ore_sluice |
+| `gold_paydirt` ✅ | refine-intermediate | craft@rock_crusher (`gold_ore`) | T5 | → `refined_gold_ore` @ ore_sluice |
+| `platinum_paydirt` ✅ | refine-intermediate | craft@rock_crusher (`platinum_ore`) | T5 | → `refined_platinum_ore` @ ore_sluice |
+| `refined_copper_ore` ✅ | refined-ore | craft@ore_sluice (`copper_paydirt`) | T2 | + coal → `copper_bar` @ furnace |
+| `refined_iron_ore` ✅ | refined-ore | craft@ore_sluice (`iron_paydirt`) | T3 | + coal → `iron_bar` @ furnace |
+| `refined_tin_ore` ✅ | refined-ore | craft@ore_sluice (`tin_paydirt`) | T2 | → `bronze_bar` @ forge (no tin bar) |
+| `refined_silver_ore` ✅ | refined-ore | craft@ore_sluice (`silver_paydirt`) | T4 | + coal → `silver_bar` @ furnace |
+| `refined_gold_ore` ✅ | refined-ore | craft@ore_sluice (`gold_paydirt`) | T5 | + coal → `gold_bar` @ furnace |
+| `refined_platinum_ore` ✅ | refined-ore | craft@ore_sluice (`platinum_paydirt`) | T5 | + coal → `platinum_bar` @ furnace |
+| `charcoal` ✅ | fuel (coal substitute) | craft@furnace (`wood`×5) | T1 | furnace/forge fuel when coal is short |
+
 ---
 
 ## wood

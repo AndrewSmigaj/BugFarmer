@@ -68,8 +68,15 @@ client + persistence migration. (Designed in the plan; outside the sim hash.)
 - **Stocked test zone** (authored `InitialContainers` seed mirroring `InitialCarrion`) + mannequin.
 - **Mockups** of every in-scope station (craft + breeding) + the architecture_crafting.md update.
 
-## The four CONFIRMs blocking authoring
-1. Mining chain length — model A (refine+smelt) or B (sluice→bars)?
-2. Gem-block set — which gems (diamond/sapphire/ruby/emerald/quartz?)?
-3. Weapons — build metal-tier sword/spear now (cheap, D26) or keep backlogged?
-4. Bug Extractor per-bug → material map.
+## The four CONFIRMs — RESOLVED (user, this session)
+1. **Mining chain = model A** (refine + smelt): `ore → crusher → paydirt → sluice → refined → furnace+coal → bar`,
+   for **all 6 metals** (copper/iron/tin/silver/gold/platinum — no half-ladder). Sluice takes only paydirt (no
+   water). tin → refined_tin_ore → bronze (no tin_bar). **Ignore D26's shorter `sluice→bars` — user disavows D26.**
+2. **Gems = crushable blocks** (diamond ✓, sapphire/ruby/emerald NEW, quartz ✓) → crusher → **raw gem** → a NEW
+   **`gem_cutter` station** → **cut gem**. (Not "metal+gem at a jeweler" — that's backlogged.)
+3. **Weapons = all metal tiers, built now** (they're swung, not just icons; sprite *visual polish* backlogged,
+   the items are not).
+4. **Bug map:** `dead_beetle/centipede/millipede/wasp → chitin`; `dead_fly/butterfly → leather`; silk deferred.
+
+> Note: this doc earlier cited **D26** and listed jeweler/preserves_jar as in-scope — both corrected above.
+> Authority is the user's direct words, not any doc (incl. DECISIONS.md, which carries my misattributions).

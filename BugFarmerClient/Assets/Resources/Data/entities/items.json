@@ -163,6 +163,142 @@
     "max_stack": 99,
     "sell_price": 100
   },
+  "copper_paydirt": {
+    "name": "Copper Paydirt",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 9
+  },
+  "refined_copper_ore": {
+    "name": "Refined Copper Ore",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 13
+  },
+  "iron_paydirt": {
+    "name": "Iron Paydirt",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 13
+  },
+  "refined_iron_ore": {
+    "name": "Refined Iron Ore",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 19
+  },
+  "tin_paydirt": {
+    "name": "Tin Paydirt",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
+  },
+  "refined_tin_ore": {
+    "name": "Refined Tin Ore",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "silver_paydirt": {
+    "name": "Silver Paydirt",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 21
+  },
+  "refined_silver_ore": {
+    "name": "Refined Silver Ore",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 32
+  },
+  "gold_paydirt": {
+    "name": "Gold Paydirt",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 31
+  },
+  "refined_gold_ore": {
+    "name": "Refined Gold Ore",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 48
+  },
+  "platinum_paydirt": {
+    "name": "Platinum Paydirt",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 51
+  },
+  "refined_platinum_ore": {
+    "name": "Refined Platinum Ore",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 80
+  },
+  "charcoal": {
+    "name": "Charcoal",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
+  },
   "iron_bar": {
     "name": "Iron Bar",
     "category": "resource",

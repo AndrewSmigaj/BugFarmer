@@ -111,11 +111,206 @@
     "process_ticks": 10,
     "unlock": "default"
   },
+  "copper_paydirt": {
+    "station": "rock_crusher",
+    "inputs": [
+      {
+        "item": "copper_ore",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "copper_paydirt",
+      "count": 1
+    },
+    "process_ticks": 150,
+    "unlock": "default"
+  },
+  "refined_copper_ore": {
+    "station": "ore_sluice",
+    "inputs": [
+      {
+        "item": "copper_paydirt",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "refined_copper_ore",
+      "count": 1
+    },
+    "process_ticks": 150,
+    "unlock": "default"
+  },
+  "iron_paydirt": {
+    "station": "rock_crusher",
+    "inputs": [
+      {
+        "item": "iron_ore",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "iron_paydirt",
+      "count": 1
+    },
+    "process_ticks": 150,
+    "unlock": "default"
+  },
+  "refined_iron_ore": {
+    "station": "ore_sluice",
+    "inputs": [
+      {
+        "item": "iron_paydirt",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "refined_iron_ore",
+      "count": 1
+    },
+    "process_ticks": 150,
+    "unlock": "default"
+  },
+  "tin_paydirt": {
+    "station": "rock_crusher",
+    "inputs": [
+      {
+        "item": "tin_ore",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "tin_paydirt",
+      "count": 1
+    },
+    "process_ticks": 150,
+    "unlock": "default"
+  },
+  "refined_tin_ore": {
+    "station": "ore_sluice",
+    "inputs": [
+      {
+        "item": "tin_paydirt",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "refined_tin_ore",
+      "count": 1
+    },
+    "process_ticks": 150,
+    "unlock": "default"
+  },
+  "silver_paydirt": {
+    "station": "rock_crusher",
+    "inputs": [
+      {
+        "item": "silver_ore",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "silver_paydirt",
+      "count": 1
+    },
+    "process_ticks": 150,
+    "unlock": "default"
+  },
+  "refined_silver_ore": {
+    "station": "ore_sluice",
+    "inputs": [
+      {
+        "item": "silver_paydirt",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "refined_silver_ore",
+      "count": 1
+    },
+    "process_ticks": 150,
+    "unlock": "default"
+  },
+  "gold_paydirt": {
+    "station": "rock_crusher",
+    "inputs": [
+      {
+        "item": "gold_ore",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "gold_paydirt",
+      "count": 1
+    },
+    "process_ticks": 150,
+    "unlock": "default"
+  },
+  "refined_gold_ore": {
+    "station": "ore_sluice",
+    "inputs": [
+      {
+        "item": "gold_paydirt",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "refined_gold_ore",
+      "count": 1
+    },
+    "process_ticks": 150,
+    "unlock": "default"
+  },
+  "platinum_paydirt": {
+    "station": "rock_crusher",
+    "inputs": [
+      {
+        "item": "platinum_ore",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "platinum_paydirt",
+      "count": 1
+    },
+    "process_ticks": 150,
+    "unlock": "default"
+  },
+  "refined_platinum_ore": {
+    "station": "ore_sluice",
+    "inputs": [
+      {
+        "item": "platinum_paydirt",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "refined_platinum_ore",
+      "count": 1
+    },
+    "process_ticks": 150,
+    "unlock": "default"
+  },
+  "charcoal": {
+    "station": "furnace",
+    "inputs": [
+      {
+        "item": "wood",
+        "count": 5
+      }
+    ],
+    "output": {
+      "item": "charcoal",
+      "count": 1
+    },
+    "process_ticks": 150,
+    "unlock": "default"
+  },
   "iron_bar": {
     "station": "furnace",
     "inputs": [
       {
-        "item": "iron_ore",
+        "item": "refined_iron_ore",
         "count": 2
       },
       {
@@ -172,7 +367,7 @@
     "station": "furnace",
     "inputs": [
       {
-        "item": "copper_ore",
+        "item": "refined_copper_ore",
         "count": 2
       },
       {
@@ -191,7 +386,7 @@
     "station": "furnace",
     "inputs": [
       {
-        "item": "silver_ore",
+        "item": "refined_silver_ore",
         "count": 2
       },
       {
@@ -210,7 +405,7 @@
     "station": "furnace",
     "inputs": [
       {
-        "item": "gold_ore",
+        "item": "refined_gold_ore",
         "count": 2
       },
       {
@@ -229,7 +424,7 @@
     "station": "furnace",
     "inputs": [
       {
-        "item": "platinum_ore",
+        "item": "refined_platinum_ore",
         "count": 2
       },
       {
@@ -290,7 +485,7 @@
         "count": 2
       },
       {
-        "item": "tin_ore",
+        "item": "refined_tin_ore",
         "count": 1
       }
     ],
