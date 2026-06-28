@@ -1039,3 +1039,17 @@ v1 (DECISIONS D25) shipped currency + two working village vendors. Open follow-o
   For now `fabric_bolt` is shop décor; revisit when the placeable-container-with-fill mechanic lands.
 - `yarn_basket` is now a real **container** (filter `textile`); its **fill-state visual** (showing yarn level)
   rides the same fill-display backlog.
+
+## UI/shop follow-ups (2026-06-28 — the polish run)
+- **Village shop placement cleanup** — the 3 new shops (Weaver/Stonemason/Modern Wares) are placed in a
+  loose south commerce strip on open grass; give them proper access lanes/spurs + tidy the layout in a
+  paired pass (positions are easy to nudge in `zone_village_21_B.py`).
+- **Full verification pass** — Unity compile + in-game test of the new panels (dialogue/shop, station I/O
+  squares, mannequin dress-up, sign read); go tests via the docker/run-backend path (local go toolchain
+  can't parse `go 1.25`); re-run `sim-determinism` after the mannequin `blocks_bugs` change.
+- **Mannequin render Increment-B** — sync each chunk's container states on subscribe (mirror tree-water in
+  `handleChunkSubscribe`) so ALL viewers + rejoins see a dressed mannequin (Increment-A renders it for the
+  dresser only). Keep ONE source of truth (the synced `ContainerState`); never store the outfit on the occupant.
+- **Sign 2-wide retroactivity** — store signs widened to `[2,1]` render 2-wide in OTHER zones that already
+  placed them (cosmetic, non-blocking); re-place signs there when those zones are next touched.
+- **Richer NPC dialogue** — quests/lore/topics beyond Trade/Goodbye (the shell is extensible).
