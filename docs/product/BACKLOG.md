@@ -289,6 +289,10 @@ ambusher (web tiles slow prey via a server speed-debuff; reuse occupant placemen
 + a jumping/stalk-pounce hunter (reuse the centipede `ActionState` lunge). Determinism-light (ant trails add
 zero sync surface). Build spiders first (lower risk); ants are Med–High complexity. Includes Step 0 = the
 rotten-fruit decay fix (bound the pile).
+- **Spiders & webs in the underground (don't forget!)** — finish adding the cave spider + its webs to the
+  FIRST underground zone (Underground Passages / Mining Camp). Per the zone sheet it's the dark-warren ambush
+  species (`cave_spider` drops from the ceiling on silk; web-choked side-passages; `cave_spider_silk` is the
+  zone's soft-material spine) — designed, not yet placed/wired into the zone.
 
 ## Later — content layer (agriculture + crafting depth) + station minigames
 - **Flesh out agriculture & crafting (finish the content layer):** the systems exist (crops, crafting
