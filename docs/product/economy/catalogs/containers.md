@@ -71,4 +71,5 @@ data. Look-alikes (`crate`/`barrel`, `dresser`/`wardrobe`, `produce_crate`/`fish
 |---|---|---|---|
 | `chest` ✅ | small 1×1 storage chest | 12 | craft@workbench (wood) |
 | `trunk` ✅ | wide 2×1 storage trunk (more than a chest) | 36 | craft@sawmill (plank) · buy |
-| `yarn_basket` ✅ | textile basket (a real container, filter:textile) | 4 | buy@weaver · find |
+| `yarn_basket` ✅ | textile basket (filter:textile) | 4 | buy@weaver · find |
+| `basket` ✅ | plain wicker basket (general small container) | 4 | buy · find |

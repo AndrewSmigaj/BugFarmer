@@ -135,7 +135,19 @@
     ]
   },
   "yarn_basket": {
-    "look": "a round woven wicker BASKET overflowing with balls of brightly coloured YARN, one knitting needle poking out of the top. NOT a fruit basket.",
+    "look": "a round woven wicker BASKET piled high with neatly wound balls of brightly coloured YARN spilling over the rim, two knitting needles stuck in. Unmistakably a yarn basket.",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "cloth_pile": {
+    "look": "a neat folded STACK of CLOTH: four squares of woven fabric in different muted colours folded flat and stacked, a measuring tape on top. A pile of folded cloth, NOT books.",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "basket": {
+    "look": "a simple empty round woven wicker BASKET with a sturdy rolled rim and an arched handle. A plain storage basket.",
     "materials": [
       "fabric"
     ]

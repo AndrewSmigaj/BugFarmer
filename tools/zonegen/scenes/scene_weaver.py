@@ -19,40 +19,41 @@ from features.tilemap import stamp                                   # noqa: E40
 # 14 wide x 15 tall. North band = STOREROOM (left) | DYE ROOM (right), split by a vertical wall at
 # col 6; each opens to the full-width WEAVING HALL (south, with the front door). Looms are work
 # surfaces in the hall; the dress form + spinning wheel sit on the side walls (facing rule).
+# 12x14 (smith-sized). Tidy LEFT-TO-RIGHT PRODUCTION LINE in the hall: spinner -> loom -> sewing
+# machine (raw fiber becomes thread, cloth, then goods). Raw materials are CONSOLIDATED in the NW
+# storeroom; the NE dye room holds the vats; the hall keeps the work line, the weaver, a finished-
+# garment dress form and a display basket. No oversized carpet.
 WEAVER = """
-WWWWWWWWWWWWWW
-WT.b.bWV...VyW
-W.y..yW.V...yW
-W.b..bW.....yW
-WWWDWWWWWWDWWW
-W.P.L...E....W
-W...M........W
-WC.....bF..C.W
-W............W
-W....G.......W
-W............W
-W............W
-W............W
-W............W
-WWWWWWDWWWWWWW
+WWWWWWWWWWWW
+WT..bWV.V..W
+Wy.c.WV....W
+Wcy..W.....W
+WWWDWWWWWDWW
+WP..L..E...W
+W..........W
+W...M......W
+W..........W
+WC.......F.W
+W..k.......W
+W.........CW
+W..........W
+WWWWWDWWWWWW
 """
-# Three textile STATIONS in the hall: spinner (fiber->thread), loom (thread->cloth), sewing machine
-# (the foot-cranked table — cloth->goods). Dye room (NE) has the vats + drying cloth; the dress form
-# displays a finished garment, flanked by a fabric bolt + candelabra light.
 LEG = {
     "W": ("occ", "wall_wood"), "D": ("occ", "door_square"),
-    "P": ("occ", "spinning_wheel"),  # thread station
-    "L": ("occ", "loom"),            # cloth station (2-wide: anchor + east dot)
+    "P": ("occ", "spinning_wheel"),  # thread station (2-wide)
+    "L": ("occ", "loom"),            # cloth station (2-wide)
     "E": ("occ", "sewing_machine"),  # goods station (2-wide)
     "V": ("occ", "dye_vat"),         # dye station
-    "F": ("occ", "dress_form"), "G": ("occ", "rug_large"),
-    "C": ("occ", "candelabra"),      # cozy candle light (not an electric lamp)
-    "b": ("occ", "fabric_bolt"), "y": ("occ", "yarn_basket"),  # yarn_basket is a textile container
-    "T": ("occ", "trunk"),           # 2-wide storage trunk (more than a chest)
+    "F": ("occ", "dress_form"),
+    "C": ("occ", "candelabra"),      # cozy candle light
+    "b": ("occ", "fabric_bolt"), "c": ("occ", "cloth_pile"),   # bolts + folded cloth (compare the two)
+    "y": ("occ", "yarn_basket"), "k": ("occ", "basket"),       # two basket types (both containers)
+    "T": ("occ", "trunk"),
     "M": ("npc", "scholar_down"), ".": ("floor",),
 }
 
-BW, BH, DOORX = 14, 15, 6
+BW, BH, DOORX = 12, 14, 5
 
 
 def place_weaver(b, ox, oy):
@@ -61,8 +62,7 @@ def place_weaver(b, ox, oy):
     stamp(b, WEAVER, LEG, ox=ox, oy=oy)
     from features.village import shop_frontage
     shop_frontage(b, ox, oy, sign_id="sign_weaver", sign_x=DOORX - 2,
-                  items=[("fabric_bolt", 1, -2), ("fabric_bolt", DOORX + 2, -2),
-                         ("yarn_basket", BW - 2, -2)])
+                  items=[("potted_plant", 1, -2), ("potted_plant", BW - 2, -2)])
     return (ox, oy, ox + BW - 1, oy + BH - 1)
 
 

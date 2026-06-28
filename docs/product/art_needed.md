@@ -161,3 +161,9 @@ gpt-image-1 (Pipeline A); NPC characters = generate_player_sprites (Pipeline B)*
 `chitin` (from `dead_beetle`) is live. The full mapping — which `dead_<bug>` yields `leather` / `silk` /
 more `chitin` — is undecided (village has no spider, so `silk` likely belongs to spider zones). Items exist
 (placeholder) so armor recipes can reference them; their EXTRACTOR recipes await Andrew's call.
+
+### TODO — signs should be 2 cells wide (Andrew, 2026-06-27)
+All shop/town signs read better at **2×1** (32×24). `sign_weaver` is already 2-wide. Remake the rest to
+2-wide (resize sprite_w → 32 + footprint [2,1], regenerate art): `sign_plank`, `sign_shop`, `sign_anvil`,
+`sign_market`, `sign_inn`, `sign_camp`, `sign_anchor`, `sign_fish_board`, `sign_leaf`, `sign_crest`,
+`sign_weather`, `signpost`. (`sign_market_board` is already 3-wide.)

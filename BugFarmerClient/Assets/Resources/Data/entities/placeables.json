@@ -6104,13 +6104,13 @@
   "spinning_wheel": {
     "name": "Spinning Wheel",
     "category": "crafting",
-    "sprite_w": 16,
+    "sprite_w": 32,
     "sprite_h": 24,
     "stackable": false,
     "sell_price": 14,
     "world": {
       "footprint": [
-        1,
+        2,
         1
       ],
       "pivot": "bc",
@@ -6214,13 +6214,13 @@
   "sign_weaver": {
     "name": "Weaver Sign",
     "category": "structure",
-    "sprite_w": 16,
+    "sprite_w": 32,
     "sprite_h": 24,
     "stackable": false,
     "sell_price": 6,
     "world": {
       "footprint": [
-        1,
+        2,
         1
       ],
       "pivot": "bc",
@@ -6316,6 +6316,61 @@
         "drops": [
           {
             "item_id": "trunk",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "cloth_pile": {
+    "name": "Cloth Pile",
+    "category": "decoration",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "stackable": false,
+    "sell_price": 6,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "cloth_pile",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "basket": {
+    "name": "Basket",
+    "category": "decoration",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "stackable": false,
+    "sell_price": 5,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "container": {
+        "slots": 4
+      },
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "basket",
             "count": 1,
             "chance": 1.0
           }

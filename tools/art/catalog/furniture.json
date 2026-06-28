@@ -255,7 +255,7 @@
     ]
   },
   "spinning_wheel": {
-    "look": "a traditional wooden SPINNING WHEEL: one large spoked WHEEL standing upright on a slanted treadle base, a small bobbin and a tuft of pale fiber on the spindle. NOT a cartwheel.",
+    "look": "a traditional wooden SPINNING WHEEL viewed from the side: one large spoked WHEEL on the RIGHT on a slanted treadle base, a spindle and bobbin with a tuft of pale fiber on the LEFT. Clearly WIDER than tall. NOT a cartwheel.",
     "materials": [
       "wood"
     ]

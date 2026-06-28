@@ -101,4 +101,5 @@ for **your** prune call. The rock/cave-decor **rework** stays backlogged — thi
 |---|---|---|
 | `dress_form` ✅ | tailor's mannequin / garment display | buy@weaver · craft@sewing_machine |
 | `fabric_bolt` ✅ | stacked bolt of woven cloth | buy@weaver · craft@loom |
-| `yarn_basket` ✅ | basket of dyed yarn (colour-pop clutter) | buy@weaver · find |
+| `yarn_basket` ✅ | basket of dyed yarn (a textile container) | buy@weaver · find |
+| `cloth_pile` ✅ | folded stack of cloth (décor; alt to fabric_bolt) | buy@weaver · craft@sewing_machine |
