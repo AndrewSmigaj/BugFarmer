@@ -425,3 +425,25 @@ lives in the data (`world.container` + `filter`). Locked:
   `chisel_bench, brick_pile, statue_unfinished, sign_mason, metal_shelf, electric_heater, glass_block`.
 - gen_sprites had **no `glass` palette** (glass defaulted to wood/brown) → added a cool-blue glass palette to
   `style.json`.
+
+### D28 — UI polish run: panels onto the Canvas/UIFactory system + signs/mannequins (2026-06-28)
+The in-game UI is consolidated onto the ONE polished Canvas/UIFactory stack (the OnGUI ShopController is
+removed — a debt reduction), in an Apico-style theme (rounded warm panels, **item-icon SQUARES** with
+counts, gold selection ring, coin pill, per-purpose accent colours). PIL mockups (`tools/ui_mock.py`) are
+the design surface we iterate on (the Unity C# can't compile here).
+- **Stations** (`CraftingPanel`): inputs are now item SQUARES (icon + have/need, red when short) → an arrow
+  → the output preview; the progress bar shows **time remaining** (matters for furnace/forge 15–26s).
+- **Shop** (`ShopPanel`, Canvas, replaces OnGUI): dialogue (portrait + greeting + Trade/Goodbye) → trade
+  board (Buy / Learn / Books / Sell as squares; known recipes greyed). Buys reuse the existing
+  ShopActionMessage; refresh via `OnInventoryChanged`. No server change.
+- **Signs** (`SignController`): store signs → 2-wide; the directional `signpost` → a thin 2-tall
+  **crossroads** post; ALL signs `blocks_bugs:false` (bugs pass through — Andrew). Per-placement TEXT via
+  `PlacedOccupant.Text` (authored, raw-JSON auto-flow; read-only). Right-click reads the carved board.
+- **Mannequins** (`MannequinController`): `blocks_bugs:true` (solid — carried by the EXISTING generic
+  frontier collision system; no new determinism code; re-run the cross-client gate). A clothing-filtered
+  container + an equip-slot panel reusing the container move/sync protocol. The worn-outfit paper-doll
+  render is the documented follow-up (BACKLOG).
+
+**Determinism note:** the ONLY frontier-relevant change is occupant `blocks_bugs` — generic over the flag
+(`state.go:702 BlocksBugsCells` static map + `handlers_world.go:674/538` dynamic `OCCUPANT_BLOCKS_BUGS`
+ledger). Everything else (UI, dialogue, sign text, outfit storage) is pure display off the hash.
