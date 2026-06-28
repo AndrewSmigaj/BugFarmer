@@ -6,6 +6,18 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Opening intro + title screen — built 2026-06-28 (follow-ups)
+The game now opens with a text intro ("It is 2136…", line-by-line) → crossfade → a **BugFarmer** title
+screen (composed farm scene + logo + Start) → reveals char-select. `UI/OpeningSequence.cs` (self-bootstrapping
+canvas, order 30, skippable, fail-safe). Art: `tools/sprites/title_art.py` → `Resources/UI/title_{bg,logo}.png`.
+- **Replace the placeholder intro script** — `IntroLines[]` at the top of `OpeningSequence.cs` is a stand-in
+  (only line 1, "It is 2136.", is Andrew's; the paste didn't come through). Swap in the real 8-ish lines.
+- **Animate the title scene** — currently a static PNG; layer it for parallax/drift (floating bugs, swaying
+  crops, clouds) — re-author `title_art.py` to emit layers + a small animator, OR a particle/Tween pass.
+- **Custom display font for the logo** (optional polish) — the wordmark uses DejaVuSerif-Bold + styling (only
+  standard fonts were available); a bespoke pixel/display .ttf would lift it. Re-render via `title_art.py --font`.
+- **Remember-intro-seen** (optional) — auto-skip the cinematic on later launches (PlayerPrefs), still show title.
+
 ## Testing backlog (deferred test coverage — not blocking)
 - **Crafting chain — verify in-game (the buildout from 2026-06-28).** The data/sprites/test-zone are built +
   the validators (`recipe_graph.py`, `catalog_coverage.py`) + Go tests are green, but the chain was NOT
