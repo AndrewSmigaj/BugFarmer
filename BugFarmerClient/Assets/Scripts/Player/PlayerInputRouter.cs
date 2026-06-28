@@ -34,7 +34,6 @@ namespace BugFarmer.Player
         private MeleeController _melee;
         private PlacementController _placement;
         private StationController _station;
-        private ShopController _shop;
         private SleepController _sleep;
         private BugReleaseController _bugRelease;
         private TreeHarvestController _treeHarvest;
@@ -51,9 +50,7 @@ namespace BugFarmer.Player
             _melee = GetComponent<MeleeController>();
             _placement = GetComponent<PlacementController>();
             _station = GetComponent<StationController>();
-            // ShopController is new (not on the prefab yet) — auto-add so no scene edit is needed.
-            _shop = GetComponent<ShopController>();
-            if (_shop == null) _shop = gameObject.AddComponent<ShopController>();
+            // Shop is now a Canvas panel (ShopPanel singleton via UIBootstrap), not a player component.
             _sleep = GetComponent<SleepController>();
             _bugRelease = GetComponent<BugReleaseController>();
             _treeHarvest = GetComponent<TreeHarvestController>();
@@ -162,8 +159,9 @@ namespace BugFarmer.Player
             if (_station != null && _station.TryHandleRightClick(mouseWorld))
                 return;
 
-            // 1b2. NPC vendors (general store / bug dealer): a "shop" occupant opens the Buy/Sell panel.
-            if (_shop != null && _shop.TryHandleRightClick(mouseWorld))
+            // 1b2. NPC vendors: a "shop" occupant opens the dialogue → Buy/Sell board (Canvas ShopPanel).
+            if (BugFarmer.UI.ShopPanel.Instance != null &&
+                BugFarmer.UI.ShopPanel.Instance.TryHandleRightClick(mouseWorld))
                 return;
 
             // 1c. Beds: right-click sets the character's home (interact beats place). Consumes the

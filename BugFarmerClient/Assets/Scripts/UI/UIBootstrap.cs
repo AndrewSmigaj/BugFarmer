@@ -64,6 +64,11 @@ namespace BugFarmer.UI
             craftGO.transform.SetParent(canvasGO.transform, false);
             craftGO.AddComponent<CraftingPanel>();
 
+            // NPC vendor shop (dialogue + buy/sell board) — replaces the old OnGUI ShopController.
+            var shopGO = new GameObject("ShopPanel(Code)", typeof(RectTransform));
+            shopGO.transform.SetParent(canvasGO.transform, false);
+            shopGO.AddComponent<ShopPanel>();
+
             var hotbarGO = new GameObject("Hotbar(Code)", typeof(RectTransform));
             hotbarGO.transform.SetParent(canvasGO.transform, false);
             hotbarGO.AddComponent<HotbarUI>();
