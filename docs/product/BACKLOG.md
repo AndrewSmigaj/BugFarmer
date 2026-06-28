@@ -953,6 +953,10 @@ These came out of designing `economy/zones/` + `catalogs/`; each needs its own d
   reject if it clips); machines split into fuel-fed (wood stove) vs electric; stove cooking-capacity
   tiers. Add the power/fuel-requirement entity flag only when building this. Author a small
   **power/electronics demo scene** to tinker with it visually.
+  - **Village windmill (Andrew, 2026-06-27):** put a **windmill in the starting town that powers the
+    houses** — but the player **cannot buy or build it until the wheat/locust area** (the
+    `locust_farmland` zone — *"a little western-style town"*). Gates the village's electrification behind
+    reaching that zone. ("I will know what it means when we get there.")
 - **Placeable wall/block visual tiling consistency** — make placeable walls/blocks (wood/brick/iron/
   glass/marble + wood/stone) tile together cleanly. Iterate-heavy, token-spend; its own pass.
 - **General-store catalog scene** — a shop (next to the produce market) with a buy-catalog of
