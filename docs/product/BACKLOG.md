@@ -336,6 +336,18 @@ rotten-fruit decay fix (bound the pile).
 - **Station minigames:** interactive minigames at craft stations (e.g. a timing/skill step when smelting,
   brewing, etc.) instead of a pure timer. Polish/engagement layer on top of the crafting system.
 
+## Later — catching gear: auto-catcher + fly nets
+The catch system already exists (net sweep + `net_size` small/large gate, `CatchingController`/
+`BugReleaseController`); this is the gear layer on top of it.
+- **Auto-catcher (placeable):** a passive bug-collection station — set near a swarm, it slowly catches
+  bugs in range into a capped internal buffer the player empties; the bug-farm chore-relief device
+  (cf. the `egg_collector` sketch in `docs/brainstorms/objects/storage_automation.md`). Must be
+  **capacity-bounded** so it can't strip a farm, and respect the existing "what the bugs eat belongs to
+  the bugs" rule. Likely a placeable with its own panel + a designed catch rate and species whitelist.
+- **Fly nets (tool tiers):** dedicated nets for flies/butterflies — extend the small/large net ladder
+  (e.g. small → large → specialized) with their craft recipes + diagonal tool icons (the same
+  `net_size` enforcement already decides which species each net can take).
+
 ## Later — sprite review (manual, by hand)
 Go through EVERY sprite by hand and fix/redo the ones that read wrong (Andrew edits on his end). Many
 were auto-generated; quality varies. NB: a bare `pixelclean.py` re-cleans ALL sprites — regenerate +

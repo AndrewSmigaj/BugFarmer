@@ -277,10 +277,21 @@ namespace BugFarmer.Entities
             }
             else
             {
-                visual.localScale = Vector3.one;
+                // Flies & butterflies read a touch large at 1:1 next to the player and the other
+                // bugs — render them at HALF scale (user feedback). Wasps stay full size. This is
+                // DISPLAY-ONLY (localScale is never in the sim hash), so it's free to differ per
+                // client, exactly like the crawler head scale above.
+                float s = FlyerRenderScale(SpeciesId);
+                visual.localScale = new Vector3(s, s, 1f);
                 visual.rotation = Quaternion.identity;
             }
         }
+
+        /// <summary>Cosmetic render scale for NON-crawling bugs. Flies AND butterflies render at
+        /// half size (they read large at 1:1); wasps/anything else stay unscaled. "butterfly_*"
+        /// contains "fly", so one Contains("fly") covers both. Display-only — never hashed.</summary>
+        private static float FlyerRenderScale(string speciesId) =>
+            (!string.IsNullOrEmpty(speciesId) && speciesId.Contains("fly")) ? 0.5f : 1f;
 
         // One segment trail per crawling bug, keyed by bug id (1-3 per knot).
         private readonly Dictionary<int, Bugs.CentipedeTrail> _trails = new();

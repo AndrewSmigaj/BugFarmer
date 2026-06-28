@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 6494dc46820808f41b48bfbb3c8f11d9
+guid: 3f94f73e40964af1a6f055856531782e
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5036883641025379586
-    second: wasp_nest_0
+      213: -8907481009752182589
+    second: tree_plum_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: wasp_nest_0
+      name: tree_plum_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
         width: 32
-        height: 32
+        height: 46
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: ef2c4b9d305691ab0800000000000000
-      internalID: -5036883641025379586
+      spriteID: 3c0fe2a2735426480800000000000000
+      internalID: -8907481009752182589
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      wasp_nest_0: -5036883641025379586
+      tree_plum_0: -8907481009752182589
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

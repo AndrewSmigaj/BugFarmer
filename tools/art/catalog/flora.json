@@ -283,6 +283,20 @@
    "foliage"
   ]
  },
+ "tree_cherry": {
+  "look": "a CHERRY TREE: a brown trunk and a round green leafy canopy dotted with small bright RED CHERRIES hanging in pairs peeking through the leaves.",
+  "materials": [
+   "wood",
+   "foliage"
+  ]
+ },
+ "tree_plum": {
+  "look": "a PLUM TREE: a brown trunk and a round green leafy canopy dotted with small round deep PURPLE PLUMS peeking through the leaves.",
+  "materials": [
+   "wood",
+   "foliage"
+  ]
+ },
  "tree_oak": {
   "look": "a leafy OAK TREE: a thick brown TRUNK at the bottom widening into a big round, full CANOPY of green leaves in rounded bumpy clusters, lighter green highlights on top, darker green underneath. Lush and full.",
   "materials": [
