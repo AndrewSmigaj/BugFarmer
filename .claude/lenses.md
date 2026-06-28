@@ -54,6 +54,27 @@ keep on this codebase (each caught a real, shipped-would-have-bitten issue).
   per-scan cost, fixed for *all* species by the index; nerfing the beetle would have starved a food-scarce
   species for ~no gain.)
 
+- ★ **Completeness / No-Half-Ladder** — When building a *set* (tiers, families, a metal ladder, a per-species
+  map), does EVERY declared member exist, or is it partial? Half-built sets read as "done" but aren't (the
+  `iron_bar` with no `copper_bar`; tools that stop at iron). Back it with a **completeness validator** that
+  enumerates the matrix and fails on any gap. (Earned: a large slice of the crafting system was silently
+  partial; the validator immediately caught `pickaxe_copper`/`axe_copper` with no recipe.)
+- ★ **Hidden-Asset-Cost** — Does this "data/recipe" change secretly require hand-authored ASSETS (paper-doll
+  overlays, multi-frame sprites) or an unbuilt SYSTEM before it's player-real? Separate data-cheap from
+  art/system-expensive *before* committing scope. A recipe whose output can't be seen/used is a halfway.
+  (Earned: armor recipes look like pure data but need ~420 hand-authored PNGs; tools were genuinely cheap.)
+- ★ **Authored-Decision Fidelity / Docs-Aren't-Authority** — Does the implementation match what the USER actually
+  decided? And **do not treat docs YOU (the assistant) wrote as authority** — design docs you authored in past
+  sessions are padded with unbuilt inventions, so "it's in `crafting.md`" (or even a `DECISIONS.md` D-entry) ≠
+  "the user decided it." Authority = built data + asking the user. Litmus for a feature: does it EXIST in the
+  built artifacts (a real placeable, a real recipe), or only in prose? When unsure, ASK. (Earned repeatedly: the
+  furnace-smelt drift from D13/D19; an invented `chopping_block` I "verified" against my own `crafting.md`; a
+  `DECISIONS.md` D26 the user said he never decided.)
+- **Content-Reachability / Dead-End** — In a content/economy graph, is every authored entity both PRODUCED and
+  CONSUMED (or terminal by design)? No orphan intermediates; no self-dropping decorative "traps." Gate with a
+  reachability validator. (Earned: `ore_sluice`/`coal_bin`/`geode` were dead self-dropping objects wired to
+  nothing.)
+
 ## Design lenses (for feature/creature DESIGN, not just code review)
 - ★ **Unbounded-Growth / Accumulation** — Does this system create entities or state that grow without a
   matching removal at steady rate? What bounds the standing count? (Generalized from the rotten-fruit pile:

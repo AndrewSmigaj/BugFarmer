@@ -78,6 +78,31 @@ The compost bin (`entities/station.go` `StationState`, `processStations`) and th
 ledger (`AddFoodEvent`/`InfluenceFoodConsumed`) are untouched. A future station whose OUTPUT is an
 insect food/breeding source registers on that path — not on the container path here.
 
+## AS-BUILT content — the mining refine chain + ladders (2026-06-28)
+
+The recipe/station system is generic (a placeable + a recipe naming it via `station` + `interaction_type:
+"craft"` = a working station, zero code). On top of it, the crafting **content** built for Village + Mining
+Camp (scope per DECISIONS D17):
+
+- **Mining metal chain** (per-mineral, 6 metals copper/iron/tin/silver/gold/platinum) — replaced the wrong
+  one-step smelt with the agreed gather→process→refine loop:
+  `raw {m}_ore → [rock_crusher] → {m}_paydirt → [ore_sluice] → refined_{m}_ore → [furnace/forge +coal] → {m}_bar`.
+  `rock_crusher` is a NEW craft station; `ore_sluice` was wired (`interaction_type:craft` added). `charcoal`
+  (`wood`→furnace) is a coal substitute. Tin has no bar — `refined_tin_ore` → bronze at the forge.
+- **Tool + weapon ladders** — metal tiers copper→platinum for pickaxe/axe/hoe/scythe/shovel (`2 {bar}+2 wood`
+  @ anvil ≤iron / forge ≥steel) and sword/spear (`2 {bar}+1 wood`, each with a scaled primary swing move) +
+  the D12 specials `saw` and `harvest_sickle`. All auto-unlock (`unlock:"default"`). Tool-tier icons are free
+  palette recolors (`tools/sprites/recolor_sprites.py`).
+- **Gems** (Minecraft/Terraria) — mine a gem block (`ore_{gem}_block`) for the raw gem → cut at the NEW
+  `gem_cutter` station → `cut_{gem}` (diamond/quartz/ruby/sapphire/emerald). Gems sellable; jeweler/accessory
+  consumers are BACKLOGGED.
+- **Bug Extractor** — `dead_beetle/centipede/millipede/wasp → chitin`, `dead_fly/butterfly → leather`.
+- **OUT (decision-backlogged):** potions/alchemy (D16), cooked food (D19), armor-tier worn art, accessories/
+  jeweler recipes, keg artisan goods, electronics.
+- **Integrity gate:** `tools/data/recipe_graph.py` — reachability (no dangling/orphan) + completeness
+  ("no half-ladder": every metal chain, tool ladder, gem chain must be full). Run it + `catalog_coverage.py`
+  after any recipe/item change.
+
 ## Files
 
 - Server NEW: `handlers_containers.go`, `craft_stations.go`, `entities/recipe.go`,
