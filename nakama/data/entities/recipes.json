@@ -1216,6 +1216,44 @@
     "process_ticks": 120,
     "unlock": "default"
   },
+  "pickaxe_copper": {
+    "station": "anvil",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "pickaxe_copper",
+      "count": 1
+    },
+    "process_ticks": 30,
+    "unlock": "default"
+  },
+  "axe_copper": {
+    "station": "anvil",
+    "inputs": [
+      {
+        "item": "copper_bar",
+        "count": 2
+      },
+      {
+        "item": "wood",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "axe_copper",
+      "count": 1
+    },
+    "process_ticks": 30,
+    "unlock": "default"
+  },
   "iron_bar": {
     "station": "furnace",
     "inputs": [
