@@ -22,23 +22,23 @@ namespace BugFarmer.UI
     public class OpeningSequence : MonoBehaviour
     {
         // ----------------------------------------------------------------- the script (EDIT HERE)
-        // PLACEHOLDER intro — replace with Andrew's pasted script. Line 1 is his ("It is 2136."); the
-        // rest is my stand-in. Blank "" entries are deliberate beats/spacers. One line == one reveal.
+        // Andrew's intro. Each non-blank entry is ONE reveal (faded in one at a time); blank "" entries
+        // are beats/spacers. The closing "→ BUGFARMER" is the TITLE crossfade itself (the logo screen),
+        // so it's not a text line — the last beat "As a bug farmer." lands, then the BugFarmer title rises.
         private static readonly string[] IntroLines =
         {
-            "It is 2136.",
+            "It is the year 2126.",
+            "A plague swept the Earth.",
+            "Nearly every mammal — gone.",
             "",
-            "The old world's harvests failed, one by one —",
-            "the fields went quiet, the great herds gone.",
+            "Humans held on.",
+            "But humans still had to eat.",
             "",
-            "But where everything else faltered,",
-            "the smallest creatures thrived.",
+            "So we made the bugs bigger.",
+            "Bigger than anyone meant to.",
             "",
-            "Now the swarms are our livestock, our trade, our hope.",
-            "On the frontier, a few hardy souls tend them,",
-            "and coax the tired soil back to life.",
-            "",
-            "You are one of them.",
+            "Out on the frontier, you start over.",
+            "As a bug farmer.",
         };
 
         private const float LineFadeIn = 0.7f;   // seconds for a line to fade in
