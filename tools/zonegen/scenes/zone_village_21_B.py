@@ -36,6 +36,9 @@ from scene_cottage import place_cottage                               # noqa: E4
 from scene_lakeside import place_boat_store                           # noqa: E402
 from scene_ecologist import place_ecologist                           # noqa: E402
 from scene_fly_farm import place_fly_farm                             # noqa: E402
+from scene_weaver import place_weaver                                 # noqa: E402
+from scene_stonemason import place_stonemason                         # noqa: E402
+from scene_modern_wares import place_modern_wares                     # noqa: E402
 
 ZW = ZH = 256
 PLAZA = (127, 123)          # the road's main bend; spawn snaps to its S paving
@@ -159,11 +162,10 @@ def build(zone_id="village_21_B", vseed=0):
     spur(b, 143, 108, 143, 103, tile="dirt")
     place_carpenter(b, 156, 109)
     spur(b, 161, 108, 161, 103, tile="dirt")
-    # Commerce (D26): the metal + wood vendors at their storefronts (beside each south-facing door).
-    # TODO(scene session): these two skip on a footprint overlap with the smith/carpenter frontage —
-    # nudge to clear cells when we lay out the storefronts together (the 1x2 NPC needs 2 clear cells).
-    b.place_occupant("blacksmith", 141, 107)
-    b.place_occupant("carpenter", 159, 107)
+    # Commerce (D26): the metal + wood vendors stand at their storefronts, IN FRONT of the door
+    # (rows y105-106, between the frontage signs at y107-108 and the lane at y104 — verified clear).
+    safe(b, "blacksmith", 141, 105)
+    safe(b, "carpenter", 159, 105)
 
     # Residential houses NW of the plaza, NORTH of the town hall's compound —
     # VARIED, not three clone boxes: a ⊥ 4-room composer house (basic), the
@@ -221,6 +223,21 @@ def build(zone_id="village_21_B", vseed=0):
     b.place_occupant("ecologist", 190, 144)                  # at the ecologist's house (D26 — sells his recipes)
     forest(b, 200, 160, 22, 14, density=0.5, seed=vseed + 13)
     forest(b, 172, 130, 14, 10, density=0.45, seed=vseed + 14)
+
+    # ---- D26 SPECIALTY SHOPS: a south commerce strip below the production quarter -------------
+    # Three new shops on open ground south of the smith/carpenter (verified-clear lots). Each is
+    # south-facing; the vendor NPC stands at the storefront. (Coords found by a clear-rect scan.)
+    def vend(v, *cands):
+        for (x, y) in cands:
+            if safe(b, v, x, y):
+                return
+        b.warn(f"vendor {v}: no free storefront cell")
+    place_weaver(b, 138, 88)                       # Isolde's Loom (textiles/dye), door x143
+    vend("weaver", (143, 85), (142, 85), (144, 85), (143, 86), (141, 85))
+    place_stonemason(b, 171, 92)                   # Dougal's Stoneworks (yard faces south), door x176
+    vend("stonemason", (176, 90), (175, 90), (177, 90), (174, 90), (176, 89))
+    place_modern_wares(b, 184, 90)                 # Pim's Modern Wares, door x190
+    vend("modern_wares", (190, 88), (189, 88), (191, 88), (190, 87), (188, 88))
 
     # ================= 5) FARMS + ORCHARD + FLY FARM + PREDATORS (N) =================
     # Windmill AT the farm fork (the landmark at the decision point) + signpost.

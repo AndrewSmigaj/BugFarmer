@@ -102,4 +102,20 @@ for **your** prune call. The rock/cave-decor **rework** stays backlogged — thi
 | `dress_form` ✅ | tailor's mannequin / garment display | buy@weaver · craft@sewing_machine |
 | `fabric_bolt` ✅ | stacked bolt of woven cloth | buy@weaver · craft@loom |
 | `yarn_basket` ✅ | basket of dyed yarn (a textile container) | buy@weaver · find |
-| `cloth_pile` ✅ | folded stack of cloth (décor; alt to fabric_bolt) | buy@weaver · craft@sewing_machine |
+
+## Rugs, mannequins & yard décor (D26 — Weaver/Stonemason build-out)
+| id | role | source 🔵 |
+|---|---|---|
+| `rug_sm_sq` ✅ | small square rug (2×2, red geometric) | buy@weaver · craft@loom |
+| `rug_sm_rect` ✅ | small rug (3×2, blue floral) | buy@weaver · craft@loom |
+| `rug_md_sq` ✅ | medium square rug (3×3, green medallion) | buy@weaver · craft@loom |
+| `rug_md_rect` ✅ | medium rug (3×4, kilim stripes) | buy@weaver · craft@loom |
+| `rug_lg_rect` ✅ | large rug (3×5, ornate persian) | buy@weaver · craft@loom |
+| `rug_runner` ✅ | runner rug (2×4, neutral woven) | buy@weaver · craft@loom |
+| `mannequin_white` ✅ | plain white display mannequin (blob-form) | display (weaver) · find |
+| `mannequin_cream` ✅ | plain cream display mannequin | display (weaver) · find |
+| `mannequin_dress_red` ✅ | dressed mannequin (red) | display (weaver) · find |
+| `mannequin_dress_teal` ✅ | dressed mannequin (teal) | display (weaver) · find |
+| `brick_pile` ✅ | stack of clay bricks (yard clutter) | craft@stonecutter · find |
+| `statue_unfinished` ✅ | half-carved WIP statue (storytelling prop) | display (stonemason) · find |
+| `electric_heater` ✅ | modern electric heater (showroom display) | **buy** (electricity expansion, D14) |

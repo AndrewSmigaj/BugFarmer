@@ -957,6 +957,18 @@ These came out of designing `economy/zones/` + `catalogs/`; each needs its own d
     houses** — but the player **cannot buy or build it until the wheat/locust area** (the
     `locust_farmland` zone — *"a little western-style town"*). Gates the village's electrification behind
     reaching that zone. ("I will know what it means when we get there.")
+  - **`clothing_rack` unlock (D26):** the 2-wide garment rail is a **display fixture only** in the Weaver
+    for now — **not craftable/buyable until "the other town"** (same later-zone gate as the windmill).
+    Wire its recipe/shop-entry when that zone lands. (`coat_rack` stays the house clothing piece.)
+  - **`electric_heater`** is a Modern-Wares showroom display; functional only with the electricity expansion.
+- **Single-slot "bulk bin" containers (D26):** `produce_crate` is now `slots:1` (a covered crate = one bulk
+  stack of fruit/veg) — the same model the **ore bins** want. For a slot holding MORE than the normal stack
+  cap (a true silo), add a per-container `stack_cap` override; until then 1 slot = 1 normal stack.
+- **Procedural container fill-display (deferred):** the "show real contents" idea (a `fill_rect` + the client
+  drawing the top item icons into it) stays backlogged — covered containers (lid/tarp) sidestep it for now;
+  it's the eventual upgrade for OPEN containers.
+- **`modern_floor` TILE:** polished floor for the Modern Wares showroom (terrain pipeline); proxied by
+  `stone_floor` for now.
 - **Placeable wall/block visual tiling consistency** — make placeable walls/blocks (wood/brick/iron/
   glass/marble + wood/stone) tile together cleanly. Iterate-heavy, token-spend; its own pass.
 - **General-store catalog scene** — a shop (next to the produce market) with a buy-catalog of

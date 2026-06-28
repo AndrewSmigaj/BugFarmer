@@ -405,3 +405,23 @@ décor-on-farm · finish lighting · electricity · fishing mechanic · land dee
 later zone (track bed_fancy/sofa_fancy/dresser_fancy/…) · wine_rack + bigger kegs → bee zone · garden_arch
 recipe → another town · special dye colors across zones · straw_hat later · tumbleweed (drier zones) · the
 stat `bonuses{}` engine.
+
+### D27 — Covered containers + the Weaver/Stonemason/Modern build-out (2026-06-27)
+The **container visual conundrum** (open baskets/piles look bad empty; we don't want a sprite-per-content or
+an empty/full state-swap) is resolved by **COVERED containers**: a `basket` gets a **lid**, a `produce_crate`
+gets a **tarp** — closed always reads fine, so **no client rendering work, no fill mechanic**. Functionality
+lives in the data (`world.container` + `filter`). Locked:
+- **Baskets** = standard **unfiltered** containers (we place cloth in them by hand in the Weaver). No multi-tag
+  filter. **Crates** = `filter:food`, **1 slot** (bulk fruit/veg). `cloth_pile` **removed** (a "pile" implies
+  put-anything, which fights the container model).
+- **Mannequins** = hand-authored Pipeline-B white "blob-form" (faces hidden): `mannequin_white/_cream` +
+  `mannequin_dress_red/_teal`. Replace `dress_form` in the Weaver display.
+- **NEW rug family** (gpt-image-1): `rug_sm_sq/_sm_rect/_md_sq/_md_rect/_lg_rect/_runner` — square+rectangular,
+  2×2→3×5, distinct colors/styles; convention is `footprint:[W,H]` + `sprite:[W·16,H·16]` (flat, pivot `c`).
+- **`clothing_rack`** (2-wide garment rail) is a **display fixture only** — gated to "the other town" (see
+  BACKLOG, with the windmill). `coat_rack` stays the house piece.
+- The **three new shop scenes** are built: Weaver (`scene_weaver`), Stonemason (`scene_stonemason`, workshop +
+  sculpture yard), Modern Wares (`scene_modern_wares`, marble showroom, glass-block windows). New entities:
+  `chisel_bench, brick_pile, statue_unfinished, sign_mason, metal_shelf, electric_heater, glass_block`.
+- gen_sprites had **no `glass` palette** (glass defaulted to wood/brown) → added a cool-blue glass palette to
+  `style.json`.

@@ -73,3 +73,13 @@ data. Look-alikes (`crate`/`barrel`, `dresser`/`wardrobe`, `produce_crate`/`fish
 | `trunk` ✅ | wide 2×1 storage trunk (more than a chest) | 36 | craft@sawmill (plank) · buy |
 | `yarn_basket` ✅ | textile basket (filter:textile) | 4 | buy@weaver · find |
 | `basket` ✅ | plain wicker basket (general small container) | 4 | buy · find |
+
+## Display containers (D26 — Weaver/Modern build-out)
+| id | slots | filter | source 🔵 | notes |
+|---|---|---|---|---|
+| `clothing_rack` ✅ | 8 | clothing | **unlock @ later town** (gated, like the windmill) | 2-wide garment rail; `coat_rack` is the house piece |
+| `metal_shelf` ✅ | 12 | — | **buy@modern_wares** | industrial display shelving |
+
+> **As-built (D26):** `basket` is now a **lidded** general container (no filter); `produce_crate` is a
+> **tarp-covered** fruit/veg crate (`filter:food`, **1 slot** bulk). Covered look = no empty/full state needed.
+> Dormant filters: `bookshelf*`=book and `wine_rack`=drink match **no items yet** (forward hooks).

@@ -63,6 +63,9 @@ namespace BugFarmer.Data
             // what the NPC offers (id+price). Buys/pricing for selling is server-authoritative.
             public string ShopKind;            // null = not a shop
             public ShopOffer[] ShopSells;
+            public ShopOffer[] ShopRecipes;    // recipes the NPC teaches (id = recipe id)
+            public ShopOffer[] ShopBooks;      // recipe-book collections (id = collection id)
+            public string Greeting;            // NPC dialogue line (null = use a default)
 
             // Light block (lamps/torches glow at night; 0 radius = no light)
             public float LightRadius;
@@ -75,6 +78,20 @@ namespace BugFarmer.Data
         {
             public string Id;
             public long Price;
+        }
+
+        /// <summary>Parse a shop offer array (sells/recipes/books) → ShopOffer[] (null/empty → null).</summary>
+        private static ShopOffer[] ParseOffers(JArray arr)
+        {
+            if (arr == null || arr.Count == 0) return null;
+            var offers = new ShopOffer[arr.Count];
+            for (int i = 0; i < arr.Count; i++)
+                offers[i] = new ShopOffer
+                {
+                    Id = arr[i]["id"]?.Value<string>(),
+                    Price = arr[i]["price"]?.Value<long>() ?? 0,
+                };
+            return offers;
         }
 
         /// <summary>
@@ -431,18 +448,13 @@ namespace BugFarmer.Data
             if (shop != null)
             {
                 world.ShopKind = shop["kind"]?.Value<string>() ?? "items";
-                var sells = shop["sells"] as JArray;
-                if (sells != null)
-                {
-                    world.ShopSells = new ShopOffer[sells.Count];
-                    for (int i = 0; i < sells.Count; i++)
-                        world.ShopSells[i] = new ShopOffer
-                        {
-                            Id = sells[i]["id"]?.Value<string>(),
-                            Price = sells[i]["price"]?.Value<long>() ?? 0,
-                        };
-                }
+                world.ShopSells = ParseOffers(shop["sells"] as JArray);
+                world.ShopRecipes = ParseOffers(shop["recipes"] as JArray);   // D26: learnable recipes
+                world.ShopBooks = ParseOffers(shop["books"] as JArray);       // D26: recipe-book collections
             }
+
+            // NPC dialogue greeting (sibling of shop)
+            world.Greeting = data["greeting"]?.Value<string>();
 
             // Parse light block (lamps/torches glow at night)
             var light = data["light"] as JObject;

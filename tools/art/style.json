@@ -7,7 +7,8 @@
     "foliage": "Foliage: dark (40,85,40), base (55,120,55), light (80,150,70)",
     "dirt": "Dirt: dark (110,75,40), base (140,95,50), light (165,120,70)",
     "fabric": "Fabric: dark (100,70,100), base (140,100,140), light (180,140,180)",
-    "marble": "Marble: dark/veining (175,172,180), base (224,222,228), light (245,246,250) — a bright near-WHITE polished marble with faint cool-grey veining; clearly pale and luminous"
+    "marble": "Marble: dark/veining (175,172,180), base (224,222,228), light (245,246,250) — a bright near-WHITE polished marble with faint cool-grey veining; clearly pale and luminous",
+    "glass": "Glass: edge/dark (120,150,170), base (175,205,220), light (230,242,250) — a translucent COOL pale blue-white glass, icy and luminous; NOT amber, NOT brown, NOT yellow"
   },
   "object": {
     "style_block": [

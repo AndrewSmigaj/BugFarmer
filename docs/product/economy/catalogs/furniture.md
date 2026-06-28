@@ -106,3 +106,9 @@ Light is kept deliberately small — a handful of radii. Held/world torches: see
 lighting. The base (wood/stone) tier crafts at workbench/sawmill/stonecutter; the `*_fancy`/marble/velvet/
 premium tier is **buy/unlock** (D19). Décor bonuses are tagged-but-unvalued (D5). Overlap notes flag look-alikes
 (`stool_wood`/`stool_stone`, `sofa`/`sofa_modern`, `stove`/`stove_wood`) for **your** prune call — nothing cut here.
+
+## Workshop & modern (D26 — Stonemason/Modern build-out)
+| id | role | source 🔵 |
+|---|---|---|
+| `chisel_bench` ✅ | stonemason fine-carving work bench | craft@stonecutter |
+| `metal_shelf` ✅ | industrial shelving (a container — see containers.md) | buy@modern_wares |

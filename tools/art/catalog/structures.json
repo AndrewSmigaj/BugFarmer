@@ -146,7 +146,7 @@
     "look": "a striped fabric AWNING projecting out from a shop front, scalloped front edge, seen front-on; a shade canopy strip"
   },
   "produce_crate": {
-    "look": "an angled wooden DISPLAY CRATE heaped with mixed colorful VEGETABLES and fruit; market produce"
+    "look": "a wooden produce CRATE COVERED with a tied-down blue PLASTIC TARP roped over the top, the tarp hiding the contents; a couple of apples and a carrot peek from a gap at one corner so you can tell it holds fruit and vegetables. A covered fruit/veg crate."
   },
   "dock_plank": {
     "look": "a square section of weathered grey wooden DOCK DECKING, planks running across, seen top-down; a flat pier walkway tile"
@@ -213,5 +213,8 @@
     "materials": [
       "wood"
     ]
+  },
+  "sign_mason": {
+    "look": "a stonemason's wooden SHOP SIGN TWO cells wide: a horizontal carved wooden board hung from a frame, a grey chisel-and-mallet emblem carved on it. A storefront sign seen front-on."
   }
 }

@@ -693,3 +693,7 @@ décor/structures; the `dead_*` carcass family is counted as **one** row):
 - `cave_quartz`/`quartz` ✅ and `glow_quartz`/`glow_crystal` — keep as deliberate tier ladders or collapse.
 - `cut_glowquartz` (T2) ↔ `cut_glow_crystal` (T3) — same luminous-cut concept, two tiers.
 - `bog_pearl` (dark) vs `cave_pearl` (pale) — distinct by water (swamp vs cave); keep both or fold to `pearl`.
+
+## Glass building block (D26 — Modern Wares)
+- `glass_block` ✅ — a translucent cool-blue **glass building block** (modern windows/walls); mineable like
+  `stone_block`. The modern shop's signature material. (Polished `modern_floor` TILE is still 🔵 backlogged.)

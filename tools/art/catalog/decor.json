@@ -140,16 +140,40 @@
       "fabric"
     ]
   },
-  "cloth_pile": {
-    "look": "a neat folded STACK of CLOTH: four squares of woven fabric in different muted colours folded flat and stacked, a measuring tape on top. A pile of folded cloth, NOT books.",
+  "basket": {
+    "look": "a round woven wicker BASKET WITH A FITTED DOMED LID closed on top, a sturdy rolled rim and a small arched handle on the lid. A closed lidded storage basket, contents hidden.",
     "materials": [
       "fabric"
     ]
   },
-  "basket": {
-    "look": "a simple empty round woven wicker BASKET with a sturdy rolled rim and an arched handle. A plain storage basket.",
-    "materials": [
-      "fabric"
-    ]
+  "rug_sm_sq": {
+    "look": "a small SQUARE woven floor RUG seen flat top-down: a deep RED rug with a bold cream-and-charcoal GEOMETRIC diamond pattern and a simple woven border, lying flat. Just the rug, no thickness, no objects on it."
+  },
+  "rug_sm_rect": {
+    "look": "a small rectangular woven floor RUG seen flat top-down, WIDER than tall: a soft dusty-BLUE rug with a cream FLORAL vine pattern and a woven border, lying flat. Just the rug."
+  },
+  "rug_md_sq": {
+    "look": "a square woven floor RUG seen flat top-down: a sage-GREEN rug with a central cream MEDALLION motif and a decorative border, lying flat. Just the rug."
+  },
+  "rug_md_rect": {
+    "look": "a rectangular woven floor RUG seen flat top-down, TALLER than wide: a flat-weave KILIM rug with bold horizontal STRIPES in terracotta, cream and mustard, a tribal look, lying flat. Just the rug."
+  },
+  "rug_lg_rect": {
+    "look": "a large rectangular woven floor RUG seen flat top-down, TALL: an ornate PERSIAN carpet in deep red and navy with an intricate central medallion and a dense floral border, lying flat. Just the rug."
+  },
+  "rug_runner": {
+    "look": "a long narrow RUNNER RUG seen flat top-down, TALL and NARROW: a neutral tan-and-grey woven runner with a simple repeating geometric border, lying flat. Just the rug."
+  },
+  "clothing_rack": {
+    "look": "a wide standing CLOTHING RACK garment rail TWO cells wide: a horizontal metal rail on two upright legs, hung with several colourful GARMENTS on hangers (a dress, a coat, a shirt). A shop clothing display rail seen front-on, NOT a thin coat-tree."
+  },
+  "brick_pile": {
+    "look": "a neat STACK of red clay BRICKS: a small rectangular pile of stacked terracotta bricks with a few loose on top, mortar flecks. A bricklayer's brick pile, NOT a wall."
+  },
+  "statue_unfinished": {
+    "look": "a HALF-CARVED stone STATUE: a rough rectangular block of grey stone partly chiselled into the head and shoulders of a figure up top, the lower half still a raw uncut block, visible chisel marks. A work-in-progress sculpture."
+  },
+  "electric_heater": {
+    "look": "a modern ELECTRIC SPACE HEATER: a small upright white appliance with a metal grille front glowing warm ORANGE from the heating element inside, on little feet. A modern heater, NOT a stove."
   }
 }

@@ -11,9 +11,6 @@
     ],
     "surface": "packed brown DIRT/soil flecked with a few small pebbles"
   },
-  "hard_stone_block": {
-    "surface": "dark dense grey STONE with tight fine cracks, tougher-looking than normal rock"
-  },
   "ore_coal_block": {
     "materials": [
       "stone"
@@ -100,5 +97,11 @@
   },
   "wall_wood2": {
     "surface": "vertical stacked LOG timbers, rounded, with darker chinking lines between the logs"
+  },
+  "glass_block": {
+    "look": "a translucent COOL PALE-BLUE frosted GLASS building block that FILLS THE FRAME for seamless tiling: light passes through it with soft white highlights and a bevelled edge. Clearly GLASS, cool blue-white and icy, NOT amber, NOT yellow, NOT wood.",
+    "materials": [
+      "glass"
+    ]
   }
 }

@@ -7,21 +7,28 @@ using BugFarmer.UI;
 namespace BugFarmer.Player
 {
     /// <summary>
-    /// NPC VENDORS — right-click a "shop" occupant (general store / bug dealer) to open a Buy/Sell
-    /// panel. Buy from the NPC's stock (server-priced); sell your items, and at the bug dealer your
-    /// live bugs + dead-bug carcasses, for coins. The server is authoritative for every price + check;
-    /// the panel reads live from InventoryManager, which the FullInventorySync echo refreshes after each
-    /// trade (coins + slots), so no client-side optimistic bookkeeping. Mirrors StationController.
+    /// NPC VENDORS — right-click a "shop" occupant to talk. A Baldur's-Gate-style DIALOGUE opens first
+    /// (the NPC's greeting + [Trade] / [Goodbye]); [Trade] opens the Buy/Sell panel. Buy items from the
+    /// NPC's stock, LEARN recipes (already-known greyed), buy recipe-BOOKS (a collection teaches its whole
+    /// set), and sell your items (+ live bugs/carcasses at the bug dealer), for coins. The server is
+    /// authoritative for every price + check; the panel reads live from InventoryManager, which the
+    /// FullInventorySync echo refreshes after each trade (coins + slots + known_recipes), so no
+    /// client-side optimistic bookkeeping. Mirrors StationController.
     /// </summary>
     public class ShopController : MonoBehaviour
     {
         [SerializeField] private float maxInteractDistance = 2.5f;
 
+        private enum Mode { Dialogue, Trade }   // BG-style: greet first, Trade opens the buy/sell panel
         private bool _open;
+        private Mode _mode = Mode.Dialogue;
         private Vector2Int _cell;
         private string _title = "Shop";
         private string _kind = "items";
+        private string _greeting = "";
         private EntityDatabase.ShopOffer[] _sells;
+        private EntityDatabase.ShopOffer[] _recipes;   // D26: learnable recipes
+        private EntityDatabase.ShopOffer[] _books;     // D26: recipe-book collections
         private Vector2 _scroll;
 
         /// <summary>Routed right-click (PlayerInputRouter owns it). Returns true on any open/close/toggle
@@ -58,6 +65,11 @@ namespace BugFarmer.Player
             _title = def.Name ?? target.OccupantId;
             _kind = def.World.ShopKind ?? "items";
             _sells = def.World.ShopSells;
+            _recipes = def.World.ShopRecipes;
+            _books = def.World.ShopBooks;
+            _greeting = string.IsNullOrEmpty(def.World.Greeting)
+                ? "Welcome, traveler. Care to trade?" : def.World.Greeting;
+            _mode = Mode.Dialogue;   // greet first; [Trade] opens the panel
             _open = true;
             return true;
         }
@@ -66,9 +78,26 @@ namespace BugFarmer.Player
         {
             if (!_open) return;
             var inv = InventoryManager.Instance;
-            const int W = 320;
+            const int W = 340;
             GUILayout.BeginArea(new Rect(Screen.width / 2f - W / 2f, 60, W, 470), GUI.skin.box);
             GUILayout.Label($"=== {_title} ===    Coins: {(inv != null ? inv.Coins : 0)}");
+            if (_mode == Mode.Dialogue) DrawDialogue();
+            else DrawTrade(inv);
+            GUILayout.EndArea();
+        }
+
+        // Baldur's-Gate-style greeting: a line + Trade / Goodbye.
+        private void DrawDialogue()
+        {
+            GUILayout.Space(8);
+            GUILayout.Label(_greeting);
+            GUILayout.Space(14);
+            if (GUILayout.Button("Trade")) _mode = Mode.Trade;
+            if (GUILayout.Button("Goodbye")) _open = false;
+        }
+
+        private void DrawTrade(InventoryManager inv)
+        {
             _scroll = GUILayout.BeginScrollView(_scroll);
 
             // --- BUY (the NPC's stock) ---
@@ -80,6 +109,37 @@ namespace BugFarmer.Player
                     if (offer == null || string.IsNullOrEmpty(offer.Id)) continue;
                     if (GUILayout.Button($"{NameOf(offer.Id)}  —  {offer.Price}c"))
                         Send("buy", offer.Id, "", 0);
+                }
+            }
+
+            // --- LEARN (recipes the NPC teaches; already-known are greyed) ---
+            var known = inv != null ? inv.KnownRecipes : null;
+            if (_recipes != null)
+            {
+                GUILayout.Space(6);
+                GUILayout.Label("Learn:");
+                foreach (var r in _recipes)
+                {
+                    if (r == null || string.IsNullOrEmpty(r.Id)) continue;
+                    bool have = known != null && known.Contains(r.Id);
+                    GUI.enabled = !have;
+                    if (GUILayout.Button(have ? $"{NameOf(r.Id)}  —  (known)"
+                                              : $"{NameOf(r.Id)}  —  {r.Price}c"))
+                        Send("buy", r.Id, "recipe", 0);
+                    GUI.enabled = true;
+                }
+            }
+
+            // --- RECIPE BOOKS (a collection teaches its whole set) ---
+            if (_books != null)
+            {
+                GUILayout.Space(6);
+                GUILayout.Label("Recipe books:");
+                foreach (var bk in _books)
+                {
+                    if (bk == null || string.IsNullOrEmpty(bk.Id)) continue;
+                    if (GUILayout.Button($"{Prettify(bk.Id)} (book)  —  {bk.Price}c"))
+                        Send("buy", bk.Id, "book", 0);
                 }
             }
 
@@ -123,8 +183,21 @@ namespace BugFarmer.Player
 
             GUILayout.EndScrollView();
             GUILayout.Space(6);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("← Back")) _mode = Mode.Dialogue;
             if (GUILayout.Button("Close")) _open = false;
-            GUILayout.EndArea();
+            GUILayout.EndHorizontal();
+        }
+
+        /// <summary>Title-case a snake_case id for display (recipe-book collection ids aren't entities).</summary>
+        private static string Prettify(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return id;
+            var parts = id.Split('_');
+            for (int i = 0; i < parts.Length; i++)
+                if (parts[i].Length > 0)
+                    parts[i] = char.ToUpper(parts[i][0]) + parts[i].Substring(1);
+            return string.Join(" ", parts);
         }
 
         private static string NameOf(string id)

@@ -153,3 +153,8 @@ stock = `../DECISIONS.md` D25/D26 + `merchants.md`; placeholder player-model art
 workbench/sawmill/stonecutter/anvil; the **electric line is buy-only** (D14); explosives + mining-haul + beekeeping
 are **backlog mechanics** (the placeables exist; the systems aren't wired). Sign/fence/wall variants carry overlap
 notes for **your** prune call — nothing cut here.
+
+## Stonemason sign (D26)
+| id | role | source 🔵 | notes |
+|---|---|---|---|
+| `sign_mason` ✅ | stonemason shop sign (2-wide) | craft@workbench (wood) | chisel-and-mallet emblem |

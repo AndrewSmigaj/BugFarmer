@@ -243,7 +243,7 @@
     "look": "a large wooden MAP TABLE strewn with rolled charts and an open land MAP, seen front-on; a planning table"
   },
   "sofa_modern": {
-    "look": "a clean low-line MODERN SOFA with square cushions, neutral grey upholstery, seen front-on; minimalist couch"
+    "look": "a sleek low MODERN SOFA seen front-on: a long minimalist couch with clean rectangular cushions in cool grey upholstery and thin metal legs. A contemporary two-seater, NOT rustic, NOT floral."
   },
   "shop_shelving": {
     "look": "tall wooden STORE SHELVING seen front-on: an upright frame of 3-4 horizontal SHELVES stocked with assorted general-store SUNDRIES - jars, sacks, bottles, folded cloth and tins in muted colors; a stocked shop shelf, NOT books, NOT a plain cabinet"
@@ -277,5 +277,11 @@
     "materials": [
       "wood"
     ]
+  },
+  "chisel_bench": {
+    "look": "a stonemason's CHISEL BENCH seen front-on: a low sturdy stone-topped WORK BENCH on heavy wooden legs, chisels, a mallet and pale stone chips scattered on the surface. A fine stone-carving work surface."
+  },
+  "metal_shelf": {
+    "look": "an industrial METAL SHELVING unit TWO cells wide, seen front-on: a grey steel frame with three flat shelves holding small boxes and modern goods. A sleek clean warehouse/store shelf."
   }
 }
