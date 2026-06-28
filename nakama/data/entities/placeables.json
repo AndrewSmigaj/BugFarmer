@@ -6204,6 +6204,10 @@
             "chance": 1.0
           }
         ]
+      },
+      "container": {
+        "slots": 4,
+        "filter": "textile"
       }
     }
   },
@@ -6236,13 +6240,13 @@
   "sewing_machine": {
     "name": "Sewing Machine",
     "category": "crafting",
-    "sprite_w": 16,
+    "sprite_w": 32,
     "sprite_h": 24,
     "stackable": false,
     "sell_price": 30,
     "world": {
       "footprint": [
-        1,
+        2,
         1
       ],
       "pivot": "bc",
@@ -6254,6 +6258,64 @@
         "drops": [
           {
             "item_id": "sewing_machine",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "chest": {
+    "name": "Small Chest",
+    "category": "storage",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "stackable": false,
+    "sell_price": 15,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "container": {
+        "slots": 12
+      },
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "chest",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "trunk": {
+    "name": "Storage Trunk",
+    "category": "storage",
+    "sprite_w": 32,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 40,
+    "world": {
+      "footprint": [
+        2,
+        1
+      ],
+      "pivot": "bc",
+      "container": {
+        "slots": 36
+      },
+      "breakable": {
+        "hp": 3,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "trunk",
             "count": 1,
             "chance": 1.0
           }

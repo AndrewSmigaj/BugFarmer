@@ -21,11 +21,11 @@ from features.tilemap import stamp                                   # noqa: E40
 # surfaces in the hall; the dress form + spinning wheel sit on the side walls (facing rule).
 WEAVER = """
 WWWWWWWWWWWWWW
-Wh.b.bWV...VyW
-W.y..yW.Y...yW
+WT.b.bWV...VyW
+W.y..yW.V...yW
 W.b..bW.....yW
 WWWDWWWWWWDWWW
-W...P..L....EW
+W.P.L...E....W
 W...M........W
 WC.....bF..C.W
 W............W
@@ -43,13 +43,12 @@ LEG = {
     "W": ("occ", "wall_wood"), "D": ("occ", "door_square"),
     "P": ("occ", "spinning_wheel"),  # thread station
     "L": ("occ", "loom"),            # cloth station (2-wide: anchor + east dot)
-    "E": ("occ", "sewing_machine"),  # goods station
+    "E": ("occ", "sewing_machine"),  # goods station (2-wide)
     "V": ("occ", "dye_vat"),         # dye station
-    "Y": ("occ", "laundry_line"),    # drying dyed cloth (2-wide)
     "F": ("occ", "dress_form"), "G": ("occ", "rug_large"),
     "C": ("occ", "candelabra"),      # cozy candle light (not an electric lamp)
-    "b": ("occ", "fabric_bolt"), "y": ("occ", "yarn_basket"),
-    "h": ("occ", "chest_wood"),
+    "b": ("occ", "fabric_bolt"), "y": ("occ", "yarn_basket"),  # yarn_basket is a textile container
+    "T": ("occ", "trunk"),           # 2-wide storage trunk (more than a chest)
     "M": ("npc", "scholar_down"), ".": ("floor",),
 }
 
@@ -62,7 +61,7 @@ def place_weaver(b, ox, oy):
     stamp(b, WEAVER, LEG, ox=ox, oy=oy)
     from features.village import shop_frontage
     shop_frontage(b, ox, oy, sign_id="sign_weaver", sign_x=DOORX - 2,
-                  items=[("laundry_line", DOORX + 1, -2), ("fabric_bolt", 1, -2),
+                  items=[("fabric_bolt", 1, -2), ("fabric_bolt", DOORX + 2, -2),
                          ("yarn_basket", BW - 2, -2)])
     return (ox, oy, ox + BW - 1, oy + BH - 1)
 

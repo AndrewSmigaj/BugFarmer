@@ -65,3 +65,10 @@ tagged to match (`clothing`/`food`/`book`/`drink`) — a design hook for themed 
 the `apple_crate` loot prop. Filters (`clothing`/`food`/`book`/`drink`) are a themed-storage hook already in the
 data. Look-alikes (`crate`/`barrel`, `dresser`/`wardrobe`, `produce_crate`/`fish_crate`) carry overlap notes for
 **your** prune call — nothing cut. The designed `sack` (cheap craftable backpack) is the one 🔵 not-yet-built id.
+
+## Storage chests (D26 — Weaver pass)
+| id | role | slots | source 🔵 |
+|---|---|---|---|
+| `chest` ✅ | small 1×1 storage chest | 12 | craft@workbench (wood) |
+| `trunk` ✅ | wide 2×1 storage trunk (more than a chest) | 36 | craft@sawmill (plank) · buy |
+| `yarn_basket` ✅ | textile basket (a real container, filter:textile) | 4 | buy@weaver · find |

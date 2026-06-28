@@ -261,7 +261,19 @@
     ]
   },
   "sewing_machine": {
-    "look": "an antique foot-treadle SEWING MACHINE: a black cast-iron machine head with a needle arm sitting on a small wooden TABLE, a cast-iron foot TREADLE and flywheel underneath. NOT a typewriter.",
+    "look": "an antique foot-treadle SEWING MACHINE on a WIDE wooden TABLE: a black cast-iron machine head with a needle arm at the right, a spool of thread, and a cast-iron foot TREADLE and flywheel beneath the table. Wider than tall. NOT a typewriter.",
+    "materials": [
+      "wood"
+    ]
+  },
+  "chest": {
+    "look": "a small wooden treasure CHEST with a rounded domed LID, dark iron bands across it and a round front clasp, closed. A single compact storage chest.",
+    "materials": [
+      "wood"
+    ]
+  },
+  "trunk": {
+    "look": "a wide wooden steamer TRUNK with a flat slatted LID, two leather STRAPS over the top and brass corner fittings, closed. A long low storage trunk, clearly WIDER than tall.",
     "materials": [
       "wood"
     ]

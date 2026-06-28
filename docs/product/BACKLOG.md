@@ -1016,3 +1016,10 @@ v1 (DECISIONS D25) shipped currency + two working village vendors. Open follow-o
   doesn't block the cell; the furniture sits over it). Verify the flat-placeable + occupant stacking.
 - **Multi-square rug art:** rugs should visibly span **multiple cells** (`rug` 2×2 / `rug_large` 2×3) — the
   current art reads as one tiny square; the sprite must fill its footprint. (Art fix, batched.)
+
+## Later — functional clutter (Weaver pass follow-ups, 2026-06-27)
+- **`fabric_bolt` → optional `fabric_pile` container:** dropping cloth on the ground could aggregate into a
+  **fabric-pile container** (the drop-aggregation idea — same family as ore bins / placeable fill containers).
+  For now `fabric_bolt` is shop décor; revisit when the placeable-container-with-fill mechanic lands.
+- `yarn_basket` is now a real **container** (filter `textile`); its **fill-state visual** (showing yarn level)
+  rides the same fill-display backlog.
