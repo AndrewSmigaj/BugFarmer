@@ -123,6 +123,19 @@ The metal spine now runs `raw ore → [rock_crusher] → paydirt → [ore_sluice
 | `refined_platinum_ore` ✅ | refined-ore | craft@ore_sluice (`platinum_paydirt`) | T5 | + coal → `platinum_bar` @ furnace |
 | `charcoal` ✅ | fuel (coal substitute) | craft@furnace (`wood`×5) | T1 | furnace/forge fuel when coal is short |
 
+### Gem chain (block → mine → raw gem → gem_cutter → cut gem)
+
+Minecraft/Terraria-style: mine a **gem block** for the raw gem, then cut it at the new **`gem_cutter`** station.
+Gems are sellable; their jeweler/accessory consumers are backlogged.
+
+| raw gem | gem block (occupant) | cut gem | tier |
+|---|---|---|---|
+| `diamond` ✅ | `ore_diamond_block` ✅ | `cut_diamond` ✅ | T5 |
+| `ruby` ✅ | `ore_ruby_block` ✅ | `cut_ruby` ✅ | T4 |
+| `sapphire` ✅ | `ore_sapphire_block` ✅ | `cut_sapphire` ✅ | T4 |
+| `emerald` ✅ | `ore_emerald_block` ✅ | `cut_emerald` ✅ | T3 |
+| `quartz` ✅ | `quartz_block` ✅ | `cut_quartz` ✅ | T2 |
+
 ---
 
 ## wood

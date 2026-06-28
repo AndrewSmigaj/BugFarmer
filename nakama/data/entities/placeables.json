@@ -6929,5 +6929,34 @@
         "required_tool_tier": 1
       }
     }
+  },
+  "gem_cutter": {
+    "name": "Gem Cutter",
+    "category": "structure",
+    "sprite_w": 32,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 60,
+    "world": {
+      "interaction_type": "craft",
+      "footprint": [
+        2,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 4,
+        "required_tool_type": "pickaxe",
+        "drops": [
+          {
+            "item_id": "rock_crusher",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
   }
 }

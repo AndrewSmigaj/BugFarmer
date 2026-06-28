@@ -3196,7 +3196,7 @@
       "blocks_bugs": true,
       "interactable": true,
       "interaction_type": "shop",
-      "greeting": "The latest comforts — though some need the new electrics.",
+      "greeting": "The latest comforts \u2014 though some need the new electrics.",
       "shop": {
         "kind": "items",
         "sells": [
@@ -3280,7 +3280,7 @@
       "blocks_bugs": true,
       "interactable": true,
       "interaction_type": "shop",
-      "greeting": "Specimens, scopes, terraria — recipes for the curious naturalist.",
+      "greeting": "Specimens, scopes, terraria \u2014 recipes for the curious naturalist.",
       "shop": {
         "kind": "items",
         "recipes": [
@@ -3327,7 +3327,88 @@
       "blocks_bugs": true,
       "interactable": true,
       "interaction_type": "npc",
-      "greeting": "Welcome to the village. Land deeds? Not just yet — soon."
+      "greeting": "Welcome to the village. Land deeds? Not just yet \u2014 soon."
+    }
+  },
+  "ore_ruby_block": {
+    "name": "Ruby Deposit",
+    "category": "ore",
+    "sprite_w": 16,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 12,
+        "required_tool_type": "pickaxe",
+        "required_tool_tier": 4,
+        "drops": [
+          {
+            "item_id": "ruby",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "ore_sapphire_block": {
+    "name": "Sapphire Deposit",
+    "category": "ore",
+    "sprite_w": 16,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 12,
+        "required_tool_type": "pickaxe",
+        "required_tool_tier": 4,
+        "drops": [
+          {
+            "item_id": "sapphire",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "ore_emerald_block": {
+    "name": "Emerald Deposit",
+    "category": "ore",
+    "sprite_w": 16,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 12,
+        "required_tool_type": "pickaxe",
+        "required_tool_tier": 3,
+        "drops": [
+          {
+            "item_id": "emerald",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
     }
   }
 }

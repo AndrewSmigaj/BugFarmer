@@ -2377,5 +2377,93 @@
     "durability": 180,
     "buy_price": 160,
     "sell_price": 60
+  },
+  "cut_diamond": {
+    "name": "Cut Diamond",
+    "category": "resource",
+    "tags": [
+      "material",
+      "gem"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 440
+  },
+  "cut_quartz": {
+    "name": "Cut Quartz",
+    "category": "resource",
+    "tags": [
+      "material",
+      "gem"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 44
+  },
+  "ruby": {
+    "name": "Ruby",
+    "category": "resource",
+    "tags": [
+      "material",
+      "gem"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 120
+  },
+  "cut_ruby": {
+    "name": "Cut Ruby",
+    "category": "resource",
+    "tags": [
+      "material",
+      "gem"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 264
+  },
+  "sapphire": {
+    "name": "Sapphire",
+    "category": "resource",
+    "tags": [
+      "material",
+      "gem"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 140
+  },
+  "cut_sapphire": {
+    "name": "Cut Sapphire",
+    "category": "resource",
+    "tags": [
+      "material",
+      "gem"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 308
+  },
+  "emerald": {
+    "name": "Emerald",
+    "category": "resource",
+    "tags": [
+      "material",
+      "gem"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 100
+  },
+  "cut_emerald": {
+    "name": "Cut Emerald",
+    "category": "resource",
+    "tags": [
+      "material",
+      "gem"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 220
   }
 }

@@ -89,7 +89,9 @@ signs, wells, docks, mining rigs, bug-catching infrastructure, beehives. Cost/st
 | `mine_rail` ✅ | mine rail | craft@anvil (iron_bar) | cart track (hauling — backlog mechanic) |
 | `mine_cart` ✅ | mine cart | craft@anvil (iron_bar) | runs on `mine_rail` |
 | `mine_support` ✅ | mine support | craft@workbench (wood) | tunnel beam (structural dressing) |
-| `ore_sluice` ✅ | ore sluice | craft@anvil (iron_bar+plank) | ore separation (see crafting `sluice`) |
+| `rock_crusher` ✅ | rock crusher | craft station | mining chain step 1: `{metal}_ore` → `{metal}_paydirt` (D13) |
+| `ore_sluice` ✅ | ore sluice | craft station | mining chain step 2: `{metal}_paydirt` → `refined_{metal}_ore` (D13) |
+| `gem_cutter` ✅ | gem cutter | craft station | cuts raw gems → cut gems (`ruby`→`cut_ruby`, etc.) |
 | `coal_bin` ✅ | coal bin | craft@workbench (wood) | fuel store dressing |
 | `lumber_rack` ✅ | lumber rack | craft@workbench (wood) | wood store dressing |
 

@@ -1066,6 +1066,156 @@
     "process_ticks": 30,
     "unlock": "default"
   },
+  "chitin_centipede": {
+    "station": "bug_extractor",
+    "inputs": [
+      {
+        "item": "dead_centipede",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "chitin",
+      "count": 1
+    },
+    "process_ticks": 80,
+    "unlock": "default"
+  },
+  "chitin_millipede": {
+    "station": "bug_extractor",
+    "inputs": [
+      {
+        "item": "dead_millipede",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "chitin",
+      "count": 1
+    },
+    "process_ticks": 80,
+    "unlock": "default"
+  },
+  "chitin_wasp": {
+    "station": "bug_extractor",
+    "inputs": [
+      {
+        "item": "dead_wasp",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "chitin",
+      "count": 1
+    },
+    "process_ticks": 80,
+    "unlock": "default"
+  },
+  "leather_fly": {
+    "station": "bug_extractor",
+    "inputs": [
+      {
+        "item": "dead_fly",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "leather",
+      "count": 1
+    },
+    "process_ticks": 80,
+    "unlock": "default"
+  },
+  "leather_butterfly": {
+    "station": "bug_extractor",
+    "inputs": [
+      {
+        "item": "dead_butterfly",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "leather",
+      "count": 1
+    },
+    "process_ticks": 80,
+    "unlock": "default"
+  },
+  "cut_diamond": {
+    "station": "gem_cutter",
+    "inputs": [
+      {
+        "item": "diamond",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "cut_diamond",
+      "count": 1
+    },
+    "process_ticks": 120,
+    "unlock": "default"
+  },
+  "cut_quartz": {
+    "station": "gem_cutter",
+    "inputs": [
+      {
+        "item": "quartz",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "cut_quartz",
+      "count": 1
+    },
+    "process_ticks": 120,
+    "unlock": "default"
+  },
+  "cut_ruby": {
+    "station": "gem_cutter",
+    "inputs": [
+      {
+        "item": "ruby",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "cut_ruby",
+      "count": 1
+    },
+    "process_ticks": 120,
+    "unlock": "default"
+  },
+  "cut_sapphire": {
+    "station": "gem_cutter",
+    "inputs": [
+      {
+        "item": "sapphire",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "cut_sapphire",
+      "count": 1
+    },
+    "process_ticks": 120,
+    "unlock": "default"
+  },
+  "cut_emerald": {
+    "station": "gem_cutter",
+    "inputs": [
+      {
+        "item": "emerald",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "cut_emerald",
+      "count": 1
+    },
+    "process_ticks": 120,
+    "unlock": "default"
+  },
   "iron_bar": {
     "station": "furnace",
     "inputs": [
