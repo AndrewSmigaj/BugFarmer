@@ -7,10 +7,33 @@ This is the durable queue. The throwaway plan doc covers only the single item we
 working; this file is what survives between sessions.
 
 ## Testing backlog (deferred test coverage — not blocking)
+- **Crafting chain — verify in-game (the buildout from 2026-06-28).** The data/sprites/test-zone are built +
+  the validators (`recipe_graph.py`, `catalog_coverage.py`) + Go tests are green, but the chain was NOT
+  exercised in a running client. Steps: rebuild/run the backend (`run-backend`, force-recreate so the Go
+  plugin picks up the new F8 "crafting" give-loadout); enter the **`crafting_test`** zone; **F8 → give
+  "crafting"**; then right-click through `rock_crusher` (ore→paydirt) → `ore_sluice` (paydirt→refined) →
+  `furnace` (refined+coal→bar) → `anvil`/`forge` (bar→tool/weapon) → `gem_cutter` (raw→cut gem) →
+  `bug_extractor` (dead bug→chitin/leather). Confirm each opens, crafts, and produces; check tool-tier icons.
 - **Cross-zone determinism check**: a player leaves a zone and re-enters; assert the bug-sim STATE HASH
   is identical across the leave/join (same bug positions/phase) — i.e. the swap didn't perturb the
   deterministic tick. Extend the sync-harness `crosszone` scenario to capture + compare zone hashes
   before/after. (The crossing is *designed* to be determinism-inert; this proves it.)
+
+## Crafting buildout — remaining pieces (data/sprites/test-zone DONE 2026-06-28; these were specified, not built)
+Plan + designs: `docs/product/economy/crafting_buildout.md` + the saved plan. All three are fully designed.
+- **Per-station craft-slot mechanic** (user-approved) — stations differ by how many recipes run AT ONCE
+  (campfire 1 < stoves more). Server: `craft_slots` int on the station entity (default 1); refactor
+  `CraftStationState` `Recipe/Queue/Progress` into `Procs []CraftProcessor`; `processCraftStations` loops
+  each; persist + migrate legacy single-recipe saves to `Procs[0]`. Wire: add a `proc` index to
+  `ContainerActionMessage` (don't overload `Slot`), a `procs[]` array to `ContainerUpdateMessage`. Client:
+  `CraftingPanel` renders N processor rows. Outside the sim hash.
+- **Barter sell UI** (Apico/BG3) — ShopPanel Sell → vendor stock + bag + "to sell" staging + one "Sell for X".
+  GOOD design (not a hack): one atomic `sell_batch` server op mirroring `shopSell` (validate each line vs the
+  vendor `Buys` filter, sum, pay once) — NOT a client loop of single sells.
+- **Station mockups** (PIL) — extend `tools/ui_mock.py` to render every craft station + the breeding/food
+  stations (compost/beehive/milkweed/wasp-nest) with the Apico I/O-square treatment, for visual review.
+- Also: armor + weapon-tier *sprite polish* (placeholders shipped); the InitialContainers authored-stock seed
+  (the good-design alternative to the F8-give); fruit/crop + breeding-station info panels (separate backlog).
 
 ## Now — Bug ecology / farming (livestock loop on a living-ecosystem engine)
 Design of record: [bug_ecology_plan.md](../brainstorms/ecology/bug_ecology_plan.md). Phased build P0–P11
