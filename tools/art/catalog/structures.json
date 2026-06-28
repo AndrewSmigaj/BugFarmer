@@ -87,7 +87,7 @@
     ]
   },
   "signpost": {
-    "look": "a wooden SIGNPOST: a vertical wooden POST with a rectangular wooden SIGN BOARD mounted near the top (blank, with a faint arrow), like a directional trail sign."
+    "look": "a wooden CROSSROADS SIGNPOST seen front-on: a single THIN tall vertical wooden POST, with two or three flat arrow-shaped DIRECTIONAL SIGN-BOARDS nailed near the top pointing left and right, each board WIDER than the slim shaft; weathered grey-brown wood. A tall narrow waymarker, NOT a single wide board."
   },
   "wall_brick": {
     "materials": [

@@ -1441,7 +1441,7 @@
     "name": "Signpost",
     "category": "structure",
     "sprite_w": 16,
-    "sprite_h": 24,
+    "sprite_h": 32,
     "stackable": true,
     "max_stack": 99,
     "sell_price": 3,
@@ -3623,18 +3623,16 @@
   "sign_camp": {
     "name": "Sign Camp",
     "category": "structure",
-    "sprite_w": 16,
+    "sprite_w": 32,
     "sprite_h": 24,
     "stackable": false,
     "sell_price": 8,
     "world": {
       "footprint": [
-        1,
+        2,
         1
       ],
       "pivot": "bc",
-      "blocks_players": true,
-      "blocks_bugs": true,
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
@@ -3645,7 +3643,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "interaction_type": "sign"
     }
   },
   "ore_sluice": {
@@ -4044,18 +4043,16 @@
   "sign_inn": {
     "name": "Sign Inn",
     "category": "structure",
-    "sprite_w": 16,
+    "sprite_w": 32,
     "sprite_h": 24,
     "stackable": false,
     "sell_price": 8,
     "world": {
       "footprint": [
-        1,
+        2,
         1
       ],
       "pivot": "bc",
-      "blocks_players": true,
-      "blocks_bugs": true,
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
@@ -4066,24 +4063,23 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "interaction_type": "sign"
     }
   },
   "sign_weather": {
     "name": "Sign Weather",
     "category": "structure",
-    "sprite_w": 16,
+    "sprite_w": 32,
     "sprite_h": 24,
     "stackable": false,
     "sell_price": 8,
     "world": {
       "footprint": [
-        1,
+        2,
         1
       ],
       "pivot": "bc",
-      "blocks_players": true,
-      "blocks_bugs": true,
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
@@ -4094,7 +4090,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "interaction_type": "sign"
     }
   },
   "sand_block": {
@@ -4971,13 +4968,13 @@
   "sign_anchor": {
     "name": "Anchor Sign",
     "category": "structure",
-    "sprite_w": 16,
+    "sprite_w": 32,
     "sprite_h": 24,
     "stackable": false,
     "sell_price": 6,
     "world": {
       "footprint": [
-        1,
+        2,
         1
       ],
       "pivot": "bc",
@@ -4991,19 +4988,20 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "interaction_type": "sign"
     }
   },
   "sign_anvil": {
     "name": "Anvil Sign",
     "category": "structure",
-    "sprite_w": 16,
+    "sprite_w": 32,
     "sprite_h": 24,
     "stackable": false,
     "sell_price": 6,
     "world": {
       "footprint": [
-        1,
+        2,
         1
       ],
       "pivot": "bc",
@@ -5017,19 +5015,20 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "interaction_type": "sign"
     }
   },
   "sign_market": {
     "name": "Market Sign",
     "category": "structure",
-    "sprite_w": 16,
+    "sprite_w": 32,
     "sprite_h": 24,
     "stackable": false,
     "sell_price": 6,
     "world": {
       "footprint": [
-        1,
+        2,
         1
       ],
       "pivot": "bc",
@@ -5043,19 +5042,20 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "interaction_type": "sign"
     }
   },
   "sign_shop": {
     "name": "Shop Sign",
     "category": "structure",
-    "sprite_w": 16,
+    "sprite_w": 32,
     "sprite_h": 24,
     "stackable": false,
     "sell_price": 6,
     "world": {
       "footprint": [
-        1,
+        2,
         1
       ],
       "pivot": "bc",
@@ -5069,19 +5069,20 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "interaction_type": "sign"
     }
   },
   "sign_crest": {
     "name": "Town Crest Sign",
     "category": "structure",
-    "sprite_w": 16,
+    "sprite_w": 32,
     "sprite_h": 24,
     "stackable": false,
     "sell_price": 6,
     "world": {
       "footprint": [
-        1,
+        2,
         1
       ],
       "pivot": "bc",
@@ -5095,19 +5096,20 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "interaction_type": "sign"
     }
   },
   "sign_plank": {
     "name": "Plank Sign",
     "category": "structure",
-    "sprite_w": 16,
+    "sprite_w": 32,
     "sprite_h": 24,
     "stackable": false,
     "sell_price": 6,
     "world": {
       "footprint": [
-        1,
+        2,
         1
       ],
       "pivot": "bc",
@@ -5121,19 +5123,20 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "interaction_type": "sign"
     }
   },
   "sign_leaf": {
     "name": "Naturalist Sign",
     "category": "structure",
-    "sprite_w": 16,
+    "sprite_w": 32,
     "sprite_h": 24,
     "stackable": false,
     "sell_price": 6,
     "world": {
       "footprint": [
-        1,
+        2,
         1
       ],
       "pivot": "bc",
@@ -5147,7 +5150,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "interaction_type": "sign"
     }
   },
   "market_stall": {
@@ -5624,13 +5628,13 @@
   "veg_patch_sign": {
     "name": "Veg Patch Sign",
     "category": "structure",
-    "sprite_w": 16,
+    "sprite_w": 32,
     "sprite_h": 24,
     "stackable": false,
     "sell_price": 4,
     "world": {
       "footprint": [
-        1,
+        2,
         1
       ],
       "pivot": "bc",
@@ -5644,7 +5648,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "interaction_type": "sign"
     }
   },
   "statue_founder": {
@@ -5726,7 +5731,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "interaction_type": "sign"
     }
   },
   "shop_shelving": {
@@ -5903,7 +5909,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "interaction_type": "sign"
     }
   },
   "ship_wheel": {
@@ -6234,7 +6241,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "interaction_type": "sign"
     }
   },
   "sewing_machine": {
@@ -6582,6 +6590,13 @@
             "chance": 1.0
           }
         ]
+      },
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interaction_type": "mannequin",
+      "container": {
+        "slots": 5,
+        "filter": "clothing"
       }
     }
   },
@@ -6608,6 +6623,13 @@
             "chance": 1.0
           }
         ]
+      },
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interaction_type": "mannequin",
+      "container": {
+        "slots": 5,
+        "filter": "clothing"
       }
     }
   },
@@ -6634,6 +6656,13 @@
             "chance": 1.0
           }
         ]
+      },
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interaction_type": "mannequin",
+      "container": {
+        "slots": 5,
+        "filter": "clothing"
       }
     }
   },
@@ -6660,6 +6689,13 @@
             "chance": 1.0
           }
         ]
+      },
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interaction_type": "mannequin",
+      "container": {
+        "slots": 5,
+        "filter": "clothing"
       }
     }
   },
@@ -6770,7 +6806,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "interaction_type": "sign"
     }
   },
   "metal_shelf": {

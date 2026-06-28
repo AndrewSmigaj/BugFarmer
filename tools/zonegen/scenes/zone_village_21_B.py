@@ -134,6 +134,9 @@ def build(zone_id="village_21_B", vseed=0):
     px, py = PLAZA
     plaza(b, px, py, r=6, seed=vseed + 9)
     b.spawn = [px - 1, py - 5]      # S paving edge, facing the fountain
+    # Crossroads SIGNPOST just outside the plaza (right where you spawn) — right-click to read it.
+    safe(b, "signpost", px - 4, py - 6, surface=None,
+         text="SW: the Lake · S: the Mines · W: the Bee Vale · N: the Farms")
 
     # ================= 4) BUILDINGS (real pieces, clear of roads) =================
     # Civic cluster W of the plaza, fronting the W lane (doors south → gate spurs).
@@ -242,7 +245,7 @@ def build(zone_id="village_21_B", vseed=0):
     # ================= 5) FARMS + ORCHARD + FLY FARM + PREDATORS (N) =================
     # Windmill AT the farm fork (the landmark at the decision point) + signpost.
     safe(b, "windmill", 118, 186)
-    safe(b, "signpost", 111, 180, surface=None)
+    safe(b, "signpost", 111, 180, surface=None, text="N: the Farms & Apiary · S: the Village")
     # Three irregular fields, hedgerows between, wheat beside the windmill.
     crop_bed(b, 90, 188, 110, 198, ["plant_wheat"])
     hedgerow(b, 86, 200, 112, 200, seed=41)

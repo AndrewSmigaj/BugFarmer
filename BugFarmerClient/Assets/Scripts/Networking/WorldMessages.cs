@@ -86,6 +86,7 @@ namespace BugFarmer.Networking
         public string id;
         public int dir;           // 0=down, 1=left, 2=right, 3=up
         public bool anchor;       // true for anchor cell, false for footprint
+        public string text;       // per-placement authored text (signs); null if none
     }
 
     /// <summary>

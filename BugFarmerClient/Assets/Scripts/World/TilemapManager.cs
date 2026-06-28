@@ -735,7 +735,8 @@ namespace BugFarmer.World
                     {
                         id = obj["id"]?.Value<string>(),
                         dir = obj["dir"]?.Value<int>() ?? 0,
-                        anchor = obj["anchor"]?.Value<bool>() ?? false
+                        anchor = obj["anchor"]?.Value<bool>() ?? false,
+                        text = obj["text"]?.Value<string>()   // signs: authored per-placement text
                     }
                 };
             }
@@ -1134,6 +1135,18 @@ namespace BugFarmer.World
 
             var occ = chunk.Occupants[ly]?[lx];
             return occ?.Occupant?.id;
+        }
+
+        /// <summary>Per-placement authored text of the occupant at a cell (signs), or null.</summary>
+        public string GetOccupantText(Vector2Int cellPos)
+        {
+            int cx = cellPos.x / ChunkSize, cy = cellPos.y / ChunkSize;
+            if (cellPos.x < 0 && cellPos.x % ChunkSize != 0) cx--;
+            if (cellPos.y < 0 && cellPos.y % ChunkSize != 0) cy--;
+            if (!_loadedChunks.TryGetValue(new Vector2Int(cx, cy), out var chunk)) return null;
+            int lx = cellPos.x - cx * ChunkSize, ly = cellPos.y - cy * ChunkSize;
+            if (ly < 0 || ly >= ChunkSize || lx < 0 || lx >= ChunkSize) return null;
+            return chunk.Occupants[ly]?[lx]?.Occupant?.text;
         }
 
         /// <summary>

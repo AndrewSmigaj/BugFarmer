@@ -164,6 +164,14 @@ namespace BugFarmer.Player
                 BugFarmer.UI.ShopPanel.Instance.TryHandleRightClick(mouseWorld))
                 return;
 
+            // 1b3. Signs (read the text) + mannequins (outfit panel).
+            if (BugFarmer.UI.SignController.Instance != null &&
+                BugFarmer.UI.SignController.Instance.TryHandleRightClick(mouseWorld))
+                return;
+            if (BugFarmer.UI.MannequinController.Instance != null &&
+                BugFarmer.UI.MannequinController.Instance.TryHandleRightClick(mouseWorld))
+                return;
+
             // 1c. Beds: right-click sets the character's home (interact beats place). Consumes the
             //     click only when a bed is actually under the cursor.
             if (_sleep != null && _sleep.TryHandleRightClick(mouseWorld))

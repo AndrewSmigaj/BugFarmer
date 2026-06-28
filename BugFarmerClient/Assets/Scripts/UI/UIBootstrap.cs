@@ -69,6 +69,14 @@ namespace BugFarmer.UI
             shopGO.transform.SetParent(canvasGO.transform, false);
             shopGO.AddComponent<ShopPanel>();
 
+            // Sign reader + mannequin outfit panels (right-click a sign / mannequin occupant).
+            var signGO = new GameObject("SignPanel(Code)", typeof(RectTransform));
+            signGO.transform.SetParent(canvasGO.transform, false);
+            signGO.AddComponent<SignController>();
+            var mannGO = new GameObject("MannequinPanel(Code)", typeof(RectTransform));
+            mannGO.transform.SetParent(canvasGO.transform, false);
+            mannGO.AddComponent<MannequinController>();
+
             var hotbarGO = new GameObject("Hotbar(Code)", typeof(RectTransform));
             hotbarGO.transform.SetParent(canvasGO.transform, false);
             hotbarGO.AddComponent<HotbarUI>();

@@ -112,10 +112,11 @@ class ZoneBuilder:
             self.surface[y][x] = surface
 
     # ---- occupants ----------------------------------------------------------
-    def place_occupant(self, oid, x, y, direction=0, surface="building", reserve=True):
+    def place_occupant(self, oid, x, y, direction=0, surface="building", reserve=True, text=None):
         """Place an occupant with its anchor at (x,y). Writes the anchor cell plus the
         entity's footprint cells (to the right/down). Refuses (and warns) if any covered
-        cell is out of bounds or already reserved — no silent overwrite."""
+        cell is out of bounds or already reserved — no silent overwrite.
+        `text` = optional per-placement authored text (signs: shown on right-click)."""
         fw, fh = self.footprint(oid)
         cells = [(x + dx, y + dy) for dy in range(fh) for dx in range(fw)]
         bad = [c for c in cells if not self.in_bounds(*c)]
@@ -134,7 +135,10 @@ class ZoneBuilder:
             if on_road:
                 self.warn(f"{oid} @({x},{y}) placed over road cells {on_road} "
                           f"(the road will run visibly through it)")
-        self.occ[(x, y)] = {"id": oid, "dir": direction, "anchor": True}
+        anchor = {"id": oid, "dir": direction, "anchor": True}
+        if text:
+            anchor["text"] = text
+        self.occ[(x, y)] = anchor
         for (cx, cy) in cells:
             if (cx, cy) != (x, y):
                 self.occ[(cx, cy)] = {"id": oid, "dir": direction}

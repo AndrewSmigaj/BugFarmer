@@ -1053,3 +1053,16 @@ v1 (DECISIONS D25) shipped currency + two working village vendors. Open follow-o
 - **Sign 2-wide retroactivity** — store signs widened to `[2,1]` render 2-wide in OTHER zones that already
   placed them (cosmetic, non-blocking); re-place signs there when those zones are next touched.
 - **Richer NPC dialogue** — quests/lore/topics beyond Trade/Goodbye (the shell is extensible).
+
+## UI polish run — remaining follow-ups (2026-06-28)
+- **Mannequin LIVE outfit render** — the equip panel + storage + blocks_bugs ship now; the mannequin still
+  shows its flat sprite. To render the WORN outfit as a paper-doll (Increment-A: compose locally from the
+  ContainerUpdate when you open/dress it; Increment-B: sync each chunk's container states on subscribe so
+  all viewers + rejoins see it), author `Player/layers/body/mannequin_{dir}{frame}.png` (Pipeline B) + a
+  custom `Outfit{Body="mannequin", Shirt/Pants/Hair=null, +overlays}` → `CharacterComposer.Compose`, and
+  inject at `TilemapManager.RenderOccupant`. Single source of truth = the synced ContainerState.
+- **Store-sign 2-wide art** — the 11 store signs are now `[2,1]` in data; only the crossroads `signpost`
+  was re-rendered. Regen the rest at the 32×24 aspect (gpt-image-1) so they don't stretch.
+- **Re-run `sim-determinism`** — mannequins now `blocks_bugs:true` (in village_21_B's weaver), so the zone
+  collision map changed (deterministically). Re-run the cross-client gate via the run-backend/docker path
+  (local go toolchain can't build the plugin) — it should still PASS (every client gets the same new map).
