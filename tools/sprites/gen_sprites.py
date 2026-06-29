@@ -432,7 +432,7 @@ def call_api(prompt, quality, api_key, model="gpt-image-1", size="1024x1024",
     return base64.b64decode(b64)
 
 
-def trim_and_save(raw_png_bytes, key, dest, sprite_w, sprite_h, keep_width=False):
+def trim_and_save(raw_png_bytes, key, dest, sprite_w, sprite_h, keep_width=False, k=20):
     """Cache the raw, then CLEAN it to the target sprite size (trim + downscale to sprite_w/h*PPC +
     quantize) and save the FINISHED sprite — one pass, so a regen touches exactly this one file (no
     separate pixelclean step + no git-revert dance). keep_width keeps left/right bleed for blocks/walls.
@@ -694,7 +694,8 @@ def main():
             _cat = ent.get("category", "")               # blocks/walls keep full width so they tile sideways
             keep_width = is_linear_connector(key, _cat) or _cat in ("block", "ore")
             size = trim_and_save(png, key, dest, ent.get("sprite_w") or 16,
-                                 ent.get("sprite_h") or 16, keep_width=keep_width)
+                                 ent.get("sprite_h") or 16, keep_width=keep_width,
+                                 k=(8 if args.source == "items" else 20))   # item icons quantize to 8 colors
             meta_status = patch_meta(dest)
             print(json.dumps({
                 "asset": key, "category": ent.get("category"),
