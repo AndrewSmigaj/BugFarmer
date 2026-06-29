@@ -6,6 +6,20 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Playtest 2026-06-28 — backlog items + fix queue
+Full investigation campaign: **`docs/product/investigations/playtest_2026-06-28_index.md`** (root-caused 17 of
+the 22 issues; one findings doc each). Backlogged-by-the-user items (not investigated):
+- **Net dynamics (catch by net size).** You shouldn't be able to catch a centipede with a small net but
+  currently can — flesh out the net-size / `catch_condition` / catch-difficulty matching (which net catches
+  which species). Pairs with the catching-gear backlog (auto-catcher + fly nets) below.
+- **Sleep.** A sleep/skip-to-morning mechanic (right-click bed → sleep), beyond the bed-as-respawn-home that
+  exists. Design the day-skip + any restore/cost.
+- **Night critters + fireflies.** Add ≥1 nocturnal species and **fireflies** (glow at night). New species
+  data + sprites + a day/night spawn gate.
+- **Known quick-fixes (no investigation — obvious):** rain doesn't reach the screen bottom (client visual);
+  flies pass through doors → doors need `blocks_bugs:true` like fences (+ zone re-save / sim-determinism, and
+  doors currently have `blocks_players:null` so they block nothing — fix together; see investigations #1/#9).
+
 ## Opening intro + title screen — built 2026-06-28 (follow-ups)
 The game now opens with a text intro ("It is 2136…", line-by-line) → crossfade → a **BugFarmer** title
 screen (composed farm scene + logo + Start) → reveals char-select. `UI/OpeningSequence.cs` (self-bootstrapping
