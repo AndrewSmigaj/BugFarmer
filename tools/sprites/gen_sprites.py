@@ -376,15 +376,21 @@ def dest_path(source, key, ent):
 
 
 def save_tile(raw_png_bytes, key, dest):
-    """Tiles are opaque and full-bleed: save as-is, NO trim, NO alpha check."""
+    """Cache the raw, then CLEAN the tile (devignette + downscale + quantize to TILE_PX) and save the
+    FINISHED tile — one pass, so generating a tile touches exactly this one file (no separate
+    pixelclean step). The clean transform lives in pixelclean.py and is imported lazily so dry-runs
+    don't need scipy/numpy."""
+    import numpy as np
+    from pixelclean import clean, TILE_PX
     raw_path = os.path.join(RAW_DIR, f"{key}.png")
     os.makedirs(RAW_DIR, exist_ok=True)
     with open(raw_path, "wb") as f:
         f.write(raw_png_bytes)
     img = Image.open(raw_path).convert("RGBA")
+    cleaned = clean(np.asarray(img, dtype=np.uint8), TILE_PX, TILE_PX, True, None, 20)
     os.makedirs(os.path.dirname(dest), exist_ok=True)
-    img.save(dest)
-    return img.size
+    Image.fromarray(cleaned).save(dest)
+    return (TILE_PX, TILE_PX)
 
 
 def canvas_size_for(ent):
@@ -426,26 +432,26 @@ def call_api(prompt, quality, api_key, model="gpt-image-1", size="1024x1024",
     return base64.b64decode(b64)
 
 
-def trim_and_save(raw_png_bytes, key, dest, vertical_only=False):
+def trim_and_save(raw_png_bytes, key, dest, sprite_w, sprite_h, keep_width=False):
+    """Cache the raw, then CLEAN it to the target sprite size (trim + downscale to sprite_w/h*PPC +
+    quantize) and save the FINISHED sprite — one pass, so a regen touches exactly this one file (no
+    separate pixelclean step + no git-revert dance). keep_width keeps left/right bleed for blocks/walls.
+    clean() lives in pixelclean.py; imported lazily so dry-runs don't need scipy/numpy."""
+    import numpy as np
+    from pixelclean import clean, PPC
     raw_path = os.path.join(RAW_DIR, f"{key}.png")
     os.makedirs(RAW_DIR, exist_ok=True)
     with open(raw_path, "wb") as f:
         f.write(raw_png_bytes)
     img = Image.open(raw_path).convert("RGBA")
-    # Transparency validation
-    alpha_min = min(p[3] for p in img.getdata())
-    if alpha_min >= 255:
+    # Transparency validation (objects come on a transparent background)
+    if min(p[3] for p in img.getdata()) >= 255:
         raise ValueError("no transparency in generated image (alpha all opaque)")
-    bbox = img.getbbox()
-    if bbox:
-        if vertical_only:
-            # Keep full width (left/right bleed) so the piece tiles horizontally;
-            # crop only the empty top/bottom bands.
-            bbox = (0, bbox[1], img.width, bbox[3])
-        img = img.crop(bbox)
+    tw, th = max(1, int(sprite_w) * PPC), max(1, int(sprite_h) * PPC)
+    cleaned = clean(np.asarray(img, dtype=np.uint8), tw, th, False, None, 20, keep_width=keep_width)
     os.makedirs(os.path.dirname(dest), exist_ok=True)
-    img.save(dest)
-    return img.size
+    Image.fromarray(cleaned).save(dest)
+    return (tw, th)
 
 
 def patch_meta(dest):
@@ -687,7 +693,8 @@ def main():
             png = call_api(prompt, args.quality, api_key, args.model, size=canvas_size_for(ent))
             _cat = ent.get("category", "")               # blocks/walls keep full width so they tile sideways
             keep_width = is_linear_connector(key, _cat) or _cat in ("block", "ore")
-            size = trim_and_save(png, key, dest, vertical_only=keep_width)
+            size = trim_and_save(png, key, dest, ent.get("sprite_w") or 16,
+                                 ent.get("sprite_h") or 16, keep_width=keep_width)
             meta_status = patch_meta(dest)
             print(json.dumps({
                 "asset": key, "category": ent.get("category"),

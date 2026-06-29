@@ -17,8 +17,14 @@ visible grid seams on tiles). This tool fixes all three:
 Cleaned assets are written to tools/pixelclean_out/{Tiles,Objects}/, leaving the
 originals untouched. make_scene.py --assets tools/pixelclean_out renders with them.
 
+NOTE: routine single-sprite regen does NOT need this tool. `gen_sprites.py` now cleans INLINE
+(generate + clean in one pass → one finished sprite, one file touched). Reach for pixelclean only
+for RARE bulk ops — a full-set re-clean or a shared palette — or `--keys` for a few specific sprites.
+A bare run re-cleans all ~412 sprites; don't use it as the single-regen path.
+
 Usage:
-  python3 pixelclean.py                 # clean all tiles + objects (per-asset palette)
+  python3 pixelclean.py --keys a,b,c    # clean ONLY these Objects/Tiles in place (targeted)
+  python3 pixelclean.py                 # clean ALL tiles + objects (bulk; per-asset palette)
   python3 pixelclean.py --shared        # one shared palette across the whole set
   python3 pixelclean.py --compare a,b,c # also write a before/after PNG for these ids
 """
@@ -122,29 +128,32 @@ def drop_detached(arr, thresh=16, keep_frac=0.10):
     return out
 
 
-def alpha_trim(arr, thresh=16):
+def alpha_trim(arr, thresh=16, keep_width=False):
     """Crop to the alpha bounding box so the object fills the frame (like the
     game expects a tightly-trimmed sprite). Without this, raw gpt-image-1 output
-    keeps a huge transparent margin and the object reads tiny + floats off-anchor."""
+    keeps a huge transparent margin and the object reads tiny + floats off-anchor.
+    keep_width: crop only the empty top/bottom (keep full width) so blocks/walls
+    keep their left/right bleed and tile horizontally."""
     a = arr[..., 3]
     ys, xs = np.where(a >= thresh)
     if len(xs) == 0:
         return arr
-    return arr[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    x0, x1 = (0, arr.shape[1] - 1) if keep_width else (xs.min(), xs.max())
+    return arr[ys.min():ys.max() + 1, x0:x1 + 1]
 
 
-def small_rgba(arr, tw, th, is_tile):
+def small_rgba(arr, tw, th, is_tile, keep_width=False):
     if not is_tile:
         arr = drop_detached(arr)
-        arr = alpha_trim(arr)
+        arr = alpha_trim(arr, keep_width=keep_width)
     rgb, alpha = arr[..., :3], arr[..., 3]
     if is_tile:
         rgb = devignette(rgb)
     return downscale(np.dstack([rgb, alpha]), tw, th)
 
 
-def clean(arr, tw, th, is_tile, palette, k, alpha_thresh=128):
-    small = small_rgba(arr, tw, th, is_tile)
+def clean(arr, tw, th, is_tile, palette, k, alpha_thresh=128, keep_width=False):
+    small = small_rgba(arr, tw, th, is_tile, keep_width=keep_width)
     rgb_s, alpha_s = small[..., :3], small[..., 3]
     pal = palette if palette is not None else build_palette(
         rgb_s.reshape(-1, 3) if is_tile else rgb_s.reshape(-1, 3)[alpha_s.reshape(-1) >= alpha_thresh], k)
