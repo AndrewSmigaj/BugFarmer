@@ -69,7 +69,15 @@ namespace BugFarmer.Networking
             if (DebugConfig.Verbose)
                 Client.Logger = new UnityLogger();
 #endif
-            Socket = Client.NewSocket(useMainThread: true);
+            // Late-join/snapshot messages can be large in dense zones: village_21_B's LateJoinSnapshot is
+            // ~230KB raw → ~305KB base64 on the wire (Nakama frames match-state data as base64 in a JSON
+            // envelope). The Nakama client's default MaxMessageReadSize is 256KB; an over-cap frame is
+            // silently truncated → the websocket framing desyncs → the late joiner stops receiving ALL
+            // zone-sync messages (snapshot + tick broadcasts) → 0 swarms (every 2nd player into a populated
+            // zone sees no bugs). Raise the client read cap to the server's max_message_size_bytes (8MB) so
+            // the client accepts anything the server is allowed to send.
+            Socket = Client.NewSocket(useMainThread: true,
+                defaultAdapter: new Nakama.WebSocketStdlibAdapter(maxMessageReadSize: 8 * 1024 * 1024));
             Socket.Connected += () =>
             {
                 Debug.Log("[NetworkManager] Socket connected");
