@@ -625,11 +625,14 @@ if __name__ == "__main__":
     print("render ->", out)
     if "--save" in sys.argv:
         out_dir = b.save()
-        # save() writes row/col 0,0 — patch to the world-grid slot (2,1).
+        # save() writes row/col 0,0 and no neighbors — patch the world-grid slot (2,1) and restore the
+        # zone link the builder drops (south edge -> the underground; underground_passages_31 already
+        # declares "north": "village_21_B"). Without this, walking off the south edge black-screens.
         import json
         zj = os.path.join(out_dir, "zone.json")
         cfg = json.load(open(zj))
         cfg["row"], cfg["col"] = 2, 1
+        cfg["neighbors"] = {"south": "underground_passages_31"}
         json.dump(cfg, open(zj, "w"), indent=2)
         print("saved ->", out_dir)
         # THE VISIBLE VILLAGE: real-art renders land in the previews on every

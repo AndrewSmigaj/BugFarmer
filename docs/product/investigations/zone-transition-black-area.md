@@ -1,5 +1,7 @@
 # Investigation: #3 zone transition broke (black area instead of the mining camp)
-_status: READY TO IMPLEMENT · investigated 2026-06-28 · investigate-only_
+_status: ✅ RESOLVED 2026-06-29 — restored `village_21_B` `{"south":"underground_passages_31"}` (matching the
+underground's `"north":"village_21_B"`) via a post-save patch in `zone_village_21_B.py`. The general builder fix
+(first-class `ZoneBuilder.neighbors` so no rebuild drops links) is deferred → BACKLOG. · investigated 2026-06-28_
 
 ## Debrief (read me first)
 - **TL;DR:** A regression. **village_21_B lost its `neighbors` block.** Commit `ce4102a` (the village_21_B

@@ -527,7 +527,7 @@
     "name": "Simple Door",
     "category": "structure",
     "sprite_w": 16,
-    "sprite_h": 24,
+    "sprite_h": 32,
     "stackable": false,
     "sell_price": 6,
     "world": {
@@ -538,6 +538,7 @@
       "pivot": "bc",
       "interactable": true,
       "interaction_type": "door",
+      "blocks_bugs": true,
       "breakable": {
         "hp": 2,
         "required_tool_type": "axe",
@@ -4239,7 +4240,7 @@
     "name": "4-Pane Window",
     "category": "structure",
     "sprite_w": 16,
-    "sprite_h": 24,
+    "sprite_h": 32,
     "stackable": true,
     "max_stack": 99,
     "sell_price": 10,

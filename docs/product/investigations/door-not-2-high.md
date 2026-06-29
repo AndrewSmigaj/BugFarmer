@@ -1,5 +1,7 @@
 # Investigation: #1 door is not 2 blocks high
-_status: READY (data fix; 1 small ambiguity — which door) · investigated 2026-06-28 · investigate-only_
+_status: ✅ RESOLVED 2026-06-29 — the placed door is `door_square` (the in-game "wood door"; `door_wood`/`door_iron`
+are unused/0-placement). Fix: `door_square` → `sprite_h 32` (1×2, matches the walls) + `blocks_bugs:true`
+(closes #9); footprint left at `[1,1]` per Andrew; art regenerated. · investigated 2026-06-28_
 
 ## Debrief (read me first)
 - **TL;DR:** Pure data inconsistency across the 3 door placeables. Render height = `sprite_h / 16` cells:

@@ -37,6 +37,9 @@
   "door_wood": {
     "look": "a single closed WOODEN DOOR standing in a simple wooden door FRAME: a tall vertical slab made of vertical wood planks, with two or three recessed rectangular PANELS, a small round brass DOORKNOB near the right edge at mid-height, and a visible frame/jamb around it. It must read instantly as a DOORWAY you could walk through - NOT a cabinet, dresser, box, or wardrobe. Taller than it is wide."
   },
+  "door_square": {
+    "look": "a SIMPLE closed WOODEN DOOR filling a tall narrow doorway, clearly TWO tiles tall and ONE tile wide: a plain slab of vertical wood planks (no recessed panels), with a small dark IRON handle/latch near the right edge at mid-height and a thin wooden frame/jamb around it. Rustic village carpentry. It must read instantly as a DOORWAY you could walk through - NOT a cabinet, crate, dresser, or wardrobe. Distinctly taller than it is wide (a 1-wide, 2-tall slab)."
+  },
   "fence_electric": {
     "look": "a section of ELECTRIC FENCE: a slim post with two horizontal taut WIRES running left and right, small ceramic INSULATORS where the wires meet the post and a tiny warning spark; same post-and-rail layout as a wooden fence but thin metal wire.",
     "materials": [

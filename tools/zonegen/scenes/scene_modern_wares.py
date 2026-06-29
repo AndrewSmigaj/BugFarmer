@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Building piece — MODERN WARES ("Pim's Modern Wares"). The clean, bright CONTRAST shop: a sleek
 marble SHOWROOM of appliances staged like a store (a kitchen-island hero, fridge, range stove, modern
-sofa) on metal shelving, with GLASS-BLOCK windows in the front wall and a neon sign — over a small
+sofa) on metal shelving, with 4-pane windows in the front wall and a neon sign — over a small
 STOCKROOM of crates and shelving. Buy-only (electronics are never craftable, D26).
 
 `place_modern_wares(b, ox, oy)` drops it; run directly to preview ->
@@ -17,7 +17,7 @@ from zonebuilder import ZoneBuilder                                   # noqa: E4
 from features.tilemap import stamp                                   # noqa: E402
 
 # Building 14 wide x 13 tall (bigger & sleeker, marble). STOCKROOM (N: crates + metal shelving) over
-# a large SHOWROOM. Front wall carries GLASS-BLOCK windows around the door. 2-wide/2x2 pieces = anchor
+# a large SHOWROOM. Front wall carries 4-pane windows around the door. 2-wide/2x2 pieces = anchor
 # char (SW cell) + '.' for the rest of the footprint.
 BUILDING = """
 WWWWWWWWWWWWWW
@@ -35,7 +35,7 @@ W.......T....W
 WWGGWWDWWGGWWW
 """
 LEG = {
-    "W": ("occ", "wall_marble"), "D": ("occ", "door_square"), "G": ("occ", "glass_block"),
+    "W": ("occ", "wall_marble"), "D": ("occ", "door_square"), "G": ("occ", "window_4pane"),
     "F": ("occ", "fridge"), "R": ("occ", "range_stove"), "I": ("occ", "kitchen_island"),
     "S": ("occ", "sofa_modern"), "O": ("occ", "ottoman"), "T": ("occ", "counter"),
     "M": ("occ", "metal_shelf"), "h": ("occ", "electric_heater"),

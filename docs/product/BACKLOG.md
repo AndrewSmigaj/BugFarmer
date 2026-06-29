@@ -16,9 +16,24 @@ the 22 issues; one findings doc each). Backlogged-by-the-user items (not investi
   exists. Design the day-skip + any restore/cost.
 - **Night critters + fireflies.** Add ≥1 nocturnal species and **fireflies** (glow at night). New species
   data + sprites + a day/night spawn gate.
-- **Known quick-fixes (no investigation — obvious):** rain doesn't reach the screen bottom (client visual);
-  flies pass through doors → doors need `blocks_bugs:true` like fences (+ zone re-save / sim-determinism, and
-  doors currently have `blocks_players:null` so they block nothing — fix together; see investigations #1/#9).
+- **Known quick-fixes (no investigation — obvious):** rain doesn't reach the screen bottom (client visual).
+- **DONE 2026-06-29 — village doors (#1/#9) + modern-store windows (#2) + village neighbor (#3-edge).**
+  `door_square` (the only placed door — all village doors) is now 1×2 tall + `blocks_bugs:true`, so flies stop
+  at doors; players still pass (`blocks_players` left unset, by design — doors don't open, they just block
+  bugs). Pure entity-def change: `blocks_bugs` is derived at zone-load and synced via the existing
+  `OCCUPANT_BLOCKS_BUGS` path, so **no zone re-save and no determinism gate** (data on a proven mechanism — the
+  earlier "needs re-save/sim-determinism" note was wrong). Modern store's frosted `glass_block` "windows" →
+  real `window_4pane` (also bumped to 2-tall to match the walls + door); village_21_B rebuilt and its dropped
+  `south→underground_passages_31` neighbor restored. Art regenerated for door_square + window_4pane (gpt-image-1).
+- **Doors/windows — general polish (deferred):** a slow per-item pass — review EVERY door/window placement in
+  every zone for look, and conform the unused `door_wood`/`door_iron` defs to 1×2.
+- **Object/bug blocking-consistency audit (deferred):** bugs pass through some fences/objects but not others
+  (confusing in playtest) — one systematic pass over every occupant's `blocks_bugs`/`blocks_players` for
+  correctness + consistency.
+- **Zone-neighbors builder hardening (deferred — the general #3 fix):** `ZoneBuilder.save()` writes no
+  `neighbors`, so every rebuild drops zone links (we patched village_21_B locally in its scene's post-save
+  block). Add a first-class `ZoneBuilder.neighbors` field written by `save()`, retire the underground
+  post-save hack, and audit all built zones for dropped links.
 
 ## Opening intro + title screen — built 2026-06-28 (follow-ups)
 The game now opens with a text intro ("It is 2136…", line-by-line) → crossfade → a **BugFarmer** title
