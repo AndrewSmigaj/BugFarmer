@@ -25,6 +25,7 @@ namespace BugFarmer.World
         private SpriteRenderer spriteRenderer;
         private Vector3 basePosition;
         private float bobOffset;
+        private bool _grounded; // placed grid object (dead bug / fruit): static, nudged, never magneted
 
         /// <summary>True while the despawn tween runs (suppresses the bob; pickup queries skip it).</summary>
         public bool Despawning { get; private set; }
@@ -53,6 +54,20 @@ namespace BugFarmer.World
 
             basePosition = worldPosition;
             transform.position = worldPosition;
+
+            // Placed GRID object? (dead bug / fruit / carrion) — rendered static with a small fixed
+            // per-item nudge inside the cell so multiple on one square read as scattered, not one blob.
+            // The offset is a stable hash of the id (same on every client; display-only, outside the sim).
+            _grounded = GroundItemManager.IsAutoPickupExcluded(itemType);
+            if (_grounded)
+            {
+                uint h = 2166136261u;
+                foreach (char c in (id ?? "")) h = (h ^ c) * 16777619u; // FNV-1a
+                float nx = (((h & 0xFF) / 255f) - 0.5f) * 0.5f;          // ~±0.25 cell
+                float ny = ((((h >> 8) & 0xFF) / 255f) - 0.5f) * 0.5f;
+                basePosition += new Vector3(nx, ny, 0f);
+                transform.position = basePosition;
+            }
 
             // Ensure we have a sprite renderer
             if (spriteRenderer == null)
@@ -164,6 +179,7 @@ namespace BugFarmer.World
         private void Update()
         {
             if (Despawning) return; // the despawn tween owns the transform
+            if (_grounded) return;  // placed grid object (dead bug / fruit): static, no bob
 
             // Sinusoidal bob animation
             float bob = Mathf.Sin((Time.time * bobFrequency) + bobOffset) * bobAmplitude;

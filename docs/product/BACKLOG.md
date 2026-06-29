@@ -34,6 +34,23 @@ the 22 issues; one findings doc each). Backlogged-by-the-user items (not investi
   `neighbors`, so every rebuild drops zone links (we patched village_21_B locally in its scene's post-save
   block). Add a first-class `ZoneBuilder.neighbors` field written by `save()`, retire the underground
   post-save hack, and audit all built zones for dropped links.
+- **DONE 2026-06-29 — dead bugs + fruit are placed GRID objects; sword-kills drop the bug (#22).** Carcasses
+  (player kill → the strike cell; old-age/starvation → scattered across the swarm by a DETERMINISTIC per-bug
+  hash, never `state.Rng`) and fallen fruit snap to a cell centre and render STATIC + per-item-nudged (multiple
+  per cell, no bob); excluded from the walk-over magnet (bug food + `no_auto_pickup`), grabbed with E on
+  mouse-hover. Server: `spawnCarcass` snap + blocked-fallback, melee carcass, `killBugsNaturally` scatter, fruit
+  snap. Client: `IsAutoPickupExcluded += FoodValue>0`, `GroundItemVisual` static+nudge, `PickupController`
+  E-on-hover. Go tests + sim-determinism green; ecology band check + Unity render/pickup are the in-game gates.
+- **★ ARCHITECTURE INITIATIVE — move the bug ECOLOGY onto the authority client (server → thin relay + snapshot
+  cache; lockstep).** Movement is already client-authoritative, but the ecology (breeding/death/hunger/food/the
+  Director) runs server-side — which is why a corpse has no individual position (the server thinks in swarm
+  *centres*). Viable because zones **freeze when empty** (no always-on requirement; the frozen-zone catch-up is
+  its own backlogged heuristic). Big project (the full ecology must become deterministic-on-clients, with
+  authority handoff) — it dissolves the corpse-position problem and scales. The natural-death scatter above is
+  the throwaway interim until this lands.
+- **Dead-bugs/fruit follow-ups (deferred):** predator kills leave a corpse + the hornet feeding-pause (#20);
+  drop/place ANY non-occupant item from inventory, one at a time (reuse the torch "placer"); smarter placement
+  (true across-a-fence reachability, nicer spread); the frozen-zone catch-up heuristic; tree refinement + testing.
 
 ## Opening intro + title screen — built 2026-06-28 (follow-ups)
 The game now opens with a text intro ("It is 2136…", line-by-line) → crossfade → a **BugFarmer** title

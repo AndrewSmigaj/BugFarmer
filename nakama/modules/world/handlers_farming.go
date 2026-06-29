@@ -796,8 +796,10 @@ func (m *Match) dropFruitFromTree(
 		Position: entities.EntityPosition{
 			ChunkX: cx,
 			ChunkY: cy,
-			LocalX: localX,
-			LocalY: localY,
+			// Snap to the cell centre — fallen fruit is a placed GRID object (int() matches the
+			// rot-time food event's flooring, so the food cell is unchanged).
+			LocalX: float32(int(localX)) + 0.5,
+			LocalY: float32(int(localY)) + 0.5,
 		},
 		Lifetime: float32(rotTicks) * 0.1, // seconds until rot
 		DecaysTo: "rotten_" + fruitType,

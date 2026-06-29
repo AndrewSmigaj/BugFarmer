@@ -1,5 +1,8 @@
 # Investigation: #22 population plummets but barely any corpses — are they generated?
-_status: READY (answered; one design choice for predation) · investigated 2026-06-28 · investigate-only_
+_status: ✅ PARTLY RESOLVED 2026-06-29 — player sword-kills now leave a corpse (was empty `kill_drops`); natural-death
+corpses SCATTER across the swarm (deterministic per-bug hash) instead of stacking on the centre; dead bugs + fruit
+are grid-placed, no-auto-magnet, E-on-hover. Predation-corpse (the design choice below) + the ecology→authority-client
+move are backlogged. · investigated 2026-06-28_
 
 ## Debrief (read me first)
 - **Direct answer:** corpses **ARE generated** for starvation & old-age (and director-culls). Verified: all

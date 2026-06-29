@@ -140,7 +140,11 @@ namespace BugFarmer.World
             if (string.IsNullOrEmpty(itemType)) return false;
             if (itemType.StartsWith("rotten_")) return true;
             var def = EntityDatabase.Get(itemType);
-            return def != null && def.NoAutoPickup;
+            // Bug food (dead bugs + carrion, FoodValue>0) joins no_auto_pickup fruit as a "grounded"
+            // item — never magneted, only the deliberate E grab. Matches the E-prompt's own eRequired
+            // check and fixes dead bugs being auto-hoovered. This predicate also = "render as a placed
+            // grid object" (GroundItemVisual reads it).
+            return def != null && (def.NoAutoPickup || def.FoodValue > 0);
         }
 
         /// <summary>

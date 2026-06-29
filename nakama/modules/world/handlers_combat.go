@@ -121,6 +121,11 @@ func (m *Match) handleMeleeAttack(
 				continue
 			}
 			result.Killed = append(result.Killed, bugID)
+			// A player kill leaves the dead bug as a grabbable corpse at the strike cell
+			// (bug kill_drops are empty by design). Predation stays corpse-less — the
+			// hornet feeding-pause is a separate ecology item. Snap/fallback handled inside.
+			m.spawnCarcass(logger, dispatcher, state, species.CarcassItem,
+				msg.ClickX, msg.ClickY, swarm.WorldX(chunkSize), swarm.WorldY(chunkSize), chunkSize)
 		}
 
 		if len(result.Damaged) > 0 || len(result.Killed) > 0 {
@@ -296,7 +301,14 @@ func (m *Match) killBugsNaturally(
 			state.AddInfluenceEvent(zoneID, InfluenceBugRemoved, "", 0, 0, swarm.ID, id)
 		}
 		if species != nil && species.CarcassItem != "" {
-			m.spawnCarcass(logger, dispatcher, state, species.CarcassItem, cx, cy, chunkSize)
+			// Scatter corpses across the swarm's footprint instead of stacking on the centre.
+			// The offset is a DETERMINISTIC per-bug hash (NOT state.Rng — drawing from the seeded
+			// sim RNG would shift the whole downstream ecology stream and churn tuning baselines);
+			// spawnCarcass falls back to the (clear) centre if the offset cell is blocked. ~5x5.
+			h := uint32(id) * 2654435761
+			dx := float32(int(h%5)) - 2
+			dy := float32(int((h/5)%5)) - 2
+			m.spawnCarcass(logger, dispatcher, state, species.CarcassItem, cx+dx, cy+dy, cx, cy, chunkSize)
 		}
 	}
 	if swarm.Count <= 0 {
@@ -314,11 +326,19 @@ func (m *Match) spawnCarcass(
 	dispatcher runtime.MatchDispatcher,
 	state *WorldState,
 	carcassItem string,
-	x, y float32,
+	x, y, fallbackX, fallbackY float32,
 	chunkSize int,
 ) {
 	if carcassItem == "" {
 		return
+	}
+	// Carcasses are placed GRID objects: snap to the floor cell's CENTER so it sits ON a
+	// square. int() matches the food event's int(x) flooring, so the food cell is unchanged.
+	// If that cell is blocked (a melee strike over a fence, or a scatter offset), fall back
+	// to the clear fallback cell (the swarm center, clear by construction).
+	x, y = float32(int(x))+0.5, float32(int(y))+0.5
+	if state.IsBlocked(x, y) {
+		x, y = float32(int(fallbackX))+0.5, float32(int(fallbackY))+0.5
 	}
 	pos := entities.EntityPosition{LocalX: x, LocalY: y}
 	pos.Normalize(chunkSize)
