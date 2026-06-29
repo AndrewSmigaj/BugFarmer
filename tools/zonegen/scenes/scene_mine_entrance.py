@@ -12,6 +12,10 @@ COMPOSITION RULES (see docs/guides/authoring/camps.md):
   mine-head = the rail head at the mouth (cart, ore pile, sign, lantern); storage = crates/barrels/lumber rack.
 - flora is SCATTERED naturally (loose tree stand, clumped bush/fern/grass/flowers), a few boulders/stumps.
 
+The camp PROPS live in `place_camp(b, ox, oy, surf_y, mx, base, H)` — terrain-free (no grass/carve/fill/struts)
+so the ZONE (zone_underground_passages) can paint its own full-width cliff + dense ore and just drop the camp
+on top. `build()` below renders the standalone vignette (paints its own grass/cliff, then calls place_camp).
+
   python3 tools/zonegen/scenes/scene_mine_entrance.py
 """
 import os
@@ -39,40 +43,37 @@ PREVIEW = "zones/underground_passages_31/scenes"
 SCALE = 8
 
 
-def build():
-    b = ZoneBuilder("scene_mine_entrance", W, H, base_tile="cave_floor", name="Mine entrance")
-    rng = random.Random(5)
-    nf = noise_field(W, 8, wavelength=10, octaves=2, seed=4)            # wobble the cliff edge
-
-    # --- IRREGULAR cliff: a TALL grass surface (north/top), rock (cliff) below the wobbled line --------
+def cliff_surface(seed=4):
+    """The irregular grass↔rock cliff line: `base` (the flat surface level) + a per-column wobbled `surf_y`
+    (grass for y >= surf_y[x]). Shared so the zone can reuse the same edge technique."""
+    nf = noise_field(W, 8, wavelength=10, octaves=2, seed=seed)
     base = H - 24                                                       # taller surface so the camp can breathe
-    surf_y = [base + int(round(5 * (float(nf[0][x]) - 0.5) * 2)) for x in range(W)]
-    grass = set()
-    for x in range(W):
-        for y in range(surf_y[x], H):
-            b.set_ground(x, y, "grass", surface="grass")
-            grass.add((x, y))
+    return base, [base + int(round(5 * (float(nf[0][x]) - 0.5) * 2)) for x in range(W)]
 
-    # --- the cave MOUTH bitten up into the cliff, + rail descending south into a first cavern ---------
-    # an ASYMMETRIC chamber system: mouth -> straight man-made shaft -> main cavern, with a natural SIDE-DIG
-    # branching east off the shaft (an exploratory working) so the void never reads as a symmetric hourglass.
-    mx = 33
-    mouth = carve_cavern(b, mx, base - 3, shape="rocky", size=9, seed=2)
-    rail = carve_tunnel(b, (mx, base - 1), (mx, 11), style="straight", width=5)
-    cav = carve_cavern(b, mx - 2, 11, shape="lobed", size=12, seed=3)        # offset + lobed = off-centre void
-    branch = carve_tunnel(b, (mx + 2, 22), (mx + 11, 19), style="natural", width=2, seed=6)
-    sidecav = carve_cavern(b, mx + 12, 18, shape="rocky", size=5, seed=8)    # the exploratory side-working
-    carved = grass | mouth | rail | cav | branch | sidecav
-    fill_solid(b, carved, ORE, seed=5)
-    place_pool(b, mx - 5, 8, 3, 2, carved, seed=9)            # still water in a cavern low spot (west side)
+
+def place_camp(b, ox, oy, surf_y, mx, base, H):
+    """Drop the open-air mining CAMP (props/flora/road/dressing only — NO grass paint, NO carve, NO fill, NO
+    rail struts) at offset (ox,oy). Cells are guarded by `is_free` over the footprint, so anything landing on
+    rock (a filled block) or water is skipped — call AFTER the terrain + fill_solid. `surf_y`/`base` describe
+    the cliff line in LOCAL coords; `mx` is the local mouth/rail column."""
+    rng = random.Random(5)
 
     def free(oid, x, y):
         fw, fh = b.footprint(oid)
-        return all((x + dx, y + dy) in carved and b.is_free(x + dx, y + dy)
-                   for dx in range(fw) for dy in range(fh))
+        return all(b.is_free(ox + x + dx, oy + y + dy) for dx in range(fw) for dy in range(fh))
 
     def put(oid, x, y):
-        return b.place_occupant(oid, x, y, surface=None) if free(oid, x, y) else False
+        return b.place_occupant(oid, ox + x, oy + y, surface=None) if free(oid, x, y) else False
+
+    def player(sid, x, y):
+        b.place_player(sid, ox + x, oy + y)
+
+    def is_grass(x, y):
+        return b.in_bounds(ox + x, oy + y) and b.ground[oy + y][ox + x] == "grass"
+
+    def set_path(x, y):
+        if is_grass(x, y):
+            b.set_ground(ox + x, oy + y, "dirt", surface="path")
 
     def road_curve(y0, y1, w=3):                                       # a MEANDERING dirt road (never a ruler)
         ylo, yhi = min(y0, y1), max(y0, y1)
@@ -80,14 +81,12 @@ def build():
             t = (yy - ylo) / max(1, yhi - ylo)                         # 0 at the mouth (low y), 1 at north edge
             cx = mx + int(round(6.0 * math.sin(t * 1.6)))             # one smooth eastward arc, no jog
             for xx in range(cx - w // 2, cx + w // 2 + 1):
-                if (xx, yy) in grass:
-                    b.set_ground(xx, yy, "dirt", surface="path")
+                set_path(xx, yy)
 
     def trail(x0, y0, x1, y1):                                         # a thin trodden link between clusters
         x, y = x0, y0
         while (x, y) != (x1, y1):
-            if (x, y) in grass and b.ground[y][x] == "grass":
-                b.set_ground(x, y, "dirt", surface="path")
+            set_path(x, y)
             x += (x1 > x) - (x1 < x)
             y += (y1 > y) - (y1 < y)
 
@@ -105,14 +104,14 @@ def build():
     put("ladder", mx + 6, base)
     put("powder_keg", mx + 5, hy)                 # blasting supply at the head
     put("ore_sack", mx - 3, hy + 1)
-    b.place_player("miner_down", mx - 2, base - 2)  # loading the cart at the rail-head
+    player("miner_down", mx - 2, base - 2)        # loading the cart at the rail-head
     # a guard-rail fence along the cliff lip flanking the mouth (open at the road/rail)
     for dx in list(range(-10, -3)) + list(range(4, 11)):
         gx = mx + dx
         if 0 <= gx < W:
             gy = surf_y[gx]
-            if (gx, gy) in grass and b.is_free(gx, gy):
-                b.place_occupant("fence_wood", gx, gy, surface=None)
+            if is_grass(gx, gy) and free("fence_wood", gx, gy):
+                b.place_occupant("fence_wood", ox + gx, oy + gy, surface=None)
 
     # === SMITHY (centre-left, beside the road): forge+anvil adjacent + coal bin + quench + tools ======
     sx0, sy0 = 22, base + 5
@@ -141,12 +140,12 @@ def build():
 
     # === PROCESSING (east, by the water): pond + ore_sluice at its edge + staged ore + wheelbarrow ====
     pcx, pcy = 50, base + 5
-    pond(b, pcx, pcy, 4, 3, seed=7)
+    pond(b, ox + pcx, oy + pcy, 4, 3, seed=7)
     for (rx, ry) in [(pcx - 4, pcy - 3), (pcx + 4, pcy - 2), (pcx + 3, pcy + 3), (pcx - 3, pcy + 3)]:
         put("reeds", rx, ry)                      # natural reedy pond edge
     put("ore_sluice", pcx - 5, pcy)               # sluice at the water's edge
-    for (ox, oy) in [(pcx - 6, pcy + 1), (pcx - 7, pcy), (pcx - 6, pcy - 1)]:
-        put("ore_pile" if (ox + oy) % 2 else "ore_sack", ox, oy)
+    for (oxp, oyp) in [(pcx - 6, pcy + 1), (pcx - 7, pcy), (pcx - 6, pcy - 1)]:
+        put("ore_pile" if (oxp + oyp) % 2 else "ore_sack", oxp, oyp)
     put("wheelbarrow", pcx - 8, pcy)
 
     # === STORAGE (far-east corner): lumber rack + crates/barrels ======================================
@@ -183,49 +182,75 @@ def build():
     put("signpost", mx + 9, H - 3)
     put("gate_wood", mx - 3, surf_y[mx - 3])
     put("gate_wood", mx + 3, surf_y[mx + 3])
-    for ly in (H - 6, base + 13):                                      # lamps lighting the worked road at night
-        t = (ly - surf_y[mx]) / max(1, H - 1 - surf_y[mx])
+    for ly2 in (H - 6, base + 13):                                     # lamps lighting the worked road at night
+        t = (ly2 - surf_y[mx]) / max(1, H - 1 - surf_y[mx])
         cx = mx + int(round(6.0 * math.sin(t * 1.6)))
-        put("lamp_post", cx + 3, ly)
-
-    # === RAIL + supports + WALL TORCHES down the shaft (a lit, timbered, man-made descent) ============
-    for y in range(11, base):
-        if (mx, y) in carved and b.is_free(mx, y):
-            b.place_occupant("mine_rail", mx, y, surface=None, reserve=False)
-    for y in range(base - 3, 12, -5):
-        for s in (mx - 2, mx + 2):
-            put("mine_support", s, y)
-    for y in range(base - 5, 12, -5):                                  # torches interleaved with the supports
-        for s in (mx - 2, mx + 2):
-            if (s, y) in carved and b.is_free(s, y) and ((s - 1, y) not in carved or (s + 1, y) not in carved):
-                b.place_occupant("torch_wall", s, y, surface=None, reserve=False)
+        put("lamp_post", cx + 3, ly2)
 
     # === FLORA: loose tree stands + clumped undergrowth (scatter, never rows), keep paths clear ======
     for (tx, ty) in [(4, H - 3), (15, base + 14), (43, base + 1), (47, H - 3), (62, base + 1),
                      (26, H - 2), (46, H - 4)]:
         put(rng.choice(["tree_oak", "tree_pine", "tree_oak", "tree_apple"]), tx, ty)
-    scatter(b, 0, base, W - 1, H - 1,
+    scatter(b, ox + 0, oy + base, ox + W - 1, oy + H - 1,
             {"bush": 3, "fern": 4, "tall_grass": 7, "clover": 5, "flower_red": 1, "flower_yellow": 1,
              "flower_blue": 1, "flower_wild": 2, "bush_flowering": 1, "mushroom_brown": 1},
             density=0.11, min_spacing=1, seed=8, surfaces=("grass",), clumping=0.65, cluster_radius=4)
     # broken cliff base: a band of rubble + the odd boulder where the rock breaks up into the grass
     for x in range(1, W - 1):
         for y in (surf_y[x] - 1, surf_y[x] - 2):
-            if (x, y) not in carved and b.is_free(x, y) and rng.random() < 0.16:
+            if free("rubble", x, y) and rng.random() < 0.16:
                 b.place_occupant(rng.choice(["rubble", "rubble", "rubble", "standing_stone", "standing_stone"]),
-                                 x, y, surface=None, reserve=False)
+                                 ox + x, oy + y, surface=None, reserve=False)
     for (bx, by) in [(18, base + 1), (40, base + 2), (54, base + 8), (6, base + 2)]:
         put("stump", bx, by) or put("standing_stone", bx, by) or put("rubble", bx, by)
 
+    player("miner_down", sx0 + 1, sy0 - 2)        # at the forge
+    player("miner_left", pcx - 4, pcy)            # at the sluice
+
+
+def build():
+    b = ZoneBuilder("scene_mine_entrance", W, H, base_tile="cave_floor", name="Mine entrance")
+    rng = random.Random(5)
+
+    # --- IRREGULAR cliff: a TALL grass surface (north/top), rock (cliff) below the wobbled line --------
+    base, surf_y = cliff_surface()
+    for x in range(W):
+        for y in range(surf_y[x], H):
+            b.set_ground(x, y, "grass", surface="grass")
+
+    # --- the cave MOUTH bitten up into the cliff, + rail descending south into a first cavern ---------
+    # an ASYMMETRIC chamber system: mouth -> straight man-made shaft -> main cavern, with a natural SIDE-DIG
+    # branching east off the shaft (an exploratory working) so the void never reads as a symmetric hourglass.
+    mx = 33
+    mouth = carve_cavern(b, mx, base - 3, shape="rocky", size=9, seed=2)
+    rail = carve_tunnel(b, (mx, base - 1), (mx, 11), style="straight", width=5)
+    cav = carve_cavern(b, mx - 2, 11, shape="lobed", size=12, seed=3)        # offset + lobed = off-centre void
+    branch = carve_tunnel(b, (mx + 2, 22), (mx + 11, 19), style="natural", width=2, seed=6)
+    sidecav = carve_cavern(b, mx + 12, 18, shape="rocky", size=5, seed=8)    # the exploratory side-working
+    carved = {(x, y) for x in range(W) for y in range(surf_y[x], H)} | mouth | rail | cav | branch | sidecav
+    fill_solid(b, carved, ORE, seed=5)
+    place_pool(b, mx - 5, 8, 3, 2, carved, seed=9)            # still water in a cavern low spot (west side)
+
+    place_camp(b, 0, 0, surf_y, mx, base, H)
+
+    # === RAIL + WALL TORCHES down the shaft (a lit man-made descent — no timber struts) ===============
+    for y in range(11, base):
+        if (mx, y) in carved and b.is_free(mx, y):
+            b.place_occupant("mine_rail", mx, y, surface=None, reserve=False)
+    for y in range(base - 5, 12, -5):
+        for s in (mx - 2, mx + 2):
+            if (s, y) in carved and b.is_free(s, y) and ((s - 1, y) not in carved or (s + 1, y) not in carved):
+                b.place_occupant("torch_wall", s, y, surface=None, reserve=False)
+
     # cave dressing + working miners (main cavern + the side-dig): glow, crystal, spoil, staged ore
-    put("mine_cart", mx + 11, 18)                          # a cart parked at the side-working
+    fw, fh = b.footprint("mine_cart")
+    if all(b.is_free(mx + 11 + dx, 18 + dy) for dx in range(fw) for dy in range(fh)):
+        b.place_occupant("mine_cart", mx + 11, 18, surface=None)        # a cart parked at the side-working
     cavefloor = [c for c in (cav | sidecav) if b.is_free(*c)]
     for c in rng.sample(cavefloor, k=min(18, len(cavefloor))):
         b.place_occupant(rng.choice(["mushroom_glow", "mushroom_glow", "mushroom_blue", "rubble",
                                      "bone_pile", "crystal_small", "crystal_small", "ore_pile"]),
                          *c, surface=None, reserve=False)
-    b.place_player("miner_down", sx0 + 1, sy0 - 2)        # at the forge
-    b.place_player("miner_left", pcx - 4, pcy)            # at the sluice
     b.spawn = [mx, H - 2]
     return b
 

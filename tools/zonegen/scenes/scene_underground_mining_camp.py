@@ -8,10 +8,12 @@ worked cavern. The hub reads in distinct WORK-ZONES (camps.md cluster rules):
 - a COOKING/SOCIAL hearth (campfire + log seats + pot) in the warm centre;
 - a SLEEPING row of tents along the deep wall (+ stash + lantern);
 - TOOL STORAGE on the west wall.
-Lit by wall torches down the shaft and around the camp + clustered glow-fungus. Ore is in rarity VEINS;
-branch digs streak off into the rock. (Dedicated rock_crusher art is backlogged; stonecutter stands in.)
+Lit by wall torches around the cavern faces + clustered glow-fungus. Ore is in rarity VEINS.
+(Dedicated rock_crusher art is backlogged; stonecutter stands in.)
 
-Renders to tools/_generated/previews/underground/scene_underground_mining_camp.png (via registry.py).
+Terrain vs. props are split so the ZONE (zone_underground_passages) can own the rock/ore: `carve_hub(b,ox,oy)`
+carves the cavern + rail tunnel + branch digs + pool + interior columns (returns a dict); `place_hub(b, hub)`
+drops the work-zone props + lighting + bugs (NO timber struts). `build()` renders the standalone vignette.
 Run: python3 tools/zonegen/scenes/scene_underground_mining_camp.py
 """
 import os
@@ -29,7 +31,7 @@ from features.cave import carve_tunnel, carve_cavern, fill_solid, place_pool   #
 W, H = 56, 60
 ORE = {"base": "stone_block",
        "veins": [("ore_copper_block", 7, 3, 6), ("ore_coal_block", 7, 3, 6), ("ore_iron_block", 4, 2, 4)],
-       "pockets": [("dirt_block", 6, 4, "top"), ("hard_stone_block", 4, 3, "bottom")]}
+       "pockets": [("dirt_block", 6, 4, "top")]}
 
 # open-floor dressing — EARTHTONES ONLY + sparse (rubble/moss/bone); ALL fungus stays in the wall clumps
 # below, never sprinkled mid-floor as green confetti. (quartz is a WALL mineral — embedded in rock faces.)
@@ -40,60 +42,53 @@ PREVIEW = "zones/underground_passages_31/scenes"
 SCALE = 6
 
 
-def build():
-    b = ZoneBuilder("scene_underground_mining_camp", W, H, base_tile="cave_floor", name="Mining hub")
-    rng = random.Random(9)
-    rx = W // 2                                            # the shaft / cavern centreline
-    cy = 22                                                # cavern centre (north-ish; camp spreads deeper/south)
-
-    # --- the big worked cavern: a main blob with overlapping LOBES so the outline is organic, not an
-    #     oval bowl — each lobe an alcove a work-zone settles into (west=hearth/tools, east=processing,
-    #     deep-south=sleeping) + the man-made rail shaft dropping in from the north + branch digs ---
+def carve_hub(b, ox, oy):
+    """Carve the worked cavern (overlapping lobes = organic outline + work-zone alcoves), the man-made rail
+    tunnel dropping in from the north, branch digs, a still pool, and a few interior rock columns. All in
+    GLOBAL coords at offset (ox,oy). Returns a dict the caller uses to lay rail + dress. Does NOT fill_solid
+    (the caller owns the rock) and does NOT lay rail occupants/struts (the caller lays the rail)."""
+    rx, cy = ox + W // 2, oy + 22                          # shaft centreline + cavern centre (north-ish)
     cavern = carve_cavern(b, rx, cy, shape="blob", size=15, seed=1)
-    cavern |= carve_cavern(b, rx - 11, cy + 1, shape="blob", size=6, seed=11)    # west alcove
+    cavern |= carve_cavern(b, rx - 11, cy + 1, shape="blob", size=6, seed=11)    # west alcove (hearth/tools)
     cavern |= carve_cavern(b, rx + 11, cy, shape="rocky", size=6, seed=12)       # east alcove (processing)
     cavern |= carve_cavern(b, rx - 2, cy - 10, shape="long", size=7, seed=13)    # deep-south alcove (sleeping)
-    rail = carve_tunnel(b, (rx, H - 2), (rx, cy + 8), style="straight", width=5)
+    rail = carve_tunnel(b, (rx, oy + H - 2), (rx, cy + 8), style="straight", width=5)
     rail_head = cy + 8                                     # where the shaft meets the cavern (north end)
     outs = set()
-    outs |= carve_tunnel(b, (rx - 11, cy + 2), (1, cy - 3), style="natural", width=2, seed=2)    # west dig
-    outs |= carve_tunnel(b, (rx + 11, cy + 1), (W - 2, cy + 5), style="natural", width=2, seed=3)  # east dig
-    outs |= carve_tunnel(b, (rx - 4, cy - 11), (rx + 5, 1), style="natural", width=2, seed=4)     # deep dig
+    outs |= carve_tunnel(b, (rx - 11, cy + 2), (ox + 1, cy - 3), style="natural", width=2, seed=2)     # west
+    outs |= carve_tunnel(b, (rx + 11, cy + 1), (ox + W - 2, cy + 5), style="natural", width=2, seed=3)  # east
+    outs |= carve_tunnel(b, (rx - 4, cy - 11), (rx + 5, oy + 1), style="natural", width=2, seed=4)      # deep
     carved = cavern | rail | outs
-    pool = place_pool(b, rx - 9, cy - 7, 3, 2, carved, seed=6)   # a still pool in a deep corner
-    fill_solid(b, carved, ORE, seed=5)
-    # a few interior rock columns left standing (so the chamber isn't an empty bowl) — off the rail/pool
-    for (cxp, cyp) in [(rx - 5, cy - 4), (rx + 5, cy + 6), (rx - 4, cy - 7)]:
+    pool = place_pool(b, rx - 9, cy - 7, 3, 2, carved, seed=6)        # a still pool in a deep corner
+    for (cxp, cyp) in [(rx - 5, cy - 4), (rx + 5, cy + 6), (rx - 4, cy - 7)]:    # interior columns
         for dy in (0, 1):
             if (cxp, cyp + dy) in cavern and (cxp, cyp + dy) not in pool and b.is_free(cxp, cyp + dy):
                 b.place_occupant("stone_block", cxp, cyp + dy)
+    return {"carved": carved, "cavern": cavern, "rail": rail, "pool": pool,
+            "rail_head": rail_head, "rx": rx, "cy": cy}
+
+
+def place_hub(b, hub):
+    """Drop the hub's work-zone props + lighting + cave bugs (no timber struts). Call AFTER carve_hub +
+    fill_solid so `is_free` rejects anything landing on rock or water."""
+    rng = random.Random(9)
+    rx, cy, rail_head = hub["rx"], hub["cy"], hub["rail_head"]
+    carved, rail, pool = hub["carved"], hub["rail"], hub["pool"]
 
     def is_rock(x, y):
         return b.in_bounds(x, y) and (x, y) not in carved
 
     def free_fp(oid, x, y):
         fw, fh = b.footprint(oid)
-        return all((x + dx, y + dy) in carved and (x + dx, y + dy) not in pool and b.is_free(x + dx, y + dy)
-                   for dx in range(fw) for dy in range(fh))
+        return all(b.is_free(x + dx, y + dy) for dx in range(fw) for dy in range(fh))
 
     def put(oid, x, y):
         return b.place_occupant(oid, x, y, surface=None) if free_fp(oid, x, y) else False
 
-    # --- the rail down the shaft, timber supports + WALL TORCHES flanking it (lit, built infrastructure) ---
-    for y in range(rail_head, H - 1):
-        if b.is_free(rx, y):
-            b.place_occupant("mine_rail", rx, y, surface=None, reserve=False)
-    for y in range(rail_head + 2, H - 2, 6):              # support timbers at intervals
-        for sx in (rx - 2, rx + 2):
-            put("wall_wood", sx, y)
-    for y in range(rail_head + 5, H - 2, 6):              # torches interleaved between the supports
-        for sx in (rx - 2, rx + 2):
-            if (sx, y) in carved and b.is_free(sx, y) and (is_rock(sx - 1, y) or is_rock(sx + 1, y)):
-                b.place_occupant("torch_wall", sx, y, surface=None)
-
     # === RAIL-HEAD LOADING BAY (north, at the shaft mouth) — a cart ON the rail + the haul =========
     put("sign_camp", rx + 3, rail_head + 1)
-    b.place_occupant("mine_cart", rx, rail_head + 2, surface=None)         # a cart sitting ON the rail
+    if free_fp("mine_cart", rx, rail_head + 2):
+        b.place_occupant("mine_cart", rx, rail_head + 2, surface=None)     # a cart sitting ON the rail
     put("mine_cart", rx - 3, rail_head)                                    # a second cart on a siding
     for oid, x, y in [("ore_pile", rx - 4, rail_head + 1), ("ore_sack", rx - 5, rail_head),
                       ("ore_sack", rx - 4, rail_head), ("wheelbarrow", rx + 2, rail_head + 2),
@@ -101,7 +96,6 @@ def build():
         put(oid, x, y)
 
     # === ORE-PROCESSING LINE (east wall) — a clean vertical SEQUENCE: crusher -> wash -> smelt ======
-    # fed by an ore bin at the top, tailings binned to the side, the bar/sack haul staged out, smith at the end
     px = rx + 9
     put("coal_bin", px, cy + 6)                           # raw-ore bin feeding the head of the line
     put("stonecutter", px, cy + 4)                        # CRUSHER (stonecutter stands in — see header)
@@ -192,6 +186,22 @@ def build():
     for i, (x, y) in enumerate(spots):
         b.place_bug(rng.choice(bugs), float(x), float(y), scale=0.45, flip=(i % 2 == 0))
 
+
+def build():
+    b = ZoneBuilder("scene_underground_mining_camp", W, H, base_tile="cave_floor", name="Mining hub")
+    hub = carve_hub(b, 0, 0)
+    fill_solid(b, hub["carved"], ORE, seed=5)
+    # the rail down the shaft + WALL TORCHES flanking it (lit, built infrastructure — no timber struts)
+    rx, rail_head = hub["rx"], hub["rail_head"]
+    for y in range(rail_head, H - 1):
+        if b.is_free(rx, y):
+            b.place_occupant("mine_rail", rx, y, surface=None, reserve=False)
+    for y in range(rail_head + 5, H - 2, 6):
+        for sx in (rx - 2, rx + 2):
+            if (sx, y) in hub["carved"] and b.is_free(sx, y) \
+                    and ((sx - 1, y) not in hub["carved"] or (sx + 1, y) not in hub["carved"]):
+                b.place_occupant("torch_wall", sx, y, surface=None)
+    place_hub(b, hub)
     b.spawn = [rx, H - 3]
     return b
 

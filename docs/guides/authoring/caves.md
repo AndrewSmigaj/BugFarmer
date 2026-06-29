@@ -35,50 +35,61 @@ version unioned overlapping circles and read as **symmetric lobes**; this reads 
 - **rocky / jagged** — a rougher edge **plus a few interior rock columns** left standing automatically.
 - **lobed** — stretched on the x-axis into a peanut/clover outline.
 Tune `size` + `seed` and re-render; the per-shape `rough` weight (in code) sets how irregular the outline is.
+- **`carve_chamber(b, cx, cy, size, seed=)`** — when a single `carve_cavern` still reads too round, this
+  unions **2–3 offset organic blobs along a random long axis** (kidney/peanut/lumpy voids). Prefer it for
+  the caverns a player explores; `carve_cavern` is the building block.
 - **Cave mouth** = a cavern positioned so it **clips the zone edge** (opens to the outside world); a
   cave is just a cavern that touches the surface. Put the entrance there.
+- **Isolation is the point.** In a MINING zone, caverns are **not** tunnel-linked — the player mines to
+  them. Only the man-made rail shaft is a pre-dug path. (Ant burrows through soft dirt are the exception —
+  that's the colony's habitat.) Don't auto-connect caverns "for walkability"; that defeats mining.
 Dress cavern **low spots with water** (§3), scatter crystals/mushrooms/rubble/bones, and leave a few
 rock columns so the space isn't an empty bowl.
 
 ## 3. Underground water features
-- **Still pools** in cavern low areas: `water_deep` core, `water_shallow` rim; reserve as `water`.
+- **`cave_pool(b, cx, cy, size, carved, seed=)`** — the quality primitive (cf. `terrain.lake`): an
+  IRREGULAR pool = a union of tilted blobs + concave **bays**, **clipped to the cavern's carved cells** so
+  the waterline bows along the rock. `water_deep` core → `water_shallow` rim → a **shoreline re-derived by
+  adjacency** dressed as a wet-rock bank (damp `mud` with gaps + scattered pebbles/moss). Seat it
+  **off-centre** in a low corner, not dead-centre. NEVER a clean ellipse — the old `place_pool` (single
+  ellipse) is deprecated for caverns.
+- About **half** the caverns get a pool; vary `size` + `seed` so no two read alike.
 - **Underground stream**: a thin (1–2 cell) **meandering** water channel following a tunnel — same
   wander rule as tunnels, never straight.
 - Keep water OFF the man-made rail tunnel (built routes drain/avoid water).
 
 ## 4. Ore placement — rarity + gameplay
 Ore is placed as **VEINS, not single specks**, so striking one gives a worthwhile haul.
-`fill_solid(b, carved, ore_table, seed=, substrate=)` fills every non-carved cell with a block — ore in short
-**random-walk veins**, `pockets` as clusters, the rest the base block. Pass **`substrate(x, y) -> block_id`**
-to paint **dirt-left / rock-right / hard-stone-deep regions** (the dirt↔rock interface): e.g. the mining camp
-makes the left third `dirt_block` (where the ant tunnels reach in) blending into `stone_block`, and
-`hard_stone_block` deep. *(History note: this was once `scatter_ore`; the carve→fill flow is now one call.)*
-- **Veins are runs of ~3–6 cells.** Commons get more (and slightly longer) veins; rares get few short ones.
-- **Rarity tiers** (relative vein counts): **common** (copper, coal) — frequent; **uncommon** (iron) —
-  fewer; **rare** (tin, silver) — sparse, short, scattered deeper.
-- **Gameplay tuning:** aim for roughly **12–18 % of the solid rock** ore-bearing — enough that a player
-  mining a tunnel keeps hitting commons (no 10-minute dig for one patch), but with plain stone between
-  veins so it isn't ore-everywhere. Tune by eye in the render; we can rebalance.
+`fill_solid(b, carved, ore_table, seed=, substrate=)` fills every non-carved cell with a block — ore in
+random-walk veins **seeded on a jittered grid** (even coverage, no dead walls), `pockets` as clusters, the
+rest the base block. Each vein tuple is `(id, count, lo, hi[, band])` with `band` in
+`surface|top|mid|bottom|deep|any` (`deep` = the bottom FIFTH, the richest seam). Pass **`substrate(x, y) ->
+block_id`** to paint the **Terraria depth model** (dirt at the surface → stone deep, with stone chunks IN the
+dirt) — there is **one rock** you mine (`stone_block`); going deeper changes the floor tile + ore, not the
+block. *(History: `hard_stone_block` was removed — a flat sprite AND a redundant idea.)*
+- **Veins are runs of ~3–6 cells.** Commons get more veins; rares few short ones, concentrated `deep`.
+- **Density + value RAMP with depth.** A baseline `any` tier keeps every band fed; the deep fifth is richest.
+- **Gameplay tuning — MEASURE IT, don't eyeball.** Target **~13–16 % of solid rock** ore-bearing overall, the
+  deep fifth **~20–25 %**, and — the metric that decides whether mining feels like a grind — **mean
+  distance-to-nearest-ore ≈ 3–4 cells, ~75 % of rock within 5** (a 1-wide miner must keep striking ore). The
+  ore-distribution probe in the zone work computes per-band % + a BFS dist-to-ore histogram; re-run it after
+  any ore change. Long dead runs (p90 > ~10) = players quit.
 - **Dirt pockets**: soft clustered patches (easy to mine), more common near the top/entrance.
 
-### Per-zone ore table (the spatial nudge — pass this to `scatter_ore`)
-Each zone has its OWN table; an LLM should read it, not guess. `clay` is **by design only in some zones,
-NOT the beginning mining zone.**
+### Per-zone ore table — `underground_passages_31` (beginning mining zone)
+Each zone has its OWN table; read it, don't guess. `clay` is **by design only in some zones, NOT here.**
 
-`underground_passages_31` — beginning mining zone:
+| material | role | placement |
+|----------|------|-----------|
+| `dirt_block` | soft surface soil (stone-speckled) | the surface band + the SW ant seam |
+| `stone_block` | the one base rock | everywhere below the dirt |
+| `ore_copper_block` / `ore_coal_block` | common ore/fuel | frequent, all depths |
+| `ore_iron_block` | mid ore | frequent (the `any` baseline) |
+| `ore_tin_block` | minor ore | mid band, sparse |
+| `ore_silver_block` | precious | bottom + deep |
+| `ore_gold_block` / `ore_platinum_block` / `ore_diamond_block` | rich/rare | **deep only** (bottom fifth) |
 
-| material | role | rarity |
-|----------|------|--------|
-| `dirt_block` | soft pockets | common (near entrance) |
-| `stone_block` | base rock | everywhere (the default) |
-| `ore_copper_block` | common ore | common |
-| `ore_coal_block` | common ore/fuel | common |
-| `ore_iron_block` | mid ore | uncommon |
-| `ore_tin_block` | minor ore | rare (tiny bits) |
-| `ore_silver_block` | minor precious | rare (tiny bits) |
-| `hard_stone_block` | tougher rock (needs better pick) | uncommon, more to the south/deep |
-
-(No `clay_block` here. Deeper zones add iron→silver→gold→platinum→diamond and clay where designed.)
+(No `clay_block`, no `hard_stone_block`. Deeper zones add more of the precious tiers + clay where designed.)
 
 ## 5. Build → render → review — the "tells" to check
 ```bash
@@ -87,8 +98,9 @@ python3 tools/zonegen/scenes/scene_underground_caverns.py
 Read the PNG and verify:
 - **No straight natural tunnels** (only the man-made one is straight, and it has rail + supports).
 - **Caverns vary in shape** (not all round); rocky ones have interior columns; one clips the edge (mouth).
-- **Ore is in findable veins**, not lone specks, at a density that looks minable-but-not-everywhere.
-- **Water reads as pools** (deep core, shallow rim), not stray puddles, and avoids the rail tunnel.
+- **Ore is in findable veins**, not lone specks, at the measured density above (don't eyeball — run the probe).
+- **Pools read irregular** (`cave_pool`: bayed waterline, deep core → shallow rim → wet-rock shore), never
+  a clean ellipse, seated off-centre in the cavern; about half the caverns have one. Off the rail tunnel.
 - `b.lint()` clean, **0 placement warnings**.
 
 Cross-cutting: minerals/crystals use the **mineral** art family (set `"family": "mineral"` on the catalog

@@ -664,8 +664,7 @@ def rock_mass(b, cx, cy, rx, ry, *, seed=0, veins=4):
                 and b.ground[y][x] in ("grass", "sand", "dirt", "mud")
             if s > 0 and on_ground:
                 b.set_ground(x, y, "stone_floor")
-                block = "hard_stone_block" if (s > 0.45 and rng.random() < 0.6) else "stone_block"
-                if b.place_occupant(block, x, y):
+                if b.place_occupant("stone_block", x, y):
                     filled.append((x, y))
             elif -0.12 < s <= 0 and on_ground:
                 if rng.random() < 0.5:
@@ -682,7 +681,7 @@ def rock_mass(b, cx, cy, rx, ry, *, seed=0, veins=4):
         ore = ores[v % len(ores)]
         for _ in range(rng.randint(3, 5)):
             cell = b.occ.get((x, y))
-            if cell and cell["id"] in ("stone_block", "hard_stone_block"):
+            if cell and cell["id"] == "stone_block":
                 cell["id"] = ore                          # swap the block in place
             x += rng.choice((-1, 0, 1))
             y += rng.choice((-1, 0, 1))
@@ -723,7 +722,7 @@ def rock_patch(b, cx, cy, radius, *, ground="stone_floor", seed=0, ore_chance=0.
             r = rng.random()
             oid = (rng.choice(gems) if r < ore_chance * 0.35
                    else rng.choice(ores) if r < ore_chance
-                   else rng.choice(["stone_block", "stone_block", "hard_stone_block"]))
+                   else "stone_block")
             b.place_occupant(oid, x, y)
             placed.add((x, y))
     return placed

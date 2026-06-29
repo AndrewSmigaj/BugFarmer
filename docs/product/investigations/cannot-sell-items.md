@@ -1,7 +1,37 @@
 # Investigation: #5 unable to sell items
-_status: BLOCKED ON one live confirm (which failure mode) · investigated 2026-06-28 · investigate-only_
+_status: LIVE-CONFIRMED — it's the sell flow, not the open · updated 2026-06-28 · investigate-only_
 
-## Debrief (read me first)
+## ★ Live confirm (Andrew, 2026-06-28)
+The NPC dialogue + shop panel **open fine** → **NOT the OverlapPoint bug** (§3A falsified). Clicking sell
+slots "doesn't do anything", with **no indicator of what the NPC would buy**; the **bug vendor can't sell bugs
+by any click/drag**. So it's the **sell flow + a missing-feedback UX gap**, root-caused below (§3B confirmed).
+
+## Real root cause (post-confirm)
+The whole sell pipeline is correctly wired (slot click `InventorySlotUI.OnPointerClick → OnSlotClicked →
+Send("sell",…) → OpCode 2 → `match.go:1025 handleShopAction` → `shopSell`; species have sell_price). The break
+is **feedback + filtering**, two parts:
+1. **No rejection is surfaced.** `shopSell` rejects with `sendWorldError` ("They don't buy that" / "You don't
+   have that"), but the client has **no UI that shows server world-errors while the shop is open** (WorldManager
+   only `Debug.LogError`s connection failures). So a rejected sell = visibly nothing happens.
+2. **No "what it buys" indicator.** Each NPC only buys a filtered set — general store buys `material`/`food`
+   **tags** (`shopBuysItem` tag match); the **bug dealer (kind "bugs") buys only live bugs (BugSlots) + items
+   prefixed `dead_`** (`shopBuysItem` returns `HasPrefix("dead_")`). The Sell column shows ALL your sellable-priced
+   items with no hint which the NPC accepts, so clicking a non-accepted item silently rejects (part 1).
+- **Bug vendor specifically:** live-bug sell IS coded (`shopSell` "bug" branch sells at `species.SellPrice`,
+  prices exist). If it truly does nothing, the fast check is the **Unity console on a bug-sell click**: a logged
+  world-error ("…") ⇒ it's reaching the server (feedback bug); total silence ⇒ the click/slot isn't firing for
+  bug slots (a slot-build/raycast issue to chase). **This one console check pins it.**
+
+## Recommended fix (post-confirm)
+1. **Surface shop results** — on a sell, show "Sold N for Xc" (success) or the server's reason (failure) in/over
+   the ShopPanel. The server already sends the error + an inventory sync; the panel just needs to display it.
+2. **Show each NPC's Buys** — a "Buys: material, food" header + **grey/disable un-accepted items** in the Sell
+   column (so you only click sellable ones). For the bug dealer, label it "Buys: bugs & carcasses."
+3. Confirm the bug-sell with the console check above; if the click isn't firing for bug slots, inspect the
+   bug-slot build in `BuildSell` (kind=="bugs" branch).
+- Determinism: none.
+
+## Debrief (read me first — original pre-confirm analysis below)
 - **TL;DR:** The sell system is **fully implemented** end-to-end (client Sell UI + server `shopSell`). The
   user-facing break is almost certainly **opening the shop**, not selling: every right-click interaction
   resolves its target with a single `Physics2D.OverlapPoint` that returns ONE arbitrary collider among

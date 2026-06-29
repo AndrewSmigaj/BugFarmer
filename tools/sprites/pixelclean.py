@@ -169,6 +169,12 @@ def main():
                     help="one shared palette across the whole set (more cohesive, less true color)")
     ap.add_argument("--k", type=int, default=20, help="colors per asset (or total if --shared)")
     ap.add_argument("--compare", default="", help="comma ids to also render before/after")
+    ap.add_argument("--keys", default="",
+                    help="comma occupant/placeable/tile ids: clean ONLY these (Objects/ or Tiles/) "
+                         "in place. The TARGETED regen path — pairs with `gen_sprites --keys X` so a "
+                         "single regen touches exactly one PNG. No full-set sweep, no git-checkout "
+                         "revert dance, no Unity re-import cascade. Use this, not a bare run, when "
+                         "you regenerated specific sprites.")
     ap.add_argument("--items", default="",
                     help="comma item ids: ALSO clean Resources/Items/{id}_icon.png (or {id}.png). "
                          "OPT-IN ONLY — never sweeps all of Items/, which holds legacy already-"
@@ -181,7 +187,23 @@ def main():
     os.makedirs(os.path.join(OUT, "Objects"), exist_ok=True)
 
     jobs = []  # (key, src, out, tw, th, is_tile)
-    if args.items:
+    if args.keys:
+        # EXCLUSIVE targeted mode: clean ONLY the named Objects/Tiles sprites, in place.
+        # Resolve each id to whichever of Objects/ or Tiles/ actually holds its PNG. This is
+        # the path for a single regen — nothing else is read or written.
+        for key in [k.strip() for k in args.keys.split(",") if k.strip()]:
+            op = os.path.join(OBJS_IN, key + ".png")
+            tp = os.path.join(TILES_IN, key + ".png")
+            if os.path.exists(op):
+                tw, th = target_size(key, meta, False)
+                jobs.append((key, op, op, tw, th, False))
+            elif os.path.exists(tp):
+                base = key.split("_v")[0]
+                tw, th = target_size(base, meta, True)
+                jobs.append((key, tp, tp, tw, th, True))
+            else:
+                print(f"  !! no Objects/Tiles png for '{key}' — skipped")
+    elif args.items:
         # EXCLUSIVE items mode: clean only the named freshly-generated icons; do not
         # touch Tiles/Objects (or the legacy Items/) in the same run.
         for key in [k.strip() for k in args.items.split(",") if k.strip()]:

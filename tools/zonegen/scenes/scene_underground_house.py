@@ -24,7 +24,7 @@ W, H = 52, 44
 ORE = {"base": "stone_block",
        "veins": [("ore_copper_block", 5, 3, 5), ("ore_coal_block", 5, 3, 5),
                  ("ore_iron_block", 3, 2, 4), ("ore_silver_block", 2, 2, 3)],
-       "pockets": [("dirt_block", 3, 3, "top"), ("hard_stone_block", 2, 3, "bottom")]}
+       "pockets": [("dirt_block", 3, 3, "top")]}
 
 
 def _ellipse(cx, cy, rx, ry):

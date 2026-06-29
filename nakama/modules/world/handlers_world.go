@@ -689,8 +689,9 @@ func (m *Match) getToolStats(state *WorldState, toolID string) (toolType string,
 		return "", 0 // Bare hands
 	}
 
-	// Look up tool from entity definitions
-	if def, exists := state.Entities[toolID]; exists && def.Category == "tool" {
+	// Look up tool from entity definitions. Weapons (sword/spear) carry a tool_type
+	// too — a wielded weapon must resolve its type/tier, not read as bare hands.
+	if def, exists := state.Entities[toolID]; exists && (def.Category == "tool" || def.Category == "weapon") {
 		return def.ToolType, def.ToolTier
 	}
 

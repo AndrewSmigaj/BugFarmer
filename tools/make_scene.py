@@ -16,7 +16,7 @@ It also exposes render_scene()/load_zone() as a library for build scripts (tools
 
 Usage: python3 make_scene.py [--zone <id>] [--bounds x0,y0,x1,y1] [--scale 6] [--out PATH]
 """
-import argparse, glob, json, os, random
+import argparse, functools, glob, json, os, random
 from PIL import Image, ImageDraw
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -126,7 +126,12 @@ def is_flat(meta, key):
     return bool((meta.get(key, {}).get("world", {}) or {}).get("flat"))
 
 
+@functools.lru_cache(maxsize=None)
 def load_png(folder, key):
+    # Cached: a full zone repeats the same ~dozen block/ore sprites tens of thousands of times;
+    # without this every occupant re-reads the PNG off disk (minutes on a /mnt WSL mount). The
+    # returned image is only ever .resize()/.transpose()d (new images) — never mutated — so sharing
+    # one instance is safe and byte-identical.
     p = os.path.join(folder, f"{key}.png")
     return Image.open(p).convert("RGBA") if os.path.exists(p) else None
 
@@ -164,7 +169,7 @@ def render_scene(ground, occupants, meta, scale, out_path, players=None, seed=7,
     cpx = CELL * scale
     canvas = Image.new("RGBA", (GW * cpx, GH * cpx), (0, 0, 0, 0))
 
-    pools, tcache, missing_tiles = {}, {}, set()
+    pools, tcache, missing_tiles, sprcache = {}, {}, set(), {}
     rng = random.Random(seed)
     block_rects = []                       # draw rects of swappable blocks/walls (+ requested ground tiles)
     record_tiles = record_tiles or set()   # ground-tile ids to also record (e.g. {"cave_floor"}) for the viewer
@@ -209,38 +214,37 @@ def render_scene(ground, occupants, meta, scale, out_path, players=None, seed=7,
     items = [("occ", oid, cx, cy, 1.0) for (oid, cx, cy) in occupants if not is_flat(meta, oid)]
     items += [("decor", did, cx, cy, mult) for (did, cx, cy, mult) in (decor or [])]
     for kind, oid, cx, cy, mult in sorted(items, key=lambda t: (-t[3], t[2])):
-        img = load_png(OBJS, oid)
         sw, sh = sprite_size_cells(meta, oid)
-        if kind == "decor":
-            if img is None:
-                continue
-            rw, rh = max(1, int(sw * scale * mult)), max(1, int(sh * scale * mult))
-            spr = img.resize((rw, rh), Image.NEAREST)
-            ax = cx * cpx + cpx / 2
-            cyc = (GH - cy - 0.5) * cpx
-            canvas.alpha_composite(spr, (int(ax - rw / 2), int(cyc - rh / 2)))
+        if kind == "occ":                                    # blocks/ore repeat thousands of times: cache
+            rw, rh = max(1, sw * scale), max(1, sh * scale)
+            spr = sprcache.get((oid, rw, rh))
+            if spr is None:
+                img = load_png(OBJS, oid)
+                if img is None:
+                    spr, _missing = placeholder_img(meta, oid, rw, rh), placeholders.append(oid)
+                else:
+                    spr = img.resize((rw, rh), Image.NEAREST)
+                sprcache[(oid, rw, rh)] = spr
+            fp_x, _ = footprint_of(meta, oid)
+            anchor_x = cx * cpx + cpx / 2 + (fp_x - 1) * 0.5 * cpx
+            if pivot_of(meta, oid) == "c":
+                px, py = int(anchor_x - rw / 2), int((GH - cy - 0.5) * cpx - rh / 2)
+            else:
+                px, py = int(anchor_x - rw / 2), int((GH - cy) * cpx - rh)
+            canvas.alpha_composite(spr, (px, py))
+            _cat = (meta.get(oid, {}) or {}).get("category", "")
+            if _cat in ("block", "ore") or (_cat == "structure" and oid.startswith("wall")):
+                block_rects.append({"key": oid, "cx": cx, "cy": cy, "x": px, "y": py, "w": rw, "h": rh})
             continue
-        rw, rh = max(1, sw * scale), max(1, sh * scale)
+        # free-floating decor (fruit, etc.): drawn centered at sprite_size*mult
+        img = load_png(OBJS, oid)
         if img is None:
-            spr = placeholder_img(meta, oid, rw, rh)
-            placeholders.append(oid)
-        else:
-            spr = img.resize((rw, rh), Image.NEAREST)
-        fp_x, _ = footprint_of(meta, oid)
-        anchor_x = cx * cpx + cpx / 2 + (fp_x - 1) * 0.5 * cpx
-        # Anchor is the FRONT (south) cell of the footprint; in the flipped image its front
-        # edge is the bottom of its band. The sprite baselines there and rises toward the back,
-        # filling the footprint (matches TilemapManager's center-pivot placement).
-        if pivot_of(meta, oid) == "c":
-            cell_center_y = (GH - cy - 0.5) * cpx
-            px, py = int(anchor_x - rw / 2), int(cell_center_y - rh / 2)
-        else:  # bc
-            front_edge_y = (GH - cy) * cpx
-            px, py = int(anchor_x - rw / 2), int(front_edge_y - rh)
-        canvas.alpha_composite(spr, (px, py))
-        _cat = (meta.get(oid, {}) or {}).get("category", "")
-        if _cat in ("block", "ore") or (_cat == "structure" and oid.startswith("wall")):
-            block_rects.append({"key": oid, "cx": cx, "cy": cy, "x": px, "y": py, "w": rw, "h": rh})
+            continue
+        rw, rh = max(1, int(sw * scale * mult)), max(1, int(sh * scale * mult))
+        spr = img.resize((rw, rh), Image.NEAREST)
+        ax = cx * cpx + cpx / 2
+        cyc = (GH - cy - 0.5) * cpx
+        canvas.alpha_composite(spr, (int(ax - rw / 2), int(cyc - rh / 2)))
 
     for pid, cx, cy in (players or []):
         img = load_png(PLAYER, pid)

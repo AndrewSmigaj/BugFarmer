@@ -23,7 +23,7 @@ ZG = os.path.dirname(HERE)
 sys.path.insert(0, ZG)
 from zonebuilder import ZoneBuilder                                         # noqa: E402
 from render import render_builder                                          # noqa: E402
-from features.cave import carve_tunnel, carve_cavern, place_pool, fill_solid  # noqa: E402
+from features.cave import carve_tunnel, carve_cavern, carve_chamber, cave_pool, fill_solid  # noqa: E402
 
 W, H = 64, 64
 
@@ -40,7 +40,6 @@ ORE_TABLE = {
     "pockets": [                          # MORE DIRT, less bare stone overall
         ("dirt_block", 14, 4, "top"),     # soft, plentiful near the entrance (north/high-y)
         ("dirt_block", 7, 3, "bottom"),   # more dirt deep too
-        ("hard_stone_block", 4, 3, "bottom"),  # tougher, deep (south/low-y)
     ],
 }
 
@@ -56,7 +55,7 @@ def build():
     rail_y = 50
 
     # --- caverns (varied shapes) ---
-    central = carve_cavern(b, 32, 30, shape="blob", size=11, seed=1)
+    central = carve_chamber(b, 32, 30, 13, seed=1)                      # irregular multi-blob chamber (not a bowl)
     gallery = carve_cavern(b, 49, 22, shape="long", size=9, seed=2)
     rocky = carve_cavern(b, 15, 25, shape="rocky", size=9, seed=3)
     mouth = carve_cavern(b, 33, 5, shape="blob", size=8, seed=4)        # clips the south edge = cave mouth
@@ -74,8 +73,9 @@ def build():
 
     carved = central | gallery | rocky | mouth | rail | nat
 
-    # --- a still pool in the central cavern ---
-    pool = place_pool(b, 31, 31, 5, 3, carved, seed=2)
+    # --- irregular pools (lake-grade waterline + re-derived wet-rock shore) in two caverns ---
+    pool = cave_pool(b, 31, 31, 7, carved, seed=2)                      # central chamber
+    pool |= cave_pool(b, 49, 22, 5, carved, seed=12)                    # gallery end
 
     # --- fill all remaining rock with blocks + rarity-tiered ore veins ---
     fill_solid(b, carved, ORE_TABLE, seed=4)

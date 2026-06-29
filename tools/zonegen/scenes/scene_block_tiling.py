@@ -14,7 +14,7 @@ from zonebuilder import ZoneBuilder              # noqa: E402
 from render import render_builder                # noqa: E402
 from features.room import place_room             # noqa: E402
 
-BLOCKS = ["dirt_block", "stone_block", "clay_block", "hard_stone_block", "sand_block", "sandstone_block",
+BLOCKS = ["dirt_block", "stone_block", "clay_block", "sand_block", "sandstone_block",
           "ore_coal_block", "ore_copper_block", "ore_iron_block", "ore_tin_block", "ore_silver_block",
           "ore_gold_block", "ore_platinum_block", "ore_diamond_block", "quartz_block"]
 WALLS = ["wall_stone", "wall_wood", "wall_brick", "wall_wood2", "wall_brick2"]
