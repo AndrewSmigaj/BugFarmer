@@ -56,6 +56,22 @@ the fix (server asks the authority to snapshot on demand) is a non-trivial round
 benefit for a self-healing ~1-frame transient, so it is documented as accepted rather than shipped. Likewise
 the continuous-spawn on-receipt-vs-hash sub-1% self-healing caveat.
 
+**Update 2026-06-29 — two latent late-join determinism bugs found + fixed (the gate had been silently failing
+on DENSE zones; the "proven bit-identical" above held only while zones were small).** (1) **Client websocket
+read cap.** The Nakama client's default `MaxMessageReadSize` is 256KB; village_21_B's `LateJoinSnapshot` grew
+to ~230KB raw → **~305KB base64 on the wire** (match-state data is base64-framed) → the client silently
+truncated the frame, the websocket desynced, and the late-joiner received NOTHING after it → **0 swarms** (any
+2nd player into a populated zone saw no bugs; regressed when #113 tripled swarm counts). Fixed: `NetworkManager`
+builds the socket with `WebSocketStdlibAdapter(maxMessageReadSize: 8MB)` to match the server's
+`max_message_size_bytes`. (2) **Food was the last view-scoped sim input.** The client food registry (`_food`,
+which bug-landing visuals read) was hydrated **per-chunk** (`GroundItemManager.HandleItemSpawn` → `HydrateFood`
+on each per-chunk `GroundItemSpawn`), so disjoint-chunk clients held different food (authority ~85 vs disjoint
+late-joiner ~265) → ~11-15% per-bug divergence — invisible until (1) was fixed and the late-joiner could
+bootstrap. Fixed: `GroundItemSpawn` is cosmetic-only; food enters `_food` only via the zone-wide
+`ITEM_ROTTED`/`FOOD_CONSUMED` ledger + the authority's `ZoneSnapshot.Food`. With collision (Phase 1b) already
+zone-wide, **the per-bug sim is now fully zone-wide.** BOTH gate halves re-verified `SYNC: IDENTICAL` on
+village_21_B (co-located 166k + spawn-apart 161k shared-bug states, no drift).
+
 ---
 
 ## 1. Architecture
