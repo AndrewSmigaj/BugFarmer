@@ -45,6 +45,13 @@ namespace BugFarmer.Bugs
         /// <summary>Hit-flash end time (Time.time); cosmetic only.</summary>
         public float FlashUntil;
 
+        // #20 strike lunge (display-only): a quick out-and-back JAB toward the victim when this member
+        // snatches its prey, so the kill reads as a committed lunge. Set by SwarmVisual.LungeNearest;
+        // decays over LungeDur via a sin envelope. Never read by the sim or the state hash.
+        public float LungeStart = -1f;
+        public float LungeDur;
+        public Vector2 LungeVec;
+
         /// <summary>
         /// Cosmetic flap-animation frames (set by SwarmVisual; null = static sprite). DISPLAY-ONLY —
         /// the shown frame + the float offset are never part of the deterministic sim or state hash,
@@ -99,6 +106,15 @@ namespace BugFarmer.Bugs
             if (Transform != null)
             {
                 Vector2 pos = Vector2.Lerp(PrevPos, CurrPos, t);
+
+                // #20 strike lunge: a quick out-and-back jab toward the victim (display-only; sin envelope
+                // peaks at mid-window, returns to 0). Added before the flap/bob so the whole sprite jabs.
+                if (LungeStart >= 0f)
+                {
+                    float le = Time.time - LungeStart;
+                    if (le >= LungeDur) LungeStart = -1f;
+                    else pos += LungeVec * Mathf.Sin(Mathf.PI * le / LungeDur);
+                }
 
                 // Cosmetic flap animation + vertical float (display-only; never hashed).
                 float bobY = 0f;

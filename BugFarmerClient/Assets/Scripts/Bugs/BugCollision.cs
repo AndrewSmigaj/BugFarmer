@@ -65,6 +65,53 @@ namespace BugFarmer.Bugs
         }
 
         /// <summary>
+        /// #20 predator line-of-sight: true if any cell STRICTLY BETWEEN a and b is blocked for bugs
+        /// (an occupant/wall occludes the shot). Integer Bresenham over the cell grid — PURE INTEGER, so
+        /// every client computes the same result and an authority handoff stays bit-identical (this runs
+        /// only on the authority's strike selection; the kill rides BUG_REMOVED). Endpoints are skipped:
+        /// the predator stands on a walkable cell, and a flier prey may legitimately hover over a blocked
+        /// cell. Reuses the ZONE-WIDE blocks_bugs map (ignoreOccupants:false) so the bin blocks the shot.
+        /// </summary>
+        public static bool LineBlocked(FixedPoint2 a, FixedPoint2 b)
+        {
+            return LineBlocked(a, b, cell =>
+                TilemapManager.Instance != null && TilemapManager.Instance.IsCellBlockedForBugs(cell, false));
+        }
+
+        /// <summary>
+        /// Testable core: the same integer walk, but the per-cell test is injected — mirrors the server's
+        /// RaycastClampWithBlock(...func) shape so a unit test can drive it against a stubbed blocked set
+        /// without a live TilemapManager.
+        /// </summary>
+        public static bool LineBlocked(FixedPoint2 a, FixedPoint2 b, System.Func<Vector2Int, bool> isBlocked)
+        {
+            Vector2Int c0 = GetCellCoords(a);
+            Vector2Int c1 = GetCellCoords(b);
+            int x = c0.x, y = c0.y;
+            int x1 = c1.x, y1 = c1.y;
+            if (x == x1 && y == y1)
+                return false; // same cell: nothing between them
+
+            int dx = Mathf.Abs(x1 - x), dy = Mathf.Abs(y1 - y);
+            int sx = x < x1 ? 1 : -1;
+            int sy = y < y1 ? 1 : -1;
+            int err = dx - dy;
+
+            // Step BEFORE testing so the start cell is never tested; stop AT the end cell so it isn't
+            // either → only the cells strictly between are checked.
+            while (true)
+            {
+                int e2 = 2 * err;
+                if (e2 > -dy) { err -= dy; x += sx; }
+                if (e2 < dx) { err += dx; y += sy; }
+                if (x == x1 && y == y1)
+                    return false; // reached the victim's cell with no blocker in between
+                if (isBlocked(new Vector2Int(x, y)))
+                    return true;
+            }
+        }
+
+        /// <summary>
         /// Floor division toward negative infinity.
         /// C# integer division truncates toward zero, which is wrong for negative coords.
         /// </summary>

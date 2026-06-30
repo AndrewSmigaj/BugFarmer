@@ -660,6 +660,11 @@ namespace BugFarmer.Entities
                         if (claimed.Contains(qbId)) continue;
                         long d = pbPos.SqrDistanceTo(qbPos).Value;
                         if (d > radiusSqr) continue;
+                        // #20 line-of-sight: skip prey occluded by a wall/bin so the predator claims its
+                        // nearest REACHABLE victim (strikes AROUND obstacles instead of through them — the
+                        // phantom-kill fix). Integer Bresenham over deterministic positions + the zone-wide
+                        // collision map → bit-identical on every client (authority-only + ledgered kill).
+                        if (BugCollision.LineBlocked(pbPos, qbPos)) continue;
                         if (d < bestSqr || (d == bestSqr && (bestId < 0 || qbId < bestId)))
                         {
                             bestSqr = d; bestId = qbId; bestPos = qbPos;
@@ -1088,8 +1093,12 @@ namespace BugFarmer.Entities
                         for (int i = 0; i < n; i++)
                         {
                             var vp = new Vector2(msg.victim_x[i], msg.victim_y[i]);
-                            swarm.FlashNearest(vp);
+                            swarm.LungeNearest(vp); // #20: the nearest member JABS toward the kill (+ flash)
                             BugFarmer.Audio.AudioFx.ThwackAt(vp);
+                            // #20: the consumed corpse pops in at the victim and holds for the feeding dwell,
+                            // then fades — the predator parks on it (server feed-pause). Display-only.
+                            if (!string.IsNullOrEmpty(msg.carcass_item))
+                                StrikeVfx.SpawnCorpse(BugFarmer.Data.EntityDatabase.GetItemSprite(msg.carcass_item), vp, msg.feed_pause_secs);
                         }
                     }
                     else

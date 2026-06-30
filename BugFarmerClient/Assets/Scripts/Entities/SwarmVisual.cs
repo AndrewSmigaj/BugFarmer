@@ -556,6 +556,28 @@ namespace BugFarmer.Entities
                 best.FlashUntil = Time.time + 0.15f;
         }
 
+        /// <summary>#20: flash AND lunge the member nearest a victim — a committed jab toward the kill so
+        /// the strike reads as an individual lunge, not just a flash. Display-only (no sim/hash effect).</summary>
+        public void LungeNearest(Vector2 worldPos)
+        {
+            BugVisual best = null; float bestSqr = float.MaxValue;
+            foreach (var bug in _bugs.Values)
+            {
+                if (bug.Transform == null) continue;
+                float d = ((Vector2)bug.Transform.position - worldPos).sqrMagnitude;
+                if (d < bestSqr) { bestSqr = d; best = bug; }
+            }
+            if (best == null) return;
+            best.FlashUntil = Time.time + 0.15f;
+            Vector2 from = best.Transform.position;
+            Vector2 dir = worldPos - from;
+            float dist = dir.magnitude;
+            // jab ~0.35 cell toward the victim, but never past it (cap at 0.6× the gap for a near prey).
+            best.LungeVec = dist > 0.001f ? dir / dist * Mathf.Min(0.35f, dist * 0.6f) : Vector2.zero;
+            best.LungeStart = Time.time;
+            best.LungeDur = 0.18f;
+        }
+
         /// <summary>Flash the whole swarm (predator telegraphs — strike snatch, windup).</summary>
         public void FlashAllBugs()
         {

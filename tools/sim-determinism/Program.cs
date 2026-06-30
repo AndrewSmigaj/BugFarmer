@@ -39,9 +39,44 @@ namespace SimDeterminism
             "centipede_garden", "millipede", "beetle_carrion",
         };
 
+        // #20: focused geometry test for BugCollision.LineBlocked (the predator line-of-sight). Run with
+        // --los-test. Proves the integer Bresenham tests cells STRICTLY BETWEEN the endpoints (skipping
+        // both) — a deterministically-WRONG walk would still pass the 2-client sync gate but fails here.
+        // Drives the delegate core with a stubbed blocked-set, so no Unity/TilemapManager is needed.
+        static int RunLosTest()
+        {
+            int failures = 0;
+            void Check(string name, bool got, bool want)
+            {
+                if (got != want) { Console.WriteLine($"LOS-TEST: ❌ {name}: got {got}, want {want}"); failures++; }
+                else Console.WriteLine($"LOS-TEST: ✅ {name}");
+            }
+            FixedPoint2 Pt(float x, float y) => new FixedPoint2(FixedPoint.FromFloat(x), FixedPoint.FromFloat(y));
+            System.Func<UnityEngine.Vector2Int, bool> Blocked(params (int x, int y)[] cells) =>
+                cell => cells.Any(c => c.x == cell.x && c.y == cell.y);
+
+            // Cell (n) center is world (n+0.5); GetCellCoords floors → cell n.
+            Check("clear horizontal", BugCollision.LineBlocked(Pt(5.5f, 5.5f), Pt(8.5f, 5.5f), _ => false), false);
+            Check("blocker between (6,5)", BugCollision.LineBlocked(Pt(5.5f, 5.5f), Pt(8.5f, 5.5f), Blocked((6, 5))), true);
+            Check("victim-cell (8,5) skipped", BugCollision.LineBlocked(Pt(5.5f, 5.5f), Pt(8.5f, 5.5f), Blocked((8, 5))), false);
+            Check("predator-cell (5,5) skipped", BugCollision.LineBlocked(Pt(5.5f, 5.5f), Pt(8.5f, 5.5f), Blocked((5, 5))), false);
+            Check("adjacent: no cell between", BugCollision.LineBlocked(Pt(5.5f, 5.5f), Pt(6.5f, 5.5f), Blocked((5, 5), (6, 5))), false);
+            Check("same cell", BugCollision.LineBlocked(Pt(5.5f, 5.5f), Pt(5.5f, 5.5f), _ => true), false);
+            Check("blocker vertical (5,7)", BugCollision.LineBlocked(Pt(5.5f, 5.5f), Pt(5.5f, 9.5f), Blocked((5, 7))), true);
+            Check("blocker on diagonal (7,7)", BugCollision.LineBlocked(Pt(5.5f, 5.5f), Pt(9.5f, 9.5f), Blocked((7, 7))), true);
+            Check("clear diagonal", BugCollision.LineBlocked(Pt(5.5f, 5.5f), Pt(9.5f, 9.5f), _ => false), false);
+
+            Console.WriteLine(failures == 0
+                ? "LOS-TEST: ✅ PASS — LineBlocked geometry correct (endpoints skipped, between-cells tested)."
+                : $"LOS-TEST: ❌ FAIL — {failures} case(s) wrong.");
+            return failures == 0 ? 0 : 1;
+        }
+
         public static int Main(string[] args)
         {
             RepoRoot = FindRepoRoot();
+            if (args.Contains("--los-test"))
+                return RunLosTest();
             bool selftest = args.Contains("--selftest");
             Console.WriteLine($"[sim-determinism] repo={RepoRoot}");
             Console.WriteLine($"[sim-determinism] {Species.Length} species x {BugsPerSpecies} bugs x {Ticks} ticks, seed={WorldSeed}"

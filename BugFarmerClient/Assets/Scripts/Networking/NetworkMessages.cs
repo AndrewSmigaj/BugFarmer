@@ -232,6 +232,10 @@ namespace BugFarmer.Networking
         // Phase 2: per-victim world points so the strike snatch plays AT each eaten fly. Display-only.
         public float[] victim_x;
         public float[] victim_y;
+        // #20: the dead_<prey> sprite shown at each victim + how long it holds before fading (the
+        // predator's feeding dwell). Both display-only; absent on older servers (JsonUtility leaves them 0/null).
+        public string carcass_item;
+        public float feed_pause_secs;
     }
 
     /// <summary>
