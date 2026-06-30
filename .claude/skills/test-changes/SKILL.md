@@ -117,11 +117,20 @@ is ① — two REAL clients, full system. The others are pre-checks/backstops, N
   Real client + real server, merge/split/spawn all live. Built standalone players don't take the Unity
   project lock, so they run alongside an open Editor (this is how "N players, Editor open" works).
   ```bash
-  # one-time per code change: build a CURRENT player (needs the project lock free for a headless build):
-  #   Editor menu  BugFarmer ▸ Build Sync-Test Player        (build from the open Editor), OR with Editor closed:
-  #   "Unity.exe" -batchmode -quit -projectPath BugFarmerClient -executeMethod SyncTestBuild.Build -logFile -
-  docker compose up -d                         # server (rebuild if Go changed)
-  tools/run_sync_test.sh village_21_B 60       # launches 2 players, diffs their per-tick hash streams
+  # one-time per code change: build a CURRENT player (needs the project lock free → Editor CLOSED for a headless build):
+  #   Editor menu  BugFarmer ▸ Build Sync-Test Player    OR headless (Editor closed; -logFile MUST be a C:/ path, not /mnt/):
+  #   "Unity.exe" -batchmode -quit -nographics -projectPath BugFarmerClient -executeMethod SyncTestBuild.Build -logFile C:/…/build.log
+  #   VERIFY THE BUILD via the managed DLL, NOT the .exe: Build/SyncTest/BugFarmerClient_Data/Managed/Assembly-CSharp.dll
+  #   gets the fresh mtime + your new symbols (`strings … | grep <YourSymbol>`); the .exe is just the launcher and
+  #   never changes — a months-old .exe mtime alongside a fresh DLL is normal, NOT a failed build.
+  docker compose build builder && docker compose up -d   # rebuild the plugin (if Go changed) + start the server
+  # CANONICAL GATE — staggered LATE-JOIN (run_sync_latejoin.sh): A authority creates the match, B LATE-JOINS it.
+  # (run_sync_test.sh launches 2 CONCURRENT players → they can race into TWO separate matches → inconclusive; prefer latejoin.)
+  # FRESH=1 force-recreates builder+nakama so the match starts at tick 0 on the CURRENT plugin. BOTH halves → SYNC: IDENTICAL:
+  FRESH=1 tools/run_sync_latejoin.sh village_21_B 70 12                                  # co-located spawn
+  FRESH=1 SPAWN_A=126,2 SPAWN_B=126,253 tools/run_sync_latejoin.sh village_21_B 70 12     # spawn-APART: disjoint chunks (the harder half)
+  #   diff = tools/netcode/sync_diff.py (hash-stream primary + per-bug localizer; unit-tested by test_sync_diff.py).
+  #   NON-VACUITY: the run must actually exercise the change (e.g. wasps killing flies); harness fails fast on 0-seed/0-bugs (exit 4/5).
   ```
   Each player (`HeadlessSyncTest.cs`, flag `-synctest`) auth's as a distinct account (NetworkManager reads
   `-clientid`), enters the zone ephemerally, records its tick hashes (the F1/F2 `TickTraceBuffer`), quits.
@@ -138,8 +147,16 @@ is ① — two REAL clients, full system. The others are pre-checks/backstops, N
   `Tick N: >0 swarms`. (The bug that taught us this: the one-shot `WorldInit` was dropped during the join
   handshake by `WorldManager`'s `CurrentMatch==null` guard — fixed in commit `1c1b251` by buffering
   pre-join match-state. A 0-swarm authority gave a bogus "96% divergence" that wasn't real.)
+  **DENSE-ZONE late-join gotchas (2026-06-29 — the gate had silently passed only because zones were small):**
+  (1) **read cap** — the Nakama client's default `MaxMessageReadSize` is 256KB; a big `LateJoinSnapshot`
+  (village_21_B's grew to ~305KB base64) silently TRUNCATES → the late-joiner gets **0 swarms**. Fixed:
+  `NetworkManager` builds the socket with `WebSocketStdlibAdapter(maxMessageReadSize: 8MB)`. (2) **view-scoped reads
+  diverge ONLY on disjoint chunks** — that is the whole point of the spawn-APART half: it caught the per-chunk
+  `_food` hydration (food now rides the zone-wide ledger + snapshot, not `GroundItemSpawn`). Any sim-input read that
+  isn't zone-wide/frontier-gated passes co-located but FAILS spawn-apart. See `architecture_swarm_sync.md` §0.
 - **② sim-determinism pre-check (FAST, no Unity, no server):** `~/.dotnet/dotnet run --project
-  tools/sim-determinism` (`--selftest` proves it detects divergence). Links the real per-bug sim source and
+  tools/sim-determinism` (`--selftest` proves it detects divergence; `--los-test` checks the
+  `BugCollision.LineBlocked` predator line-of-sight geometry, #20). Links the real per-bug sim source and
   runs it twice — catches wall-clock / unordered-collection / static / float nondeterminism in seconds. But
   it ONLY covers the per-bug movement core (no merge/split/spawn, single process) — a green here does NOT
   replace ①. See `tools/sim-determinism/README.md`.
