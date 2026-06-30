@@ -53,9 +53,11 @@ the 22 issues; one findings doc each). Backlogged-by-the-user items (not investi
   its own backlogged heuristic). Big project (the full ecology must become deterministic-on-clients, with
   authority handoff) — it dissolves the corpse-position problem and scales. The natural-death scatter above is
   the throwaway interim until this lands.
-- **Dead-bugs/fruit follow-ups (deferred):** predator kills leave a corpse + the hornet feeding-pause (#20);
-  drop/place ANY non-occupant item from inventory, one at a time (reuse the torch "placer"); smarter placement
-  (true across-a-fence reachability, nicer spread); the frozen-zone catch-up heuristic; tree refinement + testing.
+- **Dead-bugs/fruit follow-ups:** ~~predator kills leave a corpse + the hornet feeding-pause (#20)~~ **DONE
+  2026-06-30** — feed-pause (`feed_pause_ticks`, server) + client-side LOS (`BugCollision.LineBlocked`, fixes the
+  through-bin phantom) + consumed-corpse/lunge VFX (`StrikeVfx`); see `investigations/wasp-attack-indicators-phantom.md`.
+  Still deferred: drop/place ANY non-occupant item from inventory, one at a time (reuse the torch "placer"); smarter
+  placement (true across-a-fence reachability, nicer spread); the frozen-zone catch-up heuristic; tree refinement + testing.
 
 ## Opening intro + title screen — built 2026-06-28 (follow-ups)
 The game now opens with a text intro ("It is 2136…", line-by-line) → crossfade → a **BugFarmer** title

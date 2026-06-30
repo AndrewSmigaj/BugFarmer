@@ -1,5 +1,18 @@
 # Investigation+Design: #20 phantom wasp attack + attack/feeding indicators
-_status: READY (design) — phantom understood; indicator+feeding system designed · investigated 2026-06-28 · investigate-only_
+_status: BUILT 2026-06-30 (#20 shipped) — see AS-BUILT below · investigated 2026-06-28_
+
+> **AS-BUILT (2026-06-30 — differs from the design below; the design is kept for the record):**
+> (1) **LOS is CLIENT-side**, not server — the authority's `RunPredationStrikes` narrow-phase skips prey occluded by
+> the zone-wide collision map via an integer-Bresenham `BugCollision.LineBlocked`. Chosen for per-individual precision
+> (the server holds only swarm CENTRES, so a server LOS could only be centre-approximate). Predators now strike
+> *around* a bin instead of whiffing.
+> (2) **The corpse is a CLIENT VISUAL** (`StrikeVfx`, *consumed*: pops in → holds for the feed → fades), NOT a server
+> `spawnCarcass` ground item — so it adds **no** carrion/ecology load (ecology-neutral, per the user's "Consumed" choice).
+> (3) **The feeding pause IS the determinism change** — `FeedUntilTick` + a per-species `feed_pause_ticks` (wasp 50t,
+> centipede 30t ≤ each one's strike cooldown → rate-neutral). The predator parks via a zero-length hold-leg on the
+> *existing* `SWARM_SET_TARGET` event (no new event type). Gated: Go feed-pause tests + sim-determinism + the
+> 2-client sync gate. (The lunge + corpse-pop + THWACK cover the attack-indicator ask; the predator→victim dart was
+> deferred as optional.)
 
 ## Debrief (read me first)
 - **Phantom attack — cause:** `applyPredationStrike` selects/strikes prey by **distance only — no

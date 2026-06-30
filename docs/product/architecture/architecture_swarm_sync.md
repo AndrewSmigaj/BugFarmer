@@ -76,6 +76,15 @@ village_21_B (co-located 166k + spawn-apart 161k shared-bug states, no drift).
 
 ## 1. Architecture
 
+> **⚠ AS-BUILT CORRECTION (verified 2026-06-30 against `predation.go` / `state.go`):** §1's "the authority CLIENT runs
+> the canonical simulation; the server does not simulate swarms" is **STALE** — it describes the original design. The
+> as-built is **SERVER-authoritative**: the Nakama Go `Match` runs the swarm sim (`predationThink` → `emitLeg` →
+> `state.AddSwarmTargetEvent` appends the seq'd `SWARM_SET_TARGET` to the zone ledger). **Clients are deterministic
+> FOLLOWERS** — `InfluenceManager.TryComputeSwarmCenter` *mirrors* `swarm.go Move` to place each swarm CENTRE from the
+> replayed leg, then derives per-bug positions deterministically (gate-proven bit-identical, #136). The **"authority
+> client" role is scoped to per-bug STRIKE selection only** (the server holds only swarm centres). Treat §0 + the code
+> as authoritative; read §1 below as design history. (Fuller §1 rewrite = a separate backlog item.)
+
 ### 1.1 Roles
 
 Authority Client (per zone):

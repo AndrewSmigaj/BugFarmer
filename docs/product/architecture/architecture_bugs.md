@@ -39,6 +39,13 @@ Total server egress = Entities × Updates/sec × Bytes × Users
      a predator's *strike* targets the actual nearest individual fly (not the swarm center). The AUTHORITY
      client computes the strike and reports the victims (`OpCodePredationStrike`); the server validates +
      applies the kill via `BUG_REMOVED`, so followers/late-joiners stay in sync. See architecture_swarm_sync.md.
+     - **Line-of-sight (#20):** the authority's narrow-phase skips prey occluded by the zone-wide collision map
+       (integer-Bresenham `BugCollision.LineBlocked`, `ignoreOccupants:false`) → predators strike *around* a wall/bin
+       instead of through it (the "phantom kill" fix). Client-side because only clients hold per-bug positions.
+     - **Feeding pause (#20, server/determinism):** on a kill the predator PARKS for `feed_pause_ticks` (per-species;
+       `FeedUntilTick` + a zero-length hold-leg on the existing `SWARM_SET_TARGET`), and the client shows a *consumed*
+       corpse (`StrikeVfx`, display-only — pops in, holds the dwell, fades) + a committed lunge. Nest predators that a
+       kill fills to `predatorFullSatiation` skip the park and head home (the home trip is its own pause).
 3. **Brownian motion preserved** - Flies buzz naturally (client-side)
 4. **Server authority** - Positions, counts, reproduction are server-controlled
 5. **Click-to-catch** - Players click directly on bug sprites; server validates and broadcasts
