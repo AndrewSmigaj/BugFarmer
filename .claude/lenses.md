@@ -74,6 +74,14 @@ keep on this codebase (each caught a real, shipped-would-have-bitten issue).
   CONSUMED (or terminal by design)? No orphan intermediates; no self-dropping decorative "traps." Gate with a
   reachability validator. (Earned: `ore_sluice`/`coal_bin`/`geode` were dead self-dropping objects wired to
   nothing.)
+- ★ **State-Machine Priority / Concurrent-Ownership** — When an entity is driven by multiple orthogonal "what it's
+  doing now" mechanisms (a lifecycle `Phase`, an `ActionState`, a new dwell timer), define the EXPLICIT priority
+  order (which one owns the tick + emits the leg) and prove no two co-own a tick or emit conflicting targets. Added
+  "at the top" silently preempts everything below; "at the bottom" is silently starved above. (Earned: the predator
+  feed-pause had to slot into `predationThink`'s flee>defending>homing>FEED>carrion>hunt order, after
+  `processActionState` — wrong slot = nest-defense delayed by the full feed, or a feed that never fires because hunting
+  always wins. Reading the REAL order also revealed homing sits ABOVE feed, so a load-filling kill sends a wasp home
+  instead of parking — a behavior you only see by tracing the actual priority chain, not a doc's summary of it.)
 
 ## Design lenses (for feature/creature DESIGN, not just code review)
 - ★ **Unbounded-Growth / Accumulation** — Does this system create entities or state that grow without a
@@ -104,3 +112,6 @@ keep on this codebase (each caught a real, shipped-would-have-bitten issue).
 - A skeptical sub-agent per lens (especially Verification + Data/Contract) catches things the author's
   tunnel vision misses — and has, on this codebase, including an error in another sub-agent's report
   (always re-verify load-bearing claims against the real code).
+- To turn a lens pass into a **numeric, evidence-anchored certainty table** (each lens finding → a scored row
+  with a falsifier + the gate that raises it, MIN-aggregated), run the `certainty-assessment` skill. The lenses
+  say *what to look at*; that skill says *how certain you are, with the number bound to evidence.*

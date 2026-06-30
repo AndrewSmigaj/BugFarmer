@@ -129,6 +129,9 @@ fix + why · the certainty table · risks/determinism · rough effort · and **e
   never local `go`); **sync runs need a FRESH match** (strays/persisted match = false divergence).
 
 ## Certainty rubric
+Score with the **`certainty-assessment`** skill — it owns the calibrated rubric, the anti-inflation caps (no
+citation → ≤50; proxy → ≤60; doc/memory/sub-agent → ≤60; laundered user-intent → invalid), the falsifier +
+raise-it columns, and **MIN aggregation**. The investigation-tuned bands below are the shorthand:
 - **95–100%** — I read the exact code/data that proves it; I can cite the line; I checked all relevant call
   sites; (if testable) a headless gate confirms it.
 - **75–90%** — strong evidence, one or two unread call sites or an unrun experiment remain → a Phase-5 gap.

@@ -47,7 +47,9 @@ time (you end up building every feature twice). For every feature:
   (the Nakama/Postgres/Go stack), `add-object` / `regenerate-sprite` (world art), `author-zone` (zones),
   `economy` (items/stores/crafting/drops — the unified entity registry + the `catalogs/` map + coverage audit),
   `deep-investigate` (root-cause ONE reported problem → an evidence-gated findings + recommendation doc under
-  `docs/product/investigations/`, NO fix — for working a playtest issue list rigorously).
+  `docs/product/investigations/`, NO fix — for working a playtest issue list rigorously),
+  `certainty-assessment` (score a plan/design/just-built change → an evidence-anchored numeric certainty TABLE,
+  MIN-aggregated; the scoring layer for the review machinery below — run it before claiming "done/verified/safe").
 
 ## Where things live
 - **Repo organization rule (read before creating a folder or saving generated output):**
