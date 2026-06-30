@@ -134,6 +134,7 @@ type PredationConfig struct {
 	StrikeCooldownTicks    int64    `json:"strike_cooldown_ticks"`    // min ticks between kills (the anti-snowball knob)
 	KillsPerStrike         int      `json:"kills_per_strike"`         // prey bugs killed per strike
 	FeedPerKill            float32  `json:"feed_per_kill"`            // satiation gained per kill
+	FeedPauseTicks         int64    `json:"feed_pause_ticks"`         // ticks the predator PARKS on a kill (the feeding dwell; 0 = off). Keep <= strike_cooldown_ticks to stay rate-neutral.
 	HuntSpeedMult          float32  `json:"hunt_speed_mult"`          // leg speed multiplier while hunting
 	DepositSatiation       float32  `json:"deposit_satiation"`        // satiation set after a nest deposit (rest pacing)
 	HuntSatiationThreshold float32  `json:"hunt_satiation_threshold"` // hunts only below this satiation

@@ -73,7 +73,11 @@ type SwarmState struct {
 	TargetPreyID   string // prey swarm id; "" = not hunting
 	HuntStartTick  int64  // when the current hunt began (timeout)
 	LastStrikeTick int64  // strike cooldown anchor
-	LastAttackTick int64  // player-sting/bite cooldown anchor
+	// FeedUntilTick: while > TickCount the predator PARKS on its kill (the feeding dwell). Set on a
+	// kill when the species has feed_pause_ticks > 0. TRANSIENT — not in SwarmSave (like the other
+	// tick-anchors); a restart clears an in-flight dwell, consistent + deterministic.
+	FeedUntilTick  int64
+	LastAttackTick int64 // player-sting/bite cooldown anchor
 
 	// Nest membership (wasps). Phase strings for nest predators: "feeding" (hunt),
 	// "homing" (carry brood back), "defending" (chase a nest threat). An ORPHAN

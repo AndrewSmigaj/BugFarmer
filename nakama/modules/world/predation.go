@@ -198,6 +198,19 @@ func (m *Match) predationThink(
 		}
 	}
 
+	// FEED-PAUSE (#20): a predator PARKS on its kill for the feeding dwell. Slotted AFTER the nest
+	// defending/homing block (a nest attack still preempts the meal) and BEFORE the individual/hunt
+	// blocks. Re-emits a zero-length hold-leg at the jittered re-aim cadence (so the swarm re-checks
+	// defend/home each think — responsive) — the swarm freezes IN SYNC (clients mirror the march;
+	// origin==target → both arrival-clamps hold it). Determinism: FeedUntilTick is a deterministic
+	// tick stamp set by the ledgered strike, so every client/handoff-authority holds-or-thinks alike.
+	if swarm.FeedUntilTick > state.TickCount {
+		cx, cy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
+		m.emitLeg(state, swarm, species, cx, cy, 1.0, chunkSize, deltaTime)
+		swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)
+		return true
+	}
+
 	// INDIVIDUAL ground predators (centipede): CARRION-FIRST — if food is visible,
 	// decline ownership so the SHARED forage block dines/breeds normally (it clears
 	// TargetPreyID + resets SpeedMult on entry). Hunting is the fallback for a hungry
@@ -351,9 +364,28 @@ func (m *Match) applyPredationStrike(
 		predator.Satiation = 100
 	}
 
+	// FEED-PAUSE (#20): park on the kill for the dwell. NextThinkTick=now forces a prompt re-think so the
+	// park begins AT the kill (a tight, readable beat) instead of ~1s later along the stale hunt-leg.
+	// Per-species; 0 = off. (A load-filling kill that flips a nest predator to "homing" skips the park —
+	// the home trip is its own pause — but the corpse telegraph below still fires on every kill.)
+	if p.FeedPauseTicks > 0 {
+		predator.FeedUntilTick = state.TickCount + p.FeedPauseTicks
+		predator.NextThinkTick = state.TickCount
+	}
+
 	// Strike telegraph (display-only): the snatch flash + THWACK. Phase 2 carries the victim positions
 	// so the snatch plays AT each eaten fly (individual strike reads on screen); nil = predator-centre.
-	m.broadcastBugStrikeTelegraph(dispatcher, state, predator, victimX, victimY, chunkSize)
+	// #20: carry the prey's carcass + the feeding-dwell seconds so the client shows + fades a corpse.
+	tickRate := state.Config.TickRate
+	if tickRate <= 0 {
+		tickRate = 10
+	}
+	carcass := ""
+	if preySpecies != nil {
+		carcass = preySpecies.CarcassItem
+	}
+	feedPauseSecs := float32(p.FeedPauseTicks) / float32(tickRate)
+	m.broadcastBugStrikeTelegraph(dispatcher, state, predator, victimX, victimY, carcass, feedPauseSecs, chunkSize)
 
 	logger.Info("Predation: %s struck %s (-%d, satiation %.0f)",
 		predator.ID, prey.ID, len(removed), predator.Satiation)
@@ -399,6 +431,9 @@ func (m *Match) handlePredationStrike(
 		return
 	}
 	if state.TickCount-predator.LastStrikeTick < p.StrikeCooldownTicks { // server cooldown is authoritative
+		return
+	}
+	if predator.FeedUntilTick > state.TickCount { // #20: mid-feed — the predator is parked, ignore strike re-sends
 		return
 	}
 	// Loose centre-range sanity (the server has only centres): a legitimate individual strike has the two
@@ -580,9 +615,12 @@ func (m *Match) broadcastBugStrikeTelegraph(
 	state *WorldState,
 	predator *entities.SwarmState,
 	victimX, victimY []float32,
+	carcassItem string, // #20: the dead_<prey> the client shows at each victim (display-only)
+	feedPauseSecs float32, // #20: how long the corpse holds before fading (the feeding dwell)
 	chunkSize int,
 ) {
-	msg := BugTelegraphMessage{SwarmID: predator.ID, Kind: "strike", VictimX: victimX, VictimY: victimY}
+	msg := BugTelegraphMessage{SwarmID: predator.ID, Kind: "strike", VictimX: victimX, VictimY: victimY,
+		CarcassItem: carcassItem, FeedPauseSecs: feedPauseSecs}
 	m.broadcastToChunk(dispatcher, state, predator.Position.ChunkX, predator.Position.ChunkY, OpCodeBugTelegraph, msg)
 }
 

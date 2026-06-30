@@ -259,6 +259,10 @@ type BugTelegraphMessage struct {
 	// individual-fly strike reads on screen (vs the old predator-centre flash). Display-only.
 	VictimX []float32 `json:"victim_x,omitempty"`
 	VictimY []float32 `json:"victim_y,omitempty"`
+	// Consumed-corpse visual (#20, display-only): the dead_<prey> item the client shows at each victim,
+	// held then faded over FeedPauseSecs (the predator's feeding dwell). Additive — older clients ignore.
+	CarcassItem  string  `json:"carcass_item,omitempty"`
+	FeedPauseSecs float32 `json:"feed_pause_secs,omitempty"`
 }
 
 // PredationStrikeMessage (OpCode 105, C->S, AUTHORITY ONLY): the authority client ran the strike

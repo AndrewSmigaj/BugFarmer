@@ -596,6 +596,103 @@ func TestCatchNetTierMatrix(t *testing.T) {
 	}
 }
 
+// ===== Feeding-pause (#20): the predator PARKS on its kill =====
+
+// A kill with feed_pause_ticks > 0 sets FeedUntilTick AND forces a prompt re-think (NextThinkTick=now,
+// so the park begins AT the kill), and the next predationThink emits a ZERO-LENGTH hold-leg at the
+// current centre (the swarm freezes in sync — clients mirror the march) and holds NextThinkTick ahead.
+func TestFeedPauseParksOnKill(t *testing.T) {
+	state := predationTestState()
+	m := &Match{}
+	wasp := newWaspSwarm("a_wasp", 6, 10, 10)
+	fly := newTestSwarm("b_fly", 10, 11, 10) // already in strike range
+	state.Swarms[wasp.ID] = wasp
+	state.Swarms[fly.ID] = fly
+	state.SwarmsBySpecies["fly_common"] = []string{fly.ID}
+	wasp.TargetPreyID = fly.ID
+	wasp.HuntStartTick = state.TickCount
+	state.Species["wasp_common"].Predation.FeedPauseTicks = 50 // the inline test config has none
+
+	startTick := state.TickCount
+	m.handlePredationStrike(nopRuntimeLogger(), nil, state, testAuthority, PredationStrikeMessage{
+		PredatorSwarmID: wasp.ID, PreySwarmID: fly.ID, BugIDs: []int{0},
+	})
+
+	if wasp.FeedUntilTick != startTick+50 {
+		t.Fatalf("FeedUntilTick=%d, want %d (tick + feed_pause_ticks)", wasp.FeedUntilTick, startTick+50)
+	}
+	if wasp.NextThinkTick != startTick {
+		t.Fatalf("NextThinkTick=%d, want %d (forced prompt re-think)", wasp.NextThinkTick, startTick)
+	}
+
+	cx, cy := wasp.WorldX(32), wasp.WorldY(32)
+	before := len(eventsOfType(state, InfluenceSwarmSetTarget))
+	if !m.predationThink(state, wasp, state.Species["wasp_common"], 32, 0.1, nopRuntimeLogger()) {
+		t.Fatal("the feed gate must OWN the think while parked")
+	}
+	legs := eventsOfType(state, InfluenceSwarmSetTarget)
+	if len(legs) != before+1 {
+		t.Fatalf("feed-think emitted %d legs, want exactly 1", len(legs)-before)
+	}
+	hold := legs[len(legs)-1]
+	if hold.OriginX != hold.TargetX || hold.OriginY != hold.TargetY {
+		t.Fatalf("hold-leg must be zero-length: origin(%d,%d) target(%d,%d)", hold.OriginX, hold.OriginY, hold.TargetX, hold.TargetY)
+	}
+	if hold.TargetX != toFixed(cx) || hold.TargetY != toFixed(cy) {
+		t.Fatalf("hold-leg target (%d,%d), want the current centre (%d,%d)", hold.TargetX, hold.TargetY, toFixed(cx), toFixed(cy))
+	}
+	if wasp.NextThinkTick <= state.TickCount {
+		t.Fatalf("feed-think must hold NextThinkTick into the future: got %d at tick %d", wasp.NextThinkTick, state.TickCount)
+	}
+}
+
+// A strike reported DURING the feeding dwell is rejected by the mid-feed guard — separate from the
+// cooldown. feed_pause(150) > cooldown(100) isolates it: at tick+120 the cooldown has passed but the
+// feed is active → the strike must be dropped; after the feed ends it lands.
+func TestStrikeRejectedMidFeed(t *testing.T) {
+	state := predationTestState()
+	m := &Match{}
+	wasp := newWaspSwarm("a_wasp", 6, 10, 10)
+	fly := newTestSwarm("b_fly", 10, 11, 10)
+	state.Swarms[wasp.ID] = wasp
+	state.Swarms[fly.ID] = fly
+	state.SwarmsBySpecies["fly_common"] = []string{fly.ID}
+	wasp.TargetPreyID = fly.ID
+	wasp.HuntStartTick = state.TickCount
+	state.Species["wasp_common"].Predation.FeedPauseTicks = 150 // > cooldown(100) to isolate the feed guard
+
+	strike := func(id int) {
+		m.handlePredationStrike(nopRuntimeLogger(), nil, state, testAuthority, PredationStrikeMessage{
+			PredatorSwarmID: wasp.ID, PreySwarmID: fly.ID, BugIDs: []int{id},
+		})
+	}
+
+	strike(0)
+	if got := len(eventsOfType(state, InfluenceBugRemoved)); got != 1 {
+		t.Fatalf("first strike kills=%d, want 1", got)
+	}
+
+	// Past the cooldown (100) but inside the feed (150): the FEED guard blocks it.
+	state.TickCount += 120
+	strike(1)
+	if got := len(eventsOfType(state, InfluenceBugRemoved)); got != 1 {
+		t.Fatalf("a strike DURING the feed was applied (kills=%d, want 1) — the mid-feed guard failed", got)
+	}
+	if !fly.IsBugAlive(1) {
+		t.Fatal("id 1 died during the feed — the mid-feed guard failed")
+	}
+
+	// After the feed ends: the strike lands.
+	state.TickCount += 40 // now tick+160 > feed end (tick+150)
+	strike(1)
+	if fly.IsBugAlive(1) {
+		t.Fatal("a strike AFTER the feed must land")
+	}
+	if got := len(eventsOfType(state, InfluenceBugRemoved)); got != 2 {
+		t.Fatalf("final kills=%d, want 2 (the mid-feed one rejected, the post-feed one applied)", got)
+	}
+}
+
 // kill_drops parse: count ranges + chance roll bounds + multiple entries.
 func TestKillDropCountRange(t *testing.T) {
 	state := killDropTestState()
