@@ -22,6 +22,16 @@ the 22 issues; one findings doc each). Backlogged-by-the-user items (not investi
 - **Night critters + fireflies.** Add ≥1 nocturnal species and **fireflies** (glow at night). New species
   data + sprites + a day/night spawn gate.
 - **Known quick-fixes (no investigation — obvious):** rain doesn't reach the screen bottom (client visual).
+- **DONE 2026-07-01 — three quick playtest fixes: #14 containers · #15 water empty bed · #10 moved compost.**
+  **#14** (data): `basket`/`chest`/`trunk`/`yarn_basket` had a `world.container` block but no
+  `interaction_type` → the client open gate (`CraftingPanel` needs `storage`) never fired. Added
+  `interaction_type:"storage"` (exhaustive audit: exactly these 4 of 30) + published. **#15** (server): bare
+  tilled `garden_plot` now waters → `garden_plot_wet` + consumes a use (was "No crop here"); ground-tile
+  CellEdit only, no sim surface. **#10** (server, sim-feeding station): moved/runtime-placed compost had no
+  `StationState` (chunk-load scan only) → deposits rejected; new `resolveStation` lazily find-or-creates
+  (mirrors `resolveCraftStation`). Determinism-safe (empty station inert; food rides the frontier-gated
+  `processStations`→ledger). Gated: `go test ./world/` green incl. 2 new falsifiable tests + FRESH 2-client
+  sync IDENTICAL. In-game visuals = the Editor pass.
 - **DONE 2026-07-01 — shared front-most-interactable click resolver (#18 + the overlap-steal defect class).**
   Occupant `BoxCollider2D`s are sized to the full sprite, so tall/large sprites overlap neighbouring cells; every
   click used a single `Physics2D.OverlapPoint` (one ARBITRARY overlapping collider) → an occupant that merely
