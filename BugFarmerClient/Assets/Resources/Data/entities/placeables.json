@@ -6232,6 +6232,7 @@
         1
       ],
       "pivot": "bc",
+      "interaction_type": "storage",
       "breakable": {
         "hp": 1,
         "required_tool_type": "axe",
@@ -6317,6 +6318,7 @@
         1
       ],
       "pivot": "bc",
+      "interaction_type": "storage",
       "container": {
         "slots": 12
       },
@@ -6346,6 +6348,7 @@
         1
       ],
       "pivot": "bc",
+      "interaction_type": "storage",
       "container": {
         "slots": 36
       },
@@ -6375,6 +6378,7 @@
         1
       ],
       "pivot": "bc",
+      "interaction_type": "storage",
       "container": {
         "slots": 4
       },
