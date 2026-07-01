@@ -22,6 +22,16 @@ the 22 issues; one findings doc each). Backlogged-by-the-user items (not investi
 - **Night critters + fireflies.** Add ≥1 nocturnal species and **fireflies** (glow at night). New species
   data + sprites + a day/night spawn gate.
 - **Known quick-fixes (no investigation — obvious):** rain doesn't reach the screen bottom (client visual).
+- **DONE 2026-07-01 — shared front-most-interactable click resolver (#18 + the overlap-steal defect class).**
+  Occupant `BoxCollider2D`s are sized to the full sprite, so tall/large sprites overlap neighbouring cells; every
+  click used a single `Physics2D.OverlapPoint` (one ARBITRARY overlapping collider) → an occupant that merely
+  overlaps could steal the click. New `InteractionResolver.TopmostInteractable` (`OverlapPointAll` → front-most
+  INTERACTABLE occupant, front-most = lowest `AnchorCell.y` = highest render sortingOrder) routes all 8 click
+  handlers (`Breaking/Sleep/TreeHarvest/Station/Shop/Crafting/Mannequin/Sign`). Client-only target selection, no
+  sim/determinism surface; Unity batchmode build compile-clean. **Fixes #18** (break behind a tree) + the
+  flakiness class; **de-risks but does NOT fix** #5 (live-confirmed *sell-flow*, not the open), #14 (data tag),
+  #10 (station-state keying), #4 (render never built), bed-2 (respawn/optimistic-message) — each keeps its own
+  fix. In-Editor click-feel pass pending.
 - **DONE 2026-06-29 — village doors (#1/#9) + modern-store windows (#2) + village neighbor (#3-edge).**
   `door_square` (the only placed door — all village doors) is now 1×2 tall + `blocks_bugs:true`, so flies stop
   at doors; players still pass (`blocks_players` left unset, by design — doors don't open, they just block

@@ -16,6 +16,14 @@ break, container, compost, mannequin, bed) resolves its target via a single `Phy
 topmost-wins rule** → overlapping occupants steal the click. **One shared fix** (`OverlapPointAll` + pick the
 topmost interactable) directly de-risks **#5, #18, #8, #14, #4, #12**. Do this first.
 
+> **✅ BUILT 2026-07-01** — `InteractionResolver.TopmostInteractable` (front-most INTERACTABLE occupant via
+> `OverlapPointAll`; front-most = lowest `AnchorCell.y` = highest render sortingOrder), routed through all 8
+> handlers; **Unity batchmode build compiles clean**. **Corrected scope after re-reading each doc:** it fixes
+> **#18** + the overlap-stolen-click *flakiness class*, and **de-risks** the rest — but it does NOT by itself fix
+> **#5** (your live-confirm: the shop opens; it's the sell-flow), **#14** (data tag), **#10** (station-state
+> keying), **#4** (render never built), **bed-2** (respawn/optimistic-message). Each keeps its own fix. Pending:
+> a short in-Editor click-feel pass.
+
 **Clean, high-certainty fixes (mostly data / small code):**
 - #14 containers — basket/chest/trunk/yarn_basket missing `interaction_type:"storage"` (data).
 - #2 placement preview — ghost lacks the render's pivot-Y baseline; one shared position helper.
@@ -51,7 +59,7 @@ topmost interactable) directly de-risks **#5, #18, #8, #14, #4, #12**. Do this f
 | 2 | Placing a block (not everything) — preview is LOWER than where it actually lands | INVESTIGATE | `block-place-preview-offset` | ✅ READY — ghost uses raw `CellToWorld` (`PlacementController:174`); render adds the bottom-pivot Y baseline (`RenderOccupant:868`) → tall bottom-pivot blocks render higher than the ghost. Fix = one shared position helper. |
 | 1 | Door is not 2 blocks high | INVESTIGATE | `door-not-2-high` | ✅ READY (data) — doors inconsistent: door_square=1.5 tall, door_wood=2-wide (footprint transposed), door_iron=correct 1×2. Standardize to 16×32 / [1,2]. (Also: doors have `blocks_players:null` → tie to #9.) |
 | 13 | Apples shouldn't hover — should be placeable on the ground & hit to pick up; investigate how | INVESTIGATE+DESIGN | `apples-hover-vs-ground` | ✅ READY (design) — 'hover' = `GroundItemVisual` bob; fruit already falls to ground. Recommend: fallen fruit → small **breakable ground occupant** (flat, hit-to-collect). Pick approach A vs B. |
-| 18 | Someone couldn't break something behind a tree — did the tree intercept the click? (user unsure) | INVESTIGATE | `click-intercept-behind-tree` | ✅ READY — confirmed: `BreakingController:68` single `OverlapPoint`; a tree's tall sprite-bounds collider overlaps cells in front → steals the click. Same fix as #5 (topmost-interactable). |
+| 18 | Someone couldn't break something behind a tree — did the tree intercept the click? (user unsure) | INVESTIGATE | `click-intercept-behind-tree` | ✅ FIXED (front-most-interactable resolver, 2026-07-01; compile-gated, in-Editor feel pending) — was: `BreakingController:68` single `OverlapPoint`; a tree's tall sprite-bounds collider overlaps cells in front → steals the click. Same fix as #5 (topmost-interactable). |
 | 12 | Picking up bugs/other things inconsistent — some work, some don't | INVESTIGATE | `pickup-inconsistent` | ✅ READY — 3 mechanics: walk-over auto (most), **E-required** for the 4 fruit + bug food, net/hand catch for bugs (#11). Mostly discoverability; no hard bug. Ties to #13/#11. |
 | 15 | Can't water ground without a seed/plant in it (watering garden beds) | INVESTIGATE | `cannot-water-empty-bed` | ✅ READY — `handleWatering:88` rejects bare tilled soil ('No crop here'); only crops/trees waterable. Fix = water `garden_plot`→`garden_plot_wet` (wet tile exists). |
 | 3 | Zone transition broke — intermittent; leads to a black area, not the north mining camp; used to work | INVESTIGATE | `zone-transition-black-area` | ✅ READY — REGRESSION: commit ce4102a dropped village_21_B's `neighbors` (south→underground) on the ecology rebuild; builder never emits neighbors. Restore it + teach the builder. (village_21/underground links survive → 'sometimes'.) |
