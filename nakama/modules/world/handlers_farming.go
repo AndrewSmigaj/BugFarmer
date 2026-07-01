@@ -248,6 +248,20 @@ func (m *Match) handleWatering(
 				userID, gx, gy, tree.WaterLevel, treeTankCap)
 			return
 		}
+		// Bare tilled soil (no crop/tree): watering wets the bed — visual feedback + accepts the
+		// water (mirrors the crop-watering wet-soil effect below). Already-wet soil accepts silently
+		// without wasting a use. Determinism: a ground-tile CellEdit only, never a bug-sim input.
+		if tile == "garden_plot" {
+			chunk.Ground[ly][lx] = "garden_plot_wet"
+			m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, "garden_plot_wet", nil, false)
+			slot.Metadata["uses"]--
+			m.sendSlotUpdate(dispatcher, state, userID, slotIndex, slot)
+			logger.Debug("Player %s watered bare bed at %d,%d", userID, gx, gy)
+			return
+		}
+		if tile == "garden_plot_wet" {
+			return
+		}
 		m.sendWorldError(dispatcher, state, userID, "No crop here")
 		return
 	}
@@ -938,6 +952,41 @@ func (m *Match) initStationsInChunk(
 	}
 }
 
+// resolveStation returns the station at (gx,gy), lazily creating its state the first time — mirrors
+// resolveCraftStation (craft_stations.go) + the initStationsInChunk builder. This is what lets a
+// MOVED/runtime-placed station accept deposits: initStationsInChunk only scans at chunk-load, so a bin
+// placed into an already-loaded chunk had no StationState and handleStationDeposit rejected it. Returns
+// nil if no station occupant is anchored at (gx,gy). Deterministic + server-authoritative (no RNG; an
+// empty station is inert until processStations sees input).
+func (m *Match) resolveStation(state *WorldState, gx, gy int) *entities.StationState {
+	key := entities.StationKey(gx, gy)
+	if s := state.Stations[key]; s != nil {
+		return s
+	}
+	cx, cy, lx, ly := GlobalToChunk(gx, gy)
+	chunk := state.Chunks[ChunkKey(cx, cy)]
+	if chunk == nil {
+		return nil
+	}
+	cell, _ := chunk.GetOccupantCell(lx, ly)
+	if cell.IsEmpty || cell.Occupant == nil || !cell.Occupant.Anchor {
+		return nil
+	}
+	def := state.Entities[cell.Occupant.ID]
+	if def == nil || def.World == nil || def.World.Station == nil {
+		return nil
+	}
+	s := &entities.StationState{
+		Key:      key,
+		EntityID: cell.Occupant.ID,
+		GridX:    gx,
+		GridY:    gy,
+		Fill:     0,
+	}
+	state.Stations[key] = s
+	return s
+}
+
 // handleStationDeposit processes a player depositing one inventory item into a station
 // (OpCode 85). Validates the item is accepted + capacity remains, consumes it from the
 // player's inventory, raises the fill meter, and publishes BOTH a display update (OpCode 86)
@@ -956,7 +1005,7 @@ func (m *Match) handleStationDeposit(
 	}
 
 	key := entities.StationKey(msg.GX, msg.GY)
-	st := state.Stations[key]
+	st := m.resolveStation(state, msg.GX, msg.GY) // lazily create for moved/runtime-placed bins (#10)
 	if st == nil {
 		m.sendWorldError(dispatcher, state, userID, "No station there")
 		return
