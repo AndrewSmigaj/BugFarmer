@@ -64,26 +64,14 @@ namespace BugFarmer.Player
                 }
             }
 
-            // Find occupant collider at mouse position
-            Collider2D hitCollider = Physics2D.OverlapPoint(mouseWorld);
-            if (hitCollider == null)
-            {
-                // Debug: show what's under cursor when clicking on empty space
-                if (Input.GetMouseButtonDown(0))
-                {
-                    Debug.Log($"[BreakingController] No collider at {mouseWorld}");
-                }
-                StopBreaking();
-                return;
-            }
-
-            // Get click target component for occupant metadata
-            var clickTarget = hitCollider.GetComponent<OccupantClickTarget>();
+            // Front-most breakable occupant under the cursor (shared resolver; a bare OverlapPoint
+            // returns an arbitrary overlapping collider — a tree overlapping the target could steal it).
+            var clickTarget = InteractionResolver.TopmostInteractable(mouseWorld);
             if (clickTarget == null || !clickTarget.IsBreakable)
             {
                 if (Input.GetMouseButtonDown(0))
                 {
-                    Debug.Log($"[BreakingController] Hit {hitCollider.name} but no OccupantClickTarget or not breakable");
+                    Debug.Log($"[BreakingController] No breakable occupant at {mouseWorld}");
                 }
                 StopBreaking();
                 return;

@@ -126,8 +126,9 @@ namespace BugFarmer.UI
         /// </summary>
         public bool TryHandleRightClick(Vector3 mouseWorld)
         {
-            var hit = Physics2D.OverlapPoint(mouseWorld);
-            var target = hit != null ? hit.GetComponent<OccupantClickTarget>() : null;
+            // Front-most interactable occupant (shared resolver; not a bare OverlapPoint that an
+            // overlapping occupant could steal).
+            var target = InteractionResolver.TopmostInteractable(mouseWorld);
             if (target == null)
             {
                 if (_isOpen) { SetOpen(false); return true; }
