@@ -60,6 +60,8 @@ namespace BugFarmer.UI
         private CanvasGroup _group;
         private RectTransform _dock, _content;
         private TMP_Text _titleText, _coinText, _statusText;
+        private Image _headImg;
+        private Button _backBtn, _closeBtn;
 
         // ------------------------------------------------------------------ lifecycle
         private void Awake()
@@ -71,20 +73,23 @@ namespace BugFarmer.UI
         private void Start()
         {
             UIFactory.Stretch((RectTransform)transform, 0);
+            // The dock stays SHORT (ConfigureDock): the UI canvas is 800×600-reference width-matched,
+            // so a 16:9 window is only ~450 canvas-units tall — a tall dock would cover the
+            // bottom-docked InventoryPanel the barter board trades out of.
             _dock = UIFactory.MakeDock(transform, "ShopDock", new Vector2(0.5f, 1f),
-                                       new Vector2(0.5f, 1f), new Vector2(560, 440), new Vector2(0, -8));
+                                       new Vector2(0.5f, 1f), new Vector2(560, 200), new Vector2(0, -8));
             _group = _dock.gameObject.AddComponent<CanvasGroup>();
 
-            // accent header strip + title
-            var head = UIFactory.MakeImage(_dock, "Header", "panel_wood", true);
-            head.color = Accent;
-            Place(head.rectTransform, 8, -8, 544, 26);
+            // accent header strip + title + coins + Back/Close (sized per-mode in ConfigureDock)
+            _headImg = UIFactory.MakeImage(_dock, "Header", "panel_wood", true);
+            _headImg.color = Accent;
             _titleText = UIFactory.MakeText(_dock, "Title", UIFactory.HeaderSize + 1f,
                                             new Color32(238, 228, 204, 255), TextAlignmentOptions.Left);
-            Place(_titleText.rectTransform, 18, -12, 380, 18);
             _coinText = UIFactory.MakeText(_dock, "Coins", UIFactory.HeaderSize,
                                            UIFactory.HeaderColor, TextAlignmentOptions.Right);
-            Place(_coinText.rectTransform, 420, -12, 122, 18);
+            _backBtn = MakeButton(_dock, "Back", "← Back", 0, 0, 62, 20,
+                                  () => { _mode = Mode.Dialogue; BuildContent(); });
+            _closeBtn = MakeButton(_dock, "Close", "X", 0, 0, 30, 20, () => SetOpen(false));
 
             _content = UIFactory.MakeRect(_dock, "Content");
             UIFactory.Stretch(_content, 12);
@@ -411,8 +416,26 @@ namespace BugFarmer.UI
         }
 
         // ------------------------------------------------------------------ build
+
+        // Per-mode dock geometry. Trade is WIDE + SHORT (780×226): on a 16:9 window the width-matched
+        // 800-reference canvas is ~450 units tall and the InventoryPanel's item rows top out at
+        // 164-208 from the bottom — a 226-tall top dock leaves the whole bag visible below it.
+        private void ConfigureDock()
+        {
+            float w = _mode == Mode.Trade ? 780f : 560f;
+            float h = _mode == Mode.Trade ? 226f : 200f;
+            _dock.sizeDelta = new Vector2(w, h);
+            Place(_headImg.rectTransform, 8, -8, w - 16, 26);
+            Place(_titleText.rectTransform, 18, -12, w - 326, 18); // ends where the coins begin
+            Place(_coinText.rectTransform, w - 300, -12, 140, 18);
+            Place((RectTransform)_backBtn.transform, w - 150, -11, 62, 20);
+            Place((RectTransform)_closeBtn.transform, w - 82, -11, 30, 20);
+            _backBtn.gameObject.SetActive(_mode == Mode.Trade);
+        }
+
         private void BuildContent()
         {
+            ConfigureDock();
             for (int i = _content.childCount - 1; i >= 0; i--)
                 DestroyImmediate(_content.GetChild(i).gameObject);
             _statusText = null;
@@ -443,51 +466,51 @@ namespace BugFarmer.UI
             MakeButton(_content, "Goodbye", "Goodbye", 276, -110, 150, 32, () => SetOpen(false));
         }
 
+        // Compact three-column trade board (fits the 226-tall dock): Buy+Learn rows on the left,
+        // a slim Books column in the middle, the sell basket on the right. Back/Close live in the
+        // header strip (ConfigureDock), not a footer — vertical space is the scarce axis.
         private void BuildTrade()
         {
             var known = InventoryManager.Instance != null ? InventoryManager.Instance.KnownRecipes : null;
-            float y = 0;
+            float w = _dock.sizeDelta.x - 24f; // content width (12 inset each side)
 
-            // BUY
-            Header("Buy", 0, y); y -= 18;
-            if (_sells != null) RowOfOffers(_sells, y, null);
-            y -= 70;
+            // BUY (left column)
+            Header("Buy", 0, 0);
+            if (_sells != null) RowOfOffers(_sells, -18, null);
 
             // LEARN (recipes)
             if (_recipes != null && _recipes.Length > 0)
             {
-                Header("Learn", 0, y); y -= 18;
-                RowOfOffers(_recipes, y, known);
-                y -= 70;
+                Header("Learn", 0, -84);
+                RowOfOffers(_recipes, -102, known);
             }
 
-            // RECIPE BOOKS (vertical list)
+            // RECIPE BOOKS (slim middle column, up to 3)
             if (_books != null && _books.Length > 0)
             {
-                Header("Recipe books", 0, y); y -= 20;
+                Header("Books", 370, 0);
+                float yB = -18;
+                int shown = 0;
                 foreach (var bk in _books)
                 {
-                    if (bk == null || string.IsNullOrEmpty(bk.Id)) continue;
+                    if (bk == null || string.IsNullOrEmpty(bk.Id) || shown >= 3) continue;
                     var s = UIFactory.MakeSlot(_content, "slot_frame");
-                    Place((RectTransform)s.transform, 0, y, UIFactory.Slot, UIFactory.Slot);
+                    Place((RectTransform)s.transform, 370, yB, UIFactory.Slot, UIFactory.Slot);
                     s.SetSlot(new InventorySlot { item_id = "bookshelf", count = 1 });
                     var captured = bk.Id;
                     s.OnSlotClicked += (slot, ev) => Send("buy", captured, "book", 0);
-                    var t = UIFactory.MakeText(_content, "BkName", UIFactory.HeaderSize, UIFactory.TextColor, TextAlignmentOptions.TopLeft);
-                    Place(t.rectTransform, 50, y - 2, 320, 16); t.text = Prettify(bk.Id);
-                    var p = UIFactory.MakeText(_content, "BkPrice", UIFactory.CountSize, UIFactory.HeaderColor, TextAlignmentOptions.TopLeft);
-                    Place(p.rectTransform, 50, y - 22, 320, 14); p.text = $"{bk.Price}c  —  teaches the whole set";
-                    y -= 50;
+                    var t = UIFactory.MakeText(_content, "BkName", UIFactory.CountSize, UIFactory.TextColor, TextAlignmentOptions.TopLeft);
+                    t.enableWordWrapping = true;
+                    Place(t.rectTransform, 414, yB - 2, 116, 44);
+                    t.text = $"{Prettify(bk.Id)}\n{bk.Price}c — whole set";
+                    yB -= 48;
+                    shown++;
                 }
             }
 
             // SELL — the barter basket (right column). Your REAL inventory is the item source:
             // right-click / double-click a bag or hotbar stack to stage it here.
-            BuildBasket(360);
-
-            // footer
-            MakeButton(_content, "Back", "← Back", 360, -300, 80, 24, () => { _mode = Mode.Dialogue; BuildContent(); });
-            MakeButton(_content, "Close", "Close", 446, -300, 80, 24, () => SetOpen(false));
+            BuildBasket(w - 220f);
         }
 
         // A horizontal row of up to 8 offer slots (price label under each; greyed if known).
@@ -519,23 +542,24 @@ namespace BugFarmer.UI
         {
             Header("Sell", bx, 0);
 
-            // What this vendor buys (the honest filter — mirrors the server's shopBuysItem).
+            // What this vendor buys, inline after the header (the honest filter — mirrors the
+            // server's shopBuysItem).
             var buysLbl = UIFactory.MakeText(_content, "Buys", UIFactory.CountSize,
                                              Dim, TextAlignmentOptions.TopLeft);
-            buysLbl.enableWordWrapping = true;
-            Place(buysLbl.rectTransform, bx, -16, 176, 28);
+            buysLbl.enableWordWrapping = false;
+            Place(buysLbl.rectTransform, bx + 40, -2, 180, 14);
             if (_kind == "bugs")
-                buysLbl.text = "Buys: live bugs, carcasses";
+                buysLbl.text = "buys: live bugs, carcasses";
             else if (_buys != null && _buys.Length > 0)
-                buysLbl.text = "Buys: " + string.Join(", ", _buys);
+                buysLbl.text = "buys: " + string.Join(", ", _buys);
             else
-                buysLbl.text = "Buys: nothing";
+                buysLbl.text = "buys: nothing";
 
             // Basket grid (4 × 2): staged stacks render as slots; empty cells accept a held cursor.
             long total = 0;
             for (int i = 0; i < BasketCells; i++)
             {
-                float x = bx + (i % 4) * 44, y = -48 - (i / 4) * 44;
+                float x = bx + (i % 4) * 44, y = -18 - (i / 4) * 44;
                 var cell = UIFactory.MakeSlot(_content, "slot_frame");
                 Place((RectTransform)cell.transform, x, y, UIFactory.Slot, UIFactory.Slot);
                 if (i < _staged.Count)
@@ -549,13 +573,13 @@ namespace BugFarmer.UI
 
             // "Sell for Xc" — greyed when the basket is empty or a sale is in flight.
             var sellBtn = MakeButton(_content, "SellAll", total > 0 ? $"Sell for {total}c" : "Sell",
-                                     bx, -142, 176, 26, DoSellBatch, primary: total > 0 && !_sellPending);
+                                     bx, -108, 176, 24, DoSellBatch, primary: total > 0 && !_sellPending);
             sellBtn.interactable = _staged.Count > 0 && !_sellPending;
 
             _statusText = UIFactory.MakeText(_content, "SellStatus", UIFactory.CountSize,
                                              UIFactory.TextColor, TextAlignmentOptions.TopLeft);
             _statusText.enableWordWrapping = true;
-            Place(_statusText.rectTransform, bx, -174, 176, 60);
+            Place(_statusText.rectTransform, bx, -136, 216, 40);
             _statusText.text = _status;
         }
 
