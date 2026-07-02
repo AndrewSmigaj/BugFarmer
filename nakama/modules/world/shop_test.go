@@ -138,6 +138,96 @@ func TestShopSellDeadBugToDealer(t *testing.T) {
 	}
 }
 
+func TestShopSellBatchMixed(t *testing.T) {
+	state, p := shopTestState()
+	p.ItemSlots[3] = InventorySlot{ItemID: "tomato", Count: 4}
+	p.ItemSlots[5] = InventorySlot{ItemID: "wood", Count: 2}
+	p.ItemSlots[7] = InventorySlot{ItemID: "seed_tomato", Count: 1} // shop doesn't buy seeds
+	lines := []ShopSellLine{
+		{SlotType: "item", Slot: 3, ID: "tomato", Qty: 3},      // valid → 15
+		{SlotType: "item", Slot: 5, ID: "wood", Qty: 2},        // valid → 4
+		{SlotType: "item", Slot: 7, ID: "seed_tomato", Qty: 1}, // refused (not bought)
+		{SlotType: "item", Slot: 9, ID: "tomato", Qty: 1},      // stale: slot 9 is empty
+	}
+	if !(&Match{}).shopSellBatch(nopDispatcher{}, state, "p1", p, itemShop(), lines) {
+		t.Fatal("batch with valid lines should report a change")
+	}
+	if p.Coins != 19 { // 3×5 + 2×2
+		t.Fatalf("coins: want 19, got %d", p.Coins)
+	}
+	if p.ItemSlots[3].Count != 1 {
+		t.Fatalf("expected 1 tomato left, got %d", p.ItemSlots[3].Count)
+	}
+	if p.ItemSlots[5].ItemID != "" {
+		t.Fatalf("wood slot should be empty, holds %q", p.ItemSlots[5].ItemID)
+	}
+	if p.ItemSlots[7].Count != 1 || p.ItemSlots[7].ItemID != "seed_tomato" {
+		t.Fatal("refused line must leave the slot untouched")
+	}
+}
+
+func TestShopSellBatchDuplicateSlotNoDoublePayout(t *testing.T) {
+	state, p := shopTestState()
+	p.ItemSlots[3] = InventorySlot{ItemID: "tomato", Count: 4}
+	lines := []ShopSellLine{
+		{SlotType: "item", Slot: 3, ID: "tomato", Qty: 3}, // sells → 15, leaves 1
+		{SlotType: "item", Slot: 3, ID: "tomato", Qty: 3}, // re-validates live count (1 < 3) → skipped
+	}
+	if !(&Match{}).shopSellBatch(nopDispatcher{}, state, "p1", p, itemShop(), lines) {
+		t.Fatal("first line should sell")
+	}
+	if p.Coins != 15 {
+		t.Fatalf("duplicate-slot line must not double-pay: want 15, got %d", p.Coins)
+	}
+	if p.ItemSlots[3].Count != 1 {
+		t.Fatalf("expected 1 tomato left, got %d", p.ItemSlots[3].Count)
+	}
+}
+
+func TestShopSellBatchNegativeQtyRejected(t *testing.T) {
+	state, p := shopTestState()
+	p.ItemSlots[0] = InventorySlot{ItemID: "wood", Count: 5}
+	lines := []ShopSellLine{
+		{SlotType: "item", Slot: 0, ID: "wood", Qty: -5}, // the duplication exploit: must NOT grow the stack
+	}
+	if (&Match{}).shopSellBatch(nopDispatcher{}, state, "p1", p, itemShop(), lines) {
+		t.Fatal("a batch of only invalid lines must report no change")
+	}
+	if p.ItemSlots[0].Count != 5 {
+		t.Fatalf("negative qty must not change the stack: want 5, got %d", p.ItemSlots[0].Count)
+	}
+	if p.Coins != 0 {
+		t.Fatalf("no payout for a rejected line: got %d", p.Coins)
+	}
+}
+
+func TestShopSellBatchBugDealer(t *testing.T) {
+	state, p := shopTestState()
+	p.BugSlots[2] = InventorySlot{ItemID: "fly_common", Count: 3}
+	p.ItemSlots[0] = InventorySlot{ItemID: "dead_fly", Count: 1}
+	p.ItemSlots[1] = InventorySlot{ItemID: "wood", Count: 1} // dealer only buys dead_*
+	lines := []ShopSellLine{
+		{SlotType: "bug", Slot: 2, ID: "fly_common", Qty: 2}, // live bugs → 14
+		{SlotType: "item", Slot: 0, ID: "dead_fly", Qty: 1},  // carcass → 1
+		{SlotType: "item", Slot: 1, ID: "wood", Qty: 1},      // refused
+	}
+	if !(&Match{}).shopSellBatch(nopDispatcher{}, state, "p1", p, bugShop(), lines) {
+		t.Fatal("bug-dealer batch should sell the bug + carcass lines")
+	}
+	if p.Coins != 15 { // 2×7 + 1×1
+		t.Fatalf("coins: want 15, got %d", p.Coins)
+	}
+	if p.BugSlots[2].Count != 1 {
+		t.Fatalf("expected 1 fly left, got %d", p.BugSlots[2].Count)
+	}
+	if p.ItemSlots[0].ItemID != "" {
+		t.Fatal("dead_fly should be sold")
+	}
+	if p.ItemSlots[1].Count != 1 {
+		t.Fatal("refused wood line must leave the slot untouched")
+	}
+}
+
 func TestShopArbitrageInvariant(t *testing.T) {
 	state, _ := shopTestState()
 	// Clean: dealer sells fly at 20, buys back at 7 → fine.

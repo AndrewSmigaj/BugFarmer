@@ -276,17 +276,29 @@ namespace BugFarmer.Networking
     }
 
     /// <summary>Buy/sell at an NPC vendor (OpCode 2 / Action, C→S). The server is authoritative for
-    /// price + validation; the reply is the existing FullInventorySync echo (coins+items+bugs).</summary>
+    /// price + validation; the reply is the existing FullInventorySync echo (coins+items+bugs).
+    /// op "sell_batch" carries the barter basket in `lines` (each line validated server-side).</summary>
     [Serializable]
     public class ShopActionMessage
     {
         public int gx;
         public int gy;
-        public string op;          // "buy" | "sell"
+        public string op;          // "buy" | "sell" | "sell_batch"
         public string id;          // item or species id
         public int qty;            // default 1
         public int slot;           // sell: which player slot
         public string slot_type;   // "item" | "bug" (sell)
+        public ShopSellLine[] lines; // sell_batch: the staged basket
+    }
+
+    /// <summary>One staged basket line of a sell_batch (mirrors the Go ShopSellLine).</summary>
+    [Serializable]
+    public class ShopSellLine
+    {
+        public string slot_type;   // "item" | "bug"
+        public int slot;           // the player's slot index
+        public string id;          // what the slot is expected to hold
+        public int qty;            // how many to sell
     }
 
     /// <summary>Home-set confirmation (OpCode 101, S→C): shown as a brief toast.</summary>

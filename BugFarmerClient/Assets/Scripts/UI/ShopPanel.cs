@@ -11,13 +11,18 @@ using BugFarmer.World;
 namespace BugFarmer.UI
 {
     /// <summary>
-    /// NPC VENDORS as a Canvas panel (replaces the old OnGUI ShopController) — right-click a "shop"
-    /// occupant to TALK. A Baldur's-Gate-style DIALOGUE opens first (portrait + greeting + Trade/Goodbye);
-    /// [Trade] opens the buy/sell board: BUY items, LEARN recipes (already-known greyed), buy recipe
-    /// BOOKS (a collection teaches its whole set), and SELL your items (+ live bugs/carcasses at the bug
-    /// dealer). Server-authoritative: every action is an OpCode-Action ShopActionMessage; the panel reads
-    /// live from InventoryManager (coins + known_recipes), which the FullInventorySync echo refreshes via
-    /// OnInventoryChanged. Mirrors CraftingPanel (UIFactory Canvas UI), with a green vendor accent.
+    /// NPC VENDORS as a Canvas panel — right-click a "shop" occupant to TALK. A Baldur's-Gate-style
+    /// DIALOGUE opens first (portrait + greeting + Trade/Goodbye); [Trade] opens the buy/sell board:
+    /// BUY items, LEARN recipes (already-known greyed), buy recipe BOOKS, and the Apico-style BARTER
+    /// SELL — your REAL inventory opens with the shop and you stage stacks into a "to sell" BASKET
+    /// (right-click / double-click a slot = whole stack; drag = via the cursor; right-click a basket
+    /// cell with a held cursor = one at a time), then ONE "Sell for Xc" sells the whole batch
+    /// atomically (server `sell_batch`). Staging is a client-side OVERLAY (StagedQty) the inventory
+    /// render consults — inventory DATA is never mutated, so the FullInventorySync repaint (e.g. a
+    /// buy mid-shop) can't resurrect a staged slot. Server-authoritative: every action is an
+    /// OpCode-Action ShopActionMessage; the panel reads live from InventoryManager, which the
+    /// FullInventorySync echo refreshes via OnInventoryChanged. Mirrors CraftingPanel (UIFactory
+    /// Canvas UI), with a green vendor accent.
     /// </summary>
     public class ShopPanel : MonoBehaviour
     {
@@ -25,6 +30,8 @@ namespace BugFarmer.UI
         public static bool IsOpen => Instance != null && Instance._isOpen;
 
         private const float MaxInteractDistance = 2.5f;
+        private const int BasketCells = 8;         // staged-line cap (4 × 2 grid)
+        private const float SellReplyTimeout = 3f; // re-enable Sell if no echo (disconnect safety)
         private static readonly Color Accent = new Color32(120, 156, 86, 235);   // vendor green-gold
         private static readonly Color Dim = new Color32(150, 140, 126, 255);
 
@@ -36,11 +43,23 @@ namespace BugFarmer.UI
         private string _title = "Shop";
         private string _kind = "items";
         private string _greeting = "";
+        private string[] _buys;
         private EntityDatabase.ShopOffer[] _sells, _recipes, _books;
+
+        // The barter basket: one staged line per source slot. DATA only — the basket grid and the
+        // inventory-render overlay both draw from this list, so it survives every BuildContent
+        // rebuild and every server repaint.
+        private class StagedLine { public SlotType slotType; public int slotIndex; public string id; public int qty; }
+        private readonly List<StagedLine> _staged = new List<StagedLine>();
+        private bool _openedInventory; // we opened the InventoryPanel with the shop → close it with the shop
+        private string _status = "";   // status line under the Sell button (refusals / skips / sold-for)
+        private bool _sellPending;     // a sell_batch is in flight; Sell disabled until the echo
+        private long _coinsBeforeSell;
+        private float _sellSentAt;
 
         private CanvasGroup _group;
         private RectTransform _dock, _content;
-        private TMP_Text _titleText, _coinText;
+        private TMP_Text _titleText, _coinText, _statusText;
 
         // ------------------------------------------------------------------ lifecycle
         private void Awake()
@@ -73,6 +92,11 @@ namespace BugFarmer.UI
 
             if (InventoryManager.Instance != null)
                 InventoryManager.Instance.OnInventoryChanged += OnInventoryChanged;
+            // Server refusals ride OpCode 40 (ErrorMessage) — surface them in the shop status line
+            // (mirrors CraftingPanel's direct socket subscription for its opcode-99 echo).
+            var net = NetworkManager.Instance;
+            if (net?.Socket != null)
+                net.Socket.ReceivedMatchState += OnMatchState;
             SetOpen(false);
         }
 
@@ -81,11 +105,22 @@ namespace BugFarmer.UI
             if (Instance == this) Instance = null;
             if (InventoryManager.Instance != null)
                 InventoryManager.Instance.OnInventoryChanged -= OnInventoryChanged;
+            var net = NetworkManager.Instance;
+            if (net?.Socket != null)
+                net.Socket.ReceivedMatchState -= OnMatchState;
         }
 
         private void Update()
         {
-            if (_isOpen && Input.GetKeyDown(KeyCode.Escape)) SetOpen(false);
+            if (!_isOpen) return;
+            if (Input.GetKeyDown(KeyCode.Escape)) { SetOpen(false); return; }
+            // Disconnect safety: a sell_batch whose echo never arrives must not wedge the button.
+            if (_sellPending && Time.time - _sellSentAt > SellReplyTimeout)
+            {
+                _sellPending = false;
+                SetStatus("No reply — try again");
+                if (_mode == Mode.Trade) BuildContent();
+            }
         }
 
         // ------------------------------------------------------------------ open / route
@@ -118,6 +153,7 @@ namespace BugFarmer.UI
             _occId = target.OccupantId;
             _title = def.Name ?? target.OccupantId;
             _kind = def.World.ShopKind ?? "items";
+            _buys = def.World.ShopBuys;
             _sells = def.World.ShopSells;
             _recipes = def.World.ShopRecipes;
             _books = def.World.ShopBooks;
@@ -131,12 +167,26 @@ namespace BugFarmer.UI
         private void Open()
         {
             _titleText.text = _title;
+            ClearBasketAndRepaint(); // switching vendors while open must un-hide the old staging
+            _sellPending = false;
+            // A held drag cursor is returned to its slot so every mid-shop pickup starts clean —
+            // this keeps the cursor/staging bookkeeping's "server slot = local slot + cursor"
+            // invariant trivially true (see DragDropController.TryTakeCursorForStaging).
+            DragDropController.Instance?.CancelToSource();
+            // The barter board trades out of your REAL inventory — open it with the shop
+            // (mirrors the CraftingPanel storage precedent; close it with the shop if WE opened it).
+            if (InventoryPanel.Instance != null && !InventoryPanel.IsOpen)
+            {
+                _openedInventory = true;
+                InventoryPanel.Instance.SetOpen(true);
+            }
             BuildContent();
             SetOpen(true);
         }
 
         private void SetOpen(bool open)
         {
+            bool wasOpen = _isOpen;
             _isOpen = open;
             if (_group != null)
             {
@@ -145,6 +195,219 @@ namespace BugFarmer.UI
                 _group.interactable = open;
             }
             _dock.gameObject.SetActive(open);
+
+            if (!open && wasOpen)
+            {
+                // Cancel = clear the overlay; nothing to restore (data was never mutated).
+                ClearBasketAndRepaint();
+                _sellPending = false;
+                if (_openedInventory)
+                {
+                    _openedInventory = false;
+                    InventoryPanel.Instance?.SetOpen(false);
+                }
+            }
+        }
+
+        /// <summary>Empty the basket and repaint the slots that were rendering reduced — the
+        /// overlay is view-only, so "restore" is just a repaint.</summary>
+        private void ClearBasketAndRepaint()
+        {
+            var toRepaint = new List<StagedLine>(_staged);
+            _staged.Clear();
+            _status = "";
+            foreach (var ln in toRepaint)
+                InventoryManager.Instance?.NotifyLocalSlotMutation(ln.slotType, ln.slotIndex);
+        }
+
+        // ------------------------------------------------------------------ staging (the overlay)
+
+        /// <summary>How many of slot (type,index) are staged in the basket. The inventory render
+        /// (InventoryPanel + HotbarUI) subtracts this so staged stacks visibly leave the bag —
+        /// without ever touching InventoryManager data (repaint-immune by construction).</summary>
+        public static int StagedQty(SlotType type, int index)
+        {
+            var inst = Instance;
+            if (inst == null || !inst._isOpen) return 0;
+            foreach (var ln in inst._staged)
+                if (ln.slotType == type && ln.slotIndex == index) return ln.qty;
+            return 0;
+        }
+
+        /// <summary>The slot as the inventory should DRAW it: the real slot minus any staged share
+        /// (null = draw empty). Pure view transform — never mutates the slot.</summary>
+        public static InventorySlot ForRender(SlotType type, int index, InventorySlot slot)
+        {
+            int staged = StagedQty(type, index);
+            if (staged <= 0 || slot == null || slot.IsEmpty) return slot;
+            int remaining = slot.count - staged;
+            return remaining > 0 ? new InventorySlot(slot.item_id, remaining) : null;
+        }
+
+        /// <summary>Right-click stage verb (DragDropController routes here while a shop is open):
+        /// stage the slot's whole remaining stack. Returns FALSE when this vendor won't buy the
+        /// item so the click falls through to its normal verb (bug info card, quick-equip, …).</summary>
+        public static bool TryStageSlot(InventorySlotUI slot)
+        {
+            var inst = Instance;
+            var inv = InventoryManager.Instance;
+            if (inst == null || !inst._isOpen || slot == null || inv == null) return false;
+            if (slot.SlotType == SlotType.Equipment) return false;
+
+            var data = slot.SlotType == SlotType.Bug
+                ? (slot.SlotIndex < inv.BugSlots.Length ? inv.BugSlots[slot.SlotIndex] : null)
+                : (slot.SlotIndex < inv.ItemSlots.Length ? inv.ItemSlots[slot.SlotIndex] : null);
+            if (data == null || data.IsEmpty) return false;
+
+            if (!inst.CanStageId(slot.SlotType, data.item_id, out string reason))
+                return false; // not sellable here → the click keeps its normal meaning
+
+            int avail = data.count - StagedQty(slot.SlotType, slot.SlotIndex);
+            if (avail <= 0) return true; // already fully staged — consume the click
+            inst.Stage(slot.SlotType, slot.SlotIndex, data.item_id, avail);
+            return true;
+        }
+
+        /// <summary>Double-click stage verb: the 1st click of the double-click picked the stack
+        /// onto the drag cursor; this stages the CURSOR (whole stack). Returns false (fall through
+        /// to the normal put-back) when the vendor won't buy it.</summary>
+        public static bool TryStageCursor()
+        {
+            var inst = Instance;
+            var drag = DragDropController.Instance;
+            if (inst == null || !inst._isOpen || drag == null || !drag.HasCursorItem) return false;
+            if (!inst.CanStageId(drag.CursorSourceType, drag.CursorItemId, out string reason))
+            {
+                inst.SetStatus(reason);
+                return false;
+            }
+            if (drag.TryTakeCursorForStaging(drag.CursorCount, out var t, out var idx, out var id, out var taken) && taken > 0)
+                inst.Stage(t, idx, id, taken);
+            return true; // the cursor was consumed (or safely returned) — never fall through
+        }
+
+        /// <summary>Mirrors the server filter `shopBuysItem`: a bug dealer takes live bugs + any
+        /// dead_* carcass; an item vendor takes ids/tags in its buys list. Also requires a positive
+        /// payout (selling for 0 is a trap, and matches the old sell list's price filter).</summary>
+        private bool CanStageId(SlotType type, string id, out string reason)
+        {
+            if (_kind == "bugs")
+            {
+                if (type == SlotType.Bug)
+                {
+                    if ((EntityDatabase.GetSpecies(id)?.SellPrice ?? 0) > 0) { reason = null; return true; }
+                    reason = "They won't pay for that bug";
+                    return false;
+                }
+                if (id.StartsWith("dead_") && (EntityDatabase.Get(id)?.SellPrice ?? 0) > 0)
+                {
+                    reason = null;
+                    return true;
+                }
+                reason = "They only buy bugs and carcasses";
+                return false;
+            }
+
+            if (type == SlotType.Bug) { reason = "They don't buy live bugs"; return false; }
+            var def = EntityDatabase.Get(id);
+            if (def == null || def.SellPrice <= 0) { reason = "That's worthless to them"; return false; }
+            if (_buys != null)
+            {
+                foreach (var b in _buys)
+                {
+                    if (b == id) { reason = null; return true; }
+                    if (def.Tags != null)
+                        foreach (var t in def.Tags)
+                            if (t == b) { reason = null; return true; }
+                }
+            }
+            reason = "They don't buy that";
+            return false;
+        }
+
+        private int UnitPrice(SlotType type, string id) => type == SlotType.Bug
+            ? (EntityDatabase.GetSpecies(id)?.SellPrice ?? 0)
+            : (EntityDatabase.Get(id)?.SellPrice ?? 0);
+
+        private void Stage(SlotType type, int index, string id, int qty)
+        {
+            if (qty <= 0) return;
+            foreach (var ln in _staged)
+            {
+                if (ln.slotType == type && ln.slotIndex == index)
+                {
+                    ln.qty += qty;
+                    InventoryManager.Instance?.NotifyLocalSlotMutation(type, index);
+                    return;
+                }
+            }
+            if (_staged.Count >= BasketCells) { SetStatus("The basket is full"); return; }
+            _staged.Add(new StagedLine { slotType = type, slotIndex = index, id = id, qty = qty });
+            InventoryManager.Instance?.NotifyLocalSlotMutation(type, index);
+        }
+
+        private void Unstage(int lineIdx, int qty)
+        {
+            if (lineIdx < 0 || lineIdx >= _staged.Count) return;
+            var ln = _staged[lineIdx];
+            ln.qty -= qty;
+            if (ln.qty <= 0) _staged.RemoveAt(lineIdx);
+            InventoryManager.Instance?.NotifyLocalSlotMutation(ln.slotType, ln.slotIndex);
+        }
+
+        /// <summary>Drop lines whose slot no longer backs them (sold, consumed, or changed) and
+        /// clamp any line the server shrank — runs on every inventory echo.</summary>
+        private void RevalidateStaged()
+        {
+            var inv = InventoryManager.Instance;
+            if (inv == null) return;
+            for (int i = _staged.Count - 1; i >= 0; i--)
+            {
+                var ln = _staged[i];
+                var slot = ln.slotType == SlotType.Bug
+                    ? (ln.slotIndex < inv.BugSlots.Length ? inv.BugSlots[ln.slotIndex] : null)
+                    : (ln.slotIndex < inv.ItemSlots.Length ? inv.ItemSlots[ln.slotIndex] : null);
+                if (slot == null || slot.IsEmpty || slot.item_id != ln.id) { _staged.RemoveAt(i); continue; }
+                if (ln.qty > slot.count) ln.qty = slot.count;
+            }
+        }
+
+        private void DoSellBatch()
+        {
+            if (_staged.Count == 0 || _sellPending) return;
+            var lines = new ShopSellLine[_staged.Count];
+            for (int i = 0; i < _staged.Count; i++)
+            {
+                lines[i] = new ShopSellLine
+                {
+                    slot_type = _staged[i].slotType == SlotType.Bug ? "bug" : "item",
+                    slot = _staged[i].slotIndex,
+                    id = _staged[i].id,
+                    qty = _staged[i].qty,
+                };
+            }
+            _coinsBeforeSell = InventoryManager.Instance?.Coins ?? 0;
+            _sellPending = true;
+            _sellSentAt = Time.time;
+            _status = "Selling…";
+
+            var world = WorldManager.Instance;
+            var socket = NetworkManager.Instance?.Socket;
+            if (world?.CurrentMatch == null || socket == null || !socket.IsConnected)
+            {
+                _sellPending = false;
+                SetStatus("Not connected");
+                return;
+            }
+            var msg = new ShopActionMessage { gx = _cell.x, gy = _cell.y, op = "sell_batch", lines = lines };
+            _ = socket.SendMatchStateAsync(world.CurrentMatch.Id, OpCodes.Action, JsonUtility.ToJson(msg));
+            BuildContent(); // re-render with Sell disabled
+        }
+
+        private void SetStatus(string text)
+        {
+            _status = text ?? "";
+            if (_statusText != null) _statusText.text = _status;
         }
 
         // ------------------------------------------------------------------ build
@@ -152,6 +415,7 @@ namespace BugFarmer.UI
         {
             for (int i = _content.childCount - 1; i >= 0; i--)
                 DestroyImmediate(_content.GetChild(i).gameObject);
+            _statusText = null;
             RefreshCoins();
             _titleText.text = _mode == Mode.Trade ? $"{_title}   ·   Trade" : _title;
             if (_mode == Mode.Dialogue) BuildDialogue();
@@ -217,13 +481,13 @@ namespace BugFarmer.UI
                 }
             }
 
-            // SELL (your inventory) — right column
-            Header("Sell", 360, 0);
-            BuildSell(360, -18);
+            // SELL — the barter basket (right column). Your REAL inventory is the item source:
+            // right-click / double-click a bag or hotbar stack to stage it here.
+            BuildBasket(360);
 
             // footer
-            MakeButton(_content, "Back", "← Back", 360, -240, 80, 24, () => { _mode = Mode.Dialogue; BuildContent(); });
-            MakeButton(_content, "Close", "Close", 446, -240, 80, 24, () => SetOpen(false));
+            MakeButton(_content, "Back", "← Back", 360, -300, 80, 24, () => { _mode = Mode.Dialogue; BuildContent(); });
+            MakeButton(_content, "Close", "Close", 446, -300, 80, 24, () => SetOpen(false));
         }
 
         // A horizontal row of up to 8 offer slots (price label under each; greyed if known).
@@ -251,56 +515,103 @@ namespace BugFarmer.UI
             }
         }
 
-        private void BuildSell(float bx, float by)
+        private void BuildBasket(float bx)
         {
-            var inv = InventoryManager.Instance;
-            if (inv == null) return;
-            int col = 0;
-            void Add(string id, int count, string slotType, int slotIdx)
-            {
-                int price = slotType == "bug"
-                    ? (EntityDatabase.GetSpecies(id)?.SellPrice ?? 0)
-                    : (EntityDatabase.Get(id)?.SellPrice ?? 0);
-                if (price <= 0) return;
-                float x = bx + (col % 3) * 52, y = by - (col / 3) * 62;
-                var s = UIFactory.MakeSlot(_content, "slot_frame");
-                Place((RectTransform)s.transform, x, y, UIFactory.Slot, UIFactory.Slot);
-                s.SetSlot(new InventorySlot { item_id = id, count = count });
-                string cid = id; int ci = slotIdx; string ct = slotType;
-                s.OnSlotClicked += (slot, ev) => Send("sell", cid, ct, ci);
-                var lbl = UIFactory.MakeText(_content, "Sp", UIFactory.CountSize, UIFactory.HeaderColor, TextAlignmentOptions.Center);
-                Place(lbl.rectTransform, x, y - 42, UIFactory.Slot, 14); lbl.text = $"{price}c";
-                col++;
-            }
+            Header("Sell", bx, 0);
+
+            // What this vendor buys (the honest filter — mirrors the server's shopBuysItem).
+            var buysLbl = UIFactory.MakeText(_content, "Buys", UIFactory.CountSize,
+                                             Dim, TextAlignmentOptions.TopLeft);
+            buysLbl.enableWordWrapping = true;
+            Place(buysLbl.rectTransform, bx, -16, 176, 28);
             if (_kind == "bugs")
-            {
-                for (int i = 0; i < inv.BugSlots.Length; i++)
-                {
-                    var s = inv.BugSlots[i];
-                    if (s != null && !s.IsEmpty) Add(s.item_id, s.count, "bug", i);
-                }
-                for (int i = 0; i < inv.ItemSlots.Length; i++)
-                {
-                    var s = inv.ItemSlots[i];
-                    if (s != null && !s.IsEmpty && s.item_id.StartsWith("dead_")) Add(s.item_id, s.count, "item", i);
-                }
-            }
+                buysLbl.text = "Buys: live bugs, carcasses";
+            else if (_buys != null && _buys.Length > 0)
+                buysLbl.text = "Buys: " + string.Join(", ", _buys);
             else
+                buysLbl.text = "Buys: nothing";
+
+            // Basket grid (4 × 2): staged stacks render as slots; empty cells accept a held cursor.
+            long total = 0;
+            for (int i = 0; i < BasketCells; i++)
             {
-                for (int i = 0; i < inv.ItemSlots.Length; i++)
+                float x = bx + (i % 4) * 44, y = -48 - (i / 4) * 44;
+                var cell = UIFactory.MakeSlot(_content, "slot_frame");
+                Place((RectTransform)cell.transform, x, y, UIFactory.Slot, UIFactory.Slot);
+                if (i < _staged.Count)
                 {
-                    var s = inv.ItemSlots[i];
-                    if (s != null && !s.IsEmpty) Add(s.item_id, s.count, "item", i);
+                    cell.SetSlot(new InventorySlot(_staged[i].id, _staged[i].qty));
+                    total += (long)UnitPrice(_staged[i].slotType, _staged[i].id) * _staged[i].qty;
                 }
+                int captured = i;
+                cell.OnSlotClicked += (slot, ev) => OnBasketCellClicked(captured, ev);
             }
+
+            // "Sell for Xc" — greyed when the basket is empty or a sale is in flight.
+            var sellBtn = MakeButton(_content, "SellAll", total > 0 ? $"Sell for {total}c" : "Sell",
+                                     bx, -142, 176, 26, DoSellBatch, primary: total > 0 && !_sellPending);
+            sellBtn.interactable = _staged.Count > 0 && !_sellPending;
+
+            _statusText = UIFactory.MakeText(_content, "SellStatus", UIFactory.CountSize,
+                                             UIFactory.TextColor, TextAlignmentOptions.TopLeft);
+            _statusText.enableWordWrapping = true;
+            Place(_statusText.rectTransform, bx, -174, 176, 60);
+            _statusText.text = _status;
+        }
+
+        // Basket cell click: a held cursor DEPOSITS into the basket (left = all, right = ONE — the
+        // existing drop-one convention); otherwise clicking a staged line returns it to the bag
+        // (left = whole line, right = one).
+        private void OnBasketCellClicked(int cellIdx, PointerEventData ev)
+        {
+            var drag = DragDropController.Instance;
+            if (drag != null && drag.HasCursorItem)
+            {
+                if (!CanStageId(drag.CursorSourceType, drag.CursorItemId, out string reason))
+                {
+                    SetStatus(reason);
+                    return;
+                }
+                int want = ev.button == PointerEventData.InputButton.Right ? 1 : drag.CursorCount;
+                if (drag.TryTakeCursorForStaging(want, out var t, out var idx, out var id, out var taken) && taken > 0)
+                    Stage(t, idx, id, taken);
+                return;
+            }
+            if (cellIdx >= _staged.Count) return;
+            Unstage(cellIdx, ev.button == PointerEventData.InputButton.Right ? 1 : int.MaxValue);
         }
 
         // ------------------------------------------------------------------ refresh
         private void OnInventoryChanged()
         {
             if (!_isOpen) return;
+            if (_sellPending)
+            {
+                // The sell_batch echo landed: report the payout from the coin delta; skipped lines
+                // stay staged (their slots are unchanged) with the server's opcode-40 text below.
+                _sellPending = false;
+                long delta = (InventoryManager.Instance?.Coins ?? 0) - _coinsBeforeSell;
+                if (delta > 0)
+                    _status = _status.StartsWith("Didn't sell") ? $"Sold for {delta}c — {_status}" : $"Sold for {delta}c";
+            }
+            RevalidateStaged();
             RefreshCoins();
-            if (_mode == Mode.Trade) BuildContent(); // re-grey learned recipes + refresh sell + coins
+            if (_mode == Mode.Trade) BuildContent(); // re-grey learned recipes + refresh basket + coins
+        }
+
+        private void OnMatchState(Nakama.IMatchState state)
+        {
+            if (state.OpCode != OpCodes.ErrorMessage || !_isOpen) return;
+            var json = System.Text.Encoding.UTF8.GetString(state.State);
+            var msg = JsonUtility.FromJson<ErrorMessage>(json);
+            if (msg == null || string.IsNullOrEmpty(msg.error)) return;
+            SetStatus(msg.error);
+            // An all-lines-refused batch sends the error WITHOUT an inventory echo — unwedge Sell.
+            if (_sellPending)
+            {
+                _sellPending = false;
+                if (_mode == Mode.Trade) BuildContent();
+            }
         }
 
         private void RefreshCoins()

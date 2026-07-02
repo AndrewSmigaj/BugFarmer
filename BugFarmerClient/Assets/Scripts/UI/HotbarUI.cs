@@ -175,7 +175,9 @@ namespace BugFarmer.UI
             var inventory = InventoryManager.Instance;
             if (inventory != null && index < inventory.ItemSlots.Length)
             {
-                slots[index].SetSlot(inventory.ItemSlots[index]);
+                // ForRender = the shop barter-basket overlay: a staged hotbar stack renders
+                // reduced/empty while the shop is open (data untouched; no-op otherwise).
+                slots[index].SetSlot(ShopPanel.ForRender(SlotType.Item, index, inventory.ItemSlots[index]));
             }
         }
 

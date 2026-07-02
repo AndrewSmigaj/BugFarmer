@@ -60,8 +60,10 @@ namespace BugFarmer.Data
             public string ContainerFilter;
 
             // Shop block (NPC vendor; interaction_type "shop"). ShopKind "items"|"bugs"; ShopSells is
-            // what the NPC offers (id+price). Buys/pricing for selling is server-authoritative.
+            // what the NPC offers (id+price). ShopBuys = the ids/tags this vendor purchases (the
+            // client-side stage filter + "Buys:" header); pricing stays server-authoritative.
             public string ShopKind;            // null = not a shop
+            public string[] ShopBuys;          // ids or tags; null/empty = buys nothing
             public ShopOffer[] ShopSells;
             public ShopOffer[] ShopRecipes;    // recipes the NPC teaches (id = recipe id)
             public ShopOffer[] ShopBooks;      // recipe-book collections (id = collection id)
@@ -125,6 +127,10 @@ namespace BugFarmer.Data
             public int MaxStack = 99;
             public int SellPrice;
             public int BuyPrice;
+
+            // Item tags (material/food/metal/…): what vendor Buys filters match against
+            // (an entry in shop.buys matches the item id OR any tag — mirrors server shopBuysItem).
+            public string[] Tags;
 
             // Walk-over magnet exclusion: deliberate-E-only pickups (fresh tree fruit)
             public bool NoAutoPickup;
@@ -337,6 +343,7 @@ namespace BugFarmer.Data
                 MaxStack = data["max_stack"]?.Value<int>() ?? 99,
                 SellPrice = data["sell_price"]?.Value<int>() ?? 0,
                 BuyPrice = data["buy_price"]?.Value<int>() ?? 0,
+                Tags = (data["tags"] as JArray)?.ToObject<string[]>(),
                 NoAutoPickup = data["no_auto_pickup"]?.Value<bool>() ?? false,
                 FoodValue = data["food_value"]?.Value<int>() ?? 0,
                 ToolType = data["tool_type"]?.Value<string>(),
@@ -448,6 +455,7 @@ namespace BugFarmer.Data
             if (shop != null)
             {
                 world.ShopKind = shop["kind"]?.Value<string>() ?? "items";
+                world.ShopBuys = (shop["buys"] as JArray)?.ToObject<string[]>();
                 world.ShopSells = ParseOffers(shop["sells"] as JArray);
                 world.ShopRecipes = ParseOffers(shop["recipes"] as JArray);   // D26: learnable recipes
                 world.ShopBooks = ParseOffers(shop["books"] as JArray);       // D26: recipe-book collections

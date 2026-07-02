@@ -377,16 +377,30 @@ type ContainerActionMessage struct {
 // ShopActionMessage (OpCode 2 / OpCodeAction, C→S): one buy/sell at the NPC vendor occupant at (gx,gy).
 //   - "buy"  {id, qty}            — buy `id` from the NPC's sells list (server-priced)
 //   - "sell" {id, qty, slot, slot_type} — sell `qty` from your own slot; slot_type "item"|"bug"
+//   - "sell_batch" {lines}        — the barter basket: sell every line atomically (validate each,
+//                                   pay once); invalid lines are skipped + reported, valid ones sell
 // Server is authoritative: price comes from shop/entity data, never the client. The response is the
 // existing FullInventorySync echo (coins + item + bug slots) — no shop-specific S→C opcode.
 type ShopActionMessage struct {
-	GX       int    `json:"gx"`
-	GY       int    `json:"gy"`
-	Op       string `json:"op"`              // "buy" | "sell"
-	ID       string `json:"id"`              // item or species id
-	Qty      int    `json:"qty,omitempty"`   // default 1
-	Slot     int    `json:"slot,omitempty"`  // sell: which of the player's slots
-	SlotType string `json:"slot_type,omitempty"` // "item" | "bug" (sell)
+	GX       int            `json:"gx"`
+	GY       int            `json:"gy"`
+	Op       string         `json:"op"`              // "buy" | "sell" | "sell_batch"
+	ID       string         `json:"id"`              // item or species id
+	Qty      int            `json:"qty,omitempty"`   // default 1
+	Slot     int            `json:"slot,omitempty"`  // sell: which of the player's slots
+	SlotType string         `json:"slot_type,omitempty"` // "item" | "bug" (sell)
+	Lines    []ShopSellLine `json:"lines,omitempty"` // sell_batch: the staged basket
+}
+
+// ShopSellLine is one staged basket line of a sell_batch. Each line is validated with the exact
+// single-sell rules (the slot must hold `id` with at least `qty`); qty <= 0 is REJECTED per line
+// (the shared handler clamp covers only the top-level Qty — a negative line qty would otherwise
+// pass RemoveItem's `Count < count` guard and GROW the stack).
+type ShopSellLine struct {
+	SlotType string `json:"slot_type"` // "item" | "bug"
+	Slot     int    `json:"slot"`      // the player's slot index
+	ID       string `json:"id"`        // item or species id the slot is expected to hold
+	Qty      int    `json:"qty"`       // how many to sell from that slot
 }
 
 // ContainerUpdateMessage (OpCode 99, S→C): the full contents of a container/craft-station after

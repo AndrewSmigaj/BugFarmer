@@ -114,6 +114,22 @@ namespace BugFarmer.UI
                 return;
             }
 
+            // While a shop is open, right-click and double-click are the STAGE verbs (the Apico
+            // barter basket). Anything this vendor won't buy falls through to the click's normal
+            // meaning (bug info card, quick-equip, pickup).
+            if (ShopPanel.IsOpen)
+            {
+                // Double-click = the 2nd click of a left double-click: the 1st click already picked
+                // the stack onto the cursor — stage the CURSOR here, BEFORE HandleLeftClick would
+                // place it straight back into the (now-empty) slot.
+                if (eventData.button == PointerEventData.InputButton.Left &&
+                    eventData.clickCount >= 2 && HasCursorItem && ShopPanel.TryStageCursor())
+                    return;
+                if (eventData.button == PointerEventData.InputButton.Right &&
+                    !HasCursorItem && ShopPanel.TryStageSlot(slot))
+                    return;
+            }
+
             if (eventData.button == PointerEventData.InputButton.Left)
             {
                 HandleLeftClick(slot);
@@ -421,6 +437,48 @@ namespace BugFarmer.UI
         {
             if (HasCursorItem)
                 ClearCursor();
+        }
+
+        /// <summary>Return a held stack to its source slot (the Escape-cancel path, made public
+        /// for ShopPanel: a shop opens with a clean cursor so the staging bookkeeping starts
+        /// from "server slot = local slot").</summary>
+        public void CancelToSource()
+        {
+            CancelDrag();
+        }
+
+        /// <summary>
+        /// Move `requestQty` off the cursor into the SHOP BASKET's ledger: the taken share is
+        /// restored into the LOCAL source slot data (server-side the stack never left that slot —
+        /// the staging overlay is what hides it), preserving the TryInterceptSlotEcho invariant
+        /// "server slot = local slot + cursor". No server op — staging is client-only until the
+        /// one atomic sell_batch. Returns false (taken 0) if the cursor is empty or a foreign
+        /// item occupies the source slot.
+        /// </summary>
+        public bool TryTakeCursorForStaging(int requestQty, out SlotType type, out int index,
+                                            out string id, out int taken)
+        {
+            type = _sourceType;
+            index = _sourceIndex;
+            id = _cursorItemId;
+            taken = 0;
+            if (!HasCursorItem || requestQty <= 0) return false;
+
+            var slotData = GetSlotData(_sourceType, _sourceIndex);
+            if (slotData == null) return false;
+            if (!slotData.IsEmpty && slotData.item_id != _cursorItemId)
+                return false; // defensive: a different item landed in the source slot
+
+            taken = Mathf.Min(requestQty, _cursorCount);
+            int restored = (slotData.IsEmpty ? 0 : slotData.count) + taken;
+            SetSlotData(_sourceType, _sourceIndex, _cursorItemId, restored);
+
+            _cursorCount -= taken;
+            if (_cursorCount <= 0)
+                ClearCursor();
+            else
+                UpdateCursorDisplay();
+            return true;
         }
 
         private void CancelDrag()

@@ -272,19 +272,21 @@ namespace BugFarmer.UI
             if (_isOpen) RefreshCoins();
         }
 
+        // Slot cells draw through ShopPanel.ForRender: while a shop is open, a staged stack
+        // renders reduced/empty (the barter-basket overlay) without the DATA ever changing.
         private void RefreshItemCell(int panelIndex)
         {
             var inv = InventoryManager.Instance;
             int invIndex = panelIndex + PanelStart;
             if (inv != null && invIndex < inv.ItemSlots.Length)
-                _itemCells[panelIndex].SetSlot(inv.ItemSlots[invIndex]);
+                _itemCells[panelIndex].SetSlot(ShopPanel.ForRender(SlotType.Item, invIndex, inv.ItemSlots[invIndex]));
         }
 
         private void RefreshBugSlot(int index)
         {
             var inv = InventoryManager.Instance;
             if (inv != null && index < inv.BugSlots.Length)
-                bugSlots[index].SetSlot(inv.BugSlots[index]);
+                bugSlots[index].SetSlot(ShopPanel.ForRender(SlotType.Bug, index, inv.BugSlots[index]));
         }
 
         private void RefreshAllSlots()
@@ -297,10 +299,10 @@ namespace BugFarmer.UI
             {
                 int invIndex = i + PanelStart;
                 if (invIndex < inv.ItemSlots.Length)
-                    _itemCells[i].SetSlot(inv.ItemSlots[invIndex]);
+                    _itemCells[i].SetSlot(ShopPanel.ForRender(SlotType.Item, invIndex, inv.ItemSlots[invIndex]));
             }
             for (int i = 0; i < bugSlots.Length && i < inv.BugSlots.Length; i++)
-                bugSlots[i].SetSlot(inv.BugSlots[i]);
+                bugSlots[i].SetSlot(ShopPanel.ForRender(SlotType.Bug, i, inv.BugSlots[i]));
 
             RefreshCoins();
             RefreshEquipment();

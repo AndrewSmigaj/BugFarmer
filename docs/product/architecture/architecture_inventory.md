@@ -10,11 +10,24 @@
 > **SHOP v1 IS NOW BUILT (2026-06-27, DECISIONS D25)** — but NOT the 30–37 plan below. As built: an **NPC
 > vendor is a `shop` occupant** (`world.shop{kind,sells,buys}`), opened via the existing **`OpCodeAction(2)`**
 > (`handlers_shop.go` → buy/sell, server-authoritative pricing from item/`species.sell_price`); the reply is
-> the existing **FullInventorySync (38)** echo (coins+items+bugs) — **no new opcodes**. Client: `ShopController`
-> (OnGUI). **Currency is now live** (earn/spend, persisted). Two vendors run in the village (general store +
-> bug dealer). NPC dialogue, recipe-selling, rotating stock are still unbuilt. Follow the **shop/container
-> pattern**, never the 30–37 plan here. Current economy design: [`../economy/`](../economy/).
+> the existing **FullInventorySync (38)** echo (coins+items+bugs) — **no new opcodes**. Client: `UI/ShopPanel.cs`
+> (Canvas/UIFactory, D28 — the earlier OnGUI `ShopController` is removed). **Currency is now live**
+> (earn/spend, persisted). 9 vendors are authored in the village. Follow the **shop/container pattern**,
+> never the 30–37 plan here. Current economy design: [`../economy/`](../economy/).
 > Trust the "AS BUILT 2026-06" sections; treat the 30–37 design as historical.
+>
+> **BARTER SELL (2026-07-02, playtest #5 fix + DECISIONS D29):** selling is an **Apico-style staged basket**,
+> not per-click. The shop opens the player's REAL InventoryPanel; right-/double-click (or drag via the cursor)
+> stages a stack into the ShopPanel basket; ONE **"Sell for Xc"** sends `op:"sell_batch"` (a `lines[]` array on
+> the same `ShopActionMessage`, OpCode 2) — the server validates each line with the single-sell rules
+> (`sellLine`, the shared core `shopSell` also wraps), **rejects `qty<=0` per line** (a negative qty would pass
+> `RemoveItem`'s guard and GROW the stack), sums, **credits once**, reports skipped lines in one OpCode-40
+> error, and echoes ONE FullInventorySync. Client staging is a **render OVERLAY** (`ShopPanel.StagedQty` /
+> `ForRender`, consulted by InventoryPanel + HotbarUI) — inventory DATA is never mutated, so the
+> FullInventorySync repaint (e.g. a buy mid-shop) cannot resurrect a staged slot. The panel shows a
+> **"Buys: …"** header (client mirror of `shopBuysItem`: ids OR tags; bug dealer = live bugs + `dead_*`) and a
+> status line that finally SURFACES OpCode-40 server errors (they were silently dropped before). "Barter" =
+> the staging-UI metaphor only — the currency model is unchanged (one coin type, merchants.md).
 
 ## Overview
 

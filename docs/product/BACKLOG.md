@@ -112,9 +112,16 @@ Plan + designs: `docs/product/economy/crafting_buildout.md` + the saved plan. Al
   each; persist + migrate legacy single-recipe saves to `Procs[0]`. Wire: add a `proc` index to
   `ContainerActionMessage` (don't overload `Slot`), a `procs[]` array to `ContainerUpdateMessage`. Client:
   `CraftingPanel` renders N processor rows. Outside the sim hash.
-- **Barter sell UI** (Apico/BG3) — ShopPanel Sell → vendor stock + bag + "to sell" staging + one "Sell for X".
-  GOOD design (not a hack): one atomic `sell_batch` server op mirroring `shopSell` (validate each line vs the
-  vendor `Buys` filter, sum, pay once) — NOT a client loop of single sells.
+- **DONE 2026-07-02 — Barter sell UI** (Apico/BG3; also the playtest **#5** fix). Your REAL inventory opens
+  with the shop; stage stacks into a basket (right-/double-click = whole stack; drag via the cursor;
+  right-click a basket cell = one-at-a-time partial) → one atomic **`sell_batch`** server op (each line
+  validated by the shared `sellLine` core vs the vendor `Buys` filter, sum, pay ONCE, one FullInventorySync
+  echo) — NOT a client loop of single sells. Staging = a render OVERLAY (`ShopPanel.StagedQty`/`ForRender`,
+  consulted by InventoryPanel + HotbarUI) so the mid-shop FullInventorySync repaint can't resurrect staged
+  slots. Also shipped: "Buys: …" header + client stage filter mirroring `shopBuysItem`, OpCode-40 server
+  errors surfaced in a shop status line (were silently dropped — the #5 feedback gap), per-line `qty<=0`
+  rejection (closed a real negative-qty duplication exploit), bug-release guarded while a shop is open.
+  Gated: 4 new falsifiable Go tests + suite green + Unity batchmode compile clean; in-Editor pass pending.
 - **Station mockups** (PIL) — extend `tools/ui_mock.py` to render every craft station + the breeding/food
   stations (compost/beehive/milkweed/wasp-nest) with the Apico I/O-square treatment, for visual review.
 - Also: armor + weapon-tier *sprite polish* (placeholders shipped); the InitialContainers authored-stock seed

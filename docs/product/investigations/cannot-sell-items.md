@@ -1,5 +1,11 @@
 # Investigation: #5 unable to sell items
-_status: LIVE-CONFIRMED — it's the sell flow, not the open · updated 2026-06-28 · investigate-only_
+_status: ✅ FIXED 2026-07-02 (barter sell) · was: LIVE-CONFIRMED — the sell flow, not the open · investigate-only doc_
+
+> **FIX SHIPPED (2026-07-02):** the recommended fix below was built as the full **Apico barter sell** —
+> stage stacks from your REAL inventory into a basket → one atomic "Sell for Xc" (`sell_batch` server op),
+> a **"Buys: …"** header + client-side stage filter mirroring `shopBuysItem`, and a shop status line that
+> surfaces OpCode-40 server errors (both feedback gaps below closed). See architecture_inventory.md STATUS
+> + DECISIONS D29. Pending: the in-Editor confirm (incl. the bug-dealer live-bug sell).
 
 ## ★ Live confirm (Andrew, 2026-06-28)
 The NPC dialogue + shop panel **open fine** → **NOT the OverlapPoint bug** (§3A falsified). Clicking sell

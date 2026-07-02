@@ -447,3 +447,27 @@ the design surface we iterate on (the Unity C# can't compile here).
 **Determinism note:** the ONLY frontier-relevant change is occupant `blocks_bugs` — generic over the flag
 (`state.go:702 BlocksBugsCells` static map + `handlers_world.go:674/538` dynamic `OCCUPANT_BLOCKS_BUGS`
 ledger). Everything else (UI, dialogue, sign text, outfit storage) is pure display off the hash.
+
+### D29 — Barter sell: staged basket + atomic `sell_batch` (2026-07-02, playtest #5 fix)
+Selling is no longer a per-click loop on a cloned read-only list — it's the **Apico barter model** on the
+player's REAL inventory (the design recorded in `crafting_buildout.md` "Barter sell UI" + BACKLOG):
+- **Client:** the shop opens the InventoryPanel with it; right-/double-click (or drag via the cursor) stages
+  a stack into the ShopPanel **basket**; one "**Sell for Xc**" sells everything. Staging is a **render
+  OVERLAY** (`ShopPanel.StagedQty`/`ForRender`, consulted by the 4 inventory-backed render sites in
+  InventoryPanel + HotbarUI) — inventory DATA is never mutated, so the FullInventorySync repaint (a buy
+  mid-shop) cannot resurrect staged slots. A "**Buys: …**" header + client filter mirror `shopBuysItem`
+  (ids OR tags; bug dealer = live bugs + `dead_*`); refusals/skips/payout land in a shop **status line**
+  that also finally surfaces **OpCode-40 server errors** (previously defined but consumed by NOTHING —
+  the #5 "clicking does nothing" root cause).
+- **Server:** `op:"sell_batch"` with `lines[]` on the same `ShopActionMessage` (OpCode 2, additive).
+  `sellLine` is the extracted single source of sell validation (`shopSell` wraps it); the batch validates +
+  removes per line sequentially (duplicate-slot lines re-validate the live count), sums, **credits once**,
+  aggregates skips into one error, echoes one FullInventorySync. **Per-line `qty<=0` is rejected** — the
+  handler's top-level clamp doesn't see lines, and a negative qty passes `RemoveItem`'s `Count < count`
+  guard and would GROW the stack (a real duplication exploit, caught in plan review; regression-tested).
+- **Scope decisions:** the four no-buy vendors (stonemason/modern_wares/fisherman/ecologist) stay buy-nothing
+  (one-sided vendors are deliberate, merchants.md); "barter" = the staging-UI metaphor ONLY — the currency
+  model is unchanged (one coin type, no item-for-item). Bug-release is consumed (not fired) while a shop is
+  open so a missed basket drag can't free the bugs being sold.
+- **Gates:** 4 falsifiable Go tests (mixed batch / duplicate-slot / negative-qty exploit / bug-dealer batch)
+  + suite green; Unity batchmode compile clean (fresh DLL symbol-verified); in-Editor visual pass pending.

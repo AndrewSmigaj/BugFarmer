@@ -80,6 +80,8 @@ func (m *Match) handleShopAction(
 		}
 	case "sell":
 		changed = m.shopSell(dispatcher, state, userID, player, shop, msg.ID, qty, msg.Slot, msg.SlotType)
+	case "sell_batch":
+		changed = m.shopSellBatch(dispatcher, state, userID, player, shop, msg.Lines)
 	default:
 		m.sendWorldError(dispatcher, state, userID, "Unknown shop action")
 		return
@@ -203,46 +205,101 @@ func (m *Match) shopBuyBook(dispatcher runtime.MatchDispatcher, state *WorldStat
 // (species.sell_price for live bugs, item sell_price for items). The server verifies the slot
 // actually holds `id` (guards a stale client slot) and that the shop buys it.
 func (m *Match) shopSell(dispatcher runtime.MatchDispatcher, state *WorldState, userID string, player *PlayerState, shop *ShopData, id string, qty, slot int, slotType string) bool {
+	ok, payout, reason := sellLine(state, player, shop, id, qty, slot, slotType)
+	if !ok {
+		if reason != "" {
+			m.sendWorldError(dispatcher, state, userID, reason)
+		}
+		return false
+	}
+	player.Coins += payout
+	return true
+}
+
+// sellLine validates ONE sell line and removes the goods on success, returning the payout WITHOUT
+// crediting it (callers credit — the batch sums first, pays once). The single source of truth for
+// sell validation: slot must actually hold `id` with at least `qty` (guards a stale client slot),
+// and the shop must buy it. qty <= 0 is rejected here — RemoveItem's `Count < count` guard passes
+// for a negative count and would GROW the stack.
+func sellLine(state *WorldState, player *PlayerState, shop *ShopData, id string, qty, slot int, slotType string) (bool, int64, string) {
+	if qty <= 0 {
+		return false, 0, "Invalid quantity"
+	}
+
 	if slotType == "bug" {
 		if shop.Kind != "bugs" {
-			m.sendWorldError(dispatcher, state, userID, "They don't buy bugs")
-			return false
+			return false, 0, "They don't buy bugs"
 		}
 		if slot < 0 || slot >= len(player.BugSlots) || player.BugSlots[slot].ItemID != id || player.BugSlots[slot].Count < qty {
-			m.sendWorldError(dispatcher, state, userID, "You don't have that")
-			return false
+			return false, 0, "You don't have that"
 		}
 		sp := state.Species[id]
 		if sp == nil {
-			m.sendWorldError(dispatcher, state, userID, "Unknown bug")
-			return false
+			return false, 0, "Unknown bug"
 		}
 		if !player.RemoveBugs(slot, qty) {
-			return false
+			return false, 0, "You don't have that"
 		}
-		player.Coins += int64(sp.SellPrice) * int64(qty)
-		return true
+		return true, int64(sp.SellPrice) * int64(qty), ""
 	}
 
 	// item sell
 	if slot < 0 || slot >= len(player.ItemSlots) || player.ItemSlots[slot].ItemID != id || player.ItemSlots[slot].Count < qty {
-		m.sendWorldError(dispatcher, state, userID, "You don't have that")
-		return false
+		return false, 0, "You don't have that"
 	}
 	def := state.Entities[id]
 	if def == nil {
-		m.sendWorldError(dispatcher, state, userID, "Can't sell that")
-		return false
+		return false, 0, "Can't sell that"
 	}
 	if !shopBuysItem(shop, id, def) {
-		m.sendWorldError(dispatcher, state, userID, "They don't buy that")
-		return false
+		return false, 0, "They don't buy that"
 	}
 	if !player.RemoveItem(slot, qty) {
+		return false, 0, "You don't have that"
+	}
+	return true, int64(def.SellPrice) * int64(qty), ""
+}
+
+// shopSellBatch: the barter basket — sell every staged line in one transaction (validate each with
+// the exact single-sell rules, remove per line, sum, CREDIT ONCE, one FullInventorySync echo via the
+// caller). Invalid lines are skipped and reported in one aggregated error; the valid ones still sell.
+// Sequential per-line validate+remove makes duplicate-slot lines naturally safe (RemoveItem
+// re-validates the live count each time). Idempotent under a double-send: the second pass finds the
+// slots already emptied and skips everything.
+func (m *Match) shopSellBatch(dispatcher runtime.MatchDispatcher, state *WorldState, userID string, player *PlayerState, shop *ShopData, lines []ShopSellLine) bool {
+	const maxBatchLines = 100 // defensive bound; the client basket is far smaller
+	if len(lines) == 0 {
+		m.sendWorldError(dispatcher, state, userID, "Nothing staged to sell")
 		return false
 	}
-	player.Coins += int64(def.SellPrice) * int64(qty)
-	return true
+	if len(lines) > maxBatchLines {
+		lines = lines[:maxBatchLines]
+	}
+
+	var total int64
+	sold := 0
+	var skipped []string
+	for _, ln := range lines {
+		qty := ln.Qty
+		if qty > 999 {
+			qty = 999
+		}
+		ok, payout, reason := sellLine(state, player, shop, ln.ID, qty, ln.Slot, ln.SlotType)
+		if !ok {
+			skipped = append(skipped, ln.ID+" ("+strings.ToLower(reason)+")")
+			continue
+		}
+		total += payout
+		sold++
+	}
+
+	if total > 0 {
+		player.Coins += total
+	}
+	if len(skipped) > 0 {
+		m.sendWorldError(dispatcher, state, userID, "Didn't sell: "+strings.Join(skipped, ", "))
+	}
+	return sold > 0
 }
 
 // shopBuysItem reports whether this shop purchases the item: a bug dealer takes any dead_<bug>

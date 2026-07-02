@@ -29,8 +29,12 @@ If you add a test, **also add its one-liner to §1–§4 below** so it's discove
 bash tools/run_go_tests.sh        # go test ./world/ -count=1 -v inside the builder image (live source)
 ```
 Suite: `centipede combat predation nest fruit_tree release swarm_population player_hp equip world_env
-host_plant brood forage_pool ecology_director predator_starvation` (`*_test.go`).
+host_plant brood forage_pool ecology_director predator_starvation shop recipe_unlock` (`*_test.go`).
 Run after ANY server-logic change. Add a `*_test.go` for new sim/economy logic (mirror `predation_test.go`).
+- `shop_test.go` covers buy/sell/recipe/book + the **`sell_batch`** barter basket (mixed batch, duplicate-slot
+  no-double-pay, the negative-qty duplication exploit, bug-dealer batch) + the arbitrage invariant.
+- NOTE: this script pipes through `tail -30` — for the FULL verbose list run the inner `docker compose run …
+  go test` yourself or grep the un-tailed output; don't conclude "test missing" from the tail.
 
 ## 2. Headless sync-harness (`tools/sync-harness/`, real Nakama .NET client, no Unity)
 Server must be up (`docker compose up -d`). `DOTNET=$(command -v dotnet || echo ~/.dotnet/dotnet)`.
