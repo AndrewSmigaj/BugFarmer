@@ -838,8 +838,6 @@ namespace BugFarmer.World
                 return;
             }
 
-            // Get pivot from EntityDatabase
-            var pivot = EntityDatabase.GetPivot(occupantId);
             bool isBreakable = EntityDatabase.IsBreakable(occupantId);
 
             // Create or get pooled GameObject
@@ -847,25 +845,10 @@ namespace BugFarmer.World
             go.name = $"Occ_{occupantId}_{cellPos.x}_{cellPos.y}";
             go.transform.SetParent(occupantContainer);
 
-            // Position at cell with pivot adjustment
-            Vector3 worldPos = CellToWorld(cellPos);
-            // CellToWorld returns the anchor cell's center, but a multi-cell-wide
-            // footprint occupies cells to the right of the anchor. Shift X so the
-            // sprite is centered over the whole footprint, not just the anchor cell.
-            // Odd widths straddle symmetrically (no shift); even widths shift half a cell.
-            var footprint = EntityDatabase.GetFootprint(occupantId);
-            worldPos.x += (footprint.x - 1) * 0.5f * cellSize;
-            // Vertical placement. Every object sprite imports with a CENTER asset pivot, so
-            // transform.position is the sprite's center; CellToWorld gave the anchor cell center.
-            // The anchor is the FRONT (low-Y) cell of the footprint, which extends toward +Y.
-            //   bottom pivots (bc/bl/br, pivot.y == 0): baseline the sprite at the anchor cell's
-            //     front edge so it sits at the front of its footprint and rises toward the back —
-            //     a 4-deep bed now fills its footprint instead of overshooting the anchor cell.
-            //   center pivot (c, pivot.y == 0.5): leave it centered in the cell (CellToWorld).
-            var targetSize = EntityDatabase.GetSpriteSize(occupantId);
-            float spriteHeightCells = targetSize.y / 16f;
-            if (Mathf.Approximately(pivot.y, 0f))
-                worldPos.y = cellPos.y * cellSize + 0.5f * spriteHeightCells * cellSize;
+            // Position via the ONE shared helper (footprint-X + pivot-Y baseline) so the
+            // placement ghost can't drift from the real render (playtest #2).
+            var targetSize = EntityDatabase.GetSpriteSize(occupantId); // also scales the sprite below
+            Vector3 worldPos = OccupantWorldPos(cellPos, occupantId);
             worldPos.z = -0.1f; // Slightly in front of tilemap to guarantee render order
             go.transform.position = worldPos;
 
@@ -1100,6 +1083,29 @@ namespace BugFarmer.World
                 cellPos.y * cellSize + cellSize * 0.5f,
                 0
             );
+        }
+
+        /// <summary>
+        /// The world position an occupant RENDERS at when anchored at cellPos (z left at 0):
+        /// the anchor cell's center, shifted X to center a multi-cell footprint (odd widths
+        /// straddle symmetrically; even widths shift half a cell), and — for bottom-pivot
+        /// sprites (pivot.y == 0) — baselined so the sprite sits at the anchor cell's front
+        /// edge and rises toward the back of its footprint. The ONE source of truth:
+        /// RenderOccupant and the placement ghost both use it, so preview == placement by
+        /// construction (playtest #2 was these two computing different Y baselines).
+        /// </summary>
+        public Vector3 OccupantWorldPos(Vector2Int cellPos, string occupantId)
+        {
+            Vector3 worldPos = CellToWorld(cellPos);
+            var footprint = EntityDatabase.GetFootprint(occupantId);
+            worldPos.x += (footprint.x - 1) * 0.5f * cellSize;
+            var pivot = EntityDatabase.GetPivot(occupantId);
+            if (Mathf.Approximately(pivot.y, 0f))
+            {
+                float spriteHeightCells = EntityDatabase.GetSpriteSize(occupantId).y / 16f;
+                worldPos.y = cellPos.y * cellSize + 0.5f * spriteHeightCells * cellSize;
+            }
+            return worldPos;
         }
 
         /// <summary>

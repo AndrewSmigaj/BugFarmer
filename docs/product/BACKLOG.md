@@ -21,7 +21,7 @@ the 22 issues; one findings doc each). Backlogged-by-the-user items (not investi
   exists. Design the day-skip + any restore/cost.
 - **Night critters + fireflies.** Add ≥1 nocturnal species and **fireflies** (glow at night). New species
   data + sprites + a day/night spawn gate.
-- **Known quick-fixes (no investigation — obvious):** rain doesn't reach the screen bottom (client visual).
+- **DONE 2026-07-02 — the last two playtest fixes: #2 ghost offset + #7 rain.** **#2**: `TilemapManager.OccupantWorldPos` = the ONE shared position helper (footprint-X + bottom-pivot Y baseline); `RenderOccupant` + the placement ghost both use it → preview == placement by construction (ghost positions with the seed→plant id it renders). **#7**: rain streak lifetime was a fixed spec (~9-10 units of fall) shorter than a screen crossing; now computed per-layer from the live camera so the SLOWEST drop crosses the bottom edge (+ band/splash boxes sized from the view, rebuilt on zoom). Both display-only, no sim surface; editor-compile + eyeball gates.
 - **DONE 2026-07-01 — three quick playtest fixes: #14 containers · #15 water empty bed · #10 moved compost.**
   **#14** (data): `basket`/`chest`/`trunk`/`yarn_basket` had a `world.container` block but no
   `interaction_type` → the client open gate (`CraftingPanel` needs `storage`) never fired. Added

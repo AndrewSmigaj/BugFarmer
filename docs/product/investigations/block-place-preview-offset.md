@@ -1,5 +1,10 @@
 # Investigation: #2 placement preview lower than where the block lands (some blocks)
-_status: READY TO IMPLEMENT · investigated 2026-06-28 · investigate-only_
+_status: ✅ FIXED 2026-07-02 · investigated 2026-06-28_
+
+> **FIX SHIPPED (2026-07-02):** exactly the recommendation below — `TilemapManager.OccupantWorldPos`
+> (footprint-X shift + bottom-pivot Y baseline) is the ONE shared position helper; `RenderOccupant`
+> and the placement ghost both use it (the ghost positions with the seed→plant sprite id it renders),
+> so preview == placement by construction.
 
 ## Debrief (read me first)
 - **TL;DR:** The placement **ghost** positions at the raw cell center (`CellToWorld(cellPos)`,
