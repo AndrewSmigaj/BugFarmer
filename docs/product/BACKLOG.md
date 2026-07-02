@@ -121,7 +121,7 @@ Plan + designs: `docs/product/economy/crafting_buildout.md` + the saved plan. Al
   slots. Also shipped: "Buys: …" header + client stage filter mirroring `shopBuysItem`, OpCode-40 server
   errors surfaced in a shop status line (were silently dropped — the #5 feedback gap), per-line `qty<=0`
   rejection (closed a real negative-qty duplication exploit), bug-release guarded while a shop is open.
-  Gated: 4 new falsifiable Go tests + suite green + Unity batchmode compile clean; in-Editor pass pending.
+  Gated: 4 new falsifiable Go tests + suite green + Unity batchmode compile clean + in-Editor CONFIRMED (Andrew, 2026-07-02; incl. the layout fix — wide short trade dock clearing the inventory).
 - **Station mockups** (PIL) — extend `tools/ui_mock.py` to render every craft station + the breeding/food
   stations (compost/beehive/milkweed/wasp-nest) with the Apico I/O-square treatment, for visual review.
 - Also: armor + weapon-tier *sprite polish* (placeholders shipped); the InitialContainers authored-stock seed
