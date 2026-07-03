@@ -173,7 +173,7 @@
     "family": "icon"
   },
   "hands": {
-    "look": "a pair of open HANDS seen palm-up, fingers slightly spread as if ready to grab or gather, warm tan skin with a soft outline — wearing a thin FABRIC wrist cuff",
+    "look": "a pair of open HANDS seen palm-up, fingers slightly spread as if ready to grab or gather, warm tan skin with a soft outline \u2014 wearing a thin FABRIC wrist cuff",
     "family": "icon",
     "materials": [
       "fabric"
@@ -314,5 +314,25 @@
     "materials": [
       "fabric"
     ]
+  },
+  "plum": {
+    "look": "a single glossy PLUM, deep purple with a lighter dusty bloom and a vertical crease, one small green leaf on a short stem; simple round-oval silhouette, bright highlight upper-left",
+    "family": "icon"
+  },
+  "cherry": {
+    "look": "a pair of glossy red CHERRIES joined on one forked stem with a single green leaf; simple round silhouettes, bright highlight upper-left",
+    "family": "icon"
+  },
+  "rotten_plum": {
+    "look": "a ROTTEN PLUM: dull brownish-purple, sunken bruised side, a few dark mold spots, slightly collapsed silhouette, drooping wilted leaf",
+    "family": "icon"
+  },
+  "rotten_cherry": {
+    "look": "a pair of ROTTEN CHERRIES on one stem: dull brown-red, shriveled and dented with dark spots, limp wilted leaf",
+    "family": "icon"
+  },
+  "backpack": {
+    "look": "a sturdy canvas-and-leather BACKPACK with a top flap buckled shut, two shoulder straps visible, a small front pocket; warm brown leather trim on olive canvas",
+    "family": "icon"
   }
 }

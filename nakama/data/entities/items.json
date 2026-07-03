@@ -1440,7 +1440,6 @@
     "name": "Backpack",
     "category": "backpack",
     "armor_slot": "backpack",
-    "icon_from": "ore_sack",
     "slot_bonus": 10,
     "stackable": false
   },
