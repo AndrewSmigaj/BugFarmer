@@ -334,5 +334,181 @@
   "backpack": {
     "look": "a sturdy canvas-and-leather BACKPACK with a top flap buckled shut, two shoulder straps visible, a small front pocket; warm brown leather trim on olive canvas",
     "family": "icon"
+  },
+  "pickaxe_copper": {
+    "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of polished salmon-orange COPPER metal with a warm metallic sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+    "family": "icon"
+  },
+  "pickaxe_iron": {
+    "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of grey IRON metal with a dull metallic sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+    "family": "icon"
+  },
+  "pickaxe_steel": {
+    "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of bright silver-grey STEEL with a crisp metallic sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+    "family": "icon"
+  },
+  "pickaxe_silver": {
+    "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of gleaming pale SILVER with a bright white sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+    "family": "icon"
+  },
+  "pickaxe_gold": {
+    "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of rich yellow GOLD with a warm glint at the top-right, straight wooden HANDLE running to the bottom-left",
+    "family": "icon"
+  },
+  "pickaxe_platinum": {
+    "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of pale icy blue-white PLATINUM with a cold sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+    "family": "icon"
+  },
+  "axe_copper": {
+    "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of polished salmon-orange COPPER metal with a warm metallic sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+    "family": "icon"
+  },
+  "axe_iron": {
+    "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of grey IRON metal with a dull metallic sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+    "family": "icon"
+  },
+  "axe_steel": {
+    "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of bright silver-grey STEEL with a crisp metallic sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+    "family": "icon"
+  },
+  "axe_silver": {
+    "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of gleaming pale SILVER with a bright white sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+    "family": "icon"
+  },
+  "axe_gold": {
+    "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of rich yellow GOLD with a warm glint at the top-right, straight wooden HANDLE running to the bottom-left",
+    "family": "icon"
+  },
+  "axe_platinum": {
+    "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of pale icy blue-white PLATINUM with a cold sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+    "family": "icon"
+  },
+  "hoe_copper": {
+    "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
+    "family": "icon"
+  },
+  "hoe_iron": {
+    "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
+    "family": "icon"
+  },
+  "hoe_steel": {
+    "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
+    "family": "icon"
+  },
+  "hoe_silver": {
+    "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
+    "family": "icon"
+  },
+  "hoe_gold": {
+    "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
+    "family": "icon"
+  },
+  "hoe_platinum": {
+    "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
+    "family": "icon"
+  },
+  "scythe_copper": {
+    "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of polished salmon-orange COPPER metal with a warm metallic sheen sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
+    "family": "icon"
+  },
+  "scythe_iron": {
+    "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of grey IRON metal with a dull metallic sheen sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
+    "family": "icon"
+  },
+  "scythe_steel": {
+    "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of bright silver-grey STEEL with a crisp metallic sheen sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
+    "family": "icon"
+  },
+  "scythe_silver": {
+    "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of gleaming pale SILVER with a bright white sheen sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
+    "family": "icon"
+  },
+  "scythe_gold": {
+    "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of rich yellow GOLD with a warm glint sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
+    "family": "icon"
+  },
+  "scythe_platinum": {
+    "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of pale icy blue-white PLATINUM with a cold sheen sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
+    "family": "icon"
+  },
+  "shovel_copper": {
+    "look": "a digging SHOVEL: rounded pointed SPADE BLADE of polished salmon-orange COPPER metal with a warm metallic sheen at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
+    "family": "icon"
+  },
+  "shovel_iron": {
+    "look": "a digging SHOVEL: rounded pointed SPADE BLADE of grey IRON metal with a dull metallic sheen at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
+    "family": "icon"
+  },
+  "shovel_steel": {
+    "look": "a digging SHOVEL: rounded pointed SPADE BLADE of bright silver-grey STEEL with a crisp metallic sheen at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
+    "family": "icon"
+  },
+  "shovel_silver": {
+    "look": "a digging SHOVEL: rounded pointed SPADE BLADE of gleaming pale SILVER with a bright white sheen at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
+    "family": "icon"
+  },
+  "shovel_gold": {
+    "look": "a digging SHOVEL: rounded pointed SPADE BLADE of rich yellow GOLD with a warm glint at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
+    "family": "icon"
+  },
+  "shovel_platinum": {
+    "look": "a digging SHOVEL: rounded pointed SPADE BLADE of pale icy blue-white PLATINUM with a cold sheen at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
+    "family": "icon"
+  },
+  "sword_copper": {
+    "look": "a fighting SWORD: straight tapered BLADE of polished salmon-orange COPPER metal with a warm metallic sheen, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
+    "family": "icon"
+  },
+  "sword_iron": {
+    "look": "a fighting SWORD: straight tapered BLADE of grey IRON metal with a dull metallic sheen, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
+    "family": "icon"
+  },
+  "sword_steel": {
+    "look": "a fighting SWORD: straight tapered BLADE of bright silver-grey STEEL with a crisp metallic sheen, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
+    "family": "icon"
+  },
+  "sword_silver": {
+    "look": "a fighting SWORD: straight tapered BLADE of gleaming pale SILVER with a bright white sheen, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
+    "family": "icon"
+  },
+  "sword_gold": {
+    "look": "a fighting SWORD: straight tapered BLADE of rich yellow GOLD with a warm glint, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
+    "family": "icon"
+  },
+  "sword_platinum": {
+    "look": "a fighting SWORD: straight tapered BLADE of pale icy blue-white PLATINUM with a cold sheen, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
+    "family": "icon"
+  },
+  "sword_bronze": {
+    "look": "a fighting SWORD: straight tapered BLADE of warm brown-gold BRONZE with a soft metallic sheen, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
+    "family": "icon"
+  },
+  "spear_copper": {
+    "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of polished salmon-orange COPPER metal with a warm metallic sheen, blunt butt at the bottom-left",
+    "family": "icon"
+  },
+  "spear_iron": {
+    "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of grey IRON metal with a dull metallic sheen, blunt butt at the bottom-left",
+    "family": "icon"
+  },
+  "spear_steel": {
+    "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of bright silver-grey STEEL with a crisp metallic sheen, blunt butt at the bottom-left",
+    "family": "icon"
+  },
+  "spear_silver": {
+    "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of gleaming pale SILVER with a bright white sheen, blunt butt at the bottom-left",
+    "family": "icon"
+  },
+  "spear_gold": {
+    "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of rich yellow GOLD with a warm glint, blunt butt at the bottom-left",
+    "family": "icon"
+  },
+  "spear_platinum": {
+    "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of pale icy blue-white PLATINUM with a cold sheen, blunt butt at the bottom-left",
+    "family": "icon"
+  },
+  "spear_bronze": {
+    "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of warm brown-gold BRONZE with a soft metallic sheen, blunt butt at the bottom-left",
+    "family": "icon"
   }
 }
