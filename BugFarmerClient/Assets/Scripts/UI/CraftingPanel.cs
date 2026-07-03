@@ -50,8 +50,13 @@ namespace BugFarmer.UI
         private TMP_Text _qtyText;
         private TMP_Text _recipeName;
         private Button _craftButton;
-        private Image _progressFill;
-        private TMP_Text _queueText;
+        // PROCESSOR LANES (world.craft_slots, default 1): one row each — recipe icon +
+        // interpolated progress bar + queue label. All fed by the per-proc echo (procs[]).
+        private readonly List<InventorySlotUI> _procIcons = new List<InventorySlotUI>();
+        private readonly List<Image> _procFills = new List<Image>();
+        private readonly List<TMP_Text> _procLabels = new List<TMP_Text>();
+        private readonly Dictionary<string, string> _recipeOutputById = new Dictionary<string, string>();
+        private int _lanesOverride; // echo said more lanes than the def (stale data) → rebuild with this
         // INPUT item-square row (icons + have/need labels) → arrow → output preview (replaces the old text)
         private readonly List<InventorySlotUI> _inputSlots = new List<InventorySlotUI>();
         private readonly List<TMP_Text> _inputLabels = new List<TMP_Text>();
@@ -164,6 +169,7 @@ namespace BugFarmer.UI
             _selected = null;
             _qty = 1;
             _last = null;
+            _lanesOverride = 0;
             Open();
             return true;
         }
@@ -229,10 +235,12 @@ namespace BugFarmer.UI
             _inputLabels.Clear();
             _containerSlots.Clear();
             _playerSlots.Clear();
-            _qtyText = _recipeName = _queueText = _arrow = null;
+            _procIcons.Clear();
+            _procFills.Clear();
+            _procLabels.Clear();
+            _qtyText = _recipeName = _arrow = null;
             _outputPreview = null;
             _craftButton = null;
-            _progressFill = null;
 
             if (_isCraft) BuildCraftContent();
             else BuildStorageContent();
@@ -299,15 +307,32 @@ namespace BugFarmer.UI
 
             _craftButton = MakeButton(_content, "Craft", "Craft", 272, -116, 100, 24, DoCraft);
 
-            // progress bar + queue
-            var barBg = UIFactory.MakeImage(_content, "BarBg", "slot_frame", true);
-            barBg.color = new Color(0f, 0f, 0f, 0.4f);
-            Place(barBg.rectTransform, 160, -150, 230, 14);
-            _progressFill = UIFactory.MakeImage(_content, "BarFill", null);
-            _progressFill.color = new Color(0.95f, 0.7f, 0.25f, 1f);
-            Place(_progressFill.rectTransform, 162, -152, 0, 10);
-            _queueText = UIFactory.MakeText(_content, "Queue", UIFactory.CountSize, UIFactory.TextColor, TextAlignmentOptions.Left);
-            Place(_queueText.rectTransform, 160, -168, 230, 16);
+            // PROCESSOR LANE rows (one per craft_slot): what each lane is making, its progress,
+            // and its queue. The recipe-id → output-item map feeds the lane icons.
+            _recipeOutputById.Clear();
+            foreach (var r in RecipeDatabase.ForStation(_occupantId))
+                _recipeOutputById[r.id] = r.output.item;
+            int lanes = Mathf.Max(1, Mathf.Max(_lanesOverride,
+                EntityDatabase.Get(_occupantId)?.World?.CraftSlots ?? 0));
+            for (int i = 0; i < lanes; i++)
+            {
+                float y = -146 - i * 28;
+                var icon = UIFactory.MakeSlot(_content, "slot_frame");
+                Place((RectTransform)icon.transform, 160, y, 24, 24);
+                _procIcons.Add(icon);
+                var barBg = UIFactory.MakeImage(_content, $"BarBg{i}", "slot_frame", true);
+                barBg.color = new Color(0f, 0f, 0f, 0.4f);
+                Place(barBg.rectTransform, 190, y - 5, 160, 14);
+                var fill = UIFactory.MakeImage(_content, $"BarFill{i}", null);
+                fill.color = new Color(0.95f, 0.7f, 0.25f, 1f);
+                Place(fill.rectTransform, 192, y - 7, 0, 10);
+                _procFills.Add(fill);
+                var lbl = UIFactory.MakeText(_content, $"ProcQ{i}", UIFactory.CountSize,
+                                             UIFactory.TextColor, TextAlignmentOptions.Left);
+                Place(lbl.rectTransform, 356, y - 5, 48, 14);
+                _procLabels.Add(lbl);
+            }
+            RefreshProcs();
 
             // --- RIGHT: output grid + Get all ---
             var outHead = UIFactory.MakeText(_content, "OutputHeader", UIFactory.HeaderSize,
@@ -427,6 +452,11 @@ namespace BugFarmer.UI
             }
             for (int i = n; i < _inputSlots.Count; i++) { _inputSlots[i].Clear(); _inputLabels[i].text = ""; }
 
+            // A recipe is craftable only if some lane can take it (running it already, or idle).
+            bool laneFree = PickLane(_selected.id) >= 0;
+            if (!laneFree && _recipeName != null) _recipeName.text += "   (all lanes busy)";
+            affordable = affordable && laneFree;
+
             // arrow after the last input → the output preview
             if (_arrow != null)
             {
@@ -444,29 +474,57 @@ namespace BugFarmer.UI
         private void DoCraft()
         {
             if (_selected == null) return;
-            Send(new ContainerActionMessage { gx = _cell.x, gy = _cell.y, op = "craft", recipe = _selected.id, qty = _qty });
+            int proc = PickLane(_selected.id);
+            if (proc < 0) return; // every lane busy with another recipe (button is disabled then)
+            Send(new ContainerActionMessage { gx = _cell.x, gy = _cell.y, op = "craft", recipe = _selected.id, qty = _qty, proc = proc });
+        }
+
+        /// <summary>The lane a craft of recipeId should target: a lane already running it (top up
+        /// its queue) → the first idle lane → -1 (all lanes busy with other recipes).</summary>
+        private int PickLane(string recipeId)
+        {
+            var procs = _last?.procs;
+            if (procs == null || procs.Length == 0) return 0; // pre-echo: lane 0 (server validates)
+            for (int i = 0; i < procs.Length; i++)
+                if (procs[i].queue > 0 && procs[i].recipe == recipeId) return i;
+            for (int i = 0; i < procs.Length; i++)
+                if (procs[i].queue <= 0) return i;
+            return -1;
+        }
+
+        /// <summary>Lane icons from the echo: the recipe's output item while the lane runs.</summary>
+        private void RefreshProcs()
+        {
+            for (int i = 0; i < _procIcons.Count; i++)
+            {
+                var p = (_last?.procs != null && i < _last.procs.Length) ? _last.procs[i] : null;
+                if (p != null && p.queue > 0 && !string.IsNullOrEmpty(p.recipe) &&
+                    _recipeOutputById.TryGetValue(p.recipe, out var outItem))
+                    _procIcons[i].SetSlot(new InventorySlot(outItem, 1));
+                else
+                    _procIcons[i].Clear();
+            }
         }
 
         private void AnimateProgress()
         {
-            if (_progressFill == null) return;
-            float total = _last != null ? _last.total : 0;
-            int queue = _last != null ? _last.queue : 0;
-            float t = 0f;
-            float remainingSec = 0f;
-            if (queue > 0 && total > 0f)
+            for (int i = 0; i < _procFills.Count; i++)
             {
-                float baseProg = _last.progress;
-                float prog = Mathf.Min(total, baseProg + (Time.time - _lastStamp) * TickRate);
-                t = Mathf.Clamp01(prog / total);
-                remainingSec = Mathf.Max(0f, (total - prog) / TickRate);   // ticks → seconds (10 Hz)
+                var p = (_last?.procs != null && i < _last.procs.Length) ? _last.procs[i] : null;
+                int queue = p != null ? p.queue : 0;
+                float t = 0f;
+                float remainingSec = 0f;
+                if (p != null && queue > 0 && p.total > 0)
+                {
+                    float prog = Mathf.Min(p.total, p.progress + (Time.time - _lastStamp) * TickRate);
+                    t = Mathf.Clamp01(prog / p.total);
+                    remainingSec = Mathf.Max(0f, (p.total - prog) / TickRate); // ticks → seconds (10 Hz)
+                }
+                var rt = _procFills[i].rectTransform;
+                rt.sizeDelta = new Vector2(156f * t, rt.sizeDelta.y);
+                if (i < _procLabels.Count)
+                    _procLabels[i].text = queue > 0 ? $"{Mathf.CeilToInt(remainingSec)}s ×{queue}" : "idle";
             }
-            var rt = _progressFill.rectTransform;
-            rt.sizeDelta = new Vector2(226f * t, rt.sizeDelta.y);
-            if (_queueText != null)
-                _queueText.text = queue > 0
-                    ? $"Crafting…  {Mathf.CeilToInt(remainingSec)}s left" + (queue > 1 ? $"   ·   x{queue} queued" : "")
-                    : "Idle";
         }
 
         // ---------------------------------------------------------------- echoes / refresh
@@ -480,7 +538,19 @@ namespace BugFarmer.UI
             _last = msg;
             _lastStamp = Time.time;
 
-            if (_isCraft) RefreshOutput();
+            if (_isCraft)
+            {
+                // Server truth wins on the lane count (stale/missing client craft_slots):
+                // rebuild the rows once, then refresh as normal.
+                if (msg.procs != null && msg.procs.Length > 0 && msg.procs.Length != _procIcons.Count)
+                {
+                    _lanesOverride = msg.procs.Length;
+                    BuildContent();
+                }
+                RefreshOutput();
+                RefreshProcs();
+                RefreshSelected(); // a lane freeing/filling can flip the Craft button
+            }
             else RefreshStorageSlots();
         }
 

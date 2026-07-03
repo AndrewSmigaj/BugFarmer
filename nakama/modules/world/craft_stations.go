@@ -1,6 +1,7 @@
 package world
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"bugfarmer/entities"
@@ -8,14 +9,22 @@ import (
 	"github.com/heroiclabs/nakama-common/runtime"
 )
 
-// craftOutputSlots is the size of every craft station's output grid. A station processes ONE
-// active recipe at a time, so its outputs are a single item type that merges into one stack —
-// the grid only ever holds several stacks when you switch recipes without collecting, so a small
-// grid is plenty.
+// craftOutputSlots is the size of every craft station's output grid. Each processor's output is a
+// single item type that merges into one stack (addOutput is per-item), so even a multi-proc station
+// only holds a handful of live stacks — a small SHARED grid is plenty.
 const craftOutputSlots = 8
 
-// CraftStationState is the runtime state of a recipe processor (furnace/anvil/workbench…). It is
-// a Container (the Output grid) plus the active recipe + a process queue. Lazily created the first
+// CraftProcessor is ONE parallel recipe lane of a craft station: its active recipe, the batches
+// still queued (incl. the one in progress), and the ticks into the current batch. A station has
+// world.craft_slots of these (default 1) — a furnace can smelt two different bars at once.
+type CraftProcessor struct {
+	Recipe   string `json:"recipe,omitempty"`
+	Queue    int    `json:"queue,omitempty"`
+	Progress int    `json:"progress,omitempty"`
+}
+
+// CraftStationState is the runtime state of a recipe station (furnace/anvil/workbench…). It is
+// a Container (the SHARED Output grid) plus N parallel CraftProcessors. Lazily created the first
 // time a player opens the station. Outputs are display/inventory state — NEVER in the sim hash.
 type CraftStationState struct {
 	Key      string // CraftStationKey(gx,gy)
@@ -23,10 +32,47 @@ type CraftStationState struct {
 	GridX    int    // anchor cell
 	GridY    int    // anchor cell
 
-	Output   []InventorySlot // the output grid (collect from here)
-	Recipe   string          // active recipe id ("" = none selected)
-	Queue    int             // batches remaining to produce (incl the one in progress)
-	Progress int             // ticks into the current batch
+	Output []InventorySlot  // the shared output grid (collect from here)
+	Procs  []CraftProcessor // the parallel recipe lanes (len = world.craft_slots, min 1)
+}
+
+// UnmarshalJSON accepts BOTH persisted shapes: the current Procs array and the legacy
+// pre-craft-slots flat Recipe/Queue/Progress (Go-default field names — the struct never had json
+// tags), which folds into Procs[0]. Zone saves round-trip whole CraftStationState values, so
+// shipped worlds carry the legacy shape until their next save.
+func (s *CraftStationState) UnmarshalJSON(data []byte) error {
+	type alias CraftStationState // method-free view — avoids UnmarshalJSON recursion
+	aux := struct {
+		*alias
+		Recipe   string `json:"Recipe"`
+		Queue    int    `json:"Queue"`
+		Progress int    `json:"Progress"`
+	}{alias: (*alias)(s)}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	if len(s.Procs) == 0 && (aux.Recipe != "" || aux.Queue > 0 || aux.Progress > 0) {
+		s.Procs = []CraftProcessor{{Recipe: aux.Recipe, Queue: aux.Queue, Progress: aux.Progress}}
+	}
+	return nil
+}
+
+// craftSlotsFor returns the station's configured parallel-lane count (world.craft_slots, min 1).
+func craftSlotsFor(state *WorldState, entityID string) int {
+	if def := state.Entities[entityID]; def != nil && def.World != nil && def.World.CraftSlots > 1 {
+		return def.World.CraftSlots
+	}
+	return 1
+}
+
+// ensureProcs tops a station's lanes up to its configured craft_slots — the normalize point for
+// legacy restores (0 or 1 lanes) and def changes. Extra lanes beyond a SHRUNK def are kept until
+// they drain: queued batches are never dropped.
+func ensureProcs(state *WorldState, s *CraftStationState) {
+	want := craftSlotsFor(state, s.EntityID)
+	for len(s.Procs) < want {
+		s.Procs = append(s.Procs, CraftProcessor{})
+	}
 }
 
 // CraftStationKey builds the stable cell key for a craft station at a global grid cell.
@@ -60,10 +106,12 @@ func (m *Match) isCraftStationAt(state *WorldState, gx, gy int) bool {
 }
 
 // resolveCraftStation returns the craft station at (gx,gy), lazily creating its state the first
-// time. Returns nil if no craft-station occupant is anchored there.
+// time. Returns nil if no craft-station occupant is anchored there. Always normalizes the lane
+// count (ensureProcs) so restored legacy saves and def changes converge on craft_slots.
 func (m *Match) resolveCraftStation(state *WorldState, gx, gy int) *CraftStationState {
 	key := CraftStationKey(gx, gy)
 	if s := state.CraftStations[key]; s != nil {
+		ensureProcs(state, s)
 		return s
 	}
 	id := m.craftStationEntityAt(state, gx, gy)
@@ -77,6 +125,7 @@ func (m *Match) resolveCraftStation(state *WorldState, gx, gy int) *CraftStation
 		GridY:    gy,
 		Output:   make([]InventorySlot, craftOutputSlots),
 	}
+	ensureProcs(state, s)
 	state.CraftStations[key] = s
 	return s
 }
@@ -238,6 +287,15 @@ func (m *Match) handleCraftStationAction(
 		return
 	}
 
+	// The targeted processor lane. Proc 0 always exists (ensureProcs), so a legacy message
+	// without the field keeps working. collect/get_all are station-level (shared output grid)
+	// and ignore it.
+	proc := msg.Proc
+	if proc < 0 || proc >= len(s.Procs) {
+		m.sendWorldError(dispatcher, state, userID, "No such processor")
+		return
+	}
+
 	invChanged := false
 	switch msg.Op {
 	case "open":
@@ -255,14 +313,14 @@ func (m *Match) handleCraftStationAction(
 				return
 			}
 		}
-		if s.Queue > 0 && msg.Recipe != s.Recipe {
-			m.sendWorldError(dispatcher, state, userID, "Finish or collect the current batch first")
+		if s.Procs[proc].Queue > 0 && msg.Recipe != s.Procs[proc].Recipe {
+			m.sendWorldError(dispatcher, state, userID, "That processor is busy")
 			return
 		}
-		s.Recipe = msg.Recipe
+		s.Procs[proc].Recipe = msg.Recipe
 
 	case "craft":
-		invChanged = m.craftQueue(dispatcher, state, userID, player, s, msg.Recipe, msg.Qty)
+		invChanged = m.craftQueue(dispatcher, state, userID, player, s, proc, msg.Recipe, msg.Qty)
 
 	case "collect":
 		invChanged = craftCollectOne(player, s, msg.Slot)
@@ -283,19 +341,23 @@ func (m *Match) handleCraftStationAction(
 	m.broadcastCraftStationUpdate(dispatcher, state, s)
 }
 
-// craftQueue pulls inputs for up to `qty` batches from the player's inventory and queues them.
-// Inputs are consumed up-front; outputs appear over time. Queues as many as the player can afford.
+// craftQueue pulls inputs for up to `qty` batches from the player's inventory and queues them on
+// the targeted processor lane. Inputs are consumed up-front; outputs appear over time. Queues as
+// many as the player can afford. A lane running a DIFFERENT recipe refuses (the client picks a
+// same-recipe or idle lane before sending).
 func (m *Match) craftQueue(
 	dispatcher runtime.MatchDispatcher,
 	state *WorldState,
 	userID string,
 	player *PlayerState,
 	s *CraftStationState,
+	proc int,
 	recipeID string,
 	qty int,
 ) bool {
+	p := &s.Procs[proc] // caller validated the index
 	if recipeID == "" {
-		recipeID = s.Recipe
+		recipeID = p.Recipe
 	}
 	r := state.Recipes[recipeID]
 	if r == nil || r.Station != s.EntityID {
@@ -306,11 +368,11 @@ func (m *Match) craftQueue(
 		m.sendWorldError(dispatcher, state, userID, "You haven't learned that recipe yet")
 		return false
 	}
-	if s.Queue > 0 && s.Recipe != recipeID {
-		m.sendWorldError(dispatcher, state, userID, "Finish or collect the current batch first")
+	if p.Queue > 0 && p.Recipe != recipeID {
+		m.sendWorldError(dispatcher, state, userID, "That processor is busy")
 		return false
 	}
-	s.Recipe = recipeID
+	p.Recipe = recipeID
 
 	if qty <= 0 {
 		qty = 1
@@ -321,7 +383,7 @@ func (m *Match) craftQueue(
 			break
 		}
 		consumeInputs(player, r)
-		s.Queue++
+		p.Queue++
 		queued++
 	}
 	if queued == 0 {
@@ -331,69 +393,86 @@ func (m *Match) craftQueue(
 	return true
 }
 
-// processCraftStations advances every queued craft station one tick: when a batch's ProcessTicks
-// elapse and the output grid has room, produce one output. Inputs were already consumed at queue
-// time, so a full output grid just STALLS (holds at full progress) until the player collects —
-// nothing is ever lost. Non-deterministic display state; never touches the food ledger.
+// processCraftStations advances every queued processor lane one tick: when a batch's ProcessTicks
+// elapse and the SHARED output grid has room, produce one output. Inputs were already consumed at
+// queue time, so a full output grid just STALLS that lane (holds at full progress) until the
+// player collects — the OTHER lanes keep producing, and nothing is ever lost. Non-deterministic
+// display state; never touches the food ledger.
 func (m *Match) processCraftStations(state *WorldState, dispatcher runtime.MatchDispatcher) {
 	for _, s := range state.CraftStations {
-		if s.Queue <= 0 {
-			s.Progress = 0
-			continue
-		}
-		r := state.Recipes[s.Recipe]
-		if r == nil {
-			s.Queue = 0
-			s.Progress = 0
-			continue
-		}
-		total := r.ProcessTicks
-		if total < 1 {
-			total = 1
-		}
-
-		if s.Progress < total {
-			s.Progress++
-		}
-		if s.Progress < total {
-			// Periodic progress echo so a mid-batch opener / the bar stays roughly synced (the
-			// client interpolates between these for smoothness).
-			if s.Progress%20 == 0 {
-				m.broadcastCraftStationUpdate(dispatcher, state, s)
+		produced := false
+		echo := false
+		for pi := range s.Procs {
+			p := &s.Procs[pi]
+			if p.Queue <= 0 {
+				p.Progress = 0
+				continue
 			}
-			continue
-		}
+			r := state.Recipes[p.Recipe]
+			if r == nil {
+				p.Queue = 0
+				p.Progress = 0
+				continue
+			}
+			total := r.ProcessTicks
+			if total < 1 {
+				total = 1
+			}
 
-		// Batch complete — produce if there's room, else hold and wait for a collect.
-		if !outputHasRoom(s, r.Output.Item) {
-			continue // Progress stays at `total`; retry next tick
+			if p.Progress < total {
+				p.Progress++
+			}
+			if p.Progress < total {
+				// Periodic progress echo so a mid-batch opener / the bar stays roughly synced
+				// (the client interpolates between these for smoothness). One broadcast per
+				// STATION covers every lane.
+				if p.Progress%20 == 0 {
+					echo = true
+				}
+				continue
+			}
+
+			// Batch complete — produce if there's room, else THIS lane holds (others continue).
+			if !outputHasRoom(s, r.Output.Item) {
+				continue // Progress stays at `total`; retry next tick
+			}
+			p.Progress = 0
+			p.Queue--
+			addOutput(s, r.Output.Item, r.Output.Count)
+			produced = true
 		}
-		s.Progress = 0
-		s.Queue--
-		addOutput(s, r.Output.Item, r.Output.Count)
-		m.broadcastCraftStationUpdate(dispatcher, state, s)
+		if produced || echo {
+			m.broadcastCraftStationUpdate(dispatcher, state, s)
+		}
 	}
 }
 
-// broadcastCraftStationUpdate echoes a craft station's output grid + progress to its chunk.
+// broadcastCraftStationUpdate echoes a craft station's shared output grid + every processor
+// lane's recipe/progress to its chunk.
 func (m *Match) broadcastCraftStationUpdate(dispatcher runtime.MatchDispatcher, state *WorldState, s *CraftStationState) {
 	cx, cy, _, _ := GlobalToChunk(s.GridX, s.GridY)
-	total := 0
-	if r := state.Recipes[s.Recipe]; r != nil {
-		total = r.ProcessTicks
-		if total < 1 {
-			total = 1
+	procs := make([]CraftProcInfo, len(s.Procs))
+	for i := range s.Procs {
+		total := 0
+		if r := state.Recipes[s.Procs[i].Recipe]; r != nil {
+			total = r.ProcessTicks
+			if total < 1 {
+				total = 1
+			}
+		}
+		procs[i] = CraftProcInfo{
+			Recipe:   s.Procs[i].Recipe,
+			Progress: s.Procs[i].Progress,
+			Total:    total,
+			Queue:    s.Procs[i].Queue,
 		}
 	}
 	msg := ContainerUpdateMessage{
-		GX:       s.GridX,
-		GY:       s.GridY,
-		Slots:    s.Output,
-		IsCraft:  true,
-		Recipe:   s.Recipe,
-		Progress: s.Progress,
-		Total:    total,
-		Queue:    s.Queue,
+		GX:      s.GridX,
+		GY:      s.GridY,
+		Slots:   s.Output,
+		IsCraft: true,
+		Procs:   procs,
 	}
 	m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeContainerUpdate, msg)
 }

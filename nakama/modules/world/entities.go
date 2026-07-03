@@ -145,7 +145,11 @@ type WorldData struct {
 	// Container properties (item storage — chests, dressers, racks; nil = not a container).
 	// Craft stations are NOT declared here — they're detected by being a key in
 	// RecipesByStation, and their output-grid size is a code constant (§ craft station).
-	Container *ContainerData `json:"container,omitempty"`
+	// craft_slots is their ONE data knob: how many recipes the station runs AT ONCE
+	// (parallel processors; absent/0 = 1). Slow processors (furnace/forge/sawmill…)
+	// get >1; manual benches stay at 1.
+	CraftSlots int            `json:"craft_slots,omitempty"`
+	Container  *ContainerData `json:"container,omitempty"`
 
 	// Shop properties (NPC vendor; nil = not a vendor). interaction_type:"shop" opens its panel.
 	Shop *ShopData `json:"shop,omitempty"`

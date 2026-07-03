@@ -607,7 +607,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "craft_slots": 2
     }
   },
   "anvil": {
@@ -665,7 +666,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "craft_slots": 2
     }
   },
   "cauldron": {
@@ -779,7 +781,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "craft_slots": 2
     }
   },
   "stonecutter": {
@@ -3703,7 +3706,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "craft_slots": 2
     }
   },
   "ant_eggs": {
@@ -6108,7 +6112,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "craft_slots": 2
     }
   },
   "dye_vat": {
@@ -6136,7 +6141,8 @@
             "chance": 1.0
           }
         ]
-      }
+      },
+      "craft_slots": 2
     }
   },
   "spinning_wheel": {

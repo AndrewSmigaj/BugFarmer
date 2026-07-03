@@ -495,6 +495,9 @@ func (m *Match) applyChunkSave(state *WorldState, chunk *ChunkData, cx, cy int) 
 		state.Containers[ContainerKey(ct.GridX, ct.GridY)] = ct
 	}
 	for _, cf := range cs.CraftStations {
+		// Legacy pre-craft-slots saves fold Recipe/Queue/Progress into Procs[0] at unmarshal
+		// (CraftStationState.UnmarshalJSON); top the lanes up to the def's craft_slots here.
+		ensureProcs(state, cf)
 		state.CraftStations[CraftStationKey(cf.GridX, cf.GridY)] = cf
 	}
 	// Ground items (dropped/rotting fruit, bug carcasses) are TRANSIENT ecology state, not authored

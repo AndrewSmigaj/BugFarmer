@@ -372,6 +372,7 @@ type ContainerActionMessage struct {
 	Count  int    `json:"count,omitempty"`  // -1 = whole stack
 	Recipe string `json:"recipe,omitempty"`
 	Qty    int    `json:"qty,omitempty"`
+	Proc   int    `json:"proc,omitempty"` // craft/set_recipe: which processor lane (NOT Slot — that's collect's output cell)
 }
 
 // ShopActionMessage (OpCode 2 / OpCodeAction, C→S): one buy/sell at the NPC vendor occupant at (gx,gy).
@@ -404,17 +405,23 @@ type ShopSellLine struct {
 }
 
 // ContainerUpdateMessage (OpCode 99, S→C): the full contents of a container/craft-station after
-// any change (plus craft progress when it's a station). Display/inventory state only — never in
-// the sim hash. Re-sent on open and on every mutation.
+// any change (plus per-processor craft progress when it's a station). Display/inventory state
+// only — never in the sim hash. Re-sent on open and on every mutation.
 type ContainerUpdateMessage struct {
 	GX     int             `json:"gx"`
 	GY     int             `json:"gy"`
-	Slots  []InventorySlot `json:"slots"`            // chest contents OR craft output grid
+	Slots  []InventorySlot `json:"slots"`            // chest contents OR the craft station's SHARED output grid
 	Filter string          `json:"filter,omitempty"` // tag filter (chests)
 
-	// Craft-station fields (zero/absent for plain chests)
-	IsCraft  bool   `json:"is_craft,omitempty"`
-	Recipe   string `json:"recipe,omitempty"`   // active recipe id
+	// Craft-station fields (zero/absent for plain chests). One CraftProcInfo per processor
+	// lane (world.craft_slots of them).
+	IsCraft bool            `json:"is_craft,omitempty"`
+	Procs   []CraftProcInfo `json:"procs,omitempty"`
+}
+
+// CraftProcInfo is one processor lane's display state inside a ContainerUpdateMessage.
+type CraftProcInfo struct {
+	Recipe   string `json:"recipe,omitempty"`   // the lane's active recipe id
 	Progress int    `json:"progress,omitempty"` // ticks into the current batch
 	Total    int    `json:"total,omitempty"`    // process_ticks of the current batch
 	Queue    int    `json:"queue,omitempty"`    // batches remaining (incl current)

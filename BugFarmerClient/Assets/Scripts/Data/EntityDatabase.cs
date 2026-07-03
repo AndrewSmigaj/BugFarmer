@@ -54,6 +54,9 @@ namespace BugFarmer.Data
             public string[] StationAccepts;  // Item types depositable here (menu filter)
             public int StationCapacity = 10;
 
+            // Craft stations: how many recipes run AT ONCE (parallel processor lanes; 0/absent = 1).
+            public int CraftSlots;
+
             // Container block (item storage: chests/dressers/racks). ContainerSlots > 0 marks a
             // storage occupant; ContainerFilter (a tag) restricts what it accepts ("" = anything).
             public int ContainerSlots;
@@ -414,7 +417,8 @@ namespace BugFarmer.Data
                 Rotatable = data["rotatable"]?.Value<bool>() ?? false,
                 Directions = data["directions"]?.Value<int>() ?? 4,
                 Interactable = data["interactable"]?.Value<bool>() ?? false,
-                InteractionType = data["interaction_type"]?.Value<string>()
+                InteractionType = data["interaction_type"]?.Value<string>(),
+                CraftSlots = data["craft_slots"]?.Value<int>() ?? 0
             };
 
             // Parse footprint array
