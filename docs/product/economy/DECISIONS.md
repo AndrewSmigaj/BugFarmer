@@ -471,3 +471,24 @@ player's REAL inventory (the design recorded in `crafting_buildout.md` "Barter s
   open so a missed basket drag can't free the bugs being sold.
 - **Gates:** 4 falsifiable Go tests (mixed batch / duplicate-slot / negative-qty exploit / bug-dealer batch)
   + suite green; Unity batchmode compile clean (fresh DLL symbol-verified); in-Editor visual pass pending.
+
+### D30 — Per-station craft-slots (Procs lanes) + the crafting sprite pass (2026-07-03)
+The last crafting-buildout mechanic (buildout §6, user-approved) + the user-scoped art pass ("missing +
+placeholders"):
+- **Mechanic:** `CraftStationState` = a SHARED output grid + `Procs []CraftProcessor` lanes
+  (`{Recipe,Queue,Progress}` each); lane count = `world.craft_slots` (default 1). Slots reward SLOW
+  processors: furnace/forge/sawmill/ore_sluice/dye_vat/bug_extractor = 2; manual benches 1. Ops carry a
+  `proc` index (`craft`/`set_recipe`; collect is station-level); the echo carries `procs[]`. A full output
+  stalls ONLY its lane. **Legacy saves migrate** via `UnmarshalJSON` (flat fields → `Procs[0]`) — both
+  shapes load forever. Client: one CraftingPanel row per lane; DoCraft targets same-recipe → idle → refuses.
+- **Finding recorded:** campfire/stove/cooking_pot/cauldron/keg have ZERO recipes → not craft stations at
+  all (recognition = RecipesByStation membership, NOT interaction_type). The "campfire 1 < stoves more"
+  flavor stays inert until cooking recipes (D16/D19 backlog) ship.
+- **Sprites:** 15 truly-missing generated (incl. the only 2 blank crafting outputs laundry_line +
+  specimen_case; plum/cherry/rotten fruit icons with new catalog rows; a real backpack icon — its
+  `icon_from:"ore_sack"` borrow REMOVED because fallback step 1 shadows dedicated icons). ~82 placeholder
+  regens: metal intermediates, gems raw+cut, weapon tiers (regened WITH explicit per-metal look rows after
+  the first pass lost the metal), saw/sickle, rock_crusher/gem_cutter, gem ore blocks, and the 30 tool-tier
+  icons (per-metal catalog rows derived from the `_wood` bases — replacing palette-tint recolors).
+- **Gates:** 5 falsifiable Go tests + suite green; previews rebuilt; in-Editor parallel-smelt + art eyeball
+  pending; live-save migration check deferred (a player was CONNECTED — never swap the plugin mid-session).

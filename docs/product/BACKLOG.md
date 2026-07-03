@@ -106,12 +106,19 @@ canvas, order 30, skippable, fail-safe). Art: `tools/sprites/title_art.py` → `
 
 ## Crafting buildout — remaining pieces (data/sprites/test-zone DONE 2026-06-28; these were specified, not built)
 Plan + designs: `docs/product/economy/crafting_buildout.md` + the saved plan. All three are fully designed.
-- **Per-station craft-slot mechanic** (user-approved) — stations differ by how many recipes run AT ONCE
-  (campfire 1 < stoves more). Server: `craft_slots` int on the station entity (default 1); refactor
-  `CraftStationState` `Recipe/Queue/Progress` into `Procs []CraftProcessor`; `processCraftStations` loops
-  each; persist + migrate legacy single-recipe saves to `Procs[0]`. Wire: add a `proc` index to
-  `ContainerActionMessage` (don't overload `Slot`), a `procs[]` array to `ContainerUpdateMessage`. Client:
-  `CraftingPanel` renders N processor rows. Outside the sim hash.
+- **DONE 2026-07-03 — Per-station craft-slot mechanic.** `Procs []CraftProcessor` lanes (world.`craft_slots`,
+  default 1; furnace/forge/sawmill/ore_sluice/dye_vat/bug_extractor = 2) sharing ONE output grid; legacy
+  saves migrate via `UnmarshalJSON`→`Procs[0]`; `proc` on ContainerActionMessage + `procs[]` on the echo;
+  CraftingPanel renders one row per lane with lane-targeting DoCraft. 5 falsifiable Go tests (migration
+  round-trip, parallel lanes, stall isolation, proc targeting, seeding/top-up) + suite green. NOTE from the
+  build: campfire/stove/cooking_pot/cauldron/keg have ZERO recipes — not functional stations; their
+  craft_slots are moot until cooking recipes ship (cooking = D16/D19 backlog). In-Editor parallel-smelt
+  check pending. Sprite pass shipped alongside: 15 missing sprites + ~82 placeholder regens (metal/gem/
+  weapon/tool tiers now real per-metal art; catalog rows authored). Editor eyeball flags: `specimen_case`
+  reads empty; bronze-vs-gold sword tone is close.
+- **Station panel LAYOUT session (user-requested backlog)** — a joint pass positioning panel elements
+  ("right now they are ok but could be positioned a little better") + the themed per-station dressing
+  (Apico fuel/heat treatment) that was deferred with it.
 - **DONE 2026-07-02 — Barter sell UI** (Apico/BG3; also the playtest **#5** fix). Your REAL inventory opens
   with the shop; stage stacks into a basket (right-/double-click = whole stack; drag via the cursor;
   right-click a basket cell = one-at-a-time partial) → one atomic **`sell_batch`** server op (each line

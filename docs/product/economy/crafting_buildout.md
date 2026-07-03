@@ -59,9 +59,10 @@ Each `dead_<bug>` (the 6: fly/butterfly/wasp/centipede/millipede/beetle) → a m
 silk, etc. Propose: `dead_beetle → chitin` (✓exists), `dead_*` → **leather** (the base mat), spider/silk later
 (no spider in the village 6). **⚠ CONFIRM #4 — the per-bug → material map** (which bug yields what).
 
-### 6. Per-station craft-slot mechanic (this session, user-approved)
-`craft_slots` on stations (default 1); N parallel recipe processors; for stoves to differ by capacity. Server +
-client + persistence migration. (Designed in the plan; outside the sim hash.)
+### 6. Per-station craft-slot mechanic (user-approved) — ✅ BUILT 2026-07-03
+`craft_slots` on stations (default 1); N parallel recipe lanes (`Procs`) sharing one output grid; legacy-save
+migration; lane-targeted craft ops; CraftingPanel lane rows. See architecture_crafting.md + DECISIONS D30.
+(The "stoves differ by capacity" flavor is pending cooking recipes — campfire/stove have none yet.)
 
 ## Systems also in this pass (not recipe content)
 - **Barter sell UI** (atomic `sell_batch` op — good design, not a client loop).

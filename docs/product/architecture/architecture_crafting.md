@@ -23,12 +23,17 @@ path, which crafting does not touch.
 3. **`world.container {slots, filter}`** on storage placeables (`interaction_type:"storage"`) — marks
    a chest/dresser/rack and how many slots + an optional tag filter.
 
-## Runtime state (server, in the match — never persisted, never hashed)
+## Runtime state (server, in the match — never hashed; persisted per-chunk since zone-persist)
 
 - **`ContainerState`** (`handlers_containers.go`) — a chest's `[]InventorySlot` + filter, keyed
   `container_<gx>_<gy>`.
-- **`CraftStationState`** (`craft_stations.go`) — an output grid (`[]InventorySlot`) + the active
-  `Recipe`, a `Queue` of batches, and `Progress`. Keyed `craft_<gx>_<gy>`.
+- **`CraftStationState`** (`craft_stations.go`) — the SHARED output grid (`[]InventorySlot`) +
+  **`Procs []CraftProcessor`**: N parallel recipe lanes, each `{Recipe, Queue, Progress}`. Lane
+  count = the station def's **`world.craft_slots`** (default 1; the six slow processors — furnace,
+  forge, sawmill, ore_sluice, dye_vat, bug_extractor — ship at 2), seeded/topped-up by `ensureProcs`
+  at resolve AND restore. Keyed `craft_<gx>_<gy>`. **Legacy saves** (flat `Recipe/Queue/Progress`)
+  migrate via `CraftStationState.UnmarshalJSON` → `Procs[0]` — whole structs JSON-round-trip inside
+  `ChunkSave`, so both shapes must load forever.
 
 Both are **lazily created on first open** (from the occupant def at the anchor cell) — so pre-placed
 (zone-file) *and* runtime-placed stations work with no placement hook, and a station can't process
@@ -41,15 +46,17 @@ before it's opened anyway. This deliberately differs from compost, which eager-i
   - `quick {zone, slot}` — move a WHOLE stack to the opposite side (double-/shift-click)
   - `move {zone, slot, to_zone, to_slot, count}` — precise drag-drop (server-supported; client drag
     deferred — see backlog)
-  - `set_recipe {recipe}` — craft station: select the active recipe (the client doesn't send this on
-    mere browsing; `craft` carries the id)
-  - `craft {recipe, qty}` — pull inputs from the player's bag up-front (Terraria-style), queue qty batches
-  - `collect {slot}` — take ONE output cell's stack
+  - `set_recipe {recipe, proc}` — craft station: select a LANE's active recipe (the client doesn't
+    send this on mere browsing; `craft` carries the id)
+  - `craft {recipe, qty, proc}` — pull inputs from the player's bag up-front (Terraria-style), queue
+    qty batches on lane `proc` (0 default — legacy messages keep working; a lane running a DIFFERENT
+    recipe refuses "That processor is busy")
+  - `collect {slot}` — take ONE output cell's stack (the grid is station-level; no proc index)
   - `get_all` — sweep the whole output grid (overflow stays)
 - **`OpCodeContainerUpdate` (99, S→C)** — `ContainerUpdateMessage{gx,gy, slots[], filter, is_craft,
-  recipe, progress, total, queue}`, broadcast to the cell's chunk so concurrent viewers stay in sync.
-  After an action that changed the actor's bag, the server also re-sends that player a full inventory
-  sync (OpCode 38).
+  procs[]}` where each `CraftProcInfo` is `{recipe, progress, total, queue}` — one per lane;
+  broadcast to the cell's chunk so concurrent viewers stay in sync. After an action that changed the
+  actor's bag, the server also re-sends that player a full inventory sync (OpCode 38).
 
 `handleContainerAction` (handlers_containers.go) routes craft stations to
 `handleCraftStationAction` (craft_stations.go); everything else is a storage container. Range-checked
@@ -57,11 +64,12 @@ before it's opened anyway. This deliberately differs from compost, which eager-i
 
 ## Processing (the tick)
 
-`processCraftStations` runs each tick beside `processStations`: for every queued station, advance
-`Progress`; at `process_ticks`, if the output grid has room, produce one batch's output and decrement
-`Queue`. Inputs were consumed at queue time, so a full output grid just **stalls** (holds at full
-progress) until the player collects — nothing is ever lost. The client interpolates the progress bar
-between echoes for smoothness.
+`processCraftStations` runs each tick beside `processStations`: for every station, EVERY lane with a
+queue advances `Progress`; at `process_ticks`, if the shared output grid has room (`outputHasRoom` is
+per-item-type), produce one batch's output and decrement that lane's `Queue`. Inputs were consumed at
+queue time, so a full output grid just **stalls that lane** (holds at full progress) until the player
+collects — the OTHER lanes keep producing, and nothing is ever lost. One echo per station covers all
+lanes; the client interpolates each row's bar between echoes.
 
 ## Client UI
 
@@ -69,8 +77,12 @@ between echoes for smoothness.
 `UIBootstrap`, opened from `PlayerInputRouter.RouteRightClick` via `CraftingPanel.Instance
 .TryHandleRightClick`, which reads `world.interaction_type` `"craft"`/`"storage"`). It renders from the
 server echo + `RecipeDatabase`; content rebuilds per-open. Craft: recipe grid → selected inputs as
-have/need (red when short) + qty + Craft → progress bar → output grid + Get-all/double-click. Storage:
-the container grid + your item grid, double-/shift-click to quick-move.
+have/need (red when short) + qty + Craft → **one processor ROW per lane** (icon of what the lane is
+making + interpolated bar + "Ns ×Q" queue label) → output grid + Get-all/double-click. `DoCraft`
+targets a lane already running the selected recipe, else the first idle one; the Craft button
+disables (+ "(all lanes busy)") when no lane can take it. Lane count from published `craft_slots`,
+with a server-echo override rebuild if they disagree. Storage: the container grid + your item grid,
+double-/shift-click to quick-move.
 
 ## What is NOT touched
 
