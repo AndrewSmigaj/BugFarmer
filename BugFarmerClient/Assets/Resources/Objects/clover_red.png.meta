@@ -1,10 +1,13 @@
 fileFormatVersion: 2
-guid: 4fec99c677b4a414eb53da42d46e3106
+guid: 903f31b6e855b4a47a48481c3ff01ca1
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -6201596103309135139
-    second: axe_gold_icon_0
+      213: 3111476535563842468
+    second: clover_red_0
+  - first:
+      213: 8357336785441887957
+    second: clover_red_1
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -37,7 +40,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 0
+    filterMode: 1
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -46,7 +49,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -113,13 +116,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: axe_gold_icon_0
+      name: clover_red_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 32
-        height: 32
+        width: 24
+        height: 17
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +131,30 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: dd2ffc593318fe9a0800000000000000
-      internalID: -6201596103309135139
+      spriteID: 4a3fe3d7c6f2e2b20800000000000000
+      internalID: 3111476535563842468
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: clover_red_1
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 12
+        width: 9
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d6919cf6893bf370800000000000000
+      internalID: 8357336785441887957
       vertices: []
       indices: 
       edges: []
@@ -138,7 +163,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -148,7 +173,8 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      axe_gold_icon_0: -6201596103309135139
+      clover_red_0: 3111476535563842468
+      clover_red_1: 8357336785441887957
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

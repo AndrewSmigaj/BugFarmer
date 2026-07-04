@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 4fec99c677b4a414eb53da42d46e3106
+guid: 934f06ab375df23499576925ef76e5bb
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -6201596103309135139
-    second: axe_gold_icon_0
+      213: 851673205718250202
+    second: stump_mossy_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -37,7 +37,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 0
+    filterMode: 1
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -113,7 +113,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: axe_gold_icon_0
+      name: stump_mossy_0
       rect:
         serializedVersion: 2
         x: 0
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: dd2ffc593318fe9a0800000000000000
-      internalID: -6201596103309135139
+      spriteID: ad2fd8ba440c1db00800000000000000
+      internalID: 851673205718250202
       vertices: []
       indices: 
       edges: []
@@ -138,7 +138,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      axe_gold_icon_0: -6201596103309135139
+      stump_mossy_0: 851673205718250202
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

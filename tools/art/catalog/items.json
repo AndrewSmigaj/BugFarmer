@@ -510,5 +510,37 @@
   "spear_bronze": {
     "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of warm brown-gold BRONZE with a soft metallic sheen, blunt butt at the bottom-left",
     "family": "icon"
+  },
+  "copper_bar": {
+    "look": "a cast metal INGOT BAR of polished salmon-orange COPPER with a warm metallic sheen: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
+    "family": "icon"
+  },
+  "iron_bar": {
+    "look": "a cast metal INGOT BAR of grey IRON with a dull metallic sheen: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
+    "family": "icon"
+  },
+  "bronze_bar": {
+    "look": "a cast metal INGOT BAR of warm brown-gold BRONZE with a soft metallic sheen: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
+    "family": "icon"
+  },
+  "steel_bar": {
+    "look": "a cast metal INGOT BAR of bright silver-grey STEEL with a crisp metallic sheen: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
+    "family": "icon"
+  },
+  "silver_bar": {
+    "look": "a cast metal INGOT BAR of gleaming pale SILVER with a bright white sheen: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
+    "family": "icon"
+  },
+  "gold_bar": {
+    "look": "a cast metal INGOT BAR of rich yellow GOLD with a warm glint: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
+    "family": "icon"
+  },
+  "platinum_bar": {
+    "look": "a cast metal INGOT BAR of pale icy blue-white PLATINUM with a cold sheen: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
+    "family": "icon"
+  },
+  "wood": {
+    "look": "a solid square BLOCK of warm brown WOOD, face-on like a building block: horizontal plank boards with darker seams and simple wood grain, a lighter top edge; chunky readable block silhouette (this is the wood-block material item)",
+    "family": "icon"
   }
 }
