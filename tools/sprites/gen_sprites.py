@@ -408,6 +408,54 @@ def canvas_size_for(ent):
     return "1024x1024"       # near-square (bookshelf, etc.)
 
 
+EDIT_URL = "https://api.openai.com/v1/images/edits"
+
+# --ref mode: the attached sprite is the family template — the model reproduces its exact
+# silhouette/angle/pixel style and changes only what the catalog look asks (material, color).
+# This is how a FAMILY (metal bars, tool tiers) stays consistent instead of 7 unrelated takes.
+REF_FRAMING = (
+    "USE THE ATTACHED IMAGE AS THE EXACT TEMPLATE: reproduce the SAME object with the SAME "
+    "silhouette, the SAME camera angle, the SAME proportions, outline and pixel-art style, at "
+    "the SAME scale and framing, on the same transparent background. Change ONLY what the "
+    "description below requires (material / color / small identifying details).\n\n"
+)
+
+
+def call_api_ref(prompt, ref_path, quality, api_key, model="gpt-image-1", size="1024x1024",
+                 background="transparent"):
+    """images/edits with a reference sprite (multipart). Feed the RAW 1024px cache of the hero
+    (tools/_generated/raw/<key>.png), not the 32px cleaned sprite — the model needs the detail."""
+    with open(ref_path, "rb") as f:
+        ref_bytes = f.read()
+    boundary = "----bugfarmer-ref-boundary"
+    parts = []
+
+    def field(name, value):
+        parts.append((f"--{boundary}\r\nContent-Disposition: form-data; "
+                      f"name=\"{name}\"\r\n\r\n{value}\r\n").encode("utf-8"))
+
+    field("model", model)
+    field("prompt", prompt)
+    field("size", size)
+    field("quality", quality)
+    field("background", background)
+    field("n", "1")
+    parts.append((f"--{boundary}\r\nContent-Disposition: form-data; name=\"image[]\"; "
+                  f"filename=\"ref.png\"\r\nContent-Type: image/png\r\n\r\n").encode("utf-8")
+                 + ref_bytes + b"\r\n")
+    parts.append(f"--{boundary}--\r\n".encode("utf-8"))
+    body = b"".join(parts)
+    req = urllib.request.Request(
+        EDIT_URL, data=body,
+        headers={"Authorization": f"Bearer {api_key}",
+                 "Content-Type": f"multipart/form-data; boundary={boundary}"},
+        method="POST")
+    with urllib.request.urlopen(req, timeout=180) as resp:
+        payload = resp.read()
+    data = json.loads(payload)
+    return base64.b64decode(data["data"][0]["b64_json"])
+
+
 def call_api(prompt, quality, api_key, model="gpt-image-1", size="1024x1024",
              background="transparent"):
     body = json.dumps({
@@ -606,6 +654,10 @@ def main():
     ap.add_argument("--model", default="gpt-image-1", help="image model (e.g. gpt-image-1, gpt-image-2)")
     ap.add_argument("--dry-run", action="store_true", help="print prompts, no API call")
     ap.add_argument("--force", action="store_true", help="overwrite existing sprites")
+    ap.add_argument("--ref", metavar="PNG",
+                    help="reference sprite (images/edits): every key reproduces this image's exact "
+                         "silhouette/angle/style, changing only its look-row material — use the RAW "
+                         "1024px cache of a hero sprite to keep a family consistent")
     ap.add_argument("--limit", type=int, help="cap number of assets")
     ap.add_argument("--segment-sheet", metavar="PATH",
                     help="split an existing sheet into figures by transparent gaps")
@@ -690,7 +742,11 @@ def main():
             continue
 
         try:
-            png = call_api(prompt, args.quality, api_key, args.model, size=canvas_size_for(ent))
+            if args.ref:
+                png = call_api_ref(REF_FRAMING + prompt, args.ref, args.quality, api_key,
+                                   args.model, size=canvas_size_for(ent))
+            else:
+                png = call_api(prompt, args.quality, api_key, args.model, size=canvas_size_for(ent))
             _cat = ent.get("category", "")               # blocks/walls keep full width so they tile sideways
             keep_width = is_linear_connector(key, _cat) or _cat in ("block", "ore")
             size = trim_and_save(png, key, dest, ent.get("sprite_w") or 16,

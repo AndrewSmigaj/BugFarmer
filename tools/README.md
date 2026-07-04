@@ -30,7 +30,7 @@ raw/ ab/ blocklab/ variants/ scratch/ ecology_charts/   sprite staging + transie
 **`sprites/`** — art generation + cleanup (most hit the paid API or overwrite art — read the warnings)
 | Script | One-liner |
 |---|---|
-| `gen_sprites.py` | gpt-image-1 sprite gen from `art/catalog/*.json` (`--dry-run` first) |
+| `gen_sprites.py` | gpt-image-1 sprite gen from `art/catalog/*.json` (`--dry-run` first). `--ref <raw.png>` = FAMILY consistency: every key reproduces the reference sprite's exact silhouette/angle/style, changing only its look-row material (feed the hero's RAW 1024px cache from `_generated/raw/`, e.g. the 7 metal bars from one hero ingot) |
 | `pixelclean.py` | downscale+quantize sprites IN PLACE under Resources (⚠ no-args sweeps EVERYTHING — use per-key / `--items`) |
 | `recolor_sprites.py` | tool-tier recolors from a base sprite |
 | `ui_sprites.py` / `veg_sprites.py` | UI kit + vegetation-stage sprites |

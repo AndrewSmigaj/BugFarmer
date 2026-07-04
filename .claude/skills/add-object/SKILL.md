@@ -70,9 +70,13 @@ PNG, and run the acceptance check.
 - **Hand tools/weapons follow the DIAGONAL contract** (grip bottom-left, head top-right) — the same
   sprite is the in-hand swing art (`PlayerToolAnimator`). Say it in the look ("...HANDLE running to
   the bottom-left"). Watering cans are the 3/4-view exception.
-- **Tool TIERS are recolors, not generations**: author + generate only the `{family}_wood` base, then
-  `python3 tools/sprites/recolor_sprites.py --family <family>` derives every `{family}_{tier}` in items.json
-  (material ramps live inline in that script). Adding a new tier = items.json entry + re-run recolor.
+- **FAMILIES (tool/weapon tiers, metal bars) use REFERENCE generation, not recolors** (changed
+  2026-07-04; the old `recolor_sprites.py` palette-tints read as "tinted copies" and were replaced):
+  generate ONE hero of the family, eyeball it, then
+  `python3 tools/sprites/gen_sprites.py --source items --force --ref tools/_generated/raw/<hero>.png --keys <siblings>`
+  — the reference keeps every sibling on the hero's exact silhouette/angle/pixel style while each
+  key's catalog look swaps the material (author EXPLICIT per-metal look rows; a row that just says
+  "metal" loses the tier identity). Retry any sibling that breaks shape (happens ~1 in 7).
 
 ## Acceptance checklist (per sprite)
 - Reads instantly as the intended object at game zoom; correct silhouette.

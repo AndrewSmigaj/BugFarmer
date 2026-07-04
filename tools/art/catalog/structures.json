@@ -6,7 +6,7 @@
     "look": "an AUTONET automatic fly-catcher seen front-on, WIDER than tall: on the left a round spinning electric FAN in a housing, and ATTACHED right beside it a cylindrical metal TANK/vat with a mesh intake; the fan sucks flies through the opening into a collection net inside the tank. A quirky two-part bug-suction machine on little legs."
   },
   "bait_basket": {
-    "look": "a small round WICKER BASKET of fishing bait — woven tan straw sides, a few worms/grubs poking over the rim; NOT a trash bin",
+    "look": "a small round WICKER BASKET of fishing bait \u2014 woven tan straw sides, a few worms/grubs poking over the rim; NOT a trash bin",
     "materials": [
       "wood"
     ]
@@ -63,7 +63,7 @@
     ]
   },
   "fly_netting": {
-    "look": "a square patch of NET hung up: a flat square panel of fine MESH — a simple GRID OF CROSSED STRINGS, slightly slack — with a few small dark FLIES caught on it. Just the open mesh grid, NO wooden frame, NO box, NO solid panel; you can see through the holes."
+    "look": "a square patch of NET hung up: a flat square panel of fine MESH \u2014 a simple GRID OF CROSSED STRINGS, slightly slack \u2014 with a few small dark FLIES caught on it. Just the open mesh grid, NO wooden frame, NO box, NO solid panel; you can see through the holes."
   },
   "garden_arch": {
     "look": "a GARDEN ARCH / trellis archway seen front-on: two slim posts joined by an arched top, with climbing green VINES and small flowers over it and an open walk-through gap in the middle. A decorative garden arch."
@@ -75,7 +75,7 @@
     "look": "a section of trimmed HEDGE: a dense flat-topped block of green leafy shrubbery, like a low green wall. The foliage spans the FULL WIDTH and bleeds off the left and right edges so sections tile into one continuous hedge with no gap."
   },
   "ladder": {
-    "look": "a tall WOODEN LADDER standing upright — two vertical side rails joined by evenly spaced horizontal rungs; NOT a fence, NOT a wall",
+    "look": "a tall WOODEN LADDER standing upright \u2014 two vertical side rails joined by evenly spaced horizontal rungs; NOT a fence, NOT a wall",
     "materials": [
       "wood"
     ]
@@ -84,7 +84,7 @@
     "look": "a bug-catching NET STATION: a tall wooden POST with a round hoop NET of fine pale mesh mounted at the top (a butterfly-style net fixed upright on a stand). Clearly a net on a post."
   },
   "notice_board": {
-    "look": "a wooden NOTICE BOARD — a framed board on a post with a few pinned PAPER notes; NOT a door, NOT a blank post",
+    "look": "a wooden NOTICE BOARD \u2014 a framed board on a post with a few pinned PAPER notes; NOT a door, NOT a blank post",
     "materials": [
       "wood"
     ]
@@ -143,7 +143,7 @@
     "look": "a wooden SHOP SIGN on a post painted with a green LEAF and a small bug; a naturalist/ecologist sign"
   },
   "market_stall": {
-    "look": "an open-air MARKET STALL — a wooden counter under a striped peaked AWNING roof on poles, seen front-on; a trading booth, NOT a tent"
+    "look": "an open-air MARKET STALL \u2014 a wooden counter under a striped peaked AWNING roof on poles, seen front-on; a trading booth, NOT a tent"
   },
   "awning": {
     "look": "a striped fabric AWNING projecting out from a shop front, scalloped front edge, seen front-on; a shade canopy strip"
@@ -219,5 +219,11 @@
   },
   "sign_mason": {
     "look": "a stonemason's wooden SHOP SIGN TWO cells wide: a horizontal carved wooden board hung from a frame, a grey chisel-and-mallet emblem carved on it. A storefront sign seen front-on."
+  },
+  "bug_extractor": {
+    "look": "a BUG EXTRACTOR craft station: a squat copper-and-brass apparatus on a wooden bench base \u2014 a glass bell jar on top, a small hand-crank on the side, a spigot and collection vial at the front; alchemical workshop feel"
+  },
+  "fence_stone": {
+    "look": "a section of low STONE WALL fence: stacked rough grey fieldstones with visible mortar joints, a flat capstone course on top (same post-and-rail layout family as the other fences: runs left and right)"
   }
 }

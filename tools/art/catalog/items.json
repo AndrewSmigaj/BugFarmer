@@ -516,7 +516,7 @@
     "family": "icon"
   },
   "iron_bar": {
-    "look": "a cast metal INGOT BAR of grey IRON with a dull metallic sheen: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
+    "look": "ONE cast metal INGOT of grey IRON: a classic trapezoid ingot (narrow flat top, wider base) lying horizontally, seen face-on from slightly above so the flat top face and the front face both read; bright highlight band along the top edge, mid-grey front, darker base shadow line; crisp clean silhouette, nothing else in frame",
     "family": "icon"
   },
   "bronze_bar": {
@@ -541,6 +541,50 @@
   },
   "wood": {
     "look": "a solid square BLOCK of warm brown WOOD, face-on like a building block: horizontal plank boards with darker seams and simple wood grain, a lighter top edge; chunky readable block silhouette (this is the wood-block material item)",
+    "family": "icon"
+  },
+  "chitin": {
+    "look": "a curved shard of insect CHITIN shell: glossy dark brown-black plate with a ridged edge and an amber highlight along the curve",
+    "family": "icon"
+  },
+  "cloth": {
+    "look": "a neatly folded square of woven CLOTH fabric, soft cream-beige, with visible fold lines and a slightly draped front edge",
+    "family": "icon"
+  },
+  "glass": {
+    "look": "a clear square pane of GLASS seen face-on: pale ice-blue with two diagonal white glare streaks and a thin lighter edge",
+    "family": "icon"
+  },
+  "leather": {
+    "look": "a rolled-up piece of tanned brown LEATHER hide, the roll seen from its side with the coil spiral visible on the end, a strap of hide tying it",
+    "family": "icon"
+  },
+  "plank": {
+    "look": "two stacked sawn WOOD PLANKS, warm brown with visible grain and lighter cut ends, slightly offset",
+    "family": "icon"
+  },
+  "silk": {
+    "look": "a loose skein of pale ivory SILK thread folded into a soft loop, with a subtle pearly sheen",
+    "family": "icon"
+  },
+  "thread": {
+    "look": "a wooden SPOOL wound with dark red THREAD, seen slightly from above, a loose thread end trailing",
+    "family": "icon"
+  },
+  "gardener_gloves": {
+    "look": "a pair of sturdy canvas GARDENING GLOVES, olive-green with brown leather palms, lying overlapped",
+    "family": "icon"
+  },
+  "magnifying_glass": {
+    "look": "a MAGNIFYING GLASS with a round brass rim, pale blue lens with a white glare streak, and a short wooden handle at the lower-left",
+    "family": "icon"
+  },
+  "reed_hat": {
+    "look": "a woven REED sun HAT with a wide round brim and a domed crown, warm straw-yellow with a thin darker band",
+    "family": "icon"
+  },
+  "coal": {
+    "look": "a single jagged LUMP OF COAL: an irregular angular black-charcoal chunk with faceted faces and subtle blue-grey highlights on the upper edges",
     "family": "icon"
   }
 }
