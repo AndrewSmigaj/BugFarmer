@@ -58,10 +58,21 @@ func TestBeeForageTripLoop(t *testing.T) {
 
 	// HUNGRY: predationThink must DECLINE (return false) → the shared forage block owns the
 	// beat and dines on flowers. A wasp (prey-bearing) in the same state would return true.
+	// CRITICAL (the bee_arena starve-sawtooth): the decline must leave the swarm FORAGE-CAPABLE
+	// — a fresh resident is born at Phase "" (nest species skip the standard phase machine), and
+	// attractions are looked up BY PHASE, so an un-normalized handoff starves the colony beside
+	// a full flower field. Assert at the altitude that failed: attractions resolve after decline.
 	resident.Satiation = 50
+	resident.Phase = "" // exactly how nestSpawnResident leaves a fresh resident
 	state.TickCount = resident.NextThinkTick + 1
 	if m.predationThink(state, resident, bee, 32, 0.1, nopRuntimeLogger()) {
 		t.Fatal("a hungry prey-less bee must decline ownership (forage on nectar instead)")
+	}
+	if resident.Phase != "feeding" {
+		t.Fatalf("decline must normalize Phase for the forage handoff: got %q, want feeding", resident.Phase)
+	}
+	if attractions := resident.GetCurrentAttractions(bee); len(attractions) == 0 {
+		t.Fatal("post-decline the swarm must RESOLVE its feeding attractions (else it starves at the hive)")
 	}
 
 	// FULL and FAR from the hive: homing owns the beat (emits the flight leg home).

@@ -222,6 +222,15 @@ func (m *Match) predationThink(
 	// honey). Defend/homing/feed-pause above still preempt. At/above full with no live nest
 	// (orphan), it falls through to the home-range rest-wander below, like orphan wasps.
 	if p.NestOccupant != "" && len(p.Prey) == 0 && swarm.Satiation < predatorFullSatiation {
+		// PHASE NORMALIZATION AT THE HANDOFF (the bee_arena starve-sawtooth root cause): the
+		// shared forage block reads attractions BY PHASE, and nest species skip the standard
+		// phase machine (match.go — the sated→"reproducing" flip would strand them). A fresh
+		// resident is born at Phase "" and would look up attractions for "" forever — starving
+		// beside a full flower field. Default to "feeding" here, exactly like the centipede
+		// think's own "" → feeding default; deposits already set "feeding" on arrival.
+		if swarm.Phase == "" || swarm.Phase == "idle" {
+			swarm.Phase = "feeding"
+		}
 		return false
 	}
 

@@ -40,7 +40,8 @@ DEFAULT_LAB = {
     # HARD per-species BUG cap (max_population) = the crash-guard. The server mints ZERO bugs past it;
     # food only paces how fast a pen climbs. Without it a renewable food source explodes a pen.
     "max_pop": {"fly_common": 150, "butterfly_meadow": 100, "wasp_common": 40,
-                "centipede_garden": 30, "millipede": 30, "beetle_carrion": 20},
+                "centipede_garden": 30, "millipede": 30, "beetle_carrion": 20,
+                "bee_honey": 40},
     # Ecology Director — THREE-TIER bands per species (ecology_director.go). Natural dynamics own the
     # middle [event_low..event_high]; the Director acts only at the edges, gentlest-first: re-seed
     # (extreme low) / extra-rain (moderate low) / DROUGHT (moderate high) / hard cull (extreme high).
@@ -52,6 +53,9 @@ DEFAULT_LAB = {
         "centipede_garden": {"min_population": 5,  "cull_at": 24},
         "millipede":        {"min_population": 3,  "cull_at": 24},
         "beetle_carrion":   {"min_population": 2,  "cull_at": 16},
+        # Bees: min_population 0 = the Director NEVER reseeds — the D-phase gate is that the
+        # colony is SELF-maintained via the nest economy (b_nest births only, b_reseed 0).
+        "bee_honey":        {"min_population": 0,  "cull_at": 0, "max_nests": 4},
     },
     # Per-species spawn-cap fields (merged onto every species_cap). swarm_size/initial/max only.
     "caps": {
@@ -61,6 +65,7 @@ DEFAULT_LAB = {
         "centipede_garden": {"initial": 2, "max": 12, "swarm_size": 6},
         "millipede":        {"initial": 2, "max": 8,  "swarm_size": 1},
         "beetle_carrion":   {"initial": 2, "max": 4,  "swarm_size": 1},
+        "bee_honey":        {"initial": 0, "max": 12, "swarm_size": 4},  # nest-founded only, never free-spawned
     },
 }
 
@@ -142,6 +147,19 @@ def build_lab(lab):
     extra_spawns.append(("fly_pen_millipede", "millipede", 24, 20, 6))
     extra_spawns.append(("fly_pen_beetle", "beetle_carrion", 24, 28, 6))
 
+    # BEE ARENA (second row): the beekeeping loop under observation. A wild hive auto-founds its
+    # colony (initial spawns 0 — the nest IS the population source); a dense flower cluster on the
+    # west side is the nectar economy; a raider WASP NEST sits just OUTSIDE the east wall, across
+    # the pen gap — wasps don't fly over fences, so the gap at (56,68) is their raid corridor into
+    # the colony (their prey list includes bee_honey). Gate bands: bees self-maintained via b_nest
+    # (b_reseed 0 — the Director can't reseed bees), honey accrues on deposits, raids don't extinct.
+    fence_rect(8, 48, 56, 88, "fence_wood", gap=pen_gap(56, 68))
+    for (x, y) in [(14, 58), (20, 58), (26, 60), (14, 66), (20, 66),
+                   (26, 70), (14, 76), (20, 76), (26, 78)]:
+        place(x, y, ["flower_wild", "flower_red", "flower_blue", "flower_yellow"][(x + y) % 4])
+    place(34, 68, "bee_hive_wild")
+    place(64, 68, "wasp_nest")  # the raiders' base, outside the wall, facing the gap
+
     # --- assemble species_caps from the lab quantities ---
     max_pop, director, caps = lab["max_pop"], lab["director"], lab["caps"]
     species_caps, spawn_areas = {}, []
@@ -151,8 +169,9 @@ def build_lab(lab):
         c.update(director.get(sp, {}))
         species_caps[sp] = c
         spawn_areas.append({"id": label, "species": [sp], "type": "circle", "cx": cx, "cy": cy, "radius": r})
-    # decomposers (no pen of their own — capped here, spawned via extra_spawns)
-    for sp in ("millipede", "beetle_carrion"):
+    # decomposers + bees (no free-spawn pen of their own — decomposers spawn via extra_spawns;
+    # bees are founded entirely by their nest, so they get a cap entry and NO spawn area)
+    for sp in ("millipede", "beetle_carrion", "bee_honey"):
         c = {"max_population": max_pop[sp], "spawn_interval": 999999.0}
         c.update(caps.get(sp, {}))
         c.update(director.get(sp, {}))

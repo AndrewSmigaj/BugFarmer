@@ -365,3 +365,37 @@ Six data-guided runs, each lever chosen from the profiler/interaction-log, not g
 **Follow-ups logged (structural, not tunable):** beetle carrion supply (zone change); wasp prey-base→30-50;
 centipede kills→breeding-conversion (Go fix); and the Phase-3 perf target the profiler proved: a spatial
 index for FindNearbyFood (the dominant cost; merge is negligible at 5ms/day).
+
+## 2026-07-05 — Bee arena (bug_lab) — the D-phase gate for the beekeeping milestone
+
+**Setup:** new BEE ARENA in make_bug_lab (second row): wild `bee_hive_wild` (auto-founds 4; species_caps
+initial 0 — the nest IS the population source; Director min_population 0 = reseed impossible, so
+self-maintenance is unmaskable) + 9-flower nectar cluster (west) + a raider `wasp_nest` OUTSIDE the east
+wall across the pen gap (wasps don't cross fences; the gap is the raid corridor; wasp prey now includes
+bee_honey). Also: run_config now WIPES the zone's persisted zone_state before each run (under the new
+one-doc persistence, sidecars/nests would otherwise carry across runs — the 40k-rotten-fruit class), and
+its 6 plot calls were repointed tools/ → tools/ecology/ (broken since the repo reorg; runs after ~06-30
+archived note.md ONLY, no charts).
+
+**Run 1 (`bee_arena`, seed 4242, 250s ≈ 14 game-days):** bees = a 4→0 starve-refound SAWTOOTH (~25
+cycles): births 100% b_nest, deaths 100% d_starve, avg_sat ≈ 0 with refound blips; RESSTATS nectar
+NEVER moved (~900-980 of ~1100 cap) → the bees never ate at all (not competition, not raids — PREDLOG 0).
+**Root cause (code, not tuning):** nest species deliberately SKIP the standard phase machine
+(match.go — the sated→"reproducing" flip would strand them), so a fresh resident is born Phase "" and
+GetCurrentAttractions([""]) = nil forever → the shared forage block never targets a flower → the colony
+starves beside a full field, and nest recovery (nectar-gated ✓) refounds it — the sawtooth.
+
+**Fix (predation.go, the decline branch):** the prey-less-nest-forager handoff normalizes Phase
+""/idle → "feeding" (the same default the centipede think uses) so attractions resolve. Unit test
+extended to assert AT the failed altitude: post-decline Phase == feeding AND attractions resolve.
+
+**Run 2 (same config + fix):** see the entry below this one (appended after the rerun).
+**Run 2 (same config + the phase fix): GATE PASS.** Colony 4 → ~40 in under a day, holds 36-40 for 13
+game-days (min 4, mean 38): ECOSTATS b_reseed=0 every day, all growth b_nest (avg_sat 80 on day 1 — they
+eat now); nectar stock draws 900+ → 640-750 (measurable foraging, run 1 never moved it); the persisted
+wild hive holds honey=3.0 = EXACTLY its honey_cap (the ~36-deposit accrual capped, round-tripped through
+the WorldSave doc); wasp nests hold honey 0 (no accrual leak); raids/churn dip the colony but never
+extinct it. HONEST CAVEATS for the real zone: (1) bees PIN at max_pop 40 with high d_starve churn
+(19-33/day) — cap-bound, not nectar-bound; the real bound must come from flower density + zone caps in
+bee_meadow_20 (lab balance doesn't transfer, per §1). (2) The wasp square-wave (their known-broken nest
+economy, PREDLOG≈0) predates this work and is unchanged — still the open problem in §6.

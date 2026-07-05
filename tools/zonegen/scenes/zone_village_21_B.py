@@ -611,6 +611,12 @@ def build(zone_id="village_21_B", vseed=0):
             {"item": "dead_millipede", "x": 188, "y": 236, "count": 1},
         ],
     }
+    # World-map identity — written by save() directly (the old post-save zone.json patch is
+    # retired; ZoneBuilder.grid/.neighbors are first-class now). South = the underground
+    # (which declares "north": "village_21_B" back); west = Bee Meadow (the road tapering
+    # toward (2,124) + the stream entering at (0,76) continue there).
+    b.grid = (2, 1)
+    b.neighbors = {"south": "underground_passages_31", "west": "bee_meadow_20"}
     return b
 
 
@@ -625,15 +631,6 @@ if __name__ == "__main__":
     print("render ->", out)
     if "--save" in sys.argv:
         out_dir = b.save()
-        # save() writes row/col 0,0 and no neighbors — patch the world-grid slot (2,1) and restore the
-        # zone link the builder drops (south edge -> the underground; underground_passages_31 already
-        # declares "north": "village_21_B"). Without this, walking off the south edge black-screens.
-        import json
-        zj = os.path.join(out_dir, "zone.json")
-        cfg = json.load(open(zj))
-        cfg["row"], cfg["col"] = 2, 1
-        cfg["neighbors"] = {"south": "underground_passages_31"}
-        json.dump(cfg, open(zj, "w"), indent=2)
         print("saved ->", out_dir)
         # THE VISIBLE VILLAGE: real-art renders land in the previews on every
         # save (full overview + readable region crops) — they can never go

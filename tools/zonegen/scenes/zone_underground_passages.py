@@ -233,6 +233,9 @@ def build(zone_id="underground_passages_31"):
             {"item": "dead_beetle", "x": 200, "y": 72, "count": 2},
         ],
     }
+    # World-map identity — save() writes these directly now (post-save patching retired).
+    b.grid = (3, 1)
+    b.neighbors = {"north": "village_21_B"}
     return b
 
 
@@ -246,10 +249,4 @@ if __name__ == "__main__":
     print("preview ->", os.path.join(zdir, "full.png"))
     if "--save" in sys.argv:
         out_dir = b.save()
-        import json
-        zj = os.path.join(out_dir, "zone.json")
-        cfg = json.load(open(zj))
-        cfg["row"], cfg["col"] = 3, 1
-        cfg["neighbors"] = {"north": "village_21_B"}
-        json.dump(cfg, open(zj, "w"), indent=2)
         print("saved ->", out_dir)

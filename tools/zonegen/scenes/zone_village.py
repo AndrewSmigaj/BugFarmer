@@ -148,14 +148,11 @@ def build(zone_id="village_21", vseed=0):
     }
 
     Z.spawn = [MAINX, OY + 53]                                        # on the main street, by the square
+    Z.grid = (2, 1)                                                   # world-map slot (save() writes it now)
     return Z
 
 
 if __name__ == "__main__":
-    import json
     Z = build()
     out = Z.save()
-    cfg_path = os.path.join(out, "zone.json")                        # save() writes row/col 0,0 — restore world pos
-    cfg = json.load(open(cfg_path)); cfg["row"], cfg["col"] = 2, 1
-    json.dump(cfg, open(cfg_path, "w"), indent=2)
     print("saved 256x256 zone ->", out, "| spawn", Z.spawn, "| occupants", len(Z.occ))

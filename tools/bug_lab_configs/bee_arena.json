@@ -1,0 +1,8 @@
+{
+  "name": "bee_arena",
+  "description": "Bee colony observation: wild hive (auto-founded, initial 0, NO Director reseed) + 9-flower nectar cluster + a raider wasp nest across the pen gap. Gate bands: bees self-maintained via b_nest, honey accrues on deposits, wasp raids don't extinct the colony.",
+  "lab": {},
+  "tuning": {},
+  "species": {},
+  "fruit": {}
+}

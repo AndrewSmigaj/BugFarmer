@@ -61,6 +61,11 @@ class ZoneBuilder:
         self.biome = biome
         self.spawn = [width // 2, height // 2]
         self.bug_spawning = None
+        # World-map identity, written by save() (retires the old post-save zone.json patching):
+        # grid = (row, col) in the world grid; neighbors = {"north"/"south"/"east"/"west": zone_id}
+        # zone links (walking off an edge enters that neighbor). Defaults match the old save().
+        self.grid = (0, 0)
+        self.neighbors = None  # dict or None
         self.meta = _load_entity_meta()
         self.warnings = []
         self.ground = [[base_tile] * width for _ in range(height)]
@@ -386,10 +391,13 @@ class ZoneBuilder:
         out = os.path.join(zones_dir, self.zone_id)
         os.makedirs(out, exist_ok=True)
         cfg = {
-            "zone_id": self.zone_id, "name": self.name, "row": 0, "col": 0,
+            "zone_id": self.zone_id, "name": self.name,
+            "row": self.grid[0], "col": self.grid[1],
             "width": self.W, "height": self.H, "spawn_point": list(self.spawn),
             "biome_type": self.biome, "seed": self.seed,
         }
+        if self.neighbors:
+            cfg["neighbors"] = dict(self.neighbors)
         if self.bug_spawning is not None:
             cfg["bug_spawning"] = self.bug_spawning
         with open(os.path.join(out, "zone.json"), "w") as f:

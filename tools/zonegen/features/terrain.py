@@ -384,6 +384,27 @@ def stream(b, start, end, *, width=1, seed=0, wobble=0.5):
     return cells
 
 
+def bridge(b, start, end):
+    """A straight WOODEN BRIDGE between two points (a road/path crossing a stream): every WATER
+    cell on the line becomes walkable `bridge_wood` (surface path, un-reserved — the dock-plank
+    precedent in scene_lakeside); land cells along the line are left untouched, so butt the
+    bridge right up to the banks. Axis-aligned or shallow-diagonal lines both work (cells are
+    interpolated). Returns the decked cells."""
+    (x0, y0), (x1, y1) = start, end
+    steps = max(abs(x1 - x0), abs(y1 - y0), 1)
+    decked = []
+    for i in range(steps + 1):
+        x = x0 + round((x1 - x0) * i / steps)
+        y = y0 + round((y1 - y0) * i / steps)
+        if not b.in_bounds(x, y):
+            continue
+        if b.surface[y][x] == "water":
+            b.set_ground(x, y, "bridge_wood", surface="path")
+            b.reserved[y][x] = False
+            decked.append((x, y))
+    return decked
+
+
 def pond(b, cx, cy, rx, ry, seed=3):
     """An ORGANIC water feature: irregular shallow blob with a smaller deep centre + reeds."""
     rng = random.Random(seed)

@@ -1,2 +1,2 @@
-2026-06-30_1212_00_baseline
-The current tuned state (make_bug_lab.DEFAULT_LAB + compiled tuning defaults). Every other config is a delta over this. No overrides = the reference run the sweep is measured against.
+2026-07-05_1343_bee_arena
+Bee colony observation: wild hive (auto-founded, initial 0, NO Director reseed) + 9-flower nectar cluster + a raider wasp nest across the pen gap. Gate bands: bees self-maintained via b_nest, honey accrues on deposits, wasp raids don't extinct the colony.

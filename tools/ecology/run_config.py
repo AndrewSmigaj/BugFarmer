@@ -155,6 +155,19 @@ def apply_config(cfg, zone="bug_lab"):
     print(f"  zone {zone}: temp flags {flags}")
 
 
+def wipe_zone_state(zone):
+    """Delete the zone's persisted save (the WorldSave ':world' doc AND any legacy multi-record
+    save) so a tuning run starts from the AUTHORED zone, not a prior run's farm state. Without
+    this, the persistence system faithfully restores fences/nests/sidecars from the last run —
+    exactly the cross-run contamination that made comparisons dirty before (the 40k-rotten-fruit
+    class). EphemeralSwarms only skips the bug POPULATION; the map/sidecar state persists."""
+    print(f"  wiping persisted zone_state for {zone}…")
+    subprocess.run(["docker", "compose", "exec", "-T", "postgres", "psql", "-U", "postgres",
+                    "-d", "nakama", "-c",
+                    f"delete from storage where collection='zone_state' and key like '{zone}%';"],
+                   cwd=ROOT, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
 def restart_nakama():
     print("  restarting nakama (data reload)…")
     subprocess.run(["docker", "compose", "restart", "nakama"], cwd=ROOT, check=True,
@@ -208,16 +221,16 @@ def chart(csv, tag, run_log, zone, description=""):
 
     # 1) generate plots (flat, by tag, as the plot_*.py scripts expect)
     if csv and _csv_ok(csv):
-        subprocess.run(["python3", os.path.join(ROOT, "tools", "plot_fly_counts.py"), csv, tag,
+        subprocess.run(["python3", os.path.join(ROOT, "tools", "ecology", "plot_fly_counts.py"), csv, tag,
                         f"{zone} / {tag}"], cwd=ROOT)
     # Per-run log → _data/; plot_interactions parses ONLY this run's ECOSTATS (no docker-logs cross-run mix).
     log_path = os.path.join(data_dir, f"nakama_{tag}.log")
     with open(log_path, "w") as f:
         f.write(run_log)
-    subprocess.run(["python3", os.path.join(ROOT, "tools", "plot_interactions.py"), "--tag", tag,
+    subprocess.run(["python3", os.path.join(ROOT, "tools", "ecology", "plot_interactions.py"), "--tag", tag,
                     "--log", log_path], cwd=ROOT)
     # cost profiler (PERFSTATS/PERFSYS) — only emits when the zone's `profile` flag is on (rig sets it)
-    subprocess.run(["python3", os.path.join(ROOT, "tools", "plot_perf.py"), "--tag", tag,
+    subprocess.run(["python3", os.path.join(ROOT, "tools", "ecology", "plot_perf.py"), "--tag", tag,
                     "--log", log_path], cwd=ROOT)
 
     # 2) file population + interactions into <zone>/archive/<timestamp>_<tag>/
@@ -233,7 +246,7 @@ def chart(csv, tag, run_log, zone, description=""):
         f.write(f"# {ts}_{tag}\n\n{description or '(no description)'}\n")
 
     # 2b) daily bug-distribution maps (WHERE the bugs are) → this run's bugmap/ subfolder
-    subprocess.run(["python3", os.path.join(ROOT, "tools", "plot_bugmap.py"), "--log", log_path,
+    subprocess.run(["python3", os.path.join(ROOT, "tools", "ecology", "plot_bugmap.py"), "--log", log_path,
                     "--zone", zone, "--out", os.path.join(run_dir, "bugmap")], cwd=ROOT)
 
     # 3) EVERY run refreshes <zone>/current/ → the latest tuning run IS the zone's current picture, so the
@@ -246,7 +259,7 @@ def chart(csv, tag, run_log, zone, description=""):
         s = os.path.join(run_dir, name)
         if os.path.exists(s):
             shutil.copy(s, os.path.join(cur, name))
-    subprocess.run(["python3", os.path.join(ROOT, "tools", "plot_phase.py"), "--log", log_path,
+    subprocess.run(["python3", os.path.join(ROOT, "tools", "ecology", "plot_phase.py"), "--log", log_path,
                     "--tag", f"{zone}_current"], cwd=ROOT)
     ph = os.path.join(CHARTS, f"phase_{zone}_current.png")
     if os.path.exists(ph):
@@ -259,7 +272,7 @@ def chart(csv, tag, run_log, zone, description=""):
         f.write(f"{ts}_{tag}\n{description or ''}\n")
 
     # 3b) one-page dashboard (perf + ecology) → current/index.html — open it to see everything at a glance.
-    subprocess.run(["python3", os.path.join(ROOT, "tools", "make_dashboard.py"), "--zone", zone], cwd=ROOT)
+    subprocess.run(["python3", os.path.join(ROOT, "tools", "ecology", "make_dashboard.py"), "--zone", zone], cwd=ROOT)
 
     # 4) tuck the telemetry CSV sidecars into _data/ so the chart folders stay PNG-only
     for f in os.listdir(CHARTS):
@@ -283,6 +296,7 @@ def main():
     snap = snapshot([TUNING_JSON, SPECIES_JSON, OCCUPANTS_JSON, os.path.join(DATA, "zones", args.zone)])
     try:
         apply_config(cfg, args.zone)
+        wipe_zone_state(args.zone)
         restart_nakama()
         csv, run_log = run_harness(args.duration, name, args.zone)
         if csv is None:
