@@ -2476,5 +2476,82 @@
     "effect_power": 1.0,
     "buy_price": 120,
     "sell_price": 45
+  },
+  "honeycomb": {
+    "name": "Honeycomb",
+    "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 10
+  },
+  "honey": {
+    "name": "Honey",
+    "category": "food",
+    "tags": [
+      "food"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 8
+  },
+  "beeswax": {
+    "name": "Beeswax",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "dead_bee": {
+    "name": "Dead Bee",
+    "category": "resource",
+    "tags": [
+      "carrion"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1,
+    "food_value": 8
+  },
+  "dead_dragonfly": {
+    "name": "Dead Dragonfly",
+    "category": "resource",
+    "tags": [
+      "carrion"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 2,
+    "food_value": 12
+  },
+  "dead_firefly": {
+    "name": "Dead Firefly",
+    "category": "resource",
+    "tags": [
+      "carrion"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1,
+    "food_value": 6
+  },
+  "bee_suit": {
+    "name": "Bee Suit",
+    "category": "armor",
+    "tags": [
+      "clothing"
+    ],
+    "armor_slot": "body",
+    "sting_immune": true,
+    "stackable": false,
+    "buy_price": 250,
+    "sell_price": 60,
+    "overlay": "bee_suit"
   }
 }

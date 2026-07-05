@@ -3410,5 +3410,37 @@
         ]
       }
     }
+  },
+  "bee_hive_wild": {
+    "name": "Wild Bee Hive",
+    "category": "natural",
+    "sprite_w": 24,
+    "sprite_h": 28,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "interactable": true,
+      "interaction_type": "beehive",
+      "hive": {
+        "honey_cap": 3.0
+      },
+      "breakable": {
+        "hp": 4,
+        "required_tool_type": "axe",
+        "required_tool_tier": 1,
+        "drops": [
+          {
+            "item_id": "honeycomb",
+            "count": 2,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
   }
 }

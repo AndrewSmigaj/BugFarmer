@@ -2404,8 +2404,12 @@
     "station": "workbench",
     "inputs": [
       {
+        "item": "beeswax",
+        "count": 1
+      },
+      {
         "item": "fiber",
-        "count": 2
+        "count": 1
       }
     ],
     "output": {
@@ -2853,6 +2857,55 @@
       "count": 1
     },
     "process_ticks": 60,
+    "unlock": "default"
+  },
+  "honey": {
+    "station": "honey_extractor",
+    "inputs": [
+      {
+        "item": "honeycomb",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "honey",
+      "count": 2
+    },
+    "process_ticks": 40,
+    "unlock": "default"
+  },
+  "beeswax": {
+    "station": "honey_extractor",
+    "inputs": [
+      {
+        "item": "honeycomb",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "beeswax",
+      "count": 1
+    },
+    "process_ticks": 40,
+    "unlock": "default"
+  },
+  "bee_suit": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "cloth",
+        "count": 4
+      },
+      {
+        "item": "honeycomb",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "bee_suit",
+      "count": 1
+    },
+    "process_ticks": 80,
     "unlock": "default"
   }
 }

@@ -171,7 +171,8 @@
     "predation": {
       "prey": [
         "fly_common",
-        "butterfly_meadow"
+        "butterfly_meadow",
+        "bee_honey"
       ],
       "home_range": 40.0,
       "strike_radius": 3.0,
@@ -186,7 +187,8 @@
     },
     "lifespan_secs": 9450,
     "lifespan_spread_secs": 2520,
-    "carcass_item": "dead_wasp"
+    "carcass_item": "dead_wasp",
+    "attack_is_sting": true
   },
   "centipede_garden": {
     "name": "Garden Centipede",
@@ -344,5 +346,152 @@
     "lifespan_spread_secs": 1260,
     "carcass_item": "dead_beetle",
     "produces_compost": true
+  },
+  "bee_honey": {
+    "name": "Honeybee",
+    "description": "A gentle forager. Works the flowers for nectar, flies it home to the hive, and makes honey. Only stings to defend the colony.",
+    "category": "swarm",
+    "base_speed": 1.8,
+    "wander_radius": 12.0,
+    "wander_change_rate": 0.25,
+    "vision_range": 14.0,
+    "attractions_by_phase": {
+      "feeding": [
+        "flower_wild",
+        "flower_red",
+        "flower_blue",
+        "flower_yellow"
+      ]
+    },
+    "forage_chance": 0.5,
+    "feed_amount": 6.0,
+    "breed_amount": 0.0,
+    "satiation_decay_rate": 0.4,
+    "min_swarm_size": 3,
+    "max_swarm_size": 12,
+    "swarm_radius": 1.5,
+    "merge_radius": 1.5,
+    "player_reaction": "ignore",
+    "reaction_radius": 0.0,
+    "flee_speed_mult": 1.0,
+    "attack_damage": 1,
+    "attack_cooldown": 2.0,
+    "stings_only_defending": true,
+    "attack_is_sting": true,
+    "net_size": "small",
+    "catch_condition": "calm",
+    "condition_threshold": 40.0,
+    "condition_tools": {
+      "calm": 95
+    },
+    "max_hp": 1,
+    "sell_price": 6,
+    "reproduce_cooldown": 30.0,
+    "sprite_id": "honeybee",
+    "movement_style": "brownian",
+    "flies_over_fences": true,
+    "kill_drops": [],
+    "predation": {
+      "prey": [],
+      "home_range": 40.0,
+      "deposit_satiation": 80.0,
+      "hunt_satiation_threshold": 45.0,
+      "nest_occupant": "bee_hive_wild",
+      "nest_occupants_extra": [
+        "beehive_basic",
+        "beehive_medium",
+        "beehive_large",
+        "beehive_deluxe"
+      ]
+    },
+    "lifespan_secs": 8000,
+    "lifespan_spread_secs": 2000,
+    "carcass_item": "dead_bee"
+  },
+  "dragonfly_blue": {
+    "name": "Dragonfly",
+    "description": "A darting jewel over the water. Hawks wasps out of the air; harmless to everything else.",
+    "category": "swarm",
+    "base_speed": 2.8,
+    "wander_radius": 14.0,
+    "wander_change_rate": 0.3,
+    "vision_range": 16.0,
+    "attractions_by_phase": {},
+    "forage_chance": 0.0,
+    "feed_amount": 0.0,
+    "breed_amount": 0.0,
+    "satiation_decay_rate": 0.12,
+    "min_swarm_size": 1,
+    "max_swarm_size": 3,
+    "swarm_radius": 1.2,
+    "merge_radius": 1.2,
+    "player_reaction": "ignore",
+    "reaction_radius": 0.0,
+    "flee_speed_mult": 1.0,
+    "attack_damage": 0,
+    "net_size": "medium",
+    "catch_condition": "always",
+    "condition_tools": {
+      "calm": 80
+    },
+    "max_hp": 2,
+    "sell_price": 12,
+    "reproduce_cooldown": 45.0,
+    "sprite_id": "dragonfly_blue",
+    "movement_style": "darting",
+    "flies_over_fences": true,
+    "kill_drops": [],
+    "predation": {
+      "prey": [
+        "wasp_common"
+      ],
+      "strike_radius": 3.0,
+      "strike_cooldown_ticks": 120,
+      "kills_per_strike": 1,
+      "feed_per_kill": 50.0,
+      "feed_pause_ticks": 40,
+      "hunt_speed_mult": 1.4,
+      "hunt_satiation_threshold": 40.0
+    },
+    "lifespan_secs": 9000,
+    "lifespan_spread_secs": 2400,
+    "carcass_item": "dead_dragonfly"
+  },
+  "firefly": {
+    "name": "Firefly",
+    "description": "A slow amber drifter, loveliest at dusk along the stream.",
+    "category": "swarm",
+    "base_speed": 0.9,
+    "wander_radius": 10.0,
+    "wander_change_rate": 0.15,
+    "vision_range": 8.0,
+    "attractions_by_phase": {},
+    "forage_chance": 0.2,
+    "feed_amount": 3.0,
+    "breed_amount": 4.0,
+    "satiation_decay_rate": 0.2,
+    "min_swarm_size": 3,
+    "max_swarm_size": 10,
+    "swarm_radius": 1.8,
+    "merge_radius": 1.8,
+    "player_reaction": "ignore",
+    "reaction_radius": 0.0,
+    "flee_speed_mult": 1.0,
+    "attack_damage": 0,
+    "net_size": "small",
+    "catch_condition": "always",
+    "condition_tools": {
+      "calm": 80
+    },
+    "max_hp": 1,
+    "sell_price": 8,
+    "reproduce_cooldown": 40.0,
+    "sprite_id": "firefly",
+    "movement_style": "gliding",
+    "flies_over_fences": true,
+    "kill_drops": [],
+    "lifespan_secs": 6000,
+    "lifespan_spread_secs": 1500,
+    "carcass_item": "dead_firefly"
   }
 }
