@@ -71,8 +71,11 @@ A **scene** is a small render-only vignette; a **ZONE** is the 256×256 world th
 **Quick mechanic-test zones:** `python3 tools/world/make_test_zone.py --zone-id <id> --species <s> --occupant 'id@x,y' …`
 builds a tiny deterministic zone with a bug spawn + placed occupants — for isolating one mechanic.
 **Spawning gotcha:** only species DEFINED in `nakama/data/species.json` spawn (currently
-`fly_common`, `butterfly_meadow`, `wasp_common`, `centipede_garden`); `bugs.json` ids that
-lack a species spec silently don't spawn.
+`fly_common`, `butterfly_meadow`, `wasp_common`, `centipede_garden`, `millipede`,
+`beetle_carrion`, `bee_honey`, `dragonfly_blue`, `firefly`); `bugs.json` ids that lack a
+species spec silently don't spawn. Nest species (wasp, bee) need their NEST OCCUPANTS placed
+(wasp_nest / bee_hive_wild / beehive_* boxes) + `max_nests` in their species_cap — bees are
+nest-founded ONLY (`initial: 0`, never free-spawned).
 
 ## The builder — `tools/zonegen/`
 - `zonebuilder.py` — `ZoneBuilder(zone_id, W, H, base_tile=…)`: the on-disk grids + the coordination

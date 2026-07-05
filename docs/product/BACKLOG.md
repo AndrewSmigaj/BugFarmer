@@ -19,8 +19,10 @@ the 22 issues; one findings doc each). Backlogged-by-the-user items (not investi
   which species). Pairs with the catching-gear backlog (auto-catcher + fly nets) below.
 - **Sleep.** A sleep/skip-to-morning mechanic (right-click bed → sleep), beyond the bed-as-respawn-home that
   exists. Design the day-skip + any restore/cost.
-- **Night critters + fireflies.** Add ≥1 nocturnal species and **fireflies** (glow at night). New species
-  data + sprites + a day/night spawn gate.
+- **MOSTLY DONE 2026-07-05 — night critters + fireflies.** Fireflies SHIPPED (species + existing sprite +
+  the per-bug amber LampLight glow that self-ramps at night; spawns all day, glow reads at dusk) with the
+  bee milestone, plus dragonflies (the wasp-hunting chassis proof). STILL BACKLOGGED: the day/night SPAWN
+  gate (fireflies visible-glow-only at night is display; a real nocturnal spawn window is sim).
 - **DONE 2026-07-02 — the last two playtest fixes: #2 ghost offset + #7 rain.** **#2**: `TilemapManager.OccupantWorldPos` = the ONE shared position helper (footprint-X + bottom-pivot Y baseline); `RenderOccupant` + the placement ghost both use it → preview == placement by construction (ghost positions with the seed→plant id it renders). **#7**: rain streak lifetime was a fixed spec (~9-10 units of fall) shorter than a screen crossing; now computed per-layer from the live camera so the SLOWEST drop crosses the bottom edge (+ band/splash boxes sized from the view, rebuilt on zoom). Both display-only, no sim surface; editor-compile + eyeball gates.
 - **DONE 2026-07-01 — three quick playtest fixes: #14 containers · #15 water empty bed · #10 moved compost.**
   **#14** (data): `basket`/`chest`/`trunk`/`yarn_basket` had a `world.container` block but no
@@ -269,7 +271,34 @@ normal leave-A/join-B (zero cross-zone determinism surface; player position is n
 - **Verified**: sync-harness `crosszone` scenario (server entry-override, headless) + in-Editor rapid
   up→down crossing — root-caused a stale-snap race from the Editor.log and fixed it client-side.
 
+## Done 2026-07-05 — THE BEEKEEPING MILESTONE (persistence + calming foundations, bees, Bee Meadow)
+Six gated phases, each committed green (full record: `docs/product/economy/DECISIONS.md` D31; systems:
+`architecture_persistence.md` + `architecture_beekeeping.md`; zone: `docs/product/zones/bee_meadow_20.md`):
+- **A0 Persistence (§P):** ONE WorldSave document per zone, THE CLOCK RESUMES, full-fidelity swarms
+  (json-tagged, identities kept), reflection-enforced field classification, generation-stamped writes,
+  one-time legacy import-then-delete. Replaced the 2026-06-16 multi-record system below (kept for history).
+  Fixed latent: GroundItemSeq id re-mint collisions, GnawDamage lost on restart, weather/day reset.
+- **A1 Condition/subdual (§C):** the GENERAL calming mechanic on the dead schema stub — one threshold for
+  behavior + catching, all three aggression funnels + the damage-funnel belt, the catch gate, the
+  generalized smoker + consumables on the ToolUse verb (calm_spray live), explicit fills for all species.
+- **A2 Bees:** the prey-less nest-forager branch (decline → shared nectar forage → homing deposits =
+  brood + HONEY), dormant claimable hive boxes, nectar-gated recovery/founding, sting-immunity armor
+  hook, hand-harvest with the smoke/anger loop; dragonfly + firefly species.
+- **B client** (hive harvest + toasts, smoker/consumable routing, firefly glow, bee-suit layer-set) ·
+  **C sprites** (13 new: hive/Maren/beach set/bee items) · **D lab gate** (bee arena: self-maintained
+  colony, b_reseed 0, honey at cap — run 1 exposed + fixed a REAL phase-handoff sim bug) ·
+  **E the zone** (bee_meadow_20: sea/coves/island, stream + 3 bridges at the village contract rows,
+  Maren's farm, fishing hamlet, lakes, meadows/forests; crosszone BOTH directions PASS; builder
+  neighbors/grid hardening retired all post-save zone.json patching; NEW terrain.bridge primitive).
+- **Still backlogged from the milestone:** smoker tiers · smoke_bomb/chill_canister/stun_rod · the
+  "weakened" catch condition + centipede capture loop · SwarmMeterUpdate client UI · mead/keg (D26) ·
+  4-piece suit set · fishing mechanic (docks are dressing) · day/night spawn gate · the WASP nest-economy
+  starve square-wave (predates this work — ecology_tuning_log) · worn-overlay re-anchor (suit look) ·
+  LateJoinSnapshot size growth (bee_meadow adds a zone).
+
 ## Done 2026-06-16 — zone / farm persistence (farm + bug population survive a server restart)
+**SUPERSEDED 2026-07-05 by the WorldSave document (architecture_persistence.md; A0 above) — this
+section is history; zone_persist.go survives only as the one-time legacy importer.**
 A zone's player-built farm AND its cultivated bug population now persist to Nakama storage and restore on
 match (re)create — previously everything evaporated on restart / `MatchTerminate`. NEW
 `world/zone_persist.go` (mirrors `character_persist.go`): `zone_state` collection, `ZoneStateKey(zone,

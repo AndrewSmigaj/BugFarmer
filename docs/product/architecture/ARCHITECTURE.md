@@ -16,6 +16,8 @@ Bug Farmer is a 2D multiplayer game where players farm bugs, build structures, a
 - [architecture_crafting.md](architecture_crafting.md) — recipes-as-data, craft stations, item containers, the determinism boundary ([crafting_design.md](../design/crafting_design.md) = content)
 - [architecture_entity_sync.md](architecture_entity_sync.md) — entity replication
 - [architecture_swarm_sync.md](architecture_swarm_sync.md) — authoritative-client swarm sim + deterministic followers
+- [architecture_persistence.md](architecture_persistence.md) — the WorldSave document: one doc per zone, the clock resumes, the classification enforcement (Terraria-style hosting)
+- [architecture_beekeeping.md](architecture_beekeeping.md) — the bee loop (forage→honey→harvest→extract) + the GENERAL condition/subdual (calming) system
 - [determinism_audit_2026-06-20.md](../investigations/determinism_audit_2026-06-20.md) — HISTORICAL root-cause audit of the cross-client divergence; its vectors are now FIXED (see the SUPERSEDED note at the top). Read for the mechanism map, not as open issues.
 - [game_design.md](../design/game_design.md) — the Game Design Document (GDD)
 - [requirements.md](../design/requirements.md) — game design requirements

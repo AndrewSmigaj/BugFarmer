@@ -948,8 +948,9 @@ unconditionally from MeleeResult killed[] (no optimistic kill exists) and NEVER 
 BUG_REMOVED application (catches ride it; replay would storm).
 
 ### 14.5 Known v1 properties (documented, not bugs)
-- No persistence: a destroyed nest RESURRECTS on server restart (true of all broken
-  occupants; this one is the headline counterplay, so it's named here).
+- ~~No persistence: a destroyed nest RESURRECTS on server restart~~ **SUPERSEDED 2026-07-05:**
+  the WorldSave document persists broken occupants (as CellEdits) AND nest state — a destroyed
+  nest STAYS destroyed across restarts. See [architecture_persistence.md](architecture_persistence.md).
 - Nests come alive on first chunk-touch (the fruit-tree class); wild prey spawns
   zone-wide from match start — accepted asymmetry.
 - Releasing caught wasps into another player's farm mints a permanent orphan patrol

@@ -492,3 +492,35 @@ placeholders"):
   icons (per-metal catalog rows derived from the `_wood` bases — replacing palette-tint recolors).
 - **Gates:** 5 falsifiable Go tests + suite green; previews rebuilt; in-Editor parallel-smelt + art eyeball
   pending; live-save migration check deferred (a player was CONNECTED — never swap the plugin mid-session).
+
+### D31 — The beekeeping milestone: persistence + calming as FOUNDATIONS, then bees (2026-07-05)
+The full milestone (plan: harmonic-weaving-dolphin) shipped in phases A0→E, each gated. Economy/design
+decisions of record:
+- **Persistence is a first-class system, not a bee feature** (owner directive: "the entire game should
+  persist... like Terraria"). ONE WorldSave document per zone; the CLOCK persists; full-fidelity swarms;
+  a reflection-enforced classification table so "forgot to persist X" fails a test BY NAME. Old
+  multi-record saves import once, then delete. See architecture_persistence.md.
+- **Calming is GENERAL** (owner correction: "the vast majority of bugs can be calmed"): the dead
+  condition stub (`condition_tools`/`ConditionValue`) is now the live §C system — one threshold (40)
+  for behavior AND catching; every species carries an explicit `condition_tools.calm` fill (bee 95,
+  centipede 90, wasp 85, harmless 80; no key = immune). calm_spray finally works; smoker + consumables
+  share the ToolUse verb (no new OpCode). See architecture_beekeeping.md.
+- **Honeycomb is the allocation currency:** recipes are single-output, so the extractor offers
+  honeycomb→honey ×2 OR honeycomb→beeswax ×1 — the player allocates each comb (a deliberate economy
+  choice, not a schema workaround to fix later).
+- **Candle RE-THEMED:** beeswax ×1 + fiber ×1 @ workbench (was fiber ×2 — pre-bee placeholder).
+- **Smoker id is `smoker`** (display "Bee Smoker") — reconciling the catalog's `bee_smoker` naming;
+  craft iron_bar + wood ×2 + wasp_stinger @ workbench; tiers later via `effect_power` (data only).
+- **Placed hive boxes are DORMANT** (no free bees — colonies must claim them); bees are nest-founded
+  ONLY and the Director may never reseed them (min_population 0) — colony survival is real, unmasked.
+- **Defaults taken on the unanswered playtest questions** (60s timeout; frogs explicitly REJECTED,
+  crab cut): critters = fireflies (+ dragonflies as the wasp counterweight), bee suit = ONE body piece
+  with full sting immunity (suit stops stings, NOT bites, and never the anger), hive harvest = hand
+  right-click, no panel.
+- **Maren the Beekeeper** (bee_meadow_20) is the bee-economy anchor: sells beehive_basic 60 / smoker
+  120 / bee_suit 250 / calm_spray 20; buys honey / honeycomb / beeswax by id.
+- **Gates:** every phase committed on green — Go suite (24 new tests across §P/§C/bees), the persist
+  harness + a seeded legacy-migration run, sim-determinism, FRESH 2-client latejoin BOTH halves SYNC
+  IDENTICAL, the bug_lab bee-arena chart gate (self-maintained colony, b_reseed 0, honey at cap — after
+  fixing a REAL phase-handoff sim bug run 1 exposed), zone lint 0 + text-verified edge contracts +
+  headless crosszone BOTH directions. In-Editor feel pass = Andrew's.
