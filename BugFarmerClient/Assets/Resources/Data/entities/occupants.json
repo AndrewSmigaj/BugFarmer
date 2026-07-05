@@ -3442,5 +3442,121 @@
         ]
       }
     }
+  },
+  "beekeeper": {
+    "name": "Maren (Beekeeper)",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "greeting": "Smoke first, then slow hands. The bees forgive almost everything else.",
+      "shop": {
+        "kind": "items",
+        "sells": [
+          {
+            "id": "beehive_basic",
+            "price": 60
+          },
+          {
+            "id": "smoker",
+            "price": 120
+          },
+          {
+            "id": "bee_suit",
+            "price": 250
+          },
+          {
+            "id": "calm_spray",
+            "price": 20
+          }
+        ],
+        "buys": [
+          "honey",
+          "honeycomb",
+          "beeswax"
+        ]
+      }
+    }
+  },
+  "driftwood": {
+    "name": "Driftwood",
+    "category": "natural",
+    "sprite_w": 24,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        2,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "wood",
+            "count": 2,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "seashell_pile": {
+    "name": "Seashell Pile",
+    "category": "natural",
+    "sprite_w": 14,
+    "sprite_h": 10,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "any",
+        "drops": [
+          {
+            "item_id": "seashell",
+            "count": 2,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "sandcastle": {
+    "name": "Sandcastle",
+    "category": "natural",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "any",
+        "drops": []
+      }
+    }
   }
 }

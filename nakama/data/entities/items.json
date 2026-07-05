@@ -2553,5 +2553,15 @@
     "buy_price": 250,
     "sell_price": 60,
     "overlay": "bee_suit"
+  },
+  "seashell": {
+    "name": "Seashell",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 4
   }
 }

@@ -437,7 +437,7 @@
     "max_hp": 2,
     "sell_price": 12,
     "reproduce_cooldown": 45.0,
-    "sprite_id": "dragonfly_blue",
+    "sprite_id": "dragonfly",
     "movement_style": "darting",
     "flies_over_fences": true,
     "kill_drops": [],
