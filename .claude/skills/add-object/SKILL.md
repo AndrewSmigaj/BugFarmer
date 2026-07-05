@@ -49,10 +49,16 @@ python3 tools/data/publish_entities.py
 ```bash
 python3 tools/sprites/gen_sprites.py --source <placeables|occupants|items|terrain> --keys <id> --dry-run  # read the prompt, no spend
 python3 tools/sprites/gen_sprites.py --source <...> --keys <id>      # generate
-python3 tools/sprites/pixelclean.py                                  # downscale + quantize in place (Tiles+Objects)
+python3 tools/sprites/pixelclean.py --keys <id1,id2>                 # clean ONLY the keys you just generated
 ```
-**Item icons clean differently** — opt-in per key, harder quantize (a bare `pixelclean.py`
-run never touches `Items/`, which holds finished icons a re-clean would mangle):
+**NEVER run bare `pixelclean.py` after adding items** (2026-07-05 incident: a bare run
+re-cleaned all 427 Objects/Tiles and RESIZED pre-existing sprites — agave 36x32 → 32x32 —
+because a re-clean re-derives sizes from current entity data and re-quantizes; 98 committed
+sprites had to be reverted from HEAD). The bare run is ONLY for a deliberate full-set
+re-clean/shared-palette pass — treat it as a repo-wide art migration, not a cleanup step.
+
+**Item icons clean differently** — opt-in per key, harder quantize (no pixelclean run
+ever touches `Items/` without `--items`, which holds finished icons a re-clean would mangle):
 ```bash
 python3 tools/sprites/pixelclean.py --k 8 --items <id1,id2>
 ```
