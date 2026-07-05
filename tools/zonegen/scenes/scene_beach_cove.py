@@ -70,26 +70,59 @@ def sea_edge(b, *, water_w=10, sand_w=6, coves=((0.30, 9), (0.62, 7), (0.85, 11)
     return beach_x
 
 
-def dress_beach(b, beach_x, *, seed=8, density=0.04):
-    """Scatter the beach set along the sand band: driftwood, seashell piles, one sandcastle,
-    clumps of reeds at the cove waterlines."""
+def _sand_run(b, y, bx):
+    """The sand cells of row y walking west from the grass edge bx: returns (water_side_x, cells)."""
+    cells = []
+    x = bx - 1
+    while x >= 0 and b.ground[y][x] == "sand":
+        cells.append(x)
+        x -= 1
+    return (cells[-1] if cells else None), cells
+
+
+def dress_beach(b, beach_x, *, seed=8, density=0.05):
+    """The beach dressing, with STRUCTURE instead of even spray:
+    - a WRACK LINE — flotsam (shells, driftwood, starfish, the odd bottle) concentrated in the
+      2-3 sand cells nearest the water, the way tides actually leave it; only stray pieces above;
+    - DUNE GRASS — tall-grass/dandelion clumps breaking the hard sand→grass boundary;
+    - reeds in the cove shallows; exactly one guaranteed sandcastle up on the dry sand."""
     rng = random.Random(seed)
     H = b.H
     placed_castle = False
-    for y in range(2, H - 2, 3):
+    for y in range(2, H - 2):
         bx = beach_x[y]
-        for x in range(max(2, bx - 7), bx):
-            if b.ground[y][x] != "sand" or not b.is_free(x, y):
+        wx, sand = _sand_run(b, y, bx)
+        if wx is None:
+            continue
+        # The wrack line: the last 2 sand cells before water, denser + varied.
+        for x in [c for c in sand if c <= wx + 1]:
+            if not b.is_free(x, y):
                 continue
             r = rng.random()
-            if r < density:
-                b.place_occupant("seashell_pile", x, y)
-            elif r < density * 1.7:
-                b.place_occupant("driftwood", x, y)
-            elif not placed_castle and r < density * 1.9 and 0.3 * H < y < 0.7 * H:
+            if r < density * 2.3:
+                pick = rng.choice(["seashell_pile", "driftwood", "starfish",
+                                   "seashell_pile", "starfish"])
+                if pick == "driftwood" and not (b.in_bounds(x + 1, y) and b.is_free(x + 1, y)):
+                    pick = "seashell_pile"  # driftwood is 2 wide — don't shove it into water
+                b.place_occupant(pick, x, y)
+            elif r < density * 2.45:
+                b.place_occupant("message_bottle", x, y)
+        # Dry sand above: only the occasional piece (and the one sandcastle).
+        for x in [c for c in sand if c > wx + 2]:
+            if not b.is_free(x, y):
+                continue
+            r = rng.random()
+            if r < density * 0.35:
+                b.place_occupant(rng.choice(["driftwood", "seashell_pile"]), x, y)
+            elif not placed_castle and r < density * 0.5 and 0.3 * H < y < 0.7 * H:
                 b.place_occupant("sandcastle", x, y)
                 placed_castle = True
-    # The sandcastle is a landmark, not a dice roll — guarantee exactly one, mid-beach.
+        # Dune grass: clumps at the sand→grass seam.
+        if rng.random() < 0.30:
+            for x in (bx, bx + 1):
+                if b.in_bounds(x, y) and b.surface[y][x] == "grass" and b.is_free(x, y) \
+                   and rng.random() < 0.7:
+                    b.place_occupant(rng.choice(["tall_grass", "tall_grass", "dandelion"]), x, y)
     if not placed_castle:
         for y in range(H // 2, H - 2):
             x = beach_x[y] - 3
@@ -108,6 +141,54 @@ def dress_beach(b, beach_x, *, seed=8, density=0.04):
                 b.reserve(x, y, surface="water")
 
 
+def _float_put(b, oid, x, y):
+    """Stand a prop in open water (buoys): un-reserve its cell, place, re-reserve."""
+    if not b.in_bounds(x, y) or b.surface[y][x] != "water":
+        return False
+    b.reserved[y][x] = False
+    ok = b.place_occupant(oid, x, y, surface="water")
+    b.reserve(x, y, surface="water")
+    return ok
+
+
+def place_beach_landmarks(b, beach_x, *, wreck_y=None, picnic_y=None, buoy_ys=(), bottle_island=None):
+    """The coast's named little features (deterministic, never dice):
+    - a SHIPWRECK HULL half-buried at the waterline (wreck_y) with strewn driftwood;
+    - a PICNIC spot up on the dry sand (picnic_y): parasol + bench + a shell pile;
+    - striped BUOYS floating off the cove mouths (buoy_ys);
+    - a message bottle on the tease ISLAND (bottle_island=(x,y)) — visible loot you can't reach."""
+    if wreck_y is not None:
+        wx, sand = _sand_run(b, wreck_y, beach_x[wreck_y])
+        if wx is not None:
+            for x in range(wx, wx + 4):
+                if b.is_free(x, wreck_y) and b.is_free(x + 1, wreck_y):
+                    b.place_occupant("shipwreck_hull", x, wreck_y)
+                    for dx, dy in [(-2, 1), (3, -1), (1, 2)]:
+                        if b.in_bounds(x + dx, wreck_y + dy) and \
+                           b.ground[wreck_y + dy][x + dx] == "sand" and b.is_free(x + dx, wreck_y + dy):
+                            b.place_occupant("driftwood", x + dx, wreck_y + dy)
+                    break
+    if picnic_y is not None:
+        bx = beach_x[picnic_y]
+        for x in range(bx - 4, bx - 1):
+            if b.in_bounds(x, picnic_y) and b.ground[picnic_y][x] == "sand" and b.is_free(x, picnic_y) \
+               and b.is_free(x + 1, picnic_y - 1):
+                b.place_occupant("beach_umbrella", x, picnic_y)
+                b.place_occupant("bench", x + 1, picnic_y - 1)
+                if b.is_free(x - 1, picnic_y - 2):
+                    b.place_occupant("seashell_pile", x - 1, picnic_y - 2)
+                break
+    for by in buoy_ys:
+        bx = beach_x[by]
+        _float_put(b, "buoy", max(1, bx - 12), by)
+    if bottle_island is not None:
+        ix, iy = bottle_island
+        for dx in range(-2, 3):
+            if b.in_bounds(ix + dx, iy) and b.ground[iy][ix + dx] == "sand" and b.is_free(ix + dx, iy):
+                b.place_occupant("message_bottle", ix + dx, iy)
+                break
+
+
 PREVIEW = "zones/bee_meadow_20/scenes"
 SCALE = 5
 
@@ -116,8 +197,11 @@ def build():
     b = ZoneBuilder("scene_beach_cove", 48, 44, base_tile="grass", name="Beach cove", biome="coast")
     beach = sea_edge(b, water_w=11, sand_w=6, coves=((0.35, 8), (0.75, 10)), island=(0.55, 4), seed=7)
     dress_beach(b, beach, seed=8, density=0.06)
-    # A beached old boat above the south cove — somebody's given up on it.
-    for x, y in [(beach[30] - 3, 30)]:
+    place_beach_landmarks(b, beach, wreck_y=33, picnic_y=12, buoy_ys=(15, 33),
+                          bottle_island=(4, 24))
+    # A beached (working) boat on the far south stretch — away from the wreck, so the two
+    # tell different stories.
+    for x, y in [(beach[6] - 3, 6)]:
         if b.is_free(x, y):
             b.place_occupant("boat", x, y)
     b.spawn = [beach[22] + 4, 22]

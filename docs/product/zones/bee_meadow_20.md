@@ -29,11 +29,18 @@
 
 ## Landmarks & little features
 1. **The spring pondlet (NW)** — where the stream rises; reeds, fireflies.
-2. **The coves** — the west beach bitten into arcs; one tiny unreachable ISLAND offshore (a tease);
-   driftwood, seashell piles, a sandcastle someone left.
-3. **The big fishing lake (south-center)** — sand shore, reeds, a small dock with a moored boat.
-4. **The wild hive trees** — 3 wild bee hives hanging in flower-adjacent tree clumps.
-5. **The three bridges** — wood-decked road crossings over the stream.
+2. **The coves** — the west beach bitten into arcs, dressed with a WRACK LINE (shells, driftwood,
+   starfish, the odd message bottle concentrated along the tideline) and dune grass at the seam;
+   one tiny unreachable ISLAND offshore with a message bottle you can see but not reach.
+3. **The SHIPWRECK (mid-coast cove, y≈141)** — a broken hull half-buried at the waterline,
+   driftwood strewn around it; striped buoys float off the cove mouths.
+4. **The picnic spot (north beach, y≈206)** — a beach parasol, a bench, someone's shell pile;
+   a sandcastle further down the sand.
+5. **The big fishing lake (south-center)** — sand shore, reeds, lily pads, a stub pier + boat.
+6. **The quiet bench (NE pond)** — facing the water, under the evening fireflies.
+7. **The wild hive trees** — wild bee hives in flower-adjacent tree clumps (plus one hanging in
+   an oak just OUTSIDE Maren's fence — the kept boxes inside, the free colony without).
+8. **The three bridges** — wood-decked road crossings over the stream.
 
 ## Structures / NPCs
 - **Maren's bee farm (center-west, south of the stream):** 3-room cottage, fenced APIARY (the four

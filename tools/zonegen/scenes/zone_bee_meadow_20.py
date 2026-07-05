@@ -24,7 +24,7 @@ from features.terrain import (stream, lake, pond, forest, path,        # noqa: E
                               smooth_paths, bridge, shore_dress)
 from features.garden import flower_patch                               # noqa: E402
 from features.scatter import scatter                                   # noqa: E402
-from scene_beach_cove import sea_edge, dress_beach                     # noqa: E402
+from scene_beach_cove import sea_edge, dress_beach, place_beach_landmarks  # noqa: E402
 from scene_fishing_docks import place_fishing_hamlet, _dock            # noqa: E402
 from scene_beekeeper_cottage import place_bee_farm                     # noqa: E402
 
@@ -159,8 +159,56 @@ def build():
     for wx, wy in [(232, 158), (186, 90)]:
         _place_near("wasp_nest", wx, wy)
 
-    # The beach set + ambient scatter across the open meadow.
+    # The beach set + the coast's NAMED features: the shipwreck at the mid-coast cove, the
+    # picnic spot on the north beach, buoys off the cove mouths, the bottle on the island.
     dress_beach(b, beach, seed=44, density=0.05)
+    place_beach_landmarks(b, beach, wreck_y=141, picnic_y=206, buoy_ys=(64, 141),
+                          bottle_island=(5, 102))
+
+    # WAYFINDING — signposts + light at the junctions (arriving must read instantly):
+    # the east entrance, the stream bridge, the farm spur, the hamlet fork.
+    for sx, sy in [(249, ROAD_Y + 3), (135, ROAD_Y + 3), (57, 108)]:
+        if b.is_free(sx, sy) and b.surface[sy][sx] == "grass":
+            b.place_occupant("signpost", sx, sy)
+    for lx, ly in [(247, ROAD_Y - 2), (98, ROAD_Y - 2)]:
+        if b.is_free(lx, ly):
+            b.place_occupant("lamp_post", lx, ly)
+
+    # WATER DRESSING — reeds wherever shallow water meets grass (stream banks, lake rims,
+    # the ponds; the sea keeps its own beach treatment), lily pads on the calm lake shallows.
+    rng_w = random.Random(47)
+    reeds_n = pads_n = 0
+    for y in range(4, H - 4):
+        for x in range(30, W - 4):
+            if b.ground[y][x] != "water_shallow" or not b.in_bounds(x, y):
+                continue
+            nb_grass = any(b.in_bounds(x + dx, y + dy) and b.surface[y + dy][x + dx] == "grass"
+                           for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+            if nb_grass and reeds_n < 90 and rng_w.random() < 0.05:
+                b.reserved[y][x] = False
+                if b.place_occupant("reeds", x, y, surface="water"):
+                    reeds_n += 1
+                b.reserve(x, y, surface="water")
+            elif not nb_grass and pads_n < 10 and 100 < x < 240 and rng_w.random() < 0.02:
+                b.reserved[y][x] = False
+                if b.place_occupant("lily_pad", x, y, surface="water"):
+                    pads_n += 1
+                b.reserve(x, y, surface="water")
+
+    # The NE pond is the QUIET SPOT: a bench facing the water under the evening fireflies.
+    for bx, by in [(220, 198), (221, 197), (219, 197)]:
+        if b.is_free(bx, by):
+            b.place_occupant("bench", bx, by)
+            break
+
+    # The south-east fills: a wild-berry thicket + driftwood washed up the stream mouth.
+    for tx, ty in [(214, 54), (217, 56), (212, 57), (219, 53), (215, 50)]:
+        if b.is_free(tx, ty):
+            b.place_occupant("wild_berry_bush", tx, ty)
+    for dx, dy in [(246, 72), (240, 80)]:
+        if b.in_bounds(dx, dy) and b.surface[dy][dx] == "grass" and b.is_free(dx, dy):
+            b.place_occupant("driftwood", dx, dy)
+
     scatter(b, 60, 40, 250, 246,
             {"bush": 3, "tall_grass": 5, "wild_berry_bush": 1, "dandelion": 2, "clover": 2},
             density=0.02, min_spacing=3, seed=45, surfaces=("grass",))

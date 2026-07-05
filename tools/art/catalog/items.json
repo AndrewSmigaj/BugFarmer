@@ -630,5 +630,13 @@
   "seashell": {
     "look": "a single spiral CONCH seashell, cream and pink banded, pointed spire tip and a smooth open lip; NOT a snail, NOT a fossil",
     "family": "icon"
+  },
+  "starfish": {
+    "look": "a single orange five-armed STARFISH, chunky pixel-art with HARD clean edges and big bumpy dots, one arm slightly curled; bold simple shapes; NOT blurry, NOT a flower",
+    "family": "icon"
+  },
+  "message_bottle": {
+    "look": "a CORKED pale-green GLASS BOTTLE at a slight tilt with a rolled PAPER NOTE inside, chunky pixel-art with HARD clean edges and a single white glass highlight; bold simple shapes; NOT a potion",
+    "family": "icon"
   }
 }

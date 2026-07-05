@@ -3558,5 +3558,270 @@
         "drops": []
       }
     }
+  },
+  "shipwreck_hull": {
+    "name": "Shipwrecked Hull",
+    "category": "natural",
+    "sprite_w": 32,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [
+        2,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 3,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "wood",
+            "count": 3,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "beach_umbrella": {
+    "name": "Beach Umbrella",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "cloth",
+            "count": 1,
+            "chance": 1.0
+          },
+          {
+            "item_id": "wood",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "starfish": {
+    "name": "Starfish",
+    "category": "natural",
+    "sprite_w": 10,
+    "sprite_h": 8,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "any",
+        "drops": [
+          {
+            "item_id": "starfish",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "message_bottle": {
+    "name": "Message in a Bottle",
+    "category": "natural",
+    "sprite_w": 8,
+    "sprite_h": 10,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "any",
+        "drops": [
+          {
+            "item_id": "message_bottle",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "buoy": {
+    "name": "Buoy",
+    "category": "structure",
+    "sprite_w": 10,
+    "sprite_h": 16,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "wood",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "drying_rack_fish": {
+    "name": "Fish Drying Rack",
+    "category": "structure",
+    "sprite_w": 24,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [
+        2,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "wood",
+            "count": 2,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "net_pile": {
+    "name": "Heaped Net",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "any",
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 2,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "lobster_pot": {
+    "name": "Lobster Pot",
+    "category": "structure",
+    "sprite_w": 12,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "any",
+        "drops": [
+          {
+            "item_id": "wood",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "honey_shelf": {
+    "name": "Honey Shelf",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 18,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "wood",
+            "count": 2,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "bee_waterer": {
+    "name": "Bee Waterer",
+    "category": "structure",
+    "sprite_w": 14,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "any",
+        "drops": [
+          {
+            "item_id": "wood",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
   }
 }

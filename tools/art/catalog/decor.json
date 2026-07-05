@@ -205,5 +205,65 @@
     "materials": [
       "fabric"
     ]
+  },
+  "shipwreck_hull": {
+    "look": "the broken BOW section of a small wooden fishing boat wrecked at an angle: weathered gray-brown planks, a snapped mast stump, a gap of missing boards; floats on FULL transparency \u2014 NO sand, NO ground patch, NOTHING beneath the planks; clearly a RUIN, NOT a usable boat",
+    "materials": [
+      "wood"
+    ]
+  },
+  "beach_umbrella": {
+    "look": "a cheerful BEACH PARASOL stuck in the sand: a tall thin pole with a wide red-and-white striped canopy, slightly tilted; NOT a market stall, NOT a tent",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "starfish": {
+    "look": "a single orange five-armed STARFISH lying flat on the ground, bumpy texture, one arm slightly curled; small and simple; NOT a flower, NOT a gem",
+    "materials": [
+      "dirt"
+    ]
+  },
+  "message_bottle": {
+    "look": "a CORKED GLASS BOTTLE lying on its side half-buried in sand with a rolled PAPER NOTE visible inside, pale green glass; NOT standing upright, NOT a potion",
+    "materials": [
+      "stone"
+    ]
+  },
+  "buoy": {
+    "look": "a small striped MOORING BUOY floating on water: a rounded red-and-white float with a short post and ring on top, slight tilt; NOT a lighthouse, NOT a bottle",
+    "materials": [
+      "metal"
+    ]
+  },
+  "drying_rack_fish": {
+    "look": "a rustic FISH DRYING RACK: two wooden posts with horizontal poles between them, several split fish hanging in a row drying, simple lashed construction; NOT a fence, NOT a clothesline",
+    "materials": [
+      "wood"
+    ]
+  },
+  "net_pile": {
+    "look": "a heaped TAN-BROWN rope FISHING NET: bold dark criss-cross diamond mesh lines over a sandy-brown mound, three round cork floats along the front edge; warm brown rope tones ONLY; NOT pink, NOT purple, NOT a sand pile",
+    "materials": [
+      "wood"
+    ]
+  },
+  "lobster_pot": {
+    "look": "a WICKER LOBSTER POT trap: a rounded rectangular cage of woven slats with a dark funnel opening on one end and a rope coil on top; NOT a basket, NOT a crate",
+    "materials": [
+      "wood"
+    ]
+  },
+  "honey_shelf": {
+    "look": "a small open WOODEN DISPLAY SHELF with two rows of amber HONEY JARS and one honeycomb wedge on it, warm and tidy, shop-like; NOT a bookcase, NOT a crate",
+    "materials": [
+      "wood"
+    ]
+  },
+  "bee_waterer": {
+    "look": "a shallow round WOODEN BASIN of water with small pebbles breaking the surface (a bee watering dish), a couple of tiny bees perched on the pebbles; low to the ground; NOT a bird bath on a pedestal, NOT a barrel",
+    "materials": [
+      "wood"
+    ]
   }
 }

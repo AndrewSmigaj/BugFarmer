@@ -2563,5 +2563,25 @@
     "stackable": true,
     "max_stack": 99,
     "sell_price": 4
+  },
+  "starfish": {
+    "name": "Starfish",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "message_bottle": {
+    "name": "Message in a Bottle",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 10,
+    "sell_price": 15
   }
 }
