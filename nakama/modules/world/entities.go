@@ -70,8 +70,11 @@ type EntityDef struct {
 	// (ITEM_ROTTED at spawn, FOOD_CONSUMED(0) at expiry — both hash-bearing).
 	FoodValue int `json:"food_value,omitempty"`
 
-	// Consumable properties
-	Effect string `json:"effect,omitempty"`
+	// Consumable/subdual-tool properties (§C): Effect names the condition_tools key it applies
+	// ("calm"; later "chill"/"stun"); EffectPower scales the species fill (the tool-tier knob —
+	// absent/0 reads as 1.0).
+	Effect      string  `json:"effect,omitempty"`
+	EffectPower float32 `json:"effect_power,omitempty"`
 
 	// Item classes/tags: "clothing", "food", "material", "metal", "tool", "seed", "book",
 	// "drink"… A filtered container only accepts items carrying its tag; tags also seed future

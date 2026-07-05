@@ -73,12 +73,23 @@ func (m *Match) processActionState(
 ) bool {
 	switch swarm.ActionState {
 	case "windup":
+		// FUNNEL 2 (§C): smoke lands mid-windup → the lunge dissolves. Back off along the
+		// serpentine heading (deterministic; the target player may already be gone).
+		if swarmSubdued(swarm, species) {
+			m.abortActionToRecover(state, swarm, species, chunkSize, deltaTime)
+			return true
+		}
 		if state.TickCount >= swarm.ActionUntilTick {
 			m.launchSurge(state, swarm, species, chunkSize, deltaTime)
 		}
 		return true
 
 	case "surge":
+		// FUNNEL 2 (§C): a subdued centipede pulls out of the surge mid-flight.
+		if swarmSubdued(swarm, species) {
+			m.abortActionToRecover(state, swarm, species, chunkSize, deltaTime)
+			return true
+		}
 		// Per-tick bite check during flight: range AND line-of-sight (a clamped surge
 		// ends ≤1.5 from a player hugging the far side of a fence — a through-fence
 		// bite would silently void "stone is the answer").
@@ -125,8 +136,10 @@ func (m *Match) processActionState(
 		return m.processGnaw(logger, dispatcher, state, swarm, species, chunkSize)
 	}
 
-	// IDLE: the surge trigger (per-tick).
-	if species.AttackDamage > 0 && state.TickCount >= swarm.SurgeCooldownUntil {
+	// IDLE: the surge trigger (per-tick). A subdued centipede doesn't START a windup —
+	// the GDD's "smoke it and walk past it" (§C funnel 2).
+	if species.AttackDamage > 0 && state.TickCount >= swarm.SurgeCooldownUntil &&
+		!swarmSubdued(swarm, species) {
 		sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
 		if pid, px, py, found := m.nearestPlayer(state, sx, sy, centTriggerRange); found {
 			swarm.ActionState = "windup"
@@ -272,6 +285,24 @@ func (m *Match) advanceTurnaround(
 	swarm.ActionUntilTick = state.TickCount + centTurnLegTicks
 }
 
+// abortActionToRecover cancels an in-flight windup/surge because the swarm was SUBDUED (§C).
+// The away-point is current pos + heading — the centipede backs off opposite its serpentine
+// heading, deterministic and player-free (the windup target may have left). No surge cooldown
+// stamp beyond recover's own: calming isn't a miss.
+func (m *Match) abortActionToRecover(
+	state *WorldState,
+	swarm *entities.SwarmState,
+	species *entities.BugSpecies,
+	chunkSize int,
+	deltaTime float32,
+) {
+	sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
+	hx := float32(math.Cos(float64(swarm.WanderHeading)))
+	hy := float32(math.Sin(float64(swarm.WanderHeading)))
+	swarm.WindupTargetID = ""
+	m.startRecover(state, swarm, species, sx+hx, sy+hy, chunkSize, deltaTime)
+}
+
 func (m *Match) startRecover(
 	state *WorldState,
 	swarm *entities.SwarmState,
@@ -309,6 +340,10 @@ func (m *Match) tryStartGnaw(
 	if state.TickCount < swarm.GnawCooldownUntil {
 		return false
 	}
+	// §C: the single choke point for STARTING a gnaw — a subdued centipede doesn't chew.
+	if swarmSubdued(swarm, species) {
+		return false
+	}
 	def := m.occupantDefAt(state, blockX, blockY)
 	if def == nil || def.World == nil || !def.World.Gnawable {
 		return false
@@ -340,6 +375,13 @@ func (m *Match) processGnaw(
 ) bool {
 	var gx, gy int
 	fmt.Sscanf(swarm.GnawKey, "%d,%d", &gx, &gy)
+
+	// §C (the mid-gnaw case): smoke lands while it's ALREADY chewing → it stops. Damage
+	// dealt so far stays in the gnaw pool; no cooldown (being calmed is not an abandon).
+	if swarmSubdued(swarm, species) {
+		m.endGnaw(state, swarm, false)
+		return false
+	}
 
 	def := m.occupantDefAt(state, gx, gy)
 	if def == nil || def.World == nil || !def.World.Gnawable {

@@ -123,8 +123,10 @@ func (m *Match) predationThink(
 		// DEFENDING — entry: recalled by nest damage (recallNestDefenders) OR a player
 		// loitering within NestDefendRadius of the nest. Exit: hysteresis distance or
 		// the timer. Defenders chase at hunt speed (scary NEAR the nest only).
+		// §C precedence rule (all three defend entries apply it): defense is suppressed
+		// while (the resident is SUBDUED) or (the nest is SMOKED).
 		nest := state.NestStates[swarm.NestKey]
-		if swarm.Phase != "defending" && nest != nil && nest.SmokedUntilTick <= state.TickCount {
+		if swarm.Phase != "defending" && nest != nil && !nestDefenseSuppressed(state, nest, swarm) {
 			if pid, px, py, found := m.nearestPlayer(state, float32(nest.GridX)+0.5, float32(nest.GridY)+0.5, entities.NestDefendRadius); found {
 				_ = px
 				_ = py
@@ -134,7 +136,9 @@ func (m *Match) predationThink(
 			}
 		}
 		if swarm.Phase == "defending" {
-			exit := state.TickCount >= swarm.DefendUntilTick || nest == nil
+			// Exit hysteresis — the same §C precedence rule ends an anger already in flight.
+			exit := state.TickCount >= swarm.DefendUntilTick || nest == nil ||
+				nestDefenseSuppressed(state, nest, swarm)
 			var tx, ty float32
 			if !exit {
 				if target, ok := state.Players[swarm.DefendTargetID]; ok {

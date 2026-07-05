@@ -2463,5 +2463,18 @@
     "stackable": true,
     "max_stack": 99,
     "sell_price": 220
+  },
+  "smoker": {
+    "name": "Bee Smoker",
+    "category": "tool",
+    "tool_type": "smoker",
+    "tags": [
+      "tool"
+    ],
+    "stackable": false,
+    "effect": "calm",
+    "effect_power": 1.0,
+    "buy_price": 120,
+    "sell_price": 45
   }
 }

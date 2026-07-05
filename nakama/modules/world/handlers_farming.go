@@ -59,6 +59,13 @@ func (m *Match) handleToolUse(
 
 	logger.Info("ToolUse: tool %s has type=%s", toolID, toolDef.ToolType)
 
+	// CONSUMABLES ride the same verb (§C): OpCode 7 is "apply the equipped item at a cell" —
+	// one network verb for the smoker, calm_spray, and the future smoke_bomb/chill_canister.
+	if toolDef.Category == "consumable" {
+		m.handleConsumableUse(logger, dispatcher, state, userID, toolID, toolDef, msg.GridX, msg.GridY, tick)
+		return
+	}
+
 	// Route based on tool type
 	switch toolDef.ToolType {
 	case "hoe":
@@ -83,11 +90,15 @@ const smokerCalmTicks = 300
 // small cluster of boxes, not the whole apiary).
 const smokerReach = 4.0
 
-// handleSmoker calms every hive (bee nest) within smokerReach of the target cell for
-// smokerCalmTicks: SmokedUntilTick makes recallNestDefenders AND the passive
-// player-near-nest defend entry no-ops (predationThink). Server-only state — the ABSENCE
-// of defend legs replays identically everywhere, so no ledger event. Also the mechanism
-// calm_spray can ride later (its effect:"calm" was previously consumed nowhere).
+// handleSmoker: one puff at the target cell (§C — the GENERAL subdual tool, not a bee gadget):
+//   - fills ConditionValue on EVERY swarm within smokerReach whose species has a
+//     condition_tools["calm"] entry (wasps, centipedes, bees, the harmless set — the "vast
+//     majority of bugs can be calmed" rule, written in data);
+//   - stamps SmokedUntilTick on hives in reach — smoke LINGERS at the hive entrance, keeping
+//     defense suppressed even while the (uncalmed remainder of the) colony forages afield.
+//
+// Server-only state both ways — the ABSENCE of stings/surges/defend legs replays identically
+// on every client, so no ledger event.
 func (m *Match) handleSmoker(
 	logger runtime.Logger,
 	dispatcher runtime.MatchDispatcher,
@@ -112,7 +123,14 @@ func (m *Match) handleSmoker(
 		return
 	}
 
-	calmed := 0
+	// effect_power is the smoker-tier knob (item data; absent = 1.0).
+	power := float32(1.0)
+	if def := state.Entities[player.EquippedTool]; def != nil && def.EffectPower > 0 {
+		power = def.EffectPower
+	}
+	calmedSwarms := m.applyAreaCondition(state, gx, gy, smokerReach, "calm", power)
+
+	smokedNests := 0
 	reachSq := float32(smokerReach * smokerReach)
 	for _, key := range sortedStringKeys(state.NestStates) {
 		nest := state.NestStates[key]
@@ -126,13 +144,69 @@ func (m *Match) handleSmoker(
 			resident.Phase = "feeding"
 			resident.DefendTargetID = ""
 		}
-		calmed++
+		smokedNests++
 	}
-	if calmed == 0 {
-		m.sendWorldError(dispatcher, state, userID, "No hive close enough to smoke")
+	if calmedSwarms == 0 && smokedNests == 0 {
+		m.sendWorldError(dispatcher, state, userID, "Nothing nearby to smoke")
 		return
 	}
-	logger.Info("Smoker: %s calmed %d hive(s) around %d,%d", userID, calmed, gx, gy)
+	logger.Info("Smoker: %s calmed %d swarm(s), smoked %d hive(s) around %d,%d",
+		userID, calmedSwarms, smokedNests, gx, gy)
+}
+
+// handleConsumableUse applies an equipped consumable's effect at the target cell and consumes
+// one from the stack (§C: calm_spray's effect:"calm" finally has a consumer). The item's own
+// `reach` is the EFFECT radius around the cell; the cell itself must be within the standard
+// 3.0 interaction range. Species without the effect in condition_tools are simply unaffected —
+// spraying a species it can't touch reports "nothing happens" and costs nothing.
+func (m *Match) handleConsumableUse(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	userID, itemID string,
+	def *EntityDef,
+	gx, gy int,
+	tick int64,
+) {
+	player := state.Players[userID]
+	if player == nil {
+		return
+	}
+	if def.Effect == "" {
+		m.sendWorldError(dispatcher, state, userID, "Nothing happens")
+		return
+	}
+	if !m.validateToolCooldown(state, player, tick) {
+		return
+	}
+	cs := state.Config.ChunkSize
+	px, py := player.WorldX(cs), player.WorldY(cs)
+	dx, dy := px-(float32(gx)+0.5), py-(float32(gy)+0.5)
+	if dx*dx+dy*dy > 9.0 {
+		m.sendWorldError(dispatcher, state, userID, "Too far away")
+		return
+	}
+
+	slot := player.FindItem(itemID)
+	if slot < 0 {
+		m.sendWorldError(dispatcher, state, userID, "You don't have that")
+		return // possession first — never apply an effect the player can't pay for
+	}
+
+	radius := def.Reach
+	if radius <= 0 {
+		radius = 3.0
+	}
+	touched := m.applyAreaCondition(state, gx, gy, radius, def.Effect, def.EffectPower)
+	if touched == 0 {
+		m.sendWorldError(dispatcher, state, userID, "Nothing nearby to calm")
+		return // a miss costs nothing
+	}
+
+	player.RemoveItem(slot, 1)
+	m.sendSlotUpdate(dispatcher, state, userID, slot, &player.ItemSlots[slot])
+	logger.Info("Consumable %s: %s applied %q to %d swarm(s) at %d,%d",
+		itemID, userID, def.Effect, touched, gx, gy)
 }
 
 // validateCooldownTicks is THE cooldown gate: one body enforcing the shared LastToolTick

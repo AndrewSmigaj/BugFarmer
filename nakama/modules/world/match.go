@@ -1321,6 +1321,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			// === Lifecycle meters (server-authoritative; all effects ride the ledger) ===
 			swarm.ReproduceCooldown -= deltaTime // was never decremented before this system
 			swarm.CompostCooldown -= deltaTime   // detritivore compost-deposit pacing
+			decayCondition(swarm, species, deltaTime) // subdual meter drains back toward agitated (§C)
 
 			atFood := false
 			if swarm.TargetFoodID != "" {
@@ -2452,6 +2453,13 @@ func (m *Match) handleCatchBug(
 			} else {
 				m.sendWorldError(dispatcher, state, playerID, "You need a larger net for that bug!")
 			}
+			return
+		}
+		// CONDITION gate (§C / GDD §7.3 capture rules): catch_condition "calm" requires the
+		// swarm SUBDUED at the same one threshold behavior uses (angry bees can't be netted;
+		// smoke or spray them first). "always"/"" = no condition (all pre-§C species).
+		if catchSpecies.CatchCondition == "calm" && !swarmSubdued(swarm, catchSpecies) {
+			m.sendWorldError(dispatcher, state, playerID, "It's too agitated — calm it first!")
 			return
 		}
 	}

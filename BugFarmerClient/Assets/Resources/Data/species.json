@@ -37,9 +37,11 @@
     "attack_cooldown": 0,
     "net_size": "small",
     "catch_condition": "always",
+    "condition_tools": {
+      "calm": 80
+    },
     "condition_threshold": 0,
     "condition_decay": 0,
-    "condition_tools": {},
     "max_hp": 1,
     "damage_tools": {
       "hand": 1
@@ -105,9 +107,11 @@
     "attack_cooldown": 0,
     "net_size": "small",
     "catch_condition": "always",
+    "condition_tools": {
+      "calm": 80
+    },
     "condition_threshold": 0,
     "condition_decay": 0,
-    "condition_tools": {},
     "max_hp": 2,
     "damage_tools": {
       "hand": 1
@@ -154,6 +158,9 @@
     "attack_cooldown": 2.0,
     "net_size": "medium",
     "catch_condition": "always",
+    "condition_tools": {
+      "calm": 85
+    },
     "max_hp": 3,
     "sell_price": 8,
     "reproduce_cooldown": 30.0,
@@ -206,6 +213,9 @@
     "attack_cooldown": 5.0,
     "net_size": "trap_only",
     "catch_condition": "always",
+    "condition_tools": {
+      "calm": 90
+    },
     "max_hp": 6,
     "sell_price": 25,
     "reproduce_cooldown": 300.0,
@@ -264,6 +274,9 @@
     "attack_cooldown": 0.0,
     "net_size": "small",
     "catch_condition": "always",
+    "condition_tools": {
+      "calm": 80
+    },
     "max_hp": 3,
     "sell_price": 15,
     "reproduce_cooldown": 1150.0,
@@ -317,6 +330,9 @@
     "attack_cooldown": 0.0,
     "net_size": "small",
     "catch_condition": "always",
+    "condition_tools": {
+      "calm": 80
+    },
     "max_hp": 4,
     "sell_price": 20,
     "reproduce_cooldown": 120.0,

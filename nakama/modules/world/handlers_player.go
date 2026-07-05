@@ -46,6 +46,13 @@ func (m *Match) applyBugAttackToPlayer(
 		return false
 	}
 
+	// SUBDUED (§C belt-and-braces): every bug attack funnels through here (checkBugAttacks +
+	// the centipede bite are the only callers), so a calmed swarm cannot land damage even if
+	// an upstream entry check is missed later.
+	if swarmSubdued(swarm, species) {
+		return false
+	}
+
 	// STING IMMUNITY (the bee suit — the first armor damage hook): a sting_immune BODY piece
 	// fully negates sting-class attacks (bees, wasps); bites (centipedes) still land. No HP
 	// change, no knockback, no invuln burn — the cloud rages, the keeper works.
@@ -121,6 +128,10 @@ func (m *Match) checkBugAttacks(
 	// Gentle-until-provoked (bees): only a DEFENDING colony stings. Wasps (flag unset) keep
 	// their ambient contact sting.
 	if species.StingsOnlyDefending && swarm.Phase != "defending" {
+		return
+	}
+	// FUNNEL 1 (§C): a subdued swarm doesn't ambient-sting — walk through the calm cloud.
+	if swarmSubdued(swarm, species) {
 		return
 	}
 	sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)

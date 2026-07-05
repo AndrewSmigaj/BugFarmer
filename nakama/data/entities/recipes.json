@@ -2831,5 +2831,28 @@
     },
     "process_ticks": 20,
     "unlock": "shop:weaver"
+  },
+  "smoker": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "iron_bar",
+        "count": 1
+      },
+      {
+        "item": "wood",
+        "count": 2
+      },
+      {
+        "item": "wasp_stinger",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "smoker",
+      "count": 1
+    },
+    "process_ticks": 60,
+    "unlock": "default"
   }
 }

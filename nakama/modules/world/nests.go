@@ -601,11 +601,13 @@ func (m *Match) recallNestDefenders(state *WorldState, gx, gy int, attackerID st
 	if nest == nil {
 		return
 	}
-	if nest.SmokedUntilTick > state.TickCount {
-		return // the smoke keeps them calm — the whole point of the smoker
-	}
 	resident, ok := state.Swarms[nest.ResidentSwarmID]
 	if !ok {
+		return
+	}
+	// §C precedence rule (all three defend entries): suppressed while the resident is
+	// subdued OR the nest is smoked — the calm harvest window.
+	if nestDefenseSuppressed(state, nest, resident) {
 		return
 	}
 	resident.Phase = "defending"
