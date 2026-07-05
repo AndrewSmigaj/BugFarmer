@@ -30,10 +30,9 @@ func (m *Match) handleChunkSubscribe(
 		}
 		state.Chunks[chunkKey] = chunk
 
-		// ZONE PERSISTENCE: overlay this chunk's saved farm delta + hydrate its sidecar state
-		// (crops/trees/containers/stations/items) BEFORE the init scans — those scans randomize
-		// untracked trees/stations, so restored state must be in the maps first (skip-if-present).
-		m.applyChunkSave(state, chunk, cx, cy)
+		// ZONE PERSISTENCE note: every EDITED chunk was eager-loaded (edits applied + scanned) at
+		// MatchInit by restoreWorldSave/importLegacySave — a chunk reaching this lazy path is
+		// UNTOUCHED authored content, so the init scans below start it from scratch.
 
 		// Initialize fruit tree states for any fruit trees in this chunk
 		m.initFruitTreesInChunk(state, chunk, cx, cy, logger)
@@ -241,6 +240,12 @@ func (m *Match) handleTilePlace(
 				bChunk.SetFootprintCell(blx, bly, msg.OccupantID, msg.Direction)
 			}
 		}
+	}
+
+	// Runtime-placed HIVE BOX: register a DORMANT nest (no free colony — a daughter-founding
+	// or recovering colony must claim it; mirrors initNestsInChunk for the loaded-chunk case).
+	if speciesID, hiveSpecies, isBox := m.speciesForNestOccupant(state, msg.OccupantID); hiveSpecies != nil {
+		m.registerNestAt(state, msg.GridX, msg.GridY, msg.OccupantID, speciesID, hiveSpecies, isBox, logger)
 	}
 
 	// Consume item from inventory

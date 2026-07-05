@@ -313,13 +313,20 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 		logger.Info("Loaded %d crafting recipes across %d stations", len(state.Recipes), len(state.RecipesByStation))
 	}
 
-	// ZONE PERSISTENCE: prefetch this zone's saved farm delta (consumed lazily per chunk in
-	// handleChunkSubscribe). Must run after CurrentZone is set; before the swarm restore below.
-	m.prefetchZoneState(ctx, nk, state, logger)
-
-	// Restore the saved bug population if this zone was persisted; else spawn fresh initial swarms.
-	// Restored swarms are CLEAN (IDs 0..Count-1) and enter before any client joins — determinism-safe.
-	if !m.restoreSwarms(ctx, nk, state, logger) {
+	// ZONE PERSISTENCE (world_save.go): restore the zone's WorldSave document EAGERLY — the world
+	// clock resumes, then weather, cell edits, sidecar registries, and the full-fidelity swarm
+	// population, all before any client joins. No document → one-time legacy import
+	// (zone_persist.go) → else a pristine authored zone with fresh initial swarms.
+	swarmsRestored := false
+	if state.CurrentZone != nil {
+		if ws, err := loadWorldSave(ctx, nk, ZoneStateKey(state.CurrentZone.ZoneID, "")); err == nil && ws != nil {
+			m.restoreWorldSave(state, ws, logger)
+			swarmsRestored = !state.CurrentZone.EphemeralSwarms
+		} else {
+			swarmsRestored = m.importLegacySave(ctx, nk, state, logger)
+		}
+	}
+	if !swarmsRestored {
 		m.spawnInitialSwarms(state, logger)
 		m.seedInitialCarrion(state, logger)
 	}
@@ -739,11 +746,12 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 					worldState.ClearPendingInfluence()
 					logger.Info("Zone %s is now empty - reset all sync state (NextSeq, InfluenceLog, Snapshot, Authority, PendingInfluence)", zoneID)
 
-					// ZONE PERSISTENCE: the zone just went quiet — snapshot its farm (+ bug population)
-					// and write it async. The live paused match stays the source of truth until terminate,
-					// so this is a restart backup. Snapshot is built synchronously on the match goroutine.
-					if recs := m.snapshotZoneState(worldState); len(recs) > 0 {
-						go writeZoneRecords(context.Background(), nk, logger, recs)
+					// ZONE PERSISTENCE: the zone just went quiet — snapshot the WorldSave document
+					// (synchronously on the match goroutine; frozen bytes) and write it async. The
+					// generation guard in writeWorldSave keeps a slow async write from ever rolling
+					// back a newer terminate save.
+					if doc, docTick := m.snapshotWorldSaveBytes(worldState); doc != "" {
+						go writeWorldSave(context.Background(), nk, logger, worldState.CurrentZone.ZoneID, doc, docTick)
 					}
 				} else if zone.AuthorityUserID == userID {
 					// Authority is leaving but zone still has members - reassign
@@ -835,8 +843,8 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		// guard, so it never runs on an empty zone.
 		if worldState.TickCount-worldState.LastZoneSaveTick >= zoneAutosaveTicks {
 			worldState.LastZoneSaveTick = worldState.TickCount
-			if recs := m.snapshotZoneState(worldState); len(recs) > 0 {
-				go writeZoneRecords(context.Background(), nk, logger, recs)
+			if doc, docTick := m.snapshotWorldSaveBytes(worldState); doc != "" {
+				go writeWorldSave(context.Background(), nk, logger, worldState.CurrentZone.ZoneID, doc, docTick)
 			}
 		}
 
@@ -1031,6 +1039,14 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 					continue
 				}
 				m.handleSetHome(logger, dispatcher, nk, worldState, userID, shMsg)
+
+			case OpCodeHiveHarvest:
+				var hhMsg HiveHarvestMessage
+				if err := json.Unmarshal(msg.GetData(), &hhMsg); err != nil {
+					logger.Warn("Invalid hive harvest from %s: %v", userID, err)
+					continue
+				}
+				m.handleHiveHarvest(logger, dispatcher, worldState, userID, hhMsg)
 
 			case OpCodeEcologyTuning:
 				// DEV TOOL: live-override a species' ecology parameters from the Unity debug
@@ -1583,9 +1599,9 @@ func (m *Match) MatchTerminate(ctx context.Context, logger runtime.Logger, db *s
 
 	// ZONE PERSISTENCE: the authoritative save for a clean restart. SYNCHRONOUS — a detached
 	// goroutine could be killed during teardown; graceSeconds gives the window to finish the write.
-	if recs := m.snapshotZoneState(worldState); len(recs) > 0 {
-		writeZoneRecords(ctx, nk, logger, recs)
-		logger.Info("Zone %s: persisted %d record(s) on terminate", worldState.ZoneID, len(recs))
+	if doc, docTick := m.snapshotWorldSaveBytes(worldState); doc != "" {
+		writeWorldSave(ctx, nk, logger, worldState.CurrentZone.ZoneID, doc, docTick)
+		logger.Info("Zone %s: persisted world save on terminate (tick %d)", worldState.ZoneID, docTick)
 	}
 
 	return worldState
@@ -1711,7 +1727,7 @@ func (m *Match) spawnInitialSwarms(state *WorldState, logger runtime.Logger) {
 // seedInitialCarrion drops the zone's authored carrion ground items (BugSpawnConfig.InitialCarrion) at
 // match start — the day-1 food bootstrap (e.g. dead millipedes in the woods so the local flies breed and
 // the beetles feed from tick 0, instead of waiting for the first natural deaths). Created directly into
-// state.GroundItems (no dispatcher: this runs at MatchInit before any client joins, like restoreSwarms);
+// state.GroundItems (no dispatcher: this runs at MatchInit before any client joins, like the save restore);
 // clients receive them on chunk subscribe. Deterministic: fixed positions + the GroundItemSeq counter.
 func (m *Match) seedInitialCarrion(state *WorldState, logger runtime.Logger) {
 	cfg := state.CurrentZone.BugSpawning

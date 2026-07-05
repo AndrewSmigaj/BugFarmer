@@ -112,6 +112,15 @@ type BugSpecies struct {
 	// Hash-bearing same-build data (the client reads the published species.json).
 	MovementStyle string `json:"movement_style"`
 
+	// Gentle-until-provoked (bees): with this set, checkBugAttacks stings ONLY while the
+	// swarm is in the "defending" phase (nest recalled / player loitering at the hive).
+	// Without it, any attack_damage>0 species stings anyone in contact range (wasps).
+	StingsOnlyDefending bool `json:"stings_only_defending"`
+
+	// AttackIsSting classifies the attack for gear: a sting_immune body piece (the bee suit)
+	// fully negates STINGS (bees, wasps) but not bites (centipedes chew through cloth).
+	AttackIsSting bool `json:"attack_is_sting"`
+
 	// Predator configuration. The NIL POINTER is the predator gate — non-predators
 	// never enter the predation branch.
 	Predation *PredationConfig `json:"predation"`
@@ -139,6 +148,12 @@ type PredationConfig struct {
 	DepositSatiation       float32  `json:"deposit_satiation"`        // satiation set after a nest deposit (rest pacing)
 	HuntSatiationThreshold float32  `json:"hunt_satiation_threshold"` // hunts only below this satiation
 	NestOccupant           string   `json:"nest_occupant"`            // occupant id of this species' nest ("" = nestless)
+	// Additional occupant ids that also serve as this species' nests — the PLAYER-PLACED hive
+	// boxes (bees: beehive_basic..deluxe). Unlike the primary NestOccupant (wild hives, which
+	// auto-found a resident when their chunk loads), extras register DORMANT: no free colony —
+	// a daughter-founding or recovering colony must CLAIM the box (how a player's apiary
+	// comes alive).
+	NestOccupantsExtra []string `json:"nest_occupants_extra"`
 }
 
 // LoadSpecies reads species definitions from JSON config

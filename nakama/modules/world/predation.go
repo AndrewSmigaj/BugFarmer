@@ -124,7 +124,7 @@ func (m *Match) predationThink(
 		// loitering within NestDefendRadius of the nest. Exit: hysteresis distance or
 		// the timer. Defenders chase at hunt speed (scary NEAR the nest only).
 		nest := state.NestStates[swarm.NestKey]
-		if swarm.Phase != "defending" && nest != nil {
+		if swarm.Phase != "defending" && nest != nil && nest.SmokedUntilTick <= state.TickCount {
 			if pid, px, py, found := m.nearestPlayer(state, float32(nest.GridX)+0.5, float32(nest.GridY)+0.5, entities.NestDefendRadius); found {
 				_ = px
 				_ = py
@@ -209,6 +209,16 @@ func (m *Match) predationThink(
 		m.emitLeg(state, swarm, species, cx, cy, 1.0, chunkSize, deltaTime)
 		swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)
 		return true
+	}
+
+	// NECTAR FORAGERS (bees): a NEST species with an EMPTY prey list never hunts — while
+	// below the full-load point it declines ownership (the centipede carrion-first pattern)
+	// so the SHARED forage block dines on flower nectar; satiation then climbs to
+	// predatorFullSatiation and the PROVISION block above carries the load home (brood +
+	// honey). Defend/homing/feed-pause above still preempt. At/above full with no live nest
+	// (orphan), it falls through to the home-range rest-wander below, like orphan wasps.
+	if p.NestOccupant != "" && len(p.Prey) == 0 && swarm.Satiation < predatorFullSatiation {
+		return false
 	}
 
 	// INDIVIDUAL ground predators (centipede): CARRION-FIRST — if food is visible,

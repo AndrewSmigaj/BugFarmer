@@ -204,10 +204,8 @@ type WorldState struct {
 	ZoneStates       map[string]*ZoneState       // zoneID → zone authority/sync state
 	PendingInfluence []InfluenceEvent            // Events to broadcast this tick
 
-	// Zone/farm persistence (see zone_persist.go). ZoneChunkCache is the prefetched per-chunk save
-	// records (loaded once at MatchInit), consumed by handleChunkSubscribe (which has no ctx/nk).
-	// LastZoneSaveTick gates the periodic autosave. None of this is in the bug-sim hash.
-	ZoneChunkCache   map[string]*ChunkSave // ChunkKey -> persisted delta to apply on chunk load
+	// Zone persistence (see world_save.go + persist_classes.go). LastZoneSaveTick gates the
+	// periodic autosave; set to the restored Tick at load. Not in the bug-sim hash.
 	LastZoneSaveTick int64
 }
 
@@ -740,11 +738,11 @@ func (s *WorldState) BlocksBugsCells() (cx []int, cy []int) {
 	return cx, cy
 }
 
-// chunkForCollision returns the chunk to scan for blocks_bugs occupants. If the chunk is already in memory
-// (subscribed → saved-delta + lazy init already applied) it's returned as-is. Otherwise it's loaded from
-// disk TRANSIENTLY with only the occupant delta overlaid (mirrors applyChunkSave's cell loop) — NOT stored
-// and NO init, so a later real subscription still runs initFruitTrees/Nests/etc. exactly once (their RNG
-// draws stay in their normal order). Result matches the in-memory form, so first + late joiners agree.
+// chunkForCollision returns the chunk to scan for blocks_bugs occupants. An in-memory chunk is
+// always the truth (every EDITED chunk was eager-loaded at MatchInit by the persistence restore,
+// so player fences are here). Otherwise the chunk is pure authored content, loaded from disk
+// TRANSIENTLY — NOT stored and NO init, so a later real subscription still runs
+// initFruitTrees/Nests/etc. exactly once (their RNG draws stay in their normal order).
 func (s *WorldState) chunkForCollision(zonePath string, cx, cy int) *ChunkData {
 	if ch, ok := s.Chunks[ChunkKey(cx, cy)]; ok {
 		return ch
@@ -752,18 +750,6 @@ func (s *WorldState) chunkForCollision(zonePath string, cx, cy int) *ChunkData {
 	ch, err := LoadChunk(zonePath, cx, cy)
 	if err != nil {
 		return nil // no authored file → no authored occupants here
-	}
-	if s.ZoneChunkCache != nil {
-		if cs := s.ZoneChunkCache[ChunkKey(cx, cy)]; cs != nil {
-			for _, e := range cs.Cells {
-				if e.LY < 0 || e.LY >= ChunkSize || e.LX < 0 || e.LX >= ChunkSize {
-					continue
-				}
-				if e.OccSet {
-					ch.Occupants[e.LY][e.LX] = e.Occ // nil clears a broken authored occupant
-				}
-			}
-		}
 	}
 	return ch
 }

@@ -57,6 +57,10 @@ type EntityDef struct {
 	// defense math is a planned follow-up.
 	ArmorSlot string `json:"armor_slot,omitempty"`
 
+	// StingImmune (the bee suit): worn in the BODY slot, fully negates sting-class bug
+	// attacks (species with attack_is_sting). The first armor damage knob; bites ignore it.
+	StingImmune bool `json:"sting_immune,omitempty"`
+
 	// Backpack properties (category = "backpack", armor_slot = "backpack"): how many extra
 	// item-inventory slots wearing it unlocks.
 	SlotBonus int `json:"slot_bonus,omitempty"`
@@ -139,6 +143,11 @@ type WorldData struct {
 	// A ForagePoolState tracks nectar per cell. The feeding analogue of host_plant.
 	Nectar bool `json:"nectar,omitempty"`
 
+	// Hive properties (bee nests: the wild hive + the placeable hive-box tiers; nil = not a
+	// hive). honey_cap = combs the hive stores; honey_mult scales accrual per brood deposit
+	// (deluxe boxes make honey faster). Display/inventory yield knobs — never sim inputs.
+	Hive *HiveData `json:"hive,omitempty"`
+
 	// Station properties (player-fillable material processors — compost bin first; nil = not a station)
 	Station *StationData `json:"station,omitempty"`
 
@@ -191,6 +200,12 @@ type StationData struct {
 	FoodPerUnit int      `json:"food_per_unit,omitempty"` // Food value each unit provides to bugs
 	Providers   []string `json:"providers,omitempty"`     // "food", "breeding"
 	ProcessTicks int     `json:"process_ticks,omitempty"` // Reserved: fresh->processed conversion time
+}
+
+// HiveData is a bee nest's honey-yield tuning (world.hive on the wild hive + hive boxes).
+type HiveData struct {
+	HoneyCap  float32 `json:"honey_cap"`            // combs the hive holds (harvest yield cap)
+	HoneyMult float32 `json:"honey_mult,omitempty"` // accrual multiplier per brood deposit (0 = 1.0)
 }
 
 // BreakableData describes how something can be broken/harvested.

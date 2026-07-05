@@ -7,54 +7,61 @@ import (
 
 // SwarmState tracks a group of bugs moving together.
 // Server manages position/count, client renders individual flies with deterministic simulation.
+//
+// PERSISTENCE: the whole struct is WORLD-STATE — it rides WorldSave.Swarms byte-faithfully and
+// resumes under the persisted world clock, so every tick-stamp below stays valid across a restart.
+// The json tags ARE the save format: renaming a Go field must not change its tag. Two fields are
+// refreshed from the species def at load (Radius, WanderRad — config-derived; a rebalance must
+// reach saved swarms); player-ref fields (DefendTargetID, WindupTargetID) hold stable userIDs and
+// self-heal when the player is absent. See world/persist_classes.go.
 type SwarmState struct {
-	ID        string
-	SpeciesID string
-	Position  EntityPosition
-	Radius    float32   // Visual spread radius in blocks
-	Count     int       // Number of alive bugs in swarm
-	Facing    Direction // Movement direction hint for client
-	Velocity  Vec2      // Current movement
-	HomePos   EntityPosition
-	WanderRad float32 // Max distance from home
+	ID        string         `json:"id"`
+	SpeciesID string         `json:"species"`
+	Position  EntityPosition `json:"pos"`
+	Radius    float32        `json:"radius,omitempty"` // Visual spread radius in blocks (CONFIG-derived: refreshed at load)
+	Count     int            `json:"count"`
+	Facing    Direction      `json:"facing,omitempty"` // Movement direction hint for client
+	Velocity  Vec2           `json:"vel,omitempty"`
+	HomePos   EntityPosition `json:"home"`
+	WanderRad float32        `json:"wander_rad,omitempty"` // Max distance from home (CONFIG-derived: refreshed at load)
 
-	ReproduceCooldown float32 // Seconds until can reproduce
+	ReproduceCooldown float32 `json:"repro_cd,omitempty"` // Seconds until can reproduce
 
 	// Condition meter (for subduing mechanics, 0-100 range)
-	ConditionValue float32
-	CurrentHP      int
+	ConditionValue float32 `json:"condition,omitempty"`
+	CurrentHP      int     `json:"hp,omitempty"`
 
 	// Lifecycle (server-owned)
-	Phase             string  // "feeding", "reproducing", "idle"
-	Satiation         float32 // 0-100, increases when bugs feed
-	ReproductionMeter float32 // 0-100, increases when bugs visit breeding sites
-	CompostCooldown   float32 // Detritivores: seconds until the next compost-input deposit (server-only)
-	StarveTimer       float32 // Seconds the swarm has been at 0 satiation; past a threshold it starves (server-only)
+	Phase             string  `json:"phase,omitempty"`      // "feeding", "reproducing", "idle"
+	Satiation         float32 `json:"sat,omitempty"`        // 0-100, increases when bugs feed
+	ReproductionMeter float32 `json:"repro,omitempty"`      // 0-100, increases when bugs visit breeding sites
+	CompostCooldown   float32 `json:"compost_cd,omitempty"` // Detritivores: seconds until the next compost-input deposit (server-only)
+	StarveTimer       float32 `json:"starve,omitempty"`     // Seconds the swarm has been at 0 satiation; past a threshold it starves (server-only)
 	// Per-bug natural-death schedule: bugID -> absolute tick the bug dies of old age. Set at birth,
 	// carried through merge/split like BugHP, cleaned in RemoveBugs. Server-only, NOT in the state hash
 	// (clients learn of deaths only via BUG_REMOVED events). Absent / lifespan<=0 = the bug is immortal.
-	DeathTick map[int]int64
+	DeathTick map[int]int64 `json:"death_tick,omitempty"`
 
 	// Movement target (pre-validated path)
-	TargetX   float32 // Destination X (validated to be reachable)
-	TargetY   float32 // Destination Y
-	HasTarget bool    // Whether we have an active target
+	TargetX   float32 `json:"tx,omitempty"` // Destination X (validated to be reachable)
+	TargetY   float32 `json:"ty,omitempty"` // Destination Y
+	HasTarget bool    `json:"has_target,omitempty"`
 
 	// Think timer - swarms make decisions every few seconds, not every tick
-	NextThinkTick int64 // Tick when swarm next evaluates targets
-	RelocateReadyTick int64 // earliest tick this swarm may make another break-contact relocate jump (server-only; not hashed)
+	NextThinkTick     int64 `json:"next_think,omitempty"`     // Tick when swarm next evaluates targets
+	RelocateReadyTick int64 `json:"relocate_ready,omitempty"` // earliest tick this swarm may make another break-contact relocate jump (server-only; not hashed)
 
 	// Cached food target (set at Think time; lets the per-tick at-food check be O(1) —
 	// distance to this point + a registry validity lookup — instead of a chunk scan).
-	TargetFoodID         string  // Ground-item id or station cell-key; "" = none
-	TargetFoodX          float32 // World position of the food source
-	TargetFoodY          float32
-	TargetFoodDepletable bool // True for ground items/stations (required for BREEDING)
+	TargetFoodID         string  `json:"food_id,omitempty"` // Ground-item id or station cell-key; "" = none
+	TargetFoodX          float32 `json:"food_x,omitempty"`  // World position of the food source
+	TargetFoodY          float32 `json:"food_y,omitempty"`
+	TargetFoodDepletable bool    `json:"food_depletable,omitempty"` // True for ground items/stations (required for BREEDING)
 
 	// Forage duty cycle: the forage/wander MODE persists ~30-50s (10x the think cadence) so
 	// behavior doesn't flicker leg-to-leg; movement legs within a mode stay short (3-5s).
-	ForageMode    bool  // Current mode: seek food vs pure wander
-	ModeUntilTick int64 // Tick when the mode rerolls
+	ForageMode    bool  `json:"forage_mode,omitempty"` // Current mode: seek food vs pure wander
+	ModeUntilTick int64 `json:"mode_until,omitempty"`  // Tick when the mode rerolls
 
 	// Per-leg speed multiplier (hunt ×1.5, prey-flee ×1.8, surge ×3.5...). SYNC CONTRACT
 	// (architecture_swarm_sync.md §14): Move multiplies by it AND the leg-event emission
@@ -64,56 +71,57 @@ type SwarmState struct {
 	// (the shared forage path writes 1.0 — otherwise a swarm that fled keeps the flee
 	// speed forever, consistently on both sides and invisible to every harness).
 	// 0 means "unset" and reads as 1.0.
-	SpeedMult float32
+	SpeedMult float32 `json:"speed_mult,omitempty"`
 
 	// Predation (server-only; outputs ride the existing event vocabulary).
 	// TargetPreyID is the Think-cached hunt target (the TargetFoodID pattern: the
 	// per-tick strike check is O(1)). MUTUALLY EXCLUSIVE with TargetFoodID — setting
 	// one clears the other, else a strike could fire while parked on carrion.
-	TargetPreyID   string // prey swarm id; "" = not hunting
-	HuntStartTick  int64  // when the current hunt began (timeout)
-	LastStrikeTick int64  // strike cooldown anchor
+	TargetPreyID   string `json:"prey_id,omitempty"`     // prey swarm id; "" = not hunting
+	HuntStartTick  int64  `json:"hunt_start,omitempty"`  // when the current hunt began (timeout)
+	LastStrikeTick int64  `json:"last_strike,omitempty"` // strike cooldown anchor
 	// FeedUntilTick: while > TickCount the predator PARKS on its kill (the feeding dwell). Set on a
-	// kill when the species has feed_pause_ticks > 0. TRANSIENT — not in SwarmSave (like the other
-	// tick-anchors); a restart clears an in-flight dwell, consistent + deterministic.
-	FeedUntilTick  int64
-	LastAttackTick int64 // player-sting/bite cooldown anchor
+	// kill when the species has feed_pause_ticks > 0. Persists like every other tick-anchor — the
+	// clock resumes, so an in-flight dwell finishes on schedule.
+	FeedUntilTick  int64 `json:"feed_until,omitempty"`
+	LastAttackTick int64 `json:"last_attack,omitempty"` // player-sting/bite cooldown anchor
 
 	// Nest membership (wasps). Phase strings for nest predators: "feeding" (hunt),
 	// "homing" (carry brood back), "defending" (chase a nest threat). An ORPHAN
 	// (NestKey == "") never breeds, tethers to its last HomePos, still hunts/stings.
-	NestKey         string // "gx,gy" of the home nest; "" = orphan
-	CarryingBrood   bool   // sated trip in progress (a bool-carry, not a meter)
-	HomingStartTick int64  // homing timeout anchor (600 ticks drops the brood)
-	DefendUntilTick int64  // defending exits at this tick (or by distance hysteresis)
-	DefendTargetID  string // player being chased while defending
+	NestKey         string `json:"nest_key,omitempty"`     // "gx,gy" of the home nest; "" = orphan
+	CarryingBrood   bool   `json:"carrying,omitempty"`     // sated trip in progress (a bool-carry, not a meter)
+	HomingStartTick int64  `json:"homing_start,omitempty"` // homing timeout anchor (600 ticks drops the brood)
+	DefendUntilTick int64  `json:"defend_until,omitempty"` // defending exits at this tick (or by distance hysteresis)
+	DefendTargetID  string `json:"defend_target,omitempty"` // player being chased while defending (stable userID; self-heals)
 
 	// ActionState (centipede): what the bug is FORCIBLY DOING right now — orthogonal
 	// to the lifecycle Phase (what it WANTS). "" | "windup" | "surge" | "recover" |
 	// "turnaround" | "gnaw". Runs per-tick BEFORE the think gate and owns the swarm
 	// while active.
-	ActionState       string
-	ActionUntilTick   int64   // current action ends/advances at this tick
-	SurgeCooldownUntil int64  // no new windup before this
-	WindupTargetID    string  // the player being lunged at
-	WindupStartX      float32 // their position at windup START (the velocity sample)
-	WindupStartY      float32
-	WanderHeading     float32 // serpentine wander heading (radians)
-	ClampedLegStreak  int     // dead-end escape hatch: 3 fully-clamped legs => free roll
-	TurnLegsLeft      int     // turnaround arc legs remaining after a missed surge
-	GnawKey           string  // "gx,gy" of the fence being chewed
-	GnawNextTick      int64   // next gnaw damage tick
-	GnawCooldownUntil int64   // armed on ABANDONED gnaws only (successful breaks chain)
+	ActionState        string  `json:"action,omitempty"`
+	ActionUntilTick    int64   `json:"action_until,omitempty"`   // current action ends/advances at this tick
+	SurgeCooldownUntil int64   `json:"surge_cd_until,omitempty"` // no new windup before this
+	WindupTargetID     string  `json:"windup_target,omitempty"`  // the player being lunged at (stable userID; self-heals)
+	WindupStartX       float32 `json:"windup_x,omitempty"`       // their position at windup START (the velocity sample)
+	WindupStartY       float32 `json:"windup_y,omitempty"`
+	WanderHeading      float32 `json:"heading,omitempty"`      // serpentine wander heading (radians)
+	ClampedLegStreak   int     `json:"clamped_legs,omitempty"` // dead-end escape hatch: 3 fully-clamped legs => free roll
+	TurnLegsLeft       int     `json:"turn_legs,omitempty"`    // turnaround arc legs remaining after a missed surge
+	GnawKey            string  `json:"gnaw_key,omitempty"`     // "gx,gy" of the fence being chewed
+	GnawNextTick       int64   `json:"gnaw_next,omitempty"`    // next gnaw damage tick
+	GnawCooldownUntil  int64   `json:"gnaw_cd_until,omitempty"` // armed on ABANDONED gnaws only (successful breaks chain)
 
-	// Bug ID tracking for deterministic catching
-	RemovedBugIDs map[int]bool // Set of removed bug IDs (not serialized)
-	NextBugID     int          // Next ID to assign for new bugs (reproduction)
+	// Bug ID tracking for deterministic catching (persisted: restored swarms keep their
+	// exact removed-id sets so re-minted ids can never collide)
+	RemovedBugIDs map[int]bool `json:"removed_bugs,omitempty"` // Set of removed bug IDs
+	NextBugID     int          `json:"next_bug_id,omitempty"`  // Next ID to assign for new bugs (reproduction)
 
 	// Combat: sparse per-bug HP — stores ONLY damaged bugs (absent = full species MaxHP).
 	// Server-authoritative; clients hold a display-only copy fed by MeleeResultMessage.
 	// Cleaned inside RemoveBugs; transferred along the deterministic id mappings at
 	// split/merge (see checkSwarmSplitting/checkSwarmMerging).
-	BugHP map[int]int
+	BugHP map[int]int `json:"bug_hp,omitempty"`
 }
 
 // ClearFoodTarget drops the cached food target (depleted / phase change) and forces an

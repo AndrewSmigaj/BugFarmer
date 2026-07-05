@@ -144,6 +144,9 @@ const (
 
 	OpCodeBroodUpdate int64 = 104 // S->C: a brood's egg/maggot counts changed (display-only nursery, like StationUpdate)
 
+	OpCodeHiveHarvest    int64 = 107 // C->S {gx,gy}: hand-harvest honeycomb from the hive at this cell
+	OpCodeHiveHarvestAck int64 = 108 // S->C {ok,count,message}: harvest result toast (SetHomeAck pattern)
+
 	OpCodeZoneCollisionMap int64 = 106 // S->C (on join + resync): the zone's COMPLETE blocks_bugs cell set, so
 	// every client runs per-bug collision zone-wide + identically (decoupled from its camera's chunk view).
 
@@ -391,6 +394,20 @@ type ShopActionMessage struct {
 	Slot     int            `json:"slot,omitempty"`  // sell: which of the player's slots
 	SlotType string         `json:"slot_type,omitempty"` // "item" | "bug" (sell)
 	Lines    []ShopSellLine `json:"lines,omitempty"` // sell_batch: the staged basket
+}
+
+// HiveHarvestMessage (OpCode 107, C→S): hand-harvest the hive at (gx,gy) — pull every whole
+// honeycomb into the bag. Angers the resident colony unless the hive was smoked.
+type HiveHarvestMessage struct {
+	GX int `json:"gx"`
+	GY int `json:"gy"`
+}
+
+// HiveHarvestAckMessage (OpCode 108, S→C, presence-targeted): the harvest result toast.
+type HiveHarvestAckMessage struct {
+	OK      bool   `json:"ok"`
+	Count   int    `json:"count,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 // ShopSellLine is one staged basket line of a sell_batch. Each line is validated with the exact

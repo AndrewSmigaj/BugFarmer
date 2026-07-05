@@ -67,9 +67,72 @@ func (m *Match) handleToolUse(
 		m.handleWatering(logger, dispatcher, state, userID, msg.GridX, msg.GridY, tick)
 	case "scythe":
 		m.handleScythe(logger, dispatcher, state, userID, msg.GridX, msg.GridY, tick)
+	case "smoker":
+		m.handleSmoker(logger, dispatcher, state, userID, msg.GridX, msg.GridY, tick)
 	default:
 		m.sendWorldError(dispatcher, state, userID, "Use left-click for this tool")
 	}
+}
+
+// smokerCalmTicks: how long a puffed hive stays calm (both defend entries no-op) — the
+// harvest window. 30s: enough to harvest a couple of hives deliberately, short enough
+// that an unattended apiary re-arms.
+const smokerCalmTicks = 300
+
+// smokerReach: hives within this range of the puffed CELL are calmed (a puff covers a
+// small cluster of boxes, not the whole apiary).
+const smokerReach = 4.0
+
+// handleSmoker calms every hive (bee nest) within smokerReach of the target cell for
+// smokerCalmTicks: SmokedUntilTick makes recallNestDefenders AND the passive
+// player-near-nest defend entry no-ops (predationThink). Server-only state — the ABSENCE
+// of defend legs replays identically everywhere, so no ledger event. Also the mechanism
+// calm_spray can ride later (its effect:"calm" was previously consumed nowhere).
+func (m *Match) handleSmoker(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	userID string,
+	gx, gy int,
+	tick int64,
+) {
+	player := state.Players[userID]
+	if player == nil {
+		return
+	}
+	if !m.validateToolCooldown(state, player, tick) {
+		return
+	}
+	// Range check: same 3.0 allowance as container/station interactions.
+	cs := state.Config.ChunkSize
+	px, py := player.WorldX(cs), player.WorldY(cs)
+	dx, dy := px-(float32(gx)+0.5), py-(float32(gy)+0.5)
+	if dx*dx+dy*dy > 9.0 {
+		m.sendWorldError(dispatcher, state, userID, "Too far away")
+		return
+	}
+
+	calmed := 0
+	reachSq := float32(smokerReach * smokerReach)
+	for _, key := range sortedStringKeys(state.NestStates) {
+		nest := state.NestStates[key]
+		ndx, ndy := float32(nest.GridX)+0.5-(float32(gx)+0.5), float32(nest.GridY)+0.5-(float32(gy)+0.5)
+		if ndx*ndx+ndy*ndy > reachSq {
+			continue
+		}
+		nest.SmokedUntilTick = tick + smokerCalmTicks
+		// A colony already boiling calms down too (smoke works mid-anger).
+		if resident, ok := state.Swarms[nest.ResidentSwarmID]; ok && resident.Phase == "defending" {
+			resident.Phase = "feeding"
+			resident.DefendTargetID = ""
+		}
+		calmed++
+	}
+	if calmed == 0 {
+		m.sendWorldError(dispatcher, state, userID, "No hive close enough to smoke")
+		return
+	}
+	logger.Info("Smoker: %s calmed %d hive(s) around %d,%d", userID, calmed, gx, gy)
 }
 
 // validateCooldownTicks is THE cooldown gate: one body enforcing the shared LastToolTick

@@ -46,6 +46,15 @@ func (m *Match) applyBugAttackToPlayer(
 		return false
 	}
 
+	// STING IMMUNITY (the bee suit — the first armor damage hook): a sting_immune BODY piece
+	// fully negates sting-class attacks (bees, wasps); bites (centipedes) still land. No HP
+	// change, no knockback, no invuln burn — the cloud rages, the keeper works.
+	if species.AttackIsSting && len(player.Equipment) > 1 {
+		if def := state.Entities[player.Equipment[1]]; def != nil && def.StingImmune {
+			return false
+		}
+	}
+
 	swarm.LastAttackTick = state.TickCount
 	player.LastDamageTick = state.TickCount
 	player.HP -= damage
@@ -107,6 +116,11 @@ func (m *Match) checkBugAttacks(
 	chunkSize int,
 ) {
 	if species.AttackDamage <= 0 || swarm.Count <= 0 {
+		return
+	}
+	// Gentle-until-provoked (bees): only a DEFENDING colony stings. Wasps (flag unset) keep
+	// their ambient contact sting.
+	if species.StingsOnlyDefending && swarm.Phase != "defending" {
 		return
 	}
 	sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
