@@ -42,6 +42,7 @@ namespace BugFarmer.UI
         {
             new WorldChoice { label = "Normal",         zoneId = "village_21" },
             new WorldChoice { label = "Village B",      zoneId = "village_21_B" },
+            new WorldChoice { label = "Bee Meadow",     zoneId = "bee_meadow_20" },
             new WorldChoice { label = "Eco Lab",        zoneId = "village_21_lab" },
             new WorldChoice { label = "Butterfly Lab",  zoneId = "butterfly_lab" },
             new WorldChoice { label = "Fly Lab",        zoneId = "fly_lab" },

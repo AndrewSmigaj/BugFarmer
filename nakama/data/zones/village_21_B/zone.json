@@ -11,6 +11,10 @@
   ],
   "biome_type": "village",
   "seed": 0,
+  "neighbors": {
+    "south": "underground_passages_31",
+    "west": "bee_meadow_20"
+  },
   "bug_spawning": {
     "species_caps": {
       "fly_common": {
@@ -503,8 +507,5 @@
         "count": 1
       }
     ]
-  },
-  "neighbors": {
-    "south": "underground_passages_31"
   }
 }

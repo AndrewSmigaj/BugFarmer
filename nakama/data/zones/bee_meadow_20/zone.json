@@ -1,0 +1,199 @@
+{
+  "zone_id": "bee_meadow_20",
+  "name": "Bee Meadow",
+  "row": 2,
+  "col": 0,
+  "width": 256,
+  "height": 256,
+  "spawn_point": [
+    246,
+    126
+  ],
+  "biome_type": "meadow",
+  "seed": 20,
+  "neighbors": {
+    "east": "village_21_B"
+  },
+  "bug_spawning": {
+    "static": false,
+    "species_caps": {
+      "bee_honey": {
+        "initial": 0,
+        "max": 15,
+        "swarm_size": 4,
+        "max_population": 60,
+        "min_population": 0,
+        "cull_at": 0,
+        "max_nests": 8,
+        "spawn_interval": 999999.0
+      },
+      "butterfly_meadow": {
+        "initial": 6,
+        "max": 20,
+        "swarm_size": 6,
+        "max_population": 90,
+        "min_population": 10,
+        "event_low": 20,
+        "event_high": 60,
+        "cull_at": 80,
+        "spawn_interval": 600.0
+      },
+      "fly_common": {
+        "initial": 3,
+        "max": 10,
+        "swarm_size": 6,
+        "max_population": 60,
+        "min_population": 6,
+        "spawn_interval": 600.0
+      },
+      "wasp_common": {
+        "initial": 0,
+        "max": 6,
+        "swarm_size": 5,
+        "max_population": 24,
+        "min_population": 0,
+        "cull_at": 20,
+        "max_nests": 3,
+        "spawn_interval": 999999.0
+      },
+      "dragonfly_blue": {
+        "initial": 2,
+        "max": 4,
+        "swarm_size": 2,
+        "max_population": 8,
+        "min_population": 1,
+        "spawn_interval": 1200.0
+      },
+      "firefly": {
+        "initial": 4,
+        "max": 8,
+        "swarm_size": 5,
+        "max_population": 40,
+        "min_population": 4,
+        "spawn_interval": 900.0
+      },
+      "millipede": {
+        "initial": 2,
+        "max": 6,
+        "swarm_size": 1,
+        "max_population": 16,
+        "min_population": 2,
+        "spawn_interval": 1200.0
+      },
+      "beetle_carrion": {
+        "initial": 1,
+        "max": 4,
+        "swarm_size": 1,
+        "max_population": 10,
+        "min_population": 1,
+        "spawn_interval": 1200.0
+      }
+    },
+    "spawn_areas": [
+      {
+        "id": "meadow_e",
+        "species": [
+          "butterfly_meadow"
+        ],
+        "type": "circle",
+        "cx": 200,
+        "cy": 125,
+        "radius": 16
+      },
+      {
+        "id": "meadow_n",
+        "species": [
+          "butterfly_meadow"
+        ],
+        "type": "circle",
+        "cx": 95,
+        "cy": 175,
+        "radius": 14
+      },
+      {
+        "id": "farm_fly",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 140,
+        "cy": 132,
+        "radius": 10
+      },
+      {
+        "id": "bay_fly",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 52,
+        "cy": 96,
+        "radius": 9
+      },
+      {
+        "id": "lake_drag",
+        "species": [
+          "dragonfly_blue"
+        ],
+        "type": "circle",
+        "cx": 152,
+        "cy": 64,
+        "radius": 9
+      },
+      {
+        "id": "stream_ff",
+        "species": [
+          "firefly"
+        ],
+        "type": "circle",
+        "cx": 120,
+        "cy": 96,
+        "radius": 10
+      },
+      {
+        "id": "spring_ff",
+        "species": [
+          "firefly"
+        ],
+        "type": "circle",
+        "cx": 52,
+        "cy": 196,
+        "radius": 9
+      },
+      {
+        "id": "wood_mill",
+        "species": [
+          "millipede"
+        ],
+        "type": "circle",
+        "cx": 214,
+        "cy": 170,
+        "radius": 12
+      },
+      {
+        "id": "wood_beet",
+        "species": [
+          "beetle_carrion"
+        ],
+        "type": "circle",
+        "cx": 180,
+        "cy": 96,
+        "radius": 9
+      }
+    ],
+    "initial_carrion": [
+      {
+        "item": "dead_fly",
+        "x": 182,
+        "y": 98,
+        "count": 2
+      },
+      {
+        "item": "dead_millipede",
+        "x": 216,
+        "y": 168,
+        "count": 1
+      }
+    ]
+  }
+}
