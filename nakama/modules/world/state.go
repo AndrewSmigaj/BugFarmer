@@ -101,9 +101,6 @@ type WorldState struct {
 
 	// Entity maps (Phase 1)
 	Swarms      map[string]*entities.SwarmState
-	EggClusters map[string]*entities.EggClusterState
-	Individuals map[string]*entities.IndividualBugState
-	Plants      map[string]*entities.PlantState
 	GroundItems map[string]*entities.GroundItem
 	// ItemsByChunk is a chunk-bucketed index OVER GroundItems (ChunkKey -> itemID -> item), maintained
 	// incrementally via putGroundItem/deleteGroundItem (see item_index.go). Lets FindNearbyFood scan only
@@ -383,10 +380,7 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		PendingCharacters:     make(map[string]string),
 		PendingEntryPositions: make(map[string][2]float32),
 		// Entity maps
-		Swarms:      make(map[string]*entities.SwarmState),
-		EggClusters: make(map[string]*entities.EggClusterState),
-		Individuals: make(map[string]*entities.IndividualBugState),
-		Plants:      make(map[string]*entities.PlantState),
+		Swarms:       make(map[string]*entities.SwarmState),
 		GroundItems:  make(map[string]*entities.GroundItem),
 		ItemsByChunk: make(map[string]map[string]*entities.GroundItem),
 		Species:      make(map[string]*entities.BugSpecies),

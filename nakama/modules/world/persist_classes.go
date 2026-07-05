@@ -60,9 +60,6 @@ var persistClasses = map[string]persistEntry{
 
 	// -- entities --
 	"Swarms":      {classWorldState, "WorldSave.Swarms — FULL FIDELITY, whole structs (see SwarmState's json tags); Radius/WanderRad refreshed from species def at load; player-ref fields self-heal"},
-	"EggClusters": {classDead, "written nowhere — pending deletion commit"},
-	"Individuals": {classDead, "written nowhere — pending deletion commit"},
-	"Plants":      {classDead, "written nowhere — pending deletion commit"},
 	"GroundItems": {classWorldState, "WorldSave.GroundItems (skipped on EphemeralSwarms test zones)"},
 	"ItemsByChunk": {classPerRun, "derived chunk-bucketed index over GroundItems; rebuilt by putGroundItem during restore"},
 
