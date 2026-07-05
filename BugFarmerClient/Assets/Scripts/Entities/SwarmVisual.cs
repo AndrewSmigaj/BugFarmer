@@ -247,6 +247,25 @@ namespace BugFarmer.Entities
                 Object.Destroy(shadow.gameObject);
             }
 
+            // FIREFLY GLOW (display-only): each firefly carries a tiny warm LampLight —
+            // invisible at noon, full amber at night (LampLight self-ramps by daylight,
+            // the lamp/torch pattern). Pooled visuals may carry a stale glow from another
+            // species — sync its presence exactly like the shadow above.
+            bool glows = SpeciesId == "firefly";
+            var glow = visual.Find("Glow");
+            if (glows && glow == null)
+            {
+                var glowGo = new GameObject("Glow");
+                glowGo.transform.SetParent(visual, false);
+                glowGo.transform.localPosition = Vector3.zero;
+                glowGo.AddComponent<World.LampLight>()
+                      .Configure(1.6f, new Color(1f, 0.82f, 0.35f), 0.9f);
+            }
+            else if (!glows && glow != null)
+            {
+                Object.Destroy(glow.gameObject);
+            }
+
             var bugVisual = new BugVisual(agent, visual);
             bugVisual.Frames = _bugFrames; // cosmetic flap frames (null = static)
             if (_isBuzzer)

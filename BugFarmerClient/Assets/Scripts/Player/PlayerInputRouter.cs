@@ -35,6 +35,7 @@ namespace BugFarmer.Player
         private PlacementController _placement;
         private StationController _station;
         private SleepController _sleep;
+        private BeehiveController _beehive;
         private BugReleaseController _bugRelease;
         private TreeHarvestController _treeHarvest;
         private Camera _mainCamera;
@@ -52,6 +53,7 @@ namespace BugFarmer.Player
             _station = GetComponent<StationController>();
             // Shop is now a Canvas panel (ShopPanel singleton via UIBootstrap), not a player component.
             _sleep = GetComponent<SleepController>();
+            _beehive = GetComponent<BeehiveController>();
             _bugRelease = GetComponent<BugReleaseController>();
             _treeHarvest = GetComponent<TreeHarvestController>();
             _mainCamera = Camera.main;
@@ -91,7 +93,18 @@ namespace BugFarmer.Player
                 return;
 
             string toolId = InventoryManager.Instance?.GetEquippedToolId() ?? "";
-            string toolType = EntityDatabase.Get(toolId)?.ToolType;
+            var toolDef = EntityDatabase.Get(toolId);
+            string toolType = toolDef?.ToolType;
+
+            // CONSUMABLES with an effect (calm_spray; later smoke bombs): left-click APPLIES the
+            // item at the cursor cell via the shared ToolUse verb (OpCode 7) — the server routes
+            // by category, decrements the stack, and replies with the slot echo. Without this,
+            // an equipped spray fell through to bare-hand tile-BREAKING.
+            if (toolDef != null && toolDef.Category == "consumable" && !string.IsNullOrEmpty(toolDef.Effect))
+            {
+                _toolUse?.TryHandleClick();
+                return;
+            }
 
             switch (toolType)
             {
@@ -107,6 +120,7 @@ namespace BugFarmer.Player
                 case "hoe":
                 case "watering_can":
                 case "scythe":
+                case "smoker":
                     _toolUse?.TryHandleClick();
                     return;
 
@@ -175,6 +189,11 @@ namespace BugFarmer.Player
             // 1c. Beds: right-click sets the character's home (interact beats place). Consumes the
             //     click only when a bed is actually under the cursor.
             if (_sleep != null && _sleep.TryHandleRightClick(mouseWorld))
+                return;
+
+            // 1d. Beehives: right-click hand-harvests the honeycombs (angers the colony unless
+            //     smoked). Consumes the click only when a hive is actually under the cursor.
+            if (_beehive != null && _beehive.TryHandleRightClick(mouseWorld))
                 return;
 
             // 2. Placement (equipped placeable, or the cursor-place mode): mode-based
