@@ -44,6 +44,17 @@ building. Make the canvas big enough: `W ≈ BW + 2*side + 4`, `H ≈ BH + front
   the door leaves a solid *fence* in front of the door — a real DOOR-blocked defect.
 - Leave side/back space + trees by default — a fence tight on the walls reads wrong.
 
+## Backyards (owner correction, 2026-07-06)
+> "fences should have room for backyards"
+
+A fence that hugs the house wall makes the yard ALL front — nobody lives like that. When
+fencing a home, leave **3+ cells of enclosed ground BEHIND the house** (and 1-2 on the
+sides), and put the household's private life there: the laundry line, the woodpile, the
+compost, the kitchen-garden rows, the workshop clutter. Front yard = presentation (flowers,
+the path, the sign); BACK yard = function. If the plot can't afford a backyard, skip the
+rear fence entirely rather than welding the fence to the back wall — an open rear reads
+better than a zero-depth pen.
+
 ## Gotchas
 - **Place dressing AFTER the fence**, and check `b.is_free(x, y)` then — checking *before* the fence is
   placed sees stale state and you'll drop lamps/signs onto the fence line (loud overlap warnings). In a

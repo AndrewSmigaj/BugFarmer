@@ -271,6 +271,33 @@ normal leave-A/join-B (zero cross-zone determinism surface; player position is n
 - **Verified**: sync-harness `crosszone` scenario (server entry-override, headless) + in-Editor rapid
   up→down crossing — root-caused a stale-snap race from the Editor.log and fixed it client-side.
 
+## Done 2026-07-06 (later) — THE OWNER'S SEVEN CORRECTIONS, BUILT (bee_meadow rework II)
+One session, all seven owner corrections landed as guides + ledger entries + code + a
+connectivity GATE, all zone gates green (lint 0/0, save, smoke, crosszone both ways):
+- **C14 households**: place_cottage rebuilt — shared shells, per-HOUSEHOLD furnishing specs
+  (fisher net-room / farmsteader pantry+vanity / Maren's bee home); house.md gains the
+  "Making DIVERSE houses" ontology section (trade room, wealth, signature, tidiness, room jobs).
+- **C19 brewing backroom**: extractor/wine-rack/honey-shelf/keg moved INSIDE Maren's cottage;
+  the pen keeps yard work only. **Bee stations**: the 4 hive tiers collapsed to TWO placeables
+  (bee_station_small 1x1 / bee_station_large 2x1), Maren's shop + species nest list updated
+  (old beehive_* kept as legacy for the village's placed boxes); + 4 bee-decor entities
+  (skep, beeswax candle, honey-jar shelf, honeycomb rug) — all placeholders, in art_needed.md.
+- **C15 connectivity**: a BFS ROAD GATE in the zone build (fails the build on any gap) — it
+  immediately found the farm-trace stub AND a north footpath that had NEVER touched the road;
+  joint WELDS at every waypoint + bridge exit; worn lanes are surface=path so scatter can't
+  plant into them; flora-trample clearing for footpath cells.
+- **C16 wooded zone**: ~12 new stands — east band, SE shoulder, south corners, NE corner,
+  west strip — the meadow is now a CLEARING around the farm (forest.md zone-balance rule).
+- **C17 river to sea**: the spring pondlet is GONE; the river mouths into the sea through a
+  flared reeded delta (w4), runs w3 under the road bridge and through the gorge to the
+  village contract; the hamlet inlet's head pinches closed on a curve (no straight cut).
+  **Gorge** now FLANKS the river: 4 masses + full-length bank lips + scree throat.
+- **C18 backyards**: fisher's three-sided backyard fence (log pile + stump inside); yard.md rule.
+- **Fruit patches**: the 3 pairs became 4 PATCHES of 4-5 (corridor, road fork, south meadow,
+  west meadow).
+- Open: sprites for the 6 new entities (placeholder squares in-game); village's legacy
+  beehive_basic boxes migrate to stations on the village's next pass.
+
 ## Done 2026-07-06 — THE ZONE-CRAFT SCAFFOLDING (the skill that teaches zone quality)
 Owner directive ("lets create a zone improvement guide, scaffolding for you… this new skill related
 to zone authoring") — built and VALIDATED by a live run, all phases committed green:

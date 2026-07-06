@@ -401,7 +401,9 @@
         "beehive_basic",
         "beehive_medium",
         "beehive_large",
-        "beehive_deluxe"
+        "beehive_deluxe",
+        "bee_station_small",
+        "bee_station_large"
       ]
     },
     "lifespan_secs": 8000,

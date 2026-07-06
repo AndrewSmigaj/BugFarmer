@@ -59,3 +59,21 @@ Entry shape: `**C<n> — <the principle>.** (owner, date) → <guide>§<section>
   are the stamp tells. Vary size ~5:1, cluster and overlap masses, jitter fills, and give
   every feature a falloff ring — the village_21_B renders are the in-repo quality bar to
   compare crops against.
+- **C14 — Houses are HOUSEHOLDS, never clones.** (owner, 2026-07-06: "you keep making every
+  single house the same, same furniture... i said to make houses different and all you did
+  was change the room layout") → house.md §Making DIVERSE houses. Trade room + wealth tier +
+  signature piece + tidiness; ≤half shared furniture ids within a settlement.
+- **C15 — Roads/lanes are GAPLESS end to end.** (owner, 2026-07-06: "the roads are not
+  connected... all your paths have huge gaps in them") → roads.md §Design rules. Walk every
+  route in data; a skip-hole is a build failure.
+- **C16 — Wild zones are WOODED by default; open regions are carved clearings.** (owner,
+  2026-07-06: "a huge meadow surrounding the bee farm but everything else should be more
+  wooded") → forest.md §Zone-scale balance.
+- **C17 — Rivers reach the sea (or base water); arm-heads never end in a straight cut.**
+  (owner, 2026-07-06: "the river should flow to the sea not a little pond next to the sea";
+  "the east side of the hamlet just ends with a straight line") → water.md §Rivers reach the SEA.
+- **C18 — Fences leave BACKYARD room; the private life lives behind the house.** (owner,
+  2026-07-06: "fences should have room for backyards") → yard.md §Backyards.
+- **C19 — Work rooms live INSIDE: production gear belongs in a building's work room, not
+  loose on the lawn.** (owner, 2026-07-06: "the brewing stuff should be in a backroom...
+  not it just out on the lawn") → house.md §household ontology (the trade room).

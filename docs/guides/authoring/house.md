@@ -147,6 +147,51 @@ placeable as an independent item).
 - To add a collection: define a new `role -> id` dict listing only the roles where it differs from
   `basic`, and register it in `COLLECTIONS`. New ids are added via the **add-object** skill.
 
+## Making DIVERSE houses — the household ontology (owner correction, 2026-07-06)
+> "you keep making every single house the same, same furniture, same stuff, its not even
+> well organized it is poorly organized, i said to make houses different and all you did
+> was change the room layout."
+
+A house is not a floor plan — it's a HOUSEHOLD. Changing the room layout while stamping the
+same furniture grid produces the same person cloned into differently-shaped boxes. Before
+furnishing ANY home, answer four questions, and let every placement follow from the answers:
+
+1. **Who works here?** (trade) — the trade BLEEDS INSIDE. One room is the TRADE ROOM, and it
+   displaces something (a fisher mends nets where a parlor would be; a beekeeper brews where
+   a bathroom would be). The trade also decides what's just inside the door (boots, gear
+   hooks, the basket that goes to work every morning).
+2. **How well-off are they?** (wealth) — material tier of the SAME roles via collections
+   (`pick(role, coll)`): stool vs chair vs upholstered; bare boards vs rug; candle vs lamp.
+   Wealth is consistent — a poor home with one treasured nice thing tells a story; a random
+   mix tells nothing.
+3. **Who are they at home?** (life) — one SIGNATURE piece per house that is nobody else's
+   (the shell collection on the fisher's sill, Maren's honeycomb rug), and personal items
+   clustered where that person actually lingers (by the bed, by the hearth).
+4. **How do they keep it?** (tidiness) — organization is CHARACTER. Tidy = aligned runs,
+   clear floor. Messy = the same objects but drifted: a chair pulled out, a crate that never
+   got put away. Mess is still PLACED (near the work, near the door) — never random scatter.
+
+**Room ontology (what "well organized" means — each room has ONE job and its furniture serves it):**
+- **Sleep**: bed anchored to a wall AWAY from the door, head to the wall; nightstand touches
+  the bed; storage (dresser/chest) against a wall; personal items here, not in the parlor.
+- **Cook + eat**: the work TRIANGLE clusters — stove/counter/sink in one contiguous wall run
+  (never split across the room); the table is the room's center of gravity with its chairs
+  AT it; food storage (cupboard/barrel) flanks the cook run, not the far corner.
+- **Trade room**: the work surface faces the light/door; materials on one side, finished
+  goods on the other (in → work → out); tools live at the work surface, not decoratively.
+- **Everywhere**: nothing floats mid-room except the table cluster; walkable path from every
+  door to every room; the door cell and its swing stay CLEAR.
+
+**The checkable rule:** within one settlement, no two homes may share more than HALF their
+furniture ids, and every home must have (a) a visible trade room, (b) a consistent wealth
+tier, (c) one signature piece. Counterexample: bed+nightstand+dresser+bathtub+vanity+mirror
+in identical positions in every cottage — that was this project's actual failure, twice.
+
+**Mechanism:** `place_cottage(..., household=...)` — the shell grid stays, the furnishing
+comes from a HOUSEHOLD spec (trade-room stamp + wealth collection + signature + tidiness).
+Adding a household = adding a spec, never editing the shell. See `scene_cottage.py`'s
+`HOUSEHOLDS` for the worked fisher / farmsteader / beekeeper trio.
+
 ## Build → render → review loop
 ```bash
 python3 tools/zonegen/scenes/player_house.py     # render the house on its own

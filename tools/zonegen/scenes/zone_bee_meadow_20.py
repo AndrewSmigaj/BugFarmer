@@ -63,12 +63,16 @@ def build():
     import math as _m
     from features.terrain import _vnoise as _vn
     in_n, in_s = _vn(86), _vn(87)
-    for x in range(10, 53):
+    for x in range(10, 56):
         cy = 62 + int(round(1.5 * _m.sin(x / 7.0)))
         base = 4 if x < 38 else 6                       # the arm, then the basin bulge
+        if x > 47:                                      # the HEAD: pinch closed on a curve,
+            base *= max(0.0, 1.0 - (x - 47) / 7.0) ** 0.7   # never a straight cut (C17)
         flare = max(0, 16 - x) * 0.3                    # the mouth opens at the sea
         h_n = base + flare + max(-2, min(2, (in_n(x * 0.13, 0.0) - 0.5) * 4.0))
         h_s = base + flare + max(-2, min(2, (in_s(x * 0.13, 0.0) - 0.5) * 4.0))
+        if h_n + h_s < 1.5:
+            break
         for y in range(int(cy - h_s - 2), int(cy + h_n + 3)):
             if not b.in_bounds(x, y):
                 continue
@@ -81,16 +85,25 @@ def build():
             elif b.surface[y][x] == "grass" and (-h_s - 1.7 <= dy <= h_n + 1.7):
                 b.set_ground(x, y, "sand")
 
-    # The STREAM: rises at a NW spring pondlet, descends south-east through the west-center,
-    # then runs east to the village at STREAM_Y. Laid as chained segments so the course is
-    # controlled (one road crossing, one footpath crossing) but still meanders.
-    pond(b, 38, 208, 5, 4, seed=22)                       # the spring
-    for seg_start, seg_end, sw_ in [((38, 204), (58, 172), 2), ((58, 172), (76, 142), 2),
-                                    ((76, 142), (92, 108), 3), ((92, 108), (150, 84), 3),
-                                    ((150, 84), (255, STREAM_Y), 3)]:
-        # the LOW run widens to 3 (cold-grade: a 1-cell alternating checker staircase
-        # reads as a blue zipper, not water — rivers only widen, coasts research §2)
+    # THE RIVER runs SEA → VILLAGE (owner 2026-07-06: "the river should flow to the
+    # sea not a little pond next to the sea" — the old spring pondlet is gone; the
+    # west end is a real MOUTH through the beach). Widths: mouth 4 → 3 → 3 (wider
+    # overall per the same correction: "river should be wider").
+    for seg_start, seg_end, sw_ in [((10, 207), (38, 202), 4), ((38, 202), (58, 172), 3),
+                                    ((58, 172), (76, 142), 3), ((76, 142), (92, 108), 3),
+                                    ((92, 108), (150, 84), 3), ((150, 84), (255, STREAM_Y), 3)]:
         stream(b, seg_start, seg_end, width=sw_, seed=23, wobble=0.25)
+    # The mouth FLARES into the surf (coasts research §2: a mouth is a flare or fork,
+    # never a constant-width pipe butting the sea): dilate the junction's shallows.
+    for y in range(198, 214):
+        for x in range(8, 26):
+            if b.in_bounds(x, y) and b.surface[y][x] != "water" and b.ground[y][x] == "sand":
+                near_river = any(b.in_bounds(x + dx, y + dy) and b.surface[y + dy][x + dx] == "water"
+                                 and b.ground[y + dy][x + dx] != "water_deep"
+                                 for dx in (-1, 0, 1) for dy in (-1, 0, 1))
+                if near_river and (x < 16 or rng.random() < 0.5):
+                    b.set_ground(x, y, "water_shallow", surface="water")
+                    b.reserve(x, y, surface="water")
     # THE EDGE SEAM: stream() stops within a cell of its endpoint — stamp the last column so the
     # water actually TOUCHES x=255 at the contract row (the village declares it entering at (0,76)).
     for sx in (253, 254, 255):
@@ -187,25 +200,40 @@ def build():
               core="stone_block",
               vein_spec=COMMONS + [("ore_gold_block", 1, 2, 3, "core"),
                                    ("ore_ruby_block", 1, 2, 2, "core")])
-    # THE GORGE READS AS A CUT (cold-grade: "two concrete pads beside a ditch" — no
-    # landform). Overhead can't do cliffs, so the CUT is told in materials: a stone
-    # LIP hugging both banks through the notch, boulder rim blocks grinning over the
-    # water (the gap-toothed 30%, banks stay walkable), scree bleeding outward.
+    # TWO MORE masses so the rock FLANKS the whole notch (owner 2026-07-06: "the
+    # gorge does not surround the river" — two pads at two spots left the river
+    # running through plain grass for most of the stretch).
+    rock_mass(b, 211, 76, 6, 5, seed=56, shell="stone_block", floor="stone_floor",
+              core="stone_block", gap_chance=0.1, vein_spec=[("ore_coal_block", 2, 3, 5, "any")])
+    rock_mass(b, 243, 82, 5, 4, seed=57, shell="stone_block", floor="stone_floor",
+              gap_chance=0.12, vein_spec=[("ore_copper_block", 1, 3, 4, "any")])
+    # THE GORGE READS AS A CUT: a stone LIP hugging both banks through the whole
+    # notch, boulder rim blocks grinning over the water (gap-toothed, banks stay
+    # walkable), and a WIDE scree apron so the masses and the lip read as ONE
+    # rocky throat, not islands beside a ditch.
     rng_g = random.Random(96)
-    for y in range(58, 104):
-        for x in range(205, 251):
+    for y in range(56, 106):
+        for x in range(203, 253):
             if not b.in_bounds(x, y) or b.surface[y][x] != "grass":
                 continue
             near_w = any(b.in_bounds(x + dx, y + dy) and b.surface[y + dy][x + dx] == "water"
                          for dx in (-1, 0, 1) for dy in (-1, 0, 1))
             if near_w and b.ground[y][x] in ("grass", "dirt"):
                 b.set_ground(x, y, "stone_floor")
-                if rng_g.random() < 0.3 and b.is_free(x, y):
+                if rng_g.random() < 0.35 and b.is_free(x, y):
                     b.place_occupant("stone_block", x, y)
-            elif b.ground[y][x] == "grass" and rng_g.random() < 0.20 \
-                and any(b.in_bounds(x + dx, y + dy) and b.ground[y + dy][x + dx] == "stone_floor"
-                        for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
-                b.set_ground(x, y, "stone_floor")         # the scree apron widens
+        # two widening passes: scree ring 2 at 45%, ring 3 at 15%
+    for ring_p in (0.45, 0.15):
+        adds = []
+        for y in range(56, 106):
+            for x in range(203, 253):
+                if b.in_bounds(x, y) and b.surface[y][x] == "grass" \
+                   and b.ground[y][x] == "grass" and rng_g.random() < ring_p \
+                   and any(b.in_bounds(x + dx, y + dy) and b.ground[y + dy][x + dx] == "stone_floor"
+                           for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
+                    adds.append((x, y))
+        for x, y in adds:
+            b.set_ground(x, y, "stone_floor")
     # THE FRESH CLAIM — micro-story 2: somebody staked the gorge and left in a hurry
     # (deliberately UNTIDY — the C6 rule-bend: abandonment is the story, rows are for work).
     # LENS FIX (Storyteller): the props CLUSTER as one campsite — a story scattered over ten
@@ -272,11 +300,28 @@ def build():
     cspan = _water_span(b, 56, 140, 200, row=False)
     if cspan:
         s0, s1 = cspan
-        path(b, (56, 128), (52, 146), width=1, tile="dirt", wobble=0.14, seed=31)
+        path(b, (52, 104), (55, 126), width=1, tile="dirt", wobble=0.14, seed=30)
+        path(b, (55, 126), (52, 146), width=1, tile="dirt", wobble=0.14, seed=31)
         path(b, (52, 146), (56, s0 - 1), width=1, tile="dirt", wobble=0.14, seed=131)
         bridge(b, (56, s0 - 1), (56, s1 + 1))
         path(b, (56, s1 + 1), (61, 182), width=1, tile="dirt", wobble=0.14, seed=32)
         path(b, (61, 182), (60, 196), width=1, tile="dirt", wobble=0.14, seed=132, taper_ends=3)
+    # JOINT WELDS: path() stops "within a cell" of its goal, so two waypointed
+    # segments can meet diagonally or with a 1-cell hole — the exact class of gap
+    # the owner flagged (C15). Stamp a 2x2 pad at every interior waypoint AND at
+    # both bridge exits (the bridge deck ends are joints too).
+    _welds = [(232, ROAD_Y), (207, ROAD_Y - 4), (176, ROAD_Y + 3),
+              (east_bank + 2, ROAD_Y), (west_bank - 1, ROAD_Y),
+              (66, ROAD_Y - 6), (52, 104), (55, 126), (52, 146), (61, 182)]
+    if cspan:
+        _welds += [(55, s0 - 2), (55, s1 + 1), (56, s1 + 1), (56, s0 - 2)]
+    for wx_, wy_ in _welds:
+        for qx in (0, 1):
+            for qy in (0, 1):
+                px_, py_ = wx_ + qx, wy_ + qy
+                if b.in_bounds(px_, py_) and b.surface[py_][px_] != "water" \
+                   and not b.reserved[py_][px_] and (px_, py_) not in b.occ:
+                    b.set_ground(px_, py_, "dirt", surface="path")
     smooth_paths(b)
     # ROAD-EDGE WEAR: dither the band's knife edges — dirt treads bleeding off the
     # sides (ground-only; the roadbed itself is untouched, so connectivity holds).
@@ -298,13 +343,34 @@ def build():
     # trace, not path(): it has to WEAVE through the farm's flower ring, and dodging
     # planted flowers is what a real footpath does anyway.
     rng_c = random.Random(90)
+    SOFT_FLORA = {"flower_red", "flower_blue", "flower_yellow", "flower_wild", "clover",
+                  "dandelion", "tall_grass", "lavender", "chamomile", "poppy", "sunflower",
+                  "bush", "milkweed"}
+
+    def _clear_flora(x_, y_):
+        c_ = b.occ.get((x_, y_))
+        if c_ and c_.get("id") in SOFT_FLORA:
+            del b.occ[(x_, y_)]          # 1x1 flora only — a footpath tramples flowers
+            b.reserved[y_][x_] = False   # release the cell FULLY (occupants reserve
+            b.surface[y_][x_] = "grass"  # + mark building surface at place time)
+            return True
+        return False
+
     cx_, cy_ = 110, 140
     while (cx_, cy_) != (133, 128) and cy_ >= 127:
+        placed_step = False
         for cell in ((cx_, cy_), (cx_ + 1, cy_)):
             x_, y_ = cell
-            if b.in_bounds(x_, y_) and b.surface[y_][x_] == "grass" \
-               and b.ground[y_][x_] == "grass" and b.is_free(x_, y_):
-                b.set_ground(x_, y_, "dirt")
+            if not (b.in_bounds(x_, y_) and b.surface[y_][x_] == "grass"
+                    and b.ground[y_][x_] in ("grass", "dirt")):
+                continue
+            if not b.is_free(x_, y_) and not _clear_flora(x_, y_):
+                continue                 # reroute around the hard blocker
+            b.set_ground(x_, y_, "dirt", surface="path")
+            placed_step = True
+        if not placed_step:              # both blocked hard: sidestep, don't hole
+            cy_ -= 1
+            continue
         if cx_ < 133 and (cy_ <= 128 or rng_c.random() < 0.65):
             cx_ += 1
         else:
@@ -373,11 +439,40 @@ def build():
     # north-west band, and TWO NEW NORTH STANDS framing the top of the zone. The gap between
     # the north stands is deliberate — travellers pass through here, and the open corridor
     # around y≈200-215 stays wide and readable.
+    # THE WOODED ZONE (owner 2026-07-06: "there should be a huge meadow surrounding
+    # the bee farm but everything else should be more wooded... more to the east and
+    # south" — forest.md §Zone-scale balance). The MEADOW HEART stays open (~x60-190,
+    # y95-200 around Maren's), plus the road corridor, the north travel corridor,
+    # the meadow_e spawn circle (184-216, 109-141), and the lake basin. Everything
+    # else grows stands that MERGE into bands.
     forest(b, 214, 172, 26, 18, seed=38, density=0.55, dirt=True)
     forest(b, 176, 96, 18, 8, seed=39, density=0.5, dirt=True)
     forest(b, 42, 182, 16, 12, seed=40, density=0.55, dirt=True)
     forest(b, 158, 236, 26, 13, seed=48, density=0.6, dirt=True)
     forest(b, 96, 232, 15, 11, seed=49, density=0.55, dirt=True)
+    # EAST band (south of the road, merging toward the NE stand):
+    forest(b, 226, 143, 13, 8, seed=101, density=0.5, dirt=True)
+    forest(b, 246, 155, 8, 10, seed=102, density=0.5, dirt=True,
+           species=("tree_pine", "tree_pine", "tree_oak"))
+    forest(b, 205, 150, 9, 6, seed=103, density=0.45, dirt=True)
+    # SE shoulder (between the road country and the gorge, clear of meadow_e):
+    forest(b, 196, 88, 9, 6, seed=104, density=0.5, dirt=True)
+    forest(b, 168, 74, 8, 5, seed=105, density=0.45, dirt=True)
+    # SOUTH woods (between the gradient band and the lake/meadow):
+    forest(b, 70, 70, 12, 8, seed=106, density=0.5, dirt=True)
+    forest(b, 92, 57, 8, 6, seed=107, density=0.45, dirt=True,
+           species=("tree_oak", "tree_oak", "tree_pine"))
+    forest(b, 190, 50, 10, 7, seed=108, density=0.5, dirt=True)
+    forest(b, 232, 46, 12, 8, seed=109, density=0.55, dirt=True,
+           species=("tree_pine", "tree_pine", "tree_oak"))
+    # NORTH-EAST corner above the road country:
+    forest(b, 244, 196, 9, 12, seed=110, density=0.5, dirt=True)
+    forest(b, 208, 228, 12, 9, seed=113, density=0.5, dirt=True)
+    forest(b, 232, 244, 10, 7, seed=114, density=0.55, dirt=True,
+           species=("tree_pine", "tree_pine", "tree_oak"))
+    # WEST strip between the coast and the meadow heart:
+    forest(b, 45, 132, 7, 9, seed=115, density=0.45, dirt=True,
+           species=("tree_pine", "tree_oak", "tree_pine"))
     # Every big stand FRAYS (cold-grade: blob outlines read as cutouts): lone outlier
     # trees shed into the surrounding grass.
     scatter(b, 185, 150, 248, 196, {"tree_oak": 2, "tree_pine": 1}, density=0.004,
@@ -386,6 +481,10 @@ def build():
             min_spacing=5, seed=59)
     scatter(b, 24, 168, 64, 200, {"tree_pine": 2, "tree_oak": 1}, density=0.004,
             min_spacing=5, seed=66)
+    scatter(b, 56, 50, 110, 90, {"tree_oak": 2, "tree_pine": 1}, density=0.004,
+            min_spacing=5, seed=111)
+    scatter(b, 180, 36, 252, 62, {"tree_pine": 2, "tree_oak": 1}, density=0.004,
+            min_spacing=5, seed=112)
     # THE HONEY GLADE — the clearing between the north stands: a wild hive in a ring of
     # flowers (you hear it before you see it). Overhead can't do hilltops; it CAN do glades.
     flower_patch(b, 118, 224, 142, 244, common + rarer, 26, seed=50)
@@ -436,13 +535,23 @@ def build():
     for wx, wy in [(232, 158), (186, 90)]:
         _place_near("wasp_nest", wx, wy)
 
-    # WILD FRUIT CLUMPS (owner Q: "are there enough patches of fruit trees?" — there
-    # weren't; only Maren's two). Three small clusters, each near a route so they're
-    # found: windfalls feed flies TODAY and the ants foraging up from the south TOMORROW
-    # (they collect dead bugs + food), blossom forage for the bees either way.
-    for fx, fy, sp in [(150, 214, "tree_apple"), (153, 211, "tree_cherry"),   # the corridor snack
-                       (142, 132, "tree_plum"), (145, 130, "tree_plum"),      # the fork pair, N of the road
-                       (100, 44, "tree_orange"), (104, 42, "tree_apple")]:    # the south-meadow pair
+    # WILD FRUIT PATCHES (owner, twice: "needs a few patches of fruit trees" — pairs
+    # weren't patches). Four loose clumps of 4-5, each near a route: windfalls feed
+    # flies today and the ants foraging up from the south tomorrow, blossom forage
+    # for the bees either way. Clumped wild spacing, not orchard rows (C6).
+    for fx, fy, sp in [
+            # the corridor patch (apple + cherry, the traveler's snack)
+            (150, 214, "tree_apple"), (153, 211, "tree_cherry"), (148, 209, "tree_apple"),
+            (156, 214, "tree_cherry"), (152, 217, "tree_apple"),
+            # the road-fork plums, north side of the road
+            (142, 132, "tree_plum"), (145, 130, "tree_plum"), (140, 135, "tree_plum"),
+            (144, 134, "tree_plum"),
+            # the south-meadow patch (the ants' windfall larder)
+            (100, 44, "tree_orange"), (104, 42, "tree_apple"), (98, 47, "tree_apple"),
+            (103, 46, "tree_orange"), (107, 44, "tree_cherry"),
+            # the west-meadow patch on the way to the coast
+            (72, 106, "tree_apple"), (75, 109, "tree_plum"), (70, 110, "tree_apple"),
+            (76, 105, "tree_cherry")]:
         _place_near(sp, fx, fy)
 
     # THE WAYSTONE — the entrance landmark (settlements research §5: one distinct
@@ -577,6 +686,58 @@ def build():
             {"item": "dead_millipede", "x": 216, "y": 168, "count": 1},
         ],
     }
+
+    # Weld the farm trace's tail to the road (the walker can end a diagonal short;
+    # a flower on the weld cell gets trampled — it's a footpath).
+    for tx_, ty_ in [(113, 138), (114, 139), (113, 139), (114, 138)]:
+        if not b.in_bounds(tx_, ty_) or b.ground[ty_][tx_] not in ("grass", "dirt"):
+            continue
+        if b.surface[ty_][tx_] != "grass" and not _clear_flora(tx_, ty_):
+            continue
+        if not b.is_free(tx_, ty_) and not _clear_flora(tx_, ty_):
+            continue
+        b.set_ground(tx_, ty_, "dirt", surface="path")
+
+    # ---- ROAD CONNECTIVITY GATE (C15: "the roads are not connected... all your
+    # paths have huge gaps in them") — BFS over the actual walk network (path
+    # surface, bridge decks, worn dirt) from the east entrance; every declared
+    # endpoint must be REACHED or the build FAILS. No silent gaps, ever again.
+    from collections import deque
+
+    def _walkable(x, y):
+        if not b.in_bounds(x, y):
+            return False
+        g = b.ground[y][x]
+        return (b.surface[y][x] == "path" or g.startswith("bridge")
+                or g.startswith("dirt") or g.startswith("stone_path")
+                or g.startswith("road_d") or g.startswith("stone_path_d")
+                or g.startswith("dirt_path"))
+
+    seen = set()
+    dq = deque([(254, ROAD_Y)])
+    while dq:
+        cx0, cy0 = dq.popleft()
+        if (cx0, cy0) in seen or not _walkable(cx0, cy0):
+            continue
+        seen.add((cx0, cy0))
+        dq.extend(((cx0 + 1, cy0), (cx0 - 1, cy0), (cx0, cy0 + 1), (cx0, cy0 - 1)))
+    ENDPOINTS = {
+        "east entrance": (254, ROAD_Y),
+        "farm doorstep": (137, 143),
+        "farm-gate trace": (112, 140),
+        "west leg / hamlet fork": (52, 104),
+        "hamlet north quay": (50, 72),
+        "north footpath end": (60, 196),
+    }
+    unreached = {name: pt for name, pt in ENDPOINTS.items()
+                 if not any((pt[0] + dx, pt[1] + dy) in seen
+                            for dx in (-1, 0, 1) for dy in (-1, 0, 1))}
+    if unreached:
+        if os.environ.get("BEE_DEBUG"):
+            print(f"[DEBUG] ROAD NETWORK GAPS: {unreached}")
+        else:
+            raise SystemExit(f"ROAD NETWORK GAPS — unreachable endpoints: {unreached}")
+    print(f"road network: {len(seen)} cells, all {len(ENDPOINTS)} endpoints connected")
 
     # Arriving from the village reads naturally: spawn on the road just inside the east edge.
     b.spawn = [246, ROAD_Y + 2]

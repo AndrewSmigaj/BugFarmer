@@ -283,5 +283,17 @@
   },
   "metal_shelf": {
     "look": "an industrial METAL SHELVING unit TWO cells wide, seen front-on: a grey steel frame with three flat shelves holding small boxes and modern goods. A sleek clean warehouse/store shelf."
+  },
+  "candle_beeswax": {
+    "look": "a fat hand-dipped BEESWAX CANDLE, warm amber wax with drip ridges, on a small wooden dish, lit with a tiny flame; must NOT read as a lamp"
+  },
+  "honey_jar_shelf": {
+    "look": "a narrow wall SHELF UNIT crowded with glass HONEY JARS (amber gradients, a couple with cloth lids), one jar tipped; must NOT read as a bookshelf"
+  },
+  "rug_honeycomb": {
+    "look": "a flat rectangular RUG with a woven HONEYCOMB hexagon pattern, warm amber on cream, slightly frayed edge; top-down flat, no perspective",
+    "materials": [
+      "fabric"
+    ]
   }
 }

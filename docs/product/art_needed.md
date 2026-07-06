@@ -167,3 +167,11 @@ All shop/town signs read better at **2×1** (32×24). `sign_weaver` is already 2
 2-wide (resize sprite_w → 32 + footprint [2,1], regenerate art): `sign_plank`, `sign_shop`, `sign_anvil`,
 `sign_market`, `sign_inn`, `sign_camp`, `sign_anchor`, `sign_fish_board`, `sign_leaf`, `sign_crest`,
 `sign_weather`, `signpost`. (`sign_market_board` is already 3-wide.)
+
+## Bee-station + bee-decor batch (2026-07-06, placeholders in-game)
+- bee_station_small (16x22, placeable) — compact pine bee box, landing lip
+- bee_station_large (32x28, placeable, 2x1) — double-super station, tin roof
+- skep_basket (16x20) — woven straw skep dome, decorative
+- candle_beeswax (16x18) — fat amber candle on a dish
+- honey_jar_shelf (16x26) — shelf crowded with amber jars
+- rug_honeycomb (32x32 flat, 2x2) — honeycomb-pattern rug

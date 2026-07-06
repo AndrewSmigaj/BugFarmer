@@ -3463,8 +3463,12 @@
         "kind": "items",
         "sells": [
           {
-            "id": "beehive_basic",
+            "id": "bee_station_small",
             "price": 60
+          },
+          {
+            "id": "bee_station_large",
+            "price": 220
           },
           {
             "id": "smoker",

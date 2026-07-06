@@ -6982,5 +6982,181 @@
         ]
       }
     }
+  },
+  "bee_station_small": {
+    "name": "Small Bee Station",
+    "category": "beekeeping",
+    "sprite_w": 16,
+    "sprite_h": 22,
+    "stackable": false,
+    "sell_price": 30,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "beehive",
+      "breakable": {
+        "hp": 3,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "bee_station_small",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      },
+      "hive": {
+        "honey_cap": 4.0
+      }
+    }
+  },
+  "bee_station_large": {
+    "name": "Large Bee Station",
+    "category": "beekeeping",
+    "sprite_w": 32,
+    "sprite_h": 28,
+    "stackable": false,
+    "sell_price": 110,
+    "world": {
+      "footprint": [
+        2,
+        1
+      ],
+      "pivot": "bc",
+      "interactable": true,
+      "interaction_type": "beehive",
+      "breakable": {
+        "hp": 6,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "bee_station_large",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      },
+      "hive": {
+        "honey_cap": 10.0,
+        "honey_mult": 1.5
+      }
+    }
+  },
+  "candle_beeswax": {
+    "name": "Beeswax Candle",
+    "category": "furniture",
+    "sprite_w": 16,
+    "sprite_h": 18,
+    "stackable": false,
+    "sell_price": 8,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "candle_beeswax",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "honey_jar_shelf": {
+    "name": "Honey Jar Shelf",
+    "category": "furniture",
+    "sprite_w": 16,
+    "sprite_h": 26,
+    "stackable": false,
+    "sell_price": 18,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "honey_jar_shelf",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "skep_basket": {
+    "name": "Straw Skep",
+    "category": "furniture",
+    "sprite_w": 16,
+    "sprite_h": 20,
+    "stackable": false,
+    "sell_price": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "skep_basket",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "rug_honeycomb": {
+    "name": "Honeycomb Rug",
+    "category": "decoration",
+    "sprite_w": 32,
+    "sprite_h": 32,
+    "stackable": false,
+    "sell_price": 14,
+    "world": {
+      "footprint": [
+        2,
+        2
+      ],
+      "pivot": "c",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "flat": true,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "rug_honeycomb",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
   }
 }

@@ -3,13 +3,14 @@
 ## Overview
 - **Zone ID / Grid:** `bee_meadow_20` · row 2, col 0
 - **Biome / Difficulty:** meadow / coast · EASY (the gentlest zone on the map — west of the start)
-- **The feel:** a sunlit flower coast. Meadows humming with bees roll west from the village road down
-  to the SEA — a wild beach full of coves, driftwood and shell piles. A stream slips in from a spring
-  in the north-west and wanders east into the village, splitting a quieter north band off the main
-  meadow. At the heart sits Maren's bee farm — cottage, fenced apiary, a ring of flower gardens — and
-  around the southern cove a tiny fishing hamlet drowses over its docks. The hook: this is where the
-  player learns beekeeping (smoke → harvest → extract → craft), and the whole zone is visibly built
-  out of the thing bees need — flowers.
+- **The feel:** a sunlit flower clearing in a WOODED coast (owner 2026-07-06 + forest.md
+  §Zone-scale balance: "a huge meadow surrounding the bee farm but everything else should be
+  more wooded"). The great meadow rings Maren's farm; woods band the east, south and north;
+  the RIVER runs from a flared sea-mouth in the north-west, under the road bridge, through
+  the rocky gorge, east into the village. A wild cove beach walls the west, and the fishing
+  hamlet drowses over its inlet in the south-west. The hook: this is where the player learns
+  beekeeping (smoke → harvest → extract → craft), and the whole zone is visibly built out of
+  the thing bees need — flowers.
 
 ## Connections (map)
 - **E → village_21_B**: the dirt road exits at y≈124 (the village's west lane reaches (2,124) on its
@@ -42,7 +43,11 @@
   flies/ants, snacks for travelers.
 
 ## Landmarks & little features
-1. **The spring pondlet (NW)** — where the stream rises; reeds, fireflies.
+1. **THE RIVER MOUTH (NW coast)** — the river reaches the SEA through a flared, reeded
+   mouth in the north beach (owner 2026-07-06: "the river should flow to the sea not a
+   little pond next to the sea" — the old spring pondlet is gone). Fireflies still drift
+   the lower banks at dusk. The river runs sea → gorge → village, width 4 at the mouth,
+   3 along the run (C17).
 2. **The coves** — the west beach bitten into arcs, dressed with a WRACK LINE (shells, driftwood,
    starfish, the odd message bottle concentrated along the tideline), a 2-3-cell DUNE BELT with
    wind-blown sand hummocks, sandstone HEADLAND rock on the convex points between coves, and a
@@ -60,10 +65,11 @@
 9. **THE HONEY GLADE** — the flower-filled clearing between the two north forest stands, a wild
    hive at its heart; **THE MUSHROOM HOLLOW** — the damp clearing west of it (mushrooms, litter,
    ferns — millipede country).
-10. **THE ROCKY GORGE (east stream exit)** — the stream cuts between two mineable stone masses
-    pressed against its banks: doctrine ore veins (commons + short deep silver/gold/ruby runs
-    in the cores), and J. Halloway's abandoned CLAIM huddled at the north mass's foot
-    ("Back by spring").
+10. **THE ROCKY GORGE (east river exit)** — the river cuts a rocky THROAT: four mineable
+    stone masses flanking BOTH banks the whole stretch (owner 2026-07-06: the gorge must
+    surround the river), stone lips + gap-toothed rim boulders over the water, a wide scree
+    apron, doctrine ore veins (commons + short deep silver/gold/ruby in the cores), and
+    J. Halloway's abandoned CLAIM huddled at the north mass's foot ("Back by spring").
 11. **THE SOUTH GRADIENT (the south band)** — REBUILT 2026-07-06 per the owner correction:
     a noise-warped gradient (grass → speckle flecks → dirt tongues → near-solid dirt with
     stone-grit mottling; the frontier meanders ±7 cells, never a level line), five mineable
@@ -83,14 +89,15 @@
 **Maren's Bee Farm**. Junction signs carry directions; the entrance sign names the zone.
 
 ## Structures / NPCs
-- **Maren's bee farm (center-west, south of the stream):** 3-room cottage, fenced APIARY — the
-  hive-tier row on its dirt working strip, the extraction line (extractor → table → shelf →
-  rack), THREE planted bed rows (two common + a premium lavender/chamomile row), the
-  INTERRUPTED INSPECTION vignette (a hive out of the row, stool + open frame crate beside it),
-  compost bin + pile with its barrow trace, bee waterer — and honey crates STAGED on the lane
-  where it leaves the cottage, waiting for the village cart. Wild hive in an oak just OUTSIDE
-  the fence. **Maren (Beekeeper NPC, shop):** sells beehive_basic / smoker / bee_suit /
-  calm_spray; buys honey / honeycomb / beeswax. The zone's economy anchor (D10).
+- **Maren's bee farm (center-west, south of the river):** 4-room cottage — bedroom
+  (honeycomb rug, beeswax candle), kitchen (honey-jar shelf), fireplace living room with the
+  straw skep, and the BREWING BACKROOM: extractor + wine rack + honey shelf + mead keg ALL
+  INSIDE (owner 2026-07-06 / C19 — off the lawn). Fenced APIARY: the bee-STATION row (3 small
+  + 1 large — the only two hive placeables now, owner 2026-07-06) on its dirt strip, three
+  planted bed rows (premium lavender/chamomile), the INTERRUPTED INSPECTION vignette, compost
+  line, waterer; honey crates staged on the lane. Wild hive in an oak just outside the fence.
+  **Maren (Beekeeper NPC, shop):** sells bee_station_small / bee_station_large / smoker /
+  bee_suit / calm_spray; buys honey / honeycomb / beeswax. The zone's economy anchor (D10).
 - **Gullwash Landing (the SW inlet):** a SPLIT-SHORE hamlet on a true arm of the sea (open water
   from the docks past the fairway buoys; the banks carry independent noise and the mouth flares —
   never a mirrored pipe). One home on each shore, DOORS FACING THE WATER (the south home uses

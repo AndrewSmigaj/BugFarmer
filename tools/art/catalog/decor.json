@@ -265,5 +265,17 @@
     "materials": [
       "wood"
     ]
+  },
+  "bee_station_small": {
+    "look": "a compact WOODEN BEE BOX on short legs: one stacked white-pine super with a LANDING STRIP lip and a small round entrance hole, honey-gold drips at the seam; must NOT read as a crate or birdhouse"
+  },
+  "bee_station_large": {
+    "look": "a WIDE double-super BEE STATION: two joined pine hive boxes side by side on a shared stand, tin weather roof, TWO entrance holes with landing lips, a few bees dotted; must NOT read as a dresser"
+  },
+  "skep_basket": {
+    "look": "an old-fashioned woven STRAW SKEP dome (coiled rope texture) with a single dark arched doorway at the base; decorative, must NOT read as a haystack or pot",
+    "materials": [
+      "fabric"
+    ]
   }
 }

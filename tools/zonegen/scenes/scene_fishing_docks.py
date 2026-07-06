@@ -77,11 +77,24 @@ def place_fishing_hamlet(b, ox, n_shore_y, s_shore_y):
 
     # NORTH shore: the fisher's cottage (south door → the water) + the main dock. Dock
     # lengths stop MID-water — a pier that reaches the far shore is a bridge, not a dock.
-    place_cottage(b, ox, n_shore_y + 8, npc="fisher_down", yard_style="small_plot")
+    # The fisher's yard: a fenced BACKYARD only (yard.md: the private life lives
+    # behind; his front yard IS the quay — any front fence fights the quay path).
+    # Three sides, weathered picket, the gate opening onto the shore lane east.
+    place_cottage(b, ox, n_shore_y + 8, household="fisher", yard_style="unfenced")
+    _top = n_shore_y + 19                      # the cottage's back (north) wall row
+    for fy in range(_top + 1, _top + 5):       # side rails
+        for fx in (ox - 1, ox + 15):
+            if b.in_bounds(fx, fy) and b.is_free(fx, fy) and b.surface[fy][fx] == "grass":
+                b.place_occupant("fence_picket_weathered", fx, fy)
+    for fx in range(ox - 1, ox + 16):          # the back rail + its gate
+        fy = _top + 5
+        if not (b.in_bounds(fx, fy) and b.is_free(fx, fy) and b.surface[fy][fx] == "grass"):
+            continue
+        b.place_occupant("gate_picket" if fx == ox + 7 else "fence_picket_weathered", fx, fy)
     _dock(b, ox + 18, n_shore_y, max_len=6, direction=-1)
 
     # SOUTH shore: the second home opens NORTH onto the inlet (the north-door plan) + its dock.
-    place_cottage_north(b, ox + 1, s_shore_y - 13, npc="farmer_down")
+    place_cottage_north(b, ox + 1, s_shore_y - 13, household="farmsteader")
     _dock(b, ox + 11, s_shore_y, max_len=5, direction=+1)
 
     # The FOOTBRIDGE over the east narrows — the two shores are one hamlet, not neighbors
@@ -129,7 +142,7 @@ def place_fishing_hamlet(b, ox, n_shore_y, s_shore_y):
     # household eat?", and the props sit BETWEEN the door and the work source).
     # North household (the fisher): firewood work — log pile + chopping stump on the
     # inland side of the cottage, where the wood comes FROM.
-    for wx, wy in [(ox - 2, n_shore_y + 10), (ox - 1, n_shore_y + 12), (ox + 21, n_shore_y + 9)]:
+    for wx, wy in [(ox + 3, n_shore_y + 21), (ox + 5, n_shore_y + 20), (ox - 2, n_shore_y + 10)]:
         if b.in_bounds(wx, wy) and b.is_free(wx, wy) and b.surface[wy][wx] == "grass" \
            and b.in_bounds(wx + 1, wy) and b.is_free(wx + 1, wy):
             b.place_occupant("log_pile", wx, wy)
@@ -165,7 +178,7 @@ def place_fishing_hamlet(b, ox, n_shore_y, s_shore_y):
             for yy in (y_base, y_base + step):
                 if b.in_bounds(x, yy) and b.surface[yy][x] == "grass" \
                    and b.ground[yy][x] == "grass" and b.is_free(x, yy):
-                    b.set_ground(x, yy, "dirt")
+                    b.set_ground(x, yy, "dirt", surface="path")
                     break
 
     # LIVING DRESSING (render-only): dragonflies hawking over the inlet.

@@ -27,7 +27,7 @@ def place_bee_farm(b, ox, oy):
     a worn path from the gate to the extraction corner, cultivated flower beds IN ROWS (the
     kept garden vs the wild ring outside), and the keeper's kit (waterer, shelf, table)."""
     # The cottage (15×12 four-room home) sits NW, its modest yard facing south.
-    place_cottage(b, ox + 2, oy + 24, npc=None, yard_style="modest")
+    place_cottage(b, ox + 2, oy + 24, npc=None, yard_style="modest", household="beekeeper")
 
     # THE APIARY — a fenced work-yard.
     ax0, ay0, ax1, ay1 = ox + 24, oy + 20, ox + 50, oy + 38
@@ -52,21 +52,21 @@ def place_bee_farm(b, ox, oy):
             if b.is_free(x, y) and b.surface[y][x] == "grass":
                 b.set_ground(x, y, "dirt")
 
-    # The hive row ON the strip (tiers left→right — the working progression).
-    for i, hive in enumerate(["beehive_basic", "beehive_basic", "beehive_medium",
-                              "beehive_large", "beehive_deluxe"]):
+    # The station row ON the strip: smalls first, the LARGE at the row's end
+    # (owner 2026-07-06: just two bee stations — small 1x1, large 2x1).
+    for i, hive in enumerate(["bee_station_small", "bee_station_small", "bee_station_small"]):
         b.place_occupant(hive, ax0 + 3 + i * 5, ay0 + 6)
+    b.place_occupant("bee_station_large", ax0 + 18, ay0 + 6)
     # The keeper's kit: a bee waterer by the hives (pebbled water dish — real apiary practice).
     b.place_occupant("bee_waterer", ax0 + 16, ay0 + 8)
 
-    # THE EXTRACTION CORNER (NW, tight against the fence, everything in one workline):
-    # extractor → work table → honey shelf → wine rack, crates/barrel behind.
-    b.place_occupant("honey_extractor", ax0 + 2, ay1 - 4)   # 2×2
-    b.place_occupant("table_wood", ax0 + 5, ay1 - 4)
-    b.place_occupant("honey_shelf", ax0 + 7, ay1 - 4)
-    b.place_occupant("wine_rack", ax0 + 9, ay1 - 4)
-    b.place_occupant("crate", ax0 + 6, ay1 - 2)
-    b.place_occupant("barrel", ax0 + 8, ay1 - 2)
+    # The work corner keeps only YARD storage — the brewing line (extractor, wine
+    # rack, honey shelf) lives INSIDE, in the cottage's backroom (owner 2026-07-06:
+    # "the brewing stuff should be in a backroom... not just out on the lawn").
+    b.place_occupant("table_wood", ax0 + 3, ay1 - 4)        # the outdoor work table stays
+    b.place_occupant("crate", ax0 + 6, ay1 - 3)
+    b.place_occupant("crate", ax0 + 7, ay1 - 3)
+    b.place_occupant("barrel", ax0 + 6, ay1 - 2)
     b.place_occupant("compost_bin", ax1 - 3, ay1 - 3)
     b.place_occupant("lamp_post", ax0 + 11, ay0 + 2)
 
@@ -88,7 +88,7 @@ def place_bee_farm(b, ox, oy):
     # open frame crate waiting — she'll be back in a minute.
     for vx, vy in [(ax0 + 20, ay0 + 15), (ax0 + 19, ay0 + 16), (ax0 + 21, ay0 + 14)]:
         if b.is_free(vx, vy) and b.is_free(vx + 1, vy) and b.is_free(vx + 1, vy + 1):
-            b.place_occupant("beehive_basic", vx, vy)
+            b.place_occupant("bee_station_small", vx, vy)
             b.place_occupant("stool_wood", vx + 1, vy + 1)
             if b.is_free(vx - 1, vy + 1):
                 b.place_occupant("crate", vx - 1, vy + 1)
