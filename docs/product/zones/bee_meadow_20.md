@@ -18,10 +18,12 @@
 - **W**: the sea — a natural boundary (no neighbor).
 - **N (future)**: Meadow (1,0) "advanced bee stuff" — the open corridor between the north forest
   stands is the eventual route.
-- **S (future) → Ant Colony (3,0, underground)**: the whole south band FORESHADOWS it — ANT COUNTRY:
-  torn dirt ground spreading up from the edge, ant mounds, and mineable earth outcrops with rocky
-  cores (dirt aprons + stone fill + common ore veins). The actual connection lands when the ant
-  colony zone is built.
+- **S (future) → Ant Colony (3,0, underground)**: NO ant content in THIS zone (owner, 2026-07-06:
+  "there is no ant colony in the zone" — the colony is the neighbor zone, mostly underground
+  tunnels). The south band is a terrain GRADIENT ONLY: the meadow "start[s] getting dirty and
+  rocky on a gradient, not suddenly having the dirt wall" — clean grass → dirt-speckled →
+  mostly dirt → rockier at the edge, with mineable dirt masses + rocky cores embedded in the
+  dirtiest band. Crossing the zone line lands mid-gradient (C12).
 
 ## Key species & ecology
 - **Plants:** flowers EVERYWHERE (flower_wild/red/blue/yellow + lavender/chamomile/poppy/clover) — the
@@ -53,12 +55,12 @@
     pressed against its banks: doctrine ore veins (commons + short deep silver/gold/ruby runs
     in the cores), and J. Halloway's abandoned CLAIM huddled at the north mass's foot
     ("Back by spring").
-11. **ANT COUNTRY / THE OLD DIG (the south band)** — seven mineable dirt-block masses
-    (shovel shells → stone cores → ore; iron in the west anchor, one short deep silver) with
-    four of them ringing THE OLD DIG: an abandoned excavation (ore pile, crate, old timbers,
-    "the mounds came back"). Mounds crowd the mass feet; the prospector's worn scratch leads
-    in from the meadow; at the threshold, the warning sign ("the ground hums here") with a
-    fresh mound erupting right beside its post.
+11. **THE SOUTH GRADIENT (the south band)** — the meadow dirties and roughens toward the
+    south edge on a continuous gradient (grass → speckle → dirt → rocky), with mineable
+    dirt-block masses (shovel shells → stone cores → common veins, one short deep rare)
+    embedded in the dirtiest third. No ants, no dig narrative — the band is pure terrain
+    foreshadowing of the underground zone below (C12). *(Supersedes the built "ANT COUNTRY /
+    OLD DIG" set-piece — builder invention, owner-corrected 2026-07-06; rebuild pending.)*
 
 ## Named places (on the signs)
 **Gullwash Landing** (the split-shore fishing hamlet on the inlet) · **Dragonfly Lake** ·
@@ -84,6 +86,11 @@ few deep rares — a taste of the underground rows below (the full ore economy l
 zones; see caves.md per-zone tables).
 
 ## Craft brief (zone-craft skill; this pass: the south band + the gorge, 2026-07-06)
+> **OWNER CORRECTION after this pass shipped (2026-07-06):** everything ant-flavored below
+> (mounds, the ring "colony", the OLD DIG story, the sign gag, the ant owner-questions) was
+> builder invention and is VOID — "there is no ant colony in the zone." The south band is a
+> pure dirty/rocky GRADIENT with embedded mineable masses (see Connections §S + C12). Kept
+> from this pass: the mass/core/vein mechanics, the gorge, Halloway's claim.
 - **The promise:** a gentle flower coast that HUMS — the zone where you learn bees, while the
   ground itself starts whispering about what lives below.
 - **Region jobs:** sea/beach = wild edge + curiosity rewards · Gullwash inlet = working harbor ·

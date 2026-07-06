@@ -43,3 +43,19 @@ Entry shape: `**C<n> — <the principle>.** (owner, date) → <guide>§<section>
   "these guides should be guidelines I want to see you have some creativity here and make
   things appropriate") → house.md §composer. Every zone names ONE deliberate rule-bend and why
   (the zone-craft brief makes this structural).
+- **C12 — A neighbor-zone transition is a terrain GRADIENT, not the neighbor's content.**
+  (owner, 2026-07-06: "the ant colony is in the zone to the south, there is no ant colony in
+  the zone... I just didn't want immediate boundaries so wanted it to start getting dirty and
+  rocky on a gradient not suddenly having the dirt wall.") Cross-cutting: foreshadow a
+  neighbor by bleeding its MATERIALS toward the shared edge on a density gradient (clean →
+  speckled → dirty → rocky), so crossing the zone line lands mid-gradient — never a hard
+  material wall at the boundary, and never the neighbor's inhabitants/set-pieces built early
+  in this zone. (The in-zone "ANT COUNTRY / OLD DIG" narrative was the builder's invention
+  from one owner sentence — the owner's design had NO ants here at all.)
+- **C13 — Feature blobs stamped N times read as polka dots; transitions are knife edges
+  without falloff.** (owner, 2026-07-06: "everything looks aweful, just sudden changes no
+  gradients, unatural geometry (lines, etc)"). Cross-cutting, pairs with C9/C12: same-size
+  round masses at even spacing, row-banded block fills, and dead flat ground between features
+  are the stamp tells. Vary size ~5:1, cluster and overlap masses, jitter fills, and give
+  every feature a falloff ring — the village_21_B renders are the in-repo quality bar to
+  compare crops against.

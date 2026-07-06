@@ -290,9 +290,19 @@ to zone authoring") — built and VALIDATED by a live run, all phases committed 
   pass produced 3 build-changing findings (claim scatter, sign-on-lake, no route in). Ore
   MEASURED: 10-21% per mass region, runs not specks, ring-visible; grep gate zero hand-set calls.
   Zone gates all green (lint 0/0, smoke 90 swarms, crosszone both ways).
-- **Still open from the run's owner questions:** surface ANTS as a real species (sprites exist —
-  its own gated slice); an ant-colony entrance occupant when zone (3,0) is built; sprite-side
-  follow-up: ore tiers should read by SHAPE at zoom (grayscale the catalog row — research rule).
+- **OWNER VERDICT on the live run (2026-07-06): the scaffolding did NOT move the pixels** —
+  "everything looks aweful, just sudden changes no gradients, unatural geometry (lines)…
+  why is everything barely different at all?" AND the ant framing was builder invention:
+  "there is no ant colony in the zone" (the colony IS zone (3,0), mostly underground; the
+  south band should "start getting dirty and rocky on a gradient not suddenly having the
+  dirt wall" — C12). Postmortem: adopted research rules had no code mechanism behind them
+  (the same blob-stamp rock_mass reused ×7); the lens pass was self-graded; brief promises
+  were met in comments, not pixels ("aprons = the lanes"). → C12/C13 + agent memory.
+- **→ NOW (on owner go): rebuild the south band as the GRADIENT** — noise-driven dirt/speckle/
+  rock density rising southward, masses clustered + size-varied inside the dirtiest third,
+  block-fill jitter (no row-banding), falloff rings on every feature, ALL ant content stripped;
+  graded by a cold agent against village_21_B reference crops. (Ore-tier shape-readability
+  sprite pass still queued from the research.)
 
 ## Done 2026-07-05 — THE BEEKEEPING MILESTONE (persistence + calming foundations, bees, Bee Meadow)
 Six gated phases, each committed green (full record: `docs/product/economy/DECISIONS.md` D31; systems:
