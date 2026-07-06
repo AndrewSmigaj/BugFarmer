@@ -2907,5 +2907,305 @@
     },
     "process_ticks": 80,
     "unlock": "default"
+  },
+  "bed_floral": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 10
+      },
+      {
+        "item": "cloth",
+        "count": 4
+      },
+      {
+        "item": "flower",
+        "count": 4
+      }
+    ],
+    "output": {
+      "item": "bed_floral",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "floral_furniture"
+  },
+  "chair_floral": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 4
+      },
+      {
+        "item": "flower",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "chair_floral",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "floral_furniture"
+  },
+  "table_floral": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 6
+      },
+      {
+        "item": "flower",
+        "count": 3
+      }
+    ],
+    "output": {
+      "item": "table_floral",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "floral_furniture"
+  },
+  "dresser_floral": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 8
+      },
+      {
+        "item": "flower",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "dresser_floral",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "floral_furniture"
+  },
+  "lamp_floral": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 4
+      },
+      {
+        "item": "flower",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "lamp_floral",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "floral_furniture"
+  },
+  "vase_floral": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 2
+      },
+      {
+        "item": "flower",
+        "count": 3
+      }
+    ],
+    "output": {
+      "item": "vase_floral",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "floral_furniture"
+  },
+  "bookshelf_floral": {
+    "station": "sawmill",
+    "inputs": [
+      {
+        "item": "plank",
+        "count": 8
+      },
+      {
+        "item": "flower",
+        "count": 3
+      }
+    ],
+    "output": {
+      "item": "bookshelf_floral",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "floral_furniture"
+  },
+  "rug_floral": {
+    "station": "workbench",
+    "inputs": [
+      {
+        "item": "cloth",
+        "count": 6
+      },
+      {
+        "item": "flower",
+        "count": 4
+      }
+    ],
+    "output": {
+      "item": "rug_floral",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:carpenter",
+    "collection": "floral_furniture"
+  },
+  "bed_stone": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "stone_block",
+        "count": 12
+      },
+      {
+        "item": "cloth",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "bed_stone",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:stonemason",
+    "collection": "stone_works"
+  },
+  "cupboard_stone": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "stone_block",
+        "count": 8
+      }
+    ],
+    "output": {
+      "item": "cupboard_stone",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:stonemason",
+    "collection": "stone_works"
+  },
+  "shelf_stone": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "stone_block",
+        "count": 8
+      }
+    ],
+    "output": {
+      "item": "shelf_stone",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:stonemason",
+    "collection": "stone_works"
+  },
+  "desk_stone": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "stone_block",
+        "count": 7
+      }
+    ],
+    "output": {
+      "item": "desk_stone",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:stonemason",
+    "collection": "stone_works"
+  },
+  "lamp_crystal": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "stone_block",
+        "count": 2
+      },
+      {
+        "item": "crystal",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "lamp_crystal",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:stonemason",
+    "collection": "stone_works"
+  },
+  "table_marble": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "stone_block",
+        "count": 8
+      }
+    ],
+    "output": {
+      "item": "table_marble",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:stonemason",
+    "collection": "stone_works"
+  },
+  "bench_marble": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "stone_block",
+        "count": 6
+      }
+    ],
+    "output": {
+      "item": "bench_marble",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:stonemason",
+    "collection": "stone_works"
+  },
+  "bust_marble": {
+    "station": "stonecutter",
+    "inputs": [
+      {
+        "item": "stone_block",
+        "count": 8
+      }
+    ],
+    "output": {
+      "item": "bust_marble",
+      "count": 1
+    },
+    "process_ticks": 12,
+    "unlock": "shop:stonemason",
+    "collection": "stone_works"
   }
 }

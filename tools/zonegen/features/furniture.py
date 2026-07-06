@@ -74,7 +74,36 @@ FANCY = {
     "statue":     "statue_stone",
 }
 
-COLLECTIONS = {"basic": BASIC, "fancy": FANCY}
+# The FLORAL set (the bee area — Maren's world; owner 2026-07-06 "a floral set for the
+# bee area"). Only roles that differ from BASIC; footprints match role members.
+FLORAL = {
+    "bed":         "bed_floral",         # 2x4, matches bed_basic
+    "seating":     "chair_floral",       # 1x1
+    "table":       "table_floral",       # 2x2
+    "dresser":     "dresser_floral",     # 2x1
+    "light":       "lamp_floral",        # 1x1
+    "rug":         "rug_floral",         # 2x2 flat
+    "accent_small": "vase_floral",       # 1x1
+    "bookshelf":   "bookshelf_floral",   # 2x1
+}
+
+# The STONE set (underground homes; owner: "a stone set underground (marble or
+# something)"). Marble premium pieces (table_marble/bench_marble/bust_marble) exist as
+# placeables for scene authors + a future "marble" collection; the stone set proper:
+STONE = {
+    "bed":         "bed_stone",          # 2x4
+    "seating":     "stool_stone",        # 1x1
+    "stool":       "stool_stone",        # 1x1
+    "table":       "table_stone",        # 2x2
+    "cupboard":    "cupboard_stone",     # 2x1
+    "bookshelf":   "shelf_stone",        # 2x1
+    "desk":        "desk_stone",         # 2x1
+    "light":       "lamp_crystal",       # 1x1
+    "statue":      "statue_stone",       # 1x1
+    "chest":       "chest_mossy",        # underground flavor of the chest role
+}
+
+COLLECTIONS = {"basic": BASIC, "fancy": FANCY, "floral": FLORAL, "stone": STONE}
 
 
 def pick(role, collection="basic"):

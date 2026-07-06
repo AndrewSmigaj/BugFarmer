@@ -175,3 +175,12 @@ All shop/town signs read better at **2×1** (32×24). `sign_weaver` is already 2
 - candle_beeswax (16x18) — fat amber candle on a dish
 - honey_jar_shelf (16x26) — shelf crowded with amber jars
 - rug_honeycomb (32x32 flat, 2x2) — honeycomb-pattern rug
+
+## Furniture sets batch (2026-07-06, placeholders in-game; REFERENCE-generate per set)
+FLORAL (hero: bed_floral; materials wood/fabric): bed_floral 32x64, chair_floral 16x24,
+table_floral 32x24, dresser_floral 32x28, lamp_floral 16x26, vase_floral 16x20,
+bookshelf_floral 32x28, rug_floral 32x32 flat.
+STONE (hero: bed_stone; stone palette): bed_stone 32x64, cupboard_stone 32x28,
+shelf_stone 32x28, desk_stone 32x24, lamp_crystal 16x26 (glass palette).
+MARBLE (hero: table_marble; marble palette): table_marble 32x24, bench_marble 32x20,
+bust_marble 16x24.

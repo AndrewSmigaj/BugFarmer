@@ -295,5 +295,101 @@
     "materials": [
       "fabric"
     ]
+  },
+  "bed_floral": {
+    "look": "a wooden BED whose headboard is carved as a fan of open BLOSSOMS, quilt printed with scattered petals in rose and cream; must NOT read as the plain bed",
+    "materials": [
+      "wood"
+    ]
+  },
+  "chair_floral": {
+    "look": "a wooden CHAIR with a blossom-carved back splat and leaf-curl armrests, a petal-pink seat cushion",
+    "materials": [
+      "wood"
+    ]
+  },
+  "table_floral": {
+    "look": "a round-cornered wooden TABLE with a PETAL-INLAY top \u2014 pale petals radiating from the center like a pressed flower",
+    "materials": [
+      "wood"
+    ]
+  },
+  "dresser_floral": {
+    "look": "a wooden DRESSER with vine-carved drawer fronts and small flower-shaped pulls, a sprig in a jar on top",
+    "materials": [
+      "wood"
+    ]
+  },
+  "lamp_floral": {
+    "look": "a floor LAMP whose shade is an upturned BLOSSOM, warm light through petal seams, a leafy stem pole",
+    "materials": [
+      "wood"
+    ]
+  },
+  "vase_floral": {
+    "look": "a tall ceramic VASE overflowing with mixed WILDFLOWERS \u2014 the bouquet is the point, big and unruly",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "bookshelf_floral": {
+    "look": "a wooden BOOKSHELF wrapped in a carved flowering VINE, books interleaved with pressed-flower frames",
+    "materials": [
+      "wood"
+    ]
+  },
+  "rug_floral": {
+    "look": "a flat rectangular RUG woven as a RING OF PETALS around a golden center \u2014 a flower seen from above; top-down flat",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "bed_stone": {
+    "look": "a carved STONE SLAB BED softened by a thick FUR throw and a rolled pelt pillow \u2014 megalith meets cozy; must NOT read as a tomb",
+    "materials": [
+      "stone"
+    ]
+  },
+  "cupboard_stone": {
+    "look": "a chunky STONE CUPBOARD: two slab doors on carved hinges, chisel-marked faces",
+    "materials": [
+      "stone"
+    ]
+  },
+  "shelf_stone": {
+    "look": "an open STONE SHELF unit of stacked slabs holding jars and ore samples",
+    "materials": [
+      "stone"
+    ]
+  },
+  "desk_stone": {
+    "look": "a STONE DESK: one thick slab top on two block legs, a chiselled inkwell recess",
+    "materials": [
+      "stone"
+    ]
+  },
+  "lamp_crystal": {
+    "look": "a glowing CRYSTAL LAMP: a cluster of pale-blue crystal shards mounted on a squat stone stand, cool light; must NOT read as an ice sculpture",
+    "materials": [
+      "glass"
+    ]
+  },
+  "table_marble": {
+    "look": "a polished MARBLE TABLE, near-white with faint cool-grey veining, elegant tapered legs",
+    "materials": [
+      "marble"
+    ]
+  },
+  "bench_marble": {
+    "look": "a polished MARBLE BENCH: a veined slab seat on two scrolled marble supports",
+    "materials": [
+      "marble"
+    ]
+  },
+  "bust_marble": {
+    "look": "a classical MARBLE BUST on a short plinth \u2014 a noble head-and-shoulders, near-white with grey veining; must NOT read as a statue of the whole body",
+    "materials": [
+      "marble"
+    ]
   }
 }
