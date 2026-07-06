@@ -121,6 +121,18 @@ type BugSpecies struct {
 	// fully negates STINGS (bees, wasps) but not bites (centipedes chew through cloth).
 	AttackIsSting bool `json:"attack_is_sting"`
 
+	// CarrionForager marks the ANT food shape (2026-07): an empty-prey nest species whose
+	// diet is GROUND FOOD + attraction-scoped pools (carrion, rotten windfalls, fungus)
+	// instead of the bee's flower nectar. Drives the nest food/founding gates in nests.go —
+	// the stock nectar gate counts ALL ForagePools, which would let flower fields wrongly
+	// qualify an ant site.
+	CarrionForager bool `json:"carrion_forager"`
+
+	// ColonyScout marks the SENSOR caste (owner ruling: scouts are pure sensors): wide
+	// wander, registers food sites into the colony memory, never provisions. Workers of
+	// the same colony read what scouts wrote (the trails).
+	ColonyScout bool `json:"colony_scout"`
+
 	// Predator configuration. The NIL POINTER is the predator gate — non-predators
 	// never enter the predation branch.
 	Predation *PredationConfig `json:"predation"`

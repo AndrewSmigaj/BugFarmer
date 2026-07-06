@@ -1,0 +1,67 @@
+{
+  "zone_id": "ant_lab",
+  "name": "Ant Lab",
+  "row": 0,
+  "col": 0,
+  "width": 96,
+  "height": 96,
+  "spawn_point": [
+    48,
+    30
+  ],
+  "biome_type": "meadow",
+  "seed": 31,
+  "bug_spawning": {
+    "static": false,
+    "species_caps": {
+      "ant_worker": {
+        "initial": 0,
+        "max": 20,
+        "spawn_interval": 999999.0,
+        "min_population": 0,
+        "max_population": 60
+      },
+      "ant_scout": {
+        "initial": 2,
+        "max": 4,
+        "swarm_size": 1,
+        "spawn_interval": 999999.0,
+        "min_population": 2,
+        "max_population": 6
+      }
+    },
+    "spawn_areas": [
+      {
+        "id": "scout_range",
+        "species": [
+          "ant_scout"
+        ],
+        "type": "circle",
+        "cx": 40,
+        "cy": 48,
+        "radius": 20
+      }
+    ],
+    "initial_carrion": [
+      {
+        "item": "dead_fly",
+        "x": 72,
+        "y": 48,
+        "count": 4
+      },
+      {
+        "item": "dead_beetle",
+        "x": 74,
+        "y": 46,
+        "count": 3
+      },
+      {
+        "item": "dead_fly",
+        "x": 71,
+        "y": 51,
+        "count": 3
+      }
+    ]
+  },
+  "ephemeral_swarms": true
+}

@@ -335,6 +335,21 @@ func (m *Match) processNestFounding(state *WorldState, dispatcher runtime.MatchD
 			continue
 		}
 
+		if species.CarrionForager {
+			// ANT-CLASS carrion forager: no claimable boxes (ants don't move into
+			// apiaries) — a thriving colony digs a daughter brood beside its own food
+			// shape (carrion/windfalls/fungus), attraction-scoped.
+			gx, gy, ok := m.findNestSiteWithCarrion(state, nest.GridX, nest.GridY, species,
+				state.Tuning.NestFoundDistMin, state.Tuning.NestFoundDistMax)
+			if !ok {
+				continue // nothing to eat an adequate distance away — the colony WAITS
+			}
+			todo = append(todo, founding{gx: gx, gy: gy, occupantID: species.Predation.NestOccupant,
+				speciesID: nest.SpeciesID, species: species})
+			nest.Brood = 0
+			nestCount[nest.SpeciesID]++
+			continue
+		}
 		if len(species.Predation.Prey) == 0 {
 			// BEE-CLASS nectar forager: a swarming colony PREFERS an empty player-placed hive
 			// box (that's how an apiary comes alive), else founds a wild hive beside nectar.
@@ -432,6 +447,27 @@ func (m *Match) findClaimableBox(state *WorldState, parent *entities.NestState, 
 	return bestKey, bestKey != ""
 }
 
+// findNestSiteWithCarrion picks the ANT daughter-founding site: the NEAREST of the
+// species' own foods (attraction-scoped — carrion, rotten windfalls, stocked fungus
+// pools) in the [minD,maxD] band from the parent, then an empty walkable cell beside
+// it. Same WAIT-if-none semantics as the prey/nectar finders; determinism comes from
+// FindNearbyFood's dist-then-ID sort.
+func (m *Match) findNestSiteWithCarrion(state *WorldState, parentGX, parentGY int, species *entities.BugSpecies, minD, maxD int) (int, int, bool) {
+	attractions := species.AttractionsByPhase["feeding"]
+	if len(attractions) == 0 {
+		return 0, 0, false
+	}
+	pos := entities.EntityPosition{LocalX: float32(parentGX) + 0.5, LocalY: float32(parentGY) + 0.5}
+	minF := float32(minD)
+	for _, h := range FindNearbyFood(state, pos, float32(maxD), attractions) {
+		if h.Dist < minF {
+			continue // adequate distance first — daughters spread, not stack
+		}
+		return m.findEmptyCellNear(state, int(h.X), int(h.Y), 1, 8)
+	}
+	return 0, 0, false
+}
+
 // findNestSiteWithNectar picks a wild-founding site beside the RICHEST flower field an adequate
 // distance from the parent — the bee analog of findNestSiteWithPrey (same band, same WAIT-if-none
 // semantics, deterministic tiebreaks: highest nectar then lowest key).
@@ -465,16 +501,42 @@ func (m *Match) findNestSiteWithNectar(state *WorldState, parentGX, parentGY int
 // nestCanFeedNearby is the species-shape-aware food gate for recovery/founding checks:
 // hunters need live prey in range (nestHasPreyNearby); bee-class nectar foragers (a nest
 // species with an EMPTY prey list) need a live flower (a ForagePool with meaningful nectar)
-// within the same home-range tether.
+// within the same home-range tether; ANT-class carrion foragers (CarrionForager) need
+// ATTRACTION-SCOPED food — the nectar gate counts ALL pools, which would let a flower
+// field wrongly feed an ant colony.
 func (m *Match) nestCanFeedNearby(state *WorldState, nest *entities.NestState, species *entities.BugSpecies) bool {
 	p := species.Predation
 	if p == nil {
 		return false
 	}
+	if species.CarrionForager {
+		return m.nestHasCarrionFoodNearby(state, nest, species)
+	}
 	if len(p.Prey) == 0 {
 		return m.nestHasNectarNearby(state, nest, species)
 	}
 	return m.nestHasPreyNearby(state, nest, species)
+}
+
+// nestHasCarrionFoodNearby: the ANT food gate — any of the species' OWN foods (its
+// feeding attractions: carrion items, rotten windfalls via the wildcard, fungus pools
+// with stock) within the home-range tether. One FindNearbyFood call does the whole
+// mixed-source, attraction-scoped, depletion-aware check (resource_query.go).
+func (m *Match) nestHasCarrionFoodNearby(state *WorldState, nest *entities.NestState, species *entities.BugSpecies) bool {
+	p := species.Predation
+	if p == nil {
+		return false
+	}
+	reach := p.HomeRange
+	if reach <= 0 {
+		reach = 40
+	}
+	attractions := species.AttractionsByPhase["feeding"]
+	if len(attractions) == 0 {
+		return false
+	}
+	pos := entities.EntityPosition{LocalX: float32(nest.GridX) + 0.5, LocalY: float32(nest.GridY) + 0.5}
+	return len(FindNearbyFood(state, pos, reach, attractions)) > 0
 }
 
 // nestHasNectarNearby: any registered flower ForagePool with nectar above a graze-floor within

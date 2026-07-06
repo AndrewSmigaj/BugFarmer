@@ -2583,5 +2583,23 @@
     "stackable": true,
     "max_stack": 10,
     "sell_price": 15
+  },
+  "dead_ant": {
+    "name": "Dead Ant",
+    "category": "resource",
+    "tags": [
+      "carrion"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1,
+    "food_value": 10
+  },
+  "ant_egg": {
+    "name": "Ant Egg",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 8
   }
 }

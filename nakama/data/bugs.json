@@ -1064,5 +1064,18 @@
     "catch_difficulty": 4,
     "value": 26,
     "zones": []
+  },
+  "ant_scout": {
+    "sprite_path": "Sprites/Bugs/ant_worker.png",
+    "sprite_w": 8,
+    "sprite_h": 8,
+    "category": "ant",
+    "base_speed": 1.0,
+    "catch_difficulty": 1,
+    "value": 8,
+    "zones": [
+      "ant_tunnels"
+    ],
+    "name": "Scout Ant"
   }
 }
