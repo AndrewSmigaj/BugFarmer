@@ -271,6 +271,29 @@ normal leave-A/join-B (zero cross-zone determinism surface; player position is n
 - **Verified**: sync-harness `crosszone` scenario (server entry-override, headless) + in-Editor rapid
   up→down crossing — root-caused a stale-snap race from the Editor.log and fixed it client-side.
 
+## Done 2026-07-06 — THE ZONE-CRAFT SCAFFOLDING (the skill that teaches zone quality)
+Owner directive ("lets create a zone improvement guide, scaffolding for you… this new skill related
+to zone authoring") — built and VALIDATED by a live run, all phases committed green:
+- **The `zone-craft` skill** (craft loop: brief w/ quotas → 2-3 rendered OPTIONS the owner picks →
+  build via author-zone → lens pass against pixels → corrections-ledger walk → polish) + routing
+  (author-zone starts there; a COLD-agent probe reached zone-craft → CORRECTIONS.md → caves.md
+  unprompted and flagged the gorge's own violation).
+- **CORRECTIONS.md** (11 owner corrections, one-liners + inline-guide homes) · **Zone & scene
+  lenses** in lenses.md (8; five now ★-earned) · **footprints.py** (generated table + --check; the
+  2×4 bed is the fixture) · **4 research packs** (composition / mining feel / settlements /
+  coasts — procgen-digest format, checkable rules + counterexamples) · **gallery.md** +
+  references/ (6 annotated before/after pairs from the real passes).
+- **The live run** (the validation): `rock_mass` extended (shell/core/vein_spec; default output
+  proven byte-identical ×5 seeds) → ant country rebuilt as THE OLD DIG (7 mineable dirt-block
+  masses w/ stone cores + doctrine veins, the ring dig, mounds, the prospector's scratch) and the
+  gorge's hand-set ores/stepped stones replaced by doctrine veins + Halloway's claim. The lens
+  pass produced 3 build-changing findings (claim scatter, sign-on-lake, no route in). Ore
+  MEASURED: 10-21% per mass region, runs not specks, ring-visible; grep gate zero hand-set calls.
+  Zone gates all green (lint 0/0, smoke 90 swarms, crosszone both ways).
+- **Still open from the run's owner questions:** surface ANTS as a real species (sprites exist —
+  its own gated slice); an ant-colony entrance occupant when zone (3,0) is built; sprite-side
+  follow-up: ore tiers should read by SHAPE at zoom (grayscale the catalog row — research rule).
+
 ## Done 2026-07-05 — THE BEEKEEPING MILESTONE (persistence + calming foundations, bees, Bee Meadow)
 Six gated phases, each committed green (full record: `docs/product/economy/DECISIONS.md` D31; systems:
 `architecture_persistence.md` + `architecture_beekeeping.md`; zone: `docs/product/zones/bee_meadow_20.md`):

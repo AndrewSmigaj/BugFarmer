@@ -118,12 +118,15 @@ all of them PASS on a FIRST build, the questions were asked too softly — tight
 - ★ **Miner / Economist** — Is there something to extract or harvest per region, does it match
   the zone's difficulty tier, and does its distribution follow the caves.md doctrine (veins,
   bands, measured density)? (Earned: the gorge's hand-set silver/gold line, owner-caught.)
-- **Traveler** — Arriving at any edge and walking the main route, is there a visible reason to
-  keep going within ~30 seconds — a landmark, a fork, a tease — at every decision point?
+- ★ **Traveler** — Arriving at any edge and walking the main route, is there a visible reason to
+  keep going within ~30 seconds — a landmark, a fork, a tease — at every decision point? (Earned:
+  ant country had no route IN — the prospector's scratch was the fix, first live run.)
 - **Kid** — Is there something to poke, break, collect, chase, or giggle at on every screen —
   not just scenery to look at?
-- **Storyteller** — Can you narrate ≥3 micro-stories from placement ALONE (the wreck, the
+- ★ **Storyteller** — Can you narrate ≥3 micro-stories from placement ALONE (the wreck, the
   abandoned sandcastle, the laundry behind the cottage)? What happened here before the player?
+  (Earned: Halloway's claim props scattered 10 cells apart read as litter, not a story —
+  clustered into one campsite, first live run.)
 - **Ecologist** — Can every species that spawns here actually LIVE here: food, breeding
   habitat, shelter, refugia — geometrically, where they spawn? Does flora match the ground?
 - **New-Player-at-zoom** — Crop random gameplay-zoom screenfuls (~20×12 cells): is EVERY one of
