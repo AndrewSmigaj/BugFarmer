@@ -103,9 +103,15 @@ nest-founded ONLY (`initial: 0`, never free-spawned).
 - NO DEAD GRASS · clumped wild vegetation · forests as masses, not rings.
 
 ## Feature guides
+> **The craft layer** (what to build + whether it's alive): the **zone-craft** skill →
+> [CORRECTIONS.md](CORRECTIONS.md) (the owner-taste ledger — read whole before zone work) ·
+> [gallery.md](gallery.md) (annotated before/afters) · the `research_*.md` domain digests ·
+> the "Zone & scene lenses" in `.claude/lenses.md`.
+
 - [building.md](building.md) — rooms, walls, doors, building shells (`room.place_room`).
-- [house.md](house.md) — multi-room houses: the composer, the south-facing facing rule, room
-  templates, ⊥/L shapes, furniture **collections** (basic/fancy), and the 3/4/5-room layout generators.
+- [house.md](house.md) — multi-room houses: the composer, the furniture facing rule +
+  context-facing doors, room templates, ⊥/L shapes, furniture **collections** (basic/fancy),
+  and the 3/4/5-room layout generators.
 - [village.md](village.md) — composing a believable **town**: road hierarchy, function clusters, the
   `plaza()`/fountain focal point, `shop_building()`, density gradients, and the build-order recipe.
 - [yard.md](yard.md) — fenced yards/pens: `fence_rect`, `yard` (gate + path + decor).

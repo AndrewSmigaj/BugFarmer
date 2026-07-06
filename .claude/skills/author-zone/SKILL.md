@@ -5,6 +5,11 @@ description: Use when creating or editing a game zone, or building an example sc
 
 # Author a zone / scene
 
+> **Craft vs mechanics:** deciding WHAT to build, whether it's interesting, and reviewing it as
+> a PLACE → the **zone-craft** skill (brief → options → lenses → corrections ledger). This
+> skill is HOW: the builder, primitives, previews, gates. For a NEW zone or an improvement
+> pass, START in zone-craft; come here for the building.
+
 Build zones and example scenes from reusable **feature primitives** that coordinate through a
 shared occupancy model, compose with **placeholder squares** (never wait on art), and review by
 **rendering a preview PNG and looking at it**. The preview is the test — there's no live game to
@@ -28,21 +33,12 @@ top-level buckets, don't hand-type output paths — if a thing doesn't fit, it's
 - **Content to draw from:** `docs/brainstorms/<topic>/` (flora, fungus, trees, bugs, landmarks, decorations,
   materials, …) — mine these for what to place; `ecology_proposal.md` for how species relate.
 
-## Make it RICH — brainstorm, don't do the bare minimum (read this first)
-A scene is a crafted vignette, not a checklist. When asked for a new scene you are EXPECTED to
-**brainstorm interesting content yourself**, not just place the few things named:
-- Start by **brainstorming a content list** for the scene's theme/situation: the named things PLUS
-  the supporting props, decorations, clutter, and variety that make the place feel real and lived-in
-  (e.g. a mining camp isn't just tents — it's crates, barrels, pickaxes leaning on rocks, ore sacks,
-  a stew pot over the fire, lanterns, tool racks, a wash line, scattered rubble). Aim for diversity
-  (several variants, a poor→nice range where it fits) — we have AI artists, so content is cheap
-  (`game_design.md §19`). Too sparse reads as a tech demo; fill it with character.
-- **Most of that content will be NEW entities** — that's expected. Add each via the **add-object**
-  skill (lean entity row + a catalog `look` row). It renders as a placeholder immediately, so layout
-  never waits on art.
-- **Write the brainstorm down and sanity-check it** against the theme before building — did you cover
-  the activity, the people, the wear-and-tear, the lighting, the surroundings? Present the plan/brainstorm
-  for review rather than silently doing the minimum.
+## Make it RICH — brainstorm, don't do the bare minimum
+A scene is a crafted vignette, not a checklist — too sparse reads as a tech demo; we have AI
+artists, so content is cheap (`game_design.md §19`). **The brainstorm process, fields and
+QUOTAS live in the zone-craft skill's brief** (one home for the numbers — fill it there and
+persist it to the zone doc before building). New entities the brainstorm needs come in via the
+**add-object** skill (placeholder renders immediately; layout never waits on art).
 
 ## Go slow; check before you call it done
 This is an iterative craft loop, not a one-shot. Deliberately:
@@ -55,7 +51,8 @@ This is an iterative craft loop, not a one-shot. Deliberately:
 
 ## The loop
 1. Read the zone document (`docs/product/zones/<zone>.md`) or decide the scene's contents.
-2. For each feature, read its **feature guide** (below) + the cross-cutting style guide.
+2. For each feature, read its **feature guide** (below) + the cross-cutting style guide, and
+   check **`docs/guides/authoring/CORRECTIONS.md`** for owner corrections touching your features.
 3. Build with the `ZoneBuilder` + feature primitives (`tools/zonegen/`). **Author themed buildings as
    TEXT GRIDS** (`features/tilemap.stamp`/`dump`) — reason cell-by-cell, don't guess coordinates.
 4. **`b.lint()` (verify in TEXT) → then `Read` a rendered crop**; iterate the layout (and the guide).
@@ -104,8 +101,13 @@ zone_village.py` is the full scene→zone example. Each scene declares its desti
 
 ## Feature guides
 **Full index + one-liners: `docs/guides/authoring/README.md`.** The ones you'll reach for most:
+- `docs/guides/authoring/CORRECTIONS.md` — the OWNER-TASTE ledger (every correction, one line +
+  pointer). Read whole at zone-craft Step 0; walk at review.
+- `docs/guides/authoring/gallery.md` — annotated before/after pairs (what "better" means here).
+- `docs/guides/authoring/research_*.md` — distilled domain research (composition, mining feel,
+  settlements, coasts) — checkable rules + a counterexample each.
 - `docs/guides/authoring/building.md` — rooms, walls, doors, building shells.
-- `docs/guides/authoring/house.md` — multi-room houses: the composer, the south-facing **facing
+- `docs/guides/authoring/house.md` — multi-room houses: the composer, the furniture **facing
   rule**, room templates, ⊥/L shapes, **furniture collections** (basic/fancy), and the 3/4/5-room
   layout generators.
 - `docs/guides/authoring/yard.md` — fenced yards/pens: `fence_rect`, `yard` (gate + path + decor).
