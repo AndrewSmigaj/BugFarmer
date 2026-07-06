@@ -92,24 +92,65 @@ def build():
     shore_dress(b, fl, [(150, 260, "sand"), (260, 40, "reeds"), (40, 150, "forest")], seed=25)
     pond(b, 212, 204, 7, 5, seed=26)
 
-    # ---- 1b. ANT COUNTRY (the south band) ------------------------------------
-    # The zone TRANSITIONS toward the Ant Colony below (3,0): torn dirt ground spreading up
-    # from the south edge, ant mounds dotted through it, and mineable earth outcrops with
-    # rocky cores (dirt aprons + stone_block fill + common ore veins via rock_mass).
+    # ---- 1b. ANT COUNTRY (the south band) — "THE OLD DIG" ---------------------
+    # The transition toward the Ant Colony below (3,0), built as a PLACE (option C, owner
+    # review; C's ring + option B's iron-cored anchor folded in): mineable DIRT-BLOCK masses
+    # (shovel shell → stone core → ore, the concentric tool-ladder lesson) around a shared
+    # clearing holding an abandoned dig; painted dirt is only the APRON; mounds crowd the
+    # mass feet. Ore per the caves.md doctrine via rock_mass vein_spec — nothing hand-set.
+    COMMONS = [("ore_coal_block", 2, 3, 6, "any"), ("ore_copper_block", 2, 3, 5, "any")]
     rng_a = random.Random(51)
-    for bx, by, br in [(70, 12, 10), (105, 18, 8), (145, 8, 12), (185, 16, 8),
-                       (225, 10, 9), (48, 18, 6), (255, 14, 8)]:
+    ant_masses = [
+        (70, 14, 9, 6, 60, COMMONS + [("ore_iron_block", 1, 3, 4, "core")]),  # the anchor (B's core)
+        (98, 20, 7, 5, 61, COMMONS),                                          # the ring, W
+        (122, 26, 6, 4, 62, COMMONS),                                         # the ring, N
+        (146, 18, 7, 5, 63, COMMONS),                                         # the ring, E
+        (120, 7, 8, 5, 64, COMMONS + [("ore_silver_block", 1, 2, 3, "core")]),  # ring S + the ONE deep rare
+        (185, 12, 5, 4, 65, COMMONS),                                         # east outlier
+        (226, 10, 6, 4, 66, COMMONS),                                         # far-east outlier
+    ]
+    for bx, by, brx, bry, sd, spec in ant_masses:   # aprons first (painted dirt = the lanes)
+        br = max(brx, bry) + 3
         for y in range(by - br - 2, by + br + 3):
             for x in range(bx - br - 2, bx + br + 3):
-                if not b.in_bounds(x, y) or b.surface[y][x] != "grass":
+                if not b.in_bounds(x, y) or b.surface[y][x] != "grass" or b.ground[y][x] != "grass":
                     continue
-                d = ((x - bx) ** 2 + (y - by) ** 2) ** 0.5
-                if d <= br + rng_a.uniform(-2.0, 2.0):
+                if ((x - bx) ** 2 + (y - by) ** 2) ** 0.5 <= br + rng_a.uniform(-1.5, 1.5):
                     b.set_ground(x, y, "dirt")
-    rock_mass(b, 100, 13, 7, 5, seed=52, veins=3)
-    rock_mass(b, 190, 11, 8, 5, seed=53, veins=3)
-    for mx, my in [(66, 14), (82, 9), (116, 20), (140, 6), (152, 12), (176, 18),
-                   (222, 8), (233, 14)]:
+    for bx, by, brx, bry, sd, spec in ant_masses:
+        rock_mass(b, bx, by, brx, bry, seed=sd, shell="dirt_block", floor="dirt",
+                  core="stone_block", vein_spec=spec)
+    # THE OLD DIG at the ring's heart — micro-story: they dug here once; the mounds came back.
+    for oid, dx_, dy_ in [("ore_pile", 118, 17), ("crate", 122, 16), ("driftwood", 115, 15)]:
+        for ddx in range(0, 5):
+            if b.is_free(dx_ + ddx, dy_):
+                b.place_occupant(oid, dx_ + ddx, dy_)
+                break
+    for sdx in range(0, 6):
+        if b.is_free(125 + sdx, 18) and b.surface[18][125 + sdx] != "water":
+            b.place_occupant("signpost", 125 + sdx, 18,
+                             text="Dig site — abandoned.\nThe mounds came back.")
+            break
+    # LENS FIX (Traveler): the prospector's SCRATCH — a thin worn trace from the meadow
+    # threshold down into the dig clearing, so there's a route INTO ant country, not just
+    # a band you stumble over. One cell wide, wobbling, dirt only over grass.
+    rng_t = random.Random(67)
+    ty = 34
+    tx = 112
+    while ty > 18:
+        for cell in ((tx, ty), (tx, ty - 1)):
+            if b.in_bounds(*cell) and b.surface[cell[1]][cell[0]] == "grass" \
+               and b.ground[cell[1]][cell[0]] == "grass" and b.is_free(*cell):
+                b.set_ground(cell[0], cell[1], "dirt")
+        ty -= 1
+        tx += rng_t.choice((-1, 0, 0, 1))
+        tx = max(108, min(122, tx))
+
+    # Mounds crowd the mass FEET (on the aprons), plus the gag: one erupting right beside
+    # the warning signpost up at the meadow edge (placed later in WAYFINDING — the mound
+    # here waits at its future neighbor cell).
+    for mx, my in [(60, 20), (80, 8), (92, 14), (108, 24), (132, 22), (140, 10),
+                   (154, 14), (178, 16), (192, 8), (220, 15), (232, 6), (114, 12)]:
         for dx in range(0, 9):
             if b.in_bounds(mx + dx, my) and b.ground[my][mx + dx] == "dirt" \
                and b.is_free(mx + dx, my):
@@ -117,35 +158,34 @@ def build():
                 break
 
     # ---- 1c. THE ROCKY GORGE (the stream's east exit) -------------------------
-    # Where the stream leaves for the village it cuts THROUGH rock: mineable stone masses
-    # pressed right against BOTH banks (the stream is reserved water, so the fill stops at
-    # the channel), salted with common veins by rock_mass — plus HAND-SET rare ores for the
-    # sharp-eyed, and loose bank stones tracing the waterline between the masses.
-    rock_mass(b, 224, 90, 9, 7, seed=54, veins=4)   # north bank, apron on the water
-    rock_mass(b, 231, 66, 9, 7, seed=55, veins=4)   # south bank, apron on the water
-    # Hand-set rare ores: spiral outward from the target until a free cell — robust against
-    # the run-to-run placement drift (reed/shore sets iterate hash-randomized).
-    def _place_ore(oid, cx_, cy_, r=8):
-        for d in range(r + 1):
-            for dy in range(-d, d + 1):
-                for dx in range(-d, d + 1):
-                    if max(abs(dx), abs(dy)) == d and b.in_bounds(cx_ + dx, cy_ + dy) \
-                       and b.surface[cy_ + dy][cx_ + dx] != "water" and b.is_free(cx_ + dx, cy_ + dy):
-                        return b.place_occupant(oid, cx_ + dx, cy_ + dy)
-        raise SystemExit(f"no room for {oid} near ({cx_},{cy_}) — rework the gorge")
-    _place_ore("ore_silver_block", 214, 90)
-    _place_ore("ore_gold_block", 237, 70)
-    _place_ore("ore_ruby_block", 228, 56)
-    # Bank stones: hug the actual waterline column by column through the gorge reach.
-    rng_g = random.Random(58)
-    for gx in range(204, 252, 3):
-        span = _water_span(b, gx, 56, 104, row=False)
-        if not span:
-            continue
-        for gy in (span[0] - 1, span[1] + 1):
-            if rng_g.random() < 0.6 and b.in_bounds(gx, gy) \
-               and b.surface[gy][gx] == "grass" and b.is_free(gx, gy):
-                b.place_occupant("stone_block", gx, gy)
+    # The stream cuts THROUGH rock (masses pressed on both banks; the channel is reserved
+    # water so the fill stops at it). Ore: doctrine veins ONLY — commons throughout + the
+    # rares as few, short, core-band runs (owner correction 2026-07-06: no hand-set lines).
+    rock_mass(b, 224, 90, 9, 7, seed=54, shell="stone_block", floor="stone_floor",
+              core="stone_block",
+              vein_spec=COMMONS + [("ore_iron_block", 1, 3, 4, "any"),
+                                   ("ore_silver_block", 1, 2, 3, "core")])
+    rock_mass(b, 231, 66, 9, 7, seed=55, shell="stone_block", floor="stone_floor",
+              core="stone_block",
+              vein_spec=COMMONS + [("ore_gold_block", 1, 2, 3, "core"),
+                                   ("ore_ruby_block", 1, 2, 2, "core")])
+    # THE FRESH CLAIM — micro-story 2: somebody staked the gorge and left in a hurry
+    # (deliberately UNTIDY — the C6 rule-bend: abandonment is the story, rows are for work).
+    # LENS FIX (Storyteller): the props CLUSTER as one campsite — a story scattered over ten
+    # cells reads as unrelated litter. Sign, pile and crate within a 3-cell huddle at the
+    # north mass's west foot.
+    claim_anchor = None
+    for sdx in range(0, 8):
+        if b.is_free(211 + sdx, 96) and b.surface[96][211 + sdx] == "grass":
+            b.place_occupant("signpost", 211 + sdx, 96,
+                             text="CLAIM — J. Halloway.\nBack by spring.")
+            claim_anchor = (211 + sdx, 96)
+            break
+    if claim_anchor:
+        ax_, ay_ = claim_anchor
+        for oid, dx_, dy_ in [("ore_pile", 1, -1), ("crate", -2, 0), ("ore_pile", 2, 1)]:
+            if b.in_bounds(ax_ + dx_, ay_ + dy_) and b.is_free(ax_ + dx_, ay_ + dy_):
+                b.place_occupant(oid, ax_ + dx_, ay_ + dy_)
 
     # ---- 2. ROADS + BRIDGES (then smooth ONCE) ------------------------------
     # Main road: east edge → west, bridging the stream where it crosses ROAD_Y.
@@ -252,13 +292,24 @@ def build():
         (249, ROAD_Y + 3, "BEE MEADOW — the flower coast.\nThe Village →"),
         (135, ROAD_Y + 3, "↑ Maren's Bee Farm\n↓ Dragonfly Lake\n→ The Village"),
         (57, 108, "↓ Gullwash Landing — mind the tide."),
-        (148, 29, "⚠ The ground hums here.\nMind the mounds."),
+        # LENS FIX (Cartographer): was (148,29) — Dragonfly Lake's south shore dips to y≈28,
+        # and "the ground hums" beside open water reads wrong. West, onto the meadow
+        # threshold above the ring.
+        (110, 34, "⚠ The ground hums here.\nMind the mounds."),
     ]:
         placed_sign = False
         for dy in (0, 1, -1):
             for dx in range(0, 9):
                 if b.is_free(sx + dx, sy + dy) and b.surface[sy + dy][sx + dx] == "grass":
                     b.place_occupant("signpost", sx + dx, sy + dy, text=txt)
+                    # The gag: a fresh mound erupting RIGHT beside the warning post —
+                    # the ground is winning the argument. (ant_mound is 2x2 — check the quad.)
+                    if "hums" in txt:
+                        for gx in (sx + dx + 1, sx + dx - 2, sx + dx + 2):
+                            if all(b.in_bounds(gx + qx, sy + dy + qy) and b.is_free(gx + qx, sy + dy + qy)
+                                   for qx in (0, 1) for qy in (0, 1)):
+                                b.place_occupant("ant_mound", gx, sy + dy)
+                                break
                     placed_sign = True
                     break
             if placed_sign:

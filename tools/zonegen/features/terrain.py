@@ -643,14 +643,23 @@ def shore_dress(b, info, arcs, *, seed=0):
     return dressed
 
 
-def rock_mass(b, cx, cy, rx, ry, *, seed=0, veins=4):
-    """A SOLID rock mass — the surface sneak-peek of the mining underworld. Unlike
+def rock_mass(b, cx, cy, rx, ry, *, seed=0, veins=4, shell="stone_block",
+              floor="stone_floor", core=None, core_at=0.45, vein_spec=None):
+    """A SOLID mineable mass — the surface sneak-peek of the mining underworld. Unlike
     `rock_patch` (a sparse quarry floor you walk through), this is FILLED: every
-    interior cell carries a mineable block (stone, hard stone toward the core — the
-    insides go dark later), salted with short ORE VEINS (runs of 3-5, the caves.md
-    rule: veins, not specks). The shape is the same multi-blob union as `lake()`, so
-    masses read as rocky hills, not circles. Edges get a ragged dirt apron with
-    spilled blocks. Returns the filled cells."""
+    interior cell carries a mineable block, salted with ORE VEINS (runs of 3-6, the
+    caves.md §4 doctrine: veins not specks, NEVER hand-set coordinates — owner
+    correction 2026-07-06). The shape is the same multi-blob union as `lake()`, so
+    masses read as hills, not circles. Edges get a ragged dirt apron with spills.
+
+    - `shell`/`floor`: the fill block + ground under it (defaults = the classic stone
+      mass). `shell="dirt_block", floor="dirt", core="stone_block"` builds the ant-
+      country "dirt area with a rocky core" (shovel shell, pickaxe heart).
+    - `core`: block id for the INNER band (signed field > `core_at`); None = all shell.
+    - `vein_spec`: list of (ore_id, n_veins, run_lo, run_hi, where) with where in
+      {"any","core"} — rares belong ("rare_id", 1, 2, 3, "core"). None = the legacy
+      commons bag driven by `veins` (kept verbatim so existing masses are UNCHANGED).
+    Returns the filled cells."""
     rng = random.Random(seed)
     axis = rng.random() * 2 * math.pi
     nblobs = rng.randint(2, 3)
@@ -672,6 +681,7 @@ def rock_mass(b, cx, cy, rx, ry, *, seed=0, veins=4):
         return best
 
     filled = []
+    core_cells = set()
     mr = int(max(rx, ry) * 1.4) + 2
     for dy in range(-mr, mr + 1):
         for dx in range(-mr, mr + 1):
@@ -684,30 +694,56 @@ def rock_mass(b, cx, cy, rx, ry, *, seed=0, veins=4):
             on_ground = b.is_free(x, y) and b.surface[y][x] == "grass" \
                 and b.ground[y][x] in ("grass", "sand", "dirt", "mud")
             if s > 0 and on_ground:
-                b.set_ground(x, y, "stone_floor")
-                if b.place_occupant("stone_block", x, y):
+                b.set_ground(x, y, floor)
+                block = core if (core and s > core_at) else shell
+                if b.place_occupant(block, x, y):
                     filled.append((x, y))
+                    if core and s > core_at:
+                        core_cells.add((x, y))
             elif -0.12 < s <= 0 and on_ground:
                 if rng.random() < 0.5:
                     b.set_ground(x, y, "dirt")            # the ragged apron
                 if rng.random() < 0.12:
-                    b.place_occupant("stone_block", x, y)  # spilled blocks
+                    b.place_occupant(shell, x, y)          # spilled blocks
 
-    # Ore veins: short random-walk runs through the filled mass.
-    ores = ["ore_copper_block", "ore_coal_block", "ore_copper_block", "ore_iron_block"]
-    for v in range(veins):
-        if not filled:
-            break
-        x, y = filled[rng.randrange(len(filled))]
-        ore = ores[v % len(ores)]
-        for _ in range(rng.randint(3, 5)):
+    def _run_vein(ore, run_lo, run_hi, pool):
+        """One random-walk vein of run_lo..run_hi cells, seeded in `pool`, swapping
+        shell/core blocks in place (never over an earlier vein — veins don't eat veins)."""
+        if not pool:
+            return
+        x, y = pool[rng.randrange(len(pool))]
+        for _ in range(rng.randint(run_lo, run_hi)):
             cell = b.occ.get((x, y))
-            if cell and cell["id"] == "stone_block":
-                cell["id"] = ore                          # swap the block in place
+            if cell and cell["id"] in (shell, core):
+                cell["id"] = ore
             x += rng.choice((-1, 0, 1))
             y += rng.choice((-1, 0, 1))
             if not b.in_bounds(x, y):
                 break
+
+    if vein_spec is None:
+        # LEGACY path, verbatim (existing masses must render unchanged): the commons
+        # bag cycled `veins` times, runs of 3-5.
+        ores = ["ore_copper_block", "ore_coal_block", "ore_copper_block", "ore_iron_block"]
+        for v in range(veins):
+            if not filled:
+                break
+            x, y = filled[rng.randrange(len(filled))]
+            ore = ores[v % len(ores)]
+            for _ in range(rng.randint(3, 5)):
+                cell = b.occ.get((x, y))
+                if cell and cell["id"] == "stone_block":
+                    cell["id"] = ore
+                x += rng.choice((-1, 0, 1))
+                y += rng.choice((-1, 0, 1))
+                if not b.in_bounds(x, y):
+                    break
+    else:
+        core_pool = [c for c in filled if c in core_cells] or filled
+        for (ore, n, run_lo, run_hi, where) in vein_spec:
+            pool = core_pool if where == "core" else filled
+            for _ in range(n):
+                _run_vein(ore, run_lo, run_hi, pool)
     return filled
 
 

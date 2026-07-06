@@ -50,10 +50,15 @@
    hive at its heart; **THE MUSHROOM HOLLOW** — the damp clearing west of it (mushrooms, litter,
    ferns — millipede country).
 10. **THE ROCKY GORGE (east stream exit)** — the stream cuts between two mineable stone masses
-    pressed against its banks: common ore veins + hand-set silver, gold and a ruby; loose bank
-    stones trace the waterline toward the village edge.
-11. **ANT COUNTRY (the south band)** — torn dirt, mounds, two earth outcrops with rocky cores;
-    a warning sign ("the ground hums here") for the colony below.
+    pressed against its banks: doctrine ore veins (commons + short deep silver/gold/ruby runs
+    in the cores), and J. Halloway's abandoned CLAIM huddled at the north mass's foot
+    ("Back by spring").
+11. **ANT COUNTRY / THE OLD DIG (the south band)** — seven mineable dirt-block masses
+    (shovel shells → stone cores → ore; iron in the west anchor, one short deep silver) with
+    four of them ringing THE OLD DIG: an abandoned excavation (ore pile, crate, old timbers,
+    "the mounds came back"). Mounds crowd the mass feet; the prospector's worn scratch leads
+    in from the meadow; at the threshold, the warning sign ("the ground hums here") with a
+    fresh mound erupting right beside its post.
 
 ## Named places (on the signs)
 **Gullwash Landing** (the split-shore fishing hamlet on the inlet) · **Dragonfly Lake** ·
@@ -73,7 +78,49 @@
 
 ## Materials / loot
 Flowers (cut), honeycomb (wild hives, breakable), seashells (piles), driftwood → wood, wild berries,
-mushrooms in the forest patches. No ore (EASY zone).
+mushrooms in the forest patches. Mining is the ZONE'S TEASE, not its business: shovel-tier dirt-block
+masses with small stone/ore cores in ant country, and the rocky gorge's stone with common veins + a
+few deep rares — a taste of the underground rows below (the full ore economy lives in the mining
+zones; see caves.md per-zone tables).
+
+## Craft brief (zone-craft skill; this pass: the south band + the gorge, 2026-07-06)
+- **The promise:** a gentle flower coast that HUMS — the zone where you learn bees, while the
+  ground itself starts whispering about what lives below.
+- **Region jobs:** sea/beach = wild edge + curiosity rewards · Gullwash inlet = working harbor ·
+  Maren's farm = the teaching workplace · east meadows = the nectar engine · north woods +
+  glade/hollow = discovery band framing the north route · Dragonfly Lake = quiet recreation ·
+  stream + gorge = the mining tease · ANT COUNTRY (south) = the transition + first digging ·
+  the road web = the spine.
+- **Landmarks:** 12 named (see Landmarks above) — floor is 3.
+- **Content brainstorm (this pass, ≥25 across 6 categories):**
+  *activity/work:* prospector's dig at the gorge (ore_pile, crate, a leaning signpost claim),
+  shovel-test pits in the dirt masses (1-cell gaps), a stake line? (cut — reads as fence);
+  *people & wear:* a worn scratch of path toward the richest mass, the claim sign's text,
+  scattered spilled blocks (the apron doing its job);
+  *nature:* ant mounds crowding the mass feet, mounds in a ring (a young colony), dry tall_grass
+  drifts between masses, sparse dandelion on dirt;
+  *ground/water:* dirt-block masses (5-6, varied sizes), stone cores, painted-dirt lanes, gravelly
+  stone_floor lips at the gorge, the stream cutting the gorge rock;
+  *loot/extraction:* commons veins in every mass (coal/copper), iron in the bigger cores, ONE
+  short deep rare per the doctrine (silver in ant country's largest core; silver+gold+ruby as
+  doctrine rares in the gorge), honey nowhere near — the contrast IS the point;
+  *whimsy:* a mound pushed up THROUGH the old picnic spot? (cut — beach is far), an ant_mound
+  right beside the warning sign (the sign is losing the argument), one message_bottle worth of
+  weird: a buried boot? (no entity — cut; keep the sign gag).
+  → CHOSEN: masses+cores+veins, mounds at feet + one ring, the prospector story at the gorge,
+  test pits, dirt lanes, the sign-vs-mound gag.
+- **Micro-stories (≥2):** (1) someone staked a claim at the gorge and left in a hurry — ore_pile,
+  a crate, a claim sign ("CLAIM — J. Halloway. Back by spring."); (2) the warning sign at ant
+  country with a fresh mound erupting right beside its post — the ground is winning.
+- **Ground-variety plan (≥3):** dirt_block masses / stone_block+ore cores / painted-dirt aprons
+  + lanes / stone_floor gorge lips — over the existing grass/sand/forest-floor base.
+- **Edges:** unchanged contracts (E road y=124 + stream y≈76 to the village; W sea; N corridor
+  toward Meadow (1,0); S = ant country foreshadowing Ant Colony (3,0) below).
+- **The deliberate rule-bend (C6):** the prospector's gear is deliberately UNTIDY — rows are for
+  working places; this one was ABANDONED in a hurry, and the disorder is the story.
+- **Owner questions:** (1) surface ants as a real species (sprites exist) — queue as its own
+  gated slice? (2) when Ant Colony (3,0) is built, does the transition get a real entrance
+  occupant (a collapsed burrow) here?
 
 ## Biome composition (for the generator)
 Base grass; west edge = water_deep sea strip (width varying by noise) + SAND beach band with cove
