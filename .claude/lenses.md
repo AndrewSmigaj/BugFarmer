@@ -104,6 +104,31 @@ keep on this codebase (each caught a real, shipped-would-have-bitten issue).
   does it degrade sanely instead of breaking or spinning? (No-carrion ant colony goes dormant + re-founds
   (nest-recovery precedent); orphaned forager drops its load (homing timeout); web-destroyed spider re-spins.)
 
+## Zone & scene lenses (world craft, not code — run against RENDERED PIXELS, crop in hand)
+Used by the `zone-craft` skill's review step. Answer each against actual renders/crops at game
+zoom, not the plan or the source; report PASS / RISK / BROKEN with the crop that shows it. If
+all of them PASS on a FIRST build, the questions were asked too softly — tighten and re-run.
+
+- ★ **Local** — Does daily life physically work here: doors face what people use, paths connect
+  the chores, every workplace has its tools and its wear? (Earned: "doors face context, not
+  compass south" + Gullwash Landing's split-shore homes both opening onto the water.)
+- ★ **Cartographer** — Does the whole map READ at full zoom: natural region shapes, water that
+  flows from somewhere to somewhere, every edge honoring its neighbor's contract? (Earned: the
+  fishing hamlet's "sea" was a landlocked lake — dead on the first route-walk question.)
+- ★ **Miner / Economist** — Is there something to extract or harvest per region, does it match
+  the zone's difficulty tier, and does its distribution follow the caves.md doctrine (veins,
+  bands, measured density)? (Earned: the gorge's hand-set silver/gold line, owner-caught.)
+- **Traveler** — Arriving at any edge and walking the main route, is there a visible reason to
+  keep going within ~30 seconds — a landmark, a fork, a tease — at every decision point?
+- **Kid** — Is there something to poke, break, collect, chase, or giggle at on every screen —
+  not just scenery to look at?
+- **Storyteller** — Can you narrate ≥3 micro-stories from placement ALONE (the wreck, the
+  abandoned sandcastle, the laundry behind the cottage)? What happened here before the player?
+- **Ecologist** — Can every species that spawns here actually LIVE here: food, breeding
+  habitat, shelter, refugia — geometrically, where they spawn? Does flora match the ground?
+- **New-Player-at-zoom** — Crop random gameplay-zoom screenfuls (~20×12 cells): is EVERY one of
+  them composed, or only the landmarks? The player lives at this zoom, not at the god view.
+
 ## Notes for automating this
 - A lens pass is cheap insurance before an expensive build/run. Run the high-value lenses (★) on any plan
   that touches sync, data formats, or the hot loop.

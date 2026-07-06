@@ -29,6 +29,13 @@ This guide collects the rules as we learn them; the first real forest zone will 
    effectively "starts" on first exploration — fine, and worth exploiting for pacing.
 5. **Content-update workflow:** chunk files are read at chunk-touch and never written
    back. Edit/regenerate → restart the server → walk there.
+6. **CLEARINGS, not hilltops** (owner, 2026-07-05: "we cant really show a hilltop with
+   overhead but we can make clearings"). Overhead can't do elevation; absence-in-density
+   is our focal-point tool. Give big stands deliberate clearings that ARE places — a
+   honey glade (flower ring + wild hive), a mushroom hollow (litter + fungus), a still
+   clearing with one oak — and when travellers pass through the forest band, keep a
+   generous open CORRIDOR so the woods frame the route rather than wall it
+   (bee_meadow_20's north stands are the worked example).
 
 ## Forest composition (absorbed from trees-and-ponds.md; what's primitive-backed)
 - **The RING is a NOISE MASK now** (`terrain.ring_mask` + `noise_field` — the old

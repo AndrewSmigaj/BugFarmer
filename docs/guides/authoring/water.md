@@ -40,6 +40,23 @@ with zero engine work. `scene_lakeside.place_boat_store` is the worked example: 
 building sits ON the shore (hug it — a dock that stops at the waterline was a real
 defect), the 2-wide deck runs out over the water, mooring posts/lantern/boat are
 deliberately water-anchored occupants (their `validate()` notes are expected).
+- **Docks BOARDWALK-ramp the land gap and STOP MID-WATER** (2026-07-05, bee_meadow_20:
+  a max_len-12 pier decked clean across the whole inlet — a pier that reaches the far
+  shore is a bridge, not a dock; and a deck starting at the waterline floats detached
+  when the shoreline wanders). `scene_fishing_docks._dock` is the hardened version:
+  pre-scans for water (refuses to build into grass), decks the land cells as the ramp,
+  ends mid-channel.
+
+## Coasts, harbors & tidelines (learned building bee_meadow_20)
+- **A harbor CONNECTS to the sea** (owner correction 2026-07-05: "the little lake with
+  the fishing buildings does not connect to the ocean"). Water that boats and fishing
+  imply must be PROVABLY continuous open water to the sea — verify IN TEXT (walk a
+  water-only line across the map), never by eyeball. A landlocked "bay" is a bug.
+- **Beach debris follows the WRACK LINE, never even spray**: flotsam (shells, driftwood,
+  starfish, the odd bottle) concentrates in the 2-3 sand cells nearest the water — the
+  way tides deposit — with only stray pieces above, and dune grass breaking the
+  sand→grass seam. `scene_beach_cove.dress_beach` is the primitive; even scatter reads
+  as confetti.
 
 ## Placement & the "used lake" rule (kept from trees-and-ponds)
 - 2-5 lakes/ponds per zone; vary radius, seed, shore material, AND treatment arcs.

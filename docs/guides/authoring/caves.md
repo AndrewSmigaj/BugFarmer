@@ -75,6 +75,17 @@ block. *(History: `hard_stone_block` was removed — a flat sprite AND a redunda
   ore-distribution probe in the zone work computes per-band % + a BFS dist-to-ore histogram; re-run it after
   any ore change. Long dead runs (p90 > ~10) = players quit.
 - **Dirt pockets**: soft clustered patches (easy to mine), more common near the top/entrance.
+- **The doctrine applies to SURFACE rock too — never hand-set ores, even "special" rares**
+  (owner correction 2026-07-06, bee_meadow_20's gorge: "we have ore placement guides, you don't
+  need to spread them out in such a linear fashion" — a hand-placed silver/gold/ruby line and a
+  stepped row of bank stones both read as authored, not geological). Surface masses
+  (`terrain.rock_mass`) take vein specs like `fill_solid`; texture banks with the mass's own
+  apron/spill, not hand steps.
+- **"Dirt areas" means DIRT-BLOCK MASSES, not painted ground** (owner correction 2026-07-06:
+  "dirt areas actually mean dirt blocks"). A dirt AREA a player meets on the surface is a
+  mineable body — `dirt_block` shell (shovel) around a `stone_block`/ore core (pickaxe) — with
+  painted dirt only as the apron/lanes between masses. Terrain that only looks diggable but
+  isn't is a broken promise.
 
 ### Per-zone ore table — `underground_passages_31` (beginning mining zone)
 Each zone has its OWN table; read it, don't guess. `clay` is **by design only in some zones, NOT here.**
