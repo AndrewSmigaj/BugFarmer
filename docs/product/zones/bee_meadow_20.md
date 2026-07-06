@@ -33,16 +33,25 @@
 - **Pests/predators:** wasps (2 nests at the forest edges — the raiders, GDD 9.2); dragonflies over
   the water hunting the wasps (the counterweight); NO centipedes (this is the EASY zone).
 - **Ambience:** fireflies drifting along the stream (amber glow at dusk), flies/millipedes/beetles low.
+- **Future — ants forage in from the SOUTH** (owner, 2026-07-06: "the ants will be coming from
+  the south, they mostly collect dead bugs and food"): the gradient band stays walkable
+  (lanes between the masses/woods), and the south-meadow WILD FRUIT pair (≈(100,44)) drops
+  windfalls near the band — carrion + food on their path without any ant content in-zone.
+- **Wild fruit clumps** (2026-07-06): corridor apple+cherry (≈150,212), road-fork plum pair
+  (≈129,129), south-meadow orange+apple (≈102,43) — blossom forage for bees, windfalls for
+  flies/ants, snacks for travelers.
 
 ## Landmarks & little features
 1. **The spring pondlet (NW)** — where the stream rises; reeds, fireflies.
 2. **The coves** — the west beach bitten into arcs, dressed with a WRACK LINE (shells, driftwood,
-   starfish, the odd message bottle concentrated along the tideline) and dune grass at the seam;
-   one tiny unreachable ISLAND offshore with a message bottle you can see but not reach.
-3. **The SHIPWRECK (mid-coast cove, y≈141)** — a broken hull half-buried at the waterline,
-   driftwood strewn around it; striped buoys float off the cove mouths.
-4. **The picnic spot (north beach, y≈206)** — a beach parasol, a bench, someone's shell pile;
-   a sandcastle further down the sand.
+   starfish, the odd message bottle concentrated along the tideline), a 2-3-cell DUNE BELT with
+   wind-blown sand hummocks, sandstone HEADLAND rock on the convex points between coves, and a
+   TIDE POOL (y≈199) cupped in the dry sand; one tiny unreachable palm ISLAND offshore (organic
+   two-blob shape) with a message bottle you can see but not reach.
+3. **The SHIPWRECK (mid-coast cove, y≈141)** — a broken hull at the waterline beside THE ROCK
+   SHE STRUCK (a sandstone head), her cargo raked down-tide: crates, barrels, broken timbers.
+4. **The picnic spot (north beach, y≈206)** — a beach parasol, a bench, someone's shell pile,
+   last night's campfire ring with a log seat; a sandcastle further down the sand.
 5. **Dragonfly Lake (south-center)** — sand shore, reeds, lily pads, a stub pier + boat.
 6. **The quiet bench (NE pond)** — facing the water, under the evening fireflies.
 7. **The wild hive trees** — wild bee hives in flower-adjacent tree clumps (plus one hanging in
@@ -55,28 +64,43 @@
     pressed against its banks: doctrine ore veins (commons + short deep silver/gold/ruby runs
     in the cores), and J. Halloway's abandoned CLAIM huddled at the north mass's foot
     ("Back by spring").
-11. **THE SOUTH GRADIENT (the south band)** — the meadow dirties and roughens toward the
-    south edge on a continuous gradient (grass → speckle → dirt → rocky), with mineable
-    dirt-block masses (shovel shells → stone cores → common veins, one short deep rare)
-    embedded in the dirtiest third. No ants, no dig narrative — the band is pure terrain
-    foreshadowing of the underground zone below (C12). *(Supersedes the built "ANT COUNTRY /
-    OLD DIG" set-piece — builder invention, owner-corrected 2026-07-06; rebuild pending.)*
+11. **THE SOUTH GRADIENT (the south band)** — REBUILT 2026-07-06 per the owner correction:
+    a noise-warped gradient (grass → speckle flecks → dirt tongues → near-solid dirt with
+    stone-grit mottling; the frontier meanders ±7 cells, never a level line), five mineable
+    dirt-block masses embedded in the dirtiest part (size-varied ~6:1, one overlapping
+    cluster; shovel shells → ragged stone cores → doctrine veins at a measured 10-22%;
+    iron + the ONE deep silver in the anchor), torn-ground rubble flecks, dry flora
+    (tall-grass drifts, dead bushes, tumbleweed, two skeletal trees), and PATCHY WOODS
+    with real clearings holding the band's east (village forest recipe + lone-tree fray).
+    No ants, no dig narrative (C12).
+12. **THE WAYSTONE (road entrance, ≈(243,118))** — the approach landmark: an old standing
+    stone on the last rise, a bench, flowers let grow around it.
+13. **THE HUMMING OAK (roadside, ≈(206,118))** — two oaks over a wild hive in deep grass
+    just north of the road: the mid-route beat you hear before you see.
 
 ## Named places (on the signs)
 **Gullwash Landing** (the split-shore fishing hamlet on the inlet) · **Dragonfly Lake** ·
 **Maren's Bee Farm**. Junction signs carry directions; the entrance sign names the zone.
 
 ## Structures / NPCs
-- **Maren's bee farm (center-west, south of the stream):** 3-room cottage, fenced APIARY (the four
-  hive tiers in a row + honey extractor + wine rack + clutter), flower-garden ring, signpost.
-  **Maren (Beekeeper NPC, shop):** sells beehive_basic / smoker / bee_suit / calm_spray; buys
-  honey / honeycomb / beeswax. The zone's economy anchor (D10).
+- **Maren's bee farm (center-west, south of the stream):** 3-room cottage, fenced APIARY — the
+  hive-tier row on its dirt working strip, the extraction line (extractor → table → shelf →
+  rack), THREE planted bed rows (two common + a premium lavender/chamomile row), the
+  INTERRUPTED INSPECTION vignette (a hive out of the row, stool + open frame crate beside it),
+  compost bin + pile with its barrow trace, bee waterer — and honey crates STAGED on the lane
+  where it leaves the cottage, waiting for the village cart. Wild hive in an oak just OUTSIDE
+  the fence. **Maren (Beekeeper NPC, shop):** sells beehive_basic / smoker / bee_suit /
+  calm_spray; buys honey / honeycomb / beeswax. The zone's economy anchor (D10).
 - **Gullwash Landing (the SW inlet):** a SPLIT-SHORE hamlet on a true arm of the sea (open water
-  from the docks past the fairway buoys — the old landlocked bay was a bug). One home on each
-  shore, DOORS FACING THE WATER (the south home uses the north-door cottage plan); a dock off
-  each shore, a plank footbridge over the east narrows, the catch and gear split between the two
-  quays (drying racks, crate line, nets, lobster pots), laundry + a shared fire behind. No NPC
-  yet (fishing stays backlogged — the village fisherman already says "Fishing's coming").
+  from the docks past the fairway buoys; the banks carry independent noise and the mouth flares —
+  never a mirrored pipe). One home on each shore, DOORS FACING THE WATER (the south home uses
+  the north-door cottage plan); a dock off each shore, a plank footbridge over the east narrows,
+  the catch and gear split between the two quays (drying racks, crate line, nets, lobster pots).
+  The DOMESTIC layer (2026-07-06): worn shore lanes linking each quay to the footbridge, the
+  fisher's log pile + chopping stump inland of his cottage, the south home's berry-row kitchen
+  garden below its laundry line, the shared WELL, and log seats pulled up to the fire — the
+  hamlet's commons. No NPC yet (fishing stays backlogged — the village fisherman already says
+  "Fishing's coming").
 
 ## Materials / loot
 Flowers (cut), honeycomb (wild hives, breakable), seashells (piles), driftwood → wood, wild berries,

@@ -298,11 +298,20 @@ to zone authoring") — built and VALIDATED by a live run, all phases committed 
   dirt wall" — C12). Postmortem: adopted research rules had no code mechanism behind them
   (the same blob-stamp rock_mass reused ×7); the lens pass was self-graded; brief promises
   were met in comments, not pixels ("aprons = the lanes"). → C12/C13 + agent memory.
-- **→ NOW (on owner go): rebuild the south band as the GRADIENT** — noise-driven dirt/speckle/
-  rock density rising southward, masses clustered + size-varied inside the dirtiest third,
-  block-fill jitter (no row-banding), falloff rings on every feature, ALL ant content stripped;
-  graded by a cold agent against village_21_B reference crops. (Ore-tier shape-readability
-  sprite pass still queued from the research.)
+- **→ DONE (2026-07-06, the deep-rework session):** south band rebuilt as the gradient
+  (gradient_field primitive: warp-meandered frontier, embedded size-varied masses, rubble,
+  patchy east woods) · all three scenes OVERHAULED 2-3 real iterations each (beach: backshore/
+  dune belt/headlands/wreck debris field/tide pool; hamlet: organic asymmetric inlet + the
+  domestic layer — well, berry garden, log pile, shore lanes, commons seats; apiary: premium
+  bed row, interrupted-inspection vignette, staged stock, compost line) · 3 zone iterations
+  (wild fruit clumps, the Waystone, the Humming Oak, drifts) · then a COLD grading agent
+  (village_21_B as the bar) found 4 BROKENs the builder's own pass had passed — road runway →
+  waypointed+worn, meadow void → 33 flower/clover/grass drifts, "gorge" pads → bank lips +
+  rim boulders + scree, checker stream → widened+reeded — all fixed + re-verified in crops.
+  Gates: lint 0/0, save, smoke, crosszone both ways PASS. Primitives grown: gradient_field,
+  rock_mass gap/core-noise, coherent forest floors, backshore. roads.md gains the WAYPOINT
+  rule; gallery pairs 6-7 rewritten (the OLD DIG kept as a caution). (Ore-tier
+  shape-readability sprite pass still queued from the research.)
 
 ## Done 2026-07-05 — THE BEEKEEPING MILESTONE (persistence + calming foundations, bees, Bee Meadow)
 Six gated phases, each committed green (full record: `docs/product/economy/DECISIONS.md` D31; systems:

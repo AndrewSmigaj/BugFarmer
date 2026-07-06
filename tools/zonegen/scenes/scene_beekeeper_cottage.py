@@ -71,13 +71,37 @@ def place_bee_farm(b, ox, oy):
     b.place_occupant("lamp_post", ax0 + 11, ay0 + 2)
 
     # CULTIVATED flower beds IN ROWS (human-made = rows; the kept nectar garden): two packed
-    # rows north of the hive strip — contiguous alternating blooms so they READ as planted
-    # beds at zoom, not scatter.
+    # common rows + a PREMIUM row (lavender/chamomile — the fancy honey) north of the hive
+    # strip — contiguous alternating blooms so they READ as planted beds at zoom, not scatter.
     bed = ["flower_red", "flower_yellow", "flower_blue"]
     for r, y in enumerate((ay0 + 10, ay0 + 12)):
-        for i, x in enumerate(range(ax0 + 8, ax0 + 22)):
+        for i, x in enumerate(range(ax0 + 6, ax0 + 23)):
             if b.is_free(x, y):
                 b.place_occupant(bed[(i + r) % len(bed)], x, y)
+    prem = ["lavender", "chamomile"]
+    for i, x in enumerate(range(ax0 + 6, ax0 + 19)):
+        if b.is_free(x, ay0 + 14):
+            b.place_occupant(prem[i % 2], x, ay0 + 14)
+
+    # THE INTERRUPTED INSPECTION (the one frozen mid-task vignette every workplace gets):
+    # a hive pulled from the row onto the open grass, the keeper's stool beside it, the
+    # open frame crate waiting — she'll be back in a minute.
+    for vx, vy in [(ax0 + 20, ay0 + 15), (ax0 + 19, ay0 + 16), (ax0 + 21, ay0 + 14)]:
+        if b.is_free(vx, vy) and b.is_free(vx + 1, vy) and b.is_free(vx + 1, vy + 1):
+            b.place_occupant("beehive_basic", vx, vy)
+            b.place_occupant("stool_wood", vx + 1, vy + 1)
+            if b.is_free(vx - 1, vy + 1):
+                b.place_occupant("crate", vx - 1, vy + 1)
+            break
+    # The compost trace: the barrow line from the strip's east end to the bin.
+    for y in range(ay0 + 8, ay1 - 3):
+        x = ax1 - 3 + (0 if y % 3 else -1)
+        if b.in_bounds(x, y) and b.is_free(x, y) and b.surface[y][x] == "grass":
+            b.set_ground(x, y, "dirt")
+    # compost_pile is 2x2 — quad-check up-fence so it can't clip the fence row.
+    if all(b.in_bounds(ax1 - 5 + qx, ay1 - 4 + qy) and b.is_free(ax1 - 5 + qx, ay1 - 4 + qy)
+           and not b.reserved[ay1 - 4 + qy][ax1 - 5 + qx] for qx in (0, 1) for qy in (0, 1)):
+        b.place_occupant("compost_pile", ax1 - 5, ay1 - 4)
 
     # Maren (the SHOP vendor occupant) works beside the gate; sign + bench out front.
     b.place_occupant("beekeeper", ax0 + 15, ay0 + 1)
@@ -88,6 +112,13 @@ def place_bee_farm(b, ox, oy):
     for tx, ty, t in [(ox + 19, oy + 30, "tree_cherry"), (ox + 21, oy + 25, "tree_apple")]:
         if b.is_free(tx, ty):
             b.place_occupant(t, tx, ty)
+    # Shop stock STAGED where the keeper's lane leaves the cottage — honey crates
+    # waiting for the village cart, the rain barrel beside them (the yard fence owns
+    # the wall cells, so the stock sits on the lane's shoulder instead).
+    for sx, sy, oid in [(ox + 14, oy + 18, "crate"), (ox + 15, oy + 18, "crate"),
+                        (ox + 14, oy + 17, "crate"), (ox + 16, oy + 18, "barrel")]:
+        if b.in_bounds(sx, sy) and b.is_free(sx, sy) and b.surface[sy][sx] == "grass":
+            b.place_occupant(oid, sx, sy)
 
     # THE WILD CONTRAST: a wild hive hanging in an oak just OUTSIDE the north-east fence —
     # the kept boxes inside, the free colony without.

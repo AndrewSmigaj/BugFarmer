@@ -125,6 +125,49 @@ def place_fishing_hamlet(b, ox, n_shore_y, s_shore_y):
     if b.is_free(ox + 8, n_shore_y + 1):
         b.place_occupant("driftwood", ox + 8, n_shore_y + 1)
 
+    # THE DOMESTIC LAYER (settlements research §3: every home answers "how does this
+    # household eat?", and the props sit BETWEEN the door and the work source).
+    # North household (the fisher): firewood work — log pile + chopping stump on the
+    # inland side of the cottage, where the wood comes FROM.
+    for wx, wy in [(ox - 2, n_shore_y + 10), (ox - 1, n_shore_y + 12), (ox + 21, n_shore_y + 9)]:
+        if b.in_bounds(wx, wy) and b.is_free(wx, wy) and b.surface[wy][wx] == "grass" \
+           and b.in_bounds(wx + 1, wy) and b.is_free(wx + 1, wy):
+            b.place_occupant("log_pile", wx, wy)
+            if b.is_free(wx + 1, wy + 1) and b.surface[wy + 1][wx + 1] == "grass":
+                b.place_occupant("stump", wx + 1, wy + 1)
+            break
+    # South household: the kitchen garden — berry ROWS beside the house's east wall
+    # (planted, not wild; below the laundry so the yard reads as one worked strip).
+    # Anchored INSIDE the house's rows so it can't fall off a small scene canvas
+    # (the first version sat at s_shore_y-15 = off-grid here and vanished silently).
+    for i in range(4):
+        gx = ox + 19 + (i % 2) * 2
+        gyy = s_shore_y - 11 - (i // 2) * 2
+        if b.in_bounds(gx, gyy) and b.is_free(gx, gyy) and b.surface[gyy][gx] == "grass":
+            b.place_occupant("wild_berry_bush", gx, gyy)
+    for wx, wy in [(ox + 16, s_shore_y - 5), (ox + 18, s_shore_y - 6), (ox + 15, s_shore_y - 7)]:
+        if b.in_bounds(wx, wy) and b.is_free(wx, wy) and b.surface[wy][wx] == "grass" \
+           and all(b.is_free(wx + qx, wy + qy) for qx in (0, 1) for qy in (0, 1)
+                   if b.in_bounds(wx + qx, wy + qy)):
+            b.place_occupant("well", wx, wy)
+            break
+    # The COMMONS made sittable (settlements §2: fire + seats = the hamlet's evening):
+    # two log seats pulled up to the campfire on the north quay.
+    for sx, sy in [(ox + 23, n_shore_y + 3), (ox + 25, n_shore_y + 1), (ox + 23, n_shore_y + 1)]:
+        if b.in_bounds(sx, sy) and b.is_free(sx, sy) and b.surface[sy][sx] == "grass":
+            b.place_occupant("log_seat", sx, sy)
+    # Shore lanes: each quay's worn trace continues to the footbridge foot — the two
+    # shores are one hamlet's street, not two dead ends. Painted cell-by-cell on FREE
+    # grass only, weaving around the gear (a real footpath dodges the crates; a ruled
+    # path() through a prop row just threads them).
+    for y_base, step in ((n_shore_y + 1, 1), (s_shore_y - 1, -1)):
+        for x in range(ox + 13, ox + 26):
+            for yy in (y_base, y_base + step):
+                if b.in_bounds(x, yy) and b.surface[yy][x] == "grass" \
+                   and b.ground[yy][x] == "grass" and b.is_free(x, yy):
+                    b.set_ground(x, yy, "dirt")
+                    break
+
     # LIVING DRESSING (render-only): dragonflies hawking over the inlet.
     b.place_bug("dragonfly", ox + 8.0, (n_shore_y + s_shore_y) / 2.0, scale=1.2)
     b.place_bug("dragonfly", ox + 30.0, (n_shore_y + s_shore_y) / 2.0 + 2, scale=1.0)
@@ -151,22 +194,64 @@ SCALE = 5
 
 def build():
     b = ZoneBuilder("scene_fishing_docks", 52, 56, base_tile="grass", name="Fishing hamlet", biome="coast")
-    # The INLET: a deterministic east-west arm of the sea off the west edge (the zone carves
-    # the real thing through its sand bar) — gently wobbled banks, deep core, sand rims.
+    # The INLET: an arm of the sea done the way water actually sits in land (the old
+    # version was a sine PIPE — read as stacked rectangles). Coasts research §2: banks
+    # are ASYMMETRIC (each gets its own noise), the MOUTH flares open at the sea end,
+    # the head narrows and goes still (mud + reeds, §5: mud only where the energy stops).
     import math
+    from features.terrain import _vnoise
+    nb_n = _vnoise(91)   # north bank wander
+    nb_s = _vnoise(92)   # south bank wander (independent — never a mirrored channel)
     for x in range(0, 41):
-        cy = 22 + int(round(1.5 * math.sin(x / 6.0)))
-        half = 5 if x < 30 else max(2, 5 - (x - 30) // 3)   # narrows toward the east end
-        for y in range(cy - half - 1, cy + half + 2):
+        cy = 22 + 2.2 * math.sin(x / 9.0 + 1.3) + (nb_n(x * 0.11, 3.0) - 0.5) * 3.0
+        base = 5.0 * (1.0 - max(0, x - 28) / 18.0)          # narrowing toward the head
+        base += max(0, 8 - x) * 0.45                        # the mouth FLARES at the sea
+        h_n = base + (nb_n(x * 0.13, 0.0) - 0.5) * 3.2
+        h_s = base + (nb_s(x * 0.13, 0.0) - 0.5) * 3.2
+        if h_n + h_s < 2.0:                                 # the head pinches out
+            break
+        for y in range(int(cy - h_s - 2), int(cy + h_n + 3)):
             if not b.in_bounds(x, y):
                 continue
-            d = abs(y - cy)
-            if d <= half:
-                deep = d <= half - 2 and x < 34
+            dy = y - cy
+            inside = (-h_s <= dy <= h_n)
+            if inside:
+                depth = min(h_n - dy, dy + h_s)
+                deep = depth > 1.8 and x < 32
                 b.set_ground(x, y, "water_deep" if deep else "water_shallow", surface="water")
                 b.reserve(x, y, surface="water")
-            elif b.surface[y][x] == "grass":
+            elif b.surface[y][x] == "grass" and (-h_s - 1.6 <= dy <= h_n + 1.6):
                 b.set_ground(x, y, "sand")
+    # The still HEAD: mud FLATS in the last shallows — three coherent banks, not a
+    # per-cell checker — east of the footbridge line (x>=34; mud under the bridge
+    # punched plank holes), reeds crowding the rims.
+    rngh = random.Random(93)
+    shallows = [(x, y) for y in range(14, 30) for x in range(34, 41)
+                if b.in_bounds(x, y) and b.ground[y][x] == "water_shallow"]
+    for _ in range(3):
+        if not shallows:
+            break
+        sx, sy = shallows[rngh.randrange(len(shallows))]
+        for (mx, my) in [(sx, sy), (sx + 1, sy), (sx, sy + 1), (sx - 1, sy), (sx, sy - 1),
+                         (sx + 1, sy + 1)]:
+            if b.in_bounds(mx, my) and b.ground[my][mx] == "water_shallow" \
+               and rngh.random() < 0.8:
+                b.set_ground(mx, my, "mud", surface="grass")
+                b.reserved[my][mx] = False
+                if (mx, my) in shallows:
+                    shallows.remove((mx, my))
+    for y in range(13, 31):
+        for x in range(33, 42):
+            if b.in_bounds(x, y) and b.ground[y][x] == "sand" and rngh.random() < 0.3:
+                b.reserved[y][x] = False
+                if b.is_free(x, y):
+                    b.place_occupant("reeds", x, y)
+    # East meadow floor — no screen of pure void beyond the head.
+    for y in range(1, b.H - 1):
+        for x in range(42, b.W - 1):
+            if b.surface[y][x] == "grass" and b.is_free(x, y) and rngh.random() < 0.012:
+                b.place_occupant(rngh.choice(["tall_grass", "flower_wild", "dandelion", "bush"]),
+                                 x, y)
     place_fishing_hamlet(b, 6, 30, 14)
     b.spawn = [28, 34]
     return b

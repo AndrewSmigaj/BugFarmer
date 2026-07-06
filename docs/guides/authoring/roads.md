@@ -62,6 +62,14 @@ vpath(b, x, y0, y1, tile="stone_path")     # one column
 ## Design rules (avoid the stamped grid)
 - **Don't use dead-straight `hpath`/`vpath` for main roads** — a perfect cross reads as a tech demo.
   Use `path` with a little `wobble` and `taper_ends`.
+- **WAYPOINT any segment longer than ~40 cells** (cold-grade finding, 2026-07-06, bee_meadow —
+  the grader's words: "a ~145-cell dead-straight runway... a 90-cell perfectly vertical brown
+  stripe. That is literally a line drawn with a ruler"): `path()`'s goal-pull flattens wobble
+  over distance, so one long call ALWAYS irons out straight. Break the route into 25-40-cell
+  legs through offset waypoints (drift the intermediate points ±3-6 cells off the axis), keep
+  only the last few cells at a zone-edge CONTRACT row dead true, and finish with an edge-wear
+  pass (dirt treads bled one cell off the band at ~15%) so the edges aren't knife-cut. A road
+  that bends also fixes the Traveler lens for free: bends make sightlines, sightlines promise.
 - **Degrade outward:** stone (`stone_path`) in the core → `dirt` shoulders via `edge_tile` → let the
   ends taper and fade into trampled grass at the zone margins. (See the Village zone's road rules.)
 - **Connect logically, not symmetrically:** route roads between the things that matter (gates, the

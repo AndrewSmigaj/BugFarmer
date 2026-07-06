@@ -53,10 +53,27 @@ ring (the research invitation rule), Halloway's claim clustered as ONE campsite.
 **Principles (C2, C3):** ore is only veins, measured with the probe; a micro-story's props
 huddle — scattered props read as litter.
 
-## 6. Ant country: painted tint → mineable places
-**After only:** [antcountry_after.jpg](references/antcountry_after.jpg) — THE OLD DIG: seven
-dirt-block masses (shovel shell → stone core → veins), four ringing the abandoned dig, mounds
-at the mass feet, the prospector's scratch leading in, the warning sign losing its argument
-to a fresh mound. (The "before" was painted dirt tint — see pair 1's mid-state south band.)
-**Principle (C2):** terrain that looks diggable must BE diggable; the transition band is a
-PLACE, not a gradient.
+## 6. The south band: the invented set-piece → the owner's gradient
+**Before (a CAUTION, not a win):** [antcountry_after.jpg](references/antcountry_after.jpg) —
+"THE OLD DIG": seven same-size discs in a row, mounds, a dig-site story. Built with craft,
+REJECTED by the owner — the whole ant framing was builder invention from one sentence
+("there is no ant colony in the zone"), and the discs-on-lawn read drew "just sudden
+changes no gradients, unatural geometry."
+**After:** [southband_after.jpg](references/southband_after.jpg) — the owner's actual design:
+a noise-warped material GRADIENT (grass → speckle → dirt tongues → rocky grit; the frontier
+meanders, never a level line), five size-varied masses EMBEDDED in the field (one overlapping
+cluster, ragged stone hearts, weathering gaps), torn-ground rubble, dry flora, patchy woods
+with real clearings holding the east.
+**Principles (C12, C13):** a neighbor transition is a gradient of MATERIALS, never the
+neighbor's content built early; blobs stamped N times read as polka dots — vary size,
+cluster, embed, and let a field carry them.
+
+## 7. The whole zone after the cold grade
+**After:** [zone_after.jpg](references/zone_after.jpg) — the zone once a COLD grading agent
+(with village_21_B as the reference bar) drove the last pass: waypointed roads with worn
+edges instead of a 145-cell runway, flower/clover/tall-grass DRIFTS on nearly every open
+screen, the gorge told in materials (bank lips, gap-toothed rim boulders, scree), coherent
+forest floors, stream banks alive with reeds.
+**Principle:** never self-grade a lens pass — the taste being calibrated can't certify
+itself. A cold agent with a reference zone found four BROKENs the builder's own pass called
+fine.

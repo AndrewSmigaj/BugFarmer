@@ -25,16 +25,20 @@ def _water(b, x, y, deep=True):
 
 
 def sea_edge(b, *, water_w=10, sand_w=6, coves=((0.30, 9), (0.62, 7), (0.85, 11)), island=(0.47, 4),
-             seed=7):
+             seed=7, headlands=True):
     """Carve the WEST edge of `b` into a sea: a deep strip (width `water_w` ± noise per row, shallow
     lip on its east edge), a SAND band, cove BITES (fraction-of-H center, extra-reach pairs) where the
-    water arcs further inland, and one offshore sand ISLAND. Returns the per-row beach x (the first
+    water arcs further inland, and one offshore sand ISLAND. Between coves the coast does what real
+    coasts do (coasts research §1: material follows convexity): the sand PINCHES thin on the convex
+    stretch and ROCK stands on it — sandstone headlands. Returns the per-row beach x (the first
     grass column) so callers keep buildings east of it."""
     rng = random.Random(seed)
     H, W = b.H, b.W
     # Low-frequency wobble of the waterline (never a straight rule).
     phase, phase2 = rng.uniform(0, 6.28), rng.uniform(0, 6.28)
     beach_x = [0] * H
+    cove_ys = sorted(int(frac * H) for frac, _ in coves)
+    head_ys = [(a + c) // 2 for a, c in zip(cove_ys, cove_ys[1:])] if headlands else []
     for y in range(H):
         wob = 2.0 * math.sin(y / 17.0 + phase) + 1.2 * math.sin(y / 7.0 + phase2)
         ww = max(4, int(water_w + wob))
@@ -46,27 +50,53 @@ def sea_edge(b, *, water_w=10, sand_w=6, coves=((0.30, 9), (0.62, 7), (0.85, 11)
             if d < half:
                 ww += int(reach * math.cos(d / half * math.pi / 2))
         sw = max(3, int(sand_w + 1.5 * math.sin(y / 11.0 + phase2)))
+        for hy in head_ys:                       # the convex point: sand pinches to a lip
+            if abs(y - hy) < 4:
+                sw = max(2, sw - 2)
+        # The deep/shallow boundary gets its own per-row drift (cold-grade: a ruled
+        # vertical color line ran the length of a cove) — shoals, not a lane divider.
+        deep_lim = ww - 2 - (1 if rng.random() < 0.4 else 0) - (1 if rng.random() < 0.15 else 0)
         for x in range(0, min(ww, W)):
-            _water(b, x, y, deep=x < ww - 2)
+            _water(b, x, y, deep=x < deep_lim)
         for x in range(ww, min(ww + sw, W)):
             b.set_ground(x, y, "sand")
         beach_x[y] = ww + sw
-    # The island: a small sand blob offshore in open water (unreachable tease).
+    # Headland ROCK: sandstone formations shouldering the waterline on each convex
+    # stretch (2x2 — quad-checked), one or two per point, never in a cove's crescent.
+    for hy in head_ys:
+        put = 0
+        for dy in (0, -2, 2, -3, 3):
+            y = hy + dy
+            if not (0 <= y < H - 1) or put >= 2:
+                continue
+            x = beach_x[y] - min(3, sand_w)      # near the waterline, on sand
+            if all(b.in_bounds(x + qx, y + qy) and b.ground[y + qy][x + qx] == "sand"
+                   and b.is_free(x + qx, y + qy) for qx in (0, 1) for qy in (0, 1)):
+                b.place_occupant("sandstone_formation", x, y)
+                put += 1
+    # The island: TWO offset sand blobs (organic union, not a rasterized circle),
+    # a lone palm, and the driftwood that snags on any obstruction (coasts §5).
     if island:
         frac, r = island
         icx, icy = max(3, water_w // 2 - 1), int(frac * H)
-        for y in range(icy - r, icy + r + 1):
-            for x in range(max(0, icx - r), icx + r + 1):
+        blobs = [(icx, icy, r), (icx + rng.choice((-1, 1)) * max(2, r - 2),
+                                 icy + rng.choice((-2, 2)), max(2.0, r * 0.62))]
+        for y in range(icy - r - 3, icy + r + 4):
+            for x in range(max(0, icx - r - 3), icx + r + 4):
                 if not b.in_bounds(x, y):
                     continue
-                d = math.hypot(x - icx, y - icy)
-                if d <= r - 1.2:
+                d = min(math.hypot(x - bx, y - by) / br for bx, by, br in blobs)
+                if d <= 0.78:
                     b.set_ground(x, y, "sand")
                     b.reserved[y][x] = False
                     b.surface[y][x] = "grass"  # islands hold decor (driftwood), not spawns
-                elif d <= r:
+                elif d <= 1.0 and b.surface[y][x] == "water":
                     b.set_ground(x, y, "water_shallow", surface="water")
-        b.place_occupant("driftwood", icx - 1, icy)
+        # A windswept DEAD tree, not a palm (cold-grade: a palm on a temperate flower
+        # coast reads as an asset-pack drop) — the lone snag a storm left standing.
+        if b.is_free(icx + 1, icy - 1):
+            b.place_occupant("tree_dead", icx + 1, icy - 1)
+        b.place_occupant("driftwood", icx - 1, icy + 1)
     return beach_x
 
 
@@ -117,12 +147,21 @@ def dress_beach(b, beach_x, *, seed=8, density=0.05):
             elif not placed_castle and r < density * 0.5 and 0.3 * H < y < 0.7 * H:
                 b.place_occupant("sandcastle", x, y)
                 placed_castle = True
-        # Dune grass: clumps at the sand→grass seam.
-        if rng.random() < 0.30:
-            for x in (bx, bx + 1):
+        # The DUNE BELT: a real 2-3-cell deep band at the seam — dense marram-style
+        # grass with sand HUMMOCKS blowing through into the meadow (no hard sand→grass
+        # rule anywhere), a dead bush where the salt wind bites.
+        if rng.random() < 0.55:
+            for x in (bx, bx + 1, bx + 2):
                 if b.in_bounds(x, y) and b.surface[y][x] == "grass" and b.is_free(x, y) \
-                   and rng.random() < 0.7:
-                    b.place_occupant(rng.choice(["tall_grass", "tall_grass", "dandelion"]), x, y)
+                   and rng.random() < (0.7 if x <= bx + 1 else 0.35):
+                    b.place_occupant(rng.choice(["tall_grass", "tall_grass", "tall_grass",
+                                                 "dandelion", "dead_bush"]), x, y)
+        if rng.random() < 0.22:                     # wind-blown sand pockets in the grass
+            hx = bx + rng.randint(1, 3)
+            for dx in range(rng.randint(1, 2)):
+                if b.in_bounds(hx + dx, y) and b.surface[y][hx + dx] == "grass" \
+                   and b.ground[y][hx + dx] == "grass":
+                    b.set_ground(hx + dx, y, "sand")
     if not placed_castle:
         for y in range(H // 2, H - 2):
             x = beach_x[y] - 3
@@ -151,22 +190,44 @@ def _float_put(b, oid, x, y):
     return ok
 
 
-def place_beach_landmarks(b, beach_x, *, wreck_y=None, picnic_y=None, buoy_ys=(), bottle_island=None):
+def place_beach_landmarks(b, beach_x, *, wreck_y=None, picnic_y=None, buoy_ys=(), bottle_island=None,
+                          pool_y=None):
     """The coast's named little features (deterministic, never dice):
-    - a SHIPWRECK HULL half-buried at the waterline (wreck_y) with strewn driftwood;
-    - a PICNIC spot up on the dry sand (picnic_y): parasol + bench + a shell pile;
+    - the SHIPWRECK — not just a hull but a DEBRIS FIELD: spilled cargo (crates, a barrel)
+      and driftwood strewn down-tide of it, half its story in what scattered;
+    - a PICNIC spot up on the dry sand (picnic_y): parasol + bench + shell pile, and the
+      evening half — a campfire ring with a log seat a few steps off;
     - striped BUOYS floating off the cove mouths (buoy_ys);
-    - a message bottle on the tease ISLAND (bottle_island=(x,y)) — visible loot you can't reach."""
+    - a message bottle on the tease ISLAND (bottle_island=(x,y)) — visible loot you can't reach;
+    - a TIDE POOL (pool_y): still shallow water cupped in dry sand, life crowded on its rim."""
     if wreck_y is not None:
         wx, sand = _sand_run(b, wreck_y, beach_x[wreck_y])
         if wx is not None:
             for x in range(wx, wx + 4):
                 if b.is_free(x, wreck_y) and b.is_free(x + 1, wreck_y):
                     b.place_occupant("shipwreck_hull", x, wreck_y)
-                    for dx, dy in [(-2, 1), (3, -1), (1, 2)]:
-                        if b.in_bounds(x + dx, wreck_y + dy) and \
-                           b.ground[wreck_y + dy][x + dx] == "sand" and b.is_free(x + dx, wreck_y + dy):
-                            b.place_occupant("driftwood", x + dx, wreck_y + dy)
+                    # THE ROCK SHE STRUCK — a sandstone head at the hull's waterline
+                    # shoulder (the sprite alone reads as a rowboat; the rock plus the
+                    # timber field make it a WRECK). 2x2 on sand, quad-checked; water-
+                    # side cells are reserved sea, so the reef sits half-buried at the
+                    # tideline instead (verified in data: the sea-side variants never fit).
+                    for rdx, rdy in [(-2, -2), (2, -2), (-1, -3), (3, 2)]:
+                        rx_, ry_ = x + rdx, wreck_y + rdy
+                        if all(b.in_bounds(rx_ + qx, ry_ + qy)
+                               and b.ground[ry_ + qy][rx_ + qx] == "sand"
+                               and b.is_free(rx_ + qx, ry_ + qy) for qx in (0, 1) for qy in (0, 1)):
+                            b.place_occupant("sandstone_formation", rx_, ry_)
+                            break
+                    # The cargo spill, strewn DOWN-TIDE (south) of the hull the way the
+                    # current would rake it: crates then barrels then broken timbers.
+                    for oid, dx, dy in [("crate", -1, 1), ("crate", 1, 2), ("barrel", 3, 1),
+                                        ("barrel", -2, 3), ("driftwood", -2, 2), ("driftwood", 2, 3),
+                                        ("driftwood", 4, -1), ("driftwood", 0, 4),
+                                        ("seashell_pile", 0, 3),
+                                        ("starfish", -2, -1), ("starfish", 5, 2)]:
+                        tx, ty = x + dx, wreck_y + dy
+                        if b.in_bounds(tx, ty) and b.ground[ty][tx] == "sand" and b.is_free(tx, ty):
+                            b.place_occupant(oid, tx, ty)
                     break
     if picnic_y is not None:
         bx = beach_x[picnic_y]
@@ -181,6 +242,13 @@ def place_beach_landmarks(b, beach_x, *, wreck_y=None, picnic_y=None, buoy_ys=()
                 for sx, sy in [(x + 2, picnic_y + 1), (x + 3, picnic_y + 1)]:
                     if b.in_bounds(sx, sy) and b.ground[sy][sx] == "sand" and b.is_free(sx, sy):
                         b.place_occupant("starfish", sx, sy)
+                # The evening half: last night's fire ring, a log seat pulled up to it.
+                for fx, fy in [(x + 3, picnic_y + 3), (x + 2, picnic_y + 4), (x + 4, picnic_y + 2)]:
+                    if b.in_bounds(fx, fy) and b.ground[fy][fx] == "sand" \
+                       and b.is_free(fx, fy) and b.is_free(fx + 1, fy):
+                        b.place_occupant("campfire", fx, fy)
+                        b.place_occupant("log_seat", fx + 1, fy)
+                        break
                 break
     for by in buoy_ys:
         bx = beach_x[by]
@@ -191,6 +259,66 @@ def place_beach_landmarks(b, beach_x, *, wreck_y=None, picnic_y=None, buoy_ys=()
             if b.in_bounds(ix + dx, iy) and b.ground[iy][ix + dx] == "sand" and b.is_free(ix + dx, iy):
                 b.place_occupant("message_bottle", ix + dx, iy)
                 break
+    if pool_y is not None:
+        # Still water cupped in the sand — sealed from the sea by a full sand ring
+        # (coasts §5: mud/still water only where the energy stops). Searches nearby
+        # rows/offsets so dressing can't silently starve it out (a promised landmark
+        # that isn't in the pixels is a bug, not a shrug).
+        placed_pool = False
+        for ry in (pool_y, pool_y + 1, pool_y - 1, pool_y + 2, pool_y - 2, pool_y + 3):
+            if placed_pool or not (1 <= ry < b.H - 2):
+                continue
+            wx, sand = _sand_run(b, ry, beach_x[ry])
+            if wx is None or len(sand) < 5:
+                continue
+            for px in (wx + 3, wx + 2, wx + 4):
+                cells = [(px, ry), (px + 1, ry), (px, ry + 1)]
+                if all(b.in_bounds(cx, cy) and b.ground[cy][cx] == "sand" and b.is_free(cx, cy)
+                       for cx, cy in cells):
+                    for cx, cy in cells:
+                        b.set_ground(cx, cy, "water_shallow", surface="water")
+                        b.reserve(cx, cy, surface="water")
+                    for oid, ox, oy in [("starfish", px - 1, ry), ("seashell_pile", px + 2, ry + 1),
+                                        ("starfish", px + 1, ry - 1)]:
+                        if b.in_bounds(ox, oy) and b.ground[oy][ox] == "sand" and b.is_free(ox, oy):
+                            b.place_occupant(oid, ox, oy)
+                    placed_pool = True
+                    break
+
+
+def backshore(b, beach_x, *, path_y=None, seed=9, depth=None):
+    """The LAND half of a beach scene (a beach isn't a strip floating on a void): a worn
+    sandy footpath wandering in from the east to the seam, and the meadow's first
+    columns textured — the grass gets sparser decor the further from the salt.
+    `depth` caps how far inland the scrub reaches (pass ~10 when a ZONE calls this —
+    its meadows own the rest; None = dress to the scene's east edge)."""
+    rng = random.Random(seed)
+    H, W = b.H, b.W
+    if path_y is not None:
+        x = W - 1
+        y = path_y
+        while x > beach_x[y] + 1:
+            for cell in ((x, y), (x, y + 1)):
+                if b.in_bounds(*cell) and b.surface[cell[1]][cell[0]] == "grass" \
+                   and b.ground[cell[1]][cell[0]] in ("grass", "sand") and not b.reserved[cell[1]][cell[0]]:
+                    b.set_ground(cell[0], cell[1], "sand")     # sand-worn track, not a road
+            x -= 1
+            if rng.random() < 0.3:
+                y += rng.choice((-1, 1))
+                y = max(2, min(H - 3, y))
+    # Scrub: bushes/flowers thickening near the dune belt, thinning inland — and a
+    # sparse meadow floor beyond (no screen of pure void; a zone's own flower
+    # meadows take over past `depth`).
+    for y in range(1, H - 1):
+        row_lim = (beach_x[y] + depth) if depth is not None else (W - 1)
+        for x in range(beach_x[y] + 2, min(row_lim, W - 1)):
+            if b.surface[y][x] != "grass" or not b.is_free(x, y):
+                continue
+            fade = 1.0 - (x - beach_x[y]) / 12.0
+            p = 0.035 * fade if fade > 0.15 else 0.008
+            if rng.random() < p:
+                b.place_occupant(rng.choice(["tall_grass", "bush", "dandelion", "tall_grass",
+                                             "flower_wild"]), x, y)
 
 
 PREVIEW = "zones/bee_meadow_20/scenes"
@@ -202,12 +330,22 @@ def build():
     beach = sea_edge(b, water_w=11, sand_w=6, coves=((0.35, 8), (0.75, 10)), island=(0.55, 4), seed=7)
     dress_beach(b, beach, seed=8, density=0.06)
     place_beach_landmarks(b, beach, wreck_y=33, picnic_y=12, buoy_ys=(15, 33),
-                          bottle_island=(4, 24))
-    # A beached (working) boat on the far south stretch — away from the wreck, so the two
-    # tell different stories.
-    for x, y in [(beach[6] - 3, 6)]:
-        if b.is_free(x, y):
-            b.place_occupant("boat", x, y)
+                          bottle_island=(4, 24), pool_y=17)
+    backshore(b, beach, path_y=13, seed=9)
+    # A beached (working) boat on the far south stretch — away from the wreck, so the
+    # two tell different stories. Boat is 2x3: verify the WHOLE footprint on dry sand
+    # (a reserved corner cell silently sank the old placement — builder warning).
+    for y0 in (6, 7, 8, 5):
+        placed_boat = False
+        for x0 in range(beach[y0] - 3, beach[y0] + 2):
+            if all(b.in_bounds(x0 + fx, y0 + fy) and b.ground[y0 + fy][x0 + fx] == "sand"
+                   and b.is_free(x0 + fx, y0 + fy) and not b.reserved[y0 + fy][x0 + fx]
+                   for fx in (0, 1) for fy in (0, 1, 2)):
+                b.place_occupant("boat", x0, y0)
+                placed_boat = True
+                break
+        if placed_boat:
+            break
     b.spawn = [beach[22] + 4, 22]
     return b
 
