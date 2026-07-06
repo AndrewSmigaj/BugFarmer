@@ -190,8 +190,14 @@ A building is a **home or shop, not a single room**, wrapped in a [`property_yar
 - **Place buildings CLEAR of every road** — a building dropped on a road tile leaves the road running
   visibly *through* it. In a composed scene, keep each footprint+yard off the road columns/rows.
 - Compose the village from the `place_*` pieces: shops cluster at the square (commercial), homes line a
-  residential street (each fenced), one cottage per NPC. Doors face south onto a street; a short `connect`
-  path joins each door/gate to the road. (Side-facing doors are a TODO — grids currently put the door south.)
+  residential street (each fenced), one cottage per NPC. **Doors face CONTEXT, not compass south**
+  (owner correction 2026-07-05: "not all houses have to have doors on the bottom — it is awkward"): a
+  house opens toward whatever it lives on — the street, the quay, the lane, the water. A south shore's
+  home opens NORTH (see `scene_cottage.place_cottage_north` / the `COT_N` grid — a real second floor
+  plan, not a mirror; Gullwash Landing in bee_meadow_20 is the worked example: two homes facing each
+  other across the inlet). The house COMPOSER already takes `front=("room", side)` for any side.
+  A short `connect` path joins each door/gate to whatever it faces. These are GUIDELINES — vary
+  layouts to fit the place; sameness reads worse than any individual rule-break.
 
 ### Conventions the lint enforces — don't relearn these (each cost a correction)
 1. **Doors are 1 cell wide** (`door_square`, 16×24). The cell directly inside the door must be clear

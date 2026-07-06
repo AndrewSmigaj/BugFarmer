@@ -21,7 +21,7 @@ sys.path.insert(0, ZG)
 from zonebuilder import ZoneBuilder                                    # noqa: E402
 from render import render_builder                                      # noqa: E402
 from features.terrain import (stream, lake, pond, forest, path,        # noqa: E402
-                              smooth_paths, bridge, shore_dress)
+                              smooth_paths, bridge, shore_dress, rock_mass)
 from features.garden import flower_patch                               # noqa: E402
 from features.scatter import scatter                                   # noqa: E402
 from scene_beach_cove import sea_edge, dress_beach, place_beach_landmarks  # noqa: E402
@@ -54,9 +54,23 @@ def build():
     # north beach (y≈205); the tease island off the point between the first two.
     beach = sea_edge(b, water_w=11, sand_w=6,
                      coves=((0.25, 9), (0.55, 8), (0.80, 11)), island=(0.40, 4), seed=7)
-    # The HAMLET BAY: a lake blob merged into the SW cove so the water reaches inland far
-    # enough to float real docks (lake() flows into existing water).
-    lake(b, 34, 56, 13, seed=21, shore="sand", reeds=8)
+    # THE INLET (the hamlet's harbor): a TRUE arm of the sea — carved east from the SW cove
+    # through the sand bar, widening into a basin where the docks sit. Open water end to end:
+    # a boat can row from the docks out past the buoys. (The old landlocked bay was a bug.)
+    import math as _m
+    for x in range(10, 53):
+        cy = 62 + int(round(1.5 * _m.sin(x / 7.0)))
+        half = 4 if x < 38 else 6                       # the arm, then the basin bulge
+        for y in range(cy - half - 1, cy + half + 2):
+            if not b.in_bounds(x, y):
+                continue
+            d = abs(y - cy)
+            if d <= half:
+                deep = d <= half - 2
+                b.set_ground(x, y, "water_deep" if deep else "water_shallow", surface="water")
+                b.reserve(x, y, surface="water")
+            elif b.surface[y][x] == "grass":
+                b.set_ground(x, y, "sand")
 
     # The STREAM: rises at a NW spring pondlet, descends south-east through the west-center,
     # then runs east to the village at STREAM_Y. Laid as chained segments so the course is
@@ -78,6 +92,61 @@ def build():
     shore_dress(b, fl, [(150, 260, "sand"), (260, 40, "reeds"), (40, 150, "forest")], seed=25)
     pond(b, 212, 204, 7, 5, seed=26)
 
+    # ---- 1b. ANT COUNTRY (the south band) ------------------------------------
+    # The zone TRANSITIONS toward the Ant Colony below (3,0): torn dirt ground spreading up
+    # from the south edge, ant mounds dotted through it, and mineable earth outcrops with
+    # rocky cores (dirt aprons + stone_block fill + common ore veins via rock_mass).
+    rng_a = random.Random(51)
+    for bx, by, br in [(70, 12, 10), (105, 18, 8), (145, 8, 12), (185, 16, 8),
+                       (225, 10, 9), (48, 18, 6), (255, 14, 8)]:
+        for y in range(by - br - 2, by + br + 3):
+            for x in range(bx - br - 2, bx + br + 3):
+                if not b.in_bounds(x, y) or b.surface[y][x] != "grass":
+                    continue
+                d = ((x - bx) ** 2 + (y - by) ** 2) ** 0.5
+                if d <= br + rng_a.uniform(-2.0, 2.0):
+                    b.set_ground(x, y, "dirt")
+    rock_mass(b, 100, 13, 7, 5, seed=52, veins=3)
+    rock_mass(b, 190, 11, 8, 5, seed=53, veins=3)
+    for mx, my in [(66, 14), (82, 9), (116, 20), (140, 6), (152, 12), (176, 18),
+                   (222, 8), (233, 14)]:
+        for dx in range(0, 9):
+            if b.in_bounds(mx + dx, my) and b.ground[my][mx + dx] == "dirt" \
+               and b.is_free(mx + dx, my):
+                b.place_occupant("ant_mound", mx + dx, my)
+                break
+
+    # ---- 1c. THE ROCKY GORGE (the stream's east exit) -------------------------
+    # Where the stream leaves for the village it cuts THROUGH rock: mineable stone masses
+    # pressed right against BOTH banks (the stream is reserved water, so the fill stops at
+    # the channel), salted with common veins by rock_mass — plus HAND-SET rare ores for the
+    # sharp-eyed, and loose bank stones tracing the waterline between the masses.
+    rock_mass(b, 224, 90, 9, 7, seed=54, veins=4)   # north bank, apron on the water
+    rock_mass(b, 231, 66, 9, 7, seed=55, veins=4)   # south bank, apron on the water
+    # Hand-set rare ores: spiral outward from the target until a free cell — robust against
+    # the run-to-run placement drift (reed/shore sets iterate hash-randomized).
+    def _place_ore(oid, cx_, cy_, r=8):
+        for d in range(r + 1):
+            for dy in range(-d, d + 1):
+                for dx in range(-d, d + 1):
+                    if max(abs(dx), abs(dy)) == d and b.in_bounds(cx_ + dx, cy_ + dy) \
+                       and b.surface[cy_ + dy][cx_ + dx] != "water" and b.is_free(cx_ + dx, cy_ + dy):
+                        return b.place_occupant(oid, cx_ + dx, cy_ + dy)
+        raise SystemExit(f"no room for {oid} near ({cx_},{cy_}) — rework the gorge")
+    _place_ore("ore_silver_block", 214, 90)
+    _place_ore("ore_gold_block", 237, 70)
+    _place_ore("ore_ruby_block", 228, 56)
+    # Bank stones: hug the actual waterline column by column through the gorge reach.
+    rng_g = random.Random(58)
+    for gx in range(204, 252, 3):
+        span = _water_span(b, gx, 56, 104, row=False)
+        if not span:
+            continue
+        for gy in (span[0] - 1, span[1] + 1):
+            if rng_g.random() < 0.6 and b.in_bounds(gx, gy) \
+               and b.surface[gy][gx] == "grass" and b.is_free(gx, gy):
+                b.place_occupant("stone_block", gx, gy)
+
     # ---- 2. ROADS + BRIDGES (then smooth ONCE) ------------------------------
     # Main road: east edge → west, bridging the stream where it crosses ROAD_Y.
     span = _water_span(b, ROAD_Y, 60, 130)
@@ -94,10 +163,8 @@ def build():
     path(b, (137, ROAD_Y + 1), (137, 142), width=2, tile="dirt", wobble=0.05, seed=29)
     b.set_ground(137, 143, "dirt", surface="path")
 
-    # The hamlet spur: from the west leg AROUND cottage B (x48-62, y81-92), down the gap
-    # between the two cottages to the dock head — low wobble so it stays in the gap.
-    path(b, (52, 104), (43, 97), width=2, tile="dirt", wobble=0.06, seed=30)
-    path(b, (43, 97), (42, 76), width=1, tile="dirt", wobble=0.04, seed=30, taper_ends=2)
+    # The hamlet spur: from the west leg down to the north quay by the footbridge.
+    path(b, (52, 104), (50, 72), width=1, tile="dirt", wobble=0.08, seed=30, taper_ends=2)
 
     # The north-band footpath: up the west side, bridging the stream's descent.
     cspan = _water_span(b, 56, 140, 200, row=False)
@@ -110,7 +177,7 @@ def build():
 
     # ---- 3. BUILDINGS (the real pieces) -------------------------------------
     place_bee_farm(b, 100, 124)          # apiary x124-150 y144-162, cottage NW, gate at (137,144)
-    place_fishing_hamlet(b, 24, 70)      # cottages above the bay, dock south into it
+    place_fishing_hamlet(b, 24, 69, 55)  # split shores across the inlet, footbridge at x50
 
     # The lake dock: a stub pier + moored boat on the fishing lake's north shore.
     _dock(b, 150, 60, max_len=9)
@@ -124,19 +191,32 @@ def build():
     flower_patch(b, 70, 150, 118, 200, common + rarer, 40, seed=35)
     flower_patch(b, 96, 88, 150, 118, common, 30, seed=36)
     flower_patch(b, 60, 210, 130, 244, common, 36, seed=37)
-    flower_patch(b, 66, 16, 140, 58, common, 34, seed=46)   # the south meadow (below the bay road)
+    flower_patch(b, 66, 32, 160, 52, common, 34, seed=46)   # the south meadow, above ant country
     # Milkweed clumps (butterfly breeding hosts).
     for mx, my in [(180, 160), (183, 158), (186, 162), (84, 176), (87, 174), (90, 178)]:
         if b.is_free(mx, my):
             b.place_occupant("milkweed", mx, my)
 
-    # Forests: the NE stand, the stream-bank strip, the north-west band.
-    forest(b, 214, 172, 26, 18, seed=38, density=0.5)
-    forest(b, 176, 96, 18, 8, seed=39, density=0.45)
-    forest(b, 42, 182, 16, 12, seed=40, density=0.5)
+    # Forests (dark forest floors — dirt=True): the NE stand, the stream-bank strip, the
+    # north-west band, and TWO NEW NORTH STANDS framing the top of the zone. The gap between
+    # the north stands is deliberate — travellers pass through here, and the open corridor
+    # around y≈200-215 stays wide and readable.
+    forest(b, 214, 172, 26, 18, seed=38, density=0.5, dirt=True)
+    forest(b, 176, 96, 18, 8, seed=39, density=0.45, dirt=True)
+    forest(b, 42, 182, 16, 12, seed=40, density=0.5, dirt=True)
+    forest(b, 158, 236, 26, 13, seed=48, density=0.55, dirt=True)
+    forest(b, 96, 232, 15, 11, seed=49, density=0.5, dirt=True)
+    # THE HONEY GLADE — the clearing between the north stands: a wild hive in a ring of
+    # flowers (you hear it before you see it). Overhead can't do hilltops; it CAN do glades.
+    flower_patch(b, 118, 224, 142, 244, common + rarer, 26, seed=50)
+    _glade_hive = (128, 234)
+    # THE MUSHROOM HOLLOW — the damp clearing between the NW band and the west north stand.
+    scatter(b, 62, 206, 88, 226,
+            {"mushroom_brown": 4, "mushroom_chanterelle": 2, "leaf_litter": 4, "fern": 3},
+            density=0.07, min_spacing=2, seed=56, surfaces=("grass",))
     # Forest floor: leaf litter (millipede food) + mushrooms in each stand.
     for (x0, y0, x1, y1, sd) in [(190, 156, 240, 190, 41), (160, 88, 194, 104, 42),
-                                 (28, 172, 58, 194, 43)]:
+                                 (28, 172, 58, 194, 43), (146, 226, 184, 248, 57)]:
         scatter(b, x0, y0, x1, y1,
                 {"leaf_litter": 5, "mushroom_brown": 2, "fern": 3, "tall_grass": 2},
                 density=0.05, min_spacing=2, seed=sd, surfaces=("grass",))
@@ -152,8 +232,9 @@ def build():
                         return b.place_occupant(oid, x + dx, y + dy)
         raise SystemExit(f"no free cell near ({x},{y}) for {oid} — rework the layout")
 
-    # The free colonies (each auto-founds; the flowers nearby are their economy).
-    for hx, hy in [(168, 152), (206, 118), (78, 202)]:
+    # The free colonies (each auto-founds; the flowers nearby are their economy) — including
+    # the honey-glade hive between the north stands.
+    for hx, hy in [(168, 152), (206, 118), (78, 202), _glade_hive]:
         _place_near("bee_hive_wild", hx, hy)
     # The raiders, at forest edges AWAY from the farm (this is the EASY zone).
     for wx, wy in [(232, 158), (186, 90)]:
@@ -165,11 +246,23 @@ def build():
     place_beach_landmarks(b, beach, wreck_y=141, picnic_y=206, buoy_ys=(64, 141),
                           bottle_island=(5, 102))
 
-    # WAYFINDING — signposts + light at the junctions (arriving must read instantly):
-    # the east entrance, the stream bridge, the farm spur, the hamlet fork.
-    for sx, sy in [(249, ROAD_Y + 3), (135, ROAD_Y + 3), (57, 108)]:
-        if b.is_free(sx, sy) and b.surface[sy][sx] == "grass":
-            b.place_occupant("signpost", sx, sy)
+    # WAYFINDING — signposts WITH TEXT at the junctions (arriving must read instantly), and
+    # one at the ant-country edge that earns its keep as foreshadowing.
+    for sx, sy, txt in [
+        (249, ROAD_Y + 3, "BEE MEADOW — the flower coast.\nThe Village →"),
+        (135, ROAD_Y + 3, "↑ Maren's Bee Farm\n↓ Dragonfly Lake\n→ The Village"),
+        (57, 108, "↓ Gullwash Landing — mind the tide."),
+        (148, 29, "⚠ The ground hums here.\nMind the mounds."),
+    ]:
+        placed_sign = False
+        for dy in (0, 1, -1):
+            for dx in range(0, 9):
+                if b.is_free(sx + dx, sy + dy) and b.surface[sy + dy][sx + dx] == "grass":
+                    b.place_occupant("signpost", sx + dx, sy + dy, text=txt)
+                    placed_sign = True
+                    break
+            if placed_sign:
+                break
     for lx, ly in [(247, ROAD_Y - 2), (98, ROAD_Y - 2)]:
         if b.is_free(lx, ly):
             b.place_occupant("lamp_post", lx, ly)
@@ -220,7 +313,7 @@ def build():
             # Bees are NEST-FOUNDED ONLY: never free-spawned, never Director-reseeded (min 0).
             # 3 wild hives + Maren's 5 boxes = room under max_nests 8 for a full apiary.
             "bee_honey":        {"initial": 0, "max": 15, "swarm_size": 4, "max_population": 60,
-                                 "min_population": 0, "cull_at": 0, "max_nests": 8,
+                                 "min_population": 0, "cull_at": 0, "max_nests": 10,
                                  "spawn_interval": 999999.0},
             "butterfly_meadow": {"initial": 6, "max": 20, "swarm_size": 6, "max_population": 90,
                                  "min_population": 10, "event_low": 20, "event_high": 60,

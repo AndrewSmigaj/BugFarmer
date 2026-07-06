@@ -177,6 +177,10 @@ def place_beach_landmarks(b, beach_x, *, wreck_y=None, picnic_y=None, buoy_ys=()
                 b.place_occupant("bench", x + 1, picnic_y - 1)
                 if b.is_free(x - 1, picnic_y - 2):
                     b.place_occupant("seashell_pile", x - 1, picnic_y - 2)
+                # Somebody's beachcombing haul, lined up by the bench.
+                for sx, sy in [(x + 2, picnic_y + 1), (x + 3, picnic_y + 1)]:
+                    if b.in_bounds(sx, sy) and b.ground[sy][sx] == "sand" and b.is_free(sx, sy):
+                        b.place_occupant("starfish", sx, sy)
                 break
     for by in buoy_ys:
         bx = beach_x[by]

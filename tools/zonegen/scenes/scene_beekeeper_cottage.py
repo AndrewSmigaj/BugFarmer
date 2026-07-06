@@ -96,6 +96,13 @@ def place_bee_farm(b, ox, oy):
     if b.is_free(ax1 + 4, ay1):
         b.place_occupant("bee_hive_wild", ax1 + 4, ay1)
 
+    # The keeper's LANE: a worn dirt line from the cottage yard over to the apiary gate
+    # front (Maren walks it a hundred times a day).
+    for lx in range(ox + 14, ax0 + 12):
+        ly = oy + 19 + (1 if lx % 9 == 0 else 0)
+        if b.in_bounds(lx, ly) and b.is_free(lx, ly) and b.surface[ly][lx] == "grass":
+            b.set_ground(lx, ly, "dirt", surface="path")
+
     # THE NECTAR ENGINE — the WILD flower meadow ringing the apiary (scattered, vs the beds'
     # rows), dense: these become the ForagePools the colonies live on.
     common = ["flower_red", "flower_blue", "flower_yellow", "flower_wild", "clover", "dandelion"]
@@ -103,6 +110,16 @@ def place_bee_farm(b, ox, oy):
     flower_patch(b, ox + 20, oy + 2, ox + 52, oy + 16, common + rarer, 52, seed=11)
     flower_patch(b, ox + 2, oy + 2, ox + 18, oy + 20, common, 28, seed=12)
     flower_patch(b, ax1 + 1, ay0 + 2, min(ax1 + 8, b.W - 2), ay1, common, 16, seed=13)
+
+    # LIVING DRESSING (render-only): the working bees over the beds and boxes, butterflies
+    # in the wild ring — the previews should hum.
+    import random as _r
+    _rng = _r.Random(59)
+    for _ in range(7):
+        b.place_bug("honeybee", ax0 + _rng.uniform(3, 24), ay0 + _rng.uniform(5, 14), scale=1.0)
+    b.place_bug("honeybee", ax1 + 3.5, ay1 + 0.5, scale=1.0)   # at the wild hive
+    for _ in range(3):
+        b.place_bug("butterfly_common", ox + _rng.uniform(22, 50), oy + _rng.uniform(4, 15), scale=1.0)
     return (ax0, ay0, ax1, ay1)
 
 

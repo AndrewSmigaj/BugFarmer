@@ -53,6 +53,38 @@ def place_cottage(b, ox, oy, npc="farmer_down", yard_style="modest"):
                        style=yard_style, seed=ox)
 
 
+# NORTH-DOOR variant (doors face CONTEXT, not compass south — a house on a south shore
+# opens toward the water/lane on its north side; see house.md). A DIFFERENT floor plan,
+# not a mirror: LIVING (NW, the north front door) | BATHROOM (NE) over BEDROOM (SW) |
+# KITCHEN (SE). 15x12, same footprint as COT.
+COT_N = """
+WWWWDWWWWWWWWWW
+W.....p.Wh.y..W
+W.t.....D....mW
+W.a..a..W.....W
+W.......W.....W
+WWWWDWWWWWDWWWW
+W.......W.....W
+W....r..W.v..kW
+W.......Wc....W
+W.......W..t.aW
+W.E.n...W.....W
+WWWWWWWWWWWWWWW
+"""
+
+DOORX_N = 4  # the north door column (offset from ox)
+
+
+def place_cottage_north(b, ox, oy, npc="farmer_down"):
+    """The NORTH-facing cottage (SW corner ox,oy; front door on the TOP wall at ox+DOORX_N).
+    No styled yard by default — a context-facing house is dressed by its context (a quay,
+    a lane, a shore), not a compass-south picket plot."""
+    stamp(b, COT_N, LEG, ox=ox, oy=oy)
+    if npc:
+        b.place_player(npc, ox + 5.0, oy + 8)        # the resident, in the living room
+    return (ox, oy, ox + BW - 1, oy + BH - 1)
+
+
 PREVIEW = "zones/village_21_B/scenes"
 SCALE = 6
 

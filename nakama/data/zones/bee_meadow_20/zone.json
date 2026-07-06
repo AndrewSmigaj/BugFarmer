@@ -24,7 +24,7 @@
         "max_population": 60,
         "min_population": 0,
         "cull_at": 0,
-        "max_nests": 8,
+        "max_nests": 10,
         "spawn_interval": 999999.0
       },
       "butterfly_meadow": {
