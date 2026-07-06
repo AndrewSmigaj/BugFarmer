@@ -501,6 +501,33 @@ sim-determinism + re-profile that `decay` flattens. Note: the FindNearbyFood chu
 the *food-search* sensitivity to this pile (committed); this item is specifically the decay-pass cost +
 the underlying unbounded accumulation.
 
+## Later — UNDERGROUND LIGHTING (owner spec captured 2026-07-06; build after the zones)
+Owner: "the outside area at the top should be lit like any other day/night, on the top ant
+zone and the mining zone with the mining camp, we can make it dark past that point. as it
+is all masses of ore block should have the inner ones dark, wherever they are surrounded,
+this is like terraria. but we can backlog lighting for now as we are just focused on the
+zones, so backlog all lighting."
+- Surface strips of (3,0) + (3,1) get normal day/night; DARK below/past them.
+- Terraria block rule: any block cell fully surrounded by blocks renders dark (applies to
+  ore masses on the surface too — inner blocks of a mass are dark).
+- Full-dark underground + flashlight (already designed, game_design.md ~720); glowworms +
+  mushroom_glow are the natural sources (D21); zone docs place them to double as future
+  light anchors so the lighting pass never rearranges rooms (R5).
+
+## Later — REAL cross-zone bug transfer (owner 2026-07-06: "it will be real bug transfer")
+Zones are isolated per-match sims today (Neighbors is player-only). The real feature:
+a bug/swarm that walks off a connected edge LEAVES zone A's sim (a ledgered removal) and
+ARRIVES in zone B's sim (a ledgered spawn at the matching edge) — two zone-local ledger
+events, no shared sim state, each zone stays independently deterministic; transfer routing
+via the existing Neighbors map. Until built: NO fake edge-spawn pretense; ant populations
+stay zone-local (D21's "ants cross into the Mining Camp" waits for this).
+
+## Later — MARBLE (owner 2026-07-06, "backlog this just talking")
+The material exists (style.json marble palette; column_marble; wall_marble client-side).
+Future: a quarry source in the deep zones (row 4), statues + fountains crafted at the
+Stonemason (D27 sculpture yard), and the marble premium furniture tier (P2 of the
+underground-arc plan adds table/bench/bust_marble as stone-set premium overrides).
+
 ## Later — creatures: ants & spiders (DESIGNED, not built)
 Full approved design: **[design_ants_spiders.md](ecology/design_ants_spiders.md)**. Ants = a foraging colony
 (hill/queen/eggs reuse Nest+Brood; workers forage carrion → carry home via the wasp provisioning loop;

@@ -141,7 +141,7 @@ Dense brush east of river
 > **row 4**; the grand Ant Queen Chamber boss returns when row 5 does.
 
 **Col 0 - Ant Colony — intro** (EASY → MEDIUM, +Queen)
-The gentle introduction to ants: a tunneled colony of chambers and an `ant_mound` network, 2+ tunnels to
+The gentle introduction to ants: a tunneled colony of chambers whose mounds and tunnels are FORMED FROM dirt blocks (owner 2026-07-06 — no mound objects; nests anchor on `ant_brood` piles), 2+ tunnels to
 surface. The **medium tier (row 4) holds the colony Queen** — a mid-game mini-boss, distinct from the
 deferred grand Queen.
 - Garden ants, black ants (easy, row 3)
@@ -272,7 +272,7 @@ a floor tile on top, never a hole. Water is placed with care — `water_shallow`
 | stone, hard_stone, granite | solid tiles | rows 3–4 | Pickaxe Wood → Iron |
 | crystal / gem | crystal_small/large | row 4 | Stone → Iron |
 | cave_mushroom, silk (web), bone | nature occupants | rows 3–4 | Hand |
-| ant_egg | ant_mound | ant colonies (col 0 & 3) | Shovel |
+| ant_egg | ant_brood piles (brood chambers) | ant colonies (col 0 & 3) | Shovel |
 
 ### Bug-derived (from the species farmed/hunted in each region)
 | Material | From | Zones |
@@ -633,7 +633,7 @@ Found in caves/tunnels after breaking solid tiles.
 | web | 1×1 | Hand | - | silk ×1 | Neither |
 | cave_mushroom | 1×1 | Hand | - | cave_mushroom ×1 | Neither |
 | bone_pile | 1×1 | Hand | - | bone ×1-2 | Neither |
-| ant_mound | 2×2 | Shovel | Stone | dirt ×3, ant_egg ×0-1 | Both |
+| ant_brood (replaces deprecated ant_mound) | 1×1 | Shovel | — | ant_egg ×1-2 | Both |
 
 #### Walls (Player-placed)
 
@@ -726,10 +726,10 @@ The mining zone is fully pre-generated at design time:
 |----------|------------------|------|
 | Row 3 (cliff entrance) | cave_mushroom, bone_pile, web, small caverns | Copper, Coal, Iron |
 | Row 4 (deep) | stalagmite, crystal_small/large, larger caverns, mini-boss chambers | Iron, Silver, Gold, Platinum, Diamond |
-| Col 0 (Ant Colony – intro) | Ant tunnels, ant_mound, chambers, Colony Queen mini-boss (row 4), tunnels to surface | |
+| Col 0 (Ant Colony – intro) | Ant tunnels + block-built mound mouths, brood chambers (ant_brood), Colony Queen mini-boss (row 4), tunnels to surface | |
 | Col 1 (Passages → Centipede Cavern) | Narrow tunnels + cave spiders (row 3); centipede cavern w/ stalactites + glowworms (row 4) | |
 | Col 2 (Underground River) | Water features, aquatic insects, wet cave floor | |
-| Col 3 (Deadly Ants) | Ant tunnels, ant_mound, organized chambers; outpost forages to the surface swamp | |
+| Col 3 (Deadly Ants) | Ant tunnels (block-built), organized brood chambers; outpost forages to the surface swamp | |
 
 No runtime spawning - everything is baked into the zone data.
 

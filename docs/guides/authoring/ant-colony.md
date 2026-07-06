@@ -10,7 +10,14 @@ An ant nest is a **tree of narrow tunnels descending from a surface entrance int
 soil. Build it as:
 - **Soil, not bedrock.** Fill the solid rock mostly with `dirt_block` and a minority of `stone_block`
   (ants dig earth) — no ore veins.
-- **Entrance:** an `ant_mound` at the surface (top edge) over the mouth of the main shaft.
+- **Entrance:** a MOUND FORMED FROM DIRT BLOCKS (owner correction 2026-07-06: "there is
+  no such thing as ant mounds or hills — these are made from our dirt blocks, the blocks
+  literally form these and the tunnels") — a small pile of `dirt_block` rising 1-2 cells
+  above the surface line with a 1-cell dark mouth over the main shaft. The old `ant_mound`
+  OCCUPANT is DEPRECATED (placed in zero committed zones); never place it in new work.
+- **The nest ANCHOR (the sim hook):** an `ant_brood` occupant (pale egg pile) inside a
+  brood chamber — that is what `NestState` keys off (`speciesForNestOccupant`). The
+  STRUCTURE is blocks; the LIFE is the brood.
 - **Main shaft:** a single **narrow (1-cell), meandering** tunnel dropping from the entrance toward the
   deep **queen's chamber**. Narrow + wandering = dug by a creature (same rule as natural cave tunnels,
   but thinner — never straight).

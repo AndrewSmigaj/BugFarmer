@@ -131,6 +131,13 @@ all of them PASS on a FIRST build, the questions were asked too softly — tight
   habitat, shelter, refugia — geometrically, where they spawn? Does flora match the ground?
 - **New-Player-at-zoom** — Crop random gameplay-zoom screenfuls (~20×12 cells): is EVERY one of
   them composed, or only the landmarks? The player lives at this zoom, not at the god view.
+- **Secret-Keeper** — Does the zone HIDE ≥3 findable things (sealed spaces, a glint through a
+  1-block window, sounds before sights), each with a real payoff when found? (Owner, 2026-07-06:
+  "we like secrets, surprise, curiosity — those are interesting lenses.")
+- **Surprise** — Does something confound expectation at least once per zone — the beautiful room
+  in the scary place, the boulder that breathes, the trail that leads UP into daylight?
+- **Curiosity-Hook** — At every landmark, is there a visible QUESTION pulling one screen further:
+  a trail entering a crack, light from below, a draft of dark air, a door that shouldn't be there?
 
 ## Notes for automating this
 - A lens pass is cheap insurance before an expensive build/run. Run the high-value lenses (★) on any plan

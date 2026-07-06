@@ -1,6 +1,6 @@
 # Zone Content Sheet — Ant Colony (intro · col 0, row 3 · `ant_colony`)
 
-> **Grid (0,3)** · the first **underground** intro zone of column 0 · **difficulty EASY→MEDIUM** ·
+> **Grid (3,0)** *(row,col — fixed 2026-07-06; an old (col,row) slip said "(0,3)")* · the first **underground** intro zone of column 0 · **difficulty EASY→MEDIUM** ·
 > **tier T2→T3 (copper/bronze era reaching toward iron, with the first light/cave gear)**
 >
 > The **friendly-but-organized ant colony** — BugFarmer's underground intro. Past the surface meadows the
