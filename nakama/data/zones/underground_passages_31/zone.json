@@ -6,11 +6,14 @@
   "width": 256,
   "height": 256,
   "spawn_point": [
-    128,
-    10
+    129,
+    250
   ],
   "biome_type": "cave",
   "seed": 31,
+  "neighbors": {
+    "north": "village_21_B"
+  },
   "bug_spawning": {
     "species_caps": {
       "centipede_garden": {
@@ -45,20 +48,20 @@
           "millipede"
         ],
         "type": "circle",
-        "cx": 62,
-        "cy": 150,
-        "radius": 20,
+        "cx": 85,
+        "cy": 80,
+        "radius": 18,
         "weight": 3.0
       },
       {
-        "id": "milli_sw",
+        "id": "milli_mid",
         "species": [
           "millipede"
         ],
         "type": "circle",
-        "cx": 96,
-        "cy": 206,
-        "radius": 20,
+        "cx": 150,
+        "cy": 95,
+        "radius": 12,
         "weight": 3.0
       },
       {
@@ -67,8 +70,8 @@
           "beetle_carrion"
         ],
         "type": "circle",
-        "cx": 190,
-        "cy": 138,
+        "cx": 200,
+        "cy": 72,
         "radius": 18,
         "weight": 3.0
       },
@@ -78,31 +81,31 @@
           "beetle_carrion"
         ],
         "type": "circle",
-        "cx": 188,
-        "cy": 200,
-        "radius": 16,
+        "cx": 175,
+        "cy": 132,
+        "radius": 11,
         "weight": 3.0
       },
       {
-        "id": "cent_camp",
+        "id": "cent_hub",
         "species": [
           "centipede_garden"
         ],
         "type": "circle",
-        "cx": 128,
-        "cy": 112,
-        "radius": 22,
+        "cx": 129,
+        "cy": 140,
+        "radius": 20,
         "weight": 3.0
       },
       {
-        "id": "cent_deep",
+        "id": "cent_ant",
         "species": [
           "centipede_garden"
         ],
         "type": "circle",
-        "cx": 134,
-        "cy": 196,
-        "radius": 16,
+        "cx": 30,
+        "cy": 150,
+        "radius": 14,
         "weight": 3.0
       },
       {
@@ -133,19 +136,16 @@
     "initial_carrion": [
       {
         "item": "dead_millipede",
-        "x": 96,
-        "y": 206,
+        "x": 85,
+        "y": 80,
         "count": 2
       },
       {
         "item": "dead_beetle",
-        "x": 190,
-        "y": 138,
+        "x": 200,
+        "y": 72,
         "count": 2
       }
     ]
-  },
-  "neighbors": {
-    "north": "village_21_B"
   }
 }

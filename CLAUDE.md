@@ -66,6 +66,15 @@ time (you end up building every feature twice). For every feature:
   run `python3 tools/data/publish_entities.py` after editing the canonical JSON.
 
 ## Hard rules (the gotchas that bite)
+- **Zone orientation is FIXED: HIGH y = NORTH = top of every render; LOW y = SOUTH (= deep
+  underground); x=0 = WEST, x=255 = EAST** (`zone.go`: "+Y = north"). Never re-derive it —
+  sanity-check: `village_21_B`'s big lake is at (x=46, y=48) and IS in the SW quadrant. Getting
+  this wrong has burned us 3×.
+- **The GAME loads the SAVE, not the builder.** Editing a `zone_*.py` builder changes NOTHING
+  in-game until you regenerate the save. After ANY zone-builder change you MUST re-`save()`
+  (`--save`) AND verify the SAVED data north-up (`python3 tools/world/view_world.py <zone>` →
+  look). A "fixed" builder with a stale save = the game silently loads the OLD/flipped zone.
+  Never overwrite a committed zone without a temp-save + render check first.
 - **Don't resize sprites by hand.** The runtime NEAREST-scales to `sprite_w × sprite_h`;
   `pixelclean.py`'s downscale is the only intended resize. See [object_pipeline.md](docs/guides/art/object_pipeline.md).
 - **No `jq`** — decode the gpt-image-1 base64 with Python (curl-piped large base64 fails).

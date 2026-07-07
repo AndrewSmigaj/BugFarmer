@@ -513,6 +513,12 @@ zones, so backlog all lighting."
 - Full-dark underground + flashlight (already designed, game_design.md ~720); glowworms +
   mushroom_glow are the natural sources (D21); zone docs place them to double as future
   light anchors so the lighting pass never rearranges rooms (R5).
+- **CROSS-ZONE LIGHTING (owner 2026-07-07):** lighting must be continuous ACROSS zone
+  seams, not per-zone-isolated. A lit surface zone bordering a dark underground zone (e.g.
+  bee_meadow/ant_tunnels surface ↔ the underground below) must transition believably at the
+  boundary — no hard light/dark wall at the seam, and a player straddling the edge sees one
+  coherent light field. Design the lighting model to read the neighbor's light state (or a
+  shared day/night + depth model) so crossing a zone line is seamless.
 
 ## Later — ANT mechanics riders (owner review 2026-07-07)
 - Ants CARRY real items to chambers (fruit/rotten fruit/dead bugs -> granary caches) —

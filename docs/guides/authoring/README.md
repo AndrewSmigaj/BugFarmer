@@ -20,6 +20,17 @@ The system is **four parts**, each with one home:
 > `art/object_pipeline.md`). These guides assume art already exists — or use a **placeholder**
 > (a labeled colored square) so layout never waits on art.
 
+> **⚠ TWO RULES THAT HAVE BURNED US 3× — read before ANY zone work:**
+> 1. **Orientation is FIXED: HIGH y = NORTH = TOP of every render; LOW y = SOUTH (= deep
+>    underground). x=0 = WEST, x=255 = EAST** (`zone.go`: "+Y = north"). Never re-derive it.
+>    Sanity-check: `village_21_B`'s big lake is at (x=46, y=48) and IS in the SW quadrant.
+> 2. **The GAME loads the SAVE, not the builder script.** Editing a `zone_*.py` builder changes
+>    nothing in-game until you regenerate the save. **After ANY builder change you MUST re-`save()`
+>    (`--save`) AND verify north-up** with `python3 tools/world/view_world.py <zone>` (look: is the
+>    surface where it belongs?). A corrected builder + a stale save = the game loads the OLD/flipped
+>    zone. Never overwrite a committed zone the owner cares about without a temp-save + render check
+>    first (pattern: save to a throwaway `zones_dir`, load it back, render before touching the real one).
+
 ## The loop (how we actually work)
 1. Decide the contents — from a zone doc (`docs/product/zones/<zone>.md`) or the scene's theme.
    Mine `docs/brainstorms/<topic>/` for what to place.
