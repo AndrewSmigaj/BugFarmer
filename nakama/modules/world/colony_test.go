@@ -131,15 +131,50 @@ func TestTrailFollowThink(t *testing.T) {
 			worker.TargetX, worker.WorldX(32))
 	}
 
-	// Food IN VISION preempts the trail: decline → the shared forage block dines.
+	if state.MarchTargets[worker.ID] == "" {
+		t.Fatal("the march must COMMIT (MarchTargets) — the v2 oscillation-trap fix")
+	}
+
+	// COMMITTED + a snack blip mid-trail (site still beyond vision): the march HOLDS —
+	// this is exactly the pool-trickle trap the commitment exists to beat.
 	state.putGroundItem(&entities.GroundItem{
 		ID: "snack", ItemType: "dead_fly", Count: 1,
 		Position:  entities.EntityPosition{LocalX: worker.WorldX(32) + 3, LocalY: 10},
 		FoodValue: 10,
 	})
 	state.TickCount = worker.NextThinkTick + 1
+	if !m.predationThink(state, worker, ant, 32, 0.1, nopRuntimeLogger()) {
+		t.Fatal("a COMMITTED marcher must hold the trail past a food blip")
+	}
+
+	// ARRIVAL: worker near the site with the site's food in vision → release + decline
+	// (the shared forage block dines).
+	state.putGroundItem(&entities.GroundItem{
+		ID: "feast", ItemType: "dead_fly", Count: 3,
+		Position:  entities.EntityPosition{LocalX: 30, LocalY: 10},
+		FoodValue: 10,
+	})
+	worker.Position = entities.EntityPosition{ChunkX: 0, ChunkY: 0, LocalX: 27, LocalY: 10}
+	state.TickCount = worker.NextThinkTick + 1
 	if m.predationThink(state, worker, ant, 32, 0.1, nopRuntimeLogger()) {
-		t.Fatal("food in vision must preempt the trail (decline to the shared forage block)")
+		t.Fatal("arrival (site food in vision) must release the commitment and dine")
+	}
+	if state.MarchTargets[worker.ID] != "" {
+		t.Fatal("arrival must clear the commitment")
+	}
+
+	// An UNCOMMITTED worker with food in vision never starts a march: decline.
+	worker2 := newTestSwarm("w2", 3, 12, 10)
+	worker2.SpeciesID = "ant_worker"
+	state.Swarms[worker2.ID] = worker2
+	worker2.Satiation = 50
+	worker2.Phase = "feeding"
+	state.TickCount = worker2.NextThinkTick + 1
+	if m.predationThink(state, worker2, ant, 32, 0.1, nopRuntimeLogger()) {
+		t.Fatal("an uncommitted worker with food in vision must decline (dine locally)")
+	}
+	if state.MarchTargets[worker2.ID] != "" {
+		t.Fatal("no commitment may start while food is in vision")
 	}
 }
 
@@ -152,11 +187,11 @@ func TestScoutRegistersIntoNearestColony(t *testing.T) {
 		BaseSpeed: 1.2, VisionRange: 12, WanderRadius: 22,
 		MinSwarmSize: 1, MaxSwarmSize: 2,
 		CarrionForager: true, ColonyScout: true,
+		ColonyNestOccupant: "ant_brood", // link-only: scouts never found nests
 		AttractionsByPhase: map[string][]string{"feeding": {"dead_fly"}},
 		Predation: &entities.PredationConfig{
 			Prey: []string{}, HomeRange: 110,
 			DepositSatiation: 80, HuntSatiationThreshold: 45,
-			NestOccupant: "ant_brood",
 		},
 	}
 	state.Species["ant_scout"] = scoutSpec

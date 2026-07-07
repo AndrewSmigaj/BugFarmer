@@ -37,9 +37,9 @@
           "ant_scout"
         ],
         "type": "circle",
-        "cx": 40,
+        "cx": 48,
         "cy": 48,
-        "radius": 20
+        "radius": 34
       }
     ],
     "initial_carrion": [
@@ -47,19 +47,19 @@
         "item": "dead_fly",
         "x": 72,
         "y": 48,
-        "count": 4
+        "count": 8
       },
       {
         "item": "dead_beetle",
         "x": 74,
         "y": 46,
-        "count": 3
+        "count": 6
       },
       {
         "item": "dead_fly",
         "x": 71,
         "y": 51,
-        "count": 3
+        "count": 6
       }
     ]
   },

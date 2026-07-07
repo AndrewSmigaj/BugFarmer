@@ -234,24 +234,83 @@ func (m *Match) predationThink(
 			// register nearby food, then decline below — the shared blocks feed and
 			// wander it. Spawned scouts carry no NestKey → PROVISION never fires.
 			m.scoutBreadcrumb(state, swarm, colonyNest, chunkSize)
-			if nestKey != "" {
+			if nestKey != "" && colonyNest != nil {
+				nx2 := float32(colonyNest.GridX) + 0.5
+				ny2 := float32(colonyNest.GridY) + 0.5
 				for _, h := range FindNearbyFood(state, swarm.Position, species.VisionRange,
 					swarm.GetCurrentAttractions(species)) {
+					// TRAILS ARE FOR FAR FOOD (the v3 lab finding): scouts constantly
+					// re-registered the colony's own fungus garden, and Strength/(1+dist)
+					// let the 5-cell mushrooms out-score the 48-cell bonanza 10:1 — every
+					// "march" was a 3-cell hop inside the garden. Food within vision of
+					// the NEST needs no trail by definition (workers at home already see
+					// it); only beyond-garden finds enter colony memory.
+					hdx, hdy := h.X-nx2, h.Y-ny2
+					if hdx*hdx+hdy*hdy <= species.VisionRange*species.VisionRange {
+						continue
+					}
 					registerCarrionSite(state, nestKey, int(h.X), int(h.Y),
 						scoutRegisterStrength, state.ScoutPaths[swarm.ID])
+					logger.Info("ANTLOG register nest=%s site=%d,%d kind=%s routeLen=%d",
+						nestKey, int(h.X), int(h.Y), h.Kind, len(state.ScoutPaths[swarm.ID]))
 				}
 			}
-		} else if swarm.Satiation < predatorFullSatiation && nestKey != "" &&
-			len(FindNearbyFood(state, swarm.Position, species.VisionRange,
-				swarm.GetCurrentAttractions(species))) == 0 {
-			// THE WORKER on the march: nothing in sight → walk the trail.
-			if site := bestKnownSite(state.ColonyMemory[nestKey],
-				swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)); site != nil {
-				tx, ty := nextTrailPoint(site, swarm.WorldX(chunkSize), swarm.WorldY(chunkSize))
-				swarm.TargetPreyID = ""
-				m.emitLeg(state, swarm, species, tx, ty, 1.0, chunkSize, deltaTime)
-				swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)
-				return true
+			// The sensor contract: scouts ALWAYS decline ownership — the shared forage/
+			// wander blocks feed and move them. (With nest_occupant now link-only, the
+			// bee decline below no longer catches them.)
+			return false
+		} else if swarm.Satiation < predatorFullSatiation && nestKey != "" {
+			// THE WORKER'S MARCH, WITH COMMITMENT. The v2 lab exposed the oscillation
+			// trap: pool trickle-regen re-captured every marcher at the garden's edge
+			// (a 1-nectar blip in vision cancelled the trip, the blip drained, repeat)
+			// — so no trail could ever cross the map. A worker now COMMITS to a site
+			// (MarchTargets, server-only) and holds the trail until the site dies, it
+			// ARRIVES (the site's own food enters vision → dining takes over), or a
+			// full load sends it home; after the deposit it re-commits — that cycle IS
+			// the visible trail.
+			committed := ""
+			if state.MarchTargets != nil {
+				committed = state.MarchTargets[swarm.ID]
+			}
+			mem := state.ColonyMemory[nestKey]
+			var site *entities.CarrionSite
+			if committed != "" {
+				if mem != nil {
+					for _, s2 := range mem.Sites {
+						if nestKeyFor(s2.GridX, s2.GridY) == committed {
+							site = s2
+							break
+						}
+					}
+				}
+				if site == nil {
+					delete(state.MarchTargets, swarm.ID) // the site died — release
+				}
+			}
+			visionHits := FindNearbyFood(state, swarm.Position, species.VisionRange,
+				swarm.GetCurrentAttractions(species))
+			if site == nil && len(visionHits) == 0 {
+				if site = bestKnownSite(mem, swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)); site != nil {
+					if state.MarchTargets == nil {
+						state.MarchTargets = make(map[string]string)
+					}
+					state.MarchTargets[swarm.ID] = nestKeyFor(site.GridX, site.GridY)
+					logger.Info("ANTLOG commit swarm=%s site=%d,%d", swarm.ID, site.GridX, site.GridY)
+				}
+			}
+			if site != nil {
+				sx2, sy2 := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
+				ddx, ddy := float32(site.GridX)+0.5-sx2, float32(site.GridY)+0.5-sy2
+				if ddx*ddx+ddy*ddy <= species.VisionRange*species.VisionRange && len(visionHits) > 0 {
+					delete(state.MarchTargets, swarm.ID) // arrived: dine (decline below)
+					logger.Info("ANTLOG arrive swarm=%s site=%d,%d", swarm.ID, site.GridX, site.GridY)
+				} else {
+					tx, ty := nextTrailPoint(site, sx2, sy2)
+					swarm.TargetPreyID = ""
+					m.emitLeg(state, swarm, species, tx, ty, 1.0, chunkSize, deltaTime)
+					swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)
+					return true
+				}
 			}
 		}
 	}

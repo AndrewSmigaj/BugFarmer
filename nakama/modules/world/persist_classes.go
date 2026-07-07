@@ -108,6 +108,7 @@ var persistClasses = map[string]persistEntry{
 	"ForagePools":     {classWorldState, "WorldSave.ForagePools — nectar levels ARE the bee economy"},
 	"ColonyMemory":    {classPerRun, "ant trails MUST age out, never persist (Unbounded-Growth lens; entities/colony.go) — a restart forgets and scouts re-learn"},
 	"ScoutPaths":      {classPerRun, "scout walk buffers feeding ColonyMemory — same age-out contract, pruned when the swarm dies"},
+	"MarchTargets":    {classPerRun, "worker march commitments (trail hysteresis) — derived from ColonyMemory, same age-out"},
 	"GnawDamage":      {classWorldState, "WorldSave.Gnaw — half-chewed fences stay half-chewed (was silently lost before §P)"},
 	"Stations":        {classWorldState, "WorldSave.Stations"},
 	"Containers":      {classWorldState, "WorldSave.Containers"},

@@ -169,6 +169,7 @@ type WorldState struct {
 	// See entities/colony.go for the full frontier-sync classification.
 	ColonyMemory map[string]*entities.ColonyMemory // nest "gx,gy" -> remembered food sites + routes
 	ScoutPaths   map[string][]entities.RoutePoint  // scout swarmID -> breadcrumbs since leaving home
+	MarchTargets map[string]string                 // worker swarmID -> committed trail site "gx,gy" (march hysteresis)
 
 	// Gnaw damage per occupant cell — its OWN pool, NOT BreakingState (whose owner-
 	// reset would let a player "repair" a gnawed fence by hitting it, and vice versa).
@@ -408,6 +409,7 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		ForagePools:     make(map[string]*entities.ForagePoolState),
 		ColonyMemory:    make(map[string]*entities.ColonyMemory),
 		ScoutPaths:      make(map[string][]entities.RoutePoint),
+		MarchTargets:    make(map[string]string),
 		GnawDamage:      make(map[string]int),
 		Stations:        make(map[string]*entities.StationState),
 		// Crafting

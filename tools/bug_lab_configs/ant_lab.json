@@ -1,3 +1,18 @@
 {
-  "description": "Ant colony loop observation: brood+fungus west, carrion east, obstacles mid. Feel-bar: a visible worker line nest->carrion."
+  "description": "Ant lab v5: cut corpse-noise so the staged east bonanza is the dominant far-site. Levers: worker decay 0.8->0.55, scout decay ->0.25 (sensors stop dying hourly), worker max_population 60->36. Feel-bar: visible worker line nest->east carrion.",
+  "species": {
+    "ant_worker": {
+      "satiation_decay_rate": 0.55
+    },
+    "ant_scout": {
+      "satiation_decay_rate": 0.25
+    }
+  },
+  "bug_spawning": {
+    "species_caps": {
+      "ant_worker": {
+        "max_population": 36
+      }
+    }
+  }
 }

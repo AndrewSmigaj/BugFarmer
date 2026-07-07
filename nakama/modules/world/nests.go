@@ -35,7 +35,10 @@ const (
 // primary (wild) NestOccupant or one of the player-placeable NestOccupantsExtra hive boxes.
 // The bool reports whether it is an EXTRA (a box → registers DORMANT, no free colony).
 func (m *Match) speciesForNestOccupant(state *WorldState, occupantID string) (string, *entities.BugSpecies, bool) {
-	for id, sp := range state.Species {
+	// Sorted iteration: with multiple nest species in data, map order here would be a
+	// nondeterminism landmine (which species founds a contested occupant id).
+	for _, id := range sortedStringKeys(state.Species) {
+		sp := state.Species[id]
 		if sp.Predation == nil {
 			continue
 		}

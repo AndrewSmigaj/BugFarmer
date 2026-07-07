@@ -609,10 +609,11 @@
       "home_range": 110.0,
       "deposit_satiation": 80.0,
       "hunt_satiation_threshold": 45.0,
-      "nest_occupant": "ant_brood"
+      "nest_occupant": ""
     },
     "lifespan_secs": 8000,
     "lifespan_spread_secs": 2000,
-    "carcass_item": "dead_ant"
+    "carcass_item": "dead_ant",
+    "colony_nest_occupant": "ant_brood"
   }
 }

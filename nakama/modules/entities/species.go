@@ -133,6 +133,12 @@ type BugSpecies struct {
 	// the same colony read what scouts wrote (the trails).
 	ColonyScout bool `json:"colony_scout"`
 
+	// ColonyNestOccupant is the LINK-ONLY colony reference for castes that never found
+	// or claim nests themselves (scouts): nearestColonyNest matches nests of this
+	// occupant id, while speciesForNestOccupant (founding/claiming) ignores it — so two
+	// castes can share one colony without colliding over who owns the brood pile.
+	ColonyNestOccupant string `json:"colony_nest_occupant,omitempty"`
+
 	// Predator configuration. The NIL POINTER is the predator gate — non-predators
 	// never enter the predation branch.
 	Predation *PredationConfig `json:"predation"`

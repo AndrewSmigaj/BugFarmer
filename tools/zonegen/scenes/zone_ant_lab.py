@@ -35,9 +35,10 @@ def build(zone_id="ant_lab"):
     # THE COLONY CORNER: brood anchor + the fungus garden around it (pool-flagged
     # mushrooms = the staple larder inside home range).
     Z.place_occupant("ant_brood", *NEST)
+    # THREE pools only (the first run's six fed 60 workers forever — the local larder
+    # must run DRY periodically or nobody ever marches and no trail can exist).
     for mx, my, mid in [(20, 44, "mushroom_cluster"), (27, 43, "mushroom_brown"),
-                        (19, 51, "mushroom_brown"), (28, 53, "mushroom_cluster"),
-                        (23, 55, "mushroom_cluster"), (30, 47, "mushroom_brown")]:
+                        (23, 55, "mushroom_cluster")]:
         Z.place_occupant(mid, mx, my)
 
     # MID-FIELD OBSTACLES: three dirt-block clumps the trail must route around —
@@ -59,12 +60,12 @@ def build(zone_id="ant_lab"):
         },
         "spawn_areas": [
             {"id": "scout_range", "species": ["ant_scout"], "type": "circle",
-             "cx": 40, "cy": 48, "radius": 20},
+             "cx": 48, "cy": 48, "radius": 34},   # covers the WHOLE arena incl. the east carrion
         ],
         "initial_carrion": [
-            {"item": "dead_fly", "x": CARRION[0], "y": CARRION[1], "count": 4},
-            {"item": "dead_beetle", "x": CARRION[0] + 2, "y": CARRION[1] - 2, "count": 3},
-            {"item": "dead_fly", "x": CARRION[0] - 1, "y": CARRION[1] + 3, "count": 3},
+            {"item": "dead_fly", "x": CARRION[0], "y": CARRION[1], "count": 8},
+            {"item": "dead_beetle", "x": CARRION[0] + 2, "y": CARRION[1] - 2, "count": 6},
+            {"item": "dead_fly", "x": CARRION[0] - 1, "y": CARRION[1] + 3, "count": 6},
         ],
     }
 

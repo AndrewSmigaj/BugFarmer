@@ -37,7 +37,14 @@ func (m *Match) nearestColonyNest(state *WorldState, swarm *entities.SwarmState,
 		}
 	}
 	p := species.Predation
-	if p == nil || p.NestOccupant == "" {
+	if p == nil {
+		return "", nil
+	}
+	occupant := p.NestOccupant
+	if occupant == "" {
+		occupant = species.ColonyNestOccupant // link-only castes (scouts)
+	}
+	if occupant == "" {
 		return "", nil
 	}
 	sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
@@ -46,7 +53,7 @@ func (m *Match) nearestColonyNest(state *WorldState, swarm *entities.SwarmState,
 	bestSq := float32(0)
 	for _, key := range sortedStringKeys(state.NestStates) {
 		nest := state.NestStates[key]
-		if nest.EntityID != p.NestOccupant {
+		if nest.EntityID != occupant {
 			continue
 		}
 		dx, dy := float32(nest.GridX)+0.5-sx, float32(nest.GridY)+0.5-sy
@@ -200,6 +207,11 @@ func (m *Match) processColonyMemory(state *WorldState) {
 	for _, id := range sortedStringKeys(state.ScoutPaths) {
 		if state.Swarms[id] == nil {
 			delete(state.ScoutPaths, id)
+		}
+	}
+	for _, id := range sortedStringKeys(state.MarchTargets) {
+		if state.Swarms[id] == nil {
+			delete(state.MarchTargets, id)
 		}
 	}
 }

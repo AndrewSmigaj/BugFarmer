@@ -1,0 +1,2 @@
+2026-07-06_1915_ant_lab
+Ant lab v5: cut corpse-noise so the staged east bonanza is the dominant far-site. Levers: worker decay 0.8->0.55, scout decay ->0.25 (sensors stop dying hourly), worker max_population 60->36. Feel-bar: visible worker line nest->east carrion.
