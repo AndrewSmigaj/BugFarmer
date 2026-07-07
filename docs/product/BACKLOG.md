@@ -528,6 +528,34 @@ zones, so backlog all lighting."
 - Scouts are BASED in the lower colony and head UP AND OUT across zones — rides the
   real cross-zone transfer below.
 
+## Later — UNDERGROUND BUG ROSTER (owner ruling 2026-07-07: "backlog all bugs, we're just building the zones")
+Built AFTER the row-4 zone terrain. The zones PLAN the spawn locations; these are the sims.
+- **Warrior ants** (soldier caste — BLACK ants): guard the Queen; turn aggressive near her; the
+  general **defender response to STEALING/DAMAGING** (also the fix for players stealing boats/
+  containers). This is the mechanic behind the (4,0) Queen "just chills, guarded by warriors."
+- **Cave fly** — a NEW, REAL underground fly, faster + stronger than surface flies (a real
+  cave-dwelling fly; owner: all bugs must be actual bugs, never invented).
+- **Aggressive raid centipede** — GREEN variant, REUSE the existing garden-centipede sprite, tuned
+  MORE aggressive than garden centipedes; dens at the (4,0)↔(4,1) raid seam and raids the colony.
+- **Scout tuning** — scouts share the workers' home but wander much farther; must reliably FIND +
+  return food, and IGNORE near-nest food (don't over-provision — ants forage). Tuning, not a spawn.
+- **Glowworm** species (light keystone + catchable, firefly-style lantern) — the (4,1) grotto light.
+- **Cave spider** species (webs slow prey via a speed-debuff; pounce hunter) + webs decor.
+- **Aphids** (livestock/honeydew mutualism, disruptable).
+- **Live cross-zone bug traffic** (real transfer; already sketched below).
+- **Black mold hazard** — needs a POISON/hazard-cell mechanic (verified 2026-07-07: none exists);
+  build the mechanic, THEN mold that poisons on contact can be placed. (Not decorative-only.)
+
+## Later — POLISH ALL ZONES to the craft bar (owner 2026-07-07)
+Bring the existing zones (village_21_B, bee_meadow_20, underground_passages_31, …) up to the
+standard set building ant_tunnels_30: natural dirt/stone INTEGRATION (substrate model, not flat
+fills), NOISE-FADED boundaries (never straight material lines), clean prominent entrances, wooded-
+by-default with real carved clearings, neighbor edges that actually connect. Folds in the already-
+listed bee-gradient removal + mushroom-realism sweep (ANT-ARC BUILD PREP below).
+CRAFT RULES set this session (also in CORRECTIONS.md): **NO CEILINGS** (overhead view can't show
+them — no ceiling glowworms/stalactites/star-fields; features are floor/wall based); **micro-stories
+must be compatible with real game mechanics** (don't assume unbuilt mechanics).
+
 ## Now — ANT-ARC BUILD PREP (owner decisions 2026-07-06, do alongside the (3,0) build)
 - **bee_meadow_20 — REMOVE the south dirtying/rocky GRADIENT** (zone_bee_meadow_20.py §1b:
   the `gradient_field` + rock_masses + torn-ground rubble + dead-tree/dry-flora band along

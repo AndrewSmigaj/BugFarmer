@@ -77,3 +77,12 @@ Entry shape: `**C<n> — <the principle>.** (owner, date) → <guide>§<section>
 - **C19 — Work rooms live INSIDE: production gear belongs in a building's work room, not
   loose on the lawn.** (owner, 2026-07-06: "the brewing stuff should be in a backroom...
   not it just out on the lawn") → house.md §household ontology (the trade room).
+- **C20 — NO CEILINGS: the overhead view can't depict them.** (owner, 2026-07-07: "we
+  cannot do ceilings so no ceilings") Cross-cutting: no ceiling glowworm fields / honeypot
+  ceilings / stalactite-ceilings / "ceiling star-fields". Cave features are FLOOR/WALL based;
+  stone_block clusters form FLOOR columns (D22). A vertical shaft is fine (not a ceiling).
+- **C21 — Micro-stories must be COMPATIBLE with real game mechanics.** (owner, 2026-07-07:
+  micro-stories "are incompatible with game mechanics" — why 9/10 kept failing). Cross-cutting:
+  don't author a story that needs an unbuilt mechanic (ants carrying infected shelves, quarantine
+  files). Keep only what reads from real placed objects + real mechanics. Also: a HAZARD prop
+  (black mold, spikes) needs its EFFECT mechanic to exist, or it's decorative-only → cut/defer.
