@@ -514,6 +514,14 @@ zones, so backlog all lighting."
   mushroom_glow are the natural sources (D21); zone docs place them to double as future
   light anchors so the lighting pass never rearranges rooms (R5).
 
+## Later — ANT mechanics riders (owner review 2026-07-07)
+- Ants CARRY real items to chambers (fruit/rotten fruit/dead bugs -> granary caches) —
+  the transport mechanic; v1 granaries are authored caches of real items.
+- The ant BROOD system deep pass ("backlog the entire brood testing") — lifecycle,
+  harvest response, defense tuning.
+- Scouts are BASED in the lower colony and head UP AND OUT across zones — rides the
+  real cross-zone transfer below.
+
 ## Later — REAL cross-zone bug transfer (owner 2026-07-06: "it will be real bug transfer")
 Zones are isolated per-match sims today (Neighbors is player-only). The real feature:
 a bug/swarm that walks off a connected edge LEAVES zone A's sim (a ledgered removal) and

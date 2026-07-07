@@ -2601,5 +2601,12 @@
     "stackable": true,
     "max_stack": 99,
     "sell_price": 8
+  },
+  "formic_acid": {
+    "name": "Formic Acid",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
   }
 }

@@ -3,10 +3,16 @@
 Everything the plan promised for review, in one place. Decisions needed are marked ►.
 
 ## 1. The three zone designs (READY for your read)
-- **[ant_tunnels_30.md](../zones/ant_tunnels_30.md)** — (3,0) EASY: lit surface strip
-  continuing Bee Meadow's gradient, block-built tunnel mouths, scout territory, fungus
-  terraces, the mining-camp burrow-seam contract, "files of ants hauling fruit down a
-  sunlit shaft."
+- **[ant_tunnels_30.md](../zones/ant_tunnels_30.md)** — (3,0) EASY — **REV 2, owner
+  line-item review applied 2026-07-07:** HALF the zone is OUTSIDE (the cliff face
+  enters at the mining zone's height, curves down-and-across; trails form anywhere to
+  real food), stone boundary along the whole east seam w/ stray ore, the Myrmecologist
+  as a LIVE vendor in a WOODEN BUILDING at the main entrance (dirt road, EMPTY pen,
+  ant-oriented interior; scene_ant_entrance specced), fungus = real mushrooms
+  (inkcap/morel), granaries = REAL item caches, brood piles hand-harvest, dead_ant ->
+  chitin/formic via the extractor (shipped). Cut per owner: chimney, taproot, shiny
+  hoard, inversion, both micro-stories, trade board. Backlogged: scouts-up-and-out,
+  item transport, the brood deep pass.
 - **[ant_colony_40.md](../zones/ant_colony_40.md)** — (4,0) MEDIUM: the colony city —
   Great Trunk Tunnel, fungus-garden terraces (one blighted + quarantined), brood
   nurseries, granaries, the scripted Queen in a fungus-cathedral dome, the Royal Vault,

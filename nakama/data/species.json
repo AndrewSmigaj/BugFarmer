@@ -514,8 +514,8 @@
         "dead_beetle",
         "dead_bee",
         "rotten_fruit",
-        "mushroom_cluster",
-        "mushroom_brown"
+        "mushroom_inkcap",
+        "mushroom_morel"
       ]
     },
     "forage_chance": 0.55,
@@ -572,8 +572,8 @@
         "dead_beetle",
         "dead_bee",
         "rotten_fruit",
-        "mushroom_cluster",
-        "mushroom_brown"
+        "mushroom_inkcap",
+        "mushroom_morel"
       ]
     },
     "forage_chance": 0.55,

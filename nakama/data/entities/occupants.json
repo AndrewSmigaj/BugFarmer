@@ -570,7 +570,6 @@
     "sprite_w": 16,
     "sprite_h": 16,
     "world": {
-      "nectar": true,
       "footprint": [
         1,
         1
@@ -974,7 +973,6 @@
     "stackable": false,
     "sell_price": 3,
     "world": {
-      "nectar": true,
       "footprint": [
         1,
         1
@@ -1003,6 +1001,7 @@
     "stackable": false,
     "sell_price": 9,
     "world": {
+      "nectar": true,
       "footprint": [
         1,
         1
@@ -1059,6 +1058,7 @@
     "stackable": false,
     "sell_price": 5,
     "world": {
+      "nectar": true,
       "footprint": [
         1,
         1
@@ -3843,7 +3843,6 @@
       "pivot": "bc",
       "breakable": {
         "hp": 2,
-        "required_tool_type": "shovel",
         "drops": [
           {
             "item_id": "ant_egg",

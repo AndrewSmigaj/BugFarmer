@@ -3207,5 +3207,35 @@
     "process_ticks": 12,
     "unlock": "shop:stonemason",
     "collection": "stone_works"
+  },
+  "chitin_ant": {
+    "station": "bug_extractor",
+    "inputs": [
+      {
+        "item": "dead_ant",
+        "count": 1
+      }
+    ],
+    "output": {
+      "item": "chitin",
+      "count": 1
+    },
+    "process_ticks": 80,
+    "unlock": "default"
+  },
+  "formic_ant": {
+    "station": "bug_extractor",
+    "inputs": [
+      {
+        "item": "dead_ant",
+        "count": 2
+      }
+    ],
+    "output": {
+      "item": "formic_acid",
+      "count": 1
+    },
+    "process_ticks": 80,
+    "unlock": "default"
   }
 }
