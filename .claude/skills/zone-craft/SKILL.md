@@ -13,6 +13,24 @@ honored, and nothing worth walking to. Two rules frame everything below:
 - **You are expected to be CREATIVE**, not to assemble the minimum the request named. The owner
   reviews taste; your job is to bring real options worth choosing between.
 
+## ⛔ THE GATE — read this before you write ANY builder/scene code
+This exists because the failure mode is real and repeated: skipping the loop and writing a
+**monolithic `zone_*.py` that scatters props randomly** — no scene previews, haphazard "rooms with
+stuff thrown in," boring, near-pure dirt. **That is a protocol VIOLATION, not a build.**
+
+You may NOT write or edit a zone builder / scene until you have PRODUCED and POSTED to the owner:
+1. **The BRIEF** (the fields below — promise, region jobs, ≥3 named landmarks, ground-variety, edges,
+   rule-bend). Most zone docs already carry a `## Craft brief`; refine it, don't skip it.
+2. **The LANDMARK-SCENE LIST** — every interesting place is a crafted **`place_<thing>(b, ox, oy)`
+   scene piece** with a thin `build()` wrapper and its OWN preview in
+   `tools/_generated/previews/zones/<zone>/scenes/` (author-zone). Name each scene + its preview path.
+   Landmarks are authored DELIBERATELY (text-grids / arranged rows — the ROWS rule), never scatter.
+3. **2-3 rendered OPTIONS per major feature** (layout band, showpiece landmark). "Never build the
+   first idea for a major." Owner picks (AskUserQuestion; if it times out, state your pick + proceed).
+
+No artifact → no build. If you catch yourself typing `fill_solid`/`carve_*` into a `zone_*.py`
+before the scene list + options exist and are posted, STOP — you are violating the gate.
+
 ## The craft loop
 0. **ORIENT** — read the zone doc (`docs/product/zones/<zone>.md`), the corrections ledger
    (`docs/guides/authoring/CORRECTIONS.md` — ALL of it, it's short), and the `research_*.md`

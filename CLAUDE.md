@@ -66,6 +66,13 @@ time (you end up building every feature twice). For every feature:
   run `python3 tools/data/publish_entities.py` after editing the canonical JSON.
 
 ## Hard rules (the gotchas that bite)
+- **Building/reworking a ZONE = invoke the `zone-craft` skill and clear ITS GATE first.** Before
+  writing ANY zone/scene code you MUST produce + post: the BRIEF, the named LANDMARK-SCENE LIST
+  (every interesting place is a crafted `place_*(b,ox,oy)` piece with its OWN preview under
+  `previews/zones/<zone>/scenes/`), and 2-3 rendered OPTIONS per major feature. Build landmarks as
+  crafted scenes (text-grids/rows), compose-in-place, then LENS PASS + LEDGER CHECK. **NEVER a
+  monolithic prop-scatter `zone_*.py`** (the repeated failure). `dirt areas` = dirt-block MASSES with
+  stone/ore CORES so digging finds things (caves.md Rule 4) — never a flat pure-dirt fill.
 - **Zone orientation is FIXED: HIGH y = NORTH = top of every render; LOW y = SOUTH (= deep
   underground); x=0 = WEST, x=255 = EAST** (`zone.go`: "+Y = north"). Never re-derive it —
   sanity-check: `village_21_B`'s big lake is at (x=46, y=48) and IS in the SW quadrant. Getting
