@@ -215,6 +215,47 @@ func (m *Match) predationThink(
 		return true
 	}
 
+	// ANT COLONY BEHAVIOR (P3.2): scouts breadcrumb their walk and REGISTER anything
+	// edible into the colony memory; hungry workers with nothing in VISION walk the
+	// best-known trail hop-by-hop (the scout's stored route — files share one literal
+	// polyline). Everything else falls through to the bee decline below, so dining,
+	// provisioning and homing stay the verbatim shared machinery. Server-only reads;
+	// the only outputs are ordinary legs.
+	if species.CarrionForager {
+		// Phase normalization FIRST (the bee_arena starve-sawtooth lesson): attractions
+		// resolve BY PHASE and a fresh swarm is born at Phase "" — an un-normalized
+		// worker would see "no food in vision" while standing on a feast.
+		if swarm.Phase == "" || swarm.Phase == "idle" {
+			swarm.Phase = "feeding"
+		}
+		nestKey, colonyNest := m.nearestColonyNest(state, swarm, species, chunkSize)
+		if species.ColonyScout {
+			// THE SENSOR (owner ruling: scouts are pure sensors): crumb the walk,
+			// register nearby food, then decline below — the shared blocks feed and
+			// wander it. Spawned scouts carry no NestKey → PROVISION never fires.
+			m.scoutBreadcrumb(state, swarm, colonyNest, chunkSize)
+			if nestKey != "" {
+				for _, h := range FindNearbyFood(state, swarm.Position, species.VisionRange,
+					swarm.GetCurrentAttractions(species)) {
+					registerCarrionSite(state, nestKey, int(h.X), int(h.Y),
+						scoutRegisterStrength, state.ScoutPaths[swarm.ID])
+				}
+			}
+		} else if swarm.Satiation < predatorFullSatiation && nestKey != "" &&
+			len(FindNearbyFood(state, swarm.Position, species.VisionRange,
+				swarm.GetCurrentAttractions(species))) == 0 {
+			// THE WORKER on the march: nothing in sight → walk the trail.
+			if site := bestKnownSite(state.ColonyMemory[nestKey],
+				swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)); site != nil {
+				tx, ty := nextTrailPoint(site, swarm.WorldX(chunkSize), swarm.WorldY(chunkSize))
+				swarm.TargetPreyID = ""
+				m.emitLeg(state, swarm, species, tx, ty, 1.0, chunkSize, deltaTime)
+				swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)
+				return true
+			}
+		}
+	}
+
 	// NECTAR FORAGERS (bees): a NEST species with an EMPTY prey list never hunts — while
 	// below the full-load point it declines ownership (the centipede carrion-first pattern)
 	// so the SHARED forage block dines on flower nectar; satiation then climbs to

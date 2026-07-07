@@ -162,6 +162,14 @@ type WorldState struct {
 	BroodStates     map[string]*entities.BroodState      // "gx,gy" -> visible nursery (compost/milkweed/ground pile)
 	ForagePools     map[string]*entities.ForagePoolState // "gx,gy" -> flower nectar feeding pool (depletable)
 
+	// ANT colony memory + scout walk buffers — SERVER-ONLY SOFT STATE (the
+	// NestState.Brood class): never hashed, never snapshotted, and deliberately
+	// EXCLUDED from buildWorldSave (trails must age out, not persist — the
+	// Unbounded-Growth lens; a restart forgets and the scouts re-learn).
+	// See entities/colony.go for the full frontier-sync classification.
+	ColonyMemory map[string]*entities.ColonyMemory // nest "gx,gy" -> remembered food sites + routes
+	ScoutPaths   map[string][]entities.RoutePoint  // scout swarmID -> breadcrumbs since leaving home
+
 	// Gnaw damage per occupant cell — its OWN pool, NOT BreakingState (whose owner-
 	// reset would let a player "repair" a gnawed fence by hitting it, and vice versa).
 	// Whichever pool finishes first wins; dueling crack visuals are accepted cosmetics.
@@ -398,6 +406,8 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		HostPlantStates: make(map[string]*entities.HostPlantState),
 		BroodStates:     make(map[string]*entities.BroodState),
 		ForagePools:     make(map[string]*entities.ForagePoolState),
+		ColonyMemory:    make(map[string]*entities.ColonyMemory),
+		ScoutPaths:      make(map[string][]entities.RoutePoint),
 		GnawDamage:      make(map[string]int),
 		Stations:        make(map[string]*entities.StationState),
 		// Crafting
