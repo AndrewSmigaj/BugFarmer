@@ -1,0 +1,93 @@
+{
+  "zone_id": "ant_tunnels_30",
+  "name": "Ant Tunnels",
+  "row": 3,
+  "col": 0,
+  "width": 256,
+  "height": 256,
+  "spawn_point": [
+    111,
+    252
+  ],
+  "biome_type": "meadow",
+  "seed": 0,
+  "neighbors": {
+    "north": "bee_meadow_20",
+    "east": "underground_passages_31",
+    "south": "ant_colony_40"
+  },
+  "bug_spawning": {
+    "species_caps": {
+      "ant_worker": {
+        "initial": 4,
+        "max": 10,
+        "max_population": 40,
+        "min_population": 2,
+        "swarm_size": 3
+      },
+      "ant_scout": {
+        "initial": 2,
+        "max": 4,
+        "max_population": 8,
+        "min_population": 1,
+        "swarm_size": 1
+      },
+      "centipede_garden": {
+        "initial": 1,
+        "max": 2,
+        "max_population": 4,
+        "min_population": 0,
+        "swarm_size": 1
+      }
+    },
+    "spawn_areas": [
+      {
+        "id": "ants_outside",
+        "species": [
+          "ant_worker"
+        ],
+        "type": "circle",
+        "cx": 120,
+        "cy": 185,
+        "radius": 42,
+        "weight": 1.0
+      },
+      {
+        "id": "scouts",
+        "species": [
+          "ant_scout"
+        ],
+        "type": "circle",
+        "cx": 130,
+        "cy": 175,
+        "radius": 55,
+        "weight": 1.0
+      },
+      {
+        "id": "cent_den",
+        "species": [
+          "centipede_garden"
+        ],
+        "type": "circle",
+        "cx": 205,
+        "cy": 205,
+        "radius": 12,
+        "weight": 0.5
+      }
+    ],
+    "initial_carrion": [
+      {
+        "item": "dead_beetle",
+        "x": 90,
+        "y": 190,
+        "count": 2
+      },
+      {
+        "item": "rotten_fruit",
+        "x": 122,
+        "y": 186,
+        "count": 2
+      }
+    ]
+  }
+}
