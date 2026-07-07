@@ -27,8 +27,11 @@
   is superseded by the half-outside layout.
 
 ## Connections (map)
-- **N → bee_meadow_20**: a plain edge into the meadow's southern gradient (which stays
-  as built). Ant presence in the bee zone waits for cross-zone transfer (backlogged).
+- **N → bee_meadow_20**: a plain edge into open meadow. The meadow's old south dirtying
+  gradient is being REMOVED (owner review — "removing the strip at the bottom of the bee
+  zone... more spread out forest"; backlog: ANT-ARC BUILD PREP): now that (3,0) is
+  half-outside with its own cliff transition, the bee zone needs no dirt-wall blend.
+  Ant presence in the bee zone itself waits for real cross-zone transfer (backlogged).
 - **E → underground_passages_31**: THE STONE SEAM — "there should be a natural boundary
   like with the beginning mining zone all along the ant area and the rocky area." Rock
   runs the whole shared edge; the cliff line continues the mining zone's; the committed

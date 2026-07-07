@@ -522,6 +522,22 @@ zones, so backlog all lighting."
 - Scouts are BASED in the lower colony and head UP AND OUT across zones — rides the
   real cross-zone transfer below.
 
+## Now — ANT-ARC BUILD PREP (owner decisions 2026-07-06, do alongside the (3,0) build)
+- **bee_meadow_20 — REMOVE the south dirtying/rocky GRADIENT** (zone_bee_meadow_20.py §1b:
+  the `gradient_field` + rock_masses + torn-ground rubble + dead-tree/dry-flora band along
+  the south edge). Owner: "removing the strip at the bottom of the bee zone just to give
+  more space to encounter ants, and more spread out forest." Its original job (blend into
+  the ant zone below with no sudden dirt wall) is gone now that ant_tunnels_30 is
+  half-outside and carries its own cliff transition. AFTER: restore meadow to the south
+  edge with more spread-out forest. **Keep the Rocky Gorge (§1c, the stream's east exit) —
+  a separate feature, untouched.** Re-save the zone + view_world.
+- **Mushroom realism sweep — REPLACE the two generic ids** (`mushroom_cluster`,
+  `mushroom_brown`) at all 17 placements with existing real species (morel, inkcap,
+  chanterelle, puffball, bracket, red, glow…), then DEPRECATE the two generic entities.
+  Owner: "actual mushrooms, not just 'cluster' or 'brown mushroom'." Touches many
+  zone_*.py + regen; no new art (real species already have sprites). Ant zone already uses
+  inkcap/morel natively.
+
 ## Later — REAL cross-zone bug transfer (owner 2026-07-06: "it will be real bug transfer")
 Zones are isolated per-match sims today (Neighbors is player-only). The real feature:
 a bug/swarm that walks off a connected edge LEAVES zone A's sim (a ledgered removal) and
