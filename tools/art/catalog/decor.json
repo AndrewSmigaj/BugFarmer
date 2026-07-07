@@ -107,6 +107,9 @@
   "specimen_case": {
     "look": "a glass-topped wooden DISPLAY CASE of pinned butterflies and moths, seen front-on: rows of colorful pinned specimens under glass in a shallow wooden frame on short legs."
   },
+  "ant_chart": {
+    "look": "a framed CHART BOARD mounted on a wall, seen front-on: a hand-drawn scientific cross-section DIAGRAM of an ant colony on aged paper — branching vertical tunnels and round labelled chambers with a queen at the bottom; an entomology wall diagram"
+  },
   "garden_border_stone": {
     "look": "a short LOW row of small rounded grey EDGING STONES laid end-to-end to bound a garden bed, seen front-on; very short low decorative border stones, only a few pixels tall"
   },

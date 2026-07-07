@@ -173,6 +173,87 @@
       }
     }
   },
+  "sign_ant": {
+    "name": "Myrmecology Sign",
+    "category": "structure",
+    "sprite_w": 32,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 6,
+    "world": {
+      "footprint": [
+        2,
+        1
+      ],
+      "pivot": "bc",
+      "interaction_type": "sign",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "sign_ant",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "formicarium": {
+    "name": "Formicarium",
+    "category": "furniture",
+    "sprite_w": 24,
+    "sprite_h": 32,
+    "stackable": false,
+    "sell_price": 55,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "formicarium",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "ant_chart": {
+    "name": "Ant Colony Chart",
+    "category": "decoration",
+    "sprite_w": 24,
+    "sprite_h": 24,
+    "stackable": false,
+    "sell_price": 10,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "ant_chart",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
   "fence_stone": {
     "name": "Stone Fence",
     "category": "structure",

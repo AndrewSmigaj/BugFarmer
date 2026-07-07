@@ -142,6 +142,9 @@
   "sign_leaf": {
     "look": "a wooden SHOP SIGN on a post painted with a green LEAF and a small bug; a naturalist/ecologist sign"
   },
+  "sign_ant": {
+    "look": "a wooden hanging SHOP SIGN on a post, seen front-on, painted with a large bold black ANT in profile (segmented head-thorax-abdomen, six legs, two antennae) above the word MYRMECOLOGY; a field-research station sign, weathered wood"
+  },
   "market_stall": {
     "look": "an open-air MARKET STALL \u2014 a wooden counter under a striped peaked AWNING roof on poles, seen front-on; a trading booth, NOT a tent"
   },

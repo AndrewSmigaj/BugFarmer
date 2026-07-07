@@ -239,6 +239,9 @@
   "bug_terrarium_big": {
     "look": "a large glass BUG TERRARIUM tank on a wooden stand, green plants and a branch inside, seen front-on; a vivarium display"
   },
+  "formicarium": {
+    "look": "a tall narrow glass ANT FARM (formicarium) on a small wooden base, seen front-on: a slab of sandy soil sandwiched between two glass panes, riddled with dark branching ANT TUNNELS and round chambers, tiny black ants scattered through them; a research vivarium, NOT a fish tank"
+  },
   "map_table_big": {
     "look": "a large wooden MAP TABLE strewn with rolled charts and an open land MAP, seen front-on; a planning table"
   },
