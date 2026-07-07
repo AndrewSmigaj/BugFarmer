@@ -38,7 +38,7 @@ def build(zone_id="ant_lab"):
     # THREE pools only (the first run's six fed 60 workers forever — the local larder
     # must run DRY periodically or nobody ever marches and no trail can exist).
     for mx, my, mid in [(20, 44, "mushroom_cluster"), (27, 43, "mushroom_brown"),
-                        (23, 55, "mushroom_cluster")]:
+                        (23, 55, "mushroom_cluster"), (30, 50, "mushroom_brown")]:
         Z.place_occupant(mid, mx, my)
 
     # MID-FIELD OBSTACLES: three dirt-block clumps the trail must route around —

@@ -249,8 +249,18 @@ func (m *Match) predationThink(
 					if hdx*hdx+hdy*hdy <= species.VisionRange*species.VisionRange {
 						continue
 					}
-					registerCarrionSite(state, nestKey, int(h.X), int(h.Y),
+					isNew := registerCarrionSite(state, nestKey, int(h.X), int(h.Y),
 						scoutRegisterStrength, state.ScoutPaths[swarm.ID])
+					// Recruit on a FRESH site — or RELIGHT a known one whose trail
+					// has lapsed (v9: coalescence keeps sites alive, so fresh-only
+					// recruitment fired 4 times in 34 days).
+					if isNew || !anyMarcherFor(state, nestKeyFor(int(h.X), int(h.Y))) {
+						n := recruitWorkers(state, nestKey, int(h.X), int(h.Y), 5)
+						if n > 0 {
+							logger.Info("ANTLOG recruit nest=%s site=%d,%d workers=%d",
+								nestKey, int(h.X), int(h.Y), n)
+						}
+					}
 					logger.Info("ANTLOG register nest=%s site=%d,%d kind=%s routeLen=%d",
 						nestKey, int(h.X), int(h.Y), h.Kind, len(state.ScoutPaths[swarm.ID]))
 				}
@@ -302,6 +312,13 @@ func (m *Match) predationThink(
 				sx2, sy2 := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
 				ddx, ddy := float32(site.GridX)+0.5-sx2, float32(site.GridY)+0.5-sy2
 				if ddx*ddx+ddy*ddy <= species.VisionRange*species.VisionRange && len(visionHits) > 0 {
+					// TRAFFIC REINFORCEMENT (the ACO other-half, v6 finding): an
+					// arrival re-vouches for the site, so a trail SUSTAINS ITSELF
+					// while the food lasts — scouts only have to LIGHT it. When the
+					// food is gone arrivals stop and decay retires the trail (the
+					// designed migrate-on-depletion dynamic).
+					registerCarrionSite(state, nestKey, site.GridX, site.GridY,
+						workerReinforceStrength, nil)
 					delete(state.MarchTargets, swarm.ID) // arrived: dine (decline below)
 					logger.Info("ANTLOG arrive swarm=%s site=%d,%d", swarm.ID, site.GridX, site.GridY)
 				} else {

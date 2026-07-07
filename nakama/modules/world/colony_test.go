@@ -30,15 +30,24 @@ func TestColonyMemoryRegisterRefreshEvictDecay(t *testing.T) {
 		t.Fatalf("refresh must keep the SHORTER route (trails straighten): %d points", len(mem.Sites[0].Route))
 	}
 
-	// Eviction: past the cap the WEAKEST site dies.
+	// Coalescence: a registration within the merge radius refreshes the SAME site.
+	registerCarrionSite(state, key, 22, 12, 6, nil)
+	if len(mem.Sites) != 1 {
+		t.Fatalf("nearby registrations must coalesce into one site: %d", len(mem.Sites))
+	}
+	if mem.Sites[0].Strength != 30 {
+		t.Fatalf("coalesced refresh must accumulate: %v", mem.Sites[0].Strength)
+	}
+
+	// Eviction: past the cap the WEAKEST site dies (sites spread beyond the merge radius).
 	for i := 0; i < entities.MaxColonySites; i++ {
-		registerCarrionSite(state, key, 30+i, 10, float32(20+i), nil)
+		registerCarrionSite(state, key, 40+i*10, 10, float32(20+i), nil)
 	}
 	if len(mem.Sites) != entities.MaxColonySites {
 		t.Fatalf("memory must cap at %d sites: %d", entities.MaxColonySites, len(mem.Sites))
 	}
 	for _, s := range mem.Sites {
-		if s.GridX == 30 && s.GridY == 10 {
+		if s.GridX == 40 && s.GridY == 10 {
 			t.Fatal("the weakest site (strength 20) must have been evicted")
 		}
 	}

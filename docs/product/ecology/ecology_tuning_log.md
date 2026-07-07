@@ -399,3 +399,45 @@ extinct it. HONEST CAVEATS for the real zone: (1) bees PIN at max_pop 40 with hi
 (19-33/day) — cap-bound, not nectar-bound; the real bound must come from flower density + zone caps in
 bee_meadow_20 (lab balance doesn't transfer, per §1). (2) The wasp square-wave (their known-broken nest
 economy, PREDLOG≈0) predates this work and is unchanged — still the open problem in §6.
+
+## 2026-07-06/07 — ANT TRAILS: the v1→v11 lab campaign (underground-arc P3.3)
+Zone ant_lab (96x96: brood+fungus WEST, carrion bonanza EAST at (72-79,46-51), obstacles
+mid). Every run seed 1337, 600s. Each run fixed a REAL mechanism bug (all committed):
+- v1: colony never founded — BOTH ant species claimed nest_occupant ant_brood; the
+  species-map iteration was unordered (latent nondeterminism). Fix: scout link-only
+  colony_nest_occupant + sorted speciesForNestOccupant. → colony lives (4→60 in a day).
+- v2 (geometry): 6 pools fed 60 workers forever → 3 pools; scout range widened; carrion x20.
+  Result: hunger sag proved food binds; NO eastward trail.
+- v3: THE OSCILLATION TRAP — pool trickle-regen re-captured marchers at the garden edge
+  every think. Fix: march COMMITMENT (MarchTargets, server-only PER-RUN). Tests added.
+- v4: trails formed — to the colony's OWN starvation corpses (Strength/(1+dist) let
+  15-cell corpse sites beat the 48-cell bonanza 10:1; 1342 arrivals inside the garden
+  in v3's version). Fixes: TRAILS ARE FOR FAR FOOD (scouts skip sites within vision of
+  the nest) + ANTLOG telemetry (register/commit/arrive/recruit).
+- v5: op lesson — a timed-out run left config deltas in canonical data; the surgical
+  git-checkout recovery reverted UNCOMMITTED fixes (commit-all-our-work, again).
+- v6: necrophoresis — dead_ant removed from ant attractions (self-corpse trails were a
+  noise loop: starvation → corpses → trails to corpses → more starvation).
+- v7: sparse-scout memories evaporated before anyone marched → traffic REINFORCEMENT
+  (arrivals re-vouch, +8) + decay 1.5→0.75. Commits still rare (joint-probability gate).
+- v8: RECRUITMENT (fresh site → commit up to 5 workers; real-ant tandem-running). Found:
+  the carrion pile registered as 15+ one-cell sites churning the 8-slot memory.
+- v9: SITE COALESCENCE (merge radius 4 — a pile is ONE site). Found: fresh-only
+  recruitment now fires ~4x/34 days (the site never dies).
+- v10: RELIGHT recruitment (re-vouch with no live marchers → recruit). Found: marchers
+  don't arrive — scout routes are wander TANGLES; index-space skip-ahead orbits them.
+- v11: PROGRESS-GATED traversal (a waypoint counts only if it nears the site; else
+  direct leg). Arrivals still ~1/run.
+**STATE: mechanism PROVEN end-to-end** (founding, scouting, registration, recruitment,
+commitment, march, arrival, reinforcement — all fire with ANTLOG evidence; sync gates
+green; zero new ledger events). **FEEL-BAR OPEN** — the visible file has not formed. Two
+named bottlenecks with next levers:
+1. RECRUIT ELIGIBILITY: events find ~1 of ~10 live worker swarms eligible — the filter
+   (sat>=90 / already-committed / species) needs instrumentation to see which condition
+   bites. One logging line + one run.
+2. SCOUT COVERAGE: scouts wander r22 around their SPAWN points forever → the far site is
+   visited ~2-4x per 34 days. Lever: scout PATROL bias (wander anchor drifts / re-anchors
+   to least-recently-visited sectors) — real scouting behavior, small deterministic code.
+NOTE for the zones: tunnel geometry changes this calculus entirely (scouts live IN the
+colony, corridors constrain walks into usable routes, food webs are richer). Re-run the
+bar on ant_tunnels_30's real geometry before more open-field tuning.

@@ -1,8 +1,8 @@
 {
-  "description": "Ant lab v5: cut corpse-noise so the staged east bonanza is the dominant far-site. Levers: worker decay 0.8->0.55, scout decay ->0.25 (sensors stop dying hourly), worker max_population 60->36. Feel-bar: visible worker line nest->east carrion.",
+  "description": "Ant lab v10: relight-recruitment + gentler economy (worker decay 0.45, 4 pools). Feel-bar: visible worker line nest->east carrion.",
   "species": {
     "ant_worker": {
-      "satiation_decay_rate": 0.55
+      "satiation_decay_rate": 0.45
     },
     "ant_scout": {
       "satiation_decay_rate": 0.25

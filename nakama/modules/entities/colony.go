@@ -46,6 +46,12 @@ const (
 	MaxRouteLen = 24
 	// SiteStrengthCap clamps refreshes so one bonanza can't dominate forever.
 	SiteStrengthCap = 100.0
+	// SiteMergeRadius: registrations within this radius merge into ONE site — a food
+	// PILE is one destination, not a memory-churning constellation of cells (v8).
+	SiteMergeRadius = 4
 	// SiteDecayPerPass drains strength every nest pass (30 ticks) — the age-out.
-	SiteDecayPerPass = 1.5
+	// 0.75 (was 1.5): one scout sighting must live long enough (~50s) for the first
+	// workers to reach a FAR site and light the traffic-reinforcement loop (v6: at
+	// 1.5, sparse-scout memories evaporated before anyone marched).
+	SiteDecayPerPass = 0.75
 )

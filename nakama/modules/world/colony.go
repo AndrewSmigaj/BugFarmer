@@ -26,6 +26,11 @@ func nestKeyFor(gx, gy int) string { return fmt.Sprintf("%d,%d", gx, gy) }
 // needs a scout (or diners) to keep vouching for it.
 const scoutRegisterStrength = 12.0
 
+// workerReinforceStrength: one worker ARRIVAL's re-vouch (the ACO traffic loop) —
+// enough that steady traffic sustains a trail indefinitely against decay, while a
+// dead site (no arrivals) retires in under a game-hour.
+const workerReinforceStrength = 8.0
+
 // nearestColonyNest finds the nest an ant swarm belongs to: its OWN nest when it is a
 // resident, else the nearest nest whose occupant family matches the species'
 // nest_occupant (scouts are spawned, not hatched — they adopt the closest brood).
@@ -92,9 +97,9 @@ func (m *Match) scoutBreadcrumb(state *WorldState, swarm *entities.SwarmState, n
 // registering scout's walked route. Same-cell hits refresh strength and keep the
 // SHORTER route (trails straighten over generations — the ACO nod). Weakest site
 // evicted past the cap (lowest strength, lowest cell-key tiebreak).
-func registerCarrionSite(state *WorldState, nestKey string, gx, gy int, add float32, route []entities.RoutePoint) {
+func registerCarrionSite(state *WorldState, nestKey string, gx, gy int, add float32, route []entities.RoutePoint) bool {
 	if nestKey == "" {
-		return
+		return false
 	}
 	if state.ColonyMemory == nil { // defend test/deserialization construction paths
 		state.ColonyMemory = make(map[string]*entities.ColonyMemory)
@@ -105,7 +110,11 @@ func registerCarrionSite(state *WorldState, nestKey string, gx, gy int, add floa
 		state.ColonyMemory[nestKey] = mem
 	}
 	for _, s := range mem.Sites {
-		if s.GridX == gx && s.GridY == gy {
+		// COALESCENCE (v8 finding): a carrion PILE registered as 15+ one-cell sites
+		// that churned the 8-slot memory, split reinforcement, and soaked recruits
+		// on neighbor cells. Anything within the merge radius IS the same site.
+		dx, dy := s.GridX-gx, s.GridY-gy
+		if dx*dx+dy*dy <= entities.SiteMergeRadius*entities.SiteMergeRadius {
 			s.Strength += add
 			if s.Strength > entities.SiteStrengthCap {
 				s.Strength = entities.SiteStrengthCap
@@ -113,12 +122,13 @@ func registerCarrionSite(state *WorldState, nestKey string, gx, gy int, add floa
 			if len(route) > 0 && (len(s.Route) == 0 || len(route) < len(s.Route)) {
 				s.Route = append([]entities.RoutePoint(nil), route...)
 			}
-			return
+			return false
 		}
 	}
 	site := &entities.CarrionSite{GridX: gx, GridY: gy, Strength: add,
 		Route: append([]entities.RoutePoint(nil), route...)}
 	mem.Sites = append(mem.Sites, site)
+	isNew := true
 	if len(mem.Sites) > entities.MaxColonySites {
 		weakest := 0
 		for i, s := range mem.Sites {
@@ -130,6 +140,51 @@ func registerCarrionSite(state *WorldState, nestKey string, gx, gy int, add floa
 		}
 		mem.Sites = append(mem.Sites[:weakest], mem.Sites[weakest+1:]...)
 	}
+	return isNew
+}
+
+// anyMarcherFor reports whether any live swarm is currently committed to the site —
+// the "is this trail lit?" check for relight-recruitment. O(marchers), tiny.
+func anyMarcherFor(state *WorldState, siteKey string) bool {
+	for _, k := range sortedStringKeys(state.MarchTargets) {
+		if state.MarchTargets[k] == siteKey && state.Swarms[k] != nil {
+			return true
+		}
+	}
+	return false
+}
+
+// recruitWorkers is the scout's RECRUITMENT (v7 finding: without it, a first march
+// depended on a worker happening to think hungry+empty-eyed while a far site was
+// alive — ~3 commits in 34 days). A FRESH site immediately commits up to `count`
+// of the colony's workers (sorted swarm ids — deterministic), who march on their
+// next think; their arrivals light the traffic-reinforcement loop. Real ants do
+// exactly this (tandem running / recruitment pheromone).
+func recruitWorkers(state *WorldState, nestKey string, gx, gy int, count int) int {
+	if state.MarchTargets == nil {
+		state.MarchTargets = make(map[string]string)
+	}
+	siteKey := nestKeyFor(gx, gy)
+	recruited := 0
+	for _, id := range sortedStringKeys(state.Swarms) {
+		if recruited >= count {
+			break
+		}
+		sw := state.Swarms[id]
+		sp := state.Species[sw.SpeciesID]
+		if sp == nil || !sp.CarrionForager || sp.ColonyScout {
+			continue
+		}
+		if sw.Satiation >= 90 { // full loads are homing — don't divert them
+			continue
+		}
+		if state.MarchTargets[id] != "" {
+			continue // already on a trail
+		}
+		state.MarchTargets[id] = siteKey
+		recruited++
+	}
+	return recruited
 }
 
 func siteKeyLess(a, b *entities.CarrionSite) bool {
@@ -160,12 +215,17 @@ func bestKnownSite(mem *entities.ColonyMemory, fromX, fromY float32) *entities.C
 	return best
 }
 
-// nextTrailPoint is the STATELESS traversal rule: from the worker's position, find the
-// nearest route point (lowest index tiebreak), then target two points AHEAD (skip-ahead
-// keeps files moving and self-heals after a shove); past the end, target the site cell.
+// nextTrailPoint is the STATELESS traversal rule: nearest route point, then two points
+// ahead — BUT a waypoint only counts if it makes SPATIAL PROGRESS toward the site
+// (v10 finding: scout routes in open terrain are wander TANGLES — index-space
+// skip-ahead sent marchers orbiting mid-map; one lucky arrival per run). A useless
+// waypoint falls back to the DIRECT line: in the open, direct legs converge into the
+// literal file; coherent tunnel routes (scouts that walked home→site corridors) still
+// get followed point by point.
 func nextTrailPoint(site *entities.CarrionSite, fromX, fromY float32) (float32, float32) {
+	sx, sy := float32(site.GridX)+0.5, float32(site.GridY)+0.5
 	if len(site.Route) == 0 {
-		return float32(site.GridX) + 0.5, float32(site.GridY) + 0.5
+		return sx, sy
 	}
 	nearest, nearestSq := 0, float32(0)
 	for i, p := range site.Route {
@@ -177,9 +237,15 @@ func nextTrailPoint(site *entities.CarrionSite, fromX, fromY float32) (float32, 
 	}
 	target := nearest + 2
 	if target >= len(site.Route) {
-		return float32(site.GridX) + 0.5, float32(site.GridY) + 0.5
+		return sx, sy
 	}
-	return site.Route[target].X, site.Route[target].Y
+	wp := site.Route[target]
+	mySiteSq := (sx-fromX)*(sx-fromX) + (sy-fromY)*(sy-fromY)
+	wpSiteSq := (sx-wp.X)*(sx-wp.X) + (sy-wp.Y)*(sy-wp.Y)
+	if wpSiteSq >= mySiteSq { // the waypoint would take us BACKWARD — go direct
+		return sx, sy
+	}
+	return wp.X, wp.Y
 }
 
 // processColonyMemory decays every site each nest pass (30 ticks) and drops dead

@@ -528,6 +528,16 @@ Future: a quarry source in the deep zones (row 4), statues + fountains crafted a
 Stonemason (D27 sculpture yard), and the marble premium furniture tier (P2 of the
 underground-arc plan adds table/bench/bust_marble as stone-set premium overrides).
 
+## Now — ANT TRAIL FEEL-BAR (open; mechanism proven, rate-tuning remains)
+The underground-arc P3 shipped the ant colony sim (species, nest gates, colony memory,
+commitment, recruitment, reinforcement, coalescence — all gated: go suite, determinism,
+latejoin x2 SYNC IDENTICAL, zero new ledger events). The visible nest→carrion FILE has
+not yet formed in the open-field lab: 11 evidence-logged runs (ecology_tuning_log.md),
+two named bottlenecks left — (1) recruit-eligibility filter (needs one instrumented
+run), (2) scout coverage (patrol-bias lever). Owner decides at the review package
+(docs/product/investigations/underground_arc_review_package.md): finish in the lab now,
+or bar it on ant_tunnels_30's real tunnel geometry when built.
+
 ## Later — creatures: ants & spiders (DESIGNED, not built)
 Full approved design: **[design_ants_spiders.md](ecology/design_ants_spiders.md)**. Ants = a foraging colony
 (hill/queen/eggs reuse Nest+Brood; workers forage carrion → carry home via the wasp provisioning loop;
