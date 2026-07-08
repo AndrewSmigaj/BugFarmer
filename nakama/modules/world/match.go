@@ -589,6 +589,7 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 			// Phase 1b: every joiner (first or late) gets the zone-wide blocks_bugs collision map so its
 			// bug sim collides identically regardless of camera position. Dynamic changes ride the ledger.
 			m.sendZoneCollisionMap(dispatcher, worldState, presence)
+			m.sendZoneRoofMap(dispatcher, worldState, presence) // cosmetic: underground lighting roof mask
 		}
 	}
 
@@ -2694,6 +2695,7 @@ func (m *Match) handleSnapshotRequest(
 	logger.Info("Zone resync requested by %s - sending late-join snapshot", requesterID)
 	m.sendLateJoinSnapshot(logger, dispatcher, state, requesterID, presence)
 	m.sendZoneCollisionMap(dispatcher, state, presence) // Phase 1b: refresh the zone-wide collision map too
+	m.sendZoneRoofMap(dispatcher, state, presence)      // cosmetic: underground lighting roof mask
 }
 
 // handleZoneSnapshot stores a snapshot from the authority client (OpCode 75).
@@ -2796,6 +2798,21 @@ func (m *Match) sendZoneCollisionMap(dispatcher runtime.MatchDispatcher, state *
 		return
 	}
 	dispatcher.BroadcastMessage(OpCodeZoneCollisionMap, data, []runtime.Presence{presence}, nil, true)
+}
+
+// sendZoneRoofMap sends one joiner the zone's COMPLETE authored "roof" cell set (OpCodeZoneRoofMap) so the
+// client can darken underground/roofed cells for the lighting. COSMETIC — never a sim input. Sent on join
+// AND on resync, alongside the collision map (roof is static authored data, so no per-change events needed).
+func (m *Match) sendZoneRoofMap(dispatcher runtime.MatchDispatcher, state *WorldState, presence runtime.Presence) {
+	if state.CurrentZone == nil || presence == nil {
+		return
+	}
+	cx, cy := state.RoofCells()
+	data, err := json.Marshal(ZoneRoofMapMessage{Cx: cx, Cy: cy})
+	if err != nil {
+		return
+	}
+	dispatcher.BroadcastMessage(OpCodeZoneRoofMap, data, []runtime.Presence{presence}, nil, true)
 }
 
 // sendLateJoinSnapshot sends a LateJoinSnapshot (OpCode 72) to a joining player.

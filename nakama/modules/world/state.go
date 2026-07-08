@@ -744,6 +744,43 @@ func (s *WorldState) BlocksBugsCells() (cx []int, cy []int) {
 	return cx, cy
 }
 
+// RoofCells returns the zone's COMPLETE set of authored "roofed" (underground / no-sun) cells, scanning the
+// full zone grid off disk the same zone-complete way as BlocksBugsCells (so first + late joiners get an
+// identical set). COSMETIC — the client darkens these for the underground lighting; this never enters the
+// sim or ComputeStateHash. Reads chunk.Roof (authored builder data), unlike the DERIVED collision map.
+func (s *WorldState) RoofCells() (cx []int, cy []int) {
+	if s.CurrentZone == nil {
+		return nil, nil
+	}
+	chunksX := s.CurrentZone.Width / ChunkSize
+	chunksY := s.CurrentZone.Height / ChunkSize
+	if chunksX <= 0 {
+		chunksX = 8
+	}
+	if chunksY <= 0 {
+		chunksY = 8
+	}
+	zonePath := "data/zones/" + s.CurrentZone.ZoneID
+	for ccy := 0; ccy < chunksY; ccy++ {
+		for ccx := 0; ccx < chunksX; ccx++ {
+			chunk := s.chunkForCollision(zonePath, ccx, ccy)
+			if chunk == nil || chunk.Roof == nil {
+				continue
+			}
+			for ly := 0; ly < len(chunk.Roof); ly++ {
+				row := chunk.Roof[ly]
+				for lx := 0; lx < len(row); lx++ {
+					if row[lx] {
+						cx = append(cx, ccx*ChunkSize+lx)
+						cy = append(cy, ccy*ChunkSize+ly)
+					}
+				}
+			}
+		}
+	}
+	return cx, cy
+}
+
 // chunkForCollision returns the chunk to scan for blocks_bugs occupants. An in-memory chunk is
 // always the truth (every EDITED chunk was eager-loaded at MatchInit by the persistence restore,
 // so player fences are here). Otherwise the chunk is pure authored content, loaded from disk

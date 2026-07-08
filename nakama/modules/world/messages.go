@@ -150,6 +150,10 @@ const (
 	OpCodeZoneCollisionMap int64 = 106 // S->C (on join + resync): the zone's COMPLETE blocks_bugs cell set, so
 	// every client runs per-bug collision zone-wide + identically (decoupled from its camera's chunk view).
 
+	OpCodeZoneRoofMap int64 = 109 // S->C (on join + resync): the zone's COMPLETE authored "roof" cell set
+	// (underground / no-sun). COSMETIC — the client darkens roofed cells for the underground lighting; it
+	// never enters the sim. Authored zone data (chunk.roof), NOT derived like the collision map.
+
 	OpCodePredationStrike int64 = 105 // C->S (authority only): the authority client picked the individual flies a
 	// predator struck (it has per-bug positions; the server does not). Server validates + applies via the
 	// existing kill path (killBugsInSwarm → BUG_REMOVED + carrion + satiation). See PredationStrikeMessage.
@@ -289,6 +293,15 @@ type PredationStrikeMessage struct {
 // regardless of camera position. Cx[i],Cy[i] = a blocked world cell. Dynamic changes ride
 // OCCUPANT_BLOCKS_BUGS influence events (frontier-gated) after this baseline.
 type ZoneCollisionMapMessage struct {
+	Cx []int `json:"cx"`
+	Cy []int `json:"cy"`
+}
+
+// ZoneRoofMapMessage (OpCode 109, S->C, on join + resync): the zone's COMPLETE set of authored "roofed"
+// (underground / no-sun) cells. COSMETIC ONLY — the client darkens these for the underground lighting; it
+// never enters the sim or ComputeStateHash. Cx[i],Cy[i] = a roofed world cell. Authored zone data
+// (chunk.roof from the builder), unlike the DERIVED collision map.
+type ZoneRoofMapMessage struct {
 	Cx []int `json:"cx"`
 	Cy []int `json:"cy"`
 }

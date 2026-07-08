@@ -134,6 +134,7 @@ type ChunkData struct {
 	ChunkY    int                 `json:"chunk_y"`
 	Ground    [][]string          `json:"ground"`    // 32x32 tile IDs (ChunkSize per side)
 	Occupants [][]json.RawMessage `json:"occupants"` // 32x32 polymorphic
+	Roof      [][]bool            `json:"roof,omitempty"` // 32x32: true = underground/no-sun (lighting only; cosmetic). Absent = all lit.
 
 	// Anchor index (soft, derived, never serialized — unexported). FindNearbyResources used to scan all
 	// 32x32 cells (each a json.Unmarshal) every call; instead it iterates this cached list of ANCHOR

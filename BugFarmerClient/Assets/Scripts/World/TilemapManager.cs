@@ -41,6 +41,15 @@ namespace BugFarmer.World
         private bool _collisionMapReady;
         /// <summary>True once the zone-wide blocks_bugs map has arrived — the bug sim gates on this.</summary>
         public bool CollisionMapReady => _collisionMapReady;
+
+        // Authored "roof" (underground / no-sun) cell set, hydrated by OpCodeZoneRoofMap on join/resync.
+        // COSMETIC — read only by the underground lighting overlay (DarknessOverlay); never a sim input.
+        private readonly HashSet<Vector2Int> _roofZoneWide = new HashSet<Vector2Int>();
+        /// <summary>True if the cell is authored underground/roofed (for the darkness overlay).</summary>
+        public bool IsRoofCell(Vector2Int cell) => _roofZoneWide.Contains(cell);
+        /// <summary>Bumps whenever the darkness inputs (collision map or roof map) change, so the
+        /// DarknessOverlay knows to recompute. Cosmetic-only signal.</summary>
+        public int DarknessDataVersion { get; private set; }
         private Vector2Int _lastPlayerChunk = new Vector2Int(int.MinValue, int.MinValue);
         private float _lastChunkCheck;
 
@@ -924,6 +933,8 @@ namespace BugFarmer.World
             // collision set and re-gate the bug sim until it arrives, so bugs don't collide against stale walls.
             _blocksBugsZoneWide.Clear();
             _collisionMapReady = false;
+            _roofZoneWide.Clear();       // drop the old zone's roof; the new zone re-sends OpCodeZoneRoofMap
+            DarknessDataVersion++;       // force the darkness overlay to recompute for the new zone
         }
 
         private void UnloadChunk(Vector2Int chunkPos)
@@ -1243,7 +1254,23 @@ namespace BugFarmer.World
             for (int i = 0; i < n; i++)
                 _blocksBugsZoneWide.Add(new Vector2Int(cx[i], cy[i]));
             _collisionMapReady = true;
+            DarknessDataVersion++;   // buried-block darkness reads the solid map
             Debug.Log($"[TilemapManager] Zone collision map hydrated: {_blocksBugsZoneWide.Count} blocks_bugs cells");
+        }
+
+        /// <summary>
+        /// Hydrate the zone's authored roof (underground / no-sun) cell set from the server
+        /// (OpCodeZoneRoofMap, on join + resync). COSMETIC — read only by DarknessOverlay; never a sim
+        /// input. Bumps DarknessDataVersion so the overlay recomputes.
+        /// </summary>
+        public void HandleZoneRoofMap(int[] cx, int[] cy)
+        {
+            _roofZoneWide.Clear();
+            int n = (cx != null && cy != null) ? System.Math.Min(cx.Length, cy.Length) : 0;
+            for (int i = 0; i < n; i++)
+                _roofZoneWide.Add(new Vector2Int(cx[i], cy[i]));
+            DarknessDataVersion++;
+            Debug.Log($"[TilemapManager] Zone roof map hydrated: {_roofZoneWide.Count} roofed cells");
         }
 
         /// <summary>

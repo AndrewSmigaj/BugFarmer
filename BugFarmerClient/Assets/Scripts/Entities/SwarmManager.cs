@@ -899,6 +899,9 @@ namespace BugFarmer.Entities
                 case OpCodes.ZoneCollisionMap:
                     HandleZoneCollisionMap(state);
                     break;
+                case OpCodes.ZoneRoofMap:
+                    HandleZoneRoofMap(state);
+                    break;
                 // Inventory messages (26, 37, 38) handled by InventoryManager
             }
         }
@@ -1462,6 +1465,18 @@ namespace BugFarmer.Entities
             var msg = JsonUtility.FromJson<ZoneCollisionMapMessage>(json);
             if (msg == null) return;
             BugFarmer.World.TilemapManager.Instance?.HandleZoneCollisionMap(msg.cx, msg.cy);
+        }
+
+        /// <summary>
+        /// Hydrate the zone's authored roof (underground) cell set (OpCode 109). COSMETIC — the client
+        /// darkens these for the underground lighting overlay; never a sim input / hash contributor.
+        /// </summary>
+        private void HandleZoneRoofMap(IMatchState state)
+        {
+            var json = System.Text.Encoding.UTF8.GetString(state.State);
+            var msg = JsonUtility.FromJson<ZoneRoofMapMessage>(json);
+            if (msg == null) return;
+            BugFarmer.World.TilemapManager.Instance?.HandleZoneRoofMap(msg.cx, msg.cy);
         }
 
         /// <summary>

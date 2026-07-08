@@ -28,7 +28,7 @@ namespace BugFarmer.World
         private Texture2D _tex;
         private Color32[] _pixels;
         private bool _enabledOverlay = true;
-        private bool _computedForReady;
+        private int _lastVersion = -1;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
@@ -53,18 +53,13 @@ namespace BugFarmer.World
             if (tm == null) return;
             if (_sr == null && !Build()) return;
 
-            // Recompute once each time a zone's collision map becomes ready (join / zone switch).
-            if (tm.CollisionMapReady)
+            // Recompute whenever the darkness inputs change (collision map + roof map arrive on join, in
+            // either order; and on a zone switch). The version bumps on each, so this catches the roof map
+            // landing a frame after the collision map.
+            if (tm.CollisionMapReady && tm.DarknessDataVersion != _lastVersion)
             {
-                if (!_computedForReady)
-                {
-                    Recompute(tm);
-                    _computedForReady = true;
-                }
-            }
-            else
-            {
-                _computedForReady = false; // a new zone is loading; recompute when it's ready
+                Recompute(tm);
+                _lastVersion = tm.DarknessDataVersion;
             }
         }
 
@@ -112,14 +107,17 @@ namespace BugFarmer.World
         {
             int n2 = N * N;
             var solid = new bool[n2];
+            var roofed = new bool[n2];
             var cur = new float[n2];
             for (int y = 0; y < N; y++)
                 for (int x = 0; x < N; x++)
                 {
                     int i = y * N + x;
-                    bool s = tm.IsCellBlockedForBugs(new Vector2Int(x, y));
+                    var cell = new Vector2Int(x, y);
+                    bool s = tm.IsCellBlockedForBugs(cell);
                     solid[i] = s;
-                    cur[i] = s ? 0f : 1f;   // solid starts dark, open lit
+                    roofed[i] = tm.IsRoofCell(cell);   // M2: authored underground/no-sun
+                    cur[i] = s ? 0f : 1f;              // solid starts dark, open lit
                 }
 
             float step = 1f / Falloff;
@@ -144,12 +142,16 @@ namespace BugFarmer.World
 
             for (int i = 0; i < n2; i++)
             {
-                byte v = (byte)(Mathf.Clamp01(cur[i]) * 255f);
+                // Combined darkness = max(buried, roofed). A roofed cell (underground) is fully dark —
+                // tunnels AND block faces — until a carried light opens it back up (M3). Surface block
+                // masses (not roofed) keep their buried soft-edge look (M1).
+                float lit = roofed[i] ? 0f : Mathf.Clamp01(cur[i]);
+                byte v = (byte)(lit * 255f);
                 _pixels[i] = new Color32(v, v, v, 255);
             }
             _tex.SetPixels32(_pixels);
             _tex.Apply();
-            Debug.Log("[DarknessOverlay] darkness field recomputed from the solid map (M1 buried-block darkness).");
+            Debug.Log("[DarknessOverlay] darkness field recomputed (M2: buried blocks + authored roof).");
         }
     }
 }

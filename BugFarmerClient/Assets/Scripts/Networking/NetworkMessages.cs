@@ -42,6 +42,7 @@ namespace BugFarmer.Networking
         public const int EquipmentUpdate = 97;  // S->C: the 7 worn-armor slots (echo + join)
         public const int PredationStrike = 105; // C->S (authority only): individual flies a predator struck
         public const int ZoneCollisionMap = 106; // S->C (join + resync): zone-complete blocks_bugs cell set
+        public const int ZoneRoofMap = 109;      // S->C (join + resync): zone-complete authored roof cell set (cosmetic — underground lighting)
     }
 
     /// <summary>
@@ -262,6 +263,18 @@ namespace BugFarmer.Networking
     /// </summary>
     [Serializable]
     public class ZoneCollisionMapMessage
+    {
+        public int[] cx;
+        public int[] cy;
+    }
+
+    /// <summary>
+    /// ZoneRoofMap (OpCode 109, S→C, on join + resync): the COMPLETE set of authored "roofed"
+    /// (underground / no-sun) cells. COSMETIC — the client darkens these for the underground lighting; never
+    /// a sim input. cx[i],cy[i] = one global roofed cell.
+    /// </summary>
+    [Serializable]
+    public class ZoneRoofMapMessage
     {
         public int[] cx;
         public int[] cy;
