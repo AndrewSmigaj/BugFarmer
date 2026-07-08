@@ -1,6 +1,6 @@
 ---
 name: certainty-assessment
-description: Use to score how certain you are about a plan, a design, or a just-built change BEFORE trusting it — and emit a numeric, per-dimension certainty TABLE. Turns a lens/review pass into calibrated, evidence-anchored numbers (each row cites file:line or a gate, names a falsifier, and the gate that would raise it), aggregated by MIN so one weak axis can't hide behind strong ones. The number ranks where to dig and exposes residual risk; it is NOT the ship gate (the execution gates are). Invoke after planning a change, after building one, or whenever you're about to claim something is "done / verified / safe."
+description: Use to score how certain you are about a plan, a design, or a just-built change BEFORE trusting it — and emit a numeric, per-dimension certainty TABLE. Turns a lens/review pass into calibrated, evidence-anchored numbers (each row cites file:line or a gate, names a falsifier, and the gate that would raise it). Reports DESIGN CONFIDENCE (over the design-time axes, so a real weak/unread axis still shows) SEPARATELY from VERIFICATION STATUS (a pending-gate checklist) — so at plan time an always-pending gate does not misleadingly drag the whole score to "not built yet." The number ranks where to dig and exposes residual risk; it is NOT the ship gate (the execution gates are). Invoke after planning a change, after building one, or whenever you're about to claim something is "done / verified / safe."
 ---
 
 # Certainty assessment → an evidence-anchored numeric table
@@ -72,11 +72,24 @@ consumed / cross-boundary contract / state mutation). ★ = the axes that earn t
   (usually Shaky) and flag it.** Never silently drop/redefine. [no-cowardice]
 - **A high score on thin evidence is a RED FLAG, not a pass** — when score and evidence disagree, the evidence wins.
 
-## Aggregation — MIN, never mean
-**Overall = the minimum of the load-bearing rows.** Averaging hides the one fatal axis — which *is* the
-false-certainty failure mode. **Name the weakest link.** If the weakest load-bearing row is below **Strong
-(80)**, you are **not** ready to proceed on it: either run the loop to close it, or surface it as the explicit
-blocker/residual. The Overall is a floor on trust, not a summary score.
+## Aggregation — DESIGN CONFIDENCE vs VERIFICATION STATUS (do NOT collapse to one MIN)
+*(Updated: the old "Overall = MIN of all rows" was misleading at plan time — the always-pending Verification
+row dragged every plan-time score down to "not built yet," which we already know. Report two things instead.)*
+
+1. **Design confidence** — assessed over the DESIGN-TIME axes only (Requirements, Comprehension, Design,
+   Sync-fit, Correctness, Blast-radius). **Name the weakest design axis** and pitch the confidence at roughly
+   its level. The anti-false-certainty guard stays: a genuinely **Shaky/Guess DESIGN axis** — a real hole
+   (unread code, an unproven algorithm, a wrong contract), NOT merely "unbuilt" — still drags it down and
+   blocks; don't average a real hole away. But this number does **not** include Verification.
+2. **Verification status** — reported **separately** as a checklist: which model-independent gates will
+   exercise this change, and their run-state (**pending / passed / failed**). At plan time these are *pending
+   by definition* — that is a **status, not a confidence penalty.** `Proven` is earned only when a gate runs.
+
+The distinction that matters: **"unproven because unbuilt"** (expected — track it as a pending gate) is NOT
+the same as **"shaky because comprehension/design is genuinely uncertain"** (a real low score — INVESTIGATE to
+raise it *now*, before building). Push design confidence as high as the evidence allows before implementation;
+let the gates convert it to Proven at build time. If a *design* axis is below Strong, dig there first; if only
+*verification* is pending, that's normal — proceed to build and run the gates.
 
 ## Output contract — the table is mandatory
 Emit exactly this, filled, every time (drop N/A rows or mark them):
@@ -85,18 +98,22 @@ Emit exactly this, filled, every time (drop N/A rows or mark them):
 |---|-----------|-------|------|-----------------------------------|-----------|----------|
 | 1 | Requirements fidelity | … | … | … | what observation drops it | the check that lifts it |
 | … | … | … | … | … | … | … |
-| — | **Overall (= min load-bearing)** | **NN** | | **weakest link: <row>** | | <the gate that closes it> |
+| — | **Design confidence (weakest design axis)** | **NN** | | **weakest design axis: <row>** | | <the investigation that lifts it> |
 
-Then one line: **what this means for proceeding** — proceed / dig here first / blocked on `<gate or user-decision>`.
+Then a separate **Verification: PENDING/PASSED** line listing the gates (row 7 belongs here, not in the
+number). Then one line: **what this means for proceeding** — proceed to build / dig into `<design axis>` first /
+blocked on `<user-decision>`. (Verification being pending is normal at plan time and is NOT a blocker by itself.)
 
 ## The loop
 1. **Pick the load-bearing rows** — the 7 core (mark N/A) + the dynamic rows generated from the change.
 2. **Evidence each** — read the REAL code at the load-bearing altitude; run the **cheap** gate now if it
    resolves an axis (a `LineBlocked` unit test, a grep of all emit sites). Apply caps → read the band → write
    the falsifier + the raise-it.
-3. **Overall = min**; name the weakest link.
-4. **Close every sub-Strong load-bearing row** — do the specific thing that raises it (read the remaining call
-   sites, run the gate, spin up the backend and observe). Re-score. **Log how each number moved.**
+3. **Design confidence = the weakest DESIGN axis (rows 1-6); Verification (row 7) reported separately** as a
+   pending-gate checklist. Name the weakest design axis.
+4. **Close every sub-Strong DESIGN row** — do the specific thing that raises it NOW (read the remaining call
+   sites, web-verify the API, grep all emit sites). Re-score. **Log how each number moved.** (Verification rows
+   close later, at build time, by running their gate — don't let them hold design confidence down.)
 5. **Loop until scores plateau or only a genuine USER-decision remains** (not a knowable fact — front-load it).
    Map each residual to the **execution gate that will close it**. Then — and only then — `Proven` is earned by
    running that gate.
@@ -111,10 +128,13 @@ Then one line: **what this means for proceeding** — proceed / dig here first /
 | 5 | Correctness | 78 | Plausible | Algorithm reasoned; endpoints-skip handled; but the helper isn't written/tested yet | Off-by-one on the endpoint cells | the `LineBlocked` unit test |
 | 6 | Blast radius & contract | 82 | Strong | LOS only narrows victims; +2 telegraph fields are additive (`JsonUtility` ignores unknown) | A follower also runs `RunPredationStrikes` | confirm authority-only at the call site |
 | 7 | ★ Verification | 65 | Plausible | Gates **identified** (Go feed test · `LineBlocked` test · sync gate · Unity) but **none have run** | — | run them |
-| — | **Overall (= min)** | **65** | | **weakest link: Verification — nothing's run** | | run the gates |
+| — | **Design confidence (weakest design axis)** | **78** | | **weakest design axis: Correctness — algorithm reasoned but the helper isn't written** | | the `LineBlocked` unit test |
+| — | **Verification: PENDING** | — | | gates identified (Go feed test · `LineBlocked` · sync gate · Unity), none run | | run them at build time |
 
-> Note how the MIN rule corrects the plan's own optimistic "**Net certainty ~94%**" to an honest **65** until
-> the gates run. The plan is well-*evidenced* but **unproven** — which is the whole point. A blended average
+> Note the split: **design confidence is 78** (honest — the design is well-evidenced, weakest at Correctness
+> which a cheap unit test lifts), and **verification is separately PENDING**. The OLD rule would have MIN'd
+> these into a misleading **65** dominated by "not built yet." The plan is well-*evidenced* but **unproven** —
+> proceed to build and let the gates convert it to Proven. A blended average
 > would have rubber-stamped it.
 
 ## Anti-patterns (how this goes wrong)
