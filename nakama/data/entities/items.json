@@ -2608,5 +2608,12 @@
     "stackable": true,
     "max_stack": 99,
     "sell_price": 6
+  },
+  "royal_jelly": {
+    "name": "Royal Jelly",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 45
   }
 }

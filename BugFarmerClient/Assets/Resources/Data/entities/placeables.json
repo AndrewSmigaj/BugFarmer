@@ -254,6 +254,32 @@
       }
     }
   },
+  "royal_jelly_pile": {
+    "name": "Royal Jelly Pile",
+    "category": "decoration",
+    "sprite_w": 20,
+    "sprite_h": 16,
+    "stackable": false,
+    "sell_price": 40,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "hand",
+        "drops": [
+          {
+            "item_id": "royal_jelly",
+            "count": 3,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
   "fence_stone": {
     "name": "Stone Fence",
     "category": "structure",
