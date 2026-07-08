@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""PostToolUse (matcher: Read) hook — record that a skill's SKILL.md was opened this session.
+"""PostToolUse hook — record that a skill's content was loaded this session, so the gate hooks
+(gate_skill_commands.py = Bash, gate_authoring_edits.py = Edit/Write) know it was actually read.
 
-Companion to gate_skill_commands.py. When Claude uses the Read tool on a file matching
-`.claude/skills/<slug>/SKILL.md`, drop a per-session marker so the gate hook knows that
-skill was actually read (the loaded skill *description* is only a pointer, not the content).
+Two ways a skill's content enters context, BOTH marked here:
+  1. The **Read** tool on `.claude/skills/<slug>/SKILL.md`  (explicit read — what a deny reason asks for).
+  2. The **Skill** tool invoking `<slug>`                    (the natural way; loads the full SKILL.md).
+Marking on invocation too is essential: without it, satisfying a gate by invoking the skill (the
+idiomatic path) would NOT set the marker, and the gate could livelock ("read the file" forever).
 
-Generic across skills — it marks whichever skill's SKILL.md was read.
+Generic across skills — it marks whichever skill was read/invoked. Fail-open by construction: any error
+exits 0 with no output; the worst a bug here does is "forget" a marker, which only makes a gate ask again.
 
-Fail-open by construction: any error whatsoever exits 0 with no output. This hook must never
-be able to disrupt a Read; the worst a bug here can do is "forget" to set a marker, which only
-means the gate asks Claude to read the skill again.
-
-stdin JSON (official hook contract): { "session_id": "...", "tool_input": { "file_path": "..." }, ... }
-Marker written: /tmp/claude-skill-read-<slug>-<session_id>
+stdin (official contract): { "session_id": "...", "tool_name": "...", "tool_input": { ... }, ... }
+Marker written: <TMPDIR|/tmp>/claude-skill-read-<slug>-<session_id>
 """
 import sys
 import os
@@ -27,13 +27,26 @@ def _safe(s: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.-]", "_", s or "")
 
 
+def _slug_from(data: dict):
+    ti = data.get("tool_input") or {}
+    # Case 1: Read tool on a SKILL.md file
+    fp = (ti.get("file_path", "") or "").replace("\\", "/")
+    m = SKILL_RE.search(fp)
+    if m:
+        return m.group(1)
+    # Case 2: Skill tool invocation — tool_input.skill = "<slug>" (or "plugin:slug")
+    skill = ti.get("skill") or ti.get("name") or ""
+    if skill:
+        return skill.split(":")[-1].strip()   # strip any plugin: namespace
+    return None
+
+
 def main() -> None:
     data = json.load(sys.stdin)
-    file_path = (data.get("tool_input") or {}).get("file_path", "") or ""
-    m = SKILL_RE.search(file_path.replace("\\", "/"))
-    if not m:
-        return  # not a skill SKILL.md — no-op
-    slug = _safe(m.group(1))
+    slug = _slug_from(data)
+    if not slug:
+        return  # not a skill read/invocation — no-op
+    slug = _safe(slug)
     session_id = _safe(data.get("session_id", "nosession"))
     marker = os.path.join(
         os.environ.get("TMPDIR", "/tmp"),
@@ -47,5 +60,5 @@ if __name__ == "__main__":
     try:
         main()
     except Exception:
-        pass  # fail-open: never disrupt a Read
+        pass  # fail-open: never disrupt a tool call
     sys.exit(0)
