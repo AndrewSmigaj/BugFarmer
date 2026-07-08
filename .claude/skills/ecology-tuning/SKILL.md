@@ -1,11 +1,11 @@
 ---
 name: ecology-tuning
-description: Use when balancing the bug ecology — tuning the 6-species food web (fly, butterfly, wasp, centipede, millipede, beetle) so populations sit in good, alive (oscillating) bands instead of crashing, running away, or pinning the hard cap. Covers the run_config harness, the per-zone chart layout, how to read population/interaction/phase charts, the levers (species params, plant/food, spawn/Director), the determinism caveats, and the discipline (one sane lever at a time, measure, log). Read this before proposing ANY ecology balance change.
+description: Use when balancing the bug ecology — tuning the living food web (flies, wasps, centipedes, ants and the rest of the species defined in nakama/data/species.json) so populations sit in good, alive (oscillating) bands instead of crashing, running away, or pinning the hard cap. Covers the run_config harness, the per-zone chart layout, how to read population/interaction/phase charts, the levers (species params, plant/food, spawn/Director), the determinism caveats, and the discipline (one sane lever at a time, measure, log). Read this before proposing ANY ecology balance change.
 ---
 
 # Ecology tuning
 
-Balance the living 6-species ecology so every species sits in a good, **oscillating** band — bounded by
+Balance the living ecology (every species in `species.json`) so every species sits in a good, **oscillating** band — bounded by
 EMERGENT mechanics (food competition, predation, aging, breeding-when-fed), NOT by artificial knobs or the
 hard `max_population` cap (which is only a rare backstop). The job is tuning the REAL parameters of the bugs
 and plants until the emergent populations land well.
@@ -97,13 +97,15 @@ python3 tools/ecology/run_config.py <config> --zone village_21_B --duration 600 
   `satiation_decay_rate`, `feed_amount`, `vision_range`, `lifespan_secs`, `forage_chance`,
   `attractions_by_phase`, and the `predation` block (`home_range`, `feed_per_kill`, `strike_*`,
   `deposit_satiation`, `hunt_satiation_threshold`, prey list).
-- **Shared dials** (`nakama/data/ecology_tuning.json`): nectar/host regen (`nectar_regen_per_tick`,
+- **Shared dials** — every dial's DEFAULT lives in `nakama/modules/world/ecology_tuning.go` (read it for the
+  full knob set); override any by ADDING that key to `nakama/data/ecology_tuning.json` (which only *sets* a
+  subset — the rest use their .go defaults). Knobs include nectar/host regen (`nectar_regen_per_tick`,
   `max_nectar`, `host_regen_per_tick`, `host_breed_cost`, `max_host_capacity`), `predator_breed_satiation`
-  (centipede & other nestless predators breed when this well-fed — the kills→population conversion knob),
-  `spawn_satiation`, nest economy (`nest_brood_cap`/`nest_hatch_*`/`nest_founding_size`/`nest_found_dist_*`),
-  and **`max_litter`/`litter_regen_per_tick`** — leaf_litter is a DEPLETABLE forage pool (millipede's
-  detritus food, the forest-floor analogue of nectar); millipede ≈ food-limited by litter THROUGHPUT only
-  once its cap isn't binding. RESSTATS reports `litter=` next to `nectar=`.
+  (the kills→population conversion knob — centipede & other nestless predators breed when this well-fed),
+  `spawn_satiation`, the nest economy (`nest_brood_cap`/`nest_hatch_*`/`nest_founding_size`/`nest_found_dist_*`),
+  and `max_litter`/`litter_regen_per_tick` — leaf_litter, a DEPLETABLE forage pool (millipede's detritus food,
+  the forest-floor analogue of nectar); millipede ≈ food-limited by litter THROUGHPUT once its cap isn't
+  binding. RESSTATS reports `litter=` next to `nectar=`.
 - **Fruit timing** (`nakama/data/entities/occupants.json`, `fruit` config delta): `fruit_grow_ticks`,
   `fruit_drop_ticks`, `fruit_rot_ticks`. The rot LAG (~2 game-days fallen→rotten) is the fly boom-bust
   AMPLITUDE knob; fly lifespan ~3 days, so the lag is most of a fly's life = sharp busts.

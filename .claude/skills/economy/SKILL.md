@@ -11,7 +11,7 @@ def before relying on it.** Don't invent items/materials; don't delete design; s
 
 ## 1. The entity registry is UNIFIED (the #1 thing I get wrong)
 The server merges **`items.json` + `occupants.json` + `placeables.json`** into ONE `Entities` map
-(`nakama/modules/world/entities.go` `LoadEntities`, ~L288-305); the client `EntityDatabase` does the same.
+(`nakama/modules/world/entities.go`, func `LoadAllEntities` — grep it); the client `EntityDatabase` does the same.
 So a carryable / drop / recipe id is **valid if it exists in ANY of the three** — never conclude "missing"
 from `items.json` alone (that error has happened repeatedly: `ore_copper_block` is an occupant; `chair_wood`/
 `stone_block` are placeables; mushrooms/flowers are occupants).

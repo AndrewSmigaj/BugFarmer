@@ -117,7 +117,12 @@ zone_village.py` is the full scene→zone example. Each scene declares its desti
   `plaza()`/fountain, `shop_building()`, density gradients, build-order recipe.
 - `docs/guides/authoring/water.md` — lakes (multi-blob shapes), `shore_dress` arcs, docks
   (bridge_wood over water). Supersedes trees-and-ponds.md.
-- `docs/guides/authoring/{caves,blocks,ant-colony,forest,biome-feature-map}.md` — the rest.
+- `docs/guides/authoring/biome-feature-map.md` — **which primitive/guide per biome — START HERE to pick the right feature guide for this zone.**
+- `docs/guides/authoring/caves.md` — tunnels, caves, water & **ORE (§4 = the ore doctrine)**: the underground.
+- `docs/guides/authoring/ant-colony.md` — **ANT NESTS & trails** (blocks + `ant_brood` anchor + files-of-ants). **READ before building any ant zone** — a colony is biology, not a human settlement.
+- `docs/guides/authoring/camps.md` — cliff edges, mine entrances & surface work-camps (surface→underground).
+- `docs/guides/authoring/blocks.md` — resource & wall blocks (mineable/placeable cubes).
+- `docs/guides/authoring/forest.md` — authoring forests: zone-scale balance, clearings.
 - Worked multi-feature scene: `tools/zonegen/scenes/scene_houses.py` (room counts × collections, yards).
 - Cross-cutting art style/perspective: `docs/guides/art/MASTER_STYLE_GUIDE.md`.
 
@@ -148,7 +153,8 @@ fruit, lily-pads-on-water via `place_decor`) — are sub-grid floats. Space tree
 
 ## Bug spawning gotcha
 A zone spawns NOTHING without a `bug_spawning` block, and **only species in `nakama/data/species.json`
-spawn** (currently `fly_common`, `butterfly_meadow`, `wasp_common`, `centipede_garden`); `bugs.json` ids lacking a species spec silently
+spawn** — read `nakama/data/species.json` for the current roster (it grows as species are added; never
+hardcode a list here); `bugs.json` ids lacking a species spec silently
 fail. Use a `"zone"`-type area + generous `initial` for ambient bugs; `circle` areas on OPEN grass for
 habitats (water/forest/buildings reject spawns).
 

@@ -31,7 +31,7 @@ time (you end up building every feature twice). For every feature:
 - `BugFarmerClient/` — Unity 6 client (C#); all art lives under `Assets/Resources/`.
 - `nakama/` — Nakama Go server (authoritative game logic) + canonical entity data.
 - `tools/` — Python sprite/world pipeline (gen → clean → preview → publish), the test-zone
-  generator (`make_test_zone.py`), and the headless `.NET` netcode harness (`sync-harness/`).
+  generator (`tools/world/make_test_zone.py`), and the headless `.NET` netcode harness (`sync-harness/`).
   Art prompts are DATA: `tools/art/style.json` (global look) + `tools/art/catalog/*.json` (per-item).
   Zone/scene authoring: `tools/zonegen/` (builder + `features/` primitives + `scenes/`). Previews are
   plain PNG folders under `tools/_generated/previews/` (browse in a file explorer — no html):

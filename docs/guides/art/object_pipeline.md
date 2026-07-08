@@ -144,8 +144,10 @@ fit-boxes drops to ≤0.75 cell preserving aspect.
 **Tool/weapon icon contract:** one **16×16-logical DIAGONAL sprite per tool family** — grip
 bottom-left, head top-right — because the same sprite is the inventory icon AND the in-hand
 swing art (`PlayerToolAnimator` rotates it; the diagonal reads correctly through the arc).
-Tiers are PALETTE RECOLORS of the family's wood base (`tools/sprites/recolor_sprites.py`, ramps
-measured from the existing same-shape tier sets in Items/), not separate generations.
+Tiers use **REFERENCE generation** (`gen_sprites.py --force --ref tools/_generated/raw/<hero>.png
+--keys <siblings>`) — generate ONE hero of the family, then generate the siblings off it so each keeps
+the hero's exact silhouette/angle while its catalog `look` swaps the material. **(Superseded the old
+`recolor_sprites.py` palette-tints on 2026-07-04 — they read as "tinted copies"; see the add-object skill.)**
 Watering cans are the one non-diagonal exception (3/4 view). Seed icons are APICO-style
 paper SEED PACKETS.
 
@@ -154,7 +156,7 @@ paper SEED PACKETS.
 ```bash
 python3 tools/sprites/gen_sprites.py --source items --keys <ids> [--force]
 python3 tools/sprites/pixelclean.py --k 8 --items <ids>          # 32px, 8-color quantize
-python3 tools/sprites/recolor_sprites.py --family pickaxe        # derive {family}_{tier} icons
+python3 tools/sprites/gen_sprites.py --source items --force --ref tools/_generated/raw/<hero>.png --keys <siblings>  # tier family off the hero (replaces recolor_sprites)
 python3 tools/sprites/fix_sprite_ppu.py                          # AFTER Unity has imported once
 ```
 The recolor's head zone is GEOMETRIC (top-right of the diagonal) — `--head-frac` tightens it,
