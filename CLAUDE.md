@@ -51,7 +51,10 @@ time (you end up building every feature twice). For every feature:
   `deep-investigate` (root-cause ONE reported problem → an evidence-gated findings + recommendation doc under
   `docs/product/investigations/`, NO fix — for working a playtest issue list rigorously),
   `certainty-assessment` (score a plan/design/just-built change → an evidence-anchored numeric certainty TABLE,
-  MIN-aggregated; the scoring layer for the review machinery below — run it before claiming "done/verified/safe").
+  MIN-aggregated; the scoring layer for the review machinery below — run it before claiming "done/verified/safe"),
+  `thorough-research` (invoke for ANY "research / look up how X is done / how do good games do Y" task BEFORE
+  designing — the anti-bare-minimum gate: agent fan-out + deep-read quotas + ≥4 scored candidates + an
+  adversarial cold-critic loop until dry + self-verification of load-bearing claims; a half-search is a failure).
 
 ## Where things live
 - **Repo organization rule (read before creating a folder or saving generated output):**

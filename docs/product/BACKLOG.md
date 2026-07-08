@@ -501,7 +501,18 @@ sim-determinism + re-profile that `decay` flattens. Note: the FindNearbyFood chu
 the *food-search* sensitivity to this pile (committed); this item is specifically the decay-pass cost +
 the underlying unbounded accumulation.
 
-## Later — UNDERGROUND LIGHTING (owner spec captured 2026-07-06; build after the zones)
+## Later — UNDERGROUND LIGHTING + LOOK OVERHAUL (RESEARCH + DESIGN DONE 2026-07-08; build after the zones)
+**Research + design complete (2026-07-08), not built.** Design (scored candidates, spike-gated):
+`docs/product/architecture/architecture_lighting.md` (PROPOSED). Evidence (each through 2 adversarial critic
+rounds): `docs/product/investigations/research_lighting_dark_underground.md`, `..._look.md`,
+`..._look_and_feel.md`. Certainty ~60 = well-evidenced but **spike-gated** (a URP render-behavior question only
+Unity can settle). **Next actions:** (1) the acceptance-gate spike (prove, WITH the daytime global at 1.0, that
+a roofed cell stays black beside a lit surface cell AND a torch reveals it — B′ route: a roof+buried darkness
+MASK opened by light reach, kept lights); (2) the roof-signal data path (5 hops, whole-underground mask, new
+zonegen authoring primitive, save migration); (3) Part II look phases (dark ambient, flicker, soft falloff,
+post-on, grounding, grade, god-rays) + the broader look-&-feel backlog. **Owner-taste Qs to resolve first:**
+how-dark, scalar/binary roof (light shafts), pixel-perfect camera, palette mood, emission tooling, normal maps,
+player-light-underground. Original owner spec (still the requirement):
 Owner: "the outside area at the top should be lit like any other day/night, on the top ant
 zone and the mining zone with the mining camp, we can make it dark past that point. as it
 is all masses of ore block should have the inner ones dark, wherever they are surrounded,
