@@ -3,32 +3,32 @@ using UnityEngine;
 namespace BugFarmer.World
 {
     /// <summary>
-    /// M0 SPIKE for the underground darkness system — proves the render approach in-engine.
+    /// Underground darkness overlay. A world-anchored MULTIPLY-blend sprite (shader
+    /// "BugFarmer/DarknessMultiply", Blend DstColor Zero) covering the zone, sorted above all world
+    /// content and below the ScreenSpaceOverlay UI. Its texture is a per-cell darkness field
+    /// (1 = lit / 0 = dark); multiplying it over the already-lit frame darkens buried/roofed cells to
+    /// black — even at noon — while the lit surface, the player's own lights, and the UI are untouched.
     ///
-    /// A world-space MULTIPLY-blend sprite (shader "BugFarmer/DarknessMultiply", Blend DstColor Zero)
-    /// stretched over the camera view, sorted above all world content and below the ScreenSpaceOverlay UI.
-    /// It multiplies the already-lit frame by a per-cell darkness texture (1 = lit / 0 = dark), so dark
-    /// regions go BLACK even at noon (it multiplies the final lit color rather than adding into the 2D
-    /// light accumulation), while the lit surface and the UI are untouched.
+    /// M0 (done): proved the multiply renders in URP 2D with a test pattern.
+    /// M1 (this): BURIED-BLOCK darkness from the zone-wide solid map — a block-mass interior goes dark,
+    ///   the exposed face stays lit (a soft "the deeper into the rock, the darker" falloff). Open tunnels
+    ///   stay lit until M2 adds the authored roof mask; M3 lets carried lights open the mask back up.
     ///
-    /// M0 fills the texture with a TEST pattern (bottom of screen dark, top lit, soft band between) to
-    /// confirm: (a) the multiply darkens to black at any time of day, (b) the UI is unaffected. Later
-    /// milestones replace the test texture with the real per-cell darkness field (M1 buried-from-solids,
-    /// M2 roofed) and let carried lights open it back up (M3).
-    ///
-    /// Self-bootstrapping (no scene setup): a RuntimeInitialize hook spawns one persistent instance; it
-    /// waits for a Camera before building. Press <b>L</b> in Play mode to toggle it on/off for comparison.
+    /// Self-bootstrapping (no scene setup). Press <b>L</b> in Play mode to toggle it on/off.
     /// </summary>
     public class DarknessOverlay : MonoBehaviour
     {
-        private const int TexW = 64, TexH = 64;
-        private const int SortingOrder = 30000; // above world sprites; UI is a separate overlay canvas
+        private const int N = 256;            // max zone side (8x8 chunks * 32); covers any zone
+        private const int Falloff = 4;        // cells of soft edge from an open face into the rock
+        private const int SortingOrder = 30000;
 
         private static bool _spawned;
 
         private SpriteRenderer _sr;
-        private Camera _cam;
+        private Texture2D _tex;
+        private Color32[] _pixels;
         private bool _enabledOverlay = true;
+        private bool _computedForReady;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
@@ -46,68 +46,110 @@ namespace BugFarmer.World
             {
                 _enabledOverlay = !_enabledOverlay;
                 if (_sr != null) _sr.enabled = _enabledOverlay;
-                Debug.Log($"[DarknessOverlay] {( _enabledOverlay ? "ON" : "OFF")} (press L to toggle)");
+                Debug.Log($"[DarknessOverlay] {(_enabledOverlay ? "ON" : "OFF")} (L toggles)");
             }
 
-            if (_sr == null)
+            var tm = TilemapManager.Instance;
+            if (tm == null) return;
+            if (_sr == null && !Build()) return;
+
+            // Recompute once each time a zone's collision map becomes ready (join / zone switch).
+            if (tm.CollisionMapReady)
             {
-                _cam = Camera.main;
-                if (_cam != null) Build();
+                if (!_computedForReady)
+                {
+                    Recompute(tm);
+                    _computedForReady = true;
+                }
+            }
+            else
+            {
+                _computedForReady = false; // a new zone is loading; recompute when it's ready
             }
         }
 
-        private void Build()
+        private bool Build()
         {
             var shader = Shader.Find("BugFarmer/DarknessMultiply");
             if (shader == null)
             {
-                Debug.LogError("[DarknessOverlay] shader 'BugFarmer/DarknessMultiply' not found — is DarknessMultiply.shader in the project?");
+                Debug.LogError("[DarknessOverlay] shader 'BugFarmer/DarknessMultiply' not found.");
                 enabled = false;
-                return;
+                return false;
             }
 
-            // TEST darkness texture: bottom of the screen dark (0=black), top lit (1=unchanged), soft band.
-            var tex = new Texture2D(TexW, TexH, TextureFormat.RGBA32, false)
+            _tex = new Texture2D(N, N, TextureFormat.RGBA32, false)
             {
-                filterMode = FilterMode.Bilinear,   // soft gradient band when stretched
+                filterMode = FilterMode.Bilinear,   // smooth the per-cell field
                 wrapMode = TextureWrapMode.Clamp,
             };
-            for (int y = 0; y < TexH; y++)
-            {
-                float v = Mathf.Clamp01(Mathf.InverseLerp(28f, 40f, y)); // 0 (dark) low, 1 (lit) high
-                var c = new Color(v, v, v, 1f);
-                for (int x = 0; x < TexW; x++) tex.SetPixel(x, y, c);
-            }
-            tex.Apply();
+            _pixels = new Color32[N * N];
+            for (int i = 0; i < _pixels.Length; i++) _pixels[i] = new Color32(255, 255, 255, 255); // all lit
+            _tex.SetPixels32(_pixels);
+            _tex.Apply();
 
-            var sprite = Sprite.Create(tex, new Rect(0, 0, TexW, TexH),
-                                       new Vector2(0.5f, 0.5f), pixelsPerUnit: 1f);
+            // 1 texel per cell; pivot bottom-left at world origin so texel (x,y) covers cell (x,y)'s
+            // world area (cellSize = 1). The camera views whatever part of the zone it's over.
+            var sprite = Sprite.Create(_tex, new Rect(0, 0, N, N), new Vector2(0f, 0f), pixelsPerUnit: 1f);
 
-            var go = new GameObject("DarknessQuad");
-            go.transform.SetParent(_cam.transform, false);
-            go.transform.localPosition = new Vector3(0f, 0f, 1f); // just in front of the camera
-            _sr = go.AddComponent<SpriteRenderer>();
+            _sr = gameObject.AddComponent<SpriteRenderer>();
             _sr.sprite = sprite;
             _sr.sharedMaterial = new Material(shader);
-            // Sorting LAYER dominates sorting ORDER. World content is on Ground/Occupants/Player;
-            // the HUD is a separate ScreenSpaceOverlay canvas (renders after everything). Put the
-            // overlay at the TOP of the "Player" layer so it darkens all world content (incl. the
-            // player) but leaves the "UI" sorting layer + the overlay HUD untouched.
-            _sr.sortingLayerName = "Player";
+            _sr.sortingLayerName = "Player";   // above world content; UI is a separate overlay canvas
             _sr.sortingOrder = SortingOrder;
             _sr.enabled = _enabledOverlay;
-
-            Debug.Log("[DarknessOverlay] M0 spike active — bottom of screen should be dark at any time of day. Press L to toggle.");
+            transform.position = new Vector3(0f, 0f, 0f);
+            Debug.Log("[DarknessOverlay] built (world-anchored). L toggles.");
+            return true;
         }
 
-        private void LateUpdate()
+        /// <summary>
+        /// Buried-from-solids darkness: open cells = lit (1); solid cells go dark, ramping from the
+        /// exposed face (lit) into the interior (black) over <see cref="Falloff"/> cells. A "light flood"
+        /// that grows inward from open cells — deep rock the flood can't reach stays black.
+        /// </summary>
+        private void Recompute(TilemapManager tm)
         {
-            if (_sr == null || _cam == null) return;
-            if (!_cam.orthographic) return;
-            // Cover the ortho view exactly (handles zoom/pan; the sprite is a camera child).
-            float h = _cam.orthographicSize * 2f;
-            float w = h * _cam.aspect;
-            _sr.transform.localScale = new Vector3(w / TexW, h / TexH, 1f);
+            int n2 = N * N;
+            var solid = new bool[n2];
+            var cur = new float[n2];
+            for (int y = 0; y < N; y++)
+                for (int x = 0; x < N; x++)
+                {
+                    int i = y * N + x;
+                    bool s = tm.IsCellBlockedForBugs(new Vector2Int(x, y));
+                    solid[i] = s;
+                    cur[i] = s ? 0f : 1f;   // solid starts dark, open lit
+                }
+
+            float step = 1f / Falloff;
+            var nxt = new float[n2];
+            for (int pass = 0; pass < Falloff; pass++)
+            {
+                System.Array.Copy(cur, nxt, n2);
+                for (int y = 0; y < N; y++)
+                    for (int x = 0; x < N; x++)
+                    {
+                        int i = y * N + x;
+                        if (!solid[i]) continue;                 // open cells stay fully lit
+                        float m = cur[i];
+                        if (x > 0)     m = Mathf.Max(m, cur[i - 1] - step);
+                        if (x < N - 1) m = Mathf.Max(m, cur[i + 1] - step);
+                        if (y > 0)     m = Mathf.Max(m, cur[i - N] - step);
+                        if (y < N - 1) m = Mathf.Max(m, cur[i + N] - step);
+                        nxt[i] = m;
+                    }
+                var t = cur; cur = nxt; nxt = t;
+            }
+
+            for (int i = 0; i < n2; i++)
+            {
+                byte v = (byte)(Mathf.Clamp01(cur[i]) * 255f);
+                _pixels[i] = new Color32(v, v, v, 255);
+            }
+            _tex.SetPixels32(_pixels);
+            _tex.Apply();
+            Debug.Log("[DarknessOverlay] darkness field recomputed from the solid map (M1 buried-block darkness).");
         }
     }
 }
