@@ -232,7 +232,7 @@ def scan_available_zones(zones_dir: Path) -> Dict[Tuple[int, int], str]:
 
 
 def render_zone(zone_data: Dict[str, Any], scale: int = 2,
-                show_chunks: bool = False) -> Image.Image:
+                show_chunks: bool = False, show_roof: bool = False) -> Image.Image:
     """Render a single zone to an image at the zone's ACTUAL size (not a fixed 512 canvas)."""
     cfg = zone_data.get("config", {})
     zw = int(cfg.get("width", ZONE_SIZE))
@@ -281,6 +281,27 @@ def render_zone(zone_data: Dict[str, Any], scale: int = 2,
 
                 # Draw occupant filling cell (no margin - we want visibility)
                 draw.rectangle([px, py, px + scale - 1, py + scale - 1], fill=color)
+
+    # Roof overlay (lighting darkness): tint every roofed cell so the ORGANIC underground boundary is
+    # visible headlessly (no Unity needed). Drawn before the north-up flip so it aligns + flips with the map.
+    if show_roof:
+        overlay = Image.new('RGBA', (img_w, img_h), (0, 0, 0, 0))
+        odraw = ImageDraw.Draw(overlay)
+        for (cx, cy), chunk in chunks.items():
+            roof = chunk.get("roof")
+            if not roof:
+                continue
+            base_x = cx * CHUNK_SIZE * scale
+            base_y = cy * CHUNK_SIZE * scale
+            for ly, row in enumerate(roof):
+                for lx, r in enumerate(row):
+                    if not r:
+                        continue
+                    px = base_x + lx * scale
+                    py = base_y + ly * scale
+                    odraw.rectangle([px, py, px + scale - 1, py + scale - 1], fill=(20, 40, 130, 125))
+        img = Image.alpha_composite(img.convert('RGBA'), overlay).convert('RGB')
+        draw = ImageDraw.Draw(img)  # rebind for the chunk grid below
 
     # Draw chunk grid if requested
     if show_chunks:
@@ -466,6 +487,7 @@ Examples:
     parser.add_argument("--rows", type=int, default=3, help="Zone rows to render (default: 3)")
     parser.add_argument("--cols", type=int, default=4, help="Zone columns to render (default: 4)")
     parser.add_argument("--chunks", action="store_true", help="Show chunk grid lines")
+    parser.add_argument("--roof", action="store_true", help="Tint roofed (underground) cells — the lighting roof mask")
     parser.add_argument("--legend", action="store_true", help="Add color legend")
     parser.add_argument("--output", "-o", type=str, help="Output filename")
     args = parser.parse_args()
@@ -492,7 +514,7 @@ Examples:
             sys.exit(1)
 
         scale = args.scale if args.scale > 2 else 4  # Default to 4 for detail
-        img = render_zone(zone_data, scale, args.chunks)
+        img = render_zone(zone_data, scale, args.chunks, args.roof)
 
         if args.legend:
             img = add_legend(img, scale)

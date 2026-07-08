@@ -72,6 +72,11 @@ class ZoneBuilder:
         self.occ = {}  # (x,y) -> {"id","dir","anchor"?}
         self.surface = [["grass"] * width for _ in range(height)]
         self.reserved = [[False] * width for _ in range(height)]
+        # Per-cell "roofed" flag (True = underground / no sun) for the lighting darkness system.
+        # Authored over the WHOLE underground region interior (solid AND open) so a runtime-dug cell
+        # stays dark. Persisted per-chunk in save() (only when a chunk has any roofed cell). Independent
+        # of walls/blocks. See docs/product/architecture/architecture_lighting.md.
+        self.roof = [[False] * width for _ in range(height)]
         self.players = []  # [(sprite_id, x, y)] scene-dressing characters (render-only)
         self.bugs = []     # [(sprite_id, x, y)] scene-dressing bugs (render-only)
         self.decor = []    # [(id, x, y, mult)] free-floating ground decor (fruit) — render-only
@@ -88,6 +93,19 @@ class ZoneBuilder:
 
     def is_free(self, x, y):
         return self.in_bounds(x, y) and not self.reserved[y][x]
+
+    # ---- roof (lighting darkness) -------------------------------------------
+    def set_roof(self, x, y, val=True):
+        """Mark one cell roofed (underground / no sun) for the lighting darkness system."""
+        if self.in_bounds(x, y):
+            self.roof[y][x] = val
+
+    def mark_roof_region(self, cells):
+        """Mark every (x,y) in `cells` roofed. Author roof over the WHOLE underground region
+        interior (solid AND open cells) so a runtime-dug cell inside stays dark — NOT just the
+        carved tunnels (architecture_lighting.md HC2 / design-critic Finding 2)."""
+        for (x, y) in cells:
+            self.set_roof(x, y, True)
 
     def warn(self, msg):
         self.warnings.append(msg)
@@ -409,8 +427,15 @@ class ZoneBuilder:
                           for ly in range(CHUNK)]
                 occ = [[self.occ.get((cx * CHUNK + lx, cy * CHUNK + ly)) for lx in range(CHUNK)]
                        for ly in range(CHUNK)]
+                chunk_obj = {"chunk_x": cx, "chunk_y": cy, "ground": ground, "occupants": occ}
+                # Roof: only emit for chunks that actually have roofed cells (json:"roof,omitempty"
+                # on the Go side treats a missing array as all-lit — so surface zones stay unbloated).
+                roof = [[self.roof[cy * CHUNK + ly][cx * CHUNK + lx] for lx in range(CHUNK)]
+                        for ly in range(CHUNK)]
+                if any(any(row) for row in roof):
+                    chunk_obj["roof"] = roof
                 with open(os.path.join(out, f"chunk_{cx}_{cy}.json"), "w") as f:
-                    json.dump({"chunk_x": cx, "chunk_y": cy, "ground": ground, "occupants": occ}, f)
+                    json.dump(chunk_obj, f)
         return out
 
     @classmethod
