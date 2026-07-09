@@ -25,6 +25,14 @@ namespace BugFarmer.World
         private Tilemap _waterTilemap;
         private Material _waterMat;   // the runtime WaterAnimated material (driven by the fields below)
 
+        // Shore mask for foam: a 256² one-texel-per-cell texture (3-state: water=1, known-land=0.5,
+        // unloaded=0) bound to the water material; the shader draws foam where water borders known land, in
+        // WORLD space (no tile seams). Built from LOADED chunks (water is lazy per-chunk), rebuilt when dirty.
+        private const int ShoreN = 256;
+        private Texture2D _shoreMask;
+        private Color32[] _shorePixels;
+        private bool _shoreDirty;
+
         [Header("Water look — select THIS GameObject to tweak the pond live in Play mode")]
         [Tooltip("Sideways refraction of the water texture. Small; 0 = flat.")]
         [SerializeField] private float waterDistortion = 0.05f;
@@ -38,6 +46,10 @@ namespace BugFarmer.World
         [SerializeField, Range(0f, 0.5f)] private float waterShimmer = 0f;
         [Tooltip("Occasional bright sparkle glints. 0 = off (default — they march in stepped squares).")]
         [SerializeField, Range(0f, 1f)] private float waterSparkle = 0f;
+        [Tooltip("Foam band width at the shore, in cells. 0 = no foam.")]
+        [SerializeField, Range(0f, 2f)] private float waterFoamWidth = 0.7f;
+        [Tooltip("Foam swash animation speed.")]
+        [SerializeField] private float waterFoamSpeed = 1f;
 
         [Header("Settings")]
         [SerializeField] private int viewDistanceChunks = 2; // Subscribe to 5x5 grid of chunks
@@ -157,6 +169,12 @@ namespace BugFarmer.World
             {
                 _lastDropletDay = day;
                 RefreshAllDroplets();
+            }
+
+            if (_shoreDirty && _waterMat != null)
+            {
+                _shoreDirty = false;
+                RebuildShoreMask();
             }
 
             if (Time.time - _lastChunkCheck < chunkCheckInterval)
@@ -861,12 +879,54 @@ namespace BugFarmer.World
             _waterMat.SetFloat("_ScrollDirY", waterScrollDir.y);
             _waterMat.SetFloat("_Shimmer", waterShimmer);
             _waterMat.SetFloat("_SparkleStrength", waterSparkle);
+            _waterMat.SetFloat("_FoamWidth", waterFoamWidth);
+            _waterMat.SetFloat("_FoamSpeed", waterFoamSpeed);
+            _waterMat.SetFloat("_ShoreN", ShoreN);
         }
 
         private void OnValidate()
         {
             // Live-apply Inspector tweaks during Play (no-op before the material is built).
             ApplyWaterSettings();
+        }
+
+        /// <summary>
+        /// Rebuild the 3-state shore mask from LOADED chunks and bind it to the water material. Water=1,
+        /// known-land=0.5, unloaded=0 (so foam borders known land only, not the loaded-area edge). Cheap:
+        /// iterates loaded chunks (one lookup per chunk), direct array reads — not 65k GetGroundAt calls.
+        /// </summary>
+        private void RebuildShoreMask()
+        {
+            if (_waterMat == null) return;
+            if (_shoreMask == null)
+            {
+                _shoreMask = new Texture2D(ShoreN, ShoreN, TextureFormat.RGBA32, false)
+                { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Point };
+                _shorePixels = new Color32[ShoreN * ShoreN];
+            }
+            System.Array.Clear(_shorePixels, 0, _shorePixels.Length);   // unloaded = 0
+            foreach (var kv in _loadedChunks)
+            {
+                int baseX = kv.Key.x * ChunkSize, baseY = kv.Key.y * ChunkSize;
+                var ground = kv.Value.Ground;
+                if (ground == null) continue;
+                for (int ly = 0; ly < ChunkSize; ly++)
+                {
+                    if (ground[ly] == null) continue;
+                    int gy = baseY + ly;
+                    if (gy < 0 || gy >= ShoreN) continue;
+                    for (int lx = 0; lx < ChunkSize; lx++)
+                    {
+                        int gx = baseX + lx;
+                        if (gx < 0 || gx >= ShoreN) continue;
+                        byte v = IsWaterTile(ground[ly][lx]) ? (byte)255 : (byte)128; // water : known-land
+                        _shorePixels[gy * ShoreN + gx] = new Color32(v, v, v, 255);
+                    }
+                }
+            }
+            _shoreMask.SetPixels32(_shorePixels);
+            _shoreMask.Apply(false);
+            _waterMat.SetTexture("_ShoreMask", _shoreMask);
         }
 
         private void SetGroundTile(Vector2Int cellPos, string tileId)
@@ -882,7 +942,10 @@ namespace BugFarmer.World
             // Mirror water cells onto the animated overlay (same tile); clear it for any non-water id. The
             // base water tile stays in groundTilemap, so a missing overlay just falls back to static water.
             if (_waterTilemap != null)
+            {
                 _waterTilemap.SetTile(tilePos, IsWaterTile(tileId) ? tile : null);
+                _shoreDirty = true;   // any ground change can add/remove a shore edge → rebuild the foam mask
+            }
 
             // Also update chunk data so GetGroundAt() returns correct value
             int cx = cellPos.x / ChunkSize;
@@ -1084,6 +1147,7 @@ namespace BugFarmer.World
             }
 
             _loadedChunks.Remove(chunkPos);
+            if (_waterTilemap != null) _shoreDirty = true;   // shore set changed → rebuild the foam mask
         }
 
         #endregion

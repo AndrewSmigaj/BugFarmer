@@ -24,6 +24,10 @@ Shader "BugFarmer/WaterAnimated"
         _ScrollDirY("Scroll Dir Y", Float) = 0.45
         _Shimmer("Shimmer", Float) = 0
         _SparkleStrength("Sparkle", Float) = 0
+        _ShoreMask("Shore Mask", 2D) = "black" {}
+        _ShoreN("Shore Mask Size", Float) = 256
+        _FoamWidth("Foam Width", Float) = 0
+        _FoamSpeed("Foam Speed", Float) = 1
         _MaskTex("Mask", 2D) = "white" {}
         _NormalMap("Normal Map", 2D) = "bump" {}
         [MaterialToggle] _ZWrite("ZWrite", Float) = 0
@@ -97,6 +101,9 @@ Shader "BugFarmer/WaterAnimated"
             TEXTURE2D(_NormalMap);
             SAMPLER(sampler_NormalMap);
 
+            TEXTURE2D(_ShoreMask);
+            SAMPLER(sampler_ShoreMask);
+
             // NOTE: Do not ifdef the properties here as SRP batcher can not handle different layouts.
             CBUFFER_START(UnityPerMaterial)
                 half4 _Color;
@@ -113,6 +120,9 @@ Shader "BugFarmer/WaterAnimated"
                 float _ScrollDirY;
                 float _Shimmer;
                 float _SparkleStrength;
+                float _ShoreN;
+                float _FoamWidth;
+                float _FoamSpeed;
             CBUFFER_END
 
             #if USE_SHAPE_LIGHT_TYPE_0
@@ -203,6 +213,25 @@ Shader "BugFarmer/WaterAnimated"
                 float h = frac(sin(dot(cell, float2(12.9898, 78.233))) * 43758.5453);
                 litColor.rgb += _SparkleStrength * step(0.985, h) * main.a;
 
+                // Shore foam: a white swash on water pixels within _FoamWidth cells of KNOWN land. Driven by
+                // the world-space shore mask (water=1, known-land=0.5, unloaded=0) → hugs the real shore, no
+                // tile-grid seams. _FoamWidth 0 = off. Uses known-land only, so it skips the loaded-area edge.
+                if (_FoamWidth > 0.0001)
+                {
+                    float2 muv = wuv / _ShoreN;
+                    float rad = _FoamWidth / _ShoreN;
+                    float land = 0.0;
+                    [unroll] for (int fi = 0; fi < 8; fi++)
+                    {
+                        float ang = 6.2831853 * fi / 8.0;
+                        float s = SAMPLE_TEXTURE2D_LOD(_ShoreMask, sampler_ShoreMask,
+                                                       muv + float2(cos(ang), sin(ang)) * rad, 0).r;
+                        land = max(land, saturate(1.0 - abs(s - 0.5) * 4.0)); // ~1 near a known-land (0.5) texel
+                    }
+                    float swash = 0.55 + 0.45 * sin((wuv.x + wuv.y) * 3.0 + _Time.y * _FoamSpeed * 2.0);
+                    litColor.rgb = lerp(litColor.rgb, float3(1.0, 1.0, 1.0), saturate(land * swash) * main.a);
+                }
+
                 litColor.rgb = lerp(litColor.rgb, _FlashColor.rgb, _FlashAmount);   // inherited (unused for water)
                 return litColor;
             }
@@ -268,6 +297,9 @@ Shader "BugFarmer/WaterAnimated"
                 float _ScrollDirY;
                 float _Shimmer;
                 float _SparkleStrength;
+                float _ShoreN;
+                float _FoamWidth;
+                float _FoamSpeed;
             CBUFFER_END
 
             Varyings NormalsRenderingVertex(Attributes attributes)
@@ -363,6 +395,9 @@ Shader "BugFarmer/WaterAnimated"
                 float _ScrollDirY;
                 float _Shimmer;
                 float _SparkleStrength;
+                float _ShoreN;
+                float _FoamWidth;
+                float _FoamSpeed;
             CBUFFER_END
 
             Varyings UnlitVertex(Attributes attributes)
