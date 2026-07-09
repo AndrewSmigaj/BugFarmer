@@ -50,6 +50,7 @@ namespace BugFarmer.UI
             new WorldChoice { label = "Test",           zoneId = "sim_test" },
             new WorldChoice { label = "Collision Test", zoneId = "collision_test" },
             new WorldChoice { label = "Lighting Test",  zoneId = "lighting_test" },
+            new WorldChoice { label = "Feel Test",      zoneId = "feel_test" },
             new WorldChoice { label = "Split Test",     zoneId = "split_test2" },
             new WorldChoice { label = "Merge Test",     zoneId = "merge_test2" },
             new WorldChoice { label = "Fly Farm Test",  zoneId = "repro_test" },
@@ -77,6 +78,7 @@ namespace BugFarmer.UI
             EnsureWorld("Test", "sim_test");
             EnsureWorld("Collision Test", "collision_test");
             EnsureWorld("Lighting Test", "lighting_test");
+            EnsureWorld("Feel Test", "feel_test");
             EnsureWorld("Split Test", "split_test2");
             EnsureWorld("Merge Test", "merge_test2");
             EnsureWorld("Fly Farm Test", "repro_test");
