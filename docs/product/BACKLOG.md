@@ -6,6 +6,41 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## CLAUDE.md & scaffolding improvements (owner wants a pass here; captured 2026-07-09)
+Umbrella for tightening how the assistant is steered. Add items here as they come up.
+- **Reminder HOOK: don't say "go test" after a server-DATA edit without reloading.** Recurring failure
+  (many times): the assistant edits zone/server DATA, re-saves the file, then tells the owner to Play-test —
+  but the running Nakama still serves the old in-memory match, so the owner hunts for things that aren't there.
+  The knowledge IS documented (run-backend "restart on data changes"; bug-spawning "Gotcha #2 stale save"), but
+  the assistant reliably **won't** read a skill/memory just because CLAUDE.md points to it — memory/CLAUDE.md
+  reminders get buried in a large context and don't fire. So: a **reminder-style hook** (e.g. PostToolUse on
+  Write/Edit under `nakama/data/**` or `tools/zonegen/**`) that injects a fresh nudge AT THE EDIT: *"server-data
+  change — restart Nakama (and reset the persisted save for bug/edit cases) and verify BEFORE telling anyone to
+  test."* **Reminder that nudges the assistant, NOT an auto-run script or hard block** — the owner needs the
+  assistant's judgment in the loop (sometimes it needs to look at a specific thing), not a rigid runner. Will
+  test whether it's a strong enough reminder in a fresh session.
+- **The actual reload is simpler than the assistant made it (verified 2026-07-09):** authored occupants/ground
+  come from the FILE (`LoadChunk` reads `nakama/data/zones/<zone>/chunk_*.json`; the save only layers player
+  `CellEdits` on top — `world_save.go`). So for authored zone changes, **`docker compose restart nakama`** alone
+  is enough (drops the cached match → re-reads the file). The DB wipe is only needed when the persisted SAVE
+  masks the change: **bug population** (persists swarms → bug-spawning Gotcha #2) or a **player cell-edit** on a
+  re-authored cell. The reminder hook should point at the simple restart first.
+- (Owner has more scaffolding items to add here.)
+
+## Ground material MECHANICS (deferred from the shaped-ground builder; owner 2026-07-09)
+The shaped-ground builder (player places `(materialA, materialB, shape)` tiles, mask-composited) ships
+**COSMETIC first**. Later: some ground materials carry mechanics — e.g. **swamp** = slowed movement,
+**ice** (mountains, if we do them) = slippery. **Rule for a split (diagonal) cell: AVERAGE the two
+materials' mechanical values.** When we build the builder, check what's already implemented for ground-effect
+mechanics and wire material effects + the averaging then.
+
+## Tutorials & instructions review (owner, 2026-07-09)
+Polish pass on player onboarding — show users the different systems instead of leaving them to guess.
+Includes tool-role instruction via tooltips/first-use hints, e.g. **shovel** = "change the ground below your
+feet", **pick** = "break blocks & items at your level" (better wording TBD), and surfacing the other mechanics
+(farming, catching, crafting, ground-editing) as they're encountered. Ties into the shovel ground-editing UX
+being designed now.
+
 ## Late-join / determinism (found 2026-06-29 via the 2-client sync gate)
 - **DONE 2026-06-29 — late-joiner gets 0 bugs in dense zones (real multiplayer bug + why the determinism gate "couldn't run").** Root cause: the Nakama client's default `MaxMessageReadSize` is **256KB**; village_21_B's `LateJoinSnapshot` is ~230KB raw → **~305KB base64 on the wire** (Nakama frames match-state data as base64) → the client silently truncates the frame, the websocket framing **desyncs**, and the late joiner receives **nothing** after it (snapshot + handoff + tick broadcasts) → **0 swarms**. Any 2nd player into a populated zone saw no bugs; regressed when #113 tripled swarm counts ("worked the other day"). Fix (shipped, `NetworkManager.Awake`): build the socket with `WebSocketStdlibAdapter(maxMessageReadSize: 8MB)` to match the server's `max_message_size_bytes`. **Verified:** co-located late-join `SYNC: IDENTICAL` (128332 bug-states + 236 tick-hashes, no drift). Proven by A/B zone size: bug_lab (20KB snapshot) ingested fine; village_21_B (230KB) dropped everything.
 - **DONE 2026-06-29 — spawn-apart (disjoint-chunk) late-join divergence (the determinism gate's 2nd half).** Root cause (proven by a per-tick `_food` digest probe): the client deterministic food registry (`InfluenceManager._food`, which bug LANDING visuals read — `BugAgent.TryFeedAtFood` sets bug position) was hydrated **per-chunk** — `GroundItemManager.HandleItemSpawn` called `HydrateFood` for each `GroundItemSpawn`, and those are sent **per-chunk-subscribe** — so a client only knew food in its loaded chunks (authority held ~85 entries, a disjoint late-joiner ~265) → bugs forage/land differently → ~11-15% per-bug divergence. Fix (shipped, `GroundItemManager.cs`, 1 file): `GroundItemSpawn` is **COSMETIC-ONLY**; food enters `_food` only via the zone-wide `ITEM_ROTTED`/`FOOD_CONSUMED` ledger + the authority's `ZoneSnapshot.Food`. **Verified:** BOTH gate halves `SYNC: IDENTICAL` (co-located 166k + spawn-apart 161k shared-bug states, no drift). NOT an ecology change — `_food` is landing-visuals only; the server ecology uses its own `ForagePools`/`HostPlantStates`/`FindNearbyFood(worldState)`. With the collision map (#133) already zone-wide, food was the last view-scoped sim input → the deterministic bug sim is now fully zone-wide. (Optional polish, backlogged: a `ZoneFoodMap` would let bugs land on the FULL zone food set for richer feeding visuals, vs only the ledgered/un-consumed food they land on now.)
