@@ -33,23 +33,31 @@ namespace BugFarmer.World
         private Color32[] _shorePixels;
         private bool _shoreDirty;
 
-        [Header("Water look — select THIS GameObject to tweak the pond live in Play mode")]
+        // ---- Water look: CODE is the source of truth. Edit these consts to change the look; they are FORCED
+        // onto the fields below at startup (ResetWaterFieldsToCode), so a value baked into the scene by a
+        // previous save can never override what the code sets. The [SerializeField] sliders still let you
+        // tweak LIVE in Play to find a value — then tell me and I bake it into the const here.
+        private const float DefWaterAmp = 0.05f, DefWaterFreq = 4.19f, DefWaterSpeed = 0.66f,
+                            DefShimmer = 0f, DefSparkle = 0f, DefFoamWidth = 0.15f, DefFoamSpeed = 0.14f;
+        private static readonly Vector2 DefScrollDir = new Vector2(0.24f, 0.45f);
+
+        [Header("Water look — CODE-authoritative; these sliders are a LIVE scratch (reset to code on start)")]
         [Tooltip("Sideways refraction of the water texture. Small; 0 = flat.")]
-        [SerializeField] private float waterDistortion = 0.05f;
+        [SerializeField] private float waterDistortion = DefWaterAmp;
         [Tooltip("Ripple density (higher = finer, busier ripples).")]
-        [SerializeField] private float waterFrequency = 4.19f;
+        [SerializeField] private float waterFrequency = DefWaterFreq;
         [Tooltip("Overall animation speed.")]
-        [SerializeField] private float waterSpeed = 0.66f;
+        [SerializeField] private float waterSpeed = DefWaterSpeed;
         [Tooltip("Directional drift. (0,0) = calm pond; set one axis for a flowing current.")]
-        [SerializeField] private Vector2 waterScrollDir = new Vector2(0.24f, 0.45f);
-        [Tooltip("Moving light ripple. 0 = off (default — it reads as a checkerboard grid on tiled water).")]
-        [SerializeField, Range(0f, 0.5f)] private float waterShimmer = 0f;
-        [Tooltip("Occasional bright sparkle glints. 0 = off (default — they march in stepped squares).")]
-        [SerializeField, Range(0f, 1f)] private float waterSparkle = 0f;
+        [SerializeField] private Vector2 waterScrollDir = DefScrollDir;
+        [Tooltip("Moving light ripple. 0 = off (reads as a checkerboard grid on tiled water).")]
+        [SerializeField, Range(0f, 0.5f)] private float waterShimmer = DefShimmer;
+        [Tooltip("Occasional bright sparkle glints. 0 = off (they march in stepped squares).")]
+        [SerializeField, Range(0f, 1f)] private float waterSparkle = DefSparkle;
         [Tooltip("Foam band width at the shore, in cells. 0 = no foam.")]
-        [SerializeField, Range(0f, 2f)] private float waterFoamWidth = 0.15f;
+        [SerializeField, Range(0f, 2f)] private float waterFoamWidth = DefFoamWidth;
         [Tooltip("Foam swash animation speed.")]
-        [SerializeField] private float waterFoamSpeed = 0.14f;
+        [SerializeField] private float waterFoamSpeed = DefFoamSpeed;
 
         [Header("Settings")]
         [SerializeField] private int viewDistanceChunks = 2; // Subscribe to 5x5 grid of chunks
@@ -858,6 +866,7 @@ namespace BugFarmer.World
                 wr.sortingLayerName = "Ground";
                 wr.sortingOrder = 10; // above ground tiles (order 0), below the Occupants layer
                 _waterTilemap = tm;   // assign only on full success → graceful fallback to static water
+                ResetWaterFieldsToCode();   // CODE wins over any scene-baked values
                 ApplyWaterSettings();
             }
             catch (System.Exception e)
@@ -867,7 +876,17 @@ namespace BugFarmer.World
             }
         }
 
-        /// <summary>Push the Inspector water-look fields onto the runtime material. Called on setup and from
+        /// <summary>Force the CODE constants onto the water fields, overriding any values a previous scene save
+        /// baked in. Called once at setup before ApplyWaterSettings, so what the code sets always wins. The
+        /// sliders remain live-tweakable in Play (they reset to these on the next run).</summary>
+        private void ResetWaterFieldsToCode()
+        {
+            waterDistortion = DefWaterAmp; waterFrequency = DefWaterFreq; waterSpeed = DefWaterSpeed;
+            waterScrollDir = DefScrollDir; waterShimmer = DefShimmer; waterSparkle = DefSparkle;
+            waterFoamWidth = DefFoamWidth; waterFoamSpeed = DefFoamSpeed;
+        }
+
+        /// <summary>Push the water-look fields onto the runtime material. Called on setup and from
         /// OnValidate, so dragging the sliders updates the pond live during Play mode.</summary>
         private void ApplyWaterSettings()
         {
