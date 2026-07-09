@@ -14,6 +14,33 @@ namespace BugFarmer.World
 
         private static HitBurst _inst;
         private ParticleSystem _ps;
+        private static Texture2D _leafTex;
+
+        // A small "football"/leaf shape = a vesica (lens): the intersection of two circles offset along Y,
+        // giving a pointed-both-ends oval. Soft-edged. Tinted per kind at emit; rotated per particle.
+        private static Texture2D LeafTex()
+        {
+            if (_leafTex != null) return _leafTex;
+            const int N = 32;
+            var tex = new Texture2D(N, N, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+            var px = new Color32[N * N];
+            float half = (N - 1) * 0.5f;
+            float R = half * 0.8f, k = half * 0.55f; // radius + center offset → leaf width/point
+            for (int y = 0; y < N; y++)
+                for (int x = 0; x < N; x++)
+                {
+                    float dx = x - half, dy = y - half;
+                    float dTop = Mathf.Sqrt(dx * dx + (dy - k) * (dy - k)); // circle centered above
+                    float dBot = Mathf.Sqrt(dx * dx + (dy + k) * (dy + k)); // circle centered below
+                    float inside = Mathf.Min(R - dTop, R - dBot);           // signed dist into the lens
+                    float a = Mathf.Clamp01(inside * 0.9f);                 // ~1px soft edge
+                    px[y * N + x] = new Color32(255, 255, 255, (byte)(a * 255f));
+                }
+            tex.SetPixels32(px);
+            tex.Apply();
+            _leafTex = tex;
+            return _leafTex;
+        }
 
         private static HitBurst Instance()
         {
@@ -61,22 +88,27 @@ namespace BugFarmer.World
                 });
             col.color = new ParticleSystem.MinMaxGradient(grad);
 
-            var rot = _ps.rotationOverLifetime;      // tumble
+            var rot = _ps.rotationOverLifetime;      // gentle flutter (owner: "rotate a little", not spin)
             rot.enabled = true;
-            rot.z = new ParticleSystem.MinMaxCurve(-3f, 3f);
+            rot.z = new ParticleSystem.MinMaxCurve(-1.2f, 1.2f);
 
             var r = _ps.GetComponent<ParticleSystemRenderer>();
             r.renderMode = ParticleSystemRenderMode.Billboard;
-            r.material = new Material(Shader.Find("Sprites/Default")); // unlit
+            r.material = new Material(Shader.Find("Sprites/Default")) { mainTexture = LeafTex() }; // unlit leaf shape
             r.sortingLayerName = "Occupants";
             r.sortingOrder = 800;                    // in front of occupant sprites
         }
 
-        /// <summary>Emit a burst of <paramref name="count"/> particles at a world position.</summary>
-        public static void Play(Vector3 worldPos, Kind kind, int count = 8)
+        /// <summary>
+        /// Emit a burst at a world position. <paramref name="sizeScale"/> (0..1, from the struck object's
+        /// size) contains it on small plants: fewer particles, shorter range — so a little plant gets a few
+        /// flecks, a tree gets the full pop.
+        /// </summary>
+        public static void Play(Vector3 worldPos, Kind kind, float sizeScale = 1f)
         {
             var inst = Instance();
             inst.transform.position = worldPos;      // World sim space: particles live independently after emit
+            sizeScale = Mathf.Clamp(sizeScale, 0.25f, 1f);
 
             var main = inst._ps.main;
             main.startColor = kind switch
@@ -85,6 +117,11 @@ namespace BugFarmer.World
                 Kind.Chip => new Color(0.55f, 0.40f, 0.24f), // wood brown
                 _ => new Color(0.72f, 0.72f, 0.72f),         // neutral
             };
+            // Shorter range + slightly smaller for small objects; count scales too.
+            main.startSpeed = new ParticleSystem.MinMaxCurve(1.4f * sizeScale, 3.4f * sizeScale);
+            float sz = 0.6f + 0.4f * sizeScale;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.06f * sz, 0.14f * sz);
+            int count = Mathf.Max(3, Mathf.RoundToInt(8f * sizeScale));
             inst._ps.Emit(count);
         }
     }

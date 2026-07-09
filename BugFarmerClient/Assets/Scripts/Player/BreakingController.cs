@@ -127,16 +127,18 @@ namespace BugFarmer.Player
             if (target == null) return;
 
             var sr = target.GetComponent<SpriteRenderer>();
-            if (sr != null) World.HitFlash.Play(sr, 0.4f);   // gentle flash (was 0.9 — too extreme)
+            if (sr != null) World.HitFlash.Play(sr, 0.4f);   // gentle flash
 
-            CameraFollow.AddShake(0.22f);                     // small kick (was 0.5 — too extreme)
+            CameraFollow.AddShake(0.38f);                     // felt-but-cozy kick (0.5 too much, 0.22 too little)
 
             string cat = EntityDatabase.Get(target.OccupantId)?.Category;
             var kind = cat == "natural" ? World.HitBurst.Kind.Leaf
                      : cat == "structure" ? World.HitBurst.Kind.Chip
                      : World.HitBurst.Kind.Generic;
             Vector3 at = sr != null ? sr.bounds.center : target.transform.position;
-            World.HitBurst.Play(at, kind);
+            // Scale the burst to the object's world height (≈ cells): small plant → contained, tree → full.
+            float sizeScale = sr != null ? Mathf.Clamp(sr.bounds.size.y / 3f, 0.3f, 1f) : 1f;
+            World.HitBurst.Play(at, kind, sizeScale);
         }
 
         /// <summary>Clear breaking state (called by the router on click release/cancel).</summary>
