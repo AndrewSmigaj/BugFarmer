@@ -1,7 +1,7 @@
 // BugFarmer animated water: a copy of BugFarmer/SpriteLitWorld (URP 2D lit sprite) with water added to the
 // LIT (Universal2D) fragment only. All animation is driven off WORLD position (a worldUV varying) so it is
 // seamless across tile boundaries (Cyanilux 2D-water rule); any UV refraction is edge-faded so it never
-// samples a neighbour tile, and the sampled UV is posterized to the 32px tile texel for crisp pixel water.
+// samples a neighbour tile, and the caustic highlight is MULTIPLICATIVE so it fades with the scene at night.
 // It stays 2D-lit (dims at night + under the darkness overlay). Style props are dials: calm (default),
 // flowing (scroll dir/speed), sparkle (sparkle strength). Water props are in ALL 3 CBUFFERs so the SRP
 // batcher sees one UnityPerMaterial layout, even though only the lit pass uses them.
@@ -17,12 +17,12 @@ Shader "BugFarmer/WaterAnimated"
         _FlashColor("Flash Color", Color) = (1,1,1,1)
         _FlashAmount("Flash Amount", Range(0,1)) = 0
         // Water dials
-        _WaterAmp("Water Distortion", Float) = 0.015
-        _WaterFreq("Water Frequency", Float) = 2.5
-        _ScrollSpeed("Water Speed", Float) = 0.6
+        _WaterAmp("Water Distortion", Float) = 0.012
+        _WaterFreq("Water Frequency", Float) = 1.2
+        _ScrollSpeed("Water Speed", Float) = 0.5
         _ScrollDirX("Scroll Dir X", Float) = 0
         _ScrollDirY("Scroll Dir Y", Float) = 0
-        _Shimmer("Shimmer", Float) = 0.10
+        _Shimmer("Shimmer", Float) = 0.14
         _SparkleStrength("Sparkle", Float) = 0
         _MaskTex("Mask", 2D) = "white" {}
         _NormalMap("Normal Map", 2D) = "bump" {}
@@ -166,14 +166,14 @@ Shader "BugFarmer/WaterAnimated"
                 float t = _Time.y * _ScrollSpeed;
                 float2 p = wuv + float2(_ScrollDirX, _ScrollDirY) * t;   // directional drift (0 = calm pond)
 
-                // Refraction: a small UV warp, edge-faded so distortion never samples a neighbour tile,
-                // then posterized to the 32px tile texel so it reads as pixel water (not "wet").
+                // Refraction: a small, smooth world-space UV warp, edge-faded so it never samples a neighbour
+                // tile. (No posterize — snapping the sample UV to texels flickers under bilinear filtering as
+                // it animates/pans, which read as "static".)
                 float2 e = min(i.uv, 1.0 - i.uv);
                 float edgeFade = saturate(min(e.x, e.y) * 6.0);
                 float2 warp = float2(sin(p.y * _WaterFreq + t), sin(p.x * _WaterFreq * 1.3 - t))
                             + 0.5 * float2(sin(p.y * _WaterFreq * 2.1 - t * 1.4), sin(p.x * _WaterFreq * 1.9 + t * 1.2));
                 float2 duv = i.uv + warp * (_WaterAmp * edgeFade);
-                duv = floor(duv * 32.0) / 32.0;
 
                 const half4 main = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, duv);
                 const half4 mask = SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, i.uv);
@@ -192,9 +192,11 @@ Shader "BugFarmer/WaterAnimated"
 
                 half4 litColor = CombinedShapeLightShared(surfaceData, inputData);
 
-                // Caustic shimmer: seamless world-space moving light bands (two layers), gated to water pixels.
-                float bands = sin(p.x * _WaterFreq + t) + sin(p.y * _WaterFreq * 0.8 - t * 0.7);
-                litColor.rgb += _Shimmer * saturate(bands * 0.25 + 0.5) * main.a;
+                // Caustic highlight: a gentle world-space brightness ripple applied MULTIPLICATIVELY, so it
+                // scales with the lit surface and fades naturally as it gets dark (an ADDITIVE version showed a
+                // fixed interference pattern that dominated at dusk). ~1 +/- _Shimmer around the lit colour.
+                float caustic = 0.5 * sin(p.x * _WaterFreq + t) + 0.5 * sin(p.y * _WaterFreq * 0.9 - t * 0.7); // -1..1
+                litColor.rgb += litColor.rgb * (_Shimmer * caustic);
 
                 // Occasional sparkle glints: threshold a hashed world cell that ticks over time.
                 float2 cell = floor(wuv * 6.0 + floor(t));

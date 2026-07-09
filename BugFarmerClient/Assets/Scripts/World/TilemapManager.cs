@@ -23,6 +23,21 @@ namespace BugFarmer.World
         // Runtime-created animated water overlay (a second Tilemap under the same Grid, sorted just above the
         // ground water tiles). Null if the WaterAnimated shader is missing → water stays static (graceful).
         private Tilemap _waterTilemap;
+        private Material _waterMat;   // the runtime WaterAnimated material (driven by the fields below)
+
+        [Header("Water look — select THIS GameObject to tweak the pond live in Play mode")]
+        [Tooltip("Sideways refraction of the water texture. Small; 0 = flat.")]
+        [SerializeField] private float waterDistortion = 0.012f;
+        [Tooltip("Ripple density (higher = finer, busier ripples).")]
+        [SerializeField] private float waterFrequency = 1.2f;
+        [Tooltip("Overall animation speed.")]
+        [SerializeField] private float waterSpeed = 0.5f;
+        [Tooltip("Directional drift. (0,0) = calm pond; set one axis for a flowing current.")]
+        [SerializeField] private Vector2 waterScrollDir = Vector2.zero;
+        [Tooltip("Moving light ripple on the surface (multiplicative, so it fades at night).")]
+        [SerializeField, Range(0f, 0.5f)] private float waterShimmer = 0.14f;
+        [Tooltip("Occasional bright sparkle glints. 0 = off.")]
+        [SerializeField, Range(0f, 1f)] private float waterSparkle = 0f;
 
         [Header("Settings")]
         [SerializeField] private int viewDistanceChunks = 2; // Subscribe to 5x5 grid of chunks
@@ -820,16 +835,38 @@ namespace BugFarmer.World
                 // (NOT ??) — GetComponent returns a fake-null that ?? treats as non-null.
                 var wr = go.GetComponent<TilemapRenderer>();
                 if (wr == null) wr = go.AddComponent<TilemapRenderer>();
-                wr.sharedMaterial = new Material(shader);
+                _waterMat = new Material(shader);
+                wr.sharedMaterial = _waterMat;
                 wr.sortingLayerName = "Ground";
                 wr.sortingOrder = 10; // above ground tiles (order 0), below the Occupants layer
                 _waterTilemap = tm;   // assign only on full success → graceful fallback to static water
+                ApplyWaterSettings();
             }
             catch (System.Exception e)
             {
                 Debug.LogWarning($"[TilemapManager] water overlay setup failed ({e.Message}) — water stays static.");
                 _waterTilemap = null;
             }
+        }
+
+        /// <summary>Push the Inspector water-look fields onto the runtime material. Called on setup and from
+        /// OnValidate, so dragging the sliders updates the pond live during Play mode.</summary>
+        private void ApplyWaterSettings()
+        {
+            if (_waterMat == null) return;
+            _waterMat.SetFloat("_WaterAmp", waterDistortion);
+            _waterMat.SetFloat("_WaterFreq", waterFrequency);
+            _waterMat.SetFloat("_ScrollSpeed", waterSpeed);
+            _waterMat.SetFloat("_ScrollDirX", waterScrollDir.x);
+            _waterMat.SetFloat("_ScrollDirY", waterScrollDir.y);
+            _waterMat.SetFloat("_Shimmer", waterShimmer);
+            _waterMat.SetFloat("_SparkleStrength", waterSparkle);
+        }
+
+        private void OnValidate()
+        {
+            // Live-apply Inspector tweaks during Play (no-op before the material is built).
+            ApplyWaterSettings();
         }
 
         private void SetGroundTile(Vector2Int cellPos, string tileId)
