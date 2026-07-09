@@ -16,7 +16,7 @@ namespace BugFarmer.World
     public class DustController : MonoBehaviour
     {
         // Warm motes; alpha is the day/night-scaled ceiling (see Update).
-        private static readonly Color BaseColor = new Color(1f, 0.97f, 0.88f, 0.5f);
+        private static readonly Color BaseColor = new Color(1f, 0.97f, 0.88f, 0.3f);
 
         private ParticleSystem _ps;
         private Camera _cam;
@@ -45,7 +45,7 @@ namespace BugFarmer.World
             main.loop = true;
             main.startLifetime = new ParticleSystem.MinMaxCurve(6f, 12f); // long-lived, slow
             main.startSpeed = new ParticleSystem.MinMaxCurve(0.05f, 0.25f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.08f, 0.2f); // a few logical px (visible)
+            main.startSize = new ParticleSystem.MinMaxCurve(0.04f, 0.09f); // fine motes (owner: prev too big)
             main.startColor = BaseColor;
             main.gravityModifier = 0f;              // near-zero gravity — floaty
             main.maxParticles = 80;
@@ -53,7 +53,7 @@ namespace BugFarmer.World
             main.playOnAwake = false;
 
             var emission = _ps.emission;
-            emission.rateOverTime = 5f;             // ~5/s × ~9s life ≈ 45 in the box, ~25-30 in view
+            emission.rateOverTime = 4f;             // ~4/s × ~9s life ≈ 36 in the box, ~20 in view
 
             var shape = _ps.shape;                  // fill a box a little larger than the view
             shape.enabled = true;

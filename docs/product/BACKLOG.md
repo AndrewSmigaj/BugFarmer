@@ -501,7 +501,7 @@ sim-determinism + re-profile that `decay` flattens. Note: the FindNearbyFood chu
 the *food-search* sensitivity to this pile (committed); this item is specifically the decay-pass cost +
 the underlying unbounded accumulation.
 
-## Later — UNDERGROUND LIGHTING + LOOK OVERHAUL (Plan 1 BUILT M0–M3 · Plan 2 look-&-feel BUILT 6/7 · 2026-07-08)
+## Later — UNDERGROUND LIGHTING + LOOK OVERHAUL (Plan 1 BUILT M0–M3 · Plan 2 look-&-feel BUILT 7/7 · 2026-07-09)
 Design (scored candidates, spike-gated): `docs/product/architecture/architecture_lighting.md`. Evidence (each
 through 2 adversarial critic rounds): `docs/product/investigations/research_lighting_dark_underground.md`,
 `..._look.md`, `..._look_and_feel.md`.
@@ -511,21 +511,24 @@ through 2 adversarial critic rounds): `docs/product/investigations/research_ligh
   + `DarknessMultiply.shader`) = max(buried-from-solids, roofed), opened by carried-light reach; roof data path
   zonegen→Go→client (`OpCodeZoneRoofMap` 109); torches fade in like dusk via one smooth "how-dark-here"
   (`LampLight` reads `UndergroundDarknessAt`). Test vehicle: `lighting_test` zone.
-- **Plan 2 look-&-feel P2-1..P2-5, P2-7** (built on `feature/profiling-upgrade`, awaiting Play-test): wind sway +
-  hit-flash lit shader (`SpriteLitWorld.shader`, world-space motion) + `LitMaterials` routing · ambient dust
-  (`DustController`) · blob shadows (`BlobShadow`) · hit-flash + camera kick + leaf/chip burst on chops
-  (`HitFlash`/`HitBurst`/`CameraFollow.AddShake`) · lily-pad bob + reed sway · emote bubble system (`Emote`,
-  F6 test trigger). Test vehicle: `feel_test` zone. Tuning dials (amplitudes/durations) are owner Play-test work.
+- **Plan 2 look-&-feel P2-1..P2-7 (ALL built)** on `feature/profiling-upgrade`, awaiting Play-test: wind sway +
+  hit-flash lit shader (`SpriteLitWorld.shader`, world-space motion; grain crops sway, vegetables don't) +
+  `LitMaterials` routing · ambient dust (`DustController`) · blob shadows (`BlobShadow`) · hit-flash + camera kick
+  + leaf/chip burst on chops (`HitFlash`/`HitBurst`/`CameraFollow.AddShake`) · lily-pad bob + reed sway · emote
+  bubble system (`Emote`, F6 test trigger) · **P2-6 animated water** (`WaterAnimated.shader` = copy of
+  `SpriteLitWorld` + world-space seamless distortion/shimmer; a runtime second Tilemap under the Grid, sorted
+  "Ground" order 10; centralized `IsWaterTile`; additive + graceful-degrade to static water; calm/flowing/sparkle
+  are material dials). Test vehicle: `feel_test`. Tuning dials are owner Play-test work.
 
 **STILL DEFERRED:**
 - **Lighting M4:** roll the roof mask out to the REAL underground zones (`ant_tunnels_30`/mining), cross-zone
   seams, save migration, digging-updates the mask; run the M2 **2-client determinism gate** (roof is cosmetic →
   expected IDENTICAL, run when the owner's not connected).
-- **P2-6 water overhaul (owner-in-the-loop):** route `water_*` tiles to a SECOND runtime tilemap with an animated
-  water material (copy `SpriteLitWorld` + world-space UV warp; base water tile stays = graceful fallback). Held
-  back from the auto batch because it touches the per-cell `SetGroundTile` hot path (blast-radius) AND the water
-  LOOK is pure owner taste (the build→tune-dials rhythm). No wading (players can't enter water). Shoreline foam =
-  further backlog.
+- **Recreate the tree art** (owner 2026-07-09: "we need to recreate the trees"): regenerate `tree_oak` (+ other
+  trees) via the sprite pipeline (`add-object`/`regenerate-sprite`). Art task. Blob-shadow read on trees also
+  improves once the trunk art is redrawn.
+- **Water follow-ups (experimental):** shoreline **foam** (per-cell land-neighbour edge pass) · specular
+  **sparkle** default-on · reflections · **lava** animation (same overlay, different material).
 - **Part II look phases** (flicker, post-processing bloom/grade, god-rays) + broader look-&-feel backlog below.
 - **Owner-taste Qs** (mostly settled during the build; revisit if needed): scalar/binary roof (light shafts),
   palette mood, emission tooling, normal maps, player-light-underground.

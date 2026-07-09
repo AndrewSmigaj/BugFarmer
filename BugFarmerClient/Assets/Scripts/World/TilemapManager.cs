@@ -20,6 +20,10 @@ namespace BugFarmer.World
         [SerializeField] private Tilemap groundTilemap;
         [SerializeField] private Transform occupantContainer;
 
+        // Runtime-created animated water overlay (a second Tilemap under the same Grid, sorted just above the
+        // ground water tiles). Null if the WaterAnimated shader is missing → water stays static (graceful).
+        private Tilemap _waterTilemap;
+
         [Header("Settings")]
         [SerializeField] private int viewDistanceChunks = 2; // Subscribe to 5x5 grid of chunks
         [SerializeField] private float chunkCheckInterval = 0.5f;
@@ -95,6 +99,8 @@ namespace BugFarmer.World
             // Ground tiles must receive Light2D (day/night + lamps) like everything else
             if (groundTilemap != null)
                 LitMaterials.Apply(groundTilemap.GetComponent<Renderer>());
+
+            SetupWaterTilemap();
 
             if (WorldManager.Instance != null)
             {
@@ -784,6 +790,36 @@ namespace BugFarmer.World
             }
         }
 
+        /// <summary>Ground ids that render as water — the single source used by the animated overlay AND
+        /// the player-collision check, so "water" is defined once. (`lava` blocks but isn't animated here.)</summary>
+        public static bool IsWaterTile(string id) => id == "water_shallow" || id == "water_deep";
+
+        /// <summary>
+        /// Create the animated water overlay: a second Tilemap under the same Grid as groundTilemap, sorted
+        /// just above the ground water tiles (below Occupants), with the WaterAnimated material. Guarded — if
+        /// the shader is missing we leave `_waterTilemap` null and the static ground water still renders.
+        /// </summary>
+        private void SetupWaterTilemap()
+        {
+            if (groundTilemap == null) return;
+            var shader = Shader.Find("BugFarmer/WaterAnimated");
+            if (shader == null)
+            {
+                Debug.LogWarning("[TilemapManager] 'BugFarmer/WaterAnimated' not found — water stays static.");
+                return;
+            }
+            var grid = groundTilemap.transform.parent; // GroundTilemap is a child of the Grid
+            var go = new GameObject("WaterTilemap");
+            go.transform.SetParent(grid, false);
+            _waterTilemap = go.AddComponent<Tilemap>();
+            _waterTilemap.tileAnchor = groundTilemap.tileAnchor; // align with the ground grid
+            // AddComponent<Tilemap> may or may not auto-attach the renderer depending on Unity version.
+            var wr = go.GetComponent<TilemapRenderer>() ?? go.AddComponent<TilemapRenderer>();
+            wr.sharedMaterial = new Material(shader);
+            wr.sortingLayerName = "Ground";
+            wr.sortingOrder = 10; // above ground tiles (order 0), below the Occupants layer
+        }
+
         private void SetGroundTile(Vector2Int cellPos, string tileId)
         {
             if (groundTilemap == null)
@@ -793,6 +829,11 @@ namespace BugFarmer.World
             var tile = TileDatabase.Instance?.GetGroundTile(tileId);
             var tilePos = new Vector3Int(cellPos.x, cellPos.y, 0);
             groundTilemap.SetTile(tilePos, tile);
+
+            // Mirror water cells onto the animated overlay (same tile); clear it for any non-water id. The
+            // base water tile stays in groundTilemap, so a missing overlay just falls back to static water.
+            if (_waterTilemap != null)
+                _waterTilemap.SetTile(tilePos, IsWaterTile(tileId) ? tile : null);
 
             // Also update chunk data so GetGroundAt() returns correct value
             int cx = cellPos.x / ChunkSize;
@@ -909,7 +950,7 @@ namespace BugFarmer.World
             {
                 var fp = EntityDatabase.GetFootprint(occupantId);
                 BlobShadow.Attach(go.transform, fp.x, targetSize.y / 16f,
-                                  new Vector2(scaleX, scaleY), 0.5f);
+                                  new Vector2(scaleX, scaleY), 0.6f);
             }
             else
             {
@@ -973,6 +1014,10 @@ namespace BugFarmer.World
                     if (groundTilemap != null)
                     {
                         groundTilemap.SetTile(new Vector3Int(cellPos.x, cellPos.y, 0), null);
+                    }
+                    if (_waterTilemap != null)
+                    {
+                        _waterTilemap.SetTile(new Vector3Int(cellPos.x, cellPos.y, 0), null);
                     }
 
                     // Remove occupant
@@ -1309,7 +1354,7 @@ namespace BugFarmer.World
             }
 
             string groundId = GetGroundAt(cellPos);
-            if (groundId == "water_shallow" || groundId == "water_deep" || groundId == "lava")
+            if (IsWaterTile(groundId) || groundId == "lava")
                 return true;
 
             return false;
