@@ -501,18 +501,36 @@ sim-determinism + re-profile that `decay` flattens. Note: the FindNearbyFood chu
 the *food-search* sensitivity to this pile (committed); this item is specifically the decay-pass cost +
 the underlying unbounded accumulation.
 
-## Later — UNDERGROUND LIGHTING + LOOK OVERHAUL (RESEARCH + DESIGN DONE 2026-07-08; build after the zones)
-**Research + design complete (2026-07-08), not built.** Design (scored candidates, spike-gated):
-`docs/product/architecture/architecture_lighting.md` (PROPOSED). Evidence (each through 2 adversarial critic
-rounds): `docs/product/investigations/research_lighting_dark_underground.md`, `..._look.md`,
-`..._look_and_feel.md`. Certainty ~60 = well-evidenced but **spike-gated** (a URP render-behavior question only
-Unity can settle). **Next actions:** (1) the acceptance-gate spike (prove, WITH the daytime global at 1.0, that
-a roofed cell stays black beside a lit surface cell AND a torch reveals it — B′ route: a roof+buried darkness
-MASK opened by light reach, kept lights); (2) the roof-signal data path (5 hops, whole-underground mask, new
-zonegen authoring primitive, save migration); (3) Part II look phases (dark ambient, flicker, soft falloff,
-post-on, grounding, grade, god-rays) + the broader look-&-feel backlog. **Owner-taste Qs to resolve first:**
-how-dark, scalar/binary roof (light shafts), pixel-perfect camera, palette mood, emission tooling, normal maps,
-player-light-underground. Original owner spec (still the requirement):
+## Later — UNDERGROUND LIGHTING + LOOK OVERHAUL (Plan 1 BUILT M0–M3 · Plan 2 look-&-feel BUILT 6/7 · 2026-07-08)
+Design (scored candidates, spike-gated): `docs/product/architecture/architecture_lighting.md`. Evidence (each
+through 2 adversarial critic rounds): `docs/product/investigations/research_lighting_dark_underground.md`,
+`..._look.md`, `..._look_and_feel.md`.
+
+**BUILT + in-engine (pending owner Play-test validation — client-only, no sim/determinism surface):**
+- **Plan 1 lighting M0–M3** (owner-confirmed working): world-space darkness multiply overlay (`DarknessOverlay`
+  + `DarknessMultiply.shader`) = max(buried-from-solids, roofed), opened by carried-light reach; roof data path
+  zonegen→Go→client (`OpCodeZoneRoofMap` 109); torches fade in like dusk via one smooth "how-dark-here"
+  (`LampLight` reads `UndergroundDarknessAt`). Test vehicle: `lighting_test` zone.
+- **Plan 2 look-&-feel P2-1..P2-5, P2-7** (built on `feature/profiling-upgrade`, awaiting Play-test): wind sway +
+  hit-flash lit shader (`SpriteLitWorld.shader`, world-space motion) + `LitMaterials` routing · ambient dust
+  (`DustController`) · blob shadows (`BlobShadow`) · hit-flash + camera kick + leaf/chip burst on chops
+  (`HitFlash`/`HitBurst`/`CameraFollow.AddShake`) · lily-pad bob + reed sway · emote bubble system (`Emote`,
+  F6 test trigger). Test vehicle: `feel_test` zone. Tuning dials (amplitudes/durations) are owner Play-test work.
+
+**STILL DEFERRED:**
+- **Lighting M4:** roll the roof mask out to the REAL underground zones (`ant_tunnels_30`/mining), cross-zone
+  seams, save migration, digging-updates the mask; run the M2 **2-client determinism gate** (roof is cosmetic →
+  expected IDENTICAL, run when the owner's not connected).
+- **P2-6 water overhaul (owner-in-the-loop):** route `water_*` tiles to a SECOND runtime tilemap with an animated
+  water material (copy `SpriteLitWorld` + world-space UV warp; base water tile stays = graceful fallback). Held
+  back from the auto batch because it touches the per-cell `SetGroundTile` hot path (blast-radius) AND the water
+  LOOK is pure owner taste (the build→tune-dials rhythm). No wading (players can't enter water). Shoreline foam =
+  further backlog.
+- **Part II look phases** (flicker, post-processing bloom/grade, god-rays) + broader look-&-feel backlog below.
+- **Owner-taste Qs** (mostly settled during the build; revisit if needed): scalar/binary roof (light shafts),
+  palette mood, emission tooling, normal maps, player-light-underground.
+
+**Original owner spec (still the requirement — the reference the build targets):**
 Owner: "the outside area at the top should be lit like any other day/night, on the top ant
 zone and the mining zone with the mining camp, we can make it dark past that point. as it
 is all masses of ore block should have the inner ones dark, wherever they are surrounded,
