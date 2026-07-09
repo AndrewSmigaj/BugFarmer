@@ -112,7 +112,9 @@ namespace BugFarmer.World
         }
 
         // Cereal crops read as grass-like stalks and should sway; leafy/root vegetables should not.
+        // Match the crop ids specifically ("plant_corn"/"plant_wheat" + stages) — a bare "corn" would
+        // also catch "fence_corner_wood".
         private static bool IsGrainCrop(string id) =>
-            id != null && (id.Contains("wheat") || id.Contains("corn"));
+            id != null && (id.Contains("plant_wheat") || id.Contains("plant_corn"));
     }
 }
