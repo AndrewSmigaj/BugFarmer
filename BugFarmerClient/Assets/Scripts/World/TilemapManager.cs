@@ -34,9 +34,9 @@ namespace BugFarmer.World
         [SerializeField] private float waterSpeed = 0.66f;
         [Tooltip("Directional drift. (0,0) = calm pond; set one axis for a flowing current.")]
         [SerializeField] private Vector2 waterScrollDir = new Vector2(0.24f, 0.45f);
-        [Tooltip("Moving light ripple on the surface (multiplicative, so it fades at night).")]
-        [SerializeField, Range(0f, 0.5f)] private float waterShimmer = 0.013f;
-        [Tooltip("Occasional bright sparkle glints. 0 = off.")]
+        [Tooltip("Moving light ripple. 0 = off (default — it reads as a checkerboard grid on tiled water).")]
+        [SerializeField, Range(0f, 0.5f)] private float waterShimmer = 0f;
+        [Tooltip("Occasional bright sparkle glints. 0 = off (default — they march in stepped squares).")]
         [SerializeField, Range(0f, 1f)] private float waterSparkle = 0f;
 
         [Header("Settings")]
@@ -998,7 +998,7 @@ namespace BugFarmer.World
             if (cat != null && !terrainOrWater)
             {
                 BlobShadow.Attach(go.transform, targetSize.x / 16f, targetSize.y / 16f,
-                                  new Vector2(scaleX, scaleY), 0.4f);
+                                  new Vector2(scaleX, scaleY), 0.6f);
             }
             else
             {

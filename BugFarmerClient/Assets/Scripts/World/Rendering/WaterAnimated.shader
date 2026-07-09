@@ -22,7 +22,7 @@ Shader "BugFarmer/WaterAnimated"
         _ScrollSpeed("Water Speed", Float) = 0.66
         _ScrollDirX("Scroll Dir X", Float) = 0.24
         _ScrollDirY("Scroll Dir Y", Float) = 0.45
-        _Shimmer("Shimmer", Float) = 0.013
+        _Shimmer("Shimmer", Float) = 0
         _SparkleStrength("Sparkle", Float) = 0
         _MaskTex("Mask", 2D) = "white" {}
         _NormalMap("Normal Map", 2D) = "bump" {}
