@@ -22,7 +22,7 @@ namespace BugFarmer.World
         private const int Falloff = 4;        // cells of soft edge from an open face into the rock
         private const int SortingOrder = 30000;
         private const float RevealScale = 1.9f; // torch reveal reaches this * the light radius (bright core, dim ring)
-        private const int BlurPasses = 2;       // 3x3 box-blur passes on the base field → soft cave-mouth + pool edges
+        private const int BlurPasses = 5;       // 3x3 box-blur passes on the base field → wider soft cave-mouth (torch fades in over more distance)
         private const float NightFloor = 0.2f;  // matches DayNightController.nightIntensity (global brightness floor)
         // Step 2: an underground torch pool is capped to this VISIBLE brightness (compensating for the surface
         // sun), so a cave reads as a warm DIM pool — never brighter than the daytime surface, ~time-independent.
