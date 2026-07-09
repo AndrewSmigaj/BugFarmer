@@ -898,6 +898,23 @@ namespace BugFarmer.World
                 lamp.Configure(def.World.LightRadius, def.World.LightColor, def.World.LightIntensity);
             }
 
+            // Blob shadow: ground standing objects (trees + structures) so they don't look pasted on.
+            // Gate on bottom-center pivot (flat flora/rugs are center-pivoted → excluded) + tall natural
+            // (trees, sprite_h >= 40px) or structures. Managed per-render like the lamp child (pool-safe).
+            var pivot = EntityDatabase.GetPivot(occupantId);
+            bool grounded = Mathf.Approximately(pivot.y, 0f);
+            bool wantShadow = grounded && ((cat == "natural" && targetSize.y >= 40) || cat == "structure");
+            if (wantShadow)
+            {
+                var fp = EntityDatabase.GetFootprint(occupantId);
+                BlobShadow.Attach(go.transform, fp.x, targetSize.y / 16f,
+                                  new Vector2(scaleX, scaleY), 0.35f);
+            }
+            else
+            {
+                BlobShadow.Remove(go.transform);
+            }
+
             // Configure collider to match sprite bounds
             var collider = go.GetComponent<BoxCollider2D>();
             if (collider != null)
