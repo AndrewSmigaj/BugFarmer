@@ -808,16 +808,28 @@ namespace BugFarmer.World
                 Debug.LogWarning("[TilemapManager] 'BugFarmer/WaterAnimated' not found — water stays static.");
                 return;
             }
-            var grid = groundTilemap.transform.parent; // GroundTilemap is a child of the Grid
-            var go = new GameObject("WaterTilemap");
-            go.transform.SetParent(grid, false);
-            _waterTilemap = go.AddComponent<Tilemap>();
-            _waterTilemap.tileAnchor = groundTilemap.tileAnchor; // align with the ground grid
-            // AddComponent<Tilemap> may or may not auto-attach the renderer depending on Unity version.
-            var wr = go.GetComponent<TilemapRenderer>() ?? go.AddComponent<TilemapRenderer>();
-            wr.sharedMaterial = new Material(shader);
-            wr.sortingLayerName = "Ground";
-            wr.sortingOrder = 10; // above ground tiles (order 0), below the Occupants layer
+            // Wrapped so a water-overlay failure can NEVER break the rest of Start (e.g. the OnMatchData hookup).
+            try
+            {
+                var grid = groundTilemap.transform.parent; // GroundTilemap is a child of the Grid
+                var go = new GameObject("WaterTilemap");
+                go.transform.SetParent(grid, false);
+                var tm = go.AddComponent<Tilemap>();
+                tm.tileAnchor = groundTilemap.tileAnchor; // align with the ground grid
+                // AddComponent<Tilemap> does NOT auto-attach the renderer at runtime. Use Unity's == null check
+                // (NOT ??) — GetComponent returns a fake-null that ?? treats as non-null.
+                var wr = go.GetComponent<TilemapRenderer>();
+                if (wr == null) wr = go.AddComponent<TilemapRenderer>();
+                wr.sharedMaterial = new Material(shader);
+                wr.sortingLayerName = "Ground";
+                wr.sortingOrder = 10; // above ground tiles (order 0), below the Occupants layer
+                _waterTilemap = tm;   // assign only on full success → graceful fallback to static water
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[TilemapManager] water overlay setup failed ({e.Message}) — water stays static.");
+                _waterTilemap = null;
+            }
         }
 
         private void SetGroundTile(Vector2Int cellPos, string tileId)
