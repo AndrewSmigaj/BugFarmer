@@ -559,10 +559,12 @@ through 2 adversarial critic rounds): `docs/product/investigations/research_ligh
 - **Lighting M4:** roll the roof mask out to the REAL underground zones (`ant_tunnels_30`/mining), cross-zone
   seams, save migration, digging-updates the mask; run the M2 **2-client determinism gate** (roof is cosmetic →
   expected IDENTICAL, run when the owner's not connected).
-- **Recreate the tree art** (owner 2026-07-09: "we need to recreate the trees"): regenerate `tree_oak` (+ other
-  trees) via the sprite pipeline (`add-object`/`regenerate-sprite`). Art task. Blob-shadow read on trees also
-  improves once the trunk art is redrawn.
-- **Water follow-ups (experimental):** shoreline **foam** (per-cell land-neighbour edge pass) · specular
+- **Tree improvements** (owner 2026-07-09):
+  - **Recreate the tree art**: regenerate `tree_oak` (+ other trees) via the sprite pipeline
+    (`add-object`/`regenerate-sprite`). Art task. Blob-shadow read on trees improves once the trunk is redrawn.
+  - **Cutting-down animation**: a proper felling animation when a tree is chopped (lean/fall + a stump left),
+    beyond the current hit-flash + leaf burst. Owner wants it eventually; out of scope for now.
+- **Water follow-ups (experimental):** shoreline **foam** = BUILT (world-space shore-mask swash) · specular
   **sparkle** default-on · reflections · **lava** animation (same overlay, different material).
 - **Part II look phases** (flicker, post-processing bloom/grade, god-rays) + broader look-&-feel backlog below.
 - **Owner-taste Qs** (mostly settled during the build; revisit if needed): scalar/binary roof (light shafts),

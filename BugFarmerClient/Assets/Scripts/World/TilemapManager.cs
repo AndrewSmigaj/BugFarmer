@@ -47,9 +47,9 @@ namespace BugFarmer.World
         [Tooltip("Occasional bright sparkle glints. 0 = off (default — they march in stepped squares).")]
         [SerializeField, Range(0f, 1f)] private float waterSparkle = 0f;
         [Tooltip("Foam band width at the shore, in cells. 0 = no foam.")]
-        [SerializeField, Range(0f, 2f)] private float waterFoamWidth = 0.7f;
+        [SerializeField, Range(0f, 2f)] private float waterFoamWidth = 0.15f;
         [Tooltip("Foam swash animation speed.")]
-        [SerializeField] private float waterFoamSpeed = 1f;
+        [SerializeField] private float waterFoamSpeed = 0.14f;
 
         [Header("Settings")]
         [SerializeField] private int viewDistanceChunks = 2; // Subscribe to 5x5 grid of chunks
