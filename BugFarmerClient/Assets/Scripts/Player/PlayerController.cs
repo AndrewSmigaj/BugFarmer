@@ -36,6 +36,7 @@ namespace BugFarmer.Player
         private Rigidbody2D _rb;
         private SpriteRenderer _spriteRenderer;
         private Camera _mainCamera;
+        private int _emoteDemoIx; // F6 demo-emote cursor (debug)
 
         // Movement sending state
         private const float SendInterval = 0.1f; // 100ms
@@ -198,6 +199,15 @@ namespace BugFarmer.Player
             // (F7 is the day/night preview; F9 the stats readout — keep them distinct.)
             if (Input.GetKeyDown(KeyCode.F10))
                 CycleDebugOutfit();
+
+            // DEBUG: F6 pops a demo emote over the player (cycles glyphs) — the emote SYSTEM test.
+            // Real triggers are wired per feature via World.Emote.Show(target, glyph).
+            if (Input.GetKeyDown(KeyCode.F6))
+            {
+                string[] demo = { World.Emote.Alert, World.Emote.Question, World.Emote.Thinking,
+                                  World.Emote.Happy, World.Emote.Sleep };
+                World.Emote.Show(transform, demo[_emoteDemoIx++ % demo.Length]);
+            }
 
             // Skip input when typing in UI
             if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject != null)
