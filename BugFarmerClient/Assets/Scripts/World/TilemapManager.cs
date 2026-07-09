@@ -862,11 +862,15 @@ namespace BugFarmer.World
             go.transform.position = worldPos;
 
             // Configure sprite renderer
+            var def = EntityDatabase.Get(occupantId);
             var sr = go.GetComponent<SpriteRenderer>();
             if (sr == null)
                 sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
-            LitMaterials.Apply(sr); // receive day/night + lamp Light2D
+            // receive day/night + lamp Light2D; foliage (flora/trees/crops) gets the wind-sway variant.
+            var cat = def?.Category;
+            bool isFoliage = cat == "natural" || cat == "crop" || cat == "flora";
+            LitMaterials.Apply(sr, isFoliage);
 
             // Scale sprite to match target size from database
             float scaleX = targetSize.x / sprite.rect.width;
@@ -883,7 +887,6 @@ namespace BugFarmer.World
             var stale = go.transform.Find("LampLight");
             if (stale != null)
                 Destroy(stale.gameObject);
-            var def = EntityDatabase.Get(occupantId);
             if (def?.World != null && def.World.LightRadius > 0f)
             {
                 var lightGo = new GameObject("LampLight");
