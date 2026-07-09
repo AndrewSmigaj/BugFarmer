@@ -15,8 +15,9 @@ namespace BugFarmer.World
     /// </summary>
     public class DustController : MonoBehaviour
     {
-        // Warm motes; alpha is the day/night-scaled ceiling (see Update).
-        private static readonly Color BaseColor = new Color(1f, 0.97f, 0.88f, 0.3f);
+        // Warm motes; alpha is the day/night-scaled ceiling (see Update). More opaque = more visible
+        // (owner: "barely see them") WITHOUT making them bigger.
+        private static readonly Color BaseColor = new Color(1f, 0.97f, 0.88f, 0.55f);
 
         private ParticleSystem _ps;
         private Camera _cam;

@@ -17,12 +17,12 @@ Shader "BugFarmer/WaterAnimated"
         _FlashColor("Flash Color", Color) = (1,1,1,1)
         _FlashAmount("Flash Amount", Range(0,1)) = 0
         // Water dials
-        _WaterAmp("Water Distortion", Float) = 0.012
-        _WaterFreq("Water Frequency", Float) = 1.2
-        _ScrollSpeed("Water Speed", Float) = 0.5
-        _ScrollDirX("Scroll Dir X", Float) = 0
-        _ScrollDirY("Scroll Dir Y", Float) = 0
-        _Shimmer("Shimmer", Float) = 0.14
+        _WaterAmp("Water Distortion", Float) = 0.05
+        _WaterFreq("Water Frequency", Float) = 4.19
+        _ScrollSpeed("Water Speed", Float) = 0.66
+        _ScrollDirX("Scroll Dir X", Float) = 0.24
+        _ScrollDirY("Scroll Dir Y", Float) = 0.45
+        _Shimmer("Shimmer", Float) = 0.013
         _SparkleStrength("Sparkle", Float) = 0
         _MaskTex("Mask", 2D) = "white" {}
         _NormalMap("Normal Map", 2D) = "bump" {}

@@ -27,15 +27,15 @@ namespace BugFarmer.World
 
         [Header("Water look — select THIS GameObject to tweak the pond live in Play mode")]
         [Tooltip("Sideways refraction of the water texture. Small; 0 = flat.")]
-        [SerializeField] private float waterDistortion = 0.012f;
+        [SerializeField] private float waterDistortion = 0.05f;
         [Tooltip("Ripple density (higher = finer, busier ripples).")]
-        [SerializeField] private float waterFrequency = 1.2f;
+        [SerializeField] private float waterFrequency = 4.19f;
         [Tooltip("Overall animation speed.")]
-        [SerializeField] private float waterSpeed = 0.5f;
+        [SerializeField] private float waterSpeed = 0.66f;
         [Tooltip("Directional drift. (0,0) = calm pond; set one axis for a flowing current.")]
-        [SerializeField] private Vector2 waterScrollDir = Vector2.zero;
+        [SerializeField] private Vector2 waterScrollDir = new Vector2(0.24f, 0.45f);
         [Tooltip("Moving light ripple on the surface (multiplicative, so it fades at night).")]
-        [SerializeField, Range(0f, 0.5f)] private float waterShimmer = 0.14f;
+        [SerializeField, Range(0f, 0.5f)] private float waterShimmer = 0.013f;
         [Tooltip("Occasional bright sparkle glints. 0 = off.")]
         [SerializeField, Range(0f, 1f)] private float waterSparkle = 0f;
 
@@ -999,7 +999,7 @@ namespace BugFarmer.World
             {
                 var fp = EntityDatabase.GetFootprint(occupantId);
                 BlobShadow.Attach(go.transform, fp.x, targetSize.y / 16f,
-                                  new Vector2(scaleX, scaleY), 0.6f);
+                                  new Vector2(scaleX, scaleY), 0.8f);
             }
             else
             {

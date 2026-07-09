@@ -68,14 +68,14 @@ namespace BugFarmer.World
 
             sr.color = new Color(0f, 0f, 0f, alpha);
 
-            float w = Mathf.Max(0.6f, widthCells) * 1.35f;  // world units (cellSize=1); wider than base
-            float h = w * 0.4f;                              // flat ellipse
+            float w = Mathf.Max(0.6f, widthCells) * 1.5f;   // world units (cellSize=1); wider than base
+            float h = w * 0.42f;                             // flat ellipse
             float sx = parentScale.x != 0 ? parentScale.x : 1f;
             float sy = parentScale.y != 0 ? parentScale.y : 1f;
             sr.transform.localScale = new Vector3(w / sx, h / sy, 1f);
-            // Parent scale multiplies localPosition, so counter sy. Nudge ~0.15u BELOW the base (toward the
-            // camera) so more of the oval shows in front of the trunk instead of hiding under the sprite.
-            sr.transform.localPosition = new Vector3(0f, (-0.5f * spriteHeightCells - 0.15f) / sy, 0.01f);
+            // Parent scale multiplies localPosition, so counter sy. Nudge ~0.25u BELOW the base (toward the
+            // camera) so most of the oval shows in front of the trunk instead of hiding under the sprite.
+            sr.transform.localPosition = new Vector3(0f, (-0.5f * spriteHeightCells - 0.25f) / sy, 0.01f);
         }
 
         /// <summary>Remove a blob shadow if a pooled occupant no longer wants one.</summary>
