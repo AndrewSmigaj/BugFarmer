@@ -989,17 +989,16 @@ namespace BugFarmer.World
                 lamp.Configure(def.World.LightRadius, def.World.LightColor, def.World.LightIntensity);
             }
 
-            // Blob shadow: ground standing objects (trees + structures) so they don't look pasted on.
-            // Gate on bottom-center pivot (flat flora/rugs are center-pivoted → excluded) + tall natural
-            // (trees, sprite_h >= 40px) or structures. Managed per-render like the lamp child (pool-safe).
-            var pivot = EntityDatabase.GetPivot(occupantId);
-            bool grounded = Mathf.Approximately(pivot.y, 0f);
-            bool wantShadow = grounded && ((cat == "natural" && targetSize.y >= 40) || cat == "structure");
-            if (wantShadow)
+            // Blob shadow under standing objects (trees, flora, crops, structures, furniture, …) so they don't
+            // look pasted on. Skip terrain blocks/ore (they ARE the ground) and water plants (a shadow on
+            // water looks wrong). Sized to the SPRITE, so a small plant gets a small shadow and a tree a big
+            // one. Base-drop is pivot-agnostic (the sprite is centred on the GO either way). Pool-safe.
+            bool terrainOrWater = cat == "block" || cat == "ore" || cat == "flora"
+                                  || LitMaterials.IsWaterPlant(occupantId);
+            if (cat != null && !terrainOrWater)
             {
-                var fp = EntityDatabase.GetFootprint(occupantId);
-                BlobShadow.Attach(go.transform, fp.x, targetSize.y / 16f,
-                                  new Vector2(scaleX, scaleY), 0.8f);
+                BlobShadow.Attach(go.transform, targetSize.x / 16f, targetSize.y / 16f,
+                                  new Vector2(scaleX, scaleY), 0.4f);
             }
             else
             {

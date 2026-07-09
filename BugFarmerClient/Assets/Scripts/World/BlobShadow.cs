@@ -44,7 +44,7 @@ namespace BugFarmer.World
         /// position is the sprite CENTER, so the shadow is dropped ½·spriteHeightCells down to the ground base.
         /// </summary>
         /// <param name="parent">Occupant GameObject transform.</param>
-        /// <param name="widthCells">Object base width in cells (≈ footprint width).</param>
+        /// <param name="widthCells">Sprite visual width in cells (shadow is scaled from this).</param>
         /// <param name="spriteHeightCells">Sprite height in cells (drops the shadow to the base).</param>
         /// <param name="parentScale">The occupant's localScale (countered → world-unit sizing).</param>
         /// <param name="alpha">Peak opacity (0..1).</param>
@@ -68,14 +68,14 @@ namespace BugFarmer.World
 
             sr.color = new Color(0f, 0f, 0f, alpha);
 
-            float w = Mathf.Max(0.6f, widthCells) * 1.5f;   // world units (cellSize=1); wider than base
+            float w = Mathf.Max(0.35f, widthCells * 0.75f);  // world units (cellSize=1); ~ the sprite's base width
             float h = w * 0.42f;                             // flat ellipse
             float sx = parentScale.x != 0 ? parentScale.x : 1f;
             float sy = parentScale.y != 0 ? parentScale.y : 1f;
             sr.transform.localScale = new Vector3(w / sx, h / sy, 1f);
-            // Parent scale multiplies localPosition, so counter sy. Nudge ~0.25u BELOW the base (toward the
-            // camera) so most of the oval shows in front of the trunk instead of hiding under the sprite.
-            sr.transform.localPosition = new Vector3(0f, (-0.5f * spriteHeightCells - 0.25f) / sy, 0.01f);
+            // Parent scale multiplies localPosition, so counter sy. Drop to the base (-0.5*height) plus a small
+            // nudge below so a bit of the oval shows in front of a tall trunk without detaching under a low plant.
+            sr.transform.localPosition = new Vector3(0f, (-0.5f * spriteHeightCells - 0.1f) / sy, 0.01f);
         }
 
         /// <summary>Remove a blob shadow if a pooled occupant no longer wants one.</summary>

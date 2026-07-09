@@ -111,6 +111,11 @@ namespace BugFarmer.World
             if (m != null) sr.sharedMaterial = m;
         }
 
+        /// <summary>True for plants that live on/in water (lily pads, reeds, cattail, marsh, water lily) —
+        /// used to skip blob shadows there (a shadow on water looks wrong).</summary>
+        public static bool IsWaterPlant(string id) =>
+            id != null && (Floaters.Contains(id) || WaterUpright.Contains(id));
+
         // Cereal crops read as grass-like stalks and should sway; leafy/root vegetables should not.
         // Match the crop ids specifically ("plant_corn"/"plant_wheat" + stages) — a bare "corn" would
         // also catch "fence_corner_wood".

@@ -45,8 +45,11 @@ def build(zone_id="feel_test"):
             Z.place_occupant(pid, px, py, surface="water")
             Z.reserve(px, py, surface="water")
 
-    # Trees (wind canopy + chop feedback + blob shadows) — spaced so the ~2-tall sprites don't overlap.
-    for (tx, ty) in [(40, 44), (48, 50), (34, 52), (52, 38), (44, 30)]:
+    # Trees (wind canopy + chop feedback + blob shadows) — spread AROUND the spawn (32,32) in every
+    # direction so they're immediately findable, spaced so the ~2-tall sprites don't overlap, and kept
+    # clear of the SW pond (x8-24,y10-22) and the S crop beds (x34-44,y8-16).
+    for (tx, ty) in [(40, 44), (48, 50), (34, 52), (52, 38), (44, 30),
+                     (24, 36), (28, 46), (20, 52), (30, 26), (22, 42), (36, 24), (26, 30)]:
         if Z.is_free(tx, ty):
             Z.place_occupant("tree_oak", tx, ty)
 
