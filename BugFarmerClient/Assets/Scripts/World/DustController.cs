@@ -92,12 +92,24 @@ namespace BugFarmer.World
             Debug.Log($"[DustController] built (ortho {ortho:0.0}, motes rate {emission.rateOverTime.constant})");
         }
 
+        /// <summary>Debug toggle (F5) — lets a playtester rule dust in/out as the source of an artifact.</summary>
+        public static bool Enabled = true;
+
         private void Update()
         {
             if (_cam == null && (_cam = Camera.main) == null) return;
             // Rebuild on zoom — the box + spawn count are sized to the live view (same as rain).
             if (Mathf.Abs(_cam.orthographicSize - _builtOrtho) > 0.5f) Build();
             if (_ps == null) return;
+
+            if (Input.GetKeyDown(KeyCode.F5)) Enabled = !Enabled;
+            var em = _ps.emission;
+            if (em.enabled != Enabled)
+            {
+                em.enabled = Enabled;
+                if (!Enabled) _ps.Clear(); // drop existing motes immediately so the toggle is unambiguous
+            }
+            if (!Enabled) return;
 
             // Follow the camera so motes always fill the view.
             var cp = _cam.transform.position;
