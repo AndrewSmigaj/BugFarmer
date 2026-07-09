@@ -31,6 +31,7 @@ namespace BugFarmer.Player
         {
             _mainCamera = Camera.main;
             _animator = GetComponent<PlayerToolAnimator>();
+            BugFarmer.Audio.AudioFx.Ensure();   // so the axe-chop sound is ready
         }
 
         /// <summary>
@@ -126,19 +127,32 @@ namespace BugFarmer.Player
         {
             if (target == null) return;
 
-            var sr = target.GetComponent<SpriteRenderer>();
-            if (sr != null) World.HitFlash.Play(sr, 0.4f);   // gentle flash
+            CameraFollow.AddShake(0.28f);                    // VERY subtle — complements the tree wobble, not the star
+            BugFarmer.Audio.AudioFx.AxeChopAt(target.transform.position); // woody chop on each connecting hit
 
-            CameraFollow.AddShake(0.38f);                     // felt-but-cozy kick (0.5 too much, 0.22 too little)
+            var sr = target.GetComponent<SpriteRenderer>();
+            if (sr == null) return;
+            World.HitFlash.Play(sr, 0.4f);                   // gentle flash
 
             string cat = EntityDatabase.Get(target.OccupantId)?.Category;
-            var kind = cat == "natural" ? World.HitBurst.Kind.Leaf
-                     : cat == "structure" ? World.HitBurst.Kind.Chip
-                     : World.HitBurst.Kind.Generic;
-            Vector3 at = sr != null ? sr.bounds.center : target.transform.position;
-            // Scale the burst to the object's world height (≈ cells): small plant → contained, tree → full.
-            float sizeScale = sr != null ? Mathf.Clamp(sr.bounds.size.y / 3f, 0.3f, 1f) : 1f;
-            World.HitBurst.Play(at, kind, sizeScale);
+
+            // The struck plant/tree BENDS away from the player (the axe) and wobbles back — base-anchored via
+            // the wind vertex, so only bendy vegetation reacts (rigid blocks/ore/structures don't).
+            if (cat == "natural" || cat == "crop" || cat == "flora")
+            {
+                float dir = Mathf.Sign(target.transform.position.x - transform.position.x);
+                World.HitWobble.Play(sr, 0.15f * (dir == 0f ? 1f : dir));
+            }
+
+            // Particles only for TALL things (trees + tall structures); small plants get none (owner).
+            float h = sr.bounds.size.y;
+            if (h >= 1.5f)
+            {
+                var kind = cat == "natural" ? World.HitBurst.Kind.Leaf
+                         : cat == "structure" ? World.HitBurst.Kind.Chip
+                         : World.HitBurst.Kind.Generic;
+                World.HitBurst.Play(sr.bounds.center, kind, Mathf.Clamp(h / 3f, 0.3f, 1f));
+            }
         }
 
         /// <summary>Clear breaking state (called by the router on click release/cancel).</summary>

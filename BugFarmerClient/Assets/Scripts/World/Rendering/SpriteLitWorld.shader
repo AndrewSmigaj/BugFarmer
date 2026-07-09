@@ -11,6 +11,7 @@ Shader "BugFarmer/SpriteLitWorld"
         _WindSpeed("Wind Speed", Float) = 1.5
         _BobStrength("Bob Strength", Float) = 0
         _BobSpeed("Bob Speed", Float) = 1
+        _HitBend("Hit Bend", Float) = 0
         _FlashColor("Flash Color", Color) = (1,1,1,1)
         _FlashAmount("Flash Amount", Range(0,1)) = 0
         _MaskTex("Mask", 2D) = "white" {}
@@ -93,6 +94,7 @@ Shader "BugFarmer/SpriteLitWorld"
                 float _WindSpeed;
                 float _BobStrength;
                 float _BobSpeed;
+                float _HitBend;
                 float _FlashAmount;
             CBUFFER_END
 
@@ -130,6 +132,7 @@ Shader "BugFarmer/SpriteLitWorld"
                 float3 originWS = TransformObjectToWorld(float3(0.0, 0.0, 0.0));
                 float3 posWS = TransformObjectToWorld(v.positionOS);
                 posWS.x += sin(originWS.x * 0.6 + _Time.y * _WindSpeed) * _WindStrength * v.uv.y;
+                posWS.x += _HitBend * v.uv.y;   // per-hit bend impulse (tree wobble), base-anchored like wind
                 posWS.y += sin((originWS.x + originWS.y) * 0.5 + _Time.y * _BobSpeed) * _BobStrength;
                 o.positionCS = TransformWorldToHClip(posWS);
                 #if defined(DEBUG_DISPLAY)
@@ -220,6 +223,7 @@ Shader "BugFarmer/SpriteLitWorld"
                 float _WindSpeed;
                 float _BobStrength;
                 float _BobSpeed;
+                float _HitBend;
                 float _FlashAmount;
             CBUFFER_END
 
@@ -235,6 +239,7 @@ Shader "BugFarmer/SpriteLitWorld"
                 float3 originWS = TransformObjectToWorld(float3(0.0, 0.0, 0.0));
                 float3 posWS = TransformObjectToWorld(attributes.positionOS);
                 posWS.x += sin(originWS.x * 0.6 + _Time.y * _WindSpeed) * _WindStrength * attributes.uv.y;
+                posWS.x += _HitBend * attributes.uv.y;   // per-hit bend impulse (tree wobble)
                 posWS.y += sin((originWS.x + originWS.y) * 0.5 + _Time.y * _BobSpeed) * _BobStrength;
                 o.positionCS = TransformWorldToHClip(posWS);
                 o.uv = attributes.uv;
@@ -308,6 +313,7 @@ Shader "BugFarmer/SpriteLitWorld"
                 float _WindSpeed;
                 float _BobStrength;
                 float _BobSpeed;
+                float _HitBend;
                 float _FlashAmount;
             CBUFFER_END
 
@@ -323,6 +329,7 @@ Shader "BugFarmer/SpriteLitWorld"
                 float3 originWS = TransformObjectToWorld(float3(0.0, 0.0, 0.0));
                 float3 posWS = TransformObjectToWorld(attributes.positionOS);
                 posWS.x += sin(originWS.x * 0.6 + _Time.y * _WindSpeed) * _WindStrength * attributes.uv.y;
+                posWS.x += _HitBend * attributes.uv.y;   // per-hit bend impulse (tree wobble)
                 posWS.y += sin((originWS.x + originWS.y) * 0.5 + _Time.y * _BobSpeed) * _BobStrength;
                 o.positionCS = TransformWorldToHClip(posWS);
                 #if defined(DEBUG_DISPLAY)

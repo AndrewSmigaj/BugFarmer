@@ -13,8 +13,8 @@ namespace BugFarmer.Player
         [SerializeField] private float zOffset = -10f;
 
         [Header("Shake (hit feedback)")]
-        [Tooltip("Peak shake offset in world units at full trauma. Kept small/cozy.")]
-        [SerializeField] private float maxShake = 0.28f;
+        [Tooltip("Peak shake offset in world units at full trauma. Very subtle — a faint complement to the hit.")]
+        [SerializeField] private float maxShake = 0.22f;
         [SerializeField] private float shakeFrequency = 22f;
         [Tooltip("Trauma units shed per second (higher = snappier settle).")]
         [SerializeField] private float traumaDecay = 3.5f;

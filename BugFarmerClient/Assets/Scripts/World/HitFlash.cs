@@ -41,14 +41,14 @@ namespace BugFarmer.World
             hf.Apply();
         }
 
-        /// <summary>Clear any active flash on a (pooled) sprite so it rejoins the SRP batch.</summary>
+        /// <summary>Clear any active flash on a (pooled) sprite.</summary>
         public static void Clear(SpriteRenderer sr)
         {
             var hf = sr != null ? sr.GetComponent<HitFlash>() : null;
             if (hf != null && hf._amount > 0f)
             {
                 hf._amount = 0f;
-                sr.SetPropertyBlock(null);
+                hf.Apply();
             }
         }
 
@@ -59,7 +59,9 @@ namespace BugFarmer.World
             if (_amount <= 0f)
             {
                 _amount = 0f;
-                if (_sr != null) _sr.SetPropertyBlock(null); // drop the block → rejoin SRP batch
+                // Reset _FlashAmount to 0 via the block (do NOT SetPropertyBlock(null)) — nulling would also
+                // wipe a concurrent HitWobble's _HitBend and cut the wobble short.
+                Apply();
                 return;
             }
             Apply();

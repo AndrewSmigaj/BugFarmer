@@ -16,8 +16,9 @@ namespace BugFarmer.World
         private ParticleSystem _ps;
         private static Texture2D _leafTex;
 
-        // A small, SOLID football/leaf shape = a filled narrow ellipse (~2:1) that fills most of the quad, so
-        // it reads clearly at particle size. Soft-edged. Tinted per kind at emit; rotated per particle.
+        // A SOLID pointed-almond leaf = a filled vesica (lens): the overlap of two circles offset along Y,
+        // giving a shape POINTED at both ends (reads as a leaf, unlike a rounded ellipse). Big — fills most of
+        // the quad. Soft-edged. Tinted per kind at emit; rotated per particle.
         private static Texture2D LeafTex()
         {
             if (_leafTex != null) return _leafTex;
@@ -25,13 +26,15 @@ namespace BugFarmer.World
             var tex = new Texture2D(N, N, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
             var px = new Color32[N * N];
             float half = (N - 1) * 0.5f;
-            float a = 0.82f * half, b = 0.42f * half;  // long axis (x) : short axis (y) ≈ football
+            float R = 0.92f * half, k = 0.46f * half; // ~1.7:1 almond that fills the quad, pointed L/R
             for (int y = 0; y < N; y++)
                 for (int x = 0; x < N; x++)
                 {
-                    float nx = (x - half) / a, ny = (y - half) / b;
-                    float e = nx * nx + ny * ny;                 // <=1 inside the ellipse
-                    float alpha = Mathf.Clamp01((1f - e) / 0.18f); // solid interior, ~soft edge
+                    float dx = x - half, dy = y - half;
+                    float dTop = Mathf.Sqrt(dx * dx + (dy - k) * (dy - k));
+                    float dBot = Mathf.Sqrt(dx * dx + (dy + k) * (dy + k));
+                    float inside = Mathf.Min(R - dTop, R - dBot);   // signed dist into the lens
+                    float alpha = Mathf.Clamp01(inside * 0.7f);     // solid interior, ~1px soft edge
                     px[y * N + x] = new Color32(255, 255, 255, (byte)(alpha * 255f));
                 }
             tex.SetPixels32(px);
@@ -58,7 +61,7 @@ namespace BugFarmer.World
             main.playOnAwake = false;
             main.startLifetime = new ParticleSystem.MinMaxCurve(0.4f, 0.8f);
             main.startSpeed = new ParticleSystem.MinMaxCurve(1.4f, 3.4f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.12f, 0.24f); // bigger = clearly visible
+            main.startSize = new ParticleSystem.MinMaxCurve(0.18f, 0.34f); // bigger leaves (owner wants fewer/bigger)
             main.startRotation = new ParticleSystem.MinMaxCurve(0f, 6.28f);
             main.gravityModifier = 1.3f;             // chips/leaves fall after the pop
             main.maxParticles = 400;
@@ -90,6 +93,13 @@ namespace BugFarmer.World
             rot.enabled = true;
             rot.z = new ParticleSystem.MinMaxCurve(-1.2f, 1.2f);
 
+            var noise = _ps.noise;                   // WOBBLE: leaves wander/flutter as they arc + fall
+            noise.enabled = true;
+            noise.strength = 0.35f;
+            noise.frequency = 1.5f;
+            noise.scrollSpeed = 0.5f;
+            noise.damping = true;
+
             var r = _ps.GetComponent<ParticleSystemRenderer>();
             r.renderMode = ParticleSystemRenderMode.Billboard;
             r.material = new Material(Shader.Find("Sprites/Default")) { mainTexture = LeafTex() }; // unlit leaf shape
@@ -115,14 +125,12 @@ namespace BugFarmer.World
                 Kind.Chip => new Color(0.55f, 0.40f, 0.24f), // wood brown
                 _ => new Color(0.72f, 0.72f, 0.72f),         // neutral
             };
-            // Contain the RANGE on small objects (shorter fly-out) but keep them clearly visible — softened
-            // from a too-tight version that made small-plant bursts hard to see.
-            float spd = 0.45f + 0.55f * sizeScale;   // plant ≈0.63x range, tree 1x
+            // Contain the RANGE on smaller objects (shorter fly-out) but keep them clearly visible.
+            float spd = 0.45f + 0.55f * sizeScale;   // 1x for a tree
             main.startSpeed = new ParticleSystem.MinMaxCurve(1.4f * spd, 3.4f * spd);
-            float sz = 0.7f + 0.3f * sizeScale;      // barely shrink small ones
-            main.startSize = new ParticleSystem.MinMaxCurve(0.12f * sz, 0.24f * sz);
-            int count = Mathf.Max(4, Mathf.RoundToInt(8f * sizeScale));
-            Debug.Log($"[HitBurst] {kind} x{count} scale {sizeScale:0.00} @ {worldPos}");
+            float sz = 0.7f + 0.3f * sizeScale;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.18f * sz, 0.34f * sz);
+            int count = Mathf.Max(3, Mathf.RoundToInt(5f * sizeScale)); // fewer, bigger leaves
             inst._ps.Emit(count);
         }
     }
