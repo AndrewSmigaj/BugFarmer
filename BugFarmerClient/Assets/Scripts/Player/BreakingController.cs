@@ -116,7 +116,27 @@ namespace BugFarmer.Player
             {
                 SendBreakRequest(anchorCell);
                 _lastBreakTime = Time.time;
+                PlayHitFeedback(clickTarget);   // flash + shake + leaf/chip burst on each connecting hit
             }
+        }
+
+        /// <summary>Client-only juice on a connecting hit: flash the target, a tiny camera kick, and a
+        /// leaf (tree) / wood-chip (structure) burst at the strike point. No sim/determinism surface.</summary>
+        private void PlayHitFeedback(OccupantClickTarget target)
+        {
+            if (target == null) return;
+
+            var sr = target.GetComponent<SpriteRenderer>();
+            if (sr != null) World.HitFlash.Play(sr, 0.9f);
+
+            CameraFollow.AddShake(0.5f);
+
+            string cat = EntityDatabase.Get(target.OccupantId)?.Category;
+            var kind = cat == "natural" ? World.HitBurst.Kind.Leaf
+                     : cat == "structure" ? World.HitBurst.Kind.Chip
+                     : World.HitBurst.Kind.Generic;
+            Vector3 at = sr != null ? sr.bounds.center : target.transform.position;
+            World.HitBurst.Play(at, kind);
         }
 
         /// <summary>Clear breaking state (called by the router on click release/cancel).</summary>
