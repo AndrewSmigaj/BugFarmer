@@ -867,9 +867,10 @@ namespace BugFarmer.World
             if (sr == null)
                 sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
-            // receive day/night + lamp Light2D; foliage gets wind sway, water plants bob (routed by id).
+            // receive day/night + lamp Light2D; foliage sways, water plants bob, grain crops sway
+            // but vegetables DON'T (routed by id in ApplyOccupant). Natural = grass/trees/flowers.
             var cat = def?.Category;
-            bool isFoliage = cat == "natural" || cat == "crop" || cat == "flora";
+            bool isFoliage = cat == "natural" || cat == "flora";
             LitMaterials.ApplyOccupant(sr, occupantId, isFoliage);
 
             // Scale sprite to match target size from database
@@ -908,7 +909,7 @@ namespace BugFarmer.World
             {
                 var fp = EntityDatabase.GetFootprint(occupantId);
                 BlobShadow.Attach(go.transform, fp.x, targetSize.y / 16f,
-                                  new Vector2(scaleX, scaleY), 0.35f);
+                                  new Vector2(scaleX, scaleY), 0.5f);
             }
             else
             {

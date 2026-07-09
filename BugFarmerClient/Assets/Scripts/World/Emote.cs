@@ -33,6 +33,7 @@ namespace BugFarmer.World
         public static Emote Show(Transform target, string glyph, float duration = 1.8f, Color? bg = null)
         {
             if (target == null || string.IsNullOrEmpty(glyph)) return null;
+            Debug.Log($"[Emote] Show '{glyph}' over {target.name} at {target.position}");
             var go = new GameObject("Emote");
             var e = go.AddComponent<Emote>();
             e.Init(target, glyph, duration, bg ?? Color.white);
@@ -49,6 +50,7 @@ namespace BugFarmer.World
             bgGo.transform.SetParent(transform, false);
             _bubbleSr = bgGo.AddComponent<SpriteRenderer>();
             _bubbleSr.sprite = BubbleSprite();
+            _bubbleSr.material = new Material(Shader.Find("Sprites/Default")); // explicit, like the codebase's other runtime SRs
             _bubbleSr.color = bg;
             _bubbleSr.sortingLayerID = SortingLayer.NameToID("Occupants");
             _bubbleSr.sortingOrder = 961;                 // above world sprites + nameplates (960)

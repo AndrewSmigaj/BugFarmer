@@ -127,9 +127,9 @@ namespace BugFarmer.Player
             if (target == null) return;
 
             var sr = target.GetComponent<SpriteRenderer>();
-            if (sr != null) World.HitFlash.Play(sr, 0.9f);
+            if (sr != null) World.HitFlash.Play(sr, 0.4f);   // gentle flash (was 0.9 — too extreme)
 
-            CameraFollow.AddShake(0.5f);
+            CameraFollow.AddShake(0.22f);                     // small kick (was 0.5 — too extreme)
 
             string cat = EntityDatabase.Get(target.OccupantId)?.Category;
             var kind = cat == "natural" ? World.HitBurst.Kind.Leaf

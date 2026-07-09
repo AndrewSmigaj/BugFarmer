@@ -17,7 +17,7 @@ namespace BugFarmer.World
         private static readonly int FlashColorId = Shader.PropertyToID("_FlashColor");
 
         [Tooltip("Seconds for the flash to decay to 0.")]
-        public float Duration = 0.12f;
+        public float Duration = 0.08f;
         public Color Color = Color.white;
 
         private SpriteRenderer _sr;

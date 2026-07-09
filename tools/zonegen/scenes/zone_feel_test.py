@@ -50,8 +50,9 @@ def build(zone_id="feel_test"):
         if Z.is_free(tx, ty):
             Z.place_occupant("tree_oak", tx, ty)
 
-    # A crop bed (wind on crops).
-    crop_bed(Z, 34, 10, 44, 16, ["plant_corn", "plant_tomato"])
+    # Two beds side by side to show the crop-wind rule: WHEAT sways (grain stalks), VEGETABLES don't.
+    crop_bed(Z, 34, 13, 44, 16, ["plant_wheat"])                                  # sways
+    crop_bed(Z, 34, 8, 44, 11, ["plant_tomato", "plant_cabbage", "plant_carrot"])  # still
 
     # Flowers / bushes / tall grass / ferns across the open grass (wind + blob shadows).
     flora = {"flower_red": 3, "chamomile": 2, "dandelion": 2, "bush": 2, "tall_grass": 4, "fern": 1, "lavender": 1}

@@ -14,6 +14,7 @@ namespace BugFarmer.World
     {
         private const string ChildName = "BlobShadow";
         private static Sprite _sprite;
+        private static bool _logged;
 
         // One shared soft oval; a circular radial-gradient texture squashed to an ellipse via transform scale.
         private static Sprite OvalSprite()
@@ -58,8 +59,10 @@ namespace BugFarmer.World
                 go.transform.SetParent(parent, false);
                 sr = go.AddComponent<SpriteRenderer>();
                 sr.sprite = OvalSprite();
-                sr.sortingLayerName = "Ground";  // above ground tiles, below every occupant
+                sr.material = new Material(Shader.Find("Sprites/Default")); // explicit, like the codebase's other runtime SRs
+                sr.sortingLayerName = "Ground";  // above ground tiles (Ground/0), below every occupant
                 sr.sortingOrder = 100;
+                if (!_logged) { _logged = true; Debug.Log("[BlobShadow] first shadow created (Ground layer, order 100)"); }
             }
             else sr = t.GetComponent<SpriteRenderer>();
 

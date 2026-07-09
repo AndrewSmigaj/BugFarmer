@@ -98,15 +98,21 @@ namespace BugFarmer.World
 
         /// <summary>
         /// Assign the right lit material for an occupant: water floaters bob, upright water plants get the
-        /// slow reed sway, other foliage gets land wind, everything else is still (no motion).
+        /// slow reed sway, GRAIN crops (wheat/corn — tall stalks) sway but VEGETABLES (tomato/cabbage/…) do
+        /// NOT, other foliage (grass/trees/flowers) gets land wind, everything else is still.
         /// </summary>
         public static void ApplyOccupant(SpriteRenderer sr, string occupantId, bool foliage)
         {
             if (sr == null) return;
             Material m = Floaters.Contains(occupantId) ? LitBob
                        : WaterUpright.Contains(occupantId) ? LitReed
+                       : IsGrainCrop(occupantId) ? LitWind
                        : foliage ? LitWind : Lit;
             if (m != null) sr.sharedMaterial = m;
         }
+
+        // Cereal crops read as grass-like stalks and should sway; leafy/root vegetables should not.
+        private static bool IsGrainCrop(string id) =>
+            id != null && (id.Contains("wheat") || id.Contains("corn"));
     }
 }
