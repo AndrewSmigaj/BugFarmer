@@ -30,11 +30,20 @@ W = H = 64
 def build(zone_id="feel_test"):
     Z = ZoneBuilder(zone_id, W, H, base_tile="grass", name="Feel Test", seed=11)
 
-    # A pond in the SW (water tiles → water overhaul), with shore reeds (reed bob).
+    # A pond in the SW (water tiles → water overhaul), with shore reeds (reed sway).
     terrain.pond(Z, 16, 16, 8, 6, seed=3)
     for (rx, ry) in [(26, 16), (6, 16), (16, 24), (16, 8), (25, 12), (7, 20)]:
         if Z.is_free(rx, ry):
             Z.place_occupant("reeds", rx, ry)
+
+    # Lily pads floating on the pond (vertical bob) + a water_lily bloom. Pond water is reserved,
+    # so un-reserve → place → re-reserve (the shipped bee_meadow_20 / fishing_docks pattern).
+    for (pid, px, py) in [("lily_pad", 14, 15), ("lily_pad", 18, 16), ("lily_pad", 16, 18),
+                          ("lily_pad", 13, 14), ("lily_pad", 19, 13), ("water_lily", 15, 17)]:
+        if 0 <= px < W and 0 <= py < H and Z.surface[py][px] == "water":
+            Z.reserved[py][px] = False
+            Z.place_occupant(pid, px, py, surface="water")
+            Z.reserve(px, py, surface="water")
 
     # Trees (wind canopy + chop feedback + blob shadows) — spaced so the ~2-tall sprites don't overlap.
     for (tx, ty) in [(40, 44), (48, 50), (34, 52), (52, 38), (44, 30)]:

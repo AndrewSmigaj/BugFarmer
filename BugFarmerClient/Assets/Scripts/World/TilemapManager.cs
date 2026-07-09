@@ -867,10 +867,10 @@ namespace BugFarmer.World
             if (sr == null)
                 sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
-            // receive day/night + lamp Light2D; foliage (flora/trees/crops) gets the wind-sway variant.
+            // receive day/night + lamp Light2D; foliage gets wind sway, water plants bob (routed by id).
             var cat = def?.Category;
             bool isFoliage = cat == "natural" || cat == "crop" || cat == "flora";
-            LitMaterials.Apply(sr, isFoliage);
+            LitMaterials.ApplyOccupant(sr, occupantId, isFoliage);
 
             // Scale sprite to match target size from database
             float scaleX = targetSize.x / sprite.rect.width;

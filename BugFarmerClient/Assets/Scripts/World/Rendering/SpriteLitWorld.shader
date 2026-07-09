@@ -9,6 +9,8 @@ Shader "BugFarmer/SpriteLitWorld"
         _MainTex("Diffuse", 2D) = "white" {}
         _WindStrength("Wind Strength", Float) = 0
         _WindSpeed("Wind Speed", Float) = 1.5
+        _BobStrength("Bob Strength", Float) = 0
+        _BobSpeed("Bob Speed", Float) = 1
         _FlashColor("Flash Color", Color) = (1,1,1,1)
         _FlashAmount("Flash Amount", Range(0,1)) = 0
         _MaskTex("Mask", 2D) = "white" {}
@@ -89,6 +91,8 @@ Shader "BugFarmer/SpriteLitWorld"
                 half4 _FlashColor;
                 float _WindStrength;
                 float _WindSpeed;
+                float _BobStrength;
+                float _BobSpeed;
                 float _FlashAmount;
             CBUFFER_END
 
@@ -117,13 +121,17 @@ Shader "BugFarmer/SpriteLitWorld"
 
                 SetUpSpriteInstanceProperties();
                 v.positionOS = UnityFlipSprite(v.positionOS, unity_SpriteProps.xy);
-                // WIND: base-anchored (uv.y), world-phased horizontal sway. _WindStrength 0 = no sway.
-                // NOTE: offset is continuous. If sub-pixel sway reads "wet" on the 16px art at game
-                // zoom, snap it to whole object-space texels here (needs the sprite's measured texel
-                // size — deferred to the in-engine tuning pass rather than guessed).
-                float3 windWS = TransformObjectToWorld(v.positionOS);
-                v.positionOS.x += sin(windWS.x * 0.6 + _Time.y * _WindSpeed) * _WindStrength * v.uv.y;
-                o.positionCS = TransformObjectToHClip(v.positionOS);
+                // Motion is added in WORLD space so amplitude is consistent across sprites (object scale
+                // varies with each sprite's stored-vs-target resolution). Phase comes from the object
+                // ORIGIN (same for every vertex) so a plant sways coherently instead of shearing, and
+                // neighbours desync by world position. Both terms are 0 by default (no motion).
+                //   WIND: base-anchored horizontal sway (scaled by uv.y — planted base, moving tip).
+                //   BOB:  whole-sprite vertical float (for lily pads / water plants).
+                float3 originWS = TransformObjectToWorld(float3(0.0, 0.0, 0.0));
+                float3 posWS = TransformObjectToWorld(v.positionOS);
+                posWS.x += sin(originWS.x * 0.6 + _Time.y * _WindSpeed) * _WindStrength * v.uv.y;
+                posWS.y += sin((originWS.x + originWS.y) * 0.5 + _Time.y * _BobSpeed) * _BobStrength;
+                o.positionCS = TransformWorldToHClip(posWS);
                 #if defined(DEBUG_DISPLAY)
                 o.positionWS = TransformObjectToWorld(v.positionOS);
                 o.normalWS = TransformObjectToWorldDir(v.normal);
@@ -210,6 +218,8 @@ Shader "BugFarmer/SpriteLitWorld"
                 half4 _FlashColor;
                 float _WindStrength;
                 float _WindSpeed;
+                float _BobStrength;
+                float _BobSpeed;
                 float _FlashAmount;
             CBUFFER_END
 
@@ -222,9 +232,11 @@ Shader "BugFarmer/SpriteLitWorld"
 
                 SetUpSpriteInstanceProperties();
                 attributes.positionOS = UnityFlipSprite(attributes.positionOS, unity_SpriteProps.xy);
-                float3 windWS = TransformObjectToWorld(attributes.positionOS);
-                attributes.positionOS.x += sin(windWS.x * 0.6 + _Time.y * _WindSpeed) * _WindStrength * attributes.uv.y;
-                o.positionCS = TransformObjectToHClip(attributes.positionOS);
+                float3 originWS = TransformObjectToWorld(float3(0.0, 0.0, 0.0));
+                float3 posWS = TransformObjectToWorld(attributes.positionOS);
+                posWS.x += sin(originWS.x * 0.6 + _Time.y * _WindSpeed) * _WindStrength * attributes.uv.y;
+                posWS.y += sin((originWS.x + originWS.y) * 0.5 + _Time.y * _BobSpeed) * _BobStrength;
+                o.positionCS = TransformWorldToHClip(posWS);
                 o.uv = attributes.uv;
                 o.color = attributes.color * _Color * unity_SpriteColor;
                 o.normalWS = TransformObjectToWorldDir(attributes.normal);
@@ -294,6 +306,8 @@ Shader "BugFarmer/SpriteLitWorld"
                 half4 _FlashColor;
                 float _WindStrength;
                 float _WindSpeed;
+                float _BobStrength;
+                float _BobSpeed;
                 float _FlashAmount;
             CBUFFER_END
 
@@ -306,9 +320,11 @@ Shader "BugFarmer/SpriteLitWorld"
 
                 SetUpSpriteInstanceProperties();
                 attributes.positionOS = UnityFlipSprite( attributes.positionOS, unity_SpriteProps.xy);
-                float3 windWS = TransformObjectToWorld(attributes.positionOS);
-                attributes.positionOS.x += sin(windWS.x * 0.6 + _Time.y * _WindSpeed) * _WindStrength * attributes.uv.y;
-                o.positionCS = TransformObjectToHClip(attributes.positionOS);
+                float3 originWS = TransformObjectToWorld(float3(0.0, 0.0, 0.0));
+                float3 posWS = TransformObjectToWorld(attributes.positionOS);
+                posWS.x += sin(originWS.x * 0.6 + _Time.y * _WindSpeed) * _WindStrength * attributes.uv.y;
+                posWS.y += sin((originWS.x + originWS.y) * 0.5 + _Time.y * _BobSpeed) * _BobStrength;
+                o.positionCS = TransformWorldToHClip(posWS);
                 #if defined(DEBUG_DISPLAY)
                 o.positionWS = TransformObjectToWorld(attributes.positionOS);
                 #endif
