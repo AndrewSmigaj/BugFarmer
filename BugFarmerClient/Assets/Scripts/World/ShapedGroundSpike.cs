@@ -32,27 +32,24 @@ namespace BugFarmer.World
             // Camera tracks the player, so its XY is the player's location.
             Vector2Int origin = tm.WorldToCell(new Vector3(cam.transform.position.x, cam.transform.position.y, 0f));
 
-            // A 2x2 grid of 3x3 blocks, one block per diagonal shape, offset a couple cells east of the player
-            // so the player sprite doesn't cover it. Plus a reference column of solid grass / dirt.
-            string[] shapes = { "diagNE", "diagNW", "diagSE", "diagSW" };
-            for (int b = 0; b < 4; b++)
+            // One 2x2 block per shape in the full vocabulary, laid out in a grid with 1-tile dirt gaps so each
+            // shape reads on its own (not the dense quilt). East of the player so the sprite doesn't cover it.
+            var shapes = TileCompositor.Shapes;
+            const int cols = 5, block = 2, pitch = block + 1;
+            for (int s = 0; s < shapes.Length; s++)
             {
-                int bx = (b % 2) * 3;
-                int by = (b / 2) * 3;
-                string id = $"grass~dirt~{shapes[b]}";
-                for (int dy = 0; dy < 3; dy++)
-                    for (int dx = 0; dx < 3; dx++)
-                        tm.StampGroundDebug(new Vector2Int(origin.x + 2 + bx + dx, origin.y - 3 + by + dy), id);
-            }
-            // Reference column: pure grass then pure dirt, just east of the composited blocks.
-            for (int dy = 0; dy < 3; dy++)
-            {
-                tm.StampGroundDebug(new Vector2Int(origin.x + 9, origin.y - 3 + dy), "grass");
-                tm.StampGroundDebug(new Vector2Int(origin.x + 9, origin.y + dy), "dirt");
+                int col = s % cols;
+                int row = s / cols;
+                int ox = origin.x + 2 + col * pitch;
+                int oy = origin.y + 6 - row * pitch;   // north-up: first row highest
+                string id = $"grass~dirt~{shapes[s]}";
+                for (int dy = 0; dy < block; dy++)
+                    for (int dx = 0; dx < block; dx++)
+                        tm.StampGroundDebug(new Vector2Int(ox + dx, oy + dy), id);
             }
 
-            Debug.Log("[ShapedGroundSpike] Stamped grass~dirt~diag{NE,NW,SE,SW} blocks + solid grass/dirt refs " +
-                      $"near {origin}. Composite render spike (M0).");
+            Debug.Log($"[ShapedGroundSpike] Stamped {shapes.Length} grass~dirt shapes (one 2x2 block each) " +
+                      $"near {origin}. Shaped-ground M1 shape set.");
         }
     }
 }

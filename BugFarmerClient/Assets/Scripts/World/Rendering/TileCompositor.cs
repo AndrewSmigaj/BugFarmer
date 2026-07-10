@@ -16,6 +16,23 @@ namespace BugFarmer.World
         private static Material _mat;
         private static readonly Dictionary<string, Texture2D> _maskCache = new Dictionary<string, Texture2D>();
 
+        /// <summary>
+        /// The canonical shape vocabulary for a composite id's third field (the builder's mousewheel cycle,
+        /// and the server-side validator's allow-list). <c>full</c> = solid material A. The rest split the
+        /// cell: 4 diagonal halves (slopes), 4 straight halves, 4 quadrant squares. Checkerboards are made
+        /// from alternating SOLID tiles, not a shape.
+        /// </summary>
+        public static readonly string[] Shapes =
+        {
+            "full",
+            "diagNE", "diagNW", "diagSE", "diagSW",
+            "halfN", "halfS", "halfE", "halfW",
+            "quadNE", "quadNW", "quadSE", "quadSW",
+        };
+
+        /// <summary>True if <paramref name="shape"/> is a known shape token.</summary>
+        public static bool IsKnownShape(string shape) => System.Array.IndexOf(Shapes, shape) >= 0;
+
         /// <summary>Parse <c>matA~matB~shape</c>. Returns false for a plain (non-composite) id.</summary>
         public static bool TryParse(string id, out string matA, out string matB, out string shape)
         {
@@ -109,15 +126,27 @@ namespace BugFarmer.World
         /// </summary>
         private static bool MaskAt(string shape, int x, int y, int n)
         {
-            int t = n - 1;
+            int t = n - 1;   // last index
+            int h = n / 2;   // midline (16 for a 32px tile)
             switch (shape)
             {
                 case "full":   return true;
-                case "diagNE": return (x + y) >= t; // anti-diagonal, upper-right triangle
+                // Diagonal halves (slopes) — split on a corner-to-corner diagonal.
+                case "diagNE": return (x + y) >= t; // upper-right triangle
                 case "diagSW": return (x + y) <= t; // lower-left triangle
-                case "diagNW": return y >= x;       // main diagonal, upper-left triangle
+                case "diagNW": return y >= x;       // upper-left triangle
                 case "diagSE": return y <= x;       // lower-right triangle
-                default:       return true;         // unknown -> solid A (visible, not magenta)
+                // Straight halves — split on the horizontal/vertical midline.
+                case "halfN":  return y >= h;       // top half
+                case "halfS":  return y <  h;       // bottom half
+                case "halfE":  return x >= h;       // right half
+                case "halfW":  return x <  h;       // left half
+                // Quadrant squares — material A fills one 16x16 corner quarter.
+                case "quadNE": return x >= h && y >= h;
+                case "quadNW": return x <  h && y >= h;
+                case "quadSE": return x >= h && y <  h;
+                case "quadSW": return x <  h && y <  h;
+                default:       return true;         // unknown -> solid A (visible, never magenta)
             }
         }
     }
