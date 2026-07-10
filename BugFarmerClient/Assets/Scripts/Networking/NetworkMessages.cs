@@ -110,6 +110,9 @@ namespace BugFarmer.Networking
     {
         public int grid_x;  // Target cell X
         public int grid_y;  // Target cell Y
+        // Player-chosen ground id for the SHOVEL (shaped-ground builder), e.g. "grass~dirt~diagNE".
+        // Left empty for every other tool (server computes their result). Validated server-side.
+        public string ground_id;
     }
 
     /// <summary>

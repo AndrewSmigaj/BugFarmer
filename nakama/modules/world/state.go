@@ -609,10 +609,10 @@ func (w *WorldState) isBlockedImpl(worldX, worldY float32, skipOccupants, loadAu
 		}
 	}
 
-	// Check ground tile (water, lava, etc.)
+	// Check ground tile (water, lava, etc.) — primary material for shaped-ground composites.
 	tileID := chunk.GetGroundTile(lx, ly)
 	if tileID != "" {
-		tileDef := w.TileDefs[tileID]
+		tileDef := w.TileDefs[PrimaryMaterial(tileID)]
 		if tileDef != nil && tileDef.BlocksBugs {
 			return true
 		}
@@ -645,7 +645,9 @@ func (w *WorldState) IsBlockedForPlayers(worldX, worldY float32) bool {
 		}
 	}
 
-	switch chunk.GetGroundTile(lx, ly) {
+	// Primary material so shaped-ground composites collide by their base (must stay in lockstep with the
+	// client mirror TilemapManager.IsCellBlockedForPlayers).
+	switch PrimaryMaterial(chunk.GetGroundTile(lx, ly)) {
 	case "water_shallow", "water_deep", "lava":
 		return true
 	}

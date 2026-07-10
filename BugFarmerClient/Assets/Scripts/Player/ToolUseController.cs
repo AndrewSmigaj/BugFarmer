@@ -65,8 +65,10 @@ namespace BugFarmer.Player
                 return;
 
             // Send tool use message + swing the tool in-hand (plays even if the server
-            // rejects — the swing is feedback for the attempt, like the net)
-            SendToolUse(cellPos);
+            // rejects — the swing is feedback for the attempt, like the net). The SHOVEL carries the
+            // player-selected ground id (shaped-ground builder); every other tool sends none.
+            string groundId = toolDef.ToolType == "shovel" ? BugFarmer.World.ShovelSelection.CurrentGroundId : null;
+            SendToolUse(cellPos, groundId);
             _lastUseTime = Time.time;
 
             if (_animator != null)
@@ -76,7 +78,7 @@ namespace BugFarmer.Player
             }
         }
 
-        private void SendToolUse(Vector2Int cellPos)
+        private void SendToolUse(Vector2Int cellPos, string groundId)
         {
             var socket = NetworkManager.Instance?.Socket;
             var match = WorldManager.Instance?.CurrentMatch;
@@ -89,7 +91,8 @@ namespace BugFarmer.Player
             var msg = new ToolUseMessage
             {
                 grid_x = cellPos.x,
-                grid_y = cellPos.y
+                grid_y = cellPos.y,
+                ground_id = groundId
             };
 
             string json = JsonUtility.ToJson(msg);

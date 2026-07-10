@@ -692,6 +692,9 @@ type TileBreakMessage struct {
 type ToolUseMessage struct {
 	GridX int `json:"grid_x"` // Target cell X
 	GridY int `json:"grid_y"` // Target cell Y
+	// GroundID: the player-chosen ground id for the SHOVEL (shaped-ground builder), e.g. "grass~dirt~diagNE".
+	// Empty/ignored for every other tool (which compute their result server-side). Validated in handleShovel.
+	GroundID string `json:"ground_id,omitempty"`
 }
 
 // PlantInteractMessage is sent by client (OpCode 55)

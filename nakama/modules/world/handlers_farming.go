@@ -76,9 +76,58 @@ func (m *Match) handleToolUse(
 		m.handleScythe(logger, dispatcher, state, userID, msg.GridX, msg.GridY, tick)
 	case "smoker":
 		m.handleSmoker(logger, dispatcher, state, userID, msg.GridX, msg.GridY, tick)
+	case "shovel":
+		m.handleShovel(logger, dispatcher, state, userID, msg.GridX, msg.GridY, msg.GroundID, tick)
 	default:
 		m.sendWorldError(dispatcher, state, userID, "Use left-click for this tool")
 	}
+}
+
+// handleShovel changes the ground under the target cell to the player's CHOSEN ground id (the shaped-ground
+// builder). Unlike the hoe — which maps a source tile to a FIXED result via tool_actions — the shovel carries
+// a player-selected id, so we VALIDATE it against the decorative material + shape allow-list (nothing else
+// guards this player-supplied string). Cosmetic for now: the composite's PRIMARY material governs all gameplay
+// semantics everywhere else (see PrimaryMaterial). Reuses the hoe's broadcast + persistence path unchanged.
+func (m *Match) handleShovel(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	userID string,
+	gx, gy int,
+	groundID string,
+	tick int64,
+) {
+	player := state.Players[userID]
+	if player == nil {
+		return
+	}
+	if !m.validateToolCooldown(state, player, tick) {
+		return
+	}
+
+	id, ok := ValidateShovelGround(groundID)
+	if !ok {
+		m.sendWorldError(dispatcher, state, userID, "Invalid ground material")
+		return
+	}
+
+	cx, cy, lx, ly := GlobalToChunk(gx, gy)
+	chunk := state.Chunks[ChunkKey(cx, cy)]
+	if chunk == nil {
+		m.sendWorldError(dispatcher, state, userID, "Chunk not loaded")
+		return
+	}
+
+	// Don't let the shovel pave over water/lava — turning water into land is the (future) sandbag system.
+	switch PrimaryMaterial(chunk.GetGroundTile(lx, ly)) {
+	case "water_shallow", "water_deep", "lava":
+		m.sendWorldError(dispatcher, state, userID, "Can't shovel water")
+		return
+	}
+
+	chunk.Ground[ly][lx] = id
+	m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, id, nil, false)
+	logger.Debug("Player %s shoveled ground at %d,%d -> %s", userID, gx, gy, id)
 }
 
 // smokerCalmTicks: how long a puffed hive stays calm (both defend entries no-op) — the
@@ -268,7 +317,9 @@ func (m *Match) handleHoe(
 	// Get tile at position
 	tile := chunk.GetGroundTile(lx, ly)
 	logger.Debug("Hoe: tile at (%d,%d) = %s", gx, gy, tile)
-	tileDef := state.TileDefs[tile]
+	// Shaped-ground: a composite tile is governed by its primary material (so hoeing a "grass~dirt~diagNE"
+	// tile behaves like hoeing grass).
+	tileDef := state.TileDefs[PrimaryMaterial(tile)]
 	if tileDef == nil {
 		m.sendWorldError(dispatcher, state, userID, "Unknown tile")
 		return
@@ -339,8 +390,8 @@ func (m *Match) handleWatering(
 
 	tile := chunk.GetGroundTile(lx, ly)
 
-	// Check if target is water tile (refill)
-	if tile == "water_shallow" || tile == "water_deep" {
+	// Check if target is water tile (refill) — primary material, so composite water still refills.
+	if pm := PrimaryMaterial(tile); pm == "water_shallow" || pm == "water_deep" {
 		// Refill watering can
 		if slot.Metadata == nil {
 			slot.Metadata = make(map[string]int)

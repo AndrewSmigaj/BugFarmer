@@ -831,9 +831,23 @@ namespace BugFarmer.World
             }
         }
 
+        /// <summary>Base material of a (possibly composite) ground id — mirrors the server's PrimaryMaterial.
+        /// A shaped-ground id "matA~matB~shape" is governed by matA for all gameplay semantics.</summary>
+        public static string PrimaryMaterial(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return id;
+            int i = id.IndexOf('~');
+            return i >= 0 ? id.Substring(0, i) : id;
+        }
+
         /// <summary>Ground ids that render as water — the single source used by the animated overlay AND
-        /// the player-collision check, so "water" is defined once. (`lava` blocks but isn't animated here.)</summary>
-        public static bool IsWaterTile(string id) => id == "water_shallow" || id == "water_deep";
+        /// the player-collision check, so "water" is defined once. (`lava` blocks but isn't animated here.)
+        /// Uses the primary material so a shaped composite collides/animates by its base.</summary>
+        public static bool IsWaterTile(string id)
+        {
+            id = PrimaryMaterial(id);
+            return id == "water_shallow" || id == "water_deep";
+        }
 
         /// <summary>
         /// Create the animated water overlay: a second Tilemap under the same Grid as groundTilemap, sorted
@@ -1490,7 +1504,7 @@ namespace BugFarmer.World
             }
 
             string groundId = GetGroundAt(cellPos);
-            if (IsWaterTile(groundId) || groundId == "lava")
+            if (IsWaterTile(groundId) || PrimaryMaterial(groundId) == "lava")
                 return true;
 
             return false;

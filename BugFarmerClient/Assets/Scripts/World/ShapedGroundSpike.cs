@@ -21,6 +21,19 @@ namespace BugFarmer.World
 
         private void Update()
         {
+            // Shovel shape selection (M2 debug — replaced by the M4 builder UI): [ and ] cycle the shape the
+            // equipped shovel will place. Left-click with a shovel then places grass~dirt~<shape>.
+            if (Input.GetKeyDown(KeyCode.RightBracket))
+            {
+                ShovelSelection.CycleShape(1);
+                Debug.Log($"[Shovel] shape -> {ShovelSelection.Shape}  (places '{ShovelSelection.CurrentGroundId}')");
+            }
+            if (Input.GetKeyDown(KeyCode.LeftBracket))
+            {
+                ShovelSelection.CycleShape(-1);
+                Debug.Log($"[Shovel] shape -> {ShovelSelection.Shape}  (places '{ShovelSelection.CurrentGroundId}')");
+            }
+
             if (!Input.GetKeyDown(KeyCode.G))
                 return;
 

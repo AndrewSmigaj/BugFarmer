@@ -121,6 +121,7 @@ namespace BugFarmer.Player
                 case "watering_can":
                 case "scythe":
                 case "smoker":
+                case "shovel":   // shaped-ground builder: places the selected ground id at the cell
                     _toolUse?.TryHandleClick();
                     return;
 
