@@ -77,7 +77,7 @@ func (m *Match) handleToolUse(
 	case "smoker":
 		m.handleSmoker(logger, dispatcher, state, userID, msg.GridX, msg.GridY, tick)
 	case "shovel":
-		m.handleShovel(logger, dispatcher, state, userID, msg.GridX, msg.GridY, msg.GroundID, tick)
+		m.handleShovel(logger, dispatcher, state, userID, msg.GridX, msg.GridY, msg.GroundID, msg.Dig, tick)
 	default:
 		m.sendWorldError(dispatcher, state, userID, "Use left-click for this tool")
 	}
@@ -95,6 +95,7 @@ func (m *Match) handleShovel(
 	userID string,
 	gx, gy int,
 	groundID string,
+	dig bool,
 	tick int64,
 ) {
 	player := state.Players[userID]
@@ -105,12 +106,6 @@ func (m *Match) handleShovel(
 		return
 	}
 
-	id, ok := ValidateShovelGround(groundID)
-	if !ok {
-		m.sendWorldError(dispatcher, state, userID, "Invalid ground material")
-		return
-	}
-
 	cx, cy, lx, ly := GlobalToChunk(gx, gy)
 	chunk := state.Chunks[ChunkKey(cx, cy)]
 	if chunk == nil {
@@ -118,16 +113,55 @@ func (m *Match) handleShovel(
 		return
 	}
 
-	// Don't let the shovel pave over water/lava — turning water into land is the (future) sandbag system.
-	switch PrimaryMaterial(chunk.GetGroundTile(lx, ly)) {
+	current := chunk.GetGroundTile(lx, ly)
+	// Neither verb touches water/lava — filling water is the (future) sandbag system.
+	switch PrimaryMaterial(current) {
 	case "water_shallow", "water_deep", "lava":
 		m.sendWorldError(dispatcher, state, userID, "Can't shovel water")
 		return
 	}
 
+	if dig {
+		// DIG: revert the cell to bare dirt and grant one block of its primary material. Dirt is the base
+		// (digging dirt yields dirt and stays dirt), so the player always has something to build with.
+		item := GroundMaterialItem(PrimaryMaterial(current))
+		if item == "" {
+			m.sendWorldError(dispatcher, state, userID, "Nothing to dig here")
+			return
+		}
+		// Grant FIRST so a full inventory cancels the dig — don't destroy the block.
+		slotIndex := player.AddItem(item, 1)
+		if slotIndex < 0 {
+			m.sendWorldError(dispatcher, state, userID, "Inventory full")
+			return
+		}
+		chunk.Ground[ly][lx] = "dirt"
+		m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, "dirt", nil, false)
+		m.sendSlotUpdate(dispatcher, state, userID, slotIndex, &player.ItemSlots[slotIndex])
+		logger.Debug("Player %s dug ground at %d,%d -> +%s", userID, gx, gy, item)
+		return
+	}
+
+	// PLACE: validate the chosen id, consume one block of its primary material, set the ground.
+	id, ok := ValidateShovelGround(groundID)
+	if !ok {
+		m.sendWorldError(dispatcher, state, userID, "Invalid ground material")
+		return
+	}
+	item := GroundMaterialItem(PrimaryMaterial(id))
+	if item == "" {
+		m.sendWorldError(dispatcher, state, userID, "No material for that ground")
+		return
+	}
+	slotIndex := player.FindItemSlot(item)
+	if slotIndex < 0 || !player.RemoveItem(slotIndex, 1) {
+		m.sendWorldError(dispatcher, state, userID, "Need "+item)
+		return
+	}
 	chunk.Ground[ly][lx] = id
 	m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, id, nil, false)
-	logger.Debug("Player %s shoveled ground at %d,%d -> %s", userID, gx, gy, id)
+	m.sendSlotUpdate(dispatcher, state, userID, slotIndex, &player.ItemSlots[slotIndex])
+	logger.Debug("Player %s placed ground at %d,%d -> %s (-%s)", userID, gx, gy, id, item)
 }
 
 // smokerCalmTicks: how long a puffed hive stays calm (both defend entries no-op) — the

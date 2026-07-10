@@ -116,6 +116,50 @@
     "max_stack": 99,
     "sell_price": 1
   },
+  "grass_turf": {
+    "name": "Grass Turf",
+    "category": "resource",
+    "tags": [
+      "material",
+      "ground"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1
+  },
+  "dirt": {
+    "name": "Dirt",
+    "category": "resource",
+    "tags": [
+      "material",
+      "ground"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1
+  },
+  "mud": {
+    "name": "Mud",
+    "category": "resource",
+    "tags": [
+      "material",
+      "ground"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1
+  },
+  "stone": {
+    "name": "Stone",
+    "category": "resource",
+    "tags": [
+      "material",
+      "ground"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 2
+  },
   "silver_ore": {
     "name": "Silver Ore",
     "category": "resource",

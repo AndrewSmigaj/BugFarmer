@@ -120,6 +120,17 @@ func (p *PlayerState) RemoveItem(slotIndex int, count int) bool {
 	return true
 }
 
+// FindItemSlot returns the index of the first slot holding itemID (count > 0), or -1 if the player has none.
+func (p *PlayerState) FindItemSlot(itemID string) int {
+	cap := p.itemCap()
+	for i := 0; i < cap; i++ {
+		if p.ItemSlots[i].ItemID == itemID && p.ItemSlots[i].Count > 0 {
+			return i
+		}
+	}
+	return -1
+}
+
 // MoveSlot moves items between slots. Handles same-type merge, different-type swap, and splitting.
 // srcType/dstType: "bug" or "item"
 // count: -1 = all, else specific amount

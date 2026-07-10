@@ -10,7 +10,7 @@ namespace BugFarmer.World
     /// </summary>
     public class HitBurst : MonoBehaviour
     {
-        public enum Kind { Leaf, Chip, Generic }
+        public enum Kind { Leaf, Chip, Generic, Dust }
 
         private static HitBurst _inst;
         private ParticleSystem _ps;
@@ -123,6 +123,7 @@ namespace BugFarmer.World
             {
                 Kind.Leaf => new Color(0.36f, 0.60f, 0.22f), // leaf green
                 Kind.Chip => new Color(0.55f, 0.40f, 0.24f), // wood brown
+                Kind.Dust => new Color(0.60f, 0.50f, 0.36f), // dusty tan — dirt clods from digging/paving
                 _ => new Color(0.72f, 0.72f, 0.72f),         // neutral
             };
             // Contain the RANGE on smaller objects (shorter fly-out) but keep them clearly visible.

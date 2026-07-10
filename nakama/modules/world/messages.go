@@ -695,6 +695,8 @@ type ToolUseMessage struct {
 	// GroundID: the player-chosen ground id for the SHOVEL (shaped-ground builder), e.g. "grass~dirt~diagNE".
 	// Empty/ignored for every other tool (which compute their result server-side). Validated in handleShovel.
 	GroundID string `json:"ground_id,omitempty"`
+	// Dig: SHOVEL only — true = DIG (revert the cell to dirt, grant the material block), false = PLACE.
+	Dig bool `json:"dig,omitempty"`
 }
 
 // PlantInteractMessage is sent by client (OpCode 55)

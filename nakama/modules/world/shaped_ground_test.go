@@ -63,3 +63,53 @@ func TestValidateShovelGround_Rejected(t *testing.T) {
 		}
 	}
 }
+
+func TestGroundMaterialItem(t *testing.T) {
+	cases := map[string]string{
+		"grass":       "grass_turf",
+		"dirt":        "dirt",
+		"sand":        "sand",
+		"mud":         "mud",
+		"stone_floor": "stone", // stone family collapses to one block
+		"stone_path":  "stone",
+		"cave_floor":  "stone",
+		"wood_floor":  "wood",
+		"water_deep":  "", // not diggable/placeable via terraform
+		"garden_plot": "",
+	}
+	for mat, want := range cases {
+		if got := GroundMaterialItem(mat); got != want {
+			t.Errorf("GroundMaterialItem(%q) = %q, want %q", mat, got, want)
+		}
+	}
+}
+
+// TestShovelInventoryRoundTrip exercises the grant/consume plumbing the terraform loop relies on: a dig
+// grants a block (AddItem), a place finds+consumes it (FindItemSlot+RemoveItem), and consuming what you
+// don't have fails cleanly.
+func TestShovelInventoryRoundTrip(t *testing.T) {
+	p := &PlayerState{} // [40]InventorySlot, all empty; itemCap falls back to 40
+
+	if p.FindItemSlot("grass_turf") != -1 {
+		t.Fatal("expected no grass_turf before digging")
+	}
+	// Dig grants a block.
+	if slot := p.AddItem("grass_turf", 1); slot < 0 {
+		t.Fatal("AddItem(grass_turf) failed")
+	}
+	slot := p.FindItemSlot("grass_turf")
+	if slot < 0 {
+		t.Fatal("FindItemSlot did not locate the granted grass_turf")
+	}
+	// Place consumes it.
+	if !p.RemoveItem(slot, 1) {
+		t.Fatal("RemoveItem(grass_turf) failed")
+	}
+	if p.FindItemSlot("grass_turf") != -1 {
+		t.Error("grass_turf should be gone after placing")
+	}
+	// Placing a material you don't hold must fail (FindItemSlot returns -1).
+	if p.FindItemSlot("stone") != -1 {
+		t.Error("expected no stone block held")
+	}
+}

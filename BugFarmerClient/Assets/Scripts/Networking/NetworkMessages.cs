@@ -113,6 +113,8 @@ namespace BugFarmer.Networking
         // Player-chosen ground id for the SHOVEL (shaped-ground builder), e.g. "grass~dirt~diagNE".
         // Left empty for every other tool (server computes their result). Validated server-side.
         public string ground_id;
+        // SHOVEL only: true = DIG (revert cell to dirt, gain the material block); false = PLACE.
+        public bool dig;
     }
 
     /// <summary>

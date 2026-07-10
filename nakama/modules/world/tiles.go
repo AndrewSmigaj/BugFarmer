@@ -139,3 +139,24 @@ func ValidateShovelGround(id string) (string, bool) {
 	}
 	return id, true
 }
+
+// GroundMaterialItem maps a ground MATERIAL to the inventory block the shovel yields when digging it and
+// consumes when placing it (the terraform loop is coin-free — you move ground around). The stone-family
+// floors share the "stone" block; wood_floor uses "wood". Returns "" for a material with no block.
+func GroundMaterialItem(material string) string {
+	switch material {
+	case "grass":
+		return "grass_turf"
+	case "dirt":
+		return "dirt"
+	case "sand":
+		return "sand"
+	case "mud":
+		return "mud"
+	case "stone_floor", "stone_path", "cave_floor":
+		return "stone"
+	case "wood_floor":
+		return "wood"
+	}
+	return ""
+}

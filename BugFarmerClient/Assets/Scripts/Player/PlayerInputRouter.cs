@@ -202,9 +202,18 @@ namespace BugFarmer.Player
             if (_placement != null && _placement.TryHandleRightClick())
                 return;
 
-            // 3. Weapon secondary move (sword jab, axe combat swing, spear sweep).
+            // 2b. Shovel: right-click DIGS the ground (revert to dirt, gain the block) — the shaped-ground
+            //     builder's remove verb. After the context handlers above, so clicking a station/hive/bed
+            //     still wins; a shovel has no weapon move, so this never steals a combat secondary.
+            // 3. Otherwise, weapon secondary move (sword jab, axe combat swing, spear sweep).
             string toolId = InventoryManager.Instance?.GetEquippedToolId() ?? "";
-            if (EntityDatabase.Get(toolId)?.GetMove("secondary") != null)
+            var rtoolDef = EntityDatabase.Get(toolId);
+            if (rtoolDef?.ToolType == "shovel")
+            {
+                _toolUse?.TryDig();
+                return;
+            }
+            if (rtoolDef?.GetMove("secondary") != null)
                 _melee?.TryHandleClick("secondary");
         }
 

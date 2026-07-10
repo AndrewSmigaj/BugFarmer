@@ -67,9 +67,12 @@ namespace BugFarmer.Player
             // Send tool use message + swing the tool in-hand (plays even if the server
             // rejects — the swing is feedback for the attempt, like the net). The SHOVEL carries the
             // player-selected ground id (shaped-ground builder); every other tool sends none.
-            string groundId = toolDef.ToolType == "shovel" ? BugFarmer.World.ShovelSelection.CurrentGroundId : null;
-            SendToolUse(cellPos, groundId);
+            bool isShovel = toolDef.ToolType == "shovel";
+            string groundId = isShovel ? BugFarmer.World.ShovelSelection.CurrentGroundId : null;
+            SendToolUse(cellPos, groundId, false);
             _lastUseTime = Time.time;
+            if (isShovel)
+                BugFarmer.World.HitBurst.Play(cellWorld, BugFarmer.World.HitBurst.Kind.Dust, 0.6f);
 
             if (_animator != null)
             {
@@ -78,7 +81,42 @@ namespace BugFarmer.Player
             }
         }
 
-        private void SendToolUse(Vector2Int cellPos, string groundId)
+        /// <summary>Right-click with a shovel: DIG the target cell (revert to dirt, gain the material block).
+        /// Routed from PlayerInputRouter only when a shovel is equipped and no context handler consumed the
+        /// click. Shares the shovel cooldown with placing.</summary>
+        public void TryDig()
+        {
+            string toolId = InventoryManager.Instance?.GetEquippedToolId();
+            var toolDef = EntityDatabase.Get(toolId);
+            if (toolDef == null || toolDef.ToolType != "shovel")
+                return;
+
+            float cooldown = toolDef.CooldownTicks > 0 ? toolDef.CooldownTicks / 10f : 0.3f;
+            if (Time.time - _lastUseTime < cooldown)
+                return;
+            if (_mainCamera == null)
+                return;
+
+            Vector3 mouseWorld = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            mouseWorld.z = 0;
+            if (TilemapManager.Instance == null)
+                return;
+            Vector2Int cellPos = TilemapManager.Instance.WorldToCell(mouseWorld);
+            Vector3 cellWorld = TilemapManager.Instance.CellToWorld(cellPos);
+            if (Vector3.Distance(transform.position, cellWorld) > maxToolDistance)
+                return;
+
+            SendToolUse(cellPos, null, true);
+            _lastUseTime = Time.time;
+            BugFarmer.World.HitBurst.Play(cellWorld, BugFarmer.World.HitBurst.Kind.Dust, 0.6f);
+            if (_animator != null)
+            {
+                Vector2 aim = (Vector2)(mouseWorld - transform.position);
+                _animator.Play(toolDef.ToolType, EntityDatabase.GetItemSprite(toolDef.Id), aim);
+            }
+        }
+
+        private void SendToolUse(Vector2Int cellPos, string groundId, bool dig)
         {
             var socket = NetworkManager.Instance?.Socket;
             var match = WorldManager.Instance?.CurrentMatch;
@@ -92,7 +130,8 @@ namespace BugFarmer.Player
             {
                 grid_x = cellPos.x,
                 grid_y = cellPos.y,
-                ground_id = groundId
+                ground_id = groundId,
+                dig = dig
             };
 
             string json = JsonUtility.ToJson(msg);
