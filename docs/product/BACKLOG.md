@@ -34,6 +34,23 @@ The shaped-ground builder (player places `(materialA, materialB, shape)` tiles, 
 materials' mechanical values.** When we build the builder, check what's already implemented for ground-effect
 mechanics and wire material effects + the averaging then.
 
+## Rug system redo — grid-square pattern builder (owner 2026-07-09)
+Replacing the current single-sprite rugs (`rug_small`/`rug_large`). Owner wants a **grid-square-based rug
+system**: build rugs out of square/tile patterns the player composes, cell by cell (like laying carpet).
+A cousin of the shaped-ground builder — likely reuses the same mask/composite + square-pattern tech. Because
+of this redo, **rugs are EXCLUDED from the shovel palette** (they are not shovel-placed ground). Design when
+we reach it.
+
+## Sandbag water-fill system (owner 2026-07-09)
+A separate mechanic (NOT the shovel builder): fill in **shallow water** (and later **swamp**) with sandbags,
+which converts those cells into **normal walkable ground**. This is why water/bridges are out of the shovel
+scope — crossing/filling water is its own system. Design + build later.
+
+## Sound / audio pass (deferred 2026-07-09 — owner on a bad speaker, can't tune audio now)
+The `AudioFx` synth system exists (bug hit/kill, sting, faint, thunder, hiss, crunch, and the new axe-chop).
+Deferred until the owner has proper audio: broaden SFX coverage (footsteps, UI clicks, water, crafting,
+pickups, ambience), tune the volume mix + distance falloff, positional-audio polish, and music. Revisit then.
+
 ## Tutorials & instructions review (owner, 2026-07-09)
 Polish pass on player onboarding — show users the different systems instead of leaving them to guess.
 Includes tool-role instruction via tooltips/first-use hints, e.g. **shovel** = "change the ground below your
