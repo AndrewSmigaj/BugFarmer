@@ -27,12 +27,28 @@ Umbrella for tightening how the assistant is steered. Add items here as they com
   re-authored cell. The reminder hook should point at the simple restart first.
 - (Owner has more scaffolding items to add here.)
 
+## Shaped-ground builder — BUILT M0–M4 (2026-07-09/10), remaining owner passes
+The shovel is a terraform builder: it places `matA~matB~shape` **composite ground ids** (two materials
+blended through a runtime GPU mask-composite into one tile — see `architecture_shaped_ground.md`). Cosmetic:
+a composite is governed by its **primary material** (`PrimaryMaterial`) everywhere. Terraform loop: **LMB
+places** (consumes 1 material block), **RMB digs** (reverts cell to dirt, grants 1 block) — coin-free. Wheel
+cycles shape, Shift/Ctrl+wheel pick materials A/B; dust poof on place/dig. Server-tested (`shaped_ground_test.go`).
+**Two remaining passes need the OWNER (can't do headless):**
+- **Builder UI polish** — the current selection HUD is a functional dev-grade `OnGUI` readout in
+  `ShapedGroundSpike`. Design the real panel (material swatches, shape preview, held count) with the owner —
+  render 2-3 layout options, pick one. This was M4's taste checkpoint.
+- **Material item icons** — `grass_turf, dirt, mud, stone` were added as items with NO art (placeholder
+  icons). Generate real icons via the gpt-image-1 pipeline (API spend → owner approval) in one batch.
+- **Build note:** add `Hidden/BugFarmer/TileComposite` to Always-Included Shaders before a player BUILD
+  (Shader.Find works in-Editor; a stripped build would miss it).
+
 ## Ground material MECHANICS (deferred from the shaped-ground builder; owner 2026-07-09)
-The shaped-ground builder (player places `(materialA, materialB, shape)` tiles, mask-composited) ships
-**COSMETIC first**. Later: some ground materials carry mechanics — e.g. **swamp** = slowed movement,
-**ice** (mountains, if we do them) = slippery. **Rule for a split (diagonal) cell: AVERAGE the two
-materials' mechanical values.** When we build the builder, check what's already implemented for ground-effect
-mechanics and wire material effects + the averaging then.
+The builder ships **COSMETIC** (above). Later: some ground materials carry mechanics — e.g. **swamp** =
+slowed movement, **ice** (mountains, if we do them) = slippery. **Rule for a split (diagonal) cell: AVERAGE
+the two materials' mechanical values.** Mechanism: replace `PrimaryMaterial(id)` (the cosmetic resolver used
+at every gameplay derivation site — hoe/water/collision/bug-block) with a `Properties(id)` that blends
+`matA`+`matB` — SAME call sites, no rework. Movement speed isn't ground-derived today (`TileDefinition.
+MovementMult` has zero consumers), so swamp-slow also needs wiring movement to the tile def first.
 
 ## Rug system redo — grid-square pattern builder (owner 2026-07-09)
 Replacing the current single-sprite rugs (`rug_small`/`rug_large`). Owner wants a **grid-square-based rug
