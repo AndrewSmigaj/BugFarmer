@@ -21,18 +21,17 @@ namespace BugFarmer.World
 
         private void Update()
         {
-            // Shovel shape selection (M2 debug — replaced by the M4 builder UI): [ and ] cycle the shape the
-            // equipped shovel will place. Left-click with a shovel then places grass~dirt~<shape>.
-            if (Input.GetKeyDown(KeyCode.RightBracket))
+            // Shape selection: while a shovel is equipped, the MOUSE WHEEL cycles the shape the shovel will
+            // place (HotbarUI yields the wheel then). [ and ] also work. This is the real control the M4
+            // builder UI will formalize; left-click with a shovel places grass~dirt~<shape>.
+            if (ShovelEquipped())
             {
-                ShovelSelection.CycleShape(1);
-                Debug.Log($"[Shovel] shape -> {ShovelSelection.Shape}  (places '{ShovelSelection.CurrentGroundId}')");
+                float scroll = Input.GetAxis("Mouse ScrollWheel");
+                if (scroll > 0.01f) CycleShapeLog(1);
+                else if (scroll < -0.01f) CycleShapeLog(-1);
             }
-            if (Input.GetKeyDown(KeyCode.LeftBracket))
-            {
-                ShovelSelection.CycleShape(-1);
-                Debug.Log($"[Shovel] shape -> {ShovelSelection.Shape}  (places '{ShovelSelection.CurrentGroundId}')");
-            }
+            if (Input.GetKeyDown(KeyCode.RightBracket)) CycleShapeLog(1);
+            if (Input.GetKeyDown(KeyCode.LeftBracket)) CycleShapeLog(-1);
 
             if (!Input.GetKeyDown(KeyCode.G))
                 return;
@@ -63,6 +62,20 @@ namespace BugFarmer.World
 
             Debug.Log($"[ShapedGroundSpike] Stamped {shapes.Length} grass~dirt shapes (one 2x2 block each) " +
                       $"near {origin}. Shaped-ground M1 shape set.");
+        }
+
+        private static void CycleShapeLog(int dir)
+        {
+            ShovelSelection.CycleShape(dir);
+            Debug.Log($"[Shovel] shape -> {ShovelSelection.Shape}  (places '{ShovelSelection.CurrentGroundId}')");
+        }
+
+        private static bool ShovelEquipped()
+        {
+            var id = BugFarmer.UI.InventoryManager.Instance?.GetEquippedToolId();
+            if (string.IsNullOrEmpty(id))
+                return false;
+            return BugFarmer.Data.EntityDatabase.Get(id)?.ToolType == "shovel";
         }
     }
 }

@@ -113,6 +113,12 @@ namespace BugFarmer.UI
             if (InventoryPanel.IsOpen)
                 return;
 
+            // The shaped-ground builder owns the wheel while a shovel is equipped (cycles the shape it places).
+            var equipped = InventoryManager.Instance?.GetEquippedToolId();
+            if (!string.IsNullOrEmpty(equipped) &&
+                BugFarmer.Data.EntityDatabase.Get(equipped)?.ToolType == "shovel")
+                return;
+
             float scroll = Input.GetAxis("Mouse ScrollWheel");
             if (scroll > 0.01f)
             {
