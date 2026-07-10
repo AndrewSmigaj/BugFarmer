@@ -21,17 +21,23 @@ namespace BugFarmer.World
 
         private void Update()
         {
-            // Shape selection: while a shovel is equipped, the MOUSE WHEEL cycles the shape the shovel will
-            // place (HotbarUI yields the wheel then). [ and ] also work. This is the real control the M4
-            // builder UI will formalize; left-click with a shovel places grass~dirt~<shape>.
+            // Builder input: while a shovel is equipped the MOUSE WHEEL drives the selection (HotbarUI yields
+            // the wheel then) — plain = shape, Shift = material A, Ctrl = material B. LMB places, RMB digs.
             if (ShovelEquipped())
             {
                 float scroll = Input.GetAxis("Mouse ScrollWheel");
-                if (scroll > 0.01f) CycleShapeLog(1);
-                else if (scroll < -0.01f) CycleShapeLog(-1);
+                if (Mathf.Abs(scroll) > 0.01f)
+                {
+                    int dir = scroll > 0f ? 1 : -1;
+                    if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                    { ShovelSelection.CycleMatA(dir); LogSel(); }
+                    else if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+                    { ShovelSelection.CycleMatB(dir); LogSel(); }
+                    else { ShovelSelection.CycleShape(dir); LogSel(); }
+                }
+                if (Input.GetKeyDown(KeyCode.RightBracket)) { ShovelSelection.CycleShape(1); LogSel(); }
+                if (Input.GetKeyDown(KeyCode.LeftBracket)) { ShovelSelection.CycleShape(-1); LogSel(); }
             }
-            if (Input.GetKeyDown(KeyCode.RightBracket)) CycleShapeLog(1);
-            if (Input.GetKeyDown(KeyCode.LeftBracket)) CycleShapeLog(-1);
 
             if (!Input.GetKeyDown(KeyCode.G))
                 return;
@@ -64,10 +70,35 @@ namespace BugFarmer.World
                       $"near {origin}. Shaped-ground M1 shape set.");
         }
 
-        private static void CycleShapeLog(int dir)
+        private static void LogSel()
         {
-            ShovelSelection.CycleShape(dir);
-            Debug.Log($"[Shovel] shape -> {ShovelSelection.Shape}  (places '{ShovelSelection.CurrentGroundId}')");
+            Debug.Log($"[Shovel] A:{ShovelSelection.MatA} B:{ShovelSelection.MatB} " +
+                      $"shape:{ShovelSelection.Shape} -> '{ShovelSelection.CurrentGroundId}'");
+        }
+
+        // Functional builder readout (dev-grade HUD; the polished panel is the owner's M4 taste pass).
+        private GUIStyle _hud;
+
+        private void OnGUI()
+        {
+            if (!ShovelEquipped())
+                return;
+            if (_hud == null)
+                _hud = new GUIStyle(GUI.skin.box)
+                {
+                    alignment = TextAnchor.UpperLeft,
+                    fontSize = 13,
+                    padding = new RectOffset(10, 10, 8, 8),
+                };
+
+            string block = ShovelSelection.MaterialItem(ShovelSelection.MatA);
+            string txt =
+                "SHOVEL BUILDER (functional v1)\n" +
+                $"A: {ShovelSelection.MatA}    B: {ShovelSelection.MatB}    shape: {ShovelSelection.Shape}\n" +
+                $"places: {ShovelSelection.CurrentGroundId}   (costs 1 {block})\n" +
+                "wheel = shape    Shift+wheel = material A    Ctrl+wheel = material B\n" +
+                "LMB = place    RMB = dig";
+            GUI.Box(new Rect(12, 12, 560, 112), txt, _hud);
         }
 
         private static bool ShovelEquipped()
