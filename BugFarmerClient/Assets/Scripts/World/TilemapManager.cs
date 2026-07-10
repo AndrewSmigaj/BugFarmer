@@ -948,6 +948,11 @@ namespace BugFarmer.World
             _waterMat.SetTexture("_ShoreMask", _shoreMask);
         }
 
+        /// <summary>M0 shaped-ground spike helper: stamp a ground tile LOCALLY (visual only, no server / no
+        /// persistence) so composite tiles can be eyeballed. Debug-only; the real builder places via the
+        /// server shovel action.</summary>
+        public void StampGroundDebug(Vector2Int cellPos, string tileId) => SetGroundTile(cellPos, tileId);
+
         private void SetGroundTile(Vector2Int cellPos, string tileId)
         {
             if (groundTilemap == null)
