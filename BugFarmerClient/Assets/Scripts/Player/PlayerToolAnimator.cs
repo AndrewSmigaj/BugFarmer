@@ -18,7 +18,7 @@ namespace BugFarmer.Player
     /// </summary>
     public class PlayerToolAnimator : MonoBehaviour
     {
-        public enum AnimKind { Swing, Sweep, Stab, Pour }
+        public enum AnimKind { Swing, Sweep, Stab, Pour, Scoop, Chop, Till }
 
         public class Profile
         {
@@ -32,10 +32,12 @@ namespace BugFarmer.Player
         // Defaults per tool_type; combat callers can override arc/duration from item data.
         private static readonly Dictionary<string, Profile> Profiles = new Dictionary<string, Profile>
         {
-            ["axe"]          = new Profile { Kind = AnimKind.Swing, Duration = 0.18f, ArcDegrees = 100f, Offset = 0.55f },
-            ["pickaxe"]      = new Profile { Kind = AnimKind.Swing, Duration = 0.18f, ArcDegrees = 100f, Offset = 0.55f },
-            ["shovel"]       = new Profile { Kind = AnimKind.Swing, Duration = 0.20f, ArcDegrees = 90f,  Offset = 0.55f },
-            ["hoe"]          = new Profile { Kind = AnimKind.Swing, Duration = 0.20f, ArcDegrees = 90f,  Offset = 0.55f },
+            // Heavy tools (axe/pickaxe) swing SLOWER — a longer, weightier chop (owner: heavy = slower). Their
+            // break cadence is widened to match in BreakingController so the long swing isn't interrupted.
+            ["axe"]          = new Profile { Kind = AnimKind.Chop,  Duration = 0.34f, ArcDegrees = 110f, Offset = 0.55f },
+            ["pickaxe"]      = new Profile { Kind = AnimKind.Chop,  Duration = 0.34f, ArcDegrees = 110f, Offset = 0.55f },
+            ["shovel"]       = new Profile { Kind = AnimKind.Scoop, Duration = 0.24f, ArcDegrees = 90f,  Offset = 0.55f },
+            ["hoe"]          = new Profile { Kind = AnimKind.Till,  Duration = 0.24f, ArcDegrees = 90f,  Offset = 0.55f },
             ["sword"]        = new Profile { Kind = AnimKind.Swing, Duration = 0.20f, ArcDegrees = 100f, Offset = 0.6f  },
             ["net"]          = new Profile { Kind = AnimKind.Sweep, Duration = 0.25f, ArcDegrees = 90f,  Offset = 0.6f  },
             ["scythe"]       = new Profile { Kind = AnimKind.Sweep, Duration = 0.25f, ArcDegrees = 120f, Offset = 0.6f  },
@@ -302,7 +304,15 @@ namespace BugFarmer.Player
                             angle = Mathf.Lerp(aimAngle, endA, EaseOutBack((t - antF - strF) / (1f - antF - strF)));
                         // Contact = the strike/follow boundary (peak velocity at aimAngle) by construction.
                         if (!fired && t >= antF + strF) { fired = true; onContact?.Invoke(); }
+                        // A forward LUNGE into the strike (drives the sword forward, then retracts) —
+                        // distinguishes the sword slash from the stationary scythe sweep.
+                        float lungeOff = profile.Offset;
+                        if (t >= antF && t < antF + strF)
+                            lungeOff = Mathf.Lerp(profile.Offset, profile.Offset + 0.2f, EaseIn((t - antF) / strF));
+                        else if (t >= antF + strF)
+                            lungeOff = Mathf.Lerp(profile.Offset + 0.2f, profile.Offset, EaseOut((t - antF - strF) / (1f - antF - strF)));
                         _pivot.localRotation = Quaternion.Euler(0f, 0f, angle);
+                        _held.transform.localPosition = new Vector3(lungeOff, 0f, 0f);
                         yield return null;
                     }
                     _trail.emitting = false;
@@ -360,6 +370,119 @@ namespace BugFarmer.Player
                     _held.transform.localRotation = Quaternion.Euler(0f, 0f, -SpriteArtAngle - 40f);
                     onContact?.Invoke(); // "contact" = pour-hold start (water FX cue, not an impact)
                     yield return new WaitForSeconds(duration);
+                    break;
+                }
+                case AnimKind.Chop: // axe/pickaxe: overhead wind-up -> DOWN-strike -> impact HOLD -> recoil
+                {
+                    float half = arc / 2f;
+                    float endA = aimAngle - half;
+                    float topA = aimAngle + half + half * 0.35f; // big overhead wind-up (heavy)
+                    float curA = _pivot.localRotation.eulerAngles.z;
+                    while (curA - topA > 180f) curA -= 360f;
+                    while (curA - topA < -180f) curA += 360f;
+
+                    const float antF = 0.22f, strF = 0.33f, holdF = 0.28f; // recoil = 0.17
+                    _trail.Clear(); _trail.time = duration; _trail.emitting = true;
+
+                    float elapsed = 0f;
+                    while (elapsed < duration)
+                    {
+                        elapsed += Time.deltaTime;
+                        float t = Mathf.Clamp01(elapsed / duration);
+                        float angle;
+                        if (t < antF)
+                            angle = Mathf.Lerp(curA, topA, EaseOut(t / antF));
+                        else if (t < antF + strF)
+                            angle = Mathf.Lerp(topA, aimAngle, EaseIn((t - antF) / strF)); // strike down to contact
+                        else if (t < antF + strF + holdF)
+                            angle = aimAngle;                    // impact HOLD — the chop "sticks" (motion dwell)
+                        else
+                            angle = Mathf.Lerp(aimAngle, endA, EaseOut((t - antF - strF - holdF) / (1f - antF - strF - holdF)));
+                        if (!fired && t >= antF + strF) { fired = true; onContact?.Invoke(); }
+                        _pivot.localRotation = Quaternion.Euler(0f, 0f, angle);
+                        yield return null;
+                    }
+                    _trail.emitting = false;
+                    break;
+                }
+                case AnimKind.Till: // hoe: raise -> chop down into soil -> DRAG back toward the player
+                {
+                    float half = arc / 2f;
+                    float topA = aimAngle + half + half * 0.2f;
+                    float curA = _pivot.localRotation.eulerAngles.z;
+                    while (curA - topA > 180f) curA -= 360f;
+                    while (curA - topA < -180f) curA += 360f;
+
+                    const float antF = 0.18f, strF = 0.32f;   // drag-back = the remaining 0.50
+                    float dragTo = profile.Offset - 0.35f;
+                    _trail.Clear(); _trail.time = duration; _trail.emitting = true;
+
+                    float elapsed = 0f;
+                    while (elapsed < duration)
+                    {
+                        elapsed += Time.deltaTime;
+                        float t = Mathf.Clamp01(elapsed / duration);
+                        float angle;
+                        float off = profile.Offset;
+                        if (t < antF)
+                            angle = Mathf.Lerp(curA, topA, EaseOut(t / antF));
+                        else if (t < antF + strF)
+                            angle = Mathf.Lerp(topA, aimAngle, EaseIn((t - antF) / strF)); // chop down to soil
+                        else
+                        {
+                            angle = aimAngle;                    // hold the down angle
+                            off = Mathf.Lerp(profile.Offset, dragTo, EaseOut((t - antF - strF) / (1f - antF - strF))); // DRAG
+                        }
+                        if (!fired && t >= antF + strF) { fired = true; onContact?.Invoke(); }
+                        _pivot.localRotation = Quaternion.Euler(0f, 0f, angle);
+                        _held.transform.localPosition = new Vector3(off, 0f, 0f);
+                        yield return null;
+                    }
+                    _trail.emitting = false;
+                    break;
+                }
+                case AnimKind.Scoop: // shovel: thrust the blade IN (scale down) -> lift up-and-back (scale up)
+                {
+                    float baseOff = profile.Offset;
+                    float reach = baseOff + 0.45f;
+                    float liftAngle = aimAngle + 55f;             // scoop up-and-back (the lever)
+                    float baseScale = _held.transform.localScale.x; // uniform fit scale (depth fake — no shear)
+                    _pivot.localRotation = Quaternion.Euler(0f, 0f, aimAngle);
+
+                    const float thrustF = 0.35f, liftF = 0.40f;   // settle = 0.25
+                    float elapsed = 0f;
+                    while (elapsed < duration)
+                    {
+                        elapsed += Time.deltaTime;
+                        float t = Mathf.Clamp01(elapsed / duration);
+                        float off, ang, sc;
+                        if (t < thrustF)
+                        {
+                            float u = t / thrustF;
+                            off = Mathf.Lerp(baseOff, reach, EaseIn(u)); // thrust the blade in along aim
+                            sc = Mathf.Lerp(1f, 0.9f, u);                // smaller = into the ground
+                            ang = aimAngle;
+                        }
+                        else if (t < thrustF + liftF)
+                        {
+                            float u = (t - thrustF) / liftF;
+                            off = Mathf.Lerp(reach, baseOff, EaseOut(u)); // pull back
+                            sc = Mathf.Lerp(0.9f, 1.1f, u);              // larger = lifted toward the viewer
+                            ang = Mathf.Lerp(aimAngle, liftAngle, EaseOut(u)); // rotate the head up-and-back
+                        }
+                        else
+                        {
+                            float u = (t - thrustF - liftF) / (1f - thrustF - liftF);
+                            off = baseOff;
+                            sc = Mathf.Lerp(1.1f, 1f, u);
+                            ang = Mathf.Lerp(liftAngle, aimAngle, u);
+                        }
+                        if (!fired && t >= thrustF) { fired = true; onContact?.Invoke(); } // contact = the bite
+                        _pivot.localRotation = Quaternion.Euler(0f, 0f, ang);
+                        _held.transform.localPosition = new Vector3(off, 0f, 0f);
+                        _held.transform.localScale = new Vector3(baseScale * sc, baseScale * sc, 1f);
+                        yield return null;
+                    }
                     break;
                 }
             }

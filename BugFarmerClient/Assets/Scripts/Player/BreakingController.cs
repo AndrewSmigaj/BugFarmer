@@ -60,12 +60,17 @@ namespace BugFarmer.Player
             if (_pendingArmed && Time.time >= _pendingDeadline)
                 ConsumeJuice();
 
+            // Heavy tools (axe/pickaxe) swing SLOWER (owner: heavy = slower) — widen their cadence so the
+            // longer chop swing isn't interrupted before its contact frame. Light tools keep the default.
+            string equippedToolType = EntityDatabase.Get(InventoryManager.Instance?.GetEquippedToolId() ?? "")?.ToolType;
+            float cadence = (equippedToolType == "axe" || equippedToolType == "pickaxe") ? 0.36f : breakClickInterval;
+
             // SWING ON EVERY ATTEMPT, target or not (Terraria: holding swings at air) —
             // without this, clicking with an axe at nothing shows NOTHING and the tool
             // reads as broken. Throttled at the break cadence; phase-offset vs the break
             // timer (which resets per target for instant first hits) is a sub-interval
             // cosmetic, accepted.
-            if (Time.time - _lastSwingTime >= breakClickInterval)
+            if (Time.time - _lastSwingTime >= cadence)
             {
                 var swingDef = EntityDatabase.Get(InventoryManager.Instance?.GetEquippedToolId() ?? "");
                 if (_animator != null && swingDef?.ToolType != null)
@@ -125,7 +130,7 @@ namespace BugFarmer.Player
             _isBreaking = true;
 
             // Send break message at interval (the swing already played above)
-            if (Time.time - _lastBreakTime >= breakClickInterval)
+            if (Time.time - _lastBreakTime >= cadence)
             {
                 SendBreakRequest(anchorCell);
                 _lastBreakTime = Time.time;
