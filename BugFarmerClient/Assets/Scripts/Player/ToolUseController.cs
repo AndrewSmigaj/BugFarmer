@@ -71,13 +71,15 @@ namespace BugFarmer.Player
             string groundId = isShovel ? BugFarmer.World.ShovelSelection.CurrentGroundId : null;
             SendToolUse(cellPos, groundId, false);
             _lastUseTime = Time.time;
-            if (isShovel)
-                BugFarmer.World.HitBurst.Play(cellWorld, BugFarmer.World.HitBurst.Kind.Dust, 0.6f);
 
             if (_animator != null)
             {
                 Vector2 aim = (Vector2)(mouseWorld - transform.position);
-                _animator.Play(toolDef.ToolType, EntityDatabase.GetItemSprite(toolDef.Id), aim);
+                // Shovel dust bursts at the swing's CONTACT frame (the dig moment), not at click-time.
+                System.Action onContact = isShovel
+                    ? () => BugFarmer.World.HitBurst.Play(cellWorld, BugFarmer.World.HitBurst.Kind.Dust, 0.6f)
+                    : (System.Action)null;
+                _animator.Play(toolDef.ToolType, EntityDatabase.GetItemSprite(toolDef.Id), aim, onContact: onContact);
             }
         }
 
@@ -108,11 +110,12 @@ namespace BugFarmer.Player
 
             SendToolUse(cellPos, null, true);
             _lastUseTime = Time.time;
-            BugFarmer.World.HitBurst.Play(cellWorld, BugFarmer.World.HitBurst.Kind.Dust, 0.6f);
             if (_animator != null)
             {
                 Vector2 aim = (Vector2)(mouseWorld - transform.position);
-                _animator.Play(toolDef.ToolType, EntityDatabase.GetItemSprite(toolDef.Id), aim);
+                // Dust bursts at the swing's CONTACT frame (the dig moment), not at click-time.
+                _animator.Play(toolDef.ToolType, EntityDatabase.GetItemSprite(toolDef.Id), aim,
+                    onContact: () => BugFarmer.World.HitBurst.Play(cellWorld, BugFarmer.World.HitBurst.Kind.Dust, 0.6f));
             }
         }
 

@@ -107,9 +107,13 @@ namespace BugFarmer.Player
                     catches = capped;
                 }
 
-                // The sweep + trail plays even on a miss; the trail IS the catch area.
+                // The sweep + trail plays even on a miss; the trail IS the catch area. A subtle contact cue
+                // fires at the mid-sweep when bugs are actually snagged (consistency with the other tools).
+                Vector2 kick = aim.normalized * 0.04f;
+                bool caught = catches != null && catches.Count > 0;
                 _animator?.Play("net", EntityDatabase.GetItemSprite(toolId), aim,
-                                arc, net != null ? net.SwingTime : 0f);
+                                arc, net != null ? net.SwingTime : 0f,
+                                onContact: caught ? () => CameraFollow.AddShake(0.1f, kick) : (System.Action)null);
             }
             else
             {

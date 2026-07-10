@@ -40,6 +40,12 @@ namespace BugFarmer.Player
         /// </summary>
         private float _lastSwingTime;
 
+        // Deferred juice: a connecting break tick ARMS feedback (does not fire it); the swing's onContact
+        // CONSUMES it at the visual strike. If no contact consumes it in time, the floor below fires it once.
+        private OccupantClickTarget _pendingTarget;
+        private float _pendingDeadline;
+        private bool _pendingArmed;
+
         public void HoldBreak()
         {
             if (_mainCamera == null)
@@ -48,6 +54,11 @@ namespace BugFarmer.Player
             // Get world position under mouse
             Vector3 mouseWorld = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
             mouseWorld.z = 0;
+
+            // Floor: if an armed hit's swing-contact never fired (swing interrupted / off-cadence), fire it
+            // once past the deadline so every connecting hit still juices (no drop, no double-fire).
+            if (_pendingArmed && Time.time >= _pendingDeadline)
+                ConsumeJuice();
 
             // SWING ON EVERY ATTEMPT, target or not (Terraria: holding swings at air) —
             // without this, clicking with an axe at nothing shows NOTHING and the tool
@@ -60,7 +71,8 @@ namespace BugFarmer.Player
                 if (_animator != null && swingDef?.ToolType != null)
                 {
                     Vector2 aim = (Vector2)(mouseWorld - transform.position);
-                    _animator.Play(swingDef.ToolType, EntityDatabase.GetItemSprite(swingDef.Id), aim);
+                    _animator.Play(swingDef.ToolType, EntityDatabase.GetItemSprite(swingDef.Id), aim,
+                                   onContact: ConsumeJuice);   // juice lands at the swing's contact frame
                     _lastSwingTime = Time.time;
                 }
             }
@@ -117,8 +129,24 @@ namespace BugFarmer.Player
             {
                 SendBreakRequest(anchorCell);
                 _lastBreakTime = Time.time;
-                PlayHitFeedback(clickTarget);   // flash + shake + leaf/chip burst on each connecting hit
+                ArmJuice(clickTarget);   // fire the juice at the swing's CONTACT frame (deferred), not now
             }
+        }
+
+        // ARM feedback on a connecting break tick (short deadline); the swing's onContact consumes it at the
+        // strike. Avoids both a dropped hit (interrupt) and a double-fire.
+        private void ArmJuice(OccupantClickTarget target)
+        {
+            _pendingTarget = target;
+            _pendingDeadline = Time.time + 0.2f; // beyond a normal ~0.12s contact; the floor only covers drops
+            _pendingArmed = true;
+        }
+
+        private void ConsumeJuice()
+        {
+            if (!_pendingArmed) return;
+            _pendingArmed = false;
+            PlayHitFeedback(_pendingTarget);
         }
 
         /// <summary>Client-only juice on a connecting hit: flash the target, a tiny camera kick, and a
@@ -127,7 +155,8 @@ namespace BugFarmer.Player
         {
             if (target == null) return;
 
-            CameraFollow.AddShake(0.28f);                    // VERY subtle — complements the tree wobble, not the star
+            Vector2 kick = ((Vector2)(target.transform.position - transform.position)).normalized * 0.06f;
+            CameraFollow.AddShake(0.28f, kick);              // subtle shake + a kick toward the struck object
             BugFarmer.Audio.AudioFx.AxeChopAt(target.transform.position); // woody chop on each connecting hit
 
             var sr = target.GetComponent<SpriteRenderer>();
@@ -158,6 +187,7 @@ namespace BugFarmer.Player
         /// <summary>Clear breaking state (called by the router on click release/cancel).</summary>
         public void StopBreaking()
         {
+            ConsumeJuice();   // fire any armed hit's juice on release (the hit already connected)
             _isBreaking = false;
             _breakingCell = null;
         }

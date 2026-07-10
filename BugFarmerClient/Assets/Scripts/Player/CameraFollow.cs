@@ -18,12 +18,15 @@ namespace BugFarmer.Player
         [SerializeField] private float shakeFrequency = 22f;
         [Tooltip("Trauma units shed per second (higher = snappier settle).")]
         [SerializeField] private float traumaDecay = 3.5f;
+        [Tooltip("Spring-back speed of the directional impact kick (higher = snappier return).")]
+        [SerializeField] private float kickReturn = 12f;
 
         private Vector3 _velocity;
         private Vector3 _basePos;   // smoothed follow position WITHOUT shake (so shake never feeds back)
         private bool _haveBase;
         private float _trauma;      // 0..1, decays each frame
         private float _shakeSeed;
+        private Vector2 _kick;      // one-shot directional impact kick; springs back to zero
 
         private static CameraFollow _instance;
 
@@ -37,6 +40,15 @@ namespace BugFarmer.Player
         public static void AddShake(float amount)
         {
             if (_instance != null) _instance._trauma = Mathf.Clamp01(_instance._trauma + amount);
+        }
+
+        /// <summary>Add trauma PLUS a one-shot directional kick (world units) toward the impact — the camera
+        /// lurches in <paramref name="dirKick"/> and springs back. Reads as "the tool drove into it".</summary>
+        public static void AddShake(float amount, Vector2 dirKick)
+        {
+            if (_instance == null) return;
+            _instance._trauma = Mathf.Clamp01(_instance._trauma + amount);
+            _instance._kick += dirKick;
         }
 
         private void LateUpdate()
@@ -58,7 +70,10 @@ namespace BugFarmer.Player
                 _trauma = Mathf.Max(0f, _trauma - Time.deltaTime * traumaDecay);
             }
 
-            transform.position = _basePos + shake;
+            // Directional impact kick: springs back toward zero, layered on top of the noise shake.
+            _kick = Vector2.Lerp(_kick, Vector2.zero, 1f - Mathf.Exp(-kickReturn * Time.deltaTime));
+
+            transform.position = _basePos + shake + (Vector3)_kick;
         }
 
         /// <summary>

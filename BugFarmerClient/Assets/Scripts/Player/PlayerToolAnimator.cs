@@ -112,7 +112,8 @@ namespace BugFarmer.Player
         /// profile (a sword jab plays Stab on a "sword"): "swing" | "stab" | "sweep".
         /// </summary>
         public void Play(string toolType, Sprite toolSprite, Vector2 aimDir,
-                         float arcDegrees = 0f, float duration = 0f, string kindOverride = null)
+                         float arcDegrees = 0f, float duration = 0f, string kindOverride = null,
+                         System.Action onContact = null)
         {
             if (toolSprite == null || string.IsNullOrEmpty(toolType)) return;
             if (!Profiles.TryGetValue(toolType, out var profile)) return;
@@ -167,7 +168,7 @@ namespace BugFarmer.Player
             _held.sprite = toolSprite;
             FitSprite(toolSprite, 1f);
 
-            _routine = StartCoroutine(AnimateRoutine(profile, arc, dur, aimDir.normalized));
+            _routine = StartCoroutine(AnimateRoutine(profile, arc, dur, aimDir.normalized, onContact));
         }
 
         // === Idle held-at-rest display ===
@@ -254,10 +255,12 @@ namespace BugFarmer.Player
             return 1f + c3 * u * u * u + c1 * u * u;
         }
 
-        private IEnumerator AnimateRoutine(Profile profile, float arc, float duration, Vector2 aim)
+        private IEnumerator AnimateRoutine(Profile profile, float arc, float duration, Vector2 aim,
+                                           System.Action onContact)
         {
             IsPlaying = true;
             _held.enabled = true;
+            bool fired = false; // fire onContact ONCE, at the per-Kind geometric contact frame
 
             float aimAngle = Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg;
             _held.transform.localPosition = new Vector3(profile.Offset, 0f, 0f);
@@ -297,6 +300,8 @@ namespace BugFarmer.Player
                             angle = Mathf.Lerp(topA, aimAngle, EaseIn((t - antF) / strF)); // accelerate to contact
                         else
                             angle = Mathf.Lerp(aimAngle, endA, EaseOutBack((t - antF - strF) / (1f - antF - strF)));
+                        // Contact = the strike/follow boundary (peak velocity at aimAngle) by construction.
+                        if (!fired && t >= antF + strF) { fired = true; onContact?.Invoke(); }
                         _pivot.localRotation = Quaternion.Euler(0f, 0f, angle);
                         yield return null;
                     }
@@ -320,6 +325,8 @@ namespace BugFarmer.Player
                         float t = Mathf.Clamp01(elapsed / duration);
                         float eased = 1f - (1f - t) * (1f - t); // ease-out, symmetric across the arc
                         float angle = Mathf.Lerp(aimAngle + half, aimAngle - half, eased);
+                        // Contact = the mid-arc crossing of aimAngle (the sweep points at the target).
+                        if (!fired && angle <= aimAngle) { fired = true; onContact?.Invoke(); }
                         _pivot.localRotation = Quaternion.Euler(0f, 0f, angle);
                         yield return null;
                     }
@@ -339,6 +346,8 @@ namespace BugFarmer.Player
                             ? Mathf.Lerp(profile.Offset, profile.StabReach, elapsed / outTime)
                             : Mathf.Lerp(profile.StabReach, profile.Offset,
                                          (elapsed - outTime) / backTime);
+                        // Contact = the lunge apex (tip at max reach, end of the out-thrust).
+                        if (!fired && elapsed >= outTime) { fired = true; onContact?.Invoke(); }
                         _held.transform.localPosition = new Vector3(x, 0f, 0f);
                         yield return null;
                     }
@@ -349,6 +358,7 @@ namespace BugFarmer.Player
                     _pivot.localRotation = Quaternion.Euler(0f, 0f, aimAngle);
                     // Tip the can over the target; WaterDroplet provides the splash feedback.
                     _held.transform.localRotation = Quaternion.Euler(0f, 0f, -SpriteArtAngle - 40f);
+                    onContact?.Invoke(); // "contact" = pour-hold start (water FX cue, not an impact)
                     yield return new WaitForSeconds(duration);
                     break;
                 }
