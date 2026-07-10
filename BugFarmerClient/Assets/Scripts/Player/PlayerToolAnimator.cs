@@ -47,6 +47,7 @@ namespace BugFarmer.Player
         // makes the head point outward along the pivot's swing direction.
         private const float SpriteArtAngle = 45f;
         private const float MaxSpriteCells = 1.0f; // fit-box cap for the held sprite
+        private const float MaxSwingDuration = 0.45f; // clamp so a swing can't outlast its caller's cadence
 
         public bool IsPlaying { get; private set; }
 
@@ -156,6 +157,9 @@ namespace BugFarmer.Player
 
             float arc = arcDegrees > 0f ? arcDegrees : profile.ArcDegrees;
             float dur = duration > 0f ? duration : profile.Duration;
+            // Defensive clamp: a swing longer than its caller's cadence would be interrupted before contact.
+            // No current tool/weapon violates this (verified vs items.json), so this only guards future data.
+            dur = Mathf.Min(dur, MaxSwingDuration);
             if (aimDir.sqrMagnitude < 0.0001f) aimDir = Vector2.right;
 
             _behindPlayer = Mathf.Abs(aimDir.y) > Mathf.Abs(aimDir.x) && aimDir.y > 0f;
@@ -239,6 +243,17 @@ namespace BugFarmer.Player
             _held.transform.localScale = new Vector3(scale, scale, 1f);
         }
 
+        // Easing (pure math, zero-alloc). EaseOut = decelerate (wind-up settle), EaseIn = accelerate into
+        // contact (peak velocity at the end), EaseOutBack = overshoot past the target then settle back.
+        private static float EaseOut(float t) => 1f - (1f - t) * (1f - t);
+        private static float EaseIn(float t) => t * t * t;
+        private static float EaseOutBack(float t)
+        {
+            const float c1 = 1.70158f, c3 = c1 + 1f;
+            float u = t - 1f;
+            return 1f + c3 * u * u * u + c1 * u * u;
+        }
+
         private IEnumerator AnimateRoutine(Profile profile, float arc, float duration, Vector2 aim)
         {
             IsPlaying = true;
@@ -251,29 +266,64 @@ namespace BugFarmer.Player
             switch (profile.Kind)
             {
                 case AnimKind.Swing:
+                {
+                    // 3-segment swing (Phase 1a): anticipation (wind back, blend-from-current to kill the
+                    // snap-pop) -> strike (accelerate to CONTACT at aimAngle, peak velocity there) -> follow-
+                    // through (ease-out-back overshoot past, then settle). Contact = the strike/follow boundary
+                    // by construction (Phase 1b hooks onContact there).
+                    float half = arc / 2f;
+                    float endA = aimAngle - half;          // natural swing end
+                    float topA = aimAngle + half + half * 0.30f; // wound-up start, a bit past the natural start
+                    // Blend the wind-up from the CURRENT pivot angle (fresh idle pose OR an interrupted swing).
+                    float curA = _pivot.localRotation.eulerAngles.z;
+                    while (curA - topA > 180f) curA -= 360f;
+                    while (curA - topA < -180f) curA += 360f;
+
+                    const float antF = 0.15f, strF = 0.50f; // follow-through = the remaining 0.35
+                    _trail.Clear(); // a brief trail so the whippy down/along-aim arc reads (not a teleport)
+                    _trail.time = duration;
+                    _trail.emitting = true;
+
+                    _pivot.localRotation = Quaternion.Euler(0f, 0f, curA);
+                    float elapsed = 0f;
+                    while (elapsed < duration)
+                    {
+                        elapsed += Time.deltaTime;
+                        float t = Mathf.Clamp01(elapsed / duration);
+                        float angle;
+                        if (t < antF)
+                            angle = Mathf.Lerp(curA, topA, EaseOut(t / antF));
+                        else if (t < antF + strF)
+                            angle = Mathf.Lerp(topA, aimAngle, EaseIn((t - antF) / strF)); // accelerate to contact
+                        else
+                            angle = Mathf.Lerp(aimAngle, endA, EaseOutBack((t - antF - strF) / (1f - antF - strF)));
+                        _pivot.localRotation = Quaternion.Euler(0f, 0f, angle);
+                        yield return null;
+                    }
+                    _trail.emitting = false;
+                    break;
+                }
                 case AnimKind.Sweep:
                 {
-                    bool sweep = profile.Kind == AnimKind.Sweep;
+                    // Net/scythe: a SYMMETRIC even sweep — the trail must trace the whole queried sector evenly
+                    // (the trail IS the honest catch area), so NO asymmetric strike/overshoot here.
                     float half = arc / 2f;
                     _pivot.localRotation = Quaternion.Euler(0f, 0f, aimAngle + half);
-                    if (sweep)
-                    {
-                        _trail.Clear(); // AFTER repositioning, or it streaks from the old spot
-                        _trail.time = duration;
-                        _trail.emitting = true;
-                    }
+                    _trail.Clear(); // AFTER repositioning, or it streaks from the old spot
+                    _trail.time = duration;
+                    _trail.emitting = true;
 
                     float elapsed = 0f;
                     while (elapsed < duration)
                     {
                         elapsed += Time.deltaTime;
                         float t = Mathf.Clamp01(elapsed / duration);
-                        float eased = 1f - (1f - t) * (1f - t); // ease-out: fast start
+                        float eased = 1f - (1f - t) * (1f - t); // ease-out, symmetric across the arc
                         float angle = Mathf.Lerp(aimAngle + half, aimAngle - half, eased);
                         _pivot.localRotation = Quaternion.Euler(0f, 0f, angle);
                         yield return null;
                     }
-                    if (sweep) _trail.emitting = false;
+                    _trail.emitting = false;
                     break;
                 }
                 case AnimKind.Stab:
