@@ -21,22 +21,22 @@ namespace BugFarmer.World
 
         private void Update()
         {
-            // Builder input: while a shovel is equipped the MOUSE WHEEL drives the selection (HotbarUI yields
-            // the wheel then) — plain = shape, Shift = material A, Ctrl = material B. LMB places, RMB digs.
+            // Builder input while a shovel is equipped (HotbarUI yields the wheel then). The WHEEL now
+            // cycles the SHAPE ONLY — the old Shift/Ctrl-wheel material scheme was confusing (owner) and is
+            // gone; material choice moves to a proper "Set Materials" panel (S2). Until that panel exists,
+            // temporary dev keys keep composite placement testable: M = next material A, N = next material B.
             if (ShovelEquipped())
             {
                 float scroll = Input.GetAxis("Mouse ScrollWheel");
                 if (Mathf.Abs(scroll) > 0.01f)
                 {
-                    int dir = scroll > 0f ? 1 : -1;
-                    if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
-                    { ShovelSelection.CycleMatA(dir); LogSel(); }
-                    else if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
-                    { ShovelSelection.CycleMatB(dir); LogSel(); }
-                    else { ShovelSelection.CycleShape(dir); LogSel(); }
+                    ShovelSelection.CycleShape(scroll > 0f ? 1 : -1);
+                    LogSel();
                 }
                 if (Input.GetKeyDown(KeyCode.RightBracket)) { ShovelSelection.CycleShape(1); LogSel(); }
                 if (Input.GetKeyDown(KeyCode.LeftBracket)) { ShovelSelection.CycleShape(-1); LogSel(); }
+                if (Input.GetKeyDown(KeyCode.M)) { ShovelSelection.CycleMatA(1); LogSel(); } // temp: until Set-Materials panel
+                if (Input.GetKeyDown(KeyCode.N)) { ShovelSelection.CycleMatB(1); LogSel(); } // temp: until Set-Materials panel
             }
 
             if (!Input.GetKeyDown(KeyCode.G))
@@ -91,13 +91,12 @@ namespace BugFarmer.World
                     padding = new RectOffset(10, 10, 8, 8),
                 };
 
-            string block = ShovelSelection.MaterialItem(ShovelSelection.MatA);
             string txt =
                 "SHOVEL BUILDER (functional v1)\n" +
                 $"A: {ShovelSelection.MatA}    B: {ShovelSelection.MatB}    shape: {ShovelSelection.Shape}\n" +
-                $"places: {ShovelSelection.CurrentGroundId}   (costs 1 {block})\n" +
-                "wheel = shape    Shift+wheel = material A    Ctrl+wheel = material B\n" +
-                "LMB = place    RMB = dig";
+                $"places: {ShovelSelection.CurrentGroundId}\n" +
+                "wheel / [ ] = shape       (temp) M = material A    N = material B\n" +
+                "LMB = place    Shift+LMB = dig";
             GUI.Box(new Rect(12, 12, 560, 112), txt, _hud);
         }
 

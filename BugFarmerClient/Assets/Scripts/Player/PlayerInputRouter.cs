@@ -41,6 +41,7 @@ namespace BugFarmer.Player
         private Camera _mainCamera;
 
         private bool _holdLatchedToBreaking;
+        private bool _holdLatchedToDigging;
 
         private void Start()
         {
@@ -61,6 +62,18 @@ namespace BugFarmer.Player
 
         private void Update()
         {
+            // A shovel dig-hold (Shift+LMB) owns the left button until release. Like breaking, the held
+            // path runs every frame; TryDig self-throttles on the shovel cooldown, so it fires one dig
+            // per hit and the ground breaks over a few hits.
+            if (_holdLatchedToDigging)
+            {
+                if (Input.GetMouseButton(0))
+                    _toolUse?.TryDig();
+                else
+                    _holdLatchedToDigging = false;
+                return;
+            }
+
             // An in-progress break owns the left button until release.
             if (_holdLatchedToBreaking)
             {
@@ -121,8 +134,17 @@ namespace BugFarmer.Player
                 case "watering_can":
                 case "scythe":
                 case "smoker":
-                case "shovel":   // shaped-ground builder: places the selected ground id at the cell
                     _toolUse?.TryHandleClick();
+                    return;
+
+                case "shovel":
+                    // Shaped-ground builder: LMB PLACES the selected ground id; Shift+LMB DIGS (hold to
+                    // keep digging — progressive, a few hits per cell). RMB is intentionally NOT dig; it
+                    // stays free for the context actions (stations/hives/beds) in RouteRightClick.
+                    if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                        LatchDigging();
+                    else
+                        _toolUse?.TryHandleClick();
                     return;
 
                 case "placer":
@@ -202,17 +224,11 @@ namespace BugFarmer.Player
             if (_placement != null && _placement.TryHandleRightClick())
                 return;
 
-            // 2b. Shovel: right-click DIGS the ground (revert to dirt, gain the block) — the shaped-ground
-            //     builder's remove verb. After the context handlers above, so clicking a station/hive/bed
-            //     still wins; a shovel has no weapon move, so this never steals a combat secondary.
-            // 3. Otherwise, weapon secondary move (sword jab, axe combat swing, spear sweep).
+            // 3. Otherwise, weapon secondary move (sword jab, axe combat swing, spear sweep). The shovel
+            //    has NO right-click verb — digging moved to Shift+LMB (see RouteLeftClick), leaving RMB
+            //    free for the context actions above.
             string toolId = InventoryManager.Instance?.GetEquippedToolId() ?? "";
             var rtoolDef = EntityDatabase.Get(toolId);
-            if (rtoolDef?.ToolType == "shovel")
-            {
-                _toolUse?.TryDig();
-                return;
-            }
             if (rtoolDef?.GetMove("secondary") != null)
                 _melee?.TryHandleClick("secondary");
         }
@@ -222,6 +238,13 @@ namespace BugFarmer.Player
             if (_breaking == null) return;
             _holdLatchedToBreaking = true;
             _breaking.HoldBreak();
+        }
+
+        private void LatchDigging()
+        {
+            if (_toolUse == null) return;
+            _holdLatchedToDigging = true;
+            _toolUse.TryDig(); // first hit now; the Update() dig-latch repeats it while the button is held
         }
     }
 }

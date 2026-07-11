@@ -83,9 +83,10 @@ namespace BugFarmer.Player
             }
         }
 
-        /// <summary>Right-click with a shovel: DIG the target cell (revert to dirt, gain the material block).
-        /// Routed from PlayerInputRouter only when a shovel is equipped and no context handler consumed the
-        /// click. Shares the shovel cooldown with placing.</summary>
+        /// <summary>Shift+LMB with a shovel: DIG the target cell. Digging is PROGRESSIVE server-side — each
+        /// call is one hit; the ground breaks after a few, shows a crack overlay, and drops its material(s).
+        /// Called every frame by PlayerInputRouter's dig-hold latch and self-throttled on the shovel cooldown,
+        /// so holding produces a steady per-hit cadence. Shares the shovel cooldown with placing.</summary>
         public void TryDig()
         {
             string toolId = InventoryManager.Instance?.GetEquippedToolId();
