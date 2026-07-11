@@ -214,7 +214,9 @@ namespace BugFarmer.Player
             _held.sprite = _idleSprite;
             FitSprite(_idleSprite, IdleScale);
             _held.transform.localPosition = new Vector3(IdleOffset, 0f, 0f);
-            _held.transform.localRotation = Quaternion.Euler(0f, 0f, -SpriteArtAngle);
+            // The watering can is an upright 3/4 sprite — hold it upright at rest, not on the diagonal.
+            float restTilt = (_idleToolType == "watering_can") ? 0f : -SpriteArtAngle;
+            _held.transform.localRotation = Quaternion.Euler(0f, 0f, restTilt);
             _held.enabled = true;
             OrientIdleByFacing();
         }
@@ -365,11 +367,48 @@ namespace BugFarmer.Player
                 }
                 case AnimKind.Pour:
                 {
+                    // The watering can is a 3/4-view UPRIGHT sprite (NOT the diagonal grip convention), so it
+                    // must NEVER take the -SpriteArtAngle tilt — that laid it on its side (the "butchered" look).
+                    // Instead: reach out toward the target, raise + tip the spout DOWN to pour, hold with a
+                    // gentle bob, then rock back upright. Rotation is kept aim-INDEPENDENT (subtract aimAngle)
+                    // so the can always reads upright-then-tipped, whatever direction you water.
                     _pivot.localRotation = Quaternion.Euler(0f, 0f, aimAngle);
-                    // Tip the can over the target; WaterDroplet provides the splash feedback.
-                    _held.transform.localRotation = Quaternion.Euler(0f, 0f, -SpriteArtAngle - 40f);
-                    onContact?.Invoke(); // "contact" = pour-hold start (water FX cue, not an impact)
-                    yield return new WaitForSeconds(duration);
+                    float baseOff = profile.Offset;
+                    const float antF = 0.18f, tipF = 0.24f, holdF = 0.40f; // rock-back = the remaining 0.18
+                    const float pourTilt = -60f, windTilt = 12f;
+                    float elapsed = 0f;
+                    while (elapsed < duration)
+                    {
+                        elapsed += Time.deltaTime;
+                        float t = Mathf.Clamp01(elapsed / duration);
+                        float tilt, off = baseOff;
+                        if (t < antF)
+                        {
+                            float u = t / antF;
+                            tilt = Mathf.Lerp(0f, windTilt, EaseOut(u));            // anticipation: tip back
+                            off = Mathf.Lerp(baseOff, baseOff + 0.08f, EaseOut(u)); // and raise a touch
+                        }
+                        else if (t < antF + tipF)
+                        {
+                            tilt = Mathf.Lerp(windTilt, pourTilt, EaseIn((t - antF) / tipF)); // tip forward to pour
+                            off = baseOff + 0.08f;
+                        }
+                        else if (t < antF + tipF + holdF)
+                        {
+                            float h = (t - antF - tipF) / holdF;
+                            tilt = pourTilt + Mathf.Sin(h * Mathf.PI * 3f) * 3f;   // gentle bob while pouring
+                            off = baseOff + 0.08f;
+                        }
+                        else
+                        {
+                            tilt = Mathf.Lerp(pourTilt, 0f, EaseOut((t - antF - tipF - holdF) / (1f - antF - tipF - holdF)));
+                        }
+                        // "contact" = the spout dipping (water starts), not an impact.
+                        if (!fired && t >= antF + tipF * 0.5f) { fired = true; onContact?.Invoke(); }
+                        _held.transform.localRotation = Quaternion.Euler(0f, 0f, tilt - aimAngle);
+                        _held.transform.localPosition = new Vector3(off, 0f, 0f);
+                        yield return null;
+                    }
                     break;
                 }
                 case AnimKind.Chop: // axe/pickaxe: overhead wind-up -> DOWN-strike -> impact HOLD -> recoil
@@ -405,16 +444,17 @@ namespace BugFarmer.Player
                     _trail.emitting = false;
                     break;
                 }
-                case AnimKind.Till: // hoe: raise -> chop down into soil -> DRAG back toward the player
+                case AnimKind.Till: // hoe: raise HIGH -> chop down into soil -> DRAG firmly back toward the player
                 {
                     float half = arc / 2f;
-                    float topA = aimAngle + half + half * 0.2f;
+                    float topA = aimAngle + half + half * 0.35f;  // higher wind-up so the raise reads
                     float curA = _pivot.localRotation.eulerAngles.z;
                     while (curA - topA > 180f) curA -= 360f;
                     while (curA - topA < -180f) curA += 360f;
 
-                    const float antF = 0.18f, strF = 0.32f;   // drag-back = the remaining 0.50
-                    float dragTo = profile.Offset - 0.35f;
+                    const float antF = 0.20f, strF = 0.30f;   // drag-back = the remaining 0.50
+                    float dragTo = profile.Offset - 0.55f;     // deeper pull-back than v1
+                    float biteAngle = aimAngle - 12f;          // head dips slightly past level as it bites & drags
                     _trail.Clear(); _trail.time = duration; _trail.emitting = true;
 
                     float elapsed = 0f;
@@ -430,8 +470,9 @@ namespace BugFarmer.Player
                             angle = Mathf.Lerp(topA, aimAngle, EaseIn((t - antF) / strF)); // chop down to soil
                         else
                         {
-                            angle = aimAngle;                    // hold the down angle
-                            off = Mathf.Lerp(profile.Offset, dragTo, EaseOut((t - antF - strF) / (1f - antF - strF))); // DRAG
+                            float u = (t - antF - strF) / (1f - antF - strF);
+                            angle = Mathf.Lerp(aimAngle, biteAngle, EaseOut(u)); // head dips as it bites & drags
+                            off = Mathf.Lerp(profile.Offset, dragTo, EaseIn(u));  // accelerate the pull through soil
                         }
                         if (!fired && t >= antF + strF) { fired = true; onContact?.Invoke(); }
                         _pivot.localRotation = Quaternion.Euler(0f, 0f, angle);

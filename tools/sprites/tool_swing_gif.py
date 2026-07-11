@@ -101,7 +101,24 @@ def sample(p, t, aim=0.0):
         return aim, off, 1.0, 0.0, False
 
     if kind == "pour":
-        return aim, off0, 1.0, -40.0, False
+        # The can is a 3/4 UPRIGHT sprite (not diagonal): it must NOT take the -45 art angle. Reach out,
+        # tip the spout down to pour, hold with a gentle bob, rock back upright. `extra` is set so the
+        # rendered angle (ang-45+extra, with ang=aim=0) equals the absolute tilt.
+        base = off0
+        antF, tipF, holdF = 0.18, 0.24, 0.40
+        pour_tilt, wind_tilt = -60.0, 12.0
+        if t < antF:
+            u = t / antF
+            tilt = lerp(0.0, wind_tilt, ease_out(u)); off = lerp(base, base + 0.08, ease_out(u))
+        elif t < antF + tipF:
+            tilt = lerp(wind_tilt, pour_tilt, ease_in((t - antF) / tipF)); off = base + 0.08
+        elif t < antF + tipF + holdF:
+            h = (t - antF - tipF) / holdF
+            tilt = pour_tilt + math.sin(h * math.pi * 3.0) * 3.0; off = base + 0.08
+        else:
+            u = (t - antF - tipF - holdF) / (1 - antF - tipF - holdF)
+            tilt = lerp(pour_tilt, 0.0, ease_out(u)); off = base
+        return aim, off, 1.0, tilt + SPRITE_ART_ANGLE, False
 
     if kind == "chop":
         half = p["arc"] / 2.0
@@ -119,17 +136,21 @@ def sample(p, t, aim=0.0):
         return ang, off0, 1.0, 0.0, True
 
     if kind == "till":
+        # Raise HIGH, chop the blade down into the soil, then DRAG it firmly back toward the player (the
+        # characteristic till). Bigger wind-up + deeper drag than v1, and the blade dips down as it bites.
         half = p["arc"] / 2.0
-        topA = aim + half + half * 0.2
-        antF, strF = 0.18, 0.32
-        dragTo = off0 - 0.35
+        topA = aim + half + half * 0.35     # higher raise
+        antF, strF = 0.20, 0.30
+        dragTo = off0 - 0.55                 # deeper pull-back
+        biteAngle = aim - 12.0              # head dips slightly past level as it bites & drags
         if t < antF:
             ang = lerp(IDLE_ANGLE, topA, ease_out(t / antF)); off = off0
         elif t < antF + strF:
             ang = lerp(topA, aim, ease_in((t - antF) / strF)); off = off0
         else:
-            ang = aim
-            off = lerp(off0, dragTo, ease_out((t - antF - strF) / (1 - antF - strF)))
+            u = (t - antF - strF) / (1 - antF - strF)
+            ang = lerp(aim, biteAngle, ease_out(u))
+            off = lerp(off0, dragTo, ease_in(u))   # accelerate the pull — reads as dragging through soil
         return ang, off, 1.0, 0.0, True
 
     if kind == "scoop":
