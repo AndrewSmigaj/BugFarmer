@@ -96,14 +96,21 @@ water), rugs (future grid-square rug-pattern builder).
   `groundRecipeIngredients`, `groundShortfall`, `digHitsFor`).
 
 ## Milestones & deferred
-- **Done:** M0–M4 (composite render + first playable + builder UI taste pass); **S1** legibility rework
-  (dig=progressive break→`dug_soil`+drops, place=recipe, LMB/Shift+LMB, wheel=shape, world-error toast).
-- **Next — S2 "Set Materials" panel:** a real HUD panel with composited-tile swatches + live have/need
-  (grey out unaffordable), replacing the dev HUD + temp M/N keys. **S3** preview/GIF tooling. **S4** animation
-  iteration.
+- **Done + verified:** M0–M4; **S1** legibility rework (dig=progressive break→`dug_soil`+drops, place=recipe,
+  LMB/Shift+LMB, wheel=shape, world-error toast) — Go tests + plugin build pass.
+- **Built, in-engine verify owed (blind — no Unity in the build env):**
+  - **S2 "Set Materials" panel** (`UI/ShovelBuilderPanel.cs`, open with `B`): composited-tile swatches +
+    material B row + live have/need (`Data/GroundRecipeDatabase.cs` JObject-loads the published
+    `ground_recipes.json`), unaffordable dimmed. Two layouts were rendered from the real composites
+    (`tools/sprites/shovel_panel_mockup.py`) — layout A built; owner picks the final. The dev HUD + temp M/N
+    keys stay as an additive fallback.
+  - **S3 preview tooling** (`tools/sprites/composite_tiles.py`, `tool_swing_gif.py`) — CPU tile compositor
+    (mirrors the GPU shader) + a faithful port of the animator's motion model to GIFs; verified by rendering.
+  - **S4 animation fixes** — watering-can Pour rewritten (was applying the −45° diagonal tilt to an upright
+    3/4 sprite, then freezing → lay on its side); hoe till strengthened. Designed in the GIF port, ported 1:1.
 - **Later / owner passes:** material item icons (art = API spend); ground MECHANICS (swamp-slow/ice; diagonal
   AVERAGES the two); sandbag water-fill; rug grid-pattern builder; `dug_soil` art polish (current tile is a
-  cropped placeholder — re-prompt or hand-draw a cleanly-blended recessed edge).
-- **Verification owed:** the in-engine S1 playtest is the real legibility gate; a 2-client break-drop sync
-  check (the new drop-count + dig RNG fires only on player breaks, so the autonomous determinism harness is
-  unaffected — but confirm client parity once).
+  cropped placeholder); the broader tool-animation technique pass (reach-extension etc. — taste, owner-in-loop).
+- **Verification owed:** in-engine S1 legibility playtest + client compile check (new toast/panel C# is unrun);
+  a 2-client break-drop sync check (new drop-count + dig RNG fires only on player breaks, so the autonomous
+  determinism harness is unaffected — confirm client parity once).

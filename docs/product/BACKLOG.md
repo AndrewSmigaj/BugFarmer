@@ -51,10 +51,13 @@ materials), **Shift+LMB digs** as a **progressive break** (2–3 hits, crack ove
 recessed **`dug_soil`** tile + **drops the material(s) to the ground** like felling a tree; the mouse wheel
 cycles **shape only**; and a game-wide **world-error toast** (`WorldToast`, OpCode 40) surfaces every refusal
 ("Need 2 stone"). Server-tested (`shaped_ground_test.go`). **Remaining (S2–S4 + owner passes):**
-- **S2 — "Set Materials" panel (next):** a real HUD panel with composited-tile swatches + live have/need
-  (grey out unaffordable materials), replacing the dev `OnGUI` HUD + the temporary M/N material keys in
-  `ShapedGroundSpike`. Render 2–3 layout options, owner picks. (This was M4's taste checkpoint, re-scoped.)
-- **S3 — preview/GIF tooling · S4 — animation iteration** (see the tool-animation backlog item).
+- **S2 — "Set Materials" panel — BUILT, verify + pick layout:** `UI/ShovelBuilderPanel.cs` (open with `B`) —
+  composited-tile swatches + material-B row + live have/need (`Data/GroundRecipeDatabase.cs`), unaffordable
+  dimmed; additive over the dev HUD + temp M/N keys. Two layouts rendered (`tools/sprites/shovel_panel_mockup.py`,
+  option A built). Owner: pick A vs B; confirm it compiles + reads in-engine (blind-built, no Unity here).
+- **S3 — preview/GIF tooling — BUILT:** `tools/sprites/composite_tiles.py` + `tool_swing_gif.py` (verified by render).
+- **S4 — animation fixes — BUILT, eyeball in-engine:** watering-can Pour (was sideways+static) + hoe till.
+  Broader technique pass (reach-extension etc.) is taste — do with owner watching.
 - **`dug_soil` art polish** — the current tile is a cropped placeholder; re-prompt (gpt-image-1.5/medium) or
   hand-draw a cleanly-blended recessed edge so it doesn't read as a bordered box.
 - **Material item icons** — `grass_turf, dirt, mud, stone, sand, plank, wood` used by recipes have placeholder
