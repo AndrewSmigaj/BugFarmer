@@ -44,6 +44,25 @@ namespace BugFarmer.Player
         private Direction _lastSentFacing;
         private bool _wasMoving;
 
+        // Dodge (M1.3): a short i-frame dash — the owner-chosen defensive verb (dodge only, no block/parry).
+        // The i-frames are SERVER-authoritative: the dodge opcode sets DodgeInvulnUntilTick and a well-timed
+        // roll negates the sting server-side. The client just dashes, sends the opcode, and blinks. Space is
+        // the standard roll key (free during gameplay — only the intro consumes it).
+        [Header("Dodge")]
+        [SerializeField] private KeyCode dodgeKey = KeyCode.Space;
+        [SerializeField] private float dodgeSpeed = 13f;      // burst speed, blocks/s
+        [SerializeField] private float dodgeDuration = 0.22f; // dash length, seconds
+        [SerializeField] private float dodgeCooldown = 0.6f;  // lockout after a roll
+        [SerializeField] private float iFrameSeconds = 0.5f;  // MUST match server dodgeInvulnTicks (5 @ 10Hz)
+        private float _dodgeTimer;    // >0 while dashing
+        private float _dodgeReadyAt;  // Time.time the next dodge is allowed
+        private float _iFrameUntil;   // Time.time the i-frame blink ends (visual only; server is authoritative)
+        private Vector2 _dodgeDir;
+
+        /// <summary>True while the dodge i-frame window is open — PlayerHealth reads this to blink the sprite
+        /// (single owner of the sprite color, so the controller never writes color itself).</summary>
+        public bool IsDodgeInvulnerable => Time.time < _iFrameUntil;
+
         private void Awake()
         {
             _rb = GetComponent<Rigidbody2D>();
@@ -225,7 +244,20 @@ namespace BugFarmer.Player
             if (input.sqrMagnitude > 1f)
                 input.Normalize();
 
-            Velocity = input * moveSpeed;
+            // Dodge: start on key-press (off cooldown, not already rolling). A roll dashes in the movement
+            // direction, or the facing when standing still, and opens a server-authoritative i-frame window.
+            if (_dodgeTimer <= 0f && Time.time >= _dodgeReadyAt && Input.GetKeyDown(dodgeKey))
+                StartDodge(input);
+
+            if (_dodgeTimer > 0f)
+            {
+                _dodgeTimer -= Time.deltaTime;
+                Velocity = _dodgeDir * dodgeSpeed; // dash overrides input; still routed through ResolveCollision
+            }
+            else
+            {
+                Velocity = input * moveSpeed;
+            }
 
             // Face the MOUSE, not the movement direction (aim-driven: press A while the
             // mouse points right and you run backwards). Movement never sets facing.
@@ -378,6 +410,34 @@ namespace BugFarmer.Player
             {
                 SendMovement(world.CurrentMatch.Id, socket);
                 _wasMoving = isMoving;
+            }
+        }
+
+        /// <summary>Begin a dodge-roll: pick the dash direction, arm the cooldown + i-frame window, and tell the
+        /// server to open its authoritative i-frame window (which negates an incoming sting). The dash itself is
+        /// client-predicted movement — the normal position sender streams the new position as it moves.</summary>
+        private void StartDodge(Vector2 moveInput)
+        {
+            _dodgeDir = moveInput.sqrMagnitude > 0.01f ? moveInput.normalized : FacingToVector(Facing);
+            _dodgeTimer = dodgeDuration;
+            _dodgeReadyAt = Time.time + dodgeCooldown;
+            _iFrameUntil = Time.time + iFrameSeconds;
+
+            var world = WorldManager.Instance;
+            var socket = NetworkManager.Instance?.Socket;
+            if (world?.CurrentMatch != null && socket != null && socket.IsConnected)
+                _ = socket.SendMatchStateAsync(world.CurrentMatch.Id, OpCodes.PlayerDodge,
+                    JsonUtility.ToJson(new PlayerDodgeMessage { tick = 0 }));
+        }
+
+        private static Vector2 FacingToVector(Direction d)
+        {
+            switch (d)
+            {
+                case Direction.Left:  return Vector2.left;
+                case Direction.Right: return Vector2.right;
+                case Direction.Up:    return Vector2.up;
+                default:              return Vector2.down; // Down
             }
         }
 
