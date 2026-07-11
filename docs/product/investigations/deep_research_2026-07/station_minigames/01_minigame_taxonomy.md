@@ -62,6 +62,9 @@ Axes: **fun-per-second · low-fatigue on repetition · dev cost/simplicity · fi
 - **Novelty caution:** pan/mash/thread/spin as *active* checks are **absent from the genre's processing** — building them is genuinely novel, but the evidence says frame them as *perfect-bonus* checks, not mandatory taxes.
 
 ## Open questions (owner taste — not guessed)
-1. **Does crafting quality even exist in our economy?** The whole "perfect = quality bonus" model presumes a quality/tier axis. If items are flat, the reward must be **speed or yield** instead — which do you want?
+1. **Reward axis — quality is ruled out by the data.** Verified 2026-07-11: our economy has **no quality/tier
+   axis** on items or recipe outputs (only `process_ticks` speed + fixed I/O). So "perfect = quality" can't
+   land without a new economy feature; the free options are **+speed or +yield**. Which do you want — or is a
+   quality system worth building?
 2. **Mandatory or opt-in?** Given the strong genre signal, my recommendation is opt-in-for-bonus. Do you agree, or do you want at least *some* stations to require the minigame for flavour?
 3. **How often will a player hit each station?** High-frequency stations (furnace, workbench) argue hardest for the cheap click-to-stop or full automation; low-frequency "hero" crafts can afford the richer catch-bar.

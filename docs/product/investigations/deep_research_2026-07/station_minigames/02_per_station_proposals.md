@@ -10,7 +10,12 @@ shared primitives; build a skip/automation path.** Additional raw research: `../
   backlash). Recommendation: a craft **auto-completes passively as today**, and pressing the action button
   at the right moment during the (short) craft grants a **bonus tier**. Ignore it → you still get the item.
 - **One reward axis, chosen by the owner:** perfect → **+quality**, **+speed** (finish now), or **+yield**
-  (bonus output). (Open question — see below. The proposals assume a generic "bonus tier".)
+  (bonus output). **VERIFIED against our data (2026-07-11):** there is **no quality/tier/grade axis** on items
+  or recipe outputs today — `recipes.json` outputs are fixed I/O with only `process_ticks` (a speed knob);
+  `tool_tier` is a *gating* tier, not output quality. **So "perfect = quality" has nowhere to land right now.**
+  Default the reward to **+speed (reduce `process_ticks`) or +yield (bonus output count)** — both fit the
+  existing economy with zero new systems. A quality axis is possible but is a *separate, larger* economy
+  feature (new item field + everywhere that reads/sells items), not a minigame prerequisite.
 - **Three shared primitives only**, reused across all 15 stations (never 15 bespoke systems):
   - **P1 — Click-to-stop** (Sun Haven): one click on a moving marker; nested good/perfect zones; rarity/tier
     shrinks the zone. *Default for most stations. Cheapest, least fatiguing.*
@@ -97,7 +102,9 @@ Axes: **fun/sec · anti-fatigue · dev cost · multiplayer-safe** (1–5).
 | No minigames, pure passive (status quo) | 2 | 5 | 5 | 5 | The genre norm; valid — but the owner asked for engagement, so P1-as-opt-in-bonus is the low-risk step up. |
 
 ## Open questions (owner taste — not guessed)
-1. **What does "perfect" reward — quality, speed, or yield?** Needs an answer before building (the economy may not even have a quality axis yet). This is the load-bearing decision.
+1. **What does "perfect" reward?** Now narrowed by the data check: **quality doesn't exist in our economy**, so
+   it's **+speed vs +yield** (both drop in for free) — OR you decide to invest in a new **quality axis** (bigger
+   scope). Which of the three? This is the load-bearing decision.
 2. **Opt-in bonus vs. mandatory?** Recommendation (from the taxonomy evidence): opt-in-for-bonus, never mandatory. Confirm.
 3. **Which stations deserve the effort first?** Suggest starting with the ones where a skill check feels *earned* and iconic — **anvil (strike)**, **gem_cutter (precision)**, **dye_vat (match shade)** — rather than all 15 at once.
 4. **Multiplayer griefing/AFK:** should a co-op partner be able to do the minigame for your craft? (Client-result model allows it; just decide the rule.)
