@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"bugfarmer/entities"
 )
@@ -487,6 +488,68 @@ func LoadCropDefs(basePath string) (map[string]*entities.CropDef, error) {
 	}
 
 	return crops, nil
+}
+
+// LoadGroundRecipes loads shovel tile-placement recipes (placed material id -> ingredients) from
+// ground_recipes.json. A COMPOSITE tile costs BOTH its materials' recipes (unioned in handleShovel);
+// digging a tile drops the same ingredients. Pure data, zero code per recipe.
+func LoadGroundRecipes(basePath string) (map[string][]entities.RecipeIO, error) {
+	path := filepath.Join(basePath, "entities", "ground_recipes.json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read ground_recipes.json: %w", err)
+	}
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return nil, fmt.Errorf("failed to parse ground_recipes.json: %w", err)
+	}
+	out := make(map[string][]entities.RecipeIO)
+	for id, v := range raw {
+		if id == "_comment" {
+			continue
+		}
+		var ings []entities.RecipeIO
+		if err := json.Unmarshal(v, &ings); err != nil {
+			return nil, fmt.Errorf("failed to parse ground recipe %s: %w", id, err)
+		}
+		out[id] = ings
+	}
+	return out, nil
+}
+
+// groundRecipeIngredients returns the merged ingredient list for placing/digging a ground id: the UNION
+// (summed by item) of every material's recipe. A composite costs/drops BOTH materials; a solid, just one.
+func (w *WorldState) groundRecipeIngredients(id string) []entities.RecipeIO {
+	merged := map[string]int{}
+	order := []string{}
+	for _, mat := range CompositeMaterials(id) {
+		for _, ing := range w.GroundRecipes[mat] {
+			if _, seen := merged[ing.Item]; !seen {
+				order = append(order, ing.Item)
+			}
+			merged[ing.Item] += ing.Count
+		}
+	}
+	out := make([]entities.RecipeIO, 0, len(order))
+	for _, it := range order {
+		out = append(out, entities.RecipeIO{Item: it, Count: merged[it]})
+	}
+	return out
+}
+
+// groundShortfall returns "Need 2 stone, 1 plank" listing only the ingredients the player LACKS, or ""
+// if they can afford all of them (so the shovel can surface a clear reason via the world-error toast).
+func groundShortfall(player *PlayerState, ings []entities.RecipeIO) string {
+	parts := []string{}
+	for _, ing := range ings {
+		if have := playerCount(player, ing.Item); have < ing.Count {
+			parts = append(parts, fmt.Sprintf("%d %s", ing.Count-have, ing.Item))
+		}
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return "Need " + strings.Join(parts, ", ")
 }
 
 // LoadRecipes loads crafting recipes from recipes.json into a by-id map AND a by-station index

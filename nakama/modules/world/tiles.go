@@ -103,6 +103,18 @@ func PrimaryMaterial(tileID string) string {
 	return tileID
 }
 
+// CompositeMaterials returns the material(s) a ground id is MADE OF: [matA, matB] for a composite
+// "matA~matB~shape", or [id] for a solid tile. Used for recipe cost + dig drops — a composite is made
+// of both materials, so it costs both and drops both (owner: a sandwich needs bread AND filling).
+func CompositeMaterials(id string) []string {
+	if strings.Contains(id, "~") {
+		if parts := strings.Split(id, "~"); len(parts) == 3 {
+			return []string{parts[0], parts[1]}
+		}
+	}
+	return []string{id}
+}
+
 // shovelMaterials is the set of decorative ground materials the shovel may place. Mirrors the client builder
 // palette and EXCLUDES water/lava (collision), garden_plot (farming), bridge/rug (placed structures) — those
 // are other systems. Keep in sync with the client.

@@ -71,6 +71,7 @@ var persistClasses = map[string]persistEntry{
 	"CropDefs":         {classConfig, "data/crops.json"},
 	"Recipes":          {classConfig, "data/recipes.json"},
 	"RecipesByStation": {classConfig, "derived from Recipes at load"},
+	"GroundRecipes":    {classConfig, "data/entities/ground_recipes.json"},
 	"CurrentZone":      {classConfig, "authored zone metadata"},
 
 	// -- timing / telemetry --

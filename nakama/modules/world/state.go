@@ -185,6 +185,7 @@ type WorldState struct {
 	// ledger — that path stays on StationState above, not here).
 	Recipes          map[string]*entities.RecipeDef   // recipeID -> recipe
 	RecipesByStation map[string][]*entities.RecipeDef // station entity id -> its recipes
+	GroundRecipes    map[string][]entities.RecipeIO   // shovel: placed material id -> ingredients
 
 	// Item containers (chests/dressers/racks) — lazily created on first open from the
 	// occupant's world.container block. Display/inventory state, NOT in the sim hash.

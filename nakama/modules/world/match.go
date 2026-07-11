@@ -305,6 +305,13 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 		logger.Info("Loaded %d crop definitions", len(state.CropDefs))
 	}
 
+	// Load shovel ground-placement recipes
+	if gr, gerr := LoadGroundRecipes("data"); gerr != nil {
+		logger.Warn("Failed to load ground recipes: %v", gerr)
+	} else {
+		state.GroundRecipes = gr
+	}
+
 	// Load crafting recipes
 	state.Recipes, state.RecipesByStation, err = LoadRecipes("data")
 	if err != nil {

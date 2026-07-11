@@ -83,11 +83,14 @@ func (m *Match) handleToolUse(
 	}
 }
 
-// handleShovel changes the ground under the target cell to the player's CHOSEN ground id (the shaped-ground
-// builder). Unlike the hoe — which maps a source tile to a FIXED result via tool_actions — the shovel carries
-// a player-selected id, so we VALIDATE it against the decorative material + shape allow-list (nothing else
-// guards this player-supplied string). Cosmetic for now: the composite's PRIMARY material governs all gameplay
-// semantics everywhere else (see PrimaryMaterial). Reuses the hoe's broadcast + persistence path unchanged.
+// handleShovel is the shaped-ground builder's server verb. Two actions, split by `dig`:
+//   - DIG reverts the cell to the recessed "dug_soil" tile and DROPS the tile's material(s) as ground items
+//     (like felling a tree) — a composite drops BOTH its materials' ingredients; only tiles WITH a ground
+//     recipe are diggable. (Progressive multi-hit dig + crack overlay layers on top of this in a later step.)
+//   - PLACE consumes a RECIPE (all ingredients of every material the chosen id is made of — a sandwich needs
+//     bread AND filling) and sets the ground. The chosen id is player-supplied, so it is validated against the
+//     decorative material + shape allow-list (nothing else guards it). Gameplay semantics everywhere else still
+//     route through PrimaryMaterial (=matA); cost and semantics are separate concerns.
 func (m *Match) handleShovel(
 	logger runtime.Logger,
 	dispatcher runtime.MatchDispatcher,
@@ -122,46 +125,57 @@ func (m *Match) handleShovel(
 	}
 
 	if dig {
-		// DIG: revert the cell to bare dirt and grant one block of its primary material. Dirt is the base
-		// (digging dirt yields dirt and stays dirt), so the player always has something to build with.
-		item := GroundMaterialItem(PrimaryMaterial(current))
-		if item == "" {
+		// DIG: revert to dug_soil and drop the tile's material(s) onto the ground (like cutting a tree).
+		// Only tiles WITH a ground recipe are diggable — dug_soil / unknown yield nothing.
+		drops := state.groundRecipeIngredients(current)
+		if len(drops) == 0 {
 			m.sendWorldError(dispatcher, state, userID, "Nothing to dig here")
 			return
 		}
-		// Grant FIRST so a full inventory cancels the dig — don't destroy the block.
-		slotIndex := player.AddItem(item, 1)
-		if slotIndex < 0 {
-			m.sendWorldError(dispatcher, state, userID, "Inventory full")
-			return
+		chunk.Ground[ly][lx] = "dug_soil"
+		m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, "dug_soil", nil, false)
+		for _, d := range drops {
+			m.spawnHarvestDrops(dispatcher, state, d.Item, d.Count, gx, gy, cx, cy)
 		}
-		chunk.Ground[ly][lx] = "dirt"
-		m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, "dirt", nil, false)
-		m.sendSlotUpdate(dispatcher, state, userID, slotIndex, &player.ItemSlots[slotIndex])
-		logger.Debug("Player %s dug ground at %d,%d -> +%s", userID, gx, gy, item)
+		logger.Debug("Player %s dug %s at %d,%d -> dug_soil (+drops)", userID, current, gx, gy)
 		return
 	}
 
-	// PLACE: validate the chosen id, consume one block of its primary material, set the ground.
+	// PLACE: validate the chosen id, then consume its full recipe (every material it is made of) and set the
+	// ground. The world-error toast surfaces any shortfall.
 	id, ok := ValidateShovelGround(groundID)
 	if !ok {
 		m.sendWorldError(dispatcher, state, userID, "Invalid ground material")
 		return
 	}
-	item := GroundMaterialItem(PrimaryMaterial(id))
-	if item == "" {
-		m.sendWorldError(dispatcher, state, userID, "No material for that ground")
+	ings := state.groundRecipeIngredients(id)
+	if len(ings) == 0 {
+		m.sendWorldError(dispatcher, state, userID, "Can't place that here")
 		return
 	}
-	slotIndex := player.FindItemSlot(item)
-	if slotIndex < 0 || !player.RemoveItem(slotIndex, 1) {
-		m.sendWorldError(dispatcher, state, userID, "Need "+item)
+	if short := groundShortfall(player, ings); short != "" {
+		m.sendWorldError(dispatcher, state, userID, short)
 		return
+	}
+	// Capture every slot holding an ingredient BEFORE consuming, so we can push the updated (or emptied)
+	// slots to the client after — a single item may span multiple slots.
+	affected := map[int]bool{}
+	for _, ing := range ings {
+		for i := range player.ItemSlots {
+			if player.ItemSlots[i].ItemID == ing.Item {
+				affected[i] = true
+			}
+		}
+	}
+	for _, ing := range ings {
+		playerConsume(player, ing.Item, ing.Count)
 	}
 	chunk.Ground[ly][lx] = id
 	m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, id, nil, false)
-	m.sendSlotUpdate(dispatcher, state, userID, slotIndex, &player.ItemSlots[slotIndex])
-	logger.Debug("Player %s placed ground at %d,%d -> %s (-%s)", userID, gx, gy, id, item)
+	for i := range affected {
+		m.sendSlotUpdate(dispatcher, state, userID, i, &player.ItemSlots[i])
+	}
+	logger.Debug("Player %s placed %s at %d,%d", userID, id, gx, gy)
 }
 
 // smokerCalmTicks: how long a puffed hive stays calm (both defend entries no-op) — the
