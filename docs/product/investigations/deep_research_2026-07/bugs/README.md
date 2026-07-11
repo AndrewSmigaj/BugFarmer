@@ -15,9 +15,9 @@ families' research completed and survived; others' agents died early. What's her
 | **Gentle pollinators** (butterfly, bee, firefly, dragonfly, moth, mayfly, cicada) | ⏳ partial raw | `a1c61bc0ef1c7d5f9.md`, `ab9f15ce2fe9e961b.md`, `abf6d6b1bbdc1ec5e.md` | **Thin** — pollinator agent died early; some material recovered |
 | **Beetles/ladybugs, orthoptera, aquatic, ants** | ❌ | (ant material in `aa2618909f4cadf45.md`, `aff4adfa75a5ffca7.md` is largely prior-session colony work) | **Not covered** — never launched / prior work |
 
-> **Recommendation:** re-run the spiders, scorpions, and pollinator research at **≤2 agents, self-contained,
-> writing incrementally** (per `no-wide-agent-fanout`). The raw files above are a real head-start, not a
-> blank slate. The requested marquee bugs (spider types, scorpion) still deserve clean per-type docs.
+> **Recommendation:** the **pollinator** family is the last thin one — re-run it at **≤2 agents,
+> self-contained, writing incrementally** (per `no-wide-agent-fanout`). Spiders + scorpions/centipedes are
+> now clean per-type docs; the raw files remain a head-start for any deeper pass.
 
 ## Cross-cutting design principles (from the combat research, apply to every bug)
 The `../combat/` docs already establish the shared enemy framework these species plug into:
@@ -35,5 +35,6 @@ The `../combat/` docs already establish the shared enemy framework these species
   the alarm-pheromone recruit loop. [DONE]
 - **Scorpion / centipede** — ambush-from-burrow, pincer-grab→tail-sting combo, segmented "follow-the-leader"
   body movement (worm-AI); the raw files hold the source research — synthesis owed.
-- **Spider** — web-as-trap vs active hunter vs ambush-pounce; drop-from-above; the raw files are partial — the
-  dedicated deep-read is owed.
+- **Spider** — web-as-trap (orb-weaver/widow) vs active hunter (wolf/jumping) vs ambush burst (funnel/
+  tarantula) vs drop-from-above pack (cave); reuses the `design_ants_spiders.md` primitives (pounce =
+  centipede `ActionState`, web = `spider_web` occupant + `web_slow`). See `spiders.md`. [DONE]
