@@ -1194,6 +1194,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		dct := worldState.Perf.Start()
 		m.processGroundItemDecay(worldState, dispatcher)
 		worldState.Perf.StopSys("decay", dct)
+		m.processDiggingReset(worldState, dispatcher, tick) // heal shovel digs left untouched too long
 		m.processStations(worldState, dispatcher)      // material processors: input -> compost
 		m.processCraftStations(worldState, dispatcher) // recipe processors: queued batches -> output grid
 

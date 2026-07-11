@@ -10,6 +10,8 @@ package world
 import (
 	"strings"
 	"testing"
+
+	"bugfarmer/entities"
 )
 
 func TestPrimaryMaterial(t *testing.T) {
@@ -111,5 +113,92 @@ func TestShovelInventoryRoundTrip(t *testing.T) {
 	// Placing a material you don't hold must fail (FindItemSlot returns -1).
 	if p.FindItemSlot("stone") != -1 {
 		t.Error("expected no stone block held")
+	}
+}
+
+// TestCompositeMaterials: a solid id resolves to itself; a composite splits into its TWO materials
+// (ignoring the shape). This is what makes place/dig cost/drop BOTH materials of a composite tile.
+func TestCompositeMaterials(t *testing.T) {
+	cases := map[string][]string{
+		"dirt":              {"dirt"},
+		"dug_soil":          {"dug_soil"},
+		"grass~dirt~diagNE": {"grass", "dirt"},
+		"sand~stone_floor~halfN": {"sand", "stone_floor"},
+	}
+	for in, want := range cases {
+		got := CompositeMaterials(in)
+		if len(got) != len(want) {
+			t.Errorf("CompositeMaterials(%q) = %v, want %v", in, got, want)
+			continue
+		}
+		for i := range want {
+			if got[i] != want[i] {
+				t.Errorf("CompositeMaterials(%q) = %v, want %v", in, got, want)
+				break
+			}
+		}
+	}
+}
+
+// TestGroundRecipeIngredients: a solid tile costs its one material's recipe; a COMPOSITE costs the UNION of
+// both materials' recipes, with duplicate items SUMMED (a sandwich needs bread AND filling). First-seen order.
+func TestGroundRecipeIngredients(t *testing.T) {
+	w := &WorldState{GroundRecipes: map[string][]entities.RecipeIO{
+		"stone_floor": {{Item: "stone", Count: 2}},
+		"stone_path":  {{Item: "stone", Count: 1}},
+		"grass":       {{Item: "grass_turf", Count: 1}},
+		"wood_floor":  {{Item: "plank", Count: 2}},
+	}}
+
+	// Solid: just its own recipe.
+	if got := w.groundRecipeIngredients("grass"); len(got) != 1 || got[0].Item != "grass_turf" || got[0].Count != 1 {
+		t.Errorf("solid grass = %+v, want [grass_turf x1]", got)
+	}
+	// Composite with a SHARED item -> summed (stone 2 + stone 1 = 3), single entry.
+	got := w.groundRecipeIngredients("stone_floor~stone_path~diagNE")
+	if len(got) != 1 || got[0].Item != "stone" || got[0].Count != 3 {
+		t.Errorf("stone_floor~stone_path = %+v, want [stone x3]", got)
+	}
+	// Composite with distinct items -> union, first-seen order (grass_turf then plank).
+	got = w.groundRecipeIngredients("grass~wood_floor~halfN")
+	if len(got) != 2 || got[0].Item != "grass_turf" || got[1].Item != "plank" || got[1].Count != 2 {
+		t.Errorf("grass~wood_floor = %+v, want [grass_turf x1, plank x2]", got)
+	}
+	// Unknown / dug_soil (no recipe) -> empty (not diggable, not placeable).
+	if got := w.groundRecipeIngredients("dug_soil"); len(got) != 0 {
+		t.Errorf("dug_soil = %+v, want empty", got)
+	}
+}
+
+// TestGroundShortfall: reports only the ingredients the player LACKS ("Need N item, ..."), "" when affordable.
+func TestGroundShortfall(t *testing.T) {
+	p := &PlayerState{}
+	p.AddItem("stone", 1) // hold 1 stone, no plank
+
+	ings := []entities.RecipeIO{{Item: "stone", Count: 2}, {Item: "plank", Count: 2}}
+	short := groundShortfall(p, ings)
+	if !strings.Contains(short, "1 stone") || !strings.Contains(short, "2 plank") {
+		t.Errorf("shortfall = %q, want it to name '1 stone' (2 needed - 1 held) and '2 plank'", short)
+	}
+	// Affordable -> empty string.
+	p.AddItem("stone", 1)
+	p.AddItem("plank", 2)
+	if s := groundShortfall(p, ings); s != "" {
+		t.Errorf("shortfall with enough held = %q, want empty", s)
+	}
+}
+
+// TestDigHitsFor: stone-family floors are tougher (3 hits); soft ground gives after 2.
+func TestDigHitsFor(t *testing.T) {
+	cases := map[string]int{
+		"stone_floor": 3, "stone_path": 3, "cave_floor": 3,
+		"grass": 2, "dirt": 2, "sand": 2, "mud": 2, "wood_floor": 2,
+		"grass~dirt~diagNE":       2, // composite judged by primary material (grass)
+		"stone_floor~grass~diagNE": 3, // primary = stone_floor
+	}
+	for id, want := range cases {
+		if got := digHitsFor(id); got != want {
+			t.Errorf("digHitsFor(%q) = %d, want %d", id, got, want)
+		}
 	}
 }

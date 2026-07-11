@@ -149,7 +149,8 @@ type WorldState struct {
 	ChunkSubs     map[string]map[string]bool   // "chunkX,chunkY" -> player IDs subscribed
 	TileDefs      map[string]*TileDefinition   // Loaded from tiles.json
 	Entities      map[string]*EntityDef        // Loaded from entities/*.json (items, occupants, placeables)
-	BreakingState map[string]*BreakingProgress // "gx,gy" -> breaking progress
+	BreakingState map[string]*BreakingProgress // "gx,gy" -> occupant breaking progress
+	DiggingState  map[string]*BreakingProgress // "gx,gy" -> shovel dig progress (SEPARATE from BreakingState)
 
 	// Farming (crops)
 	CropStates map[string]*entities.CropState // "gx,gy" -> crop state
@@ -400,6 +401,7 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		TileDefs:      make(map[string]*TileDefinition),
 		Entities:      make(map[string]*EntityDef),
 		BreakingState: make(map[string]*BreakingProgress),
+		DiggingState:  make(map[string]*BreakingProgress),
 		// Farming
 		CropStates:      make(map[string]*entities.CropState),
 		CropDefs:        make(map[string]*entities.CropDef),

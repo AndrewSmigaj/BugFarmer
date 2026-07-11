@@ -83,6 +83,45 @@ func (m *Match) handleToolUse(
 	}
 }
 
+// digIdleResetSeconds: a dig-in-progress left untouched this long heals back to full (the crack clears),
+// like walking away from breaking a block — so a half-dug cell never lingers.
+const digIdleResetSeconds = 3
+
+// processDiggingReset heals any shovel dig idle longer than digIdleResetSeconds: it clears the crack overlay
+// on every client (a CurrentHP<=0 BreakProgress) and drops the DiggingState entry, so resuming starts fresh.
+// DiggingState only — the occupant BreakingState is untouched. Cosmetic (BreakProgress isn't hashed), so
+// map-order iteration is fine.
+func (m *Match) processDiggingReset(state *WorldState, dispatcher runtime.MatchDispatcher, tick int64) {
+	if len(state.DiggingState) == 0 {
+		return
+	}
+	resetTicks := int64(state.Config.TickRate) * digIdleResetSeconds
+	if resetTicks <= 0 {
+		resetTicks = SimRate * digIdleResetSeconds
+	}
+	for key, prog := range state.DiggingState {
+		if tick-prog.LastTick < resetTicks {
+			continue
+		}
+		cx, cy, _, _ := GlobalToChunk(prog.GridX, prog.GridY)
+		m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeBreakProgress, BreakProgressMessage{
+			GridX: prog.GridX, GridY: prog.GridY, CurrentHP: 0, MaxHP: prog.MaxHP, PlayerID: prog.PlayerID,
+		})
+		delete(state.DiggingState, key)
+	}
+}
+
+// digHitsFor is how many shovel hits it takes to dig out a cell — stone-family floors are tougher (3),
+// soft ground (grass/dirt/sand/mud/wood) gives after 2. Judged by the tile's primary material.
+func digHitsFor(groundID string) int {
+	switch PrimaryMaterial(groundID) {
+	case "stone_floor", "stone_path", "cave_floor":
+		return 3
+	default:
+		return 2
+	}
+}
+
 // handleShovel is the shaped-ground builder's server verb. Two actions, split by `dig`:
 //   - DIG reverts the cell to the recessed "dug_soil" tile and DROPS the tile's material(s) as ground items
 //     (like felling a tree) — a composite drops BOTH its materials' ingredients; only tiles WITH a ground
@@ -125,13 +164,34 @@ func (m *Match) handleShovel(
 	}
 
 	if dig {
-		// DIG: revert to dug_soil and drop the tile's material(s) onto the ground (like cutting a tree).
-		// Only tiles WITH a ground recipe are diggable — dug_soil / unknown yield nothing.
+		// DIG is PROGRESSIVE: each hit accumulates in DiggingState and broadcasts a crack overlay (reusing
+		// the block-break BreakProgress pipeline, which is cell-keyed so it renders on a bare ground cell).
+		// After digHitsFor(material) hits the cell becomes dug_soil and DROPS the tile's material(s) onto the
+		// ground (like felling a tree). Only tiles WITH a ground recipe are diggable. Untouched digs heal via
+		// processDiggingReset. DiggingState is SEPARATE from the occupant BreakingState (same key, distinct map).
 		drops := state.groundRecipeIngredients(current)
 		if len(drops) == 0 {
 			m.sendWorldError(dispatcher, state, userID, "Nothing to dig here")
 			return
 		}
+		digKey := fmt.Sprintf("%d,%d", gx, gy)
+		prog, ok := state.DiggingState[digKey]
+		if !ok || prog.PlayerID != userID {
+			maxHP := digHitsFor(current)
+			prog = &BreakingProgress{GridX: gx, GridY: gy, PlayerID: userID, CurrentHP: maxHP, MaxHP: maxHP, LastTick: tick}
+			state.DiggingState[digKey] = prog
+		}
+		prog.CurrentHP--
+		prog.LastTick = tick
+		// Broadcast the crack stage (CurrentHP<=0 clears the overlay on every client).
+		m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeBreakProgress, BreakProgressMessage{
+			GridX: gx, GridY: gy, CurrentHP: prog.CurrentHP, MaxHP: prog.MaxHP, PlayerID: userID,
+		})
+		if prog.CurrentHP > 0 {
+			return // still digging — crack shown, wait for the next hit
+		}
+		// Fully dug: clear state, sink the tile to dug_soil, drop its material(s).
+		delete(state.DiggingState, digKey)
 		chunk.Ground[ly][lx] = "dug_soil"
 		m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, "dug_soil", nil, false)
 		for _, d := range drops {

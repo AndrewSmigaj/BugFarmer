@@ -99,6 +99,7 @@ var persistClasses = map[string]persistEntry{
 	"Chunks":        {classWorldState, "WorldSave.CellEdits — semantic diff of loaded chunks vs the authored zone; edited chunks eager-load at restore"},
 	"ChunkSubs":     {classPerRun, "live view subscriptions"},
 	"BreakingState": {classPerRun, "an in-progress hand action; abandoned on restart"},
+	"DiggingState":  {classPerRun, "an in-progress shovel dig; abandoned on restart"},
 
 	// -- farm / ecology registries (whole structs into the document) --
 	"CropStates":      {classWorldState, "WorldSave.Crops"},
