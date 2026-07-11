@@ -17,6 +17,11 @@ lever below is version-verified for Unity 6000.2 / URP 17. Raw transcript:
 - **One shared `Sprite-Lit-Default` material** (`LitMaterials.Lit`) on every renderer — correct for batching;
   do **not** make per-sprite material variants.
 - **HDR ON, post-processing OFF** (`m_RenderPostProcessing: 0`) → **no bloom can run today** even though HDR is on.
+- **A `DefaultVolumeProfile.asset` already exists** (verified 2026-07-11) — so enabling post-FX is *add a Bloom
+  override to that profile + flip the camera flag*, not "create the whole volume stack from scratch."
+- **No color-grading / LUT anywhere in the project** (verified) — there is currently **zero global colour
+  treatment**. A single **color-grade / LUT** override is the biggest missing *cohesion* lever (see the added
+  cohesion note below); it's the cheapest way to make disparate AI-generated sprites read as one world.
 
 ## The highest-leverage levers (ranked by uplift/effort)
 
@@ -47,6 +52,21 @@ Axes: **visual impact · effort · perf on low-end · fits pixel-art** (1–5).
 - **Two enabled Globals** — both accumulate into the Multiply texture and pin the world bright (the "night isn't dark" bug our controller guards against).
 - **Blanket normal maps** — the depth-prepass-per-layer-batch cost; not per-sprite-cheap.
 - **Bloom that eats pixel art** — keep Threshold above mid-tones and Intensity modest so it glows lamps, not everything (the classic "bloom destroyed my pixel art" mistake).
+
+## Cohesion — likely the biggest single visual lever (added supplement)
+The owner's core complaint ("other games look more interesting") is probably **less about missing effects and
+more about COHESION** — our sprites are AI-generated in separate passes, so their palettes, contrast, and
+implied light direction don't fully agree, which reads as "a pile of assets" rather than "one world." Two
+cheap, global, engine-side cohesion levers (verified absent today):
+1. **A global color-grade / LUT** (a Color Adjustments / Tonemapping / LUT override on the existing
+   `DefaultVolumeProfile`) — pulls every on-screen sprite through one colour response, unifying disparate
+   palettes in a single pass. Near-free, reversible, huge cohesion return.
+2. **Warm/cool light already unifies** — the day/night Global tint (confirmed in `DayNightController`) is a
+   second global unifier; leaning into it harder compounds with the LUT.
+The **pipeline-side** cohesion levers (palette unification / gradient-map recolor of the source sprites,
+consistent light direction, a limited master ramp) are covered in the art-direction doc (`README.md` →
+art-direction). **Recommendation: prove cohesion first with a one-day LUT + before/after zone render** before
+investing in more effects — I believe it will move the needle more than anything else here.
 
 ## Open questions (owner taste — not guessed)
 1. **How far off pure pixel-art are we willing to go?** Bloom + soft cookie lights + normal-map relief each
