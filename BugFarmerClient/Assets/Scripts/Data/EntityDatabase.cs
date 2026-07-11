@@ -217,6 +217,12 @@ namespace BugFarmer.Data
             public string Name = "";
             public string Description = "";
             public int SellPrice;
+
+            // Combat: the authority uses these to decide WHICH swarms sting a player (per-individual
+            // detect→relay). AttackDamage>0 = attack-capable; AttackCooldown (secs) throttles the report.
+            // The server re-gates authoritatively (immune/subdued/defend-only/cooldown/invuln).
+            public int AttackDamage;
+            public float AttackCooldown;
         }
         private static Dictionary<string, SpeciesInfo> _species;
         private static bool _initialized;
@@ -299,6 +305,8 @@ namespace BugFarmer.Data
                         Description = obj?["description"]?.Value<string>() ?? "",
                         SellPrice = obj?["sell_price"]?.Value<int>() ?? 0,
                         NetSize = obj?["net_size"]?.Value<string>() ?? "small",
+                        AttackDamage = obj?["attack_damage"]?.Value<int>() ?? 0,
+                        AttackCooldown = obj?["attack_cooldown"]?.Value<float>() ?? 0f,
                     };
                 }
             }

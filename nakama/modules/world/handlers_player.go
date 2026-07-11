@@ -15,6 +15,7 @@ import (
 
 const (
 	playerInvulnTicks = 10  // 1s shared across ALL attackers
+	dodgeInvulnTicks  = 5   // 0.5s i-frame window a dodge-roll grants
 	regenDelayTicks   = 100 // regen starts 10s after the last damage
 	regenIntervalTick = 300 // +1 HP per 30s
 	stingRange        = 1.5 // "standing in them" — ambient wasps only sting at contact
@@ -43,6 +44,10 @@ func (m *Match) applyBugAttackToPlayer(
 	}
 	// Shared invuln window (across all attackers)
 	if state.TickCount-player.LastDamageTick < playerInvulnTicks {
+		return false
+	}
+	// Dodge i-frames — a well-timed roll negates the sting (separate window; doesn't gate regen).
+	if state.TickCount < player.DodgeInvulnUntilTick {
 		return false
 	}
 
@@ -144,6 +149,73 @@ func (m *Match) checkBugAttacks(
 		if m.applyBugAttackToPlayer(logger, dispatcher, state, swarm, species, userID, player, species.AttackDamage) {
 			return // one victim per swarm per tick (the cooldown re-arms anyway)
 		}
+	}
+}
+
+// handleBugPlayerStrike applies a PER-INDIVIDUAL sting the AUTHORITY detected. The server holds only swarm
+// CENTRES, so it can't tell which individual is actually next to the player — the old center-based
+// checkBugAttacks stung anyone near the CENTROID (the "phantom" hit). The authority (which has per-bug
+// positions) reports the attacker(s); the server re-gates through the funnel so damage stays authoritative.
+// Mirrors handlePredationStrike.
+func (m *Match) handleBugPlayerStrike(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	senderID string,
+	msg BugPlayerStrikeMessage,
+) {
+	if state.CurrentZone == nil {
+		return
+	}
+	zone := state.GetOrCreateZone(state.CurrentZone.ZoneID)
+	if zone.AuthorityUserID != senderID {
+		return // AUTHORITY ONLY (anti-cheat + de-dupe)
+	}
+	swarm, ok := state.Swarms[msg.SwarmID]
+	if !ok || swarm.Count <= 0 {
+		return
+	}
+	species := state.Species[swarm.SpeciesID]
+	if species == nil || species.AttackDamage <= 0 {
+		return
+	}
+	player, ok := state.Players[msg.PlayerID]
+	if !ok || player == nil {
+		return
+	}
+	// Full authoritative gates the authority skipped (it reports loosely): defend-only (bees), subdued.
+	if species.StingsOnlyDefending && swarm.Phase != "defending" {
+		return
+	}
+	if swarmSubdued(swarm, species) {
+		return
+	}
+	// Loose centre-range sanity with the server's FINE player pos (mirrors handlePredationStrike) — rejects
+	// obviously-bogus reports without needing the per-bug positions the server lacks.
+	cs := state.Config.ChunkSize
+	dx := player.WorldX(cs) - swarm.WorldX(cs)
+	dy := player.WorldY(cs) - swarm.WorldY(cs)
+	maxR := stingRange + swarm.Radius
+	if dx*dx+dy*dy > maxR*maxR {
+		return
+	}
+	// Apply each reported attacker still alive; the funnel's per-swarm cooldown + shared 1s invuln cap the
+	// actual damage (≤1 hit/window) — the token pool just lets ≤N individuals commit a sting.
+	for _, id := range msg.BugIDs {
+		if !swarm.IsBugAlive(id) {
+			continue
+		}
+		if m.applyBugAttackToPlayer(logger, dispatcher, state, swarm, species, msg.PlayerID, player, species.AttackDamage) {
+			return
+		}
+	}
+}
+
+// handlePlayerDodge grants a brief server-authoritative i-frame window so a well-timed dodge-roll negates an
+// incoming sting. Movement itself stays client-predicted + reconciled.
+func (m *Match) handlePlayerDodge(state *WorldState, senderID string) {
+	if player, ok := state.Players[senderID]; ok && player != nil {
+		player.DodgeInvulnUntilTick = state.TickCount + dodgeInvulnTicks
 	}
 }
 

@@ -1135,6 +1135,19 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 					continue
 				}
 				m.handlePredationStrike(logger, dispatcher, worldState, userID, strikeMsg)
+
+			case OpCodeBugPlayerStrike:
+				// Authority reports which INDIVIDUAL bug(s) stung a player (server has only centres) — fixes the
+				// phantom center-sting. Server re-gates + funnels through applyBugAttackToPlayer.
+				var stingMsg BugPlayerStrikeMessage
+				if err := json.Unmarshal(msg.GetData(), &stingMsg); err != nil {
+					logger.Warn("Invalid bug-player strike from %s: %v", userID, err)
+					continue
+				}
+				m.handleBugPlayerStrike(logger, dispatcher, worldState, userID, stingMsg)
+
+			case OpCodePlayerDodge:
+				m.handlePlayerDodge(worldState, userID)
 			}
 		}
 
@@ -1323,10 +1336,10 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			// via OpCodePredationStrike → handlePredationStrike → applyPredationStrike. No autonomous
 			// server-side centre-strike here anymore.
 
-			// Bug-vs-player attacks (stings/bites): contact range, cooldown + invuln gated
-			if species.AttackDamage > 0 {
-				m.checkBugAttacks(logger, dispatcher, worldState, swarm, species, chunkSize)
-			}
+			// Bug-vs-player stings are now PER-INDIVIDUAL: the AUTHORITY client detects which individual bug is
+			// actually in range and reports it (OpCodeBugPlayerStrike → handleBugPlayerStrike), because the
+			// server holds only swarm centres. The old center-based checkBugAttacks — the phantom-hit source —
+			// is retired here. (Centipede bites still fire from centipede.go for M1; per-individual in M4.)
 
 			// === Lifecycle meters (server-authoritative; all effects ride the ledger) ===
 			swarm.ReproduceCooldown -= deltaTime // was never decremented before this system

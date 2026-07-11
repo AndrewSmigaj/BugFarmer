@@ -157,6 +157,11 @@ const (
 	OpCodePredationStrike int64 = 105 // C->S (authority only): the authority client picked the individual flies a
 	// predator struck (it has per-bug positions; the server does not). Server validates + applies via the
 	// existing kill path (killBugsInSwarm → BUG_REMOVED + carrion + satiation). See PredationStrikeMessage.
+
+	OpCodeBugPlayerStrike int64 = 110 // C->S (authority only): the authority picked which INDIVIDUAL bug(s) stung
+	// a player (the server holds only swarm centres, so the old center-based checkBugAttacks stung near the
+	// CENTROID = the "phantom" hit). Server re-gates + funnels through applyBugAttackToPlayer. See BugPlayerStrikeMessage.
+	OpCodePlayerDodge int64 = 111 // C->S: the player dodge-rolled → server grants a brief i-frame window.
 )
 
 // BroodUpdateMessage (OpCode 104): a visible nursery's eggs/maggots changed (a lay, a maturation, a
@@ -285,6 +290,23 @@ type PredationStrikeMessage struct {
 	BugX            []float32 `json:"bug_x,omitempty"`
 	BugY            []float32 `json:"bug_y,omitempty"`
 	Tick            int64     `json:"tick,omitempty"`
+}
+
+// BugPlayerStrikeMessage (OpCode 110, C->S, AUTHORITY ONLY): the authority ran the PER-INDIVIDUAL sting
+// selection (the server holds only swarm centres) and reports the attacker bug(s) + victim. Fixes the phantom
+// sting (old checkBugAttacks stung near the CENTROID). The server re-gates through applyBugAttackToPlayer
+// (StingImmune/subdued/cooldown/invuln + StingsOnlyDefending) so damage stays authoritative + fair.
+type BugPlayerStrikeMessage struct {
+	SwarmID  string `json:"swarm_id"`
+	PlayerID string `json:"player_id"`
+	BugIDs   []int  `json:"bug_ids"`
+	Tick     int64  `json:"tick,omitempty"`
+}
+
+// PlayerDodgeMessage (OpCode 111, C->S): the player dodge-rolled; the server grants a brief i-frame window
+// (DodgeInvulnUntilTick) the bug-attack funnel respects. Movement itself stays client-predicted + reconciled.
+type PlayerDodgeMessage struct {
+	Tick int64 `json:"tick,omitempty"`
 }
 
 // ZoneCollisionMapMessage (OpCode 106, S->C, on join + resync): the zone's COMPLETE set of cells that

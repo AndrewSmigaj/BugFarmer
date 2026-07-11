@@ -43,6 +43,8 @@ namespace BugFarmer.Networking
         public const int PredationStrike = 105; // C->S (authority only): individual flies a predator struck
         public const int ZoneCollisionMap = 106; // S->C (join + resync): zone-complete blocks_bugs cell set
         public const int ZoneRoofMap = 109;      // S->C (join + resync): zone-complete authored roof cell set (cosmetic — underground lighting)
+        public const int BugPlayerStrike = 110;  // C->S (authority only): individual bug(s) that stung a player (replaces center-sting)
+        public const int PlayerDodge = 111;      // C->S: player dodge-rolled — server grants a brief i-frame window
     }
 
     /// <summary>
@@ -258,6 +260,32 @@ namespace BugFarmer.Networking
         public int[] bug_ids;
         public float[] bug_x;
         public float[] bug_y;
+        public long tick;
+    }
+
+    /// <summary>
+    /// BugPlayerStrike (OpCode 110, C→S, AUTHORITY ONLY): the individual bug(s) the authority detected in sting
+    /// range of a player this pass. Mirrors the predation-strike relay — the server holds only swarm CENTRES, so
+    /// it can't tell WHICH bug is next to the player (the old center-sting phantom); the authority reports it and
+    /// the server re-gates + applies through applyBugAttackToPlayer. Damage/HP are sim-inert (server-authoritative,
+    /// NOT in the client sim hash), so this needs no ledger/snapshot wiring.
+    /// </summary>
+    [Serializable]
+    public class BugPlayerStrikeMessage
+    {
+        public string swarm_id;
+        public string player_id;
+        public int[] bug_ids;
+        public long tick;
+    }
+
+    /// <summary>
+    /// PlayerDodge (OpCode 111, C→S): the local player dodge-rolled. The server grants a brief per-player i-frame
+    /// window (DodgeInvulnUntilTick) so a well-timed roll negates an incoming sting. Movement stays client-predicted.
+    /// </summary>
+    [Serializable]
+    public class PlayerDodgeMessage
+    {
         public long tick;
     }
 

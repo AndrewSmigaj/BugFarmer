@@ -314,9 +314,10 @@ type PlayerState struct {
 	// Health (predators v1). HP is SIM-INERT: bug AI reads player CELLS (already on
 	// the ledger); HP travels as the presence-targeted PlayerDamage message (the
 	// MeleeResult display class). 1s invuln is server-enforced across ALL attackers.
-	HP             int   // current health
-	MaxHP          int   // 10 v1
-	LastDamageTick int64 // invuln window + regen gating
+	HP                   int   // current health
+	MaxHP                int   // 10 v1
+	LastDamageTick       int64 // invuln window + regen gating
+	DodgeInvulnUntilTick int64 // dodge i-frame window (separate from LastDamageTick so it doesn't gate regen)
 
 	// Character identity (Terraria-style). "" = ephemeral default (no-char join, e.g. the
 	// sync-harness). Set in MatchJoin from the join metadata; drives save-on-leave. None of
