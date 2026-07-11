@@ -25,7 +25,22 @@ Umbrella for tightening how the assistant is steered. Add items here as they com
   is enough (drops the cached match → re-reads the file). The DB wipe is only needed when the persisted SAVE
   masks the change: **bug population** (persists swarms → bug-spawning Gotcha #2) or a **player cell-edit** on a
   re-authored cell. The reminder hook should point at the simple restart first.
-- (Owner has more scaffolding items to add here.)
+- **Make all sessions learning experiences (owner 2026-07-10).** A skill/scaffold — ideally triggered by a
+  push (or other) hook — where the assistant ELI5s / teaches what it's doing as we go (concepts, why this
+  approach, the trade-offs), so the owner actively learns software dev instead of being hand-waved through.
+  The owner is building toward an AI-engineer role and wants to not let that part of the brain atrophy.
+- **Audit our scaffolding — is it helping or caging? (owner 2026-07-10).** Review the skills / memories /
+  CLAUDE.md / plan discipline and ask, per piece: what specific failure does it prevent (can we name it)?
+  does it TRANSFER INFO the model can't have, or merely DICTATE METHOD / restate general competence? is it
+  still true? Lens: **scar-born** scaffolding (from a real "burned us 3×" failure) = usually keep; **guess-born**
+  (proactive theories of how an agent "should" work) = scrutinize hardest. Explicitly include the ASSISTANT's
+  own habit of inventing rigid rules and over-constraining itself — that's a big source of caging, not just the
+  docs. Prune noise/stale/method-dictation; keep info/corrections/taste.
+- **Token-optimization review (owner 2026-07-10).** Owner has a guide (drafted in chat) on cutting token cost —
+  both to run more projects and as a core modern-AI-engineer skill. Turn it into real practice/scaffolding:
+  **compact early** (after a task completes, at direction pivots — don't just let context fill), prompt-**cache**
+  awareness, and **richer up-front instructions to agents** so they don't waste turns re-discovering context
+  (clear, streamlined briefs). Capture the guide into a doc/skill + habits.
 
 ## Shaped-ground builder — BUILT M0–M4 (2026-07-09/10), remaining owner passes
 The shovel is a terraform builder: it places `matA~matB~shape` **composite ground ids** (two materials

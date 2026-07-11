@@ -650,8 +650,8 @@ def main():
     ap.add_argument("--source", choices=list(SOURCES), default="placeables")
     ap.add_argument("--category", help="filter by category (e.g. furniture)")
     ap.add_argument("--keys", help="comma-separated entity keys (overrides category)")
-    ap.add_argument("--quality", choices=["low", "medium", "high"], default="low")
-    ap.add_argument("--model", default="gpt-image-1", help="image model (e.g. gpt-image-1, gpt-image-2)")
+    ap.add_argument("--quality", choices=["low", "medium", "high"], default="medium")
+    ap.add_argument("--model", default="gpt-image-1.5", help="image model (default gpt-image-1.5). low quality is a lossy dev-only choice; medium is the standing default")
     ap.add_argument("--dry-run", action="store_true", help="print prompts, no API call")
     ap.add_argument("--force", action="store_true", help="overwrite existing sprites")
     ap.add_argument("--ref", metavar="PNG",
