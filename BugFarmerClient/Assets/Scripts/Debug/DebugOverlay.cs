@@ -24,6 +24,10 @@ namespace BugFarmer.Tracing
         private bool _showWorld = false;   // F8: world debug (time / weather / spawn)
         private bool _showPerf = false;    // F7: client cost profiler (FPS + per-subsystem ms + GC heap)
         private string _wStatus = "";
+        // Debug enemy spawner (arena testing): a species picker + count.
+        private System.Collections.Generic.List<string> _spawnIds;
+        private int _spawnIdx;
+        private int _spawnCount = 4;
 
         // Perf panel state: a smoothed frame-time so the FPS readout doesn't flicker.
         private float _frameMsEMA = 0f;
@@ -247,18 +251,37 @@ namespace BugFarmer.Tracing
                 BugFarmer.World.RainController.RequestStrike();
             GUILayout.EndHorizontal();
 
-            if (GUILayout.Button("Spawn fly swarm at player"))
-                SendWorldDebug(t =>
+            // Enemy spawner (arena testing): pick ANY species + count, spawn at the player.
+            if (_spawnIds == null || _spawnIds.Count == 0)
+                _spawnIds = BugFarmer.Data.EntityDatabase.AllSpeciesIds();
+            if (_spawnIds != null && _spawnIds.Count > 0)
+            {
+                if (_spawnIdx >= _spawnIds.Count) _spawnIdx = 0;
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("<", GUILayout.Width(24))) _spawnIdx = (_spawnIdx - 1 + _spawnIds.Count) % _spawnIds.Count;
+                GUILayout.Label(_spawnIds[_spawnIdx], GUILayout.Width(140));
+                if (GUILayout.Button(">", GUILayout.Width(24))) _spawnIdx = (_spawnIdx + 1) % _spawnIds.Count;
+                if (GUILayout.Button("-", GUILayout.Width(24))) _spawnCount = System.Math.Max(1, _spawnCount - 1);
+                GUILayout.Label($"x{_spawnCount}", GUILayout.Width(34));
+                if (GUILayout.Button("+", GUILayout.Width(24))) _spawnCount = System.Math.Min(40, _spawnCount + 1);
+                GUILayout.EndHorizontal();
+                if (GUILayout.Button($"Spawn {_spawnIds[_spawnIdx]} x{_spawnCount} at player"))
                 {
-                    var player = FindObjectOfType<BugFarmer.Player.PlayerController>();
-                    t.spawn_species = "fly_common";
-                    t.spawn_count = 8;
-                    if (player != null)
+                    string sp = _spawnIds[_spawnIdx];
+                    int n = _spawnCount;
+                    SendWorldDebug(t =>
                     {
-                        t.spawn_x = player.transform.position.x;
-                        t.spawn_y = player.transform.position.y;
-                    }
-                });
+                        var player = FindObjectOfType<BugFarmer.Player.PlayerController>();
+                        t.spawn_species = sp;
+                        t.spawn_count = n;
+                        if (player != null)
+                        {
+                            t.spawn_x = player.transform.position.x;
+                            t.spawn_y = player.transform.position.y;
+                        }
+                    });
+                }
+            }
 
             // Crafting: stock the player with the Stage-1 recipe materials (+ a couple of items
             // for the filtered-container tests). Use in the "Crafting Test" zone.

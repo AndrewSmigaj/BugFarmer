@@ -228,6 +228,16 @@ namespace BugFarmer.Data
             return _species != null && _species.TryGetValue(speciesId, out var info) ? info : null;
         }
 
+        /// <summary>All known species ids, sorted (for the debug spawner picker). Empty if not loaded.</summary>
+        public static List<string> AllSpeciesIds()
+        {
+            EnsureInitialized();
+            var ids = new List<string>();
+            if (_species != null) ids.AddRange(_species.Keys);
+            ids.Sort();
+            return ids;
+        }
+
         #region Initialization
 
         private static void EnsureInitialized()

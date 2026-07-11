@@ -47,6 +47,7 @@ namespace BugFarmer.UI
             new WorldChoice { label = "Butterfly Lab",  zoneId = "butterfly_lab" },
             new WorldChoice { label = "Fly Lab",        zoneId = "fly_lab" },
             new WorldChoice { label = "Crawler Lab",    zoneId = "crawler_lab" },
+            new WorldChoice { label = "Arena",          zoneId = "arena" },
             new WorldChoice { label = "Test",           zoneId = "sim_test" },
             new WorldChoice { label = "Collision Test", zoneId = "collision_test" },
             new WorldChoice { label = "Lighting Test",  zoneId = "lighting_test" },
