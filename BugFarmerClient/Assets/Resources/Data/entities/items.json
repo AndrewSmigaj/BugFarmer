@@ -2659,5 +2659,17 @@
     "stackable": true,
     "max_stack": 99,
     "sell_price": 45
+  },
+  "dead_caterpillar": {
+    "name": "Dead Caterpillar",
+    "category": "resource",
+    "tags": [
+      "carrion"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 4,
+    "food_value": 10,
+    "description": "The limp husk of a caterpillar. Grubby, but the chitin and bristles have uses."
   }
 }

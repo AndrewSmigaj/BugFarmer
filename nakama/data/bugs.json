@@ -1077,5 +1077,53 @@
       "ant_tunnels"
     ],
     "name": "Scout Ant"
+  },
+  "wasp_soldier": {
+    "sprite_path": "Sprites/Bugs/wasp_soldier.png",
+    "sprite_w": 13,
+    "sprite_h": 13,
+    "category": "wasp",
+    "base_speed": 2.6,
+    "catch_difficulty": 4,
+    "value": 30,
+    "zones": [
+      "wasp_thicket"
+    ]
+  },
+  "hornet_giant": {
+    "sprite_path": "Sprites/Bugs/hornet_giant.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "category": "wasp",
+    "base_speed": 3.0,
+    "catch_difficulty": 5,
+    "value": 60,
+    "zones": [
+      "wasp_thicket"
+    ]
+  },
+  "caterpillar_spiny": {
+    "sprite_path": "Sprites/Bugs/caterpillar_spiny.png",
+    "sprite_w": 15,
+    "sprite_h": 12,
+    "category": "caterpillar",
+    "base_speed": 1.1,
+    "catch_difficulty": 3,
+    "value": 18,
+    "zones": [
+      "butterfly_fields"
+    ]
+  },
+  "caterpillar_thornback": {
+    "sprite_path": "Sprites/Bugs/caterpillar_thornback.png",
+    "sprite_w": 17,
+    "sprite_h": 13,
+    "category": "caterpillar",
+    "base_speed": 1.0,
+    "catch_difficulty": 4,
+    "value": 35,
+    "zones": [
+      "butterfly_fields"
+    ]
   }
 }

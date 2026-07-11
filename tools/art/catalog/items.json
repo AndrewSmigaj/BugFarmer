@@ -1,642 +1,649 @@
 {
-  "dead_fly": {
-    "look": "a dead HOUSEFLY lying on its BACK, six thin legs curled up in the air, dull desaturated grey-black body and limp translucent wings; a small dead-bug carcass on the ground",
-    "family": "icon",
-    "materials": [
-      "dirt"
-    ]
-  },
-  "dead_butterfly": {
-    "look": "a dead BUTTERFLY lying on the ground, wings folded crooked and faded to dull dusty muted colors, body limp and lifeless; clearly a carcass, NOT flying",
-    "family": "icon",
-    "materials": [
-      "dirt"
-    ]
-  },
-  "dead_wasp": {
-    "look": "a dead WASP on its BACK, legs curled up in the air, faded dull yellow-and-black striped body, wings limp; a dead-bug carcass on the ground",
-    "family": "icon",
-    "materials": [
-      "dirt"
-    ]
-  },
-  "dead_centipede": {
-    "look": "a dead CENTIPEDE curled into a loose C-shape on the ground, dull desaturated reddish-brown segmented body, legs limp; a lifeless carcass",
-    "family": "icon",
-    "materials": [
-      "dirt"
-    ]
-  },
-  "dead_millipede": {
-    "look": "a dead MILLIPEDE coiled into a tight flat SPIRAL on the ground, dull dark brown segmented body; a lifeless carcass",
-    "family": "icon",
-    "materials": [
-      "dirt"
-    ]
-  },
-  "dead_beetle": {
-    "look": "a dead BEETLE lying on its BACK with its six legs sticking up and curled inward, dull desaturated black shell; the classic dead-bug pose on the ground",
-    "family": "icon",
-    "materials": [
-      "dirt"
-    ]
-  },
-  "scythe_wood": {
-    "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of pale wood sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
-    "family": "icon",
-    "materials": [
-      "wood"
-    ]
-  },
-  "pickaxe_wood": {
-    "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of pale wood at the top-right, straight wooden HANDLE running to the bottom-left",
-    "family": "icon",
-    "materials": [
-      "wood"
-    ]
-  },
-  "axe_wood": {
-    "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of pale wood at the top-right, straight wooden HANDLE running to the bottom-left",
-    "family": "icon",
-    "materials": [
-      "wood"
-    ]
-  },
-  "shovel_wood": {
-    "look": "a digging SHOVEL: rounded pointed SPADE BLADE of pale wood at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
-    "family": "icon",
-    "materials": [
-      "wood"
-    ]
-  },
-  "hoe_wood": {
-    "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
-    "family": "icon",
-    "materials": [
-      "wood"
-    ]
-  },
-  "sword_wood": {
-    "look": "a training SWORD: straight tapered wooden BLADE with a visible center ridge pointing to the top-right, small CROSSGUARD and wrapped GRIP with a round pommel at the bottom-left",
-    "family": "icon",
-    "materials": [
-      "wood"
-    ]
-  },
-  "spear_wood": {
-    "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, with a leaf-shaped sharpened wooden SPEARHEAD at the top-right and a blunt butt at the bottom-left",
-    "family": "icon",
-    "materials": [
-      "wood"
-    ]
-  },
-  "small_net": {
-    "look": "a small BUG NET: a round HOOP with a visible crosshatch MESH bag at the top-right, short wooden HANDLE to the bottom-left",
-    "family": "icon",
-    "materials": [
-      "wood"
-    ]
-  },
-  "large_net": {
-    "look": "a large BUG NET: a WIDE round HOOP at the top-right with a deep baggy NET BAG of fine diagonal MESH lines hanging from it (thin woven net texture, NOT a checkerboard), sturdy wooden HANDLE with a wrapped grip to the bottom-left",
-    "family": "icon",
-    "materials": [
-      "wood"
-    ]
-  },
-  "watering_can_basic": {
-    "look": "a small metal WATERING CAN in 3/4 view: rounded body, top handle, long SPOUT with a sprinkler ROSE tip pointing right; dull grey tin",
-    "family": "icon",
-    "materials": [
-      "metal"
-    ]
-  },
-  "watering_can_large": {
-    "look": "a BIG metal WATERING CAN in 3/4 view: wide barrel body with a riveted seam, top handle, long SPOUT with a sprinkler ROSE tip pointing right; dull grey tin with a copper band",
-    "family": "icon",
-    "materials": [
-      "metal"
-    ]
-  },
-  "seed_tomato": {
-    "look": "a paper SEED PACKET, upright rectangle with a TORN-OPEN top edge and a few seeds spilling: cream paper, a simple round red TOMATO illustration on the front, thin green border",
-    "family": "icon"
-  },
-  "seed_corn": {
-    "look": "a paper SEED PACKET, upright rectangle with a TORN-OPEN top edge and a few seeds spilling: cream paper, a yellow CORN COB with green husk illustrated on the front, thin yellow border",
-    "family": "icon"
-  },
-  "seed_wheat": {
-    "look": "a paper SEED PACKET, upright rectangle with a TORN-OPEN top edge and a few seeds spilling: cream paper, three golden WHEAT STALKS illustrated on the front, thin brown border",
-    "family": "icon"
-  },
-  "berries": {
-    "look": "a small cluster of round red BERRIES, three or four plump berries with a single green leaf on top",
-    "family": "icon"
-  },
-  "quartz": {
-    "look": "a single MILKY WHITE quartz crystal SHARD: six-sided prism with a pointed tip, pale white with faint icy blue facet shading - bright and translucent, NOT dark, NOT black, NOT grey rock",
-    "family": "icon",
-    "materials": [
-      "stone"
-    ]
-  },
-  "sand": {
-    "look": "a small conical PILE OF SAND, pale tan with a few darker speckles and a soft heaped silhouette",
-    "family": "icon",
-    "materials": [
-      "dirt"
-    ]
-  },
-  "tin_ore": {
-    "look": "a rough grey ORE CHUNK studded with dull silvery TIN flecks, angular blocky rock",
-    "family": "icon",
-    "materials": [
-      "stone",
-      "metal"
-    ]
-  },
-  "apple": {
-    "look": "a single shiny red APPLE with one small green LEAF on a short stem: simple round silhouette, bright highlight on the upper-left",
-    "family": "icon"
-  },
-  "orange": {
-    "look": "a single ORANGE with dimpled peel texture and one small green leaf: round, warm orange, soft highlight",
-    "family": "icon"
-  },
-  "rotten_apple": {
-    "look": "a ROTTEN APPLE: dull brown-red with a sunken bruised side, a few dark spots, slightly collapsed silhouette, drooping wilted leaf",
-    "family": "icon"
-  },
-  "rotten_orange": {
-    "look": "a ROTTEN ORANGE: dull brownish peel with grey-green MOLD patches, slightly deflated and sagging",
-    "family": "icon"
-  },
-  "hands": {
-    "look": "a pair of open HANDS seen palm-up, fingers slightly spread as if ready to grab or gather, warm tan skin with a soft outline \u2014 wearing a thin FABRIC wrist cuff",
-    "family": "icon",
-    "materials": [
-      "fabric"
-    ]
-  },
-  "flashlight": {
-    "look": "a chunky handheld FLASHLIGHT seen at a 3/4 angle: cylindrical metal body with a wide head, glass lens face glowing pale yellow, small button on the side",
-    "family": "icon",
-    "materials": [
-      "metal"
-    ]
-  },
-  "centipede_parts": {
-    "look": "a few curved CENTIPEDE BODY SEGMENTS: glossy reddish-brown chitin plates with little legs attached, stacked loosely",
-    "family": "icon",
-    "materials": [
-      "wood"
-    ]
-  },
-  "paper_nest": {
-    "look": "a torn chunk of grey papery WASP NEST material: layered swirled bands of grey paper",
-    "family": "icon",
-    "materials": [
-      "stone"
-    ]
-  },
-  "wasp_larvae": {
-    "look": "three plump pale WASP LARVAE: cream-white segmented grubs curled in a row",
-    "family": "icon",
-    "materials": [
-      "marble"
-    ]
-  },
-  "wasp_stinger": {
-    "look": "a single sharp WASP STINGER: a curved black needle-like point with a small amber venom drop at the tip",
-    "family": "icon",
-    "materials": [
-      "metal"
-    ]
-  },
-  "iron_helmet": {
-    "look": "a knight's IRON HELMET seen front-on: rounded steel dome, dark T-shaped visor slit, riveted plates, cool grey sheen",
-    "family": "icon",
-    "materials": [
-      "metal"
-    ]
-  },
-  "copper_helmet": {
-    "look": "a COPPER HELMET front-on: rounded burnished orange-brown dome with a vertical nose guard and a riveted rim",
-    "family": "icon",
-    "materials": [
-      "metal"
-    ]
-  },
-  "leather_cap": {
-    "look": "a soft LEATHER CAP/hood front-on: rounded brown headpiece with a short stitched brim",
-    "family": "icon",
-    "materials": [
-      "fabric"
-    ]
-  },
-  "straw_hat": {
-    "look": "a wide-brimmed STRAW HAT: golden woven straw, low conical crown, broad flat brim with a darker band",
-    "family": "icon",
-    "materials": [
-      "foliage"
-    ]
-  },
-  "iron_chest": {
-    "look": "an IRON BREASTPLATE: grey steel torso armor, rounded shoulder plates, a central ridge, riveted edges",
-    "family": "icon",
-    "materials": [
-      "metal"
-    ]
-  },
-  "leather_chest": {
-    "look": "a brown LEATHER tunic / chest armor: layered stitched leather vest with a belt",
-    "family": "icon",
-    "materials": [
-      "fabric"
-    ]
-  },
-  "iron_gauntlets": {
-    "look": "a PAIR of IRON GAUNTLETS side by side: grey steel armored gloves with segmented finger plates",
-    "family": "icon",
-    "materials": [
-      "metal"
-    ]
-  },
-  "leather_gloves": {
-    "look": "a PAIR of brown LEATHER GLOVES side by side, with stitched cuffs",
-    "family": "icon",
-    "materials": [
-      "fabric"
-    ]
-  },
-  "leather_pants": {
-    "look": "brown LEATHER leggings: a pair of stitched leather trouser legs",
-    "family": "icon",
-    "materials": [
-      "fabric"
-    ]
-  },
-  "iron_boots": {
-    "look": "a PAIR of IRON BOOTS side by side: grey steel armored boots with plated shins",
-    "family": "icon",
-    "materials": [
-      "metal"
-    ]
-  },
-  "leather_boots": {
-    "look": "a PAIR of brown LEATHER BOOTS side by side, with stitched soles",
-    "family": "icon",
-    "materials": [
-      "fabric"
-    ]
-  },
-  "red_dye": {
-    "look": "a small round glass JAR of crimson powdered DYE, vivid red pigment filling it, a cork stopper on top. A clean inventory icon.",
-    "materials": [
-      "fabric"
-    ]
-  },
-  "yellow_dye": {
-    "look": "a small round glass JAR of golden-yellow powdered DYE, vivid yellow pigment filling it, a cork stopper on top. A clean inventory icon.",
-    "materials": [
-      "fabric"
-    ]
-  },
-  "blue_dye": {
-    "look": "a small round glass JAR of deep blue powdered DYE, vivid blue pigment filling it, a cork stopper on top. A clean inventory icon.",
-    "materials": [
-      "fabric"
-    ]
-  },
-  "green_dye": {
-    "look": "a small round glass JAR of leaf-green powdered DYE, vivid green pigment filling it, a cork stopper on top. A clean inventory icon.",
-    "materials": [
-      "fabric"
-    ]
-  },
-  "plum": {
-    "look": "a single glossy PLUM, deep purple with a lighter dusty bloom and a vertical crease, one small green leaf on a short stem; simple round-oval silhouette, bright highlight upper-left",
-    "family": "icon"
-  },
-  "cherry": {
-    "look": "a pair of glossy red CHERRIES joined on one forked stem with a single green leaf; simple round silhouettes, bright highlight upper-left",
-    "family": "icon"
-  },
-  "rotten_plum": {
-    "look": "a ROTTEN PLUM: dull brownish-purple, sunken bruised side, a few dark mold spots, slightly collapsed silhouette, drooping wilted leaf",
-    "family": "icon"
-  },
-  "rotten_cherry": {
-    "look": "a pair of ROTTEN CHERRIES on one stem: dull brown-red, shriveled and dented with dark spots, limp wilted leaf",
-    "family": "icon"
-  },
-  "backpack": {
-    "look": "a sturdy canvas-and-leather BACKPACK with a top flap buckled shut, two shoulder straps visible, a small front pocket; warm brown leather trim on olive canvas",
-    "family": "icon"
-  },
-  "pickaxe_copper": {
-    "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of polished salmon-orange COPPER metal with a warm metallic sheen at the top-right, straight wooden HANDLE running to the bottom-left",
-    "family": "icon"
-  },
-  "pickaxe_iron": {
-    "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of grey IRON metal with a dull metallic sheen at the top-right, straight wooden HANDLE running to the bottom-left",
-    "family": "icon"
-  },
-  "pickaxe_steel": {
-    "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of bright silver-grey STEEL with a crisp metallic sheen at the top-right, straight wooden HANDLE running to the bottom-left",
-    "family": "icon"
-  },
-  "pickaxe_silver": {
-    "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of gleaming pale SILVER with a bright white sheen at the top-right, straight wooden HANDLE running to the bottom-left",
-    "family": "icon"
-  },
-  "pickaxe_gold": {
-    "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of rich yellow GOLD with a warm glint at the top-right, straight wooden HANDLE running to the bottom-left",
-    "family": "icon"
-  },
-  "pickaxe_platinum": {
-    "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of pale icy blue-white PLATINUM with a cold sheen at the top-right, straight wooden HANDLE running to the bottom-left",
-    "family": "icon"
-  },
-  "axe_copper": {
-    "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of polished salmon-orange COPPER metal with a warm metallic sheen at the top-right, straight wooden HANDLE running to the bottom-left",
-    "family": "icon"
-  },
-  "axe_iron": {
-    "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of grey IRON metal with a dull metallic sheen at the top-right, straight wooden HANDLE running to the bottom-left",
-    "family": "icon"
-  },
-  "axe_steel": {
-    "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of bright silver-grey STEEL with a crisp metallic sheen at the top-right, straight wooden HANDLE running to the bottom-left",
-    "family": "icon"
-  },
-  "axe_silver": {
-    "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of gleaming pale SILVER with a bright white sheen at the top-right, straight wooden HANDLE running to the bottom-left",
-    "family": "icon"
-  },
-  "axe_gold": {
-    "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of rich yellow GOLD with a warm glint at the top-right, straight wooden HANDLE running to the bottom-left",
-    "family": "icon"
-  },
-  "axe_platinum": {
-    "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of pale icy blue-white PLATINUM with a cold sheen at the top-right, straight wooden HANDLE running to the bottom-left",
-    "family": "icon"
-  },
-  "hoe_copper": {
-    "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
-    "family": "icon"
-  },
-  "hoe_iron": {
-    "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
-    "family": "icon"
-  },
-  "hoe_steel": {
-    "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
-    "family": "icon"
-  },
-  "hoe_silver": {
-    "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
-    "family": "icon"
-  },
-  "hoe_gold": {
-    "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
-    "family": "icon"
-  },
-  "hoe_platinum": {
-    "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
-    "family": "icon"
-  },
-  "scythe_copper": {
-    "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of polished salmon-orange COPPER metal with a warm metallic sheen sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
-    "family": "icon"
-  },
-  "scythe_iron": {
-    "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of grey IRON metal with a dull metallic sheen sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
-    "family": "icon"
-  },
-  "scythe_steel": {
-    "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of bright silver-grey STEEL with a crisp metallic sheen sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
-    "family": "icon"
-  },
-  "scythe_silver": {
-    "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of gleaming pale SILVER with a bright white sheen sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
-    "family": "icon"
-  },
-  "scythe_gold": {
-    "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of rich yellow GOLD with a warm glint sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
-    "family": "icon"
-  },
-  "scythe_platinum": {
-    "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of pale icy blue-white PLATINUM with a cold sheen sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
-    "family": "icon"
-  },
-  "shovel_copper": {
-    "look": "a digging SHOVEL: rounded pointed SPADE BLADE of polished salmon-orange COPPER metal with a warm metallic sheen at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
-    "family": "icon"
-  },
-  "shovel_iron": {
-    "look": "a digging SHOVEL: rounded pointed SPADE BLADE of grey IRON metal with a dull metallic sheen at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
-    "family": "icon"
-  },
-  "shovel_steel": {
-    "look": "a digging SHOVEL: rounded pointed SPADE BLADE of bright silver-grey STEEL with a crisp metallic sheen at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
-    "family": "icon"
-  },
-  "shovel_silver": {
-    "look": "a digging SHOVEL: rounded pointed SPADE BLADE of gleaming pale SILVER with a bright white sheen at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
-    "family": "icon"
-  },
-  "shovel_gold": {
-    "look": "a digging SHOVEL: rounded pointed SPADE BLADE of rich yellow GOLD with a warm glint at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
-    "family": "icon"
-  },
-  "shovel_platinum": {
-    "look": "a digging SHOVEL: rounded pointed SPADE BLADE of pale icy blue-white PLATINUM with a cold sheen at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
-    "family": "icon"
-  },
-  "sword_copper": {
-    "look": "a fighting SWORD: straight tapered BLADE of polished salmon-orange COPPER metal with a warm metallic sheen, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
-    "family": "icon"
-  },
-  "sword_iron": {
-    "look": "a fighting SWORD: straight tapered BLADE of grey IRON metal with a dull metallic sheen, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
-    "family": "icon"
-  },
-  "sword_steel": {
-    "look": "a fighting SWORD: straight tapered BLADE of bright silver-grey STEEL with a crisp metallic sheen, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
-    "family": "icon"
-  },
-  "sword_silver": {
-    "look": "a fighting SWORD: straight tapered BLADE of gleaming pale SILVER with a bright white sheen, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
-    "family": "icon"
-  },
-  "sword_gold": {
-    "look": "a fighting SWORD: straight tapered BLADE of rich yellow GOLD with a warm glint, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
-    "family": "icon"
-  },
-  "sword_platinum": {
-    "look": "a fighting SWORD: straight tapered BLADE of pale icy blue-white PLATINUM with a cold sheen, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
-    "family": "icon"
-  },
-  "sword_bronze": {
-    "look": "a fighting SWORD: straight tapered BLADE of warm brown-gold BRONZE with a soft metallic sheen, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
-    "family": "icon"
-  },
-  "spear_copper": {
-    "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of polished salmon-orange COPPER metal with a warm metallic sheen, blunt butt at the bottom-left",
-    "family": "icon"
-  },
-  "spear_iron": {
-    "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of grey IRON metal with a dull metallic sheen, blunt butt at the bottom-left",
-    "family": "icon"
-  },
-  "spear_steel": {
-    "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of bright silver-grey STEEL with a crisp metallic sheen, blunt butt at the bottom-left",
-    "family": "icon"
-  },
-  "spear_silver": {
-    "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of gleaming pale SILVER with a bright white sheen, blunt butt at the bottom-left",
-    "family": "icon"
-  },
-  "spear_gold": {
-    "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of rich yellow GOLD with a warm glint, blunt butt at the bottom-left",
-    "family": "icon"
-  },
-  "spear_platinum": {
-    "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of pale icy blue-white PLATINUM with a cold sheen, blunt butt at the bottom-left",
-    "family": "icon"
-  },
-  "spear_bronze": {
-    "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of warm brown-gold BRONZE with a soft metallic sheen, blunt butt at the bottom-left",
-    "family": "icon"
-  },
-  "copper_bar": {
-    "look": "a cast metal INGOT BAR of polished salmon-orange COPPER with a warm metallic sheen: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
-    "family": "icon"
-  },
-  "iron_bar": {
-    "look": "ONE cast metal INGOT of grey IRON: a classic trapezoid ingot (narrow flat top, wider base) lying horizontally, seen face-on from slightly above so the flat top face and the front face both read; bright highlight band along the top edge, mid-grey front, darker base shadow line; crisp clean silhouette, nothing else in frame",
-    "family": "icon"
-  },
-  "bronze_bar": {
-    "look": "a cast metal INGOT BAR of warm brown-gold BRONZE with a soft metallic sheen: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
-    "family": "icon"
-  },
-  "steel_bar": {
-    "look": "a cast metal INGOT BAR of bright silver-grey STEEL with a crisp metallic sheen: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
-    "family": "icon"
-  },
-  "silver_bar": {
-    "look": "a cast metal INGOT BAR of gleaming pale SILVER with a bright white sheen: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
-    "family": "icon"
-  },
-  "gold_bar": {
-    "look": "a cast metal INGOT BAR of rich yellow GOLD with a warm glint: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
-    "family": "icon"
-  },
-  "platinum_bar": {
-    "look": "a cast metal INGOT BAR of pale icy blue-white PLATINUM with a cold sheen: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
-    "family": "icon"
-  },
-  "wood": {
-    "look": "a solid square BLOCK of warm brown WOOD, face-on like a building block: horizontal plank boards with darker seams and simple wood grain, a lighter top edge; chunky readable block silhouette (this is the wood-block material item)",
-    "family": "icon"
-  },
-  "chitin": {
-    "look": "a curved shard of insect CHITIN shell: glossy dark brown-black plate with a ridged edge and an amber highlight along the curve",
-    "family": "icon"
-  },
-  "cloth": {
-    "look": "a neatly folded square of woven CLOTH fabric, soft cream-beige, with visible fold lines and a slightly draped front edge",
-    "family": "icon"
-  },
-  "glass": {
-    "look": "a clear square pane of GLASS seen face-on: pale ice-blue with two diagonal white glare streaks and a thin lighter edge",
-    "family": "icon"
-  },
-  "leather": {
-    "look": "a rolled-up piece of tanned brown LEATHER hide, the roll seen from its side with the coil spiral visible on the end, a strap of hide tying it",
-    "family": "icon"
-  },
-  "plank": {
-    "look": "two stacked sawn WOOD PLANKS, warm brown with visible grain and lighter cut ends, slightly offset",
-    "family": "icon"
-  },
-  "silk": {
-    "look": "a loose skein of pale ivory SILK thread folded into a soft loop, with a subtle pearly sheen",
-    "family": "icon"
-  },
-  "thread": {
-    "look": "a wooden SPOOL wound with dark red THREAD, seen slightly from above, a loose thread end trailing",
-    "family": "icon"
-  },
-  "gardener_gloves": {
-    "look": "a pair of sturdy canvas GARDENING GLOVES, olive-green with brown leather palms, lying overlapped",
-    "family": "icon"
-  },
-  "magnifying_glass": {
-    "look": "a MAGNIFYING GLASS with a round brass rim, pale blue lens with a white glare streak, and a short wooden handle at the lower-left",
-    "family": "icon"
-  },
-  "reed_hat": {
-    "look": "a woven REED sun HAT with a wide round brim and a domed crown, warm straw-yellow with a thin darker band",
-    "family": "icon"
-  },
-  "coal": {
-    "look": "a single jagged LUMP OF COAL: an irregular angular black-charcoal chunk with faceted faces and subtle blue-grey highlights on the upper edges",
-    "family": "icon"
-  },
-  "honeycomb": {
-    "look": "a broken-off chunk of golden HONEYCOMB, hexagonal wax cells clearly visible, a few cells oozing amber honey, waxy yellow-orange; NOT a jar, NOT a whole hive",
-    "family": "icon"
-  },
-  "honey": {
-    "look": "a small glass JAR of amber HONEY with a wooden dipper handle sticking out, golden translucent contents, a band of cloth tied over the lid; NOT a bottle of liquid, NOT a mug",
-    "family": "icon"
-  },
-  "beeswax": {
-    "look": "a rectangular BAR of pale CREAM-WHITE beeswax, like a bar of soap: matte, solid, very light yellow-ivory color with ONE faint small honeycomb stamp in the corner; NOT orange, NOT honey, NOT a honeycomb, NOT round",
-    "family": "icon"
-  },
-  "smoker": {
-    "look": "a beekeeper's SMOKER tool: a shiny SILVER-TIN cylindrical can with a short conical SPOUT angled to the TOP-RIGHT puffing one wisp of white smoke, a small RED accordion BELLOWS attached to the can's lower-left side; bright metal, simple bold shapes; NOT a lantern, NOT a kettle, NOT blue",
-    "family": "icon",
-    "materials": [
-      "metal"
-    ]
-  },
-  "dead_bee": {
-    "look": "a dead HONEYBEE on its BACK, legs curled up in the air, faded dull gold-and-brown striped body, limp translucent wings; a small dead-bug carcass",
-    "family": "icon",
-    "materials": [
-      "dirt"
-    ]
-  },
-  "dead_dragonfly": {
-    "look": "a dead DRAGONFLY lying flat, long thin faded blue body, four translucent wings splayed crooked and dull; clearly a carcass, NOT flying",
-    "family": "icon",
-    "materials": [
-      "dirt"
-    ]
-  },
-  "dead_firefly": {
-    "look": "a dead FIREFLY on its BACK, small dark beetle body with a faded pale amber tail segment gone dull, legs curled; a small dead-bug carcass",
-    "family": "icon",
-    "materials": [
-      "dirt"
-    ]
-  },
-  "seashell": {
-    "look": "a single spiral CONCH seashell, cream and pink banded, pointed spire tip and a smooth open lip; NOT a snail, NOT a fossil",
-    "family": "icon"
-  },
-  "starfish": {
-    "look": "a single orange five-armed STARFISH, chunky pixel-art with HARD clean edges and big bumpy dots, one arm slightly curled; bold simple shapes; NOT blurry, NOT a flower",
-    "family": "icon"
-  },
-  "message_bottle": {
-    "look": "a CORKED pale-green GLASS BOTTLE at a slight tilt with a rolled PAPER NOTE inside, chunky pixel-art with HARD clean edges and a single white glass highlight; bold simple shapes; NOT a potion",
-    "family": "icon"
-  }
+ "dead_fly": {
+  "look": "a dead HOUSEFLY lying on its BACK, six thin legs curled up in the air, dull desaturated grey-black body and limp translucent wings; a small dead-bug carcass on the ground",
+  "family": "icon",
+  "materials": [
+   "dirt"
+  ]
+ },
+ "dead_butterfly": {
+  "look": "a dead BUTTERFLY lying on the ground, wings folded crooked and faded to dull dusty muted colors, body limp and lifeless; clearly a carcass, NOT flying",
+  "family": "icon",
+  "materials": [
+   "dirt"
+  ]
+ },
+ "dead_wasp": {
+  "look": "a dead WASP on its BACK, legs curled up in the air, faded dull yellow-and-black striped body, wings limp; a dead-bug carcass on the ground",
+  "family": "icon",
+  "materials": [
+   "dirt"
+  ]
+ },
+ "dead_centipede": {
+  "look": "a dead CENTIPEDE curled into a loose C-shape on the ground, dull desaturated reddish-brown segmented body, legs limp; a lifeless carcass",
+  "family": "icon",
+  "materials": [
+   "dirt"
+  ]
+ },
+ "dead_millipede": {
+  "look": "a dead MILLIPEDE coiled into a tight flat SPIRAL on the ground, dull dark brown segmented body; a lifeless carcass",
+  "family": "icon",
+  "materials": [
+   "dirt"
+  ]
+ },
+ "dead_beetle": {
+  "look": "a dead BEETLE lying on its BACK with its six legs sticking up and curled inward, dull desaturated black shell; the classic dead-bug pose on the ground",
+  "family": "icon",
+  "materials": [
+   "dirt"
+  ]
+ },
+ "scythe_wood": {
+  "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of pale wood sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
+  "family": "icon",
+  "materials": [
+   "wood"
+  ]
+ },
+ "pickaxe_wood": {
+  "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of pale wood at the top-right, straight wooden HANDLE running to the bottom-left",
+  "family": "icon",
+  "materials": [
+   "wood"
+  ]
+ },
+ "axe_wood": {
+  "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of pale wood at the top-right, straight wooden HANDLE running to the bottom-left",
+  "family": "icon",
+  "materials": [
+   "wood"
+  ]
+ },
+ "shovel_wood": {
+  "look": "a digging SHOVEL: rounded pointed SPADE BLADE of pale wood at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
+  "family": "icon",
+  "materials": [
+   "wood"
+  ]
+ },
+ "hoe_wood": {
+  "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
+  "family": "icon",
+  "materials": [
+   "wood"
+  ]
+ },
+ "sword_wood": {
+  "look": "a training SWORD: straight tapered wooden BLADE with a visible center ridge pointing to the top-right, small CROSSGUARD and wrapped GRIP with a round pommel at the bottom-left",
+  "family": "icon",
+  "materials": [
+   "wood"
+  ]
+ },
+ "spear_wood": {
+  "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, with a leaf-shaped sharpened wooden SPEARHEAD at the top-right and a blunt butt at the bottom-left",
+  "family": "icon",
+  "materials": [
+   "wood"
+  ]
+ },
+ "small_net": {
+  "look": "a small BUG NET: a round HOOP with a visible crosshatch MESH bag at the top-right, short wooden HANDLE to the bottom-left",
+  "family": "icon",
+  "materials": [
+   "wood"
+  ]
+ },
+ "large_net": {
+  "look": "a large BUG NET: a WIDE round HOOP at the top-right with a deep baggy NET BAG of fine diagonal MESH lines hanging from it (thin woven net texture, NOT a checkerboard), sturdy wooden HANDLE with a wrapped grip to the bottom-left",
+  "family": "icon",
+  "materials": [
+   "wood"
+  ]
+ },
+ "watering_can_basic": {
+  "look": "a small metal WATERING CAN in 3/4 view: rounded body, top handle, long SPOUT with a sprinkler ROSE tip pointing right; dull grey tin",
+  "family": "icon",
+  "materials": [
+   "metal"
+  ]
+ },
+ "watering_can_large": {
+  "look": "a BIG metal WATERING CAN in 3/4 view: wide barrel body with a riveted seam, top handle, long SPOUT with a sprinkler ROSE tip pointing right; dull grey tin with a copper band",
+  "family": "icon",
+  "materials": [
+   "metal"
+  ]
+ },
+ "seed_tomato": {
+  "look": "a paper SEED PACKET, upright rectangle with a TORN-OPEN top edge and a few seeds spilling: cream paper, a simple round red TOMATO illustration on the front, thin green border",
+  "family": "icon"
+ },
+ "seed_corn": {
+  "look": "a paper SEED PACKET, upright rectangle with a TORN-OPEN top edge and a few seeds spilling: cream paper, a yellow CORN COB with green husk illustrated on the front, thin yellow border",
+  "family": "icon"
+ },
+ "seed_wheat": {
+  "look": "a paper SEED PACKET, upright rectangle with a TORN-OPEN top edge and a few seeds spilling: cream paper, three golden WHEAT STALKS illustrated on the front, thin brown border",
+  "family": "icon"
+ },
+ "berries": {
+  "look": "a small cluster of round red BERRIES, three or four plump berries with a single green leaf on top",
+  "family": "icon"
+ },
+ "quartz": {
+  "look": "a single MILKY WHITE quartz crystal SHARD: six-sided prism with a pointed tip, pale white with faint icy blue facet shading - bright and translucent, NOT dark, NOT black, NOT grey rock",
+  "family": "icon",
+  "materials": [
+   "stone"
+  ]
+ },
+ "sand": {
+  "look": "a small conical PILE OF SAND, pale tan with a few darker speckles and a soft heaped silhouette",
+  "family": "icon",
+  "materials": [
+   "dirt"
+  ]
+ },
+ "tin_ore": {
+  "look": "a rough grey ORE CHUNK studded with dull silvery TIN flecks, angular blocky rock",
+  "family": "icon",
+  "materials": [
+   "stone",
+   "metal"
+  ]
+ },
+ "apple": {
+  "look": "a single shiny red APPLE with one small green LEAF on a short stem: simple round silhouette, bright highlight on the upper-left",
+  "family": "icon"
+ },
+ "orange": {
+  "look": "a single ORANGE with dimpled peel texture and one small green leaf: round, warm orange, soft highlight",
+  "family": "icon"
+ },
+ "rotten_apple": {
+  "look": "a ROTTEN APPLE: dull brown-red with a sunken bruised side, a few dark spots, slightly collapsed silhouette, drooping wilted leaf",
+  "family": "icon"
+ },
+ "rotten_orange": {
+  "look": "a ROTTEN ORANGE: dull brownish peel with grey-green MOLD patches, slightly deflated and sagging",
+  "family": "icon"
+ },
+ "hands": {
+  "look": "a pair of open HANDS seen palm-up, fingers slightly spread as if ready to grab or gather, warm tan skin with a soft outline \u2014 wearing a thin FABRIC wrist cuff",
+  "family": "icon",
+  "materials": [
+   "fabric"
+  ]
+ },
+ "flashlight": {
+  "look": "a chunky handheld FLASHLIGHT seen at a 3/4 angle: cylindrical metal body with a wide head, glass lens face glowing pale yellow, small button on the side",
+  "family": "icon",
+  "materials": [
+   "metal"
+  ]
+ },
+ "centipede_parts": {
+  "look": "a few curved CENTIPEDE BODY SEGMENTS: glossy reddish-brown chitin plates with little legs attached, stacked loosely",
+  "family": "icon",
+  "materials": [
+   "wood"
+  ]
+ },
+ "paper_nest": {
+  "look": "a torn chunk of grey papery WASP NEST material: layered swirled bands of grey paper",
+  "family": "icon",
+  "materials": [
+   "stone"
+  ]
+ },
+ "wasp_larvae": {
+  "look": "three plump pale WASP LARVAE: cream-white segmented grubs curled in a row",
+  "family": "icon",
+  "materials": [
+   "marble"
+  ]
+ },
+ "wasp_stinger": {
+  "look": "a single sharp WASP STINGER: a curved black needle-like point with a small amber venom drop at the tip",
+  "family": "icon",
+  "materials": [
+   "metal"
+  ]
+ },
+ "iron_helmet": {
+  "look": "a knight's IRON HELMET seen front-on: rounded steel dome, dark T-shaped visor slit, riveted plates, cool grey sheen",
+  "family": "icon",
+  "materials": [
+   "metal"
+  ]
+ },
+ "copper_helmet": {
+  "look": "a COPPER HELMET front-on: rounded burnished orange-brown dome with a vertical nose guard and a riveted rim",
+  "family": "icon",
+  "materials": [
+   "metal"
+  ]
+ },
+ "leather_cap": {
+  "look": "a soft LEATHER CAP/hood front-on: rounded brown headpiece with a short stitched brim",
+  "family": "icon",
+  "materials": [
+   "fabric"
+  ]
+ },
+ "straw_hat": {
+  "look": "a wide-brimmed STRAW HAT: golden woven straw, low conical crown, broad flat brim with a darker band",
+  "family": "icon",
+  "materials": [
+   "foliage"
+  ]
+ },
+ "iron_chest": {
+  "look": "an IRON BREASTPLATE: grey steel torso armor, rounded shoulder plates, a central ridge, riveted edges",
+  "family": "icon",
+  "materials": [
+   "metal"
+  ]
+ },
+ "leather_chest": {
+  "look": "a brown LEATHER tunic / chest armor: layered stitched leather vest with a belt",
+  "family": "icon",
+  "materials": [
+   "fabric"
+  ]
+ },
+ "iron_gauntlets": {
+  "look": "a PAIR of IRON GAUNTLETS side by side: grey steel armored gloves with segmented finger plates",
+  "family": "icon",
+  "materials": [
+   "metal"
+  ]
+ },
+ "leather_gloves": {
+  "look": "a PAIR of brown LEATHER GLOVES side by side, with stitched cuffs",
+  "family": "icon",
+  "materials": [
+   "fabric"
+  ]
+ },
+ "leather_pants": {
+  "look": "brown LEATHER leggings: a pair of stitched leather trouser legs",
+  "family": "icon",
+  "materials": [
+   "fabric"
+  ]
+ },
+ "iron_boots": {
+  "look": "a PAIR of IRON BOOTS side by side: grey steel armored boots with plated shins",
+  "family": "icon",
+  "materials": [
+   "metal"
+  ]
+ },
+ "leather_boots": {
+  "look": "a PAIR of brown LEATHER BOOTS side by side, with stitched soles",
+  "family": "icon",
+  "materials": [
+   "fabric"
+  ]
+ },
+ "red_dye": {
+  "look": "a small round glass JAR of crimson powdered DYE, vivid red pigment filling it, a cork stopper on top. A clean inventory icon.",
+  "materials": [
+   "fabric"
+  ]
+ },
+ "yellow_dye": {
+  "look": "a small round glass JAR of golden-yellow powdered DYE, vivid yellow pigment filling it, a cork stopper on top. A clean inventory icon.",
+  "materials": [
+   "fabric"
+  ]
+ },
+ "blue_dye": {
+  "look": "a small round glass JAR of deep blue powdered DYE, vivid blue pigment filling it, a cork stopper on top. A clean inventory icon.",
+  "materials": [
+   "fabric"
+  ]
+ },
+ "green_dye": {
+  "look": "a small round glass JAR of leaf-green powdered DYE, vivid green pigment filling it, a cork stopper on top. A clean inventory icon.",
+  "materials": [
+   "fabric"
+  ]
+ },
+ "plum": {
+  "look": "a single glossy PLUM, deep purple with a lighter dusty bloom and a vertical crease, one small green leaf on a short stem; simple round-oval silhouette, bright highlight upper-left",
+  "family": "icon"
+ },
+ "cherry": {
+  "look": "a pair of glossy red CHERRIES joined on one forked stem with a single green leaf; simple round silhouettes, bright highlight upper-left",
+  "family": "icon"
+ },
+ "rotten_plum": {
+  "look": "a ROTTEN PLUM: dull brownish-purple, sunken bruised side, a few dark mold spots, slightly collapsed silhouette, drooping wilted leaf",
+  "family": "icon"
+ },
+ "rotten_cherry": {
+  "look": "a pair of ROTTEN CHERRIES on one stem: dull brown-red, shriveled and dented with dark spots, limp wilted leaf",
+  "family": "icon"
+ },
+ "backpack": {
+  "look": "a sturdy canvas-and-leather BACKPACK with a top flap buckled shut, two shoulder straps visible, a small front pocket; warm brown leather trim on olive canvas",
+  "family": "icon"
+ },
+ "pickaxe_copper": {
+  "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of polished salmon-orange COPPER metal with a warm metallic sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+  "family": "icon"
+ },
+ "pickaxe_iron": {
+  "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of grey IRON metal with a dull metallic sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+  "family": "icon"
+ },
+ "pickaxe_steel": {
+  "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of bright silver-grey STEEL with a crisp metallic sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+  "family": "icon"
+ },
+ "pickaxe_silver": {
+  "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of gleaming pale SILVER with a bright white sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+  "family": "icon"
+ },
+ "pickaxe_gold": {
+  "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of rich yellow GOLD with a warm glint at the top-right, straight wooden HANDLE running to the bottom-left",
+  "family": "icon"
+ },
+ "pickaxe_platinum": {
+  "look": "a mining PICKAXE: twin-pointed curved PICK HEAD of pale icy blue-white PLATINUM with a cold sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+  "family": "icon"
+ },
+ "axe_copper": {
+  "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of polished salmon-orange COPPER metal with a warm metallic sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+  "family": "icon"
+ },
+ "axe_iron": {
+  "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of grey IRON metal with a dull metallic sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+  "family": "icon"
+ },
+ "axe_steel": {
+  "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of bright silver-grey STEEL with a crisp metallic sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+  "family": "icon"
+ },
+ "axe_silver": {
+  "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of gleaming pale SILVER with a bright white sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+  "family": "icon"
+ },
+ "axe_gold": {
+  "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of rich yellow GOLD with a warm glint at the top-right, straight wooden HANDLE running to the bottom-left",
+  "family": "icon"
+ },
+ "axe_platinum": {
+  "look": "a woodcutting AXE: single broad wedge-shaped AXE HEAD of pale icy blue-white PLATINUM with a cold sheen at the top-right, straight wooden HANDLE running to the bottom-left",
+  "family": "icon"
+ },
+ "hoe_copper": {
+  "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
+  "family": "icon"
+ },
+ "hoe_iron": {
+  "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
+  "family": "icon"
+ },
+ "hoe_steel": {
+  "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
+  "family": "icon"
+ },
+ "hoe_silver": {
+  "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
+  "family": "icon"
+ },
+ "hoe_gold": {
+  "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
+  "family": "icon"
+ },
+ "hoe_platinum": {
+  "look": "a garden HOE shaped like a golf club: a very long thin wooden SHAFT to the bottom-left, tipped at the top-right with ONE SMALL THIN FLAT PADDLE BLADE angled sharply downward-forward. The blade is a thin flat plate, NARROWER than a hammer head - absolutely NOT a hammer, NOT a mallet, no block-shaped head",
+  "family": "icon"
+ },
+ "scythe_copper": {
+  "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of polished salmon-orange COPPER metal with a warm metallic sheen sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
+  "family": "icon"
+ },
+ "scythe_iron": {
+  "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of grey IRON metal with a dull metallic sheen sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
+  "family": "icon"
+ },
+ "scythe_steel": {
+  "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of bright silver-grey STEEL with a crisp metallic sheen sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
+  "family": "icon"
+ },
+ "scythe_silver": {
+  "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of gleaming pale SILVER with a bright white sheen sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
+  "family": "icon"
+ },
+ "scythe_gold": {
+  "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of rich yellow GOLD with a warm glint sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
+  "family": "icon"
+ },
+ "scythe_platinum": {
+  "look": "a harvesting SCYTHE: long CURVED CRESCENT BLADE of pale icy blue-white PLATINUM with a cold sheen sweeping across the top-right, bent wooden SNATH handle with a short grip peg to the bottom-left",
+  "family": "icon"
+ },
+ "shovel_copper": {
+  "look": "a digging SHOVEL: rounded pointed SPADE BLADE of polished salmon-orange COPPER metal with a warm metallic sheen at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
+  "family": "icon"
+ },
+ "shovel_iron": {
+  "look": "a digging SHOVEL: rounded pointed SPADE BLADE of grey IRON metal with a dull metallic sheen at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
+  "family": "icon"
+ },
+ "shovel_steel": {
+  "look": "a digging SHOVEL: rounded pointed SPADE BLADE of bright silver-grey STEEL with a crisp metallic sheen at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
+  "family": "icon"
+ },
+ "shovel_silver": {
+  "look": "a digging SHOVEL: rounded pointed SPADE BLADE of gleaming pale SILVER with a bright white sheen at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
+  "family": "icon"
+ },
+ "shovel_gold": {
+  "look": "a digging SHOVEL: rounded pointed SPADE BLADE of rich yellow GOLD with a warm glint at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
+  "family": "icon"
+ },
+ "shovel_platinum": {
+  "look": "a digging SHOVEL: rounded pointed SPADE BLADE of pale icy blue-white PLATINUM with a cold sheen at the top-right, long wooden SHAFT with a small T-GRIP at the bottom-left",
+  "family": "icon"
+ },
+ "sword_copper": {
+  "look": "a fighting SWORD: straight tapered BLADE of polished salmon-orange COPPER metal with a warm metallic sheen, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
+  "family": "icon"
+ },
+ "sword_iron": {
+  "look": "a fighting SWORD: straight tapered BLADE of grey IRON metal with a dull metallic sheen, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
+  "family": "icon"
+ },
+ "sword_steel": {
+  "look": "a fighting SWORD: straight tapered BLADE of bright silver-grey STEEL with a crisp metallic sheen, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
+  "family": "icon"
+ },
+ "sword_silver": {
+  "look": "a fighting SWORD: straight tapered BLADE of gleaming pale SILVER with a bright white sheen, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
+  "family": "icon"
+ },
+ "sword_gold": {
+  "look": "a fighting SWORD: straight tapered BLADE of rich yellow GOLD with a warm glint, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
+  "family": "icon"
+ },
+ "sword_platinum": {
+  "look": "a fighting SWORD: straight tapered BLADE of pale icy blue-white PLATINUM with a cold sheen, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
+  "family": "icon"
+ },
+ "sword_bronze": {
+  "look": "a fighting SWORD: straight tapered BLADE of warm brown-gold BRONZE with a soft metallic sheen, a visible center ridge, pointing to the top-right; small CROSSGUARD and leather-wrapped GRIP with a round pommel at the bottom-left",
+  "family": "icon"
+ },
+ "spear_copper": {
+  "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of polished salmon-orange COPPER metal with a warm metallic sheen, blunt butt at the bottom-left",
+  "family": "icon"
+ },
+ "spear_iron": {
+  "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of grey IRON metal with a dull metallic sheen, blunt butt at the bottom-left",
+  "family": "icon"
+ },
+ "spear_steel": {
+  "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of bright silver-grey STEEL with a crisp metallic sheen, blunt butt at the bottom-left",
+  "family": "icon"
+ },
+ "spear_silver": {
+  "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of gleaming pale SILVER with a bright white sheen, blunt butt at the bottom-left",
+  "family": "icon"
+ },
+ "spear_gold": {
+  "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of rich yellow GOLD with a warm glint, blunt butt at the bottom-left",
+  "family": "icon"
+ },
+ "spear_platinum": {
+  "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of pale icy blue-white PLATINUM with a cold sheen, blunt butt at the bottom-left",
+  "family": "icon"
+ },
+ "spear_bronze": {
+  "look": "a hunting SPEAR: a long thin wooden SHAFT running corner to corner, tipped at the top-right with a leaf-shaped SPEARHEAD of warm brown-gold BRONZE with a soft metallic sheen, blunt butt at the bottom-left",
+  "family": "icon"
+ },
+ "copper_bar": {
+  "look": "a cast metal INGOT BAR of polished salmon-orange COPPER with a warm metallic sheen: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
+  "family": "icon"
+ },
+ "iron_bar": {
+  "look": "ONE cast metal INGOT of grey IRON: a classic trapezoid ingot (narrow flat top, wider base) lying horizontally, seen face-on from slightly above so the flat top face and the front face both read; bright highlight band along the top edge, mid-grey front, darker base shadow line; crisp clean silhouette, nothing else in frame",
+  "family": "icon"
+ },
+ "bronze_bar": {
+  "look": "a cast metal INGOT BAR of warm brown-gold BRONZE with a soft metallic sheen: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
+  "family": "icon"
+ },
+ "steel_bar": {
+  "look": "a cast metal INGOT BAR of bright silver-grey STEEL with a crisp metallic sheen: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
+  "family": "icon"
+ },
+ "silver_bar": {
+  "look": "a cast metal INGOT BAR of gleaming pale SILVER with a bright white sheen: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
+  "family": "icon"
+ },
+ "gold_bar": {
+  "look": "a cast metal INGOT BAR of rich yellow GOLD with a warm glint: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
+  "family": "icon"
+ },
+ "platinum_bar": {
+  "look": "a cast metal INGOT BAR of pale icy blue-white PLATINUM with a cold sheen: a single chunky trapezoid-profile ingot seen face-on and slightly from above, bright highlight along the top face, darker shading on the front face; clean readable silhouette",
+  "family": "icon"
+ },
+ "wood": {
+  "look": "a solid square BLOCK of warm brown WOOD, face-on like a building block: horizontal plank boards with darker seams and simple wood grain, a lighter top edge; chunky readable block silhouette (this is the wood-block material item)",
+  "family": "icon"
+ },
+ "chitin": {
+  "look": "a curved shard of insect CHITIN shell: glossy dark brown-black plate with a ridged edge and an amber highlight along the curve",
+  "family": "icon"
+ },
+ "cloth": {
+  "look": "a neatly folded square of woven CLOTH fabric, soft cream-beige, with visible fold lines and a slightly draped front edge",
+  "family": "icon"
+ },
+ "glass": {
+  "look": "a clear square pane of GLASS seen face-on: pale ice-blue with two diagonal white glare streaks and a thin lighter edge",
+  "family": "icon"
+ },
+ "leather": {
+  "look": "a rolled-up piece of tanned brown LEATHER hide, the roll seen from its side with the coil spiral visible on the end, a strap of hide tying it",
+  "family": "icon"
+ },
+ "plank": {
+  "look": "two stacked sawn WOOD PLANKS, warm brown with visible grain and lighter cut ends, slightly offset",
+  "family": "icon"
+ },
+ "silk": {
+  "look": "a loose skein of pale ivory SILK thread folded into a soft loop, with a subtle pearly sheen",
+  "family": "icon"
+ },
+ "thread": {
+  "look": "a wooden SPOOL wound with dark red THREAD, seen slightly from above, a loose thread end trailing",
+  "family": "icon"
+ },
+ "gardener_gloves": {
+  "look": "a pair of sturdy canvas GARDENING GLOVES, olive-green with brown leather palms, lying overlapped",
+  "family": "icon"
+ },
+ "magnifying_glass": {
+  "look": "a MAGNIFYING GLASS with a round brass rim, pale blue lens with a white glare streak, and a short wooden handle at the lower-left",
+  "family": "icon"
+ },
+ "reed_hat": {
+  "look": "a woven REED sun HAT with a wide round brim and a domed crown, warm straw-yellow with a thin darker band",
+  "family": "icon"
+ },
+ "coal": {
+  "look": "a single jagged LUMP OF COAL: an irregular angular black-charcoal chunk with faceted faces and subtle blue-grey highlights on the upper edges",
+  "family": "icon"
+ },
+ "honeycomb": {
+  "look": "a broken-off chunk of golden HONEYCOMB, hexagonal wax cells clearly visible, a few cells oozing amber honey, waxy yellow-orange; NOT a jar, NOT a whole hive",
+  "family": "icon"
+ },
+ "honey": {
+  "look": "a small glass JAR of amber HONEY with a wooden dipper handle sticking out, golden translucent contents, a band of cloth tied over the lid; NOT a bottle of liquid, NOT a mug",
+  "family": "icon"
+ },
+ "beeswax": {
+  "look": "a rectangular BAR of pale CREAM-WHITE beeswax, like a bar of soap: matte, solid, very light yellow-ivory color with ONE faint small honeycomb stamp in the corner; NOT orange, NOT honey, NOT a honeycomb, NOT round",
+  "family": "icon"
+ },
+ "smoker": {
+  "look": "a beekeeper's SMOKER tool: a shiny SILVER-TIN cylindrical can with a short conical SPOUT angled to the TOP-RIGHT puffing one wisp of white smoke, a small RED accordion BELLOWS attached to the can's lower-left side; bright metal, simple bold shapes; NOT a lantern, NOT a kettle, NOT blue",
+  "family": "icon",
+  "materials": [
+   "metal"
+  ]
+ },
+ "dead_bee": {
+  "look": "a dead HONEYBEE on its BACK, legs curled up in the air, faded dull gold-and-brown striped body, limp translucent wings; a small dead-bug carcass",
+  "family": "icon",
+  "materials": [
+   "dirt"
+  ]
+ },
+ "dead_dragonfly": {
+  "look": "a dead DRAGONFLY lying flat, long thin faded blue body, four translucent wings splayed crooked and dull; clearly a carcass, NOT flying",
+  "family": "icon",
+  "materials": [
+   "dirt"
+  ]
+ },
+ "dead_firefly": {
+  "look": "a dead FIREFLY on its BACK, small dark beetle body with a faded pale amber tail segment gone dull, legs curled; a small dead-bug carcass",
+  "family": "icon",
+  "materials": [
+   "dirt"
+  ]
+ },
+ "seashell": {
+  "look": "a single spiral CONCH seashell, cream and pink banded, pointed spire tip and a smooth open lip; NOT a snail, NOT a fossil",
+  "family": "icon"
+ },
+ "starfish": {
+  "look": "a single orange five-armed STARFISH, chunky pixel-art with HARD clean edges and big bumpy dots, one arm slightly curled; bold simple shapes; NOT blurry, NOT a flower",
+  "family": "icon"
+ },
+ "message_bottle": {
+  "look": "a CORKED pale-green GLASS BOTTLE at a slight tilt with a rolled PAPER NOTE inside, chunky pixel-art with HARD clean edges and a single white glass highlight; bold simple shapes; NOT a potion",
+  "family": "icon"
+ },
+ "dead_caterpillar": {
+  "look": "a dead CATERPILLAR curled limp on the ground, plump segmented body in a dull desaturated grey-green, a few soft spines flattened, lifeless; a dead-bug carcass",
+  "family": "icon",
+  "materials": [
+   "dirt"
+  ]
+ }
 }

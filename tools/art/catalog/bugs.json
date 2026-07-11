@@ -449,5 +449,33 @@
       "dirt"
     ],
     "family": "creature"
+  },
+  "wasp_soldier": {
+    "look": "a WASP SOLDIER, top-down: a large aggressive wasp, bigger and bulkier than a common wasp, with a THICK armoured black-and-YELLOW banded abdomen, broad dark wings swept back, and a prominent stinger; menacing.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "hornet_giant": {
+    "look": "a GIANT HORNET, top-down: a huge fearsome hornet with a broad ORANGE-and-dark-brown banded body, large angular head with big jaws, long swept-back amber wings, and a thick venomous stinger; the apex flying predator, clearly bigger and deadlier than a wasp.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "caterpillar_spiny": {
+    "look": "a SPINY CATERPILLAR, top-down: a fat segmented grub-like caterpillar lying flat, pale GREEN body with rows of bristly VENOM-TIPPED spines along its back, small dark head at one end; plump and slow, NOT a worm, NOT a centipede.",
+    "materials": [
+      "foliage"
+    ],
+    "family": "creature"
+  },
+  "caterpillar_thornback": {
+    "look": "a THORNBACK CATERPILLAR, top-down: a huge armoured caterpillar, dark PURPLE-black segmented body ridged with rows of sharp BLACK THORNS/spikes down its back, glowing faint markings, blunt head; hulking and tanky, NOT a centipede, NOT a millipede.",
+    "materials": [
+      "foliage"
+    ],
+    "family": "creature"
   }
 }
