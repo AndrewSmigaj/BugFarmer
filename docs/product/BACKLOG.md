@@ -572,6 +572,17 @@ containers, and the determinism boundary. See [architecture_crafting.md](archite
 - Scaffolding: CLAUDE.md quality directive; `regenerate-sprite` skill hardened (aspect-ratio check,
   missing-catalog-row, pixelclean churn).
 
+## Next — COMBAT AI & CHALLENGE (DESIGN adopted 2026-07-11 → `architecture_combat.md`)
+Owner adopted the skeleton: **attack-token stage manager + FSM brains + steering**. Recommended core layers
+(pending owner confirm): **three-phase attack telegraphs**, **player dodge + i-frames** (the prerequisite — we
+have weapon swings but no defensive verb), **threat table + aggro radius + leash**, then a **threat director**
+pacing valve. Deferred: utility-AI attack selection, enemy-role/species expansion. Rejected: GOAP, flow fields.
+All integer/fixed-point on the server → cheap on the wire (legs + events, not per-bug positions; see the doc's
+network section). **Build order:** dodge+i-frames → one telegraphed enemy + token pool in `feel_test` (playtest)
+→ aggro/leash → generalise FSM+steering → threat director. Open taste/scope Qs in the doc (how cozy vs hard;
+dodge-only vs block/parry; is threat zoned; how many new enemy roles). Full evidence:
+`investigations/deep_research_2026-07/combat/`.
+
 ## Next — HUD: bigger hearts + access-button bar (planned, not built)
 Plan exists (`~/.claude/plans` / the torch+HUD plan). Bigger/nudged hearts; bottom rounded-square
 access buttons (Inventory works; Ecologist/Mayor/Herbalist locked w/ toasts); Apico-style layout
