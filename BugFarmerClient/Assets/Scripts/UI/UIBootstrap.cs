@@ -69,6 +69,11 @@ namespace BugFarmer.UI
             shopGO.transform.SetParent(canvasGO.transform, false);
             shopGO.AddComponent<ShopPanel>();
 
+            // Shovel builder "Set Materials" panel (open with B while a shovel is equipped).
+            var shovelGO = new GameObject("ShovelBuilderPanel(Code)", typeof(RectTransform));
+            shovelGO.transform.SetParent(canvasGO.transform, false);
+            shovelGO.AddComponent<ShovelBuilderPanel>();
+
             // Sign reader + mannequin outfit panels (right-click a sign / mannequin occupant).
             var signGO = new GameObject("SignPanel(Code)", typeof(RectTransform));
             signGO.transform.SetParent(canvasGO.transform, false);
