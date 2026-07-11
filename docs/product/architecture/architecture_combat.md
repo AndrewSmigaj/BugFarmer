@@ -1,7 +1,8 @@
 # Combat AI & challenge — design
 
-**STATUS: Milestone 1 (foundation) BUILT + gated (2026-07-11); M2–M5 are DESIGN.** The adopted skeleton + the
-layers around it. M1 as-built is in [§ Milestone 1 — as-built](#milestone-1--as-built) below; the rest is design.
+**STATUS: Milestones 1–3 BUILT + gated (2026-07-11); M4 (centipede regroup) + the M5 skill remain.** The adopted
+skeleton + the layers around it. As-built: [§ Milestone 1](#milestone-1--as-built) (foundation),
+[§ Milestones 2–3](#milestones-23--as-built-enemy-tiers) (enemy tiers + nocturnal). The rest is design.
 Build plan: the session plan file (combat foundation + enemy roadmap). Evidence + alternatives:
 [`../investigations/deep_research_2026-07/combat/`](../investigations/deep_research_2026-07/combat/)
 (01 melee AI · 02 swarm AI · 03 challenge/effectiveness · 04 player combat & bosses). Runs inside the
@@ -115,6 +116,30 @@ Shipped 2026-07-11 (commits `combat M1.1`…`M1.4`). The foundation everything e
   plugin. **PENDING (needs the rebuilt plugin deployed):** the 2-client `run_sync_latejoin.sh` regression run
   (co-located + disjoint) and the **owner arena playtest** (telegraph reads · dodge negates · no phantom · ≤2 bite
   · night enemies via the debug time control).
+
+## Milestones 2–3 — as-built (enemy tiers)
+Shipped 2026-07-11 (commits `Combat: nocturnal…`, `Combat M2+M3…`). Four new enemies on the M1 foundation, each
+just DATA (`species.json` combat spec + `bugs.json` art + a carcass item) + a fresh gpt-image-1.5 sprite — no
+per-enemy code. All are debug-spawnable in the arena immediately via the M1 species picker.
+
+- **Nocturnal mechanic** (`BugSpecies.Nocturnal`): a night hunter lies low by day and is a full threat at night.
+  Server-side + deterministic — `isNightForHunting(state)` (dusk ≈ 0.72 → dawn ≈ 0.22 of the day) gates two
+  things, both of which output only legs / server-authoritative HP (no new client-hashed sim input): the sting
+  (`handleBugPlayerStrike` won't arm by day) and predator aggro (`predationThink` won't hunt/nest-defend by day).
+- **M2 wasp tiers** (`category: swarm`, predation → inherit nest-defence + hunt + ambient sting):
+  `wasp_soldier` (medium: dmg 2 / cd 1.6 / spd 2.6 / hp 5) and `hornet_giant` (hard, **nocturnal**: dmg 3 / cd
+  1.2 / spd 3.0 / hp 8).
+- **M3 caterpillar tiers** (`category: individual`, **no predation** → no lunge machine; slow tanky grazers that
+  ambient-sting on contact — the ground contrast to aerial wasps): `caterpillar_spiny` (medium: dmg 2 / spd 1.1 /
+  hp 10) and `caterpillar_thornback` (tough, **nocturnal**: dmg 3 / spd 1.0 / hp 16).
+- **Difficulty knobs** (no new code): `attack_damage` (per-hit) · `attack_cooldown` (frequency, floored by the 1 s
+  shared invuln) · `base_speed` + `hunt_speed_mult` (escape pressure) · `vision_range`/`home_range` (aggro net) ·
+  `max_hp` (hits-to-kill) · `min/max_swarm_size` (cloud size) · `nocturnal`. Add/tune an enemy → the
+  **`combat-enemy` skill**.
+- **Verified:** full Go world suite + `sim-determinism` PASS; sprites acceptance-checked at full res.
+- **Known gaps (design, not built):** a per-species **token pool** (higher tiers biting more at once) and active
+  **player-pursuit** for non-nest enemies (caterpillars only ambient-sting; wasps pursue only via nest-defence) —
+  both belong to the adopted-but-unbuilt **threat table + aggro radius** layer.
 
 ## Determinism & network model (why the "central arbiter" is cheap)
 - The stage manager, FSMs, and steering are **server CPU**, run each tick as **integer/fixed-point** math with

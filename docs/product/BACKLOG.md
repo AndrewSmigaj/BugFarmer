@@ -583,11 +583,15 @@ mirrors predation; swarm-of-1 dropped — player HP is SIM-INERT so it needs no 
   ticks**, `processPendingStings`). Gated: `bug_player_strike_test.go` + full world suite + `sim-determinism`
   PASS. **Left to run** (needs the rebuilt plugin deployed — do with the playtest): 2-client `run_sync_latejoin`
   regression + the **owner arena playtest**.
-- **⏳ NEXT — needs the owner (design + API spend), so surfaced not guessed:** **M2** wasp polish + **medium/hard
-  wasp-tier** enemies and **M3** medium/tough **caterpillar** both need (a) the **difficulty specifics** — what
-  each tier tunes: HP / speed / cooldown / token count / a new attack — and (b) **which are nocturnal**; and both
-  **generate new sprites** (gpt-image-1.5/medium — real API spend). **M4** centipede regroup (grouped + staggered
-  per-individual bite, onto the M1 authority path). **M5** docs AS-BUILT (M1 portion done) + `combat-enemy` skill.
+- **✅ M2+M3 DONE** (commits `Combat: nocturnal…`, `Combat M2+M3…`): **nocturnal** night-hunter mechanic +
+  4 new enemies with fresh gpt-image-1.5 sprites — `wasp_soldier` (med) / `hornet_giant` (hard, nocturnal) /
+  `caterpillar_spiny` (med) / `caterpillar_thornback` (tough, nocturnal). Debug-spawnable in the arena.
+  Gated: Go suite + sim-determinism PASS. Difficulty via existing knobs (dmg/cd/speed/vision/hp/swarm) + nocturnal.
+- **⏳ REMAINING:** **M4** centipede regroup (grouped + staggered per-individual bite onto the M1 authority path) +
+  the super-hard centipede — **owner-scoped for the centipede-tiers session** (deferred by owner 2026-07-11).
+  **M5** `combat-enemy` skill. **Threat-table / aggro-radius** layer (adopted, unbuilt): active player-pursuit for
+  non-nest enemies + a per-species token pool — the two known gaps that make the new tiers *ambient* rather than
+  *pursuing*.
 **Backlog `zone barriers`:** gate danger by zone so starter zones stay cozy while wilds/caves/night are dangerous.
 Earlier notes (still valid): Deferred — utility-AI attack selection, enemy-role/species expansion. Rejected: GOAP, flow fields.
 All integer/fixed-point on the server → cheap on the wire (legs + events, not per-bug positions; see the doc's

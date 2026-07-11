@@ -42,7 +42,9 @@ time (you end up building every feature twice). For every feature:
   (`art/` = how sprites look & are made; `authoring/` = how to build zones/scenes — start at its `README.md`).
 - `.claude/skills/` — task playbooks: `test-changes` (verify ANY change — every test/determinism gate),
   `frontier-sync` (wire a new deterministic bug-sim mechanic), `perf-tuning` (profile + optimize the sim),
-  `ecology-tuning` (balance the bug food web), `bug-spawning` (why a zone has the wrong # of bugs —
+  `combat-enemy` (add/tune a COMBAT enemy — species tier, difficulty dial, nocturnal, the per-individual
+  telegraphed-sting foundation + the arena test loop), `ecology-tuning` (balance the bug food web),
+  `bug-spawning` (why a zone has the wrong # of bugs —
   spawn paths, the walkability + stale-save gotchas, populate/reset/persist), `run-backend`
   (the Nakama/Postgres/Go stack), `add-object` / `regenerate-sprite` (world art), `author-zone` (zone/scene
   MECHANICS), `zone-craft` (zone/scene QUALITY — the craft loop: brief quotas, options, zone lenses,
