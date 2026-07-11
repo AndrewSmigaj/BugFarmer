@@ -7,7 +7,7 @@
 | Slice | Clean doc | Strongest recovered raw | Status |
 |---|---|---|---|
 | **URP-2D lighting & rendering** (project-grounded) | ✅ `01_unity_urp2d_lighting_and_rendering.md` | `../_raw_recovered/visuals/ae56b9b076e43bd1d.md` (8+ Unity docs + our actual project) | **DONE** — actionable, version-pinned |
-| **Art-direction reference** (why Stardew/Spiritfarer/Ori/etc. look rich; palette cohesion; making AI-generated sprites cohere) | ⏳ raw only | `a0a7f7d6a45db08cb.md` (Apico devlog + others), `a669498e088defe4d.md` (art direction of games), `a10a417503069e33a.md` (density & composition) | **Raw recovered** — synthesis owed |
+| **Art-direction & cohesion** (why Stardew/Spiritfarer/Ori/etc. look rich; palette cohesion; making AI-generated sprites cohere) | ✅ `02_art_direction_and_cohesion.md` | `a0a7f7d6a45db08cb.md`, `a669498e088defe4d.md`, `a10a417503069e33a.md` (+ own web research) | **DONE** — cohesion pipeline, look-target (Stardew), asset shortlist, scored picks |
 | **Unity asset-packs survey** (shaders/VFX/tween/lighting packs; free-first) | ⏳ scattered | check `a03253260bc73bf44.md`, `a8ee28390764d697b.md`, `ac6d8eadc55b5bc59.md` (some may be mis-bucketed) | **Partial** — the dedicated asset-pack agent died early; verify from raw + a low-concurrency re-run |
 | **Other URP techniques** (post-FX beyond bloom, shaders, tilemap variety, parallax, VFX Graph) | ⏳ raw | `a2d8849a583c18e92.md`, `ad9a4a7f01a437995.md`, `af590b9766eea606a.md` | **Raw recovered** — synthesis owed |
 
@@ -21,10 +21,11 @@
 3. **Lean into warm-key / cool-ambient contrast** — the #1 "looks good" trick, already half-done.
 4. **Sprite-cookie lights + additive emissive accents** (fireflies/torches self-glow into the bloom).
 
-## Art-direction angle owed (the owner's core concern — "other games look more interesting")
-The prior research covered particles/foliage/shadows/camera/post-FX/parallax. The **gap** the overnight run
-targeted (and that survived only as raw) is **art direction**, not tech: palette cohesion & contrast, value
-structure, focal hierarchy, tile variety/anti-repetition, idle micro-animation density, and — our specific
-risk — **making AI-generated sprites cohere** (palette unification, gradient-map recolor, one consistent light
-direction, a unifying post-pass). This deserves a clean synthesis doc from the raw art-direction files above,
-plus the asset-pack shortlist. Re-run at ≤2 self-contained agents per `no-wide-agent-fanout`.
+## Art-direction angle (the owner's core concern — "other games look more interesting") — DONE
+Synthesized in `02_art_direction_and_cohesion.md`: why the best 2D games look rich (source table), the
+**AI-sprite cohesion pipeline** (master palette → LUT proof → prompt anchoring → post-gen palette clamp → one
+light direction → gradient-map rescue), tile variety/anti-repetition, motion-density budget, a single
+**look-target (Stardew, + Eastward LUT-mood + Coromon per-biome variety)**, a **Unity asset-pack shortlist**
+(Cinemachine/PrimeTween/URP Color Lookup free; All-In-1 Sprite Shader ~$22; Feel ~$25), and scored candidates
+with the pick order **LUT → palette-lock → tile-variety+motion on the grass pass**. Owner questions: pixel-art
+purity line, look-target confirm, lock one light direction, pixel density, palette scope.
