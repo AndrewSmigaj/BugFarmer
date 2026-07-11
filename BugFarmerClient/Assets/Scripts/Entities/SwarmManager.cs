@@ -701,6 +701,9 @@ namespace BugFarmer.Entities
         // per-swarm cooldown + shared 1s invuln cap the ACTUAL damage to ≤1 hit/window; the pool just bounds how
         // many attackers the authority claims (mirrors predation's kills_per_strike).
         private const int StingTokenPool = 2;
+        // How often (ticks) the authority re-reports a swarm's in-range attackers. Small: the server's telegraph
+        // pending-slot + per-swarm cooldown are the real cadence limiter; this just caps report volume.
+        private const int StingReportThrottleTicks = 4;
         // Per-swarm local re-send throttle (the SERVER cooldown is authoritative; this just avoids spamming a
         // strike message every tick while a bug sits by a player). Key: swarm_id.
         private readonly Dictionary<string, long> _lastLocalStingTick = new();
@@ -730,10 +733,11 @@ namespace BugFarmer.Entities
                 var sp = EntityDatabase.GetSpecies(swarm.SpeciesId);
                 if (sp == null || sp.AttackDamage <= 0) continue;   // only attack-capable species sting
 
-                // Local throttle to the species attack cooldown (server re-gates the real cadence).
-                long cooldownTicks = sp.AttackCooldown > 0f ? (long)(sp.AttackCooldown * 10f) : 20;
+                // Light local throttle only (the SERVER owns the real cadence now: the two-beat telegraph's
+                // pending-slot + per-swarm cooldown gate re-arming). Reporting every few ticks while in range
+                // lets the server re-arm promptly once its cooldown lapses; extra reports are cheap no-ops.
                 if (_lastLocalStingTick.TryGetValue(swarmId, out var last) &&
-                    _simulationTick - last < cooldownTicks)
+                    _simulationTick - last < StingReportThrottleTicks)
                     continue;
 
                 // BROAD-PHASE: swarm centre within stingRange + the cloud radius of a player before the per-bug scan.

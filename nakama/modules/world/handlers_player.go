@@ -14,8 +14,9 @@ import (
 // message (94) — an unfiltered broadcast would knock back every client in the zone.
 
 const (
-	playerInvulnTicks = 10  // 1s shared across ALL attackers
-	dodgeInvulnTicks  = 5   // 0.5s i-frame window a dodge-roll grants
+	playerInvulnTicks   = 10 // 1s shared across ALL attackers
+	dodgeInvulnTicks    = 5  // 0.5s i-frame window a dodge-roll grants
+	stingTelegraphTicks = 12 // 1.2s wind-up between the telegraph flash and the sting — the fairness window
 	regenDelayTicks   = 100 // regen starts 10s after the last damage
 	regenIntervalTick = 300 // +1 HP per 30s
 	stingRange        = 1.5 // "standing in them" — ambient wasps only sting at contact
@@ -199,15 +200,70 @@ func (m *Match) handleBugPlayerStrike(
 	if dx*dx+dy*dy > maxR*maxR {
 		return
 	}
-	// Apply each reported attacker still alive; the funnel's per-swarm cooldown + shared 1s invuln cap the
-	// actual damage (≤1 hit/window) — the token pool just lets ≤N individuals commit a sting.
+	// Two-beat telegraph: don't sting on contact — ARM a telegraphed sting. Flash the wind-up NOW and schedule
+	// the hit for stingTelegraphTicks later (processPendingStings), so the player can dodge (i-frames) or step
+	// out before it lands. A pending sting OR the post-sting cooldown blocks re-arming, so it can't be spammed.
+	if swarm.PendingStingTick > 0 {
+		return // already wound up against someone
+	}
+	cooldownTicks := int64(species.AttackCooldown * 10)
+	if cooldownTicks <= 0 {
+		cooldownTicks = 20
+	}
+	if state.TickCount-swarm.LastAttackTick < cooldownTicks {
+		return // still on cooldown from the last sting
+	}
+	// At least one reported attacker must still be alive (guards a stale report before we commit a wind-up).
+	alive := false
 	for _, id := range msg.BugIDs {
-		if !swarm.IsBugAlive(id) {
+		if swarm.IsBugAlive(id) {
+			alive = true
+			break
+		}
+	}
+	if !alive {
+		return
+	}
+	swarm.PendingStingPlayer = msg.PlayerID
+	swarm.PendingStingTick = state.TickCount + stingTelegraphTicks
+	m.broadcastBugTelegraph(dispatcher, state, swarm, "windup", state.Config.ChunkSize)
+}
+
+// processPendingStings fires telegraphed stings whose wind-up has elapsed (the SECOND beat). At fire time it
+// re-gates: the target must still exist and the swarm centre must still be within loose sting range (step-out
+// counterplay), then applyBugAttackToPlayer applies the FINAL gates (dodge i-frames, shared invuln, per-swarm
+// cooldown, subdued, sting-immunity) + damage. Runs every tick; sorted iteration keeps this sim-inert pass
+// reproducible.
+func (m *Match) processPendingStings(logger runtime.Logger, dispatcher runtime.MatchDispatcher, state *WorldState) {
+	cs := state.Config.ChunkSize
+	for _, swarmID := range sortedStringKeys(state.Swarms) {
+		swarm := state.Swarms[swarmID]
+		if swarm == nil || swarm.PendingStingTick == 0 || state.TickCount < swarm.PendingStingTick {
 			continue
 		}
-		if m.applyBugAttackToPlayer(logger, dispatcher, state, swarm, species, msg.PlayerID, player, species.AttackDamage) {
-			return
+		playerID := swarm.PendingStingPlayer
+		swarm.PendingStingTick = 0
+		swarm.PendingStingPlayer = ""
+
+		if swarm.Count <= 0 {
+			continue
 		}
+		species := state.Species[swarm.SpeciesID]
+		if species == nil || species.AttackDamage <= 0 {
+			continue
+		}
+		player, ok := state.Players[playerID]
+		if !ok || player == nil {
+			continue
+		}
+		// Step-out counterplay: if the swarm centre has drifted out of loose sting range, the sting whiffs.
+		dx := player.WorldX(cs) - swarm.WorldX(cs)
+		dy := player.WorldY(cs) - swarm.WorldY(cs)
+		maxR := stingRange + swarm.Radius
+		if dx*dx+dy*dy > maxR*maxR {
+			continue
+		}
+		m.applyBugAttackToPlayer(logger, dispatcher, state, swarm, species, playerID, player, species.AttackDamage)
 	}
 }
 

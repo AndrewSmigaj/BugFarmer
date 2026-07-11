@@ -85,6 +85,11 @@ type SwarmState struct {
 	// clock resumes, so an in-flight dwell finishes on schedule.
 	FeedUntilTick  int64 `json:"feed_until,omitempty"`
 	LastAttackTick int64 `json:"last_attack,omitempty"` // player-sting/bite cooldown anchor
+	// Telegraphed sting (the two-beat wind-up): when the authority first reports an in-range attacker, the
+	// server flashes a windup telegraph NOW and schedules the actual sting for PendingStingTick, giving the
+	// player a dodge / step-out window. Server-only + sim-inert (like LastAttackTick — never hashed).
+	PendingStingPlayer string `json:"pending_sting_player,omitempty"` // target user id ("" = no pending sting)
+	PendingStingTick   int64  `json:"pending_sting_tick,omitempty"`   // tick the telegraphed sting lands (0 = none)
 
 	// Nest membership (wasps). Phase strings for nest predators: "feeding" (hunt),
 	// "homing" (carry brood back), "defending" (chase a nest threat). An ORPHAN

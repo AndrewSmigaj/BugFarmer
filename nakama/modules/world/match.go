@@ -1508,6 +1508,10 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		// Player HP regen: +1 per 30s, gated on damage recency (echoed to the owner)
 		m.processPlayerRegen(dispatcher, worldState)
 
+		// Fire telegraphed stings whose wind-up has elapsed (the second beat of the two-beat) — re-gated
+		// at fire time so a dodge or step-out during the wind-up negates the hit.
+		m.processPendingStings(logger, dispatcher, worldState)
+
 		// Broadcast swarm SET/metadata only when it changes (NOT per tick). Positions are
 		// derived deterministically on clients from SWARM_SET_TARGET events, so this carries
 		// lifecycle/metadata + the current leg for clients creating a swarm's visual.

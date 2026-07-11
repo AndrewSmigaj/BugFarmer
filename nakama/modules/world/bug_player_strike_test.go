@@ -1,9 +1,10 @@
 package world
 
-// Tests for the PER-INDIVIDUAL bug→player sting (handleBugPlayerStrike): the authority-detect→relay path that
-// replaces the old center-based checkBugAttacks (the "phantom hit" the playtest reported). The server holds only
-// swarm CENTRES, so the authority reports which individual bug(s) are actually in range; the server re-gates
-// through applyBugAttackToPlayer. These tests pin the server-side gates the authority relies on.
+// Tests for the PER-INDIVIDUAL bug→player sting: the authority-detect→relay path (handleBugPlayerStrike) that
+// replaces the old center-based checkBugAttacks (the "phantom hit" the playtest reported), plus the two-beat
+// TELEGRAPH — handleBugPlayerStrike ARMS a wind-up and processPendingStings fires it stingTelegraphTicks later,
+// re-gated so a dodge / step-out during the wind-up negates the hit. HP is server-authoritative + sim-inert, so
+// these tests are the real correctness gate (the sting won't show in the client sync hash).
 //
 // Run inside the builder image:  go test ./modules/world/ -run TestBugPlayerStrike -v
 
@@ -11,7 +12,19 @@ import (
 	"testing"
 )
 
-// Happy path: the zone authority reports an in-range attacker → the funnel applies one hit.
+// report arms a telegraphed sting (the first beat). fireStings advances past the wind-up and runs the fire pass.
+func report(m *Match, state *WorldState, sender, swarmID, playerID string, ids []int) {
+	m.handleBugPlayerStrike(nopRuntimeLogger(), nil, state, sender, BugPlayerStrikeMessage{
+		SwarmID: swarmID, PlayerID: playerID, BugIDs: ids,
+	})
+}
+
+func fireStings(m *Match, state *WorldState) {
+	state.TickCount += stingTelegraphTicks
+	m.processPendingStings(nopRuntimeLogger(), nil, state)
+}
+
+// Happy path: an in-range report arms a wind-up; nothing lands until it fires; then the funnel applies one hit.
 func TestBugPlayerStrikeApplies(t *testing.T) {
 	state, p := hpTestState()
 	m := &Match{}
@@ -19,15 +32,24 @@ func TestBugPlayerStrikeApplies(t *testing.T) {
 	state.Swarms[w.ID] = w
 	state.TickCount = 1000
 
-	m.handleBugPlayerStrike(nopRuntimeLogger(), nil, state, testAuthority, BugPlayerStrikeMessage{
-		SwarmID: w.ID, PlayerID: "p1", BugIDs: w.FirstAliveBugIDs(2),
-	})
+	report(m, state, testAuthority, w.ID, "p1", w.FirstAliveBugIDs(2))
+	if p.HP != 10 {
+		t.Fatalf("HP=%d — the sting must WIND UP, not land on contact", p.HP)
+	}
+	if w.PendingStingTick != 1000+stingTelegraphTicks {
+		t.Fatalf("PendingStingTick=%d, want %d", w.PendingStingTick, 1000+stingTelegraphTicks)
+	}
+
+	fireStings(m, state)
 	if p.HP != 9 {
-		t.Fatalf("HP=%d, want 9 after one relayed sting", p.HP)
+		t.Fatalf("HP=%d, want 9 after the telegraphed sting lands", p.HP)
+	}
+	if w.PendingStingTick != 0 {
+		t.Fatalf("PendingStingTick=%d — must clear after firing", w.PendingStingTick)
 	}
 }
 
-// Anti-cheat: a report from anyone who is NOT the zone authority is ignored.
+// Anti-cheat: a report from anyone who is NOT the zone authority arms nothing.
 func TestBugPlayerStrikeAuthorityOnly(t *testing.T) {
 	state, p := hpTestState()
 	m := &Match{}
@@ -35,16 +57,18 @@ func TestBugPlayerStrikeAuthorityOnly(t *testing.T) {
 	state.Swarms[w.ID] = w
 	state.TickCount = 1000
 
-	m.handleBugPlayerStrike(nopRuntimeLogger(), nil, state, "not_the_authority", BugPlayerStrikeMessage{
-		SwarmID: w.ID, PlayerID: "p1", BugIDs: w.FirstAliveBugIDs(2),
-	})
+	report(m, state, "not_the_authority", w.ID, "p1", w.FirstAliveBugIDs(2))
+	if w.PendingStingTick != 0 {
+		t.Fatalf("a non-authority report must not arm a sting (PendingStingTick=%d)", w.PendingStingTick)
+	}
+	fireStings(m, state)
 	if p.HP != 10 {
-		t.Fatalf("HP=%d — a non-authority report must be ignored", p.HP)
+		t.Fatalf("HP=%d — a non-authority report must never damage", p.HP)
 	}
 }
 
-// Centre-range sanity: even a well-formed authority report is rejected if the swarm centre is nowhere near the
-// player (guards against a bogus/stale report). maxR = stingRange(1.5) + swarm.Radius(4) = 5.5.
+// Centre-range sanity: a report whose swarm centre is nowhere near the player is rejected at arm time.
+// maxR = stingRange(1.5) + swarm.Radius(4) = 5.5.
 func TestBugPlayerStrikeCenterSanity(t *testing.T) {
 	state, p := hpTestState()
 	m := &Match{}
@@ -52,41 +76,71 @@ func TestBugPlayerStrikeCenterSanity(t *testing.T) {
 	state.Swarms[w.ID] = w
 	state.TickCount = 1000
 
-	m.handleBugPlayerStrike(nopRuntimeLogger(), nil, state, testAuthority, BugPlayerStrikeMessage{
-		SwarmID: w.ID, PlayerID: "p1", BugIDs: w.FirstAliveBugIDs(2),
-	})
+	report(m, state, testAuthority, w.ID, "p1", w.FirstAliveBugIDs(2))
+	fireStings(m, state)
 	if p.HP != 10 {
 		t.Fatalf("HP=%d — a report far outside centre range must be rejected", p.HP)
 	}
 }
 
-// Dodge i-frames: a well-timed roll (DodgeInvulnUntilTick in the future) negates the relayed sting.
+// Dodge i-frames: a roll active AT fire time negates the telegraphed sting; once it lapses the next one lands.
 func TestBugPlayerStrikeDodgeNegates(t *testing.T) {
 	state, p := hpTestState()
 	m := &Match{}
 	w := newWaspSwarm("a_w", 6, 10.5, 10)
 	state.Swarms[w.ID] = w
 	state.TickCount = 1000
-	p.DodgeInvulnUntilTick = 1005 // rolled at t=1000, i-frames through 1004
 
-	m.handleBugPlayerStrike(nopRuntimeLogger(), nil, state, testAuthority, BugPlayerStrikeMessage{
-		SwarmID: w.ID, PlayerID: "p1", BugIDs: w.FirstAliveBugIDs(2),
-	})
+	report(m, state, testAuthority, w.ID, "p1", w.FirstAliveBugIDs(2))
+	// Dodge through the fire tick (1000 + 12 = 1012).
+	p.DodgeInvulnUntilTick = 1013
+	fireStings(m, state)
 	if p.HP != 10 {
-		t.Fatalf("HP=%d — a dodge i-frame must negate the sting", p.HP)
+		t.Fatalf("HP=%d — a dodge i-frame active at fire time must negate the sting", p.HP)
 	}
 
-	// After the window closes, the next sting lands.
-	state.TickCount = 1005
-	m.handleBugPlayerStrike(nopRuntimeLogger(), nil, state, testAuthority, BugPlayerStrikeMessage{
-		SwarmID: w.ID, PlayerID: "p1", BugIDs: w.FirstAliveBugIDs(2),
-	})
+	// Next cycle, no dodge: it lands. (The whiffed sting never armed LastAttackTick, so re-arming is allowed.)
+	report(m, state, testAuthority, w.ID, "p1", w.FirstAliveBugIDs(2))
+	fireStings(m, state)
 	if p.HP != 9 {
-		t.Fatalf("HP=%d — sting must land once the i-frame window closes", p.HP)
+		t.Fatalf("HP=%d — the sting must land once the i-frame window lapses", p.HP)
 	}
 }
 
-// Stale ids: a reported bug that is no longer alive is skipped (no phantom damage from a dead attacker).
+// Step-out: if the player leaves loose sting range during the wind-up, the sting whiffs at fire time.
+func TestBugPlayerStrikeStepOutWhiffs(t *testing.T) {
+	state, p := hpTestState()
+	m := &Match{}
+	w := newWaspSwarm("a_w", 6, 10.5, 10)
+	state.Swarms[w.ID] = w
+	state.TickCount = 1000
+
+	report(m, state, testAuthority, w.ID, "p1", w.FirstAliveBugIDs(2))
+	p.Position.LocalX, p.Position.LocalY = 40, 40 // sprint away before the wind-up completes
+	fireStings(m, state)
+	if p.HP != 10 {
+		t.Fatalf("HP=%d — stepping out of range during the wind-up must whiff the sting", p.HP)
+	}
+}
+
+// No spam: while a sting is already wound up, a second report does not re-arm or reschedule it.
+func TestBugPlayerStrikeTelegraphNoSpam(t *testing.T) {
+	state, _ := hpTestState()
+	m := &Match{}
+	w := newWaspSwarm("a_w", 6, 10.5, 10)
+	state.Swarms[w.ID] = w
+	state.TickCount = 1000
+
+	report(m, state, testAuthority, w.ID, "p1", w.FirstAliveBugIDs(2))
+	armed := w.PendingStingTick
+	state.TickCount = 1005
+	report(m, state, testAuthority, w.ID, "p1", w.FirstAliveBugIDs(2))
+	if w.PendingStingTick != armed {
+		t.Fatalf("PendingStingTick=%d — a second report must not reschedule the wind-up (was %d)", w.PendingStingTick, armed)
+	}
+}
+
+// Stale ids: a report naming only non-alive bugs arms nothing (no phantom wind-up from a dead attacker).
 func TestBugPlayerStrikeDeadBugFiltered(t *testing.T) {
 	state, p := hpTestState()
 	m := &Match{}
@@ -94,9 +148,11 @@ func TestBugPlayerStrikeDeadBugFiltered(t *testing.T) {
 	state.Swarms[w.ID] = w
 	state.TickCount = 1000
 
-	m.handleBugPlayerStrike(nopRuntimeLogger(), nil, state, testAuthority, BugPlayerStrikeMessage{
-		SwarmID: w.ID, PlayerID: "p1", BugIDs: []int{999}, // no such bug
-	})
+	report(m, state, testAuthority, w.ID, "p1", []int{999}) // no such bug
+	if w.PendingStingTick != 0 {
+		t.Fatalf("a report of only non-alive bugs must not arm a sting (PendingStingTick=%d)", w.PendingStingTick)
+	}
+	fireStings(m, state)
 	if p.HP != 10 {
 		t.Fatalf("HP=%d — a report naming only non-alive bugs must not damage", p.HP)
 	}
