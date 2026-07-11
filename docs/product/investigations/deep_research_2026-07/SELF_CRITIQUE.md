@@ -4,6 +4,20 @@
 Other interesting approaches? How would I do it?" Written after the docs, deliberately adversarial toward my
 own work.*
 
+## UPDATE 2026-07-11 — most of this critique has since been ADDRESSED
+A supplemental thorough pass acted on the gaps below (≤2 self-contained write-to-disk agents, the fixed way):
+- **Combat player-side** → now `combat/04_player_combat_and_bosses.md` (dodge+i-frames prereq, hornet-raid boss
+  structure, co-op, netcode). ✅
+- **Bugs: spiders / scorpions / pollinators** → now `bugs/spiders.md`, `bugs/scorpions_centipedes.md`,
+  `bugs/pollinators_gentle_fliers.md`. ✅
+- **Minigames: forge-genre depth + the economy-quality check** → forge deep-dive added to
+  `station_minigames/02`; verified our economy has **no quality axis** (reward = speed/yield). ✅
+- **Visuals: art-direction/cohesion + LUT + asset packs** → now `visuals/02_art_direction_and_cohesion.md`;
+  verified the `DefaultVolumeProfile`/no-LUT state and added the cohesion note to `visuals/01`. ✅
+**Still open (lower priority):** minor bug families (beetles/orthoptera/aquatic/ants); deeper visuals slices
+(broad asset-pack survey, VFX Graph / custom passes). And the *real* next move below stands: **in-engine spikes,
+not more reading.** The original critique text is kept intact below as the record.
+
 ## Meta (the biggest miss was the process itself)
 The overnight run over-parallelized agents and burned the session limit — the research survived and was
 recovered, but this should never have happened and cost real time/money. The rule is now in memory
