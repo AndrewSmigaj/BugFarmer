@@ -33,11 +33,68 @@ shared primitives; build a skip/automation path.** Additional raw research: `../
 ### Smelting & metal — **forge, furnace** → P2 balance band ("heat")
 - **Verb:** manage the heat. A temperature needle drifts; tap to pump the bellows and keep it in the glowing
   band for the smelt. Perfect = the whole smelt stayed in-band.
-- **Reward:** faster smelt or a "refined" bar tier. **Skip path:** an upgraded furnace auto-holds heat.
+- **Reward:** faster smelt (−`process_ticks`) or bonus bars (+yield); **never a quality tier** (no quality axis
+  — see 01). **Skip path:** an upgraded furnace auto-holds heat.
+- **See the richer, genre-grounded version below** → *"Blacksmith-genre deep-dive (anvil + forge)."*
 
 ### **anvil** → P1 click-to-stop ("strike") — the classic blacksmith beat
 - **Verb:** the hammer sweeps over the anvil; click when it's over the glowing sweet spot. 2–3 strikes per item.
-- **Reward:** perfect strikes → higher-quality tool/part. **Skip:** power hammer upgrade auto-strikes.
+- **Reward:** perfect strikes → faster finish (−`process_ticks`) or a bonus part (+yield); **not "quality"**
+  (no quality axis). **Skip:** power hammer upgrade auto-strikes.
+- **See the richer, genre-grounded version below** → *"Blacksmith-genre deep-dive (anvil + forge)."*
+
+### Blacksmith-genre deep-dive (anvil + forge)
+*Supplement — the farming-sim taxonomy (01) under-covered the dedicated smithing genre, whose whole loop is
+exactly our forge=heat + anvil=strike pair. Deep-read 2026-07-11 (6 full sources). It confirms our two
+primitives are the right ones and hands us concrete tuning + a fatigue trap to avoid — but every one of these
+games rewards **quality/durability/stat tiers**, which we don't have, so we translate that reward to
+**+speed / +yield** throughout (per 01's verified constraint).*
+
+**Source table (all fetched & read):**
+
+| Game (source) | Verb | Input | Loop | Reward (theirs → ours) | Gripes / lessons |
+|---|---|---|---|---|---|
+| **Kynseed** — Steam guide 2940467589 + wiki | heat-then-hammer | LMB to pull metal at the **green (+15) / yellow (+10) marker** on a moving scale; then LMB to **cover a target**, hits = your **Strength** stat, **Perfect+10/Good+5/OK+2/MISS=penalty** | 2 phases/item: time the pull, then N strikes | durability tiers → **our +speed/+yield** | zones shrink & scales oscillate with better ore; **Strength-paradox: extra swings AFTER the goal waste time or *lose* durability on a miss** → *end the check at the goal, never force extra reps*; higher ore = harder for same reward (perverse) → *reward must scale WITH the difficulty tier*; timer never pauses |
+| **The Forge** — forge.wiki guide | pump → pour → hammer | **bellows**: quick up/down to fill; **pour**: keep white indicator in a **moving yellow zone**; **hammer**: click when **outer ring overlaps inner ring = "Perfect"** | 3 short phases, rhythm-driven | Broken→Masterwork **(+20–30% stats)** → **our +speed/+yield** | clean split: pour = **our P2 balance-band**, hammer = **our P1 click-to-stop**; "focus on rhythm; visual/audio cues" |
+| **Fantasy Blacksmith** — gameslushpile review | strike the ingot | timed hammer taps (not mash); **thermometer**; metal **cools and must be reheated** mid-forge; "hammer till done, **not too much or it goes bad**" | reheat↔strike cycle/item, then sell | reputation/gold → n/a (we don't sell-craft) | *"the repetition sets in"*; *"would have worked better as a mini game in another game than as a game in itself"* → **great as a garnish, fatal as the whole loop** — vindicates opt-in |
+| **Wartales** — Steam disc. 6222…790 | strike on cue | **click the instant the plate turns white** — near **frame-perfect**; even perfect ≈ only 20% at max | repeat per item | armor-stat odds → n/a | *"has to be like a single frame,"* *"I don't play games in this genre to have my twitch reflexes tested,"* save-scumming, stutter ruins it → **avoid a punishing single-frame window; use generous nested good/perfect zones; never make failure destroy the input (kills save-scum incentive)** |
+| **Blacksmith Simulator** — Impulse Gamer review | full physical sim | smelt→heat→**hammer to shape**→quench→fit guard/handle/pommel→sharpen | many manual steps/item | quality → n/a | mostly-negative; paywalled forge upgrades + soft-lock bugs; **too many mandatory steps per item** → *don't chain a 5-step tax onto every bar* |
+| **My Time at Sandrock** — wiki/forums | (none) | Forging Machine is a **passive automated station** — no forge minigame at all | queue → wait | — | the biggest modern crafting sim keeps smithing **passive** → reinforces 01's "processing is a timer" default; a minigame here is strictly the opt-in bonus layer |
+
+**Richer forge (heat management) — P2 balance band, refined by the genre:**
+- **Verb:** while a bar smelts, a **heat needle drifts** on a vertical gauge; **tap to pump the bellows** (nudges
+  it up; it cools between taps). Keep it inside the **glowing work-band** (nested **good / perfect** sub-bands, à la
+  The Forge's pour + Kynseed's green/yellow). A short **~2 s** check, not the whole smelt.
+- **Both edges are live** (the genre's real texture): drift **too cold** *or* **overheat past the band** both leave
+  the band — but per 01, leaving it just yields the **normal** result, it never scorches/destroys the bar.
+- **Difficulty (opt-in, cosmetic-to-sim):** rarer ore → **narrower band + faster drift** (Kynseed/The Forge). It only
+  changes how much bonus is on offer, never the base output.
+- **Reward:** all-in-band smelt → **−`process_ticks` (finish sooner)** or **+1 bar (yield)** — owner picks the axis
+  (01 Q1). **Skip path:** an upgraded/automated furnace **auto-holds heat** (Sandrock-style passive).
+
+**Richer anvil (strike timing) — P1 click-to-stop, refined by the genre:**
+- **Verb:** a **short chain of 2–3 strikes**. Each strike a marker sweeps the anvil face; **click on the glowing
+  sweet spot** (nested good/perfect), the classic beat that Kynseed, The Forge and Wartales all use.
+- **Anti-Wartales rule (load-bearing):** the perfect zone is **generous and clearly telegraphed**, *not* a single
+  frame — Wartales' frame-perfect window is the #1 gripe of the genre and turns a garnish into a chore.
+- **Anti-Kynseed rule (load-bearing):** the strike chain is **fixed-length and ends at the goal** — never bolt on
+  "extra swings" that waste time or (their bug) *subtract* on a late miss. A missed strike in ours = **that strike
+  just doesn't earn the bonus**; you still get the item.
+- **Reward:** all strikes perfect → **−`process_ticks`** or **+yield** (a bonus part). Partial credit like Dave-the-
+  Diver: 2/3 perfect = 2/3 of the bonus, **input never lost**. **Skip:** power-hammer upgrade auto-strikes.
+
+**Optional forge→anvil chaining (owner call, below):** the dedicated genre runs these as *one* loop — heat the bar
+at the forge, then strike it at the anvil while it's hot — which is why they feel iconic together. We *can* wire the
+forge's heat result as a small **carry-over bonus** into an immediately-following anvil strike (hot metal = wider
+strike window), or keep the two stations fully independent. Both fit the primitives; it's a feel choice (Q5).
+
+**Owner questions this genre surfaces (add to 01/02's list):**
+5. **Chain the two, or keep them independent?** Dedicated smithing games make forge→anvil one continuous
+   heat-then-strike loop (their signature feel). Do you want that linkage (forge heat carries a bonus into the anvil
+   strike) — richer but couples two stations — or two independent opt-in checks that are simpler and reusable?
+6. **Strike count: 1 or 2–3?** A single strike is the cheapest, least-fatiguing rep (01's default); a 2–3 strike
+   chain reads far more like real smithing (Kynseed/The Forge) at some added time-per-craft. Which cadence do you
+   want on the anvil specifically (it can differ from the other P1 stations)?
 
 ### Wood — **sawmill** → P1 click-to-stop ("cut on the line")
 - **Verb:** stop the moving saw on the marked cut line. Off = normal plank; perfect = an extra plank or a
