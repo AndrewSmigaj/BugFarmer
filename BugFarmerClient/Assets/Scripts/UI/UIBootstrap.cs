@@ -99,6 +99,12 @@ namespace BugFarmer.UI
             dragGO.AddComponent<EquipmentController>();
             dragGO.AddComponent<BugInfoCard>();
 
+            // World-error toast — general on-screen surface for OpCode-40 refusals ("Need 2 stone",
+            // "Can't shovel water"). Non-interactive; sits above the panels, below the hover tooltip.
+            var toastGO = new GameObject("WorldToast(Code)", typeof(RectTransform));
+            toastGO.transform.SetParent(canvasGO.transform, false);
+            toastGO.AddComponent<WorldToast>();
+
             // Hover tooltip — last child so it draws above every panel.
             var tipGO = new GameObject("Tooltip(Code)", typeof(RectTransform));
             tipGO.transform.SetParent(canvasGO.transform, false);
