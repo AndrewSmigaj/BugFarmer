@@ -572,13 +572,22 @@ containers, and the determinism boundary. See [architecture_crafting.md](archite
 - Scaffolding: CLAUDE.md quality directive; `regenerate-sprite` skill hardened (aspect-ratio check,
   missing-catalog-row, pixelclean churn).
 
-## Now — COMBAT FOUNDATION (M1 IN BUILD 2026-07-11 → `architecture_combat.md`)
+## Now — COMBAT FOUNDATION (M1 BUILT 2026-07-11 → `architecture_combat.md § Milestone 1 — as-built`)
 Owner adopted the skeleton (**attack-token + FSM + steering**) + core bundle. **Decided dials:** bite-token
 pool = **2**, **dodge-only**, danger **at night**, bug→player damage **per-individual** (authority-decided,
 mirrors predation; swarm-of-1 dropped — player HP is SIM-INERT so it needs no hash/snapshot wiring), new sprites
-**gpt-image-1.5/medium**. **M1** = arena + debug spawner → per-individual sting (fixes the wasp **phantom hit**,
-`handlers_player.go:114-142` swarm-center bug) → player dodge+i-frames → attack telegraph. Then M2 wasp
-polish+tiers · M3 caterpillars · M4 centipede regroup · M5 docs + `combat-enemy` skill.
+**gpt-image-1.5/medium**.
+- **✅ M1 DONE + gated** (commits `combat M1.1`…`M1.4`): arena + debug species-picker spawner · per-individual
+  sting (fixes the wasp **phantom hit** — retired the `checkBugAttacks` swarm-centre sting; opcode 110) · player
+  dodge + i-frames (Space; opcode 111 + `DodgeInvulnUntilTick`) · attack telegraph (two-beat wind-up = **12
+  ticks**, `processPendingStings`). Gated: `bug_player_strike_test.go` + full world suite + `sim-determinism`
+  PASS. **Left to run** (needs the rebuilt plugin deployed — do with the playtest): 2-client `run_sync_latejoin`
+  regression + the **owner arena playtest**.
+- **⏳ NEXT — needs the owner (design + API spend), so surfaced not guessed:** **M2** wasp polish + **medium/hard
+  wasp-tier** enemies and **M3** medium/tough **caterpillar** both need (a) the **difficulty specifics** — what
+  each tier tunes: HP / speed / cooldown / token count / a new attack — and (b) **which are nocturnal**; and both
+  **generate new sprites** (gpt-image-1.5/medium — real API spend). **M4** centipede regroup (grouped + staggered
+  per-individual bite, onto the M1 authority path). **M5** docs AS-BUILT (M1 portion done) + `combat-enemy` skill.
 **Backlog `zone barriers`:** gate danger by zone so starter zones stay cozy while wilds/caves/night are dangerous.
 Earlier notes (still valid): Deferred — utility-AI attack selection, enemy-role/species expansion. Rejected: GOAP, flow fields.
 All integer/fixed-point on the server → cheap on the wire (legs + events, not per-bug positions; see the doc's

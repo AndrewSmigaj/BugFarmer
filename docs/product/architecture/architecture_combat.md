@@ -1,6 +1,7 @@
 # Combat AI & challenge — design
 
-**STATUS: DESIGN — Milestone 1 (foundation) in build (2026-07-11).** The adopted skeleton + the layers around it.
+**STATUS: Milestone 1 (foundation) BUILT + gated (2026-07-11); M2–M5 are DESIGN.** The adopted skeleton + the
+layers around it. M1 as-built is in [§ Milestone 1 — as-built](#milestone-1--as-built) below; the rest is design.
 Build plan: the session plan file (combat foundation + enemy roadmap). Evidence + alternatives:
 [`../investigations/deep_research_2026-07/combat/`](../investigations/deep_research_2026-07/combat/)
 (01 melee AI · 02 swarm AI · 03 challenge/effectiveness · 04 player combat & bosses). Runs inside the
@@ -79,6 +80,41 @@ bundle is inseparable from the skeleton; the pacing + polish layers land in late
 - **Flow-field-tile pathfinding** (SupCom2-style) — overkill; our `SWARM_SET_TARGET` legs already give shared,
   instant, coordinated movement. Revisit only if we ever need thousands of independently-pathing bugs through
   complex obstacle mazes.
+
+## Milestone 1 — as-built
+Shipped 2026-07-11 (commits `combat M1.1`…`M1.4`). The foundation everything else reuses.
+
+- **M1.1 — Arena + generalized debug spawner.** `nakama/data/zones/arena/` (from `tools/zonegen/scenes/zone_arena.py`
+  — a 64×64 walled pen, `ephemeral_swarms`, generous caps so debug spawns don't hit the population gate, no
+  auto-spawn). `WorldMenu.cs` "Arena" row. `DebugOverlay.cs` F8 is now a species **picker** (`<`/`>` cycle,
+  `-`/`+` count, spawn-at-player) over `EntityDatabase.AllSpeciesIds()`. Server spawn path unchanged (ledgered).
+- **M1.2 — Per-individual bug→player sting (the phantom fix).** Replaces the swarm-**centre** `checkBugAttacks`
+  (which stung near the centroid — the reported phantom). The **authority** client runs `RunBugPlayerStrikes`
+  (`SwarmManager.cs`, mirrors `RunPredationStrikes`): per-individual, in `stingRange` (1.5) + line-of-sight of a
+  player cell, **≤2** claimed (the token pool), reported via **`BUG_PLAYER_STRIKE` (opcode 110)**. The server
+  (`handleBugPlayerStrike`) re-gates authoritatively (authority-only, centre-range sanity, still-alive) and
+  funnels through the existing `applyBugAttackToPlayer` (subdued / sting-immune / per-swarm cooldown / shared
+  invuln). HP is **sim-inert** → no ledger/hash/snapshot wiring. `checkBugAttacks` is **retired from the loop**
+  but kept (its unit tests exercise the shared funnel).
+- **M1.3 — Player dodge + i-frames.** `PlayerController.cs`: **Space** dashes (13 bps / 0.22 s) in the move
+  direction (or facing when still), client-predicted through `ResolveCollision`, and sends **`PLAYER_DODGE`
+  (opcode 111)**. The server sets a **separate** `PlayerState.DodgeInvulnUntilTick` (5 ticks = 0.5 s; separate
+  from `LastDamageTick` so it doesn't perturb regen), checked in `applyBugAttackToPlayer`. `PlayerHealth.cs`
+  (sole sprite-color owner) blinks during the window.
+- **M1.4 — Attack telegraph (two-beat).** `handleBugPlayerStrike` now **arms** a telegraphed sting instead of
+  landing it: flash a `"windup"` telegraph now (reuses `broadcastBugTelegraph`; client already renders flash +
+  hiss) and schedule the hit for `stingTelegraphTicks` later on `SwarmState.PendingStingPlayer/Tick` (server-only,
+  sim-inert). `processPendingStings` (per tick) fires due stings, re-gating **range** (step-out counterplay) then
+  the funnel (dodge/invuln). The pending-slot + per-swarm cooldown own the cadence, so the client re-reports on a
+  light fixed throttle (`StingReportThrottleTicks` = 4).
+  - **Deviation from design:** wind-up shipped at **12 ticks (1.2 s)**, not the doc's earlier "~15" — a readable-
+    but-snappy default; it's a one-line tunable (`stingTelegraphTicks`) to dial in the arena playtest.
+- **Verification.** Go unit tests `bug_player_strike_test.go` (applies / authority-only / centre-sanity /
+  dodge-negates / step-out-whiffs / no-spam / dead-bug) + the full world suite green; the headless
+  `sim-determinism` gate **PASS** (sting is sim-inert — the swarm sim core is untouched); plugin builds as a
+  plugin. **PENDING (needs the rebuilt plugin deployed):** the 2-client `run_sync_latejoin.sh` regression run
+  (co-located + disjoint) and the **owner arena playtest** (telegraph reads · dodge negates · no phantom · ≤2 bite
+  · night enemies via the debug time control).
 
 ## Determinism & network model (why the "central arbiter" is cheap)
 - The stage manager, FSMs, and steering are **server CPU**, run each tick as **integer/fixed-point** math with
