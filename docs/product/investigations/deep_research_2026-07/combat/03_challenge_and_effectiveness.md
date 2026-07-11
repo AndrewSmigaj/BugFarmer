@@ -65,6 +65,22 @@ Axes: **challenge gained · keeps cozy tone · determinism/perf fit · dev cost*
 
 Every mechanic above is integer/counter/timer based — no floats — so all five ride the deterministic ledger the same way the predation strike already does (authority decides, relays the observable via events).
 
+## Reality check — our player-side combat kit (verified 2026-07-11)
+Combat is two-sided, so the enemy telegraph→recovery loop only pays off if the player has counters. What we
+actually have in the code today:
+- **Weapon movesets exist** — `MeleeController.TryHandleClick("primary"/"secondary")` + a `moves` block per
+  weapon in `items.json` (every weapon has a `secondary`); hits are server-validated; the procedural
+  `PlayerToolAnimator` renders the swing.
+- **No defensive kit at all** — there is **no dodge / roll / dash, no block, no parry, no i-frames**
+  (no such controller in `Assets/Scripts/Player/`; `MeleeController` has no invuln logic). Movement is plain
+  walking.
+**Implication:** the research's fair-threat model (telegraph → sidestep/counter → punish the recovery) has
+**nothing to sidestep *with*** today. Before (or alongside) smarter enemies, the player needs a minimal
+defensive verb — at least a **dodge/dash with brief i-frames** (the single highest-leverage add), and possibly
+a **block/parry** if we lean into tell-reading. Without it, "raise the challenge" can only mean "take more
+unavoidable damage," which is the unfair path every source warns against. **This is the load-bearing
+prerequisite for the whole combat direction** and is called out further in `../SELF_CRITIQUE.md`.
+
 ## Anti-patterns
 - Scaling **stats** (HP/damage/count) to make things "harder" → bullet-sponges + unfair pile-ons (universal warning).
 - No **leash / aggro radius** → the player can never disengage → cozy game becomes stressful/unfair.
