@@ -556,6 +556,11 @@ func (m *Match) breakOccupantAt(
 			if state.Rng.Float32() > drop.Chance {
 				continue
 			}
+			// Roll the drop count in [CountMin, CountMax] (server-authoritative; broadcast so clients agree).
+			dropCount := drop.CountMin
+			if drop.CountMax > drop.CountMin {
+				dropCount += state.Rng.Intn(drop.CountMax - drop.CountMin + 1)
+			}
 			itemID := state.nextItemID(fmt.Sprintf("item_%d_%d", gx, gy))
 			worldX := float32(gx) + 0.5 + (state.Rng.Float32()-0.5)*0.3
 			worldY := float32(gy) + 0.5 + (state.Rng.Float32()-0.5)*0.3
@@ -565,7 +570,7 @@ func (m *Match) breakOccupantAt(
 			groundItem := &entities.GroundItem{
 				ID:       itemID,
 				ItemType: drop.ItemID,
-				Count:    drop.Count,
+				Count:    dropCount,
 				Position: entities.EntityPosition{
 					ChunkX: cx, ChunkY: cy, LocalX: localX, LocalY: localY,
 				},
@@ -574,7 +579,7 @@ func (m *Match) breakOccupantAt(
 			state.putGroundItem(groundItem)
 
 			spawnMsg := GroundItemSpawnMessage{
-				ID: itemID, ItemType: drop.ItemID, Count: drop.Count, X: worldX, Y: worldY,
+				ID: itemID, ItemType: drop.ItemID, Count: dropCount, X: worldX, Y: worldY,
 			}
 			m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeGroundItemSpawn, spawnMsg)
 			logger.Debug("Spawned ground item %s x%d at %.1f,%.1f", drop.ItemID, drop.Count, worldX, worldY)

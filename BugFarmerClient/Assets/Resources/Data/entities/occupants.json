@@ -20,7 +20,8 @@
         "drops": [
           {
             "item_id": "wood",
-            "count": 4,
+            "count_min": 2,
+            "count_max": 3,
             "chance": 1.0
           }
         ]
@@ -47,7 +48,8 @@
         "drops": [
           {
             "item_id": "wood",
-            "count": 4,
+            "count_min": 2,
+            "count_max": 3,
             "chance": 1.0
           }
         ]
@@ -80,7 +82,8 @@
         "drops": [
           {
             "item_id": "wood",
-            "count": 3,
+            "count_min": 2,
+            "count_max": 3,
             "chance": 1.0
           }
         ]

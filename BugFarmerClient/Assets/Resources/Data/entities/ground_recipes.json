@@ -1,0 +1,11 @@
+{
+  "_comment": "Shovel tile-placement recipes: placed MATERIAL id -> ingredients consumed (RecipeIO list). A COMPOSITE tile (matA~matB~shape) costs BOTH materials' recipes (it is made of both - owner: a sandwich needs bread AND filling). Digging a tile drops these same ingredients. Multi-ingredient is intended; owner tunes amounts. Materials with no entry are not shovel-placeable.",
+  "grass":       [{ "item": "grass_turf", "count": 1 }],
+  "dirt":        [{ "item": "dirt", "count": 1 }],
+  "sand":        [{ "item": "sand", "count": 1 }],
+  "mud":         [{ "item": "dirt", "count": 1 }, { "item": "grass_turf", "count": 1 }],
+  "stone_path":  [{ "item": "stone", "count": 1 }],
+  "cave_floor":  [{ "item": "stone", "count": 1 }],
+  "stone_floor": [{ "item": "stone", "count": 2 }],
+  "wood_floor":  [{ "item": "plank", "count": 2 }]
+}

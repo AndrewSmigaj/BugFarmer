@@ -220,11 +220,15 @@ type BreakableData struct {
 	Drops            []DropEntry `json:"drops,omitempty"`
 }
 
-// DropEntry describes a single drop from breaking something.
+// DropEntry describes a single drop from breaking something. Count is a fixed amount; CountMin/CountMax give
+// a random RANGE (rolled on the server via state.Rng, so all clients agree) — mirrors HarvestCountMin/Max.
+// When the range is unset it defaults to the fixed Count (see load-defaults), so old data keeps working.
 type DropEntry struct {
-	ItemID string  `json:"item_id"`
-	Count  int     `json:"count"`
-	Chance float32 `json:"chance"` // 0.0 to 1.0
+	ItemID   string  `json:"item_id"`
+	Count    int     `json:"count"`
+	CountMin int     `json:"count_min,omitempty"`
+	CountMax int     `json:"count_max,omitempty"`
+	Chance   float32 `json:"chance"` // 0.0 to 1.0
 }
 
 // GetFootprint returns (width, height) for the given direction.
@@ -431,11 +435,19 @@ func applyDefaults(e *EntityDef) {
 		// Breakable defaults
 		if e.World.Breakable != nil {
 			for i := range e.World.Breakable.Drops {
-				if e.World.Breakable.Drops[i].Count == 0 {
-					e.World.Breakable.Drops[i].Count = 1
+				d := &e.World.Breakable.Drops[i]
+				if d.Count == 0 {
+					d.Count = 1
 				}
-				if e.World.Breakable.Drops[i].Chance == 0 {
-					e.World.Breakable.Drops[i].Chance = 1.0
+				if d.Chance == 0 {
+					d.Chance = 1.0
+				}
+				// Count range defaults to the fixed Count (mirrors HarvestCountMin/Max at :480).
+				if d.CountMin == 0 {
+					d.CountMin = d.Count
+				}
+				if d.CountMax == 0 {
+					d.CountMax = d.CountMin
 				}
 			}
 		}
