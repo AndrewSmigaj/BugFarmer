@@ -184,8 +184,12 @@ func (m *Match) handleBugPlayerStrike(
 	if !ok || player == nil {
 		return
 	}
-	// Full authoritative gates the authority skipped (it reports loosely): defend-only (bees), subdued.
+	// Full authoritative gates the authority skipped (it reports loosely): defend-only (bees), subdued,
+	// and nocturnal (a night hunter can't sting by day — covers nocturnal wasps AND caterpillars).
 	if species.StingsOnlyDefending && swarm.Phase != "defending" {
+		return
+	}
+	if species.Nocturnal && !isNightForHunting(state) {
 		return
 	}
 	if swarmSubdued(swarm, species) {

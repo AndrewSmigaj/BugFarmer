@@ -121,6 +121,10 @@ type BugSpecies struct {
 	// fully negates STINGS (bees, wasps) but not bites (centipedes chew through cloth).
 	AttackIsSting bool `json:"attack_is_sting"`
 
+	// Nocturnal: a night hunter. By day it can't sting a player and won't hunt/defend-aggro
+	// (it lies low); at night it's a full threat. Gated server-side (deterministic tick-of-day).
+	Nocturnal bool `json:"nocturnal,omitempty"`
+
 	// CarrionForager marks the ANT food shape (2026-07): an empty-prey nest species whose
 	// diet is GROUND FOOD + attraction-scoped pools (carrion, rotten windfalls, fungus)
 	// instead of the bee's flower nectar. Drives the nest food/founding gates in nests.go —

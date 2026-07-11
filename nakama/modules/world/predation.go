@@ -63,6 +63,18 @@ func (m *Match) predationThink(
 	state.Perf.Count(species.ID, "pred_thinks")
 	defer state.Perf.StopSpecies(species.ID, "pred", pt)
 
+	// Nocturnal hunters lie low by day: no hunting, no nest-defence aggro — they just wander (the
+	// caller's default). Clears any in-flight hunt/defend. Server-side + deterministic (outputs only
+	// legs), so the swarm sim stays in sync.
+	if species.Nocturnal && !isNightForHunting(state) {
+		swarm.TargetPreyID = ""
+		if swarm.Phase == "defending" {
+			swarm.Phase = "feeding"
+			swarm.DefendTargetID = ""
+		}
+		return false
+	}
+
 	// --- 1. PREY FLEE -------------------------------------------------------------
 	if species.PredatorFleeRadius > 0 {
 		if px, py, found := m.nearestPredatorPos(state, swarm, species, species.PredatorFleeRadius); found {

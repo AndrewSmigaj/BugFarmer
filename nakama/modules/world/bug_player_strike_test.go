@@ -140,6 +140,34 @@ func TestBugPlayerStrikeTelegraphNoSpam(t *testing.T) {
 	}
 }
 
+// Nocturnal: a night hunter can't arm a sting by day; at night it arms + lands.
+func TestBugPlayerStrikeNocturnalGate(t *testing.T) {
+	state, p := hpTestState()
+	m := &Match{}
+	state.Species["wasp_common"].Nocturnal = true
+	w := newWaspSwarm("a_w", 6, 10.5, 10)
+	state.Swarms[w.ID] = w
+	state.DayOffsetTicks = 0
+
+	// DAY (t≈0.5): no wind-up arms.
+	state.TickCount = int64(0.5 * DayLengthTicks)
+	report(m, state, testAuthority, w.ID, "p1", w.FirstAliveBugIDs(2))
+	if w.PendingStingTick != 0 {
+		t.Fatalf("a nocturnal species must not arm a sting by day (PendingStingTick=%d)", w.PendingStingTick)
+	}
+
+	// NIGHT (t≈0.85): it arms, and the sting lands.
+	state.TickCount = int64(0.85 * DayLengthTicks)
+	report(m, state, testAuthority, w.ID, "p1", w.FirstAliveBugIDs(2))
+	if w.PendingStingTick == 0 {
+		t.Fatalf("a nocturnal species must arm a sting at night")
+	}
+	fireStings(m, state)
+	if p.HP != 9 {
+		t.Fatalf("HP=%d — a nocturnal sting must land at night", p.HP)
+	}
+}
+
 // Stale ids: a report naming only non-alive bugs arms nothing (no phantom wind-up from a dead attacker).
 func TestBugPlayerStrikeDeadBugFiltered(t *testing.T) {
 	state, p := hpTestState()
