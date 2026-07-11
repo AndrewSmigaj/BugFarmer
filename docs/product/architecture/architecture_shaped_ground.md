@@ -1,7 +1,9 @@
 # Shaped-ground builder (the shovel)
 
 How players sculpt non-square ground — diagonal roads, patterns, checkerboards — with the shovel. Built
-M0–M4 (2026-07-09/10). Cosmetic; mechanics deferred (see BACKLOG "Ground material MECHANICS").
+M0–M4 (2026-07-09/10), then reworked for **legibility** in S1 (2026-07-10) after playtest: dig and place
+were indistinguishable and refusals were invisible. Ground look is cosmetic; ground MECHANICS
+(swamp-slow/ice) are still deferred (see BACKLOG "Ground material MECHANICS").
 
 ## The composite-id grammar (the key idea)
 Ground is a **string id per cell** and is **opaque** through storage/network/save. A shaped cell encodes its
@@ -38,17 +40,38 @@ every derivation site so a composite never falls through a `TileDefs[...]` looku
 - Forward-compatible: ground MECHANICS later replace `PrimaryMaterial` with a `Properties(id)` that BLENDS
   matA+matB — same call sites.
 
-## The terraform loop (coin-free — "move ground around")
+## The terraform loop — dig = a BREAK, place = a CRAFT (S1)
 The shovel is a terraform tool (`handleShovel`, routed from `handleToolUse` on tool_type `shovel`;
-`ToolUseMessage` carries `ground_id` + `dig`):
-- **PLACE (LMB)** — validates the chosen id (`ValidateShovelGround`: 8 decorative materials × known shapes +
-  length cap — the SOLE guard on the player-supplied string), consumes 1 **material block**
-  (`FindItemSlot`+`RemoveItem`) or errors `Need <block>`, sets the ground, broadcasts.
-- **DIG (RMB)** — reverts the cell to `dirt`, grants 1 block (`AddItem`; granted FIRST so a full bag cancels
-  the dig, never destroying the block). Dirt is the abundant base (digging dirt yields dirt).
-- Material↔block map: `GroundMaterialItem` — grass→`grass_turf`, dirt/sand/mud→self, stone family→`stone`,
-  wood_floor→`wood`. Neither verb touches water/lava (that's the future sandbag system).
-- Cosmetic feedback: dust poof (`HitBurst.Kind.Dust`) + the shovel swing on place/dig.
+`ToolUseMessage` carries `ground_id` + `dig`). S1 made the two verbs read differently on purpose:
+
+**Controls (client — `PlayerInputRouter`):** **LMB = place**, **Shift+LMB = dig** (hold to keep digging — a
+dig-hold latch mirrors the block-break latch). RMB is intentionally *not* dig (it stays free for the context
+actions: stations/hives/beds). The mouse **wheel cycles SHAPE only** (the old Shift/Ctrl-wheel material
+scheme was the confusing part and is gone; material choice moves to a "Set Materials" panel in S2 — until
+then temporary dev keys M/N cycle material A/B).
+
+- **PLACE = a recipe-craft.** `ValidateShovelGround` still guards the player-supplied id (8 decorative
+  materials × known shapes + length cap). The cost is then the **ground recipe**
+  (`nakama/data/entities/ground_recipes.json`, id → `[]RecipeIO`): a solid tile costs its one material's
+  recipe; a **composite costs the UNION of BOTH materials' recipes**, duplicates summed — it's made of both
+  (owner: "a sandwich needs bread AND filling"). `groundRecipeIngredients(id)` merges via `CompositeMaterials`;
+  `groundShortfall` builds a "Need 2 stone, 1 plank" message; consume goes through the crafting item path
+  (`playerCount`/`playerConsume`). Missing ingredients → the world-error toast, not silence.
+- **DIG = a progressive break.** Each Shift+LMB hit accumulates in a **`DiggingState`** map (separate from the
+  occupant `BreakingState`, same key form) and broadcasts `BreakProgress` (OpCode 45) — the client crack
+  pipeline is cell-keyed, so the 4-stage spiderweb renders on a bare ground cell with no client change.
+  `digHitsFor` = 3 for stone-family, 2 for soft ground. After the last hit the cell becomes the recessed
+  **`dug_soil`** tile and the tile's material(s) **drop to the ground** like felling a tree (`spawnHarvestDrops`,
+  both materials of a composite). A dig left idle > 3s heals: `processDiggingReset` (a tick sweep) clears the
+  crack and drops the `DiggingState` entry. `dug_soil` is a normal walkable/buildable-over tile
+  (`tiles.json`); it has no recipe, so it isn't placeable or re-diggable.
+- **The material loop** is now: dig ground → its material(s) drop as ground items → pick them up → place them
+  (as a recipe) elsewhere. Coin-free. Neither verb touches water/lava (future sandbag system).
+- **World-error toast (foundational, game-wide):** `WorldToast` (client HUD) surfaces every OpCode-40
+  refusal ("Need 2 stone", "Can't shovel water", "Nothing to dig here"). Previously only `ShopPanel` read
+  OpCode 40 (and only while open), so refusals outside a shop were invisible — the root cause of the shovel
+  "does nothing, no feedback" bug. Fixed once, for all systems.
+- Feedback: dust poof (`HitBurst.Kind.Dust`) + the shovel scoop swing per hit/place.
 
 ## Palette scope (decorative only) & excluded systems
 Placeable: `grass, dirt, sand, mud, stone_floor, stone_path, wood_floor, cave_floor`. Excluded (own systems):
@@ -57,16 +80,30 @@ water), rugs (future grid-square rug-pattern builder).
 
 ## Files
 - Client: `World/Rendering/TileComposite.shader`, `World/Rendering/TileCompositor.cs`, `World/TileDatabase.cs`
-  (`~` branch), `World/ShovelSelection.cs`, `World/ShapedGroundSpike.cs` (builder input + dev-grade HUD —
-  replaced by the real UI at the polish pass), `World/TilemapManager.cs` (`PrimaryMaterial`/`IsWaterTile`),
-  `Player/ToolUseController.cs` (place/`TryDig`), `Player/PlayerInputRouter.cs` (shovel routing),
-  `UI/HotbarUI.cs` (yields the wheel), `World/HitBurst.cs` (`Kind.Dust`).
-- Server: `world/tiles.go` (`PrimaryMaterial`, `ValidateShovelGround`, `GroundMaterialItem`),
-  `world/handlers_farming.go` (`handleShovel`), `world/state.go` + others (derivation sites),
-  `world/inventory.go` (`FindItemSlot`), `world/messages.go` (`ToolUseMessage` +`GroundID`/`Dig`).
-  Tests: `world/shaped_ground_test.go`.
+  (`~` branch; plain `dug_soil` loads `Tiles/dug_soil.png`), `World/ShovelSelection.cs`,
+  `World/ShapedGroundSpike.cs` (wheel=shape + temp M/N material keys + dev HUD — replaced by the S2 panel),
+  `World/TilemapManager.cs` (`PrimaryMaterial`/`IsWaterTile`; the cell-keyed crack overlay `ShowBreakingProgress`
+  is reused for dig), `Player/ToolUseController.cs` (place/`TryDig`), `Player/PlayerInputRouter.cs` (LMB place /
+  Shift+LMB dig-hold latch), `UI/WorldToast.cs` (OpCode-40 toast) + `UI/UIBootstrap.cs` (registers it),
+  `World/HitBurst.cs` (`Kind.Dust`).
+- Server: `world/tiles.go` (`PrimaryMaterial`, `ValidateShovelGround`, `CompositeMaterials`; `GroundMaterialItem`
+  is now legacy — only referenced by tests), `world/entities.go` (`LoadGroundRecipes`, `groundRecipeIngredients`,
+  `groundShortfall`), `world/handlers_farming.go` (`handleShovel` place=recipe / dig=progressive, `digHitsFor`,
+  `processDiggingReset`), `world/state.go` (`GroundRecipes`, `DiggingState`), `world/match.go` (recipe load + the
+  dig-reset sweep), `world/persist_classes.go` (both new fields classified), `world/messages.go` (`ToolUseMessage`,
+  `BreakProgressMessage`). Data: `nakama/data/entities/ground_recipes.json`, `nakama/data/tiles.json` (`dug_soil`),
+  `Resources/Tiles/dug_soil.png`. Tests: `world/shaped_ground_test.go` (`CompositeMaterials`,
+  `groundRecipeIngredients`, `groundShortfall`, `digHitsFor`).
 
-## Deferred (owner passes / later)
-Builder UI polish (real panel — taste checkpoint); material item icons (art = API spend); ground MECHANICS
-(swamp-slow/ice; diagonal AVERAGES the two); full conservation (place currently consumes only matA);
-sandbag water-fill; rug grid-pattern builder.
+## Milestones & deferred
+- **Done:** M0–M4 (composite render + first playable + builder UI taste pass); **S1** legibility rework
+  (dig=progressive break→`dug_soil`+drops, place=recipe, LMB/Shift+LMB, wheel=shape, world-error toast).
+- **Next — S2 "Set Materials" panel:** a real HUD panel with composited-tile swatches + live have/need
+  (grey out unaffordable), replacing the dev HUD + temp M/N keys. **S3** preview/GIF tooling. **S4** animation
+  iteration.
+- **Later / owner passes:** material item icons (art = API spend); ground MECHANICS (swamp-slow/ice; diagonal
+  AVERAGES the two); sandbag water-fill; rug grid-pattern builder; `dug_soil` art polish (current tile is a
+  cropped placeholder — re-prompt or hand-draw a cleanly-blended recessed edge).
+- **Verification owed:** the in-engine S1 playtest is the real legibility gate; a 2-client break-drop sync
+  check (the new drop-count + dig RNG fires only on player breaks, so the autonomous determinism harness is
+  unaffected — but confirm client parity once).

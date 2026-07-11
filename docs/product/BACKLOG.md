@@ -42,18 +42,25 @@ Umbrella for tightening how the assistant is steered. Add items here as they com
   awareness, and **richer up-front instructions to agents** so they don't waste turns re-discovering context
   (clear, streamlined briefs). Capture the guide into a doc/skill + habits.
 
-## Shaped-ground builder — BUILT M0–M4 (2026-07-09/10), remaining owner passes
+## Shaped-ground builder — BUILT M0–M4 + S1 legibility rework (2026-07-09/10)
 The shovel is a terraform builder: it places `matA~matB~shape` **composite ground ids** (two materials
-blended through a runtime GPU mask-composite into one tile — see `architecture_shaped_ground.md`). Cosmetic:
-a composite is governed by its **primary material** (`PrimaryMaterial`) everywhere. Terraform loop: **LMB
-places** (consumes 1 material block), **RMB digs** (reverts cell to dirt, grants 1 block) — coin-free. Wheel
-cycles shape, Shift/Ctrl+wheel pick materials A/B; dust poof on place/dig. Server-tested (`shaped_ground_test.go`).
-**Two remaining passes need the OWNER (can't do headless):**
-- **Builder UI polish** — the current selection HUD is a functional dev-grade `OnGUI` readout in
-  `ShapedGroundSpike`. Design the real panel (material swatches, shape preview, held count) with the owner —
-  render 2-3 layout options, pick one. This was M4's taste checkpoint.
-- **Material item icons** — `grass_turf, dirt, mud, stone` were added as items with NO art (placeholder
-  icons). Generate real icons via the gpt-image-1 pipeline (API spend → owner approval) in one batch.
+blended through a runtime GPU mask-composite into one tile — see `architecture_shaped_ground.md`). A composite
+is governed by its **primary material** (`PrimaryMaterial`) for gameplay. **S1 (2026-07-10)** made dig/place
+legible after playtest: **LMB places** as a **recipe-craft** (`ground_recipes.json`; a composite costs BOTH
+materials), **Shift+LMB digs** as a **progressive break** (2–3 hits, crack overlay, ~3s idle-reset) → the
+recessed **`dug_soil`** tile + **drops the material(s) to the ground** like felling a tree; the mouse wheel
+cycles **shape only**; and a game-wide **world-error toast** (`WorldToast`, OpCode 40) surfaces every refusal
+("Need 2 stone"). Server-tested (`shaped_ground_test.go`). **Remaining (S2–S4 + owner passes):**
+- **S2 — "Set Materials" panel (next):** a real HUD panel with composited-tile swatches + live have/need
+  (grey out unaffordable materials), replacing the dev `OnGUI` HUD + the temporary M/N material keys in
+  `ShapedGroundSpike`. Render 2–3 layout options, owner picks. (This was M4's taste checkpoint, re-scoped.)
+- **S3 — preview/GIF tooling · S4 — animation iteration** (see the tool-animation backlog item).
+- **`dug_soil` art polish** — the current tile is a cropped placeholder; re-prompt (gpt-image-1.5/medium) or
+  hand-draw a cleanly-blended recessed edge so it doesn't read as a bordered box.
+- **Material item icons** — `grass_turf, dirt, mud, stone, sand, plank, wood` used by recipes have placeholder
+  icons; generate real icons via the pipeline (API spend → owner approval) in one batch.
+- **Verification owed:** the in-engine S1 playtest is the legibility gate; also confirm 2-client parity of the
+  new player-break drop RNG once (autonomous determinism harness is unaffected — it issues no player breaks).
 - **Build note:** add `Hidden/BugFarmer/TileComposite` to Always-Included Shaders before a player BUILD
   (Shader.Find works in-Editor; a stripped build would miss it).
 
