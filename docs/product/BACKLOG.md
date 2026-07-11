@@ -572,11 +572,15 @@ containers, and the determinism boundary. See [architecture_crafting.md](archite
 - Scaffolding: CLAUDE.md quality directive; `regenerate-sprite` skill hardened (aspect-ratio check,
   missing-catalog-row, pixelclean churn).
 
-## Next — COMBAT AI & CHALLENGE (DESIGN adopted 2026-07-11 → `architecture_combat.md`)
-Owner adopted the skeleton: **attack-token stage manager + FSM brains + steering**. Recommended core layers
-(pending owner confirm): **three-phase attack telegraphs**, **player dodge + i-frames** (the prerequisite — we
-have weapon swings but no defensive verb), **threat table + aggro radius + leash**, then a **threat director**
-pacing valve. Deferred: utility-AI attack selection, enemy-role/species expansion. Rejected: GOAP, flow fields.
+## Now — COMBAT FOUNDATION (M1 IN BUILD 2026-07-11 → `architecture_combat.md`)
+Owner adopted the skeleton (**attack-token + FSM + steering**) + core bundle. **Decided dials:** bite-token
+pool = **2**, **dodge-only**, danger **at night**, bug→player damage **per-individual** (authority-decided,
+mirrors predation; swarm-of-1 dropped — player HP is SIM-INERT so it needs no hash/snapshot wiring), new sprites
+**gpt-image-1.5/medium**. **M1** = arena + debug spawner → per-individual sting (fixes the wasp **phantom hit**,
+`handlers_player.go:114-142` swarm-center bug) → player dodge+i-frames → attack telegraph. Then M2 wasp
+polish+tiers · M3 caterpillars · M4 centipede regroup · M5 docs + `combat-enemy` skill.
+**Backlog `zone barriers`:** gate danger by zone so starter zones stay cozy while wilds/caves/night are dangerous.
+Earlier notes (still valid): Deferred — utility-AI attack selection, enemy-role/species expansion. Rejected: GOAP, flow fields.
 All integer/fixed-point on the server → cheap on the wire (legs + events, not per-bug positions; see the doc's
 network section). **Build order:** dodge+i-frames → one telegraphed enemy + token pool in `feel_test` (playtest)
 → aggro/leash → generalise FSM+steering → threat director. Open taste/scope Qs in the doc (how cozy vs hard;

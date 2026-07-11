@@ -1,9 +1,23 @@
 # Combat AI & challenge — design
 
-**STATUS: DESIGN / PROPOSED (not built).** The decided skeleton + the recommended layers around it. Evidence
-and alternatives live in the research: [`../investigations/deep_research_2026-07/combat/`](../investigations/deep_research_2026-07/combat/)
+**STATUS: DESIGN — Milestone 1 (foundation) in build (2026-07-11).** The adopted skeleton + the layers around it.
+Build plan: the session plan file (combat foundation + enemy roadmap). Evidence + alternatives:
+[`../investigations/deep_research_2026-07/combat/`](../investigations/deep_research_2026-07/combat/)
 (01 melee AI · 02 swarm AI · 03 challenge/effectiveness · 04 player combat & bosses). Runs inside the
 deterministic swarm sim — see [`architecture_swarm_sync.md`](architecture_swarm_sync.md) §0.
+
+## Owner decisions (2026-07-11)
+- **Danger tone:** dangerous overall, but **starter zones stay cozy** (few dangerous things) → **`zone barriers`**
+  backlogged (gate danger by zone).
+- **Defensive verb: DODGE only** (no block/parry).
+- **Threat zoning:** extra danger **at night** — nocturnal hunters that don't hunt by day; otherwise not zoned.
+- **Bite-token pool = 2** (≤2 individual stings per swarm per attack-cooldown).
+- **Bug→player damage is PER-INDIVIDUAL**, authority-decided (mirrors the predation strike); **swarm-of-1 dropped**.
+  Crucial fact: **player HP is SIM-INERT** (`state.go:314`) — the strike is a server-authoritative event, NOT a
+  client-hashed sim input, so it needs no ledger/hash/snapshot wiring (lower determinism risk than predation).
+- **New enemy sprites: gpt-image-1.5 @ medium quality.**
+- **Roadmap:** M1 foundation+arena → M2 wasp polish + medium/hard tiers → M3 medium/tough caterpillar → M4
+  centipede regroup (grouped + staggered) → M5 docs + `combat-enemy` skill.
 
 ## The decided skeleton (owner-adopted 2026-07-11)
 Three primitives, layered:
@@ -14,7 +28,7 @@ Three primitives, layered:
 2. **FSM brains** — each bug/swarm is in exactly one state: `Idle → Chase → Wind-up → Attack → Recover → Flee`,
    with data-driven transitions (see player → Chase; in range → Wind-up; hit → Flee). O(1), deterministic.
 3. **Attack-token stage manager** — a central server-side bouncer per player: a small integer pool of **bite
-   tokens** (default 1–2) + a ring of surround **slots**. Only a token-holder may execute a damaging lunge;
+   tokens** (**= 2**, owner) + a ring of surround **slots**. Only a token-holder may execute a damaging lunge;
    the other bugs still crowd/menace (scary) but can't all bite at once (fair). Slots assign nearest-free →
    emergent flanking with zero peer awareness. Difficulty = raise the token/slot budgets. Pure integer
    bookkeeping on the server; emits **no extra network bytes** — only its *outcomes* (a telegraph leg, a strike)
@@ -23,11 +37,11 @@ Three primitives, layered:
 These compose: the **stage manager** sits above per-bug **FSM brains** whose Attack/Chase states drive
 **steering**, which sets the next `SWARM_SET_TARGET` leg.
 
-## Recommended alongside them — the layers that make the three actually work
-*(My recommendation, not yet owner-confirmed. The first group is effectively inseparable from the skeleton —
-without it, "smarter enemies" just means "more unavoidable damage," the anti-pattern every source warns of.)*
+## Adopted alongside the skeleton (owner-approved 2026-07-11)
+*(These make the three actually work — without them "smarter enemies" is just "more unavoidable damage." The core
+bundle is inseparable from the skeleton; the pacing + polish layers land in later milestones.)*
 
-### Core bundle — strongly recommend (adopt with the three)
+### Core bundle — ADOPTED (M1 foundation)
 - **Three-phase attack timing** (anticipation → active → recovery, authored **integer ticks**). This is the
   *fairness contract*: a token-holder's bite has a visible **wind-up (≥ ~15 ticks)** you can react to, and a
   **recovery** window that's the player's free-hit. Without it the attack tokens are just unavoidable hits.
