@@ -74,6 +74,9 @@ func (m *Match) reproduceSwarm(state *WorldState, dispatcher runtime.MatchDispat
 	swarm *entities.SwarmState, species *entities.BugSpecies, logger runtime.Logger) {
 
 	count := 1 + state.Rng.Intn(2) // 1-2 offspring
+	if species.Category == "individual" {
+		count = 1 // individuals are swarm-of-1 — mint a solo child, never a 2-member knot
+	}
 
 	// VISIBLE BROOD path (flies/butterflies): a non-predator swarm LAYS eggs into the nursery at its
 	// breeding source instead of growing instantly. processBroods matures + hatches them, and the
