@@ -167,6 +167,37 @@ func TestAggroPlayerThinkChasesNearbyPlayer(t *testing.T) {
 	}
 }
 
+// Aggro hysteresis: acquire within ENTER (8), stay sticky out to EXIT (12), release beyond it.
+func TestAggroHysteresis(t *testing.T) {
+	state, p := hpTestState()
+	m := &Match{}
+	w := newWaspSwarm("a_w", 6, 0, 0) // swarm at origin
+	state.Swarms[w.ID] = w
+	state.TickCount = 1000
+	sp := state.Species["wasp_common"]
+
+	// 10 cells away (> enter 8): no aggro.
+	p.Position.LocalX, p.Position.LocalY = 10, 0
+	if m.aggroPlayerThink(state, w, sp, 32, 0.1) || w.AggroTargetID != "" {
+		t.Fatalf("must not aggro beyond enter range (10 > 8)")
+	}
+	// 6 cells (< enter 8): acquire.
+	p.Position.LocalX, p.Position.LocalY = 6, 0
+	if !m.aggroPlayerThink(state, w, sp, 32, 0.1) || w.AggroTargetID != "p1" {
+		t.Fatalf("must aggro within enter range (6 < 8)")
+	}
+	// Drifts to 10 (between enter 8 and exit 12): STICKY, still engaged.
+	p.Position.LocalX, p.Position.LocalY = 10, 0
+	if !m.aggroPlayerThink(state, w, sp, 32, 0.1) || w.AggroTargetID != "p1" {
+		t.Fatalf("hysteresis: must keep chasing between enter and exit (10 < 12)")
+	}
+	// Past exit 12: release.
+	p.Position.LocalX, p.Position.LocalY = 13, 0
+	if m.aggroPlayerThink(state, w, sp, 32, 0.1) || w.AggroTargetID != "" {
+		t.Fatalf("must release past exit range (13 > 12)")
+	}
+}
+
 // Nocturnal: a night hunter can't arm a sting by day; at night it arms + lands.
 func TestBugPlayerStrikeNocturnalGate(t *testing.T) {
 	state, p := hpTestState()

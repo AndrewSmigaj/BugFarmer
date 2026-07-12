@@ -49,18 +49,20 @@ const (
 //  2. PREDATOR behavior (species.Predation != nil): hunt / wander-in-home-range
 //
 // Every path through here writes SpeedMult before emitting (the sync contract).
-// playerAggroRange caps how close a player must be before an attack-capable swarm gives chase (each
-// species also can't aggro past its own vision). Moderate on purpose: enemies engage when you get near,
-// but don't abandon their lives from across the zone (keeps the ecology intact away from the player).
-const playerAggroRange = 8.0
+// Aggro hysteresis: an attack-capable swarm NOTICES a player within ENTER (capped by its vision) and keeps
+// chasing until the player passes EXIT — so it doesn't flip-flop chase↔wander at the boundary. Moderate on
+// purpose: enemies engage when you get near but don't abandon their lives from across the zone.
+const (
+	playerAggroEnter = 8.0
+	playerAggroExit  = 12.0
+)
 
-// aggroPlayerThink is the "aggro radius" that was missing: any attack-capable swarm (attack_damage > 0)
-// CHASES the nearest player within range, instead of wandering. Without it, non-nest attackers (a debug-
-// spawned wasp cloud) never engage — and a wandering target drifts out of sting range
-// during the telegraph wind-up, so nothing ever lands. Steering toward the player also keeps the swarm on
-// top of you so the per-individual sting actually connects. Server-authoritative leg → deterministic
-// (nearestPlayer is sorted-id; emitLeg is the standard leg; NextThinkTick jitter uses the seeded Rng).
-// Returns true when it takes the leg (owning this think). Skips subdued swarms and nocturnal-by-day.
+// aggroPlayerThink is the proximity-aggro chase. Called EVERY tick for a non-actionState attack-capable swarm
+// (so it notices a player promptly — not gated behind a 3-5 s wander leg). It keeps a STICKY target with
+// hysteresis (AggroTargetID) and emits a chase leg only on target-acquire or on the re-aim cadence (so no
+// per-tick leg spam). Centipedes use this too: it closes the 5-8 gap, then the per-tick surge trigger takes
+// over inside centTriggerRange (it runs first, sets actionActive, and this isn't called during a surge).
+// Server-authoritative leg → deterministic. Returns true when it OWNS the think (has a target).
 func (m *Match) aggroPlayerThink(
 	state *WorldState,
 	swarm *entities.SwarmState,
@@ -68,36 +70,60 @@ func (m *Match) aggroPlayerThink(
 	chunkSize int,
 	deltaTime float32,
 ) bool {
-	if species.AttackDamage <= 0 || swarm.Count <= 0 {
+	if species.AttackDamage <= 0 || swarm.Count <= 0 ||
+		(species.Nocturnal && !isNightForHunting(state)) || swarmSubdued(swarm, species) {
+		swarm.AggroTargetID = ""
 		return false
-	}
-	// Centipede/millipede-class (individual predators) run their OWN player-attack AI (the surge
-	// ActionState / centTriggerRange); don't double-drive them with the generic aggro leg.
-	if species.Predation != nil && species.Category == "individual" {
-		return false
-	}
-	if species.Nocturnal && !isNightForHunting(state) {
-		return false
-	}
-	if swarmSubdued(swarm, species) {
-		return false
-	}
-	aggroRange := float32(playerAggroRange)
-	if species.VisionRange > 0 && species.VisionRange < aggroRange {
-		aggroRange = species.VisionRange // a short-sighted crawler only notices you up close
 	}
 	sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
-	_, px, py, found := m.nearestPlayer(state, sx, sy, aggroRange)
-	if !found {
-		return false
+
+	// Keep the current target while it stays inside EXIT; otherwise try to acquire the nearest within ENTER.
+	var tx, ty float32
+	acquired := false
+	if swarm.AggroTargetID != "" {
+		if p, ok := state.Players[swarm.AggroTargetID]; ok && p != nil {
+			px, py := p.WorldX(chunkSize), p.WorldY(chunkSize)
+			if dx, dy := px-sx, py-sy; dx*dx+dy*dy <= playerAggroExit*playerAggroExit {
+				tx, ty = px, py
+			} else {
+				swarm.AggroTargetID = "" // left the exit radius
+			}
+		} else {
+			swarm.AggroTargetID = "" // gone
+		}
 	}
-	mult := float32(1.4) // a purposeful advance; a bit faster than a wander
-	if species.Predation != nil && species.Predation.HuntSpeedMult > 0 {
-		mult = species.Predation.HuntSpeedMult
+	if swarm.AggroTargetID == "" {
+		enter := float32(playerAggroEnter)
+		if species.VisionRange > 0 && species.VisionRange < enter {
+			enter = species.VisionRange // a short-sighted crawler only notices you up close
+		}
+		if pid, px, py, found := m.nearestPlayer(state, sx, sy, enter); found {
+			swarm.AggroTargetID = pid
+			tx, ty = px, py
+			acquired = true
+		}
 	}
-	swarm.TargetPreyID = ""
-	m.emitLeg(state, swarm, species, px, py, mult, chunkSize, deltaTime)
-	swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)
+	if swarm.AggroTargetID == "" {
+		return false // nobody to chase → fall through to normal think
+	}
+
+	// Emit a chase leg on ACQUIRE (prompt) or on the re-aim cadence; otherwise ride the current leg.
+	if acquired || state.TickCount >= swarm.NextThinkTick {
+		mult := float32(1.4)
+		if species.Predation != nil && species.Predation.HuntSpeedMult > 0 {
+			mult = species.Predation.HuntSpeedMult
+		}
+		// Grounded attackers clamp the chase to a reachable point (path around walls, not through them);
+		// fliers (FliesOverFences) aim straight.
+		if !species.FliesOverFences {
+			tx, ty, _, _, _ = entities.RaycastClampWithBlock(sx, sy, tx, ty, func(x, y float32) bool {
+				return state.IsBlockedForSpecies(x, y, species)
+			})
+		}
+		swarm.TargetPreyID = ""
+		m.emitLeg(state, swarm, species, tx, ty, mult, chunkSize, deltaTime)
+		swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)
+	}
 	return true
 }
 

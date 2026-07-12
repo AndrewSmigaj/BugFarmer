@@ -99,6 +99,7 @@ type SwarmState struct {
 	HomingStartTick int64  `json:"homing_start,omitempty"` // homing timeout anchor (600 ticks drops the brood)
 	DefendUntilTick int64  `json:"defend_until,omitempty"` // defending exits at this tick (or by distance hysteresis)
 	DefendTargetID  string `json:"defend_target,omitempty"` // player being chased while defending (stable userID; self-heals)
+	AggroTargetID   string `json:"aggro_target,omitempty"`  // player an attack-capable swarm is chasing (proximity aggro, hysteresis; server-only, sim-inert)
 
 	// ActionState (centipede): what the bug is FORCIBLY DOING right now — orthogonal
 	// to the lifecycle Phase (what it WANTS). "" | "windup" | "surge" | "recover" |
