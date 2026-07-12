@@ -140,6 +140,33 @@ func TestBugPlayerStrikeTelegraphNoSpam(t *testing.T) {
 	}
 }
 
+// Aggro: an attack-capable swarm chases a nearby player, ignores a far one, and won't aggro nocturnal-by-day.
+func TestAggroPlayerThinkChasesNearbyPlayer(t *testing.T) {
+	state, p := hpTestState() // wasp_common attack_damage=1; player at (10,10)
+	m := &Match{}
+	w := newWaspSwarm("a_w", 6, 13, 10) // 3 cells away, inside aggro range (8)
+	state.Swarms[w.ID] = w
+	state.TickCount = 1000
+
+	if !m.aggroPlayerThink(state, w, state.Species["wasp_common"], 32, 0.1) {
+		t.Fatalf("a wasp should aggro a player 3 cells away")
+	}
+
+	// Far player → no aggro.
+	p.Position.LocalX, p.Position.LocalY = 80, 80
+	if m.aggroPlayerThink(state, w, state.Species["wasp_common"], 32, 0.1) {
+		t.Fatalf("a wasp must not aggro a player far outside aggro range")
+	}
+
+	// Nocturnal-by-day → no aggro even when adjacent.
+	p.Position.LocalX, p.Position.LocalY = 12, 10
+	state.Species["wasp_common"].Nocturnal = true
+	state.TickCount = int64(0.5 * DayLengthTicks) // day
+	if m.aggroPlayerThink(state, w, state.Species["wasp_common"], 32, 0.1) {
+		t.Fatalf("a nocturnal species must not aggro by day")
+	}
+}
+
 // Nocturnal: a night hunter can't arm a sting by day; at night it arms + lands.
 func TestBugPlayerStrikeNocturnalGate(t *testing.T) {
 	state, p := hpTestState()

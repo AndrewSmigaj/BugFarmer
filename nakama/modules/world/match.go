@@ -1251,7 +1251,11 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			// Predation branches (prey FLEE / predator hunt+wander) REPLACE the shared
 			// forage block when they fire — they emit their own leg, write their own
 			// SpeedMult, and own NextThinkTick (hunt/flee re-aim every 10-15 ticks).
+			// AGGRO first: an attack-capable swarm chases a nearby player (the "aggro radius"). If it
+			// engages it owns this think — skips hunting/foraging so the enemy actually comes at you and
+			// stays in sting range through the telegraph wind-up. Non-attackers fall straight through.
 			if !actionActive && worldState.TickCount >= swarm.NextThinkTick &&
+				!m.aggroPlayerThink(worldState, swarm, species, chunkSize, deltaTime) &&
 				!m.predationThink(worldState, swarm, species, chunkSize, deltaTime, logger) {
 				var resourceX, resourceY float32 = float32(math.NaN()), float32(math.NaN())
 				swarm.TargetFoodID = ""

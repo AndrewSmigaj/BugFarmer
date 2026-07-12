@@ -49,6 +49,53 @@ const (
 //  2. PREDATOR behavior (species.Predation != nil): hunt / wander-in-home-range
 //
 // Every path through here writes SpeedMult before emitting (the sync contract).
+// playerAggroRange caps how close a player must be before an attack-capable swarm gives chase (each
+// species also can't aggro past its own vision). Moderate on purpose: enemies engage when you get near,
+// but don't abandon their lives from across the zone (keeps the ecology intact away from the player).
+const playerAggroRange = 8.0
+
+// aggroPlayerThink is the "aggro radius" that was missing: any attack-capable swarm (attack_damage > 0)
+// CHASES the nearest player within range, instead of wandering. Without it, non-nest attackers (a debug-
+// spawned wasp cloud, a caterpillar) never engage — and a wandering target drifts out of sting range
+// during the telegraph wind-up, so nothing ever lands. Steering toward the player also keeps the swarm on
+// top of you so the per-individual sting actually connects. Server-authoritative leg → deterministic
+// (nearestPlayer is sorted-id; emitLeg is the standard leg; NextThinkTick jitter uses the seeded Rng).
+// Returns true when it takes the leg (owning this think). Skips subdued swarms and nocturnal-by-day.
+func (m *Match) aggroPlayerThink(
+	state *WorldState,
+	swarm *entities.SwarmState,
+	species *entities.BugSpecies,
+	chunkSize int,
+	deltaTime float32,
+) bool {
+	if species.AttackDamage <= 0 || swarm.Count <= 0 {
+		return false
+	}
+	if species.Nocturnal && !isNightForHunting(state) {
+		return false
+	}
+	if swarmSubdued(swarm, species) {
+		return false
+	}
+	aggroRange := float32(playerAggroRange)
+	if species.VisionRange > 0 && species.VisionRange < aggroRange {
+		aggroRange = species.VisionRange // a short-sighted crawler only notices you up close
+	}
+	sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
+	_, px, py, found := m.nearestPlayer(state, sx, sy, aggroRange)
+	if !found {
+		return false
+	}
+	mult := float32(1.4) // a purposeful advance; a bit faster than a wander
+	if species.Predation != nil && species.Predation.HuntSpeedMult > 0 {
+		mult = species.Predation.HuntSpeedMult
+	}
+	swarm.TargetPreyID = ""
+	m.emitLeg(state, swarm, species, px, py, mult, chunkSize, deltaTime)
+	swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)
+	return true
+}
+
 func (m *Match) predationThink(
 	state *WorldState,
 	swarm *entities.SwarmState,
