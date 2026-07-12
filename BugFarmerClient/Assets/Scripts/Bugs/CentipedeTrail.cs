@@ -32,8 +32,13 @@ namespace BugFarmer.Bugs
 
         /// <summary>The crawler head's display scale for this species — SwarmVisual sets the head
         /// transform to this so the head matches its trail segments (millipede = 2x centipede).</summary>
-        public static float PartScaleFor(string speciesId) =>
-            (speciesId != null && speciesId.Contains("millipede")) ? MilliScale : CentScale;
+        public static float PartScaleFor(string speciesId)
+        {
+            var info = BugFarmer.Data.EntityDatabase.GetSpecies(speciesId);
+            float scale = (info != null && info.RenderScale > 0f) ? info.RenderScale : 1f;
+            bool milli = speciesId != null && speciesId.Contains("millipede");
+            return (milli ? MilliScale : CentScale) * scale;
+        }
 
         // The segment sprites are 32px = 2.0 world units raw; CentScale (0.35) reads each part as
         // ~0.7 units — a long bug, not a parade of plates. MilliScale doubles it for millipedes.
@@ -55,9 +60,14 @@ namespace BugFarmer.Bugs
             // Pick the sprite family + size from the species (millipede has its own body/tail art
             // and renders 2x bigger; everything else uses the centipede segments).
             bool milli = speciesId != null && speciesId.Contains("millipede");
-            string fam = milli ? "millipede" : "centipede";
-            _partScale = milli ? MilliScale : CentScale;
-            _spacing = milli ? CentSpacing * 2f : CentSpacing;   // spacing scales with size
+            // Segment art family: an explicit per-species sprite_family (a tier's OWN head/body/tail set),
+            // falling back to the legacy millipede/centipede split. render_scale lets a giant tier be bigger.
+            var info = BugFarmer.Data.EntityDatabase.GetSpecies(speciesId);
+            string fam = !string.IsNullOrEmpty(info?.SpriteFamily) ? info.SpriteFamily
+                         : (milli ? "millipede" : "centipede");
+            float renderScale = (info != null && info.RenderScale > 0f) ? info.RenderScale : 1f;
+            _partScale = (milli ? MilliScale : CentScale) * renderScale;
+            _spacing = (milli ? CentSpacing * 2f : CentSpacing) * renderScale;   // spacing scales with size
             _maxHistory = (BodySegments + 2) * _spacing + 2f;
             // ONE body design per creature: body_a/body_b are ALTERNATIVE looks, not strung together.
             // Chosen look: centipede = the "b" set, millipede = the "a" set. (Head is the species sprite_id.)

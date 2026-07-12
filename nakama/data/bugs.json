@@ -1101,5 +1101,83 @@
     "zones": [
       "wasp_thicket"
     ]
+  },
+  "centipede_tiger_head": {
+    "sprite_path": "Sprites/Bugs/centipede_tiger_head.png",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "category": "centipede",
+    "part": "head",
+    "base_speed": 0.6,
+    "catch_difficulty": 4,
+    "value": 40,
+    "zones": [
+      "centipede_cavern"
+    ]
+  },
+  "centipede_tiger_body_b": {
+    "sprite_path": "Sprites/Bugs/centipede_tiger_body_b.png",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "category": "centipede",
+    "part": "body",
+    "base_speed": 0.6,
+    "catch_difficulty": 4,
+    "value": 40,
+    "zones": [
+      "centipede_cavern"
+    ]
+  },
+  "centipede_tiger_tail_b": {
+    "sprite_path": "Sprites/Bugs/centipede_tiger_tail_b.png",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "category": "centipede",
+    "part": "tail",
+    "base_speed": 0.6,
+    "catch_difficulty": 4,
+    "value": 40,
+    "zones": [
+      "centipede_cavern"
+    ]
+  },
+  "centipede_giant_head": {
+    "sprite_path": "Sprites/Bugs/centipede_giant_head.png",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "category": "centipede",
+    "part": "head",
+    "base_speed": 0.6,
+    "catch_difficulty": 4,
+    "value": 40,
+    "zones": [
+      "centipede_cavern"
+    ]
+  },
+  "centipede_giant_body_b": {
+    "sprite_path": "Sprites/Bugs/centipede_giant_body_b.png",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "category": "centipede",
+    "part": "body",
+    "base_speed": 0.6,
+    "catch_difficulty": 4,
+    "value": 40,
+    "zones": [
+      "centipede_cavern"
+    ]
+  },
+  "centipede_giant_tail_b": {
+    "sprite_path": "Sprites/Bugs/centipede_giant_tail_b.png",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "category": "centipede",
+    "part": "tail",
+    "base_speed": 0.6,
+    "catch_difficulty": 4,
+    "value": 40,
+    "zones": [
+      "centipede_cavern"
+    ]
   }
 }

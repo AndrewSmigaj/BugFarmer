@@ -463,5 +463,47 @@
       "dirt"
     ],
     "family": "creature"
+  },
+  "centipede_tiger_head": {
+    "look": "a TIGER CENTIPEDE HEAD, top-down: a flattened armoured head in banded ORANGE-and-dark-brown, two long antennae pointing forward, a pair of curved venom fangs, one pair of legs to the sides; aggressive; the BOTTOM edge is FLAT to connect to a body segment.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "centipede_tiger_body_b": {
+    "look": "one TIGER CENTIPEDE body segment, top-down: a banded ORANGE-and-dark-brown armoured plate with a pair of orange legs splayed left and right; FLAT top and bottom edges so segments stack into a chain.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "centipede_tiger_tail_b": {
+    "look": "a TIGER CENTIPEDE tail end, top-down: banded orange-and-dark-brown, a final segment with two long rear appendages trailing back; FLAT top edge to connect to the body.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "centipede_giant_head": {
+    "look": "a GIANT CENTIPEDE HEAD, top-down: a massive flattened armoured head in dark BLOOD-RED chitin, two thick antennae forward, big curved venom fangs, heavy; the BOTTOM edge is FLAT to connect to a body segment; clearly larger and deadlier than a common centipede.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "centipede_giant_body_b": {
+    "look": "one GIANT CENTIPEDE body segment, top-down: a broad dark BLOOD-RED armoured plate with thick amber-yellow legs splayed left and right; FLAT top and bottom edges so segments stack into a chain; chunky.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "centipede_giant_tail_b": {
+    "look": "a GIANT CENTIPEDE tail end, top-down: dark blood-red, a heavy final segment with two long thick rear appendages trailing back; FLAT top edge to connect to the body.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
   }
 }

@@ -223,6 +223,12 @@ namespace BugFarmer.Data
             // The server re-gates authoritatively (immune/subdued/defend-only/cooldown/invuln).
             public int AttackDamage;
             public float AttackCooldown;
+
+            // Segmented crawlers (centipede/millipede): which body/tail art set to string behind the head,
+            // and a render-scale multiplier so a giant tier is visibly bigger. SpriteFamily null → the
+            // legacy centipede/millipede fallback in CentipedeTrail.
+            public string SpriteFamily;
+            public float RenderScale = 1f;
         }
         private static Dictionary<string, SpeciesInfo> _species;
         private static bool _initialized;
@@ -307,6 +313,8 @@ namespace BugFarmer.Data
                         NetSize = obj?["net_size"]?.Value<string>() ?? "small",
                         AttackDamage = obj?["attack_damage"]?.Value<int>() ?? 0,
                         AttackCooldown = obj?["attack_cooldown"]?.Value<float>() ?? 0f,
+                        SpriteFamily = obj?["sprite_family"]?.Value<string>(),
+                        RenderScale = obj?["render_scale"]?.Value<float>() ?? 1f,
                     };
                 }
             }
