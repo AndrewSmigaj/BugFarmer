@@ -59,6 +59,47 @@ const (
 	centEscapeStreak   = 3 // fully-clamped legs before a free 360° re-roll
 )
 
+// resolveLunge returns the effective surge params for this species — from its attack{}/attack.lunge profile,
+// with the shared centipede consts as fallback (so a hand-built test centipede with no profile still works).
+// The wind-up is attack.telegraph_secs (per-species, shared with the sting wind-up); cooldown is cooldown_secs.
+// This is what makes tiers lunge differently (a giant rears slower + charges further) from DATA, not code.
+func resolveLunge(species *entities.BugSpecies) (lc entities.LungeConfig, windupTicks, cooldownTicks int64) {
+	lc = entities.LungeConfig{
+		TriggerRange:   centTriggerRange,
+		SurgeSpeedMult: centSurgeSpeedMult,
+		Overshoot:      centSurgeOvershoot,
+		SurgeMaxTicks:  centSurgeMaxTicks,
+		Lead:           centSurgeLead,
+	}
+	windupTicks, cooldownTicks = centWindupTicks, centSurgeCooldown
+	if atk := species.AttackProfile(); atk != nil {
+		if atk.TelegraphSecs > 0 {
+			windupTicks = int64(atk.TelegraphSecs * 10)
+		}
+		if atk.CooldownSecs > 0 {
+			cooldownTicks = int64(atk.CooldownSecs * 10)
+		}
+		if l := atk.Lunge; l != nil {
+			if l.TriggerRange > 0 {
+				lc.TriggerRange = l.TriggerRange
+			}
+			if l.SurgeSpeedMult > 0 {
+				lc.SurgeSpeedMult = l.SurgeSpeedMult
+			}
+			if l.Overshoot > 0 {
+				lc.Overshoot = l.Overshoot
+			}
+			if l.SurgeMaxTicks > 0 {
+				lc.SurgeMaxTicks = l.SurgeMaxTicks
+			}
+			if l.Lead > 0 {
+				lc.Lead = l.Lead
+			}
+		}
+	}
+	return
+}
+
 // processActionState drives windup/surge/recover/gnaw per tick. Returns true while an
 // action owns the swarm (the think gate is skipped). When idle (""), it also checks
 // the surge TRIGGER (per-tick — a player can cross 5.0 between thinks).
@@ -71,6 +112,7 @@ func (m *Match) processActionState(
 	chunkSize int,
 	deltaTime float32,
 ) bool {
+	lc, windupTicks, cooldownTicks := resolveLunge(species) // per-species surge params (attack.lunge)
 	switch swarm.ActionState {
 	case "windup":
 		// FUNNEL 2 (§C): smoke lands mid-windup → the lunge dissolves. Back off along the
@@ -92,23 +134,28 @@ func (m *Match) processActionState(
 		}
 		// Per-tick bite check during flight: range AND line-of-sight (a clamped surge
 		// ends ≤1.5 from a player hugging the far side of a fence — a through-fence
-		// bite would silently void "stone is the answer").
+		// bite would silently void "stone is the answer"). The DAMAGE goes through the
+		// same subsystem as the sting — the shared gate (nocturnal/defend-only/subdued)
+		// + the funnel — so a lunge can't skip a gate the contact path enforces.
 		sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
-		for userID, player := range state.Players {
-			px, py := player.WorldX(chunkSize), player.WorldY(chunkSize)
-			dx, dy := px-sx, py-sy
-			if dx*dx+dy*dy > centBiteRange*centBiteRange {
-				continue
-			}
-			_, _, _, _, blocked := entities.RaycastClampWithBlock(sx, sy, px, py, func(x, y float32) bool {
-				return state.IsBlockedForSpecies(x, y, species)
-			})
-			if blocked {
-				continue // a wall between us: no bite through it
-			}
-			if m.applyBugAttackToPlayer(logger, dispatcher, state, swarm, species, userID, player, species.AttackDamage) {
-				m.startRecover(state, swarm, species, px, py, chunkSize, deltaTime)
-				return true
+		atk := species.AttackProfile()
+		if atk != nil && m.bugAttackAllowed(state, swarm, species, atk) {
+			for userID, player := range state.Players {
+				px, py := player.WorldX(chunkSize), player.WorldY(chunkSize)
+				dx, dy := px-sx, py-sy
+				if dx*dx+dy*dy > atk.Range*atk.Range {
+					continue
+				}
+				_, _, _, _, blocked := entities.RaycastClampWithBlock(sx, sy, px, py, func(x, y float32) bool {
+					return state.IsBlockedForSpecies(x, y, species)
+				})
+				if blocked {
+					continue // a wall between us: no bite through it
+				}
+				if m.applyBugAttackToPlayer(logger, dispatcher, state, swarm, species, userID, player, atk.Damage) {
+					m.startRecover(state, swarm, species, px, py, chunkSize, deltaTime)
+					return true
+				}
 			}
 		}
 		// Flight over (arrived or capped) WITHOUT a bite: the overshoot carried us
@@ -121,7 +168,7 @@ func (m *Match) processActionState(
 	case "recover":
 		if state.TickCount >= swarm.ActionUntilTick {
 			swarm.ActionState = ""
-			swarm.SurgeCooldownUntil = state.TickCount + centSurgeCooldown
+			swarm.SurgeCooldownUntil = state.TickCount + cooldownTicks
 			swarm.NextThinkTick = state.TickCount // re-decide immediately
 		}
 		return true
@@ -136,14 +183,15 @@ func (m *Match) processActionState(
 		return m.processGnaw(logger, dispatcher, state, swarm, species, chunkSize)
 	}
 
-	// IDLE: the surge trigger (per-tick). A subdued centipede doesn't START a windup —
-	// the GDD's "smoke it and walk past it" (§C funnel 2).
-	if species.AttackDamage > 0 && state.TickCount >= swarm.SurgeCooldownUntil &&
-		!swarmSubdued(swarm, species) {
+	// IDLE: the surge trigger (per-tick). Gated by the SAME shared subsystem the sting uses
+	// (bugAttackAllowed = defend-only/nocturnal/subdued) — so a nocturnal centipede won't lunge
+	// by day (the gate the old direct path skipped). "smoke it and walk past it" (§C funnel 2).
+	atk := species.AttackProfile()
+	if atk != nil && m.bugAttackAllowed(state, swarm, species, atk) && state.TickCount >= swarm.SurgeCooldownUntil {
 		sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
-		if pid, px, py, found := m.nearestPlayer(state, sx, sy, centTriggerRange); found {
+		if pid, px, py, found := m.nearestPlayer(state, sx, sy, lc.TriggerRange); found {
 			swarm.ActionState = "windup"
-			swarm.ActionUntilTick = state.TickCount + centWindupTicks
+			swarm.ActionUntilTick = state.TickCount + windupTicks
 			swarm.WindupTargetID = pid
 			swarm.WindupStartX, swarm.WindupStartY = px, py
 			// Freeze: a zero-length leg (origin == target) — deterministic on both
@@ -167,25 +215,26 @@ func (m *Match) launchSurge(
 	chunkSize int,
 	deltaTime float32,
 ) {
+	lc, windupTicks, cooldownTicks := resolveLunge(species) // per-species surge params (attack.lunge)
 	player, ok := state.Players[swarm.WindupTargetID]
 	if !ok {
 		swarm.ActionState = ""
-		swarm.SurgeCooldownUntil = state.TickCount + centSurgeCooldown
+		swarm.SurgeCooldownUntil = state.TickCount + cooldownTicks
 		return
 	}
 
 	px, py := player.WorldX(chunkSize), player.WorldY(chunkSize)
 	sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
 
-	// Velocity over the windup (u/s) → lead by flight time × 0.8
-	vx := (px - swarm.WindupStartX) / (float32(centWindupTicks) * 0.1)
-	vy := (py - swarm.WindupStartY) / (float32(centWindupTicks) * 0.1)
+	// Velocity over the windup (u/s) → lead by flight time × lc.Lead
+	vx := (px - swarm.WindupStartX) / (float32(windupTicks) * 0.1)
+	vy := (py - swarm.WindupStartY) / (float32(windupTicks) * 0.1)
 	ddx, ddy := px-sx, py-sy
 	dist := float32(math.Sqrt(float64(ddx*ddx + ddy*ddy)))
-	surgeSpeed := species.BaseSpeed * centSurgeSpeedMult
+	surgeSpeed := species.BaseSpeed * lc.SurgeSpeedMult
 	flight := dist / surgeSpeed
-	tx := px + vx*flight*centSurgeLead
-	ty := py + vy*flight*centSurgeLead
+	tx := px + vx*flight*lc.Lead
+	ty := py + vy*flight*lc.Lead
 
 	// OVERSHOOT: charge THROUGH the aim point and past it — a dodged lunge leaves
 	// the centipede beyond the player (the turnaround brings it back); an undodged
@@ -193,8 +242,8 @@ func (m *Match) launchSurge(
 	odx, ody := tx-sx, ty-sy
 	odist := float32(math.Sqrt(float64(odx*odx + ody*ody)))
 	if odist > 0.01 {
-		tx += odx / odist * centSurgeOvershoot
-		ty += ody / odist * centSurgeOvershoot
+		tx += odx / odist * lc.Overshoot
+		ty += ody / odist * lc.Overshoot
 	}
 
 	// Ground-bound: the surge clamps at fences/water like every centipede leg.
@@ -203,11 +252,11 @@ func (m *Match) launchSurge(
 	})
 
 	swarm.ActionState = "surge"
-	swarm.ActionUntilTick = state.TickCount + centSurgeMaxTicks
+	swarm.ActionUntilTick = state.TickCount + lc.SurgeMaxTicks
 	// The lunge direction seeds the heading, so a turnaround banks from the actual
 	// flight line (and post-action wander continues naturally too).
 	swarm.WanderHeading = float32(math.Atan2(float64(cy-sy), float64(cx-sx)))
-	m.emitLeg(state, swarm, species, cx, cy, centSurgeSpeedMult, chunkSize, deltaTime)
+	m.emitLeg(state, swarm, species, cx, cy, lc.SurgeSpeedMult, chunkSize, deltaTime)
 }
 
 // startTurnaround begins the missed-surge arc: bank back toward the target player
