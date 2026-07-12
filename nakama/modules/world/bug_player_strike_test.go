@@ -156,8 +156,8 @@ func TestBugPlayerStrikeNocturnalGate(t *testing.T) {
 		t.Fatalf("a nocturnal species must not arm a sting by day (PendingStingTick=%d)", w.PendingStingTick)
 	}
 
-	// NIGHT (t≈0.85): it arms, and the sting lands.
-	state.TickCount = int64(0.85 * DayLengthTicks)
+	// NIGHT (t≈0.70 — the debug "Night" button value): it arms, and the sting lands.
+	state.TickCount = int64(0.70 * DayLengthTicks)
 	report(m, state, testAuthority, w.ID, "p1", w.FirstAliveBugIDs(2))
 	if w.PendingStingTick == 0 {
 		t.Fatalf("a nocturnal species must arm a sting at night")

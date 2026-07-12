@@ -92,13 +92,15 @@ func (s *WorldState) AdvanceDayIfNeeded() (int64, bool) {
 	return currentDay, false
 }
 
-// isNightForHunting reports whether the apparent time of day is "night" — the window a
-// nocturnal hunter is active. Dusk ≈ 0.72 of the day → dawn ≈ 0.22 (the darkest stretch;
-// the client's lighting darkens over roughly the same window). Purely a function of the
-// tick + the (synced, deterministic) day offset, so it never perturbs the swarm sim.
+// isNightForHunting reports whether the apparent time of day is "night" — the window a nocturnal
+// hunter is active. Tracks the CLIENT's visual night (DayNightController: day <0.42, dusk 0.42–0.58,
+// deep night 0.58–0.88, dawn 0.88–1.0): active from late dusk through dawn's start, so a night hunter
+// comes out as it gets dark and lies low once it's light. The debug "Night" button (t≈0.70) lands
+// squarely inside; "Evening"/"Noon"/"Morning" (0.50/0.25/0.0) are day. Purely a function of the tick +
+// the synced day offset, so it never perturbs the swarm sim.
 func isNightForHunting(state *WorldState) bool {
 	t := float64((state.TickCount+state.DayOffsetTicks)%DayLengthTicks) / float64(DayLengthTicks)
-	return t >= 0.72 || t < 0.22
+	return t >= 0.55 && t < 0.90
 }
 
 // setTimeOfDay shifts DayOffsetTicks so the apparent position within the day becomes

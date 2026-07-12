@@ -122,16 +122,20 @@ Shipped 2026-07-11 (commits `Combat: nocturnal…`, `Combat M2+M3…`). Four new
 just DATA (`species.json` combat spec + `bugs.json` art + a carcass item) + a fresh gpt-image-1.5 sprite — no
 per-enemy code. All are debug-spawnable in the arena immediately via the M1 species picker.
 
-- **Nocturnal mechanic** (`BugSpecies.Nocturnal`): a night hunter lies low by day and is a full threat at night.
-  Server-side + deterministic — `isNightForHunting(state)` (dusk ≈ 0.72 → dawn ≈ 0.22 of the day) gates two
-  things, both of which output only legs / server-authoritative HP (no new client-hashed sim input): the sting
-  (`handleBugPlayerStrike` won't arm by day) and predator aggro (`predationThink` won't hunt/nest-defend by day).
+- **Nocturnal mechanic** (`BugSpecies.Nocturnal`): a genuinely night-active creature (a nocturnal caterpillar,
+  moth, etc.) lies low by day and is a full threat at night. Server-side + deterministic — `isNightForHunting`
+  tracks the client's VISUAL night (deep night 0.58–0.88; active window `[0.55, 0.90)`, so the debug "Night"
+  button t≈0.70 is night, "Evening"/"Noon"/"Morning" are day). Gates two things, both of which output only legs /
+  server-authoritative HP (no new client-hashed sim input): the sting (`handleBugPlayerStrike` won't arm by day)
+  and predator aggro (`predationThink` won't hunt/nest-defend by day). NOTE: don't flag a diurnal real species
+  (wasps, hornets — seen by day) nocturnal; that reads as wrong.
 - **M2 wasp tiers** (`category: swarm`, predation → inherit nest-defence + hunt + ambient sting):
-  `wasp_soldier` (medium: dmg 2 / cd 1.6 / spd 2.6 / hp 5) and `hornet_giant` (hard, **nocturnal**: dmg 3 / cd
-  1.2 / spd 3.0 / hp 8).
+  `wasp_soldier` (medium: dmg 2 / cd 1.6 / spd 2.6 / hp 5) and `hornet_giant` (hard, **diurnal** — real hornets
+  are day-active: dmg 3 / cd 1.2 / spd 3.0 / hp 8).
 - **M3 caterpillar tiers** (`category: individual`, **no predation** → no lunge machine; slow tanky grazers that
   ambient-sting on contact — the ground contrast to aerial wasps): `caterpillar_spiny` (medium: dmg 2 / spd 1.1 /
-  hp 10) and `caterpillar_thornback` (tough, **nocturnal**: dmg 3 / spd 1.0 / hp 16).
+  hp 10) and `caterpillar_thornback` (tough, **nocturnal** — nocturnal caterpillars are real: dmg 3 / spd 1.0 /
+  hp 16).
 - **Difficulty knobs** (no new code): `attack_damage` (per-hit) · `attack_cooldown` (frequency, floored by the 1 s
   shared invuln) · `base_speed` + `hunt_speed_mult` (escape pressure) · `vision_range`/`home_range` (aggro net) ·
   `max_hp` (hits-to-kill) · `min/max_swarm_size` (cloud size) · `nocturnal`. Add/tune an enemy → the

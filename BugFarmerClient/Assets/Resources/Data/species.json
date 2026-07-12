@@ -724,8 +724,7 @@
     "lifespan_secs": 9450,
     "lifespan_spread_secs": 2520,
     "carcass_item": "dead_wasp",
-    "attack_is_sting": true,
-    "nocturnal": true
+    "attack_is_sting": true
   },
   "caterpillar_spiny": {
     "name": "Spiny Caterpillar",
