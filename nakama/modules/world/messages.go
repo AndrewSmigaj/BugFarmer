@@ -301,6 +301,10 @@ type BugPlayerStrikeMessage struct {
 	PlayerID string `json:"player_id"`
 	BugIDs   []int  `json:"bug_ids"`
 	Tick     int64  `json:"tick,omitempty"`
+	// Phase drives the authority-owned two-beat: "windup" = just flash the telegraph (no damage); "strike"
+	// (or "") = the wind-up elapsed AND a bug is STILL in range → apply the hit now. The authority owns the
+	// timing + the precise per-individual range check, so the server never schedules a centre-fire.
+	Phase string `json:"phase,omitempty"`
 }
 
 // PlayerDodgeMessage (OpCode 111, C->S): the player dodge-rolled; the server grants a brief i-frame window

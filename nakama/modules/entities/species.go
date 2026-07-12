@@ -146,6 +146,39 @@ type BugSpecies struct {
 	// Predator configuration. The NIL POINTER is the predator gate — non-predators
 	// never enter the predation branch.
 	Predation *PredationConfig `json:"predation"`
+
+	// Player-attack configuration (the data-driven combat profile). NIL = this bug can't hurt the player.
+	// One place for every player-facing combat dial so a new bug is DATA, not code. When present it is the
+	// source of truth; AttackProfile() falls back to the legacy top-level attack_* fields when it is absent.
+	Attack *AttackConfig `json:"attack,omitempty"`
+}
+
+// AttackConfig is the per-species player-attack profile — the ONE home for combat feel, so different-difficulty
+// bugs get different telegraphs/ranges/pursuit without touching code. Read identically by the server (gates +
+// decisions) and the client (wind-up + detection). All values are server-authoritative-decision / cosmetic —
+// none feed the deterministic sim hash.
+type AttackConfig struct {
+	Style         string  `json:"style"`          // "contact" (hits you when a bug is adjacent) | "lunge" (surge choreography)
+	Damage        int     `json:"damage"`         // HP per hit
+	CooldownSecs  float32 `json:"cooldown_secs"`  // min seconds between hits from one swarm
+	Range         float32 `json:"range"`          // contact/bite range (was the global stingRange 1.5; read by BOTH sides)
+	TelegraphSecs float32 `json:"telegraph_secs"` // PER-SPECIES wind-up before the hit (0 = instant). Sting: client timer. Lunge: the surge wind-up.
+	IsSting       bool    `json:"is_sting"`       // sting-class (bee suit / sting_immune armour negates it); false = a bite
+	OnlyDefending bool    `json:"only_defending"` // only strikes while the swarm Phase == "defending" (bees)
+	AggroEnter    float32 `json:"aggro_enter"`    // start chasing a player within this (was global 8); 0 = no proximity pursuit
+	AggroExit     float32 `json:"aggro_exit"`     // keep chasing until the player passes this (hysteresis; was global 12)
+	Lunge         *LungeConfig `json:"lunge,omitempty"` // style "lunge" only: the surge params (were the global cent* consts)
+}
+
+// LungeConfig holds the surge-lunge choreography knobs (style "lunge"), per-species so tiers can lunge
+// differently. Movement-only tuning (turnaround arcs, recover, wander) stays as shared consts in centipede.go;
+// these are the combat-relevant ones. The wind-up duration is AttackConfig.TelegraphSecs (shared with stings).
+type LungeConfig struct {
+	TriggerRange   float32 `json:"trigger_range"`    // distance at which it commits the surge (was centTriggerRange 5.0)
+	SurgeSpeedMult float32 `json:"surge_speed_mult"` // lunge speed = base_speed × this (was centSurgeSpeedMult 4.8)
+	Overshoot      float32 `json:"overshoot"`        // charges PAST the aim point by this many cells (was centSurgeOvershoot 3.5)
+	SurgeMaxTicks  int64   `json:"surge_max_ticks"`  // surge-flight cap (was centSurgeMaxTicks 25)
+	Lead           float32 `json:"lead"`             // aim-lead fraction of the target's velocity (was centSurgeLead 0.8)
 }
 
 // KillDrop is one entry of a species' kill loot table.
@@ -197,8 +230,44 @@ func LoadSpecies(path string) (map[string]*BugSpecies, error) {
 			return nil, fmt.Errorf("failed to parse species %s: %w", id, err)
 		}
 		spec.ID = id
+		spec.normalizeAttack()
 		species[id] = &spec
 	}
 
 	return species, nil
+}
+
+// AttackProfile returns the effective player-attack profile (nil = can't hurt the player). Real data is
+// normalized at load; hand-built species (tests) are lazily backfilled from their top-level attack_* fields.
+// The single read point for all combat code.
+func (s *BugSpecies) AttackProfile() *AttackConfig {
+	if s.Attack == nil {
+		s.normalizeAttack()
+	}
+	return s.Attack
+}
+
+// normalizeAttack backfills the Attack profile from the legacy top-level attack_* fields when a species has no
+// explicit attack{} block — so un-migrated data keeps working and the rest of the code reads only s.Attack.
+// A species with no attack block AND attack_damage <= 0 stays Attack == nil (can't hurt the player).
+func (s *BugSpecies) normalizeAttack() {
+	if s.Attack != nil || s.AttackDamage <= 0 {
+		return
+	}
+	style := "contact"
+	if s.Predation != nil && s.Category == "individual" {
+		style = "lunge" // legacy centipede/individual surge
+	}
+	s.Attack = &AttackConfig{
+		Style:         style,
+		Damage:        s.AttackDamage,
+		CooldownSecs:  s.AttackCooldown,
+		Range:         1.5,  // legacy global stingRange / centBiteRange
+		TelegraphSecs: 0.8,  // legacy centWindupTicks (8 @10Hz); stings had 1.2 but 0.8 is the sane shared default
+		IsSting:       s.AttackIsSting,
+		OnlyDefending: s.StingsOnlyDefending,
+		AggroEnter:    8.0,  // legacy global playerAggroEnter
+		AggroExit:     12.0, // legacy global playerAggroExit
+	}
+	// Lunge sub-config left nil here; centipede.go falls back to its own consts when Attack.Lunge is nil.
 }

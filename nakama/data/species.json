@@ -188,7 +188,17 @@
     "lifespan_secs": 9450,
     "lifespan_spread_secs": 2520,
     "carcass_item": "dead_wasp",
-    "attack_is_sting": true
+    "attack_is_sting": true,
+    "attack": {
+      "style": "contact",
+      "damage": 1,
+      "cooldown_secs": 2.0,
+      "range": 1.5,
+      "telegraph_secs": 0.8,
+      "is_sting": true,
+      "aggro_enter": 8,
+      "aggro_exit": 12
+    }
   },
   "centipede_garden": {
     "name": "Garden Centipede",
@@ -242,7 +252,24 @@
     },
     "lifespan_secs": 6300,
     "lifespan_spread_secs": 1680,
-    "carcass_item": "dead_centipede"
+    "carcass_item": "dead_centipede",
+    "attack": {
+      "style": "lunge",
+      "damage": 2,
+      "cooldown_secs": 5.0,
+      "range": 1.6,
+      "telegraph_secs": 0.8,
+      "is_sting": false,
+      "aggro_enter": 8,
+      "aggro_exit": 12,
+      "lunge": {
+        "trigger_range": 5.0,
+        "surge_speed_mult": 4.8,
+        "overshoot": 3.5,
+        "surge_max_ticks": 25,
+        "lead": 0.8
+      }
+    }
   },
   "millipede": {
     "name": "Garden Millipede",
@@ -408,7 +435,18 @@
     },
     "lifespan_secs": 8000,
     "lifespan_spread_secs": 2000,
-    "carcass_item": "dead_bee"
+    "carcass_item": "dead_bee",
+    "attack": {
+      "style": "contact",
+      "damage": 1,
+      "cooldown_secs": 2.0,
+      "range": 1.5,
+      "telegraph_secs": 0.7,
+      "is_sting": true,
+      "only_defending": true,
+      "aggro_enter": 0,
+      "aggro_exit": 0
+    }
   },
   "dragonfly_blue": {
     "name": "Dragonfly",
@@ -552,7 +590,18 @@
     },
     "lifespan_secs": 8000,
     "lifespan_spread_secs": 2000,
-    "carcass_item": "dead_ant"
+    "carcass_item": "dead_ant",
+    "attack": {
+      "style": "contact",
+      "damage": 1,
+      "cooldown_secs": 2.0,
+      "range": 1.5,
+      "telegraph_secs": 0.5,
+      "is_sting": false,
+      "only_defending": true,
+      "aggro_enter": 0,
+      "aggro_exit": 0
+    }
   },
   "ant_scout": {
     "name": "Scout Ant",
@@ -612,7 +661,18 @@
     "lifespan_secs": 8000,
     "lifespan_spread_secs": 2000,
     "carcass_item": "dead_ant",
-    "colony_nest_occupant": "ant_brood"
+    "colony_nest_occupant": "ant_brood",
+    "attack": {
+      "style": "contact",
+      "damage": 1,
+      "cooldown_secs": 2.0,
+      "range": 1.5,
+      "telegraph_secs": 0.5,
+      "is_sting": false,
+      "only_defending": true,
+      "aggro_enter": 0,
+      "aggro_exit": 0
+    }
   },
   "wasp_soldier": {
     "name": "Wasp Soldier",
@@ -668,7 +728,17 @@
     "lifespan_secs": 9450,
     "lifespan_spread_secs": 2520,
     "carcass_item": "dead_wasp",
-    "attack_is_sting": true
+    "attack_is_sting": true,
+    "attack": {
+      "style": "contact",
+      "damage": 2,
+      "cooldown_secs": 1.6,
+      "range": 1.5,
+      "telegraph_secs": 0.6,
+      "is_sting": true,
+      "aggro_enter": 9,
+      "aggro_exit": 13
+    }
   },
   "hornet_giant": {
     "name": "Giant Hornet",
@@ -724,7 +794,17 @@
     "lifespan_secs": 9450,
     "lifespan_spread_secs": 2520,
     "carcass_item": "dead_wasp",
-    "attack_is_sting": true
+    "attack_is_sting": true,
+    "attack": {
+      "style": "contact",
+      "damage": 3,
+      "cooldown_secs": 1.2,
+      "range": 1.6,
+      "telegraph_secs": 0.45,
+      "is_sting": true,
+      "aggro_enter": 10,
+      "aggro_exit": 14
+    }
   },
   "centipede_tiger": {
     "name": "Tiger Centipede",
@@ -779,7 +859,24 @@
     "lifespan_secs": 6300,
     "lifespan_spread_secs": 1680,
     "carcass_item": "dead_centipede",
-    "sprite_family": "centipede_tiger"
+    "sprite_family": "centipede_tiger",
+    "attack": {
+      "style": "lunge",
+      "damage": 3,
+      "cooldown_secs": 5.0,
+      "range": 1.6,
+      "telegraph_secs": 0.7,
+      "is_sting": false,
+      "aggro_enter": 8,
+      "aggro_exit": 12,
+      "lunge": {
+        "trigger_range": 5.5,
+        "surge_speed_mult": 5.2,
+        "overshoot": 3.5,
+        "surge_max_ticks": 25,
+        "lead": 0.8
+      }
+    }
   },
   "centipede_giant": {
     "name": "Giant Centipede",
@@ -835,6 +932,23 @@
     "lifespan_spread_secs": 1680,
     "carcass_item": "dead_centipede",
     "sprite_family": "centipede_giant",
-    "render_scale": 1.4
+    "render_scale": 1.4,
+    "attack": {
+      "style": "lunge",
+      "damage": 4,
+      "cooldown_secs": 5.0,
+      "range": 1.8,
+      "telegraph_secs": 0.9,
+      "is_sting": false,
+      "aggro_enter": 8,
+      "aggro_exit": 13,
+      "lunge": {
+        "trigger_range": 5.0,
+        "surge_speed_mult": 4.4,
+        "overshoot": 4.0,
+        "surge_max_ticks": 28,
+        "lead": 0.8
+      }
+    }
   }
 }

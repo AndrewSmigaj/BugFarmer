@@ -16,7 +16,6 @@ import (
 const (
 	playerInvulnTicks   = 10 // 1s shared across ALL attackers
 	dodgeInvulnTicks    = 5  // 0.5s i-frame window a dodge-roll grants
-	stingTelegraphTicks = 12 // 1.2s wind-up between the telegraph flash and the sting — the fairness window
 	regenDelayTicks   = 100 // regen starts 10s after the last damage
 	regenIntervalTick = 300 // +1 HP per 30s
 	stingRange        = 1.5 // "standing in them" — ambient wasps only sting at contact
@@ -35,8 +34,15 @@ func (m *Match) applyBugAttackToPlayer(
 	player *PlayerState,
 	damage int,
 ) bool {
-	// Per-swarm cooldown (attack_cooldown is in SECONDS; 10Hz)
-	cooldownTicks := int64(species.AttackCooldown * 10)
+	// Per-species attack profile (cooldown, sting-class). AttackProfile is never nil for a caller that got
+	// here (they hold an atk), but guard defensively.
+	atk := species.AttackProfile()
+	cd := float32(2.0)
+	if atk != nil && atk.CooldownSecs > 0 {
+		cd = atk.CooldownSecs
+	}
+	// Per-swarm cooldown (cooldown_secs → ticks; 10Hz)
+	cooldownTicks := int64(cd * 10)
 	if cooldownTicks <= 0 {
 		cooldownTicks = 20
 	}
@@ -62,7 +68,7 @@ func (m *Match) applyBugAttackToPlayer(
 	// STING IMMUNITY (the bee suit — the first armor damage hook): a sting_immune BODY piece
 	// fully negates sting-class attacks (bees, wasps); bites (centipedes) still land. No HP
 	// change, no knockback, no invuln burn — the cloud rages, the keeper works.
-	if species.AttackIsSting && len(player.Equipment) > 1 {
+	if atk != nil && atk.IsSting && len(player.Equipment) > 1 {
 		if def := state.Entities[player.Equipment[1]]; def != nil && def.StingImmune {
 			return false
 		}
@@ -153,123 +159,6 @@ func (m *Match) checkBugAttacks(
 	}
 }
 
-// handleBugPlayerStrike applies a PER-INDIVIDUAL sting the AUTHORITY detected. The server holds only swarm
-// CENTRES, so it can't tell which individual is actually next to the player — the old center-based
-// checkBugAttacks stung anyone near the CENTROID (the "phantom" hit). The authority (which has per-bug
-// positions) reports the attacker(s); the server re-gates through the funnel so damage stays authoritative.
-// Mirrors handlePredationStrike.
-func (m *Match) handleBugPlayerStrike(
-	logger runtime.Logger,
-	dispatcher runtime.MatchDispatcher,
-	state *WorldState,
-	senderID string,
-	msg BugPlayerStrikeMessage,
-) {
-	if state.CurrentZone == nil {
-		return
-	}
-	zone := state.GetOrCreateZone(state.CurrentZone.ZoneID)
-	if zone.AuthorityUserID != senderID {
-		return // AUTHORITY ONLY (anti-cheat + de-dupe)
-	}
-	swarm, ok := state.Swarms[msg.SwarmID]
-	if !ok || swarm.Count <= 0 {
-		return
-	}
-	species := state.Species[swarm.SpeciesID]
-	if species == nil || species.AttackDamage <= 0 {
-		return
-	}
-	player, ok := state.Players[msg.PlayerID]
-	if !ok || player == nil {
-		return
-	}
-	// Full authoritative gates the authority skipped (it reports loosely): defend-only (bees), subdued,
-	// and nocturnal (any night-active attacker can't sting by day).
-	if species.StingsOnlyDefending && swarm.Phase != "defending" {
-		return
-	}
-	if species.Nocturnal && !isNightForHunting(state) {
-		return
-	}
-	if swarmSubdued(swarm, species) {
-		return
-	}
-	// Loose centre-range sanity with the server's FINE player pos (mirrors handlePredationStrike) — rejects
-	// obviously-bogus reports without needing the per-bug positions the server lacks.
-	cs := state.Config.ChunkSize
-	dx := player.WorldX(cs) - swarm.WorldX(cs)
-	dy := player.WorldY(cs) - swarm.WorldY(cs)
-	maxR := stingRange + swarm.Radius
-	if dx*dx+dy*dy > maxR*maxR {
-		return
-	}
-	// Two-beat telegraph: don't sting on contact — ARM a telegraphed sting. Flash the wind-up NOW and schedule
-	// the hit for stingTelegraphTicks later (processPendingStings), so the player can dodge (i-frames) or step
-	// out before it lands. A pending sting OR the post-sting cooldown blocks re-arming, so it can't be spammed.
-	if swarm.PendingStingTick > 0 {
-		return // already wound up against someone
-	}
-	cooldownTicks := int64(species.AttackCooldown * 10)
-	if cooldownTicks <= 0 {
-		cooldownTicks = 20
-	}
-	if state.TickCount-swarm.LastAttackTick < cooldownTicks {
-		return // still on cooldown from the last sting
-	}
-	// At least one reported attacker must still be alive (guards a stale report before we commit a wind-up).
-	alive := false
-	for _, id := range msg.BugIDs {
-		if swarm.IsBugAlive(id) {
-			alive = true
-			break
-		}
-	}
-	if !alive {
-		return
-	}
-	swarm.PendingStingPlayer = msg.PlayerID
-	swarm.PendingStingTick = state.TickCount + stingTelegraphTicks
-	m.broadcastBugTelegraph(dispatcher, state, swarm, "windup", state.Config.ChunkSize)
-}
-
-// processPendingStings fires telegraphed stings whose wind-up has elapsed (the SECOND beat). At fire time it
-// re-gates: the target must still exist and the swarm centre must still be within loose sting range (step-out
-// counterplay), then applyBugAttackToPlayer applies the FINAL gates (dodge i-frames, shared invuln, per-swarm
-// cooldown, subdued, sting-immunity) + damage. Runs every tick; sorted iteration keeps this sim-inert pass
-// reproducible.
-func (m *Match) processPendingStings(logger runtime.Logger, dispatcher runtime.MatchDispatcher, state *WorldState) {
-	cs := state.Config.ChunkSize
-	for _, swarmID := range sortedStringKeys(state.Swarms) {
-		swarm := state.Swarms[swarmID]
-		if swarm == nil || swarm.PendingStingTick == 0 || state.TickCount < swarm.PendingStingTick {
-			continue
-		}
-		playerID := swarm.PendingStingPlayer
-		swarm.PendingStingTick = 0
-		swarm.PendingStingPlayer = ""
-
-		if swarm.Count <= 0 {
-			continue
-		}
-		species := state.Species[swarm.SpeciesID]
-		if species == nil || species.AttackDamage <= 0 {
-			continue
-		}
-		player, ok := state.Players[playerID]
-		if !ok || player == nil {
-			continue
-		}
-		// Step-out counterplay: if the swarm centre has drifted out of loose sting range, the sting whiffs.
-		dx := player.WorldX(cs) - swarm.WorldX(cs)
-		dy := player.WorldY(cs) - swarm.WorldY(cs)
-		maxR := stingRange + swarm.Radius
-		if dx*dx+dy*dy > maxR*maxR {
-			continue
-		}
-		m.applyBugAttackToPlayer(logger, dispatcher, state, swarm, species, playerID, player, species.AttackDamage)
-	}
-}
 
 // handlePlayerDodge grants a brief server-authoritative i-frame window so a well-timed dodge-roll negates an
 // incoming sting. Movement itself stays client-predicted + reconciled.
