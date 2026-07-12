@@ -36,8 +36,9 @@ const (
 	centSurgeOvershoot = 3.5 // the lunge charges PAST the aim point by this — it
 	// surges THROUGH the player's spot unless they dodge (the per-tick bite check
 	// fires mid-pass); a miss leaves it BEYOND them, set up for the turnaround.
-	centBiteRange      = 1.6 // absorbs the velocity-sample error
-	centTriggerRange   = 5.0 // player this close → windup
+	// NB: the surge bite range + trigger range + wind-up/speed/overshoot are now the DEFAULTS behind the
+	// per-species attack.lunge profile (resolveLunge). The values below are the shared fallback.
+	centTriggerRange   = 5.0 // player this close → windup (default; attack.lunge.trigger_range overrides)
 	centDeAggroRange   = 12.0
 	// Turnaround (missed surge): bank back toward the player as a CURVED arc of
 	// short chained legs — the trail renders the chain as a natural curve — then

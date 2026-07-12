@@ -24,19 +24,24 @@ entry + a sprite + a carcass item), **no new code**. Read the as-built first:
   any attack-capable NON-centipede swarm chases a player within ~8 cells (capped by its vision). So a new swarm
   attacker WILL now pursue you; a new centipede tier pursues via the surge.
 
-## Add an enemy tier (the common case — data only)
-1. **`nakama/data/species.json`** — the combat spec. Clone the nearest existing species and dial the knobs.
-   - **`category`** decides the AI: **`swarm`** = a cloud (+ a `predation` block → nest-predator hunt/defend, like
-     wasps); **`individual`** = a single big crawler. ⚠️ `individual` + a `predation` block invokes the
-     **centipede surge/lunge ActionState** (`match.go` gate `Predation != nil && Category == "individual"`) — this
-     is how a **centipede tier** attacks (clone `centipede_garden`). A `swarm` attacker uses the ambient
-     per-individual sting + generic aggro instead.
-   - **Difficulty knobs** (no new code): `attack_damage` (per-hit) · `attack_cooldown` (frequency — but the **1 s
-     shared invuln floors real damage at ≤1 hit/s**, so cd < 1.0 buys nothing) · `base_speed` (+ `predation.
-     hunt_speed_mult`) for escape pressure · `vision_range` / `predation.home_range` for the aggro net · `max_hp`
-     (hits-to-kill by the player's weapon) · `min/max_swarm_size` (cloud size).
-   - **`nocturnal: true`** → lies low by day, full threat at night (server-gates the sting + hunt/defend; see below).
-   - **`attack_is_sting`**: `true` = a sting the bee-suit (`sting_immune` body armor) negates; `false` = a
+## Add an enemy tier (the common case — DATA ONLY, no Go)
+1. **`nakama/data/species.json`** — clone the nearest existing species. All player-facing combat is the nested
+   **`attack{}` profile** (the single source; mirrors `predation{}`). Author it and you're done:
+   - `style`: **`"contact"`** (hits you when a bug is adjacent — wasps/bees/ants) or **`"lunge"`** (the centipede
+     surge choreography). A `lunge` needs `category: "individual"` + a `predation` block (that's the gate that
+     runs the surge ActionState) + an `attack.lunge{}` sub-block; clone `centipede_garden`.
+   - `damage` · `cooldown_secs` (real damage floored at ≤1 hit/s by the shared invuln, so <1.0 buys little) ·
+     `range` (contact/bite) · **`telegraph_secs`** (the PER-SPECIES wind-up — the difficulty tell; hornet 0.45 is
+     snappier than wasp 0.8) · `is_sting` (bee-suit negates) · `only_defending` (bees/ants — 0 proximity aggro) ·
+     `aggro_enter`/`aggro_exit` (proximity-chase hysteresis; 0 = defender, no chase) ·
+     `lunge{trigger_range, surge_speed_mult, overshoot, surge_max_ticks, lead}`.
+   - Other difficulty knobs (top-level): `base_speed` (escape pressure; for a lunge also the surge base) ·
+     `vision_range` (caps aggro reach) · `max_hp` (hits-to-kill) · `min/max_swarm_size` · `nocturnal: true`
+     (lies low by day — gated in the ONE `bugAttackAllowed`, so it covers both styles) ·
+     `sprite_family`/`render_scale` (segmented crawlers).
+   - LEGACY: bare top-level `attack_damage`/`attack_cooldown`/`attack_is_sting`/`stings_only_defending` still work
+     (auto-migrated by `AttackProfile()`), but prefer authoring `attack{}` — it's the source of truth.
+   - **`attack_is_sting`** (or `attack.is_sting`): `true` = a sting the bee-suit (`sting_immune` body armor) negates; `false` = a
      bite/spines it does not. `sprite_id` → `Resources/Bugs/<sprite_id>.png`. `carcass_item` → a real `items.json` id.
 2. **`nakama/data/bugs.json`** — the art-source row (`sprite_path`, `sprite_w/h`, `category`) that `gen_sprites
    --source bugs` reads.

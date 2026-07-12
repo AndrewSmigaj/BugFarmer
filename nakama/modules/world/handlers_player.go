@@ -123,9 +123,10 @@ func (m *Match) applyBugAttackToPlayer(
 	return true
 }
 
-// checkBugAttacks runs per tick for attack-capable species (attack_damage > 0): any
-// player within sting range of the swarm center takes the hit. Ambient swarms only
-// sting players standing IN them; chasing happens via the defending/surge legs.
+// checkBugAttacks — RETIRED / TEST-ONLY. The old center-based ambient sting (the phantom source),
+// replaced in production by the authority-detected per-individual path (bug_attack.go). Kept ONLY
+// because condition_test.go + player_hp_test.go drive the shared HP funnel through it; NOT called from
+// the match loop. Do not add production callers — use the attack subsystem.
 func (m *Match) checkBugAttacks(
 	logger runtime.Logger,
 	dispatcher runtime.MatchDispatcher,

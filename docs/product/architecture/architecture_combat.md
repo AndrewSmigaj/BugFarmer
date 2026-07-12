@@ -146,10 +146,24 @@ per-enemy code. All are debug-spawnable in the arena immediately via the M1 spec
   `max_hp` (hits-to-kill) · `min/max_swarm_size` · `nocturnal` · `sprite_family`/render scale (segmented crawlers).
   Add/tune an enemy → the **`combat-enemy` skill**.
 - **Verified:** full Go world suite + `sim-determinism` PASS; sprites acceptance-checked at full res.
-- **Known gaps (design):** ONE damage funnel (`applyBugAttackToPlayer`) but TWO detection paths feed it — the
-  centipede **surge** and the wasp **per-individual telegraph**; and aggro is split across surge-trigger /
-  nest-defence / `aggroPlayerThink`. Unifying them (one attack path + one aggro) is a deliberate FUTURE refactor
-  (the deferred "M4 regroup" + threat-table), tracked, not hacked around.
+## Data-driven attack model (2026-07-12 refactor — the "maintainable for 50 bugs" pass)
+Every player-facing combat behaviour is now a **per-species `attack{}` profile** in `species.json`
+(`entities.AttackConfig`, mirroring `predation{}`) — no combat feel is hardcoded, so adding bug #51 is DATA:
+- `style` (`contact` | `lunge`) · `damage` · `cooldown_secs` · `range` · **`telegraph_secs` (per-species
+  telegraph)** · `is_sting` · `only_defending` · `aggro_enter`/`aggro_exit` · `lunge{trigger_range,
+  surge_speed_mult, overshoot, surge_max_ticks, lead}`. `BugSpecies.AttackProfile()` is the one read point
+  (backfills from the legacy top-level fields for un-migrated data).
+- **ONE pipeline, cleanly split by file:** `bug_attack.go` = the bug→player attack subsystem (the
+  authority-relayed strike/telegraph + the shared `bugAttackAllowed` gate every style passes through) ·
+  `handlers_player.go` = pure player-HP (funnel/regen/dodge/faint) · `combat_aggro.go` = proximity pursuit ·
+  `centipede.go` = the lunge *movement* choreography (its bite routes through `bug_attack.go`, params from
+  `attack.lunge`). The old **two-detection-paths + split-aggro smell is resolved** — both the contact sting and
+  the centipede lunge share the same gates + funnel (this closed a real bug: the surge skipped the nocturnal gate).
+- **Phantom killed:** the authority client owns the two-beat (per-species `telegraph_secs`) + the precise
+  per-individual range check against the LOCAL player's EXACT position; the server applies on `phase:"strike"`.
+  No server-scheduled centre-fire.
+- **Remaining follow-ups (small):** `checkBugAttacks` is retired but kept as a test-only funnel-driver (2 tests);
+  the legacy top-level `attack_*` struct fields remain as normalize-input. Neither is on a production path.
 
 ## Determinism & network model (why the "central arbiter" is cheap)
 - The stage manager, FSMs, and steering are **server CPU**, run each tick as **integer/fixed-point** math with
