@@ -463,19 +463,5 @@
       "dirt"
     ],
     "family": "creature"
-  },
-  "caterpillar_spiny": {
-    "look": "a SPINY CATERPILLAR, top-down: a fat segmented grub-like caterpillar lying flat, pale GREEN body with rows of bristly VENOM-TIPPED spines along its back, small dark head at one end; plump and slow, NOT a worm, NOT a centipede.",
-    "materials": [
-      "foliage"
-    ],
-    "family": "creature"
-  },
-  "caterpillar_thornback": {
-    "look": "a THORNBACK CATERPILLAR, top-down: a huge armoured caterpillar, dark PURPLE-black segmented body ridged with rows of sharp BLACK THORNS/spikes down its back, glowing faint markings, blunt head; hulking and tanky, NOT a centipede, NOT a millipede.",
-    "materials": [
-      "foliage"
-    ],
-    "family": "creature"
   }
 }

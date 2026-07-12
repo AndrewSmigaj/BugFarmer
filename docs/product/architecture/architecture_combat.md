@@ -1,8 +1,9 @@
 # Combat AI & challenge — design
 
-**STATUS: Milestones 1–3 BUILT + gated (2026-07-11); M4 (centipede regroup) + the M5 skill remain.** The adopted
+**STATUS: M1 + M2 (wasp tiers) BUILT + gated; M3 = centipede tiers IN BUILD (2026-07-12).** The adopted
 skeleton + the layers around it. As-built: [§ Milestone 1](#milestone-1--as-built) (foundation),
-[§ Milestones 2–3](#milestones-23--as-built-enemy-tiers) (enemy tiers + nocturnal). The rest is design.
+[§ Milestones 2–3](#milestones-23--as-built-enemy-tiers) (enemy tiers + nocturnal + aggro). *(M3 was briefly
+built as caterpillars — a misread; stripped, now real centipede tiers.)*
 Build plan: the session plan file (combat foundation + enemy roadmap). Evidence + alternatives:
 [`../investigations/deep_research_2026-07/combat/`](../investigations/deep_research_2026-07/combat/)
 (01 melee AI · 02 swarm AI · 03 challenge/effectiveness · 04 player combat & bosses). Runs inside the
@@ -122,8 +123,8 @@ Shipped 2026-07-11 (commits `Combat: nocturnal…`, `Combat M2+M3…`). Four new
 just DATA (`species.json` combat spec + `bugs.json` art + a carcass item) + a fresh gpt-image-1.5 sprite — no
 per-enemy code. All are debug-spawnable in the arena immediately via the M1 species picker.
 
-- **Nocturnal mechanic** (`BugSpecies.Nocturnal`): a genuinely night-active creature (a nocturnal caterpillar,
-  moth, etc.) lies low by day and is a full threat at night. Server-side + deterministic — `isNightForHunting`
+- **Nocturnal mechanic** (`BugSpecies.Nocturnal`): a genuinely night-active creature (a moth, a nocturnal beetle,
+  etc.) lies low by day and is a full threat at night. Server-side + deterministic — `isNightForHunting`
   tracks the client's VISUAL night (deep night 0.58–0.88; active window `[0.55, 0.90)`, so the debug "Night"
   button t≈0.70 is night, "Evening"/"Noon"/"Morning" are day). Gates two things, both of which output only legs /
   server-authoritative HP (no new client-hashed sim input): the sting (`handleBugPlayerStrike` won't arm by day)
@@ -132,18 +133,23 @@ per-enemy code. All are debug-spawnable in the arena immediately via the M1 spec
 - **M2 wasp tiers** (`category: swarm`, predation → inherit nest-defence + hunt + ambient sting):
   `wasp_soldier` (medium: dmg 2 / cd 1.6 / spd 2.6 / hp 5) and `hornet_giant` (hard, **diurnal** — real hornets
   are day-active: dmg 3 / cd 1.2 / spd 3.0 / hp 8).
-- **M3 caterpillar tiers** (`category: individual`, **no predation** → no lunge machine; slow tanky grazers that
-  ambient-sting on contact — the ground contrast to aerial wasps): `caterpillar_spiny` (medium: dmg 2 / spd 1.1 /
-  hp 10) and `caterpillar_thornback` (tough, **nocturnal** — nocturnal caterpillars are real: dmg 3 / spd 1.0 /
-  hp 16).
+- **M3 centipede tiers** (`category: individual` + predation → reuse the base centipede's **surge/lunge** attack;
+  see § Milestone 3 below): `centipede_tiger` (medium) and `centipede_giant` (hard). *(An earlier build made these
+  as caterpillars — a misread of the ask; caterpillars are butterfly/moth larvae, not combat enemies, and were
+  stripped out 2026-07-12.)*
+- **Player-aggro radius** (`aggroPlayerThink`, predation.go): any attack-capable NON-centipede swarm (wasps) now
+  chases the nearest player within ~8 cells (capped by its vision), so it engages instead of wandering and stays in
+  range through the sting wind-up. Centipede/millipede are skipped — they have their own `centTriggerRange`→surge.
+  Server leg → deterministic.
 - **Difficulty knobs** (no new code): `attack_damage` (per-hit) · `attack_cooldown` (frequency, floored by the 1 s
-  shared invuln) · `base_speed` + `hunt_speed_mult` (escape pressure) · `vision_range`/`home_range` (aggro net) ·
-  `max_hp` (hits-to-kill) · `min/max_swarm_size` (cloud size) · `nocturnal`. Add/tune an enemy → the
-  **`combat-enemy` skill**.
+  shared invuln) · `base_speed` (+ `hunt_speed_mult`; for a centipede also scales lunge speed) · `vision_range` ·
+  `max_hp` (hits-to-kill) · `min/max_swarm_size` · `nocturnal` · `sprite_family`/render scale (segmented crawlers).
+  Add/tune an enemy → the **`combat-enemy` skill**.
 - **Verified:** full Go world suite + `sim-determinism` PASS; sprites acceptance-checked at full res.
-- **Known gaps (design, not built):** a per-species **token pool** (higher tiers biting more at once) and active
-  **player-pursuit** for non-nest enemies (caterpillars only ambient-sting; wasps pursue only via nest-defence) —
-  both belong to the adopted-but-unbuilt **threat table + aggro radius** layer.
+- **Known gaps (design):** ONE damage funnel (`applyBugAttackToPlayer`) but TWO detection paths feed it — the
+  centipede **surge** and the wasp **per-individual telegraph**; and aggro is split across surge-trigger /
+  nest-defence / `aggroPlayerThink`. Unifying them (one attack path + one aggro) is a deliberate FUTURE refactor
+  (the deferred "M4 regroup" + threat-table), tracked, not hacked around.
 
 ## Determinism & network model (why the "central arbiter" is cheap)
 - The stage manager, FSMs, and steering are **server CPU**, run each tick as **integer/fixed-point** math with

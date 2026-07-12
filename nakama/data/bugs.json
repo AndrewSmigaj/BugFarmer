@@ -1101,29 +1101,5 @@
     "zones": [
       "wasp_thicket"
     ]
-  },
-  "caterpillar_spiny": {
-    "sprite_path": "Sprites/Bugs/caterpillar_spiny.png",
-    "sprite_w": 15,
-    "sprite_h": 12,
-    "category": "caterpillar",
-    "base_speed": 1.1,
-    "catch_difficulty": 3,
-    "value": 18,
-    "zones": [
-      "butterfly_fields"
-    ]
-  },
-  "caterpillar_thornback": {
-    "sprite_path": "Sprites/Bugs/caterpillar_thornback.png",
-    "sprite_w": 17,
-    "sprite_h": 13,
-    "category": "caterpillar",
-    "base_speed": 1.0,
-    "catch_difficulty": 4,
-    "value": 35,
-    "zones": [
-      "butterfly_fields"
-    ]
   }
 }

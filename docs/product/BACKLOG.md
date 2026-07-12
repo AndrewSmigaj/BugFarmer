@@ -583,16 +583,18 @@ mirrors predation; swarm-of-1 dropped — player HP is SIM-INERT so it needs no 
   ticks**, `processPendingStings`). Gated: `bug_player_strike_test.go` + full world suite + `sim-determinism`
   PASS. **Left to run** (needs the rebuilt plugin deployed — do with the playtest): 2-client `run_sync_latejoin`
   regression + the **owner arena playtest**.
-- **✅ M2+M3 DONE** (commits `Combat: nocturnal…`, `Combat M2+M3…`): **nocturnal** night-hunter mechanic +
-  4 new enemies with fresh gpt-image-1.5 sprites — `wasp_soldier` (med) / `hornet_giant` (hard, **diurnal** —
-  real hornets are day-active) / `caterpillar_spiny` (med) / `caterpillar_thornback` (tough, nocturnal —
-  nocturnal caterpillars are real). Debug-spawnable in the arena.
+- **✅ M2 DONE + nocturnal + aggro:** **nocturnal** night-hunter mechanic + **player-aggro radius**
+  (`aggroPlayerThink` — non-centipede attackers chase a nearby player) + 2 wasp tiers with fresh gpt-image-1.5
+  sprites — `wasp_soldier` (med) / `hornet_giant` (hard, **diurnal** — real hornets are day-active).
   Gated: Go suite + sim-determinism PASS. Difficulty via existing knobs (dmg/cd/speed/vision/hp/swarm) + nocturnal.
-- **⏳ REMAINING:** **M4** centipede regroup (grouped + staggered per-individual bite onto the M1 authority path) +
-  the super-hard centipede — **owner-scoped for the centipede-tiers session** (deferred by owner 2026-07-11).
-  **M5** `combat-enemy` skill. **Threat-table / aggro-radius** layer (adopted, unbuilt): active player-pursuit for
-  non-nest enemies + a per-species token pool — the two known gaps that make the new tiers *ambient* rather than
-  *pursuing*.
+- **🩹 M3 caterpillars STRIPPED (2026-07-12):** built as caterpillars off a literal misread; caterpillars are
+  butterfly/moth larvae, not combat enemies. Removed all of it. Replaced by → **M3 centipede tiers** (below).
+- **⏳ IN BUILD — M3 centipede tiers:** 2 REAL centipede species, medium + hard, own segmented sprites, reusing the
+  base centipede surge model — `centipede_tiger` (Scolopendra polymorpha) + `centipede_giant` (S. gigantea). One
+  clean code change: de-hardcode `CentipedeTrail` segment family (add `sprite_family`).
+- **⏳ REMAINING:** the super-hard "boss" centipede (owner floated it). **Consolidation refactor** (future,
+  tracked): unify the two damage-detection paths (centipede surge vs wasp per-individual telegraph) + collapse the
+  3 aggro triggers into one; a per-species token pool. These are the known overlaps, tracked for a deliberate pass.
 
 ## Content — TRUE BUG MAPPINGS (make every bug a real bug) — owner direction 2026-07-11
 Every creature in the game should be an **actual real bug species** — real name, real look, and behavior that

@@ -56,7 +56,7 @@ const playerAggroRange = 8.0
 
 // aggroPlayerThink is the "aggro radius" that was missing: any attack-capable swarm (attack_damage > 0)
 // CHASES the nearest player within range, instead of wandering. Without it, non-nest attackers (a debug-
-// spawned wasp cloud, a caterpillar) never engage — and a wandering target drifts out of sting range
+// spawned wasp cloud) never engage — and a wandering target drifts out of sting range
 // during the telegraph wind-up, so nothing ever lands. Steering toward the player also keeps the swarm on
 // top of you so the per-individual sting actually connects. Server-authoritative leg → deterministic
 // (nearestPlayer is sorted-id; emitLeg is the standard leg; NextThinkTick jitter uses the seeded Rng).
@@ -69,6 +69,11 @@ func (m *Match) aggroPlayerThink(
 	deltaTime float32,
 ) bool {
 	if species.AttackDamage <= 0 || swarm.Count <= 0 {
+		return false
+	}
+	// Centipede/millipede-class (individual predators) run their OWN player-attack AI (the surge
+	// ActionState / centTriggerRange); don't double-drive them with the generic aggro leg.
+	if species.Predation != nil && species.Category == "individual" {
 		return false
 	}
 	if species.Nocturnal && !isNightForHunting(state) {
