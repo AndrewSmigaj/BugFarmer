@@ -277,6 +277,7 @@ namespace BugFarmer.Networking
         public string player_id;
         public int[] bug_ids;
         public long tick;
+        public string phase; // "windup" = flash the telegraph only; "strike"/"" = apply the hit now
     }
 
     /// <summary>

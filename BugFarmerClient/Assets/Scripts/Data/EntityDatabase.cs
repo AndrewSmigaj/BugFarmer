@@ -218,17 +218,31 @@ namespace BugFarmer.Data
             public string Description = "";
             public int SellPrice;
 
-            // Combat: the authority uses these to decide WHICH swarms sting a player (per-individual
-            // detect→relay). AttackDamage>0 = attack-capable; AttackCooldown (secs) throttles the report.
-            // The server re-gates authoritatively (immune/subdued/defend-only/cooldown/invuln).
+            // Combat: legacy top-level fields (kept for back-compat). Prefer Attack (the data-driven profile).
             public int AttackDamage;
             public float AttackCooldown;
+
+            // The data-driven attack profile (mirrors the server's attack{} block). Null = this bug can't
+            // hurt the player. The authority reads Range + TelegraphSecs for its per-species detect/wind-up.
+            public AttackInfo Attack;
 
             // Segmented crawlers (centipede/millipede): which body/tail art set to string behind the head,
             // and a render-scale multiplier so a giant tier is visibly bigger. SpriteFamily null → the
             // legacy centipede/millipede fallback in CentipedeTrail.
             public string SpriteFamily;
             public float RenderScale = 1f;
+        }
+
+        /// <summary>Client mirror of the server AttackConfig (species.json "attack"). Only the fields the
+        /// authority needs to run per-individual detection + the wind-up telegraph.</summary>
+        public class AttackInfo
+        {
+            public string Style = "contact"; // "contact" | "lunge"
+            public int Damage;
+            public float Range = 1.5f;        // detection range
+            public float TelegraphSecs;       // per-species wind-up before the strike (0 = instant)
+            public float AggroEnter;
+            public float AggroExit;
         }
         private static Dictionary<string, SpeciesInfo> _species;
         private static bool _initialized;
@@ -315,6 +329,7 @@ namespace BugFarmer.Data
                         AttackCooldown = obj?["attack_cooldown"]?.Value<float>() ?? 0f,
                         SpriteFamily = obj?["sprite_family"]?.Value<string>(),
                         RenderScale = obj?["render_scale"]?.Value<float>() ?? 1f,
+                        Attack = ParseAttack(obj),
                     };
                 }
             }
@@ -322,6 +337,27 @@ namespace BugFarmer.Data
             {
                 Debug.LogError($"[EntityDatabase] Failed to parse Data/species: {e.Message}");
             }
+        }
+
+        /// <summary>Parse the data-driven attack{} profile; fall back to synthesizing one from the legacy
+        /// top-level attack_damage so un-migrated species still work. Null = can't hurt the player.</summary>
+        private static AttackInfo ParseAttack(JObject obj)
+        {
+            if (obj?["attack"] is JObject a)
+            {
+                return new AttackInfo
+                {
+                    Style = a["style"]?.Value<string>() ?? "contact",
+                    Damage = a["damage"]?.Value<int>() ?? 0,
+                    Range = a["range"]?.Value<float>() ?? 1.5f,
+                    TelegraphSecs = a["telegraph_secs"]?.Value<float>() ?? 0f,
+                    AggroEnter = a["aggro_enter"]?.Value<float>() ?? 0f,
+                    AggroExit = a["aggro_exit"]?.Value<float>() ?? 0f,
+                };
+            }
+            int dmg = obj?["attack_damage"]?.Value<int>() ?? 0;
+            if (dmg <= 0) return null;
+            return new AttackInfo { Style = "contact", Damage = dmg, Range = 1.5f, TelegraphSecs = 0.8f, AggroEnter = 8f, AggroExit = 12f };
         }
 
         private static int LoadEntityFile(string resourcePath, string entityType)
