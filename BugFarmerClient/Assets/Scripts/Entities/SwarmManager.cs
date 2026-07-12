@@ -730,7 +730,7 @@ namespace BugFarmer.Entities
                 var swarm = _swarms[swarmId];
                 if (swarm == null || swarm.Count == 0) continue;
 
-                var sp = EntityDatabase.GetSpecies(swarm.SpeciesId);
+                var sp = BugFarmer.Data.EntityDatabase.GetSpecies(swarm.SpeciesId);
                 if (sp == null || sp.AttackDamage <= 0) continue;   // only attack-capable species sting
 
                 // Light local throttle only (the SERVER owns the real cadence now: the two-beat telegraph's
