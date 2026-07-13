@@ -34,7 +34,13 @@ entry + a sprite + a carcass item), **no new code**. Read the as-built first:
      `range` (contact/bite) · **`telegraph_secs`** (the PER-SPECIES wind-up — the difficulty tell; hornet 0.45 is
      snappier than wasp 0.8) · `is_sting` (bee-suit negates) · `only_defending` (bees/ants — 0 proximity aggro) ·
      `aggro_enter`/`aggro_exit` (proximity-chase hysteresis; 0 = defender, no chase) ·
-     `lunge{trigger_range, surge_speed_mult, overshoot, surge_max_ticks, lead}`.
+     **`aggro_speed_mult`** (chase leg = `base_speed × this`; must beat player walk 5 to HOVER on them, not trail —
+     wasp ~2.4) · `lunge{trigger_range, surge_speed_mult, overshoot, surge_max_ticks, lead}`.
+   - **Attack-movement knobs (CONTACT bugs — the "solo divers within a bigger swarm" swoop; HASH-BEARING client
+     sim, read by BugAgent):** top-level `player_reaction: "attack"` + `reaction_radius`, then `attack.standoff`
+     (hover distance), `attack.dive_period_secs` (swoop cadence — shorter = more divers), `attack.dive_secs`
+     (swoop length; must exceed `telegraph_secs`). Sting-cadence knobs (client detect): `attack_tokens` (how many
+     flash/sting at once) · `dive_cooldown_secs`. Full table: `architecture_combat.md § "Combat knobs"`.
    - Other difficulty knobs (top-level): `base_speed` (escape pressure; for a lunge also the surge base) ·
      `vision_range` (caps aggro reach) · `max_hp` (hits-to-kill) · `min/max_swarm_size` · `nocturnal: true`
      (lies low by day — gated in the ONE `bugAttackAllowed`, so it covers both styles) ·
@@ -89,10 +95,23 @@ look (not the shared green centipede body):
 - Generate the 3 segment sprites (`_head`, `_body_b`, `_tail_b`) with **FLAT top/bottom edges** so they chain
   (per the `centipede_head_b`/`body_b`/`tail_b` catalog looks). Reuse `dead_centipede` as the carcass.
 
+## How bug→player combat works now (2026-07-12 — read before tuning)
+Two layers, both DATA-driven (`architecture_combat.md § Individual attack AI`):
+- **MOVEMENT (the swoop) — deterministic per-bug AI.** Set `player_reaction: "attack"` + `reaction_radius` and
+  each individual runs `BugAgent.AttackMove`: HOVER at `attack.standoff` off the player, then SWOOP in during its
+  own phase-offset slice (`dive_period_secs`/`dive_secs`) → ~1–2 divers at once, staggered, deterministic (a pure
+  function of tick+bug-id + the player CELL). `ignore` = the bug wanders and never engages (the old wasp bug).
+- **STING (the damage) — authority-detected, thin.** `RunContactSting` (contact) / `RunLungeConnect` (centipede)
+  detect a bug in **RENDERED** range of the exact player (no phantom, sim-inert), flash the wind-up
+  (`telegraph_secs`), then report `BUG_PLAYER_STRIKE` → the ONE gate+funnel (`bugAttackAllowed` +
+  `applyBugAttackToPlayer`). `attack_tokens` = how many flash at once; server `cooldown_secs` = the damage gate.
+  **No server-side centipede bite** (deleted — it was the phantom); the surge IS the centipede's dive.
+- So an aggressive tier is pure data: `player_reaction:"attack"` + `reaction_radius` + the `attack.standoff`/
+  `dive_*`/`aggro_speed_mult` feel knobs. A defender (bee/ant) stays `player_reaction:"ignore"` + `only_defending`.
+
 ## Known gaps (tracked, don't re-derive)
-- **No per-species token pool yet** — the sting token pool (≤2 individuals commit at once) is a global const;
-  "higher tiers bite more at once" needs a small `attack_tokens` field wired into `RunBugPlayerStrikes` first.
-- **Two damage-detection paths + 3 aggro triggers** — the centipede surge vs the wasp per-individual telegraph both
-  feed the ONE funnel (`applyBugAttackToPlayer`); aggro is surge-trigger / nest-defence / `aggroPlayerThink`.
-  Unifying them is a deliberate FUTURE refactor (the deferred "M4 regroup" + threat-table), not something to bolt
-  onto — reuse the existing model when adding a tier.
+- **Aggro has 3 triggers** — surge-trigger (centipede) / nest-defence (`predationThink` "defending") /
+  `aggroPlayerThink` (generic proximity). They coexist deliberately (a full unification is the deferred
+  threat-table); reuse the existing model when adding a tier rather than adding a fourth path.
+- **Dive knobs are client-only** — `attack_tokens`/`dive_cooldown_secs`/`dart_reach`/`dart_secs` are read by
+  SwarmManager, not the server; they can't be unit-tested in the Go harness (verify in the arena playtest).

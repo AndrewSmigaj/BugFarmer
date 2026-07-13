@@ -167,7 +167,22 @@ type AttackConfig struct {
 	OnlyDefending bool    `json:"only_defending"` // only strikes while the swarm Phase == "defending" (bees)
 	AggroEnter    float32 `json:"aggro_enter"`    // start chasing a player within this (was global 8); 0 = no proximity pursuit
 	AggroExit     float32 `json:"aggro_exit"`     // keep chasing until the player passes this (hysteresis; was global 12)
-	Lunge         *LungeConfig `json:"lunge,omitempty"` // style "lunge" only: the surge params (were the global cent* consts)
+	// AggroSpeedMult is the proximity-chase leg speed multiplier — HOW FAST the cloud closes/hovers on the
+	// player (the "swoop in" knob). base_speed × this must exceed the player's walk (5 c/s) or the swarm just
+	// bumbles behind. 0 = legacy fallback (predation.hunt_speed_mult, else 1.4). Server-authoritative leg →
+	// deterministic (same kind of leg as today, just a different speed).
+	AggroSpeedMult float32 `json:"aggro_speed_mult"`
+	// ATTACK-MOVEMENT knobs — the "solo divers within a bigger swarm" behaviour. These drive the CLIENT bug sim
+	// (BugAgent attack behaviour, hash-bearing — every client reads the same published species.json + build, like
+	// movement_style), so the cloud hovers at a standoff and individuals SWOOP in. Requires player_reaction:"attack".
+	Standoff       float32 `json:"standoff"`         // cells the hovering (non-diving) cloud keeps off the player. 0 → default
+	DivePeriodSecs float32 `json:"dive_period_secs"` // each bug's dive cycle length (staggered per bug → 1-2 diving at once). 0 → default
+	DiveSecs       float32 `json:"dive_secs"`        // how long a swoop lasts (must exceed telegraph_secs to land). 0 → default
+	// STING knobs (client detect + server apply — the damage cadence/tell). AttackTokens/DiveCooldownSecs pace the
+	// authority's strike REPORTS (they don't gate damage — the server cooldown does).
+	AttackTokens     int     `json:"attack_tokens"`      // max concurrent stings reported per swarm (1-2). 0 → default 1
+	DiveCooldownSecs float32 `json:"dive_cooldown_secs"` // per-bug rest between its sting reports. 0 → default
+	Lunge            *LungeConfig `json:"lunge,omitempty"` // style "lunge" only: the surge params (were the global cent* consts)
 }
 
 // LungeConfig holds the surge-lunge choreography knobs (style "lunge"), per-species so tiers can lunge

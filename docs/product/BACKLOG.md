@@ -589,12 +589,26 @@ mirrors predation; swarm-of-1 dropped — player HP is SIM-INERT so it needs no 
   Gated: Go suite + sim-determinism PASS. Difficulty via existing knobs (dmg/cd/speed/vision/hp/swarm) + nocturnal.
 - **🩹 M3 caterpillars STRIPPED (2026-07-12):** built as caterpillars off a literal misread; caterpillars are
   butterfly/moth larvae, not combat enemies. Removed all of it. Replaced by → **M3 centipede tiers** (below).
-- **⏳ IN BUILD — M3 centipede tiers:** 2 REAL centipede species, medium + hard, own segmented sprites, reusing the
+- **✅ M3 centipede tiers DONE:** 2 REAL centipede species, medium + hard, own segmented sprites, reusing the
   base centipede surge model — `centipede_tiger` (Scolopendra polymorpha) + `centipede_giant` (S. gigantea). One
   clean code change: de-hardcode `CentipedeTrail` segment family (add `sprite_family`).
+- **✅ Enemy AI — individual attack movement + phantom/bumble fix (2026-07-12) → `architecture_combat.md §
+  Individual attack AI`.** Owner report (*"wasps bumble … centipedes phantom-hit … they should swoop in and
+  attack, solo divers one or two at a time"*) fixed. ROOT CAUSE of the bumbling: wasps shipped
+  `player_reaction:"ignore"` so each individual bug's AI wandered and never engaged (the swarm-centre chase +
+  cosmetic-dart first pass didn't fix it). REAL fix: (A) **individual attack MOVEMENT** — `player_reaction:"attack"`
+  + `BugAgent.AttackMove`: each bug HOVERS at `standoff` then SWOOPS in during its phase-offset slice
+  (`dive_period_secs`/`dive_secs`) → ~1–2 divers at once, staggered, DETERMINISTIC (pure `tick`+`bugId` + player
+  CELL); (B) `aggro_speed_mult` brings the cloud onto you; (C) sting detection vs the **RENDERED** sprite killed the
+  phantom + the **server centipede bite was DELETED**; (D) `wasp_soldier render_scale 0.5` (was too big); (E) all
+  feel in `attack{}` + a "Combat knobs" table. **Gated:** Go world+entities PASS; `sim-determinism` PASS (wander
+  hash unchanged `BDE84AEF38467D57`) **+ a new `--attack-test`** that drives a moving player and proves the attack
+  movement reproducible (A==B, `FB80CE8997CF9EC3`). **Left to run:** owner arena playtest + knob tuning; 2-client
+  `run_sync_latejoin` confirmation (Unity build).
 - **⏳ REMAINING:** the super-hard "boss" centipede (owner floated it). **Consolidation refactor** (future,
-  tracked): unify the two damage-detection paths (centipede surge vs wasp per-individual telegraph) + collapse the
-  3 aggro triggers into one; a per-species token pool. These are the known overlaps, tracked for a deliberate pass.
+  tracked): bug→player DAMAGE now has ONE model (client-detect-vs-rendered → server-apply, both styles); the
+  remaining overlap is the **3 aggro triggers** (surge-trigger / nest-defence / `aggroPlayerThink`) — collapse into
+  one threat-table in a deliberate pass.
 
 ## Content — TRUE BUG MAPPINGS (make every bug a real bug) — owner direction 2026-07-11
 Every creature in the game should be an **actual real bug species** — real name, real look, and behavior that

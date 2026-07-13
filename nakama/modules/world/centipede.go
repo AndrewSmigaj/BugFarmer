@@ -133,34 +133,15 @@ func (m *Match) processActionState(
 			m.abortActionToRecover(state, swarm, species, chunkSize, deltaTime)
 			return true
 		}
-		// Per-tick bite check during flight: range AND line-of-sight (a clamped surge
-		// ends ≤1.5 from a player hugging the far side of a fence — a through-fence
-		// bite would silently void "stone is the answer"). The DAMAGE goes through the
-		// same subsystem as the sting — the shared gate (nocturnal/defend-only/subdued)
-		// + the funnel — so a lunge can't skip a gate the contact path enforces.
-		sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
-		atk := species.AttackProfile()
-		if atk != nil && m.bugAttackAllowed(state, swarm, species, atk) {
-			for userID, player := range state.Players {
-				px, py := player.WorldX(chunkSize), player.WorldY(chunkSize)
-				dx, dy := px-sx, py-sy
-				if dx*dx+dy*dy > atk.Range*atk.Range {
-					continue
-				}
-				_, _, _, _, blocked := entities.RaycastClampWithBlock(sx, sy, px, py, func(x, y float32) bool {
-					return state.IsBlockedForSpecies(x, y, species)
-				})
-				if blocked {
-					continue // a wall between us: no bite through it
-				}
-				if m.applyBugAttackToPlayer(logger, dispatcher, state, swarm, species, userID, player, atk.Damage) {
-					m.startRecover(state, swarm, species, px, py, chunkSize, deltaTime)
-					return true
-				}
-			}
-		}
-		// Flight over (arrived or capped) WITHOUT a bite: the overshoot carried us
-		// past the player — bank back toward them (turnaround), don't retreat.
+		// The BITE is no longer detected here. The server holds only the swarm CENTRE, so the old
+		// centre-vs-stale-player-pos check fired a "hit" ~2.5 cells off the on-screen sprite during the
+		// 9 c/s surge (the phantom). The connect is now detected on the AUTHORITY CLIENT against the
+		// RENDERED centipede vs the exact player (SwarmManager.RunBugPlayerStrikes, style "lunge") and
+		// reported via BUG_PLAYER_STRIKE → the same shared gate/funnel (bugAttackAllowed +
+		// applyBugAttackToPlayer). The surge MOVEMENT below stays a deterministic server leg.
+		//
+		// Flight over (arrived or capped): the overshoot carried us past the player — bank back toward
+		// them (turnaround) and press the attack on the short cooldown.
 		if state.TickCount >= swarm.ActionUntilTick || !swarm.HasTarget {
 			m.startTurnaround(state, swarm, species, chunkSize, deltaTime)
 		}

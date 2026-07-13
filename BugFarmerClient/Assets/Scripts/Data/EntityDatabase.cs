@@ -243,6 +243,14 @@ namespace BugFarmer.Data
             public float TelegraphSecs;       // per-species wind-up before the strike (0 = instant)
             public float AggroEnter;
             public float AggroExit;
+            // ATTACK-MOVEMENT knobs (the "solo divers within a bigger swarm" — BugAgent reads these to hover +
+            // swoop). Hash-bearing sim data, like movement_style. 0 = a sensible default.
+            public float Standoff;            // cells the hovering cloud keeps off the player
+            public float DivePeriodSecs;      // each bug's dive cycle (staggered per bug → 1-2 diving at once)
+            public float DiveSecs;            // how long a swoop lasts
+            // STING knobs (SwarmManager reads these to pace the strike reports; the server ignores them).
+            public int AttackTokens;          // max concurrent stings reported per swarm (1-2)
+            public float DiveCooldownSecs;    // per-bug rest between its sting reports
         }
         private static Dictionary<string, SpeciesInfo> _species;
         private static bool _initialized;
@@ -353,6 +361,11 @@ namespace BugFarmer.Data
                     TelegraphSecs = a["telegraph_secs"]?.Value<float>() ?? 0f,
                     AggroEnter = a["aggro_enter"]?.Value<float>() ?? 0f,
                     AggroExit = a["aggro_exit"]?.Value<float>() ?? 0f,
+                    Standoff = a["standoff"]?.Value<float>() ?? 0f,
+                    DivePeriodSecs = a["dive_period_secs"]?.Value<float>() ?? 0f,
+                    DiveSecs = a["dive_secs"]?.Value<float>() ?? 0f,
+                    AttackTokens = a["attack_tokens"]?.Value<int>() ?? 0,
+                    DiveCooldownSecs = a["dive_cooldown_secs"]?.Value<float>() ?? 0f,
                 };
             }
             int dmg = obj?["attack_damage"]?.Value<int>() ?? 0;

@@ -10,6 +10,12 @@ namespace BugFarmer.Bugs
         public float WanderRadius;     // How far bugs wander from swarm center
         public bool FliesOverFences;   // HASH-BEARING: per-bug collision skips occupants
         public bool SkipCollision;     // crawling individuals: head = center verbatim
+        // ATTACK-movement knobs (player_reaction "attack"): the cloud hovers `Standoff` cells off the player and
+        // each bug swoops in for `DiveTicks` every `DivePeriodTicks`, staggered per bug-id so ~1-2 dive at once.
+        // Hash-bearing (drives Agent.Position), from the attack{} block. 0 = a sensible default (see BugAgent).
+        public float Standoff;
+        public int DivePeriodTicks;
+        public int DiveTicks;
     }
 
     /// <summary>
@@ -93,6 +99,7 @@ namespace BugFarmer.Bugs
                     "crawling" => 0f,  // the head IS the center
                     _ => 4.0f,         // brownian
                 };
+                var atk = info.Attack;
                 return new SpeciesBehavior
                 {
                     PlayerReaction = string.IsNullOrEmpty(info.PlayerReaction) ? "ignore" : info.PlayerReaction,
@@ -100,6 +107,9 @@ namespace BugFarmer.Bugs
                     WanderRadius = wander,
                     FliesOverFences = info.FliesOverFences,
                     SkipCollision = info.MovementStyle == "crawling",
+                    Standoff = atk != null ? atk.Standoff : 0f,
+                    DivePeriodTicks = atk != null && atk.DivePeriodSecs > 0 ? (int)(atk.DivePeriodSecs * 10f) : 0,
+                    DiveTicks = atk != null && atk.DiveSecs > 0 ? (int)(atk.DiveSecs * 10f) : 0,
                 };
             }
 

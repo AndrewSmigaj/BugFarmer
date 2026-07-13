@@ -1343,10 +1343,12 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			// via OpCodePredationStrike → handlePredationStrike → applyPredationStrike. No autonomous
 			// server-side centre-strike here anymore.
 
-			// Bug-vs-player stings are now PER-INDIVIDUAL: the AUTHORITY client detects which individual bug is
-			// actually in range and reports it (OpCodeBugPlayerStrike → handleBugPlayerStrike), because the
-			// server holds only swarm centres. The old center-based checkBugAttacks — the phantom-hit source —
-			// is retired here. (Centipede bites still fire from centipede.go for M1; per-individual in M4.)
+			// Bug-vs-player damage is now ALL client-detected + server-applied: the AUTHORITY client detects
+			// which individual bug is actually in range of the exact player (against the RENDERED sprite, so
+			// the hit matches what's on screen) and reports it (OpCodeBugPlayerStrike → handleBugPlayerStrike);
+			// the server holds only swarm centres. This covers BOTH the wasp contact sting AND the centipede
+			// lunge connect (the old server-side centipede bite — the last centre-fire phantom — was deleted
+			// from centipede.go). The old center-based checkBugAttacks is retired (TEST-ONLY).
 
 			// === Lifecycle meters (server-authoritative; all effects ride the ledger) ===
 			swarm.ReproduceCooldown -= deltaTime // was never decremented before this system

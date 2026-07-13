@@ -58,8 +58,11 @@ func driveCentTick(m *Match, state *WorldState, cent *entities.SwarmState) {
 	cent.Move(0.1, species, 32)
 }
 
-// Surge: trigger at 5.0 → 8-tick windup freeze → clamped lead surge → bite or recover
-// → cooldown; de-aggro beyond the trigger range just never re-triggers.
+// Surge: trigger at 5.0 → 8-tick windup freeze → clamped lead surge → overshoot →
+// turnaround → idle on a cooldown. The BITE is no longer applied here: the connect is detected
+// client-side (against the rendered sprite) and applied via handleBugPlayerStrike
+// (bug_player_strike_test.go). The server surge is therefore DAMAGE-FREE — this test guards that
+// invariant (the phantom is gone) plus the choreography.
 func TestCentSurgeCycle(t *testing.T) {
 	state, cent := centTestState()
 	m := &Match{}
@@ -84,64 +87,58 @@ func TestCentSurgeCycle(t *testing.T) {
 		t.Fatalf("state=%q, want surge after the windup", cent.ActionState)
 	}
 
-	// A STANDING player gets bitten (lead = 0 for zero velocity).
-	for i := 0; i < centSurgeMaxTicks+centRecoverTicks+2 && p.HP == 10; i++ {
+	// No server bite → the surge overshoots and banks into the turnaround, then idles on a cooldown.
+	sawTurnaround := false
+	for i := 0; i < centSurgeMaxTicks+centTurnLegs*centTurnLegTicks+centRecoverTicks+8; i++ {
 		driveCentTick(m, state, cent)
+		if cent.ActionState == "turnaround" {
+			sawTurnaround = true
+		}
+		if sawTurnaround && cent.ActionState == "" {
+			break
+		}
 	}
-	if p.HP != 8 {
-		t.Fatalf("standing player HP=%d, want 8 (bite 2)", p.HP)
+	if p.HP != 10 {
+		t.Fatalf("server surge applied HP=%d — it must be DAMAGE-FREE (the client detects the bite)", p.HP)
 	}
-	// Recover then cooldown.
-	for i := 0; i < centRecoverTicks+2; i++ {
-		driveCentTick(m, state, cent)
+	if !sawTurnaround {
+		t.Fatal("a surge with no server bite must bank into the turnaround")
 	}
 	if cent.ActionState != "" {
-		t.Fatalf("state=%q, want idle after recover", cent.ActionState)
+		t.Fatalf("state=%q, want idle after the cycle", cent.ActionState)
 	}
 	if cent.SurgeCooldownUntil <= state.TickCount {
-		t.Fatal("surge cooldown not armed")
+		t.Fatal("surge cooldown not armed after the cycle")
 	}
 }
 
-// The velocity half-lead: a player strafing steadily (half walk speed — fighting,
-// not fleeing) gets clipped by the lead; the same player REVERSING direction at
-// launch escapes (the skill check: the hiss asks you to move DIFFERENTLY). A
-// full-speed runner with the whole telegraph as head start legitimately outruns
-// the lunge — the telegraph rewarding movement is the design.
+// The velocity lead: launchSurge aims at pos + velocity×flight×lead, so the surge target LEADS a
+// moving player — a +Y drifter yields a HIGHER surge target Y than the same player drifting −Y. This
+// is the server-side geometry (unchanged); whether the lead CONNECTS is now detected client-side
+// against the rendered sprite, so this test verifies the aim, not an HP hit.
 func TestCentSurgeLead(t *testing.T) {
-	run := func(reverse bool) bool {
+	surgeTargetY := func(vy float32) float32 {
 		state, cent := centTestState()
 		m := &Match{}
 		p := &PlayerState{UserID: "p1", HP: 10, MaxHP: 10,
 			Position: entities.EntityPosition{LocalX: 14, LocalY: 10}}
 		state.Players = map[string]*PlayerState{"p1": p}
 
-		const strafeSpeed = 0.25 // half walk speed: circling while fighting
-		dir := float32(strafeSpeed)
-		surged := false
-		for i := 0; i < 80 && p.HP == 10; i++ {
+		for i := 0; i < 60 && cent.ActionState != "surge"; i++ {
 			driveCentTick(m, state, cent)
-			if cent.ActionState == "surge" {
-				surged = true
-				if reverse {
-					dir = -strafeSpeed // direction change at launch
-				}
-			} else if surged {
-				break // the FIRST surge ended — this test judges only that lunge
-				// (the turnaround now presses a second attack by design; the
-				// keep-dodging loop is TestCentMissTurnaround's subject)
-			}
-			p.Position.LocalY += dir
+			p.Position.LocalY += vy // steady drift through the windup → sets the lead velocity
 			p.Position.Normalize(32)
 		}
-		return p.HP < 10
+		if cent.ActionState != "surge" {
+			t.Fatalf("never launched a surge (vy=%.2f)", vy)
+		}
+		return cent.TargetY
 	}
 
-	if !run(false) {
-		t.Fatal("a steady strafer must get clipped by the lead")
-	}
-	if run(true) {
-		t.Fatal("a direction-change at launch must dodge the surge")
+	up := surgeTargetY(0.25)    // drifting +Y
+	down := surgeTargetY(-0.25) // drifting −Y
+	if !(up > down) {
+		t.Fatalf("surge must LEAD the player's velocity: +Y-drift target=%.2f must exceed −Y-drift target=%.2f", up, down)
 	}
 }
 
@@ -231,14 +228,16 @@ func TestCentMissTurnaround(t *testing.T) {
 	}
 }
 
-// The surge CLAMPS at fences and the bite is LOS-gated: a player across a wall within
-// 1.6 of the clamp point takes NO damage.
+// "Stone is the answer": the surge CLAMPS at the wall — the body never crosses it, so a player on
+// the far side is unreachable (server movement guarantee). The additional through-thin-wall BITE
+// block is now enforced CLIENT-side (RenderedStingersInRange + BugCollision.LineBlocked, the same
+// integer-Bresenham LoS as the predation #20 fix) — not Go-testable here. This guards the movement
+// half + that the server surge stays damage-free.
 func TestCentSurgeNoThroughFenceBite(t *testing.T) {
 	state, cent := centTestState()
 	m := &Match{}
 	chunk := state.Chunks[ChunkKey(0, 0)]
-	// A FULL-COLUMN stone wall at x=12 — no flanking around the ends (a shorter wall
-	// let the wander legitimately walk around it and bite with clear LOS).
+	// A FULL-COLUMN stone wall at x=12 — no flanking around the ends.
 	for ly := 0; ly < 32; ly++ {
 		chunk.SetOccupant(12, ly, &PlacedOccupant{ID: "fence_stone", Anchor: true})
 	}
@@ -247,11 +246,16 @@ func TestCentSurgeNoThroughFenceBite(t *testing.T) {
 		Position: entities.EntityPosition{LocalX: 13.2, LocalY: 10}}
 	state.Players = map[string]*PlayerState{"p1": p}
 
+	// The wall is column 12; the player is at 13.2 (cell 13, the far side). The centipede may touch the
+	// near face of the wall cell but must never CROSS to the player's cell (x >= 13) — the surge clamps.
 	for i := 0; i < 120; i++ {
 		driveCentTick(m, state, cent)
+		if cent.WorldX(32) >= 13 {
+			t.Fatalf("centipede crossed the stone wall to the player's side (x=%.2f) — the surge must clamp", cent.WorldX(32))
+		}
 	}
 	if p.HP != 10 {
-		t.Fatalf("through-fence bite landed: HP=%d — 'stone is the answer' is void", p.HP)
+		t.Fatalf("server applied damage across a wall: HP=%d — the server surge must be damage-free", p.HP)
 	}
 }
 

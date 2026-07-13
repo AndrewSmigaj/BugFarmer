@@ -695,25 +695,30 @@ namespace BugFarmer.Entities
             }
         }
 
-        // At most N individual bugs commit a strike per swarm per report (visual/feel; the server's per-swarm
-        // cooldown + shared 1s invuln cap ACTUAL damage to ≤1 hit/window).
-        private const int StingTokenPool = 2;
-        // After a strike/whiff, don't re-arm this swarm for a few ticks (paces the client's reports; the SERVER
-        // cooldown is authoritative).
-        private const int StingRearmTicks = 4;
+        // ── Bug → player attack (AUTHORITY-ONLY, SIM-INERT) ─────────────────────────────────────────────────
+        // The "swoop in and attack" behaviour. Determinism note: EVERYTHING here is authority-only and feeds
+        // ONLY server-bound strike REPORTS (player HP is display-only, never hashed). It reads the RENDERED
+        // (on-screen) bug transform + the exact local-player transform — non-deterministic values that can
+        // therefore NEVER enter the sim hash. The deterministic bug positions (Agent.Position) are untouched.
+        private const int DefaultAttackTokens    = 2;  // 1-2 bugs flash/report per sting (visual; server caps damage)
+        private const int DefaultStingRearmTicks = 4;  // paces a swarm's sting REPORTS (server cooldown_secs is the real gate)
+        private const int LungeRearmTicks        = 4;  // throttle for the centipede per-tick connect report
 
+        // Per-swarm sting wind-up: an in-range bug flashes (the telegraph), then stings if a bug is STILL in range.
         private class StingWindup { public string PlayerId; public long FireTick; }
-        private readonly Dictionary<string, StingWindup> _stingWindup = new();   // swarm_id → in-flight wind-up
-        private readonly Dictionary<string, long> _stingRearmAt = new();         // swarm_id → tick it may arm again
-        private UnityEngine.Transform _localPlayerTf;                            // cached; the EXACT local pos (no cell granularity)
+        private readonly Dictionary<string, StingWindup> _stingWindup = new(); // swarm_id → in-flight wind-up
+        private readonly Dictionary<string, long> _stingRearmAt = new();       // swarm_id → tick it may arm again
+        private readonly Dictionary<string, long> _lungeRearmAt = new();       // swarm_id → tick the lunge connect may re-report
+
+        private UnityEngine.Transform _localPlayerTf;   // cached; the EXACT local pos (no cell granularity)
         private string _localUserId;
 
-        /// <summary>AUTHORITY-ONLY per-tick bug→player attack pass. The authority owns the two-beat timing AND the
-        /// precise per-individual range check (it has per-bug positions and, for the LOCAL player, the exact
-        /// transform — so a strike lands ONLY when a bug is actually adjacent; no centroid phantom, no cell slop).
-        /// Per-species range + wind-up come from the attack{} profile. On wind-up start it sends phase "windup"
-        /// (server flashes the telegraph); when the wind-up elapses it RE-checks range and sends "strike" only if a
-        /// bug is still in range (else whiffs). Sim-inert (server-authoritative HP), so the exact pos is safe here.</summary>
+        /// <summary>AUTHORITY-ONLY per-tick bug→player STING detection. The actual swoop is the DETERMINISTIC
+        /// attack MOVEMENT (BugAgent orbit-and-dive, run by every client); this layer only lands the DAMAGE + the
+        /// telegraph. It flashes an in-range bug (the dodge-able wind-up), then after telegraph_secs stings if a bug
+        /// is STILL in RENDERED range of the exact local player (so the hit matches the sprite — no phantom).
+        /// CONTACT bugs use a per-swarm wind-up; LUNGE bugs (centipedes) detect their surge connect. HP is
+        /// server-authoritative + display-only, so the rendered/exact reads here never enter the sim hash.</summary>
         private void RunBugPlayerStrikes(List<PlayerTarget> players)
         {
             if (players == null || players.Count == 0) return;
@@ -723,54 +728,114 @@ namespace BugFarmer.Entities
             foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
             {
                 var swarm = _swarms[swarmId];
-                if (swarm == null || swarm.Count == 0) { _stingWindup.Remove(swarmId); continue; }
+                if (swarm == null || swarm.Count == 0) { ClearStingState(swarmId); continue; }
                 var atk = BugFarmer.Data.EntityDatabase.GetSpecies(swarm.SpeciesId)?.Attack;
                 if (atk == null || atk.Damage <= 0) continue;   // only attack-capable species
 
                 var rFixed = FixedPoint.FromFloat(atk.Range);
                 long rangeSqr = (rFixed * rFixed).Value;
 
-                // IN A WIND-UP → fire when it elapses, but only if a bug is STILL in range (step-out whiffs).
-                if (_stingWindup.TryGetValue(swarmId, out var wu))
-                {
-                    if (_simulationTick < wu.FireTick) continue;
-                    _stingWindup.Remove(swarmId);
-                    _stingRearmAt[swarmId] = _simulationTick + StingRearmTicks;
-                    var pos = PlayerAttackPos(wu.PlayerId, players);
-                    if (pos.HasValue)
-                    {
-                        var stillIn = StingersInRange(swarm, pos.Value, rangeSqr);
-                        if (stillIn.Count > 0) SendStrike(swarmId, wu.PlayerId, stillIn, "strike");
-                    }
-                    continue;
-                }
-
-                if (_stingRearmAt.TryGetValue(swarmId, out var rearm) && _simulationTick < rearm) continue;
-
-                // NOT WINDING UP → find a bug in range of a player and start the wind-up (or strike instantly).
-                var broadFixed = FixedPoint.FromFloat(atk.Range + swarm.Radius);
-                long broadSqr = (broadFixed * broadFixed).Value;
-                foreach (var player in players)
-                {
-                    var pos = PlayerAttackPos(player.PlayerId, players) ?? player.Position;
-                    if (swarm.SimCenter.SqrDistanceTo(pos).Value > broadSqr) continue;
-                    var stingers = StingersInRange(swarm, pos, rangeSqr);
-                    if (stingers.Count == 0) continue;
-
-                    long telegraphTicks = (long)(atk.TelegraphSecs * 10f);
-                    if (telegraphTicks <= 0)
-                    {
-                        SendStrike(swarmId, player.PlayerId, stingers, "strike");
-                        _stingRearmAt[swarmId] = _simulationTick + StingRearmTicks;
-                    }
-                    else
-                    {
-                        _stingWindup[swarmId] = new StingWindup { PlayerId = player.PlayerId, FireTick = _simulationTick + telegraphTicks };
-                        SendStrike(swarmId, player.PlayerId, stingers, "windup");
-                    }
-                    break; // one target per swarm per pass
-                }
+                if (atk.Style == "lunge")
+                    RunLungeConnect(swarmId, swarm, atk, rangeSqr, players);
+                else
+                    RunContactSting(swarmId, swarm, atk, rangeSqr, players);
             }
+        }
+
+        /// <summary>LUNGE connect (centipedes): the SERVER owns the surge choreography (rear-up telegraph →
+        /// surge → overshoot); the client just detects when the surging RENDERED body reaches the player and
+        /// reports an instant strike (the server per-swarm cooldown is the real damage gate; a short local
+        /// rearm throttles reports). Replaces the deleted server-side centre-fire bite (the phantom).</summary>
+        private void RunLungeConnect(string swarmId, SwarmVisual swarm, BugFarmer.Data.EntityDatabase.AttackInfo atk, long rangeSqr, List<PlayerTarget> players)
+        {
+            if (_lungeRearmAt.TryGetValue(swarmId, out var rearm) && _simulationTick < rearm) return;
+            long broadSqr = BroadSqr(atk.Range, swarm.Radius);
+            foreach (var player in players)
+            {
+                var pos = PlayerAttackPos(player.PlayerId, players) ?? player.Position;
+                if (swarm.SimCenter.SqrDistanceTo(pos).Value > broadSqr) continue;
+                var stingers = RenderedStingersInRange(swarm, pos, rangeSqr, 1);
+                if (stingers.Count == 0) continue;
+                SendStrike(swarmId, player.PlayerId, stingers, "strike");
+                _lungeRearmAt[swarmId] = _simulationTick + LungeRearmTicks;
+                break;
+            }
+        }
+
+        /// <summary>CONTACT sting (wasps/bees): a per-swarm wind-up. Flash an in-range bug (the dodge-able tell),
+        /// then after telegraph_secs sting if a bug is STILL in RENDERED range (a dodge/step-out whiffs).
+        /// attack_tokens = how many bugs flash/report at once. The DIVERS come from the attack MOVEMENT, not
+        /// here — this layer just fires the telegraphed damage whenever a swooping bug is on the player.</summary>
+        private void RunContactSting(string swarmId, SwarmVisual swarm, BugFarmer.Data.EntityDatabase.AttackInfo atk, long rangeSqr, List<PlayerTarget> players)
+        {
+            int tokens = atk.AttackTokens > 0 ? atk.AttackTokens : DefaultAttackTokens;
+            long telegraphTicks = (long)(atk.TelegraphSecs * 10f);
+            long rearmTicks = atk.DiveCooldownSecs > 0 ? (long)(atk.DiveCooldownSecs * 10f) : DefaultStingRearmTicks;
+
+            // IN A WIND-UP → fire when it elapses, but only if a bug is STILL in range (step-out/dodge whiffs).
+            if (_stingWindup.TryGetValue(swarmId, out var wu))
+            {
+                if (_simulationTick < wu.FireTick) return;
+                _stingWindup.Remove(swarmId);
+                _stingRearmAt[swarmId] = _simulationTick + rearmTicks;
+                var ppos = PlayerAttackPos(wu.PlayerId, players);
+                if (ppos.HasValue)
+                {
+                    var stillIn = RenderedStingersInRange(swarm, ppos.Value, rangeSqr, tokens);
+                    if (stillIn.Count > 0) SendStrike(swarmId, wu.PlayerId, stillIn, "strike");
+                }
+                return;
+            }
+            if (_stingRearmAt.TryGetValue(swarmId, out var rearm) && _simulationTick < rearm) return;
+
+            // NOT WINDING UP → find a swooping bug in range of a player and start the wind-up (or sting instantly).
+            long broadSqr = BroadSqr(atk.Range, swarm.Radius);
+            foreach (var player in players)
+            {
+                var pos = PlayerAttackPos(player.PlayerId, players) ?? player.Position;
+                if (swarm.SimCenter.SqrDistanceTo(pos).Value > broadSqr) continue;
+                var stingers = RenderedStingersInRange(swarm, pos, rangeSqr, tokens);
+                if (stingers.Count == 0) continue;
+                if (telegraphTicks <= 0)
+                {
+                    SendStrike(swarmId, player.PlayerId, stingers, "strike");
+                    _stingRearmAt[swarmId] = _simulationTick + rearmTicks;
+                }
+                else
+                {
+                    _stingWindup[swarmId] = new StingWindup { PlayerId = player.PlayerId, FireTick = _simulationTick + telegraphTicks };
+                    SendStrike(swarmId, player.PlayerId, stingers, "windup");
+                }
+                break; // one target per swarm per pass
+            }
+        }
+
+        private long BroadSqr(float range, float swarmRadius)
+        {
+            var broadFixed = FixedPoint.FromFloat(range + swarmRadius);
+            return (broadFixed * broadFixed).Value;
+        }
+
+        /// <summary>Up to `max` RENDERED members within range (+LoS) of a point, ascending id.</summary>
+        private List<int> RenderedStingersInRange(SwarmVisual swarm, FixedPoint2 pos, long rangeSqr, int max)
+        {
+            var stingers = new List<int>();
+            foreach (var (bugId, bugPos) in swarm.GetAllBugsRenderedSorted())
+            {
+                if (stingers.Count >= max) break;
+                if (bugPos.SqrDistanceTo(pos).Value > rangeSqr) continue;
+                if (BugCollision.LineBlocked(bugPos, pos)) continue;
+                stingers.Add(bugId);
+            }
+            return stingers;
+        }
+
+        /// <summary>Drop all sting/lunge bookkeeping for a swarm that's gone (keeps the dicts bounded).</summary>
+        private void ClearStingState(string swarmId)
+        {
+            _stingWindup.Remove(swarmId);
+            _stingRearmAt.Remove(swarmId);
+            _lungeRearmAt.Remove(swarmId);
         }
 
         /// <summary>Position to test a player against: the LOCAL player's EXACT transform (kills the cell
@@ -784,19 +849,6 @@ namespace BugFarmer.Entities
             }
             foreach (var pt in players) if (pt.PlayerId == playerId) return pt.Position;
             return null;
-        }
-
-        private List<int> StingersInRange(SwarmVisual swarm, FixedPoint2 pos, long rangeSqr)
-        {
-            var stingers = new List<int>();
-            foreach (var (bugId, bugPos) in swarm.GetAllBugsAliveSorted())
-            {
-                if (stingers.Count >= StingTokenPool) break;
-                if (bugPos.SqrDistanceTo(pos).Value > rangeSqr) continue;
-                if (BugCollision.LineBlocked(bugPos, pos)) continue;
-                stingers.Add(bugId);
-            }
-            return stingers;
         }
 
         private void SendStrike(string swarmId, string playerId, List<int> bugIds, string phase)
@@ -916,6 +968,10 @@ namespace BugFarmer.Entities
             _lastReceivedSeq = -1;
             _frontierWatermark = -1;
             _syncState = SyncState.Joining;
+            // Bug-attack bookkeeping is per-zone (authority-only, sim-inert) — drop it on a zone swap.
+            _stingWindup.Clear();
+            _stingRearmAt.Clear();
+            _lungeRearmAt.Clear();
         }
 
         private void RequestResync()
@@ -1225,8 +1281,30 @@ namespace BugFarmer.Entities
                     }
                     break;
                 case "windup":
-                    BugFarmer.Audio.AudioFx.HissAt(pos);
-                    swarm.FlashAllBugs();
+                    // A member PEELING OFF to dive (victim = the target player) flashes ONLY the nearest bug —
+                    // a solo diver, not the whole cloud. The centipede rear-up / predator windup (no victim)
+                    // flashes the whole (usually 1-member) swarm as before.
+                    if (msg.victim_x != null && msg.victim_x.Length > 0 && msg.victim_y != null && msg.victim_y.Length > 0)
+                    {
+                        var vp = new Vector2(msg.victim_x[0], msg.victim_y[0]);
+                        swarm.FlashNearest(vp);
+                        BugFarmer.Audio.AudioFx.HissAt(vp);
+                    }
+                    else
+                    {
+                        BugFarmer.Audio.AudioFx.HissAt(pos);
+                        swarm.FlashAllBugs();
+                    }
+                    break;
+                case "dive":
+                    // Connect (the sting landed): flash the member nearest the player + a small hit-pop jab. The
+                    // real SWOOP is now the deterministic attack MOVEMENT (BugAgent), so no big cosmetic dart is
+                    // needed — this is just the hit reaction. Display-only; damage was already applied server-side.
+                    if (msg.victim_x != null && msg.victim_x.Length > 0 && msg.victim_y != null && msg.victim_y.Length > 0)
+                    {
+                        var vp = new Vector2(msg.victim_x[0], msg.victim_y[0]);
+                        swarm.LungeNearest(vp); // 0.35 jab + flash (predation-style hit-pop)
+                    }
                     break;
                 case "gnaw":
                     // The night tell: the crunch is audible past the light radius —

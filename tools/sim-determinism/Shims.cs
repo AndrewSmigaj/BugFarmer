@@ -97,6 +97,16 @@ namespace BugFarmer.Data
             public string PlayerReaction = "ignore";
             public float ReactionRadius;
             public bool FliesOverFences;
+            public AttackInfo Attack; // the attack{} block — MovementFactory reads its standoff/dive knobs
+        }
+
+        // Minimal mirror of the client AttackInfo — only the fields the linked MovementFactory reads for the
+        // deterministic attack-movement (the orbit-and-dive knobs). Null when the species has no attack{}.
+        public class AttackInfo
+        {
+            public float Standoff;
+            public float DivePeriodSecs;
+            public float DiveSecs;
         }
 
         private static Dictionary<string, SpeciesInfo> _cache;
@@ -121,6 +131,12 @@ namespace BugFarmer.Data
                     PlayerReaction = o.TryGetProperty("player_reaction", out var pr) ? (pr.GetString() ?? "ignore") : "ignore",
                     ReactionRadius = o.TryGetProperty("reaction_radius", out var rr) ? (float)rr.GetDouble() : 0f,
                     FliesOverFences = o.TryGetProperty("flies_over_fences", out var ff) && ff.ValueKind == JsonValueKind.True,
+                    Attack = o.TryGetProperty("attack", out var a) ? new AttackInfo
+                    {
+                        Standoff = a.TryGetProperty("standoff", out var so) ? (float)so.GetDouble() : 0f,
+                        DivePeriodSecs = a.TryGetProperty("dive_period_secs", out var dp) ? (float)dp.GetDouble() : 0f,
+                        DiveSecs = a.TryGetProperty("dive_secs", out var ds) ? (float)ds.GetDouble() : 0f,
+                    } : null,
                 };
             }
         }

@@ -137,10 +137,11 @@ per-enemy code. All are debug-spawnable in the arena immediately via the M1 spec
   see § Milestone 3 below): `centipede_tiger` (medium) and `centipede_giant` (hard). *(An earlier build made these
   as caterpillars — a misread of the ask; caterpillars are butterfly/moth larvae, not combat enemies, and were
   stripped out 2026-07-12.)*
-- **Player-aggro radius** (`aggroPlayerThink`, predation.go): any attack-capable NON-centipede swarm (wasps) now
-  chases the nearest player within ~8 cells (capped by its vision), so it engages instead of wandering and stays in
-  range through the sting wind-up. Centipede/millipede are skipped — they have their own `centTriggerRange`→surge.
-  Server leg → deterministic.
+- **Player-aggro radius** (`aggroPlayerThink`, combat_aggro.go): any attack-capable swarm with `attack.aggro_enter > 0`
+  chases the nearest player within that radius (capped by its vision), so it engages instead of wandering and hovers
+  in range. Centipedes use it too — it closes them to `attack.lunge.trigger_range`, then the per-tick surge takes
+  over. Defenders (`aggro_enter == 0`: bees/ants) don't proximity-chase. The chase speed is `attack.aggro_speed_mult`
+  (see the dives section below). Server leg → deterministic.
 - **Difficulty knobs** (no new code): `attack_damage` (per-hit) · `attack_cooldown` (frequency, floored by the 1 s
   shared invuln) · `base_speed` (+ `hunt_speed_mult`; for a centipede also scales lunge speed) · `vision_range` ·
   `max_hp` (hits-to-kill) · `min/max_swarm_size` · `nocturnal` · `sprite_family`/render scale (segmented crawlers).
@@ -164,6 +165,66 @@ Every player-facing combat behaviour is now a **per-species `attack{}` profile**
   No server-scheduled centre-fire.
 - **Remaining follow-ups (small):** `checkBugAttacks` is retired but kept as a test-only funnel-driver (2 tests);
   the legacy top-level `attack_*` struct fields remain as normalize-input. Neither is on a production path.
+
+## Individual attack AI: orbit-and-dive (2026-07-12 — "swoop in and attack")
+Fixed two structural bugs the owner reported (*"wasps just bumble around … centipedes phantom-hit"*) and gave
+enemies the **"solo divers within a bigger swarm, one or two at a time"** feel — as **real deterministic
+per-bug movement**, not a cosmetic overlay. The root cause of the bumbling: wasps shipped `player_reaction:
+"ignore"`, so each individual bug's AI wandered around the swarm centre and never engaged. Making the *centre*
+chase faster + adding a cosmetic dart (the first pass) didn't fix it — the bugs themselves weren't attacking.
+- **The real fix — individual attack MOVEMENT (`BugAgent.AttackMove`, hash-bearing, deterministic).** Wasps/
+  hornets now ship `player_reaction: "attack"` + a `reaction_radius`. Each bug's AI (already had an "attack"
+  branch, gated off) now runs an **orbit-and-dive**: most of a repeating cycle it HOVERS in a menacing cloud a
+  `standoff` off the player (its natural darting hover, pulled toward the *player* instead of the swarm centre);
+  during its own slice of the cycle it SWOOPS straight in at ~2× the hover dash (`DiveSpeedMult` — a committed
+  dive, faster than the player's 5 c/s walk so it reads as an attack), then the cycle returns it to the hover
+  (which peels it back out). The dive slice is **phase-offset per bug-id** (`(tick + bugId·13) % divePeriod <
+  diveTicks`), so ~1–2 of the swarm dive at any instant — staggered, never a lockstep pile-on, and coordinated
+  *without communication* (a shared deterministic formula). **Determinism:** a pure function of `(tick, bugId)` +
+  the deterministic player CELL + fixed-point math, reusing the existing `MoveToward`/`UpdateMovement` primitives
+  — so every client computes the identical `Agent.Position`, exactly like the flee/curious behaviours that
+  already ship. No new snapshot state. Gated by `sim-determinism --attack-test` (a moving player drives it; two
+  runs byte-identical, hash `FB80CE8997CF9EC3`).
+- **Fast aggro (`attack.aggro_speed_mult`, server/deterministic).** Brings the whole cloud onto you so the
+  individuals get within `reaction_radius` to engage: chase leg = `base_speed × aggro_speed_mult` (wasp `2.2 ×
+  2.4 ≈ 5.3 > 5` walk; can't catch a *dodging* player at 13, by design). Same deterministic leg, faster speed.
+- **Phantom killed — sting detected against the RENDERED sprite (client, authority-only, sim-inert).**
+  `RunBugPlayerStrikes` (SwarmManager.cs) range-tests each bug's **rendered `Transform.position`** (via
+  `GetAllBugsRenderedSorted`), not `Agent.Position`. For a 9 c/s centipede surge the sprite lags the sim ~1.4
+  cells, so testing the sim pos fired the "hit" that far off-screen; the rendered read matches what you see. It
+  feeds only server-bound strike REPORTS (HP is display-only) → never enters the hash. **The server-side
+  centipede bite was DELETED** (centipede.go) — the last centre-fire phantom; the centipede connect is now
+  client-detected (`style:"lunge"` → per-tick connect) like the wasp sting.
+- **The sting layer is now thin.** The MOVEMENT does the swooping; `RunContactSting` only lands the telegraphed
+  DAMAGE: it flashes an in-range diving bug (the dodge-able wind-up), then after `telegraph_secs` stings if a bug
+  is STILL in rendered range (a dodge/step-out whiffs). `attack_tokens` = how many bugs flash/report at once; the
+  server `cooldown_secs` is the real damage-rate gate. On connect the bug gets a small 0.35 hit-pop jab (the real
+  swoop is the movement, so no big cosmetic dart). `lunge` bugs use their server surge as the dive.
+
+### Combat knobs — dial any enemy's feel from `species.json` alone (no code)
+| Knob | Where | Side | What it does |
+|---|---|---|---|
+| `player_reaction: "attack"` | top-level | client sim | turns ON the individual orbit-and-dive (vs `ignore`/`flee`/`curious`) |
+| `reaction_radius` | top-level | client sim | how close a bug must be to the player to engage (per-bug alert range) |
+| `attack.standoff` | attack{} | client sim | cells the hovering (non-diving) cloud keeps off the player |
+| `attack.dive_period_secs` | attack{} | client sim | each bug's swoop cycle — shorter = dives more often (more divers at once) |
+| `attack.dive_secs` | attack{} | client sim | how long a swoop lasts (must exceed `telegraph_secs` to land the sting) |
+| `attack.aggro_enter`/`aggro_exit` | attack{} | server | the swarm-CENTRE proximity-chase radii (hysteresis). `0` = defender |
+| `attack.aggro_speed_mult` | attack{} | server | centre chase speed = `base_speed × this` — brings the cloud onto you |
+| `attack.range` | attack{} | both | hit/bite distance (the sting detection radius) |
+| `attack.telegraph_secs` | attack{} | both | wind-up before the sting (the dodge window; the per-tier tell) |
+| `attack.cooldown_secs` | attack{} | server | min seconds between hits from one swarm (the real damage-rate gate) |
+| `attack.attack_tokens` | attack{} | client | max bugs that flash/sting at once (1–2) |
+| `attack.dive_cooldown_secs` | attack{} | client | paces a swarm's sting reports |
+| `attack.lunge{…}` | attack{} | server | the centipede surge choreography (`style:"lunge"` only) |
+| `attack.damage · is_sting · only_defending · style` | attack{} | server | per-hit HP · bee-suit-negated? · defender-only? · `contact`\|`lunge` |
+| `render_scale` | top-level | client | display size (e.g. `wasp_soldier: 0.5` — sprite read too big) |
+
+The **client-sim** knobs (`player_reaction`, `reaction_radius`, `standoff`, `dive_*`) are HASH-BEARING — they
+drive `Agent.Position`, so all clients must read the same published `species.json` + build (the same rule as
+`movement_style`; `publish_entities.py` is the drift tripwire). The **client-detect** knobs (`attack_tokens`,
+`dive_cooldown_secs`) only pace the authority's strike reports (sim-inert). Everything stays in ONE `attack{}`
+block so a bug's whole combat feel is one place. `combat-enemy` skill authors it.
 
 ## Determinism & network model (why the "central arbiter" is cheap)
 - The stage manager, FSMs, and steering are **server CPU**, run each tick as **integer/fixed-point** math with

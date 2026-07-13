@@ -759,6 +759,24 @@ func (m *Match) broadcastBugTelegraph(
 	m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeBugTelegraph, msg)
 }
 
+// broadcastBugTelegraphAt is the player-attack telegraph (display-only): the flash/dart plays AT a world
+// point (atX/atY = the target player's position) so a SINGLE member peels off / darts, not the whole cloud.
+// Used for the wasp dive peel-off ("windup") + the dive connect ("dive"); the client resolves the nearest
+// member to that point and flashes/darts it. Chunk-scoped on the swarm's chunk like the other telegraphs.
+func (m *Match) broadcastBugTelegraphAt(
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	swarm *entities.SwarmState,
+	kind string,
+	atX, atY float32,
+) {
+	msg := BugTelegraphMessage{
+		SwarmID: swarm.ID, Kind: kind,
+		VictimX: []float32{atX}, VictimY: []float32{atY},
+	}
+	m.broadcastToChunk(dispatcher, state, swarm.Position.ChunkX, swarm.Position.ChunkY, OpCodeBugTelegraph, msg)
+}
+
 // broadcastBugStrikeTelegraph is the predation-strike telegraph (display-only): the snatch/THWACK plays
 // AT each victim position (victimX/victimY) so an individual-fly strike reads on screen; nil victims fall
 // back to the predator-centre flash. Chunk-scoped on the predator's chunk like the other telegraphs.

@@ -80,8 +80,11 @@ func (m *Match) handleBugPlayerStrike(
 		return
 	}
 
+	// Telegraphs play AT the player so a SINGLE member peels off / darts in (not the whole cloud): the
+	// "swoop in and attack" read. The client resolves the nearest member to that point.
+	px, py := player.WorldX(cs), player.WorldY(cs)
 	if msg.Phase == "windup" {
-		m.broadcastBugTelegraph(dispatcher, state, swarm, "windup", cs)
+		m.broadcastBugTelegraphAt(dispatcher, state, swarm, "windup", px, py)
 		return
 	}
 	for _, id := range msg.BugIDs {
@@ -89,6 +92,9 @@ func (m *Match) handleBugPlayerStrike(
 			continue
 		}
 		if m.applyBugAttackToPlayer(logger, dispatcher, state, swarm, species, msg.PlayerID, player, atk.Damage) {
+			// Connected: the member DARTS in as it strikes (contact = a big cosmetic dart, lunge =
+			// just the flash — the surge already carried the body). Display-only; damage already applied.
+			m.broadcastBugTelegraphAt(dispatcher, state, swarm, "dive", px, py)
 			return
 		}
 	}

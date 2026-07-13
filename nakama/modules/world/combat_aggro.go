@@ -61,9 +61,15 @@ func (m *Match) aggroPlayerThink(
 
 	// Emit a chase leg on ACQUIRE (prompt) or on the re-aim cadence; otherwise ride the current leg.
 	if acquired || state.TickCount >= swarm.NextThinkTick {
+		// HOW FAST the cloud closes/hovers: attack.aggro_speed_mult is the explicit knob (base_speed × this
+		// must beat the player's walk or the swarm trails and bumbles). Falls back to the predator hunt speed,
+		// then 1.4, for un-migrated species. Same deterministic leg either way — only the speed differs.
 		mult := float32(1.4)
 		if species.Predation != nil && species.Predation.HuntSpeedMult > 0 {
 			mult = species.Predation.HuntSpeedMult
+		}
+		if atk.AggroSpeedMult > 0 {
+			mult = atk.AggroSpeedMult
 		}
 		// Grounded attackers clamp the chase to a reachable point (path around walls, not through them);
 		// fliers (FliesOverFences) aim straight.

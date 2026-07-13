@@ -151,8 +151,8 @@
     "max_swarm_size": 10,
     "swarm_radius": 1.5,
     "merge_radius": 1.5,
-    "player_reaction": "ignore",
-    "reaction_radius": 0.0,
+    "player_reaction": "attack",
+    "reaction_radius": 12.0,
     "flee_speed_mult": 1.0,
     "net_size": "medium",
     "catch_condition": "always",
@@ -191,10 +191,16 @@
       "damage": 1,
       "cooldown_secs": 2.0,
       "range": 1.5,
-      "telegraph_secs": 0.8,
+      "telegraph_secs": 0.6,
       "is_sting": true,
       "aggro_enter": 8,
-      "aggro_exit": 12
+      "aggro_exit": 12,
+      "aggro_speed_mult": 2.4,
+      "attack_tokens": 2,
+      "dive_cooldown_secs": 1.2,
+      "standoff": 3.0,
+      "dive_period_secs": 5.0,
+      "dive_secs": 1.4
     }
   },
   "centipede_garden": {
@@ -257,6 +263,7 @@
       "is_sting": false,
       "aggro_enter": 8,
       "aggro_exit": 12,
+      "aggro_speed_mult": 1.3,
       "lunge": {
         "trigger_range": 5.0,
         "surge_speed_mult": 4.8,
@@ -436,7 +443,10 @@
       "is_sting": true,
       "only_defending": true,
       "aggro_enter": 0,
-      "aggro_exit": 0
+      "aggro_exit": 0,
+      "attack_tokens": 1,
+      "dart_reach": 0.6,
+      "dart_secs": 0.18
     }
   },
   "dragonfly_blue": {
@@ -587,7 +597,10 @@
       "is_sting": false,
       "only_defending": true,
       "aggro_enter": 0,
-      "aggro_exit": 0
+      "aggro_exit": 0,
+      "attack_tokens": 1,
+      "dart_reach": 0.5,
+      "dart_secs": 0.15
     }
   },
   "ant_scout": {
@@ -654,7 +667,10 @@
       "is_sting": false,
       "only_defending": true,
       "aggro_enter": 0,
-      "aggro_exit": 0
+      "aggro_exit": 0,
+      "attack_tokens": 1,
+      "dart_reach": 0.5,
+      "dart_secs": 0.15
     }
   },
   "wasp_soldier": {
@@ -674,8 +690,8 @@
     "max_swarm_size": 12,
     "swarm_radius": 1.6,
     "merge_radius": 1.6,
-    "player_reaction": "ignore",
-    "reaction_radius": 0.0,
+    "player_reaction": "attack",
+    "reaction_radius": 13.0,
     "flee_speed_mult": 1.0,
     "net_size": "medium",
     "catch_condition": "always",
@@ -714,11 +730,18 @@
       "damage": 2,
       "cooldown_secs": 1.6,
       "range": 1.5,
-      "telegraph_secs": 0.6,
+      "telegraph_secs": 0.5,
       "is_sting": true,
       "aggro_enter": 9,
-      "aggro_exit": 13
-    }
+      "aggro_exit": 13,
+      "aggro_speed_mult": 2.1,
+      "attack_tokens": 2,
+      "dive_cooldown_secs": 1.0,
+      "standoff": 3.0,
+      "dive_period_secs": 4.0,
+      "dive_secs": 1.4
+    },
+    "render_scale": 0.5
   },
   "hornet_giant": {
     "name": "Giant Hornet",
@@ -737,8 +760,8 @@
     "max_swarm_size": 8,
     "swarm_radius": 1.8,
     "merge_radius": 1.8,
-    "player_reaction": "ignore",
-    "reaction_radius": 0.0,
+    "player_reaction": "attack",
+    "reaction_radius": 14.0,
     "flee_speed_mult": 1.0,
     "net_size": "medium",
     "catch_condition": "always",
@@ -777,10 +800,16 @@
       "damage": 3,
       "cooldown_secs": 1.2,
       "range": 1.6,
-      "telegraph_secs": 0.45,
+      "telegraph_secs": 0.4,
       "is_sting": true,
       "aggro_enter": 10,
-      "aggro_exit": 14
+      "aggro_exit": 14,
+      "aggro_speed_mult": 1.9,
+      "attack_tokens": 2,
+      "dive_cooldown_secs": 0.8,
+      "standoff": 3.5,
+      "dive_period_secs": 3.2,
+      "dive_secs": 1.5
     }
   },
   "centipede_tiger": {
@@ -844,6 +873,7 @@
       "is_sting": false,
       "aggro_enter": 8,
       "aggro_exit": 12,
+      "aggro_speed_mult": 1.4,
       "lunge": {
         "trigger_range": 5.5,
         "surge_speed_mult": 5.2,
@@ -915,6 +945,7 @@
       "is_sting": false,
       "aggro_enter": 8,
       "aggro_exit": 13,
+      "aggro_speed_mult": 1.2,
       "lunge": {
         "trigger_range": 5.0,
         "surge_speed_mult": 4.4,

@@ -60,6 +60,17 @@ namespace BugFarmer.Bugs
         private FixedPoint _reactionRadiusSqr;
         private FixedPoint _wanderRadiusSqr;
 
+        // ATTACK-movement (player_reaction "attack") — the orbit-and-dive. Cached from _behavior with defaults.
+        // Deterministic by construction: the swoop is a pure function of tick + bug-id (no RNG, no extra state),
+        // the target is the deterministic player CELL, and the motion is fixed-point — so all clients agree.
+        private FixedPoint _attackHoverRadiusSqr; // standoff² the hovering (non-diving) cloud keeps off the player
+        private int _divePeriodTicks;             // each bug's swoop cycle length
+        private int _diveTicks;                   // how long a swoop lasts, at the front of the cycle
+        private const int DivePhaseStep = 13;     // per-bug phase offset (staggers who's diving; ~coprime w/ period)
+        // The swoop travels this much faster than the twitchy hover dash, so a dive reads as a COMMITTED attack
+        // (faster than the player's walk of 5 c/s) rather than a slow drift. Fixed-point → deterministic.
+        private static readonly FixedPoint DiveSpeedMult = FixedPoint.FromFloat(2.0f);
+
         // Alert chance per check (3/10 = 30%). Integer ratio to keep the roll float-free.
         private const int AlertChanceNumerator = 3;
         private const int AlertChanceDenominator = 10;
@@ -89,6 +100,13 @@ namespace BugFarmer.Bugs
             _behavior = MovementFactory.GetBehavior(speciesId);
             _reactionRadiusSqr = FixedPoint.FromFloat(_behavior.ReactionRadius * _behavior.ReactionRadius);
             _wanderRadiusSqr = FixedPoint.FromFloat(_behavior.WanderRadius * _behavior.WanderRadius);
+
+            // Attack-movement params (defaults when unset): standoff 2.5 cells, a 5.5s dive cycle, 1.2s swoops.
+            float standoff = _behavior.Standoff > 0f ? _behavior.Standoff : 2.5f;
+            _attackHoverRadiusSqr = FixedPoint.FromFloat(standoff * standoff);
+            _divePeriodTicks = _behavior.DivePeriodTicks > 0 ? _behavior.DivePeriodTicks : 55;
+            _diveTicks = _behavior.DiveTicks > 0 ? _behavior.DiveTicks : 12;
+            if (_diveTicks >= _divePeriodTicks) _diveTicks = _divePeriodTicks - 1; // always leave a hover phase
         }
 
         /// <summary>
@@ -211,7 +229,7 @@ namespace BugFarmer.Bugs
                     {
                         var targetPos = GetPlayerPosition(players, TargetPlayerId);
                         if (targetPos.HasValue)
-                            Movement.MoveToward(this, targetPos.Value);
+                            AttackMove(targetPos.Value);
                         else
                             Movement.UpdateMovement(this, swarmCenter, _wanderRadiusSqr);
                     }
@@ -266,6 +284,31 @@ namespace BugFarmer.Bugs
             Position = _behavior.SkipCollision
                 ? proposed
                 : BugCollision.Resolve(Position, proposed, _behavior.FliesOverFences);
+        }
+
+        /// <summary>
+        /// ATTACK movement — "solo divers within a bigger swarm." Most of the cycle the bug HOVERS in a menacing
+        /// cloud a standoff distance off the player (its natural darting hover, pulled toward the player instead of
+        /// the swarm centre); during its own slice of a repeating cycle it SWOOPS straight in at dash speed, then
+        /// the cycle returns it to the hover (which peels it back out). The dive slice is phase-offset per bug-id,
+        /// so ~1-2 of the swarm dive at any instant — staggered, never a lockstep pile-on.
+        ///
+        /// DETERMINISM: the swoop/hover choice is a pure function of (currentTick, bugId) — no RNG, no per-bug
+        /// state beyond Position (already synced) — the target is the deterministic player CELL, and MoveToward/
+        /// UpdateMovement are the existing fixed-point + counter-RNG primitives. So every client computes the
+        /// identical Agent.Position, exactly like the flee/curious behaviours that already ship.
+        /// </summary>
+        private void AttackMove(FixedPoint2 target)
+        {
+            long phase = (_currentTick + (long)BugId * DivePhaseStep) % _divePeriodTicks;
+            if (phase < _diveTicks)
+            {
+                Movement.MoveToward(this, target);                     // SWOOP straight in...
+                Velocity = new FixedPoint2(Velocity.X * DiveSpeedMult, // ...but faster than the hover — a committed
+                                           Velocity.Y * DiveSpeedMult); //    dive (beats the player's walk speed)
+            }
+            else
+                Movement.UpdateMovement(this, target, _attackHoverRadiusSqr); // HOVER around the player at standoff
         }
 
         /// <summary>

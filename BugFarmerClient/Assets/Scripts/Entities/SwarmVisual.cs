@@ -310,10 +310,11 @@ namespace BugFarmer.Entities
             else
             {
                 // Flies & butterflies read a touch large at 1:1 next to the player and the other
-                // bugs — render them at HALF scale (user feedback). Wasps stay full size. This is
-                // DISPLAY-ONLY (localScale is never in the sim hash), so it's free to differ per
+                // bugs — render them at HALF scale (user feedback). Wasps stay full size UNLESS the
+                // species sets render_scale (e.g. wasp_soldier = 0.5 — its sprite reads too big). This
+                // is DISPLAY-ONLY (localScale is never in the sim hash), so it's free to differ per
                 // client, exactly like the crawler head scale above.
-                float s = FlyerRenderScale(SpeciesId);
+                float s = FlyerRenderScale(SpeciesId) * (info != null && info.RenderScale > 0f ? info.RenderScale : 1f);
                 visual.localScale = new Vector3(s, s, 1f);
                 visual.rotation = Quaternion.identity;
             }
@@ -577,7 +578,13 @@ namespace BugFarmer.Entities
 
         /// <summary>#20: flash AND lunge the member nearest a victim — a committed jab toward the kill so
         /// the strike reads as an individual lunge, not just a flash. Display-only (no sim/hash effect).</summary>
-        public void LungeNearest(Vector2 worldPos)
+        public void LungeNearest(Vector2 worldPos) => LungeNearest(worldPos, 0.35f, 0.18f);
+
+        /// <summary>Flash + dart the member nearest a world point toward it, with a tunable reach/duration.
+        /// The wasp dive uses a BIGGER reach (~1.1 cells) so the peel-off reads as a swoop, not the 0.35 jab
+        /// the predation strike uses. Out-and-back (sin envelope in BugVisual.Interpolate); purely cosmetic —
+        /// LungeVec never touches Agent.Position or the hash, so all clients keep identical sim positions.</summary>
+        public void LungeNearest(Vector2 worldPos, float reach, float secs)
         {
             BugVisual best = null; float bestSqr = float.MaxValue;
             foreach (var bug in _bugs.Values)
@@ -591,10 +598,10 @@ namespace BugFarmer.Entities
             Vector2 from = best.Transform.position;
             Vector2 dir = worldPos - from;
             float dist = dir.magnitude;
-            // jab ~0.35 cell toward the victim, but never past it (cap at 0.6× the gap for a near prey).
-            best.LungeVec = dist > 0.001f ? dir / dist * Mathf.Min(0.35f, dist * 0.6f) : Vector2.zero;
+            // dart toward the victim, but never overshoot past it (cap at 0.6× the gap for a near target).
+            best.LungeVec = dist > 0.001f ? dir / dist * Mathf.Min(reach, dist * 0.6f) : Vector2.zero;
             best.LungeStart = Time.time;
-            best.LungeDur = 0.18f;
+            best.LungeDur = secs > 0f ? secs : 0.18f;
         }
 
         /// <summary>Flash the whole swarm (predator telegraphs — strike snatch, windup).</summary>
@@ -798,6 +805,26 @@ namespace BugFarmer.Entities
             foreach (var bugId in _bugs.Keys.OrderBy(id => id))
                 yield return (bugId, _bugs[bugId].Agent.Position);
         }
+
+        /// <summary>
+        /// Like GetAllBugsAliveSorted but yields each bug's RENDERED (on-screen) position — the interpolated
+        /// transform, not the deterministic Agent.Position. Player-attack detection tests against THIS so the
+        /// hit matches the sprite you see: for a fast surging centipede the rendered sprite lags the sim by
+        /// ~1.4 cells, and testing the sim pos fired the "hit" that far off-screen (the phantom). This read is
+        /// AUTHORITY-ONLY + sim-inert (feeds only server-bound strike reports; HP is display-only), so a
+        /// rendered (non-deterministic) value here can NEVER enter the hash. Falls back to CurrPos if the
+        /// transform is missing.
+        /// </summary>
+        public IEnumerable<(int bugId, FixedPoint2 pos)> GetAllBugsRenderedSorted()
+        {
+            foreach (var bugId in _bugs.Keys.OrderBy(id => id))
+            {
+                var b = _bugs[bugId];
+                Vector2 v = b.Transform != null ? (Vector2)b.Transform.position : b.CurrPos;
+                yield return (bugId, new FixedPoint2 { X = FixedPoint.FromFloat(v.x), Y = FixedPoint.FromFloat(v.y) });
+            }
+        }
+
 
         /// <summary>
         /// Apply snapshot from another client (late joiner or drift correction).

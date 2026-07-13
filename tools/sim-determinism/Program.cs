@@ -78,14 +78,16 @@ namespace SimDeterminism
             if (args.Contains("--los-test"))
                 return RunLosTest();
             bool selftest = args.Contains("--selftest");
+            bool attackTest = args.Contains("--attack-test");
             Console.WriteLine($"[sim-determinism] repo={RepoRoot}");
             Console.WriteLine($"[sim-determinism] {Species.Length} species x {BugsPerSpecies} bugs x {Ticks} ticks, seed={WorldSeed}"
-                              + (selftest ? "  [SELFTEST: run B is deliberately perturbed]" : ""));
+                              + (selftest ? "  [SELFTEST: run B is deliberately perturbed]" : "")
+                              + (attackTest ? "  [ATTACK-TEST: a deterministic moving player drives attack/flee/curious]" : ""));
 
             // --selftest proves this harness can actually SEE divergence (so a normal PASS isn't vacuous):
             // run B is perturbed with wall-clock, so the two runs MUST differ; we assert we detect it.
-            long[] runA = RunSim(perturb: false);
-            long[] runB = RunSim(perturb: selftest);
+            long[] runA = RunSim(perturb: false, withPlayer: attackTest);
+            long[] runB = RunSim(perturb: selftest, withPlayer: attackTest);
 
             int firstDiff = -1;
             for (int t = 0; t < Ticks; t++)
@@ -128,7 +130,9 @@ namespace SimDeterminism
 
         // One full simulation pass: build swarms, advance every tick, return the per-tick state hash.
         // perturb=true injects wall-clock into the center path (SELFTEST ONLY) so the run is nondeterministic.
-        static long[] RunSim(bool perturb)
+        // withPlayer=true feeds a deterministic MOVING player each tick, exercising the player-reactive paths
+        // (wasp attack orbit-and-dive, fly flee, butterfly curious) — the --attack-test gate.
+        static long[] RunSim(bool perturb, bool withPlayer = false)
         {
             // SortedDictionary(Ordinal) => deterministic swarm iteration, mirroring the client's OrderBy(id).
             var swarms = new SortedDictionary<string, List<BugAgent>>(StringComparer.Ordinal);
@@ -148,11 +152,16 @@ namespace SimDeterminism
                 swarms[swarmId] = bugs;
             }
 
-            var players = new List<PlayerTarget>();   // no players (drift checks run without player interaction too)
+            var players = new List<PlayerTarget>();   // default: no players (wander-only drift check)
             var hashes = new long[Ticks];
 
             for (int t = 0; t < Ticks; t++)
             {
+                if (withPlayer)                        // deterministic moving player → exercises attack/flee/curious
+                {
+                    players.Clear();
+                    players.Add(new PlayerTarget { PlayerId = "p1", Position = PlayerAt(t) });
+                }
                 foreach (var kv in swarms)            // sorted by swarmId
                 {
                     FixedPoint2 center = CenterAt(kv.Key, t);
@@ -164,6 +173,17 @@ namespace SimDeterminism
                 hashes[t] = HashState(swarms);
             }
             return hashes;
+        }
+
+        // A deterministic moving player (a slow circle near the swarms at 100,100), standing in for the
+        // synced player CELL. Pure function of tick → identical across runs, so it gates the attack-movement
+        // reproducibility (the wasp orbit-and-dive) exactly like CenterAt gates the wander sim.
+        static FixedPoint2 PlayerAt(int tick)
+        {
+            float ang = tick * 0.03f;
+            return new FixedPoint2(
+                FixedPoint.FromFloat(100f + 8f * (float)Math.Cos(ang)),
+                FixedPoint.FromFloat(100f + 8f * (float)Math.Sin(ang)));
         }
 
         // A deterministic moving swarm center (a slow circle), standing in for the server's SWARM_SET_TARGET
