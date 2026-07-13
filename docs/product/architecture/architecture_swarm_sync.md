@@ -963,3 +963,35 @@ BUG_REMOVED application (catches ride it; replay would storm).
   both sites or neither (per-bug positions are hash state).
 - Content-update workflow: zone files are read at chunk-touch and never written back —
   regenerate → restart the server → visible on next approach.
+
+### 14.6 Individual predation — one wasp hunts, kills, and eats one fly (2026-07, S1+S2)
+The swarm still ROAMS as a loose group (SWARM_SET_TARGET legs), but the visible act is now
+INDIVIDUAL and computed client-side deterministically — the first proof that per-bug DECISIONS
+(not just per-bug movement) sync with ~no new server traffic. The pattern is the same as §14's
+backbone: **clients replay AI OUTPUTS, not decisions.**
+- **S1 — PURSUIT (client, deterministic).** `BugAgent` gained a HUNT branch: a per-bug
+  `ShouldHunt` stagger (counter-RNG, `RngPurpose.Hunt`, ~1/3 per 3s window so 1–2 peel off at a
+  time) commits the nearest alive prey bug (`HuntTargetBugId`, ascending-id tie-break) and steers
+  to its deterministic position. `SwarmManager.AdvanceOneTick` feeds each hunting swarm's prey
+  positions into `SimulateTick`; `RunPredationStrikes`' broad-phase was relaxed from a swarm-CENTRE
+  gate to PER-BUG so a pursuer that left the cloud still connects. The kill itself is unchanged
+  (authority-detect → relay via `BUG_REMOVED`, §14).
+- **S2 — the REAL corpse + EAT (server drop + client feed).** `applyPredationStrike` now drops a
+  `dead_<prey>` carcass AT each victim cell (predation was corpse-less; production prey all have
+  empty `kill_drops`, so this is the sole corpse — no double-drop with `spawnKillDrops`). Edible →
+  it rides the existing **ITEM_ROTTED** food ledger (§14.1 "carrion is hash-bearing food"), so every
+  client's `_food` registry sees it identically. `BugAgent`'s FEED branch: on the committed target's
+  death, seek the fresh corpse (`InfluenceManager.TryGetNearestFoodId`, MIN-over-`_food` with an
+  ordinal tie-break — iteration-order-independent), pause `FeedTicks` eating it, then a counter-RNG
+  `RngPurpose.LeaveCorpse` roll (~1/4 LEAVE). CONSUME → the authority reports the removal via the ONE
+  new opcode this slice adds — **`CorpseConsume` (112, C→S, authority-only)** → `handleCorpseConsume`
+  → `consumeFood` → **FOOD_CONSUMED**@0 so the corpse vanishes on every client + late-joiner; LEAVE
+  → no report, the corpse rots. New per-bug FSM state (`HuntTargetBugId`, `feed_until` [long, absolute
+  tick], `feed_corpse_id`) rides `BugSampleData` for late-join and folds into `ComputeStateHash`
+  (`hunt_target` + `feed_until`) so the harness sees any desync.
+- **Determinism:** everything read is deterministic — prey positions (fixed-point), the corpse
+  registry (zone-wide ITEM_ROTTED, not view-scoped), the two counter-RNG rolls. Gate: `sim-determinism
+  --predation-test` (a real corpse-eat driven through the shim's food registry — non-vacuous, two runs
+  byte-identical). Satiation still bumps instant-on-kill (the eat is VISUAL for v1) → the breeding
+  economy is unchanged. **S3 (pending):** dial back the swarm-centre steamroll (`predationThink`,
+  scoped to swarm predators — the centipede/ant branches untouched) + an `ecology-tuning` re-balance.

@@ -168,6 +168,15 @@ the 22 issues; one findings doc each). Backlogged-by-the-user items (not investi
   its own backlogged heuristic). Big project (the full ecology must become deterministic-on-clients, with
   authority handoff) — it dissolves the corpse-position problem and scales. The natural-death scatter above is
   the throwaway interim until this lands.
+  - **PILOT SHIPPED — individual predation S1+S2 (2026-07):** the first slice of this initiative — per-bug
+    DECISIONS on the authority client, deterministic, ~no new traffic. **S1** = one wasp PURSUES a specific fly
+    (`BugAgent` HUNT branch, staggered commit; per-bug strike broad-phase). **S2** = the kill drops a REAL edible
+    corpse and the wasp PAUSES to eat it, with a ~1/4 chance it leaves it (`BugAgent` FEED branch; the corpse rides
+    the ITEM_ROTTED food ledger; consume via the new authority-only `CorpseConsume` opcode 112 → FOOD_CONSUMED).
+    Gated: `sim-determinism --predation-test` (non-vacuous, byte-identical) + Go tests green; committed `c39289b`
+    (S1 `0b7dd3c`). See `architecture_swarm_sync.md` §14.6. **Next — S3:** dial back the swarm-centre steamroll
+    (`predationThink`, scoped to swarm predators) + an `ecology-tuning` re-balance; then arena feel-watch (owner).
+    Breeding/death/hunger/food/Director still server-side — the FULL ecology port is the remaining big project.
 - **Dead-bugs/fruit follow-ups:** ~~predator kills leave a corpse + the hornet feeding-pause (#20)~~ **DONE
   2026-06-30** — feed-pause (`feed_pause_ticks`, server) + client-side LOS (`BugCollision.LineBlocked`, fixes the
   through-bin phantom) + consumed-corpse/lunge VFX (`StrikeVfx`); see `investigations/wasp-attack-indicators-phantom.md`.
