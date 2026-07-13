@@ -2486,6 +2486,38 @@
       }
     }
   },
+  "hornet_nest": {
+    "name": "Hornet Nest",
+    "category": "natural",
+    "sprite_w": 28,
+    "sprite_h": 34,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 6,
+        "required_tool_type": "axe",
+        "required_tool_tier": 2,
+        "drops": [
+          {
+            "item_id": "paper_nest",
+            "count": 3,
+            "chance": 1.0
+          },
+          {
+            "item_id": "wasp_larvae",
+            "count": 3,
+            "chance": 0.9
+          }
+        ]
+      }
+    }
+  },
   "standing_stone": {
     "name": "Standing Stone",
     "category": "natural",

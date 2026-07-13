@@ -371,5 +371,13 @@
    "stone",
    "wood"
   ]
+ },
+ "hornet_nest": {
+  "look": "a large menacing HORNET NEST: a big bulbous football-shaped hive of coarse mottled brown-and-tan paper bands, a wide dark entrance hole low on the front, two chunky yellow-and-black hornets crawling on it",
+  "family": "prop",
+  "materials": [
+   "stone",
+   "wood"
+  ]
  }
 }

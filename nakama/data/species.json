@@ -174,11 +174,11 @@
       ],
       "home_range": 40.0,
       "strike_radius": 3.0,
-      "strike_cooldown_ticks": 100,
+      "strike_cooldown_ticks": 40,
       "kills_per_strike": 1,
       "feed_per_kill": 48.0,
       "feed_pause_ticks": 50,
-      "hunt_speed_mult": 1.5,
+      "hunt_speed_mult": 2.6,
       "deposit_satiation": 80.0,
       "hunt_satiation_threshold": 45.0,
       "nest_occupant": "wasp_nest"
@@ -790,7 +790,7 @@
       "hunt_speed_mult": 1.8,
       "deposit_satiation": 80.0,
       "hunt_satiation_threshold": 45.0,
-      "nest_occupant": "wasp_nest"
+      "nest_occupant": "hornet_nest"
     },
     "lifespan_secs": 9450,
     "lifespan_spread_secs": 2520,
