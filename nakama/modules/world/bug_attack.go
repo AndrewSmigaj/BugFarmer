@@ -20,7 +20,16 @@ const attackSanityMargin = 1.0
 // bugAttackAllowed is the shared authoritative gate every attack style passes through: defend-only (bees/ants),
 // nocturnal-by-day, and subdued. (Per-swarm cooldown + shared invuln + dodge i-frames + sting-immunity live in
 // applyBugAttackToPlayer, so they gate every path too.)
+// peacefulZone reports whether the current zone is a peaceful OBSERVATION zone (bugs ignore the player).
+// Read at all three combat gates so no attack style — sting, contact, lunge, or nest-defend — fires.
+func peacefulZone(state *WorldState) bool {
+	return state.CurrentZone != nil && state.CurrentZone.Peaceful
+}
+
 func (m *Match) bugAttackAllowed(state *WorldState, swarm *entities.SwarmState, species *entities.BugSpecies, atk *entities.AttackConfig) bool {
+	if peacefulZone(state) {
+		return false
+	}
 	if atk.OnlyDefending && swarm.Phase != "defending" {
 		return false
 	}

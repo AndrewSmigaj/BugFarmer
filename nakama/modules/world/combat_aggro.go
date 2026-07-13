@@ -23,7 +23,8 @@ func (m *Match) aggroPlayerThink(
 ) bool {
 	atk := species.AttackProfile()
 	if atk == nil || atk.AggroEnter <= 0 || swarm.Count <= 0 ||
-		(species.Nocturnal && !isNightForHunting(state)) || swarmSubdued(swarm, species) {
+		(species.Nocturnal && !isNightForHunting(state)) || swarmSubdued(swarm, species) ||
+		peacefulZone(state) {
 		swarm.AggroTargetID = ""
 		return false
 	}

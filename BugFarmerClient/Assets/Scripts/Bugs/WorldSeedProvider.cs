@@ -21,6 +21,12 @@ namespace BugFarmer.Bugs
         public long WorldSeed { get; private set; }
 
         /// <summary>
+        /// Observation/arena zone flag from WorldInit: bugs suppress their cosmetic attack/flee reaction to
+        /// the player (paired with the server peace gates) so the player can walk among them undisturbed.
+        /// </summary>
+        public bool Peaceful { get; private set; }
+
+        /// <summary>
         /// True after WorldInit message received from server.
         /// SwarmVisual should not simulate until this is true.
         /// </summary>
@@ -77,6 +83,7 @@ namespace BugFarmer.Bugs
                     var initMsg = JsonUtility.FromJson<WorldInitMessage>(Encoding.UTF8.GetString(state.State));
                     WorldSeed = initMsg.world_seed;
                     CurrentTick = initMsg.tick;
+                    Peaceful = initMsg.peaceful;
                     IsInitialized = true;
                     Debug.Log($"[WorldSeedProvider] Initialized with seed: {WorldSeed}, tick: {CurrentTick}");
                     break;

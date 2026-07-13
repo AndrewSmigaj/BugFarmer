@@ -138,7 +138,7 @@ func (m *Match) predationThink(
 		// §C precedence rule (all three defend entries apply it): defense is suppressed
 		// while (the resident is SUBDUED) or (the nest is SMOKED).
 		nest := state.NestStates[swarm.NestKey]
-		if swarm.Phase != "defending" && nest != nil && !nestDefenseSuppressed(state, nest, swarm) {
+		if swarm.Phase != "defending" && nest != nil && !nestDefenseSuppressed(state, nest, swarm) && !peacefulZone(state) {
 			if pid, px, py, found := m.nearestPlayer(state, float32(nest.GridX)+0.5, float32(nest.GridY)+0.5, entities.NestDefendRadius); found {
 				_ = px
 				_ = py

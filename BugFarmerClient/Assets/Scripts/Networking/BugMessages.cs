@@ -60,6 +60,7 @@ namespace BugFarmer.Networking
     {
         public long world_seed;
         public long tick;
+        public bool peaceful; // observation zone: suppress the cosmetic attack/flee reaction to the player
     }
 
     /// <summary>

@@ -77,6 +77,14 @@ namespace BugFarmer.Bugs
     // FEED path: this is a REAL minimal deterministic registry (a mirror of the client's _food query — MIN over
     // the dict with an ordinal tie-break, iteration-order-independent) so the corpse-seek + eat-vs-leave roll
     // are actually run (a non-vacuous FEED gate), not just compiled.
+    // WorldSeedProvider is the client's world-init singleton (seed + the Peaceful observation flag). Headless:
+    // Instance is null so BugAgent's `Instance != null` guard short-circuits (normal, non-peaceful behavior).
+    public class WorldSeedProvider
+    {
+        public static WorldSeedProvider Instance => null;
+        public bool Peaceful;
+    }
+
     public class InfluenceManager
     {
         public static InfluenceManager Instance;   // settable (harness injects one); null everywhere else

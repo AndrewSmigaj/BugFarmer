@@ -115,6 +115,11 @@ type ZoneConfig struct {
 	// Pure observation, never hashed; production omits it → zero overhead (see profiler.go).
 	Profile bool `json:"profile,omitempty"`
 
+	// Peaceful: OBSERVATION ZONES ONLY — bugs fully ignore the player (no sting/lunge damage, no cloud
+	// chase, no nest-defend). Lets the owner walk among the ecology to watch it undisturbed. Read directly
+	// at the three combat gates (bugAttackAllowed / aggroPlayerThink / nest-defend). Production omits it.
+	Peaceful bool `json:"peaceful,omitempty"`
+
 	// Cross-zone adjacency: edge direction ("north"/"south"/"east"/"west") -> neighbor zoneID.
 	// Walking off an edge with a neighbor hidden-swaps into it (see CrossZoneController). Absent/""
 	// = a hard edge (no crossing). +Y = north, so south edge = y0, north edge = y255.

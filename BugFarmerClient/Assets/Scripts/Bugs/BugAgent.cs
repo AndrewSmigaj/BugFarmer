@@ -415,7 +415,11 @@ namespace BugFarmer.Bugs
         /// </summary>
         private void UpdateBehavior(List<PlayerTarget> players)
         {
-            if (_behavior.PlayerReaction == "ignore" || _behavior.ReactionRadius <= 0)
+            // Peaceful OBSERVATION zone (from WorldInit): suppress the cosmetic attack/flee reaction entirely
+            // so bugs fully ignore the player (paired with the server peace gates). All clients read the same
+            // flag from WorldInit → deterministic. (Instance null in the headless harness → normal behavior.)
+            if (_behavior.PlayerReaction == "ignore" || _behavior.ReactionRadius <= 0
+                || (WorldSeedProvider.Instance != null && WorldSeedProvider.Instance.Peaceful))
             {
                 CurrentBehavior = "wander";
                 TargetPlayerId = null;

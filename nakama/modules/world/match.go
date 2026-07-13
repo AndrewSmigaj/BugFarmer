@@ -516,6 +516,7 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 		worldInit := WorldInitMessage{
 			WorldSeed: worldState.WorldSeed,
 			Tick:      worldState.TickCount,
+			Peaceful:  worldState.CurrentZone != nil && worldState.CurrentZone.Peaceful,
 		}
 		initData, _ := json.Marshal(worldInit)
 		dispatcher.BroadcastMessage(OpCodeWorldInit, initData, []runtime.Presence{presence}, nil, true)

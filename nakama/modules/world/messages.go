@@ -806,6 +806,7 @@ type PickupItemMessage struct {
 type WorldInitMessage struct {
 	WorldSeed int64 `json:"world_seed"`
 	Tick      int64 `json:"tick"`
+	Peaceful  bool  `json:"peaceful,omitempty"` // observation zone: client suppresses the cosmetic attack/flee reaction
 }
 
 // BugSampleQuery identifies a single bug for sampling

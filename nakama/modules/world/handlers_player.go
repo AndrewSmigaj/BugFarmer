@@ -34,6 +34,11 @@ func (m *Match) applyBugAttackToPlayer(
 	player *PlayerState,
 	damage int,
 ) bool {
+	// Peace toggle (belt-and-braces, like subdued): a peaceful OBSERVATION zone deals NO bug damage,
+	// no matter which path reached the funnel (client-authority strike, centipede lunge, ambient).
+	if peacefulZone(state) {
+		return false
+	}
 	// Per-species attack profile (cooldown, sting-class). AttackProfile is never nil for a caller that got
 	// here (they hold an atk), but guard defensively.
 	atk := species.AttackProfile()

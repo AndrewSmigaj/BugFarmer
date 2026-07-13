@@ -110,6 +110,38 @@ func TestCalmSuppressesAmbientSting(t *testing.T) {
 	}
 }
 
+// A peaceful OBSERVATION zone (the peace toggle) suppresses ALL bug→player attacks: a wasp standing
+// on the player draws no sting; flipping peaceful off, the sting is back. (bugAttackAllowed gate.)
+func TestPeacefulZoneSuppressesSting(t *testing.T) {
+	state := predationTestState()
+	state.CurrentZone = &ZoneConfig{ZoneID: "arena", Peaceful: true}
+	m := &Match{}
+	wasp := state.Species["wasp_common"]
+	wasp.AttackDamage = 1
+	wasp.AttackCooldown = 0.1
+
+	sw := newTestSwarm("w1", 5, 10, 10)
+	sw.SpeciesID = "wasp_common"
+	state.Swarms[sw.ID] = sw
+	p := &PlayerState{UserID: "p1", HP: 10, MaxHP: 10,
+		Position: entities.EntityPosition{LocalX: 10.5, LocalY: 10}} // inside stingRange
+	state.Players = map[string]*PlayerState{"p1": p}
+	state.TickCount = 1000
+
+	// Peaceful: standing IN the swarm draws no sting.
+	m.checkBugAttacks(nopRuntimeLogger(), nopDispatcher{}, state, sw, wasp, 32)
+	if p.HP != 10 {
+		t.Fatalf("peaceful-zone wasp stung: HP=%d", p.HP)
+	}
+	// Peace off: the sting returns.
+	state.CurrentZone.Peaceful = false
+	state.TickCount += 100 // clear cooldown/invuln windows
+	m.checkBugAttacks(nopRuntimeLogger(), nopDispatcher{}, state, sw, wasp, 32)
+	if p.HP != 9 {
+		t.Fatalf("non-peaceful wasp must sting: HP=%d", p.HP)
+	}
+}
+
 // --- funnel 2: the centipede action machine ---
 
 func TestCalmCentipedeNoWindupStart(t *testing.T) {
