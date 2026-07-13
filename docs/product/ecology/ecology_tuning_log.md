@@ -441,3 +441,21 @@ named bottlenecks with next levers:
 NOTE for the zones: tunnel geometry changes this calculus entirely (scouts live IN the
 colony, corridors constrain walks into usable routes, food webs are richer). Re-run the
 bar on ant_tunnels_30's real geometry before more open-field tuning.
+
+## 2026-07-13 — "the wasp economy is broken" was WRONG (three stacked confounds; fixed, commit 79bc376)
+The long-standing "wasp square-wave / known-broken nest economy (PREDLOG≈0)" verdict (§6, the
+2026-07-06 note) was **an artifact, not a broken engine**. Three stacked issues:
+1. **The `run_config` rig is predation-BLIND.** Predation went client-authority (Phase 2 removed the
+   server autonomous `checkPredationStrike`), and the ecology rig uses the PASSIVE .NET sync-harness —
+   it never runs `RunPredationStrikes`, so `d_predation`/`PREDLOG` read 0 no matter the tuning. Every
+   wasp number logged since Phase 2 was measured in a world where nothing hunts.
+2. **The wasp zone silently ran HORNETS.** `hornet_giant` (+`wasp_soldier`, added `3e37e0e`) shared
+   `nest_occupant="wasp_nest"`; sorted resolution → hornet won every nest → `wasp_common` had 0 pop.
+3. **The aerial predator couldn't catch prey:** `hunt_speed_mult` 1.5/1.8 < the fly's 2.4× flee.
+**Fix:** `hornet_giant` → its own `hornet_nest`; `wasp_common` hunts at 2.6 with `strike_cooldown` 40.
+**Measured (headless UNITY player, wiped zone, spawned on a nest — the ONLY faithful way, see the
+`nest-occupant-hijack-and-ecology-measure` memory):** nests found `wasp_common`, ~41 strikes/run,
+fly `d_predation` 0→38/day, and **the nest cycle completes end-to-end — a nest hatched 4→7 with
+`b_reseed=0` (self-sustaining).** The economy works; day-1 wasp `avg_sat` is low (normal day-1 fly
+chaos) — that's the next tuning target, not a structural break. **Use the Unity player + ECOSTATS for
+any predator ecology work; the `run_config` rig can only tune the non-predation base (flies/plants).**
