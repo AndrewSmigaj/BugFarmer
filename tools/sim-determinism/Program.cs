@@ -72,11 +72,82 @@ namespace SimDeterminism
             return failures == 0 ? 0 : 1;
         }
 
+        // --predation-test: a predator swarm (wasp_common) hunts a nearby prey swarm (fly_common). Each tick the
+        // predators are fed the prey's positions (preyBugs), driving the individual HUNT pursuit. Proves the
+        // pursuit + the per-bug ShouldHunt stagger + the target-commit are DETERMINISTIC (two runs byte-identical,
+        // non-vacuous — bugs pursue + move). Movement-only (the harness has no strike/kill — that's Go-tested).
+        static int RunPredationTest()
+        {
+            Console.WriteLine($"[sim-determinism] repo={RepoRoot}");
+            Console.WriteLine("[sim-determinism] PREDATION-TEST: 8 wasp_common hunt 20 fly_common — the individual HUNT pursuit must be reproducible");
+            long[] a = RunPredationSim();
+            long[] b = RunPredationSim();
+            int firstDiff = -1;
+            for (int t = 0; t < Ticks; t++) if (a[t] != b[t]) { firstDiff = t; break; }
+            bool moved = a[Ticks - 1] != a[0];
+            Console.WriteLine($"[sim-determinism] final hash A={a[Ticks - 1]:X16}  B={b[Ticks - 1]:X16}   moved={moved}");
+            if (!moved) { Console.WriteLine("PREDATION-TEST: INCONCLUSIVE — bugs never moved."); return 2; }
+            if (firstDiff >= 0) { Console.WriteLine($"PREDATION-TEST: ❌ FAIL — diverged at tick {firstDiff}. The HUNT pursuit is NONDETERMINISTIC."); return 1; }
+            Console.WriteLine("PREDATION-TEST: ✅ PASS — the individual predator pursuit is deterministic (two runs byte-identical).");
+            return 0;
+        }
+
+        static long[] RunPredationSim()
+        {
+            var predators = new List<BugAgent>();
+            var prey = new List<BugAgent>();
+            for (int i = 0; i < 8; i++)
+            {
+                double ang = i * 2.0 * Math.PI / 8;
+                predators.Add(new BugAgent(WorldSeed, "swarm_wasp_common", "wasp_common", i,
+                    new FixedPoint2(FixedPoint.FromFloat(100f + 3f * (float)Math.Cos(ang)), FixedPoint.FromFloat(100f + 3f * (float)Math.Sin(ang)))));
+            }
+            for (int i = 0; i < 20; i++)
+            {
+                double ang = i * 2.0 * Math.PI / 20;
+                prey.Add(new BugAgent(WorldSeed, "swarm_fly_common", "fly_common", i,
+                    new FixedPoint2(FixedPoint.FromFloat(104f + 3f * (float)Math.Cos(ang)), FixedPoint.FromFloat(100f + 3f * (float)Math.Sin(ang)))));
+            }
+            var noPlayers = new List<PlayerTarget>();
+            var hashes = new long[Ticks];
+            for (int t = 0; t < Ticks; t++)
+            {
+                // capture LAST tick's prey positions (mirror the game: predators pursue last-tick positions)
+                var preyBugs = new List<(int bugId, FixedPoint2 pos)>();
+                foreach (var b in prey.OrderBy(x => x.BugId)) preyBugs.Add((b.BugId, b.Position));
+                // prey wander around a slowly-moving centre near (104,100); predators loiter near (100,100)
+                var preyCentre = new FixedPoint2(FixedPoint.FromFloat(104f + 2f * (float)Math.Cos(t * 0.02f)),
+                                                 FixedPoint.FromFloat(100f + 2f * (float)Math.Sin(t * 0.02f)));
+                var predCentre = new FixedPoint2(FixedPoint.FromFloat(100f), FixedPoint.FromFloat(100f));
+                foreach (var b in prey.OrderBy(x => x.BugId)) b.SimulateTick(preyCentre, noPlayers, t);
+                foreach (var b in predators.OrderBy(x => x.BugId)) b.SimulateTick(predCentre, noPlayers, t, preyBugs);
+                hashes[t] = HashPredation(predators, prey);
+            }
+            return hashes;
+        }
+
+        static long HashPredation(List<BugAgent> predators, List<BugAgent> prey)
+        {
+            unchecked
+            {
+                ulong hash = 14695981039346656037UL; const ulong prime = 1099511628211UL;
+                foreach (var b in predators.OrderBy(x => x.BugId).Concat(prey.OrderBy(x => x.BugId)))
+                {
+                    hash ^= (ulong)(long)b.Position.X.Value; hash *= prime;
+                    hash ^= (ulong)(long)b.Position.Y.Value; hash *= prime;
+                    hash ^= (ulong)(long)b.HuntTargetBugId; hash *= prime; // include the commit so a desync there is caught
+                }
+                return (long)hash;
+            }
+        }
+
         public static int Main(string[] args)
         {
             RepoRoot = FindRepoRoot();
             if (args.Contains("--los-test"))
                 return RunLosTest();
+            if (args.Contains("--predation-test"))
+                return RunPredationTest();
             bool selftest = args.Contains("--selftest");
             bool attackTest = args.Contains("--attack-test");
             Console.WriteLine($"[sim-determinism] repo={RepoRoot}");

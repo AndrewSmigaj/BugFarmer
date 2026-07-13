@@ -391,7 +391,8 @@ namespace BugFarmer.Entities
         /// </summary>
         /// <param name="tick">The current simulation tick from SwarmManager</param>
         /// <param name="players">Player targets from InfluenceManager (deterministic, sorted by playerId)</param>
-        public void SimulateTick(long tick, List<PlayerTarget> players)
+        public void SimulateTick(long tick, List<PlayerTarget> players,
+                                 IReadOnlyList<(int bugId, FixedPoint2 pos)> preyBugs = null)
         {
             using var _perf = PerfProfiler.Sample("Sim.SwarmTick");
             if (!WorldSeedProvider.Instance?.IsInitialized ?? true)
@@ -434,7 +435,7 @@ namespace BugFarmer.Entities
             // 2. Simulate each bug in deterministic order
             foreach (var bugId in sortedBugIds)
             {
-                _bugs[bugId].Agent.SimulateTick(_simCenter, players, tick);
+                _bugs[bugId].Agent.SimulateTick(_simCenter, players, tick, preyBugs);
             }
 
             // Debug: log first bug's state every 100 ticks (sample one swarm)
@@ -776,6 +777,7 @@ namespace BugFarmer.Entities
                 current_dir_x = movementState.CurrentDirX,
                 current_dir_y = movementState.CurrentDirY,
                 land_ticks = agent.LandTicks, // feed land/hold timer (history-dependent — must ride snapshot)
+                hunt_target = agent.HuntTargetBugId, // committed prey bug id (history-dependent — rides snapshot)
                 // DIAGNOSTIC (re-root investigation)
                 spawn_tick = agent.SpawnTick,
                 spawn_source = agent.SpawnSource
@@ -855,6 +857,7 @@ namespace BugFarmer.Entities
                     };
                     agent.Rng.State = data.rng_state;
                     agent.LandTicks = data.land_ticks; // restore feed land/hold timer (else feeding bugs desync)
+                    agent.HuntTargetBugId = data.hunt_target; // restore the committed chase (else hunters desync)
                     agent.SpawnSource = "snapshotApply"; // DIAGNOSTIC: got authoritative per-bug state
 
                     // Behavior state

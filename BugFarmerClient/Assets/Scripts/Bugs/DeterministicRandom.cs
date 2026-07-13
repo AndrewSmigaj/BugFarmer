@@ -17,6 +17,8 @@ namespace BugFarmer.Bugs
         public const int TargetOffset = 7;
         public const int Land = 8;        // feed-at-food: landing duration
         public const int Participate = 9; // feed-at-food: per-bug per-window join roll
+        public const int Hunt = 10;       // individual predation: per-bug per-window "do I pursue prey now" roll
+        public const int LeaveCorpse = 11; // individual predation (S2): eat-vs-leave the corpse roll
     }
 
     /// <summary>

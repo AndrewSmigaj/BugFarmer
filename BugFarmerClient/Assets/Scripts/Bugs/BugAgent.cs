@@ -47,6 +47,12 @@ namespace BugFarmer.Bugs
         public string CurrentBehavior; // "wander", "flee", "attack", "curious"
         public string TargetPlayerId;
 
+        // Individual predation (S1): the committed prey bug id this predator is pursuing (-1 = none). Deterministic
+        // per-bug state — the prey SWARM is the swarm's TargetPreyID; only the individual prey bug id lives here.
+        // Rides the snapshot (like TargetPlayerId) so late-joiners keep the same chase.
+        public int HuntTargetBugId = -1;
+        private const int HuntWindowTicks = 30; // per-bug hunt-entry roll re-rolls every 3s → a rolling subset pursues
+
         // Alert state (stochastic reaction)
         private bool _isAlerted;
         private int _alertCheckCooldown;
@@ -213,7 +219,10 @@ namespace BugFarmer.Bugs
         /// <param name="swarmCenter">Current swarm center position</param>
         /// <param name="players">Player positions (from InfluenceManager)</param>
         /// <param name="currentTick">Current simulation tick for counter-based RNG</param>
-        public void SimulateTick(FixedPoint2 swarmCenter, List<PlayerTarget> players, long currentTick)
+        /// <param name="preyBugs">When this bug's swarm is hunting, the target prey swarm's (bugId, position) as of
+        /// last tick — deterministic on every client. null = not hunting. Drives the individual HUNT pursuit.</param>
+        public void SimulateTick(FixedPoint2 swarmCenter, List<PlayerTarget> players, long currentTick,
+                                 IReadOnlyList<(int bugId, FixedPoint2 pos)> preyBugs = null)
         {
             // Store tick for counter-based RNG calls
             _currentTick = currentTick;
@@ -258,6 +267,13 @@ namespace BugFarmer.Bugs
                     break;
 
                 default: // "wander" or "ignore"
+                    // INDIVIDUAL PREDATION (S1): when this swarm is hunting (preyBugs present) and this bug is
+                    // committed to a chase OR its per-window stagger roll says go, PURSUE a specific prey bug —
+                    // deterministic, so every client sees the SAME wasp chase the SAME fly. Center-riding crawlers
+                    // (SkipCollision, e.g. centipedes) keep their own server-driven surge; fliers/walkers pursue.
+                    if (!_behavior.SkipCollision && preyBugs != null && preyBugs.Count > 0
+                        && (HuntTargetBugId >= 0 || ShouldHunt()) && TryHuntMove(preyBugs))
+                        break;
                     // FEEDING VISUAL: when the swarm centre is at a registered food source,
                     // bugs approach it, LAND (pause), then resume — driven purely by
                     // deterministic inputs (event-driven food registry + derived centre +
@@ -309,6 +325,45 @@ namespace BugFarmer.Bugs
             }
             else
                 Movement.UpdateMovement(this, target, _attackHoverRadiusSqr); // HOVER around the player at standoff
+        }
+
+        /// <summary>Per-bug hunt-ENTRY stagger: ~1/3 of the swarm rolls in per window (re-rolls every
+        /// HuntWindowTicks → a rolling subset pursues, not the whole cloud). Deterministic (counter-RNG on the
+        /// window). A committed hunter (HuntTargetBugId set) keeps going regardless — this only gates entry.</summary>
+        private bool ShouldHunt()
+        {
+            long window = _currentTick / HuntWindowTicks;
+            return CounterRng.Chance(_worldSeed, SwarmId, BugId, window, RngPurpose.Hunt, 1, 3);
+        }
+
+        /// <summary>Individual pursuit: steer toward the COMMITTED prey bug (resolve its current position from
+        /// preyBugs) — or, on a fresh entry, commit the NEAREST prey bug and steer to it. Returns false if the
+        /// committed target is gone (drop the chase → caller wanders; re-entry re-gated next tick) or no prey
+        /// exists. Deterministic: fixed-point distances + ascending-bug-id tie-break, so every client's wasp
+        /// chases the same fly. Steers at the movement's dash speed (MoveToward) so it out-paces a wandering fly.</summary>
+        private bool TryHuntMove(IReadOnlyList<(int bugId, FixedPoint2 pos)> preyBugs)
+        {
+            // 1. Committed target still alive? Pursue it.
+            if (HuntTargetBugId >= 0)
+            {
+                for (int i = 0; i < preyBugs.Count; i++)
+                    if (preyBugs[i].bugId == HuntTargetBugId) { Movement.MoveToward(this, preyBugs[i].pos); return true; }
+                HuntTargetBugId = -1; // target died/gone — drop the chase (re-entry re-gated by ShouldHunt)
+                return false;
+            }
+            // 2. Fresh entry (ShouldHunt already rolled true): commit the NEAREST prey bug.
+            int best = -1; long bestSqr = long.MaxValue; FixedPoint2 bestPos = default;
+            for (int i = 0; i < preyBugs.Count; i++)
+            {
+                long d = Position.SqrDistanceTo(preyBugs[i].pos).Value;
+                int bid = preyBugs[i].bugId;
+                if (d < bestSqr || (d == bestSqr && (best < 0 || bid < best)))
+                { bestSqr = d; best = bid; bestPos = preyBugs[i].pos; }
+            }
+            if (best < 0) return false;
+            HuntTargetBugId = best;
+            Movement.MoveToward(this, bestPos);
+            return true;
         }
 
         /// <summary>

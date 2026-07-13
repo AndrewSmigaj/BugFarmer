@@ -243,6 +243,7 @@ namespace BugFarmer.Networking
         public int intent_target_x, intent_target_y; // Gliding: intent target
         public int current_dir_x, current_dir_y;     // Gliding: current direction
         public int land_ticks;                       // Feed land/hold timer (>0 = landed on food); history-dependent
+        public int hunt_target = -1;                 // Individual predation: committed prey bug id (-1 = none); history-dependent
 
         // DIAGNOSTIC ONLY (re-root investigation; never hashed): provenance of this bug on this client.
         public long spawn_tick = -1;

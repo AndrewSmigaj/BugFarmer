@@ -569,11 +569,30 @@ namespace BugFarmer.Entities
                 DebugFileLogger.Log(msg);
             }
 
+            // INDIVIDUAL PREDATION (S1): resolve each HUNTING predator swarm's target-prey positions (last tick,
+            // deterministic — captured BEFORE the sim loop so every predator pursues the same last-tick positions
+            // regardless of swarm iteration order). GetHuntingSwarms is InfluenceManager's predator→{TargetPreyId}
+            // map (the same source RunPredationStrikes uses). Passed into SimulateTick so bugs pursue individual prey.
+            Dictionary<string, IReadOnlyList<(int bugId, FixedPoint2 pos)>> huntTargets = null;
+            var influence = InfluenceManager.Instance;
+            if (influence != null)
+            {
+                foreach (var kv in influence.GetHuntingSwarms())
+                {
+                    var prey = GetSwarm(kv.Value.TargetPreyId);
+                    if (prey == null || prey.Count == 0) continue;
+                    huntTargets ??= new Dictionary<string, IReadOnlyList<(int bugId, FixedPoint2 pos)>>();
+                    huntTargets[kv.Key] = prey.GetAllBugsAliveSorted().ToList();
+                }
+            }
+
             // 4. Simulate all bugs for the NEW tick
             // FIX #2: MUST iterate in deterministic order (sorted by swarmId)
             foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
             {
-                _swarms[swarmId].SimulateTick(_simulationTick, players);
+                IReadOnlyList<(int bugId, FixedPoint2 pos)> prey = null;
+                huntTargets?.TryGetValue(swarmId, out prey);
+                _swarms[swarmId].SimulateTick(_simulationTick, players, prey);
             }
 
             // 4b. Phase 2 — individual-fly predation strike (AUTHORITY ONLY, LIVE only). Positions are
@@ -635,11 +654,13 @@ namespace BugFarmer.Entities
                 var rFixed = new FixedPoint { Value = strike.StrikeRadiusFixed };
                 long radiusSqr = (rFixed * rFixed).Value;
 
-                // BROAD-PHASE: skip the O(P×Q) per-bug scan unless the swarm CENTRES are within
-                // strike_radius + both cloud radii (threshold squared via FixedPoint too, same ×1000 scale).
-                var broadFixed = FixedPoint.FromFloat((strike.StrikeRadiusFixed / 1000f) + predator.Radius + prey.Radius);
-                long broadSqr = (broadFixed * broadFixed).Value;
-                if (predator.SimCenter.SqrDistanceTo(prey.SimCenter).Value > broadSqr) continue;
+                // PER-BUG BROAD-PHASE (individual predation): the old swarm-CENTRE gate skipped the scan unless the
+                // clouds overlapped — but an individual wasp that peeled off to CHASE a distant fly leaves its
+                // cloud, so a centre gate would wrongly skip its strike. Instead gate PER predator bug: it scans
+                // prey only if IT is near the prey cloud (strike_radius + prey.Radius of prey.SimCenter). A
+                // predator bug far from prey skips cheaply; a pursuer near the prey still strikes. (Threshold ×1000.)
+                var perBugFixed = FixedPoint.FromFloat((strike.StrikeRadiusFixed / 1000f) + prey.Radius);
+                long perBugBroadSqr = (perBugFixed * perBugFixed).Value;
 
                 int kills = strike.KillsPerStrike > 0 ? strike.KillsPerStrike : 1;
                 var preyBugs = prey.GetAllBugsAliveSorted().ToList();
@@ -653,6 +674,7 @@ namespace BugFarmer.Entities
                 foreach (var (pbId, pbPos) in predator.GetAllBugsAliveSorted())
                 {
                     if (victimIds.Count >= kills) break;
+                    if (pbPos.SqrDistanceTo(prey.SimCenter).Value > perBugBroadSqr) continue; // this predator bug is far from the prey cloud
                     int bestId = -1;
                     long bestSqr = long.MaxValue;
                     FixedPoint2 bestPos = default;
@@ -2433,6 +2455,8 @@ namespace BugFarmer.Entities
                         hash ^= (ulong)bug.vx;
                         hash *= prime;
                         hash ^= (ulong)bug.vy;
+                        hash *= prime;
+                        hash ^= (ulong)bug.hunt_target; // individual-predation commit — catches a chase-target desync directly
                         hash *= prime;
                     }
                 }
