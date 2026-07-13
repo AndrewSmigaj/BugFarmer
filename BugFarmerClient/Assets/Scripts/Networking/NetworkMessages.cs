@@ -45,6 +45,15 @@ namespace BugFarmer.Networking
         public const int ZoneRoofMap = 109;      // S->C (join + resync): zone-complete authored roof cell set (cosmetic — underground lighting)
         public const int BugPlayerStrike = 110;  // C->S (authority only): individual bug(s) that stung a player (replaces center-sting)
         public const int PlayerDodge = 111;      // C->S: player dodge-rolled — server grants a brief i-frame window
+        public const int CorpseConsume = 112;    // C->S (authority only): a predator finished eating a corpse → remove it
+    }
+
+    /// <summary>C->S (authority only): an individual predator ate a corpse to completion — remove it (server owns the
+    /// ground item; it vanishes on every client via FOOD_CONSUMED). A LEFT corpse gets no message and rots away.</summary>
+    [System.Serializable]
+    public class CorpseConsumeMessage
+    {
+        public string food_id;
     }
 
     /// <summary>

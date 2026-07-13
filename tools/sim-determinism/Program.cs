@@ -85,15 +85,21 @@ namespace SimDeterminism
             int firstDiff = -1;
             for (int t = 0; t < Ticks; t++) if (a[t] != b[t]) { firstDiff = t; break; }
             bool moved = a[Ticks - 1] != a[0];
-            Console.WriteLine($"[sim-determinism] final hash A={a[Ticks - 1]:X16}  B={b[Ticks - 1]:X16}   moved={moved}");
+            Console.WriteLine($"[sim-determinism] final hash A={a[Ticks - 1]:X16}  B={b[Ticks - 1]:X16}   moved={moved}  feedFired={_predFeedFired}  consumeRolled={_predConsumeRolled}");
             if (!moved) { Console.WriteLine("PREDATION-TEST: INCONCLUSIVE — bugs never moved."); return 2; }
-            if (firstDiff >= 0) { Console.WriteLine($"PREDATION-TEST: ❌ FAIL — diverged at tick {firstDiff}. The HUNT pursuit is NONDETERMINISTIC."); return 1; }
-            Console.WriteLine("PREDATION-TEST: ✅ PASS — the individual predator pursuit is deterministic (two runs byte-identical).");
+            if (!_predFeedFired) { Console.WriteLine("PREDATION-TEST: INCONCLUSIVE — the S2 FEED path never ran (gate would be vacuous)."); return 2; }
+            if (firstDiff >= 0) { Console.WriteLine($"PREDATION-TEST: ❌ FAIL — diverged at tick {firstDiff}. The HUNT/FEED path is NONDETERMINISTIC."); return 1; }
+            Console.WriteLine("PREDATION-TEST: ✅ PASS — individual pursuit AND the S2 corpse-feed (approach + dwell + eat-vs-leave roll) are deterministic (two runs byte-identical).");
             return 0;
         }
 
         static long[] RunPredationSim()
         {
+            // S2 FEED gate: a REAL deterministic food registry (the shim mirrors the client's _food MIN-query) so
+            // the corpse-seek + eat-vs-leave roll actually EXECUTE — a non-vacuous FEED gate, not just compiled.
+            var influence = new BugFarmer.Bugs.InfluenceManager();
+            BugFarmer.Bugs.InfluenceManager.Instance = influence;
+
             var predators = new List<BugAgent>();
             var prey = new List<BugAgent>();
             for (int i = 0; i < 8; i++)
@@ -108,10 +114,27 @@ namespace SimDeterminism
                 prey.Add(new BugAgent(WorldSeed, "swarm_fly_common", "fly_common", i,
                     new FixedPoint2(FixedPoint.FromFloat(104f + 3f * (float)Math.Cos(ang)), FixedPoint.FromFloat(100f + 3f * (float)Math.Sin(ang)))));
             }
+
+            // Scenario A — force predator 0 through the FULL feed lifecycle (approach the corpse, dwell FeedTicks,
+            // then the deterministic eat-vs-leave roll → WantsConsumeCorpse). Exercises BugAgent.HandleFeed end-to-end.
+            influence.HydrateFood("corpse_a", new FixedPoint2(FixedPoint.FromFloat(101f), FixedPoint.FromFloat(100f)), 10);
+            predators[0].FeedCorpseId = "corpse_a";
+            predators[0].FeedUntilTick = 22;   // > FeedTicks entry so the dwell runs, then the roll at t=22
+
+            // Scenario B — exercise the HUNT→target-died→seek-corpse branch: commit predator 1 to prey bug 5; at
+            // killTick remove prey 5 (its "kill") and drop a corpse at predator 1's cell so TryHuntMove finds it.
+            predators[1].HuntTargetBugId = 5;
+            const int killTick = 15;
+
             var noPlayers = new List<PlayerTarget>();
             var hashes = new long[Ticks];
             for (int t = 0; t < Ticks; t++)
             {
+                if (t == killTick)
+                {
+                    prey.RemoveAll(b => b.BugId == 5);                       // "kill" predator 1's committed prey
+                    influence.HydrateFood("corpse_b", predators[1].Position, 10); // corpse at the hunter's cell
+                }
                 // capture LAST tick's prey positions (mirror the game: predators pursue last-tick positions)
                 var preyBugs = new List<(int bugId, FixedPoint2 pos)>();
                 foreach (var b in prey.OrderBy(x => x.BugId)) preyBugs.Add((b.BugId, b.Position));
@@ -121,10 +144,20 @@ namespace SimDeterminism
                 var predCentre = new FixedPoint2(FixedPoint.FromFloat(100f), FixedPoint.FromFloat(100f));
                 foreach (var b in prey.OrderBy(x => x.BugId)) b.SimulateTick(preyCentre, noPlayers, t);
                 foreach (var b in predators.OrderBy(x => x.BugId)) b.SimulateTick(predCentre, noPlayers, t, preyBugs);
+                // Non-vacuity: record that the FEED path actually executed (pred 0 forced-dwell OR pred 1 entered
+                // FEED via the hunt→corpse branch, OR any predator rolled CONSUME) — proves the gate isn't hollow.
+                if (predators[0].FeedUntilTick > 0 || predators[1].FeedCorpseId != null)
+                    _predFeedFired = true;
+                foreach (var b in predators)
+                    if (b.WantsConsumeCorpse != null && b.WantsConsumeCorpse.Length > 0) _predConsumeRolled = true;
                 hashes[t] = HashPredation(predators, prey);
             }
+            BugFarmer.Bugs.InfluenceManager.Instance = null; // don't leak the registry into other scenarios
             return hashes;
         }
+
+        static bool _predFeedFired;      // set true if the FEED lifecycle ran at all (non-vacuity)
+        static bool _predConsumeRolled;  // set true if the eat-vs-leave roll ever landed on CONSUME
 
         static long HashPredation(List<BugAgent> predators, List<BugAgent> prey)
         {
@@ -136,6 +169,8 @@ namespace SimDeterminism
                     hash ^= (ulong)(long)b.Position.X.Value; hash *= prime;
                     hash ^= (ulong)(long)b.Position.Y.Value; hash *= prime;
                     hash ^= (ulong)(long)b.HuntTargetBugId; hash *= prime; // include the commit so a desync there is caught
+                    hash ^= (ulong)(long)b.FeedUntilTick; hash *= prime;   // S2: catch a feed-timer desync
+                    hash ^= (b.WantsConsumeCorpse != null && b.WantsConsumeCorpse.Length > 0 ? 1UL : 0UL); hash *= prime; // S2: the eat-vs-leave roll
                 }
                 return (long)hash;
             }

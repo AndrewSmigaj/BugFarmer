@@ -778,6 +778,8 @@ namespace BugFarmer.Entities
                 current_dir_y = movementState.CurrentDirY,
                 land_ticks = agent.LandTicks, // feed land/hold timer (history-dependent — must ride snapshot)
                 hunt_target = agent.HuntTargetBugId, // committed prey bug id (history-dependent — rides snapshot)
+                feed_until = agent.FeedUntilTick,    // corpse-eating timer (history-dependent — rides snapshot)
+                feed_corpse_id = agent.FeedCorpseId, // the corpse being eaten (history-dependent — rides snapshot)
                 // DIAGNOSTIC (re-root investigation)
                 spawn_tick = agent.SpawnTick,
                 spawn_source = agent.SpawnSource
@@ -806,6 +808,24 @@ namespace BugFarmer.Entities
         {
             foreach (var bugId in _bugs.Keys.OrderBy(id => id))
                 yield return (bugId, _bugs[bugId].Agent.Position);
+        }
+
+        /// <summary>S2 (authority): collect + CLEAR each bug's pending corpse-consume (a completed feed that rolled
+        /// CONSUME). Returns the food ids to report so the server removes those corpses; the roll is deterministic
+        /// (every client agrees) but only the authority reports (dedup). null if none this tick.</summary>
+        public List<string> DrainCorpseConsumes()
+        {
+            List<string> ids = null;
+            foreach (var bug in _bugs.Values)
+            {
+                var a = bug.Agent;
+                if (!string.IsNullOrEmpty(a.WantsConsumeCorpse))
+                {
+                    (ids ??= new List<string>()).Add(a.WantsConsumeCorpse);
+                    a.WantsConsumeCorpse = "";
+                }
+            }
+            return ids;
         }
 
         /// <summary>
@@ -858,6 +878,8 @@ namespace BugFarmer.Entities
                     agent.Rng.State = data.rng_state;
                     agent.LandTicks = data.land_ticks; // restore feed land/hold timer (else feeding bugs desync)
                     agent.HuntTargetBugId = data.hunt_target; // restore the committed chase (else hunters desync)
+                    agent.FeedUntilTick = data.feed_until;    // restore the corpse-eat timer (else feeders desync)
+                    agent.FeedCorpseId = data.feed_corpse_id;
                     agent.SpawnSource = "snapshotApply"; // DIAGNOSTIC: got authoritative per-bug state
 
                     // Behavior state

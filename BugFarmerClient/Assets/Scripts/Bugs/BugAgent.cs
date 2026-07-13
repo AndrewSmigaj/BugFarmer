@@ -53,6 +53,16 @@ namespace BugFarmer.Bugs
         public int HuntTargetBugId = -1;
         private const int HuntWindowTicks = 30; // per-bug hunt-entry roll re-rolls every 3s → a rolling subset pursues
 
+        // Individual predation FEED (S2): after killing its prey a predator PAUSES at the fresh corpse and eats it
+        // for FeedTicks, then a counter-RNG roll CONSUMES it (WantsConsumeCorpse → the authority reports the
+        // removal) or LEAVES it (rots naturally). FeedUntilTick/FeedCorpseId ride the snapshot (like HuntTargetBugId).
+        public long FeedUntilTick;             // > currentTick = currently eating a corpse (absolute tick, like _currentTick)
+        public string FeedCorpseId;            // the corpse (food id) being eaten
+        public string WantsConsumeCorpse = ""; // TRANSIENT (not snapshot): set the tick a feed ends with a CONSUME
+                                               // roll; SwarmManager (authority) reads it that tick → reports → removes.
+        private const int FeedTicks = 25;      // ~2.5s pause-and-eat at the corpse
+        private const float CorpseEatRange = 2.0f; // must be ~on the fresh kill to start eating it
+
         // Alert state (stochastic reaction)
         private bool _isAlerted;
         private int _alertCheckCooldown;
@@ -267,6 +277,10 @@ namespace BugFarmer.Bugs
                     break;
 
                 default: // "wander" or "ignore"
+                    // INDIVIDUAL PREDATION FEED (S2): if I'm eating a fresh kill's corpse, PAUSE on it and eat —
+                    // priority over re-hunting so the kill→eat beat reads on screen; ends with a consume-or-leave roll.
+                    if (!_behavior.SkipCollision && FeedUntilTick > 0 && HandleFeed())
+                        break;
                     // INDIVIDUAL PREDATION (S1): when this swarm is hunting (preyBugs present) and this bug is
                     // committed to a chase OR its per-window stagger roll says go, PURSUE a specific prey bug —
                     // deterministic, so every client sees the SAME wasp chase the SAME fly. Center-riding crawlers
@@ -349,7 +363,16 @@ namespace BugFarmer.Bugs
                 for (int i = 0; i < preyBugs.Count; i++)
                     if (preyBugs[i].bugId == HuntTargetBugId) { Movement.MoveToward(this, preyBugs[i].pos); return true; }
                 HuntTargetBugId = -1; // target died/gone — drop the chase (re-entry re-gated by ShouldHunt)
-                return false;
+                // S2: if it was KILLED, a fresh corpse dropped right where I am — start eating it (pause + feed).
+                var im = InfluenceManager.Instance;
+                if (im != null && im.TryGetNearestFoodId(Position, CorpseEatRange, out var cid, out var cpos))
+                {
+                    FeedCorpseId = cid;
+                    FeedUntilTick = _currentTick + FeedTicks;
+                    Movement.MoveTowardSlow(this, cpos); // head onto the corpse
+                    return true;
+                }
+                return false; // it fled (no corpse) → wander / re-hunt
             }
             // 2. Fresh entry (ShouldHunt already rolled true): commit the NEAREST prey bug.
             int best = -1; long bestSqr = long.MaxValue; FixedPoint2 bestPos = default;
@@ -364,6 +387,26 @@ namespace BugFarmer.Bugs
             HuntTargetBugId = best;
             Movement.MoveToward(this, bestPos);
             return true;
+        }
+
+        /// <summary>S2 — eat the fresh kill's corpse: HOLD on it for FeedTicks, then a counter-RNG roll CONSUMES it
+        /// (WantsConsumeCorpse → the authority reports the removal so it vanishes) or LEAVES it (rots naturally).
+        /// Returns true while eating (owns movement). Deterministic (counter-RNG on the tick); if the corpse
+        /// vanishes mid-feed (consumed/rotted) the feed ends cleanly.</summary>
+        private bool HandleFeed()
+        {
+            var im = InfluenceManager.Instance;
+            if (_currentTick < FeedUntilTick)
+            {
+                if (im != null && im.TryGetFoodPos(FeedCorpseId, out var pos)) { Movement.MoveTowardSlow(this, pos); return true; }
+                FeedUntilTick = 0; FeedCorpseId = null; return false; // corpse gone → stop
+            }
+            // feed ENDED this tick: consume-or-leave roll (~1/4 LEAVE).
+            FeedUntilTick = 0;
+            bool leave = CounterRng.Chance(_worldSeed, SwarmId, BugId, _currentTick, RngPurpose.LeaveCorpse, 1, 4);
+            if (!leave) WantsConsumeCorpse = FeedCorpseId; // the AUTHORITY reports this → server removes the corpse
+            FeedCorpseId = null;
+            return false; // done → fall through to hunt/wander (moves off the corpse)
         }
 
         /// <summary>

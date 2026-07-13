@@ -509,6 +509,17 @@ func (m *Match) applyPredationStrike(
 	state.Stats.recordDeath(prey.SpeciesID, DeathPredation, len(removed))
 	state.Stats.recordPredation(predator.SpeciesID, prey.SpeciesID, len(removed))
 
+	// S2 individual predation: drop a REAL edible corpse (dead_<prey>) AT each victim so the individual
+	// predator can go eat it (or leave it). Predation was corpse-less before (only a fading VFX); the client
+	// FEED behaviour + the corpse-consume report do the eating. Falls back to the predator centre if a victim
+	// cell is blocked. Edible (food_value>0) so a LEFT corpse also feeds detritivores / rots away naturally.
+	if preySpecies != nil && preySpecies.CarcassItem != "" {
+		fbx, fby := predator.WorldX(chunkSize), predator.WorldY(chunkSize)
+		for i := 0; i < len(victimX) && i < len(victimY); i++ {
+			m.spawnCarcass(logger, dispatcher, state, preySpecies.CarcassItem, victimX[i], victimY[i], fbx, fby, chunkSize)
+		}
+	}
+
 	predator.LastStrikeTick = state.TickCount
 	predator.HuntStartTick = state.TickCount // a kill is progress: the timeout re-arms
 	predator.Satiation += p.FeedPerKill * float32(len(removed))
@@ -542,6 +553,20 @@ func (m *Match) applyPredationStrike(
 	logger.Info("Predation: %s struck %s (-%d, satiation %.0f)",
 		predator.ID, prey.ID, len(removed), predator.Satiation)
 	return len(removed)
+}
+
+// handleCorpseConsume removes a corpse an individual predator finished eating (S2 individual predation, OpCode
+// 112). AUTHORITY ONLY (anti-cheat + dedup — the eat/leave roll is deterministic on every client, but only the
+// authority reports). The removal rides the shared consumeFood → FOOD_CONSUMED@0 → deleteGroundItem path, so
+// every client + late-joiner sees the corpse vanish. A LEFT corpse gets no report and rots away naturally.
+func (m *Match) handleCorpseConsume(state *WorldState, dispatcher runtime.MatchDispatcher, senderID string, msg CorpseConsumeMessage) {
+	if state.CurrentZone == nil || msg.FoodID == "" {
+		return
+	}
+	if zone := state.GetOrCreateZone(state.CurrentZone.ZoneID); zone.AuthorityUserID != senderID {
+		return // authority only
+	}
+	m.consumeFood(state, dispatcher, msg.FoodID, 9999) // drain it fully → the corpse vanishes
 }
 
 // handlePredationStrike validates + applies an AUTHORITY-reported individual-fly strike (OpCode 105).

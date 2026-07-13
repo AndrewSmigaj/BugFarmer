@@ -604,6 +604,7 @@ namespace BugFarmer.Entities
             {
                 RunPredationStrikes();
                 RunBugPlayerStrikes(players);
+                RunCorpseConsumes();
             }
 
             // Record this tick's state hash for tick-aligned drift checks (always on, cheap).
@@ -714,6 +715,29 @@ namespace BugFarmer.Entities
                     bug_y = victimY.ToArray(),
                     tick = _simulationTick,
                 });
+            }
+        }
+
+        /// <summary>
+        /// AUTHORITY-ONLY per-tick corpse-consume pass (S2, individual EAT). Each bug that finished eating a
+        /// corpse and rolled CONSUME (the deterministic leave-vs-consume roll in <see cref="BugAgent.HandleFeed"/>)
+        /// flags the corpse's food id in <c>WantsConsumeCorpse</c>; <see cref="SwarmVisual.DrainCorpseConsumes"/>
+        /// collects + clears them. The roll is deterministic (every client agrees which corpse gets eaten) but
+        /// only the AUTHORITY reports it — the server removes the ground item and the FOOD_CONSUMED event returns
+        /// frontier-gated so the corpse vanishes identically on every client. A LEFT corpse is never reported
+        /// (it stays a real ground item and rots). Swarms iterated ascending-id for a deterministic report order.
+        /// </summary>
+        private void RunCorpseConsumes()
+        {
+            foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
+            {
+                var ids = _swarms[swarmId].DrainCorpseConsumes();
+                if (ids == null) continue;
+                foreach (var foodId in ids)
+                {
+                    if (string.IsNullOrEmpty(foodId)) continue;
+                    SendToServer(OpCodes.CorpseConsume, new CorpseConsumeMessage { food_id = foodId });
+                }
             }
         }
 
@@ -2457,6 +2481,8 @@ namespace BugFarmer.Entities
                         hash ^= (ulong)bug.vy;
                         hash *= prime;
                         hash ^= (ulong)bug.hunt_target; // individual-predation commit — catches a chase-target desync directly
+                        hash *= prime;
+                        hash ^= (ulong)bug.feed_until;  // corpse-eat timer — catches a feed-state desync directly
                         hash *= prime;
                     }
                 }

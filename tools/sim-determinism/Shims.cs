@@ -71,16 +71,44 @@ namespace BugFarmer.Util
 
 namespace BugFarmer.Bugs
 {
-    // The food registry is fed from server/chunk state on a live client. Headless: Instance is null =>
-    // BugAgent.TryFeedAtFood returns false (bugs wander, never "land on food"). Deterministic. The method
-    // body never runs (Instance is null); it exists only so the linked BugAgent compiles.
+    // The food registry is fed from server/chunk state on a live client. On a LIVE client Instance is set in
+    // Awake(); headless it defaults to null so BugAgent's im!=null guards short-circuit (bugs wander, never
+    // "land on food") — deterministic. The predation gate (--predation-test) SETS Instance to exercise the S2
+    // FEED path: this is a REAL minimal deterministic registry (a mirror of the client's _food query — MIN over
+    // the dict with an ordinal tie-break, iteration-order-independent) so the corpse-seek + eat-vs-leave roll
+    // are actually run (a non-vacuous FEED gate), not just compiled.
     public class InfluenceManager
     {
-        public static InfluenceManager Instance => null;
-        public bool TryGetNearestFood(FixedPoint2 center, float radius, out FixedPoint2 food)
+        public static InfluenceManager Instance;   // settable (harness injects one); null everywhere else
+
+        private readonly System.Collections.Generic.Dictionary<string, (FixedPoint2 pos, int level)> _food = new();
+        public void HydrateFood(string foodId, FixedPoint2 pos, int level) { if (level > 0) _food[foodId] = (pos, level); }
+        public void RemoveFood(string foodId) => _food.Remove(foodId);
+        public void ClearFood() => _food.Clear();
+
+        public bool TryGetNearestFood(FixedPoint2 from, float maxDist, out FixedPoint2 food)
+            => TryGetNearestFoodId(from, maxDist, out _, out food);
+
+        public bool TryGetNearestFoodId(FixedPoint2 from, float maxDist, out string foodId, out FixedPoint2 pos)
         {
-            food = FixedPoint2.Zero;
-            return false;
+            pos = FixedPoint2.Zero; foodId = null;
+            int bestSqr = int.MaxValue;
+            var maxFixed = FixedPoint.FromFloat(maxDist);
+            int maxSqr = (maxFixed * maxFixed).Value;
+            foreach (var kv in _food)
+            {
+                int sqr = kv.Value.pos.SqrDistanceTo(from).Value;
+                if (sqr > maxSqr) continue;
+                if (sqr < bestSqr || (sqr == bestSqr && string.CompareOrdinal(kv.Key, foodId) < 0))
+                { bestSqr = sqr; foodId = kv.Key; pos = kv.Value.pos; }
+            }
+            return foodId != null;
+        }
+
+        public bool TryGetFoodPos(string foodId, out FixedPoint2 pos)
+        {
+            if (foodId != null && _food.TryGetValue(foodId, out var v)) { pos = v.pos; return true; }
+            pos = FixedPoint2.Zero; return false;
         }
     }
 }

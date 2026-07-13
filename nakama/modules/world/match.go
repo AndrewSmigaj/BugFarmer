@@ -1151,6 +1151,16 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 
 			case OpCodePlayerDodge:
 				m.handlePlayerDodge(worldState, userID)
+
+			case OpCodeCorpseConsume:
+				// S2 individual predation: the authority reports a corpse an individual predator finished eating →
+				// remove it (server holds the ground item). Authority-gated inside; a LEFT corpse rots naturally.
+				var ccMsg CorpseConsumeMessage
+				if err := json.Unmarshal(msg.GetData(), &ccMsg); err != nil {
+					logger.Warn("Invalid corpse-consume from %s: %v", userID, err)
+					continue
+				}
+				m.handleCorpseConsume(worldState, dispatcher, userID, ccMsg)
 			}
 		}
 

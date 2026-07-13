@@ -107,6 +107,32 @@ namespace BugFarmer.Bugs
             return bestId != null;
         }
 
+        /// <summary>Like TryGetNearestFood but ALSO returns the food id — an individual predator needs the id to
+        /// report a corpse-consume. Deterministic (same _food + ascending-id tie-break on every client).</summary>
+        public bool TryGetNearestFoodId(FixedPoint2 from, float maxDist, out string foodId, out FixedPoint2 pos)
+        {
+            pos = default; foodId = null;
+            int bestSqr = int.MaxValue;
+            var maxFixed = FixedPoint.FromFloat(maxDist);
+            int maxSqr = (maxFixed * maxFixed).Value;
+            foreach (var kv in _food)
+            {
+                int sqr = kv.Value.pos.SqrDistanceTo(from).Value;
+                if (sqr > maxSqr) continue;
+                if (sqr < bestSqr || (sqr == bestSqr && string.CompareOrdinal(kv.Key, foodId) < 0))
+                { bestSqr = sqr; foodId = kv.Key; pos = kv.Value.pos; }
+            }
+            return foodId != null;
+        }
+
+        /// <summary>Resolve a specific food source's current position by id (a bug feeding at ONE corpse); false if
+        /// it's gone (consumed / rotted).</summary>
+        public bool TryGetFoodPos(string foodId, out FixedPoint2 pos)
+        {
+            if (foodId != null && _food.TryGetValue(foodId, out var v)) { pos = v.pos; return true; }
+            pos = default; return false;
+        }
+
         /// <summary>Clear the registry (late-join resync re-bootstraps it).</summary>
         public void ClearFood() => _food.Clear();
 

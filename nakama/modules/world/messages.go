@@ -162,7 +162,16 @@ const (
 	// a player (the server holds only swarm centres, so the old center-based checkBugAttacks stung near the
 	// CENTROID = the "phantom" hit). Server re-gates + funnels through applyBugAttackToPlayer. See BugPlayerStrikeMessage.
 	OpCodePlayerDodge int64 = 111 // C->S: the player dodge-rolled → server grants a brief i-frame window.
+	OpCodeCorpseConsume int64 = 112 // C->S (authority only): an individual predator finished eating a corpse → remove it.
 )
+
+// CorpseConsumeMessage (OpCode 112, C->S, AUTHORITY ONLY): an individual predator ate a corpse (a dead_<prey>
+// ground item) to completion. The authority reports it → the server removes it via consumeFood (FOOD_CONSUMED@0 →
+// the corpse vanishes on every client + late-joiner). The eat-vs-leave choice is a deterministic per-bug roll;
+// only the authority reports (dedup). A LEFT corpse gets no report and rots away naturally.
+type CorpseConsumeMessage struct {
+	FoodID string `json:"food_id"`
+}
 
 // BroodUpdateMessage (OpCode 104): a visible nursery's eggs/maggots changed (a lay, a maturation, a
 // hatch, or removal). Display-only — the actual births ride the deterministic SWARM_REPRODUCED ledger,
