@@ -196,6 +196,14 @@ func (m *Match) debugGiveItem(
 		for _, sp := range []string{"fly_common", "butterfly_meadow", "wasp_common", "centipede_garden"} {
 			player.AddBugs(sp, 10)
 		}
+	} else if item == "eco" {
+		// Ecology-watch kit: fruit + a watering can + spare compost bins, PLUS spawn a fruit tree and a
+		// compost bin flanking the player so a whole food web (fruit→rot→flies→predators) stands up in one click.
+		give = map[string]int{"apple": 30, "watering_can_basic": 1, "compost_bin": 2}
+		cs := state.Config.ChunkSize
+		gx, gy := int(player.WorldX(cs)), int(player.WorldY(cs))
+		m.debugSpawnOccupant(logger, dispatcher, state, "tree_apple", gx+2, gy)
+		m.debugSpawnOccupant(logger, dispatcher, state, "compost_bin", gx-2, gy)
 	} else {
 		give[item] = count
 	}
@@ -207,6 +215,43 @@ func (m *Match) debugGiveItem(
 		_ = m.sendInventorySync(logger, dispatcher, player, presence)
 	}
 	logger.Info("DEBUG WORLD: %s gave items %v", userID, give)
+}
+
+// debugSpawnOccupant (DEV TOOL) places an occupant at a grid cell + registers it (fruit tree so it bears
+// fruit / nest so it hosts a colony) + broadcasts to chunk subscribers — mirroring handlePlaceOccupant.
+// Used by the "eco" kit to stand up a food-web scene in one click. Skips if the chunk isn't loaded.
+func (m *Match) debugSpawnOccupant(logger runtime.Logger, dispatcher runtime.MatchDispatcher, state *WorldState, occupantID string, gx, gy int) {
+	def := state.Entities[occupantID]
+	if def == nil {
+		return
+	}
+	cx, cy, lx, ly := GlobalToChunk(gx, gy)
+	chunk := state.Chunks[ChunkKey(cx, cy)]
+	if chunk == nil {
+		return // the player's own chunk is loaded; skip silently if an offset lands off-chunk
+	}
+	occ := &PlacedOccupant{ID: occupantID, Dir: 0}
+	chunk.SetOccupant(lx, ly, occ)
+	// Footprint cells for multi-cell occupants (mirror handlePlaceOccupant).
+	w, h := def.GetFootprint(0)
+	for dy := 0; dy < h; dy++ {
+		for dx := 0; dx < w; dx++ {
+			if dx == 0 && dy == 0 {
+				continue // anchor
+			}
+			bcx, bcy, blx, bly := GlobalToChunk(gx+dx, gy+dy)
+			if bChunk := state.Chunks[ChunkKey(bcx, bcy)]; bChunk != nil {
+				bChunk.SetFootprintCell(blx, bly, occupantID, 0)
+			}
+		}
+	}
+	// Register a placed fruit tree (re-scan skips already-registered) or a nest, like the placement handler.
+	m.initFruitTreesInChunk(state, chunk, cx, cy, logger)
+	if speciesID, hiveSpecies, isBox := m.speciesForNestOccupant(state, occupantID); hiveSpecies != nil {
+		m.registerNestAt(state, gx, gy, occupantID, speciesID, hiveSpecies, isBox, logger)
+	}
+	m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, "", occ, false)
+	logger.Info("DEBUG WORLD: spawned occupant %s at %d,%d", occupantID, gx, gy)
 }
 
 // scheduleDailyRain rolls the day's weather at the rollover: 30% chance of ONE shower at

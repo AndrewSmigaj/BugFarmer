@@ -292,6 +292,11 @@ namespace BugFarmer.Tracing
             if (GUILayout.Button("Stock Bug Lab"))
                 SendWorldDebug(t => t.give_item = "buglab");
 
+            // Ecology-watch kit: spawns a fruit tree + compost bin next to you and gives fruit + a watering
+            // can, so a whole food web (fruit→rot→flies→predators) stands up in one click (pairs with a peaceful zone).
+            if (GUILayout.Button("Ecology kit"))
+                SendWorldDebug(t => t.give_item = "eco");
+
             GUILayout.Label($"time now: {BugFarmer.World.DayNightController.TimeOfDay:F2}  " +
                             $"weather: {BugFarmer.World.DayNightController.Weather}");
             if (!string.IsNullOrEmpty(_wStatus))

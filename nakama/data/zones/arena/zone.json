@@ -105,5 +105,6 @@
     },
     "spawn_areas": []
   },
-  "ephemeral_swarms": true
+  "ephemeral_swarms": true,
+  "peaceful": true
 }
