@@ -72,6 +72,25 @@ bootstrap. Fixed: `GroundItemSpawn` is cosmetic-only; food enters `_food` only v
 zone-wide, **the per-bug sim is now fully zone-wide.** BOTH gate halves re-verified `SYNC: IDENTICAL` on
 village_21_B (co-located 166k + spawn-apart 161k shared-bug states, no drift).
 
+**Update 2026-07-14 — the S1/S2 predation late-join desync + the VERBATIM-RELAY CONTRACT.** New per-bug
+predation state (`HuntTargetBugId`, `FeedUntilTick`, `FeedCorpseId`) and the per-swarm hunt assignment
+(`_swarmStrikes`) were added to the CLIENT snapshot but were NOT reconstructed on a late-joiner: (a) the server
+relayed the per-bug snapshot through a **hand-declared Go `BugSampleData` struct** that was missing those three
+fields → the server silently DROPPED them → late-joiners re-committed every wasp to a different prey fly →
+permanent divergence; (b) `_swarmStrikes` was only ever set from live/replayed events, never snapshot-hydrated,
+so a predator mid-hunt-leg at snapshot lost its prey list. **Fixes (both structural, not field-patches):**
+(A) `SwarmSnapshotData.Bugs` is now `json.RawMessage` — the server relays the per-bug snapshot **VERBATIM**, so
+EVERY per-bug field (present + future) round-trips and none can be dropped. (B) `_swarmStrikes` is snapshotted
+by mirroring the food registry exactly (`ExportSwarmStrikes`/`ClearSwarmStrikes`/`HydrateSwarmStrike` + a relayed
+`hunts` section + clear-then-hydrate before replay). Re-verified `SYNC: IDENTICAL` on village_21_B with wasps
+actively hunting when B joins (non-vacuous; 0 ht + 0 pc A-vs-B mismatch over 11.6k wasp bug-ticks).
+- **CONTRACT (do not re-open):** the per-bug snapshot (`SwarmSnapshotData.Bugs`) is relayed as opaque bytes —
+  **never re-declare bug fields in a Go struct.** The determinism contract IS `ComputeStateHash`
+  (`{x,y,vx,vy,hunt_target,feed_until}` per bug); its full input set to reconstruct on late-join =
+  {all `BugAgent` snapshot fields (via the verbatim relay) + the 4 `InfluenceManager` dicts —
+  `_swarmLegs`/`_swarmStrikes`/`_food`/`_playerCells` + the movement-state round-trip}. Any NEW client sim-state
+  outside this set needs its own snapshot carrier + a NON-VACUOUS gate that exercises it.
+
 ---
 
 ## 1. Architecture

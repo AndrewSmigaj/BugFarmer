@@ -158,6 +158,37 @@ namespace BugFarmer.Bugs
                 new FixedPoint { Value = x }, new FixedPoint { Value = y }), level);
         }
 
+        // ── Hunt assignments (_swarmStrikes) snapshot, mirroring the food registry ──────────────────────────
+        // _swarmStrikes is per-swarm predator→prey state set ONLY from live/replayed SWARM_SET_TARGET events, so
+        // a late-joiner whose predator's hunt leg predates the replay window would have no prey list and wander
+        // while the authority hunts → per-bug desync. Snapshot it exactly like _food: authority ExportSwarmStrikes
+        // → relay → joiner ClearSwarmStrikes + HydrateSwarmStrike (before replay). Replay-window events converge
+        // it on top. Same clear-then-hydrate discipline as ClearFood/HydrateFoodExact.
+
+        /// <summary>Clear the hunt assignments (late-join/resync re-hydrates from the snapshot).</summary>
+        public void ClearSwarmStrikes() => _swarmStrikes.Clear();
+
+        /// <summary>Export the full hunt-assignment dict so the AUTHORITY can embed it in its ZoneSnapshot.</summary>
+        public IEnumerable<(string predatorId, SwarmStrike strike)> ExportSwarmStrikes()
+        {
+            foreach (var kv in _swarmStrikes)
+                yield return (kv.Key, kv.Value);
+        }
+
+        /// <summary>Hydrate one hunt assignment from a snapshot (late-join). Overwrites authoritatively; replay
+        /// events converge it. An empty target_prey_id means "not hunting" — skip (leaves no entry).</summary>
+        public void HydrateSwarmStrike(string predatorId, string targetPreyId, int strikeRadius, int kills, int cooldown)
+        {
+            if (string.IsNullOrEmpty(predatorId) || string.IsNullOrEmpty(targetPreyId)) return;
+            _swarmStrikes[predatorId] = new SwarmStrike
+            {
+                TargetPreyId = targetPreyId,
+                StrikeRadiusFixed = strikeRadius,
+                KillsPerStrike = kills,
+                StrikeCooldownTicks = cooldown,
+            };
+        }
+
         private void Awake()
         {
             Instance = this;

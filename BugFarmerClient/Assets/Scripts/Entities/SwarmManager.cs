@@ -1781,6 +1781,20 @@ namespace BugFarmer.Entities
                 DebugFileLogger.Log($"[SwarmManager] Hydrated {msg.food.Length} food entries from snapshot");
             }
 
+            // Hydrate the per-swarm HUNT ASSIGNMENTS (_swarmStrikes) BEFORE replay — SAME reason as food. Cleared
+            // first (a resync could hold stale assignments), then set from the authority's exact dict; replay-window
+            // SWARM_SET_TARGET events converge on top. Without this, a late-joiner's predators have no prey list →
+            // they wander while the authority hunts → per-bug positions desync (the late-join predation bug).
+            InfluenceManager.Instance?.ClearSwarmStrikes();
+            if (msg.hunts != null)
+            {
+                foreach (var h in msg.hunts)
+                    InfluenceManager.Instance?.HydrateSwarmStrike(
+                        h.predator_swarm_id, h.target_prey_id, h.strike_radius, h.kills_per_strike, h.strike_cooldown_ticks);
+                Debug.Log($"[SwarmManager] Hydrated {msg.hunts.Length} hunt assignments from snapshot");
+                DebugFileLogger.Log($"[SwarmManager] Hydrated {msg.hunts.Length} hunt assignments from snapshot");
+            }
+
             // Hydrate player cells from snapshot STATE (not events)
             // This restores the point-in-time player positions at snapshot_tick
             if (msg.player_cells != null)
@@ -2313,10 +2327,23 @@ namespace BugFarmer.Entities
             // is the reliable source. Bugs at a food source FEED (position-affecting), so a missing entry desyncs
             // per-bug positions on a late-joiner. (Confirmed cause of the residual late-join divergence.)
             var foodSnapshots = new List<FoodSnapshotData>();
+            var huntSnapshots = new List<HuntSnapshotData>();
             if (InfluenceManager.Instance != null)
             {
                 foreach (var (id, fx, fy, level) in InfluenceManager.Instance.ExportFood())
                     foodSnapshots.Add(new FoodSnapshotData { food_id = id, x = fx, y = fy, level = level });
+                // Embed the per-swarm hunt assignments (_swarmStrikes) too — same reason as food: event-sourced +
+                // pruned, so the authority's live dict is the reliable source. A missing entry → a late-joiner's
+                // predator has no prey list → it wanders while the authority hunts → per-bug desync.
+                foreach (var (predatorId, s) in InfluenceManager.Instance.ExportSwarmStrikes())
+                    huntSnapshots.Add(new HuntSnapshotData
+                    {
+                        predator_swarm_id = predatorId,
+                        target_prey_id = s.TargetPreyId,
+                        strike_radius = s.StrikeRadiusFixed,
+                        kills_per_strike = s.KillsPerStrike,
+                        strike_cooldown_ticks = s.StrikeCooldownTicks,
+                    });
             }
 
             var snapshot = new ZoneSnapshotMessage
@@ -2326,6 +2353,7 @@ namespace BugFarmer.Entities
                 snapshot_last_event_seq = _lastAppliedSeq, // Last seq whose effects are in this snapshot
                 swarms = swarmSnapshots.ToArray(),
                 food = foodSnapshots.ToArray(),
+                hunts = huntSnapshots.ToArray(),
                 state_hash = "" // TODO: Implement state hash
             };
 

@@ -158,6 +158,18 @@ is ① — two REAL clients, full system. The others are pre-checks/backstops, N
   diverge ONLY on disjoint chunks** — that is the whole point of the spawn-APART half: it caught the per-chunk
   `_food` hydration (food now rides the zone-wide ledger + snapshot, not `GroundItemSpawn`). Any sim-input read that
   isn't zone-wide/frontier-gated passes co-located but FAILS spawn-apart. See `architecture_swarm_sync.md` §0.
+  (3) **NEW CLIENT SIM-STATE → LATE-JOIN COMPLETENESS (2026-07-14 — the S1/S2 predation desync).** If you add or
+  rename ANY client-side per-bug or per-swarm state that feeds `ComputeStateHash` (bug x/y/vx/vy/hunt_target/
+  feed_until) OR that moves a bug, it MUST be reconstructed on a late-joiner. Two carriers: **per-bug** state
+  rides the VERBATIM per-bug relay automatically (`SwarmSnapshotData.Bugs` is `json.RawMessage` — never re-declare
+  bug fields in a Go struct, or the server silently drops them: that was the bug); **per-swarm/zone** state (a
+  new `InfluenceManager` dict like `_swarmStrikes`) needs its OWN snapshot section — mirror `_food`
+  (`Export…`/`Clear…`/`Hydrate…` on the client + a relayed section on ZoneSnapshot/LateJoinSnapshot + clear-then-
+  hydrate before replay in `HandleLateJoinSnapshot`). **VERIFY it with a NON-VACUOUS `run_sync_latejoin` that
+  actually exercises the new state** (e.g. wasps must be HUNTING when B joins — a run where the behavior never
+  fires is VACUOUS and proves nothing; that is how S1/S2 passed while broken). A quick way to prove non-vacuity +
+  reconstruction at once: temporarily log the new field per bug on A and B and assert 0 A-vs-B mismatches over
+  the overlap, in a window where the behavior is active.
 - **② sim-determinism pre-check (FAST, no Unity, no server):** `~/.dotnet/dotnet run --project
   tools/sim-determinism` (`--selftest` proves it detects divergence; `--los-test` checks the
   `BugCollision.LineBlocked` predator line-of-sight geometry, #20). Links the real per-bug sim source and

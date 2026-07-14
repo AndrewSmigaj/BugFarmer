@@ -1,6 +1,7 @@
 package world
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"math/rand"
@@ -273,6 +274,7 @@ type ZoneSnapshot struct {
 	SnapshotLastEventSeq int64 // Last applied seq included in snapshot state
 	Swarms               []SwarmSnapshotData
 	Food                 []FoodSnapshotData // Authoritative food registry @ snapshot (late-join hydration)
+	Hunts                json.RawMessage    // Authoritative hunt assignments @ snapshot (verbatim; late-join hydration)
 	StateHash            string
 }
 

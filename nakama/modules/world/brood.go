@@ -88,7 +88,13 @@ func (m *Match) layIntoBrood(state *WorldState, dispatcher runtime.MatchDispatch
 		gx, gy = broodAreaKey(gx, gy)
 		_ = it
 	} else {
-		return false // no recognizable breeding source at the target
+		// No recognized food-source breeding spot (free-roaming predators like dragonfly/centipede,
+		// detritivores that breed on forage pools/carrion). Lay a VISIBLE clutch at the swarm's OWN area
+		// cell so the birth still develops + is visible — never an instant pop-out. Reuses the ground-pile
+		// behavior (detached lifetime, retires once fully hatched out).
+		cs := state.Config.ChunkSize
+		kind, sourceID = "ground_pile", ""
+		gx, gy = broodAreaKey(int(swarm.WorldX(cs)), int(swarm.WorldY(cs)))
 	}
 
 	b := m.getOrCreateBrood(state, gx, gy, swarm.SpeciesID, kind, sourceID, capEggs)

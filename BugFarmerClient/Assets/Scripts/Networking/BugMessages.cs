@@ -484,7 +484,25 @@ namespace BugFarmer.Networking
         public long snapshot_last_event_seq; // Last applied seq included in snapshot state
         public SwarmSnapshotData[] swarms;
         public FoodSnapshotData[] food;      // Authoritative food registry @ snapshot (late-join hydration)
+        public HuntSnapshotData[] hunts;     // Authoritative hunt assignments @ snapshot (late-join hydration)
         public string state_hash;
+    }
+
+    /// <summary>
+    /// One entry of the per-swarm hunt assignment (_swarmStrikes: which prey SWARM a predator hunts + its strike
+    /// params), embedded in the snapshot so late-joiners hydrate it coherently — mirrors FoodSnapshotData. Like
+    /// the food registry, _swarmStrikes is only ever set from live/replayed events, so a late-joiner whose
+    /// predator's hunt leg predates the replay window has NO prey list → it wanders while the authority hunts →
+    /// per-bug positions desync. The authority's live dict is the reliable source.
+    /// </summary>
+    [Serializable]
+    public class HuntSnapshotData
+    {
+        public string predator_swarm_id;   // the hunting predator swarm
+        public string target_prey_id;      // which prey SWARM it hunts
+        public int strike_radius;          // ×1000
+        public int kills_per_strike;
+        public int strike_cooldown_ticks;
     }
 
     /// <summary>
@@ -545,5 +563,6 @@ namespace BugFarmer.Networking
         public string authority_id;
         public PlayerCellData[] player_cells;  // Current player positions (state, not events)
         public FoodSnapshotData[] food;        // Authoritative food registry @ snapshot (hydrate before replay)
+        public HuntSnapshotData[] hunts;       // Authoritative hunt assignments @ snapshot (hydrate before replay)
     }
 }

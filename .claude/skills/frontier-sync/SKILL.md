@@ -34,10 +34,20 @@ sole sanctioned exception is join-time bootstrap hydration the snapshot+events i
 2. **Emit it server-side in ONE place** (centralize — don't scatter N copies; e.g. placement funnels through
    `broadcastWorldUpdate`). Stamp `seq` via the zone's `NextSeq++` (use the `AddInfluenceEvent` family in
    `state.go`); it lands in `PendingInfluence` → OpCode 71, frontier-gated.
-3. **Cover late-join**: the event must ride the replay window (it does automatically if seq > the snapshot's
-   last seq and it's within the prune window). If it's persistent per-bug/zone STATE that a joiner must have
-   before replay (not reconstructable from the in-window log), embed it in the snapshot too and hydrate it
-   bit-exact (pattern: the food registry `ExportFood`/`HydrateFoodExact`; the zone collision map).
+3. **Cover late-join** — the failure that has bitten most often. The event must ride the replay window (auto if
+   seq > the snapshot's last seq, within the prune window). BUT if you add **persistent CLIENT sim-state** a
+   joiner must have BEFORE replay (a per-bug field, or a new `InfluenceManager` dict), the in-window log is NOT
+   enough — it must ride the SNAPSHOT:
+   - **Per-bug state** (a new `BugAgent`/`MovementState` field): capture it in `CreateBugSampleData` + apply in
+     `ApplySnapshot`, and you're DONE — the server relays the per-bug snapshot VERBATIM (`SwarmSnapshotData.Bugs`
+     is `json.RawMessage`; **never re-declare bug fields in a Go struct** — that silently drops them, the S1/S2
+     predation desync, 2026-07-14).
+   - **Per-swarm/zone state** (a new dict): mirror the food registry EXACTLY — `Export…`/`Clear…`/`Hydrate…` on
+     the client + a relayed snapshot section + **clear-then-hydrate before replay** in `HandleLateJoinSnapshot`
+     (see `_food` and `_swarmStrikes`).
+   The determinism contract is `ComputeStateHash` (`{x,y,vx,vy,hunt_target,feed_until}`); every input to it must
+   reconstruct on a late-joiner. VERIFY with a **NON-VACUOUS** `run_sync_latejoin` that actually exercises the
+   new behavior (a run where it never fires proves nothing).
 4. **Apply on every client in seq order, idempotent, AT the event tick** (`ProcessEventsForTick` runs at
    `evt.tick` in both live and replay). Idempotency matters: a re-join/replay may re-apply it.
 5. **Determinism hygiene** (the invariants that bite):

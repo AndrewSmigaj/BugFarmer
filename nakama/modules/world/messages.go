@@ -844,6 +844,11 @@ type BugSampleData struct {
 	LandTicks        int `json:"land_ticks,omitempty"` // feed land/hold timer (history-dependent — rides snapshot)
 }
 
+// NOTE: BugSampleData above is now UNUSED by the relay — SwarmSnapshotData.Bugs is a verbatim json.RawMessage
+// passthrough (see below). The server never reads per-bug fields, so it must NOT re-declare them: a field the
+// client sends but the server omits here is silently dropped from the LateJoinSnapshot (that was the late-join
+// predation desync — hunt_target/feed_until/feed_corpse_id were missing). Kept only for reference/other decoders.
+
 // FoodSnapshotData is one entry of the deterministic food registry, embedded in the authority's ZoneSnapshot
 // and relayed in the late-join package. The registry is event-sourced (ITEM_ROTTED/FOOD_CONSUMED) and pruned,
 // so — like swarm legs — the authority's live registry is the reliable late-join source. Coords are raw
@@ -883,8 +888,11 @@ type SnapshotRequestMessage struct {
 
 // SwarmSnapshotData contains all bug positions for a single swarm
 type SwarmSnapshotData struct {
-	SwarmID string          `json:"swarm_id"`
-	Bugs    []BugSampleData `json:"bugs"` // All bugs in swarm
+	SwarmID string `json:"swarm_id"`
+	// Bugs is the authority's per-bug snapshot, relayed VERBATIM (the server never reads it — see BugSampleData
+	// note). json.RawMessage means every per-bug field the client sends round-trips untouched, so no field can
+	// ever be silently dropped by a stale server struct (the late-join predation desync). Do NOT re-type this.
+	Bugs json.RawMessage `json:"bugs"`
 
 	// Current movement leg AT the snapshot tick (authority-embedded). Used for late-join center
 	// hydration: the InfluenceLog is pruned each tick, so a slow swarm's last SWARM_SET_TARGET may
@@ -1045,6 +1053,10 @@ type ZoneSnapshotMessage struct {
 	SnapshotLastEventSeq int64               `json:"snapshot_last_event_seq"` // Last applied seq included in snapshot state
 	Swarms               []SwarmSnapshotData `json:"swarms"`
 	Food                 []FoodSnapshotData  `json:"food,omitempty"` // Authoritative food registry @ snapshot
+	// Hunts = the authority's per-swarm hunt assignments (_swarmStrikes: predator→prey + strike params), relayed
+	// VERBATIM (json.RawMessage) exactly like Bugs. Without it, a late-joiner's predators have no prey list and
+	// wander while the authority hunts → divergence. The server never interprets it (mirrors the food registry).
+	Hunts                json.RawMessage     `json:"hunts,omitempty"`
 	StateHash            string              `json:"state_hash"`
 }
 
@@ -1077,4 +1089,5 @@ type LateJoinSnapshot struct {
 	AuthorityID          string              `json:"authority_id"`
 	PlayerCells          []PlayerCellData    `json:"player_cells"` // Current player positions (state, not events)
 	Food                 []FoodSnapshotData  `json:"food,omitempty"` // Authoritative food registry @ snapshot
+	Hunts                json.RawMessage     `json:"hunts,omitempty"` // Authoritative hunt assignments @ snapshot (verbatim)
 }

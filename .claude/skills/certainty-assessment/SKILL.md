@@ -41,7 +41,13 @@ consumed / cross-boundary contract / state mutation). ★ = the axes that earn t
 4. ★ **Sync & determinism fit** — *the BugFarmer-critical axis.* Every sim-**READ** arrives frontier-gated /
    zone-wide (NOT view-scoped / on-receipt); **fixed-point not float**; deterministic iteration order;
    **authority-only writes** + replay (detect-don't-remove); **idempotent** under replay/re-join; snapshot
-   coherence; nothing wall-clock enters `ComputeStateHash`. [the invariant checklist · Determinism lens · `architecture_swarm_sync.md` §0]
+   coherence; nothing wall-clock enters `ComputeStateHash`. **LATE-JOIN COMPLETENESS is a REQUIRED sub-row, not
+   optional:** if the change adds/renames ANY client sim-state feeding `ComputeStateHash` (or that moves a bug),
+   is it reconstructed on a late-joiner (per-bug → verbatim relay; per-swarm/zone dict → its own snapshot
+   section)? "Births/strikes ride the ledger" is NOT sufficient — the S1/S2 predation reviews were FALSELY green
+   because they checked the ledger but never the snapshot, and a late-joiner's wasps re-committed to different
+   prey (2026-07-14). Enumerate every hash input; a hash input with no snapshot carrier is a **Guess** that BLOCKS
+   until closed by a NON-VACUOUS gate. [the invariant checklist · Determinism lens · `architecture_swarm_sync.md` §0]
 5. **Correctness** — is the logic actually right at every edit: shapes/units/scale (×1000 fixed-point), the
    load-bearing algorithm, and empty/missing/duplicate/stale/vanished-mid-op inputs? [FM1-at-edit · Failure/Edge]
 6. **Blast radius & contract** — are all other consumers / persistence / late-join / replay accounted for, and

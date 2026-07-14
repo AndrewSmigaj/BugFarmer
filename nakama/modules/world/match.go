@@ -78,22 +78,21 @@ func (m *Match) reproduceSwarm(state *WorldState, dispatcher runtime.MatchDispat
 		count = 1 // individuals are swarm-of-1 — mint a solo child, never a 2-member knot
 	}
 
-	// VISIBLE BROOD path (flies/butterflies): a non-predator swarm LAYS eggs into the nursery at its
-	// breeding source instead of growing instantly. processBroods matures + hatches them, and the
-	// population/swarm caps apply at HATCH time (eggs are not bugs). Predators (wasp nest, centipede)
-	// and individuals fall through to the instant-growth path below, unchanged.
-	// GATED on an egg sprite: only species with a nursery (EggSpriteID) brood. Swarm-category
-	// DETRITIVORES (millipede/beetle — no egg art, and they breed on forage pools / carrion that
-	// layIntoBrood can't resolve) fall through to instant-growth + merge, which is the food-bounded
-	// "fewer fat swarms" behavior we want for them without a fake egg nursery.
-	if species.Predation == nil && species.Category == "swarm" && species.EggSpriteID != "" {
-		laid := m.layIntoBrood(state, dispatcher, swarm, count)
+	// VISIBLE BROOD path (breeding-unify): EVERY non-nest species LAYS a brood that develops + hatches,
+	// instead of a new bug popping into the swarm from nowhere. layIntoBrood resolves a breeding source
+	// (compost station / milkweed host / rotten-fruit pile) or falls back to a clutch at the swarm's own
+	// cell (free-roaming predators, detritivores). processBroods matures + hatches; caps apply at HATCH
+	// time (eggs aren't bugs); the birth itself still rides the deterministic SWARM_REPRODUCED ledger.
+	// NEST species (Predation.NestOccupant != "") are EXCLUDED — they breed via the nest deposit path
+	// (depositBrood), which the nest-brood variant makes visible separately. INDIVIDUAL crawlers
+	// (centipede, swarm-of-1) are EXCLUDED for now — hatchFromBrood grows the nearest swarm, which would
+	// break their swarm-of-1 model; they get the clutch when Phase 3 turns them into packs.
+	if species.Category != "individual" && (species.Predation == nil || species.Predation.NestOccupant == "") {
+		m.layIntoBrood(state, dispatcher, swarm, count) // own-cell fallback never fails → always a visible clutch
 		swarm.ReproductionMeter = 0
 		swarm.Satiation = 0
 		swarm.ReproduceCooldown = species.ReproduceCooldown
-		if laid {
-			m.consumeFood(state, dispatcher, swarm.TargetFoodID, reproduceFoodCost)
-		}
+		m.consumeFood(state, dispatcher, swarm.TargetFoodID, reproduceFoodCost)
 		return
 	}
 
@@ -2761,7 +2760,8 @@ func (m *Match) handleZoneSnapshot(
 		SnapshotTick:         msg.SnapshotTick,
 		SnapshotLastEventSeq: msg.SnapshotLastEventSeq,
 		Swarms:               msg.Swarms,
-		Food:                 msg.Food, // relay the authoritative food registry (opaque to server)
+		Food:                 msg.Food,  // relay the authoritative food registry (opaque to server)
+		Hunts:                msg.Hunts, // relay the authoritative hunt assignments (opaque to server)
 		StateHash:            msg.StateHash,
 	}
 	zone.LatestSnapshotTick = msg.SnapshotTick
@@ -3037,7 +3037,8 @@ func (m *Match) sendLateJoinSnapshot(
 		InfluenceLog:         influenceLog,
 		AuthorityID:          zone.AuthorityUserID,
 		PlayerCells:          playerCells,
-		Food:                 zone.LatestSnapshot.Food, // authoritative food registry for late-join hydration
+		Food:                 zone.LatestSnapshot.Food,  // authoritative food registry for late-join hydration
+		Hunts:                zone.LatestSnapshot.Hunts, // authoritative hunt assignments for late-join hydration
 	}
 
 	data, err := json.Marshal(msg)
