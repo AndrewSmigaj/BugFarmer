@@ -82,8 +82,9 @@ type BugSpecies struct {
 	ProducesCompost bool `json:"produces_compost"`
 
 	// Sprites - lookup keys for client to load sprite sheets
-	SpriteID    string `json:"sprite_id"`
-	EggSpriteID string `json:"egg_sprite_id"`
+	SpriteID      string `json:"sprite_id"`
+	EggSpriteID   string `json:"egg_sprite_id"`
+	LarvaSpriteID string `json:"larva_sprite_id"`
 
 	// Kill drops: per-species loot table (replaces the old hardcoded bug_parts).
 	// Empty = drops nothing.

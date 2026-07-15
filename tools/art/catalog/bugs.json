@@ -2,6 +2,39 @@
   "ant_eggs": {
     "look": "a clutch of ANT EGGS: a small heap of glossy pale-white oval eggs piled together, top-down, on the nest floor."
   },
+  "fly_eggs": {
+    "look": "a clutch of FLY EGGS: a small tight cluster of tiny white rice-grain eggs on the ground, top-down."
+  },
+  "fly_larvae": {
+    "look": "FLY MAGGOTS: a small squirming clump of plump pale-white legless grubs, blunt at one end, top-down."
+  },
+  "butterfly_eggs": {
+    "look": "a small group of BUTTERFLY EGGS: tiny pale ribbed dome-shaped eggs laid in a neat cluster on a leaf, top-down."
+  },
+  "wasp_eggs": {
+    "look": "WASP EGGS in paper comb: a few slender white eggs, each standing upright in an open hexagonal paper cell, top-down."
+  },
+  "wasp_grubs": {
+    "look": "WASP GRUBS: fat creamy-white legless larvae, each curled inside a hexagonal paper comb-cell, top-down."
+  },
+  "beetle_eggs": {
+    "look": "a clutch of BEETLE EGGS: a small heap of tiny round pearly-white eggs in dark soil, top-down."
+  },
+  "beetle_larvae": {
+    "look": "BEETLE GRUBS: a few plump C-curled pale grubs with small dark heads and tiny legs, in soil, top-down."
+  },
+  "millipede_eggs": {
+    "look": "a clutch of MILLIPEDE EGGS: a small cluster of tiny round pale eggs in damp soil, top-down."
+  },
+  "millipede_larvae": {
+    "look": "young MILLIPEDES: a few tiny pale short-bodied juvenile millipedes, lightly coiled, top-down."
+  },
+  "centipede_eggs": {
+    "look": "a clutch of CENTIPEDE EGGS: a small cluster of glossy pale round eggs tucked in soil, top-down."
+  },
+  "centipede_larvae": {
+    "look": "young CENTIPEDES: a few tiny pale slender juvenile centipedes with short legs, top-down."
+  },
   "backswimmer_common": {
     "look": "a BACKSWIMMER, top-down: a boat-shaped pale bug swimming upside-down with long oar-like hind legs.",
     "materials": [

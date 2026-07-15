@@ -3859,6 +3859,61 @@
       }
     }
   },
+  "fly_eggs": {
+    "name": "Fly Eggs", "category": "decoration", "sprite_w": 24, "sprite_h": 16,
+    "stackable": false, "sell_price": 1,
+    "world": { "footprint": [1, 1], "pivot": "bc", "blocks_players": false, "blocks_bugs": false, "flat": true }
+  },
+  "fly_larvae": {
+    "name": "Fly Maggots", "category": "decoration", "sprite_w": 24, "sprite_h": 16,
+    "stackable": false, "sell_price": 1,
+    "world": { "footprint": [1, 1], "pivot": "bc", "blocks_players": false, "blocks_bugs": false, "flat": true }
+  },
+  "butterfly_eggs": {
+    "name": "Butterfly Eggs", "category": "decoration", "sprite_w": 24, "sprite_h": 16,
+    "stackable": false, "sell_price": 2,
+    "world": { "footprint": [1, 1], "pivot": "bc", "blocks_players": false, "blocks_bugs": false, "flat": true }
+  },
+  "wasp_eggs": {
+    "name": "Wasp Eggs", "category": "decoration", "sprite_w": 24, "sprite_h": 16,
+    "stackable": false, "sell_price": 2,
+    "world": { "footprint": [1, 1], "pivot": "bc", "blocks_players": false, "blocks_bugs": false, "flat": true }
+  },
+  "wasp_grubs": {
+    "name": "Wasp Grubs", "category": "decoration", "sprite_w": 24, "sprite_h": 16,
+    "stackable": false, "sell_price": 2,
+    "world": { "footprint": [1, 1], "pivot": "bc", "blocks_players": false, "blocks_bugs": false, "flat": true }
+  },
+  "beetle_eggs": {
+    "name": "Beetle Eggs", "category": "decoration", "sprite_w": 24, "sprite_h": 16,
+    "stackable": false, "sell_price": 1,
+    "world": { "footprint": [1, 1], "pivot": "bc", "blocks_players": false, "blocks_bugs": false, "flat": true }
+  },
+  "beetle_larvae": {
+    "name": "Beetle Grubs", "category": "decoration", "sprite_w": 24, "sprite_h": 16,
+    "stackable": false, "sell_price": 1,
+    "world": { "footprint": [1, 1], "pivot": "bc", "blocks_players": false, "blocks_bugs": false, "flat": true }
+  },
+  "millipede_eggs": {
+    "name": "Millipede Eggs", "category": "decoration", "sprite_w": 24, "sprite_h": 16,
+    "stackable": false, "sell_price": 1,
+    "world": { "footprint": [1, 1], "pivot": "bc", "blocks_players": false, "blocks_bugs": false, "flat": true }
+  },
+  "millipede_larvae": {
+    "name": "Young Millipedes", "category": "decoration", "sprite_w": 24, "sprite_h": 16,
+    "stackable": false, "sell_price": 1,
+    "world": { "footprint": [1, 1], "pivot": "bc", "blocks_players": false, "blocks_bugs": false, "flat": true }
+  },
+  "centipede_eggs": {
+    "name": "Centipede Eggs", "category": "decoration", "sprite_w": 24, "sprite_h": 16,
+    "stackable": false, "sell_price": 1,
+    "world": { "footprint": [1, 1], "pivot": "bc", "blocks_players": false, "blocks_bugs": false, "flat": true }
+  },
+  "centipede_larvae": {
+    "name": "Young Centipedes", "category": "decoration", "sprite_w": 24, "sprite_h": 16,
+    "stackable": false, "sell_price": 1,
+    "world": { "footprint": [1, 1], "pivot": "bc", "blocks_players": false, "blocks_bugs": false, "flat": true }
+  },
   "cow_skull": {
     "name": "Cow Skull",
     "category": "decoration",
