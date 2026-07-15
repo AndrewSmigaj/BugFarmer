@@ -170,8 +170,77 @@ func (m *Match) broodSourceGone(state *WorldState, b *entities.BroodState) bool 
 		return state.Stations[b.SourceID] == nil
 	case "host_plant":
 		return state.HostPlantStates[broodKey(b.GridX, b.GridY)] == nil
+	case "nest":
+		// The nest occupant is gone (destroyed / swept). Its in-progress brood hatches out into the
+		// resident (if still alive) then clears — same shape as a vanishing station. The player-BREAK
+		// path (onNestOccupantRemoved) pours the brood out as live bugs BEFORE deleting the nest, so by
+		// the time the sweep sees NestStates==nil the BroodState is already gone (nothing double-hatches).
+		return state.NestStates[broodKey(b.GridX, b.GridY)] == nil
 	}
 	return false
+}
+
+// nestBroodCount is the nest's banked brood (eggs + maggots in its visible BroodState) — the economy
+// currency processNests/processNestFounding read, replacing the old nest.Brood counter.
+func (m *Match) nestBroodCount(state *WorldState, nest *entities.NestState) int {
+	if b := state.BroodStates[broodKey(nest.GridX, nest.GridY)]; b != nil {
+		return b.Eggs + b.Maggots
+	}
+	return 0
+}
+
+// depositNestEgg lays ONE egg into the nest's visible BroodState (a homing resident's provisioning
+// trip), clamped at the nest brood cap. Dispatcher-free (called from the deposit path inside
+// predationThink) so it does NOT broadcast — processBroods/processNests carry the display update.
+func (m *Match) depositNestEgg(state *WorldState, nest *entities.NestState, capEggs int) {
+	b := m.getOrCreateBrood(state, nest.GridX, nest.GridY, nest.SpeciesID, "nest", "", capEggs)
+	if b.Eggs+b.Maggots < b.CapEggs {
+		b.Eggs++
+	}
+}
+
+// drainNestBrood removes up to n from the nest's BroodState (maggots first, then eggs) and returns how
+// many were drained — the recovery re-staff (a dead resident's banked brood becomes a fresh patrol).
+// Broadcasts the display update; clears the brood if it empties.
+func (m *Match) drainNestBrood(state *WorldState, dispatcher runtime.MatchDispatcher, nest *entities.NestState, n int) int {
+	key := broodKey(nest.GridX, nest.GridY)
+	b := state.BroodStates[key]
+	if b == nil || n <= 0 {
+		return 0
+	}
+	drained := 0
+	if take := n; take > b.Maggots {
+		drained += b.Maggots
+		n -= b.Maggots
+		b.Maggots = 0
+	} else {
+		b.Maggots -= take
+		drained += take
+		n -= take
+	}
+	if n > 0 {
+		take := n
+		if take > b.Eggs {
+			take = b.Eggs
+		}
+		b.Eggs -= take
+		drained += take
+	}
+	empty := b.Eggs == 0 && b.Maggots == 0
+	m.broadcastBroodUpdate(dispatcher, state, b, empty)
+	if empty {
+		delete(state.BroodStates, key)
+	}
+	return drained
+}
+
+// clearNestBrood removes the nest's entire BroodState (founding drains the banked surplus to a cooldown).
+func (m *Match) clearNestBrood(state *WorldState, dispatcher runtime.MatchDispatcher, nest *entities.NestState) {
+	key := broodKey(nest.GridX, nest.GridY)
+	if b := state.BroodStates[key]; b != nil {
+		m.broadcastBroodUpdate(dispatcher, state, b, true)
+		delete(state.BroodStates, key)
+	}
 }
 
 // hatchFromBrood turns up to BroodHatchCount maggots into bugs at the brood cell — growing the nearest
@@ -196,6 +265,24 @@ func (m *Match) hatchFromBrood(state *WorldState, b *entities.BroodState) int {
 		if n <= 0 {
 			return 0
 		}
+	}
+
+	// NEST brood: emerge into the nest's own RESIDENT patrol (it may be hunting far from the nest, so
+	// nearestSwarmNear is wrong here). No live resident → HOLD the maggots (processNests recovery drains
+	// them to re-staff); nest gone → HOLD (the source-gone sweep / break-release owns it).
+	if b.SourceKind == "nest" {
+		nest := state.NestStates[broodKey(b.GridX, b.GridY)]
+		if nest == nil {
+			return 0
+		}
+		resident, alive := state.Swarms[nest.ResidentSwarmID]
+		if !alive || nest.ResidentSwarmID == "" {
+			return 0
+		}
+		m.growSwarm(state, resident, n)
+		state.Stats.recordBirth(b.SpeciesID, BirthBrood, n)
+		b.Maggots -= n
+		return n
 	}
 
 	chunkSize := state.Config.ChunkSize

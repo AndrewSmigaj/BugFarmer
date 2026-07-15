@@ -248,8 +248,18 @@ skill so it stops getting lost between sessions).
 The **SERVER ecology is built + verified** (Go tests + 6× headless lab + per-species charts in
 `tools/_generated/ecology_charts/`). The living system = **depletable food → boom-bust → the Director →
 (future) the Ecologist restores → progression**. Done:
-- **Visible breeding broods** — flies/butterflies lay eggs into a brood (compost / rotten-fruit maggot pile /
-  milkweed) that matures + hatches (`entities/brood.go`, `world/brood.go`).
+- **Breeding-unify — ONE visible brood model (2026-07-14, SERVER DONE + deployed):** ALL non-instant
+  breeding lays eggs into a visible `BroodState` that develops over GAME-HOURS (`BroodEggMatureTicks=350`
+  ≈ 1 game-hour/egg, was ~10s = the "always-empty nests" problem) and hatches — flies/butterflies (compost /
+  rotten-fruit pile / milkweed), detritivores, AND **wasp NESTS** (nest brood routed off the old invisible
+  instant-pop counter onto the `BroodState`; recovery/founding read it via `nestBroodCount`; the homing
+  resident ENTERS the nest a beat to tend). **Break-release:** kick a nest → the brood POURS OUT as live
+  wasps that swarm the breaker (`onNestOccupantRemoved` + `aggroPlayerThink`). Go-tested; A1 ecology-validated
+  (ground species self-sustain via `+brood`). `entities/brood.go`, `world/{brood,nests,predation}.go`.
+  **→ Next (client + art, needs Unity):** B = brood RENDERER + look-in/REMOVE panel + emergence beat (OpCode
+  104 `BroodUpdate` has NO client consumer yet, so brood is invisible in-game until B); D = egg/larva/pupa +
+  nest-brood sprites. Then Phase-3 re-tune to the new bands (fly 200 · butterfly 100 · rest 30) on the
+  predation-inclusive Unity rig. Dead `egg_count_min/max` species fields to delete (unused).
 - **Natural death + carcass recycle** (per-bug `DeathTick`, `dead_<species>`, millipede→compost).
 - **Hard `max_population` crash-guard** (per species per zone; the only guaranteed bound — food is
   player-controlled, so it can't be the guard).

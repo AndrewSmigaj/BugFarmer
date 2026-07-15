@@ -133,6 +133,14 @@ python3 tools/ecology/run_config.py <config> --zone village_21_B --duration 600 
   parity after any sim change to confirm no desync.
 
 ## 6. Current status (read the tuning log for detail)
-Determinism + fruit-rot + clean-start fixed. Flies breed (booms ~1300, still cap-limited). Centipede is the
-working fly predator; millipede stable ~130. **Wasp nest economy is still broken** (resident starves at the
-nest → nestless Director reseeds; provision/deposit rhythm fragile) — open problem. Butterfly noisy.
+Determinism + fruit-rot + clean-start fixed. Flies breed + self-sustain via `+brood` (booms, cap-limited).
+Centipede is the working fly predator; millipede stable. The old "wasp nest economy is broken" verdict was
+DISPROVEN (commit `79bc376`, the nest-occupant-hijack fix): the wasp economy self-sustains (`b_reseed→0`).
+**Breeding-unify (2026-07-14):** ALL species — incl. wasp NESTS — now lay eggs into the VISIBLE `BroodState`
+that develops over GAME-HOURS (`BroodEggMatureTicks=350` ≈ 1 game-hour/egg) and hatches into the resident;
+breaking a nest POURS the brood out as live bugs. So there is ONE brood model now (no invisible instant-pop).
+**Open — re-tune to the new target bands** (fly 200 · butterfly 100 · wasp/centipede/beetle/millipede 30,
+provisional): the slowed pace shifted the population curves. NOTE `run_config` is PREDATION-BLIND (wasps/
+centipedes can't hunt → starve → the Director props them; their bands there are artifacts) — the faithful
+predator/nest-breeding tune needs the headless UNITY player (predation-inclusive). Butterfly is food-limited
+by nectar (not a breeding failure).

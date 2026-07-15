@@ -1,2 +1,2 @@
-2026-06-22_2150_00_baseline
-The current tuned state (make_bug_lab.DEFAULT_LAB + compiled tuning defaults). Every other config is a delta over this. No overrides = the reference run the sweep is measured against.
+2026-07-14_1116_v21b_baseline
+village_21_B as-is (no deltas) — validates the --zone rig + the reference run.

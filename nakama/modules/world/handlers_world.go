@@ -591,7 +591,7 @@ func (m *Match) breakOccupantAt(
 
 	// Nest destruction: clear the state + ORPHAN the resident (it never breeds again,
 	// tethers to its last home, still hunts/stings — a decaying patrol).
-	m.onNestOccupantRemoved(state, gx, gy, logger)
+	m.onNestOccupantRemoved(state, dispatcher, gx, gy, logger)
 
 	// A broken compost bin / milkweed loses its in-progress nursery (its eggs/maggots vanish).
 	m.onBroodSourceRemoved(state, dispatcher, gx, gy)

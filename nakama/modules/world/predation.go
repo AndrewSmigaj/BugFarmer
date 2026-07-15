@@ -40,6 +40,10 @@ const (
 	// think) and the wasp forages forever without ever heading home. 90 leaves the post-kill overshoot
 	// comfortably above it (decay-per-think ≈ 0.3), so the provision reliably fires.
 	predatorFullSatiation = 90.0
+	// nestDwellTicks: a homing resident that reaches the nest DWELLS a beat "inside" (parked via the
+	// FeedUntilTick hold branch) tending the brood before resuming the hunt — the "go inside the nest"
+	// read. ~10s; breeding-unify B renders the parked-at-nest resident as gone-inside (display-only).
+	nestDwellTicks = 100
 )
 
 // predationThink runs the species-specific Think branches that REPLACE the shared
@@ -205,6 +209,13 @@ func (m *Match) predationThink(
 					swarm.CarryingBrood = false
 					swarm.Phase = "feeding"
 					swarm.Satiation = p.DepositSatiation
+					// ENTER THE NEST: hunter residents (wasps/hornets) dwell a beat tending the brood before
+					// resuming the hunt (the "go inside the nest" read); parks via the FeedUntilTick hold-leg
+					// branch below — deterministic, and B renders the parked resident as gone-inside. Nectar/
+					// carrion foragers (bees/ants) keep their tight forage loop for now (village scope = wasp).
+					if len(p.Prey) > 0 {
+						swarm.FeedUntilTick = state.TickCount + nestDwellTicks
+					}
 				} else {
 					m.emitLeg(state, swarm, species, nx, ny, 1.0, chunkSize, deltaTime)
 					swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)

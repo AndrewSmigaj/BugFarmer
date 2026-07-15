@@ -28,7 +28,10 @@ func TestBroodLifecycleLayMatureHatch(t *testing.T) {
 		Position: entities.EntityPosition{LocalX: 10, LocalY: 10}}
 
 	start := swarm.Count
-	for i := 0; i < 40 && swarm.Count == start; i++ {
+	// Loop bound scales with the maturation clock so slowing BroodEggMatureTicks doesn't break the test
+	// (processBroods advances StageProgress by its 30-tick interval each call).
+	maxIters := int(entities.BroodEggMatureTicks/30) + 20
+	for i := 0; i < maxIters && swarm.Count == start; i++ {
 		m.processBroods(state, nil, nopRuntimeLogger())
 	}
 	if swarm.Count <= start {

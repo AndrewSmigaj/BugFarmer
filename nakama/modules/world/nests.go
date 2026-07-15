@@ -143,7 +143,7 @@ func (m *Match) nestSpawnResident(
 // breakOccupantAt hook) and the brood-drain RE-HATCH: a dead resident with banked
 // brood re-staffs after 2 min at a size equal to the brood consumed — ~3 consecutive
 // culls exhaust a nest into readable dormancy.
-func (m *Match) processNests(state *WorldState, logger runtime.Logger) {
+func (m *Match) processNests(state *WorldState, dispatcher runtime.MatchDispatcher, logger runtime.Logger) {
 	chunkSize := state.Config.ChunkSize
 	var toDelete []string
 
@@ -167,8 +167,8 @@ func (m *Match) processNests(state *WorldState, logger runtime.Logger) {
 			continue
 		}
 
-		// Resident dead (caught/killed). Brood-drain re-hatch:
-		if nest.Brood < state.Tuning.NestHatchCost {
+		// Resident dead (caught/killed). Brood-drain re-hatch (banked brood now lives in the nest BroodState):
+		if m.nestBroodCount(state, nest) < state.Tuning.NestHatchCost {
 			// Brood exhausted → the colony would otherwise be permanently dormant (the bug behind the
 			// collapsing wasp colonies). Since wasps are NEST-ONLY, this is their sole way back, so a dead
 			// colony RE-FOUNDS a fresh founding patrol — but FOOD-GATED (live prey for hunters, live
@@ -196,11 +196,11 @@ func (m *Match) processNests(state *WorldState, logger runtime.Logger) {
 			continue
 		}
 		if state.TickCount >= nest.RehatchAtTick {
-			size := nest.Brood
+			size := m.nestBroodCount(state, nest)
 			if size > state.Tuning.NestHatchCost {
 				size = state.Tuning.NestHatchCost
 			}
-			nest.Brood -= size
+			m.drainNestBrood(state, dispatcher, nest, size)
 			species := state.Species[nest.SpeciesID]
 			if species != nil {
 				m.nestSpawnResident(state, nest, species, size, logger)
@@ -214,19 +214,18 @@ func (m *Match) processNests(state *WorldState, logger runtime.Logger) {
 	}
 }
 
-// depositBrood handles a sated resident arriving home: +1 brood (clamped — no banked
-// chain-hatching) and the hatch check (+2 into the resident per 3 brood, §13
-// partial-litter at the population cap; at zero room the brood stays banked).
+// depositBrood handles a sated resident arriving home. Breeding-unify: it lays ONE egg into the nest's
+// VISIBLE BroodState (banked at the nest brood cap) instead of bumping an invisible counter that
+// instant-pops adults. processBroods matures eggs -> maggots over GAME-HOURS and hatches them into the
+// resident (hatchFromBrood's "nest" case), honoring the population cap at hatch time (a capped nest banks
+// maggots, exactly like the old counter). Bees also make honey per trip. Dispatcher-free (called from the
+// deposit path inside predationThink) → no broadcast here; processBroods/processNests carry the display.
 func (m *Match) depositBrood(
 	state *WorldState,
 	swarm *entities.SwarmState,
 	nest *entities.NestState,
 	logger runtime.Logger,
 ) {
-	if nest.Brood < state.Tuning.NestBroodCap {
-		nest.Brood++
-	}
-
 	// Bees: every provisioning trip also makes honey (foraging IS the honey economy), up to
 	// the hive def's cap. Wasp nests have no world.hive → no-op. Display/inventory yield only.
 	if def := state.Entities[nest.EntityID]; def != nil && def.World != nil && def.World.Hive != nil {
@@ -241,34 +240,32 @@ func (m *Match) depositBrood(
 		}
 	}
 
-	if nest.Brood >= state.Tuning.NestHatchCost {
-		n := state.Tuning.NestHatchCount
-		if maxPop := state.SpeciesMaxPopulation(swarm.SpeciesID); maxPop > 0 {
-			room := maxPop - state.SpeciesPopulation(swarm.SpeciesID)
-			if room < n {
-				n = room
-			}
-		}
-		if n > 0 {
-			nest.Brood -= state.Tuning.NestHatchCost
-			m.growSwarm(state, swarm, n)
-			logger.Info("Nest %d,%d hatched +%d into %s (now %d; brood %d)",
-				nest.GridX, nest.GridY, n, swarm.ID, swarm.Count, nest.Brood)
-		}
-	}
+	m.depositNestEgg(state, nest, state.Tuning.NestBroodCap)
+	_, _ = swarm, logger // hatch is deferred to processBroods (the resident grows there, not here)
 }
 
-// onNestOccupantRemoved is the breakOccupantAt hook: clear the state and ORPHAN the
-// resident — it never breeds again, tethers to its last HomePos, still hunts/stings.
-func (m *Match) onNestOccupantRemoved(state *WorldState, gx, gy int, logger runtime.Logger) {
+// onNestOccupantRemoved is the player-BREAK hook (breakOccupantAt): the developing brood POURS OUT as live
+// bugs at the nest and the resident is orphaned (still alive, still stings). Kick a nest and everything
+// inside comes at you — the poured-out swarm + the resident proximity-aggro the adjacent breaker
+// (aggroPlayerThink, aggro_enter). The spawn rides SWARM_SPAWNED (ledgered → late-join replay-mints it).
+// This is the BREAK path only; the occupant-gone SWEEP (processNests) stays calm-orphan (no release).
+func (m *Match) onNestOccupantRemoved(state *WorldState, dispatcher runtime.MatchDispatcher, gx, gy int, logger runtime.Logger) {
 	key := fmt.Sprintf("%d,%d", gx, gy)
 	nest := state.NestStates[key]
 	if nest == nil {
 		return
 	}
+	// POUR OUT the brood as live bugs at the nest cell (the breaker is right there → they swarm it).
+	if n := m.nestBroodCount(state, nest); n > 0 {
+		chunkSize := state.Config.ChunkSize
+		if sw := m.spawnSwarmAt(state, nest.SpeciesID, n, float32(nest.GridX)+0.5, float32(nest.GridY)+0.5, chunkSize); sw != nil {
+			logger.Info("Nest at %s broken: %d brood poured out as swarm %s", key, n, sw.ID)
+		}
+		m.clearNestBrood(state, dispatcher, nest)
+	}
 	m.orphanNestResident(state, nest)
 	delete(state.NestStates, key)
-	logger.Info("Nest at %s destroyed (resident orphaned)", key)
+	logger.Info("Nest at %s destroyed (brood released, resident orphaned)", key)
 }
 
 func (m *Match) orphanNestResident(state *WorldState, nest *entities.NestState) {
@@ -325,7 +322,7 @@ func (m *Match) processNestFounding(state *WorldState, dispatcher runtime.MatchD
 		}
 		// Thriving: saturated patrol + banked surplus brood (brood only accrues from successful
 		// post-kill homing, so a full bank means the colony is well-fed).
-		if resident.Count < species.MaxSwarmSize || nest.Brood < state.Tuning.NestBroodCap {
+		if resident.Count < species.MaxSwarmSize || m.nestBroodCount(state, nest) < state.Tuning.NestBroodCap {
 			continue
 		}
 		maxNests := state.CurrentZone.BugSpawning.SpeciesCaps[nest.SpeciesID].MaxNests
@@ -349,7 +346,7 @@ func (m *Match) processNestFounding(state *WorldState, dispatcher runtime.MatchD
 			}
 			todo = append(todo, founding{gx: gx, gy: gy, occupantID: species.Predation.NestOccupant,
 				speciesID: nest.SpeciesID, species: species})
-			nest.Brood = 0
+			m.clearNestBrood(state, dispatcher, nest)
 			nestCount[nest.SpeciesID]++
 			continue
 		}
@@ -358,7 +355,7 @@ func (m *Match) processNestFounding(state *WorldState, dispatcher runtime.MatchD
 			// box (that's how an apiary comes alive), else founds a wild hive beside nectar.
 			if boxKey, ok := m.findClaimableBox(state, nest, species); ok {
 				todo = append(todo, founding{speciesID: nest.SpeciesID, species: species, claimKey: boxKey})
-				nest.Brood = 0
+				m.clearNestBrood(state, dispatcher, nest)
 				nestCount[nest.SpeciesID]++
 				continue
 			}
@@ -369,7 +366,7 @@ func (m *Match) processNestFounding(state *WorldState, dispatcher runtime.MatchD
 			}
 			todo = append(todo, founding{gx: gx, gy: gy, occupantID: species.Predation.NestOccupant,
 				speciesID: nest.SpeciesID, species: species})
-			nest.Brood = 0
+			m.clearNestBrood(state, dispatcher, nest)
 			nestCount[nest.SpeciesID]++
 			continue
 		}
@@ -381,7 +378,7 @@ func (m *Match) processNestFounding(state *WorldState, dispatcher runtime.MatchD
 		}
 		todo = append(todo, founding{gx: gx, gy: gy, occupantID: nest.EntityID,
 			speciesID: nest.SpeciesID, species: species})
-		nest.Brood = 0              // drain the surplus -> founding cooldown (rebuild to NestBroodCap first)
+		m.clearNestBrood(state, dispatcher, nest) // drain the surplus -> founding cooldown (rebuild to NestBroodCap first)
 		nestCount[nest.SpeciesID]++ // reserve the slot so two parents can't both overshoot MaxNests this pass
 	}
 

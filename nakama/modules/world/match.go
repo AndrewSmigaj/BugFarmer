@@ -1210,7 +1210,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		worldState.Perf.StopSys("forage", fgt)
 		if worldState.TickCount%30 == 0 {
 			nst := worldState.Perf.Start()
-			m.processNests(worldState, logger)                        // occupant-gone sweep + brood-drain re-hatch
+			m.processNests(worldState, dispatcher, logger)            // occupant-gone sweep + brood-drain re-hatch
 			m.processColonyMemory(worldState)                         // ant trails decay/age out (server-only soft state)
 			m.processNestFounding(worldState, dispatcher, logger)     // a thriving colony splits off a daughter hive
 			m.processPredatorBreeding(worldState, dispatcher, logger) // nestless carnivores breed when well-fed

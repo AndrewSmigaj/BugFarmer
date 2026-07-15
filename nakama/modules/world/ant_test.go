@@ -84,8 +84,8 @@ func TestAntForageTripLoop(t *testing.T) {
 	if m.predationThink(state, resident, ant, 32, 0.1, nopRuntimeLogger()) {
 		t.Fatal("the deposit beat must fall through to the shared forage block")
 	}
-	if nest.Brood != 1 {
-		t.Fatalf("deposit must bank brood: %d, want 1", nest.Brood)
+	if got := m.nestBroodCount(state, nest); got != 1 {
+		t.Fatalf("deposit must bank brood: %d, want 1", got)
 	}
 	if nest.Honey != 0 {
 		t.Fatalf("an ant brood pile must make NO honey: got %v", nest.Honey)
