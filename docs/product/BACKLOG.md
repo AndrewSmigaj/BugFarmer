@@ -256,9 +256,13 @@ The **SERVER ecology is built + verified** (Go tests + 6× headless lab + per-sp
   resident ENTERS the nest a beat to tend). **Break-release:** kick a nest → the brood POURS OUT as live
   wasps that swarm the breaker (`onNestOccupantRemoved` + `aggroPlayerThink`). Go-tested; A1 ecology-validated
   (ground species self-sustain via `+brood`). `entities/brood.go`, `world/{brood,nests,predation}.go`.
-  **→ Next (client + art, needs Unity):** B = brood RENDERER + look-in/REMOVE panel + emergence beat (OpCode
-  104 `BroodUpdate` has NO client consumer yet, so brood is invisible in-game until B); D = egg/larva/pupa +
-  nest-brood sprites. Then Phase-3 re-tune to the new bands (fly 200 · butterfly 100 · rest 30) on the
+  **→ Next (client, needs Unity):** B = brood RENDERER (OpCode 104 `BroodUpdate` still has NO client consumer,
+  so brood is invisible in-game until B) + look-in/REMOVE panel + emergence beat. **D egg+larva sprites DONE
+  (2026-07-14):** 11 per-species medium-quality sprites (fly/butterfly/wasp/beetle/millipede/centipede eggs +
+  larvae; butterfly caterpillar backlogged) wired to `species.egg_sprite_id`/`larva_sprite_id` (new field) —
+  the nest-brood PILE sprite is the remaining art. **Bug Zoo built** (`zone_bug_zoo.py` — a peaceful 3×3-pen
+  observation zone, replaces the scattered labs) to watch the loop; `zone_arena`/`zone_crawler_lab` flagged
+  superseded. Then Phase-3 re-tune to the new bands (fly 200 · butterfly 100 · rest 30) on the
   predation-inclusive Unity rig. Dead `egg_count_min/max` species fields to delete (unused).
 - **Natural death + carcass recycle** (per-bug `DeathTick`, `dead_<species>`, millipede→compost).
 - **Hard `max_population` crash-guard** (per species per zone; the only guaranteed bound — food is

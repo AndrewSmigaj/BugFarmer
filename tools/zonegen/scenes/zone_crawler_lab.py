@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SUPERSEDED by the Bug Zoo (tools/zonegen/scenes/zone_bug_zoo.py) — it has its own centipede + millipede
+# pens. Kept for now; safe to delete pending owner OK (2026-07-14).
 """CRAWLER LAB (96x96): two walled pens for fighting the long crawlers — centipedes on the left,
 millipedes on the right — separated by a central aisle you spawn in. Stone walls block players AND
 bugs so each species stays penned; a 3-cell door off the aisle lets you walk in.

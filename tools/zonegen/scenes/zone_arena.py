@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SUPERSEDED by the Bug Zoo (tools/zonegen/scenes/zone_bug_zoo.py) — its 3 empty staging pens do this
+# (spawn any species with F8 in a sealed pen). Kept for now; safe to delete pending owner OK (2026-07-14).
 """COMBAT ARENA (64x64): one stone-walled pen you spawn in, for testing enemies via the F8 debug
 spawner ("spawn any species at cursor"). Walls block players AND bugs, so spawned enemies stay penned
 and you can test line-of-sight stings against the wall.
