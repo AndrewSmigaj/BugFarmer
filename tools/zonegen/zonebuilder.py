@@ -61,6 +61,11 @@ class ZoneBuilder:
         self.biome = biome
         self.spawn = [width // 2, height // 2]
         self.bug_spawning = None
+        # Test/observation-zone flags (default off → no effect on normal zones). peaceful: bugs ignore
+        # the player (ZoneConfig.Peaceful, zone.go). ephemeral_swarms: re-seed the initial population each
+        # load instead of restoring the save (a reproducible sandbox). Both are additive in save().
+        self.peaceful = False
+        self.ephemeral_swarms = False
         # World-map identity, written by save() (retires the old post-save zone.json patching):
         # grid = (row, col) in the world grid; neighbors = {"north"/"south"/"east"/"west": zone_id}
         # zone links (walking off an edge enters that neighbor). Defaults match the old save().
@@ -418,6 +423,10 @@ class ZoneBuilder:
             cfg["neighbors"] = dict(self.neighbors)
         if self.bug_spawning is not None:
             cfg["bug_spawning"] = self.bug_spawning
+        if self.peaceful:
+            cfg["peaceful"] = True
+        if self.ephemeral_swarms:
+            cfg["ephemeral_swarms"] = True
         with open(os.path.join(out, "zone.json"), "w") as f:
             json.dump(cfg, f, indent=2)
         cw, ch = self._chunk_counts()
@@ -447,6 +456,8 @@ class ZoneBuilder:
                 seed=cfg.get("seed", 0), name=cfg.get("name"), biome=cfg.get("biome_type", "meadow"))
         b.spawn = list(cfg.get("spawn_point", b.spawn))
         b.bug_spawning = cfg.get("bug_spawning")
+        b.peaceful = bool(cfg.get("peaceful", False))
+        b.ephemeral_swarms = bool(cfg.get("ephemeral_swarms", False))
         cw, ch = b._chunk_counts()
         for cy in range(ch):
             for cx in range(cw):
