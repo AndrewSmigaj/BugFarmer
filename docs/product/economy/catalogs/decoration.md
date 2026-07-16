@@ -119,3 +119,24 @@ for **your** prune call. The rock/cave-decor **rework** stays backlogged — thi
 | `brick_pile` ✅ | stack of clay bricks (yard clutter) | craft@stonecutter · find |
 | `statue_unfinished` ✅ | half-carved WIP statue (storytelling prop) | display (stonemason) · find |
 | `electric_heater` ✅ | modern electric heater (showroom display) | **buy** (electricity expansion, D14) |
+
+## Bug life-stage nursery (display-only)
+Rendered by the brood system (`BroodManager`, OpCode 104) at a breeding source as the nursery develops
+egg → larva → [pupa] → adult. Not obtainable — display-only decorations, one per species stage.
+| id | role | source 🔵 | notes |
+|---|---|---|---|
+| `fly_eggs` ✅ | fly egg clutch | sim (brood nursery) | fly stage 1 |
+| `fly_larvae` ✅ | fly maggots | sim (brood nursery) | fly stage 2 |
+| `fly_pupa` ✅ | fly pupae | sim (brood nursery) | fly stage 3 |
+| `butterfly_eggs` ✅ | butterfly eggs | sim (brood nursery) | butterfly stage 1 (milkweed) |
+| `butterfly_caterpillar` ✅ | caterpillars | sim (brood nursery) | butterfly stage 2 (milkweed) |
+| `butterfly_chrysalis` ✅ | chrysalis | sim (brood nursery) | butterfly stage 3 (milkweed) |
+| `beetle_eggs` ✅ | beetle eggs | sim (brood nursery) | beetle stage 1 |
+| `beetle_larvae` ✅ | beetle grubs | sim (brood nursery) | beetle stage 2 |
+| `beetle_pupa` ✅ | beetle pupae | sim (brood nursery) | beetle stage 3 |
+| `millipede_eggs` ✅ | millipede eggs | sim (brood nursery) | millipede stage 1 |
+| `millipede_larvae` ✅ | young millipedes | sim (brood nursery) | millipede stage 2 (no pupa) |
+| `centipede_eggs` ✅ | centipede eggs | sim (brood nursery) | centipede (Phase-3 brood) |
+| `centipede_larvae` ✅ | young centipedes | sim (brood nursery) | centipede (Phase-3 brood) |
+| `wasp_eggs` ✅ | wasp eggs | sim (nest brood) | wasp nest stage 1 |
+| `wasp_grubs` ✅ | wasp grubs | sim (nest brood) | wasp nest stage 2 |

@@ -8,8 +8,17 @@
   "fly_larvae": {
     "look": "FLY MAGGOTS: a small squirming clump of plump pale-white legless grubs, blunt at one end, top-down."
   },
+  "fly_pupa": {
+    "look": "FLY PUPAE: a small cluster of hard capsule-shaped reddish-brown pupae (puparia), smooth rounded barrel shapes, resting on the ground, top-down.", "family": "creature"
+  },
   "butterfly_eggs": {
     "look": "a small group of BUTTERFLY EGGS: tiny pale ribbed dome-shaped eggs laid in a neat cluster on a leaf, top-down."
+  },
+  "butterfly_caterpillar": {
+    "look": "two or three distinct CATERPILLARS lying side by side: each a long plump worm-like body with clear repeating yellow, white and black rings along its length, tiny legs, crawling on a green leaf, top-down.", "family": "creature"
+  },
+  "butterfly_chrysalis": {
+    "look": "a BUTTERFLY CHRYSALIS: one or two smooth teardrop jade-green chrysalises rimmed with tiny gold dots, hanging from a milkweed stem, top-down.", "family": "creature"
   },
   "wasp_eggs": {
     "look": "WASP EGGS: small creamy-white eggs, each a soft rounded rice-grain resting at the bottom of its own hexagonal paper comb-cell, top-down — matte soft eggs, NOT metal rods or bars."
@@ -22,6 +31,9 @@
   },
   "beetle_larvae": {
     "look": "BEETLE GRUBS: a few plump C-curled pale grubs with small dark heads and tiny legs, in soil, top-down."
+  },
+  "beetle_pupa": {
+    "look": "BEETLE PUPAE: a couple of pale soft immobile pupae with faint folded legs and wing-cases pressed against the body, in dark soil, top-down.", "family": "creature"
   },
   "millipede_eggs": {
     "look": "a clutch of MILLIPEDE EGGS: a small cluster of tiny round pale eggs in damp soil, top-down."
