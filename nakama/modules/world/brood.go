@@ -124,44 +124,24 @@ func (m *Match) processBroods(state *WorldState, dispatcher runtime.MatchDispatc
 
 		changed := false
 
-		if b.SourceKind == "nest" {
-			// 2a) NEST broods are UNCHANGED (the nest economy — nestBroodCount, founding, recovery —
-			//     depends on this exact behavior): egg->maggot on the FULL clock, then hatch maggots
-			//     instantly into the resident patrol. No pupa, no per-stage dwell.
-			if b.Eggs > 0 {
-				b.StageProgress += interval
-				if b.StageProgress >= entities.BroodEggMatureTicks {
-					b.StageProgress -= entities.BroodEggMatureTicks
-					b.Eggs--
-					b.Maggots++
+		// Climb ONE life stage per stageTicks so EVERY stage DWELLS (is broadcast + rendered):
+		// egg->larva->[pupa]->adult; the final transition IS the hatch. BroodEggMatureTicks is split by the
+		// transition count so TOTAL egg->adult dev time is unchanged — the pupa just subdivides the same
+		// window. Most-advanced-first (advanceBroodStage) so nothing starves. NESTS use the SAME ladder now
+		// (they pupate + count pupae via nestBroodCount) — the nest hatch grows the resident (hatchFromBrood).
+		transitions := 2
+		if m.broodPupates(state, b) {
+			transitions = 3
+		}
+		stageTicks := entities.BroodEggMatureTicks / transitions
+		if b.Eggs > 0 || b.Maggots > 0 || b.Pupae > 0 {
+			b.StageProgress += interval
+			if b.StageProgress >= stageTicks {
+				if m.advanceBroodStage(state, b) {
+					b.StageProgress -= stageTicks
 					changed = true
-				}
-			}
-			if b.Maggots > 0 {
-				if m.hatchFromBrood(state, b) > 0 {
-					changed = true
-				}
-			}
-		} else {
-			// 2b) SOURCE broods climb ONE life stage per stageTicks so EVERY stage DWELLS (is broadcast +
-			//     rendered): egg->larva->[pupa]->adult; the final transition IS the hatch. BroodEggMatureTicks
-			//     is split by the transition count, so TOTAL egg->adult dev time is UNCHANGED (no ecology
-			//     re-tune) — the pupa just subdivides the same window. Most-advanced-first (advanceBroodStage)
-			//     so nothing starves (continuous laying still hatches).
-			transitions := 2
-			if m.broodPupates(state, b) {
-				transitions = 3
-			}
-			stageTicks := entities.BroodEggMatureTicks / transitions
-			if b.Eggs > 0 || b.Maggots > 0 || b.Pupae > 0 {
-				b.StageProgress += interval
-				if b.StageProgress >= stageTicks {
-					if m.advanceBroodStage(state, b) {
-						b.StageProgress -= stageTicks
-						changed = true
-					} else {
-						b.StageProgress = stageTicks // only a cap-held final stage remains — hold, retry next call
-					}
+				} else {
+					b.StageProgress = stageTicks // only a cap-held final stage remains — hold, retry next call
 				}
 			}
 		}
@@ -209,7 +189,7 @@ func (m *Match) broodSourceGone(state *WorldState, b *entities.BroodState) bool 
 // currency processNests/processNestFounding read, replacing the old nest.Brood counter.
 func (m *Match) nestBroodCount(state *WorldState, nest *entities.NestState) int {
 	if b := state.BroodStates[broodKey(nest.GridX, nest.GridY)]; b != nil {
-		return b.Eggs + b.Maggots
+		return b.Eggs + b.Maggots + b.Pupae
 	}
 	return 0
 }
@@ -219,7 +199,7 @@ func (m *Match) nestBroodCount(state *WorldState, nest *entities.NestState) int 
 // predationThink) so it does NOT broadcast — processBroods/processNests carry the display update.
 func (m *Match) depositNestEgg(state *WorldState, nest *entities.NestState, capEggs int) {
 	b := m.getOrCreateBrood(state, nest.GridX, nest.GridY, nest.SpeciesID, "nest", "", capEggs)
-	if b.Eggs+b.Maggots < b.CapEggs {
+	if b.Eggs+b.Maggots+b.Pupae < b.CapEggs {
 		b.Eggs++
 	}
 }
@@ -234,24 +214,20 @@ func (m *Match) drainNestBrood(state *WorldState, dispatcher runtime.MatchDispat
 		return 0
 	}
 	drained := 0
-	if take := n; take > b.Maggots {
-		drained += b.Maggots
-		n -= b.Maggots
-		b.Maggots = 0
-	} else {
-		b.Maggots -= take
+	// Drain most-advanced first: pupae, then maggots, then eggs (re-staff pulls the closest-to-adult brood).
+	for _, stage := range []*int{&b.Pupae, &b.Maggots, &b.Eggs} {
+		if n <= 0 {
+			break
+		}
+		take := n
+		if take > *stage {
+			take = *stage
+		}
+		*stage -= take
 		drained += take
 		n -= take
 	}
-	if n > 0 {
-		take := n
-		if take > b.Eggs {
-			take = b.Eggs
-		}
-		b.Eggs -= take
-		drained += take
-	}
-	empty := b.Eggs == 0 && b.Maggots == 0
+	empty := b.Eggs == 0 && b.Maggots == 0 && b.Pupae == 0
 	m.broadcastBroodUpdate(dispatcher, state, b, empty)
 	if empty {
 		delete(state.BroodStates, key)
@@ -268,13 +244,11 @@ func (m *Match) clearNestBrood(state *WorldState, dispatcher runtime.MatchDispat
 	}
 }
 
-// broodPupates reports whether this brood runs the full egg->larva->PUPA->adult ladder: SOURCE broods
-// (not nests) of a species that has a pupa sprite. Nests + non-pupating species (e.g. millipede) stay
-// egg->larva->adult so the nest economy (nestBroodCount = Eggs+Maggots) is untouched.
+// broodPupates reports whether this brood runs the full egg->larva->PUPA->adult ladder: any brood
+// (source OR nest) whose species has a pupa sprite. Holometabolous bugs (fly/butterfly/beetle + wasp/bee/ant
+// in a nest) pupate; non-pupating species (e.g. millipede) stay egg->larva->adult. The nest economy
+// (nestBroodCount / drainNestBrood) counts pupae too, so nests pupate without breaking founding/recovery.
 func (m *Match) broodPupates(state *WorldState, b *entities.BroodState) bool {
-	if b.SourceKind == "nest" {
-		return false
-	}
 	sp := state.Species[b.SpeciesID]
 	return sp != nil && sp.PupaSpriteID != ""
 }

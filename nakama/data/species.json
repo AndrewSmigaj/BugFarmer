@@ -169,6 +169,7 @@
     "sprite_id": "wasp_common",
     "egg_sprite_id": "wasp_eggs",
     "larva_sprite_id": "wasp_grubs",
+    "pupa_sprite_id": "wasp_pupa",
     "movement_style": "darting",
     "flies_over_fences": false,
     "kill_drops": [],

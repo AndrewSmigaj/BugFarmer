@@ -26,6 +26,9 @@
   "wasp_grubs": {
     "look": "WASP GRUBS: fat creamy-white legless larvae, each curled inside a hexagonal paper comb-cell, top-down."
   },
+  "wasp_pupa": {
+    "look": "WASP PUPAE: capped brood — pale developing wasp pupae sealed inside hexagonal paper comb-cells, each cell closed over with a domed off-white silk cap, a faint curled wasp shape showing through the thin cap, top-down — matte silk caps over the comb, NOT metal rods or bars."
+  },
   "beetle_eggs": {
     "look": "a clutch of BEETLE EGGS: a small heap of tiny round pearly-white eggs in dark soil, top-down."
   },

@@ -152,27 +152,37 @@ func TestBroodSourcePupatesFullCycle(t *testing.T) {
 	}
 }
 
-// The pupa ladder is gated to SOURCE broods so the nest economy is untouched: broodPupates is false for a
-// nest brood (hatches from Maggots) and true for a source brood of a pupating species (hatches from Pupae).
-func TestBroodNestSkipsPupa(t *testing.T) {
+// Nests pupate too (wasps/bees are holometabolous): a nest brood of a pupating species runs the full
+// egg->larva->pupa->adult ladder and hatches from Pupae, and nestBroodCount counts pupae so the nest economy
+// (founding/recovery) still sees the whole brood. Only a species with NO pupa sprite stays egg->larva->adult.
+func TestBroodNestPupates(t *testing.T) {
 	state := newTestState(50)
 	m := &Match{}
-	state.Species["fly_common"].PupaSpriteID = "fly_pupa"
+	state.Species["fly_common"].PupaSpriteID = "fly_pupa" // a pupating species...
 
-	nestB := &entities.BroodState{SpeciesID: "fly_common", SourceKind: "nest", Maggots: 2}
-	if m.broodPupates(state, nestB) {
-		t.Fatal("a nest-source brood must NOT pupate (protects nestBroodCount = Eggs+Maggots)")
+	nestB := &entities.BroodState{SpeciesID: "fly_common", SourceKind: "nest", Eggs: 2, Maggots: 1, Pupae: 3}
+	if !m.broodPupates(state, nestB) {
+		t.Fatal("a nest brood of a pupating species must pupate")
 	}
-	if got := m.broodReadyToHatch(state, nestB); got != 2 {
-		t.Fatalf("a nest brood hatches from Maggots: readyToHatch=%d want 2", got)
+	if got := m.broodReadyToHatch(state, nestB); got != 3 {
+		t.Fatalf("a pupating nest brood hatches from Pupae: readyToHatch=%d want 3", got)
+	}
+	// nestBroodCount must include pupae so founding/recovery see the full brood.
+	nest := &entities.NestState{GridX: 5, GridY: 6, SpeciesID: "fly_common"}
+	nestB.SourceID = ""
+	state.BroodStates[broodKey(5, 6)] = nestB
+	if got := m.nestBroodCount(state, nest); got != 2+1+3 {
+		t.Fatalf("nestBroodCount must count eggs+maggots+pupae: got %d want 6", got)
 	}
 
-	srcB := &entities.BroodState{SpeciesID: "fly_common", SourceKind: "ground_pile", Maggots: 1, Pupae: 3}
-	if !m.broodPupates(state, srcB) {
-		t.Fatal("a source brood of a pupating species must pupate")
+	// A species with NO pupa sprite stays egg->larva->adult (hatches from Maggots).
+	state.Species["millipede"] = &entities.BugSpecies{Category: "swarm"}
+	noPupaB := &entities.BroodState{SpeciesID: "millipede", SourceKind: "ground_pile", Maggots: 2}
+	if m.broodPupates(state, noPupaB) {
+		t.Fatal("a species with no pupa sprite must NOT pupate")
 	}
-	if got := m.broodReadyToHatch(state, srcB); got != 3 {
-		t.Fatalf("a pupating source brood hatches from Pupae: readyToHatch=%d want 3", got)
+	if got := m.broodReadyToHatch(state, noPupaB); got != 2 {
+		t.Fatalf("a non-pupating brood hatches from Maggots: readyToHatch=%d want 2", got)
 	}
 }
 

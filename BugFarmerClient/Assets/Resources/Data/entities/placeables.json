@@ -3899,6 +3899,11 @@
     "stackable": false, "sell_price": 2,
     "world": { "footprint": [1, 1], "pivot": "bc", "blocks_players": false, "blocks_bugs": false, "flat": true }
   },
+  "wasp_pupa": {
+    "name": "Wasp Pupae", "category": "decoration", "sprite_w": 24, "sprite_h": 16,
+    "stackable": false, "sell_price": 2,
+    "world": { "footprint": [1, 1], "pivot": "bc", "blocks_players": false, "blocks_bugs": false, "flat": true }
+  },
   "beetle_eggs": {
     "name": "Beetle Eggs", "category": "decoration", "sprite_w": 24, "sprite_h": 16,
     "stackable": false, "sell_price": 1,

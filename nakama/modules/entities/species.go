@@ -85,7 +85,7 @@ type BugSpecies struct {
 	SpriteID      string `json:"sprite_id"`
 	EggSpriteID   string `json:"egg_sprite_id"`
 	LarvaSpriteID string `json:"larva_sprite_id"`
-	PupaSpriteID  string `json:"pupa_sprite_id"` // set => this species pupates (source broods gain egg->larva->PUPA->adult)
+	PupaSpriteID  string `json:"pupa_sprite_id"` // set => this species pupates: every brood (source OR nest) runs egg->larva->PUPA->adult
 
 	// Kill drops: per-species loot table (replaces the old hardcoded bug_parts).
 	// Empty = drops nothing.
