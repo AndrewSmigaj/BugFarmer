@@ -145,3 +145,8 @@ tools/_generated/ecology_charts/*/*
 tools/response*.json
 tools/honeybee*.png
 /Untitled.png
+/diagonaltile.png
+
+# Claude Code runtime artifacts (transient — never track)
+.claude/scheduled_tasks.lock
+.claude/hooks/_smoke.log
