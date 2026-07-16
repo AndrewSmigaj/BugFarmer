@@ -1,0 +1,7 @@
+#!/bin/sh
+# Repo-health doc-drift backstop (P3). Blocks a commit whose staged source changed but its doc
+# (per .claude/manifest.json doc_coverage) did not. Activate with:
+#     git config core.hooksPath .githooks
+# Override a legitimate case with:  git commit --no-verify
+# Fail-open: the checker exits 0 on any internal error, so a bug here never blocks commits.
+exec python3 "$(git rev-parse --show-toplevel)/.claude/hooks/check_staged_drift.py"

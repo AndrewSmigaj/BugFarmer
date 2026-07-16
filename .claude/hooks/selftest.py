@@ -9,6 +9,7 @@ so it never touches the real per-session markers. Safe to re-run anytime.
 """
 import json
 import os
+import re
 import subprocess
 import sys
 
@@ -18,6 +19,9 @@ GATE_EDIT = os.path.join(HOOKS, "gate_authoring_edits.py")
 MARK = os.path.join(HOOKS, "mark_skill_read.py")
 GATE_PLAN = os.path.join(HOOKS, "gate_plan_exit.py")
 ROUTE = os.path.join(HOOKS, "route_skills.py")
+LOG_TOUCHED = os.path.join(HOOKS, "log_touched.py")
+CHECK_DRIFT = os.path.join(HOOKS, "check_doc_drift.py")
+STAGED_DRIFT = os.path.join(HOOKS, "check_staged_drift.py")
 SID = "SELFTEST"
 TMP = os.environ.get("TMPDIR", "/tmp")
 
@@ -55,6 +59,23 @@ def run_env(script, payload, extra_env):
     p = subprocess.run([sys.executable, script], input=json.dumps(payload),
                        capture_output=True, text=True, env=e)
     return p.returncode, p.stdout.strip()
+
+
+def run3(script, payload):
+    p = subprocess.run([sys.executable, script], input=json.dumps(payload), capture_output=True, text=True)
+    return p.returncode, p.stdout.strip(), p.stderr.strip()
+
+
+def run3env(script, payload, extra_env):
+    e = dict(os.environ)
+    e.update(extra_env)
+    p = subprocess.run([sys.executable, script], input=json.dumps(payload),
+                       capture_output=True, text=True, env=e)
+    return p.returncode, p.stdout.strip(), p.stderr.strip()
+
+
+def _safe(s):
+    return re.sub(r"[^A-Za-z0-9_.-]", "_", s or "")
 
 
 def check(name, ok):
@@ -206,6 +227,57 @@ def main():
     check("route SILENT for a skill already read this session", rc == 0 and out == "")
     rc, out = run_raw(ROUTE, "not json")
     check("route FAIL-OPEN on bad stdin", rc == 0 and out == "")
+    clear_markers()
+
+    # ============ DOC-DRIFT (log_touched.py + check_doc_drift.py) ============
+    tlog = os.path.join(TMP, f"claude-touched-{SID}.log")
+    FARM = "/x/nakama/modules/world/handlers_farming.go"          # covered by exactly one doc
+    FARM_DOC = "docs/product/architecture/architecture_farming.md"
+    for p in (tlog,):
+        try:
+            os.remove(p)
+        except OSError:
+            pass
+    run(LOG_TOUCHED, {"session_id": SID, "tool_input": {"file_path": FARM}})
+    check("log_touched records the edited path",
+          os.path.isfile(tlog) and "handlers_farming.go" in open(tlog).read())
+    rc, _o, _e = run3(CHECK_DRIFT, {"session_id": SID})
+    check("drift BLOCKS (exit 2): source changed, doc not", rc == 2)
+    with open(tlog, "a") as f:
+        f.write(FARM_DOC + "\n")
+    rc, _o, _e = run3(CHECK_DRIFT, {"session_id": SID})
+    check("drift CLEARS when the doc is also changed", rc == 0)
+    try:
+        os.remove(tlog)
+    except OSError:
+        pass
+    run(LOG_TOUCHED, {"session_id": SID, "tool_input": {"file_path": FARM}})
+    waiver = os.path.join(TMP, f"claude-docwaiver-{_safe(FARM_DOC)}-{SID}")
+    with open(waiver, "w") as f:
+        f.write("no doc change needed: internal refactor\n")
+    rc, _o, _e = run3(CHECK_DRIFT, {"session_id": SID})
+    check("drift CLEARS with a per-doc waiver", rc == 0)
+    for p in (waiver, tlog):
+        try:
+            os.remove(p)
+        except OSError:
+            pass
+    rc, _o, _e = run3(CHECK_DRIFT, {"session_id": SID})
+    check("drift ALLOWS stop when nothing edited", rc == 0)
+    rc, out = run_raw(CHECK_DRIFT, "not json")
+    check("drift FAIL-OPEN on bad stdin (exit 0)", rc == 0)
+    rc, out = run_raw(LOG_TOUCHED, "not json")
+    check("log_touched FAIL-OPEN on bad stdin", rc == 0)
+
+    # ============ PRE-COMMIT STAGED DRIFT (check_staged_drift.py) ============
+    rc, _o, _e = run3env(STAGED_DRIFT, {}, {"CLAUDE_STAGED_FILES": "nakama/modules/world/handlers_farming.go"})
+    check("staged-drift BLOCKS (exit 1): source staged, doc not", rc == 1)
+    rc, _o, _e = run3env(STAGED_DRIFT, {}, {"CLAUDE_STAGED_FILES": "nakama/modules/world/handlers_farming.go " + FARM_DOC})
+    check("staged-drift PASSES when doc also staged", rc == 0)
+    rc, _o, _e = run3env(STAGED_DRIFT, {}, {"CLAUDE_STAGED_FILES": ".claude/manifest.json README.md"})
+    check("staged-drift PASSES for non-covered files", rc == 0)
+    rc, _o, _e = run3env(STAGED_DRIFT, {}, {"CLAUDE_STAGED_FILES": ""})
+    check("staged-drift PASSES with nothing staged", rc == 0)
     clear_markers()
 
     print()

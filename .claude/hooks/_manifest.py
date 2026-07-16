@@ -35,3 +35,30 @@ def path_matches(file_path, globs):
         except Exception:
             continue
     return False
+
+
+def _same_path(changed, target):
+    """True if a changed path (absolute or repo-relative) IS the repo-relative target doc."""
+    c = (changed or "").replace("\\", "/")
+    t = (target or "").replace("\\", "/")
+    return c == t or c.endswith("/" + t)
+
+
+def doc_drift(changed_paths, m):
+    """Given the changed repo paths (this session's edits, or git-staged files), return
+    [(doc, trigger_source), ...] for each code_doc whose `covers` matched a changed source path
+    but whose own doc file was NOT among the changed paths. This is the shared drift check used by
+    both the Stop hook (check_doc_drift.py) and the pre-commit backstop (check_staged_drift.py)."""
+    changed = [c for c in (changed_paths or []) if c]
+    out = []
+    for row in m.get("doc_coverage", []):
+        if row.get("kind") != "code_doc":
+            continue
+        covers = row.get("covers", [])
+        doc = row.get("doc", "")
+        trig = next((c for c in changed if path_matches(c, covers)), None)
+        if not trig:
+            continue
+        if not any(_same_path(c, doc) for c in changed):
+            out.append((doc, trig))
+    return out
