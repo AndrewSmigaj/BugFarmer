@@ -16,6 +16,8 @@ HOOKS = os.path.dirname(os.path.abspath(__file__))
 GATE_CMD = os.path.join(HOOKS, "gate_skill_commands.py")
 GATE_EDIT = os.path.join(HOOKS, "gate_authoring_edits.py")
 MARK = os.path.join(HOOKS, "mark_skill_read.py")
+GATE_PLAN = os.path.join(HOOKS, "gate_plan_exit.py")
+ROUTE = os.path.join(HOOKS, "route_skills.py")
 SID = "SELFTEST"
 TMP = os.environ.get("TMPDIR", "/tmp")
 
@@ -28,7 +30,8 @@ def marker(slug):
 
 def clear_markers():
     for slug in ("test-changes", "run-backend", "ecology-tuning", "perf-tuning",
-                 "zone-craft", "author-zone", "economy", "frontier-sync", "regenerate-sprite"):
+                 "zone-craft", "author-zone", "economy", "frontier-sync", "regenerate-sprite",
+                 "combat-enemy", "bug-spawning", "add-object"):
         try:
             os.remove(marker(slug))
         except OSError:
@@ -166,6 +169,45 @@ def main():
     check("edit gate FAIL-OPEN on missing manifest", rc == 0 and out == "")
 
     clear_markers()
+
+    # ============ PLAN-EXIT GATE (gate_plan_exit.py) ============
+    plan = os.path.join(TMP, f"selftest-plan-{SID}.md")
+    with open(plan, "w") as f:
+        f.write("# Plan\nWe will edit nakama/modules/world/handlers_bugs.go to add a mechanic.\n")
+    rc, out = run_env(GATE_PLAN, {"session_id": SID, "tool_name": "ExitPlanMode"}, {"CLAUDE_PLAN_FILE": plan})
+    check("plan-exit DENIES: plan names world/*.go, frontier-sync unread", rc == 0 and is_deny(out))
+    mark_invoke("frontier-sync")
+    rc, out = run_env(GATE_PLAN, {"session_id": SID, "tool_name": "ExitPlanMode"}, {"CLAUDE_PLAN_FILE": plan})
+    check("plan-exit ALLOWS after reading frontier-sync", rc == 0 and out == "")
+    clear_markers()
+    with open(plan, "w") as f:
+        f.write("# Plan\nWrite a short poem about a sunset. No code, no zones.\n")
+    rc, out = run_env(GATE_PLAN, {"session_id": SID, "tool_name": "ExitPlanMode"}, {"CLAUDE_PLAN_FILE": plan})
+    check("plan-exit ALLOWS: no covered domain in plan", rc == 0 and out == "")
+    with open(plan, "w") as f:
+        f.write("# Plan\nTune the ecology and rebalance the food web.\n")
+    rc, out = run_env(GATE_PLAN, {"session_id": SID, "tool_name": "ExitPlanMode"}, {"CLAUDE_PLAN_FILE": plan})
+    check("plan-exit DENIES: ecology keyword, ecology-tuning unread", rc == 0 and is_deny(out))
+    rc, out = run_env(GATE_PLAN, {"session_id": SID, "tool_name": "ExitPlanMode"}, {"CLAUDE_PLAN_FILE": "/no/such/plan.md"})
+    check("plan-exit FAIL-OPEN when no plan file", rc == 0 and out == "")
+    try:
+        os.remove(plan)
+    except OSError:
+        pass
+    clear_markers()
+
+    # ============ ROUTE-SKILLS nudge (route_skills.py) ============
+    rc, out = run(ROUTE, {"session_id": SID, "prompt": "let's build a zone with a cave landmark scene"})
+    check("route injects zone-craft nudge (unread)", rc == 0 and "zone-craft" in out)
+    rc, out = run(ROUTE, {"session_id": SID, "prompt": "hello, how are you today"})
+    check("route SILENT when no domain keyword", rc == 0 and out == "")
+    mark_invoke("frontier-sync")
+    rc, out = run(ROUTE, {"session_id": SID, "prompt": "add a new bug mechanic with determinism"})
+    check("route SILENT for a skill already read this session", rc == 0 and out == "")
+    rc, out = run_raw(ROUTE, "not json")
+    check("route FAIL-OPEN on bad stdin", rc == 0 and out == "")
+    clear_markers()
+
     print()
     passed = sum(results)
     print(f"{passed}/{len(results)} checks passed")

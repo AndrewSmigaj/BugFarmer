@@ -51,6 +51,19 @@
     }
   ],
   "command_viewers": ["grep", "rg", "egrep", "fgrep", "cat", "bat", "less", "more", "head", "tail", "ls", "tree", "find", "fd", "wc", "echo", "printf", "stat", "file", "vim", "nvim", "nano", "emacs", "code", "sed", "awk", "cut", "column", "diff", "git", "cd", "pushd"],
+  "_routing_readme": "prompt/plan keyword -> governing skill. Consumed by route_skills.py (UserPromptSubmit: inject a tiny nudge for UNREAD relevant skills) and gate_plan_exit.py (ExitPlanMode: block until the plan's touched-domain skills are read). Keywords matched case-insensitively as substrings; keep them specific to avoid noise.",
+  "routing": [
+    { "skill": "zone-craft", "keywords": ["build a zone", "rework a zone", "zone-craft", "zonegen", "landmark scene", "a biome"], "hint": "zone/scene work -> read zone-craft (gate: brief + landmark list + options) & author-zone" },
+    { "skill": "frontier-sync", "keywords": ["determinism", "deterministic", "frontier-gated", "event ledger", "state hash", "late-join", "late join", "desync", "new bug mechanic", "swarm sim"], "hint": "deterministic sim mechanic -> read frontier-sync & architecture_swarm_sync.md" },
+    { "skill": "ecology-tuning", "keywords": ["ecology", "food web", "balance the bug", "carrying capacity", "predation rate", "spawn rate"], "hint": "ecology / food-web balance -> read ecology-tuning" },
+    { "skill": "economy", "keywords": ["new item", "a recipe", "crafting station", "the shop", "drop table", "entity registry", "currency"], "hint": "items/economy -> read economy (the unified entity registry + catalogs)" },
+    { "skill": "combat-enemy", "keywords": ["combat enemy", "enemy tier", "telegraphed sting", "aggro", "nocturnal enemy", "difficulty dial"], "hint": "add/tune a combat enemy -> read combat-enemy" },
+    { "skill": "bug-spawning", "keywords": ["spawn count", "too many bugs", "too few bugs", "populate the zone", "spawn path", "wrong number of bugs"], "hint": "wrong bug counts -> read bug-spawning (walkability + stale-save gotchas)" },
+    { "skill": "perf-tuning", "keywords": ["optimize the sim", "profile the", "hot loop", "frame time", "sim performance"], "hint": "profile/optimize the sim -> read perf-tuning (sim opts are determinism changes)" },
+    { "skill": "test-changes", "keywords": ["run the tests", "determinism check", "sync test", "test gate", "verify the change", "regression test"], "hint": "verifying a change -> read test-changes (the test-gate source of truth)" },
+    { "skill": "run-backend", "keywords": ["start the server", "start nakama", "docker compose", "rebuild the plugin", "the backend stack"], "hint": "server lifecycle -> read run-backend" },
+    { "skill": "add-object", "keywords": ["new sprite", "regenerate art", "new art asset", "new object art", "gpt-image"], "hint": "world art / sprites -> read add-object / regenerate-sprite" }
+  ],
   "_doc_coverage_readme": "Per code-doc -> the source globs it is system-of-record for. Consumed by check_doc_drift.py (P3): if a covered source changed but its doc did not, nudge to update the doc (waivable). Legitimate overlaps exist (e.g. terrain.py serves roads/water/camps) and are resolved at consume-time by naming all covering docs under one waiver. kind:reference = index/style/brainstorm doc, NO covers (excluded from drift). Every glob is validated to hit >=1 real path by validate_manifest.py.",
   "doc_coverage": [
     { "doc": "docs/product/architecture/ARCHITECTURE.md", "kind": "reference", "owner_skill": "none", "note": "Top-level architecture index / doc-map; documents no single source path." },

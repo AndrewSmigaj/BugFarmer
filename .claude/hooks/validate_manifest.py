@@ -61,6 +61,11 @@ def main():
             except re.error as e:
                 errs.append(f"{tag}.patterns: bad regex '{p}': {e}")
 
+    for i, row in enumerate(m.get("routing", [])):
+        s = row.get("skill", "")
+        if not skill_exists(s):
+            errs.append(f"routing[{i}]: skill '{s}' has no SKILL.md")
+
     for row in m.get("doc_coverage", []):
         tag = f"doc_coverage[{row.get('doc', '?')}]"
         doc = row.get("doc", "")
@@ -81,6 +86,7 @@ def main():
     print("manifest.json OK: "
           f"{len(m.get('authoring_gates', []))} authoring_gates, "
           f"{len(m.get('command_gates', []))} command_gates, "
+          f"{len(m.get('routing', []))} routing, "
           f"{len(m.get('doc_coverage', []))} doc_coverage")
     return 0
 
