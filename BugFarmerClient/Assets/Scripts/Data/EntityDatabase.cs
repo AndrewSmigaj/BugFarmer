@@ -231,6 +231,12 @@ namespace BugFarmer.Data
             // legacy centipede/millipede fallback in CentipedeTrail.
             public string SpriteFamily;
             public float RenderScale = 1f;
+
+            // Life-stage nursery sprites (BroodManager resolves the current stage's sprite by id). A non-empty
+            // PupaSpriteId means the species PUPATES (egg->larva->pupa->adult); else egg->larva->adult.
+            public string EggSpriteId;
+            public string LarvaSpriteId;
+            public string PupaSpriteId;
         }
 
         /// <summary>Client mirror of the server AttackConfig (species.json "attack"). Only the fields the
@@ -337,6 +343,9 @@ namespace BugFarmer.Data
                         AttackCooldown = obj?["attack_cooldown"]?.Value<float>() ?? 0f,
                         SpriteFamily = obj?["sprite_family"]?.Value<string>(),
                         RenderScale = obj?["render_scale"]?.Value<float>() ?? 1f,
+                        EggSpriteId = obj?["egg_sprite_id"]?.Value<string>(),
+                        LarvaSpriteId = obj?["larva_sprite_id"]?.Value<string>(),
+                        PupaSpriteId = obj?["pupa_sprite_id"]?.Value<string>(),
                         Attack = ParseAttack(obj),
                     };
                 }
