@@ -124,6 +124,18 @@ blocked on `<user-decision>`. (Verification being pending is normal at plan time
    Map each residual to the **execution gate that will close it**. Then — and only then — `Proven` is earned by
    running that gate.
 
+## Premortem — before you finalize the number
+Assume it is a week later and this change caused an incident. Answer each briefly; every answer is either a row
+you must **re-score down** or a residual you must **name and close now**:
+- **What broke — and which dimension's optimism hid it?** (the failure you'd kick yourself for missing)
+- **Which load-bearing fact did I take from a doc / memory / sub-agent WITHOUT reading the code this pass?** (→ ≤60 cap; go read it)
+- **What input did I assume was populated / valid at my read point** that could be empty, stale, duplicated, or vanished mid-op?
+- **If a late-joiner or a replay hit this, what hash-input state has NO snapshot carrier?** (the recurring sync trap — swarm_sync §0)
+- **What did the user actually DECIDE (quote them) vs. what did I infer?** An inferred "decision" INVALIDATES that row.
+- **Which hard requirement got quietly easier because it was hard?** Score against the ORIGINAL ask.
+If the premortem surfaces anything not already a named residual, close it now or lower the score to match — a
+premortem that moves no number was not run honestly.
+
 ## Worked example — the #20 client-side-LOS plan, scored at PLAN time
 | # | Dimension | Score | Band | Evidence | Falsifier | To raise |
 |---|-----------|-------|------|----------|-----------|----------|
