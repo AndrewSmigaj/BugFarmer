@@ -361,6 +361,13 @@ STUCK for MECHANIC reasons, not tunable by any param:
   too high / `max_swarm_size` 3 too small to accumulate / well-fed-split too slow. A ground-predator
   breeding pass would let it climb. (Tuning vision/position/seed-count all FAILED — it's a breeding bottleneck.)
 - **Brood CLIENT layer** — right-click a source → eggs/maggots panel + on-world maggot-pile/egg visuals + sprites.
+- **Butterfly life stages ON the milkweed (owner decision 2026-07-16 — keep it simple):** caterpillar +
+  chrysalis are STAGES that happen ON the milkweed host plant — eggs → caterpillar → chrysalis → adult — **NOT**
+  a caterpillar that crawls off or a chrysalis that wanders to a tree/fence (that mobile-creature version is
+  explicitly OUT of scope). Extends the existing `host_plant` `BroodState` (butterfly already breeds on milkweed,
+  `brood.go`) with a chrysalis stage on top of egg→larva, plus caterpillar + chrysalis stage sprites (butterfly
+  caterpillar sprite already backlogged above). Adult butterfly birth rides the deterministic ledger as today.
+  Deferred: caterpillar/chrysalis are synchronized client-side bugs — needs the sync-gate work, not done today.
 - **Plant repopulation** — player planting (seeds from destroying milkweed/flowers) + rare bounded natural spread.
 - **Ecologist meta** — the Ecology TAB dashboard (per-species graph + band status + tasks, reusing the same
   per-species data), restorative TASKS (the Director's player-facing tier: a task + grace window before the

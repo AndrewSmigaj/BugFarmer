@@ -181,7 +181,8 @@ type BroodUpdateMessage struct {
 	GY      int    `json:"gy"`
 	Species string `json:"species"`
 	Eggs    int    `json:"eggs"`
-	Maggots int    `json:"maggots"`
+	Maggots int    `json:"maggots"` // LARVA stage
+	Pupae   int    `json:"pupae"`   // PUPA stage (pupating source broods only; 0 for nests + non-pupating)
 	Kind    string `json:"kind"`    // "station" | "host_plant" | "ground_pile" | "nest" — drives the client visual
 	Removed bool   `json:"removed"` // true when the brood/pile is cleared (source gone)
 }

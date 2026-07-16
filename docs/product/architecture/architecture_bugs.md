@@ -71,6 +71,17 @@ The server owns all game state and validates all actions:
 - **Hostile/alerted state**: Which swarms are reacting to players
 - **Catching validation**: Verifies net size, condition thresholds met, range
 - **Reproduction logic**: When swarms breed, egg hatching
+- **Brood lifecycle** *(current model — `entities/brood.go`; supersedes the old `EggClusterState` /
+  `eggs.go` sections later in this doc)*: a breeding swarm lays eggs into a **`BroodState`** at its
+  source (compost `station`, `milkweed` `host_plant`, rotten-fruit/own-cell `ground_pile`, or `nest`) —
+  server-only **soft state** (never hashed, never in the snapshot; hydrated to a joining client). It
+  develops on a slow clock and **hatches via the deterministic `SWARM_REPRODUCED` ledger event** (the
+  birth is deterministic; the nursery display is not). SOURCE broods of a **pupating** species (any with
+  a `pupa_sprite_id` — fly/butterfly/beetle) climb the full **egg → larva → PUPA → adult** ladder, each
+  stage dwelling one clock step (broadcast via the display-only `BroodUpdate`, OpCode 104, carrying
+  eggs/maggots/**pupae**) so every stage is renderable; `BroodEggMatureTicks` is split across the stages
+  so total development time is unchanged. NEST broods (wasp) and non-pupating source species (millipede)
+  stay **egg → larva → adult** — the nest economy (`nestBroodCount = Eggs + Maggots`) is untouched.
 - **Merge/split decisions** *(IMPLEMENTED — deterministic population pass)*: once a minute
   (600 ticks), a swarm **splits when `Count > max_swarm_size`** (sheds its HIGHEST alive
   bug-ids into a new child swarm) and two same-species swarms **merge when their centers are

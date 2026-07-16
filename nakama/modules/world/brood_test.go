@@ -82,13 +82,20 @@ func TestBroodGroundPileSweepHatchesAndClears(t *testing.T) {
 	b.Maggots = 2
 	// GroundItems has no "food1" → the food has been consumed away.
 
-	m.processBroods(state, nil, nopRuntimeLogger())
+	// The pile isn't "source-gone" (piles detach from their food); its remaining maggots develop to adults
+	// on the brood clock and hatch, then the empty pile retires. (Source broods now dwell per stage, so the
+	// hatch takes the clock rather than a single instant call.) Ground piles live under the "g:" key namespace.
+	pileKey := "g:10,10"
+	maxIters := int(entities.BroodEggMatureTicks/30) + 20
+	for i := 0; i < maxIters && state.BroodStates[pileKey] != nil; i++ {
+		m.processBroods(state, nil, nopRuntimeLogger())
+	}
 
-	if state.BroodStates["10,10"] != nil {
-		t.Fatal("a pile must clear once its food is gone")
+	if state.BroodStates[pileKey] != nil {
+		t.Fatal("a pile must clear once its maggots have hatched out")
 	}
 	if swarm.Count != 8 {
-		t.Fatalf("the sweep should hatch the 2 remaining maggots: count=%d", swarm.Count)
+		t.Fatalf("the pile should hatch its 2 remaining maggots: count=%d", swarm.Count)
 	}
 }
 
@@ -105,5 +112,94 @@ func TestBroodEggCapClamps(t *testing.T) {
 	}
 	if b.Eggs != 3 {
 		t.Fatalf("eggs=%d, want 3", b.Eggs)
+	}
+}
+
+// Pupating SOURCE brood: egg -> larva -> PUPA -> adult. The pupa stage is reached before hatching, and the
+// split timing keeps total dev time within the old egg->maggot budget (no ecology re-tune).
+func TestBroodSourcePupatesFullCycle(t *testing.T) {
+	state := newTestState(50)
+	m := &Match{}
+	state.Species["fly_common"].PupaSpriteID = "fly_pupa" // data-driven: a pupa sprite => this species pupates
+	swarm := newTestSwarm("s", 6, 10, 10)
+	state.Swarms["s"] = swarm
+	state.SwarmsBySpecies["fly_common"] = []string{"s"}
+
+	b := m.getOrCreateBrood(state, 10, 10, "fly_common", "ground_pile", "food1", 12)
+	if got := m.layEggs(nil, state, b, 2); got != 2 {
+		t.Fatalf("expected 2 eggs laid, got %d", got)
+	}
+	state.GroundItems["food1"] = &entities.GroundItem{ID: "food1", FoodValue: 100,
+		Position: entities.EntityPosition{LocalX: 10, LocalY: 10}}
+
+	start := swarm.Count
+	sawPupa := false
+	maxIters := int(entities.BroodEggMatureTicks/30) + 20 // same budget as the non-pupating model
+	for i := 0; i < maxIters && swarm.Count == start; i++ {
+		m.processBroods(state, nil, nopRuntimeLogger())
+		if b.Pupae > 0 {
+			sawPupa = true
+		}
+	}
+	if !sawPupa {
+		t.Fatal("a pupating source brood must pass through the PUPA stage (Pupae>0) before hatching")
+	}
+	if swarm.Count <= start {
+		t.Fatalf("pupating brood never hatched within the preserved tick budget: count=%d", swarm.Count)
+	}
+	if len(eventsOfType(state, InfluenceSwarmReproduced)) == 0 {
+		t.Fatal("a hatch must emit SWARM_REPRODUCED")
+	}
+}
+
+// The pupa ladder is gated to SOURCE broods so the nest economy is untouched: broodPupates is false for a
+// nest brood (hatches from Maggots) and true for a source brood of a pupating species (hatches from Pupae).
+func TestBroodNestSkipsPupa(t *testing.T) {
+	state := newTestState(50)
+	m := &Match{}
+	state.Species["fly_common"].PupaSpriteID = "fly_pupa"
+
+	nestB := &entities.BroodState{SpeciesID: "fly_common", SourceKind: "nest", Maggots: 2}
+	if m.broodPupates(state, nestB) {
+		t.Fatal("a nest-source brood must NOT pupate (protects nestBroodCount = Eggs+Maggots)")
+	}
+	if got := m.broodReadyToHatch(state, nestB); got != 2 {
+		t.Fatalf("a nest brood hatches from Maggots: readyToHatch=%d want 2", got)
+	}
+
+	srcB := &entities.BroodState{SpeciesID: "fly_common", SourceKind: "ground_pile", Maggots: 1, Pupae: 3}
+	if !m.broodPupates(state, srcB) {
+		t.Fatal("a source brood of a pupating species must pupate")
+	}
+	if got := m.broodReadyToHatch(state, srcB); got != 3 {
+		t.Fatalf("a pupating source brood hatches from Pupae: readyToHatch=%d want 3", got)
+	}
+}
+
+// Regression (the maturation-order bug): a CONTINUOUSLY-laid pupating brood must still hatch. If maturation
+// advanced egg->larva first, incoming eggs would starve pupation and larvae would pile up forever (a
+// population crash). Later-stage-first keeps larvae flowing to pupae->adults even while eggs keep arriving.
+func TestBroodPupatingKeepsHatchingUnderContinuousLay(t *testing.T) {
+	state := newTestState(50)
+	m := &Match{}
+	state.Species["fly_common"].PupaSpriteID = "fly_pupa"
+	swarm := newTestSwarm("s", 6, 10, 10)
+	state.Swarms["s"] = swarm
+	state.SwarmsBySpecies["fly_common"] = []string{"s"}
+
+	b := m.getOrCreateBrood(state, 10, 10, "fly_common", "ground_pile", "food1", 30)
+	state.GroundItems["food1"] = &entities.GroundItem{ID: "food1", FoodValue: 100,
+		Position: entities.EntityPosition{LocalX: 10, LocalY: 10}}
+
+	start := swarm.Count
+	for i := 0; i < 120; i++ {
+		if i%5 == 0 {
+			m.layEggs(nil, state, b, 1) // a fly keeps breeding at the pile — Eggs is rarely 0
+		}
+		m.processBroods(state, nil, nopRuntimeLogger())
+	}
+	if swarm.Count <= start {
+		t.Fatalf("continuously-laid pupating brood never hatched (larvae starved pupation?): count=%d larvae=%d pupae=%d",
+			swarm.Count, b.Maggots, b.Pupae)
 	}
 }

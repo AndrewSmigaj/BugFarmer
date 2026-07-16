@@ -15,8 +15,9 @@ type BroodState struct {
 	SpeciesID    string // the species this brood produces ("fly_common", "butterfly_meadow")
 
 	Eggs          int // freshly laid, not yet matured
-	Maggots       int // matured, awaiting a hatch slot (held here when at the population cap)
-	StageProgress int // ticks accumulated toward maturing the next egg -> maggot
+	Maggots       int // matured to LARVA; awaiting the next stage (pupa) or a hatch slot (held here at the cap)
+	Pupae         int // SOURCE broods of a pupating species only (egg->larva->PUPA->adult); nests never populate this
+	StageProgress int // ticks accumulated toward maturing the next stage transition
 
 	SourceKind string // "station" | "host_plant" | "ground_pile" — drives the source-gone sweep + client visual
 	SourceID   string // station key / "" for host_plant (cell-keyed) / ground-item id for a pile

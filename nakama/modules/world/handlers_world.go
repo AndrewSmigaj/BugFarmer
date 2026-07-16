@@ -120,7 +120,7 @@ func (m *Match) handleChunkSubscribe(
 			}
 			bMsg := BroodUpdateMessage{
 				GX: b.GridX, GY: b.GridY, Species: b.SpeciesID,
-				Eggs: b.Eggs, Maggots: b.Maggots, Kind: b.SourceKind,
+				Eggs: b.Eggs, Maggots: b.Maggots, Pupae: b.Pupae, Kind: b.SourceKind,
 			}
 			bData, _ := json.Marshal(bMsg)
 			dispatcher.BroadcastMessage(OpCodeBroodUpdate, bData, []runtime.Presence{presence}, nil, true)

@@ -53,7 +53,7 @@ func (m *Match) getOrCreateBrood(state *WorldState, gx, gy int, speciesID, sourc
 // layEggs deposits n eggs into the brood at (gx,gy), clamped at the brood's capacity. Returns how many
 // were actually accepted (0 if the nursery is full). Called from the reproduceSwarm redirect.
 func (m *Match) layEggs(dispatcher runtime.MatchDispatcher, state *WorldState, b *entities.BroodState, n int) int {
-	room := b.CapEggs - (b.Eggs + b.Maggots)
+	room := b.CapEggs - (b.Eggs + b.Maggots + b.Pupae)
 	if room <= 0 {
 		return 0
 	}
@@ -101,17 +101,18 @@ func (m *Match) layIntoBrood(state *WorldState, dispatcher runtime.MatchDispatch
 	return m.layEggs(dispatcher, state, b, count) > 0
 }
 
-// processBroods (slow clock, beside processNests) matures eggs -> maggots and hatches maggots -> bugs,
-// and sweeps broods whose source is gone. Collect-then-delete (no map mutation mid-range).
+// processBroods (slow clock, beside processNests) climbs each brood one life stage per stageTicks
+// (egg->larva->[pupa]->adult; the final step hatches bugs) and sweeps broods whose source is gone.
+// Collect-then-delete (no map mutation mid-range).
 func (m *Match) processBroods(state *WorldState, dispatcher runtime.MatchDispatcher, logger runtime.Logger) {
 	const interval = 30 // call cadence (ticks); matches the processNests slow clock
 	var toDelete []string
 
 	for _, key := range sortedStringKeys(state.BroodStates) { // sorted: hatches mint swarm IDs
 		b := state.BroodStates[key]
-		// 1) Source-gone sweep: hatch whatever matured, then clear.
+		// 1) Source-gone sweep: hatch whatever fully matured, then clear.
 		if m.broodSourceGone(state, b) {
-			for b.Maggots > 0 {
+			for m.broodReadyToHatch(state, b) > 0 {
 				if hatched := m.hatchFromBrood(state, b); hatched == 0 {
 					break // at the population/swarm cap — drop the rest with the vanishing source
 				}
@@ -123,21 +124,45 @@ func (m *Match) processBroods(state *WorldState, dispatcher runtime.MatchDispatc
 
 		changed := false
 
-		// 2) Mature one egg -> maggot per BroodEggMatureTicks.
-		if b.Eggs > 0 {
-			b.StageProgress += interval
-			if b.StageProgress >= entities.BroodEggMatureTicks {
-				b.StageProgress -= entities.BroodEggMatureTicks
-				b.Eggs--
-				b.Maggots++
-				changed = true
+		if b.SourceKind == "nest" {
+			// 2a) NEST broods are UNCHANGED (the nest economy — nestBroodCount, founding, recovery —
+			//     depends on this exact behavior): egg->maggot on the FULL clock, then hatch maggots
+			//     instantly into the resident patrol. No pupa, no per-stage dwell.
+			if b.Eggs > 0 {
+				b.StageProgress += interval
+				if b.StageProgress >= entities.BroodEggMatureTicks {
+					b.StageProgress -= entities.BroodEggMatureTicks
+					b.Eggs--
+					b.Maggots++
+					changed = true
+				}
 			}
-		}
-
-		// 3) Hatch matured maggots (cap-gated inside hatchFromBrood).
-		if b.Maggots > 0 {
-			if hatched := m.hatchFromBrood(state, b); hatched > 0 {
-				changed = true
+			if b.Maggots > 0 {
+				if m.hatchFromBrood(state, b) > 0 {
+					changed = true
+				}
+			}
+		} else {
+			// 2b) SOURCE broods climb ONE life stage per stageTicks so EVERY stage DWELLS (is broadcast +
+			//     rendered): egg->larva->[pupa]->adult; the final transition IS the hatch. BroodEggMatureTicks
+			//     is split by the transition count, so TOTAL egg->adult dev time is UNCHANGED (no ecology
+			//     re-tune) — the pupa just subdivides the same window. Most-advanced-first (advanceBroodStage)
+			//     so nothing starves (continuous laying still hatches).
+			transitions := 2
+			if m.broodPupates(state, b) {
+				transitions = 3
+			}
+			stageTicks := entities.BroodEggMatureTicks / transitions
+			if b.Eggs > 0 || b.Maggots > 0 || b.Pupae > 0 {
+				b.StageProgress += interval
+				if b.StageProgress >= stageTicks {
+					if m.advanceBroodStage(state, b) {
+						b.StageProgress -= stageTicks
+						changed = true
+					} else {
+						b.StageProgress = stageTicks // only a cap-held final stage remains — hold, retry next call
+					}
+				}
 			}
 		}
 
@@ -145,10 +170,10 @@ func (m *Match) processBroods(state *WorldState, dispatcher runtime.MatchDispatc
 			m.broadcastBroodUpdate(dispatcher, state, b, false)
 		}
 
-		// A ground pile isn't tied to a vanishing apple: retire it once it has fully hatched out (no eggs
-		// or maggots left) so a tree's between-fruitings don't leave empty piles lingering. Active piles
-		// (a fly bred there this cycle) keep ≥1 egg and survive.
-		if b.SourceKind == "ground_pile" && b.Eggs == 0 && b.Maggots == 0 {
+		// A ground pile isn't tied to a vanishing apple: retire it once it has fully hatched out (no eggs,
+		// larvae, or pupae left) so a tree's between-fruitings don't leave empty piles lingering. Active
+		// piles (a fly bred there this cycle) keep ≥1 egg and survive.
+		if b.SourceKind == "ground_pile" && b.Eggs == 0 && b.Maggots == 0 && b.Pupae == 0 {
 			m.broadcastBroodUpdate(dispatcher, state, b, true)
 			toDelete = append(toDelete, key)
 		}
@@ -243,17 +268,77 @@ func (m *Match) clearNestBrood(state *WorldState, dispatcher runtime.MatchDispat
 	}
 }
 
-// hatchFromBrood turns up to BroodHatchCount maggots into bugs at the brood cell — growing the nearest
-// same-species swarm camped there (the breeder) or, failing that, minting a small new swarm. Returns the
-// number hatched (0 if held at the population/swarm cap). Mirrors the nest hatch + reproduceSwarm caps.
+// broodPupates reports whether this brood runs the full egg->larva->PUPA->adult ladder: SOURCE broods
+// (not nests) of a species that has a pupa sprite. Nests + non-pupating species (e.g. millipede) stay
+// egg->larva->adult so the nest economy (nestBroodCount = Eggs+Maggots) is untouched.
+func (m *Match) broodPupates(state *WorldState, b *entities.BroodState) bool {
+	if b.SourceKind == "nest" {
+		return false
+	}
+	sp := state.Species[b.SpeciesID]
+	return sp != nil && sp.PupaSpriteID != ""
+}
+
+// broodReadyToHatch is the count in the final pre-adult stage — PUPAE for a pupating source brood, else MAGGOTS.
+func (m *Match) broodReadyToHatch(state *WorldState, b *entities.BroodState) int {
+	if m.broodPupates(state, b) {
+		return b.Pupae
+	}
+	return b.Maggots
+}
+
+// advanceBroodStage advances ONE brood item by one stage, MOST-ADVANCED first. The final advance IS the hatch
+// (via hatchFromBrood, cap-gated). Most-advanced-first keeps the final stage draining — continuous laying
+// still hatches, larvae/pupae never pile up forever — while every stage still dwells one stageTicks (so it is
+// broadcast + rendered). Returns false only when nothing could advance (e.g. just a cap-held final stage).
+func (m *Match) advanceBroodStage(state *WorldState, b *entities.BroodState) bool {
+	pupating := m.broodPupates(state, b)
+
+	// Final stage -> adult (hatch). hatchFromBrood drains the right field (pupae if pupating, else maggots)
+	// and returns 0 when held at the population/swarm cap — then we fall through to advance an earlier stage.
+	if pupating && b.Pupae > 0 {
+		if m.hatchFromBrood(state, b) > 0 {
+			return true
+		}
+	} else if !pupating && b.Maggots > 0 {
+		if m.hatchFromBrood(state, b) > 0 {
+			return true
+		}
+	}
+
+	// Larva -> pupa (pupating only; for a non-pupating brood the larva IS the final stage, handled above).
+	if pupating && b.Maggots > 0 {
+		b.Maggots--
+		b.Pupae++
+		return true
+	}
+
+	// Egg -> larva.
+	if b.Eggs > 0 {
+		b.Eggs--
+		b.Maggots++
+		return true
+	}
+
+	return false
+}
+
+// hatchFromBrood turns up to BroodHatchCount of the final-stage brood into bugs at the brood cell — growing
+// the nearest same-species swarm camped there (the breeder) or, failing that, minting a small new swarm.
+// Returns the number hatched (0 if held at the population/swarm cap). Mirrors the nest hatch + reproduceSwarm caps.
 func (m *Match) hatchFromBrood(state *WorldState, b *entities.BroodState) int {
 	species := state.Species[b.SpeciesID]
-	if species == nil || b.Maggots <= 0 {
+	// The final pre-adult stage: PUPAE for a pupating source brood, else MAGGOTS (nests + non-pupating).
+	ready := &b.Maggots
+	if m.broodPupates(state, b) {
+		ready = &b.Pupae
+	}
+	if species == nil || *ready <= 0 {
 		return 0
 	}
 	n := entities.BroodHatchCount
-	if n > b.Maggots {
-		n = b.Maggots
+	if n > *ready {
+		n = *ready
 	}
 
 	// Population cap: hold maggots if there's no room (the nest's at-cap banking).
@@ -281,7 +366,7 @@ func (m *Match) hatchFromBrood(state *WorldState, b *entities.BroodState) int {
 		}
 		m.growSwarm(state, resident, n)
 		state.Stats.recordBirth(b.SpeciesID, BirthBrood, n)
-		b.Maggots -= n
+		*ready -= n
 		return n
 	}
 
@@ -304,7 +389,7 @@ func (m *Match) hatchFromBrood(state *WorldState, b *entities.BroodState) int {
 		}
 	}
 	state.Stats.recordBirth(b.SpeciesID, BirthBrood, n) // both paths minted n bugs from the brood
-	b.Maggots -= n
+	*ready -= n
 	return n
 }
 
@@ -343,6 +428,6 @@ func (m *Match) broadcastBroodUpdate(dispatcher runtime.MatchDispatcher, state *
 	cx, cy := b.GridX/chunkSize, b.GridY/chunkSize
 	m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeBroodUpdate, BroodUpdateMessage{
 		GX: b.GridX, GY: b.GridY, Species: b.SpeciesID,
-		Eggs: b.Eggs, Maggots: b.Maggots, Kind: b.SourceKind, Removed: removed,
+		Eggs: b.Eggs, Maggots: b.Maggots, Pupae: b.Pupae, Kind: b.SourceKind, Removed: removed,
 	})
 }
