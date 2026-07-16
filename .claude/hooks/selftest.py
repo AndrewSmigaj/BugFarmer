@@ -22,6 +22,8 @@ ROUTE = os.path.join(HOOKS, "route_skills.py")
 LOG_TOUCHED = os.path.join(HOOKS, "log_touched.py")
 CHECK_DRIFT = os.path.join(HOOKS, "check_doc_drift.py")
 STAGED_DRIFT = os.path.join(HOOKS, "check_staged_drift.py")
+MARK_DET = os.path.join(HOOKS, "mark_determinism_run.py")
+CHECK_DET = os.path.join(HOOKS, "check_determinism.py")
 SID = "SELFTEST"
 TMP = os.environ.get("TMPDIR", "/tmp")
 
@@ -278,6 +280,46 @@ def main():
     check("staged-drift PASSES for non-covered files", rc == 0)
     rc, _o, _e = run3env(STAGED_DRIFT, {}, {"CLAUDE_STAGED_FILES": ""})
     check("staged-drift PASSES with nothing staged", rc == 0)
+    clear_markers()
+
+    # ============ DETERMINISM GATE (mark_determinism_run.py + check_determinism.py) ============
+    tlog = os.path.join(TMP, f"claude-touched-{SID}.log")
+    runmark = os.path.join(TMP, f"claude-determinism-run-{SID}")
+    detwaiver = os.path.join(TMP, f"claude-determinism-waiver-{SID}")
+    for p in (tlog, runmark, detwaiver):
+        try:
+            os.remove(p)
+        except OSError:
+            pass
+    run(LOG_TOUCHED, {"session_id": SID, "tool_input": {"file_path": "/x/nakama/modules/world/match.go"}})
+    rc, _o, _e = run3(CHECK_DET, {"session_id": SID})
+    check("determinism BLOCKS (exit 2): sim changed, gate not run", rc == 2)
+    run(MARK_DET, {"session_id": SID, "tool_input": {"command": "ls -la nakama"}})
+    check("mark_determinism_run IGNORES a non-gate command", not os.path.exists(runmark))
+    run(MARK_DET, {"session_id": SID, "tool_input": {"command": "bash tools/run_go_tests.sh"}})
+    check("mark_determinism_run marks a gate command", os.path.exists(runmark))
+    rc, _o, _e = run3(CHECK_DET, {"session_id": SID})
+    check("determinism CLEARS after the gate ran", rc == 0)
+    os.remove(runmark)
+    with open(detwaiver, "w") as f:
+        f.write("no determinism impact: comment only\n")
+    rc, _o, _e = run3(CHECK_DET, {"session_id": SID})
+    check("determinism CLEARS with a session waiver", rc == 0)
+    os.remove(detwaiver)
+    try:
+        os.remove(tlog)
+    except OSError:
+        pass
+    run(LOG_TOUCHED, {"session_id": SID, "tool_input": {"file_path": "/x/README.md"}})
+    rc, _o, _e = run3(CHECK_DET, {"session_id": SID})
+    check("determinism ALLOWS when no sim code changed", rc == 0)
+    rc, out = run_raw(CHECK_DET, "not json")
+    check("determinism FAIL-OPEN on bad stdin", rc == 0)
+    for p in (tlog, runmark, detwaiver):
+        try:
+            os.remove(p)
+        except OSError:
+            pass
     clear_markers()
 
     print()

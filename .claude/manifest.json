@@ -51,6 +51,10 @@
     }
   ],
   "command_viewers": ["grep", "rg", "egrep", "fgrep", "cat", "bat", "less", "more", "head", "tail", "ls", "tree", "find", "fd", "wc", "echo", "printf", "stat", "file", "vim", "nvim", "nano", "emacs", "code", "sed", "awk", "cut", "column", "diff", "git", "cd", "pushd"],
+  "determinism": {
+    "covers": ["nakama/modules/world/*.go", "nakama/modules/entities/*.go"],
+    "gate_hint": "run the determinism gates before finishing (test-changes skill): bash tools/run_go_tests.sh + the headless sim-determinism replay + run_sync_latejoin.sh (co-located AND disjoint spawn-apart)"
+  },
   "_routing_readme": "prompt/plan keyword -> governing skill. Consumed by route_skills.py (UserPromptSubmit: inject a tiny nudge for UNREAD relevant skills) and gate_plan_exit.py (ExitPlanMode: block until the plan's touched-domain skills are read). Keywords matched case-insensitively as substrings; keep them specific to avoid noise.",
   "routing": [
     { "skill": "zone-craft", "keywords": ["build a zone", "rework a zone", "zone-craft", "zonegen", "landmark scene", "a biome"], "hint": "zone/scene work -> read zone-craft (gate: brief + landmark list + options) & author-zone" },

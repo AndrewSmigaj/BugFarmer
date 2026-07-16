@@ -66,6 +66,10 @@ def main():
         if not skill_exists(s):
             errs.append(f"routing[{i}]: skill '{s}' has no SKILL.md")
 
+    for g in (m.get("determinism") or {}).get("covers", []):
+        if not glob_hits(g):
+            errs.append(f"determinism.covers: glob '{g}' matches 0 real paths")
+
     for row in m.get("doc_coverage", []):
         tag = f"doc_coverage[{row.get('doc', '?')}]"
         doc = row.get("doc", "")
