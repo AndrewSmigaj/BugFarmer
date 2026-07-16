@@ -28,14 +28,18 @@
 - **P4 DONE.** child nakama/modules/world/CLAUDE.md (determinism checklist, grounded in swarm_sync §0) +
   manifest `determinism` scope + check_determinism.py (Stop) + mark_determinism_run.py (PostToolUse Bash).
   selftest 62/62. Committed 829bf90. **Hooks README** written + committed 8502f7d.
-- **NEXT: P5** — plan/spec discipline: committed docs/plans/ (README + TEMPLATE + this plan copied) + a
-  premortem subsection added to certainty-assessment. (The "can't report done without a conformance table"
-  rule is documented in the TEMPLATE + certainty skill, NOT a fragile Stop done-detector hook.)
-- **P6/P7 = DEFER to owner review (taste/destructive/big), do read-only audit + report only:** trim CLAUDE.md
-  to a router; skill merge/cut (plan OUT OF SCOPE: scar-born stay); effort-pinning + manual-invocation
-  frontmatter (silent-unlist hazard, do WITH review); visual verification + overnight loops (need Unity/owner
-  setup; loops have burned overnight sessions). Also DEFER the P1 doc-hygiene fixes (bugs_new.md dup,
-  entity_sync stale, block_prompts->lab_server.py) — they need canonical-choice judgment.
+- **P5 DONE.** docs/plans/ (README + TEMPLATE + this plan copied as repo-health-enforcement.md) + premortem
+  subsection added to certainty-assessment. Committed c54beff.
+- **P6 (audit only) DONE.** Skill-frontmatter audit: all 15 skills single-line desc + closed frontmatter →
+  NO silent-unlist hazard; `effort:` pinned on 0/15 (a real gap). Merge/cut NOT done (OUT OF SCOPE: scar-born stay).
+- **STOPPED HERE — owner-review queue.** Enforcement system P0-P5 COMPLETE, tested (selftest 62/62, validate
+  exit 0), 10 commits. DEFERRED for owner (taste/destructive/big): trim CLAUDE.md to a router; effort-pinning +
+  manual-invocation frontmatter (do WITH review — silent-unlist hazard); doc-hygiene fixes (bugs_new.md dup,
+  entity_sync stale, block_prompts->lab_server.py); (P7) visual verification + loop engineering + skill evals
+  (need Unity/owner setup; loops have burned overnight sessions). Then the PARKED game work resumes.
+- **⚠ NEXT-SESSION FIRST ACTION:** confirm `.claude/hooks/_smoke.log` shows UserPromptSubmit + Stop +
+  ExitPlanMode fired (proves the new hooks are live) → then REMOVE the 3 smoke loggers from settings.json +
+  delete smoke_log.py (see P0). The real gates (route_skills, gate_plan_exit, doc-drift, determinism) are now live.
 
 ## Context / why
 All of today's lost time traces to two things the guide names: **reminders don't fire** (CLAUDE.md + memory

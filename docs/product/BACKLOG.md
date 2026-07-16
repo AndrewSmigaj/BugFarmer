@@ -8,6 +8,15 @@ working; this file is what survives between sessions.
 
 ## CLAUDE.md & scaffolding improvements (owner wants a pass here; captured 2026-07-09)
 Umbrella for tightening how the assistant is steered. Add items here as they come up.
+- **DONE 2026-07-15 — enforcement scaffolding landed (P0-P5; plan: `docs/plans/repo-health-enforcement.md`).**
+  Built the manifest-driven hook system this section called for: `.claude/manifest.json` (one source) +
+  `.claude/hooks/` (skill-read gates, doc-drift Stop hook + git pre-commit backstop, determinism Stop gate,
+  plan-exit gate, prompt routing) + `nakama/modules/world/CLAUDE.md` + committed `docs/plans/`. System map:
+  `.claude/hooks/README.md`. **Hooks go live at the NEXT session start** (Claude Code snapshots hooks at startup).
+  STILL OPEN in this umbrella (deferred to owner review): the **server-data-reload reminder hook** (below) is now
+  a ~1-row add to the framework (a PostToolUse Edit nudge on `nakama/data/**` + `tools/zonegen/**`); the
+  **teach-as-we-go** and **token-optimization** items; and the owner's **scaffolding audit** (effort-pinning,
+  trim CLAUDE.md to a router, skill scar-vs-guess review) + doc-hygiene (bugs_new.md dup, entity_sync stale).
 - **Reminder HOOK: don't say "go test" after a server-DATA edit without reloading.** Recurring failure
   (many times): the assistant edits zone/server DATA, re-saves the file, then tells the owner to Play-test —
   but the running Nakama still serves the old in-memory match, so the owner hunts for things that aren't there.
