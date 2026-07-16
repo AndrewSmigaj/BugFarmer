@@ -8,16 +8,16 @@ and improvise the wrong runner. This hook makes the read non-optional: a gate co
 governing skill's SKILL.md has been read/invoked this session (marker set by mark_skill_read.py).
 
 Some commands legitimately span SKILLS (e.g. `docker compose` = run-backend AND test-changes;
-`run_config.py` = ecology-tuning / perf-tuning / test-changes). Each GATES row therefore lists the SET of
-acceptable skills — reading ANY ONE clears the command, and the deny names them all so the right one is on
-the radar. (command→one-skill was the old cross-wire: every command forced reading test-changes, even
-`docker compose up`, whose real skill is run-backend.)
+`run_config.py` = ecology-tuning / perf-tuning / test-changes). Each command_gates row therefore lists the
+SET of acceptable skills — reading ANY ONE clears the command, and the deny names them all.
 
-FAIL-OPEN by construction. A workflow gate must never be able to wall off the workflow it disciplines, so
-the whole body is wrapped in try/except and always exits 0. Only an explicit matched-gate-without-marker
-prints a deny. exit 0 + empty stdout = allow; we never emit exit 2, so any bug here degrades to "allow".
+The gate ROWS (command_gates) + the inspect-only first-tokens (command_viewers) live in
+.claude/manifest.json — the ONE source shared with the other hooks — NOT hardcoded here. Extend = add a
+command_gates row to the manifest.
 
-Extending to another skill later = add a GATES row.
+FAIL-OPEN by construction. A workflow gate must never wall off the workflow it disciplines, so the whole
+body is wrapped in try/except and always exits 0. Only an explicit matched-gate-without-marker prints a
+deny; we never emit exit 2, so any bug here (including a missing/malformed manifest) degrades to "allow".
 
 stdin (official contract): { "session_id": "...", "tool_input": { "command": "..." }, ... }
 Deny output (official contract): {"hookSpecificOutput":{"hookEventName":"PreToolUse",
@@ -28,43 +28,8 @@ import os
 import re
 import json
 
-# ---------------------------------------------------------------------------
-# GATES: ([acceptable skill slugs], [regexes identifying the command], context note).
-# Reading ANY of the acceptable skills clears the command. Regexes are matched against each
-# command *segment* after quoted strings are stripped (see matched_gate).
-# ---------------------------------------------------------------------------
-GATES = [
-    # determinism / test / verify runners  -> the test-changes discipline
-    (["test-changes"], [
-        r"\brun_go_tests\.sh\b",
-        r"\brun_sync[a-z_]*\.sh\b",
-        r"\bharness_persist_test\.sh\b",
-        r"\bsim-determinism\b",
-        r"\bsync-harness\b",
-        r"\bdotnet\s+run\b",
-        r"-executeMethod\b",
-    ], "test/determinism runner — read test-changes"),
-    # server lifecycle  -> run-backend (or test-changes, which also rebuilds the plugin before a test)
-    (["run-backend", "test-changes"], [
-        r"\bdocker[- ]compose\s+(build|up|run|restart|down)\b",
-    ], "docker compose = server lifecycle (run-backend), or rebuilding the plugin before a test (test-changes)"),
-    # ecology/perf harness  -> ecology-tuning / perf-tuning (or test-changes for a determinism verify)
-    (["ecology-tuning", "perf-tuning", "test-changes"], [
-        r"\brun_config\.py\b",
-        r"\brun_sweep\.sh\b",
-    ], "run_config/sweep = balance (ecology-tuning) / profiling (perf-tuning) / determinism-verify (test-changes)"),
-]
+import _manifest
 
-# First-token commands that only READ/inspect/navigate — never an execution. If a command segment starts
-# with one of these it's skipped (so `grep run_go_tests.sh`, `cat …`, `cd tools/sync-harness` aren't gated).
-VIEWERS = {
-    "grep", "rg", "egrep", "fgrep", "cat", "bat", "less", "more", "head", "tail",
-    "ls", "tree", "find", "fd", "wc", "echo", "printf", "stat", "file", "vim",
-    "nvim", "nano", "emacs", "code", "sed", "awk", "cut", "column", "diff", "git",
-    "cd", "pushd",
-}
-
-_GATES = [(slugs, [re.compile(p) for p in pats], note) for (slugs, pats, note) in GATES]
 _ASSIGN = re.compile(r"^\w+=")               # leading VAR=value env assignments
 _QUOTED = re.compile(r"'[^']*'|\"[^\"]*\"")  # '...' / "..." — mentions, not invocations
 _SEGSEP = re.compile(r"&&|\|\||[|;&\n]")      # shell command separators
@@ -79,15 +44,16 @@ def _first_exec(segment):
     return ""
 
 
-def matched_gate(command):
-    """Return (acceptable_slugs, note) of the first gate whose command is actually executed, else None."""
+def matched_gate(command, gates, viewers):
+    """Return (acceptable_slugs, note) of the first gate whose command is actually executed, else None.
+    `gates` rows must already carry a compiled-regex list under '_compiled' (set in main)."""
     for segment in _SEGSEP.split(command):
-        if _first_exec(segment) in VIEWERS:
+        if _first_exec(segment) in viewers:
             continue  # inspection / navigation, not an execution
         stripped = _QUOTED.sub(" ", segment)  # a real invocation token is never inside quotes
-        for slugs, regexes, note in _GATES:
-            if any(r.search(stripped) for r in regexes):
-                return slugs, note
+        for row in gates:
+            if any(r.search(stripped) for r in row.get("_compiled", [])):
+                return row.get("skills", []), row.get("note", "")
     return None
 
 
@@ -102,7 +68,14 @@ def _marker(slug, session_id):
 def main():
     data = json.load(sys.stdin)
     command = (data.get("tool_input") or {}).get("command", "") or ""
-    hit = matched_gate(command)
+
+    m = _manifest.load()
+    gates = m.get("command_gates", [])
+    for row in gates:
+        row["_compiled"] = [re.compile(p) for p in row.get("patterns", [])]
+    viewers = set(m.get("command_viewers", []))
+
+    hit = matched_gate(command, gates, viewers)
     if not hit:
         return  # not a gate command — allow (silent)
     slugs, note = hit

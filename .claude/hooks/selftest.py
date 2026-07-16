@@ -46,6 +46,14 @@ def run_raw(script, raw):
     return p.returncode, p.stdout.strip()
 
 
+def run_env(script, payload, extra_env):
+    e = dict(os.environ)
+    e.update(extra_env)
+    p = subprocess.run([sys.executable, script], input=json.dumps(payload),
+                       capture_output=True, text=True, env=e)
+    return p.returncode, p.stdout.strip()
+
+
 def check(name, ok):
     results.append(ok)
     print(f"{'PASS' if ok else 'FAIL':4} {name}")
@@ -147,6 +155,15 @@ def main():
     check("edit gate FAIL-OPEN on bad stdin", rc == 0 and out == "")
     rc, out = run_raw(MARK, "not json")
     check("mark FAIL-OPEN on bad stdin", rc == 0)
+
+    # the manifest dependency must ALSO fail-open: a genuinely-gated command/path with a MISSING
+    # manifest must ALLOW (a broken manifest must never wall off the workflow the gates discipline).
+    rc, out = run_env(GATE_CMD, {"session_id": SID, "tool_input": {"command": "bash tools/run_go_tests.sh"}},
+                      {"CLAUDE_MANIFEST_PATH": "/no/such/manifest.json"})
+    check("cmd gate FAIL-OPEN on missing manifest", rc == 0 and out == "")
+    rc, out = run_env(GATE_EDIT, {"session_id": SID, "tool_input": {"file_path": "/x/nakama/modules/world/foo.go"}},
+                      {"CLAUDE_MANIFEST_PATH": "/no/such/manifest.json"})
+    check("edit gate FAIL-OPEN on missing manifest", rc == 0 and out == "")
 
     clear_markers()
     print()
