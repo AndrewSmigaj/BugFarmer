@@ -265,11 +265,18 @@ The **SERVER ecology is built + verified** (Go tests + 6× headless lab + per-sp
   resident ENTERS the nest a beat to tend). **Break-release:** kick a nest → the brood POURS OUT as live
   wasps that swarm the breaker (`onNestOccupantRemoved` + `aggroPlayerThink`). Go-tested; A1 ecology-validated
   (ground species self-sustain via `+brood`). `entities/brood.go`, `world/{brood,nests,predation}.go`.
-  **→ Next (client, needs Unity):** B = brood RENDERER (OpCode 104 `BroodUpdate` still has NO client consumer,
-  so brood is invisible in-game until B) + look-in/REMOVE panel + emergence beat. **D egg+larva sprites DONE
-  (2026-07-14):** 11 per-species medium-quality sprites (fly/butterfly/wasp/beetle/millipede/centipede eggs +
-  larvae; butterfly caterpillar backlogged) wired to `species.egg_sprite_id`/`larva_sprite_id` (new field) —
-  the nest-brood PILE sprite is the remaining art. **Bug Zoo built** (`zone_bug_zoo.py` — a peaceful 3×3-pen
+  **→ Client renderer + emergence + insect-accurate PUPA stage DONE (2026-07-16):** `BroodManager` (client)
+  consumes OpCode 104 and draws the most-advanced non-empty stage per brood cell (egg→larva→[pupa]) — the
+  nursery is now VISIBLE in-game (was the "no client consumer" gap); the **emergence beat** slides hatchlings
+  out of the nursery cell so adults don't pop in at the swarm centre (display-only, cloned from the hash-safe
+  `LungeStart` offset). SOURCE broods of pupating species (fly/butterfly/beetle) gained a visible **PUPA** stage
+  (`BroodState.Pupae`; egg→larva→pupa→adult, each stage dwelling; `BroodEggMatureTicks` split so total dev time
+  is unchanged → no ecology re-tune; NEST broods unchanged so `nestBroodCount` is untouched). Stage art: the 11
+  existing eggs+larvae + NEW `fly_pupa`/`beetle_pupa`/`butterfly_caterpillar`/`butterfly_chrysalis` (placeholders,
+  family=creature — need an art-review pass). Go-tested; Unity batchmode compile clean; determinism proven by
+  construction (no new `ComputeStateHash` inputs). **STILL OPEN:** look-in/REMOVE panel (right-click source →
+  egg/larva/pupa counts); the in-Unity Play-test of the full lifecycle in the Bug Zoo; a non-vacuous 2-client
+  sync-gate re-run (a hatch actually firing). **Bug Zoo built** (`zone_bug_zoo.py` — a peaceful 3×3-pen
   observation zone, replaces the scattered labs) to watch the loop; `zone_arena`/`zone_crawler_lab` flagged
   superseded. Then Phase-3 re-tune to the new bands (fly 200 · butterfly 100 · rest 30) on the
   predation-inclusive Unity rig. Dead `egg_count_min/max` species fields to delete (unused).
