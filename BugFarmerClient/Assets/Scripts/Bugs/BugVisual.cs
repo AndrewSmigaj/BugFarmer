@@ -52,14 +52,6 @@ namespace BugFarmer.Bugs
         public float LungeDur;
         public Vector2 LungeVec;
 
-        // Emergence beat (display-only): a hatchling minted by a brood hatch starts its VISUAL at the nursery
-        // cell it came from and slides to its deterministic sim position over EmergeDur — so adults visibly
-        // come OUT of the brood instead of popping in at the swarm centre. Set by SwarmVisual.SpawnBug; blended
-        // inside Interpolate exactly like LungeStart. Never read by the sim or the state hash.
-        public float EmergeStart = -1f;
-        public float EmergeDur;
-        public Vector2 EmergeFromWorld;
-
         /// <summary>
         /// Cosmetic flap-animation frames (set by SwarmVisual; null = static sprite). DISPLAY-ONLY —
         /// the shown frame + the float offset are never part of the deterministic sim or state hash,
@@ -122,14 +114,6 @@ namespace BugFarmer.Bugs
                     float le = Time.time - LungeStart;
                     if (le >= LungeDur) LungeStart = -1f;
                     else pos += LungeVec * Mathf.Sin(Mathf.PI * le / LungeDur);
-                }
-
-                // Emergence beat: slide the visual from the brood cell to the sim pos (display-only; smoothstep).
-                if (EmergeStart >= 0f)
-                {
-                    float ee = (Time.time - EmergeStart) / EmergeDur;
-                    if (ee >= 1f) EmergeStart = -1f;
-                    else pos = Vector2.Lerp(EmergeFromWorld, pos, ee * ee * (3f - 2f * ee));
                 }
 
                 // Cosmetic flap animation + vertical float (display-only; never hashed).

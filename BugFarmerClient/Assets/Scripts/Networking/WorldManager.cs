@@ -239,8 +239,7 @@ namespace BugFarmer.Networking
             Bugs.InfluenceManager.Instance?.ClearSwarmLegs();
             Bugs.InfluenceManager.Instance?.ClearFood();
             World.TilemapManager.Instance?.UnloadAllChunks();         // terrain + occupant pool
-            World.BroodManager.Instance?.ClearAll();                  // nursery visuals (display-only)
-            Debug.Log("[WorldManager] ResetForZoneSwap: cleared entities/swarms/influence/tiles/broods");
+            Debug.Log("[WorldManager] ResetForZoneSwap: cleared entities/swarms/influence/tiles");
         }
 
         private void HandlePresence(IMatchPresenceEvent ev)

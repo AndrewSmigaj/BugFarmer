@@ -269,25 +269,6 @@ namespace BugFarmer.Entities
             var bugVisual = new BugVisual(agent, visual);
             bugVisual.Frames = _bugFrames; // cosmetic flap frames (null = static)
 
-            // Emergence beat (display-only): a hatchling minted by a brood hatch (SpawnSource reproduce/
-            // swarmSpawned) slides OUT of the nursery cell it came from instead of popping in at the swarm
-            // centre — only when a brood is nearby (the swarm is camped at its source). Agent.Position (the
-            // sim + hash) is untouched; this only moves the VISUAL transform for a beat.
-            if (agent.SpawnSource == "reproduce" || agent.SpawnSource == "swarmSpawned")
-            {
-                var broodCell = World.BroodManager.Instance?.NearestBroodCell(startPos.ToVector2(), 3.5f);
-                if (broodCell.HasValue)
-                {
-                    Vector2 from = World.TilemapManager.Instance != null
-                        ? (Vector2)World.TilemapManager.Instance.CellToWorld(broodCell.Value)
-                        : new Vector2(broodCell.Value.x + 0.5f, broodCell.Value.y + 0.5f);
-                    bugVisual.EmergeFromWorld = from;
-                    bugVisual.EmergeDur = 0.6f;
-                    bugVisual.EmergeStart = Time.time;
-                    visual.position = from; // start the sprite AT the nursery this frame
-                }
-            }
-
             if (_isBuzzer)
             {
                 // Fast, continuous wing buzz with a quick jittery hover — no butterfly glide.

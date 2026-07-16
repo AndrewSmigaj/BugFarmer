@@ -232,7 +232,7 @@ namespace BugFarmer.Data
             public string SpriteFamily;
             public float RenderScale = 1f;
 
-            // Life-stage nursery sprites (BroodManager resolves the current stage's sprite by id). A non-empty
+            // Life-stage nursery sprites (the nursery panel resolves each stage's sprite by id). A non-empty
             // PupaSpriteId means the species PUPATES (egg->larva->pupa->adult); else egg->larva->adult.
             public string EggSpriteId;
             public string LarvaSpriteId;
