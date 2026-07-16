@@ -32,7 +32,7 @@ const (
 	// 350 = ~1 game-hour to mature ONE egg -> maggot; a full clutch (CapEggs) develops over several game-hours
 	// to ~a day, and a brood always has developing eggs to look in on. (Was 100 = ~10s, the "hatch instantly"
 	// problem.) This reshapes the population CURVE, not the target totals — re-tune the band in Phase 3.
-	BroodEggMatureTicks = 350 // ticks to mature one egg -> maggot (~1 game-hour at 10Hz)
+	BroodEggMatureTicks = 350 // TOTAL egg->adult dev budget in ticks (~1 game-hour at 10Hz); processBroods splits it across the stage transitions (2 or 3), so total dev time is stage-count-independent
 	BroodHatchCount     = 2   // bugs hatched per hatch event
 	BroodDefaultCapEggs = 12  // nursery capacity for compost/milkweed (a ground pile scales by food)
 )

@@ -118,10 +118,7 @@ func (m *Match) handleChunkSubscribe(
 			if b.GridX/cs != cx || b.GridY/cs != cy {
 				continue
 			}
-			bMsg := BroodUpdateMessage{
-				GX: b.GridX, GY: b.GridY, Species: b.SpeciesID,
-				Eggs: b.Eggs, Maggots: b.Maggots, Pupae: b.Pupae, Kind: b.SourceKind,
-			}
+			bMsg := m.broodUpdateMessage(state, b, false)
 			bData, _ := json.Marshal(bMsg)
 			dispatcher.BroadcastMessage(OpCodeBroodUpdate, bData, []runtime.Presence{presence}, nil, true)
 		}

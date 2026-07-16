@@ -122,8 +122,6 @@ func (m *Match) processBroods(state *WorldState, dispatcher runtime.MatchDispatc
 			continue
 		}
 
-		changed := false
-
 		// Climb ONE life stage per stageTicks so EVERY stage DWELLS (is broadcast + rendered):
 		// egg->larva->[pupa]->adult; the final transition IS the hatch. BroodEggMatureTicks is split by the
 		// transition count so TOTAL egg->adult dev time is unchanged — the pupa just subdivides the same
@@ -139,15 +137,10 @@ func (m *Match) processBroods(state *WorldState, dispatcher runtime.MatchDispatc
 			if b.StageProgress >= stageTicks {
 				if m.advanceBroodStage(state, b) {
 					b.StageProgress -= stageTicks
-					changed = true
 				} else {
 					b.StageProgress = stageTicks // only a cap-held final stage remains — hold, retry next call
 				}
 			}
-		}
-
-		if changed {
-			m.broadcastBroodUpdate(dispatcher, state, b, false)
 		}
 
 		// A ground pile isn't tied to a vanishing apple: retire it once it has fully hatched out (no eggs,
@@ -156,7 +149,13 @@ func (m *Match) processBroods(state *WorldState, dispatcher runtime.MatchDispatc
 		if b.SourceKind == "ground_pile" && b.Eggs == 0 && b.Maggots == 0 && b.Pupae == 0 {
 			m.broadcastBroodUpdate(dispatcher, state, b, true)
 			toDelete = append(toDelete, key)
+			continue
 		}
+
+		// Re-broadcast the live brood every slow tick (not only on a stage transition) so an open nursery
+		// panel keeps its counts, conversion bar (StageProgress), and resident count fresh. Display-only +
+		// chunk-scoped → cheap (a handful of broods per zone).
+		m.broadcastBroodUpdate(dispatcher, state, b, false)
 	}
 
 	for _, key := range toDelete {
@@ -176,10 +175,10 @@ func (m *Match) broodSourceGone(state *WorldState, b *entities.BroodState) bool 
 	case "host_plant":
 		return state.HostPlantStates[broodKey(b.GridX, b.GridY)] == nil
 	case "nest":
-		// The nest occupant is gone (destroyed / swept). Its in-progress brood hatches out into the
-		// resident (if still alive) then clears — same shape as a vanishing station. The player-BREAK
-		// path (onNestOccupantRemoved) pours the brood out as live bugs BEFORE deleting the nest, so by
-		// the time the sweep sees NestStates==nil the BroodState is already gone (nothing double-hatches).
+		// The nest occupant is gone (destroyed / swept). On a calm SWEEP its in-progress brood hatches out
+		// into the resident (if still alive) then clears — same shape as a vanishing station. The player-BREAK
+		// path (onNestOccupantRemoved) instead PERISHES the brood (clearNestBrood) BEFORE deleting the nest,
+		// so by the time the sweep sees NestStates==nil the BroodState is already gone (nothing double-hatches).
 		return state.NestStates[broodKey(b.GridX, b.GridY)] == nil
 	}
 	return false
@@ -397,11 +396,42 @@ func (m *Match) onBroodSourceRemoved(state *WorldState, dispatcher runtime.Match
 }
 
 // broadcastBroodUpdate sends a display-only nursery update to the brood's chunk subscribers.
+// broodUpdateMessage builds the display-only OpCode-104 payload for a brood: stage counts + the
+// conversion-bar fraction (how far the current stage has climbed toward the next transition, 0..1) +
+// the resident-adult count (nests today; compost later). Shared by the chunk broadcast and the
+// join/subscribe hydration so both carry identical fields.
+func (m *Match) broodUpdateMessage(state *WorldState, b *entities.BroodState, removed bool) BroodUpdateMessage {
+	var progress float32
+	if !removed {
+		transitions := 2
+		if m.broodPupates(state, b) {
+			transitions = 3
+		}
+		if stageTicks := entities.BroodEggMatureTicks / transitions; stageTicks > 0 {
+			progress = float32(b.StageProgress) / float32(stageTicks)
+			if progress > 1 {
+				progress = 1
+			}
+		}
+	}
+	residents := 0
+	if b.SourceKind == "nest" {
+		if nest := state.NestStates[broodKey(b.GridX, b.GridY)]; nest != nil {
+			if sw, ok := state.Swarms[nest.ResidentSwarmID]; ok && sw != nil {
+				residents = sw.Count
+			}
+		}
+	}
+	return BroodUpdateMessage{
+		GX: b.GridX, GY: b.GridY, Species: b.SpeciesID,
+		Eggs: b.Eggs, Maggots: b.Maggots, Pupae: b.Pupae,
+		Progress: progress, Residents: residents,
+		Kind: b.SourceKind, Removed: removed,
+	}
+}
+
 func (m *Match) broadcastBroodUpdate(dispatcher runtime.MatchDispatcher, state *WorldState, b *entities.BroodState, removed bool) {
 	chunkSize := state.Config.ChunkSize
 	cx, cy := b.GridX/chunkSize, b.GridY/chunkSize
-	m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeBroodUpdate, BroodUpdateMessage{
-		GX: b.GridX, GY: b.GridY, Species: b.SpeciesID,
-		Eggs: b.Eggs, Maggots: b.Maggots, Pupae: b.Pupae, Kind: b.SourceKind, Removed: removed,
-	})
+	m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeBroodUpdate, m.broodUpdateMessage(state, b, removed))
 }

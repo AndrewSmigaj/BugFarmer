@@ -244,28 +244,25 @@ func (m *Match) depositBrood(
 	_, _ = swarm, logger // hatch is deferred to processBroods (the resident grows there, not here)
 }
 
-// onNestOccupantRemoved is the player-BREAK hook (breakOccupantAt): the developing brood POURS OUT as live
-// bugs at the nest and the resident is orphaned (still alive, still stings). Kick a nest and everything
-// inside comes at you — the poured-out swarm + the resident proximity-aggro the adjacent breaker
-// (aggroPlayerThink, aggro_enter). The spawn rides SWARM_SPAWNED (ledgered → late-join replay-mints it).
-// This is the BREAK path only; the occupant-gone SWEEP (processNests) stays calm-orphan (no release).
+// onNestOccupantRemoved is the player-BREAK hook (breakOccupantAt): tearing a nursery open PERISHES its
+// developing brood (eggs/larvae/pupae die — only living adults survive) and orphans the resident patrol,
+// which is still alive and still stings. Kick a nest and the RESIDENT ADULTS come at you: they're right
+// next to the breaker, so their existing proximity aggro (aggroPlayerThink, aggro_enter) turns them onto
+// the attacker. No new bugs are minted from the brood — a torn brood is dead brood (harvest it first to
+// keep it). This is the BREAK path only; the occupant-gone SWEEP (processNests) stays calm-orphan.
 func (m *Match) onNestOccupantRemoved(state *WorldState, dispatcher runtime.MatchDispatcher, gx, gy int, logger runtime.Logger) {
 	key := fmt.Sprintf("%d,%d", gx, gy)
 	nest := state.NestStates[key]
 	if nest == nil {
 		return
 	}
-	// POUR OUT the brood as live bugs at the nest cell (the breaker is right there → they swarm it).
-	if n := m.nestBroodCount(state, nest); n > 0 {
-		chunkSize := state.Config.ChunkSize
-		if sw := m.spawnSwarmAt(state, nest.SpeciesID, n, float32(nest.GridX)+0.5, float32(nest.GridY)+0.5, chunkSize); sw != nil {
-			logger.Info("Nest at %s broken: %d brood poured out as swarm %s", key, n, sw.ID)
-		}
-		m.clearNestBrood(state, dispatcher, nest)
-	}
+	// The brood PERISHES — clear it (broadcasts removed=true so the panel/display empties); no spawn.
+	m.clearNestBrood(state, dispatcher, nest)
+	// The live resident adults spill out: orphan the patrol (it keeps its bugs) so it stops homing; being
+	// adjacent to the breaker, its proximity aggro brings it onto them.
 	m.orphanNestResident(state, nest)
 	delete(state.NestStates, key)
-	logger.Info("Nest at %s destroyed (brood released, resident orphaned)", key)
+	logger.Info("Nest at %s destroyed (brood perished; resident adults orphaned)", key)
 }
 
 func (m *Match) orphanNestResident(state *WorldState, nest *entities.NestState) {

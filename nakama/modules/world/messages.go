@@ -177,14 +177,16 @@ type CorpseConsumeMessage struct {
 // hatch, or removal). Display-only — the actual births ride the deterministic SWARM_REPRODUCED ledger,
 // so a dropped/late BroodUpdate only delays the on-screen egg/maggot count, never the bug positions.
 type BroodUpdateMessage struct {
-	GX      int    `json:"gx"`
-	GY      int    `json:"gy"`
-	Species string `json:"species"`
-	Eggs    int    `json:"eggs"`
-	Maggots int    `json:"maggots"` // LARVA stage
-	Pupae   int    `json:"pupae"`   // PUPA stage (pupating source broods only; 0 for nests + non-pupating)
-	Kind    string `json:"kind"`    // "station" | "host_plant" | "ground_pile" | "nest" — drives the client visual
-	Removed bool   `json:"removed"` // true when the brood/pile is cleared (source gone)
+	GX        int     `json:"gx"`
+	GY        int     `json:"gy"`
+	Species   string  `json:"species"`
+	Eggs      int     `json:"eggs"`
+	Maggots   int     `json:"maggots"`   // LARVA stage
+	Pupae     int     `json:"pupae"`     // PUPA stage (any pupating species — fly/butterfly/beetle/wasp; 0 for non-pupating)
+	Progress  float32 `json:"progress"`  // current stage's fraction toward the next transition (0..1) — the panel's conversion bar
+	Residents int     `json:"residents"` // resident adults living IN the station (nests today; 0 otherwise) — the panel's adult slots
+	Kind      string  `json:"kind"`      // "station" | "host_plant" | "ground_pile" | "nest" — drives the client visual
+	Removed   bool    `json:"removed"`   // true when the brood/pile is cleared (source gone)
 }
 
 // PlayerSpawnMessage (OpCode 102): where the server placed this player on join (the character's

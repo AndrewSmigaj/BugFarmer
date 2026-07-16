@@ -240,14 +240,15 @@ func TestNestBreakOrphansResident(t *testing.T) {
 	}
 }
 
-// Break-release: kicking a nest with developing brood POURS IT OUT as a live swarm (which then swarms the
-// breaker via proximity aggro), clears the brood, and orphans the resident (still alive).
-func TestNestBreakReleasesBrood(t *testing.T) {
+// Break-teardown: kicking a nursery open PERISHES its developing brood — no bugs are minted from it (a torn
+// brood is dead brood; harvest it first to keep it) — and orphans the resident (still alive; being adjacent
+// to the breaker its proximity aggro turns it onto them). Only living adults survive a teardown.
+func TestNestBreakPerishesBrood(t *testing.T) {
 	state := nestTestState()
 	m := &Match{}
 	nest, resident := initTestNest(m, state)
 	setNestBrood(m, state, nest, 5) // 5 developing brood inside
-	before := len(state.Swarms)
+	before := len(state.Swarms)     // includes the already-live resident patrol
 
 	m.breakOccupantAt(nopRuntimeLogger(), nil, state, 10, 10, false)
 
@@ -255,22 +256,17 @@ func TestNestBreakReleasesBrood(t *testing.T) {
 		t.Fatal("nest survived the break")
 	}
 	if got := m.nestBroodCount(state, nest); got != 0 {
-		t.Fatalf("brood not cleared on release: %d", got)
+		t.Fatalf("brood not cleared on teardown: %d", got)
 	}
-	if len(state.Swarms) != before+1 {
-		t.Fatalf("break must pour out a released swarm: swarms %d -> %d", before, len(state.Swarms))
+	// The brood PERISHES — no new swarm is minted from it; only the already-live resident remains.
+	if len(state.Swarms) != before {
+		t.Fatalf("teardown must NOT mint a swarm from the perished brood: swarms %d -> %d", before, len(state.Swarms))
 	}
 	if resident.NestKey != "" {
 		t.Fatal("resident not orphaned")
 	}
-	found := false
-	for id, sw := range state.Swarms {
-		if id != resident.ID && sw.SpeciesID == "wasp_common" && sw.Count == 5 {
-			found = true
-		}
-	}
-	if !found {
-		t.Fatal("no 5-bug released wasp swarm found after the break")
+	if _, alive := state.Swarms[resident.ID]; !alive {
+		t.Fatal("the live resident adults must survive the teardown")
 	}
 }
 

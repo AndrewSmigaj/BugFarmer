@@ -48,8 +48,9 @@ Destroying a nursery is the **normal occupant-break** (hit it N times → pick u
 - The **brood (eggs + larva) perishes.**
 - Only the **live resident adults** spill out into the world (wasps come out **aggressive**).
 - To keep any brood, **harvest it first**, then move it to a compatible nursery.
-- **Bug to fix:** `onNestOccupantRemoved` currently turns the brood *count* into live attacking bugs — that
-  contradicts "the brood dies." Fix so the brood perishes and only resident adults are released.
+- **Built:** `onNestOccupantRemoved` now **perishes the brood** (`clearNestBrood`, no bugs minted) and orphans
+  the resident patrol — the already-live adults proximity-aggro the breaker. Matches "the brood dies, only
+  living adults spill out."
 
 ## Stages in this scope — egg → larva → adult (NO pupa)
 The village nursery bugs (flies etc.) are **egg → larva → adult**. Do **not** add a pupa stage here — pupae are
@@ -77,10 +78,13 @@ A later design layer adds **real insect life cycles** as optional educational de
 - **Built + tested (server):** the brood engine — `BroodState` (egg/larva counts + timer), `layIntoBrood`,
   `processBroods` (mature + hatch in place), nest deposit/re-hatch, milkweed host loop, wasp-nest residents.
   Breeding works; it is just invisible to the player.
+- **Built (server foundation for the panel):** the **universal pupa stage** (nests pupate too — wasp/bee),
+  the **teardown fix** (`onNestOccupantRemoved` perishes the brood), and **OpCode 104 now carries
+  conversion-progress + resident count** (via the shared `broodUpdateMessage`, re-broadcast each slow tick so an
+  open panel stays fresh).
 - **Not built (the player-facing layer):** the open-station brood **panel**, **take/random-harvest** + egg/larva
-  items, **residents at the compost bin** (residents exist only for nests today), a **clickable world object for
-  the wild fly brood**, the **teardown fix** (`onNestOccupantRemoved`), and OpCode 104 does not yet carry
-  conversion-progress or resident data.
+  items, **residents at the compost bin** (residents exist only for nests today), and a **clickable world object
+  for the wild fly brood**.
 
 ## Suggested staged build (each stage complete + testable)
 0. Butterfly caterpillar larva sprite (the one missing brood stage sprite).

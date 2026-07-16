@@ -21,9 +21,11 @@ namespace BugFarmer.Networking
         public int gy;
         public string species;
         public int eggs;
-        public int maggots; // LARVA stage
-        public int pupae;   // PUPA stage (pupating source broods only; 0 for nests + non-pupating)
-        public string kind; // "station" | "host_plant" | "ground_pile" | "nest"
+        public int maggots;   // LARVA stage
+        public int pupae;     // PUPA stage (any pupating species — fly/butterfly/beetle/wasp; 0 for non-pupating)
+        public float progress; // current stage's fraction toward the next transition (0..1) — the panel's conversion bar
+        public int residents; // resident adults living IN the station (nests today; 0 otherwise) — the panel's adult slots
+        public string kind;   // "station" | "host_plant" | "ground_pile" | "nest"
         public bool removed;
     }
 }
