@@ -804,6 +804,8 @@
     "sprite_h": 28,
     "world": {
       "host_plant": true,
+      "interactable": true,
+      "interaction_type": "nursery",
       "footprint": [
         1,
         1
@@ -2467,6 +2469,8 @@
       "pivot": "bc",
       "blocks_players": false,
       "blocks_bugs": false,
+      "interactable": true,
+      "interaction_type": "nursery",
       "breakable": {
         "hp": 4,
         "required_tool_type": "axe",

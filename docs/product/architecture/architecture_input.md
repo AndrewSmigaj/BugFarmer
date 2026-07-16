@@ -59,7 +59,7 @@ depends on world context, so it's a priority CHAIN, not a tool table:
 | order | owner | consumes when |
 |---|---|---|
 | 0 | UI guard | pointer over UI |
-| 1 | `StationController.TryHandleRightClick` | a station is under the cursor (toggle), **or an open menu was closed by the click** (state transition = consumed — never "close menu AND jab/place") |
+| 1 | station-panel sub-chain: `CraftingPanel` → **`NurseryPanel`** (nursery stations — wasp nest / milkweed) → `StationController` (compost) → shop / sign / mannequin — each self-checks its occupant's `interaction_type` | a matching occupant is under the cursor (toggle), **or an open menu was closed by the click** (state transition = consumed — never "close menu AND jab/place") |
 | 2 | `PlacementController.TryHandleRightClick` | placing mode is active (equipped placeable OR cursor-place) — **mode-based, not success-based**: a red-ghost misclick consumes; it never falls through to a jab |
 | 3 | weapon `secondary` move | the equipped item's `moves` map has a `"secondary"` |
 

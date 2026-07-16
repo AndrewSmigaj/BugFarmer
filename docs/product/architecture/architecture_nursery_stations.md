@@ -82,9 +82,14 @@ A later design layer adds **real insect life cycles** as optional educational de
   the **teardown fix** (`onNestOccupantRemoved` perishes the brood), and **OpCode 104 now carries
   conversion-progress + resident count** (via the shared `broodUpdateMessage`, re-broadcast each slow tick so an
   open panel stays fresh).
-- **Not built (the player-facing layer):** the open-station brood **panel**, **take/random-harvest** + egg/larva
-  items, **residents at the compost bin** (residents exist only for nests today), and a **clickable world object
-  for the wild fly brood**.
+- **Built (client, functional placeholder):** the open-station **`NurseryPanel`** — right-click a **wasp nest**
+  or **milkweed** (`interaction_type:"nursery"`) → one Canvas panel showing egg/larva/pupa **slots** (stage
+  sprite + count), the **resident adults inside** (a slot + count), and a smoothed **conversion bar**, fed by
+  the cached OpCode-104 stream. Mirrors `CraftingPanel`; the owner's UI mockup drives the visual polish later.
+- **Not built (the player-facing layer):** **take/random-harvest** + egg/larva items; the **compost bin** unified
+  into the panel (it still uses the `StationController` deposit UI — its `interaction_type` stays `"station"`
+  until the deposit + brood views merge); **residents at the compost bin** (residents exist only for nests
+  today); and a **clickable world object for the wild fly brood** (`ground_pile`).
 
 ## Suggested staged build (each stage complete + testable)
 0. Butterfly caterpillar larva sprite (the one missing brood stage sprite).

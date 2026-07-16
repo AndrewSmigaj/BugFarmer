@@ -192,6 +192,11 @@ namespace BugFarmer.Player
                 BugFarmer.UI.CraftingPanel.Instance.TryHandleRightClick(mouseWorld))
                 return;
 
+            // 1a. Nursery stations (wasp nest / milkweed): right-click opens the brood panel.
+            if (BugFarmer.UI.NurseryPanel.Instance != null &&
+                BugFarmer.UI.NurseryPanel.Instance.TryHandleRightClick(mouseWorld))
+                return;
+
             // 1b. Stations (compost): interact beats attack/place; closing an open menu consumes too.
             if (_station != null && _station.TryHandleRightClick(mouseWorld))
                 return;

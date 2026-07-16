@@ -64,6 +64,11 @@ namespace BugFarmer.UI
             craftGO.transform.SetParent(canvasGO.transform, false);
             craftGO.AddComponent<CraftingPanel>();
 
+            // Nursery-station panel (open a breeding station → egg/larva/pupa + residents + conversion bar).
+            var nurseryGO = new GameObject("NurseryPanel(Code)", typeof(RectTransform));
+            nurseryGO.transform.SetParent(canvasGO.transform, false);
+            nurseryGO.AddComponent<NurseryPanel>();
+
             // NPC vendor shop (dialogue + buy/sell board) — replaces the old OnGUI ShopController.
             var shopGO = new GameObject("ShopPanel(Code)", typeof(RectTransform));
             shopGO.transform.SetParent(canvasGO.transform, false);
