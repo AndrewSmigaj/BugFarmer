@@ -39,9 +39,11 @@ A nursery is **just a station**: the way a hive generates units of honeycomb and
 bars, a nursery generates **units of brood** — its egg / larva / pupa counts ARE its collectable output. You
 **take however many you want**, exactly like any other station's item transfer — **no random yield, nothing
 perishes on take** (what you leave keeps developing).
-- Each stage is a **per-species item** (the stage's own sprite): taking the eggs gives egg items, the larvae
-  give larva items, etc. The item id **is** `species.<stage>_sprite_id` (the stage entities are made stackable);
-  no new items invented.
+- Each stage grants a **per-species item**. Display sprite and take item are **separate**: the panel shows the
+  developing stage sprite (`species.<stage>_sprite_id`); the bag gets `species.<stage>_item_id` where the design
+  has a dedicated material (e.g. **wasp larva → the `wasp_larvae` material** — the boss-drop / brood-input item,
+  so harvest + place-back use that one item; `wasp_grubs` stays display-only), else the stage's own (stackable)
+  sprite id. No new items invented — reuses the unified registry.
 - Placing taken brood back onto a **COMPATIBLE nursery** — butterfly → milkweed, fly → compost, wasp → nest —
   re-seeds a brood there (host-specific; not startable on bare ground). *[the reciprocal transfer; its own step]*
 

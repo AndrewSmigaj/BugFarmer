@@ -125,7 +125,7 @@ The 7 base crops grow through 4 stages (`plant_X_stage0..3`, config in `crops.js
 | `standing_stone` ✅ | — | landmark (no drop) |
 | `ant_mound` ✅ | — | ant colony marker (see species_and_drops.md) |
 | `broken_net` ✅ | `fiber` | salvage clutter |
-| `wasp_nest` ✅ | — (no material drop) | **breeding station** (portable structure, D23): "chop" = pick it up & move it; open to harvest/move the brood. Current data drop (`paper_nest`+`wasp_larvae`) is the OLD model — to be removed when D23 is built. |
+| `wasp_nest` ✅ | — (no material drop) | **breeding station / nursery** (D23; built — see `architecture_nursery_stations.md`): right-click to open the brood panel and TAKE its egg/larva/pupa units (larva → the `wasp_larvae` material). Breaking it **perishes the brood** and spills the resident adults (aggressive) — **no material drop** (the old `paper_nest`+`wasp_larvae` break-drop is REMOVED; those are now Wasp-Thicket boss loot only). |
 
 ---
 

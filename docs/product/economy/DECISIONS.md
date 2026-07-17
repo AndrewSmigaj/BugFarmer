@@ -271,6 +271,8 @@ These were decided (some repeatedly) but kept getting dropped. Recorded here as 
 ---
 
 ### D23 — Breeding stations (host + brood): the canonical model (2026-06-27)
+> **⚠ SUPERSEDED (2026-07) — the canonical model is now [`architecture_nursery_stations.md`](../../architecture/architecture_nursery_stations.md).** A nursery is a **modified station**: the brood **IS** the station (not a separate host that "holds" it), and its egg/larva/pupa counts are collectable **output units** you take like any station transfer — **no random yield, nothing perishes on take**. The "portable host carries its brood" special case is **dropped** (breaking any nursery perishes the brood + spills the resident adults). The text below is kept for history; where it conflicts, the nursery spec wins.
+
 A **breeding station = a HOST that holds a BROOD** (eggs/larvae developing). The brood is a living thing
 separate from the host's material — larvae are **never loot/drops**.
 
@@ -288,10 +290,12 @@ separate from the host's material — larvae are **never loot/drops**.
 - **Rooted host plant** (e.g. `milkweed`): an ordinary plant. Chop = **fiber + seed** (plant material).
   Open → harvest/move the brood. Tearing it down while occupied **kills** the brood.
 
-**Status: DESIGN ONLY — not built.** Missing: the open-station brood UI, take/move-larvae, and the host-rule
-(mature / relocate / die). The brood *source* layer exists in `brood.go` (milkweed host-plant) / `nests.go`
-(wasp nest `NestState`); this is the player-facing harvest/teardown layer on top. Data changes for later:
-`wasp_nest` drop `paper_nest`+`wasp_larvae` → **none** (pick-up-and-move); `milkweed` drop `milkweed` → `fiber` + a *chance* `milkweed_seed` (per the D24 harvest rule), and milkweed is a **large plant** (several hits to fell, D24).
+**Status: BUILDING (2026-07).** BUILT: the brood engine + universal pupa stage; the open-station **panel**
+(wasp nest / milkweed); **take** (a stage's units → the bag, larva → the `wasp_larvae` material); and **teardown**
+(breaking a nursery **perishes the brood** + spills the resident adults). The `wasp_nest`
+`paper_nest`+`wasp_larvae` break-drop is **removed** (now Wasp-Thicket boss loot only). PENDING: place-back onto
+a compatible nursery, the compost bin's deposit+brood unified into the one panel, the wild fly-brood object, and
+compost residents. `milkweed` drop `milkweed` → `fiber` + a *chance* `milkweed_seed` (D24) stays as designed.
 
 ---
 

@@ -38,18 +38,23 @@ func (m *Match) handleNurseryTake(
 		return
 	}
 
-	// Pick the stage the player asked for: 0=egg, 1=larva, 2=pupa.
+	// Pick the stage the player asked for: 0=egg, 1=larva, 2=pupa. The TAKE item is the stage's dedicated
+	// item id where the design has one (e.g. wasp larva -> wasp_larvae), else the stage's own sprite id (the
+	// stackable stage placeable). Display sprite and take item are separate on purpose.
 	var avail *int
-	var itemID string
+	var itemID, spriteID string
 	switch msg.Stage {
 	case 0:
-		avail, itemID = &b.Eggs, sp.EggSpriteID
+		avail, itemID, spriteID = &b.Eggs, sp.EggItemID, sp.EggSpriteID
 	case 1:
-		avail, itemID = &b.Maggots, sp.LarvaSpriteID
+		avail, itemID, spriteID = &b.Maggots, sp.LarvaItemID, sp.LarvaSpriteID
 	case 2:
-		avail, itemID = &b.Pupae, sp.PupaSpriteID
+		avail, itemID, spriteID = &b.Pupae, sp.PupaItemID, sp.PupaSpriteID
 	default:
 		return
+	}
+	if itemID == "" {
+		itemID = spriteID
 	}
 	if *avail <= 0 || itemID == "" {
 		return

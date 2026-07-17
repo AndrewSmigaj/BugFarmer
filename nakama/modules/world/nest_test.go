@@ -407,6 +407,7 @@ func TestNurseryTakeStation(t *testing.T) {
 	sp.EggSpriteID = "wasp_eggs"
 	sp.LarvaSpriteID = "wasp_grubs"
 	sp.PupaSpriteID = "wasp_pupa"
+	sp.LarvaItemID = "wasp_larvae" // larva TAKE item = the designed material; the sprite stays wasp_grubs
 
 	state.BroodStates[broodKey(10, 10)] = &entities.BroodState{
 		GridX: 10, GridY: 10, SpeciesID: "wasp_common", SourceKind: "nest",
@@ -424,11 +425,12 @@ func TestNurseryTakeStation(t *testing.T) {
 	if b.Eggs != 5 || b.Pupae != 2 {
 		t.Fatalf("other stages must be untouched: eggs=%d pupae=%d", b.Eggs, b.Pupae)
 	}
-	if slot := player.FindItem("wasp_grubs"); slot < 0 || player.ItemSlots[slot].Count != 3 {
-		t.Fatalf("must grant 3 wasp_grubs items, slot=%d", slot)
+	if slot := player.FindItem("wasp_larvae"); slot < 0 || player.ItemSlots[slot].Count != 3 {
+		t.Fatalf("larva take must grant 3 wasp_larvae (the designed item), slot=%d", slot)
 	}
 
-	// partial take: 2 of the 5 eggs (stage 0, count 2) — nothing perishes, the other 3 stay
+	// partial take: 2 of the 5 eggs (stage 0, count 2) — no egg_item_id, so it falls back to the egg SPRITE
+	// id (wasp_eggs); nothing perishes, the other 3 stay
 	m.handleNurseryTake(nopRuntimeLogger(), nopDispatcher{}, state, "p1", NurseryTakeMessage{GX: 10, GY: 10, Stage: 0, Count: 2})
 	if b.Eggs != 3 {
 		t.Fatalf("partial take must leave 3 eggs (no perish), got %d", b.Eggs)

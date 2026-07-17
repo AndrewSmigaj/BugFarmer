@@ -3896,7 +3896,7 @@
   },
   "wasp_grubs": {
     "name": "Wasp Grubs", "category": "decoration", "sprite_w": 24, "sprite_h": 16,
-    "stackable": true, "max_stack": 99, "sell_price": 2,
+    "stackable": false, "sell_price": 2,
     "world": { "footprint": [1, 1], "pivot": "bc", "blocks_players": false, "blocks_bugs": false, "flat": true }
   },
   "wasp_pupa": {

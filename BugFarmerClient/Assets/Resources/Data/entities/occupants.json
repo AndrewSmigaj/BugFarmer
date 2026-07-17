@@ -2475,18 +2475,7 @@
         "hp": 4,
         "required_tool_type": "axe",
         "required_tool_tier": 1,
-        "drops": [
-          {
-            "item_id": "paper_nest",
-            "count": 2,
-            "chance": 1.0
-          },
-          {
-            "item_id": "wasp_larvae",
-            "count": 2,
-            "chance": 0.8
-          }
-        ]
+        "drops": []
       }
     }
   },

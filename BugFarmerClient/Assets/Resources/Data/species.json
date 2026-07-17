@@ -170,6 +170,7 @@
     "egg_sprite_id": "wasp_eggs",
     "larva_sprite_id": "wasp_grubs",
     "pupa_sprite_id": "wasp_pupa",
+    "larva_item_id": "wasp_larvae",
     "movement_style": "darting",
     "flies_over_fences": false,
     "kill_drops": [],

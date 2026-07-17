@@ -87,6 +87,15 @@ type BugSpecies struct {
 	LarvaSpriteID string `json:"larva_sprite_id"`
 	PupaSpriteID  string `json:"pupa_sprite_id"` // set => this species pupates: every brood (source OR nest) runs egg->larva->PUPA->adult
 
+	// The ITEM granted when a player TAKES this stage from a nursery (a modified station). Display sprite
+	// (above) and take item (here) are SEPARATE: the panel shows the developing stage sprite, the bag gets
+	// this item. Empty => grant the stage's own sprite id (the stage placeable, made stackable). Set to a
+	// dedicated material where the design has one — e.g. wasp larva -> "wasp_larvae" (the boss-drop /
+	// brood-input material), so the harvest->place-back loop uses that ONE item and wasp_grubs stays display-only.
+	EggItemID   string `json:"egg_item_id"`
+	LarvaItemID string `json:"larva_item_id"`
+	PupaItemID  string `json:"pupa_item_id"`
+
 	// Kill drops: per-species loot table (replaces the old hardcoded bug_parts).
 	// Empty = drops nothing.
 	KillDrops []KillDrop `json:"kill_drops"`
