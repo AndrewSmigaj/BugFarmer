@@ -16,6 +16,12 @@ brood" wording — see Reconciliation).
 > merge with crafting — crafting is player *inventory*, breeding is the bug *ecology*; same surface abstraction,
 > different domains. (Assessment 2026-07: porting breeding client-side is a real, determinism-gated project —
 > `float32`→fixed-point of the whole satiation/feeding economy — not a now-simplification, so deferred.)
+>
+> **Compost panel (2026-07):** the compost bin's panel is two clearly-separated areas — the **COMPOST** material
+> (organic scraps convert to *units* of compost over time; **no stages, no byproducts**) and, below a divider,
+> the flies' **own brood area** (per-species stage words — *maggots*, not "brood"). A flavor `description` shows
+> on open. Look/feel follows the research in `investigations/compost-panel-ux/`. Still open: the "take compost"
+> output (pending what a compost unit is *for*) and an in-editor visual pass.
 
 ## The core model — a brood IS a nursery station
 A **nursery station is where a species breeds, and the brood *is* that station** — one object, not a container

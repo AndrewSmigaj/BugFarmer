@@ -118,6 +118,7 @@ namespace BugFarmer.Data
         {
             public string Id;
             public string Name;
+            public string Description = ""; // flavor/functional blurb (shown when a station panel opens)
             public string Category;
             public string EntityType; // "item", "occupant", or "placeable"
 
@@ -437,6 +438,7 @@ namespace BugFarmer.Data
                 Id = id,
                 EntityType = entityType,
                 Name = data["name"]?.Value<string>() ?? id,
+                Description = data["description"]?.Value<string>() ?? "",
                 Category = data["category"]?.Value<string>() ?? "",
                 Stackable = data["stackable"]?.Value<bool>() ?? false,
                 MaxStack = data["max_stack"]?.Value<int>() ?? 99,

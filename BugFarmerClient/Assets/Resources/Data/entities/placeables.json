@@ -4850,6 +4850,7 @@
   },
   "compost_bin": {
     "name": "Compost Bin",
+    "description": "Rots scraps, spoiled fruit, and garden trimmings into rich compost over time. Flies feed and breed in the warm rot.",
     "category": "structure",
     "sprite_w": 28,
     "sprite_h": 36,

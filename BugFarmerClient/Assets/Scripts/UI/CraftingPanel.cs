@@ -234,7 +234,7 @@ namespace BugFarmer.UI
             _dock.anchorMin = _dock.anchorMax = new Vector2(0.5f, 1f);
             _dock.pivot = new Vector2(0.5f, 1f);
             _dock.sizeDelta = _isCraft ? new Vector2(600, 320)
-                            : _isStation ? new Vector2(320, 300)
+                            : _isStation ? new Vector2(340, 440)   // compost: description + material block + divider + flies block
                             : (_isNursery || _isBeehive) ? new Vector2(320, 210)
                             : new Vector2(312, 220);
             _dock.anchoredPosition = new Vector2(0, -8);
@@ -484,12 +484,24 @@ namespace BugFarmer.UI
         // placeholder — the owner's mockup drives visual polish.
         private void BuildStationContent()
         {
-            var head = UIFactory.MakeText(_content, "DepHead", UIFactory.HeaderSize, UIFactory.HeaderColor, TextAlignmentOptions.Left);
-            Place(head.rectTransform, 0, 0, 320, 16);
-            head.text = "COMPOST — click an item to deposit";
+            var def = EntityDatabase.Get(_occupantId);
+
+            // Flavor description shown on open — one warm, plain blurb (italic + wrapped).
+            var desc = UIFactory.MakeText(_content, "StDesc", UIFactory.CountSize, UIFactory.TextColor, TextAlignmentOptions.TopLeft);
+            Place(desc.rectTransform, 0, 0, 312, 48);
+            desc.fontStyle = FontStyles.Italic;
+            desc.text = def?.Description ?? "";
+
+            // ── Block A — the compost itself: organic scraps convert to UNITS of compost over time (no stages) ──
+            var aHead = UIFactory.MakeText(_content, "StAHead", UIFactory.HeaderSize, UIFactory.HeaderColor, TextAlignmentOptions.Left);
+            Place(aHead.rectTransform, 0, -54, 100, 16);
+            aHead.text = "COMPOST";
+            var aHint = UIFactory.MakeText(_content, "StAHint", UIFactory.CountSize - 1f, UIFactory.TextColor, TextAlignmentOptions.Left);
+            Place(aHint.rectTransform, 104, -53, 200, 14);
+            aHint.text = "click a scrap to add it";
 
             var grid = UIFactory.MakeGrid(_content, "DepositGrid", 6, UIFactory.Slot);
-            Place((RectTransform)grid.transform, 0, -20, 6 * 44, 2 * 44);
+            Place((RectTransform)grid.transform, 0, -74, 6 * 44, 2 * 44);
             for (int i = 0; i < 12; i++)
             {
                 var s = UIFactory.MakeSlot(grid.transform, "slot_frame");
@@ -498,21 +510,25 @@ namespace BugFarmer.UI
                 _depositSlots.Add(s);
             }
 
-            _stInputLbl = UIFactory.MakeText(_content, "InLbl", UIFactory.CountSize, UIFactory.TextColor, TextAlignmentOptions.Left);
-            Place(_stInputLbl.rectTransform, 0, -112, 200, 14);
-            var inBg = UIFactory.MakeImage(_content, "InBg", "slot_frame", true); inBg.color = new Color(0f, 0f, 0f, 0.4f);
-            Place(inBg.rectTransform, 0, -128, 184, 12);
-            _stInputFill = UIFactory.MakeImage(_content, "InFill", null); _stInputFill.color = new Color(0.8f, 0.65f, 0.3f, 1f);
-            Place(_stInputFill.rectTransform, 2, -130, 0, 8);
-
+            // Compost accumulates as UNITS (the hero readout, green bar); a small line shows how much raw is
+            // still converting. No hopper bar — a compost bin is just "scraps → units over time".
             _stCompostLbl = UIFactory.MakeText(_content, "CoLbl", UIFactory.CountSize, UIFactory.TextColor, TextAlignmentOptions.Left);
-            Place(_stCompostLbl.rectTransform, 0, -144, 200, 14);
+            Place(_stCompostLbl.rectTransform, 0, -168, 240, 14);
             var coBg = UIFactory.MakeImage(_content, "CoBg", "slot_frame", true); coBg.color = new Color(0f, 0f, 0f, 0.4f);
-            Place(coBg.rectTransform, 0, -160, 184, 12);
+            Place(coBg.rectTransform, 0, -184, 184, 12);
             _stCompostFill = UIFactory.MakeImage(_content, "CoFill", null); _stCompostFill.color = new Color(0.45f, 0.8f, 0.3f, 1f);
-            Place(_stCompostFill.rectTransform, 2, -162, 0, 8);
+            Place(_stCompostFill.rectTransform, 2, -186, 0, 8);
 
-            BuildBroodRegion(-182); // the compost's fly-brood aspect (shared with the nursery/beehive modes)
+            _stInputLbl = UIFactory.MakeText(_content, "InLbl", UIFactory.CountSize - 1f, UIFactory.TextColor, TextAlignmentOptions.Left);
+            Place(_stInputLbl.rectTransform, 0, -200, 240, 12);
+            _stInputFill = null; // raw-scraps amount is a small readout, not a second bar
+
+            // ── divider: material processing above, the living flies below ──
+            var rule = UIFactory.MakeImage(_content, "StRule", null); rule.color = new Color(1f, 1f, 1f, 0.12f);
+            Place(rule.rectTransform, 0, -218, 312, 1);
+
+            // ── Block B — the flies living in the compost: their OWN area, separate from the material ──
+            BuildBroodRegion(-232);
             RefreshStation();
         }
 
@@ -542,9 +558,9 @@ namespace BugFarmer.UI
             // fill meters
             int input = 0, fill = 0, cap = def?.World?.StationCapacity ?? 10;
             if (_stationEchoes.TryGetValue(_cell, out var st)) { input = st.input; fill = st.fill; cap = st.capacity; }
-            if (_stInputLbl != null) _stInputLbl.text = $"Input {input}/{cap}";
-            if (_stCompostLbl != null) _stCompostLbl.text = $"Compost {fill}/{cap}";
-            SetBar(_stInputFill, cap > 0 ? (float)input / cap : 0f);
+            if (_stCompostLbl != null) _stCompostLbl.text = $"Compost   {fill}/{cap} units";
+            if (_stInputLbl != null) _stInputLbl.text = input > 0 ? $"converting {input} more…" : "";
+            SetBar(_stInputFill, cap > 0 ? (float)input / cap : 0f); // _stInputFill is null in compost mode → no-op
             SetBar(_stCompostFill, cap > 0 ? (float)fill / cap : 0f);
 
             RefreshBrood(); // the compost's fly-brood aspect
