@@ -7,6 +7,7 @@ namespace BugFarmer.Networking
         // Life-stage nursery (display-only; mirrors server nakama/modules/world/messages.go)
         public const int BroodUpdate = 104; // S->C: a brood's egg/larva/pupa counts changed (display-only nursery)
         public const int NurseryTake = 113; // C->S: take brood units from a nursery station into the bag
+        public const int NurseryDeposit = 114; // C->S: place brood units from a bag slot INTO a compatible nursery
     }
 
     /// <summary>
@@ -20,6 +21,21 @@ namespace BugFarmer.Networking
         public int gx;
         public int gy;
         public int stage;
+        public int count;
+    }
+
+    /// <summary>
+    /// Place brood units FROM a bag slot INTO a compatible nursery (OpCode 114) — the reciprocal of take.
+    /// slot = the player inventory slot holding the brood item; count<=0 = the whole slot. The server
+    /// resolves the item's species+stage and rejects a cross-species deposit. Field names match the server
+    /// NurseryDepositMessage json tags (JsonUtility binds by name).
+    /// </summary>
+    [Serializable]
+    public class NurseryDepositMessage
+    {
+        public int gx;
+        public int gy;
+        public int slot;
         public int count;
     }
 

@@ -275,9 +275,11 @@ The **SERVER ecology is built + verified** (Go tests + 6× headless lab + per-sp
   `BroodEggMatureTicks` split across stages so total dev time is unchanged. Stage art: 11 existing +
   `fly_pupa`/`beetle_pupa`/`butterfly_caterpillar`/`butterfly_chrysalis`/`wasp_pupa`. The earlier wrong-model
   (on-world `BroodManager` sprite renderer + the "emergence beat") was a MIS-BUILD → **removed**. Go-tested green;
-  determinism-safe by construction (broods are server-soft/unhashed); D23 + docs reconciled. **STILL OPEN:**
-  place brood back onto a compatible nursery; the **compost bin** deposit+brood unified into the panel; the wild
-  fly-brood object; compost residents; the owner's in-Unity compile + panel eyeball + a non-vacuous 2-client
+  determinism-safe by construction (broods are server-soft/unhashed); D23 + docs reconciled. **Place-back**
+  (OpCode 114) built too — deposit a compatible brood item into a nursery (species-validated; tops up or seeds
+  an empty nest). Client headless-compile CLEAN (Assembly-CSharp.dll built). **STILL OPEN:**
+  the **compost bin** deposit+brood unified into the panel; the wild
+  fly-brood object; compost residents; the owner's in-engine panel eyeball + a non-vacuous 2-client
   sync re-run. **Bug Zoo built** (`zone_bug_zoo.py` — a peaceful 3×3-pen observation zone, replaces the scattered
   labs) to watch the loop; `zone_arena`/`zone_crawler_lab` flagged superseded. Then Phase-3 re-tune to the new
   bands (fly 200 · butterfly 100 · rest 30) on the predation-inclusive Unity rig. Dead `egg_count_min/max`

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 using BugFarmer.Data;
 using BugFarmer.Networking;
@@ -203,17 +204,17 @@ namespace BugFarmer.UI
             head.text = "BROOD";
             var hint = UIFactory.MakeText(_broodGroup, "Hint", UIFactory.CountSize - 1f,
                                           UIFactory.TextColor, TextAlignmentOptions.Left);
-            Place(hint.rectTransform, 92, 1, 200, 14);
-            hint.text = "click a stage to collect";
+            Place(hint.rectTransform, 92, 1, 210, 14);
+            hint.text = "click to collect · drop a brood item to deposit";
 
             // egg / larva / pupa slots + a count label under each (always shows the number, incl. 0).
-            // Clicking a stage COLLECTS its units into the bag — a plain station transfer (take-all).
+            // Click a stage to COLLECT its units; click while holding a brood item to DEPOSIT it (place-back).
             for (int i = 0; i < 3; i++)
             {
                 var s = UIFactory.MakeSlot(_broodGroup, "slot_frame");
                 Place((RectTransform)s.transform, i * 52, -20, UIFactory.Slot, UIFactory.Slot);
                 int stage = i;
-                s.OnSlotClicked += (slot, ev) => TakeStage(stage);
+                s.OnSlotClicked += (slot, ev) => OnStageClicked(stage, ev);
                 _stageSlots.Add(s);
                 var lbl = UIFactory.MakeText(_broodGroup, $"Stage{i}Lbl", UIFactory.CountSize,
                                              UIFactory.TextColor, TextAlignmentOptions.Center);
@@ -315,9 +316,23 @@ namespace BugFarmer.UI
         // Collect a whole stage's units into the bag (count=0 = take-all — the station-collect verb; a
         // quantity picker can send a specific count later). The panel refreshes when the server's BroodUpdate
         // echoes the new counts + the inventory sync lands.
-        private void TakeStage(int stage)
+        // Click a stage slot: if you're holding a brood item on the cursor, DEPOSIT it into this nursery
+        // (place-back — the server validates species compatibility); otherwise COLLECT this stage's units.
+        private void OnStageClicked(int stage, PointerEventData ev)
         {
             if (!_isOpen) return;
+            var drag = DragDropController.Instance;
+            if (drag != null && drag.HasCursorItem && drag.CursorSourceType == SlotType.Item)
+            {
+                Send(new NurseryDepositMessage { gx = _cell.x, gy = _cell.y, slot = drag.CursorSourceIndex, count = drag.CursorCount });
+                drag.ForceClearCursor(); // the deposit handler's inventory sync reconciles the bag
+                return;
+            }
+            TakeStage(stage);
+        }
+
+        private void TakeStage(int stage)
+        {
             Send(new NurseryTakeMessage { gx = _cell.x, gy = _cell.y, stage = stage, count = 0 });
         }
 
@@ -327,6 +342,14 @@ namespace BugFarmer.UI
             var socket = NetworkManager.Instance?.Socket;
             if (world?.CurrentMatch == null || socket == null || !socket.IsConnected) return;
             _ = socket.SendMatchStateAsync(world.CurrentMatch.Id, OpCodes.NurseryTake, JsonUtility.ToJson(msg));
+        }
+
+        private void Send(NurseryDepositMessage msg)
+        {
+            var world = WorldManager.Instance;
+            var socket = NetworkManager.Instance?.Socket;
+            if (world?.CurrentMatch == null || socket == null || !socket.IsConnected) return;
+            _ = socket.SendMatchStateAsync(world.CurrentMatch.Id, OpCodes.NurseryDeposit, JsonUtility.ToJson(msg));
         }
 
         // ---------------------------------------------------------------- helpers

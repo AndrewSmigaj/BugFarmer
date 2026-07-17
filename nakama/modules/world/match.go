@@ -1067,6 +1067,14 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				}
 				m.handleNurseryTake(logger, dispatcher, worldState, userID, ntMsg)
 
+			case OpCodeNurseryDeposit:
+				var ndMsg NurseryDepositMessage
+				if err := json.Unmarshal(msg.GetData(), &ndMsg); err != nil {
+					logger.Warn("Invalid nursery deposit from %s: %v", userID, err)
+					continue
+				}
+				m.handleNurseryDeposit(logger, dispatcher, worldState, userID, ndMsg)
+
 			case OpCodeEcologyTuning:
 				// DEV TOOL: live-override a species' ecology parameters from the Unity debug
 				// panel (server-decided values; determinism-safe).

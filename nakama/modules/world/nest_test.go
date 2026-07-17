@@ -446,3 +446,54 @@ func TestNurseryTakeStation(t *testing.T) {
 		t.Fatalf("out-of-range take must do nothing, pupae=%d", b.Pupae)
 	}
 }
+
+// Place-back (deposit): put a compatible brood item from the bag INTO a nursery — the reciprocal of take.
+// Tops up the matching stage, rejects a wrong-species item, and clamps at the brood cap.
+func TestNurseryDeposit(t *testing.T) {
+	state := nestTestState()
+	m := &Match{}
+	sp := state.Species["wasp_common"]
+	sp.LarvaSpriteID = "wasp_grubs"
+	sp.LarvaItemID = "wasp_larvae"
+	state.Species["fly_common"].LarvaSpriteID = "fly_larvae" // so fly_larvae reverse-resolves to fly
+
+	player := &PlayerState{UserID: "p1", Position: entities.EntityPosition{LocalX: 11, LocalY: 10}}
+	player.ItemSlots[0] = InventorySlot{ItemID: "wasp_larvae", Count: 5}
+	player.ItemSlots[1] = InventorySlot{ItemID: "fly_larvae", Count: 3} // wrong species for a wasp nest
+	state.Players = map[string]*PlayerState{"p1": player}
+
+	state.BroodStates[broodKey(10, 10)] = &entities.BroodState{
+		GridX: 10, GridY: 10, SpeciesID: "wasp_common", SourceKind: "nest", CapEggs: 9,
+	}
+	b := state.BroodStates[broodKey(10, 10)]
+	dep := func(slot, count int) {
+		m.handleNurseryDeposit(nopRuntimeLogger(), nopDispatcher{}, state, "p1",
+			NurseryDepositMessage{GX: 10, GY: 10, Slot: slot, Count: count})
+	}
+
+	// compatible: 2 wasp_larvae → larva stage +2; slot 0 → 3 left
+	dep(0, 2)
+	if b.Maggots != 2 || player.ItemSlots[0].Count != 3 {
+		t.Fatalf("compatible deposit: maggots=%d slot0=%d want 2,3", b.Maggots, player.ItemSlots[0].Count)
+	}
+
+	// wrong species: fly_larvae into a wasp nest → rejected, nothing moves
+	dep(1, 3)
+	if b.Maggots != 2 || player.ItemSlots[1].Count != 3 {
+		t.Fatalf("wrong-species deposit must be rejected: maggots=%d slot1=%d", b.Maggots, player.ItemSlots[1].Count)
+	}
+
+	// take-all (count<=0): the remaining 3 fit (brood 2, cap 9) → larva 5, slot empty
+	dep(0, 0)
+	if b.Maggots != 5 || player.ItemSlots[0].Count != 0 {
+		t.Fatalf("take-all deposit: maggots=%d slot0=%d want 5,0", b.Maggots, player.ItemSlots[0].Count)
+	}
+
+	// cap clamp: brood at Eggs 8 (cap 9 → room 1); depositing 5 lets only 1 in, 4 stay in the slot
+	player.ItemSlots[0] = InventorySlot{ItemID: "wasp_larvae", Count: 5}
+	b.Eggs, b.Maggots, b.Pupae = 8, 0, 0
+	dep(0, 5)
+	if b.Maggots != 1 || player.ItemSlots[0].Count != 4 {
+		t.Fatalf("cap-clamped deposit: maggots=%d slot0=%d want 1,4", b.Maggots, player.ItemSlots[0].Count)
+	}
+}

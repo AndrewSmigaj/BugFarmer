@@ -44,8 +44,11 @@ perishes on take** (what you leave keeps developing).
   has a dedicated material (e.g. **wasp larva → the `wasp_larvae` material** — the boss-drop / brood-input item,
   so harvest + place-back use that one item; `wasp_grubs` stays display-only), else the stage's own (stackable)
   sprite id. No new items invented — reuses the unified registry.
-- Placing taken brood back onto a **COMPATIBLE nursery** — butterfly → milkweed, fly → compost, wasp → nest —
-  re-seeds a brood there (host-specific; not startable on bare ground). *[the reciprocal transfer; its own step]*
+- **Built:** placing taken brood back onto a **COMPATIBLE nursery** (hold a brood item, click a stage slot in
+  the panel → `OpCodeNurseryDeposit` 114). The server reverse-resolves the item's species+stage (`broodItemStage`)
+  and accepts it only if the species matches the nursery's (a fly larva can't go in a wasp nest) — it tops up an
+  active brood or **seeds an empty nest** (species known via `NestState`; an empty milkweed's species isn't
+  knowable from the host alone, so milkweed is top-up-only). Capacity-clamped; not startable on bare ground.
 
 ## Teardown / destroy
 Destroying a nursery is the **normal occupant-break** (hit it N times → pick up the empty station):
@@ -89,11 +92,13 @@ A later design layer adds **real insect life cycles** as optional educational de
 - **Built (client, functional placeholder):** the open-station **`NurseryPanel`** — right-click a **wasp nest**
   or **milkweed** (`interaction_type:"nursery"`) → one Canvas panel showing egg/larva/pupa **slots** (stage
   sprite + count), the **resident adults inside** (a slot + count), and a smoothed **conversion bar**, fed by
-  the cached OpCode-104 stream. Mirrors `CraftingPanel`; the owner's UI mockup drives the visual polish later.
-- **Not built (the player-facing layer):** **take/random-harvest** + egg/larva items; the **compost bin** unified
-  into the panel (it still uses the `StationController` deposit UI — its `interaction_type` stays `"station"`
-  until the deposit + brood views merge); **residents at the compost bin** (residents exist only for nests
-  today); and a **clickable world object for the wild fly brood** (`ground_pile`).
+  the cached OpCode-104 stream. **Take** a stage's units (click a slot → OpCode 113) and **place brood back**
+  into a compatible nursery (hold a brood item, click a slot → OpCode 114 deposit; species-validated, tops up an
+  active brood or seeds an empty nest). Mirrors `CraftingPanel`; the owner's UI mockup drives the visual polish.
+- **Not built (the player-facing layer):** the **compost bin** unified into the panel (it still uses the
+  `StationController` deposit UI — its `interaction_type` stays `"station"` until the deposit + brood views
+  merge); **residents at the compost bin** (residents exist only for nests today); and a **clickable world
+  object for the wild fly brood** (`ground_pile`).
 
 ## Suggested staged build (each stage complete + testable)
 0. Butterfly caterpillar larva sprite (the one missing brood stage sprite).

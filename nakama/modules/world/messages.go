@@ -142,8 +142,9 @@ const (
 	// only — never in the sim hash; the tick loop is untouched.
 	OpCodePlayerInfo int64 = 103 // S->C: {players:[{user_id,name,char_class,char_hair,char_skin}]}
 
-	OpCodeBroodUpdate int64 = 104 // S->C: a brood's egg/maggot counts changed (display-only nursery, like StationUpdate)
-	OpCodeNurseryTake int64 = 113 // C->S {gx,gy,stage,count}: take brood units from a nursery station into the bag
+	OpCodeBroodUpdate    int64 = 104 // S->C: a brood's egg/maggot counts changed (display-only nursery, like StationUpdate)
+	OpCodeNurseryTake    int64 = 113 // C->S {gx,gy,stage,count}: take brood units from a nursery station into the bag
+	OpCodeNurseryDeposit int64 = 114 // C->S {gx,gy,slot,count}: place brood units from a bag slot INTO a compatible nursery
 
 	OpCodeHiveHarvest    int64 = 107 // C->S {gx,gy}: hand-harvest honeycomb from the hive at this cell
 	OpCodeHiveHarvestAck int64 = 108 // S->C {ok,count,message}: harvest result toast (SetHomeAck pattern)
@@ -197,6 +198,18 @@ type NurseryTakeMessage struct {
 	GX    int `json:"gx"`
 	GY    int `json:"gy"`
 	Stage int `json:"stage"`
+	Count int `json:"count"`
+}
+
+// NurseryDepositMessage (OpCode 114, C->S): place brood units FROM a bag slot INTO a nursery — the reciprocal
+// of take (relocate/top-up a brood). Slot = the player inventory slot holding the brood item; Count<=0 = the
+// whole slot. The server resolves the item's species+stage (reverse lookup) and only accepts it if the
+// species matches the nursery's (a fly larva can't go in a wasp nest); it tops up an existing brood or seeds
+// an empty NEST (whose species is known). Capacity-clamped.
+type NurseryDepositMessage struct {
+	GX    int `json:"gx"`
+	GY    int `json:"gy"`
+	Slot  int `json:"slot"`
 	Count int `json:"count"`
 }
 
