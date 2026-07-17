@@ -34,14 +34,16 @@ the world.** This engine exists: `BroodState` (egg/larva counts + a maturation t
 `processBroods`. Per species, the source is resolved automatically: fly → compost bin if present else a wild
 ground brood; butterfly → milkweed; wasp → nest; free-roamers → a wild ground brood at their cell.
 
-## Take / harvest
-- You take eggs/larva out **as items** (per-species egg/larva items, which already have sprites).
-- You harvest a **random amount** — the remainder **perish**. (A "harvesting skill" that raises the yield is
-  backlogged.)
-- Only **living** egg/larva are items; there are **no dead-brood items** — "perish" simply means they died and
-  returned to the soil (dead-object modeling stays for adult carcasses only). *[resolved: streamlined]*
-- Taken brood can only be **placed on a COMPATIBLE nursery** — butterfly → milkweed, fly → compost, wasp → nest
-  (mirrors real host-specificity). Brood cannot be started on bare ground. *[resolved]*
+## Take (a nursery is a modified station)
+A nursery is **just a station**: the way a hive generates units of honeycomb and a furnace generates steel
+bars, a nursery generates **units of brood** — its egg / larva / pupa counts ARE its collectable output. You
+**take however many you want**, exactly like any other station's item transfer — **no random yield, nothing
+perishes on take** (what you leave keeps developing).
+- Each stage is a **per-species item** (the stage's own sprite): taking the eggs gives egg items, the larvae
+  give larva items, etc. The item id **is** `species.<stage>_sprite_id` (the stage entities are made stackable);
+  no new items invented.
+- Placing taken brood back onto a **COMPATIBLE nursery** — butterfly → milkweed, fly → compost, wasp → nest —
+  re-seeds a brood there (host-specific; not startable on bare ground). *[the reciprocal transfer; its own step]*
 
 ## Teardown / destroy
 Destroying a nursery is the **normal occupant-break** (hit it N times → pick up the empty station):

@@ -397,3 +397,50 @@ func TestNestFoundingSplitsDaughterHive(t *testing.T) {
 		t.Fatalf("at MaxNests no more hives may be founded, got %d", len(state.NestStates))
 	}
 }
+
+// A nursery is a modified station: taking a stage pulls its units into the bag as the per-species stage item
+// — a plain transfer (take-all by default), nothing perishes, other stages untouched. Partial + range enforced.
+func TestNurseryTakeStation(t *testing.T) {
+	state := nestTestState()
+	m := &Match{}
+	sp := state.Species["wasp_common"]
+	sp.EggSpriteID = "wasp_eggs"
+	sp.LarvaSpriteID = "wasp_grubs"
+	sp.PupaSpriteID = "wasp_pupa"
+
+	state.BroodStates[broodKey(10, 10)] = &entities.BroodState{
+		GridX: 10, GridY: 10, SpeciesID: "wasp_common", SourceKind: "nest",
+		Eggs: 5, Maggots: 3, Pupae: 2,
+	}
+	player := &PlayerState{UserID: "p1", Position: entities.EntityPosition{LocalX: 11, LocalY: 10}}
+	state.Players = map[string]*PlayerState{"p1": player}
+
+	// take-all of the larva stage (stage 1)
+	m.handleNurseryTake(nopRuntimeLogger(), nopDispatcher{}, state, "p1", NurseryTakeMessage{GX: 10, GY: 10, Stage: 1})
+	b := state.BroodStates[broodKey(10, 10)]
+	if b.Maggots != 0 {
+		t.Fatalf("take-all must empty the larva stage, got %d", b.Maggots)
+	}
+	if b.Eggs != 5 || b.Pupae != 2 {
+		t.Fatalf("other stages must be untouched: eggs=%d pupae=%d", b.Eggs, b.Pupae)
+	}
+	if slot := player.FindItem("wasp_grubs"); slot < 0 || player.ItemSlots[slot].Count != 3 {
+		t.Fatalf("must grant 3 wasp_grubs items, slot=%d", slot)
+	}
+
+	// partial take: 2 of the 5 eggs (stage 0, count 2) — nothing perishes, the other 3 stay
+	m.handleNurseryTake(nopRuntimeLogger(), nopDispatcher{}, state, "p1", NurseryTakeMessage{GX: 10, GY: 10, Stage: 0, Count: 2})
+	if b.Eggs != 3 {
+		t.Fatalf("partial take must leave 3 eggs (no perish), got %d", b.Eggs)
+	}
+	if slot := player.FindItem("wasp_eggs"); slot < 0 || player.ItemSlots[slot].Count != 2 {
+		t.Fatalf("must grant 2 wasp_eggs items")
+	}
+
+	// out of range: nothing happens
+	player.Position = entities.EntityPosition{LocalX: 40, LocalY: 40}
+	m.handleNurseryTake(nopRuntimeLogger(), nopDispatcher{}, state, "p1", NurseryTakeMessage{GX: 10, GY: 10, Stage: 2})
+	if b.Pupae != 2 {
+		t.Fatalf("out-of-range take must do nothing, pupae=%d", b.Pupae)
+	}
+}

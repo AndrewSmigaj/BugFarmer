@@ -143,6 +143,7 @@ const (
 	OpCodePlayerInfo int64 = 103 // S->C: {players:[{user_id,name,char_class,char_hair,char_skin}]}
 
 	OpCodeBroodUpdate int64 = 104 // S->C: a brood's egg/maggot counts changed (display-only nursery, like StationUpdate)
+	OpCodeNurseryTake int64 = 113 // C->S {gx,gy,stage,count}: take brood units from a nursery station into the bag
 
 	OpCodeHiveHarvest    int64 = 107 // C->S {gx,gy}: hand-harvest honeycomb from the hive at this cell
 	OpCodeHiveHarvestAck int64 = 108 // S->C {ok,count,message}: harvest result toast (SetHomeAck pattern)
@@ -187,6 +188,16 @@ type BroodUpdateMessage struct {
 	Residents int     `json:"residents"` // resident adults living IN the station (nests today; 0 otherwise) — the panel's adult slots
 	Kind      string  `json:"kind"`      // "station" | "host_plant" | "ground_pile" | "nest" — drives the client visual
 	Removed   bool    `json:"removed"`   // true when the brood/pile is cleared (source gone)
+}
+
+// NurseryTakeMessage (OpCode 113, C->S): take brood units OUT of a nursery station into the player's bag —
+// a plain station item transfer (like hive-harvest / container-collect), NOT a random draw. Stage: 0=egg,
+// 1=larva, 2=pupa. Count<=0 means take all available of that stage; otherwise take min(Count, available).
+type NurseryTakeMessage struct {
+	GX    int `json:"gx"`
+	GY    int `json:"gy"`
+	Stage int `json:"stage"`
+	Count int `json:"count"`
 }
 
 // PlayerSpawnMessage (OpCode 102): where the server placed this player on join (the character's

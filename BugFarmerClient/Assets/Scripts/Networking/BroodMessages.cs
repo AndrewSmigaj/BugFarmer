@@ -6,6 +6,21 @@ namespace BugFarmer.Networking
     {
         // Life-stage nursery (display-only; mirrors server nakama/modules/world/messages.go)
         public const int BroodUpdate = 104; // S->C: a brood's egg/larva/pupa counts changed (display-only nursery)
+        public const int NurseryTake = 113; // C->S: take brood units from a nursery station into the bag
+    }
+
+    /// <summary>
+    /// Take brood units OUT of a nursery station into the bag (OpCode 113). A plain station transfer —
+    /// stage 0=egg, 1=larva, 2=pupa; count<=0 = take all of that stage. Field names match the server
+    /// NurseryTakeMessage json tags exactly (JsonUtility binds by name).
+    /// </summary>
+    [Serializable]
+    public class NurseryTakeMessage
+    {
+        public int gx;
+        public int gy;
+        public int stage;
+        public int count;
     }
 
     /// <summary>

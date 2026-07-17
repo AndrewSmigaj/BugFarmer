@@ -140,3 +140,4 @@ egg → larva → [pupa] → adult. Not obtainable — display-only decorations,
 | `centipede_larvae` ✅ | young centipedes | sim (brood nursery) | centipede (Phase-3 brood) |
 | `wasp_eggs` ✅ | wasp eggs | sim (nest brood) | wasp nest stage 1 |
 | `wasp_grubs` ✅ | wasp grubs | sim (nest brood) | wasp nest stage 2 |
+| `wasp_pupa` ✅ | wasp pupae (capped comb) | sim (nest brood) | wasp nest stage 3 (pupa) |

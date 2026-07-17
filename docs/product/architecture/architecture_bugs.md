@@ -84,7 +84,9 @@ The server owns all game state and validates all actions:
   re-tune). Nests use the same staged ladder now, so the nest economy counts pupae too
   (`nestBroodCount = Eggs + Maggots + Pupae`; `drainNestBrood` drains most-advanced-first). Only
   **non-pupating** species with no pupa sprite (millipede/centipede — hemimetabolous) stay
-  **egg → larva → adult**.
+  **egg → larva → adult**. A nursery is a **modified station**: those stage counts are collectable output
+  units — the player opens the station and takes them into the bag as the per-species stage item
+  (`OpCodeNurseryTake` 113; the panel + take model live in `architecture_nursery_stations.md`).
 - **Merge/split decisions** *(IMPLEMENTED — deterministic population pass)*: once a minute
   (600 ticks), a swarm **splits when `Count > max_swarm_size`** (sheds its HIGHEST alive
   bug-ids into a new child swarm) and two same-species swarms **merge when their centers are

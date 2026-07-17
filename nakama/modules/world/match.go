@@ -1059,6 +1059,14 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				}
 				m.handleHiveHarvest(logger, dispatcher, worldState, userID, hhMsg)
 
+			case OpCodeNurseryTake:
+				var ntMsg NurseryTakeMessage
+				if err := json.Unmarshal(msg.GetData(), &ntMsg); err != nil {
+					logger.Warn("Invalid nursery take from %s: %v", userID, err)
+					continue
+				}
+				m.handleNurseryTake(logger, dispatcher, worldState, userID, ntMsg)
+
 			case OpCodeEcologyTuning:
 				// DEV TOOL: live-override a species' ecology parameters from the Unity debug
 				// panel (server-decided values; determinism-safe).

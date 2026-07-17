@@ -199,14 +199,21 @@ namespace BugFarmer.UI
 
             var head = UIFactory.MakeText(_broodGroup, "BroodHead", UIFactory.HeaderSize,
                                           UIFactory.HeaderColor, TextAlignmentOptions.Left);
-            Place(head.rectTransform, 0, 0, 200, 16);
+            Place(head.rectTransform, 0, 0, 90, 16);
             head.text = "BROOD";
+            var hint = UIFactory.MakeText(_broodGroup, "Hint", UIFactory.CountSize - 1f,
+                                          UIFactory.TextColor, TextAlignmentOptions.Left);
+            Place(hint.rectTransform, 92, 1, 200, 14);
+            hint.text = "click a stage to collect";
 
             // egg / larva / pupa slots + a count label under each (always shows the number, incl. 0).
+            // Clicking a stage COLLECTS its units into the bag — a plain station transfer (take-all).
             for (int i = 0; i < 3; i++)
             {
                 var s = UIFactory.MakeSlot(_broodGroup, "slot_frame");
                 Place((RectTransform)s.transform, i * 52, -20, UIFactory.Slot, UIFactory.Slot);
+                int stage = i;
+                s.OnSlotClicked += (slot, ev) => TakeStage(stage);
                 _stageSlots.Add(s);
                 var lbl = UIFactory.MakeText(_broodGroup, $"Stage{i}Lbl", UIFactory.CountSize,
                                              UIFactory.TextColor, TextAlignmentOptions.Center);
@@ -303,6 +310,23 @@ namespace BugFarmer.UI
             if (_barFill == null) return;
             var rt = _barFill.rectTransform;
             rt.sizeDelta = new Vector2(BarWidth * Mathf.Clamp01(_barShown), rt.sizeDelta.y);
+        }
+
+        // Collect a whole stage's units into the bag (count=0 = take-all — the station-collect verb; a
+        // quantity picker can send a specific count later). The panel refreshes when the server's BroodUpdate
+        // echoes the new counts + the inventory sync lands.
+        private void TakeStage(int stage)
+        {
+            if (!_isOpen) return;
+            Send(new NurseryTakeMessage { gx = _cell.x, gy = _cell.y, stage = stage, count = 0 });
+        }
+
+        private void Send(NurseryTakeMessage msg)
+        {
+            var world = WorldManager.Instance;
+            var socket = NetworkManager.Instance?.Socket;
+            if (world?.CurrentMatch == null || socket == null || !socket.IsConnected) return;
+            _ = socket.SendMatchStateAsync(world.CurrentMatch.Id, OpCodes.NurseryTake, JsonUtility.ToJson(msg));
         }
 
         // ---------------------------------------------------------------- helpers
