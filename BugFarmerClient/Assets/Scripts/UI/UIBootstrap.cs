@@ -59,15 +59,11 @@ namespace BugFarmer.UI
             panelGO.transform.SetParent(canvasGO.transform, false);
             panelGO.AddComponent<InventoryPanel>();
 
-            // Crafting / container panel (workbench/furnace/anvil/… + chests/dressers).
+            // THE unified station panel — craft stations, storage containers, the compost bin (station), and
+            // nurseries (wasp nest / milkweed), all dispatched by interaction_type.
             var craftGO = new GameObject("CraftingPanel(Code)", typeof(RectTransform));
             craftGO.transform.SetParent(canvasGO.transform, false);
             craftGO.AddComponent<CraftingPanel>();
-
-            // Nursery-station panel (open a breeding station → egg/larva/pupa + residents + conversion bar).
-            var nurseryGO = new GameObject("NurseryPanel(Code)", typeof(RectTransform));
-            nurseryGO.transform.SetParent(canvasGO.transform, false);
-            nurseryGO.AddComponent<NurseryPanel>();
 
             // NPC vendor shop (dialogue + buy/sell board) — replaces the old OnGUI ShopController.
             var shopGO = new GameObject("ShopPanel(Code)", typeof(RectTransform));
