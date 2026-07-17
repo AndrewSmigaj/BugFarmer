@@ -93,8 +93,6 @@ namespace BugFarmer.Player
                 gameObject.AddComponent<PlayerHealth>();
             if (GetComponent<SleepController>() == null)
                 gameObject.AddComponent<SleepController>();
-            if (GetComponent<BeehiveController>() == null)
-                gameObject.AddComponent<BeehiveController>();
             if (GetComponent<CrossZoneController>() == null)
                 gameObject.AddComponent<CrossZoneController>();
             if (GetComponent<PlayerInputRouter>() == null)

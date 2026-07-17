@@ -33,9 +33,7 @@ namespace BugFarmer.Player
         private BreakingController _breaking;
         private MeleeController _melee;
         private PlacementController _placement;
-        private StationController _station;
         private SleepController _sleep;
-        private BeehiveController _beehive;
         private BugReleaseController _bugRelease;
         private TreeHarvestController _treeHarvest;
         private Camera _mainCamera;
@@ -51,10 +49,10 @@ namespace BugFarmer.Player
             _breaking = GetComponent<BreakingController>();
             _melee = GetComponent<MeleeController>();
             _placement = GetComponent<PlacementController>();
-            _station = GetComponent<StationController>();
+            // Compost + other "station" occupants now open the unified CraftingPanel (checked first in the
+            // right-click chain); the legacy IMGUI StationController is gone.
             // Shop is now a Canvas panel (ShopPanel singleton via UIBootstrap), not a player component.
             _sleep = GetComponent<SleepController>();
-            _beehive = GetComponent<BeehiveController>();
             _bugRelease = GetComponent<BugReleaseController>();
             _treeHarvest = GetComponent<TreeHarvestController>();
             _mainCamera = Camera.main;
@@ -186,19 +184,11 @@ namespace BugFarmer.Player
             if (_bugRelease != null && _bugRelease.TryHandleClick(releaseAll: false))
                 return;
 
-            // 1. Craft stations + storage containers (workbench/furnace/… + chests/dressers):
-            //    the panel opens/closes; a state transition consumes the click.
+            // 1. Every processing station + storage container — ONE panel, dispatched by interaction_type
+            //    (craft | storage | station=compost | nursery=wasp nest/milkweed). Opens/closes; a state
+            //    transition consumes the click.
             if (BugFarmer.UI.CraftingPanel.Instance != null &&
                 BugFarmer.UI.CraftingPanel.Instance.TryHandleRightClick(mouseWorld))
-                return;
-
-            // 1a. Nursery stations (wasp nest / milkweed): right-click opens the brood panel.
-            if (BugFarmer.UI.NurseryPanel.Instance != null &&
-                BugFarmer.UI.NurseryPanel.Instance.TryHandleRightClick(mouseWorld))
-                return;
-
-            // 1b. Stations (compost): interact beats attack/place; closing an open menu consumes too.
-            if (_station != null && _station.TryHandleRightClick(mouseWorld))
                 return;
 
             // 1b2. NPC vendors: a "shop" occupant opens the dialogue → Buy/Sell board (Canvas ShopPanel).
@@ -219,10 +209,8 @@ namespace BugFarmer.Player
             if (_sleep != null && _sleep.TryHandleRightClick(mouseWorld))
                 return;
 
-            // 1d. Beehives: right-click hand-harvests the honeycombs (angers the colony unless
-            //     smoked). Consumes the click only when a hive is actually under the cursor.
-            if (_beehive != null && _beehive.TryHandleRightClick(mouseWorld))
-                return;
+            // (Beehives now open the unified station panel — routed via CraftingPanel at step 1 —
+            //  so there's no separate beehive right-click handler.)
 
             // 2. Placement (equipped placeable, or the cursor-place mode): mode-based
             //    consume — a misclicked red-ghost placement must never fall through to a jab.
