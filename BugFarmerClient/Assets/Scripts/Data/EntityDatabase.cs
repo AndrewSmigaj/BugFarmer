@@ -237,6 +237,15 @@ namespace BugFarmer.Data
             public string EggSpriteId;
             public string LarvaSpriteId;
             public string PupaSpriteId;
+
+            // Plain, per-species stage LABELS for the nursery panel (display-only — read only by the UI,
+            // never by the sim, so they do NOT enter the state hash). The larva "form" is species-specific
+            // (fly=maggots, wasp/beetle=grubs, butterfly=caterpillars, centi/millipede=young); butterfly
+            // pupa=chrysalises. BroodLabel is the section's umbrella word — "Brood" only where it fits a
+            // true nest/hive. Null → the panel falls back to eggs / larvae / pupae.
+            public string LarvaName;
+            public string PupaName;
+            public string BroodLabel;
         }
 
         /// <summary>Client mirror of the server AttackConfig (species.json "attack"). Only the fields the
@@ -346,6 +355,9 @@ namespace BugFarmer.Data
                         EggSpriteId = obj?["egg_sprite_id"]?.Value<string>(),
                         LarvaSpriteId = obj?["larva_sprite_id"]?.Value<string>(),
                         PupaSpriteId = obj?["pupa_sprite_id"]?.Value<string>(),
+                        LarvaName = obj?["larva_name"]?.Value<string>(),
+                        PupaName = obj?["pupa_name"]?.Value<string>(),
+                        BroodLabel = obj?["brood_label"]?.Value<string>(),
                         Attack = ParseAttack(obj),
                     };
                 }

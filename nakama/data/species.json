@@ -70,7 +70,10 @@
     "carcass_item": "dead_fly",
     "relocate_chance": 0.12,
     "relocate_distance": 22.0,
-    "relocate_cooldown_ticks": 200
+    "relocate_cooldown_ticks": 200,
+    "larva_name": "maggots",
+    "pupa_name": "pupae",
+    "brood_label": "Maggots"
   },
   "butterfly_meadow": {
     "name": "Meadow Butterfly",
@@ -136,7 +139,10 @@
     "predator_flee_speed_mult": 1.5,
     "lifespan_secs": 3360,
     "lifespan_spread_secs": 1120,
-    "carcass_item": "dead_butterfly"
+    "carcass_item": "dead_butterfly",
+    "larva_name": "caterpillars",
+    "pupa_name": "chrysalises",
+    "brood_label": "Caterpillars"
   },
   "wasp_common": {
     "name": "Wasp",
@@ -209,7 +215,10 @@
       "standoff": 3.0,
       "dive_period_secs": 5.0,
       "dive_secs": 1.4
-    }
+    },
+    "larva_name": "grubs",
+    "pupa_name": "pupae",
+    "brood_label": "Brood"
   },
   "centipede_garden": {
     "name": "Garden Centipede",
@@ -281,7 +290,9 @@
         "surge_max_ticks": 25,
         "lead": 0.8
       }
-    }
+    },
+    "larva_name": "young",
+    "brood_label": "Young"
   },
   "millipede": {
     "name": "Garden Millipede",
@@ -329,7 +340,9 @@
     "kill_drops": [],
     "lifespan_secs": 5040,
     "lifespan_spread_secs": 1260,
-    "carcass_item": "dead_millipede"
+    "carcass_item": "dead_millipede",
+    "larva_name": "young",
+    "brood_label": "Young"
   },
   "beetle_carrion": {
     "name": "Carrion Beetle",
@@ -389,7 +402,10 @@
     "lifespan_secs": 5040,
     "lifespan_spread_secs": 1260,
     "carcass_item": "dead_beetle",
-    "produces_compost": true
+    "produces_compost": true,
+    "larva_name": "grubs",
+    "pupa_name": "pupae",
+    "brood_label": "Grubs"
   },
   "bee_honey": {
     "name": "Honeybee",

@@ -70,9 +70,15 @@ Destroying a nursery is the **normal occupant-break** (hit it N times → pick u
   the resident patrol — the already-live adults proximity-aggro the breaker. Matches "the brood dies, only
   living adults spill out."
 
-## Stages in this scope — egg → larva → adult (NO pupa)
-The village nursery bugs (flies etc.) are **egg → larva → adult**. Do **not** add a pupa stage here — pupae are
-part of the deferred extended lifecycle below.
+## Stages — egg → larva → pupa → adult (flies pupate too)
+The nursery bugs run the real insect life cycle: **egg → larva → pupa → adult**. Flies included — a housefly is
+egg → maggot → pupa → adult, so the compost bin shows a pupa lane. This is **built**: a species pupates when it
+has a `pupa_sprite_id` (`fly_common` does), which `brood.go`'s `broodPupates` reads for source/compost broods,
+not just nests. *(An earlier draft scoped village flies to egg → larva → adult with NO pupa; that was superseded
+when the universal pupa stage shipped — corrected here.)* The larva's **form** is a species-specific display
+label only — a **maggot** (fly), a **grub** (wasp/beetle), a **caterpillar** (butterfly), or just **young**
+(centipede/millipede) — never a merge of egg + larva. These labels are data (`species.json` `larva_name` /
+`pupa_name` / `brood_label`); "brood" is used as the section's umbrella word only where it fits a true nest/hive.
 
 ## Reconciliation with D23 (this doc supersedes the older wording)
 - D23 says "a host that **holds** a brood" (two objects). **Corrected: the brood IS the station** (one object).

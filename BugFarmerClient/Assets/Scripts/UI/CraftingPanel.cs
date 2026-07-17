@@ -58,7 +58,7 @@ namespace BugFarmer.UI
         private readonly List<InventorySlotUI> _broodSlots = new List<InventorySlotUI>();
         private readonly List<TMP_Text> _broodCountLbls = new List<TMP_Text>();
         private InventorySlotUI _residentSlot;
-        private TMP_Text _residentLbl, _broodEmptyLbl;
+        private TMP_Text _residentLbl, _broodEmptyLbl, _broodHead;
         private Image _broodBar;
         private float _broodBarShown, _broodBarTarget;
         private bool _hasBrood; // this open renders a brood region (compost / nursery / beehive)
@@ -574,11 +574,11 @@ namespace BugFarmer.UI
         {
             _hasBrood = true;
 
-            var head = UIFactory.MakeText(_content, "BrHead", UIFactory.HeaderSize, UIFactory.HeaderColor, TextAlignmentOptions.Left);
-            Place(head.rectTransform, 0, y, 90, 16);
-            head.text = "BROOD";
+            _broodHead = UIFactory.MakeText(_content, "BrHead", UIFactory.HeaderSize, UIFactory.HeaderColor, TextAlignmentOptions.Left);
+            Place(_broodHead.rectTransform, 0, y, 132, 16);
+            _broodHead.text = "NURSERY"; // replaced per-species in RefreshBrood (MAGGOTS / BROOD / CATERPILLARS / GRUBS …)
             var hint = UIFactory.MakeText(_content, "BrHint", UIFactory.CountSize - 1f, UIFactory.TextColor, TextAlignmentOptions.Left);
-            Place(hint.rectTransform, 92, y + 1, 224, 14);
+            Place(hint.rectTransform, 134, y + 1, 182, 14);
             hint.text = "click to collect · drop to deposit";
 
             for (int i = 0; i < 3; i++)
@@ -595,7 +595,7 @@ namespace BugFarmer.UI
 
             var barBg = UIFactory.MakeImage(_content, "BrBarBg", "slot_frame", true); barBg.color = new Color(0f, 0f, 0f, 0.4f);
             Place(barBg.rectTransform, 0, y - 80, 184, 12);
-            _broodBar = UIFactory.MakeImage(_content, "BrBar", null); _broodBar.color = new Color(0.55f, 0.85f, 0.4f, 1f);
+            _broodBar = UIFactory.MakeImage(_content, "BrBar", null); _broodBar.color = new Color(0.30f, 0.72f, 0.82f, 1f); // teal — distinct from the green compost fill bar
             Place(_broodBar.rectTransform, 2, y - 82, 0, 8);
 
             var resHead = UIFactory.MakeText(_content, "ResHead", UIFactory.CountSize, UIFactory.HeaderColor, TextAlignmentOptions.Left);
@@ -608,7 +608,7 @@ namespace BugFarmer.UI
 
             _broodEmptyLbl = UIFactory.MakeText(_content, "BrEmpty", UIFactory.CountSize + 1f, UIFactory.TextColor, TextAlignmentOptions.Left);
             Place(_broodEmptyLbl.rectTransform, 0, y - 20, 300, 16);
-            _broodEmptyLbl.text = "No brood developing here yet.";
+            _broodEmptyLbl.text = "Nothing developing here yet.";
             _broodEmptyLbl.enabled = false;
         }
 
@@ -622,7 +622,15 @@ namespace BugFarmer.UI
             var sp = has ? EntityDatabase.GetSpecies(b.species) : null;
             string[] ids = { sp?.EggSpriteId ?? "", sp?.LarvaSpriteId ?? "", sp?.PupaSpriteId ?? "" };
             int[] counts = has ? new[] { b.eggs, b.maggots, b.pupae } : new[] { 0, 0, 0 };
-            string[] names = { "eggs", "larvae", "pupae" };
+            // Species-appropriate stage words (fly=maggots, wasp/beetle=grubs, butterfly=caterpillars/
+            // chrysalises, centi/millipede=young); "brood" only where BroodLabel says a true nest/hive.
+            // Fall back to the generic terms when a species omits them.
+            string[] names = { "eggs", sp?.LarvaName ?? "larvae", sp?.PupaName ?? "pupae" };
+            if (_broodHead != null)
+            {
+                string label = has ? sp?.BroodLabel : null;
+                _broodHead.text = string.IsNullOrEmpty(label) ? "NURSERY" : label.ToUpperInvariant();
+            }
             for (int i = 0; i < _broodSlots.Count; i++)
             {
                 bool show = has && !string.IsNullOrEmpty(ids[i]);
