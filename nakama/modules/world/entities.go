@@ -199,11 +199,12 @@ type ContainerData struct {
 // meter rises, and the contents act as a provider other systems consume (e.g. flies feed/breed
 // from a compost bin, draining its fill).
 type StationData struct {
-	Accepts     []string `json:"accepts"`                 // Item types depositable here
-	Capacity    int      `json:"capacity"`                // Max units of fill
-	FoodPerUnit int      `json:"food_per_unit,omitempty"` // Food value each unit provides to bugs
-	Providers   []string `json:"providers,omitempty"`     // "food", "breeding"
-	ProcessTicks int     `json:"process_ticks,omitempty"` // Reserved: fresh->processed conversion time
+	Accepts      []string `json:"accepts"`                 // Item types depositable here
+	Capacity     int      `json:"capacity"`                // Max units of fill
+	FoodPerUnit  int      `json:"food_per_unit,omitempty"` // Food value each unit provides to bugs
+	ProcessTicks int      `json:"process_ticks,omitempty"` // Reserved: fresh->processed conversion time
+	// (The "providers" field was declared here but never read — the real couplings are food_per_unit>0
+	//  for the food provider, and the species-side breeding_plants/nest_occupant reverse-index. Dropped.)
 }
 
 // HiveData is a bee nest's honey-yield tuning (world.hive on the wild hive + hive boxes).

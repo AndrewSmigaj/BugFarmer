@@ -6,6 +6,17 @@ which is the part not yet built. Canonical decisions: **D23** (`economy/DECISION
 in `bug_ecology_plan.md`, reconciled with the finalized model below (which supersedes D23's "host holds a
 brood" wording — see Reconciliation).
 
+> **Status (2026-07) — the player-facing layer is BUILT into ONE unified station panel.** Compost, wasp
+> nest / milkweed nurseries, and the beehive all open the same `CraftingPanel`, dispatched by
+> `interaction_type` (`craft` · `storage` · `station`=compost · `nursery` · `beehive`): a deposit grid + fill
+> meters, the shared brood region (stage slots + maturation bar + resident adults + take/place-back), and honey
+> harvest. The legacy IMGUI `StationController`, the `NurseryPanel` clone, and `BeehiveController` are deleted.
+> The **server-side** breeding engine (`brood.go`/`nests.go`/`processStations`) stays server-side for now; its
+> correct long-term home is the **authority-client "ecology port"** slice (`BACKLOG.md`), NOT a server-code
+> merge with crafting — crafting is player *inventory*, breeding is the bug *ecology*; same surface abstraction,
+> different domains. (Assessment 2026-07: porting breeding client-side is a real, determinism-gated project —
+> `float32`→fixed-point of the whole satiation/feeding economy — not a now-simplification, so deferred.)
+
 ## The core model — a brood IS a nursery station
 A **nursery station is where a species breeds, and the brood *is* that station** — one object, not a container
 that holds a separate brood. The nursery stations are:

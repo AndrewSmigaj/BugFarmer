@@ -188,6 +188,17 @@ the 22 issues; one findings doc each). Backlogged-by-the-user items (not investi
     (S1 `0b7dd3c`). See `architecture_swarm_sync.md` §14.6. **Next — S3:** dial back the swarm-centre steamroll
     (`predationThink`, scoped to swarm predators) + an `ecology-tuning` re-balance; then arena feel-watch (owner).
     Breeding/death/hunger/food/Director still server-side — the FULL ecology port is the remaining big project.
+    **→ Next slice mapped (2026-07, station-unify assessment):** the BREEDING STATIONS (compost/brood/nest/
+    milkweed) belong to this port. Seam — move client-side (authority owns → hashed + snapshotted): per-swarm
+    `Satiation`/`ReproductionMeter` + the feed/hunger loop (`match.go:1379-1474`) + `BroodStates` maturation +
+    the authoritative food LEVELS (`Fill`/`FoodValue`/`Capacity`/`Nectar`) — **requires `float32`→fixed-point**;
+    new `BREED_LAID`/`BROOD_HATCHED` events (→ existing `SWARM_REPRODUCED`); the food registry becomes
+    authoritative. Stays server: the Director (population-count-driven, decoupled) + the nest/predator economies.
+    NOT a now-simplification (the fixed-point conversion is the real cost) → deferred. **The player-facing UI is
+    ALREADY unified** — compost/nursery/beehive + craft/storage open ONE `CraftingPanel` (dispatched by
+    `interaction_type`; IMGUI `StationController` + `NurseryPanel` + `BeehiveController` deleted). The server-code
+    merge was deliberately NOT done: crafting = inventory, breeding = ecology (different domains); merging the
+    server tick loops would be thrown away by this ecology port.
 - **Dead-bugs/fruit follow-ups:** ~~predator kills leave a corpse + the hornet feeding-pause (#20)~~ **DONE
   2026-06-30** — feed-pause (`feed_pause_ticks`, server) + client-side LOS (`BugCollision.LineBlocked`, fixes the
   through-bin phantom) + consumed-corpse/lunge VFX (`StrikeVfx`); see `investigations/wasp-attack-indicators-phantom.md`.

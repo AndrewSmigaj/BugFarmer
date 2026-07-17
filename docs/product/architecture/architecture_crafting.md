@@ -90,6 +90,13 @@ The compost bin (`entities/station.go` `StationState`, `processStations`) and th
 ledger (`AddFoodEvent`/`InfluenceFoodConsumed`) are untouched. A future station whose OUTPUT is an
 insect food/breeding source registers on that path — not on the container path here.
 
+> **Crafting = inventory; breeding = the bug ecology.** They share a surface abstraction (items → timed
+> transform → items) and now share ONE player-facing panel (`CraftingPanel`, dispatched by `interaction_type`:
+> `craft`/`storage`/`station`/`nursery`/`beehive`), but their SERVER code stays separate on purpose: crafting is
+> this container/recipe engine; breeding (compost/brood/nest/milkweed) is the bug ecology, whose long-term home
+> is the authority-client "ecology port" (`BACKLOG.md`), not a merge into this engine. See
+> `architecture_nursery_stations.md`.
+
 ## AS-BUILT content — the mining refine chain + ladders (2026-06-28)
 
 The recipe/station system is generic (a placeable + a recipe naming it via `station` + `interaction_type:

@@ -4881,11 +4881,7 @@
         ],
         "capacity": 10,
         "food_per_unit": 100,
-        "process_ticks": 300,
-        "providers": [
-          "food",
-          "breeding"
-        ]
+        "process_ticks": 300
       },
       "breakable": {
         "hp": 3,
