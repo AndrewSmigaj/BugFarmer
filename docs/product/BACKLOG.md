@@ -262,24 +262,26 @@ The **SERVER ecology is built + verified** (Go tests + 6× headless lab + per-sp
   ≈ 1 game-hour/egg, was ~10s = the "always-empty nests" problem) and hatches — flies/butterflies (compost /
   rotten-fruit pile / milkweed), detritivores, AND **wasp NESTS** (nest brood routed off the old invisible
   instant-pop counter onto the `BroodState`; recovery/founding read it via `nestBroodCount`; the homing
-  resident ENTERS the nest a beat to tend). **Break-release:** kick a nest → the brood POURS OUT as live
-  wasps that swarm the breaker (`onNestOccupantRemoved` + `aggroPlayerThink`). Go-tested; A1 ecology-validated
-  (ground species self-sustain via `+brood`). `entities/brood.go`, `world/{brood,nests,predation}.go`.
-  **→ Client renderer + emergence + insect-accurate PUPA stage DONE (2026-07-16):** `BroodManager` (client)
-  consumes OpCode 104 and draws the most-advanced non-empty stage per brood cell (egg→larva→[pupa]) — the
-  nursery is now VISIBLE in-game (was the "no client consumer" gap); the **emergence beat** slides hatchlings
-  out of the nursery cell so adults don't pop in at the swarm centre (display-only, cloned from the hash-safe
-  `LungeStart` offset). SOURCE broods of pupating species (fly/butterfly/beetle) gained a visible **PUPA** stage
-  (`BroodState.Pupae`; egg→larva→pupa→adult, each stage dwelling; `BroodEggMatureTicks` split so total dev time
-  is unchanged → no ecology re-tune; NEST broods unchanged so `nestBroodCount` is untouched). Stage art: the 11
-  existing eggs+larvae + NEW `fly_pupa`/`beetle_pupa`/`butterfly_caterpillar`/`butterfly_chrysalis` (placeholders,
-  family=creature — need an art-review pass). Go-tested; Unity batchmode compile clean; determinism proven by
-  construction (no new `ComputeStateHash` inputs). **STILL OPEN:** look-in/REMOVE panel (right-click source →
-  egg/larva/pupa counts); the in-Unity Play-test of the full lifecycle in the Bug Zoo; a non-vacuous 2-client
-  sync-gate re-run (a hatch actually firing). **Bug Zoo built** (`zone_bug_zoo.py` — a peaceful 3×3-pen
-  observation zone, replaces the scattered labs) to watch the loop; `zone_arena`/`zone_crawler_lab` flagged
-  superseded. Then Phase-3 re-tune to the new bands (fly 200 · butterfly 100 · rest 30) on the
-  predation-inclusive Unity rig. Dead `egg_count_min/max` species fields to delete (unused).
+  resident ENTERS the nest a beat to tend). Go-tested; A1 ecology-validated (ground species self-sustain via
+  `+brood`). `entities/brood.go`, `world/{brood,nests,predation}.go`.
+  **→ NURSERY-STATION model built (2026-07-16) — see `architecture/architecture_nursery_stations.md`:** a brood
+  IS a modified STATION. Right-click a **wasp nest** or **milkweed** → the `NurseryPanel` (egg/larva/pupa slots +
+  stage sprites + resident adults + a maturing bar), fed by OpCode 104 (now carrying conversion progress +
+  resident count). **Take** a stage's units into the bag like any station transfer — no random yield, nothing
+  perishes on take (larva → the designed `wasp_larvae` material, else the stackable stage sprite;
+  `OpCodeNurseryTake` 113). **Teardown** now **perishes the brood** and spills the resident adults (aggressive) —
+  the `wasp_nest` `paper_nest`+`wasp_larvae` break-drop removed per D23 (now Wasp-Thicket boss loot only). The
+  **pupa stage is universal** — nests pupate too (wasp `wasp_pupa`); millipede/centipede stay egg→larva→adult;
+  `BroodEggMatureTicks` split across stages so total dev time is unchanged. Stage art: 11 existing +
+  `fly_pupa`/`beetle_pupa`/`butterfly_caterpillar`/`butterfly_chrysalis`/`wasp_pupa`. The earlier wrong-model
+  (on-world `BroodManager` sprite renderer + the "emergence beat") was a MIS-BUILD → **removed**. Go-tested green;
+  determinism-safe by construction (broods are server-soft/unhashed); D23 + docs reconciled. **STILL OPEN:**
+  place brood back onto a compatible nursery; the **compost bin** deposit+brood unified into the panel; the wild
+  fly-brood object; compost residents; the owner's in-Unity compile + panel eyeball + a non-vacuous 2-client
+  sync re-run. **Bug Zoo built** (`zone_bug_zoo.py` — a peaceful 3×3-pen observation zone, replaces the scattered
+  labs) to watch the loop; `zone_arena`/`zone_crawler_lab` flagged superseded. Then Phase-3 re-tune to the new
+  bands (fly 200 · butterfly 100 · rest 30) on the predation-inclusive Unity rig. Dead `egg_count_min/max`
+  species fields to delete (unused).
 - **Natural death + carcass recycle** (per-bug `DeathTick`, `dead_<species>`, millipede→compost).
 - **Hard `max_population` crash-guard** (per species per zone; the only guaranteed bound — food is
   player-controlled, so it can't be the guard).
