@@ -520,8 +520,11 @@ namespace BugFarmer.UI
             Place(_stCompostFill.rectTransform, 2, -186, 0, 8);
 
             _stInputLbl = UIFactory.MakeText(_content, "InLbl", UIFactory.CountSize - 1f, UIFactory.TextColor, TextAlignmentOptions.Left);
-            Place(_stInputLbl.rectTransform, 0, -200, 240, 12);
+            Place(_stInputLbl.rectTransform, 0, -200, 200, 12);
             _stInputFill = null; // raw-scraps amount is a small readout, not a second bar
+
+            // Scoop the finished compost out into the bag (take-all; the flies keep whatever regrows).
+            MakeButton(_content, "TakeCompost", "Take compost", 200, -186, 114, 24, HarvestCompost);
 
             // ── divider: material processing above, the living flies below ──
             var rule = UIFactory.MakeImage(_content, "StRule", null); rule.color = new Color(1f, 1f, 1f, 0.12f);
@@ -692,6 +695,16 @@ namespace BugFarmer.UI
             var socket = NetworkManager.Instance?.Socket;
             if (world?.CurrentMatch == null || socket == null || !socket.IsConnected) return;
             _ = socket.SendMatchStateAsync(world.CurrentMatch.Id, OpCodes.StationDeposit, JsonUtility.ToJson(msg));
+        }
+
+        private void HarvestCompost() => SendCompostHarvest(new CompostHarvestMessage { gx = _cell.x, gy = _cell.y });
+
+        private void SendCompostHarvest(CompostHarvestMessage msg)
+        {
+            var world = WorldManager.Instance;
+            var socket = NetworkManager.Instance?.Socket;
+            if (world?.CurrentMatch == null || socket == null || !socket.IsConnected) return;
+            _ = socket.SendMatchStateAsync(world.CurrentMatch.Id, OpCodes.CompostHarvest, JsonUtility.ToJson(msg));
         }
 
         private void SendNursery(NurseryTakeMessage msg)

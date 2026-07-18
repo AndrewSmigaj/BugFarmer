@@ -20,8 +20,11 @@ brood" wording — see Reconciliation).
 > **Compost panel (2026-07):** the compost bin's panel is two clearly-separated areas — the **COMPOST** material
 > (organic scraps convert to *units* of compost over time; **no stages, no byproducts**) and, below a divider,
 > the flies' **own brood area** (per-species stage words — *maggots*, not "brood"). A flavor `description` shows
-> on open. Look/feel follows the research in `investigations/compost-panel-ux/`. Still open: the "take compost"
-> output (pending what a compost unit is *for*) and an in-editor visual pass.
+> on open. Look/feel follows the research in `investigations/compost-panel-ux/`. The **take-compost output is
+> built**: a "Take compost" button scoops all units into a sellable `compost` item (`OpCodeCompostHarvest` 115;
+> `handleCompostHarvest` empties `Fill`+`FoodFrac` and drops the deterministic food level to match — the same
+> `AddFoodEvent` the process/feed loops use, so no desync). Its **fertilizer** use is backlogged. Still open: a
+> compost icon (`Items/compost_icon.png`) and an in-editor visual pass.
 
 ## The core model — a brood IS a nursery station
 A **nursery station is where a species breeds, and the brood *is* that station** — one object, not a container

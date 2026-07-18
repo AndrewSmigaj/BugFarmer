@@ -30,6 +30,7 @@ namespace BugFarmer.Networking
         // Stations (player-fillable processors: compost bin etc.)
         public const int StationDeposit = 85;     // C->S: Deposit an inventory item into a station
         public const int StationUpdate = 86;      // S->C: Station fill changed (UI meter)
+        public const int CompostHarvest = 115;    // C->S: scoop finished compost units out of a bin into the bag
 
         // Dev tuning (debug): live-override ecology parameters on the server
         public const int EcologyTuning = 87;      // C->S: EcologyTuningMessage
@@ -395,6 +396,17 @@ namespace BugFarmer.Networking
         public int gx;
         public int gy;
         public string item_id;
+    }
+
+    /// <summary>
+    /// Scoop the finished compost units out of a bin into the bag (OpCode 115, C->S). The server
+    /// empties the bin and drops its deterministic food level to match (the hive-harvest pattern).
+    /// </summary>
+    [Serializable]
+    public class CompostHarvestMessage
+    {
+        public int gx;
+        public int gy;
     }
 
     /// <summary>

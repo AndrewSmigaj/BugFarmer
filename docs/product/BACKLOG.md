@@ -259,6 +259,12 @@ Plan + designs: `docs/product/economy/crafting_buildout.md` + the saved plan. Al
   stations (compost/beehive/milkweed/wasp-nest) with the Apico I/O-square treatment, for visual review.
 - Also: armor + weapon-tier *sprite polish* (placeholders shipped); the InitialContainers authored-stock seed
   (the good-design alternative to the F8-give); fruit/crop + breeding-station info panels (separate backlog).
+- **Compost → fertilizer (backlogged 2026-07, owner decision):** the compost bin now yields a sellable
+  `compost` item (take-all harvest, `OpCodeCompostHarvest` 115). Its FERTILIZER use — apply compost to tilled
+  soil/crops for a growth or yield boost — is DEFERRED (owner: "backlog the fertilizer part"). Design when
+  picked up: what the boost is (faster growth vs. better yield vs. water-retention — cf. Sun Haven's elemental
+  split), how it's applied (a use-item on soil, mirroring `garden_plot` watering), and whether it tiers
+  (basic/quality/deluxe). Compost also needs an icon sprite (`Items/compost_icon.png`, gpt-image-1).
 
 ## Now — Bug ecology / farming (livestock loop on a living-ecosystem engine)
 Design of record: [bug_ecology_plan.md](../brainstorms/ecology/bug_ecology_plan.md). Phased build P0–P11

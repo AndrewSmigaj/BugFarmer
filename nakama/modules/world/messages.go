@@ -87,8 +87,9 @@ const (
 	OpCodePlantInteract   int64 = 55 // C→S: Harvest or destroy plant
 
 	// Stations (player-fillable processors: compost bin etc.)
-	OpCodeStationDeposit int64 = 85 // C→S: Deposit an inventory item into a station
-	OpCodeStationUpdate  int64 = 86 // S→C: Station fill changed (UI meter; display-only)
+	OpCodeStationDeposit int64 = 85  // C→S: Deposit an inventory item into a station
+	OpCodeStationUpdate  int64 = 86  // S→C: Station fill changed (UI meter; display-only)
+	OpCodeCompostHarvest int64 = 115 // C→S {gx,gy}: scoop the finished compost units out of a bin into the bag
 
 	// Dev tuning (debug builds): live-override ecology parameters on the server
 	OpCodeEcologyTuning int64 = 87 // C→S: apply EcologyTuningMessage to a species
@@ -426,6 +427,14 @@ type StationUpdateMessage struct {
 	Input    int `json:"input"`    // Raw deposits awaiting processing
 	Fill     int `json:"fill"`     // Processed output (compost) — the food provider
 	Capacity int `json:"capacity"`
+}
+
+// CompostHarvestMessage (OpCode 115, C→S): scoop every whole compost unit out of the bin at
+// (gx,gy) into the bag. The compost is also the flies' food source, so the server drops the
+// deterministic food level to match (the hive-harvest pattern; see handleCompostHarvest).
+type CompostHarvestMessage struct {
+	GX int `json:"gx"`
+	GY int `json:"gy"`
 }
 
 // ContainerActionMessage (OpCode 98, C→S): one action on the container/craft-station at (gx,gy).

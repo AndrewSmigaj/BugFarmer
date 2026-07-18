@@ -1027,6 +1027,14 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				}
 				m.handleStationDeposit(logger, dispatcher, worldState, userID, depositMsg)
 
+			case OpCodeCompostHarvest:
+				var chMsg CompostHarvestMessage
+				if err := json.Unmarshal(msg.GetData(), &chMsg); err != nil {
+					logger.Warn("Invalid compost harvest from %s: %v", userID, err)
+					continue
+				}
+				m.handleCompostHarvest(logger, dispatcher, worldState, userID, chMsg)
+
 			case OpCodeContainer:
 				var caMsg ContainerActionMessage
 				if err := json.Unmarshal(msg.GetData(), &caMsg); err != nil {

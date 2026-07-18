@@ -1403,6 +1403,76 @@ func (m *Match) broadcastStationUpdate(dispatcher runtime.MatchDispatcher, st *e
 	dispatcher.BroadcastMessage(OpCodeStationUpdate, updData, nil, nil, true)
 }
 
+// handleCompostHarvest (OpCode 115): the player scoops the finished compost out of a bin into the
+// bag — the hive-harvest pattern (take-all, no panel-count). Compost is display/inventory yield AND
+// the flies' food source, so removing it MUST lower the deterministic food level to match: we emit
+// the SAME frontier-gated FOOD_CONSUMED event the process/feed loops use (no new ledger vocabulary),
+// so every client's food registry stays in sync with the now-empty bin and nothing desyncs.
+func (m *Match) handleCompostHarvest(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	userID string,
+	msg CompostHarvestMessage,
+) {
+	player := state.Players[userID]
+	if player == nil {
+		return
+	}
+
+	key := entities.StationKey(msg.GX, msg.GY)
+	st := m.resolveStation(state, msg.GX, msg.GY)
+	if st == nil {
+		m.sendWorldError(dispatcher, state, userID, "No compost bin there")
+		return
+	}
+	def := state.Entities[st.EntityID]
+	if def == nil || def.World == nil || def.World.Station == nil {
+		return
+	}
+	sd := def.World.Station
+
+	// Range check (same 3.0 allowance as deposit/pickup/hive).
+	cs := state.Config.ChunkSize
+	px, py := player.WorldX(cs), player.WorldY(cs)
+	dx, dy := px-(float32(msg.GX)+0.5), py-(float32(msg.GY)+0.5)
+	if dx*dx+dy*dy > 9.0 {
+		m.sendWorldError(dispatcher, state, userID, "Too far away")
+		return
+	}
+
+	units := st.Fill
+	if units <= 0 {
+		m.sendWorldError(dispatcher, state, userID, "No compost ready yet")
+		return
+	}
+	if player.AddItem("compost", units) < 0 {
+		m.sendWorldError(dispatcher, state, userID, "Your bag is full")
+		return
+	}
+
+	// Scoop out the whole pile: every whole unit leaves, and the part-eaten fraction goes with it.
+	st.Fill = 0
+	st.FoodFrac = 0
+
+	capacity := sd.Capacity
+	if capacity <= 0 {
+		capacity = 10
+	}
+	m.broadcastStationUpdate(dispatcher, st, capacity)
+
+	// The compost was the flies' food source — drop its deterministic level to 0 to match (level =
+	// Fill*foodPerUnit - FoodFrac = 0). Same frontier-gated event processStations/feeding emit.
+	if state.CurrentZone != nil {
+		state.AddFoodEvent(state.CurrentZone.ZoneID, InfluenceFoodConsumed, key, st.GridX, st.GridY, 0)
+	}
+
+	if presence, ok := state.Presences[userID]; ok && presence != nil {
+		_ = m.sendInventorySync(logger, dispatcher, player, presence)
+	}
+	logger.Info("CompostHarvest: %s took %d compost at %d,%d", userID, units, msg.GX, msg.GY)
+}
+
 // processStations advances every station's INPUT -> OUTPUT conversion (the material-processor
 // loop: one input unit becomes one compost unit every process_ticks). Newly produced compost
 // raises the station's food level on the deterministic ledger (bugs start targeting it).

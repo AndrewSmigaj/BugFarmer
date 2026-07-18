@@ -342,6 +342,17 @@
     "max_stack": 99,
     "sell_price": 5
   },
+  "compost": {
+    "name": "Compost",
+    "description": "Dark, crumbly compost from well-rotted scraps.",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 3
+  },
   "iron_bar": {
     "name": "Iron Bar",
     "category": "resource",
