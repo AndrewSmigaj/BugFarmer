@@ -249,6 +249,16 @@ namespace BugFarmer.Networking
         public long feed_until;                      // Individual predation: tick this bug stops eating a corpse (0 = not feeding); absolute tick
         public string feed_corpse_id;                // Individual predation: the corpse (food id) being eaten
 
+        // Centipede LUNGE (surge) — position-determining per-bug combat state; the ints below also ride the hash
+        // so a late-joiner reconstructs a mid-lunge AND a phase/heading desync is caught directly.
+        public int surge_phase;                      // 0 idle | 1 windup | 2 surge | 3 recover
+        public long surge_until;                     // current phase ends at this tick
+        public long surge_cooldown_until;            // no new windup before this tick
+        public int windup_cell_x, windup_cell_y;     // player cell at windup start (velocity-lead sample; snapshot only)
+        public int surge_heading_x, surge_heading_y; // locked unit heading during the charge (FixedPoint.Value)
+        public int surge_dist_left;                  // FixedPoint.Value: charge distance remaining
+        public string surge_target_id;               // player locked at windup (snapshot only — a string, not hashed)
+
         // DIAGNOSTIC ONLY (re-root investigation; never hashed): provenance of this bug on this client.
         public long spawn_tick = -1;
         public string spawn_source = "?";

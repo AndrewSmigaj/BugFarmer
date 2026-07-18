@@ -288,7 +288,10 @@ namespace BugFarmer.Entities
             // visuals may arrive from a non-crawling species (or go back to one), so
             // BOTH branches set scale/rotation explicitly.
             var info = Data.EntityDatabase.GetSpecies(SpeciesId);
-            bool crawling = info != null && info.MovementStyle == "crawling";
+            // "crawling" = the segmented ground bugs. Centipede PACK members use movement_style "centipede"
+            // (per-bug independent motion) but still render the segmented body — include both styles here, or
+            // switching centipedes to the pack model silently drops their body + melee hit-segments.
+            bool crawling = info != null && (info.MovementStyle == "crawling" || info.MovementStyle == "centipede");
             // Only the SEGMENTED crawlers (centipede/millipede) render the multi-part body trail.
             // Single-body crawlers (e.g. beetle_carrion) fall through to the single-sprite path —
             // without this they'd be drawn with the hardcoded centipede trail (CentipedeTrail.cs).
@@ -781,6 +784,16 @@ namespace BugFarmer.Entities
                 hunt_target = agent.HuntTargetBugId, // committed prey bug id (history-dependent — rides snapshot)
                 feed_until = agent.FeedUntilTick,    // corpse-eating timer (history-dependent — rides snapshot)
                 feed_corpse_id = agent.FeedCorpseId, // the corpse being eaten (history-dependent — rides snapshot)
+                // Centipede lunge (surge) — reconstruct a mid-lunge on a late-joiner
+                surge_phase = agent.SurgePhase,
+                surge_until = agent.SurgeUntilTick,
+                surge_cooldown_until = agent.SurgeCooldownUntil,
+                windup_cell_x = agent.WindupCellX,
+                windup_cell_y = agent.WindupCellY,
+                surge_heading_x = agent.SurgeHeadingX,
+                surge_heading_y = agent.SurgeHeadingY,
+                surge_dist_left = agent.SurgeDistLeft,
+                surge_target_id = agent.SurgeTargetId ?? "",
                 // DIAGNOSTIC (re-root investigation)
                 spawn_tick = agent.SpawnTick,
                 spawn_source = agent.SpawnSource
@@ -881,6 +894,16 @@ namespace BugFarmer.Entities
                     agent.HuntTargetBugId = data.hunt_target; // restore the committed chase (else hunters desync)
                     agent.FeedUntilTick = data.feed_until;    // restore the corpse-eat timer (else feeders desync)
                     agent.FeedCorpseId = data.feed_corpse_id;
+                    // Centipede lunge (surge) — restore a mid-lunge so a late-joiner charges identically.
+                    agent.SurgePhase = data.surge_phase;
+                    agent.SurgeUntilTick = data.surge_until;
+                    agent.SurgeCooldownUntil = data.surge_cooldown_until;
+                    agent.WindupCellX = data.windup_cell_x;
+                    agent.WindupCellY = data.windup_cell_y;
+                    agent.SurgeHeadingX = data.surge_heading_x;
+                    agent.SurgeHeadingY = data.surge_heading_y;
+                    agent.SurgeDistLeft = data.surge_dist_left;
+                    agent.SurgeTargetId = string.IsNullOrEmpty(data.surge_target_id) ? null : data.surge_target_id;
                     agent.SpawnSource = "snapshotApply"; // DIAGNOSTIC: got authoritative per-bug state
 
                     // Behavior state

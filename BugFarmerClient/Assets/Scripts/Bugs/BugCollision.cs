@@ -45,6 +45,33 @@ namespace BugFarmer.Bugs
         }
 
         /// <summary>
+        /// Swept resolve for FAST moves (a centipede surge can exceed 1 cell/tick). Resolve() only tests the
+        /// DESTINATION cell, so a >1-cell step would tunnel a 1-thick fence; sub-step the move in ≤0.9-cell
+        /// increments and Resolve() each so the mover clamps at the wall instead. Deterministic: fixed-point,
+        /// a step count derived from the move length. Short moves take the single-step Resolve fast path.
+        /// </summary>
+        public static FixedPoint2 ResolveSwept(FixedPoint2 current, FixedPoint2 proposed, bool ignoreOccupants)
+        {
+            var delta = proposed - current;
+            var maxStep = FixedPoint.FromFloat(0.9f);
+            var distSqr = delta.SqrMagnitude();
+            if (distSqr <= maxStep * maxStep)
+                return Resolve(current, proposed, ignoreOccupants);
+
+            int steps = FixedPointMath.Sqrt(distSqr).Value / maxStep.Value + 1; // ceil(dist / 0.9)
+            var stepVec = delta / FixedPoint.FromInt(steps);
+            var pos = current;
+            for (int i = 0; i < steps; i++)
+            {
+                var next = new FixedPoint2(pos.X + stepVec.X, pos.Y + stepVec.Y);
+                var resolved = Resolve(pos, next, ignoreOccupants);
+                if (resolved == pos) break; // fully blocked this sub-step — stop (clamped at the wall)
+                pos = resolved;
+            }
+            return pos;
+        }
+
+        /// <summary>
         /// Check if a fixed-point position is blocked.
         /// </summary>
         public static bool IsBlocked(FixedPoint2 pos, bool ignoreOccupants = false)

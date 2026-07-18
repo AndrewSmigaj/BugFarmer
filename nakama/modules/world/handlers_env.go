@@ -445,17 +445,7 @@ func (m *Match) debugSpawnSwarm(
 		}
 	}
 
-	// INDIVIDUALS (centipedes) are swarm-of-1: spawn N SEPARATE solo swarms (jittered) so a debug count
-	// gives N independent crawlers, not one synced knot. Swarm species spawn as one cloud of N as before.
-	if species.Category == "individual" {
-		for i := 0; i < n; i++ {
-			jx := msg.SpawnX + float32(state.Rng.Intn(5)-2)
-			jy := msg.SpawnY + float32(state.Rng.Intn(5)-2)
-			m.spawnSwarmAt(state, speciesID, 1, jx, jy, chunkSize)
-		}
-		logger.Info("DEBUG WORLD: %s spawned %d solo %s at (%.1f, %.1f)", userID, n, speciesID, msg.SpawnX, msg.SpawnY)
-		return
-	}
+	// Every species (centipede packs included) spawns as one swarm of N at the debug point.
 	if swarm := m.spawnSwarmAt(state, speciesID, n, msg.SpawnX, msg.SpawnY, chunkSize); swarm != nil {
 		logger.Info("DEBUG WORLD: %s spawned %d %s as %s at (%.1f, %.1f)",
 			userID, n, speciesID, swarm.ID, msg.SpawnX, msg.SpawnY)

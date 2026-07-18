@@ -74,9 +74,6 @@ func (m *Match) reproduceSwarm(state *WorldState, dispatcher runtime.MatchDispat
 	swarm *entities.SwarmState, species *entities.BugSpecies, logger runtime.Logger) {
 
 	count := 1 + state.Rng.Intn(2) // 1-2 offspring
-	if species.Category == "individual" {
-		count = 1 // individuals are swarm-of-1 — mint a solo child, never a 2-member knot
-	}
 
 	// VISIBLE BROOD path (breeding-unify): EVERY non-nest species LAYS a brood that develops + hatches,
 	// instead of a new bug popping into the swarm from nowhere. layIntoBrood resolves a breeding source
@@ -84,10 +81,10 @@ func (m *Match) reproduceSwarm(state *WorldState, dispatcher runtime.MatchDispat
 	// cell (free-roaming predators, detritivores). processBroods matures + hatches; caps apply at HATCH
 	// time (eggs aren't bugs); the birth itself still rides the deterministic SWARM_REPRODUCED ledger.
 	// NEST species (Predation.NestOccupant != "") are EXCLUDED — they breed via the nest deposit path
-	// (depositBrood), which the nest-brood variant makes visible separately. INDIVIDUAL crawlers
-	// (centipede, swarm-of-1) are EXCLUDED for now — hatchFromBrood grows the nearest swarm, which would
-	// break their swarm-of-1 model; they get the clutch when Phase 3 turns them into packs.
-	if species.Category != "individual" && (species.Predation == nil || species.Predation.NestOccupant == "") {
+	// (depositBrood), which the nest-brood variant makes visible separately. Centipede PACKS are
+	// free-roaming predators with no nest, so they lay an own-cell clutch here like every other
+	// nestless species; hatchFromBrood grows the nearest pack, which then splits past split_threshold.
+	if species.Predation == nil || species.Predation.NestOccupant == "" {
 		m.layIntoBrood(state, dispatcher, swarm, count) // own-cell fallback never fails → always a visible clutch
 		swarm.ReproductionMeter = 0
 		swarm.Satiation = 0
@@ -109,45 +106,6 @@ func (m *Match) reproduceSwarm(state *WorldState, dispatcher runtime.MatchDispat
 				swarm.ID, swarm.SpeciesID, maxPop)
 			return
 		}
-	}
-
-	// Individuals (ground crawlers, §14.3): merge/split are disabled for the
-	// category, so a full swarm can never shed members — growth past MaxSwarmSize
-	// would overcap the knot forever. At the swarm-size cap the litter becomes a
-	// NEW swarm beside the parent instead, subject to the zone's swarm-count cap
-	// (the same arm-the-cooldown skip as the population cap when no room).
-	if species.Category == "individual" && species.MaxSwarmSize > 0 &&
-		swarm.Count >= species.MaxSwarmSize {
-		atSwarmCap := false
-		if state.CurrentZone != nil && state.CurrentZone.BugSpawning != nil {
-			if zcap, ok := state.CurrentZone.BugSpawning.SpeciesCaps[swarm.SpeciesID]; ok &&
-				zcap.Max > 0 && state.AliveSwarmCount(swarm.SpeciesID) >= zcap.Max {
-				atSwarmCap = true
-			}
-		}
-		if atSwarmCap {
-			swarm.ReproductionMeter = 0
-			swarm.Satiation = 0
-			swarm.ReproduceCooldown = species.ReproduceCooldown
-			logger.Debug("Swarm %s at the %s swarm-count cap: reproduction skipped",
-				swarm.ID, swarm.SpeciesID)
-			return
-		}
-		chunkSize := state.Config.ChunkSize
-		child := m.spawnSwarmAt(state, swarm.SpeciesID, count,
-			swarm.Position.WorldX(chunkSize)+1.5, swarm.Position.WorldY(chunkSize),
-			chunkSize)
-		if child == nil {
-			return
-		}
-		state.Stats.recordBirth(swarm.SpeciesID, BirthReproduce, count)
-		swarm.ReproductionMeter = 0
-		swarm.Satiation = 0
-		swarm.ReproduceCooldown = species.ReproduceCooldown
-		m.consumeFood(state, dispatcher, swarm.TargetFoodID, reproduceFoodCost)
-		logger.Info("Swarm %s reproduced at %s: minted new swarm %s (+%d, parent full at %d)",
-			swarm.ID, swarm.TargetFoodID, child.ID, count, swarm.Count)
-		return
 	}
 
 	m.growSwarm(state, swarm, count) // the shared id-math + SWARM_REPRODUCED event
@@ -1275,13 +1233,15 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			// the chosen source is CACHED on the swarm so the per-tick meter check is O(1).
 			// V1 RULE: a REPRODUCING swarm only targets DEPLETABLE sources (items/stations) —
 			// flora is infinite, so breeding on it would mean unbounded growth.
-			// ActionState machine (centipede windup/surge/recover/gnaw): PER TICK, BEFORE
-			// the think gate — surges are 25 ticks vs 8-30-tick thinks, and the bite check
-			// must run every tick of flight. Owns the swarm while active.
+			// Centipede GNAW (PER TICK, before the think gate): while chewing through a fence the swarm
+			// owns the tick (skips hunt/forage). The rest of the centipede brain — windup/surge/lunge +
+			// serpentine wander — now runs PER-BUG on the client (movement_style "centipede", each pack
+			// member independent). Only the gnaw stays server-side: it mutates the world and needs the
+			// occupant/Gnawable data the client doesn't have. Dispatched off the ActionState the hunt-leg sets.
 			actionActive := false
-			if species.Predation != nil && species.Category == "individual" {
+			if swarm.ActionState == "gnaw" {
 				pt := worldState.Perf.Start()
-				actionActive = m.processActionState(logger, dispatcher, worldState, swarm, species, chunkSize, deltaTime)
+				actionActive = m.processGnaw(logger, dispatcher, worldState, swarm, species, chunkSize)
 				worldState.Perf.StopSpecies(swarm.SpeciesID, "action", pt)
 			}
 
@@ -1291,7 +1251,10 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			// AGGRO: an attack-capable swarm checks EVERY tick for a nearby player (prompt notice — not
 			// gated behind a 3-5 s wander leg). If it has a target it OWNS the think (chase) and skips
 			// hunt/forage so it actually comes at you. Non-attackers return false and fall through.
-			aggroOwned := !actionActive && m.aggroPlayerThink(worldState, swarm, species, chunkSize, deltaTime)
+			// Centipedes don't aggro at the swarm-center level — each pack member surges at the player
+			// individually on the client. The server center just roams + hunts prey (the loose-center model).
+			aggroOwned := !actionActive && species.MovementStyle != "centipede" &&
+				m.aggroPlayerThink(worldState, swarm, species, chunkSize, deltaTime)
 			if !actionActive && !aggroOwned && worldState.TickCount >= swarm.NextThinkTick &&
 				!m.predationThink(worldState, swarm, species, chunkSize, deltaTime, logger) {
 				var resourceX, resourceY float32 = float32(math.NaN()), float32(math.NaN())
@@ -2198,8 +2161,8 @@ func (m *Match) checkSwarmMerging(state *WorldState, chunkSize int, logger runti
 			continue
 		}
 		species1 := state.Species[swarm1.SpeciesID]
-		if species1 == nil || species1.Category == "individual" {
-			continue // individuals (centipede) never merge
+		if species1 == nil {
+			continue
 		}
 
 		for _, id2 := range mergeIDs {
@@ -2305,8 +2268,8 @@ func (m *Match) checkSwarmSplitting(state *WorldState, chunkSize int, logger run
 			continue
 		}
 		species := state.Species[swarm.SpeciesID]
-		if species == nil || species.Category == "individual" {
-			continue // individuals (centipede) never split — belt+braces over the sizes
+		if species == nil {
+			continue
 		}
 
 		// Deterministic size rule: split when over the split limit. SplitThreshold (if set) decouples the

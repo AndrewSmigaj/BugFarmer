@@ -143,6 +143,15 @@ namespace BugFarmer.Data
             public float Standoff;
             public float DivePeriodSecs;
             public float DiveSecs;
+            // Lunge (centipede surge) — BugAgent's ctor reads these for a style "lunge" species.
+            public string Style = "contact";
+            public float TelegraphSecs;
+            public float CooldownSecs;
+            public int SurgeMaxTicks;
+            public float TriggerRange;
+            public float SurgeSpeedMult;
+            public float Overshoot;
+            public float Lead;
         }
 
         private static Dictionary<string, SpeciesInfo> _cache;
@@ -167,14 +176,34 @@ namespace BugFarmer.Data
                     PlayerReaction = o.TryGetProperty("player_reaction", out var pr) ? (pr.GetString() ?? "ignore") : "ignore",
                     ReactionRadius = o.TryGetProperty("reaction_radius", out var rr) ? (float)rr.GetDouble() : 0f,
                     FliesOverFences = o.TryGetProperty("flies_over_fences", out var ff) && ff.ValueKind == JsonValueKind.True,
-                    Attack = o.TryGetProperty("attack", out var a) ? new AttackInfo
-                    {
-                        Standoff = a.TryGetProperty("standoff", out var so) ? (float)so.GetDouble() : 0f,
-                        DivePeriodSecs = a.TryGetProperty("dive_period_secs", out var dp) ? (float)dp.GetDouble() : 0f,
-                        DiveSecs = a.TryGetProperty("dive_secs", out var ds) ? (float)ds.GetDouble() : 0f,
-                    } : null,
+                    Attack = ParseAttack(o),
                 };
             }
+        }
+
+        // Mirrors the client AttackInfo parse (the fields the linked BugAgent/MovementFactory read): the dive
+        // knobs + the style "lunge" surge sub-config (centipedes). Null when the species has no attack{} block.
+        private static AttackInfo ParseAttack(JsonElement o)
+        {
+            if (!o.TryGetProperty("attack", out var a)) return null;
+            var atk = new AttackInfo
+            {
+                Standoff = a.TryGetProperty("standoff", out var so) ? (float)so.GetDouble() : 0f,
+                DivePeriodSecs = a.TryGetProperty("dive_period_secs", out var dp) ? (float)dp.GetDouble() : 0f,
+                DiveSecs = a.TryGetProperty("dive_secs", out var ds) ? (float)ds.GetDouble() : 0f,
+                Style = a.TryGetProperty("style", out var st) ? (st.GetString() ?? "contact") : "contact",
+                TelegraphSecs = a.TryGetProperty("telegraph_secs", out var tg) ? (float)tg.GetDouble() : 0f,
+                CooldownSecs = a.TryGetProperty("cooldown_secs", out var cd) ? (float)cd.GetDouble() : 0f,
+            };
+            if (a.TryGetProperty("lunge", out var l))
+            {
+                atk.TriggerRange = l.TryGetProperty("trigger_range", out var tr) ? (float)tr.GetDouble() : 0f;
+                atk.SurgeSpeedMult = l.TryGetProperty("surge_speed_mult", out var ss) ? (float)ss.GetDouble() : 0f;
+                atk.Overshoot = l.TryGetProperty("overshoot", out var ov) ? (float)ov.GetDouble() : 0f;
+                atk.SurgeMaxTicks = l.TryGetProperty("surge_max_ticks", out var sm) ? sm.GetInt32() : 0;
+                atk.Lead = l.TryGetProperty("lead", out var ld) ? (float)ld.GetDouble() : 0f;
+            }
+            return atk;
         }
     }
 }

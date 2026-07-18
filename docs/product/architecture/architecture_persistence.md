@@ -23,8 +23,8 @@ updates stay compatible with old saves), the `Gnaw` map (half-chewed fences stay
 kept, so `NestState.ResidentSwarmID` stays valid), and every sidecar registry (crops, trees,
 stations, containers, craft stations, nests, forage pools, host plants, broods, ground items).
 Two swarm fields are refreshed from the live species def at load (`Radius`, `WanderRad` — a
-rebalance must reach saved swarms); player-ref fields (`DefendTargetID`, `WindupTargetID`) hold
-stable userIDs and self-heal.
+rebalance must reach saved swarms); the player-ref field `DefendTargetID` holds a stable userID and
+self-heals (`WindupTargetID` was removed with the centipede combat-brain move to the client, 2026-07-18).
 
 ## Restore (eager, at MatchInit, before any client joins)
 One order, one function (`restoreWorldSave`): **(1)** the clock + scalars (`LastZoneSaveTick` :=

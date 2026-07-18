@@ -125,8 +125,9 @@ func buildPopulatedState(t *testing.T) *WorldState {
 		RemovedBugIDs:   map[int]bool{1: true},
 		NextBugID:       8,
 		BugHP:           map[int]int{3: 1},
-		ActionState:     "recover",
+		ActionState:     "gnaw",
 		ActionUntilTick: 5020,
+		GnawKey:         "30,30",
 		DefendTargetID:  "user-abc", // stable userID — persists AS-IS
 	}
 	s.Swarms[sw.ID] = sw

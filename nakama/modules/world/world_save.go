@@ -328,7 +328,7 @@ func (m *Match) restoreWorldSave(state *WorldState, ws *WorldSave, logger runtim
 
 	// (3) Swarms — as they were, identities included. The only fixup is refreshing the
 	// CONFIG-DERIVED fields from the live species def (a rebalance must reach saved swarms);
-	// player-ref fields (DefendTargetID, WindupTargetID) hold stable userIDs and self-heal.
+	// the player-ref field DefendTargetID holds a stable userID and self-heals.
 	if !ephemeral {
 		for _, sw := range ws.Swarms {
 			if sw == nil || sw.Count <= 0 {

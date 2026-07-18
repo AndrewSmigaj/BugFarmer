@@ -25,14 +25,6 @@ func TestNormalizeAttack_LegacyContactSynth(t *testing.T) {
 	}
 }
 
-func TestNormalizeAttack_LegacyLungeSynth(t *testing.T) {
-	s := &BugSpecies{Category: "individual", AttackDamage: 2, Predation: &PredationConfig{}}
-	s.normalizeAttack()
-	if s.Attack == nil || s.Attack.Style != "lunge" {
-		t.Fatalf("legacy individual+predation must synthesize a lunge, got %+v", s.Attack)
-	}
-}
-
 func TestNormalizeAttack_NonAttackerStaysNil(t *testing.T) {
 	s := &BugSpecies{AttackDamage: 0}
 	s.normalizeAttack()

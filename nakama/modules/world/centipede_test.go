@@ -1,7 +1,10 @@
 package world
 
-// Tests for the centipede ActionState machine (windup/surge/recover/gnaw), the
-// serpentine wander escape hatch, and the swarm-of-one invariants.
+// Tests for the centipede's SERVER-side GNAW — the only centipede behavior still on the
+// server — plus the pack lifecycle (merge / split / breed), which is no longer disabled.
+// The combat brain (windup/surge/recover/turnaround) and the serpentine wander moved to
+// the CLIENT, one brain per pack member (movement_style "centipede"); those are exercised
+// by the Unity + determinism gates, not here.
 //
 // Run inside the builder image:  go test ./modules/world/ -run TestCent -v
 
@@ -14,9 +17,9 @@ import (
 func centTestState() (*WorldState, *entities.SwarmState) {
 	state := predationTestState()
 	state.Species["centipede_garden"] = &entities.BugSpecies{
-		ID: "centipede_garden", Category: "individual",
+		ID: "centipede_garden", Category: "swarm", MovementStyle: "centipede",
 		BaseSpeed: 1.6, VisionRange: 10, WanderRadius: 15,
-		MinSwarmSize: 1, MaxSwarmSize: 1,
+		MinSwarmSize: 3, MaxSwarmSize: 5, SwarmRadius: 2.5, MergeRadius: 1.5, SplitThreshold: 6,
 		AttackDamage: 2, AttackCooldown: 5.0,
 		MaxHP: 6, NetSize: "trap_only",
 		AttractionsByPhase: map[string][]string{}, // pure hunter — no scavenging (breeds via the well-fed timer)
@@ -42,12 +45,16 @@ func centTestState() (*WorldState, *entities.SwarmState) {
 	return state, cent
 }
 
-// driveCentTick replicates the loop order for the centipede: ActionState per tick →
-// think gate → move.
+// driveCentTick replicates the server loop order for a centipede swarm: the GNAW
+// ActionState (the only server-side action left) is dispatched per tick BEFORE the think
+// gate; otherwise the predator think (hunt/wander) runs, then the center moves.
 func driveCentTick(m *Match, state *WorldState, cent *entities.SwarmState) {
 	state.TickCount++
 	species := state.Species[cent.SpeciesID]
-	active := m.processActionState(nopRuntimeLogger(), nil, state, cent, species, 32, 0.1)
+	active := false
+	if cent.ActionState == "gnaw" {
+		active = m.processGnaw(nopRuntimeLogger(), nil, state, cent, species, 32)
+	}
 	if !active && state.TickCount >= cent.NextThinkTick {
 		if !m.predationThink(state, cent, species, 32, 0.1, nopRuntimeLogger()) {
 			cent.SpeedMult = 1.0
@@ -56,207 +63,6 @@ func driveCentTick(m *Match, state *WorldState, cent *entities.SwarmState) {
 		}
 	}
 	cent.Move(0.1, species, 32)
-}
-
-// Surge: trigger at 5.0 → 8-tick windup freeze → clamped lead surge → overshoot →
-// turnaround → idle on a cooldown. The BITE is no longer applied here: the connect is detected
-// client-side (against the rendered sprite) and applied via handleBugPlayerStrike
-// (bug_player_strike_test.go). The server surge is therefore DAMAGE-FREE — this test guards that
-// invariant (the phantom is gone) plus the choreography.
-func TestCentSurgeCycle(t *testing.T) {
-	state, cent := centTestState()
-	m := &Match{}
-	p := &PlayerState{UserID: "p1", HP: 10, MaxHP: 10,
-		Position: entities.EntityPosition{LocalX: 13, LocalY: 10}} // 3u away, standing still
-	state.Players = map[string]*PlayerState{"p1": p}
-
-	// Trigger + windup freeze
-	driveCentTick(m, state, cent)
-	if cent.ActionState != "windup" {
-		t.Fatalf("state=%q, want windup", cent.ActionState)
-	}
-	frozeX := cent.WorldX(32)
-	for i := 0; i < centWindupTicks-1; i++ { // up to (not incl.) the launch tick
-		driveCentTick(m, state, cent)
-		if cent.WorldX(32) != frozeX {
-			t.Fatal("centipede moved during the windup freeze")
-		}
-	}
-	driveCentTick(m, state, cent) // the launch tick: surge leg + first move
-	if cent.ActionState != "surge" {
-		t.Fatalf("state=%q, want surge after the windup", cent.ActionState)
-	}
-
-	// No server bite → the surge overshoots and banks into the turnaround, then idles on a cooldown.
-	sawTurnaround := false
-	for i := 0; i < centSurgeMaxTicks+centTurnLegs*centTurnLegTicks+centRecoverTicks+8; i++ {
-		driveCentTick(m, state, cent)
-		if cent.ActionState == "turnaround" {
-			sawTurnaround = true
-		}
-		if sawTurnaround && cent.ActionState == "" {
-			break
-		}
-	}
-	if p.HP != 10 {
-		t.Fatalf("server surge applied HP=%d — it must be DAMAGE-FREE (the client detects the bite)", p.HP)
-	}
-	if !sawTurnaround {
-		t.Fatal("a surge with no server bite must bank into the turnaround")
-	}
-	if cent.ActionState != "" {
-		t.Fatalf("state=%q, want idle after the cycle", cent.ActionState)
-	}
-	if cent.SurgeCooldownUntil <= state.TickCount {
-		t.Fatal("surge cooldown not armed after the cycle")
-	}
-}
-
-// The velocity lead: launchSurge aims at pos + velocity×flight×lead, so the surge target LEADS a
-// moving player — a +Y drifter yields a HIGHER surge target Y than the same player drifting −Y. This
-// is the server-side geometry (unchanged); whether the lead CONNECTS is now detected client-side
-// against the rendered sprite, so this test verifies the aim, not an HP hit.
-func TestCentSurgeLead(t *testing.T) {
-	surgeTargetY := func(vy float32) float32 {
-		state, cent := centTestState()
-		m := &Match{}
-		p := &PlayerState{UserID: "p1", HP: 10, MaxHP: 10,
-			Position: entities.EntityPosition{LocalX: 14, LocalY: 10}}
-		state.Players = map[string]*PlayerState{"p1": p}
-
-		for i := 0; i < 60 && cent.ActionState != "surge"; i++ {
-			driveCentTick(m, state, cent)
-			p.Position.LocalY += vy // steady drift through the windup → sets the lead velocity
-			p.Position.Normalize(32)
-		}
-		if cent.ActionState != "surge" {
-			t.Fatalf("never launched a surge (vy=%.2f)", vy)
-		}
-		return cent.TargetY
-	}
-
-	up := surgeTargetY(0.25)    // drifting +Y
-	down := surgeTargetY(-0.25) // drifting −Y
-	if !(up > down) {
-		t.Fatalf("surge must LEAD the player's velocity: +Y-drift target=%.2f must exceed −Y-drift target=%.2f", up, down)
-	}
-}
-
-// The surge OVERSHOOTS: its leg target lies BEYOND the player along the launch line —
-// it charges THROUGH their spot (the per-tick flight check bites mid-pass) and ends
-// past them, set up for the turnaround.
-func TestCentSurgeOvershoot(t *testing.T) {
-	state, cent := centTestState()
-	m := &Match{}
-	p := &PlayerState{UserID: "p1", HP: 10, MaxHP: 10,
-		Position: entities.EntityPosition{LocalX: 13, LocalY: 10}} // standing, 3u east
-	state.Players = map[string]*PlayerState{"p1": p}
-
-	for i := 0; i < centWindupTicks+2 && cent.ActionState != "surge"; i++ {
-		driveCentTick(m, state, cent)
-	}
-	if cent.ActionState != "surge" {
-		t.Fatalf("state=%q, want surge", cent.ActionState)
-	}
-	// Zero player velocity → aim = the player; target = aim + overshoot along the line.
-	if cent.TargetX < 13+centSurgeOvershoot-0.5 {
-		t.Fatalf("surge target X=%.2f, want ≥ %.2f (past the player at 13)",
-			cent.TargetX, 13+centSurgeOvershoot-0.5)
-	}
-}
-
-// A MISSED surge banks back toward the player (turnaround: chained arc legs, the
-// heading converging on them) and re-engages on the SHORT cooldown — it presses the
-// attack instead of retreating. A player who RUNS (beyond de-aggro) ends it with the
-// full cooldown instead.
-func TestCentMissTurnaround(t *testing.T) {
-	state, cent := centTestState()
-	m := &Match{}
-	p := &PlayerState{UserID: "p1", HP: 10, MaxHP: 10,
-		Position: entities.EntityPosition{LocalX: 14, LocalY: 10}}
-	state.Players = map[string]*PlayerState{"p1": p}
-
-	for i := 0; i < centWindupTicks+2 && cent.ActionState != "surge"; i++ {
-		driveCentTick(m, state, cent)
-	}
-	if cent.ActionState != "surge" {
-		t.Fatalf("state=%q, want surge", cent.ActionState)
-	}
-	// DODGE: sidestep well off the flight line (still inside de-aggro 12).
-	p.Position.LocalY = 16
-	p.Position.Normalize(32)
-
-	sawTurnaround := false
-	for i := 0; i < centSurgeMaxTicks+centTurnLegs*centTurnLegTicks+8; i++ {
-		driveCentTick(m, state, cent)
-		if cent.ActionState == "turnaround" {
-			sawTurnaround = true
-		}
-		if sawTurnaround && cent.ActionState == "" {
-			break
-		}
-	}
-	if !sawTurnaround {
-		t.Fatal("missed surge never entered turnaround")
-	}
-	if cent.ActionState != "" {
-		t.Fatalf("state=%q, want idle after the turnaround", cent.ActionState)
-	}
-	// Short re-engage cooldown (presses the attack), not the full 50.
-	if cd := cent.SurgeCooldownUntil - state.TickCount; cd > centTurnCooldown {
-		t.Fatalf("cooldown after turnaround = %d ticks, want ≤ %d (short)", cd, centTurnCooldown)
-	}
-	if p.HP != 10 {
-		t.Fatalf("dodged player took damage: HP=%d", p.HP)
-	}
-
-	// --- The runner: dodge AND flee beyond de-aggro → full cooldown, no pursuit.
-	state2, cent2 := centTestState()
-	p2 := &PlayerState{UserID: "p1", HP: 10, MaxHP: 10,
-		Position: entities.EntityPosition{LocalX: 14, LocalY: 10}}
-	state2.Players = map[string]*PlayerState{"p1": p2}
-	for i := 0; i < centWindupTicks+2 && cent2.ActionState != "surge"; i++ {
-		driveCentTick(m, state2, cent2)
-	}
-	p2.Position.LocalX, p2.Position.LocalY = 40, 40 // gone
-	p2.Position.Normalize(32)
-	for i := 0; i < centSurgeMaxTicks+centTurnLegs*centTurnLegTicks+8 && cent2.ActionState != ""; i++ {
-		driveCentTick(m, state2, cent2)
-	}
-	if cd := cent2.SurgeCooldownUntil - state2.TickCount; cd <= centTurnCooldown {
-		t.Fatalf("runner-escape cooldown = %d ticks, want the FULL backoff", cd)
-	}
-}
-
-// "Stone is the answer": the surge CLAMPS at the wall — the body never crosses it, so a player on
-// the far side is unreachable (server movement guarantee). The additional through-thin-wall BITE
-// block is now enforced CLIENT-side (RenderedStingersInRange + BugCollision.LineBlocked, the same
-// integer-Bresenham LoS as the predation #20 fix) — not Go-testable here. This guards the movement
-// half + that the server surge stays damage-free.
-func TestCentSurgeNoThroughFenceBite(t *testing.T) {
-	state, cent := centTestState()
-	m := &Match{}
-	chunk := state.Chunks[ChunkKey(0, 0)]
-	// A FULL-COLUMN stone wall at x=12 — no flanking around the ends.
-	for ly := 0; ly < 32; ly++ {
-		chunk.SetOccupant(12, ly, &PlacedOccupant{ID: "fence_stone", Anchor: true})
-	}
-	// Player hugging the far side of the wall at x=12; centipede at x=10
-	p := &PlayerState{UserID: "p1", HP: 10, MaxHP: 10,
-		Position: entities.EntityPosition{LocalX: 13.2, LocalY: 10}}
-	state.Players = map[string]*PlayerState{"p1": p}
-
-	// The wall is column 12; the player is at 13.2 (cell 13, the far side). The centipede may touch the
-	// near face of the wall cell but must never CROSS to the player's cell (x >= 13) — the surge clamps.
-	for i := 0; i < 120; i++ {
-		driveCentTick(m, state, cent)
-		if cent.WorldX(32) >= 13 {
-			t.Fatalf("centipede crossed the stone wall to the player's side (x=%.2f) — the surge must clamp", cent.WorldX(32))
-		}
-	}
-	if p.HP != 10 {
-		t.Fatalf("server applied damage across a wall: HP=%d — the server surge must be damage-free", p.HP)
-	}
 }
 
 // Gnaw: a hungry centipede with penned prey chews the wood fence at 80-tick intervals
@@ -337,56 +143,54 @@ func TestCentGnawSeparateFromPlayerBreaking(t *testing.T) {
 	}
 }
 
-// Dead-end escape: boxed in by stone on three sides, the serpentine wander frees
-// itself within a handful of thinks (heading updates on clamped rolls + the 3-streak
-// free 360°).
-func TestCentDeadEndEscape(t *testing.T) {
-	state, cent := centTestState()
+// Centipede PACKS merge (two small overlapping packs combine, up to max_swarm_size) and
+// SPLIT (a pack grown past split_threshold halves into two, each ≥ min_swarm_size) — the
+// swarm dynamics that were disabled for the retired "individual" swarm-of-1 model.
+func TestCentPacksMergeAndSplit(t *testing.T) {
 	m := &Match{}
-	chunk := state.Chunks[ChunkKey(0, 0)]
-	// A stone pocket: walls north, east, south of (10,10); open to the WEST.
-	for d := -2; d <= 2; d++ {
-		chunk.SetOccupant(12, 10+d, &PlacedOccupant{ID: "fence_stone", Anchor: true}) // east
-		chunk.SetOccupant(10+d, 12, &PlacedOccupant{ID: "fence_stone", Anchor: true}) // north
-		chunk.SetOccupant(10+d, 8, &PlacedOccupant{ID: "fence_stone", Anchor: true})  // south
-	}
-	cent.WanderHeading = 0 // facing EAST, straight at the wall
-	cent.Satiation = 100   // no hunting; pure wander
 
-	for i := 0; i < 900; i++ {
-		driveCentTick(m, state, cent)
-		if cent.WorldX(32) < 8.5 {
-			return // escaped west ✓
-		}
-	}
-	t.Fatalf("centipede never escaped the dead end (at %.1f,%.1f streak=%d)",
-		cent.WorldX(32), cent.WorldY(32), cent.ClampedLegStreak)
-}
-
-// Individuals never merge or split, even when overfed/overlapping.
-func TestCentNeverMergesOrSplits(t *testing.T) {
-	state, c1 := centTestState()
-	m := &Match{}
-	c2 := newTestSwarm("c_cent2", 1, 10.2, 10)
-	c2.SpeciesID = "centipede_garden"
-	state.Swarms[c2.ID] = c2
-	c1.Count = 3 // force over max_swarm_size 1
+	// MERGE: two packs of 2, 1.0 apart (≤ merge_radius 1.5) → one pack of 4 (≤ max 5).
+	state, _ := centTestState()
+	delete(state.Swarms, "c_cent") // drop the fixture's default solo swarm
+	a := newTestSwarm("c_a", 2, 10, 10)
+	a.SpeciesID = "centipede_garden"
+	b := newTestSwarm("c_b", 2, 11, 10)
+	b.SpeciesID = "centipede_garden"
+	state.Swarms["c_a"] = a
+	state.Swarms["c_b"] = b
 
 	m.checkSwarmMerging(state, 32, nopRuntimeLogger())
-	m.checkSwarmSplitting(state, 32, nopRuntimeLogger())
 
-	if len(state.Swarms) != 3 { // c1, c2, b_fly?? — predationTestState has no flies; just c1+c2
-		// recount precisely:
-		n := 0
-		for range state.Swarms {
-			n++
-		}
-		if n != 2 {
-			t.Fatalf("swarm count changed: %d (merge or split fired on individuals)", n)
+	if len(state.Swarms) != 1 {
+		t.Fatalf("two overlapping packs must merge into one: %d swarms remain", len(state.Swarms))
+	}
+	for _, s := range state.Swarms {
+		if s.Count != 4 {
+			t.Fatalf("merged pack count=%d, want 4", s.Count)
 		}
 	}
-	if c1.Count != 3 {
-		t.Fatalf("individual split: count=%d", c1.Count)
+
+	// SPLIT: a pack of 7 (> split_threshold 6) halves; both halves ≥ min_swarm_size 3.
+	state2, _ := centTestState()
+	delete(state2.Swarms, "c_cent")
+	big := newTestSwarm("c_big", 7, 10, 10)
+	big.SpeciesID = "centipede_garden"
+	state2.Swarms["c_big"] = big
+
+	m.checkSwarmSplitting(state2, 32, nopRuntimeLogger())
+
+	if len(state2.Swarms) != 2 {
+		t.Fatalf("a pack over split_threshold must split in two: %d swarms", len(state2.Swarms))
+	}
+	total := 0
+	for _, s := range state2.Swarms {
+		if s.Count < 3 {
+			t.Fatalf("split half too small: count=%d (< min_swarm_size 3)", s.Count)
+		}
+		total += s.Count
+	}
+	if total != 7 {
+		t.Fatalf("split must conserve members: total=%d, want 7", total)
 	}
 }
 

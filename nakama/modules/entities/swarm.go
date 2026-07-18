@@ -12,8 +12,8 @@ import (
 // resumes under the persisted world clock, so every tick-stamp below stays valid across a restart.
 // The json tags ARE the save format: renaming a Go field must not change its tag. Two fields are
 // refreshed from the species def at load (Radius, WanderRad — config-derived; a rebalance must
-// reach saved swarms); player-ref fields (DefendTargetID, WindupTargetID) hold stable userIDs and
-// self-heal when the player is absent. See world/persist_classes.go.
+// reach saved swarms); the player-ref field DefendTargetID holds a stable userID and
+// self-heals when the player is absent. See world/persist_classes.go.
 type SwarmState struct {
 	ID        string         `json:"id"`
 	SpeciesID string         `json:"species"`
@@ -96,22 +96,16 @@ type SwarmState struct {
 	DefendTargetID  string `json:"defend_target,omitempty"` // player being chased while defending (stable userID; self-heals)
 	AggroTargetID   string `json:"aggro_target,omitempty"`  // player an attack-capable swarm is chasing (proximity aggro, hysteresis; server-only, sim-inert)
 
-	// ActionState (centipede): what the bug is FORCIBLY DOING right now — orthogonal
-	// to the lifecycle Phase (what it WANTS). "" | "windup" | "surge" | "recover" |
-	// "turnaround" | "gnaw". Runs per-tick BEFORE the think gate and owns the swarm
-	// while active.
-	ActionState        string  `json:"action,omitempty"`
-	ActionUntilTick    int64   `json:"action_until,omitempty"`   // current action ends/advances at this tick
-	SurgeCooldownUntil int64   `json:"surge_cd_until,omitempty"` // no new windup before this
-	WindupTargetID     string  `json:"windup_target,omitempty"`  // the player being lunged at (stable userID; self-heals)
-	WindupStartX       float32 `json:"windup_x,omitempty"`       // their position at windup START (the velocity sample)
-	WindupStartY       float32 `json:"windup_y,omitempty"`
-	WanderHeading      float32 `json:"heading,omitempty"`      // serpentine wander heading (radians)
-	ClampedLegStreak   int     `json:"clamped_legs,omitempty"` // dead-end escape hatch: 3 fully-clamped legs => free roll
-	TurnLegsLeft       int     `json:"turn_legs,omitempty"`    // turnaround arc legs remaining after a missed surge
-	GnawKey            string  `json:"gnaw_key,omitempty"`     // "gx,gy" of the fence being chewed
-	GnawNextTick       int64   `json:"gnaw_next,omitempty"`    // next gnaw damage tick
-	GnawCooldownUntil  int64   `json:"gnaw_cd_until,omitempty"` // armed on ABANDONED gnaws only (successful breaks chain)
+	// ActionState (centipede): the only forced server-side action left is the GNAW —
+	// "" | "gnaw". The combat brain (windup/surge/recover/turnaround) and the serpentine
+	// wander moved to the CLIENT, per-bug (movement_style "centipede", each pack member
+	// independent); only the gnaw stays server-side because it mutates the world (it needs
+	// occupant/Gnawable data + owns the break). Runs per-tick before the think gate.
+	ActionState       string `json:"action,omitempty"`
+	ActionUntilTick   int64  `json:"action_until,omitempty"` // the gnaw's safety-timeout tick
+	GnawKey           string `json:"gnaw_key,omitempty"`     // "gx,gy" of the fence being chewed
+	GnawNextTick      int64  `json:"gnaw_next,omitempty"`    // next gnaw damage tick
+	GnawCooldownUntil int64  `json:"gnaw_cd_until,omitempty"` // armed on ABANDONED gnaws only (successful breaks chain)
 
 	// Bug ID tracking for deterministic catching (persisted: restored swarms keep their
 	// exact removed-id sets so re-minted ids can never collide)

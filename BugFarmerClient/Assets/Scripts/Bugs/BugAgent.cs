@@ -63,6 +63,30 @@ namespace BugFarmer.Bugs
         private const int FeedTicks = 25;      // ~2.5s pause-and-eat at the corpse
         private const float CorpseEatRange = 2.0f; // must be ~on the fresh kill to start eating it
 
+        // CENTIPEDE LUNGE (surge) — client per-bug combat, active when _behavior.AttackStyle == "lunge".
+        // Deterministic (fixed-point, no RNG); the position-determining fields ride the snapshot + hash so a
+        // late-joiner reconstructs a mid-lunge. Phase: 0 idle | 1 windup (freeze + telegraph) | 2 surge
+        // (ballistic charge past the aim) | 3 recover (back off, then cooldown).
+        public int SurgePhase;
+        public long SurgeUntilTick;            // the current phase ends at this tick
+        public long SurgeCooldownUntil;        // no new windup before this tick
+        public int WindupCellX, WindupCellY;   // player cell at windup START (the velocity-lead sample; FixedPoint.Value)
+        public int SurgeHeadingX, SurgeHeadingY; // locked unit heading during the charge (FixedPoint.Value)
+        public int SurgeDistLeft;              // FixedPoint.Value: charge distance remaining (aim dist + overshoot)
+        public string SurgeTargetId;           // player locked at windup (snapshot, NOT hashed — like FeedCorpseId)
+
+        // Cached lunge params (from the attack.lunge profile; set in the ctor only for a "lunge" species).
+        private int _windupTicks, _surgeCooldownTicks, _surgeMaxTicks;
+        private const int SurgeRecoverTicks = 20;
+        private FixedPoint _triggerRangeSqr;
+        private FixedPoint _surgeSpeed;
+        private FixedPoint _overshoot;
+        private FixedPoint _lead;
+        // The client has no per-species base_speed (movement speeds are hardcoded per style), so the surge uses a
+        // uniform centipede base × the parsed surge_speed_mult. All tiers land < 1 cell/tick; ResolveSwept covers any excess.
+        private static readonly FixedPoint CentBaseSpeed = FixedPoint.FromFloat(0.19f);
+        private static readonly FixedPoint SurgeRecoverSpeed = FixedPoint.FromFloat(0.16f);
+
         // Alert state (stochastic reaction)
         private bool _isAlerted;
         private int _alertCheckCooldown;
@@ -123,6 +147,20 @@ namespace BugFarmer.Bugs
             _divePeriodTicks = _behavior.DivePeriodTicks > 0 ? _behavior.DivePeriodTicks : 55;
             _diveTicks = _behavior.DiveTicks > 0 ? _behavior.DiveTicks : 12;
             if (_diveTicks >= _divePeriodTicks) _diveTicks = _divePeriodTicks - 1; // always leave a hover phase
+
+            // Cache the LUNGE (surge) params for a "lunge" species (centipedes) — read once here, like the dive knobs.
+            var lungeAtk = Data.EntityDatabase.GetSpecies(speciesId)?.Attack;
+            if (lungeAtk != null && lungeAtk.Style == "lunge")
+            {
+                _windupTicks = lungeAtk.TelegraphSecs > 0f ? (int)(lungeAtk.TelegraphSecs * 10f) : 8;
+                _surgeCooldownTicks = lungeAtk.CooldownSecs > 0f ? (int)(lungeAtk.CooldownSecs * 10f) : 50;
+                _surgeMaxTicks = lungeAtk.SurgeMaxTicks > 0 ? lungeAtk.SurgeMaxTicks : 25;
+                float trig = lungeAtk.TriggerRange > 0f ? lungeAtk.TriggerRange : 5f;
+                _triggerRangeSqr = FixedPoint.FromFloat(trig * trig);
+                _surgeSpeed = CentBaseSpeed * FixedPoint.FromFloat(lungeAtk.SurgeSpeedMult > 0f ? lungeAtk.SurgeSpeedMult : 4.8f);
+                _overshoot = FixedPoint.FromFloat(lungeAtk.Overshoot > 0f ? lungeAtk.Overshoot : 3.5f);
+                _lead = FixedPoint.FromFloat(lungeAtk.Lead > 0f ? lungeAtk.Lead : 0.8f);
+            }
         }
 
         /// <summary>
@@ -237,14 +275,20 @@ namespace BugFarmer.Bugs
             // Store tick for counter-based RNG calls
             _currentTick = currentTick;
 
-            // 1. Update behavior based on nearby players (stochastic alert)
-            UpdateBehavior(players);
+            // 1. Update behavior based on nearby players (stochastic alert). SKIP the re-eval while a centipede
+            //    LUNGE is committed (SurgePhase != 0): the surge owns the tick, so CurrentBehavior stays "attack"
+            //    and the switch below routes back into the surge — a player leaving range mid-surge can't abandon it.
+            if (!(_behavior.AttackStyle == "lunge" && SurgePhase != 0))
+                UpdateBehavior(players);
 
             // 2. Apply movement based on current behavior
             switch (CurrentBehavior)
             {
                 case "attack":
-                    if (TargetPlayerId != null)
+                    // Lungers (centipedes) run the per-bug surge machine; contact attackers keep the orbit-and-dive.
+                    if (_behavior.AttackStyle == "lunge")
+                        CentipedeSurge(players);
+                    else if (TargetPlayerId != null)
                     {
                         var targetPos = GetPlayerPosition(players, TargetPlayerId);
                         if (targetPos.HasValue)
@@ -313,7 +357,10 @@ namespace BugFarmer.Bugs
             );
             Position = _behavior.SkipCollision
                 ? proposed
-                : BugCollision.Resolve(Position, proposed, _behavior.FliesOverFences);
+                : (SurgePhase == 2
+                    // The fast charge sub-steps its collision so it clamps at a fence instead of tunneling.
+                    ? BugCollision.ResolveSwept(Position, proposed, _behavior.FliesOverFences)
+                    : BugCollision.Resolve(Position, proposed, _behavior.FliesOverFences));
         }
 
         /// <summary>
@@ -339,6 +386,99 @@ namespace BugFarmer.Bugs
             }
             else
                 Movement.UpdateMovement(this, target, _attackHoverRadiusSqr); // HOVER around the player at standoff
+        }
+
+        /// <summary>
+        /// CENTIPEDE LUNGE state machine (client-authority, deterministic — fixed-point, no RNG). Aims at the
+        /// deterministic player CELL (the quantized GetDeterministicPlayerTargets). Owns the tick while active. The
+        /// DAMAGE is detected separately by SwarmManager.RunLungeConnect against the rendered sprite; this only
+        /// drives the motion. Phase: 0 idle (approach + trigger) | 1 windup (freeze + telegraph) | 2 surge (charge
+        /// past the aim) | 3 recover (back off, then arm the cooldown).
+        /// </summary>
+        private void CentipedeSurge(List<PlayerTarget> players)
+        {
+            switch (SurgePhase)
+            {
+                case 1: // windup: FREEZE (the telegraph); at the end, launch
+                    Velocity = FixedPoint2.Zero;
+                    if (_currentTick >= SurgeUntilTick)
+                        LaunchSurge(players);
+                    return;
+
+                case 2: // surge: ballistic charge along the locked heading until the overshoot distance is spent
+                {
+                    var heading = new FixedPoint2(new FixedPoint { Value = SurgeHeadingX }, new FixedPoint { Value = SurgeHeadingY });
+                    Velocity = new FixedPoint2(heading.X * _surgeSpeed, heading.Y * _surgeSpeed);
+                    SurgeDistLeft -= _surgeSpeed.Value;
+                    if (SurgeDistLeft <= 0 || _currentTick >= SurgeUntilTick) // dist spent (or the safety cap)
+                    {
+                        SurgePhase = 3;
+                        SurgeUntilTick = _currentTick + SurgeRecoverTicks;
+                    }
+                    return;
+                }
+
+                case 3: // recover: back off along the reverse heading, then idle on the cooldown
+                {
+                    var heading = new FixedPoint2(new FixedPoint { Value = SurgeHeadingX }, new FixedPoint { Value = SurgeHeadingY });
+                    Velocity = new FixedPoint2(-(heading.X * SurgeRecoverSpeed), -(heading.Y * SurgeRecoverSpeed));
+                    if (_currentTick >= SurgeUntilTick)
+                    {
+                        SurgePhase = 0;
+                        SurgeCooldownUntil = _currentTick + _surgeCooldownTicks;
+                    }
+                    return;
+                }
+
+                default: // 0 idle: approach the player; at trigger range + off cooldown, begin the windup
+                {
+                    var target = GetPlayerPosition(players, TargetPlayerId);
+                    if (!target.HasValue) { Velocity = FixedPoint2.Zero; return; }
+                    var toPlayer = target.Value - Position;
+                    if (_currentTick >= SurgeCooldownUntil && toPlayer.SqrMagnitude() <= _triggerRangeSqr)
+                    {
+                        SurgePhase = 1;
+                        SurgeUntilTick = _currentTick + _windupTicks;
+                        SurgeTargetId = TargetPlayerId;
+                        WindupCellX = target.Value.X.Value;   // sample the player cell for the launch-time velocity lead
+                        WindupCellY = target.Value.Y.Value;
+                        Velocity = FixedPoint2.Zero;
+                    }
+                    else
+                    {
+                        Movement.MoveToward(this, target.Value); // close in at chase speed until in trigger range
+                    }
+                    return;
+                }
+            }
+        }
+
+        /// <summary>Windup → surge: aim at the player's cell plus a velocity lead sampled over the windup, lock a
+        /// unit heading, set the charge distance (aim + overshoot). Target gone during windup → flinch into recover.
+        /// Pure fixed-point (Normalize/Sqrt — no Atan2), so every client computes the identical charge.</summary>
+        private void LaunchSurge(List<PlayerTarget> players)
+        {
+            var t = GetPlayerPosition(players, SurgeTargetId);
+            if (!t.HasValue)
+            {
+                SurgePhase = 3;
+                SurgeUntilTick = _currentTick + SurgeRecoverTicks;
+                Velocity = FixedPoint2.Zero;
+                return;
+            }
+            var launch = t.Value;
+            var windupCell = new FixedPoint2(new FixedPoint { Value = WindupCellX }, new FixedPoint { Value = WindupCellY });
+            // Player velocity over the windup (cells/tick) → lead by flight-time × the lead fraction.
+            var vel = (launch - windupCell) / FixedPoint.FromInt(_windupTicks);
+            var flight = FixedPointMath.Sqrt((launch - Position).SqrMagnitude()) / _surgeSpeed; // ticks
+            var aim = launch + vel * (flight * _lead);
+            var toAim = aim - Position;
+            var heading = FixedPointMath.Normalize(toAim);
+            SurgeHeadingX = heading.X.Value;
+            SurgeHeadingY = heading.Y.Value;
+            SurgeDistLeft = FixedPointMath.Sqrt(toAim.SqrMagnitude()).Value + _overshoot.Value;
+            SurgePhase = 2;
+            SurgeUntilTick = _currentTick + _surgeMaxTicks; // safety cap
         }
 
         /// <summary>Per-bug hunt-ENTRY stagger: ~1/3 of the swarm rolls in per window (re-rolls every

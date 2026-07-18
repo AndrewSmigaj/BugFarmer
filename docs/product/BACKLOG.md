@@ -674,6 +674,25 @@ mirrors predation; swarm-of-1 dropped — player HP is SIM-INERT so it needs no 
   hash unchanged `BDE84AEF38467D57`) **+ a new `--attack-test`** that drives a moving player and proves the attack
   movement reproducible (A==B, `FB80CE8997CF9EC3`). **Left to run:** owner arena playtest + knob tuning; 2-client
   `run_sync_latejoin` confirmation (Unity build).
+- **✅ CENTIPEDE PACKS + per-bug CLIENT brain DONE (2026-07-18):** centipedes now travel in PACKS of ~5, each acting
+  INDEPENDENTLY (own serpentine wander, individual prey hunt+kill, telegraphed windup→surge→overshoot→recover LUNGE at
+  the player), with that per-bug behavior on the CLIENT — the last species on the server combat brain, now migrated.
+  The server ActionState combat machine + the `category:"individual"` swarm-of-1 hack were DELETED (`centipede.go`
+  keeps only the gnaw; all knot special-cases gone from `predation.go`/`entities/swarm.go`/`match.go`); the client got
+  `CentipedeMovement` (real chase steering) + the surge state machine on `BugAgent` (`CentipedeSurge`/`LaunchSurge`,
+  hash+snapshot wired). Ecology (breeding/pop/food) + the GNAW stay server-side. **Gated:** Go world+entities PASS ·
+  sim-determinism default + a NEW `--surge-test` (the lunge fires twice byte-identical, non-vacuous) · 2-client
+  `run_sync_latejoin` co-located + disjoint SYNC IDENTICAL · Unity batchmode compile · owner playtest ("watched them
+  kill flies"). Arch: `architecture_swarm_sync.md §14.3` (rewritten).
+  **Deferred (owner feel calls):** per-MEMBER lunge-connect re-key (each surging member reports its own hit; i-frames
+  cap burst — balance) · `village_21_B` `centipede_garden.swarm_size` density dial (currently 2, below pack min 3 →
+  packs render sparse).
+  **⚠️ KNOWN GAP (regression from the move — surfaced 2026-07-18):** subdue/smoke no longer suppresses the centipede
+  LUNGE. The calm condition gated the OLD server surge; the surge is now client-side and subdue is server-only soft
+  state (never synced), so a smoked centipede still lunges (its GNAW is still suppressed correctly). FIX = sync the
+  subdued flag to the client surge like the peaceful-zone flag (a small frontier-sync slice). Docs: `architecture_beekeeping.md`.
+  NOTE: the `arena` zone is `peaceful:true` (observation) — the lunge only fires in a NON-peaceful zone (e.g.
+  `village_21_B`); don't test centipede combat in the arena.
 - **⏳ REMAINING:** the super-hard "boss" centipede (owner floated it). **Consolidation refactor** (future,
   tracked): bug→player DAMAGE now has ONE model (client-detect-vs-rendered → server-apply, both styles); the
   remaining overlap is the **3 aggro triggers** (surge-trigger / nest-defence / `aggroPlayerThink`) — collapse into

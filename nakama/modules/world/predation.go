@@ -374,25 +374,6 @@ func (m *Match) predationThink(
 		return false
 	}
 
-	// INDIVIDUAL ground predators (centipede): CARRION-FIRST — if food is visible,
-	// decline ownership so the SHARED forage block dines/breeds normally (it clears
-	// TargetPreyID + resets SpeedMult on entry). Hunting is the fallback for a hungry
-	// centipede with nothing to scavenge.
-	isIndividual := species.Category == "individual"
-	if isIndividual && swarm.TargetPreyID == "" {
-		// A fresh swarm's Phase is "" until the first CheckPhaseTransition — default
-		// to "feeding" for the attraction lookup (the transition's own default).
-		phase := swarm.Phase
-		if phase == "" || phase == "idle" {
-			phase = "feeding"
-		}
-		if attractions := species.AttractionsByPhase[phase]; len(attractions) > 0 {
-			if hits := FindNearbyFood(state, swarm.Position, species.VisionRange, attractions); len(hits) > 0 {
-				return false
-			}
-		}
-	}
-
 	// Continue or acquire a hunt. Hunting persists once started (re-aim each think)
 	// until: sated, prey gone/out-of-range, or timeout without a kill.
 	//
@@ -447,7 +428,7 @@ func (m *Match) predationThink(
 				cxp, cyp, bx, by, blocked := entities.RaycastClampWithBlock(sx, sy, tx, ty, func(x, y float32) bool {
 					return state.IsBlockedForSpecies(x, y, species)
 				})
-				if blocked && isIndividual && m.tryStartGnaw(state, swarm, species, bx, by, chunkSize, deltaTime) {
+				if blocked && species.MovementStyle == "centipede" && m.tryStartGnaw(state, swarm, species, bx, by, chunkSize, deltaTime) {
 					return true
 				}
 				tx, ty = cxp, cyp
@@ -458,14 +439,9 @@ func (m *Match) predationThink(
 		}
 	}
 
-	// Idle: individuals wander SERPENTINE (heading-constrained short legs + the
-	// dead-end escape hatch); swarm predators rest-wander in their home range.
-	if isIndividual {
-		m.centipedeWander(state, swarm, species, chunkSize, deltaTime)
-		return true
-	}
-
-	// Wander within the home range (rest between trips; the readable loiter).
+	// Wander within the home range (rest between trips; the readable loiter). A centipede
+	// pack's CENTER rest-wanders here too — each member's own serpentine wander runs
+	// per-bug on the client (movement_style "centipede").
 	sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
 	angle := state.Rng.Float64() * 2 * math.Pi
 	tx := sx + float32(math.Cos(angle))*predWanderDistance

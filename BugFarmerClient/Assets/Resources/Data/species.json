@@ -223,7 +223,7 @@
   "centipede_garden": {
     "name": "Garden Centipede",
     "description": "A long, fast, venomous hunter. Wanders in lazy serpentines, lunges at anything warm, chews through wooden fences. Stone walls stop it. Far too big for any net.",
-    "category": "individual",
+    "category": "swarm",
     "base_speed": 1.9,
     "wander_radius": 20.0,
     "wander_change_rate": 0.1,
@@ -234,12 +234,12 @@
     "breed_amount": 8.0,
     "satiation_decay_rate": 0.1,
     "consume_rate": 0.5,
-    "min_swarm_size": 1,
-    "max_swarm_size": 1,
-    "swarm_radius": 0.5,
-    "merge_radius": 0.0,
-    "player_reaction": "ignore",
-    "reaction_radius": 0.0,
+    "min_swarm_size": 3,
+    "max_swarm_size": 5,
+    "swarm_radius": 2.5,
+    "merge_radius": 1.5,
+    "player_reaction": "attack",
+    "reaction_radius": 8.0,
     "flee_speed_mult": 1.0,
     "net_size": "trap_only",
     "catch_condition": "always",
@@ -252,7 +252,7 @@
     "sprite_id": "centipede_head_b",
     "egg_sprite_id": "centipede_eggs",
     "larva_sprite_id": "centipede_larvae",
-    "movement_style": "crawling",
+    "movement_style": "centipede",
     "flies_over_fences": false,
     "kill_drops": [],
     "predation": {
@@ -292,7 +292,8 @@
       }
     },
     "larva_name": "young",
-    "brood_label": "Young"
+    "brood_label": "Young",
+    "split_threshold": 6
   },
   "millipede": {
     "name": "Garden Millipede",
@@ -846,7 +847,7 @@
   "centipede_tiger": {
     "name": "Tiger Centipede",
     "description": "A banded desert centipede, faster and meaner than the garden kind. It lunges from cover and its bite really stings.",
-    "category": "individual",
+    "category": "swarm",
     "base_speed": 2.4,
     "wander_radius": 20.0,
     "wander_change_rate": 0.1,
@@ -857,12 +858,12 @@
     "breed_amount": 8.0,
     "satiation_decay_rate": 0.1,
     "consume_rate": 0.5,
-    "min_swarm_size": 1,
-    "max_swarm_size": 1,
-    "swarm_radius": 0.5,
-    "merge_radius": 0.0,
-    "player_reaction": "ignore",
-    "reaction_radius": 0.0,
+    "min_swarm_size": 2,
+    "max_swarm_size": 4,
+    "swarm_radius": 2.5,
+    "merge_radius": 1.5,
+    "player_reaction": "attack",
+    "reaction_radius": 8.0,
     "flee_speed_mult": 1.0,
     "net_size": "trap_only",
     "catch_condition": "always",
@@ -873,7 +874,7 @@
     "sell_price": 40,
     "reproduce_cooldown": 300.0,
     "sprite_id": "centipede_tiger_head",
-    "movement_style": "crawling",
+    "movement_style": "centipede",
     "flies_over_fences": false,
     "kill_drops": [],
     "predation": {
@@ -912,12 +913,13 @@
         "surge_max_ticks": 25,
         "lead": 0.8
       }
-    }
+    },
+    "split_threshold": 5
   },
   "centipede_giant": {
     "name": "Giant Centipede",
     "description": "The Amazonian giant \u2014 a monstrous dark-red centipede as long as your arm. Slow to kill, agony to be bitten by. Apex of the crawlers.",
-    "category": "individual",
+    "category": "swarm",
     "base_speed": 2.0,
     "wander_radius": 20.0,
     "wander_change_rate": 0.1,
@@ -928,12 +930,12 @@
     "breed_amount": 8.0,
     "satiation_decay_rate": 0.1,
     "consume_rate": 0.5,
-    "min_swarm_size": 1,
-    "max_swarm_size": 1,
-    "swarm_radius": 0.5,
-    "merge_radius": 0.0,
-    "player_reaction": "ignore",
-    "reaction_radius": 0.0,
+    "min_swarm_size": 2,
+    "max_swarm_size": 3,
+    "swarm_radius": 2.5,
+    "merge_radius": 1.5,
+    "player_reaction": "attack",
+    "reaction_radius": 8.0,
     "flee_speed_mult": 1.0,
     "net_size": "trap_only",
     "catch_condition": "always",
@@ -944,7 +946,7 @@
     "sell_price": 75,
     "reproduce_cooldown": 300.0,
     "sprite_id": "centipede_giant_head",
-    "movement_style": "crawling",
+    "movement_style": "centipede",
     "flies_over_fences": false,
     "kill_drops": [],
     "predation": {
@@ -984,6 +986,7 @@
         "surge_max_ticks": 28,
         "lead": 0.8
       }
-    }
+    },
+    "split_threshold": 4
   }
 }

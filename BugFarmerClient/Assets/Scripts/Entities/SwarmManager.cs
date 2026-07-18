@@ -2512,6 +2512,20 @@ namespace BugFarmer.Entities
                         hash *= prime;
                         hash ^= (ulong)bug.feed_until;  // corpse-eat timer — catches a feed-state desync directly
                         hash *= prime;
+                        // Centipede lunge: fold the position-determining surge fields so a phase/heading/timer desync
+                        // is caught DIRECTLY (not only once positions have already drifted).
+                        hash ^= (ulong)bug.surge_phase;
+                        hash *= prime;
+                        hash ^= (ulong)bug.surge_heading_x;
+                        hash *= prime;
+                        hash ^= (ulong)bug.surge_heading_y;
+                        hash *= prime;
+                        hash ^= (ulong)bug.surge_dist_left;
+                        hash *= prime;
+                        hash ^= (ulong)bug.surge_until;
+                        hash *= prime;
+                        hash ^= (ulong)bug.surge_cooldown_until;
+                        hash *= prime;
                     }
                 }
                 return (long)hash;

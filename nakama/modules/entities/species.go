@@ -280,12 +280,10 @@ func (s *BugSpecies) normalizeAttack() {
 	if s.Attack != nil || s.AttackDamage <= 0 {
 		return
 	}
-	style := "contact"
-	if s.Predation != nil && s.Category == "individual" {
-		style = "lunge" // legacy centipede/individual surge
-	}
+	// The legacy backfill always synthesizes a plain CONTACT attacker. Lungers (centipedes) declare
+	// an explicit attack{style:"lunge"} block in species.json, so normalizeAttack never runs for them.
 	s.Attack = &AttackConfig{
-		Style:         style,
+		Style:         "contact",
 		Damage:        s.AttackDamage,
 		CooldownSecs:  s.AttackCooldown,
 		Range:         1.5,  // legacy global stingRange / centBiteRange
@@ -295,5 +293,5 @@ func (s *BugSpecies) normalizeAttack() {
 		AggroEnter:    8.0,  // legacy global playerAggroEnter
 		AggroExit:     12.0, // legacy global playerAggroExit
 	}
-	// Lunge sub-config left nil here; centipede.go falls back to its own consts when Attack.Lunge is nil.
+	// No Lunge sub-config: a synthesized attack is contact-only; the client reads Attack.Lunge from data.
 }

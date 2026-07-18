@@ -172,7 +172,9 @@ is ① — two REAL clients, full system. The others are pre-checks/backstops, N
   the overlap, in a window where the behavior is active.
 - **② sim-determinism pre-check (FAST, no Unity, no server):** `~/.dotnet/dotnet run --project
   tools/sim-determinism` (`--selftest` proves it detects divergence; `--los-test` checks the
-  `BugCollision.LineBlocked` predator line-of-sight geometry, #20). Links the real per-bug sim source and
+  `BugCollision.LineBlocked` predator line-of-sight geometry, #20; `--predation-test` the individual hunt+feed;
+  `--surge-test` the centipede LUNGE — a pack windup→surge→overshoot→recover at a fixed player, byte-identical +
+  non-vacuous `surgeFired`/`recovered`; `--attack-test` a moving player driving attack/flee/curious). Links the real per-bug sim source and
   runs it twice — catches wall-clock / unordered-collection / static / float nondeterminism in seconds. But
   it ONLY covers the per-bug movement core (no merge/split/spawn, single process) — a green here does NOT
   replace ①. See `tools/sim-determinism/README.md`.

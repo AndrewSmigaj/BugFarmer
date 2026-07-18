@@ -142,57 +142,9 @@ func TestPeacefulZoneSuppressesSting(t *testing.T) {
 	}
 }
 
-// --- funnel 2: the centipede action machine ---
-
-func TestCalmCentipedeNoWindupStart(t *testing.T) {
-	state, cent := centTestState()
-	m := &Match{}
-	species := state.Species["centipede_garden"]
-	species.ConditionTools = map[string]float32{"calm": 90}
-	state.Players = map[string]*PlayerState{
-		"p1": {UserID: "p1", HP: 10, MaxHP: 10, Position: entities.EntityPosition{LocalX: 13, LocalY: 10}},
-	}
-	applyConditionEffect(cent, species, "calm", 1.0)
-
-	driveCentTick(m, state, cent)
-	if cent.ActionState == "windup" {
-		t.Fatal("a subdued centipede must not START a windup — the walk-past play")
-	}
-}
-
-func TestCalmCentipedeAbortsWindupAndSurge(t *testing.T) {
-	state, cent := centTestState()
-	m := &Match{}
-	species := state.Species["centipede_garden"]
-	species.ConditionTools = map[string]float32{"calm": 90}
-	state.Players = map[string]*PlayerState{
-		"p1": {UserID: "p1", HP: 10, MaxHP: 10, Position: entities.EntityPosition{LocalX: 13, LocalY: 10}},
-	}
-
-	// Enter windup agitated…
-	driveCentTick(m, state, cent)
-	if cent.ActionState != "windup" {
-		t.Fatalf("setup: state=%q, want windup", cent.ActionState)
-	}
-	// …then the smoke lands mid-windup: the lunge dissolves into recover.
-	applyConditionEffect(cent, species, "calm", 1.0)
-	driveCentTick(m, state, cent)
-	if cent.ActionState != "recover" || cent.WindupTargetID != "" {
-		t.Fatalf("windup abort: state=%q target=%q, want recover/\"\"", cent.ActionState, cent.WindupTargetID)
-	}
-
-	// Same for a surge in flight.
-	cent2 := newTestSwarm("c_cent2", 1, 20, 20)
-	cent2.SpeciesID = "centipede_garden"
-	state.Swarms[cent2.ID] = cent2
-	cent2.ActionState = "surge"
-	cent2.ActionUntilTick = state.TickCount + 100
-	applyConditionEffect(cent2, species, "calm", 1.0)
-	m.processActionState(nopRuntimeLogger(), nil, state, cent2, species, 32, 0.1)
-	if cent2.ActionState != "recover" {
-		t.Fatalf("surge abort: state=%q, want recover", cent2.ActionState)
-	}
-}
+// --- funnel 2: subduing a centipede's server-side GNAW ---
+// (The windup/surge abort moved to the client with the rest of the combat brain; the
+// gnaw is the only server-side centipede action a condition still gates.)
 
 func TestCalmCentipedeGnawChokeAndMidGnawStop(t *testing.T) {
 	state, cent := centTestState()

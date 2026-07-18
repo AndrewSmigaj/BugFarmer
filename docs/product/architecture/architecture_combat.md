@@ -1,6 +1,11 @@
 # Combat AI & challenge — design
 
-**STATUS: M1 + M2 (wasp tiers) BUILT + gated; M3 = centipede tiers IN BUILD (2026-07-12).** The adopted
+**STATUS: M1 + M2 (wasp tiers) BUILT + gated; M3 centipede tiers BUILT.** **UPDATE 2026-07-18 — the centipede
+COMBAT BRAIN (serpentine wander + individual prey hunt + the windup→surge→recover LUNGE) MOVED to the CLIENT
+(per-bug agents, packs of ~5); `centipede.go` keeps only the gnaw. Current model = `architecture_swarm_sync.md
+§14.3`. The bug→player DAMAGE model described below is UNCHANGED (client-detect-vs-rendered → server-apply); only
+the lunge MOVEMENT/decision relocated. Known gap from the move: subdue no longer suppresses the lunge — see
+`architecture_beekeeping.md`.** The adopted
 skeleton + the layers around it. As-built: [§ Milestone 1](#milestone-1--as-built) (foundation),
 [§ Milestones 2–3](#milestones-23--as-built-enemy-tiers) (enemy tiers + nocturnal + aggro). *(M3 was briefly
 built as caterpillars — a misread; stripped, now real centipede tiers.)*
@@ -133,8 +138,8 @@ per-enemy code. All are debug-spawnable in the arena immediately via the M1 spec
 - **M2 wasp tiers** (`category: swarm`, predation → inherit nest-defence + hunt + ambient sting):
   `wasp_soldier` (medium: dmg 2 / cd 1.6 / spd 2.6 / hp 5) and `hornet_giant` (hard, **diurnal** — real hornets
   are day-active: dmg 3 / cd 1.2 / spd 3.0 / hp 8).
-- **M3 centipede tiers** (`category: individual` + predation → reuse the base centipede's **surge/lunge** attack;
-  see § Milestone 3 below): `centipede_tiger` (medium) and `centipede_giant` (hard). *(An earlier build made these
+- **M3 centipede tiers** (`category: swarm` packs + predation → the base centipede's **surge/lunge** attack, now a
+  CLIENT per-bug brain — `architecture_swarm_sync.md §14.3`): `centipede_tiger` (medium) and `centipede_giant` (hard). *(An earlier build made these
   as caterpillars — a misread of the ask; caterpillars are butterfly/moth larvae, not combat enemies, and were
   stripped out 2026-07-12.)*
 - **Player-aggro radius** (`aggroPlayerThink`, combat_aggro.go): any attack-capable swarm with `attack.aggro_enter > 0`
@@ -157,8 +162,9 @@ Every player-facing combat behaviour is now a **per-species `attack{}` profile**
 - **ONE pipeline, cleanly split by file:** `bug_attack.go` = the bug→player attack subsystem (the
   authority-relayed strike/telegraph + the shared `bugAttackAllowed` gate every style passes through) ·
   `handlers_player.go` = pure player-HP (funnel/regen/dodge/faint) · `combat_aggro.go` = proximity pursuit ·
-  `centipede.go` = the lunge *movement* choreography (its bite routes through `bug_attack.go`, params from
-  `attack.lunge`). The old **two-detection-paths + split-aggro smell is resolved** — both the contact sting and
+  `centipede.go` = the server-side GNAW only — the lunge *movement* moved to the CLIENT (`CentipedeMovement` +
+  the `BugAgent` surge machine, `architecture_swarm_sync.md §14.3`), its bite still routing through `bug_attack.go`
+  with params from `attack.lunge`. The old **two-detection-paths + split-aggro smell is resolved** — both the contact sting and
   the centipede lunge share the same gates + funnel (this closed a real bug: the surge skipped the nocturnal gate).
 - **Phantom killed:** the authority client owns the two-beat (per-species `telegraph_secs`) + the precise
   per-individual range check against the LOCAL player's EXACT position; the server applies on `phase:"strike"`.

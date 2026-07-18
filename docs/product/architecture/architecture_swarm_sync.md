@@ -872,8 +872,16 @@ satiation, prey targeting, strike cooldowns, brood, and gnaw counters are SERVER
 state (the forage-duty-cycle convention — server rand at Think time is replay-safe).
 The entire slice shipped with **zero new ledger event types**.
 
+**EVOLVED (2026-07):** per-INDIVIDUAL combat behavior is now COMPUTED on the client from
+those same synced inputs, not replayed as a server output — WHICH specific prey bug a
+predator chases, and the centipede's telegraphed LUNGE (§14.3). The server stays
+authoritative over kills/HP/caps/brood/gnaw and still owns the swarm CENTER; the client
+computes the per-bug motion deterministically (fixed-point + counter-RNG + snapshot&hash)
+so all clients agree. So "replay AI OUTPUTS" now covers the swarm-center legs + kills; the
+per-bug brain (hunt steering, lunge) is client-side.
+
 ### 14.1 The sync invariants this slice added
-- **SpeedMult (per-leg speed multipliers — hunt ×1.5, flee ×1.8, surge ×4.8):**
+- **SpeedMult (per-leg speed multipliers — hunt ×1.5, flee ×1.8; the centipede's old server surge ×4.8 leg is RETIRED — the lunge is client-side now, §14.3):**
   `swarm.Move` multiplies by it AND the leg-event emission carries
   `BaseSpeed × SpeedMult × dt` — the server position and the client's closed-form leg
   interpolation always agree. It is written ONLY by code that immediately emits a leg
@@ -920,41 +928,45 @@ always the player's doing — readable. Containment asymmetry: wasps fly over fe
 = stone). Penned prey corners against its own fence — penned flies are MORE vulnerable
 to raids, intentionally.
 
-### 14.3 The centipede
-Category "individual" — reuses combat/catch/caps/sync wholesale; never merges/splits
-(the category guards). "Individual" means GROUND CRAWLER WITH AN ACTION-STATE MACHINE;
-swarm sizes are DATA: max_swarm_size is now 3, so a swarm is a small KNOT of 1-3
-centipedes sharing one center (one leg stream per knot — the server-traffic lever; the
-2026-06 design decision was to KEEP predator AI server-side: the server must stay
-authoritative over kills/HP/caps/brood, wire traffic is identical wherever the AI
-runs, and multi-bug knots are the real traffic win). Because splits are disabled, a
-FULL knot's litter mints a NEW swarm beside the parent in reproduceSwarm (zone
-swarm-count capped, arm-the-cooldown skip at the cap). Phase = what it WANTS (the
-standard feeding/reproducing lifecycle — the CheckPhaseTransition skip applies ONLY to
-nest predators, so the centipede parks at carrion and breeds there); ActionState =
-what it's DOING (windup 0.8s zero-leg freeze → SURGE at the launch position + a 0.8
-velocity half-lead **+ a 3.5 OVERSHOOT past the aim point** — it charges THROUGH the
-player's spot unless they dodge; the per-tick flight check bites mid-pass at 1.6 with
-a line-of-sight gate (no through-fence bites — "stone is the answer" stays true) →
-on a BITE: recover + the full 5s cooldown; on a MISS: **"turnaround"** — up to 3
-chained ~2.5-cell arc legs, heading rotating ≤75°/leg toward the player (the trail
-renders the chain as a banked curve), then re-engage on a SHORT 1.5s cooldown — it
-presses the attack; a player beyond de-aggro 12 ends it on the full cooldown); the
-whole knot lunges together (members are center+offset, knot radius 2.4). Gnaw: its own GnawState
-damage pool (NOT BreakingState — the owner-reset would let players "repair" by
-hitting), 1 dmg/80 ticks → wood HP 2 = 16 visible+audible seconds (the crunch is the
-NIGHT tell: audible past the light radius); breaks via breakOccupantAt with no drops;
-the cooldown arms only on ABANDONS (successful breaks chain layered walls). Serpentine
-wander = heading-constrained short legs (±60°, widening to ±120° once clamped, free
-360° after 3 — the dead-end escape). CLIENT: CrawlingMovement = center + a
-slowly-wandering per-bug OFFSET (position-based, so members track surge legs exactly;
-CounterRng; offset/target/timer round-trip MovementState — per-bug positions are hash
-state). Segments are PURE display (one CentipedeTrail per member; parts scaled 0.35 —
-the sprites are 2.0 world units raw — spacing 0.5, art-angle offset −90°, the head
-rotates along its motion; segment hits map to THAT trail's bug id in the client
-sector query — the server validates click-vs-player reach only and needs no change).
-Known v1 behaviors: no pathfinding (chews the wall 3 cells from an open gate — the
-dumb-relentless fantasy); trap_only = uncatchable until the subdue system.
+### 14.3 The centipede — per-bug CLIENT combat brain (packs; combat moved off the server 2026-07)
+**SUPERSEDES the 2026-06 server-side model (quoted at the end).** Centipedes are now `category:"swarm"` — packs of
+~5 that merge/split like every other swarm; the old `category:"individual"` swarm-of-1-3 KNOT and its **server
+ActionState combat machine were DELETED** (`centipede.go` keeps ONLY the gnaw; `predation.go`/`entities/swarm.go`/
+`match.go` lost the individual/knot special-cases). Each centipede is now an INDEPENDENT per-bug agent on the CLIENT
+— the same client-authority model the wasp/fly individual-predation port ships:
+- **Serpentine wander** (`CentipedeMovement`): a heading unit-vector rotated ±small index-steps per retarget, pulled
+  back toward the swarm center past the wander radius (keeps the pack coherent); slow creep (~0.14/tick).
+- **Individual prey hunt:** when the pack hunts (the server still stamps `target_prey_id` on its leg — §14 unchanged),
+  each member commits to a specific prey bug and steers at chase speed (`MoveToward` ~0.35/tick, to out-run a fleeing
+  fly); the kill is authority-detected + relayed exactly like the wasp — no new opcode.
+- **Telegraphed LUNGE at the player** (`CentipedeSurge`/`LaunchSurge` on `BugAgent`, routed when `AttackStyle=="lunge"`):
+  idle approach → at `trigger_range` + off cooldown a windup FREEZE (the telegraph) → a ballistic charge along a locked
+  heading aimed at the quantized player CELL + a velocity lead, driving `overshoot` cells PAST the aim → recover + a
+  `cooldown_secs` cooldown (re-fires while the player stays in trigger — this replaces the old server "turnaround" arc).
+  Pure fixed-point (`Normalize`/`Sqrt`, NO Atan2) and NO RNG → a deterministic function of (tick, synced inputs). The
+  fast charge sub-steps collision (`BugCollision.ResolveSwept`) so a >1-cell/tick tier clamps at a fence, not tunnels.
+  DAMAGE reuses the existing detect-vs-RENDERED lunge-connect (`RunLungeConnect`→`handleBugPlayerStrike`) — no new opcode.
+- **Determinism wiring:** the position-determining surge fields (`SurgePhase`, `SurgeHeadingX/Y`, `SurgeDistLeft`,
+  `SurgeUntilTick`, `SurgeCooldownUntil`) fold into `ComputeStateHash` AND ride the per-bug snapshot (`BugSampleData`
+  write+read — the three-site pattern) so a late-joiner reconstructs a mid-lunge; `SurgeTargetId`/`WindupCell` are
+  snapshot-only (not hashed). GATED by `tools/sim-determinism --surge-test` (fires the full lunge twice, byte-identical
+  + non-vacuous) + the 2-client `run_sync_latejoin` (co-located + disjoint).
+- **Peace gate:** a peaceful OBSERVATION zone suppresses the lunge on BOTH sides — client `BugAgent.UpdateBehavior`
+  early-returns "wander" when `WorldSeedProvider.Peaceful`; server `peacefulZone` gates every attack path.
+
+**Still SERVER-side (unchanged):** the GNAW — the only server-side centipede ACTION left — its own GnawState damage
+pool (NOT BreakingState — an owner-reset would let players "repair" by hitting), 1 dmg/80 ticks → wood HP 2 = 16
+visible+audible seconds (the crunch is the NIGHT tell), breaks via `breakOccupantAt` with no drops, the cooldown arms
+only on ABANDONS (successful breaks chain layered walls); and ALL ecology (breeding/satiation/food/population).
+Segments stay PURE display (one `CentipedeTrail` per member, following the head sprite; segment hits map to that
+member's bug id — the server validates click-vs-player reach only). Known v1: no pathfinding (chews the wall 3 cells
+from an open gate — the dumb-relentless fantasy); trap_only until subdue.
+
+> **2026-06 (historical) model, now RETIRED:** category "individual"; a server ACTION-STATE machine drove the whole
+> KNOT together — windup 0.8s freeze → a server SURGE leg (×4.8) with a 3.5 overshoot + a per-tick LOS flight-bite at
+> 1.6 → on a miss a chained "turnaround" arc; the client was a passive `CrawlingMovement` center+offset that tracked
+> the server surge legs. Replaced because per-bug behavior belongs on the CLIENT (rich, independent, no per-knot
+> server traffic) — packs of individuals, each with its own brain. See the git history for the deleted paths.
 
 ### 14.4 Player HP
 Sim-inert display state (bug AI reads player CELLS, already ledgered): HP 10, sting 1 /

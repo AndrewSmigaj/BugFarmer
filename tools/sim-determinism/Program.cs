@@ -176,6 +176,85 @@ namespace SimDeterminism
             }
         }
 
+        // --surge-test: a pack of centipede_garden lunges at a nearby player. Each member alerts (within
+        // reaction_radius), creeps to trigger range, WINDS UP (freeze/telegraph), SURGES past with overshoot,
+        // then RECOVERS — the full per-bug lunge machine (BugAgent.CentipedeSurge). Proves it's DETERMINISTIC
+        // (two runs byte-identical, incl. the surge hash-fields) AND non-vacuous (a surge phase actually fires).
+        // The player is a FIXED quantized cell (like GetDeterministicPlayerTargets) 6 cells north; the pack
+        // center is stationary. No InfluenceManager (null) → no food/hunt interference; pure surge behavior.
+        const int SurgeTicks = 260;
+        static bool _surgeFired, _surgeRecovered;
+
+        static int RunSurgeTest()
+        {
+            Console.WriteLine($"[sim-determinism] repo={RepoRoot}");
+            Console.WriteLine("[sim-determinism] SURGE-TEST: 5 centipede_garden lunge at a nearby player — windup→surge→overshoot→recover must be reproducible");
+            long[] a = RunSurgeSim();
+            long[] b = RunSurgeSim();
+            int firstDiff = -1;
+            for (int t = 0; t < SurgeTicks; t++) if (a[t] != b[t]) { firstDiff = t; break; }
+            bool moved = a[SurgeTicks - 1] != a[0];
+            Console.WriteLine($"[sim-determinism] final hash A={a[SurgeTicks - 1]:X16}  B={b[SurgeTicks - 1]:X16}   moved={moved}  surgeFired={_surgeFired}  recovered={_surgeRecovered}");
+            if (!moved) { Console.WriteLine("SURGE-TEST: INCONCLUSIVE — bugs never moved."); return 2; }
+            if (!_surgeFired) { Console.WriteLine("SURGE-TEST: INCONCLUSIVE — no centipede entered the SURGE phase (gate would be vacuous)."); return 2; }
+            if (!_surgeRecovered) { Console.WriteLine("SURGE-TEST: INCONCLUSIVE — no centipede reached RECOVER (surge cycle never completed)."); return 2; }
+            if (firstDiff >= 0) { Console.WriteLine($"SURGE-TEST: ❌ FAIL — diverged at tick {firstDiff}. The lunge is NONDETERMINISTIC."); return 1; }
+            Console.WriteLine("SURGE-TEST: ✅ PASS — the centipede lunge (windup→surge→overshoot→recover) is deterministic (two runs byte-identical) AND fired non-vacuously.");
+            return 0;
+        }
+
+        static long[] RunSurgeSim()
+        {
+            var pack = new List<BugAgent>();
+            for (int i = 0; i < 5; i++)
+            {
+                double ang = i * 2.0 * Math.PI / 5;
+                pack.Add(new BugAgent(WorldSeed, "swarm_centipede_garden", "centipede_garden", i,
+                    new FixedPoint2(FixedPoint.FromFloat(100f + 1.5f * (float)Math.Cos(ang)),
+                                    FixedPoint.FromFloat(100f + 1.5f * (float)Math.Sin(ang)))));
+            }
+            // Player fixed at the cell 6 north of the pack (quantized like the real GetDeterministicPlayerTargets).
+            var players = new List<PlayerTarget> { new PlayerTarget { PlayerId = "p1",
+                Position = new FixedPoint2(FixedPoint.FromInt(100), FixedPoint.FromInt(106)) } };
+            var center = new FixedPoint2(FixedPoint.FromInt(100), FixedPoint.FromInt(100)); // stationary pack center
+
+            var hashes = new long[SurgeTicks];
+            for (int t = 0; t < SurgeTicks; t++)
+            {
+                foreach (var b in pack.OrderBy(x => x.BugId))
+                {
+                    b.SimulateTick(center, players, t);
+                    if (b.SurgePhase == 2) _surgeFired = true;
+                    if (b.SurgePhase == 3) _surgeRecovered = true;
+                }
+                hashes[t] = HashSurge(pack);
+            }
+            return hashes;
+        }
+
+        static long HashSurge(List<BugAgent> pack)
+        {
+            unchecked
+            {
+                ulong hash = 14695981039346656037UL; const ulong prime = 1099511628211UL;
+                foreach (var b in pack.OrderBy(x => x.BugId))
+                {
+                    hash ^= (ulong)(long)b.Position.X.Value; hash *= prime;
+                    hash ^= (ulong)(long)b.Position.Y.Value; hash *= prime;
+                    hash ^= (ulong)(long)b.Velocity.X.Value; hash *= prime;
+                    hash ^= (ulong)(long)b.Velocity.Y.Value; hash *= prime;
+                    // Fold the surge state — the exact new ComputeStateHash inputs — so a surge-field desync is caught.
+                    hash ^= (ulong)(long)b.SurgePhase; hash *= prime;
+                    hash ^= (ulong)(long)b.SurgeHeadingX; hash *= prime;
+                    hash ^= (ulong)(long)b.SurgeHeadingY; hash *= prime;
+                    hash ^= (ulong)(long)b.SurgeDistLeft; hash *= prime;
+                    hash ^= (ulong)b.SurgeUntilTick; hash *= prime;
+                    hash ^= (ulong)b.SurgeCooldownUntil; hash *= prime;
+                }
+                return (long)hash;
+            }
+        }
+
         public static int Main(string[] args)
         {
             RepoRoot = FindRepoRoot();
@@ -183,6 +262,8 @@ namespace SimDeterminism
                 return RunLosTest();
             if (args.Contains("--predation-test"))
                 return RunPredationTest();
+            if (args.Contains("--surge-test"))
+                return RunSurgeTest();
             bool selftest = args.Contains("--selftest");
             bool attackTest = args.Contains("--attack-test");
             Console.WriteLine($"[sim-determinism] repo={RepoRoot}");

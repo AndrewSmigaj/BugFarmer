@@ -267,6 +267,13 @@ namespace BugFarmer.Data
             // STING knobs (SwarmManager reads these to pace the strike reports; the server ignores them).
             public int AttackTokens;          // max concurrent stings reported per swarm (1-2)
             public float DiveCooldownSecs;    // per-bug rest between its sting reports
+            // LUNGE knobs (style "lunge" = the centipede surge; BugAgent reads these to run windup→charge→recover).
+            public float CooldownSecs;        // seconds between lunges (the surge cooldown)
+            public float TriggerRange;        // player this close → begin the windup
+            public float SurgeSpeedMult;      // lunge speed = a client base × this
+            public float Overshoot;           // charge PAST the aim point by this many cells
+            public int SurgeMaxTicks;         // surge-flight safety cap
+            public float Lead;                // aim-lead: fraction of the player's windup-velocity to lead by
         }
         private static Dictionary<string, SpeciesInfo> _species;
         private static bool _initialized;
@@ -375,6 +382,7 @@ namespace BugFarmer.Data
         {
             if (obj?["attack"] is JObject a)
             {
+                var lunge = a["lunge"] as JObject; // present only for style "lunge" (centipedes)
                 return new AttackInfo
                 {
                     Style = a["style"]?.Value<string>() ?? "contact",
@@ -388,6 +396,12 @@ namespace BugFarmer.Data
                     DiveSecs = a["dive_secs"]?.Value<float>() ?? 0f,
                     AttackTokens = a["attack_tokens"]?.Value<int>() ?? 0,
                     DiveCooldownSecs = a["dive_cooldown_secs"]?.Value<float>() ?? 0f,
+                    CooldownSecs = a["cooldown_secs"]?.Value<float>() ?? 0f,
+                    TriggerRange = lunge?["trigger_range"]?.Value<float>() ?? 0f,
+                    SurgeSpeedMult = lunge?["surge_speed_mult"]?.Value<float>() ?? 0f,
+                    Overshoot = lunge?["overshoot"]?.Value<float>() ?? 0f,
+                    SurgeMaxTicks = lunge?["surge_max_ticks"]?.Value<int>() ?? 0,
+                    Lead = lunge?["lead"]?.Value<float>() ?? 0f,
                 };
             }
             int dmg = obj?["attack_damage"]?.Value<int>() ?? 0;

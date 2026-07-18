@@ -452,7 +452,7 @@ func TestFlierVsGroundedFenceBehavior(t *testing.T) {
 
 	// GROUNDED predator (same config, no flight): leg clamps short of the fence.
 	grounded := &entities.BugSpecies{
-		ID: "centipede_test", Category: "individual", BaseSpeed: 1.6, VisionRange: 14,
+		ID: "centipede_test", Category: "swarm", BaseSpeed: 1.6, VisionRange: 14,
 		Predation: &entities.PredationConfig{
 			Prey: []string{"fly_common"}, StrikeRadius: 1.2, StrikeCooldownTicks: 50,
 			KillsPerStrike: 1, FeedPerKill: 30, HuntSpeedMult: 1.0, HuntSatiationThreshold: 30,
