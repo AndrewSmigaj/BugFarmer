@@ -587,6 +587,10 @@
     "look": "a single jagged LUMP OF COAL: an irregular angular black-charcoal chunk with faceted faces and subtle blue-grey highlights on the upper edges",
     "family": "icon"
   },
+  "compost": {
+    "look": "a small mounded HEAP OF COMPOST: loose crumbly dark brown-black humus soil, lumpy and rich, flecked with tiny bits of half-rotted leaf, twig and eggshell; damp earthy decomposed matter, NOT a bag, NOT a bin, NOT a bucket",
+    "family": "icon"
+  },
   "honeycomb": {
     "look": "a broken-off chunk of golden HONEYCOMB, hexagonal wax cells clearly visible, a few cells oozing amber honey, waxy yellow-orange; NOT a jar, NOT a whole hive",
     "family": "icon"
