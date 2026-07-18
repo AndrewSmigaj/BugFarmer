@@ -43,6 +43,7 @@ namespace BugFarmer.UI
             new WorldChoice { label = "Normal",         zoneId = "village_21" },
             new WorldChoice { label = "Village B",      zoneId = "village_21_B" },
             new WorldChoice { label = "Bee Meadow",     zoneId = "bee_meadow_20" },
+            new WorldChoice { label = "Bug Zoo",        zoneId = "bug_zoo" },
             new WorldChoice { label = "Eco Lab",        zoneId = "village_21_lab" },
             new WorldChoice { label = "Butterfly Lab",  zoneId = "butterfly_lab" },
             new WorldChoice { label = "Fly Lab",        zoneId = "fly_lab" },
@@ -76,6 +77,7 @@ namespace BugFarmer.UI
             EnsureWorld("Normal", "village_21");
             EnsureWorld("Village B", "village_21_B");
             EnsureWorld("Eco Lab", "village_21_lab");
+            EnsureWorld("Bug Zoo", "bug_zoo");
             EnsureWorld("Test", "sim_test");
             EnsureWorld("Collision Test", "collision_test");
             EnsureWorld("Lighting Test", "lighting_test");
