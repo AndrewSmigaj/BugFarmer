@@ -63,9 +63,16 @@ python3 tools/ecology/run_config.py <config> --zone village_21_B --duration 600 
   `bug_spawning` (zone.json species_caps / spawn weights / Director bands), `fruit` (tree rates),
   `flags`. Supports `"extends": "<parent>"` to build on a prior config.
 - `run_config.py` SNAPSHOTS + RESTORES canonical data around the run (it mutates species.json etc. then
-  reverts) — so a sweep never leaves the repo dirty. It restarts nakama, runs the headless sync-harness,
-  charts, and restores. `v21b_baseline` = no deltas (the reference). Duration×0.0133 ≈ game-days.
-- The harness pins **seed 1337** for reproducibility (production zones keep seed 0 = random per match).
+  reverts) — so a sweep never leaves the repo dirty. It restarts nakama, **drives the run with the REAL headless
+  Unity client (`-ecology` mode, via `tools/run_ecology_client.sh`) — which runs client-authoritative PREDATION**
+  (the old passive .NET harness never did → it was predation-blind), then charts and restores. `v21b_baseline` =
+  no deltas (the reference). NOTE: needs a BUILT player (`Build/SyncTest/BugFarmerClient.exe`; build it via
+  `SyncTestBuild.Build`, Editor closed) — same player the sync tests use.
+- **Speed: `call_rate:60 / sim_batch:1` = 6× real-time — the CEILING.** The Unity client is the speed governor
+  (~60-70 ticks/sec on village_21_B); `sim_batch:2` is faithful in principle but MEASURED to break the client (it
+  desyncs to 0 bugs). So `--duration × 60/8400 ≈ game-days`: **~48 game-days = `--duration 6720` (~112 min,
+  overnight-friendly)**. Don't undershoot — 4 days is a transient; ~48 is standard.
+- The run pins **seed 1337** for reproducibility (production zones keep seed 0 = random per match).
 
 ## 3. Where the charts go (per-zone layout)
 `tools/_generated/ecology_charts/` (see its README.md). Per ZONE:
@@ -139,8 +146,10 @@ DISPROVEN (commit `79bc376`, the nest-occupant-hijack fix): the wasp economy sel
 **Breeding-unify (2026-07-14):** ALL species — incl. wasp NESTS — now lay eggs into the VISIBLE `BroodState`
 that develops over GAME-HOURS (`BroodEggMatureTicks=350` ≈ 1 game-hour/egg) and hatches into the resident;
 breaking a nest POURS the brood out as live bugs. So there is ONE brood model now (no invisible instant-pop).
-**Open — re-tune to the new target bands** (fly 200 · butterfly 100 · wasp/centipede/beetle/millipede 30,
-provisional): the slowed pace shifted the population curves. NOTE `run_config` is PREDATION-BLIND (wasps/
-centipedes can't hunt → starve → the Director props them; their bands there are artifacts) — the faithful
-predator/nest-breeding tune needs the headless UNITY player (predation-inclusive). Butterfly is food-limited
-by nectar (not a breeding failure).
+**Predation is now FAITHFUL (2026-07-18):** `run_config` drives with the real headless client (`-ecology`), so
+client-authoritative predation actually fires — verified `d_predation>0` (was a flat 0 with the old passive
+harness). The predation-blind era is over; predator/prey bands in the charts are now REAL. **Open — re-tune to
+the target bands** (fly 200 · butterfly 100 · wasp/centipede/beetle/millipede 30, provisional) on a proper long
+run (~48 days). First finding: a FRESH start needs LIGHT seeding (owner) — dumping a big population in before food
+ramps (fruit drop/rot, compost fill, nectar regrow all take game-days) mass-starves; start low and let it grow
+into the food (`v21b_seed_low.json`). Butterfly is food-limited by nectar (not a breeding failure).
