@@ -143,11 +143,11 @@ def apply_config(cfg, zone="bug_lab"):
     # seed: a FIXED non-zero seed makes the whole run reproducible (the server seeds its per-match RNG from
     # zone.seed, and the sim iterates entities in sorted order) — so a config's effect is measurable, not
     # drowned in run-to-run noise. Production zones keep seed 0 (random per match). A config may override.
-    # call_rate:60 (Nakama's cap) + sim_batch:2 = 12x real-time. Predation stays FAITHFUL under batch:2: the
-    # server drains client input on sub-tick 0 only, but every predator's strike_cooldown_ticks >= 40 (20x the
-    # batch depth) so no strike is ever collapsed (verified match.go:862-867 + species cooldowns). A config may
-    # override sim_batch in `flags` (batch:1 = purest/6x; higher = faster if the client sustains the tick rate).
-    flags = {"ephemeral_swarms": True, "call_rate": 60, "sim_batch": 2, "seed": 1337,
+    # call_rate:60 (Nakama's cap) + sim_batch:1 = 6x real-time — the CEILING for a real-client-driven run. The
+    # Unity authority is the speed governor: it caps ~60-70 ticks/sec on village_21_B. sim_batch:2 (120 t/s) is
+    # FAITHFUL in principle (cooldowns >=40 >> batch 2) but MEASURED to break the client — it falls hopelessly
+    # behind (~12 t/s, desyncs to 0 bugs) so predation stops mattering. Keep batch:1 for clean data on this zone.
+    flags = {"ephemeral_swarms": True, "call_rate": 60, "sim_batch": 1, "seed": 1337,
              "profile": True,  # PERFSTATS cost profiler (temp flag, restored after the run → prod stays clean)
              **(cfg.get("flags") or {})}
     z.update(flags)
