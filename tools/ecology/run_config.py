@@ -143,6 +143,10 @@ def apply_config(cfg, zone="bug_lab"):
     # seed: a FIXED non-zero seed makes the whole run reproducible (the server seeds its per-match RNG from
     # zone.seed, and the sim iterates entities in sorted order) — so a config's effect is measurable, not
     # drowned in run-to-run noise. Production zones keep seed 0 (random per match). A config may override.
+    # call_rate:60 (Nakama's cap) + sim_batch:2 = 12x real-time. Predation stays FAITHFUL under batch:2: the
+    # server drains client input on sub-tick 0 only, but every predator's strike_cooldown_ticks >= 40 (20x the
+    # batch depth) so no strike is ever collapsed (verified match.go:862-867 + species cooldowns). A config may
+    # override sim_batch in `flags` (batch:1 = purest/6x; higher = faster if the client sustains the tick rate).
     flags = {"ephemeral_swarms": True, "call_rate": 60, "sim_batch": 2, "seed": 1337,
              "profile": True,  # PERFSTATS cost profiler (temp flag, restored after the run → prod stays clean)
              **(cfg.get("flags") or {})}
@@ -195,9 +199,10 @@ def run_harness(duration, tag, zone="bug_lab", retries=3):
         if os.path.exists(csv):
             os.remove(csv)
         t0 = time.time()
-        print(f"  running harness ({duration}s ≈ {duration*0.057:.1f} game-days), attempt {attempt}…")
-        subprocess.run([DOTNET, "run", "--project", os.path.join(ROOT, "tools", "sync-harness"),
-                        "--", "--zone", zone, "--duration", str(duration), "--tag", tag],
+        print(f"  running ecology client ({duration}s real), attempt {attempt}…")
+        # DRIVER = the real headless Unity client (-ecology): it runs client-authoritative PREDATION and writes
+        # the ground-truth population CSV. The old passive .NET sync-harness was predation-blind (d_predation:0).
+        subprocess.run(["bash", os.path.join(ROOT, "tools", "run_ecology_client.sh"), zone, str(duration)],
                        cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         window = int(time.time() - t0) + 8
         run_log = subprocess.run(["docker", "compose", "logs", "--no-color", "--since", f"{window}s",

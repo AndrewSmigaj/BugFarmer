@@ -1,0 +1,15 @@
+{
+  "name": "v21b_seed_low",
+  "description": "Start the zone LIGHTLY seeded and run to equilibrium (~48 game-days). Owner: don't dump a big bug population in before the food ramps (fruit drop/rot, compost fill, nectar regrow all take game-days) — on a fresh start that mass-starves. ONE lever vs baseline: bug_spawning `initial` counts cut ~4x so populations GROW into the food supply instead of crashing off the line. This is the first faithful (predation-inclusive) tuning pass since predation moved client-side.",
+  "species": {},
+  "tuning": {},
+  "bug_spawning": {
+    "species_caps": {
+      "fly_common":       { "initial": 20 },
+      "butterfly_meadow": { "initial": 10 },
+      "centipede_garden": { "initial": 6 },
+      "millipede":        { "initial": 6 },
+      "beetle_carrion":   { "initial": 4 }
+    }
+  }
+}
