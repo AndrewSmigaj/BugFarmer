@@ -118,12 +118,26 @@ namespace BugFarmer.Testing
                     return;
                 }
 
+                // DRIFT-NET SELF-TEST (`-desyncafter N`): deliberately perturb one bug N recorded ticks in, so
+                // THIS client diverges — the zone drift round + authority tie-referee must then DETECT it and
+                // RESYNC us (watch the server log for "tie broken by AUTHORITY"). Inert without the flag.
+                int desyncAfter = 0;
+                int.TryParse(HeadlessSyncTest.GetArg("-desyncafter", "0"), out desyncAfter);
+                int recordedTicks = 0; bool chaosInjected = false;
+
                 // Record per-tick state hashes exactly like DebugOverlay F1 (SetTraceCallback -> TickTraceBuffer).
                 var buffer = new TickTraceBuffer();
                 int maxBugs = 0;
                 SwarmManager.Instance.SetTraceCallback((tick, hash, bugs, players) =>
                 {
                     if (bugs != null && bugs.Count > maxBugs) maxBugs = bugs.Count;
+                    recordedTicks++;
+                    if (desyncAfter > 0 && !chaosInjected && recordedTicks >= desyncAfter)
+                    {
+                        chaosInjected = true;
+                        Log($"CHAOS: injecting 1-bug perturbation at tick {tick} (drift-net self-test)");
+                        SwarmManager.Instance.DebugPerturbOneBug();
+                    }
                     // DIAGNOSTIC: also capture per-swarm leg+center each tick (leg/center divergence pin).
                     var legs = SwarmManager.Instance.CollectSwarmLegTraces();
                     buffer.RecordTick(tick, hash, bugs, players, legs);

@@ -327,3 +327,39 @@ func TestConsumableAppliesAndConsumes(t *testing.T) {
 		t.Fatalf("a miss must cost nothing: count=%d, want 1", player.ItemSlots[slot].Count)
 	}
 }
+
+// --- subdue SYNC to the client (the LUNGE/DIVE moved client-side, so the calmed state must ride the ledger) ---
+
+// syncSubduedState emits a SWARM_SUBDUED/UNSUBDUED toggle only when the subdued state CROSSES the threshold, so a
+// late-joiner / every client can suppress the lunge/dive on a calmed swarm. No change = no event (idempotent).
+func TestSubduedSyncEmitsOnCrossing(t *testing.T) {
+	state, cent := centTestState()
+	state.CurrentZone = &ZoneConfig{ZoneID: "arena"}
+	species := state.Species["centipede_garden"]
+	species.ConditionTools = map[string]float32{"calm": 90}
+
+	// Un-smoked → not subdued → no emit.
+	if state.syncSubduedState("arena", cent, species) {
+		t.Fatal("un-smoked swarm must not emit")
+	}
+	// Smoke it over the threshold → exactly one SWARM_SUBDUED for this swarm.
+	applyConditionEffect(cent, species, "calm", 1.0)
+	if !state.syncSubduedState("arena", cent, species) {
+		t.Fatal("crossing INTO subdued must emit")
+	}
+	if last := state.PendingInfluence[len(state.PendingInfluence)-1]; last.Type != InfluenceSwarmSubdued || last.SwarmID != cent.ID {
+		t.Fatalf("want SWARM_SUBDUED for %s, got type=%q swarm=%q", cent.ID, last.Type, last.SwarmID)
+	}
+	// Still subdued next tick → idempotent, NO re-emit.
+	if state.syncSubduedState("arena", cent, species) {
+		t.Fatal("must not re-emit while subdued state is unchanged")
+	}
+	// Decay below the threshold → exactly one SWARM_UNSUBDUED.
+	cent.ConditionValue = 0
+	if !state.syncSubduedState("arena", cent, species) {
+		t.Fatal("crossing OUT of subdued must emit")
+	}
+	if last := state.PendingInfluence[len(state.PendingInfluence)-1]; last.Type != InfluenceSwarmUnsubdued || last.SwarmID != cent.ID {
+		t.Fatalf("want SWARM_UNSUBDUED for %s, got type=%q swarm=%q", cent.ID, last.Type, last.SwarmID)
+	}
+}

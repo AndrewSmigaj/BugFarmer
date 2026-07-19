@@ -51,6 +51,11 @@ namespace BugFarmer.Bugs
             public int StrikeCooldownTicks;
         }
 
+        // Subdued (smoke/calm) swarms — the server-only condition meter, toggled to the client via
+        // SWARM_SUBDUED/UNSUBDUED so the per-bug sim suppresses the lunge/dive for a calmed swarm. A sim INPUT
+        // (like player cells): read each tick, NOT hashed; snapshot-hydrated like _swarmStrikes. Key: swarm_id.
+        private readonly HashSet<string> _subdued = new();
+
         // Event type constants (must match server)
         public const string EventPlayerCellEnter = "PLAYER_CELL_ENTER";
         public const string EventPlayerCellLeave = "PLAYER_CELL_LEAVE";
@@ -66,6 +71,8 @@ namespace BugFarmer.Bugs
         public const string EventOccupantBlocksBugs = "OCCUPANT_BLOCKS_BUGS"; // Phase 1b: fence/wall placed (level=1) or removed (0)
         public const string EventTreeFruitGrow = "TREE_FRUIT_GROW"; // server-only ledger; fruit shown via OpCode 93
         public const string EventTreeFruitDrop = "TREE_FRUIT_DROP"; // server-only ledger; fruit shown via OpCode 93
+        public const string EventSwarmSubdued = "SWARM_SUBDUED";     // swarm crossed the calm threshold (smoke)
+        public const string EventSwarmUnsubdued = "SWARM_UNSUBDUED"; // swarm dropped below the calm threshold
 
         // === Deterministic FOOD REGISTRY ===
         // food_id -> (world position, remaining level). Maintained ONLY from tick+seq events
@@ -189,6 +196,22 @@ namespace BugFarmer.Bugs
             };
         }
 
+        // --- Subdued registry (smoke/calm) — snapshot-hydrated exactly like _swarmStrikes above ---
+        /// <summary>True if this swarm is currently subdued (calmed) — the per-bug sim reads this to suppress attacks.</summary>
+        public bool IsSubdued(string swarmId) => _subdued.Contains(swarmId);
+
+        /// <summary>Clear the subdued set (late-join/resync re-hydrates from the snapshot).</summary>
+        public void ClearSubdued() => _subdued.Clear();
+
+        /// <summary>Export the subdued swarm-ids so the AUTHORITY can embed them in its ZoneSnapshot.</summary>
+        public IEnumerable<string> ExportSubdued() => _subdued;
+
+        /// <summary>Hydrate one subdued swarm from a snapshot (late-join). Replay-window toggles converge on top.</summary>
+        public void HydrateSubdued(string swarmId)
+        {
+            if (!string.IsNullOrEmpty(swarmId)) _subdued.Add(swarmId);
+        }
+
         private void Awake()
         {
             Instance = this;
@@ -247,6 +270,16 @@ namespace BugFarmer.Bugs
                     {
                         _swarmStrikes.Remove(evt.swarm_id);
                     }
+                    break;
+
+                case EventSwarmSubdued:
+                    // Swarm was calmed (smoke) — the per-bug sim suppresses its lunge/dive.
+                    _subdued.Add(evt.swarm_id);
+                    break;
+
+                case EventSwarmUnsubdued:
+                    // Calm wore off — the swarm may attack again.
+                    _subdued.Remove(evt.swarm_id);
                     break;
 
                 case EventBugRemoved:

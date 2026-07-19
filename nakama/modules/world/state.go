@@ -275,6 +275,8 @@ type ZoneSnapshot struct {
 	Swarms               []SwarmSnapshotData
 	Food                 []FoodSnapshotData // Authoritative food registry @ snapshot (late-join hydration)
 	Hunts                json.RawMessage    // Authoritative hunt assignments @ snapshot (verbatim; late-join hydration)
+	Subdued              json.RawMessage    // Authoritative subdued swarm-id set @ snapshot (verbatim; late-join hydration)
+	PlayerCells          []PlayerCellData   // Player cells @ the snapshot moment (one-time-base rule; late-join hydration)
 	StateHash            string
 }
 
@@ -860,6 +862,29 @@ func (s *WorldState) AddSwarmTargetEvent(zoneID, swarmID string, originX, origin
 	if sw := s.Swarms[swarmID]; sw != nil {
 		s.Perf.Count(sw.SpeciesID, "legs")
 	}
+}
+
+// AddSwarmSubduedEvent broadcasts a swarm's subdue-threshold crossing (smoke/calm meter). Toggle pair like
+// the food registry: subdued=true emits SWARM_SUBDUED, false emits SWARM_UNSUBDUED. SwarmID-only. The client
+// per-bug sim reads it to suppress the LUNGE/DIVE for a calmed swarm (damage is already gated server-side).
+func (s *WorldState) AddSwarmSubduedEvent(zoneID, swarmID string, subdued bool) {
+	zone := s.GetOrCreateZone(zoneID)
+
+	eventType := InfluenceSwarmUnsubdued
+	if subdued {
+		eventType = InfluenceSwarmSubdued
+	}
+	event := InfluenceEvent{
+		Tick:    s.TickCount,
+		Seq:     zone.NextSeq,
+		Type:    eventType,
+		ZoneID:  zoneID,
+		SwarmID: swarmID,
+	}
+	zone.NextSeq++
+
+	zone.InfluenceLog = append(zone.InfluenceLog, event)
+	s.PendingInfluence = append(s.PendingInfluence, event)
 }
 
 // AddSwarmSplitEvent logs a SWARM_SPLIT through the seq-gated ledger: the parent swarm

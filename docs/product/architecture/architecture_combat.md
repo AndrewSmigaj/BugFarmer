@@ -4,8 +4,8 @@
 COMBAT BRAIN (serpentine wander + individual prey hunt + the windup→surge→recover LUNGE) MOVED to the CLIENT
 (per-bug agents, packs of ~5); `centipede.go` keeps only the gnaw. Current model = `architecture_swarm_sync.md
 §14.3`. The bug→player DAMAGE model described below is UNCHANGED (client-detect-vs-rendered → server-apply); only
-the lunge MOVEMENT/decision relocated. Known gap from the move: subdue no longer suppresses the lunge — see
-`architecture_beekeeping.md`.** The adopted
+the lunge MOVEMENT/decision relocated. Subdue (smoke/calm) now suppresses the lunge/dive client-side too, via a
+`SWARM_SUBDUED` toggle synced to the per-bug sim (§14.3 swarm_sync; `architecture_beekeeping.md`).** The adopted
 skeleton + the layers around it. As-built: [§ Milestone 1](#milestone-1--as-built) (foundation),
 [§ Milestones 2–3](#milestones-23--as-built-enemy-tiers) (enemy tiers + nocturnal + aggro). *(M3 was briefly
 built as caterpillars — a misread; stripped, now real centipede tiers.)*

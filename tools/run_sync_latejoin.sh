@@ -40,9 +40,16 @@ echo "=== late-join sync test: zone=$ZONE A-duration=${DUR}s B-joins-after=${DEL
 taskkill.exe /F /IM BugFarmerClient.exe >/dev/null 2>&1 || true
 
 # FRESH MATCH (required for a DEFINITIVE run): a build DEPLOY is not a restart, and a restart is not a fresh
-# match. FRESH=1 force-recreates the plugin + server (so the match starts at tick 0 on the CURRENT backend.so)
-# and waits for "Startup done". See memory: sync-test-fresh-match, server-chunks-lazy-loaded.
+# match. FRESH=1 REBUILDS the plugin image from the CURRENT Go source and force-recreates the server (so the
+# match starts at tick 0 on the CURRENT backend.so) and waits for "Startup done".
+# The image REBUILD is load-bearing: the compose builder BAKES a source copy at image-build time, so a plain
+# force-recreate recompiles the OLD source — Go changes silently don't deploy (this invalidated a whole fix
+# verification on 2026-07-19; see run-backend skill "you must build builder first").
+# See memory: sync-test-fresh-match, server-chunks-lazy-loaded.
 if [ "${FRESH:-0}" = "1" ]; then
+  echo "FRESH=1: rebuilding plugin image from current source…"
+  docker compose -f "$ROOT/docker-compose.yml" build builder >/dev/null 2>&1 \
+    || { echo "  ERROR: docker compose build builder FAILED (Go compile error?) — run it manually to see why"; exit 1; }
   echo "FRESH=1: redeploying plugin + server (force-recreate) and waiting for Startup done…"
   docker compose -f "$ROOT/docker-compose.yml" up -d --force-recreate builder nakama >/dev/null 2>&1
   ok=0
@@ -66,6 +73,10 @@ rm -f "$PDATA"/player_A.log "$PDATA"/player_B.log 2>/dev/null
 A_SPAWN_ARG=(); B_SPAWN_ARG=()
 [ -n "${SPAWN_A:-}" ] && A_SPAWN_ARG=(-spawn "$SPAWN_A")
 [ -n "${SPAWN_B:-}" ] && B_SPAWN_ARG=(-spawn "$SPAWN_B")
+# DRIFT-NET SELF-TEST: DESYNC_B=<n> makes client B deliberately perturb one bug n recorded ticks in — the
+# zone drift round + authority tie-referee must then DETECT + RESYNC it (server log: "tie broken by
+# AUTHORITY"). Such a run is EXPECTED to show a divergent span in the diff — it proves the net, not sync.
+[ -n "${DESYNC_B:-}" ] && B_SPAWN_ARG+=(-desyncafter "$DESYNC_B")
 
 echo "launching client A (authority, creates the match)… spawn=${SPAWN_A:-default}"
 "$PLAYER" -batchmode -nographics -synctest -zone "$ZONE" -clientid A -duration "$DUR" "${A_SPAWN_ARG[@]}" \
@@ -137,8 +148,29 @@ fi
 python3 "$ROOT/tools/netcode/sync_diff.py" "$TA" "$TB"
 RC=$?
 
-echo "--- backstop: server drift detector ---"
-docker compose -f "$ROOT/docker-compose.yml" logs --since "$((DUR+30))s" nakama 2>/dev/null | grep -i "Drift detected" \
-  && echo "(server ALSO logged drift — corroborates divergence)" \
-  || echo "(no 'Drift detected' in server log — corroborates sync)"
+# RECONSTRUCTION TRIPWIRES (2026-07-19 late-join bug class): a merge/split that DEFICIT-FILLS bugs a live
+# client should have MOVED, or snapshot bugs ORPHANED without metadata, is the same-id-different-bug
+# divergence machine even when positions happen not to diverge this run. FAIL LOUD on any occurrence in
+# either client log. (moved 0/0 is excluded — a genuinely empty absorbed swarm is legal.)
+TRIP=0
+for LOGF in "$PDATA/player_A.log" "$PDATA/player_B.log"; do
+  [ -f "$LOGF" ] || continue
+  HITS=$(grep -E "SWARM_MERGE .* moved 0/[1-9]|SWARM_SPLIT .* moved 0, spawned [1-9]|SWARM_SPLIT .* parent now -1|caching .* bugs for later" "$LOGF" | head -5)
+  if [ -n "$HITS" ]; then
+    echo "TRIPWIRE: swarm-reconstruction fault in $(basename "$LOGF"):"
+    echo "$HITS" | sed 's/^/    /'
+    TRIP=1
+  fi
+done
+if [ "$TRIP" = 1 ]; then
+  echo "TRIPWIRE: ❌ FAIL — a client fabricated/orphaned bugs during merge/split or late-join (the"
+  echo "same-id-different-bug class). This fails the run even if the position diff above passed."
+  RC=6
+fi
+
+echo "--- backstop: server drift detector (NOTE: structurally blind at 2 players pre-Phase-2 — silence is NOT proof) ---"
+docker compose -f "$ROOT/docker-compose.yml" logs --since "$((DUR+30))s" nakama 2>/dev/null \
+  | grep -iE "Drift detected|ambiguous hash split" \
+  && echo "(server drift machinery fired — see lines above)" \
+  || echo "(server drift machinery silent)"
 exit $RC

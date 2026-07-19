@@ -925,6 +925,15 @@ type SnapshotRequestMessage struct {
 // SwarmSnapshotData contains all bug positions for a single swarm
 type SwarmSnapshotData struct {
 	SwarmID string `json:"swarm_id"`
+	// Snapshot-moment IDENTITY (2026-07-19 one-time-base fix): the late-join swarm_metadata is now built
+	// FROM these entries (the state at snapshot_tick), never from current state.Swarms — a swarm that merges
+	// away or is born inside the snapshot→end window otherwise gets inconsistent metadata and the joiner
+	// fabricates/mis-seeds bugs (the same-id-different-bug divergence). Typed additive siblings of the
+	// opaque Bugs blob (the HasLeg precedent); requires a DEPLOYED plugin (docker compose build builder).
+	SpeciesID string `json:"species_id,omitempty"`
+	NextBugID int    `json:"next_bug_id,omitempty"`
+	CenterX   int    `json:"center_x,omitempty"` // fixed-point ×1000 (client SimCenter) — legless-swarm fallback centre
+	CenterY   int    `json:"center_y,omitempty"`
 	// Bugs is the authority's per-bug snapshot, relayed VERBATIM (the server never reads it — see BugSampleData
 	// note). json.RawMessage means every per-bug field the client sends round-trips untouched, so no field can
 	// ever be silently dropped by a stale server struct (the late-join predation desync). Do NOT re-type this.
@@ -994,6 +1003,13 @@ const (
 	// (the chunk-scoped WorldUpdate that renders it can't reach far clients). CellX/CellY = world cell;
 	// Level = 1 (now blocks bugs) or 0 (no longer). Phase 1b — see architecture_swarm_sync.md.
 	InfluenceOccupantBlocksBugs = "OCCUPANT_BLOCKS_BUGS"
+
+	// A swarm crossed the SUBDUE threshold (smoke/calm meter). Toggle pair (like ITEM_ROTTED/FOOD_CONSUMED):
+	// SUBDUED = now subdued, UNSUBDUED = no longer. SwarmID only (no value field). The client per-bug sim reads
+	// this to suppress the LUNGE/DIVE animation for a calmed swarm — the DAMAGE is already gated server-side
+	// (applyBugAttackToPlayer). See architecture_swarm_sync.md §14.3.
+	InfluenceSwarmSubdued   = "SWARM_SUBDUED"
+	InfluenceSwarmUnsubdued = "SWARM_UNSUBDUED"
 )
 
 // InfluenceEvent represents a discrete, replayable signal for bug AI
@@ -1093,6 +1109,14 @@ type ZoneSnapshotMessage struct {
 	// VERBATIM (json.RawMessage) exactly like Bugs. Without it, a late-joiner's predators have no prey list and
 	// wander while the authority hunts → divergence. The server never interprets it (mirrors the food registry).
 	Hunts                json.RawMessage     `json:"hunts,omitempty"`
+	// Subdued = the authority's set of subdued swarm-ids, relayed VERBATIM (like Hunts). Without it, a
+	// late-joiner wouldn't know a swarm is calmed → its per-bug sim would resume the lunge/dive on a smoked swarm.
+	Subdued              json.RawMessage     `json:"subdued,omitempty"`
+	// PlayerCells = the deterministic player cells AT the snapshot moment (the authority's
+	// InfluenceManager registry — the exact values its sim read at snapshot_tick). The late-join package
+	// hydrates from THESE, not current server state: end-tick cells would let a joiner's replay see FUTURE
+	// player positions until each window ENTER replays (the one-time-base rule, 2026-07-19).
+	PlayerCells          []PlayerCellData    `json:"player_cells,omitempty"`
 	StateHash            string              `json:"state_hash"`
 }
 
@@ -1126,4 +1150,5 @@ type LateJoinSnapshot struct {
 	PlayerCells          []PlayerCellData    `json:"player_cells"` // Current player positions (state, not events)
 	Food                 []FoodSnapshotData  `json:"food,omitempty"` // Authoritative food registry @ snapshot
 	Hunts                json.RawMessage     `json:"hunts,omitempty"` // Authoritative hunt assignments @ snapshot (verbatim)
+	Subdued              json.RawMessage     `json:"subdued,omitempty"` // Authoritative subdued swarm-id set @ snapshot (verbatim)
 }

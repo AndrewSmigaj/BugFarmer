@@ -64,6 +64,19 @@ namespace BugFarmer.Entities
 
         // DIAGNOSTIC (leg/center trace): the center bug AI used this tick, and the metadata fallback center.
         public FixedPoint2 SimCenter => _simCenter;
+
+        /// <summary>Total bug ids ever minted in this swarm (the id counter). The authority embeds it in its
+        /// snapshot so a late-joiner reconstructs the id space exactly (one-time-base late-join fix).</summary>
+        public int NextBugId => _nextBugId;
+
+        /// <summary>TEST HOOK: lowest-id bug's agent, or null. Only the drift-net self-test
+        /// (SwarmManager.DebugPerturbOneBug ← HeadlessSyncTest -desyncafter) calls this.</summary>
+        public Bugs.BugAgent GetFirstAgentForDebug()
+        {
+            foreach (var bugId in _bugs.Keys.OrderBy(id => id))
+                return _bugs[bugId].Agent;
+            return null;
+        }
         public FixedPoint2 FallbackCenter => _fallbackCenter;
         public float Radius => _radius;
         public bool IsWaitingForSnapshot => _waitingForSnapshot;
@@ -396,7 +409,8 @@ namespace BugFarmer.Entities
         /// <param name="tick">The current simulation tick from SwarmManager</param>
         /// <param name="players">Player targets from InfluenceManager (deterministic, sorted by playerId)</param>
         public void SimulateTick(long tick, List<PlayerTarget> players,
-                                 IReadOnlyList<(int bugId, FixedPoint2 pos)> preyBugs = null)
+                                 IReadOnlyList<(int bugId, FixedPoint2 pos)> preyBugs = null,
+                                 bool subdued = false)
         {
             using var _perf = PerfProfiler.Sample("Sim.SwarmTick");
             if (!WorldSeedProvider.Instance?.IsInitialized ?? true)
@@ -439,7 +453,7 @@ namespace BugFarmer.Entities
             // 2. Simulate each bug in deterministic order
             foreach (var bugId in sortedBugIds)
             {
-                _bugs[bugId].Agent.SimulateTick(_simCenter, players, tick, preyBugs);
+                _bugs[bugId].Agent.SimulateTick(_simCenter, players, tick, preyBugs, subdued);
             }
 
             // Debug: log first bug's state every 100 ticks (sample one swarm)

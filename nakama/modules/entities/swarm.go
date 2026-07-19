@@ -29,6 +29,10 @@ type SwarmState struct {
 
 	// Condition meter (for subduing mechanics, 0-100 range)
 	ConditionValue float32 `json:"condition,omitempty"`
+	// SubduedSynced: the last subdued-state broadcast to clients (server-only; NOT persisted — self-heals on
+	// restart by re-emitting on tick 1). Drives the SWARM_SUBDUED/UNSUBDUED toggle so the client per-bug sim
+	// can suppress the LUNGE/DIVE animation for a calmed swarm (damage is already gated server-side).
+	SubduedSynced bool `json:"-"`
 	CurrentHP      int     `json:"hp,omitempty"`
 
 	// Lifecycle (server-owned)

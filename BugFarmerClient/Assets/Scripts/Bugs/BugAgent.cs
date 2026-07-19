@@ -270,7 +270,7 @@ namespace BugFarmer.Bugs
         /// <param name="preyBugs">When this bug's swarm is hunting, the target prey swarm's (bugId, position) as of
         /// last tick — deterministic on every client. null = not hunting. Drives the individual HUNT pursuit.</param>
         public void SimulateTick(FixedPoint2 swarmCenter, List<PlayerTarget> players, long currentTick,
-                                 IReadOnlyList<(int bugId, FixedPoint2 pos)> preyBugs = null)
+                                 IReadOnlyList<(int bugId, FixedPoint2 pos)> preyBugs = null, bool subdued = false)
         {
             // Store tick for counter-based RNG calls
             _currentTick = currentTick;
@@ -285,6 +285,21 @@ namespace BugFarmer.Bugs
             switch (CurrentBehavior)
             {
                 case "attack":
+                    // SUBDUED (smoke/calm): don't attack. Abort any in-flight lunge, then wander. The server
+                    // already blocks the DAMAGE (applyBugAttackToPlayer); this stops the VISUAL lunge/dive so
+                    // "smoke it, walk past it" reads right. Aborting to idle (phase 0), not "recover", avoids
+                    // reading a heading that's only set at launch. Deterministic: `subdued` is the synced input.
+                    if (subdued)
+                    {
+                        if (SurgePhase != 0)
+                        {
+                            SurgePhase = 0;
+                            Velocity = FixedPoint2.Zero;
+                            SurgeCooldownUntil = _currentTick + _surgeCooldownTicks;
+                        }
+                        Movement.UpdateMovement(this, swarmCenter, _wanderRadiusSqr);
+                        break;
+                    }
                     // Lungers (centipedes) run the per-bug surge machine; contact attackers keep the orbit-and-dive.
                     if (_behavior.AttackStyle == "lunge")
                         CentipedeSurge(players);

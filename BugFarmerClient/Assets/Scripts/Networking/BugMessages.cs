@@ -306,6 +306,13 @@ namespace BugFarmer.Networking
     public class SwarmSnapshotData
     {
         public string swarm_id;
+        // Snapshot-moment IDENTITY (one-time-base fix, 2026-07-19): the server builds late-join
+        // swarm_metadata FROM these entries, so a swarm that merges away (or is born) inside the
+        // snapshot→end window reconstructs consistently on a late-joiner instead of being orphaned
+        // (merge deficit-fill fabricating same-id-different-bugs) or mis-seeded at the end-tick centre.
+        public string species_id;
+        public int next_bug_id;
+        public int center_x, center_y; // fixed-point ×1000 SimCenter — legless-swarm fallback centre
         public BugSampleData[] bugs;
 
         // Current movement leg AT the snapshot tick (authoritative). Lets late-join hydrate the swarm
@@ -507,6 +514,9 @@ namespace BugFarmer.Networking
         public SwarmSnapshotData[] swarms;
         public FoodSnapshotData[] food;      // Authoritative food registry @ snapshot (late-join hydration)
         public HuntSnapshotData[] hunts;     // Authoritative hunt assignments @ snapshot (late-join hydration)
+        public string[] subdued;             // Authoritative subdued swarm-ids @ snapshot (late-join hydration)
+        public PlayerCellData[] player_cells; // Player cells @ the snapshot MOMENT (one-time-base rule) —
+                                              // end-tick cells would let a joiner's replay see future positions
         public string state_hash;
     }
 
@@ -586,5 +596,6 @@ namespace BugFarmer.Networking
         public PlayerCellData[] player_cells;  // Current player positions (state, not events)
         public FoodSnapshotData[] food;        // Authoritative food registry @ snapshot (hydrate before replay)
         public HuntSnapshotData[] hunts;       // Authoritative hunt assignments @ snapshot (hydrate before replay)
+        public string[] subdued;               // Authoritative subdued swarm-ids @ snapshot (hydrate before replay)
     }
 }

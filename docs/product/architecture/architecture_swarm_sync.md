@@ -34,6 +34,7 @@ client `BugFarmerClient/.../Bugs/InfluenceManager.cs` `ProcessInfluenceEvent`). 
 | `SWARM_SPLIT` / `SWARM_MERGE` | swarm ids, id base/count | moves bugs between swarms (population pass) |
 | `ITEM_ROTTED` / `FOOD_CONSUMED` | food_id, cell, level | maintains the deterministic food registry (level 0 = gone) |
 | `OCCUPANT_BLOCKS_BUGS` | cell_x/y, level | toggles a cell in the zone-wide blocks_bugs collision set (Phase 1b) |
+| `SWARM_SUBDUED` / `SWARM_UNSUBDUED` | swarm_id | toggles a swarm's calmed (smoke) state so the client per-bug sim suppresses its lunge/dive (§14.3); a sim INPUT, not hashed |
 | (`TREE_FRUIT_GROW` / `_DROP` | tree cell | farming; server-side, not bug-sim) |
 
 **Recipe — adding a new deterministic mechanic.** (1) Classify the state: ledgered sim-input /
@@ -90,6 +91,31 @@ actively hunting when B joins (non-vacuous; 0 ht + 0 pc A-vs-B mismatch over 11.
   {all `BugAgent` snapshot fields (via the verbatim relay) + the 4 `InfluenceManager` dicts —
   `_swarmLegs`/`_swarmStrikes`/`_food`/`_playerCells` + the movement-state round-trip}. Any NEW client sim-state
   outside this set needs its own snapshot carrier + a NON-VACUOUS gate that exercises it.
+
+**Update 2026-07-19 — the ONE-TIME-BASE rule (late-join swarm-lifecycle divergence) + the drift net un-blinded.**
+A swarm that MERGED AWAY between snapshot_tick and end_tick shipped per-bug data but NO metadata (metadata was
+built from CURRENT `state.Swarms` at end_tick) → the joiner orphaned its bugs → the replayed merge deficit-filled
+same-id-DIFFERENT-bugs (fresh RNG) while the authority moved its real ones → permanent ~2% divergence whenever a
+merge landed in the ~4s window (proven by a 17/17 one-class census). Latent siblings of the same flaw: window-BORN
+swarms were prespawned from end-tick metadata (the birth event then "never re-seed"-skipped), and player_cells
+were end-tick (a joiner's replay saw future player positions). **THE RULE: every part of the late-join package
+describes ONE moment — snapshot_tick; everything after is replay's job.** As built: the authority embeds per-swarm
+identity (`species_id`/`next_bug_id`/`center`) + `player_cells` in its ZoneSnapshot; the server builds
+`swarm_metadata` FROM those snapshot entries (never current state); the joiner PRUNES swarms not in the snapshot
+(replay re-mints window-born ones at their birth tick) and — on RESYNC — reconciles each swarm's BUG-ID SET to
+exactly the snapshot's (post-snapshot extras would otherwise carry end-state through the replay, double-advanced).
+Two adjacent races fixed with it: (a) `ProcessSwarmUpdate`'s on-receipt removal could delete an absorbed swarm
+BEFORE its merge event applied ("early on-receipt deletion" → live-vs-live fabrication) — SwarmUpdates now DROP
+while not Live and the removal is a DEFERRED tick-aligned sweep of Count==0 husks only; (b) the DRIFT NET was
+structurally blind at ≤2 players (per-chunk rounds: disjoint clients share no chunk; a 1v1 disagreement was a
+tie → deliberately skipped) — now ONE zone-scoped round (the payload was already the zone-wide hash) + the
+AUTHORITY's vote breaks ties. Verified: 3× non-vacuous disjoint/co-located late-joins with in-window merges all
+`moved N/N` real bugs + SYNC IDENTICAL; the drift-net SELF-TEST (`DESYNC_B=<n>` → HeadlessSyncTest
+`-desyncafter` deliberately perturbs one bug) detects in ONE round, tie-breaks by authority, resyncs, and the
+client CONVERGES (post-resync span IDENTICAL, later rounds silent). The sync harness now FAILS (exit 6) on
+reconstruction tripwires (`moved 0/N` deficit-fills, orphaned "caching for later") even when positions pass, and
+FRESH=1 rebuilds the plugin image first (`FRESH≠deploy` — the compose builder bakes source; a stale plugin
+silently drops new typed fields, which once invalidated a whole fix verification).
 
 ---
 
@@ -953,6 +979,13 @@ ActionState combat machine were DELETED** (`centipede.go` keeps ONLY the gnaw; `
   + non-vacuous) + the 2-client `run_sync_latejoin` (co-located + disjoint).
 - **Peace gate:** a peaceful OBSERVATION zone suppresses the lunge on BOTH sides — client `BugAgent.UpdateBehavior`
   early-returns "wander" when `WorldSeedProvider.Peaceful`; server `peacefulZone` gates every attack path.
+- **Subdue (smoke/calm) gate:** the calm meter is server-only soft state, but the LUNGE is client-side, so the
+  server broadcasts a per-swarm `SWARM_SUBDUED`/`SWARM_UNSUBDUED` toggle (emitted once per crossing from the
+  lifecycle loop; `syncSubduedState`) + a `subdued` snapshot section for late-join. The client holds a `_subdued`
+  set (mirrors `_swarmStrikes`), passed per-tick into `SimulateTick`; the `"attack"` case suppresses a new
+  lunge/dive and aborts an in-flight one to idle. DAMAGE is already server-gated, so this is the VISUAL half.
+  A sim INPUT (like player cells) → not in `ComputeStateHash`, but it moves bugs so it must sync. Gate:
+  `sim-determinism --subdue-test`.
 
 **Still SERVER-side (unchanged):** the GNAW — the only server-side centipede ACTION left — its own GnawState damage
 pool (NOT BreakingState — an owner-reset would let players "repair" by hitting), 1 dmg/80 ticks → wood HP 2 = 16

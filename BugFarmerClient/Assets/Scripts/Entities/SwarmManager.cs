@@ -592,7 +592,10 @@ namespace BugFarmer.Entities
             {
                 IReadOnlyList<(int bugId, FixedPoint2 pos)> prey = null;
                 huntTargets?.TryGetValue(swarmId, out prey);
-                _swarms[swarmId].SimulateTick(_simulationTick, players, prey);
+                // Subdued (smoke/calm) is a per-swarm sim INPUT (like players): read from the synced registry,
+                // passed down so a calmed swarm's per-bug sim suppresses its lunge/dive.
+                bool subdued = influence != null && influence.IsSubdued(swarmId);
+                _swarms[swarmId].SimulateTick(_simulationTick, players, prey, subdued);
             }
 
             // 4b. Phase 2 — individual-fly predation strike (AUTHORITY ONLY, LIVE only). Positions are
@@ -610,6 +613,9 @@ namespace BugFarmer.Entities
             // Record this tick's state hash for tick-aligned drift checks (always on, cheap).
             var hash = ComputeStateHash();
             RecordTickHash(_simulationTick, hash);
+
+            // Tick-aligned cosmetic husk sweep (deferred SwarmUpdate reconcile — see ReconcileDespawnedSwarms).
+            ReconcileDespawnedSwarms();
 
             // Invoke trace callback if recording
             if (_traceCallback != null)
@@ -1142,6 +1148,17 @@ namespace BugFarmer.Entities
                 return;
             }
 
+            // REPLAY GATE (one-time-base fix): while not Live, an on-receipt update reflects END-tick server
+            // state — its removal reconcile would DESTROY snapshot-recreated merged-away swarms before their
+            // merge replays (re-fabricating the very divergence the late-join fix removes). SwarmUpdate is
+            // cosmetic (metadata refresh + empty-husk sweep; every sim-relevant removal rides the ledger), so
+            // dropping is lossless — the next Live-period update re-delivers.
+            if (_syncState != SyncState.Live)
+            {
+                DebugFileLogger.Log($"[SwarmManager] Dropping SwarmUpdate (tick {update.tick}) — state={_syncState} (replay gate)");
+                return;
+            }
+
             ProcessSwarmUpdate(update);
         }
 
@@ -1166,17 +1183,71 @@ namespace BugFarmer.Entities
                 // tick) or the join baseline. Deliberately do nothing (see comment above).
             }
 
-            // Remove swarms not in this update (merged/despawned)
-            var toRemove = _swarms.Keys.Where(id => !receivedIds.Contains(id)).ToList();
-            foreach (var id in toRemove)
+            // DEFERRED removal reconcile (fixes the "early on-receipt deletion" race the merge handler's
+            // deficit-fill comment admits to): destroying a swarm the moment the server update omits it can
+            // race AHEAD of the deterministic SWARM_MERGE at its event tick — the merge then finds the
+            // absorbed swarm gone and FABRICATES bugs on this client while a differently-timed client MOVES
+            // its real ones (same-id-different-bug divergence, live-vs-live). Every sim-relevant removal
+            // rides the ledger (server deletes only empty husks / evented merges), so the reconcile's only
+            // legitimate job is sweeping EMPTY husks — defer it until our sim has PASSED the update's tick
+            // (all events ≤ tick applied locally), and never touch a swarm that still has bugs.
+            _pendingReconcileTick = update.tick;
+            _pendingReconcileIds = receivedIds;
+        }
+
+        // Latest server swarm-id set awaiting the tick-aligned husk sweep (see ProcessSwarmUpdate).
+        private long _pendingReconcileTick = -1;
+        private HashSet<string> _pendingReconcileIds;
+
+        /// <summary>TEST HOOK (headless sync harness `-desyncafter` — the drift-net self-test): deliberately
+        /// perturb ONE bug's position so THIS client diverges. Proves the zone drift round + authority
+        /// tie-referee actually DETECT and RESYNC a diverged client (the net's --selftest). Never called on
+        /// any production path — only HeadlessSyncTest wires it, and only when the flag is passed.</summary>
+        public bool DebugPerturbOneBug()
+        {
+            foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
             {
-                if (_swarms.TryGetValue(id, out var swarm))
-                {
-                    swarm.Cleanup();
-                    Destroy(swarm.gameObject);
-                }
-                _swarms.Remove(id);
+                var agent = _swarms[swarmId].GetFirstAgentForDebug();
+                if (agent == null) continue;
+                agent.Position = new FixedPoint2(
+                    agent.Position.X + FixedPoint.FromInt(1), agent.Position.Y);
+                Debug.LogWarning($"[SwarmManager] CHAOS: perturbed {swarmId} bug {agent.BugId} by +1 cell (drift-net self-test)");
+                DebugFileLogger.Log($"[SwarmManager] CHAOS: perturbed {swarmId} bug {agent.BugId} by +1 cell (drift-net self-test)");
+                return true;
             }
+            return false;
+        }
+
+        /// <summary>Tick-aligned cosmetic sweep: once the sim has processed every event up to the update's
+        /// tick, destroy EMPTY swarms the server no longer lists. Bugful absentees are logged, never
+        /// destroyed (either born after the update's tick, or a genuine inconsistency to surface).</summary>
+        private void ReconcileDespawnedSwarms()
+        {
+            if (_pendingReconcileIds == null || _simulationTick < _pendingReconcileTick) return;
+            List<string> toRemove = null;
+            foreach (var kv in _swarms)
+            {
+                if (_pendingReconcileIds.Contains(kv.Key)) continue;
+                if (kv.Value.Count > 0)
+                {
+                    DebugFileLogger.Log($"[SwarmManager] Reconcile: {kv.Key} absent from server set (tick {_pendingReconcileTick}) but has {kv.Value.Count} bugs — NOT removing (newborn or inconsistency)");
+                    continue;
+                }
+                (toRemove ??= new List<string>()).Add(kv.Key);
+            }
+            if (toRemove != null)
+            {
+                foreach (var id in toRemove)
+                {
+                    if (_swarms.TryGetValue(id, out var swarm))
+                    {
+                        swarm.Cleanup();
+                        Destroy(swarm.gameObject);
+                    }
+                    _swarms.Remove(id);
+                }
+            }
+            _pendingReconcileIds = null;
         }
 
         private void HandleBugCaught(IMatchState state)
@@ -1795,6 +1866,17 @@ namespace BugFarmer.Entities
                 DebugFileLogger.Log($"[SwarmManager] Hydrated {msg.hunts.Length} hunt assignments from snapshot");
             }
 
+            // Hydrate the SUBDUED (smoke/calm) swarm set BEFORE replay — same discipline as hunts/food. Without it
+            // a late-joiner wouldn't know a swarm is calmed → its per-bug sim resumes the lunge/dive on a smoked swarm.
+            InfluenceManager.Instance?.ClearSubdued();
+            if (msg.subdued != null)
+            {
+                foreach (var id in msg.subdued)
+                    InfluenceManager.Instance?.HydrateSubdued(id);
+                Debug.Log($"[SwarmManager] Hydrated {msg.subdued.Length} subdued swarms from snapshot");
+                DebugFileLogger.Log($"[SwarmManager] Hydrated {msg.subdued.Length} subdued swarms from snapshot");
+            }
+
             // Hydrate player cells from snapshot STATE (not events)
             // This restores the point-in-time player positions at snapshot_tick
             if (msg.player_cells != null)
@@ -1805,6 +1887,36 @@ namespace BugFarmer.Entities
                 }
                 Debug.Log($"[SwarmManager] Hydrated {msg.player_cells.Length} player cells from snapshot");
                 DebugFileLogger.Log($"[SwarmManager] Hydrated {msg.player_cells.Length} player cells from snapshot");
+            }
+
+            // PRUNE-TO-SNAPSHOT (one-time-base rule): our state at snapshot_tick must equal the snapshot
+            // EXACTLY. Any existing swarm not in the snapshot's swarm set is either window-born (its
+            // SWARM_SPAWNED/SPLIT replays and re-mints it at its birth tick with correct seeding) or stale —
+            // keeping it would let a RESYNCING client's window-born swarms carry end-state bugs through the
+            // replay (double-advanced). Fresh joiners have no swarms → no-op. Skipped for bootstrap packages
+            // (no authority snapshot yet — nothing authoritative to prune against).
+            _pendingReconcileIds = null; // a pre-resync husk-sweep stash is stale relative to the new timeline
+            if (msg.swarms != null && msg.swarms.Length > 0)
+            {
+                var snapshotSwarmIds = new HashSet<string>();
+                foreach (var sd in msg.swarms) snapshotSwarmIds.Add(sd.swarm_id);
+                List<string> prune = null;
+                foreach (var id in _swarms.Keys)
+                    if (!snapshotSwarmIds.Contains(id)) (prune ??= new List<string>()).Add(id);
+                if (prune != null)
+                {
+                    foreach (var id in prune)
+                    {
+                        if (_swarms.TryGetValue(id, out var stale))
+                        {
+                            stale.Cleanup();
+                            Destroy(stale.gameObject);
+                        }
+                        _swarms.Remove(id);
+                    }
+                    Debug.Log($"[SwarmManager] Pruned {prune.Count} swarms not in snapshot (window-born re-mint via replay)");
+                    DebugFileLogger.Log($"[SwarmManager] Pruned {prune.Count} swarms not in snapshot (window-born re-mint via replay)");
+                }
             }
 
             // Create swarm visuals from metadata BEFORE applying snapshots
@@ -1907,15 +2019,36 @@ namespace BugFarmer.Entities
                     var swarm = GetSwarm(swarmData.swarm_id);
                     if (swarm != null)
                     {
+                        // RESYNC per-BUG exactness (one-time-base rule): a RESYNCING client's swarm may hold
+                        // post-snapshot bugs (which would carry end-state THROUGH the replay — double-advanced;
+                        // this kept a perturbed client divergent across three resyncs in the drift-net
+                        // self-test) or lack snapshot bugs it removed post-snapshot (ApplySnapshot only
+                        // overwrites EXISTING bugs). Reconcile the bug-id set to EXACTLY the snapshot's first —
+                        // the per-bug analog of the swarm-level prune. Replay re-mints post-snapshot births at
+                        // their event ticks (SpawnBugAt un-removes), so nothing is lost. Fresh joins are
+                        // already exact (create-exact-ids) → extras/missing are both empty there.
+                        var wantIds = new HashSet<int>();
+                        foreach (var b in swarmData.bugs) wantIds.Add(b.bug_id);
+                        List<int> extras = null;
+                        foreach (var (bugId, _) in swarm.GetAllBugsAliveSorted())
+                            if (!wantIds.Contains(bugId)) (extras ??= new List<int>()).Add(bugId);
+                        if (extras != null)
+                        {
+                            swarm.RemoveBugsById(extras.ToArray());
+                            DebugFileLogger.Log($"[SwarmManager] Resync reconcile {swarmData.swarm_id}: removed {extras.Count} post-snapshot bugs (replay re-mints)");
+                        }
+                        foreach (var b in swarmData.bugs) swarm.SpawnBugAt(b.bug_id); // no-op on existing; recreates missing
                         Debug.Log($"[SwarmManager] Swarm {swarmData.swarm_id} exists, applying snapshot directly");
                         DebugFileLogger.Log($"[SwarmManager] Swarm {swarmData.swarm_id} exists, applying snapshot directly");
                         swarm.ApplySnapshot(swarmData.bugs);
                     }
                     else
                     {
-                        // This shouldn't happen now that we create from metadata, but keep as fallback
-                        Debug.LogWarning($"[SwarmManager] Swarm {swarmData.swarm_id} NOT found (no metadata?), caching {bugCount} bugs for later");
-                        DebugFileLogger.Log($"[SwarmManager] Swarm {swarmData.swarm_id} NOT found, caching {bugCount} bugs for later");
+                        // Post one-time-base fix this branch is DEAD (metadata is built from the snapshot's
+                        // own swarm set, so every bug-data swarm has metadata). If it fires, the package is
+                        // self-inconsistent again — the same-id-different-bug divergence machine. Scream.
+                        Debug.LogError($"[SwarmManager] LATEJOIN-INCONSISTENCY: swarm {swarmData.swarm_id} has bug data but NO metadata — caching {bugCount} bugs for later (divergence likely; see one-time-base rule)");
+                        DebugFileLogger.Log($"[SwarmManager] LATEJOIN-INCONSISTENCY: swarm {swarmData.swarm_id} NOT found, caching {bugCount} bugs for later");
                         _pendingSnapshots[swarmData.swarm_id] = new PendingSnapshot
                         {
                             Bugs = swarmData.bugs,
@@ -2289,11 +2422,20 @@ namespace BugFarmer.Entities
             foreach (var kvp in _swarms)
             {
                 var bugData = kvp.Value.GetAllBugPositions();
-                if (bugData.Length > 0)
+                // Include 0-bug swarms too (one-time-base fix): an empty swarm at snapshot still needs
+                // metadata on a late-joiner, or a window SWARM_REPRODUCED targeting it is skipped ("unknown
+                // swarm") and the joiner permanently misses those bugs.
                 {
                     var snap = new SwarmSnapshotData
                     {
                         swarm_id = kvp.Key,
+                        // Snapshot-moment identity: the server builds late-join swarm_metadata FROM these
+                        // (never from its end-tick state), so merged-away/window-born swarms reconstruct
+                        // consistently. See the one-time-base rule (architecture_swarm_sync.md).
+                        species_id = kvp.Value.SpeciesId,
+                        next_bug_id = kvp.Value.NextBugId,
+                        center_x = kvp.Value.SimCenter.X.Value,
+                        center_y = kvp.Value.SimCenter.Y.Value,
                         bugs = bugData
                     };
                     // Embed the swarm's current leg (authoritative @ snapshot tick) so late-joiners hydrate
@@ -2328,6 +2470,8 @@ namespace BugFarmer.Entities
             // per-bug positions on a late-joiner. (Confirmed cause of the residual late-join divergence.)
             var foodSnapshots = new List<FoodSnapshotData>();
             var huntSnapshots = new List<HuntSnapshotData>();
+            var subduedIds = new List<string>();
+            var playerCells = new List<PlayerCellData>();
             if (InfluenceManager.Instance != null)
             {
                 foreach (var (id, fx, fy, level) in InfluenceManager.Instance.ExportFood())
@@ -2344,6 +2488,15 @@ namespace BugFarmer.Entities
                         kills_per_strike = s.KillsPerStrike,
                         strike_cooldown_ticks = s.StrikeCooldownTicks,
                     });
+                // Embed the subdued (smoke/calm) swarm-ids — same reason: event-sourced (SWARM_SUBDUED/UNSUBDUED)
+                // + pruned, so the authority's live set is the reliable source. A missing entry → a late-joiner
+                // resumes the lunge/dive on a calmed swarm.
+                subduedIds.AddRange(InfluenceManager.Instance.ExportSubdued());
+                // Embed the deterministic player cells AT this snapshot moment (one-time-base rule): the
+                // joiner's replay must read the same cells our sim read at snapshot_tick — end-tick server
+                // cells would show it FUTURE player positions during replay.
+                foreach (var (playerId, cellX, cellY) in InfluenceManager.Instance.GetPlayerCells())
+                    playerCells.Add(new PlayerCellData { player_id = playerId, cell_x = cellX, cell_y = cellY });
             }
 
             var snapshot = new ZoneSnapshotMessage
@@ -2354,6 +2507,8 @@ namespace BugFarmer.Entities
                 swarms = swarmSnapshots.ToArray(),
                 food = foodSnapshots.ToArray(),
                 hunts = huntSnapshots.ToArray(),
+                subdued = subduedIds.ToArray(),
+                player_cells = playerCells.ToArray(),
                 state_hash = "" // TODO: Implement state hash
             };
 

@@ -1352,6 +1352,11 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			swarm.CompostCooldown -= deltaTime   // detritivore compost-deposit pacing
 			decayCondition(swarm, species, deltaTime) // subdual meter drains back toward agitated (§C)
 
+			// SUBDUE SYNC: the smoke/calm meter is server-only, but the client per-bug sim needs it to suppress
+			// the LUNGE/DIVE for a calmed swarm (the surge is client-side now). Broadcast the threshold crossing
+			// (both up on smoke and down on decay) as a frontier-gated toggle — the ONE emit point. §14.3.
+			worldState.syncSubduedState(worldState.CurrentZone.ZoneID, swarm, species)
+
 			atFood := false
 			if swarm.TargetFoodID != "" {
 				if swarm.TargetFoodDepletable && !m.foodSourceAlive(worldState, swarm.TargetFoodID, swarm.TargetFoodX, swarm.TargetFoodY) {
@@ -2672,7 +2677,10 @@ func (m *Match) handleSampleResponse(
 		return // Unanimous (or nobody voted) - no drift
 	}
 
-	// Pick the majority hash as the reference. On a tie, skip to avoid resync storms.
+	// Pick the majority hash as the reference. On a tie, the ZONE AUTHORITY's vote breaks it (2026-07-19:
+	// with exactly 2 players every disagreement is a 1v1 tie, so the old skip made the net structurally
+	// blind in 2-player games — divergence persisted silently forever). Authority-as-truth is the system's
+	// established semantics: its snapshot IS the resync source. An authority-less tie still skips.
 	var refHash int64
 	bestCount, tie := -1, false
 	for h, c := range counts {
@@ -2683,9 +2691,21 @@ func (m *Match) handleSampleResponse(
 		}
 	}
 	if tie {
-		logger.Warn("Drift check for chunk %d,%d at tick %d: ambiguous hash split %v - skipping resync",
-			msg.ChunkX, msg.ChunkY, check.SampleTick, counts)
-		return
+		authorityBroke := false
+		if state.CurrentZone != nil {
+			zone := state.GetOrCreateZone(state.CurrentZone.ZoneID)
+			if authHash, ok := check.Votes[zone.AuthorityUserID]; ok {
+				refHash = authHash
+				authorityBroke = true
+				logger.Warn("Drift check at tick %d: hash tie %v broken by AUTHORITY %s (hash %d) - resyncing dissenters",
+					check.SampleTick, counts, zone.AuthorityUserID, authHash)
+			}
+		}
+		if !authorityBroke {
+			logger.Warn("Drift check for chunk %d,%d at tick %d: ambiguous hash split %v - skipping resync (no authority vote)",
+				msg.ChunkX, msg.ChunkY, check.SampleTick, counts)
+			return
+		}
 	}
 
 	// Resync every voter that disagreed with the majority.
@@ -2747,8 +2767,10 @@ func (m *Match) handleZoneSnapshot(
 		SnapshotTick:         msg.SnapshotTick,
 		SnapshotLastEventSeq: msg.SnapshotLastEventSeq,
 		Swarms:               msg.Swarms,
-		Food:                 msg.Food,  // relay the authoritative food registry (opaque to server)
-		Hunts:                msg.Hunts, // relay the authoritative hunt assignments (opaque to server)
+		Food:                 msg.Food,        // relay the authoritative food registry (opaque to server)
+		Hunts:                msg.Hunts,       // relay the authoritative hunt assignments (opaque to server)
+		Subdued:              msg.Subdued,     // relay the authoritative subdued swarm-id set (opaque to server)
+		PlayerCells:          msg.PlayerCells, // player cells @ snapshot moment (one-time-base rule)
 		StateHash:            msg.StateHash,
 	}
 	zone.LatestSnapshotTick = msg.SnapshotTick
@@ -2915,24 +2937,35 @@ func (m *Match) sendLateJoinSnapshot(
 	logger.Info("LateJoinSnapshot coherence: swarms=%d (leg-less=%d) food_entries=%d",
 		len(zone.LatestSnapshot.Swarms), noLegCount, len(zone.LatestSnapshot.Food))
 
-	// Collect current player cell positions from authoritative state
-	// This is snapshot state, NOT event reconstruction
-	// Only include players currently in zone.Members (connected, zone-resident)
+	// Player cells: PREFER the authority's snapshot-moment registry (one-time-base rule, 2026-07-19) —
+	// end-tick cells would let the joiner's replay see FUTURE player positions until each window ENTER
+	// replays. Filtered to CURRENT zone.Members so a player who left during the window doesn't linger as a
+	// ghost cell forever (their in-window influence on bugs is a known ~4s micro-gap; post-window state
+	// converges exactly as before). Fallback to current state for bootstrap / a pre-fix authority.
 	var playerCells []PlayerCellData
-	for playerID := range zone.Members {
-		if cell, ok := state.PlayerCells[playerID]; ok {
-			playerCells = append(playerCells, PlayerCellData{
-				PlayerID: playerID,
-				CellX:    cell.CellX,
-				CellY:    cell.CellY,
-			})
+	if len(zone.LatestSnapshot.PlayerCells) > 0 {
+		for _, cell := range zone.LatestSnapshot.PlayerCells {
+			if _, member := zone.Members[cell.PlayerID]; member {
+				playerCells = append(playerCells, cell)
+			}
+		}
+	}
+	if len(playerCells) == 0 {
+		for playerID := range zone.Members {
+			if cell, ok := state.PlayerCells[playerID]; ok {
+				playerCells = append(playerCells, PlayerCellData{
+					PlayerID: playerID,
+					CellX:    cell.CellX,
+					CellY:    cell.CellY,
+				})
+			}
 		}
 	}
 
-	// Sanity check: playerCells should match zone.Members count
-	// If mismatch, state.PlayerCells wasn't updated correctly on join/leave
-	if len(playerCells) != len(zone.Members) {
-		logger.Warn("LateJoinSnapshot: playerCells=%d but zone.Members=%d - possible state sync bug",
+	// Note: playerCells may be FEWER than zone.Members — a player who joined after the snapshot has no
+	// snapshot cell; their PLAYER_CELL_ENTER replays from the influence log (correct by construction).
+	if len(playerCells) < len(zone.Members) {
+		logger.Debug("LateJoinSnapshot: playerCells=%d < zone.Members=%d (joined-in-window players hydrate via replay)",
 			len(playerCells), len(zone.Members))
 	}
 
@@ -2944,13 +2977,40 @@ func (m *Match) sendLateJoinSnapshot(
 		// No authority snapshot: deliver the seed-baseline (client creates + seeds from centre).
 		swarmMetadata = m.buildSwarmSeedBaseline(state, zone, chunkSize)
 	}
+	// ONE TIME BASE (2026-07-19 late-join fix): metadata is built FROM the snapshot entries — the swarm
+	// set AT snapshot_tick — NEVER from current state.Swarms. A swarm that MERGED AWAY inside the
+	// snapshot→end window still gets metadata (the joiner creates it, so the replayed merge MOVES its real
+	// bugs; the old state-lookup silently skipped it → the joiner orphaned its bugs and the merge
+	// deficit-fill fabricated same-id-DIFFERENT-bugs → permanent per-bug divergence). A swarm BORN in the
+	// window gets NO metadata — replay mints it at its birth tick from the SWARM_SPAWNED event's own
+	// species/centre/count (pre-creating it here seeded it at the END-tick centre and HandleSwarmSpawned
+	// then skipped re-seeding — the same bug's latent sibling). Current state is consulted ONLY for
+	// display-only BugHP. A pre-fix authority snapshot (no species_id) falls back to the legacy lookup.
 	for _, swarmSnapshot := range zone.LatestSnapshot.Swarms {
-		if swarm, ok := state.Swarms[swarmSnapshot.SwarmID]; ok {
+		var meta SwarmData
+		if swarmSnapshot.SpeciesID != "" {
+			spriteID := swarmSnapshot.SpeciesID // fallback
+			if species, ok := state.Species[swarmSnapshot.SpeciesID]; ok {
+				spriteID = species.SpriteID
+			}
+			meta = SwarmData{
+				ID:        swarmSnapshot.SwarmID,
+				SpeciesID: swarmSnapshot.SpeciesID,
+				SpriteID:  spriteID,
+				X:         float32(swarmSnapshot.CenterX) / 1000.0, // snapshot-moment centre (legless fallback)
+				Y:         float32(swarmSnapshot.CenterY) / 1000.0,
+				Count:     0, // the joiner creates the EXACT snapshot bug ids; count is unused on that path
+				NextBugID: swarmSnapshot.NextBugID,
+				// Radius/Facing/Phase are cosmetic — SwarmUpdate refreshes them for live swarms.
+			}
+		} else if swarm, ok := state.Swarms[swarmSnapshot.SwarmID]; ok {
+			// LEGACY (authority predates the identity fields): the old end-tick lookup — still skips
+			// merged-away swarms, but an old-build authority can't tell us more.
 			spriteID := swarm.SpeciesID // fallback
 			if species, ok := state.Species[swarm.SpeciesID]; ok {
 				spriteID = species.SpriteID
 			}
-			meta := SwarmData{
+			meta = SwarmData{
 				ID:         swarm.ID,
 				SpeciesID:  swarm.SpeciesID,
 				SpriteID:   spriteID,
@@ -2963,53 +3023,55 @@ func (m *Match) sendLateJoinSnapshot(
 				NextBugID:  swarm.NextBugID,
 				RemovedIDs: swarm.GetRemovedIDs(),
 			}
-
-			// Seed the joiner's display-only HP for damaged bugs (server-owned truth,
-			// the RemovedIDs precedent). Subsequent MeleeResultMessages converge it.
-			if len(swarm.BugHP) > 0 {
-				ids := make([]int, 0, len(swarm.BugHP))
-				for bugID := range swarm.BugHP {
-					ids = append(ids, bugID)
-				}
-				sort.Ints(ids)
-				meta.BugHP = make([]BugHPEntry, 0, len(ids))
-				for _, bugID := range ids {
-					meta.BugHP = append(meta.BugHP, BugHPEntry{BugID: bugID, HP: swarm.BugHP[bugID]})
-				}
-			}
-
-			// Hydrate the leg active AT snapshotTick. PREFERRED source: the authority embedded its live
-			// leg in the snapshot (swarmSnapshot.HasLeg) — this is reliable even for slow swarms whose last
-			// SWARM_SET_TARGET has been pruned from the InfluenceLog. (The old log-scan below missed those,
-			// so late-joiners fell back to the metadata center and the swarm center diverged.) Legs started
-			// after snapshotTick still replay from influenceLog and overwrite this at their own tick.
-			if swarmSnapshot.HasLeg {
-				meta.HasTarget = true
-				meta.LegOriginX = swarmSnapshot.LegOriginX
-				meta.LegOriginY = swarmSnapshot.LegOriginY
-				meta.LegTargetX = swarmSnapshot.LegTargetX
-				meta.LegTargetY = swarmSnapshot.LegTargetY
-				meta.LegSpeed = swarmSnapshot.LegSpeed
-				meta.LegStartTick = swarmSnapshot.LegStartTick
-			} else {
-				// Fallback (pre-leg-embedding snapshots, or bootstrap): scan the pruned InfluenceLog.
-				for i := len(zone.InfluenceLog) - 1; i >= 0; i-- {
-					evt := zone.InfluenceLog[i]
-					if evt.Type == InfluenceSwarmSetTarget && evt.SwarmID == swarm.ID && evt.Tick <= snapshotTick {
-						meta.HasTarget = true
-						meta.LegOriginX = evt.OriginX
-						meta.LegOriginY = evt.OriginY
-						meta.LegTargetX = evt.TargetX
-						meta.LegTargetY = evt.TargetY
-						meta.LegSpeed = evt.Speed
-						meta.LegStartTick = evt.Tick
-						break
-					}
-				}
-			}
-
-			swarmMetadata = append(swarmMetadata, meta)
+		} else {
+			continue
 		}
+
+		// Seed the joiner's display-only HP for damaged bugs still alive NOW (server-owned truth,
+		// the RemovedIDs precedent; display-only, so the end-tick read cannot desync the sim).
+		if swarm, ok := state.Swarms[swarmSnapshot.SwarmID]; ok && len(swarm.BugHP) > 0 {
+			ids := make([]int, 0, len(swarm.BugHP))
+			for bugID := range swarm.BugHP {
+				ids = append(ids, bugID)
+			}
+			sort.Ints(ids)
+			meta.BugHP = make([]BugHPEntry, 0, len(ids))
+			for _, bugID := range ids {
+				meta.BugHP = append(meta.BugHP, BugHPEntry{BugID: bugID, HP: swarm.BugHP[bugID]})
+			}
+		}
+
+		// Hydrate the leg active AT snapshotTick. PREFERRED source: the authority embedded its live
+		// leg in the snapshot (swarmSnapshot.HasLeg) — this is reliable even for slow swarms whose last
+		// SWARM_SET_TARGET has been pruned from the InfluenceLog. (The old log-scan below missed those,
+		// so late-joiners fell back to the metadata center and the swarm center diverged.) Legs started
+		// after snapshotTick still replay from influenceLog and overwrite this at their own tick.
+		if swarmSnapshot.HasLeg {
+			meta.HasTarget = true
+			meta.LegOriginX = swarmSnapshot.LegOriginX
+			meta.LegOriginY = swarmSnapshot.LegOriginY
+			meta.LegTargetX = swarmSnapshot.LegTargetX
+			meta.LegTargetY = swarmSnapshot.LegTargetY
+			meta.LegSpeed = swarmSnapshot.LegSpeed
+			meta.LegStartTick = swarmSnapshot.LegStartTick
+		} else {
+			// Fallback (pre-leg-embedding snapshots, or bootstrap): scan the pruned InfluenceLog.
+			for i := len(zone.InfluenceLog) - 1; i >= 0; i-- {
+				evt := zone.InfluenceLog[i]
+				if evt.Type == InfluenceSwarmSetTarget && evt.SwarmID == swarmSnapshot.SwarmID && evt.Tick <= snapshotTick {
+					meta.HasTarget = true
+					meta.LegOriginX = evt.OriginX
+					meta.LegOriginY = evt.OriginY
+					meta.LegTargetX = evt.TargetX
+					meta.LegTargetY = evt.TargetY
+					meta.LegSpeed = evt.Speed
+					meta.LegStartTick = evt.Tick
+					break
+				}
+			}
+		}
+
+		swarmMetadata = append(swarmMetadata, meta)
 	}
 
 	msg := LateJoinSnapshot{
@@ -3024,8 +3086,9 @@ func (m *Match) sendLateJoinSnapshot(
 		InfluenceLog:         influenceLog,
 		AuthorityID:          zone.AuthorityUserID,
 		PlayerCells:          playerCells,
-		Food:                 zone.LatestSnapshot.Food,  // authoritative food registry for late-join hydration
-		Hunts:                zone.LatestSnapshot.Hunts, // authoritative hunt assignments for late-join hydration
+		Food:                 zone.LatestSnapshot.Food,    // authoritative food registry for late-join hydration
+		Hunts:                zone.LatestSnapshot.Hunts,   // authoritative hunt assignments for late-join hydration
+		Subdued:              zone.LatestSnapshot.Subdued, // authoritative subdued swarm-id set for late-join hydration
 	}
 
 	data, err := json.Marshal(msg)
@@ -3077,36 +3140,38 @@ func (m *Match) checkDriftSampling(
 		return // Not enough history yet
 	}
 
-	for chunkKey, subs := range state.ChunkSubs {
-		// Collect connected clients in this chunk
-		var presences []runtime.Presence
-		expected := make(map[string]bool)
-		for playerID := range subs {
-			if p, ok := state.Presences[playerID]; ok && p != nil {
-				presences = append(presences, p)
-				expected[playerID] = true
-			}
-		}
-		if len(expected) < 2 {
-			continue // Need at least 2 clients to compare
-		}
-
-		// Parse chunk coordinates
-		var cx, cy int
-		fmt.Sscanf(chunkKey, "%d,%d", &cx, &cy)
-
-		// Open a fresh drift-check round (overwrites any stale one for this chunk)
-		state.DriftChecks[chunkKey] = &DriftCheck{
-			SampleTick: sampleTick,
-			Expected:   expected,
-			Responded:  make(map[string]bool),
-			Votes:      make(map[string]int64),
-		}
-
-		reqMsg := SampleRequestMessage{ChunkX: cx, ChunkY: cy, Tick: sampleTick}
-		data, _ := json.Marshal(reqMsg)
-		dispatcher.BroadcastMessage(OpCodeRequestSample, data, presences, nil, true)
-		logger.Debug("Drift hash request sent to %d clients for chunk %d,%d at tick %d",
-			len(presences), cx, cy, sampleTick)
+	// ONE ZONE-SCOPED round (2026-07-19 drift-net fix): every client answers with the ZONE-wide
+	// ComputeStateHash from its always-on hash ring, so the old per-chunk rounds were N redundant copies of
+	// the same comparison — and clients sharing NO chunk (spawn-apart) were never compared at all. One round
+	// over ALL connected zone members closes that blindness. Sentinel chunk -1,-1 keys the round (the client
+	// responder echoes coords verbatim — verified, no client change needed).
+	if state.CurrentZone == nil {
+		return
 	}
+	zone := state.GetOrCreateZone(state.CurrentZone.ZoneID)
+	var presences []runtime.Presence
+	expected := make(map[string]bool)
+	for playerID := range zone.Members {
+		if p, ok := state.Presences[playerID]; ok && p != nil {
+			presences = append(presences, p)
+			expected[playerID] = true
+		}
+	}
+	if len(expected) < 2 {
+		return // Need at least 2 clients to compare
+	}
+
+	zoneKey := ChunkKey(-1, -1)
+	state.DriftChecks[zoneKey] = &DriftCheck{
+		SampleTick: sampleTick,
+		Expected:   expected,
+		Responded:  make(map[string]bool),
+		Votes:      make(map[string]int64),
+	}
+
+	reqMsg := SampleRequestMessage{ChunkX: -1, ChunkY: -1, Tick: sampleTick}
+	data, _ := json.Marshal(reqMsg)
+	dispatcher.BroadcastMessage(OpCodeRequestSample, data, presences, nil, true)
+	logger.Debug("Drift hash request (zone-wide) sent to %d clients at tick %d",
+		len(presences), sampleTick)
 }

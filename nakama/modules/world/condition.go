@@ -10,10 +10,12 @@ package world
 // placid-but-"too agitated to catch".
 //
 // Calm covers ALL THREE aggression funnels:
-//   1. checkBugAttacks — the ambient contact sting (wasps) skips a subdued swarm.
-//   2. The centipede ActionState — no windup START while subdued; a mid-windup/surge ABORTS to
-//      recover; tryStartGnaw refuses; an already-gnawing centipede stops (damage kept, no
-//      cooldown). The GDD's "smoke it to walk past it" play, complete.
+//   1. The ambient contact sting (wasps): the damage funnel applyBugAttackToPlayer skips a subdued swarm.
+//   2. The centipede: the GNAW is still server-side (tryStartGnaw refuses; an already-gnawing centipede stops,
+//      damage kept, no cooldown). The windup/surge LUNGE moved to the CLIENT with the combat brain — so a
+//      SWARM_SUBDUED/UNSUBDUED toggle (AddSwarmSubduedEvent, emitted from the per-tick lifecycle loop) carries
+//      the crossing to the client, whose per-bug sim then suppresses the lunge (and the wasp dive) and aborts an
+//      in-flight one. Damage is safe regardless (funnel #1). The GDD's "smoke it to walk past it" play.
 //   3. Nest defense — THE PRECEDENCE RULE, stated once, applied at all three entries (the passive
 //      proximity entry, recallNestDefenders, the exit hysteresis):
 //          defense is suppressed while (the resident is SUBDUED) or (the nest is SMOKED).
@@ -21,9 +23,11 @@ package world
 //      SmokedUntilTick is smoke lingering at the hive entrance while residents forage afield.
 //   Belt-and-braces: applyBugAttackToPlayer (the single damage funnel) also refuses while subdued.
 //
-// Determinism: ConditionValue is SERVER-ONLY soft state (persisted via §P, never hashed). Its
-// outputs — the ABSENCE of stings, surges, and defend legs — ride the existing event vocabulary
-// identically on every client. Zero ledger surface.
+// Determinism: ConditionValue is SERVER-ONLY soft state (persisted via §P, never hashed). Its outputs — the
+// ABSENCE of stings and defend legs — ride the existing event vocabulary. The one exception (since the lunge
+// moved client-side) is the subdued STATE itself, which the client sim now reads: it rides ONE frontier-gated
+// toggle pair (SWARM_SUBDUED/UNSUBDUED) + the late-join snapshot's `subdued` section, so every client agrees on
+// which swarms are calmed at each tick. The toggle is not itself hashed (it's a sim INPUT, like player cells).
 
 import "bugfarmer/entities"
 
@@ -54,6 +58,21 @@ func conditionDecayRate(species *entities.BugSpecies) float32 {
 // this and nothing else.
 func swarmSubdued(swarm *entities.SwarmState, species *entities.BugSpecies) bool {
 	return swarm.ConditionValue >= conditionThreshold(species)
+}
+
+// syncSubduedState broadcasts a swarm's subdue-threshold CROSSING to clients — the ONE emit point (called once
+// per swarm per tick from the lifecycle loop, both after a smoke raised the meter and after decay lowered it).
+// Since the LUNGE/DIVE moved client-side, the client per-bug sim needs the subdued state to suppress it; this
+// rides a frontier-gated SWARM_SUBDUED/UNSUBDUED toggle (SubduedSynced tracks the last-broadcast value so it
+// emits only on change). Returns whether it emitted (for tests). §14.3.
+func (s *WorldState) syncSubduedState(zoneID string, swarm *entities.SwarmState, species *entities.BugSpecies) bool {
+	now := swarmSubdued(swarm, species)
+	if now == swarm.SubduedSynced {
+		return false
+	}
+	s.AddSwarmSubduedEvent(zoneID, swarm.ID, now)
+	swarm.SubduedSynced = now
+	return true
 }
 
 // applyConditionEffect applies one subdual effect to one swarm:

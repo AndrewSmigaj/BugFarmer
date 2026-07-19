@@ -113,6 +113,22 @@ being designed now.
 - **DONE 2026-06-29 — spawn-apart (disjoint-chunk) late-join divergence (the determinism gate's 2nd half).** Root cause (proven by a per-tick `_food` digest probe): the client deterministic food registry (`InfluenceManager._food`, which bug LANDING visuals read — `BugAgent.TryFeedAtFood` sets bug position) was hydrated **per-chunk** — `GroundItemManager.HandleItemSpawn` called `HydrateFood` for each `GroundItemSpawn`, and those are sent **per-chunk-subscribe** — so a client only knew food in its loaded chunks (authority held ~85 entries, a disjoint late-joiner ~265) → bugs forage/land differently → ~11-15% per-bug divergence. Fix (shipped, `GroundItemManager.cs`, 1 file): `GroundItemSpawn` is **COSMETIC-ONLY**; food enters `_food` only via the zone-wide `ITEM_ROTTED`/`FOOD_CONSUMED` ledger + the authority's `ZoneSnapshot.Food`. **Verified:** BOTH gate halves `SYNC: IDENTICAL` (co-located 166k + spawn-apart 161k shared-bug states, no drift). NOT an ecology change — `_food` is landing-visuals only; the server ecology uses its own `ForagePools`/`HostPlantStates`/`FindNearbyFood(worldState)`. With the collision map (#133) already zone-wide, food was the last view-scoped sim input → the deterministic bug sim is now fully zone-wide. (Optional polish, backlogged: a `ZoneFoodMap` would let bugs land on the FULL zone food set for richer feeding visuals, vs only the ledgered/un-consumed food they land on now.)
 - **Snapshot size scalability (follow-up).** The `LateJoinSnapshot` grows unbounded with zone density (8MB client cap = ~30× today's headroom, not infinite). Consider gzip-compressing or chunking the snapshot, or bounding it.
 - **DONE 2026-07-14 — S1/S2 predation client-state not surviving late-join (each client's wasps re-picked different prey → permanent desync).** Root: the server relayed the per-bug snapshot through a hand-declared Go `BugSampleData` struct missing `hunt_target`/`feed_until`/`feed_corpse_id` (silently dropped), and `_swarmStrikes` was never snapshot-hydrated. Fix: (A) `SwarmSnapshotData.Bugs` → `json.RawMessage` (server relays per-bug state VERBATIM — no field can drop); (B) snapshot `_swarmStrikes` by mirroring the food registry. Verified `SYNC: IDENTICAL` co-located + spawn-apart, non-vacuous (wasps hunting), 0 ht+pc mismatch. Contract in `architecture_swarm_sync.md §0`; check baked into test-changes/frontier-sync/certainty-assessment.
+- **DONE 2026-07-19 — late-join swarm-LIFECYCLE divergence (merged-away/window-born swarms) + the drift net
+  un-blinded (THE one-time-base fix).** Root (proven by a 17/17 one-class census of a failing disjoint run): the
+  late-join package mixed two time bases — per-bug data at snapshot_tick but swarm METADATA from CURRENT
+  state at end_tick (+ player_cells end-tick) — so a swarm that MERGED AWAY inside the ~4s window shipped
+  bugs-without-metadata → the joiner orphaned them → the replayed merge deficit-filled same-id-DIFFERENT-bugs
+  while the authority moved real ones → permanent ~2% divergence. Fix (structural, not a patch): the authority
+  embeds per-swarm identity + player_cells in its snapshot; the server builds metadata FROM the snapshot
+  entries; the joiner prunes-to-snapshot; resync reconciles per-swarm BUG-ID SETS. Adjacent races fixed:
+  on-receipt SwarmUpdate removal racing the merge event (now replay-gated + a deferred tick-aligned
+  empty-husk sweep), and the drift net (per-chunk rounds + tie-skip = structurally blind at ≤2 players) → ONE
+  zone-scoped round + AUTHORITY tie-referee, proven by a new self-test (`DESYNC_B=<n>` deliberately perturbs
+  one bug → detected in 1 round, resynced, CONVERGED). Harness hardened: FRESH=1 now REBUILDS the plugin
+  (FRESH≠deploy — a stale baked plugin silently drops new fields and once invalidated a fix verification) +
+  FAIL-loud reconstruction tripwires (exit 6 on `moved 0/N`/orphan lines). Verified: 3× non-vacuous
+  (in-window merges, all `moved N/N`) + 6/6 runs SYNC IDENTICAL across disjoint + co-located topologies.
+  Docs: `architecture_swarm_sync.md §0` "Update 2026-07-19".
 - **STRESS / SCALE TEST the bug sim (owner ask 2026-07-14).** Spawn LARGE bug populations (many swarms, dense predation/breeding) and confirm it all still holds: (1) DETERMINISM — the 2-client late-join gate stays `SYNC: IDENTICAL` under high swarm/bug counts (the snapshot + per-tick hash cost scale; watch the 8MB snapshot cap above); (2) PERF — client FPS + server tick time under load (tie in the `perf-tuning` skill + the ground-item pile bound below); (3) STABILITY — no crashes/OOM, no unbounded growth (ground items, brood, food registry). Add a stress test-zone (mass `initial` spawns) or a debug "spawn N swarms" and run the determinism + perf gates against it. Likely surfaces snapshot-size + O(n) hot spots first.
 
 ## Playtest 2026-06-28 — backlog items + fix queue
@@ -687,10 +703,12 @@ mirrors predation; swarm-of-1 dropped — player HP is SIM-INERT so it needs no 
   **Deferred (owner feel calls):** per-MEMBER lunge-connect re-key (each surging member reports its own hit; i-frames
   cap burst — balance) · `village_21_B` `centipede_garden.swarm_size` density dial (currently 2, below pack min 3 →
   packs render sparse).
-  **⚠️ KNOWN GAP (regression from the move — surfaced 2026-07-18):** subdue/smoke no longer suppresses the centipede
-  LUNGE. The calm condition gated the OLD server surge; the surge is now client-side and subdue is server-only soft
-  state (never synced), so a smoked centipede still lunges (its GNAW is still suppressed correctly). FIX = sync the
-  subdued flag to the client surge like the peaceful-zone flag (a small frontier-sync slice). Docs: `architecture_beekeeping.md`.
+  **✅ SUBDUE-SYNC FIXED (2026-07-18):** subdue/smoke now suppresses the client lunge/dive. A per-swarm
+  `SWARM_SUBDUED`/`SWARM_UNSUBDUED` toggle (emitted once per crossing from the lifecycle loop) + a `subdued`
+  late-join snapshot section carry the calmed state to the client `_subdued` registry; `BugAgent`'s attack case
+  suppresses a new lunge/dive and aborts an in-flight one. Was visual-only (damage was always server-gated). Gated
+  by a new `sim-determinism --subdue-test` (control lunges, subdued does not, in-flight aborts; deterministic) + a
+  server emit test. Docs: `architecture_swarm_sync.md §14.3` + `architecture_beekeeping.md`.
   NOTE: the `arena` zone is `peaceful:true` (observation) — the lunge only fires in a NON-peaceful zone (e.g.
   `village_21_B`); don't test centipede combat in the arena.
 - **⏳ REMAINING:** the super-hard "boss" centipede (owner floated it). **Consolidation refactor** (future,

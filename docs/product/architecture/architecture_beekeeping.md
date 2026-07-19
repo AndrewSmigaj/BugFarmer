@@ -45,12 +45,12 @@ live ForagePool above the graze floor, both within home range).
   AND catching — never placid-but-uncatchable. Playable windows: bee ≈27s, centipede ≈25s.
 - **All three aggression funnels honor it** (+ a belt in `applyBugAttackToPlayer`, the single
   damage funnel): (1) the ambient contact sting; (2) the centipede machine — its GNAW still honors it
-  (no gnaw start; an ALREADY-gnawing centipede stops, damage kept, no cooldown). ⚠️ **GAP (2026-07-18):**
-  the windup/surge LUNGE suppression is NOT re-wired since the lunge moved CLIENT-side
-  (`architecture_swarm_sync.md §14.3`) — a smoked centipede STILL lunges (subdue is server-only soft
-  state, never synced to the client surge). Re-wiring it (sync the subdued flag to the client sim, like
-  the peaceful-zone flag) is BACKLOGGED; so "smoke it and walk past it" currently covers the gnaw, not
-  the lunge; (3) nest defense
+  server-side (no gnaw start; an ALREADY-gnawing centipede stops, damage kept, no cooldown). The
+  windup/surge LUNGE moved CLIENT-side (`architecture_swarm_sync.md §14.3`), so subdue rides a
+  frontier-gated **SWARM_SUBDUED/UNSUBDUED** toggle + the late-join snapshot's `subdued` section: the
+  client per-bug sim reads it and suppresses the lunge (and the wasp dive) + aborts an in-flight one
+  (DAMAGE is safe regardless — funnel #1's `applyBugAttackToPlayer` gate). So "smoke it and walk past
+  it" is complete again (2026-07-18); (3) nest defense
   via ONE precedence rule at all three entries (passive proximity, recallNestDefenders, exit
   hysteresis): *defense is suppressed while (the resident is subdued) OR (the nest is smoked)*.
   `NestState.SmokedUntilTick` is the hive-local lingering smoke — the meter alone can't express

@@ -130,7 +130,16 @@ is ① — two REAL clients, full system. The others are pre-checks/backstops, N
   docker compose build builder && docker compose up -d   # rebuild the plugin (if Go changed) + start the server
   # CANONICAL GATE — staggered LATE-JOIN (run_sync_latejoin.sh): A authority creates the match, B LATE-JOINS it.
   # (run_sync_test.sh launches 2 CONCURRENT players → they can race into TWO separate matches → inconclusive; prefer latejoin.)
-  # FRESH=1 force-recreates builder+nakama so the match starts at tick 0 on the CURRENT plugin. BOTH halves → SYNC: IDENTICAL:
+  # FRESH=1 now `docker compose build builder` FIRST, then force-recreates builder+nakama (tick 0 on the CURRENT
+  # plugin). The build step is LOAD-BEARING: the compose builder BAKES source at image-build time, so a bare
+  # force-recreate recompiles OLD Go — a Go change silently doesn't deploy (this invalidated a fix verification
+  # 2026-07-19). NEVER pipe this gate through `| tail` when acting on its exit code — the pipe masks it (check
+  # PIPESTATUS or run unpiped). It also FAILS (exit 6) on reconstruction TRIPWIRES (merge/split deficit-fill
+  # `moved 0/N`, orphaned "caching for later") even when positions happen not to diverge. DRIFT-NET SELF-TEST:
+  # DESYNC_B=<n> makes client B deliberately perturb one bug n ticks into recording — the zone drift round must
+  # DETECT it ("broken by AUTHORITY" in the server log), resync B, and B must CONVERGE (post-resync IDENTICAL).
+  # NON-VACUITY for lifecycle coverage: a definitive run should show ≥1 in-window merge in player_B.log
+  # (`SWARM_MERGE .* moved [1-9]`) — an empty window proves steady-state only. BOTH halves → SYNC: IDENTICAL:
   FRESH=1 tools/run_sync_latejoin.sh village_21_B 70 12                                  # co-located spawn
   FRESH=1 SPAWN_A=126,2 SPAWN_B=126,253 tools/run_sync_latejoin.sh village_21_B 70 12     # spawn-APART: disjoint chunks (the harder half)
   #   diff = tools/netcode/sync_diff.py (hash-stream primary + per-bug localizer; unit-tested by test_sync_diff.py).
@@ -174,7 +183,9 @@ is ① — two REAL clients, full system. The others are pre-checks/backstops, N
   tools/sim-determinism` (`--selftest` proves it detects divergence; `--los-test` checks the
   `BugCollision.LineBlocked` predator line-of-sight geometry, #20; `--predation-test` the individual hunt+feed;
   `--surge-test` the centipede LUNGE — a pack windup→surge→overshoot→recover at a fixed player, byte-identical +
-  non-vacuous `surgeFired`/`recovered`; `--attack-test` a moving player driving attack/flee/curious). Links the real per-bug sim source and
+  non-vacuous `surgeFired`/`recovered`; `--subdue-test` the smoke/calm gate — a SUBDUED pack must NOT lunge (control
+  DOES) yet still wanders, and an in-flight lunge aborts, all deterministic; `--attack-test` a moving player driving
+  attack/flee/curious). Links the real per-bug sim source and
   runs it twice — catches wall-clock / unordered-collection / static / float nondeterminism in seconds. But
   it ONLY covers the per-bug movement core (no merge/split/spawn, single process) — a green here does NOT
   replace ①. See `tools/sim-determinism/README.md`.

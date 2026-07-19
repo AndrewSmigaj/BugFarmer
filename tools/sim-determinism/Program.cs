@@ -255,6 +255,84 @@ namespace SimDeterminism
             }
         }
 
+        // --subdue-test: the SAME pack/player as --surge-test, but the swarm is SUBDUED (smoked). Proves the
+        // client gate (BugAgent "attack" case) suppresses the lunge: a CONTROL run (not subdued) DOES surge — so
+        // the setup would lunge; the SUBDUED run never enters windup/surge yet still WANDERS (moves — suppressed,
+        // not frozen); a bug caught mid-surge ABORTS to idle (phase 0) when subdued; and the subdued run is
+        // byte-identical across two runs (deterministic — `subdued` is a synced input). The client half of the gate.
+        static int RunSubdueTest()
+        {
+            Console.WriteLine($"[sim-determinism] repo={RepoRoot}");
+            Console.WriteLine("[sim-determinism] SUBDUE-TEST: a calmed centipede pack must NOT lunge (and must abort an in-flight lunge), deterministically");
+            bool ctrlSurged = RunSubdueSim(false, out _);
+            bool subSurged = RunSubdueSim(true, out long[] subA);
+            RunSubdueSim(true, out long[] subB);
+            bool moved = subA[SurgeTicks - 1] != subA[0];
+            bool aborted = RunSubdueAbort();
+            int firstDiff = -1;
+            for (int t = 0; t < SurgeTicks; t++) if (subA[t] != subB[t]) { firstDiff = t; break; }
+            Console.WriteLine($"[sim-determinism] ctrlSurged={ctrlSurged}  subduedSurged={subSurged}  moved={moved}  aborted={aborted}  A={subA[SurgeTicks - 1]:X16}  B={subB[SurgeTicks - 1]:X16}");
+            if (!ctrlSurged) { Console.WriteLine("SUBDUE-TEST: INCONCLUSIVE — the control never surged (suppression would be vacuous)."); return 2; }
+            if (!moved) { Console.WriteLine("SUBDUE-TEST: INCONCLUSIVE — subdued bugs never moved."); return 2; }
+            if (subSurged) { Console.WriteLine("SUBDUE-TEST: ❌ FAIL — a SUBDUED centipede still entered the lunge (windup/surge)."); return 1; }
+            if (!aborted) { Console.WriteLine("SUBDUE-TEST: ❌ FAIL — an in-flight lunge did NOT abort to idle when subdued."); return 1; }
+            if (firstDiff >= 0) { Console.WriteLine($"SUBDUE-TEST: ❌ FAIL — the subdued run diverged at tick {firstDiff} (nondeterministic)."); return 1; }
+            Console.WriteLine("SUBDUE-TEST: ✅ PASS — a calmed centipede suppresses + aborts the lunge (the control DOES lunge), deterministically.");
+            return 0;
+        }
+
+        static List<BugAgent> MakeCentPack()
+        {
+            var pack = new List<BugAgent>();
+            for (int i = 0; i < 5; i++)
+            {
+                double ang = i * 2.0 * Math.PI / 5;
+                pack.Add(new BugAgent(WorldSeed, "swarm_centipede_garden", "centipede_garden", i,
+                    new FixedPoint2(FixedPoint.FromFloat(100f + 1.5f * (float)Math.Cos(ang)),
+                                    FixedPoint.FromFloat(100f + 1.5f * (float)Math.Sin(ang)))));
+            }
+            return pack;
+        }
+
+        static List<PlayerTarget> FixedPlayerNorth() => new List<PlayerTarget> { new PlayerTarget { PlayerId = "p1",
+            Position = new FixedPoint2(FixedPoint.FromInt(100), FixedPoint.FromInt(106)) } };
+
+        static bool RunSubdueSim(bool subdued, out long[] hashes)
+        {
+            var pack = MakeCentPack();
+            var players = FixedPlayerNorth();
+            var center = new FixedPoint2(FixedPoint.FromInt(100), FixedPoint.FromInt(100));
+            hashes = new long[SurgeTicks];
+            bool surged = false;
+            for (int t = 0; t < SurgeTicks; t++)
+            {
+                foreach (var b in pack.OrderBy(x => x.BugId))
+                {
+                    b.SimulateTick(center, players, t, null, subdued);
+                    if (b.SurgePhase == 1 || b.SurgePhase == 2) surged = true;
+                }
+                hashes[t] = HashSurge(pack);
+            }
+            return surged;
+        }
+
+        static bool RunSubdueAbort()
+        {
+            var pack = MakeCentPack();
+            var players = FixedPlayerNorth();
+            var center = new FixedPoint2(FixedPoint.FromInt(100), FixedPoint.FromInt(100));
+            int t = 0; bool sawSurge = false;
+            for (; t < SurgeTicks; t++)
+            {
+                foreach (var b in pack.OrderBy(x => x.BugId)) b.SimulateTick(center, players, t, null, false);
+                if (pack.Any(b => b.SurgePhase == 2)) { sawSurge = true; break; }
+            }
+            if (!sawSurge) return false; // never reached surge → can't exercise the abort
+            // One subdued tick aborts every in-flight lunge (windup/surge/recover → idle).
+            foreach (var b in pack.OrderBy(x => x.BugId)) b.SimulateTick(center, players, t + 1, null, true);
+            return pack.All(b => b.SurgePhase == 0);
+        }
+
         public static int Main(string[] args)
         {
             RepoRoot = FindRepoRoot();
@@ -264,6 +342,8 @@ namespace SimDeterminism
                 return RunPredationTest();
             if (args.Contains("--surge-test"))
                 return RunSurgeTest();
+            if (args.Contains("--subdue-test"))
+                return RunSubdueTest();
             bool selftest = args.Contains("--selftest");
             bool attackTest = args.Contains("--attack-test");
             Console.WriteLine($"[sim-determinism] repo={RepoRoot}");
