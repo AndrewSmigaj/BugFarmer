@@ -1,5 +1,6 @@
 # Swarm / group AI — coordinated, threatening, deterministic movement
 
+
 *Topic 1 of the 2026-07 combat research. How groups of small creatures move as a coordinated,
 alive, threatening whole — applied to BugFarmer's swarms. Synthesized from a fully-read authoritative
 dev source (SupCom2 flow-field tiles) + three community technical writeups. Raw transcript:

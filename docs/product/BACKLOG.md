@@ -1390,6 +1390,17 @@ Tidy what's clearly safe; leave anything risky alone.
 - No structural refactors, no god-class splits — those are deferred until we have a way to verify
   them (there are currently no automated tests).
 
+## Player art model — BALD BASE + hair-as-a-layer (owner decision 2026-07-20, REVERSED the earlier "baked-in")
+The player BASE is now **BALD**; hair is a generated+masked **layer** like armor (owner: "lets go without hair
+and do the hair just like the other parts"). Locked bald front = `refart_spike/bald/base_down_bald_FINAL.png`
+(`_REVIEW/LOCKED_bald_front.png`). `CharacterComposer` already draws `hair` as its own layer under `helmet`, so
+this fits. Hair generation is proven (`refart_spike/hair/_hair.png` — `neat_short`+`tousled_mop`, face kept
+pixel-identical via composite-in-post). TODO: build the hair-layer library on the bald base + a matching
+running-sideways base (first frame done: `_REVIEW/11_bald_running_sideways.png`; a run CYCLE needs several).
+- **Caps/hats now WORK with this model** (were blocked when hair was baked in): with hair as a layer you can use
+  a **"hair-under-hat" flattened-hair variant** (Stardew-style) so a cap shows hair only below the brim. Crown-
+  only head-gear mask (top ~16%, above the eyes) prevents the generator eating the head — fold into the pipeline.
+
 ## Done 2026-06: multi-frame sprites SOLVED via pixkit (hand-authored, not gpt sheets)
 The text-grid toolkit (tools/player_sprites/pixkit.py) made animation a derivation, not an
 art problem: player walk cycle (4 frames x 4 dirs, mechanical leg-shift+bob from one master
