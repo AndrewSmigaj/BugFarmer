@@ -27,7 +27,8 @@ Bug Farmer is a 2D multiplayer game where players farm bugs, build structures, a
 - [zones/](zones/) — per-zone design notes
 
 **`docs/guides/art/` — how sprites look & get made**
-- [object_pipeline.md](../../guides/art/object_pipeline.md) — **canonical** art/sprite pipeline (gen → clean → preview); read first
+- [object_pipeline.md](../../guides/art/object_pipeline.md) — **canonical** WORLD-art pipeline (Pipeline A: gen → clean → preview); read first. The PLAYER character + wearables pipeline (Pipeline B) is the **player-sprites** skill.
+- Where generated art lives on disk: [tools/_generated/README.md](../../../tools/_generated/README.md) — the MAP (previews · workspace · caches · sim).
 - [MASTER_STYLE_GUIDE.md](../../guides/art/MASTER_STYLE_GUIDE.md), [PERSPECTIVE_GUIDE.md](../../guides/art/PERSPECTIVE_GUIDE.md), [CHARACTER_DESIGN_GUIDE.md](../../guides/art/CHARACTER_DESIGN_GUIDE.md), [BIOME_PALETTES.md](../../guides/art/BIOME_PALETTES.md) — art direction
 
 **`docs/guides/authoring/` — how to build zones & scenes**
