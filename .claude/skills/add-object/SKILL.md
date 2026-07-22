@@ -5,6 +5,9 @@ description: Use when adding a new world object, occupant, placeable, item, tile
 
 # Add a world object / item
 
+> **Player character or wearables** (clothing / armor / hats / hair)? Use the **player-sprites** skill
+> (Pipeline B) — not this one. Where generated art lives: the `tools/_generated/README.md` MAP.
+
 Pipeline A (gpt-image-1). The art is **data-driven**: per-item silhouettes live in
 `tools/art/catalog/*.json`; the global look (pixel-art style, palettes, per-family art direction) lives
 in `tools/art/style.json`. To add an item you edit **two data files** (the canonical entity JSON + one
