@@ -29,7 +29,8 @@ A second, in-development pipeline mass-produces wearables (clothing/armor/hats/h
 instead of hand-authored text grids. The idea is consistency-by-CONSTRAINT: paint gear onto a recoloured
 **mannequin** of the locked base, inside a masked slot; normalize scale+position with code; extract a coverage
 layer; compose in `CharacterComposer` draw order. Native working resolution **64×128**; renders are pixelized
-immediately (`aipipe/pixelsnap.py` recovers the true grid). Code: `tools/player_sprites/aipipe/`. **Full
+immediately (`aipipe/pixelsnap.py` recovers the true grid). Code: `tools/player_sprites/aipipe/`; WIP +
+references live in `tools/_generated/workspace/player/{refs,in-progress,archived}/`. **Full
 procedure, prompting rules, and where WIP lives: the `player-sprites` skill**
 (`.claude/skills/player-sprites/SKILL.md`). The 16×32 shipped system above is unchanged; publishing at a larger
 crisp size is a separate, owner-gated integration.

@@ -15,5 +15,8 @@ start or finish a piece.** Status: `idea` · `in-progress` · `shipped` (publish
 | `copper_armor` | helmet · chest · legs · feet | in-progress | one-pass full-suit render being masked into pieces (owner) |
 | `silver_armor` | helmet · chest · legs · feet | in-progress | fancy silver set being masked into pieces (owner) |
 
+**Active masking workspace:** `in-progress/wearable_masking/` — the copper/silver sets (`CURRENT/` + `pieces/`,
+with `INDEX.md` + `HOW_TO_ASEPRITE.md`). Base/bald/mannequin references are in `refs/`.
+
 _(This is the starting index; extend the tables as we add caps, tools, more sets. Directions beyond `down`
 get added when the walk animation needs them.)_

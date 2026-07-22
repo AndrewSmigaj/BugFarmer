@@ -10,14 +10,14 @@ from PIL import Image, ImageDraw
 
 DIR = sys.argv[1] if len(sys.argv) > 1 else "down"
 SETNAME = sys.argv[2] if len(sys.argv) > 2 else "leather"
-S = "tools/_generated/previews/player/refart_spike"
-OUT = S + f"/pilot/{DIR}"
+REFS = "tools/_generated/workspace/player/refs"   # base/bald references (moved out of refart_spike)
+OUT = f"tools/_generated/workspace/player/in-progress/pilot/{DIR}"
 os.makedirs(OUT, exist_ok=True)
 
-base = C.load_rgba(S + f"/base_set/base_{DIR}_gen.png")   # haired: what gear composites onto
+base = C.load_rgba(REFS + f"/base_set/base_{DIR}_gen.png")   # haired: what gear composites onto
 # the DUMMY we paint gear onto is BALD (if we have one for this dir) so head gear sits on a clean
 # scalp; body/proportions are identical to the haired base, so gear still lands correctly.
-baldp = S + f"/bald/base_{DIR}_bald.png"
+baldp = REFS + f"/bald/base_{DIR}_bald.png"
 man = C.make_mannequin(C.load_rgba(baldp) if os.path.exists(baldp) else base, "green")
 manp = OUT + f"/mannequin_{DIR}.png"
 C.save_rgba(man, manp)
