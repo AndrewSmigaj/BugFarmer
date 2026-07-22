@@ -130,6 +130,15 @@ tools/_generated/
 # its other contents, then re-include the wanted leaves.
 !tools/_generated/
 tools/_generated/*
+# EXCEPT the committed player-art docs: the _generated MAP + the workspace/player tier docs. The STRUCTURE is
+# tracked so it's visible in the repo; the WIP images themselves stay ignored (local-only). Same nested idiom.
+!tools/_generated/README.md
+!tools/_generated/workspace/
+tools/_generated/workspace/*
+!tools/_generated/workspace/player/
+tools/_generated/workspace/player/*
+!tools/_generated/workspace/player/README.md
+!tools/_generated/workspace/player/CATALOG.md
 !tools/_generated/ecology_charts/
 tools/_generated/ecology_charts/*
 !tools/_generated/ecology_charts/README.md
