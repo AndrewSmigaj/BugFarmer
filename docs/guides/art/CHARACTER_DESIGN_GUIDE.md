@@ -24,6 +24,16 @@ call: keep the current resolution), not the 32x48 proposed below. How it works
   need `isReadable: 1` — `fix_sprite_ppu.py` sets it). Appearance/equip server
   sync is a backlog follow-up; F6 cycles debug outfits locally.
 
+## WIP (2026-07): AI-generated wearables — the `aipipe` pipeline
+A second, in-development pipeline mass-produces wearables (clothing/armor/hats/hair) with **gpt-image-1.5**
+instead of hand-authored text grids. The idea is consistency-by-CONSTRAINT: paint gear onto a recoloured
+**mannequin** of the locked base, inside a masked slot; normalize scale+position with code; extract a coverage
+layer; compose in `CharacterComposer` draw order. Native working resolution **64×128**; renders are pixelized
+immediately (`aipipe/pixelsnap.py` recovers the true grid). Code: `tools/player_sprites/aipipe/`. **Full
+procedure, prompting rules, and where WIP lives: the `player-sprites` skill**
+(`.claude/skills/player-sprites/SKILL.md`). The 16×32 shipped system above is unchanged; publishing at a larger
+crisp size is a separate, owner-gated integration.
+
 The sections below are the ORIGINAL 32x48 proposal — kept for the proportions/
 perspective/palette guidance, which still applies. Dimensions there are
 superseded by the as-built 16x32 above.
