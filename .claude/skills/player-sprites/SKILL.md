@@ -18,20 +18,20 @@ region**, and you **normalize the output with code**. The model only ever fills 
 handed. That is why the pipeline below exists and why shortcuts around it (free-form "draw a knight") fail.
 
 ## Where the work lives (read this before making a folder — the anti-mess rule)
-- **The finished sprite the game loads = `Resources/Player/layers/{slot}/{id}_{dir}{_w1|_w3}.png`.** This is
-  the single source of "current." Updating a sprite = replace that file. **To polish an existing sprite, open
-  THAT file and edit it** — each layer PNG is already an isolated, transparent, true-pixel piece. Do NOT keep a
-  second "master"/"current" copy elsewhere; a parallel copy just drifts.
-- **Work-in-progress lives in `tools/_generated/workspace/player/`** (gitignored) and ONLY here:
-  - `refs/` — durable references you generate against: the locked base, the bald base, the mannequin.
-  - `in-progress/<slug>/` — active creation of a NEW sprite/set (e.g. `in-progress/copper_armor/`). **"New hat"
-    starts here.** When done, the exported piece publishes to `Resources/Player/layers/…` and the slug can be
-    archived.
-  - `archived/` — dated old experiments / superseded versions.
-- **No `previews/player/` mirror, no `.ase` masters, no workspace `current/`** — all were redundant copies of a
-  sprite that already lives editably in `Resources/`. (Assembled-character renders — walk gifs, "wearing the
-  set" sheets — are an *occasional* look-at render into the workspace, or just view in-game; never a canonical
-  copy.) If you think you need a new folder, you almost certainly don't — see `docs/guides/authoring/ORGANIZATION.md`.
+All player art work lives under **`tools/_generated/player/`** (gitignored except the structure docs). Layout:
+- **`current/`** — a preview (`character.png`) of what's LIVE in the game. The real files are
+  `Resources/Player/layers/{slot}/{id}_{dir}{_w1|_w3}.png` — that is what the game loads and the single source
+  of "current." **To polish a live sprite, edit THAT file directly** (each layer PNG is an isolated true-pixel
+  piece — never keep a second copy, it just drifts).
+- **`in-progress/<item>/<YYYY-MM-DD_HHMM_label>/`** — active work, **per item, per DATED attempt.** Each attempt
+  holds `suit.png` (the render to cut) + `pieces/` (the cut pieces). **The newest-dated folder is the latest.**
+  "Make a new hat" → `in-progress/<name>/<today>_label/`. **NEVER dump loose files — always a dated attempt**
+  (so near-identical attempts stay distinguishable and the latest is obvious).
+- **`references/`** — the ONE shared `base`/`bald`/`mannequin` you mask against (not copied per attempt).
+- **`old/`** — finished + abandoned stuff, out of the way.
+- **On approve:** publish the chosen attempt's `pieces/` to `Resources/Player/layers/…`, refresh `current/`, and
+  log which attempt is live in `current/README.md`. If you think you need a new top-level folder, you almost
+  certainly don't — see the MAP `tools/_generated/README.md` and `docs/guides/authoring/ORGANIZATION.md`.
 
 ## The pipeline (Pipeline B — hand-authored base + AI wearables), as built in `tools/player_sprites/aipipe/`
 `aipipe/common.py` is the tested toolbox; `aipipe/run_pilot.py` is the worked end-to-end example (a full set,

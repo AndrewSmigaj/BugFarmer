@@ -35,8 +35,7 @@ organized by **what each thing is + its lifecycle**, not one flat rule:
   three mirrors above). A few category renders (`ui/`, `title/`, …) also live here and don't fit the three
   cleanly — an acknowledged open tidy item, not a pattern to copy. (This replaces the old "exactly four
   folders, nothing else" claim, which the tree never actually satisfied.)
-- **`workspace/`** — work-in-progress ART CREATION (currently `player/`). WIP is a first-class thing with its
-  own home; it is NOT a "preview."
+- **`player/`** — the player character + wearable art work (WIP creation). A first-class home, NOT a "preview."
 - **`raw/`, `ab/`, `blocklab/`** — paid render caches (don't delete).
 - **`ecology_charts/`** — non-art sim output (the only git-tracked subset).
 - **`footprints.md`** — a generated reference.
@@ -44,11 +43,12 @@ organized by **what each thing is + its lifecycle**, not one flat rule:
 Scripts DO hand-type their output path (`ui_sprites.py` → `previews/ui/`, etc.) — that's fine; the MAP records
 where each writes.
 
-### Player art is NOT a previews mirror
-The player character + wearables are made in `workspace/player/{refs,in-progress,archived}/`, and the FINISHED
-sprite lives with every other sprite at `Resources/Player/layers/{slot}/{id}_{dir}.png` — that is the single
-"current" (polish it by editing that file). There is deliberately no `previews/player/` copy and no workspace
-`current/`: a second copy of a shipped sprite just drifts. (Governed by the **player-sprites** skill.)
+### Player art lives in `player/`, not a previews mirror
+Player character + wearables are made in `tools/_generated/player/`: `current/` (a preview of the live look),
+`in-progress/<item>/<YYYY-MM-DD_label>/` (per-item, dated attempts), `references/`, `old/`. The FINISHED sprite
+lives with every other sprite at `Resources/Player/layers/{slot}/{id}_{dir}.png` (the game's copy — polish it
+directly). There is no `previews/player/` mirror. (Governed by the **player-sprites** skill; start at
+`tools/_generated/player/README.md`.)
 
 ## Docs — general vs zone-specific
 - General how-to (build a house, a river, a cave) → `docs/guides/authoring/<feature>.md`.
@@ -65,6 +65,6 @@ its paths. Co-dependent scripts share a folder so their imports resolve when run
 
 ## The one rule that still holds
 **Don't invent a new top-level bucket casually.** If something doesn't obviously fit, it's almost always a
-technique (→ `examples`), a place (→ a zone), content (→ `catalog`), or work-in-progress (→ `workspace`). When
+technique (→ `examples`), a place (→ a zone), content (→ `catalog`), or player-art WIP (→ `player/`). When
 genuinely unsure, ask — or, if the honest answer is that this doc is missing a category, add it here with a
 reason.
