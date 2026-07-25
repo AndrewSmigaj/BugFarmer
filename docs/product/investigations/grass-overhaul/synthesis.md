@@ -50,3 +50,36 @@ static. We're on Unity's real `Tilemap`; **`LitWind` foliage sway is already bui
 - **Art direction (owner taste):** crisp-pixel (Stardew/Necesse) vs painterly (Don't Starve)? density/lushness level?
 - **Scope:** biome variation? seasons (→ decal catalog + seasonal recolor)? which zones first?
 - **Resolution:** we're 32×32 already (Necesse-level, good blending room) — keep.
+
+## ⚠ Critic round-1 corrections (VERIFIED in code — these SUPERSEDE the rankings above)
+The cold-critic (`critic_round1.md`) caught real, load-bearing issues; I re-verified each against the code:
+1. **PERF — the dense-scatter feasibility was WRONG (was "MED, reuse scatter").** Each occupant =
+   GameObject + SpriteRenderer + **BlobShadow GO** + **BoxCollider2D** + click target (`TilemapManager.cs:1007-1130`);
+   current density 0.08 (`scatter.py:19`). A Necesse-dense carpet (0.5-1.5/cell) = **tens of thousands of
+   GameObjects** → perf death (web: Unity 400→35 FPS @ ~1000 grass GObjects; the GO/collider overhead itself is
+   the killer). **Dense visual tufts need a NEW batched, collider-FREE renderer** (`DrawMeshInstanced` or a
+   combined per-chunk mesh); interactive/gameplay plants stay sparse occupants. Bake contact-AO INTO the tuft
+   sprite (not a shadow GO). **This is the #1 spike — resolve before committing a build order.**
+2. **RE-RANK — lead with the CHEAP shader/data wins (A + E), not the GameObject carpet.** Per-cell **HSV
+   jitter needs NO data path** — just `hash(floor(worldPos))` in the fragment shader; **macro-tint** uses the
+   already-proven `_ShoreMask` per-cell data texture; both = **zero GameObjects**. Add **dithering** to the tint
+   gradients (they band on 8-bit). Variants (A) via our runtime `SetTile` path = **roll our own
+   `hash(x,y,seed)→variant`** (WeightedRandomTile is a Tile-Palette *asset*, doesn't drop into our path).
+3. **ADD normal-mapped lighting (omitted; near-free).** `SpriteLitWorld.shader` already has `_NormalMap` +
+   a full `NormalsRendering` pass (lines 18, 177+); the game is URP-2D-lit. Author **normal maps** for grass
+   tiles + tufts → real depth/AO under day-night + lamps. (Moonlighter's "no normal maps" was imported without
+   noticing Moonlighter isn't 2D-lit like us.)
+4. **WIND is basic, not "mostly built."** The sway (`SpriteLitWorld.shader:134`) is a **single global sine
+   phased by world-X** + a `_HitBend` impulse — no gusts, weak per-instance variation, no walk-through bend.
+   The good (Stardew/Terraria) version = **add noise gusts + per-instance hash phase + player-position bend +
+   a persistent trampling trail** (cheap via a per-cell shader field). It's an upgrade to LitWind, not free.
+5. **TRANSITIONS — bake-off, lean FRINGE not dual-grid.** Dual-grid needs a 2nd offset tilemap and ~60-75
+   tiles for our 4-5 terrains (grass/dirt/path/sand/water), and **conflicts with our existing shaped-ground
+   `TileCompositor` blend** (one gameplay tilemap). **Fringe-overhang + dither** (our Topic-2 rated it best for
+   organic grass edges; Don't Starve's look) works WITH shaped-ground and is likely the better pick. Bake-off in the plan.
+6. **Placement mechanism EXISTS:** `scatter.py` already has `clumping` + a gaussian density field (`:43`) for
+   organic clumps/clearings — "tuned density" is a config (pass `clumping>0`), not new code.
+
+**Net revised order:** A (hash-variant tiles) + E (in-shader HSV+macro-tint+dither) + normal maps FIRST (cheap,
+zero-GO, high impact) → wind upgrade (F) → **spike the batched tuft renderer, then the dense scatter (B)** →
+transitions bake-off (D, lean fringe). The plan formalizes this with scored options.
