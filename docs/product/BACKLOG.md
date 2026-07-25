@@ -6,14 +6,14 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
-## Player art organization + governance (BUILT 2026-07-25)
-The player-sprite / wearable work now has a clean, navigable workspace (`tools/_generated/player/` — current /
-in-progress-per-item-dated-attempt / references / old) + a read-gate so it stays organized and the assistant
-doesn't reinvent it. **Full design + status + what remains: `docs/plans/player-art-organization.md`.** Key docs:
-`.claude/skills/player-sprites/SKILL.md`, `tools/_generated/player/README.md`, `tools/_generated/README.md` (the
-map). Remaining: publish the copper/silver armor from `tools/_generated/player/in-progress/`; the deferred
-`_generated/` root tidy (`scratch/` · `variants/` · category previews); the 16×32→crisp size-bump; the
-`farmer_down` 36×44 vs 16×32 size mismatch.
+## Player sprite + wearable creation system (in progress, record 2026-07-25)
+Building a repeatable AI pipeline to create the player character + mass-produce wearables (armor / clothing /
+hats / hair) and get them into the game. The pipeline + a clean workspace (`tools/_generated/player/`) + a
+read-gate are built; the actual wearables are mostly still to produce (copper/silver in progress, **nothing
+published to the game yet**). **Full design + status + what remains: `docs/plans/player-sprite-and-wearable-creation.md`.**
+Key docs: `.claude/skills/player-sprites/SKILL.md`, `tools/_generated/player/README.md`, `tools/_generated/README.md`.
+Remaining: produce + publish the wearables; the 16×32→crisp size-bump; the `farmer_down` 36×44 vs 16×32 size
+mismatch; the deferred `_generated/` root tidy (`scratch/` · `variants/` · category previews).
 
 ## CLAUDE.md & scaffolding improvements (owner wants a pass here; captured 2026-07-09)
 Umbrella for tightening how the assistant is steered. Add items here as they come up.
