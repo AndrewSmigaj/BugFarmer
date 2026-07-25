@@ -6,6 +6,15 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Player art organization + governance (BUILT 2026-07-25)
+The player-sprite / wearable work now has a clean, navigable workspace (`tools/_generated/player/` — current /
+in-progress-per-item-dated-attempt / references / old) + a read-gate so it stays organized and the assistant
+doesn't reinvent it. **Full design + status + what remains: `docs/plans/player-art-organization.md`.** Key docs:
+`.claude/skills/player-sprites/SKILL.md`, `tools/_generated/player/README.md`, `tools/_generated/README.md` (the
+map). Remaining: publish the copper/silver armor from `tools/_generated/player/in-progress/`; the deferred
+`_generated/` root tidy (`scratch/` · `variants/` · category previews); the 16×32→crisp size-bump; the
+`farmer_down` 36×44 vs 16×32 size mismatch.
+
 ## CLAUDE.md & scaffolding improvements (owner wants a pass here; captured 2026-07-09)
 Umbrella for tightening how the assistant is steered. Add items here as they come up.
 - **DONE 2026-07-15 — enforcement scaffolding landed (P0-P5; plan: `docs/plans/repo-health-enforcement.md`).**
