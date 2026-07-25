@@ -45,5 +45,30 @@ Stage-2 study of our own grass (companion to the external research). All claims 
   config/data change, not new tech.
 - The art pipeline (gpt-image + `pixelclean`) to author better grass tiles + tuft/detail sprites.
 
+## Engine capabilities — feasibility (VERIFIED this pass; de-risks the plan)
+The research recommends: variant-per-cell + dense tuft scatter + wind + dual-grid transitions + color noise.
+How much can our existing tech already do?
+1. **We use Unity's real `Tilemap`** — `TilemapManager.groundTilemap` (`UnityEngine.Tilemaps`), with a second
+   runtime `_waterTilemap`. → **Unity 2D Tilemap Extras (`WeightedRandomTile`, `RuleTile`) and the dual-grid
+   autotiling implementations are DIRECTLY usable** (they build on Tilemap). Variant-per-cell = a
+   WeightedRandomTile, near-free.
+2. **Wind sway is ALREADY BUILT.** `LitMaterials` + `SpriteLitWorld.shader` (URP Sprite-Lit + **base-anchored
+   vertex wind/bob**) provides **`LitWind` — "land foliage sway (trees, flowers, GRASS, crops)"**
+   (`WindStrength 0.12`, `WindSpeed 1.5`), plus `LitReed`/`LitBob`. **Grass-tuft sprites get sway for FREE**
+   via the existing foliage material. (The "alive" half is mostly done.)
+3. **A custom animated Tilemap shader is proven** — the water Tilemap runs `_waterMat` (WaterAnimated) fed by a
+   foam/land **data RenderTexture**. That is the exact template for a **grass macro-tint / color-variation
+   ground shader** (feed a low-freq noise/tint field → per-cell modulation).
+4. **Runtime GPU tile compositing is proven** — `TileCompositor` (`Shader.Find` + `Graphics.Blit` +
+   `RenderTexture`, the `Hidden/BugFarmer/TileComposite` shader).
+5. **Scatter + detail occupants exist** — `scatter.py` + `tall_grass`/`fern`/`clover`/`flower_*` occupants,
+   rendered as `SpriteRenderer`s that already get `LitWind`. A denser, better-tuned grass-detail layer is
+   mostly a data/art task, not new tech.
+6. **NOT built (the real new work):** grass↔dirt/path/water **dual-grid transition tiles** (art + a variant
+   selector on our custom-loaded tiles); **variant-per-cell wiring** (we have 3 tiles, use 1); a **macro-tint
+   color shader** on the ground tilemap; more/better **grass-tuft + variant sprites** (art); optional
+   **player-reactive bend** (velocity mask — an enhancement over the ambient LitWind). Verify the per-cell data
+   path for a tilemap tint shader against our custom chunk-loading before committing to it.
+
 _(This is the "our side." The external research — `games_*.md`, `techniques_*.md` — provides how good games
 solve 1-5; the `synthesis.md` + the plan combine them.)_
