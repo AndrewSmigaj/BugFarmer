@@ -67,8 +67,13 @@ How much can our existing tech already do?
 6. **NOT built (the real new work):** grass↔dirt/path/water **dual-grid transition tiles** (art + a variant
    selector on our custom-loaded tiles); **variant-per-cell wiring** (we have 3 tiles, use 1); a **macro-tint
    color shader** on the ground tilemap; more/better **grass-tuft + variant sprites** (art); optional
-   **player-reactive bend** (velocity mask — an enhancement over the ambient LitWind). Verify the per-cell data
-   path for a tilemap tint shader against our custom chunk-loading before committing to it.
+   **player-reactive bend** (velocity mask — an enhancement over the ambient LitWind).
+7. **Per-cell-data-to-shader path — RESOLVED (spike closed):** the water tilemap already binds a **256²
+   one-texel-per-cell `_ShoreMask` data texture** (3-state: water/known-land/unloaded), written CPU-side via
+   `SetPixels32` → `SetTexture("_ShoreMask", …)` and rebuilt on any ground change (`_shoreDirty`); its shader
+   samples it per cell (`TilemapManager.cs:28-32, 928-962`). This is the exact reusable path for a grass
+   **macro-tint / variant-index / dual-grid-terrain** shader — encode per-cell grass data in a 256² texture and
+   sample it. So levers D (transitions/tint) and E (color) are feasible on proven tech, not hand-waved.
 
 _(This is the "our side." The external research — `games_*.md`, `techniques_*.md` — provides how good games
 solve 1-5; the `synthesis.md` + the plan combine them.)_
