@@ -26,6 +26,12 @@ color space so no sRGB reconcile. Result cached by the full id (`_tileCache`) �
   4 straight halves · 4 quadrant squares. Checkerboards = alternating SOLID tiles (no shape).
 - **Build note:** add the shader to Always-Included Shaders before a player build (`Shader.Find` is
   Editor-only otherwise).
+- **Plain ids can have ART VARIANTS.** Before `SetGroundTile` resolves a tile it runs the id through
+  `TilemapManager.VariantTileId`, which maps a variant-bearing id (e.g. `grass`, listed in `VariantCounts`)
+  to one of `grass`/`grass_v2`…/`grass_v5` by hashing the cell coordinate — so a large field stops reading
+  as a repeating carpet. This is orthogonal to the composite grammar: composite ids contain `~` and are
+  never variant-mapped, and variants never change `PrimaryMaterial` or any gameplay semantics. See
+  `architecture_world.md` §0 for the variant + tuft layers.
 
 ## The one rule — "primary material governs" (`PrimaryMaterial`)
 For ALL gameplay a composite behaves as its **primary material (matA)**. A tiny split-helper is applied at

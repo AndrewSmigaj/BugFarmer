@@ -6,6 +6,28 @@ BugFarmer uses a tile-based world with fixed-size zones. World data is authored 
 
 ---
 
+## 0. Ground rendering — tile variants + the decorative tuft layer
+
+Ground is stored as one id per cell (`grass`, `dirt`, …), and every zone with grass uses the id `grass`,
+so ground ART changes apply everywhere at once with no zone-data edit. Two client-side visual layers sit
+on top of that single id (both purely cosmetic — no server, sim, or determinism surface):
+
+- **Tile variants.** `grass` ships as `grass.png` + `grass_v2..v5.png` (16×16 = one cell at the game's
+  16 PPU). `TilemapManager.VariantTileId` picks one per cell from a hash of the cell coordinate, so a
+  field stops reading as an obviously repeating carpet. Deterministic from position alone → identical on
+  every client and across reloads, with nothing stored or synced. Extend by adding an entry to
+  `VariantCounts` and dropping in `<id>_vN.png` files.
+  All variants of a family MUST share one palette: independently-authored variants drift in overall
+  brightness and a mixed field then reads as a patchwork of lighter and darker squares.
+- **Grass tufts.** `GrassTuftRenderer` scatters small tuft sprites (`Resources/Objects/grass_tuft_1..4`)
+  over grass cells, per loaded chunk, placed by the same positional hash. This detail layer — not the
+  base tile — is what makes a lawn read as grass; the base tile stays deliberately quiet.
+  They are plain `SpriteRenderer`s with **no collider, no blob shadow, no click target, and they are NOT
+  occupants**: the occupant path is for interactive entities and carries far too much per-instance weight
+  for a dense decorative layer. They use the shared `LitWind` material, so they sway with other foliage.
+
+---
+
 ## 1. World Structure
 
 ### Layout

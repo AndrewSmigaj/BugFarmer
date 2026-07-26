@@ -271,6 +271,7 @@ namespace BugFarmer.World
             var msg = new ChunkSubscribeMessage { chunk_x = cx, chunk_y = cy };
             var json = JsonUtility.ToJson(msg);
             _ = socket.SendMatchStateAsync(match.Id, OpCodes.ChunkUnsub, json);
+            GrassTuftRenderer.Instance?.ClearChunk(cx, cy);   // drop this chunk's visual tufts
             Debug.Log($"[TilemapManager] Unsubscribe chunk {cx},{cy}");
         }
 
@@ -829,6 +830,19 @@ namespace BugFarmer.World
                     RenderOccupant(cellPos, occData);
                 }
             }
+
+            // Visual grass-tuft layer for this chunk (no colliders, not occupants — see GrassTuftRenderer).
+            if (GrassTuftRenderer.Instance != null)
+            {
+                GrassTuftRenderer.Instance.BuildChunk(
+                    chunk.ChunkX, chunk.ChunkY, ChunkSize,
+                    (wx, wy) =>
+                    {
+                        int lyy = wy - baseY, lxx = wx - baseX;
+                        if (lyy < 0 || lyy >= ChunkSize || lxx < 0 || lxx >= ChunkSize) return null;
+                        return chunk.Ground[lyy] != null ? chunk.Ground[lyy][lxx] : null;
+                    });
+            }
         }
 
         /// <summary>Base material of a (possibly composite) ground id — mirrors the server's PrimaryMaterial.
@@ -967,13 +981,32 @@ namespace BugFarmer.World
         /// server shovel action.</summary>
         public void StampGroundDebug(Vector2Int cellPos, string tileId) => SetGroundTile(cellPos, tileId);
 
+        // Ground ids that ship with interchangeable art variants (grass.png + grass_v2..v5.png). A single
+        // tile stamped on every cell reads as an obviously repeating carpet, so each cell deterministically
+        // picks one variant from its coordinates: same cell -> same variant on every client and every
+        // reload, with no extra data to store or sync.
+        private static readonly Dictionary<string, int> VariantCounts = new() { { "grass", 5 } };
+
+        private static string VariantTileId(string tileId, Vector2Int cellPos)
+        {
+            if (string.IsNullOrEmpty(tileId) || !VariantCounts.TryGetValue(tileId, out int n) || n <= 1)
+                return tileId;
+            // cheap positional hash; the mix constants just decorrelate neighbouring cells
+            unchecked
+            {
+                int h = cellPos.x * 73856093 ^ cellPos.y * 19349663;
+                int v = (h & 0x7fffffff) % n;
+                return v == 0 ? tileId : $"{tileId}_v{v + 1}";     // v0 = the base id, then _v2.._v5
+            }
+        }
+
         private void SetGroundTile(Vector2Int cellPos, string tileId)
         {
             if (groundTilemap == null)
                 return;
 
             // Update visual tilemap
-            var tile = TileDatabase.Instance?.GetGroundTile(tileId);
+            var tile = TileDatabase.Instance?.GetGroundTile(VariantTileId(tileId, cellPos));
             var tilePos = new Vector3Int(cellPos.x, cellPos.y, 0);
             groundTilemap.SetTile(tilePos, tile);
 
