@@ -18,8 +18,8 @@ from PIL import Image
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC = os.path.join(REPO, "BugFarmerClient", "Assets", "Resources", "Tiles", "grass.png")
-OUT = os.path.join(REPO, "tools", "_generated", "tiles", "candidates")
-N = 32
+OUT = os.path.join(REPO, "tools", "_generated", "tiles", "candidates16")
+N = 16          # tile size in px. 16 = one CELL at the game's 16 PPU (32 would be two cells).
 
 
 def shift(rgb, dv=0.0, ds=0.0, dh=0.0):
@@ -81,12 +81,12 @@ def h1_stardew_informed(seed=7):
     img[:, :] = p["base"]
     # Density is calibrated against the reference: ~50% of the tile carries a non-base tone
     # (on 32x32 that is ~500 px, NOT the ~90 a naive sparse scatter gives).
-    for _ in range(210):                         # quiet near-base speckle (most of the texture)
+    for _ in range(int(210 * (N / 32) ** 2)):                         # quiet near-base speckle (most of the texture)
         put(img, rng.integers(N), rng.integers(N), p["near1"] if rng.random() < 0.5 else p["near2"])
-    for _ in range(55):                          # the readable light blades
+    for _ in range(int(55 * (N / 32) ** 2)):                          # the readable light blades
         x, y = int(rng.integers(N)), int(rng.integers(N))
         hook(img, x, y, p["light"], h=int(rng.integers(2, 4)), over=1)
-    for _ in range(34):                          # dark blades for depth
+    for _ in range(int(34 * (N / 32) ** 2)):                          # dark blades for depth
         x, y = int(rng.integers(N)), int(rng.integers(N))
         hook(img, x, y, p["dark"], h=int(rng.integers(2, 3)), over=1)
     return img
@@ -96,13 +96,13 @@ def h2_necesse_informed(seed=11):
     """Soft mottle: large wrapped blobs quantised to a few tones (calm, low contrast)."""
     p = base_palette()
     rng = np.random.default_rng(seed)
-    f = wrapped_noise(rng, cells=8, smooth=2)
+    f = wrapped_noise(rng, cells=max(3, N // 4), smooth=2)
     img = np.zeros((N, N, 3), np.uint8)
     img[:, :] = p["base"]
     img[f < 0.38] = p["near2"]
     img[f > 0.62] = p["near1"]
     img[f > 0.90] = p["light"]
-    for _ in range(6):                           # a few darker specks so it isn't pure gradient
+    for _ in range(int(6 * (N / 32) ** 2)):                           # a few darker specks so it isn't pure gradient
         put(img, rng.integers(N), rng.integers(N), p["dark"])
     return img
 
@@ -111,15 +111,15 @@ def h3_ours(seed=3):
     """Ours: mottled base (H2 idea) PLUS denser blade glyphs (H1 idea) — texture with a calm ground."""
     p = base_palette()
     rng = np.random.default_rng(seed)
-    f = wrapped_noise(rng, cells=7, smooth=2)
+    f = wrapped_noise(rng, cells=max(3, N // 5), smooth=2)
     img = np.zeros((N, N, 3), np.uint8)
     img[:, :] = p["base"]
     img[f < 0.35] = p["near2"]
     img[f > 0.72] = p["near1"]
-    for _ in range(22):
+    for _ in range(int(22 * (N / 32) ** 2)):
         x, y = int(rng.integers(N)), int(rng.integers(N))
         hook(img, x, y, p["light"], h=int(rng.integers(1, 3)), over=1)
-    for _ in range(13):
+    for _ in range(int(13 * (N / 32) ** 2)):
         x, y = int(rng.integers(N)), int(rng.integers(N))
         hook(img, x, y, p["dark"], h=2, over=1)
     return img
