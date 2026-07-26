@@ -369,3 +369,36 @@ if __name__ == "__main__":
             fn()
         except Exception as e:
             print(f"  FAILED {name}: {type(e).__name__}: {e}")
+
+
+def V():
+    """V = the RECIPE the experiments taught us, applied properly, in ONE call:
+       big-FIELD framing (not 'a tile')  +  2x2 sheet (style-matched variants by construction)
+       +  explicit MARK SCALE (the headline finding: marks must survive the 32x downscale)
+       +  code-side seam heal (free, guaranteed wrap) instead of spending calls per variant."""
+    prompt = (
+        "A 2x2 grid of four square GRASS ground textures for a 2D top-down farming game, separated by "
+        "thin black lines. Each square is a flat expanse of grass seen from DIRECTLY ABOVE (flat "
+        "orthographic, no perspective, no horizon, no objects, no centre subject) filling its square "
+        "edge to edge. "
+        "IMPORTANT SCALE: draw CHUNKY pixel art in which the smallest grass mark is about 1/32nd of the "
+        "square's width - roughly thirty marks across, NOT hundreds of tiny specks. Each blade mark is a "
+        "bold 1-3 block dash, clearly visible, not fine hair-like detail. "
+        "About half of each square is one flat mid-green base colour; scattered over it are small marks "
+        "in one lighter green and one darker green, plus a few barely-different greens as quiet speckle, "
+        "and very occasionally a tiny dry-tan fleck. Even coverage, no clumping into one big feature. "
+        "Lighting is COMPLETELY FLAT: identical brightness at the centre and at every edge and corner, "
+        "no vignette, no shadow, no outline around the squares. "
+        "All four squares share EXACTLY the same palette, mark size and density - they differ only in "
+        "the arrangement of the marks. " + STYLE_TAIL)
+    raw = save_raw(generate(prompt), "V1_recipe_sheet")
+    a = np.asarray(Image.open(raw).convert("RGB"), np.uint8)
+    half = a.shape[0] // 2
+    for i, (y, x) in enumerate([(0, 0), (0, 1), (1, 0), (1, 1)], start=1):
+        q = a[y * half:(y + 1) * half, x * half:(x + 1) * half][24:-24, 24:-24]   # drop divider lines
+        t = snap_palette(grid_sample(q), k=7)
+        save_cand(t, f"V1_recipe_q{i}")                       # as-generated
+        save_cand(snap_palette(min_cut_seam_heal(t), k=7), f"V1_recipe_q{i}_wrapped")   # guaranteed-wrap
+
+
+ALL["V"] = V

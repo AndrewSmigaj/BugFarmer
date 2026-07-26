@@ -31,10 +31,25 @@ with **no dominant base** (base_share 0.11) vs the Stardew reference's **0.48**.
 | **H1-H3** | hand-authored pixel grids (no API) | All seamless **by construction**. H1 reads as a quiet, plausible grass base; H2/H3 are mottled alternatives. |
 | **OV** | grass drawn taller than the cell | **Did not work as a tile** (as predicted): the model drew a *scene* — a wall of tall grass behind ground — not a repeatable overhang. The blades themselves are good pixel art, so this render is a decent source for separate **tuft sprites** instead. |
 
+## V — the recipe applied (one extra call, after the experiments)
+`V1_recipe_*` combines the two winners in ONE call: big-field framing + a 2×2 sheet + an explicit
+**mark-scale** instruction ("smallest mark ≈ 1/32 of the square, ~30 across, not hundreds of specks"), then
+code-side seam healing (the `_wrapped` versions) so no extra calls are spent per variant.
+- **The mark scale worked** — the marks survive the downscale, exactly as the headline finding predicts, and
+  the four variants are style-matched.
+- **But the palette drifted bright/lime**, away from our muted look, because the prompt specified *structure*
+  without anchoring *colour*. **Fix next time: state the palette explicitly, or feed an existing tile as a
+  colour reference (`--ref`).** Also learned: when slicing a sheet, **auto-trim the divider lines** — a fixed
+  inset left black pixels in the crop and the `edge_delta` metric caught it (39 → 7 after the fix).
+
 ## My honest picks (for the owner to choose from)
-- **Best overall:** `SH1_sheet_q4` / `q1` / `q3` — good texture *and* a matched variant set from one call.
-- **Best single AI tile:** `A3_bigfield_crop` (or `A4_offset_healed` for a guaranteed-wrap version of it).
-- **Best guaranteed-seamless:** `M1_mine_seamheal`, `M3_mine_palette_stamp`, `H1_handauthored`.
+- **Best overall: `SH1_sheet_q4` / `q1` / `q3`** — muted natural green, readable blade marks, no visible
+  repeat, *and* a matched variant set from a single call.
+- **Best single AI tile:** `A3_bigfield_crop` (or `A4_offset_healed` for a guaranteed-wrap version).
+- **Best guaranteed-seamless:** `M1_mine_seamheal`, `M3_mine_palette_stamp`, `H1_handauthored` (calm/quiet).
+- **`V1_recipe_*`:** right structure, wrong colour (too bright/lime for us) — worth one re-run with the
+  palette pinned; it would likely become the best of the lot.
+- **Not usable:** `A2_gridlocked` (literal grid), `OV*` (a scene, not a tile).
 
 ## Recipe that follows from this (draft — to confirm with more runs)
 1. Ask for a **large flat field** of the material, "seen from directly above, even coverage, no centre subject,
