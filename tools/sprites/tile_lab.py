@@ -10,7 +10,11 @@ Metrics (all cheap, no API):
   edge_delta        |mean luminance of the border ring - interior| (vignette/gradient detector; ~0 is good)
   seam_x / seam_y   WRAP-edge percentile: where the wrap edge's difference falls among all interior
                     adjacent-column/row differences. ~50 => the wrap edge is indistinguishable from
-                    ordinary interior texture (seamless). >90 => an outlier = a visible seam when tiled.
+                    ordinary interior texture (seamless). >90 => an outlier = possibly a visible seam.
+                    CAVEAT on small tiles: a 16px tile has only 15 interior edges, so merely being the
+                    LARGEST of them saturates the percentile to 100 even when the absolute difference is
+                    ordinary. Always confirm a flagged seam against the tiled field render before acting
+                    on it (grass_v4 measured 100/100 and is invisible when tiled).
 
 Usage:
   python3 tools/sprites/tile_lab.py sheet          # contact sheet of every candidate + master comparison
