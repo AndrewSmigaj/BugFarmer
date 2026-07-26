@@ -282,7 +282,7 @@ def A3():
     save_cand(snap_palette(grid_sample(c)), "A3_bigfield_crop")
 
 
-def A4(src="A2_gridlocked"):
+def A4(src="A3_bigfield"):
     """Offset-heal: roll 50% so both wrap seams cross the centre, ask 1.5 to repaint just that cross."""
     a = load_raw(src)
     rolled = roll_half(a)
@@ -298,7 +298,7 @@ def A4(src="A2_gridlocked"):
     save_cand(snap_palette(grid_sample(roll_half(h))), "A4_offset_healed")   # roll back
 
 
-def A5(ref="A2_gridlocked"):
+def A5(ref="A3_bigfield"):
     """Reference-fed: guide the generation with an existing tile (input_fidelity=high) for style lock."""
     refp = os.path.join(RAW, ref + ".png")
     prompt = ("Using the attached grass tile as the exact style and palette reference, draw a NEW "

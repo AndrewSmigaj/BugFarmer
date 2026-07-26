@@ -13,6 +13,7 @@ of output already has a home, and inventing a new top-level bucket is how the me
 | `ab/` | A/B two-variant generations; `_B` = the parked alternate | `sprites/ab_generate.py` | **PAID** | no |
 | `blocklab/` | block/tile variant bake-offs | `sprites/blocklab.py` | **PAID** | no |
 | `player/` | player character + wearable art work (see below) | you + the `aipipe` pipeline | mixed | structure only |
+| `tiles/` | ground-TILE R&D: candidates + tiling comparison sheets (`README.md` = the findings) | `sprites/tile_experiments.py`, `gen_tiles_handauthored.py`; judge with `sprites/tile_lab.py` | **PAID** raws | findings + 2 sheets |
 | `ecology_charts/` | NON-ART sim/ecology charts (the tuning picture) | `ecology/run_config.py` + plotters | free | **yes (curated subset)** |
 | `footprints.md` | generated entity-footprint reference | `data/footprints.py` | free | no |
 

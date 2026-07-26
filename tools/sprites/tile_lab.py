@@ -150,6 +150,36 @@ def sheet():
     print("\nwrote", out)
 
 
+def grid(cols=4, n=3, scale=2):
+    """Compact comparison: every candidate as a small n x n tiled field, laid out in a grid.
+    This is the view that actually lets you compare 15+ candidates at once."""
+    paths = sorted(glob.glob(os.path.join(CAND, "*.png")))
+    if not paths:
+        print("no candidates in", CAND)
+        return
+    os.makedirs(PREV, exist_ok=True)
+    cells = []
+    for p in paths:
+        a = load(p)
+        m = measure(a)
+        fld = field(a, n=n, scale=scale)
+        cells.append((os.path.splitext(os.path.basename(p))[0], fld, m))
+    cw = max(c[1].width for c in cells) + 12
+    ch = max(c[1].height for c in cells) + 40
+    rows = (len(cells) + cols - 1) // cols
+    im = Image.new("RGB", (cw * cols, ch * rows), (18, 18, 22))
+    d = ImageDraw.Draw(im)
+    for i, (name, fld, m) in enumerate(cells):
+        x, y = (i % cols) * cw, (i // cols) * ch
+        d.text((x + 6, y + 4), name[:34], fill=(255, 235, 160))
+        d.text((x + 6, y + 16), f"base={m['base_share']} seam=({m['seam_x']:.0f},{m['seam_y']:.0f}) {verdict(m)}"[:44],
+               fill=(180, 200, 180))
+        im.paste(fld, (x + 6, y + 32))
+    out = os.path.join(PREV, "_GRID_COMPARE.png")
+    im.save(out)
+    print("wrote", out, f"({len(cells)} candidates)")
+
+
 def one(path):
     a = load(path)
     m = measure(a)
@@ -164,6 +194,8 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "sheet"
     if cmd == "sheet":
         sheet()
+    elif cmd == "grid":
+        grid()
     elif cmd == "one":
         one(sys.argv[2])
     else:

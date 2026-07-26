@@ -141,6 +141,14 @@ tools/_generated/player/*
 tools/_generated/player/current/*
 !tools/_generated/player/current/README.md
 !tools/_generated/player/current/character.png
+# Tile R&D: keep the findings + the two comparison sheets (the evidence) in git; raws/candidates stay local.
+!tools/_generated/tiles/
+tools/_generated/tiles/*
+!tools/_generated/tiles/README.md
+!tools/_generated/tiles/previews/
+tools/_generated/tiles/previews/*
+!tools/_generated/tiles/previews/_GRID_COMPARE.png
+!tools/_generated/tiles/previews/_ALL_CANDIDATES.png
 !tools/_generated/ecology_charts/
 tools/_generated/ecology_charts/*
 !tools/_generated/ecology_charts/README.md
