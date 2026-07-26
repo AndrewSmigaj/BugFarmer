@@ -213,6 +213,22 @@ def main():
     check("plan-exit DENIES: ecology keyword, ecology-tuning unread", rc == 0 and is_deny(out))
     rc, out = run_env(GATE_PLAN, {"session_id": SID, "tool_name": "ExitPlanMode"}, {"CLAUDE_PLAN_FILE": "/no/such/plan.md"})
     check("plan-exit FAIL-OPEN when no plan file", rc == 0 and out == "")
+
+    # ---- LAYOUT gate: a plan that creates files must say WHERE they go ----
+    def plan_says(text):
+        with open(plan, "w") as f:
+            f.write(text)
+        return run_env(GATE_PLAN, {"session_id": SID, "tool_name": "ExitPlanMode"},
+                       {"CLAUDE_PLAN_FILE": plan})
+
+    rc, out = plan_says("# Plan\nWe will create a helper script to render the sprites.\n")
+    check("layout DENIES: plan creates files, no destination", rc == 0 and is_deny(out))
+    rc, out = plan_says("# Plan\nWe will create a helper script at tools/sprites/render_sheet.py.\n")
+    check("layout ALLOWS: destination path stated", rc == 0 and out == "")
+    rc, out = plan_says("# Plan\nCreate a preview generator.\nLayout:\n```\nfoo/bar/baz.png\n```\n")
+    check("layout ALLOWS: a folder tree is given", rc == 0 and out == "")
+    rc, out = plan_says("# Plan\nRefactor the existing loop for clarity; no new files.\n")
+    check("layout ALLOWS: plan creates nothing", rc == 0 and out == "")
     try:
         os.remove(plan)
     except OSError:

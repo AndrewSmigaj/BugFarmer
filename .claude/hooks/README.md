@@ -22,6 +22,7 @@ by contrast, is live the moment `core.hooksPath` is set.)
 | `authoring_gates` | `{skill, covers:[path globs], also_skills, note}` | `gate_authoring_edits.py`, `gate_plan_exit.py` |
 | `command_gates` + `command_viewers` | `{skills, patterns:[regex], note}` / `[first-tokens]` | `gate_skill_commands.py` |
 | `routing` | `{skill, keywords, hint}` | `route_skills.py`, `gate_plan_exit.py` |
+| `layout_gate` | `{creates, not_creating, satisfied_by, note}` (phrase lists) | `gate_plan_exit.py` |
 | `determinism` | `{covers:[globs], gate_hint}` | `check_determinism.py` |
 | `doc_coverage` | `{doc, kind, owner_skill, covers:[globs]}` | `check_doc_drift.py`, `check_staged_drift.py` |
 
@@ -36,7 +37,7 @@ must exist). **Extending the system is usually just adding a manifest row — no
 | `mark_skill_read.py` | PostToolUse (Read\|Skill) | Marks `<tmp>/claude-skill-read-<slug>-<sid>` when a `SKILL.md` is read or a skill is invoked. The signal every gate below checks. |
 | `gate_skill_commands.py` | PreToolUse (Bash) | Denies a gated command (test/determinism runners, docker, ecology harness) until a governing skill was read this session. |
 | `gate_authoring_edits.py` | PreToolUse (Edit\|Write\|MultiEdit) | Denies authoring a covered file (sim `.go`, entity JSON, zone scenes, sprite catalog…) until its skill was read. |
-| `gate_plan_exit.py` | PreToolUse (ExitPlanMode) | Denies leaving plan mode if the active plan names a covered path / domain keyword whose skill is unread. |
+| `gate_plan_exit.py` | PreToolUse (ExitPlanMode) | **Two** checks. (1) Denies if the plan names a covered path / domain keyword whose skill is unread. (2) **Layout:** denies if the plan CREATES files but never says WHERE they go — folder layout is a design decision, so it gets made in the plan (free to change, and reviewed) rather than falling out of whatever filename appears mid-work. A repo path, an `outputs -> …` line, or a small tree clears it. Phrases live in `layout_gate`; `not_creating` exempts plans that state they create nothing (substring matching gets this backwards on its own — "no new files" contains "new file"). Checks a layout is STATED, not that it is good; cannot police naming. |
 | `route_skills.py` | UserPromptSubmit | Injects a tiny nudge to read the governing skill(s) for the prompt's domain — only for skills NOT yet read. |
 | `log_touched.py` | PostToolUse (Edit\|Write\|MultiEdit) | Appends each edited path to `<tmp>/claude-touched-<sid>.log` (the session change set). |
 | `mark_determinism_run.py` | PostToolUse (Bash) | Marks `<tmp>/claude-determinism-run-<sid>` when a determinism gate command runs. |

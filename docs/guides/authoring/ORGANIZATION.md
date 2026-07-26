@@ -63,6 +63,15 @@ directly). There is no `previews/player/` mirror. (Governed by the **player-spri
 way** — walk up from `__file__` to the folder containing `.git` — so a script's folder location never breaks
 its paths. Co-dependent scripts share a folder so their imports resolve when run.
 
+## Decide the layout BEFORE creating files (enforced on plan exit)
+Folder structure is a design decision, but it never *feels* like one mid-work — a filename just appears while
+you are chasing an output, and that is how dozens of files end up in one folder with names only their author
+can read. So a plan that creates files must also say **where they go**: a repo path, an `outputs -> …` line,
+or a small folder tree. `gate_plan_exit.py` blocks leaving plan mode otherwise (`layout_gate` in
+`.claude/manifest.json`). Outside plan mode the same rule stands by convention: before creating files in a new
+area, say where they go and why. Prefer plain descriptive names (`grass_tuft_1.png`) over experiment codes
+(`SH1_q4.png`) — provenance belongs in a NOTES file, not in a filename someone has to decode.
+
 ## The one rule that still holds
 **Don't invent a new top-level bucket casually.** If something doesn't obviously fit, it's almost always a
 technique (→ `examples`), a place (→ a zone), content (→ `catalog`), or player-art WIP (→ `player/`). When
