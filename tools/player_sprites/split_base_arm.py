@@ -5,17 +5,22 @@ out of a finished armour render: the cut is ragged, it fragments when rotated, a
 torso. The right way is to split the BASE once — then every armour set generated onto the split pieces is
 already in the correct shape.
 
-The split follows the character's own silhouette rather than a rectangle. Below the shoulder the arm is
-already separated from the torso by a gap of empty pixels, so taking the connected blob on the weapon side
-gives a whole limb AND leaves the body intact — no socket to repaint, because the shoulder never belonged
-to the arm in the first place.
+Which seam the split follows depends on the view, and the two cases are not equally easy:
 
-Outputs (per direction) plus a layered .aseprite for hand cleanup, since the model-drawn edges usually want
-a few pixels of tidying:
+- **gap** (front, back) — below the shoulder the arm already hangs clear of the torso, separated by a column
+  of empty pixels. Taking the connected blob on the weapon side lifts out a whole limb AND leaves the body
+  intact, so there is no socket to repaint: the shoulder never belonged to the arm. Lossless and automatic.
+- **colour** (profile) — the arm is drawn over the torso with no gap, so the seam is bare limb (saturated
+  skin) against clothing (pale) instead. Harder, because the arm sits on the silhouette EDGE: lifting it out
+  deletes the torso's back rather than opening a hole in the middle, and nothing in the source says what
+  belongs there. The reconstruction is a starting point that always wants hand finishing.
+
+Outputs per direction, plus a layered .aseprite (body / arm / hidden original) for that hand work:
     references/<dir>/body.png · arm.png · split.aseprite · pivot in pivots.json
 
-  python3 tools/player_sprites/split_base_arm.py down       # split the front base
-  python3 tools/player_sprites/split_base_arm.py down --preview
+  python3 tools/player_sprites/split_base_arm.py down                 # front  (gap split)
+  python3 tools/player_sprites/split_base_arm.py side                 # profile (colour split)
+  python3 tools/player_sprites/split_base_arm.py down --compare-cap   # choose a shoulder cap by eye
 """
 import os
 import sys
@@ -31,14 +36,15 @@ PLAYER = os.path.join(REPO, "tools", "_generated", "player")
 REFS = os.path.join(PLAYER, "references")
 ASEPRITE = "/mnt/c/Program Files (x86)/Steam/steamapps/common/Aseprite/Aseprite.exe"
 
-# Per direction: the source image, the row where the arm stops being fused to the shoulder (above this the
-# silhouette is one mass; below it there is a gap the split follows), and the shoulder-cap height.
-# `down`'s cap of 3 was picked by looking at arm_cap_comparison_down.png: a cap of 0 hinges at the armpit and
-# visibly detaches by 50°, 2 still opens a notch at the arm root, and 4 pivots so high the arm rides into the
-# chest. Re-run --compare-cap when adding a direction rather than reusing this number.
+# Per direction: the source image and which seam to follow (see the module docstring for the two methods).
+#   gap    — free_row is where the arm stops being fused to the shoulder; cap is how many shoulder rows the
+#            arm carries. `down`'s cap of 3 was chosen by looking at arm_cap_comparison_down.png: 0 hinges at
+#            the armpit and detaches by 50°, 2 still notches at the arm root, 4 rides up into the chest.
+#            Re-run --compare-cap for a new direction rather than reusing this number.
+#   colour — torso_rows bounds the band searched for the limb, so the legs (also bare skin) can't be picked.
 SOURCES = {
-    "down": ("base.png", 37, 3),
-    "side": ("base_side.png", 37, 3),
+    "down": {"src": "base.png", "how": "gap", "free_row": 37, "cap": 3},
+    "side": {"src": "base_side.png", "how": "colour", "torso_rows": (17, 42)},
 }
 
 
@@ -97,6 +103,68 @@ def split(img, free_row, weapon_side="right", cap=0):
     row_xs = xs[ys == top]
     # pivot = middle of the arm's topmost row — the shoulder joint when a cap is present, the armpit without
     pivot = (int(round(row_xs.mean())), int(top))
+    return body, arm, pivot
+
+
+def split_side(img, torso_rows, sat_cut=0.42, cap=3):
+    """Split a PROFILE view, where the arm overlaps the torso instead of hanging clear of it.
+
+    The front view splits on a gap in the silhouette. A profile has no gap — the arm is drawn over the body
+    — so the seam is a COLOUR boundary instead: bare limb (saturated skin) against clothing (pale, desaturated).
+
+    The harder half is that the arm sits on the silhouette EDGE, so lifting it out doesn't open a hole in the
+    middle of the torso, it deletes the torso's whole back. Nothing in the source says what belongs there, so
+    this fills it by extending the body inward from the clothed side and keeps the original outline. That is a
+    STARTING POINT for hand work in split.aseprite, not a finished piece.
+    """
+    op = img[..., 3] > 0
+    rgb = img[..., :3].astype(int)
+    mx, mn = rgb.max(2), rgb.min(2)
+    sat = np.where(mx > 0, (mx - mn) / np.maximum(mx, 1), 0)
+    skin = op & (sat > sat_cut) & (rgb[..., 0] > 150)
+
+    r0, r1 = torso_rows
+    band = np.zeros_like(op)
+    band[r0:r1 + 1] = skin[r0:r1 + 1]
+    lbl, n = label(band, structure=np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]]))
+    if n == 0:
+        return img.copy(), np.zeros_like(img), None
+    sizes = [(lbl == i).sum() for i in range(1, n + 1)]
+    arm_mask = lbl == (int(np.argmax(sizes)) + 1)
+
+    arm = np.zeros_like(img)
+    arm[arm_mask] = img[arm_mask]
+
+    # rebuild the body under the arm: walk each row from the clothed side into the vacated pixels
+    body = img.copy()
+    for y in range(img.shape[0]):
+        xs = np.where(arm_mask[y])[0]
+        if not len(xs):
+            continue
+        src = None
+        for x in range(xs.max() + 1, img.shape[1]):        # nearest kept pixel toward the clothed side
+            if op[y, x] and not arm_mask[y, x]:
+                src = x
+                break
+        if src is None:
+            for x in range(xs.min() - 1, -1, -1):
+                if op[y, x] and not arm_mask[y, x]:
+                    src = x
+                    break
+        if src is None:
+            continue
+        # mirror the clothing outward from the seam rather than flat-filling the row: a single sampled colour
+        # per row lays down obvious horizontal banding across the torso, whereas reflecting keeps the fabric's
+        # own shading and folds
+        for x in range(xs.min(), xs.max() + 1):
+            m = src + (src - x)
+            if not (0 <= m < img.shape[1] and op[y, m] and not arm_mask[y, m]):
+                m = src
+            body[y, x] = img[y, m]
+
+    ys, xs = np.where(arm_mask)
+    top = ys.min()
+    pivot = (int(round(xs[ys == top].mean())), int(top))
     return body, arm, pivot
 
 
@@ -188,21 +256,29 @@ def compare_caps(img, free_row, caps=(0, 2, 3, 4)):
 
 def main():
     which = sys.argv[1] if len(sys.argv) > 1 else "down"
-    src_name, free_row, cap = SOURCES[which]
-    if "--compare-cap" in sys.argv:
-        img = np.asarray(Image.open(os.path.join(REFS, src_name)).convert("RGBA"), np.uint8)
-        out = os.path.join(PLAYER, f"arm_cap_comparison_{which}.png")
-        compare_caps(img, free_row).save(out)
-        print("  wrote", os.path.relpath(out, REPO))
-        return
+    cfg = SOURCES[which]
+    src_name = cfg["src"]
     src = os.path.join(REFS, src_name)
     img = np.asarray(Image.open(src).convert("RGBA"), np.uint8)
 
+    if "--compare-cap" in sys.argv:
+        if cfg["how"] != "gap":
+            sys.exit(f"--compare-cap only applies to gap splits; {which} uses {cfg['how']}")
+        out = os.path.join(PLAYER, f"arm_cap_comparison_{which}.png")
+        compare_caps(img, cfg["free_row"]).save(out)
+        print("  wrote", os.path.relpath(out, REPO))
+        return
+
     out_dir = os.path.join(REFS, which)
     os.makedirs(out_dir, exist_ok=True)
-    body, arm, pivot = split(img, free_row, cap=cap)
+    if cfg["how"] == "gap":
+        body, arm, pivot = split(img, cfg["free_row"], cap=cfg["cap"])
+    else:
+        body, arm, pivot = split_side(img, cfg["torso_rows"])
+        print("  NOTE: profile split — the torso behind the arm is RECONSTRUCTED, not recovered.")
+        print("        Treat body.png as a starting point and finish it in split.aseprite.")
     if pivot is None:
-        sys.exit("could not find a separable arm — check the free_row for this direction")
+        sys.exit("could not find a separable arm — check this direction's split settings")
 
     Image.fromarray(body, "RGBA").save(os.path.join(out_dir, "body.png"))
     Image.fromarray(arm, "RGBA").save(os.path.join(out_dir, "arm.png"))
@@ -212,7 +288,7 @@ def main():
 
     pj = os.path.join(REFS, "pivots.json")
     piv = json.load(open(pj)) if os.path.exists(pj) else {}
-    piv[which] = {"shoulder": list(pivot), "source": src_name, "free_row": free_row, "cap": cap}
+    piv[which] = {"shoulder": list(pivot), "source": src_name, "how": cfg["how"]}
     json.dump(piv, open(pj, "w"), indent=2)
 
     ase = build_ase(out_dir, img, body, arm)

@@ -5,7 +5,14 @@
       34
     ],
     "source": "base.png",
-    "free_row": 37,
-    "cap": 3
+    "how": "gap"
+  },
+  "side": {
+    "shoulder": [
+      6,
+      19
+    ],
+    "source": "base_side.png",
+    "how": "colour"
   }
 }

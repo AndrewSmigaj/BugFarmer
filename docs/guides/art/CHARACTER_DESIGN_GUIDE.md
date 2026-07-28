@@ -47,15 +47,27 @@ Per direction (`down`, `side`, `up`; left is always a mirror of right):
 - **arm** — the weapon arm, on the same full-size canvas as the body, so the two share an origin and only the
   pivot matters. Rotates about the **shoulder pivot** in `references/pivots.json`.
 
-Tool: `tools/player_sprites/split_base_arm.py` (`--compare-cap` renders the cap options for a new direction).
-Three findings worth not rediscovering:
-- **No socket needs painting.** Below the shoulder the art already separates arm from torso by a 1px gap, so
-  the connected blob on the weapon side lifts out and leaves the body whole. Assert `body+arm == original`.
-- **The arm's shoulder cap is COPIED from the body, not cut from it** (3 rows for `down`). Hinging at the
-  armpit detaches visibly by 50°; the cap moves the hinge to the joint, and because the body keeps its own
-  shoulder the overlap can't open a seam at any angle. Pick the cap by looking, not by guessing.
+Tool: `tools/player_sprites/split_base_arm.py`. **Which seam the split follows depends on the view, and the
+two cases are not equally easy** — don't assume the front's result generalizes.
+
+**`gap` (front, back) — automatic and lossless.** The arm already hangs clear of the torso.
+- **No socket needs painting.** The connected blob on the weapon side lifts out and leaves the body whole;
+  the shoulder never belonged to the arm. Assert `body+arm == original`.
+- **The shoulder cap is COPIED from the body, not cut from it** (3 rows for `down`). Hinging at the armpit
+  detaches visibly by 50°; the cap moves the hinge to the joint, and because the body keeps its own shoulder
+  the overlap can't open a seam at any angle. Pick it by eye with `--compare-cap`, don't guess.
 - **Use 4-connectivity.** The gap column steps sideways one pixel partway down; under 8-connectivity that
   diagonal touch bridges the gap and swallows the whole lower body into one blob.
+
+**`colour` (profile) — a starting point that always needs hand finishing.** There is no gap: the arm is drawn
+over the torso, so the seam is bare limb (saturated skin) vs clothing (pale, desaturated).
+- **Confirm the skin blob is the arm, not a bare shoulder**, before trusting it — check its hand ends at the
+  same fraction down the figure as the front view's hand (~0.64 for ours).
+- **The profile arm sits on the silhouette EDGE**, so lifting it out deletes the torso's whole back rather
+  than opening a hole in the middle, and nothing in the source says what belongs there. The tool mirrors the
+  clothing outward from the seam and keeps the outline. **Mirror, don't flat-fill** — one sampled colour per
+  row lays down obvious horizontal banding.
+- Finish it by hand in `split.aseprite`; the tool prints this warning on every profile run.
 
 `references/` is tracked in git — it is an INPUT (the locked bases, their splits, the pivots), not regenerable
 output. Plan: `docs/plans/player-arm-and-wearables.md`.
