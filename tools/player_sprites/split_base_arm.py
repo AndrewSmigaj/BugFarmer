@@ -15,8 +15,9 @@ Which seam the split follows depends on the view, and the two cases are not equa
   deletes the torso's back rather than opening a hole in the middle, and nothing in the source says what
   belongs there. The reconstruction is a starting point that always wants hand finishing.
 
-Outputs per direction, plus a layered .aseprite (body / arm / hidden original) for that hand work:
-    references/<dir>/body.png · arm.png · split.aseprite · pivot in pivots.json
+Reads the locked bases from `references/` and writes NOTHING there. Output goes to a dated attempt folder,
+per tools/_generated/player/README.md:
+    in-progress/arm-split/<date>/<dir>/body.png · arm.png · split.aseprite · pivot in pivots.json
 
   python3 tools/player_sprites/split_base_arm.py down                 # front  (gap split)
   python3 tools/player_sprites/split_base_arm.py side                 # profile (colour split)
@@ -33,7 +34,10 @@ from scipy.ndimage import label
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PLAYER = os.path.join(REPO, "tools", "_generated", "player")
-REFS = os.path.join(PLAYER, "references")
+REFS = os.path.join(PLAYER, "references")          # READ-ONLY: the locked bases, nothing gets written here
+# Working output goes to a dated attempt folder, per tools/_generated/player/README.md ("Never dump loose
+# files"). references/ holds only the base/bald/mannequin every attempt masks against.
+WORK = os.path.join(PLAYER, "in-progress", "arm-split", "2026-07-28_arm-split")
 ASEPRITE = "/mnt/c/Program Files (x86)/Steam/steamapps/common/Aseprite/Aseprite.exe"
 
 # Per direction: the source image and which seam to follow (see the module docstring for the two methods).
@@ -264,12 +268,12 @@ def main():
     if "--compare-cap" in sys.argv:
         if cfg["how"] != "gap":
             sys.exit(f"--compare-cap only applies to gap splits; {which} uses {cfg['how']}")
-        out = os.path.join(PLAYER, f"arm_cap_comparison_{which}.png")
+        out = os.path.join(WORK, f"arm_cap_comparison_{which}.png")
         compare_caps(img, cfg["free_row"]).save(out)
         print("  wrote", os.path.relpath(out, REPO))
         return
 
-    out_dir = os.path.join(REFS, which)
+    out_dir = os.path.join(WORK, which)
     os.makedirs(out_dir, exist_ok=True)
     if cfg["how"] == "gap":
         body, arm, pivot = split(img, cfg["free_row"], cap=cfg["cap"])
@@ -286,7 +290,7 @@ def main():
     print(f"  {which}: arm cols {xs.min()}-{xs.max()} rows {ys.min()}-{ys.max()}  pivot {pivot}")
     print(f"  body pixels {(body[...,3]>0).sum()}   arm pixels {(arm[...,3]>0).sum()}")
 
-    pj = os.path.join(REFS, "pivots.json")
+    pj = os.path.join(WORK, "pivots.json")
     piv = json.load(open(pj)) if os.path.exists(pj) else {}
     piv[which] = {"shoulder": list(pivot), "source": src_name, "how": cfg["how"]}
     json.dump(piv, open(pj, "w"), indent=2)
