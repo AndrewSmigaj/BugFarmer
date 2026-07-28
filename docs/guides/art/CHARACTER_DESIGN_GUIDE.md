@@ -36,6 +36,30 @@ procedure, prompting rules, and where WIP lives: the `player-sprites` skill**
 (`.claude/skills/player-sprites/SKILL.md`). The 16×32 shipped system above is unchanged; publishing at a larger
 crisp size is a separate, owner-gated integration.
 
+### The body/arm split — every character asset is TWO pieces (2026-07-28)
+A weapon swing has to move the arm, so the weapon arm cannot live inside a flattened composite. **Split the
+BASE once, then generate armour onto the split pieces** — armour painted onto a body-without-arm is already a
+body-without-arm, so registration is structural rather than something each set has to get right. Cutting an
+arm out of a finished armour render is the wrong order and does not work: the cut fragments when rotated.
+
+Per direction (`down`, `side`, `up`; left is always a mirror of right):
+- **body** — torso, head, legs, feet, and the OFF arm. Keeps its own shoulder.
+- **arm** — the weapon arm, on the same full-size canvas as the body, so the two share an origin and only the
+  pivot matters. Rotates about the **shoulder pivot** in `references/pivots.json`.
+
+Tool: `tools/player_sprites/split_base_arm.py` (`--compare-cap` renders the cap options for a new direction).
+Three findings worth not rediscovering:
+- **No socket needs painting.** Below the shoulder the art already separates arm from torso by a 1px gap, so
+  the connected blob on the weapon side lifts out and leaves the body whole. Assert `body+arm == original`.
+- **The arm's shoulder cap is COPIED from the body, not cut from it** (3 rows for `down`). Hinging at the
+  armpit detaches visibly by 50°; the cap moves the hinge to the joint, and because the body keeps its own
+  shoulder the overlap can't open a seam at any angle. Pick the cap by looking, not by guessing.
+- **Use 4-connectivity.** The gap column steps sideways one pixel partway down; under 8-connectivity that
+  diagonal touch bridges the gap and swallows the whole lower body into one blob.
+
+`references/` is tracked in git — it is an INPUT (the locked bases, their splits, the pivots), not regenerable
+output. Plan: `docs/plans/player-arm-and-wearables.md`.
+
 The sections below are the ORIGINAL 32x48 proposal — kept for the proportions/
 perspective/palette guidance, which still applies. Dimensions there are
 superseded by the as-built 16x32 above.

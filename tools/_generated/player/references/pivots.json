@@ -1,0 +1,11 @@
+{
+  "down": {
+    "shoulder": [
+      26,
+      34
+    ],
+    "source": "base.png",
+    "free_row": 37,
+    "cap": 3
+  }
+}

@@ -141,6 +141,11 @@ tools/_generated/player/*
 tools/_generated/player/current/*
 !tools/_generated/player/current/README.md
 !tools/_generated/player/current/character.png
+# references/ is an INPUT, not output: the locked bases every wearable is generated onto, their body/arm
+# split, and the shoulder pivots. They can't be re-derived — base_side.png is one specific API roll we chose
+# out of eight — so losing them costs real work and would silently move every armour piece off-register.
+!tools/_generated/player/references/
+!tools/_generated/player/references/**
 # Tile R&D: keep the findings + the two comparison sheets (the evidence) in git; raws/candidates stay local.
 !tools/_generated/tiles/
 tools/_generated/tiles/*
