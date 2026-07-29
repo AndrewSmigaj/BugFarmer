@@ -113,6 +113,52 @@ OUTFITS = {
         "dark slate carapace with a small glowing green panel"),
 }
 
+# ---------------------------------------------------------------------------
+# EXPLORE — pick the DESIGN before paying for a walk cycle.
+#
+# The first pass went straight to finished 12-frame sheets, so the first time a set could be judged
+# it had already been paid for in full and there was nothing to compare it against. This mode draws
+# three genuinely different designs of ONE set, standing still and large enough to actually see.
+# Owner: "I dont think we are spending enough time getting a good reference sprite."
+#
+# The three options must have different PARENTS, not three tunings of one idea — the same discipline
+# the swing design used, for the same reason: left alone they collapse into one.
+#
+# Background is MAGENTA, not black. Black is the one colour the armour also contains, which is how
+# the cutter came to delete 17% of hornet-stinger as "background". A key colour the art never uses
+# turns a judgement call into an exact test.
+EXPLORE = """Draw THREE different design options for {what}, side by side in a single row, on a FLAT SOLID MAGENTA background (pure magenta, RGB 255 0 255). The magenta must be completely flat and uniform with nothing else drawn on it - no shadow, no gradient, no vignette, no ground, no scenery, no text.
+
+Each of the three is the SAME character wearing a DIFFERENT DESIGN of the outfit: standing still, facing the viewer, full body from head to feet, all three at the same scale and standing on the same baseline.
+
+Because the character has NO ARMS, do not draw arms, hands, elbows, forearms or gauntlets. Each shoulder ends in a rounded shoulder cap at the armless shoulder opening. This is deliberate - the hands are separate sprites added later.
+
+The three designs, left to right:
+1. {a}
+2. {b}
+3. {c}
+
+Every design covers the whole head with its own headgear, and covers the body from the shoulders to the boots, with no bare skin between the waist and the boots.
+
+Pixel art. Big simple shapes, chunky pixels, a handful of large blocks per area - no rivets, no filigree, no fine detail. Each figure is only about 40 pixels tall in the game, so it has to read by its silhouette and three or four shading bands alone.
+
+Draw each figure with HARD pixel edges against the magenta. Do not blur, feather, glow or blend the figure into the background. Do not draw a heavy black outline around the figure - where an outline is needed use a darker shade of that figure's own colours, one pixel thick."""
+
+# name -> (what the set is, [three designs with different parents])
+EXPLORATIONS = {
+    "ranger": (
+        "a woodland ranger's outfit",
+        ["a HOODED FOREST SCOUT - a deep hood pulled up with the face in shadow, a long ragged "
+         "cloak hanging over a light leather jerkin, muted forest greens and cool greys, lean and "
+         "stealthy",
+         "a PRACTICAL WOODSMAN - no hood, a short brimmed felt hat with a feather in the band, a "
+         "brown leather jerkin over a moss-green tunic, belts and pouches, face clearly visible, "
+         "rugged and grounded",
+         "an ELITE FOREST WARDEN - layered overlapping leaf-shaped plates in deep lacquered green "
+         "with bronze edging, a helm with swept antler-like prongs, richer and more ceremonial"]),
+}
+
+
 SHEET = """Draw a single sprite sheet showing the SAME character in {what} as a 12-frame walk-cycle sheet. Use the same character design, proportions, and no-arm anatomy consistently across the whole sheet.
 
 Layout: 3 rows by 4 columns, evenly spaced, all sprites at the same scale and aligned to the same baseline within each row.
@@ -150,8 +196,10 @@ Care about the SILHOUETTE above all. The outline is a soft rounded shape, slight
 Big simple shapes, chunky pixels. This is a small pixel art sprite - each hand is about ten pixels across in the game, so use a handful of large blocks, no rivets, no filigree, no fine detail."""
 
 
-def gen(dest, prompt, refs):
+def gen(dest, prompt, refs, size=None):
     cmd = [sys.executable, os.path.join(HERE, "gen.py"), "--dest", dest, "--prompt", prompt]
+    if size:
+        cmd += ["--size", size]
     for r in refs:
         cmd += ["--ref", r]
     p = subprocess.run(cmd, capture_output=True, text=True)
@@ -169,6 +217,14 @@ def main():
     if mode == "list":
         for k, v in OUTFITS.items():
             print(f"  {k:16s} {v[0]}")
+        return
+    if mode == "explore":
+        for n in names or EXPLORATIONS:
+            what, opts = EXPLORATIONS[n]
+            gen(f"explore/{n}",
+                EXPLORE.format(what=what, a=opts[0], b=opts[1], c=opts[2]),
+                [os.path.join(BASES, "armless_front.png")],
+                size="1536x1024")          # landscape: three figures in a row, each as large as possible
         return
     for n in names or OUTFITS:
         what, material, headgear, glove = OUTFITS[n]

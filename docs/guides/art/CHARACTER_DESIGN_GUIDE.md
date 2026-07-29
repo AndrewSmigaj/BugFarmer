@@ -38,6 +38,19 @@ drift by construction; the masked per-slot route needed hand-fixing on every pie
 Model **gpt-image-2**, **NO MASK**. Masked runs come back as black boxes. The prompt must state that the
 character has no arms, or the model draws them back on.
 
+**Generate on MAGENTA, never on black (2026-07-29).** Black is the one colour the armour also contains, so
+"is this pixel background?" stops being answerable. The cutter used to decide by brightness, and deleted the
+artwork's own dark pixels: hornet-stinger lost 17% of the figure — every black band — and ant-carapace 17%,
+swamp-gear 11%, ranger 10%, with most of the roster losing 6–9%. On a magenta sheet the separation is exact:
+measured on ranger, **zero** art pixels test as magenta, against 8.9% of that same sprite being
+indistinguishable from a black background. Key by flooding in **from the border**, never per-pixel — a dark
+pixel reachable from outside is background, one enclosed by the figure is its own shading.
+
+**Pick the DESIGN before paying for a walk cycle.** `outfits.py explore <set>` draws three designs of one set,
+standing still and large, on magenta. The three must have **different parents** — left to themselves they
+become three tunings of one idea, the same failure the swing design guarded against. Only the chosen design
+gets a 12-frame sheet.
+
 Full procedure — the verbatim sheet and gauntlet prompts, the cutting steps, the pixelsnap pitch warning, the
 hand-size constant and the per-tool grip measurement — lives in the **`player-sprites` skill**
 (`.claude/skills/player-sprites/SKILL.md`). Art lives in `tools/_generated/player/` (`bases/` = the two locked

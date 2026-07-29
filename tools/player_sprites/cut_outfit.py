@@ -28,7 +28,7 @@ import sys
 
 import numpy as np
 from PIL import Image
-from scipy.ndimage import label, binary_dilation
+from scipy.ndimage import label, binary_dilation, binary_propagation
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from aipipe import pixelsnap
@@ -72,9 +72,36 @@ def _bands(mask, axis, want, floor=4):
     return [(edges[i], edges[i + 1]) for i in range(len(edges) - 1)]
 
 
+BG_MAX = 8        # the sheet background measures 0-4 across every border; the darkest ART starts at 13
+
+
+def background(sheet):
+    """The BACKGROUND, found by flooding in from the border — NOT by "this pixel is dark".
+
+    This is the fix for the defect that shredded every dark set. The old mask was a per-pixel
+    brightness test (`sum(rgb) > 70` = keep), which cannot tell the black BEHIND the character from
+    the black IN the character. Hornet-stinger is black-and-yellow banded, so 17% of the figure --
+    every black band -- was deleted as though it were background, leaving disconnected yellow stripes
+    floating in a hole where the character used to be. ant-carapace lost 17%, swamp-gear 11%,
+    ranger 10%.
+
+    Blackness is not the signal. CONNECTEDNESS TO THE OUTSIDE is. A dark pixel you can walk to from
+    the image border without crossing the figure is background; a dark pixel enclosed by the figure
+    is the figure's own shading, however black it is. The separation is wide and measured, not tuned:
+    background 0-4, darkest art 13.
+    """
+    near_black = sheet[..., :3].astype(int).sum(2) <= BG_MAX
+    seed = np.zeros_like(near_black)
+    seed[0, :] = near_black[0, :]
+    seed[-1, :] = near_black[-1, :]
+    seed[:, 0] = near_black[:, 0]
+    seed[:, -1] = near_black[:, -1]
+    return binary_propagation(seed, mask=near_black)
+
+
 def cells(sheet, rows, cols):
     """The sheet's figures as a rows x cols grid, each entry the true (undilated) pixel mask."""
-    solid = sheet[..., :3].astype(int).sum(2) > 70
+    solid = ~background(sheet)
     out = []
     for r0, r1 in _bands(solid, 0, rows):
         band = np.zeros_like(solid)
