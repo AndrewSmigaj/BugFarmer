@@ -140,9 +140,15 @@ The three designs, left to right:
 
 Every design covers the whole head with its own headgear, and covers the body from the shoulders to the boots, with no bare skin between the waist and the boots.
 
-Pixel art. Big simple shapes, chunky pixels, a handful of large blocks per area - no rivets, no filigree, no fine detail. Each figure is only about 40 pixels tall in the game, so it has to read by its silhouette and three or four shading bands alone.
+CRITICAL - THE FIGURE WILL BE SHRUNK TO ABOUT 40 PIXELS TALL. Everything below follows from that:
+- What makes each design recognisable must be its SILHOUETTE - the OUTLINE shape of the hat, hood, helm, crest, shoulders and hem. Shape survives shrinking. Surface pattern does not.
+- Do NOT distinguish the designs by engraving, filigree, trim, embroidery, scrollwork, inlay, rivets or fine linework. At 40 pixels tall all of that collapses into grey mush and the design is lost.
+- Use no more than four or five flat colour areas per figure, in big chunky blocks. Think a bold cut-paper shape, not an illustration.
+- If a design would only look different from the others when seen large, it is the wrong design.
 
-Draw each figure with HARD pixel edges against the magenta. Do not blur, feather, glow or blend the figure into the background. Do not draw a heavy black outline around the figure - where an outline is needed use a darker shade of that figure's own colours, one pixel thick."""
+Draw each figure with HARD pixel edges against the magenta. Do not blur, feather, glow or blend the figure into the background. Do not draw a heavy black outline around the figure - where an outline is needed use a darker shade of that figure's own colours, one pixel thick.
+
+Do not use magenta, pink or purple ANYWHERE on the figures themselves - not on the armour, not as glowing eyes, not as trim. Magenta is reserved for the background alone."""
 
 # name -> (what the set is, [three designs with different parents])
 EXPLORATIONS = {
@@ -156,6 +162,74 @@ EXPLORATIONS = {
          "rugged and grounded",
          "an ELITE FOREST WARDEN - layered overlapping leaf-shaped plates in deep lacquered green "
          "with bronze edging, a helm with swept antler-like prongs, richer and more ceremonial"]),
+
+    # Owner: the current one "looks like a rhinocerous" — so the single frontal horn is banned, and
+    # each option takes a DIFFERENT REAL BEETLE as its parent rather than three horn sizes.
+    "beetle-shell": (
+        "beetle-shell armour",
+        ["a STAG BEETLE warrior - the helm's defining shape is a pair of huge curved MANDIBLE pincers "
+         "sweeping forward on either side of the face, glossy blue-black chitin, broad flat shoulders. "
+         "NO horn on the forehead",
+         "a JEWEL BEETLE guard - a smooth rounded domed elytra shell forming a wide turtle-like back "
+         "and shoulders, bright metallic emerald green shading to copper, a simple smooth rounded helm. "
+         "Bold and rounded, NO spikes, NO horn",
+         "a GROUND BEETLE trooper - low flat overlapping segmented plates like a woodlouse, matte "
+         "charcoal black, a narrow wedge-shaped helm, purely structural and armoured. NO horn, NO "
+         "ornament"]),
+
+    # Owner likes the concept; the three options are three different GLOW STRATEGIES, because where
+    # the light sits is a silhouette-scale decision and the colour of the plates is not.
+    "glowworm": (
+        "glowworm armour",
+        ["a LIVING LANTERN - almost everything is near-black carapace, and ONE big round glowing "
+         "yellow-green lantern organ sits on the belly, large enough to read as a lamp, throwing a "
+         "pool of green light onto the plates and boots around it",
+         "SEAM-LIT PLATES - dark slate-grey plates separated by thick bright glowing cyan-green seam "
+         "lines that trace the edges of the chest, thighs and helm, so the figure reads as a dark "
+         "shape drawn in glowing outline",
+         "a SOFT LARVA GLOW - a pale, plump, softly segmented body like a grub, each segment glowing "
+         "warm yellow-green from inside so the whole figure is luminous rather than dark, with a "
+         "smooth rounded featureless head"]),
+
+    # Owner: "we need a remake of swamp gear, not sure what to put" — so the three options are three
+    # different ANSWERS to what a swamp set is for, not three shades of green.
+    "swamp-gear": (
+        "swamp gear",
+        ["PRACTICAL WADERS - chest-high rubber waders over a short oilskin coat, a wide sou'wester "
+         "hood, muted olive and mud brown, straps and buckles, plainly functional working kit",
+         "a MOSS-CLOAKED BOG STALKER - draped hanging moss, lichen and strips of bark over a dark "
+         "hunched form, an irregular ragged outline that breaks up the shape, deep greens and greys, "
+         "looks grown rather than made",
+         "a SEALED MARSH SUIT - a smooth sealed hooded suit with a round glass faceplate and a "
+         "breathing filter at the chin, pale grey-green rubber, clean simple curved shapes, "
+         "protection against foul air"]),
+
+    # Owner: the current one "looks ridiculous like curious george with the goofy yellow thing" — so
+    # the cartoon-bright sou'wester is out and the three options are three different WATERS.
+    "fisherman": (
+        "a fisherman's outfit",
+        ["a WEATHERED SEA FISHERMAN - a thick cream cable-knit sweater under weathered ochre oilskin "
+         "bib trousers and heavy boots, a soft dark hood. Muted and salt-worn, NOT bright yellow, NOT "
+         "cartoonish",
+         "a RIVER ANGLER - chest waders in tan canvas over a many-pocketed olive vest, a wide flat "
+         "brimmed hat, greens and sand browns, freshwater and practical",
+         "a DEEP-WATER HARPOONER - a heavy dark storm coat wrapped with coils of rope, a deep hood "
+         "over a scarfed face, weathered navy and rust, rugged and adventurous"]),
+
+    # Owner: platinum is the TOP of the ladder and must "stress that it is fancy". The lesson from
+    # ranger option 3 is baked in — fancy has to live in the SILHOUETTE (crest, plume, cape, wings),
+    # never in engraving, because engraving is exactly what dies at 40px.
+    "platinum": (
+        "platinum plate armour, the finest armour in the game",
+        ["a CRESTED CHAMPION - bright white-silver plate with a TALL SWEEPING PLUME crest standing up "
+         "from the helm, and a long cape falling behind the shoulders. The grandeur is entirely in "
+         "those two big shapes",
+         "a WINGED PALADIN - mirror-bright blue-white plate with large upswept WING-SHAPED shoulder "
+         "pieces rising above the shoulders and a halo-like ring behind the head. Smooth and radiant, "
+         "almost no surface detail",
+         "a HORNED MONARCH - heavy regal platinum with a CROWN of tall spikes around the helm and "
+         "broad squared-off pauldrons, a wide flared skirt of plates at the hips. Imposing and "
+         "top-heavy"]),
 }
 
 

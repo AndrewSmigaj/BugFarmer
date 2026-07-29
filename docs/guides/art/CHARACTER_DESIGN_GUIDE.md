@@ -51,6 +51,21 @@ standing still and large, on magenta. The three must have **different parents** 
 become three tunings of one idea, the same failure the swing design guarded against. Only the chosen design
 gets a 12-frame sheet.
 
+**A design is not judged until it is judged SMALL.** `preview_explore.py <set>` renders each option large and
+again shrunk to real game height on grass; the small row is the one that decides. Ranger's third option was
+the best-looking design on the page and the worst in the game — its gold linework became noise the instant it
+shrank, while the two plainer designs kept working. So:
+
+- **What distinguishes one design from another must be SILHOUETTE** — hat, hood, crest, plume, cape, shoulder
+  and hem shape. Never engraving, filigree, trim or inlay: those are exactly what dies at 40px. Platinum's
+  three "fancy" options are a plume, wings and a spiked crown for this reason, and all three stayed readable.
+- Four or five flat colour areas per figure, in chunky blocks.
+
+**The model will paint the KEY COLOUR onto the figure** if you let it — magenta "glowing eyes" on a beetle,
+a magenta halo on a platinum. They survive only because the key floods from the border (an enclosed magenta
+pixel counts as art); a per-pixel colour test would punch holes exactly there. The prompt now forbids
+magenta/pink/purple anywhere on the figures, but **check each sheet for it anyway**.
+
 Full procedure — the verbatim sheet and gauntlet prompts, the cutting steps, the pixelsnap pitch warning, the
 hand-size constant and the per-tool grip measurement — lives in the **`player-sprites` skill**
 (`.claude/skills/player-sprites/SKILL.md`). Art lives in `tools/_generated/player/` (`bases/` = the two locked

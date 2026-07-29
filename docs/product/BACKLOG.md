@@ -21,6 +21,12 @@ the contact pose (fighting games). It lives in `tools/player_sprites/swing_lab.p
 demo gif. `PlayerToolAnimator.cs` still runs the old hand-authored curves.
 Design + evidence: `docs/product/investigations/swing-design/`. Plan: `docs/plans/swing-design-and-outfits.md`.
 
+**Stealth / reduced aggro (owner 2026-07-29, not built).** The spidersilk set's signature bonus:
+*"makes you stealthier (backlog stealth bonuses, basically reduces aggro I guess)"*. Nothing in the sim reads
+a stealth stat today, so this is a real mechanic to design — bug aggro is CLIENT-authority per
+`architecture_swarm_sync.md`, so anything that changes which bugs notice the player is a determinism-touching
+change and goes through the `frontier-sync` recipe, not a cosmetic tweak.
+
 Remaining, in the order it blocks things:
 - **Owner call** — which of the 8 non-catalog sets (`farmer` `wood` `swamp-gear` `fisherman` `wizard-robe`
   `hornet-stinger` `moth-wool` `glowworm`) become real sets, cosmetics, or get dropped.

@@ -86,6 +86,27 @@ with what exists on disk.
 **Set-design rule (D10):** a new set must justify a *concept*, not just exist because a zone does. "Thorough"
 = ~7 bonus-set concepts + 9 base sets — enough variety, not bloat.
 
+### Owner decisions 2026-07-29 (from the ranger design sheet)
+
+Three designs were drawn as options for one set; the owner kept **all three** and gave each a different home.
+`tools/_generated/player/explore/ranger/REVIEW.png`.
+
+| design | becomes | owner's words |
+|---|---|---|
+| 1 — hooded scout, ragged cloak | the **spidersilk stealth set** (the old `ranger` slot) | *"keep the first as ranger outfit (need a better naming), made from spidersilk and some other things, makes you stealthier"* |
+| 2 — brimmed hat, leather jerkin | **Entomologist** — replaces the khaki pith-helmet version | *"the second one will be the preemptive etomologist outfit"* |
+| 3 — leaf plates, antlered helm | **Forest armour** — a new set | *"the third is the forest armor"* |
+
+- **NAME PENDING** on design 1 — owner asked for a better one than "ranger". It is spider-silk and stealth,
+  which makes it the **Silk** concept in section B arriving earlier than T4–T5, not a new set. Naming is the
+  owner's call; candidates offered: `shadowsilk`, `silkstalker`, `gossamer`, `silkshroud`.
+- **Signature stat is STEALTH / reduced aggro**, not the `dodge_chance / move_speed / crit` this table
+  currently lists for Silk — *"makes you stealthier (backlog stealth bonuses, basically reduces aggro I guess)"*.
+  The mechanic is **backlogged**, so the table row is left as-is until it is built rather than being rewritten
+  to describe something that does not exist.
+- **Design 3 is the legibility risk.** At real game size its gold linework turns to noise while designs 1 and 2
+  stay readable. Its 12-frame sheet must be regenerated with the detail cut back, not scaled down from this.
+
 ---
 
 ## Reconciliation note
