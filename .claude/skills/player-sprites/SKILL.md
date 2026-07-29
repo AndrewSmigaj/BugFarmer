@@ -1,107 +1,178 @@
 ---
 name: player-sprites
-description: Use when creating, regenerating, or processing the PLAYER character sprite or any player WEARABLE — clothing, armor, hats/helmets, hair, boots, held gear — including the AI generation, the mask/extract pipeline, aligning + pixelizing, and where the work lives on disk. Covers tools/player_sprites/** (the aipipe pipeline) and the player paperdoll. Does NOT cover world objects / occupants / tiles / items (that is the add-object skill, Pipeline A) — the player is its OWN pipeline (B) with its own base, mannequin, and layer format.
+description: Use when creating or processing the PLAYER character or any player OUTFIT — armour sets, clothing, helmets, gauntlets/hands — including generating the sprite sheet, cutting it into frames, the walk/run/swing motion, and where the work lives on disk. Covers tools/player_sprites/** and tools/_generated/player/**. Does NOT cover world objects / occupants / tiles / items — that is the add-object skill.
 ---
 
-# Player sprites & wearables
+# Player sprites & outfits
 
-The player is a **paperdoll**: a locked base character plus coverage layers (helmet, chest, legs, boots,
-hair, …) that `CharacterComposer` stacks in draw order. This skill makes hundreds of those layers
-**consistent** with each other and with the game's look, and keeps the work **findable** so a request like
-"make a new hat" has one obvious home. Read the `_generated` MAP (`tools/_generated/README.md`) and the
-as-built format doc (`docs/guides/art/CHARACTER_DESIGN_GUIDE.md`) alongside this.
+**The character is ARMLESS by design.** No sprite has arms. The hands are separate little fists that float
+where hands would be. That one decision is what makes this cheap:
 
-## The one idea everything depends on — consistency comes from CONSTRAINT, not prompting
-You never ask the model to "match the style" from scratch — that's where drift comes from. Instead you author
-the character **once**, then force every wearable to be painted **onto that same locked base, inside a masked
-region**, and you **normalize the output with code**. The model only ever fills a hole on a figure it was
-handed. That is why the pipeline below exists and why shortcuts around it (free-form "draw a knight") fail.
+- no shoulder joint, no socket, no hole to repaint when a limb moves;
+- no per-outfit arm to keep in register;
+- a walk, a run and a **weapon swing** are done by *moving* the hand in code, so no swing pose is ever drawn.
 
-## Where the work lives (read this before making a folder — the anti-mess rule)
-All player art work lives under **`tools/_generated/player/`** (gitignored except the structure docs). Layout:
-- **`current/`** — a preview (`character.png`) of what's LIVE in the game. The real files are
-  `Resources/Player/layers/{slot}/{id}_{dir}{_w1|_w3}.png` — that is what the game loads and the single source
-  of "current." **To polish a live sprite, edit THAT file directly** (each layer PNG is an isolated true-pixel
-  piece — never keep a second copy, it just drifts).
-- **`in-progress/<item>/<YYYY-MM-DD_HHMM_label>/`** — active work, **per item, per DATED attempt.** Each attempt
-  holds `suit.png` (the render to cut) + `pieces/` (the cut pieces). **The newest-dated folder is the latest.**
-  "Make a new hat" → `in-progress/<name>/<today>_label/`. **NEVER dump loose files — always a dated attempt**
-  (so near-identical attempts stay distinguishable and the latest is obvious).
-- **`references/`** — the ONE shared `base`/`bald`/`mannequin` you mask against (not copied per attempt).
-- **`old/`** — finished + abandoned stuff, out of the way.
-- **On approve:** publish the chosen attempt's `pieces/` to `Resources/Player/layers/…`, refresh `current/`, and
-  log which attempt is live in `current/README.md`. If you think you need a new top-level folder, you almost
-  certainly don't — see the MAP `tools/_generated/README.md` and `docs/guides/authoring/ORGANIZATION.md`.
+One animator drives every tool. Adding a new weapon costs no animation work.
 
-## The pipeline (Pipeline B — hand-authored base + AI wearables), as built in `tools/player_sprites/aipipe/`
-`aipipe/common.py` is the tested toolbox; `aipipe/run_pilot.py` is the worked end-to-end example (a full set,
-front view). Native working resolution is **64×128** (`NATIVE_W/NATIVE_H`, owner-chosen for detail); the model
-is **`gpt-image-1.5`**, canvas `1024x1536`, quality `high`.
+**Outfits are whole sets, not modular pieces.** Owner decision (2026-07-28): we generate a complete 12-frame
+sheet per outfit — copper, silver, bronze… — rather than composing chest/legs/boots layers. The old paperdoll
+route needed hand-fixing on every piece; generating the whole sheet in one image removes drift entirely
+because everything shares a single render. A modular pipeline may come back later; it is not this.
 
-1. **Base + mannequin.** The locked base is the haired character gear composites onto. Build the dummy with
-   `make_mannequin(base, "green")` — it recolours the base to a shaded chroma dummy *preserving luminance* so
-   the model still drapes gear correctly. Paint HEAD gear on the **bald** base so a helmet sits on a clean
-   scalp. `"green"` is default; `"magenta"` is the fallback chroma when the gear itself is green (extraction =
-   "keep everything that isn't the dummy colour", so the dummy colour must be one no gear uses).
-2. **Mask the slot.** `slot_region(base, slot)` → a generous paint-here region → `region_mask_png(...)`
-   (transparent = editable, opaque = protected). The mask is a soft hint; the precise cut happens in extract.
-3. **Generate.** `masked_edit(mannequin_path, mask_path, prompt, ref_path=None)` — a gpt-image edit. It sends
-   `input_fidelity=high` + `background=transparent` on gpt-image-1/1.5 (keeps the figure faithful); it OMITS
-   both on gpt-image-2 (which rejects them — see FAILED below). An optional second `image[]` (`ref_path`) is a
-   finished view for cross-view consistency; the mask applies to the FIRST image only.
-4. **Normalize with code.** `normalize_align(mannequin, render, match_band=…)` corrects gpt's scale drift AND
-   position in one step by matching an anchor band (SSD on a downscaled grayscale) across scale 0.70–1.40. Use
-   `match_band=(0.0,0.32)` (the HEAD) for body gear; use a TORSO band `(0.34,0.64)` for HEAD gear (a helmet
-   replaces the head's look, so anchor where the figure is still green in both images).
-5. **Extract as a coverage layer.** Build ONE shared palette across the base + every render (`_pc.build_palette`,
-   k≈26) so all layers agree on colour, then `extract_layer(base, aligned_render, region, palette=…)` cuts the
-   gear (inside region AND not-the-dummy-colour AND opaque; despeckled). Pass `hand_mask=` to use an
-   owner-drawn silhouette instead of the colour test (supports "hand-modify the mask" in Aseprite).
-6. **Compose / preview.** `compose_layers(base_rgb, base_alpha, [layers in draw order])` stacks onto the base,
-   mirroring `CharacterComposer`'s order (legs → feet → torso → head).
+---
 
-### Pixelize FIRST, always (`aipipe/pixelsnap.py`)
-gpt draws each logical pixel as an anti-aliased ~N×N block on a non-integer grid. **Recover the true low-res
-grid immediately — never surface a raw render for editing** (the owner edits pixels, not drawings-of-pixels).
-`python pixelsnap.py in.png out.png --auto [--width 64 --height 128] [--palette 24] [--debug]` finds the pitch
-(largest on-grid-energy pitch = the fundamental; square grid from both axes) + corner and samples the **median
-of the inner 50%** of each cell (ignores AA borders). When crisping to a fixed height, be **crest-aware**:
-normalize by feet-to-top-of-**head** (first head-wide row), so a helmet crest is extra rows, not a squashed body.
+## Where things live
+```
+tools/_generated/player/
+  bases/          armless_front.png, armless_side.png   <- EXACTLY two files. The only source of a base.
+  outfits/<name>/ result.png (the 12-frame sheet), the 12 cut frames, gauntlet/, preview gifs
+  props/<name>/   non-character props (practice dummy, …)
+  archive/        superseded work. Nothing is deleted.
+```
+Folders are named for **what is in them**, never for how they were made. Looking for the bronze armour means
+knowing it is called bronze — not knowing which run produced it.
 
-## Prompting rules (hard-won — each was a real failure)
-- **Negations BACKFIRE.** Never say "no hair" / "without hair" — naming "hair" primes the model to draw it.
-  Describe positively ("bare shaved scalp"), or better, FEED the bald base and ask only for a view change.
-- **Feed the finished thing + ask for a small delta.** "Here is the bald character; make it stand from the
-  side, keep everything else identical" beats "remove the hair and turn it".
-- **UNIFORM PIXEL GRID.** Say: big chunky SQUARE pixels, ALL the same size, same density everywhere, no detail /
-  filigree / chainmail / anti-aliasing smaller than one pixel; keep the "fancy" in BOLD shapes + a little trim.
-  This is what fixes inconsistent pixelization between renders.
-- **A one-pass full suit must be LOCKED to the chibi silhouette.** A loose box mask → the model draws a
-  realistic ADULT knight. State: stocky CHIBI, BIG head, SHORT body, dead-on symmetric FRONT, keep pose/position.
-- **Keep the body identical.** Every gear prompt ends with "keep HEIGHT, body size, proportions, pose and
-  position EXACTLY identical; paint ONLY inside the editable region; everything else stays the same figure."
+`gen.py` is the **only** way to generate. Every run writes `RECORD.txt` beside the result (prompt, model,
+references as sent, timestamp) and appends a line to `RUNS.txt`. Nothing about a run lives in chat or in the
+assistant's head, because that is exactly what kept getting lost.
 
-## FAILED / rejected approaches (don't re-try these)
-- **gpt-image-2 — rejected.** It refuses `input_fidelity` and `transparent` background and paints a fake
-  checkerboard where it wants transparency. Stay on **gpt-image-1.5**. There is no "reasoning/thinking" param
-  for image models.
-- **Prompt-driven framing/height** ("fill the frame, ~60px tall") — over-zooms and distorts. Control size with
-  the METHOD (mannequin = recolor = same size) + `normalize_align`, not words.
-- **Hand-resizing sprites** — never. The runtime NEAREST-scales; `pixelsnap`/`pixelclean` are the only intended
-  resizers.
+```bash
+python3 tools/player_sprites/gen.py --dest outfits/steel --size 1024x1024 \
+  --ref tools/_generated/player/bases/armless_front.png \
+  --ref tools/_generated/player/bases/armless_side.png \
+  --prompt "..."
+```
 
-## Publish + verify
-- **Publish** the extracted, pixelized layers to `Resources/Player/layers/{slot}/{id}_{dir}{_w1|_w3}.png` (the
-  9 slots `CharacterComposer` reads: arms, body, chest, feet, hair, helmet, legs, pants, shirt). The game format
-  is **16×32 today**; the crisp native-size bump (64×128 → a larger published size) is a **separate,
-  owner-gated integration**, not something to slip in silently.
-- **Client C# is unverified until a Unity batchmode compile** — a Go/determinism gate never compiles
-  `CharacterComposer.cs`. If you touch client code, say so and run the headless compile (see `test-changes`).
-- **Spend freely on the image API when the owner has authorized it** — generate fresh assets and the good
-  version; don't reuse old art or defer to dodge cost.
+## ⚠ ASK BEFORE EVERY PAID IMAGE CALL
+The spend is unrecoverable and a wrong guess buys nothing. State how many calls and what each is for, then
+wait. An earlier "use the API as needed" is **not** standing permission. Free work — compositing, cutting,
+measuring, rendering previews — needs no permission, but say plainly which kind a result came from.
+
+---
+
+## Making an outfit
+
+### 1. The sheet — one call
+Model **gpt-image-2**, **no mask**, `1024x1024`, both bases as references in order (front, then side).
+
+> Draw a single sprite sheet showing the SAME character in **\<OUTFIT\>** as a 12-frame walk-cycle sheet. Use
+> the same character design, proportions, and no-arm anatomy consistently across the whole sheet.
+>
+> Layout: 3 rows by 4 columns, evenly spaced, all sprites at the same scale and aligned to the same baseline
+> within each row.
+>
+> Row 1: FRONT walk cycle, 4 distinct frames.
+> Row 2: BACK walk cycle, 4 distinct frames.
+> Row 3: RIGHT-FACING SIDE walk cycle, 4 distinct frames.
+>
+> Very important: the 4 frames in each row must be DIFFERENT phases of a walk cycle, not repeated standing
+> poses.
+>
+> For each row, the 4 columns must be:
+> Column 1: left leg forward, right leg back.
+> Column 2: passing pose, legs closer together, transition between steps.
+> Column 3: right leg forward, left leg back.
+> Column 4: passing pose opposite to column 2, transition back toward column 1.
+>
+> Because the character has NO ARMS, the walking motion must be shown by leg motion, slight hip shift, and a
+> subtle torso/head bob only. Do not add arms, hands, elbows, forearms, or gauntlets. The rounded shoulder
+> caps must end at the armless shoulder openings.
+>
+> Outfit: **\<material, colours, shadows, highlights\>**. Include a **\<HEADGEAR\>** covering the whole
+> head, a breastplate, rounded shoulder caps, a waist and hip piece covering the crotch, thigh plates on both
+> legs, greaves, and boots. No bare skin between the waist and the boots. The headgear is on the character in
+> all 12 frames.
+>
+> Keep the front row front-facing, the back row back-facing, and the bottom row a strict right-facing side
+> profile. Do not drift into a three-quarter view.
+>
+> Big simple shapes, not fine detail. This is a small pixel art sprite sheet. All 12 sprites must clearly be
+> the same character, but each frame in a row must be a distinct walking frame. If two adjacent frames in a
+> row are identical, the sheet is wrong.
+
+**Every outfit gets its headgear.** A set without one is inconsistent with the rest and has to be redone.
+
+### 2. The gauntlet/hand — one call
+Reference **that outfit's own sheet** so the material matches.
+
+> The attached image is a sprite sheet of a character wearing \<OUTFIT\>.
+>
+> Draw FOUR small \<MATERIAL\> GAUNTLET HANDS in a row on a black background, evenly spaced, large and
+> centred. Nothing else in the image — no character, no body, no arms, just the four hands.
+>
+> Each is the SAME \<MATERIAL\> as the armour in the attached image, same darker shadows, same bright
+> highlights, dark outline.
+>
+> Left to right, the same hand from four angles: (1) back of the hand facing the viewer, (2) palm side,
+> (3) in profile facing right, (4) three-quarter view.
+>
+> Care about the SILHOUETTE above all. The outline is a soft rounded shape, slightly taller than wide,
+> narrowing a little at the wrist. No separate fingers are drawn — at this size the hand reads entirely by its
+> outline and two or three shading bands inside it.
+>
+> Big simple shapes, chunky pixels. This is a small pixel art sprite — each hand is about ten pixels across in
+> the game, so use a handful of large blocks, no rivets, no filigree, no fine detail.
+
+Tested prompt strategies: describing the **silhouette** and forbidding interior detail works. Describing
+**anatomy** ("fingers curled, thumb along the index") does not — the model draws a realistic hand and then
+shrinks it into mush.
+
+### 3. Cut the sheet — free
+1. Threshold the black background (`rgb.sum() > 70`).
+2. **Dilate before labelling** (`binary_dilation(…, ones((9,9)))`) — dark plate gaps split one figure into
+   several blobs otherwise.
+3. Connected components; keep blobs over ~4000 px; sort by row centre → front / back / side; sort each row by
+   column centre.
+4. Give each row **one shared ground line** so the figure doesn't bounce between frames.
+5. Left = **mirror of right**. Never generate it.
+
+Frames 1, 2, 3 are the cycle. **Drop frame 4** — it comes back as a second stride rather than the opposite
+passing pose, which reads as a skip. Play **1, 2, 3, 2**.
+
+### 4. Pixelize — only if you need the true grid
+`aipipe/pixelsnap.py` recovers the real pixel grid. **Verify the pitch yourself** — measure the most common
+run-length of constant colour along a few rows and compare. `--auto` once reported **9.5** against a true
+**~3.17** and silently discarded two thirds of the sprite. Pass `--pitch` explicitly.
+
+Never hand-roll a downscaler. Cell-median or area-average resampling turns pixel art to mush; that mistake was
+made twice in one session while the correct tool sat unused.
+
+---
+
+## Motion (all free, all in code)
+
+**One hand-size constant, relative to BODY height — currently 0.17.** Never size the hand off the tool sprite:
+that bug made the same hand 25% of body height while swinging and 17% while walking, so it grew the moment a
+weapon was drawn.
+
+- **Walk** — hands swing fore and aft *through* the body, opposite phase, extended on the stride frames and
+  tucked at the hip on the passing frames, tilting with the direction of travel. The near hand draws over the
+  torso, the far hand behind it and dimmed. Anchor to the **torso width at chest height**, measured once from
+  the neutral frame — measuring per frame makes the hands jitter as the legs change the silhouette.
+- **Run** — same twelve frames played faster (≈90ms vs 150ms), hands rotated ~75° to point forward and raised
+  toward the chest, bigger travel. **No new art for running.**
+- **Swing** — the hand rides the tool. Grip position is **measured per tool** off its own sprite (a sword
+  grips high on a short hilt, a hoe low on a long shaft), then rotated **225°** with the hand sitting **+16%**
+  further down the handle. The motion curves live in `PlayerToolAnimator.cs` and differ per tool kind:
+  Swing overshoots, Chop **holds at impact**, Sweep is symmetric with no overshoot (the trail *is* the catch
+  area), Till chops down then **drags back** toward the player. Read the actual `case`; do not assume one
+  curve fits all.
+
+---
+
+## Failures worth never repeating
+- **Masks produce black boxes.** Every masked run came back ruined; every unmasked run worked. The old
+  guidance in this file said the opposite and cost most of a day.
+- **Say "the character has no arms" explicitly.** Minimal-delta preserves what is *present*, not what is
+  *absent* — without the sentence the model draws arms back on, even from an armless reference.
+- **Don't carve pieces out of a finished render.** A drawn arm only contains the pixels visible in that pose;
+  rotate it and you expose a surface that was never drawn. Author the pieces, don't cut them.
+- **One canonical copy of each base.** The base once existed under four names in four folders and the wrong
+  one was picked three times in a single session.
+- **Look at the render.** Repeatedly a change was made, the output described as working, and the actual image
+  showed it buried in the hip, cropped off-frame, or a hand the size of the head.
 
 ## Pointers
-- `tools/_generated/README.md` — the MAP (where every generated thing lives).
-- `docs/guides/art/CHARACTER_DESIGN_GUIDE.md` — the as-built paperdoll format + `CharacterComposer`.
-- `docs/guides/art/object_pipeline.md` — the sibling Pipeline-A (world art) doc; `add-object` owns it.
-- `docs/guides/authoring/ORGANIZATION.md` — the repo folder rule (why we don't invent buckets).
+- `docs/guides/art/CHARACTER_DESIGN_GUIDE.md` — the as-built format.
+- `tools/player_sprites/demo_swings.py` — the motion preview, with the curves ported from the game.
+- `docs/product/economy/catalogs/armor.md` — the canonical list of which sets exist and are planned.

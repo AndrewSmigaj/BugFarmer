@@ -24,53 +24,37 @@ call: keep the current resolution), not the 32x48 proposed below. How it works
   need `isReadable: 1` — `fix_sprite_ppu.py` sets it). Appearance/equip server
   sync is a backlog follow-up; F6 cycles debug outfits locally.
 
-## WIP (2026-07): AI-generated wearables — the `aipipe` pipeline
-A second, in-development pipeline mass-produces wearables (clothing/armor/hats/hair) with **gpt-image-1.5**
-instead of hand-authored text grids. The idea is consistency-by-CONSTRAINT: paint gear onto a recoloured
-**mannequin** of the locked base, inside a masked slot; normalize scale+position with code; extract a coverage
-layer; compose in `CharacterComposer` draw order. Native working resolution **64×128**; renders are pixelized
-immediately (`aipipe/pixelsnap.py` recovers the true grid). Code: `tools/player_sprites/aipipe/`; the work
-lives in `tools/_generated/player/` (`current/` · `in-progress/<item>/<dated-attempt>/` · `references/` ·
-`old/` — start at its `README.md`). **Full
-procedure, prompting rules, and where WIP lives: the `player-sprites` skill**
-(`.claude/skills/player-sprites/SKILL.md`). The 16×32 shipped system above is unchanged; publishing at a larger
-crisp size is a separate, owner-gated integration.
+## AS BUILT (2026-07-28): whole-outfit sprite sheets, armless character + floating hands
+**This supersedes the masked/paperdoll pipeline described in older revisions of this section.**
 
-### The body/arm split — every character asset is TWO pieces (2026-07-28)
-A weapon swing has to move the arm, so the weapon arm cannot live inside a flattened composite. **Split the
-BASE once, then generate armour onto the split pieces** — armour painted onto a body-without-arm is already a
-body-without-arm, so registration is structural rather than something each set has to get right. Cutting an
-arm out of a finished armour render is the wrong order and does not work: the cut fragments when rotated.
+The character is **armless**; the hands are separate floating fists moved by code. A walk, a run and a weapon
+swing therefore need no drawn poses beyond the walk cycle itself, and one animator drives every tool.
 
-Per direction (`down`, `side`, `up`; left is always a mirror of right):
-- **body** — torso, head, legs, feet, and the OFF arm. Keeps its own shoulder.
-- **arm** — the weapon arm, on the same full-size canvas as the body, so the two share an origin and only the
-  pivot matters. Rotates about the **shoulder pivot** in `references/pivots.json`.
+Outfits are generated as **whole 12-frame sheets** (3 rows front/back/side x 4 walk phases), one image per
+outfit, rather than composed from chest/legs/boots layers. Generating the whole sheet in one render removes
+drift by construction; the masked per-slot route needed hand-fixing on every piece and was abandoned
+(owner decision, 2026-07-28).
 
-Tool: `tools/player_sprites/split_base_arm.py`. **Which seam the split follows depends on the view, and the
-two cases are not equally easy** — don't assume the front's result generalizes.
+Model **gpt-image-2**, **NO MASK**. Masked runs come back as black boxes. The prompt must state that the
+character has no arms, or the model draws them back on.
 
-**`gap` (front, back) — automatic and lossless.** The arm already hangs clear of the torso.
-- **No socket needs painting.** The connected blob on the weapon side lifts out and leaves the body whole;
-  the shoulder never belonged to the arm. Assert `body+arm == original`.
-- **The shoulder cap is COPIED from the body, not cut from it** (3 rows for `down`). Hinging at the armpit
-  detaches visibly by 50°; the cap moves the hinge to the joint, and because the body keeps its own shoulder
-  the overlap can't open a seam at any angle. Pick it by eye with `--compare-cap`, don't guess.
-- **Use 4-connectivity.** The gap column steps sideways one pixel partway down; under 8-connectivity that
-  diagonal touch bridges the gap and swallows the whole lower body into one blob.
+Full procedure — the verbatim sheet and gauntlet prompts, the cutting steps, the pixelsnap pitch warning, the
+hand-size constant and the per-tool grip measurement — lives in the **`player-sprites` skill**
+(`.claude/skills/player-sprites/SKILL.md`). Art lives in `tools/_generated/player/` (`bases/` = the two locked
+sprites, `outfits/<name>/` = one folder per outfit).
 
-**`colour` (profile) — a starting point that always needs hand finishing.** There is no gap: the arm is drawn
-over the torso, so the seam is bare limb (saturated skin) vs clothing (pale, desaturated).
-- **Confirm the skin blob is the arm, not a bare shoulder**, before trusting it — check its hand ends at the
-  same fraction down the figure as the front view's hand (~0.64 for ours).
-- **The profile arm sits on the silhouette EDGE**, so lifting it out deletes the torso's whole back rather
-  than opening a hole in the middle, and nothing in the source says what belongs there. The tool mirrors the
-  clothing outward from the seam and keeps the outline. **Mirror, don't flat-fill** — one sampled colour per
-  row lays down obvious horizontal banding.
-- Finish it by hand in `split.aseprite`; the tool prints this warning on every profile run.
+The 16x32 region-template system above is the ORIGINAL hand-authored player and is what the game still loads
+today; publishing the new sheets is a separate step.
 
-`references/` is tracked in git — it is an INPUT (the locked bases, their splits, the pivots), not regenerable
-output. Plan: `docs/plans/player-arm-and-wearables.md`.
+### SUPERSEDED — the body/arm split (abandoned 2026-07-28)
+An earlier attempt split each base into a body plus a rotatable weapon ARM. It was abandoned the same day: you
+cannot carve animation pieces out of a finished drawing, because a drawn arm only contains the pixels visible
+in that one pose — rotate it and you expose a surface that was never drawn. In profile it is worse still, as
+the arm overlaps the torso and lifting it out deletes the body behind it.
+
+The armless + floating-hand design replaces it and removes the problem rather than solving it: a fist is
+round, self-contained, and reads the same from any angle, so there is nothing to tear and no joint to hide.
+`tools/player_sprites/split_base_arm.py` remains only as a record of the attempt.
 
 The sections below are the ORIGINAL 32x48 proposal — kept for the proportions/
 perspective/palette guidance, which still applies. Dimensions there are
