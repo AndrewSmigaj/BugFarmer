@@ -89,6 +89,29 @@ cloth and not as pale armour.
 The 16x32 region-template system above is the ORIGINAL hand-authored player and is what the game still loads
 today; publishing the new sheets is a separate step.
 
+### The swing: the hand needs a SHOULDER (2026-07-29)
+The first five swing "approaches" all rotated one rigid tool sprite about the **player's centre** and stuck
+the fist to its grip afterwards. They differed only in the easing of that one angle, which is why they looked
+identical and why the fist rode up past the chest — a circle around the navel is not a swing, and no amount
+of retiming fixes a wrong pivot.
+
+**Drive the HAND, then hang the tool off it** (`swing_lab.py` approaches 8–9). The hand travels an arc from a
+shoulder; the arm shortens across the body and extends through contact, which is what an elbow does. Costs no
+new art, because the fist is already a separate code-moved sprite.
+
+Two constraints found by getting them wrong:
+
+- **The armless design caps how far the hand may travel.** A drawn character can reach arm's length because
+  the arm connects the hand. Ours cannot — at a realistic reach the sword visibly detached and floated beside
+  the body. Keep the hand within roughly a third of a cell of the shoulder.
+- **`art_rot` must stay 0 unless the grip is recomputed with it.** `grip_of` measures the handle off the
+  *unrotated* sprite, so rotating the net 180° left the hand clamped on the hoop with the handle out the far
+  side. Fix a "wrong way round" tool by reversing its **sweep**, not its sprite.
+
+**Every facing gets its own shoulder.** Sharing one put the hand at face height in the front view. The front
+view also needs a floor angle so a tool stops in front rather than burying itself, and the away-facing view
+draws tool and hand **behind** the body. All three are rendered side by side because all three have to work.
+
 ### SUPERSEDED — the body/arm split (abandoned 2026-07-28)
 An earlier attempt split each base into a body plus a rotatable weapon ARM. It was abandoned the same day: you
 cannot carve animation pieces out of a finished drawing, because a drawn arm only contains the pixels visible

@@ -25,6 +25,10 @@ DEST = os.path.join(REPO, "docs", "product", "investigations", "swing-design")
 
 ease_out = lambda t: 1 - (1 - t) ** 2
 ease_in = lambda t: t ** 3
+ease_in_out = lambda t: 4 * t ** 3 if t < 0.5 else 1 - (-2 * t + 2) ** 3 / 2
+# 0 -> 1 -> 0. The tool reaches its furthest at mid-strike and comes back, so "extend" is a REACH through
+# the arc rather than a permanent change of radius that would leave the tool stranded at arm's length.
+bump = lambda t: math.sin(math.pi * max(0.0, min(1.0, t))) ** 0.8
 
 
 def ease_out_back(t):
@@ -33,12 +37,34 @@ def ease_out_back(t):
 
 
 # Profiles as shipped (PlayerToolAnimator.cs:33-46). `weight` 0..1 drives the derived approaches.
+# `art_rot` rotates the SPRITE only. ⚠ IT MUST STAY 0 UNLESS THE GRIP IS RECOMPUTED WITH IT: `grip_of`
+# measures the handle end off the unrotated sprite, so spinning the art 180 deg leaves the hand clamped on
+# the HEAD with the handle sticking out the far side. Tried that on the net and it looked worse, not better.
+# The net's "upside down" is fixed by reversing the SWEEP instead — see `sweep` in arm_motion.
 TOOLS = {
-    "sword": dict(icon="sword_bronze_icon.png", kind="swing", arc=100.0, dur=0.20, off=0.60, weight=0.25),
-    "axe":   dict(icon="axe_copper_icon.png",   kind="chop",  arc=110.0, dur=0.34, off=0.55, weight=1.00),
-    "net":   dict(icon="small_net_icon.png",    kind="sweep", arc=90.0,  dur=0.25, off=0.60, weight=0.10),
-    "hoe":   dict(icon="hoe_copper_icon.png",   kind="till",  arc=90.0,  dur=0.24, off=0.55, weight=0.65),
+    "sword": dict(icon="sword_bronze_icon.png", kind="swing", arc=100.0, dur=0.20, off=0.60, weight=0.25,
+                  art_rot=0.0),
+    "axe":   dict(icon="axe_copper_icon.png",   kind="chop",  arc=110.0, dur=0.30, off=0.55, weight=1.00,
+                  art_rot=0.0),
+    "net":   dict(icon="small_net_icon.png",    kind="sweep", arc=150.0, dur=0.16, off=0.60, weight=0.10,
+                  art_rot=0.0),
+    "hoe":   dict(icon="hoe_copper_icon.png",   kind="till",  arc=90.0,  dur=0.24, off=0.55, weight=0.65,
+                  art_rot=0.0),
 }
+
+# One entry per facing. The shoulder is NOT in the same place in every view, and pretending it is put the
+# hand at face height in the front view — owner: "the face down the hand is too high, it holds it like face
+# height with the tool straight down the hand should be lower".
+#   sprite  which body frame to draw
+#   aim     rotates the whole arc for that facing
+#   sh      shoulder offset from body centre, CELL units, +x forward / +y up
+#   behind  draw tool+hand BEHIND the body (true for the away-facing view, or the tool covers his back)
+#   floor   lowest angle the arc may reach in this facing; None = unclamped
+FACINGS = [
+    dict(name="side",  sprite="side_2.png",  aim=0.0,   sh=(0.06, 0.40), behind=False, floor=None),
+    dict(name="front", sprite="front_2.png", aim=-60.0, sh=(0.10, 0.10), behind=False, floor=-30.0),
+    dict(name="up",    sprite="back_2.png",  aim=45.0,  sh=(0.10, 0.22), behind=True,  floor=None),
+]
 ART_ANGLE = 45.0
 DIAG = np.array([-1, 1]) / math.sqrt(2)
 GRIP_EXTRA = 0.16
@@ -49,7 +75,21 @@ FPS = 30
 # The pose the game cuts to the instant a swing ends (PlayerToolAnimator.cs:183-185, RestoreIdle :204).
 # It is set directly — no lerp — so the gap between where an approach LEAVES the tool and this pose is a
 # visible pop. The lab used to loop straight back to t=0, which hid that cost from every approach.
-IDLE_ANGLE, IDLE_OFF, IDLE_SCALE = -35.0, 0.4, 0.75
+#
+# IDLE_SCALE was 0.75 while every swing frame drew the tool at 1.0, so the weapon visibly CHANGED SIZE the
+# instant the swing ended. Owner: "the idle sword/tool is different sized than the ones used in the
+# animation". That is a real bug in the shipped animator too — `PlayerToolAnimator.IdleScale` has to come
+# to 1.0 with it, or the game will still pop even once the motion is right.
+IDLE_ANGLE, IDLE_OFF, IDLE_SCALE = -35.0, 0.4, 1.0
+
+# Approach 7 retimes for ACTUAL PLAY. Owner: "these are to be used in game so they can't be really slow."
+# The lab's durations came from the shipped profiles, which were authored for a demo loop, not for a player
+# holding the button — the axe at 0.34s is a third of a second of committed animation per tree.
+DUR_SCALE = {7: 0.70, 8: 0.70, 9: 0.70}
+
+
+def duration(approach, p):
+    return p["dur"] * DUR_SCALE.get(approach, 1.0)
 
 
 # ---------------------------------------------------------------- approaches
@@ -84,6 +124,54 @@ def motion(approach, p, t):
         u = (t - strike) / (1 - strike)
         end = aim - half - half * (0.30 + 0.50 * w)     # exaggerated overshoot, scaled by weight
         return aim + (end - aim) * ease_out_back(u), off, False, False
+
+    if approach == 7:
+        # ITERATION 2, TUNED — owner picked 2 as the closest and listed what was wrong with it.
+        # Everything here is one of his notes, not a fresh idea:
+        #
+        #  * "the hand should arc forward a little more ... the sword one has the best, the rest should
+        #    do that too". Only `swing` ever pushed the tool outward mid-strike (+0.20); chop, sweep and
+        #    till held a fixed radius, which is why they read as spinning on the spot. Now every kind
+        #    extends, and the sword's own push goes 0.20 -> 0.38 because "it just needs to extend a
+        #    little further".
+        #  * "the tip of the hoe does not go down to ground level". It stopped at -12 deg, barely under
+        #    horizontal. The tip reaches the feet at about -80.
+        #  * "for the ax i would prefer it a swing that goes back and all the way around" — so chop's
+        #    lift-hold-drop is replaced by a single continuous 250 deg circle.
+        #  * the sword "can be the sharp slash like it is now", so its angle curve is untouched.
+        ext = 0.38 if kind == "swing" else 0.30      # how far the tool reaches out through the strike
+        contact = {"swing": 0.62, "chop": 0.58, "sweep": 0.50, "till": 0.55}[kind]
+        freeze = contact <= t < contact + 0.06 + 0.10 * w
+
+        if kind == "chop":                      # AXE — back, and all the way around
+            top, end = aim + 175.0, aim - 75.0   # 250 deg of continuous travel, no hold
+            ant = 0.28
+            if t < ant:
+                a = (aim + half) + (top - (aim + half)) * ease_out(t / ant)
+                return a, off, False, False
+            u = (t - ant) / (1 - ant)
+            a = top + (end - top) * ease_in_out(u)
+            return a, off + ext * bump(u), freeze, 0.25 < u < 0.62
+
+        if kind == "sweep":                     # NET — stays ABOVE horizontal so the hoop never inverts
+            a = 55.0 - 75.0 * ease_out(t)       # +55 -> -20, a scoop rather than a barrel roll
+            return a, off + ext * bump(t), False, 0.2 < t < 0.6
+
+        if kind == "till":                      # HOE — down to the feet, THEN drag back
+            top, ground = aim + half + half * 0.35, -80.0
+            ant, strf = 0.20, 0.34
+            if t < ant:
+                return (aim + half) + (top - (aim + half)) * ease_out(t / ant), off, False, False
+            if t < ant + strf:
+                u = (t - ant) / strf
+                return top + (ground - top) * ease_in(u), off + ext * u, freeze, u > 0.55
+            u = (t - ant - strf) / (1 - ant - strf)          # planted, and pulled back toward the player
+            return ground + 6.0 * u, off + ext - (ext + 0.28) * ease_out(u), False, False
+
+        a, o = _shipped(kind, t, aim, arc, off)              # SWORD — the slash is kept as it was
+        if 0.15 <= t:
+            o = off + ext * bump((t - 0.15) / 0.85)
+        return a, o, freeze, False
 
     if approach == 6:                           # THE SYNTHESIS — see DESIGN.md "RESULT"
         # Approach 5 won on two structural counts (continuous velocity kills the teleport; the
@@ -151,6 +239,82 @@ def motion(approach, p, t):
             x += v * dt
         return x, off, False, abs(v) > 900
     return 0.0, off, False, False
+
+
+# ---------------------------------------------------------------- the arm rig (approaches 8 and 9)
+#
+# Approaches 1-7 all share one mechanism: rotate a rigid tool sprite about the player's CENTRE at a fixed
+# radius. That is WHY the swing reads wrong no matter how the timing is tuned — the fist travels a circle
+# around the character's navel, so it rides up past the chest and the weapon spins on the spot. Owner:
+# "who even swings a sword like that their fist up near their chest".
+#
+# Nothing here needs a new sprite. The character is armless and the fist is already a free-floating sprite
+# moved by code, so the hand can follow ANY path we choose — we simply never chose one. These two give it
+# a path:
+#
+#   8  SHOULDER ARM  — the hand hangs off a shoulder, at arm's length, and the arm SHORTENS as it comes
+#                      across the body and extends again on the follow-through. That length change is the
+#                      elbow, without drawing one; it is what turns a circle into a swing.
+#   9  WHOLE BODY    — the same arm, plus the body itself. Real swings are driven from the hips: the torso
+#                      counter-rotates away during wind-up, then rotates and steps INTO the strike. This
+#                      is the single biggest thing missing, and it costs one rotate + one offset.
+# From the body's centre, in CELL units (CELL = half the body height): +x forward, +y UP.
+# The shoulder sits about 22% of body height above centre, which is where the sprite's shoulder cap is.
+SHOULDER = (0.06, 0.40)
+
+# THE ARMLESS DESIGN CAPS HOW FAR THE HAND MAY TRAVEL, and this is the thing the first attempt got wrong.
+# A drawn character can put its hand at arm's length because the arm connects it. Ours cannot: there is no
+# arm, so a fist 20px clear of the torso does not read as "reaching", it reads as a fist that has come off.
+# The first pass used reach 0.62-0.72 CELL and the sword visibly detached and floated beside the body.
+# Keeping the hand inside roughly a third of a cell keeps it reading as attached while still tracing an arm
+# arc rather than orbiting the navel.
+ARM_MIN, ARM_MAX = 0.20, 0.40
+
+
+def arm_motion(approach, p, t):
+    """-> theta, arm, freeze, smear, lean, step   (theta/arm place the HAND, not the tool)."""
+    kind, w, arc = p["kind"], p["weight"], p["arc"]
+    contact = {"swing": 0.60, "chop": 0.58, "sweep": 0.50, "till": 0.55}[kind]
+    freeze = contact <= t < contact + 0.05 + 0.09 * w
+
+    if kind == "chop":
+        # AXE — ONE continuous arc the whole way round. Owner: "i want the axes swung around in an arc,
+        # not pulled back and swung down." The previous version had a distinct wind-back that STOPPED and
+        # then a separate chop, which is exactly the two-part motion he is rejecting. This never stops:
+        # it starts at rest and travels ~330 deg in a single accelerating-then-decelerating sweep, so the
+        # head is always moving and the "wind up" is just the first third of the same circle.
+        theta = 60.0 - 330.0 * ease_in_out(t)
+    elif kind == "sweep":
+        # NET — faster and further across (dur 0.25 -> 0.16, arc 90 -> 150), and now sweeping UPWARD:
+        # low behind, up and over the front. Owner: "the net is upside down (you are swinging the net
+        # bulge first)". Sweeping down led with the closed underside of the bag; scooping up leads with
+        # the mouth, which is also how you actually catch something.
+        theta = -55.0 + 150.0 * ease_out(t)
+    elif kind == "till":
+        top, ground, ant, strf = arc / 2 + 16.0, -80.0, 0.20, 0.34
+        theta = ((arc / 2) + (top - arc / 2) * ease_out(t / ant) if t < ant
+                 else top + (ground - top) * ease_in(min(1.0, (t - ant) / strf)) if t < ant + strf
+                 else ground + 6.0 * ((t - ant - strf) / (1 - ant - strf)))
+    else:
+        top, end, ant, strf = arc / 2 + arc * 0.15, -arc / 2, 0.15, 0.50
+        theta = ((arc / 2) + (top - arc / 2) * ease_out(t / ant) if t < ant
+                 else top + (0.0 - top) * ease_in((t - ant) / strf) if t < ant + strf
+                 else 0.0 + (end - 0.0) * ease_out_back((t - ant - strf) / (1 - ant - strf)))
+
+    # THE ELBOW, without an elbow: tucked in during the wind-up, thrown out through contact, drawn back
+    # on the recovery. That length change over the arc is what an elbow DOES, and it is the difference
+    # between a swing and a sprite on a turntable.
+    u = bump(t) ** 0.6 if kind != "till" else min(1.0, t / 0.55)
+    arm = ARM_MIN + (ARM_MAX - ARM_MIN) * u * (0.85 + 0.15 * w)
+
+    lean = step = 0.0
+    if approach == 9:
+        # hips first: away during wind-up, hard through the strike, settle. Small numbers on purpose —
+        # at 71px tall, 6 degrees and a third of a cell is a lunge, not a nudge.
+        s = min(1.0, max(0.0, (t - 0.12) / 0.55))
+        lean = (-4.5 * (1 - s) + 7.0 * s) * (0.6 + 0.4 * w)
+        step = (-0.06 * (1 - s) + 0.30 * s) * (0.7 + 0.3 * w)
+    return theta, arm, freeze, (0.25 < t < 0.62), lean, step
 
 
 def _shipped(kind, t, aim, arc, off):
@@ -249,8 +413,8 @@ def cut_side_dummy():
 
 
 def build(approach):
-    side = rgba(os.path.join(OUTFIT, "side_2.png"))
-    front = rgba(os.path.join(OUTFIT, "front_2.png"))
+    bodies = {f["name"]: rgba(os.path.join(OUTFIT, f["sprite"])) for f in FACINGS}
+    side, front = bodies["side"], bodies["front"]
     BH = bbox(side)[1] - bbox(side)[0] + 1
     CELL = BH / 2.0
     hand = rgba(os.path.join(OUTFIT, "gauntlet", "front.png"))
@@ -260,8 +424,10 @@ def build(approach):
     tiles = [rgba(os.path.join(RES, "Tiles", n)) for n in
              ("grass.png", "grass_v2.png", "grass_v3.png", "grass_v4.png", "grass_v5.png")]
 
-    # framed tight: two characters with arc room, dummy between, tree at the edge
-    W, H = int(CELL * 6.4), int(CELL * 3.6)
+    # Three characters now — side, front and away-facing. Owner: "might as well put the facing upward
+    # swings in here too." All three have to work, so all three are on screen at once rather than being
+    # checked one at a time and assumed fine.
+    W, H = int(CELL * 8.6), int(CELL * 3.6)
     TS = int(CELL)
     rng = np.random.RandomState(7)
     ground = np.zeros((H, W, 4), np.uint8)
@@ -270,10 +436,13 @@ def build(approach):
             paste(ground, scale_h(tiles[rng.randint(len(tiles))], TS), gx + TS / 2, gy + TS / 2)
 
     BASE = int(H * 0.88)
-    SX, DX, FX = int(W * 0.20), int(W * 0.50), int(W * 0.80)
+    FACE_X = [int(W * 0.16), int(W * 0.50), int(W * 0.84)]      # side, front, away — matches FACINGS
+    SX, DX, FX = FACE_X[0], int(W * 0.33), FACE_X[1]
 
     def frame(tool, t, idle=False):
         p = TOOLS[tool]
+        if approach >= 8 and not idle:
+            return frame_arm(tool, t)
         ang, off, freeze, smear = motion(approach, p, t)
         if idle:                                        # the pose the game snaps to when the swing ends
             ang, off, smear = IDLE_ANGLE, IDLE_OFF, False
@@ -283,7 +452,8 @@ def build(approach):
         art = scale_h(rgba(os.path.join(RES, "Items", p["icon"])), CELL * (IDLE_SCALE if idle else 1.0))
         g = grip_of(art) + DIAG * GRIP_EXTRA
 
-        for px, body, aim_off in ((SX, side, 0.0), (FX, front, -60.0)):
+        for px, fc in zip(FACE_X, FACINGS):
+            body, aim_off = bodies[fc["name"]], fc["aim"]
             cy = BASE - BH // 2
             paste(sc, body, px, cy)
             a = ang + aim_off
@@ -304,15 +474,67 @@ def build(approach):
         im.alpha_composite(Image.fromarray(sc, "RGBA"))
         return im.convert("RGB"), freeze
 
+    def frame_arm(tool, t):
+        """Approaches 8/9: place the HAND on an arm arc, then hang the tool off the hand.
+
+        The order matters and is the whole point. Everywhere else the tool is positioned first and the
+        fist is stuck to its grip afterwards, so the hand goes wherever the sprite's rotation puts it.
+        Here the hand is driven and the tool follows it, which is the way round a real swing works.
+        """
+        p = TOOLS[tool]
+        theta, armlen, freeze, smear, lean, step = arm_motion(approach, p, t)
+        sc = ground.copy()
+        paste(sc, tree, int(W * 0.03), BASE - tree.shape[0] // 2 + int(CELL * 0.2))
+        paste(sc, dummy, DX, BASE - dummy.shape[0] // 2)     # something for the side swing to reach
+        art = scale_h(rgba(os.path.join(RES, "Items", p["icon"])), CELL)
+        g = (grip_of(art) + DIAG * GRIP_EXTRA) * art.shape[0]
+        arot = p.get("art_rot", 0.0)
+
+        for px, fc in zip(FACE_X, FACINGS):
+            body = bodies[fc["name"]]
+            cy = BASE - BH // 2
+            bx = px + step * CELL                       # the step INTO the swing (approach 9 only)
+
+            a = theta + fc["aim"]
+            if fc["floor"] is not None:                 # front view: stop in front, don't bury the tool
+                a = max(a, fc["floor"])
+            sh_x = bx + fc["sh"][0] * CELL
+            sh_y = cy - fc["sh"][1] * CELL
+            r = math.radians(a)
+            hx = sh_x + math.cos(r) * armlen * CELL     # the HAND, on its arm arc
+            hy = sh_y - math.sin(r) * armlen * CELL
+
+            rr = math.radians(-(a - ART_ANGLE))         # the tool hangs off the hand, grip-first
+            tx = hx - (g[0] * math.cos(rr) - g[1] * math.sin(rr))
+            ty = hy - (g[0] * math.sin(rr) + g[1] * math.cos(rr))
+
+            def draw_tool():
+                if smear:
+                    for k, al in ((7, 0.28), (14, 0.14)):
+                        paste(sc, rot(art, a + k - ART_ANGLE + arot), tx, ty, al)
+                paste(sc, rot(art, a - ART_ANGLE + arot), tx, ty)
+                paste(sc, rot(hand_s, a - ART_ANGLE + HAND_ROT), hx, hy)
+
+            if fc["behind"]:                            # away-facing: the swing happens behind him
+                draw_tool()
+                paste(sc, rot(body, lean) if lean else body, bx, cy)
+            else:
+                paste(sc, rot(body, lean) if lean else body, bx, cy)
+                draw_tool()
+        im = Image.new("RGBA", (W, H), (30, 36, 30, 255))
+        im.alpha_composite(Image.fromarray(sc, "RGBA"))
+        return im.convert("RGB"), freeze
+
     frames, ms = [], []
     for tool in ("sword", "axe", "net", "hoe"):
         p = TOOLS[tool]
-        n = max(8, int(p["dur"] * FPS * 3))
+        dur = duration(approach, p)
+        n = max(8, int(dur * FPS * 3))
         for reps in (1, 2):
             for _ in range(reps):
                 for i in range(n):
                     img, fr = frame(tool, i / (n - 1))
-                    step = int(p["dur"] * 1000 / n)
+                    step = int(dur * 1000 / n)
                     frames.append(img)
                     ms.append(step * (4 if fr else 1))     # a freeze is a held frame, purely local + visual
             # hold the IDLE pose, not t=0 — the cut from swing-end to idle is part of what we're judging

@@ -97,9 +97,9 @@ Three designs were drawn as options for one set; the owner kept **all three** an
 | 2 — brimmed hat, leather jerkin | **Entomologist** — replaces the khaki pith-helmet version | *"the second one will be the preemptive etomologist outfit"* |
 | 3 — leaf plates, antlered helm | **Forest armour** — a new set | *"the third is the forest armor"* |
 
-- **NAME PENDING** on design 1 — owner asked for a better one than "ranger". It is spider-silk and stealth,
-  which makes it the **Silk** concept in section B arriving earlier than T4–T5, not a new set. Naming is the
-  owner's call; candidates offered: `shadowsilk`, `silkstalker`, `gossamer`, `silkshroud`.
+- **NAMED `shadowsilk`** by the owner, 2026-07-29 — *"ranger's shadowsilk armor"*. It is spider-silk and
+  stealth, which makes it the **Silk** concept in section B arriving earlier than T4–T5, not a new set. The
+  old `ranger` set name retires; `forest` takes the woodland slot.
 - **Signature stat is STEALTH / reduced aggro**, not the `dodge_chance / move_speed / crit` this table
   currently lists for Silk — *"makes you stealthier (backlog stealth bonuses, basically reduces aggro I guess)"*.
   The mechanic is **backlogged**, so the table row is left as-is until it is built rather than being rewritten
