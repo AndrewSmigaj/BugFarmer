@@ -135,6 +135,13 @@ begins in front has no swing in it, whatever the timing does.
 
 **Combat durations are 0.11–0.22s.** Anything slower cannot be held down in a fight.
 
+### Judge a set IN MOTION, holding something
+`showcase.py` renders several sets across four bands on one timeline — running right, running down, swinging
+side-on, swinging front-on — with a different tool per column so every motion appears. A set that reads well
+as a portrait can still fall apart the moment it moves or picks up a weapon, so the reel, not the contact
+sheet, is what a set has to survive. It imports the swing from `swing_lab` rather than reimplementing it, so
+it cannot drift from the designed motion.
+
 ### SUPERSEDED — the body/arm split (abandoned 2026-07-28)
 An earlier attempt split each base into a body plus a rotatable weapon ARM. It was abandoned the same day: you
 cannot carve animation pieces out of a finished drawing, because a drawn arm only contains the pixels visible
