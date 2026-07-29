@@ -89,3 +89,64 @@ the character and the whole arc fill the frame.
 ## Success would look like
 Four tools that are told apart at a glance with no per-tool animation authored, a contact moment the eye can
 register at sprite size, and no reliance on anything that would desync a second client.
+
+---
+
+# RESULT — what the five iterations settled
+
+Written after all five rendered. Scores are what the renders and the measurements show, not what I expected.
+
+| | 1 baseline | 2 impact-first | 3 Stardew | 4 Cooper | 5 spring |
+|---|---|---|---|---|---|
+| max frame jump (sword) | 41 deg | 41 deg | **44 deg** | 41 deg | **20 deg** |
+| overshoot returns to rest | no | no | no | **no — settles at the exaggerated value** | **yes** |
+| exit pop vs `IdleAngle` (axe) | 20 deg | 20 deg | 20 deg | **64 deg** | 20 deg |
+| weight visible in the motion | no | no | no | **yes** | yes, but **inverted** |
+| tuning cost | 4 hand tables | 4 + contact times | 4 tables | 4 tables | **2 numbers per tool** |
+
+## The pick: the spring (5), with grafts from 4 and 2
+
+It wins on the two things no authored curve managed, and wins them **structurally** rather than by tuning:
+
+- **It halves the per-frame angle jump** (20 deg vs 41-44). The "teleport" that iterations 3 and 4 both showed
+  at opposite ends of the time budget was never a timing problem — it was discontinuous velocity, and a spring
+  has continuous velocity by construction.
+- **Its overshoot returns.** `ease_out_back` settles *at* the exaggerated end value, which is why iteration 4's
+  sword spends half its animation with the blade across the character's legs. A spring goes past and comes back
+  because that is what a spring is.
+- It costs **two numbers per tool** instead of a hand-authored segment table, so a new weapon is free.
+
+**Graft from 4 (Cooper):** weight expressed as a *difference in where the tool ends up* is the only weight cue
+in the whole lab a viewer can actually see. Keep it — but invert the spring's mapping, because
+`ratio = 0.45 + 0.35*w` makes the heavy axe the most damped when heavy should mean **hard to stop**.
+
+**Graft from 2 (fighting games):** a freeze at contact, fixed to hold the **contact pose** rather than the next
+frame — and only on tools that have a contact instant. A sweep does not; its trail is the catch area.
+
+**Reject from 3 (Stardew):** the 50/20/30 frame distribution. Stardew's split is a split of *poses*; ported to a
+rotating sprite it spends 50% of the time on 17% of the distance and reads as nothing happening.
+
+## What the lab could not settle
+- **Stardew vs Cooper on responsiveness.** A demo loop has no button press, so it shows which arc looks better,
+  never which feels better to a player holding the button. That needs the game.
+- **Whether a pause reads as impact or as a dropped frame** — iteration 2's freeze never landed on contact, so
+  the question is still open.
+- **Contact timing under a spring.** A spring has no segment boundary, so contact has to be fired by an angle
+  threshold or a separate timer. Flagged before implementation; still true.
+
+## The three defects worth more than the choice of arc
+Found along the way, all present in the **shipped** animator, all independent of which approach wins:
+
+1. **The swing has no exit.** `RestoreIdle()` (`PlayerToolAnimator.cs:204-222`) sets rotation, position and
+   scale directly with **no lerp**, so every swing ends in a hard cut to `IdleAngle = -35` plus a scale change
+   from 1.0 to `IdleScale = 0.75`. Either land the recovery on the idle pose or blend the restore.
+2. **The tool draws through the body.** In the front view the arc carries the tool across the character's torso
+   and, drawing on top, it appears to slice through him. `_behindPlayer` handles only the up-facing case; the
+   sort needs to come from the **arc angle per frame**, not from facing.
+3. **The hand disappears against its own armour.** Same metal, same value, sitting against the body. It needs a
+   darker outline or a rim, or the floating-fist design stops reading as a hand at sprite size.
+
+## Multiplayer, restated
+Everything above is **presentation**. The freeze is a local hold of the tool and hand sprites; no approach here
+touches player position, sim state, or `ComputeStateHash`. A hitstop that paused the sim would desync clients
+outright — a stronger constraint than the exploit-window warning the fighting-game sources give.
