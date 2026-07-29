@@ -50,7 +50,16 @@ TOOLS = {
                   art_rot=0.0),
     "hoe":   dict(icon="hoe_copper_icon.png",   kind="till",  arc=90.0,  dur=0.24, off=0.55, weight=0.65,
                   art_rot=0.0),
+    "spear": dict(icon="spear_bronze_icon.png", kind="thrust", arc=30.0, dur=0.22, off=0.55, weight=0.45,
+                  art_rot=0.0),
+    "shovel": dict(icon="shovel_copper_icon.png", kind="scoop", arc=90.0, dur=0.26, off=0.55, weight=0.70,
+                   art_rot=0.0),
 }
+# The lab's own `kind` names for approaches 1-9 differ from the per-tool motions used by 10-12; this maps
+# the old profile kinds onto the new ones so both generations of approach can run off one TOOLS table.
+KIND10 = {"swing": "slash", "chop": "wheel", "sweep": "sweep",
+          "till": "till", "thrust": "thrust", "scoop": "scoop"}
+DEMO_TOOLS = ("sword", "axe", "net", "hoe", "spear", "shovel")
 
 # One entry per facing. The shoulder is NOT in the same place in every view, and pretending it is put the
 # hand at face height in the front view — owner: "the face down the hand is too high, it holds it like face
@@ -89,7 +98,97 @@ DUR_SCALE = {7: 0.70, 8: 0.70, 9: 0.70}
 
 
 def duration(approach, p):
+    if approach in (10, 11, 12):
+        return COMBAT_DUR[KIND10[p["kind"]]]
     return p["dur"] * DUR_SCALE.get(approach, 1.0)
+
+
+# ------------------------------------------------- per-tool motions, used by approaches 10, 11 and 12
+# ONE MOTION PER TOOL — they are not the same move at different speeds.
+#
+# Owner caught this as a code smell and he is right: the previous pass gave all four tools one arc shape
+# with different constants, so a sword slash and an axe chop were the same function. They are not the same
+# motion. "sword is not an axe swing"; "the sword needs to be combat appropriate we can't have huge dramatic
+# arcs it needs to be fast and slashy"; the axe is "swing behind over then down in front ... like a real
+# axe"; a spear is "stabby"; a shovel is "downward stabbing then up like a scoop".
+#
+# So each KIND gets its own function below. They differ in what they do with the two channels available —
+# angle and reach — and a thrust barely uses angle at all, which is the point.
+#
+# Angle convention: 0 = FORWARD (side-view character faces right), 90 = up, 180 = behind, -90 = down.
+# Each returns (angle_deg, reach_multiplier, contact_u, smear).
+COMBAT_DUR = {"slash": 0.11, "wheel": 0.20, "sweep": 0.15,
+              "till": 0.18, "thrust": 0.12, "scoop": 0.22}
+
+
+def m_slash(t):
+    """SWORD — short, fast, slashy. NOT a dramatic 200 deg wheel; a combat slash is a flick of the wrist
+    that lives almost entirely in the middle third of its own duration."""
+    a = 75.0 - 120.0 * ease_in_out(min(1.0, t / 0.78))
+    return a, 1.0 + 0.34 * bump(t / 0.78), 0.55, 0.18 < t < 0.66
+
+
+def m_wheel(t):
+    """AXE — behind, up over the top, down in front, in one unbroken circle. Momentum carries it; there is
+    no pull-back that stops, because a real axe never stops at the top."""
+    a = 200.0 - 265.0 * (0.10 * t + 0.90 * ease_in_out(t))
+    return a, 1.0 + 0.26 * bump(t), 0.66, 0.22 < t < 0.78
+
+
+def m_sweep(t):
+    """NET — a committed swing that STARTS BEHIND the shoulder and travels forward. The old one began
+    already out in front and only tipped down, which is why it read as swinging the net first, backwards,
+    and timid. A net swing is a swing."""
+    a = 170.0 - 195.0 * ease_in_out(t)
+    return a, 1.0 + 0.30 * bump(t), 0.58, 0.20 < t < 0.80
+
+
+def m_till(t):
+    """HOE — raise, drive the blade down to the ground at the feet, then drag it back toward the player."""
+    if t < 0.26:
+        return 45.0 + 75.0 * ease_out(t / 0.26), 1.0, 0.0, False
+    if t < 0.62:
+        u = (t - 0.26) / 0.36
+        return 120.0 - 200.0 * ease_in(u), 1.0 + 0.30 * u, 0.60, u > 0.5
+    u = (t - 0.62) / 0.38
+    return -80.0 + 8.0 * u, 1.30 - 0.62 * ease_out(u), 0.0, False
+
+
+def m_thrust(t):
+    """SPEAR — stabby. The angle barely moves; the REACH is the whole animation. This is the one motion
+    that is a translation rather than a rotation, which is exactly why it could not be a tuning of the
+    others."""
+    if t < 0.34:
+        u = ease_in(t / 0.34)
+        return 22.0 - 20.0 * u, 0.55 + 1.25 * u, 0.0, u > 0.45
+    if t < 0.48:
+        return 2.0, 1.80, 0.36, False                    # held at full extension: the hit
+    u = (t - 0.48) / 0.52
+    return 2.0 + 16.0 * u, 1.80 - 1.10 * ease_out(u), 0.0, False
+
+
+def m_scoop(t):
+    """SHOVEL — stab down into the ground, then lift and scoop up and out."""
+    if t < 0.42:
+        u = ease_in(t / 0.42)
+        return 50.0 - 135.0 * u, 0.85 + 0.45 * u, 0.38, u > 0.55
+    u = (t - 0.42) / 0.58
+    return -85.0 + 120.0 * ease_out(u), 1.30 - 0.35 * u, 0.0, u < 0.45
+
+
+KIND_MOTION = {"slash": m_slash, "wheel": m_wheel, "sweep": m_sweep,
+               "till": m_till, "thrust": m_thrust, "scoop": m_scoop}
+
+
+def variation(approach, kind, t):
+    """Approaches 10/11/12 all use the SAME per-tool motion above. They differ only in how time is spent
+    inside it — so a difference you see between them is the feel, never the choreography."""
+    if approach == 11:                 # SNAP — get most of the way there early, then settle
+        t = 0.70 * ease_out(min(1.0, t / 0.34)) + 0.30 * ease_out(max(0.0, t - 0.34) / 0.66)
+    elif approach == 12:               # LOAD — a brief moving load, then everything at once
+        t = (0.12 * (t / 0.24) if t < 0.24
+             else 0.12 + 0.88 * ease_in_out(min(1.0, (t - 0.24) / 0.60)))
+    return KIND_MOTION[kind](min(1.0, max(0.0, t)))
 
 
 # ---------------------------------------------------------------- approaches
@@ -124,6 +223,11 @@ def motion(approach, p, t):
         u = (t - strike) / (1 - strike)
         end = aim - half - half * (0.30 + 0.50 * w)     # exaggerated overshoot, scaled by weight
         return aim + (end - aim) * ease_out_back(u), off, False, False
+
+    if approach in (10, 11, 12):
+        a, reach, contact, smear = variation(approach, KIND10[kind], t)
+        freeze = contact > 0 and contact <= t < contact + 0.05 + 0.09 * w
+        return a, off * reach, freeze, smear
 
     if approach == 7:
         # ITERATION 2, TUNED — owner picked 2 as the closest and listed what was wrong with it.
@@ -441,7 +545,7 @@ def build(approach):
 
     def frame(tool, t, idle=False):
         p = TOOLS[tool]
-        if approach >= 8 and not idle:
+        if approach in (8, 9) and not idle:      # only 8/9 use the shoulder-arm rig; 10-12 are polar
             return frame_arm(tool, t)
         ang, off, freeze, smear = motion(approach, p, t)
         if idle:                                        # the pose the game snaps to when the swing ends
@@ -526,7 +630,7 @@ def build(approach):
         return im.convert("RGB"), freeze
 
     frames, ms = [], []
-    for tool in ("sword", "axe", "net", "hoe"):
+    for tool in (DEMO_TOOLS if approach >= 10 else ("sword", "axe", "net", "hoe")):
         p = TOOLS[tool]
         dur = duration(approach, p)
         n = max(8, int(dur * FPS * 3))

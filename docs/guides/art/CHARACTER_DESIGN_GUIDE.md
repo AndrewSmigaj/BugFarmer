@@ -112,6 +112,29 @@ Two constraints found by getting them wrong:
 view also needs a floor angle so a tool stops in front rather than burying itself, and the away-facing view
 draws tool and hand **behind** the body. All three are rendered side by side because all three have to work.
 
+### ONE MOTION PER TOOL — do not share an arc
+The strongest recurring mistake in this work: writing one arc function and giving each tool different
+constants. It looks like reuse and it is actually six copies of the same move. A sword is not an axe; a
+thrust is not a slash. If two tools differ only by numbers, they will read as the same animation, which is
+exactly the complaint that came back every round.
+
+Each `kind` in `swing_lab.py` owns a function, and they differ in **mechanism**:
+
+| kind | tool | what it actually does |
+|---|---|---|
+| `slash` | sword | short fast flick, ~120°, 0.11s — a combat slash, **not** a dramatic wheel |
+| `wheel` | axe | behind → over the top → down in front, ~265° unbroken; a real axe never stops at the top |
+| `sweep` | net | starts **behind the shoulder**, travels ~195° forward |
+| `till` | hoe | raise, drive down to the feet, drag back toward the player |
+| `thrust` | spear | angle nearly fixed — the **reach** is the whole animation, held at full extension |
+| `scoop` | shovel | stab down into the ground, then lift and scoop up and out |
+
+**A swing must START BEHIND the character.** The net ran 55° → −20°: already out in front, only tipping down.
+That single fact produced three separate rounds of "you're swinging it backwards / it's timid" — a tool that
+begins in front has no swing in it, whatever the timing does.
+
+**Combat durations are 0.11–0.22s.** Anything slower cannot be held down in a fight.
+
 ### SUPERSEDED — the body/arm split (abandoned 2026-07-28)
 An earlier attempt split each base into a body plus a rotatable weapon ARM. It was abandoned the same day: you
 cannot carve animation pieces out of a finished drawing, because a drawn arm only contains the pixels visible
