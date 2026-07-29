@@ -53,8 +53,23 @@ ones are **designed but PENDING** until we reach those zones.
 | **Silk** | light/agility spider-silk set; the **Widow** endgame variant folds in | T4–T5 | dodge_chance, move_speed_pct, crit | **pending** (late zones) |
 
 **Cut sets:** Forager (→Ranger), Thornweave (→Ranger), **Swarm-Warden** (locust is an interesting *area*, no
-set), **Fire-Warden** (no firewarden). **Swamp** has a vendor + waders; a dedicated swamp set is optional/pending
-until the swamp is designed.
+set), **Fire-Warden** (no firewarden). ~~**Swamp** has a vendor + waders; a dedicated swamp set is
+optional/pending until the swamp is designed.~~ — **superseded 2026-07-29: the swamp set was built at the
+owner's direction**, ahead of the swamp being designed. Recorded so the catalog doesn't silently disagree
+with what exists on disk.
+
+> **Sprite status (2026-07-29).** Walk-cycle sprites + matching gauntlets now exist for **17 sets** under
+> `tools/_generated/player/outfits/`. **Art only** — no `items.json` ids, no stats, no recipes.
+>
+> Already in this catalog: `leather` `bronze` `silver` `gold` `platinum` (base ladder) · `ranger`
+> `beekeeper` (bonus concepts) · `ant-carapace` `beetle-shell` (the Chitin/Carapace family).
+> **Not in this catalog, built anyway:** `farmer` `wood` `swamp-gear` `fisherman` `wizard-robe`
+> `hornet-stinger` `moth-wool` `glowworm` — **owner's call** whether each becomes a real set, a cosmetic,
+> or is dropped. `beetle-shell`, `moth-wool` and `glowworm` were the assistant's proposals to fill the
+> bug-derived gap; they are not owner-chosen and carry no weight until he says so.
+>
+> Still unbuilt: `padded (cloth)` `copper` `steel` from the ladder; `Entomologist`, `Miner / Spelunker`,
+> `Diver / Waders`, `Silk` from the concepts.
 
 **Set-design rule (D10):** a new set must justify a *concept*, not just exist because a zone does. "Thorough"
 = ~7 bonus-set concepts + 9 base sets — enough variety, not bloat.

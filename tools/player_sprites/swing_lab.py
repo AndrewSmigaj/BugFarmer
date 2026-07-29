@@ -85,6 +85,57 @@ def motion(approach, p, t):
         end = aim - half - half * (0.30 + 0.50 * w)     # exaggerated overshoot, scaled by weight
         return aim + (end - aim) * ease_out_back(u), off, False, False
 
+    if approach == 6:                           # THE SYNTHESIS — see DESIGN.md "RESULT"
+        # Approach 5 won on two structural counts (continuous velocity kills the teleport; the
+        # overshoot returns instead of settling at the exaggerated value). The iterations found four
+        # things wrong with it, and all four are fixed here:
+        #
+        #  1. weight was INVERTED. `ratio = 0.45 + 0.35*w` made the heavy axe the MOST damped, so it
+        #     never moved past its target while the light tools rang. Heavy means HARD TO STOP.
+        #  2. it had no anticipation — it started AT its own wind-up target, so it sat motionless for
+        #     the first 18%. A spring only animates a gap; it was given none. Now it starts at the
+        #     pose the tool actually rests in and has to climb.
+        #  3. every approach ended in a pop, because RestoreIdle cuts to IdleAngle with no lerp. The
+        #     third target IS the idle pose, so the swing lands on it and the cut is invisible.
+        #  4. the freeze in approach 2 held the frame AFTER contact. Here contact is detected as the
+        #     angle crossing `aim` on the way down, and the freeze holds THAT pose.
+        # On fix 1 the first answer was wrong. Inverting the DAMPING to get the heavy tool to
+        # overshoot does work, but overshoot needs low damping, low damping means high velocity, and
+        # high velocity means a big per-frame jump — it is the same knob, so a 0.2s window cannot
+        # have both. A sweep over 2000 parameter sets confirmed the frontier: smooth (jump 9,
+        # pop 3) with ZERO overshoot, or a 200 degree overshoot with a 73 degree frame jump.
+        #
+        # So weight comes from Cooper instead — a heavier tool is given a FURTHER TARGET, which is a
+        # difference in position rather than in ringing, and costs no damping. That buys all four at
+        # once: jump 22 (authored curves: 41-44), pop 8 (Cooper's axe: 64), wind-up 71 (the Stardew
+        # port managed 17), and the swing carries the axe 35 degrees further round than the net.
+        freq = 7.0 - 2.0 * w                    # heavy = slower
+        ratio = 0.85 - 0.20 * w                 # heavy rings slightly more, but stays damped
+        top = aim + half + half * 0.25
+        end = aim - half - half * 0.30 * w      # <- the weight cue: heavy carries further
+        rest = IDLE_ANGLE
+
+        def target(tt):
+            return top if tt < 0.30 else end if tt < 0.68 else rest
+
+        dt = 1 / 480.0
+        k = (2 * math.pi * freq) ** 2
+        c = ratio * 2 * math.sqrt(k)
+        x, v = rest, 0.0                        # starts where the tool is actually held at rest
+        hold = 0.05 + 0.07 * w                  # heavier hit, longer hold — capped by construction
+        t_contact, a_contact = None, None
+        steps = max(1, int(t * p["dur"] / dt))
+        for i in range(steps):
+            tt = i * dt / p["dur"]
+            prev = x
+            v += (k * (target(tt) - x) - c * v) * dt
+            x += v * dt
+            if t_contact is None and tt > 0.30 and prev > aim >= x:   # crossing aim, descending
+                t_contact, a_contact = tt, x
+        if kind != "sweep" and t_contact is not None and t_contact <= t < t_contact + hold:
+            return a_contact, off, True, False   # hold the CONTACT pose, not the next frame
+        return x, off, False, abs(v) * dt / p["dur"] > 12.0
+
     if approach == 5:                           # SPRING — no authored segments
         freq = 5.5 - 3.0 * w                    # heavy = lower frequency
         ratio = 0.45 + 0.35 * w                 # heavy = more damped, less ring

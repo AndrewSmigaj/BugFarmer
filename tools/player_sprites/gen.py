@@ -8,7 +8,7 @@ that says what exists and where.
 
 Layout (fixed — do not invent another one). There is ONE player folder and four things in it:
     tools/_generated/player/bases/        the current official sprites, nothing else
-    tools/_generated/player/runs/<YYYY-MM-DD>-<HHMM>-<title>/
+    tools/_generated/player/<dest>/          e.g. outfits/bronze, hands
         result.png        what came back
         RECORD.txt        prompt, model, references, timestamp
         ref_1_<name>.png  every reference exactly as sent
@@ -16,8 +16,11 @@ Layout (fixed — do not invent another one). There is ONE player folder and fou
     tools/_generated/player/old/          archive
     tools/_generated/player/RUNS.txt      one line per run, newest last
 
-  python3 tools/player_sprites/gen.py --title helmet --prompt "..." \
+  python3 tools/player_sprites/gen.py --dest hands --prompt "..." \
       --ref tools/_generated/player/bases/armless_front.png
+
+Folders are named for WHAT IS IN THEM, not for how they were made — looking for the bronze armour should mean
+knowing it is called bronze, not knowing which run produced it.
 """
 import argparse
 import datetime
@@ -70,7 +73,8 @@ def call(prompt, refs, model, size, quality):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--title", required=True, help="short label for THIS run, e.g. copper-helmet")
+    ap.add_argument("--dest", required=True,
+                    help="where it goes, relative to tools/_generated/player — e.g. 'outfits/bronze', 'hands'")
     ap.add_argument("--prompt", required=True)
     ap.add_argument("--ref", action="append", default=[], help="reference image; repeatable, order matters")
     ap.add_argument("--model", default=MODEL)
@@ -83,8 +87,7 @@ def main():
     a = ap.parse_args()
 
     now = datetime.datetime.now()
-    stamp = now.strftime("%Y-%m-%d-%H%M")
-    out = os.path.join(ROOT, "runs", f"{stamp}-{a.title}")
+    out = os.path.join(ROOT, a.dest)
     os.makedirs(out, exist_ok=True)
 
     # Upscale each reference and send THAT, so what is recorded is exactly what the model saw.
@@ -103,7 +106,7 @@ def main():
     with open(os.path.join(out, "RECORD.txt"), "w") as f:
         f.write(f"when      : {now.strftime('%Y-%m-%d %H:%M:%S')}\n")
         f.write(f"model     : {a.model}\nsize      : {a.size}\nquality   : {a.quality}\nmask      : NONE\n")
-        f.write(f"title     : {a.title}\n")
+        f.write(f"dest      : {a.dest}\n")
         f.write("references (in the order sent):\n")
         for i, p in enumerate(a.ref, 1):
             f.write(f"  {i}. {os.path.relpath(p, REPO)}  (sent upscaled x{a.scale})\n")
@@ -117,7 +120,7 @@ def main():
 
     os.makedirs(ROOT, exist_ok=True)
     with open(RUNS, "a") as f:
-        f.write(f"{now.strftime('%Y-%m-%d %H:%M')}  {a.model:14} {a.title:28} "
+        f.write(f"{now.strftime('%Y-%m-%d %H:%M')}  {a.model:14} {a.dest:28} "
                 f"{'(dry-run)' if a.dry_run else os.path.relpath(out, REPO)}\n")
 
     print(f"\nFOLDER : {out.replace('/mnt/c/', 'C:/')}")
