@@ -46,6 +46,11 @@ HAND_FRAC = 0.17          # of BODY height — never off the tool sprite
 HAND_ROT = 225
 FPS = 30
 
+# The pose the game cuts to the instant a swing ends (PlayerToolAnimator.cs:183-185, RestoreIdle :204).
+# It is set directly — no lerp — so the gap between where an approach LEAVES the tool and this pose is a
+# visible pop. The lab used to loop straight back to t=0, which hid that cost from every approach.
+IDLE_ANGLE, IDLE_OFF, IDLE_SCALE = -35.0, 0.4, 0.75
+
 
 # ---------------------------------------------------------------- approaches
 def motion(approach, p, t):
@@ -216,13 +221,15 @@ def build(approach):
     BASE = int(H * 0.88)
     SX, DX, FX = int(W * 0.20), int(W * 0.50), int(W * 0.80)
 
-    def frame(tool, t):
+    def frame(tool, t, idle=False):
         p = TOOLS[tool]
         ang, off, freeze, smear = motion(approach, p, t)
+        if idle:                                        # the pose the game snaps to when the swing ends
+            ang, off, smear = IDLE_ANGLE, IDLE_OFF, False
         sc = ground.copy()
         paste(sc, tree, int(W * 0.03), BASE - tree.shape[0] // 2 + int(CELL * 0.2))
         paste(sc, dummy, DX, BASE - dummy.shape[0] // 2)
-        art = scale_h(rgba(os.path.join(RES, "Items", p["icon"])), CELL)
+        art = scale_h(rgba(os.path.join(RES, "Items", p["icon"])), CELL * (IDLE_SCALE if idle else 1.0))
         g = grip_of(art) + DIAG * GRIP_EXTRA
 
         for px, body, aim_off in ((SX, side, 0.0), (FX, front, -60.0)):
@@ -257,7 +264,8 @@ def build(approach):
                     step = int(p["dur"] * 1000 / n)
                     frames.append(img)
                     ms.append(step * (4 if fr else 1))     # a freeze is a held frame, purely local + visual
-            frames.append(frame(tool, 0.0)[0]); ms.append(650)
+            # hold the IDLE pose, not t=0 — the cut from swing-end to idle is part of what we're judging
+            frames.append(frame(tool, 1.0, idle=True)[0]); ms.append(650)
     out = os.path.join(DEST, f"iteration-{approach}.gif")
     frames[0].save(out, save_all=True, append_images=frames[1:], duration=ms, loop=0)
     print(f"  approach {approach}: {len(frames)} frames -> {out.replace('/mnt/c/', 'C:/')}")
