@@ -172,7 +172,29 @@ weapon was drawn.
 - **Look at the render.** Repeatedly a change was made, the output described as working, and the actual image
   showed it buried in the hip, cropped off-frame, or a hand the size of the head.
 
+## Making a whole set, end to end
+Two paid calls, everything else free. `outfits.py` holds the set list and the one shared prompt, so a new
+set is a dict entry, not a new script.
+
+```bash
+python3 tools/player_sprites/outfits.py sheet    steel   # PAID - the 12-frame sheet.  ASK FIRST.
+python3 tools/player_sprites/cut_outfit.py outfit outfits/steel     # free - 9 frames
+python3 tools/player_sprites/outfits.py gauntlet steel   # PAID - the 4 hands.  ASK FIRST.
+python3 tools/player_sprites/cut_outfit.py gauntlet outfits/steel   # free - front/back/side/grip
+python3 tools/player_sprites/demo_swings.py steel                   # free - DEMO.gif
+python3 tools/player_sprites/preview_all.py                         # free - both ALL_*.png pages
+```
+
+**Look at the sheet before cutting, and at the cut frames before the demo.** Both have failed silently.
+
+**A metal set earns its rung by COLOUR, not by shape** — at sprite size the silhouettes are identical, so
+"another grey" is a wasted tier. Check it by measuring, not by eye: mean luma over the worn material of
+`front_1.png` currently runs iron 66 → steel 90 → silver 113 → platinum 157. Judging this by eye once
+produced a confident wrong call (steel "collides with silver"; the numbers said otherwise).
+
 ## Pointers
 - `docs/guides/art/CHARACTER_DESIGN_GUIDE.md` — the as-built format.
-- `tools/player_sprites/demo_swings.py` — the motion preview, with the curves ported from the game.
+- `tools/player_sprites/demo_swings.py` — the motion preview. Imports `swing_lab.py` approach 6 (the
+  designed swing) rather than copying it, so the preview cannot drift from the design.
+- `docs/product/investigations/swing-design/` — why the swing is what it is: 10 sources, 5 iterations, the result.
 - `docs/product/economy/catalogs/armor.md` — the canonical list of which sets exist and are planned.

@@ -43,6 +43,21 @@ hand-size constant and the per-tool grip measurement — lives in the **`player-
 (`.claude/skills/player-sprites/SKILL.md`). Art lives in `tools/_generated/player/` (`bases/` = the two locked
 sprites, `outfits/<name>/` = one folder per outfit).
 
+**Which sets exist is DATA, not prose.** `tools/player_sprites/outfits.py` holds the roster and the single
+shared prompt; a new set is a dict entry naming three things — what the set is, its material and colours, and
+its headgear — never a new script. **Every set has headgear**; one without it doesn't match the rest and gets
+redone. Which sets are *planned* is `docs/product/economy/catalogs/armor.md`.
+
+**A tier reads by COLOUR, not by silhouette.** At sprite size every plate set is the same shape, so a metal
+rung that isn't separated in brightness is a wasted tier. Check it by measuring mean luma over the worn
+material of `front_1.png`, not by eye — the completed ladder runs iron 66 → steel 90 → silver 113 →
+platinum 157, and eyeballing that same comparison once produced a confident *wrong* call (that steel collided
+with silver). Warm metals separate by hue instead: copper is pink-orange, bronze brown-gold, gold yellow.
+
+**Design 2026-07-29 (as built, 22 sets).** The base ladder is complete at nine rungs. Cloth sets (padded,
+moth-wool) show the face under a hood or coif rather than a full helm, which is what makes them read as T1
+cloth and not as pale armour.
+
 The 16x32 region-template system above is the ORIGINAL hand-authored player and is what the game still loads
 today; publishing the new sheets is a separate step.
 

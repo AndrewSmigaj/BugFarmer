@@ -6,14 +6,36 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
-## Player sprite + wearable creation system (in progress, record 2026-07-25)
-Building a repeatable AI pipeline to create the player character + mass-produce wearables (armor / clothing /
-hats / hair) and get them into the game. The pipeline + a clean workspace (`tools/_generated/player/`) + a
-read-gate are built; the actual wearables are mostly still to produce (copper/silver in progress, **nothing
-published to the game yet**). **Full design + status + what remains: `docs/plans/player-sprite-and-wearable-creation.md`.**
-Key docs: `.claude/skills/player-sprites/SKILL.md`, `tools/_generated/player/README.md`, `tools/_generated/README.md`.
-Remaining: produce + publish the wearables; the 16×32→crisp size-bump; the `farmer_down` 36×44 vs 16×32 size
-mismatch; the deferred `_generated/` root tidy (`scratch/` · `variants/` · category previews).
+## Player sprite + wearable creation system (art DONE, publishing NOT STARTED — record 2026-07-29)
+The character is **armless with separate floating fists**, and outfits are **whole 12-frame sheets**, not
+modular paperdoll pieces (owner decision 2026-07-28). One animator moves the hands, so a new weapon costs no
+animation work. Pipeline + workspace (`tools/_generated/player/`) + the read-gate are built.
+
+**Built (art only, on disk, nothing in the game):** **22 outfits**, each with a walk sheet, cut frames, a
+matching gauntlet and a swing `DEMO.gif`. The **base metal ladder is complete** (all 9 rungs). Full list and
+what remains: `docs/product/economy/catalogs/armor.md`.
+
+**The swing motion is designed and NOT implemented.** 10 researched sources, 5 rendered iterations, and a
+written result: a damped spring won, with weight expressed as a further strike target (Cooper) and a hold on
+the contact pose (fighting games). It lives in `tools/player_sprites/swing_lab.py` approach 6 and drives every
+demo gif. `PlayerToolAnimator.cs` still runs the old hand-authored curves.
+Design + evidence: `docs/product/investigations/swing-design/`. Plan: `docs/plans/swing-design-and-outfits.md`.
+
+Remaining, in the order it blocks things:
+- **Owner call** — which of the 8 non-catalog sets (`farmer` `wood` `swamp-gear` `fisherman` `wizard-robe`
+  `hornet-stinger` `moth-wool` `glowworm`) become real sets, cosmetics, or get dropped.
+- **The published size** — art is 36×71, the game's paperdoll is 16×32 at 16 PPU. Decide against a rendered
+  scene, not in the abstract; blocks publishing, not the art.
+- Implement the spring swing in `PlayerToolAnimator.cs` + the 3 defects the design found (no exit blend, the
+  tool draws through the body, the hand vanishes against its own armour).
+- Publish the sprites; `items.json` ids, stats and recipes for whichever sets survive the owner call.
+- Two concepts still unbuilt: `Miner / Spelunker`, `Diver / Waders` (+ `Silk`, pending late zones).
+- The deferred `_generated/` root tidy (`scratch/` · `variants/` · category previews).
+
+Key docs: `.claude/skills/player-sprites/SKILL.md`, `docs/guides/art/CHARACTER_DESIGN_GUIDE.md`,
+`tools/_generated/player/README.md`.
+**Superseded:** `docs/plans/player-arm-and-wearables.md` describes the abandoned split-arm approach —
+kept for its findings, but it is NOT the current design.
 
 ## CLAUDE.md & scaffolding improvements (owner wants a pass here; captured 2026-07-09)
 Umbrella for tightening how the assistant is steered. Add items here as they come up.

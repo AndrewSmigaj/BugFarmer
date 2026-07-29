@@ -64,7 +64,7 @@ raw/ ab/ blocklab/ variants/ scratch/ ecology_charts/   sprite staging + transie
 |---|---|
 | `zonegen/` | the zone/scene builder library + `scenes/` + `scene_preview.py` (the one scene→preview render path) |
 | `art/` | art prompt DATA: `style.json` (global) + `catalog/*.json` (per-item) |
-| `player_sprites/` | player paper-doll generation modules (imported by `sprites/generate_player_sprites.py`) |
+| `player_sprites/` | the **armless character + whole-outfit** pipeline (NOT the old paper-doll). `gen.py` = the only generator (paid, records every run) · `outfits.py` = which sets exist + the one shared prompt (`sheet` / `gauntlet`) · `cut_outfit.py` = sheet → frames (free) · `demo_swings.py` = per-outfit swing `DEMO.gif` (free) · `preview_all.py` = all sets on one page (free) · `swing_lab.py` = the swing motion, approach 6 is the shipped design |
 | `sync-harness/` | the headless .NET netcode harness (`dotnet run -- --zone <id>`) |
 | `bug_lab_configs/` | ecology tuning experiment configs (json) |
 | `archive/` | retired one-off scripts (kept for reference, never run) |

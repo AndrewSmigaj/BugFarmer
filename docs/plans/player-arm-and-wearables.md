@@ -1,5 +1,18 @@
 # Player character: swinging arm + a wearables pipeline that registers
 
+> ## ⛔ SUPERSEDED 2026-07-28 — THIS IS NOT THE CURRENT DESIGN.
+> The whole premise below — that the weapon arm is its own sprite, split off the base at a shoulder pivot —
+> was **abandoned the same day**. The character is now **armless**, with separate floating fists that are
+> *moved in code*, so there is no arm to split, no socket, no pivot to keep in register, and no swing pose
+> ever drawn. Outfits are **whole 12-frame sheets**, not modular pieces.
+>
+> Current design: `.claude/skills/player-sprites/SKILL.md` · `docs/plans/swing-design-and-outfits.md` ·
+> `docs/product/investigations/swing-design/`.
+>
+> Kept because §2's findings are still true and still cost something to learn: the 1px arm gap needs
+> 4-connectivity (8-connectivity bridges it and swallows the lower body), and a cut-from-a-render arm
+> exposes surfaces that were never drawn when you rotate it — which is *why* the armless design won.
+
 **Status: PLAN (2026-07-28).** Supersedes the arm section of `player-sprite-and-wearable-creation.md`.
 
 ## The problem

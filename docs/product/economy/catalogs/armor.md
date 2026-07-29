@@ -58,18 +58,30 @@ optional/pending until the swamp is designed.~~ — **superseded 2026-07-29: the
 owner's direction**, ahead of the swamp being designed. Recorded so the catalog doesn't silently disagree
 with what exists on disk.
 
-> **Sprite status (2026-07-29).** Walk-cycle sprites + matching gauntlets now exist for **17 sets** under
-> `tools/_generated/player/outfits/`. **Art only** — no `items.json` ids, no stats, no recipes.
+> **Sprite status (2026-07-29, second pass).** Walk-cycle sprites + matching gauntlets exist for
+> **22 sets** under `tools/_generated/player/outfits/`. **Art only** — no `items.json` ids, no stats,
+> no recipes, nothing loaded by the game.
 >
-> Already in this catalog: `leather` `bronze` `silver` `gold` `platinum` (base ladder) · `ranger`
-> `beekeeper` (bonus concepts) · `ant-carapace` `beetle-shell` (the Chitin/Carapace family).
+> **The base ladder (A) is now COMPLETE — all 9 rungs have sprites:**
+> `leather` `padded` `copper` `bronze` `iron` `steel` `silver` `gold` `platinum`.
+> The four grey rungs separate by brightness rather than by shape, measured off the worn material in
+> `front_1.png` — iron 66, steel 90, silver 113, platinum 157 — so a rung is legible at sprite size.
+>
+> Bonus concepts (B) with sprites: `ranger` `beekeeper` `entomologist` · `ant-carapace` `beetle-shell`
+> (the Chitin/Carapace family).
+>
 > **Not in this catalog, built anyway:** `farmer` `wood` `swamp-gear` `fisherman` `wizard-robe`
 > `hornet-stinger` `moth-wool` `glowworm` — **owner's call** whether each becomes a real set, a cosmetic,
 > or is dropped. `beetle-shell`, `moth-wool` and `glowworm` were the assistant's proposals to fill the
 > bug-derived gap; they are not owner-chosen and carry no weight until he says so.
 >
-> Still unbuilt: `padded (cloth)` `copper` `steel` from the ladder; `Entomologist`, `Miner / Spelunker`,
-> `Diver / Waders`, `Silk` from the concepts.
+> **Still unbuilt:** `Miner / Spelunker` and `Diver / Waders` from the concepts, plus `Silk`
+> (pending late zones). Diver/Waders was the one deliberately skipped of the three remaining concepts —
+> `swamp-gear` and `fisherman` already cover that visual ground.
+>
+> *Correction to the first pass of this note: it listed the unbuilt ladder rungs as padded/copper/steel
+> and **omitted `iron`**, which had no sprite either (its ✅ above is an `items.json` id, not art). All
+> four are built now.*
 
 **Set-design rule (D10):** a new set must justify a *concept*, not just exist because a zone does. "Thorough"
 = ~7 bonus-set concepts + 9 base sets — enough variety, not bloat.

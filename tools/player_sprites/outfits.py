@@ -32,6 +32,40 @@ OUTFITS = {
         "tan and mid-brown boiled leather with darker brown straps and stitching",
         "brown leather cap with a short brim",
         "worn tan leather"),
+    # The four that finish the ladder. Each is written to be told apart from the metals already
+    # built (bronze warm brown-gold, silver white-grey, gold yellow, platinum blue-white) — at
+    # sprite size a set earns its rung by COLOUR, so "another grey metal" would be a wasted tier.
+    "padded": (
+        "a quilted cloth gambeson",
+        "natural off-white and oatmeal linen, quilted into vertical padded tubes with visible "
+        "stitching seams, soft cloth with no metal anywhere",
+        "quilted cloth coif hood covering the head and neck",
+        "quilted off-white linen"),
+    "copper": (
+        "copper plate armour",
+        "warm orange-pink copper plate with salmon highlights and patches of pale green verdigris "
+        "in the crevices",
+        "copper kettle-helm with a wide flat brim",
+        "warm orange-pink copper"),
+    "iron": (
+        "rough iron plate armour",
+        "dark blue-grey unpolished iron, rough and pitted, with dull rust-brown staining around "
+        "the rivets and edges",
+        "iron barbute helm with a narrow T-shaped face opening",
+        "dark pitted iron"),
+    "steel": (
+        "tempered steel plate armour",
+        "mid gunmetal-grey steel with a faint cold blue sheen, bright polished bevels along every "
+        "plate edge, noticeably darker than silver",
+        "steel sallet helm with a long tail and a visor",
+        "polished gunmetal steel"),
+    # --- bonus concept from the catalog: the "collector" (armor.md, section B) ---
+    "entomologist": (
+        "a bug-catcher's field outfit",
+        "khaki and olive canvas field jacket and trousers, brown leather belt and shoulder strap "
+        "with rows of small specimen pouches and glass vials",
+        "pale khaki pith helmet with a fine dark mesh veil hanging over the face",
+        "khaki canvas glove"),
     "ranger": (
         "a woodland ranger's outfit",
         "forest-green wool cloak over a brown leather jerkin, muted greens and browns",
