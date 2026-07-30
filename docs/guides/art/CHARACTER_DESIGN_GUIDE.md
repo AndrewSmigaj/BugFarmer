@@ -130,10 +130,28 @@ Each `kind` in `swing_lab.py` owns a function, and they differ in **mechanism**:
 | `scoop` | shovel | stab down into the ground, then lift and scoop up and out |
 
 **A swing must START BEHIND the character.** The net ran 55° → −20°: already out in front, only tipping down.
-That single fact produced three separate rounds of "you're swinging it backwards / it's timid" — a tool that
-begins in front has no swing in it, whatever the timing does.
+A tool that begins in front has no swing in it, whatever the timing does.
+
+**Every motion starts AND ends at the idle pose.** Swings used to *teleport* to their wind-up pose — 235° for
+the axe, 205° for the net — then sit there while the curve eased in. That jump, not the timing, is what read
+as "hovering in the cocked-back position". Travel the wind-up and land the recovery on idle; that also closes
+the old "the swing has no exit" defect. Arrive at the top **at speed** (`ease_in`), never decelerating into
+it, or the tool lingers at the extreme.
 
 **Combat durations are 0.11–0.22s.** Anything slower cannot be held down in a fight.
+
+**Digging tools are REACH-driven, not angle-driven.** The hoe and shovel read as swings while their angle did
+the work. A hoe is a small lift, a strike, and a drag; a shovel is a downward jab that holds and lifts a
+little. Both keep the angle nearly still and let the reach drive — that is the difference between digging and
+swinging.
+
+### When a note keeps coming back, stop theorising and enumerate
+The net swing was wrong five rounds running. Each round produced a *theory* about what "backwards" meant,
+changed something on the strength of it, and was wrong; the last theory was invented outright and attributed
+to the owner. `net_options.py` is the correction: render every combination that could possibly be meant —
+sweep direction × sprite transform × which end leads — caption them, and have him point at one. Cheaper than
+a sixth wrong guess, and it ends the argument. Reach for this the *second* time a note repeats, not the fifth.
+(When transforming a sprite, recompute the grip on the **transformed** art or the fist clamps to the wrong end.)
 
 ### Judge a set IN MOTION, holding something
 `showcase.py` renders several sets across four bands on one timeline — running right, running down, swinging

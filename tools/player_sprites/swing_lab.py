@@ -121,59 +121,102 @@ COMBAT_DUR = {"slash": 0.11, "wheel": 0.20, "sweep": 0.15,
               "till": 0.18, "thrust": 0.12, "scoop": 0.22}
 
 
+# EVERY MOTION STARTS AND ENDS AT THE IDLE POSE. This is the fix for the "hover in the cocked back
+# position" — measured, the tool used to TELEPORT 235 deg (axe) / 205 deg (net) from idle to its start
+# pose and then sit there while the curve eased in, parked near that pose for 22-45% of the animation
+# depending on the approach. Approach 11 only parked for 6-8%, which is exactly why it felt best.
+#
+# Now the wind-up is TRAVELLED. The tool is where the hand left it, moves, and comes back. That also
+# closes the original research's defect #1 ("the swing has no exit" — RestoreIdle cut with no lerp).
+#
+# `seg(t, a, b)` maps a sub-range of t onto 0..1 so each phase is readable as "from here, to there".
+def seg(t, a, b):
+    return min(1.0, max(0.0, (t - a) / (b - a)))
+
+
 def m_slash(t):
-    """SWORD — short, fast, slashy. NOT a dramatic 200 deg wheel; a combat slash is a flick of the wrist
-    that lives almost entirely in the middle third of its own duration."""
-    a = 75.0 - 120.0 * ease_in_out(min(1.0, t / 0.78))
-    return a, 1.0 + 0.34 * bump(t / 0.78), 0.55, 0.18 < t < 0.66
+    """SWORD — short, fast, slashy. NOT a dramatic wheel: a combat slash is a flick that lives in the
+    middle third of its own duration. Owner approved iteration 7's shape; this is that, anchored."""
+    if t < 0.16:                                        # travelled wind-up, from where the tool rests
+        return IDLE_ANGLE + (60.0 - IDLE_ANGLE) * ease_in_out(seg(t, 0.0, 0.16)), 1.0, 0.0, False
+    if t < 0.58:
+        u = seg(t, 0.16, 0.58)
+        return 60.0 - 115.0 * ease_in(u), 1.0 + 0.34 * bump(u), 0.52, u > 0.35
+    u = seg(t, 0.58, 1.0)
+    return -55.0 + (IDLE_ANGLE + 55.0) * ease_out(u), 1.0 + 0.10 * (1 - u), 0.0, False
 
 
 def m_wheel(t):
-    """AXE — behind, up over the top, down in front, in one unbroken circle. Momentum carries it; there is
-    no pull-back that stops, because a real axe never stops at the top."""
-    a = 200.0 - 265.0 * (0.10 * t + 0.90 * ease_in_out(t))
-    return a, 1.0 + 0.26 * bump(t), 0.66, 0.22 < t < 0.78
+    """AXE — round and down in one continuous travel. Owner revised this off a full circle: "i dont
+    think you need to swing the net and axe all the way around ... just make it faster". So it is a big
+    arc that never stops rather than a wheel, and it starts from idle instead of appearing at the top."""
+    if t < 0.22:
+        return IDLE_ANGLE + (150.0 - IDLE_ANGLE) * ease_in(seg(t, 0.0, 0.22)), 1.0, 0.0, t > 0.12
+    if t < 0.70:
+        u = seg(t, 0.22, 0.70)
+        return 150.0 - 220.0 * ease_in_out(u), 1.0 + 0.26 * bump(u), 0.62, True
+    u = seg(t, 0.70, 1.0)
+    return -70.0 + (IDLE_ANGLE + 70.0) * ease_out(u), 1.0, 0.0, False
 
 
 def m_sweep(t):
-    """NET — a committed swing that STARTS BEHIND the shoulder and travels forward. The old one began
-    already out in front and only tipped down, which is why it read as swinging the net first, backwards,
-    and timid. A net swing is a swing."""
-    a = 170.0 - 195.0 * ease_in_out(t)
-    return a, 1.0 + 0.30 * bump(t), 0.58, 0.20 < t < 0.80
+    """NET — same anchoring. WHICH WAY IT SHOULD GO IS AN OPEN QUESTION: five rounds of theories about
+    "backwards" were all wrong, so the orientation is being chosen from a rendered grid
+    (`net_options.py`) rather than reasoned about again. This is the placeholder shape until he picks."""
+    if t < 0.20:
+        return IDLE_ANGLE + (145.0 - IDLE_ANGLE) * ease_in(seg(t, 0.0, 0.20)), 1.0, 0.0, False
+    if t < 0.72:
+        u = seg(t, 0.20, 0.72)
+        return 145.0 - 180.0 * ease_in_out(u), 1.0 + 0.30 * bump(u), 0.56, True
+    u = seg(t, 0.72, 1.0)
+    return -35.0 + (IDLE_ANGLE + 35.0) * ease_out(u), 1.0, 0.0, False
 
 
 def m_till(t):
-    """HOE — raise, drive the blade down to the ground at the feet, then drag it back toward the player."""
-    if t < 0.26:
-        return 45.0 + 75.0 * ease_out(t / 0.26), 1.0, 0.0, False
-    if t < 0.62:
-        u = (t - 0.26) / 0.36
-        return 120.0 - 200.0 * ease_in(u), 1.0 + 0.30 * u, 0.60, u > 0.5
-    u = (t - 0.62) / 0.38
-    return -80.0 + 8.0 * u, 1.30 - 0.62 * ease_out(u), 0.0, False
+    """HOE — a SMALL lift, strike the ground, pull back. Owner: "the hoe is not supposed to look like
+    someone whipping the ground with a stick, you have it swinging in a big arc, it should be more lift
+    a little then strike the ground and pull." So the angle barely travels (100 deg, not 200) and the
+    work is done by REACH — that is the difference between digging and swinging."""
+    if t < 0.18:                                        # lift a little. A LITTLE.
+        return IDLE_ANGLE + 60.0 * ease_in(seg(t, 0.0, 0.18)), 1.0, 0.0, False
+    if t < 0.50:                                        # strike down into the ground
+        u = seg(t, 0.18, 0.50)
+        return 25.0 - 100.0 * ease_in(u), 1.0 + 0.34 * u, 0.46, u > 0.55
+    if t < 0.78:                                        # planted, dragged back toward the player
+        u = seg(t, 0.50, 0.78)
+        return -75.0 + 6.0 * u, 1.34 - 0.50 * ease_out(u), 0.0, False
+    u = seg(t, 0.78, 1.0)
+    return -69.0 + (IDLE_ANGLE + 69.0) * ease_out(u), 0.84 + 0.16 * u, 0.0, False
 
 
 def m_thrust(t):
-    """SPEAR — stabby. The angle barely moves; the REACH is the whole animation. This is the one motion
-    that is a translation rather than a rotation, which is exactly why it could not be a tuning of the
-    others."""
-    if t < 0.34:
-        u = ease_in(t / 0.34)
-        return 22.0 - 20.0 * u, 0.55 + 1.25 * u, 0.0, u > 0.45
-    if t < 0.48:
-        return 2.0, 1.80, 0.36, False                    # held at full extension: the hit
-    u = (t - 0.48) / 0.52
-    return 2.0 + 16.0 * u, 1.80 - 1.10 * ease_out(u), 0.0, False
+    """SPEAR — stabby. The angle barely moves; the REACH is the whole animation. The one motion that is
+    a translation rather than a rotation, which is why it could never be a tuning of a swing."""
+    if t < 0.18:                                        # settle to level, and load back a little
+        return IDLE_ANGLE + (8.0 - IDLE_ANGLE) * ease_out(seg(t, 0.0, 0.18)), 0.62, 0.0, False
+    if t < 0.44:
+        u = seg(t, 0.18, 0.44)
+        return 8.0 - 6.0 * u, 0.62 + 1.18 * ease_in(u), 0.0, u > 0.4
+    if t < 0.56:
+        return 2.0, 1.80, 0.44, False                   # held at full extension: the hit
+    u = seg(t, 0.56, 1.0)
+    return 2.0 + (IDLE_ANGLE - 2.0) * ease_out(u), 1.80 - 0.80 * ease_out(u), 0.0, False
 
 
 def m_scoop(t):
-    """SHOVEL — stab down into the ground, then lift and scoop up and out."""
-    if t < 0.42:
-        u = ease_in(t / 0.42)
-        return 50.0 - 135.0 * u, 0.85 + 0.45 * u, 0.38, u > 0.55
-    u = (t - 0.42) / 0.58
-    return -85.0 + 120.0 * ease_out(u), 1.30 - 0.35 * u, 0.0, u < 0.45
+    """SHOVEL — a downward JAB, then a small lift coming back. Owner: "the shovel is not working, your
+    just waving it around, it needs to jab downward (like digging) then when coming back it could lift
+    a little, no need to be crazy". Like the spear thrust, aimed at the ground: the reach does the work
+    and the angle stays put, so it reads as digging rather than as another swing."""
+    if t < 0.20:                                        # bring it over the spot, barely any travel
+        return IDLE_ANGLE + (-58.0 - IDLE_ANGLE) * ease_out(seg(t, 0.0, 0.20)), 0.80, 0.0, False
+    if t < 0.44:                                        # JAB straight down
+        u = seg(t, 0.20, 0.44)
+        return -58.0 - 14.0 * u, 0.80 + 0.62 * ease_in(u), 0.40, u > 0.45
+    if t < 0.60:
+        return -72.0, 1.42, 0.0, False                  # buried
+    u = seg(t, 0.60, 1.0)                               # lift a little on the way back, nothing crazy
+    return -72.0 + (IDLE_ANGLE + 72.0 + 18.0) * ease_out(u) - 18.0 * u, 1.42 - 0.52 * ease_out(u), 0.0, False
 
 
 KIND_MOTION = {"slash": m_slash, "wheel": m_wheel, "sweep": m_sweep,
