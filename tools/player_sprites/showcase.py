@@ -7,16 +7,18 @@
 Writes `tools/_generated/player/SHOWCASE.gif`.
 
 Layout, top to bottom — six bands:
-  1  WALK right   (side)      fists past the hip, rolling
+  1  WALK right   (side)      fists at the waist, hanging, swinging through the body
   2  WALK down    (front)
-  3  RUN  right   (side)      both fists up at the chest, pointing forward, pumping
+  3  RUN  right   (side)      fists up at the chest, rotated 75 deg forward, bigger swing
   4  RUN  down    (front)
   5  SWING side               a different tool per column, so all six motions appear
   6  SWING front
 
-Walk and run are DIFFERENT poses, not one played faster. Getting that wrong once produced fists that
-"go crazy like flapping" — the walk's ±55° roll running at running speed. They are separate here, and
-each advances off its own clock (150ms vs 90ms) against one shared timeline.
+Walk and run are DIFFERENT poses, not one played faster, and BOTH come from `gait.py` — which holds the
+constants the owner actually approved, recovered from the session transcript after the original script
+turned out never to have been committed. This file must not re-derive them; doing that once produced
+fists at the wrong height with three times the travel and a roll that never existed.
+Each gait advances off its own clock (150ms vs 90ms) against one shared timeline.
 
 The point of one loop is that a set has to hold up in motion, from every angle, holding a weapon — not
 just standing still on a contact sheet. Sets that look fine as a portrait have fallen apart the moment
@@ -34,6 +36,7 @@ from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import swing_lab as S                                    # noqa: E402
+import gait                                              # noqa: E402  the APPROVED walk/run motion
 from demo_swings import rgba, bbox, scale_h, rot, paste, torso   # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -46,24 +49,10 @@ TOOLS_FOR = ["sword", "axe", "net", "spear", "shovel"]   # one per column, so al
 CYCLE = [1, 2, 3, 2]              # frame 4 came back a second stride, so it is dropped
 APPROACH = 10
 
-# WALK — the approved pose (`demo_swings.py`, signed off as "walk b is fine"). Fists swing fore and aft
-# past the HIP, rolling as they go "as if on a wheel"; the side view shows the near fist only and the far
-# one is dimmed.
+# Walk/run constants live in gait.py — recovered from the session where they were approved, and
+# committed there so they cannot be lost a second time. Do not duplicate them here.
 WALK_MS = 150
-WALK_SWING = 0.42                 # fore/aft travel, as a fraction of torso width
-WALK_ROLL = 55.0                  # how much the fist rolls through the swing
-
-# RUN — a DIFFERENT pose, not the walk played fast. This is the thing the first showcase got wrong: it
-# ran the walk's ±55° roll at running speed, which reads as flapping. Owner: "those are absolutely not
-# the hand movements we agreed on, they are absolutely crazy going crazy like flapping".
-# Matched against the approved `RUN_r75.gif`: BOTH fists visible even side-on, raised to CHEST height,
-# rotated to POINT FORWARD, pumping with bigger travel — a runner's fists, not a stroll.
 RUN_MS = 90
-RUN_SWING = 0.62                  # bigger travel than the walk
-RUN_ROT = 75.0                    # fists point forward and hold there
-RUN_ROLL = 16.0                   # only a little roll on top of that
-RUN_RAISE = 0.05                  # lifted toward the chest, as a fraction of body height. 0.13 put the
-                                  # fists over the FACE — the reference keeps them below the helmet.
 
 
 def load(name):
@@ -74,6 +63,7 @@ def load(name):
     return dict(name=name,
                 side=[rgba(os.path.join(d, f"side_{i}.png")) for i in (1, 2, 3)],
                 front=[rgba(os.path.join(d, f"front_{i}.png")) for i in (1, 2, 3)],
+                **dict(zip(("back", "palm"), gait.hands_for(d))),
                 hand=rgba(os.path.join(d, "gauntlet", "front.png")))
 
 
@@ -87,7 +77,7 @@ def build(names, approach=APPROACH):
     for s in sets:                                       # one height for every set, or they look mismatched
         for k in ("side", "front"):
             s[k] = [scale_h(f, BH) for f in s[k]]
-        s["hand"] = scale_h(s["hand"], BH * S.HAND_FRAC)
+        s["hand"] = scale_h(s["hand"], BH * S.HAND_FRAC)   # swing only; gait sizes its own
 
     BANDS = 6                     # walk side · walk front · run side · run front · swing side · swing front
     COLW, ROWH = int(CELL * 2.9), int(CELL * 2.5)
@@ -102,31 +92,18 @@ def build(names, approach=APPROACH):
             paste(ground, scale_h(tiles[rng.randint(len(tiles))], TS), gx + TS / 2, gy + TS / 2)
 
     def gait_pose(sc, s, cx, base, bank_name, beat, running):
-        """Walk and run are DIFFERENT poses, not one speed apart.
+        """Posed by `gait.py`, which holds the APPROVED walk and run constants.
 
-        Walk: fists past the hip, rolling; side view shows the near fist only.
-        Run:  both fists up at the chest, pointing forward, pumping — matched to `RUN_r75.gif`.
+        Do not re-implement this here. An earlier version did, deriving the motion by eye from the
+        reference gifs, and got the height, the travel, the hand sprite and the rotation all wrong —
+        "those look insane like flapping weird shit". gait.py is the single source; if the motion is
+        wrong, it is wrong there.
         """
         bank = s[bank_name]
-        body = bank[CYCLE[beat % len(CYCLE)] - 1]
-        cy = base - body.shape[0] // 2
-        paste(sc, body, cx, cy)
-        row, lx, rx = torso(bank[1])
-        mid, halfw = (lx + rx) / 2, (rx - lx) / 2
-        dy = cy - body.shape[0] / 2
-        ph = math.sin(beat / len(CYCLE) * 2 * math.pi)
-        travel = RUN_SWING if running else WALK_SWING
-        lift = RUN_RAISE * body.shape[0] if running else 0.0
-        for sgn in (+1, -1):
-            if bank_name == "side" and sgn < 0 and not running:
-                continue                                 # walking side-on shows the near fist only;
-                                                         # running shows both, as the reference does
-            off = sgn * ph * halfw * 2 * travel
-            ang = (RUN_ROT - ph * sgn * RUN_ROLL) if running else (-ph * sgn * WALK_ROLL)
-            near = off > 0
-            paste(sc, rot(s["hand"], ang),
-                  cx - body.shape[1] / 2 + mid + off, dy + row - lift,
-                  1.0 if near else (0.75 if running else 0.55))
+        body = bank[gait.CYCLE[beat % len(gait.CYCLE)] - 1]
+        fn = gait.run_frame if running else gait.walk_frame
+        posed = fn(body, bank[1], s["back"], s["palm"], beat)
+        paste(sc, posed, cx, base - posed.shape[0] // 2)
 
     def swing_pose(sc, s, cx, base, bank_name, tool, t):
         p = S.TOOLS[tool]
@@ -152,8 +129,6 @@ def build(names, approach=APPROACH):
               ty + g[0] * math.sin(rr) + g[1] * math.cos(rr))
         return freeze
 
-    # Every band shares one timeline: the runs loop continuously while the swings play through, so the
-    # reel reads as one moment rather than four clips stitched together.
     # One shared timeline. The walk advances at WALK_MS and the run at RUN_MS off the same clock, so
     # the run genuinely reads as faster than the walk instead of both being driven at the frame rate —
     # which is what made the first version flap.

@@ -153,15 +153,26 @@ sweep direction × sprite transform × which end leads — caption them, and hav
 a sixth wrong guess, and it ends the argument. Reach for this the *second* time a note repeats, not the fifth.
 (When transforming a sprite, recompute the grip on the **transformed** art or the fist clamps to the wrong end.)
 
-### WALK and RUN are different poses — never one played faster
-- **Walk** — fists past the **hip**, rolling ±55° "as if on a wheel"; side-on shows the **near fist only**,
-  the far one dimmed. 150ms a frame.
-- **Run** — **both** fists visible even side-on, up at **chest** height, rotated **~75° to point forward**
-  and held there with only a small roll, bigger travel. 90ms a frame.
+### WALK and RUN — the approved motion lives in `tools/player_sprites/gait.py`. USE IT.
+Both fists swing **through the body**, around the torso centre measured once at 42% down the neutral frame.
+The far fist is drawn first and **dimmed to 0.62**, the body over it, the near fist last — so the arms read
+as passing behind and in front. Beat phase is `[0.5, 0.0, 1.5, 1.0]`.
 
-Running the walk pose fast is the failure mode: a ±55° roll at running speed reads as **flapping**, and that
-shipped once before being caught. Match `outfits/bronze/RUN_r75.gif` — it is owner-approved — rather than
-re-deriving the pose. Constants live in the `player-sprites` skill.
+| | amp (×torso width) | rise | rotation | tilt | fist (×body H) | height down body | ms |
+|---|---|---|---|---|---|---|---|
+| **walk** | 0.52 | 0.013 | **0°** (it hangs) | 22° | 0.17 | **0.60** waist | 150 |
+| **run** | 0.58 | 0.032 | **75°** forward | 14° | 0.19 | **0.46** chest | 90 |
+
+**Do not re-derive these from the reference gifs.** That was done once and every number came out wrong —
+walking fists anchored at the chest instead of the waist, travel measured off the body edges instead of
+through the centre, ~3× the amplitude, a ±55° roll the approved walk does not have (its rotation is 0), no
+far-hand dimming, wrong hand sprites. It read as flapping and was rejected on sight.
+
+> **The lesson that cost this.** The script that produced the approved motion was written into a session
+> scratch directory, run, and **never committed** — only its output gifs survived, and those live in a
+> gitignored folder. An approved decision that exists only as a rendered artifact is a decision you will
+> lose. **If a parameter was agreed, it belongs in committed code the same day**, not in a temp script.
+> (It was recoverable from the session transcript, but only because the transcript happened to still exist.)
 
 ### Judge a set IN MOTION, holding something
 `showcase.py` renders several sets across four bands on one timeline — running right, running down, swinging
