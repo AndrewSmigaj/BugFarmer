@@ -6,15 +6,21 @@
 
 Writes `tools/_generated/player/SHOWCASE.gif`.
 
-Layout, top to bottom:
-  band 1   each set RUNNING RIGHT   (side frames, fists swinging fore and aft)
-  band 2   each set RUNNING DOWN    (front frames, same fists, toward the viewer)
-  band 3   each set SWINGING, side view   — a different tool per set
-  band 4   the same swings, front view
+Layout, top to bottom — six bands:
+  1  WALK right   (side)      fists past the hip, rolling
+  2  WALK down    (front)
+  3  RUN  right   (side)      both fists up at the chest, pointing forward, pumping
+  4  RUN  down    (front)
+  5  SWING side               a different tool per column, so all six motions appear
+  6  SWING front
 
-The point of putting all four bands in one loop is that a set has to hold up in motion, from every angle,
-holding a weapon — not just standing still on a contact sheet. Sets that look fine as a portrait have
-fallen apart the moment they moved.
+Walk and run are DIFFERENT poses, not one played faster. Getting that wrong once produced fists that
+"go crazy like flapping" — the walk's ±55° roll running at running speed. They are separate here, and
+each advances off its own clock (150ms vs 90ms) against one shared timeline.
+
+The point of one loop is that a set has to hold up in motion, from every angle, holding a weapon — not
+just standing still on a contact sheet. Sets that look fine as a portrait have fallen apart the moment
+they moved.
 
 The swing comes from `swing_lab` so this reel cannot drift from the designed motion; change the approach
 there and this follows.
@@ -37,11 +43,27 @@ RES = os.path.join(REPO, "BugFarmerClient", "Assets", "Resources")
 
 DEFAULT = ["bronze", "silver", "ranger", "hornet-stinger", "wizard-robe"]
 TOOLS_FOR = ["sword", "axe", "net", "spear", "shovel"]   # one per column, so all six get seen
-RUN_CYCLE = [1, 2, 3, 2]
-RUN_MS = 90                       # running, not walking — same frames, played faster
-HAND_SWING = 0.42
-HAND_ROLL = 55.0
+CYCLE = [1, 2, 3, 2]              # frame 4 came back a second stride, so it is dropped
 APPROACH = 10
+
+# WALK — the approved pose (`demo_swings.py`, signed off as "walk b is fine"). Fists swing fore and aft
+# past the HIP, rolling as they go "as if on a wheel"; the side view shows the near fist only and the far
+# one is dimmed.
+WALK_MS = 150
+WALK_SWING = 0.42                 # fore/aft travel, as a fraction of torso width
+WALK_ROLL = 55.0                  # how much the fist rolls through the swing
+
+# RUN — a DIFFERENT pose, not the walk played fast. This is the thing the first showcase got wrong: it
+# ran the walk's ±55° roll at running speed, which reads as flapping. Owner: "those are absolutely not
+# the hand movements we agreed on, they are absolutely crazy going crazy like flapping".
+# Matched against the approved `RUN_r75.gif`: BOTH fists visible even side-on, raised to CHEST height,
+# rotated to POINT FORWARD, pumping with bigger travel — a runner's fists, not a stroll.
+RUN_MS = 90
+RUN_SWING = 0.62                  # bigger travel than the walk
+RUN_ROT = 75.0                    # fists point forward and hold there
+RUN_ROLL = 16.0                   # only a little roll on top of that
+RUN_RAISE = 0.05                  # lifted toward the chest, as a fraction of body height. 0.13 put the
+                                  # fists over the FACE — the reference keeps them below the helmet.
 
 
 def load(name):
@@ -67,8 +89,9 @@ def build(names, approach=APPROACH):
             s[k] = [scale_h(f, BH) for f in s[k]]
         s["hand"] = scale_h(s["hand"], BH * S.HAND_FRAC)
 
+    BANDS = 6                     # walk side · walk front · run side · run front · swing side · swing front
     COLW, ROWH = int(CELL * 2.9), int(CELL * 2.5)
-    W, H = COLW * len(sets), ROWH * 4
+    W, H = COLW * len(sets), ROWH * BANDS
     TS = int(CELL)
     rng = np.random.RandomState(11)
     tiles = [rgba(os.path.join(RES, "Tiles", n)) for n in
@@ -78,22 +101,32 @@ def build(names, approach=APPROACH):
         for gx in range(0, W + TS, TS):
             paste(ground, scale_h(tiles[rng.randint(len(tiles))], TS), gx + TS / 2, gy + TS / 2)
 
-    def run_pose(sc, s, cx, base, bank_name, beat):
-        """A run is the walk frames played fast with the fists thrown further and rolled harder."""
+    def gait_pose(sc, s, cx, base, bank_name, beat, running):
+        """Walk and run are DIFFERENT poses, not one speed apart.
+
+        Walk: fists past the hip, rolling; side view shows the near fist only.
+        Run:  both fists up at the chest, pointing forward, pumping — matched to `RUN_r75.gif`.
+        """
         bank = s[bank_name]
-        body = bank[RUN_CYCLE[beat % len(RUN_CYCLE)] - 1]
+        body = bank[CYCLE[beat % len(CYCLE)] - 1]
         cy = base - body.shape[0] // 2
         paste(sc, body, cx, cy)
         row, lx, rx = torso(bank[1])
         mid, halfw = (lx + rx) / 2, (rx - lx) / 2
         dy = cy - body.shape[0] / 2
-        ph = math.sin(beat / len(RUN_CYCLE) * 2 * math.pi)
+        ph = math.sin(beat / len(CYCLE) * 2 * math.pi)
+        travel = RUN_SWING if running else WALK_SWING
+        lift = RUN_RAISE * body.shape[0] if running else 0.0
         for sgn in (+1, -1):
-            if bank_name == "side" and sgn < 0:
-                continue                                 # side view shows the near fist only
-            off = sgn * ph * halfw * 2 * HAND_SWING
-            paste(sc, rot(s["hand"], -ph * sgn * HAND_ROLL),
-                  cx - body.shape[1] / 2 + mid + off, dy + row, 1.0 if off > 0 else 0.55)
+            if bank_name == "side" and sgn < 0 and not running:
+                continue                                 # walking side-on shows the near fist only;
+                                                         # running shows both, as the reference does
+            off = sgn * ph * halfw * 2 * travel
+            ang = (RUN_ROT - ph * sgn * RUN_ROLL) if running else (-ph * sgn * WALK_ROLL)
+            near = off > 0
+            paste(sc, rot(s["hand"], ang),
+                  cx - body.shape[1] / 2 + mid + off, dy + row - lift,
+                  1.0 if near else (0.75 if running else 0.55))
 
     def swing_pose(sc, s, cx, base, bank_name, tool, t):
         p = S.TOOLS[tool]
@@ -121,23 +154,32 @@ def build(names, approach=APPROACH):
 
     # Every band shares one timeline: the runs loop continuously while the swings play through, so the
     # reel reads as one moment rather than four clips stitched together.
-    nsw = max(10, int(0.22 * S.FPS * 3))
+    # One shared timeline. The walk advances at WALK_MS and the run at RUN_MS off the same clock, so
+    # the run genuinely reads as faster than the walk instead of both being driven at the frame rate —
+    # which is what made the first version flap.
+    nsw = max(16, int(0.22 * S.FPS * 4))
+    STEP = 30                                            # ms per rendered frame
     frames, ms = [], []
-    for beat in range(nsw):
+    for f in range(nsw):
+        now = f * STEP
+        walk_beat = int(now / WALK_MS)
+        run_beat = int(now / RUN_MS)
         sc = ground.copy()
         fr = False
         for i, s in enumerate(sets):
             cx = int(COLW * (i + 0.5))
-            run_pose(sc, s, cx, int(ROWH * 0.92), "side", beat)
-            run_pose(sc, s, cx, int(ROWH * 1.92), "front", beat)
+            gait_pose(sc, s, cx, int(ROWH * 0.92), "side",  walk_beat, running=False)
+            gait_pose(sc, s, cx, int(ROWH * 1.92), "front", walk_beat, running=False)
+            gait_pose(sc, s, cx, int(ROWH * 2.92), "side",  run_beat,  running=True)
+            gait_pose(sc, s, cx, int(ROWH * 3.92), "front", run_beat,  running=True)
             tool = TOOLS_FOR[i % len(TOOLS_FOR)]
-            t = (beat % nsw) / (nsw - 1)
-            fr |= swing_pose(sc, s, cx, int(ROWH * 2.92), "side", tool, t)
-            swing_pose(sc, s, cx, int(ROWH * 3.92), "front", tool, t)
+            t = f / (nsw - 1)
+            fr |= swing_pose(sc, s, cx, int(ROWH * 4.92), "side", tool, t)
+            swing_pose(sc, s, cx, int(ROWH * 5.92), "front", tool, t)
         im = Image.new("RGBA", (W, H), (28, 34, 28, 255))
         im.alpha_composite(Image.fromarray(sc, "RGBA"))
         frames.append(im.convert("RGB"))
-        ms.append(RUN_MS * (3 if fr else 1))
+        ms.append(STEP * (3 if fr else 1))
 
     out = os.path.join(PLAYER, "SHOWCASE.gif")
     frames[0].save(out, save_all=True, append_images=frames[1:], duration=ms, loop=0)

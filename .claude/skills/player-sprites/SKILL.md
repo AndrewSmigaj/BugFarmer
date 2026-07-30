@@ -149,8 +149,13 @@ weapon was drawn.
   tucked at the hip on the passing frames, tilting with the direction of travel. The near hand draws over the
   torso, the far hand behind it and dimmed. Anchor to the **torso width at chest height**, measured once from
   the neutral frame — measuring per frame makes the hands jitter as the legs change the silhouette.
-- **Run** — same twelve frames played faster (≈90ms vs 150ms), hands rotated ~75° to point forward and raised
-  toward the chest, bigger travel. **No new art for running.**
+- **Run** — same twelve frames played faster (≈90ms vs 150ms), but a **DIFFERENT HAND POSE, not the walk
+  sped up.** Both fists visible *even side-on*, raised to **chest** height (~0.05 of body height above the
+  torso row — 0.13 puts them over the face), rotated **~75° to point forward and held there** with only a
+  small roll (~16°) on top, and bigger travel (0.62 vs the walk's 0.42). **No new art for running.**
+  Reference render: `outfits/bronze/RUN_r75.gif`, owner-approved — match it, don't re-derive it.
+  ⚠ Running the *walk* pose fast is the failure: its ±55° roll at running speed reads as **flapping**, and
+  shipping that in the showcase was caught immediately.
 - **Swing** — the hand rides the tool. Grip position is **measured per tool** off its own sprite (a sword
   grips high on a short hilt, a hoe low on a long shaft), then rotated **225°** with the hand sitting **+16%**
   further down the handle. The motion curves live in `PlayerToolAnimator.cs` and differ per tool kind:

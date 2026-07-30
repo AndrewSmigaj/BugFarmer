@@ -153,6 +153,16 @@ sweep direction × sprite transform × which end leads — caption them, and hav
 a sixth wrong guess, and it ends the argument. Reach for this the *second* time a note repeats, not the fifth.
 (When transforming a sprite, recompute the grip on the **transformed** art or the fist clamps to the wrong end.)
 
+### WALK and RUN are different poses — never one played faster
+- **Walk** — fists past the **hip**, rolling ±55° "as if on a wheel"; side-on shows the **near fist only**,
+  the far one dimmed. 150ms a frame.
+- **Run** — **both** fists visible even side-on, up at **chest** height, rotated **~75° to point forward**
+  and held there with only a small roll, bigger travel. 90ms a frame.
+
+Running the walk pose fast is the failure mode: a ±55° roll at running speed reads as **flapping**, and that
+shipped once before being caught. Match `outfits/bronze/RUN_r75.gif` — it is owner-approved — rather than
+re-deriving the pose. Constants live in the `player-sprites` skill.
+
 ### Judge a set IN MOTION, holding something
 `showcase.py` renders several sets across four bands on one timeline — running right, running down, swinging
 side-on, swinging front-on — with a different tool per column so every motion appears. A set that reads well
