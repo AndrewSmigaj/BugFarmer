@@ -41,15 +41,18 @@ rest sits at `IDLE_ANGLE = -35°`; there is no standing gif to point at.
 
 ## The hands (`hands/`)
 
-`h1`–`h4` are `hand-D-pixel`, the set chosen out of the A/B/C/D prompt comparison on 07-28.
-`front/back/side/grip.png` are the cut gauntlet views the animation code actually loads.
+**Only the three sprites the animations actually use are kept here.** From `hand-D-pixel`, the set chosen
+out of the A/B/C/D prompt comparison on 07-28.
 
 | sprite | used by |
 |---|---|
-| `h1` / `front` — knuckles, back of hand | side walk + run (near fist) **and the tool swing** |
-| `h2` / `back` — palm | side walk + run (far fist, dimmed and drawn behind the body) |
-| `h3` / `side` — profile | front-facing walk |
-| `h4` / `grip` — closed round a pole | **nothing currently loads this** |
+| `h1` — knuckles, back of hand | side walk + run (near fist) **and the tool swing** |
+| `h2` — palm | side walk + run (far fist, dimmed and drawn behind the body) |
+| `h3` — profile | front-facing walk |
+
+Deliberately **not** here: `h4` (the fist closed round a pole) — nothing loads it — and the cut gauntlet
+views `front/back/side/grip.png`, which are a re-cut made on 08-01 and were never approved. This folder
+holds approved work only; anything unapproved living here is how the wrong sprite gets picked later.
 
 **The tool-swing hand is the knuckles, not the grip.** The grip was chosen first —
 *"for swinging tools 'grip' is fine"* (04:53) — and then superseded the same session:
@@ -61,9 +64,10 @@ rest sits at `IDLE_ANGLE = -35°`; there is no standing gif to point at.
 
 Those two numbers are `HAND_ROT = 225` and `GRIP_EXTRA = 0.16` in `swing_lab.py`.
 
-⚠ `bronze/gauntlet/{front,back,side,grip}.png` were **overwritten on 2026-08-01 by a bulk re-cut**. The
-copies here are that re-cut, not the 07-28 originals. The source sheet (`bronze/gauntlet/result.png`,
-07-28) is untouched, so they are reproducible, but they are not byte-identical to what was approved.
+⚠ `bronze/gauntlet/{front,back,side,grip}.png` in the outfits folder were **overwritten on 2026-08-01 by
+a bulk re-cut**, so those files are no longer the 07-28 originals. The source sheet
+(`bronze/gauntlet/result.png`, 07-28) is untouched, so they are reproducible. The three sprites in this
+folder are from `hand-D-pixel`, which was never overwritten.
 
 ## The motion parameters
 
