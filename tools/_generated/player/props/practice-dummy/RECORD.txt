@@ -1,0 +1,19 @@
+when      : 2026-07-28 23:57:47
+model     : gpt-image-2
+size      : 1024x1024
+quality   : high
+mask      : NONE
+dest      : props/practice-dummy
+references (in the order sent):
+  1. tools/_generated/player/bases/armless_front.png  (sent upscaled x14)
+
+PROMPT:
+Draw a TRAINING DUMMY for a top-down pixel art game, on a black background. Nothing else in the image - no character, no ground, no shadow.
+
+Draw it TWICE side by side, evenly spaced, both the same size and standing on the same baseline: on the LEFT seen from the FRONT, on the RIGHT seen from the RIGHT-FACING SIDE.
+
+The dummy is a straw-and-timber practice target: a thick wooden post driven into a small square timber base, with a barrel-shaped straw body lashed to the post with rope, a crossbar of wood forming stubby arms, and a round sackcloth head with a painted target mark. Weathered pale straw, mid-brown timber, dull rope.
+
+It stands about the same height as the character in the attached reference image - a little shorter than a person.
+
+Big simple shapes, chunky pixels, not fine detail. This is a small pixel art sprite. Same art style as the attached reference: hard pixel edges, no anti-aliasing, a limited palette, soft shading with only a few shades.

@@ -146,6 +146,21 @@ tools/_generated/player/*
 # them costs real work and would silently put every outfit off-register. Exactly two files live here.
 !tools/_generated/player/bases/
 !tools/_generated/player/bases/**
+# THE OUTFIT ART IS THE PRODUCT AND IS TRACKED. Every sprite sheet, every cut frame, every hand, every
+# finished animation. This was ignored until 2026-08-01, which is exactly how a day of approved work was
+# lost: nothing here was recoverable, so when I overwrote it with a bulk re-cut there was no undo.
+# Art is not scratch. The only things that belong in .gitignore are secrets and genuinely regenerable
+# temporaries.
+!tools/_generated/player/outfits/
+!tools/_generated/player/outfits/**
+!tools/_generated/player/props/
+!tools/_generated/player/props/**
+# The design-exploration sheets: the evidence behind which look was chosen.
+!tools/_generated/player/explore/
+!tools/_generated/player/explore/**
+# archive/ stays OUT: ~1.1 GB, and almost all of it is DEMO.gif preview renders at 27 MB each that
+# regenerate from the sprites in one command. The sprites themselves are tracked above, so nothing
+# unrecoverable lives in there. Say the word and it goes in too.
 # Tile R&D: keep the findings + the two comparison sheets (the evidence) in git; raws/candidates stay local.
 !tools/_generated/tiles/
 tools/_generated/tiles/*
