@@ -64,6 +64,7 @@ def load(name):
                 side=[rgba(os.path.join(d, f"side_{i}.png")) for i in (1, 2, 3)],
                 front=[rgba(os.path.join(d, f"front_{i}.png")) for i in (1, 2, 3)],
                 **dict(zip(("back", "palm"), gait.hands_for(d))),
+                d3=gait.front_hand_for(d),
                 hand=rgba(os.path.join(d, "gauntlet", "front.png")))
 
 
@@ -101,9 +102,14 @@ def build(names, approach=APPROACH):
         """
         bank = s[bank_name]
         body = bank[gait.CYCLE[beat % len(gait.CYCLE)] - 1]
-        fn = gait.run_frame if running else gait.walk_frame
-        posed = fn(body, bank[1], s["back"], s["palm"], beat)
-        paste(sc, posed, cx, base - posed.shape[0] // 2)
+        by = base - body.shape[0] // 2
+        if bank_name == "front":
+            # The FRONT gait is its own implementation (GAIT_front_D3_bigger), not the side one
+            # re-aimed. Using the side motion here was wrong and obvious on sight.
+            gait.walk_front_into(sc, cx, by, body, bank[0], s["d3"], beat)
+        else:
+            fn = gait.run_into if running else gait.walk_into
+            fn(sc, cx, by, body, bank[1], s["back"], s["palm"], beat)
 
     def swing_pose(sc, s, cx, base, bank_name, tool, t):
         p = S.TOOLS[tool]

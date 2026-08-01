@@ -135,6 +135,10 @@ tools/_generated/*
 !tools/_generated/README.md
 !tools/_generated/player/
 tools/_generated/player/*
+# The APPROVED animations and the decisions behind them are PRODUCT, not scratch. They are tracked.
+# Excluding the art from git, then overwriting it, is what lost a day of approved work on 2026-08-01.
+!tools/_generated/player/APPROVED/
+!tools/_generated/player/APPROVED/**
 !tools/_generated/player/README.md
 !tools/_generated/player/HOW_TO_ASEPRITE.md
 # bases/ is an INPUT, not output: the two official sprites (armless front + armless side) every outfit is

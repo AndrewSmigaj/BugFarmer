@@ -270,6 +270,28 @@ Care about the SILHOUETTE above all. The outline is a soft rounded shape, slight
 Big simple shapes, chunky pixels. This is a small pixel art sprite - each hand is about ten pixels across in the game, so use a handful of large blocks, no rivets, no filigree, no fine detail."""
 
 
+# The APPROVED hand set: bronze `hand-D-pixel`, chosen out of the A/B/C/D prompt comparison on
+# 2026-07-28. Four hands, one shape, consistent angles, with a cuff:
+#   h1 back of hand (knuckles)  h2 palm  h3 profile  h4 GRIP — closed round a pole, hole through it
+# The walk/run use h1+h2 (side) and h3 (front); the tool swing uses the knuckles at rot 225, +16% down
+# the handle ("225 works ... +16% so the last one").
+#
+# Every other outfit's gauntlet was generated INDEPENDENTLY from a material description, so the model
+# invented a different hand shape each time — five outfits, five different objects, visibly different
+# widths and angles in the same reel. This mode fixes that the way tool tiers are done: generate against
+# the approved hand as a REFERENCE so the silhouette and the four angles are preserved and only the
+# material changes.
+OFFICIAL_HAND = os.path.join(PLAYER, "outfits", "bronze", "hand-D-pixel", "result.png")
+
+OFFICIAL_GAUNTLET = """The FIRST attached image is the reference: four small pixel-art gauntlet hands in a row on a black background. The SECOND attached image is a sprite sheet of a character wearing {what}.
+
+Redraw those SAME FOUR HANDS in the SAME four poses, in the SAME row, at the SAME size and spacing, on a black background - but made of {glove} instead, matching the material, colours, shadows and highlights of the armour in the second image.
+
+Copy the reference EXACTLY in shape. Same silhouette, same outline, same proportions, same wrist cuff at the bottom of each hand, same angle for each of the four. Left to right they are: (1) the back of a closed fist, (2) the palm side, (3) the fist in profile, (4) the fist closed around a pole with a small round hole through the grip. Do not redesign them, do not restyle them, do not change how any hand is posed or turned - the ONLY thing that changes is the material they are made of.
+
+Big simple shapes, chunky pixels, a dark outline, no fine detail. Nothing else in the image - no character, no body, no arms, just the four hands."""
+
+
 def gen(dest, prompt, refs, size=None):
     cmd = [sys.executable, os.path.join(HERE, "gen.py"), "--dest", dest, "--prompt", prompt]
     if size:
@@ -291,6 +313,15 @@ def main():
     if mode == "list":
         for k, v in OUTFITS.items():
             print(f"  {k:16s} {v[0]}")
+        return
+    if mode == "official":
+        # Writes to gauntlet2/ — NEVER over the existing gauntlet/. Bulk overwriting generated art
+        # destroyed a day's work on 2026-08-01; new output goes to a new folder, always.
+        for n in names:
+            what, _, _, glove = OUTFITS[n]
+            gen(f"outfits/{n}/gauntlet2",
+                OFFICIAL_GAUNTLET.format(what=what, glove=glove),
+                [OFFICIAL_HAND, os.path.join(PLAYER, "outfits", n, "result.png")])
         return
     if mode == "explore":
         for n in names or EXPLORATIONS:
