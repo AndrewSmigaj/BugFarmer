@@ -39,6 +39,35 @@ rest sits at `IDLE_ANGLE = -35°`; there is no standing gif to point at.
 
 ---
 
+## APPROVED 2026-08-01 — the two TOOL-GRIP hands (bronze)
+
+These are the hands used **for holding tools and weapons only**. They are not the walking or running
+hands — see the warning below.
+
+| file | which arm | approved, verbatim |
+|---|---|---|
+| `outfits/bronze/hands/grip_back_of_hand.png` | the arm where you see the **back** of the hand | *"the first rows' grip does look good enough we can use it"* — the axe and hoe read right "because the knuckles are appropriately pointing down" |
+| `outfits/bronze/hands/grip_palm.png` | the **other arm**, where you see the palm | *"For the other si[de] (the other arm so you would s[ee] the palm and knuckles) row 2 fist PALM is great"* |
+
+Provenance so this can never be lost again: `grip_back_of_hand.png` is the **3rd hand of
+`hands/candidates/set_a/result.png`**; `grip_palm.png` is the **4th hand of
+`hands/candidates/set_b/result.png`**. Both cut with `compare_hands.cut_hands`.
+Seen in context in `hands/candidates/hands_in_motion_row1_row2_grips.gif`.
+
+### ⚠ THE GRIP HANDS ARE NOT THE WALK/RUN HANDS
+
+> *"the weapon grabbing is NOT to be blindly replacing walk and/or running — they all should be
+> carefully thought about and the best one picked"*
+
+Every animation gets its own hand **and its own rotation**, chosen deliberately. Reusing the grip hand
+for walking produced impossible poses, and he named them exactly:
+
+- **walking** — fingers pointing *upward*. A hand hanging at the waist cannot point its fingers up.
+- **running** — pointing *backward*, and *alternating between open and fist* between frames.
+
+So the walk and run hands are still **UNDECIDED** and must be chosen separately. The grips above are
+settled; nothing else is.
+
 ## The hands (`hands/`)
 
 **Only the three sprites the animations actually use are kept here.** From `hand-D-pixel`, the set chosen

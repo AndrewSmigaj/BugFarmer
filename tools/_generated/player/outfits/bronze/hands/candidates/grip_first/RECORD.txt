@@ -1,0 +1,22 @@
+when      : 2026-08-01 15:49:12
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+dest      : outfits/bronze/hands/candidates/grip_first
+references (in the order sent):
+  1. tools/_generated/player/outfits/bronze/result.png  (sent upscaled x14)
+
+PROMPT:
+The attached image is a sprite sheet of a character wearing bronze plate armour, from a small top-down 2D pixel-art farming and adventure game.
+
+WHAT THESE SPRITES ARE FOR. The player character is drawn WITHOUT ARMS. The hands are separate little sprites that float beside the body, and the game moves and rotates them by code: they swing back and forth when the character walks and runs, and they are placed onto the handle of a tool or weapon when the character carries a sword, axe, hoe, shovel or bug net. So each hand has to work as a small standalone sprite that still reads at roughly 12 pixels across, and it has to look like a hand that could actually hold a handle.
+
+Draw them in a row on a flat magenta background (255,0,255), evenly spaced, large and centred. Bronze metal matching the armour in the attached image - same darker shadows, same bright highlights, a short cuff at the wrist. Chunky pixel art with a dark outline.
+
+Draw FOUR views of a hand DESIGNED AROUND HOLDING THINGS. In every one of the four, the hand is wrapped around a plain WOODEN HANDLE that is clearly visible passing through the fist, entering below the hand and leaving above it. The four views are the same grip seen from four angles as the hand rotates:
+1. from the back of the hand
+2. rotated a quarter turn
+3. from the palm side
+4. rotated a quarter turn the other way
+The point of this set is the opening the handle passes through, so make that opening unmistakable.

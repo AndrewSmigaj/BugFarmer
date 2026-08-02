@@ -1,0 +1,21 @@
+when      : 2026-08-01 15:44:46
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+dest      : outfits/bronze/hands/candidates/fingered_gauntlet
+references (in the order sent):
+  1. tools/_generated/player/outfits/bronze/result.png  (sent upscaled x14)
+
+PROMPT:
+The attached image is a sprite sheet of a character wearing bronze plate armour, from a small top-down 2D pixel-art farming and adventure game.
+
+WHAT THESE SPRITES ARE FOR. The player character is drawn WITHOUT ARMS. The hands are separate little sprites that float beside the body, and the game moves and rotates them by code: they swing back and forth when the character walks and runs, and they are placed onto the handle of a tool or weapon when the character carries a sword, axe, hoe, shovel or bug net. So each hand has to work as a small standalone sprite that still reads at roughly 12 pixels across, and it has to look like a hand that could actually hold a handle.
+
+Draw them in a row on a flat magenta background (255,0,255), evenly spaced, large and centred. Bronze metal matching the armour in the attached image - same darker shadows, same bright highlights, a short cuff at the wrist. Chunky pixel art with a dark outline.
+
+Draw FOUR views of an ARMOURED GAUNTLET WITH DISTINCT FINGERS - individual armoured finger segments you can see, curled inward as if ready to close around something.
+1. back of the hand, fingers curled
+2. palm side, fingers curled
+3. the same gauntlet GRIPPING A SWORD HILT - draw the sword hilt passing through the fist so it is obvious the hand is holding it
+4. the hand seen in profile, edge-on
