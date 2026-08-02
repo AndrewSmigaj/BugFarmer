@@ -228,6 +228,27 @@ disk and survives the sprites being recreated. Under `file://` a page cannot lis
 local JSON, so the manifest is inlined as a `<script>` block and the page **must** live at
 `_generated/player/` for the relative image paths to resolve.
 
+### Recording a decision — `promote.py`, and why it is the only path
+An outfit lives in three folders: `scratchpad/` (candidates, in four numbered stages), `current/` (what we
+agreed), `archive/` (superseded — nothing is deleted).
+
+```bash
+python3 tools/player_sprites/promote.py bronze scratchpad/2-frames/2026-08-02-1344-first-cut "ok lets use this one"
+```
+
+One atomic action: copy into `current/`, move what it replaced into `archive/`, append the `CURRENT.md` row
+with the owner's words **verbatim**, re-render the animations, refresh the gallery. **Promoting IS
+recording.** There is deliberately no way to do one without the other, because every time recording was a
+separate step it got skipped — and the approved walk/run constants were lost exactly that way.
+
+`check_sprite_ledger.py` (pre-commit) fails the commit if `CURRENT.md` and `current/` ever disagree, which
+catches a hand-copy that bypassed the script. It is a **git** hook, not a Claude Code hook, so it is live
+the moment it is wired rather than after a session restart. `anim/` is excluded — those gifs are derived
+from the frames and regenerated on every promotion, so they are not decisions.
+
+`migrate.py` moves the pre-existing art into this shape. **Dry run is its default**: every bulk move run
+against this folder has destroyed or hidden something, so it prints the plan and only moves on `--go`.
+
 ### SUPERSEDED — the body/arm split (abandoned 2026-07-28)
 An earlier attempt split each base into a body plus a rotatable weapon ARM. It was abandoned the same day: you
 cannot carve animation pieces out of a finished drawing, because a drawn arm only contains the pixels visible
