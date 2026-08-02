@@ -199,8 +199,34 @@ cuff-down, so using them raw gives a hand hanging at the waist with its fingers 
 > The grip hands are **not** the walk/run hands. *"the weapon grabbing is NOT to be blindly replacing walk
 > and/or running — they all should be carefully thought about and the best one picked."*
 
-⚠ **Known limit:** the script is currently hardcoded to bronze's hand paths, which is the only reason 21 of
-the 22 outfits have zero animations while every one of them already has front, back and side frames on disk.
+**One outfit or `--all`** — 264 animations across 22 outfits, free. Each outfit uses **its own gauntlet**
+(never bronze's: bronze's hand-D-pixel fists are a different aspect, 0.80 vs 0.55-0.60, so a multi-set reel
+had visibly mismatched hands), and the script reports which source it resolved so a placeholder can't be
+mistaken for the real thing.
+
+**Every outfit renders at ONE body height** (`TARGET_BODY_H`, currently 320, NEAREST only). The 22 outfits
+on disk are cut at two scales — 7 at 267-292px, 15 at 395-435px, a **1.63×** split — which side by side
+reads as "these outfits are different sizes" when it is purely a cutting artifact. This is fixed at
+**render time, not by re-cutting the source**: the art is being recreated anyway, and a bulk re-cut is what
+destroyed a day of approved work on 08-01.
+
+The **back-facing walk** — which `APPROVED/DECISIONS.md` still calls *"requested, never delivered"* — comes
+free: every outfit already had `back_1..3`. It reuses the front-walk implementation deliberately (from
+behind you also see both hands clear of the silhouette; at ~10px a hand, the near/far distinction the side
+walk needs does not read).
+
+⚠ **Known limit:** `run_front` and `run_back` are the *walk* motion played at run speed. Only the **side**
+run has its own approved pose (`RUN`, rot 75°). Front/back running is not yet designed.
+
+### Seeing all of it — `tools/player_sprites/gallery.py`
+Writes `tools/_generated/player/gallery.html`; open it by double-clicking. Three tabs: **Current** (every
+outfit × every animation, transposable), **Progress** (which of the four stages each outfit has actually
+reached), **Outfit detail** (frames, gauntlets, candidate sheets captioned from `RECORD.txt`, the ledger).
+
+Generated from the folder structure — no hardcoded outfit or animation list — so it reflects whatever is on
+disk and survives the sprites being recreated. Under `file://` a page cannot list a directory or `fetch()`
+local JSON, so the manifest is inlined as a `<script>` block and the page **must** live at
+`_generated/player/` for the relative image paths to resolve.
 
 ### SUPERSEDED — the body/arm split (abandoned 2026-07-28)
 An earlier attempt split each base into a body plus a rotatable weapon ARM. It was abandoned the same day: you

@@ -25,12 +25,67 @@ because everything shares a single render. A modular pipeline may come back late
 ```
 tools/_generated/player/
   bases/          armless_front.png, armless_side.png   <- EXACTLY two files. The only source of a base.
-  outfits/<name>/ result.png (the 12-frame sheet), the 12 cut frames, gauntlet/, preview gifs
+  outfits/<name>/ scratchpad/  current/  archive/       <- see "Iterating on a sprite" below
   props/<name>/   non-character props (practice dummy, …)
-  archive/        superseded work. Nothing is deleted.
+  gallery.html    generated. Open it to see every outfit as it stands.
 ```
 Folders are named for **what is in them**, never for how they were made. Looking for the bronze armour means
 knowing it is called bronze — not knowing which run produced it.
+
+---
+
+## Iterating on a sprite — READ THIS BEFORE MAKING OR MOVING ANYTHING
+
+Sprites are not made once. They are **iterated**, the owner picks, and the pick has to survive the session.
+Everything below exists because it didn't: variants named `set_a` / `batch2` / `profile_option_1`, dumped in
+one folder, approvals never written down, and then neither of us could say what was current. That cost three
+days and a day of approved work.
+
+### The four stages an outfit passes through
+
+| stage | produces | API? |
+|---|---|---|
+| `scratchpad/1-candidates/` | N whole 12-frame sheets, one call each | **paid — ask first** |
+| `scratchpad/2-frames/` | the picked sheet **cut** into front/back/side | free |
+| `scratchpad/3-gauntlets/` | that outfit's hands | **paid — ask first** |
+| `current/` | the one the owner chose. Promoted, never hand-copied. | free |
+
+```
+outfits/<name>/
+  scratchpad/
+    1-candidates/2026-08-02-1344-woodland-cloak/   sheet.png + RECORD.txt
+    2-frames/2026-08-03-0910-first-cut/            front_1..3 side_1..3 back_1..3 + walk.gif
+    3-gauntlets/2026-08-03-1120-plated/
+  current/      CURRENT.md + the frames + gauntlet/ + anim/     <- the answer to "what are we using"
+  archive/      superseded currents. Nothing deleted, ever.
+```
+
+### The rules, in the order they get broken
+
+1. **Never name a file for how it was made.** Not `set_a`, not `batch2`, not `option_1`, not `result.png`.
+   The *batch folder* carries the meaning — dated and named for the idea — and `RECORD.txt` inside it holds
+   the prompt. Today every candidate on disk is called `result.png`, which is most of why nothing is findable.
+2. **Batch folders are `YYYY-MM-DD-HHMM-what-it-was`.** Year first so Explorer sorts them; no colons, Windows
+   forbids them.
+3. **To make something current, run `promote.py` — do not copy files by hand.**
+   ```bash
+   python3 tools/player_sprites/promote.py <outfit> <path-under-scratchpad> "<the owner's words, verbatim>"
+   ```
+   It copies to `current/`, moves the old current to `archive/`, appends the `CURRENT.md` row, re-renders the
+   animations and refreshes the gallery — atomically. **Promoting IS recording.** A hand-copy skips the
+   record, and a decision with no record is a decision that gets lost. The pre-commit hook fails the commit if
+   `CURRENT.md` and `current/` disagree.
+4. **Quote the owner verbatim in the ledger.** Not your paraphrase of what they approved. Approvals sound like
+   *"row 2 fist PALM is great"* and *"walk b is fine"* — the exact words are what makes it unambiguous later.
+5. **Nothing is deleted or overwritten.** Superseded work moves to `archive/`. **Never bulk re-cut or bulk
+   move** — every bulk run so far has destroyed or hidden something the owner was using. Show the list first.
+6. **Scratchpad is tracked in git.** Work in progress is real work. Decisions are not instant.
+7. **One shape for every sprite.** The bare character is just another outfit. No special buckets.
+
+### Seeing what you have
+`python3 tools/player_sprites/gallery.py` regenerates `gallery.html` — every outfit's current animations and
+frames, a progress board showing which stage each outfit is at, and per-outfit candidate comparison. Open it
+before asking the owner to look at anything, and re-run it after any promotion.
 
 `gen.py` is the **only** way to generate. Every run writes `RECORD.txt` beside the result (prompt, model,
 references as sent, timestamp) and appends a line to `RUNS.txt`. Nothing about a run lives in chat or in the

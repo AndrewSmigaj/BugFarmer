@@ -38,6 +38,10 @@ time (you end up building every feature twice). For every feature:
   `catalog/<group>/` = every in-game object by category (rebuild: `python3 tools/world/previews.py`, generated
   from entity data so it can't drift); `zones/<zone>/` = each zone's full render + region crops + its
   composing `scenes/`. `tools/README.md` is the map of every script + where outputs go.
+  **The ONE sanctioned html exception — `tools/_generated/player/gallery.html`** (`gallery.py`): 22 outfits ×
+  12 ANIMATIONS cannot be compared in a file explorer, which is the entire problem it solves. Owner asked
+  for it explicitly (2026-08-02). It is generated from the folder structure, never hand-maintained.
+  **Do not delete it as dead code** — that is exactly what happened to the previous html gallery.
 - `docs/` — `product/` (how the game works, incl. the GDD `game_design.md`) and `guides/`
   (`art/` = how sprites look & are made; `authoring/` = how to build zones/scenes — start at its `README.md`).
 - `.claude/skills/` — task playbooks: `test-changes` (verify ANY change — every test/determinism gate),

@@ -40,6 +40,16 @@ The entity already exists in `nakama/data/entities/*.json`, so this only redoes 
    - **Icon legibility:** if a world sprite doubles as the ~40px hotbar/inventory icon, confirm it READS that
      small; a dedicated `Items/<id>_icon` override is the fallback.
 
+## When you iterate — the naming rules that apply to ALL art
+- **Never name a variant for how it was made** (`set_a`, `batch2`, `option_1`, `result.png`) — name it for
+  what it *is*. This is what made 131 player-sprite files indistinguishable and cost three days.
+- **Write the decision down the moment it's made**, in the owner's words, not your paraphrase.
+- **Regenerating overwrites committed art.** Diff against HEAD before committing — regen tools have clobbered
+  newer art three times in one session. `git status` should show only your sprite and its `.meta`.
+
+The full candidates → current → archive workflow with a ledger is **player-art specific** for now; see the
+`player-sprites` skill if you're touching the character or an outfit.
+
 **Bulk re-clean (rare, NOT part of a single regen):** `python3 tools/sprites/pixelclean.py` re-cleans the whole
 set; `--keys a,b,c` cleans only those existing sprites in place. Use it for re-cleaning EXISTING art across the
 set, never as the path to regenerate one sprite.

@@ -1,10 +1,24 @@
-"""render_animations.py — the finished animation set for one outfit. FREE, no API.
+"""render_animations.py — the finished animation set for one outfit, or all of them. FREE, no API.
 
   python3 tools/player_sprites/render_animations.py bronze
+  python3 tools/player_sprites/render_animations.py --all
 
-Writes one gif per animation into `outfits/<outfit>/animations/`, each with a stable descriptive name.
-There is exactly one file per animation and it is always the current one; history lives in git. No
-iteration codes in filenames — that habit is what made 131 files indistinguishable.
+Writes one gif per animation into `outfits/<outfit>/current/anim/` (falling back to the pre-migration
+`outfits/<outfit>/animations/`), each with a stable descriptive name. There is exactly one file per
+animation and it is always the current one; history lives in git. No iteration codes in filenames — that
+habit is what made 131 files indistinguishable.
+
+EVERY OUTFIT RENDERS AT THE SAME SIZE
+-------------------------------------
+The 22 outfits on disk are cut at two different scales: 7 sit at 267-292px body height and 15 at
+395-435px, a 1.63x split. That is a cutting artifact, not a difference in the art, and side by side it
+reads as "these outfits are different sizes". So every frame bank is scaled (NEAREST only — never a hand
+resize) so the character's measured body height equals TARGET_BODY_H before anything is animated. Each
+direction is normalised against its own neutral frame, which also fixes outfits whose sheet rows came out
+at slightly different scales.
+
+This is deliberately a RENDER-TIME rule rather than a re-cut of the source art. The sprites are being
+recreated anyway, and a bulk re-cut is what destroyed a day of approved work on 2026-08-01.
 
 WHICH HAND EACH ANIMATION USES, and why the rotation matters
 -----------------------------------------------------------
@@ -20,6 +34,11 @@ So each animation picks its hand AND its base rotation deliberately:
 
 The grip hands are NOT reused for walking. Owner: "the weapon grabbing is NOT to be blindly replacing
 walk and/or running - they all should be carefully thought about and the best one picked."
+
+EACH OUTFIT USES ITS OWN GAUNTLET, not bronze's. Preferring bronze's hand-D-pixel fists where they
+existed made bronze's hands a different SHAPE from everyone else's (aspect 0.80 vs 0.55-0.60), so across
+a multi-set reel the hands were visibly different sizes. `gauntlet_dir` reports which source it used so
+a placeholder can never be mistaken for the real thing.
 """
 import math
 import os
@@ -31,19 +50,105 @@ from PIL import Image
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gait                                              # noqa: E402
 import swing_lab as S                                    # noqa: E402
-from compare_hands import cut_hands, rgba                # noqa: E402
+from compare_hands import rgba                           # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PLAYER = os.path.join(REPO, "tools", "_generated", "player")
+OUTFITS = os.path.join(PLAYER, "outfits")
 RES = os.path.join(REPO, "BugFarmerClient", "Assets", "Resources")
 
 SWING_APPROACH = 11        # the one the owner picked as best overall
 PAD = 90                   # scene margin so a swinging tool is never clipped
+TARGET_BODY_H = 320        # every outfit is normalised to this measured body height
 
 ONE_HANDED = [("sword", "sword_bronze_icon.png"), ("axe", "axe_copper_icon.png"),
               ("net", "small_net_icon.png"), ("hoe", "hoe_copper_icon.png"),
               ("shovel", "shovel_copper_icon.png")]
 TWO_HANDED = [("spear", "spear_bronze_icon.png")]
+
+# Where a gauntlet may live, best first. The 08-01 archive is where all 22 currently are; it is
+# GITIGNORED, so those are one `git clean -fdx` from gone.
+GAUNTLET_SOURCES = [
+    (os.path.join("{d}", "current", "gauntlet"), "current"),
+    (os.path.join("{d}", "gauntlet"), "outfit"),
+    (os.path.join(PLAYER, "archive", "2026-08-01_pre-redo", "gauntlets", "{o}"), "archived (pending redo)"),
+]
+
+
+def outfit_dir(outfit):
+    return os.path.join(OUTFITS, outfit)
+
+
+def anim_dir(outfit):
+    """Prefer the new current/anim/, fall back to the pre-migration animations/."""
+    d = outfit_dir(outfit)
+    new = os.path.join(d, "current", "anim")
+    return new if os.path.isdir(os.path.join(d, "current")) else os.path.join(d, "animations")
+
+
+def frames_dir(outfit):
+    """Frames live in current/ after migration, at the outfit root before it."""
+    d = outfit_dir(outfit)
+    cur = os.path.join(d, "current")
+    return cur if os.path.exists(os.path.join(cur, "side_1.png")) else d
+
+
+def gauntlet_dir(outfit):
+    """(path, provenance) for this outfit's own gauntlet, or (None, reason)."""
+    d = outfit_dir(outfit)
+    for tmpl, label in GAUNTLET_SOURCES:
+        p = tmpl.format(d=d, o=outfit)
+        if all(os.path.exists(os.path.join(p, f)) for f in ("front.png", "back.png")):
+            return p, label
+    return None, "none found"
+
+
+def _scaled(a, f):
+    if abs(f - 1.0) < 0.02:
+        return a
+    h, w = a.shape[:2]
+    return np.asarray(Image.fromarray(a, "RGBA").resize(
+        (max(1, round(w * f)), max(1, round(h * f))), Image.NEAREST), np.uint8)
+
+
+def load_bank(outfit, kind, neutral_idx):
+    """Frames 1..3 for one direction, normalised so the measured body height == TARGET_BODY_H.
+
+    Returns None if the direction is incomplete — a missing direction is reported as a gap, never
+    silently skipped.
+    """
+    d = frames_dir(outfit)
+    paths = [os.path.join(d, f"{kind}_{i}.png") for i in (1, 2, 3)]
+    if not all(os.path.exists(p) for p in paths):
+        return None
+    bank = [rgba(p) for p in paths]
+    y0, y1, _, _ = gait.anchor(bank[neutral_idx])
+    body_h = y1 - y0 + 1
+    if body_h <= 0:
+        return None
+    return [_scaled(a, TARGET_BODY_H / body_h) for a in bank]
+
+
+def load_hands(outfit):
+    """Every hand this outfit's animations need, plus a note on where they came from."""
+    g, prov = gauntlet_dir(outfit)
+    if g is None:
+        return None, prov
+    walk_back, walk_palm = gait.flip(rgba(os.path.join(g, "front.png"))), \
+        gait.flip(rgba(os.path.join(g, "back.png")))
+
+    # The APPROVED bronze grips win where they exist; otherwise the outfit's own gauntlet grip.
+    approved = os.path.join(outfit_dir(outfit), "hands")
+    gb = os.path.join(approved, "grip_back_of_hand.png")
+    gp = os.path.join(approved, "grip_palm.png")
+    if os.path.exists(gb) and os.path.exists(gp):
+        grip_back, grip_palm, prov = rgba(gb), rgba(gp), prov + " + approved grips"
+    else:
+        grip = os.path.join(g, "grip.png")
+        src = grip if os.path.exists(grip) else os.path.join(g, "front.png")
+        grip_back = grip_palm = rgba(src)
+    return dict(walk_back=walk_back, walk_palm=walk_palm,
+                grip_back=grip_back, grip_palm=grip_palm), prov
 
 
 def scene(w, h):
@@ -57,6 +162,7 @@ def finish(sc):
 
 
 def save(frames, ms, path):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     frames[0].save(path, save_all=True, append_images=frames[1:], duration=ms, loop=0)
     return path
 
@@ -66,7 +172,6 @@ def swing_frames(body, hands, tool_png, bh, two_handed=False):
     cell = bh / 2.0
     art = S.scale_h(rgba(tool_png), cell)
     g = (S.grip_of(art) + S.DIAG * S.GRIP_EXTRA) * art.shape[0]
-    p = dict(S.TOOLS["sword"])
     kind = {"sword_bronze_icon.png": "sword", "axe_copper_icon.png": "axe",
             "small_net_icon.png": "net", "hoe_copper_icon.png": "hoe",
             "shovel_copper_icon.png": "shovel", "spear_bronze_icon.png": "spear"}[os.path.basename(tool_png)]
@@ -103,55 +208,93 @@ def swing_frames(body, hands, tool_png, bh, two_handed=False):
     return out, ms
 
 
-def build(outfit="bronze"):
-    d = os.path.join(PLAYER, "outfits", outfit)
-    anim = os.path.join(d, "animations")
-    os.makedirs(anim, exist_ok=True)
+def _gait_gif(bank, neutral, fn, ms, path, *hands):
+    fr = []
+    W, H = bank[0].shape[1] + 2 * PAD, bank[0].shape[0] + PAD
+    for beat in range(len(gait.CYCLE)):
+        sc = scene(W, H)
+        fn(sc, W / 2, H / 2, bank[gait.CYCLE[beat] - 1], neutral, *hands, beat)
+        fr.append(finish(sc))
+    return save(fr, ms, path)
 
-    # relaxed hands for the gaits, FLIPPED so the fingers hang down instead of pointing at the sky
-    raw = cut_hands(os.path.join(d, "hands", "candidates", "set_a", "result.png"))
-    hands = dict(walk_back=gait.flip(raw[0]), walk_palm=gait.flip(raw[1]),
-                 grip_back=rgba(os.path.join(d, "hands", "grip_back_of_hand.png")),
-                 grip_palm=rgba(os.path.join(d, "hands", "grip_palm.png")))
 
-    side = [rgba(os.path.join(d, f"side_{i}.png")) for i in (1, 2, 3)]
-    front = [rgba(os.path.join(d, f"front_{i}.png")) for i in (1, 2, 3)]
-    bh = gait.anchor(side[1])[1] - gait.anchor(side[1])[0] + 1
-    made = []
+def build(outfit="bronze", verbose=True):
+    """Render every animation this outfit can support. Returns (made, gaps, provenance)."""
+    anim = anim_dir(outfit)
+    made, gaps = [], []
 
-    for name, bank, fn, ms in [
-            ("walk_side", side, gait.walk_into, gait.WALK["ms"]),
-            ("run_side", side, gait.run_into, gait.RUN["ms"])]:
-        fr = []
-        W, H = bank[0].shape[1] + 2 * PAD, bank[0].shape[0] + PAD
-        for beat in range(len(gait.CYCLE)):
-            sc = scene(W, H)
-            fn(sc, W / 2, H / 2, bank[gait.CYCLE[beat] - 1], bank[1],
-               hands["walk_back"], hands["walk_palm"], beat)
-            fr.append(finish(sc))
-        made.append(save(fr, ms, os.path.join(anim, f"{name}.gif")))
+    hands, prov = load_hands(outfit)
+    if hands is None:
+        return [], [f"all animations: no gauntlet ({prov})"], prov
 
-    for name, bank, ms in [("walk_front", front, gait.WALK["ms"]), ("run_front", front, gait.RUN["ms"])]:
-        fr = []
-        W, H = bank[0].shape[1] + 2 * PAD, bank[0].shape[0] + PAD
-        for beat in range(len(gait.CYCLE)):
-            sc = scene(W, H)
-            gait.walk_front_into(sc, W / 2, H / 2, bank[gait.CYCLE[beat] - 1], bank[0],
-                                 hands["walk_back"], beat)
-            fr.append(finish(sc))
-        made.append(save(fr, ms, os.path.join(anim, f"{name}.gif")))
+    side = load_bank(outfit, "side", 1)
+    front = load_bank(outfit, "front", 0)
+    back = load_bank(outfit, "back", 0)
 
-    for name, icon in ONE_HANDED:
-        fr, ms = swing_frames(side[1], hands, os.path.join(RES, "Items", icon), bh)
-        made.append(save(fr, ms, os.path.join(anim, f"swing_{name}.gif")))
-    for name, icon in TWO_HANDED:
-        fr, ms = swing_frames(side[1], hands, os.path.join(RES, "Items", icon), bh, two_handed=True)
-        made.append(save(fr, ms, os.path.join(anim, f"thrust_{name}_two_handed.gif")))
+    # --- gaits ---------------------------------------------------------------------------------
+    if side:
+        bh = gait.anchor(side[1])[1] - gait.anchor(side[1])[0] + 1
+        made.append(_gait_gif(side, side[1], gait.walk_into, gait.WALK["ms"],
+                              os.path.join(anim, "walk_side.gif"),
+                              hands["walk_back"], hands["walk_palm"]))
+        made.append(_gait_gif(side, side[1], gait.run_into, gait.RUN["ms"],
+                              os.path.join(anim, "run_side.gif"),
+                              hands["walk_back"], hands["walk_palm"]))
+    else:
+        gaps.append("walk_side, run_side, every swing: no side_1..3 frames")
+        bh = None
 
-    for p in made:
-        print("  " + p.replace("/mnt/c/", "C:/"))
-    return made
+    # The front walk is its own implementation: hands OUTSIDE the body edges, one up one down, no
+    # rotation, no dimming. The BACK view reuses it deliberately — from behind you also see both hands
+    # clear of the silhouette. At ~10px a hand the near/far distinction the side walk needs does not read.
+    for kind, bank in (("front", front), ("back", back)):
+        if not bank:
+            gaps.append(f"walk_{kind}, run_{kind}: no {kind}_1..3 frames")
+            continue
+        label = kind if kind == "front" else "back"
+        made.append(_gait_gif(bank, bank[0], gait.walk_front_into, gait.WALK["ms"],
+                              os.path.join(anim, f"walk_{label}.gif"), hands["walk_back"]))
+        made.append(_gait_gif(bank, bank[0], gait.walk_front_into, gait.RUN["ms"],
+                              os.path.join(anim, f"run_{label}.gif"), hands["walk_back"]))
+
+    # --- swings --------------------------------------------------------------------------------
+    if side:
+        for name, icon in ONE_HANDED:
+            p = os.path.join(RES, "Items", icon)
+            if not os.path.exists(p):
+                gaps.append(f"swing_{name}: {icon} missing")
+                continue
+            fr, ms = swing_frames(side[1], hands, p, bh)
+            made.append(save(fr, ms, os.path.join(anim, f"swing_{name}.gif")))
+        for name, icon in TWO_HANDED:
+            p = os.path.join(RES, "Items", icon)
+            if not os.path.exists(p):
+                gaps.append(f"thrust_{name}: {icon} missing")
+                continue
+            fr, ms = swing_frames(side[1], hands, p, bh, two_handed=True)
+            made.append(save(fr, ms, os.path.join(anim, f"thrust_{name}_two_handed.gif")))
+
+    if verbose:
+        print(f"  {outfit}: {len(made)} animations, hands = {prov}")
+        for g in gaps:
+            print(f"    GAP  {g}")
+    return made, gaps, prov
+
+
+def all_outfits():
+    return sorted(d for d in os.listdir(OUTFITS) if os.path.isdir(os.path.join(OUTFITS, d)))
 
 
 if __name__ == "__main__":
-    build(sys.argv[1] if len(sys.argv) > 1 else "bronze")
+    args = sys.argv[1:]
+    targets = all_outfits() if ("--all" in args) else [a for a in args if not a.startswith("-")] or ["bronze"]
+    total, allgaps = 0, []
+    for o in targets:
+        made, gaps, _ = build(o)
+        total += len(made)
+        allgaps += [f"{o}: {g}" for g in gaps]
+    print(f"\n{total} animations across {len(targets)} outfit(s)")
+    if allgaps:
+        print(f"{len(allgaps)} gap(s):")
+        for g in allgaps:
+            print("  " + g)

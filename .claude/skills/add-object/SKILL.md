@@ -93,4 +93,17 @@ PNG, and run the acceptance check.
 - Even-width objects sit on grid in the preview (footprint-X rule).
 - Tiles / linear connectors (fence, wall) tile seam-free.
 
+## When you iterate — the naming rules that apply to ALL art
+These cost three days on the player sprites. They apply here too:
+- **Never name a variant for how it was made** — not `set_a`, `batch2`, `option_1`, or `result.png`. Name it
+  for what it *is*. A folder of files distinguishable only by run order is a folder nobody can use.
+- **Write the decision down the moment it's made**, in the owner's own words. An approval that lives only in
+  chat is gone by the next session.
+- **Never overwrite or bulk re-run.** A bare `pixelclean.py` re-cleaning 427 sprites is the same class of
+  mistake as a bulk re-cut: it destroys work nobody asked you to touch. Targeted `--keys` only.
+
+The full candidates → frames → current → archive workflow (with `promote.py` and a ledger) is **player-art
+specific** for now — world art writes straight to `Resources/` and has no scratchpad. See the
+`player-sprites` skill if you're touching the character or an outfit.
+
 Canonical pipeline detail: `docs/guides/art/object_pipeline.md`.

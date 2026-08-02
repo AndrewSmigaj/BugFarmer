@@ -64,7 +64,7 @@ raw/ ab/ blocklab/ variants/ scratch/ ecology_charts/   sprite staging + transie
 |---|---|
 | `zonegen/` | the zone/scene builder library + `scenes/` + `scene_preview.py` (the one scene→preview render path) |
 | `art/` | art prompt DATA: `style.json` (global) + `catalog/*.json` (per-item) |
-| `player_sprites/` | the **armless character + whole-outfit** pipeline (NOT the old paper-doll). `gen.py` = the only generator (paid, records every run) · `outfits.py` = which sets exist + the one shared prompt (`sheet` / `gauntlet`) · `cut_outfit.py` = sheet → frames (free) · `demo_swings.py` = per-outfit swing `DEMO.gif` (free) · `preview_all.py` = all sets on one page (free) · `swing_lab.py` = the swing motion, approach 6 is the shipped design |
+| `player_sprites/` | the **armless character + whole-outfit** pipeline (NOT the old paper-doll). `gen.py` = the only generator (paid, records every run) · `outfits.py` = which sets exist + the one shared prompt (`sheet` / `gauntlet`) · `cut_outfit.py` = sheet → frames (free) · `gait.py` = the OWNER-APPROVED walk/run constants, do not tune · `render_animations.py` = every animation for one outfit or `--all`, normalised to one body height (free) · **`gallery.py` = `gallery.html`, every outfit + progress board (free)** · `demo_swings.py` = per-outfit swing `DEMO.gif` (free) · `swing_lab.py` = the swing motion |
 | `sync-harness/` | the headless .NET netcode harness (`dotnet run -- --zone <id>`) |
 | `bug_lab_configs/` | ecology tuning experiment configs (json) |
 | `archive/` | retired one-off scripts (kept for reference, never run) |
@@ -72,3 +72,9 @@ raw/ ab/ blocklab/ variants/ scratch/ ecology_charts/   sprite staging + transie
 Removed (dead code): `artlab/`, `lab/`, `lab_server.py` (old variant viewers),
 `zonegen/gallery.py` + `previews/index.html` (the html gallery), `contact_sheet.py`
 (hand-listed sprite sheets — replaced by `previews.py`, which is generated from data).
+
+⚠ **`player_sprites/gallery.py` is NOT that removed gallery and must not be deleted with it.** The zone
+gallery died because static zone renders are better browsed as PNG folders. The player one exists because
+22 outfits × 12 **animations** cannot be compared in a file explorer at all — a different problem with a
+different answer. Owner asked for it explicitly (2026-08-02); it is generated from the folder structure,
+so it never goes stale and never needs hand-maintaining.
