@@ -181,6 +181,27 @@ as a portrait can still fall apart the moment it moves or picks up a weapon, so 
 sheet, is what a set has to survive. It imports the swing from `swing_lab` rather than reimplementing it, so
 it cannot drift from the designed motion.
 
+### The finished animation set — `tools/player_sprites/render_animations.py`
+Renders one gif per animation into `outfits/<outfit>/animations/`, free, no API. **One file per animation,
+always the current one, named for what it is** — `walk_side.gif`, `swing_axe.gif`. No iteration codes in
+filenames; history lives in git. Naming variants for how they were made (`set_a`, `batch2`,
+`profile_option_1`) is what produced 131 indistinguishable files and cost three days.
+
+**Each animation picks its hand AND its base rotation deliberately** — the hand sheets are drawn fingers-up,
+cuff-down, so using them raw gives a hand hanging at the waist with its fingers pointing at the sky:
+
+| animation | hand | rotation |
+|---|---|---|
+| walk | relaxed, **flipped** so the fingers hang down | 0 |
+| run | relaxed, flipped then turned to lead | 75° |
+| swing | the approved **grip** hands, knuckles down | `HAND_ROT` 225, +16% down the handle |
+
+> The grip hands are **not** the walk/run hands. *"the weapon grabbing is NOT to be blindly replacing walk
+> and/or running — they all should be carefully thought about and the best one picked."*
+
+⚠ **Known limit:** the script is currently hardcoded to bronze's hand paths, which is the only reason 21 of
+the 22 outfits have zero animations while every one of them already has front, back and side frames on disk.
+
 ### SUPERSEDED — the body/arm split (abandoned 2026-07-28)
 An earlier attempt split each base into a body plus a rotatable weapon ARM. It was abandoned the same day: you
 cannot carve animation pieces out of a finished drawing, because a drawn arm only contains the pixels visible
