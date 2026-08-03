@@ -158,6 +158,13 @@ tools/_generated/player/*
 # The design-exploration sheets: the evidence behind which look was chosen.
 !tools/_generated/player/explore/
 !tools/_generated/player/explore/**
+# Cross-outfit review sheets — the comparisons a decision was made from. These MUST be in the repo:
+# putting them in a VM temp dir is showing the owner something he cannot open, which has happened
+# repeatedly and is worse than not making them at all.
+!tools/_generated/player/reviews/
+!tools/_generated/player/reviews/**
+# The generated gallery — the one page that shows every outfit as it stands.
+!tools/_generated/player/gallery.html
 # archive/ stays OUT: ~1.1 GB, and almost all of it is DEMO.gif preview renders at 27 MB each that
 # regenerate from the sprites in one command. The sprites themselves are tracked above, so nothing
 # unrecoverable lives in there. Say the word and it goes in too.

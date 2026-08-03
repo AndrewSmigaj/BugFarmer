@@ -25,9 +25,15 @@ outfits/<name>/   one folder per outfit. The bare character is just another outf
 props/<name>/     non-character props (practice dummy, …)
 APPROVED/         the owner's approved animations + DECISIONS.md, the record of what was agreed
 explore/          early look-exploration sheets
+reviews/<date>-<what>/   cross-outfit comparison sheets a decision was made from
 archive/          superseded work. Nothing is deleted, ever.
 gallery.html      generated. The thing to open.
 ```
+
+> ⚠ **Anything you want the owner to LOOK at goes in the repo, never a temp folder.** The assistant runs
+> in a VM; `/tmp/...` paths do not exist on his machine, so showing him one shows him nothing. Comparison
+> sheets go in `reviews/<date>-<what>/` with a `README.md` saying what each image is, and the path quoted
+> back to him starts `C:/Users/emily/BugFarmer/`. This has gone wrong repeatedly.
 
 ### Inside an outfit
 
