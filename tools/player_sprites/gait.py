@@ -88,9 +88,19 @@ def anchor(neutral):
 def pose_into(scene, bx, by, body, neutral, back_hand, palm_hand, beat, p):
     """The original `render()` inner loop, drawing into a scene instead of a body-sized canvas.
 
-    That is the ONE deliberate difference from the transcript, and it is a bug fix: the original
-    composed onto `np.zeros_like(frame)`, which clips the fists on outfits cropped tighter than bronze
-    (ranger and hornet-stinger lost them entirely). The motion is untouched.
+    TWO deliberate differences from the transcript, both bug fixes. THE OWNER'S NUMBERS IN `WALK` AND
+    `RUN` ARE UNTOUCHED — neither of these changes a constant.
+
+    1. It composes into a scene instead of `np.zeros_like(frame)`, which clipped the fists on outfits
+       cropped tighter than bronze (ranger and hornet-stinger lost them entirely).
+
+    2. THE TWO HANDS TILT IN OPPOSITE DIRECTIONS. The transcript gave both the same `ang`, so the hand
+       swinging FORWARD and the hand swinging BACK leaned the same way — the wrists read as locked
+       together rather than as an arm swing. Owner, 2026-08-03: "the rotations are wrong for the hands
+       when they are swinging in the walking (the back hand for example is rotating the wrong way when
+       forward)". `back_hand` sits at `+dx`, so it is the forward one when s > 0 — the hand he named.
+       Each hand now tilts with ITS OWN direction of travel: forward hand `-tilt*s`, rear hand `+tilt*s`.
+       `p["tilt"]` itself is unchanged.
     """
     ny0, ny1, cx, tw = anchor(neutral)
     bh = ny1 - ny0 + 1
@@ -100,11 +110,12 @@ def pose_into(scene, bx, by, body, neutral, back_hand, palm_hand, beat, p):
     s = math.sin(PHASE[beat % len(PHASE)] * math.pi)
     dx = p["amp"] * tw * s
     dy = -p["ay"] * bh * abs(s)
-    ang = p["rot"] + p["tilt"] * s
+    near_ang = p["rot"] - p["tilt"] * s      # back_hand, at +dx: forward when s > 0
+    far_ang = p["rot"] + p["tilt"] * s       # palm_hand, at -dx: the opposite phase
 
-    _paste(scene, _sz(_rot(_dim(palm_hand), ang), bh, p["ratio"]), ox + cx - dx, oy + wy + dy)
+    _paste(scene, _sz(_rot(_dim(palm_hand), far_ang), bh, p["ratio"]), ox + cx - dx, oy + wy + dy)
     _paste(scene, body, bx, by)
-    _paste(scene, _sz(_rot(back_hand, ang), bh, p["ratio"]), ox + cx + dx, oy + wy + dy)
+    _paste(scene, _sz(_rot(back_hand, near_ang), bh, p["ratio"]), ox + cx + dx, oy + wy + dy)
 
 
 def walk_into(scene, bx, by, body, neutral, back_hand, palm_hand, beat):
@@ -172,7 +183,17 @@ def hands_for(outfit_dir):
 
 
 def front_hand_for(outfit_dir):
-    """The single fist the FRONT walk uses — D3 where it exists, else the outfit's own gauntlet."""
+    """The single fist the FRONT and BACK walks use — the PROFILE view, `gauntlet/side.png`.
+
+    NOT the back of the hand. Facing the camera you see the hand edge-on, and both hands turn INWARD
+    toward the body. Owner: "walk front needs to actually have it's hands sideways (turned inward)",
+    and APPROVED/DECISIONS.md lists `h3 — profile` as the front-facing walk's hand.
+
+    `flip()` is a 180 degree rotation, so the profile ends up fingers-down pointing INWARD for the right
+    hand; `walk_front_into` mirrors it for the left, which points that one inward too.
+    """
     def rgba(p):
         return np.asarray(Image.open(p).convert("RGBA"), np.uint8)
-    return flip(rgba(os.path.join(outfit_dir, "gauntlet", "front.png")))
+    g = os.path.join(outfit_dir, "gauntlet")
+    side = os.path.join(g, "side.png")
+    return flip(rgba(side if os.path.exists(side) else os.path.join(g, "front.png")))

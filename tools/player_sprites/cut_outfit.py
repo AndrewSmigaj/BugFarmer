@@ -24,6 +24,7 @@ opposite passing pose, which reads as a skip. Play 1, 2, 3, 2.
   python3 tools/player_sprites/cut_outfit.py outfit   outfits/silver
 """
 import os
+import statistics
 import sys
 
 import numpy as np
@@ -126,15 +127,19 @@ def measure_pitch(sheet, b):
     return pixelsnap.detect_pitch([ex, ey], pmin=3.0, pmax=60.0)
 
 
-def snap(sheet, b, target_h, pad=1):
+def snap(sheet, b, target_h, pad=1, pitch=None):
     """Downscale one blob onto its own pixel grid. Never a hand-rolled resampler: cell-median and
-    area-average both turn pixel art to mush, and that mistake has been made twice already."""
+    area-average both turn pixel art to mush, and that mistake has been made twice already.
+
+    `pitch` overrides per-blob detection — pass the sheet's shared pitch when several blobs were drawn
+    at one scale, because per-blob detection disagrees with itself (see `cut_gauntlet`).
+    """
     cut = np.zeros_like(sheet)
     cut[b["m"]] = sheet[b["m"]]
     cut[..., 3] = np.where(b["m"], 255, 0)
     sub = cut[b["y0"]:b["y1"] + 1, b["x0"]:b["x1"] + 1]
 
-    p = measure_pitch(sheet, b)
+    p = pitch if pitch else measure_pitch(sheet, b)
     nx, ny = max(1, round(sub.shape[1] / p)), max(1, round(sub.shape[0] / p))
     small = pixelsnap.sample(sub, p, p, 0.0, 0.0, nx, ny)
 
@@ -168,12 +173,24 @@ def add_rim(a, darken=0.45):
 
 
 def cut_gauntlet(folder):
+    """The four hands, all downscaled on ONE shared pixel pitch.
+
+    ⚠ Measuring the pitch PER BLOB is wrong and it visibly damages hands. The four hands are drawn in a
+    single image at a single scale, so there is one true pitch — but `detect_pitch` run per blob
+    disagrees with itself: bronze measures [3.50, 4.90, 4.85, 4.95] and ranger [3.35, 3.25, 3.45, 4.95].
+    The odd one out gets sampled at the wrong rate and comes out mush — bronze's profile hand lost the
+    separation between its fingers, which is the whole reason that view exists.
+
+    The median across the four is the sheet's pitch. Most outfits already agree to within 0.3, so this
+    changes nothing for them and rescues the one or two blobs that misdetect.
+    """
     sheet = np.asarray(Image.open(os.path.join(folder, "result.png")).convert("RGBA"), np.uint8)
     grid = cells(sheet, rows=1, cols=4)
     if len(grid) != 1 or len(grid[0]) != 4:
         raise SystemExit(f"  expected 4 hands in 1 row, got {[len(r) for r in grid]} — look at result.png")
+    pitch = statistics.median([measure_pitch(sheet, b) for b in grid[0]])
     for view, b in zip(GAUNTLET_VIEWS, grid[0]):
-        img = add_rim(snap(sheet, b, TARGET_HAND_H))
+        img = add_rim(snap(sheet, b, TARGET_HAND_H, pitch=pitch))
         Image.fromarray(img, "RGBA").save(os.path.join(folder, f"{view}.png"))
     return [f"{v}.png" for v in GAUNTLET_VIEWS]
 

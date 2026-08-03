@@ -137,6 +137,12 @@ def load_hands(outfit):
     walk_back, walk_palm = gait.flip(rgba(os.path.join(g, "front.png"))), \
         gait.flip(rgba(os.path.join(g, "back.png")))
 
+    # Facing the camera (or away) you see the hand EDGE-ON, turned inward — not its knuckles.
+    # Owner: "walk front needs to actually have it's hands sideways (turned inward)"; DECISIONS.md
+    # lists `h3 — profile` for the front-facing walk. `side.png` is the gauntlet's profile view.
+    side = os.path.join(g, "side.png")
+    profile = gait.flip(rgba(side)) if os.path.exists(side) else walk_back
+
     # The APPROVED bronze grips win where they exist; otherwise the outfit's own gauntlet grip.
     approved = os.path.join(outfit_dir(outfit), "hands")
     gb = os.path.join(approved, "grip_back_of_hand.png")
@@ -147,7 +153,7 @@ def load_hands(outfit):
         grip = os.path.join(g, "grip.png")
         src = grip if os.path.exists(grip) else os.path.join(g, "front.png")
         grip_back = grip_palm = rgba(src)
-    return dict(walk_back=walk_back, walk_palm=walk_palm,
+    return dict(walk_back=walk_back, walk_palm=walk_palm, profile=profile,
                 grip_back=grip_back, grip_palm=grip_palm), prov
 
 
@@ -253,9 +259,9 @@ def build(outfit="bronze", verbose=True):
             continue
         label = kind if kind == "front" else "back"
         made.append(_gait_gif(bank, bank[0], gait.walk_front_into, gait.WALK["ms"],
-                              os.path.join(anim, f"walk_{label}.gif"), hands["walk_back"]))
+                              os.path.join(anim, f"walk_{label}.gif"), hands["profile"]))
         made.append(_gait_gif(bank, bank[0], gait.walk_front_into, gait.RUN["ms"],
-                              os.path.join(anim, f"run_{label}.gif"), hands["walk_back"]))
+                              os.path.join(anim, f"run_{label}.gif"), hands["profile"]))
 
     # --- swings --------------------------------------------------------------------------------
     if side:

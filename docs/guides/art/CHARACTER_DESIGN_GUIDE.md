@@ -228,6 +228,49 @@ disk and survives the sprites being recreated. Under `file://` a page cannot lis
 local JSON, so the manifest is inlined as a `<script>` block and the page **must** live at
 `_generated/player/` for the relative image paths to resolve.
 
+### Three defects found by looking at the finished set (2026-08-03)
+All three were invisible until 22 outfits were rendered side by side — which is the argument for the
+gallery existing at all.
+
+**1. The two walking hands must tilt in OPPOSITE directions.** The recovered transcript gave both hands
+the same `ang`, so the hand swinging forward and the hand swinging back leaned the same way and the
+wrists read as locked together. Owner: *"the rotations are wrong for the hands when they are swinging in
+the walking (the back hand for example is rotating the wrong way when forward)"*. `back_hand` sits at
+`+dx`, so it is the forward one when `s > 0` — the hand he named. Each hand now tilts with **its own**
+direction of travel. **The `WALK`/`RUN` constants are untouched**; only the per-hand sign changed.
+
+**2. Facing the camera (or away), the hands are seen EDGE-ON, turned inward** — `gauntlet/side.png`, the
+profile view. Not the knuckles. Owner: *"walk front needs to actually have it's hands sideways (turned
+inward)"*, and `APPROVED/DECISIONS.md` lists `h3 — profile` for the front walk. `flip()` is a 180° turn,
+so the profile ends up fingers-down pointing inward, and `walk_front_into` mirrors it for the other hand.
+
+**3. A left-facing side row makes an outfit walk and swing backwards.** The prompt asks for "a strict
+RIGHT-facing side profile" and the model sometimes ignores it; copper and farmer came out mirrored.
+Everything downstream assumes right-facing (`back_hand` swings to `+dx`, every swing arcs toward `+x`).
+`flip_side.py <outfit> --go` mirrors just `side_*.png` — free and exact, and the skill already says
+"Left = mirror of right. Never generate it."
+
+> ⚠ **Do not try to auto-detect the facing.** A centroid heuristic ("the visor overhangs toward the
+> facing direction") agreed with a careful visual read on only **6 of 8** outfits. A detector wrong a
+> quarter of the time would mirror sprites the wrong way across the whole set, silently. A human looks
+> at the gallery and names them.
+
+**Related cutter bug (real, but NOT the cause of the boxy hand):** `cut_gauntlet` measured the pixel
+pitch **per blob**, but the four hands are one image at one scale, so there is one true pitch.
+`detect_pitch` disagreed with itself — bronze `[3.50, 4.90, 4.85, 4.95]`, ranger `[3.35, 3.25, 3.45,
+4.95]` — meaning one hand per sheet was sampled at the wrong rate. It now uses the **median**. Most
+outfits agree to within 0.3 and are unaffected.
+
+> **The profile hand still reads as a slab, and re-cutting does NOT fix it.** That was the first
+> hypothesis and it was wrong: a median-pitch re-cut of bronze is visually identical to the old cut. The
+> squared-off block is **in the source drawing** — the profile view includes a squared wrist stump, and
+> the sprite is 89% opaque, so at ~20px it is a rounded rectangle with fingers on one edge. It is an ART
+> problem for the gauntlet redo to fix, not a pipeline problem.
+>
+> `APPROVED/hands/h3.png` (12×21, 81% opaque) is a genuinely good profile hand and `DECISIONS.md` names
+> it for exactly this purpose — but it is bronze-coloured and exists only for bronze, so using it
+> everywhere would reintroduce the shape/colour mismatch `hands_for` was written to avoid.
+
 ### Recording a decision — `promote.py`, and why it is the only path
 An outfit lives in three folders: `scratchpad/` (candidates, in four numbered stages), `current/` (what we
 agreed), `archive/` (superseded — nothing is deleted).

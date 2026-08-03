@@ -71,6 +71,35 @@ To see what an outfit looks like right now, open its `current/`. That is the who
 
 `check_sprite_ledger.py` runs on pre-commit and fails the commit if `CURRENT.md` and `current/` disagree.
 
+## The side row must face RIGHT
+
+Everything downstream assumes it: the walk swings the near hand to `+x` as the forward one, and every
+swing arcs toward `+x`. An outfit whose side row came out facing **left** therefore walks and swings
+backwards. Copper and farmer both did.
+
+```bash
+python3 tools/player_sprites/flip_side.py copper farmer --go   # mirrors only side_*.png
+```
+
+**Check it by eye, in the gallery** — the face, visor slit or hat brim points the way the character
+faces, and it must point right. **Do not automate this**: a centroid heuristic was tried and agreed with
+a careful visual read on only 6 of 8 outfits, and a detector that is wrong a quarter of the time would
+mirror sprites the wrong way, silently, across the whole set.
+
+## Which hand each animation uses
+
+| animation | hand | why |
+|---|---|---|
+| walk / run, side-on | `gauntlet/front.png` (knuckles) + `back.png` (palm) | near hand over the torso, far hand behind and dimmed |
+| walk / run, toward or away | `gauntlet/side.png` (**profile**, turned inward) | facing the camera you see the hand edge-on, not its knuckles |
+| swing | the approved grips, else `gauntlet/grip.png` | rotated 225°, +16% down the handle |
+
+The two side-on hands tilt in **opposite** directions — each follows its own direction of travel.
+
+⚠ The profile hand currently reads as a slab: the source drawing includes a squared wrist stump and the
+sprite is ~89% opaque, so at 20px it is a rounded rectangle with fingers on one edge. Re-cutting does not
+fix it — this is for the gauntlet redo.
+
 ## Rules that keep getting broken
 
 - **Never name a file for how it was made** — not `set_a`, `batch2`, `option_1`, or `result.png`. The batch
