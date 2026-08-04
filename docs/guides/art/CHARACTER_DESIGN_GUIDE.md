@@ -276,6 +276,34 @@ pitch **per blob**, but the four hands are one image at one scale, so there is o
 4.95]` — meaning one hand per sheet was sampled at the wrong rate. It now uses the **median**. Most
 outfits agree to within 0.3 and are unaffected.
 
+### The hand view decides where the arm can be — and it killed the lateral swing (2026-08-04)
+A hand sprite is drawn from **one** viewpoint, and that viewpoint tells the viewer where the arm is.
+Looking down at the knuckles of a closed fist reads as an arm **stretched out** — the forearm runs away
+from you and the fist caps it. The back of the hand is the opposite: you cannot see the back of the hand
+on an arm reaching out to the side, because at that extension the wrist turns it edge-on. So a
+back-of-hand sprite **forbids** full extension; it only makes sense at a limited distance from the
+shoulder.
+
+Approaches 1–12 spin **one** sprite through a ~250° **lateral** arc, so across most of that travel the
+drawn view contradicts where the hand is. That is why the swing read as impossible while no single part
+looked wrong — and why retiming, re-cutting and swapping between the hands we already had all failed.
+**Rotation cannot change a drawn viewpoint.** It only tilts the picture.
+
+**The fix is to remove the conflict, not to draw around it: swing top-to-bottom.** A vertical arc keeps
+the arm inside the geometry one hand view can honestly represent, so one sprite carries the whole motion
+and no new art is needed. Owner: *"just not have laterally s[w]ings, everything is just a top to bottom
+swing, that way we dont have to worry about different hand shapes."*
+
+`swing_lab.py` approaches **20–23** are the vertical set (overhead, diagonal, loaded, chop-and-stop), all
+anchored to `IDLE_ANGLE` at both ends. `swing_options.py` renders them one- and two-handed for review.
+
+**Two-handed uses BOTH approved grips** — `grip_back_of_hand.png` on one arm, `grip_palm.png` on the other
+(*"the other arm so you would see the palm"*). Never mirror one to make the other: mirroring the back of a
+hand gives a mirrored back of a hand, never a palm.
+
+⚠ A vertical swing needs padding on **both** axes — `swing_frames` only padded sideways and clipped the
+blade off the bottom.
+
 ### Recording a decision — `promote.py`, and why it is the only path
 An outfit lives in three folders: `scratchpad/` (candidates, in four numbered stages), `current/` (what we
 agreed), `archive/` (superseded — nothing is deleted).

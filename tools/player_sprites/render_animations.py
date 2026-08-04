@@ -57,7 +57,13 @@ PLAYER = os.path.join(REPO, "tools", "_generated", "player")
 OUTFITS = os.path.join(PLAYER, "outfits")
 RES = os.path.join(REPO, "BugFarmerClient", "Assets", "Resources")
 
-SWING_APPROACH = 11        # the one the owner picked as best overall
+# TWO swings were approved, not one. DECISIONS.md:
+#   05_SWING_iteration7_best_for_SWORD  — "for the sword iteration 7 is the best"  (20:43)
+#   06_SWING_iteration11_best_overall   — "iteration 11 looks best"                (23:37)
+# So the sword uses 7 and everything else uses 11. Rendering all six tools with 11 threw away the
+# sword pick, which is the one he named a tool for explicitly.
+SWING_APPROACH = 11                # best overall
+SWING_APPROACH_BY_TOOL = {"sword": 7}
 APPROVED_HANDS_OUTFIT = "bronze"   # whose hands APPROVED/hands/h1..h3 are (from hand-D-pixel)
 PAD = 90                   # scene margin so a swinging tool is never clipped
 TARGET_BODY_H = 320        # every outfit is normalised to this measured body height
@@ -170,7 +176,12 @@ def load_hands(outfit):
     else:
         return None, prov
 
-    # Swings only. The approved per-outfit grips win; else that outfit's gauntlet grip view.
+    # THE TWO GRIPS ARE A PAIR, ONE PER ARM — approved together 2026-08-01:
+    #   grip_back_of_hand.png  the arm where you see the BACK of the hand ("the knuckles are
+    #                          appropriately pointing down")
+    #   grip_palm.png          "the other arm so you would see the palm ... row 2 fist PALM is great"
+    # A two-handed grip uses BOTH. Do not mirror one to make the other — mirroring the back of a hand
+    # gives a mirrored back of a hand, never a palm.
     gb = os.path.join(outfit_dir(outfit), "hands", "grip_back_of_hand.png")
     gp = os.path.join(outfit_dir(outfit), "hands", "grip_palm.png")
     if os.path.exists(gb) and os.path.exists(gp):
@@ -200,7 +211,7 @@ def save(frames, ms, path):
     return path
 
 
-def swing_frames(body, hands, tool_png, bh, two_handed=False):
+def swing_frames(body, hands, tool_png, bh, two_handed=False, approach=None, pad=None):
     """One full swing. Two-handed puts the second grip further up the handle."""
     cell = bh / 2.0
     art = S.scale_h(rgba(tool_png), cell)
@@ -209,12 +220,16 @@ def swing_frames(body, hands, tool_png, bh, two_handed=False):
             "small_net_icon.png": "net", "hoe_copper_icon.png": "hoe",
             "shovel_copper_icon.png": "shovel", "spear_bronze_icon.png": "spear"}[os.path.basename(tool_png)]
     p = S.TOOLS[kind]
-    n = max(12, int(S.duration(SWING_APPROACH, p) * S.FPS * 4))
-    W, H = body.shape[1] + 2 * PAD, body.shape[0] + PAD
+    ap = approach if approach is not None else SWING_APPROACH_BY_TOOL.get(kind, SWING_APPROACH)
+    n = max(12, int(S.duration(ap, p) * S.FPS * 4))
+    # A VERTICAL swing puts the blade well below the feet and well above the head, so the lateral
+    # PAD clips it. Owner has been shown clipped swings before; the frame has to fit the whole arc.
+    pd = PAD if pad is None else pad
+    W, H = body.shape[1] + 2 * pd, body.shape[0] + 2 * pd
     out, ms = [], []
     for i in range(n):
         t = i / (n - 1)
-        ang, off, freeze, smear = S.motion(SWING_APPROACH, p, t)
+        ang, off, freeze, smear = S.motion(ap, p, t)
         sc = scene(W, H)
         bx, by = W / 2, H / 2
         ny0, ny1, cx, _ = gait.anchor(body)
@@ -237,7 +252,7 @@ def swing_frames(body, hands, tool_png, bh, two_handed=False):
                         tx + gg[0] * math.cos(rr) - gg[1] * math.sin(rr),
                         ty + gg[0] * math.sin(rr) + gg[1] * math.cos(rr))
         out.append(finish(sc))
-        ms.append(int(S.duration(SWING_APPROACH, p) * 1000 / n) * (3 if freeze else 1))
+        ms.append(int(S.duration(ap, p) * 1000 / n) * (3 if freeze else 1))
     return out, ms
 
 

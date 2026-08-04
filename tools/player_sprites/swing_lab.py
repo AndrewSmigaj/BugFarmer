@@ -98,6 +98,11 @@ DUR_SCALE = {7: 0.70, 8: 0.70, 9: 0.70}
 
 
 def duration(approach, p):
+    if approach in VERTICALS:
+        # A vertical swing is lift + drop + recover, so it cannot be as short as a flat slash. Still has
+        # to be playable: "these are to be used in game so they can't be really slow." Heavier tools take
+        # longer, which is the only weight cue a player actually reads.
+        return 0.24 + 0.14 * p["weight"]
     if approach in (10, 11, 12):
         return COMBAT_DUR[KIND10[p["kind"]]]
     return p["dur"] * DUR_SCALE.get(approach, 1.0)
@@ -234,6 +239,81 @@ def variation(approach, kind, t):
     return KIND_MOTION[kind](min(1.0, max(0.0, t)))
 
 
+# ---------------------------------------------------------------- vertical swings (20-23)
+# WHY VERTICAL. A hand sprite is drawn from ONE viewpoint, and that viewpoint tells the viewer where the
+# arm is: looking down at the knuckles of a closed fist reads as an arm STRETCHED OUT, while the back of
+# the hand reads as an arm that is NOT extended (you cannot see the back of the hand on an arm reaching
+# out to the side — at that extension the wrist turns it edge-on).
+#
+# Approaches 1-12 spin ONE sprite through a ~250 deg LATERAL arc, so across that arc the drawn view keeps
+# contradicting where the hand is and the pose reads as impossible even though no single part looks wrong.
+# Retiming, re-cutting and swapping between the hands we already had were all tuning the wrong variable.
+#
+# A TOP-TO-BOTTOM swing removes the conflict instead of drawing around it: the arm stays inside the
+# geometry one hand view can honestly represent, so one sprite carries the whole motion and no new art is
+# needed. Owner, 2026-08-04: "just not have laterally s[w]ings, everything is just a top to bottom swing,
+# that way we dont have to worry about different hand shapes".
+#
+# Every variant STARTS AND ENDS AT `IDLE_ANGLE` so the swing has an exit and does not pop when it ends.
+VERTICALS = {20: "overhead", 21: "diagonal", 22: "loaded", 23: "chop_and_stop"}
+
+
+def _v_overhead(t, off):
+    """Up above the head, straight down through the target, short recovery."""
+    top, low = 135.0, -78.0
+    if t < 0.30:                                        # lift
+        return IDLE_ANGLE + (top - IDLE_ANGLE) * ease_out(t / 0.30), off, False, False
+    if t < 0.72:                                        # drop — the fast part
+        u = (t - 0.30) / 0.42
+        return top + (low - top) * ease_in(u), off + 0.18 * ease_in(u), False, u > 0.45
+    u = (t - 0.72) / 0.28                               # recover to idle
+    return low + (IDLE_ANGLE - low) * ease_out(u), off + 0.18 - 0.18 * ease_out(u), False, False
+
+
+def _v_diagonal(t, off):
+    """Outside shoulder down across to the opposite hip — reaches out through the strike, pulls in after."""
+    top, low = 112.0, -62.0
+    if t < 0.28:
+        return IDLE_ANGLE + (top - IDLE_ANGLE) * ease_out(t / 0.28), off - 0.10, False, False
+    if t < 0.70:
+        u = (t - 0.28) / 0.42
+        return top + (low - top) * ease_in_out(u), off - 0.10 + 0.34 * ease_in(u), False, 0.35 < u < 0.9
+    u = (t - 0.70) / 0.30
+    return low + (IDLE_ANGLE - low) * ease_out(u), off + 0.24 - 0.24 * ease_out(u), False, False
+
+
+def _v_loaded(t, off):
+    """A small lift, then the whole drop at once — the weight is in the fall, not the wind-up."""
+    top, low = 72.0, -84.0
+    if t < 0.16:                                        # brief load
+        return IDLE_ANGLE + (top - IDLE_ANGLE) * ease_out(t / 0.16), off, False, False
+    if t < 0.26:                                        # hang at the top
+        return top, off, False, False
+    if t < 0.62:                                        # everything at once
+        u = (t - 0.26) / 0.36
+        return top + (low - top) * ease_in(u), off + 0.22 * ease_in(u), False, u > 0.3
+    u = (t - 0.62) / 0.38
+    return low + (IDLE_ANGLE - low) * ease_out(u), off + 0.22 - 0.22 * ease_out(u), False, False
+
+
+def _v_chop_stop(t, off):
+    """Down with a HARD STOP at contact — the fighting-game freeze, on the contact pose itself."""
+    top, stop = 125.0, -14.0
+    hold_from, hold_to = 0.58, 0.70
+    if t < 0.30:
+        return IDLE_ANGLE + (top - IDLE_ANGLE) * ease_out(t / 0.30), off, False, False
+    if t < hold_from:
+        u = (t - 0.30) / (hold_from - 0.30)
+        return top + (stop - top) * ease_in(u), off + 0.20 * ease_in(u), False, u > 0.5
+    if t < hold_to:                                     # the stop. freeze=True holds this exact pose
+        return stop, off + 0.20, True, False
+    u = (t - hold_to) / (1 - hold_to)
+    return stop + (IDLE_ANGLE - stop) * ease_out(u), off + 0.20 - 0.20 * ease_out(u), False, False
+
+
+V_MOTION = {20: _v_overhead, 21: _v_diagonal, 22: _v_loaded, 23: _v_chop_stop}
+
+
 # ---------------------------------------------------------------- approaches
 def motion(approach, p, t):
     """-> (angle, offset, freeze, smear). angle/offset drive the pivot; freeze/smear are presentation."""
@@ -266,6 +346,9 @@ def motion(approach, p, t):
         u = (t - strike) / (1 - strike)
         end = aim - half - half * (0.30 + 0.50 * w)     # exaggerated overshoot, scaled by weight
         return aim + (end - aim) * ease_out_back(u), off, False, False
+
+    if approach in V_MOTION:                    # 20-23 — TOP-TO-BOTTOM, one hand view all the way
+        return V_MOTION[approach](min(1.0, max(0.0, t)), off)
 
     if approach in (10, 11, 12):
         a, reach, contact, smear = variation(approach, KIND10[kind], t)

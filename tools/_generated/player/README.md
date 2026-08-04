@@ -99,7 +99,11 @@ mirror sprites the wrong way, silently, across the whole set.
 | `APPROVED/hands/h1.png` | knuckles / back of hand — walk + run, the **near** hand |
 | `APPROVED/hands/h2.png` | palm — walk + run, the **far** hand (dimmed, drawn behind the body) |
 | `APPROVED/hands/h3.png` | profile — walking **toward or away** from the camera |
-| `<outfit>/hands/grip_*.png` | **SWINGS ONLY** |
+| `<outfit>/hands/grip_back_of_hand.png` | **SWINGS ONLY** — the arm you see the back of |
+| `<outfit>/hands/grip_palm.png` | **SWINGS ONLY** — *"the other arm so you would see the palm"* |
+
+The two grips are a **pair, one per arm**, approved together. A two-handed swing uses **both**. Never
+mirror one to make the other — mirroring the back of a hand gives a mirrored back of a hand, never a palm.
 
 These are bronze's, and **every other outfit's gauntlet was generated from them**, so a non-bronze outfit
 uses its own gauntlet in the same three roles: `front`→h1, `back`→h2, `side`→h3.
