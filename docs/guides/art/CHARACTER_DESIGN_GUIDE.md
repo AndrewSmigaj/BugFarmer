@@ -302,6 +302,15 @@ Owner: *"do sword_1h_f4_back85 as the official one, but have it pull back a tad 
 hand is at the hip not forward a little, you can also have tip slightly continue down more."*
 The other five tools still run the old shoulder-pivot approaches.
 
+**THE ATTACK HAPPENS IN FRONT OF HIM. NEVER WIND UP BEHIND HIS BACK.** No game swings a weapon from
+behind the player and around — that is cutscene staging, and it wastes the frames a game attack does not
+have. Owner: *"do you know any game with a sword or whatever that starts way behind the player and swings
+around like that?"*
+
+**Check the sign of the hand's x offset across the whole motion.** If it goes negative, the arc is passing
+behind him, through his own body, before it reaches anything. A net sweep built that way measured
+x −0.48 → +0.48; the fix keeps it at +0.06 → +0.55.
+
 **SWEEP AND HEIGHT ARE SEPARATE KNOBS — do not trade one for the other.** The net went wrong twice in a
 row on exactly this: one version swept the arm to +92°, putting the hand **3-4% down the body** (above the
 top of the helmet — *"its crazy how it ends up over the head"*); the fix for that shrank the travel to

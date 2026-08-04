@@ -78,25 +78,22 @@ TOOLS = {
                         (40, 50, 0.44)),
     }),
     "net": ("small_net_icon.png", False, {
-        # Based on the 11:52 C_scoop_up, which the owner said was closest — a real upward SCOOP with a
-        # big sweep. Two things fixed, both measured rather than eyeballed:
+        # THE SWEEP HAPPENS IN FRONT OF HIM. It is a weapon — you hit things with it — so the arc covers
+        # the space he is attacking, and that space is in front. Owner: "do you know any game with a
+        # sword or whatever that starts way behind the player and swings around like that?" No.
         #
-        # 1. IT ENDED OVER HIS HEAD. C_scoop_up swept the arm to +92 deg, which puts the hand straight up
-        #    from the shoulder — 3-4% down the body, above the top of the helmet. "its crazy how it ends
-        #    up over the head."  The sweep is kept; the whole RANGE is shifted down so it finishes at
-        #    chest height.
-        # 2. THE HAND STARTS LOWER — down by the knees, where a bug on the ground actually is.
+        # I built a golf swing: the previous version started at x -0.48, behind his back, and travelled
+        # through his own body before reaching anything. Winding up behind the player is cutscene
+        # staging; a game attack is quick and entirely in the attack space.
         #
-        # The 12:21 attempt (A_low_scoop) fixed the height by killing the motion: it travelled 9% of body
-        # height in total, so it stopped reading as a scoop at all. Sweep AND height both matter.
-        #
-        # Reference: hand travels 63% -> 44% down the body. Head ends at 22%, waist 50%, knees ~80%.
-        "A_scoop": ((-84, -25, 0.66),
-                    [(-72, -38, 0.70), (-56, -50, 0.72), (-42, -56, 0.66), (-28, -58, 0.60)],
-                    (-82, -26, 0.64)),
-        "B_bigger_lift": ((-88, -22, 0.70),
-                          [(-74, -36, 0.76), (-56, -52, 0.78), (-38, -60, 0.70), (-18, -62, 0.62)],
-                          (-86, -24, 0.68)),
+        # Both of these stay at x +0.06 .. +0.55 — never behind him — and sweep between 37% and 60% down
+        # the body. Same simple shape as the other tools, hoop leading.
+        "A_sweep_down": ((-16, -30, 0.54),
+                         [(-34, -44, 0.64), (-54, -52, 0.68), (-72, -46, 0.64), (-84, -34, 0.56)],
+                         (-20, -28, 0.52)),
+        "B_scoop_up": ((-84, -30, 0.56),
+                       [(-70, -46, 0.66), (-50, -54, 0.70), (-30, -48, 0.64), (-14, -32, 0.56)],
+                       (-80, -28, 0.54)),
     }),
     "shovel": ("shovel_copper_icon.png", True, {
         # HOW A SHOVEL IS ACTUALLY HELD AND USED. Two corrections, both mine:
