@@ -302,6 +302,15 @@ Owner: *"do sword_1h_f4_back85 as the official one, but have it pull back a tad 
 hand is at the hip not forward a little, you can also have tip slightly continue down more."*
 The other five tools still run the old shoulder-pivot approaches.
 
+**SWEEP AND HEIGHT ARE SEPARATE KNOBS — do not trade one for the other.** The net went wrong twice in a
+row on exactly this: one version swept the arm to +92°, putting the hand **3-4% down the body** (above the
+top of the helmet — *"its crazy how it ends up over the head"*); the fix for that shrank the travel to
+**9% of body height**, so it stopped reading as a scoop at all. The answer is to keep the sweep and shift
+the whole RANGE down. Working motions live between roughly **40% and 70% down the body**.
+
+**Compute where the hand lands as a percentage down the body before rendering.** `shoulder_y −
+sin(arm)·reach·cell`, as a fraction of body height. Two rounds of this were wasted judging it by eye.
+
 **NEVER OVERWRITE REVIEW OUTPUT.** Every lab script writes to `reviews/<date>-<HHMM>-<tag>/` — a **new
 folder per run**. They used to write into one folder named for the day and clear it each run, so
 re-rendering destroyed the previous attempt. When the owner says *"it was mostly ok before you changed

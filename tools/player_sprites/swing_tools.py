@@ -78,16 +78,25 @@ TOOLS = {
                         (40, 50, 0.44)),
     }),
     "net": ("small_net_icon.png", False, {
-        # Hoop LEADS (negative back). START LOW AND END LOW — you scoop a bug up off the ground, your
-        # hand does not finish beside your face. Owner: "when you sweep up a bug does your hand end up
-        # near your face?" The hand stays below the shoulder line for the whole motion, and the hoop is
-        # angled UP more so the opening faces where the bug is.
-        "A_low_scoop": ((-78, -34, 0.46),
-                        [(-64, -52, 0.60), (-46, -62, 0.68), (-34, -58, 0.64), (-38, -48, 0.58)],
-                        (-74, -32, 0.44)),
-        "B_wider": ((-84, -30, 0.44),
-                    [(-66, -50, 0.62), (-42, -64, 0.72), (-26, -60, 0.68), (-34, -50, 0.60)],
-                    (-78, -30, 0.44)),
+        # Based on the 11:52 C_scoop_up, which the owner said was closest — a real upward SCOOP with a
+        # big sweep. Two things fixed, both measured rather than eyeballed:
+        #
+        # 1. IT ENDED OVER HIS HEAD. C_scoop_up swept the arm to +92 deg, which puts the hand straight up
+        #    from the shoulder — 3-4% down the body, above the top of the helmet. "its crazy how it ends
+        #    up over the head."  The sweep is kept; the whole RANGE is shifted down so it finishes at
+        #    chest height.
+        # 2. THE HAND STARTS LOWER — down by the knees, where a bug on the ground actually is.
+        #
+        # The 12:21 attempt (A_low_scoop) fixed the height by killing the motion: it travelled 9% of body
+        # height in total, so it stopped reading as a scoop at all. Sweep AND height both matter.
+        #
+        # Reference: hand travels 63% -> 44% down the body. Head ends at 22%, waist 50%, knees ~80%.
+        "A_scoop": ((-84, -25, 0.66),
+                    [(-72, -38, 0.70), (-56, -50, 0.72), (-42, -56, 0.66), (-28, -58, 0.60)],
+                    (-82, -26, 0.64)),
+        "B_bigger_lift": ((-88, -22, 0.70),
+                          [(-74, -36, 0.76), (-56, -52, 0.78), (-38, -60, 0.70), (-18, -62, 0.62)],
+                          (-86, -24, 0.68)),
     }),
     "shovel": ("shovel_copper_icon.png", True, {
         # HOW A SHOVEL IS ACTUALLY HELD AND USED. Two corrections, both mine:
