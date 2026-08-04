@@ -147,16 +147,30 @@ def render(kind, name, sh, fn, two_handed):
                               shoulder=sh, behind=(kind == "back"))
 
 
+def out_dir(tag):
+    """A NEW folder per run — timestamped. Nothing is ever overwritten.
+
+    Every lab script used to write to one folder named for the day and clear it each run, so re-running
+    destroyed the previous attempt. That means when the owner says "it was mostly ok before you changed
+    something", the file he was looking at no longer exists, and I cannot even tell him which version it
+    was because the filenames were reused. Owner: "can you please stop overwriting files i cant show you
+    the old one".
+
+    A dated batch folder per run is exactly the scratchpad convention already written into the
+    player-sprites skill — which I designed and then did not apply to my own output.
+    """
+    stamp = datetime.datetime.now().strftime("%Y-%m-%d-%H%M")
+    d = os.path.join(R.PLAYER, "reviews", f"{stamp}-{tag}")
+    os.makedirs(d, exist_ok=True)
+    return d
+
+
 def main():
     # A CLEAN FOLDER EVERY RUN. Re-running with renamed variants used to leave every dead attempt on
     # disk beside the live ones — 56 gifs in one folder, of which 12 were current. Owner: "all i see in
     # here is complete crap... so which ones are you talking about". Anything this script wrote last run
     # is regenerable in one command, so it goes; nothing else in the folder is touched.
-    d = os.path.join(R.PLAYER, "reviews", f"{datetime.date.today().isoformat()}-swing-facings")
-    os.makedirs(d, exist_ok=True)
-    for f in sorted(os.listdir(d)):
-        if f.startswith("sword_") and f.endswith(".gif"):
-            os.remove(os.path.join(d, f))
+    d = out_dir("swing-facings")
     made = []
     for kind, variants in (("front", FRONT), ("back", BACK)):
         for name, sh, fn in variants:

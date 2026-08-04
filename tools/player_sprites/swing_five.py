@@ -184,14 +184,26 @@ def build(facing, name, two_handed=False):
     return R.crop_union(out)
 
 
-def main():
-    d = os.path.join(R.PLAYER, "reviews", f"{datetime.date.today().isoformat()}-swing-five")
+def out_dir(tag):
+    """A NEW folder per run — timestamped. Nothing is ever overwritten.
+
+    Every lab script used to write to one folder named for the day and clear it each run, so re-running
+    destroyed the previous attempt. That means when the owner says "it was mostly ok before you changed
+    something", the file he was looking at no longer exists, and I cannot even tell him which version it
+    was because the filenames were reused. Owner: "can you please stop overwriting files i cant show you
+    the old one".
+
+    A dated batch folder per run is exactly the scratchpad convention already written into the
+    player-sprites skill — which I designed and then did not apply to my own output.
+    """
+    stamp = datetime.datetime.now().strftime("%Y-%m-%d-%H%M")
+    d = os.path.join(R.PLAYER, "reviews", f"{stamp}-{tag}")
     os.makedirs(d, exist_ok=True)
-    for f in sorted(os.listdir(d)):
-        # Clear only what THIS script generates. A blanket remove deletes the hand-written README in the
-        # folder too, which happened once — the notes explaining the options are not regenerable.
-        if f.lower().endswith((".gif", ".png")):
-            os.remove(os.path.join(d, f))
+    return d
+
+
+def main():
+    d = out_dir("swing-five")
 
     made = {}
     for facing in FACINGS:

@@ -302,6 +302,16 @@ Owner: *"do sword_1h_f4_back85 as the official one, but have it pull back a tad 
 hand is at the hip not forward a little, you can also have tip slightly continue down more."*
 The other five tools still run the old shoulder-pivot approaches.
 
+**NEVER OVERWRITE REVIEW OUTPUT.** Every lab script writes to `reviews/<date>-<HHMM>-<tag>/` — a **new
+folder per run**. They used to write into one folder named for the day and clear it each run, so
+re-rendering destroyed the previous attempt. When the owner says *"it was mostly ok before you changed
+something"*, that file has to still exist, and reusing filenames across runs means you cannot even tell
+him which version he was looking at. Owner: *"can you please stop overwriting files i cant show you the
+old one"*.
+
+This is the dated-batch convention already in the `player-sprites` skill. It was designed and then not
+applied to the assistant's own output.
+
 **A SHOVEL IS A LEVER HELD LOW — it is not a battering ram, and not held up by your face.** Two things the
 rig could not express until `attack_frames` grew `pivot` and `second`:
 
