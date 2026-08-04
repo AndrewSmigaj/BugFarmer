@@ -1,42 +1,37 @@
-# 2026-08-03 — facing direction + walking hands
+# 2026-08-03 — the walk/run hands, and two backwards outfits
 
-Andrew reported three things: copper is backwards, a lot of outfits aren't using the profile hands when
-facing down, and the hand rotations are wrong in the walk.
+## The mistake
 
-**The one that needs a decision is image 1.**
+Every animation was built on the **cut gauntlet views** (`gauntlet/front|back|side.png`) instead of the
+hands that were already agreed. `APPROVED/DECISIONS.md` says in writing that those cuts
 
-| image | what it shows |
+> "are a re-cut made on 08-01 and were never approved... anything unapproved living here is how the wrong
+> sprite gets picked later."
+
+Which is exactly what happened. Bronze's walk used a discarded sprite, and the swing used the tool-grip
+hand — a hand meant for holding a handle — while the agreed hands sat unused in `APPROVED/hands/`.
+
+## The hands, settled. Do not substitute.
+
+| sprite | used by |
 |---|---|
-| **1_FRONT_HAND_OPTIONS_pick_one** | **DECISION NEEDED.** The three choices for the hand used when walking toward or away from the camera. Middle = what is live now. |
-| 2_front_hand_knuckles_vs_profile | The same three, with the old knuckles version for comparison. |
-| 3_all_22_side_facing_audit | Every outfit's side frame. They must all face RIGHT. |
-| 4_heads_zoomed_which_way_they_face | The heads, zoomed — the face/visor/brim points the way they face. This is how copper and farmer were caught. |
-| 5_result_walk_side_and_front | The result: copper and farmer now face right, hands tilt correctly. |
-| 6_hand_tilt_before_after | The rotation fix. Top row = both hands leaning the same way (wrong). Bottom = each hand tilts with its own direction of travel. |
-| 7_gauntlet_source_art_the_wrist_stump | Why the profile hand looks like a slab — the source drawing has a squared wrist stump on it. |
+| `APPROVED/hands/h1.png` | knuckles / back of hand — walk + run, the **near** hand |
+| `APPROVED/hands/h2.png` | palm — walk + run, the **far** hand (dimmed, drawn behind the body) |
+| `APPROVED/hands/h3.png` | profile — walking **toward or away** from the camera |
+| `bronze/hands/grip_*.png` | **swings only** |
 
-## The decision, in image 1
+These are bronze's, and **every other outfit's gauntlet was generated from them**, so a non-bronze outfit
+uses its own gauntlet in the same three roles: `front`→h1, `back`→h2, `side`→h3.
 
-Left = what is live now (gauntlet profile, reads as a slab).
-Middle = the same thing re-cut with the pipeline bug fixed — **identical**, which proves the problem is
-the drawing, not the cutting.
-Right = `APPROVED/hands/h3.png`, a genuinely good profile hand. But it exists **only for bronze, in bronze
-colour**, so using it everywhere would put bronze's hands on the wizard.
+`1_APPROVED_vs_NOW.png` — top row is the approved reference, bottom is the current render. The hands now
+match.
 
-1. Leave as is — right view, boxy hands, fixed properly by the gauntlet redo
-2. Good hand for bronze only — bronze right now, other 21 boxy and inconsistent
-3. Back to knuckles until the redo — wrong view, but reads as a hand
+## Also fixed: copper and farmer faced left
 
-Recommended: **1**. It is the view he asked for, it is consistent across all 22, and the gauntlets are
-being redone anyway — adding "no wrist or forearm, the hand only" to that prompt fixes it for everyone.
+Everything downstream assumes the side row faces right — the near hand swings to `+x`, every swing arcs
+toward `+x` — so those two walked and swung backwards. Mirrored with `flip_side.py`. They were the only
+two of 22; see `2_facing_audit_all_22.png` and `3_facing_heads_zoomed.png` (the face, visor slit or hat
+brim points the way they face).
 
-## Fixed already, no decision needed
-
-- **copper and farmer** were facing left, so they walked and swung backwards. Mirrored with
-  `flip_side.py`. They were the only two of 22.
-- **The two walking hands** were leaning the same way; each now tilts with its own direction of travel.
-  The owner-approved WALK/RUN constants were not touched.
-
-> **Do not automate the facing check.** A centroid heuristic was tried and agreed with a careful visual
-> read on only 6 of 8 outfits. A detector wrong a quarter of the time would mirror sprites the wrong way,
-> silently, across the whole set.
+**Do not automate the facing check.** A centroid heuristic agreed with a careful visual read on only 6 of
+8 outfits, and a detector wrong a quarter of the time would mirror sprites the wrong way, silently.

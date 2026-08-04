@@ -239,10 +239,25 @@ the walking (the back hand for example is rotating the wrong way when forward)"*
 `+dx`, so it is the forward one when `s > 0` — the hand he named. Each hand now tilts with **its own**
 direction of travel. **The `WALK`/`RUN` constants are untouched**; only the per-hand sign changed.
 
-**2. Facing the camera (or away), the hands are seen EDGE-ON, turned inward** — `gauntlet/side.png`, the
-profile view. Not the knuckles. Owner: *"walk front needs to actually have it's hands sideways (turned
-inward)"*, and `APPROVED/DECISIONS.md` lists `h3 — profile` for the front walk. `flip()` is a 180° turn,
-so the profile ends up fingers-down pointing inward, and `walk_front_into` mirrors it for the other hand.
+**2. THE HANDS WERE ALREADY CHOSEN AND WERE NOT BEING USED.** Every animation had been built on the cut
+gauntlet views, so bronze's walk used a **discarded** sprite and its swing used the **tool-grip** hand —
+a hand for holding a handle. `APPROVED/DECISIONS.md` had already warned in writing that those cuts "were
+never approved... anything unapproved living here is how the wrong sprite gets picked later."
+
+| sprite | used by |
+|---|---|
+| `APPROVED/hands/h1.png` | knuckles / back of hand — walk + run, the **near** hand |
+| `APPROVED/hands/h2.png` | palm — walk + run, the **far** hand (dimmed, behind the body) |
+| `APPROVED/hands/h3.png` | profile — walking **toward or away** from the camera |
+| `<outfit>/hands/grip_*.png` | **SWINGS ONLY** |
+
+They are bronze's, and **every other outfit's gauntlet was generated from them**, so a non-bronze outfit
+uses its own gauntlet in the same three roles: `front`→h1, `back`→h2, `side`→h3. `flip()` is a 180° turn,
+so the profile hangs fingers-down pointing inward, and `walk_front_into` mirrors it for the other hand.
+
+> **The reference gifs in `APPROVED/` are what a correct render looks like. Compare against them before
+> claiming an animation is right.** Rendering 264 animations without once doing that is how a discarded
+> hand shipped across all 22 outfits.
 
 **3. A left-facing side row makes an outfit walk and swing backwards.** The prompt asks for "a strict
 RIGHT-facing side profile" and the model sometimes ignores it; copper and farmer came out mirrored.
@@ -260,16 +275,6 @@ pitch **per blob**, but the four hands are one image at one scale, so there is o
 `detect_pitch` disagreed with itself — bronze `[3.50, 4.90, 4.85, 4.95]`, ranger `[3.35, 3.25, 3.45,
 4.95]` — meaning one hand per sheet was sampled at the wrong rate. It now uses the **median**. Most
 outfits agree to within 0.3 and are unaffected.
-
-> **The profile hand still reads as a slab, and re-cutting does NOT fix it.** That was the first
-> hypothesis and it was wrong: a median-pitch re-cut of bronze is visually identical to the old cut. The
-> squared-off block is **in the source drawing** — the profile view includes a squared wrist stump, and
-> the sprite is 89% opaque, so at ~20px it is a rounded rectangle with fingers on one edge. It is an ART
-> problem for the gauntlet redo to fix, not a pipeline problem.
->
-> `APPROVED/hands/h3.png` (12×21, 81% opaque) is a genuinely good profile hand and `DECISIONS.md` names
-> it for exactly this purpose — but it is bronze-coloured and exists only for bronze, so using it
-> everywhere would reintroduce the shape/colour mismatch `hands_for` was written to avoid.
 
 ### Recording a decision — `promote.py`, and why it is the only path
 An outfit lives in three folders: `scratchpad/` (candidates, in four numbered stages), `current/` (what we

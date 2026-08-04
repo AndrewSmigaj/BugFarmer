@@ -58,6 +58,7 @@ OUTFITS = os.path.join(PLAYER, "outfits")
 RES = os.path.join(REPO, "BugFarmerClient", "Assets", "Resources")
 
 SWING_APPROACH = 11        # the one the owner picked as best overall
+APPROVED_HANDS_OUTFIT = "bronze"   # whose hands APPROVED/hands/h1..h3 are (from hand-D-pixel)
 PAD = 90                   # scene margin so a swinging tool is never clipped
 TARGET_BODY_H = 320        # every outfit is normalised to this measured body height
 
@@ -130,29 +131,55 @@ def load_bank(outfit, kind, neutral_idx):
 
 
 def load_hands(outfit):
-    """Every hand this outfit's animations need, plus a note on where they came from."""
+    """Every hand this outfit's animations need, plus a note on where they came from.
+
+    THE HANDS ARE ALREADY CHOSEN. `APPROVED/hands/` holds them and they win over everything:
+
+        h1  knuckles / back of hand   walk + run, the NEAR hand
+        h2  palm                      walk + run, the FAR hand (dimmed, behind the body)
+        h3  profile                   walking toward or away from the camera
+
+    They are what the reference gifs in `APPROVED/` were rendered with, so anything else does not match
+    the approved look. Do not substitute:
+
+      * NOT the tool-grip hands (`hands/grip_*.png`). Those are for SWINGS only. Owner: "the weapon
+        grabbing is NOT to be blindly replacing walk and/or running."
+      * NOT the cut gauntlet views (`gauntlet/{front,back,side}.png`) where an approved hand exists.
+        `DECISIONS.md`: those "are a re-cut made on 08-01 and were never approved... anything unapproved
+        living here is how the wrong sprite gets picked later." Which is exactly what happened — all 264
+        animations were built on them, and the walk used a discarded sprite while the swing used a hand
+        meant for holding a tool.
+
+    An outfit with no approved hands of its own falls back to its OWN gauntlet in the SAME three roles —
+    front->h1, back->h2, side->h3 — because those views were prompted to correspond.
+    """
+    approved = os.path.join(PLAYER, "APPROVED", "hands")
+    h = {n: os.path.join(approved, f"{n}.png") for n in ("h1", "h2", "h3")}
     g, prov = gauntlet_dir(outfit)
-    if g is None:
+
+    # h1/h2/h3 came from `hand-D-pixel` and are BRONZE's hands (DECISIONS.md). They are not a
+    # universal set — handing them to silver would put bronze fists on silver armour.
+    if outfit == APPROVED_HANDS_OUTFIT and all(os.path.exists(p) for p in h.values()):
+        walk_back, walk_palm = gait.flip(rgba(h["h1"])), gait.flip(rgba(h["h2"]))
+        profile, prov = gait.flip(rgba(h["h3"])), "APPROVED h1/h2/h3"
+    elif g is not None:
+        walk_back, walk_palm = gait.flip(rgba(os.path.join(g, "front.png"))), \
+            gait.flip(rgba(os.path.join(g, "back.png")))
+        side = os.path.join(g, "side.png")
+        profile = gait.flip(rgba(side)) if os.path.exists(side) else walk_back
+    else:
         return None, prov
-    walk_back, walk_palm = gait.flip(rgba(os.path.join(g, "front.png"))), \
-        gait.flip(rgba(os.path.join(g, "back.png")))
 
-    # Facing the camera (or away) you see the hand EDGE-ON, turned inward — not its knuckles.
-    # Owner: "walk front needs to actually have it's hands sideways (turned inward)"; DECISIONS.md
-    # lists `h3 — profile` for the front-facing walk. `side.png` is the gauntlet's profile view.
-    side = os.path.join(g, "side.png")
-    profile = gait.flip(rgba(side)) if os.path.exists(side) else walk_back
-
-    # The APPROVED bronze grips win where they exist; otherwise the outfit's own gauntlet grip.
-    approved = os.path.join(outfit_dir(outfit), "hands")
-    gb = os.path.join(approved, "grip_back_of_hand.png")
-    gp = os.path.join(approved, "grip_palm.png")
+    # Swings only. The approved per-outfit grips win; else that outfit's gauntlet grip view.
+    gb = os.path.join(outfit_dir(outfit), "hands", "grip_back_of_hand.png")
+    gp = os.path.join(outfit_dir(outfit), "hands", "grip_palm.png")
     if os.path.exists(gb) and os.path.exists(gp):
         grip_back, grip_palm, prov = rgba(gb), rgba(gp), prov + " + approved grips"
-    else:
+    elif g is not None:
         grip = os.path.join(g, "grip.png")
-        src = grip if os.path.exists(grip) else os.path.join(g, "front.png")
-        grip_back = grip_palm = rgba(src)
+        grip_back = grip_palm = rgba(grip if os.path.exists(grip) else os.path.join(g, "front.png"))
+    else:
+        grip_back = grip_palm = walk_back
     return dict(walk_back=walk_back, walk_palm=walk_palm, profile=profile,
                 grip_back=grip_back, grip_palm=grip_palm), prov
 

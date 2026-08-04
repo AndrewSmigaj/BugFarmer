@@ -92,19 +92,26 @@ faces, and it must point right. **Do not automate this**: a centroid heuristic w
 a careful visual read on only 6 of 8 outfits, and a detector that is wrong a quarter of the time would
 mirror sprites the wrong way, silently, across the whole set.
 
-## Which hand each animation uses
+## Which hand each animation uses — THIS IS SETTLED, DO NOT SUBSTITUTE
 
-| animation | hand | why |
-|---|---|---|
-| walk / run, side-on | `gauntlet/front.png` (knuckles) + `back.png` (palm) | near hand over the torso, far hand behind and dimmed |
-| walk / run, toward or away | `gauntlet/side.png` (**profile**, turned inward) | facing the camera you see the hand edge-on, not its knuckles |
-| swing | the approved grips, else `gauntlet/grip.png` | rotated 225°, +16% down the handle |
+| sprite | used by |
+|---|---|
+| `APPROVED/hands/h1.png` | knuckles / back of hand — walk + run, the **near** hand |
+| `APPROVED/hands/h2.png` | palm — walk + run, the **far** hand (dimmed, drawn behind the body) |
+| `APPROVED/hands/h3.png` | profile — walking **toward or away** from the camera |
+| `<outfit>/hands/grip_*.png` | **SWINGS ONLY** |
+
+These are bronze's, and **every other outfit's gauntlet was generated from them**, so a non-bronze outfit
+uses its own gauntlet in the same three roles: `front`→h1, `back`→h2, `side`→h3.
 
 The two side-on hands tilt in **opposite** directions — each follows its own direction of travel.
 
-⚠ The profile hand currently reads as a slab: the source drawing includes a squared wrist stump and the
-sprite is ~89% opaque, so at 20px it is a rounded rectangle with fingers on one edge. Re-cutting does not
-fix it — this is for the gauntlet redo.
+> ⚠ **Never build an animation on the cut gauntlet views for an outfit that has approved hands.**
+> `APPROVED/DECISIONS.md`: those cuts "are a re-cut made on 08-01 and were never approved... anything
+> unapproved living here is how the wrong sprite gets picked later." All 264 animations were once built
+> on them — bronze's walk used a discarded sprite and its swing used the tool-grip hand, which is for
+> holding a handle. The approved reference gifs in `APPROVED/` are what a correct render looks like;
+> compare against them before claiming an animation is right.
 
 ## Rules that keep getting broken
 
