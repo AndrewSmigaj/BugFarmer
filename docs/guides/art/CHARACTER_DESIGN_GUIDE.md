@@ -302,6 +302,23 @@ Owner: *"do sword_1h_f4_back85 as the official one, but have it pull back a tad 
 hand is at the hip not forward a little, you can also have tip slightly continue down more."*
 The other five tools still run the old shoulder-pivot approaches.
 
+**A SWING MUST COVER WHAT IT HITS.** This is a game, not a portrait. Facing down the player attacks the
+tile SOUTH of him — straight down the screen — so the blade has to finish with its **tip past his feet**.
+Facing up, past his head. A swing that sweeps out to the side is a front-facing sprite performing the
+sideways attack: it covers nothing in the direction he is attacking. Owner: *"when you strike something
+below you while facing down it means being able to strike something below you, all your looking down ones
+are pretty much the same thing as the sideways ones"*.
+
+**AND THEY ARE THEIR OWN MOTIONS, NOT THE SIDE SWING RE-AIMED.** The side swing is one monotonic sweep;
+facing the camera that is wrong twice over — different plane, and a monotonic sweep **stops dead** instead
+of following through. Each facing is written in three phases: **RAISE**, **STRIKE** (through the tile),
+**FINISH** (carry past contact and settle). Owner: *"the swing will be different when facing down and up,
+and it also needs to finish the swing, so its weird you are like so obsessed with the sideways swing"*.
+
+⚠ A follow-through must move the blade somewhere **visibly different** from the strike. Taking the arm
+past vertical while unwinding the blade by the same amount leaves `blade = arm + back` pinned — the up
+swing froze with three identical frames at the top.
+
 **Facing DOWN and UP are not the side swing rotated** (`swing_facings.py`):
 - **The shoulder moves per view** — `(0.06, 0.40)` side, `(0.10, 0.10)` front, `(0.10, 0.22)` away. Reusing
   the side-on shoulder is what put the hand at face height in the front view.

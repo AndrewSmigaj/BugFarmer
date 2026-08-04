@@ -48,37 +48,103 @@ def _mk(start, end, back_start, back_end, reach):
     return f
 
 
-# ⚠ THE BLADE-BACK ANGLE MUST UNWIND FURTHER WHEN THE ARM TRAVELS LESS.
-# Side-on the arm carries to -104, so a blade held 52 behind it ends at -52 — pointing down, correct.
-# Facing down the arm stops around -34 (it must not carry through into his own legs), and 52 behind that
-# is +18 — the tip ends UP IN THE AIR at the end of a downward swing. First pass did exactly that.
-# So these end with far less blade-back than the side view.
+# ⚠⚠ THIS IS A GAME. THE SWING HAS TO COVER WHAT IT HITS.
+# Owner, 2026-08-04: "when you strike something below you while facing down it means being able to strike
+# something below you, all your looking down ones are pretty much the same thing as the sideways ones".
+#
+# Facing DOWN, the player is attacking the tile SOUTH of him — which is straight DOWN THE SCREEN. So the
+# blade must travel down-screen and finish with its TIP PAST HIS FEET, covering that tile. A swing that
+# sweeps out to the side is cosmetically a front-facing sprite doing the sideways attack; it covers
+# nothing below him and is useless as an attack.
+#
+# Facing UP, the same in reverse: the blade must finish ABOVE HIS HEAD, covering the tile NORTH of him.
+#
+# This is why the blade ends at 0 behind the arm in these — the blade CONTINUES the arm, pointing straight
+# down (or straight up), which is what puts the tip out past the body.
 
-# FACING DOWN — he faces us. The blade comes down across the front of his body and STOPS in front,
-# never carrying through to the hip the way the side view does.
+# THESE ARE THEIR OWN MOTIONS, NOT THE SIDE SWING RE-AIMED.
+# Owner, 2026-08-04: "you are starting with the sideways swing first and then trying to force it into
+# different melds, the swing will be different when facing down and up, and it also needs to finish the
+# swing, so its weird you are like so obsessed with the sideways swing".
+#
+# The side swing is one monotonic sweep from behind the head to the hip. Facing the camera that is the
+# wrong shape twice over: the arc happens in a different plane, and a monotonic sweep STOPS DEAD at the
+# bottom instead of following through. So each of these is written in three phases:
+#
+#   RAISE    lift the blade clear, wind up
+#   STRIKE   fast, through the tile being attacked
+#   FINISH   carry PAST the contact point and settle - the swing finishes rather than freezing
+#
+# `phase(t, cuts, keys)` interpolates arm angle / blade-behind-arm across those phases.
+
+
+def phase(t, cuts, arm, back, reach, eases):
+    """Piecewise motion. `cuts` are the phase boundaries; arm/back have len(cuts)+1 keyframes."""
+    lo = 0.0
+    for i, hi in enumerate(list(cuts) + [1.0]):
+        if t <= hi or i == len(cuts):
+            u = 0.0 if hi <= lo else min(1.0, max(0.0, (t - lo) / (hi - lo)))
+            u = eases[i](u)
+            return (arm[i] + (arm[i + 1] - arm[i]) * u,
+                    reach,
+                    back[i] + (back[i + 1] - back[i]) * u)
+        lo = hi
+    return arm[-1], reach, back[-1]
+
+
+_OUT, _IN, _IO = R._ease_in_out, R._ease_in, R._ease_in_out
+
+
+def down_swing(raise_to, strike_to, finish_to, reach, back_hi=85, back_lo=-6, back_end=34):
+    """FACING DOWN. Raise beside the head, strike down through the tile below, follow through and settle."""
+    def f(t):
+        return phase(t, (0.30, 0.64),
+                     arm=[-55, raise_to, strike_to, finish_to],
+                     back=[back_hi, back_hi, back_lo, back_end],
+                     reach=reach, eases=[_OUT, _IN, _OUT])
+    return f
+
+
+def up_swing(wind_to, strike_to, finish_to, reach, back_hi=85, back_lo=4, back_end=30):
+    """FACING UP. Wind down in front, strike up through the tile above, carry over and settle.
+
+    ⚠ The FINISH has to move the blade somewhere VISIBLY DIFFERENT from the strike. First pass took the
+    arm past vertical while unwinding the blade by the same amount, so blade = arm + back stayed pinned
+    near 90 and the last three frames were identical — the swing froze at the top instead of finishing.
+    Carrying the arm over AND letting the blade fall past vertical is what makes it read as follow-through.
+    """
+    def f(t):
+        return phase(t, (0.30, 0.64),
+                     arm=[20, wind_to, strike_to, finish_to],
+                     back=[back_hi, back_hi, back_lo, back_end],
+                     reach=reach, eases=[_OUT, _IN, _OUT])
+    return f
+
+
+# FACING DOWN — attacking the tile below. The tip must land PAST HIS FEET, then the swing finishes.
 FRONT = [
-    ("F1_across", _mk(118, -34, 85, 5, 0.52)),      # down across, tip finishing low
-    ("F2_high_stop", _mk(110, -20, 85, -15, 0.48)),  # stops higher, blade unwinds harder to point down
-    ("F3_lower", _mk(125, -50, 85, 20, 0.55)),       # carries a little further down
+    ("F1_overhead", (0.26, 0.12), down_swing(112, -84, -52, 0.52)),
+    ("F2_high_raise", (0.30, 0.14), down_swing(132, -78, -44, 0.56)),
+    ("F3_tight", (0.22, 0.10), down_swing(96, -90, -60, 0.46)),
 ]
 
-# FACING AWAY — his back to us, weapon drawn BEHIND him.
+# FACING UP — attacking the tile above. The tip must land ABOVE HIS HEAD, then the swing finishes.
+# Weapon draws BEHIND him.
 BACK = [
-    ("B1_across", _mk(118, -40, 85, 10, 0.52)),
-    ("B2_over_the_top", _mk(140, -70, 85, 30, 0.50)),  # over the shoulder, straight down
-    ("B3_shallow", _mk(96, -20, 85, -10, 0.46)),       # shallower, stays high
+    ("B1_uppercut", (0.26, 0.22), up_swing(-58, 92, 142, 0.52)),
+    ("B2_deep_wind", (0.30, 0.22), up_swing(-74, 86, 150, 0.56)),
+    ("B3_tight", (0.22, 0.22), up_swing(-44, 96, 136, 0.46)),
 ]
 
 
-def render(kind, name, fn, two_handed):
+def render(kind, name, sh, fn, two_handed):
     hands, _ = R.load_hands(OUTFIT)
     bank = R.load_bank(OUTFIT, "front" if kind == "front" else "back", 0)
     body = bank[0]
     bh = gait.anchor(body)[1] - gait.anchor(body)[0] + 1
     icon = os.path.join(R.RES, "Items", S.TOOLS[TOOL]["icon"])
     return R.arm_swing_frames(body, hands, icon, bh, two_handed=two_handed, motion=fn, pad=210,
-                              shoulder=SH_FRONT if kind == "front" else SH_BACK,
-                              behind=(kind == "back"))
+                              shoulder=sh, behind=(kind == "back"))
 
 
 def main():
@@ -86,9 +152,9 @@ def main():
     os.makedirs(d, exist_ok=True)
     made = []
     for kind, variants in (("front", FRONT), ("back", BACK)):
-        for name, fn in variants:
+        for name, sh, fn in variants:
             for two in (False, True):
-                frames, ms = render(kind, name, fn, two)
+                frames, ms = render(kind, name, sh, fn, two)
                 lbl = "2h" if two else "1h"
                 p = os.path.join(d, f"sword_{kind}_{lbl}_{name}.gif")
                 frames[0].save(p, save_all=True, append_images=frames[1:], duration=ms, loop=0)
@@ -102,7 +168,7 @@ def main():
         sheet = Image.new("RGB", (len(rows) * W, H + 22), (28, 28, 34))
         dr = ImageDraw.Draw(sheet)
         for k, (lbl, frames) in enumerate(rows):
-            im = frames[int(len(frames) * 0.78)]
+            im = frames[-1]        # the END pose - does the tip actually reach past him?
             bg = Image.new("RGB", (W, H), BG)
             bg.paste(im, ((W - im.size[0]) // 2, (H - im.size[1]) // 2))
             sheet.paste(bg, (k * W, 22))
