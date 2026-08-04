@@ -183,6 +183,30 @@ shoulder-pivot `swing_frames`.
 Rendered: `reviews/2026-08-04-swing-official/` — `OFFICIAL_filmstrip.png` shows start → end, and the
 last frame is the hand-at-hip pose he asked for.
 
+### ✅ FACING DOWN AND FACING UP — picked 2026-08-04: **E_double_back**
+
+> *"lets do double back for both, they seem good"*
+
+Out across, then whipped back through the other way. Live in `render_animations.attack_frames` /
+`DOUBLE_BACK`, rendered as `swing_sword_down.gif` and `swing_sword_up.gif`.
+
+**The structural rule these settle:** a top-down attack is a sweep **across the body that passes THROUGH**
+the tile being hit. It is **not** a thrust *along* the attack direction — doing that gave a reverse stab
+(*"its a backwards stabby motion as in going the wrong way"*). Motions are written relative to `centre`
+(−90 facing down, +90 facing up) and the arc **crosses** centre rather than ending on it.
+
+**And an attack is a frame budget, not an eased sweep** (*"the user has to watch the play pull back the
+sword the swing the sword, its not a video game swing"*):
+
+| frames | | |
+|---|---|---|
+| 0 | anticipation | ONE frame — *"it really does not need that swing back"* |
+| 1-4 | strike | the whole arc, with a blade trail |
+| 5-6 | hold | sits on the exit pose — this is what reads as impact |
+| 7-11 | recovery | eases home |
+
+12 frames × 20 ms = **0.24 s**. The eased version measured 0.46 s.
+
 ### Still open
 
 - Only the **sword** is done. Axe, hoe, net, shovel and spear still run the old shoulder-pivot

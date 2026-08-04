@@ -245,6 +245,99 @@ def sword_motion(t):
     return th, SWORD_REACH, back
 
 
+# ---------------------------------------------------------------------------------------------------
+# THE FACING-DOWN / FACING-UP SWORD ATTACK — owner's pick 2026-08-04: "lets do double back for both".
+#
+# A top-down attack is a sweep ACROSS the body that passes THROUGH the tile being hit — it is NOT a
+# thrust along the attack direction. Driving the blade along that direction gives a reverse stab, which
+# is what the rejected facing-up version did. So the motion is written relative to `centre`, the
+# direction attacked, and the arc CROSSES centre rather than ending on it.
+#
+# Frame budget, 12 frames @ 20ms = 0.24s. The strike frames ARE the path — no easing inside the arc, so
+# the shape survives instead of being smoothed into a generic curve.
+ATK_ANTIC, ATK_STRIKE, ATK_HOLD, ATK_REC = 1, 4, 2, 5
+ATK_MS = 20
+
+# E_double_back: out across, then whipped back through the other way. Poses are
+# (arm offset from centre, blade behind arm, reach in cells).
+DOUBLE_BACK = ((+70, 66, 0.50),
+               [(0, 44, 0.60), (-64, 30, 0.56), (-10, 46, 0.58), (+34, 58, 0.54)],
+               (+34, 60, 0.46))
+
+SWORD_FACINGS = {
+    "down": dict(centre=-90.0, sh=(0.26, 0.12), bank="front", behind=False),
+    "up":   dict(centre=+90.0, sh=(0.26, 0.22), bank="back",  behind=True),
+}
+
+
+def attack_poses(centre, spec):
+    antic, path, rest = spec
+    def at(p):
+        return (centre + p[0], p[1], p[2])
+    out = [at(antic)] * ATK_ANTIC + [at(p) for p in path]
+    hit = out[-1]
+    out += [hit] * ATK_HOLD
+    r = at(rest)
+    for i in range(ATK_REC):
+        u = 1 - (1 - (i + 1) / ATK_REC) ** 3
+        out.append(tuple(hit[k] + (r[k] - hit[k]) * u for k in range(3)))
+    return out
+
+
+def attack_frames(body, hands, tool_png, bh, cfg, spec=DOUBLE_BACK, two_handed=False, pad=230):
+    """A directional attack: the arc sweeps THROUGH the tile being hit, with a blade trail."""
+    cell = bh / 2.0
+    ny0, ny1, cx, _ = gait.anchor(body)
+    art0 = S.scale_h(rgba(tool_png), cell)
+    grip = (S.grip_of(art0) + S.DIAG * S.GRIP_EXTRA) * art0.shape[0]
+    poses = attack_poses(cfg["centre"], spec)
+    W, H = body.shape[1] + 2 * pad, body.shape[0] + 2 * pad
+    out, ms = [], []
+    for i, (arm, back, reach) in enumerate(poses):
+        sc = scene(W, H)
+        bx, by = W / 2, H / 2
+        ox, oy = bx - body.shape[1] / 2, by - body.shape[0] / 2
+        bcy = oy + ny0 + (ny1 - ny0) / 2.0
+        sx, sy = ox + cx + cfg["sh"][0] * cell, bcy - cfg["sh"][1] * cell
+
+        def place(a, b, rc):
+            r = math.radians(a)
+            hx, hy = sx + math.cos(r) * rc * cell, sy - math.sin(r) * rc * cell
+            blade = a + b
+            art = S.rot(art0, blade - S.ART_ANGLE)
+            rr = math.radians(-(blade - S.ART_ANGLE))
+            gx = grip[0] * math.cos(rr) - grip[1] * math.sin(rr)
+            gy = grip[0] * math.sin(rr) + grip[1] * math.cos(rr)
+            return art, hx - gx, hy - gy, hx, hy, blade
+
+        def weapon():
+            if ATK_ANTIC < i < ATK_ANTIC + ATK_STRIKE:
+                pa, pb, pr = poses[i - 1]
+                for f in (0.34, 0.67):
+                    art, tx, ty, _, _, _ = place(pa + (arm - pa) * f, pb + (back - pb) * f,
+                                                 pr + (reach - pr) * f)
+                    gait._paste(sc, gait._dim(art, 0.5), tx, ty)
+            art, tx, ty, hx, hy, blade = place(arm, back, reach)
+            gait._paste(sc, art, tx, ty)
+            fists = [(hands["grip_back"], 0.0)]
+            if two_handed:
+                fists.append((hands["grip_palm"], 0.17))
+            for fist, up in fists:
+                fx = hx + math.cos(math.radians(blade)) * up * art0.shape[0]
+                fy = hy - math.sin(math.radians(blade)) * up * art0.shape[0]
+                gait._paste(sc, gait._sz(S.rot(fist, blade + HAND_PERP), bh, gait.RUN["ratio"]), fx, fy)
+
+        if cfg["behind"]:
+            weapon()
+            gait._paste(sc, body, bx, by)
+        else:
+            gait._paste(sc, body, bx, by)
+            weapon()
+        out.append(finish(sc))
+        ms.append(ATK_MS)
+    return crop_union(out), ms
+
+
 def arm_swing_frames(body, hands, tool_png, bh, two_handed=False, motion=None, dur=SWORD_DUR, pad=None,
                      shoulder=None, behind=False):
     """A swing where the HAND travels an arc and the tool is hung off it.
@@ -443,6 +536,18 @@ def build(outfit="bronze", verbose=True):
                 continue
             fr, ms = swing_frames(side[1], hands, p, bh, two_handed=True)
             made.append(save(fr, ms, os.path.join(anim, f"thrust_{name}_two_handed.gif")))
+
+    # The sword's DOWN and UP attacks — a different motion from the side one, not the side one re-aimed.
+    sword = os.path.join(RES, "Items", "sword_bronze_icon.png")
+    for facing, cfg in SWORD_FACINGS.items():
+        bank = front if cfg["bank"] == "front" else back
+        if not bank or not os.path.exists(sword):
+            gaps.append(f"swing_sword_{facing}: no {cfg['bank']} frames")
+            continue
+        b = bank[0]
+        fbh = gait.anchor(b)[1] - gait.anchor(b)[0] + 1
+        fr, ms = attack_frames(b, hands, sword, fbh, cfg)
+        made.append(save(fr, ms, os.path.join(anim, f"swing_sword_{facing}.gif")))
 
     if verbose:
         print(f"  {outfit}: {len(made)} animations, hands = {prov}")

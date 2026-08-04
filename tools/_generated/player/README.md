@@ -116,7 +116,13 @@ Arm **128° → −104°** (past straight down, so the hand finishes **at the hi
 the arm (decreasing, so the **tip keeps dropping** after the arm stops), reach 0.60, `HAND_PERP = 180`.
 `render_animations.sword_motion`; full record in `APPROVED/DECISIONS.md`.
 
-⚠ Only the **sword** uses this. The other five tools still run the old shoulder-pivot approaches.
+**Facing down / facing up are separate attacks** (`swing_sword_down.gif`, `swing_sword_up.gif`), settled
+2026-08-04 as **E_double_back**: out across, then whipped back through the other way. A top-down attack is
+a sweep **across the body that passes THROUGH** the tile being hit — never a thrust *along* the attack
+direction, which gives a reverse stab. 12 frames × 20ms = 0.24s: 1 anticipation, 4 strike (with a blade
+trail), 2 hold, 5 recovery.
+
+⚠ Only the **sword** uses these. The other five tools still run the old shoulder-pivot approaches.
 
 **Facing down and up are aimed differently, not just rotated** (`swing_facings.py`): the shoulder sits in
 a different place in each view, the weapon draws **behind** him when he faces away, the facing-down swing

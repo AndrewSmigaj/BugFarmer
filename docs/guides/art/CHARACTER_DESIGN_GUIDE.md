@@ -302,6 +302,10 @@ Owner: *"do sword_1h_f4_back85 as the official one, but have it pull back a tad 
 hand is at the hip not forward a little, you can also have tip slightly continue down more."*
 The other five tools still run the old shoulder-pivot approaches.
 
+**SHIPPED for facing down and up, 2026-08-04: `E_double_back`** (*"lets do double back for both"*) —
+`render_animations.attack_frames` / `DOUBLE_BACK`, rendered as `swing_sword_down.gif` /
+`swing_sword_up.gif`. Out across, then whipped back through the other way.
+
 **THE ARC SWEEPS *THROUGH* THE ATTACKED SPACE — IT IS NOT A THRUST *ALONG* IT.** A top-down sword attack
 is a sweep **across the body** that passes through the tile being hit, which is what gives it a wide
 attack area ([SLYNYRD Pixelblog 56](https://www.slynyrd.com/blog/2025/5/23/pixelblog-56-top-down-character-attack-animation)).
