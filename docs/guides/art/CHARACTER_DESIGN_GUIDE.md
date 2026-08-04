@@ -302,6 +302,17 @@ Owner: *"do sword_1h_f4_back85 as the official one, but have it pull back a tad 
 hand is at the hip not forward a little, you can also have tip slightly continue down more."*
 The other five tools still run the old shoulder-pivot approaches.
 
+**NO ANGLED WRISTS. `WRIST_LIMIT = 0`.** The tool continues the **forearm** and the hand grips it
+perpendicular; the **arm angle carries the entire motion**. `back` (the tool's angle relative to the arm)
+is forced to zero in `attack_frames`.
+
+Owner said this twice — *"you dont need to have the wrist angle with respect to the pommel of the sword,
+its awkward... so that the hand is perpendicular with the pommel"*, and then *"no angled wrists, i
+literally already told you"*. An intermediate attempt clamped it to 40°, which is **still an angled
+wrist** — that was negotiating with a decision that had already been made, not implementing it.
+
+The tell: the spear already ran at ~0° and is the one tool that always read correctly.
+
 **THE ATTACK HAPPENS IN FRONT OF HIM. NEVER WIND UP BEHIND HIS BACK.** No game swings a weapon from
 behind the player and around — that is cutscene staging, and it wastes the frames a game attack does not
 have. Owner: *"do you know any game with a sword or whatever that starts way behind the player and swings

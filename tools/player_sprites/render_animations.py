@@ -223,7 +223,26 @@ def save(frames, ms, path):
 # body and stuck the hand on afterwards, so the fist sat by the shoulder and spun in place — "do people
 # take a sword in their fist, hold their fist up to their shoulder and rotate their fist to swing it?"
 SHOULDER = (0.06, 0.40)     # cell units from body centre, +x forward / +y up (swing_lab.FACINGS "side")
-HAND_PERP = 180.0           # picked BY EYE off HAND_ROTATION_which_way.png. Do not re-derive.
+HAND_PERP = 180.0
+
+# A WRIST HAS A LIMIT. `back` is the angle between the tool and the forearm — and because the hand grips
+# the handle, that angle IS the wrist angle. Past roughly 40 degrees it is a pose no wrist can hold, and
+# the fist reads as stuck on the tool at an impossible attitude. Owner, 2026-08-04: "its the correct
+# orientation of the hand on the sprite you just are not using it correctly, so its in impossible angles."
+#
+# Measured before clamping: axe 0..+78, shovel +28..+74, hoe 0..+58, net -56..-28 — all impossible. The
+# spear ran 0..+12 and is the one that always read fine, which is the tell.
+#
+# The ARM angle carries the motion; the tool stays roughly in line with the forearm, as it does in life.
+# ZERO. NO ANGLED WRISTS — the tool continues the forearm and the hand grips it perpendicular. Owner
+# said this twice: "you dont need to have the wrist angle with respect to the pommel of the sword, its
+# awkward... so that the hand is perpendicular with the pommel", and then again "no angled wrists, i
+# literally already told you". Clamping to 40 was still an angled wrist; I was negotiating with a
+# decision that had already been made.
+#
+# So `back` is forced to 0 and the ARM angle carries the entire motion. The tool is an extension of the
+# arm, which is also why the spear - the one tool that already ran at ~0 - always read correctly.
+WRIST_LIMIT = 0.0           # picked BY EYE off HAND_ROTATION_which_way.png. Do not re-derive.
 SWORD_START_TH, SWORD_END_TH = 128.0, -104.0   # behind the head -> past straight down, hand at the hip
 SWORD_BACK_START, SWORD_BACK_END = 85.0, 52.0  # blade catches up -> the tip keeps dropping
 SWORD_REACH = 0.60
@@ -289,7 +308,7 @@ def attack_poses(centre, spec):
 
 
 def attack_frames(body, hands, tool_png, bh, cfg, spec=DOUBLE_BACK, two_handed=False, pad=230,
-                  scale=1.0, pivot=0.0, second=0.17):
+                  scale=1.0, pivot=0.0, second=0.17, hand_rot=None):
     """A directional attack: the arc sweeps THROUGH the tile being hit, with a blade trail."""
     cell = bh / 2.0
     ny0, ny1, cx, _ = gait.anchor(body)
@@ -312,6 +331,7 @@ def attack_frames(body, hands, tool_png, bh, cfg, spec=DOUBLE_BACK, two_handed=F
     poses = attack_poses(cfg["centre"], spec)
     W, H = body.shape[1] + 2 * pad, body.shape[0] + 2 * pad
     out, ms = [], []
+    poses = [(a, max(-WRIST_LIMIT, min(WRIST_LIMIT, bk)), rc) for a, bk, rc in poses]
     for i, (arm, back, reach) in enumerate(poses):
         sc = scene(W, H)
         bx, by = W / 2, H / 2
@@ -344,7 +364,7 @@ def attack_frames(body, hands, tool_png, bh, cfg, spec=DOUBLE_BACK, two_handed=F
             for fist, up in fists:
                 fx = hx + math.cos(math.radians(blade)) * up * art0.shape[0]
                 fy = hy - math.sin(math.radians(blade)) * up * art0.shape[0]
-                gait._paste(sc, gait._sz(S.rot(fist, blade + HAND_PERP), bh, gait.RUN["ratio"]), fx, fy)
+                gait._paste(sc, gait._sz(S.rot(fist, blade + (HAND_PERP if hand_rot is None else hand_rot)), bh, gait.RUN["ratio"]), fx, fy)
 
         if cfg["behind"]:
             weapon()

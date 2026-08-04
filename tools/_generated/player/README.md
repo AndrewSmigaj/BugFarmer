@@ -161,6 +161,11 @@ spear 32-47%, net 48-57%, shovel 42-69%.
 **Every attack holds at REST for 4 frames before looping** (`ATK_REST`) — without it a looping gif
 ping-pongs and you cannot tell which direction the swing runs.
 
+**NO ANGLED WRISTS.** The tool continues the **forearm**; the hand grips it perpendicular; the **arm
+angle carries the whole motion**. `WRIST_LIMIT = 0` in `render_animations`. A bent wrist puts the fist on
+the handle at an attitude no wrist can hold, and it is the single thing that made the tool animations read
+wrong for a whole afternoon.
+
 **Every tool now uses the hand-travels model**, each with its own verb: axe CHOPS (bites and stops), hoe
 TILLS (chop then drag back), net CATCHES (hoop leads, then lifts to enclose), shovel DIGS (push in, lever,
 lift, toss — not a swing at all), spear THRUSTS (cocked back, reach is the whole motion).
