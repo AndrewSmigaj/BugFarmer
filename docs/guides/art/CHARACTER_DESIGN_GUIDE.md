@@ -302,6 +302,16 @@ Owner: *"do sword_1h_f4_back85 as the official one, but have it pull back a tad 
 hand is at the hip not forward a little, you can also have tip slightly continue down more."*
 The other five tools still run the old shoulder-pivot approaches.
 
+**THE ARC SWEEPS *THROUGH* THE ATTACKED SPACE — IT IS NOT A THRUST *ALONG* IT.** A top-down sword attack
+is a sweep **across the body** that passes through the tile being hit, which is what gives it a wide
+attack area ([SLYNYRD Pixelblog 56](https://www.slynyrd.com/blog/2025/5/23/pixelblog-56-top-down-character-attack-animation)).
+Write each motion relative to `centre`, the direction attacked (−90 facing down, +90 facing up), and have
+the arc **cross** centre rather than end on it.
+
+⚠ Driving the blade *along* the attack direction gives a **reverse stab**, not a swing — the facing-up
+version dipped the blade down and then drove it up, and owner called it *"a backwards stabby motion as in
+going the wrong way"*. Five diverse approaches live in `swing_five.py`.
+
 **AN ATTACK IS A FRAME BUDGET, NOT AN EASED SWEEP** (`swing_game.py`). Owner: *"the user has to watch
 the play pull back the sword the swing the sword, its not a video game swing"*. Spreading the motion
 evenly across the runtime and giving the wind-up a third of it makes a cutscene — you watch him lift the
