@@ -37,68 +37,68 @@ OUTFIT = "bronze"
 BG = (150, 160, 150)
 SIDE = dict(centre=0.0, sh=(0.06, 0.40), behind=False)
 
-# tool -> icon, two-handed, and the variants to explore.
-# Each variant: (anticipation, [4 strike poses], rest).
+# tool -> (icon, two-handed, LENGTH relative to a cell, variants)
+#
+# ⚠ THESE ARE NOT SWINGS WITH DIFFERENT ARCS. Owner: "you arent thinking of the tools right - you are
+# treating them all like swords you swing in different ways... do you sit there bashing the ground with
+# a shovel? do you?"  No. Each tool has a VERB, and the verb decides which channel carries the motion:
+#
+#   axe     CHOP    - a big arc that BITES AND STOPS. A real axe does not follow through past the wood.
+#   hoe     TILL    - chop in, then DRAG back toward you. The drag is the working stroke, not the chop.
+#   net     CATCH   - sweep hoop-first, then LIFT to enclose. It ends by scooping up, not by passing through.
+#   shovel  DIG     - push the blade IN, LEVER the handle back while the blade stays planted, lift, toss.
+#                     Not a strike at all. Nothing about digging is a swing.
+#   spear   THRUST  - cocked back at the body, then driven forward. REACH is the whole motion.
+#
+# Reach shrinking while the tool stays low IS the drag/lever. Reach growing with a still angle IS the
+# thrust. Rotation is the wrong channel for both, which is why they read as waving before.
+
+TOOL_SCALE = {"spear": 1.9}     # A SPEAR IS NOT A SWORD LENGTH. Asked for three times; never applied.
+
 TOOLS = {
     "axe": ("axe_copper_icon.png", False, {
-        # heavy, continuous, no hover at the top
-        "A_round_behind": ((150, 70, 0.44),
-                           [(70, 55, 0.54), (0, 30, 0.62), (-70, 5, 0.60), (-125, -15, 0.50)],
-                           (-60, 45, 0.44)),
-        "B_over_the_top": ((128, 88, 0.42),
-                           [(60, 62, 0.52), (-10, 26, 0.62), (-72, -4, 0.62), (-108, -20, 0.54)],
-                           (-50, 50, 0.44)),
-        "C_full_circle": ((175, 80, 0.46),
-                          [(90, 66, 0.54), (0, 42, 0.62), (-90, 18, 0.58), (-175, 0, 0.48)],
-                          (-70, 48, 0.44)),
+        "A_bite_and_stick": ((150, 70, 0.44),
+                             [(80, 50, 0.54), (10, 20, 0.62), (-28, 0, 0.62), (-32, 2, 0.60)],
+                             (60, 55, 0.44)),
+        "B_high_chop": ((172, 78, 0.42),
+                        [(95, 56, 0.52), (16, 22, 0.62), (-34, -2, 0.64), (-38, 0, 0.62)],
+                        (70, 58, 0.44)),
     }),
     "hoe": ("hoe_copper_icon.png", False, {
-        # lift a little, strike the ground, PULL back toward the player
-        "A_strike_and_pull": ((70, 60, 0.46),
-                              [(10, 30, 0.60), (-58, 0, 0.66), (-72, 6, 0.50), (-80, 14, 0.36)],
-                              (-30, 45, 0.42)),
-        "B_deeper": ((88, 66, 0.48),
-                     [(6, 26, 0.62), (-66, -6, 0.70), (-78, 2, 0.52), (-86, 10, 0.34)],
-                     (-30, 45, 0.42)),
-        "C_short_chop": ((52, 54, 0.44),
-                         [(0, 24, 0.58), (-54, 0, 0.62), (-64, 6, 0.48), (-70, 12, 0.38)],
-                         (-28, 44, 0.42)),
+        # chop in, then DRAG: the reach shrinks while the tool stays low
+        "A_chop_and_drag": ((70, 55, 0.46),
+                            [(-50, 10, 0.62), (-62, 0, 0.66), (-70, 5, 0.50), (-78, 10, 0.34)],
+                            (40, 50, 0.44)),
+        "B_long_drag": ((78, 58, 0.46),
+                        [(-46, 12, 0.64), (-60, 2, 0.68), (-72, 6, 0.46), (-84, 12, 0.26)],
+                        (40, 50, 0.44)),
     }),
     "net": ("small_net_icon.png", False, {
-        # fast and wide, and the HOOP leads — so the tool is carried ahead of the arm, not trailing it
-        "A_wide_sweep": ((92, -40, 0.50),
-                         [(30, -46, 0.60), (-20, -50, 0.66), (-70, -54, 0.62), (-104, -58, 0.54)],
-                         (-40, -30, 0.44)),
-        "B_quick_flick": ((66, -44, 0.48),
-                          [(6, -50, 0.62), (-48, -54, 0.66), (-84, -56, 0.58), (-96, -52, 0.50)],
-                          (-30, -30, 0.44)),
-        "C_scoop_up": ((-60, -30, 0.46),
-                       [(-20, -44, 0.60), (20, -52, 0.66), (60, -58, 0.62), (92, -60, 0.52)],
-                       (30, -34, 0.44)),
+        # hoop LEADS (negative back), and it finishes by LIFTING to enclose rather than passing through
+        "A_sweep_and_lift": ((80, -40, 0.50),
+                             [(30, -48, 0.62), (-20, -54, 0.66), (-50, -40, 0.62), (-30, -10, 0.58)],
+                             (40, -30, 0.46)),
+        "B_low_scoop": ((40, -34, 0.46),
+                        [(-20, -50, 0.60), (-60, -56, 0.66), (-40, -34, 0.62), (0, -4, 0.58)],
+                        (30, -28, 0.44)),
     }),
     "shovel": ("shovel_copper_icon.png", False, {
-        # JAB DOWN then lift like a scoop. Reach does the digging, not rotation.
-        "A_jab_and_scoop": ((-40, 20, 0.40),
-                            [(-70, 6, 0.56), (-84, 0, 0.72), (-80, 10, 0.60), (-52, 34, 0.46)],
-                            (-30, 45, 0.42)),
-        "B_deep_jab": ((-30, 24, 0.38),
-                       [(-66, 8, 0.58), (-88, -2, 0.78), (-86, 6, 0.66), (-58, 30, 0.48)],
-                       (-30, 45, 0.42)),
-        "C_dig_and_toss": ((-44, 18, 0.40),
-                           [(-76, 4, 0.58), (-88, 0, 0.74), (-50, 26, 0.58), (18, 52, 0.46)],
-                           (-28, 46, 0.42)),
+        # DIG. push in -> lever the handle back with the blade planted -> lift -> toss.
+        "A_dig_lever_toss": ((-55, 25, 0.45),
+                             [(-72, 10, 0.62), (-80, 5, 0.68), (-45, 45, 0.50), (10, 70, 0.50)],
+                             (-40, 35, 0.44)),
+        "B_deep_dig": ((-50, 28, 0.44),
+                       [(-76, 8, 0.64), (-86, 2, 0.74), (-50, 42, 0.52), (0, 66, 0.52)],
+                       (-40, 35, 0.44)),
     }),
     "spear": ("spear_bronze_icon.png", True, {
-        # stabby: the REACH does the work, the angle barely moves
-        "A_thrust": ((16, 6, 0.34),
-                     [(4, 2, 0.52), (0, 0, 0.78), (0, 0, 0.82), (2, 2, 0.60)],
-                     (18, 30, 0.40)),
-        "B_long_thrust": ((22, 8, 0.30),
-                          [(6, 2, 0.56), (0, 0, 0.88), (0, 0, 0.92), (2, 2, 0.66)],
-                          (20, 32, 0.40)),
-        "C_double_jab": ((16, 6, 0.34),
-                         [(0, 0, 0.74), (4, 4, 0.46), (0, 0, 0.80), (4, 4, 0.56)],
-                         (18, 30, 0.40)),
+        # COCKED BACK at the body, then driven forward. Reach is the entire motion.
+        "A_thrust": ((12, 0, 0.15),
+                     [(4, 0, 0.38), (0, 0, 0.78), (0, 0, 0.98), (0, 0, 0.92)],
+                     (12, 10, 0.28)),
+        "B_deep_cock": ((18, 4, 0.06),
+                        [(6, 0, 0.34), (0, 0, 0.82), (0, 0, 1.06), (0, 0, 0.98)],
+                        (14, 12, 0.24)),
     }),
 }
 
@@ -115,12 +115,14 @@ def main():
     made = {}
 
     for tool, (icon, two, variants) in TOOLS.items():
+        scale = TOOL_SCALE.get(tool, 1.0)
         p = os.path.join(R.RES, "Items", icon)
         if not os.path.exists(p):
             print(f"  SKIP {tool}: {icon} missing")
             continue
         for name, spec in variants.items():
-            frames, ms = R.attack_frames(body, hands, p, bh, SIDE, spec=spec, two_handed=two)
+            frames, ms = R.attack_frames(body, hands, p, bh, SIDE, spec=spec, two_handed=two,
+                                         scale=scale)
             out = os.path.join(d, f"{tool}_{name}.gif")
             frames[0].save(out, save_all=True, append_images=frames[1:], duration=ms, loop=0)
             made.setdefault(tool, []).append((name, frames))

@@ -302,6 +302,19 @@ Owner: *"do sword_1h_f4_back85 as the official one, but have it pull back a tad 
 hand is at the hip not forward a little, you can also have tip slightly continue down more."*
 The other five tools still run the old shoulder-pivot approaches.
 
+**THE VERB DECIDES THE CHANNEL — angle or reach.** Not every tool is an arc:
+
+- **reach SHRINKING while the tool stays low** is the hoe's *drag* and the shovel's *lever*
+- **reach GROWING with a still angle** is the spear's *thrust*
+- only the axe, net and sword are actually carried by **angle**
+
+Building the spear and shovel as arcs is why they read as waving the thing around. Owner: *"do you sit
+there bashing the ground with a shovel? do you?"*
+
+⚠ **TOOL LENGTH IS A PARAMETER AND IT WAS NEVER SET.** `attack_frames(scale=…)`; the spear is **1.9×** a
+cell. It was rendered at sword length for weeks while the owner asked three separate times for it to be
+longer — every time, the motion got adjusted and the sprite scale was never looked at.
+
 **ONE MOTION PER TOOL** (`swing_tools.py`) — not one arc with different constants. Owner caught that as
 a code smell: *"sword is not an axe swing"*. The channel that carries the motion differs per tool:
 

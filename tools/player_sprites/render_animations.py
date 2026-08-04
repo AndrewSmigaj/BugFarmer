@@ -284,11 +284,14 @@ def attack_poses(centre, spec):
     return out
 
 
-def attack_frames(body, hands, tool_png, bh, cfg, spec=DOUBLE_BACK, two_handed=False, pad=230):
+def attack_frames(body, hands, tool_png, bh, cfg, spec=DOUBLE_BACK, two_handed=False, pad=230,
+                  scale=1.0):
     """A directional attack: the arc sweeps THROUGH the tile being hit, with a blade trail."""
     cell = bh / 2.0
     ny0, ny1, cx, _ = gait.anchor(body)
-    art0 = S.scale_h(rgba(tool_png), cell)
+    # `scale` is the tool's length relative to a cell. A SPEAR IS NOT A SWORD LENGTH — it was rendered at
+    # 1.0 for weeks while the owner asked three separate times for it to be longer.
+    art0 = S.scale_h(rgba(tool_png), cell * scale)
     grip = (S.grip_of(art0) + S.DIAG * S.GRIP_EXTRA) * art0.shape[0]
     poses = attack_poses(cfg["centre"], spec)
     W, H = body.shape[1] + 2 * pad, body.shape[0] + 2 * pad

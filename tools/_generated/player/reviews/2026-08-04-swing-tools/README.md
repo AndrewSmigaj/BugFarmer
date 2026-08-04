@@ -1,24 +1,32 @@
-# 2026-08-04 — the other five tools on the settled attack model
+# 2026-08-04 — the five tools, rebuilt around what each tool DOES
 
-Fifteen gifs, three per tool. `ALL_<tool>.png` shows that tool's three mid-arc and at end of strike.
+Ten gifs, two per tool. `ALL_<tool>.png` per tool; `FILMSTRIP_shovel.png` and `FILMSTRIP_spear.png`
+show every frame of the two that were most wrong.
 
-These were still running the OLD shoulder-pivot motion — the one where the fist parks beside the
-shoulder and spins in place. Now they use the same model as the sword: the **hand travels**, the tool
-follows it, on a frame budget (1 anticipation / 4 strike with a blade trail / 2 hold / 5 recovery,
-0.24s).
+## The correction
 
-**One motion per tool**, not one arc with different constants — *"sword is not an axe swing"*.
+> *"you arent thinking of the tools right - you are treating them all like swords you swing in different
+> ways, more thought should be going into each of these, do you sit there bashing the ground with a
+> shovel? do you?"*
 
-| tool | what it should do | the three |
+No. They were five arcs with different constants. Each tool has a **verb**, and the verb decides which
+channel carries the motion — angle, or reach.
+
+| tool | verb | what actually moves |
 |---|---|---|
-| **axe** | *"swing behind over then down in front... like a real axe"*, and no hovering cocked-back | round-behind · over-the-top · full-circle |
-| **hoe** | *"lift a little, strike the ground and PULL"* — not whipping the ground with a stick | strike-and-pull · deeper · short-chop |
-| **net** | the **hoop leads** (it is the opening), faster, swings across more | wide-sweep · quick-flick · scoop-up |
-| **shovel** | *"downward stabbing then up like a scoop"* — it must **jab down** | jab-and-scoop · deep-jab · dig-and-toss |
-| **spear** | *"stabby"*, two-handed — the **reach** does the work, the angle barely moves | thrust · long-thrust · double-jab |
+| **axe** | CHOP | a big arc that **bites and STOPS**. A real axe does not follow through past the wood |
+| **hoe** | TILL | chop in, then **DRAG back** toward you. The drag is the working stroke, not the chop |
+| **net** | CATCH | sweep **hoop-first**, then **LIFT to enclose** — it does not pass through and keep going |
+| **shovel** | DIG | push the blade **in**, **LEVER** the handle back with the blade planted, lift, toss. Nothing about digging is a swing |
+| **spear** | THRUST | cocked back at the body, then driven forward. **Reach is the entire motion** |
 
-The net variants carry the tool **ahead** of the arm (negative blade-behind) so the hoop leads rather
-than trails — that is the fix for "the net is backwards, you're swinging the bulge first".
+**Reach shrinking while the tool stays low IS the drag and the lever. Reach growing with a still angle IS
+the thrust.** Rotation is the wrong channel for both, which is why they read as waving the thing around.
 
-The spear and shovel barely rotate at all; their reach goes to 0.78-0.92 cells and back. Rotation is
-the wrong channel for a stab, which is why they read as waving when they were built as arcs.
+## The spear
+
+**It is now 1.9× a cell instead of 1.0** — asked for three separate times and never applied, because I
+kept adjusting the motion and never looked at the sprite scale. It also starts properly cocked back:
+the hand begins 0.15 cells from the shoulder and drives to 0.98.
+
+`B_deep_cock` starts further back again (0.06) and drives past a full cell.
