@@ -302,6 +302,22 @@ Owner: *"do sword_1h_f4_back85 as the official one, but have it pull back a tad 
 hand is at the hip not forward a little, you can also have tip slightly continue down more."*
 The other five tools still run the old shoulder-pivot approaches.
 
+**AN ATTACK IS A FRAME BUDGET, NOT AN EASED SWEEP** (`swing_game.py`). Owner: *"the user has to watch
+the play pull back the sword the swing the sword, its not a video game swing"*. Spreading the motion
+evenly across the runtime and giving the wind-up a third of it makes a cutscene — you watch him lift the
+sword, then watch him lower it. A game attack puts almost all the travel in **two or three frames** and
+spends the rest **sitting on the end pose**:
+
+| frames | | |
+|---|---|---|
+| 0-1 | ANTICIPATION | a small lift, not a wind-up you can watch |
+| 2-4 | STRIKE | ~90% of the arc, with a blade **trail** — three frames is too fast to read without one |
+| 5-7 | HOLD | the end pose sits still; **this is what reads as impact** |
+| 8-13 | recovery | eases home, nobody is watching |
+
+**14 frames @ 20ms = 0.28s.** Measure it — the eased version came out 0.46s, half a second of committed
+animation per swing. 20ms is the floor gif players reliably honour.
+
 **A SWING MUST COVER WHAT IT HITS.** This is a game, not a portrait. Facing down the player attacks the
 tile SOUTH of him — straight down the screen — so the blade has to finish with its **tip past his feet**.
 Facing up, past his head. A swing that sweeps out to the side is a front-facing sprite performing the

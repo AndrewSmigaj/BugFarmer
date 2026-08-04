@@ -148,8 +148,15 @@ def render(kind, name, sh, fn, two_handed):
 
 
 def main():
+    # A CLEAN FOLDER EVERY RUN. Re-running with renamed variants used to leave every dead attempt on
+    # disk beside the live ones — 56 gifs in one folder, of which 12 were current. Owner: "all i see in
+    # here is complete crap... so which ones are you talking about". Anything this script wrote last run
+    # is regenerable in one command, so it goes; nothing else in the folder is touched.
     d = os.path.join(R.PLAYER, "reviews", f"{datetime.date.today().isoformat()}-swing-facings")
     os.makedirs(d, exist_ok=True)
+    for f in sorted(os.listdir(d)):
+        if f.startswith("sword_") and f.endswith(".gif"):
+            os.remove(os.path.join(d, f))
     made = []
     for kind, variants in (("front", FRONT), ("back", BACK)):
         for name, sh, fn in variants:
