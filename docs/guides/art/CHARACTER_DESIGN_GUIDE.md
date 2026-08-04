@@ -322,7 +322,7 @@ a code smell: *"sword is not an axe swing"*. The channel that carries the motion
 - **hoe** — lift a little, strike the ground, then **PULL back** toward the player
 - **net** — the **hoop LEADS**: carry the tool *ahead* of the arm (negative blade-behind). Trailing it is
   what made the net swing bulge-first
-- **shovel** — **jab down**, then lift like a scoop
+- **shovel** — **thrust in**, then swing up **just a little**, then return. The lift is small and the blade stays on the ground line; levering the handle over and heaving the load up is a different action and looks nothing like a shovel
 - **spear** — **REACH does the work** (0.78-0.92 cells), the angle barely moves
 
 ⚠ Rotation is the wrong channel for a stab. Building the spear and shovel as arcs is why they read as

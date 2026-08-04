@@ -188,7 +188,10 @@ def main():
     d = os.path.join(R.PLAYER, "reviews", f"{datetime.date.today().isoformat()}-swing-five")
     os.makedirs(d, exist_ok=True)
     for f in sorted(os.listdir(d)):
-        os.remove(os.path.join(d, f))
+        # Clear only what THIS script generates. A blanket remove deletes the hand-written README in the
+        # folder too, which happened once — the notes explaining the options are not regenerable.
+        if f.lower().endswith((".gif", ".png")):
+            os.remove(os.path.join(d, f))
 
     made = {}
     for facing in FACINGS:

@@ -17,7 +17,7 @@ channel carries the motion — angle, or reach.
 | **axe** | CHOP | a big arc that **bites and STOPS**. A real axe does not follow through past the wood |
 | **hoe** | TILL | chop in, then **DRAG back** toward you. The drag is the working stroke, not the chop |
 | **net** | CATCH | sweep **hoop-first**, then **LIFT to enclose** — it does not pass through and keep going |
-| **shovel** | DIG | push the blade **in**, **LEVER** the handle back with the blade planted, lift, toss. Nothing about digging is a swing |
+| **shovel** | DIG | **thrust the blade in**, then swing up **just a little**, then return. Reach does the digging; the lift is a small angular change at the end and the blade never leaves the ground line |
 | **spear** | THRUST | cocked back at the body, then driven forward. **Reach is the entire motion** |
 
 **Reach shrinking while the tool stays low IS the drag and the lever. Reach growing with a still angle IS

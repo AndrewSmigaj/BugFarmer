@@ -83,13 +83,19 @@ TOOLS = {
                         (30, -28, 0.44)),
     }),
     "shovel": ("shovel_copper_icon.png", False, {
-        # DIG. push in -> lever the handle back with the blade planted -> lift -> toss.
-        "A_dig_lever_toss": ((-55, 25, 0.45),
-                             [(-72, 10, 0.62), (-80, 5, 0.68), (-45, 45, 0.50), (10, 70, 0.50)],
-                             (-40, 35, 0.44)),
-        "B_deep_dig": ((-50, 28, 0.44),
-                       [(-76, 8, 0.64), (-86, 2, 0.74), (-50, 42, 0.52), (0, 66, 0.52)],
-                       (-40, 35, 0.44)),
+        # THRUST IN, then swing up JUST A LITTLE, then return. Owner: "you are supposed to thrust in and
+        # then swing up just a little before returning."
+        #
+        # The motion is REACH (driving the blade into the ground), and the lift is a SMALL angular change
+        # at the end — the blade never leaves the ground line. My previous version levered the handle right
+        # over and heaved the load up past his shoulder, which is a completely different action and looked
+        # nothing like a shovel.
+        "A_thrust_and_lift": ((-50, 20, 0.32),
+                              [(-62, 12, 0.52), (-70, 6, 0.68), (-58, 14, 0.66), (-48, 20, 0.62)],
+                              (-50, 22, 0.36)),
+        "B_deeper": ((-46, 22, 0.30),
+                     [(-64, 10, 0.54), (-76, 2, 0.74), (-62, 12, 0.72), (-50, 20, 0.66)],
+                     (-48, 24, 0.34)),
     }),
     "spear": ("spear_bronze_icon.png", True, {
         # COCKED BACK at the body, then driven forward. Reach is the entire motion.
@@ -107,7 +113,10 @@ def main():
     d = os.path.join(R.PLAYER, "reviews", f"{datetime.date.today().isoformat()}-swing-tools")
     os.makedirs(d, exist_ok=True)
     for f in sorted(os.listdir(d)):
-        os.remove(os.path.join(d, f))
+        # Clear only what THIS script generates. A blanket remove deletes the hand-written README in the
+        # folder too, which happened once — the notes explaining the options are not regenerable.
+        if f.lower().endswith((".gif", ".png")):
+            os.remove(os.path.join(d, f))
 
     hands, _ = R.load_hands(OUTFIT)
     body = R.load_bank(OUTFIT, "side", 1)[1]
