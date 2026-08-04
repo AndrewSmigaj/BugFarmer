@@ -74,15 +74,18 @@ TOOLS = {
                         (40, 50, 0.44)),
     }),
     "net": ("small_net_icon.png", False, {
-        # hoop LEADS (negative back), and it finishes by LIFTING to enclose rather than passing through
-        "A_sweep_and_lift": ((80, -40, 0.50),
-                             [(30, -48, 0.62), (-20, -54, 0.66), (-50, -40, 0.62), (-30, -10, 0.58)],
-                             (40, -30, 0.46)),
-        "B_low_scoop": ((40, -34, 0.46),
-                        [(-20, -50, 0.60), (-60, -56, 0.66), (-40, -34, 0.62), (0, -4, 0.58)],
-                        (30, -28, 0.44)),
+        # Hoop LEADS (negative back). START LOW AND END LOW — you scoop a bug up off the ground, your
+        # hand does not finish beside your face. Owner: "when you sweep up a bug does your hand end up
+        # near your face?" The hand stays below the shoulder line for the whole motion, and the hoop is
+        # angled UP more so the opening faces where the bug is.
+        "A_low_scoop": ((-78, -34, 0.46),
+                        [(-64, -52, 0.60), (-46, -62, 0.68), (-34, -58, 0.64), (-38, -48, 0.58)],
+                        (-74, -32, 0.44)),
+        "B_wider": ((-84, -30, 0.44),
+                    [(-66, -50, 0.62), (-42, -64, 0.72), (-26, -60, 0.68), (-34, -50, 0.60)],
+                    (-78, -30, 0.44)),
     }),
-    "shovel": ("shovel_copper_icon.png", False, {
+    "shovel": ("shovel_copper_icon.png", True, {
         # THRUST IN, then swing up JUST A LITTLE, then return. Owner: "you are supposed to thrust in and
         # then swing up just a little before returning."
         #
@@ -90,21 +93,27 @@ TOOLS = {
         # at the end — the blade never leaves the ground line. My previous version levered the handle right
         # over and heaved the load up past his shoulder, which is a completely different action and looked
         # nothing like a shovel.
-        "A_thrust_and_lift": ((-50, 20, 0.32),
-                              [(-62, 12, 0.52), (-70, 6, 0.68), (-58, 14, 0.66), (-48, 20, 0.62)],
-                              (-50, 22, 0.36)),
-        "B_deeper": ((-46, 22, 0.30),
-                     [(-64, 10, 0.54), (-76, 2, 0.74), (-62, 12, 0.72), (-50, 20, 0.66)],
-                     (-48, 24, 0.34)),
+        "A_deep": ((-48, 22, 0.32),
+                   [(-64, 10, 0.56), (-78, 0, 0.80), (-62, 12, 0.78), (-50, 20, 0.70)],
+                   (-50, 24, 0.36)),
+        "B_deeper_still": ((-46, 24, 0.30),
+                           [(-66, 8, 0.58), (-82, -4, 0.90), (-64, 10, 0.86), (-50, 20, 0.76)],
+                           (-48, 26, 0.34)),
     }),
     "spear": ("spear_bronze_icon.png", True, {
         # COCKED BACK at the body, then driven forward. Reach is the entire motion.
-        "A_thrust": ((12, 0, 0.15),
-                     [(4, 0, 0.38), (0, 0, 0.78), (0, 0, 0.98), (0, 0, 0.92)],
-                     (12, 10, 0.28)),
-        "B_deep_cock": ((18, 4, 0.06),
-                        [(6, 0, 0.34), (0, 0, 0.82), (0, 0, 1.06), (0, 0, 0.98)],
-                        (14, 12, 0.24)),
+        #
+        # ⚠ AIM IT BELOW HORIZONTAL. The shoulder pivot sits at ~30% down the body, which IS the shoulder
+        # line — measured off the sprite's width profile, where the helmet ends and the torso starts. But
+        # thrusting horizontally FROM there leaves the hands at shoulder height, up by his head. A spear
+        # held two-handed sits at chest/waist. -20 deg drops the hands to about 45% down the body, which
+        # is where they belong. Owner: "the hands need to come down a bunch more they are near the head".
+        "A_thrust": ((-14, 0, 0.15),
+                     [(-18, 0, 0.40), (-20, 0, 0.80), (-20, 0, 1.00), (-20, 0, 0.94)],
+                     (-14, 10, 0.28)),
+        "B_lower": ((-18, 0, 0.12),
+                    [(-24, 0, 0.42), (-26, 0, 0.84), (-26, 0, 1.06), (-26, 0, 0.98)],
+                    (-18, 12, 0.26)),
     }),
 }
 

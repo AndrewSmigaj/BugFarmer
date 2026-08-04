@@ -255,7 +255,7 @@ def sword_motion(t):
 #
 # Frame budget, 12 frames @ 20ms = 0.24s. The strike frames ARE the path — no easing inside the arc, so
 # the shape survives instead of being smoothed into a generic curve.
-ATK_ANTIC, ATK_STRIKE, ATK_HOLD, ATK_REC = 1, 4, 2, 5
+ATK_ANTIC, ATK_STRIKE, ATK_HOLD, ATK_REC, ATK_REST = 1, 4, 2, 5, 4
 ATK_MS = 20
 
 # E_double_back: out across, then whipped back through the other way. Poses are
@@ -281,6 +281,10 @@ def attack_poses(centre, spec):
     for i in range(ATK_REC):
         u = 1 - (1 - (i + 1) / ATK_REC) ** 3
         out.append(tuple(hit[k] + (r[k] - hit[k]) * u for k in range(3)))
+    # Sit at rest before the loop restarts. A gif that cuts straight from recovery back to the
+    # anticipation reads as a ping-pong and you cannot tell which way the swing is going — owner:
+    # "i cant even tell which direction that animation is going with it repeating".
+    out += [r] * ATK_REST
     return out
 
 

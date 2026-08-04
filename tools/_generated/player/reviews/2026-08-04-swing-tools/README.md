@@ -16,9 +16,9 @@ channel carries the motion — angle, or reach.
 |---|---|---|
 | **axe** | CHOP | a big arc that **bites and STOPS**. A real axe does not follow through past the wood |
 | **hoe** | TILL | chop in, then **DRAG back** toward you. The drag is the working stroke, not the chop |
-| **net** | CATCH | sweep **hoop-first**, then **LIFT to enclose** — it does not pass through and keep going |
+| **net** | CATCH | **starts low, ends low**, hoop-first and angled up. You scoop a bug off the ground — your hand does not finish beside your face |
 | **shovel** | DIG | **thrust the blade in**, then swing up **just a little**, then return. Reach does the digging; the lift is a small angular change at the end and the blade never leaves the ground line |
-| **spear** | THRUST | cocked back at the body, then driven forward. **Reach is the entire motion** |
+| **spear** | THRUST | cocked back, driven forward, **aimed below horizontal** so the hands sit at chest/waist rather than shoulder height. Reach is the entire motion |
 
 **Reach shrinking while the tool stays low IS the drag and the lever. Reach growing with a still angle IS
 the thrust.** Rotation is the wrong channel for both, which is why they read as waving the thing around.
@@ -30,3 +30,20 @@ kept adjusting the motion and never looked at the sprite scale. It also starts p
 the hand begins 0.15 cells from the shoulder and drives to 0.98.
 
 `B_deep_cock` starts further back again (0.06) and drives past a full cell.
+
+
+## Where the hands actually are (measured, not eyeballed)
+
+The sprite's width profile: helmet to ~22% down, shoulders ~30%, waist ~50%, legs below 65%. The shoulder
+pivot sits at **30%** — correctly on the shoulder line.
+
+| | hand travels |
+|---|---|
+| spear | 32%-47% down the body — chest to waist |
+| net | 48%-57% — low, and it ends low |
+| shovel | 42%-69% — down to the ground |
+
+The bug was never the pivot. It was **aiming horizontally from it**, which parks the hands at shoulder
+height — up by his head. Thrusts and scoops aim below horizontal.
+
+Every gif now **holds at rest** for 4 frames before looping, so you can tell which direction it runs.

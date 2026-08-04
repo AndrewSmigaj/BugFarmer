@@ -302,6 +302,19 @@ Owner: *"do sword_1h_f4_back85 as the official one, but have it pull back a tad 
 hand is at the hip not forward a little, you can also have tip slightly continue down more."*
 The other five tools still run the old shoulder-pivot approaches.
 
+**WHERE THE HANDS SIT — measure the sprite, do not assume.** Bronze's width profile: helmet to ~22% down,
+shoulders ~30%, waist ~50%, legs below 65%. The shoulder pivot (`SHOULDER`, 0.40 cells above body centre)
+lands at **30%** — correctly on the shoulder line. The character is **not** chibi; asserting that without
+looking sent one whole pass in the wrong direction.
+
+⚠ **The trap is aiming HORIZONTALLY from the shoulder**, which parks the hands at shoulder height, up by
+his head. A two-handed spear sits at chest/waist, a bug-scoop at waist. **Thrusts and scoops aim BELOW
+horizontal** (spear −20°). Check it by computing where the hand lands as a % down the body, not by eye:
+spear 32-47%, net 48-57%, shovel 42-69%.
+
+**Every attack holds at REST for 4 frames before looping** (`ATK_REST`) — without it a looping gif
+ping-pongs and you cannot tell which direction the swing runs.
+
 **THE VERB DECIDES THE CHANNEL — angle or reach.** Not every tool is an arc:
 
 - **reach SHRINKING while the tool stays low** is the hoe's *drag* and the shovel's *lever*
