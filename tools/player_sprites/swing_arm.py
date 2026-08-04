@@ -154,8 +154,36 @@ def _back(deg):
     return f
 
 
-VARIANTS = [("F1_back25", _back(25)), ("F2_back45", _back(45)),
-            ("F3_back65", _back(65)), ("F4_back85", _back(85))]
+# ---------------------------------------------------------------------------------------------------
+# THE OFFICIAL SWORD SWING — owner's pick, 2026-08-04:
+#   "they look great, do sword_1h_f4_back85 as the official one, but have it pull back a tad more at the
+#    end so the hand is at the hip not forward a little, you can also have tip slightly continue down
+#    more as you dow"
+#
+# So it is F4 (blade 85 deg behind the arm) with two changes:
+#   * the arm carries past straight-down to END so the hand finishes AT THE HIP rather than out in front
+#   * the blade angle behind the arm DECREASES through the swing, so the tip keeps dropping after the
+#     arm has stopped — the follow-through continues instead of freezing with the arm
+OFFICIAL_START_TH = 128.0
+OFFICIAL_END_TH = -104.0        # past straight down (-90) so the hand ends at the hip, slightly behind
+OFFICIAL_BACK_START = 85.0      # F4
+OFFICIAL_BACK_END = 52.0        # blade catches up on the arm -> the tip continues down
+OFFICIAL_REACH = 0.60
+
+
+def official(t):
+    """The shipped sword swing. `render_animations` uses this for the sword."""
+    th = OFFICIAL_START_TH + (OFFICIAL_END_TH - OFFICIAL_START_TH) * ease_in_out(t)
+    back = OFFICIAL_BACK_START + (OFFICIAL_BACK_END - OFFICIAL_BACK_START) * ease_in(t)
+    return th, OFFICIAL_REACH, back
+
+
+VARIANTS = [("OFFICIAL", official),
+            ("tweak_less_pullback", lambda t: (128 + (-92 - 128) * ease_in_out(t), 0.60,
+                                               85 + (62 - 85) * ease_in(t))),
+            ("tweak_more_pullback", lambda t: (128 + (-116 - 128) * ease_in_out(t), 0.60,
+                                               85 + (44 - 85) * ease_in(t))),
+            ("F4_back85_as_was", _back(85))]
 
 PREV_VARIANTS = [("A_short", v_short), ("B_far", v_far), ("C_elbow", v_elbow),
                  ("D_overhead", v_overhead), ("E_wrist_snap", v_wrist)]
@@ -243,7 +271,7 @@ def crop_union(frames, margin=14):
 
 
 def main():
-    d = os.path.join(R.PLAYER, "reviews", f"{datetime.date.today().isoformat()}-swing-arm2")
+    d = os.path.join(R.PLAYER, "reviews", f"{datetime.date.today().isoformat()}-swing-official")
     os.makedirs(d, exist_ok=True)
     made = []
     for name, fn in VARIANTS:

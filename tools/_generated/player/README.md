@@ -105,6 +105,19 @@ mirror sprites the wrong way, silently, across the whole set.
 The two grips are a **pair, one per arm**, approved together. A two-handed swing uses **both**. Never
 mirror one to make the other — mirroring the back of a hand gives a mirrored back of a hand, never a palm.
 
+### The sword swing (settled 2026-08-04)
+
+**The hand travels and the tool follows it.** Not the other way round — the old model rotated the *tool*
+about a point near the body and stuck the hand on afterwards, so the fist sat by the shoulder and spun in
+place. *"do people take a sword in their fist, hold their fist up to their shoulder and rotate their fist
+to swing it? ever?"*
+
+Arm **128° → −104°** (past straight down, so the hand finishes **at the hip**), blade **85° → 52°** behind
+the arm (decreasing, so the **tip keeps dropping** after the arm stops), reach 0.60, `HAND_PERP = 180`.
+`render_animations.sword_motion`; full record in `APPROVED/DECISIONS.md`.
+
+⚠ Only the **sword** uses this. The other five tools still run the old shoulder-pivot approaches.
+
 These are bronze's, and **every other outfit's gauntlet was generated from them**, so a non-bronze outfit
 uses its own gauntlet in the same three roles: `front`→h1, `back`→h2, `side`→h3.
 

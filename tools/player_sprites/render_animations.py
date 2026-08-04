@@ -211,6 +211,108 @@ def save(frames, ms, path):
     return path
 
 
+# ---------------------------------------------------------------------------------------------------
+# THE SWORD SWING — the hand travels, the tool follows. Owner's pick 2026-08-04, see APPROVED/DECISIONS.md
+#
+#   shoulder  a fixed point on the body
+#   hand      shoulder + reach x direction        <- THE HAND TRAVELS
+#   blade     a fixed angle BEHIND the arm        <- no wrist articulation
+#   tool      placed so its grip lands on the hand
+#
+# This replaces the shoulder-pivot model for the sword. That one rotated the TOOL about a point near the
+# body and stuck the hand on afterwards, so the fist sat by the shoulder and spun in place — "do people
+# take a sword in their fist, hold their fist up to their shoulder and rotate their fist to swing it?"
+SHOULDER = (0.06, 0.40)     # cell units from body centre, +x forward / +y up (swing_lab.FACINGS "side")
+HAND_PERP = 180.0           # picked BY EYE off HAND_ROTATION_which_way.png. Do not re-derive.
+SWORD_START_TH, SWORD_END_TH = 128.0, -104.0   # behind the head -> past straight down, hand at the hip
+SWORD_BACK_START, SWORD_BACK_END = 85.0, 52.0  # blade catches up -> the tip keeps dropping
+SWORD_REACH = 0.60
+SWORD_DUR = 0.30
+
+
+def _ease_in_out(u):
+    return 3 * u * u - 2 * u * u * u
+
+
+def _ease_in(u):
+    return u * u * u
+
+
+def sword_motion(t):
+    """(arm direction, reach, blade angle behind the arm) for the official sword swing."""
+    th = SWORD_START_TH + (SWORD_END_TH - SWORD_START_TH) * _ease_in_out(t)
+    back = SWORD_BACK_START + (SWORD_BACK_END - SWORD_BACK_START) * _ease_in(t)
+    return th, SWORD_REACH, back
+
+
+def arm_swing_frames(body, hands, tool_png, bh, two_handed=False, motion=None, dur=SWORD_DUR, pad=None):
+    """A swing where the HAND travels an arc and the tool is hung off it."""
+    motion = motion or sword_motion
+    pd = PAD if pad is None else pad
+    cell = bh / 2.0
+    ny0, ny1, cx, _ = gait.anchor(body)
+    art0 = S.scale_h(rgba(tool_png), cell)
+    grip = (S.grip_of(art0) + S.DIAG * S.GRIP_EXTRA) * art0.shape[0]
+
+    W, H = body.shape[1] + 2 * pd, body.shape[0] + 2 * pd
+    n = max(14, int(dur * S.FPS * 3))
+    out, ms = [], []
+    for i in range(n):
+        t = i / (n - 1)
+        th, reach, back = motion(t)
+        sc = scene(W, H)
+        bx, by = W / 2, H / 2
+        ox, oy = bx - body.shape[1] / 2, by - body.shape[0] / 2
+        bcy = oy + ny0 + (ny1 - ny0) / 2.0
+        sx, sy = ox + cx + SHOULDER[0] * cell, bcy - SHOULDER[1] * cell
+
+        r = math.radians(th)
+        hx, hy = sx + math.cos(r) * reach * cell, sy - math.sin(r) * reach * cell
+        blade = th + back
+        art = S.rot(art0, blade - S.ART_ANGLE)
+        rr = math.radians(-(blade - S.ART_ANGLE))
+        gx = grip[0] * math.cos(rr) - grip[1] * math.sin(rr)
+        gy = grip[0] * math.sin(rr) + grip[1] * math.cos(rr)
+
+        gait._paste(sc, body, bx, by)
+        gait._paste(sc, art, hx - gx, hy - gy)
+        fists = [(hands["grip_back"], 0.0)]
+        if two_handed:
+            fists.append((hands["grip_palm"], 0.17))
+        for fist, up in fists:
+            fx = hx + math.cos(math.radians(blade)) * up * art0.shape[0]
+            fy = hy - math.sin(math.radians(blade)) * up * art0.shape[0]
+            gait._paste(sc, gait._sz(S.rot(fist, blade + HAND_PERP), bh, gait.RUN["ratio"]), fx, fy)
+
+        out.append(finish(sc))
+        ms.append(int(dur * 1000 / n))
+    return crop_union(out), ms
+
+
+def crop_union(frames, margin=14):
+    """Crop every frame to the union of what they draw, so the gif is not mostly dead space.
+
+    A vertical swing has to be rendered with a big pad or the blade is clipped off the bottom, which
+    otherwise leaves the sword gif twice the size of the walk gifs in the same outfit.
+    """
+    bg = np.array((150, 160, 150), np.int16)
+    x0 = y0 = 10 ** 9
+    x1 = y1 = -1
+    for f in frames:
+        d = np.abs(np.asarray(f, np.int16) - bg).sum(2) > 24
+        if not d.any():
+            continue
+        ys, xs = np.where(d)
+        x0, x1 = min(x0, xs.min()), max(x1, xs.max())
+        y0, y1 = min(y0, ys.min()), max(y1, ys.max())
+    if x1 < 0:
+        return frames
+    W, H = frames[0].size
+    box = (max(0, x0 - margin), max(0, y0 - margin),
+           min(W, x1 + 1 + margin), min(H, y1 + 1 + margin))
+    return [f.crop(box) for f in frames]
+
+
 def swing_frames(body, hands, tool_png, bh, two_handed=False, approach=None, pad=None):
     """One full swing. Two-handed puts the second grip further up the handle."""
     cell = bh / 2.0
@@ -312,7 +414,12 @@ def build(outfit="bronze", verbose=True):
             if not os.path.exists(p):
                 gaps.append(f"swing_{name}: {icon} missing")
                 continue
-            fr, ms = swing_frames(side[1], hands, p, bh)
+            # The SWORD uses the settled hand-travels swing. The other tools still run the old
+            # shoulder-pivot approaches and are next in line to be redone the same way.
+            if name == "sword":
+                fr, ms = arm_swing_frames(side[1], hands, p, bh, pad=210)
+            else:
+                fr, ms = swing_frames(side[1], hands, p, bh)
             made.append(save(fr, ms, os.path.join(anim, f"swing_{name}.gif")))
         for name, icon in TWO_HANDED:
             p = os.path.join(RES, "Items", icon)

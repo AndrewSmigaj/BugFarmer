@@ -162,8 +162,30 @@ detached with no arm drawn. That is what pinned the hand at the shoulder and mad
 ⚠ **`HAND_ROT = 225` and `GRIP_EXTRA = 0.16` belong to the OLD shoulder-pivot swing.** They were tuned when
 the tool led. They are meaningless once the hand travels — do not carry them forward.
 
+### ✅ THE OFFICIAL SWORD SWING — picked 2026-08-04
+
+> *"they look great, do sword_1h_f4_back85 as the official one, but have it pull back a tad more at the
+> end so the hand is at the hip not forward a little, you can also have tip slightly continue down more
+> as you dow"*
+
+F4 (blade 85° behind the arm) with the two changes he asked for. **Live in
+`render_animations.arm_swing_frames` / `sword_motion`** — the sword no longer uses the old
+shoulder-pivot `swing_frames`.
+
+| | value | why |
+|---|---|---|
+| arm direction | **128° → −104°** | past straight-down, so the hand finishes **at the hip**, not out in front |
+| blade behind arm | **85° → 52°** | decreasing, so the **tip keeps dropping** after the arm has stopped |
+| reach | 0.60 cells | |
+| hand rotation | `HAND_PERP = 180` | |
+| duration | 0.30 s | |
+
+Rendered: `reviews/2026-08-04-swing-official/` — `OFFICIAL_filmstrip.png` shows start → end, and the
+last frame is the hand-at-hip pose he asked for.
+
 ### Still open
 
-- **How far back the blade is held.** Four rendered — F1 25°, F2 45°, F3 65°, F4 85° — in
-  `reviews/2026-08-04-swing-arm2/`. Not yet picked.
-- Only the **sword** is done. Axe, hoe, net, shovel and spear follow once the sword is settled.
+- Only the **sword** is done. Axe, hoe, net, shovel and spear still run the old shoulder-pivot
+  approaches and are next in line to be rebuilt the same way.
+- The swing has **no idle anchor** in this model — it starts with the sword already behind the head
+  rather than coming from rest, so the game will pop on entry until `RestoreIdle` is reconciled.

@@ -293,7 +293,14 @@ blade       along the arm, plus a wrist offset         <- pivots at the WRIST
 tool        placed so its measured grip lands on the hand   <- the tool FOLLOWS
 ```
 
-`swing_arm.py` is that model. `DESIGN.md` had already said *"Drive the HAND, then hang the tool off it"* —
+`swing_arm.py` is that model.
+
+**SHIPPED for the sword, 2026-08-04** — `render_animations.arm_swing_frames` / `sword_motion`:
+arm **128° → −104°** (past straight down, so the hand finishes at the hip), blade **85° → 52°** behind the
+arm (decreasing, so the tip keeps dropping after the arm stops), reach **0.60**, `HAND_PERP = 180`, 0.30s.
+Owner: *"do sword_1h_f4_back85 as the official one, but have it pull back a tad more at the end so the
+hand is at the hip not forward a little, you can also have tip slightly continue down more."*
+The other five tools still run the old shoulder-pivot approaches. `DESIGN.md` had already said *"Drive the HAND, then hang the tool off it"* —
 the renderer contradicted its own design doc and nobody checked.
 
 **The constraint that caused it, now overturned.** `DESIGN.md` also said *"keep the hand within roughly a
