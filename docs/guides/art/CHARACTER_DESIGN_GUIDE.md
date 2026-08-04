@@ -302,6 +302,15 @@ arm drawn. That is what pinned the hand at the shoulder, and it is incompatible 
 a swing. Owner, 2026-08-04: *"dont care about the arm missing, though it doesnt have to be realistic just
 out some."*
 
+**No wrist articulation, and the fist grips ACROSS the handle.** Owner: *"you dont need to have the wrist
+angle with respect to the pommel of the sword, its awkward... the sword can be angled back more... so that
+the hand is perpendicular with the pommel."* So the blade sits at **one fixed angle behind the arm** for
+the whole swing, and the fist is rotated perpendicular to the blade (`HAND_PERP = 90`).
+
+⚠ **`HAND_ROT = 225` and `GRIP_EXTRA = 0.16` belong to the OLD shoulder-pivot swing** — they were tuned
+when the tool led and the hand was stuck to its grip. Once the hand travels they are meaningless; do not
+carry them into the new path.
+
 ⚠ **Two units traps here, both hit on the first attempt:**
 - `FACINGS` gives the shoulder in **cell units offset from body centre** (`+x` forward, `+y` up) — *not*
   as a fraction of body height. Reading it as a fraction moves the shoulder and the whole arm with it.

@@ -125,8 +125,36 @@ def v_wrist(t):
     return th, reach, wrist
 
 
-VARIANTS = [("A_short", v_short), ("B_far", v_far), ("C_elbow", v_elbow),
-            ("D_overhead", v_overhead), ("E_wrist_snap", v_wrist)]
+# ---------------------------------------------------------------------------------------------------
+# 2026-08-04, second pass. Owner: "you dont need to have the wrist angle with respect to the pommel of
+# the sword, its awkward, it should start a little behind the head and swing down, but the sword can be
+# angled back more, similar to far but the sword is angle back more so that the hand is perpendicular
+# with the pommel".
+#
+# So: NO per-frame wrist articulation. The blade sits at a FIXED angle behind the arm for the whole
+# swing, and the fist grips ACROSS the handle — perpendicular to the blade — instead of being rotated
+# to some offset of its own. The only thing that varies between these is how far back the blade is set.
+#
+# `HAND_PERP` replaces `HAND_ROT` (225), which was tuned for the old shoulder-pivot swing and has no
+# meaning once the hand travels.
+HAND_PERP = 90.0
+START_TH, END_TH = 128.0, -74.0     # a little behind the head, swinging down
+BACK_REACH = 0.60                   # B_far's reach — the one he pointed at
+
+
+def _back(deg):
+    """Blade held `deg` behind the arm direction for the whole swing. No wrist articulation."""
+    def f(t):
+        th = START_TH + (END_TH - START_TH) * ease_in_out(t)
+        return th, BACK_REACH, deg
+    return f
+
+
+VARIANTS = [("F1_back25", _back(25)), ("F2_back45", _back(45)),
+            ("F3_back65", _back(65)), ("F4_back85", _back(85))]
+
+PREV_VARIANTS = [("A_short", v_short), ("B_far", v_far), ("C_elbow", v_elbow),
+                 ("D_overhead", v_overhead), ("E_wrist_snap", v_wrist)]
 
 DUR = 0.30
 
@@ -180,7 +208,9 @@ def build(name, fn, two_handed):
         for fist, up in fists:
             fx = hx + math.cos(math.radians(blade)) * up * art0.shape[0]
             fy = hy - math.sin(math.radians(blade)) * up * art0.shape[0]
-            gait._paste(sc, gait._sz(S.rot(fist, blade + S.HAND_ROT), bh, gait.RUN["ratio"]), fx, fy)
+            # The fist grips ACROSS the handle — perpendicular to the blade. Not S.HAND_ROT (225),
+            # which was tuned for the old shoulder-pivot swing and is meaningless once the hand travels.
+            gait._paste(sc, gait._sz(S.rot(fist, blade + HAND_PERP), bh, gait.RUN["ratio"]), fx, fy)
 
         im = Image.new("RGBA", (W, H), BG + (255,))
         im.alpha_composite(Image.fromarray(sc, "RGBA"))
@@ -209,7 +239,7 @@ def crop_union(frames, margin=14):
 
 
 def main():
-    d = os.path.join(R.PLAYER, "reviews", f"{datetime.date.today().isoformat()}-swing-arm")
+    d = os.path.join(R.PLAYER, "reviews", f"{datetime.date.today().isoformat()}-swing-arm2")
     os.makedirs(d, exist_ok=True)
     made = []
     for name, fn in VARIANTS:
@@ -222,7 +252,7 @@ def main():
             made.append((f"{lbl}  {name}", frames))
             print(f"  {os.path.basename(p):34} {len(frames)} frames   hands = {prov}")
 
-    cols = 5
+    cols = len(VARIANTS)
     W = max(f[0].size[0] for _, f in made)
     H = max(f[0].size[1] for _, f in made)
     rows = (len(made) + cols - 1) // cols
