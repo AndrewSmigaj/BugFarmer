@@ -86,19 +86,22 @@ TOOLS = {
                     (-78, -30, 0.44)),
     }),
     "shovel": ("shovel_copper_icon.png", True, {
-        # THRUST IN, then swing up JUST A LITTLE, then return. Owner: "you are supposed to thrust in and
-        # then swing up just a little before returning."
+        # ⚠ THIS IS A BLOCK WORLD. Standing sideways he is digging the block BESIDE him, not the ground
+        # under his feet. Owner: "this is a block based world so when standing sideways you are digging
+        # dirt to the side of you not below you." So the thrust is roughly HORIZONTAL into the adjacent
+        # cell — a downward jab would be the facing-down animation, digging the block below.
         #
-        # The motion is REACH (driving the blade into the ground), and the lift is a SMALL angular change
-        # at the end — the blade never leaves the ground line. My previous version levered the handle right
-        # over and heaved the load up past his shoulder, which is a completely different action and looked
-        # nothing like a shovel.
-        "A_deep": ((-48, 22, 0.32),
-                   [(-64, 10, 0.56), (-78, 0, 0.80), (-62, 12, 0.78), (-50, 20, 0.70)],
-                   (-50, 24, 0.36)),
-        "B_deeper_still": ((-46, 24, 0.30),
-                           [(-66, 8, 0.58), (-82, -4, 0.90), (-64, 10, 0.86), (-50, 20, 0.76)],
-                           (-48, 26, 0.34)),
+        # A cell is half his body height, so the block beside him spans his lower half. Aiming a little
+        # under horizontal puts the blade into it.
+        #
+        # AND THE HANDS START AT THE HIP, close in — not already extended. Owner: "with shoveling the
+        # hands start closer to the hip".
+        "A_side_dig": ((-16, 12, 0.18),
+                       [(-16, 6, 0.44), (-14, 0, 0.74), (-6, 8, 0.72), (2, 14, 0.66)],
+                       (-16, 14, 0.20)),
+        "B_lower_block": ((-26, 14, 0.16),
+                          [(-28, 8, 0.46), (-26, 0, 0.80), (-16, 8, 0.78), (-6, 16, 0.70)],
+                          (-24, 16, 0.18)),
     }),
     "spear": ("spear_bronze_icon.png", True, {
         # COCKED BACK at the body, then driven forward. Reach is the entire motion.

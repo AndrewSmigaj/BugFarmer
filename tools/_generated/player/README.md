@@ -122,6 +122,15 @@ a sweep **across the body that passes THROUGH** the tile being hit — never a t
 direction, which gives a reverse stab. 12 frames × 20ms = 0.24s: 1 anticipation, 4 strike (with a blade
 trail), 2 hold, 5 recovery.
 
+**THIS IS A BLOCK WORLD — aim the tool at the BLOCK IT IS ACTUALLY BREAKING.** Standing sideways, he digs
+the block **beside** him, not the ground under his feet. Owner: *"this is a block based world so when
+standing sideways you are digging dirt to the side of you not below you."* So the side-view shovel is a
+roughly **horizontal** drive into the adjacent cell; a downward jab is the *facing-down* animation, which
+breaks the block below. A cell is half his body height, so the block beside him spans his lower half —
+aim a little under horizontal to land in it.
+
+**Working tools start at the HIP**, close in, not already extended. The reach is the stroke.
+
 **WHERE THE HANDS SIT — measure the sprite, do not assume.** Bronze's width profile: helmet to ~22% down,
 shoulders ~30%, waist ~50%, legs below 65%. The shoulder pivot (`SHOULDER`, 0.40 cells above body centre)
 lands at **30%** — correctly on the shoulder line. The character is **not** chibi; asserting that without
