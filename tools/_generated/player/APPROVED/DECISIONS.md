@@ -113,3 +113,57 @@ the far fist is dimmed to 0.62 and drawn behind. Beat phase `[0.5, 0.0, 1.5, 1.0
 The **front** walk is a separate implementation, not the side one re-aimed: hands sit *outside* the body
 edges, edges measured per frame at 0.62 down, one hand rises while the other drops (±0.15 of body span),
 phase `[1, 0, -1, 0]`, left hand mirrored, neither rotated nor dimmed.
+
+---
+
+## 2026-08-04 — THE SWING: the hand travels, the tool follows
+
+### What was wrong with every swing before this
+
+> *"do people take a sword in their fist, hold their fist up to their shoulder and rotate their fist to
+> swing it? ever?"* — 2026-08-04
+
+No. And that is exactly what `swing_frames` did. It computed **one angle**, placed the **tool** at a fixed
+small radius from the body centre, then stuck the hand onto the tool's grip. The tool led and the hand was
+downstream of it, so the fist stayed parked beside the shoulder and **rotated in place** while the blade
+swept round it like a clock hand bolted to his chest.
+
+Every "fix" for weeks — iterations 1-12, the four "vertical" variants of this morning — retimed that same
+motion. **Timing was never the problem.** `DESIGN.md` already said *"Drive the HAND, then hang the tool off
+it"*; the renderer contradicted its own design doc and nobody checked.
+
+### The model, settled
+
+```
+shoulder    a fixed point on the body
+hand        shoulder + reach(t) x direction(t)              <- THE HAND TRAVELS
+blade       held at a FIXED angle behind the arm            <- no wrist articulation
+tool        placed so its measured grip lands on the hand   <- the tool FOLLOWS
+```
+
+`tools/player_sprites/swing_arm.py`.
+
+### Decided today
+
+| | value | his words |
+|---|---|---|
+| hand rotation | **`HAND_PERP = 180`** | *"hand perp 180"* — picked off `HAND_ROTATION_which_way.png`, which renders 0/90/180/270 side by side |
+| wrist | **none** — blade at one fixed angle behind the arm for the whole swing | *"you dont need to have the wrist angle with respect to the pommel of the sword, its awkward"* |
+| path | starts a little behind the head (128°), swings down to −74° | *"it should start a little behind the head and swing down"* |
+| reach | **0.60 cells** | *"similar to far"* |
+| two-handed | **both** approved grips — back of hand on one arm, palm on the other | the pair approved 08-01, one per arm |
+
+**The "keep the hand near the shoulder" constraint is OVERTURNED.** `DESIGN.md` said *"keep the hand
+within roughly a third of a cell of the shoulder"* because a fist out at arm's length was thought to look
+detached with no arm drawn. That is what pinned the hand at the shoulder and made a real swing impossible.
+
+> *"dont care about the arm missing, though it doesnt have to be realistic just out some"* — 2026-08-04
+
+⚠ **`HAND_ROT = 225` and `GRIP_EXTRA = 0.16` belong to the OLD shoulder-pivot swing.** They were tuned when
+the tool led. They are meaningless once the hand travels — do not carry them forward.
+
+### Still open
+
+- **How far back the blade is held.** Four rendered — F1 25°, F2 45°, F3 65°, F4 85° — in
+  `reviews/2026-08-04-swing-arm2/`. Not yet picked.
+- Only the **sword** is done. Axe, hoe, net, shovel and spear follow once the sword is settled.

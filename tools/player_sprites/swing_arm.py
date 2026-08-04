@@ -137,7 +137,11 @@ def v_wrist(t):
 #
 # `HAND_PERP` replaces `HAND_ROT` (225), which was tuned for the old shoulder-pivot swing and has no
 # meaning once the hand travels.
-HAND_PERP = 90.0
+# OWNER'S PICK, 2026-08-04: "hand perp 180". Chosen off `HAND_ROTATION_which_way.png` in the review
+# folder, which renders 0 / 90 / 180 / 270 side by side at the same frame.
+# 90 was wrong — "dude you turned the hand the wrong way" — and 270 was my guess at the opposite, also
+# not it. Do not re-derive this from reasoning about wrists; it was picked by eye against the render.
+HAND_PERP = 180.0
 START_TH, END_TH = 128.0, -74.0     # a little behind the head, swinging down
 BACK_REACH = 0.60                   # B_far's reach — the one he pointed at
 

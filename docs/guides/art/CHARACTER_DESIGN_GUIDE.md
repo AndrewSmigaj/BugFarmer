@@ -305,7 +305,12 @@ out some."*
 **No wrist articulation, and the fist grips ACROSS the handle.** Owner: *"you dont need to have the wrist
 angle with respect to the pommel of the sword, its awkward... the sword can be angled back more... so that
 the hand is perpendicular with the pommel."* So the blade sits at **one fixed angle behind the arm** for
-the whole swing, and the fist is rotated perpendicular to the blade (`HAND_PERP = 90`).
+the whole swing, and the fist is rotated to **`HAND_PERP = 180`**.
+
+⚠ **180 was picked BY EYE, not derived.** `reviews/2026-08-04-swing-arm2/HAND_ROTATION_which_way.png`
+renders 0 / 90 / 180 / 270 at the same frame; owner: *"hand perp 180"*. Reasoning about where a wrist
+"should" be produced 90 first and then 270, and both were wrong. **Render the four and look** — do not
+re-derive it.
 
 ⚠ **`HAND_ROT = 225` and `GRIP_EXTRA = 0.16` belong to the OLD shoulder-pivot swing** — they were tuned
 when the tool led and the hand was stuck to its grip. Once the hand travels they are meaningless; do not
