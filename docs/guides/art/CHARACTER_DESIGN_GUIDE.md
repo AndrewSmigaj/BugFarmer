@@ -276,6 +276,39 @@ pitch **per blob**, but the four hands are one image at one scale, so there is o
 4.95]` — meaning one hand per sheet was sampled at the wrong rate. It now uses the **median**. Most
 outfits agree to within 0.3 and are unaffected.
 
+### THE HAND TRAVELS. The tool follows it. (2026-08-04 — the root cause)
+Owner: *"do people take a sword in their fist, hold their fist up to their shoulder and rotate their fist
+to swing it? ever?"* No. And that is exactly what `swing_frames` did for weeks.
+
+It computed **one angle**, placed the **tool** at a fixed small radius from the body centre, then stuck
+the hand onto the tool's grip. The tool led and the hand was downstream of it — so the fist stayed parked
+beside the shoulder and **rotated in place** while the blade swept round it like a clock hand bolted to
+his chest. Every "fix" retimed that motion, which is why none of them worked: **timing was never the
+problem.**
+
+```
+shoulder    a fixed point on the body
+hand        shoulder + reach(t) x direction(t)         <- THE HAND TRAVELS
+blade       along the arm, plus a wrist offset         <- pivots at the WRIST
+tool        placed so its measured grip lands on the hand   <- the tool FOLLOWS
+```
+
+`swing_arm.py` is that model. `DESIGN.md` had already said *"Drive the HAND, then hang the tool off it"* —
+the renderer contradicted its own design doc and nobody checked.
+
+**The constraint that caused it, now overturned.** `DESIGN.md` also said *"keep the hand within roughly a
+third of a cell of the shoulder"*, because a fist out at arm's length was thought to look detached with no
+arm drawn. That is what pinned the hand at the shoulder, and it is incompatible with a swing that reads as
+a swing. Owner, 2026-08-04: *"dont care about the arm missing, though it doesnt have to be realistic just
+out some."*
+
+⚠ **Two units traps here, both hit on the first attempt:**
+- `FACINGS` gives the shoulder in **cell units offset from body centre** (`+x` forward, `+y` up) — *not*
+  as a fraction of body height. Reading it as a fraction moves the shoulder and the whole arm with it.
+- **Reach in cells is much bigger than it sounds.** A cell is half the body height and his half-width is
+  only ~0.28 cell, so a reach of 1.0 is a whole torso away. Sanity-check reach against his half-width
+  before rendering a batch — 0.6–1.15 produced a sword floating in space beside a man.
+
 ### The hand view decides where the arm can be — and it killed the lateral swing (2026-08-04)
 A hand sprite is drawn from **one** viewpoint, and that viewpoint tells the viewer where the arm is.
 Looking down at the knuckles of a closed fist reads as an arm **stretched out** — the forearm runs away
