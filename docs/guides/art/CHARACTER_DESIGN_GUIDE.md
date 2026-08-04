@@ -302,6 +302,19 @@ Owner: *"do sword_1h_f4_back85 as the official one, but have it pull back a tad 
 hand is at the hip not forward a little, you can also have tip slightly continue down more."*
 The other five tools still run the old shoulder-pivot approaches.
 
+**ONE MOTION PER TOOL** (`swing_tools.py`) — not one arc with different constants. Owner caught that as
+a code smell: *"sword is not an axe swing"*. The channel that carries the motion differs per tool:
+
+- **axe** — a big continuous arc, "behind over then down in front", **never hovering** cocked-back
+- **hoe** — lift a little, strike the ground, then **PULL back** toward the player
+- **net** — the **hoop LEADS**: carry the tool *ahead* of the arm (negative blade-behind). Trailing it is
+  what made the net swing bulge-first
+- **shovel** — **jab down**, then lift like a scoop
+- **spear** — **REACH does the work** (0.78-0.92 cells), the angle barely moves
+
+⚠ Rotation is the wrong channel for a stab. Building the spear and shovel as arcs is why they read as
+waving the tool around.
+
 **SHIPPED for facing down and up, 2026-08-04: `E_double_back`** (*"lets do double back for both"*) —
 `render_animations.attack_frames` / `DOUBLE_BACK`, rendered as `swing_sword_down.gif` /
 `swing_sword_up.gif`. Out across, then whipped back through the other way.
