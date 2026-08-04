@@ -118,6 +118,11 @@ the arm (decreasing, so the **tip keeps dropping** after the arm stops), reach 0
 
 ⚠ Only the **sword** uses this. The other five tools still run the old shoulder-pivot approaches.
 
+**Facing down and up are aimed differently, not just rotated** (`swing_facings.py`): the shoulder sits in
+a different place in each view, the weapon draws **behind** him when he faces away, the facing-down swing
+**stops in front** instead of carrying to the hip, and the blade has to unwind **further** when the arm
+travels less — or the tip finishes pointing up at the end of a downward swing.
+
 These are bronze's, and **every other outfit's gauntlet was generated from them**, so a non-bronze outfit
 uses its own gauntlet in the same three roles: `front`→h1, `back`→h2, `side`→h3.
 

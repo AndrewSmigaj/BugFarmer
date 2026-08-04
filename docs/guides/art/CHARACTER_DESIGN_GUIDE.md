@@ -300,7 +300,17 @@ arm **128° → −104°** (past straight down, so the hand finishes at the hip)
 arm (decreasing, so the tip keeps dropping after the arm stops), reach **0.60**, `HAND_PERP = 180`, 0.30s.
 Owner: *"do sword_1h_f4_back85 as the official one, but have it pull back a tad more at the end so the
 hand is at the hip not forward a little, you can also have tip slightly continue down more."*
-The other five tools still run the old shoulder-pivot approaches. `DESIGN.md` had already said *"Drive the HAND, then hang the tool off it"* —
+The other five tools still run the old shoulder-pivot approaches.
+
+**Facing DOWN and UP are not the side swing rotated** (`swing_facings.py`):
+- **The shoulder moves per view** — `(0.06, 0.40)` side, `(0.10, 0.10)` front, `(0.10, 0.22)` away. Reusing
+  the side-on shoulder is what put the hand at face height in the front view.
+- **Facing away, the weapon draws BEHIND the body**, or it covers his back.
+- **Facing down the swing STOPS IN FRONT** — it must not carry past straight down the way the side view
+  does, or the blade ends up buried in his own legs.
+- ⚠ **The blade-back angle must unwind further when the arm travels less.** Side-on the arm reaches −104°,
+  so 52° behind it ends at −52° (pointing down). Facing down the arm stops near −34°, and 52° behind *that*
+  is +18° — the tip finishing **up in the air** at the end of a downward swing. `DESIGN.md` had already said *"Drive the HAND, then hang the tool off it"* —
 the renderer contradicted its own design doc and nobody checked.
 
 **The constraint that caused it, now overturned.** `DESIGN.md` also said *"keep the hand within roughly a

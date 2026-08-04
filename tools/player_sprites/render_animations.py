@@ -245,9 +245,17 @@ def sword_motion(t):
     return th, SWORD_REACH, back
 
 
-def arm_swing_frames(body, hands, tool_png, bh, two_handed=False, motion=None, dur=SWORD_DUR, pad=None):
-    """A swing where the HAND travels an arc and the tool is hung off it."""
+def arm_swing_frames(body, hands, tool_png, bh, two_handed=False, motion=None, dur=SWORD_DUR, pad=None,
+                     shoulder=None, behind=False):
+    """A swing where the HAND travels an arc and the tool is hung off it.
+
+    `shoulder` overrides the side-view shoulder for the front/back facings — the shoulder is NOT in the
+    same place in every view, and pretending it is put the hand at face height in the front view.
+    `behind` draws the tool and fist BEHIND the body, which is what the away-facing view needs or the
+    weapon covers his back.
+    """
     motion = motion or sword_motion
+    sh = shoulder or SHOULDER
     pd = PAD if pad is None else pad
     cell = bh / 2.0
     ny0, ny1, cx, _ = gait.anchor(body)
@@ -264,7 +272,7 @@ def arm_swing_frames(body, hands, tool_png, bh, two_handed=False, motion=None, d
         bx, by = W / 2, H / 2
         ox, oy = bx - body.shape[1] / 2, by - body.shape[0] / 2
         bcy = oy + ny0 + (ny1 - ny0) / 2.0
-        sx, sy = ox + cx + SHOULDER[0] * cell, bcy - SHOULDER[1] * cell
+        sx, sy = ox + cx + sh[0] * cell, bcy - sh[1] * cell
 
         r = math.radians(th)
         hx, hy = sx + math.cos(r) * reach * cell, sy - math.sin(r) * reach * cell
@@ -274,15 +282,22 @@ def arm_swing_frames(body, hands, tool_png, bh, two_handed=False, motion=None, d
         gx = grip[0] * math.cos(rr) - grip[1] * math.sin(rr)
         gy = grip[0] * math.sin(rr) + grip[1] * math.cos(rr)
 
-        gait._paste(sc, body, bx, by)
-        gait._paste(sc, art, hx - gx, hy - gy)
-        fists = [(hands["grip_back"], 0.0)]
-        if two_handed:
-            fists.append((hands["grip_palm"], 0.17))
-        for fist, up in fists:
-            fx = hx + math.cos(math.radians(blade)) * up * art0.shape[0]
-            fy = hy - math.sin(math.radians(blade)) * up * art0.shape[0]
-            gait._paste(sc, gait._sz(S.rot(fist, blade + HAND_PERP), bh, gait.RUN["ratio"]), fx, fy)
+        def draw_weapon():
+            gait._paste(sc, art, hx - gx, hy - gy)
+            fists = [(hands["grip_back"], 0.0)]
+            if two_handed:
+                fists.append((hands["grip_palm"], 0.17))
+            for fist, up in fists:
+                fx = hx + math.cos(math.radians(blade)) * up * art0.shape[0]
+                fy = hy - math.sin(math.radians(blade)) * up * art0.shape[0]
+                gait._paste(sc, gait._sz(S.rot(fist, blade + HAND_PERP), bh, gait.RUN["ratio"]), fx, fy)
+
+        if behind:                      # away-facing: the weapon is on the far side of him
+            draw_weapon()
+            gait._paste(sc, body, bx, by)
+        else:
+            gait._paste(sc, body, bx, by)
+            draw_weapon()
 
         out.append(finish(sc))
         ms.append(int(dur * 1000 / n))
