@@ -289,14 +289,26 @@ def attack_poses(centre, spec):
 
 
 def attack_frames(body, hands, tool_png, bh, cfg, spec=DOUBLE_BACK, two_handed=False, pad=230,
-                  scale=1.0):
+                  scale=1.0, pivot=0.0, second=0.17):
     """A directional attack: the arc sweeps THROUGH the tile being hit, with a blade trail."""
     cell = bh / 2.0
     ny0, ny1, cx, _ = gait.anchor(body)
     # `scale` is the tool's length relative to a cell. A SPEAR IS NOT A SWORD LENGTH — it was rendered at
     # 1.0 for weeks while the owner asked three separate times for it to be longer.
     art0 = S.scale_h(rgba(tool_png), cell * scale)
-    grip = (S.grip_of(art0) + S.DIAG * S.GRIP_EXTRA) * art0.shape[0]
+
+    # `pivot` slides the point the tool sits on the driving hand UP THE SHAFT, away from the butt.
+    #
+    # That is what makes a LEVER possible. A sword pivots at the grip (pivot=0) — the hand is at the end
+    # of the handle and the whole weapon swings. A SHOVEL DOES NOT WORK LIKE THAT: you hold it two-handed
+    # at two different points, and the motion is a lever about the LOWER hand, which barely moves, while
+    # the top hand swings through a big arc. With pivot=0 and both fists welded to the tool, the only
+    # thing the rig can do is slide the whole shovel forward like a battering ram — which is exactly what
+    # it looked like. Owner: "is that how you use a shovel?"
+    #
+    # `second` is where the other fist sits relative to the pivot, along the shaft. NEGATIVE puts it
+    # BEHIND the pivot, toward the butt — which is where the top hand goes on a shovel.
+    grip = (S.grip_of(art0) + S.DIAG * (S.GRIP_EXTRA - pivot)) * art0.shape[0]
     poses = attack_poses(cfg["centre"], spec)
     W, H = body.shape[1] + 2 * pad, body.shape[0] + 2 * pad
     out, ms = [], []
@@ -328,7 +340,7 @@ def attack_frames(body, hands, tool_png, bh, cfg, spec=DOUBLE_BACK, two_handed=F
             gait._paste(sc, art, tx, ty)
             fists = [(hands["grip_back"], 0.0)]
             if two_handed:
-                fists.append((hands["grip_palm"], 0.17))
+                fists.append((hands["grip_palm"], second))
             for fist, up in fists:
                 fx = hx + math.cos(math.radians(blade)) * up * art0.shape[0]
                 fy = hy - math.sin(math.radians(blade)) * up * art0.shape[0]

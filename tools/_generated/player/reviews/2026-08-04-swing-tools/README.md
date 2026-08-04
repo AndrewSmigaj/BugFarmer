@@ -17,7 +17,7 @@ channel carries the motion — angle, or reach.
 | **axe** | CHOP | a big arc that **bites and STOPS**. A real axe does not follow through past the wood |
 | **hoe** | TILL | chop in, then **DRAG back** toward you. The drag is the working stroke, not the chop |
 | **net** | CATCH | **starts low, ends low**, hoop-first and angled up. You scoop a bug off the ground — your hand does not finish beside your face |
-| **shovel** | DIG | hands start at the **hip**, then drive roughly **horizontally into the block beside him** — block world, sideways means the adjacent block, not the ground. Small lift, return. Two-handed |
+| **shovel** | DIG | held **low at the waist**, two hands at two points on the shaft. Drive the blade into the block beside him, then **LEVER** — the low hand barely moves while the blade rotates. Not a battering ram, and not held up by his face |
 | **spear** | THRUST | cocked back, driven forward, **aimed below horizontal** so the hands sit at chest/waist rather than shoulder height. Reach is the entire motion |
 
 **Reach shrinking while the tool stays low IS the drag and the lever. Reach growing with a still angle IS

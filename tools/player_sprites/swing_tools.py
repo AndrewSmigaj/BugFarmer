@@ -53,7 +53,11 @@ SIDE = dict(centre=0.0, sh=(0.06, 0.40), behind=False)
 # Reach shrinking while the tool stays low IS the drag/lever. Reach growing with a still angle IS the
 # thrust. Rotation is the wrong channel for both, which is why they read as waving before.
 
-TOOL_SCALE = {"spear": 1.9}     # A SPEAR IS NOT A SWORD LENGTH. Asked for three times; never applied.
+TOOL_SCALE = {"spear": 1.9}
+# pivot: where along the shaft the tool sits on the driving hand (0 = the butt, like a sword).
+# second: where the other fist sits relative to that, along the shaft. NEGATIVE = behind, toward the butt.
+TOOL_PIVOT = {"shovel": 0.34}
+TOOL_SECOND = {"shovel": -0.22}     # A SPEAR IS NOT A SWORD LENGTH. Asked for three times; never applied.
 
 TOOLS = {
     "axe": ("axe_copper_icon.png", False, {
@@ -86,22 +90,25 @@ TOOLS = {
                     (-78, -30, 0.44)),
     }),
     "shovel": ("shovel_copper_icon.png", True, {
-        # ⚠ THIS IS A BLOCK WORLD. Standing sideways he is digging the block BESIDE him, not the ground
-        # under his feet. Owner: "this is a block based world so when standing sideways you are digging
-        # dirt to the side of you not below you." So the thrust is roughly HORIZONTAL into the adjacent
-        # cell — a downward jab would be the facing-down animation, digging the block below.
+        # HOW A SHOVEL IS ACTUALLY HELD AND USED. Two corrections, both mine:
         #
-        # A cell is half his body height, so the block beside him spans his lower half. Aiming a little
-        # under horizontal puts the blade into it.
+        # 1. YOU DO NOT HOLD IT UP NEAR YOUR FACE. The hands stay LOW — waist to hip — with the blade
+        #    below them. Mine had the hands at chest height because the arm aimed near horizontal from a
+        #    shoulder that sits at 30% down the body.  Now the ARM aims steeply down (about -55 deg) so
+        #    the hands sit at 50-57% down, and the BLADE is brought back up to a shallow forward angle by
+        #    a large `back` — that is what "hands low, blade forward into the block" looks like.
         #
-        # AND THE HANDS START AT THE HIP, close in — not already extended. Owner: "with shoveling the
-        # hands start closer to the hip".
-        "A_side_dig": ((-16, 12, 0.18),
-                       [(-16, 6, 0.44), (-14, 0, 0.74), (-6, 8, 0.72), (2, 14, 0.66)],
-                       (-16, 14, 0.20)),
-        "B_lower_block": ((-26, 14, 0.16),
-                          [(-28, 8, 0.46), (-26, 0, 0.80), (-16, 8, 0.78), (-6, 16, 0.70)],
-                          (-24, 16, 0.18)),
+        # 2. IT IS A LEVER, NOT A BATTERING RAM. Two hands at two points on the shaft; the LOWER hand
+        #    barely moves and the top hand swings. So the strike drives the blade in with reach, and then
+        #    the last frames change the ANGLE with almost no hand travel — that rotation about the low
+        #    hand IS the lever. `pivot` puts the tool on the driving hand partway up the shaft and
+        #    `second` (negative) puts the other fist BEHIND it, toward the butt, where the top hand goes.
+        "A_lever_dig": ((-58, 42, 0.34),
+                        [(-56, 38, 0.50), (-54, 32, 0.68), (-50, 55, 0.66), (-46, 70, 0.62)],
+                        (-58, 44, 0.34)),
+        "B_deeper": ((-60, 44, 0.32),
+                     [(-58, 38, 0.52), (-56, 28, 0.76), (-50, 56, 0.74), (-44, 74, 0.68)],
+                     (-60, 46, 0.32)),
     }),
     "spear": ("spear_bronze_icon.png", True, {
         # COCKED BACK at the body, then driven forward. Reach is the entire motion.
@@ -143,7 +150,8 @@ def main():
             continue
         for name, spec in variants.items():
             frames, ms = R.attack_frames(body, hands, p, bh, SIDE, spec=spec, two_handed=two,
-                                         scale=scale)
+                                         scale=scale, pivot=TOOL_PIVOT.get(tool, 0.0),
+                                         second=TOOL_SECOND.get(tool, 0.17))
             out = os.path.join(d, f"{tool}_{name}.gif")
             frames[0].save(out, save_all=True, append_images=frames[1:], duration=ms, loop=0)
             made.setdefault(tool, []).append((name, frames))

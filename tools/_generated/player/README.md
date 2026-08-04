@@ -122,6 +122,23 @@ a sweep **across the body that passes THROUGH** the tile being hit — never a t
 direction, which gives a reverse stab. 12 frames × 20ms = 0.24s: 1 anticipation, 4 strike (with a blade
 trail), 2 hold, 5 recovery.
 
+**A SHOVEL IS A LEVER HELD LOW — it is not a battering ram, and not held up by your face.** Two things the
+rig could not express until `attack_frames` grew `pivot` and `second`:
+
+- **`pivot`** slides the point the tool sits on the driving hand **up the shaft**. A sword pivots at the
+  butt (`pivot=0`) and the whole weapon swings. A shovel is gripped partway along, and the motion is a
+  **rotation about the LOW hand** — which barely moves — while the top hand swings. With `pivot=0` and both
+  fists welded to the tool, the only thing the rig can do is slide the whole shovel forward.
+- **`second`** places the other fist relative to that point. **Negative** puts it *behind*, toward the
+  butt, which is where the top hand actually goes on a shovel.
+
+**Hands stay LOW.** The arm aims steeply down (≈−55°) so the hands sit at **50-57% down the body** — waist
+to hip — and the blade is brought back up to a shallow forward angle by a large `back`. Aiming near
+horizontal from the shoulder (30% down) puts the hands at chest height, holding the shovel up by his face.
+
+Check the lever numerically: between drive-in and lift the hand should move **almost nothing** while the
+blade rotates a lot. Currently 0.11 cells of hand travel against 46° of blade rotation.
+
 **THIS IS A BLOCK WORLD — aim the tool at the BLOCK IT IS ACTUALLY BREAKING.** Standing sideways, he digs
 the block **beside** him, not the ground under his feet. Owner: *"this is a block based world so when
 standing sideways you are digging dirt to the side of you not below you."* So the side-view shovel is a
