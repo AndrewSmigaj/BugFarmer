@@ -10,8 +10,9 @@ that: copying a file into `current/` by hand. One checkable question, no intent 
     Does CURRENT.md describe exactly what is in current/ ?
 
 A file in `current/` with no ledger row, or a row pointing at a file that isn't there, fails the commit.
-`anim/` is excluded: those gifs are DERIVED from the frames and regenerated on every promotion, so they
-are not decisions and are not ledgered.
+`anim/` IS ledgered. It used to be excluded as derived output, but the MOTION is the thing being chosen
+and the gif is the record of that choice — an agreed animation that is not ledgered is exactly what went
+missing on 2026-08-04.
 
 Deliberately a GIT hook rather than a Claude Code hook: git hooks are live the moment they are wired,
 where Claude Code hooks are snapshotted at session start and would not take effect until a restart.
@@ -24,7 +25,10 @@ Outfit roots come from git, or from $CLAUDE_SPRITE_ROOT for tests.
 import os
 import sys
 
-DERIVED = ("anim",)
+# `anim/` USED to be excluded as derived output, regenerated from the frames. That is no longer true:
+# the MOTION is the thing being chosen, and the gif is the record of that choice. An agreed animation
+# that is not ledgered is exactly what went missing on 2026-08-04.
+DERIVED = ()
 IMG = (".png", ".gif")
 LEDGER = "CURRENT.md"
 

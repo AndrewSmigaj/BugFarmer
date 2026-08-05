@@ -185,6 +185,21 @@ The two side-on hands tilt in **opposite** directions — each follows its own d
 > holding a handle. The approved reference gifs in `APPROVED/` are what a correct render looks like;
 > compare against them before claiming an animation is right.
 
+**AGREED ANIMATIONS LIVE IN `outfits/bronze/current/anim/`, NOT IN A REVIEW FOLDER.** Bronze is the
+reference outfit: motions are designed on it, then applied to the other 21 with their own gauntlets.
+
+**The moment he says "this one", copy it there and add a `CURRENT.md` row the same day.** Everything under
+`reviews/` is exploration — later runs regenerate it and it is not safe. Owner: *"these animations need to
+stay somewhere so we can use them - we cant just willy nilly explore things and when i say 'this one' just
+shrug and move on."*
+
+`CURRENT.md` records, per animation, **the motion constant in code** that produces it as well as his
+words, so it can be rebuilt from source alone rather than only existing as a gif.
+
+⚠ `anim/` **is ledgered.** It was once excluded as derived output, on the assumption animations are just
+regenerated from the frames. That is wrong: the **motion is the decision**. An agreed animation that is
+not ledgered is exactly what went missing across 2026-08-04.
+
 ## Rules that keep getting broken
 
 - **Never name a file for how it was made** — not `set_a`, `batch2`, `option_1`, or `result.png`. The batch

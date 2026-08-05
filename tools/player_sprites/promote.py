@@ -24,8 +24,7 @@ The stage is inferred from the path, so you don't pass it:
   scratchpad/2-frames/<batch>/      -> current/            front_*/side_*/back_*
   scratchpad/3-gauntlets/<batch>/   -> current/gauntlet/
 
-`anim/` is NOT ledgered: those gifs are DERIVED from the frames and regenerated on every promotion. The
-ledger records what was *chosen*, not what was computed from it.
+`anim/` IS ledgered. The MOTION is the decision and the gif is the record of it.
 
 NOTHING IS EVER DELETED. What `current/` held before moves to `archive/<when>-superseded/`.
 """
@@ -40,7 +39,10 @@ import render_animations as R                            # noqa: E402
 
 PLAYER = R.PLAYER
 LEDGER = "CURRENT.md"
-DERIVED = ("anim",)          # regenerated, never ledgered
+# `anim/` USED to be excluded as derived output, regenerated from the frames. That is no longer true:
+# the MOTION is the thing being chosen, and the gif is the record of that choice. An agreed animation
+# that is not ledgered is exactly what went missing on 2026-08-04.
+DERIVED = ()          # regenerated, never ledgered
 IMG = (".png", ".gif")
 
 STAGE_DEST = {"1-candidates": "", "2-frames": "", "3-gauntlets": "gauntlet"}
@@ -50,7 +52,7 @@ HEADER = """# {outfit} — current
 Everything in `current/` and where it came from. **Written by `promote.py`; do not hand-edit.**
 The pre-commit hook fails the commit if this table and the folder disagree.
 
-`anim/` is not listed — those gifs are derived from the frames and regenerated on every promotion.
+`anim/` is listed too — an agreed motion is a decision, not derived output.
 
 | file | agreed | from | your words |
 |---|---|---|---|
