@@ -88,14 +88,12 @@ TOOLS = {
         #
         # Both of these stay at x +0.06 .. +0.55 — never behind him — and sweep between 37% and 60% down
         # the body. Same simple shape as the other tools, hoop leading.
-        # FLING UP MORE at the end — owner: "it should fling up (sweep up) a little more". The finish
-        # carries to -4 deg instead of -14, so the hoop is thrown up and forward at the end of the catch.
-        "A_scoop": ((-86, -30, 0.54),
-                    [(-70, -46, 0.66), (-48, -56, 0.72), (-24, -50, 0.66), (-4, -34, 0.58)],
-                    (-82, -28, 0.52)),
-        "B_bigger_fling": ((-90, -28, 0.56),
-                           [(-72, -46, 0.68), (-46, -58, 0.76), (-18, -52, 0.70), (6, -34, 0.60)],
-                           (-86, -26, 0.54)),
+        "A_sweep_down": ((-16, -30, 0.54),
+                         [(-34, -44, 0.64), (-54, -52, 0.68), (-72, -46, 0.64), (-84, -34, 0.56)],
+                         (-20, -28, 0.52)),
+        "B_scoop_up": ((-84, -30, 0.56),
+                       [(-70, -46, 0.66), (-50, -54, 0.70), (-30, -48, 0.64), (-14, -32, 0.56)],
+                       (-80, -28, 0.54)),
     }),
     "shovel": ("shovel_copper_icon.png", True, {
         # HOW A SHOVEL IS ACTUALLY HELD AND USED. Two corrections, both mine:

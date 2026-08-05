@@ -302,32 +302,6 @@ Owner: *"do sword_1h_f4_back85 as the official one, but have it pull back a tad 
 hand is at the hip not forward a little, you can also have tip slightly continue down more."*
 The other five tools still run the old shoulder-pivot approaches.
 
-**A STRAIGHT WRIST MEANS THE TOOL IS PERPENDICULAR TO THE ARM — NOT in line with it.**
-
-Make a fist. The tube your hand forms, where a handle sits, runs **across your palm at right angles to
-your forearm**. So gripping a handle with a straight wrist puts the tool **perpendicular** to the arm.
-Pointing a tool *along* your forearm requires bending the wrist a **full 90°** — that is the impossible
-pose, and it is what every wrong tool animation had.
-
-`back` (the tool's angle relative to the arm) is therefore pinned near **90°** with a little slack, and
-the **arm angle carries the motion**.
-
-> The proof was in the repo the whole time: the one swing that was approved — the side sword — runs
-> `back` 85°→52°, and **85° is essentially perpendicular**. It read correctly because it was the only
-> motion holding the tool the way a hand can hold it.
->
-> I had this exactly inverted, forced `back` to 0 and called it "no angled wrist" when it is the maximum
-> possible bend. Owner, after explaining it twice: *"the hand holds the tool, by the handle, the wrist is
-> straight. this means the tool is perpendicular to the arm... your positions literally dont make sense,
-> they dont follow possible geometry."*
-
-Owner said this twice — *"you dont need to have the wrist angle with respect to the pommel of the sword,
-its awkward... so that the hand is perpendicular with the pommel"*, and then *"no angled wrists, i
-literally already told you"*. An intermediate attempt clamped it to 40°, which is **still an angled
-wrist** — that was negotiating with a decision that had already been made, not implementing it.
-
-The tell: the spear already ran at ~0° and is the one tool that always read correctly.
-
 **THE ATTACK HAPPENS IN FRONT OF HIM. NEVER WIND UP BEHIND HIS BACK.** No game swings a weapon from
 behind the player and around — that is cutscene staging, and it wastes the frames a game attack does not
 have. Owner: *"do you know any game with a sword or whatever that starts way behind the player and swings

@@ -161,25 +161,6 @@ spear 32-47%, net 48-57%, shovel 42-69%.
 **Every attack holds at REST for 4 frames before looping** (`ATK_REST`) — without it a looping gif
 ping-pongs and you cannot tell which direction the swing runs.
 
-**A STRAIGHT WRIST MEANS THE TOOL IS PERPENDICULAR TO THE ARM — NOT in line with it.**
-
-Make a fist. The tube your hand forms, where a handle sits, runs **across your palm at right angles to
-your forearm**. So gripping a handle with a straight wrist puts the tool **perpendicular** to the arm.
-Pointing a tool *along* your forearm requires bending the wrist a **full 90°** — that is the impossible
-pose, and it is what every wrong tool animation had.
-
-`back` (the tool's angle relative to the arm) is therefore pinned near **90°** with a little slack, and
-the **arm angle carries the motion**.
-
-> The proof was in the repo the whole time: the one swing that was approved — the side sword — runs
-> `back` 85°→52°, and **85° is essentially perpendicular**. It read correctly because it was the only
-> motion holding the tool the way a hand can hold it.
->
-> I had this exactly inverted, forced `back` to 0 and called it "no angled wrist" when it is the maximum
-> possible bend. Owner, after explaining it twice: *"the hand holds the tool, by the handle, the wrist is
-> straight. this means the tool is perpendicular to the arm... your positions literally dont make sense,
-> they dont follow possible geometry."*
-
 **Every tool now uses the hand-travels model**, each with its own verb: axe CHOPS (bites and stops), hoe
 TILLS (chop then drag back), net CATCHES (hoop leads, then lifts to enclose), shovel DIGS (push in, lever,
 lift, toss — not a swing at all), spear THRUSTS (cocked back, reach is the whole motion).
