@@ -234,15 +234,24 @@ HAND_PERP = 180.0
 # spear ran 0..+12 and is the one that always read fine, which is the tell.
 #
 # The ARM angle carries the motion; the tool stays roughly in line with the forearm, as it does in life.
-# ZERO. NO ANGLED WRISTS — the tool continues the forearm and the hand grips it perpendicular. Owner
-# said this twice: "you dont need to have the wrist angle with respect to the pommel of the sword, its
-# awkward... so that the hand is perpendicular with the pommel", and then again "no angled wrists, i
-# literally already told you". Clamping to 40 was still an angled wrist; I was negotiating with a
-# decision that had already been made.
+# A STRAIGHT WRIST MEANS THE TOOL IS PERPENDICULAR TO THE ARM. NOT in line with it.
 #
-# So `back` is forced to 0 and the ARM angle carries the entire motion. The tool is an extension of the
-# arm, which is also why the spear - the one tool that already ran at ~0 - always read correctly.
-WRIST_LIMIT = 0.0           # picked BY EYE off HAND_ROTATION_which_way.png. Do not re-derive.
+# Make a fist: the tube your hand forms, where a handle sits, runs ACROSS your palm at right angles to
+# your forearm. So gripping a handle with a straight wrist puts the tool perpendicular to the arm.
+# Pointing a tool ALONG your forearm requires bending the wrist a full 90 degrees — the impossible pose.
+#
+# I had this exactly inverted. I forced `back` to 0 ("tool continues the forearm") and called that "no
+# angled wrist"; it is the maximum possible wrist bend. Owner: "the hand holds the tool, by the handle,
+# the wrist is straight. this means the tool is perpendicular to the arm... your positions literally dont
+# make sense, they dont follow possible geometry."
+#
+# The proof was already in the repo: the ONE swing he approved — the side sword — runs `back` 85 -> 52.
+# 85 is essentially perpendicular. It read correctly because it was the only motion holding the tool the
+# way a hand can hold it.
+#
+# `back` is therefore pinned near PERPENDICULAR and the ARM ANGLE carries the motion.
+WRIST_PERPENDICULAR = 90.0
+WRIST_SLACK = 12.0          # a real wrist has a little play, not none           # picked BY EYE off HAND_ROTATION_which_way.png. Do not re-derive.
 SWORD_START_TH, SWORD_END_TH = 128.0, -104.0   # behind the head -> past straight down, hand at the hip
 SWORD_BACK_START, SWORD_BACK_END = 85.0, 52.0  # blade catches up -> the tip keeps dropping
 SWORD_REACH = 0.60
@@ -331,7 +340,9 @@ def attack_frames(body, hands, tool_png, bh, cfg, spec=DOUBLE_BACK, two_handed=F
     poses = attack_poses(cfg["centre"], spec)
     W, H = body.shape[1] + 2 * pad, body.shape[0] + 2 * pad
     out, ms = [], []
-    poses = [(a, max(-WRIST_LIMIT, min(WRIST_LIMIT, bk)), rc) for a, bk, rc in poses]
+    # Hold the tool perpendicular to the arm (straight wrist), allowing a little play.
+    lo, hi = WRIST_PERPENDICULAR - WRIST_SLACK, WRIST_PERPENDICULAR + WRIST_SLACK
+    poses = [(a, max(lo, min(hi, bk if bk > 0 else WRIST_PERPENDICULAR)), rc) for a, bk, rc in poses]
     for i, (arm, back, reach) in enumerate(poses):
         sc = scene(W, H)
         bx, by = W / 2, H / 2
