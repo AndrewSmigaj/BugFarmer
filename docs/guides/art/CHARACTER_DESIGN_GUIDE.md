@@ -51,6 +51,17 @@ standing still and large, on magenta. The three must have **different parents** 
 become three tunings of one idea, the same failure the swing design guarded against. Only the chosen design
 gets a 12-frame sheet.
 
+**THE HEAD TREATMENT IS A SLOT.** `EXPLORE` takes `{head}`: `HEAD_COVERED` (full helm — the default, and
+what every existing set uses) or `HEAD_FACE`, which asks for an open-faced helm with the face actually
+drawn. Sets listed in `FACE_SETS` get the latter. Owner wanted the player's face visible on the ant
+colourways; it still reads at 40px, which was the risk, since a face is fine detail.
+
+⚠ **RUN PAID CALLS IN THE BACKGROUND, NEVER INLINE.** `gen.py` opens the output file *before* the API
+returns, so a harness timeout mid-call leaves a **0-byte result.png** and the image is gone — while the
+request may still have been billed. `RECORD.txt` is written *before* the call, so its presence proves
+nothing about whether the call completed. This destroyed the `ant-carapace-black` batch on 2026-08-05
+because two calls were chained in one foreground command.
+
 **OPEN THE FIRST ROUND UNDIRECTED — the three briefs are a ceiling, not a floor.** Measured on
 ant-carapace 2026-08-05: given only the material (*"armour made from ant parts — chitin, shell, carapace,
 mandibles, leg segments, worn by a person"*) and three slots saying "your own design / clearly different /

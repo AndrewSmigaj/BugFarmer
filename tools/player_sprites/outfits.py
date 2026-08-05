@@ -139,7 +139,7 @@ The three designs, left to right:
 2. {b}
 3. {c}
 
-Every design covers the whole head with its own headgear, and covers the body from the shoulders to the boots, with no bare skin between the waist and the boots.
+{head} The body is covered from the shoulders to the boots, with no bare skin between the waist and the boots.
 
 CRITICAL - THE FIGURE WILL BE SHRUNK TO ABOUT 40 PIXELS TALL. Everything below follows from that:
 - What makes each design recognisable must be its SILHOUETTE - the OUTLINE shape of the hat, hood, helm, crest, shoulders and hem. Shape survives shrinking. Surface pattern does not.
@@ -152,7 +152,33 @@ Draw each figure with HARD pixel edges against the magenta. Do not blur, feather
 Do not use magenta, pink or purple ANYWHERE on the figures themselves - not on the armour, not as glowing eyes, not as trim. Magenta is reserved for the background alone."""
 
 # name -> (what the set is, [three designs with different parents])
+HEAD_COVERED = ("Every design covers the whole head with its own headgear.")
+
+# Owner, 2026-08-05: "i do want to see the players face though if possible". An open-faced helm, so the
+# character reads as a PERSON in ant armour rather than a sealed shell.
+HEAD_FACE = ("Every design has headgear that leaves the character's FACE VISIBLE and uncovered - an "
+             "open-faced helm, a raised visor, a framing hood or a crown-like piece. Draw the face: eyes, "
+             "nose and mouth, human skin. The head is never fully enclosed and there is no blank visor "
+             "slit. The headgear frames the face, it does not hide it.")
+
+FACE_SETS = {"ant-carapace-red", "ant-carapace-black"}
+
 EXPLORATIONS = {
+    # Two colourways to lock in, undirected. Owner: "we will have both black and red fireant versions...
+    # lets do 2 more attempts on each red and black so we can lock those in, i do want to see the players
+    # face though if possible". No design briefs - the undirected round beat both directed ones.
+    "ant-carapace-red": ("armour made from RED FIRE-ANT parts - deep red and orange-red chitin plates, "
+                         "shell, carapace, mandibles, leg segments. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+    "ant-carapace-black": ("armour made from BLACK ANT parts - near-black and dark charcoal chitin "
+                           "plates, shell, carapace, mandibles, leg segments. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
     # OPEN exploration - the design is NOT specified. Owner, 2026-08-05: "just do three ant carapace
     # armor versions without telling it what to put other than the sprite and it is made from ant parts
     # and carapace". The technical constraints stay (magenta, armless, silhouette-over-detail, no magenta
@@ -371,7 +397,8 @@ def main():
                                                    "CHOSEN_*.png")))
             refs += chosen[:1]
             gen(f"explore/{n}",
-                EXPLORE.format(what=what, a=opts[0], b=opts[1], c=opts[2]),
+                EXPLORE.format(what=what, a=opts[0], b=opts[1], c=opts[2],
+                               head=HEAD_FACE if n in FACE_SETS else HEAD_COVERED),
                 refs,
                 size="1536x1024")          # landscape: three figures in a row, each as large as possible
         return
