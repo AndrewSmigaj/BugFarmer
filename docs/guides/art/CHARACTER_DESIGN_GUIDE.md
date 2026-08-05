@@ -51,6 +51,18 @@ standing still and large, on magenta. The three must have **different parents** 
 become three tunings of one idea, the same failure the swing design guarded against. Only the chosen design
 gets a 12-frame sheet.
 
+**THEN VARY THE WINNER — with the chosen figure as a REFERENCE.** Picking a design is one round; the second
+round explores variants *of it*. Crop the chosen figure out of the three-option sheet, save it in that
+explore folder as `CHOSEN_<what>.png`, and `explore` passes it as a **second reference** automatically. Without
+it the model produces three fresh ideas instead of three variants, and the round is wasted.
+
+The variants must still differ by **silhouette** — on `ant-carapace-soldier` that was broad pauldrons vs
+forward tusks vs a tall crest, not three surface treatments.
+
+⚠ **Check the widths, not just the heights.** A brief like *"tighter, trimmer body"* is followed literally:
+the crest variant came out **274px wide against 478 and 492** for its siblings. That is not a defect, but a
+figure half the width of the others reads as a different weight class from the rest of the armour tier.
+
 **A design is not judged until it is judged SMALL.** `preview_explore.py <set>` renders each option large and
 again shrunk to real game height on grass; the small row is the one that decides. Ranger's third option was
 the best-looking design on the page and the worst in the game — its gold linework became noise the instant it

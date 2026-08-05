@@ -10,6 +10,7 @@ Every set gets headgear. A set without one doesn't match the rest and has to be 
   python3 tools/player_sprites/outfits.py sheet   platinum swamp-gear      # one API call each
   python3 tools/player_sprites/outfits.py gauntlet platinum swamp-gear     # one API call each
 """
+import glob
 import os
 import subprocess
 import sys
@@ -152,6 +153,20 @@ Do not use magenta, pink or purple ANYWHERE on the figures themselves - not on t
 
 # name -> (what the set is, [three designs with different parents])
 EXPLORATIONS = {
+    # Variants of the CHOSEN soldier-plate design (option 1 of the 2026-08-05 three). Owner: "i want the
+    # first version, so give me three variants of it (the soldier carapace)". The chosen figure is passed
+    # as a REFERENCE so these stay on that design instead of drifting into three new ideas.
+    "ant-carapace-soldier": ("ant-carapace SOLDIER-PLATE armour - keep the design in the attached "
+                             "reference: dark red-brown chitin plates, a helm whose visor is flanked by "
+                             "the two repurposed MANDIBLES as curved jaw guards. Vary only what is "
+                             "described below", (
+        "HEAVY PAULDRONS - the same helm, but the silhouette is dominated by very broad blocky shoulder "
+        "plates flaring well past the body, and a deep chest plate. Short jaw guards. A tank",
+        "LONG TUSKS - the two mandible jaw guards sweep much FURTHER FORWARD past the chin like curved "
+        "tusks, and are the largest feature of the whole figure. Narrower shoulders so the jaw reads",
+        "HIGH CREST - a tall raised ridge crest running front-to-back over the top of the helm, making "
+        "the figure noticeably taller, with a tighter trimmer body and close-fitting shoulders",
+    )),
     "ant-carapace": ("ant-carapace armour", (
         "a SOLDIER-PLATE harness - armour forged from a soldier ant's head-plate, with the two MANDIBLES "
         "repurposed as a pair of curved jaw guards sweeping forward on either side of the visor. Thick "
@@ -337,9 +352,15 @@ def main():
     if mode == "explore":
         for n in names or EXPLORATIONS:
             what, opts = EXPLORATIONS[n]
+            # If a CHOSEN_*.png sits in the explore folder, pass it as a second reference so variants
+            # stay on that design rather than drifting into three unrelated ideas.
+            refs = [os.path.join(BASES, "armless_front.png")]
+            chosen = sorted(glob.glob(os.path.join(PLAYER, "explore", n.split("-soldier")[0],
+                                                   "CHOSEN_*.png")))
+            refs += chosen[:1]
             gen(f"explore/{n}",
                 EXPLORE.format(what=what, a=opts[0], b=opts[1], c=opts[2]),
-                [os.path.join(BASES, "armless_front.png")],
+                refs,
                 size="1536x1024")          # landscape: three figures in a row, each as large as possible
         return
     for n in names or OUTFITS:
