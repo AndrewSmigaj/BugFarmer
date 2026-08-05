@@ -161,9 +161,24 @@ HEAD_FACE = ("Every design has headgear that leaves the character's FACE VISIBLE
              "nose and mouth, human skin. The head is never fully enclosed and there is no blank visor "
              "slit. The headgear frames the face, it does not hide it.")
 
-FACE_SETS = {"ant-carapace-red", "ant-carapace-black"}
+FACE_SETS = {"ant-carapace-red", "ant-carapace-black",
+             "ant-carapace-red2", "ant-carapace-black2"}
 
 EXPLORATIONS = {
+    # Second undirected pass on each colourway, for variety. Same prompt as the first - the point is a
+    # different roll, not a different brief.
+    "ant-carapace-red2": ("armour made from RED FIRE-ANT parts - deep red and orange-red chitin plates, "
+                          "shell, carapace, mandibles, leg segments. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+    "ant-carapace-black2": ("armour made from BLACK ANT parts - near-black and dark charcoal chitin "
+                            "plates, shell, carapace, mandibles, leg segments. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
     # Two colourways to lock in, undirected. Owner: "we will have both black and red fireant versions...
     # lets do 2 more attempts on each red and black so we can lock those in, i do want to see the players
     # face though if possible". No design briefs - the undirected round beat both directed ones.

@@ -1,9 +1,9 @@
-when      : 2026-08-05 12:32:51
+when      : 2026-08-05 12:36:14
 model     : gpt-image-2
 size      : 1536x1024
 quality   : high
 mask      : NONE
-dest      : explore/ant-carapace-black
+dest      : explore/ant-carapace-black2
 references (in the order sent):
   1. tools/_generated/player/bases/armless_front.png  (sent upscaled x14)
 

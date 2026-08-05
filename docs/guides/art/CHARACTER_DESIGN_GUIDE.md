@@ -51,6 +51,12 @@ standing still and large, on magenta. The three must have **different parents** 
 become three tunings of one idea, the same failure the swing design guarded against. Only the chosen design
 gets a 12-frame sheet.
 
+**TWO ROLLS OF THE SAME PROMPT IS A CHEAP WAY TO GET VARIETY.** Undirected batches vary a lot run to run,
+so `-A` / `-B` pairs of the *same* set are worth more than rewriting the brief. On the ant colourways the
+two rolls differed mainly in **stray magenta**: red-A and black-B came back with **0**, red-B with **374**
+and black-A with **105**. Same prompt, same forbidding line — the model paints the key colour on anyway
+about half the time. **Count it before picking**; those pixels survive keying and render as bright specks.
+
 **THE HEAD TREATMENT IS A SLOT.** `EXPLORE` takes `{head}`: `HEAD_COVERED` (full helm — the default, and
 what every existing set uses) or `HEAD_FACE`, which asks for an open-faced helm with the face actually
 drawn. Sets listed in `FACE_SETS` get the latter. Owner wanted the player's face visible on the ant

@@ -1,14 +1,14 @@
-when      : 2026-08-05 12:32:51
+when      : 2026-08-05 12:34:32
 model     : gpt-image-2
 size      : 1536x1024
 quality   : high
 mask      : NONE
-dest      : explore/ant-carapace-black
+dest      : explore/ant-carapace-red2
 references (in the order sent):
   1. tools/_generated/player/bases/armless_front.png  (sent upscaled x14)
 
 PROMPT:
-Draw THREE different design options for armour made from BLACK ANT parts - near-black and dark charcoal chitin plates, shell, carapace, mandibles, leg segments. ARMOUR WORN BY A PERSON, side by side in a single row, on a FLAT SOLID MAGENTA background (pure magenta, RGB 255 0 255). The magenta must be completely flat and uniform with nothing else drawn on it - no shadow, no gradient, no vignette, no ground, no scenery, no text.
+Draw THREE different design options for armour made from RED FIRE-ANT parts - deep red and orange-red chitin plates, shell, carapace, mandibles, leg segments. ARMOUR WORN BY A PERSON, side by side in a single row, on a FLAT SOLID MAGENTA background (pure magenta, RGB 255 0 255). The magenta must be completely flat and uniform with nothing else drawn on it - no shadow, no gradient, no vignette, no ground, no scenery, no text.
 
 Each of the three is the SAME character wearing a DIFFERENT DESIGN of the outfit: standing still, facing the viewer, full body from head to feet, all three at the same scale and standing on the same baseline.
 
