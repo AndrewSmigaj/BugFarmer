@@ -6,6 +6,31 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Armour economy overhaul — WHOLE OUTFITS, not per-slot pieces (owner 2026-08-05)
+
+The player art moved to **whole-outfit sprite sheets** — one image per outfit, generated in a single
+render. Owner: *"we are moving to a whole outfit system (no way I can mask all the individual things)"*.
+The economy still assumes the old **per-piece** model, so it no longer matches the art.
+
+**What has to change:**
+- **Recipes.** Today there are separate recipes for individual pieces of equipment — helm, chest, legs,
+  boots. Those become **one recipe per OUTFIT**. `nakama/data/entities/items.json` (`armor_slot`) and
+  `recipes.json` both encode the per-slot model.
+- **Costs.** A whole outfit is one purchase/craft, so the price ladder has to be rebuilt rather than
+  summed from four pieces.
+- **Armour slots.** If an outfit is one item, the multi-slot equip model may collapse to a single slot —
+  that is a design decision, not a mechanical one, and it touches the server's equip handling.
+- **Drops and vendors.** Same knock-on: what drops, what a shop stocks.
+
+**Per-zone special outfits.** Owner: *"in each zone there might be one or two special outfits including
+the ones made from natural material."* So the roster is partly **zone-gated content** — ant-carapace,
+beetle-shell, moth-wool, glowworm and the rest are made from things a specific zone provides, and should
+be obtainable there. That is a content-design pass over `docs/product/economy/zones/` as well as a
+mechanical one.
+
+**Not started.** Raised while building the fire-ant and black-ant outfits, which are the first two
+material-sourced sets to go through the new whole-outfit flow.
+
 ## Player sprite + wearable creation system (art DONE, publishing NOT STARTED — record 2026-07-29)
 The character is **armless with separate floating fists**, and outfits are **whole 12-frame sheets**, not
 modular paperdoll pieces (owner decision 2026-07-28). One animator moves the hands, so a new weapon costs no

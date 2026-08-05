@@ -51,6 +51,14 @@ standing still and large, on magenta. The three must have **different parents** 
 become three tunings of one idea, the same failure the swing design guarded against. Only the chosen design
 gets a 12-frame sheet.
 
+**THE SHEET MUST BE LOCKED TO THE FIGURE THAT WAS PICKED.** Crop the chosen figure out of the explore
+sheet as `CHOSEN_<setname>.png`; `sheet` mode passes it as a **third reference** alongside the two bases.
+Without it the 12 frames are a fresh reading of the words, not the design that was actually chosen — and
+the words were never what he picked from.
+
+`SHEET`'s headgear phrase used to hard-code *"covering the whole head"*, which silently overrode a
+face-visible set. It is now just `{headgear}`, so the set description owns the head treatment.
+
 **TWO ROLLS OF THE SAME PROMPT IS A CHEAP WAY TO GET VARIETY.** Undirected batches vary a lot run to run,
 so `-A` / `-B` pairs of the *same* set are worth more than rewriting the brief. On the ant colourways the
 two rolls differed mainly in **stray magenta**: red-A and black-B came back with **0**, red-B with **374**

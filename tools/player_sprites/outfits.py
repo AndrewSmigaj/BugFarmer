@@ -22,6 +22,23 @@ BASES = os.path.join(PLAYER, "bases")
 
 # name -> (what the set IS, its material + colours, its headgear, the gauntlet material)
 OUTFITS = {
+    # The two ant colourways, picked 2026-08-05 from the undirected face-visible batches. The chosen
+    # figure is passed as an extra REFERENCE by `sheet` so the 12 frames match the design that was
+    # actually chosen, rather than a fresh interpretation of the words.
+    "fireant": ("fire-ant carapace armour",
+                "orange-red and deep red ant chitin, overlapping segmented plates with darker red "
+                "shading and leg-spur plates at the hips",
+                "an ant-head helm with a ridged crest, a dark compound eye on each side and two curved "
+                "antennae, OPEN AT THE FRONT so the character's face is visible - draw the face, eyes "
+                "and hair; the helm frames it and never covers it",
+                "orange-red ant chitin"),
+    "blackant": ("black-ant carapace armour",
+                 "near-black and dark charcoal ant chitin, smooth plates with chevron banding across "
+                 "the chest",
+                 "a smooth rounded ant-head hood-helm with two curved antennae, OPEN AT THE FRONT so "
+                 "the character's face is visible - draw the face, eyes and hair; the hood frames it "
+                 "and never covers it",
+                 "near-black ant chitin"),
     # --- from the armour catalog's base ladder ---
     "platinum": (
         "polished platinum plate armour",
@@ -330,7 +347,7 @@ Column 4: passing pose opposite to column 2, transition back toward column 1.
 
 Because the character has NO ARMS, the walking motion must be shown by leg motion, slight hip shift, and a subtle torso/head bob only. Do not add arms, hands, elbows, forearms, or gauntlets. The rounded shoulder caps must end at the armless shoulder openings.
 
-Outfit: {material}. Include a {headgear} covering the whole head, a breastplate, rounded shoulder caps, a waist and hip piece covering the crotch, thigh plates on both legs, greaves, and boots. No bare skin between the waist and the boots. The headgear is on the character in all 12 frames.
+Outfit: {material}. Include a {headgear}, a breastplate, rounded shoulder caps, a waist and hip piece covering the crotch, thigh plates on both legs, greaves, and boots. No bare skin between the waist and the boots. The headgear is on the character in all 12 frames.
 
 Keep the front row front-facing, the back row back-facing, and the bottom row a strict right-facing side profile. Do not drift into a three-quarter view.
 
@@ -420,9 +437,13 @@ def main():
     for n in names or OUTFITS:
         what, material, headgear, glove = OUTFITS[n]
         if mode == "sheet":
+            refs = [os.path.join(BASES, "armless_front.png"), os.path.join(BASES, "armless_side.png")]
+            # A CHOSEN_*.png from any explore folder locks the sheet to the design that was picked.
+            chosen = sorted(glob.glob(os.path.join(PLAYER, "explore", "*", f"CHOSEN_{n}.png")))
+            refs += chosen[:1]
             gen(f"outfits/{n}",
                 SHEET.format(what=what, material=material, headgear=headgear),
-                [os.path.join(BASES, "armless_front.png"), os.path.join(BASES, "armless_side.png")])
+                refs)
         else:
             gen(f"outfits/{n}/gauntlet",
                 GAUNTLET.format(what=what, glove=glove),
