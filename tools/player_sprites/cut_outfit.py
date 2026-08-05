@@ -76,28 +76,42 @@ def _bands(mask, axis, want, floor=4):
 BG_MAX = 8        # the sheet background measures 0-4 across every border; the darkest ART starts at 13
 
 
+def _is_magenta(rgb):
+    R, G, B = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    return (R > 140) & (B > 140) & (G < 110) & (np.abs(R - B) < 70)
+
+
 def background(sheet):
     """The BACKGROUND, found by flooding in from the border — NOT by "this pixel is dark".
 
-    This is the fix for the defect that shredded every dark set. The old mask was a per-pixel
-    brightness test (`sum(rgb) > 70` = keep), which cannot tell the black BEHIND the character from
-    the black IN the character. Hornet-stinger is black-and-yellow banded, so 17% of the figure --
-    every black band -- was deleted as though it were background, leaving disconnected yellow stripes
-    floating in a hole where the character used to be. ant-carapace lost 17%, swamp-gear 11%,
-    ranger 10%.
+    HANDLES BOTH KEY COLOURS. Sheets were generated on BLACK until 2026-07-29 and on MAGENTA after,
+    but this function only ever knew about black — so every magenta sheet failed to cut, reporting
+    "expected 3 rows of 4, got [1]". The generator was switched and the cutter was not, and it went
+    unnoticed because no new sheet was cut between the change and 2026-08-05. Which key a sheet uses
+    is now DETECTED from its own border rather than assumed.
 
-    Blackness is not the signal. CONNECTEDNESS TO THE OUTSIDE is. A dark pixel you can walk to from
-    the image border without crossing the figure is background; a dark pixel enclosed by the figure
-    is the figure's own shading, however black it is. The separation is wide and measured, not tuned:
-    background 0-4, darkest art 13.
+    Flooding from the border is the part that matters and is unchanged. A per-pixel brightness test
+    ("this pixel is dark, so it is background") cannot tell the black BEHIND the character from the
+    black IN it: hornet-stinger is black-and-yellow banded, so 17% of the figure — every black band —
+    was deleted as though it were background, leaving disconnected yellow stripes floating in a hole.
+    ant-carapace lost 17%, swamp-gear 11%, ranger 10%.
+
+    Blackness is not the signal. CONNECTEDNESS TO THE OUTSIDE is. A background-coloured pixel you can
+    walk to from the image border without crossing the figure is background; one enclosed by the
+    figure is the figure's own shading, however dark or however magenta.
     """
-    near_black = sheet[..., :3].astype(int).sum(2) <= BG_MAX
-    seed = np.zeros_like(near_black)
-    seed[0, :] = near_black[0, :]
-    seed[-1, :] = near_black[-1, :]
-    seed[:, 0] = near_black[:, 0]
-    seed[:, -1] = near_black[:, -1]
-    return binary_propagation(seed, mask=near_black)
+    rgb = sheet[..., :3].astype(int)
+    border = np.concatenate([rgb[0], rgb[-1], rgb[:, 0], rgb[:, -1]])
+    if _is_magenta(border).mean() > 0.5:
+        keyed = _is_magenta(rgb)
+    else:
+        keyed = rgb.sum(2) <= BG_MAX
+    seed = np.zeros_like(keyed)
+    seed[0, :] = keyed[0, :]
+    seed[-1, :] = keyed[-1, :]
+    seed[:, 0] = keyed[:, 0]
+    seed[:, -1] = keyed[:, -1]
+    return binary_propagation(seed, mask=keyed)
 
 
 def cells(sheet, rows, cols):
@@ -150,6 +164,41 @@ def snap(sheet, b, target_h, pad=1, pitch=None):
     return small
 
 
+def defringe(a, rounds=3):
+    """Remove KEY-COLOUR BLEED from the silhouette edge.
+
+    The generator anti-aliases the figure against its background, so the outermost pixels are a blend
+    of art and key. On the old BLACK sheets that blend was a dark edge and invisible. On MAGENTA it is
+    bright pink, and it survives keying because a half-magenta pixel is not magenta enough to key out:
+    measured 1.0% of fireant's opaque pixels and 1.3% of blackant's.
+
+    Each flagged pixel takes the mean of its non-flagged opaque neighbours, repeated a few times so a
+    two-pixel fringe resolves inward. Pixels with no clean neighbour are made transparent rather than
+    guessed at.
+    """
+    a = a.copy()
+    for _ in range(rounds):
+        R, G, B = a[..., 0].astype(int), a[..., 1].astype(int), a[..., 2].astype(int)
+        op = a[..., 3] > 0
+        bad = op & (R > G + 40) & (B > G + 40) & (B > 90)
+        if not bad.any():
+            break
+        good = op & ~bad
+        acc = np.zeros(a.shape[:2] + (3,), float)
+        cnt = np.zeros(a.shape[:2], float)
+        for dy, dx in ((-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)):
+            g = np.roll(np.roll(good, dy, 0), dx, 1)
+            v = np.roll(np.roll(a[..., :3].astype(float), dy, 0), dx, 1)
+            acc += v * g[..., None]
+            cnt += g
+        fix = bad & (cnt > 0)
+        a[..., :3][fix] = (acc[fix] / cnt[fix][:, None]).astype(np.uint8)
+    R, G, B = a[..., 0].astype(int), a[..., 1].astype(int), a[..., 2].astype(int)
+    left = (a[..., 3] > 0) & (R > G + 40) & (B > G + 40) & (B > 90)
+    a[..., 3][left] = 0                       # no clean neighbour -> drop it, never guess
+    return a
+
+
 def add_rim(a, darken=0.45):
     """A guaranteed 1px dark rim around the silhouette.
 
@@ -190,7 +239,7 @@ def cut_gauntlet(folder):
         raise SystemExit(f"  expected 4 hands in 1 row, got {[len(r) for r in grid]} — look at result.png")
     pitch = statistics.median([measure_pitch(sheet, b) for b in grid[0]])
     for view, b in zip(GAUNTLET_VIEWS, grid[0]):
-        img = add_rim(snap(sheet, b, TARGET_HAND_H, pitch=pitch))
+        img = add_rim(defringe(snap(sheet, b, TARGET_HAND_H, pitch=pitch)))
         Image.fromarray(img, "RGBA").save(os.path.join(folder, f"{view}.png"))
     return [f"{v}.png" for v in GAUNTLET_VIEWS]
 
@@ -233,7 +282,7 @@ def cut_outfit(folder):
         y = CH - h                                   # standing on the bottom edge
         canvas[y:y + h, x:x + w] = sub[:h, :w]
         name = f"{rn}_{i % 3 + 1}.png"
-        Image.fromarray(canvas, "RGBA").save(os.path.join(folder, name))
+        Image.fromarray(defringe(canvas), "RGBA").save(os.path.join(folder, name))
         made.append(name)
     return made
 

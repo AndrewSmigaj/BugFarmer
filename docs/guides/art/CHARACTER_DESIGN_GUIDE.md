@@ -46,6 +46,19 @@ measured on ranger, **zero** art pixels test as magenta, against 8.9% of that sa
 indistinguishable from a black background. Key by flooding in **from the border**, never per-pixel — a dark
 pixel reachable from outside is background, one enclosed by the figure is its own shading.
 
+⚠ **THE CUTTER DETECTS THE KEY COLOUR; IT DOES NOT ASSUME ONE.** The switch to magenta was applied to
+the generator on 2026-07-29 and **not** to `cut_outfit.background()`, which kept keying near-black. Every
+existing outfit predates the switch, so nothing was cut in between and the drift sat unnoticed for a week
+— it surfaced on 2026-08-05 as *"expected 3 rows of 4, got [1]"*. `background()` now reads the sheet's own
+border and handles both.
+
+⚠ **DEFRINGE EVERY MAGENTA CUT.** The generator anti-aliases the figure against its background, so the
+outermost pixels are a blend of art and key. On black that edge was dark and invisible; on magenta it is
+**bright pink**, and it survives keying because a half-magenta pixel is not magenta enough to key out —
+measured **1.04%** of fireant's opaque pixels and **1.32%** of blackant's. `defringe()` replaces each
+tinted pixel with the mean of its clean neighbours over three passes and drops any with no clean
+neighbour rather than guessing. Check it: count pixels where R and B both exceed G by 40+.
+
 **Pick the DESIGN before paying for a walk cycle.** `outfits.py explore <set>` draws three designs of one set,
 standing still and large, on magenta. The three must have **different parents** — left to themselves they
 become three tunings of one idea, the same failure the swing design guarded against. Only the chosen design
