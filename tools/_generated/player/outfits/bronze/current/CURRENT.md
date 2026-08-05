@@ -22,25 +22,16 @@ constants that produce it are named in the table so it can be rebuilt from code 
 | `anim/run_side.gif` | `gait.RUN` | 2026-07-29 | *"RUN_r75.gif is fine, looks the best"* |
 | `anim/run_front.gif` | `gait.FRONT` at run speed | — | ⚠ **not designed** — the walk motion played faster |
 | `anim/run_back.gif` | `gait.FRONT` at run speed | — | ⚠ **not designed** — the walk motion played faster |
+| `anim/swing_sword.gif` | `render_animations.SWORD_SIDE` via `attack_frames` | 2026-08-04 | *"yes we obviously want the quick candidate"* |
 | `anim/swing_sword_down.gif` | `render_animations.DOUBLE_BACK` | 2026-08-04 | *"lets do double back for both, the seem good"* |
 | `anim/swing_sword_up.gif` | `render_animations.DOUBLE_BACK` | 2026-08-04 | *"lets do double back for both, the seem good"* |
 
-## ⚠ UNRESOLVED — the side sword swing
-
-Two candidates are sitting in `anim/`, both named `..._CANDIDATE_...` so neither can be mistaken for
-settled. **This needs one word from you.**
-
-| file | what it is |
-|---|---|
-| `anim/swing_sword_side_CANDIDATE_slow_27f.gif` | 27 frames / 270 ms. `arm_swing_frames` + `sword_motion` — arm 128°→−104°, blade 85°→52°, reach 0.60. This is what *"do sword_1h_f4_back85 as the official one, but have it pull back a tad more at the end"* produced. |
-| `anim/swing_sword_side_CANDIDATE_quick_12f.gif` | 12 frames / 280 ms. The **frame-budget** version — 1 anticipation, 3 strike with a blade trail, hold on the hit, recovery. What you meant by *"we had clearly switched to a video game much quicker one"*. |
-
-**What happened:** when the quick frame-budget model was adopted, only **facing down and up** were wired
-up to it. The side swing was left on the old eased model and I kept describing it as settled. The numbers
-show it plainly — down/up are 11f/240ms, the side one is 27f/270ms.
-
 ## Not here yet
 
-The other five tools — axe, hoe, net, shovel, spear — are still unsettled. `B_deeper` was picked for the
-shovel and is **not yet recorded**, because the wrist geometry underneath it was wrong and got reverted.
-They all need redoing once the geometry is right.
+The other five tools — axe, hoe, net, shovel, spear — are **still unsettled**, so they are deliberately
+NOT in `current/`. They sit in `archive/2026-08-04-unsettled-tools/`, still on the old shoulder-pivot
+model. `B_deeper` was picked for the shovel and is **not recorded**, because the wrist geometry underneath
+it was wrong and got reverted. They all need redoing once the geometry is right.
+
+The superseded 27-frame eased side sword is in `archive/2026-08-04-superseded-side-sword/`. Nothing is
+deleted.

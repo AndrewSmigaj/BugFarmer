@@ -508,6 +508,15 @@ hand gives a mirrored back of a hand, never a palm.
 ⚠ A vertical swing needs padding on **both** axes — `swing_frames` only padded sideways and clipped the
 blade off the bottom.
 
+**ALL THREE SWORD SWINGS RUN ON THE FRAME BUDGET** (`attack_frames`), one spec per facing in
+`SWORD_FACINGS`: `SWORD_SIDE` for side-on, `DOUBLE_BACK` for facing down and up. Owner, 2026-08-04:
+*"yes we obviously want the quick candidate"*.
+
+The eased `sword_motion` + `arm_swing_frames` path is **no longer used for the sword** — it remains only
+because `swing_arm.py` imports it for the lab. Its 27 smoothly-eased frames were what the frame budget
+replaced, and leaving the side swing on it while down/up moved across is how the set ended up half
+converted without anyone noticing.
+
 **AGREED ANIMATIONS LIVE IN `outfits/bronze/current/anim/`, NOT IN A REVIEW FOLDER.** Bronze is the
 reference outfit: motions are designed on it, then applied to the other 21 with their own gauntlets.
 

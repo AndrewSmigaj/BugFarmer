@@ -264,9 +264,23 @@ DOUBLE_BACK = ((+70, 66, 0.50),
                [(0, 44, 0.60), (-64, 30, 0.56), (-10, 46, 0.58), (+34, 58, 0.54)],
                (+34, 60, 0.46))
 
+# THE SIDE SWORD SWING — owner's pick 2026-08-04: "yes we obviously want the quick candidate".
+#
+# Same arc as the eased version it replaces (behind the head -> past straight down, hand finishing at the
+# hip, blade unwinding so the tip keeps dropping), but on the FRAME BUDGET rather than smoothly eased
+# across 27 frames. 12 frames instead: 1 anticipation, 4 strike with a blade trail, 2 hold on the hit, 5
+# recovery, 4 at rest.
+#
+# The eased path (`sword_motion` + `arm_swing_frames`) is no longer used for the sword. It is left in the
+# file because `swing_arm.py` still imports it for the lab.
+SWORD_SIDE = ((120, 88, 0.60),
+              [(60, 76, 0.62), (-10, 62, 0.64), (-70, 48, 0.62), (-104, 40, 0.60)],
+              (-35, 60, 0.58))
+
 SWORD_FACINGS = {
-    "down": dict(centre=-90.0, sh=(0.26, 0.12), bank="front", behind=False),
-    "up":   dict(centre=+90.0, sh=(0.26, 0.22), bank="back",  behind=True),
+    "side": dict(centre=0.0,   sh=SHOULDER,     bank="side",  behind=False, spec=SWORD_SIDE),
+    "down": dict(centre=-90.0, sh=(0.26, 0.12), bank="front", behind=False, spec=DOUBLE_BACK),
+    "up":   dict(centre=+90.0, sh=(0.26, 0.22), bank="back",  behind=True,  spec=DOUBLE_BACK),
 }
 
 
@@ -541,12 +555,11 @@ def build(outfit="bronze", verbose=True):
             if not os.path.exists(p):
                 gaps.append(f"swing_{name}: {icon} missing")
                 continue
-            # The SWORD uses the settled hand-travels swing. The other tools still run the old
-            # shoulder-pivot approaches and are next in line to be redone the same way.
+            # The SWORD's three facings are all rendered below, on the frame budget. The other tools
+            # still run the old shoulder-pivot approaches and are next to be redone.
             if name == "sword":
-                fr, ms = arm_swing_frames(side[1], hands, p, bh, pad=210)
-            else:
-                fr, ms = swing_frames(side[1], hands, p, bh)
+                continue
+            fr, ms = swing_frames(side[1], hands, p, bh)
             made.append(save(fr, ms, os.path.join(anim, f"swing_{name}.gif")))
         for name, icon in TWO_HANDED:
             p = os.path.join(RES, "Items", icon)
@@ -559,14 +572,15 @@ def build(outfit="bronze", verbose=True):
     # The sword's DOWN and UP attacks — a different motion from the side one, not the side one re-aimed.
     sword = os.path.join(RES, "Items", "sword_bronze_icon.png")
     for facing, cfg in SWORD_FACINGS.items():
-        bank = front if cfg["bank"] == "front" else back
+        bank = {"side": side, "front": front, "back": back}[cfg["bank"]]
         if not bank or not os.path.exists(sword):
             gaps.append(f"swing_sword_{facing}: no {cfg['bank']} frames")
             continue
-        b = bank[0]
+        b = bank[1] if cfg["bank"] == "side" else bank[0]
         fbh = gait.anchor(b)[1] - gait.anchor(b)[0] + 1
-        fr, ms = attack_frames(b, hands, sword, fbh, cfg)
-        made.append(save(fr, ms, os.path.join(anim, f"swing_sword_{facing}.gif")))
+        fr, ms = attack_frames(b, hands, sword, fbh, cfg, spec=cfg["spec"])
+        name = "swing_sword.gif" if facing == "side" else f"swing_sword_{facing}.gif"
+        made.append(save(fr, ms, os.path.join(anim, name)))
 
     if verbose:
         print(f"  {outfit}: {len(made)} animations, hands = {prov}")

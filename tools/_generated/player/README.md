@@ -185,6 +185,10 @@ The two side-on hands tilt in **opposite** directions — each follows its own d
 > holding a handle. The approved reference gifs in `APPROVED/` are what a correct render looks like;
 > compare against them before claiming an animation is right.
 
+**All three sword swings run on the frame budget** (`attack_frames`), one spec per facing in
+`SWORD_FACINGS`: `SWORD_SIDE` side-on, `DOUBLE_BACK` facing down and up. 1 anticipation, 4 strike with a
+blade trail, 2 hold, 5 recovery, 4 at rest. The eased `sword_motion` path is no longer used for the sword.
+
 **AGREED ANIMATIONS LIVE IN `outfits/bronze/current/anim/`, NOT IN A REVIEW FOLDER.** Bronze is the
 reference outfit: motions are designed on it, then applied to the other 21 with their own gauntlets.
 
