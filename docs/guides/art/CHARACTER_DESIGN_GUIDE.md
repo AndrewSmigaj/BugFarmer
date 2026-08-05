@@ -61,6 +61,11 @@ shrank, while the two plainer designs kept working. So:
   three "fancy" options are a plume, wings and a spiked crown for this reason, and all three stayed readable.
 - Four or five flat colour areas per figure, in chunky blocks.
 
+**MATERIAL-NAMED SETS ARE ARMOUR MADE OF THE MATERIAL, NOT A COSTUME OF THE CREATURE.** Owner, 2026-08-05:
+*"in all cases it should be armor, wearing armor made from ant carapace does not magically turn you into an
+ant."* So ant-carapace is a **person in a helmet** whose mandibles have been repurposed as jaw guards — not
+an ant's head on a body. The same reading applies to beetle-shell, hornet-stinger, moth-wool and the rest.
+
 **The model will paint the KEY COLOUR onto the figure** if you let it — magenta "glowing eyes" on a beetle,
 a magenta halo on a platinum. They survive only because the key floods from the border (an enclosed magenta
 pixel counts as art); a per-pixel colour test would punch holes exactly there. The prompt now forbids

@@ -152,6 +152,17 @@ Do not use magenta, pink or purple ANYWHERE on the figures themselves - not on t
 
 # name -> (what the set is, [three designs with different parents])
 EXPLORATIONS = {
+    "ant-carapace": ("ant-carapace armour", (
+        "a SOLDIER-PLATE harness - armour forged from a soldier ant's head-plate, with the two MANDIBLES "
+        "repurposed as a pair of curved jaw guards sweeping forward on either side of the visor. Thick "
+        "dark red-brown chitin, heavy square pauldrons. A HELMET on a person, not an ant's head",
+        "BANDED SEGMENT armour - many overlapping curved carapace segments worn as lamellar bands across "
+        "the chest, waist and thighs, warm ochre-amber, cinched at the waist, with a low smooth domed helm "
+        "cut from a single shell plate. Reads as banded armour, no insect features",
+        "an ALATE CLOAK harness - a pair of long folded wing-cases worn as a stiff back-cape over the "
+        "shoulders, glossy near-black chitin plates beneath, and a smooth rounded helm with a single swept "
+        "crest cut from carapace. The wing-cape is the silhouette",
+    )),
     "ranger": (
         "a woodland ranger's outfit",
         ["a HOODED FOREST SCOUT - a deep hood pulled up with the face in shadow, a long ragged "
