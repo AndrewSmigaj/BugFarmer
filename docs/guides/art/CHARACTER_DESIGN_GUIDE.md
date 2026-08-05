@@ -517,6 +517,22 @@ because `swing_arm.py` imports it for the lab. Its 27 smoothly-eased frames were
 replaced, and leaving the side swing on it while down/up moved across is how the set ended up half
 converted without anyone noticing.
 
+**AGREED MOTIONS LIVE IN `tools/player_sprites/motions.py`, WHICH ONLY EVER GROWS.** The lab files
+(`swing_tools.py` and friends) are scratch — their variants get overwritten every time a new idea is
+tried, and nothing in them is durable.
+
+⚠ **The spec IS the artifact, not just the gif.** Timestamped review folders stopped the *gifs* being
+overwritten, but the **numbers that define a motion** had the same bug one level down and it went
+unnoticed: each new variant replaced the last in the lab file, so a picked motion had to be dug out of git
+history. Owner: *"after all this desperate trying to get you to get organized, you think its ok while
+developing which animation to use in the game you are just throwing them away as we go?"*
+
+Every lab run now also writes **`SPECS.json` beside its gifs**, so a review folder is self-describing and
+any gif can be traced to its exact numbers without git archaeology.
+
+**A picked motion is COPIED into `motions.py`, never edited in place.** Superseding one means adding the
+replacement beside it and marking the old superseded.
+
 **AGREED ANIMATIONS LIVE IN `outfits/bronze/current/anim/`, NOT IN A REVIEW FOLDER.** Bronze is the
 reference outfit: motions are designed on it, then applied to the other 21 with their own gauntlets.
 

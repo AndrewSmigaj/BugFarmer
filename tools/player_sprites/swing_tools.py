@@ -158,6 +158,17 @@ def main():
     hands, _ = R.load_hands(OUTFIT)
     body = R.load_bank(OUTFIT, "side", 1)[1]
     bh = gait.anchor(body)[1] - gait.anchor(body)[0] + 1
+    # WRITE THE SPECS NEXT TO THE GIFS. A review folder has to be self-describing: the numbers that
+    # produced each gif live beside it, so "this one" can always be traced back to a motion without
+    # digging through git history. The gifs stopped being overwritten; the specs were still being
+    # thrown away every run, which is the same bug one level down.
+    import json
+    with open(os.path.join(d, "SPECS.json"), "w", encoding="utf-8") as fh:
+        json.dump({f"{t}_{n}": {"anticipation": sp[0], "strike": sp[1], "rest": sp[2],
+                                "scale": TOOL_SCALE.get(t, 1.0),
+                                "pivot": TOOL_PIVOT.get(t, 0.0), "second": TOOL_SECOND.get(t, 0.17)}
+                   for t, (_, _, vs) in TOOLS.items() for n, sp in vs.items()}, fh, indent=2)
+
     made = {}
 
     for tool, (icon, two, variants) in TOOLS.items():
