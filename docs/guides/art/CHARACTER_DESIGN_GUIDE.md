@@ -51,6 +51,22 @@ standing still and large, on magenta. The three must have **different parents** 
 become three tunings of one idea, the same failure the swing design guarded against. Only the chosen design
 gets a 12-frame sheet.
 
+**OPEN THE FIRST ROUND UNDIRECTED — the three briefs are a ceiling, not a floor.** Measured on
+ant-carapace 2026-08-05: given only the material (*"armour made from ant parts — chitin, shell, carapace,
+mandibles, leg segments, worn by a person"*) and three slots saying "your own design / clearly different /
+clearly different again", the undirected batch beat both directed ones on every check —
+
+| | undirected | directed 3-options | directed variants |
+|---|---|---|---|
+| height spread | **2.6%** | 7.0% | 7.4% |
+| width spread | **6.3%** | — | 79% |
+| stray magenta | **0** | 665 | 0 |
+
+and produced more characterful designs. Writing three design briefs narrows what the model reaches for.
+**Keep the technical constraints** — magenta background, armless, silhouette-over-detail, no magenta on the
+figure — those are quality rules, not design direction. Write briefs only when something specific is
+wanted, and pass **no reference** on an open round; a reference steers it.
+
 **THEN VARY THE WINNER — with the chosen figure as a REFERENCE.** Picking a design is one round; the second
 round explores variants *of it*. Crop the chosen figure out of the three-option sheet, save it in that
 explore folder as `CHOSEN_<what>.png`, and `explore` passes it as a **second reference** automatically. Without

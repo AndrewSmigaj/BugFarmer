@@ -153,6 +153,18 @@ Do not use magenta, pink or purple ANYWHERE on the figures themselves - not on t
 
 # name -> (what the set is, [three designs with different parents])
 EXPLORATIONS = {
+    # OPEN exploration - the design is NOT specified. Owner, 2026-08-05: "just do three ant carapace
+    # armor versions without telling it what to put other than the sprite and it is made from ant parts
+    # and carapace". The technical constraints stay (magenta, armless, silhouette-over-detail, no magenta
+    # on the figure) because those are quality rules, not design direction. No CHOSEN_ reference either -
+    # a reference would steer it, which is the opposite of the point.
+    "ant-carapace-open": ("armour made from ant parts - chitin plates, shell, carapace, mandibles, "
+                          "leg segments, whatever an ant provides. It is ARMOUR WORN BY A PERSON, not "
+                          "an ant costume: a helmet on a head, plates on a body", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
     # Variants of the CHOSEN soldier-plate design (option 1 of the 2026-08-05 three). Owner: "i want the
     # first version, so give me three variants of it (the soldier carapace)". The chosen figure is passed
     # as a REFERENCE so these stay on that design instead of drifting into three new ideas.
