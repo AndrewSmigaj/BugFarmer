@@ -293,11 +293,54 @@ as a portrait can still fall apart the moment it moves or picks up a weapon, so 
 sheet, is what a set has to survive. It imports the swing from `swing_lab` rather than reimplementing it, so
 it cannot drift from the designed motion.
 
-### The finished animation set — `tools/player_sprites/render_animations.py`
-Renders one gif per animation into `outfits/<outfit>/animations/`, free, no API. **One file per animation,
-always the current one, named for what it is** — `walk_side.gif`, `swing_axe.gif`. No iteration codes in
-filenames; history lives in git. Naming variants for how they were made (`set_a`, `batch2`,
-`profile_option_1`) is what produced 131 indistinguishable files and cost three days.
+### WHAT IS OFFICIAL — `tools/player_sprites/official.py` (2026-08-06)
+
+**One file names every official sprite and animation. The build reads it and nothing else.** No directory
+scanning, no fallbacks: **a missing file stops the build and prints which one.**
+
+That rule is the whole point. Before it, two things were true at once and nobody noticed:
+
+* `render_animations.py:79-83` resolved an outfit's hands by trying **three folders in order** and taking
+  whichever existed. Measured by patching the image loader and running it over all 24 outfits — **21
+  resolved to a gitignored archive**, 2 to their own `gauntlet/`, and bronze to a hardcoded exception
+  reading two other folders under different filenames. Nobody chose that. The fallback did.
+* **No build code ever opened a decision record.** `render_animations.py` mentions "APPROVED" 18 times in
+  comments and reads `DECISIONS.md`/`CURRENT.md` zero times. So *what was official* and *what got loaded*
+  were never the same object — which is why asking for "a gallery of the official ones" returned whatever
+  happened to be sitting on disk.
+
+`official.py` holds four things: `HAND_ROLES` (the five hands every outfit has), `OUTFITS` (which folders
+are that outfit's chosen frames and hands, with the owner's words and date), `GAITS` + `SWINGS` (the
+approved motion numbers — this only ever GROWS, so "go back to Tuesday's swing" is a one-line change), and
+`ANIMATIONS`, where **one row fully defines one animation**. Adding an animation is a row, not a branch.
+
+> That definition used to be split three ways with no single file stating it: `gait.py` held the walk
+> constants, `motions.py` the swing arcs, and a `SWORD_FACINGS` dict inside `render_animations.py` held
+> which frame bank, where the shoulder sits and whether the weapon draws behind the body — next to 174
+> lines of dead code including a whole second motion system whose constants still looked live.
+
+### Rendering it — `tools/player_sprites/build.py`
+
+```bash
+python3 tools/player_sprites/build.py            # every outfit in official.py
+python3 tools/player_sprites/build.py bronze     # one
+python3 tools/player_sprites/build.py --check    # compare only; writes nothing
+```
+
+**`build` owns `<outfit>/anim/`** — anything there that `official.py` does not name is removed. Stale files
+are not hypothetical: `thrust_spear_two_handed.gif` sat in 22 outfits, was committed, and showed in the
+gallery for weeks after the code that produced it stopped existing.
+
+**Ported under a byte-identical gate.** All 13 of bronze's approved animations rebuild byte-for-byte
+through the new path. The render is deterministic (same md5 across runs), so that is a real check rather
+than a promise — and it is what proves the port faithful before anything old is deleted.
+
+⚠ **Still on the old path:** `gallery.py` continues to infer state by scanning directories, so it inherits
+the fallbacks. Until it reads `official.py`, the gallery can still show something that was never chosen.
+
+One file per animation, always the current one, named for what it is — `walk_side.gif`, `swing_axe.gif`.
+No iteration codes in filenames; history lives in git. Naming variants for how they were made (`set_a`,
+`batch2`, `profile_option_1`) is what produced 131 indistinguishable files and cost three days.
 
 **Each animation picks its hand AND its base rotation deliberately** — the hand sheets are drawn fingers-up,
 cuff-down, so using them raw gives a hand hanging at the waist with its fingers pointing at the sky:
@@ -311,10 +354,18 @@ cuff-down, so using them raw gives a hand hanging at the waist with its fingers 
 > The grip hands are **not** the walk/run hands. *"the weapon grabbing is NOT to be blindly replacing walk
 > and/or running — they all should be carefully thought about and the best one picked."*
 
-**One outfit or `--all`** — 264 animations across 22 outfits, free. Each outfit uses **its own gauntlet**
-(never bronze's: bronze's hand-D-pixel fists are a different aspect, 0.80 vs 0.55-0.60, so a multi-set reel
-had visibly mismatched hands), and the script reports which source it resolved so a placeholder can't be
-mistaken for the real thing.
+**Each outfit uses its own gauntlet — but every one is a material variant of BRONZE's shapes.** Owner,
+2026-08-06: *"the only officially established hands are the bronze hands... everything else will have
+literally their own as close as possible variants (well with different color and texture and such)."*
+The gauntlet prompt sends bronze's hand sheet as reference image #1 and says *"Copy the reference EXACTLY
+in shape... the ONLY thing that changes is the material."* Proven — fireant and blackant were made this
+way and still hold their `ref_1_SOURCE_SHEET_hand-D-pixel.png`.
+
+⚠ **There are FIVE hands, not four** (`official.HAND_ROLES`). The count was previously hardcoded in three
+places that disagreed — `cut_gauntlet(cols=4)`, four poses in the prompt text, five keys in `load_hands` —
+so `grip_palm` silently fell back to `grip_back`. Result: **23 of 24 outfits held a two-handed tool with
+the same hand twice** (verified by array comparison). Only bronze had a real back-and-palm pair, which is
+why nothing could copy it: no other outfit had the parts.
 
 **Every outfit renders at ONE body height** (`TARGET_BODY_H`, currently 320, NEAREST only). The 22 outfits
 on disk are cut at two scales — 7 at 267-292px, 15 at 395-435px, a **1.63×** split — which side by side

@@ -1,0 +1,184 @@
+"""official.py — the ONE file that says what is official. If it is not in here, it does not exist.
+
+THE RULE
+--------
+The build reads this file and nothing else. No directory scanning. No fallbacks. No "if this file exists
+use it, otherwise use that one". **A missing file stops the build and prints which one.**
+
+That last sentence is the entire fix. Every confusion in this pipeline came from its absence:
+
+  * `render_animations.py:79-83` looked for an outfit's hands in THREE places and took the first that
+    existed. Measured on 2026-08-06 by patching the image loader and running it over all 24 outfits:
+    21 resolved to a GITIGNORED archive folder, 2 to their own `gauntlet/`, and bronze to a hardcoded
+    exception reading two other folders entirely. Nobody chose that. The fallback chose it.
+  * `DECISIONS.md` and `CURRENT.md` recorded what was approved — and **no build code ever opened them.**
+    `render_animations.py` mentions "APPROVED" 18 times in comments and reads a decision file zero times.
+    So the record of what was official and the thing the code loaded were never the same object, which is
+    why asking for "a gallery of the official ones" returned whatever happened to be on disk.
+
+Owner, 2026-08-06: *"when we make a change it is reflected in our fucking code somewhere - I dont care
+where as long as its actually used."* This is that place.
+
+HOW TO CHANGE SOMETHING
+-----------------------
+  Change a swing            edit the animation's `motion`, rebuild. The gif AND the gallery both change,
+                            because both read this line.
+  Try alternatives          generate into `outfits/<name>/tries/<date>-<what>/`, look, then point the
+                            line at the one you picked. Every other attempt stays in `tries/` forever.
+  Go back to an old swing   point the line at the old motion name. MOTIONS only ever grows; nothing in it
+                            is edited in place or deleted, so no decision can become unreachable.
+
+WHAT IS *NOT* HERE
+------------------
+Nothing about *how* art is made — prompts, cutting, keying. Those live with the code that does them. This
+file only answers "which one is official", for every sprite and every animation.
+"""
+
+# ── HAND ROLES ───────────────────────────────────────────────────────────────────────────────────────
+# Every outfit has its own version of every hand bronze has. The COUNT is not a decision to make — it is
+# whatever this list says, and the prompt, the cutter and the renderer all read it from here.
+#
+# It was previously hardcoded in three places that disagreed: `cut_gauntlet(cols=4)`, four poses written
+# into the gauntlet prompt text, and five keys returned by `load_hands`. That disagreement is why 23 of 24
+# outfits ended up holding a two-handed tool with the SAME hand twice — there was no fifth hand to use, so
+# `grip_palm` silently fell back to `grip_back`.
+HAND_ROLES = ["front", "back", "side", "grip_back", "grip_palm"]
+
+HAND_ROLE_MEANING = {
+    "front":     "back of a closed fist (knuckles toward camera)",
+    "back":      "the palm side",
+    "side":      "the fist in profile",
+    "grip_back": "fist closed around a pole, knuckles showing",
+    "grip_palm": "fist closed around a pole, palm showing — the SECOND hand on a two-handed tool",
+}
+
+# The hand set every other outfit is a material variant of. Owner: *"the only officially established hands
+# are the bronze hands... everything else will have literally their own as close as possible variants."*
+REFERENCE_OUTFIT = "bronze"
+
+
+# ── OUTFITS ──────────────────────────────────────────────────────────────────────────────────────────
+# `frames` and `hands` are folders, relative to tools/_generated/player/. Both must exist or the build
+# stops. An outfit with no approved hands is simply absent from here — it is never "rendered with
+# something else".
+OUTFITS = {
+    "bronze":   dict(frames="outfits/bronze",   hands="outfits/bronze/gauntlet",
+                     approved="2026-08-06", words="the reference set - made first, and they work"),
+    "fireant":  dict(frames="outfits/fireant",  hands="outfits/fireant/gauntlet",
+                     approved="2026-08-05", words="fireant faces B the second one"),
+    "blackant": dict(frames="outfits/blackant", hands="outfits/blackant/gauntlet",
+                     approved="2026-08-05", words="black ant faces A the second one"),
+}
+
+
+# ── MOTIONS ──────────────────────────────────────────────────────────────────────────────────────────
+# ONLY EVER GROWS. Superseding a motion means ADDING the replacement beside it, never editing this one in
+# place — otherwise "go back to the one from Tuesday" becomes an archaeology exercise. It already did: the
+# agreed net sweep had to be recovered from commit 8bfd24e after a later variant overwrote it in the lab.
+#
+# GAIT motions are dicts of the owner's tuned constants, recovered verbatim from the 2026-07-28 session.
+# ⚠ These numbers are HIS. Do not adjust them to make other code look right; fix the other code.
+GAITS = {
+    # amp=hand travel, ay=rise, rot=base rotation, tilt=wrist lean, ratio=fist size vs body height,
+    # waist=where the hands hang, ms=frame duration
+    "WALK": dict(amp=0.52, ay=0.013, rot=0.0,  tilt=22.0, ratio=0.17, waist=0.60, ms=150),
+    "RUN":  dict(amp=0.58, ay=0.032, rot=75.0, tilt=14.0, ratio=0.19, waist=0.46, ms=90),
+    # The camera-facing walk is a SEPARATE motion, not the side one re-aimed: a different fist (profile),
+    # hands outside the body edges rather than swinging through the torso, one rising as the other drops.
+    "FRONT":     dict(ratio=0.17, row=0.62, gap=0.03, dx=0.06, dy=0.15, ms=150),
+    "FRONT_RUN": dict(ratio=0.17, row=0.62, gap=0.03, dx=0.06, dy=0.15, ms=90),
+}
+
+# SWING motions: (anticipation pose, [4 strike poses], rest pose).
+# A pose is (arm offset from the aim direction, blade angle behind the arm, reach in cells).
+SWINGS = {
+    # 2026-08-04 — "yes we obviously want the quick candidate"
+    # Behind the head, past straight down, hand finishing at the hip; the blade unwinds so the tip keeps
+    # dropping after the arm has stopped.
+    "SWORD_SIDE": ((120, 88, 0.60),
+                   [(60, 76, 0.62), (-10, 62, 0.64), (-70, 48, 0.62), (-104, 40, 0.60)],
+                   (-35, 60, 0.58)),
+
+    # 2026-08-04 — "lets do double back for both, the seem good". Used facing DOWN and facing UP.
+    # Out across, then whipped back through the other way.
+    "DOUBLE_BACK": ((+70, 66, 0.50),
+                    [(0, 44, 0.60), (-64, 30, 0.56), (-10, 46, 0.58), (+34, 58, 0.54)],
+                    (+34, 60, 0.46)),
+
+    # 2026-08-04 — "this net for the side will work: ...1204_8bfd24e_net_A_sweep_and_lift.gif"
+    "NET_SIDE": ((80, -40, 0.50),
+                 [(30, -48, 0.62), (-20, -54, 0.66), (-50, -40, 0.62), (-30, -10, 0.58)],
+                 (40, -30, 0.46)),
+
+    # 2026-08-04 — "...axe_B_high_chop.gif for the axe"
+    "AXE_SIDE": ((172, 78, 0.42),
+                 [(95, 56, 0.52), (16, 22, 0.62), (-34, -2, 0.64), (-38, 0, 0.62)],
+                 (70, 58, 0.44)),
+
+    # 2026-08-04 — "...hoe_B_long_drag.gif for the side hoe"
+    "HOE_SIDE": ((78, 58, 0.46),
+                 [(-46, 12, 0.64), (-60, 2, 0.68), (-72, 6, 0.46), (-84, 12, 0.26)],
+                 (40, 50, 0.44)),
+
+    # 2026-08-04 — "...shovel_B_deeper.gif for the shovel". A lever held low, not a battering ram.
+    "SHOVEL_SIDE": ((-60, 44, 0.32),
+                    [(-58, 38, 0.52), (-56, 28, 0.76), (-50, 56, 0.74), (-44, 74, 0.68)],
+                    (-60, 46, 0.32)),
+}
+
+
+# ── ANIMATIONS ───────────────────────────────────────────────────────────────────────────────────────
+# ONE ROW FULLY DEFINES ONE ANIMATION. Adding one is a row, not a branch.
+#
+# Before this file, an animation's definition was split across three places and no single one of them said
+# what an animation was: `gait.py` held the walk constants, `motions.py` held the swing arcs, and a
+# `SWORD_FACINGS` dict inside `render_animations.py` held which body frames to use, where the shoulder
+# sits and whether the weapon draws behind the body — in the same file as 174 lines of dead code.
+#
+#   frames    which frame bank: side / front / back
+#   motion    a key in GAITS or SWINGS
+#   aim       direction being attacked: 0 = sideways, -90 = toward camera, +90 = away
+#   shoulder  (x, y) shoulder position in cells, measured from the body centre
+#   behind    draw the weapon BEHIND the body (true when he is facing away)
+#   two_handed / pivot / second   a lever grip: where the tool sits on the driving hand, and where the
+#             second fist sits along the shaft. NEGATIVE `second` puts it toward the butt.
+SHOULDER = (0.06, 0.40)
+
+ANIMATIONS = {
+    "walk_side":  dict(kind="gait",       frames="side",  motion="WALK"),
+    "run_side":   dict(kind="gait",       frames="side",  motion="RUN"),
+    "walk_front": dict(kind="gait_front", frames="front", motion="FRONT"),
+    "run_front":  dict(kind="gait_front", frames="front", motion="FRONT_RUN"),
+    "walk_back":  dict(kind="gait_front", frames="back",  motion="FRONT"),
+    "run_back":   dict(kind="gait_front", frames="back",  motion="FRONT_RUN"),
+
+    "swing_sword":      dict(kind="attack", frames="side",  motion="SWORD_SIDE",
+                             tool="sword_bronze_icon.png",  aim=0.0,   shoulder=SHOULDER),
+    "swing_sword_down": dict(kind="attack", frames="front", motion="DOUBLE_BACK",
+                             tool="sword_bronze_icon.png",  aim=-90.0, shoulder=(0.26, 0.12)),
+    "swing_sword_up":   dict(kind="attack", frames="back",  motion="DOUBLE_BACK",
+                             tool="sword_bronze_icon.png",  aim=+90.0, shoulder=(0.26, 0.22),
+                             behind=True),
+
+    "swing_axe":    dict(kind="attack", frames="side", motion="AXE_SIDE",
+                         tool="axe_copper_icon.png",    aim=0.0, shoulder=SHOULDER),
+    "swing_net":    dict(kind="attack", frames="side", motion="NET_SIDE",
+                         tool="small_net_icon.png",     aim=0.0, shoulder=SHOULDER),
+    "swing_hoe":    dict(kind="attack", frames="side", motion="HOE_SIDE",
+                         tool="hoe_copper_icon.png",    aim=0.0, shoulder=SHOULDER),
+    "swing_shovel": dict(kind="attack", frames="side", motion="SHOVEL_SIDE",
+                         tool="shovel_copper_icon.png", aim=0.0, shoulder=SHOULDER,
+                         two_handed=True, pivot=0.34, second=-0.22),
+}
+
+
+# ── NOT AGREED — deliberately absent, so it cannot render by accident ────────────────────────────────
+# An unsettled animation is NOT listed above, so the build does not produce it and cannot silently ship a
+# superseded version. `thrust_spear_two_handed.gif` sat in 22 outfits for weeks, was committed, and showed
+# in the gallery, long after the code that made it stopped existing. Absence here is the fix for that.
+NOT_AGREED = {
+    "spear (side)":              "length settled at 1.9 cells; the motion is not",
+    "axe/hoe/net/shovel up+down": "only the sword has facing-up and facing-down motions",
+    "run_front / run_back":       "listed above, but it is the WALK played faster — never designed as its "
+                                  "own motion. Real camera-facing run poses do not exist yet.",
+}
