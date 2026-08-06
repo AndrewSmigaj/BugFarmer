@@ -12,11 +12,20 @@ right for static zone renders and wrong here: a file explorer cannot show 22 out
 once, and the whole problem this solves is not being able to see what you have. Owner asked for this
 explicitly on 2026-08-02. **Do not delete it as dead code.**
 
-GENERATED, NEVER HAND-MAINTAINED
---------------------------------
-Nothing below hardcodes an outfit name, an animation name or a count. Every sprite in this project is
-going to be recreated; re-run this and the page reflects whatever is on disk at that moment. That is the
-only reason it survives the rebuild.
+IT SHOWS WHAT IS OFFICIAL — NOT WHAT IS ON DISK
+-----------------------------------------------
+Every name, path and animation comes from `official.py`. This page used to SCAN DIRECTORIES instead, so
+it inherited the renderer's fallback chains and showed whatever happened to be lying around — which is
+exactly why asking for "a gallery of the official ones" returned things nobody had chosen. Owner,
+2026-08-06: *"I will for example ask for a gallery showing all the official whatevers and it will just
+be random crap."*
+
+Concretely, before this: `thrust_spear_two_handed.gif` appeared in the gallery for 22 outfits, long after
+the code that produced it had been deleted; and 21 outfits displayed hands loaded from a gitignored
+archive folder. Both were on disk, so both were shown.
+
+Outfits in `official.PENDING` are listed as NOT official and are not rendered. An outfit is complete and
+official, or it is pending — there is no third state where it borrows someone else's parts.
 
 TWO CONSTRAINTS THAT DECIDE THE SHAPE
 -------------------------------------
@@ -30,15 +39,11 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import render_animations as R                            # noqa: E402
+import official as O                                     # noqa: E402  the only source of truth
 
-PLAYER = R.PLAYER
-OUTFITS = R.OUTFITS
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PLAYER = os.path.join(REPO, "tools", "_generated", "player")
 OUT = os.path.join(PLAYER, "gallery.html")
-
-# The four stages an outfit passes through, in order. Each knows how to detect itself so the progress
-# board reports where an outfit ACTUALLY is rather than where a list says it should be.
-STAGES = ["candidates", "frames", "gauntlets", "official"]
 
 
 def rel(path):
@@ -70,90 +75,74 @@ def read_record(d):
     return out
 
 
-def scan_candidates(outfit):
-    """Candidate sheets, new structure first, then the places they live today."""
-    d = R.outfit_dir(outfit)
-    found = []
-    new = os.path.join(d, "scratchpad", "1-candidates")
-    if os.path.isdir(new):
-        for b in sorted(os.listdir(new)):
-            bd = os.path.join(new, b)
-            for f in _pngs(bd):
-                found.append(dict(src=rel(os.path.join(bd, f)), batch=b, **read_record(bd)))
-        return found
-    # pre-migration: explore/<outfit>/result.png and the outfit's own result.png
-    for cand in (os.path.join(PLAYER, "explore", outfit), d):
-        p = os.path.join(cand, "result.png")
-        if os.path.exists(p):
-            found.append(dict(src=rel(p), batch=os.path.basename(cand) + " (pre-migration)",
-                              **read_record(cand)))
-    return found
-
-
-def scan_frames(outfit):
-    d = R.frames_dir(outfit)
+def _named(outfit, kind, names, ext):
+    """The files official.py says should be there. A name that is ABSENT is reported as absent —
+    never replaced by whatever else happens to be in the folder."""
+    d = os.path.join(PLAYER, O.path(outfit, kind))
     out = {}
-    for kind in ("front", "side", "back"):
-        fs = [os.path.join(d, f"{kind}_{i}.png") for i in (1, 2, 3)]
-        fs = [f for f in fs if os.path.exists(f)]
-        if fs:
-            out[kind] = [rel(f) for f in fs]
+    for n in names:
+        p = os.path.join(d, f"{n}{ext}")
+        out[n] = rel(p) if os.path.exists(p) else None
     return out
 
 
-def scan_gauntlet(outfit):
-    g, prov = R.gauntlet_dir(outfit)
-    if g is None:
-        return {}, prov
-    return {os.path.splitext(f)[0]: rel(os.path.join(g, f))
-            for f in _pngs(g) if os.path.splitext(f)[0] in ("front", "back", "side", "grip")}, prov
+def scan_tries(outfit):
+    """Every attempt, so alternatives stay visible next to the one that was chosen.
+
+    This is the ONLY place the gallery looks at the disk rather than at official.py, and deliberately:
+    tries/ is exploration, its contents are not declared anywhere, and nothing is loaded FROM it.
+    """
+    d = os.path.join(PLAYER, O.path(outfit, O.TRIES_DIR))
+    found = []
+    if os.path.isdir(d):
+        for batch in sorted(os.listdir(d)):
+            bd = os.path.join(d, batch)
+            if os.path.isdir(bd):
+                for f in _pngs(bd):
+                    found.append(dict(src=rel(os.path.join(bd, f)), batch=batch, **read_record(bd)))
+    return found
 
 
-def scan_anims(outfit):
-    d = R.anim_dir(outfit)
-    if not os.path.isdir(d):
-        return {}
-    return {os.path.splitext(f)[0]: rel(os.path.join(d, f))
-            for f in sorted(os.listdir(d)) if f.lower().endswith(".gif")}
-
-
-def read_ledger(outfit):
-    p = os.path.join(R.outfit_dir(outfit), "current", "CURRENT.md")
-    if not os.path.exists(p):
-        return None
-    with open(p, encoding="utf-8", errors="replace") as fh:
-        return fh.read()
-
-
-def scan(outfit):
-    cands = scan_candidates(outfit)
-    frames = scan_frames(outfit)
-    gaunt, gprov = scan_gauntlet(outfit)
-    anims = scan_anims(outfit)
-    ledger = read_ledger(outfit)
-    stages = {
-        "candidates": len(cands),
-        "frames": sum(len(v) for v in frames.values()),
-        "gauntlets": len(gaunt),
-        "official": 1 if ledger else 0,
-    }
-    return dict(name=outfit, candidates=cands, frames=frames, gauntlet=gaunt,
-                gauntlet_source=gprov, anims=anims, ledger=ledger, stages=stages)
+def scan(outfit, official=True):
+    o = (O.OUTFITS if official else O.PENDING)[outfit]
+    frames = {} if not official else {
+        bank: [v for v in _named(outfit, O.FRAMES_DIR, [f"{bank}_{i}" for i in (1, 2, 3)], ".png").values()]
+        for bank in ("front", "side", "back")}
+    return dict(
+        name=outfit,
+        official=official,
+        approved=o.get("approved") or o.get("chosen", ""),
+        words=o.get("words", ""),
+        needs=o.get("needs", ""),
+        frames={k: [p for p in v if p] for k, v in frames.items()},
+        gauntlet=_named(outfit, O.HANDS_DIR, O.HAND_ROLES, ".png"),
+        anims=_named(outfit, O.ANIM_DIR, list(O.ANIMATIONS), ".gif"),
+        tries=scan_tries(outfit),
+    )
 
 
 def build():
-    outfits = [scan(o) for o in R.all_outfits()]
-    anim_names = sorted({k for o in outfits for k in o["anims"]},
-                        key=lambda n: (not n.startswith("walk"), not n.startswith("run"), n))
-    data = dict(outfits=outfits, anims=anim_names, stages=STAGES)
+    outfits = ([scan(n, True) for n in O.OUTFITS]
+               + [scan(n, False) for n in O.PENDING])
+    data = dict(outfits=outfits,
+                anims=list(O.ANIMATIONS),          # declared order, not alphabetical disk order
+                roles=O.HAND_ROLES,
+                role_meaning=O.HAND_ROLE_MEANING,
+                not_agreed=O.NOT_AGREED)
     with open(OUT, "w", encoding="utf-8") as fh:
         fh.write(PAGE.replace("__DATA__", json.dumps(data)))
-    tot = sum(len(o["anims"]) for o in outfits)
-    print(f"  {len(outfits)} outfits, {tot} animations, {len(anim_names)} animation kinds")
+
+    have = sum(1 for o in outfits if o["official"])
+    print(f"  {have} official, {len(O.PENDING)} pending, {len(O.ANIMATIONS)} animations declared")
     print("  " + OUT.replace("/mnt/c/", "C:/"))
     for o in outfits:
-        if not o["anims"]:
-            print(f"    EMPTY  {o['name']} - no animations rendered")
+        if not o["official"]:
+            print(f"    PENDING  {o['name']} - {o['needs']}")
+            continue
+        missing = [k for k, v in o["anims"].items() if not v] + \
+                  [f"hand:{k}" for k, v in o["gauntlet"].items() if not v]
+        if missing:
+            print(f"    INCOMPLETE  {o['name']} - missing {', '.join(missing)}")
     return OUT
 
 
@@ -218,17 +207,23 @@ const D = __DATA__;
 const main = document.getElementById('main'), extra = document.getElementById('extra');
 let tab = 'current', flip = false, who = D.outfits.length ? D.outfits[0].name : null;
 
+const OFFICIAL = D.outfits.filter(o=>o.official);
+const PENDING  = D.outfits.filter(o=>!o.official);
+
 document.getElementById('sub').textContent =
-  D.outfits.length + ' outfits · ' +
-  D.outfits.reduce((n,o)=>n+Object.keys(o.anims).length,0) + ' animations';
+  OFFICIAL.length + ' official · ' + PENDING.length + ' pending · ' +
+  D.anims.length + ' animations declared in official.py';
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const img = (src, cap) => `<img loading="lazy" src="${src}" alt="${esc(cap)}" data-cap="${esc(cap)}">`;
 
+// Only OFFICIAL outfits appear in the grid. A pending outfit renders nothing at all — it is never
+// shown wearing somebody else's parts, which is what the old directory-scanning page did.
 function current() {
-  const rows = flip ? D.anims : D.outfits.map(o=>o.name);
-  const cols = flip ? D.outfits.map(o=>o.name) : D.anims;
-  const by = Object.fromEntries(D.outfits.map(o=>[o.name,o]));
+  if (!OFFICIAL.length) return '<p class="note">Nothing is official yet.</p>';
+  const rows = flip ? D.anims : OFFICIAL.map(o=>o.name);
+  const cols = flip ? OFFICIAL.map(o=>o.name) : D.anims;
+  const by = Object.fromEntries(OFFICIAL.map(o=>[o.name,o]));
   let h = '<div class="grid"><table><tr><th class="rowhead"></th>' +
           cols.map(c=>`<th>${esc(c)}</th>`).join('') + '</tr>';
   for (const r of rows) {
@@ -245,21 +240,27 @@ function current() {
 }
 
 function progress() {
-  let h = '<p class="note">Where each outfit actually is. Counts are files found on disk, not a checklist.</p>' +
-          '<div class="grid"><table class="board"><tr><th class="rowhead">outfit</th>' +
-          D.stages.map(s=>`<th>${esc(s)}</th>`).join('') +
-          '<th>animations</th><th>gauntlet source</th></tr>';
+  let h = '<p class="note">Straight from official.py. An outfit is OFFICIAL and complete, or PENDING and ' +
+          'not rendered — there is no third state where it borrows another outfit’s parts.</p>' +
+          '<div class="grid"><table class="board"><tr><th class="rowhead">outfit</th><th>status</th>' +
+          '<th>hands</th><th>animations</th><th>agreed</th><th>notes</th></tr>';
   for (const o of D.outfits) {
+    const nh = Object.values(o.gauntlet).filter(Boolean).length;
+    const na = Object.values(o.anims).filter(Boolean).length;
     h += `<tr><td class="rowhead">${esc(o.name)}</td>`;
-    for (const s of D.stages) {
-      const n = o.stages[s];
-      h += n ? `<td class="yes">${s==='official'?'yes':n}</td>` : `<td class="none">—</td>`;
-    }
-    const na = Object.keys(o.anims).length;
-    h += `<td class="${na?'yes':'none'}">${na||'—'}</td>`;
-    h += `<td class="note">${esc(o.gauntlet_source)}</td></tr>`;
+    h += o.official ? `<td class="yes">official</td>` : `<td class="none">pending</td>`;
+    h += `<td class="${nh===D.roles.length?'yes':'none'}">${nh}/${D.roles.length}</td>`;
+    h += `<td class="${na===D.anims.length?'yes':'none'}">${na}/${D.anims.length}</td>`;
+    h += `<td class="note">${esc(o.approved||'—')}</td>`;
+    h += `<td class="note">${esc(o.needs || o.words || '')}</td></tr>`;
   }
-  return h + '</table></div>';
+  h += '</table></div>';
+  if (D.not_agreed && Object.keys(D.not_agreed).length) {
+    h += '<div class="card"><h2>Not agreed — deliberately absent so it cannot render by accident</h2>' +
+         Object.entries(D.not_agreed).map(([k,v])=>`<p class="note"><b>${esc(k)}</b> — ${esc(v)}</p>`).join('') +
+         '</div>';
+  }
+  return h;
 }
 
 function detail() {
@@ -270,25 +271,35 @@ function detail() {
     ? `<div class="card"><h2>${esc(title)}</h2>${note?`<p class="note">${esc(note)}</p>`:''}<div class="row">${body}</div></div>`
     : `<div class="card"><h2>${esc(title)}</h2><p class="note">none yet</p></div>`;
 
-  h += sec('Current — animations',
-    Object.entries(o.anims).map(([k,v])=>`<figure>${img(v,o.name+' · '+k)}<figcaption>${esc(k)}</figcaption></figure>`).join(''));
+  if (!o.official)
+    h += `<div class="card"><h2>NOT OFFICIAL</h2><p class="note">Nothing below is built. Needs: ${esc(o.needs)}</p></div>`;
+  else if (o.words)
+    h += `<div class="card"><h2>Approved ${esc(o.approved)}</h2><p class="note">“${esc(o.words)}”</p></div>`;
 
-  h += sec('Current — frames',
+  // A declared animation with no file shows as a MISSING tile rather than being quietly left out.
+  h += sec('Animations',
+    D.anims.map(k=>{
+      const v = o.anims[k];
+      return `<figure>${v?img(v,o.name+' · '+k):'<div class="gap" style="padding:28px">missing</div>'}` +
+             `<figcaption>${esc(k)}</figcaption></figure>`;
+    }).join(''));
+
+  h += sec('Frames',
     Object.entries(o.frames).map(([k,v])=>
       v.map((s,i)=>`<figure>${img(s,k+'_'+(i+1))}<figcaption>${esc(k)}_${i+1}</figcaption></figure>`).join('')).join(''));
 
-  h += `<div class="card"><h2>Gauntlet</h2><p class="note">source: ${esc(o.gauntlet_source)}</p>
+  h += `<div class="card"><h2>Hands</h2><p class="note">One per official.HAND_ROLES. Every outfit has its own version of all ${D.roles.length}.</p>
         <div class="row zoom">` +
-    Object.entries(o.gauntlet).map(([k,v])=>`<figure>${img(v,'gauntlet '+k)}<figcaption>${esc(k)}</figcaption></figure>`).join('')
-    + '</div></div>';
+    D.roles.map(k=>{
+      const v = o.gauntlet[k];
+      return `<figure>${v?img(v,'hand '+k):'<div class="gap" style="padding:28px">missing</div>'}` +
+             `<figcaption>${esc(k)}<br><span class="note">${esc(D.role_meaning[k]||'')}</span></figcaption></figure>`;
+    }).join('') + '</div></div>';
 
-  h += sec('Candidates (scratchpad)',
-    o.candidates.map(c=>`<figure>${img(c.src, o.name+' candidate')}<figcaption><b>${esc(c.batch)}</b>${
+  h += sec('Tries — every attempt, kept',
+    o.tries.map(c=>`<figure>${img(c.src, o.name+' try')}<figcaption><b>${esc(c.batch)}</b>${
       c.when?'<br>'+esc(c.when):''}${c.prompt?'<br>'+esc(c.prompt.slice(0,150))+'…':''}</figcaption></figure>`).join(''),
-    'Every candidate on disk is still named result.png — the batch folder is what tells them apart.');
-
-  if (o.ledger) h += `<div class="card"><h2>CURRENT.md</h2><pre class="note" style="white-space:pre-wrap">${esc(o.ledger)}</pre></div>`;
-  else h += `<div class="card"><h2>CURRENT.md</h2><p class="note">Not promoted yet — no ledger. Run promote.py.</p></div>`;
+    'Nothing is loaded from here. Choosing copies one into place; the rest stay for comparison.');
   return h;
 }
 

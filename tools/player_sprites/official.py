@@ -92,8 +92,15 @@ PENDING = {
 
 
 def path(outfit, kind):
-    """The one place `kind` ('frames' | 'gauntlet' | 'anim' | 'tries') lives for this outfit."""
-    return f"{OUTFITS[outfit]['dir']}/{kind}"
+    """The one place `kind` ('frames' | 'gauntlet' | 'anim' | 'tries') lives for this outfit.
+
+    Resolves against PENDING too, so tooling can SHOW an unfinished outfit's folders. Only `OUTFITS`
+    is ever BUILT — being resolvable is not the same as being official.
+    """
+    entry = OUTFITS.get(outfit) or PENDING.get(outfit)
+    if entry is None:
+        raise KeyError(f"{outfit!r} is in neither OUTFITS nor PENDING in official.py")
+    return f"{entry['dir']}/{kind}"
 
 
 # ── MOTIONS ──────────────────────────────────────────────────────────────────────────────────────────

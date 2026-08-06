@@ -361,8 +361,16 @@ gallery for weeks after the code that produced it stopped existing.
 through the new path. The render is deterministic (same md5 across runs), so that is a real check rather
 than a promise — and it is what proves the port faithful before anything old is deleted.
 
-⚠ **Still on the old path:** `gallery.py` continues to infer state by scanning directories, so it inherits
-the fallbacks. Until it reads `official.py`, the gallery can still show something that was never chosen.
+**`gallery.py` reads `official.py` too** (2026-08-06). It used to scan directories, so it inherited the
+renderer's fallbacks and displayed whatever was lying around — which is why *"I ask for a gallery showing
+all the official whatevers and it will just be random crap"*. Concretely: it showed
+`thrust_spear_two_handed.gif` for 22 outfits long after the code that made it was deleted, and showed 21
+outfits wearing hands loaded from a gitignored archive. Both were on disk, so both were displayed.
+
+Now every name, path and animation comes from `official.py`. A **pending** outfit renders nothing rather
+than borrowing another outfit's parts, and a declared animation with no file shows as a **missing** tile
+instead of being quietly omitted. The one place it still reads the disk is `tries/`, deliberately —
+that folder is exploration, its contents are declared nowhere, and nothing is ever loaded from it.
 
 One file per animation, always the current one, named for what it is — `walk_side.gif`, `swing_axe.gif`.
 No iteration codes in filenames; history lives in git. Naming variants for how they were made (`set_a`,

@@ -26,7 +26,8 @@ props/<name>/     non-character props (practice dummy, …)
 APPROVED/         the owner's approved animations + DECISIONS.md, the record of what was agreed
 explore/          early look-exploration sheets
 reviews/<date>-<what>/   cross-outfit comparison sheets a decision was made from
-archive/          superseded work. Nothing is deleted, ever.
+archive/          superseded work from before 2026-08-06. Per-outfit archives are gone: tries/ + git
+                  already keep every version, and a third system was one place too many.
 gallery.html      generated. The thing to open.
 ```
 
@@ -37,45 +38,51 @@ gallery.html      generated. The thing to open.
 
 ### Inside an outfit
 
-Every outfit has the same three folders, whatever stage it is at:
+**`tools/player_sprites/official.py` is the answer to "what are we using".** The build reads it and nothing
+else — no directory scanning, no fallbacks, and a missing file stops the build naming it. Folders hold the
+art; `official.py` says which art counts.
+
+Every outfit has the same four folders. The names are fixed by the system, not chosen per outfit, so
+"where are this outfit's hands?" has one answer for all thirty:
 
 ```
 outfits/bronze/
-  scratchpad/          IN PROGRESS. One folder per batch, dated and named for the idea.
-    1-candidates/        whole 12-frame sheets — pick one            (paid: ASK FIRST)
-    2-frames/            the picked sheet cut into front/side/back   (free)
-    3-gauntlets/         that outfit's hands                         (paid: ASK FIRST)
-  current/             WHAT WE AGREED ON. The answer to "what are we using".
-    CURRENT.md           what it is, when agreed, the owner's words, which batch it came from
-    front_*.png side_*.png back_*.png
-    gauntlet/
-    anim/                the rendered animations — DERIVED, regenerated on every promotion
-  archive/             superseded currents
+  tries/<YYYY-MM-DD>-<what>/   every attempt, kept forever. THE BUILD NEVER READS THIS.
+  frames/                      the chosen body frames
+  gauntlet/                    the chosen hands — one per official.HAND_ROLES (there are FIVE)
+  anim/                        rendered animations. build.py OWNS this folder and removes
+                               anything official.py does not name.
 ```
 
-To see what an outfit looks like right now, open its `current/`. That is the whole rule.
+**Choosing = COPY from `tries/` into place. Never a move.** The attempt stays where it was, so nothing is
+consumed and nothing can be overwritten; git holds every prior state. This is why there is no `archive/`
+per outfit any more — it was a third version system sitting next to `tries/` and git.
 
 ## How to work
 
-1. **Generate candidates** — several whole sheets for one outfit. Paid; ask first.
+1. **Generate candidates** into `tries/<date>-<what>/`. Paid; **ask first**.
 2. **The owner picks one.**
-3. **Cut it** into front/side/back frames. Free.
-4. **Generate the gauntlets** for that outfit. Paid; ask first.
-5. **Promote** — and promoting *is* recording:
+3. **Copy it into place** — `frames/` or `gauntlet/` — and add or update the outfit's row in `official.py`
+   with the date and his words verbatim.
+4. **Build:**
 
    ```bash
-   python3 tools/player_sprites/promote.py bronze scratchpad/2-frames/2026-08-02-1344-first-cut \
-       "ok lets use this one moving forward"
+   python3 tools/player_sprites/build.py --status   # what is official, what is pending
+   python3 tools/player_sprites/build.py bronze     # frames -> animations
+   python3 tools/player_sprites/gallery.py          # the page to open
    ```
 
-   That copies into `current/`, moves what it replaced into `archive/`, writes the `CURRENT.md` row with the
-   owner's words verbatim, re-renders the animations and refreshes the gallery. There is no way to promote
-   without recording, because recording as a separate step is what kept getting skipped.
+An outfit is either complete and in `OUTFITS`, or listed in `PENDING` and **not built at all**. There is no
+third state where it renders using another outfit's parts — which is exactly what the old fallback chain
+did to 21 of 24 outfits.
 
-6. **Deploying into the game** is separate and later — `deploy.py`, which stamps the date in `CURRENT.md` so
-   "agreed" and "in the game" stay distinct.
+`.claude/hooks/check_official_build.py` runs on pre-commit: it re-renders from `official.py` and compares
+the actual GIF bytes, so committed art cannot drift from what is declared. (It replaced
+`check_sprite_ledger.py`, which compared *filenames* against a hand-written `CURRENT.md` and never opened
+an image — every animation could have been wrong and it would still have passed.)
 
-`check_sprite_ledger.py` runs on pre-commit and fails the commit if `CURRENT.md` and `current/` disagree.
+**Deploying into the game** is separate and later; nothing under `_generated/player/` ships today. The game
+loads `Resources/Player/layers/` via `CharacterComposer.cs`.
 
 ## The side row must face RIGHT
 
