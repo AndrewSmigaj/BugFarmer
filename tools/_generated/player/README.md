@@ -101,16 +101,26 @@ mirror sprites the wrong way, silently, across the whole set.
 
 ## Which hand each animation uses — THIS IS SETTLED, DO NOT SUBSTITUTE
 
-| sprite | used by |
+Every outfit has **its own version of all five**, in `<outfit>/gauntlet/`, under the same five names —
+`official.HAND_ROLES`. There is no per-outfit variation in the count or the naming.
+
+| `<outfit>/gauntlet/…` | used by |
 |---|---|
-| `APPROVED/hands/h1.png` | knuckles / back of hand — walk + run, the **near** hand |
-| `APPROVED/hands/h2.png` | palm — walk + run, the **far** hand (dimmed, drawn behind the body) |
-| `APPROVED/hands/h3.png` | profile — walking **toward or away** from the camera |
-| `<outfit>/hands/grip_back_of_hand.png` | **SWINGS ONLY** — the arm you see the back of |
-| `<outfit>/hands/grip_palm.png` | **SWINGS ONLY** — *"the other arm so you would see the palm"* |
+| `front.png` | knuckles / back of hand — walk + run, the **near** hand |
+| `back.png` | palm — walk + run, the **far** hand (dimmed, drawn behind the body) |
+| `side.png` | profile — walking **toward or away** from the camera |
+| `grip_back.png` | **SWINGS ONLY** — the arm you see the back of |
+| `grip_palm.png` | **SWINGS ONLY** — *"the other arm so you would see the palm"* |
 
 The two grips are a **pair, one per arm**, approved together. A two-handed swing uses **both**. Never
 mirror one to make the other — mirroring the back of a hand gives a mirrored back of a hand, never a palm.
+
+> ⚠ **This is why nothing could copy bronze.** The gauntlet sheet only ever asked for FOUR hands, so no
+> other outfit had a fifth, and `grip_palm` silently fell back to `grip_back`. Verified by comparing the
+> arrays: **23 of 24 outfits held a two-handed tool with the same hand twice.** Bronze was the only one
+> with a real pair — and its five lived in two other folders under different names (`APPROVED/hands/h1–h3`
+> plus `hands/grip_*`), reached by a hardcoded exception in the loader. Bronze's are now copied into
+> `outfits/bronze/gauntlet/` under the standard names; `APPROVED/hands/` stays as the approval record.
 
 ### The sword swing (settled 2026-08-04)
 
