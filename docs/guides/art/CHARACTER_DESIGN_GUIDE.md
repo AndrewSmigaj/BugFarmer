@@ -46,6 +46,12 @@ measured on ranger, **zero** art pixels test as magenta, against 8.9% of that sa
 indistinguishable from a black background. Key by flooding in **from the border**, never per-pixel — a dark
 pixel reachable from outside is background, one enclosed by the figure is its own shading.
 
+**FRONT WALK: the RIGHT hand is the mirrored one.** That turns both openings **inward** toward the body.
+Mirroring the left instead faces both palms outward, which is what shipped until 2026-08-05 — on every
+outfit, bronze included. It stayed invisible while gauntlets were featureless slabs, and only showed once
+they had knuckles and a thumb. Owner: *"the palms are facing out"*, and originally *"walk front needs to
+actually have it's hands sideways (turned inward)"*.
+
 **EVERY OUTFIT'S GAUNTLET IS A RE-SKIN OF BRONZE'S APPROVED HANDS — use `official` mode, never `gauntlet`.**
 
 ```bash

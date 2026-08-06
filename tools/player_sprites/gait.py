@@ -155,9 +155,14 @@ def walk_front_into(scene, bx, by, body, neutral, hand_d3, beat):
     s = FRONT_PHASE[beat % len(FRONT_PHASE)]
     gap = max(2, int(span * p["gap"]))
 
+    # WHICH HAND IS MIRRORED. The RIGHT one is, not the left — that turns both openings INWARD toward
+    # the body. Mirroring the left instead faces both palms OUT, away from him, which is what shipped
+    # until 2026-08-05: "the gauntlets for red and black ants for walk front need to be flipped
+    # horizontally, the palms are facing out". It was never ant-specific; every outfit had it, bronze
+    # included, and it was invisible while the gauntlets were featureless slabs with no readable palm.
     _paste(scene, body, bx, by)
-    _paste(scene, hand[:, ::-1], ox + lx - gap - s * span * p["dx"], oy + r - s * span * p["dy"])
-    _paste(scene, hand,          ox + rx + gap + s * span * p["dx"], oy + r + s * span * p["dy"])
+    _paste(scene, hand,          ox + lx - gap - s * span * p["dx"], oy + r - s * span * p["dy"])
+    _paste(scene, hand[:, ::-1], ox + rx + gap + s * span * p["dx"], oy + r + s * span * p["dy"])
 
 
 def run_into(scene, bx, by, body, neutral, back_hand, palm_hand, beat):

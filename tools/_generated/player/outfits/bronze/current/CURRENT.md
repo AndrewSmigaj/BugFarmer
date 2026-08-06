@@ -32,6 +32,11 @@ constants that produce it are named in the table so it can be rebuilt from code 
 
 ## Not here yet
 
+⚠ **`render_animations.build()` writes EVERY animation into `current/anim/`, including unsettled ones.**
+So re-rendering bronze puts the spear back and the pre-commit ledger check fails until it is moved out
+again. That is the check working — it is the only thing stopping an unsettled animation from quietly
+sitting in `current/` looking agreed — but it is friction worth removing when the tools are settled.
+
 **The SPEAR side motion** is not settled. Its length is (1.9 cells, `motions.SPEAR_SCALE`); the motion is
 not. It sits in `archive/2026-08-04-unsettled-tools/`.
 
