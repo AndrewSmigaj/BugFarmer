@@ -32,12 +32,18 @@ from PIL import Image
 from scipy.ndimage import label, binary_dilation, binary_propagation
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from aipipe import pixelsnap
+import official                                            # noqa: E402  HAND_ROLES — how many hands
+from aipipe import pixelsnap                               # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PLAYER = os.path.join(REPO, "tools", "_generated", "player")
 
-GAUNTLET_VIEWS = ["front", "back", "side", "grip"]
+# The hands a gauntlet sheet contains, IN SHEET ORDER — read from official.py, never hardcoded here.
+# It used to be a literal ["front","back","side","grip"] alongside a literal `cols=4` below, while the
+# prompt asked for four poses and the renderer looked for five keys. Three places, three answers: the
+# fifth hand (grip_palm) never existed, so every two-handed tool was held with the same hand twice on
+# 23 of 24 outfits. One list now drives the prompt, the cut and the render.
+GAUNTLET_VIEWS = official.HAND_ROLES
 ROWS = ["front", "back", "side"]
 TARGET_HAND_H = 20            # bronze's hands are ~20px; the whole set must match or they'd differ in-game
 
@@ -233,10 +239,12 @@ def cut_gauntlet(folder):
     The median across the four is the sheet's pitch. Most outfits already agree to within 0.3, so this
     changes nothing for them and rescues the one or two blobs that misdetect.
     """
+    n = len(GAUNTLET_VIEWS)
     sheet = np.asarray(Image.open(os.path.join(folder, "result.png")).convert("RGBA"), np.uint8)
-    grid = cells(sheet, rows=1, cols=4)
-    if len(grid) != 1 or len(grid[0]) != 4:
-        raise SystemExit(f"  expected 4 hands in 1 row, got {[len(r) for r in grid]} — look at result.png")
+    grid = cells(sheet, rows=1, cols=n)
+    if len(grid) != 1 or len(grid[0]) != n:
+        raise SystemExit(f"  expected {n} hands in 1 row ({', '.join(GAUNTLET_VIEWS)}), "
+                         f"got {[len(r) for r in grid]} — look at result.png")
     pitch = statistics.median([measure_pitch(sheet, b) for b in grid[0]])
     for view, b in zip(GAUNTLET_VIEWS, grid[0]):
         img = add_rim(defringe(snap(sheet, b, TARGET_HAND_H, pitch=pitch)))

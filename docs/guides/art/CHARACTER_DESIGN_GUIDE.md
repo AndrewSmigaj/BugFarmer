@@ -401,6 +401,22 @@ so `grip_palm` silently fell back to `grip_back`. Result: **23 of 24 outfits hel
 the same hand twice** (verified by array comparison). Only bronze had a real back-and-palm pair, which is
 why nothing could copy it: no other outfit had the parts.
 
+**One list now drives all three.** `official.HAND_ROLES` decides how many poses the prompt asks for, how
+many cells `cut_gauntlet` bands the sheet into, and how many hands the renderer requires. Add a role and
+everything follows; there is no second place to remember.
+
+**The reference image is generated, not stored** (`outfits.reference_strip()`). It composites bronze's
+actual `gauntlet/` into a strip at call time, so the reference *is* the official set and cannot drift from
+`HAND_ROLES` — which is exactly how the old committed 4-hand `SOURCE_SHEET` came to disagree with a
+5-role renderer. Two things it fixes on the way through:
+
+* **Normalises height.** Bronze's five are not stored at one scale — the walk trio are cut sprites
+  (16×20, 18×22, 12×21) while the two grips are full-resolution art (213×237, 176×240), an ~11× gap.
+  Pasted raw, the reference shows three tiny hands beside two huge ones and the model copies that.
+* **Defringes.** The grips still carry magenta key-bleed at the silhouette edge (cut before `defringe`
+  existed). A few bright pink pixels in a reference become a few bright pink pixels in all thirty
+  outfits. The approved source files are untouched; only the derived strip is cleaned.
+
 **Every outfit renders at ONE body height** (`TARGET_BODY_H`, currently 320, NEAREST only). The 22 outfits
 on disk are cut at two scales — 7 at 267-292px, 15 at 395-435px, a **1.63×** split — which side by side
 reads as "these outfits are different sizes" when it is purely a cutting artifact. This is fixed at

@@ -10,10 +10,14 @@ Every set gets headgear. A set without one doesn't match the rest and has to be 
   python3 tools/player_sprites/outfits.py sheet   platinum swamp-gear      # one API call each
   python3 tools/player_sprites/outfits.py gauntlet platinum swamp-gear     # one API call each
 """
+import datetime
 import glob
 import os
 import subprocess
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import official as O                       # noqa: E402  HAND_ROLES — how many hands, and what each is
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
@@ -384,13 +388,66 @@ Big simple shapes, chunky pixels. This is a small pixel art sprite - each hand i
 # hands it produced.
 OFFICIAL_HAND = os.path.join(PLAYER, "APPROVED", "hands", "SOURCE_SHEET_hand-D-pixel.png")
 
-OFFICIAL_GAUNTLET = """The FIRST attached image is the reference: four small pixel-art gauntlet hands in a row on a black background. The SECOND attached image is a sprite sheet of a character wearing {what}.
+OFFICIAL_GAUNTLET = """The FIRST attached image is the reference: {n} small pixel-art gauntlet hands in a row on a black background. The SECOND attached image is a sprite sheet of a character wearing {what}.
 
-Redraw those SAME FOUR HANDS in the SAME four poses, in the SAME row, at the SAME size and spacing, on a black background - but made of {glove} instead, matching the material, colours, shadows and highlights of the armour in the second image.
+Redraw those SAME {n} HANDS in the SAME {n} poses, in the SAME row, at the SAME size and spacing, on a black background - but made of {glove} instead, matching the material, colours, shadows and highlights of the armour in the second image.
 
-Copy the reference EXACTLY in shape. Same silhouette, same outline, same proportions, same wrist cuff at the bottom of each hand, same angle for each of the four. Left to right they are: (1) the back of a closed fist, (2) the palm side, (3) the fist in profile, (4) the fist closed around a pole with a small round hole through the grip. Do not redesign them, do not restyle them, do not change how any hand is posed or turned - the ONLY thing that changes is the material they are made of.
+Copy the reference EXACTLY in shape. Same silhouette, same outline, same proportions, same wrist cuff at the bottom of each hand, same angle for each of the {n}. Left to right they are: {roles}. Do not redesign them, do not restyle them, do not change how any hand is posed or turned - the ONLY thing that changes is the material they are made of.
 
-Big simple shapes, chunky pixels, a dark outline, no fine detail. Nothing else in the image - no character, no body, no arms, just the four hands."""
+Big simple shapes, chunky pixels, a dark outline, no fine detail. Nothing else in the image - no character, no body, no arms, just the {n} hands."""
+
+
+def reference_strip():
+    """Build the reference image FROM bronze's official gauntlet, at call time.
+
+    The reference used to be a committed 4-hand sheet (`SOURCE_SHEET_hand-D-pixel.png`). That is one more
+    thing that can silently disagree with HAND_ROLES — and it did: the sheet had four hands while the
+    renderer wanted five, so `grip_palm` never existed for any outfit but bronze. Compositing it from
+    `outfits/bronze/gauntlet/` means the reference IS the official set, always, and a new role appears in
+    the prompt the moment it appears in official.py.
+    """
+    from PIL import Image
+    g = os.path.join(PLAYER, O.path(O.REFERENCE_OUTFIT, O.HANDS_DIR))
+    imgs = []
+    for role in O.HAND_ROLES:
+        p = os.path.join(g, f"{role}.png")
+        if not os.path.exists(p):
+            raise SystemExit(f"reference outfit '{O.REFERENCE_OUTFIT}' has no '{role}.png'\n"
+                             f"  expected: {p}\n"
+                             f"  Every hand in official.HAND_ROLES must exist on the reference outfit.")
+        imgs.append(Image.open(p).convert("RGBA"))
+
+    # NORMALISE HEIGHT FIRST. Bronze's five hands are not stored at one scale — the walk trio are cut
+    # sprites (16x20, 18x22, 12x21) while the two grips are full-resolution art (213x237, 176x240), a
+    # ~11x difference. Pasting them as-is gives a reference showing three tiny hands beside two huge
+    # ones, and the model would faithfully copy that. Everything goes to TARGET_HAND_H first, which is
+    # the height cut_gauntlet gives every hand anyway.
+    # …and DEFRINGE. The two grip hands still carry magenta key-bleed at the silhouette edge (they were
+    # cut before defringe existed). A handful of bright pink pixels in a reference is a handful of bright
+    # pink pixels the model copies into all 30 outfits. The approved source files are left untouched;
+    # this cleans the derived strip only.
+    import numpy as np
+    from cut_outfit import TARGET_HAND_H, defringe
+    norm = []
+    for i in imgs:
+        a = defringe(np.asarray(i, np.uint8))
+        i = Image.fromarray(a, "RGBA")
+        s = TARGET_HAND_H / i.height
+        norm.append(i.resize((max(1, round(i.width * s)), TARGET_HAND_H), Image.NEAREST))
+
+    SCALE, GAP, PAD = 8, 24, 24            # big enough that the model reads the shapes, not the pixels
+    h = max(i.height for i in norm) * SCALE
+    w = sum(i.width for i in norm) * SCALE + GAP * (len(norm) - 1)
+    strip = Image.new("RGBA", (w + PAD * 2, h + PAD * 2), (0, 0, 0, 255))
+    x = PAD
+    for i in norm:
+        big = i.resize((i.width * SCALE, i.height * SCALE), Image.NEAREST)
+        strip.alpha_composite(big, (x, PAD + h - big.height))
+        x += big.width + GAP
+    out = os.path.join(PLAYER, "APPROVED", "hands", "REFERENCE_STRIP_generated.png")
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    strip.convert("RGB").save(out)
+    return out
 
 
 def gen(dest, prompt, refs, size=None):
@@ -416,13 +473,19 @@ def main():
             print(f"  {k:16s} {v[0]}")
         return
     if mode == "official":
-        # Writes to gauntlet2/ — NEVER over the existing gauntlet/. Bulk overwriting generated art
-        # destroyed a day's work on 2026-08-01; new output goes to a new folder, always.
+        # Writes into tries/<date>-official-gauntlet/, NEVER over an existing gauntlet/. Bulk overwriting
+        # generated art destroyed a day's work on 2026-08-01, so new output always lands somewhere new.
+        # (It used to go to `gauntlet2/` for the same good reason — but nothing ever read that name, so
+        # every official-mode result was invisible to the renderer. tries/ is the place that already
+        # exists for this, and choosing = copying one out of it into gauntlet/.)
+        ref = reference_strip()
+        stamp = datetime.date.today().isoformat()
+        roles = ", ".join(f"({i + 1}) {O.HAND_ROLE_MEANING[r]}" for i, r in enumerate(O.HAND_ROLES))
         for n in names:
             what, _, _, glove = OUTFITS[n]
-            gen(f"outfits/{n}/gauntlet2",
-                OFFICIAL_GAUNTLET.format(what=what, glove=glove),
-                [OFFICIAL_HAND, os.path.join(PLAYER, "outfits", n, "result.png")])
+            gen(f"outfits/{n}/tries/{stamp}-official-gauntlet",
+                OFFICIAL_GAUNTLET.format(what=what, glove=glove, n=len(O.HAND_ROLES), roles=roles),
+                [ref, os.path.join(PLAYER, "outfits", n, "result.png")])
         return
     if mode == "explore":
         for n in names or EXPLORATIONS:
