@@ -1,0 +1,18 @@
+{
+  "down": {
+    "shoulder": [
+      26,
+      34
+    ],
+    "source": "base.png",
+    "how": "gap"
+  },
+  "side": {
+    "shoulder": [
+      6,
+      19
+    ],
+    "source": "base_side.png",
+    "how": "colour"
+  }
+}

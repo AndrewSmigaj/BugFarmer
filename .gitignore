@@ -130,44 +130,21 @@ tools/_generated/
 # its other contents, then re-include the wanted leaves.
 !tools/_generated/
 tools/_generated/*
-# EXCEPT the committed player-art docs: the _generated MAP + the player/ structure docs + the current-look
-# preview. The STRUCTURE is tracked (visible in the repo); the WIP images stay ignored (local-only). Nested idiom.
 !tools/_generated/README.md
+# ── PLAYER ART IS TRACKED BY DEFAULT ────────────────────────────────────────────────────────────────
+# This was an ALLOWLIST until 2026-08-06: `player/*` followed by ~10 `!` re-includes. Anything not named
+# on the list fell out of git silently. That is how `archive/` — which holds 156 paid gauntlet files, the
+# hands that 21 of 24 outfits were ACTUALLY rendering from — and `hands/` ended up untracked and one
+# `git clean -fdx` from gone. The comment that used to sit here asserted "nothing unrecoverable lives in
+# there"; measured on 2026-08-06, that was false.
+#
+# The polarity is now INVERTED. Art is tracked unless a rule below names it, so a new folder can never
+# again vanish from git by omission — the failure mode becomes "we committed something regenerable"
+# (harmless) instead of "we lost paid art" (not). Only NAMED, REGENERABLE previews are excluded, and each
+# one must rebuild from the tracked sprites in a single command.
 !tools/_generated/player/
-tools/_generated/player/*
-# The APPROVED animations and the decisions behind them are PRODUCT, not scratch. They are tracked.
-# Excluding the art from git, then overwriting it, is what lost a day of approved work on 2026-08-01.
-!tools/_generated/player/APPROVED/
-!tools/_generated/player/APPROVED/**
-!tools/_generated/player/README.md
-!tools/_generated/player/HOW_TO_ASEPRITE.md
-# bases/ is an INPUT, not output: the two official sprites (armless front + armless side) every outfit is
-# generated onto. They can't be re-derived — the side is one specific API roll chosen out of many — so losing
-# them costs real work and would silently put every outfit off-register. Exactly two files live here.
-!tools/_generated/player/bases/
-!tools/_generated/player/bases/**
-# THE OUTFIT ART IS THE PRODUCT AND IS TRACKED. Every sprite sheet, every cut frame, every hand, every
-# finished animation. This was ignored until 2026-08-01, which is exactly how a day of approved work was
-# lost: nothing here was recoverable, so when I overwrote it with a bulk re-cut there was no undo.
-# Art is not scratch. The only things that belong in .gitignore are secrets and genuinely regenerable
-# temporaries.
-!tools/_generated/player/outfits/
-!tools/_generated/player/outfits/**
-!tools/_generated/player/props/
-!tools/_generated/player/props/**
-# The design-exploration sheets: the evidence behind which look was chosen.
-!tools/_generated/player/explore/
-!tools/_generated/player/explore/**
-# Cross-outfit review sheets — the comparisons a decision was made from. These MUST be in the repo:
-# putting them in a VM temp dir is showing the owner something he cannot open, which has happened
-# repeatedly and is worse than not making them at all.
-!tools/_generated/player/reviews/
-!tools/_generated/player/reviews/**
-# The generated gallery — the one page that shows every outfit as it stands.
-!tools/_generated/player/gallery.html
-# archive/ stays OUT: ~1.1 GB, and almost all of it is DEMO.gif preview renders at 27 MB each that
-# regenerate from the sprites in one command. The sprites themselves are tracked above, so nothing
-# unrecoverable lives in there. Say the word and it goes in too.
+tools/_generated/player/**/DEMO*.gif
+tools/_generated/player/SHOWCASE.gif
 # Tile R&D: keep the findings + the two comparison sheets (the evidence) in git; raws/candidates stay local.
 !tools/_generated/tiles/
 tools/_generated/tiles/*

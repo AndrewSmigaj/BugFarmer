@@ -1,0 +1,34 @@
+when      : 2026-07-28 15:21:56
+model     : gpt-image-2
+size      : 1024x1024
+quality   : high
+mask      : NONE
+title     : bronze-12frame-sheet
+references (in the order sent):
+  1. tools/_generated/player/bases/armless_front.png  (sent upscaled x14)
+  2. tools/_generated/player/bases/armless_side.png  (sent upscaled x14)
+
+PROMPT:
+Draw a single sprite sheet showing the SAME character in bronze armor as a 12-frame walk-cycle sheet. Use the same character design, proportions, face, hair, and no-arm anatomy consistently across the whole sheet.
+
+Layout: 3 rows by 4 columns, evenly spaced, all sprites at the same scale and aligned to the same baseline within each row.
+
+Row 1: FRONT walk cycle, 4 distinct frames.
+Row 2: BACK walk cycle, 4 distinct frames.
+Row 3: RIGHT-FACING SIDE walk cycle, 4 distinct frames.
+
+Very important: the 4 frames in each row must be DIFFERENT phases of a walk cycle, not repeated standing poses.
+
+For each row, the 4 columns must be:
+Column 1: left leg forward, right leg back.
+Column 2: passing pose, legs closer together, transition between steps.
+Column 3: right leg forward, left leg back.
+Column 4: passing pose opposite to column 2, transition back toward column 1.
+
+Because the character has NO ARMS, the walking motion must be shown by leg motion, slight hip shift, and a subtle torso/head bob only. Do not add arms, hands, elbows, forearms, or gauntlets. The rounded shoulder caps must end at the armless shoulder openings.
+
+Armor: warm bronze-brown plate armor with darker shadows and bright highlights. Include a breastplate, rounded shoulder caps, a waist and hip piece covering the crotch, thigh plates on both legs, greaves, and boots. No bare skin between the waist and the boots. No helmet. Keep the head, hair, and face exactly as they are.
+
+Keep the front row front-facing, the back row back-facing, and the bottom row a strict right-facing side profile. Do not drift into a three-quarter view.
+
+Big simple armor shapes, not fine detail. This is a small pixel art sprite sheet. All 12 sprites must clearly be the same character, but each frame in a row must be a distinct walking frame. If two adjacent frames in a row are identical, the sheet is wrong.

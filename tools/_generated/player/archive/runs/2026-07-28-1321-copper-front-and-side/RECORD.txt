@@ -1,0 +1,21 @@
+when      : 2026-07-28 13:21
+model     : gpt-image-2
+size      : 1024x1536
+quality   : high
+mask      : NONE
+area/item : side_view/copper_armor
+title     : copper-front-and-side
+references (in the order sent):
+  1. ref_1_front_armless.png   (armless front base, upscaled 14x nearest)
+  2. ref_2_side_armless.png    (armless side base, background keyed)
+
+PROMPT:
+Draw the SAME character TWICE side by side in one image, both at the same height on the same baseline. On
+the LEFT: the character from the first image, seen from the FRONT. On the RIGHT: the character from the
+second image, seen from the SIDE facing right. Both wear a full suit of BRONZE PLATE ARMOUR in warm
+bronze-brown with darker shadows and bright highlights: a breastplate, a rounded shoulder cap, a waist and
+hip piece covering the crotch, thigh plates on BOTH legs, and boots. No bare skin between the waist and the
+boots. Both have NO ARMS. Keep the head, hair and face exactly as they are, no helmet. Big simple armour
+shapes, not fine detail - this is a small pixel art sprite. Change nothing else.
+
+NOTE: no helmet in this one - the prompt said "no helmet".

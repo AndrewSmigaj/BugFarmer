@@ -1,0 +1,21 @@
+when      : 2026-07-29 08:14:18
+model     : gpt-image-2
+size      : 1024x1536
+quality   : high
+mask      : NONE
+dest      : outfits/ranger/gauntlet
+references (in the order sent):
+  1. tools/_generated/player/outfits/ranger/result.png  (sent upscaled x14)
+
+PROMPT:
+The attached image is a sprite sheet of a character wearing a woodland ranger's outfit.
+
+Draw FOUR small HANDS in a row on a black background, evenly spaced, large and centred. Nothing else in the image - no character, no body, no arms, just the four hands.
+
+Each hand is made of dark green leather, the SAME material as the armour in the attached image, with the same darker shadows and the same bright highlights.
+
+Left to right, the same hand from four angles: (1) back of the hand facing the viewer, (2) palm side, (3) in profile facing right, (4) three-quarter view.
+
+Care about the SILHOUETTE above all. The outline is a soft rounded shape, slightly taller than wide, narrowing a little at the wrist. No separate fingers are drawn - at this size the hand reads entirely by its outline and two or three shading bands inside it.
+
+Big simple shapes, chunky pixels. This is a small pixel art sprite - each hand is about ten pixels across in the game, so use a handful of large blocks, no rivets, no filigree, no fine detail.

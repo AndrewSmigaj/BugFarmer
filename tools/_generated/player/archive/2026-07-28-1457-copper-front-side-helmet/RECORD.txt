@@ -1,0 +1,12 @@
+when      : 2026-07-28 14:57:35
+model     : gpt-image-2
+size      : 1024x1536
+quality   : high
+mask      : NONE
+title     : copper-front-side-helmet
+references (in the order sent):
+  1. tools/_generated/player/bases/armless_front.png  (sent upscaled x14)
+  2. tools/_generated/player/bases/armless_side.png  (sent upscaled x14)
+
+PROMPT:
+Draw the SAME character TWICE side by side in one image, both at the same height on the same baseline. On the LEFT: the character from the first image, seen from the FRONT. On the RIGHT: the character from the second image, seen from the SIDE facing right. Both wear a full suit of COPPER PLATE ARMOUR in warm copper-brown with darker shadows and bright highlights: a COPPER HELMET covering the whole head, a breastplate, a rounded shoulder cap, a waist and hip piece covering the crotch, thigh plates on BOTH legs, and boots. No bare skin between the waist and the boots. Both have NO ARMS. Big simple armour shapes, not fine detail - this is a small pixel art sprite. Black background. Change nothing else.
