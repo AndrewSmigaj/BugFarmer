@@ -322,10 +322,36 @@ approved motion numbers — this only ever GROWS, so "go back to Tuesday's swing
 ### Rendering it — `tools/player_sprites/build.py`
 
 ```bash
+python3 tools/player_sprites/build.py --status   # what is official, what is pending, what is not agreed
 python3 tools/player_sprites/build.py            # every outfit in official.py
 python3 tools/player_sprites/build.py bronze     # one
-python3 tools/player_sprites/build.py --check    # compare only; writes nothing
+python3 tools/player_sprites/build.py --check    # compare only; writes nothing (the pre-commit gate)
 ```
+
+**Every outfit has the same shape** — the subfolder names are fixed by the system, not chosen per outfit,
+so "where are this outfit's hands?" has one answer for all thirty of them:
+
+```
+outfits/<name>/tries/<YYYY-MM-DD>-<what>/   every attempt, kept forever. THE BUILD NEVER READS THIS.
+outfits/<name>/frames/                      the chosen body frames
+outfits/<name>/gauntlet/                    the chosen hands, one per HAND_ROLES
+outfits/<name>/anim/                        rendered animations — build.py OWNS this folder
+```
+
+**Choosing = COPY from `tries/` into place, never a move.** The attempt stays where it was, so nothing is
+consumed and nothing can be overwritten; git holds every prior state. This replaces the
+`scratchpad/current/archive` shape and `promote.py`'s move-to-archive step — the only step that could
+lose something.
+
+**An outfit is either complete and in `OUTFITS`, or it is in `PENDING` and does not render at all.** There
+is no third state where it renders using someone else's parts, which is precisely what the fallback chain
+did to 21 outfits.
+
+⚠ **`CURRENT.md` and `check_sprite_ledger.py` are retired** (2026-08-06). The hook compared *filenames*
+between a hand-written ledger and the folder — it never opened an image, so every animation could be wrong
+and it would still pass; and it only inspected outfits that had a `CURRENT.md`, which was 2 of 24. Its
+replacement, `.claude/hooks/check_official_build.py`, re-renders from `official.py` and compares the GIF
+bytes.
 
 **`build` owns `<outfit>/anim/`** — anything there that `official.py` does not name is removed. Stale files
 are not hypothetical: `thrust_spear_two_handed.gif` sat in 22 outfits, was committed, and showed in the

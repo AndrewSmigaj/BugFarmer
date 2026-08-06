@@ -58,17 +58,42 @@ REFERENCE_OUTFIT = "bronze"
 
 
 # ── OUTFITS ──────────────────────────────────────────────────────────────────────────────────────────
-# `frames` and `hands` are folders, relative to tools/_generated/player/. Both must exist or the build
-# stops. An outfit with no approved hands is simply absent from here — it is never "rendered with
-# something else".
+# EVERY OUTFIT HAS THE SAME SHAPE. The subfolder names are fixed by the system, not chosen per outfit —
+# so there is exactly one place each kind of thing can live, and "where are this outfit's hands?" has one
+# answer for all 30 of them.
+#
+#   <dir>/tries/<YYYY-MM-DD>-<what>/   every attempt, kept forever. THE BUILD NEVER READS THIS.
+#   <dir>/frames/                      the chosen body frames
+#   <dir>/gauntlet/                    the chosen hands, one per HAND_ROLES
+#   <dir>/anim/                        rendered animations. build.py OWNS this folder.
+#
+# Choosing something = COPY it from tries/ into place. Never a move: the attempt stays where it was, so
+# nothing is consumed and nothing can be overwritten. Git holds every prior state.
+TRIES_DIR, FRAMES_DIR, HANDS_DIR, ANIM_DIR = "tries", "frames", "gauntlet", "anim"
+
+# `dir` is relative to tools/_generated/player/. An outfit with no approved hands is simply ABSENT from
+# here — it is never quietly rendered with someone else's.
 OUTFITS = {
-    "bronze":   dict(frames="outfits/bronze",   hands="outfits/bronze/gauntlet",
-                     approved="2026-08-06", words="the reference set - made first, and they work"),
-    "fireant":  dict(frames="outfits/fireant",  hands="outfits/fireant/gauntlet",
-                     approved="2026-08-05", words="fireant faces B the second one"),
-    "blackant": dict(frames="outfits/blackant", hands="outfits/blackant/gauntlet",
-                     approved="2026-08-05", words="black ant faces A the second one"),
+    "bronze": dict(dir="outfits/bronze", approved="2026-08-06",
+                   words="the reference set - made first, and they work"),
 }
+
+# NOT OFFICIAL YET — listed so the gap is visible, but NOT built. An outfit is either complete and in
+# OUTFITS, or it is here and does not render at all. There is no third state where it renders with
+# somebody else's parts, which is exactly what the old fallback chain did to 21 outfits.
+PENDING = {
+    "fireant":  dict(dir="outfits/fireant",  chosen="2026-08-05",
+                     words="fireant faces B the second one",
+                     needs="frames/ layout; a 5-hand gauntlet (has 4: no grip_back/grip_palm split)"),
+    "blackant": dict(dir="outfits/blackant", chosen="2026-08-05",
+                     words="black ant faces A the second one",
+                     needs="frames/ layout; a 5-hand gauntlet (has 4: no grip_back/grip_palm split)"),
+}
+
+
+def path(outfit, kind):
+    """The one place `kind` ('frames' | 'gauntlet' | 'anim' | 'tries') lives for this outfit."""
+    return f"{OUTFITS[outfit]['dir']}/{kind}"
 
 
 # ── MOTIONS ──────────────────────────────────────────────────────────────────────────────────────────
@@ -81,13 +106,22 @@ OUTFITS = {
 GAITS = {
     # amp=hand travel, ay=rise, rot=base rotation, tilt=wrist lean, ratio=fist size vs body height,
     # waist=where the hands hang, ms=frame duration
+    #
+    # 2026-07-29 — "walk b is fine"   (rendered as walk_ref/walk_b)
     "WALK": dict(amp=0.52, ay=0.013, rot=0.0,  tilt=22.0, ratio=0.17, waist=0.60, ms=150),
+    # 2026-07-29 — "RUN_r75.gif is fine, looks the best"
     "RUN":  dict(amp=0.58, ay=0.032, rot=75.0, tilt=14.0, ratio=0.19, waist=0.46, ms=90),
+
     # The camera-facing walk is a SEPARATE motion, not the side one re-aimed: a different fist (profile),
     # hands outside the body edges rather than swinging through the torso, one rising as the other drops.
+    # 2026-07-29 — "first for walking forward gait_front_d3_bigger.gif is great"
     "FRONT":     dict(ratio=0.17, row=0.62, gap=0.03, dx=0.06, dy=0.15, ms=150),
+    # Same motion at run speed. ⚠ NOT designed — see NOT_AGREED. Only the SIDE run has its own pose.
     "FRONT_RUN": dict(ratio=0.17, row=0.62, gap=0.03, dx=0.06, dy=0.15, ms=90),
 }
+# The back-facing walk reuses FRONT deliberately: from behind you also see both hands clear of the
+# silhouette, and at ~10px a hand the near/far distinction the side walk needs does not read.
+# 2026-08-02, delivered against "so we have forward and sideways might as well finish with back".
 
 # SWING motions: (anticipation pose, [4 strike poses], rest pose).
 # A pose is (arm offset from the aim direction, blade angle behind the arm, reach in cells).

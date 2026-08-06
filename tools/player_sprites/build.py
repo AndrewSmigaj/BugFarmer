@@ -60,7 +60,7 @@ def load_frames(outfit, bank):
     rather than a difference in the art — side by side it reads as "these characters are different sizes".
     NEAREST only; never a hand resize.
     """
-    d = os.path.join(PLAYER, O.OUTFITS[outfit]["frames"])
+    d = os.path.join(PLAYER, O.path(outfit, O.FRAMES_DIR))
     imgs = [_rgba(os.path.join(d, f"{bank}_{i}.png"),
                   f"{outfit}: frame {bank}_{i}.png is missing") for i in (1, 2, 3)]
     y0, y1, _, _ = gait.anchor(imgs[NEUTRAL[bank]])
@@ -77,7 +77,7 @@ def load_hands(outfit):
     hand hanging at the waist with its fingers pointing at the sky). The GRIP roles are not flipped —
     they are already posed around a shaft.
     """
-    d = os.path.join(PLAYER, O.OUTFITS[outfit]["hands"])
+    d = os.path.join(PLAYER, O.path(outfit, O.HANDS_DIR))
     out = {}
     for role in O.HAND_ROLES:
         a = _rgba(os.path.join(d, f"{role}.png"),
@@ -171,7 +171,7 @@ def build(outfit, check=False, verbose=True):
     file is how `thrust_spear_two_handed.gif` sat in 22 outfits and showed in the gallery for weeks after
     the code that produced it stopped existing.
     """
-    anim = os.path.join(PLAYER, O.OUTFITS[outfit]["frames"], "anim")
+    anim = os.path.join(PLAYER, O.path(outfit, O.ANIM_DIR))
     written, same, diff = [], [], []
     for name in O.ANIMATIONS:
         data = encode(*render(outfit, name))
@@ -206,12 +206,45 @@ def build(outfit, check=False, verbose=True):
     return written, same, diff
 
 
+def status():
+    """What is official, what is pending, and what each pending outfit still needs."""
+    print(f"\nOFFICIAL — built from official.py ({len(O.OUTFITS)})")
+    for name, o in O.OUTFITS.items():
+        parts = []
+        for kind in (O.FRAMES_DIR, O.HANDS_DIR):
+            d = os.path.join(PLAYER, O.path(name, kind))
+            n = len([f for f in os.listdir(d) if f.endswith(".png")]) if os.path.isdir(d) else 0
+            parts.append(f"{kind} {n}")
+        anim = os.path.join(PLAYER, O.path(name, O.ANIM_DIR))
+        n = len([f for f in os.listdir(anim) if f.endswith(".gif")]) if os.path.isdir(anim) else 0
+        print(f"  {name:<12} {', '.join(parts)}, anim {n}/{len(O.ANIMATIONS)}")
+        print(f"  {'':<12} approved {o['approved']} — \"{o['words']}\"")
+
+    if O.PENDING:
+        print(f"\nNOT OFFICIAL — listed, deliberately NOT built ({len(O.PENDING)})")
+        for name, o in O.PENDING.items():
+            print(f"  {name:<12} needs: {o['needs']}")
+
+    print(f"\n{len(O.ANIMATIONS)} animations declared. Hand roles: {', '.join(O.HAND_ROLES)}")
+    if O.NOT_AGREED:
+        print("\nNOT AGREED — absent from ANIMATIONS so it cannot render by accident")
+        for k, v in O.NOT_AGREED.items():
+            print(f"  {k:<28} {v}")
+    print()
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("outfits", nargs="*", help="default: every outfit in official.py")
     ap.add_argument("--check", action="store_true",
                     help="compare against what is on disk; write nothing")
+    ap.add_argument("--status", action="store_true",
+                    help="what is official, what is pending, what is not agreed")
     args = ap.parse_args()
+
+    if args.status:
+        status()
+        return
 
     targets = args.outfits or list(O.OUTFITS)
     unknown = [o for o in targets if o not in O.OUTFITS]
