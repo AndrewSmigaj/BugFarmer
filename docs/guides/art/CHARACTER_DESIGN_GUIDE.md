@@ -367,6 +367,12 @@ untouched.
 
 The generated art being good is not the point. Whether it is good is his call, not mine.
 
+**And show him the THING, not its inputs.** When he reported the ant gauntlets looked reversed, I built a
+sheet comparing the source PNGs against bronze's — which he could not act on: *"i dont know which one you
+are using in the animation"*. The hands are mirrored at render time, so the files and the frames are not
+the same thing. The sheet that resolved it in one look rendered the walk exactly as `build` does and
+cropped to the hands.
+
 It also carries `PENDING` — outfits that are chosen but **not built**, with what each still needs. An
 outfit is complete and in `OUTFITS`, or it is here and renders nothing. Settled behavioural decisions that
 are code rather than numbers (the wrist direction, which hand is mirrored) are recorded beside the
