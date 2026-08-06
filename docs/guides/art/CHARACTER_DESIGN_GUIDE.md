@@ -312,6 +312,21 @@ far_ang  = p["rot"] - p["tilt"] * s      # at -dx: trailing, so the cuff leans F
 
 `tilt` itself is unchanged — 22° walk, 14° run. Only the direction it is applied in.
 
+#### ONE mirror, in one place
+
+There is exactly **one** left-right mirror in the whole live path — `gait.walk_front_into`, which builds
+the camera-facing walk's hand pair from a single sprite. Nothing else mirrors anything.
+
+Keep it that way, and resist "just store both hands so nothing has to mirror". A left hand *is* a mirrored
+right hand, so producing the pair from one sprite **guarantees they match**; storing two drawings costs a
+sixth paid hand per outfit and lets the pair drift. The mirror was never the problem.
+
+**Two copies of the motion was the problem.** This function was briefly transcribed into `build` so its
+numbers could come from `official.py`, and the copies then disagreed about which hand to mirror — the
+palms-in fix landed in one and not the other, so everything still calling `gait` kept rendering palms-out.
+`build` now calls this and passes `p` in. If you need a variant, pass different numbers; do not copy the
+function.
+
 #### Palms turn IN for the camera-facing walk
 
 The front and back walks paste **one** hand sprite twice and mirror one of them; mirroring the **left** one

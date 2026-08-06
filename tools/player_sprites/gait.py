@@ -158,8 +158,16 @@ def _edges(a, frac):
     return (row, xs.min(), xs.max()) if len(xs) else (row, x0, x1)
 
 
-def walk_front_into(scene, bx, by, body, neutral, hand_d3, beat):
-    p = FRONT
+def walk_front_into(scene, bx, by, body, neutral, hand_d3, beat, p=None):
+    """THE ONE camera-facing walk. `p` defaults to FRONT; `build` passes the dict from official.py.
+
+    ⚠ There is exactly ONE of these on purpose. It was briefly implemented twice — here and transcribed
+    into `build` — and the two copies disagreed about WHICH HAND IS MIRRORED, so the palms-out bug stayed
+    live in everything that called this one. Two implementations of a motion is two answers to "what is
+    it", which is the whole failure this pipeline was rebuilt to end. If you need a variant, pass
+    different numbers in `p`; do not copy the function.
+    """
+    p = p or FRONT
     ny0, ny1, _, _ = _bbox(neutral)
     bh = ny1 - ny0 + 1
     h, w = body.shape[:2]
@@ -175,9 +183,16 @@ def walk_front_into(scene, bx, by, body, neutral, hand_d3, beat):
     # until 2026-08-05: "the gauntlets for red and black ants for walk front need to be flipped
     # horizontally, the palms are facing out". It was never ant-specific; every outfit had it, bronze
     # included, and it was invisible while the gauntlets were featureless slabs with no readable palm.
+    # PALMS TURN IN, TOWARD THE BODY — the LEFT hand is the mirrored one.
+    #
+    # A left hand IS a mirrored right hand, so producing the pair from one sprite is not a shortcut: it
+    # guarantees they match. Storing two drawings instead would cost a sixth paid hand per outfit and let
+    # the pair drift apart. What was wrong was never the mirror — it was mirroring the RIGHT one, which
+    # turns both palms outward. Reported twice ("the palms are facing out when they should be facing in")
+    # and settled 2026-08-06 against all four rendered options.
     _paste(scene, body, bx, by)
-    _paste(scene, hand,          ox + lx - gap - s * span * p["dx"], oy + r - s * span * p["dy"])
-    _paste(scene, hand[:, ::-1], ox + rx + gap + s * span * p["dx"], oy + r + s * span * p["dy"])
+    _paste(scene, hand[:, ::-1], ox + lx - gap - s * span * p["dx"], oy + r - s * span * p["dy"])
+    _paste(scene, hand,          ox + rx + gap + s * span * p["dx"], oy + r + s * span * p["dy"])
 
 
 def run_into(scene, bx, by, body, neutral, back_hand, palm_hand, beat):

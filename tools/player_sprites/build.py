@@ -103,34 +103,17 @@ def _gait_frames(bank, neutral, hands, spec, p):
 def _gait_front_frames(bank, neutral, hands, p):
     """The camera-facing walk — a separate motion, not the side one re-aimed.
 
-    Transcribed from `gait.walk_front_into` so the numbers come from official.py rather than from a
-    constant buried in gait.py. The byte-identical gate is what proves the transcription is faithful.
-    Hands sit OUTSIDE the body edges (measured per frame, since the legs change the silhouette), one
-    rising as the other drops, neither rotated nor dimmed.
+    This used to TRANSCRIBE `gait.walk_front_into` so the numbers could come from official.py. That was a
+    mistake: two copies of one motion is two answers to "what is it", and they duly drifted — the fix that
+    turned the palms inward landed here and not there, so everything still calling `gait` kept rendering
+    palms-out. Now it calls the one implementation and passes official.py's numbers in.
     """
     W, H = bank[0].shape[1] + 2 * PAD, bank[0].shape[0] + PAD
-    ny0, ny1, _, _ = gait._bbox(neutral)
-    bh = ny1 - ny0 + 1
-    hand = gait._sz(hands["side"], bh, p["ratio"])
     out = []
     for beat in range(len(gait.CYCLE)):
         sc = scene(W, H)
-        body = bank[gait.CYCLE[beat] - 1]
-        bx, by = W / 2, H / 2
-        h, w = body.shape[:2]
-        ox, oy = bx - w / 2.0, by - h / 2.0
-        r, lx, rx = gait._edges(body, p["row"])
-        span = rx - lx
-        s = gait.FRONT_PHASE[beat % len(gait.FRONT_PHASE)]
-        gap = max(2, int(span * p["gap"]))
-        # PALMS TURN IN, TOWARD THE BODY. The LEFT hand is the mirrored one.
-        # Mirroring the RIGHT one instead turns both palms OUT, away from him — which is what shipped
-        # and what the owner reported twice ("the palms are facing out when they should be facing in").
-        # Rendered as all four options in reviews/2026-08-06-bronze-hands/PALMS_compare.png; A and D
-        # point both hands the same way, so a symmetric pair is B or C, and C is the one he rejected.
-        gait._paste(sc, body, bx, by)
-        gait._paste(sc, hand[:, ::-1], ox + lx - gap - s * span * p["dx"], oy + r - s * span * p["dy"])
-        gait._paste(sc, hand, ox + rx + gap + s * span * p["dx"], oy + r + s * span * p["dy"])
+        gait.walk_front_into(sc, W / 2, H / 2, bank[gait.CYCLE[beat] - 1], neutral,
+                             hands["side"], beat, p)
         out.append(finish(sc))
     return out
 
