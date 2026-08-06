@@ -1,60 +1,40 @@
-# Bronze hands — two things to point at
+# Bronze hands — decided 2026-08-06, and the two outfits that followed
 
-Both are taste calls, so I rendered the options instead of guessing. I have guessed the palm direction
-wrong twice already.
+All settled. Kept because these are the images the decisions were made from.
 
----
+## What was decided
 
-## 1. Which way should the palms face? → `PALMS_compare.png`
+| | decision |
+|---|---|
+| **Fist size** | walk stays at **0.17**. *"hand sizes we go with current"* — the "way too big" complaint was about the RUN, which has its own larger ratio (0.19) |
+| **Wrist direction** | the cuff leans **toward the body**, because that is where the arm comes from |
+| **Palms** | turn **in** for the camera-facing walk |
 
-The camera-facing walk pastes **one** hand sprite twice and mirrors one of them. Which one gets mirrored
-decides whether the palms turn IN toward the body or OUT away from it. All four possibilities:
+*"all three fixes look good! make it official"*
 
-| | left hand | right hand | what you see |
-|---|---|---|---|
-| **A_neither** | as drawn | as drawn | both face the same way — asymmetric |
-| **B_left** | mirrored | as drawn | a symmetric pair |
-| **C_right** | as drawn | mirrored | a symmetric pair, facing the other way — **what ships today** |
-| **D_both** | mirrored | mirrored | both face the same way — the mirror of A |
+## The sheets
 
-The still is cropped to the hands and blown up 4×, because a looping gif is the wrong medium for judging
-which way a palm points — *"i cant even tell which direction that animation is going with it repeating"*.
-The four `PALMS_*.gif` files are there too if you want them moving.
+**Decision sheets** — what was chosen from:
+- `FIX_1_wrist.png` — before/after. Both signs had been inverted, so the forward fist's wrist sat
+  *further forward than the fist* and the arm read as reaching around from the far side.
+- `FIX_2_palms.png` — before/after.
+- `FIX_3_run_size.png` — run at 0.19 / 0.17 / 0.15.
+- `PALMS_compare.png` + `PALMS_A..D.gif` — all four mirror combinations.
+- `HAND_SIZES.png` — both views at three ratios, with the measurements.
+- `WRIST_current.png` — the two hands isolated per beat, which is what made the inverted sign visible.
 
-**My read: B_left** — its curls turn inward toward the body, and C (today's) turns them outward, which is
-the defect you reported. But you decide; say the letter.
+**Result** — what came out:
+- `GAUNTLETS_all_three.png` — bronze, fireant, blackant. Same five poses, different materials.
+- `CONSISTENCY_walk_side.png`, `_walk_front.png`, `_swing_sword.png` — the same motion across all three.
 
----
+## Why the earlier attempt missed
 
-## 2. Hand size → `HAND_SIZES.png`
+On 2026-08-05 the two hands were changed to tilt in **opposite** directions. That sounds like the same fix
+and is not — both directions stayed wrong, so the thing being pointed at never changed. The lesson is in
+`CHARACTER_DESIGN_GUIDE.md`: measure which way the cuff actually moves, don't reason about it. Rotating
+this sprite by +22° moves the cuff 2.4px left, by −22° moves it 2.0px right.
 
-Your words: *"the gauntlet on the side facing the screen way too big, if it is scaled it should be
-slightly not like having one huge and one small hand."*
+## State
 
-I measured three different mismatches and can't tell from the words which you mean, so here are the
-numbers on a 320px-tall body:
-
-| used for | source sprite | drawn |
-|---|---|---|
-| side view, NEAR hand | 16 × 20 | **43 × 54** |
-| side view, FAR hand | 18 × 22 | **44 × 54** |
-| camera-facing view, both | 12 × 21 | **31 × 54** |
-
-- **Near vs far in the side view: 43 vs 44px — 1.02×, essentially identical.** So "one huge and one
-  small" isn't a size difference there. What *does* differ: the far hand is dimmed to 62% and drawn
-  behind the body, which reads as smaller and further away even though it is the same size.
-- **Side view vs camera-facing: 43 vs 31px — 1.39×.** This one is a real difference. It happens because
-  hands are scaled by HEIGHT, so a narrower source sprite (the profile fist, 12px wide vs 16px) draws
-  narrower.
-- **Overall size: a fist is 17% of body height.** A real fist is about 10–11%.
-
-The sheet shows both views at **0.17 (current) / 0.14 / 0.11** so you can judge the overall size. Frame
-picked is full reach, not the passing pose where the fists hide behind the torso.
-
-**Tell me which is wrong** — the overall size (and which ratio), the side-vs-front difference, or the
-near/far read in the side view — and I'll fix that one rather than guessing at all three.
-
----
-
-Both live in `official.py` once you choose: the palm mirroring in the front-walk render, the ratio in
-`GAITS`. Change it there, run `build.py`, and every animation and the gallery follow.
+3 outfits official, 13 animations each, 39 total. `PENDING` is empty.
+Open `tools/_generated/player/gallery.html` to see them.
