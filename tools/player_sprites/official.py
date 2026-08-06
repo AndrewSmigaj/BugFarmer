@@ -81,18 +81,23 @@ OUTFITS = {
     "bronze":   dict(dir="outfits/bronze", approved="2026-08-06",
                      sheet="result.png",
                      words="the reference set - made first, and they work"),
-    "fireant":  dict(dir="outfits/fireant", approved="2026-08-06",
-                     sheet="tries/2026-08-05-original-sheet/result.png",
-                     words="fireant faces B the second one"),
-    "blackant": dict(dir="outfits/blackant", approved="2026-08-06",
-                     sheet="tries/2026-08-05-original-sheet/result.png",
-                     words="black ant faces A the second one"),
 }
 
 # NOT OFFICIAL YET — listed so the gap is visible, but NOT built. An outfit is either complete and in
 # OUTFITS, or it is here and does not render at all. There is no third state where it renders with
 # somebody else's parts, which is exactly what the old fallback chain did to 21 outfits.
-PENDING = {}
+PENDING = {
+    "fireant":  dict(dir="outfits/fireant",  chosen="2026-08-05",
+                     sheet="tries/2026-08-05-original-sheet/result.png",
+                     words="fireant faces B the second one",
+                     needs="gauntlet generated 2026-08-06 and AWAITING REVIEW - owner reports the hands "
+                           "are reversed. Candidate in tries/2026-08-06-official-gauntlet."),
+    "blackant": dict(dir="outfits/blackant", chosen="2026-08-05",
+                     sheet="tries/2026-08-05-original-sheet/result.png",
+                     words="black ant faces A the second one",
+                     needs="gauntlet generated 2026-08-06 and AWAITING REVIEW - owner reports the hands "
+                           "are reversed. Candidate in tries/2026-08-06-official-gauntlet."),
+}
 
 
 def path(outfit, kind):

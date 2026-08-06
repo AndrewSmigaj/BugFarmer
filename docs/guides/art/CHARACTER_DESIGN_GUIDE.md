@@ -352,6 +352,21 @@ Each entry also names its `sheet` — the chosen 12-frame generation the frames 
 gauntlet prompt sends as the colour reference. Declaring it beats hunting for a file called `result.png`,
 which broke the moment those were tidied into `tries/`.
 
+### REVIEW COMES BEFORE OFFICIAL. Always.
+
+Owner, 2026-08-06: *"we always want to review before updating anything official."* The order is:
+
+```
+generate into tries/  →  render a review sheet  →  HE LOOKS AND SAYS YES  →  copy into place  →  official.py
+```
+
+I broke this the first time it mattered: fireant and blackant were generated, promoted into `gauntlet/`,
+added to `OUTFITS` and rendered — and *then* shown to him. He is the gate; a sheet produced after the fact
+is not a review, it is a report. Reverting was cheap only because choosing is a **copy** and `tries/` was
+untouched.
+
+The generated art being good is not the point. Whether it is good is his call, not mine.
+
 It also carries `PENDING` — outfits that are chosen but **not built**, with what each still needs. An
 outfit is complete and in `OUTFITS`, or it is here and renders nothing. Settled behavioural decisions that
 are code rather than numbers (the wrist direction, which hand is mirrored) are recorded beside the
