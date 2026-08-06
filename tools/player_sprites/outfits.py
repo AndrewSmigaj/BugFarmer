@@ -483,9 +483,14 @@ def main():
         roles = ", ".join(f"({i + 1}) {O.HAND_ROLE_MEANING[r]}" for i, r in enumerate(O.HAND_ROLES))
         for n in names:
             what, _, _, glove = OUTFITS[n]
-            gen(f"outfits/{n}/tries/{stamp}-official-gauntlet",
+            # The colour reference is the outfit's CHOSEN sheet, named in official.py — not a hunt for a
+            # file called result.png, which broke as soon as those were tidied into tries/.
+            colour = os.path.join(PLAYER, O.sheet(n))
+            if not os.path.exists(colour):
+                raise SystemExit(f"{n}: official.py names a sheet that is not there\n    {colour}")
+            gen(f"{O.path(n, O.TRIES_DIR)}/{stamp}-official-gauntlet",
                 OFFICIAL_GAUNTLET.format(what=what, glove=glove, n=len(O.HAND_ROLES), roles=roles),
-                [ref, os.path.join(PLAYER, "outfits", n, "result.png")])
+                [ref, colour])
         return
     if mode == "explore":
         for n in names or EXPLORATIONS:

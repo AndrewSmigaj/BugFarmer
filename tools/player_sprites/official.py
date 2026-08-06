@@ -73,8 +73,13 @@ TRIES_DIR, FRAMES_DIR, HANDS_DIR, ANIM_DIR = "tries", "frames", "gauntlet", "ani
 
 # `dir` is relative to tools/_generated/player/. An outfit with no approved hands is simply ABSENT from
 # here — it is never quietly rendered with someone else's.
+# `sheet` is the chosen 12-frame generation, relative to `dir`. The frames were cut from it, and the
+# gauntlet prompt sends it as the COLOUR reference so the hands match that outfit's material. It is a
+# chosen artifact, so it is declared here rather than found by looking for a file called result.png —
+# which broke the moment those files were tidied into tries/.
 OUTFITS = {
     "bronze": dict(dir="outfits/bronze", approved="2026-08-06",
+                   sheet="result.png",
                    words="the reference set - made first, and they work"),
 }
 
@@ -83,9 +88,11 @@ OUTFITS = {
 # somebody else's parts, which is exactly what the old fallback chain did to 21 outfits.
 PENDING = {
     "fireant":  dict(dir="outfits/fireant",  chosen="2026-08-05",
+                     sheet="tries/2026-08-05-original-sheet/result.png",
                      words="fireant faces B the second one",
                      needs="a 5-hand gauntlet — the 4-hand one is in tries/2026-08-05-gauntlet-4hand"),
     "blackant": dict(dir="outfits/blackant", chosen="2026-08-05",
+                     sheet="tries/2026-08-05-original-sheet/result.png",
                      words="black ant faces A the second one",
                      needs="a 5-hand gauntlet — the 4-hand one is in tries/2026-08-05-gauntlet-4hand"),
 }
@@ -101,6 +108,14 @@ def path(outfit, kind):
     if entry is None:
         raise KeyError(f"{outfit!r} is in neither OUTFITS nor PENDING in official.py")
     return f"{entry['dir']}/{kind}"
+
+
+def sheet(outfit):
+    """The outfit's chosen 12-frame generation — the colour reference for its gauntlet prompt."""
+    entry = OUTFITS.get(outfit) or PENDING.get(outfit)
+    if entry is None:
+        raise KeyError(f"{outfit!r} is in neither OUTFITS nor PENDING in official.py")
+    return f"{entry['dir']}/{entry['sheet']}"
 
 
 # ── MOTIONS ──────────────────────────────────────────────────────────────────────────────────────────
