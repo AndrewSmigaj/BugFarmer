@@ -68,6 +68,22 @@ SHOVEL_SIDE = ((-60, 44, 0.32),
 # the butt, which is where the top hand goes.
 SHOVEL_PIVOT, SHOVEL_SECOND = 0.34, -0.22
 
+# ── THE LOOKUP `render_animations.build()` READS ─────────────────────────────────────────────────────
+# A tool absent from TOOL_SIDE is NOT RENDERED and is reported as a gap. That is deliberate: shipping a
+# superseded motion silently is how the agreed tool swings were overwritten by every re-render on
+# 2026-08-05, because the picks lived here and `build()` never looked at them.
+TOOL_SIDE = {
+    "net": NET_SIDE,
+    "axe": AXE_SIDE,
+    "hoe": HOE_SIDE,
+    "shovel": SHOVEL_SIDE,
+}
+TOOL_TWO_HANDED = {"shovel": True}
+TOOL_PIVOT = {"shovel": SHOVEL_PIVOT}
+TOOL_SECOND = {"shovel": SHOVEL_SECOND}
+TOOL_SCALE = {"spear": 1.9}      # SPEAR_SCALE, defined below; the motion is still unsettled
+
+
 # ── NOT YET AGREED ───────────────────────────────────────────────────────────────────────────────────
 # spear (side)                  — length is settled at 1.9 cells, the motion is not
 # axe / hoe / net / shovel      — FACING DOWN and FACING UP do not exist at all; only the sword has them

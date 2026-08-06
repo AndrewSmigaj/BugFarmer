@@ -46,6 +46,21 @@ measured on ranger, **zero** art pixels test as magenta, against 8.9% of that sa
 indistinguishable from a black background. Key by flooding in **from the border**, never per-pixel — a dark
 pixel reachable from outside is background, one enclosed by the figure is its own shading.
 
+**`build()` RENDERS FROM `motions.py`. THERE IS NO SECOND SET OF NUMBERS.**
+
+This was the root of a whole day of churn. `motions.py` recorded what the owner picked; `build()` had its
+own constants and never imported it. Every pick got written into the record, hand-placed as a gif, and
+then **silently overwritten by the next re-render** with the superseded motion — so approved things kept
+coming back wrong. Owner: *"they are NOT using the official agreed on animations. why has this been so
+convoluted and difficult?"*
+
+Measured at the time, in bronze's own `current/anim/`: the sword was the agreed 320ms frame budget while
+axe, hoe, net and shovel were all still the old shoulder-pivot approaches.
+
+⚠ **A tool with no agreed motion is SKIPPED and reported as a GAP** — never falls back to an older one.
+Silence was the failure mode, so a missing decision has to be loud. The spear correctly reports a gap on
+all 24 outfits.
+
 **FRONT WALK: the RIGHT hand is the mirrored one.** That turns both openings **inward** toward the body.
 Mirroring the left instead faces both palms outward, which is what shipped until 2026-08-05 — on every
 outfit, bronze included. It stayed invisible while gauntlets were featureless slabs, and only showed once

@@ -49,6 +49,7 @@ from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gait                                              # noqa: E402
+import motions as M                                     # noqa: E402
 import swing_lab as S                                    # noqa: E402
 from compare_hands import rgba                           # noqa: E402
 
@@ -260,9 +261,7 @@ ATK_MS = 20
 
 # E_double_back: out across, then whipped back through the other way. Poses are
 # (arm offset from centre, blade behind arm, reach in cells).
-DOUBLE_BACK = ((+70, 66, 0.50),
-               [(0, 44, 0.60), (-64, 30, 0.56), (-10, 46, 0.58), (+34, 58, 0.54)],
-               (+34, 60, 0.46))
+DOUBLE_BACK = M.DOUBLE_BACK
 
 # THE SIDE SWORD SWING — owner's pick 2026-08-04: "yes we obviously want the quick candidate".
 #
@@ -273,9 +272,9 @@ DOUBLE_BACK = ((+70, 66, 0.50),
 #
 # The eased path (`sword_motion` + `arm_swing_frames`) is no longer used for the sword. It is left in the
 # file because `swing_arm.py` still imports it for the lab.
-SWORD_SIDE = ((120, 88, 0.60),
-              [(60, 76, 0.62), (-10, 62, 0.64), (-70, 48, 0.62), (-104, 40, 0.60)],
-              (-35, 60, 0.58))
+SWORD_SIDE = M.SWORD_SIDE
+
+SIDE_FACING = dict(centre=0.0, sh=SHOULDER, behind=False)
 
 SWORD_FACINGS = {
     "side": dict(centre=0.0,   sh=SHOULDER,     bank="side",  behind=False, spec=SWORD_SIDE),
@@ -555,19 +554,26 @@ def build(outfit="bronze", verbose=True):
             if not os.path.exists(p):
                 gaps.append(f"swing_{name}: {icon} missing")
                 continue
-            # The SWORD's three facings are all rendered below, on the frame budget. The other tools
-            # still run the old shoulder-pivot approaches and are next to be redone.
+            # THE SWORD's three facings are rendered below. Every other tool renders from the AGREED
+            # motion in motions.py — never from the old shoulder-pivot approaches, and never from
+            # numbers written here. If a tool has no agreed motion yet it is SKIPPED and reported as a
+            # gap, rather than silently shipping a superseded one.
             if name == "sword":
                 continue
-            fr, ms = swing_frames(side[1], hands, p, bh)
+            spec = M.TOOL_SIDE.get(name)
+            if spec is None:
+                gaps.append(f"swing_{name}: no agreed motion in motions.py — not rendered")
+                continue
+            fr, ms = attack_frames(side[1], hands, p, bh, SIDE_FACING, spec=spec,
+                                   two_handed=M.TOOL_TWO_HANDED.get(name, False),
+                                   scale=M.TOOL_SCALE.get(name, 1.0),
+                                   pivot=M.TOOL_PIVOT.get(name, 0.0),
+                                   second=M.TOOL_SECOND.get(name, 0.17))
             made.append(save(fr, ms, os.path.join(anim, f"swing_{name}.gif")))
         for name, icon in TWO_HANDED:
-            p = os.path.join(RES, "Items", icon)
-            if not os.path.exists(p):
-                gaps.append(f"thrust_{name}: {icon} missing")
+            if name not in M.TOOL_SIDE:
+                gaps.append(f"thrust_{name}: no agreed motion in motions.py — not rendered")
                 continue
-            fr, ms = swing_frames(side[1], hands, p, bh, two_handed=True)
-            made.append(save(fr, ms, os.path.join(anim, f"thrust_{name}_two_handed.gif")))
 
     # The sword's DOWN and UP attacks — a different motion from the side one, not the side one re-aimed.
     sword = os.path.join(RES, "Items", "sword_bronze_icon.png")

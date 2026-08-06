@@ -161,6 +161,21 @@ spear 32-47%, net 48-57%, shovel 42-69%.
 **Every attack holds at REST for 4 frames before looping** (`ATK_REST`) — without it a looping gif
 ping-pongs and you cannot tell which direction the swing runs.
 
+**`build()` RENDERS FROM `motions.py`. THERE IS NO SECOND SET OF NUMBERS.**
+
+This was the root of a whole day of churn. `motions.py` recorded what the owner picked; `build()` had its
+own constants and never imported it. Every pick got written into the record, hand-placed as a gif, and
+then **silently overwritten by the next re-render** with the superseded motion — so approved things kept
+coming back wrong. Owner: *"they are NOT using the official agreed on animations. why has this been so
+convoluted and difficult?"*
+
+Measured at the time, in bronze's own `current/anim/`: the sword was the agreed 320ms frame budget while
+axe, hoe, net and shovel were all still the old shoulder-pivot approaches.
+
+⚠ **A tool with no agreed motion is SKIPPED and reported as a GAP** — never falls back to an older one.
+Silence was the failure mode, so a missing decision has to be loud. The spear correctly reports a gap on
+all 24 outfits.
+
 **Every tool now uses the hand-travels model**, each with its own verb: axe CHOPS (bites and stops), hoe
 TILLS (chop then drag back), net CATCHES (hoop leads, then lifts to enclose), shovel DIGS (push in, lever,
 lift, toss — not a swing at all), spear THRUSTS (cocked back, reach is the whole motion).
