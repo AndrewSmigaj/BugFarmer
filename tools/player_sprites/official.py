@@ -84,10 +84,10 @@ OUTFITS = {
 PENDING = {
     "fireant":  dict(dir="outfits/fireant",  chosen="2026-08-05",
                      words="fireant faces B the second one",
-                     needs="frames/ layout; a 5-hand gauntlet (has 4: no grip_back/grip_palm split)"),
+                     needs="a 5-hand gauntlet — the 4-hand one is in tries/2026-08-05-gauntlet-4hand"),
     "blackant": dict(dir="outfits/blackant", chosen="2026-08-05",
                      words="black ant faces A the second one",
-                     needs="frames/ layout; a 5-hand gauntlet (has 4: no grip_back/grip_palm split)"),
+                     needs="a 5-hand gauntlet — the 4-hand one is in tries/2026-08-05-gauntlet-4hand"),
 }
 
 
@@ -129,6 +129,20 @@ GAITS = {
 # The back-facing walk reuses FRONT deliberately: from behind you also see both hands clear of the
 # silhouette, and at ~10px a hand the near/far distinction the side walk needs does not read.
 # 2026-08-02, delivered against "so we have forward and sideways might as well finish with back".
+
+# ── SETTLED 2026-08-06 — "all three fixes look good! make it official" ────────────────────────────────
+# Three things about how the hands are PLACED. They are behaviour, not numbers, so they live in the code
+# that draws them — recorded here because this file is where "what did we agree" gets answered.
+#
+#  1. FIST SIZE — walk stays at 0.17. He was explicit: "hand sizes we go with current". His earlier
+#     "way too big" complaint was about the RUN, which has its own larger ratio (0.19, above).
+#  2. WRIST DIRECTION — the cuff leans TOWARD the body, because that is where the arm comes from
+#     (`gait.pose_into`). Both signs had been inverted, so the forward fist's wrist sat further forward
+#     than the fist and the arm read as reaching around from the far side. Reported 2026-08-03 and again
+#     2026-08-06. An intervening "fix" made the two hands tilt in OPPOSITE directions, which sounds like
+#     the same change and is not — both stayed wrong.
+#  3. PALMS TURN IN — the camera-facing walk mirrors the LEFT hand (`build._gait_front_frames`).
+#     Mirroring the right instead turns both palms outward, which shipped and was rejected twice.
 
 # SWING motions: (anticipation pose, [4 strike poses], rest pose).
 # A pose is (arm offset from the aim direction, blade angle behind the arm, reach in cells).

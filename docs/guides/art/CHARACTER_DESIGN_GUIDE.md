@@ -348,6 +348,11 @@ are that outfit's chosen frames and hands, with the owner's words and date), `GA
 approved motion numbers — this only ever GROWS, so "go back to Tuesday's swing" is a one-line change), and
 `ANIMATIONS`, where **one row fully defines one animation**. Adding an animation is a row, not a branch.
 
+It also carries `PENDING` — outfits that are chosen but **not built**, with what each still needs. An
+outfit is complete and in `OUTFITS`, or it is here and renders nothing. Settled behavioural decisions that
+are code rather than numbers (the wrist direction, which hand is mirrored) are recorded beside the
+constants they affect, because this file is where *"what did we agree"* gets answered.
+
 > That definition used to be split three ways with no single file stating it: `gait.py` held the walk
 > constants, `motions.py` the swing arcs, and a `SWORD_FACINGS` dict inside `render_animations.py` held
 > which frame bank, where the shoulder sits and whether the weapon draws behind the body — next to 174
