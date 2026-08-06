@@ -111,6 +111,46 @@ def row(panels, note=None, pad=14, gap=28):
     return sheet
 
 
+def hand_strip(folder, roles, scale=8, gap=20, target_h=20):
+    """A row of an outfit's hands, all at ONE scale, for comparing sets side by side.
+
+    Normalising height is not cosmetic. An outfit's hands are not stored at a common scale — bronze's
+    walk trio are cut sprites (16x20, 18x22, 12x21) while its two grips are full-resolution art
+    (213x237, 176x240), an ~11x gap. Pasted raw, the grips swamp the strip and the comparison is
+    useless. This is the same normalisation `outfits.reference_strip()` needs, which is why it lives
+    here rather than being written twice.
+    """
+    import numpy as np
+    from cut_outfit import defringe
+
+    ims = []
+    for r in roles:
+        p = os.path.join(folder, f"{r}.png")
+        if not os.path.exists(p):
+            ims.append(None)
+            continue
+        im = Image.open(p).convert("RGBA")
+        im = Image.fromarray(defringe(np.asarray(im, np.uint8)), "RGBA")   # drop any key bleed
+        s = target_h / im.height
+        ims.append(im.resize((max(1, round(im.width * s)), target_h), Image.NEAREST))
+
+    h = target_h * scale
+    w = sum((i.width if i else target_h) * scale for i in ims) + gap * (len(ims) - 1)
+    out = Image.new("RGB", (w, h), BG)
+    d, x = ImageDraw.Draw(out), 0
+    for i in ims:
+        if i is None:
+            d.rectangle([x, 0, x + target_h * scale, h - 1], outline=(90, 60, 60))
+            x += target_h * scale + gap
+            continue
+        big = i.resize((i.width * scale, i.height * scale), Image.NEAREST)
+        bg = Image.new("RGB", big.size, BG)
+        bg.paste(big, (0, 0), big)
+        out.paste(bg, (x, h - big.height))
+        x += big.width + gap
+    return out
+
+
 def save(sheet, folder, name):
     """Write into reviews/<folder>/ and print the conventions that were applied.
 

@@ -92,14 +92,19 @@ def main():
 
     # Upscale each reference and send THAT, so what is recorded is exactly what the model saw.
     from PIL import Image
-    kept = []
+    kept, how = [], []
     for i, p in enumerate(a.ref, 1):
         if not os.path.exists(p):
             raise SystemExit(f"reference not found: {p}")
         dst = os.path.join(out, f"ref_{i}_{os.path.basename(p)}")
         im = Image.open(p).convert("RGBA")
+        # Only tiny references get upscaled — a sprite needs it so the model can see the shapes; an
+        # already-large sheet does not, and blowing one up to 30+ megapixels would be rejected.
         if a.scale > 1 and max(im.size) < 400:
             im = im.resize((im.width * a.scale, im.height * a.scale), Image.NEAREST)
+            how.append(f"upscaled x{a.scale} -> {im.width}x{im.height}")
+        else:
+            how.append(f"sent as-is at {im.width}x{im.height}")
         im.save(dst)
         kept.append(dst)
 
@@ -108,15 +113,35 @@ def main():
         f.write(f"model     : {a.model}\nsize      : {a.size}\nquality   : {a.quality}\nmask      : NONE\n")
         f.write(f"dest      : {a.dest}\n")
         f.write("references (in the order sent):\n")
-        for i, p in enumerate(a.ref, 1):
-            f.write(f"  {i}. {os.path.relpath(p, REPO)}  (sent upscaled x{a.scale})\n")
+        # Record what ACTUALLY happened to each reference, not the flag. This line used to say
+        # "sent upscaled x14" unconditionally, including when the size guard skipped the upscale —
+        # a record that states an intention rather than a fact is worse than no record.
+        for i, (p, note) in enumerate(zip(a.ref, how), 1):
+            f.write(f"  {i}. {os.path.relpath(p, REPO)}  ({note})\n")
         f.write(f"\nPROMPT:\n{a.prompt}\n")
 
     if a.dry_run:
         print("DRY RUN — nothing spent")
     else:
-        open(os.path.join(out, "result.png"), "wb").write(
-            call(a.prompt, kept, a.model, a.size, a.quality))
+        # WRITE ATOMICALLY: fetch fully into memory, write a temp file, then rename.
+        #
+        # This used to be `open(dest,"wb").write(call(...))`. Python evaluates `open()` FIRST, so the
+        # destination was created and truncated to zero BEFORE the paid call was even made — and if the
+        # call then raised, or the process was interrupted mid-flight, what survived was a 0-byte
+        # `result.png` that looks like a generated file. That has happened twice (ant-carapace-black,
+        # and fireant on 2026-08-06), and in both cases it was impossible to tell afterwards whether the
+        # money had been spent. Now: no bytes, no file.
+        data = call(a.prompt, kept, a.model, a.size, a.quality)
+        if not data:
+            raise SystemExit("the API returned no image data — nothing written")
+        dest = os.path.join(out, "result.png")
+        tmp = dest + ".part"
+        with open(tmp, "wb") as f:
+            f.write(data)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, dest)
+        print(f"  received {len(data) / 1024:.0f} KB")
 
     os.makedirs(ROOT, exist_ok=True)
     with open(RUNS, "a") as f:

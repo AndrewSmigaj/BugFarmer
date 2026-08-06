@@ -1,0 +1,18 @@
+when      : 2026-08-06 14:51:43
+model     : gpt-image-2
+size      : 1024x1536
+quality   : high
+mask      : NONE
+dest      : outfits/blackant/tries/2026-08-06-official-gauntlet
+references (in the order sent):
+  1. tools/_generated/player/APPROVED/hands/REFERENCE_STRIP_generated.png  (sent as-is at 752x208)
+  2. tools/_generated/player/outfits/blackant/tries/2026-08-05-original-sheet/result.png  (sent as-is at 1024x1536)
+
+PROMPT:
+The FIRST attached image is the reference: 5 small pixel-art gauntlet hands in a row on a black background. The SECOND attached image is a sprite sheet of a character wearing black-ant carapace armour.
+
+Redraw those SAME 5 HANDS in the SAME 5 poses, in the SAME row, at the SAME size and spacing, on a black background - but made of near-black ant chitin instead, matching the material, colours, shadows and highlights of the armour in the second image.
+
+Copy the reference EXACTLY in shape. Same silhouette, same outline, same proportions, same wrist cuff at the bottom of each hand, same angle for each of the 5. Left to right they are: (1) back of a closed fist (knuckles toward camera), (2) the palm side, (3) the fist in profile, (4) fist closed around a pole, knuckles showing, (5) fist closed around a pole, palm showing — the SECOND hand on a two-handed tool. Do not redesign them, do not restyle them, do not change how any hand is posed or turned - the ONLY thing that changes is the material they are made of.
+
+Big simple shapes, chunky pixels, a dark outline, no fine detail. Nothing else in the image - no character, no body, no arms, just the 5 hands.

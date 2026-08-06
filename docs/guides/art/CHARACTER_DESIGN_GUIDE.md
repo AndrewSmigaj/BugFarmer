@@ -466,6 +466,10 @@ why nothing could copy it: no other outfit had the parts.
 many cells `cut_gauntlet` bands the sheet into, and how many hands the renderer requires. Add a role and
 everything follows; there is no second place to remember.
 
+`review.hand_strip()` renders an outfit's hands at one scale for comparing sets — the same height
+normalisation, in one place rather than copy-pasted (my first fireant-vs-bronze sheet skipped it and
+bronze's grips swamped the row).
+
 **The reference image is generated, not stored** (`outfits.reference_strip()`). It composites bronze's
 actual `gauntlet/` into a strip at call time, so the reference *is* the official set and cannot drift from
 `HAND_ROLES` — which is exactly how the old committed 4-hand `SOURCE_SHEET` came to disagree with a

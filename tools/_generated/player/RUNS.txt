@@ -71,3 +71,7 @@
 2026-08-05 15:35  gpt-image-2    outfits/blackant/gauntlet    tools/_generated/player/outfits/blackant/gauntlet
 2026-08-05 16:55  gpt-image-2    outfits/fireant/gauntlet2    tools/_generated/player/outfits/fireant/gauntlet2
 2026-08-05 16:56  gpt-image-2    outfits/blackant/gauntlet2   tools/_generated/player/outfits/blackant/gauntlet2
+2026-08-06 14:45  gpt-image-2    outfits/fireant/tries/2026-08-06-official-gauntlet tools/_generated/player/outfits/fireant/tries/2026-08-06-official-gauntlet
+2026-08-06 14:48  gpt-image-2    outfits/fireant/tries/DRYRUN (dry-run)
+2026-08-06 14:48  gpt-image-2    outfits/fireant/tries/2026-08-06-official-gauntlet tools/_generated/player/outfits/fireant/tries/2026-08-06-official-gauntlet
+2026-08-06 14:51  gpt-image-2    outfits/blackant/tries/2026-08-06-official-gauntlet tools/_generated/player/outfits/blackant/tries/2026-08-06-official-gauntlet
