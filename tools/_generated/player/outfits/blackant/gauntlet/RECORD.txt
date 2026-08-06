@@ -1,21 +1,18 @@
-when      : 2026-08-05 15:35:38
+when      : 2026-08-05 16:56:24
 model     : gpt-image-2
 size      : 1024x1536
 quality   : high
 mask      : NONE
-dest      : outfits/blackant/gauntlet
+dest      : outfits/blackant/gauntlet2
 references (in the order sent):
-  1. tools/_generated/player/outfits/blackant/result.png  (sent upscaled x14)
+  1. tools/_generated/player/APPROVED/hands/SOURCE_SHEET_hand-D-pixel.png  (sent upscaled x14)
+  2. tools/_generated/player/outfits/blackant/result.png  (sent upscaled x14)
 
 PROMPT:
-The attached image is a sprite sheet of a character wearing black-ant carapace armour.
+The FIRST attached image is the reference: four small pixel-art gauntlet hands in a row on a black background. The SECOND attached image is a sprite sheet of a character wearing black-ant carapace armour.
 
-Draw FOUR small HANDS in a row on a black background, evenly spaced, large and centred. Nothing else in the image - no character, no body, no arms, just the four hands.
+Redraw those SAME FOUR HANDS in the SAME four poses, in the SAME row, at the SAME size and spacing, on a black background - but made of near-black ant chitin instead, matching the material, colours, shadows and highlights of the armour in the second image.
 
-Each hand is made of near-black ant chitin, the SAME material as the armour in the attached image, with the same darker shadows and the same bright highlights.
+Copy the reference EXACTLY in shape. Same silhouette, same outline, same proportions, same wrist cuff at the bottom of each hand, same angle for each of the four. Left to right they are: (1) the back of a closed fist, (2) the palm side, (3) the fist in profile, (4) the fist closed around a pole with a small round hole through the grip. Do not redesign them, do not restyle them, do not change how any hand is posed or turned - the ONLY thing that changes is the material they are made of.
 
-Left to right, the same hand from four angles: (1) back of the hand facing the viewer, (2) palm side, (3) in profile facing right, (4) three-quarter view.
-
-Care about the SILHOUETTE above all. The outline is a soft rounded shape, slightly taller than wide, narrowing a little at the wrist. No separate fingers are drawn - at this size the hand reads entirely by its outline and two or three shading bands inside it.
-
-Big simple shapes, chunky pixels. This is a small pixel art sprite - each hand is about ten pixels across in the game, so use a handful of large blocks, no rivets, no filigree, no fine detail.
+Big simple shapes, chunky pixels, a dark outline, no fine detail. Nothing else in the image - no character, no body, no arms, just the four hands.

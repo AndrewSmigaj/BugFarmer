@@ -377,7 +377,12 @@ Big simple shapes, chunky pixels. This is a small pixel art sprite - each hand i
 # widths and angles in the same reel. This mode fixes that the way tool tiers are done: generate against
 # the approved hand as a REFERENCE so the silhouette and the four angles are preserved and only the
 # material changes.
-OFFICIAL_HAND = os.path.join(PLAYER, "outfits", "bronze", "hand-D-pixel", "result.png")
+# The four APPROVED bronze hands, as a sheet — the shape every other outfit's gauntlet must copy.
+# ⚠ This used to point at outfits/bronze/hand-D-pixel/result.png, which no longer exists (bronze was
+# reorganised), and the only surviving copy was inside the GITIGNORED archive. A reference that every
+# future gauntlet depends on cannot live somewhere untracked, so it now sits in APPROVED/ with the
+# hands it produced.
+OFFICIAL_HAND = os.path.join(PLAYER, "APPROVED", "hands", "SOURCE_SHEET_hand-D-pixel.png")
 
 OFFICIAL_GAUNTLET = """The FIRST attached image is the reference: four small pixel-art gauntlet hands in a row on a black background. The SECOND attached image is a sprite sheet of a character wearing {what}.
 

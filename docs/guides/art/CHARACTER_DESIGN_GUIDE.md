@@ -46,6 +46,26 @@ measured on ranger, **zero** art pixels test as magenta, against 8.9% of that sa
 indistinguishable from a black background. Key by flooding in **from the border**, never per-pixel — a dark
 pixel reachable from outside is background, one enclosed by the figure is its own shading.
 
+**EVERY OUTFIT'S GAUNTLET IS A RE-SKIN OF BRONZE'S APPROVED HANDS — use `official` mode, never `gauntlet`.**
+
+```bash
+python3 tools/player_sprites/outfits.py official <set>   # copies bronze's four hands, changes material
+python3 tools/player_sprites/outfits.py gauntlet <set>   # lets the model invent hands. DO NOT USE.
+```
+
+Plain `gauntlet` mode sends only the outfit's own sheet, so the model designs hands from scratch and
+returns **featureless slabs with no fingers, knuckles or thumb**. There is then nothing to establish which
+way a palm faces, and every swing reads wrong — because `HAND_PERP` and the grip offsets were tuned
+against **bronze's** shapes. Owner caught it: *"its used in the wrong gauntlets, are you feeding the
+official bronze gauntlet in when creating those?"*
+
+`official` writes to `gauntlet2/` and never over `gauntlet/`; promote it deliberately and archive what it
+replaces.
+
+⚠ The reference is `APPROVED/hands/SOURCE_SHEET_hand-D-pixel.png`. It used to be pointed at
+`outfits/bronze/hand-D-pixel/result.png`, which no longer exists, with the only surviving copy inside the
+**gitignored** archive — a reference every future gauntlet depends on, one `git clean` from gone.
+
 ⚠ **THE CUTTER DETECTS THE KEY COLOUR; IT DOES NOT ASSUME ONE.** The switch to magenta was applied to
 the generator on 2026-07-29 and **not** to `cut_outfit.background()`, which kept keying near-black. Every
 existing outfit predates the switch, so nothing was cut in between and the drift sat unnoticed for a week
