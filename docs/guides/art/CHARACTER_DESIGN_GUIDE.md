@@ -319,6 +319,24 @@ approved motion numbers — this only ever GROWS, so "go back to Tuesday's swing
 > which frame bank, where the shoulder sits and whether the weapon draws behind the body — next to 174
 > lines of dead code including a whole second motion system whose constants still looked live.
 
+### Showing him options — `tools/player_sprites/review.py`
+
+Anything the owner must LOOK AT to make a decision goes through this. Two conventions are baked in
+because both have been got wrong more than once:
+
+* **Labels are 22pt — about 2× PIL's default.** `ImageDraw.text()` with no `font=` gives an ~11px bitmap
+  face. Owner, twice: *"i literally have to zoom in to see it its so tiny… maybe make it twice as big…
+  i asked you before so can you somehow remember this."* The helper cannot render small text, so a new
+  script cannot reintroduce it. (Watch the width: a sheet sized to its images alone will **clip** a long
+  label, which defeats the point. `stack()`/`row()` measure the text too.)
+* **It lands in the repo**, under `reviews/<YYYY-MM-DD>-<what>/`, and `save()` prints the `C:/…` path
+  back. `/tmp` and `/mnt` paths do not exist on his machine, so showing him one shows him nothing.
+
+**The script is the reminder.** `save()` prints the conventions it just applied and warns when a review
+folder has no `README.md`. Owner's idea, 2026-08-06: *"having python scripts perhaps actually output
+things — reminders and such, as a form of 'hook' — as long as you read the output of the script."* It
+fires exactly when relevant, cannot be routed around, and costs one `print()`.
+
 ### Rendering it — `tools/player_sprites/build.py`
 
 ```bash

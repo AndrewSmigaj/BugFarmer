@@ -70,6 +70,21 @@ kept for its findings, but it is NOT the current design.
 
 ## CLAUDE.md & scaffolding improvements (owner wants a pass here; captured 2026-07-09)
 Umbrella for tightening how the assistant is steered. Add items here as they come up.
+- **SCRIPTS AS REMINDERS — a cheaper hook (owner's idea, 2026-08-06).** *"having python scripts perhaps
+  actually output things - reminders and such, as a form of 'hook' - as long as you read the output of the
+  script."* A tool that prints the convention it just applied fires exactly when it is relevant, cannot be
+  routed around, and costs one `print()` — no manifest row, no session-start snapshot, no fail-open logic.
+  **First instance is live:** `tools/player_sprites/review.py` `save()` prints the `C:/` path, that labels
+  are 22pt (~2× PIL's default, because he has twice had to zoom in to read a comparison sheet), and warns
+  when a review folder has no `README.md`. Worth spreading to the other generators — `gen_sprites.py`
+  (which model is about to be paid for), `publish_entities.py`, the zone builders (re-save + re-render
+  north-up before claiming a zone is fixed).
+- **A skill for AUTHORING skills (owner, 2026-08-06).** `scaffolding-review` already covers *reviewing* a
+  scaffolding change — levers, dimensions, gates, gotchas. What is missing is the authoring side: when a
+  reminder should be a skill vs a hook vs a printed line in the tool vs a comment where the mistake is
+  made, and how to tell whether it will actually change behaviour. Fold in the "scripts as reminders"
+  pattern above and the 2026-08-06 lesson that **four rounds of better *records* did nothing because no
+  code read them** — the fix was making the loader read the record, not writing a fifth record.
 - **DONE 2026-07-15 — enforcement scaffolding landed (P0-P5; plan: `docs/plans/repo-health-enforcement.md`).**
   Built the manifest-driven hook system this section called for: `.claude/manifest.json` (one source) +
   `.claude/hooks/` (skill-read gates, doc-drift Stop hook + git pre-commit backstop, determinism Stop gate,
