@@ -110,8 +110,23 @@ def pose_into(scene, bx, by, body, neutral, back_hand, palm_hand, beat, p):
     s = math.sin(PHASE[beat % len(PHASE)] * math.pi)
     dx = p["amp"] * tw * s
     dy = -p["ay"] * bh * abs(s)
-    near_ang = p["rot"] - p["tilt"] * s      # back_hand, at +dx: forward when s > 0
-    far_ang = p["rot"] + p["tilt"] * s       # palm_hand, at -dx: the opposite phase
+    # THE WRIST LEANS TOWARD THE BODY, because that is where the arm comes from.
+    #
+    # A hand held out in FRONT of you has its wrist BEHIND it, nearer the shoulder. A hand trailing
+    # behind has its wrist in FRONT of it. Both signs were backwards, so the forward fist's cuff sat
+    # further forward still — the arm appeared to reach around from the far side. Owner, repeatedly,
+    # most recently 2026-08-06: "when a hand is in front of you the wrist has to be like closer to you
+    # not coming from the other side... this is something I have been saying several times and you just
+    # dont fix". First raised 2026-08-03; the 08-05 change made the two hands tilt OPPOSITE ways but
+    # kept both directions wrong, so it never actually fixed what he was pointing at.
+    #
+    # Measured, not reasoned: the character faces +x, and rotating this (already flipped: cuff up,
+    # fingers down) sprite by +22 deg moves the cuff 2.4px to the LEFT, by -22 deg 2.0px to the RIGHT.
+    # So the forward hand — at +dx when s > 0 — needs the POSITIVE angle.
+    #
+    # `p["tilt"]` itself is unchanged; only the direction it is applied in.
+    near_ang = p["rot"] + p["tilt"] * s      # back_hand, at +dx: forward when s > 0, so cuff leans BACK
+    far_ang = p["rot"] - p["tilt"] * s       # palm_hand, at -dx: trailing, so cuff leans FORWARD
 
     _paste(scene, _sz(_rot(_dim(palm_hand), far_ang), bh, p["ratio"]), ox + cx - dx, oy + wy + dy)
     _paste(scene, body, bx, by)

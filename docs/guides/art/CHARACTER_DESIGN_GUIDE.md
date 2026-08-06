@@ -286,6 +286,40 @@ far-hand dimming, wrong hand sprites. It read as flapping and was rejected on si
 > lose. **If a parameter was agreed, it belongs in committed code the same day**, not in a temp script.
 > (It was recoverable from the session transcript, but only because the transcript happened to still exist.)
 
+#### THE WRIST LEANS TOWARD THE BODY (fixed 2026-08-06, after being reported three times)
+
+A hand held out **in front** of you has its wrist **behind** it, nearer the shoulder. A hand trailing
+**behind** has its wrist **in front** of it. The arm has to come from somewhere, and that somewhere is the
+body.
+
+Both signs were inverted, so the forward fist's cuff sat *further forward still* and the arm read as
+reaching around from the far side. Owner, first on 2026-08-03 and again on 2026-08-06: *"when a hand is in
+front of you the wrist has to be like closer to you not coming from the other side… this is something I
+have been saying several times and you just dont fix"*.
+
+**Why the earlier fix missed.** On 2026-08-05 the two hands were changed to tilt in *opposite* directions,
+which sounds like the same fix and is not — both directions stayed wrong, so the thing he was pointing at
+never changed. Opposite ≠ correct.
+
+**Do not eyeball this; measure it.** The character faces `+x`; the hand sprite is flipped (cuff up, fingers
+down); `_rot(hand, +22°)` moves the cuff **2.4px LEFT**, `-22°` moves it **2.0px RIGHT**. So the forward
+hand — the one at `+dx` when `s > 0` — needs the **positive** angle:
+
+```python
+near_ang = p["rot"] + p["tilt"] * s      # at +dx: forward when s > 0, so the cuff leans BACK
+far_ang  = p["rot"] - p["tilt"] * s      # at -dx: trailing, so the cuff leans FORWARD
+```
+
+`tilt` itself is unchanged — 22° walk, 14° run. Only the direction it is applied in.
+
+#### Palms turn IN for the camera-facing walk
+
+The front and back walks paste **one** hand sprite twice and mirror one of them; mirroring the **left** one
+turns both palms inward. Mirroring the right instead turns them both out, which shipped and was reported
+twice. All four combinations are rendered in `reviews/2026-08-06-bronze-hands/PALMS_compare.png` —
+mirroring neither or both points the hands the same way, so a symmetric pair is only ever the left or the
+right, and the right is the rejected one.
+
 ### Judge a set IN MOTION, holding something
 `showcase.py` renders several sets across four bands on one timeline — running right, running down, swinging
 side-on, swinging front-on — with a different tool per column so every motion appears. A set that reads well

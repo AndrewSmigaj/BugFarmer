@@ -123,9 +123,14 @@ def _gait_front_frames(bank, neutral, hands, p):
         span = rx - lx
         s = gait.FRONT_PHASE[beat % len(gait.FRONT_PHASE)]
         gap = max(2, int(span * p["gap"]))
+        # PALMS TURN IN, TOWARD THE BODY. The LEFT hand is the mirrored one.
+        # Mirroring the RIGHT one instead turns both palms OUT, away from him — which is what shipped
+        # and what the owner reported twice ("the palms are facing out when they should be facing in").
+        # Rendered as all four options in reviews/2026-08-06-bronze-hands/PALMS_compare.png; A and D
+        # point both hands the same way, so a symmetric pair is B or C, and C is the one he rejected.
         gait._paste(sc, body, bx, by)
-        gait._paste(sc, hand, ox + lx - gap - s * span * p["dx"], oy + r - s * span * p["dy"])
-        gait._paste(sc, hand[:, ::-1], ox + rx + gap + s * span * p["dx"], oy + r + s * span * p["dy"])
+        gait._paste(sc, hand[:, ::-1], ox + lx - gap - s * span * p["dx"], oy + r - s * span * p["dy"])
+        gait._paste(sc, hand, ox + rx + gap + s * span * p["dx"], oy + r + s * span * p["dy"])
         out.append(finish(sc))
     return out
 
