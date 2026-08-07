@@ -29,9 +29,19 @@ leather · wood · **bronze ✅** · copper · iron · steel · platinum
 
 **queens' set** — parts from BOTH queens, chest in an underground fortress · **spider-plate set** — Spider Vale
 
-## 4. Combat / chitin — 3
+## 4. Combat / chitin — 4
 
-**fireant ✅** · **blackant ✅** · **scorpion** ⬜ *(Scorpion Rocks, sand/desert)*
+| set | source | why it exists |
+|---|---|---|
+| **beetle-shell** 🎨 | `beetle_carrion` — **live** in village, Bee Meadow, Underground Passages | **The entry-level bug armour.** The first thing you make *from* bugs rather than buy: above ground, before the ant colonies. `dead_beetle → chitin` is **60 ticks, the fastest of the five** chitin recipes, so beetles are the game's primary chitin source. Elytra also reads nothing like ant chitin — iridescent, domed, colour-shifting vs matte segmented plates |
+| **fireant** ✅ | Ant Colony | |
+| **blackant** ✅ | Ant Colony | |
+| **scorpion** ⬜ | Scorpion Rocks (sand/desert) | venom + heat |
+
+> I had cut beetle-shell as "redundant". That was wrong. The owner's *"i dont think we need multiple chitin
+> just the fireant and black ant"* was about **ant variants** — don't make five ant sets — and I generalised
+> it into "no other bug-plate armour", which would also have ruled out the scorpion and thorn sets he
+> explicitly asked for.
 
 ## 5. Thorn line — 3  ·  species-specific
 
@@ -137,15 +147,13 @@ prospector's oilskin · queen's regalia *(it IS the queens' set)* · merchant ·
 
 ## Your calls
 
-1. **`beetle-shell`** 🎨 — old art, never confirmed. Chitin is capped at the two ants + scorpion, so it is
-   redundant as armour. Drop, or re-purpose? *(`moth-wool` is resolved above → decorative.)*
-2. **Fishing 4th** — is there an "ultimate fishing gear"?
-3. **Beekeeping 4th** — is there a "fancy armoured beesuit"?
-4. **The third legendary** — still an empty slot.
-5. **Dye** — a recolour system for any cloth outfit, or its own sets?
-6. **Names** — pick from the candidates above, or say the flavour and I will try more.
+1. **Fishing 4th** — is there an "ultimate fishing gear"?
+2. **Beekeeping 4th** — is there a "fancy armoured beesuit"?
+3. **The third legendary** — still an empty slot.
+4. **Dye** — a recolour system for any cloth outfit, or its own sets?
+5. **Names** — pick from the candidates above, or say the flavour and I will try more.
 
 ## Scale
 
-**~42 sets.** 3 done, ~11 with old art to re-roll. At three paid calls each (candidates → sheet →
+**~43 sets.** 3 done, ~11 with old art to re-roll. At three paid calls each (candidates → sheet →
 gauntlet) that is roughly **115 calls** — paced in batches with your review between each, never one spend.
