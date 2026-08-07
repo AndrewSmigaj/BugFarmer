@@ -6,6 +6,32 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Underground fortress — a secret, and the Queens' set (owner 2026-08-06)
+
+*"it would be locked in a chest in a little underground fortress we will backlog. i do want secrets."*
+
+A small built structure somewhere underground holding a **chest with a legendary armour recipe**. The set
+needs parts from **BOTH colony queens** — the col-0 intro colony and the col-3 deadly one — plus rare
+metals. Requiring both is the good part: it forces a traverse of the whole underground, east and west,
+rather than grinding one place.
+
+One of **two or three** most-powerful sets; a second is built on **spider plate** and is gated behind
+Spider Vale by geography. Design notes: [`design/brainstorm_armor.md`](design/brainstorm_armor.md) §5.
+
+Needs: a fortress structure (zonegen scene), a lockable/lootable chest with recipe contents, and the
+queen-part drop items. None of those exist.
+
+## Base village improvements (owner 2026-08-06 — placeholder, owner to fill)
+
+*"please backlog 'base village improvements' because there are some things I want to add and improve on."*
+
+Owner has a list in mind; this is the bucket for it. Known members so far:
+
+- **Bug processing station.** *"wood… you get by processing bugs — there will be a bug processing station."*
+  The `bug_extractor` placeable and its 8 recipes (carcasses → `chitin` / `leather` / `formic_acid`) already
+  exist; what is open is its role in the village and in the armour ladder, since it is the source of the
+  whole bug→material economy and gates the bottom two rungs (leather, then wood).
+
 ## Thorns — spiked armour hurts what runs into you (owner 2026-08-06)
 
 *"lets then redo the hornet thorn one — if enemies run into you it should do damage."*
