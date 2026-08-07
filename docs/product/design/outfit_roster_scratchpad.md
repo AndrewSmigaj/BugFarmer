@@ -1,169 +1,151 @@
 # Outfit roster — the list, for review
 
-**Scratchpad. Mark it up, strike things, add things.** Once it is settled it becomes the exploration
-briefs and we start making sprites. Design reasoning lives in
-[`brainstorm_armor.md`](brainstorm_armor.md); this is just the list.
+**Scratchpad. Mark it up.** Design reasoning: [`brainstorm_armor.md`](brainstorm_armor.md).
+**One paid call = one sheet of THREE design options**, so the count is per set.
 
-**One paid call = one sheet of THREE design options.** So the call count below is per set, not per design.
+Status: ✅ done · 🎨 old art, needs a fresh roll · ⬜ nothing yet · ⚠ needs your call
 
-Status key:  ✅ done · 🎨 old art exists (needs a fresh roll) · ⬜ nothing yet · ⚠ needs a decision
+> ⚠ **PREREQUISITE — the species list.** Several sets below depend on which bugs have how many tiers.
+> `species.json` has **15 entries**; the design docs describe many more. Owner: *"we need for all the bugs
+> simpler and more advanced version — a lot of bugs having three species in their tiers though some just 2
+> and some 1 but most have 3."* **Wasps and hornets: ~2 types each. Bees: 3, including killer bee.**
+> Worth settling that list before the thorn and bee sets get briefed.
 
 ---
 
-## 1. Base ladder — 6
+## 1. Base ladder — 6 to make
 
-Settled: bronze, tin, stone and silver-as-a-set are cut.
-
-| | set | zone / source | status |
-|---|---|---|---|
-| 1 | leather | bug processing | 🎨 |
-| 2 | wood | bug processing, a step above leather | 🎨 |
-| 3 | copper | | 🎨 |
-| 4 | **bronze** | | ✅ **official** |
-| 5 | iron | | 🎨 |
-| 6 | steel | | 🎨 |
-| 7 | platinum | top of the ladder | 🎨 |
+leather · wood · **bronze ✅** · copper · iron · steel · platinum
+*(bronze, tin, stone, silver-as-a-set: cut)* — all 🎨 except bronze.
 
 ## 2. Metal specials — 2
 
-| | set | what it is | status |
-|---|---|---|---|
-| 8 | gilded steel plate | gold over steel → acid-proof (Deadly Ants) | ⬜ |
-| 9 | fancy plate | silver, expensive, plain good defence. Recipe from **NW town** | ⬜ |
+| set | what it is |
+|---|---|
+| **gilded steel plate** | gold over steel → acid-proof (Deadly Ants) |
+| **fancy plate** | silver, expensive, plain good defence. Recipe from the NW town |
 
-## 3. Legendaries — 2 (+1 slot open)
+## 3. Legendaries — 2 (+1 open ⚠)
 
-| | set | gate | status |
-|---|---|---|---|
-| 10 | **queens' set** | parts from **BOTH** queens + rare metals; chest in an underground fortress | ⬜ |
-| 11 | **spider-plate set** | Spider Vale | ⬜ |
-| — | *(third slot open)* | | ⚠ |
+**queens' set** — parts from BOTH queens, chest in an underground fortress · **spider-plate set** — Spider Vale
 
 ## 4. Combat / chitin — 3
 
-| | set | zone | status |
+**fireant ✅** · **blackant ✅** · **scorpion** ⬜ *(Scorpion Rocks, sand/desert)*
+
+## 5. Thorn line — 3  ·  species-specific
+
+*"things that hit you get stung."* **Not one ladder** — wasps and hornets are different species; hornets
+*hunt* wasps. Three separate sets, three zones, three ingredient sources. Each may need thorns from
+**multiple species within its own family**.
+
+| | set | source | names to try |
 |---|---|---|---|
-| 12 | **fireant** | Ant Colony | ✅ **official** |
-| 13 | **blackant** | Ant Colony | ✅ **official** |
-| 14 | scorpion | Scorpion Rocks (sand/desert) — venom + heat | ⬜ |
-
-## 5. Thorn line — 3  *(things that hit you get stung)*
-
-Tiers follow the species ladder that already exists: `wasp_common` → `wasp_soldier` → `hornet_giant`.
-**Proposal: explore tier 1 only, tiers 2–3 reference that design** with material + spine intensity stepped
-up — the same way gauntlets reference bronze. Saves 2 calls and keeps the line consistent.
-
-| | set | status |
-|---|---|---|
-| 15 | wasp thorn | ⬜ |
-| 16 | hornet thorn | ⬜ |
-| 17 | *(third tier — apex)* | ⚠ name |
+| 1st | **wasp thorn** | the ranger zone, east | Bramblejack · Sting-Coat · Waspmail |
+| 2nd | **hornet thorn** | | Hornetplate · Spinemail · Brutebarb |
+| 3rd | **killer-bee thorn** | the bee line's late payoff | Killer's Coat · Swarmplate · Goldspine |
 
 ## 6. Place & anti-species — 2
 
-| | set | what it is | status |
-|---|---|---|---|
-| 18 | **ranger** | wasp/hornet protection. From the outpost zone (not yet designed) | 🎨 |
-| 19 | **forest** | bonus in forest zones + forest materials | ⬜ |
+| set | what it is | names to try |
+|---|---|---|
+| **ranger** 🎨 | wasp/hornet protection. From the eastern outpost zone | *(keep "ranger")* |
+| **forest plate** ⬜ | **samurai-ish. No bugs** — special trees and plants. **CAMO**: certain things have a hard time seeing you, plus tank defence, but **slower** | Forest Plate · Bark Harness · Greenwarden |
 
-## 7. Stealth — 3  *(spider silk; helps with venom; toughness + agility)*
+## 7. Silk / stealth — 3  ·  light, fast, quiet, WEAK
 
-| | set | zone | status |
-|---|---|---|---|
-| 20 | cave-spider silk | Underground Passages | ⬜ |
-| 21 | orb-weaver / hunting silk | Spider Vale West | ⬜ |
-| 22 | **widow** | Spider Vale East — black widow | ⬜ |
+⚠ **Correction: silk is NOT venom-related.** Silk is stealth and speed — the robes are quiet *because they
+are light*. Venom comes from elsewhere: **weapons** cause poisoned states, and **widow's armour reduces
+venom**.
+
+**Two different stealth flavours, deliberately:** silk = light-and-quiet (fast, weak) · forest = camo
+(hidden, tanky, slow).
+
+| | set | source |
+|---|---|---|
+| 1 | cave-spider silk ⬜ | Underground Passages |
+| 2 | hunting-spider silk ⬜ | Spider Vale West |
+| 3 | **widow's armour** ⬜ | Spider Vale East — the venom-reduction one |
 
 ## 8. Mining — 3
 
-| | set | zone | status |
-|---|---|---|---|
-| 23 | mining t1 | Underground Passages | ⬜ |
-| 24 | mining t2 | deep / Centipede Cavern | ⬜ |
-| 25 | **ant combat-mining hybrid** | Deadly Ants core. Ant parts, real combat **and** mining | ⬜ |
+Plus: the **underground combat armour** (§4/§3) also carries mining bonuses — ore chance, carry capacity,
+station bonuses. *(Dredging: later.)*
 
-## 9. Fishing / diving — 3
+**basic mining gear** ⬜ · **armoured mining gear** ⬜ · **deep mining gear** ⬜
 
-| | set | zone | status |
-|---|---|---|---|
-| 26 | fisherman | Shallow Swamp dock | 🎨 |
-| 27 | river / swamp diver | Underground River | ⬜ |
-| 28 | deep diver | Underground River deep, sunken ruins | ⬜ |
+## 9. Fishing — 3, maybe 4
 
-## 10. Beekeeping — 3
+⚠ **My mistake:** I had this as one dock set plus two underground-river sets, which is *"one tiny part of
+the water world."* **There is no diving in this game.**
 
-| | set | what it is | status |
-|---|---|---|---|
-| 29 | plain cloth beekeeper | the cheap starter | 🎨 |
-| 30 | the NPC's fancy suit | | ⬜ |
-| 31 | armoured beekeeper | for the aggressive bees | ⬜ |
+**basic fishing gear** 🎨 · **cave fishing gear** ⬜ · **armoured fishing gear** ⬜ · *(ultimate fishing gear?* ⚠*)*
 
-## 11. Farming — 2 or 3 ⚠
+## 10. Beekeeping — 3 or 4 ⚠
 
-| | set | status |
-|---|---|---|
-| 32 | farmhand — simple farmer's clothes | 🎨 |
-| 33 | market gardener — the crop half | ⬜ |
-| 34 | *(bug rancher — your own bug farm)* | ⚠ **name collision, see §12** |
+**cheap beesuit** 🎨 · **professional beesuit** ⬜ *(a store sells it)* · **padded beesuit** ⬜ ·
+*(fancy armoured beesuit?* ⚠*)*
+Names to try: Hivecloth · Apiarist's Suit · Smoke-and-Veil · Combwarden
 
-## 12. Bug catching — 3  *(bugs ignore you · harvest success rate)*
+## 11. Farming — 3
 
-| | set | what it is | status |
-|---|---|---|---|
-| 35 | **entomologist** | the scientist | 🎨 |
-| 36 | butterfly collector | butterfly-scoped | ⬜ |
-| 37 | **bug wrangler** | cowboy vibes — ants, beetles, anything wrangleable | ⬜ |
+**farmhand's clothes** 🎨 · **padded/armoured farming outfit** ⬜ · **industrial farming gear** ⬜ ⚠ *(no idea
+what it looks like yet)*
+Names to try: Furrow Coat · Tiller's Kit · Harvest Rig · Threshers
 
-> ⚠ **Name collision.** "Bug rancher" was proposed for farming #34 and for the cowboy #37.
-> **Proposed split: wrangler = catching wild bugs · rancher = running your own farm.**
-> Or give the cowboy the name and drop farming to two.
+## 12. Bug catching — 3
+
+**entomologist** 🎨 · **butterfly collector** ⬜ · **bug wrangler** ⬜ *(cowboy — same thing as "bug rancher",
+one set only)*
 
 ## 13. Potions — 2
 
-Potions are not magic, so you can hand one to someone else. *(Mechanic for later: healing someone is
-having the potion equipped in the off hand, not right-clicking, which drinks it.)*
+**village healer's garb** ⬜ · **industrial chemist** ⬜ — *"neat having potions made via these two lenses."*
 
-| | set | status |
-|---|---|---|
-| 38 | village alchemist / healer garb | ⬜ |
-| 39 | industrial chemist — found in town | ⬜ |
+## 14. Light — 2 (+1 experiment)
 
-## 14. Light — 1 or 2 ⚠
+⚠ **Brief it as ARMOUR, like everything else** — not *"an outfit that turns you into a mutant glowworm
+humanoid."* That is what made the old sheet ugly.
 
-| | set | status |
-|---|---|---|
-| 40 | **glowworm** — ⚠ **ARMOUR MADE FROM glowworm material, NOT a glowworm-creature.** The old sheet was *"ridiculously weird and ugly."* One of the three options built from **glowsticks** | 🎨 redo |
+| set | note |
+|---|---|
+| **glowworm armour** 🎨 redo | armour MADE FROM glowworm material |
+| **glowstick armour** ⬜ | built from glowsticks |
+| *(one option: a "glowstick man" version — it's a real thing, worth seeing once)* | |
 
-## 15. Decorative / social — 1+
+## 15. Decorative / social — 6+
 
-Clothes that exist to look good. Bonus may be farm output or happiness — the role furniture plays.
-*"outfits are like decorations in that they can be used so i like outfits, make a variety we can create and
-buy in different zones."* Dyeable at the **dyer**.
+Clothes that exist to look good; bonus may be farm output or happiness. Sold across different zones,
+dyeable at the dyer. Not filler — this is the furniture role.
 
-| | set | status |
-|---|---|---|
-| 41 | festival / sunday best | ⬜ |
-| — | *(more — how many, and which zones sell them?)* | ⚠ |
+| set | what it is |
+|---|---|
+| **festival wear** | village fair / harvest festival |
+| **pinstripe suit** | town formal |
+| **beach outfit** | Bee Meadow coast |
+| **honey-gold formal** | the beekeeper's Sunday best — bee-inspired, warm gold and cream |
+| **moth-wool knits** 🎨 | ⚠ **repurpose**: it was never a convincing armour, but it is a *lovely* cosy winter set. Solves the open question |
+| **traveller's coat** | the road between zones; a merchant look without a merchant stat |
+| **sleepwear** | you have a house and idle content |
 
 ---
 
 ## Cut — confirmed
 
-deep-sea explorer · storm / weather gear · pill-bug plate · hermit / bog alchemist · prospector's oilskin ·
-queen's regalia *(it IS the queens' set)* · merchant / trader · locust set *(D10)*
+deep-sea explorer · diving *(no diving in the game)* · storm gear · pill-bug · hermit/bog alchemist ·
+prospector's oilskin · queen's regalia *(it IS the queens' set)* · merchant · locust set *(D10)*
 
-## Still needing your call
+## Your calls
 
-1. **`beetle-shell` and `moth-wool`** — old art, never confirmed. Beetle-shell overlaps chitin (capped at
-   the two ants); moth-wool overlaps butterfly collector's zone. Keep, drop, or re-purpose?
-2. **The bug-rancher name collision** (§11 / §12).
-3. **The third thorn tier** — what is it called?
-4. **The third legendary** — empty slot.
-5. **How many decorative outfits**, and which zones sell them?
-6. **Dye** — a recolour system applied to any cloth outfit, or its own sets?
+1. **`beetle-shell`** 🎨 — old art, never confirmed. Chitin is capped at the two ants + scorpion, so it is
+   redundant as armour. Drop, or re-purpose? *(`moth-wool` is resolved above → decorative.)*
+2. **Fishing 4th** — is there an "ultimate fishing gear"?
+3. **Beekeeping 4th** — is there a "fancy armoured beesuit"?
+4. **The third legendary** — still an empty slot.
+5. **Dye** — a recolour system for any cloth outfit, or its own sets?
+6. **Names** — pick from the candidates above, or say the flavour and I will try more.
 
 ## Scale
 
-**~41 sets**, of which **3 are done** and **~11 have old art** to re-roll. At three paid calls each
-(candidates → sheet → gauntlet) the full programme is roughly **115 calls**. That is a long run, so it
-gets paced in batches with your review between each — never one big spend.
+**~42 sets.** 3 done, ~11 with old art to re-roll. At three paid calls each (candidates → sheet →
+gauntlet) that is roughly **115 calls** — paced in batches with your review between each, never one spend.
