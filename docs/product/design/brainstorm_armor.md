@@ -231,7 +231,83 @@ third yet to be named — all moving *being ignored* and *harvest success*, none
 backlogged. Owner: *"we do not step aside from building sprites to build every single little related
 mechanic, focus now we are creating sprites."*
 
-## 11. Open
+## 11. The saturation test
+
+> *"we want more outfits but we also dont want to flood and saturate them and make them less meaningful by
+> having too many."* — owner, 2026-08-06
+
+**A set earns its slot if you can say what it is FOR in one phrase, and no other set has the same answer.**
+Two sets with the same answer means one of them is filler, and filler is what makes a wardrobe feel cheap.
+
+Corollary the owner gave, and it is freeing: **not every bug needs an outfit.** *"some bugs might only be
+used for certain tools… its ok if we dont have for example a mosquito based armor, it can be used for a
+weapon."* Bugs feed tools, weapons, potions and decor as well as armour.
+
+## 12. The roster — zone by zone
+
+Every zone gives at least one, none give the same answer twice.
+
+| zone | set(s) | role it tops or serves |
+|---|---|---|
+| (0,0) Locust Farmland | — | **none.** D10 cut the locust set; it is a place you defend, not a look |
+| (0,1) Millipede Forest | **forest** | situational: forest zones + forest materials |
+| (0,2) Spider Vale W | silk (mid) | stealth |
+| (0,3) Spider Vale E | **widow** · **spider-plate** ⭐ | stealth apex · a legendary |
+| (1,0) Meadow | beekeeper (armoured) | beekeeping apex |
+| (1,1) Butterfly Fields | **butterfly collector** | catching |
+| (1,2) Scorpion Rocks *(sand/desert)* | **scorpion** | combat + venom/heat — **NEW, owner asked** |
+| (1,3) Deep Swamp | swamp gear | situational: marsh traversal |
+| (2,0) Bee Meadow | beekeeper (plain) | beekeeping t1 |
+| (2,1) **Village** *(town → many recipes)* | farmhand · market gardener · **village alchemist** · **dyed clothes** | farming · potions · utility |
+| (2,2) Wasp Thicket *(outpost, wasp/hornet infested)* | **ranger** | anti-wasp/hornet |
+| (2,3) Shallow Swamp *(dock, Fisher's hut)* | fisherman | fishing t1 |
+| (3,0) Ant Colony intro | **fireant ✅ · blackant ✅** | combat/chitin |
+| (3,1) Underground Passages | mining t1 · cave-spider silk | mining · stealth t1 |
+| (3,2) Underground River | fishing t2 / diving | fishing |
+| (3,3) Deadly Ants outpost | thorn line | combat buff |
+| (4,0) Ant Colony + Queen | **queens' set** ⭐ *(part 1)* | a legendary |
+| (4,1) Centipede Cavern | **glowworm** | light |
+| (4,2) Underground River deep *(sunken ruins)* | fishing/diving apex | fishing apex |
+| (4,3) Deadly Ants core | **ant combat-mining hybrid** · queens' set *(part 2)* | hybrid · legendary |
+| **NW town** | **industrial chemist** · **fancy plate** | potions apex · defence |
+
+**Potions — new, owner 2026-08-06.** *"potions not magic so you can give someone else a potion."* A basic
+**village alchemist / healer** garb and an advanced **industrial chemist** found in town. Mechanic note for
+later: healing someone is having the potion **equipped in the off hand**, not right-clicking (which drinks
+it) — ties to the backlogged sword-and-shield work. Trinkets and shields are **not for now**.
+
+**Clothing vs armour — new line.** *"you can also make clothes - there is a dyer to dye clothes, and they
+give bonuses to making potions, harvesting, etc."* Light **clothing** with utility bonuses and low defence
+is a legitimate trade against the armour line, and dyeing gives colour variety without new designs. ⚠ Open:
+is dye a **recolour system** applied to any cloth outfit, or are dyed clothes their own sets?
+
+**Bug wrangler / rancher — the third catching set.** *"cowboy related vibes… bonuses to catching ants and
+beetles and anything we might want to wrangle."* ⚠ Name collision: I had proposed *bug rancher* for
+farming's third tier. Clean split — **wrangler** = catching wild bugs (cowboy), **rancher** = your own
+bug farm. Or drop farming to two and let the cowboy own the name.
+
+## 13. What I would CUT, and why
+
+Applying the saturation test to my own earlier proposals:
+
+| cut | because |
+|---|---|
+| deep-sea explorer | fishing already has three tiers; this is a fourth aquatic answer to the same question, and there is no ocean zone |
+| glowworm as **two** outfits | one design, two **materials** (harvested vs glowstick). A material variant is a recolour, not a second set |
+| hermit / bog alchemist | the village alchemist now owns potions |
+| prospector's oilskin | that is mining t1 |
+| festival / sunday best | pure cosmetic — exactly the filler that dilutes a wardrobe |
+| storm / weather gear | no mechanic, and no phrase for what it is FOR |
+| pill-bug plate | a fun silhouette with no answer that "tank" does not already give |
+| queen's regalia | it **is** the queens' legendary; one thing, one name |
+| beetle-shell · moth-wool | old art, never confirmed. Beetle-shell overlaps chitin (capped at the two ants); moth-wool overlaps butterfly collector's zone. **Owner call** |
+| merchant / trader | folds into the town cluster unless shop prices become a real lever |
+
+**Scale after the cut: ~40 sets.** That is what the owner's own constraints produce — six ladder rungs,
+three tiers across six categories, one-plus per zone across twenty zones — and it is the number to sanity
+check before committing, at three paid calls each.
+
+## 14. Open
 
 - **Scale.** Six rungs + ~5 metal/legendary + 3×(stealth, mining, fishing, beekeeping, farming) + the
   catching sets + combat chitin + ≥1 per zone across 20 zones lands somewhere near **45–60 outfits**.
