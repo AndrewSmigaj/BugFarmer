@@ -148,9 +148,21 @@ Both fail for one reason. "Faster growth in this area" is **world state**; "your
 An outfit that boosts idle output either has to be worn while you idle — which is not idle, and wastes the
 slot — or apply while unworn, which is incoherent.
 
-**So: the home farm stays decoration-driven, and outfit bonuses attach to VERBS.** Watering AoE when you
-water, extra-crop chance when you harvest, seed return when you plant, carry when you haul. Personal,
-active, and safe in a shared world by construction.
+**So a FUNCTIONAL outfit's bonuses attach to VERBS.** Watering AoE when you water, extra-crop chance when
+you harvest, seed return when you plant, carry when you haul. Personal, active, and safe in a shared world
+by construction. A mining or farming set should not quietly boost idle output.
+
+> ⚠ **I over-applied this.** The owner was *musing* — *"but that also might not be a great design"* — and I
+> wrote it up as a law, then used it to cut festival wear. He corrected it 2026-08-07:
+>
+> *"we do want some outfits, they are clothes and look cool, and their only bonus is increasing something
+> on the players farm or adding happiness/decoration or whatever… outfits are like decorations in that they
+> can be used so i like outfits."*
+>
+> **There is a third class: DECORATIVE outfits.** Clothes that exist to look good, sold and found across
+> different zones, whose whole bonus may be farm output or happiness — the same role furniture plays. They
+> are not filler and the verb rule does not govern them. The rule above constrains **functional** sets so
+> they do not become idle-boosters; it was never meant to ban the decorative class.
 
 ## 8. Farming — the naming problem
 
@@ -293,11 +305,11 @@ Applying the saturation test to my own earlier proposals:
 | cut | because |
 |---|---|
 | deep-sea explorer | fishing already has three tiers; this is a fourth aquatic answer to the same question, and there is no ocean zone |
-| glowworm as **two** outfits | one design, two **materials** (harvested vs glowstick). A material variant is a recolour, not a second set |
+| ~~glowworm as two outfits~~ | **REVERSED 2026-08-07.** Explore genuinely different *designs*, not one re-rolled. The existing sheet is *"ridiculously weird and ugly… its armor not a strange half human half glow worm beast"* — so the brief must say **ARMOUR MADE FROM glowworm materials, never a glowworm-creature**, with one option built from **glowsticks**. *"if they look better other ways we might just use glow worm ingredients, we might make both"* |
 | hermit / bog alchemist | the village alchemist now owns potions |
 | prospector's oilskin | that is mining t1 |
-| festival / sunday best | pure cosmetic — exactly the filler that dilutes a wardrobe |
-| storm / weather gear | no mechanic, and no phrase for what it is FOR |
+| ~~festival / sunday best~~ | **KEEP — I was wrong.** Decorative outfits are a legitimate class (see §7); *"festival wear is fine"* |
+| storm / weather gear | **cut, confirmed** |
 | pill-bug plate | a fun silhouette with no answer that "tank" does not already give |
 | queen's regalia | it **is** the queens' legendary; one thing, one name |
 | beetle-shell · moth-wool | old art, never confirmed. Beetle-shell overlaps chitin (capped at the two ants); moth-wool overlaps butterfly collector's zone. **Owner call** |
