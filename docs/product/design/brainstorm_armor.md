@@ -124,7 +124,61 @@ plain (yield %) → fancy (yield % + range: `harvest_aoe`/`water_aoe` are alread
 
 ---
 
-## 7. Open
+## 7. Two rules that decide what a bonus may be
+
+### An outfit suits an EXPEDITION, not an ACTION
+
+> *"outfits should be something we dont want to micromanage and constantly swap out they should not be
+> completely single purpose so still have defense just other bonuses."* — owner
+
+Every outfit is **defence + two or three bonuses**, chosen so you pick one for a **trip**. The mining kit
+carries you through digging, fighting what lives down there, and hauling back — you do not change clothes
+at each activity. This is the test that kills single-purpose ideas: a *composter's* or *pollinator's* set
+fails it, which is why the owner is right that **tools are the better home for those**.
+
+### An outfit changes what YOU DO — a decoration changes what the PLACE IS
+
+The owner raised two doubts that are the same doubt:
+
+- *"in the shared open world there is no way of having something go faster for you than other people"*
+- *"why should you wearing a better farming outfit increase things on your home plot"*
+
+Both fail for one reason. "Faster growth in this area" is **world state**; "your home honey rate" is
+**place state**; neither can be personal, and the home plot is **idle** content while an outfit is **worn**.
+An outfit that boosts idle output either has to be worn while you idle — which is not idle, and wastes the
+slot — or apply while unworn, which is incoherent.
+
+**So: the home farm stays decoration-driven, and outfit bonuses attach to VERBS.** Watering AoE when you
+water, extra-crop chance when you harvest, seed return when you plant, carry when you haul. Personal,
+active, and safe in a shared world by construction.
+
+## 8. Farming — the naming problem
+
+Owner: *"not sure what the 3 farmer related ones will be, those are not obvious."*
+
+The game is **Bug** Farmer, so farming has two halves. Splitting on that gives three without inventing a
+third crop tier that has no identity:
+
+| | covers | bonuses (verbs) |
+|---|---|---|
+| **Farmhand** | starter, general | small yield, small carry |
+| **Market gardener** | the crop half | extra-crop chance, watering AoE, carry |
+| **Bug rancher** | the bug half — owner's word | nest-harvest yield, calm radius, handling |
+
+Bug rancher moves **your** yield and **your** handling, never breeding rates — the shared-world constraint
+above.
+
+## 9. Difficulty is two parallel ladders, not one
+
+> *"the upper outside and lower underground are roughly even in difficulty… spider veil being the hardest
+> above ground and the fireant domain the hardest below ground."* — owner. Swamp ≈ underground river ≈ lake.
+
+So the top of each category is a **pair of peers**, not a sequence: stealth t3 (widow, Spider Vale) and
+mining t3 (Deadly Ants / fireant domain) are the same rung by different routes. That matches the two
+legendaries — one behind **both queens** underground, one behind **spider plate** above — and it means the
+endgame is a choice of route rather than a single ladder.
+
+## 10. Open
 
 - **Scale.** Six rungs + ~5 metal/legendary + 3×(stealth, mining, fishing, beekeeping, farming) + the
   catching sets + combat chitin + ≥1 per zone across 20 zones lands somewhere near **45–60 outfits**.
