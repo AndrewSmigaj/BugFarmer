@@ -6,6 +6,32 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Thorns — spiked armour hurts what runs into you (owner 2026-08-06)
+
+*"lets then redo the hornet thorn one — if enemies run into you it should do damage."*
+
+The signature bonus of the **Chitin/Carapace** line. `stats_and_bonuses.md` already lists `thorns` under
+that concept with status 🔴 **not built**, and there is nothing to hang it on yet: the entire armour system
+in the sim is `sting_immune` (a bool) and `slot_bonus` (an int) — `entities.go:56-68`. No defense field, no
+bonuses map, no `PlayerStats`.
+
+- **Server-authoritative.** Player HP is server-only and sim-inert (`combat-enemy` skill), so reflecting
+  damage back onto a bug is a server change. It kills bugs, so the kill must ride the ledger like any other
+  (`BUG_REMOVED`, detect-don't-remove) or clients disagree about which bugs are alive.
+- **Needs the `bonuses{}` block first** — this is the second armour stat ever, so it is really "build the
+  armour-stat system, with thorns as its first customer".
+- Reads naturally on: hornet (spined chitin), scorpion, centipede plate, pill-bug.
+
+## Glowsticks and glow lanterns — a crafted light material (owner 2026-08-06)
+
+*"one describing it as being made from glowsticks which we might end up making it out of (glowsticks, glow
+lanterns both made at workbench)."*
+
+Workbench recipes for a **glowstick** and a **glow lantern**, which then become the material story for the
+glowstick variant of the glowworm outfit — a *crafted* light set as an alternative to the *harvested*
+glowworm one. Glowworms live in **Centipede Cavern (4,1)**; `light_radius` is 🔴 not built, so this pairs
+with the lighting/mining bonus work.
+
 ## Armour economy overhaul — WHOLE OUTFITS, not per-slot pieces (owner 2026-08-05)
 
 The player art moved to **whole-outfit sprite sheets** — one image per outfit, generated in a single
@@ -51,6 +77,13 @@ Design + evidence: `docs/product/investigations/swing-design/`. Plan: `docs/plan
 a stealth stat today, so this is a real mechanic to design — bug aggro is CLIENT-authority per
 `architecture_swarm_sync.md`, so anything that changes which bugs notice the player is a determinism-touching
 change and goes through the `frontier-sync` recipe, not a cosmetic tweak.
+
+> **STEALTH AND SPIDERS ARE ONE SPRINT (owner 2026-08-06).** *"spiders give silk which is what stealth based
+> equipment is based on, one way to deal with harder levels without combat… we are eventually going to do
+> spiders so we can backlog stealth and spiders as one sprint."* They are the same feature: stealth needs a
+> material, the material is silk, and **`silk` is currently an orphan item** — `items.json:1631` exists with
+> no recipe and no bug that drops it. Spiders are the source. See *Later — creatures: ants & spiders*.
+> Sequence: cave spider + webs → silk drops → the silk/`shadowsilk` set → the stealth stat.
 
 Remaining, in the order it blocks things:
 - **Owner call** — which of the 8 non-catalog sets (`farmer` `wood` `swamp-gear` `fisherman` `wizard-robe`
@@ -964,7 +997,14 @@ run), (2) scout coverage (patrol-bias lever). Owner decides at the review packag
 (docs/product/investigations/underground_arc_review_package.md): finish in the lab now,
 or bar it on ant_tunnels_30's real tunnel geometry when built.
 
-## Later — creatures: ants & spiders (DESIGNED, not built)
+## Later — creatures: ants & spiders (DESIGNED, not built) — **PAIR WITH STEALTH**
+
+> Owner 2026-08-06: run this **together with the stealth bonuses** (see *Player sprite + wearable creation
+> system*). Spiders are the only source of silk, silk is what the stealth line is made of, and `silk`
+> (`items.json:1631`) is an orphan id today — it exists with no recipe and nothing that drops it. Building
+> spiders without stealth leaves a material with no purpose; building stealth without spiders leaves a set
+> with no material.
+
 Full approved design: **[design_ants_spiders.md](ecology/design_ants_spiders.md)**. Ants = a foraging colony
 (hill/queen/eggs reuse Nest+Brood; workers forage carrion → carry home via the wasp provisioning loop;
 scouts + server-only "colony memory" make trails emerge — no per-cell ACO grid). Spiders = a web-builder
