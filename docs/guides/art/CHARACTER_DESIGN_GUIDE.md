@@ -398,6 +398,19 @@ constants they affect, because this file is where *"what did we agree"* gets ans
 > which frame bank, where the shoulder sits and whether the weapon draws behind the body — next to 174
 > lines of dead code including a whole second motion system whose constants still looked live.
 
+### Candidate designs — `outfits.py explore <name>`
+
+One paid call draws **three** design options side by side on magenta, so "three candidates" = one call.
+The brief is an `EXPLORATIONS` entry: what the set IS, plus three directions.
+
+**The three must differ by SILHOUETTE — helm outline, shoulder mass, hem shape.** The shared prompt already
+says so, and it is the whole game: at ~40px surface detail collapses to mush, so three designs separated by
+trim, engraving or linework produce a sheet nobody can tell apart. The grey metal rungs additionally
+separate by **brightness** (armor.md records iron 66, steel 90, platinum 157).
+
+Design intent for the roster lives in `docs/product/design/brainstorm_armor.md` — what each set is FOR,
+which role's apex it competes for, and what has been cut and why.
+
 ### Showing him options — `tools/player_sprites/review.py`
 
 Anything the owner must LOOK AT to make a decision goes through this. Two conventions are baked in

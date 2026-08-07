@@ -330,6 +330,72 @@ EXPLORATIONS = {
          "a HORNED MONARCH - heavy regal platinum with a CROWN of tall spikes around the helm and "
          "broad squared-off pauldrons, a wide flared skirt of plates at the hips. Imposing and "
          "top-heavy"]),
+
+    # ── BATCH 1: THE BASE LADDER (2026-08-06) ────────────────────────────────────────────────────
+    # Six rungs, settled: leather -> wood -> copper -> iron -> steel -> platinum. Bronze, tin, stone
+    # and silver-as-a-set are CUT (see docs/product/design/brainstorm_armor.md §3).
+    #
+    # The three options in each row differ by SILHOUETTE ONLY — helm outline, shoulder mass, hem shape.
+    # The shared prompt already warns that at ~40px surface detail collapses to mush, so distinguishing
+    # a design by trim or engraving produces three sheets nobody can tell apart. Each rung also has to
+    # read as ITS MATERIAL at a glance, and the four grey rungs (iron/steel/silver/platinum) separate by
+    # BRIGHTNESS as much as by shape — armor.md records the values iron 66, steel 90, platinum 157.
+
+    "leather": ("plain boiled-leather armour - tan and mid-brown, darker straps and stitching, no metal "
+                "plates anywhere", (
+        "a HOODED JERKIN - a soft pointed hood worn up, a short sleeveless jerkin, a plain belt, and "
+        "trousers tucked into low boots. The silhouette is soft and rounded all over, no hard edges",
+        "a STUDDED BRIGANDINE - a stiff square-cut torso piece sitting proud of the body with a broad "
+        "waist belt, bare shoulders, and a short skirt of hanging leather strips at the hips",
+        "a LONG RIDING COAT - a tall standing collar framing the head, no hood, and a long coat that "
+        "flares below the knee. Tall and narrow, the tallest silhouette of the three")),
+
+    "wood": ("armour made of WOOD - bark plates, pale carved timber and darker bark, bound with cord. "
+             "Wood is the rung ABOVE leather, so it must read as sturdier than cloth, not as a costume", (
+        "BARK PLATES - broad curved slabs of thick bark strapped over the chest and thighs like plate, "
+        "with a low domed bark helm. Chunky and rounded, the outline of a beetle's back",
+        "WOVEN WITHY - basket-woven flexible branches forming a barrel-shaped torso and a tall open "
+        "helm-cage around the head. Light, airy, with a visibly woven outline",
+        "A CARVED YOKE - a heavy squared timber shoulder-yoke sitting across both shoulders, a plain "
+        "board cuirass hanging from it, and no helm at all. Wide, flat-topped, top-heavy")),
+
+    "copper": ("copper plate armour - warm orange-pink metal with salmon highlights and patches of pale "
+               "green verdigris in the crevices", (
+        "a KETTLE-HAT SET - a wide flat circular brimmed helm, a plain rounded breastplate and a short "
+        "flared skirt of plates. The wide disc of the brim is the whole silhouette",
+        "a MUSCLE CUIRASS - a smooth rounded sculpted torso, a close-fitting cap helm with cheek pieces, "
+        "and short thigh plates. Curved, organic, almost no straight lines",
+        "a SCALE COAT - overlapping round copper scales over a long knee-length coat, a plain conical "
+        "helm. Narrow, tall and columnar with a scalloped hem")),
+
+    "iron": ("rough iron plate armour - dark blue-grey unpolished iron, pitted, with dull rust-brown "
+             "staining at the rivets and edges. Clearly DARKER than steel", (
+        "a BARBUTE SET - a tall helm with a narrow T-shaped face opening, plain rounded shoulders and "
+        "long hanging thigh plates. Tall, closed and severe",
+        "BANDED MAIL - horizontal iron bands wrapped around the torso and limbs, a low open-faced skull "
+        "cap. Wide, barrel-chested, the outline visibly ringed",
+        "a RIVETED BRIGANDINE with a HORNED helm - a square-cut torso, bulky squared pauldrons, and two "
+        "short blunt horns angling out from the helm. Broad, angular and top-heavy")),
+
+    "steel": ("tempered steel plate armour - mid gunmetal grey with a faint cold blue sheen and bright "
+              "polished bevels along every plate edge. Clearly BRIGHTER than iron", (
+        "a SALLET SET - a smooth rounded helm with a long pointed tail sweeping back off the skull, a "
+        "fitted breastplate and articulated tassets. Streamlined, swept back, aerodynamic",
+        "FULL PLATE - complete enclosing plate with very large rounded pauldrons, a closed visored helm "
+        "and a long skirt of plates. The biggest, heaviest outline of the three",
+        "a FLUTED HALF-PLATE - a breastplate covered in deep vertical fluting ridges, open shoulders, an "
+        "open-faced helm and plain trousers below the waist. Narrow-shouldered and clearly LESS armoured "
+        "than the other two")),
+
+    "platinum-r2": ("polished platinum plate armour, the FINEST armour in the game - bright white-silver "
+                    "with cool blue-white highlights and pale grey shadows. It must read as the top of "
+                    "the ladder without any gold, colour or gemstones", (
+        "a CRESTED CHAMPION - a tall thin blade-like crest running front to back over the helm, a "
+        "close-fitted breastplate and long clean leg plates. Tall, narrow and vertical",
+        "a WINGED GUARDIAN - large upswept wing-shaped shoulder pieces rising well above the shoulders, "
+        "a smooth radiant breastplate, almost no surface detail. The widest silhouette",
+        "a TOWER SET - deep squared-off pauldrons, a flat-topped closed helm and a broad flared skirt of "
+        "plates reaching the knee. Blocky, rectangular and immovable")),
 }
 
 

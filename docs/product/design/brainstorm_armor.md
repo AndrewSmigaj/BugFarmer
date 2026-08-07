@@ -168,17 +168,70 @@ third crop tier that has no identity:
 Bug rancher moves **your** yield and **your** handling, never breeding rates — the shared-world constraint
 above.
 
-## 9. Difficulty is two parallel ladders, not one
+## 9. There is no single best armour. Every ROLE has its own apex.
 
-> *"the upper outside and lower underground are roughly even in difficulty… spider veil being the hardest
-> above ground and the fireant domain the hardest below ground."* — owner. Swamp ≈ underground river ≈ lake.
+> *"recall we have stealth, mining, combat, etc all sorts of different things each which will have their
+> own best version and a few which are mix and matches of them… there will be a best stealth and a best
+> mining and a best tank and a best agility and such."* — owner, 2026-08-06
+>
+> *"the spider zone stealth is NOT the top outfit."*
 
-So the top of each category is a **pair of peers**, not a sequence: stealth t3 (widow, Spider Vale) and
-mining t3 (Deadly Ants / fireant domain) are the same rung by different routes. That matches the two
-legendaries — one behind **both queens** underground, one behind **spider plate** above — and it means the
-endgame is a choice of route rather than a single ladder.
+**Not one ladder, and not two — a set of roles, each with its own top.** Tank · attack · agility · stealth ·
+mining · fishing · farming · bug-catching · beekeeping. Nothing is "the best armour in the game"; a set is
+the best *at something*. This is why *"which key do I need"* beats *"do I have the best one yet"*, and it is
+the shape that pays off the curiosity lens — no zone hands you the endgame, each hands you the top of one
+thing.
 
-## 10. Open
+**Two axes, and an outfit sits on both.**
+
+| axis | what it means |
+|---|---|
+| **Role** | tank, attack, agility, stealth, mining, fishing, farming, catching — each has an apex |
+| **Situation** | *"bonus defense and/or attack against wasps compared to other armors in the zone"* — best HERE, or against THIS, rather than best outright |
+
+The situational axis is the expedition rule again: you bring gear for **where you are going**, not for a
+number. And it lets a mid-tier set be genuinely correct in its own zone, which keeps old sets alive.
+
+**Hybrids are first-class.** *"a few which are mix and matches of them."* The named example:
+
+> **Underground combat-mining set** — ant parts, mining buffs *and* real combat. Second in power to the
+> spider-zone combat gear **as combat gear**, while being far better than it at mining. That is exactly
+> how a hybrid should read: top of nothing, strong at two things.
+
+⚠ **Correction:** `fireant` and `blackant` are **combat/chitin sets, NOT mining outfits.** The ant-parts
+mining hybrid above is a separate, deeper set.
+
+*(Difficulty context, owner: the upper surface and the lower underground are roughly even; swamp ≈
+underground river ≈ lake; Spider Vale is the hardest surface zone and the fireant domain the hardest
+underground one. So the hardest zones are peers — but "hardest zone" produces "best of a role", not
+"best overall".)*
+
+## 10. Settled 2026-08-06 — ranger, forest, thorns, catching
+
+**Ranger — YES, and it is the wasp/hornet answer.** *"the ranger thing is good for wasps… ranger armor
+yeah wasp and hornet protection."* You get it in a zone with **a little outpost, infested with wasps and
+hornets, seeded by an active bubble of flies** — that zone is **not designed yet**.
+
+**Forest — a separate set, keep the plain name.** *"just call it that, gives bonus in forest zones and
+maybe things involving forests."* So ranger and forest both exist; ranger is anti-wasp, forest is
+place-and-material.
+
+**Thorn armour — 3 tiers, a combat buff.** *"basically things that hit you get stung."* The tiers follow
+the species ladder that already exists (`wasp_common` → `wasp_soldier` → `hornet_giant`), so **wasp thorn**
+and **hornet thorn** are two of the three. Owner: *"not sure we need candidates"* — the look follows from
+the bug, so the proposal is **explore tier 1 only, then tiers 2–3 reference that design** with the material
+and spine-intensity stepped up. Same pattern as the gauntlets referencing bronze: one design, then variants.
+
+**Bug-catching — 3 outfits, one lever family, conceptually distinct.** *"we dont want literally 3
+entomologist outfits but 3 outfits that do similar things… related to bugs ignoring you and the harvest
+success rate."* So: **entomologist** (the scientist), **butterfly collector** (butterfly-scoped), and a
+third yet to be named — all moving *being ignored* and *harvest success*, none of them a re-skin.
+
+**Build the sprite ahead of the mechanic.** Ocean zones and hostile bees are backlogged and stay
+backlogged. Owner: *"we do not step aside from building sprites to build every single little related
+mechanic, focus now we are creating sprites."*
+
+## 11. Open
 
 - **Scale.** Six rungs + ~5 metal/legendary + 3×(stealth, mining, fishing, beekeeping, farming) + the
   catching sets + combat chitin + ≥1 per zone across 20 zones lands somewhere near **45–60 outfits**.
