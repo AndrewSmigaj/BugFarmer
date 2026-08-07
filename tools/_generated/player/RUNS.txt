@@ -75,3 +75,8 @@
 2026-08-06 14:48  gpt-image-2    outfits/fireant/tries/DRYRUN (dry-run)
 2026-08-06 14:48  gpt-image-2    outfits/fireant/tries/2026-08-06-official-gauntlet tools/_generated/player/outfits/fireant/tries/2026-08-06-official-gauntlet
 2026-08-06 14:51  gpt-image-2    outfits/blackant/tries/2026-08-06-official-gauntlet tools/_generated/player/outfits/blackant/tries/2026-08-06-official-gauntlet
+2026-08-07 12:48  gpt-image-2    explore/leather              tools/_generated/player/explore/leather
+2026-08-07 12:50  gpt-image-2    explore/wood                 tools/_generated/player/explore/wood
+2026-08-07 12:52  gpt-image-2    explore/copper               tools/_generated/player/explore/copper
+2026-08-07 12:54  gpt-image-2    explore/iron                 tools/_generated/player/explore/iron
+2026-08-07 12:55  gpt-image-2    explore/steel                tools/_generated/player/explore/steel

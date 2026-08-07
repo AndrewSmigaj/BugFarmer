@@ -123,10 +123,16 @@ humanoid."* That is what made the old sheet ugly.
 | **glowstick armour** ⬜ | built from glowsticks |
 | *(one option: a "glowstick man" version — it's a real thing, worth seeing once)* | |
 
-## 15. Decorative / social — 6+
+## 15. Decorative / social — 6+  ·  ⏸ ON HOLD
 
-Clothes that exist to look good; bonus may be farm output or happiness. Sold across different zones,
-dyeable at the dyer. Not filler — this is the furniture role.
+Owner 2026-08-07: *"hold off on clothing."* The list stands; nothing gets briefed yet.
+
+**Dye is a RECOLOUR, not new sprites.** *"dye is for things with cloth, but I want to try to use python or
+something to manually change the colors rather than creating new sprites — it would take forever."* So dye
+is a palette-swap pass over an existing cloth outfit — free, no API — and only cloth sets are dyeable.
+Parked until the clothing line starts.
+
+Clothes that exist to look good; bonus may be farm output or happiness. Not filler — this is the furniture role.
 
 | set | what it is |
 |---|---|
@@ -150,8 +156,7 @@ prospector's oilskin · queen's regalia *(it IS the queens' set)* · merchant ·
 1. **Fishing 4th** — is there an "ultimate fishing gear"?
 2. **Beekeeping 4th** — is there a "fancy armoured beesuit"?
 3. **The third legendary** — still an empty slot.
-4. **Dye** — a recolour system for any cloth outfit, or its own sets?
-5. **Names** — pick from the candidates above, or say the flavour and I will try more.
+4. **Names** — pick from the candidates above, or say the flavour and I will try more.
 
 ## Scale
 
