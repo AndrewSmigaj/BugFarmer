@@ -80,3 +80,5 @@
 2026-08-07 12:52  gpt-image-2    explore/copper               tools/_generated/player/explore/copper
 2026-08-07 12:54  gpt-image-2    explore/iron                 tools/_generated/player/explore/iron
 2026-08-07 12:55  gpt-image-2    explore/steel                tools/_generated/player/explore/steel
+2026-08-07 13:54  gpt-image-2    explore/bronze-r2            tools/_generated/player/explore/bronze-r2
+2026-08-07 13:56  gpt-image-2    explore/wood-r2              tools/_generated/player/explore/wood-r2

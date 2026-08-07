@@ -403,6 +403,15 @@ constants they affect, because this file is where *"what did we agree"* gets ans
 One paid call draws **three** design options side by side on magenta, so "three candidates" = one call.
 The brief is an `EXPLORATIONS` entry: what the set IS, plus three directions.
 
+**FACES ARE THE DEFAULT** (owner 2026-08-07). `outfits.FACE_SETS = "ALL"`, so every exploration gets the
+`HEAD_FACE` clause — an open helm, raised visor or framing hood, with the face drawn. `HEAD_COVERED` is kept
+for a set that genuinely needs a sealed helm; nothing uses it today.
+
+> The rule used to be the reverse — covered unless a set was listed — and that is exactly how the roster
+> drifted: bronze a sealed great-helm, fireant/blackant face-visible because they were on the list, and the
+> base-ladder sheets showing faces anyway *despite being told to cover the head*. Mixed by accident is not
+> variety, which is why this is a default rather than a per-set flag.
+
 **The three must differ by SILHOUETTE — helm outline, shoulder mass, hem shape.** The shared prompt already
 says so, and it is the whole game: at ~40px surface detail collapses to mush, so three designs separated by
 trim, engraving or linework produce a sheet nobody can tell apart. The grey metal rungs additionally

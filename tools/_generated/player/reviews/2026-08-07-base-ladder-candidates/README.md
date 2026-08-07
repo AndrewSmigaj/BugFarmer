@@ -1,12 +1,19 @@
-# Base ladder — first 5 candidate sheets
+# Base ladder — 7 candidate sheets
 
-**5 paid calls, gpt-image-2, 15 designs.** Pick one per rung, or say re-roll.
+**7 paid calls, gpt-image-2, 21 designs.** Pick one per rung, or say re-roll.
+
+**FACES ARE NOW THE DEFAULT** (owner 2026-08-07). It used to be the reverse — covered unless a set was
+listed as face-visible — which is how the roster drifted: bronze a sealed great-helm, fireant/blackant
+faces because they were on the list, and the first five showing faces anyway despite being told to cover.
+Mixed by accident is not variety.
 
 Each folder has two files. **`REVIEW.png` is the one that decides** — the three options large on grey, and
 underneath the same three shrunk to real game height standing on grass, with the bare base beside them for
 scale. Big and pretty is not the same as legible, and only legible ships.
 
 ```
+C:/Users/emily/BugFarmer/tools/_generated/player/explore/bronze-r2/REVIEW.png   <- NEW, faces
+C:/Users/emily/BugFarmer/tools/_generated/player/explore/wood-r2/REVIEW.png     <- NEW, re-roll
 C:/Users/emily/BugFarmer/tools/_generated/player/explore/leather/REVIEW.png
 C:/Users/emily/BugFarmer/tools/_generated/player/explore/wood/REVIEW.png
 C:/Users/emily/BugFarmer/tools/_generated/player/explore/copper/REVIEW.png
@@ -25,6 +32,8 @@ C:/Users/emily/BugFarmer/tools/_generated/player/explore/steel/REVIEW.png
 | **copper** | kettle-hat, wide flat brim | muscle cuirass, curved | scale coat, long and columnar |
 | **iron** | barbute, tall and closed | banded mail, barrel-chested | riveted brigandine + short horns |
 | **steel** | sallet with swept tail | full plate, huge pauldrons | fluted half-plate, less armoured |
+| **bronze-r2** | rounded guard, domed helm + cheek pieces | crested officer, squared pauldrons + long skirt | segmented legionary, banded + hip strips |
+| **wood-r2** | bark plates, domed helm | splint timber, vertical staves lashed | heartwood cuirass, one carved piece |
 
 ## My read — you decide
 
@@ -36,8 +45,12 @@ C:/Users/emily/BugFarmer/tools/_generated/player/explore/steel/REVIEW.png
   want wood to be a serious rung, this may want a re-roll with 1 as the anchor.
 - **copper / iron** — look at them yourself before I colour your read.
 
-## Consistency question for the roster
+## The two new sheets
 
-These show **faces**; bronze (the reference outfit) is a closed helm with no face. fireant and blackant
-show faces because you asked for it. So face-visible is already mixed across the set — worth deciding
-whether that is fine as variety or whether the metal rungs should all be closed helms.
+- **bronze-r2** — all three landed, all face-visible, all clearly bronze (warm gold-brown, not copper-pink).
+  Only the BODY is being replaced; `outfits/bronze/gauntlet/` — the five approved hands every other outfit
+  copies — is untouched, so the animations keep working whichever design wins.
+- **wood-r2** — fixed. All three read as armour now instead of a basket and a barrel. ⚠ Option 3 shows bare
+  skin at the upper thighs, which the brief forbids; minor, but it is a defect if you pick that one.
+
+The original `explore/wood/` sheet is untouched if you want to compare.

@@ -182,8 +182,14 @@ HEAD_FACE = ("Every design has headgear that leaves the character's FACE VISIBLE
              "nose and mouth, human skin. The head is never fully enclosed and there is no blank visor "
              "slit. The headgear frames the face, it does not hide it.")
 
-FACE_SETS = {"ant-carapace-red", "ant-carapace-black",
-             "ant-carapace-red2", "ant-carapace-black2"}
+# FACES ARE THE DEFAULT (owner, 2026-08-07: "we should show faces… yes show faces").
+#
+# It used to be the other way round — HEAD_COVERED unless the set was listed here — which was how the
+# roster ended up mixed: bronze is a sealed great-helm, fireant and blackant show faces because they were
+# on this list, and the base-ladder sheets showed faces anyway despite being told to cover the head.
+# Mixed by accident is not variety. HEAD_COVERED is kept for the rare set that genuinely needs a sealed
+# helm; nothing uses it today.
+FACE_SETS = "ALL"
 
 EXPLORATIONS = {
     # Second undirected pass on each colourway, for variety. Same prompt as the first - the point is a
@@ -387,6 +393,31 @@ EXPLORATIONS = {
         "open-faced helm and plain trousers below the waist. Narrow-shouldered and clearly LESS armoured "
         "than the other two")),
 
+    # bronze is the REFERENCE OUTFIT — its five approved hands are what every other gauntlet copies. Only
+    # the BODY is being re-rolled here, for a visible face; `outfits/bronze/gauntlet/` is untouched, so the
+    # animations keep working whichever design wins.
+    "bronze-r2": ("bronze plate armour - warm brown-gold bronze with darker brown shadows and soft yellow "
+                  "highlights. Older and warmer than steel, not as pink as copper", (
+        "a ROUNDED GUARD - a smooth domed open-faced helm with wide cheek pieces framing the face, a "
+        "plain rounded breastplate and short thigh plates. Soft, curved, no sharp corners anywhere",
+        "a CRESTED OFFICER - a helm with a low front-to-back ridge crest, squared pauldrons standing "
+        "clear of the shoulders, and a knee-length skirt of vertical plates. Angular and formal",
+        "a SEGMENTED LEGIONARY - overlapping horizontal bands across the chest and shoulders, a simple "
+        "browed cap helm, and a belt of hanging strips at the hips. Visibly banded, workmanlike")),
+
+    # wood-r1 came back comic — option 2 was literally a basket and option 3 grew a log helm despite the
+    # brief saying no helm. Anchoring all three on the one that worked (bark plates) and pushing them
+    # toward ARMOUR rather than woodcraft.
+    "wood-r2": ("armour made of WOOD - thick bark and hard carved timber, pale wood against dark bark, "
+                "bound with cord. It is the rung ABOVE leather, so it must read as real ARMOUR a "
+                "craftsman built - never a basket, a barrel, a costume or a joke", (
+        "BARK PLATES - broad curved slabs of thick bark strapped over chest and thighs like plate armour, "
+        "with a low domed bark helm open at the face. Chunky and rounded",
+        "SPLINT TIMBER - narrow vertical hardwood staves laid side by side over the torso and limbs and "
+        "lashed together, with a browed wooden cap. Tall, ridged and vertical",
+        "a HEARTWOOD CUIRASS - one thick carved single-piece breastplate of pale heartwood over dark "
+        "bark shoulders, and a short skirt. Smooth, solid and simple - the fewest pieces of the three")),
+
     "platinum-r2": ("polished platinum plate armour, the FINEST armour in the game - bright white-silver "
                     "with cool blue-white highlights and pale grey shadows. It must read as the top of "
                     "the ladder without any gold, colour or gemstones", (
@@ -569,7 +600,7 @@ def main():
             refs += chosen[:1]
             gen(f"explore/{n}",
                 EXPLORE.format(what=what, a=opts[0], b=opts[1], c=opts[2],
-                               head=HEAD_FACE if n in FACE_SETS else HEAD_COVERED),
+                               head=HEAD_FACE if FACE_SETS == "ALL" or n in FACE_SETS else HEAD_COVERED),
                 refs,
                 size="1536x1024")          # landscape: three figures in a row, each as large as possible
         return
