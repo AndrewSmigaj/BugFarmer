@@ -1,7 +1,19 @@
 # Base ladder — pick one per rung
 
-**`LADDER_game_size.png`** — all 21 designs at **real game size** (71px tall), one row per rung, in ladder
+**`LADDER_game_size.png`** — all 21 designs shrunk to game height (71px), one row per rung, in ladder
 order, on grass with the bare character at the top for scale.
+
+> ⚠ **These are design SKETCHES, not sprites, and they do not look like fireant or blackant yet.** They
+> are stage 1 of three: `outfits.py explore` draws three design options standing on magenta — a big
+> illustration whose only job is to let you choose a SILHOUETTE. Shrinking it here is a photographic
+> downscale, so it keeps illustration noise (which is most of why iron and steel look busy).
+>
+> **Stage 2 is where the look comes from.** Once you pick, a second paid call — `outfits.py sheet` —
+> redraws *that design* as the 12-frame walk sheet, under a different prompt that says *"big simple
+> shapes, not fine detail. This is a small pixel art sprite sheet."* That redraw is what makes fireant
+> look like fireant. Then cutting, hands and animations are free.
+>
+> So judge these on **shape** — helm outline, shoulder mass, hem — and not on surface or finish.
 
 This is the same 7 sheets you already had, in one image. The per-rung `explore/<name>/REVIEW.png` files
 are still where you look at a design **large**; this one exists to answer the question none of them can —
