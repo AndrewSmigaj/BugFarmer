@@ -15,6 +15,44 @@ order, on grass with the bare character at the top for scale.
 >
 > So judge these on **shape** — helm outline, shoulder mass, hem — and not on surface or finish.
 
+## ⛔ Before you pick anything — the ladder was briefed differently from the ants
+
+**`WHY_THE_LADDER_LOOKS_WORSE.png`** — three rows, same tool, same model, same size, same reference.
+
+The ant explorations you liked were **undirected**. The three slots said, verbatim:
+
+```
+1. your own design - decide for yourself what this armour looks like
+2. a second design, clearly and obviously different from the first
+3. a third design, clearly and obviously different from both of the others
+```
+
+Every base-ladder sheet (2026-08-06/07) replaced that with a **dictated** brief — *"a KETTLE-HAT SET — a
+wide flat circular brimmed helm, a plain rounded breastplate and a short flared skirt of plates"*, and two
+more like it, per rung. Three changes went in, not one:
+
+| | ants (good) | base ladder |
+|---|---|---|
+| the three options | **undirected** — the model designs | **dictated** — a named historical armour each |
+| head | face visible | *copper / iron / steel:* sealed helm |
+| framing | "ARMOUR WORN BY A PERSON" | dropped |
+
+`outfits.py` records why that was the wrong move, in a comment written at the time:
+
+> *No design briefs — **the undirected round beat both directed ones**.*
+
+and your instruction it came from, 2026-08-05:
+
+> *"just do three ant carapace armor versions **without telling it what to put** other than the sprite and
+> it is made from ant parts and carapace"*
+
+So the directed brief had already been tried on the same subject, lost, and been dropped at your
+instruction — and then the whole base ladder was generated with it anyway. That is the bug, and it is
+mine. Two variables differ between the good row and the bad ones (direction and faces), so I can't split
+their contributions from these images alone; the fix is to stop differing on either.
+
+**Nothing here is worth picking from.** The ask below stands only if you want to salvage a design.
+
 This is the same 7 sheets you already had, in one image. The per-rung `explore/<name>/REVIEW.png` files
 are still where you look at a design **large**; this one exists to answer the question none of them can —
 **does the ladder work as a ladder**, and do any two rungs collapse into the same blob at game size.
