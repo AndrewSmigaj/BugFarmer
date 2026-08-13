@@ -2,9 +2,15 @@
 
   python3 tools/player_sprites/preview_explore.py beetle-shell
   python3 tools/player_sprites/preview_explore.py --all
+  python3 tools/player_sprites/preview_explore.py --ladder leather wood copper iron steel
 
 Writes `explore/<name>/REVIEW.png`: the three options large on grey, and underneath the SAME three
 shrunk to real game height and standing on grass.
+
+`--ladder` writes ONE sheet instead: every named set's three options at game size, one row per set, in
+the order given. A per-set REVIEW.png answers "which of these three"; only this answers "does the ladder
+work as a ladder" — whether copper reads as a step up from wood, and whether any two rungs collapse into
+the same brown blob at 71px. It is also one file to open rather than seven.
 
 The bottom row is the row that decides. The ranger sheet's third option was the best-looking design
 on the page and the worst one in the game — its gold filigree turned to noise the moment it was
@@ -22,8 +28,10 @@ import os
 import sys
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 from scipy.ndimage import binary_propagation
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PLAYER = os.path.join(REPO, "tools", "_generated", "player")
@@ -118,8 +126,73 @@ def review(name, want=3):
     return out
 
 
+def ladder(names, folder, want=3, zoom=5):
+    """One sheet: every named set's options at GAME SIZE, one row per set, in the order given.
+
+    Game size only, deliberately. The big renders already live in each set's own REVIEW.png; what no
+    per-set sheet can show is the ladder as a ladder — a rung that looks distinct on its own page and
+    identical to its neighbour at 71px is a wasted rung, and that has already happened once (steel
+    against silver, caught by measuring rather than by eye).
+    """
+    import review as R
+
+    rows = []
+    for n in names:
+        src = os.path.join(EXPLORE, n, "result.png")
+        if not os.path.exists(src):
+            print(f"  {n}: no result.png — skipped")
+            continue
+        figs = figures(src, want)
+        if len(figs) != want:
+            print(f"  {n}: found {len(figs)} figures, expected {want}")
+        rows.append((n, [f.resize((max(1, round(f.width * GAME_H / f.height)), GAME_H), Image.LANCZOS)
+                         for f in figs]))
+    if not rows:
+        return None
+
+    base = Image.open(BASE).convert("RGBA")
+    font, lab = R.font(R.TITLE_PT), R.text_h(R.TITLE_PT)
+    probe = ImageDraw.Draw(Image.new("RGB", (1, 1)))
+    gut = max(int(probe.textlength(n, font=font)) for n, _ in rows) + 30
+
+    cell_w = max([s.width for _, ss in rows for s in ss] + [base.width]) * zoom + 30
+    row_h = GAME_H * zoom + 16
+    top = lab * 2 + GAME_H * zoom + 20                       # the scale strip: the bare character
+    w = gut + cell_w * want
+    sheet = Image.new("RGBA", (w, top + row_h * len(rows) + 10), (58, 58, 64, 255))
+
+    g = Image.open(GRASS).convert("RGBA")
+    g = g.resize((g.width * zoom, g.height * zoom), Image.NEAREST)
+    for y in range(top - GAME_H * zoom - 10, sheet.height, g.height):    # grass under every figure
+        for x in range(0, sheet.width, g.width):
+            sheet.alpha_composite(g, (x, y))
+
+    d = ImageDraw.Draw(sheet)
+    d.rectangle([0, 0, w, top - GAME_H * zoom - 11], fill=(40, 40, 46, 255))
+    d.text((14, 10), "the bare character — everything below is at the same game size",
+           fill=R.INK, font=font)
+    b = base.resize((base.width * zoom, base.height * zoom), Image.NEAREST)
+    sheet.alpha_composite(b, (gut, top - b.height - 6))
+    for i in range(want):
+        d.text((gut + cell_w * i + 14, top - lab - 4), f"option {i + 1}", fill=R.INK, font=font)
+
+    for ri, (name, small) in enumerate(rows):
+        y = top + row_h * (ri + 1) - 8
+        d.text((14, y - GAME_H * zoom // 2 - lab // 2), name, fill=R.INK, font=font)
+        for ci, s in enumerate(small):
+            b = s.resize((s.width * zoom, s.height * zoom), Image.NEAREST)
+            sheet.alpha_composite(b, (gut + cell_w * ci + 14, y - b.height))
+        d.line([0, y + 8, w, y + 8], fill=(58, 58, 64, 255), width=3)
+
+    return R.save(sheet.convert("RGB"), folder, "LADDER_game_size.png")
+
+
 if __name__ == "__main__":
     args = sys.argv[1:]
+    if "--ladder" in args:
+        rest = [a for a in args if a != "--ladder"]
+        ladder(rest, f"{__import__('datetime').date.today()}-base-ladder-pick")
+        sys.exit()
     names = ([os.path.basename(p) for p in sorted(glob.glob(os.path.join(EXPLORE, "*")))
               if os.path.isdir(p)] if "--all" in args else args)
     for n in names:

@@ -119,10 +119,15 @@ two rolls differed mainly in **stray magenta**: red-A and black-B came back with
 and black-A with **105**. Same prompt, same forbidding line — the model paints the key colour on anyway
 about half the time. **Count it before picking**; those pixels survive keying and render as bright specks.
 
-**THE HEAD TREATMENT IS A SLOT.** `EXPLORE` takes `{head}`: `HEAD_COVERED` (full helm — the default, and
-what every existing set uses) or `HEAD_FACE`, which asks for an open-faced helm with the face actually
-drawn. Sets listed in `FACE_SETS` get the latter. Owner wanted the player's face visible on the ant
-colourways; it still reads at 40px, which was the risk, since a face is fine detail.
+**THE HEAD TREATMENT IS A SLOT.** `EXPLORE` takes `{head}`: `HEAD_FACE`, which asks for an open-faced helm
+with the face actually drawn, or `HEAD_COVERED`, a full sealed helm. A face still reads at 40px, which was
+the risk, since a face is fine detail.
+
+> **`HEAD_FACE` is the default since 2026-08-07** — `FACE_SETS = "ALL"`, and nothing currently uses
+> `HEAD_COVERED`. This paragraph used to say the opposite (covered unless listed), which is how the roster
+> drifted. The full rule, and why it is a default rather than a per-set flag, is under **"FACES ARE THE
+> DEFAULT"** in *Candidate designs* below. Sheets generated before that date
+> — **copper, iron, steel** — are all sealed helms and predate the rule.
 
 ⚠ **RUN PAID CALLS IN THE BACKGROUND, NEVER INLINE.** `gen.py` opens the output file *before* the API
 returns, so a harness timeout mid-call leaves a **0-byte result.png** and the image is gone — while the
@@ -167,6 +172,15 @@ shrank, while the two plainer designs kept working. So:
   and hem shape. Never engraving, filigree, trim or inlay: those are exactly what dies at 40px. Platinum's
   three "fancy" options are a plume, wings and a spiked crown for this reason, and all three stayed readable.
 - Four or five flat colour areas per figure, in chunky blocks.
+
+**And a LADDER is not judged until its rungs are judged against EACH OTHER.**
+`preview_explore.py --ladder leather wood copper iron steel` writes one sheet, every set's options at game
+size, one row per set. A per-set sheet can only answer *which of these three*; whether copper reads as a
+step up from wood, or two rungs collapse into the same brown blob at 71px, is invisible until they are
+stacked. It has already earned itself twice on the base ladder: **iron** options 1 and 2 read as a
+near-black silhouette on grass (and would vanish underground), and it is where the **faces** inconsistency
+below was caught. Cross-rung colour separation is also the thing to *measure* rather than eyeball — see the
+mean-luma ladder in the player-sprites skill, where judging by eye produced a confident wrong call.
 
 **MATERIAL-NAMED SETS ARE ARMOUR MADE OF THE MATERIAL, NOT A COSTUME OF THE CREATURE.** Owner, 2026-08-05:
 *"in all cases it should be armor, wearing armor made from ant carapace does not magically turn you into an
