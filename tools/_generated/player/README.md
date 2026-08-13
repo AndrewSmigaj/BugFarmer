@@ -6,6 +6,12 @@ Everything for the player character and its outfits lives here.
 how far along it is, and its candidate sheets. That is the answer to "what do we have". Regenerate with
 `python3 tools/player_sprites/gallery.py`.
 
+**To SHOW someone, send `ALL_OUTFITS_ALL_ANIMATIONS.gif`** — the gallery's Current grid as one animated
+file: every outfit x every animation, all playing at once. The gallery itself cannot be sent (a local
+`file://` page with 39 relative image paths), and 39 separate gifs is not a thing anyone can look at.
+Regenerate with `python3 tools/player_sprites/gallery_gif.py`; it is built from the same `official.py`
+and laid out from the same CSS, so the gif and the page always agree.
+
 ## The character
 
 **Armless by design.** No sprite has arms. The hands are separate little fists moved and rotated in code,
@@ -29,6 +35,9 @@ reviews/<date>-<what>/   cross-outfit comparison sheets a decision was made from
 archive/          superseded work from before 2026-08-06. Per-outfit archives are gone: tries/ + git
                   already keep every version, and a third system was one place too many.
 gallery.html      generated. The thing to open.
+ALL_OUTFITS_ALL_ANIMATIONS.gif   generated. The thing to SEND — gallery.html's grid, animated.
+ALL_THREE_walk.gif / ALL_THREE_swing.gif   older, narrower versions of the same idea (one animation
+                  each). Superseded by the file above; kept because they were sent to people.
 ```
 
 > ⚠ **Anything you want the owner to LOOK at goes in the repo, never a temp folder.** The assistant runs

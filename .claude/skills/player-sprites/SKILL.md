@@ -87,6 +87,14 @@ outfits/<name>/
 frames, a progress board showing which stage each outfit is at, and per-outfit candidate comparison. Open it
 before asking the owner to look at anything, and re-run it after any promotion.
 
+**When he asks for something to SHOW someone, that is `gallery_gif.py`, not a pile of files.** It renders
+the gallery's Current grid — every outfit x every animation, playing at once — into the single
+`ALL_OUTFITS_ALL_ANIMATIONS.gif`. Asked for three times before it existed, because the answers given were
+per-animation gifs, then a walk gif and a swing gif: the same "you cannot send someone 39 files" problem
+restated. It deliberately reimplements the gallery's own table sizing and colours — owner, 2026-08-13:
+*"i really need the gif to look like the gallery"* — so **do not "improve" the composition** with cropping
+or a global scale. That was tried; it produced ragged grey off-cuts and half-size characters.
+
 `gen.py` is the **only** way to generate. Every run writes `RECORD.txt` beside the result (prompt, model,
 references as sent, timestamp) and appends a line to `RUNS.txt`. Nothing about a run lives in chat or in the
 assistant's head, because that is exactly what kept getting lost.

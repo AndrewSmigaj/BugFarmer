@@ -559,10 +559,29 @@ Writes `tools/_generated/player/gallery.html`; open it by double-clicking. Three
 outfit × every animation, transposable), **Progress** (which of the four stages each outfit has actually
 reached), **Outfit detail** (frames, gauntlets, candidate sheets captioned from `RECORD.txt`, the ledger).
 
-Generated from the folder structure — no hardcoded outfit or animation list — so it reflects whatever is on
-disk and survives the sprites being recreated. Under `file://` a page cannot list a directory or `fetch()`
-local JSON, so the manifest is inlined as a `<script>` block and the page **must** live at
-`_generated/player/` for the relative image paths to resolve.
+No hardcoded outfit or animation list: names, paths and animations all come from `official.py` (2026-08-06
+— it used to scan directories, and so showed whatever happened to be lying around). Under `file://` a page
+cannot list a directory or `fetch()` local JSON, so the manifest is inlined as a `<script>` block and the
+page **must** live at `_generated/player/` for the relative image paths to resolve.
+
+### Sending it to someone — `tools/player_sprites/gallery_gif.py`
+The gallery cannot leave this machine: it is a `file://` page with 39 relative image paths. So the Current
+grid is also rendered as **one** animated file, `_generated/player/ALL_OUTFITS_ALL_ANIMATIONS.gif` — every
+official outfit × every official animation, all playing at once. That is the thing to send. Asked for three
+times before it existed; the answers given were per-animation gifs, then a walk gif and a swing gif, which
+is the same "you cannot send someone 39 files" problem restated.
+
+**It is deliberately a reimplementation of the gallery's own CSS, and must stay one.** Owner, 2026-08-13:
+*"i really need the gif to look like the gallery"*. A cell is the WHOLE source gif fit to 150px (`td img
+{max-width:150px}`), a column is as wide as its widest cell (`border-collapse`), and the colours are
+`:root`'s. **Do not "improve" the composition.** Cropping each frame to the character and applying one
+global scale was tried, and produced ragged grey off-cuts plus half-size characters — a different-looking
+artefact from the page it is supposed to be a copy of.
+
+Each animation runs at its own speed against its own per-frame durations (walk 150ms, run 90ms, swing
+20/40/100ms), and each cell's rate is nudged to the nearest whole number of cycles in the 1800ms loop so
+nothing snaps mid-motion at the wrap — a swing plays 6×300ms instead of 5.625×320ms, 6.7% fast and
+invisible. Seamless without that trick means LCM(600, 360, 320) = 14.4s, i.e. a file nobody can send.
 
 ### Three defects found by looking at the finished set (2026-08-03)
 All three were invisible until 22 outfits were rendered side by side — which is the argument for the
