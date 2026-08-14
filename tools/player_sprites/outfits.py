@@ -67,13 +67,17 @@ OUTFITS = {
         "copper plate armour",
         "warm orange-pink copper plate with salmon highlights and patches of pale green verdigris "
         "in the crevices",
-        "copper kettle-helm with a wide flat brim",
+        "a tall crested copper helm - a raised front-to-back crest ridge, a brow band and wide cheek "
+        "flaps framing the face, OPEN AT THE FRONT so the character's face is visible - draw the face, "
+        "eyes and hair; the helm frames it and never covers it",
         "warm orange-pink copper"),
     "iron": (
         "rough iron plate armour",
         "dark blue-grey unpolished iron, rough and pitted, with dull rust-brown staining around "
         "the rivets and edges",
-        "iron barbute helm with a narrow T-shaped face opening",
+        "a rounded iron hood shaped close over the head and shoulders with a wide opening around the "
+        "face, OPEN so the character's face is visible - draw the face, eyes and hair; the hood frames "
+        "it and never covers it",
         "dark pitted iron"),
     "steel": (
         "tempered steel plate armour",
@@ -365,6 +369,10 @@ EXPLORATIONS = {
         "A CARVED YOKE - a heavy squared timber shoulder-yoke sitting across both shoulders, a plain "
         "board cuirass hanging from it, and no helm at all. Wide, flat-topped, top-heavy")),
 
+    # ⚠ SUPERSEDED by copper-r2 / iron-r2 below. These two briefs DICTATE the three designs, which
+    # reversed the owner's 2026-08-05 instruction and produced sheets he rejected on 2026-08-13:
+    # "they look like absolute shit and look nothing like the ones we were getting before". Kept only
+    # because explore/copper/ and explore/iron/ hold the art they produced. Do not re-run them.
     "copper": ("copper plate armour - warm orange-pink metal with salmon highlights and patches of pale "
                "green verdigris in the crevices", (
         "a KETTLE-HAT SET - a wide flat circular brimmed helm, a plain rounded breastplate and a short "
@@ -382,6 +390,62 @@ EXPLORATIONS = {
         "cap. Wide, barrel-chested, the outline visibly ringed",
         "a RIVETED BRIGANDINE with a HORNED helm - a square-cut torso, bulky squared pauldrons, and two "
         "short blunt horns angling out from the helm. Broad, angular and top-heavy")),
+
+    # Owner, 2026-08-14: *"just tell it to draw 3 variants of the armor then whichever I pick is used, of
+    # course with all the things we need to keep the sprite consistent… I dont want you to constrain gpt
+    # with your garbage descriptions, remember the old copper armor one looked like a fucking mushroom the
+    # others huge barrels."* So: the MATERIAL, and nothing about the design. No silhouettes, no helm
+    # shapes, no hems. The face clause is automatic (FACE_SETS = "ALL").
+    "fancy": ("fancy armour made of polished silver with gold trim. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+    "platinum-r3": ("platinum armour. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+    # A second roll of the SAME prompt — undirected batches vary a lot run to run, so this is the cheap
+    # way to get more designs. Identical brief, new dice, new folder.
+    "platinum-r4": ("platinum armour. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+    # The re-rolls, UNDIRECTED — the ant recipe. The three slots are the same three lines the ant rolls
+    # used, and only the MATERIAL is described; nothing here describes a design. Verified by diffing the
+    # composed prompt against explore/ant-carapace-red2/RECORD.txt: one line differs, the material.
+    "copper-r2": ("copper plate armour - warm orange-pink metal with salmon highlights and patches of "
+                  "pale green verdigris in the crevices. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+    "iron-r2": ("rough iron plate armour - dark blue-grey unpolished iron, pitted, with dull rust-brown "
+                "staining at the rivets and edges. Clearly DARKER than steel. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+    # copper-r2 came back too high-res — owner, 2026-08-13: "the copper is way too high res". His fix,
+    # his wording: anchor the density to the reference rather than to a number. It works because gen.py
+    # sends armless_front.png (36x71) upscaled x14, so the attached image literally has 14px blocks in it.
+    # Downsampling the r2 art instead was rejected outright: "you get trash downpixeling".
+    "copper-r3": ("copper plate armour - warm orange-pink metal with salmon highlights and patches of "
+                  "pale green verdigris in the crevices. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    ),
+        "Match the PIXEL DENSITY of the attached reference image: its pixels are large visible squares, "
+        "and yours must be the same size. Do not draw at a finer resolution than the reference - chunky "
+        "blocks, flat colour, no smooth shading, no fine detail."),
 
     "steel": ("tempered steel plate armour - mid gunmetal grey with a faint cold blue sheen and bright "
               "polished bevels along every plate edge. Clearly BRIGHTER than iron", (
@@ -418,7 +482,9 @@ EXPLORATIONS = {
         "a HEARTWOOD CUIRASS - one thick carved single-piece breastplate of pale heartwood over dark "
         "bark shoulders, and a short skirt. Smooth, solid and simple - the fewest pieces of the three")),
 
-    "platinum-r2": ("polished platinum plate armour, the FINEST armour in the game - bright white-silver "
+    # ⚠ SUPERSEDED - directed, and the "what" is three instructions of mine, not a material. It is what
+    # explore/platinum-r2/ was rolled with by accident (a duplicate key beat my undirected entry).
+    "platinum-r2-directed": ("polished platinum plate armour, the FINEST armour in the game - bright white-silver "
                     "with cool blue-white highlights and pale grey shadows. It must read as the top of "
                     "the ladder without any gold, colour or gemstones", (
         "a CRESTED CHAMPION - a tall thin blade-like crest running front to back over the helm, a "
@@ -591,16 +657,22 @@ def main():
         return
     if mode == "explore":
         for n in names or EXPLORATIONS:
-            what, opts = EXPLORATIONS[n]
+            # An entry may carry a third element: an EXTRA clause appended verbatim to the end of the
+            # prompt, for this set only. Appended rather than templated so that every other set's prompt
+            # stays byte-identical to the one that produced its art.
+            what, opts, *rest = EXPLORATIONS[n]
+            extra = rest[0] if rest else ""
             # If a CHOSEN_*.png sits in the explore folder, pass it as a second reference so variants
             # stay on that design rather than drifting into three unrelated ideas.
             refs = [os.path.join(BASES, "armless_front.png")]
             chosen = sorted(glob.glob(os.path.join(PLAYER, "explore", n.split("-soldier")[0],
                                                    "CHOSEN_*.png")))
             refs += chosen[:1]
+            prompt = EXPLORE.format(what=what, a=opts[0], b=opts[1], c=opts[2],
+                                    head=HEAD_FACE if FACE_SETS == "ALL" or n in FACE_SETS
+                                    else HEAD_COVERED)
             gen(f"explore/{n}",
-                EXPLORE.format(what=what, a=opts[0], b=opts[1], c=opts[2],
-                               head=HEAD_FACE if FACE_SETS == "ALL" or n in FACE_SETS else HEAD_COVERED),
+                prompt + (f"\n\n{extra}" if extra else ""),
                 refs,
                 size="1536x1024")          # landscape: three figures in a row, each as large as possible
         return

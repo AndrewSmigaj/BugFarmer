@@ -100,6 +100,16 @@ measured **1.04%** of fireant's opaque pixels and **1.32%** of blackant's. `defr
 tinted pixel with the mean of its clean neighbours over three passes and drops any with no clean
 neighbour rather than guessing. Check it: count pixels where R and B both exceed G by 40+.
 
+**A BRIEF IS THE MATERIAL AND NOTHING ELSE.** Owner, 2026-08-14: *"I literally just want gpt to make 'copper
+armor' with 'open face helmet' and the things to make it consistent and such… I dont want you to constrain gpt
+with your garbage descriptions, remember the old copper armor one looked like a fucking mushroom the others
+huge barrels it was dumb."* No silhouettes, no helm shapes, no hems, no "must read as the top of the ladder".
+The three option slots are left to the model — *"your own design, decide for yourself"* — and the technical
+block stays, because magenta / armless / face-visible / silhouette-over-detail are quality rules, not design
+direction. Settled for the ants on 2026-08-05, broken on 08-06 at a cost of 7 paid calls and 21 rejected
+designs, and broken again on 08-14 by a **duplicate key in `EXPLORATIONS`** — the same name twice, so Python
+kept the later directed entry and silently dropped the undirected one. Check the key is new before adding it.
+
 **Pick the DESIGN before paying for a walk cycle.** `outfits.py explore <set>` draws three designs of one set,
 standing still and large, on magenta. The three must have **different parents** — left to themselves they
 become three tunings of one idea, the same failure the swing design guarded against. Only the chosen design
@@ -172,15 +182,6 @@ shrank, while the two plainer designs kept working. So:
   and hem shape. Never engraving, filigree, trim or inlay: those are exactly what dies at 40px. Platinum's
   three "fancy" options are a plume, wings and a spiked crown for this reason, and all three stayed readable.
 - Four or five flat colour areas per figure, in chunky blocks.
-
-**And a LADDER is not judged until its rungs are judged against EACH OTHER.**
-`preview_explore.py --ladder leather wood copper iron steel` writes one sheet, every set's options at game
-size, one row per set. A per-set sheet can only answer *which of these three*; whether copper reads as a
-step up from wood, or two rungs collapse into the same brown blob at 71px, is invisible until they are
-stacked. It has already earned itself twice on the base ladder: **iron** options 1 and 2 read as a
-near-black silhouette on grass (and would vanish underground), and it is where the **faces** inconsistency
-below was caught. Cross-rung colour separation is also the thing to *measure* rather than eyeball — see the
-mean-luma ladder in the player-sprites skill, where judging by eye produced a confident wrong call.
 
 **MATERIAL-NAMED SETS ARE ARMOUR MADE OF THE MATERIAL, NOT A COSTUME OF THE CREATURE.** Owner, 2026-08-05:
 *"in all cases it should be armor, wearing armor made from ant carapace does not magically turn you into an
@@ -577,25 +578,6 @@ No hardcoded outfit or animation list: names, paths and animations all come from
 — it used to scan directories, and so showed whatever happened to be lying around). Under `file://` a page
 cannot list a directory or `fetch()` local JSON, so the manifest is inlined as a `<script>` block and the
 page **must** live at `_generated/player/` for the relative image paths to resolve.
-
-### Sending it to someone — `tools/player_sprites/gallery_gif.py`
-The gallery cannot leave this machine: it is a `file://` page with 39 relative image paths. So the Current
-grid is also rendered as **one** animated file, `_generated/player/ALL_OUTFITS_ALL_ANIMATIONS.gif` — every
-official outfit × every official animation, all playing at once. That is the thing to send. Asked for three
-times before it existed; the answers given were per-animation gifs, then a walk gif and a swing gif, which
-is the same "you cannot send someone 39 files" problem restated.
-
-**It is deliberately a reimplementation of the gallery's own CSS, and must stay one.** Owner, 2026-08-13:
-*"i really need the gif to look like the gallery"*. A cell is the WHOLE source gif fit to 150px (`td img
-{max-width:150px}`), a column is as wide as its widest cell (`border-collapse`), and the colours are
-`:root`'s. **Do not "improve" the composition.** Cropping each frame to the character and applying one
-global scale was tried, and produced ragged grey off-cuts plus half-size characters — a different-looking
-artefact from the page it is supposed to be a copy of.
-
-Each animation runs at its own speed against its own per-frame durations (walk 150ms, run 90ms, swing
-20/40/100ms), and each cell's rate is nudged to the nearest whole number of cycles in the 1800ms loop so
-nothing snaps mid-motion at the wrap — a swing plays 6×300ms instead of 5.625×320ms, 6.7% fast and
-invisible. Seamless without that trick means LCM(600, 360, 320) = 14.4s, i.e. a file nobody can send.
 
 ### Three defects found by looking at the finished set (2026-08-03)
 All three were invisible until 22 outfits were rendered side by side — which is the argument for the

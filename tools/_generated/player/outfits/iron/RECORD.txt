@@ -1,12 +1,13 @@
-when      : 2026-07-29 09:30:04
+when      : 2026-08-14 11:59:09
 model     : gpt-image-2
 size      : 1024x1536
 quality   : high
 mask      : NONE
 dest      : outfits/iron
 references (in the order sent):
-  1. tools/_generated/player/bases/armless_front.png  (sent upscaled x14)
-  2. tools/_generated/player/bases/armless_side.png  (sent upscaled x14)
+  1. tools/_generated/player/bases/armless_front.png  (upscaled x14 -> 504x994)
+  2. tools/_generated/player/bases/armless_side.png  (upscaled x14 -> 504x994)
+  3. tools/_generated/player/explore/iron-r2/CHOSEN_iron.png  (sent as-is at 302x849)
 
 PROMPT:
 Draw a single sprite sheet showing the SAME character in rough iron plate armour as a 12-frame walk-cycle sheet. Use the same character design, proportions, and no-arm anatomy consistently across the whole sheet.
@@ -27,7 +28,7 @@ Column 4: passing pose opposite to column 2, transition back toward column 1.
 
 Because the character has NO ARMS, the walking motion must be shown by leg motion, slight hip shift, and a subtle torso/head bob only. Do not add arms, hands, elbows, forearms, or gauntlets. The rounded shoulder caps must end at the armless shoulder openings.
 
-Outfit: dark blue-grey unpolished iron, rough and pitted, with dull rust-brown staining around the rivets and edges. Include a iron barbute helm with a narrow T-shaped face opening covering the whole head, a breastplate, rounded shoulder caps, a waist and hip piece covering the crotch, thigh plates on both legs, greaves, and boots. No bare skin between the waist and the boots. The headgear is on the character in all 12 frames.
+Outfit: dark blue-grey unpolished iron, rough and pitted, with dull rust-brown staining around the rivets and edges. Include a a rounded iron hood shaped close over the head and shoulders with a wide opening around the face, OPEN so the character's face is visible - draw the face, eyes and hair; the hood frames it and never covers it, a breastplate, rounded shoulder caps, a waist and hip piece covering the crotch, thigh plates on both legs, greaves, and boots. No bare skin between the waist and the boots. The headgear is on the character in all 12 frames.
 
 Keep the front row front-facing, the back row back-facing, and the bottom row a strict right-facing side profile. Do not drift into a three-quarter view.
 

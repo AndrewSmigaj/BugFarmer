@@ -213,3 +213,68 @@ sword the swing the sword, its not a video game swing"*):
   approaches and are next in line to be rebuilt the same way.
 - The swing has **no idle anchor** in this model — it starts with the sword already behind the head
   rather than coming from rest, so the game will pop on entry until `RestoreIdle` is reconciled.
+
+---
+
+## 2026-08-14 — the base-ladder picks, and the rule about prompts
+
+### THE PROMPT RULE (this one caused everything below)
+
+Owner, verbatim: *"I literally just want gpt to make 'copper armor' with 'open face helmet' and the things
+to make it consistent and such… I dont want you to constrain gpt with your garbage descriptions, remember
+the old copper armor one looked like a fucking mushroom the others huge barrels it was dumb."*
+
+**A brief is the MATERIAL and nothing else.** No silhouettes, no helm shapes, no hems, no "reads as the top
+of the ladder". The three options are left to the model:
+
+```
+1. your own design - decide for yourself what this armour looks like
+2. a second design, clearly and obviously different from the first
+3. a third design, clearly and obviously different from both of the others
+```
+
+The technical block stays — magenta, armless, face visible, silhouette-over-detail at 40px, hard edges.
+Those are quality rules, not design direction. `FACE_SETS = "ALL"` supplies the open-face clause.
+
+This had already been settled on 2026-08-05 for the ants and was broken anyway on 08-06, which cost 7 paid
+calls and 21 rejected designs. It was then broken a second time on 08-14 by a **duplicate dict key** —
+`platinum-r2` existed twice in `EXPLORATIONS`, so Python kept the later, directed one and silently
+discarded the undirected entry. That roll is `explore/platinum-r2/` and is NOT to be used.
+
+### The picks
+
+| set | picked | where the art is |
+|---|---|---|
+| **copper** | option 1 of `copper-r3` | `explore/copper-r3/CHOSEN_copper.png` |
+| **iron** | option 1 of `iron-r2` | `explore/iron-r2/CHOSEN_iron.png` |
+| **platinum** | option 1 of `platinum-r4` | `explore/platinum-r4/CHOSEN_platinum.png` |
+| **fancy** | NOT PICKED YET | `explore/fancy/result.png` — three options waiting |
+
+Copper needed three rolls: `copper` (directed, rejected), `copper-r2` (*"the copper is way too high res"*),
+then `copper-r3` with the owner's own fix — *"perhaps we can then try to say keep the pixel density"* — which
+anchors density to the attached reference rather than to a number. That line is what made it chunky.
+
+### What is DONE and what is NOT
+
+| | copper | iron | platinum | fancy |
+|---|---|---|---|---|
+| design picked | ✅ | ✅ | ✅ | ❌ |
+| `CHOSEN_*.png` cut | ✅ | ✅ | ✅ | — |
+| 12-frame sheet | ✅ `outfits/<n>/result.png` | ✅ | ❌ | ❌ |
+| gauntlet | ⚠ generated, TOO SOFT | ⚠ same | ❌ | ❌ |
+| sheet cut to 9 frames | ❌ | ❌ | ❌ | ❌ |
+| hands cut to 5 roles | ❌ | ❌ | ❌ | ❌ |
+| in `official.py` | ❌ | ❌ | ❌ | ❌ |
+
+**The gauntlets need redoing.** Owner: *"the gauntlets need to have the same pixel density I dont want to
+make slop."* Both came back smoothly shaded with no dark outline, unlike bronze's crisp hands. The fix is
+the same trick that fixed copper: the gauntlet call already sends bronze's five approved hands as the shape
+reference, and those *are* low-res cut sprites, so the prompt should anchor density to that reference.
+
+### Other decisions made the same day
+
+- **run_front** — the camera-facing run had no pose of its own (`FRONT_RUN` was byte-identical to `FRONT`
+  apart from `ms`). Picked `W3_widest_lowest`, *"we will go with wisdest lowest"*. Numbers and the two
+  rejected attempts: `reviews/2026-08-14-run-front-pump/DECISION.md`. **Shares numbers with `run_back`.**
+- **swing while running** — picked half pump, *"half pump is the one"*.
+  `reviews/2026-08-14-swing-while-running/DECISION.md`. Not built.
