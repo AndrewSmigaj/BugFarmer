@@ -745,6 +745,92 @@ Big simple shapes, chunky pixels. This is a small pixel art sprite - each hand i
 # widths and angles in the same reel. This mode fixes that the way tool tiers are done: generate against
 # the approved hand as a REFERENCE so the silhouette and the four angles are preserved and only the
 # material changes.
+# ── THE WALK ROW — one paid call per direction ───────────────────────────────────────────────────────
+# THIS WAS NOT IN THE CODE. Every outfit rebuilt on the one-direction-per-call pipeline had its walk
+# prompt typed fresh and the wording survived only inside that run's `RECORD.txt`. Three outfits is
+# already three chances to drift; twenty-five is a guarantee. It lives here now, so every outfit gets
+# the same words and changing them is one edit with a diff the owner can see before a call is made.
+#
+# EVERY SENTENCE IS LOAD-BEARING — each one is a defect that shipped:
+#   feet under the hips     the default is feet kicking out sideways, which reads as a Russian dance
+#                           (*"they are ridiculous like someone doing a russian dance"*)
+#   frames 1 and 3 opposite the model returns cycles where BOTH stepping frames lift the SAME leg. It
+#                           looks fine in a still and wrong only once it loops (*"it is not correct in
+#                           how it loops"*). `cut_walk_row.check_alternation` tests for exactly this.
+#   same head/torso/legs    without it the model "walks" the character by stretching the body
+#   same pixel blocks       without it the render comes back smooth and there is no grid to convert
+#
+# KNEE LIFT — 2026-08-18. The wording used to be "Lift the knee HIGH", which measured 13.8-19.8% of
+# body height across the three built outfits. Owner: *"its lifting the knees really high which is ok
+# for running but not walking"*. Now MEDIUM-HIGH with a numeric anchor.
+# ⚠ There is ONE leg set per direction: `official.ANIMATIONS` gives walk_side and run_side the same
+# `frames="side"` bank, and the run differs only in arm swing, fist size and timing. So this number
+# serves BOTH. A genuinely higher run lift would need a second set of leg frames per direction — three
+# more paid calls per outfit — and that has not been agreed.
+WALK_KNEE = (
+    "Lift the knee a MEDIUM-HIGH amount: the raised knee comes up clearly in front of the body and "
+    "sits visibly higher than the planted knee, with the raised foot clear of the ground. Do NOT "
+    "high-step or march - the raised foot lifts about a TENTH of the character's total height, enough "
+    "to read as a step and no more."
+)
+
+WALK_VIEW = {
+    "side":  "seen in right profile",
+    "front": "seen from the front, facing the viewer",
+    "back":  "seen from behind, facing away from the viewer",
+}
+
+# The side view carries which leg leads in the SILHOUETTE (one leg forward, one back). The camera-facing
+# views cannot — from the front a forward leg is hidden behind the body — so there the step is vertical
+# and the readable event is the KNEE coming up.
+WALK_LEGS = {
+    "side": ("Frame 1: left leg forward, right leg back.\n"
+             "Frame 2: passing pose, legs closer together, transition between steps.\n"
+             "Frame 3: right leg forward, left leg back.\n"
+             "Frame 4: passing pose opposite to frame 2, transition back toward frame 1."),
+    "camera": ("Frame 1: the LEFT knee comes up and the LEFT foot leaves the ground. The right leg is "
+               "straight and planted.\n"
+               "Frame 2: both feet flat on the ground, together, directly under the hips.\n"
+               "Frame 3: the RIGHT knee comes up and the RIGHT foot leaves the ground. The left leg is "
+               "straight and planted.\n"
+               "Frame 4: both feet flat on the ground, together, directly under the hips."),
+}
+
+WALK_ROW = """The attached image is a finished pixel-art sprite of a character in {what}, {view}. Draw FOUR frames of this character WALKING, side by side in a single row, all four the same size and standing on the same baseline, all {view}.
+
+The 4 frames are:
+{legs}
+{camera}Very important: the 4 frames must be DIFFERENT phases of a walk cycle, not repeated standing poses. Frame 1 and frame 3 must use OPPOSITE legs - if the same leg is forward, or the same foot is off the ground, in both, the cycle is wrong. Frame 3 is the MIRROR of frame 1, never a copy of it.
+
+This is the same finished sprite posed differently, not a redraw. Do not redesign the armour, the helmet, the antennae, the face or the colours. Keep the same head size, torso length, leg length and foot size as the reference. Do not shorten the legs. Do not enlarge the head. Walking is the legs moving, not the body being stretched or rescaled.
+
+Use the same size pixel blocks as the reference. Do not use smaller pixel detail. If armour detail does not fit, simplify it instead of adding smaller details.
+
+The character has NO ARMS: do not draw arms, hands, elbows, forearms or gauntlets. Solid rounded shoulder ends. No holes, sockets or empty arm openings. No bare skin between the shoulders and the boots.
+
+Match the PIXEL DENSITY of the attached reference image: its pixels are large visible squares and yours must be the same size.
+
+Flat pure MAGENTA background (255 0 255), nothing else on it. Hard pixel edges, no blur."""
+
+
+def walk_prompt(what, view):
+    """The walk-row prompt for one direction. `view` is 'side' | 'front' | 'back'.
+
+    ⚠ Side comes back facing LEFT whatever the prompt says; mirror it at CUT time
+    (`cut_walk.mirror=True`), never after rendering — `gait`'s wrist-lean maths assumes the character
+    faces +x, so mirroring a finished animation puts the wrists on backwards.
+    """
+    if view not in WALK_VIEW:
+        raise KeyError(f"view must be one of {sorted(WALK_VIEW)}, got {view!r}")
+    camera = "" if view == "side" else (
+        "\nThe feet must stay directly underneath the hips - do NOT swing a foot out to the left or to "
+        "the right, at all. In this view a step is straight UP and straight DOWN. " + WALK_KNEE +
+        " Knees point FORWARD and feet point FORWARD, never splayed outward.\n")
+    return WALK_ROW.format(what=what, view=WALK_VIEW[view],
+                           legs=WALK_LEGS["side" if view == "side" else "camera"],
+                           camera=camera + "\n")
+
+
 # The four APPROVED bronze hands, as a sheet — the shape every other outfit's gauntlet must copy.
 # ⚠ This used to point at outfits/bronze/hand-D-pixel/result.png, which no longer exists (bronze was
 # reorganised), and the only surviving copy was inside the GITIGNORED archive. A reference that every

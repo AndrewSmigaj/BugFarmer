@@ -328,6 +328,34 @@ used the front and its back view has a wider shoulder line). The other two moved
 ⚠ Place a fist by its **outer edge**, never its centre. Centring on a body edge makes the reach
 depend on how wide that outfit's fist happens to be — a second way for outfits to disagree.
 
+#### What the cut GATES on — and the one thing it used not to (2026-08-18)
+
+`cut_walk_row.check_alternation(frames_dir, bank)`, run on the **front and back** banks every time. The
+model returns cycles where both stepping frames lift the SAME leg; it looks fine in a still and wrong
+only once it loops, as a foot tapping twice. The side bank cannot be tested this way — in profile both
+feet are planted in a contact frame, so which leg leads is carried by shading, not silhouette.
+
+**Leg HEIGHT had no gate at all.** Alternation asks only *which* foot is up, on a 1-pixel threshold, so
+a 2px shuffle and a 14px stride passed identically. `check_lift` now measures the raised foot against
+the figure height and warns outside `LIFT_BAND` (7–15%).
+
+Measured under the old *"Lift the knee HIGH"* wording:
+
+| | front | back |
+|---|---|---|
+| bronze | 19.1% | 16.2% |
+| fire-ant | 18.2% | 15.4% |
+| black-ant | 13.8% | 19.8% |
+
+A 6-point spread across the set, and 3–6 points between front and back of the *same* outfit. Owner,
+2026-08-18: *"its lifting the knees really high which is ok for running but not walking"*. The prompt
+(`outfits.WALK_KNEE`) now asks for MEDIUM-HIGH with a numeric anchor — about a tenth of the character's
+height. The band is provisional and a **warning, not a fail**: it is a taste range, so look at the render.
+
+⚠ **One leg set serves both walk and run.** `official.ANIMATIONS` gives `walk_side` and `run_side` the
+same `frames="side"` bank — the run differs only in arm swing, fist size and timing. The walk's knee
+lift IS the run's knee lift. A higher run would need a second set of leg frames per direction.
+
 #### Animations composite at NATIVE size and are enlarged ONCE, by a whole number (2026-08-18)
 
 `build.PIXEL_SCALE = 4`. Everything — body, fists, tools — is composed at the sprite's real pixel size,

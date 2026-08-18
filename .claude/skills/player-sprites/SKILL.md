@@ -149,10 +149,24 @@ plus the armless clause enumerating "arms, hands, elbows, forearms, gauntlets", 
 clause, and the magenta background. Compose it from `outfits.py`; `gen.py` refuses to spend on a
 character prompt missing a mandatory clause.
 
-**For the camera-facing views, say the legs do not swing sideways.** The default is feet kicking out
-to either side, which reads as a dance. What worked: *"a step in this view is straight UP and
-straight DOWN, both feet stay directly underneath the hips, knees and feet point FORWARD, lift the
-knee HIGHER."*
+**The walk prompt is `outfits.walk_prompt(what, view)` — do not type one.** It was typed fresh per run
+until 2026-08-18 and survived only inside each run's `RECORD.txt`, which is three chances to drift
+across three outfits and a guarantee across twenty-five. Every sentence in it is a defect that shipped;
+`outfits.py` says which. Change the wording there, once, and show the owner the diff before spending.
+
+**For the camera-facing views it says the legs do not swing sideways.** The default is feet kicking out
+to either side, which reads as a dance (*"they are ridiculous like someone doing a russian dance"*).
+
+**Knee lift is MEDIUM-HIGH, and it is now measured.** "Lift the knee HIGH" produced 13.8–19.8% of body
+height across the three built outfits — owner, 2026-08-18: *"its lifting the knees really high which is
+ok for running but not walking"*. `outfits.WALK_KNEE` asks for a lift of about a tenth of the
+character's height, and `cut_walk_row.check_lift` warns outside `LIFT_BAND` (7–15%). The band is
+provisional and a WARNING, not a fail — look at the render.
+
+⚠ **One leg set serves both walk and run.** `official.ANIMATIONS` gives `walk_side` and `run_side` the
+same `frames="side"` bank; the run differs only in arm swing, fist size and timing. So the walk's knee
+lift IS the run's knee lift. A higher run would need a second set of leg frames per direction — three
+more paid calls per outfit — and that has not been agreed.
 
 **Side comes back facing LEFT.** Mirror it at cut time (`cut_walk(..., mirror=True)`), never after
 rendering — `gait`'s wrist-lean maths assumes the character faces +x, so mirroring the finished

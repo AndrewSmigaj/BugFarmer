@@ -257,7 +257,52 @@ def check_alternation(frames_dir, bank):
         bad.append(f"{bank}: frames 1 and 3 lift the SAME foot ({lifted}) — not a walk, reroll")
     if lifted[1] != "-" or lifted[3] != "-":
         bad.append(f"{bank}: frames 2 and 4 should be feet-together, got {lifted}")
+    bad += check_lift(frames_dir, bank)
     return bad
+
+
+# How far the raised foot should clear the planted one, as a fraction of the figure's height.
+#
+# Leg HEIGHT was the one thing in this pipeline with no gate on it. `check_alternation` asks only WHICH
+# foot is up, on a 1px threshold, so a 2px shuffle and a 14px stride passed identically. Measured on the
+# three outfits built under the old "Lift the knee HIGH" wording: bronze 19.1% front / 16.2% back,
+# fire-ant 18.2 / 15.4, black-ant 13.8 / 19.8 — a 6-point spread across the set and 3-6 points between
+# front and back of the SAME outfit. Owner: *"its lifting the knees really high which is ok for running
+# but not walking"*, and the prompt now asks for MEDIUM-HIGH (`outfits.WALK_KNEE`).
+#
+# ⚠ The band is provisional — derived from that instruction, not from a picked number. It is a WARNING,
+# not a hard fail: it is a taste range, and the rule is to look at the render, not to trust a threshold.
+LIFT_BAND = (0.07, 0.15)
+
+
+def check_lift(frames_dir, bank):
+    """FRONT/BACK only: how high the raised foot clears the planted one, against `LIFT_BAND`.
+
+    The SIDE bank is excluded for the same reason as alternation — in profile both feet are planted in
+    a contact frame, so foot height carries no information there.
+    """
+    if bank == "side":
+        return []
+    heights = []
+    for i in (1, 3):
+        a = np.asarray(Image.open(os.path.join(frames_dir, f"{bank}_{i}.png")).convert("RGBA"))
+        m = a[..., 3] > 0
+        mid = int(round(_torso_centre(a)))
+        low = []
+        for sl in (slice(0, mid), slice(mid, m.shape[1])):
+            ys = np.where(m[:, sl].any(axis=1))[0]
+            low.append(ys.max() if len(ys) else -1)
+        heights.append(abs(low[0] - low[1]))
+    ys = np.where((np.asarray(Image.open(
+        os.path.join(frames_dir, f"{bank}_2.png")).convert("RGBA"))[..., 3] > 0).any(axis=1))[0]
+    body = max(1, ys.max() - ys.min() + 1)
+    frac = max(heights) / body
+    lo, hi = LIFT_BAND
+    if not lo <= frac <= hi:
+        how = "HIGHER than" if frac > hi else "LOWER than"
+        return [f"{bank}: foot lift {max(heights)}px on a {body}px body = {frac:.1%}, {how} the "
+                f"{lo:.0%}-{hi:.0%} band — look at it before accepting"]
+    return []
 
 
 def cut_gauntlet_column(src, hands_dir, pitch=None, target_h=13, roles=None):
