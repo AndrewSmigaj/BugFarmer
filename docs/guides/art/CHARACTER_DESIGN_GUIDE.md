@@ -295,6 +295,63 @@ walking fists anchored at the chest instead of the waist, travel measured off th
 through the centre, ~3× the amplitude, a ±55° roll the approved walk does not have (its rotation is 0), no
 far-hand dimming, wrong hand sprites. It read as flapping and was rejected on sight.
 
+#### The CAMERA-FACING walk anchors to the SHOULDER LINE, not to the silhouette (2026-08-18)
+
+The side walk above swings its fists through the torso centre at 42% down the neutral frame — a real
+landmark, and it measures the same on every outfit. The camera-facing walk did **not**: it hung each
+fist off the body edge at **row 0.62 of the whole figure** and sized it at 0.17 of total height.
+
+A percentage of the silhouette is not a place on a body. Headgear is not a constant share of the
+figure — bronze's helm is 19 of 68px, black-ant's horned head 31 of 87, fire-ant's ant head **40 of
+77, more than half** — so the same 0.62 landed at the hip on bronze and at the **armpit** on
+fire-ant, and the body's width at that row ran 0.73 / 0.70 / 0.61 of the shoulders, throwing the
+fists out at three different reaches. Owner, shown all three: *"black ant is the only good one"*.
+
+`gait.shoulder_line(a)` returns the widest row across the torso (searched in the 0.35–0.60 band). It
+is a feature of the armour, not of the framing, so it holds still — across all four frames of both
+camera-facing banks of the three rebuilt outfits it moves at most 2px in width and 1px in row, which
+is why it can be measured **per frame**, as the approved front walk requires.
+
+| `FRONT` / `FRONT_RUN` key | was | now |
+|---|---|---|
+| `row` | 0.62 down the whole figure | from the shoulders down toward the feet |
+| `ratio` | 0.17 × total figure height | × shoulder WIDTH |
+| `dx` / `dy` | × the width of that arbitrary row | × shoulder width |
+| `gap` → `edge` | 3% of that row — floored to its 2px minimum on **every** outfit, so there was no clearance term at all | the fist's OUTER EDGE flush on the shoulder edge, `edge` widths beyond it |
+
+**The design did not change; the units did.** Black-ant was the calibration — every constant was
+solved so it renders as it did (front bank within 1px; its back bank moved ~6%, because the solve
+used the front and its back view has a wider shoulder line). The other two moved onto it: reach
+1.19 / 1.17 / 1.02 → **1.09 on all three**; fist height 35% / 31% / 27% of shoulders-to-feet →
+**33% on all three**. Renders: `_generated/player/reviews/2026-08-18-walk-hands/`.
+
+⚠ Place a fist by its **outer edge**, never its centre. Centring on a body edge makes the reach
+depend on how wide that outfit's fist happens to be — a second way for outfits to disagree.
+
+#### Animations composite at NATIVE size and are enlarged ONCE, by a whole number (2026-08-18)
+
+`build.PIXEL_SCALE = 4`. Everything — body, fists, tools — is composed at the sprite's real pixel size,
+and the finished frame is enlarged once with NEAREST at the very end. That is what makes the output
+pixel art rather than a picture of pixel art.
+
+It used to normalise every outfit to `render_animations.TARGET_BODY_H = 320` **on load**. That factor
+is never a whole number — measured 3.678x black-ant, 4.156x fire-ant, 4.706x bronze — and a fractional
+NEAREST resize makes some source pixels 4 screen-px wide and the ones beside them 5. `gallery_gif.py`
+then resized each cell again with `Image.LANCZOS`, a blur filter. Between them, a sprite that had been
+carefully converted to pixels came back out smooth. Owner, 2026-08-18: *"NOT THE RAW version the PIXEL
+version"*.
+
+**Check it by arithmetic, not by eye:** every rendered frame must be an exact block grid — reshape to
+`(h/4, 4, w/4, 4, 3)` and assert every 4x4 block is one flat colour. It passes for all 13 animations of
+all three rebuilt outfits.
+
+⚠ **Consequence, and it is intended:** outfits are no longer forced to a common on-screen height. The
+old normalisation measured **total** figure height, headgear included, so a tall-helmeted outfit's
+*body* came out smaller — the same mistake as the pre-2026-08-18 hand placement. Black-ant is 87 native
+px against bronze's 68 and now genuinely renders taller. Any resize downstream must use a whole-number
+divisor that divides both sides exactly (`gallery_gif.fit`), and one divisor for a whole sheet — sizing
+cells independently drew the same character at two sizes on one page.
+
 > **The lesson that cost this.** The script that produced the approved motion was written into a session
 > scratch directory, run, and **never committed** — only its output gifs survived, and those live in a
 > gitignored folder. An approved decision that exists only as a rendered artifact is a decision you will

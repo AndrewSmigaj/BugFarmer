@@ -1,0 +1,11 @@
+when      : 2026-08-15 17:58:33
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+dest      : explore/bronze-v2-turnaround
+references (in the order sent):
+  1. tools/_generated/player/explore/bronze-v2-turnaround/CHOSEN_ref.png  (upscaled x14 -> 378x952)
+
+PROMPT:
+Create a 3-view standing turnaround from the attached sprite: front, exact right profile, and back. Keep the same head size, torso length, leg length, face and hair as the reference. Change only the view - this is the same sprite seen from three angles, not a redesign. Use the same size pixel blocks as the reference; do not use smaller pixel detail. If armor detail does not fit, simplify it instead of adding smaller details. The helmet is open-faced but covers the whole head; hair may stick out from under it. Armless body: do not draw arms, hands, elbows, forearms or gauntlets. Solid rounded shoulder ends. No holes, sockets or empty arm openings. Flat pure magenta background (255 0 255), nothing else on it. Hard pixel edges, no blur.

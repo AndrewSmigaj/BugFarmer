@@ -6,6 +6,45 @@ Running queue of upcoming work. Short notes only — each item gets its own plan
 This is the durable queue. The throwaway plan doc covers only the single item we're actively
 working; this file is what survives between sessions.
 
+## Next — RUNNING IMPROVEMENTS (owner 2026-08-14: "backlog 'running improvements' just dont want to do it now")
+
+Two motions are **picked but not built**. Both are lab renders only; nothing in the game or in `build.py`
+does either of them.
+
+- **`run_front` has no pose of its own.** `official.GAITS["FRONT_RUN"]` is byte-identical to `FRONT` apart
+  from `ms` — the camera-facing run is the camera-facing *walk* played faster, which is the failure the side
+  run already fixed. Owner: *"that's just not running with hands down by the side."* Picked
+  `W3_widest_lowest`; numbers and the two rejected attempts are in
+  `_generated/player/reviews/2026-08-14-run-front-pump/DECISION.md`.
+  Building it needs a **`pulse`** term in `gait.walk_front_into` (fists grow/shrink with depth — it has no
+  per-hand scale today), the numbers into `official.GAITS`, and a re-render.
+  ⚠ **`run_back` shares `FRONT_RUN`**, so both change together. Whether the depth pulse should invert for
+  the away-facing view is still open — rendered both ways, not decided.
+- **Swing while running.** Picked half pump — the off arm keeps running at half the approved amplitude while
+  the weapon arm takes the swing arc. `reviews/2026-08-14-swing-while-running/DECISION.md`. Needs a new
+  animation kind: today a gait and a swing are separate rows in `official.ANIMATIONS` that never overlap.
+
+## Later — SPRITE PIPELINE CLEANUP + IMPROVEMENTS (owner 2026-08-14, "after we get our sprites done based on what works")
+
+Do this **after** the outfit run finishes, so it is built from what actually worked rather than guessed.
+Known material, all learned the hard way today:
+
+- **A brief is the MATERIAL.** Make it structural, not a habit: one shared `UNDIRECTED` constant for the
+  three option slots, one shared face/head phrase, so writing a directed brief means overriding a named
+  default. See `APPROVED/DECISIONS.md`, 2026-08-14.
+- **Guard against duplicate keys in `EXPLORATIONS`.** A repeated key silently discarded the undirected
+  entry and rolled a directed one instead — one wasted call, and it looked like the model's fault.
+- **The pixel-density anchor line works and is not applied everywhere.** *"Match the PIXEL DENSITY of the
+  attached reference"* fixed copper; the gauntlet prompt never got it and both gauntlets came back smooth
+  and outline-less. Owner: *"the gauntlets need to have the same pixel density I dont want to make slop."*
+- **Tier separation is measurable, so measure it.** Mean luma + shadow hue over the worn material, skin
+  excluded. It found that steel had drifted into silver's slot and that platinum's blue shadows were the
+  real discriminator; the fix moved shadow hue +20 → +84. Worth a committed script rather than ad-hoc.
+- **Two gauntlet paths exist** — the old 4-hand `GAUNTLET` and the 5-role `OFFICIAL_GAUNTLET`. The renderer
+  needs five. fireant took three paid gauntlet calls because of this.
+- **`render_animations.py` is stale**: its `frames_dir()` still looks at the outfit root, which predates the
+  2026-08-06 move into `<outfit>/frames/`, so its loaders silently find nothing. `build.py` is the live one.
+
 ## Underground fortress — a secret, and the Queens' set (owner 2026-08-06)
 
 *"it would be locked in a chest in a little underground fortress we will backlog. i do want secrets."*

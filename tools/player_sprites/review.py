@@ -167,3 +167,40 @@ def save(sheet, folder, name):
     if not os.path.exists(os.path.join(d, "README.md")):
         print(f"    ⚠ {folder}/ has no README.md — say what each image is and what you want decided")
     return p
+
+
+def pixel_proof(outfit, scale=8, banks=("front", "side", "back"), frame=2):
+    """Is this outfit ACTUALLY converted to pixels? One sheet that answers it by eye and by number.
+
+    A sprite can come out of the pipeline looking fine at a glance and still not be pixel art — the
+    render is smooth, or the snap landed between grid lines, or something downstream resampled it. All
+    three have shipped. Owner, 2026-08-18, before authorising a 25-outfit rebuild: *"we NEED to make
+    sure the pixelized versions work or we are blowing away money"*.
+
+    Each bank is shown at 1:1 and again at `scale`x NEAREST, with its true size and colour count. What
+    you are checking in the big version is that every block is the SAME SIZE and has a HARD EDGE. A raw
+    render at this magnification is unmistakable: soft gradients, thousands of colours, no grid.
+
+    For contrast, measured on the outfits this replaced: `outfits/bronze/frames/front_2.png` is 162x297
+    with 12,555 colours, blackant's 185x455 with 11,874. A converted sprite is tens of px and ~1,000.
+    """
+    import numpy as np
+
+    panels = []
+    for bank in banks:
+        p = os.path.join(os.path.dirname(REVIEWS), "outfits", outfit, "frames", f"{bank}_{frame}.png")
+        if not os.path.exists(p):
+            continue
+        im = Image.open(p).convert("RGBA")
+        a = np.asarray(im, np.uint8)
+        m = a[..., 3] > 0
+        cols = len(np.unique(a[m][:, :3].reshape(-1, 3), axis=0)) if m.any() else 0
+        big = im.resize((im.width * scale, im.height * scale), Image.NEAREST)
+        plate = Image.new("RGB", (big.width, big.height), BG)
+        plate.paste(big, (0, 0), big)
+        panels.append((f"{bank}  {im.width}x{im.height}px  {cols} colours  (shown {scale}x)", plate))
+
+    if not panels:
+        raise SystemExit(f"{outfit}: no frames/ on disk")
+    return row(panels, note="Every block must be the same size with a hard edge. Soft gradients or "
+                            "thousands of colours = still the raw render, not a sprite.")

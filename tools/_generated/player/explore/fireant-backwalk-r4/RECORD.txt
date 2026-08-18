@@ -1,0 +1,30 @@
+when      : 2026-08-15 09:39:11
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+dest      : explore/fireant-backwalk-r4
+references (in the order sent):
+  1. tools/_generated/player/explore/fireant-backwalk-r4/REF_current.png  (upscaled x14 -> 1792x1148)
+
+PROMPT:
+The attached image is a pixel-art walk cycle: the SAME character in fire-ant carapace armour, in FOUR frames, seen from behind, facing away from the viewer.
+
+There are two things wrong with it. Redraw the four frames fixing both. Change nothing else.
+
+PROBLEM 1 - both stepping frames lift the SAME leg. In the attached image frame 1 and frame 3 both raise the character's left leg, so it never steps with the other leg. Frame 3 must raise the OTHER leg. The four frames must be:
+  Frame 1: the LEFT knee comes up and the LEFT foot leaves the ground. The right leg is straight and planted.
+  Frame 2: both feet flat on the ground, together, directly under the hips.
+  Frame 3: the RIGHT knee comes up and the RIGHT foot leaves the ground. The left leg is straight and planted. Frame 3 is the MIRROR of frame 1, not a copy of it.
+  Frame 4: both feet flat on the ground, together, directly under the hips.
+Frame 1 and frame 3 must raise opposite legs. If the same foot is off the ground in both, the cycle is wrong.
+
+PROBLEM 2 - the feet still swing out sideways, and the knees barely lift. Both feet must stay directly underneath the hips: do NOT move a foot out to the left or to the right, at all. A step in this view is straight UP and straight DOWN. Lift the knee HIGHER - the raised knee should come up clearly in front of the body and sit visibly higher than the planted knee, and the raised foot should be well clear of the ground. The knees point FORWARD and the feet point FORWARD, never splayed outward.
+
+Everything else stays EXACTLY as it is. Do not redesign the armour, the helmet, the antennae, the face or the colours. Same head size, same torso, same leg length, same foot size, same overall height, same baseline, same width. Only the leg, knee and foot positions change.
+
+Use the same size pixel blocks as the attached image. Do not draw at a finer resolution. If detail does not fit, simplify it instead of adding smaller pixels.
+
+Armless body: do not draw arms, hands, elbows, forearms or gauntlets. Solid rounded shoulder ends. No holes, sockets or empty arm openings.
+
+Flat pure magenta background (255 0 255), nothing else on it. Hard pixel edges, no blur.

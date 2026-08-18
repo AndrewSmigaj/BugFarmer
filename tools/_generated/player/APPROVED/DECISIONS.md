@@ -278,3 +278,117 @@ reference, and those *are* low-res cut sprites, so the prompt should anchor dens
   rejected attempts: `reviews/2026-08-14-run-front-pump/DECISION.md`. **Shares numbers with `run_back`.**
 - **swing while running** — picked half pump, *"half pump is the one"*.
   `reviews/2026-08-14-swing-while-running/DECISION.md`. Not built.
+
+---
+
+## 2026-08-15 — the generation pipeline changed. Approved: *"those are fine, so this approach works"*
+
+Worked through on fire-ant. Renders, gifs and the reasoning:
+`reviews/2026-08-15-fireant-v2/` (start at its `README.md`).
+
+### One direction per call, not one sheet
+
+The 3x4 twelve-frame sheet is **retired**. It never produced convertible pixel art — twelve cells leave
+each figure about a twelfth of the canvas, the blocks come back too small to form a grid, and the render is
+smooth with nothing to snap to. Repeated attempts to rescue it (a reference board, a template with
+pre-placed masters and registration guides) fixed the scale drift but the model repainted rather than
+edited: 22x75 pixel art in, 253x380 smooth out.
+
+An outfit is now **five paid calls**: a three-view standing turnaround (the design lock), then one call per
+walk direction with four frames in a row on a 1536x1024 canvas, then the gauntlets. Every direction is
+seeded from its own view of the approved turnaround.
+
+Measured on fire-ant: side 77, front 77.6, back 78.3 art-pixels — within a pixel of each other, all on
+real grids.
+
+### All four frames are used
+
+`gait.CYCLE` is now `[1,2,3,4]`. Owner: *"we really should use the full animation frames unless there is a
+reason not to (why replace 4 with 2? makes no sense)"*.
+
+`[1,2,3,2]` was correct for the old sheet, whose frame 4 came back as a second copy of the same stride. On
+the camera-facing banks of a one-direction render, frames 2 and 4 are the two DIFFERENT passing poses —
+opposite leg leading — so playing frame 2 twice threw a real pose away. (On the side bank frames 2 and 4
+still come back identical, 0 silhouette pixels differing, so both cycles render the same there.)
+
+`build.NEUTRAL` is now a single value, 1 — every bank measures itself against frame 2, the feet-together
+pose.
+
+### Gauntlets are drawn at the size they are used
+
+**13 pixels**, `round(77 * 0.17)` — the hand ratio is unchanged. The old hands were 20px and got squashed
+to 13 at render time, deleting rows; now `gait._sz` is an identity for five of the six gaits (only
+`run_side` scales, and it is a 1.15 upscale, which duplicates rows rather than deleting them).
+
+The hand has to be BORN at 13. It cannot be shrunk to it — rescaling player art is banned, and the one
+attempt to build a 13px reference by downscaling the 20px hands produced hands the model redrew as
+rectangles.
+
+**This is arithmetic, not prompt wording.** The model always draws a hand about 200 screen pixels tall, so
+the hand's real-pixel size is `200 / grid`, and the grid is set by how tall the character is drawn. A
+landscape canvas caps the character near 900px, pinning the grid at ~12 and flooring the hands at ~16. Four
+phrasings were tried and returned 19.7, 19.5, 16.0, 19.3. The fix is a **portrait** canvas with the hands
+stacked in a column beside the character: the character is drawn ~1400px, the grid goes to 18.5, and the
+usual 200px hand lands on 13. Predicted 12.4 before spending; measured 12.1–14.1.
+
+### Legs: the failure to check for
+
+Two defects, both found by measuring rather than looking:
+
+1. **Feet kicking out sideways** on the camera-facing walks — read as a dance. Owner: *"they are ridiculous
+   like someone doing a russian dance"*. Fixed by asking for the step to be straight up and down with both
+   feet under the hips, knees and feet forward, and a higher knee lift.
+2. **Both stepping frames lifting the SAME leg.** Frames 1 and 3 both raised the left foot, so the cycle was
+   tap-left, together, tap-left, together. Invisible in a still; wrong only once it loops. Owner: *"it is
+   not correct in how it loops"*. `cut_walk_row.check_alternation` now tests this and must be run on the
+   front and back banks every time. The side bank cannot be tested this way — in profile both feet are
+   planted in a contact frame, and which leg leads is carried by shading, not silhouette.
+
+### Also fixed
+
+The magenta fringe. `pixelsnap.sample` medians all four channels together, so a cell straddling the
+silhouette got a half-transparent *magenta* pixel. `cut_walk_row.sample_masked` takes each cell's colour
+from the figure pixels only.
+
+### Still open
+
+- **Everything gets regenerated on this pipeline.** Owner: *"we are going to regenerate everything… it is
+  new software, nothing old needs to be supported, all sprites will use the same pipelines."* bronze and
+  blackant currently have three frames per bank and will not build until they are redone.
+- `promote.py` and the skill's rule 3 still target a `scratchpad/` → `current/` layout that no outfit on
+  disk uses (the real one is `tries/ frames/ gauntlet/ anim/`).
+- `cut_outfit.cut_outfit()` and `cut_outfit.cut_gauntlet()` are the old sheet and hand-row cutters. Nothing
+  but their own CLI calls them. The shared helpers in that module are still used.
+
+### The files that approval refers to
+
+Filed 2026-08-18, after the folder was left holding only 2026-08-01 work while the thing that was
+actually approved sat in a review folder.
+
+`APPROVED/2026-08-15-fireant-v2/` — the six gifs, the twelve real-pixel frames, the five hands.
+Working copy `outfits/fireant-v2/` (was named `outfits/fireant-sidewalk/`, which is why it could
+not be found; nothing referenced that name).
+
+`APPROVED/README.md` is the index. Start there.
+
+---
+
+## 2026-08-18 — the camera-facing walk hangs its hands off the SHOULDER LINE
+
+Owner, shown bronze, fire-ant and black-ant side by side: *"black ant is the only good one"*.
+
+Every number placing a fist used to be a fraction of the whole silhouette — row 0.62 down the figure,
+size 0.17 of total height. A percentage is not a place on a body: the headgear is not a constant share
+of the figure (bronze's helm 19 of 68px, black-ant's 31 of 87, fire-ant's ant head **40 of 77**), so the
+same 0.62 landed at the hip on bronze and at the ARMPIT on fire-ant, and the body's width there ran
+0.73 / 0.70 / 0.61 of the shoulders — three different reaches.
+
+Now measured against `gait.shoulder_line()`, the widest row across the torso, with the fist's OUTER
+EDGE flush to the shoulder edge. **Black-ant is the calibration** — every constant was solved so it
+renders as it did (front bank within 1px; its back bank moved more, see the review). The other two
+moved to match it: reach 1.19 / 1.17 / 1.02 -> **1.09 on all three**, hand height 35% / 31% / 27% of
+shoulders-to-feet -> **33% on all three**.
+
+`FRONT` and `FRONT_RUN` in `official.GAITS` changed UNITS, not design. The side walk was not touched.
+
+Renders and the full numbers: `reviews/2026-08-18-walk-hands/`.

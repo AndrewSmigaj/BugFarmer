@@ -1,0 +1,40 @@
+when      : 2026-08-15 06:27:31
+model     : gpt-image-2
+size      : 1024x1536
+quality   : high
+mask      : NONE
+dest      : explore/fireant-v2-walk2
+references (in the order sent):
+  1. tools/_generated/player/explore/fireant-v2-board/BOARD.png  (upscaled x14 -> 1176x1134)
+
+PROMPT:
+The attached image is a reference board of finished pixel-art sprites of ONE character in red fire-ant armor, left to right: front, right side, back. These three sprites are the ground truth.
+
+Create a sprite sheet of 4 rows by 4 columns.
+
+ROW 1 - STANDING STILL, one sprite per view, upright and relaxed, weight on both feet, back straight, head up. Not crouching, not leaning, not hunched.
+Column 1: standing still facing the viewer. Column 2: standing still in exact right profile. Column 3: standing still seen from the back. Column 4: standing still facing the viewer again.
+
+ROW 2: FRONT walk cycle, 4 distinct frames, facing the viewer.
+ROW 3: RIGHT-FACING SIDE walk cycle, 4 distinct frames.
+ROW 4: BACK walk cycle, 4 distinct frames, seen from behind.
+
+Very important: the 4 frames in each row must be DIFFERENT phases of a walk cycle, not repeated standing poses.
+
+For each row, the 4 columns must be:
+Column 1: left leg forward, right leg back.
+Column 2: passing pose, legs closer together, transition between steps.
+Column 3: right leg forward, left leg back.
+Column 4: passing pose opposite to column 2, transition back toward column 1.
+
+All 12 sprites must clearly be the same character, but each frame in a row must be a distinct walking frame. If two adjacent frames in a row are identical, the sheet is wrong.
+
+EVERY ONE OF THE 16 SPRITES IS THE SAME SIZE - the standing sprites in row 1 are exactly as tall as the walking sprites in rows 2, 3 and 4, and all of them are the same size as the reference sprites.
+
+This is the same finished sprite posed differently, not a redraw. Do not redesign the armor, the helmet, the antennae, the face or the colors. Keep the same head size, torso length and leg length as the reference. Do not shorten the legs. Do not enlarge the head. Walking is the legs moving, not the body being stretched or rescaled.
+
+Use the same size pixel blocks as the reference. Do not use smaller pixel detail. If armor detail does not fit, simplify it instead of adding smaller details.
+
+The helmet is open-faced but covers the whole head; hair may stick out from under it. Armless body: do not draw arms, hands, elbows, forearms or gauntlets. Solid rounded shoulder ends. No holes, sockets or empty arm openings.
+
+Flat pure magenta background (255 0 255), nothing else on it. Hard pixel edges, no blur.

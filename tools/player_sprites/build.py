@@ -37,8 +37,9 @@ REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 PLAYER = os.path.join(REPO, "tools", "_generated", "player")
 RES = os.path.join(REPO, "BugFarmerClient", "Assets", "Resources")
 
-# The neutral frame each bank measures itself against — side stands on 2, the camera-facing banks on 1.
-NEUTRAL = {"side": 1, "front": 0, "back": 0}
+# Every bank is measured against frame 2, the passing pose — feet together, directly under the hips.
+# Body height, torso centre and torso width come from it once, so they cannot jitter as the legs move.
+NEUTRAL = 1
 
 
 class Missing(Exception):
@@ -53,21 +54,45 @@ def _rgba(path, why):
 
 # ── loading — every path comes from official.py ──────────────────────────────────────────────────────
 
-def load_frames(outfit, bank):
-    """Frames 1..3 of one direction, normalised so every outfit renders at the same body height.
+# ── PIXEL SCALE ──────────────────────────────────────────────────────────────────────────────────────
+# EVERYTHING COMPOSITES AT NATIVE RESOLUTION AND IS UPSCALED **ONCE**, BY A WHOLE NUMBER, AT THE END.
+#
+# It used to normalise every outfit to `TARGET_BODY_H = 320` on load. That factor is never a whole
+# number — measured 3.678x for black-ant, 4.156x for fire-ant, 4.706x for bronze — and a fractional
+# NEAREST resize makes some source pixels 4 screen-px wide and the ones beside them 5. The sprite stops
+# being on a grid, which is the whole point of converting it to pixels in the first place. Owner,
+# 2026-08-18: *"NOT THE RAW version the PIXEL version"*.
+#
+# It also normalised on the TOTAL figure height, headgear included, so a tall-helmeted outfit's BODY
+# came out smaller — the same mistake as the pre-2026-08-18 hand placement.
+#
+# Consequence, and it is intended: outfits are no longer forced to one on-screen height. Bronze is 68
+# native px and black-ant 87, so black-ant now genuinely renders taller. That difference is real and
+# was previously being hidden.
+PIXEL_SCALE = 4
 
-    The 24 sheets on disk were cut at two different scales (a 1.63x split), which is a cutting artifact
-    rather than a difference in the art — side by side it reads as "these characters are different sizes".
-    NEAREST only; never a hand resize.
+
+def upscale(im):
+    """One whole-number NEAREST enlargement of a finished frame. The only resize in the render."""
+    return im.resize((im.width * PIXEL_SCALE, im.height * PIXEL_SCALE), Image.NEAREST)
+
+
+def load_frames(outfit, bank):
+    """The four frames of one direction, at their NATIVE pixel size.
+
+    Four frames, always: contact, passing, opposite contact, opposite passing. Every outfit is cut by
+    `cut_walk_row.py` from a one-direction-per-call render, so they all arrive in the same shape.
+
+    No resize here — see PIXEL_SCALE above.
     """
     d = os.path.join(PLAYER, O.path(outfit, O.FRAMES_DIR))
     imgs = [_rgba(os.path.join(d, f"{bank}_{i}.png"),
-                  f"{outfit}: frame {bank}_{i}.png is missing") for i in (1, 2, 3)]
-    y0, y1, _, _ = gait.anchor(imgs[NEUTRAL[bank]])
+                  f"{outfit}: frame {bank}_{i}.png is missing") for i in (1, 2, 3, 4)]
+    y0, y1, _, _ = gait.anchor(imgs[NEUTRAL])
     body_h = y1 - y0 + 1
     if body_h <= 0:
         raise Missing(f"{outfit}: {bank} frames are blank")
-    return [_scaled(a, TARGET_BODY_H / body_h) for a in imgs]
+    return imgs
 
 
 def load_hands(outfit):
@@ -92,9 +117,9 @@ def _gait_frames(bank, neutral, hands, spec, p):
     """The side walk/run: fists swing through the torso centre, the far one dimmed and drawn behind."""
     W, H = bank[0].shape[1] + 2 * PAD, bank[0].shape[0] + PAD
     out = []
-    for beat in range(len(gait.CYCLE)):
+    for beat, which in enumerate(gait.CYCLE):
         sc = scene(W, H)
-        gait.pose_into(sc, W / 2, H / 2, bank[gait.CYCLE[beat] - 1], neutral,
+        gait.pose_into(sc, W / 2, H / 2, bank[which - 1], neutral,
                        hands["front"], hands["back"], beat, p)
         out.append(finish(sc))
     return out
@@ -110,9 +135,9 @@ def _gait_front_frames(bank, neutral, hands, p):
     """
     W, H = bank[0].shape[1] + 2 * PAD, bank[0].shape[0] + PAD
     out = []
-    for beat in range(len(gait.CYCLE)):
+    for beat, which in enumerate(gait.CYCLE):
         sc = scene(W, H)
-        gait.walk_front_into(sc, W / 2, H / 2, bank[gait.CYCLE[beat] - 1], neutral,
+        gait.walk_front_into(sc, W / 2, H / 2, bank[which - 1], neutral,
                              hands["side"], beat, p)
         out.append(finish(sc))
     return out
@@ -123,13 +148,13 @@ def render(outfit, name):
     a = O.ANIMATIONS[name]
     bank = load_frames(outfit, a["frames"])
     hands = load_hands(outfit)
-    neutral = bank[NEUTRAL[a["frames"]]]
+    neutral = bank[NEUTRAL]
 
     if a["kind"] in ("gait", "gait_front"):
         p = O.GAITS[a["motion"]]
         frames = (_gait_frames(bank, neutral, hands, a, p) if a["kind"] == "gait"
                   else _gait_front_frames(bank, neutral, hands, p))
-        return frames, p["ms"]
+        return [upscale(f) for f in frames], p["ms"]
 
     tool = os.path.join(RES, "Items", a["tool"])
     if not os.path.exists(tool):
@@ -142,7 +167,7 @@ def render(outfit, name):
                                scale=a.get("scale", 1.0),
                                pivot=a.get("pivot", 0.0),
                                second=a.get("second", 0.17))
-    return frames, ms[0]
+    return [upscale(f) for f in frames], ms[0]
 
 
 def encode(frames, ms):
@@ -177,7 +202,11 @@ def build(outfit, check=False, verbose=True):
 
     stale = []
     if os.path.isdir(anim):
-        keep = {f"{n}.gif" for n in O.ANIMATIONS}
+        # `ALL_ANIMATIONS.gif` is the every-animation-in-one sheet written by `gallery_gif.py --outfit`.
+        # It is not an animation, so it is not in official.ANIMATIONS — but it lives here because this
+        # is where someone looks for "show me this outfit". Without this line the next build silently
+        # deletes it, which is precisely the class of loss the stale-sweep exists to prevent.
+        keep = {f"{n}.gif" for n in O.ANIMATIONS} | {"ALL_ANIMATIONS.gif"}
         stale = sorted(f for f in os.listdir(anim) if f.endswith(".gif") and f not in keep)
         if stale and not check:
             for f in stale:
@@ -234,11 +263,20 @@ def main():
         status()
         return
 
+    # A PENDING outfit renders ONLY when named explicitly on the command line — never by default, and
+    # never into the gallery. That is the whole distinction: OUTFITS is what the project ships, PENDING
+    # is something you can look at before deciding. Without this an outfit could not be reviewed until
+    # it was already declared official, which is backwards.
     targets = args.outfits or list(O.OUTFITS)
-    unknown = [o for o in targets if o not in O.OUTFITS]
+    unknown = [o for o in targets if o not in O.OUTFITS and o not in O.PENDING]
     if unknown:
         raise SystemExit(f"not in official.py: {', '.join(unknown)}\n"
-                         f"  official outfits: {', '.join(O.OUTFITS)}")
+                         f"  official outfits: {', '.join(O.OUTFITS)}\n"
+                         f"  pending (name one explicitly to render it for review):"
+                         f" {', '.join(O.PENDING) or '(none)'}")
+    for o in targets:
+        if o in O.PENDING:
+            print(f"  ⚠ {o} is PENDING — rendering for review, NOT official.")
 
     total_diff = 0
     for o in targets:

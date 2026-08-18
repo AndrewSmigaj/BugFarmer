@@ -27,7 +27,7 @@ RUN = dict(amp=0.58, ay=0.032, rot=75.0, tilt=14.0, ratio=0.19, waist=0.46, ms=9
 
 PHASE = [0.5, 0.0, 1.5, 1.0]   # NOT [0,.5,1,1.5] — that inversion put the fists at full reach on the
                                # passing frames, one of the four walk failures before this was settled
-CYCLE = [1, 2, 3, 2]           # frame 4 came back a second stride, so it is dropped
+CYCLE = [1, 2, 3, 4]           # contact, passing, opposite contact, opposite passing
 CHEST_ROW = 0.42               # torso centre and width are measured ONCE, here, on the neutral frame
 DIM = 0.62                     # the far fist is darkened as well as drawn behind
 
@@ -146,16 +146,55 @@ def walk_into(scene, bx, by, body, neutral, back_hand, palm_hand, beat):
 #   * one hand rises while the other drops (±0.15 of body span)
 #   * phase [1, 0, -1, 0], not the side walk's [0.5, 0, 1.5, 1.0]
 #   * the left hand is MIRRORED; neither is rotated or dimmed
-FRONT = dict(ratio=0.17, row=0.62, gap=0.03, dx=0.06, dy=0.15, ms=150)
+# ⚠ UNITS CHANGED 2026-08-18 — these are SHOULDER-relative, not silhouette-relative. The design is
+# unchanged and black-ant is the calibration: every number was solved so black-ant renders as it did,
+# because it was the one the owner kept. *"black ant is the only good one"*. `official.GAITS` carries
+# the live copy; this is the fallback default.
+FRONT = dict(ratio=0.484, row=0.340, edge=0.016, dx=0.037, dy=0.092, ms=150)
 FRONT_PHASE = [1, 0, -1, 0]
 
 
 def _edges(a, frac):
-    """Row at `frac` down the figure, and the body's left/right edge ON THAT ROW. Per frame."""
+    """Row at `frac` down the figure, and the body's left/right edge ON THAT ROW. Per frame.
+
+    ⚠ SUPERSEDED for hand placement — kept only because `preview_hands` and the labs still read it.
+    See `shoulder_line` for why a percentage of the silhouette is not a place to hang an arm.
+    """
     y0, y1, x0, x1 = _bbox(a)
     row = y0 + int((y1 - y0) * frac)
     xs = np.where(a[..., 3][row] > 0)[0]
     return (row, xs.min(), xs.max()) if len(xs) else (row, x0, x1)
+
+
+SHOULDER_BAND = (0.35, 0.60)   # the slice of the figure the shoulder line is looked for in
+
+
+def shoulder_line(a):
+    """(width, row, left, right) of the WIDEST row across the torso — the arm landmark.
+
+    THE FRONT WALK USED TO HANG ITS HANDS OFF A PERCENTAGE OF THE SILHOUETTE (row 0.62, hand size
+    0.17 of total height). A percentage is not a place on a body. The headgear is not a constant
+    share of the figure — bronze's helm is 19 of 68px, black-ant's horned head 31 of 87, fire-ant's
+    ant head 40 of 77, more than half the figure — so the same 0.62 landed at the hip on bronze and
+    at the ARMPIT on fire-ant, and the body's width at that row ran 0.73 / 0.70 / 0.61 of the
+    shoulders, which threw the hands out at three different widths. Owner, 2026-08-18, looking at all
+    three: *"black ant is the only good one"*. Measured before/after: reviews/2026-08-18-walk-hands/.
+
+    The shoulder line is a real feature of the armour, so it holds still: across all four frames of
+    both camera-facing banks of the three rebuilt outfits it moves at most 2px in width and 1px in
+    row. That is why it can be measured per frame, which the approved front walk requires.
+    """
+    y0, y1, x0, x1 = _bbox(a)
+    lo = y0 + int((y1 - y0 + 1) * SHOULDER_BAND[0])
+    hi = max(lo + 1, y0 + int((y1 - y0 + 1) * SHOULDER_BAND[1]))
+    best = None
+    for r in range(lo, hi):
+        xs = np.where(a[..., 3][r] > 0)[0]
+        if len(xs) and (best is None or xs.max() - xs.min() > best[0]):
+            best = (xs.max() - xs.min(), r, xs.min(), xs.max())
+    if best is None:
+        return x1 - x0, (y0 + y1) // 2, x0, x1
+    return best[0] + 1, best[1], best[2], best[3]
 
 
 def walk_front_into(scene, bx, by, body, neutral, hand_d3, beat, p=None):
@@ -168,15 +207,27 @@ def walk_front_into(scene, bx, by, body, neutral, hand_d3, beat, p=None):
     different numbers in `p`; do not copy the function.
     """
     p = p or FRONT
-    ny0, ny1, _, _ = _bbox(neutral)
-    bh = ny1 - ny0 + 1
     h, w = body.shape[:2]
     ox, oy = bx - w / 2.0, by - h / 2.0
-    hand = _sz(hand_d3, bh, p["ratio"])
-    r, lx, rx = _edges(body, p["row"])
-    span = rx - lx
+
+    # EVERY NUMBER HERE IS MEASURED AGAINST THE SHOULDER LINE, never against the silhouette — see
+    # `shoulder_line` for what that fixed. `row` is how far from the shoulders DOWN TO THE FEET the
+    # fists hang; `ratio` sizes the fist against the shoulder WIDTH; `dx`/`dy` travel in shoulder
+    # widths; and the fist's OUTER EDGE lands `edge` shoulder-widths outside the shoulder edge.
+    span, srow, lx, rx = shoulder_line(body)
+    feet = _bbox(body)[1]
+    r = srow + (feet - srow) * p["row"]
     s = FRONT_PHASE[beat % len(FRONT_PHASE)]
-    gap = max(2, int(span * p["gap"]))
+    gap = span * p["edge"]
+
+    # `pulse` — the fist coming TOWARD the camera grows, the one going back shrinks. Facing the viewer
+    # the arms travel mostly in Z, so a purely up-down swing reads as flapping; the size change is what
+    # sells it. Owner picked this 2026-08-14 ("we will go with wisdest lowest") from
+    # reviews/2026-08-14-run-front-pump/. DEFAULTS TO 0, so WALK/FRONT render byte-identical to before —
+    # only a gait that sets `pulse` (FRONT_RUN) changes.
+    pulse = p.get("pulse", 0.0)
+    hand_far = _sz(hand_d3, span, p["ratio"] * (1.0 - pulse * s))
+    hand_near = _sz(hand_d3, span, p["ratio"] * (1.0 + pulse * s))
 
     # WHICH HAND IS MIRRORED. The RIGHT one is, not the left — that turns both openings INWARD toward
     # the body. Mirroring the left instead faces both palms OUT, away from him, which is what shipped
@@ -190,9 +241,14 @@ def walk_front_into(scene, bx, by, body, neutral, hand_d3, beat, p=None):
     # the pair drift apart. What was wrong was never the mirror — it was mirroring the RIGHT one, which
     # turns both palms outward. Reported twice ("the palms are facing out when they should be facing in")
     # and settled 2026-08-06 against all four rendered options.
+    # The fist hangs FLUSH with the shoulder: its outer edge on the shoulder edge, so half its width
+    # sits inboard. Placing the fist's CENTRE on a body edge (what this did) makes the reach depend on
+    # how wide the fist happens to be, which is a second way for outfits to disagree.
+    _paste(scene, hand_far[:, ::-1],
+           ox + lx + hand_far.shape[1] / 2.0 - gap - s * span * p["dx"], oy + r - s * span * p["dy"])
     _paste(scene, body, bx, by)
-    _paste(scene, hand[:, ::-1], ox + lx - gap - s * span * p["dx"], oy + r - s * span * p["dy"])
-    _paste(scene, hand,          ox + rx + gap + s * span * p["dx"], oy + r + s * span * p["dy"])
+    _paste(scene, hand_near,
+           ox + rx - hand_near.shape[1] / 2.0 + gap + s * span * p["dx"], oy + r + s * span * p["dy"])
 
 
 def run_into(scene, bx, by, body, neutral, back_hand, palm_hand, beat):

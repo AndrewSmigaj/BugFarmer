@@ -78,15 +78,23 @@ TRIES_DIR, FRAMES_DIR, HANDS_DIR, ANIM_DIR = "tries", "frames", "gauntlet", "ani
 # chosen artifact, so it is declared here rather than found by looking for a file called result.png —
 # which broke the moment those files were tidied into tries/.
 OUTFITS = {
-    "bronze":   dict(dir="outfits/bronze", approved="2026-08-06",
-                     sheet="result.png",
-                     words="the reference set - made first, and they work"),
-    "fireant":  dict(dir="outfits/fireant", approved="2026-08-06",
-                     sheet="tries/2026-08-05-original-sheet/result.png",
-                     words="they are all correct in the animation png... these gauntlets are fine"),
-    "blackant": dict(dir="outfits/blackant", approved="2026-08-06",
-                     sheet="tries/2026-08-05-original-sheet/result.png",
-                     words="they are all correct in the animation png... these gauntlets are fine"),
+    # 2026-08-18 — ALL THREE REPLACED with their pixel-converted rebuilds. What was here before was the
+    # RAW render: measured, the old `bronze/frames/front_2.png` was 162x297 with 12,555 colours and
+    # blackant's 185x455 with 11,874. These are 27x68, 26x77 and 32x87, ~1,000 colours — actual sprites.
+    # The raw art is kept at `<dir>/archive/2026-08-18-superseded-raw/`; nothing was deleted.
+    #
+    # `sheet` is empty for all three: it named the old 12-frame generation, and that pipeline is retired
+    # (a twelve-cell sheet leaves each figure too small to carry a pixel grid). An outfit is now a
+    # turnaround plus one call per direction, so there is no single sheet to point at.
+    "bronze":   dict(dir="outfits/bronze", approved="2026-08-18",
+                     sheet="",
+                     words="it looks good... these seem good, pixelization works"),
+    "fireant":  dict(dir="outfits/fireant", approved="2026-08-18",
+                     sheet="",
+                     words="it looks good... these seem good, pixelization works"),
+    "blackant": dict(dir="outfits/blackant", approved="2026-08-18",
+                     sheet="",
+                     words="it looks good... these seem good, pixelization works"),
 }
 
 # NOT OFFICIAL YET — listed so the gap is visible, but NOT built. An outfit is either complete and in
@@ -134,9 +142,25 @@ GAITS = {
     # The camera-facing walk is a SEPARATE motion, not the side one re-aimed: a different fist (profile),
     # hands outside the body edges rather than swinging through the torso, one rising as the other drops.
     # 2026-07-29 — "first for walking forward gait_front_d3_bigger.gif is great"
-    "FRONT":     dict(ratio=0.17, row=0.62, gap=0.03, dx=0.06, dy=0.15, ms=150),
+    #
+    # ⚠ 2026-08-18 — THE UNITS CHANGED, THE DESIGN DID NOT. `ratio` is now the fist's height as a
+    # fraction of the SHOULDER WIDTH, `row` how far from the shoulders down to the feet the fists
+    # hang, `dx`/`dy` travel in shoulder widths, `edge` the clearance outside the shoulder edge
+    # (`gap`, a fraction of an arbitrary silhouette row, floored to its 2px minimum on every outfit
+    # and is gone). Hanging hands off a percentage of the whole silhouette made every outfit with
+    # different headgear disagree — fire-ant's fists ended up at its armpits and black-ant's inside
+    # its own shoulder line. Owner, shown all three: *"black ant is the only good one"*, so every
+    # constant below was solved from black-ant and it renders unchanged.
+    # Measured before/after: reviews/2026-08-18-walk-hands/.
+    "FRONT":     dict(ratio=0.484, row=0.340, edge=0.016, dx=0.037, dy=0.092, ms=150),
     # Same motion at run speed. ⚠ NOT designed — see NOT_AGREED. Only the SIDE run has its own pose.
-    "FRONT_RUN": dict(ratio=0.17, row=0.62, gap=0.03, dx=0.06, dy=0.15, ms=90),
+    # 2026-08-14 — "we will go with wisdest lowest". The camera-facing run had NO pose of its own:
+    # this row was byte-identical to FRONT apart from ms, i.e. the walk played faster, which is the
+    # failure the side run already fixed. Owner: "that's just not running with hands down by the
+    # side". Picked from reviews/2026-08-14-run-front-pump/ against three rendered options; the two
+    # rejected attempts are recorded there. `pulse` is new — the fist coming toward the camera grows.
+    # ⚠ run_back shares this row, so it changes too.
+    "FRONT_RUN": dict(ratio=0.484, row=0.180, edge=0.016, dx=0.047, dy=0.151, pulse=0.22, ms=90),
 }
 # The back-facing walk reuses FRONT deliberately: from behind you also see both hands clear of the
 # silhouette, and at ~10px a hand the near/far distinction the side walk needs does not read.

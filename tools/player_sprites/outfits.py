@@ -32,9 +32,8 @@ OUTFITS = {
     "fireant": ("fire-ant carapace armour",
                 "orange-red and deep red ant chitin, overlapping segmented plates with darker red "
                 "shading and leg-spur plates at the hips",
-                "an ant-head helm with a ridged crest, a dark compound eye on each side and two curved "
-                "antennae, OPEN AT THE FRONT so the character's face is visible - draw the face, eyes "
-                "and hair; the helm frames it and never covers it",
+                "an open-faced helm that leaves the face visible - draw the face, eyes and hair; it "
+                "frames the face and never covers it",
                 "orange-red ant chitin"),
     "blackant": ("black-ant carapace armour",
                  "near-black and dark charcoal ant chitin, smooth plates with chevron banding across "
@@ -83,7 +82,7 @@ OUTFITS = {
         "tempered steel plate armour",
         "mid gunmetal-grey steel with a faint cold blue sheen, bright polished bevels along every "
         "plate edge, noticeably darker than silver",
-        "steel sallet helm with a long tail and a visor",
+        "an open-faced helm that leaves the face visible - draw the face, eyes and hair; it frames the face and never covers it",
         "polished gunmetal steel"),
     # --- bonus concept from the catalog: the "collector" (armor.md, section B) ---
     "entomologist": (
@@ -157,7 +156,7 @@ EXPLORE = """Draw THREE different design options for {what}, side by side in a s
 
 Each of the three is the SAME character wearing a DIFFERENT DESIGN of the outfit: standing still, facing the viewer, full body from head to feet, all three at the same scale and standing on the same baseline.
 
-Because the character has NO ARMS, do not draw arms, hands, elbows, forearms or gauntlets. Each shoulder ends in a rounded shoulder cap at the armless shoulder opening. This is deliberate - the hands are separate sprites added later.
+Because the character has NO ARMS, do not draw arms, hands, elbows, forearms or gauntlets. Each shoulder ends in a smooth rounded cap, closed over and solid - no socket, no hole, no opening, nothing hanging below it. This is deliberate - the hands are separate sprites added later.
 
 The three designs, left to right:
 1. {a}
@@ -174,7 +173,10 @@ CRITICAL - THE FIGURE WILL BE SHRUNK TO ABOUT 40 PIXELS TALL. Everything below f
 
 Draw each figure with HARD pixel edges against the magenta. Do not blur, feather, glow or blend the figure into the background. Do not draw a heavy black outline around the figure - where an outline is needed use a darker shade of that figure's own colours, one pixel thick.
 
-Do not use magenta, pink or purple ANYWHERE on the figures themselves - not on the armour, not as glowing eyes, not as trim. Magenta is reserved for the background alone."""
+Do not use magenta, pink or purple ANYWHERE on the figures themselves - not on the armour, not as glowing eyes, not as trim. Magenta is reserved for the background alone.
+
+Match the PIXEL DENSITY of the FIRST attached reference image: its pixels are large visible squares, and yours must be the same size. Do not draw at a finer resolution than that reference - chunky blocks, flat colour, no smooth shading, no fine detail.
+"""
 
 # name -> (what the set is, [three designs with different parents])
 HEAD_COVERED = ("Every design covers the whole head with its own headgear.")
@@ -206,6 +208,26 @@ EXPLORATIONS = {
     )),
     "ant-carapace-black2": ("armour made from BLACK ANT parts - near-black and dark charcoal chitin "
                             "plates, shell, carapace, mandibles, leg segments. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+    # A COMPLETE reroll of black-ant on the new pipeline, 2026-08-15. Owner: "can we try to do the
+    # black ant exactly like we did with fireant, a complete reroll". Same undirected brief as black2,
+    # copied verbatim - the point is a fresh design, not a new direction. Its explore folder carries no
+    # CHOSEN_*.png, so nothing steers it toward the existing black-ant.
+    "ant-carapace-black3": ("armour made from BLACK ANT parts - near-black and dark charcoal chitin "
+                            "plates, shell, carapace, mandibles, leg segments. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+    # OWNER'S EDIT, 2026-08-15: "can you put in parenthesis (Lasius niger) so that it knows it is
+    # literally a black garden ant". Naming the species is the whole change - the brief stays
+    # undirected, the model still decides what the armour looks like.
+    "ant-carapace-black4": ("armour made from BLACK ANT (Lasius niger) parts - near-black and dark "
+                            "charcoal chitin plates, shell, carapace, mandibles, leg segments. "
+                            "ARMOUR WORN BY A PERSON", (
         "your own design - decide for yourself what this armour looks like",
         "a second design, clearly and obviously different from the first",
         "a third design, clearly and obviously different from both of the others",
@@ -351,7 +373,8 @@ EXPLORATIONS = {
     # read as ITS MATERIAL at a glance, and the four grey rungs (iron/steel/silver/platinum) separate by
     # BRIGHTNESS as much as by shape — armor.md records the values iron 66, steel 90, platinum 157.
 
-    "leather": ("plain boiled-leather armour - tan and mid-brown, darker straps and stitching, no metal "
+    # SUPERSEDED - directed brief (2026-08-06), produced explore/leather/, rejected.
+    "leather-directed": ("plain boiled-leather armour - tan and mid-brown, darker straps and stitching, no metal "
                 "plates anywhere", (
         "a HOODED JERKIN - a soft pointed hood worn up, a short sleeveless jerkin, a plain belt, and "
         "trousers tucked into low boots. The silhouette is soft and rounded all over, no hard edges",
@@ -360,7 +383,8 @@ EXPLORATIONS = {
         "a LONG RIDING COAT - a tall standing collar framing the head, no hood, and a long coat that "
         "flares below the knee. Tall and narrow, the tallest silhouette of the three")),
 
-    "wood": ("armour made of WOOD - bark plates, pale carved timber and darker bark, bound with cord. "
+    # SUPERSEDED - directed brief (2026-08-06), produced explore/wood/, rejected.
+    "wood-directed": ("armour made of WOOD - bark plates, pale carved timber and darker bark, bound with cord. "
              "Wood is the rung ABOVE leather, so it must read as sturdier than cloth, not as a costume", (
         "BARK PLATES - broad curved slabs of thick bark strapped over the chest and thighs like plate, "
         "with a low domed bark helm. Chunky and rounded, the outline of a beetle's back",
@@ -447,7 +471,8 @@ EXPLORATIONS = {
         "and yours must be the same size. Do not draw at a finer resolution than the reference - chunky "
         "blocks, flat colour, no smooth shading, no fine detail."),
 
-    "steel": ("tempered steel plate armour - mid gunmetal grey with a faint cold blue sheen and bright "
+    # SUPERSEDED - directed brief (2026-08-06), produced explore/steel/, rejected.
+    "steel-directed": ("tempered steel plate armour - mid gunmetal grey with a faint cold blue sheen and bright "
               "polished bevels along every plate edge. Clearly BRIGHTER than iron", (
         "a SALLET SET - a smooth rounded helm with a long pointed tail sweeping back off the skull, a "
         "fitted breastplate and articulated tassets. Streamlined, swept back, aerodynamic",
@@ -468,6 +493,16 @@ EXPLORATIONS = {
         "clear of the shoulders, and a knee-length skirt of vertical plates. Angular and formal",
         "a SEGMENTED LEGIONARY - overlapping horizontal bands across the chest and shoulders, a simple "
         "browed cap helm, and a belt of hanging strips at the hips. Visibly banded, workmanlike")),
+
+    # Bronze regenerated on the one-direction pipeline, 2026-08-15. UNDIRECTED, unlike bronze-r2 above,
+    # which dictated its three designs - the owner's standing rule is that the model decides what the
+    # armour looks like. His MATERIAL words are kept verbatim from r2; only the design direction is gone.
+    "bronze-r3": ("bronze plate armour - warm brown-gold bronze with darker brown shadows and soft yellow "
+                  "highlights. Older and warmer than steel, not as pink as copper. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
 
     # wood-r1 came back comic — option 2 was literally a basket and option 3 grew a log helm despite the
     # brief saying no helm. Anchoring all three on the one that worked (bark plates) and pushing them
@@ -493,6 +528,166 @@ EXPLORATIONS = {
         "a smooth radiant breastplate, almost no surface detail. The widest silhouette",
         "a TOWER SET - deep squared-off pauldrons, a flat-topped closed helm and a broad flared skirt of "
         "plates reaching the knee. Blocky, rectangular and immovable")),
+
+    # 2026-08-14 - the material and nothing else. See DECISIONS.md, 'A brief is the MATERIAL'.
+    "leather-r2": ("leather armour. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+    "wood-r3": ("wooden armour. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+    "steel-r2": ("steel armour. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+    "gilded-steel": ("gilded steel armour - gold over steel. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+    "beetle-shell-r2": ("armour made from beetle shell and elytra. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+
+    # 2026-08-14 rerolls. The steel and beetle-shell extras are the OWNER'S instructions, verbatim -
+    # not my design direction. He asked for them by name.
+    "wood-r4": ("wooden armour. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+    "steel-r3": ("steel armour. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    ),
+        "Do not go with your default helmets - draw a different kind of helmet."),
+
+    "beetle-shell-r3": ("armour made from DARK BLUE beetle shell and elytra. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    ),
+        "The helmet is ROUNDED. No wings."),
+
+
+    "fancy-r2": ("fancy armour - EXTRA fancy: gold AND silver, with gemstones. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+
+    "wood-r5": ("wooden armour. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+
+    "steel-r4": ("mid-grey steel armour, matte. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+    "steel-r5": ("mid-grey steel armour, matte. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    ),
+        "Do not go for the first things that come to mind."),
+
+    "platinum-r5": ("mirror-polished platinum armour, cool blue-white with blue-grey shadows. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+    "platinum-r6": ("mirror-polished platinum armour, cool blue-white with blue-grey shadows. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    ),
+        "Do not go for the first things that come to mind."),
+
+
+    "scorpion": ("armour made from scorpion shell and claws. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+    "wasp-thorn": ("armour made from wasp chitin and stingers. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+    "hornet-thorn": ("armour made from hornet chitin and stingers. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+    "killer-bee-thorn": ("armour made from killer bee chitin and stingers. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+    "ranger-r2": ("a woodland ranger's outfit of leather and wool. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+
+    "wasp-stinger": ("armour made from black and lemon-yellow wasp chitin and stingers. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+    "hornet-stinger-r2": ("armour made from black and deep orange hornet chitin and stingers. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+    "killer-bee-stinger": ("armour made from black and dark gold killer bee chitin and stingers. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+
+    "fireant-r2": ("armour made from RED FIRE-ANT parts - deep red and orange-red chitin plates, shell, carapace, mandibles, leg segments. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
+
+    "fireant-r3": ("armour made from RED FIRE-ANT parts - deep red and orange-red chitin plates, shell, carapace, mandibles, leg segments. ARMOUR WORN BY A PERSON", (
+        "your own design - decide for yourself what this armour looks like",
+        "a second design, clearly and obviously different from the first",
+        "a third design, clearly and obviously different from both of the others",
+    )),
+
 }
 
 
@@ -518,7 +713,13 @@ Outfit: {material}. Include a {headgear}, a breastplate, rounded shoulder caps, 
 
 Keep the front row front-facing, the back row back-facing, and the bottom row a strict right-facing side profile. Do not drift into a three-quarter view.
 
-Big simple shapes, not fine detail. This is a small pixel art sprite sheet. All 12 sprites must clearly be the same character, but each frame in a row must be a distinct walking frame. If two adjacent frames in a row are identical, the sheet is wrong."""
+Big simple shapes, not fine detail. This is a small pixel art sprite sheet. All 12 sprites must clearly be the same character, but each frame in a row must be a distinct walking frame. If two adjacent frames in a row are identical, the sheet is wrong.
+
+Match the PIXEL DENSITY of the FIRST attached reference image: its pixels are large visible squares, and yours must be the same size. Do not draw at a finer resolution than that reference - chunky blocks, flat colour, no smooth shading, no fine detail.
+
+
+Draw the sheet on a FLAT SOLID MAGENTA background (pure magenta, RGB 255 0 255), completely flat and uniform with nothing else on it - no shadow, no gradient, no ground, no text. Do not use magenta, pink or purple anywhere on the character itself. Magenta is the background alone.
+"""
 
 GAUNTLET = """The attached image is a sprite sheet of a character wearing {what}.
 
@@ -557,7 +758,10 @@ Redraw those SAME {n} HANDS in the SAME {n} poses, in the SAME row, at the SAME 
 
 Copy the reference EXACTLY in shape. Same silhouette, same outline, same proportions, same wrist cuff at the bottom of each hand, same angle for each of the {n}. Left to right they are: {roles}. Do not redesign them, do not restyle them, do not change how any hand is posed or turned - the ONLY thing that changes is the material they are made of.
 
-Big simple shapes, chunky pixels, a dark outline, no fine detail. Nothing else in the image - no character, no body, no arms, just the {n} hands."""
+Big simple shapes, chunky pixels, a dark outline, no fine detail. Nothing else in the image - no character, no body, no arms, just the {n} hands.
+
+Match the PIXEL DENSITY of the FIRST attached reference image: its pixels are large visible squares, and yours must be the same size. Do not draw at a finer resolution than that reference - chunky blocks, flat colour, no smooth shading, no fine detail.
+"""
 
 
 def reference_strip():

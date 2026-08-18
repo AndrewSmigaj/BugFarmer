@@ -63,6 +63,7 @@ import sys
 from PIL import Image, ImageDraw, ImageSequence
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import build as B                                          # noqa: E402  for PIXEL_SCALE, the render scale
 import official as O                                       # noqa: E402  the only source of truth
 import review as R                                         # noqa: E402  the readable-label helper
 
@@ -127,10 +128,24 @@ def sample(cell, t):
 
 
 def fit(size, cell_px):
-    """max-width/max-height: shrink to fit the box, keep the aspect, never enlarge."""
+    """Shrink to fit the box by a WHOLE-NUMBER divisor, so the pixel grid survives. Never enlarge.
+
+    This used to be `round(w * min(cell_px/w, cell_px/h, 1.0))` — an arbitrary ratio — and `frame_at`
+    then resampled the cell with LANCZOS. Between them they turned a sprite that had been carefully
+    converted to pixels back into a smooth image: exactly the thing the conversion exists to prevent.
+    Owner, 2026-08-18: *"NOT THE RAW version the PIXEL version"*.
+
+    Only divisors that divide BOTH sides exactly are allowed, so a 4x block grid becomes a clean 2x or
+    1x one and never a 1.7x smear. If no divisor gets the cell under `cell_px`, the largest legal one
+    wins and the cell stays slightly big — a correct large cell beats a mushy small one.
+    """
     w, h = size
-    s = min(cell_px / w, cell_px / h, 1.0)
-    return max(1, round(w * s)), max(1, round(h * s))
+    legal = [d for d in range(1, 9) if w % d == 0 and h % d == 0]
+    for d in legal:
+        if max(w, h) // d <= cell_px:
+            return w // d, h // d
+    d = legal[-1]
+    return max(1, w // d), max(1, h // d)
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -234,7 +249,7 @@ def frame_at(g, base, t):
             if not cell:
                 continue
             w, h = g.imsize[(r, c)]
-            src = sample(cell, t).resize((w, h), Image.LANCZOS)
+            src = sample(cell, t).resize((w, h), Image.NEAREST)   # NEAREST: see fit() — keep the pixels
             im.paste(src, (g.x(ci) + (g.col_w[ci] - w) // 2, g.y(ri) + (g.row_h[ri] - h) // 2))
     return im
 
@@ -292,12 +307,119 @@ def build(cell_px=CELL, flip=False, step=STEP_MS, loop_ms=LOOP_MS, out=OUT):
     return out
 
 
+# ---------------------------------------------------------------------------------------------------
+# ONE OUTFIT, EVERY ANIMATION — the file to actually look at when judging a single outfit
+#
+# The roster sheet above answers "how do the outfits compare". This answers "is THIS outfit finished",
+# which is the question asked before an outfit is promoted, and it is asked one outfit at a time.
+#
+# It reuses `load_cell` / `fit_loop` / `sample` deliberately: the master-timeline logic (every cell
+# looping cleanly inside one shared loop, at its own speed) is the subtle part, and a second copy of it
+# would drift. Only the layout differs — a per-cell caption instead of one caption per column, because
+# 13 animations do not share a row/column meaning the way outfit x animation does.
+
+OUTFIT_COLS = 4     # 13 animations -> 4 x 4 with three blanks, which reads better than 13 in a strip
+OUTFIT_CELL = 460   # sources render at 4x, so this lands on a clean /2 -> an exact 2x block grid
+
+
+def build_outfit(outfit, cell_px=OUTFIT_CELL, step=STEP_MS, loop_ms=LOOP_MS, out=None):
+    """Every animation of ONE outfit in a single gif. Written to that outfit's own `anim/` folder."""
+    anims = list(O.ANIMATIONS)
+    out = out or os.path.join(PLAYER, O.path(outfit, O.ANIM_DIR), "ALL_ANIMATIONS.gif")
+
+    cells, gaps = {}, []
+    for a in anims:
+        c = load_cell(outfit, a)
+        cells[a] = c
+        if c is None:
+            gaps.append(a)
+        else:
+            c["rate"] = fit_loop(c, loop_ms)
+
+    live = [a for a in anims if cells[a]]
+    if not live:
+        raise SystemExit(f"{outfit}: no animations on disk — run build.py {outfit} first")
+
+    # ONE divisor for the WHOLE sheet. Sizing each cell independently (what `fit` does per-cell for the
+    # roster grid, where every cell in a column is the same animation) let a small cell keep 4x native
+    # while a big one dropped to 2x — so the same character was drawn at two sizes on one page, which
+    # reads as the sprite changing size between animations. The scale must be a property of the sheet.
+    sizes = [cells[a]["frames"][0].size for a in live]
+    legal = [d for d in range(1, 9) if all(w % d == 0 and h % d == 0 for w, h in sizes)]
+    div = next((d for d in legal if max(max(w, h) for w, h in sizes) // d <= cell_px), legal[-1])
+    size = {a: (cells[a]["frames"][0].size[0] // div, cells[a]["frames"][0].size[1] // div)
+            for a in live}
+    ncol = min(OUTFIT_COLS, len(live))
+    nrow = (len(live) + ncol - 1) // ncol
+    lh = R.text_h(LABEL_PT)
+    colw = [max([size[a][0] for i, a in enumerate(live) if i % ncol == ci] or [cell_px]) + PADX * 2
+            for ci in range(ncol)]
+    rowh = [max([size[a][1] for i, a in enumerate(live) if i // ncol == ri] or [cell_px]) + lh + PADY * 3
+            for ri in range(nrow)]
+
+    top = R.text_h(TITLE_PT) + PADY * 2
+    W = sum(colw)
+    H = top + sum(rowh)
+
+    base = Image.new("RGB", (W, H), BG)
+    d = ImageDraw.Draw(base)
+    font, tf, sf = R.font(LABEL_PT), R.font(TITLE_PT), R.font(R.NOTE_PT)
+    d.rectangle([0, 0, W - 1, top - 1], fill=PANEL)
+    d.text((PADX, (top - TITLE_PT) // 2 - 3), outfit, fill=(0xe8, 0xe8, 0xf0), font=tf)
+    shown = max(1, B.PIXEL_SCALE // div)          # build.py renders at PIXEL_SCALE; we divide by `div`
+    d.text((PADX + d.textlength(outfit, font=tf) + 14, (top - R.NOTE_PT) // 2 - 1),
+           f"{len(live)} animations · every cell at {shown}x native pixels · nothing resampled",
+           fill=DIM, font=sf)
+    d.line([0, top - 1, W, top - 1], fill=LINE)
+
+    pos = {}
+    for i, a in enumerate(live):
+        ci, ri = i % ncol, i // ncol
+        x0 = sum(colw[:ci])
+        y0 = top + sum(rowh[:ri])
+        d.text((x0 + PADX, y0 + PADY), a.replace("_", " "), fill=GOLD, font=font)
+        w, h = size[a]
+        pos[a] = (x0 + (colw[ci] - w) // 2, y0 + lh + PADY * 2)
+    for ri in range(1, nrow):
+        d.line([0, top + sum(rowh[:ri]) - 1, W, top + sum(rowh[:ri]) - 1], fill=LINE)
+    for ci in range(1, ncol):
+        d.line([sum(colw[:ci]) - 1, top, sum(colw[:ci]) - 1, H], fill=LINE)
+
+    n = max(1, loop_ms // step)
+    frames = []
+    for i in range(n):
+        im = base.copy()
+        for a in live:
+            im.paste(sample(cells[a], i * step).resize(size[a], Image.NEAREST), pos[a])
+        frames.append(im)
+
+    probes = min(8, n)
+    strip = Image.new("RGB", (W, H * probes))
+    for i in range(probes):
+        strip.paste(frames[i * n // probes], (0, i * H))
+    pal = strip.quantize(colors=255, method=Image.MEDIANCUT)
+    frames = [f.quantize(palette=pal, dither=Image.Dither.NONE) for f in frames]
+
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    frames[0].save(out, save_all=True, append_images=frames[1:], duration=step, loop=0, optimize=True)
+    print(f"  {out.replace('/mnt/c/', 'C:/')}")
+    print(f"    {len(live)} animations, {W}x{H}, {n} frames, {loop_ms}ms loop, "
+          f"{os.path.getsize(out) / 1e6:.1f} MB")
+    for m in gaps:
+        print(f"    MISSING  {m} — declared in official.py, no file on disk")
+    return out
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--cell", type=int, default=CELL, help="max px per cell (the gallery uses 150)")
+    ap.add_argument("--outfit", help="ONE outfit, every animation, into that outfit's anim/ folder")
+    ap.add_argument("--cell", type=int, default=None, help="max px per cell (the gallery uses 150)")
     ap.add_argument("--flip", action="store_true", help="rows = animations (the gallery's flip button)")
     ap.add_argument("--step", type=int, default=STEP_MS, help="ms per gif frame")
     ap.add_argument("--loop", type=int, default=LOOP_MS, help="ms per loop")
-    ap.add_argument("--out", default=OUT)
+    ap.add_argument("--out", default=None)
     a = ap.parse_args()
-    build(a.cell, a.flip, a.step, a.loop, a.out)
+    if a.outfit:
+        build_outfit(a.outfit, a.cell or OUTFIT_CELL, a.step, a.loop, a.out)
+    else:
+        build(a.cell or CELL, a.flip, a.step, a.loop, a.out or OUT)

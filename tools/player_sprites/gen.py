@@ -71,6 +71,50 @@ def call(prompt, refs, model, size, quality):
         return base64.b64decode(json.loads(r.read())["data"][0]["b64_json"])
 
 
+# ── the clause guard ────────────────────────────────────────────────────────────────────────────────
+# Every prompt that draws the CHARACTER must carry these. They are not style preferences; each one is a
+# defect that shipped when it was missing, and each was missing because a prompt was assembled by hand
+# instead of composed from the template.
+#
+#   NO ARMS        2026-08-14: dropped while splicing the template with .split(); the model drew arms
+#                  back on. The skill has said for weeks that absence must be stated explicitly.
+#   bare skin      2026-08-14: dropped the same way one call later; the armour came back with gaps at
+#                  the thighs and hips where the shorts showed through.
+#   MAGENTA        the background the cutter keys on. Black armour on a black background gets eaten -
+#                  a black-and-yellow set lost 17% of the figure that way.
+#   PIXEL DENSITY  without it gpt renders smooth and there is no pixel grid to convert; owner's fix,
+#                  2026-08-13, and it sat in one dict entry for twenty rolls before reaching the template.
+CHARACTER_CLAUSES = {
+    "NO ARMS": "the armless rule - the model draws arms back on without it",
+    "bare skin": "the coverage rule - armour comes back with gaps at the thighs without it",
+    "MAGENTA": "the key colour the cutter thresholds on",
+    "PIXEL DENSITY": "the block-size anchor; without it the render is smooth and cannot be pixelized",
+}
+
+
+def check_clauses(prompt, dest, skip=False):
+    """Refuse to spend on a character prompt that is missing a mandatory clause.
+
+    Gauntlet calls draw hands on black, not the character, so they are exempt. Everything else that
+    draws a figure goes through here whether the prompt came from the template or was built by hand -
+    the point is that it does not depend on whoever wrote it remembering.
+    """
+    if "gauntlet" in dest or "hands" in dest:
+        return
+    missing = [c for c in CHARACTER_CLAUSES if c not in prompt]
+    if not missing:
+        return
+    lines = "\n".join(f"    MISSING  {c!r} - {CHARACTER_CLAUSES[c]}" for c in missing)
+    if skip:
+        print(f"  ⚠ sending anyway, --skip-clause-check:\n{lines}")
+        return
+    raise SystemExit(
+        f"\nREFUSING TO SPEND - this character prompt is missing {len(missing)} mandatory clause(s):\n"
+        f"{lines}\n\n"
+        "  Compose the prompt from outfits.EXPLORE / outfits.SHEET rather than assembling it by hand.\n"
+        "  If it is genuinely not a character prompt, pass --skip-clause-check and say why.\n")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dest", required=True,
@@ -84,7 +128,11 @@ def main():
                     help="nearest-neighbour upscale applied to every reference before sending; the bases "
                          "are game-size sprites and the model needs a bigger image to read them")
     ap.add_argument("--dry-run", action="store_true", help="write the folder + RECORD, spend nothing")
+    ap.add_argument("--skip-clause-check", action="store_true",
+                    help="send a CHARACTER prompt that is missing a mandatory clause. Say why in the run.")
     a = ap.parse_args()
+
+    check_clauses(a.prompt, a.dest, a.skip_clause_check)
 
     now = datetime.datetime.now()
     out = os.path.join(ROOT, a.dest)

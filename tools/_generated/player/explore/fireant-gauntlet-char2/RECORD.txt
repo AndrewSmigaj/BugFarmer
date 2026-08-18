@@ -1,0 +1,22 @@
+when      : 2026-08-15 08:15:09
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+dest      : explore/fireant-gauntlet-char2
+references (in the order sent):
+  1. tools/_generated/player/explore/fireant-gauntlet-char2/REF_character.png  (upscaled x14 -> 350x1064)
+  2. tools/_generated/player/explore/fireant-gauntlet-char2/REF_shapes_native.png  (upscaled x14 -> 1316x336)
+
+PROMPT:
+The FIRST attached image is a finished pixel-art sprite of a character in fire-ant carapace armour. The SECOND attached image is the reference: 5 small pixel-art gauntlet hands in a row.
+
+Draw the character from the first image standing on the left, unchanged. To the right of it, draw those SAME 5 HANDS from the second image, in a row, in the SAME 5 poses. Left to right the hands are: (1) back of a closed fist (knuckles toward camera), (2) the palm side, (3) the fist in profile, (4) fist closed around a pole, knuckles showing, (5) fist closed around a pole, palm showing - the SECOND hand on a two-handed tool.
+
+EVERYTHING in the image must be drawn at the SAME PIXEL DENSITY as the character: the same size pixel blocks throughout. The hands must not be drawn at a finer resolution than the character. Each hand must be exactly 13 pixel blocks tall - count the blocks. The character is about 90 pixel blocks tall, so each hand is roughly one seventh of the character height. The hands must be SMALL next to the character.
+
+Copy the hand shapes EXACTLY from the second image. Same silhouette, same outline, same proportions, same wrist cuff at the bottom of each hand, same angle for each of the 5. Do not redesign them, do not restyle them, do not change how any hand is posed or turned - the ONLY thing that changes is that they are made of orange-red ant chitin, matching the material, colours, shadows and highlights of the armour on the character.
+
+Big simple shapes, chunky pixels, a dark outline, no fine detail. Nothing else in the image - just the character and the 5 hands.
+
+Flat pure magenta background (255 0 255), nothing else on it. Hard pixel edges, no blur.

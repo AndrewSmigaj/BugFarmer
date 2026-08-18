@@ -1,0 +1,38 @@
+when      : 2026-08-15 06:36:47
+model     : gpt-image-2
+size      : 1024x1536
+quality   : high
+mask      : NONE
+dest      : explore/fireant-v2-edited
+references (in the order sent):
+  1. tools/_generated/player/explore/fireant-v2-template/TEMPLATE.png  (sent as-is at 1024x1536)
+
+PROMPT:
+Edit this 4x4 sprite sheet. Every cell ALREADY contains the master-scale character at the correct size and position. Preserve the exact body size, head size, torso length, leg length, foot size and placement in every cell. Do not rescale any sprite. Keep the feet on the existing baseline and keep the head at the existing head-height line. Change ONLY the walking pose of the legs in each cell.
+
+Every sprite must use the same body box: same crown-to-sole height, same shoulder width, same head size, same torso length, same leg length, same foot size. Walking changes the pose only, not the size of the body.
+
+ROW 1: leave these four standing still exactly as they are - front, right profile, back, front.
+ROW 2: front walk cycle, 4 frames.
+ROW 3: right-profile walk cycle, 4 frames.
+ROW 4: back walk cycle, 4 frames.
+
+For each walk row, the 4 columns must be:
+Column 1: left leg forward, right leg back.
+Column 2: passing pose, legs closer together, transition between steps.
+Column 3: right leg forward, left leg back.
+Column 4: passing pose opposite to column 2, transition back toward column 1.
+
+Very important: the 4 frames in each row must be DIFFERENT phases of a walk cycle, not repeated standing poses.
+
+For each row, the 4 columns must be:
+Column 1: left leg forward, right leg back.
+Column 2: passing pose, legs closer together, transition between steps.
+Column 3: right leg forward, left leg back.
+Column 4: passing pose opposite to column 2, transition back toward column 1.
+
+Do not redesign the armor, the helmet, the antennae, the face or the colors - they are already correct in every cell. Keep the same pixel block size; do not add finer detail.
+
+Armless body: do not draw arms, hands, elbows, forearms or gauntlets. Solid rounded shoulder ends.
+
+Keep the cyan guide lines and cell borders exactly where they are. Background stays flat magenta.

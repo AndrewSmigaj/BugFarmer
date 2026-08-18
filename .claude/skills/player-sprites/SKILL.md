@@ -14,10 +14,15 @@ where hands would be. That one decision is what makes this cheap:
 
 One animator drives every tool. Adding a new weapon costs no animation work.
 
-**Outfits are whole sets, not modular pieces.** Owner decision (2026-07-28): we generate a complete 12-frame
-sheet per outfit — copper, silver, bronze… — rather than composing chest/legs/boots layers. The old paperdoll
-route needed hand-fixing on every piece; generating the whole sheet in one image removes drift entirely
-because everything shares a single render. A modular pipeline may come back later; it is not this.
+**Outfits are whole sets, not modular pieces.** Owner decision (2026-07-28): we generate a complete outfit —
+copper, silver, bronze… — rather than composing chest/legs/boots layers. The old paperdoll route needed
+hand-fixing on every piece. A modular pipeline may come back later; it is not this.
+
+That decision stands; the mechanism under it has changed. It used to mean one 12-frame render per outfit, on
+the reasoning that a single image removes drift. It didn't work — a twelve-cell sheet leaves each figure too
+small to carry a pixel grid. An outfit is now **one turnaround plus one call per direction**, and the drift
+that the single render was meant to prevent is handled by seeding every direction from the same approved
+turnaround and then measuring the results against each other.
 
 ---
 
@@ -25,7 +30,7 @@ because everything shares a single render. A modular pipeline may come back late
 ```
 tools/_generated/player/
   bases/          armless_front.png, armless_side.png   <- EXACTLY two files. The only source of a base.
-  outfits/<name>/ scratchpad/  current/  archive/       <- see "Iterating on a sprite" below
+  outfits/<name>/ tries/ frames/ gauntlet/ anim/ archive/   <- see "Iterating on a sprite" below
   props/<name>/   non-character props (practice dummy, …)
   gallery.html    generated. Open it to see every outfit as it stands.
 ```
@@ -45,20 +50,22 @@ days and a day of approved work.
 
 | stage | produces | API? |
 |---|---|---|
-| `scratchpad/1-candidates/` | N whole 12-frame sheets, one call each | **paid — ask first** |
-| `scratchpad/2-frames/` | the picked sheet **cut** into front/back/side | free |
-| `scratchpad/3-gauntlets/` | that outfit's hands | **paid — ask first** |
-| `current/` | the one the owner chose. Promoted, never hand-copied. | free |
+| `tries/` | every candidate render, one folder per run with its `RECORD.txt` | **paid — ask first** |
+| `frames/` | the picked renders **cut** into `front_1..4` `side_1..4` `back_1..4` | free |
+| `gauntlet/` | that outfit's five hands | **paid — ask first** |
+| `anim/` | the built gifs. `build.py` writes these; never hand-made. | free |
 
 ```
 outfits/<name>/
-  scratchpad/
-    1-candidates/2026-08-02-1344-woodland-cloak/   sheet.png + RECORD.txt
-    2-frames/2026-08-03-0910-first-cut/            front_1..3 side_1..3 back_1..3 + walk.gif
-    3-gauntlets/2026-08-03-1120-plated/
-  current/      CURRENT.md + the frames + gauntlet/ + anim/     <- the answer to "what are we using"
-  archive/      superseded currents. Nothing deleted, ever.
+  tries/2026-08-15-frontwalk/    result.png + RECORD.txt (prompt, model, refs) per run
+  frames/                        front_1..4  side_1..4  back_1..4   <- what build.py reads
+  gauntlet/                      front back side grip_back grip_palm
+  anim/                          walk_side.gif, run_front.gif, swing_*.gif …
+  archive/                       superseded work. Nothing deleted, ever.
 ```
+
+**Four frames per direction, always** — contact, passing, opposite contact, opposite passing, played
+`[1,2,3,4]`. Frame 2 is the neutral the whole bank is measured against (`build.NEUTRAL`).
 
 ### The rules, in the order they get broken
 
@@ -87,13 +94,8 @@ outfits/<name>/
 frames, a progress board showing which stage each outfit is at, and per-outfit candidate comparison. Open it
 before asking the owner to look at anything, and re-run it after any promotion.
 
-**When he asks for something to SHOW someone, that is `gallery_gif.py`, not a pile of files.** It renders
-the gallery's Current grid — every outfit x every animation, playing at once — into the single
-`ALL_OUTFITS_ALL_ANIMATIONS.gif`. Asked for three times before it existed, because the answers given were
-per-animation gifs, then a walk gif and a swing gif: the same "you cannot send someone 39 files" problem
-restated. It deliberately reimplements the gallery's own table sizing and colours — owner, 2026-08-13:
-*"i really need the gif to look like the gallery"* — so **do not "improve" the composition** with cropping
-or a global scale. That was tried; it produced ragged grey off-cuts and half-size characters.
+`gallery_gif.py` renders that same grid, animated, into one `ALL_OUTFITS_ALL_ANIMATIONS.gif` — the version
+that can be sent to someone.
 
 `gen.py` is the **only** way to generate. Every run writes `RECORD.txt` beside the result (prompt, model,
 references as sent, timestamp) and appends a line to `RUNS.txt`. Nothing about a run lives in chat or in the
@@ -115,90 +117,102 @@ measuring, rendering previews — needs no permission, but say plainly which kin
 
 ## Making an outfit
 
-### 1. The sheet — one call
-Model **gpt-image-2**, **no mask**, `1024x1024`, both bases as references in order (front, then side).
+**Four paid calls minimum: the turnaround, then one per walk direction, then the gauntlets.**
+Everything after that is free. Do not try to get more than one direction out of a call — see
+"Why one direction at a time" below.
 
-> Draw a single sprite sheet showing the SAME character in **\<OUTFIT\>** as a 12-frame walk-cycle sheet. Use
-> the same character design, proportions, and no-arm anatomy consistently across the whole sheet.
->
-> Layout: 3 rows by 4 columns, evenly spaced, all sprites at the same scale and aligned to the same baseline
-> within each row.
->
-> Row 1: FRONT walk cycle, 4 distinct frames.
-> Row 2: BACK walk cycle, 4 distinct frames.
-> Row 3: RIGHT-FACING SIDE walk cycle, 4 distinct frames.
->
-> Very important: the 4 frames in each row must be DIFFERENT phases of a walk cycle, not repeated standing
-> poses.
->
-> For each row, the 4 columns must be:
-> Column 1: left leg forward, right leg back.
-> Column 2: passing pose, legs closer together, transition between steps.
-> Column 3: right leg forward, left leg back.
-> Column 4: passing pose opposite to column 2, transition back toward column 1.
->
-> Because the character has NO ARMS, the walking motion must be shown by leg motion, slight hip shift, and a
-> subtle torso/head bob only. Do not add arms, hands, elbows, forearms, or gauntlets. The rounded shoulder
-> caps must end at the armless shoulder openings.
->
-> Outfit: **\<material, colours, shadows, highlights\>**. Include a **\<HEADGEAR\>** covering the whole
-> head, a breastplate, rounded shoulder caps, a waist and hip piece covering the crotch, thigh plates on both
-> legs, greaves, and boots. No bare skin between the waist and the boots. The headgear is on the character in
-> all 12 frames.
->
-> Keep the front row front-facing, the back row back-facing, and the bottom row a strict right-facing side
-> profile. Do not drift into a three-quarter view.
->
-> Big simple shapes, not fine detail. This is a small pixel art sprite sheet. All 12 sprites must clearly be
-> the same character, but each frame in a row must be a distinct walking frame. If two adjacent frames in a
-> row are identical, the sheet is wrong.
+### 1. The turnaround — one call, and it sets everything downstream
+`1536x1024`, references = the two bases. Ask for THREE standing views in a row: front, strict right
+profile, rear.
 
-**Every outfit gets its headgear.** A set without one is inconsistent with the rest and has to be redone.
+This is the design lock. The owner approves the design here, and every later call for this outfit is
+seeded from one of these three views — the front walk from the front view, and so on. Snap all three
+**on one grid** so they are guaranteed the same size, and keep them as `view_front/side/back.png`.
 
-### 2. The gauntlet/hand — one call
-Reference **that outfit's own sheet** so the material matches.
+Two consequences worth knowing:
+- A direction's calls never see the other directions, so the back view can't come back as the front
+  with the head turned round — there is no front view in the room.
+- Nothing cross-checks the directions either. The turnaround is the ONLY place they are forced to
+  agree, which is why every walk is seeded from it. Measure each walk against the others anyway.
 
-> The attached image is a sprite sheet of a character wearing \<OUTFIT\>.
+### 2. Each walk direction — one call each, THREE calls
+`1536x1024` (landscape), reference = that direction's turnaround view. Four walk frames in a row:
+
+> Frame 1: left leg forward, right leg back.
+> Frame 2: passing pose, legs closer together, transition between steps.
+> Frame 3: right leg forward, left leg back.
+> Frame 4: passing pose opposite to frame 2, transition back toward frame 1.
 >
-> Draw FOUR small \<MATERIAL\> GAUNTLET HANDS in a row on a black background, evenly spaced, large and
-> centred. Nothing else in the image — no character, no body, no arms, just the four hands.
->
-> Each is the SAME \<MATERIAL\> as the armour in the attached image, same darker shadows, same bright
-> highlights, dark outline.
->
-> Left to right, the same hand from four angles: (1) back of the hand facing the viewer, (2) palm side,
-> (3) in profile facing right, (4) three-quarter view.
->
-> Care about the SILHOUETTE above all. The outline is a soft rounded shape, slightly taller than wide,
-> narrowing a little at the wrist. No separate fingers are drawn — at this size the hand reads entirely by its
-> outline and two or three shading bands inside it.
->
-> Big simple shapes, chunky pixels. This is a small pixel art sprite — each hand is about ten pixels across in
-> the game, so use a handful of large blocks, no rivets, no filigree, no fine detail.
+> Very important: the 4 frames must be DIFFERENT phases of a walk cycle, not repeated standing poses.
 
-Tested prompt strategies: describing the **silhouette** and forbidding interior detail works. Describing
-**anatomy** ("fingers curled, thumb along the index") does not — the model draws a realistic hand and then
-shrinks it into mush.
+plus the armless clause enumerating "arms, hands, elbows, forearms, gauntlets", the pixel-density
+clause, and the magenta background. Compose it from `outfits.py`; `gen.py` refuses to spend on a
+character prompt missing a mandatory clause.
 
-### 3. Cut the sheet — free
-1. Threshold the black background (`rgb.sum() > 70`).
-2. **Dilate before labelling** (`binary_dilation(…, ones((9,9)))`) — dark plate gaps split one figure into
-   several blobs otherwise.
-3. Connected components; keep blobs over ~4000 px; sort by row centre → front / back / side; sort each row by
-   column centre.
-4. Give each row **one shared ground line** so the figure doesn't bounce between frames.
-5. Left = **mirror of right**. Never generate it.
+**For the camera-facing views, say the legs do not swing sideways.** The default is feet kicking out
+to either side, which reads as a dance. What worked: *"a step in this view is straight UP and
+straight DOWN, both feet stay directly underneath the hips, knees and feet point FORWARD, lift the
+knee HIGHER."*
 
-Frames 1, 2, 3 are the cycle. **Drop frame 4** — it comes back as a second stride rather than the opposite
-passing pose, which reads as a skip. Play **1, 2, 3, 2**.
+**Side comes back facing LEFT.** Mirror it at cut time (`cut_walk(..., mirror=True)`), never after
+rendering — `gait`'s wrist-lean maths assumes the character faces +x, so mirroring the finished
+animation puts the wrists on backwards.
 
-### 4. Pixelize — only if you need the true grid
-`aipipe/pixelsnap.py` recovers the real pixel grid. **Verify the pitch yourself** — measure the most common
-run-length of constant colour along a few rows and compare. `--auto` once reported **9.5** against a true
-**~3.17** and silently discarded two thirds of the sprite. Pass `--pitch` explicitly.
+#### Why one direction at a time
+The old approach asked for all twelve frames as a 3x4 sheet in one call. It never produced
+convertible pixel art. A twelve-cell sheet gives each figure about a twelfth of the canvas, so the
+blocks come back too small to form a grid, and the render is smooth with nothing to snap to. Four
+frames in a row gives each figure the same room as the standing turnaround, which is the layout that
+converts every time.
 
-Never hand-roll a downscaler. Cell-median or area-average resampling turns pixel art to mush; that mistake was
-made twice in one session while the correct tool sat unused.
+### 3. The gauntlets — one call, on a PORTRAIT canvas
+`1024x1536`, references = (1) a template image, (2) the crisp hand strip for shape.
+
+The hand must end up **exactly `round(body_height * ratio)` tall** — 13 pixels for a 77-pixel body at
+the walk's 0.17. It has to be BORN at that size. It cannot be shrunk to it afterwards: `gait._sz`
+resizing a 20px hand down to 13 deletes rows, and rescaling player art is banned.
+
+Getting there is arithmetic, not wording. **The model always draws a hand about 200 screen pixels
+tall**, whatever you ask, so the hand's size in real pixels is `200 / grid`, and the grid is set by
+how tall the character gets drawn. On a landscape canvas the character can't exceed ~900px, which
+pins the grid near 12 and floors the hands at ~16. Four different phrasings — "one sixth as tall as
+the character", "exactly 13 blocks, count them", correctly-sized boxes to draw inside — returned
+19.7, 19.5, 16.0, 19.3. None of them could work.
+
+Portrait fixes it. Put the character on the left and the five hands **stacked in a column** on the
+right; the template is then taller than it is wide, so the canvas height binds, the character is
+drawn ~1400px tall, the grid goes to ~18.5, and the usual 200px hand lands on 13.
+
+Predict it before spending: `grid ≈ 1400 / template_height_in_blocks`, `hand ≈ 200 / grid`.
+
+The template also carries the character sprite itself at 1:1, which is what makes "the same pixel
+density as the character" binding rather than hopeful — both are drawn on one canvas, so they cannot
+disagree. The character came back at 25.0 x 76.5 against a 25 x 76 reference.
+
+### 4. Cut — free, `cut_walk_row.py`
+```python
+from cut_walk_row import cut_walk, cut_gauntlet_column, check_alternation
+cut_walk(render, frames_dir, "front", pitch=12.25)
+cut_gauntlet_column(render, hands_dir, pitch=18.50)
+```
+
+**Pixel conversion is mandatory, not optional.** It is what makes a player sprite a sprite. See
+[[player-sprites-are-pixelsnapped]]: snapping RECOVERS the pixels gpt drew, at their true grid — it
+is not a downscale, and downscaling player art is banned outright.
+
+- **Snap the whole canvas on ONE grid, then split.** All four frames were drawn at one scale, so
+  there is one true grid. Per-frame detection disagrees with itself and the character shimmers.
+- **Pass the pitch explicitly.** `detect_pitch` takes the smallest pitch scoring near-max and a comb
+  at half the true pitch also lands on every line, so it returns the harmonic constantly — 9.25 for a
+  true 18.50, 4.65 for a true 23.00. Score the candidates, check what figure height each implies,
+  then pass it.
+- **Run `check_alternation` on the front and back banks, every time.** The model returns cycles where
+  BOTH stepping frames lift the same leg. It looks fine in a still and wrong only once it loops, as a
+  foot tapping twice. That shipped before anyone caught it, and it was caught by measuring. The side
+  bank can't be checked this way and has to be judged by eye.
+- **Measure the three directions against each other.** They come from separate calls and nothing
+  makes them agree. A front that came back at 90 pixels against a side of 77 is a visible size jump
+  when the character turns; reroll rather than rescale.
 
 ---
 
@@ -212,8 +226,10 @@ weapon was drawn.
   tucked at the hip on the passing frames, tilting with the direction of travel. The near hand draws over the
   torso, the far hand behind it and dimmed. Anchor to the **torso width at chest height**, measured once from
   the neutral frame — measuring per frame makes the hands jitter as the legs change the silhouette.
-- **Run** — same twelve frames played faster (≈90ms vs 150ms), but a **DIFFERENT HAND POSE, not the walk
-  sped up.** Both fists visible *even side-on*, raised to **chest** height (~0.05 of body height above the
+- **Run** — the same four frames played faster (90ms vs 150ms), but a **DIFFERENT HAND POSE, not the walk
+  sped up.** The run is a real, approved motion — `RUN` settled 2026-07-29 ("RUN_r75.gif is fine, looks the
+  best") and `FRONT_RUN` 2026-08-14 ("we will go with wisdest lowest"). It shares the walk's leg frames BY
+  DESIGN and lives in the arm swing, fist size and timing; sharing legs is not a gap to be filled. Both fists visible *even side-on*, raised to **chest** height (~0.05 of body height above the
   torso row — 0.13 puts them over the face), rotated **~75° to point forward and held there** with only a
   small roll (~16°) on top, and bigger travel (0.62 vs the walk's 0.42). **No new art for running.**
   Reference render: `outfits/bronze/RUN_r75.gif`, owner-approved — match it, don't re-derive it.
@@ -241,19 +257,26 @@ weapon was drawn.
   showed it buried in the hip, cropped off-frame, or a hand the size of the head.
 
 ## Making a whole set, end to end
-Two paid calls, everything else free. `outfits.py` holds the set list and the one shared prompt, so a new
-set is a dict entry, not a new script.
+**Five paid calls, everything else free**, in this order. Ask before each; stop and look at every render
+before cutting it.
 
+| # | call | canvas | reference | out |
+|---|---|---|---|---|
+| 1 | turnaround — 3 standing views | 1536x1024 | the two bases | `view_front/side/back.png`, snapped on ONE grid |
+| 2 | front walk — 4 frames in a row | 1536x1024 | `view_front.png` | `front_1..4.png` |
+| 3 | side walk | 1536x1024 | `view_side.png` | `side_1..4.png` (mirror at cut time) |
+| 4 | back walk | 1536x1024 | `view_back.png` | `back_1..4.png` |
+| 5 | gauntlets — character + hand column | **1024x1536** | template + hand strip | the five hands at 13px |
+
+Then, free:
 ```bash
-python3 tools/player_sprites/outfits.py sheet    steel   # PAID - the 12-frame sheet.  ASK FIRST.
-python3 tools/player_sprites/cut_outfit.py outfit outfits/steel     # free - 9 frames
-python3 tools/player_sprites/outfits.py gauntlet steel   # PAID - the 4 hands.  ASK FIRST.
-python3 tools/player_sprites/cut_outfit.py gauntlet outfits/steel   # free - front/back/side/grip
-python3 tools/player_sprites/demo_swings.py steel                   # free - DEMO.gif
-python3 tools/player_sprites/preview_all.py                         # free - both ALL_*.png pages
+python3 tools/player_sprites/build.py steel        # every animation
+python3 tools/player_sprites/preview_all.py        # both ALL_*.png pages
 ```
 
-**Look at the sheet before cutting, and at the cut frames before the demo.** Both have failed silently.
+**Gate every cut on the numbers, not on a glance:** the three directions within a pixel or two of each
+other, `check_alternation` clean on front and back, and the hands at exactly the height the walk asks for.
+Each of those three has shipped broken while looking fine.
 
 **A metal set earns its rung by COLOUR, not by shape** — at sprite size the silhouettes are identical, so
 "another grey" is a wasted tier. Check it by measuring, not by eye: mean luma over the worn material of

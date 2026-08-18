@@ -1,0 +1,24 @@
+when      : 2026-08-15 08:18:17
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+dest      : explore/fireant-gauntlet-box
+references (in the order sent):
+  1. tools/_generated/player/explore/fireant-gauntlet-box/REF_boxes.png  (upscaled x14 -> 1778x1232)
+  2. tools/_generated/player/explore/fireant-gauntlet-box/REF_shapes_native.png  (upscaled x14 -> 1316x336)
+
+PROMPT:
+The FIRST attached image is a template: a finished pixel-art character in fire-ant carapace armour on the left, and five empty cyan boxes in a row on the right. The SECOND attached image is the reference: 5 small pixel-art gauntlet hands in a row.
+
+Redraw the FIRST image exactly as it is, with one change: draw one gauntlet hand INSIDE each of the five cyan boxes. Each hand must FILL its box - touching the top of the box and the bottom of the box, and no taller and no wider than its box. Then remove the cyan outlines so only the hands remain.
+
+Do not change the character. Do not move it, do not resize it, do not redraw it differently. It is there to fix the scale.
+
+The five hands, left to right, are: (1) back of a closed fist (knuckles toward camera), (2) the palm side, (3) the fist in profile, (4) fist closed around a pole, knuckles showing, (5) fist closed around a pole, palm showing - the SECOND hand on a two-handed tool.
+
+Copy the hand shapes from the second image. Same silhouette, same outline, same proportions, same wrist cuff at the bottom of each hand, same angle for each of the 5. Do not redesign them, do not restyle them - the ONLY things that change are their size and that they are made of orange-red ant chitin, matching the material, colours, shadows and highlights of the armour on the character.
+
+EVERYTHING must be drawn at the SAME PIXEL DENSITY as the character: the same size pixel blocks throughout. The hands must not be drawn at a finer resolution than the character. A hand is only about thirteen pixel blocks tall, so use big simple shapes and a dark outline, and simplify rather than adding smaller detail.
+
+Flat pure magenta background (255 0 255), nothing else on it. Hard pixel edges, no blur.

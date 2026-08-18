@@ -1,0 +1,31 @@
+when      : 2026-08-14 22:12:28
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+dest      : explore/fireant-genA3
+references (in the order sent):
+  1. tools/_generated/player/bases/armless_front.png  (upscaled x14 -> 504x994)
+
+PROMPT:
+Draw a THREE-VIEW STANDING TURNAROUND of one armoured character, three sprites in a single row on a FLAT SOLID MAGENTA background (pure magenta, RGB 255 0 255), completely flat and uniform - no shadow, no gradient, no ground, no text.
+
+THE ATTACHED IMAGE IS THE SOURCE CHARACTER - a person in a vest and shorts.
+
+The three views, left to right: FRONT facing the viewer, a strict RIGHT-FACING side profile, and the REAR seen from behind. All three are the EXACT SAME PERSON in the EXACT SAME ARMOUR, at the same anatomical scale and the same effective pixel resolution as the source character.
+
+The armour is made from RED FIRE-ANT parts - deep red and orange-red chitin plates, shell, carapace, mandibles, leg segments. DESIGN IT YOURSELF: decide what this armour looks like. It is ARMOUR WORN BY A PERSON, not an insect costume.
+
+WHAT MUST NOT CHANGE FROM THE SOURCE: the character's body proportions and his effective pixel-detail level. Head dimensions, torso dimensions, thigh length, lower-leg length, shoulder width, foot size and overall character scale are the source character's and stay the source character's. The armour is worn over that body; it does not enlarge it, lengthen it or change its build.
+
+Because the character has NO ARMS, do not draw arms, hands, elbows, forearms or gauntlets. Each shoulder ends in a rounded shoulder cap at the armless shoulder opening. This is deliberate - the hands are separate sprites added later.
+
+Standing still means standing UPRIGHT and relaxed, weight on both feet, back straight, head up. Not crouching, not leaning, not hunched.
+
+THE ARMOUR IS COMPLETE - no gaps, no holes, no patches of the vest or shorts showing through it. The body is covered from the shoulders to the boots, with no bare skin between the waist and the boots. The headgear leaves the FACE VISIBLE in the front and side views - draw the face and the eyes. Antennae, crest or horns may rise ABOVE the top of the head; they must never make the character shorter than the source.
+
+Do not drift into a three-quarter view: strictly front, strictly right profile, strictly rear.
+
+Match the PIXEL DENSITY of the FIRST attached reference image: its pixels are large visible squares, and yours must be the same size. Do not draw at a finer resolution than that reference - chunky blocks, flat colour, no smooth shading, no fine detail. No region may be drawn with finer apparent pixels or denser surface detail than the source. Simplify armour detail rather than increasing resolution.
+
+Draw with HARD pixel edges against the magenta. Do not blur, feather, glow or blend into the background. Do not use magenta, pink or purple anywhere on the character.

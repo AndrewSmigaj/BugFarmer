@@ -253,18 +253,29 @@ def cut_gauntlet(folder):
 
 
 def cut_outfit(folder):
-    """Body frames stay FULL RESOLUTION on ONE shared canvas — matching the approved bronze set.
+    """Body frames are PIXELSNAPPED to their true grid, on ONE shared canvas.
 
-    Two things here are convention, not preference, and getting either wrong is visible in game:
+    ⚠ THIS FUNCTION USED TO DO THE OPPOSITE, AND THE DOCSTRING TAUGHT IT AS A RULE. It said "body
+    frames stay FULL RESOLUTION… no downscaling", from commit a5f6a92 (2026-07-29), because snapped
+    frames came out 30x58 against bronze's 184x310 — where bronze had been cut BY HAND at full
+    resolution the session before. A hand-cut one-off became the standard, snapping was dropped to
+    match it, and every outfit made since is a smooth render rather than pixel art. Owner, 2026-08-14:
+    *"I ALWAYS wanted the pixelsnapped same pixel density converted to pixels (ABSOLUTELY NOT
+    DOWNSCALING) version."*
 
-    * **No downscaling.** The runtime NEAREST-scales a sprite to its configured cell size, and
-      `pixelclean.py`'s is the only intended resize (CLAUDE.md). Every existing outfit is a full-res
-      crop — bronze's frames are 184x310. Snapping these to ~30x58 the way a gauntlet is snapped
-      produced frames a fifth of the size of every other outfit.
-    * **One canvas for all 12 frames**, with the figure placed on a shared ground line and centred.
-      Bronze's frames are all exactly 184x310. Saved at their own bounding boxes instead, the frames
-      come out 30x58, 29x58, 22x68 — so the character would change height between facing directions
-      and drift sideways as he walks.
+    **Snapping is not downscaling.** `pixelsnap` finds the grid gpt actually drew on and takes the
+    median of the inner half of each cell, recovering the artist's pixels exactly. Area-average and
+    cell-median resampling are the mush, and those stay banned. The precondition is that the render was
+    drawn as visible blocks — that is what the PIXEL DENSITY line in the prompt is for; without it gpt
+    renders smooth and there is no grid to land on.
+
+    Two conventions kept from the old version, both still right:
+
+    * **ONE shared pitch for the whole sheet.** Per-figure detection disagrees with itself, so the
+      twelve frames would land on twelve slightly different grids and the character would shimmer.
+    * **One canvas for every frame**, figure centred on a shared ground line per row. Saved at their own
+      bounding boxes the frames come out 30x58, 29x58, 22x68 — the character changes height between
+      facings and drifts sideways as he walks.
     """
     sheet = np.asarray(Image.open(os.path.join(folder, "result.png")).convert("RGBA"), np.uint8)
     grid = cells(sheet, rows=3, cols=4)
@@ -272,26 +283,36 @@ def cut_outfit(folder):
         raise SystemExit(f"  expected 3 rows of 4, got {[len(r) for r in grid]} — look at result.png")
 
     keep = [(rn, b) for rn, row in zip(ROWS, grid) for b in row[:3]]   # col 4 is a repeat stride
-    CW = max(b["x1"] - b["x0"] + 1 for _, b in keep)
-    CH = max(b["y1"] - b["y0"] + 1 for _, b in keep)
 
-    made, per_row = [], {}
+    per_row = {}
     for rn, row in zip(ROWS, grid):
         per_row[rn] = max(b["y1"] for b in row)      # ONE ground line per row, or the figure bounces
-    for i, (rn, b) in enumerate(keep):
+
+    pitch = float(np.median([measure_pitch(sheet, b) for _, b in keep]))
+
+    smalls = []
+    for rn, b in keep:
         cut = np.zeros_like(sheet)
         cut[b["m"]] = sheet[b["m"]]
         cut[..., 3] = np.where(b["m"], 255, 0)
-        sub = cut[b["y0"]:per_row[rn] + 1, b["x0"]:b["x1"] + 1]
+        sub = cut[b["y0"]:per_row[rn] + 1, b["x0"]:b["x1"] + 1]      # incl. the row's ground line
+        nx = max(1, round(sub.shape[1] / pitch))
+        ny = max(1, round(sub.shape[0] / pitch))
+        smalls.append(pixelsnap.sample(sub, pitch, pitch, 0.0, 0.0, nx, ny))
 
+    CW = max(s.shape[1] for s in smalls)
+    CH = max(s.shape[0] for s in smalls)
+    made = []
+    for i, ((rn, _), small) in enumerate(zip(keep, smalls)):
         canvas = np.zeros((CH, CW, 4), np.uint8)
-        h, w = min(CH, sub.shape[0]), min(CW, sub.shape[1])
+        h, w = small.shape[0], small.shape[1]
         x = (CW - w) // 2                            # centred horizontally
         y = CH - h                                   # standing on the bottom edge
-        canvas[y:y + h, x:x + w] = sub[:h, :w]
+        canvas[y:y + h, x:x + w] = small
         name = f"{rn}_{i % 3 + 1}.png"
         Image.fromarray(defringe(canvas), "RGBA").save(os.path.join(folder, name))
         made.append(name)
+    print(f"  pitch {pitch:.2f} -> frames {CW}x{CH} true pixels")
     return made
 
 
