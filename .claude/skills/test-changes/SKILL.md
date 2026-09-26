@@ -26,15 +26,22 @@ If you add a test, **also add its one-liner to §1–§4 below** so it's discove
 
 ## 1. Go server unit tests
 ```bash
-bash tools/run_go_tests.sh        # go test ./world/ -count=1 -v inside the builder image (live source)
+bash tools/run_go_tests.sh        # go test ./... (world + entities + rpc) inside the builder image (live source)
 ```
 Suite: `centipede combat predation nest fruit_tree release swarm_population player_hp equip world_env
 host_plant brood forage_pool ecology_director predator_starvation shop recipe_unlock` (`*_test.go`).
 Run after ANY server-logic change. Add a `*_test.go` for new sim/economy logic (mirror `predation_test.go`).
 - `shop_test.go` covers buy/sell/recipe/book + the **`sell_batch`** barter basket (mixed batch, duplicate-slot
   no-double-pay, the negative-qty duplication exploit, bug-dealer batch) + the arbitrage invariant.
-- NOTE: this script pipes through `tail -30` — for the FULL verbose list run the inner `docker compose run …
-  go test` yourself or grep the un-tailed output; don't conclude "test missing" from the tail.
+- The script prints the last 40 lines and **returns go test's own exit code** (fixed 2026-09-26: it used to
+  pipe into `tail`, which masked failures, and it only ran `./world/`, skipping `rpc` + `entities`). For the
+  verbose per-test list run the inner `docker compose run … go test ./... -v` yourself.
+- `rpc/world_zone_test.go` — `world_enter`/`world_create` refuse unknown/malformed zone ids (the
+  village_21 save-borrowing fallback).
+- `world/zone_links_test.go` — the SAVED zone map (`nakama/data/zones`, mounted read-only at `/data` by the
+  script): every neighbour exists, links back from the opposite edge, sits on the adjacent grid square, and
+  shares the same edge length. One-way links need a named entry in `zoneLinkExceptions` (with the reason);
+  an entry that is no longer needed fails the test too.
 
 ## 2. Headless sync-harness (`tools/sync-harness/`, real Nakama .NET client, no Unity)
 Server must be up (`docker compose up -d`). `DOTNET=$(command -v dotnet || echo ~/.dotnet/dotnet)`.

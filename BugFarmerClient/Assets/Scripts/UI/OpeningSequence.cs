@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace BugFarmer.UI
 {
     /// <summary>
-    /// The game's OPENING: a short text intro ("It is 2136…") that reveals one line at a time, then
+    /// The game's OPENING: a short text intro ("It is the year 2126…") that reveals one line at a time, then
     /// crossfades to the BugFarmer TITLE screen (a composed farm scene + the logo + a Start button).
     /// Pressing Start hides this overlay to reveal the CharacterSelectPanel beneath — which has been
     /// authenticating + loading the roster the whole time (so the intro doubles as the loading cover).

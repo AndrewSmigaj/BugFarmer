@@ -173,3 +173,4 @@ tools/honeybee*.png
 # Claude Code runtime artifacts (transient — never track)
 .claude/scheduled_tasks.lock
 .claude/hooks/_smoke.log
+tools/gdd/_build/

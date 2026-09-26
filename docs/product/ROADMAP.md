@@ -1,0 +1,110 @@
+# Roadmap — finishing Bug Farmer
+
+The durable plan for finishing the game (approved 2026-09-26). **What** we are building and in which order.
+The design itself is being consolidated into `docs/gdd/` (one section at a time, reviewed by the owner);
+captured-but-unscheduled items stay in [`BACKLOG.md`](BACKLOG.md); finished work moves to
+[`CHANGELOG.md`](CHANGELOG.md).
+
+> Owner, 2026-09-26: *"we are not trying to bandaid it and ship we are trying to finish the game and a lot of
+> design decisions need to be made, content added"* · *"I want you to do most of the work and have me review"*
+> · *"we have bug behavior but this does not mean we have polished bug behavior, combat and other things could
+> be improved, and of course ecology tuning and all the other systems like the ecology tab and such, UI"*
+
+## The game in one paragraph
+It is 2126. A plague killed nearly every mammal, so humanity bred bugs giant to eat. You start over on the
+frontier as a bug farmer. A top-down, Terraria-like multiplayer sandbox with Stardew-like farming — no
+storyline; progress comes from gear and preparation, gated by cost. Its heart is a living, deterministic
+ecosystem every player sees identically; bugs are livestock (meat, or products like honey and silk) and the
+food chain is the progression. Twenty zones of rising danger (surface north, underground south). Gear is about
+roles and expeditions, not one best set. The shared world is chaotic (anything goes except NPC citizens'
+property); private plots from City Hall are safe. The Ecologist and the Ecology tab (unlocked per area by
+ecology stations) let you read and steer the ecosystem.
+
+## Owner decisions (2026-09-26, verbatim)
+| topic | decision |
+|---|---|
+| Art | Claude draws the pixel art **in code** — *"YOU (OPUS 5.5) ARE GENERATING PIXEL ART FOR OTHER PEOPLE USING THINGS LIKE JS. WHY ARE YOU NOT ABLE TO DO THAT FOR ME?"* No paid image tools. 32 px per grid cell. |
+| Hosting | *"it should be like terraria"* — Host & Play + join + a dedicated server program; *"our own server will not be part of the game itself … We would cap based on what is a feasible cap like the minecraft servers do."* |
+| Characters | *"Necesse's is fine"* — per-server characters + a per-world host switch "allow characters from other worlds". |
+| Empty zones | *"as already designed frozen with aggregation upon first access with random border crossing events"* |
+| Cross-zone bugs | *"you decide based on what will be better design and more efficient"* → swarm-level migration (below). |
+| Private plots + City Hall | *"absolutely keep them … the world is chaotic and anything goes (except stealing citizens stuff or destroying their houses, a message will pop up saying its basically not nice)"* |
+| Electronics | *"power sources like wind turbines and solar powers, they create zones where things are powered, then things for gardening, bug farming, powered versions of different stations … (some are automatic some require manual interactions)"* |
+| Base village | *"NPCs and NPC behavior, Building and zone overhauls … general improvement and polish passes, village secrets"* |
+| Story | *"no overarching storyline it is like terraria"*; tutorials that unlock; the Ecology tab has its own small tasks. |
+| Process | *"one document at a time"*; every idea passes the lenses before the owner sees it. |
+| Git | *"main I want it pushed to main"* — main is merged + pushed at the end of every session. |
+
+## Phases
+### Phase 0 — safety + baseline (2026-09-26)
+- [x] Everything pushed; `main` = all work (90216c0). New work on `feature/finish-the-game`.
+- [x] Art demo drawn in code: `tools/_generated/player/reviews/2026-09-26-art-demo/` (awaiting owner verdict).
+- [x] Safety fix: unknown zones refused (no silent `village_21` save-borrowing); dangling `ant_colony_40` link removed.
+- [x] Backup of `tools/_generated/raw` (1.1 GB) → `C:\Users\emily\BugFarmer_backups\generated_raw_2026-09-26\`.
+- [x] Baseline gates: Go tests (all packages), sim-determinism (7 modes), sync-harness cross-zone + observe.
+- [x] 2-client late-join sync gate on a fresh build (headless Unity player compiled today): co-located —
+  all 76,447 shared-bug states + 239 tick hashes identical; spawn-apart (disjoint chunks) — all 77,737 + 241
+  identical.
+- [x] GDD skeleton (`docs/gdd/`, 23 sections) + the section-at-a-time review page
+  (https://claude.ai/artifact/CRtGxrNmWdXPVAVyNnwWW1): §00 Premise and §19 Multiplayer ready for the owner.
+
+### Phase 1 — prove the art, set the rules, design the spine, lay foundations
+- **Art:** owner verdict on the demo → art bible (palette, sizes, outline, light) → the redo, category by category.
+- **GDD, one section at a time:** premise & pillars (+ audit of mammal-derived content) · multiplayer & hosting ·
+  world & zones · progression · bestiary · ecology + Ecology tab · bug farming & catching · farming · combat ·
+  gear · tools & weapons · crafting · food & potions · electricity · fishing · mining · building & private plots ·
+  NPCs & economy · exploration & secrets · time & weather · UI · art direction · audio · then 20 zone bibles.
+- **Engineering, in dependency order:** ~~zone-link lint~~ (done 2026-09-26: `zone_links_test.go`; two missing
+  return links added — bee meadow ↔ ant tunnels, ant tunnels ↔ underground passages) · saves: ~~versioning,
+  migration~~ (done 2026-09-26: upgrade old, refuse newer, back up before upgrading), rolling backups, periodic
+  character saves · hosting spike → standalone Nakama-compatible server + Host/Join
+  + world list + version handshake · zone-complete collision/loading (+ ecology re-tune) · world clock ·
+  frozen-zone catch-up · blocked zone entry · latent bugs (WorldEnter race, first-join seq stall, merge ignores
+  nests) · reconnect · CI + release builds · internet-reality test (latency, bandwidth).
+- **Examine view + examine texts:** an examine view for items, recipes and bugs, and ~650 short texts with the real
+  biology (the owner: *"when you examine it as a recipe or item you should see what it does"*); today hovering
+  shows only the name and 2 of 654 things have a description. Written alongside the art redo, category by category.
+- **Polish audits** (findings only): bug behaviour, combat, ecology + tab, UI, farming, catching, stations,
+  building, lighting/weather, audio, tutorials, performance. **True-bug naming pass.**
+
+### Phase 2 — the existing world to FINAL quality (the calibration slice)
+Village, Bee Meadow, Mining Camp, Ant Tunnels, Ant Colony (4,0) + Queen — each from its finalized zone bible —
+plus the systems that land with them (progression backbone, armour + stats, catching gear + bug storage,
+cooking + potions basics, ecology stations + tab, tutorials, private plots + City Hall, player art in-game,
+cross-zone migration). Timed → the real estimate for Phase 3.
+
+### Phase 3 — new zones in rings, each a complete package
+Ring B: Wasp Thicket, Butterfly Fields, Hilltop Meadow, Centipede Cavern, Underground River + fishing ·
+Ring C: Locust Farmland + western town + electricity, Millipede Forest, Scorpion Rocks, Shallow Swamp, Deadly Ants
+outpost, deep river · Ring D: Spider Vales + spiders/silk/stealth, Deep Swamp, Deadly Ants core, the underground
+fortress + legendary sets.
+
+### Phase 4 — whole-game polish, balance, QA, release
+Solo + hosted playthroughs; economy/ecology/combat balance; stress test (sync + FPS + tick + bandwidth at big
+populations); cross-platform determinism; save migration; audio/music; legal (audio licence, AI disclosure); launch.
+
+## Key design calls (researched + critic-reviewed 2026-09-26)
+- **Bugs crossing zone edges = swarm-level migration.** Bugs stay inside their zone unless their swarm is
+  migrating; the server decides migration per species (overcrowding, hunger, fleeing, random crossing events),
+  can split off a small group (even one bug) that becomes its own swarm, and hands the swarm over whole once it
+  has flown past the line — nothing vanishes in view, no one-bug fragments. "Migrating" = a movement leg aimed
+  out of bounds (no new sync field — leg fields are relayed through fixed structs and a new one would be
+  dropped). Exactly-once hand-off: each zone's save + the inbox record in one Nakama transaction. Three critic
+  rounds: direction sound; five remaining fixes are specified in the design doc.
+- **Frozen zones catch up on first visit** before the first player's baseline is sent (sync-safe: an empty
+  zone's sync state is fully reset), with a server-side predation stand-in (predation kills are normally
+  reported by a player's client).
+- **One world clock** via the existing per-zone `DayOffsetTicks` (the client bug sim never reads time of day).
+- **Blocked zone entry** (measured: ~90 walkable crossing points land on solid cells) → the server picks the
+  nearest walkable cell and never strands the player; zone builds check that shared edges match.
+- **Hosting like Terraria:** a small Nakama-compatible Go server (the Unity client + test tools unchanged),
+  Host & Play launches it, IP join + Epic's free relay first, Steam later. Measured bandwidth ≈ 2 KB/s per
+  player in a busy zone.
+
+## Latent bugs found 2026-09-26 (verified in code)
+1. ~~Unknown zone → silently becomes `village_21` and writes its save~~ — **fixed** (26d704a).
+2. `world_enter` has no lock → two players entering at once can create two copies of a zone.
+3. Possible first-join stall on fresh zones (MatchInit emits events; the first joiner is told there are none).
+4. Swarm merge ignores nests → a nest's patrol can be absorbed; the nest then regrows one (population inflation).
+5. ~~A save-version bump discards every existing save~~ — **fixed** (save formats upgrade step by step; newer or
+   unreadable saves are refused, never overwritten).

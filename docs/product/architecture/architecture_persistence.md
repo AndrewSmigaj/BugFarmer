@@ -44,6 +44,24 @@ rolling the zone back). `EphemeralSwarms` test zones skip ONLY the population (s
 items) both ways; `tools/ecology/run_config.py` additionally WIPES the zone's storage before every
 tuning run so runs stay comparable.
 
+## Save formats — upgrade old, refuse newer, never overwrite what can't be read (2026-09-26)
+Every stored document carries `version` — the format of the build that wrote it (`worldSaveVersion`,
+`characterSaveVersion`). `save_versions.go` (`upgradeSaveJSON`) decides on load:
+- **same format** → read as-is (byte-identical);
+- **older** → upgraded one step at a time on the raw JSON (`worldSaveSteps` / `characterSaveSteps`: step `v`
+  turns a version-v document into v+1, so a step can reshape fields today's structs no longer know). The
+  untouched original is kept first — a zone at `<zone>:world:v<N>` in `zone_state`, a character at
+  `<charID>:v<N>` in `character_backup` (a separate collection so it never appears on the select screen). The
+  first backup of a version is never replaced. If the backup can't be written, the zone does not start;
+- **newer** (a downgrade), **unreadable**, or **storage unreachable** → the zone does NOT start (`MatchInit`
+  returns no state → `world_enter` answers `MATCH_CREATE_FAILED`; the log says why) and the document is left
+  untouched; `writeWorldSave` also refuses to write over a newer or unreadable document. A character that
+  can't be used refuses the join (`character load failed`) and is left off the select screen.
+
+This replaced "any other version = treat the save as missing", where the zone then started empty and the next
+autosave wrote over the player's world; a storage read error at start-up did the same. **Changing a save
+shape:** bump the version and add the step for the OLD version; never edit an existing step.
+
 ## The enforcement — persist_classes.go
 Every `WorldState` field is classified exactly once: **WORLD-STATE** (in the document, note says
 which field) | **PER-RUN** (presences, the sync ledger — per-run BY the sync architecture —, RNG,
@@ -65,6 +83,8 @@ successful document write. New-doc-wins forever after. The importer dies a relea
 ## Gates that hold it
 `world_save_test.go`: classification completeness, full round-trip deep-equality, resume-clock,
 GroundItemSeq no-collision, ephemeral skip, generation guard, legacy decode+clamps, SwarmState
-json tags. End-to-end: `tools/harness_persist_test.sh` (build a farm headless → restart → assert
+json tags. `save_versions_test.go` (with an in-memory storage fake): the upgrade chain, refusing newer /
+unreadable saves at start-up and on write, upgrading an older save with its original backed up once, and
+the same for characters. End-to-end: `tools/harness_persist_test.sh` (build a farm headless → restart → assert
 restored, incl. a [6/6] direct Postgres inspection of the stored document), plus a seeded
 legacy-format migration run (imported → carried → legacy rows deleted).

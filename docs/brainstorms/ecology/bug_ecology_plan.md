@@ -5,7 +5,7 @@ doc only covers the active item; THIS is the persistent design. Verify every sim
 **`test-changes`** skill (Go tests + sync-harness + the determinism / "all players in sync" checks).
 
 ## Premise & core loop
-2135: livestock collapsed, humanity farms giant gene-modded BUGS for meat. **Two production channels:**
+2126 (the opening text): a plague killed nearly every mammal; livestock collapsed, humanity farms giant gene-modded BUGS for meat. **Two production channels:**
 (1) many bugs **produce goods at species stations** (bees → honey at an apiary, silkworm → silk); (2) bugs
 without a distinct product — flies, wasps — are **sold raw as meat at the bug market** (resolves "what do
 flies/wasps produce?" — they're the meat). The loop:

@@ -273,8 +273,9 @@ def build():
         ],
     }
     b.grid = (3, 0)
-    b.neighbors = {"north": "bee_meadow_20", "east": "underground_passages_31",
-                   "south": "ant_colony_40"}
+    # "south": "ant_colony_40" is added back when that zone is SAVED. A link to a zone with no data
+    # used to land the player in a match that borrowed village_21's save (2026-09-26 safety fix).
+    b.neighbors = {"north": "bee_meadow_20", "east": "underground_passages_31"}
     return b
 
 

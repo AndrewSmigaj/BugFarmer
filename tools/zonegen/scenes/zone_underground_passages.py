@@ -235,7 +235,7 @@ def build(zone_id="underground_passages_31"):
     }
     # World-map identity — save() writes these directly now (post-save patching retired).
     b.grid = (3, 1)
-    b.neighbors = {"north": "village_21_B"}
+    b.neighbors = {"north": "village_21_B", "west": "ant_tunnels_30"}
     return b
 
 
