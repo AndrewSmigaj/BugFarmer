@@ -13,6 +13,17 @@ import (
 // can list/read its own characters but can NEVER write inventory/coins (server-only writes).
 const CharacterCollection = "character"
 
+// CharacterBackupCollection holds the untouched copy of a character taken before its save format is upgraded
+// (kept apart from CharacterCollection so a backup never shows up on the character-select screen).
+const CharacterBackupCollection = "character_backup"
+
+// characterSaveVersion is the format this build writes; characterSaveSteps upgrades older formats one step at a
+// time (save_versions.go). Changing the CharacterSave shape = bump the version AND add the step for the old one.
+// (A var only so tests can simulate a format change; nothing assigns it in production.)
+var characterSaveVersion = 1
+
+var characterSaveSteps = map[int]saveStep{}
+
 // Appearance is the cosmetic identity chosen at character creation (drives the paper-doll composer).
 type Appearance struct {
 	Class string `json:"class"` // paper-doll class set (e.g. "merchant")
@@ -66,7 +77,7 @@ func DefaultCharacterSave(charID, name string, app Appearance, now int64) *Chara
 	var tmp PlayerState
 	applyStartingKit(&tmp)
 	return &CharacterSave{
-		Version:           1,
+		Version:           characterSaveVersion,
 		CharID:            charID,
 		Name:              name,
 		Appearance:        app,
@@ -133,7 +144,7 @@ func applyCharacterSave(p *PlayerState, save *CharacterSave) {
 // buildCharacterSave snapshots a live PlayerState into a CharacterSave for writing (on leave / sleep).
 func buildCharacterSave(p *PlayerState, zoneID string, chunkSize int, now int64) *CharacterSave {
 	return &CharacterSave{
-		Version:           1,
+		Version:           characterSaveVersion,
 		CharID:            p.CharacterID,
 		Name:              p.Username,
 		Appearance:        p.Appearance,
@@ -171,15 +182,46 @@ func LoadCharacterSave(ctx context.Context, nk runtime.NakamaModule, userID, cha
 	if len(objs) == 0 {
 		return nil, nil
 	}
-	var save CharacterSave
-	if err := json.Unmarshal([]byte(objs[0].Value), &save); err != nil {
-		return nil, fmt.Errorf("corrupt character %s: %w", charID, err)
+	save, stored, err := decodeCharacterSave(objs[0].Value)
+	if err != nil {
+		return nil, fmt.Errorf("character %s can't be used: %w", charID, err)
 	}
-	return &save, nil
+	if stored < characterSaveVersion {
+		// Keep the untouched original before the upgraded character is ever written back (first copy wins).
+		key := fmt.Sprintf("%s:v%d", charID, stored)
+		prev, err := nk.StorageRead(ctx, []*runtime.StorageRead{{Collection: CharacterBackupCollection, Key: key, UserID: userID}})
+		if err != nil {
+			return nil, fmt.Errorf("character %s: reading its backup failed: %w", charID, err)
+		}
+		if len(prev) == 0 {
+			if _, err := nk.StorageWrite(ctx, []*runtime.StorageWrite{{
+				Collection: CharacterBackupCollection, Key: key, UserID: userID, Value: objs[0].Value,
+				PermissionRead: 0, PermissionWrite: 0,
+			}}); err != nil {
+				return nil, fmt.Errorf("character %s: backing it up before upgrading failed: %w", charID, err)
+			}
+		}
+	}
+	return save, nil
+}
+
+// decodeCharacterSave parses a stored character, upgrading an older format through characterSaveSteps; it
+// returns the format the character was stored in.
+func decodeCharacterSave(value string) (*CharacterSave, int, error) {
+	upgraded, stored, err := upgradeSaveJSON([]byte(value), characterSaveVersion, characterSaveSteps)
+	if err != nil {
+		return nil, stored, err
+	}
+	var save CharacterSave
+	if err := json.Unmarshal(upgraded, &save); err != nil {
+		return nil, stored, fmt.Errorf("%w: %v", errSaveUnreadable, err)
+	}
+	return &save, stored, nil
 }
 
 // WriteCharacterSave persists one character (user-owned, server-only write permission).
 func WriteCharacterSave(ctx context.Context, nk runtime.NakamaModule, userID string, save *CharacterSave) error {
+	save.Version = characterSaveVersion // the struct IS this build's format
 	data, err := json.Marshal(save)
 	if err != nil {
 		return err
@@ -210,9 +252,9 @@ func ListCharacterSummaries(ctx context.Context, nk runtime.NakamaModule, userID
 	}
 	out := make([]CharacterSummary, 0, len(objs))
 	for _, o := range objs {
-		var save CharacterSave
-		if err := json.Unmarshal([]byte(o.Value), &save); err != nil {
-			continue // skip a corrupt record rather than fail the whole list
+		save, _, err := decodeCharacterSave(o.Value)
+		if err != nil {
+			continue // skip a record this build can't use (corrupt, or from a newer build) rather than fail the list
 		}
 		out = append(out, CharacterSummary{
 			CharID: save.CharID, Name: save.Name, Appearance: save.Appearance,

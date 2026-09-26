@@ -287,12 +287,30 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 	// clock resumes, then weather, cell edits, sidecar registries, and the full-fidelity swarm
 	// population, all before any client joins. No document → one-time legacy import
 	// (zone_persist.go) → else a pristine authored zone with fresh initial swarms.
+	// A save that exists but can't be used (storage unreachable, unreadable, or written by a NEWER build) stops
+	// the zone from starting: an empty zone here would autosave over the player's world. The join fails and can
+	// be retried; the stored document is never touched. An OLDER format is upgraded (save_versions.go) after its
+	// original is backed up — and if the backup can't be written, the zone doesn't start either.
 	swarmsRestored := false
 	if state.CurrentZone != nil {
-		if ws, err := loadWorldSave(ctx, nk, ZoneStateKey(state.CurrentZone.ZoneID, "")); err == nil && ws != nil {
-			m.restoreWorldSave(state, ws, logger)
+		zoneKey := ZoneStateKey(state.CurrentZone.ZoneID, "")
+		found, err := loadWorldSave(ctx, nk, zoneKey)
+		switch {
+		case err != nil:
+			logger.Error("Zone %s NOT started — its world save can't be used: %v. The save is left untouched.", zoneID, err)
+			return nil, 0, ""
+		case found != nil:
+			if found.StoredVersion < worldSaveVersion {
+				if err := backupWorldSave(ctx, nk, zoneKey, found); err != nil {
+					logger.Error("Zone %s NOT started — backing up its format-%d save before upgrading failed: %v", zoneID, found.StoredVersion, err)
+					return nil, 0, ""
+				}
+				logger.Info("Zone %s: upgraded its world save from format %d to %d (original kept as %s)",
+					zoneID, found.StoredVersion, worldSaveVersion, worldSaveBackupKey(zoneKey, found.StoredVersion))
+			}
+			m.restoreWorldSave(state, found.Save, logger)
 			swarmsRestored = !state.CurrentZone.EphemeralSwarms
-		} else {
+		default:
 			swarmsRestored = m.importLegacySave(ctx, nk, state, logger)
 		}
 	}

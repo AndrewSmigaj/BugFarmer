@@ -20,6 +20,7 @@ package world
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -28,7 +29,12 @@ import (
 	"bugfarmer/entities"
 )
 
-const worldSaveVersion = 1
+// worldSaveVersion is the save format this build writes; worldSaveSteps upgrades older formats one step at a time
+// (see save_versions.go). Changing the WorldSave shape = bump the version AND add the step for the old one.
+// (A var only so tests can simulate a format change; nothing assigns it in production.)
+var worldSaveVersion = 1
+
+var worldSaveSteps = map[int]saveStep{}
 
 // GlobalCellEdit is one player-made map change, as a semantic diff against the AUTHORED zone
 // (global coordinates). Ground nil = unchanged; OccSet with Occ nil = an authored occupant was
@@ -227,13 +233,18 @@ func writeWorldSave(ctx context.Context, nk runtime.NakamaModule, logger runtime
 	zoneKey := ZoneStateKey(zoneID, "")
 	key := worldSaveKey(zoneKey)
 
-	if existing, err := loadWorldSave(ctx, nk, zoneKey); err == nil && existing != nil && worldSaveSuperseded(existing.Tick, tick) {
+	existing, err := loadWorldSave(ctx, nk, zoneKey)
+	if err != nil && (errors.Is(err, errSaveFromNewerBuild) || errors.Is(err, errSaveUnreadable)) {
+		logger.Error("Zone %s: world-save write REFUSED — the stored save %v; it is left untouched", zoneID, err)
+		return
+	}
+	if existing != nil && worldSaveSuperseded(existing.Save.Tick, tick) {
 		logger.Info("Zone %s: skipped world-save write (stored tick %d > snapshot tick %d — newer save wins)",
-			zoneID, existing.Tick, tick)
+			zoneID, existing.Save.Tick, tick)
 		return
 	}
 
-	_, err := nk.StorageWrite(ctx, []*runtime.StorageWrite{{
+	_, err = nk.StorageWrite(ctx, []*runtime.StorageWrite{{
 		Collection:      ZoneStateCollection,
 		Key:             key,
 		UserID:          "", // system-owned (shared zone)
@@ -248,22 +259,64 @@ func writeWorldSave(ctx context.Context, nk runtime.NakamaModule, logger runtime
 	deleteLegacyZoneRecords(ctx, nk, logger, zoneKey, zoneID)
 }
 
-// loadWorldSave reads the zone's document. (nil, nil) when absent.
-func loadWorldSave(ctx context.Context, nk runtime.NakamaModule, zoneKey string) (*WorldSave, error) {
+// storedWorldSave is what loadWorldSave found: the document (upgraded to this build's format), the format it was
+// stored in, and the stored bytes (kept for the pre-upgrade backup).
+type storedWorldSave struct {
+	Save          *WorldSave
+	StoredVersion int
+	Raw           string
+}
+
+// loadWorldSave reads the zone's document: (nil, nil) when there is none. An error means storage could not be
+// read, or a document exists that this build must not use (unreadable, or written by a newer build) — the
+// caller must then leave the stored document alone (errors.Is errSaveFromNewerBuild / errSaveUnreadable).
+func loadWorldSave(ctx context.Context, nk runtime.NakamaModule, zoneKey string) (*storedWorldSave, error) {
 	objs, err := nk.StorageRead(ctx, []*runtime.StorageRead{{
 		Collection: ZoneStateCollection, Key: worldSaveKey(zoneKey), UserID: "",
 	}})
-	if err != nil || len(objs) == 0 {
+	if err != nil {
+		return nil, fmt.Errorf("reading the world save failed: %w", err)
+	}
+	if len(objs) == 0 {
+		return nil, nil
+	}
+	return decodeWorldSave(objs[0].Value)
+}
+
+// decodeWorldSave parses a stored document, upgrading an older format through worldSaveSteps.
+func decodeWorldSave(value string) (*storedWorldSave, error) {
+	upgraded, stored, err := upgradeSaveJSON([]byte(value), worldSaveVersion, worldSaveSteps)
+	if err != nil {
 		return nil, err
 	}
 	var ws WorldSave
-	if err := json.Unmarshal([]byte(objs[0].Value), &ws); err != nil {
-		return nil, err
+	if err := json.Unmarshal(upgraded, &ws); err != nil {
+		return nil, fmt.Errorf("%w: %v", errSaveUnreadable, err)
 	}
-	if ws.Version != worldSaveVersion {
-		return nil, nil // future-versioned doc: treat as absent rather than misread
+	return &storedWorldSave{Save: &ws, StoredVersion: stored, Raw: value}, nil
+}
+
+// worldSaveBackupKey names the untouched copy of a document kept before it is upgraded from `version`.
+func worldSaveBackupKey(zoneKey string, version int) string {
+	return fmt.Sprintf("%s:v%d", worldSaveKey(zoneKey), version)
+}
+
+// backupWorldSave keeps the untouched pre-upgrade document before the upgraded zone is ever written back. It never
+// replaces an existing backup of that version: the first one is the original.
+func backupWorldSave(ctx context.Context, nk runtime.NakamaModule, zoneKey string, found *storedWorldSave) error {
+	key := worldSaveBackupKey(zoneKey, found.StoredVersion)
+	objs, err := nk.StorageRead(ctx, []*runtime.StorageRead{{Collection: ZoneStateCollection, Key: key, UserID: ""}})
+	if err != nil {
+		return err
 	}
-	return &ws, nil
+	if len(objs) > 0 {
+		return nil
+	}
+	_, err = nk.StorageWrite(ctx, []*runtime.StorageWrite{{
+		Collection: ZoneStateCollection, Key: key, UserID: "", Value: found.Raw,
+		PermissionRead: 0, PermissionWrite: 0, // server-only
+	}})
+	return err
 }
 
 // ---- restore (eager, at MatchInit, before any client joins) ----

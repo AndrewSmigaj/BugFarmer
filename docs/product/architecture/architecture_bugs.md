@@ -346,7 +346,9 @@ func (m *Match) initSpecies(state *WorldState) error {
 `world_create` refuse a zone id with no authored `zone.json` (`rpc/world.go` `zoneExists`, tested in
 `world_zone_test.go`). If a config still fails to load, the match runs an empty placeholder keyed to the
 **requested** id — it no longer falls back to `village_21`, which made a second match load and write
-`village_21`'s save.
+`village_21`'s save. Its world save loads next: a save that is newer than this build, unreadable, or unreachable stops the
+zone from starting rather than letting an empty zone autosave over it (`architecture_persistence.md` → "Save
+formats"); the bug population is therefore only ever restored from a save this build can read.
 
 ---
 

@@ -54,8 +54,9 @@ ecology stations) let you read and steer the ecosystem.
   gear · tools & weapons · crafting · food & potions · electricity · fishing · mining · building & private plots ·
   NPCs & economy · exploration & secrets · time & weather · UI · art direction · audio · then 20 zone bibles.
 - **Engineering, in dependency order:** ~~zone-link lint~~ (done 2026-09-26: `zone_links_test.go`; two missing
-  return links added — bee meadow ↔ ant tunnels, ant tunnels ↔ underground passages) · saves: versioning,
-  migration, backups, periodic character saves · hosting spike → standalone Nakama-compatible server + Host/Join
+  return links added — bee meadow ↔ ant tunnels, ant tunnels ↔ underground passages) · saves: ~~versioning,
+  migration~~ (done 2026-09-26: upgrade old, refuse newer, back up before upgrading), rolling backups, periodic
+  character saves · hosting spike → standalone Nakama-compatible server + Host/Join
   + world list + version handshake · zone-complete collision/loading (+ ecology re-tune) · world clock ·
   frozen-zone catch-up · blocked zone entry · latent bugs (WorldEnter race, first-join seq stall, merge ignores
   nests) · reconnect · CI + release builds · internet-reality test (latency, bandwidth).
@@ -101,4 +102,5 @@ populations); cross-platform determinism; save migration; audio/music; legal (au
 2. `world_enter` has no lock → two players entering at once can create two copies of a zone.
 3. Possible first-join stall on fresh zones (MatchInit emits events; the first joiner is told there are none).
 4. Swarm merge ignores nests → a nest's patrol can be absorbed; the nest then regrows one (population inflation).
-5. A save-version bump discards every existing save (no migration chain yet).
+5. ~~A save-version bump discards every existing save~~ — **fixed** (save formats upgrade step by step; newer or
+   unreadable saves are refused, never overwritten).

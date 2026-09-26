@@ -1018,6 +1018,8 @@ type WorldUpdateMessage struct {
 - Base zone data: loaded from committed JSON files
 - Player modifications: stored in Nakama storage per world instance
 - On load: apply modifications on top of base data
+- The full design — one WorldSave document per zone, how old save formats upgrade, and why a newer or
+  unreadable save stops the zone instead of being overwritten — is `architecture_persistence.md`.
 
 ---
 
