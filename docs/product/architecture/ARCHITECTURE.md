@@ -1,8 +1,14 @@
 # Bug Farmer - Architecture Document
 
+> **Status (2026-09-26).** The plan for finishing the game is [`ROADMAP.md`](../ROADMAP.md); finished work is
+> listed in [`CHANGELOG.md`](../CHANGELOG.md); open items in [`BACKLOG.md`](../BACKLOG.md). The game design is
+> being gathered into one place, `docs/gdd/`, one section at a time. Parts of this document were written before
+> much of the game was built — where it and the code disagree, the code is right. (Example: the "infection" and
+> meteor events described further down were an early idea and are not in the game.)
+
 ## Overview
 
-Bug Farmer is a 2D multiplayer game where players farm bugs, build structures, and manage infection events. This document captures the foundational architecture (stack, networking, world/chunk model, persistence) and serves as the index to the rest of the documentation.
+Bug Farmer is a 2D multiplayer game where players farm bugs, build structures, and explore a world of giant bugs. This document captures the foundational architecture (stack, networking, world/chunk model, persistence) and serves as the index to the rest of the documentation.
 
 ## Documentation map
 
@@ -23,7 +29,8 @@ Bug Farmer is a 2D multiplayer game where players farm bugs, build structures, a
 - [determinism_audit_2026-06-20.md](../investigations/determinism_audit_2026-06-20.md) — HISTORICAL root-cause audit of the cross-client divergence; its vectors are now FIXED (see the SUPERSEDED note at the top). Read for the mechanism map, not as open issues.
 - [game_design.md](../design/game_design.md) — the Game Design Document (GDD)
 - [requirements.md](../design/requirements.md) — game design requirements
-- [BACKLOG.md](../BACKLOG.md) — running queue of upcoming work (Now / Next / Later)
+- [ROADMAP.md](../ROADMAP.md) — the plan for finishing the game (phases, owner decisions)
+- [BACKLOG.md](../BACKLOG.md) — open items not yet scheduled · [CHANGELOG.md](../CHANGELOG.md) — finished work
 - [zones/](zones/) — per-zone design notes
 
 **`docs/guides/art/` — how sprites look & get made**
