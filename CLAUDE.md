@@ -42,7 +42,13 @@ time (you end up building every feature twice). For every feature:
   12 ANIMATIONS cannot be compared in a file explorer, which is the entire problem it solves. Owner asked
   for it explicitly (2026-08-02). It is generated from the folder structure, never hand-maintained.
   **Do not delete it as dead code** — that is exactly what happened to the previous html gallery.
-- `docs/` — `product/` (how the game works, incl. the GDD `game_design.md`) and `guides/`
+  **Second sanctioned html exception — the GDD review page** (`tools/gdd/build_page.py` +
+  `review_page.template.html`): the owner asked for a page to answer the design document section by section
+  (2026-09-26). It is generated from `docs/gdd/*.md` into the git-ignored `tools/gdd/_build/` and published to
+  claude.ai (link in `docs/gdd/README.md`); it never lives in `_generated/`.
+- `docs/` — `gdd/` (**THE design document, one file per section, reviewed by the owner one section at a time —
+  read its `README.md` first for any design question**), `product/` (how the game works as built: architecture,
+  ROADMAP, BACKLOG, CHANGELOG; the older design docs the GDD is gathering) and `guides/`
   (`art/` = how sprites look & are made; `authoring/` = how to build zones/scenes — start at its `README.md`).
 - `.claude/skills/` — task playbooks: `test-changes` (verify ANY change — every test/determinism gate),
   `frontier-sync` (wire a new deterministic bug-sim mechanic), `perf-tuning` (profile + optimize the sim),
@@ -126,9 +132,11 @@ python3 tools/make_scene.py                         # render tools/_generated/pr
 - **Git workflow (how we branch/commit/merge):** `.claude/git-guidelines.md`.
 
 ## Find depth in
+- `docs/product/ROADMAP.md` — the plan for finishing the game (phases, the owner's decisions of 2026-09-26).
+- `docs/gdd/README.md` — the design document: what is decided, what is waiting for the owner's review.
 - `docs/product/architecture/ARCHITECTURE.md` — top-level architecture + index to all product docs.
-- `docs/product/BACKLOG.md` — the live "what's next" queue (Now / Next / Later). The throwaway plan
-  doc covers only the item we're actively working; the backlog is what persists between sessions.
+- `docs/product/BACKLOG.md` — open items not yet scheduled (finished work moves to `CHANGELOG.md`). The
+  throwaway plan doc covers only the item we're actively working; ROADMAP + BACKLOG persist between sessions.
 - `docs/guides/art/object_pipeline.md` — canonical art/sprite pipeline (the one to read first).
 
 ## Keep the canonical docs in step with the code

@@ -1,0 +1,615 @@
+<title>Bug Farmer Design Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Pixelify+Sans:wght@500;600&display=swap">
+<style>
+/* Tokens — colours are the game's own master palette (tools/sprites/drawn/palette.py). */
+:root {
+  --ground: #edf0e3;
+  --surface: #f8faf2;
+  --surface-2: #e3e8d6;
+  --ink: #221820;
+  --ink-2: #4a4452;
+  --ink-3: #6a6770;
+  --line: #cad2bc;
+  --line-strong: #9dab8d;
+  --accent: #26523a;
+  --accent-hover: #3e763c;
+  --on-accent: #f8faf2;
+  --pick-bg: #fac45c;
+  --pick-ink: #5a2a18;
+  --keep: #3e763c;
+  --keep-soft: #dde8cc;
+  --cut: #a8412f;
+  --cut-soft: #f2d5cb;
+  --change: #a45418;
+  --change-soft: #f4dfc0;
+  --focus: #4c6692;
+  --shadow: 0 1px 0 rgba(34, 24, 32, .05), 0 10px 24px -18px rgba(34, 24, 32, .35);
+  --font-display: "Pixelify Sans", "Courier New", monospace;
+  --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --r: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #111915;
+    --surface: #19231d;
+    --surface-2: #151e19;
+    --ink: #e9ecdf;
+    --ink-2: #b6bfad;
+    --ink-3: #8c9588;
+    --line: #2c3a30;
+    --line-strong: #46584a;
+    --accent: #6ea240;
+    --accent-hover: #86b84e;
+    --on-accent: #0f160f;
+    --pick-bg: #e2902c;
+    --pick-ink: #1e1206;
+    --keep: #8cc05a;
+    --keep-soft: #213221;
+    --cut: #e5876a;
+    --cut-soft: #3b2420;
+    --change: #e9a855;
+    --change-soft: #3a2b18;
+    --focus: #7494b6;
+    --shadow: 0 1px 0 rgba(0, 0, 0, .3), 0 12px 26px -18px rgba(0, 0, 0, .8);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #111915;
+  --surface: #19231d;
+  --surface-2: #151e19;
+  --ink: #e9ecdf;
+  --ink-2: #b6bfad;
+  --ink-3: #8c9588;
+  --line: #2c3a30;
+  --line-strong: #46584a;
+  --accent: #6ea240;
+  --accent-hover: #86b84e;
+  --on-accent: #0f160f;
+  --pick-bg: #e2902c;
+  --pick-ink: #1e1206;
+  --keep: #8cc05a;
+  --keep-soft: #213221;
+  --cut: #e5876a;
+  --cut-soft: #3b2420;
+  --change: #e9a855;
+  --change-soft: #3a2b18;
+  --focus: #7494b6;
+  --shadow: 0 1px 0 rgba(0, 0, 0, .3), 0 12px 26px -18px rgba(0, 0, 0, .8);
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  padding-inline: 16px;
+  padding-block: 0;
+}
+a { color: var(--accent); text-underline-offset: 2px; }
+code { font-family: var(--font-mono); font-size: .86em; background: var(--surface-2); padding: .05em .3em; border-radius: 3px; overflow-wrap: anywhere; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.app { max-width: 1180px; margin-inline: auto; display: grid; gap: 28px; grid-template-columns: minmax(0, 1fr); padding-block: 20px 0; }
+@media (min-width: 960px) { .app { grid-template-columns: 272px minmax(0, 1fr); gap: 40px; } }
+
+/* ---------- rail: the section index */
+.rail { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+@media (min-width: 960px) {
+  .rail { position: sticky; top: env(safe-area-inset-top, 0px); align-self: start; max-height: 100vh; overflow-y: auto; padding-block: 4px 24px; }
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.beetle { width: 48px; height: 48px; flex: none; image-rendering: pixelated; background-image: var(--beetle); background-size: 288px 48px; background-repeat: no-repeat; background-position: 0 0; }
+.beetle.walking { animation: walk .54s steps(6) infinite; }
+@keyframes walk { to { background-position: -288px 0; } }
+@media (prefers-reduced-motion: reduce) { .beetle.walking { animation: none; } }
+.brand-name { font-family: var(--font-display); font-weight: 600; font-size: 22px; line-height: 1.05; letter-spacing: .01em; }
+.brand-sub { color: var(--ink-3); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
+.how { color: var(--ink-2); font-size: 14px; margin: 0; max-width: 42ch; }
+.tally { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.tally b { color: var(--ink); }
+
+.nav { list-style: none; margin: 0; padding: 0; display: flex; gap: 2px; flex-direction: column; }
+.nav button {
+  all: unset; box-sizing: border-box; width: 100%; cursor: pointer; display: grid; grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: baseline; gap: 8px; padding: 7px 10px; border-radius: var(--r); color: var(--ink-2); font-size: 14px; line-height: 1.3;
+}
+.nav button:hover { background: var(--surface-2); color: var(--ink); }
+.nav button[aria-current="true"] { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-strong); }
+.nav button:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.nav .num { font-family: var(--font-display); font-size: 14px; color: var(--ink-3); }
+.ss { font-family: var(--font-body); font-weight: 400; font-size: .72em; margin-right: .08em; vertical-align: .08em; }
+.nav .draft .t { color: var(--ink-3); }
+.chip { font-size: 11px; letter-spacing: .05em; text-transform: uppercase; padding: 1px 7px; border-radius: 999px; white-space: nowrap; border: 1px solid transparent; }
+.chip.ready { background: var(--pick-bg); color: var(--pick-ink); }
+.chip.progress { background: var(--change-soft); color: var(--change); border-color: color-mix(in srgb, var(--change) 35%, transparent); }
+.chip.done { background: var(--keep-soft); color: var(--keep); border-color: color-mix(in srgb, var(--keep) 35%, transparent); }
+.chip.final { background: var(--accent); color: var(--on-accent); }
+.chip.draft { color: var(--ink-3); border-color: var(--line); }
+@media (max-width: 959px) {
+  .navwrap { overflow-x: auto; margin-inline: -16px; padding-inline: 16px; padding-block: 2px 6px; }
+  .nav { flex-direction: row; gap: 6px; width: max-content; }
+  .nav li { flex: none; }
+  .nav button { width: auto; grid-template-columns: auto auto auto; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+  .nav .t .long { display: none; }
+}
+@media (min-width: 960px) { .nav .t .short { display: none; } }
+
+/* ---------- the section sheet */
+main { min-width: 0; max-width: 780px; padding-bottom: 96px; }
+.label {
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r); padding: 18px 20px 16px;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 18px; row-gap: 6px; align-items: start; box-shadow: var(--shadow);
+}
+.label .sec { font-family: var(--font-display); font-weight: 600; font-size: 40px; line-height: .95; color: var(--accent); grid-row: span 2; }
+.label h1 { font-family: var(--font-body); font-weight: 700; font-size: clamp(22px, 3.2vw, 28px); line-height: 1.2; margin: 0; text-wrap: balance; }
+.label .meta { font-size: 13px; color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.label .meta code { font-size: 12px; }
+.banner { margin-top: 14px; padding: 10px 14px; border-radius: var(--r); background: var(--keep-soft); color: var(--ink); font-size: 14px; border: 1px solid color-mix(in srgb, var(--keep) 40%, transparent); }
+
+.part { margin-top: 30px; }
+.part > h2 { font-size: 13px; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 10px; font-weight: 700; }
+.part > h2 .aside { text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--ink-3); margin-left: 8px; }
+.experience p { font-size: 18px; line-height: 1.6; margin: 0; max-width: 64ch; }
+.prose { max-width: 68ch; }
+.prose p { margin: 0 0 .8em; }
+.prose ul, .prose ol { margin: 0 0 .8em; padding-left: 1.3em; }
+.prose li { margin-bottom: .45em; }
+.prose li::marker { color: var(--ink-3); }
+.prose blockquote { margin: 0 0 .8em; padding-left: 14px; border-left: 3px solid var(--line-strong); color: var(--ink-2); }
+.prose pre { background: var(--surface-2); padding: 10px 12px; border-radius: var(--r); overflow-x: auto; font-size: 13px; }
+.prose pre code { background: none; padding: 0; }
+.tbl { overflow-x: auto; margin: 0 0 1em; }
+.tbl table { border-collapse: collapse; font-size: 14px; min-width: 520px; }
+.tbl th, .tbl td { text-align: left; vertical-align: top; padding: 7px 10px; border-bottom: 1px solid var(--line); }
+.tbl th { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); border-bottom-color: var(--line-strong); }
+.decided li { margin-bottom: .6em; }
+
+details.ref { border-top: 1px solid var(--line); }
+details.ref:last-of-type { border-bottom: 1px solid var(--line); }
+details.ref summary { cursor: pointer; padding: 12px 2px; font-weight: 700; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+details.ref summary::-webkit-details-marker { display: none; }
+details.ref summary::after { content: "+"; font-family: var(--font-display); color: var(--ink-3); }
+details.ref[open] summary::after { content: "−"; }
+details.ref .prose { padding: 0 2px 14px; }
+.ref-note { font-weight: 400; color: var(--ink-3); font-size: 14px; margin-left: 6px; }
+
+/* ---------- answer cards */
+.cards { display: flex; flex-direction: column; gap: 14px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; box-shadow: var(--shadow); }
+.card.answered { border-color: var(--line-strong); }
+.card-head { display: flex; gap: 10px; align-items: baseline; margin-bottom: 8px; }
+.tag { font-family: var(--font-display); font-size: 15px; color: var(--accent); flex: none; min-width: 26px; }
+.card h3 { font-size: 17px; line-height: 1.35; margin: 0; text-wrap: balance; }
+.card .prose p:last-child, .card .prose ul:last-child, .card .prose ol:last-child { margin-bottom: 0; }
+.lenses { margin-top: 10px; font-size: 13px; color: var(--ink-3); line-height: 1.5; }
+.lenses b { font-weight: 700; color: var(--ink-2); letter-spacing: .04em; text-transform: uppercase; font-size: 11px; margin-right: 6px; }
+
+.verdict { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; border: 0; padding: 0; }
+.verdict legend { padding: 0; }
+.seg { position: relative; }
+.seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.seg span {
+  display: inline-block; cursor: pointer; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line-strong);
+  font-size: 14px; font-weight: 700; color: var(--ink-2); background: var(--surface); user-select: none;
+}
+.seg span:hover { color: var(--ink); border-color: var(--ink-3); }
+.seg input:focus-visible + span { outline: 2px solid var(--focus); outline-offset: 2px; }
+.seg.keep input:checked + span { background: var(--keep-soft); color: var(--keep); border-color: var(--keep); }
+.seg.cut input:checked + span { background: var(--cut-soft); color: var(--cut); border-color: var(--cut); }
+.seg.change input:checked + span { background: var(--change-soft); color: var(--change); border-color: var(--change); }
+
+textarea, input[type="text"] {
+  width: 100%; font: inherit; font-size: 15px; color: var(--ink); background: var(--ground); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 8px 10px; resize: vertical;
+}
+textarea::placeholder, input::placeholder { color: var(--ink-3); }
+textarea:focus, input[type="text"]:focus { outline: 2px solid var(--focus); outline-offset: 0; border-color: transparent; }
+.note { margin-top: 10px; min-height: 42px; }
+
+.opts { display: flex; flex-direction: column; gap: 8px; margin: 14px 0 0; border: 0; padding: 0; }
+.opt { display: grid; grid-template-columns: 22px 22px minmax(0, 1fr); gap: 8px; align-items: start; padding: 10px 12px; border-radius: var(--r); border: 1px solid var(--line); cursor: pointer; background: var(--surface); }
+.opt:hover { border-color: var(--line-strong); }
+.opt input { margin: 4px 0 0; accent-color: var(--accent); width: 16px; height: 16px; }
+.opt .k { font-family: var(--font-display); color: var(--ink-3); font-size: 16px; line-height: 1.4; }
+.opt .txt { font-size: 15px; }
+.opt.chosen { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--surface)); }
+.opt.chosen .k { color: var(--accent); }
+.pick { display: inline-block; margin-left: 8px; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; background: var(--pick-bg); color: var(--pick-ink); padding: 1px 7px; border-radius: 999px; vertical-align: 2px; }
+.opt.other { grid-template-columns: 22px 22px minmax(0, 1fr); }
+.opt.other input[type="text"] { margin-top: 6px; }
+.rec { margin-top: 12px; font-size: 14px; color: var(--ink-2); background: var(--surface-2); border-radius: var(--r); padding: 10px 12px; }
+.rec b { color: var(--ink); }
+
+.general textarea { min-height: 84px; }
+
+/* ---------- the save bar */
+.savebar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(6px); border-top: 1px solid var(--line);
+}
+.savebar .in { max-width: 1180px; margin-inline: auto; display: flex; gap: 10px 18px; align-items: center; flex-wrap: wrap; }
+@media (min-width: 960px) { .savebar .in { padding-left: 312px; } }
+.status { font-size: 14px; color: var(--ink-2); display: flex; align-items: center; gap: 8px; min-width: 0; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); flex: none; }
+.dot.ok { background: var(--keep); }
+.dot.busy { background: var(--change); }
+.dot.bad { background: var(--cut); }
+.count { font-size: 14px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.spacer { flex: 1; }
+.btn { font: inherit; font-size: 15px; font-weight: 700; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); cursor: pointer; }
+.btn:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn.ghost { background: transparent; color: var(--accent); }
+.btn.ghost:hover { background: var(--surface-2); }
+.btn[disabled] { opacity: .45; cursor: default; }
+
+.draftnote { margin-top: 24px; font-size: 16px; color: var(--ink-2); max-width: 60ch; }
+</style>
+
+<script id="gdd-data" type="application/json">/*GDD_DATA*/</script>
+
+<div class="app" style="--beetle: url('{{BEETLE}}')">
+  <aside class="rail" aria-label="Sections">
+    <div class="brand">
+      <div class="beetle walking" id="beetle" role="img" aria-label="A burying beetle, drawn in code"></div>
+      <div>
+        <div class="brand-name">Bug Farmer</div>
+        <div class="brand-sub">Design review</div>
+      </div>
+    </div>
+    <p class="how">One section at a time. Keep, cut or change my proposals; answer the questions that are yours. Everything saves as you go.</p>
+    <div class="tally" id="tally"></div>
+    <div class="navwrap"><ul class="nav" id="nav"></ul></div>
+  </aside>
+  <main id="main" tabindex="-1"></main>
+</div>
+
+<div class="savebar" id="savebar" hidden>
+  <div class="in">
+    <div class="status" id="status" aria-live="polite"><span class="dot"></span><span>Connecting…</span></div>
+    <div class="count" id="count"></div>
+    <div class="spacer"></div>
+    <button class="btn" id="submit" type="button">I’m done with this section</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const DATA = JSON.parse(document.getElementById("gdd-data").textContent);
+  const SECTIONS = DATA.sections;
+  const byId = Object.fromEntries(SECTIONS.map(s => [s.id, s]));
+  const LS_DRAFTS = "bugfarmer-gdd-drafts-v1";
+  const LS_LAST = "bugfarmer-gdd-last-section";
+  const REF_TITLES = {
+    "Current design": ["What the design documents already say", "for reference"],
+    "As built": ["What’s in the game today", "for reference"],
+    "How it will work": ["How it will work", "engineering — for your information, not to answer"],
+  };
+
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const store = {
+    get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* private window: fine */ } },
+  };
+
+  // ---------------------------------------------------------------- answer state
+  const answers = {};                       // sectionId -> the document saved in the page's database
+  const drafts = store.get(LS_DRAFTS) || {}; // sectionId -> {body, pending}: edits not yet confirmed saved
+  for (const sid in drafts) if (byId[sid] && drafts[sid] && drafts[sid].body) answers[sid] = drafts[sid].body;
+
+  function body(sid) {
+    if (!answers[sid]) {
+      const s = byId[sid];
+      answers[sid] = { section: sid, title: s.title.replace(/<[^>]+>/g, ""), items: {}, general: "", submitted: false, updatedAt: null, pageVersion: DATA.version };
+    }
+    return answers[sid];
+  }
+  function item(sid, kind, it) {
+    const b = body(sid);
+    if (!b.items[it.id]) b.items[it.id] = kind === "proposal"
+      ? { kind, title: it.plain, verdict: null, note: "" }
+      : { kind, title: it.plain, choice: null, other: "", note: "" };
+    return b.items[it.id];
+  }
+  function answeredCount(sid) {
+    const s = byId[sid], b = answers[sid];
+    const total = s.proposals.length + s.questions.length;
+    if (!b) return [0, total];
+    let n = 0;
+    for (const p of s.proposals) { const a = b.items[p.id]; if (a && a.verdict) n++; }
+    for (const q of s.questions) { const a = b.items[q.id]; if (a && a.choice && (a.choice !== "other" || (a.other || "").trim())) n++; }
+    return [n, total];
+  }
+  function sectionState(sid) {
+    const s = byId[sid];
+    if (s.status === "final") return ["final", "Final"];
+    if (s.status !== "review") return ["draft", "Later"];
+    const b = answers[sid];
+    if (b && b.submitted) return ["done", "Answered"];
+    const [n, t] = answeredCount(sid);
+    if (n > 0) return ["progress", `${n}/${t}`];
+    return ["ready", "Ready"];
+  }
+
+  // ---------------------------------------------------------------- saving
+  let db = null, dbState = "connecting", lastSaved = null;
+  const timers = {}, inflight = {}, again = {};
+
+  function keepDraft(sid, pending) {
+    drafts[sid] = { body: answers[sid], pending };
+    store.set(LS_DRAFTS, drafts);
+  }
+  function changed(sid) {
+    keepDraft(sid, true);
+    clearTimeout(timers[sid]);
+    timers[sid] = setTimeout(() => save(sid), 700);
+    setStatus(db ? "pending" : dbState);
+    renderNav(); renderCount();
+  }
+  async function write(sid, doc) {
+    try { await db.doc("answers/" + sid).set(doc); }
+    catch (e) {
+      if (e && e.code === "unavailable") { await sleep(400 + Math.random() * 900); await db.doc("answers/" + sid).set(doc); }
+      else throw e;
+    }
+  }
+  async function save(sid) {
+    clearTimeout(timers[sid]);
+    timers[sid] = null;
+    if (!db) { setStatus(dbState); return; }
+    if (inflight[sid]) { again[sid] = true; return; }
+    inflight[sid] = true;
+    setStatus("saving");
+    const b = body(sid);
+    b.updatedAt = new Date().toISOString();
+    b.pageVersion = DATA.version;
+    try {
+      await write(sid, clone(b));
+      keepDraft(sid, false);
+      lastSaved = new Date();
+      setStatus("saved");
+    } catch (e) {
+      setStatus("error", e);
+    } finally {
+      inflight[sid] = false;
+      if (again[sid]) { again[sid] = false; save(sid); }
+    }
+  }
+
+  function setStatus(kind, err) {
+    const el = $("#status");
+    const map = {
+      connecting: ["busy", "Connecting to the page’s storage…"],
+      pending: ["busy", "Saving…"],
+      saving: ["busy", "Saving…"],
+      saved: ["ok", "All answers saved" + (lastSaved ? " · " + lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "")],
+      local: ["bad", "This view can’t reach the page’s storage — answers are kept in this browser only. Open the page on claude.ai to save them."],
+      error: ["bad", "Couldn’t save just now" + (err && err.code === "quota_exceeded" ? " — storage is full" : " — your answers are kept in this browser; the next change retries.")],
+    };
+    const [dot, text] = map[kind] || map.connecting;
+    el.innerHTML = `<span class="dot ${dot}"></span><span>${esc(text)}</span>`;
+    const beetle = $("#beetle");
+    if (kind === "saving" || kind === "pending") beetle.classList.add("walking");
+    else if (kind === "saved") setTimeout(() => beetle.classList.remove("walking"), 1100);
+  }
+
+  function connect() {
+    const use = window.claude && typeof window.claude.use === "function" ? window.claude.use("db") : Promise.resolve(null);
+    use.then(ns => {
+      if (!ns) { dbState = "local"; setStatus("local"); return; }
+      db = ns; dbState = "ready";
+      let first = true;
+      db.collection("answers").onSnapshot(snap => {
+        for (const d of snap.docs) {
+          if (!byId[d.id] || !d.exists) continue;
+          if (drafts[d.id] && drafts[d.id].pending) continue;   // this browser's unsaved edits win; they get written below
+          answers[d.id] = clone(d.data());
+        }
+        renderNav();
+        if (first) {
+          first = false;
+          if (!$("#main").contains(document.activeElement) || document.activeElement === $("#main")) renderSection(current, false);
+          setStatus("saved");
+          for (const sid in drafts) if (drafts[sid] && drafts[sid].pending) save(sid);
+        }
+      }, err => setStatus("error", err));
+    }).catch(() => { dbState = "local"; setStatus("local"); });
+  }
+
+  // ---------------------------------------------------------------- rendering
+  const reviewable = SECTIONS.filter(s => s.status === "review" || s.status === "final");
+  let current = (() => {
+    const h = (location.hash || "").replace(/^#s/, "");
+    if (byId[h]) return h;
+    const last = store.get(LS_LAST);
+    if (last && byId[last]) return last;
+    return (reviewable[0] || SECTIONS[0]).id;
+  })();
+
+  function shortTitle(t) { return t.split(/[,:&]/)[0].trim(); }
+
+  function renderNav() {
+    const ready = SECTIONS.filter(s => s.status === "review").length;
+    const done = SECTIONS.filter(s => s.status === "review" && answers[s.id] && answers[s.id].submitted).length;
+    const final = SECTIONS.filter(s => s.status === "final").length;
+    $("#tally").innerHTML = `<b>${ready}</b> ready for you · <b>${done}</b> answered · <b>${final}</b> final · ${SECTIONS.length} sections in all`;
+    $("#nav").innerHTML = SECTIONS.map(s => {
+      const [cls, label] = sectionState(s.id);
+      return `<li><button type="button" data-sid="${esc(s.id)}" class="${cls === "draft" ? "draft" : ""}" aria-current="${s.id === current}" title="§${esc(s.id)} ${esc(s.title)}">
+        <span class="num"><span class="ss">§</span>${esc(s.id)}</span>
+        <span class="t"><span class="long">${esc(s.title)}</span><span class="short">${esc(shortTitle(s.title))}</span></span>
+        <span class="chip ${cls}">${esc(label)}</span></button></li>`;
+    }).join("");
+  }
+
+  function renderCount() {
+    const s = byId[current];
+    const bar = $("#savebar");
+    if (s.status !== "review" && s.status !== "final") { bar.hidden = true; return; }
+    bar.hidden = false;
+    const [n, t] = answeredCount(current);
+    $("#count").textContent = `${n} of ${t} answered`;
+    const sub = $("#submit");
+    const b = answers[current];
+    if (b && b.submitted) { sub.textContent = "Answered ✓ — reopen"; sub.classList.add("ghost"); }
+    else { sub.textContent = "I’m done with this section"; sub.classList.remove("ghost"); }
+  }
+
+  function proposalCard(sid, p) {
+    const a = item(sid, "proposal", p);
+    const name = `v-${sid}-${p.id}`;
+    const seg = (val, label) => `<label class="seg ${val}"><input type="radio" id="${name}-${val}" name="${name}" value="${val}" data-kind="verdict" data-item="${p.id}"${a.verdict === val ? " checked" : ""}><span>${label}</span></label>`;
+    return `<article class="card${a.verdict ? " answered" : ""}" id="card-${sid}-${p.id}">
+      <div class="card-head"><span class="tag">${esc(p.id)}</span><h3>${p.title}</h3></div>
+      <div class="prose">${p.html}</div>
+      ${p.lenses ? `<div class="lenses"><b>Checked against</b>${p.lenses}</div>` : ""}
+      <fieldset class="verdict"><legend class="vh">Your verdict on ${esc(p.plain)}</legend>
+        ${seg("keep", "Keep")}${seg("cut", "Cut")}${seg("change", "Change")}
+      </fieldset>
+      <textarea class="note" id="n-${sid}-${p.id}" data-kind="note" data-item="${p.id}" rows="2" placeholder="Note (optional) — what to change, or why"></textarea>
+    </article>`;
+  }
+
+  function questionCard(sid, q) {
+    const a = item(sid, "question", q);
+    const name = `q-${sid}-${q.id}`;
+    const opts = q.options.map(o => `<label class="opt${a.choice === o.key ? " chosen" : ""}">
+        <input type="radio" id="${name}-${o.key}" name="${name}" value="${o.key}" data-kind="choice" data-item="${q.id}"${a.choice === o.key ? " checked" : ""}>
+        <span class="k">${esc(o.key)}</span>
+        <span class="txt">${o.html}${q.rec && q.rec.key === o.key ? '<span class="pick">My pick</span>' : ""}</span>
+      </label>`).join("");
+    return `<article class="card${a.choice ? " answered" : ""}" id="card-${sid}-${q.id}">
+      <div class="card-head"><span class="tag">${esc(q.id)}</span><h3>${q.title}</h3></div>
+      <div class="prose">${q.context}</div>
+      <fieldset class="opts"><legend class="vh">${esc(q.plain)}</legend>
+        ${opts}
+        <label class="opt other${a.choice === "other" ? " chosen" : ""}">
+          <input type="radio" id="${name}-other" name="${name}" value="other" data-kind="choice" data-item="${q.id}"${a.choice === "other" ? " checked" : ""}>
+          <span class="k">…</span>
+          <span class="txt">Something else<input type="text" id="o-${sid}-${q.id}" data-kind="other" data-item="${q.id}" placeholder="Your own answer"></span>
+        </label>
+      </fieldset>
+      ${q.rec ? `<div class="rec"><b>My pick: ${esc(q.rec.key)}.</b> ${q.rec.html}</div>` : ""}
+      <textarea class="note" id="qn-${sid}-${q.id}" data-kind="note" data-item="${q.id}" rows="2" placeholder="Note (optional)"></textarea>
+    </article>`;
+  }
+
+  function renderSection(sid, focus) {
+    current = sid;
+    store.set(LS_LAST, sid);
+    const s = byId[sid];
+    const main = $("#main");
+    const updated = s.updated ? new Date(s.updated + "T12:00:00").toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" }) : "";
+    const statusWord = { review: "Ready for your answers", final: "Final", draft: "Not written yet" }[s.status] || s.status;
+    let h = `<header class="label">
+      <div class="sec" aria-hidden="true"><span class="ss">§</span>${esc(s.id)}</div>
+      <h1>${esc(s.title)}</h1>
+      <div class="meta"><span>${esc(statusWord)}</span>${updated ? `<span>updated ${esc(updated)}</span>` : ""}<span><code>${esc(s.file)}</code></span></div>
+    </header>`;
+    const b = answers[sid];
+    if (b && b.submitted) h += `<div class="banner">You marked this section done. I’ll read your answers and write them into the design document. You can still change anything here.</div>`;
+
+    if (s.status === "draft") {
+      h += `<p class="draftnote">This section isn’t written yet. It comes after the sections marked ready; each one is gathered from the documents below and checked before it reaches you.</p>`;
+      if (s.settle) h += `<section class="part"><h2>To settle <span class="aside">my raw list — not yet checked</span></h2><div class="prose">${s.settle}</div></section>`;
+      if (s.gather) h += `<section class="part"><h2>Documents it will gather</h2><div class="prose">${s.gather}</div></section>`;
+      main.innerHTML = h;
+      renderNav(); renderCount();
+      if (focus) main.focus({ preventScroll: true });
+      return;
+    }
+
+    if (s.lead) h += `<div class="prose part">${s.lead}</div>`;
+    if (s.experience) h += `<section class="part experience"><h2>The experience</h2>${s.experience}</section>`;
+    if (s.decided) h += `<section class="part"><h2>Already decided <span class="aside">your words — not asked again</span></h2><div class="prose decided">${s.decided}</div></section>`;
+    if (s.reference.length) {
+      h += `<section class="part">` + s.reference.map(r => {
+        const [t, note] = REF_TITLES[r.title] || [r.title, ""];
+        return `<details class="ref"><summary><span>${esc(t)}<span class="ref-note">${esc(note)}</span></span></summary><div class="prose">${r.html}</div></details>`;
+      }).join("") + `</section>`;
+    }
+    if (s.proposals.length) {
+      h += `<section class="part"><h2>Proposals <span class="aside">my calls — keep what’s right, cut or change what isn’t</span></h2><div class="cards">`
+        + s.proposals.map(p => proposalCard(sid, p)).join("") + `</div></section>`;
+    }
+    if (s.questions.length) {
+      h += `<section class="part"><h2>Questions <span class="aside">yours to answer</span></h2><div class="cards">`
+        + s.questions.map(q => questionCard(sid, q)).join("") + `</div></section>`;
+    }
+    h += `<section class="part general"><h2><label for="g-${sid}">Anything else about this section?</label></h2>
+      <textarea id="g-${sid}" data-kind="general" rows="3" placeholder="Optional"></textarea></section>`;
+    if (s.sources) h += `<section class="part"><details class="ref"><summary><span>Sources<span class="ref-note">where everything above comes from</span></span></summary><div class="prose">${s.sources}</div></details></section>`;
+    main.innerHTML = h;
+
+    // free-text values are set as properties, never as markup
+    const bb = body(sid);
+    for (const id in bb.items) {
+      const a = bb.items[id];
+      const n = $(`#${a.kind === "proposal" ? "n" : "qn"}-${sid}-${id}`); if (n) n.value = a.note || "";
+      const o = $(`#o-${sid}-${id}`); if (o) o.value = a.other || "";
+    }
+    const g = $(`#g-${sid}`); if (g) g.value = bb.general || "";
+    renderNav(); renderCount();
+    if (focus) { main.focus({ preventScroll: true }); window.scrollTo(0, 0); }
+  }
+
+  // ---------------------------------------------------------------- events
+  $("#nav").addEventListener("click", e => {
+    const btn = e.target.closest("button[data-sid]");
+    if (!btn) return;
+    const sid = btn.dataset.sid;
+    for (const k in drafts) if (drafts[k] && drafts[k].pending) save(k);
+    try { history.replaceState(null, "", "#s" + sid); } catch { /* sandboxed: fine */ }
+    renderSection(sid, true);
+  });
+
+  $("#main").addEventListener("input", e => {
+    const t = e.target, kind = t.dataset.kind;
+    if (!kind) return;
+    const s = byId[current], b = body(current);
+    if (kind === "general") { b.general = t.value; changed(current); return; }
+    const id = t.dataset.item;
+    const p = s.proposals.find(x => x.id === id), q = s.questions.find(x => x.id === id);
+    const a = p ? item(current, "proposal", p) : item(current, "question", q);
+    if (kind === "verdict") a.verdict = t.value;
+    else if (kind === "choice") a.choice = t.value;
+    else if (kind === "note") a.note = t.value;
+    else if (kind === "other") { a.other = t.value; if (t.value.trim() && a.choice !== "other") { a.choice = "other"; const r = $(`#q-${current}-${id}-other`); if (r) r.checked = true; } }
+    const card = $(`#card-${current}-${id}`);
+    if (card) {
+      card.classList.toggle("answered", !!(a.verdict || a.choice));
+      card.querySelectorAll(".opt").forEach(l => l.classList.toggle("chosen", !!l.querySelector("input[type=radio]:checked")));
+    }
+    changed(current);
+  });
+
+  $("#submit").addEventListener("click", () => {
+    const b = body(current);
+    b.submitted = !b.submitted;
+    keepDraft(current, true);
+    renderSection(current, false);
+    save(current);
+  });
+
+  window.addEventListener("hashchange", () => {
+    const h = (location.hash || "").replace(/^#s/, "");
+    if (byId[h] && h !== current) renderSection(h, true);
+  });
+
+  renderSection(current, false);
+  setStatus("connecting");
+  connect();
+  setTimeout(() => { if (!$("#status .dot.busy")) $("#beetle").classList.remove("walking"); }, 2400);
+})();
+</script>

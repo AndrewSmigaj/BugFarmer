@@ -916,7 +916,7 @@ green, the recurring rules logged as DECISIONS D22. Open follow-ups the user adj
   render-only; the boat-store furniture un-reserves water as a special case).
 - Side-door TEXT-GRID pieces (composer + place_room already do all sides).
 - A leaf-litter/forest_floor ground tile (deep forest uses dirt=True meanwhile).
-- A frog ambient critter for the lake (intent doc wish).
+- ~~A frog ambient critter for the lake (intent doc wish).~~ — frogs rejected (2026-07-05, `economy/DECISIONS.md` D31).
 - Subdue/drag/revive (smoke tool) — the centipede capture path (trap_only reserves it).
 - Millipede: the peaceful detritivore on the same individual chassis (eats rot, makes
   compost). Dragonfly: prey:[wasp_common] — pure data + sprite (the chassis proof).

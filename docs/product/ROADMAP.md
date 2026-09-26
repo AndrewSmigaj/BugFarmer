@@ -45,7 +45,8 @@ ecology stations) let you read and steer the ecosystem.
 - [x] 2-client late-join sync gate on a fresh build (headless Unity player compiled today): co-located —
   all 76,447 shared-bug states + 239 tick hashes identical; spawn-apart (disjoint chunks) — all 77,737 + 241
   identical.
-- [ ] GDD skeleton + section-at-a-time review page.
+- [x] GDD skeleton (`docs/gdd/`, 23 sections) + the section-at-a-time review page
+  (https://claude.ai/artifact/CRtGxrNmWdXPVAVyNnwWW1): §00 Premise and §19 Multiplayer ready for the owner.
 
 ### Phase 1 — prove the art, set the rules, design the spine, lay foundations
 - **Art:** owner verdict on the demo → art bible (palette, sizes, outline, light) → the redo, category by category.
@@ -60,6 +61,9 @@ ecology stations) let you read and steer the ecosystem.
   + world list + version handshake · zone-complete collision/loading (+ ecology re-tune) · world clock ·
   frozen-zone catch-up · blocked zone entry · latent bugs (WorldEnter race, first-join seq stall, merge ignores
   nests) · reconnect · CI + release builds · internet-reality test (latency, bandwidth).
+- **Examine view + examine texts:** an examine view for items, recipes and bugs, and ~650 short texts with the real
+  biology (the owner: *"when you examine it as a recipe or item you should see what it does"*); today hovering
+  shows only the name and 2 of 654 things have a description. Written alongside the art redo, category by category.
 - **Polish audits** (findings only): bug behaviour, combat, ecology + tab, UI, farming, catching, stations,
   building, lighting/weather, audio, tutorials, performance. **True-bug naming pass.**
 

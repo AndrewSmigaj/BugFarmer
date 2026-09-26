@@ -34,7 +34,7 @@ that show it off. Players spawn here; it's the safe hub and the game's first imp
 
 ## Key species & ecology
 - The village is the **fly-ecology showcase**: fruit trees → fallen fruit → rot → **flies** → predators
-  (frogs/spiders, migrant wasps). The Orchard + Fly Farm make this legible. (See `ecology_proposal.md`.)
+  (spiders, migrant wasps — frogs were rejected 2026-07-05, D31). The Orchard + Fly Farm make this legible. (See `ecology_proposal.md`.)
 - No threats; pollinators (bees/butterflies drifting in from the north) and flies only.
 
 ## The town — buildings (each made distinct by signage + props)
@@ -53,7 +53,7 @@ that show it off. Players spawn here; it's the safe hub and the game's first imp
 - **Civic square** (center, the visual anchor): ONE central element (well / old tree with a stone ring /
   monument), plus benches (unevenly placed), a notice board, a signpost (fast travel), flower beds, and a
   small **statue**. It should imply waiting, gathering, announcements, conversation.
-- **SW lake**: a pond with the **fishing docks + boat**, reeds, lily pads, a frog or two.
+- **SW lake**: a pond with the **fishing docks + boat**, reeds, lily pads. *(Frogs were rejected 2026-07-05 — D31.)*
 - **Orchard** (edge, intentionally ordered): grid-aligned apple/orange rows with clear walking lanes,
   ladders, crates at row ends, **compost piles**, fallen fruit under the trees. *Apples fall fresh, age,
   then rot and draw flies — no placed rot props.*
