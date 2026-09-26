@@ -104,6 +104,67 @@ keep on this codebase (each caught a real, shipped-would-have-bitten issue).
   does it degrade sanely instead of breaking or spinning? (No-carrion ant colony goes dormant + re-founds
   (nest-recovery precedent); orphaned forager drops its load (homing timeout); web-destroyed spider re-spins.)
 
+## Idea lenses (before ANY game idea — item, outfit, weapon, bug, mechanic — reaches the owner)
+> Owner, 2026-09-26: *"All game ideas can be looked at through lenses before even showing me, we will want to
+> probably not just go with you kneejerk ideas but actually have a good process that eliminates a lot of these
+> unplayability aspects."* · *"we like surprises, the lens of curiosity and lens of surprise are important lenses
+> from the book of lenses."*
+
+**The process (every time):** (1) read what the owner already designed or cut for this topic — the GDD section
+(`docs/gdd/`), `docs/product/economy/DECISIONS.md`, and for gear `docs/product/design/brainstorm_armor.md`
+(§7 the expedition + verbs rules, §11 the saturation test) — and start there, not from a blank page;
+(2) write one line per lens below for each idea (PASS / RISK / CUT + why); (3) a cold-critic agent (told: no
+sub-agents) sees only the ideas, these lenses and the owner's rules and tries to cut each one; (4) show the owner
+the survivors WITH their lens notes, and list the cuts with a one-line reason each so he can rescue one.
+
+Earned 2026-09-26: of 16 sample ideas, the owner rejected 6 and qualified 5 — every one traced to a lens below
+that was skipped. His words are the evidence:
+
+- ★ **Premise** — Does it fit 2126: giant bugs, nearly no mammals, bugs are food and livestock? (Pooter, a
+  suction vial for tiny bugs: *"no - keep in mind bug farmer is in the future where bugs are giant"*. Berlese
+  funnel for tiny soil bugs: *"no"*.)
+- ★ **Bestiary** — Does it depend on a bug we don't have? Say so plainly and count it as a cost. New bugs are
+  welcome — *"We can add as many new bugs as we want as long as things stay balanced and things are explained"* —
+  but not ones that *"require completely new zones"*. (Trap-jaw dagger: *"We don't have trap jaw ants."*)
+- ★ **Picture the moment** — Describe what the player literally sees and presses, second by second. If it looks
+  awkward, cut it. (Mantis gauntlet: *"try to envision it as actually what it would look like as if you do it might
+  end up seeming awkward to pin something down with one hand then net it with another."* Moth light-sheet: *"this
+  would be awkward to look at, moths should be attracted to light and you can put nets and auto bug catchers around
+  them when you get electricity. Could also have bug zappers"*.)
+- ★ **Zone freedom** — Does it force a rule onto every zone ("one in every zone")? Cut. (Naturalist's notebooks:
+  *"one in every zone would be awkward, we dont want mechanics forcing rules on zones."*)
+- ★ **Already covered?** — What does it do that nothing in the game (or the design) already does? (UV lantern:
+  *"we do have normal electric lanterns and the bug based lanterns and torches so its not like you have a problem
+  seeing them as it is."* Notebooks: *"We already have recipes you can find and an ecologist"*.)
+- ★ **Explain on examine** — Is the real biology shown when you examine the item or its recipe, so the effect
+  makes sense? (Monarch regalia: *"We need to make sure to include the biology lesson so it makes sense, when you
+  examine it as a recipe or item you should see what it does."*)
+- **Scope of the effect** — Does it claim to work on "anything"? Name exactly which bugs it affects and why.
+  (Monarch: *"it cant be 'anything' that bites you but this is a decent idea for some things."*)
+- **Made from the world** — Is it crafted from materials that make sense for it, that the player can get?
+  (Stick-insect ghillie: *"is it made from stick insects? I would prefer from plants and fiber."*)
+- **Readable state** — If it changes a hidden state (hidden, calmed, marked…), how does the player SEE it?
+  (Ghillie: *"There will need to be a 'hidden' indicator."*)
+- **New-mechanic tax** — Does it need a new system (a flip state, a pin state…)? Is the payoff worth building and
+  balancing it? *"We need to use common sense in some area."* (Rhino-beetle maul: *"this would require a new flip
+  mechanic so not sure if we want to do this."*)
+- **Art-system fit** — Does it depend on an art capability we don't have yet (separate armour pieces, a new
+  animation)? State the dependency. (Waders: *"unless we can create the pixel art for individual pieces of armor
+  that work with our system then sure"*.)
+- **Owner's gear rules** (outfits and accessories) — suits an EXPEDITION, not one action; bonuses attach to
+  VERBS, not idle output (decorative outfits that boost the farm are the owner's allowed exception); passes the
+  SATURATION test — say what it is FOR in one phrase, and no other set has that answer.
+- **Balance** — Where does it sit on the cost ladder, and what does it make obsolete? (Food ideas: *"as long as it
+  doesnt mess up the balance"*.)
+- **Schell's lenses** (*The Art of Game Design*) — the Eight Filters (it feels right · the players it's for will like it ·
+  it's well designed · it's new enough · it helps the game sell · it can be built · it serves playing together ·
+  playtesters enjoy it), then **Curiosity** and
+  **Surprise** (the owner's two), Toy, Meaningful Choices, Elegance, Visible Progress, Economy, Unification.
+
+What passed with no conditions, for calibration: bombardier plate (*"this is fine"*), tarantula-hair cloak (*"yeah
+sure"*), amber in cave walls (*"sure, we like surprises"*), nest chests (*"bugs coming out of chests is fine"*),
+bug food from your own farm (*"relatively ok"*).
+
 ## Zone & scene lenses (world craft, not code — run against RENDERED PIXELS, crop in hand)
 Used by the `zone-craft` skill's review step. Answer each against actual renders/crops at game
 zoom, not the plan or the source; report PASS / RISK / BROKEN with the crop that shows it. If
