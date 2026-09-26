@@ -1,5 +1,10 @@
 # Art needed (placeholder → real sprite)
 
+> **Superseded 2026-09-26.** All art is being regenerated on gpt-image-2 + pixelsnap after the GDD sign-off, so
+> this queue (built for the old `gen_sprites.py` → `pixelclean.py` route) is no longer the plan. The live item is
+> *Now — all art on gpt-image-2 + pixelsnap* at the top of [`BACKLOG.md`](BACKLOG.md). The missing-sprite script
+> below still works for finding entities with no image.
+
 World entities placed in scenes/zones that have **no sprite PNG yet** render as labeled
 placeholder squares (colored by category) in `make_scene` previews, so layout/composition can be
 built and reviewed before any art exists. This file is the queue for the batched art pass

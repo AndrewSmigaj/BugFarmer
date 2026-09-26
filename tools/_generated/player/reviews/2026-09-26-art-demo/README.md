@@ -1,5 +1,11 @@
 # 2026-09-26 — Art demo: pixel art drawn by Claude, in code
 
+> **VERDICT (2026-09-26): not adopted.** After this demo and a second code-drawn pass on the player base
+> (`../2026-09-26-base-pass/` — *"they look terrible"*), the owner decided: *"we will use gpt-image-2 for
+> everything, just full outfits I guess as yours are really bad"*. So: whole outfits (not the separate pieces in
+> `06b_*`), floating hands as approved on 2026-07-28, and all world/item art regenerated on gpt-image-2 +
+> pixelsnap after the GDD sign-off. Kept as a record only — nothing here is game art.
+
 Folder: `C:\Users\emily\BugFarmer\tools\_generated\player\reviews\2026-09-26-art-demo\`
 
 Everything here was drawn by Claude writing code — shapes, one light from the top-left, one shared palette,

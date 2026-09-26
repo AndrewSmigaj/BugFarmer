@@ -131,10 +131,15 @@ NEW png at the default **PPU 100**, which renders it at **16% size** — a "micr
 is a *latent* bug: it only fires the first time the sprite is actually placed in a zone
 (225 of 315 Objects sat broken until the fly-farm zone used one).
 
-**After adding/copying ANY sprite into `Resources/Objects` or `Resources/Items`:**
+**After adding/copying ANY sprite under `Resources/` (once Unity has imported it, so its `.meta` exists):**
 ```bash
-python3 tools/sprites/fix_sprite_ppu.py        # normalizes every .png.meta to PPU 16
+python3 tools/sprites/fix_sprite_ppu.py        # PPU 16 + point filtering on Objects/Items/Bugs/Effects/Player;
+                                               # point filtering only on UI/ and Tiles/ (their size is set in code)
 ```
+Unity's default filter is bilinear, which blurs pixel art. On 2026-09-26 the script was run after a check found
+45 objects + 44 items still at PPU 100 and 45 objects, 18 items, 13 tiles and the 4 break-stage cracks
+bilinear; it now covers Tiles/ and Effects/ too. **Replacing art: overwrite the PNG in place** so its `.meta`
+(and the GUID that `TileDatabase.asset` and scenes reference it by) survives; archived copies go outside `Assets/`.
 **Item display sprites are unified** (`EntityDatabase.GetItemSprite`): the resolution chain is
 `Objects/{icon_from}` → `Objects/{id}` → `Items/{id}_icon` → `Items/{id}` — an item WITH world
 art uses it directly (icon = drop = the scaled-down original; no separate icon generation).

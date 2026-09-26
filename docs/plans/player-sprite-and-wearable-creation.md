@@ -1,5 +1,12 @@
 # Player sprite + wearable creation system
 
+> **SUPERSEDED (noted 2026-09-26).** This records the July masked/per-slot approach (gpt-image-1.5, a mannequin,
+> pieces cut in Aseprite). It was replaced on 2026-07-28 by whole outfits on gpt-image-2, and on 2026-08-15 by
+> the procedure used today (three designs → the owner's pick → turnaround → one walk per direction → hands, all
+> pixel-snapped). Current how-to: `.claude/skills/player-sprites/SKILL.md`; decisions:
+> `tools/_generated/player/APPROVED/DECISIONS.md`; open work: the top item of `docs/product/BACKLOG.md`.
+> Kept for its findings.
+
 **Status: IN PROGRESS (record saved 2026-07-25).** The durable, committed record of the effort to build and use
 a system for **creating the player character and its wearables**. Saved here (committed to git, clean name) so
 it is NOT lost when the ephemeral `~/.claude/plans/` file gets cleaned up. Picking this up later: this is the

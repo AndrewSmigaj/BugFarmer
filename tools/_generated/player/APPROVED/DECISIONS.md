@@ -247,8 +247,8 @@ discarded the undirected entry. That roll is `explore/platinum-r2/` and is NOT t
 |---|---|---|
 | **copper** | option 1 of `copper-r3` | `explore/copper-r3/CHOSEN_copper.png` |
 | **iron** | option 1 of `iron-r2` | `explore/iron-r2/CHOSEN_iron.png` |
-| **platinum** | option 1 of `platinum-r4` | `explore/platinum-r4/CHOSEN_platinum.png` |
-| **fancy** | NOT PICKED YET | `explore/fancy/result.png` — three options waiting |
+| **platinum** | option 1 of `platinum-r4` | `explore/platinum-r4/CHOSEN_platinum.png` — *corrected 2026-09-26: the pick is `explore/platinum-r5/CHOSEN_platinum.png`; r4 holds the superseded option* |
+| **fancy** | NOT PICKED YET | `explore/fancy/result.png` — three options waiting — *corrected 2026-09-26: picked in the second roll, `explore/fancy-r2/CHOSEN_fancy.png`* |
 
 Copper needed three rolls: `copper` (directed, rejected), `copper-r2` (*"the copper is way too high res"*),
 then `copper-r3` with the owner's own fix — *"perhaps we can then try to say keep the pixel density"* — which
@@ -392,3 +392,48 @@ shoulders-to-feet -> **33% on all three**.
 `FRONT` and `FRONT_RUN` in `official.GAITS` changed UNITS, not design. The side walk was not touched.
 
 Renders and the full numbers: `reviews/2026-08-18-walk-hands/`.
+
+---
+
+## 2026-09-26 — gpt-image-2 for everything; whole outfits; the picks
+
+Code-drawn art was tried (an art demo and a cleanup of the base) and rejected: *"they look terrible"*. Then,
+verbatim:
+
+> *"we will use gpt-image-2 for everything, just full outfits I guess as yours are really bad, so we were partway
+> done with the outfits and we had planned regenerating all the world and item actual sprites with gpt-image-2 as
+> it was a different pipeline and we did not use pixelsnap correctly like our new pipeline. anyways so that needs to
+> be done at some point (the only thing done correctly are the outfits). It should be in the plans and backlog"*
+
+> *"we were generating three different variants for each outfit, I would decide, then we created all the animation
+> frames - you see in fireant there is a 'CHOSEN' png but you dont see it some of the others as we didn't do them all
+> we just did one batch. we need to finish this but you need to figure and understand the entire procedure rather
+> than just assuming/guessing and rushing. as it is most outfits and other things will be made after signing off on
+> the GDD but you should know that (and with test batches so we can ensure you are doing it right)"*
+
+> *"anything with CHOSEN has been picked, the others we still need to work through together, yes you can do a batch
+> now"*
+
+### What that settles
+- **One pipeline for all art:** gpt-image-2 + pixelsnap, as the outfits are made. The 2026-08-15 note *"all sprites
+  will use the same pipelines"* now covers world, item, bug, tile and UI art too.
+- **Whole outfits** (with his "I guess" — the reason given was that the drawn-in-code pieces were bad).
+- **The picks** — every design with a `CHOSEN_*.png` is picked:
+
+| set | the pick |
+|---|---|
+| copper | `explore/copper-r3/CHOSEN_copper.png` |
+| iron | `explore/iron-r2/CHOSEN_iron.png` |
+| platinum | `explore/platinum-r5/CHOSEN_platinum.png` (the 2026-08-14 table below says r4 — it is r5) |
+| steel | `explore/steel-r5/CHOSEN_steel.png` |
+| leather | `explore/leather-r2/CHOSEN_leather.png` |
+| beetle-shell | `explore/beetle-shell-r3/CHOSEN_beetle-shell.png` |
+| gilded-steel | `explore/gilded-steel/CHOSEN_gilded-steel.png` |
+| fancy | `explore/fancy-r2/CHOSEN_fancy.png` (the 2026-08-14 table below says "not picked" — the second roll was picked) |
+
+  Already built from their picks: bronze (`bronze-r3`), fire-ant (`fireant-pair2`), black-ant (`ant-carapace-black4`).
+- **The rest are worked through with him**: the explored-but-unpicked sets (wood, ranger, scorpion, the wasp /
+  hornet / killer-bee thorn and stinger sets, glowworm, fisherman, swamp-gear) and everything never explored on this
+  procedure.
+- **Timing:** most outfits and other art are made after the GDD is signed off, with test batches first. One test
+  batch approved now (copper).
