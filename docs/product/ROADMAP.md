@@ -23,7 +23,7 @@ ecology stations) let you read and steer the ecosystem.
 ## Owner decisions (2026-09-26, verbatim)
 | topic | decision |
 |---|---|
-| Art | Claude draws the pixel art **in code** — *"YOU (OPUS 5.5) ARE GENERATING PIXEL ART FOR OTHER PEOPLE USING THINGS LIKE JS. WHY ARE YOU NOT ABLE TO DO THAT FOR ME?"* No paid image tools. 32 px per grid cell. |
+| Art | **gpt-image-2 for everything, pixel-snapped** — *"we will use gpt-image-2 for everything, just full outfits I guess as yours are really bad … we had planned regenerating all the world and item actual sprites with gpt-image-2 … (the only thing done correctly are the outfits)"*. Art drawn by Claude in code was tried the same day and rejected (on the player-base cleanup: *"they look terrible"*). Outfits and other art come after the GDD sign-off, in test batches: *"most outfits and other things will be made after signing off on the GDD … (and with test batches so we can ensure you are doing it right)"*. The look stays — *"same style as currently"* — which is 32 art pixels per grid square. Every paid image call is asked first. |
 | Hosting | *"it should be like terraria"* — Host & Play + join + a dedicated server program; *"our own server will not be part of the game itself … We would cap based on what is a feasible cap like the minecraft servers do."* |
 | Characters | *"Necesse's is fine"* — per-server characters + a per-world host switch "allow characters from other worlds". |
 | Empty zones | *"as already designed frozen with aggregation upon first access with random border crossing events"* |
@@ -38,7 +38,8 @@ ecology stations) let you read and steer the ecosystem.
 ## Phases
 ### Phase 0 — safety + baseline (2026-09-26)
 - [x] Everything pushed; `main` = all work (90216c0). New work on `feature/finish-the-game`.
-- [x] Art demo drawn in code: `tools/_generated/player/reviews/2026-09-26-art-demo/` (awaiting owner verdict).
+- [x] Art demo drawn in code: `tools/_generated/player/reviews/2026-09-26-art-demo/` — not adopted: after a
+  second code-drawn pass on the player base (*"they look terrible"*) all art moved to gpt-image-2 (decision above).
 - [x] Safety fix: unknown zones refused (no silent `village_21` save-borrowing); dangling `ant_colony_40` link removed.
 - [x] Backup of `tools/_generated/raw` (1.1 GB) → `C:\Users\emily\BugFarmer_backups\generated_raw_2026-09-26\`.
 - [x] Baseline gates: Go tests (all packages), sim-determinism (7 modes), sync-harness cross-zone + observe.
@@ -49,7 +50,12 @@ ecology stations) let you read and steer the ecosystem.
   (https://claude.ai/artifact/CRtGxrNmWdXPVAVyNnwWW1): §00 Premise and §19 Multiplayer ready for the owner.
 
 ### Phase 1 — prove the art, set the rules, design the spine, lay foundations
-- **Art:** owner verdict on the demo → art bible (palette, sizes, outline, light) → the redo, category by category.
+- **Art (details: the top item of `BACKLOG.md`):** ~~import-scale fix~~ (done 2026-09-26: 89 sprites were drawing at
+  the wrong size and 80 blurry) · the outfit procedure written into the `player-sprites` skill, with commands that
+  reproduce the approved runs · **copper as the approved test batch** (5 image calls) · the other seven picked
+  outfits, batch by batch, each asked for · GDD §08 (outfit decisions) and §21 (art direction). After the GDD
+  sign-off: the remaining outfits, the 11 NPCs, then the world + item regeneration (a sizing rule first, then test
+  batches per category, then zone by zone — only content the GDD keeps).
 - **GDD, one section at a time:** premise & pillars (+ audit of mammal-derived content) · multiplayer & hosting ·
   world & zones · progression · bestiary · ecology + Ecology tab · bug farming & catching · farming · combat ·
   gear · tools & weapons · crafting · food & potions · electricity · fishing · mining · building & private plots ·
@@ -70,8 +76,9 @@ ecology stations) let you read and steer the ecosystem.
 ### Phase 2 — the existing world to FINAL quality (the calibration slice)
 Village, Bee Meadow, Mining Camp, Ant Tunnels, Ant Colony (4,0) + Queen — each from its finalized zone bible —
 plus the systems that land with them (progression backbone, armour + stats, catching gear + bug storage,
-cooking + potions basics, ecology stations + tab, tutorials, private plots + City Hall, player art in-game,
-cross-zone migration). Timed → the real estimate for Phase 3.
+cooking + potions basics, ecology stations + tab, tutorials, private plots + City Hall, the whole-outfit player art
+in the game (its own plan: published size, equip model, starter outfit, tool motions — owner decisions in GDD §08),
+the regenerated world art for these zones, cross-zone migration). Timed → the real estimate for Phase 3.
 
 ### Phase 3 — new zones in rings, each a complete package
 Ring B: Wasp Thicket, Butterfly Fields, Hilltop Meadow, Centipede Cavern, Underground River + fishing ·
@@ -108,3 +115,12 @@ populations); cross-platform determinism; save migration; audio/music; legal (au
 4. Swarm merge ignores nests → a nest's patrol can be absorbed; the nest then regrows one (population inflation).
 5. ~~A save-version bump discards every existing save~~ — **fixed** (save formats upgrade step by step; newer or
    unreadable saves are refused, never overwritten).
+
+## Open plans not yet scheduled above
+- **Grass overhaul** — phase 1 shipped 2026-07-26 (`grass_01` + variants + tufts in every zone); phases 2–5
+  (motion, dense detail layer, …) not started: `docs/plans/grass-overhaul.md`. The shipped grass is 16 px per square,
+  so it is also part of the art regeneration.
+- **Swing design, phase 6** (up to 5 more outfits from the catalog) — not started; the spring swing itself is
+  designed but not in the game: `docs/plans/swing-design-and-outfits.md`.
+- **Repo-health enforcement, P7** (visual checks, loop engineering, skill evals) — the last phase, not started:
+  `docs/plans/repo-health-enforcement.md`.

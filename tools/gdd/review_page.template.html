@@ -522,6 +522,7 @@ textarea:focus, input[type="text"]:focus { outline: 2px solid var(--focus); outl
 
     if (s.status === "draft") {
       h += `<p class="draftnote">This section isn’t written yet. It comes after the sections marked ready; each one is gathered from the documents below and checked before it reaches you.</p>`;
+      if (s.decided) h += `<section class="part"><h2>Already decided <span class="aside">your words — not asked again</span></h2><div class="prose decided">${s.decided}</div></section>`;
       if (s.settle) h += `<section class="part"><h2>To settle <span class="aside">my raw list — not yet checked</span></h2><div class="prose">${s.settle}</div></section>`;
       if (s.gather) h += `<section class="part"><h2>Documents it will gather</h2><div class="prose">${s.gather}</div></section>`;
       main.innerHTML = h;

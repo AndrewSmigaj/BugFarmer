@@ -9,6 +9,87 @@ working; this file is what survives between sessions.
 > **2026-09-26:** finished sections moved to [`CHANGELOG.md`](CHANGELOG.md); the ordered plan is
 > [`ROADMAP.md`](ROADMAP.md). This file is the capture queue for open items.
 
+## Now — ALL ART ON gpt-image-2 + pixelsnap (owner decisions 2026-09-26)
+
+Owner, verbatim:
+> *"we will use gpt-image-2 for everything, just full outfits I guess as yours are really bad, so we were partway
+> done with the outfits and we had planned regenerating all the world and item actual sprites with gpt-image-2 as
+> it was a different pipeline and we did not use pixelsnap correctly like our new pipeline. anyways so that needs
+> to be done at some point (the only thing done correctly are the outfits). It should be in the plans and
+> backlog"*
+>
+> *"we were generating three different variants for each outfit, I would decide, then we created all the animation
+> frames … as it is most outfits and other things will be made after signing off on the GDD but you should know
+> that (and with test batches so we can ensure you are doing it right)"*
+>
+> *"anything with CHOSEN has been picked, the others we still need to work through together, yes you can do a
+> batch now"*
+
+Art drawn by Claude in code was tried the same day and rejected (*"they look terrible"*) — kept only as a record:
+`tools/sprites/drawn/`, `tools/_generated/player/reviews/2026-09-26-art-demo/` and `…/2026-09-26-base-pass/`.
+The decision log with every pick is `tools/_generated/player/APPROVED/DECISIONS.md`.
+
+**The procedure** (proven on fire-ant, black-ant and bronze, approved 2026-08-15: *"those are fine, so this
+approach works"*): three designs in one image → the owner picks one (`explore/<run>/CHOSEN_<name>.png`) → the pick
+turned into a real-pixel reference at the base's size → a front/side/back turnaround (1 image) → one walk per
+direction (3 images) → the five hands (1 image) → a review sheet → only on his yes: `outfits/<name>/`,
+`official.py`, `build.py`, `gallery.py`, `DECISIONS.md`. The step-by-step how-to is the `player-sprites` skill.
+Every paid image call is asked for first.
+
+**Outfits:**
+- **Done on the procedure** (in `official.py`, approved 2026-08-18): bronze, fire-ant, black-ant.
+- **Picked, still to build** (turnaround → walks → hands → review): copper (`explore/copper-r3`), iron (`iron-r2`),
+  platinum (`platinum-r5`), steel (`steel-r5`), leather (`leather-r2`), beetle-shell (`beetle-shell-r3`),
+  gilded-steel, fancy (`fancy-r2`). **Copper is the approved test batch** (5 image calls), run once the procedure's
+  missing commands exist and are checked against the approved runs with no calls.
+- **To work through with the owner, from the three-designs step:** explored but not picked (wood, ranger,
+  scorpion, the wasp/hornet/killer-bee sets, glowworm, fisherman, swamp-gear) and never explored on this procedure
+  (silver, gold, padded, beekeeper, farmer, entomologist, moth-wool, wizard-robe, …; their folders hold July art —
+  full-size renders, never snapped). Two catalog concepts have no art at all: Miner / Spelunker, Diver / Waders.
+- **After the GDD sign-off:** the remaining outfits, then the 11 NPCs (merchant, bug dealer, blacksmith,
+  carpenter, weaver, stonemason, modern wares, fisherman, ecologist, mayor, beekeeper — all still the old 16×32
+  size) on the same procedure.
+
+**World + item art — regenerate everything, after the GDD sign-off, test batches first.** 775 images (Objects 431,
+Items 185, Bugs 106, Tiles 29, UI 20, Effects 4) were made on the old route (a gpt render shrunk by
+`pixelclean.py`, which averages pixels instead of recovering them). Only content the GDD keeps gets redone.
+- **Density: 32 art pixels per grid square**, reached by snapping and padding, never by resizing. For a placed
+  object that means an image exactly 2 × (`sprite_w`, `sprite_h`) — the game scales objects to their data size
+  (`TilemapManager.cs:65, 1101-1103`).
+- **The July grass is 16 pixels per square** (the 5 grass tiles are 16×16; the other 24 tiles are 32×32) — redo
+  at 32.
+- **Write one sizing rule first.** Items have no size in the data (0 of 209), and held tools, ground drops, strike
+  effects, grass tufts and bugs size themselves from the image's pixel count or a code constant
+  (`PlayerToolAnimator.cs:245-247`, `GroundItemVisual.cs:97-98`, `StrikeVfx.cs:110-111`, `GrassTuftRenderer.cs:31`,
+  `SwarmVisual.cs:343-344`), so a sharper image would change their size on screen unless those change with it.
+- **The route:** the outfit procedure pointed at world art — `gen.py` needs a `--root` option (it writes into the
+  player folder today); magenta background (gpt-image-2 refuses the transparent one `gen_sprites.py` asks for);
+  the per-family prompts reused unchanged, with the needed changes (magenta, the density line) shown to the owner
+  as one diff; ~157 things with no written brief get one, shown before any call; keying checked for leftover
+  magenta (fence holes, pink subjects); the 8 pre-made diagonal path tiles included. Overwrite each PNG in place
+  so its `.meta` survives.
+- `docs/product/art_needed.md` (the old missing-sprite queue) is superseded by this item.
+
+**Built outfits into the game — its own plan, with the owner's decisions in it** (GDD §08). None of the new art is
+in the game: the client still draws the old 16×32 farmer from layers (`CharacterComposer.cs`, `RemoteEntity.cs`),
+and `PlayerToolAnimator.cs` still runs the old swing curves.
+- Owner decisions needed: the **published size** — *"art is 36×71, the game's paperdoll is 16×32 at 16 PPU. Decide
+  against a rendered scene, not in the abstract"*; the **equip model** (the server checks 8 armour slots piece by
+  piece, `handlers_world.go:812,867`; no item exists for bronze/fire-ant/black-ant — see *Armour economy overhaul*
+  below); a **starter outfit**; what becomes of **class, hair and skin** choices (`CharacterSelectPanel.cs:28-30`);
+  **tool motions** — 9 tools animate in the game, only the sword is approved in all three facings (axe, net, hoe
+  and shovel side-only; pickaxe, scythe, spear and watering can none — `official.py` `NOT_AGREED`).
+- Engineering: hands and tools drawn at their own pixel size (no runtime rescaling); the spring swing
+  (designed, `docs/product/investigations/swing-design/`, `tools/player_sprites/swing_lab.py` approach 6) plus the 3
+  defects it found (no exit blend, the tool draws through the body, the hand vanishes against its own armour);
+  the nameplate assumes a 2-unit-tall player (`RemoteEntity.cs:212`). First piece (no decision needed): draw a
+  whole-outfit frame behind a debug outfit id, to make the rendered scene the size decision asks for.
+
+**Polish later** — *"we have several outfits that are almost done (we need to polish but we can do that later)"*
+(2026-09-26). Known: the camera-facing walks lift the knees too high — *"its lifting the knees really high which
+is ok for running but not walking"* (2026-08-18; `check_lift` flags 5 of the 6 built front/back walks). Also
+*Running improvements* and *Sprite pipeline cleanup* below.
+
 ## Next — RUNNING IMPROVEMENTS (owner 2026-08-14: "backlog 'running improvements' just dont want to do it now")
 
 Two motions are **picked but not built**. Both are lab renders only; nothing in the game or in `build.py`
@@ -125,22 +206,8 @@ mechanical one.
 **Not started.** Raised while building the fire-ant and black-ant outfits, which are the first two
 material-sourced sets to go through the new whole-outfit flow.
 
-## Player sprite + wearable creation system (art DONE, publishing NOT STARTED — record 2026-07-29)
-The character is **armless with separate floating fists**, and outfits are **whole 12-frame sheets**, not
-modular paperdoll pieces (owner decision 2026-07-28). One animator moves the hands, so a new weapon costs no
-animation work. Pipeline + workspace (`tools/_generated/player/`) + the read-gate are built.
-
-**Built (art only, on disk, nothing in the game):** **22 outfits**, each with a walk sheet, cut frames, a
-matching gauntlet and a swing `DEMO.gif`. The **base metal ladder is complete** (all 9 rungs). Full list and
-what remains: `docs/product/economy/catalogs/armor.md`.
-
-**The swing motion is designed and NOT implemented.** 10 researched sources, 5 rendered iterations, and a
-written result: a damped spring won, with weight expressed as a further strike target (Cooper) and a hold on
-the contact pose (fighting games). It lives in `tools/player_sprites/swing_lab.py` approach 6 and drives every
-demo gif. `PlayerToolAnimator.cs` still runs the old hand-authored curves.
-Design + evidence: `docs/product/investigations/swing-design/`. Plan: `docs/plans/swing-design-and-outfits.md`.
-
-**Stealth / reduced aggro (owner 2026-07-29, not built).** The spidersilk set's signature bonus:
+## Stealth / reduced aggro — the spidersilk bonus (owner 2026-07-29, not built)
+The spidersilk set's signature bonus:
 *"makes you stealthier (backlog stealth bonuses, basically reduces aggro I guess)"*. Nothing in the sim reads
 a stealth stat today, so this is a real mechanic to design — bug aggro is CLIENT-authority per
 `architecture_swarm_sync.md`, so anything that changes which bugs notice the player is a determinism-touching
@@ -153,21 +220,12 @@ change and goes through the `frontier-sync` recipe, not a cosmetic tweak.
 > no recipe and no bug that drops it. Spiders are the source. See *Later — creatures: ants & spiders*.
 > Sequence: cave spider + webs → silk drops → the silk/`shadowsilk` set → the stealth stat.
 
-Remaining, in the order it blocks things:
-- **Owner call** — which of the 8 non-catalog sets (`farmer` `wood` `swamp-gear` `fisherman` `wizard-robe`
-  `hornet-stinger` `moth-wool` `glowworm`) become real sets, cosmetics, or get dropped.
-- **The published size** — art is 36×71, the game's paperdoll is 16×32 at 16 PPU. Decide against a rendered
-  scene, not in the abstract; blocks publishing, not the art.
-- Implement the spring swing in `PlayerToolAnimator.cs` + the 3 defects the design found (no exit blend, the
-  tool draws through the body, the hand vanishes against its own armour).
-- Publish the sprites; `items.json` ids, stats and recipes for whichever sets survive the owner call.
-- Two concepts still unbuilt: `Miner / Spelunker`, `Diver / Waders` (+ `Silk`, pending late zones).
-- The deferred `_generated/` root tidy (`scratch/` · `variants/` · category previews).
-
-Key docs: `.claude/skills/player-sprites/SKILL.md`, `docs/guides/art/CHARACTER_DESIGN_GUIDE.md`,
-`tools/_generated/player/README.md`.
-**Superseded:** `docs/plans/player-arm-and-wearables.md` describes the abandoned split-arm approach —
-kept for its findings, but it is NOT the current design.
+> The rest of this item — the July "Player sprite + wearable creation system" record (22 outfits "built",
+> a publishing to-do) — was folded into *Now — all art on gpt-image-2 + pixelsnap* at the top on 2026-09-26:
+> those 22 were July renders, never pixel-snapped; three outfits are done on the approved procedure. Still
+> open from it: the deferred `_generated/` root tidy (`scratch/` · `variants/` · category previews).
+> `docs/plans/player-arm-and-wearables.md` (split arms) and `docs/plans/player-sprite-and-wearable-creation.md`
+> are both superseded — kept for their findings.
 
 ## CLAUDE.md & scaffolding improvements (owner wants a pass here; captured 2026-07-09)
 Umbrella for tightening how the assistant is steered. Add items here as they come up.
@@ -965,6 +1023,9 @@ Tidy what's clearly safe; leave anything risky alone.
   them (there are currently no automated tests).
 
 ## Player art model — BALD BASE + hair-as-a-layer (owner decision 2026-07-20, REVERSED the earlier "baked-in")
+> **Superseded (noted 2026-09-26):** this was the layered paper-doll model. Outfits became whole images on
+> 2026-07-28, each drawn with its own hair, and today's base (`tools/_generated/player/bases/armless_front.png`)
+> has hair. Whether players choose hair or skin under whole outfits is an open question in GDD §08.
 The player BASE is now **BALD**; hair is a generated+masked **layer** like armor (owner: "lets go without hair
 and do the hair just like the other parts"). Locked bald front = `refart_spike/bald/base_down_bald_FINAL.png`
 (`_REVIEW/LOCKED_bald_front.png`). `CharacterComposer` already draws `hair` as its own layer under `helmet`, so
