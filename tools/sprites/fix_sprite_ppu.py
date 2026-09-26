@@ -7,9 +7,14 @@ renders them at 16% size ("micro" sprites). Everything placed in early zones was
 the long tail of generated-but-not-yet-placed art (225 of 315 Objects at the time of this
 fix) was still at 100 — a latent bug that fires the first time each one is placed.
 
-Run after adding any new sprite under Resources/Objects (or Items):
-  python3 tools/sprites/fix_sprite_ppu.py            # fix Objects/ + Items/
+Run after adding any new sprite under Resources/ (Unity must have imported it once, so its .meta exists):
+  python3 tools/sprites/fix_sprite_ppu.py            # fix every folder below
   python3 tools/sprites/fix_sprite_ppu.py --dry-run  # report only
+
+Covers Objects/, Items/, Bugs/, Effects/ (PPU 16 + point filtering), Player/ (the same, plus readable layers),
+UI/ and Tiles/ (point filtering only — their scale is set in code: UI by RectTransform, tiles by
+TileDatabase's Sprite.Create with PPU = texture width). Tiles and Effects were added 2026-09-26: 13 tiles and
+the 4 break-stage cracks were importing bilinear, i.e. blurry.
 """
 import os
 import re
@@ -17,7 +22,7 @@ import sys
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..",
                     "BugFarmerClient", "Assets", "Resources")
-FOLDERS = ["Objects", "Items", "Bugs"]
+FOLDERS = ["Objects", "Items", "Bugs", "Effects"]
 PPU = "16"
 
 dry = "--dry-run" in sys.argv
@@ -101,23 +106,25 @@ for dirpath, _dirs, names in os.walk(player_base):
                     text = read_pat.sub(r"\g<1>1", text, count=1)
                 open(path, "w").write(text)
 
-# ---- UI/ (point filter only — Unity's bilinear default blurs pixel-art UI;
-# PPU is irrelevant: UI Images scale by RectTransform, and 9-slice borders are
-# passed in code via Sprite.Create, never stored in metas)
-ui_base = os.path.join(ROOT, "UI")
-if os.path.isdir(ui_base):
-    for name in sorted(os.listdir(ui_base)):
+# ---- UI/ and Tiles/ (point filter only — Unity's bilinear default blurs pixel art; PPU is irrelevant here:
+# UI Images scale by RectTransform, 9-slice borders are passed in code via Sprite.Create, and TileDatabase builds
+# each tile sprite with PPU = texture width, so a tile fills one cell whatever its import PPU says)
+for folder in ("UI", "Tiles"):
+    point_base = os.path.join(ROOT, folder)
+    if not os.path.isdir(point_base):
+        continue
+    for name in sorted(os.listdir(point_base)):
         if not name.endswith(".png.meta"):
             continue
-        path = os.path.join(ui_base, name)
+        path = os.path.join(point_base, name)
         text = open(path).read()
         f = filt_pat.search(text)
         total += 1
         if f is not None and f.group(2) != "0":
             fixed += 1
             if dry:
-                print(f"  would fix UI/{name}: filterMode {f.group(2)}->0")
+                print(f"  would fix {folder}/{name}: filterMode {f.group(2)}->0")
             else:
                 open(path, "w").write(filt_pat.sub(r"\g<1>0", text, count=1))
 
-print(f"{'would fix' if dry else 'fixed'} {fixed}/{total} sprite metas -> PPU {PPU}, filterMode 0 (+isReadable on Player/layers, point on UI)")
+print(f"{'would fix' if dry else 'fixed'} {fixed}/{total} sprite metas -> PPU {PPU}, filterMode 0 (+isReadable on Player/layers, point-only on UI + Tiles)")
