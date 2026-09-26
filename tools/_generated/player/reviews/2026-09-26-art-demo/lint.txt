@@ -1,0 +1,9 @@
+chest             64x44  colours  15  off-palette 0
+tree              64x96  colours  15  off-palette 0
+beetle            32x32  colours  11  off-palette 0
+axe               32x32  colours  12  off-palette 0
+honey jar         32x32  colours  16  off-palette 0
+grass             32x32  colours   4  off-palette 0
+dirt              32x32  colours   7  off-palette 0
+player+bronze     32x72  colours  15  off-palette 0
+panel            112x72  colours  13  off-palette 0
