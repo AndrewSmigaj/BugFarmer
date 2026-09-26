@@ -13,8 +13,7 @@
   "seed": 0,
   "neighbors": {
     "north": "bee_meadow_20",
-    "east": "underground_passages_31",
-    "south": "ant_colony_40"
+    "east": "underground_passages_31"
   },
   "bug_spawning": {
     "species_caps": {

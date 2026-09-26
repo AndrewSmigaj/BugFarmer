@@ -4,6 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"os"
+	"path/filepath"
+	"regexp"
 	"time"
 
 	"bugfarmer/world"
@@ -16,6 +19,24 @@ import (
 const (
 	CollectionWorlds = "worlds"
 )
+
+// zonesRoot is where the authored zone folders live — the same root world.LoadZoneConfig reads
+// ("data/zones/<id>/zone.json", relative to the server's working directory). A var so tests can
+// point it at a temp dir.
+var zonesRoot = "data/zones"
+
+var zoneIDPattern = regexp.MustCompile(`^[A-Za-z0-9_]{1,64}$`) // e.g. village_21_B
+
+// zoneExists reports whether zoneID names a real, authored zone. Unknown ids MUST be refused: the
+// match used to fall back to "village_21" for an unknown zone and then load and WRITE village_21's
+// save from a second match (e.g. walking into the not-yet-built ant_colony_40).
+func zoneExists(zoneID string) bool {
+	if !zoneIDPattern.MatchString(zoneID) {
+		return false
+	}
+	info, err := os.Stat(filepath.Join(zonesRoot, zoneID, "zone.json"))
+	return err == nil && !info.IsDir()
+}
 
 // WorldMetadata is stored in Nakama storage
 type WorldMetadata struct {
@@ -117,6 +138,10 @@ func WorldCreate(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runt
 	}
 	if req.AccessPolicy != "public" && req.AccessPolicy != "private" {
 		req.AccessPolicy = "public"
+	}
+	if req.ZoneID != "" && !zoneExists(req.ZoneID) {
+		logger.Warn("WorldCreate: refusing unknown zone %q", req.ZoneID)
+		return errorResponse("unknown zone", "UNKNOWN_ZONE")
 	}
 
 	// Generate world ID
@@ -323,6 +348,10 @@ func WorldEnter(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 	}
 	if req.ZoneID == "" {
 		req.ZoneID = "village_21"
+	}
+	if !zoneExists(req.ZoneID) {
+		logger.Warn("WorldEnter: refusing unknown zone %q", req.ZoneID)
+		return errorResponse("unknown zone", "UNKNOWN_ZONE")
 	}
 
 	// Deterministic per-zone identity so there is exactly one canonical world per zone.

@@ -708,6 +708,9 @@ headless `tools/sync-harness` (real Nakama .NET client, no Unity) reproduces/ver
 - **Entry is via `world_enter(zone_id)`** (RPC): find-or-create the canonical *singleton* world per
   zone (deterministic key `default_<zone>`), reuse its live match or recreate on demand, return the
   match id. The frontend never creates worlds; Normal=`village_21`, Test=`sim_test`.
+- **Unknown zones are refused (2026-09-26):** `world_enter`/`world_create` return `UNKNOWN_ZONE` for an id
+  with no authored `data/zones/<id>/zone.json`, and `MatchInit`'s config-load fallback keeps the requested id
+  instead of becoming `village_21` (which used to load and write village_21's save from a second match).
 - **Pause when empty:** `MatchLoop` early-returns when no players/presences are connected — no tick
   advance, no swarm sim/merge/split, no broadcasts. A world only "runs" while someone is in it; a
   joining player resumes from the frozen `TickCount`. (Replaces the old never-terminating match that

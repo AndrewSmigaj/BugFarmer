@@ -180,8 +180,11 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 	zonePath := fmt.Sprintf("data/zones/%s", zoneID)
 	zoneConfig, err := LoadZoneConfig(zonePath)
 	if err != nil {
-		logger.Warn("Failed to load zone config: %v - using default", err)
-		zoneConfig = &ZoneConfig{ZoneID: "village_21", BiomeType: "village"}
+		// Never adopt ANOTHER zone's identity here. This used to become "village_21", and the match then
+		// loaded and wrote village_21's WorldSave from a second match. world_enter/world_create now refuse
+		// unknown zones up front; this is the belt-and-braces path, keyed to the requested id's own save.
+		logger.Error("Failed to load zone config for %q: %v - running an empty placeholder zone", zoneID, err)
+		zoneConfig = &ZoneConfig{ZoneID: zoneID, BiomeType: "village"}
 	}
 	state.CurrentZone = zoneConfig
 

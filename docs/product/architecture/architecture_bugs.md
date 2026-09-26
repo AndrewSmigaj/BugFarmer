@@ -342,6 +342,12 @@ func (m *Match) initSpecies(state *WorldState) error {
 }
 ```
 
+**Zone data at `MatchInit` (2026-09-26):** the match loads `data/zones/<zone_id>/zone.json`. `world_enter` /
+`world_create` refuse a zone id with no authored `zone.json` (`rpc/world.go` `zoneExists`, tested in
+`world_zone_test.go`). If a config still fails to load, the match runs an empty placeholder keyed to the
+**requested** id — it no longer falls back to `village_21`, which made a second match load and write
+`village_21`'s save.
+
 ---
 
 ## Data Structures
