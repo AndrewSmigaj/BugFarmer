@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using BugFarmer.Networking;
@@ -27,7 +30,7 @@ namespace BugFarmer.Testing
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Boot()
         {
-            if (!HasFlag("-synctest")) return;
+            if (!HasFlag("-synctest") && !HasFlag("-ecology")) return;
             var go = new GameObject("/[HeadlessSyncTest]");
             UnityEngine.Object.DontDestroyOnLoad(go);
             go.AddComponent<HeadlessSyncTestRunner>();
@@ -103,7 +106,24 @@ namespace BugFarmer.Testing
                     Quit(4);
                     return;
                 }
-                Log($"world seed ready ({WorldSeedProvider.Instance.WorldSeed}); recording…");
+                bool ecology = HeadlessSyncTest.HasFlag("-ecology");
+                Log($"world seed ready ({WorldSeedProvider.Instance.WorldSeed}); {(ecology ? "sampling population" : "recording")}…");
+
+                // ECOLOGY MODE: just live in the zone (authority → predation runs) while the SERVER logs ECOSTATS;
+                // sample the client's ground-truth population and write fly_counts.csv. No hash trace (that's the
+                // sync-test job) — keeps the run light.
+                if (ecology)
+                {
+                    await RunEcologySampling(duration);
+                    return;
+                }
+
+                // DRIFT-NET SELF-TEST (`-desyncafter N`): deliberately perturb one bug N recorded ticks in, so
+                // THIS client diverges — the zone drift round + authority tie-referee must then DETECT it and
+                // RESYNC us (watch the server log for "tie broken by AUTHORITY"). Inert without the flag.
+                int desyncAfter = 0;
+                int.TryParse(HeadlessSyncTest.GetArg("-desyncafter", "0"), out desyncAfter);
+                int recordedTicks = 0; bool chaosInjected = false;
 
                 // Record per-tick state hashes exactly like DebugOverlay F1 (SetTraceCallback -> TickTraceBuffer).
                 var buffer = new TickTraceBuffer();
@@ -111,6 +131,13 @@ namespace BugFarmer.Testing
                 SwarmManager.Instance.SetTraceCallback((tick, hash, bugs, players) =>
                 {
                     if (bugs != null && bugs.Count > maxBugs) maxBugs = bugs.Count;
+                    recordedTicks++;
+                    if (desyncAfter > 0 && !chaosInjected && recordedTicks >= desyncAfter)
+                    {
+                        chaosInjected = true;
+                        Log($"CHAOS: injecting 1-bug perturbation at tick {tick} (drift-net self-test)");
+                        SwarmManager.Instance.DebugPerturbOneBug();
+                    }
                     // DIAGNOSTIC: also capture per-swarm leg+center each tick (leg/center divergence pin).
                     var legs = SwarmManager.Instance.CollectSwarmLegTraces();
                     buffer.RecordTick(tick, hash, bugs, players, legs);
@@ -134,6 +161,53 @@ namespace BugFarmer.Testing
                 Log("EXCEPTION: " + e);
                 Quit(3);
             }
+        }
+
+        /// <summary>ECOLOGY MODE: live in the zone as authority (predation runs) while the SERVER logs ECOSTATS,
+        /// and sample the client's GROUND-TRUTH per-species counts ~once per game-second (speed-independent) into
+        /// fly_counts.csv — the same format the .NET harness produced, now more accurate (real swarm counts, not a
+        /// ledger reconstruction). Written to persistentDataPath so run_config reads it from PDATA. No hash trace.</summary>
+        private async Task RunEcologySampling(int durationSeconds)
+        {
+            var samples = new List<(long tick, Dictionary<string, int> bySpecies)>();
+            var speciesSeen = new SortedSet<string>(StringComparer.Ordinal);
+            long lastSampledTick = long.MinValue;
+            int maxTotal = 0;
+
+            float t0 = Time.realtimeSinceStartup;
+            while (Time.realtimeSinceStartup - t0 < durationSeconds)
+            {
+                await Task.Delay(100);
+                long tick = SwarmManager.Instance.SimulationTick;
+                if (tick - lastSampledTick < 10) continue; // ~1 sample / game-second (SimRate=10 ticks/sim-sec)
+                lastSampledTick = tick;
+                var counts = SwarmManager.Instance.BugCountBySpecies();
+                foreach (var k in counts.Keys) speciesSeen.Add(k);
+                int total = SwarmManager.Instance.TotalBugCount;
+                if (total > maxTotal) maxTotal = total;
+                samples.Add((tick, counts));
+            }
+
+            var cols = new List<string>(speciesSeen);
+            var sb = new StringBuilder("tick,").Append(string.Join(",", cols)).Append(",total_bugs\n");
+            foreach (var (tick, bySpecies) in samples)
+            {
+                sb.Append(tick);
+                int total = 0;
+                foreach (var c in cols) { int v = bySpecies.TryGetValue(c, out var vv) ? vv : 0; total += v; sb.Append(',').Append(v); }
+                sb.Append(',').Append(total).Append('\n');
+            }
+            string path = Path.Combine(Application.persistentDataPath, "fly_counts.csv");
+            File.WriteAllText(path, sb.ToString());
+            Log($"ECOLOGY: {samples.Count} population samples, {cols.Count} species, max total {maxTotal} -> {path}");
+
+            if (maxTotal == 0)
+            {
+                Log("WARNING: sampled 0 bugs the whole window — client saw no swarms; treating run as INVALID.");
+                Quit(5);
+                return;
+            }
+            Quit(0);
         }
 
         private static void Log(string m)

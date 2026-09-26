@@ -62,6 +62,10 @@ def place_ecologist(b, ox, oy, fenced=False):
                        style="modest" if fenced else "unfenced", seed=4)
 
 
+PREVIEW = "zones/village_21_B/scenes"
+SCALE = 5
+
+
 def build():
     b = ZoneBuilder("scene_ecologist", BW + 8, BH + 14, base_tile="grass", name="Ecologist's house")
     place_ecologist(b, 4, 8)
@@ -70,9 +74,7 @@ def build():
 
 
 if __name__ == "__main__":
+    from scene_preview import render
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "tests", "scene_ecologist.png"))
-    render_builder(b, out, scale=10)
-    print(dump(b, 3, 9, 20, 21))
-    print("LINT:", b.lint() or "0 defects", "| warnings:", len(b.warnings), "| missing_art:", b.missing_art())
-    print("rendered ->", out)
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

@@ -62,8 +62,23 @@ vpath(b, x, y0, y1, tile="stone_path")     # one column
 ## Design rules (avoid the stamped grid)
 - **Don't use dead-straight `hpath`/`vpath` for main roads** — a perfect cross reads as a tech demo.
   Use `path` with a little `wobble` and `taper_ends`.
+- **WAYPOINT any segment longer than ~40 cells** (cold-grade finding, 2026-07-06, bee_meadow —
+  the grader's words: "a ~145-cell dead-straight runway... a 90-cell perfectly vertical brown
+  stripe. That is literally a line drawn with a ruler"): `path()`'s goal-pull flattens wobble
+  over distance, so one long call ALWAYS irons out straight. Break the route into 25-40-cell
+  legs through offset waypoints (drift the intermediate points ±3-6 cells off the axis), keep
+  only the last few cells at a zone-edge CONTRACT row dead true, and finish with an edge-wear
+  pass (dirt treads bled one cell off the band at ~15%) so the edges aren't knife-cut. A road
+  that bends also fixes the Traveler lens for free: bends make sightlines, sightlines promise.
 - **Degrade outward:** stone (`stone_path`) in the core → `dirt` shoulders via `edge_tile` → let the
   ends taper and fade into trampled grass at the zone margins. (See the Village zone's road rules.)
+- **A road/lane must be GAPLESS end to end** (owner correction 2026-07-06: "the roads are
+  not connected... all your paths have huge gaps in them"): `path()` skips reserved cells
+  and cell-by-cell traces skip occupied ones — every skip is a HOLE in the walkway. After
+  laying all roads, WALK each route in data (flood along path/dirt ground from endpoint to
+  endpoint) and treat any break as a build failure: reroute around the blocker or clear it.
+  Taper only where a road genuinely dies into wilderness — never between two things it
+  claims to connect.
 - **Connect logically, not symmetrically:** route roads between the things that matter (gates, the
   square, the docks); let a spur end awkwardly at the orchard rather than mirroring everything.
 - **Lay roads before buildings** so building footprints reserve along the finished road, and after
@@ -76,7 +91,7 @@ ONCE after ALL roads (before buildings):
 - Every stair-step corner (a grass cell whose N/S + E/W neighbors are both road of one
   material) gets a **45° diagonal transition tile** (`stone_path_d_ne` …
   `dirt_path_d_sw` — composited from the two real tile PNGs by
-  `tools/make_diagonal_tiles.py`, so they match both materials by construction).
+  `tools/sprites/make_diagonal_tiles.py`, so they match both materials by construction).
 - It also HEALS POTHOLES: `edge_tile` fraying on a wobbling centerline leaves dirt
   specks that end up interior to the stone band — any dirt path cell with ≥3 stone
   road neighbors is repaved (the checkered-road lint's inverse).

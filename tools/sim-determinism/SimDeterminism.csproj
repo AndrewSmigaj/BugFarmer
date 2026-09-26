@@ -37,6 +37,7 @@
     <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/BrownianMovement.cs" Link="client/BrownianMovement.cs" />
     <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/GlidingMovement.cs" Link="client/GlidingMovement.cs" />
     <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/CrawlingMovement.cs" Link="client/CrawlingMovement.cs" />
+    <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/CentipedeMovement.cs" Link="client/CentipedeMovement.cs" />
     <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/DartingMovement.cs" Link="client/DartingMovement.cs" />
     <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/MovementFactory.cs" Link="client/MovementFactory.cs" />
     <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/BugAgent.cs" Link="client/BugAgent.cs" />

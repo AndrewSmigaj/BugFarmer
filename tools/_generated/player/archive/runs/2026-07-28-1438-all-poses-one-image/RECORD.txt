@@ -1,0 +1,13 @@
+when      : 2026-07-28 14:38:22
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+area/item : side_view/copper_armor
+title     : all-poses-one-image
+references (in the order sent):
+  1. tools/_generated/_player/bases/armless_front.png
+  2. tools/_generated/_player/bases/armless_side.png
+
+PROMPT:
+Draw the SAME character FIVE times in a row in one image, evenly spaced, all the same height, all standing on the same baseline. Left to right: (1) FRONT view standing still, (2) BACK view standing still seen from behind, (3) SIDE view facing right standing still, (4) SIDE view facing right mid-stride with the legs apart, one leg forward and one leg back, (5) SIDE view facing right with the legs close together as the back leg swings past. The first reference image is the character from the front, the second is the same character from the side. ALL FIVE wear the SAME full suit of copper plate armour in warm copper-brown with darker shadows and bright highlights: breastplate, rounded shoulder cap, waist and hip piece covering the crotch, thigh plates on both legs, and boots. No bare skin between the waist and the boots. ALL FIVE have NO ARMS. Keep the head, hair and face exactly as in the references, no helmet. The armour must be IDENTICAL on all five figures - same plates, same highlights, same shapes - only the legs differ between poses. Big simple armour shapes, not fine detail, this is a small pixel art sprite. Black background.

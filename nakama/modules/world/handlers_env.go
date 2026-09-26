@@ -92,6 +92,17 @@ func (s *WorldState) AdvanceDayIfNeeded() (int64, bool) {
 	return currentDay, false
 }
 
+// isNightForHunting reports whether the apparent time of day is "night" — the window a nocturnal
+// hunter is active. Tracks the CLIENT's visual night (DayNightController: day <0.42, dusk 0.42–0.58,
+// deep night 0.58–0.88, dawn 0.88–1.0): active from late dusk through dawn's start, so a night hunter
+// comes out as it gets dark and lies low once it's light. The debug "Night" button (t≈0.70) lands
+// squarely inside; "Evening"/"Noon"/"Morning" (0.50/0.25/0.0) are day. Purely a function of the tick +
+// the synced day offset, so it never perturbs the swarm sim.
+func isNightForHunting(state *WorldState) bool {
+	t := float64((state.TickCount+state.DayOffsetTicks)%DayLengthTicks) / float64(DayLengthTicks)
+	return t >= 0.55 && t < 0.90
+}
+
 // setTimeOfDay shifts DayOffsetTicks so the apparent position within the day becomes
 // targetTicks (0..DayLengthTicks-1). Mod-positive so the offset is always >= 0.
 func setTimeOfDay(state *WorldState, targetTicks int64) {
@@ -170,12 +181,29 @@ func (m *Match) debugGiveItem(
 			"straw_hat": 1, "leather_cap": 1, "apple": 20, // filtered-container (clothing/food) tests
 			"backpack": 1, // equip → +10 panel slots
 		}
+	} else if item == "crafting" {
+		// FULL crafting-test loadout: every input to exercise the whole chain end to end —
+		// mining refine (ore→crusher→sluice→smelter), bars→tools/weapons, gems→cutter, dead bugs→extractor.
+		give = map[string]int{"wood": 99, "coal": 99, "sand": 40, "fiber": 40,
+			"iron_ore": 30, "copper_ore": 30, "tin_ore": 30, "silver_ore": 30, "gold_ore": 30, "platinum_ore": 30,
+			"iron_bar": 20, "copper_bar": 20, "bronze_bar": 10, "steel_bar": 10, "silver_bar": 10, "gold_bar": 10, "platinum_bar": 10,
+			"diamond": 5, "quartz": 5, "ruby": 5, "sapphire": 5, "emerald": 5,
+			"dead_beetle": 8, "dead_centipede": 8, "dead_millipede": 8, "dead_wasp": 8, "dead_fly": 8, "dead_butterfly": 8,
+			"backpack": 1}
 	} else if item == "buglab" {
 		// Bug Lab loadout: 100 fruit to feed the pens + 10 of each catchable species to release.
 		give = map[string]int{"apple": 100}
 		for _, sp := range []string{"fly_common", "butterfly_meadow", "wasp_common", "centipede_garden"} {
 			player.AddBugs(sp, 10)
 		}
+	} else if item == "eco" {
+		// Ecology-watch kit: fruit + a watering can + spare compost bins, PLUS spawn a fruit tree and a
+		// compost bin flanking the player so a whole food web (fruit→rot→flies→predators) stands up in one click.
+		give = map[string]int{"apple": 30, "watering_can_basic": 1, "compost_bin": 2}
+		cs := state.Config.ChunkSize
+		gx, gy := int(player.WorldX(cs)), int(player.WorldY(cs))
+		m.debugSpawnOccupant(logger, dispatcher, state, "tree_apple", gx+2, gy)
+		m.debugSpawnOccupant(logger, dispatcher, state, "compost_bin", gx-2, gy)
 	} else {
 		give[item] = count
 	}
@@ -187,6 +215,43 @@ func (m *Match) debugGiveItem(
 		_ = m.sendInventorySync(logger, dispatcher, player, presence)
 	}
 	logger.Info("DEBUG WORLD: %s gave items %v", userID, give)
+}
+
+// debugSpawnOccupant (DEV TOOL) places an occupant at a grid cell + registers it (fruit tree so it bears
+// fruit / nest so it hosts a colony) + broadcasts to chunk subscribers — mirroring handlePlaceOccupant.
+// Used by the "eco" kit to stand up a food-web scene in one click. Skips if the chunk isn't loaded.
+func (m *Match) debugSpawnOccupant(logger runtime.Logger, dispatcher runtime.MatchDispatcher, state *WorldState, occupantID string, gx, gy int) {
+	def := state.Entities[occupantID]
+	if def == nil {
+		return
+	}
+	cx, cy, lx, ly := GlobalToChunk(gx, gy)
+	chunk := state.Chunks[ChunkKey(cx, cy)]
+	if chunk == nil {
+		return // the player's own chunk is loaded; skip silently if an offset lands off-chunk
+	}
+	occ := &PlacedOccupant{ID: occupantID, Dir: 0}
+	chunk.SetOccupant(lx, ly, occ)
+	// Footprint cells for multi-cell occupants (mirror handlePlaceOccupant).
+	w, h := def.GetFootprint(0)
+	for dy := 0; dy < h; dy++ {
+		for dx := 0; dx < w; dx++ {
+			if dx == 0 && dy == 0 {
+				continue // anchor
+			}
+			bcx, bcy, blx, bly := GlobalToChunk(gx+dx, gy+dy)
+			if bChunk := state.Chunks[ChunkKey(bcx, bcy)]; bChunk != nil {
+				bChunk.SetFootprintCell(blx, bly, occupantID, 0)
+			}
+		}
+	}
+	// Register a placed fruit tree (re-scan skips already-registered) or a nest, like the placement handler.
+	m.initFruitTreesInChunk(state, chunk, cx, cy, logger)
+	if speciesID, hiveSpecies, isBox := m.speciesForNestOccupant(state, occupantID); hiveSpecies != nil {
+		m.registerNestAt(state, gx, gy, occupantID, speciesID, hiveSpecies, isBox, logger)
+	}
+	m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, "", occ, false)
+	logger.Info("DEBUG WORLD: spawned occupant %s at %d,%d", occupantID, gx, gy)
 }
 
 // scheduleDailyRain rolls the day's weather at the rollover: 30% chance of ONE shower at
@@ -380,6 +445,7 @@ func (m *Match) debugSpawnSwarm(
 		}
 	}
 
+	// Every species (centipede packs included) spawns as one swarm of N at the debug point.
 	if swarm := m.spawnSwarmAt(state, speciesID, n, msg.SpawnX, msg.SpawnY, chunkSize); swarm != nil {
 		logger.Info("DEBUG WORLD: %s spawned %d %s as %s at (%.1f, %.1f)",
 			userID, n, speciesID, swarm.ID, msg.SpawnX, msg.SpawnY)

@@ -14,7 +14,8 @@ import (
 // message (94) — an unfiltered broadcast would knock back every client in the zone.
 
 const (
-	playerInvulnTicks = 10  // 1s shared across ALL attackers
+	playerInvulnTicks   = 10 // 1s shared across ALL attackers
+	dodgeInvulnTicks    = 5  // 0.5s i-frame window a dodge-roll grants
 	regenDelayTicks   = 100 // regen starts 10s after the last damage
 	regenIntervalTick = 300 // +1 HP per 30s
 	stingRange        = 1.5 // "standing in them" — ambient wasps only sting at contact
@@ -33,8 +34,20 @@ func (m *Match) applyBugAttackToPlayer(
 	player *PlayerState,
 	damage int,
 ) bool {
-	// Per-swarm cooldown (attack_cooldown is in SECONDS; 10Hz)
-	cooldownTicks := int64(species.AttackCooldown * 10)
+	// Peace toggle (belt-and-braces, like subdued): a peaceful OBSERVATION zone deals NO bug damage,
+	// no matter which path reached the funnel (client-authority strike, centipede lunge, ambient).
+	if peacefulZone(state) {
+		return false
+	}
+	// Per-species attack profile (cooldown, sting-class). AttackProfile is never nil for a caller that got
+	// here (they hold an atk), but guard defensively.
+	atk := species.AttackProfile()
+	cd := float32(2.0)
+	if atk != nil && atk.CooldownSecs > 0 {
+		cd = atk.CooldownSecs
+	}
+	// Per-swarm cooldown (cooldown_secs → ticks; 10Hz)
+	cooldownTicks := int64(cd * 10)
 	if cooldownTicks <= 0 {
 		cooldownTicks = 20
 	}
@@ -44,6 +57,26 @@ func (m *Match) applyBugAttackToPlayer(
 	// Shared invuln window (across all attackers)
 	if state.TickCount-player.LastDamageTick < playerInvulnTicks {
 		return false
+	}
+	// Dodge i-frames — a well-timed roll negates the sting (separate window; doesn't gate regen).
+	if state.TickCount < player.DodgeInvulnUntilTick {
+		return false
+	}
+
+	// SUBDUED (§C belt-and-braces): every bug attack funnels through here (checkBugAttacks +
+	// the centipede bite are the only callers), so a calmed swarm cannot land damage even if
+	// an upstream entry check is missed later.
+	if swarmSubdued(swarm, species) {
+		return false
+	}
+
+	// STING IMMUNITY (the bee suit — the first armor damage hook): a sting_immune BODY piece
+	// fully negates sting-class attacks (bees, wasps); bites (centipedes) still land. No HP
+	// change, no knockback, no invuln burn — the cloud rages, the keeper works.
+	if atk != nil && atk.IsSting && len(player.Equipment) > 1 {
+		if def := state.Entities[player.Equipment[1]]; def != nil && def.StingImmune {
+			return false
+		}
 	}
 
 	swarm.LastAttackTick = state.TickCount
@@ -95,9 +128,10 @@ func (m *Match) applyBugAttackToPlayer(
 	return true
 }
 
-// checkBugAttacks runs per tick for attack-capable species (attack_damage > 0): any
-// player within sting range of the swarm center takes the hit. Ambient swarms only
-// sting players standing IN them; chasing happens via the defending/surge legs.
+// checkBugAttacks — RETIRED / TEST-ONLY. The old center-based ambient sting (the phantom source),
+// replaced in production by the authority-detected per-individual path (bug_attack.go). Kept ONLY
+// because condition_test.go + player_hp_test.go drive the shared HP funnel through it; NOT called from
+// the match loop. Do not add production callers — use the attack subsystem.
 func (m *Match) checkBugAttacks(
 	logger runtime.Logger,
 	dispatcher runtime.MatchDispatcher,
@@ -107,6 +141,15 @@ func (m *Match) checkBugAttacks(
 	chunkSize int,
 ) {
 	if species.AttackDamage <= 0 || swarm.Count <= 0 {
+		return
+	}
+	// Gentle-until-provoked (bees): only a DEFENDING colony stings. Wasps (flag unset) keep
+	// their ambient contact sting.
+	if species.StingsOnlyDefending && swarm.Phase != "defending" {
+		return
+	}
+	// FUNNEL 1 (§C): a subdued swarm doesn't ambient-sting — walk through the calm cloud.
+	if swarmSubdued(swarm, species) {
 		return
 	}
 	sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
@@ -119,6 +162,15 @@ func (m *Match) checkBugAttacks(
 		if m.applyBugAttackToPlayer(logger, dispatcher, state, swarm, species, userID, player, species.AttackDamage) {
 			return // one victim per swarm per tick (the cooldown re-arms anyway)
 		}
+	}
+}
+
+
+// handlePlayerDodge grants a brief server-authoritative i-frame window so a well-timed dodge-roll negates an
+// incoming sting. Movement itself stays client-predicted + reconciled.
+func (m *Match) handlePlayerDodge(state *WorldState, senderID string) {
+	if player, ok := state.Players[senderID]; ok && player != nil {
+		player.DodgeInvulnUntilTick = state.TickCount + dodgeInvulnTicks
 	}
 }
 

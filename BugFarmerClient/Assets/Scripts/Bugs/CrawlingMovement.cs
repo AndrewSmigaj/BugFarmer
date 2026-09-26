@@ -16,14 +16,13 @@ namespace BugFarmer.Bugs
     /// </summary>
     public class CrawlingMovement : IBugMovement
     {
-        // Offsets re-target inside this radius and creep toward the new spot at crawl
-        // speed (per-tick step). 2.4 (was 1.1) after playtest: members glued to one
-        // spot read as "three centipedes in the same area" — they should patrol a
-        // loose territory around the shared center, not a huddle.
-        private static readonly FixedPoint KnotRadius = FixedPoint.FromFloat(2.4f);
-        private static readonly FixedPoint OffsetStep = FixedPoint.FromFloat(0.035f);
-        private const int RetargetMinTicks = 40;  // 4-8s between repositions
-        private const int RetargetMaxTicks = 81;
+        // Members patrol a WIDE territory around the shared center and re-target often, so a parked
+        // knot reads as separate centipedes wandering their own patch — not a huddle. (Raised from
+        // 2.4 / sped up retarget after playtest: "they all move the same, attack at once, bunched".)
+        private static readonly FixedPoint KnotRadius = FixedPoint.FromFloat(4.0f);
+        private static readonly FixedPoint OffsetStep = FixedPoint.FromFloat(0.05f);
+        private const int RetargetMinTicks = 20;  // 2-5s between repositions (livelier)
+        private const int RetargetMaxTicks = 51;
 
         private FixedPoint2 _offset;
         private FixedPoint2 _offsetTarget;
@@ -54,12 +53,16 @@ namespace BugFarmer.Bugs
                 }
             }
 
-            // Velocity = exactly the delta to (center + offset): position lands ON it
-            // this tick, so the knot member rides every surge leg verbatim.
-            bug.Velocity = new FixedPoint2(
-                swarmCenter.X + _offset.X - bug.Position.X,
-                swarmCenter.Y + _offset.Y - bug.Position.Y
-            );
+            // Follow (center + offset) by a PER-BUG fraction of the remaining gap each tick — slower
+            // members trail when the center surges, faster ones lead, so the knot STRINGS OUT during a
+            // lunge and regroups when parked, and members reach prey (and strike) at different times
+            // instead of all at once. Exponential follow always converges, so a member never drifts
+            // away. Deterministic: fraction is fixed per member (BugId), FixedPoint math, no per-tick RNG.
+            int fpct = 30 + (bug.BugId * 37) % 31;          // 30..60% — constant per member
+            var frac = FixedPoint.FromFloat(fpct / 100f);
+            var gapX = swarmCenter.X + _offset.X - bug.Position.X;
+            var gapY = swarmCenter.Y + _offset.Y - bug.Position.Y;
+            bug.Velocity = new FixedPoint2(gapX * frac, gapY * frac);
         }
 
         private void PickNewOffsetTarget(BugAgent bug)

@@ -50,24 +50,40 @@ func FindNearbyFood(state *WorldState, pos entities.EntityPosition, visionRange 
 
 	var hits []FoodHit
 
-	// 1) Ground items (rotten fruit): the "rotten_fruit" wildcard or an exact item type.
+	// 1) Ground items (rotten fruit / carrion): scan only the chunk buckets that can hold an item
+	//    within visionRange, via the ItemsByChunk index (see item_index.go) — NOT the whole item map.
+	//    Result is IDENTICAL to a full scan: the inner dist filter is unchanged, and the scanned chunk
+	//    box [worldX±vision, worldY±vision] (PLUS a 1-chunk pad as float-rounding insurance) is a
+	//    superset of every chunk a within-vision item can fall in.
 	wantRotten := targetSet["rotten_fruit"]
-	for id, item := range state.GroundItems {
-		if item.FoodValue <= 0 {
-			continue
-		}
-		// The "rotten_fruit" wildcard matches any rotted food EXCEPT bug carcasses (carrion is
-		// detritivore food — flies don't breed on their own dead). Carrion matches only a species
-		// that lists the exact dead_<species> id (e.g. the millipede).
-		if !targetSet[item.ItemType] && (!wantRotten || item.IsCarrion) {
-			continue
-		}
-		ix := float32(item.Position.ChunkX*chunkSize) + item.Position.LocalX
-		iy := float32(item.Position.ChunkY*chunkSize) + item.Position.LocalY
-		dx, dy := ix-worldX, iy-worldY
-		dist := float32(math.Sqrt(float64(dx*dx + dy*dy)))
-		if dist <= visionRange {
-			hits = append(hits, FoodHit{ID: id, Kind: "item", X: ix, Y: iy, Dist: dist, Depletable: true})
+	minCX := floorDivF(worldX-visionRange, chunkSize) - 1
+	maxCX := floorDivF(worldX+visionRange, chunkSize) + 1
+	minCY := floorDivF(worldY-visionRange, chunkSize) - 1
+	maxCY := floorDivF(worldY+visionRange, chunkSize) + 1
+	for cy := minCY; cy <= maxCY; cy++ {
+		for cx := minCX; cx <= maxCX; cx++ {
+			bucket := state.ItemsByChunk[ChunkKey(cx, cy)]
+			if bucket == nil {
+				continue
+			}
+			for id, item := range bucket {
+				if item.FoodValue <= 0 {
+					continue
+				}
+				// The "rotten_fruit" wildcard matches any rotted food EXCEPT bug carcasses (carrion is
+				// detritivore food — flies don't breed on their own dead). Carrion matches only a species
+				// that lists the exact dead_<species> id (e.g. the millipede).
+				if !targetSet[item.ItemType] && (!wantRotten || item.IsCarrion) {
+					continue
+				}
+				ix := float32(item.Position.ChunkX*chunkSize) + item.Position.LocalX
+				iy := float32(item.Position.ChunkY*chunkSize) + item.Position.LocalY
+				dx, dy := ix-worldX, iy-worldY
+				dist := float32(math.Sqrt(float64(dx*dx + dy*dy)))
+				if dist <= visionRange {
+					hits = append(hits, FoodHit{ID: id, Kind: "item", X: ix, Y: iy, Dist: dist, Depletable: true})
+				}
+			}
 		}
 	}
 
@@ -141,25 +157,22 @@ func FindNearbyResources(state *WorldState, pos entities.EntityPosition, visionR
 				continue
 			}
 
-			for ly := 0; ly < ChunkSize; ly++ {
-				for lx := 0; lx < ChunkSize; lx++ {
-					cell, err := chunk.GetOccupantCell(lx, ly)
-					if err != nil || cell.IsEmpty || cell.Occupant == nil || !cell.Occupant.Anchor {
-						continue
-					}
+			// Iterate the chunk's cached ANCHOR index instead of all 32x32 cells (each of which would be a
+			// json.Unmarshal). Same (ly,lx) order + same dist test as the old cell scan → identical result,
+			// and species whose targets are never occupants (carrion/rotten-fruit eaters) just skip-filter
+			// a handful of anchors instead of parsing 1024 cells.
+			chunk.ensureAnchors()
+			for _, a := range chunk.anchors {
+				if !targetSet[a.id] {
+					continue
+				}
+				occX := float32(cx*chunkSize + a.lx)
+				occY := float32(cy*chunkSize + a.ly)
+				dx, dy := occX-worldX, occY-worldY
+				dist := float32(math.Sqrt(float64(dx*dx + dy*dy)))
 
-					if !targetSet[cell.Occupant.ID] {
-						continue
-					}
-
-					occX := float32(cx*chunkSize + lx)
-					occY := float32(cy*chunkSize + ly)
-					dx, dy := occX-worldX, occY-worldY
-					dist := float32(math.Sqrt(float64(dx*dx + dy*dy)))
-
-					if dist <= visionRange {
-						hits = append(hits, ResourceHit{ID: cell.Occupant.ID, X: occX, Y: occY, Dist: dist})
-					}
+				if dist <= visionRange {
+					hits = append(hits, ResourceHit{ID: a.id, X: occX, Y: occY, Dist: dist})
 				}
 			}
 		}

@@ -5,7 +5,7 @@ and BUG PARTS. The bug parts are the signature crossover that makes "farm bugs" 
 loop. Design only.
 
 Read alongside:
-- `docs/product/game_design.md` §11.3 (extractors/processing stations), §15 (small meaningful
+- `docs/product/design/game_design.md` §11.3 (extractors/processing stations), §15 (small meaningful
   bonuses, no loot treadmill), §16 (soft modifiers).
 - Existing ids: `cauldron`, `cooking_pot`, `mortar`-adjacent, `keg`, `still`-adjacent, `furnace`,
   `compost_bin`, `honey_extractor` (bug extraction precedent).

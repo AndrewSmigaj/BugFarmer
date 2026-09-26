@@ -1,0 +1,18 @@
+{
+  "description": "Ant lab v10: relight-recruitment + gentler economy (worker decay 0.45, 4 pools). Feel-bar: visible worker line nest->east carrion.",
+  "species": {
+    "ant_worker": {
+      "satiation_decay_rate": 0.45
+    },
+    "ant_scout": {
+      "satiation_decay_rate": 0.25
+    }
+  },
+  "bug_spawning": {
+    "species_caps": {
+      "ant_worker": {
+        "max_population": 36
+      }
+    }
+  }
+}

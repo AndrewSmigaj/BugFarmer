@@ -113,6 +113,12 @@ namespace BugFarmer.UI
             if (InventoryPanel.IsOpen)
                 return;
 
+            // The shaped-ground builder owns the wheel while a shovel is equipped (cycles the shape it places).
+            var equipped = InventoryManager.Instance?.GetEquippedToolId();
+            if (!string.IsNullOrEmpty(equipped) &&
+                BugFarmer.Data.EntityDatabase.Get(equipped)?.ToolType == "shovel")
+                return;
+
             float scroll = Input.GetAxis("Mouse ScrollWheel");
             if (scroll > 0.01f)
             {
@@ -175,7 +181,9 @@ namespace BugFarmer.UI
             var inventory = InventoryManager.Instance;
             if (inventory != null && index < inventory.ItemSlots.Length)
             {
-                slots[index].SetSlot(inventory.ItemSlots[index]);
+                // ForRender = the shop barter-basket overlay: a staged hotbar stack renders
+                // reduced/empty while the shop is open (data untouched; no-op otherwise).
+                slots[index].SetSlot(ShopPanel.ForRender(SlotType.Item, index, inventory.ItemSlots[index]));
             }
         }
 

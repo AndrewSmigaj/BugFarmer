@@ -1,0 +1,24 @@
+when      : 2026-08-15 15:25:10
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+dest      : explore/blackant-v2-turnaround
+references (in the order sent):
+  1. tools/_generated/player/bases/armless_front.png  (upscaled x14 -> 504x994)
+  2. tools/_generated/player/outfits/blackant/ref_3_CHOSEN_blackant.png  (sent as-is at 321x914)
+
+PROMPT:
+The FIRST attached image is the bare character sprite. It sets the ANATOMY and the PIXEL DENSITY: its pixels are large visible squares, and yours must be the same size. Do not draw at a finer resolution than it. The SECOND attached image shows the armour design to copy.
+
+Create a 3-view standing turnaround of the character from the FIRST image wearing the armour from the SECOND image: front, exact right profile, and back, in a row, all three the same size and standing on the same baseline.
+
+Keep the same head size, torso length, leg length, face and hair as the first image. Change only the view - this is one character seen from three angles, not a redesign. Do not redesign the armour either: it is black-ant carapace armour, near-black and dark charcoal ant chitin, smooth plates with chevron banding across the chest. Headgear: a smooth rounded ant-head hood-helm with two curved antennae, OPEN AT THE FRONT so the character's face is visible - draw the face, eyes and hair; the hood frames it and never covers it.
+
+Use the same size pixel blocks throughout. If armour detail does not fit, simplify it instead of adding smaller details.
+
+The character has NO ARMS: do not draw arms, hands, elbows, forearms or gauntlets. Solid rounded shoulder ends. No holes, sockets or empty arm openings.
+
+No bare skin between the shoulders and the boots.
+
+Flat pure MAGENTA background (255 0 255), nothing else on it. Hard pixel edges, no blur.

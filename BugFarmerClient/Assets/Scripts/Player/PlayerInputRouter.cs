@@ -33,13 +33,13 @@ namespace BugFarmer.Player
         private BreakingController _breaking;
         private MeleeController _melee;
         private PlacementController _placement;
-        private StationController _station;
         private SleepController _sleep;
         private BugReleaseController _bugRelease;
         private TreeHarvestController _treeHarvest;
         private Camera _mainCamera;
 
         private bool _holdLatchedToBreaking;
+        private bool _holdLatchedToDigging;
 
         private void Start()
         {
@@ -49,7 +49,9 @@ namespace BugFarmer.Player
             _breaking = GetComponent<BreakingController>();
             _melee = GetComponent<MeleeController>();
             _placement = GetComponent<PlacementController>();
-            _station = GetComponent<StationController>();
+            // Compost + other "station" occupants now open the unified CraftingPanel (checked first in the
+            // right-click chain); the legacy IMGUI StationController is gone.
+            // Shop is now a Canvas panel (ShopPanel singleton via UIBootstrap), not a player component.
             _sleep = GetComponent<SleepController>();
             _bugRelease = GetComponent<BugReleaseController>();
             _treeHarvest = GetComponent<TreeHarvestController>();
@@ -58,6 +60,18 @@ namespace BugFarmer.Player
 
         private void Update()
         {
+            // A shovel dig-hold (Shift+LMB) owns the left button until release. Like breaking, the held
+            // path runs every frame; TryDig self-throttles on the shovel cooldown, so it fires one dig
+            // per hit and the ground breaks over a few hits.
+            if (_holdLatchedToDigging)
+            {
+                if (Input.GetMouseButton(0))
+                    _toolUse?.TryDig();
+                else
+                    _holdLatchedToDigging = false;
+                return;
+            }
+
             // An in-progress break owns the left button until release.
             if (_holdLatchedToBreaking)
             {
@@ -90,7 +104,18 @@ namespace BugFarmer.Player
                 return;
 
             string toolId = InventoryManager.Instance?.GetEquippedToolId() ?? "";
-            string toolType = EntityDatabase.Get(toolId)?.ToolType;
+            var toolDef = EntityDatabase.Get(toolId);
+            string toolType = toolDef?.ToolType;
+
+            // CONSUMABLES with an effect (calm_spray; later smoke bombs): left-click APPLIES the
+            // item at the cursor cell via the shared ToolUse verb (OpCode 7) — the server routes
+            // by category, decrements the stack, and replies with the slot echo. Without this,
+            // an equipped spray fell through to bare-hand tile-BREAKING.
+            if (toolDef != null && toolDef.Category == "consumable" && !string.IsNullOrEmpty(toolDef.Effect))
+            {
+                _toolUse?.TryHandleClick();
+                return;
+            }
 
             switch (toolType)
             {
@@ -106,7 +131,18 @@ namespace BugFarmer.Player
                 case "hoe":
                 case "watering_can":
                 case "scythe":
+                case "smoker":
                     _toolUse?.TryHandleClick();
+                    return;
+
+                case "shovel":
+                    // Shaped-ground builder: LMB PLACES the selected ground id; Shift+LMB DIGS (hold to
+                    // keep digging — progressive, a few hits per cell). RMB is intentionally NOT dig; it
+                    // stays free for the context actions (stations/hives/beds) in RouteRightClick.
+                    if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                        LatchDigging();
+                    else
+                        _toolUse?.TryHandleClick();
                     return;
 
                 case "placer":
@@ -148,14 +184,24 @@ namespace BugFarmer.Player
             if (_bugRelease != null && _bugRelease.TryHandleClick(releaseAll: false))
                 return;
 
-            // 1. Craft stations + storage containers (workbench/furnace/… + chests/dressers):
-            //    the panel opens/closes; a state transition consumes the click.
+            // 1. Every processing station + storage container — ONE panel, dispatched by interaction_type
+            //    (craft | storage | station=compost | nursery=wasp nest/milkweed). Opens/closes; a state
+            //    transition consumes the click.
             if (BugFarmer.UI.CraftingPanel.Instance != null &&
                 BugFarmer.UI.CraftingPanel.Instance.TryHandleRightClick(mouseWorld))
                 return;
 
-            // 1b. Stations (compost): interact beats attack/place; closing an open menu consumes too.
-            if (_station != null && _station.TryHandleRightClick(mouseWorld))
+            // 1b2. NPC vendors: a "shop" occupant opens the dialogue → Buy/Sell board (Canvas ShopPanel).
+            if (BugFarmer.UI.ShopPanel.Instance != null &&
+                BugFarmer.UI.ShopPanel.Instance.TryHandleRightClick(mouseWorld))
+                return;
+
+            // 1b3. Signs (read the text) + mannequins (outfit panel).
+            if (BugFarmer.UI.SignController.Instance != null &&
+                BugFarmer.UI.SignController.Instance.TryHandleRightClick(mouseWorld))
+                return;
+            if (BugFarmer.UI.MannequinController.Instance != null &&
+                BugFarmer.UI.MannequinController.Instance.TryHandleRightClick(mouseWorld))
                 return;
 
             // 1c. Beds: right-click sets the character's home (interact beats place). Consumes the
@@ -163,14 +209,20 @@ namespace BugFarmer.Player
             if (_sleep != null && _sleep.TryHandleRightClick(mouseWorld))
                 return;
 
+            // (Beehives now open the unified station panel — routed via CraftingPanel at step 1 —
+            //  so there's no separate beehive right-click handler.)
+
             // 2. Placement (equipped placeable, or the cursor-place mode): mode-based
             //    consume — a misclicked red-ghost placement must never fall through to a jab.
             if (_placement != null && _placement.TryHandleRightClick())
                 return;
 
-            // 3. Weapon secondary move (sword jab, axe combat swing, spear sweep).
+            // 3. Otherwise, weapon secondary move (sword jab, axe combat swing, spear sweep). The shovel
+            //    has NO right-click verb — digging moved to Shift+LMB (see RouteLeftClick), leaving RMB
+            //    free for the context actions above.
             string toolId = InventoryManager.Instance?.GetEquippedToolId() ?? "";
-            if (EntityDatabase.Get(toolId)?.GetMove("secondary") != null)
+            var rtoolDef = EntityDatabase.Get(toolId);
+            if (rtoolDef?.GetMove("secondary") != null)
                 _melee?.TryHandleClick("secondary");
         }
 
@@ -179,6 +231,13 @@ namespace BugFarmer.Player
             if (_breaking == null) return;
             _holdLatchedToBreaking = true;
             _breaking.HoldBreak();
+        }
+
+        private void LatchDigging()
+        {
+            if (_toolUse == null) return;
+            _holdLatchedToDigging = true;
+            _toolUse.TryDig(); // first hit now; the Update() dig-latch repeats it while the button is held
         }
     }
 }

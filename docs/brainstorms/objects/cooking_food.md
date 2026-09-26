@@ -4,7 +4,7 @@ Cooking stations across the capacity progression, plus the dishes/foods they mak
 signature BUG foods — and the buffs they grant. Design only.
 
 Read alongside:
-- `docs/product/game_design.md` §11.7 (stove capacity progression) and §11.6 (fuel vs power).
+- `docs/product/design/game_design.md` §11.7 (stove capacity progression) and §11.6 (fuel vs power).
 - Existing ids: `campfire`, `campfire_spit`, `cooking_pot`, `stove_wood`, `stove`, `range_stove`,
   `fireplace`, `kitchen_island`, `counter`/`counter_fancy`, `fridge`, `sink`, `cupboard`, `keg`.
 - Bug-food inputs come from `bug_farming.md` (honey, honeydew, royal jelly, grubs, cricket flour, silk-

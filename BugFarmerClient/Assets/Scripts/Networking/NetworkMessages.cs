@@ -42,6 +42,18 @@ namespace BugFarmer.Networking
         public const int EquipmentUpdate = 97;  // S->C: the 7 worn-armor slots (echo + join)
         public const int PredationStrike = 105; // C->S (authority only): individual flies a predator struck
         public const int ZoneCollisionMap = 106; // S->C (join + resync): zone-complete blocks_bugs cell set
+        public const int ZoneRoofMap = 109;      // S->C (join + resync): zone-complete authored roof cell set (cosmetic — underground lighting)
+        public const int BugPlayerStrike = 110;  // C->S (authority only): individual bug(s) that stung a player (replaces center-sting)
+        public const int PlayerDodge = 111;      // C->S: player dodge-rolled — server grants a brief i-frame window
+        public const int CorpseConsume = 112;    // C->S (authority only): a predator finished eating a corpse → remove it
+    }
+
+    /// <summary>C->S (authority only): an individual predator ate a corpse to completion — remove it (server owns the
+    /// ground item; it vanishes on every client via FOOD_CONSUMED). A LEFT corpse gets no message and rots away.</summary>
+    [System.Serializable]
+    public class CorpseConsumeMessage
+    {
+        public string food_id;
     }
 
     /// <summary>
@@ -109,6 +121,11 @@ namespace BugFarmer.Networking
     {
         public int grid_x;  // Target cell X
         public int grid_y;  // Target cell Y
+        // Player-chosen ground id for the SHOVEL (shaped-ground builder), e.g. "grass~dirt~diagNE".
+        // Left empty for every other tool (server computes their result). Validated server-side.
+        public string ground_id;
+        // SHOVEL only: true = DIG (revert cell to dirt, gain the material block); false = PLACE.
+        public bool dig;
     }
 
     /// <summary>
@@ -232,6 +249,10 @@ namespace BugFarmer.Networking
         // Phase 2: per-victim world points so the strike snatch plays AT each eaten fly. Display-only.
         public float[] victim_x;
         public float[] victim_y;
+        // #20: the dead_<prey> sprite shown at each victim + how long it holds before fading (the
+        // predator's feeding dwell). Both display-only; absent on older servers (JsonUtility leaves them 0/null).
+        public string carcass_item;
+        public float feed_pause_secs;
     }
 
     /// <summary>
@@ -252,6 +273,33 @@ namespace BugFarmer.Networking
     }
 
     /// <summary>
+    /// BugPlayerStrike (OpCode 110, C→S, AUTHORITY ONLY): the individual bug(s) the authority detected in sting
+    /// range of a player this pass. Mirrors the predation-strike relay — the server holds only swarm CENTRES, so
+    /// it can't tell WHICH bug is next to the player (the old center-sting phantom); the authority reports it and
+    /// the server re-gates + applies through applyBugAttackToPlayer. Damage/HP are sim-inert (server-authoritative,
+    /// NOT in the client sim hash), so this needs no ledger/snapshot wiring.
+    /// </summary>
+    [Serializable]
+    public class BugPlayerStrikeMessage
+    {
+        public string swarm_id;
+        public string player_id;
+        public int[] bug_ids;
+        public long tick;
+        public string phase; // "windup" = flash the telegraph only; "strike"/"" = apply the hit now
+    }
+
+    /// <summary>
+    /// PlayerDodge (OpCode 111, C→S): the local player dodge-rolled. The server grants a brief per-player i-frame
+    /// window (DodgeInvulnUntilTick) so a well-timed roll negates an incoming sting. Movement stays client-predicted.
+    /// </summary>
+    [Serializable]
+    public class PlayerDodgeMessage
+    {
+        public long tick;
+    }
+
+    /// <summary>
     /// ZoneCollisionMap (OpCode 106, S→C, sent to one joiner on join + resync): the COMPLETE set of cells in
     /// the zone whose occupant blocks bugs. The client hydrates TilemapManager._blocksBugsZoneWide so its bug
     /// sim collides zone-wide + identically to every other client (Phase 1b). cx[i],cy[i] = one global cell.
@@ -263,12 +311,50 @@ namespace BugFarmer.Networking
         public int[] cy;
     }
 
+    /// <summary>
+    /// ZoneRoofMap (OpCode 109, S→C, on join + resync): the COMPLETE set of authored "roofed"
+    /// (underground / no-sun) cells. COSMETIC — the client darkens these for the underground lighting; never
+    /// a sim input. cx[i],cy[i] = one global roofed cell.
+    /// </summary>
+    [Serializable]
+    public class ZoneRoofMapMessage
+    {
+        public int[] cx;
+        public int[] cy;
+    }
+
     /// <summary>Sleep in a bed → set this character's home (OpCode 100, C→S): the bed's anchor cell.</summary>
     [Serializable]
     public class SetHomeMessage
     {
         public int gx;
         public int gy;
+    }
+
+    /// <summary>Buy/sell at an NPC vendor (OpCode 2 / Action, C→S). The server is authoritative for
+    /// price + validation; the reply is the existing FullInventorySync echo (coins+items+bugs).
+    /// op "sell_batch" carries the barter basket in `lines` (each line validated server-side).</summary>
+    [Serializable]
+    public class ShopActionMessage
+    {
+        public int gx;
+        public int gy;
+        public string op;          // "buy" | "sell" | "sell_batch"
+        public string id;          // item or species id
+        public int qty;            // default 1
+        public int slot;           // sell: which player slot
+        public string slot_type;   // "item" | "bug" (sell)
+        public ShopSellLine[] lines; // sell_batch: the staged basket
+    }
+
+    /// <summary>One staged basket line of a sell_batch (mirrors the Go ShopSellLine).</summary>
+    [Serializable]
+    public class ShopSellLine
+    {
+        public string slot_type;   // "item" | "bug"
+        public int slot;           // the player's slot index
+        public string id;          // what the slot is expected to hold
+        public int qty;            // how many to sell
     }
 
     /// <summary>Home-set confirmation (OpCode 101, S→C): shown as a brief toast.</summary>

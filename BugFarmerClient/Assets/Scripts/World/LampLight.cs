@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
@@ -31,16 +32,42 @@ namespace BugFarmer.World
             _light.intensity = 0f;
         }
 
+        // Registry of active lamps, read by DarknessOverlay to "open" the underground darkness mask where a
+        // light reaches (so a torch pool isn't re-multiplied to black). Cosmetic — client-local only.
+        public static readonly List<LampLight> Active = new List<LampLight>();
+
+        private float _onFactor;   // 0..1 "how dark is it here" (night on the surface, or underground)
+
+        /// <summary>Outer reach in world units (= cells) for the darkness light-stamp.</summary>
+        public float OuterRadius => _light != null ? _light.pointLightOuterRadius : 0f;
+        /// <summary>0..1 fade — how much this lamp is "on" (dark enough to matter). The reveal scales by this,
+        /// so a torch fades its pool in smoothly (no snap at a cave mouth).</summary>
+        public float Strength01 => _onFactor;
+        /// <summary>Emitting enough to bother stamping.</summary>
+        public bool IsEmitting => _onFactor > 0.02f;
+
         private void Awake()
         {
             EnsureLight();
         }
 
+        private void OnEnable() { Active.Add(this); }
+        private void OnDisable() { Active.Remove(this); }
+
         private void Update()
         {
-            // Inverse of daylight: invisible at noon, full glow at night, eased through dusk.
-            if (_light != null)
-                _light.intensity = _baseIntensity * (1f - DayNightController.Daylight);
+            if (_light == null) return;
+            // A torch fades in wherever it's dark — ONE "how dark is it here": the day/night curve (so it
+            // fades in at dusk and glows at night) OR being underground (a smooth, boundary-blurred value, so
+            // it fades in at a cave mouth the SAME way it does at dusk — no hard cave gate, no snap).
+            float night = 1f - DayNightController.Daylight;
+            float underground = 0f;
+            var ov = DarknessOverlay.Instance;
+            var tm = TilemapManager.Instance;
+            if (ov != null && tm != null)
+                underground = ov.UndergroundDarknessAt(tm.WorldToCell(transform.position));
+            _onFactor = Mathf.Max(night, underground);
+            _light.intensity = _baseIntensity * _onFactor;
         }
     }
 

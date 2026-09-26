@@ -5,15 +5,27 @@ description: Use when creating or editing a game zone, or building an example sc
 
 # Author a zone / scene
 
+> **Craft vs mechanics:** deciding WHAT to build, whether it's interesting, and reviewing it as
+> a PLACE → the **zone-craft** skill (brief → options → lenses → corrections ledger). This
+> skill is HOW: the builder, primitives, previews, gates. For a NEW zone or an improvement
+> pass, START in zone-craft; come here for the building.
+
 Build zones and example scenes from reusable **feature primitives** that coordinate through a
 shared occupancy model, compose with **placeholder squares** (never wait on art), and review by
 **rendering a preview PNG and looking at it**. The preview is the test — there's no live game to
 watch here.
 
+## Where things go — READ THIS FIRST (so you don't invent folders)
+**`docs/guides/authoring/ORGANIZATION.md`** is the rule. One question decides everything:
+**reusable technique → `examples/<feature>`; a specific place → `zones/<zone>`; game content → `catalog/`.**
+Previews live in exactly four folders (`catalog/ examples/ zones/ player/`); a scene renders to the folder
+named in its own `PREVIEW = "..."` constant, via `python3 tools/world/previews.py`. Don't make new
+top-level buckets, don't hand-type output paths — if a thing doesn't fit, it's a technique or a place; ask.
+
 ## Where the world lives (orient here first)
 - **The system index:** `docs/guides/authoring/README.md` — the parts (builder · guides · scenes · the
-  scene→zone→`view_world`→test pipeline) and how they fit. Read it first. (The gallery replaced the old Art Lab.)
-- **The whole map:** `docs/product/architecture_world.md` — the 24-zone grid, layout, river/roads,
+  scene→zone→`view_world`→test pipeline) and how they fit. Read it first.
+- **The whole map:** `docs/product/architecture/architecture_world.md` — the 24-zone grid, layout, river/roads,
   coordinates, per-zone species.
 - **Per-zone design docs:** `docs/product/zones/<zone_id>.md` (intent: biome, species, landmarks, ecology).
   Start a new one from `docs/product/zones/_TEMPLATE.md`. Current build scope: `docs/product/zones/demo_slice.md`.
@@ -21,21 +33,12 @@ watch here.
 - **Content to draw from:** `docs/brainstorms/<topic>/` (flora, fungus, trees, bugs, landmarks, decorations,
   materials, …) — mine these for what to place; `ecology_proposal.md` for how species relate.
 
-## Make it RICH — brainstorm, don't do the bare minimum (read this first)
-A scene is a crafted vignette, not a checklist. When asked for a new scene you are EXPECTED to
-**brainstorm interesting content yourself**, not just place the few things named:
-- Start by **brainstorming a content list** for the scene's theme/situation: the named things PLUS
-  the supporting props, decorations, clutter, and variety that make the place feel real and lived-in
-  (e.g. a mining camp isn't just tents — it's crates, barrels, pickaxes leaning on rocks, ore sacks,
-  a stew pot over the fire, lanterns, tool racks, a wash line, scattered rubble). Aim for diversity
-  (several variants, a poor→nice range where it fits) — we have AI artists, so content is cheap
-  (`game_design.md §19`). Too sparse reads as a tech demo; fill it with character.
-- **Most of that content will be NEW entities** — that's expected. Add each via the **add-object**
-  skill (lean entity row + a catalog `look` row). It renders as a placeholder immediately, so layout
-  never waits on art.
-- **Write the brainstorm down and sanity-check it** against the theme before building — did you cover
-  the activity, the people, the wear-and-tear, the lighting, the surroundings? Present the plan/brainstorm
-  for review rather than silently doing the minimum.
+## Make it RICH — brainstorm, don't do the bare minimum
+A scene is a crafted vignette, not a checklist — too sparse reads as a tech demo; we have AI
+artists, so content is cheap (`game_design.md §19`). **The brainstorm process, fields and
+QUOTAS live in the zone-craft skill's brief** (one home for the numbers — fill it there and
+persist it to the zone doc before building). New entities the brainstorm needs come in via the
+**add-object** skill (placeholder renders immediately; layout never waits on art).
 
 ## Go slow; check before you call it done
 This is an iterative craft loop, not a one-shot. Deliberately:
@@ -48,12 +51,14 @@ This is an iterative craft loop, not a one-shot. Deliberately:
 
 ## The loop
 1. Read the zone document (`docs/product/zones/<zone>.md`) or decide the scene's contents.
-2. For each feature, read its **feature guide** (below) + the cross-cutting style guide.
+2. For each feature, read its **feature guide** (below) + the cross-cutting style guide, and
+   check **`docs/guides/authoring/CORRECTIONS.md`** for owner corrections touching your features.
 3. Build with the `ZoneBuilder` + feature primitives (`tools/zonegen/`). **Author themed buildings as
    TEXT GRIDS** (`features/tilemap.stamp`/`dump`) — reason cell-by-cell, don't guess coordinates.
 4. **`b.lint()` (verify in TEXT) → then `Read` a rendered crop**; iterate the layout (and the guide).
-   The GALLERY (`previews/index.html`, regenerated by `gallery.py`/`registry.py`) shows every card
-   with its guide — keep it current; new scenes need a GUIDE_OF row in gallery.py.
+   Previews are plain PNG folders under `tools/_generated/previews/` (no html): a scene renders to
+   `zones/<zone>/scenes/` (if it composes a real zone) or its theme folder (`surface/`, `underground/`…);
+   the content catalog (`catalog/<group>/`) is rebuilt by `python3 tools/world/previews.py`.
    THE ROWS RULE: human-made things (orchard trees, shelves, stalls, bins, nets, trays) sit in
    rows/columns; even-spread is only for deliberately wild nature.
 5. Placed a new object with no art yet? It renders as a labeled placeholder — add it to
@@ -79,7 +84,7 @@ This is an iterative craft loop, not a one-shot. Deliberately:
   `house.py` also has ready-made 3/4/5-room floor plans (`row_/t_/plus_house` — WIDE: budget slots per
   house.md's measured sizes). Each has a guide.
 - `render.render_builder(b, out, scale, bounds=None)` — render a builder straight to a preview PNG
-  (for scene vignettes; no zone files written). For a saved ZONE, use `tools/view_world.py` instead.
+  (for scene vignettes; no zone files written). For a saved ZONE, use `tools/world/view_world.py` instead.
 - **Precedence — place HARD features first so later ones route around them:** biome base → water →
   roads → buildings → farms → scatter. (`place_road` will pathfind around `reserved`; `scatter`
   only fills free grass.) Out-of-order placement is refused/warned.
@@ -87,17 +92,22 @@ This is an iterative craft loop, not a one-shot. Deliberately:
 
 ## Build & render an example scene
 ```bash
-python3 tools/zonegen/scenes/<scene>.py    # build + render ONE scene to its preview PNG + print lint
-python3 tools/zonegen/registry.py <scene>  # render via the canonical registry path
+python3 tools/zonegen/scenes/<scene>.py    # build + render THAT scene to its PREVIEW folder + print lint
+python3 tools/world/previews.py                  # rebuild the content catalog + ALL scene previews
 ```
 `scenes/scene_cottage.py` is the worked piece (a text-grid 2-room home + `property_yard`); `scenes/
-zone_village.py` is the full scene→zone example. The
-canonical render scale per scene lives in `tools/zonegen/registry.py`.
+zone_village.py` is the full scene→zone example. Each scene declares its destination + render scale in
+`PREVIEW = "..."` / `SCALE = N` constants; `scene_preview.py` is the one render path.
 
 ## Feature guides
 **Full index + one-liners: `docs/guides/authoring/README.md`.** The ones you'll reach for most:
+- `docs/guides/authoring/CORRECTIONS.md` — the OWNER-TASTE ledger (every correction, one line +
+  pointer). Read whole at zone-craft Step 0; walk at review.
+- `docs/guides/authoring/gallery.md` — annotated before/after pairs (what "better" means here).
+- `docs/guides/authoring/research_*.md` — distilled domain research (composition, mining feel,
+  settlements, coasts) — checkable rules + a counterexample each.
 - `docs/guides/authoring/building.md` — rooms, walls, doors, building shells.
-- `docs/guides/authoring/house.md` — multi-room houses: the composer, the south-facing **facing
+- `docs/guides/authoring/house.md` — multi-room houses: the composer, the furniture **facing
   rule**, room templates, ⊥/L shapes, **furniture collections** (basic/fancy), and the 3/4/5-room
   layout generators.
 - `docs/guides/authoring/yard.md` — fenced yards/pens: `fence_rect`, `yard` (gate + path + decor).
@@ -107,7 +117,12 @@ canonical render scale per scene lives in `tools/zonegen/registry.py`.
   `plaza()`/fountain, `shop_building()`, density gradients, build-order recipe.
 - `docs/guides/authoring/water.md` — lakes (multi-blob shapes), `shore_dress` arcs, docks
   (bridge_wood over water). Supersedes trees-and-ponds.md.
-- `docs/guides/authoring/{caves,blocks,ant-colony,forest,biome-feature-map}.md` — the rest.
+- `docs/guides/authoring/biome-feature-map.md` — **which primitive/guide per biome — START HERE to pick the right feature guide for this zone.**
+- `docs/guides/authoring/caves.md` — tunnels, caves, water & **ORE (§4 = the ore doctrine)**: the underground.
+- `docs/guides/authoring/ant-colony.md` — **ANT NESTS & trails** (blocks + `ant_brood` anchor + files-of-ants). **READ before building any ant zone** — a colony is biology, not a human settlement.
+- `docs/guides/authoring/camps.md` — cliff edges, mine entrances & surface work-camps (surface→underground).
+- `docs/guides/authoring/blocks.md` — resource & wall blocks (mineable/placeable cubes).
+- `docs/guides/authoring/forest.md` — authoring forests: zone-scale balance, clearings.
 - Worked multi-feature scene: `tools/zonegen/scenes/scene_houses.py` (room counts × collections, yards).
 - Cross-cutting art style/perspective: `docs/guides/art/MASTER_STYLE_GUIDE.md`.
 
@@ -124,11 +139,11 @@ canonical render scale per scene lives in `tools/zonegen/registry.py`.
   roads (+`smooth_paths` once, after all of them) → buildings → farms → scatter, then
   `Z.bug_spawning` and `Z.save()`. Size must be ×32; `save()` writes row/col 0,0 so patch them after
   for a real world-grid zone.
-- **View the whole zone:** `python3 tools/view_world.py <zone>` → `tools/_generated/previews/maps/<zone>_detail.png`
+- **View the whole zone:** `python3 tools/world/view_world.py <zone>` → `tools/_generated/previews/maps/<zone>_detail.png`
   (north-up colour minimap; reads SAVED chunks, so save first).
 - **Test in-game (no Unity):** `run-backend` skill starts the server, then the sync-harness joins +
   confirms load/tick/spawn (`tools/sync-harness`, `dotnet run -- --zone <id> --duration 20`). Edit zone
-  DATA → `docker compose restart nakama`. Quick isolated mechanic test: `tools/make_test_zone.py`.
+  DATA → `docker compose restart nakama`. Quick isolated mechanic test: `tools/world/make_test_zone.py`.
 
 ## EVERYTHING snaps to the grid except BUGS (changed rule)
 Trees, plants, flowers, crops are real grid `place_occupant`s (the player plants them; saved to the
@@ -138,7 +153,8 @@ fruit, lily-pads-on-water via `place_decor`) — are sub-grid floats. Space tree
 
 ## Bug spawning gotcha
 A zone spawns NOTHING without a `bug_spawning` block, and **only species in `nakama/data/species.json`
-spawn** (currently `fly_common`, `butterfly_meadow`, `wasp_common`, `centipede_garden`); `bugs.json` ids lacking a species spec silently
+spawn** — read `nakama/data/species.json` for the current roster (it grows as species are added; never
+hardcode a list here); `bugs.json` ids lacking a species spec silently
 fail. Use a `"zone"`-type area + generous `initial` for ambient bugs; `circle` areas on OPEN grass for
 habitats (water/forest/buildings reject spawns).
 

@@ -569,11 +569,33 @@ namespace BugFarmer.Entities
                 DebugFileLogger.Log(msg);
             }
 
+            // INDIVIDUAL PREDATION (S1): resolve each HUNTING predator swarm's target-prey positions (last tick,
+            // deterministic — captured BEFORE the sim loop so every predator pursues the same last-tick positions
+            // regardless of swarm iteration order). GetHuntingSwarms is InfluenceManager's predator→{TargetPreyId}
+            // map (the same source RunPredationStrikes uses). Passed into SimulateTick so bugs pursue individual prey.
+            Dictionary<string, IReadOnlyList<(int bugId, FixedPoint2 pos)>> huntTargets = null;
+            var influence = InfluenceManager.Instance;
+            if (influence != null)
+            {
+                foreach (var kv in influence.GetHuntingSwarms())
+                {
+                    var prey = GetSwarm(kv.Value.TargetPreyId);
+                    if (prey == null || prey.Count == 0) continue;
+                    huntTargets ??= new Dictionary<string, IReadOnlyList<(int bugId, FixedPoint2 pos)>>();
+                    huntTargets[kv.Key] = prey.GetAllBugsAliveSorted().ToList();
+                }
+            }
+
             // 4. Simulate all bugs for the NEW tick
             // FIX #2: MUST iterate in deterministic order (sorted by swarmId)
             foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
             {
-                _swarms[swarmId].SimulateTick(_simulationTick, players);
+                IReadOnlyList<(int bugId, FixedPoint2 pos)> prey = null;
+                huntTargets?.TryGetValue(swarmId, out prey);
+                // Subdued (smoke/calm) is a per-swarm sim INPUT (like players): read from the synced registry,
+                // passed down so a calmed swarm's per-bug sim suppresses its lunge/dive.
+                bool subdued = influence != null && influence.IsSubdued(swarmId);
+                _swarms[swarmId].SimulateTick(_simulationTick, players, prey, subdued);
             }
 
             // 4b. Phase 2 — individual-fly predation strike (AUTHORITY ONLY, LIVE only). Positions are
@@ -584,11 +606,16 @@ namespace BugFarmer.Entities
             if (_isAuthority && _syncState == SyncState.Live)
             {
                 RunPredationStrikes();
+                RunBugPlayerStrikes(players);
+                RunCorpseConsumes();
             }
 
             // Record this tick's state hash for tick-aligned drift checks (always on, cheap).
             var hash = ComputeStateHash();
             RecordTickHash(_simulationTick, hash);
+
+            // Tick-aligned cosmetic husk sweep (deferred SwarmUpdate reconcile — see ReconcileDespawnedSwarms).
+            ReconcileDespawnedSwarms();
 
             // Invoke trace callback if recording
             if (_traceCallback != null)
@@ -634,11 +661,13 @@ namespace BugFarmer.Entities
                 var rFixed = new FixedPoint { Value = strike.StrikeRadiusFixed };
                 long radiusSqr = (rFixed * rFixed).Value;
 
-                // BROAD-PHASE: skip the O(P×Q) per-bug scan unless the swarm CENTRES are within
-                // strike_radius + both cloud radii (threshold squared via FixedPoint too, same ×1000 scale).
-                var broadFixed = FixedPoint.FromFloat((strike.StrikeRadiusFixed / 1000f) + predator.Radius + prey.Radius);
-                long broadSqr = (broadFixed * broadFixed).Value;
-                if (predator.SimCenter.SqrDistanceTo(prey.SimCenter).Value > broadSqr) continue;
+                // PER-BUG BROAD-PHASE (individual predation): the old swarm-CENTRE gate skipped the scan unless the
+                // clouds overlapped — but an individual wasp that peeled off to CHASE a distant fly leaves its
+                // cloud, so a centre gate would wrongly skip its strike. Instead gate PER predator bug: it scans
+                // prey only if IT is near the prey cloud (strike_radius + prey.Radius of prey.SimCenter). A
+                // predator bug far from prey skips cheaply; a pursuer near the prey still strikes. (Threshold ×1000.)
+                var perBugFixed = FixedPoint.FromFloat((strike.StrikeRadiusFixed / 1000f) + prey.Radius);
+                long perBugBroadSqr = (perBugFixed * perBugFixed).Value;
 
                 int kills = strike.KillsPerStrike > 0 ? strike.KillsPerStrike : 1;
                 var preyBugs = prey.GetAllBugsAliveSorted().ToList();
@@ -652,6 +681,7 @@ namespace BugFarmer.Entities
                 foreach (var (pbId, pbPos) in predator.GetAllBugsAliveSorted())
                 {
                     if (victimIds.Count >= kills) break;
+                    if (pbPos.SqrDistanceTo(prey.SimCenter).Value > perBugBroadSqr) continue; // this predator bug is far from the prey cloud
                     int bestId = -1;
                     long bestSqr = long.MaxValue;
                     FixedPoint2 bestPos = default;
@@ -660,6 +690,11 @@ namespace BugFarmer.Entities
                         if (claimed.Contains(qbId)) continue;
                         long d = pbPos.SqrDistanceTo(qbPos).Value;
                         if (d > radiusSqr) continue;
+                        // #20 line-of-sight: skip prey occluded by a wall/bin so the predator claims its
+                        // nearest REACHABLE victim (strikes AROUND obstacles instead of through them — the
+                        // phantom-kill fix). Integer Bresenham over deterministic positions + the zone-wide
+                        // collision map → bit-identical on every client (authority-only + ledgered kill).
+                        if (BugCollision.LineBlocked(pbPos, qbPos)) continue;
                         if (d < bestSqr || (d == bestSqr && (bestId < 0 || qbId < bestId)))
                         {
                             bestSqr = d; bestId = qbId; bestPos = qbPos;
@@ -687,6 +722,194 @@ namespace BugFarmer.Entities
                     tick = _simulationTick,
                 });
             }
+        }
+
+        /// <summary>
+        /// AUTHORITY-ONLY per-tick corpse-consume pass (S2, individual EAT). Each bug that finished eating a
+        /// corpse and rolled CONSUME (the deterministic leave-vs-consume roll in <see cref="BugAgent.HandleFeed"/>)
+        /// flags the corpse's food id in <c>WantsConsumeCorpse</c>; <see cref="SwarmVisual.DrainCorpseConsumes"/>
+        /// collects + clears them. The roll is deterministic (every client agrees which corpse gets eaten) but
+        /// only the AUTHORITY reports it — the server removes the ground item and the FOOD_CONSUMED event returns
+        /// frontier-gated so the corpse vanishes identically on every client. A LEFT corpse is never reported
+        /// (it stays a real ground item and rots). Swarms iterated ascending-id for a deterministic report order.
+        /// </summary>
+        private void RunCorpseConsumes()
+        {
+            foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
+            {
+                var ids = _swarms[swarmId].DrainCorpseConsumes();
+                if (ids == null) continue;
+                foreach (var foodId in ids)
+                {
+                    if (string.IsNullOrEmpty(foodId)) continue;
+                    SendToServer(OpCodes.CorpseConsume, new CorpseConsumeMessage { food_id = foodId });
+                }
+            }
+        }
+
+        // ── Bug → player attack (AUTHORITY-ONLY, SIM-INERT) ─────────────────────────────────────────────────
+        // The "swoop in and attack" behaviour. Determinism note: EVERYTHING here is authority-only and feeds
+        // ONLY server-bound strike REPORTS (player HP is display-only, never hashed). It reads the RENDERED
+        // (on-screen) bug transform + the exact local-player transform — non-deterministic values that can
+        // therefore NEVER enter the sim hash. The deterministic bug positions (Agent.Position) are untouched.
+        private const int DefaultAttackTokens    = 2;  // 1-2 bugs flash/report per sting (visual; server caps damage)
+        private const int DefaultStingRearmTicks = 4;  // paces a swarm's sting REPORTS (server cooldown_secs is the real gate)
+        private const int LungeRearmTicks        = 4;  // throttle for the centipede per-tick connect report
+
+        // Per-swarm sting wind-up: an in-range bug flashes (the telegraph), then stings if a bug is STILL in range.
+        private class StingWindup { public string PlayerId; public long FireTick; }
+        private readonly Dictionary<string, StingWindup> _stingWindup = new(); // swarm_id → in-flight wind-up
+        private readonly Dictionary<string, long> _stingRearmAt = new();       // swarm_id → tick it may arm again
+        private readonly Dictionary<string, long> _lungeRearmAt = new();       // swarm_id → tick the lunge connect may re-report
+
+        private UnityEngine.Transform _localPlayerTf;   // cached; the EXACT local pos (no cell granularity)
+        private string _localUserId;
+
+        /// <summary>AUTHORITY-ONLY per-tick bug→player STING detection. The actual swoop is the DETERMINISTIC
+        /// attack MOVEMENT (BugAgent orbit-and-dive, run by every client); this layer only lands the DAMAGE + the
+        /// telegraph. It flashes an in-range bug (the dodge-able wind-up), then after telegraph_secs stings if a bug
+        /// is STILL in RENDERED range of the exact local player (so the hit matches the sprite — no phantom).
+        /// CONTACT bugs use a per-swarm wind-up; LUNGE bugs (centipedes) detect their surge connect. HP is
+        /// server-authoritative + display-only, so the rendered/exact reads here never enter the sim hash.</summary>
+        private void RunBugPlayerStrikes(List<PlayerTarget> players)
+        {
+            if (players == null || players.Count == 0) return;
+            if (string.IsNullOrEmpty(_localUserId)) _localUserId = WorldManager.Instance?.Self?.UserId;
+            if (_localPlayerTf == null) _localPlayerTf = FindObjectOfType<BugFarmer.Player.PlayerController>()?.transform;
+
+            foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
+            {
+                var swarm = _swarms[swarmId];
+                if (swarm == null || swarm.Count == 0) { ClearStingState(swarmId); continue; }
+                var atk = BugFarmer.Data.EntityDatabase.GetSpecies(swarm.SpeciesId)?.Attack;
+                if (atk == null || atk.Damage <= 0) continue;   // only attack-capable species
+
+                var rFixed = FixedPoint.FromFloat(atk.Range);
+                long rangeSqr = (rFixed * rFixed).Value;
+
+                if (atk.Style == "lunge")
+                    RunLungeConnect(swarmId, swarm, atk, rangeSqr, players);
+                else
+                    RunContactSting(swarmId, swarm, atk, rangeSqr, players);
+            }
+        }
+
+        /// <summary>LUNGE connect (centipedes): the SERVER owns the surge choreography (rear-up telegraph →
+        /// surge → overshoot); the client just detects when the surging RENDERED body reaches the player and
+        /// reports an instant strike (the server per-swarm cooldown is the real damage gate; a short local
+        /// rearm throttles reports). Replaces the deleted server-side centre-fire bite (the phantom).</summary>
+        private void RunLungeConnect(string swarmId, SwarmVisual swarm, BugFarmer.Data.EntityDatabase.AttackInfo atk, long rangeSqr, List<PlayerTarget> players)
+        {
+            if (_lungeRearmAt.TryGetValue(swarmId, out var rearm) && _simulationTick < rearm) return;
+            long broadSqr = BroadSqr(atk.Range, swarm.Radius);
+            foreach (var player in players)
+            {
+                var pos = PlayerAttackPos(player.PlayerId, players) ?? player.Position;
+                if (swarm.SimCenter.SqrDistanceTo(pos).Value > broadSqr) continue;
+                var stingers = RenderedStingersInRange(swarm, pos, rangeSqr, 1);
+                if (stingers.Count == 0) continue;
+                SendStrike(swarmId, player.PlayerId, stingers, "strike");
+                _lungeRearmAt[swarmId] = _simulationTick + LungeRearmTicks;
+                break;
+            }
+        }
+
+        /// <summary>CONTACT sting (wasps/bees): a per-swarm wind-up. Flash an in-range bug (the dodge-able tell),
+        /// then after telegraph_secs sting if a bug is STILL in RENDERED range (a dodge/step-out whiffs).
+        /// attack_tokens = how many bugs flash/report at once. The DIVERS come from the attack MOVEMENT, not
+        /// here — this layer just fires the telegraphed damage whenever a swooping bug is on the player.</summary>
+        private void RunContactSting(string swarmId, SwarmVisual swarm, BugFarmer.Data.EntityDatabase.AttackInfo atk, long rangeSqr, List<PlayerTarget> players)
+        {
+            int tokens = atk.AttackTokens > 0 ? atk.AttackTokens : DefaultAttackTokens;
+            long telegraphTicks = (long)(atk.TelegraphSecs * 10f);
+            long rearmTicks = atk.DiveCooldownSecs > 0 ? (long)(atk.DiveCooldownSecs * 10f) : DefaultStingRearmTicks;
+
+            // IN A WIND-UP → fire when it elapses, but only if a bug is STILL in range (step-out/dodge whiffs).
+            if (_stingWindup.TryGetValue(swarmId, out var wu))
+            {
+                if (_simulationTick < wu.FireTick) return;
+                _stingWindup.Remove(swarmId);
+                _stingRearmAt[swarmId] = _simulationTick + rearmTicks;
+                var ppos = PlayerAttackPos(wu.PlayerId, players);
+                if (ppos.HasValue)
+                {
+                    var stillIn = RenderedStingersInRange(swarm, ppos.Value, rangeSqr, tokens);
+                    if (stillIn.Count > 0) SendStrike(swarmId, wu.PlayerId, stillIn, "strike");
+                }
+                return;
+            }
+            if (_stingRearmAt.TryGetValue(swarmId, out var rearm) && _simulationTick < rearm) return;
+
+            // NOT WINDING UP → find a swooping bug in range of a player and start the wind-up (or sting instantly).
+            long broadSqr = BroadSqr(atk.Range, swarm.Radius);
+            foreach (var player in players)
+            {
+                var pos = PlayerAttackPos(player.PlayerId, players) ?? player.Position;
+                if (swarm.SimCenter.SqrDistanceTo(pos).Value > broadSqr) continue;
+                var stingers = RenderedStingersInRange(swarm, pos, rangeSqr, tokens);
+                if (stingers.Count == 0) continue;
+                if (telegraphTicks <= 0)
+                {
+                    SendStrike(swarmId, player.PlayerId, stingers, "strike");
+                    _stingRearmAt[swarmId] = _simulationTick + rearmTicks;
+                }
+                else
+                {
+                    _stingWindup[swarmId] = new StingWindup { PlayerId = player.PlayerId, FireTick = _simulationTick + telegraphTicks };
+                    SendStrike(swarmId, player.PlayerId, stingers, "windup");
+                }
+                break; // one target per swarm per pass
+            }
+        }
+
+        private long BroadSqr(float range, float swarmRadius)
+        {
+            var broadFixed = FixedPoint.FromFloat(range + swarmRadius);
+            return (broadFixed * broadFixed).Value;
+        }
+
+        /// <summary>Up to `max` RENDERED members within range (+LoS) of a point, ascending id.</summary>
+        private List<int> RenderedStingersInRange(SwarmVisual swarm, FixedPoint2 pos, long rangeSqr, int max)
+        {
+            var stingers = new List<int>();
+            foreach (var (bugId, bugPos) in swarm.GetAllBugsRenderedSorted())
+            {
+                if (stingers.Count >= max) break;
+                if (bugPos.SqrDistanceTo(pos).Value > rangeSqr) continue;
+                if (BugCollision.LineBlocked(bugPos, pos)) continue;
+                stingers.Add(bugId);
+            }
+            return stingers;
+        }
+
+        /// <summary>Drop all sting/lunge bookkeeping for a swarm that's gone (keeps the dicts bounded).</summary>
+        private void ClearStingState(string swarmId)
+        {
+            _stingWindup.Remove(swarmId);
+            _stingRearmAt.Remove(swarmId);
+            _lungeRearmAt.Remove(swarmId);
+        }
+
+        /// <summary>Position to test a player against: the LOCAL player's EXACT transform (kills the cell
+        /// granularity/lag that left a residual phantom), else the deterministic cell target. Null if unknown.</summary>
+        private FixedPoint2? PlayerAttackPos(string playerId, List<PlayerTarget> players)
+        {
+            if (playerId == _localUserId && _localPlayerTf != null)
+            {
+                var p = _localPlayerTf.position;
+                return new FixedPoint2 { X = FixedPoint.FromFloat(p.x), Y = FixedPoint.FromFloat(p.y) };
+            }
+            foreach (var pt in players) if (pt.PlayerId == playerId) return pt.Position;
+            return null;
+        }
+
+        private void SendStrike(string swarmId, string playerId, List<int> bugIds, string phase)
+        {
+            SendToServer(OpCodes.BugPlayerStrike, new BugPlayerStrikeMessage
+            {
+                swarm_id = swarmId, player_id = playerId, bug_ids = bugIds.ToArray(),
+                tick = _simulationTick, phase = phase,
+            });
         }
 
         /// <summary>
@@ -797,6 +1020,10 @@ namespace BugFarmer.Entities
             _lastReceivedSeq = -1;
             _frontierWatermark = -1;
             _syncState = SyncState.Joining;
+            // Bug-attack bookkeeping is per-zone (authority-only, sim-inert) — drop it on a zone swap.
+            _stingWindup.Clear();
+            _stingRearmAt.Clear();
+            _lungeRearmAt.Clear();
         }
 
         private void RequestResync()
@@ -894,6 +1121,9 @@ namespace BugFarmer.Entities
                 case OpCodes.ZoneCollisionMap:
                     HandleZoneCollisionMap(state);
                     break;
+                case OpCodes.ZoneRoofMap:
+                    HandleZoneRoofMap(state);
+                    break;
                 // Inventory messages (26, 37, 38) handled by InventoryManager
             }
         }
@@ -915,6 +1145,17 @@ namespace BugFarmer.Entities
                 Debug.Log($"[SwarmManager] WorldSeed not ready, caching {update.swarms.Length} swarms");
                 _pendingUpdate = update;
                 _hasPendingUpdate = true;
+                return;
+            }
+
+            // REPLAY GATE (one-time-base fix): while not Live, an on-receipt update reflects END-tick server
+            // state — its removal reconcile would DESTROY snapshot-recreated merged-away swarms before their
+            // merge replays (re-fabricating the very divergence the late-join fix removes). SwarmUpdate is
+            // cosmetic (metadata refresh + empty-husk sweep; every sim-relevant removal rides the ledger), so
+            // dropping is lossless — the next Live-period update re-delivers.
+            if (_syncState != SyncState.Live)
+            {
+                DebugFileLogger.Log($"[SwarmManager] Dropping SwarmUpdate (tick {update.tick}) — state={_syncState} (replay gate)");
                 return;
             }
 
@@ -942,17 +1183,71 @@ namespace BugFarmer.Entities
                 // tick) or the join baseline. Deliberately do nothing (see comment above).
             }
 
-            // Remove swarms not in this update (merged/despawned)
-            var toRemove = _swarms.Keys.Where(id => !receivedIds.Contains(id)).ToList();
-            foreach (var id in toRemove)
+            // DEFERRED removal reconcile (fixes the "early on-receipt deletion" race the merge handler's
+            // deficit-fill comment admits to): destroying a swarm the moment the server update omits it can
+            // race AHEAD of the deterministic SWARM_MERGE at its event tick — the merge then finds the
+            // absorbed swarm gone and FABRICATES bugs on this client while a differently-timed client MOVES
+            // its real ones (same-id-different-bug divergence, live-vs-live). Every sim-relevant removal
+            // rides the ledger (server deletes only empty husks / evented merges), so the reconcile's only
+            // legitimate job is sweeping EMPTY husks — defer it until our sim has PASSED the update's tick
+            // (all events ≤ tick applied locally), and never touch a swarm that still has bugs.
+            _pendingReconcileTick = update.tick;
+            _pendingReconcileIds = receivedIds;
+        }
+
+        // Latest server swarm-id set awaiting the tick-aligned husk sweep (see ProcessSwarmUpdate).
+        private long _pendingReconcileTick = -1;
+        private HashSet<string> _pendingReconcileIds;
+
+        /// <summary>TEST HOOK (headless sync harness `-desyncafter` — the drift-net self-test): deliberately
+        /// perturb ONE bug's position so THIS client diverges. Proves the zone drift round + authority
+        /// tie-referee actually DETECT and RESYNC a diverged client (the net's --selftest). Never called on
+        /// any production path — only HeadlessSyncTest wires it, and only when the flag is passed.</summary>
+        public bool DebugPerturbOneBug()
+        {
+            foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
             {
-                if (_swarms.TryGetValue(id, out var swarm))
-                {
-                    swarm.Cleanup();
-                    Destroy(swarm.gameObject);
-                }
-                _swarms.Remove(id);
+                var agent = _swarms[swarmId].GetFirstAgentForDebug();
+                if (agent == null) continue;
+                agent.Position = new FixedPoint2(
+                    agent.Position.X + FixedPoint.FromInt(1), agent.Position.Y);
+                Debug.LogWarning($"[SwarmManager] CHAOS: perturbed {swarmId} bug {agent.BugId} by +1 cell (drift-net self-test)");
+                DebugFileLogger.Log($"[SwarmManager] CHAOS: perturbed {swarmId} bug {agent.BugId} by +1 cell (drift-net self-test)");
+                return true;
             }
+            return false;
+        }
+
+        /// <summary>Tick-aligned cosmetic sweep: once the sim has processed every event up to the update's
+        /// tick, destroy EMPTY swarms the server no longer lists. Bugful absentees are logged, never
+        /// destroyed (either born after the update's tick, or a genuine inconsistency to surface).</summary>
+        private void ReconcileDespawnedSwarms()
+        {
+            if (_pendingReconcileIds == null || _simulationTick < _pendingReconcileTick) return;
+            List<string> toRemove = null;
+            foreach (var kv in _swarms)
+            {
+                if (_pendingReconcileIds.Contains(kv.Key)) continue;
+                if (kv.Value.Count > 0)
+                {
+                    DebugFileLogger.Log($"[SwarmManager] Reconcile: {kv.Key} absent from server set (tick {_pendingReconcileTick}) but has {kv.Value.Count} bugs — NOT removing (newborn or inconsistency)");
+                    continue;
+                }
+                (toRemove ??= new List<string>()).Add(kv.Key);
+            }
+            if (toRemove != null)
+            {
+                foreach (var id in toRemove)
+                {
+                    if (_swarms.TryGetValue(id, out var swarm))
+                    {
+                        swarm.Cleanup();
+                        Destroy(swarm.gameObject);
+                    }
+                    _swarms.Remove(id);
+                }
+            }
+            _pendingReconcileIds = null;
         }
 
         private void HandleBugCaught(IMatchState state)
@@ -1079,23 +1374,54 @@ namespace BugFarmer.Entities
             switch (msg.kind)
             {
                 case "strike":
-                    swarm.FlashAllBugs(); // the predator lunges
-                    // Phase 2: per-victim snatch — a positioned THWACK AT each eaten fly (the kill itself
-                    // vanishes the exact individual deterministically; this is the audible per-victim cue).
+                    // Per-victim snatch: flash ONLY the member nearest each eaten prey (+ a positioned
+                    // THWACK) so a strike reads as individual lunges, not the whole swarm flashing at once.
+                    // The kill itself vanishes the exact individual deterministically via the ledger.
                     if (msg.victim_x != null && msg.victim_y != null && msg.victim_x.Length > 0)
                     {
                         int n = Mathf.Min(msg.victim_x.Length, msg.victim_y.Length);
                         for (int i = 0; i < n; i++)
-                            BugFarmer.Audio.AudioFx.ThwackAt(new Vector2(msg.victim_x[i], msg.victim_y[i]));
+                        {
+                            var vp = new Vector2(msg.victim_x[i], msg.victim_y[i]);
+                            swarm.LungeNearest(vp); // #20: the nearest member JABS toward the kill (+ flash)
+                            BugFarmer.Audio.AudioFx.ThwackAt(vp);
+                            // #20: the consumed corpse pops in at the victim and holds for the feeding dwell,
+                            // then fades — the predator parks on it (server feed-pause). Display-only.
+                            if (!string.IsNullOrEmpty(msg.carcass_item))
+                                StrikeVfx.SpawnCorpse(BugFarmer.Data.EntityDatabase.GetItemSprite(msg.carcass_item), vp, msg.feed_pause_secs);
+                        }
                     }
                     else
                     {
-                        BugFarmer.Audio.AudioFx.ThwackAt(pos); // legacy/centre fallback
+                        swarm.FlashAllBugs(); // no victim positions — fall back to the swarm lunge
+                        BugFarmer.Audio.AudioFx.ThwackAt(pos);
                     }
                     break;
                 case "windup":
-                    BugFarmer.Audio.AudioFx.HissAt(pos);
-                    swarm.FlashAllBugs();
+                    // A member PEELING OFF to dive (victim = the target player) flashes ONLY the nearest bug —
+                    // a solo diver, not the whole cloud. The centipede rear-up / predator windup (no victim)
+                    // flashes the whole (usually 1-member) swarm as before.
+                    if (msg.victim_x != null && msg.victim_x.Length > 0 && msg.victim_y != null && msg.victim_y.Length > 0)
+                    {
+                        var vp = new Vector2(msg.victim_x[0], msg.victim_y[0]);
+                        swarm.FlashNearest(vp);
+                        BugFarmer.Audio.AudioFx.HissAt(vp);
+                    }
+                    else
+                    {
+                        BugFarmer.Audio.AudioFx.HissAt(pos);
+                        swarm.FlashAllBugs();
+                    }
+                    break;
+                case "dive":
+                    // Connect (the sting landed): flash the member nearest the player + a small hit-pop jab. The
+                    // real SWOOP is now the deterministic attack MOVEMENT (BugAgent), so no big cosmetic dart is
+                    // needed — this is just the hit reaction. Display-only; damage was already applied server-side.
+                    if (msg.victim_x != null && msg.victim_x.Length > 0 && msg.victim_y != null && msg.victim_y.Length > 0)
+                    {
+                        var vp = new Vector2(msg.victim_x[0], msg.victim_y[0]);
+                        swarm.LungeNearest(vp); // 0.35 jab + flash (predation-style hit-pop)
+                    }
                     break;
                 case "gnaw":
                     // The night tell: the crunch is audible past the light radius —
@@ -1451,6 +1777,18 @@ namespace BugFarmer.Entities
         }
 
         /// <summary>
+        /// Hydrate the zone's authored roof (underground) cell set (OpCode 109). COSMETIC — the client
+        /// darkens these for the underground lighting overlay; never a sim input / hash contributor.
+        /// </summary>
+        private void HandleZoneRoofMap(IMatchState state)
+        {
+            var json = System.Text.Encoding.UTF8.GetString(state.State);
+            var msg = JsonUtility.FromJson<ZoneRoofMapMessage>(json);
+            if (msg == null) return;
+            BugFarmer.World.TilemapManager.Instance?.HandleZoneRoofMap(msg.cx, msg.cy);
+        }
+
+        /// <summary>
         /// Handle late join snapshot (OpCode 72).
         /// Contains snapshot + influence_log for deterministic replay.
         /// </summary>
@@ -1514,6 +1852,31 @@ namespace BugFarmer.Entities
                 DebugFileLogger.Log($"[SwarmManager] Hydrated {msg.food.Length} food entries from snapshot");
             }
 
+            // Hydrate the per-swarm HUNT ASSIGNMENTS (_swarmStrikes) BEFORE replay — SAME reason as food. Cleared
+            // first (a resync could hold stale assignments), then set from the authority's exact dict; replay-window
+            // SWARM_SET_TARGET events converge on top. Without this, a late-joiner's predators have no prey list →
+            // they wander while the authority hunts → per-bug positions desync (the late-join predation bug).
+            InfluenceManager.Instance?.ClearSwarmStrikes();
+            if (msg.hunts != null)
+            {
+                foreach (var h in msg.hunts)
+                    InfluenceManager.Instance?.HydrateSwarmStrike(
+                        h.predator_swarm_id, h.target_prey_id, h.strike_radius, h.kills_per_strike, h.strike_cooldown_ticks);
+                Debug.Log($"[SwarmManager] Hydrated {msg.hunts.Length} hunt assignments from snapshot");
+                DebugFileLogger.Log($"[SwarmManager] Hydrated {msg.hunts.Length} hunt assignments from snapshot");
+            }
+
+            // Hydrate the SUBDUED (smoke/calm) swarm set BEFORE replay — same discipline as hunts/food. Without it
+            // a late-joiner wouldn't know a swarm is calmed → its per-bug sim resumes the lunge/dive on a smoked swarm.
+            InfluenceManager.Instance?.ClearSubdued();
+            if (msg.subdued != null)
+            {
+                foreach (var id in msg.subdued)
+                    InfluenceManager.Instance?.HydrateSubdued(id);
+                Debug.Log($"[SwarmManager] Hydrated {msg.subdued.Length} subdued swarms from snapshot");
+                DebugFileLogger.Log($"[SwarmManager] Hydrated {msg.subdued.Length} subdued swarms from snapshot");
+            }
+
             // Hydrate player cells from snapshot STATE (not events)
             // This restores the point-in-time player positions at snapshot_tick
             if (msg.player_cells != null)
@@ -1524,6 +1887,36 @@ namespace BugFarmer.Entities
                 }
                 Debug.Log($"[SwarmManager] Hydrated {msg.player_cells.Length} player cells from snapshot");
                 DebugFileLogger.Log($"[SwarmManager] Hydrated {msg.player_cells.Length} player cells from snapshot");
+            }
+
+            // PRUNE-TO-SNAPSHOT (one-time-base rule): our state at snapshot_tick must equal the snapshot
+            // EXACTLY. Any existing swarm not in the snapshot's swarm set is either window-born (its
+            // SWARM_SPAWNED/SPLIT replays and re-mints it at its birth tick with correct seeding) or stale —
+            // keeping it would let a RESYNCING client's window-born swarms carry end-state bugs through the
+            // replay (double-advanced). Fresh joiners have no swarms → no-op. Skipped for bootstrap packages
+            // (no authority snapshot yet — nothing authoritative to prune against).
+            _pendingReconcileIds = null; // a pre-resync husk-sweep stash is stale relative to the new timeline
+            if (msg.swarms != null && msg.swarms.Length > 0)
+            {
+                var snapshotSwarmIds = new HashSet<string>();
+                foreach (var sd in msg.swarms) snapshotSwarmIds.Add(sd.swarm_id);
+                List<string> prune = null;
+                foreach (var id in _swarms.Keys)
+                    if (!snapshotSwarmIds.Contains(id)) (prune ??= new List<string>()).Add(id);
+                if (prune != null)
+                {
+                    foreach (var id in prune)
+                    {
+                        if (_swarms.TryGetValue(id, out var stale))
+                        {
+                            stale.Cleanup();
+                            Destroy(stale.gameObject);
+                        }
+                        _swarms.Remove(id);
+                    }
+                    Debug.Log($"[SwarmManager] Pruned {prune.Count} swarms not in snapshot (window-born re-mint via replay)");
+                    DebugFileLogger.Log($"[SwarmManager] Pruned {prune.Count} swarms not in snapshot (window-born re-mint via replay)");
+                }
             }
 
             // Create swarm visuals from metadata BEFORE applying snapshots
@@ -1626,15 +2019,36 @@ namespace BugFarmer.Entities
                     var swarm = GetSwarm(swarmData.swarm_id);
                     if (swarm != null)
                     {
+                        // RESYNC per-BUG exactness (one-time-base rule): a RESYNCING client's swarm may hold
+                        // post-snapshot bugs (which would carry end-state THROUGH the replay — double-advanced;
+                        // this kept a perturbed client divergent across three resyncs in the drift-net
+                        // self-test) or lack snapshot bugs it removed post-snapshot (ApplySnapshot only
+                        // overwrites EXISTING bugs). Reconcile the bug-id set to EXACTLY the snapshot's first —
+                        // the per-bug analog of the swarm-level prune. Replay re-mints post-snapshot births at
+                        // their event ticks (SpawnBugAt un-removes), so nothing is lost. Fresh joins are
+                        // already exact (create-exact-ids) → extras/missing are both empty there.
+                        var wantIds = new HashSet<int>();
+                        foreach (var b in swarmData.bugs) wantIds.Add(b.bug_id);
+                        List<int> extras = null;
+                        foreach (var (bugId, _) in swarm.GetAllBugsAliveSorted())
+                            if (!wantIds.Contains(bugId)) (extras ??= new List<int>()).Add(bugId);
+                        if (extras != null)
+                        {
+                            swarm.RemoveBugsById(extras.ToArray());
+                            DebugFileLogger.Log($"[SwarmManager] Resync reconcile {swarmData.swarm_id}: removed {extras.Count} post-snapshot bugs (replay re-mints)");
+                        }
+                        foreach (var b in swarmData.bugs) swarm.SpawnBugAt(b.bug_id); // no-op on existing; recreates missing
                         Debug.Log($"[SwarmManager] Swarm {swarmData.swarm_id} exists, applying snapshot directly");
                         DebugFileLogger.Log($"[SwarmManager] Swarm {swarmData.swarm_id} exists, applying snapshot directly");
                         swarm.ApplySnapshot(swarmData.bugs);
                     }
                     else
                     {
-                        // This shouldn't happen now that we create from metadata, but keep as fallback
-                        Debug.LogWarning($"[SwarmManager] Swarm {swarmData.swarm_id} NOT found (no metadata?), caching {bugCount} bugs for later");
-                        DebugFileLogger.Log($"[SwarmManager] Swarm {swarmData.swarm_id} NOT found, caching {bugCount} bugs for later");
+                        // Post one-time-base fix this branch is DEAD (metadata is built from the snapshot's
+                        // own swarm set, so every bug-data swarm has metadata). If it fires, the package is
+                        // self-inconsistent again — the same-id-different-bug divergence machine. Scream.
+                        Debug.LogError($"[SwarmManager] LATEJOIN-INCONSISTENCY: swarm {swarmData.swarm_id} has bug data but NO metadata — caching {bugCount} bugs for later (divergence likely; see one-time-base rule)");
+                        DebugFileLogger.Log($"[SwarmManager] LATEJOIN-INCONSISTENCY: swarm {swarmData.swarm_id} NOT found, caching {bugCount} bugs for later");
                         _pendingSnapshots[swarmData.swarm_id] = new PendingSnapshot
                         {
                             Bugs = swarmData.bugs,
@@ -2008,11 +2422,20 @@ namespace BugFarmer.Entities
             foreach (var kvp in _swarms)
             {
                 var bugData = kvp.Value.GetAllBugPositions();
-                if (bugData.Length > 0)
+                // Include 0-bug swarms too (one-time-base fix): an empty swarm at snapshot still needs
+                // metadata on a late-joiner, or a window SWARM_REPRODUCED targeting it is skipped ("unknown
+                // swarm") and the joiner permanently misses those bugs.
                 {
                     var snap = new SwarmSnapshotData
                     {
                         swarm_id = kvp.Key,
+                        // Snapshot-moment identity: the server builds late-join swarm_metadata FROM these
+                        // (never from its end-tick state), so merged-away/window-born swarms reconstruct
+                        // consistently. See the one-time-base rule (architecture_swarm_sync.md).
+                        species_id = kvp.Value.SpeciesId,
+                        next_bug_id = kvp.Value.NextBugId,
+                        center_x = kvp.Value.SimCenter.X.Value,
+                        center_y = kvp.Value.SimCenter.Y.Value,
                         bugs = bugData
                     };
                     // Embed the swarm's current leg (authoritative @ snapshot tick) so late-joiners hydrate
@@ -2037,7 +2460,7 @@ namespace BugFarmer.Entities
             // tick behind the state it contained, so late-joiners re-simulated that tick on replay → a 1-tick
             // cycle/position shift that compounded into cross-client divergence. Confirmed by boundary trace:
             // the captured state matched THIS client's trace at snapshot_tick+1, 5/5. See
-            // docs/product/architecture_swarm_sync.md:103/111/137.)
+            // docs/product/architecture/architecture_swarm_sync.md:103/111/137.)
             // snapshot_last_event_seq stays _lastAppliedSeq: events@_simulationTick are still pending (applied
             // at the start of the next AdvanceOneTick) and ride the replay log, so a joiner that starts at
             // snapshot_tick=_simulationTick applies them before simulating _simulationTick+1 — in lockstep.
@@ -2046,10 +2469,34 @@ namespace BugFarmer.Entities
             // is the reliable source. Bugs at a food source FEED (position-affecting), so a missing entry desyncs
             // per-bug positions on a late-joiner. (Confirmed cause of the residual late-join divergence.)
             var foodSnapshots = new List<FoodSnapshotData>();
+            var huntSnapshots = new List<HuntSnapshotData>();
+            var subduedIds = new List<string>();
+            var playerCells = new List<PlayerCellData>();
             if (InfluenceManager.Instance != null)
             {
                 foreach (var (id, fx, fy, level) in InfluenceManager.Instance.ExportFood())
                     foodSnapshots.Add(new FoodSnapshotData { food_id = id, x = fx, y = fy, level = level });
+                // Embed the per-swarm hunt assignments (_swarmStrikes) too — same reason as food: event-sourced +
+                // pruned, so the authority's live dict is the reliable source. A missing entry → a late-joiner's
+                // predator has no prey list → it wanders while the authority hunts → per-bug desync.
+                foreach (var (predatorId, s) in InfluenceManager.Instance.ExportSwarmStrikes())
+                    huntSnapshots.Add(new HuntSnapshotData
+                    {
+                        predator_swarm_id = predatorId,
+                        target_prey_id = s.TargetPreyId,
+                        strike_radius = s.StrikeRadiusFixed,
+                        kills_per_strike = s.KillsPerStrike,
+                        strike_cooldown_ticks = s.StrikeCooldownTicks,
+                    });
+                // Embed the subdued (smoke/calm) swarm-ids — same reason: event-sourced (SWARM_SUBDUED/UNSUBDUED)
+                // + pruned, so the authority's live set is the reliable source. A missing entry → a late-joiner
+                // resumes the lunge/dive on a calmed swarm.
+                subduedIds.AddRange(InfluenceManager.Instance.ExportSubdued());
+                // Embed the deterministic player cells AT this snapshot moment (one-time-base rule): the
+                // joiner's replay must read the same cells our sim read at snapshot_tick — end-tick server
+                // cells would show it FUTURE player positions during replay.
+                foreach (var (playerId, cellX, cellY) in InfluenceManager.Instance.GetPlayerCells())
+                    playerCells.Add(new PlayerCellData { player_id = playerId, cell_x = cellX, cell_y = cellY });
             }
 
             var snapshot = new ZoneSnapshotMessage
@@ -2059,6 +2506,9 @@ namespace BugFarmer.Entities
                 snapshot_last_event_seq = _lastAppliedSeq, // Last seq whose effects are in this snapshot
                 swarms = swarmSnapshots.ToArray(),
                 food = foodSnapshots.ToArray(),
+                hunts = huntSnapshots.ToArray(),
+                subdued = subduedIds.ToArray(),
+                player_cells = playerCells.ToArray(),
                 state_hash = "" // TODO: Implement state hash
             };
 
@@ -2212,6 +2662,24 @@ namespace BugFarmer.Entities
                         hash ^= (ulong)bug.vx;
                         hash *= prime;
                         hash ^= (ulong)bug.vy;
+                        hash *= prime;
+                        hash ^= (ulong)bug.hunt_target; // individual-predation commit — catches a chase-target desync directly
+                        hash *= prime;
+                        hash ^= (ulong)bug.feed_until;  // corpse-eat timer — catches a feed-state desync directly
+                        hash *= prime;
+                        // Centipede lunge: fold the position-determining surge fields so a phase/heading/timer desync
+                        // is caught DIRECTLY (not only once positions have already drifted).
+                        hash ^= (ulong)bug.surge_phase;
+                        hash *= prime;
+                        hash ^= (ulong)bug.surge_heading_x;
+                        hash *= prime;
+                        hash ^= (ulong)bug.surge_heading_y;
+                        hash *= prime;
+                        hash ^= (ulong)bug.surge_dist_left;
+                        hash *= prime;
+                        hash ^= (ulong)bug.surge_until;
+                        hash *= prime;
+                        hash ^= (ulong)bug.surge_cooldown_until;
                         hash *= prime;
                     }
                 }

@@ -36,6 +36,9 @@ from scene_cottage import place_cottage                               # noqa: E4
 from scene_lakeside import place_boat_store                           # noqa: E402
 from scene_ecologist import place_ecologist                           # noqa: E402
 from scene_fly_farm import place_fly_farm                             # noqa: E402
+from scene_weaver import place_weaver                                 # noqa: E402
+from scene_stonemason import place_stonemason                         # noqa: E402
+from scene_modern_wares import place_modern_wares                     # noqa: E402
 
 ZW = ZH = 256
 PLAZA = (127, 123)          # the road's main bend; spawn snaps to its S paving
@@ -131,11 +134,15 @@ def build(zone_id="village_21_B", vseed=0):
     px, py = PLAZA
     plaza(b, px, py, r=6, seed=vseed + 9)
     b.spawn = [px - 1, py - 5]      # S paving edge, facing the fountain
+    # Crossroads SIGNPOST just outside the plaza (right where you spawn) — right-click to read it.
+    safe(b, "signpost", px - 4, py - 6, surface=None,
+         text="SW: the Lake · S: the Mines · W: the Bee Vale · N: the Farms")
 
     # ================= 4) BUILDINGS (real pieces, clear of roads) =================
     # Civic cluster W of the plaza, fronting the W lane (doors south → gate spurs).
     place_mayor(b, 96, 136)                                  # the town hall (grandest)
     spur(b, 105, 135, 105, 127, tile="stone_path")
+    b.place_occupant("mayor", 103, 134)                      # talk-only (land deeds deferred), front of the hall
     place_market(b, 72, 138)
     spur(b, 77, 137, 77, 127, tile="stone_path")
     # The general store — composed (no piece existed; intent doc lists it
@@ -146,6 +153,10 @@ def build(zone_id="village_21_B", vseed=0):
     for (oid, x, y) in [("barrel", 53, 138), ("crate", 54, 138), ("crate", 55, 138)]:
         safe(b, oid, x, y)                                   # delivery clutter out front
     spur(b, 57, 139, 57, 127, tile="stone_path")
+    # Commerce v1 — interactive shop NPCs at the storefront: the general store keeper
+    # and the bug dealer next door (a proper bug-market building/scene comes later).
+    b.place_occupant("general_store_merchant", 60, 138)
+    b.place_occupant("bug_dealer", 64, 142)
 
     # Production cluster SE of the plaza on its own short lane off the main road
     # (set back so the smith's ore/coal frontage at oy-2 stays off the roadway).
@@ -154,6 +165,10 @@ def build(zone_id="village_21_B", vseed=0):
     spur(b, 143, 108, 143, 103, tile="dirt")
     place_carpenter(b, 156, 109)
     spur(b, 161, 108, 161, 103, tile="dirt")
+    # Commerce (D26): the metal + wood vendors stand at their storefronts, IN FRONT of the door
+    # (rows y105-106, between the frontage signs at y107-108 and the lane at y104 — verified clear).
+    safe(b, "blacksmith", 141, 105)
+    safe(b, "carpenter", 159, 105)
 
     # Residential houses NW of the plaza, NORTH of the town hall's compound —
     # VARIED, not three clone boxes: a ⊥ 4-room composer house (basic), the
@@ -204,16 +219,33 @@ def build(zone_id="village_21_B", vseed=0):
     # Boat store on the big lake's N shore, dock running S into the water (the
     # store hugs the shore so the dock actually crosses onto it).
     place_boat_store(b, 38, 108, dock_len=14)
+    b.place_occupant("fisherman", 41, 109)                   # at the boat store (fishing mechanic deferred)
 
     # Ecologist in its grove on the E lane (unfenced — the documented exception).
     place_ecologist(b, 188, 146, fenced=False)
+    b.place_occupant("ecologist", 190, 144)                  # at the ecologist's house (D26 — sells his recipes)
     forest(b, 200, 160, 22, 14, density=0.5, seed=vseed + 13)
     forest(b, 172, 130, 14, 10, density=0.45, seed=vseed + 14)
+
+    # ---- D26 SPECIALTY SHOPS: a south commerce strip below the production quarter -------------
+    # Three new shops on open ground south of the smith/carpenter (verified-clear lots). Each is
+    # south-facing; the vendor NPC stands at the storefront. (Coords found by a clear-rect scan.)
+    def vend(v, *cands):
+        for (x, y) in cands:
+            if safe(b, v, x, y):
+                return
+        b.warn(f"vendor {v}: no free storefront cell")
+    place_weaver(b, 138, 88)                       # Isolde's Loom (textiles/dye), door x143
+    vend("weaver", (143, 85), (142, 85), (144, 85), (143, 86), (141, 85))
+    place_stonemason(b, 171, 92)                   # Dougal's Stoneworks (yard faces south), door x176
+    vend("stonemason", (176, 90), (175, 90), (177, 90), (174, 90), (176, 89))
+    place_modern_wares(b, 184, 90)                 # Pim's Modern Wares, door x190
+    vend("modern_wares", (190, 88), (189, 88), (191, 88), (190, 87), (188, 88))
 
     # ================= 5) FARMS + ORCHARD + FLY FARM + PREDATORS (N) =================
     # Windmill AT the farm fork (the landmark at the decision point) + signpost.
     safe(b, "windmill", 118, 186)
-    safe(b, "signpost", 111, 180, surface=None)
+    safe(b, "signpost", 111, 180, surface=None, text="N: the Farms & Apiary · S: the Village")
     # Three irregular fields, hedgerows between, wheat beside the windmill.
     crop_bed(b, 90, 188, 110, 198, ["plant_wheat"])
     hedgerow(b, 86, 200, 112, 200, seed=41)
@@ -579,6 +611,12 @@ def build(zone_id="village_21_B", vseed=0):
             {"item": "dead_millipede", "x": 188, "y": 236, "count": 1},
         ],
     }
+    # World-map identity — written by save() directly (the old post-save zone.json patch is
+    # retired; ZoneBuilder.grid/.neighbors are first-class now). South = the underground
+    # (which declares "north": "village_21_B" back); west = Bee Meadow (the road tapering
+    # toward (2,124) + the stream entering at (0,76) continue there).
+    b.grid = (2, 1)
+    b.neighbors = {"south": "underground_passages_31", "west": "bee_meadow_20"}
     return b
 
 
@@ -593,12 +631,6 @@ if __name__ == "__main__":
     print("render ->", out)
     if "--save" in sys.argv:
         out_dir = b.save()
-        # save() writes row/col 0,0 — patch to the world-grid slot (2,1).
-        import json
-        zj = os.path.join(out_dir, "zone.json")
-        cfg = json.load(open(zj))
-        cfg["row"], cfg["col"] = 2, 1
-        json.dump(cfg, open(zj, "w"), indent=2)
         print("saved ->", out_dir)
         # THE VISIBLE VILLAGE: real-art renders land in the previews on every
         # save (full overview + readable region crops) — they can never go
@@ -607,11 +639,6 @@ if __name__ == "__main__":
                                             "zones", "village_21_B"))
         os.makedirs(zdir, exist_ok=True)
         render_builder(b, os.path.join(zdir, "full.png"), scale=2)
-        for nm, bounds in [("plaza", (100, 100, 165, 150)),
-                           ("residential", (10, 140, 120, 195)),
-                           ("fly_farm", (105, 185, 160, 245)),
-                           ("farms_orchard", (55, 175, 120, 240)),
-                           ("lake_boatstore", (5, 55, 105, 125)),
-                           ("mining", (80, 5, 200, 60))]:
-            render_builder(b, os.path.join(zdir, f"{nm}.png"), scale=5, bounds=bounds)
-        print("zone renders ->", zdir)
+        # The village's PARTS (plaza, orchard, fly farm, boat store, the buildings…) are previewed as
+        # SCENES in scenes/ — see ORGANIZATION.md. A zone is just full.png + scenes/; no region crops.
+        print("zone render ->", os.path.join(zdir, "full.png"))

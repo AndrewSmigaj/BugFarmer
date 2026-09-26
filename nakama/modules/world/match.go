@@ -75,22 +75,21 @@ func (m *Match) reproduceSwarm(state *WorldState, dispatcher runtime.MatchDispat
 
 	count := 1 + state.Rng.Intn(2) // 1-2 offspring
 
-	// VISIBLE BROOD path (flies/butterflies): a non-predator swarm LAYS eggs into the nursery at its
-	// breeding source instead of growing instantly. processBroods matures + hatches them, and the
-	// population/swarm caps apply at HATCH time (eggs are not bugs). Predators (wasp nest, centipede)
-	// and individuals fall through to the instant-growth path below, unchanged.
-	// GATED on an egg sprite: only species with a nursery (EggSpriteID) brood. Swarm-category
-	// DETRITIVORES (millipede/beetle — no egg art, and they breed on forage pools / carrion that
-	// layIntoBrood can't resolve) fall through to instant-growth + merge, which is the food-bounded
-	// "fewer fat swarms" behavior we want for them without a fake egg nursery.
-	if species.Predation == nil && species.Category == "swarm" && species.EggSpriteID != "" {
-		laid := m.layIntoBrood(state, dispatcher, swarm, count)
+	// VISIBLE BROOD path (breeding-unify): EVERY non-nest species LAYS a brood that develops + hatches,
+	// instead of a new bug popping into the swarm from nowhere. layIntoBrood resolves a breeding source
+	// (compost station / milkweed host / rotten-fruit pile) or falls back to a clutch at the swarm's own
+	// cell (free-roaming predators, detritivores). processBroods matures + hatches; caps apply at HATCH
+	// time (eggs aren't bugs); the birth itself still rides the deterministic SWARM_REPRODUCED ledger.
+	// NEST species (Predation.NestOccupant != "") are EXCLUDED — they breed via the nest deposit path
+	// (depositBrood), which the nest-brood variant makes visible separately. Centipede PACKS are
+	// free-roaming predators with no nest, so they lay an own-cell clutch here like every other
+	// nestless species; hatchFromBrood grows the nearest pack, which then splits past split_threshold.
+	if species.Predation == nil || species.Predation.NestOccupant == "" {
+		m.layIntoBrood(state, dispatcher, swarm, count) // own-cell fallback never fails → always a visible clutch
 		swarm.ReproductionMeter = 0
 		swarm.Satiation = 0
 		swarm.ReproduceCooldown = species.ReproduceCooldown
-		if laid {
-			m.consumeFood(state, dispatcher, swarm.TargetFoodID, reproduceFoodCost)
-		}
+		m.consumeFood(state, dispatcher, swarm.TargetFoodID, reproduceFoodCost)
 		return
 	}
 
@@ -107,45 +106,6 @@ func (m *Match) reproduceSwarm(state *WorldState, dispatcher runtime.MatchDispat
 				swarm.ID, swarm.SpeciesID, maxPop)
 			return
 		}
-	}
-
-	// Individuals (ground crawlers, §14.3): merge/split are disabled for the
-	// category, so a full swarm can never shed members — growth past MaxSwarmSize
-	// would overcap the knot forever. At the swarm-size cap the litter becomes a
-	// NEW swarm beside the parent instead, subject to the zone's swarm-count cap
-	// (the same arm-the-cooldown skip as the population cap when no room).
-	if species.Category == "individual" && species.MaxSwarmSize > 0 &&
-		swarm.Count >= species.MaxSwarmSize {
-		atSwarmCap := false
-		if state.CurrentZone != nil && state.CurrentZone.BugSpawning != nil {
-			if zcap, ok := state.CurrentZone.BugSpawning.SpeciesCaps[swarm.SpeciesID]; ok &&
-				zcap.Max > 0 && state.AliveSwarmCount(swarm.SpeciesID) >= zcap.Max {
-				atSwarmCap = true
-			}
-		}
-		if atSwarmCap {
-			swarm.ReproductionMeter = 0
-			swarm.Satiation = 0
-			swarm.ReproduceCooldown = species.ReproduceCooldown
-			logger.Debug("Swarm %s at the %s swarm-count cap: reproduction skipped",
-				swarm.ID, swarm.SpeciesID)
-			return
-		}
-		chunkSize := state.Config.ChunkSize
-		child := m.spawnSwarmAt(state, swarm.SpeciesID, count,
-			swarm.Position.WorldX(chunkSize)+1.5, swarm.Position.WorldY(chunkSize),
-			chunkSize)
-		if child == nil {
-			return
-		}
-		state.Stats.recordBirth(swarm.SpeciesID, BirthReproduce, count)
-		swarm.ReproductionMeter = 0
-		swarm.Satiation = 0
-		swarm.ReproduceCooldown = species.ReproduceCooldown
-		m.consumeFood(state, dispatcher, swarm.TargetFoodID, reproduceFoodCost)
-		logger.Info("Swarm %s reproduced at %s: minted new swarm %s (+%d, parent full at %d)",
-			swarm.ID, swarm.TargetFoodID, child.ID, count, swarm.Count)
-		return
 	}
 
 	m.growSwarm(state, swarm, count) // the shared id-math + SWARM_REPRODUCED event
@@ -292,12 +252,24 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 		}
 	}
 
+	// Economy invariant: no shop may sell a good cheaper than it buys it back (infinite-money pump).
+	if bad := validateShopArbitrage(state); len(bad) > 0 {
+		logger.Error("SHOP ARBITRAGE — sold cheaper than bought back: %v", bad)
+	}
+
 	// Load crop definitions
 	state.CropDefs, err = LoadCropDefs("data")
 	if err != nil {
 		logger.Warn("Failed to load crop definitions: %v", err)
 	} else {
 		logger.Info("Loaded %d crop definitions", len(state.CropDefs))
+	}
+
+	// Load shovel ground-placement recipes
+	if gr, gerr := LoadGroundRecipes("data"); gerr != nil {
+		logger.Warn("Failed to load ground recipes: %v", gerr)
+	} else {
+		state.GroundRecipes = gr
 	}
 
 	// Load crafting recipes
@@ -308,13 +280,20 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 		logger.Info("Loaded %d crafting recipes across %d stations", len(state.Recipes), len(state.RecipesByStation))
 	}
 
-	// ZONE PERSISTENCE: prefetch this zone's saved farm delta (consumed lazily per chunk in
-	// handleChunkSubscribe). Must run after CurrentZone is set; before the swarm restore below.
-	m.prefetchZoneState(ctx, nk, state, logger)
-
-	// Restore the saved bug population if this zone was persisted; else spawn fresh initial swarms.
-	// Restored swarms are CLEAN (IDs 0..Count-1) and enter before any client joins — determinism-safe.
-	if !m.restoreSwarms(ctx, nk, state, logger) {
+	// ZONE PERSISTENCE (world_save.go): restore the zone's WorldSave document EAGERLY — the world
+	// clock resumes, then weather, cell edits, sidecar registries, and the full-fidelity swarm
+	// population, all before any client joins. No document → one-time legacy import
+	// (zone_persist.go) → else a pristine authored zone with fresh initial swarms.
+	swarmsRestored := false
+	if state.CurrentZone != nil {
+		if ws, err := loadWorldSave(ctx, nk, ZoneStateKey(state.CurrentZone.ZoneID, "")); err == nil && ws != nil {
+			m.restoreWorldSave(state, ws, logger)
+			swarmsRestored = !state.CurrentZone.EphemeralSwarms
+		} else {
+			swarmsRestored = m.importLegacySave(ctx, nk, state, logger)
+		}
+	}
+	if !swarmsRestored {
 		m.spawnInitialSwarms(state, logger)
 		m.seedInitialCarrion(state, logger)
 	}
@@ -494,6 +473,7 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 		worldInit := WorldInitMessage{
 			WorldSeed: worldState.WorldSeed,
 			Tick:      worldState.TickCount,
+			Peaceful:  worldState.CurrentZone != nil && worldState.CurrentZone.Peaceful,
 		}
 		initData, _ := json.Marshal(worldInit)
 		dispatcher.BroadcastMessage(OpCodeWorldInit, initData, []runtime.Presence{presence}, nil, true)
@@ -577,6 +557,7 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 			// Phase 1b: every joiner (first or late) gets the zone-wide blocks_bugs collision map so its
 			// bug sim collides identically regardless of camera position. Dynamic changes ride the ledger.
 			m.sendZoneCollisionMap(dispatcher, worldState, presence)
+			m.sendZoneRoofMap(dispatcher, worldState, presence) // cosmetic: underground lighting roof mask
 		}
 	}
 
@@ -616,12 +597,17 @@ func (m *Match) sendInventorySync(logger runtime.Logger, dispatcher runtime.Matc
 	if unlocked <= 0 {
 		unlocked = baseUnlockedItemSlots
 	}
+	known := make([]string, 0, len(player.KnownRecipes))
+	for id := range player.KnownRecipes {
+		known = append(known, id)
+	}
 	msg := FullInventorySyncMessage{
 		BugSlots:          bugSlots,
 		ItemSlots:         itemSlots,
 		Coins:             player.Coins,
 		ItemSlotsUnlocked: unlocked,
 		Intro:             player.PendingIntro,
+		KnownRecipes:      known,
 	}
 	player.PendingIntro = false // one-shot
 
@@ -729,11 +715,12 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 					worldState.ClearPendingInfluence()
 					logger.Info("Zone %s is now empty - reset all sync state (NextSeq, InfluenceLog, Snapshot, Authority, PendingInfluence)", zoneID)
 
-					// ZONE PERSISTENCE: the zone just went quiet — snapshot its farm (+ bug population)
-					// and write it async. The live paused match stays the source of truth until terminate,
-					// so this is a restart backup. Snapshot is built synchronously on the match goroutine.
-					if recs := m.snapshotZoneState(worldState); len(recs) > 0 {
-						go writeZoneRecords(context.Background(), nk, logger, recs)
+					// ZONE PERSISTENCE: the zone just went quiet — snapshot the WorldSave document
+					// (synchronously on the match goroutine; frozen bytes) and write it async. The
+					// generation guard in writeWorldSave keeps a slow async write from ever rolling
+					// back a newer terminate save.
+					if doc, docTick := m.snapshotWorldSaveBytes(worldState); doc != "" {
+						go writeWorldSave(context.Background(), nk, logger, worldState.CurrentZone.ZoneID, doc, docTick)
 					}
 				} else if zone.AuthorityUserID == userID {
 					// Authority is leaving but zone still has members - reassign
@@ -817,6 +804,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 	// batched zone). VERIFIED: no early `return` between here and the loop close, so the wrap is safe.
 	for simStep := 0; simStep < worldState.Config.SimBatch; simStep++ {
 		worldState.TickCount++
+		tickStart := worldState.Perf.Start() // whole-tick timer (recorded at loop-body end; see profiler.go)
 		chunkSize := worldState.Config.ChunkSize
 
 		// ZONE PERSISTENCE: periodic autosave while occupied (crash safety between the on-empty/terminate
@@ -824,8 +812,8 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		// guard, so it never runs on an empty zone.
 		if worldState.TickCount-worldState.LastZoneSaveTick >= zoneAutosaveTicks {
 			worldState.LastZoneSaveTick = worldState.TickCount
-			if recs := m.snapshotZoneState(worldState); len(recs) > 0 {
-				go writeZoneRecords(context.Background(), nk, logger, recs)
+			if doc, docTick := m.snapshotWorldSaveBytes(worldState); doc != "" {
+				go writeWorldSave(context.Background(), nk, logger, worldState.CurrentZone.ZoneID, doc, docTick)
 			}
 		}
 
@@ -997,6 +985,14 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				}
 				m.handleStationDeposit(logger, dispatcher, worldState, userID, depositMsg)
 
+			case OpCodeCompostHarvest:
+				var chMsg CompostHarvestMessage
+				if err := json.Unmarshal(msg.GetData(), &chMsg); err != nil {
+					logger.Warn("Invalid compost harvest from %s: %v", userID, err)
+					continue
+				}
+				m.handleCompostHarvest(logger, dispatcher, worldState, userID, chMsg)
+
 			case OpCodeContainer:
 				var caMsg ContainerActionMessage
 				if err := json.Unmarshal(msg.GetData(), &caMsg); err != nil {
@@ -1005,6 +1001,14 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				}
 				m.handleContainerAction(logger, dispatcher, worldState, userID, caMsg)
 
+			case OpCodeAction:
+				var shMsg ShopActionMessage
+				if err := json.Unmarshal(msg.GetData(), &shMsg); err != nil {
+					logger.Warn("Invalid shop action from %s: %v", userID, err)
+					continue
+				}
+				m.handleShopAction(logger, dispatcher, worldState, userID, shMsg)
+
 			case OpCodeSetHome:
 				var shMsg SetHomeMessage
 				if err := json.Unmarshal(msg.GetData(), &shMsg); err != nil {
@@ -1012,6 +1016,30 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 					continue
 				}
 				m.handleSetHome(logger, dispatcher, nk, worldState, userID, shMsg)
+
+			case OpCodeHiveHarvest:
+				var hhMsg HiveHarvestMessage
+				if err := json.Unmarshal(msg.GetData(), &hhMsg); err != nil {
+					logger.Warn("Invalid hive harvest from %s: %v", userID, err)
+					continue
+				}
+				m.handleHiveHarvest(logger, dispatcher, worldState, userID, hhMsg)
+
+			case OpCodeNurseryTake:
+				var ntMsg NurseryTakeMessage
+				if err := json.Unmarshal(msg.GetData(), &ntMsg); err != nil {
+					logger.Warn("Invalid nursery take from %s: %v", userID, err)
+					continue
+				}
+				m.handleNurseryTake(logger, dispatcher, worldState, userID, ntMsg)
+
+			case OpCodeNurseryDeposit:
+				var ndMsg NurseryDepositMessage
+				if err := json.Unmarshal(msg.GetData(), &ndMsg); err != nil {
+					logger.Warn("Invalid nursery deposit from %s: %v", userID, err)
+					continue
+				}
+				m.handleNurseryDeposit(logger, dispatcher, worldState, userID, ndMsg)
 
 			case OpCodeEcologyTuning:
 				// DEV TOOL: live-override a species' ecology parameters from the Unity debug
@@ -1092,6 +1120,29 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 					continue
 				}
 				m.handlePredationStrike(logger, dispatcher, worldState, userID, strikeMsg)
+
+			case OpCodeBugPlayerStrike:
+				// Authority reports which INDIVIDUAL bug(s) stung a player (server has only centres) — fixes the
+				// phantom center-sting. Server re-gates + funnels through applyBugAttackToPlayer.
+				var stingMsg BugPlayerStrikeMessage
+				if err := json.Unmarshal(msg.GetData(), &stingMsg); err != nil {
+					logger.Warn("Invalid bug-player strike from %s: %v", userID, err)
+					continue
+				}
+				m.handleBugPlayerStrike(logger, dispatcher, worldState, userID, stingMsg)
+
+			case OpCodePlayerDodge:
+				m.handlePlayerDodge(worldState, userID)
+
+			case OpCodeCorpseConsume:
+				// S2 individual predation: the authority reports a corpse an individual predator finished eating →
+				// remove it (server holds the ground item). Authority-gated inside; a LEFT corpse rots naturally.
+				var ccMsg CorpseConsumeMessage
+				if err := json.Unmarshal(msg.GetData(), &ccMsg); err != nil {
+					logger.Warn("Invalid corpse-consume from %s: %v", userID, err)
+					continue
+				}
+				m.handleCorpseConsume(worldState, dispatcher, userID, ccMsg)
 			}
 		}
 
@@ -1141,7 +1192,8 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		worldState.Perf.StopSys("forage", fgt)
 		if worldState.TickCount%30 == 0 {
 			nst := worldState.Perf.Start()
-			m.processNests(worldState, logger)                        // occupant-gone sweep + brood-drain re-hatch
+			m.processNests(worldState, dispatcher, logger)            // occupant-gone sweep + brood-drain re-hatch
+			m.processColonyMemory(worldState)                         // ant trails decay/age out (server-only soft state)
 			m.processNestFounding(worldState, dispatcher, logger)     // a thriving colony splits off a daughter hive
 			m.processPredatorBreeding(worldState, dispatcher, logger) // nestless carnivores breed when well-fed
 			m.processBroods(worldState, dispatcher, logger)           // visible nurseries: mature eggs -> maggots -> hatch
@@ -1150,6 +1202,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		dct := worldState.Perf.Start()
 		m.processGroundItemDecay(worldState, dispatcher)
 		worldState.Perf.StopSys("decay", dct)
+		m.processDiggingReset(worldState, dispatcher, tick) // heal shovel digs left untouched too long
 		m.processStations(worldState, dispatcher)      // material processors: input -> compost
 		m.processCraftStations(worldState, dispatcher) // recipe processors: queued batches -> output grid
 
@@ -1180,20 +1233,29 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			// the chosen source is CACHED on the swarm so the per-tick meter check is O(1).
 			// V1 RULE: a REPRODUCING swarm only targets DEPLETABLE sources (items/stations) —
 			// flora is infinite, so breeding on it would mean unbounded growth.
-			// ActionState machine (centipede windup/surge/recover/gnaw): PER TICK, BEFORE
-			// the think gate — surges are 25 ticks vs 8-30-tick thinks, and the bite check
-			// must run every tick of flight. Owns the swarm while active.
+			// Centipede GNAW (PER TICK, before the think gate): while chewing through a fence the swarm
+			// owns the tick (skips hunt/forage). The rest of the centipede brain — windup/surge/lunge +
+			// serpentine wander — now runs PER-BUG on the client (movement_style "centipede", each pack
+			// member independent). Only the gnaw stays server-side: it mutates the world and needs the
+			// occupant/Gnawable data the client doesn't have. Dispatched off the ActionState the hunt-leg sets.
 			actionActive := false
-			if species.Predation != nil && species.Category == "individual" {
+			if swarm.ActionState == "gnaw" {
 				pt := worldState.Perf.Start()
-				actionActive = m.processActionState(logger, dispatcher, worldState, swarm, species, chunkSize, deltaTime)
+				actionActive = m.processGnaw(logger, dispatcher, worldState, swarm, species, chunkSize)
 				worldState.Perf.StopSpecies(swarm.SpeciesID, "action", pt)
 			}
 
 			// Predation branches (prey FLEE / predator hunt+wander) REPLACE the shared
 			// forage block when they fire — they emit their own leg, write their own
 			// SpeedMult, and own NextThinkTick (hunt/flee re-aim every 10-15 ticks).
-			if !actionActive && worldState.TickCount >= swarm.NextThinkTick &&
+			// AGGRO: an attack-capable swarm checks EVERY tick for a nearby player (prompt notice — not
+			// gated behind a 3-5 s wander leg). If it has a target it OWNS the think (chase) and skips
+			// hunt/forage so it actually comes at you. Non-attackers return false and fall through.
+			// Centipedes don't aggro at the swarm-center level — each pack member surges at the player
+			// individually on the client. The server center just roams + hunts prey (the loose-center model).
+			aggroOwned := !actionActive && species.MovementStyle != "centipede" &&
+				m.aggroPlayerThink(worldState, swarm, species, chunkSize, deltaTime)
+			if !actionActive && !aggroOwned && worldState.TickCount >= swarm.NextThinkTick &&
 				!m.predationThink(worldState, swarm, species, chunkSize, deltaTime, logger) {
 				var resourceX, resourceY float32 = float32(math.NaN()), float32(math.NaN())
 				swarm.TargetFoodID = ""
@@ -1278,14 +1340,22 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 			// via OpCodePredationStrike → handlePredationStrike → applyPredationStrike. No autonomous
 			// server-side centre-strike here anymore.
 
-			// Bug-vs-player attacks (stings/bites): contact range, cooldown + invuln gated
-			if species.AttackDamage > 0 {
-				m.checkBugAttacks(logger, dispatcher, worldState, swarm, species, chunkSize)
-			}
+			// Bug-vs-player damage is now ALL client-detected + server-applied: the AUTHORITY client detects
+			// which individual bug is actually in range of the exact player (against the RENDERED sprite, so
+			// the hit matches what's on screen) and reports it (OpCodeBugPlayerStrike → handleBugPlayerStrike);
+			// the server holds only swarm centres. This covers BOTH the wasp contact sting AND the centipede
+			// lunge connect (the old server-side centipede bite — the last centre-fire phantom — was deleted
+			// from centipede.go). The old center-based checkBugAttacks is retired (TEST-ONLY).
 
 			// === Lifecycle meters (server-authoritative; all effects ride the ledger) ===
 			swarm.ReproduceCooldown -= deltaTime // was never decremented before this system
 			swarm.CompostCooldown -= deltaTime   // detritivore compost-deposit pacing
+			decayCondition(swarm, species, deltaTime) // subdual meter drains back toward agitated (§C)
+
+			// SUBDUE SYNC: the smoke/calm meter is server-only, but the client per-bug sim needs it to suppress
+			// the LUNGE/DIVE for a calmed swarm (the surge is client-side now). Broadcast the threshold crossing
+			// (both up on smoke and down on decay) as a frontier-gated toggle — the ONE emit point. §14.3.
+			worldState.syncSubduedState(worldState.CurrentZone.ZoneID, swarm, species)
 
 			atFood := false
 			if swarm.TargetFoodID != "" {
@@ -1541,6 +1611,11 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		if worldState.TickCount%100 == 0 && worldState.CurrentZone != nil {
 			worldState.PruneInfluenceLog(worldState.CurrentZone.ZoneID, worldState.TickCount)
 		}
+
+		// Whole-tick cost: record AFTER all per-tick work (incl. the day-rollover emit at ~L1440). On a
+		// rollover tick the emit already flushed+reset, so this tick lands in the next day's bucket — a
+		// ~1-in-DayLengthTicks aggregate imprecision (acceptable). See profiler.go RecordTick / dark-time.
+		worldState.Perf.RecordTick(tickStart)
 	} // end SIM BATCH loop
 
 	// Return state to continue (never nil for persistent world)
@@ -1559,9 +1634,9 @@ func (m *Match) MatchTerminate(ctx context.Context, logger runtime.Logger, db *s
 
 	// ZONE PERSISTENCE: the authoritative save for a clean restart. SYNCHRONOUS — a detached
 	// goroutine could be killed during teardown; graceSeconds gives the window to finish the write.
-	if recs := m.snapshotZoneState(worldState); len(recs) > 0 {
-		writeZoneRecords(ctx, nk, logger, recs)
-		logger.Info("Zone %s: persisted %d record(s) on terminate", worldState.ZoneID, len(recs))
+	if doc, docTick := m.snapshotWorldSaveBytes(worldState); doc != "" {
+		writeWorldSave(ctx, nk, logger, worldState.CurrentZone.ZoneID, doc, docTick)
+		logger.Info("Zone %s: persisted world save on terminate (tick %d)", worldState.ZoneID, docTick)
 	}
 
 	return worldState
@@ -1687,7 +1762,7 @@ func (m *Match) spawnInitialSwarms(state *WorldState, logger runtime.Logger) {
 // seedInitialCarrion drops the zone's authored carrion ground items (BugSpawnConfig.InitialCarrion) at
 // match start — the day-1 food bootstrap (e.g. dead millipedes in the woods so the local flies breed and
 // the beetles feed from tick 0, instead of waiting for the first natural deaths). Created directly into
-// state.GroundItems (no dispatcher: this runs at MatchInit before any client joins, like restoreSwarms);
+// state.GroundItems (no dispatcher: this runs at MatchInit before any client joins, like the save restore);
 // clients receive them on chunk subscribe. Deterministic: fixed positions + the GroundItemSeq counter.
 func (m *Match) seedInitialCarrion(state *WorldState, logger runtime.Logger) {
 	cfg := state.CurrentZone.BugSpawning
@@ -1713,7 +1788,7 @@ func (m *Match) seedInitialCarrion(state *WorldState, logger runtime.Logger) {
 			pos := entities.EntityPosition{LocalX: float32(seed.X + i), LocalY: float32(seed.Y)}
 			pos.Normalize(chunkSize)
 			itemID := state.nextItemID("item_carcass")
-			state.GroundItems[itemID] = &entities.GroundItem{
+			state.putGroundItem(&entities.GroundItem{
 				ID:        itemID,
 				ItemType:  seed.Item,
 				Count:     1,
@@ -1721,7 +1796,7 @@ func (m *Match) seedInitialCarrion(state *WorldState, logger runtime.Logger) {
 				Lifetime:  killDropLifetime,
 				FoodValue: foodValue,
 				IsCarrion: true,
-			}
+			})
 			if foodValue > 0 && state.CurrentZone != nil {
 				state.AddFoodEvent(state.CurrentZone.ZoneID, InfluenceItemRotted, itemID,
 					seed.X+i, seed.Y, foodValue)
@@ -1850,7 +1925,10 @@ func (m *Match) spawnSwarmInArea(state *WorldState, speciesID string, species *e
 			worldX = float32(area.CX) + float32(r*math.Cos(angle))
 			worldY = float32(area.CY) + float32(r*math.Sin(angle))
 		}
-		if !state.IsBlocked(worldX, worldY) {
+		// IsBlockedForSpawn consults the AUTHORED map (loads the chunk from disk if it's not subscribed
+		// yet), so this works at MatchInit before any chunk is in memory — the old IsBlocked checked the
+		// empty cache and reported every cell blocked, which is why initial spawn placed zero bugs.
+		if !state.IsBlockedForSpawn(worldX, worldY) {
 			placed = true
 			break
 		}
@@ -1859,15 +1937,7 @@ func (m *Match) spawnSwarmInArea(state *WorldState, speciesID string, species *e
 		return nil // no walkable cell found (rare) — skip this spawn rather than drop a bug in terrain
 	}
 
-	// Convert to chunk position
 	chunkSize := state.Config.ChunkSize
-	pos := entities.EntityPosition{
-		ChunkX: int(worldX) / chunkSize,
-		ChunkY: int(worldY) / chunkSize,
-		LocalX: worldX - float32(int(worldX)/chunkSize*chunkSize),
-		LocalY: worldY - float32(int(worldY)/chunkSize*chunkSize),
-	}
-
 	// Determine bug count: fixed swarm_size if set (deterministic test zones),
 	// else species MinSwarmSize plus a random amount in the lower-middle range.
 	countRange := species.MaxSwarmSize / 2
@@ -1878,32 +1948,15 @@ func (m *Match) spawnSwarmInArea(state *WorldState, speciesID string, species *e
 	if cap.SwarmSize > 0 {
 		count = cap.SwarmSize
 	}
-	id, _ := uuid.NewV4()
-	swarm := &entities.SwarmState{
-		ID:        fmt.Sprintf("swarm_%s", id.String()[:8]),
-		SpeciesID: speciesID,
-		Position:  pos,
-		Radius:    species.SwarmRadius,
-		Count:     count,
-		WanderRad: species.WanderRadius,
-		HomePos:   pos,
-		Satiation: state.Tuning.SpawnSatiation, // born half-fed (see const) — natural-spawn + Director re-seed path
+
+	// ONE creation path: spawnSwarmAt builds the swarm + registers it + emits the deterministic
+	// SWARM_SPAWNED ledger event. (This used to duplicate that logic inline.) RNG order is unchanged:
+	// position retries, then count, then spawnSwarmAt's uuid + assignDeathTicks.
+	swarm := m.spawnSwarmAt(state, speciesID, count, worldX, worldY, chunkSize)
+	if swarm != nil {
+		logger.Debug("Spawned swarm %s (%s) in %s at (%.0f, %.0f)",
+			swarm.ID, speciesID, area.ID, worldX, worldY)
 	}
-	swarm.InitializeBugIDs()
-	assignDeathTicks(swarm, species, 0, count, state.TickCount, SimRate)
-
-	state.Swarms[swarm.ID] = swarm
-	state.SwarmsBySpecies[speciesID] = append(state.SwarmsBySpecies[speciesID], swarm.ID)
-	state.SwarmsDirty = true
-	// Deterministic spawn via the ledger (see AddSwarmSpawnedEvent) — all clients create at the same tick.
-	if state.CurrentZone != nil {
-		state.AddSwarmSpawnedEvent(state.CurrentZone.ZoneID, swarm.ID, speciesID, count,
-			toFixed(swarm.WorldX(chunkSize)), toFixed(swarm.WorldY(chunkSize)))
-	}
-
-	logger.Debug("Spawned swarm %s (%s) in %s at (%.0f, %.0f)",
-		swarm.ID, speciesID, area.ID, worldX, worldY)
-
 	return swarm
 }
 
@@ -2113,8 +2166,8 @@ func (m *Match) checkSwarmMerging(state *WorldState, chunkSize int, logger runti
 			continue
 		}
 		species1 := state.Species[swarm1.SpeciesID]
-		if species1 == nil || species1.Category == "individual" {
-			continue // individuals (centipede) never merge
+		if species1 == nil {
+			continue
 		}
 
 		for _, id2 := range mergeIDs {
@@ -2220,8 +2273,8 @@ func (m *Match) checkSwarmSplitting(state *WorldState, chunkSize int, logger run
 			continue
 		}
 		species := state.Species[swarm.SpeciesID]
-		if species == nil || species.Category == "individual" {
-			continue // individuals (centipede) never split — belt+braces over the sizes
+		if species == nil {
+			continue
 		}
 
 		// Deterministic size rule: split when over the split limit. SplitThreshold (if set) decouples the
@@ -2436,6 +2489,13 @@ func (m *Match) handleCatchBug(
 			}
 			return
 		}
+		// CONDITION gate (§C / GDD §7.3 capture rules): catch_condition "calm" requires the
+		// swarm SUBDUED at the same one threshold behavior uses (angry bees can't be netted;
+		// smoke or spray them first). "always"/"" = no condition (all pre-§C species).
+		if catchSpecies.CatchCondition == "calm" && !swarmSubdued(swarm, catchSpecies) {
+			m.sendWorldError(dispatcher, state, playerID, "It's too agitated — calm it first!")
+			return
+		}
 	}
 
 	bugIDs := msg.BugIDs
@@ -2617,7 +2677,10 @@ func (m *Match) handleSampleResponse(
 		return // Unanimous (or nobody voted) - no drift
 	}
 
-	// Pick the majority hash as the reference. On a tie, skip to avoid resync storms.
+	// Pick the majority hash as the reference. On a tie, the ZONE AUTHORITY's vote breaks it (2026-07-19:
+	// with exactly 2 players every disagreement is a 1v1 tie, so the old skip made the net structurally
+	// blind in 2-player games — divergence persisted silently forever). Authority-as-truth is the system's
+	// established semantics: its snapshot IS the resync source. An authority-less tie still skips.
 	var refHash int64
 	bestCount, tie := -1, false
 	for h, c := range counts {
@@ -2628,9 +2691,21 @@ func (m *Match) handleSampleResponse(
 		}
 	}
 	if tie {
-		logger.Warn("Drift check for chunk %d,%d at tick %d: ambiguous hash split %v - skipping resync",
-			msg.ChunkX, msg.ChunkY, check.SampleTick, counts)
-		return
+		authorityBroke := false
+		if state.CurrentZone != nil {
+			zone := state.GetOrCreateZone(state.CurrentZone.ZoneID)
+			if authHash, ok := check.Votes[zone.AuthorityUserID]; ok {
+				refHash = authHash
+				authorityBroke = true
+				logger.Warn("Drift check at tick %d: hash tie %v broken by AUTHORITY %s (hash %d) - resyncing dissenters",
+					check.SampleTick, counts, zone.AuthorityUserID, authHash)
+			}
+		}
+		if !authorityBroke {
+			logger.Warn("Drift check for chunk %d,%d at tick %d: ambiguous hash split %v - skipping resync (no authority vote)",
+				msg.ChunkX, msg.ChunkY, check.SampleTick, counts)
+			return
+		}
 	}
 
 	// Resync every voter that disagreed with the majority.
@@ -2667,6 +2742,7 @@ func (m *Match) handleSnapshotRequest(
 	logger.Info("Zone resync requested by %s - sending late-join snapshot", requesterID)
 	m.sendLateJoinSnapshot(logger, dispatcher, state, requesterID, presence)
 	m.sendZoneCollisionMap(dispatcher, state, presence) // Phase 1b: refresh the zone-wide collision map too
+	m.sendZoneRoofMap(dispatcher, state, presence)      // cosmetic: underground lighting roof mask
 }
 
 // handleZoneSnapshot stores a snapshot from the authority client (OpCode 75).
@@ -2691,7 +2767,10 @@ func (m *Match) handleZoneSnapshot(
 		SnapshotTick:         msg.SnapshotTick,
 		SnapshotLastEventSeq: msg.SnapshotLastEventSeq,
 		Swarms:               msg.Swarms,
-		Food:                 msg.Food, // relay the authoritative food registry (opaque to server)
+		Food:                 msg.Food,        // relay the authoritative food registry (opaque to server)
+		Hunts:                msg.Hunts,       // relay the authoritative hunt assignments (opaque to server)
+		Subdued:              msg.Subdued,     // relay the authoritative subdued swarm-id set (opaque to server)
+		PlayerCells:          msg.PlayerCells, // player cells @ snapshot moment (one-time-base rule)
 		StateHash:            msg.StateHash,
 	}
 	zone.LatestSnapshotTick = msg.SnapshotTick
@@ -2771,6 +2850,21 @@ func (m *Match) sendZoneCollisionMap(dispatcher runtime.MatchDispatcher, state *
 	dispatcher.BroadcastMessage(OpCodeZoneCollisionMap, data, []runtime.Presence{presence}, nil, true)
 }
 
+// sendZoneRoofMap sends one joiner the zone's COMPLETE authored "roof" cell set (OpCodeZoneRoofMap) so the
+// client can darken underground/roofed cells for the lighting. COSMETIC — never a sim input. Sent on join
+// AND on resync, alongside the collision map (roof is static authored data, so no per-change events needed).
+func (m *Match) sendZoneRoofMap(dispatcher runtime.MatchDispatcher, state *WorldState, presence runtime.Presence) {
+	if state.CurrentZone == nil || presence == nil {
+		return
+	}
+	cx, cy := state.RoofCells()
+	data, err := json.Marshal(ZoneRoofMapMessage{Cx: cx, Cy: cy})
+	if err != nil {
+		return
+	}
+	dispatcher.BroadcastMessage(OpCodeZoneRoofMap, data, []runtime.Presence{presence}, nil, true)
+}
+
 // sendLateJoinSnapshot sends a LateJoinSnapshot (OpCode 72) to a joining player.
 // This contains the authority's snapshot plus the influence log for replay.
 func (m *Match) sendLateJoinSnapshot(
@@ -2843,24 +2937,35 @@ func (m *Match) sendLateJoinSnapshot(
 	logger.Info("LateJoinSnapshot coherence: swarms=%d (leg-less=%d) food_entries=%d",
 		len(zone.LatestSnapshot.Swarms), noLegCount, len(zone.LatestSnapshot.Food))
 
-	// Collect current player cell positions from authoritative state
-	// This is snapshot state, NOT event reconstruction
-	// Only include players currently in zone.Members (connected, zone-resident)
+	// Player cells: PREFER the authority's snapshot-moment registry (one-time-base rule, 2026-07-19) —
+	// end-tick cells would let the joiner's replay see FUTURE player positions until each window ENTER
+	// replays. Filtered to CURRENT zone.Members so a player who left during the window doesn't linger as a
+	// ghost cell forever (their in-window influence on bugs is a known ~4s micro-gap; post-window state
+	// converges exactly as before). Fallback to current state for bootstrap / a pre-fix authority.
 	var playerCells []PlayerCellData
-	for playerID := range zone.Members {
-		if cell, ok := state.PlayerCells[playerID]; ok {
-			playerCells = append(playerCells, PlayerCellData{
-				PlayerID: playerID,
-				CellX:    cell.CellX,
-				CellY:    cell.CellY,
-			})
+	if len(zone.LatestSnapshot.PlayerCells) > 0 {
+		for _, cell := range zone.LatestSnapshot.PlayerCells {
+			if _, member := zone.Members[cell.PlayerID]; member {
+				playerCells = append(playerCells, cell)
+			}
+		}
+	}
+	if len(playerCells) == 0 {
+		for playerID := range zone.Members {
+			if cell, ok := state.PlayerCells[playerID]; ok {
+				playerCells = append(playerCells, PlayerCellData{
+					PlayerID: playerID,
+					CellX:    cell.CellX,
+					CellY:    cell.CellY,
+				})
+			}
 		}
 	}
 
-	// Sanity check: playerCells should match zone.Members count
-	// If mismatch, state.PlayerCells wasn't updated correctly on join/leave
-	if len(playerCells) != len(zone.Members) {
-		logger.Warn("LateJoinSnapshot: playerCells=%d but zone.Members=%d - possible state sync bug",
+	// Note: playerCells may be FEWER than zone.Members — a player who joined after the snapshot has no
+	// snapshot cell; their PLAYER_CELL_ENTER replays from the influence log (correct by construction).
+	if len(playerCells) < len(zone.Members) {
+		logger.Debug("LateJoinSnapshot: playerCells=%d < zone.Members=%d (joined-in-window players hydrate via replay)",
 			len(playerCells), len(zone.Members))
 	}
 
@@ -2872,13 +2977,40 @@ func (m *Match) sendLateJoinSnapshot(
 		// No authority snapshot: deliver the seed-baseline (client creates + seeds from centre).
 		swarmMetadata = m.buildSwarmSeedBaseline(state, zone, chunkSize)
 	}
+	// ONE TIME BASE (2026-07-19 late-join fix): metadata is built FROM the snapshot entries — the swarm
+	// set AT snapshot_tick — NEVER from current state.Swarms. A swarm that MERGED AWAY inside the
+	// snapshot→end window still gets metadata (the joiner creates it, so the replayed merge MOVES its real
+	// bugs; the old state-lookup silently skipped it → the joiner orphaned its bugs and the merge
+	// deficit-fill fabricated same-id-DIFFERENT-bugs → permanent per-bug divergence). A swarm BORN in the
+	// window gets NO metadata — replay mints it at its birth tick from the SWARM_SPAWNED event's own
+	// species/centre/count (pre-creating it here seeded it at the END-tick centre and HandleSwarmSpawned
+	// then skipped re-seeding — the same bug's latent sibling). Current state is consulted ONLY for
+	// display-only BugHP. A pre-fix authority snapshot (no species_id) falls back to the legacy lookup.
 	for _, swarmSnapshot := range zone.LatestSnapshot.Swarms {
-		if swarm, ok := state.Swarms[swarmSnapshot.SwarmID]; ok {
+		var meta SwarmData
+		if swarmSnapshot.SpeciesID != "" {
+			spriteID := swarmSnapshot.SpeciesID // fallback
+			if species, ok := state.Species[swarmSnapshot.SpeciesID]; ok {
+				spriteID = species.SpriteID
+			}
+			meta = SwarmData{
+				ID:        swarmSnapshot.SwarmID,
+				SpeciesID: swarmSnapshot.SpeciesID,
+				SpriteID:  spriteID,
+				X:         float32(swarmSnapshot.CenterX) / 1000.0, // snapshot-moment centre (legless fallback)
+				Y:         float32(swarmSnapshot.CenterY) / 1000.0,
+				Count:     0, // the joiner creates the EXACT snapshot bug ids; count is unused on that path
+				NextBugID: swarmSnapshot.NextBugID,
+				// Radius/Facing/Phase are cosmetic — SwarmUpdate refreshes them for live swarms.
+			}
+		} else if swarm, ok := state.Swarms[swarmSnapshot.SwarmID]; ok {
+			// LEGACY (authority predates the identity fields): the old end-tick lookup — still skips
+			// merged-away swarms, but an old-build authority can't tell us more.
 			spriteID := swarm.SpeciesID // fallback
 			if species, ok := state.Species[swarm.SpeciesID]; ok {
 				spriteID = species.SpriteID
 			}
-			meta := SwarmData{
+			meta = SwarmData{
 				ID:         swarm.ID,
 				SpeciesID:  swarm.SpeciesID,
 				SpriteID:   spriteID,
@@ -2891,53 +3023,55 @@ func (m *Match) sendLateJoinSnapshot(
 				NextBugID:  swarm.NextBugID,
 				RemovedIDs: swarm.GetRemovedIDs(),
 			}
-
-			// Seed the joiner's display-only HP for damaged bugs (server-owned truth,
-			// the RemovedIDs precedent). Subsequent MeleeResultMessages converge it.
-			if len(swarm.BugHP) > 0 {
-				ids := make([]int, 0, len(swarm.BugHP))
-				for bugID := range swarm.BugHP {
-					ids = append(ids, bugID)
-				}
-				sort.Ints(ids)
-				meta.BugHP = make([]BugHPEntry, 0, len(ids))
-				for _, bugID := range ids {
-					meta.BugHP = append(meta.BugHP, BugHPEntry{BugID: bugID, HP: swarm.BugHP[bugID]})
-				}
-			}
-
-			// Hydrate the leg active AT snapshotTick. PREFERRED source: the authority embedded its live
-			// leg in the snapshot (swarmSnapshot.HasLeg) — this is reliable even for slow swarms whose last
-			// SWARM_SET_TARGET has been pruned from the InfluenceLog. (The old log-scan below missed those,
-			// so late-joiners fell back to the metadata center and the swarm center diverged.) Legs started
-			// after snapshotTick still replay from influenceLog and overwrite this at their own tick.
-			if swarmSnapshot.HasLeg {
-				meta.HasTarget = true
-				meta.LegOriginX = swarmSnapshot.LegOriginX
-				meta.LegOriginY = swarmSnapshot.LegOriginY
-				meta.LegTargetX = swarmSnapshot.LegTargetX
-				meta.LegTargetY = swarmSnapshot.LegTargetY
-				meta.LegSpeed = swarmSnapshot.LegSpeed
-				meta.LegStartTick = swarmSnapshot.LegStartTick
-			} else {
-				// Fallback (pre-leg-embedding snapshots, or bootstrap): scan the pruned InfluenceLog.
-				for i := len(zone.InfluenceLog) - 1; i >= 0; i-- {
-					evt := zone.InfluenceLog[i]
-					if evt.Type == InfluenceSwarmSetTarget && evt.SwarmID == swarm.ID && evt.Tick <= snapshotTick {
-						meta.HasTarget = true
-						meta.LegOriginX = evt.OriginX
-						meta.LegOriginY = evt.OriginY
-						meta.LegTargetX = evt.TargetX
-						meta.LegTargetY = evt.TargetY
-						meta.LegSpeed = evt.Speed
-						meta.LegStartTick = evt.Tick
-						break
-					}
-				}
-			}
-
-			swarmMetadata = append(swarmMetadata, meta)
+		} else {
+			continue
 		}
+
+		// Seed the joiner's display-only HP for damaged bugs still alive NOW (server-owned truth,
+		// the RemovedIDs precedent; display-only, so the end-tick read cannot desync the sim).
+		if swarm, ok := state.Swarms[swarmSnapshot.SwarmID]; ok && len(swarm.BugHP) > 0 {
+			ids := make([]int, 0, len(swarm.BugHP))
+			for bugID := range swarm.BugHP {
+				ids = append(ids, bugID)
+			}
+			sort.Ints(ids)
+			meta.BugHP = make([]BugHPEntry, 0, len(ids))
+			for _, bugID := range ids {
+				meta.BugHP = append(meta.BugHP, BugHPEntry{BugID: bugID, HP: swarm.BugHP[bugID]})
+			}
+		}
+
+		// Hydrate the leg active AT snapshotTick. PREFERRED source: the authority embedded its live
+		// leg in the snapshot (swarmSnapshot.HasLeg) — this is reliable even for slow swarms whose last
+		// SWARM_SET_TARGET has been pruned from the InfluenceLog. (The old log-scan below missed those,
+		// so late-joiners fell back to the metadata center and the swarm center diverged.) Legs started
+		// after snapshotTick still replay from influenceLog and overwrite this at their own tick.
+		if swarmSnapshot.HasLeg {
+			meta.HasTarget = true
+			meta.LegOriginX = swarmSnapshot.LegOriginX
+			meta.LegOriginY = swarmSnapshot.LegOriginY
+			meta.LegTargetX = swarmSnapshot.LegTargetX
+			meta.LegTargetY = swarmSnapshot.LegTargetY
+			meta.LegSpeed = swarmSnapshot.LegSpeed
+			meta.LegStartTick = swarmSnapshot.LegStartTick
+		} else {
+			// Fallback (pre-leg-embedding snapshots, or bootstrap): scan the pruned InfluenceLog.
+			for i := len(zone.InfluenceLog) - 1; i >= 0; i-- {
+				evt := zone.InfluenceLog[i]
+				if evt.Type == InfluenceSwarmSetTarget && evt.SwarmID == swarmSnapshot.SwarmID && evt.Tick <= snapshotTick {
+					meta.HasTarget = true
+					meta.LegOriginX = evt.OriginX
+					meta.LegOriginY = evt.OriginY
+					meta.LegTargetX = evt.TargetX
+					meta.LegTargetY = evt.TargetY
+					meta.LegSpeed = evt.Speed
+					meta.LegStartTick = evt.Tick
+					break
+				}
+			}
+		}
+
+		swarmMetadata = append(swarmMetadata, meta)
 	}
 
 	msg := LateJoinSnapshot{
@@ -2952,7 +3086,9 @@ func (m *Match) sendLateJoinSnapshot(
 		InfluenceLog:         influenceLog,
 		AuthorityID:          zone.AuthorityUserID,
 		PlayerCells:          playerCells,
-		Food:                 zone.LatestSnapshot.Food, // authoritative food registry for late-join hydration
+		Food:                 zone.LatestSnapshot.Food,    // authoritative food registry for late-join hydration
+		Hunts:                zone.LatestSnapshot.Hunts,   // authoritative hunt assignments for late-join hydration
+		Subdued:              zone.LatestSnapshot.Subdued, // authoritative subdued swarm-id set for late-join hydration
 	}
 
 	data, err := json.Marshal(msg)
@@ -3004,36 +3140,38 @@ func (m *Match) checkDriftSampling(
 		return // Not enough history yet
 	}
 
-	for chunkKey, subs := range state.ChunkSubs {
-		// Collect connected clients in this chunk
-		var presences []runtime.Presence
-		expected := make(map[string]bool)
-		for playerID := range subs {
-			if p, ok := state.Presences[playerID]; ok && p != nil {
-				presences = append(presences, p)
-				expected[playerID] = true
-			}
-		}
-		if len(expected) < 2 {
-			continue // Need at least 2 clients to compare
-		}
-
-		// Parse chunk coordinates
-		var cx, cy int
-		fmt.Sscanf(chunkKey, "%d,%d", &cx, &cy)
-
-		// Open a fresh drift-check round (overwrites any stale one for this chunk)
-		state.DriftChecks[chunkKey] = &DriftCheck{
-			SampleTick: sampleTick,
-			Expected:   expected,
-			Responded:  make(map[string]bool),
-			Votes:      make(map[string]int64),
-		}
-
-		reqMsg := SampleRequestMessage{ChunkX: cx, ChunkY: cy, Tick: sampleTick}
-		data, _ := json.Marshal(reqMsg)
-		dispatcher.BroadcastMessage(OpCodeRequestSample, data, presences, nil, true)
-		logger.Debug("Drift hash request sent to %d clients for chunk %d,%d at tick %d",
-			len(presences), cx, cy, sampleTick)
+	// ONE ZONE-SCOPED round (2026-07-19 drift-net fix): every client answers with the ZONE-wide
+	// ComputeStateHash from its always-on hash ring, so the old per-chunk rounds were N redundant copies of
+	// the same comparison — and clients sharing NO chunk (spawn-apart) were never compared at all. One round
+	// over ALL connected zone members closes that blindness. Sentinel chunk -1,-1 keys the round (the client
+	// responder echoes coords verbatim — verified, no client change needed).
+	if state.CurrentZone == nil {
+		return
 	}
+	zone := state.GetOrCreateZone(state.CurrentZone.ZoneID)
+	var presences []runtime.Presence
+	expected := make(map[string]bool)
+	for playerID := range zone.Members {
+		if p, ok := state.Presences[playerID]; ok && p != nil {
+			presences = append(presences, p)
+			expected[playerID] = true
+		}
+	}
+	if len(expected) < 2 {
+		return // Need at least 2 clients to compare
+	}
+
+	zoneKey := ChunkKey(-1, -1)
+	state.DriftChecks[zoneKey] = &DriftCheck{
+		SampleTick: sampleTick,
+		Expected:   expected,
+		Responded:  make(map[string]bool),
+		Votes:      make(map[string]int64),
+	}
+
+	reqMsg := SampleRequestMessage{ChunkX: -1, ChunkY: -1, Tick: sampleTick}
+	data, _ := json.Marshal(reqMsg)
+	dispatcher.BroadcastMessage(OpCodeRequestSample, data, presences, nil, true)
+	logger.Debug("Drift hash request (zone-wide) sent to %d clients at tick %d",
+		len(presences), sampleTick)
 }

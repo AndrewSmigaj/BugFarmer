@@ -63,6 +63,13 @@
    "foliage"
   ]
  },
+ "leaf_litter": {
+  "look": "a flat scatter of dry fallen LEAVES on the ground \u2014 a loose low patch of overlapping brown, tan and faded-orange dead leaves; NO plant, NO stem, NO mound, just leaves lying flat",
+  "materials": [
+   "foliage",
+   "dirt"
+  ]
+ },
  "dandelion": {
   "look": "a DANDELION: a low rosette of jagged green leaves with one bright yellow flower and one round white seed PUFF on slender stems.",
   "materials": [
@@ -283,6 +290,20 @@
    "foliage"
   ]
  },
+ "tree_cherry": {
+  "look": "a CHERRY TREE: a brown trunk and a round green leafy canopy dotted with small bright RED CHERRIES hanging in pairs peeking through the leaves.",
+  "materials": [
+   "wood",
+   "foliage"
+  ]
+ },
+ "tree_plum": {
+  "look": "a PLUM TREE: a brown trunk and a round green leafy canopy dotted with small round deep PURPLE PLUMS peeking through the leaves.",
+  "materials": [
+   "wood",
+   "foliage"
+  ]
+ },
  "tree_oak": {
   "look": "a leafy OAK TREE: a thick brown TRUNK at the bottom widening into a big round, full CANOPY of green leaves in rounded bumpy clusters, lighter green highlights on top, darker green underneath. Lush and full.",
   "materials": [
@@ -345,6 +366,14 @@
  },
  "wasp_nest": {
   "look": "a grey papery WASP NEST: a teardrop-shaped hive of layered grey paper bands hanging low, small dark entrance hole at the bottom, two tiny wasps near it",
+  "family": "prop",
+  "materials": [
+   "stone",
+   "wood"
+  ]
+ },
+ "hornet_nest": {
+  "look": "a large menacing HORNET NEST: a big bulbous football-shaped hive of coarse mottled brown-and-tan paper bands, a wide dark entrance hole low on the front, two chunky yellow-and-black hornets crawling on it",
   "family": "prop",
   "materials": [
    "stone",

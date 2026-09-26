@@ -28,6 +28,10 @@ namespace BugFarmer.Entities
 
         // Species sprite loaded from Resources/Bugs/{species_id}
         private Sprite _bugSprite;
+        // Cosmetic flap-animation frames (Bugs/{spriteId}_0.png, _1.png, ...). null = static sprite.
+        // DISPLAY-ONLY: the shown frame is never hashed, so animation is free to differ per client.
+        private Sprite[] _bugFrames;
+        private bool _isBuzzer;     // fly-type → fast continuous wing buzz (no glide)
 
         // Bug ID tracking (matches server)
         private int _nextBugId;
@@ -60,6 +64,19 @@ namespace BugFarmer.Entities
 
         // DIAGNOSTIC (leg/center trace): the center bug AI used this tick, and the metadata fallback center.
         public FixedPoint2 SimCenter => _simCenter;
+
+        /// <summary>Total bug ids ever minted in this swarm (the id counter). The authority embeds it in its
+        /// snapshot so a late-joiner reconstructs the id space exactly (one-time-base late-join fix).</summary>
+        public int NextBugId => _nextBugId;
+
+        /// <summary>TEST HOOK: lowest-id bug's agent, or null. Only the drift-net self-test
+        /// (SwarmManager.DebugPerturbOneBug ← HeadlessSyncTest -desyncafter) calls this.</summary>
+        public Bugs.BugAgent GetFirstAgentForDebug()
+        {
+            foreach (var bugId in _bugs.Keys.OrderBy(id => id))
+                return _bugs[bugId].Agent;
+            return null;
+        }
         public FixedPoint2 FallbackCenter => _fallbackCenter;
         public float Radius => _radius;
         public bool IsWaitingForSnapshot => _waitingForSnapshot;
@@ -88,9 +105,29 @@ namespace BugFarmer.Entities
             SwarmId = data.id;
             SpeciesId = data.species_id;
 
-            // Load sprite from Resources using sprite_id from server
-            var spriteId = !string.IsNullOrEmpty(data.sprite_id) ? data.sprite_id : data.species_id;
-            _bugSprite = Resources.Load<Sprite>($"Bugs/{spriteId}");
+            // Load sprite from Resources using sprite_id from server. SWARM_SPAWNED-born swarms
+            // arrive with an EMPTY sprite_id (the later SwarmUpdate carries the real one) — resolve
+            // it from the species def so we never fall back to the raw species id, which has no
+            // Bugs/ sprite (e.g. butterfly_meadow -> butterfly_common). Display-only, never hashed.
+            var spriteId = data.sprite_id;
+            if (string.IsNullOrEmpty(spriteId))
+            {
+                var spInfo = Data.EntityDatabase.GetSpecies(data.species_id);
+                spriteId = !string.IsNullOrEmpty(spInfo?.SpriteId) ? spInfo.SpriteId : data.species_id;
+            }
+            // Flies buzz continuously (fast, no glide); butterflies keep the graceful flap-glide default.
+            _isBuzzer = !string.IsNullOrEmpty(spriteId) &&
+                        spriteId.Contains("fly") && !spriteId.Contains("butterfly");
+            // Animation frames: Bugs/{spriteId}_0, _1, ... (contiguous). >=2 => animated (cosmetic flap).
+            var frames = new System.Collections.Generic.List<Sprite>();
+            for (int i = 0; i < 12; i++)
+            {
+                var f = Resources.Load<Sprite>($"Bugs/{spriteId}_{i}");
+                if (f == null) break;
+                frames.Add(f);
+            }
+            _bugFrames = frames.Count >= 2 ? frames.ToArray() : null;
+            _bugSprite = _bugFrames != null ? _bugFrames[0] : Resources.Load<Sprite>($"Bugs/{spriteId}");
             if (_bugSprite == null)
             {
                 Debug.LogWarning($"[SwarmVisual] No sprite found at Resources/Bugs/{spriteId}");
@@ -223,7 +260,37 @@ namespace BugFarmer.Entities
                 Object.Destroy(shadow.gameObject);
             }
 
+            // FIREFLY GLOW (display-only): each firefly carries a tiny warm LampLight —
+            // invisible at noon, full amber at night (LampLight self-ramps by daylight,
+            // the lamp/torch pattern). Pooled visuals may carry a stale glow from another
+            // species — sync its presence exactly like the shadow above.
+            bool glows = SpeciesId == "firefly";
+            var glow = visual.Find("Glow");
+            if (glows && glow == null)
+            {
+                var glowGo = new GameObject("Glow");
+                glowGo.transform.SetParent(visual, false);
+                glowGo.transform.localPosition = Vector3.zero;
+                glowGo.AddComponent<World.LampLight>()
+                      .Configure(1.6f, new Color(1f, 0.82f, 0.35f), 0.9f);
+            }
+            else if (!glows && glow != null)
+            {
+                Object.Destroy(glow.gameObject);
+            }
+
             var bugVisual = new BugVisual(agent, visual);
+            bugVisual.Frames = _bugFrames; // cosmetic flap frames (null = static)
+
+            if (_isBuzzer)
+            {
+                // Fast, continuous wing buzz with a quick jittery hover — no butterfly glide.
+                bugVisual.FlapFps = 20f;
+                bugVisual.GlideSecs = 0f;
+                bugVisual.FlapsPerBurst = 1;
+                bugVisual.BobAmp = 0.03f;
+                bugVisual.BobHz = 3.6f;
+            }
             _bugs[bugId] = bugVisual;
 
             // INDIVIDUALS (centipede knots, §14.3): EVERY member drags its own
@@ -234,10 +301,20 @@ namespace BugFarmer.Entities
             // visuals may arrive from a non-crawling species (or go back to one), so
             // BOTH branches set scale/rotation explicitly.
             var info = Data.EntityDatabase.GetSpecies(SpeciesId);
-            bool crawling = info != null && info.MovementStyle == "crawling";
-            if (crawling)
+            // "crawling" = the segmented ground bugs. Centipede PACK members use movement_style "centipede"
+            // (per-bug independent motion) but still render the segmented body — include both styles here, or
+            // switching centipedes to the pack model silently drops their body + melee hit-segments.
+            bool crawling = info != null && (info.MovementStyle == "crawling" || info.MovementStyle == "centipede");
+            // Only the SEGMENTED crawlers (centipede/millipede) render the multi-part body trail.
+            // Single-body crawlers (e.g. beetle_carrion) fall through to the single-sprite path —
+            // without this they'd be drawn with the hardcoded centipede trail (CentipedeTrail.cs).
+            bool segmented = crawling &&
+                             (SpeciesId.Contains("centipede") || SpeciesId.Contains("millipede"));
+            if (segmented)
             {
-                visual.localScale = new Vector3(CrawlerHeadScale, CrawlerHeadScale, 1f);
+                // Head scale matches its trail segments — per species (millipede = 2x centipede).
+                float headScale = Bugs.CentipedeTrail.PartScaleFor(SpeciesId);
+                visual.localScale = new Vector3(headScale, headScale, 1f);
                 if (!_trails.ContainsKey(bugId))
                 {
                     var trailGo = new GameObject($"trail_{bugId}");
@@ -249,13 +326,22 @@ namespace BugFarmer.Entities
             }
             else
             {
-                visual.localScale = Vector3.one;
+                // Flies & butterflies read a touch large at 1:1 next to the player and the other
+                // bugs — render them at HALF scale (user feedback). Wasps stay full size UNLESS the
+                // species sets render_scale (e.g. wasp_soldier = 0.5 — its sprite reads too big). This
+                // is DISPLAY-ONLY (localScale is never in the sim hash), so it's free to differ per
+                // client, exactly like the crawler head scale above.
+                float s = FlyerRenderScale(SpeciesId) * (info != null && info.RenderScale > 0f ? info.RenderScale : 1f);
+                visual.localScale = new Vector3(s, s, 1f);
                 visual.rotation = Quaternion.identity;
             }
         }
 
-        // Matches CentipedeTrail.PartScale: head and body parts read as one creature.
-        private const float CrawlerHeadScale = 0.35f;
+        /// <summary>Cosmetic render scale for NON-crawling bugs. Flies AND butterflies render at
+        /// half size (they read large at 1:1); wasps/anything else stay unscaled. "butterfly_*"
+        /// contains "fly", so one Contains("fly") covers both. Display-only — never hashed.</summary>
+        private static float FlyerRenderScale(string speciesId) =>
+            (!string.IsNullOrEmpty(speciesId) && speciesId.Contains("fly")) ? 0.5f : 1f;
 
         // One segment trail per crawling bug, keyed by bug id (1-3 per knot).
         private readonly Dictionary<int, Bugs.CentipedeTrail> _trails = new();
@@ -322,7 +408,9 @@ namespace BugFarmer.Entities
         /// </summary>
         /// <param name="tick">The current simulation tick from SwarmManager</param>
         /// <param name="players">Player targets from InfluenceManager (deterministic, sorted by playerId)</param>
-        public void SimulateTick(long tick, List<PlayerTarget> players)
+        public void SimulateTick(long tick, List<PlayerTarget> players,
+                                 IReadOnlyList<(int bugId, FixedPoint2 pos)> preyBugs = null,
+                                 bool subdued = false)
         {
             using var _perf = PerfProfiler.Sample("Sim.SwarmTick");
             if (!WorldSeedProvider.Instance?.IsInitialized ?? true)
@@ -365,7 +453,7 @@ namespace BugFarmer.Entities
             // 2. Simulate each bug in deterministic order
             foreach (var bugId in sortedBugIds)
             {
-                _bugs[bugId].Agent.SimulateTick(_simCenter, players, tick);
+                _bugs[bugId].Agent.SimulateTick(_simCenter, players, tick, preyBugs, subdued);
             }
 
             // Debug: log first bug's state every 100 ticks (sample one swarm)
@@ -490,6 +578,49 @@ namespace BugFarmer.Entities
         {
             if (_bugs.TryGetValue(bugId, out var bug))
                 bug.FlashUntil = Time.time + 0.15f;
+        }
+
+        /// <summary>Flash ONLY the member nearest a world position — one bug snatching its own prey,
+        /// so a strike reads as an individual lunge, not the whole swarm flashing at once. Display-only.</summary>
+        public void FlashNearest(Vector2 worldPos)
+        {
+            BugVisual best = null; float bestSqr = float.MaxValue;
+            foreach (var bug in _bugs.Values)
+            {
+                if (bug.Transform == null) continue;
+                float d = ((Vector2)bug.Transform.position - worldPos).sqrMagnitude;
+                if (d < bestSqr) { bestSqr = d; best = bug; }
+            }
+            if (best != null)
+                best.FlashUntil = Time.time + 0.15f;
+        }
+
+        /// <summary>#20: flash AND lunge the member nearest a victim — a committed jab toward the kill so
+        /// the strike reads as an individual lunge, not just a flash. Display-only (no sim/hash effect).</summary>
+        public void LungeNearest(Vector2 worldPos) => LungeNearest(worldPos, 0.35f, 0.18f);
+
+        /// <summary>Flash + dart the member nearest a world point toward it, with a tunable reach/duration.
+        /// The wasp dive uses a BIGGER reach (~1.1 cells) so the peel-off reads as a swoop, not the 0.35 jab
+        /// the predation strike uses. Out-and-back (sin envelope in BugVisual.Interpolate); purely cosmetic —
+        /// LungeVec never touches Agent.Position or the hash, so all clients keep identical sim positions.</summary>
+        public void LungeNearest(Vector2 worldPos, float reach, float secs)
+        {
+            BugVisual best = null; float bestSqr = float.MaxValue;
+            foreach (var bug in _bugs.Values)
+            {
+                if (bug.Transform == null) continue;
+                float d = ((Vector2)bug.Transform.position - worldPos).sqrMagnitude;
+                if (d < bestSqr) { bestSqr = d; best = bug; }
+            }
+            if (best == null) return;
+            best.FlashUntil = Time.time + 0.15f;
+            Vector2 from = best.Transform.position;
+            Vector2 dir = worldPos - from;
+            float dist = dir.magnitude;
+            // dart toward the victim, but never overshoot past it (cap at 0.6× the gap for a near target).
+            best.LungeVec = dist > 0.001f ? dir / dist * Mathf.Min(reach, dist * 0.6f) : Vector2.zero;
+            best.LungeStart = Time.time;
+            best.LungeDur = secs > 0f ? secs : 0.18f;
         }
 
         /// <summary>Flash the whole swarm (predator telegraphs — strike snatch, windup).</summary>
@@ -664,6 +795,19 @@ namespace BugFarmer.Entities
                 current_dir_x = movementState.CurrentDirX,
                 current_dir_y = movementState.CurrentDirY,
                 land_ticks = agent.LandTicks, // feed land/hold timer (history-dependent — must ride snapshot)
+                hunt_target = agent.HuntTargetBugId, // committed prey bug id (history-dependent — rides snapshot)
+                feed_until = agent.FeedUntilTick,    // corpse-eating timer (history-dependent — rides snapshot)
+                feed_corpse_id = agent.FeedCorpseId, // the corpse being eaten (history-dependent — rides snapshot)
+                // Centipede lunge (surge) — reconstruct a mid-lunge on a late-joiner
+                surge_phase = agent.SurgePhase,
+                surge_until = agent.SurgeUntilTick,
+                surge_cooldown_until = agent.SurgeCooldownUntil,
+                windup_cell_x = agent.WindupCellX,
+                windup_cell_y = agent.WindupCellY,
+                surge_heading_x = agent.SurgeHeadingX,
+                surge_heading_y = agent.SurgeHeadingY,
+                surge_dist_left = agent.SurgeDistLeft,
+                surge_target_id = agent.SurgeTargetId ?? "",
                 // DIAGNOSTIC (re-root investigation)
                 spawn_tick = agent.SpawnTick,
                 spawn_source = agent.SpawnSource
@@ -694,6 +838,44 @@ namespace BugFarmer.Entities
                 yield return (bugId, _bugs[bugId].Agent.Position);
         }
 
+        /// <summary>S2 (authority): collect + CLEAR each bug's pending corpse-consume (a completed feed that rolled
+        /// CONSUME). Returns the food ids to report so the server removes those corpses; the roll is deterministic
+        /// (every client agrees) but only the authority reports (dedup). null if none this tick.</summary>
+        public List<string> DrainCorpseConsumes()
+        {
+            List<string> ids = null;
+            foreach (var bug in _bugs.Values)
+            {
+                var a = bug.Agent;
+                if (!string.IsNullOrEmpty(a.WantsConsumeCorpse))
+                {
+                    (ids ??= new List<string>()).Add(a.WantsConsumeCorpse);
+                    a.WantsConsumeCorpse = "";
+                }
+            }
+            return ids;
+        }
+
+        /// <summary>
+        /// Like GetAllBugsAliveSorted but yields each bug's RENDERED (on-screen) position — the interpolated
+        /// transform, not the deterministic Agent.Position. Player-attack detection tests against THIS so the
+        /// hit matches the sprite you see: for a fast surging centipede the rendered sprite lags the sim by
+        /// ~1.4 cells, and testing the sim pos fired the "hit" that far off-screen (the phantom). This read is
+        /// AUTHORITY-ONLY + sim-inert (feeds only server-bound strike reports; HP is display-only), so a
+        /// rendered (non-deterministic) value here can NEVER enter the hash. Falls back to CurrPos if the
+        /// transform is missing.
+        /// </summary>
+        public IEnumerable<(int bugId, FixedPoint2 pos)> GetAllBugsRenderedSorted()
+        {
+            foreach (var bugId in _bugs.Keys.OrderBy(id => id))
+            {
+                var b = _bugs[bugId];
+                Vector2 v = b.Transform != null ? (Vector2)b.Transform.position : b.CurrPos;
+                yield return (bugId, new FixedPoint2 { X = FixedPoint.FromFloat(v.x), Y = FixedPoint.FromFloat(v.y) });
+            }
+        }
+
+
         /// <summary>
         /// Apply snapshot from another client (late joiner or drift correction).
         /// Sets full state including position, velocity, RNG, behavior, and movement state.
@@ -723,6 +905,19 @@ namespace BugFarmer.Entities
                     };
                     agent.Rng.State = data.rng_state;
                     agent.LandTicks = data.land_ticks; // restore feed land/hold timer (else feeding bugs desync)
+                    agent.HuntTargetBugId = data.hunt_target; // restore the committed chase (else hunters desync)
+                    agent.FeedUntilTick = data.feed_until;    // restore the corpse-eat timer (else feeders desync)
+                    agent.FeedCorpseId = data.feed_corpse_id;
+                    // Centipede lunge (surge) — restore a mid-lunge so a late-joiner charges identically.
+                    agent.SurgePhase = data.surge_phase;
+                    agent.SurgeUntilTick = data.surge_until;
+                    agent.SurgeCooldownUntil = data.surge_cooldown_until;
+                    agent.WindupCellX = data.windup_cell_x;
+                    agent.WindupCellY = data.windup_cell_y;
+                    agent.SurgeHeadingX = data.surge_heading_x;
+                    agent.SurgeHeadingY = data.surge_heading_y;
+                    agent.SurgeDistLeft = data.surge_dist_left;
+                    agent.SurgeTargetId = string.IsNullOrEmpty(data.surge_target_id) ? null : data.surge_target_id;
                     agent.SpawnSource = "snapshotApply"; // DIAGNOSTIC: got authoritative per-bug state
 
                     // Behavior state

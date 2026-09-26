@@ -1,0 +1,32 @@
+when      : 2026-08-07 12:55:48
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+dest      : explore/steel
+references (in the order sent):
+  1. tools/_generated/player/bases/armless_front.png  (upscaled x14 -> 504x994)
+
+PROMPT:
+Draw THREE different design options for tempered steel plate armour - mid gunmetal grey with a faint cold blue sheen and bright polished bevels along every plate edge. Clearly BRIGHTER than iron, side by side in a single row, on a FLAT SOLID MAGENTA background (pure magenta, RGB 255 0 255). The magenta must be completely flat and uniform with nothing else drawn on it - no shadow, no gradient, no vignette, no ground, no scenery, no text.
+
+Each of the three is the SAME character wearing a DIFFERENT DESIGN of the outfit: standing still, facing the viewer, full body from head to feet, all three at the same scale and standing on the same baseline.
+
+Because the character has NO ARMS, do not draw arms, hands, elbows, forearms or gauntlets. Each shoulder ends in a rounded shoulder cap at the armless shoulder opening. This is deliberate - the hands are separate sprites added later.
+
+The three designs, left to right:
+1. a SALLET SET - a smooth rounded helm with a long pointed tail sweeping back off the skull, a fitted breastplate and articulated tassets. Streamlined, swept back, aerodynamic
+2. FULL PLATE - complete enclosing plate with very large rounded pauldrons, a closed visored helm and a long skirt of plates. The biggest, heaviest outline of the three
+3. a FLUTED HALF-PLATE - a breastplate covered in deep vertical fluting ridges, open shoulders, an open-faced helm and plain trousers below the waist. Narrow-shouldered and clearly LESS armoured than the other two
+
+Every design covers the whole head with its own headgear. The body is covered from the shoulders to the boots, with no bare skin between the waist and the boots.
+
+CRITICAL - THE FIGURE WILL BE SHRUNK TO ABOUT 40 PIXELS TALL. Everything below follows from that:
+- What makes each design recognisable must be its SILHOUETTE - the OUTLINE shape of the hat, hood, helm, crest, shoulders and hem. Shape survives shrinking. Surface pattern does not.
+- Do NOT distinguish the designs by engraving, filigree, trim, embroidery, scrollwork, inlay, rivets or fine linework. At 40 pixels tall all of that collapses into grey mush and the design is lost.
+- Use no more than four or five flat colour areas per figure, in big chunky blocks. Think a bold cut-paper shape, not an illustration.
+- If a design would only look different from the others when seen large, it is the wrong design.
+
+Draw each figure with HARD pixel edges against the magenta. Do not blur, feather, glow or blend the figure into the background. Do not draw a heavy black outline around the figure - where an outline is needed use a darker shade of that figure's own colours, one pixel thick.
+
+Do not use magenta, pink or purple ANYWHERE on the figures themselves - not on the armour, not as glowing eyes, not as trim. Magenta is reserved for the background alone.

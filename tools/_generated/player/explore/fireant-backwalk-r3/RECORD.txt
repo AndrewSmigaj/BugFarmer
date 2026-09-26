@@ -1,0 +1,29 @@
+when      : 2026-08-15 09:04:27
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+dest      : explore/fireant-backwalk-r3
+references (in the order sent):
+  1. tools/_generated/player/explore/fireant-backwalk-r3/REF_current.png  (upscaled x14 -> 1792x1148)
+
+PROMPT:
+The attached image is a finished pixel-art walk cycle: the SAME character in fire-ant carapace armour, in FOUR frames of a walk, seen from behind, facing away from the viewer.
+
+Redraw these four frames with ONE change: fix the legs.
+
+Right now the legs kick out sideways - the feet swing wide to the left and the right of the body, which reads as a dance, not a walk. In this view a walking step is almost entirely the leg lifting and moving toward and away from the viewer, which is foreshortened, so the foot mainly moves UP and DOWN and only slightly sideways. Keep both feet close to underneath the hips. The stepping foot lifts and comes down near where it started - it does not stride out to the side. Keep the knees pointing FORWARD, not outward, and the feet pointing FORWARD, not splayed apart.
+
+The four frames must still be four DIFFERENT phases of a walk:
+Frame 1: left leg raised and stepping, right leg planted.
+Frame 2: passing pose, both legs together underneath the body.
+Frame 3: right leg raised and stepping, left leg planted.
+Frame 4: passing pose, both legs together, the opposite leg leading from frame 2.
+
+Everything else stays EXACTLY as it is. Do not redesign the armour, the helmet, the antennae, the face or the colours. Same head size, same torso, same leg length, same foot size, same overall height, same baseline. Only the leg and foot positions change.
+
+Use the same size pixel blocks as the attached image. Do not draw at a finer resolution. If detail does not fit, simplify it instead of adding smaller pixels.
+
+Armless body: do not draw arms, hands, elbows, forearms or gauntlets. Solid rounded shoulder ends. No holes, sockets or empty arm openings.
+
+Flat pure magenta background (255 0 255), nothing else on it. Hard pixel edges, no blur.

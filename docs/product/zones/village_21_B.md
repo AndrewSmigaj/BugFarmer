@@ -61,6 +61,9 @@ water are walkable on both sides with zero Go/C# change).
 | Market | `place_market` | across the plaza from the hall |
 | General Store | NEW composed via `shop_building` (barrels, sacks, open frontage, basket sign) | beside the market — the intent doc lists it separately; no piece existed |
 | Carpenter + Smith | `place_carpenter`, `place_smith` | the production cluster SE of the plaza, adjacent |
+| Weaver (Isolde's Loom) | `place_weaver` (D26) | south commerce strip below the production quarter; sells the `woven_goods` book + 4 station recipes |
+| Stonemason (Dougal's Stoneworks) | `place_stonemason` (D26) | south commerce strip; workshop + open sculpture **display yard**; sells the `stone_works` book |
+| Modern Wares (Pim's) | `place_modern_wares` (D26) | south commerce strip; sleek marble showroom (buy-only) |
 | Boat & Fishing Store | `place_boat_store` | ON the big lake's E shore; **docks are `bridge_wood` ground tiles** (walkable, art exists — `dock_plank` has no art) + lanterns + nets |
 | Ecologist's Cabin | `place_ecologist` (unfenced — the documented exception) | E side in its grove, on the E lane |
 | Cottages ×4 | `place_cottage`/`place_house` + `property_yard` | a curving residential lane N of the plaza; varied setbacks, collections, door spurs |

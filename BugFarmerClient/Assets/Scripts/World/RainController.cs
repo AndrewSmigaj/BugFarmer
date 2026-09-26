@@ -64,6 +64,7 @@ namespace BugFarmer.World
         private ParticleSystem _splash;
         private Camera _cam;
         private RainIntensity _builtIntensity;
+        private float _builtOrtho = -1f; // camera half-height the layers were sized for
         private float _nextStrike;
 
         private void Awake() => _inst = this;
@@ -84,21 +85,35 @@ namespace BugFarmer.World
             _streaks.Clear();
             if (_splash != null) Destroy(_splash.gameObject);
 
+            // Size everything from the LIVE view (nothing in the project pins the camera's ortho
+            // size): the streak band spawns 1.5 above the top edge, so a drop must survive
+            // (viewHeight + band + margin) of fall to CROSS THE BOTTOM EDGE — the playtest-#7 bug
+            // was fixed spec lifetimes shorter than that (light rain died ~2/3 down the screen).
+            if (_cam == null) _cam = Camera.main;
+            float ortho = _cam != null ? _cam.orthographicSize : 5f;
+            float aspect = _cam != null ? _cam.aspect : 16f / 9f;
+            float viewW = 2f * ortho * aspect;
+            float fallNeeded = 2f * ortho + 1.5f + 0.75f + 2f; // view + band offset/half + margin past the bottom
+
             var specs = Intensity == RainIntensity.Heavy ? HeavyLayers : LightLayers;
             for (int i = 0; i < specs.Length; i++)
-                _streaks.Add(BuildStreak($"RainStreak{i}", specs[i]));
+                _streaks.Add(BuildStreak($"RainStreak{i}", specs[i], fallNeeded, viewW));
 
             // Sparse splashes for light, dense for heavy.
-            _splash = BuildSplash(Intensity == RainIntensity.Heavy ? 130f : 45f);
+            _splash = BuildSplash(Intensity == RainIntensity.Heavy ? 130f : 45f,
+                                  viewW + 2f, 2f * ortho + 2f);
             _builtIntensity = Intensity;
+            _builtOrtho = ortho;
         }
 
-        private ParticleSystem BuildStreak(string name, LayerSpec s)
+        private ParticleSystem BuildStreak(string name, LayerSpec s, float fallNeeded, float viewW)
         {
             var ps = NewSystem(name);
             var main = ps.main;
             main.loop = true;
-            main.startLifetime = s.lifetime;
+            // Lifetime from the SLOWEST drop (velYMax is the least-negative): every drop reaches
+            // past the bottom edge; faster ones die off-screen. Spec lifetime is the floor.
+            main.startLifetime = Mathf.Max(s.lifetime, fallNeeded / Mathf.Abs(s.velYMax));
             main.startSpeed = 0f;                 // motion from velocityOverLifetime
             main.startSize = new ParticleSystem.MinMaxCurve(s.sizeMin, s.sizeMax);
             main.startColor = s.color;
@@ -113,7 +128,7 @@ namespace BugFarmer.World
             var shape = ps.shape;                 // wide thin band above the camera top edge
             shape.enabled = true;
             shape.shapeType = ParticleSystemShapeType.Box;
-            shape.scale = new Vector3(30f, 1.5f, 1f);
+            shape.scale = new Vector3(viewW + 8f, 1.5f, 1f); // cover the view + wind drift slack
 
             // ALL three velocity curves MUST share a mode (TwoConstants) or Unity throws "Particle
             // Velocity curves must all be in the same mode" and emits nothing (the bug that hid rain).
@@ -133,7 +148,7 @@ namespace BugFarmer.World
             return ps;
         }
 
-        private ParticleSystem BuildSplash(float emission)
+        private ParticleSystem BuildSplash(float emission, float viewW, float viewH)
         {
             var ps = NewSystem("RainSplash");
             var main = ps.main;
@@ -153,7 +168,7 @@ namespace BugFarmer.World
             var shape = ps.shape;                 // a flat box over the whole camera view
             shape.enabled = true;
             shape.shapeType = ParticleSystemShapeType.Box;
-            shape.scale = new Vector3(32f, 20f, 1f);
+            shape.scale = new Vector3(viewW, viewH, 1f); // sized from the live view (splashes to every edge)
 
             // Ripple: grow a little, then the alpha fades to nothing.
             var sol = ps.sizeOverLifetime;
@@ -188,7 +203,10 @@ namespace BugFarmer.World
 
         private void Update()
         {
-            if (_builtIntensity != Intensity)
+            // Rebuild when the preset changes OR the camera height drifts (zoom) — the layer
+            // lifetimes/boxes are sized to the view, so a stale build shortens the rain again.
+            if (_builtIntensity != Intensity ||
+                (_cam != null && Mathf.Abs(_cam.orthographicSize - _builtOrtho) > 0.5f))
                 BuildLayers();
 
             bool raining = DayNightController.Weather == "rain";

@@ -8,7 +8,7 @@ emergent food competition + predation + aging, with the hard `max_population` ca
 - **`archive/<timestamp>_<tag>/`** — every run, for comparing which settings worked. `note.md` in each says
   what it changed + the result.
 - **`comparisons/`** — overlay charts (one line per run) for fast before/after reads.
-- Full move-by-move history + reasoning: `docs/product/ecology_tuning_log.md`.
+- Full move-by-move history + reasoning: `docs/product/ecology/ecology_tuning_log.md`.
 
 ## Current state (as of the latest baseline — seed 1337, ~8 game-days)
 - **fly** — works (breeds on rotten fruit), but booms to ~1300–1500, sitting near its 1500 cap (cap-limited,

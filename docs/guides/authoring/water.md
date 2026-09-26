@@ -40,6 +40,36 @@ with zero engine work. `scene_lakeside.place_boat_store` is the worked example: 
 building sits ON the shore (hug it — a dock that stops at the waterline was a real
 defect), the 2-wide deck runs out over the water, mooring posts/lantern/boat are
 deliberately water-anchored occupants (their `validate()` notes are expected).
+- **Docks BOARDWALK-ramp the land gap and STOP MID-WATER** (2026-07-05, bee_meadow_20:
+  a max_len-12 pier decked clean across the whole inlet — a pier that reaches the far
+  shore is a bridge, not a dock; and a deck starting at the waterline floats detached
+  when the shoreline wanders). `scene_fishing_docks._dock` is the hardened version:
+  pre-scans for water (refuses to build into grass), decks the land cells as the ramp,
+  ends mid-channel.
+
+## Coasts, harbors & tidelines (learned building bee_meadow_20)
+- **A harbor CONNECTS to the sea** (owner correction 2026-07-05: "the little lake with
+  the fishing buildings does not connect to the ocean"). Water that boats and fishing
+  imply must be PROVABLY continuous open water to the sea — verify IN TEXT (walk a
+  water-only line across the map), never by eyeball. A landlocked "bay" is a bug.
+- **Beach debris follows the WRACK LINE, never even spray**: flotsam (shells, driftwood,
+  starfish, the odd bottle) concentrates in the 2-3 sand cells nearest the water — the
+  way tides deposit — with only stray pieces above, and dune grass breaking the
+  sand→grass seam. `scene_beach_cove.dress_beach` is the primitive; even scatter reads
+  as confetti.
+
+## Rivers reach the SEA (owner correction, 2026-07-06)
+> "the river should flow to the sea not a little pond next to the sea" · "river should be wider"
+
+A river's endpoints are non-negotiable geography: one end is a SOURCE (spring, lake,
+zone-edge contract), the other REACHES BASE WATER — the sea, a lake, or an edge contract.
+A watercourse that dies in a pondlet a few cells from the coast reads as a plumbing error;
+if a river runs anywhere near the sea, CONNECT it (carve the mouth through the beach: the
+mouth FLARES or forks per research_coasts_geology.md §2 — never a constant-width pipe
+butting the surf). Width: rivers only WIDEN downstream — 2 cells at the source is fine,
+but the lower run should be 3-4+, and the mouth wider still. Inlet/arm HEADS never end in
+a straight cut ("its like it is cut off"): taper and ROUND the head (narrowing noisy banks
+that pinch closed), and let the still head go mud + reeds.
 
 ## Placement & the "used lake" rule (kept from trees-and-ponds)
 - 2-5 lakes/ponds per zone; vary radius, seed, shore material, AND treatment arcs.

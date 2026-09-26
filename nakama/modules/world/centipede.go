@@ -2,299 +2,30 @@ package world
 
 import (
 	"fmt"
-	"math"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 
 	"bugfarmer/entities"
 )
 
-// The centipede (architecture_swarm_sync.md §14): an "individual"-category swarm
-// that reuses combat/catch/caps/sync wholesale. "Individual" means GROUND CRAWLER
-// WITH AN ACTION-STATE MACHINE — swarm sizes are data (max_swarm_size, now 1-3: a
-// small KNOT of centipedes shares one center and lunges together; merge/split stay
-// disabled for the category, so a full knot's litter mints a new swarm instead —
-// see reproduceSwarm). The ActionState machine (windup → surge → bite? recover :
-// turnaround, plus gnaw) runs PER TICK before the think gate — surges are 25 ticks
-// vs 8-30-tick thinks — and owns the swarm while active. The surge OVERSHOOTS past
-// the player (dodge-or-be-bitten mid-pass); a miss banks back via the turnaround
-// arc and re-engages on a short cooldown. All outputs are ordinary legs + the
-// existing damage/break paths.
+// The centipede's per-bug brain — serpentine wander, telegraphed lunge at the player,
+// prey hunt — now runs on the CLIENT, one brain per pack member (movement_style
+// "centipede"; architecture_swarm_sync.md §14). The ONLY centipede behavior left on the
+// server is the GNAW: chewing through a blocking gnawable fence to reach penned prey. It
+// stays here because it MUTATES the world (it needs the occupant/Gnawable data and owns
+// the break), so it must be authority-driven + ledgered like every other world mutation.
 //
-// Doc rule: Phase = what it WANTS (the standard feeding/reproducing lifecycle — it
-// parks at carrion and breeds there); ActionState = what it's forcibly DOING.
+// The gnaw is a per-swarm ActionState ("gnaw") started from the THINK path when a hunt
+// leg is clamped by a gnawable blocker (predation.go). While chewing, the swarm owns the
+// tick (dispatched in match.go before the think gate); processGnaw damages the fence
+// every centGnawInterval ticks through its own GnawDamage pool and finishes with the
+// shared breakOccupantAt. Being SUBDUED (smoke) stops a gnaw (§C funnel).
 
 const (
-	centWindupTicks    = 8   // 0.8s telegraph freeze
-	centSurgeMaxTicks  = 25  // surge flight cap
-	centRecoverTicks   = 20  // post-lunge backoff
-	centSurgeCooldown  = 50  // 5s between lunges
-	centSurgeSpeedMult = 4.8 // 1.6 base × 4.8 = 7.7 u/s lunge (player walks 5 — the
-	// review's intended flight speed; ×3.5 was computed off the WASP's 2.2 base and
-	// left the lunge barely faster than a walking player)
-	centSurgeLead      = 0.8 // half-lead: aim = pos + velocity × flight × this
-	centSurgeOvershoot = 3.5 // the lunge charges PAST the aim point by this — it
-	// surges THROUGH the player's spot unless they dodge (the per-tick bite check
-	// fires mid-pass); a miss leaves it BEYOND them, set up for the turnaround.
-	centBiteRange      = 1.6 // absorbs the velocity-sample error
-	centTriggerRange   = 5.0 // player this close → windup
-	centDeAggroRange   = 12.0
-	// Turnaround (missed surge): bank back toward the player as a CURVED arc of
-	// short chained legs — the trail renders the chain as a natural curve — then
-	// re-trigger on a SHORT cooldown (it presses the attack; only a bite earns the
-	// full backoff).
-	centTurnLegs        = 3                       // max arc legs per turnaround
-	centTurnLegDist     = 2.5                     // cells per arc leg
-	centTurnSpeedMult   = 1.6                     // arc speed (between walk and lunge)
-	centTurnLegTicks    = 12                      // next leg/finish check cadence
-	centTurnMaxRad      = 75.0 * math.Pi / 180.0  // max heading change per arc leg
-	centTurnDoneRad     = 30.0 * math.Pi / 180.0  // facing within this → re-engage
-	centTurnCooldown    = 15                      // short re-trigger after a turnaround
-	centGnawInterval   = 80  // ticks between gnaw damage (fence_wood HP 2 → 16s)
-	centGnawCooldown   = 600 // armed on ABANDONED gnaws only
-	centGnawTimeout    = 900 // safety: a 90s gnaw that went nowhere abandons
-	centWanderTurnMax  = 60.0 * math.Pi / 180.0
-	centWanderDistMin  = 4.0
-	centWanderDistMax  = 7.0
-	centEscapeStreak   = 3 // fully-clamped legs before a free 360° re-roll
+	centGnawInterval = 80  // ticks between gnaw damage (fence_wood HP 2 → 16s)
+	centGnawCooldown = 600 // armed on ABANDONED gnaws only
+	centGnawTimeout  = 900 // safety: a 90s gnaw that went nowhere abandons
 )
-
-// processActionState drives windup/surge/recover/gnaw per tick. Returns true while an
-// action owns the swarm (the think gate is skipped). When idle (""), it also checks
-// the surge TRIGGER (per-tick — a player can cross 5.0 between thinks).
-func (m *Match) processActionState(
-	logger runtime.Logger,
-	dispatcher runtime.MatchDispatcher,
-	state *WorldState,
-	swarm *entities.SwarmState,
-	species *entities.BugSpecies,
-	chunkSize int,
-	deltaTime float32,
-) bool {
-	switch swarm.ActionState {
-	case "windup":
-		if state.TickCount >= swarm.ActionUntilTick {
-			m.launchSurge(state, swarm, species, chunkSize, deltaTime)
-		}
-		return true
-
-	case "surge":
-		// Per-tick bite check during flight: range AND line-of-sight (a clamped surge
-		// ends ≤1.5 from a player hugging the far side of a fence — a through-fence
-		// bite would silently void "stone is the answer").
-		sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
-		for userID, player := range state.Players {
-			px, py := player.WorldX(chunkSize), player.WorldY(chunkSize)
-			dx, dy := px-sx, py-sy
-			if dx*dx+dy*dy > centBiteRange*centBiteRange {
-				continue
-			}
-			_, _, _, _, blocked := entities.RaycastClampWithBlock(sx, sy, px, py, func(x, y float32) bool {
-				return state.IsBlockedForSpecies(x, y, species)
-			})
-			if blocked {
-				continue // a wall between us: no bite through it
-			}
-			if m.applyBugAttackToPlayer(logger, dispatcher, state, swarm, species, userID, player, species.AttackDamage) {
-				m.startRecover(state, swarm, species, px, py, chunkSize, deltaTime)
-				return true
-			}
-		}
-		// Flight over (arrived or capped) WITHOUT a bite: the overshoot carried us
-		// past the player — bank back toward them (turnaround), don't retreat.
-		if state.TickCount >= swarm.ActionUntilTick || !swarm.HasTarget {
-			m.startTurnaround(state, swarm, species, chunkSize, deltaTime)
-		}
-		return true
-
-	case "recover":
-		if state.TickCount >= swarm.ActionUntilTick {
-			swarm.ActionState = ""
-			swarm.SurgeCooldownUntil = state.TickCount + centSurgeCooldown
-			swarm.NextThinkTick = state.TickCount // re-decide immediately
-		}
-		return true
-
-	case "turnaround":
-		if state.TickCount >= swarm.ActionUntilTick {
-			m.advanceTurnaround(state, swarm, species, chunkSize, deltaTime)
-		}
-		return true
-
-	case "gnaw":
-		return m.processGnaw(logger, dispatcher, state, swarm, species, chunkSize)
-	}
-
-	// IDLE: the surge trigger (per-tick).
-	if species.AttackDamage > 0 && state.TickCount >= swarm.SurgeCooldownUntil {
-		sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
-		if pid, px, py, found := m.nearestPlayer(state, sx, sy, centTriggerRange); found {
-			swarm.ActionState = "windup"
-			swarm.ActionUntilTick = state.TickCount + centWindupTicks
-			swarm.WindupTargetID = pid
-			swarm.WindupStartX, swarm.WindupStartY = px, py
-			// Freeze: a zero-length leg (origin == target) — deterministic on both
-			// sides (server Move no-ops at dist<0.5; client returns target at dist≤0).
-			m.emitLeg(state, swarm, species, sx, sy, 1.0, chunkSize, deltaTime)
-			m.broadcastBugTelegraph(dispatcher, state, swarm, "windup", chunkSize)
-			return true
-		}
-	}
-	return false
-}
-
-// launchSurge aims at the target's position AT LAUNCH plus a half-lead from their
-// velocity over the windup window (player walk 5 u/s vs windup-start aim = a
-// guaranteed miss; the lead clips straight-liners while direction-changers dodge —
-// the intended skill check). The leg is CLAMPED (ground-bound) and rides ×3.5.
-func (m *Match) launchSurge(
-	state *WorldState,
-	swarm *entities.SwarmState,
-	species *entities.BugSpecies,
-	chunkSize int,
-	deltaTime float32,
-) {
-	player, ok := state.Players[swarm.WindupTargetID]
-	if !ok {
-		swarm.ActionState = ""
-		swarm.SurgeCooldownUntil = state.TickCount + centSurgeCooldown
-		return
-	}
-
-	px, py := player.WorldX(chunkSize), player.WorldY(chunkSize)
-	sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
-
-	// Velocity over the windup (u/s) → lead by flight time × 0.8
-	vx := (px - swarm.WindupStartX) / (float32(centWindupTicks) * 0.1)
-	vy := (py - swarm.WindupStartY) / (float32(centWindupTicks) * 0.1)
-	ddx, ddy := px-sx, py-sy
-	dist := float32(math.Sqrt(float64(ddx*ddx + ddy*ddy)))
-	surgeSpeed := species.BaseSpeed * centSurgeSpeedMult
-	flight := dist / surgeSpeed
-	tx := px + vx*flight*centSurgeLead
-	ty := py + vy*flight*centSurgeLead
-
-	// OVERSHOOT: charge THROUGH the aim point and past it — a dodged lunge leaves
-	// the centipede beyond the player (the turnaround brings it back); an undodged
-	// one bites mid-pass via the per-tick flight check.
-	odx, ody := tx-sx, ty-sy
-	odist := float32(math.Sqrt(float64(odx*odx + ody*ody)))
-	if odist > 0.01 {
-		tx += odx / odist * centSurgeOvershoot
-		ty += ody / odist * centSurgeOvershoot
-	}
-
-	// Ground-bound: the surge clamps at fences/water like every centipede leg.
-	cx, cy := entities.RaycastClamp(sx, sy, tx, ty, func(x, y float32) bool {
-		return state.IsBlockedForSpecies(x, y, species)
-	})
-
-	swarm.ActionState = "surge"
-	swarm.ActionUntilTick = state.TickCount + centSurgeMaxTicks
-	// The lunge direction seeds the heading, so a turnaround banks from the actual
-	// flight line (and post-action wander continues naturally too).
-	swarm.WanderHeading = float32(math.Atan2(float64(cy-sy), float64(cx-sx)))
-	m.emitLeg(state, swarm, species, cx, cy, centSurgeSpeedMult, chunkSize, deltaTime)
-}
-
-// startTurnaround begins the missed-surge arc: bank back toward the target player
-// with chained short legs (advanceTurnaround emits them), pressing the attack on a
-// short cooldown instead of retreating. Recover (the straight backoff + full
-// cooldown) is reserved for AFTER a successful bite.
-func (m *Match) startTurnaround(
-	state *WorldState,
-	swarm *entities.SwarmState,
-	species *entities.BugSpecies,
-	chunkSize int,
-	deltaTime float32,
-) {
-	swarm.ActionState = "turnaround"
-	swarm.TurnLegsLeft = centTurnLegs
-	m.advanceTurnaround(state, swarm, species, chunkSize, deltaTime)
-}
-
-// advanceTurnaround emits the next arc leg (heading rotates ≤centTurnMaxRad toward
-// the player per leg — the chained legs render as a banked curve through the trail),
-// or ends the turnaround: facing within centTurnDoneRad (or arc spent) → idle on the
-// SHORT cooldown so the windup trigger re-fires; target gone/out of range → idle on
-// the full cooldown.
-func (m *Match) advanceTurnaround(
-	state *WorldState,
-	swarm *entities.SwarmState,
-	species *entities.BugSpecies,
-	chunkSize int,
-	deltaTime float32,
-) {
-	finish := func(cooldown int64) {
-		swarm.ActionState = ""
-		swarm.TurnLegsLeft = 0
-		swarm.SurgeCooldownUntil = state.TickCount + cooldown
-		swarm.NextThinkTick = state.TickCount // re-decide immediately
-	}
-
-	player, ok := state.Players[swarm.WindupTargetID]
-	if !ok {
-		finish(centSurgeCooldown)
-		return
-	}
-	sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
-	px, py := player.WorldX(chunkSize), player.WorldY(chunkSize)
-	dx, dy := px-sx, py-sy
-	if dx*dx+dy*dy > centDeAggroRange*centDeAggroRange {
-		finish(centSurgeCooldown) // they ran: back to wandering, no pursuit
-		return
-	}
-
-	desired := math.Atan2(float64(dy), float64(dx))
-	diff := desired - float64(swarm.WanderHeading)
-	diff = math.Atan2(math.Sin(diff), math.Cos(diff)) // normalize to [-π, π]
-	if math.Abs(diff) <= centTurnDoneRad || swarm.TurnLegsLeft <= 0 {
-		finish(centTurnCooldown) // facing them: press the attack
-		return
-	}
-
-	turn := diff
-	if turn > centTurnMaxRad {
-		turn = centTurnMaxRad
-	} else if turn < -centTurnMaxRad {
-		turn = -centTurnMaxRad
-	}
-	heading := float64(swarm.WanderHeading) + turn
-	swarm.WanderHeading = float32(heading)
-
-	tx := sx + float32(math.Cos(heading)*centTurnLegDist)
-	ty := sy + float32(math.Sin(heading)*centTurnLegDist)
-	cx2, cy2 := entities.RaycastClamp(sx, sy, tx, ty, func(x, y float32) bool {
-		return state.IsBlockedForSpecies(x, y, species)
-	})
-	m.emitLeg(state, swarm, species, cx2, cy2, centTurnSpeedMult, chunkSize, deltaTime)
-	swarm.TurnLegsLeft--
-	swarm.ActionUntilTick = state.TickCount + centTurnLegTicks
-}
-
-func (m *Match) startRecover(
-	state *WorldState,
-	swarm *entities.SwarmState,
-	species *entities.BugSpecies,
-	awayFromX, awayFromY float32,
-	chunkSize int,
-	deltaTime float32,
-) {
-	sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
-	dx, dy := sx-awayFromX, sy-awayFromY
-	dist := float32(math.Sqrt(float64(dx*dx + dy*dy)))
-	if dist < 0.01 {
-		dx, dy, dist = 1, 0, 1
-	}
-	const back = 4.0
-	tx, ty := sx+dx/dist*back, sy+dy/dist*back
-	cx, cy := entities.RaycastClamp(sx, sy, tx, ty, func(x, y float32) bool {
-		return state.IsBlockedForSpecies(x, y, species)
-	})
-	swarm.ActionState = "recover"
-	swarm.ActionUntilTick = state.TickCount + centRecoverTicks
-	m.emitLeg(state, swarm, species, cx, cy, 1.0, chunkSize, deltaTime)
-}
 
 // tryStartGnaw is called from the THINK path when a seek/hunt leg was clamped: if the
 // blocking cell is gnawable and the cooldown is clear, park and start chewing.
@@ -307,6 +38,10 @@ func (m *Match) tryStartGnaw(
 	deltaTime float32,
 ) bool {
 	if state.TickCount < swarm.GnawCooldownUntil {
+		return false
+	}
+	// §C: the single choke point for STARTING a gnaw — a subdued centipede doesn't chew.
+	if swarmSubdued(swarm, species) {
 		return false
 	}
 	def := m.occupantDefAt(state, blockX, blockY)
@@ -340,6 +75,13 @@ func (m *Match) processGnaw(
 ) bool {
 	var gx, gy int
 	fmt.Sscanf(swarm.GnawKey, "%d,%d", &gx, &gy)
+
+	// §C (the mid-gnaw case): smoke lands while it's ALREADY chewing → it stops. Damage
+	// dealt so far stays in the gnaw pool; no cooldown (being calmed is not an abandon).
+	if swarmSubdued(swarm, species) {
+		m.endGnaw(state, swarm, false)
+		return false
+	}
 
 	def := m.occupantDefAt(state, gx, gy)
 	if def == nil || def.World == nil || !def.World.Gnawable {
@@ -401,72 +143,4 @@ func (m *Match) occupantDefAt(state *WorldState, gx, gy int) *EntityDef {
 		return nil
 	}
 	return state.Entities[cell.Occupant.ID]
-}
-
-// centipedeWander: serpentine heading-constrained short legs (±60° per think,
-// 4-7 cells) with the dead-end escape hatch — the heading updates to the ROLLED
-// heading even when clamped, and 3 consecutive fully-clamped legs earn a free 360°
-// re-roll (a stone dead-end would otherwise pin it facing the wall forever). Gnaw
-// triggers ride the clamp result when the blocker is gnawable.
-func (m *Match) centipedeWander(
-	state *WorldState,
-	swarm *entities.SwarmState,
-	species *entities.BugSpecies,
-	chunkSize int,
-	deltaTime float32,
-) {
-	// Graduated escape: serpentine ±60° in the open; once a leg clamps the turn
-	// range widens to ±120°, and 3 clamped legs earn a free 360° roll — a pocketed
-	// centipede frees itself in a handful of thinks instead of random-walking its
-	// heading 5° at a time while visibly stuck.
-	var turn float64
-	switch {
-	case swarm.ClampedLegStreak >= centEscapeStreak:
-		turn = state.Rng.Float64()*2*math.Pi - math.Pi // free 360°
-		swarm.ClampedLegStreak = 0
-	case swarm.ClampedLegStreak >= 1:
-		turn = (state.Rng.Float64()*2 - 1) * centWanderTurnMax * 2 // ±120°
-	default:
-		turn = (state.Rng.Float64()*2 - 1) * centWanderTurnMax
-	}
-	heading := float64(swarm.WanderHeading) + turn
-	swarm.WanderHeading = float32(heading)
-
-	dist := centWanderDistMin + state.Rng.Float64()*(centWanderDistMax-centWanderDistMin)
-	sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
-	tx := sx + float32(math.Cos(heading)*dist)
-	ty := sy + float32(math.Sin(heading)*dist)
-
-	// Tether to home (wander_radius around HomePos)
-	if species.WanderRadius > 0 {
-		hx, hy := swarm.HomePos.WorldX(chunkSize), swarm.HomePos.WorldY(chunkSize)
-		hdx, hdy := tx-hx, ty-hy
-		if d := float32(math.Sqrt(float64(hdx*hdx + hdy*hdy))); d > species.WanderRadius {
-			tx = hx + hdx/d*species.WanderRadius
-			ty = hy + hdy/d*species.WanderRadius
-		}
-	}
-
-	cx, cy, blockX, blockY, hit := entities.RaycastClampWithBlock(sx, sy, tx, ty, func(x, y float32) bool {
-		return state.IsBlockedForSpecies(x, y, species)
-	})
-
-	// Clamped = the leg achieved less than HALF its intended distance (an absolute
-	// <0.5 test let corner-jiggling reset the streak forever: partial 0.5-1.5 moves
-	// against two walls while the heading random-walked too slowly to escape).
-	mdx, mdy := cx-sx, cy-sy
-	achieved := float64(mdx*mdx + mdy*mdy)
-	intended := dist * dist * 0.25 // (dist/2)^2
-	if achieved < intended {
-		swarm.ClampedLegStreak++
-	} else {
-		swarm.ClampedLegStreak = 0
-	}
-
-	if hit && m.tryStartGnaw(state, swarm, species, blockX, blockY, chunkSize, deltaTime) {
-		return
-	}
-
-	m.emitLeg(state, swarm, species, cx, cy, 1.0, chunkSize, deltaTime)
-	swarm.NextThinkTick = state.TickCount + 20 + state.Rng.Int63n(11) // short serpentine legs
 }

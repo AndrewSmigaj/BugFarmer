@@ -5,7 +5,7 @@
 > **Grounding:**
 > - Materials + tiers from `../materials/ores_metals.md` (shared tier→rarity color table).
 > - Rarity ladder mirrors `../weapons/weapons.md` (Common→Legendary).
-> - Bonus types tie to real systems in `docs/product/architecture_bugs.md` (catch chance,
+> - Bonus types tie to real systems in `docs/product/architecture/architecture_bugs.md` (catch chance,
 >   condition meters, net size, sell price) and the farming/mining loops.
 
 **Design intent:** equipment for **FIVE slots** — **helmet, body (chest), arms

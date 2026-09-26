@@ -1,0 +1,40 @@
+{
+  "zone_id": "fly_lab",
+  "name": "Fly Lab",
+  "row": 0,
+  "col": 0,
+  "width": 96,
+  "height": 96,
+  "spawn_point": [
+    48,
+    48
+  ],
+  "biome_type": "test",
+  "seed": 1234,
+  "bug_spawning": {
+    "static": false,
+    "species_caps": {
+      "fly_common": {
+        "initial": 2,
+        "max": 12,
+        "swarm_size": 6,
+        "spawn_interval": 999999.0,
+        "min_population": 8,
+        "max_population": 60
+      }
+    },
+    "spawn_areas": [
+      {
+        "id": "center",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 48,
+        "cy": 48,
+        "radius": 12
+      }
+    ]
+  },
+  "ephemeral_swarms": true
+}

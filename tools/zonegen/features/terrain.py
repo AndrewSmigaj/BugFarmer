@@ -7,7 +7,7 @@ import random
 
 
 # Road material -> its diagonal-transition tile family (made by
-# tools/make_diagonal_tiles.py; ids carry "path" so load() classifies them).
+# tools/sprites/make_diagonal_tiles.py; ids carry "path" so load() classifies them).
 _DIAG_FAMILY = {"stone_path": "stone_path_d", "dirt": "dirt_path_d"}
 
 
@@ -384,6 +384,27 @@ def stream(b, start, end, *, width=1, seed=0, wobble=0.5):
     return cells
 
 
+def bridge(b, start, end):
+    """A straight WOODEN BRIDGE between two points (a road/path crossing a stream): every WATER
+    cell on the line becomes walkable `bridge_wood` (surface path, un-reserved — the dock-plank
+    precedent in scene_lakeside); land cells along the line are left untouched, so butt the
+    bridge right up to the banks. Axis-aligned or shallow-diagonal lines both work (cells are
+    interpolated). Returns the decked cells."""
+    (x0, y0), (x1, y1) = start, end
+    steps = max(abs(x1 - x0), abs(y1 - y0), 1)
+    decked = []
+    for i in range(steps + 1):
+        x = x0 + round((x1 - x0) * i / steps)
+        y = y0 + round((y1 - y0) * i / steps)
+        if not b.in_bounds(x, y):
+            continue
+        if b.surface[y][x] == "water":
+            b.set_ground(x, y, "bridge_wood", surface="path")
+            b.reserved[y][x] = False
+            decked.append((x, y))
+    return decked
+
+
 def pond(b, cx, cy, rx, ry, seed=3):
     """An ORGANIC water feature: irregular shallow blob with a smaller deep centre + reeds."""
     rng = random.Random(seed)
@@ -430,8 +451,13 @@ def forest(b, cx, cy, rx, ry, *, species=("tree_oak", "tree_pine"),
             if d <= 1.0 + rng.uniform(-0.28, 0.18):                  # ragged organic edge
                 cells.append((x, y, d))
     if dirt:
+        # ONE coherent floor mass per stand (cold-grade fix: per-cell 50% dirt read as
+        # checker CONFETTI, not ground): solid dirt core, noise-ragged rim, no interior
+        # speckle. Village-standard stands don't pass dirt=True, so they're untouched.
+        nf = _vnoise((seed, "floor"))
         for (x, y, d) in cells:
-            if b.is_free(x, y) and b.surface[y][x] == "grass" and rng.random() < 0.5:
+            if b.is_free(x, y) and b.surface[y][x] == "grass" \
+               and d < 0.58 + (nf(x * 0.3, y * 0.3) - 0.5) * 0.55:
                 b.set_ground(x, y, "dirt")
     rng.shuffle(cells)
     for (x, y, d) in cells:
@@ -622,14 +648,116 @@ def shore_dress(b, info, arcs, *, seed=0):
     return dressed
 
 
-def rock_mass(b, cx, cy, rx, ry, *, seed=0, veins=4):
-    """A SOLID rock mass — the surface sneak-peek of the mining underworld. Unlike
+def _vnoise(seed):
+    """Seeded smooth 2D value noise → f(x, y) in [0,1]. Coarse random lattice
+    (hash per lattice point, so values are position-stable and call-order-free)
+    with smoothstep bilinear blending. The building block for organic FIELDS —
+    material gradients, density ramps — where per-cell white noise reads as
+    static and hand blobs read as stamps."""
+    cache = {}
+
+    def lat(ix, iy):
+        v = cache.get((ix, iy))
+        if v is None:
+            v = cache[(ix, iy)] = random.Random((seed, ix, iy)).random()
+        return v
+
+    def f(x, y):
+        fx, fy = math.floor(x), math.floor(y)
+        tx, ty = x - fx, y - fy
+        tx = tx * tx * (3 - 2 * tx)
+        ty = ty * ty * (3 - 2 * ty)
+        a = lat(fx, fy) * (1 - tx) + lat(fx + 1, fy) * tx
+        c = lat(fx, fy + 1) * (1 - tx) + lat(fx + 1, fy + 1) * tx
+        return a * (1 - ty) + c * ty
+    return f
+
+
+def gradient_field(b, x0, y0, x1, y1, *, edge="s", seed=0, ground="dirt",
+                   rocky=None, rocky_from=0.62, scale=0.075, gamma=1.15,
+                   noise_amp=0.55, threshold=0.40, speckle=0.18,
+                   warp=0.0, warp_scale=0.02):
+    """A zone-seam TERRAIN GRADIENT toward `edge` — the C12 rule (owner,
+    2026-07-06: the transition should "start getting dirty and rocky on a
+    gradient, not suddenly having the dirt wall"). Paints `ground` over plain
+    grass with density = edge-ramp × smooth value noise: near-solid at the
+    edge, breaking into organic TONGUES mid-band, thinning to lone speckle
+    flecks, then clean grass — no contour line anywhere. `rocky` (e.g.
+    stone_floor) mottles the strongest cells via a second noise field.
+
+    GROUND ONLY (stays walkable, places nothing): embed rock_mass / forest /
+    scatter separately so features sit IN the field instead of carrying their
+    own aprons. Skips water/paths/buildings/sand — only plain grass repaints.
+    Returns the painted-cell count."""
+    n1 = _vnoise(seed)                    # the material tongues
+    n2 = _vnoise((seed, "rocky"))         # the rocky mottle (high-freq grit)
+    n3 = _vnoise((seed, "warp"))          # low-freq frontier meander
+    rngd = random.Random((seed, "dither"))
+    painted = 0
+    rocky_cells = []
+    for y in range(max(0, y0), min(b.H, y1 + 1)):
+        for x in range(max(0, x0), min(b.W, x1 + 1)):
+            if b.surface[y][x] != "grass" or b.ground[y][x] != "grass":
+                continue
+            # `warp` meanders the frontier itself (±warp cells over ~1/warp_scale
+            # wavelengths) so the fade line never runs level across the map (C13).
+            if edge in ("s", "n"):
+                yy = y + (n3(x * warp_scale, 0.0) - 0.5) * 2 * warp
+                t = 1.0 - (yy - y0) / max(1, y1 - y0)
+                if edge == "n":
+                    t = 1.0 - t
+            else:
+                xx = x + (n3(0.0, y * warp_scale) - 0.5) * 2 * warp
+                t = 1.0 - (xx - x0) / max(1, x1 - x0)
+                if edge == "e":
+                    t = 1.0 - t
+            ramp = max(0.0, min(1.0, t)) ** gamma
+            v = ramp * ((1 - noise_amp) + noise_amp * 1.35 * n1(x * scale, y * scale))
+            v += (rngd.random() - 0.5) * 0.045          # de-alias the contour
+            if v > threshold:
+                if rocky and v > rocky_from and n2(x * scale * 4.0, y * scale * 4.0) > 0.66:
+                    b.set_ground(x, y, rocky)           # small sharp grit, not coins
+                    rocky_cells.append((x, y))
+                else:
+                    b.set_ground(x, y, ground)
+                painted += 1
+            elif v > threshold * 0.6 and rngd.random() < speckle:
+                b.set_ground(x, y, ground)              # lone flecks at the fade
+                painted += 1
+    # De-orphan the grit: a single 1x1 rocky tile floating in dirt reads as a tile
+    # BUG, not an outcrop (cold-grade finding) — regrind isolated ones to `ground`.
+    if rocky:
+        rocky_set = set(rocky_cells)
+        for (x, y) in rocky_cells:
+            if not any((x + dx, y + dy) in rocky_set
+                       for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+                b.set_ground(x, y, ground)
+                rocky_set.discard((x, y))
+    return painted
+
+
+def rock_mass(b, cx, cy, rx, ry, *, seed=0, veins=4, shell="stone_block",
+              floor="stone_floor", core=None, core_at=0.45, vein_spec=None,
+              gap_chance=0.0, core_noise=0.0):
+    """A SOLID mineable mass — the surface sneak-peek of the mining underworld. Unlike
     `rock_patch` (a sparse quarry floor you walk through), this is FILLED: every
-    interior cell carries a mineable block (stone, hard stone toward the core — the
-    insides go dark later), salted with short ORE VEINS (runs of 3-5, the caves.md
-    rule: veins, not specks). The shape is the same multi-blob union as `lake()`, so
-    masses read as rocky hills, not circles. Edges get a ragged dirt apron with
-    spilled blocks. Returns the filled cells."""
+    interior cell carries a mineable block, salted with ORE VEINS (runs of 3-6, the
+    caves.md §4 doctrine: veins not specks, NEVER hand-set coordinates — owner
+    correction 2026-07-06). The shape is the same multi-blob union as `lake()`, so
+    masses read as hills, not circles. Edges get a ragged dirt apron with spills.
+
+    - `shell`/`floor`: the fill block + ground under it (defaults = the classic stone
+      mass). `shell="dirt_block", floor="dirt", core="stone_block"` builds the ant-
+      country "dirt area with a rocky core" (shovel shell, pickaxe heart).
+    - `core`: block id for the INNER band (signed field > `core_at`); None = all shell.
+    - `vein_spec`: list of (ore_id, n_veins, run_lo, run_hi, where) with where in
+      {"any","core"} — rares belong ("rare_id", 1, 2, 3, "core"). None = the legacy
+      commons bag driven by `veins` (kept verbatim so existing masses are UNCHANGED).
+    - `gap_chance`: weathering — some interior cells skip their block (floor shows
+      through), likelier near the rim. Kills the solid-fill row-band read (C13).
+    - `core_noise`: jitters the core threshold per cell so the shell/core boundary
+      is ragged, not a contour band (C13). Both default 0 = legacy output, byte-exact.
+    Returns the filled cells."""
     rng = random.Random(seed)
     axis = rng.random() * 2 * math.pi
     nblobs = rng.randint(2, 3)
@@ -651,6 +779,7 @@ def rock_mass(b, cx, cy, rx, ry, *, seed=0, veins=4):
         return best
 
     filled = []
+    core_cells = set()
     mr = int(max(rx, ry) * 1.4) + 2
     for dy in range(-mr, mr + 1):
         for dx in range(-mr, mr + 1):
@@ -663,31 +792,60 @@ def rock_mass(b, cx, cy, rx, ry, *, seed=0, veins=4):
             on_ground = b.is_free(x, y) and b.surface[y][x] == "grass" \
                 and b.ground[y][x] in ("grass", "sand", "dirt", "mud")
             if s > 0 and on_ground:
-                b.set_ground(x, y, "stone_floor")
-                block = "hard_stone_block" if (s > 0.45 and rng.random() < 0.6) else "stone_block"
+                b.set_ground(x, y, floor)
+                if gap_chance and rng.random() < gap_chance * (1.35 - min(s, 1.0)):
+                    continue                              # weathered gap — floor shows
+                c_at = core_at if not core_noise else \
+                    core_at + (rng.random() - 0.5) * core_noise
+                block = core if (core and s > c_at) else shell
                 if b.place_occupant(block, x, y):
                     filled.append((x, y))
+                    if core and s > c_at:
+                        core_cells.add((x, y))
             elif -0.12 < s <= 0 and on_ground:
                 if rng.random() < 0.5:
                     b.set_ground(x, y, "dirt")            # the ragged apron
                 if rng.random() < 0.12:
-                    b.place_occupant("stone_block", x, y)  # spilled blocks
+                    b.place_occupant(shell, x, y)          # spilled blocks
 
-    # Ore veins: short random-walk runs through the filled mass.
-    ores = ["ore_copper_block", "ore_coal_block", "ore_copper_block", "ore_iron_block"]
-    for v in range(veins):
-        if not filled:
-            break
-        x, y = filled[rng.randrange(len(filled))]
-        ore = ores[v % len(ores)]
-        for _ in range(rng.randint(3, 5)):
+    def _run_vein(ore, run_lo, run_hi, pool):
+        """One random-walk vein of run_lo..run_hi cells, seeded in `pool`, swapping
+        shell/core blocks in place (never over an earlier vein — veins don't eat veins)."""
+        if not pool:
+            return
+        x, y = pool[rng.randrange(len(pool))]
+        for _ in range(rng.randint(run_lo, run_hi)):
             cell = b.occ.get((x, y))
-            if cell and cell["id"] in ("stone_block", "hard_stone_block"):
-                cell["id"] = ore                          # swap the block in place
+            if cell and cell["id"] in (shell, core):
+                cell["id"] = ore
             x += rng.choice((-1, 0, 1))
             y += rng.choice((-1, 0, 1))
             if not b.in_bounds(x, y):
                 break
+
+    if vein_spec is None:
+        # LEGACY path, verbatim (existing masses must render unchanged): the commons
+        # bag cycled `veins` times, runs of 3-5.
+        ores = ["ore_copper_block", "ore_coal_block", "ore_copper_block", "ore_iron_block"]
+        for v in range(veins):
+            if not filled:
+                break
+            x, y = filled[rng.randrange(len(filled))]
+            ore = ores[v % len(ores)]
+            for _ in range(rng.randint(3, 5)):
+                cell = b.occ.get((x, y))
+                if cell and cell["id"] == "stone_block":
+                    cell["id"] = ore
+                x += rng.choice((-1, 0, 1))
+                y += rng.choice((-1, 0, 1))
+                if not b.in_bounds(x, y):
+                    break
+    else:
+        core_pool = [c for c in filled if c in core_cells] or filled
+        for (ore, n, run_lo, run_hi, where) in vein_spec:
+            pool = core_pool if where == "core" else filled
+            for _ in range(n):
+                _run_vein(ore, run_lo, run_hi, pool)
     return filled
 
 
@@ -723,7 +881,7 @@ def rock_patch(b, cx, cy, radius, *, ground="stone_floor", seed=0, ore_chance=0.
             r = rng.random()
             oid = (rng.choice(gems) if r < ore_chance * 0.35
                    else rng.choice(ores) if r < ore_chance
-                   else rng.choice(["stone_block", "stone_block", "hard_stone_block"]))
+                   else "stone_block")
             b.place_occupant(oid, x, y)
             placed.add((x, y))
     return placed

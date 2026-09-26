@@ -22,11 +22,12 @@ namespace BugFarmer.Networking
     ///   "open"       — just request the current contents
     ///   "quick"      {zone, slot}                      — move a WHOLE stack to the opposite side
     ///   "move"       {zone, slot, to_zone, to_slot, count} — precise drag-drop (-1 = all)
-    ///   "set_recipe" {recipe}                          — craft station: pick the active recipe
-    ///   "craft"      {recipe, qty}                     — craft station: queue qty batches
-    ///   "collect"    {slot}                            — craft station: take ONE output cell
+    ///   "set_recipe" {recipe, proc}                    — craft station: pick a lane's active recipe
+    ///   "craft"      {recipe, qty, proc}               — craft station: queue qty batches on a lane
+    ///   "collect"    {slot}                            — craft station: take ONE output cell (shared grid)
     ///   "get_all"                                      — craft station: sweep the output grid
-    /// zone / to_zone are "player" | "container".
+    /// zone / to_zone are "player" | "container". proc = the processor lane (craft_slots of them;
+    /// 0 default) — distinct from slot, which is collect's output-cell index.
     /// </summary>
     [Serializable]
     public class ContainerActionMessage
@@ -41,24 +42,33 @@ namespace BugFarmer.Networking
         public int count;
         public string recipe;
         public int qty;
+        public int proc;
     }
 
     /// <summary>
-    /// OpCode 99 (S->C): a container / craft-station's full contents after any change (plus craft
-    /// progress when is_craft). Display/inventory state only. (InventorySlot.metadata is ignored by
-    /// JsonUtility — fine: Stage-1 container/output contents are stackable materials.)
+    /// OpCode 99 (S->C): a container / craft-station's full contents after any change (plus
+    /// per-processor craft progress when is_craft). Display/inventory state only.
+    /// (InventorySlot.metadata is ignored by JsonUtility — fine: Stage-1 container/output
+    /// contents are stackable materials.)
     /// </summary>
     [Serializable]
     public class ContainerUpdateMessage
     {
         public int gx;
         public int gy;
-        public InventorySlot[] slots;  // chest contents OR craft output grid
+        public InventorySlot[] slots;  // chest contents OR the craft station's SHARED output grid
         public string filter;          // tag filter (chests); "" = none
 
-        // Craft-station fields (default/absent for plain chests)
+        // Craft-station fields (default/absent for plain chests): one entry per processor lane.
         public bool is_craft;
-        public string recipe;          // active recipe id
+        public CraftProcInfo[] procs;
+    }
+
+    /// <summary>One processor lane's display state (mirrors the Go CraftProcInfo).</summary>
+    [Serializable]
+    public class CraftProcInfo
+    {
+        public string recipe;          // the lane's active recipe id
         public int progress;           // ticks into the current batch
         public int total;              // process_ticks of the current batch
         public int queue;              // batches remaining (incl current)

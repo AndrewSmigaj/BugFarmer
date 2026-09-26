@@ -3,18 +3,33 @@
 This is the index for **world-building**: how we lay out zones, houses, yards, caves, and the
 example scenes that show them off. Read this first; it points at everything else.
 
+> **Where does X go?** → **[ORGANIZATION.md](ORGANIZATION.md)** — the one rule (reusable technique →
+> `examples/<feature>`, a specific place → `zones/<zone>`, content → `catalog/`). Read it before creating
+> a folder or saving a generated file.
+
 The system is **four parts**, each with one home:
 
 | Part | What it is | Lives in |
 |------|------------|----------|
 | **① The builder** | The Python library you compose zones/scenes with — feature primitives that coordinate through a shared occupancy model (a road routes around a pond; scatter avoids water). | `tools/zonegen/` |
 | **② These guides** | How to do each world-building task (build a house, a yard, a cave…). Read & iterate on them as we learn. | `docs/guides/authoring/` |
-| **③ Example scenes** | Small curated vignettes built with ①, rendered to preview PNGs. They double as the worked examples for these guides and the visual catalog/QA. | `tools/zonegen/scenes/` |
-| **④ The Gallery** | `previews/index.html` — every scene card + zone render in one page. | `tools/zonegen/gallery.py` |
+| **③ Example scenes** | Small curated vignettes built with ①, rendered to preview PNGs. They double as the worked examples for these guides and visual QA. | `tools/zonegen/scenes/` |
+| **④ The previews** | Plain PNG folders you browse in a file explorer (no html). `catalog/<group>/` = every in-game object by category; `zones/<zone>/` = a zone's full render + region crops + its `scenes/`. | `tools/_generated/previews/` |
 
 > **Art is separate.** How sprites *look* and get made is `docs/guides/art/` (start with
 > `art/object_pipeline.md`). These guides assume art already exists — or use a **placeholder**
 > (a labeled colored square) so layout never waits on art.
+
+> **⚠ TWO RULES THAT HAVE BURNED US 3× — read before ANY zone work:**
+> 1. **Orientation is FIXED: HIGH y = NORTH = TOP of every render; LOW y = SOUTH (= deep
+>    underground). x=0 = WEST, x=255 = EAST** (`zone.go`: "+Y = north"). Never re-derive it.
+>    Sanity-check: `village_21_B`'s big lake is at (x=46, y=48) and IS in the SW quadrant.
+> 2. **The GAME loads the SAVE, not the builder script.** Editing a `zone_*.py` builder changes
+>    nothing in-game until you regenerate the save. **After ANY builder change you MUST re-`save()`
+>    (`--save`) AND verify north-up** with `python3 tools/world/view_world.py <zone>` (look: is the
+>    surface where it belongs?). A corrected builder + a stale save = the game loads the OLD/flipped
+>    zone. Never overwrite a committed zone the owner cares about without a temp-save + render check
+>    first (pattern: save to a throwaway `zones_dir`, load it back, render before touching the real one).
 
 ## The loop (how we actually work)
 1. Decide the contents — from a zone doc (`docs/product/zones/<zone>.md`) or the scene's theme.
@@ -24,7 +39,7 @@ The system is **four parts**, each with one home:
    (`features/tilemap.stamp`/`dump`) — reasoned cell-by-cell, not by guessing coordinates.
 4. **`b.lint()` is the QA gate** — it returns TEXT defect strings (door blocked, wall/door/window height
    mismatch, fence/wall on path/water, wall/fence on a road TILE, dirt potholes inside stone roads,
-   spawn circles mostly over water). `registry.render_one` prints it. `place_occupant` additionally
+   spawn circles mostly over water). `tools/world/previews.py` prints it per scene. `place_occupant` additionally
    warns AT PLACEMENT when a building lands on road surface (lint can't see it later — the mask is
    overwritten). Rule: **verify in TEXT (lint + `dump`), then look at a rendered crop** — never call it
    good off a giant PNG. (`validate()` is the older bare overlap check; `lint()` supersedes it.) The one
@@ -33,15 +48,21 @@ The system is **four parts**, each with one home:
 
 ```bash
 python3 tools/zonegen/scenes/<scene>.py     # build + render ONE scene to its preview PNG + print lint
-python3 tools/zonegen/registry.py <scene>   # render via the canonical registry path (prints lint)
-python3 tools/zonegen/gallery.py            # regenerate previews/index.html (the GALLERY)
+python3 tools/world/previews.py                    # rebuild the content CATALOG + ALL scene previews
 ```
 
-> **THE GALLERY is the visual entry point**: open `tools/_generated/previews/index.html`
-> — every scene card with the guide it illustrates. Zone maps live in `previews/maps/`,
-> one-off art QA in `previews/art_review/`. The previews root holds only directories.
-
-> (The old Art Lab variant viewer was removed 2026-06 — the gallery + direct renders replaced it.)
+> **Where previews live** — the rule is [ORGANIZATION.md](ORGANIZATION.md). `tools/_generated/previews/`
+> has exactly four folders (browse them — no html, no registry):
+> - `catalog/<category>/` — every in-game object, by category. Each group has a `_sheet.png` (all at a
+>   glance) **and** every object as its own `<id>.png`. Generated from entity data by `tools/world/previews.py`,
+>   so it always matches what's in the game.
+> - `examples/<feature>/` — reusable technique demos (`buildings/`, `blocks/`, `roads/`, `water/`, …).
+> - `zones/<zone>/` — a zone's `full.png` + region crops + a `scenes/` folder of the vignettes that
+>   compose it (e.g. `zones/underground_passages_31/scenes/{mine_entrance,underground_caverns,underground_mining_camp}.png`).
+> - `player/` — player sprites + animations.
+>
+> Each scene declares its destination in a `PREVIEW = "..."` constant; `tools/world/previews.py` discovers and
+> renders them all (one render path, no hand-typed output paths). (The old html gallery + registry were removed.)
 
 ## From scenes to a real ZONE (the full pipeline)
 A **scene** is a small render-only vignette; a **ZONE** is the 256×256 world the game loads. Composing:
@@ -53,16 +74,19 @@ A **scene** is a small render-only vignette; a **ZONE** is the 256×256 world th
    add organic terrain (`lake`/`forest`/`rock_patch`), extend roads to the edges, set `Z.bug_spawning`,
    then `Z.save()` → `nakama/data/zones/<id>/` (size must be a multiple of 32; `save()` writes row/col 0,0
    so patch them after for real zones).
-4. **View the whole zone** — `python3 tools/view_world.py <zone>` → `tools/_generated/previews/maps/<zone>_detail.png`
+4. **View the whole zone** — `python3 tools/world/view_world.py <zone>` → `tools/_generated/previews/maps/<zone>_detail.png`
    (a north-up colour minimap; it reads the SAVED chunks, so save first).
 5. **Test in-game (no Unity needed)** — `run-backend` skill to start the server, then the sync-harness
    joins the zone and verifies it loads + ticks + spawns (see `tools/sync-harness/`).
 
-**Quick mechanic-test zones:** `python3 tools/make_test_zone.py --zone-id <id> --species <s> --occupant 'id@x,y' …`
+**Quick mechanic-test zones:** `python3 tools/world/make_test_zone.py --zone-id <id> --species <s> --occupant 'id@x,y' …`
 builds a tiny deterministic zone with a bug spawn + placed occupants — for isolating one mechanic.
 **Spawning gotcha:** only species DEFINED in `nakama/data/species.json` spawn (currently
-`fly_common`, `butterfly_meadow`, `wasp_common`, `centipede_garden`); `bugs.json` ids that
-lack a species spec silently don't spawn.
+`fly_common`, `butterfly_meadow`, `wasp_common`, `centipede_garden`, `millipede`,
+`beetle_carrion`, `bee_honey`, `dragonfly_blue`, `firefly`); `bugs.json` ids that lack a
+species spec silently don't spawn. Nest species (wasp, bee) need their NEST OCCUPANTS placed
+(wasp_nest / bee_hive_wild / beehive_* boxes) + `max_nests` in their species_cap — bees are
+nest-founded ONLY (`initial: 0`, never free-spawned).
 
 ## The builder — `tools/zonegen/`
 - `zonebuilder.py` — `ZoneBuilder(zone_id, W, H, base_tile=…)`: the on-disk grids + the coordination
@@ -70,7 +94,8 @@ lack a species spec silently don't spawn.
   (writes anchor + footprint cells, **refuses overlaps loudly**), `set_ground`, **`lint()`** (the text
   QA gate), `place_player`/`place_bug` (render-only dressing), `save()`/`load()`.
 - `render.py` — `render_builder(b, out, scale, bounds=None)`: builder → full-art preview PNG.
-- `registry.py` — the **scene catalog** + canonical render (prints lint).
+- `scene_preview.py` — the ONE render path: a scene declares `PREVIEW`/`SCALE`; this renders it to the
+  right folder. `tools/world/previews.py` discovers + renders every scene (and the content catalog).
 - `features/` — the primitives (one guide each, below): `tilemap` (text-grid stamp/dump), `terrain`
   (`lake`/`forest`/`pond`/`rock_patch`/`path`/`stream`), `scatter`, `garden`, `yard`, `room`, `house`,
   `village`, `furniture`, `cave`.
@@ -89,9 +114,15 @@ lack a species spec silently don't spawn.
 - NO DEAD GRASS · clumped wild vegetation · forests as masses, not rings.
 
 ## Feature guides
+> **The craft layer** (what to build + whether it's alive): the **zone-craft** skill →
+> [CORRECTIONS.md](CORRECTIONS.md) (the owner-taste ledger — read whole before zone work) ·
+> [gallery.md](gallery.md) (annotated before/afters) · the `research_*.md` domain digests ·
+> the "Zone & scene lenses" in `.claude/lenses.md`.
+
 - [building.md](building.md) — rooms, walls, doors, building shells (`room.place_room`).
-- [house.md](house.md) — multi-room houses: the composer, the south-facing facing rule, room
-  templates, ⊥/L shapes, furniture **collections** (basic/fancy), and the 3/4/5-room layout generators.
+- [house.md](house.md) — multi-room houses: the composer, the furniture facing rule +
+  context-facing doors, room templates, ⊥/L shapes, furniture **collections** (basic/fancy),
+  and the 3/4/5-room layout generators.
 - [village.md](village.md) — composing a believable **town**: road hierarchy, function clusters, the
   `plaza()`/fountain focal point, `shop_building()`, density gradients, and the build-order recipe.
 - [yard.md](yard.md) — fenced yards/pens: `fence_rect`, `yard` (gate + path + decor).
@@ -102,6 +133,8 @@ lack a species spec silently don't spawn.
 - [water.md](water.md) — lakes (`terrain.lake` multi-blob shapes), `shore_dress` per-arc banks, docks.
   (Supersedes trees-and-ponds.md; its forest half lives in forest.md.)
 - [caves.md](caves.md) — underground space (solid rock carved out).
+- [camps.md](camps.md) — cliff edges, mine entrances & **surface work-camps** (organised functional
+  clusters, the cliff/mouth/descent, the road in). The surface→underground transition.
 - [ant-colony.md](ant-colony.md) — a worked underground nest ("creatures shape the underground").
 - [blocks.md](blocks.md) — mineable/placeable cube blocks that tile in a grid.
 - [biome-feature-map.md](biome-feature-map.md) — which primitives to reach for per biome.
@@ -110,7 +143,7 @@ lack a species spec silently don't spawn.
   scoreboard — the rationale behind `noise_field`/`route_road`/`sculpt_plan`.
 
 ## Orient yourself
-- **The whole map:** `docs/product/architecture_world.md` — the 24-zone grid, layout, river/roads,
+- **The whole map:** `docs/product/architecture/architecture_world.md` — the 24-zone grid, layout, river/roads,
   per-zone species, coordinates.
 - **Per-zone design docs:** `docs/product/zones/<zone>.md` (start from `_TEMPLATE.md`). Current build
   scope: `docs/product/zones/demo_slice.md`.

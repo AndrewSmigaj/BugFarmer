@@ -2,6 +2,54 @@
   "ant_eggs": {
     "look": "a clutch of ANT EGGS: a small heap of glossy pale-white oval eggs piled together, top-down, on the nest floor."
   },
+  "fly_eggs": {
+    "look": "a clutch of FLY EGGS: a small tight cluster of tiny white rice-grain eggs on the ground, top-down."
+  },
+  "fly_larvae": {
+    "look": "FLY MAGGOTS: a small squirming clump of plump pale-white legless grubs, blunt at one end, top-down."
+  },
+  "fly_pupa": {
+    "look": "FLY PUPAE: a small cluster of hard capsule-shaped reddish-brown pupae (puparia), smooth rounded barrel shapes, resting on the ground, top-down.", "family": "creature"
+  },
+  "butterfly_eggs": {
+    "look": "a small group of BUTTERFLY EGGS: tiny pale ribbed dome-shaped eggs laid in a neat cluster on a leaf, top-down."
+  },
+  "butterfly_caterpillar": {
+    "look": "two or three distinct CATERPILLARS lying side by side: each a long plump worm-like body with clear repeating yellow, white and black rings along its length, tiny legs, crawling on a green leaf, top-down.", "family": "creature"
+  },
+  "butterfly_chrysalis": {
+    "look": "a BUTTERFLY CHRYSALIS: one or two smooth teardrop jade-green chrysalises rimmed with tiny gold dots, hanging from a milkweed stem, top-down.", "family": "creature"
+  },
+  "wasp_eggs": {
+    "look": "WASP EGGS: small creamy-white eggs, each a soft rounded rice-grain resting at the bottom of its own hexagonal paper comb-cell, top-down — matte soft eggs, NOT metal rods or bars."
+  },
+  "wasp_grubs": {
+    "look": "WASP GRUBS: fat creamy-white legless larvae, each curled inside a hexagonal paper comb-cell, top-down."
+  },
+  "wasp_pupa": {
+    "look": "WASP PUPAE: capped brood — pale developing wasp pupae sealed inside hexagonal paper comb-cells, each cell closed over with a domed off-white silk cap, a faint curled wasp shape showing through the thin cap, top-down — matte silk caps over the comb, NOT metal rods or bars."
+  },
+  "beetle_eggs": {
+    "look": "a clutch of BEETLE EGGS: a small heap of tiny round pearly-white eggs in dark soil, top-down."
+  },
+  "beetle_larvae": {
+    "look": "BEETLE GRUBS: a few plump C-curled pale grubs with small dark heads and tiny legs, in soil, top-down."
+  },
+  "beetle_pupa": {
+    "look": "BEETLE PUPAE: a couple of pale soft immobile pupae with faint folded legs and wing-cases pressed against the body, in dark soil, top-down.", "family": "creature"
+  },
+  "millipede_eggs": {
+    "look": "a clutch of MILLIPEDE EGGS: a small cluster of tiny round pale eggs in damp soil, top-down."
+  },
+  "millipede_larvae": {
+    "look": "young MILLIPEDES: a few tiny pale short-bodied juvenile millipedes, lightly coiled, top-down."
+  },
+  "centipede_eggs": {
+    "look": "a clutch of CENTIPEDE EGGS: a small cluster of glossy pale round eggs tucked in soil, top-down."
+  },
+  "centipede_larvae": {
+    "look": "young CENTIPEDES: a few tiny pale slender juvenile centipedes with short legs, top-down."
+  },
   "backswimmer_common": {
     "look": "a BACKSWIMMER, top-down: a boat-shaped pale bug swimming upside-down with long oar-like hind legs.",
     "materials": [
@@ -445,6 +493,62 @@
   },
   "wasp_yellowjacket": {
     "look": "a YELLOWJACKET wasp, top-down: stocky bright yellow-and-black striped body, aggressive stance, short wings.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "wasp_soldier": {
+    "look": "a WASP SOLDIER, top-down: a large aggressive wasp, bigger and bulkier than a common wasp, with a THICK armoured black-and-YELLOW banded abdomen, broad dark wings swept back, and a prominent stinger; menacing.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "hornet_giant": {
+    "look": "a GIANT HORNET, top-down: a huge fearsome hornet with a broad ORANGE-and-dark-brown banded body, large angular head with big jaws, long swept-back amber wings, and a thick venomous stinger; the apex flying predator, clearly bigger and deadlier than a wasp.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "centipede_tiger_head": {
+    "look": "a TIGER CENTIPEDE HEAD, top-down: a flattened armoured head in banded ORANGE-and-dark-brown, two long antennae pointing forward, a pair of curved venom fangs, one pair of legs to the sides; aggressive; the BOTTOM edge is FLAT to connect to a body segment.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "centipede_tiger_body_b": {
+    "look": "one TIGER CENTIPEDE body segment, top-down: a banded ORANGE-and-dark-brown armoured plate with a pair of orange legs splayed left and right; FLAT top and bottom edges so segments stack into a chain.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "centipede_tiger_tail_b": {
+    "look": "a TIGER CENTIPEDE tail end, top-down: banded orange-and-dark-brown, a final segment with two long rear appendages trailing back; FLAT top edge to connect to the body.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "centipede_giant_head": {
+    "look": "a GIANT CENTIPEDE HEAD, top-down: a massive flattened armoured head in dark BLOOD-RED chitin, two thick antennae forward, big curved venom fangs, heavy; the BOTTOM edge is FLAT to connect to a body segment; clearly larger and deadlier than a common centipede.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "centipede_giant_body_b": {
+    "look": "one GIANT CENTIPEDE body segment, top-down: a broad dark BLOOD-RED armoured plate with thick amber-yellow legs splayed left and right; FLAT top and bottom edges so segments stack into a chain; chunky.",
+    "materials": [
+      "dirt"
+    ],
+    "family": "creature"
+  },
+  "centipede_giant_tail_b": {
+    "look": "a GIANT CENTIPEDE tail end, top-down: dark blood-red, a heavy final segment with two long thick rear appendages trailing back; FLAT top edge to connect to the body.",
     "materials": [
       "dirt"
     ],

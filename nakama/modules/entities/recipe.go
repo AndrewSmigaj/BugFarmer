@@ -21,5 +21,6 @@ type RecipeDef struct {
 	Output       RecipeIO   `json:"output"`             // produced per craft
 	ProcessTicks int        `json:"process_ticks"`      // ticks to convert one batch (the ONLY speed knob)
 	Catalyst     *RecipeIO  `json:"catalyst,omitempty"` // optional required+consumed extra (e.g. fuel)
-	Unlock       string     `json:"unlock,omitempty"`   // "" / "default" = always; future: "recipe:<id>" | "shop:<npc>"
+	Unlock       string     `json:"unlock,omitempty"`   // "" / "default" = always; "shop:<npc>" | "find" = gated (must learn)
+	Collection   string     `json:"collection,omitempty"` // optional "recipe book" group; a shop book-entry grants every recipe sharing this collection
 }

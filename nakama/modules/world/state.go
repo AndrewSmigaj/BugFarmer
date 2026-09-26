@@ -1,6 +1,7 @@
 package world
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"math/rand"
@@ -101,10 +102,11 @@ type WorldState struct {
 
 	// Entity maps (Phase 1)
 	Swarms      map[string]*entities.SwarmState
-	EggClusters map[string]*entities.EggClusterState
-	Individuals map[string]*entities.IndividualBugState
-	Plants      map[string]*entities.PlantState
 	GroundItems map[string]*entities.GroundItem
+	// ItemsByChunk is a chunk-bucketed index OVER GroundItems (ChunkKey -> itemID -> item), maintained
+	// incrementally via putGroundItem/deleteGroundItem (see item_index.go). Lets FindNearbyFood scan only
+	// the chunks near a swarm instead of the whole item map. Pure derived view — never the source of truth.
+	ItemsByChunk map[string]map[string]*entities.GroundItem
 
 	// Config
 	Species map[string]*entities.BugSpecies // Loaded from config
@@ -148,7 +150,8 @@ type WorldState struct {
 	ChunkSubs     map[string]map[string]bool   // "chunkX,chunkY" -> player IDs subscribed
 	TileDefs      map[string]*TileDefinition   // Loaded from tiles.json
 	Entities      map[string]*EntityDef        // Loaded from entities/*.json (items, occupants, placeables)
-	BreakingState map[string]*BreakingProgress // "gx,gy" -> breaking progress
+	BreakingState map[string]*BreakingProgress // "gx,gy" -> occupant breaking progress
+	DiggingState  map[string]*BreakingProgress // "gx,gy" -> shovel dig progress (SEPARATE from BreakingState)
 
 	// Farming (crops)
 	CropStates map[string]*entities.CropState // "gx,gy" -> crop state
@@ -160,6 +163,15 @@ type WorldState struct {
 	HostPlantStates map[string]*entities.HostPlantState  // "gx,gy" -> milkweed host-plant breeding capacity
 	BroodStates     map[string]*entities.BroodState      // "gx,gy" -> visible nursery (compost/milkweed/ground pile)
 	ForagePools     map[string]*entities.ForagePoolState // "gx,gy" -> flower nectar feeding pool (depletable)
+
+	// ANT colony memory + scout walk buffers — SERVER-ONLY SOFT STATE (the
+	// NestState.Brood class): never hashed, never snapshotted, and deliberately
+	// EXCLUDED from buildWorldSave (trails must age out, not persist — the
+	// Unbounded-Growth lens; a restart forgets and the scouts re-learn).
+	// See entities/colony.go for the full frontier-sync classification.
+	ColonyMemory map[string]*entities.ColonyMemory // nest "gx,gy" -> remembered food sites + routes
+	ScoutPaths   map[string][]entities.RoutePoint  // scout swarmID -> breadcrumbs since leaving home
+	MarchTargets map[string]string                 // worker swarmID -> committed trail site "gx,gy" (march hysteresis)
 
 	// Gnaw damage per occupant cell — its OWN pool, NOT BreakingState (whose owner-
 	// reset would let a player "repair" a gnawed fence by hitting it, and vice versa).
@@ -175,6 +187,7 @@ type WorldState struct {
 	// ledger — that path stays on StationState above, not here).
 	Recipes          map[string]*entities.RecipeDef   // recipeID -> recipe
 	RecipesByStation map[string][]*entities.RecipeDef // station entity id -> its recipes
+	GroundRecipes    map[string][]entities.RecipeIO   // shovel: placed material id -> ingredients
 
 	// Item containers (chests/dressers/racks) — lazily created on first open from the
 	// occupant's world.container block. Display/inventory state, NOT in the sim hash.
@@ -200,10 +213,8 @@ type WorldState struct {
 	ZoneStates       map[string]*ZoneState       // zoneID → zone authority/sync state
 	PendingInfluence []InfluenceEvent            // Events to broadcast this tick
 
-	// Zone/farm persistence (see zone_persist.go). ZoneChunkCache is the prefetched per-chunk save
-	// records (loaded once at MatchInit), consumed by handleChunkSubscribe (which has no ctx/nk).
-	// LastZoneSaveTick gates the periodic autosave. None of this is in the bug-sim hash.
-	ZoneChunkCache   map[string]*ChunkSave // ChunkKey -> persisted delta to apply on chunk load
+	// Zone persistence (see world_save.go + persist_classes.go). LastZoneSaveTick gates the
+	// periodic autosave; set to the restored Tick at load. Not in the bug-sim hash.
 	LastZoneSaveTick int64
 }
 
@@ -263,6 +274,9 @@ type ZoneSnapshot struct {
 	SnapshotLastEventSeq int64 // Last applied seq included in snapshot state
 	Swarms               []SwarmSnapshotData
 	Food                 []FoodSnapshotData // Authoritative food registry @ snapshot (late-join hydration)
+	Hunts                json.RawMessage    // Authoritative hunt assignments @ snapshot (verbatim; late-join hydration)
+	Subdued              json.RawMessage    // Authoritative subdued swarm-id set @ snapshot (verbatim; late-join hydration)
+	PlayerCells          []PlayerCellData   // Player cells @ the snapshot moment (one-time-base rule; late-join hydration)
 	StateHash            string
 }
 
@@ -304,9 +318,10 @@ type PlayerState struct {
 	// Health (predators v1). HP is SIM-INERT: bug AI reads player CELLS (already on
 	// the ledger); HP travels as the presence-targeted PlayerDamage message (the
 	// MeleeResult display class). 1s invuln is server-enforced across ALL attackers.
-	HP             int   // current health
-	MaxHP          int   // 10 v1
-	LastDamageTick int64 // invuln window + regen gating
+	HP                   int   // current health
+	MaxHP                int   // 10 v1
+	LastDamageTick       int64 // invuln window + regen gating
+	DodgeInvulnUntilTick int64 // dodge i-frame window (separate from LastDamageTick so it doesn't gate regen)
 
 	// Character identity (Terraria-style). "" = ephemeral default (no-char join, e.g. the
 	// sync-harness). Set in MatchJoin from the join metadata; drives save-on-leave. None of
@@ -315,7 +330,12 @@ type PlayerState struct {
 	CharCreatedAt int64
 	IntroSeen     bool
 	PendingIntro  bool // transient: first login this session → ride the next FullInventorySync
-	Appearance    Appearance
+	// KnownRecipes: recipe ids the player has LEARNED (bought/found). Recipes with unlock
+	// "" / "default" are always craftable and NOT tracked here; only gated recipes
+	// (unlock "shop:<npc>" / "find") need an entry. Persisted via CharacterSave. Per-player,
+	// never sim state.
+	KnownRecipes map[string]bool
+	Appearance   Appearance
 	HomeZone      string // bed-set respawn/login zone ("" = use the zone spawn_point)
 	HomeX         float32
 	HomeY         float32
@@ -376,18 +396,17 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		PendingCharacters:     make(map[string]string),
 		PendingEntryPositions: make(map[string][2]float32),
 		// Entity maps
-		Swarms:      make(map[string]*entities.SwarmState),
-		EggClusters: make(map[string]*entities.EggClusterState),
-		Individuals: make(map[string]*entities.IndividualBugState),
-		Plants:      make(map[string]*entities.PlantState),
-		GroundItems: make(map[string]*entities.GroundItem),
-		Species:     make(map[string]*entities.BugSpecies),
+		Swarms:       make(map[string]*entities.SwarmState),
+		GroundItems:  make(map[string]*entities.GroundItem),
+		ItemsByChunk: make(map[string]map[string]*entities.GroundItem),
+		Species:      make(map[string]*entities.BugSpecies),
 		// World building
 		Chunks:        make(map[string]*ChunkData),
 		ChunkSubs:     make(map[string]map[string]bool),
 		TileDefs:      make(map[string]*TileDefinition),
 		Entities:      make(map[string]*EntityDef),
 		BreakingState: make(map[string]*BreakingProgress),
+		DiggingState:  make(map[string]*BreakingProgress),
 		// Farming
 		CropStates:      make(map[string]*entities.CropState),
 		CropDefs:        make(map[string]*entities.CropDef),
@@ -396,6 +415,9 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		HostPlantStates: make(map[string]*entities.HostPlantState),
 		BroodStates:     make(map[string]*entities.BroodState),
 		ForagePools:     make(map[string]*entities.ForagePoolState),
+		ColonyMemory:    make(map[string]*entities.ColonyMemory),
+		ScoutPaths:      make(map[string][]entities.RoutePoint),
+		MarchTargets:    make(map[string]string),
 		GnawDamage:      make(map[string]int),
 		Stations:        make(map[string]*entities.StationState),
 		// Crafting
@@ -471,6 +493,9 @@ func (s *WorldState) AddPlayer(userID, username string, presence runtime.Presenc
 func applyStartingKit(player *PlayerState) {
 	player.MaxHP = 10
 	player.HP = 10
+	if player.KnownRecipes == nil {
+		player.KnownRecipes = make(map[string]bool)
+	}
 
 	// Slot 0 left EMPTY for now — the "hands" grab verb is pulled pending the
 	// grabbing/pushing/shoving rework (BACKLOG). Empty slots still behave as a bare-hand
@@ -532,7 +557,17 @@ func floorDiv(a, b int) int {
 // IsBlocked checks if a world position blocks swarm center movement.
 // Returns true if the position has a blocking occupant or impassable ground.
 func (w *WorldState) IsBlocked(worldX, worldY float32) bool {
-	return w.isBlockedImpl(worldX, worldY, false)
+	return w.isBlockedImpl(worldX, worldY, false, false)
+}
+
+// IsBlockedForSpawn is the walkability check used when PLACING a swarm. Unlike the per-tick checks, it
+// consults the AUTHORED map — loading a not-yet-subscribed chunk transiently from disk (chunkForCollision)
+// when it isn't in the lazily-loaded state.Chunks cache. That cache is EMPTY at MatchInit (chunks load per
+// subscription), so the per-tick check would call every cell "blocked" and the initial spawn would place
+// zero bugs; this one sees the real walls and actually places them. Same authored source the zone collision
+// map uses — determinism-safe (read-only, no init, not stored). Only the spawn path pays the disk load.
+func (w *WorldState) IsBlockedForSpawn(worldX, worldY float32) bool {
+	return w.isBlockedImpl(worldX, worldY, false, true)
 }
 
 // IsBlockedForSpecies is the species-aware blocking check: flies_over_fences species
@@ -543,10 +578,10 @@ func (w *WorldState) IsBlocked(worldX, worldY float32) bool {
 // the identical rule (architecture_swarm_sync.md §14: BOTH collision sites).
 func (w *WorldState) IsBlockedForSpecies(worldX, worldY float32, species *entities.BugSpecies) bool {
 	skipOccupants := species != nil && species.FliesOverFences
-	return w.isBlockedImpl(worldX, worldY, skipOccupants)
+	return w.isBlockedImpl(worldX, worldY, skipOccupants, false)
 }
 
-func (w *WorldState) isBlockedImpl(worldX, worldY float32, skipOccupants bool) bool {
+func (w *WorldState) isBlockedImpl(worldX, worldY float32, skipOccupants, loadAuthored bool) bool {
 	cs := w.Config.ChunkSize
 
 	// Convert to integer grid coordinates using floor (consistent for negative coords)
@@ -561,10 +596,14 @@ func (w *WorldState) isBlockedImpl(worldX, worldY float32, skipOccupants bool) b
 	lx := gx - cx*cs
 	ly := gy - cy*cs
 
-	// Get chunk
+	// Get chunk. Spawn-time checks (loadAuthored) fall back to the authored map on disk when the chunk
+	// isn't subscribed yet — otherwise an unloaded chunk reads as "blocked" and spawning fails at MatchInit.
 	chunk := w.Chunks[ChunkKey(cx, cy)]
+	if chunk == nil && loadAuthored && w.CurrentZone != nil {
+		chunk = w.chunkForCollision("data/zones/"+w.CurrentZone.ZoneID, cx, cy)
+	}
 	if chunk == nil {
-		return true // Out of bounds = blocked
+		return true // Out of bounds / no authored chunk = blocked
 	}
 
 	// Check occupant layer (fences, walls, trees) — skipped for flying species
@@ -578,10 +617,10 @@ func (w *WorldState) isBlockedImpl(worldX, worldY float32, skipOccupants bool) b
 		}
 	}
 
-	// Check ground tile (water, lava, etc.)
+	// Check ground tile (water, lava, etc.) — primary material for shaped-ground composites.
 	tileID := chunk.GetGroundTile(lx, ly)
 	if tileID != "" {
-		tileDef := w.TileDefs[tileID]
+		tileDef := w.TileDefs[PrimaryMaterial(tileID)]
 		if tileDef != nil && tileDef.BlocksBugs {
 			return true
 		}
@@ -614,7 +653,9 @@ func (w *WorldState) IsBlockedForPlayers(worldX, worldY float32) bool {
 		}
 	}
 
-	switch chunk.GetGroundTile(lx, ly) {
+	// Primary material so shaped-ground composites collide by their base (must stay in lockstep with the
+	// client mirror TilemapManager.IsCellBlockedForPlayers).
+	switch PrimaryMaterial(chunk.GetGroundTile(lx, ly)) {
 	case "water_shallow", "water_deep", "lava":
 		return true
 	}
@@ -713,11 +754,48 @@ func (s *WorldState) BlocksBugsCells() (cx []int, cy []int) {
 	return cx, cy
 }
 
-// chunkForCollision returns the chunk to scan for blocks_bugs occupants. If the chunk is already in memory
-// (subscribed → saved-delta + lazy init already applied) it's returned as-is. Otherwise it's loaded from
-// disk TRANSIENTLY with only the occupant delta overlaid (mirrors applyChunkSave's cell loop) — NOT stored
-// and NO init, so a later real subscription still runs initFruitTrees/Nests/etc. exactly once (their RNG
-// draws stay in their normal order). Result matches the in-memory form, so first + late joiners agree.
+// RoofCells returns the zone's COMPLETE set of authored "roofed" (underground / no-sun) cells, scanning the
+// full zone grid off disk the same zone-complete way as BlocksBugsCells (so first + late joiners get an
+// identical set). COSMETIC — the client darkens these for the underground lighting; this never enters the
+// sim or ComputeStateHash. Reads chunk.Roof (authored builder data), unlike the DERIVED collision map.
+func (s *WorldState) RoofCells() (cx []int, cy []int) {
+	if s.CurrentZone == nil {
+		return nil, nil
+	}
+	chunksX := s.CurrentZone.Width / ChunkSize
+	chunksY := s.CurrentZone.Height / ChunkSize
+	if chunksX <= 0 {
+		chunksX = 8
+	}
+	if chunksY <= 0 {
+		chunksY = 8
+	}
+	zonePath := "data/zones/" + s.CurrentZone.ZoneID
+	for ccy := 0; ccy < chunksY; ccy++ {
+		for ccx := 0; ccx < chunksX; ccx++ {
+			chunk := s.chunkForCollision(zonePath, ccx, ccy)
+			if chunk == nil || chunk.Roof == nil {
+				continue
+			}
+			for ly := 0; ly < len(chunk.Roof); ly++ {
+				row := chunk.Roof[ly]
+				for lx := 0; lx < len(row); lx++ {
+					if row[lx] {
+						cx = append(cx, ccx*ChunkSize+lx)
+						cy = append(cy, ccy*ChunkSize+ly)
+					}
+				}
+			}
+		}
+	}
+	return cx, cy
+}
+
+// chunkForCollision returns the chunk to scan for blocks_bugs occupants. An in-memory chunk is
+// always the truth (every EDITED chunk was eager-loaded at MatchInit by the persistence restore,
+// so player fences are here). Otherwise the chunk is pure authored content, loaded from disk
+// TRANSIENTLY — NOT stored and NO init, so a later real subscription still runs
+// initFruitTrees/Nests/etc. exactly once (their RNG draws stay in their normal order).
 func (s *WorldState) chunkForCollision(zonePath string, cx, cy int) *ChunkData {
 	if ch, ok := s.Chunks[ChunkKey(cx, cy)]; ok {
 		return ch
@@ -725,18 +803,6 @@ func (s *WorldState) chunkForCollision(zonePath string, cx, cy int) *ChunkData {
 	ch, err := LoadChunk(zonePath, cx, cy)
 	if err != nil {
 		return nil // no authored file → no authored occupants here
-	}
-	if s.ZoneChunkCache != nil {
-		if cs := s.ZoneChunkCache[ChunkKey(cx, cy)]; cs != nil {
-			for _, e := range cs.Cells {
-				if e.LY < 0 || e.LY >= ChunkSize || e.LX < 0 || e.LX >= ChunkSize {
-					continue
-				}
-				if e.OccSet {
-					ch.Occupants[e.LY][e.LX] = e.Occ // nil clears a broken authored occupant
-				}
-			}
-		}
 	}
 	return ch
 }
@@ -796,6 +862,29 @@ func (s *WorldState) AddSwarmTargetEvent(zoneID, swarmID string, originX, origin
 	if sw := s.Swarms[swarmID]; sw != nil {
 		s.Perf.Count(sw.SpeciesID, "legs")
 	}
+}
+
+// AddSwarmSubduedEvent broadcasts a swarm's subdue-threshold crossing (smoke/calm meter). Toggle pair like
+// the food registry: subdued=true emits SWARM_SUBDUED, false emits SWARM_UNSUBDUED. SwarmID-only. The client
+// per-bug sim reads it to suppress the LUNGE/DIVE for a calmed swarm (damage is already gated server-side).
+func (s *WorldState) AddSwarmSubduedEvent(zoneID, swarmID string, subdued bool) {
+	zone := s.GetOrCreateZone(zoneID)
+
+	eventType := InfluenceSwarmUnsubdued
+	if subdued {
+		eventType = InfluenceSwarmSubdued
+	}
+	event := InfluenceEvent{
+		Tick:    s.TickCount,
+		Seq:     zone.NextSeq,
+		Type:    eventType,
+		ZoneID:  zoneID,
+		SwarmID: swarmID,
+	}
+	zone.NextSeq++
+
+	zone.InfluenceLog = append(zone.InfluenceLog, event)
+	s.PendingInfluence = append(s.PendingInfluence, event)
 }
 
 // AddSwarmSplitEvent logs a SWARM_SPLIT through the seq-gated ledger: the parent swarm

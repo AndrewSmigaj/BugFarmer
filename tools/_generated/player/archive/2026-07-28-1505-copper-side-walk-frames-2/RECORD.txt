@@ -1,0 +1,11 @@
+when      : 2026-07-28 15:05:30
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+title     : copper-side-walk-frames-2
+references (in the order sent):
+  1. tools/_generated/player/runs/2026-07-28-1457-copper-front-side-helmet/result.png  (sent upscaled x14)
+
+PROMPT:
+The attached image shows a character in copper plate armour, front view on the left and side view on the right. Take the SIDE view figure and draw it THREE times in a row in one image, evenly spaced, all exactly the same height standing on the same baseline, all facing right. The three poses are the three stages of a walk cycle: (1) FEET TOGETHER, standing still, both legs straight and touching. (2) His LEFT leg is forward and his RIGHT leg is behind him. (3) The OPPOSITE of pose 2 - his RIGHT leg is forward and his LEFT leg is behind him. Poses 2 and 3 must be MIRROR OPPOSITES of each other: whichever leg is in front in pose 2 must be the one behind in pose 3. It is a SMALL walking step, the feet only a little apart, not a lunge or a running stride. ONLY THE LEGS CHANGE between the three figures - the helmet, breastplate, shoulder cap and hip piece must be pixel-identical on all three. All three have NO ARMS. Big simple shapes, not fine detail, this is a small pixel art sprite. Black background.

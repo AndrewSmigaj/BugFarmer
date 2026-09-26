@@ -1,11 +1,11 @@
 ---
 name: ecology-tuning
-description: Use when balancing the bug ecology — tuning the 6-species food web (fly, butterfly, wasp, centipede, millipede, beetle) so populations sit in good, alive (oscillating) bands instead of crashing, running away, or pinning the hard cap. Covers the run_config harness, the per-zone chart layout, how to read population/interaction/phase charts, the levers (species params, plant/food, spawn/Director), the determinism caveats, and the discipline (one sane lever at a time, measure, log). Read this before proposing ANY ecology balance change.
+description: Use when balancing the bug ecology — tuning the living food web (flies, wasps, centipedes, ants and the rest of the species defined in nakama/data/species.json) so populations sit in good, alive (oscillating) bands instead of crashing, running away, or pinning the hard cap. Covers the run_config harness, the per-zone chart layout, how to read population/interaction/phase charts, the levers (species params, plant/food, spawn/Director), the determinism caveats, and the discipline (one sane lever at a time, measure, log). Read this before proposing ANY ecology balance change.
 ---
 
 # Ecology tuning
 
-Balance the living 6-species ecology so every species sits in a good, **oscillating** band — bounded by
+Balance the living ecology (every species in `species.json`) so every species sits in a good, **oscillating** band — bounded by
 EMERGENT mechanics (food competition, predation, aging, breeding-when-fed), NOT by artificial knobs or the
 hard `max_population` cap (which is only a rare backstop). The job is tuning the REAL parameters of the bugs
 and plants until the emergent populations land well.
@@ -41,9 +41,9 @@ do NOT stack changes you can't separate. The owner has repeatedly caught kneejer
 6. **Distinct tag per run.** Reusing a config name overwrites its `_data/nakama_<tag>.log` and makes the
    archive folders ambiguous. One experiment = one name. Report run counts/durations/coverage HONESTLY.
 
-- **Strategy log (append-only):** `docs/product/ecology_tuning_log.md`. EVERY move + its measured result
+- **Strategy log (append-only):** `docs/product/ecology/ecology_tuning_log.md`. EVERY move + its measured result
   goes here (category, exact change, seed, per-species outcome). Read it first so you don't retread.
-- **Controllability map:** `docs/product/ecology_control_campaign.md` — which lever moves which band (and
+- **Controllability map:** `docs/product/ecology/ecology_control_campaign.md` — which lever moves which band (and
   whether it moves CENTRE vs AMPLITUDE), the 6 analysis lenses, and the two hardest species (millipede =
   cap-bound until you raise the cap + scarce litter; centipede = reaches its cap only when SPAWNED NEAR PREY
   + the kills→breeding conversion). Read before re-investigating a "stuck" species.
@@ -56,16 +56,23 @@ do NOT stack changes you can't separate. The owner has repeatedly caught kneejer
 
 ## 2. Run a config
 ```bash
-python3 tools/run_config.py <config> --zone village_21_B --duration 600   # ~8 game-days
+python3 tools/ecology/run_config.py <config> --zone village_21_B --duration 600   # ~8 game-days
 ```
 - Configs live in `tools/bug_lab_configs/*.json` — a DELTA deep-merged over canonical data:
   `species` (species.json fields, incl. nested `predation`), `tuning` (ecology_tuning.json dials),
   `bug_spawning` (zone.json species_caps / spawn weights / Director bands), `fruit` (tree rates),
   `flags`. Supports `"extends": "<parent>"` to build on a prior config.
 - `run_config.py` SNAPSHOTS + RESTORES canonical data around the run (it mutates species.json etc. then
-  reverts) — so a sweep never leaves the repo dirty. It restarts nakama, runs the headless sync-harness,
-  charts, and restores. `v21b_baseline` = no deltas (the reference). Duration×0.0133 ≈ game-days.
-- The harness pins **seed 1337** for reproducibility (production zones keep seed 0 = random per match).
+  reverts) — so a sweep never leaves the repo dirty. It restarts nakama, **drives the run with the REAL headless
+  Unity client (`-ecology` mode, via `tools/run_ecology_client.sh`) — which runs client-authoritative PREDATION**
+  (the old passive .NET harness never did → it was predation-blind), then charts and restores. `v21b_baseline` =
+  no deltas (the reference). NOTE: needs a BUILT player (`Build/SyncTest/BugFarmerClient.exe`; build it via
+  `SyncTestBuild.Build`, Editor closed) — same player the sync tests use.
+- **Speed: `call_rate:60 / sim_batch:1` = 6× real-time — the CEILING.** The Unity client is the speed governor
+  (~60-70 ticks/sec on village_21_B); `sim_batch:2` is faithful in principle but MEASURED to break the client (it
+  desyncs to 0 bugs). So `--duration × 60/8400 ≈ game-days`: **~48 game-days = `--duration 6720` (~112 min,
+  overnight-friendly)**. Don't undershoot — 4 days is a transient; ~48 is standard.
+- The run pins **seed 1337** for reproducibility (production zones keep seed 0 = random per match).
 
 ## 3. Where the charts go (per-zone layout)
 `tools/_generated/ecology_charts/` (see its README.md). Per ZONE:
@@ -77,7 +84,7 @@ python3 tools/run_config.py <config> --zone village_21_B --duration 600   # ~8 g
   leave stale charts there). `archive/<ts>_<tag>/` keeps the dated history; `current/` is "latest".
 - **`<zone>/archive/<timestamp>_<tag>/`** — every run, with a `note.md` (what it changed + result), for
   comparing which settings were better.
-- **`<zone>/comparisons/`** — overlay charts (one line per run): `python3 tools/plot_compare.py out.png
+- **`<zone>/comparisons/`** — overlay charts (one line per run): `python3 tools/ecology/plot_compare.py out.png
   "label=_data/nakama_<tag>.log" ...`. The fastest before/after read.
 - **`_data/`** — raw `nakama_*.log` + telemetry CSVs (regenerate plots from these).
 - **After every run: refresh `current/` (the tooling does this) AND show the owner those charts** —
@@ -97,13 +104,15 @@ python3 tools/run_config.py <config> --zone village_21_B --duration 600   # ~8 g
   `satiation_decay_rate`, `feed_amount`, `vision_range`, `lifespan_secs`, `forage_chance`,
   `attractions_by_phase`, and the `predation` block (`home_range`, `feed_per_kill`, `strike_*`,
   `deposit_satiation`, `hunt_satiation_threshold`, prey list).
-- **Shared dials** (`nakama/data/ecology_tuning.json`): nectar/host regen (`nectar_regen_per_tick`,
+- **Shared dials** — every dial's DEFAULT lives in `nakama/modules/world/ecology_tuning.go` (read it for the
+  full knob set); override any by ADDING that key to `nakama/data/ecology_tuning.json` (which only *sets* a
+  subset — the rest use their .go defaults). Knobs include nectar/host regen (`nectar_regen_per_tick`,
   `max_nectar`, `host_regen_per_tick`, `host_breed_cost`, `max_host_capacity`), `predator_breed_satiation`
-  (centipede & other nestless predators breed when this well-fed — the kills→population conversion knob),
-  `spawn_satiation`, nest economy (`nest_brood_cap`/`nest_hatch_*`/`nest_founding_size`/`nest_found_dist_*`),
-  and **`max_litter`/`litter_regen_per_tick`** — leaf_litter is a DEPLETABLE forage pool (millipede's
-  detritus food, the forest-floor analogue of nectar); millipede ≈ food-limited by litter THROUGHPUT only
-  once its cap isn't binding. RESSTATS reports `litter=` next to `nectar=`.
+  (the kills→population conversion knob — centipede & other nestless predators breed when this well-fed),
+  `spawn_satiation`, the nest economy (`nest_brood_cap`/`nest_hatch_*`/`nest_founding_size`/`nest_found_dist_*`),
+  and `max_litter`/`litter_regen_per_tick` — leaf_litter, a DEPLETABLE forage pool (millipede's detritus food,
+  the forest-floor analogue of nectar); millipede ≈ food-limited by litter THROUGHPUT once its cap isn't
+  binding. RESSTATS reports `litter=` next to `nectar=`.
 - **Fruit timing** (`nakama/data/entities/occupants.json`, `fruit` config delta): `fruit_grow_ticks`,
   `fruit_drop_ticks`, `fruit_rot_ticks`. The rot LAG (~2 game-days fallen→rotten) is the fly boom-bust
   AMPLITUDE knob; fly lifespan ~3 days, so the lag is most of a fly's life = sharp busts.
@@ -131,6 +140,16 @@ python3 tools/run_config.py <config> --zone village_21_B --duration 600   # ~8 g
   parity after any sim change to confirm no desync.
 
 ## 6. Current status (read the tuning log for detail)
-Determinism + fruit-rot + clean-start fixed. Flies breed (booms ~1300, still cap-limited). Centipede is the
-working fly predator; millipede stable ~130. **Wasp nest economy is still broken** (resident starves at the
-nest → nestless Director reseeds; provision/deposit rhythm fragile) — open problem. Butterfly noisy.
+Determinism + fruit-rot + clean-start fixed. Flies breed + self-sustain via `+brood` (booms, cap-limited).
+Centipede is the working fly predator; millipede stable. The old "wasp nest economy is broken" verdict was
+DISPROVEN (commit `79bc376`, the nest-occupant-hijack fix): the wasp economy self-sustains (`b_reseed→0`).
+**Breeding-unify (2026-07-14):** ALL species — incl. wasp NESTS — now lay eggs into the VISIBLE `BroodState`
+that develops over GAME-HOURS (`BroodEggMatureTicks=350` ≈ 1 game-hour/egg) and hatches into the resident;
+breaking a nest POURS the brood out as live bugs. So there is ONE brood model now (no invisible instant-pop).
+**Predation is now FAITHFUL (2026-07-18):** `run_config` drives with the real headless client (`-ecology`), so
+client-authoritative predation actually fires — verified `d_predation>0` (was a flat 0 with the old passive
+harness). The predation-blind era is over; predator/prey bands in the charts are now REAL. **Open — re-tune to
+the target bands** (fly 200 · butterfly 100 · wasp/centipede/beetle/millipede 30, provisional) on a proper long
+run (~48 days). First finding: a FRESH start needs LIGHT seeding (owner) — dumping a big population in before food
+ramps (fruit drop/rot, compost fill, nectar regrow all take game-days) mass-starves; start low and let it grow
+into the food (`v21b_seed_low.json`). Butterfly is food-limited by nectar (not a breeding failure).

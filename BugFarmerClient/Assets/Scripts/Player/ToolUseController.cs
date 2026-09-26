@@ -65,18 +65,62 @@ namespace BugFarmer.Player
                 return;
 
             // Send tool use message + swing the tool in-hand (plays even if the server
-            // rejects — the swing is feedback for the attempt, like the net)
-            SendToolUse(cellPos);
+            // rejects — the swing is feedback for the attempt, like the net). The SHOVEL carries the
+            // player-selected ground id (shaped-ground builder); every other tool sends none.
+            bool isShovel = toolDef.ToolType == "shovel";
+            string groundId = isShovel ? BugFarmer.World.ShovelSelection.CurrentGroundId : null;
+            SendToolUse(cellPos, groundId, false);
             _lastUseTime = Time.time;
 
             if (_animator != null)
             {
                 Vector2 aim = (Vector2)(mouseWorld - transform.position);
-                _animator.Play(toolDef.ToolType, EntityDatabase.GetItemSprite(toolDef.Id), aim);
+                // Shovel dust bursts at the swing's CONTACT frame (the dig moment), not at click-time.
+                System.Action onContact = isShovel
+                    ? () => BugFarmer.World.HitBurst.Play(cellWorld, BugFarmer.World.HitBurst.Kind.Dust, 0.6f)
+                    : (System.Action)null;
+                _animator.Play(toolDef.ToolType, EntityDatabase.GetItemSprite(toolDef.Id), aim, onContact: onContact);
             }
         }
 
-        private void SendToolUse(Vector2Int cellPos)
+        /// <summary>Shift+LMB with a shovel: DIG the target cell. Digging is PROGRESSIVE server-side — each
+        /// call is one hit; the ground breaks after a few, shows a crack overlay, and drops its material(s).
+        /// Called every frame by PlayerInputRouter's dig-hold latch and self-throttled on the shovel cooldown,
+        /// so holding produces a steady per-hit cadence. Shares the shovel cooldown with placing.</summary>
+        public void TryDig()
+        {
+            string toolId = InventoryManager.Instance?.GetEquippedToolId();
+            var toolDef = EntityDatabase.Get(toolId);
+            if (toolDef == null || toolDef.ToolType != "shovel")
+                return;
+
+            float cooldown = toolDef.CooldownTicks > 0 ? toolDef.CooldownTicks / 10f : 0.3f;
+            if (Time.time - _lastUseTime < cooldown)
+                return;
+            if (_mainCamera == null)
+                return;
+
+            Vector3 mouseWorld = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            mouseWorld.z = 0;
+            if (TilemapManager.Instance == null)
+                return;
+            Vector2Int cellPos = TilemapManager.Instance.WorldToCell(mouseWorld);
+            Vector3 cellWorld = TilemapManager.Instance.CellToWorld(cellPos);
+            if (Vector3.Distance(transform.position, cellWorld) > maxToolDistance)
+                return;
+
+            SendToolUse(cellPos, null, true);
+            _lastUseTime = Time.time;
+            if (_animator != null)
+            {
+                Vector2 aim = (Vector2)(mouseWorld - transform.position);
+                // Dust bursts at the swing's CONTACT frame (the dig moment), not at click-time.
+                _animator.Play(toolDef.ToolType, EntityDatabase.GetItemSprite(toolDef.Id), aim,
+                    onContact: () => BugFarmer.World.HitBurst.Play(cellWorld, BugFarmer.World.HitBurst.Kind.Dust, 0.6f));
+            }
+        }
+
+        private void SendToolUse(Vector2Int cellPos, string groundId, bool dig)
         {
             var socket = NetworkManager.Instance?.Socket;
             var match = WorldManager.Instance?.CurrentMatch;
@@ -89,7 +133,9 @@ namespace BugFarmer.Player
             var msg = new ToolUseMessage
             {
                 grid_x = cellPos.x,
-                grid_y = cellPos.y
+                grid_y = cellPos.y,
+                ground_id = groundId,
+                dig = dig
             };
 
             string json = JsonUtility.ToJson(msg);

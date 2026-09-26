@@ -41,6 +41,10 @@ def place_player_house(b, ox=0, oy=0):
     return rooms
 
 
+PREVIEW = "examples/buildings"
+SCALE = 7
+
+
 def build():
     b = ZoneBuilder("scene_player_house", 40, 30, base_tile="grass", name="Player house")
     place_player_house(b, 0, 0)
@@ -48,8 +52,7 @@ def build():
 
 
 if __name__ == "__main__":
+    from scene_preview import render
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "tests", "scene_player_house.png"))
-    render_builder(b, out, scale=7)
-    print("missing_art:", b.missing_art())
-    print("warnings:", len(b.warnings))
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

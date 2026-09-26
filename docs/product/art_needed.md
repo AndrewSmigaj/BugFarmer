@@ -121,7 +121,7 @@ frames, reconvert as part of the **multi-frame sprites** backlog item, not one-o
 
 ### TODO — crafting outputs (NEW item icons; batch with `add-object`)
 Stage-1 recipes deliberately output EXISTING-art items so crafting shipped without an art batch. As
-recipes expand (see [crafting_design.md](crafting_design.md)) these new outputs need icons:
+recipes expand (see [crafting_design.md](design/crafting_design.md)) these new outputs need icons:
 - **Metal bars:** `copper_bar`, `tin_bar`, `silver_bar`, `gold_bar`, `platinum_bar`, `steel`
   (only `iron_bar` exists). Recolor pipeline can likely do the bar set from one base.
 - **Materials:** `wood_plank`, `glass`, `charcoal`, `coal_dust`, `sawdust`, `thread`, `cloth`,
@@ -130,7 +130,7 @@ recipes expand (see [crafting_design.md](crafting_design.md)) these new outputs 
 - **Food:** `flour`, `bread`, `meal_*`.
 - **Beekeeping:** `honey`, `honey_wine`.
 
-### TODO — crafting UI art (hand-authored, `tools/ui_sprites.py` → `Resources/UI/`)
+### TODO — crafting UI art (hand-authored, `tools/sprites/ui_sprites.py` → `Resources/UI/`)
 Stage 1 ships a generic panel built from existing UI sprites. The Apico-touch polish pass:
 - `panel_craft` frame; per-station header/theming (the smelter's fuel + ore input slots, a fire/heat
   meter, a fuel tank, a themed progress-bar fill). Drives the per-station look (currently identical).
@@ -142,3 +142,45 @@ Stage 1 ships a generic panel built from existing UI sprites. The Apico-touch po
 
 (Catalog coverage: as scenes are built, ensure every world entity appears in at least one scene —
 that's also what surfaces the items above and any new ones added to the catalog.)
+
+---
+
+## VILLAGE ECONOMY BUILDOUT (D26) — placeholder art needing real sprites
+These ship NOW as flat colored-square placeholders (`tools/sprites/placeholder_sprites.py`, no API) so the
+items/stations are fully functional in engine. Replace with real art in a batched pass — **materials/blocks =
+gpt-image-1 (Pipeline A); NPC characters = generate_player_sprites (Pipeline B)**.
+
+### Material icons (`Resources/Items/{id}_icon.png`, 16×16) — gpt-image-1
+- Metal bars: `copper_bar` `bronze_bar` `steel_bar` `silver_bar` `gold_bar` `platinum_bar`
+- Base mats: `plank` `thread` `cloth` `glass` `chitin` `leather` `silk`
+
+### Stations (`Resources/Objects/{id}.png`) — gpt-image-1
+- `bug_extractor` (32×24) — the dead-bug → materials station.
+
+### Design TODO (not art): the Bug Extractor dead→material recipe map
+`chitin` (from `dead_beetle`) is live. The full mapping — which `dead_<bug>` yields `leather` / `silk` /
+more `chitin` — is undecided (village has no spider, so `silk` likely belongs to spider zones). Items exist
+(placeholder) so armor recipes can reference them; their EXTRACTOR recipes await Andrew's call.
+
+### TODO — signs should be 2 cells wide (Andrew, 2026-06-27)
+All shop/town signs read better at **2×1** (32×24). `sign_weaver` is already 2-wide. Remake the rest to
+2-wide (resize sprite_w → 32 + footprint [2,1], regenerate art): `sign_plank`, `sign_shop`, `sign_anvil`,
+`sign_market`, `sign_inn`, `sign_camp`, `sign_anchor`, `sign_fish_board`, `sign_leaf`, `sign_crest`,
+`sign_weather`, `signpost`. (`sign_market_board` is already 3-wide.)
+
+## Bee-station + bee-decor batch (2026-07-06, placeholders in-game)
+- bee_station_small (16x22, placeable) — compact pine bee box, landing lip
+- bee_station_large (32x28, placeable, 2x1) — double-super station, tin roof
+- skep_basket (16x20) — woven straw skep dome, decorative
+- candle_beeswax (16x18) — fat amber candle on a dish
+- honey_jar_shelf (16x26) — shelf crowded with amber jars
+- rug_honeycomb (32x32 flat, 2x2) — honeycomb-pattern rug
+
+## Furniture sets batch (2026-07-06, placeholders in-game; REFERENCE-generate per set)
+FLORAL (hero: bed_floral; materials wood/fabric): bed_floral 32x64, chair_floral 16x24,
+table_floral 32x24, dresser_floral 32x28, lamp_floral 16x26, vase_floral 16x20,
+bookshelf_floral 32x28, rug_floral 32x32 flat.
+STONE (hero: bed_stone; stone palette): bed_stone 32x64, cupboard_stone 32x28,
+shelf_stone 32x28, desk_stone 32x24, lamp_crystal 16x26 (glass palette).
+MARBLE (hero: table_marble; marble palette): table_marble 32x24, bench_marble 32x20,
+bust_marble 16x24.

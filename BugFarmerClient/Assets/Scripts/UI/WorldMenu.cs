@@ -42,9 +42,17 @@ namespace BugFarmer.UI
         {
             new WorldChoice { label = "Normal",         zoneId = "village_21" },
             new WorldChoice { label = "Village B",      zoneId = "village_21_B" },
+            new WorldChoice { label = "Bee Meadow",     zoneId = "bee_meadow_20" },
+            new WorldChoice { label = "Bug Zoo",        zoneId = "bug_zoo" },
             new WorldChoice { label = "Eco Lab",        zoneId = "village_21_lab" },
+            new WorldChoice { label = "Butterfly Lab",  zoneId = "butterfly_lab" },
+            new WorldChoice { label = "Fly Lab",        zoneId = "fly_lab" },
+            new WorldChoice { label = "Crawler Lab",    zoneId = "crawler_lab" },
+            new WorldChoice { label = "Arena",          zoneId = "arena" },
             new WorldChoice { label = "Test",           zoneId = "sim_test" },
             new WorldChoice { label = "Collision Test", zoneId = "collision_test" },
+            new WorldChoice { label = "Lighting Test",  zoneId = "lighting_test" },
+            new WorldChoice { label = "Feel Test",      zoneId = "feel_test" },
             new WorldChoice { label = "Split Test",     zoneId = "split_test2" },
             new WorldChoice { label = "Merge Test",     zoneId = "merge_test2" },
             new WorldChoice { label = "Fly Farm Test",  zoneId = "repro_test" },
@@ -69,13 +77,18 @@ namespace BugFarmer.UI
             EnsureWorld("Normal", "village_21");
             EnsureWorld("Village B", "village_21_B");
             EnsureWorld("Eco Lab", "village_21_lab");
+            EnsureWorld("Bug Zoo", "bug_zoo");
             EnsureWorld("Test", "sim_test");
             EnsureWorld("Collision Test", "collision_test");
+            EnsureWorld("Lighting Test", "lighting_test");
+            EnsureWorld("Feel Test", "feel_test");
             EnsureWorld("Split Test", "split_test2");
             EnsureWorld("Merge Test", "merge_test2");
             EnsureWorld("Fly Farm Test", "repro_test");
             EnsureWorld("Crafting Test", "crafting_test");
             EnsureWorld("Bug Lab", "bug_lab");
+            EnsureWorld("Fly Lab", "fly_lab");
+            EnsureWorld("Crawler Lab", "crawler_lab");
         }
 
         private void Start()

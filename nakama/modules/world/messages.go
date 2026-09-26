@@ -87,8 +87,9 @@ const (
 	OpCodePlantInteract   int64 = 55 // C→S: Harvest or destroy plant
 
 	// Stations (player-fillable processors: compost bin etc.)
-	OpCodeStationDeposit int64 = 85 // C→S: Deposit an inventory item into a station
-	OpCodeStationUpdate  int64 = 86 // S→C: Station fill changed (UI meter; display-only)
+	OpCodeStationDeposit int64 = 85  // C→S: Deposit an inventory item into a station
+	OpCodeStationUpdate  int64 = 86  // S→C: Station fill changed (UI meter; display-only)
+	OpCodeCompostHarvest int64 = 115 // C→S {gx,gy}: scoop the finished compost units out of a bin into the bag
 
 	// Dev tuning (debug builds): live-override ecology parameters on the server
 	OpCodeEcologyTuning int64 = 87 // C→S: apply EcologyTuningMessage to a species
@@ -142,27 +143,75 @@ const (
 	// only — never in the sim hash; the tick loop is untouched.
 	OpCodePlayerInfo int64 = 103 // S->C: {players:[{user_id,name,char_class,char_hair,char_skin}]}
 
-	OpCodeBroodUpdate int64 = 104 // S->C: a brood's egg/maggot counts changed (display-only nursery, like StationUpdate)
+	OpCodeBroodUpdate    int64 = 104 // S->C: a brood's egg/maggot counts changed (display-only nursery, like StationUpdate)
+	OpCodeNurseryTake    int64 = 113 // C->S {gx,gy,stage,count}: take brood units from a nursery station into the bag
+	OpCodeNurseryDeposit int64 = 114 // C->S {gx,gy,slot,count}: place brood units from a bag slot INTO a compatible nursery
+
+	OpCodeHiveHarvest    int64 = 107 // C->S {gx,gy}: hand-harvest honeycomb from the hive at this cell
+	OpCodeHiveHarvestAck int64 = 108 // S->C {ok,count,message}: harvest result toast (SetHomeAck pattern)
 
 	OpCodeZoneCollisionMap int64 = 106 // S->C (on join + resync): the zone's COMPLETE blocks_bugs cell set, so
 	// every client runs per-bug collision zone-wide + identically (decoupled from its camera's chunk view).
 
+	OpCodeZoneRoofMap int64 = 109 // S->C (on join + resync): the zone's COMPLETE authored "roof" cell set
+	// (underground / no-sun). COSMETIC — the client darkens roofed cells for the underground lighting; it
+	// never enters the sim. Authored zone data (chunk.roof), NOT derived like the collision map.
+
 	OpCodePredationStrike int64 = 105 // C->S (authority only): the authority client picked the individual flies a
 	// predator struck (it has per-bug positions; the server does not). Server validates + applies via the
 	// existing kill path (killBugsInSwarm → BUG_REMOVED + carrion + satiation). See PredationStrikeMessage.
+
+	OpCodeBugPlayerStrike int64 = 110 // C->S (authority only): the authority picked which INDIVIDUAL bug(s) stung
+	// a player (the server holds only swarm centres, so the old center-based checkBugAttacks stung near the
+	// CENTROID = the "phantom" hit). Server re-gates + funnels through applyBugAttackToPlayer. See BugPlayerStrikeMessage.
+	OpCodePlayerDodge int64 = 111 // C->S: the player dodge-rolled → server grants a brief i-frame window.
+	OpCodeCorpseConsume int64 = 112 // C->S (authority only): an individual predator finished eating a corpse → remove it.
 )
+
+// CorpseConsumeMessage (OpCode 112, C->S, AUTHORITY ONLY): an individual predator ate a corpse (a dead_<prey>
+// ground item) to completion. The authority reports it → the server removes it via consumeFood (FOOD_CONSUMED@0 →
+// the corpse vanishes on every client + late-joiner). The eat-vs-leave choice is a deterministic per-bug roll;
+// only the authority reports (dedup). A LEFT corpse gets no report and rots away naturally.
+type CorpseConsumeMessage struct {
+	FoodID string `json:"food_id"`
+}
 
 // BroodUpdateMessage (OpCode 104): a visible nursery's eggs/maggots changed (a lay, a maturation, a
 // hatch, or removal). Display-only — the actual births ride the deterministic SWARM_REPRODUCED ledger,
 // so a dropped/late BroodUpdate only delays the on-screen egg/maggot count, never the bug positions.
 type BroodUpdateMessage struct {
-	GX      int    `json:"gx"`
-	GY      int    `json:"gy"`
-	Species string `json:"species"`
-	Eggs    int    `json:"eggs"`
-	Maggots int    `json:"maggots"`
-	Kind    string `json:"kind"`    // "station" | "host_plant" | "ground_pile" | "nest" — drives the client visual
-	Removed bool   `json:"removed"` // true when the brood/pile is cleared (source gone)
+	GX        int     `json:"gx"`
+	GY        int     `json:"gy"`
+	Species   string  `json:"species"`
+	Eggs      int     `json:"eggs"`
+	Maggots   int     `json:"maggots"`   // LARVA stage
+	Pupae     int     `json:"pupae"`     // PUPA stage (any pupating species — fly/butterfly/beetle/wasp; 0 for non-pupating)
+	Progress  float32 `json:"progress"`  // current stage's fraction toward the next transition (0..1) — the panel's conversion bar
+	Residents int     `json:"residents"` // resident adults living IN the station (nests today; 0 otherwise) — the panel's adult slots
+	Kind      string  `json:"kind"`      // "station" | "host_plant" | "ground_pile" | "nest" — drives the client visual
+	Removed   bool    `json:"removed"`   // true when the brood/pile is cleared (source gone)
+}
+
+// NurseryTakeMessage (OpCode 113, C->S): take brood units OUT of a nursery station into the player's bag —
+// a plain station item transfer (like hive-harvest / container-collect), NOT a random draw. Stage: 0=egg,
+// 1=larva, 2=pupa. Count<=0 means take all available of that stage; otherwise take min(Count, available).
+type NurseryTakeMessage struct {
+	GX    int `json:"gx"`
+	GY    int `json:"gy"`
+	Stage int `json:"stage"`
+	Count int `json:"count"`
+}
+
+// NurseryDepositMessage (OpCode 114, C->S): place brood units FROM a bag slot INTO a nursery — the reciprocal
+// of take (relocate/top-up a brood). Slot = the player inventory slot holding the brood item; Count<=0 = the
+// whole slot. The server resolves the item's species+stage (reverse lookup) and only accepts it if the
+// species matches the nursery's (a fly larva can't go in a wasp nest); it tops up an existing brood or seeds
+// an empty NEST (whose species is known). Capacity-clamped.
+type NurseryDepositMessage struct {
+	GX    int `json:"gx"`
+	GY    int `json:"gy"`
+	Slot  int `json:"slot"`
+	Count int `json:"count"`
 }
 
 // PlayerSpawnMessage (OpCode 102): where the server placed this player on join (the character's
@@ -259,6 +308,10 @@ type BugTelegraphMessage struct {
 	// individual-fly strike reads on screen (vs the old predator-centre flash). Display-only.
 	VictimX []float32 `json:"victim_x,omitempty"`
 	VictimY []float32 `json:"victim_y,omitempty"`
+	// Consumed-corpse visual (#20, display-only): the dead_<prey> item the client shows at each victim,
+	// held then faded over FeedPauseSecs (the predator's feeding dwell). Additive — older clients ignore.
+	CarcassItem  string  `json:"carcass_item,omitempty"`
+	FeedPauseSecs float32 `json:"feed_pause_secs,omitempty"`
 }
 
 // PredationStrikeMessage (OpCode 105, C->S, AUTHORITY ONLY): the authority client ran the strike
@@ -276,12 +329,42 @@ type PredationStrikeMessage struct {
 	Tick            int64     `json:"tick,omitempty"`
 }
 
+// BugPlayerStrikeMessage (OpCode 110, C->S, AUTHORITY ONLY): the authority ran the PER-INDIVIDUAL sting
+// selection (the server holds only swarm centres) and reports the attacker bug(s) + victim. Fixes the phantom
+// sting (old checkBugAttacks stung near the CENTROID). The server re-gates through applyBugAttackToPlayer
+// (StingImmune/subdued/cooldown/invuln + StingsOnlyDefending) so damage stays authoritative + fair.
+type BugPlayerStrikeMessage struct {
+	SwarmID  string `json:"swarm_id"`
+	PlayerID string `json:"player_id"`
+	BugIDs   []int  `json:"bug_ids"`
+	Tick     int64  `json:"tick,omitempty"`
+	// Phase drives the authority-owned two-beat: "windup" = just flash the telegraph (no damage); "strike"
+	// (or "") = the wind-up elapsed AND a bug is STILL in range → apply the hit now. The authority owns the
+	// timing + the precise per-individual range check, so the server never schedules a centre-fire.
+	Phase string `json:"phase,omitempty"`
+}
+
+// PlayerDodgeMessage (OpCode 111, C->S): the player dodge-rolled; the server grants a brief i-frame window
+// (DodgeInvulnUntilTick) the bug-attack funnel respects. Movement itself stays client-predicted + reconciled.
+type PlayerDodgeMessage struct {
+	Tick int64 `json:"tick,omitempty"`
+}
+
 // ZoneCollisionMapMessage (OpCode 106, S->C, on join + resync): the zone's COMPLETE set of cells that
 // block bugs (occupants with World.BlocksBugs). Clients run per-bug collision against this zone-wide set
 // instead of their view-scoped chunks, so a bug near a fence collides IDENTICALLY on every client
 // regardless of camera position. Cx[i],Cy[i] = a blocked world cell. Dynamic changes ride
 // OCCUPANT_BLOCKS_BUGS influence events (frontier-gated) after this baseline.
 type ZoneCollisionMapMessage struct {
+	Cx []int `json:"cx"`
+	Cy []int `json:"cy"`
+}
+
+// ZoneRoofMapMessage (OpCode 109, S->C, on join + resync): the zone's COMPLETE set of authored "roofed"
+// (underground / no-sun) cells. COSMETIC ONLY — the client darkens these for the underground lighting; it
+// never enters the sim or ComputeStateHash. Cx[i],Cy[i] = a roofed world cell. Authored zone data
+// (chunk.roof from the builder), unlike the DERIVED collision map.
+type ZoneRoofMapMessage struct {
 	Cx []int `json:"cx"`
 	Cy []int `json:"cy"`
 }
@@ -346,6 +429,14 @@ type StationUpdateMessage struct {
 	Capacity int `json:"capacity"`
 }
 
+// CompostHarvestMessage (OpCode 115, C→S): scoop every whole compost unit out of the bin at
+// (gx,gy) into the bag. The compost is also the flies' food source, so the server drops the
+// deterministic food level to match (the hive-harvest pattern; see handleCompostHarvest).
+type CompostHarvestMessage struct {
+	GX int `json:"gx"`
+	GY int `json:"gy"`
+}
+
 // ContainerActionMessage (OpCode 98, C→S): one action on the container/craft-station at (gx,gy).
 // Op selects the behavior; only the fields that op needs are read:
 //   - "quick"      {zone, slot}                  — move a WHOLE stack to the opposite side
@@ -368,20 +459,70 @@ type ContainerActionMessage struct {
 	Count  int    `json:"count,omitempty"`  // -1 = whole stack
 	Recipe string `json:"recipe,omitempty"`
 	Qty    int    `json:"qty,omitempty"`
+	Proc   int    `json:"proc,omitempty"` // craft/set_recipe: which processor lane (NOT Slot — that's collect's output cell)
+}
+
+// ShopActionMessage (OpCode 2 / OpCodeAction, C→S): one buy/sell at the NPC vendor occupant at (gx,gy).
+//   - "buy"  {id, qty}            — buy `id` from the NPC's sells list (server-priced)
+//   - "sell" {id, qty, slot, slot_type} — sell `qty` from your own slot; slot_type "item"|"bug"
+//   - "sell_batch" {lines}        — the barter basket: sell every line atomically (validate each,
+//                                   pay once); invalid lines are skipped + reported, valid ones sell
+// Server is authoritative: price comes from shop/entity data, never the client. The response is the
+// existing FullInventorySync echo (coins + item + bug slots) — no shop-specific S→C opcode.
+type ShopActionMessage struct {
+	GX       int            `json:"gx"`
+	GY       int            `json:"gy"`
+	Op       string         `json:"op"`              // "buy" | "sell" | "sell_batch"
+	ID       string         `json:"id"`              // item or species id
+	Qty      int            `json:"qty,omitempty"`   // default 1
+	Slot     int            `json:"slot,omitempty"`  // sell: which of the player's slots
+	SlotType string         `json:"slot_type,omitempty"` // "item" | "bug" (sell)
+	Lines    []ShopSellLine `json:"lines,omitempty"` // sell_batch: the staged basket
+}
+
+// HiveHarvestMessage (OpCode 107, C→S): hand-harvest the hive at (gx,gy) — pull every whole
+// honeycomb into the bag. Angers the resident colony unless the hive was smoked.
+type HiveHarvestMessage struct {
+	GX int `json:"gx"`
+	GY int `json:"gy"`
+}
+
+// HiveHarvestAckMessage (OpCode 108, S→C, presence-targeted): the harvest result toast.
+type HiveHarvestAckMessage struct {
+	OK      bool   `json:"ok"`
+	Count   int    `json:"count,omitempty"`
+	Message string `json:"message,omitempty"`
+}
+
+// ShopSellLine is one staged basket line of a sell_batch. Each line is validated with the exact
+// single-sell rules (the slot must hold `id` with at least `qty`); qty <= 0 is REJECTED per line
+// (the shared handler clamp covers only the top-level Qty — a negative line qty would otherwise
+// pass RemoveItem's `Count < count` guard and GROW the stack).
+type ShopSellLine struct {
+	SlotType string `json:"slot_type"` // "item" | "bug"
+	Slot     int    `json:"slot"`      // the player's slot index
+	ID       string `json:"id"`        // item or species id the slot is expected to hold
+	Qty      int    `json:"qty"`       // how many to sell from that slot
 }
 
 // ContainerUpdateMessage (OpCode 99, S→C): the full contents of a container/craft-station after
-// any change (plus craft progress when it's a station). Display/inventory state only — never in
-// the sim hash. Re-sent on open and on every mutation.
+// any change (plus per-processor craft progress when it's a station). Display/inventory state
+// only — never in the sim hash. Re-sent on open and on every mutation.
 type ContainerUpdateMessage struct {
 	GX     int             `json:"gx"`
 	GY     int             `json:"gy"`
-	Slots  []InventorySlot `json:"slots"`            // chest contents OR craft output grid
+	Slots  []InventorySlot `json:"slots"`            // chest contents OR the craft station's SHARED output grid
 	Filter string          `json:"filter,omitempty"` // tag filter (chests)
 
-	// Craft-station fields (zero/absent for plain chests)
-	IsCraft  bool   `json:"is_craft,omitempty"`
-	Recipe   string `json:"recipe,omitempty"`   // active recipe id
+	// Craft-station fields (zero/absent for plain chests). One CraftProcInfo per processor
+	// lane (world.craft_slots of them).
+	IsCraft bool            `json:"is_craft,omitempty"`
+	Procs   []CraftProcInfo `json:"procs,omitempty"`
+}
+
+// CraftProcInfo is one processor lane's display state inside a ContainerUpdateMessage.
+type CraftProcInfo struct {
+	Recipe   string `json:"recipe,omitempty"`   // the lane's active recipe id
 	Progress int    `json:"progress,omitempty"` // ticks into the current batch
 	Total    int    `json:"total,omitempty"`    // process_ticks of the current batch
 	Queue    int    `json:"queue,omitempty"`    // batches remaining (incl current)
@@ -563,6 +704,7 @@ type FullInventorySyncMessage struct {
 	Coins             int64           `json:"coins"`
 	ItemSlotsUnlocked int             `json:"item_slots_unlocked"` // usable item slots (base + backpack)
 	Intro             bool            `json:"intro,omitempty"`     // first login of this character → show the intro
+	KnownRecipes      []string        `json:"known_recipes,omitempty"` // gated recipe ids the player has learned (for the crafting-panel filter)
 }
 
 // MoveSlotMessage is sent by client (OpCode 28)
@@ -621,6 +763,11 @@ type TileBreakMessage struct {
 type ToolUseMessage struct {
 	GridX int `json:"grid_x"` // Target cell X
 	GridY int `json:"grid_y"` // Target cell Y
+	// GroundID: the player-chosen ground id for the SHOVEL (shaped-ground builder), e.g. "grass~dirt~diagNE".
+	// Empty/ignored for every other tool (which compute their result server-side). Validated in handleShovel.
+	GroundID string `json:"ground_id,omitempty"`
+	// Dig: SHOVEL only — true = DIG (revert the cell to dirt, grant the material block), false = PLACE.
+	Dig bool `json:"dig,omitempty"`
 }
 
 // PlantInteractMessage is sent by client (OpCode 55)
@@ -695,6 +842,7 @@ type PickupItemMessage struct {
 type WorldInitMessage struct {
 	WorldSeed int64 `json:"world_seed"`
 	Tick      int64 `json:"tick"`
+	Peaceful  bool  `json:"peaceful,omitempty"` // observation zone: client suppresses the cosmetic attack/flee reaction
 }
 
 // BugSampleQuery identifies a single bug for sampling
@@ -731,6 +879,11 @@ type BugSampleData struct {
 	CurrentDirY      int `json:"current_dir_y"`
 	LandTicks        int `json:"land_ticks,omitempty"` // feed land/hold timer (history-dependent — rides snapshot)
 }
+
+// NOTE: BugSampleData above is now UNUSED by the relay — SwarmSnapshotData.Bugs is a verbatim json.RawMessage
+// passthrough (see below). The server never reads per-bug fields, so it must NOT re-declare them: a field the
+// client sends but the server omits here is silently dropped from the LateJoinSnapshot (that was the late-join
+// predation desync — hunt_target/feed_until/feed_corpse_id were missing). Kept only for reference/other decoders.
 
 // FoodSnapshotData is one entry of the deterministic food registry, embedded in the authority's ZoneSnapshot
 // and relayed in the late-join package. The registry is event-sourced (ITEM_ROTTED/FOOD_CONSUMED) and pruned,
@@ -771,8 +924,20 @@ type SnapshotRequestMessage struct {
 
 // SwarmSnapshotData contains all bug positions for a single swarm
 type SwarmSnapshotData struct {
-	SwarmID string          `json:"swarm_id"`
-	Bugs    []BugSampleData `json:"bugs"` // All bugs in swarm
+	SwarmID string `json:"swarm_id"`
+	// Snapshot-moment IDENTITY (2026-07-19 one-time-base fix): the late-join swarm_metadata is now built
+	// FROM these entries (the state at snapshot_tick), never from current state.Swarms — a swarm that merges
+	// away or is born inside the snapshot→end window otherwise gets inconsistent metadata and the joiner
+	// fabricates/mis-seeds bugs (the same-id-different-bug divergence). Typed additive siblings of the
+	// opaque Bugs blob (the HasLeg precedent); requires a DEPLOYED plugin (docker compose build builder).
+	SpeciesID string `json:"species_id,omitempty"`
+	NextBugID int    `json:"next_bug_id,omitempty"`
+	CenterX   int    `json:"center_x,omitempty"` // fixed-point ×1000 (client SimCenter) — legless-swarm fallback centre
+	CenterY   int    `json:"center_y,omitempty"`
+	// Bugs is the authority's per-bug snapshot, relayed VERBATIM (the server never reads it — see BugSampleData
+	// note). json.RawMessage means every per-bug field the client sends round-trips untouched, so no field can
+	// ever be silently dropped by a stale server struct (the late-join predation desync). Do NOT re-type this.
+	Bugs json.RawMessage `json:"bugs"`
 
 	// Current movement leg AT the snapshot tick (authority-embedded). Used for late-join center
 	// hydration: the InfluenceLog is pruned each tick, so a slow swarm's last SWARM_SET_TARGET may
@@ -838,6 +1003,13 @@ const (
 	// (the chunk-scoped WorldUpdate that renders it can't reach far clients). CellX/CellY = world cell;
 	// Level = 1 (now blocks bugs) or 0 (no longer). Phase 1b — see architecture_swarm_sync.md.
 	InfluenceOccupantBlocksBugs = "OCCUPANT_BLOCKS_BUGS"
+
+	// A swarm crossed the SUBDUE threshold (smoke/calm meter). Toggle pair (like ITEM_ROTTED/FOOD_CONSUMED):
+	// SUBDUED = now subdued, UNSUBDUED = no longer. SwarmID only (no value field). The client per-bug sim reads
+	// this to suppress the LUNGE/DIVE animation for a calmed swarm — the DAMAGE is already gated server-side
+	// (applyBugAttackToPlayer). See architecture_swarm_sync.md §14.3.
+	InfluenceSwarmSubdued   = "SWARM_SUBDUED"
+	InfluenceSwarmUnsubdued = "SWARM_UNSUBDUED"
 )
 
 // InfluenceEvent represents a discrete, replayable signal for bug AI
@@ -933,6 +1105,18 @@ type ZoneSnapshotMessage struct {
 	SnapshotLastEventSeq int64               `json:"snapshot_last_event_seq"` // Last applied seq included in snapshot state
 	Swarms               []SwarmSnapshotData `json:"swarms"`
 	Food                 []FoodSnapshotData  `json:"food,omitempty"` // Authoritative food registry @ snapshot
+	// Hunts = the authority's per-swarm hunt assignments (_swarmStrikes: predator→prey + strike params), relayed
+	// VERBATIM (json.RawMessage) exactly like Bugs. Without it, a late-joiner's predators have no prey list and
+	// wander while the authority hunts → divergence. The server never interprets it (mirrors the food registry).
+	Hunts                json.RawMessage     `json:"hunts,omitempty"`
+	// Subdued = the authority's set of subdued swarm-ids, relayed VERBATIM (like Hunts). Without it, a
+	// late-joiner wouldn't know a swarm is calmed → its per-bug sim would resume the lunge/dive on a smoked swarm.
+	Subdued              json.RawMessage     `json:"subdued,omitempty"`
+	// PlayerCells = the deterministic player cells AT the snapshot moment (the authority's
+	// InfluenceManager registry — the exact values its sim read at snapshot_tick). The late-join package
+	// hydrates from THESE, not current server state: end-tick cells would let a joiner's replay see FUTURE
+	// player positions until each window ENTER replays (the one-time-base rule, 2026-07-19).
+	PlayerCells          []PlayerCellData    `json:"player_cells,omitempty"`
 	StateHash            string              `json:"state_hash"`
 }
 
@@ -965,4 +1149,6 @@ type LateJoinSnapshot struct {
 	AuthorityID          string              `json:"authority_id"`
 	PlayerCells          []PlayerCellData    `json:"player_cells"` // Current player positions (state, not events)
 	Food                 []FoodSnapshotData  `json:"food,omitempty"` // Authoritative food registry @ snapshot
+	Hunts                json.RawMessage     `json:"hunts,omitempty"` // Authoritative hunt assignments @ snapshot (verbatim)
+	Subdued              json.RawMessage     `json:"subdued,omitempty"` // Authoritative subdued swarm-id set @ snapshot (verbatim)
 }

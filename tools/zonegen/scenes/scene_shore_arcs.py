@@ -16,6 +16,10 @@ from features.terrain import lake, shore_dress   # noqa: E402
 W, H = 72, 72
 
 
+PREVIEW = "examples/water"
+SCALE = 3
+
+
 def build():
     b = ZoneBuilder("scene_shore_arcs", W, H, base_tile="grass")
     info = lake(b, 36, 36, 16, seed=5, reeds=0)   # reeds come from the arc, not the lake
@@ -29,5 +33,7 @@ def build():
 
 
 if __name__ == "__main__":
-    from registry import render_one
-    render_one("scene_shore_arcs")
+    from scene_preview import render
+    b = build()
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

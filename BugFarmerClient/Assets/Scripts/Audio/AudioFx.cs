@@ -21,7 +21,7 @@ namespace BugFarmer.Audio
     {
         public static AudioFx Instance { get; private set; }
 
-        private AudioClip _thwack, _pop, _sting, _thud, _hiss, _crunch, _thunder;
+        private AudioClip _thwack, _pop, _sting, _thud, _hiss, _crunch, _thunder, _chop;
         private AudioSource[] _pool;
         private int _next;
 
@@ -52,6 +52,15 @@ namespace BugFarmer.Audio
                 Noise(t) * Mathf.Lerp(0.15f, 0.55f, t / dur) * Decay(t, dur, 3f));
             _crunch = Synth("fx_crunch", sr, 0.18f, (t, dur) =>
                 Noise(t) * (Mathf.PingPong(t * 30f, 1f) > 0.5f ? 1f : 0.25f) * Decay(t, dur, 6f) * 0.65f);
+            // AXE CHOP: a woody "thock" — a low body sweep (~220→90 Hz) + a sharp noise blade transient,
+            // fast attack, fast decay.
+            _chop = Synth("fx_chop", sr, 0.14f, (t, dur) =>
+            {
+                float body = Mathf.Sin(2f * Mathf.PI * Mathf.Lerp(220f, 90f, t / dur) * t);
+                float blade = Noise(t) * Decay(t, dur, 30f) * 0.5f;       // sharp transient at the strike
+                float env = Decay(t, dur, 11f) * Mathf.Min(1f, t / 0.005f); // fast attack
+                return (body * 0.6f + blade) * env * 0.8f;
+            });
             // THUNDER (heavy-rain lightning): a low boom sweep + amplitude-wobbled rumble noise,
             // quick attack and a long decaying tail. Long enough to feel distant after the flash.
             _thunder = Synth("fx_thunder", sr, 1.4f, (t, dur) =>
@@ -84,6 +93,7 @@ namespace BugFarmer.Audio
         public static void HissAt(Vector2 worldPos) => Instance?.PlayAt(Instance._hiss, worldPos, 12f, 0.9f);
         public static void CrunchAt(Vector2 worldPos) => Instance?.PlayAt(Instance._crunch, worldPos, 14f, 0.9f);
         public static void ThwackAt(Vector2 worldPos) => Instance?.PlayAt(Instance._thwack, worldPos, 10f, 0.8f);
+        public static void AxeChopAt(Vector2 worldPos) => Instance?.PlayAt(Instance._chop, worldPos, 12f, 0.85f);
 
         private void Play(AudioClip clip, float volume)
         {

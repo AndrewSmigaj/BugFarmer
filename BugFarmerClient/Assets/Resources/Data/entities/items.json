@@ -53,7 +53,6 @@
   "coal": {
     "name": "Coal",
     "category": "resource",
-    "icon_from": "ore_coal_block",
     "tags": [
       "material"
     ],
@@ -117,6 +116,50 @@
     "max_stack": 99,
     "sell_price": 1
   },
+  "grass_turf": {
+    "name": "Grass Turf",
+    "category": "resource",
+    "tags": [
+      "material",
+      "ground"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1
+  },
+  "dirt": {
+    "name": "Dirt",
+    "category": "resource",
+    "tags": [
+      "material",
+      "ground"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1
+  },
+  "mud": {
+    "name": "Mud",
+    "category": "resource",
+    "tags": [
+      "material",
+      "ground"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1
+  },
+  "stone": {
+    "name": "Stone",
+    "category": "resource",
+    "tags": [
+      "material",
+      "ground"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 2
+  },
   "silver_ore": {
     "name": "Silver Ore",
     "category": "resource",
@@ -162,6 +205,153 @@
     "stackable": true,
     "max_stack": 99,
     "sell_price": 100
+  },
+  "copper_paydirt": {
+    "name": "Copper Paydirt",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 9
+  },
+  "refined_copper_ore": {
+    "name": "Refined Copper Ore",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 13
+  },
+  "iron_paydirt": {
+    "name": "Iron Paydirt",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 13
+  },
+  "refined_iron_ore": {
+    "name": "Refined Iron Ore",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 19
+  },
+  "tin_paydirt": {
+    "name": "Tin Paydirt",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
+  },
+  "refined_tin_ore": {
+    "name": "Refined Tin Ore",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "silver_paydirt": {
+    "name": "Silver Paydirt",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 21
+  },
+  "refined_silver_ore": {
+    "name": "Refined Silver Ore",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 32
+  },
+  "gold_paydirt": {
+    "name": "Gold Paydirt",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 31
+  },
+  "refined_gold_ore": {
+    "name": "Refined Gold Ore",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 48
+  },
+  "platinum_paydirt": {
+    "name": "Platinum Paydirt",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 51
+  },
+  "refined_platinum_ore": {
+    "name": "Refined Platinum Ore",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 80
+  },
+  "charcoal": {
+    "name": "Charcoal",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
+  },
+  "compost": {
+    "name": "Compost",
+    "description": "Dark, crumbly compost from well-rotted scraps.",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 3
   },
   "iron_bar": {
     "name": "Iron Bar",
@@ -267,6 +457,66 @@
     "stackable": true,
     "max_stack": 99,
     "sell_price": 7
+  },
+  "mint": {
+    "name": "Mint",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
+  },
+  "sage": {
+    "name": "Sage",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
+  },
+  "thyme": {
+    "name": "Thyme",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
+  },
+  "fennel": {
+    "name": "Fennel",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 5
+  },
+  "aloe": {
+    "name": "Aloe",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "agave": {
+    "name": "Agave",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
   },
   "yarrow": {
     "name": "Yarrow",
@@ -519,8 +769,8 @@
     ],
     "tool_type": "net",
     "reach": 2.5,
-    "buy_price": 0,
-    "sell_price": 25,
+    "buy_price": 30,
+    "sell_price": 10,
     "arc_degrees": 80,
     "catch_cap": 10,
     "cooldown_ticks": 3,
@@ -816,7 +1066,7 @@
   },
   "sword_wood": {
     "name": "Wooden Sword",
-    "category": "tool",
+    "category": "weapon",
     "tags": [
       "tool"
     ],
@@ -848,7 +1098,7 @@
   },
   "spear_wood": {
     "name": "Wooden Spear",
-    "category": "tool",
+    "category": "weapon",
     "tags": [
       "tool"
     ],
@@ -1086,18 +1336,6 @@
     "buy_price": 12,
     "sell_price": 2
   },
-  "straw_hat": {
-    "name": "Straw Hat",
-    "category": "armor",
-    "tags": [
-      "clothing"
-    ],
-    "armor_slot": "head",
-    "stackable": false,
-    "buy_price": 15,
-    "sell_price": 3,
-    "overlay": "straw_hat"
-  },
   "leather_cap": {
     "name": "Leather Cap",
     "category": "armor",
@@ -1256,8 +1494,1181 @@
     "name": "Backpack",
     "category": "backpack",
     "armor_slot": "backpack",
-    "icon_from": "ore_sack",
     "slot_bonus": 10,
     "stackable": false
+  },
+  "copper_bar": {
+    "name": "Copper Bar",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 16
+  },
+  "bronze_bar": {
+    "name": "Bronze Bar",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 22
+  },
+  "steel_bar": {
+    "name": "Steel Bar",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 45
+  },
+  "silver_bar": {
+    "name": "Silver Bar",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 55
+  },
+  "gold_bar": {
+    "name": "Gold Bar",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 95
+  },
+  "platinum_bar": {
+    "name": "Platinum Bar",
+    "category": "resource",
+    "tags": [
+      "material",
+      "metal"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 160
+  },
+  "plank": {
+    "name": "Plank",
+    "category": "resource",
+    "tags": [
+      "material",
+      "wood"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 3
+  },
+  "thread": {
+    "name": "Thread",
+    "category": "resource",
+    "tags": [
+      "material",
+      "textile"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 4
+  },
+  "cloth": {
+    "name": "Cloth",
+    "category": "resource",
+    "tags": [
+      "material",
+      "textile"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 9
+  },
+  "glass": {
+    "name": "Glass",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "chitin": {
+    "name": "Chitin",
+    "category": "resource",
+    "tags": [
+      "material",
+      "bug"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 7
+  },
+  "leather": {
+    "name": "Leather",
+    "category": "resource",
+    "tags": [
+      "material",
+      "bug"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 10
+  },
+  "silk": {
+    "name": "Silk",
+    "category": "resource",
+    "tags": [
+      "material",
+      "textile",
+      "bug"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 12
+  },
+  "magnifying_glass": {
+    "name": "Magnifying Glass",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "inspect",
+    "stackable": false,
+    "sell_price": 12,
+    "buy_price": 40
+  },
+  "gardener_gloves": {
+    "name": "Gardener's Gloves",
+    "category": "armor",
+    "tags": [
+      "armor"
+    ],
+    "armor_slot": "hands",
+    "stackable": false,
+    "sell_price": 15,
+    "buy_price": 60
+  },
+  "reed_hat": {
+    "name": "Reed Hat",
+    "category": "armor",
+    "tags": [
+      "armor"
+    ],
+    "armor_slot": "head",
+    "stackable": false,
+    "sell_price": 8,
+    "buy_price": 25
+  },
+  "sword_copper": {
+    "name": "Copper Sword",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "stackable": false,
+    "sell_price": 18,
+    "buy_price": 60,
+    "tool_type": "sword",
+    "tool_tier": 3,
+    "moves": {
+      "primary": {
+        "kind": "swing",
+        "damage": 6,
+        "arc_degrees": 60,
+        "reach": 3.0,
+        "swing_time": 0.2,
+        "max_targets": 2,
+        "cooldown_ticks": 6
+      }
+    }
+  },
+  "spear_copper": {
+    "name": "Copper Spear",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "stackable": false,
+    "sell_price": 18,
+    "buy_price": 60,
+    "tool_type": "spear",
+    "tool_tier": 3,
+    "moves": {
+      "primary": {
+        "kind": "stab",
+        "damage": 6,
+        "arc_degrees": 20,
+        "reach": 3.6,
+        "swing_time": 0.2,
+        "max_targets": 1,
+        "cooldown_ticks": 6
+      }
+    }
+  },
+  "red_dye": {
+    "name": "Red Dye",
+    "category": "resource",
+    "tags": [
+      "material",
+      "dye"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "yellow_dye": {
+    "name": "Yellow Dye",
+    "category": "resource",
+    "tags": [
+      "material",
+      "dye"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "blue_dye": {
+    "name": "Blue Dye",
+    "category": "resource",
+    "tags": [
+      "material",
+      "dye"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "green_dye": {
+    "name": "Green Dye",
+    "category": "resource",
+    "tags": [
+      "material",
+      "dye"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "pickaxe_steel": {
+    "name": "Steel Pickaxe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "pickaxe",
+    "tool_tier": 5,
+    "reach": 4.0,
+    "durability": 380,
+    "buy_price": 500,
+    "sell_price": 200,
+    "mining_speed": 2.4
+  },
+  "pickaxe_silver": {
+    "name": "Silver Pickaxe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "pickaxe",
+    "tool_tier": 6,
+    "reach": 4.0,
+    "durability": 520,
+    "buy_price": 760,
+    "sell_price": 304,
+    "mining_speed": 2.8
+  },
+  "pickaxe_gold": {
+    "name": "Gold Pickaxe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "pickaxe",
+    "tool_tier": 7,
+    "reach": 4.0,
+    "durability": 680,
+    "buy_price": 1080,
+    "sell_price": 432,
+    "mining_speed": 3.2
+  },
+  "pickaxe_platinum": {
+    "name": "Platinum Pickaxe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "pickaxe",
+    "tool_tier": 8,
+    "reach": 4.0,
+    "durability": 880,
+    "buy_price": 1500,
+    "sell_price": 600,
+    "mining_speed": 3.6
+  },
+  "axe_steel": {
+    "name": "Steel Axe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "axe",
+    "tool_tier": 5,
+    "reach": 4.0,
+    "durability": 380,
+    "buy_price": 500,
+    "sell_price": 200,
+    "mining_speed": 2.4
+  },
+  "axe_silver": {
+    "name": "Silver Axe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "axe",
+    "tool_tier": 6,
+    "reach": 4.0,
+    "durability": 520,
+    "buy_price": 760,
+    "sell_price": 304,
+    "mining_speed": 2.8
+  },
+  "axe_gold": {
+    "name": "Gold Axe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "axe",
+    "tool_tier": 7,
+    "reach": 4.0,
+    "durability": 680,
+    "buy_price": 1080,
+    "sell_price": 432,
+    "mining_speed": 3.2
+  },
+  "axe_platinum": {
+    "name": "Platinum Axe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "axe",
+    "tool_tier": 8,
+    "reach": 4.0,
+    "durability": 880,
+    "buy_price": 1500,
+    "sell_price": 600,
+    "mining_speed": 3.6
+  },
+  "hoe_copper": {
+    "name": "Copper Hoe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "hoe",
+    "tool_tier": 3,
+    "reach": 3.5,
+    "durability": 150,
+    "buy_price": 150,
+    "sell_price": 60,
+    "cooldown_ticks": 5
+  },
+  "hoe_iron": {
+    "name": "Iron Hoe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "hoe",
+    "tool_tier": 4,
+    "reach": 3.5,
+    "durability": 250,
+    "buy_price": 300,
+    "sell_price": 120,
+    "cooldown_ticks": 4
+  },
+  "hoe_steel": {
+    "name": "Steel Hoe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "hoe",
+    "tool_tier": 5,
+    "reach": 3.5,
+    "durability": 380,
+    "buy_price": 500,
+    "sell_price": 200,
+    "cooldown_ticks": 3
+  },
+  "hoe_silver": {
+    "name": "Silver Hoe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "hoe",
+    "tool_tier": 6,
+    "reach": 3.5,
+    "durability": 520,
+    "buy_price": 760,
+    "sell_price": 304,
+    "cooldown_ticks": 2
+  },
+  "hoe_gold": {
+    "name": "Gold Hoe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "hoe",
+    "tool_tier": 7,
+    "reach": 3.5,
+    "durability": 680,
+    "buy_price": 1080,
+    "sell_price": 432,
+    "cooldown_ticks": 2
+  },
+  "hoe_platinum": {
+    "name": "Platinum Hoe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "hoe",
+    "tool_tier": 8,
+    "reach": 3.5,
+    "durability": 880,
+    "buy_price": 1500,
+    "sell_price": 600,
+    "cooldown_ticks": 2
+  },
+  "scythe_copper": {
+    "name": "Copper Scythe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "scythe",
+    "tool_tier": 3,
+    "reach": 3.5,
+    "durability": 150,
+    "buy_price": 150,
+    "sell_price": 60,
+    "cooldown_ticks": 5
+  },
+  "scythe_iron": {
+    "name": "Iron Scythe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "scythe",
+    "tool_tier": 4,
+    "reach": 3.5,
+    "durability": 250,
+    "buy_price": 300,
+    "sell_price": 120,
+    "cooldown_ticks": 4
+  },
+  "scythe_steel": {
+    "name": "Steel Scythe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "scythe",
+    "tool_tier": 5,
+    "reach": 3.5,
+    "durability": 380,
+    "buy_price": 500,
+    "sell_price": 200,
+    "cooldown_ticks": 3
+  },
+  "scythe_silver": {
+    "name": "Silver Scythe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "scythe",
+    "tool_tier": 6,
+    "reach": 3.5,
+    "durability": 520,
+    "buy_price": 760,
+    "sell_price": 304,
+    "cooldown_ticks": 2
+  },
+  "scythe_gold": {
+    "name": "Gold Scythe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "scythe",
+    "tool_tier": 7,
+    "reach": 3.5,
+    "durability": 680,
+    "buy_price": 1080,
+    "sell_price": 432,
+    "cooldown_ticks": 2
+  },
+  "scythe_platinum": {
+    "name": "Platinum Scythe",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "scythe",
+    "tool_tier": 8,
+    "reach": 3.5,
+    "durability": 880,
+    "buy_price": 1500,
+    "sell_price": 600,
+    "cooldown_ticks": 2
+  },
+  "shovel_copper": {
+    "name": "Copper Shovel",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "shovel",
+    "tool_tier": 3,
+    "reach": 3.5,
+    "durability": 150,
+    "buy_price": 150,
+    "sell_price": 60,
+    "mining_speed": 1.6
+  },
+  "shovel_iron": {
+    "name": "Iron Shovel",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "shovel",
+    "tool_tier": 4,
+    "reach": 3.5,
+    "durability": 250,
+    "buy_price": 300,
+    "sell_price": 120,
+    "mining_speed": 2.0
+  },
+  "shovel_steel": {
+    "name": "Steel Shovel",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "shovel",
+    "tool_tier": 5,
+    "reach": 3.5,
+    "durability": 380,
+    "buy_price": 500,
+    "sell_price": 200,
+    "mining_speed": 2.4
+  },
+  "shovel_silver": {
+    "name": "Silver Shovel",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "shovel",
+    "tool_tier": 6,
+    "reach": 3.5,
+    "durability": 520,
+    "buy_price": 760,
+    "sell_price": 304,
+    "mining_speed": 2.8
+  },
+  "shovel_gold": {
+    "name": "Gold Shovel",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "shovel",
+    "tool_tier": 7,
+    "reach": 3.5,
+    "durability": 680,
+    "buy_price": 1080,
+    "sell_price": 432,
+    "mining_speed": 3.2
+  },
+  "shovel_platinum": {
+    "name": "Platinum Shovel",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "shovel",
+    "tool_tier": 8,
+    "reach": 3.5,
+    "durability": 880,
+    "buy_price": 1500,
+    "sell_price": 600,
+    "mining_speed": 3.6
+  },
+  "sword_bronze": {
+    "name": "Bronze Sword",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "sword",
+    "stackable": false,
+    "buy_price": 320,
+    "sell_price": 96,
+    "moves": {
+      "primary": {
+        "kind": "swing",
+        "damage": 8,
+        "arc_degrees": 60,
+        "reach": 3.0,
+        "swing_time": 0.2,
+        "max_targets": 2,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 4
+  },
+  "sword_iron": {
+    "name": "Iron Sword",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "sword",
+    "stackable": false,
+    "buy_price": 300,
+    "sell_price": 90,
+    "moves": {
+      "primary": {
+        "kind": "swing",
+        "damage": 10,
+        "arc_degrees": 60,
+        "reach": 3.0,
+        "swing_time": 0.2,
+        "max_targets": 2,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 4
+  },
+  "sword_steel": {
+    "name": "Steel Sword",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "sword",
+    "stackable": false,
+    "buy_price": 500,
+    "sell_price": 150,
+    "moves": {
+      "primary": {
+        "kind": "swing",
+        "damage": 14,
+        "arc_degrees": 60,
+        "reach": 3.0,
+        "swing_time": 0.2,
+        "max_targets": 2,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 5
+  },
+  "sword_silver": {
+    "name": "Silver Sword",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "sword",
+    "stackable": false,
+    "buy_price": 760,
+    "sell_price": 228,
+    "moves": {
+      "primary": {
+        "kind": "swing",
+        "damage": 18,
+        "arc_degrees": 60,
+        "reach": 3.0,
+        "swing_time": 0.2,
+        "max_targets": 2,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 6
+  },
+  "sword_gold": {
+    "name": "Gold Sword",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "sword",
+    "stackable": false,
+    "buy_price": 1080,
+    "sell_price": 324,
+    "moves": {
+      "primary": {
+        "kind": "swing",
+        "damage": 22,
+        "arc_degrees": 60,
+        "reach": 3.0,
+        "swing_time": 0.2,
+        "max_targets": 2,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 7
+  },
+  "sword_platinum": {
+    "name": "Platinum Sword",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "sword",
+    "stackable": false,
+    "buy_price": 1500,
+    "sell_price": 450,
+    "moves": {
+      "primary": {
+        "kind": "swing",
+        "damage": 28,
+        "arc_degrees": 60,
+        "reach": 3.0,
+        "swing_time": 0.2,
+        "max_targets": 2,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 8
+  },
+  "spear_bronze": {
+    "name": "Bronze Spear",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "spear",
+    "stackable": false,
+    "buy_price": 320,
+    "sell_price": 96,
+    "moves": {
+      "primary": {
+        "kind": "stab",
+        "damage": 8,
+        "arc_degrees": 20,
+        "reach": 3.6,
+        "swing_time": 0.2,
+        "max_targets": 1,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 4
+  },
+  "spear_iron": {
+    "name": "Iron Spear",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "spear",
+    "stackable": false,
+    "buy_price": 300,
+    "sell_price": 90,
+    "moves": {
+      "primary": {
+        "kind": "stab",
+        "damage": 10,
+        "arc_degrees": 20,
+        "reach": 3.6,
+        "swing_time": 0.2,
+        "max_targets": 1,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 4
+  },
+  "spear_steel": {
+    "name": "Steel Spear",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "spear",
+    "stackable": false,
+    "buy_price": 500,
+    "sell_price": 150,
+    "moves": {
+      "primary": {
+        "kind": "stab",
+        "damage": 14,
+        "arc_degrees": 20,
+        "reach": 3.6,
+        "swing_time": 0.2,
+        "max_targets": 1,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 5
+  },
+  "spear_silver": {
+    "name": "Silver Spear",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "spear",
+    "stackable": false,
+    "buy_price": 760,
+    "sell_price": 228,
+    "moves": {
+      "primary": {
+        "kind": "stab",
+        "damage": 18,
+        "arc_degrees": 20,
+        "reach": 3.6,
+        "swing_time": 0.2,
+        "max_targets": 1,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 6
+  },
+  "spear_gold": {
+    "name": "Gold Spear",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "spear",
+    "stackable": false,
+    "buy_price": 1080,
+    "sell_price": 324,
+    "moves": {
+      "primary": {
+        "kind": "stab",
+        "damage": 22,
+        "arc_degrees": 20,
+        "reach": 3.6,
+        "swing_time": 0.2,
+        "max_targets": 1,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 7
+  },
+  "spear_platinum": {
+    "name": "Platinum Spear",
+    "category": "weapon",
+    "tags": [
+      "weapon"
+    ],
+    "tool_type": "spear",
+    "stackable": false,
+    "buy_price": 1500,
+    "sell_price": 450,
+    "moves": {
+      "primary": {
+        "kind": "stab",
+        "damage": 28,
+        "arc_degrees": 20,
+        "reach": 3.6,
+        "swing_time": 0.2,
+        "max_targets": 1,
+        "cooldown_ticks": 6
+      }
+    },
+    "tool_tier": 8
+  },
+  "saw": {
+    "name": "Saw",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "axe",
+    "tool_tier": 5,
+    "reach": 4.0,
+    "mining_speed": 2.6,
+    "durability": 300,
+    "buy_price": 420,
+    "sell_price": 160
+  },
+  "harvest_sickle": {
+    "name": "Harvest Sickle",
+    "category": "tool",
+    "tags": [
+      "tool"
+    ],
+    "tool_type": "scythe",
+    "tool_tier": 3,
+    "reach": 3.5,
+    "cooldown_ticks": 5,
+    "durability": 180,
+    "buy_price": 160,
+    "sell_price": 60
+  },
+  "cut_diamond": {
+    "name": "Cut Diamond",
+    "category": "resource",
+    "tags": [
+      "material",
+      "gem"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 440
+  },
+  "cut_quartz": {
+    "name": "Cut Quartz",
+    "category": "resource",
+    "tags": [
+      "material",
+      "gem"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 44
+  },
+  "ruby": {
+    "name": "Ruby",
+    "category": "resource",
+    "tags": [
+      "material",
+      "gem"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 120
+  },
+  "cut_ruby": {
+    "name": "Cut Ruby",
+    "category": "resource",
+    "tags": [
+      "material",
+      "gem"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 264
+  },
+  "sapphire": {
+    "name": "Sapphire",
+    "category": "resource",
+    "tags": [
+      "material",
+      "gem"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 140
+  },
+  "cut_sapphire": {
+    "name": "Cut Sapphire",
+    "category": "resource",
+    "tags": [
+      "material",
+      "gem"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 308
+  },
+  "emerald": {
+    "name": "Emerald",
+    "category": "resource",
+    "tags": [
+      "material",
+      "gem"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 100
+  },
+  "cut_emerald": {
+    "name": "Cut Emerald",
+    "category": "resource",
+    "tags": [
+      "material",
+      "gem"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 220
+  },
+  "smoker": {
+    "name": "Bee Smoker",
+    "category": "tool",
+    "tool_type": "smoker",
+    "tags": [
+      "tool"
+    ],
+    "stackable": false,
+    "effect": "calm",
+    "effect_power": 1.0,
+    "buy_price": 120,
+    "sell_price": 45
+  },
+  "honeycomb": {
+    "name": "Honeycomb",
+    "category": "resource",
+    "tags": [
+      "material",
+      "food"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 10
+  },
+  "honey": {
+    "name": "Honey",
+    "category": "food",
+    "tags": [
+      "food"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 8
+  },
+  "beeswax": {
+    "name": "Beeswax",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "dead_bee": {
+    "name": "Dead Bee",
+    "category": "resource",
+    "tags": [
+      "carrion"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1,
+    "food_value": 8
+  },
+  "dead_dragonfly": {
+    "name": "Dead Dragonfly",
+    "category": "resource",
+    "tags": [
+      "carrion"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 2,
+    "food_value": 12
+  },
+  "dead_firefly": {
+    "name": "Dead Firefly",
+    "category": "resource",
+    "tags": [
+      "carrion"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1,
+    "food_value": 6
+  },
+  "bee_suit": {
+    "name": "Bee Suit",
+    "category": "armor",
+    "tags": [
+      "clothing"
+    ],
+    "armor_slot": "body",
+    "sting_immune": true,
+    "stackable": false,
+    "buy_price": 250,
+    "sell_price": 60,
+    "overlay": "bee_suit"
+  },
+  "seashell": {
+    "name": "Seashell",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 4
+  },
+  "starfish": {
+    "name": "Starfish",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "message_bottle": {
+    "name": "Message in a Bottle",
+    "category": "resource",
+    "tags": [
+      "material"
+    ],
+    "stackable": true,
+    "max_stack": 10,
+    "sell_price": 15
+  },
+  "dead_ant": {
+    "name": "Dead Ant",
+    "category": "resource",
+    "tags": [
+      "carrion"
+    ],
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 1,
+    "food_value": 10
+  },
+  "ant_egg": {
+    "name": "Ant Egg",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 8
+  },
+  "formic_acid": {
+    "name": "Formic Acid",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 6
+  },
+  "royal_jelly": {
+    "name": "Royal Jelly",
+    "category": "resource",
+    "stackable": true,
+    "max_stack": 99,
+    "sell_price": 45
   }
 }

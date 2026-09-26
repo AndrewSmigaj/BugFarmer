@@ -92,6 +92,7 @@ namespace BugFarmer.Networking
         public long coins;
         public int item_slots_unlocked;         // usable item slots (base + backpack)
         public bool intro;                      // first login of this character → show the intro overlay
+        public string[] known_recipes;          // gated recipe ids the player has learned (crafting-panel filter)
     }
 
     /// <summary>

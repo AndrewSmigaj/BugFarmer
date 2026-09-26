@@ -107,6 +107,13 @@
   "specimen_case": {
     "look": "a glass-topped wooden DISPLAY CASE of pinned butterflies and moths, seen front-on: rows of colorful pinned specimens under glass in a shallow wooden frame on short legs."
   },
+  "ant_chart": {
+    "look": "a framed CHART BOARD mounted on a wall, seen front-on: a hand-drawn scientific cross-section DIAGRAM of an ant colony on aged paper — branching vertical tunnels and round labelled chambers with a queen at the bottom; an entomology wall diagram"
+  },
+  "royal_jelly_pile": {
+    "look": "a small glistening MOUND of pale-golden ROYAL JELLY on the cave floor, seen front-on: a glossy translucent amber-cream blob catching a soft sheen, a few droplets beside it; a rich larval-food pile, NOT honey and NOT eggs",
+    "materials": ["foliage"]
+  },
   "garden_border_stone": {
     "look": "a short LOW row of small rounded grey EDGING STONES laid end-to-end to bound a garden bed, seen front-on; very short low decorative border stones, only a few pixels tall"
   },
@@ -121,5 +128,161 @@
   },
   "fishing_pole": {
     "look": "a single long thin fishing ROD with a small reel and a length of line, leaning at a slant; one slender fishing pole, mostly empty space around the thin rod"
+  },
+  "dress_form": {
+    "look": "a tailor's DRESS FORM: a fabric MANNEQUIN torso with NO head and NO arms, on a single slim wooden tripod stand, a half-pinned strip of cloth draped over the shoulder. A dressmaker's dummy.",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "fabric_bolt": {
+    "look": "a short stack of rolled BOLTS OF CLOTH: two or three cylindrical fabric rolls in different muted colours lying on their sides. NOT scrolls and NOT logs.",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "yarn_basket": {
+    "look": "a round woven wicker BASKET piled high with neatly wound balls of brightly coloured YARN spilling over the rim, two knitting needles stuck in. Unmistakably a yarn basket.",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "basket": {
+    "look": "a round woven wicker BASKET WITH A FITTED DOMED LID closed on top, a sturdy rolled rim and a small arched handle on the lid. A closed lidded storage basket, contents hidden.",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "rug_sm_sq": {
+    "look": "a small SQUARE woven floor RUG seen flat top-down: a deep RED rug with a bold cream-and-charcoal GEOMETRIC diamond pattern and a simple woven border, lying flat. Just the rug, no thickness, no objects on it."
+  },
+  "rug_sm_rect": {
+    "look": "a small rectangular woven floor RUG seen flat top-down, WIDER than tall: a soft dusty-BLUE rug with a cream FLORAL vine pattern and a woven border, lying flat. Just the rug."
+  },
+  "rug_md_sq": {
+    "look": "a square woven floor RUG seen flat top-down: a sage-GREEN rug with a central cream MEDALLION motif and a decorative border, lying flat. Just the rug."
+  },
+  "rug_md_rect": {
+    "look": "a rectangular woven floor RUG seen flat top-down, TALLER than wide: a flat-weave KILIM rug with bold horizontal STRIPES in terracotta, cream and mustard, a tribal look, lying flat. Just the rug."
+  },
+  "rug_lg_rect": {
+    "look": "a large rectangular woven floor RUG seen flat top-down, TALL: an ornate PERSIAN carpet in deep red and navy with an intricate central medallion and a dense floral border, lying flat. Just the rug."
+  },
+  "rug_runner": {
+    "look": "a long narrow RUNNER RUG seen flat top-down, TALL and NARROW: a neutral tan-and-grey woven runner with a simple repeating geometric border, lying flat. Just the rug."
+  },
+  "clothing_rack": {
+    "look": "a wide standing CLOTHING RACK garment rail TWO cells wide: a horizontal metal rail on two upright legs, hung with several colourful GARMENTS on hangers (a dress, a coat, a shirt). A shop clothing display rail seen front-on, NOT a thin coat-tree."
+  },
+  "brick_pile": {
+    "look": "a neat STACK of red clay BRICKS: a small rectangular pile of stacked terracotta bricks with a few loose on top, mortar flecks. A bricklayer's brick pile, NOT a wall."
+  },
+  "statue_unfinished": {
+    "look": "a HALF-CARVED stone STATUE: a rough rectangular block of grey stone partly chiselled into the head and shoulders of a figure up top, the lower half still a raw uncut block, visible chisel marks. A work-in-progress sculpture."
+  },
+  "electric_heater": {
+    "look": "a modern ELECTRIC SPACE HEATER: a small upright white appliance with a metal grille front glowing warm ORANGE from the heating element inside, on little feet. A modern heater, NOT a stove."
+  },
+  "bee_hive_wild": {
+    "look": "a WILD BEE HIVE: a teardrop-shaped papery golden-brown hive hanging from a short broken BRANCH stub at the top, layered wax folds, a small dark entrance hole near the bottom with two tiny bees; floats on transparency with NO ground shadow, NO grass, NOTHING beneath the hive's bottom tip; NOT a wasp nest gray cone, NOT a wooden box",
+    "materials": [
+      "wood"
+    ]
+  },
+  "driftwood": {
+    "look": "a weathered DRIFTWOOD LOG lying on its side, silvery-gray sun-bleached wood, smooth worn knots and a broken branch stub, slightly curved; NOT a fresh log, NOT a plank",
+    "materials": [
+      "wood"
+    ]
+  },
+  "seashell_pile": {
+    "look": "a small PILE of assorted SEASHELLS: a spiral conch, two fan-shaped scallops and a few small clams heaped together, cream/pink/pale orange; NOT a rock pile",
+    "materials": [
+      "stone"
+    ]
+  },
+  "sandcastle": {
+    "look": "a small SANDCASTLE with a square keep, four corner towers with pressed-bucket ridges and a tiny stick-and-leaf flag on top, warm beach sand color; NOT a stone castle",
+    "materials": [
+      "dirt"
+    ]
+  },
+  "beekeeper": {
+    "look": "a friendly BEEKEEPER NPC standing facing the viewer: wide-brimmed HAT with a fine dark mesh VEIL over the face, white keeper's jacket with rolled sleeves, thick gloves tucked in her belt, holding a small tin SMOKER at her side; warm and approachable; NOT a ghost, NOT a hazmat suit",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "shipwreck_hull": {
+    "look": "the broken BOW section of a small wooden fishing boat wrecked at an angle: weathered gray-brown planks, a snapped mast stump, a gap of missing boards; floats on FULL transparency \u2014 NO sand, NO ground patch, NOTHING beneath the planks; clearly a RUIN, NOT a usable boat",
+    "materials": [
+      "wood"
+    ]
+  },
+  "beach_umbrella": {
+    "look": "a cheerful BEACH PARASOL stuck in the sand: a tall thin pole with a wide red-and-white striped canopy, slightly tilted; NOT a market stall, NOT a tent",
+    "materials": [
+      "fabric"
+    ]
+  },
+  "starfish": {
+    "look": "a single orange five-armed STARFISH lying flat on the ground, bumpy texture, one arm slightly curled; small and simple; NOT a flower, NOT a gem",
+    "materials": [
+      "dirt"
+    ]
+  },
+  "message_bottle": {
+    "look": "a CORKED GLASS BOTTLE lying on its side half-buried in sand with a rolled PAPER NOTE visible inside, pale green glass; NOT standing upright, NOT a potion",
+    "materials": [
+      "stone"
+    ]
+  },
+  "buoy": {
+    "look": "a small striped MOORING BUOY floating on water: a rounded red-and-white float with a short post and ring on top, slight tilt; NOT a lighthouse, NOT a bottle",
+    "materials": [
+      "metal"
+    ]
+  },
+  "drying_rack_fish": {
+    "look": "a rustic FISH DRYING RACK: two wooden posts with horizontal poles between them, several split fish hanging in a row drying, simple lashed construction; NOT a fence, NOT a clothesline",
+    "materials": [
+      "wood"
+    ]
+  },
+  "net_pile": {
+    "look": "a heaped TAN-BROWN rope FISHING NET: bold dark criss-cross diamond mesh lines over a sandy-brown mound, three round cork floats along the front edge; warm brown rope tones ONLY; NOT pink, NOT purple, NOT a sand pile",
+    "materials": [
+      "wood"
+    ]
+  },
+  "lobster_pot": {
+    "look": "a WICKER LOBSTER POT trap: a rounded rectangular cage of woven slats with a dark funnel opening on one end and a rope coil on top; NOT a basket, NOT a crate",
+    "materials": [
+      "wood"
+    ]
+  },
+  "honey_shelf": {
+    "look": "a small open WOODEN DISPLAY SHELF with two rows of amber HONEY JARS and one honeycomb wedge on it, warm and tidy, shop-like; NOT a bookcase, NOT a crate",
+    "materials": [
+      "wood"
+    ]
+  },
+  "bee_waterer": {
+    "look": "a shallow round WOODEN BASIN of water with small pebbles breaking the surface (a bee watering dish), a couple of tiny bees perched on the pebbles; low to the ground; NOT a bird bath on a pedestal, NOT a barrel",
+    "materials": [
+      "wood"
+    ]
+  },
+  "bee_station_small": {
+    "look": "a compact WOODEN BEE BOX on short legs: one stacked white-pine super with a LANDING STRIP lip and a small round entrance hole, honey-gold drips at the seam; must NOT read as a crate or birdhouse"
+  },
+  "bee_station_large": {
+    "look": "a WIDE double-super BEE STATION: two joined pine hive boxes side by side on a shared stand, tin weather roof, TWO entrance holes with landing lips, a few bees dotted; must NOT read as a dresser"
+  },
+  "skep_basket": {
+    "look": "an old-fashioned woven STRAW SKEP dome (coiled rope texture) with a single dark arched doorway at the base; decorative, must NOT read as a haystack or pot",
+    "materials": [
+      "fabric"
+    ]
   }
 }

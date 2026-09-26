@@ -71,16 +71,52 @@ namespace BugFarmer.Util
 
 namespace BugFarmer.Bugs
 {
-    // The food registry is fed from server/chunk state on a live client. Headless: Instance is null =>
-    // BugAgent.TryFeedAtFood returns false (bugs wander, never "land on food"). Deterministic. The method
-    // body never runs (Instance is null); it exists only so the linked BugAgent compiles.
+    // The food registry is fed from server/chunk state on a live client. On a LIVE client Instance is set in
+    // Awake(); headless it defaults to null so BugAgent's im!=null guards short-circuit (bugs wander, never
+    // "land on food") — deterministic. The predation gate (--predation-test) SETS Instance to exercise the S2
+    // FEED path: this is a REAL minimal deterministic registry (a mirror of the client's _food query — MIN over
+    // the dict with an ordinal tie-break, iteration-order-independent) so the corpse-seek + eat-vs-leave roll
+    // are actually run (a non-vacuous FEED gate), not just compiled.
+    // WorldSeedProvider is the client's world-init singleton (seed + the Peaceful observation flag). Headless:
+    // Instance is null so BugAgent's `Instance != null` guard short-circuits (normal, non-peaceful behavior).
+    public class WorldSeedProvider
+    {
+        public static WorldSeedProvider Instance => null;
+        public bool Peaceful;
+    }
+
     public class InfluenceManager
     {
-        public static InfluenceManager Instance => null;
-        public bool TryGetNearestFood(FixedPoint2 center, float radius, out FixedPoint2 food)
+        public static InfluenceManager Instance;   // settable (harness injects one); null everywhere else
+
+        private readonly System.Collections.Generic.Dictionary<string, (FixedPoint2 pos, int level)> _food = new();
+        public void HydrateFood(string foodId, FixedPoint2 pos, int level) { if (level > 0) _food[foodId] = (pos, level); }
+        public void RemoveFood(string foodId) => _food.Remove(foodId);
+        public void ClearFood() => _food.Clear();
+
+        public bool TryGetNearestFood(FixedPoint2 from, float maxDist, out FixedPoint2 food)
+            => TryGetNearestFoodId(from, maxDist, out _, out food);
+
+        public bool TryGetNearestFoodId(FixedPoint2 from, float maxDist, out string foodId, out FixedPoint2 pos)
         {
-            food = FixedPoint2.Zero;
-            return false;
+            pos = FixedPoint2.Zero; foodId = null;
+            int bestSqr = int.MaxValue;
+            var maxFixed = FixedPoint.FromFloat(maxDist);
+            int maxSqr = (maxFixed * maxFixed).Value;
+            foreach (var kv in _food)
+            {
+                int sqr = kv.Value.pos.SqrDistanceTo(from).Value;
+                if (sqr > maxSqr) continue;
+                if (sqr < bestSqr || (sqr == bestSqr && string.CompareOrdinal(kv.Key, foodId) < 0))
+                { bestSqr = sqr; foodId = kv.Key; pos = kv.Value.pos; }
+            }
+            return foodId != null;
+        }
+
+        public bool TryGetFoodPos(string foodId, out FixedPoint2 pos)
+        {
+            if (foodId != null && _food.TryGetValue(foodId, out var v)) { pos = v.pos; return true; }
+            pos = FixedPoint2.Zero; return false;
         }
     }
 }
@@ -97,6 +133,25 @@ namespace BugFarmer.Data
             public string PlayerReaction = "ignore";
             public float ReactionRadius;
             public bool FliesOverFences;
+            public AttackInfo Attack; // the attack{} block — MovementFactory reads its standoff/dive knobs
+        }
+
+        // Minimal mirror of the client AttackInfo — only the fields the linked MovementFactory reads for the
+        // deterministic attack-movement (the orbit-and-dive knobs). Null when the species has no attack{}.
+        public class AttackInfo
+        {
+            public float Standoff;
+            public float DivePeriodSecs;
+            public float DiveSecs;
+            // Lunge (centipede surge) — BugAgent's ctor reads these for a style "lunge" species.
+            public string Style = "contact";
+            public float TelegraphSecs;
+            public float CooldownSecs;
+            public int SurgeMaxTicks;
+            public float TriggerRange;
+            public float SurgeSpeedMult;
+            public float Overshoot;
+            public float Lead;
         }
 
         private static Dictionary<string, SpeciesInfo> _cache;
@@ -121,8 +176,34 @@ namespace BugFarmer.Data
                     PlayerReaction = o.TryGetProperty("player_reaction", out var pr) ? (pr.GetString() ?? "ignore") : "ignore",
                     ReactionRadius = o.TryGetProperty("reaction_radius", out var rr) ? (float)rr.GetDouble() : 0f,
                     FliesOverFences = o.TryGetProperty("flies_over_fences", out var ff) && ff.ValueKind == JsonValueKind.True,
+                    Attack = ParseAttack(o),
                 };
             }
+        }
+
+        // Mirrors the client AttackInfo parse (the fields the linked BugAgent/MovementFactory read): the dive
+        // knobs + the style "lunge" surge sub-config (centipedes). Null when the species has no attack{} block.
+        private static AttackInfo ParseAttack(JsonElement o)
+        {
+            if (!o.TryGetProperty("attack", out var a)) return null;
+            var atk = new AttackInfo
+            {
+                Standoff = a.TryGetProperty("standoff", out var so) ? (float)so.GetDouble() : 0f,
+                DivePeriodSecs = a.TryGetProperty("dive_period_secs", out var dp) ? (float)dp.GetDouble() : 0f,
+                DiveSecs = a.TryGetProperty("dive_secs", out var ds) ? (float)ds.GetDouble() : 0f,
+                Style = a.TryGetProperty("style", out var st) ? (st.GetString() ?? "contact") : "contact",
+                TelegraphSecs = a.TryGetProperty("telegraph_secs", out var tg) ? (float)tg.GetDouble() : 0f,
+                CooldownSecs = a.TryGetProperty("cooldown_secs", out var cd) ? (float)cd.GetDouble() : 0f,
+            };
+            if (a.TryGetProperty("lunge", out var l))
+            {
+                atk.TriggerRange = l.TryGetProperty("trigger_range", out var tr) ? (float)tr.GetDouble() : 0f;
+                atk.SurgeSpeedMult = l.TryGetProperty("surge_speed_mult", out var ss) ? (float)ss.GetDouble() : 0f;
+                atk.Overshoot = l.TryGetProperty("overshoot", out var ov) ? (float)ov.GetDouble() : 0f;
+                atk.SurgeMaxTicks = l.TryGetProperty("surge_max_ticks", out var sm) ? sm.GetInt32() : 0;
+                atk.Lead = l.TryGetProperty("lead", out var ld) ? (float)ld.GetDouble() : 0f;
+            }
+            return atk;
         }
     }
 }

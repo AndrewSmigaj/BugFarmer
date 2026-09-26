@@ -130,6 +130,29 @@ tools/_generated/
 # its other contents, then re-include the wanted leaves.
 !tools/_generated/
 tools/_generated/*
+!tools/_generated/README.md
+# ── PLAYER ART IS TRACKED BY DEFAULT ────────────────────────────────────────────────────────────────
+# This was an ALLOWLIST until 2026-08-06: `player/*` followed by ~10 `!` re-includes. Anything not named
+# on the list fell out of git silently. That is how `archive/` — which holds 156 paid gauntlet files, the
+# hands that 21 of 24 outfits were ACTUALLY rendering from — and `hands/` ended up untracked and one
+# `git clean -fdx` from gone. The comment that used to sit here asserted "nothing unrecoverable lives in
+# there"; measured on 2026-08-06, that was false.
+#
+# The polarity is now INVERTED. Art is tracked unless a rule below names it, so a new folder can never
+# again vanish from git by omission — the failure mode becomes "we committed something regenerable"
+# (harmless) instead of "we lost paid art" (not). Only NAMED, REGENERABLE previews are excluded, and each
+# one must rebuild from the tracked sprites in a single command.
+!tools/_generated/player/
+tools/_generated/player/**/DEMO*.gif
+tools/_generated/player/SHOWCASE.gif
+# Tile R&D: keep the findings + the two comparison sheets (the evidence) in git; raws/candidates stay local.
+!tools/_generated/tiles/
+tools/_generated/tiles/*
+!tools/_generated/tiles/README.md
+!tools/_generated/tiles/previews/
+tools/_generated/tiles/previews/*
+!tools/_generated/tiles/previews/_GRID_COMPARE.png
+!tools/_generated/tiles/previews/_ALL_CANDIDATES.png
 !tools/_generated/ecology_charts/
 tools/_generated/ecology_charts/*
 !tools/_generated/ecology_charts/README.md
@@ -145,3 +168,8 @@ tools/_generated/ecology_charts/*/*
 tools/response*.json
 tools/honeybee*.png
 /Untitled.png
+/diagonaltile.png
+
+# Claude Code runtime artifacts (transient — never track)
+.claude/scheduled_tasks.lock
+.claude/hooks/_smoke.log

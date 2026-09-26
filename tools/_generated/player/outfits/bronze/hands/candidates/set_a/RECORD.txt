@@ -1,0 +1,27 @@
+when      : 2026-08-01 15:10:15
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+dest      : outfits/bronze/hands/candidates/set_a
+references (in the order sent):
+  1. tools/_generated/player/outfits/bronze/result.png  (sent upscaled x14)
+
+PROMPT:
+The attached image is a sprite sheet of a character wearing bronze plate armour.
+
+Draw FOUR small bronze gauntlet hands in a row on a flat magenta background (255,0,255), evenly spaced, large and centred. Nothing else in the image - no character, no body, no arms, no tools, no handles. Just four hands.
+
+These are FLOATING HANDS for a character drawn with no arms. In the game each hand is a small sprite that gets ROTATED and moved to wherever the animation needs it. So each one must be a clean, readable VIEW of the same gauntlet, and nothing more. Do not draw a hand holding anything, do not draw a hand posed around an object, do not draw a hole through the hand.
+
+Left to right, the same gauntlet in four views:
+1. RELAXED, BACK OF HAND - a loose, open-ish hand, not flat and not a tight fist, seen from behind
+2. RELAXED, PALM SIDE - the same relaxed hand seen from the palm side
+3. CLOSED FIST, BACK OF HAND - the same hand closed into a tight fist, seen from behind
+4. CLOSED FIST, PALM SIDE - the same tight fist seen from the palm side
+
+All four are the SAME gauntlet in the same bronze metal as the armour in the attached image - same darker shadows, same bright highlights, a short cuff at the wrist.
+
+Care about the SILHOUETTE above all. No separate fingers - at this size a hand reads entirely by its outline and two or three shading bands inside it. Big simple shapes, chunky pixels, a dark outline. No rivets, no filigree, no fine detail. Each hand is about ten pixels across in the game.
+
+SHAPE FOR THIS SET: soft and ROUNDED - a plump mitten-like blob, wider than it is deep, corners fully rounded off. Friendly and cartoonish.

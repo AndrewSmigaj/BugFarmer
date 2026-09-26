@@ -30,10 +30,9 @@ func (m *Match) handleChunkSubscribe(
 		}
 		state.Chunks[chunkKey] = chunk
 
-		// ZONE PERSISTENCE: overlay this chunk's saved farm delta + hydrate its sidecar state
-		// (crops/trees/containers/stations/items) BEFORE the init scans — those scans randomize
-		// untracked trees/stations, so restored state must be in the maps first (skip-if-present).
-		m.applyChunkSave(state, chunk, cx, cy)
+		// ZONE PERSISTENCE note: every EDITED chunk was eager-loaded (edits applied + scanned) at
+		// MatchInit by restoreWorldSave/importLegacySave — a chunk reaching this lazy path is
+		// UNTOUCHED authored content, so the init scans below start it from scratch.
 
 		// Initialize fruit tree states for any fruit trees in this chunk
 		m.initFruitTreesInChunk(state, chunk, cx, cy, logger)
@@ -119,10 +118,7 @@ func (m *Match) handleChunkSubscribe(
 			if b.GridX/cs != cx || b.GridY/cs != cy {
 				continue
 			}
-			bMsg := BroodUpdateMessage{
-				GX: b.GridX, GY: b.GridY, Species: b.SpeciesID,
-				Eggs: b.Eggs, Maggots: b.Maggots, Kind: b.SourceKind,
-			}
+			bMsg := m.broodUpdateMessage(state, b, false)
 			bData, _ := json.Marshal(bMsg)
 			dispatcher.BroadcastMessage(OpCodeBroodUpdate, bData, []runtime.Presence{presence}, nil, true)
 		}
@@ -241,6 +237,12 @@ func (m *Match) handleTilePlace(
 				bChunk.SetFootprintCell(blx, bly, msg.OccupantID, msg.Direction)
 			}
 		}
+	}
+
+	// Runtime-placed HIVE BOX: register a DORMANT nest (no free colony — a daughter-founding
+	// or recovering colony must claim it; mirrors initNestsInChunk for the loaded-chunk case).
+	if speciesID, hiveSpecies, isBox := m.speciesForNestOccupant(state, msg.OccupantID); hiveSpecies != nil {
+		m.registerNestAt(state, msg.GridX, msg.GridY, msg.OccupantID, speciesID, hiveSpecies, isBox, logger)
 	}
 
 	// Consume item from inventory
@@ -551,6 +553,11 @@ func (m *Match) breakOccupantAt(
 			if state.Rng.Float32() > drop.Chance {
 				continue
 			}
+			// Roll the drop count in [CountMin, CountMax] (server-authoritative; broadcast so clients agree).
+			dropCount := drop.CountMin
+			if drop.CountMax > drop.CountMin {
+				dropCount += state.Rng.Intn(drop.CountMax - drop.CountMin + 1)
+			}
 			itemID := state.nextItemID(fmt.Sprintf("item_%d_%d", gx, gy))
 			worldX := float32(gx) + 0.5 + (state.Rng.Float32()-0.5)*0.3
 			worldY := float32(gy) + 0.5 + (state.Rng.Float32()-0.5)*0.3
@@ -560,16 +567,16 @@ func (m *Match) breakOccupantAt(
 			groundItem := &entities.GroundItem{
 				ID:       itemID,
 				ItemType: drop.ItemID,
-				Count:    drop.Count,
+				Count:    dropCount,
 				Position: entities.EntityPosition{
 					ChunkX: cx, ChunkY: cy, LocalX: localX, LocalY: localY,
 				},
 				Lifetime: 60.0,
 			}
-			state.GroundItems[itemID] = groundItem
+			state.putGroundItem(groundItem)
 
 			spawnMsg := GroundItemSpawnMessage{
-				ID: itemID, ItemType: drop.ItemID, Count: drop.Count, X: worldX, Y: worldY,
+				ID: itemID, ItemType: drop.ItemID, Count: dropCount, X: worldX, Y: worldY,
 			}
 			m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeGroundItemSpawn, spawnMsg)
 			logger.Debug("Spawned ground item %s x%d at %.1f,%.1f", drop.ItemID, drop.Count, worldX, worldY)
@@ -581,7 +588,7 @@ func (m *Match) breakOccupantAt(
 
 	// Nest destruction: clear the state + ORPHAN the resident (it never breeds again,
 	// tethers to its last home, still hunts/stings — a decaying patrol).
-	m.onNestOccupantRemoved(state, gx, gy, logger)
+	m.onNestOccupantRemoved(state, dispatcher, gx, gy, logger)
 
 	// A broken compost bin / milkweed loses its in-progress nursery (its eggs/maggots vanish).
 	m.onBroodSourceRemoved(state, dispatcher, gx, gy)
@@ -689,8 +696,9 @@ func (m *Match) getToolStats(state *WorldState, toolID string) (toolType string,
 		return "", 0 // Bare hands
 	}
 
-	// Look up tool from entity definitions
-	if def, exists := state.Entities[toolID]; exists && def.Category == "tool" {
+	// Look up tool from entity definitions. Weapons (sword/spear) carry a tool_type
+	// too — a wielded weapon must resolve its type/tier, not read as bare hands.
+	if def, exists := state.Entities[toolID]; exists && (def.Category == "tool" || def.Category == "weapon") {
 		return def.ToolType, def.ToolTier
 	}
 
@@ -751,7 +759,7 @@ func (m *Match) handlePickupItem(
 	}
 
 	// Remove from ground
-	delete(state.GroundItems, msg.ID)
+	state.deleteGroundItem(msg.ID)
 
 	// If this was registered BUG FOOD (rotten fruit), tell the deterministic food registry
 	// it's gone — bug AI must forget it at a tick boundary, not just visually.

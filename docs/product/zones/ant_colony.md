@@ -1,7 +1,11 @@
-# Zone Design: Ant Colony (deep underground · `ant_colony`)
+# Zone Design: Ant Colony (deep underground · `ant_colony`) — SUPERSEDED
 
-> Grid cell TBD — the demo places it directly **below the Mining Caves** (deeper south); the world doc's
-> "Deadly Ants" sits in col 3. Confirm placement with the user (tracked in the plan).
+> **SUPERSEDED 2026-07-06.** This is the DEMO-era sheet ("Grid cell TBD", pre-restructure).
+> The current truth: ants own **col 0** — Ant Tunnels **(3,0)** + Ant Colony w/ Queen
+> **(4,0)** (decisions D2/D3/D9; owner 2026-07-06: colony in the SW zone, scout tunnels
+> above leading outside south of the bee zone). See the live docs:
+> `ant_tunnels_30.md` and `ant_colony_40.md`. Kept for its prose ideas only (the fungus
+> garden, aphid livestock, THE GREAT TRUNK TUNNEL survive as candidates there).
 
 ## Overview
 - **Zone ID / Grid:** `ant_colony` · deep underground (below `underground_passages_31`)

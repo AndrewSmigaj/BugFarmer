@@ -5,7 +5,7 @@ namespace BugFarmer.Player
 {
     /// <summary>
     /// Runtime paper-doll compositor. Stacks layer PNGs from
-    /// Resources/Player/layers/ (emitted by tools/generate_player_sprites.py)
+    /// Resources/Player/layers/ (emitted by tools/sprites/generate_player_sprites.py)
     /// into composited per-(direction, frame) sprites:
     ///   layer order: body -> pants -> shirt -> chest -> hair -> helmet
     ///   frames per direction: [contact-L(_w1), idle(), contact-R(_w3), idle()]
@@ -151,7 +151,7 @@ namespace BugFarmer.Player
             catch (UnityException)
             {
                 Debug.LogWarning($"[CharacterComposer] {resourcePath} not CPU-readable — " +
-                                 "run tools/fix_sprite_ppu.py and reimport.");
+                                 "run tools/sprites/fix_sprite_ppu.py and reimport.");
                 return false;
             }
             if (src.Length != px.Length) return false;

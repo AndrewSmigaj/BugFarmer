@@ -30,6 +30,7 @@ namespace BugFarmer.Networking
         // Stations (player-fillable processors: compost bin etc.)
         public const int StationDeposit = 85;     // C->S: Deposit an inventory item into a station
         public const int StationUpdate = 86;      // S->C: Station fill changed (UI meter)
+        public const int CompostHarvest = 115;    // C->S: scoop finished compost units out of a bin into the bag
 
         // Dev tuning (debug): live-override ecology parameters on the server
         public const int EcologyTuning = 87;      // C->S: EcologyTuningMessage
@@ -60,6 +61,7 @@ namespace BugFarmer.Networking
     {
         public long world_seed;
         public long tick;
+        public bool peaceful; // observation zone: suppress the cosmetic attack/flee reaction to the player
     }
 
     /// <summary>
@@ -243,6 +245,19 @@ namespace BugFarmer.Networking
         public int intent_target_x, intent_target_y; // Gliding: intent target
         public int current_dir_x, current_dir_y;     // Gliding: current direction
         public int land_ticks;                       // Feed land/hold timer (>0 = landed on food); history-dependent
+        public int hunt_target = -1;                 // Individual predation: committed prey bug id (-1 = none); history-dependent
+        public long feed_until;                      // Individual predation: tick this bug stops eating a corpse (0 = not feeding); absolute tick
+        public string feed_corpse_id;                // Individual predation: the corpse (food id) being eaten
+
+        // Centipede LUNGE (surge) — position-determining per-bug combat state; the ints below also ride the hash
+        // so a late-joiner reconstructs a mid-lunge AND a phase/heading desync is caught directly.
+        public int surge_phase;                      // 0 idle | 1 windup | 2 surge | 3 recover
+        public long surge_until;                     // current phase ends at this tick
+        public long surge_cooldown_until;            // no new windup before this tick
+        public int windup_cell_x, windup_cell_y;     // player cell at windup start (velocity-lead sample; snapshot only)
+        public int surge_heading_x, surge_heading_y; // locked unit heading during the charge (FixedPoint.Value)
+        public int surge_dist_left;                  // FixedPoint.Value: charge distance remaining
+        public string surge_target_id;               // player locked at windup (snapshot only — a string, not hashed)
 
         // DIAGNOSTIC ONLY (re-root investigation; never hashed): provenance of this bug on this client.
         public long spawn_tick = -1;
@@ -291,6 +306,13 @@ namespace BugFarmer.Networking
     public class SwarmSnapshotData
     {
         public string swarm_id;
+        // Snapshot-moment IDENTITY (one-time-base fix, 2026-07-19): the server builds late-join
+        // swarm_metadata FROM these entries, so a swarm that merges away (or is born) inside the
+        // snapshot→end window reconstructs consistently on a late-joiner instead of being orphaned
+        // (merge deficit-fill fabricating same-id-different-bugs) or mis-seeded at the end-tick centre.
+        public string species_id;
+        public int next_bug_id;
+        public int center_x, center_y; // fixed-point ×1000 SimCenter — legless-swarm fallback centre
         public BugSampleData[] bugs;
 
         // Current movement leg AT the snapshot tick (authoritative). Lets late-join hydrate the swarm
@@ -394,6 +416,17 @@ namespace BugFarmer.Networking
     }
 
     /// <summary>
+    /// Scoop the finished compost units out of a bin into the bag (OpCode 115, C->S). The server
+    /// empties the bin and drops its deterministic food level to match (the hive-harvest pattern).
+    /// </summary>
+    [Serializable]
+    public class CompostHarvestMessage
+    {
+        public int gx;
+        public int gy;
+    }
+
+    /// <summary>
     /// A station's fill meter changed (OpCode 86, S->C). Display-only — bug AI reads the
     /// deterministic FOOD_CONSUMED ledger instead.
     /// </summary>
@@ -480,7 +513,28 @@ namespace BugFarmer.Networking
         public long snapshot_last_event_seq; // Last applied seq included in snapshot state
         public SwarmSnapshotData[] swarms;
         public FoodSnapshotData[] food;      // Authoritative food registry @ snapshot (late-join hydration)
+        public HuntSnapshotData[] hunts;     // Authoritative hunt assignments @ snapshot (late-join hydration)
+        public string[] subdued;             // Authoritative subdued swarm-ids @ snapshot (late-join hydration)
+        public PlayerCellData[] player_cells; // Player cells @ the snapshot MOMENT (one-time-base rule) —
+                                              // end-tick cells would let a joiner's replay see future positions
         public string state_hash;
+    }
+
+    /// <summary>
+    /// One entry of the per-swarm hunt assignment (_swarmStrikes: which prey SWARM a predator hunts + its strike
+    /// params), embedded in the snapshot so late-joiners hydrate it coherently — mirrors FoodSnapshotData. Like
+    /// the food registry, _swarmStrikes is only ever set from live/replayed events, so a late-joiner whose
+    /// predator's hunt leg predates the replay window has NO prey list → it wanders while the authority hunts →
+    /// per-bug positions desync. The authority's live dict is the reliable source.
+    /// </summary>
+    [Serializable]
+    public class HuntSnapshotData
+    {
+        public string predator_swarm_id;   // the hunting predator swarm
+        public string target_prey_id;      // which prey SWARM it hunts
+        public int strike_radius;          // ×1000
+        public int kills_per_strike;
+        public int strike_cooldown_ticks;
     }
 
     /// <summary>
@@ -541,5 +595,7 @@ namespace BugFarmer.Networking
         public string authority_id;
         public PlayerCellData[] player_cells;  // Current player positions (state, not events)
         public FoodSnapshotData[] food;        // Authoritative food registry @ snapshot (hydrate before replay)
+        public HuntSnapshotData[] hunts;       // Authoritative hunt assignments @ snapshot (hydrate before replay)
+        public string[] subdued;               // Authoritative subdued swarm-ids @ snapshot (hydrate before replay)
     }
 }

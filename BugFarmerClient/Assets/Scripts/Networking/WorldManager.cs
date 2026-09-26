@@ -28,7 +28,7 @@ namespace BugFarmer.Networking
         // (Assets/Nakama/Runtime/UnitySocket.cs). The HandleMatchState guard would otherwise DROP them,
         // and the one-shot WorldInit (OpCode 68, the world seed) has no second chance → the authority
         // client never seeds its bug sim and shows 0 swarms. We buffer frames for the match we're joining
-        // and replay them once CurrentMatch/Self are set. See docs/product/determinism_audit_2026-06-20.md.
+        // and replay them once CurrentMatch/Self are set. See docs/product/investigations/determinism_audit_2026-06-20.md.
         private string _joiningMatchId;
         private readonly List<IMatchState> _preJoinBuffer = new();
         private const int MaxPreJoinBuffer = 256;

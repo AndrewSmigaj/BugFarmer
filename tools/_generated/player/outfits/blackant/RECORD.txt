@@ -1,0 +1,41 @@
+when      : 2026-08-14 19:44:21
+model     : gpt-image-2
+size      : 1024x1536
+quality   : high
+mask      : NONE
+dest      : outfits/blackant
+references (in the order sent):
+  1. tools/_generated/player/bases/armless_front.png  (upscaled x14 -> 504x994)
+  2. tools/_generated/player/bases/armless_side.png  (upscaled x14 -> 504x994)
+  3. tools/_generated/player/explore/ant-carapace-black/CHOSEN_blackant.png  (sent as-is at 321x914)
+
+PROMPT:
+Draw a single sprite sheet showing the SAME character in black-ant carapace armour as a 12-frame walk-cycle sheet. Use the same character design, proportions, and no-arm anatomy consistently across the whole sheet.
+
+Layout: 3 rows by 4 columns, evenly spaced, all sprites at the same scale and aligned to the same baseline within each row.
+
+Row 1: FRONT walk cycle, 4 distinct frames.
+Row 2: BACK walk cycle, 4 distinct frames.
+Row 3: RIGHT-FACING SIDE walk cycle, 4 distinct frames.
+
+Very important: the 4 frames in each row must be DIFFERENT phases of a walk cycle, not repeated standing poses.
+
+For each row, the 4 columns must be:
+Column 1: left leg forward, right leg back.
+Column 2: passing pose, legs closer together, transition between steps.
+Column 3: right leg forward, left leg back.
+Column 4: passing pose opposite to column 2, transition back toward column 1.
+
+Because the character has NO ARMS, the walking motion must be shown by leg motion, slight hip shift, and a subtle torso/head bob only. Do not add arms, hands, elbows, forearms, or gauntlets. The rounded shoulder caps must end at the armless shoulder openings.
+
+Outfit: near-black and dark charcoal ant chitin, smooth plates with chevron banding across the chest. Include a a smooth rounded ant-head hood-helm with two curved antennae, OPEN AT THE FRONT so the character's face is visible - draw the face, eyes and hair; the hood frames it and never covers it, a breastplate, rounded shoulder caps, a waist and hip piece covering the crotch, thigh plates on both legs, greaves, and boots. No bare skin between the waist and the boots. The headgear is on the character in all 12 frames.
+
+Keep the front row front-facing, the back row back-facing, and the bottom row a strict right-facing side profile. Do not drift into a three-quarter view.
+
+Big simple shapes, not fine detail. This is a small pixel art sprite sheet. All 12 sprites must clearly be the same character, but each frame in a row must be a distinct walking frame. If two adjacent frames in a row are identical, the sheet is wrong.
+
+Match the PIXEL DENSITY of the FIRST attached reference image: its pixels are large visible squares, and yours must be the same size. Do not draw at a finer resolution than that reference - chunky blocks, flat colour, no smooth shading, no fine detail.
+
+
+Draw the sheet on a FLAT SOLID MAGENTA background (pure magenta, RGB 255 0 255), completely flat and uniform with nothing else on it - no shadow, no gradient, no ground, no text. Do not use magenta, pink or purple anywhere on the character itself. Magenta is the background alone.
+

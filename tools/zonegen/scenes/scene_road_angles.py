@@ -5,7 +5,7 @@ Four road shapes, RAW on the left half vs SMOOTHED (terrain.smooth_paths) on the
 right, same seeds: a straight run, a gentle bend, a 45° diagonal run, and an S-curve.
 The smoothed side should show every stair-step corner bevelled by a diagonal
 transition tile (stone_path_d_*/dirt_path_d_*, composited by
-tools/make_diagonal_tiles.py) — curves read as curves, not staircases.
+tools/sprites/make_diagonal_tiles.py) — curves read as curves, not staircases.
 """
 import os
 import sys
@@ -29,6 +29,10 @@ def lay_roads(b, ox):
     path(b, (ox + 30, 34), (ox + 42, 58), width=2, tile="dirt", wobble=0.3, seed=11)
 
 
+PREVIEW = "examples/roads"
+SCALE = 4
+
+
 def build():
     b = ZoneBuilder("scene_road_angles", W, H, base_tile="grass")
     lay_roads(b, 0)            # RAW half
@@ -44,5 +48,7 @@ def build():
 
 
 if __name__ == "__main__":
-    from registry import render_one
-    render_one("scene_road_angles")
+    from scene_preview import render
+    b = build()
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

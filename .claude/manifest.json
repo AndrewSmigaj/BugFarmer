@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "_readme": "Machine-readable repo map — the ONE source the .claude/hooks read (no more per-hook hardcoded tables). Sections: authoring_gates (path-glob -> owner skill that must be read before editing; drives gate_authoring_edits.py), command_gates + command_viewers (command-regex -> skills; drives gate_skill_commands.py), doc_coverage (per-doc source globs; drives check_doc_drift.py, P3). Path patterns in authoring_gates/doc_coverage.covers are GLOBS matched right-anchored via pathlib.PurePath.match (component-aware: '*' does NOT cross '/'). command_gates.patterns are Python REGEXES matched against command segments. Validate with .claude/hooks/validate_manifest.py.",
+  "authoring_gates": [
+    {
+      "skill": "zone-craft",
+      "covers": ["tools/zonegen/scenes/*.py"],
+      "also_skills": ["author-zone"],
+      "note": "Also read author-zone (builder/lint/preview mechanics) AND the FEATURE GUIDE for what you're building: ant nest=docs/guides/authoring/ant-colony.md, cave/tunnel/ore=caves.md, coast/water=water.md, mine/cliff/camp=camps.md, blocks=blocks.md, forest=forest.md, houses=house.md (index: biome-feature-map.md). Walk CORRECTIONS.md (owner taste)."
+    },
+    {
+      "skill": "economy",
+      "covers": ["nakama/data/entities/*.json"],
+      "also_skills": ["add-object"],
+      "note": "Also read add-object (the art pipeline). CHECK the unified registry FIRST — an id is valid if it exists in ANY of items/occupants/placeables.json (never conclude 'missing' from one file); never invent. Home any NEW entity in docs/product/economy/catalogs/ (run tools/data/catalog_coverage.py)."
+    },
+    {
+      "skill": "frontier-sync",
+      "covers": ["nakama/modules/world/*.go"],
+      "also_skills": ["bug-spawning", "perf-tuning", "test-changes"],
+      "note": "Determinism-critical server code. Also: bug-spawning (spawn/persist files), perf-tuning (hot loops), and the relevant docs/product/architecture/architecture_*.md (index: ARCHITECTURE.md) — UPDATE that architecture doc if you change behavior."
+    },
+    {
+      "skill": "ecology-tuning",
+      "covers": ["nakama/data/species.json", "nakama/data/ecology_tuning.json", "tools/bug_lab_configs/*.json"],
+      "also_skills": ["frontier-sync"],
+      "note": "Balance change. Also read frontier-sync if you touch a hash-bearing behavior field (movement_style / flies_over_fences / predation geometry) — that's a determinism change."
+    },
+    {
+      "skill": "regenerate-sprite",
+      "covers": ["tools/art/catalog/*.json"],
+      "also_skills": ["add-object"],
+      "note": "Also read add-object if this is a NEW asset (not a re-do of an existing one's art)."
+    },
+    {
+      "skill": "player-sprites",
+      "covers": ["tools/player_sprites/*.py", "tools/player_sprites/aipipe/*.py"],
+      "also_skills": ["add-object"],
+      "note": "Player character + outfits — Pipeline B. ARMLESS character + floating hands; WHOLE-OUTFIT 12-frame sheets (the paper-doll was abandoned 2026-07-28). Read tools/_generated/player/README.md for the folder shape + docs/guides/art/CHARACTER_DESIGN_GUIDE.md for the format and the owner-approved motion constants. tools/player_sprites/official.py is THE record of what is official — the build reads it and nothing else, no directory scanning and no fallbacks, and a missing file STOPS the build naming it. Each outfit is <dir>/{tries,frames,gauntlet,anim}; choosing = COPY from tries/ into place, never a move. Render with build.py (build.py --check is the pre-commit gate; it re-renders and compares GIF bytes). Never bulk re-cut or bulk move; ASK before every paid image call."
+    }
+  ],
+  "command_gates": [
+    {
+      "skills": ["test-changes"],
+      "patterns": ["\\brun_go_tests\\.sh\\b", "\\brun_sync[a-z_]*\\.sh\\b", "\\bharness_persist_test\\.sh\\b", "\\bsim-determinism\\b", "\\bsync-harness\\b", "\\bdotnet\\s+run\\b", "-executeMethod\\b"],
+      "note": "test/determinism runner — read test-changes"
+    },
+    {
+      "skills": ["run-backend", "test-changes"],
+      "patterns": ["\\bdocker[- ]compose\\s+(build|up|run|restart|down)\\b"],
+      "note": "docker compose = server lifecycle (run-backend), or rebuilding the plugin before a test (test-changes)"
+    },
+    {
+      "skills": ["ecology-tuning", "perf-tuning", "test-changes"],
+      "patterns": ["\\brun_config\\.py\\b", "\\brun_sweep\\.sh\\b"],
+      "note": "run_config/sweep = balance (ecology-tuning) / profiling (perf-tuning) / determinism-verify (test-changes)"
+    }
+  ],
+  "command_viewers": ["grep", "rg", "egrep", "fgrep", "cat", "bat", "less", "more", "head", "tail", "ls", "tree", "find", "fd", "wc", "echo", "printf", "stat", "file", "vim", "nvim", "nano", "emacs", "code", "sed", "awk", "cut", "column", "diff", "git", "cd", "pushd"],
+  "determinism": {
+    "covers": ["nakama/modules/world/*.go", "nakama/modules/entities/*.go"],
+    "gate_hint": "run the determinism gates before finishing (test-changes skill): bash tools/run_go_tests.sh + the headless sim-determinism replay + run_sync_latejoin.sh (co-located AND disjoint spawn-apart)"
+  },
+  "_routing_readme": "prompt/plan keyword -> governing skill. Consumed by route_skills.py (UserPromptSubmit: inject a tiny nudge for UNREAD relevant skills) and gate_plan_exit.py (ExitPlanMode: block until the plan's touched-domain skills are read). Keywords matched case-insensitively as substrings; keep them specific to avoid noise. Keywords MUST be human INTENT PHRASES ('make a hat', 'build a zone'), NEVER tool/folder names or single words — those match incidental path/code mentions and over-fire (the 'zonegen' false-positive, 2026-07-21).",
+  "routing": [
+    { "skill": "zone-craft", "keywords": ["build a zone", "rework a zone", "zone-craft", "landmark scene", "a biome"], "hint": "zone/scene work -> read zone-craft (gate: brief + landmark list + options) & author-zone" },
+    { "skill": "frontier-sync", "keywords": ["determinism", "deterministic", "frontier-gated", "event ledger", "state hash", "late-join", "late join", "desync", "new bug mechanic", "swarm sim"], "hint": "deterministic sim mechanic -> read frontier-sync & architecture_swarm_sync.md" },
+    { "skill": "ecology-tuning", "keywords": ["ecology", "food web", "balance the bug", "carrying capacity", "predation rate", "spawn rate"], "hint": "ecology / food-web balance -> read ecology-tuning" },
+    { "skill": "economy", "keywords": ["new item", "a recipe", "crafting station", "the shop", "drop table", "entity registry", "currency"], "hint": "items/economy -> read economy (the unified entity registry + catalogs)" },
+    { "skill": "combat-enemy", "keywords": ["combat enemy", "enemy tier", "telegraphed sting", "aggro", "nocturnal enemy", "difficulty dial"], "hint": "add/tune a combat enemy -> read combat-enemy" },
+    { "skill": "bug-spawning", "keywords": ["spawn count", "too many bugs", "too few bugs", "populate the zone", "spawn path", "wrong number of bugs"], "hint": "wrong bug counts -> read bug-spawning (walkability + stale-save gotchas)" },
+    { "skill": "perf-tuning", "keywords": ["optimize the sim", "profile the", "hot loop", "frame time", "sim performance"], "hint": "profile/optimize the sim -> read perf-tuning (sim opts are determinism changes)" },
+    { "skill": "test-changes", "keywords": ["run the tests", "determinism check", "sync test", "test gate", "verify the change", "regression test"], "hint": "verifying a change -> read test-changes (the test-gate source of truth)" },
+    { "skill": "run-backend", "keywords": ["start the server", "start nakama", "docker compose", "rebuild the plugin", "the backend stack"], "hint": "server lifecycle -> read run-backend" },
+    { "skill": "add-object", "keywords": ["new sprite", "regenerate art", "new art asset", "new object art", "gpt-image"], "hint": "world art / sprites -> read add-object / regenerate-sprite" },
+    { "skill": "player-sprites", "keywords": ["make a wearable", "new hat", "armor sprite", "player sprite", "player art"], "hint": "player character / wearable (clothing/armor/hair) art -> read player-sprites (Pipeline B)" }
+  ],
+  "_layout_gate_readme": "Consumed by gate_plan_exit.py. A plan that CREATES files must also say WHERE they go, so folder layout is a decision the owner reviews rather than a side-effect of whatever filename appeared mid-flow (the recurring 'dozens of files dumped in one folder with cryptic names' failure — it has hit tools/_generated/, docs/ and tools/). `creates` = phrases meaning new files/folders; `satisfied_by` = evidence the plan states a destination (a repo path, a fenced tree, an 'outputs ->' line). Matching is case-insensitive substring/regex over the plan text. This checks a layout is STATED, not that it is GOOD — the owner still judges the shape; and it cannot police naming. Tune by editing these lists; no hook code change.",
+  "layout_gate": {
+    "creates": ["create a", "creates a", "new file", "new folder", "new directory", "new script",
+                "add a script", "add a file", "write a new", "generate a", "save the", "save it to",
+                "writes to", "output goes", "outputs go"],
+    "not_creating": ["no new file", "not create", "don't create", "does not create", "no files are created",
+                     "without creating", "no new script", "existing files only"],
+    "satisfied_by": ["tools/", "docs/", "nakama/", "bugfarmerclient/", ".claude/", "outputs →",
+                     "outputs ->", "layout:", "folder structure", "```"],
+    "note": "State the destination + naming for anything this plan creates — one line or a small tree."
+  },
+  "_doc_coverage_readme": "Per code-doc -> the source globs it is system-of-record for. Consumed by check_doc_drift.py (P3): if a covered source changed but its doc did not, nudge to update the doc (waivable). Legitimate overlaps exist (e.g. terrain.py serves roads/water/camps) and are resolved at consume-time by naming all covering docs under one waiver. kind:reference = index/style/brainstorm doc, NO covers (excluded from drift). Every glob is validated to hit >=1 real path by validate_manifest.py.",
+  "doc_coverage": [
+    { "doc": "docs/product/architecture/ARCHITECTURE.md", "kind": "reference", "owner_skill": "none", "note": "Top-level architecture index / doc-map; documents no single source path." },
+    { "doc": "docs/product/architecture/architecture_beekeeping.md", "kind": "code_doc", "owner_skill": "ecology-tuning", "covers": ["nakama/modules/world/handlers_hive.go", "nakama/modules/world/nests.go", "nakama/modules/world/condition.go", "nakama/modules/world/predation.go", "nakama/data/species.json", "nakama/data/entities/occupants.json", "nakama/data/entities/recipes.json"], "note": "Bee loop (forage->honey->harvest->extract->craft) + calming. economy co-owns the honey/craft half." },
+    { "doc": "docs/product/architecture/architecture_bugs.md", "kind": "code_doc", "owner_skill": "frontier-sync", "covers": ["nakama/modules/world/match.go", "nakama/modules/world/state.go", "nakama/modules/world/resource_query.go", "nakama/modules/entities/swarm.go", "nakama/modules/entities/species.go", "nakama/data/species.json", "nakama/data/bugs.json", "BugFarmerClient/Assets/Scripts/Bugs/InfluenceManager.cs", "BugFarmerClient/Assets/Scripts/Entities/SwarmManager.cs"], "note": "Unified bug entity system (swarm vs individual). Part 1 as-built / Part 2 roadmap. bugs_new.md is a stale duplicate of this." },
+    { "doc": "docs/product/architecture/architecture_combat.md", "kind": "code_doc", "owner_skill": "combat-enemy", "covers": ["nakama/modules/world/bug_attack.go", "nakama/modules/world/combat_aggro.go", "nakama/modules/world/handlers_combat.go", "nakama/modules/world/centipede.go", "nakama/data/species.json", "BugFarmerClient/Assets/Scripts/Player/MeleeController.cs"], "note": "Combat AI (M1/M2 wasp tiers built, M3 centipede in build). Dodge/telegraph controllers are PROPOSED, not yet in client." },
+    { "doc": "docs/product/architecture/architecture_crafting.md", "kind": "code_doc", "owner_skill": "economy", "covers": ["nakama/modules/world/craft_stations.go", "nakama/modules/world/handlers_containers.go", "nakama/data/entities/recipes.json", "BugFarmerClient/Assets/Scripts/Data/RecipeDatabase.cs", "BugFarmerClient/Assets/Scripts/UI/CraftingPanel.cs"], "note": "Crafting system + item containers (the mechanics; content lives in crafting_design.md)." },
+    { "doc": "docs/product/architecture/architecture_entity_sync.md", "kind": "code_doc", "owner_skill": "none", "covers": ["BugFarmerClient/Assets/Scripts/Entities/EntityManager.cs", "BugFarmerClient/Assets/Scripts/Entities/RemoteEntity.cs"], "note": "FLAG: oldest sync doc (Dec 2025); largely superseded by architecture_swarm_sync.md for the bug half. Covers trimmed to dedicated client entity classes." },
+    { "doc": "docs/product/architecture/architecture_farming.md", "kind": "code_doc", "owner_skill": "none", "covers": ["nakama/modules/world/handlers_farming.go", "nakama/modules/entities/crop.go", "nakama/modules/entities/fruit_tree.go", "nakama/modules/entities/host_plant.go", "nakama/modules/entities/forage_pool.go", "nakama/data/entities/crops.json"], "note": "Till/plant/water/grow/harvest + bug-ecology integration." },
+    { "doc": "docs/product/architecture/architecture_input.md", "kind": "code_doc", "owner_skill": "none", "covers": ["BugFarmerClient/Assets/Scripts/Player/PlayerInputRouter.cs", "BugFarmerClient/Assets/Scripts/Player/MeleeController.cs", "BugFarmerClient/Assets/Scripts/Player/CatchingController.cs", "BugFarmerClient/Assets/Scripts/Player/ToolUseController.cs", "BugFarmerClient/Assets/Scripts/Player/BreakingController.cs", "BugFarmerClient/Assets/Scripts/Player/PlacementController.cs", "BugFarmerClient/Assets/Scripts/Player/PlayerController.cs"], "note": "Mouse-input routing to game actions (left-click router + per-verb controllers). StationController.cs was retired (6a5e102, folded into the unified Canvas panel)." },
+    { "doc": "docs/product/architecture/architecture_inventory.md", "kind": "code_doc", "owner_skill": "economy", "covers": ["nakama/modules/world/handlers_shop.go", "nakama/modules/world/inventory.go", "BugFarmerClient/Assets/Scripts/UI/ShopPanel.cs", "BugFarmerClient/Assets/Scripts/UI/InventoryPanel.cs", "BugFarmerClient/Assets/Scripts/UI/HotbarUI.cs"], "note": "Inventory/hotbar/shop AS-BUILT. FLAG: the OpCodes 30-37 shop plan (shop.go/NPCManager) was NEVER built." },
+    { "doc": "docs/product/architecture/architecture_items.md", "kind": "code_doc", "owner_skill": "economy", "covers": ["nakama/data/entities/items.json", "nakama/data/entities/placeables.json", "nakama/data/entities/occupants.json", "nakama/modules/world/inventory.go", "nakama/modules/world/item_index.go", "nakama/modules/entities/items.go"], "note": "Item & inventory data-model (footprint, sprite size, where data+art live)." },
+    { "doc": "docs/product/architecture/architecture_lighting.md", "kind": "code_doc", "owner_skill": "none", "covers": ["BugFarmerClient/Assets/Scripts/World/DayNightController.cs", "BugFarmerClient/Assets/Scripts/World/LampLight.cs", "BugFarmerClient/Assets/Scripts/World/LitMaterials.cs"], "note": "FLAG: mostly PROPOSED/design; only the as-built section maps to these files." },
+    { "doc": "docs/product/architecture/architecture_persistence.md", "kind": "code_doc", "owner_skill": "none", "covers": ["nakama/modules/world/world_save.go", "nakama/modules/world/persist_classes.go", "nakama/modules/world/zone_persist.go", "nakama/modules/world/character_persist.go"], "note": "How a zone survives a server restart (the WorldSave document). test-changes exercises restart." },
+    { "doc": "docs/product/architecture/architecture_shaped_ground.md", "kind": "code_doc", "owner_skill": "none", "covers": ["nakama/modules/world/tiles.go", "BugFarmerClient/Assets/Scripts/World/TileDatabase.cs", "BugFarmerClient/Assets/Scripts/World/TilemapManager.cs", "BugFarmerClient/Assets/Scripts/World/Rendering/TileCompositor.cs", "BugFarmerClient/Assets/Scripts/World/Rendering/TileComposite.shader"], "note": "Shovel terraform: composite matA~matB~shape ground ids, GPU mask-composite, dig<->place loop." },
+    { "doc": "docs/product/architecture/architecture_swarm_sync.md", "kind": "code_doc", "owner_skill": "frontier-sync", "covers": ["nakama/modules/world/messages.go", "nakama/modules/world/match.go", "BugFarmerClient/Assets/Scripts/Bugs/InfluenceManager.cs", "BugFarmerClient/Assets/Scripts/Entities/SwarmManager.cs"], "note": "THE determinism recipe (frontier-sync's core doc): authority sim + tick frontier + event ledger + snapshots; followers replay. VERIFIED: ProcessInfluenceEvent, AdvanceOneTick/ComputeStateHash, ledger consts present." },
+    { "doc": "docs/product/architecture/architecture_weather.md", "kind": "code_doc", "owner_skill": "none", "covers": ["nakama/modules/world/handlers_env.go", "BugFarmerClient/Assets/Scripts/World/RainController.cs", "BugFarmerClient/Assets/Scripts/World/DayNightController.cs"], "note": "Weather v1 (rain-only, one-shot watering); OpCode 91 WorldEnv." },
+    { "doc": "docs/product/architecture/architecture_world.md", "kind": "code_doc", "owner_skill": "none", "covers": ["nakama/modules/world/zone.go", "nakama/modules/world/tiles.go", "nakama/modules/world/handlers_world.go", "nakama/modules/world/world_save.go", "BugFarmerClient/Assets/Scripts/World/TilemapManager.cs"], "note": "World building: zones/chunks/tile+occupant model; authored at design-time, saved as data." },
+    { "doc": "docs/guides/art/object_pipeline.md", "kind": "code_doc", "owner_skill": "add-object", "covers": ["tools/sprites/gen_sprites.py", "tools/sprites/pixelclean.py", "tools/sprites/veg_sprites.py", "tools/make_scene.py"], "note": "Canonical WORLD-art pipeline (gen->clean->preview). The player pipeline (Pipeline B) is owned by player-sprites + CHARACTER_DESIGN_GUIDE.md, not here." },
+    { "doc": "docs/guides/art/block_prompts.md", "kind": "code_doc", "owner_skill": "add-object", "covers": ["tools/sprites/blocklab.py", "tools/art/catalog/blocks.json"], "note": "Block sprite bake-off workflow. FLAG: the doc references tools/lab_server.py which no longer exists (stale — fix in P6 doc-hygiene)." },
+    { "doc": "docs/guides/art/MASTER_STYLE_GUIDE.md", "kind": "reference", "owner_skill": "none", "note": "Art-direction source of truth (the look); defers all mechanics to object_pipeline.md." },
+    { "doc": "docs/guides/art/PERSPECTIVE_GUIDE.md", "kind": "reference", "owner_skill": "none", "note": "3/4 top-down perspective principles; no source mapping." },
+    { "doc": "docs/guides/art/CHARACTER_DESIGN_GUIDE.md", "kind": "code_doc", "owner_skill": "player-sprites", "covers": ["tools/player_sprites/*.py", "tools/player_sprites/aipipe/*.py", "tools/sprites/generate_player_sprites.py", "BugFarmerClient/Assets/Scripts/Player/CharacterComposer.cs"], "note": "AS-BUILT: armless character + whole-outfit sheets + the owner-approved walk/run/swing motion. The region-template paper-doll sections below it are SUPERSEDED (abandoned 2026-07-28) and kept only as history. Owned by player-sprites (Pipeline B); add-object EXCLUDES the player pipeline." },
+    { "doc": "tools/_generated/player/README.md", "kind": "code_doc", "owner_skill": "player-sprites", "covers": ["tools/player_sprites/gallery.py", "tools/player_sprites/render_animations.py"], "note": "The FOLDER SHAPE an outfit lives in (scratchpad/current/archive) + the promote-is-recording workflow. This README went stale describing the abandoned paper-doll layout and nothing caught it, which is why it is now covered here." },
+    { "doc": "docs/guides/art/BIOME_PALETTES.md", "kind": "reference", "owner_skill": "none", "note": "Tile+occupant id palettes per biome (a content catalog, not code)." },
+    { "doc": "docs/guides/art/bugs_new.md", "kind": "reference", "owner_skill": "none", "note": "FLAG: full bug-system architecture doc MISFILED in art/ and duplicating architecture_bugs.md over the same server files. Suspected stale duplicate — do NOT map (avoid double-trigger); resolve in P6 doc-hygiene." },
+    { "doc": "docs/guides/authoring/README.md", "kind": "code_doc", "owner_skill": "zone-craft", "covers": ["tools/zonegen/*.py", "tools/world/previews.py", "tools/world/view_world.py"], "note": "Zone/scene authoring index over the zonegen system + preview/view commands." },
+    { "doc": "docs/guides/authoring/ORGANIZATION.md", "kind": "reference", "owner_skill": "none", "note": "Repo folder-convention rule (examples/ vs zones/ vs catalog/); documents no source behavior." },
+    { "doc": "docs/guides/authoring/biome-feature-map.md", "kind": "code_doc", "owner_skill": "zone-craft", "covers": ["tools/zonegen/features/*.py"], "note": "Which features/ primitive to reach for per biome (a picker over all feature modules)." },
+    { "doc": "docs/guides/authoring/blocks.md", "kind": "code_doc", "owner_skill": "add-object", "covers": ["tools/art/catalog/blocks.json", "tools/sprites/gen_sprites.py", "tools/sprites/ab_generate.py", "tools/sprites/blocklab.py"], "note": "Mineable/placeable block recipe (one shared recipe; prompt text is data)." },
+    { "doc": "docs/guides/authoring/building.md", "kind": "code_doc", "owner_skill": "zone-craft", "covers": ["tools/zonegen/features/room.py"], "note": "Place building shells with the room primitive (place_room)." },
+    { "doc": "docs/guides/authoring/house.md", "kind": "code_doc", "owner_skill": "zone-craft", "covers": ["tools/zonegen/features/house.py", "tools/zonegen/scenes/player_house.py", "tools/zonegen/scenes/scene1_player_farm.py"], "note": "Compose a varied multi-room house with the house composer." },
+    { "doc": "docs/guides/authoring/yard.md", "kind": "code_doc", "owner_skill": "zone-craft", "covers": ["tools/zonegen/features/yard.py", "tools/zonegen/scenes/scene_houses.py"], "note": "Fenced enclosures (yard/pen/garden)." },
+    { "doc": "docs/guides/authoring/caves.md", "kind": "code_doc", "owner_skill": "zone-craft", "covers": ["tools/zonegen/features/cave.py", "tools/zonegen/scenes/scene_underground_caverns.py"], "note": "Author underground space (carve_tunnel/carve_cavern/fill_solid)." },
+    { "doc": "docs/guides/authoring/camps.md", "kind": "code_doc", "owner_skill": "zone-craft", "covers": ["tools/zonegen/scenes/scene_mine_entrance.py", "tools/zonegen/features/terrain.py", "tools/zonegen/features/cave.py"], "note": "Surface->underground transition (cliff face, cave mouth, work-camp) — a composition technique." },
+    { "doc": "docs/guides/authoring/forest.md", "kind": "reference", "owner_skill": "zone-craft", "note": "FLAG: nascent 'rules learned so far'; not yet a dedicated module (leans on scatter.py). Reference until it firms up." },
+    { "doc": "docs/guides/authoring/roads.md", "kind": "code_doc", "owner_skill": "zone-craft", "covers": ["tools/zonegen/features/terrain.py"], "note": "Lay roads/paths (route_road/smooth_paths/clear_road_margins). Shares terrain.py with water/camps." },
+    { "doc": "docs/guides/authoring/water.md", "kind": "code_doc", "owner_skill": "zone-craft", "covers": ["tools/zonegen/features/terrain.py", "tools/zonegen/scenes/scene_shore_arcs.py"], "note": "Author water (lake/shore_dress). Shares terrain.py with roads/camps." },
+    { "doc": "docs/guides/authoring/village.md", "kind": "code_doc", "owner_skill": "zone-craft", "covers": ["tools/zonegen/features/village.py", "tools/zonegen/scenes/scene_village.py"], "note": "Compose a lived-in town (plaza/shop_building)." },
+    { "doc": "docs/guides/authoring/ant-colony.md", "kind": "code_doc", "owner_skill": "zone-craft", "covers": ["tools/zonegen/features/cave.py", "tools/zonegen/scenes/scene_ant_colony.py", "nakama/modules/world/nests.go"], "note": "Author an ant nest (trail system); nests.go speciesForNestOccupant keys off ant_brood (cross-ref)." }
+  ]
+}

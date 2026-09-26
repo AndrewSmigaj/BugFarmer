@@ -1,0 +1,11 @@
+when      : 2026-08-14 22:47:37
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+dest      : explore/tip-E1-fromsnap
+references (in the order sent):
+  1. tools/_generated/player/explore/tip-pixref/CHOSEN_ref.png  (upscaled x14 -> 252x798)
+
+PROMPT:
+The attached image is a finished pixel-art sprite of the character in red fire-ant armor. Create a 3-view standing turnaround of THIS EXACT sprite: front, exact right profile, and back. Preserve the character exactly - same armor, same face, same body proportions, same pixel block size. This is the same sprite seen from three angles, not a redesign. Armless body: do not draw arms, hands, elbows, forearms or gauntlets. Solid rounded shoulder ends. No holes, sockets or empty arm openings. Flat pure magenta background (255 0 255), nothing else on it. Hard pixel edges, no blur.

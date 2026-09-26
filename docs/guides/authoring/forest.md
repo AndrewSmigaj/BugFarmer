@@ -29,6 +29,13 @@ This guide collects the rules as we learn them; the first real forest zone will 
    effectively "starts" on first exploration — fine, and worth exploiting for pacing.
 5. **Content-update workflow:** chunk files are read at chunk-touch and never written
    back. Edit/regenerate → restart the server → walk there.
+6. **CLEARINGS, not hilltops** (owner, 2026-07-05: "we cant really show a hilltop with
+   overhead but we can make clearings"). Overhead can't do elevation; absence-in-density
+   is our focal-point tool. Give big stands deliberate clearings that ARE places — a
+   honey glade (flower ring + wild hive), a mushroom hollow (litter + fungus), a still
+   clearing with one oak — and when travellers pass through the forest band, keep a
+   generous open CORRIDOR so the woods frame the route rather than wall it
+   (bee_meadow_20's north stands are the worked example).
 
 ## Forest composition (absorbed from trees-and-ponds.md; what's primitive-backed)
 - **The RING is a NOISE MASK now** (`terrain.ring_mask` + `noise_field` — the old
@@ -56,3 +63,15 @@ This guide collects the rules as we learn them; the first real forest zone will 
   initial 2×2 / max 3 swarms / pop 8. Forest zones can push the knobs higher
   ("their home").
 - Underbrush occupants that block players but NOT bugs (ambush grass).
+
+## Zone-scale balance — wooded by default (owner correction, 2026-07-06)
+> "there should be a huge meadow surrounding the bee farm but everything else should be
+> more wooded... more to the east and south"
+
+A wilderness zone is not a lawn with tree blobs on it: it's WOODS with carved-out open
+places. Compose the zone so each named open region (a meadow, a farm clearing, a lake basin)
+is a CLEARING IN the forest, and the forest is the connective tissue between regions —
+stands merging into bands, corridors left deliberately open for routes. Target: outside a
+zone's named open regions and coasts, tree cover should read as the DOMINANT ground use
+(≥40-50% of the leftover grass), built from overlapping varied stands + fray, not one
+mega-blob. The village's small stands are a TOWN's balance; wild zones lean much heavier.

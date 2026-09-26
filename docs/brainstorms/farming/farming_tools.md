@@ -5,7 +5,7 @@ protection, plant support, structures, processing, and automation hints. Design 
 code/data/art.
 
 Read alongside:
-- `docs/product/game_design.md` §8/§10/§11 (private-plot farming + automation rules).
+- `docs/product/design/game_design.md` §8/§10/§11 (private-plot farming + automation rules).
 - `docs/brainstorms/materials/ores_metals.md` for the **material tier ladder** (Wood → Copper →
   Iron → Steel → Gold/exotic) that hand tools are graded on.
 - Existing crops: `tomato`, `corn`, `wheat` (`nakama/data/entities/crops.json`).

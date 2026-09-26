@@ -37,6 +37,9 @@
   "door_wood": {
     "look": "a single closed WOODEN DOOR standing in a simple wooden door FRAME: a tall vertical slab made of vertical wood planks, with two or three recessed rectangular PANELS, a small round brass DOORKNOB near the right edge at mid-height, and a visible frame/jamb around it. It must read instantly as a DOORWAY you could walk through - NOT a cabinet, dresser, box, or wardrobe. Taller than it is wide."
   },
+  "door_square": {
+    "look": "a SIMPLE closed WOODEN DOOR filling a tall narrow doorway, clearly TWO tiles tall and ONE tile wide: a plain slab of vertical wood planks (no recessed panels), with a small dark IRON handle/latch near the right edge at mid-height and a thin wooden frame/jamb around it. Rustic village carpentry. It must read instantly as a DOORWAY you could walk through - NOT a cabinet, crate, dresser, or wardrobe. Distinctly taller than it is wide (a 1-wide, 2-tall slab)."
+  },
   "fence_electric": {
     "look": "a section of ELECTRIC FENCE: a slim post with two horizontal taut WIRES running left and right, small ceramic INSULATORS where the wires meet the post and a tiny warning spark; same post-and-rail layout as a wooden fence but thin metal wire.",
     "materials": [
@@ -87,7 +90,7 @@
     ]
   },
   "signpost": {
-    "look": "a wooden SIGNPOST: a vertical wooden POST with a rectangular wooden SIGN BOARD mounted near the top (blank, with a faint arrow), like a directional trail sign."
+    "look": "a wooden CROSSROADS SIGNPOST seen front-on: a single THIN tall vertical wooden POST, with two or three flat arrow-shaped DIRECTIONAL SIGN-BOARDS nailed near the top pointing left and right, each board WIDER than the slim shaft; weathered grey-brown wood. A tall narrow waymarker, NOT a single wide board."
   },
   "wall_brick": {
     "materials": [
@@ -139,6 +142,9 @@
   "sign_leaf": {
     "look": "a wooden SHOP SIGN on a post painted with a green LEAF and a small bug; a naturalist/ecologist sign"
   },
+  "sign_ant": {
+    "look": "a wooden hanging SHOP SIGN on a post, seen front-on, painted with a large bold black ANT in profile (segmented head-thorax-abdomen, six legs, two antennae) above the word MYRMECOLOGY; a field-research station sign, weathered wood"
+  },
   "market_stall": {
     "look": "an open-air MARKET STALL \u2014 a wooden counter under a striped peaked AWNING roof on poles, seen front-on; a trading booth, NOT a tent"
   },
@@ -146,7 +152,7 @@
     "look": "a striped fabric AWNING projecting out from a shop front, scalloped front edge, seen front-on; a shade canopy strip"
   },
   "produce_crate": {
-    "look": "an angled wooden DISPLAY CRATE heaped with mixed colorful VEGETABLES and fruit; market produce"
+    "look": "a wooden produce CRATE COVERED with a tied-down blue PLASTIC TARP roped over the top, the tarp hiding the contents; a couple of apples and a carrot peek from a gap at one corner so you can tell it holds fruit and vegetables. A covered fruit/veg crate."
   },
   "dock_plank": {
     "look": "a square section of weathered grey wooden DOCK DECKING, planks running across, seen top-down; a flat pier walkway tile"
@@ -207,5 +213,20 @@
   },
   "rowboat_beached": {
     "look": "a small weathered wooden ROWBOAT seen from above, pulled up on land and resting slightly TILTED to one side: faded sun-bleached planks, no oars, a little sand spilling over the bow; abandoned and beached, NOT floating"
+  },
+  "sign_weaver": {
+    "look": "a WIDE hanging wooden shop SIGN strung between two short posts, a painted SPOOL OF THREAD with a needle across the board. Clearly wider than tall.",
+    "materials": [
+      "wood"
+    ]
+  },
+  "sign_mason": {
+    "look": "a stonemason's wooden SHOP SIGN TWO cells wide: a horizontal carved wooden board hung from a frame, a grey chisel-and-mallet emblem carved on it. A storefront sign seen front-on."
+  },
+  "bug_extractor": {
+    "look": "a BUG EXTRACTOR craft station: a squat copper-and-brass apparatus on a wooden bench base \u2014 a glass bell jar on top, a small hand-crank on the side, a spigot and collection vial at the front; alchemical workshop feel"
+  },
+  "fence_stone": {
+    "look": "a section of low STONE WALL fence: stacked rough grey fieldstones with visible mortar joints, a flat capstone course on top (same post-and-rail layout family as the other fences: runs left and right)"
   }
 }

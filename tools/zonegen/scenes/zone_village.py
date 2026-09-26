@@ -4,7 +4,7 @@ clearing, its main road extended out to the zone edges (so it connects to neighb
 the surrounding land filled — a perimeter forest belt, meadow ring, scattered woods and ponds.
 
 Run directly to BUILD + save() the zone to nakama/data/zones/village_21, then view the whole-zone
-pixel overview with:  python3 tools/view_world.py village_21
+pixel overview with:  python3 tools/world/view_world.py village_21
 """
 import os
 import sys
@@ -148,14 +148,11 @@ def build(zone_id="village_21", vseed=0):
     }
 
     Z.spawn = [MAINX, OY + 53]                                        # on the main street, by the square
+    Z.grid = (2, 1)                                                   # world-map slot (save() writes it now)
     return Z
 
 
 if __name__ == "__main__":
-    import json
     Z = build()
     out = Z.save()
-    cfg_path = os.path.join(out, "zone.json")                        # save() writes row/col 0,0 — restore world pos
-    cfg = json.load(open(cfg_path)); cfg["row"], cfg["col"] = 2, 1
-    json.dump(cfg, open(cfg_path, "w"), indent=2)
     print("saved 256x256 zone ->", out, "| spawn", Z.spawn, "| occupants", len(Z.occ))

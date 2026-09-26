@@ -1,0 +1,24 @@
+when      : 2026-08-15 06:08:25
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+dest      : explore/tip-V1-variants
+references (in the order sent):
+  1. tools/_generated/player/bases/armless_front.png  (upscaled x14 -> 504x994)
+
+PROMPT:
+Create THREE different design options for red fire-ant armor worn by the attached character, standing side by side in one row, all three at the same scale on the same baseline.
+
+The three, left to right:
+1. your own design - decide for yourself what this armor looks like
+2. a second design, clearly and obviously different from the first
+3. a third design, clearly and obviously different from both of the others
+
+All three are the SAME character wearing different armor. Keep the same head size, torso length, leg length, face and hair as the reference. Change only the armor.
+
+Use the same size pixel blocks as the reference; do not use smaller pixel detail. If armor detail does not fit, simplify it instead of adding smaller details.
+
+Each helmet is open-faced but covers the whole head; hair may stick out from under it. Armless body: do not draw arms, hands, elbows, forearms or gauntlets. Solid rounded shoulder ends. No holes, sockets or empty arm openings.
+
+Flat pure magenta background (255 0 255), nothing else on it. Hard pixel edges, no blur.

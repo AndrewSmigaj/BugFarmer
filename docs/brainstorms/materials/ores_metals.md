@@ -10,7 +10,7 @@
 >   `flower`, `crystal`, `bone`, `coal`, `*_ore`, `quartz`, `sand`, `diamond`, `iron_bar`, `brick`.
 > - Ore rarity + zone placement: `docs/guides/authoring/caves.md` (veins, 12–18% density,
 >   deeper = rarer).
-> - The pen ladder below ties to the catch system in `docs/product/architecture_bugs.md`
+> - The pen ladder below ties to the catch system in `docs/product/architecture/architecture_bugs.md`
 >   (net sizes small/medium/large/trap_only; "some bugs are GIANT").
 
 This doc is the **single source for what materials exist and how they ladder up**, so the

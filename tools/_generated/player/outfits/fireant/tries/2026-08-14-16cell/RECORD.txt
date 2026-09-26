@@ -1,0 +1,34 @@
+when      : 2026-08-14 21:30:00
+model     : gpt-image-2
+size      : 1024x1536
+quality   : high
+mask      : NONE
+dest      : outfits/fireant/tries/2026-08-14-16cell
+references (in the order sent):
+  1. tools/_generated/player/bases/armless_front.png  (upscaled x14 -> 504x994)
+  2. tools/_generated/player/explore/fireant-pair/SUPERSEDED_fireant.png  (sent as-is at 382x964)
+
+PROMPT:
+Draw a sprite sheet of 4 rows by 4 columns on a FLAT SOLID MAGENTA background (pure magenta, RGB 255 0 255), completely flat and uniform - no shadow, no gradient, no ground, no text. All 16 sprites are the SAME character at the SAME scale, evenly spaced, aligned to the same baseline within each row.
+
+THE SECOND ATTACHED IMAGE IS THE CHARACTER: a person wearing fire-ant carapace armour. Every sprite on the sheet is that exact character - same armour, same colours, same head, same face, same proportions, same height. Do not redesign it.
+
+Because the character has NO ARMS, do not draw arms, hands, elbows, forearms or gauntlets. Each shoulder ends in a rounded shoulder cap at the armless shoulder opening. This is deliberate - the hands are separate sprites added later.
+
+ROW 1 - the character standing still, one sprite per view:
+Column 1: a faithful copy of the SECOND attached image, redrawn unchanged, facing the viewer.
+Column 2: standing still facing the viewer (facing DOWN the screen).
+Column 3: standing still in a strict RIGHT-FACING side profile.
+Column 4: standing still seen from behind (facing UP the screen).
+
+ROW 2: FRONT walk cycle, 4 distinct frames, facing the viewer.
+ROW 3: RIGHT-FACING SIDE walk cycle, 4 distinct frames.
+ROW 4: BACK walk cycle, 4 distinct frames, seen from behind.
+
+In each walk row the 4 frames are DIFFERENT phases of a walk: (1) left leg forward right leg back, (2) passing pose legs closer together, (3) right leg forward left leg back, (4) the opposite passing pose. Because the character has no arms the walk reads through leg motion, a slight hip shift and a subtle torso and head bob only.
+
+Keep row 2 front-facing, row 4 back-facing and row 3 a strict right-facing profile. Do not drift into a three-quarter view. The face is visible in the front views - draw the face, eyes and hair.
+
+Match the PIXEL DENSITY of the FIRST attached reference image: its pixels are large visible squares, and yours must be the same size. Do not draw at a finer resolution than that reference - chunky blocks, flat colour, no smooth shading, no fine detail.
+
+Draw with HARD pixel edges against the magenta. Do not blur, feather, glow or blend the figure into the background. Do not use magenta, pink or purple anywhere on the character.

@@ -39,18 +39,322 @@ namespace SimDeterminism
             "centipede_garden", "millipede", "beetle_carrion",
         };
 
+        // #20: focused geometry test for BugCollision.LineBlocked (the predator line-of-sight). Run with
+        // --los-test. Proves the integer Bresenham tests cells STRICTLY BETWEEN the endpoints (skipping
+        // both) — a deterministically-WRONG walk would still pass the 2-client sync gate but fails here.
+        // Drives the delegate core with a stubbed blocked-set, so no Unity/TilemapManager is needed.
+        static int RunLosTest()
+        {
+            int failures = 0;
+            void Check(string name, bool got, bool want)
+            {
+                if (got != want) { Console.WriteLine($"LOS-TEST: ❌ {name}: got {got}, want {want}"); failures++; }
+                else Console.WriteLine($"LOS-TEST: ✅ {name}");
+            }
+            FixedPoint2 Pt(float x, float y) => new FixedPoint2(FixedPoint.FromFloat(x), FixedPoint.FromFloat(y));
+            System.Func<UnityEngine.Vector2Int, bool> Blocked(params (int x, int y)[] cells) =>
+                cell => cells.Any(c => c.x == cell.x && c.y == cell.y);
+
+            // Cell (n) center is world (n+0.5); GetCellCoords floors → cell n.
+            Check("clear horizontal", BugCollision.LineBlocked(Pt(5.5f, 5.5f), Pt(8.5f, 5.5f), _ => false), false);
+            Check("blocker between (6,5)", BugCollision.LineBlocked(Pt(5.5f, 5.5f), Pt(8.5f, 5.5f), Blocked((6, 5))), true);
+            Check("victim-cell (8,5) skipped", BugCollision.LineBlocked(Pt(5.5f, 5.5f), Pt(8.5f, 5.5f), Blocked((8, 5))), false);
+            Check("predator-cell (5,5) skipped", BugCollision.LineBlocked(Pt(5.5f, 5.5f), Pt(8.5f, 5.5f), Blocked((5, 5))), false);
+            Check("adjacent: no cell between", BugCollision.LineBlocked(Pt(5.5f, 5.5f), Pt(6.5f, 5.5f), Blocked((5, 5), (6, 5))), false);
+            Check("same cell", BugCollision.LineBlocked(Pt(5.5f, 5.5f), Pt(5.5f, 5.5f), _ => true), false);
+            Check("blocker vertical (5,7)", BugCollision.LineBlocked(Pt(5.5f, 5.5f), Pt(5.5f, 9.5f), Blocked((5, 7))), true);
+            Check("blocker on diagonal (7,7)", BugCollision.LineBlocked(Pt(5.5f, 5.5f), Pt(9.5f, 9.5f), Blocked((7, 7))), true);
+            Check("clear diagonal", BugCollision.LineBlocked(Pt(5.5f, 5.5f), Pt(9.5f, 9.5f), _ => false), false);
+
+            Console.WriteLine(failures == 0
+                ? "LOS-TEST: ✅ PASS — LineBlocked geometry correct (endpoints skipped, between-cells tested)."
+                : $"LOS-TEST: ❌ FAIL — {failures} case(s) wrong.");
+            return failures == 0 ? 0 : 1;
+        }
+
+        // --predation-test: a predator swarm (wasp_common) hunts a nearby prey swarm (fly_common). Each tick the
+        // predators are fed the prey's positions (preyBugs), driving the individual HUNT pursuit. Proves the
+        // pursuit + the per-bug ShouldHunt stagger + the target-commit are DETERMINISTIC (two runs byte-identical,
+        // non-vacuous — bugs pursue + move). Movement-only (the harness has no strike/kill — that's Go-tested).
+        static int RunPredationTest()
+        {
+            Console.WriteLine($"[sim-determinism] repo={RepoRoot}");
+            Console.WriteLine("[sim-determinism] PREDATION-TEST: 8 wasp_common hunt 20 fly_common — the individual HUNT pursuit must be reproducible");
+            long[] a = RunPredationSim();
+            long[] b = RunPredationSim();
+            int firstDiff = -1;
+            for (int t = 0; t < Ticks; t++) if (a[t] != b[t]) { firstDiff = t; break; }
+            bool moved = a[Ticks - 1] != a[0];
+            Console.WriteLine($"[sim-determinism] final hash A={a[Ticks - 1]:X16}  B={b[Ticks - 1]:X16}   moved={moved}  feedFired={_predFeedFired}  consumeRolled={_predConsumeRolled}");
+            if (!moved) { Console.WriteLine("PREDATION-TEST: INCONCLUSIVE — bugs never moved."); return 2; }
+            if (!_predFeedFired) { Console.WriteLine("PREDATION-TEST: INCONCLUSIVE — the S2 FEED path never ran (gate would be vacuous)."); return 2; }
+            if (firstDiff >= 0) { Console.WriteLine($"PREDATION-TEST: ❌ FAIL — diverged at tick {firstDiff}. The HUNT/FEED path is NONDETERMINISTIC."); return 1; }
+            Console.WriteLine("PREDATION-TEST: ✅ PASS — individual pursuit AND the S2 corpse-feed (approach + dwell + eat-vs-leave roll) are deterministic (two runs byte-identical).");
+            return 0;
+        }
+
+        static long[] RunPredationSim()
+        {
+            // S2 FEED gate: a REAL deterministic food registry (the shim mirrors the client's _food MIN-query) so
+            // the corpse-seek + eat-vs-leave roll actually EXECUTE — a non-vacuous FEED gate, not just compiled.
+            var influence = new BugFarmer.Bugs.InfluenceManager();
+            BugFarmer.Bugs.InfluenceManager.Instance = influence;
+
+            var predators = new List<BugAgent>();
+            var prey = new List<BugAgent>();
+            for (int i = 0; i < 8; i++)
+            {
+                double ang = i * 2.0 * Math.PI / 8;
+                predators.Add(new BugAgent(WorldSeed, "swarm_wasp_common", "wasp_common", i,
+                    new FixedPoint2(FixedPoint.FromFloat(100f + 3f * (float)Math.Cos(ang)), FixedPoint.FromFloat(100f + 3f * (float)Math.Sin(ang)))));
+            }
+            for (int i = 0; i < 20; i++)
+            {
+                double ang = i * 2.0 * Math.PI / 20;
+                prey.Add(new BugAgent(WorldSeed, "swarm_fly_common", "fly_common", i,
+                    new FixedPoint2(FixedPoint.FromFloat(104f + 3f * (float)Math.Cos(ang)), FixedPoint.FromFloat(100f + 3f * (float)Math.Sin(ang)))));
+            }
+
+            // Scenario A — force predator 0 through the FULL feed lifecycle (approach the corpse, dwell FeedTicks,
+            // then the deterministic eat-vs-leave roll → WantsConsumeCorpse). Exercises BugAgent.HandleFeed end-to-end.
+            influence.HydrateFood("corpse_a", new FixedPoint2(FixedPoint.FromFloat(101f), FixedPoint.FromFloat(100f)), 10);
+            predators[0].FeedCorpseId = "corpse_a";
+            predators[0].FeedUntilTick = 22;   // > FeedTicks entry so the dwell runs, then the roll at t=22
+
+            // Scenario B — exercise the HUNT→target-died→seek-corpse branch: commit predator 1 to prey bug 5; at
+            // killTick remove prey 5 (its "kill") and drop a corpse at predator 1's cell so TryHuntMove finds it.
+            predators[1].HuntTargetBugId = 5;
+            const int killTick = 15;
+
+            var noPlayers = new List<PlayerTarget>();
+            var hashes = new long[Ticks];
+            for (int t = 0; t < Ticks; t++)
+            {
+                if (t == killTick)
+                {
+                    prey.RemoveAll(b => b.BugId == 5);                       // "kill" predator 1's committed prey
+                    influence.HydrateFood("corpse_b", predators[1].Position, 10); // corpse at the hunter's cell
+                }
+                // capture LAST tick's prey positions (mirror the game: predators pursue last-tick positions)
+                var preyBugs = new List<(int bugId, FixedPoint2 pos)>();
+                foreach (var b in prey.OrderBy(x => x.BugId)) preyBugs.Add((b.BugId, b.Position));
+                // prey wander around a slowly-moving centre near (104,100); predators loiter near (100,100)
+                var preyCentre = new FixedPoint2(FixedPoint.FromFloat(104f + 2f * (float)Math.Cos(t * 0.02f)),
+                                                 FixedPoint.FromFloat(100f + 2f * (float)Math.Sin(t * 0.02f)));
+                var predCentre = new FixedPoint2(FixedPoint.FromFloat(100f), FixedPoint.FromFloat(100f));
+                foreach (var b in prey.OrderBy(x => x.BugId)) b.SimulateTick(preyCentre, noPlayers, t);
+                foreach (var b in predators.OrderBy(x => x.BugId)) b.SimulateTick(predCentre, noPlayers, t, preyBugs);
+                // Non-vacuity: record that the FEED path actually executed (pred 0 forced-dwell OR pred 1 entered
+                // FEED via the hunt→corpse branch, OR any predator rolled CONSUME) — proves the gate isn't hollow.
+                if (predators[0].FeedUntilTick > 0 || predators[1].FeedCorpseId != null)
+                    _predFeedFired = true;
+                foreach (var b in predators)
+                    if (b.WantsConsumeCorpse != null && b.WantsConsumeCorpse.Length > 0) _predConsumeRolled = true;
+                hashes[t] = HashPredation(predators, prey);
+            }
+            BugFarmer.Bugs.InfluenceManager.Instance = null; // don't leak the registry into other scenarios
+            return hashes;
+        }
+
+        static bool _predFeedFired;      // set true if the FEED lifecycle ran at all (non-vacuity)
+        static bool _predConsumeRolled;  // set true if the eat-vs-leave roll ever landed on CONSUME
+
+        static long HashPredation(List<BugAgent> predators, List<BugAgent> prey)
+        {
+            unchecked
+            {
+                ulong hash = 14695981039346656037UL; const ulong prime = 1099511628211UL;
+                foreach (var b in predators.OrderBy(x => x.BugId).Concat(prey.OrderBy(x => x.BugId)))
+                {
+                    hash ^= (ulong)(long)b.Position.X.Value; hash *= prime;
+                    hash ^= (ulong)(long)b.Position.Y.Value; hash *= prime;
+                    hash ^= (ulong)(long)b.HuntTargetBugId; hash *= prime; // include the commit so a desync there is caught
+                    hash ^= (ulong)(long)b.FeedUntilTick; hash *= prime;   // S2: catch a feed-timer desync
+                    hash ^= (b.WantsConsumeCorpse != null && b.WantsConsumeCorpse.Length > 0 ? 1UL : 0UL); hash *= prime; // S2: the eat-vs-leave roll
+                }
+                return (long)hash;
+            }
+        }
+
+        // --surge-test: a pack of centipede_garden lunges at a nearby player. Each member alerts (within
+        // reaction_radius), creeps to trigger range, WINDS UP (freeze/telegraph), SURGES past with overshoot,
+        // then RECOVERS — the full per-bug lunge machine (BugAgent.CentipedeSurge). Proves it's DETERMINISTIC
+        // (two runs byte-identical, incl. the surge hash-fields) AND non-vacuous (a surge phase actually fires).
+        // The player is a FIXED quantized cell (like GetDeterministicPlayerTargets) 6 cells north; the pack
+        // center is stationary. No InfluenceManager (null) → no food/hunt interference; pure surge behavior.
+        const int SurgeTicks = 260;
+        static bool _surgeFired, _surgeRecovered;
+
+        static int RunSurgeTest()
+        {
+            Console.WriteLine($"[sim-determinism] repo={RepoRoot}");
+            Console.WriteLine("[sim-determinism] SURGE-TEST: 5 centipede_garden lunge at a nearby player — windup→surge→overshoot→recover must be reproducible");
+            long[] a = RunSurgeSim();
+            long[] b = RunSurgeSim();
+            int firstDiff = -1;
+            for (int t = 0; t < SurgeTicks; t++) if (a[t] != b[t]) { firstDiff = t; break; }
+            bool moved = a[SurgeTicks - 1] != a[0];
+            Console.WriteLine($"[sim-determinism] final hash A={a[SurgeTicks - 1]:X16}  B={b[SurgeTicks - 1]:X16}   moved={moved}  surgeFired={_surgeFired}  recovered={_surgeRecovered}");
+            if (!moved) { Console.WriteLine("SURGE-TEST: INCONCLUSIVE — bugs never moved."); return 2; }
+            if (!_surgeFired) { Console.WriteLine("SURGE-TEST: INCONCLUSIVE — no centipede entered the SURGE phase (gate would be vacuous)."); return 2; }
+            if (!_surgeRecovered) { Console.WriteLine("SURGE-TEST: INCONCLUSIVE — no centipede reached RECOVER (surge cycle never completed)."); return 2; }
+            if (firstDiff >= 0) { Console.WriteLine($"SURGE-TEST: ❌ FAIL — diverged at tick {firstDiff}. The lunge is NONDETERMINISTIC."); return 1; }
+            Console.WriteLine("SURGE-TEST: ✅ PASS — the centipede lunge (windup→surge→overshoot→recover) is deterministic (two runs byte-identical) AND fired non-vacuously.");
+            return 0;
+        }
+
+        static long[] RunSurgeSim()
+        {
+            var pack = new List<BugAgent>();
+            for (int i = 0; i < 5; i++)
+            {
+                double ang = i * 2.0 * Math.PI / 5;
+                pack.Add(new BugAgent(WorldSeed, "swarm_centipede_garden", "centipede_garden", i,
+                    new FixedPoint2(FixedPoint.FromFloat(100f + 1.5f * (float)Math.Cos(ang)),
+                                    FixedPoint.FromFloat(100f + 1.5f * (float)Math.Sin(ang)))));
+            }
+            // Player fixed at the cell 6 north of the pack (quantized like the real GetDeterministicPlayerTargets).
+            var players = new List<PlayerTarget> { new PlayerTarget { PlayerId = "p1",
+                Position = new FixedPoint2(FixedPoint.FromInt(100), FixedPoint.FromInt(106)) } };
+            var center = new FixedPoint2(FixedPoint.FromInt(100), FixedPoint.FromInt(100)); // stationary pack center
+
+            var hashes = new long[SurgeTicks];
+            for (int t = 0; t < SurgeTicks; t++)
+            {
+                foreach (var b in pack.OrderBy(x => x.BugId))
+                {
+                    b.SimulateTick(center, players, t);
+                    if (b.SurgePhase == 2) _surgeFired = true;
+                    if (b.SurgePhase == 3) _surgeRecovered = true;
+                }
+                hashes[t] = HashSurge(pack);
+            }
+            return hashes;
+        }
+
+        static long HashSurge(List<BugAgent> pack)
+        {
+            unchecked
+            {
+                ulong hash = 14695981039346656037UL; const ulong prime = 1099511628211UL;
+                foreach (var b in pack.OrderBy(x => x.BugId))
+                {
+                    hash ^= (ulong)(long)b.Position.X.Value; hash *= prime;
+                    hash ^= (ulong)(long)b.Position.Y.Value; hash *= prime;
+                    hash ^= (ulong)(long)b.Velocity.X.Value; hash *= prime;
+                    hash ^= (ulong)(long)b.Velocity.Y.Value; hash *= prime;
+                    // Fold the surge state — the exact new ComputeStateHash inputs — so a surge-field desync is caught.
+                    hash ^= (ulong)(long)b.SurgePhase; hash *= prime;
+                    hash ^= (ulong)(long)b.SurgeHeadingX; hash *= prime;
+                    hash ^= (ulong)(long)b.SurgeHeadingY; hash *= prime;
+                    hash ^= (ulong)(long)b.SurgeDistLeft; hash *= prime;
+                    hash ^= (ulong)b.SurgeUntilTick; hash *= prime;
+                    hash ^= (ulong)b.SurgeCooldownUntil; hash *= prime;
+                }
+                return (long)hash;
+            }
+        }
+
+        // --subdue-test: the SAME pack/player as --surge-test, but the swarm is SUBDUED (smoked). Proves the
+        // client gate (BugAgent "attack" case) suppresses the lunge: a CONTROL run (not subdued) DOES surge — so
+        // the setup would lunge; the SUBDUED run never enters windup/surge yet still WANDERS (moves — suppressed,
+        // not frozen); a bug caught mid-surge ABORTS to idle (phase 0) when subdued; and the subdued run is
+        // byte-identical across two runs (deterministic — `subdued` is a synced input). The client half of the gate.
+        static int RunSubdueTest()
+        {
+            Console.WriteLine($"[sim-determinism] repo={RepoRoot}");
+            Console.WriteLine("[sim-determinism] SUBDUE-TEST: a calmed centipede pack must NOT lunge (and must abort an in-flight lunge), deterministically");
+            bool ctrlSurged = RunSubdueSim(false, out _);
+            bool subSurged = RunSubdueSim(true, out long[] subA);
+            RunSubdueSim(true, out long[] subB);
+            bool moved = subA[SurgeTicks - 1] != subA[0];
+            bool aborted = RunSubdueAbort();
+            int firstDiff = -1;
+            for (int t = 0; t < SurgeTicks; t++) if (subA[t] != subB[t]) { firstDiff = t; break; }
+            Console.WriteLine($"[sim-determinism] ctrlSurged={ctrlSurged}  subduedSurged={subSurged}  moved={moved}  aborted={aborted}  A={subA[SurgeTicks - 1]:X16}  B={subB[SurgeTicks - 1]:X16}");
+            if (!ctrlSurged) { Console.WriteLine("SUBDUE-TEST: INCONCLUSIVE — the control never surged (suppression would be vacuous)."); return 2; }
+            if (!moved) { Console.WriteLine("SUBDUE-TEST: INCONCLUSIVE — subdued bugs never moved."); return 2; }
+            if (subSurged) { Console.WriteLine("SUBDUE-TEST: ❌ FAIL — a SUBDUED centipede still entered the lunge (windup/surge)."); return 1; }
+            if (!aborted) { Console.WriteLine("SUBDUE-TEST: ❌ FAIL — an in-flight lunge did NOT abort to idle when subdued."); return 1; }
+            if (firstDiff >= 0) { Console.WriteLine($"SUBDUE-TEST: ❌ FAIL — the subdued run diverged at tick {firstDiff} (nondeterministic)."); return 1; }
+            Console.WriteLine("SUBDUE-TEST: ✅ PASS — a calmed centipede suppresses + aborts the lunge (the control DOES lunge), deterministically.");
+            return 0;
+        }
+
+        static List<BugAgent> MakeCentPack()
+        {
+            var pack = new List<BugAgent>();
+            for (int i = 0; i < 5; i++)
+            {
+                double ang = i * 2.0 * Math.PI / 5;
+                pack.Add(new BugAgent(WorldSeed, "swarm_centipede_garden", "centipede_garden", i,
+                    new FixedPoint2(FixedPoint.FromFloat(100f + 1.5f * (float)Math.Cos(ang)),
+                                    FixedPoint.FromFloat(100f + 1.5f * (float)Math.Sin(ang)))));
+            }
+            return pack;
+        }
+
+        static List<PlayerTarget> FixedPlayerNorth() => new List<PlayerTarget> { new PlayerTarget { PlayerId = "p1",
+            Position = new FixedPoint2(FixedPoint.FromInt(100), FixedPoint.FromInt(106)) } };
+
+        static bool RunSubdueSim(bool subdued, out long[] hashes)
+        {
+            var pack = MakeCentPack();
+            var players = FixedPlayerNorth();
+            var center = new FixedPoint2(FixedPoint.FromInt(100), FixedPoint.FromInt(100));
+            hashes = new long[SurgeTicks];
+            bool surged = false;
+            for (int t = 0; t < SurgeTicks; t++)
+            {
+                foreach (var b in pack.OrderBy(x => x.BugId))
+                {
+                    b.SimulateTick(center, players, t, null, subdued);
+                    if (b.SurgePhase == 1 || b.SurgePhase == 2) surged = true;
+                }
+                hashes[t] = HashSurge(pack);
+            }
+            return surged;
+        }
+
+        static bool RunSubdueAbort()
+        {
+            var pack = MakeCentPack();
+            var players = FixedPlayerNorth();
+            var center = new FixedPoint2(FixedPoint.FromInt(100), FixedPoint.FromInt(100));
+            int t = 0; bool sawSurge = false;
+            for (; t < SurgeTicks; t++)
+            {
+                foreach (var b in pack.OrderBy(x => x.BugId)) b.SimulateTick(center, players, t, null, false);
+                if (pack.Any(b => b.SurgePhase == 2)) { sawSurge = true; break; }
+            }
+            if (!sawSurge) return false; // never reached surge → can't exercise the abort
+            // One subdued tick aborts every in-flight lunge (windup/surge/recover → idle).
+            foreach (var b in pack.OrderBy(x => x.BugId)) b.SimulateTick(center, players, t + 1, null, true);
+            return pack.All(b => b.SurgePhase == 0);
+        }
+
         public static int Main(string[] args)
         {
             RepoRoot = FindRepoRoot();
+            if (args.Contains("--los-test"))
+                return RunLosTest();
+            if (args.Contains("--predation-test"))
+                return RunPredationTest();
+            if (args.Contains("--surge-test"))
+                return RunSurgeTest();
+            if (args.Contains("--subdue-test"))
+                return RunSubdueTest();
             bool selftest = args.Contains("--selftest");
+            bool attackTest = args.Contains("--attack-test");
             Console.WriteLine($"[sim-determinism] repo={RepoRoot}");
             Console.WriteLine($"[sim-determinism] {Species.Length} species x {BugsPerSpecies} bugs x {Ticks} ticks, seed={WorldSeed}"
-                              + (selftest ? "  [SELFTEST: run B is deliberately perturbed]" : ""));
+                              + (selftest ? "  [SELFTEST: run B is deliberately perturbed]" : "")
+                              + (attackTest ? "  [ATTACK-TEST: a deterministic moving player drives attack/flee/curious]" : ""));
 
             // --selftest proves this harness can actually SEE divergence (so a normal PASS isn't vacuous):
             // run B is perturbed with wall-clock, so the two runs MUST differ; we assert we detect it.
-            long[] runA = RunSim(perturb: false);
-            long[] runB = RunSim(perturb: selftest);
+            long[] runA = RunSim(perturb: false, withPlayer: attackTest);
+            long[] runB = RunSim(perturb: selftest, withPlayer: attackTest);
 
             int firstDiff = -1;
             for (int t = 0; t < Ticks; t++)
@@ -93,7 +397,9 @@ namespace SimDeterminism
 
         // One full simulation pass: build swarms, advance every tick, return the per-tick state hash.
         // perturb=true injects wall-clock into the center path (SELFTEST ONLY) so the run is nondeterministic.
-        static long[] RunSim(bool perturb)
+        // withPlayer=true feeds a deterministic MOVING player each tick, exercising the player-reactive paths
+        // (wasp attack orbit-and-dive, fly flee, butterfly curious) — the --attack-test gate.
+        static long[] RunSim(bool perturb, bool withPlayer = false)
         {
             // SortedDictionary(Ordinal) => deterministic swarm iteration, mirroring the client's OrderBy(id).
             var swarms = new SortedDictionary<string, List<BugAgent>>(StringComparer.Ordinal);
@@ -113,11 +419,16 @@ namespace SimDeterminism
                 swarms[swarmId] = bugs;
             }
 
-            var players = new List<PlayerTarget>();   // no players (drift checks run without player interaction too)
+            var players = new List<PlayerTarget>();   // default: no players (wander-only drift check)
             var hashes = new long[Ticks];
 
             for (int t = 0; t < Ticks; t++)
             {
+                if (withPlayer)                        // deterministic moving player → exercises attack/flee/curious
+                {
+                    players.Clear();
+                    players.Add(new PlayerTarget { PlayerId = "p1", Position = PlayerAt(t) });
+                }
                 foreach (var kv in swarms)            // sorted by swarmId
                 {
                     FixedPoint2 center = CenterAt(kv.Key, t);
@@ -129,6 +440,17 @@ namespace SimDeterminism
                 hashes[t] = HashState(swarms);
             }
             return hashes;
+        }
+
+        // A deterministic moving player (a slow circle near the swarms at 100,100), standing in for the
+        // synced player CELL. Pure function of tick → identical across runs, so it gates the attack-movement
+        // reproducibility (the wasp orbit-and-dive) exactly like CenterAt gates the wander sim.
+        static FixedPoint2 PlayerAt(int tick)
+        {
+            float ang = tick * 0.03f;
+            return new FixedPoint2(
+                FixedPoint.FromFloat(100f + 8f * (float)Math.Cos(ang)),
+                FixedPoint.FromFloat(100f + 8f * (float)Math.Sin(ang)));
         }
 
         // A deterministic moving swarm center (a slow circle), standing in for the server's SWARM_SET_TARGET

@@ -1,0 +1,20 @@
+when      : 2026-07-28 18:58:46
+model     : gpt-image-1
+size      : 1024x1024
+quality   : high
+mask      : NONE
+dest      : hands
+references (in the order sent):
+  1. tools/_generated/player/bases/armless_front.png  (sent upscaled x14)
+  2. tools/_generated/player/bases/armless_side.png  (sent upscaled x14)
+
+PROMPT:
+Draw the SAME character THREE times in a row in one image, evenly spaced, all the same height on the same baseline. Left to right: (1) FRONT view, (2) BACK view seen from behind, (3) RIGHT-FACING SIDE view. The first reference image is the character from the front, the second is the same character from the side.
+
+The character has NO ARMS — nothing protrudes from the shoulders, each torso ends at a rounded shoulder exactly as in the references.
+
+Instead, each figure has small round FLOATING FISTS — closed hands drawn as simple rounded shapes in the character's own skin tone with a dark outline. The fists are SEPARATE from the body: there is a clear gap of empty space between each fist and the torso, they do not touch the body or the shoulders anywhere, and there is no arm, wrist, elbow or connecting line of any kind between a fist and the body.
+
+Place them where the hands would naturally be: on the FRONT view, one fist either side of the body at about hip height; on the BACK view the same; on the SIDE view, one fist beside the body at hip height.
+
+Keep the head, hair, face, tank top, shorts and legs exactly as in the references. Big simple shapes, not fine detail — this is a small pixel art sprite. Black background.

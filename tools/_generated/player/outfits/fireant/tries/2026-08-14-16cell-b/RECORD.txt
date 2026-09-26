@@ -1,0 +1,33 @@
+when      : 2026-08-14 21:34:10
+model     : gpt-image-2
+size      : 1024x1536
+quality   : high
+mask      : NONE
+dest      : outfits/fireant/tries/2026-08-14-16cell-b
+references (in the order sent):
+  1. tools/_generated/player/bases/armless_front.png  (upscaled x14 -> 504x994)
+
+PROMPT:
+Draw a sprite sheet of 4 rows by 4 columns on a FLAT SOLID MAGENTA background (pure magenta, RGB 255 0 255), completely flat and uniform - no shadow, no gradient, no ground, no text. Every sprite is the SAME character at the SAME scale and the SAME height, evenly spaced, aligned to the same baseline within each row.
+
+THE ATTACHED IMAGE IS THE CHARACTER - a person in a vest and shorts. Keep his body, his height, his proportions, his head size and his face in every sprite on this sheet.
+
+Because the character has NO ARMS, do not draw arms, hands, elbows, forearms or gauntlets. Each shoulder ends in a rounded shoulder cap at the armless shoulder opening. This is deliberate - the hands are separate sprites added later.
+
+ROW 1 - STANDING STILL. Standing still means standing UPRIGHT and relaxed, weight on both feet, back straight, head up, looking ahead. Not crouching, not leaning, not hunched, not bent forward.
+Column 1: a faithful copy of the ATTACHED IMAGE - the bare character in his vest and shorts, unarmoured, facing the viewer.
+Column 2: the SAME character now wearing armour made from RED FIRE-ANT parts - deep red and orange-red chitin plates, shell, carapace, mandibles, leg segments - standing still facing the viewer.
+Column 3: the same armoured character standing still in a strict RIGHT-FACING side profile.
+Column 4: the same armoured character standing still seen from behind.
+
+ROWS 2, 3 and 4 - the ARMOURED character walking, 4 distinct frames each:
+ROW 2: facing the viewer. ROW 3: strict RIGHT-FACING side profile. ROW 4: seen from behind.
+The 4 frames of a walk are (1) left leg forward right leg back, (2) passing pose legs closer together, (3) right leg forward left leg back, (4) the opposite passing pose. With no arms the walk reads through leg motion, a slight hip shift and a subtle torso and head bob only.
+
+The armour is ARMOUR WORN BY A PERSON, not an insect costume. Its headgear leaves the FACE VISIBLE - draw the face, eyes and hair in the front-facing views. Antennae, crest or horns may rise ABOVE the top of the head; they must never make the character shorter than the bare one in column 1.
+
+Do not drift into a three-quarter view: rows 2 front, 3 strict right profile, 4 from behind.
+
+Match the PIXEL DENSITY of the attached reference image: its pixels are large visible squares, and yours must be the same size. Do not draw at a finer resolution than that reference - chunky blocks, flat colour, no smooth shading, no fine detail.
+
+Draw with HARD pixel edges against the magenta. Do not blur, feather, glow or blend into the background. Do not use magenta, pink or purple anywhere on the character.

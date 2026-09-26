@@ -1,0 +1,21 @@
+when      : 2026-07-28 21:58:09
+model     : gpt-image-2
+size      : 1024x1024
+quality   : high
+mask      : NONE
+dest      : outfits/bronze/hand-C-silhouette
+references (in the order sent):
+  1. tools/_generated/player/outfits/bronze/result.png  (sent upscaled x14)
+
+PROMPT:
+The attached image is a sprite sheet of a character wearing bronze plate armor.
+
+Draw FOUR small BRONZE GAUNTLET HANDS in a row on a black background, evenly spaced, large and centred. Nothing else in the image - no character, no body, no arms, just the four hands.
+
+Each is the SAME warm bronze-brown metal as the armor in the attached image, same darker shadows, same bright highlights, dark outline.
+
+Left to right, the same hand from four angles: (1) back of the hand facing the viewer, (2) palm side, (3) in profile facing right, (4) three-quarter view.
+
+Care about the SILHOUETTE above all. The outline is a soft rounded shape, slightly taller than wide, narrowing a little at the wrist, with one shallow dip along the finger edge. No separate fingers are drawn - at this size the hand reads entirely by its outline and two or three shading bands inside it.
+
+Big simple shapes, chunky pixels. This is a small pixel art sprite - each hand is about ten pixels across in the game, so use a handful of large blocks, no rivets, no filigree, no fine detail.

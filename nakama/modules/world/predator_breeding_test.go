@@ -21,11 +21,14 @@ func TestPredatorBreedsWhenWellFed(t *testing.T) {
 	state.Swarms[cent.ID] = cent
 	state.SwarmsBySpecies[cent.SpeciesID] = []string{cent.ID}
 
-	before := state.SpeciesPopulation(cent.SpeciesID)
+	broodsBefore := len(state.BroodStates)
 	m.processPredatorBreeding(state, nil, nopRuntimeLogger())
 
-	if state.SpeciesPopulation(cent.SpeciesID) <= before {
-		t.Fatalf("a well-fed nestless predator must reproduce: pop %d -> %d", before, state.SpeciesPopulation(cent.SpeciesID))
+	// A nestless predator breeds by laying a VISIBLE brood (an egg clutch that develops + hatches
+	// into pack members later), NOT an instant pop-out — the breeding-unify model. Centipedes joined
+	// this path when they became category:"swarm" packs (they have egg/larva art).
+	if len(state.BroodStates) <= broodsBefore {
+		t.Fatalf("a well-fed nestless predator must lay a brood: broods %d -> %d", broodsBefore, len(state.BroodStates))
 	}
 	if cent.ReproduceCooldown <= 0 {
 		t.Fatal("breeding must re-arm the reproduce cooldown (forces a re-hunt before the next breed)")

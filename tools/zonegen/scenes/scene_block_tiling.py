@@ -14,7 +14,7 @@ from zonebuilder import ZoneBuilder              # noqa: E402
 from render import render_builder                # noqa: E402
 from features.room import place_room             # noqa: E402
 
-BLOCKS = ["dirt_block", "stone_block", "clay_block", "hard_stone_block", "sand_block", "sandstone_block",
+BLOCKS = ["dirt_block", "stone_block", "clay_block", "sand_block", "sandstone_block",
           "ore_coal_block", "ore_copper_block", "ore_iron_block", "ore_tin_block", "ore_silver_block",
           "ore_gold_block", "ore_platinum_block", "ore_diamond_block", "quartz_block"]
 WALLS = ["wall_stone", "wall_wood", "wall_brick", "wall_wood2", "wall_brick2"]
@@ -30,6 +30,10 @@ WALL_Y = MARGIN + BLOCK_ROWS * (PATCH + GAP) + 3
 H = WALL_Y + 4 + MARGIN
 
 LABELS = []         # (text, cell_x, cell_y) filled during build
+
+
+PREVIEW = "examples/blocks"
+SCALE = 4
 
 
 def build():
@@ -66,10 +70,7 @@ def label(out):
 
 
 if __name__ == "__main__":
+    from scene_preview import render
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "block_tiling.png"))
-    render_builder(b, out, scale=7)
-    label(out)
-    print("placeholders:", b.missing_art())
-    print("warnings:", len(b.warnings))
-    print("wrote", out)
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

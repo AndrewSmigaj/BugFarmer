@@ -20,6 +20,45 @@ namespace BugFarmer.World
         [SerializeField] private Tilemap groundTilemap;
         [SerializeField] private Transform occupantContainer;
 
+        // Runtime-created animated water overlay (a second Tilemap under the same Grid, sorted just above the
+        // ground water tiles). Null if the WaterAnimated shader is missing → water stays static (graceful).
+        private Tilemap _waterTilemap;
+        private Material _waterMat;   // the runtime WaterAnimated material (driven by the fields below)
+
+        // Shore mask for foam: a 256² one-texel-per-cell texture (3-state: water=1, known-land=0.5,
+        // unloaded=0) bound to the water material; the shader draws foam where water borders known land, in
+        // WORLD space (no tile seams). Built from LOADED chunks (water is lazy per-chunk), rebuilt when dirty.
+        private const int ShoreN = 256;
+        private Texture2D _shoreMask;
+        private Color32[] _shorePixels;
+        private bool _shoreDirty;
+
+        // ---- Water look: CODE is the source of truth. Edit these consts to change the look; they are FORCED
+        // onto the fields below at startup (ResetWaterFieldsToCode), so a value baked into the scene by a
+        // previous save can never override what the code sets. The [SerializeField] sliders still let you
+        // tweak LIVE in Play to find a value — then tell me and I bake it into the const here.
+        private const float DefWaterAmp = 0.05f, DefWaterFreq = 4.19f, DefWaterSpeed = 0.66f,
+                            DefShimmer = 0f, DefSparkle = 0f, DefFoamWidth = 0.15f, DefFoamSpeed = 0.14f;
+        private static readonly Vector2 DefScrollDir = new Vector2(0.24f, 0.45f);
+
+        [Header("Water look — CODE-authoritative; these sliders are a LIVE scratch (reset to code on start)")]
+        [Tooltip("Sideways refraction of the water texture. Small; 0 = flat.")]
+        [SerializeField] private float waterDistortion = DefWaterAmp;
+        [Tooltip("Ripple density (higher = finer, busier ripples).")]
+        [SerializeField] private float waterFrequency = DefWaterFreq;
+        [Tooltip("Overall animation speed.")]
+        [SerializeField] private float waterSpeed = DefWaterSpeed;
+        [Tooltip("Directional drift. (0,0) = calm pond; set one axis for a flowing current.")]
+        [SerializeField] private Vector2 waterScrollDir = DefScrollDir;
+        [Tooltip("Moving light ripple. 0 = off (reads as a checkerboard grid on tiled water).")]
+        [SerializeField, Range(0f, 0.5f)] private float waterShimmer = DefShimmer;
+        [Tooltip("Occasional bright sparkle glints. 0 = off (they march in stepped squares).")]
+        [SerializeField, Range(0f, 1f)] private float waterSparkle = DefSparkle;
+        [Tooltip("Foam band width at the shore, in cells. 0 = no foam.")]
+        [SerializeField, Range(0f, 2f)] private float waterFoamWidth = DefFoamWidth;
+        [Tooltip("Foam swash animation speed.")]
+        [SerializeField] private float waterFoamSpeed = DefFoamSpeed;
+
         [Header("Settings")]
         [SerializeField] private int viewDistanceChunks = 2; // Subscribe to 5x5 grid of chunks
         [SerializeField] private float chunkCheckInterval = 0.5f;
@@ -41,6 +80,15 @@ namespace BugFarmer.World
         private bool _collisionMapReady;
         /// <summary>True once the zone-wide blocks_bugs map has arrived — the bug sim gates on this.</summary>
         public bool CollisionMapReady => _collisionMapReady;
+
+        // Authored "roof" (underground / no-sun) cell set, hydrated by OpCodeZoneRoofMap on join/resync.
+        // COSMETIC — read only by the underground lighting overlay (DarknessOverlay); never a sim input.
+        private readonly HashSet<Vector2Int> _roofZoneWide = new HashSet<Vector2Int>();
+        /// <summary>True if the cell is authored underground/roofed (for the darkness overlay).</summary>
+        public bool IsRoofCell(Vector2Int cell) => _roofZoneWide.Contains(cell);
+        /// <summary>Bumps whenever the darkness inputs (collision map or roof map) change, so the
+        /// DarknessOverlay knows to recompute. Cosmetic-only signal.</summary>
+        public int DarknessDataVersion { get; private set; }
         private Vector2Int _lastPlayerChunk = new Vector2Int(int.MinValue, int.MinValue);
         private float _lastChunkCheck;
 
@@ -87,6 +135,8 @@ namespace BugFarmer.World
             if (groundTilemap != null)
                 LitMaterials.Apply(groundTilemap.GetComponent<Renderer>());
 
+            SetupWaterTilemap();
+
             if (WorldManager.Instance != null)
             {
                 WorldManager.Instance.OnMatchData += HandleMatchData;
@@ -127,6 +177,12 @@ namespace BugFarmer.World
             {
                 _lastDropletDay = day;
                 RefreshAllDroplets();
+            }
+
+            if (_shoreDirty && _waterMat != null)
+            {
+                _shoreDirty = false;
+                RebuildShoreMask();
             }
 
             if (Time.time - _lastChunkCheck < chunkCheckInterval)
@@ -215,6 +271,7 @@ namespace BugFarmer.World
             var msg = new ChunkSubscribeMessage { chunk_x = cx, chunk_y = cy };
             var json = JsonUtility.ToJson(msg);
             _ = socket.SendMatchStateAsync(match.Id, OpCodes.ChunkUnsub, json);
+            GrassTuftRenderer.Instance?.ClearChunk(cx, cy);   // drop this chunk's visual tufts
             Debug.Log($"[TilemapManager] Unsubscribe chunk {cx},{cy}");
         }
 
@@ -735,7 +792,8 @@ namespace BugFarmer.World
                     {
                         id = obj["id"]?.Value<string>(),
                         dir = obj["dir"]?.Value<int>() ?? 0,
-                        anchor = obj["anchor"]?.Value<bool>() ?? false
+                        anchor = obj["anchor"]?.Value<bool>() ?? false,
+                        text = obj["text"]?.Value<string>()   // signs: authored per-placement text
                     }
                 };
             }
@@ -772,6 +830,174 @@ namespace BugFarmer.World
                     RenderOccupant(cellPos, occData);
                 }
             }
+
+            // Visual grass-tuft layer for this chunk (no colliders, not occupants — see GrassTuftRenderer).
+            if (GrassTuftRenderer.Instance != null)
+            {
+                GrassTuftRenderer.Instance.BuildChunk(
+                    chunk.ChunkX, chunk.ChunkY, ChunkSize,
+                    (wx, wy) =>
+                    {
+                        int lyy = wy - baseY, lxx = wx - baseX;
+                        if (lyy < 0 || lyy >= ChunkSize || lxx < 0 || lxx >= ChunkSize) return null;
+                        return chunk.Ground[lyy] != null ? chunk.Ground[lyy][lxx] : null;
+                    });
+            }
+        }
+
+        /// <summary>Base material of a (possibly composite) ground id — mirrors the server's PrimaryMaterial.
+        /// A shaped-ground id "matA~matB~shape" is governed by matA for all gameplay semantics.</summary>
+        public static string PrimaryMaterial(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return id;
+            int i = id.IndexOf('~');
+            return i >= 0 ? id.Substring(0, i) : id;
+        }
+
+        /// <summary>Ground ids that render as water — the single source used by the animated overlay AND
+        /// the player-collision check, so "water" is defined once. (`lava` blocks but isn't animated here.)
+        /// Uses the primary material so a shaped composite collides/animates by its base.</summary>
+        public static bool IsWaterTile(string id)
+        {
+            id = PrimaryMaterial(id);
+            return id == "water_shallow" || id == "water_deep";
+        }
+
+        /// <summary>
+        /// Create the animated water overlay: a second Tilemap under the same Grid as groundTilemap, sorted
+        /// just above the ground water tiles (below Occupants), with the WaterAnimated material. Guarded — if
+        /// the shader is missing we leave `_waterTilemap` null and the static ground water still renders.
+        /// </summary>
+        private void SetupWaterTilemap()
+        {
+            if (groundTilemap == null) return;
+            var shader = Shader.Find("BugFarmer/WaterAnimated");
+            if (shader == null)
+            {
+                Debug.LogWarning("[TilemapManager] 'BugFarmer/WaterAnimated' not found — water stays static.");
+                return;
+            }
+            // Wrapped so a water-overlay failure can NEVER break the rest of Start (e.g. the OnMatchData hookup).
+            try
+            {
+                var grid = groundTilemap.transform.parent; // GroundTilemap is a child of the Grid
+                var go = new GameObject("WaterTilemap");
+                go.transform.SetParent(grid, false);
+                var tm = go.AddComponent<Tilemap>();
+                tm.tileAnchor = groundTilemap.tileAnchor; // align with the ground grid
+                // AddComponent<Tilemap> does NOT auto-attach the renderer at runtime. Use Unity's == null check
+                // (NOT ??) — GetComponent returns a fake-null that ?? treats as non-null.
+                var wr = go.GetComponent<TilemapRenderer>();
+                if (wr == null) wr = go.AddComponent<TilemapRenderer>();
+                _waterMat = new Material(shader);
+                wr.sharedMaterial = _waterMat;
+                wr.sortingLayerName = "Ground";
+                wr.sortingOrder = 10; // above ground tiles (order 0), below the Occupants layer
+                _waterTilemap = tm;   // assign only on full success → graceful fallback to static water
+                ResetWaterFieldsToCode();   // CODE wins over any scene-baked values
+                ApplyWaterSettings();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[TilemapManager] water overlay setup failed ({e.Message}) — water stays static.");
+                _waterTilemap = null;
+            }
+        }
+
+        /// <summary>Force the CODE constants onto the water fields, overriding any values a previous scene save
+        /// baked in. Called once at setup before ApplyWaterSettings, so what the code sets always wins. The
+        /// sliders remain live-tweakable in Play (they reset to these on the next run).</summary>
+        private void ResetWaterFieldsToCode()
+        {
+            waterDistortion = DefWaterAmp; waterFrequency = DefWaterFreq; waterSpeed = DefWaterSpeed;
+            waterScrollDir = DefScrollDir; waterShimmer = DefShimmer; waterSparkle = DefSparkle;
+            waterFoamWidth = DefFoamWidth; waterFoamSpeed = DefFoamSpeed;
+        }
+
+        /// <summary>Push the water-look fields onto the runtime material. Called on setup and from
+        /// OnValidate, so dragging the sliders updates the pond live during Play mode.</summary>
+        private void ApplyWaterSettings()
+        {
+            if (_waterMat == null) return;
+            _waterMat.SetFloat("_WaterAmp", waterDistortion);
+            _waterMat.SetFloat("_WaterFreq", waterFrequency);
+            _waterMat.SetFloat("_ScrollSpeed", waterSpeed);
+            _waterMat.SetFloat("_ScrollDirX", waterScrollDir.x);
+            _waterMat.SetFloat("_ScrollDirY", waterScrollDir.y);
+            _waterMat.SetFloat("_Shimmer", waterShimmer);
+            _waterMat.SetFloat("_SparkleStrength", waterSparkle);
+            _waterMat.SetFloat("_FoamWidth", waterFoamWidth);
+            _waterMat.SetFloat("_FoamSpeed", waterFoamSpeed);
+            _waterMat.SetFloat("_ShoreN", ShoreN);
+        }
+
+        private void OnValidate()
+        {
+            // Live-apply Inspector tweaks during Play (no-op before the material is built).
+            ApplyWaterSettings();
+        }
+
+        /// <summary>
+        /// Rebuild the 3-state shore mask from LOADED chunks and bind it to the water material. Water=1,
+        /// known-land=0.5, unloaded=0 (so foam borders known land only, not the loaded-area edge). Cheap:
+        /// iterates loaded chunks (one lookup per chunk), direct array reads — not 65k GetGroundAt calls.
+        /// </summary>
+        private void RebuildShoreMask()
+        {
+            if (_waterMat == null) return;
+            if (_shoreMask == null)
+            {
+                _shoreMask = new Texture2D(ShoreN, ShoreN, TextureFormat.RGBA32, false)
+                { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Point };
+                _shorePixels = new Color32[ShoreN * ShoreN];
+            }
+            System.Array.Clear(_shorePixels, 0, _shorePixels.Length);   // unloaded = 0
+            foreach (var kv in _loadedChunks)
+            {
+                int baseX = kv.Key.x * ChunkSize, baseY = kv.Key.y * ChunkSize;
+                var ground = kv.Value.Ground;
+                if (ground == null) continue;
+                for (int ly = 0; ly < ChunkSize; ly++)
+                {
+                    if (ground[ly] == null) continue;
+                    int gy = baseY + ly;
+                    if (gy < 0 || gy >= ShoreN) continue;
+                    for (int lx = 0; lx < ChunkSize; lx++)
+                    {
+                        int gx = baseX + lx;
+                        if (gx < 0 || gx >= ShoreN) continue;
+                        byte v = IsWaterTile(ground[ly][lx]) ? (byte)255 : (byte)128; // water : known-land
+                        _shorePixels[gy * ShoreN + gx] = new Color32(v, v, v, 255);
+                    }
+                }
+            }
+            _shoreMask.SetPixels32(_shorePixels);
+            _shoreMask.Apply(false);
+            _waterMat.SetTexture("_ShoreMask", _shoreMask);
+        }
+
+        /// <summary>M0 shaped-ground spike helper: stamp a ground tile LOCALLY (visual only, no server / no
+        /// persistence) so composite tiles can be eyeballed. Debug-only; the real builder places via the
+        /// server shovel action.</summary>
+        public void StampGroundDebug(Vector2Int cellPos, string tileId) => SetGroundTile(cellPos, tileId);
+
+        // Ground ids that ship with interchangeable art variants (grass.png + grass_v2..v5.png). A single
+        // tile stamped on every cell reads as an obviously repeating carpet, so each cell deterministically
+        // picks one variant from its coordinates: same cell -> same variant on every client and every
+        // reload, with no extra data to store or sync.
+        private static readonly Dictionary<string, int> VariantCounts = new() { { "grass", 5 } };
+
+        private static string VariantTileId(string tileId, Vector2Int cellPos)
+        {
+            if (string.IsNullOrEmpty(tileId) || !VariantCounts.TryGetValue(tileId, out int n) || n <= 1)
+                return tileId;
+            // cheap positional hash; the mix constants just decorrelate neighbouring cells
+            unchecked
+            {
+                int h = cellPos.x * 73856093 ^ cellPos.y * 19349663;
+                int v = (h & 0x7fffffff) % n;
+                return v == 0 ? tileId : $"{tileId}_v{v + 1}";     // v0 = the base id, then _v2.._v5
+            }
         }
 
         private void SetGroundTile(Vector2Int cellPos, string tileId)
@@ -780,9 +1006,17 @@ namespace BugFarmer.World
                 return;
 
             // Update visual tilemap
-            var tile = TileDatabase.Instance?.GetGroundTile(tileId);
+            var tile = TileDatabase.Instance?.GetGroundTile(VariantTileId(tileId, cellPos));
             var tilePos = new Vector3Int(cellPos.x, cellPos.y, 0);
             groundTilemap.SetTile(tilePos, tile);
+
+            // Mirror water cells onto the animated overlay (same tile); clear it for any non-water id. The
+            // base water tile stays in groundTilemap, so a missing overlay just falls back to static water.
+            if (_waterTilemap != null)
+            {
+                _waterTilemap.SetTile(tilePos, IsWaterTile(tileId) ? tile : null);
+                _shoreDirty = true;   // any ground change can add/remove a shore edge → rebuild the foam mask
+            }
 
             // Also update chunk data so GetGroundAt() returns correct value
             int cx = cellPos.x / ChunkSize;
@@ -837,8 +1071,6 @@ namespace BugFarmer.World
                 return;
             }
 
-            // Get pivot from EntityDatabase
-            var pivot = EntityDatabase.GetPivot(occupantId);
             bool isBreakable = EntityDatabase.IsBreakable(occupantId);
 
             // Create or get pooled GameObject
@@ -846,34 +1078,24 @@ namespace BugFarmer.World
             go.name = $"Occ_{occupantId}_{cellPos.x}_{cellPos.y}";
             go.transform.SetParent(occupantContainer);
 
-            // Position at cell with pivot adjustment
-            Vector3 worldPos = CellToWorld(cellPos);
-            // CellToWorld returns the anchor cell's center, but a multi-cell-wide
-            // footprint occupies cells to the right of the anchor. Shift X so the
-            // sprite is centered over the whole footprint, not just the anchor cell.
-            // Odd widths straddle symmetrically (no shift); even widths shift half a cell.
-            var footprint = EntityDatabase.GetFootprint(occupantId);
-            worldPos.x += (footprint.x - 1) * 0.5f * cellSize;
-            // Vertical placement. Every object sprite imports with a CENTER asset pivot, so
-            // transform.position is the sprite's center; CellToWorld gave the anchor cell center.
-            // The anchor is the FRONT (low-Y) cell of the footprint, which extends toward +Y.
-            //   bottom pivots (bc/bl/br, pivot.y == 0): baseline the sprite at the anchor cell's
-            //     front edge so it sits at the front of its footprint and rises toward the back —
-            //     a 4-deep bed now fills its footprint instead of overshooting the anchor cell.
-            //   center pivot (c, pivot.y == 0.5): leave it centered in the cell (CellToWorld).
-            var targetSize = EntityDatabase.GetSpriteSize(occupantId);
-            float spriteHeightCells = targetSize.y / 16f;
-            if (Mathf.Approximately(pivot.y, 0f))
-                worldPos.y = cellPos.y * cellSize + 0.5f * spriteHeightCells * cellSize;
+            // Position via the ONE shared helper (footprint-X + pivot-Y baseline) so the
+            // placement ghost can't drift from the real render (playtest #2).
+            var targetSize = EntityDatabase.GetSpriteSize(occupantId); // also scales the sprite below
+            Vector3 worldPos = OccupantWorldPos(cellPos, occupantId);
             worldPos.z = -0.1f; // Slightly in front of tilemap to guarantee render order
             go.transform.position = worldPos;
 
             // Configure sprite renderer
+            var def = EntityDatabase.Get(occupantId);
             var sr = go.GetComponent<SpriteRenderer>();
             if (sr == null)
                 sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
-            LitMaterials.Apply(sr); // receive day/night + lamp Light2D
+            // receive day/night + lamp Light2D; foliage sways, water plants bob, grain crops sway
+            // but vegetables DON'T (routed by id in ApplyOccupant). Natural = grass/trees/flowers.
+            var cat = def?.Category;
+            bool isFoliage = cat == "natural" || cat == "flora";
+            LitMaterials.ApplyOccupant(sr, occupantId, isFoliage);
 
             // Scale sprite to match target size from database
             float scaleX = targetSize.x / sprite.rect.width;
@@ -890,7 +1112,6 @@ namespace BugFarmer.World
             var stale = go.transform.Find("LampLight");
             if (stale != null)
                 Destroy(stale.gameObject);
-            var def = EntityDatabase.Get(occupantId);
             if (def?.World != null && def.World.LightRadius > 0f)
             {
                 var lightGo = new GameObject("LampLight");
@@ -900,6 +1121,22 @@ namespace BugFarmer.World
                     scaleX != 0 ? 1f / scaleX : 1f, scaleY != 0 ? 1f / scaleY : 1f, 1f);
                 var lamp = lightGo.AddComponent<LampLight>();
                 lamp.Configure(def.World.LightRadius, def.World.LightColor, def.World.LightIntensity);
+            }
+
+            // Blob shadow under standing objects (trees, flora, crops, structures, furniture, …) so they don't
+            // look pasted on. Skip terrain blocks/ore (they ARE the ground) and water plants (a shadow on
+            // water looks wrong). Sized to the SPRITE, so a small plant gets a small shadow and a tree a big
+            // one. Base-drop is pivot-agnostic (the sprite is centred on the GO either way). Pool-safe.
+            bool terrainOrWater = cat == "block" || cat == "ore" || cat == "flora"
+                                  || LitMaterials.IsWaterPlant(occupantId);
+            if (cat != null && !terrainOrWater)
+            {
+                BlobShadow.Attach(go.transform, targetSize.x / 16f, targetSize.y / 16f,
+                                  new Vector2(scaleX, scaleY), 0.6f);
+            }
+            else
+            {
+                BlobShadow.Remove(go.transform);
             }
 
             // Configure collider to match sprite bounds
@@ -940,6 +1177,8 @@ namespace BugFarmer.World
             // collision set and re-gate the bug sim until it arrives, so bugs don't collide against stale walls.
             _blocksBugsZoneWide.Clear();
             _collisionMapReady = false;
+            _roofZoneWide.Clear();       // drop the old zone's roof; the new zone re-sends OpCodeZoneRoofMap
+            DarknessDataVersion++;       // force the darkness overlay to recompute for the new zone
         }
 
         private void UnloadChunk(Vector2Int chunkPos)
@@ -958,6 +1197,10 @@ namespace BugFarmer.World
                     {
                         groundTilemap.SetTile(new Vector3Int(cellPos.x, cellPos.y, 0), null);
                     }
+                    if (_waterTilemap != null)
+                    {
+                        _waterTilemap.SetTile(new Vector3Int(cellPos.x, cellPos.y, 0), null);
+                    }
 
                     // Remove occupant
                     if (_occupantObjects.TryGetValue(cellPos, out var obj))
@@ -975,6 +1218,7 @@ namespace BugFarmer.World
             }
 
             _loadedChunks.Remove(chunkPos);
+            if (_waterTilemap != null) _shoreDirty = true;   // shore set changed → rebuild the foam mask
         }
 
         #endregion
@@ -1102,6 +1346,29 @@ namespace BugFarmer.World
         }
 
         /// <summary>
+        /// The world position an occupant RENDERS at when anchored at cellPos (z left at 0):
+        /// the anchor cell's center, shifted X to center a multi-cell footprint (odd widths
+        /// straddle symmetrically; even widths shift half a cell), and — for bottom-pivot
+        /// sprites (pivot.y == 0) — baselined so the sprite sits at the anchor cell's front
+        /// edge and rises toward the back of its footprint. The ONE source of truth:
+        /// RenderOccupant and the placement ghost both use it, so preview == placement by
+        /// construction (playtest #2 was these two computing different Y baselines).
+        /// </summary>
+        public Vector3 OccupantWorldPos(Vector2Int cellPos, string occupantId)
+        {
+            Vector3 worldPos = CellToWorld(cellPos);
+            var footprint = EntityDatabase.GetFootprint(occupantId);
+            worldPos.x += (footprint.x - 1) * 0.5f * cellSize;
+            var pivot = EntityDatabase.GetPivot(occupantId);
+            if (Mathf.Approximately(pivot.y, 0f))
+            {
+                float spriteHeightCells = EntityDatabase.GetSpriteSize(occupantId).y / 16f;
+                worldPos.y = cellPos.y * cellSize + 0.5f * spriteHeightCells * cellSize;
+            }
+            return worldPos;
+        }
+
+        /// <summary>
         /// Check if a cell is occupied by an occupant (anchor or footprint cell).
         /// </summary>
         public bool IsCellOccupied(Vector2Int cellPos)
@@ -1134,6 +1401,18 @@ namespace BugFarmer.World
 
             var occ = chunk.Occupants[ly]?[lx];
             return occ?.Occupant?.id;
+        }
+
+        /// <summary>Per-placement authored text of the occupant at a cell (signs), or null.</summary>
+        public string GetOccupantText(Vector2Int cellPos)
+        {
+            int cx = cellPos.x / ChunkSize, cy = cellPos.y / ChunkSize;
+            if (cellPos.x < 0 && cellPos.x % ChunkSize != 0) cx--;
+            if (cellPos.y < 0 && cellPos.y % ChunkSize != 0) cy--;
+            if (!_loadedChunks.TryGetValue(new Vector2Int(cx, cy), out var chunk)) return null;
+            int lx = cellPos.x - cx * ChunkSize, ly = cellPos.y - cy * ChunkSize;
+            if (ly < 0 || ly >= ChunkSize || lx < 0 || lx >= ChunkSize) return null;
+            return chunk.Occupants[ly]?[lx]?.Occupant?.text;
         }
 
         /// <summary>
@@ -1224,7 +1503,23 @@ namespace BugFarmer.World
             for (int i = 0; i < n; i++)
                 _blocksBugsZoneWide.Add(new Vector2Int(cx[i], cy[i]));
             _collisionMapReady = true;
+            DarknessDataVersion++;   // buried-block darkness reads the solid map
             Debug.Log($"[TilemapManager] Zone collision map hydrated: {_blocksBugsZoneWide.Count} blocks_bugs cells");
+        }
+
+        /// <summary>
+        /// Hydrate the zone's authored roof (underground / no-sun) cell set from the server
+        /// (OpCodeZoneRoofMap, on join + resync). COSMETIC — read only by DarknessOverlay; never a sim
+        /// input. Bumps DarknessDataVersion so the overlay recomputes.
+        /// </summary>
+        public void HandleZoneRoofMap(int[] cx, int[] cy)
+        {
+            _roofZoneWide.Clear();
+            int n = (cx != null && cy != null) ? System.Math.Min(cx.Length, cy.Length) : 0;
+            for (int i = 0; i < n; i++)
+                _roofZoneWide.Add(new Vector2Int(cx[i], cy[i]));
+            DarknessDataVersion++;
+            Debug.Log($"[TilemapManager] Zone roof map hydrated: {_roofZoneWide.Count} roofed cells");
         }
 
         /// <summary>
@@ -1242,7 +1537,7 @@ namespace BugFarmer.World
             }
 
             string groundId = GetGroundAt(cellPos);
-            if (groundId == "water_shallow" || groundId == "water_deep" || groundId == "lava")
+            if (IsWaterTile(groundId) || PrimaryMaterial(groundId) == "lava")
                 return true;
 
             return false;

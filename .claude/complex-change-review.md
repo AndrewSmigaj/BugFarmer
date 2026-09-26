@@ -5,8 +5,10 @@ large, intricate codebase — where the agent breaks things by **mis-modelling t
 hallucinating facts. Structure: lifecycle **STAGES × FAILURE MODES**, with BugFarmer's own invariants
 baked in as checks.
 
-Companions: `lenses.md` (the lens catalog — what to look at) and the `test-changes` skill (the EXECUTION
-GATES — the only model-independent ground truth). Reusable for any complex BugFarmer change.
+Companions: `lenses.md` (the lens catalog — what to look at), the `certainty-assessment` skill (the SCORING
+LAYER — turns this matrix's answers into an evidence-anchored, MIN-aggregated numeric table; "score CAUSE / FIX
+/ TEST separately" is its job, generalized), and the `test-changes` skill (the EXECUTION GATES — the only
+model-independent ground truth). Reusable for any complex BugFarmer change.
 
 ## The 7 ways a coding agent breaks THIS codebase (each = a real miss we hit)
 - **FM1 INCOMPLETE COMPREHENSION** — acts on a partial mental model; didn't trace the real data flow /

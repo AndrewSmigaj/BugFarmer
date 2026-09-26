@@ -59,10 +59,29 @@ namespace BugFarmer.UI
             panelGO.transform.SetParent(canvasGO.transform, false);
             panelGO.AddComponent<InventoryPanel>();
 
-            // Crafting / container panel (workbench/furnace/anvil/… + chests/dressers).
+            // THE unified station panel — craft stations, storage containers, the compost bin (station), and
+            // nurseries (wasp nest / milkweed), all dispatched by interaction_type.
             var craftGO = new GameObject("CraftingPanel(Code)", typeof(RectTransform));
             craftGO.transform.SetParent(canvasGO.transform, false);
             craftGO.AddComponent<CraftingPanel>();
+
+            // NPC vendor shop (dialogue + buy/sell board) — replaces the old OnGUI ShopController.
+            var shopGO = new GameObject("ShopPanel(Code)", typeof(RectTransform));
+            shopGO.transform.SetParent(canvasGO.transform, false);
+            shopGO.AddComponent<ShopPanel>();
+
+            // Shovel builder "Set Materials" panel (open with B while a shovel is equipped).
+            var shovelGO = new GameObject("ShovelBuilderPanel(Code)", typeof(RectTransform));
+            shovelGO.transform.SetParent(canvasGO.transform, false);
+            shovelGO.AddComponent<ShovelBuilderPanel>();
+
+            // Sign reader + mannequin outfit panels (right-click a sign / mannequin occupant).
+            var signGO = new GameObject("SignPanel(Code)", typeof(RectTransform));
+            signGO.transform.SetParent(canvasGO.transform, false);
+            signGO.AddComponent<SignController>();
+            var mannGO = new GameObject("MannequinPanel(Code)", typeof(RectTransform));
+            mannGO.transform.SetParent(canvasGO.transform, false);
+            mannGO.AddComponent<MannequinController>();
 
             var hotbarGO = new GameObject("Hotbar(Code)", typeof(RectTransform));
             hotbarGO.transform.SetParent(canvasGO.transform, false);
@@ -85,6 +104,12 @@ namespace BugFarmer.UI
             dragGO.AddComponent<DragDropController>();
             dragGO.AddComponent<EquipmentController>();
             dragGO.AddComponent<BugInfoCard>();
+
+            // World-error toast — general on-screen surface for OpCode-40 refusals ("Need 2 stone",
+            // "Can't shovel water"). Non-interactive; sits above the panels, below the hover tooltip.
+            var toastGO = new GameObject("WorldToast(Code)", typeof(RectTransform));
+            toastGO.transform.SetParent(canvasGO.transform, false);
+            toastGO.AddComponent<WorldToast>();
 
             // Hover tooltip — last child so it draws above every panel.
             var tipGO = new GameObject("Tooltip(Code)", typeof(RectTransform));

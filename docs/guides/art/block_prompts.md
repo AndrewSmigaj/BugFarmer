@@ -9,10 +9,10 @@ The prompt that gets there is **still being tuned**, so we tune it with a bake-o
 
 ## The bake-off
 - **Prompt approaches** — three *different prompts*, same block, **shared style block**, different technique;
-  defined in `tools/blocklab.py` (`SHARED_STYLE` + `APPROACHES`), in descriptively-named folders:
+  defined in `tools/sprites/blocklab.py` (`SHARED_STYLE` + `APPROACHES`), in descriptively-named folders:
   `01_described`, `02_explicit_dimensions`, `03_grid_check`.
 - **Variants `1 / 2 / 3`** — three random samples of one prompt (gpt-image-1 is stochastic). NOT different prompts.
-- Run: `python3 tools/blocklab.py` → fills `tools/_generated/blocklab/<approach>/<block>_{1,2,3}.png`.
+- Run: `python3 tools/sprites/blocklab.py` → fills `tools/_generated/blocklab/<approach>/<block>_{1,2,3}.png`.
   Scope it: `--approaches 02_explicit_dimensions --blocks stone_block --variants 3`.
 
 ### The three approaches (technique differs, goal identical)

@@ -1,0 +1,13 @@
+#!/bin/sh
+# Repo-health pre-commit backstops. Activate with:  git config core.hooksPath .githooks
+# Override a legitimate case with:  git commit --no-verify
+# Both checks fail-open: a bug in either exits 0, so it never blocks a commit by accident.
+#
+#   check_staged_drift   — staged source changed but its doc (manifest doc_coverage) did not
+#   check_official_build — the committed animations disagree with official.py (re-renders and compares
+#                          the actual GIF bytes; only runs when a render-affecting file is staged)
+ROOT="$(git rev-parse --show-toplevel)"
+
+python3 "$ROOT/.claude/hooks/check_staged_drift.py"   || exit 1
+python3 "$ROOT/.claude/hooks/check_official_build.py" || exit 1
+exit 0

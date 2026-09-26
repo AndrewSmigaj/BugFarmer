@@ -9,7 +9,7 @@ namespace BugFarmer.UI
     /// Programmatic UI construction (2026-06: the hand-built scene UI is
     /// replaced by code — see UIBootstrap). One style block, factory helpers,
     /// and the UI sprite loader. Sprites come from Resources/UI/ (hand-authored
-    /// by tools/ui_sprites.py); 9-slice borders are passed HERE to
+    /// by tools/sprites/ui_sprites.py); 9-slice borders are passed HERE to
     /// Sprite.Create — never stored in .meta files.
     /// </summary>
     public static class UIFactory

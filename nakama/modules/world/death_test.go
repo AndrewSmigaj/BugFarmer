@@ -146,3 +146,43 @@ func TestDepositCompostIgnoresNonFoodStation(t *testing.T) {
 		t.Fatal("a non-food station should not accept compost")
 	}
 }
+
+// Harvest: scoop all whole compost units into the bag, empty the bin (Fill + the part-eaten
+// FoodFrac both zeroed), and refuse when empty or out of range.
+func TestCompostHarvest(t *testing.T) {
+	state := newTestState(20)
+	state.CurrentZone = &ZoneConfig{ZoneID: "test"}
+	state.Entities["compost_bin"] = &EntityDef{World: &WorldData{Station: &StationData{Capacity: 10, FoodPerUnit: 100}}}
+	state.Stations["station_5_5"] = &entities.StationState{EntityID: "compost_bin", GridX: 5, GridY: 5, Fill: 3, FoodFrac: 40}
+	player := &PlayerState{UserID: "p1", Position: entities.EntityPosition{LocalX: 5, LocalY: 5}}
+	state.Players = map[string]*PlayerState{"p1": player}
+	m := &Match{}
+
+	m.handleCompostHarvest(nopRuntimeLogger(), nopDispatcher{}, state, "p1", CompostHarvestMessage{GX: 5, GY: 5})
+
+	slot := player.FindItem("compost")
+	if slot < 0 || player.ItemSlots[slot].Count != 3 {
+		t.Fatalf("harvest must give all 3 compost units, got slot=%d", slot)
+	}
+	if st := state.Stations["station_5_5"]; st.Fill != 0 || st.FoodFrac != 0 {
+		t.Fatalf("the bin must be emptied: Fill=%d FoodFrac=%v, want 0/0", st.Fill, st.FoodFrac)
+	}
+
+	// Nothing left → a second harvest adds nothing.
+	m.handleCompostHarvest(nopRuntimeLogger(), nopDispatcher{}, state, "p1", CompostHarvestMessage{GX: 5, GY: 5})
+	if player.ItemSlots[slot].Count != 3 {
+		t.Fatalf("harvesting an empty bin must not add compost: count=%d, want 3", player.ItemSlots[slot].Count)
+	}
+
+	// Out of range → the bin keeps its compost, the player gets nothing.
+	state.Stations["station_5_5"].Fill = 5
+	far := &PlayerState{UserID: "p2", Position: entities.EntityPosition{LocalX: 15, LocalY: 15}}
+	state.Players["p2"] = far
+	m.handleCompostHarvest(nopRuntimeLogger(), nopDispatcher{}, state, "p2", CompostHarvestMessage{GX: 5, GY: 5})
+	if far.FindItem("compost") >= 0 {
+		t.Fatal("out-of-range harvest must yield nothing")
+	}
+	if state.Stations["station_5_5"].Fill != 5 {
+		t.Fatalf("out-of-range harvest must leave the bin full: Fill=%d, want 5", state.Stations["station_5_5"].Fill)
+	}
+}

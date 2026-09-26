@@ -32,8 +32,9 @@ namespace BugFarmer.Player
             Vector3 mouseWorld = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
             mouseWorld.z = 0;
 
-            var hit = Physics2D.OverlapPoint(mouseWorld);
-            var target = hit != null ? hit.GetComponent<OccupantClickTarget>() : null;
+            // Front-most interactable occupant (shared resolver; not a bare OverlapPoint that an
+            // overlapping occupant could steal).
+            var target = InteractionResolver.TopmostInteractable(mouseWorld);
             if (target == null) return false;
 
             var def = EntityDatabase.Get(target.OccupantId);

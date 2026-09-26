@@ -34,6 +34,10 @@ from features.terrain import vpath, pond         # noqa: E402
 W, H = 64, 52
 
 
+PREVIEW = "zones/butterfly_meadow_11/scenes"
+SCALE = 3
+
+
 def build():
     b = ZoneBuilder("scene_butterfly_meadow", W, H, base_tile="grass",
                     name="Butterfly Meadow", biome="meadow")
@@ -143,9 +147,7 @@ def build():
 
 
 if __name__ == "__main__":
+    from scene_preview import render
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "scene_butterfly_meadow.png"))
-    render_builder(b, out)
-    print("missing_art:", b.missing_art())
-    print("warnings:", len(b.warnings))
-    print("validate:", b.validate() or "OK")
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

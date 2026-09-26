@@ -94,6 +94,10 @@ namespace BugFarmer.World
             // Rain visuals live on a sibling component (programmatic, no scene setup)
             if (GetComponent<RainController>() == null)
                 gameObject.AddComponent<RainController>();
+
+            // Ambient dust motes — a second sibling atmosphere component (always-on, no scene setup)
+            if (GetComponent<DustController>() == null)
+                gameObject.AddComponent<DustController>();
         }
 
         private void OnDestroy()

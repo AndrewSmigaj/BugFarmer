@@ -73,6 +73,7 @@ namespace BugFarmer.UI
                 // (a tall plant letterboxes in the square slot instead of stretching).
                 iconImage.preserveAspect = true;
                 iconImage.enabled = sprite != null;
+                iconImage.color = Color.white; // reset any prior dim
             }
 
             if (countText != null)
@@ -87,6 +88,13 @@ namespace BugFarmer.UI
                     countText.enabled = false;
                 }
             }
+        }
+
+        /// <summary>Grey the icon (e.g. a recipe the player already knows).</summary>
+        public void SetDimmed(bool dimmed)
+        {
+            if (iconImage != null)
+                iconImage.color = dimmed ? new Color(1f, 1f, 1f, 0.32f) : Color.white;
         }
 
         public void SetSelected(bool selected)

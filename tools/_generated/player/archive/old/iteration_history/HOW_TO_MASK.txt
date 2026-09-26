@@ -1,0 +1,52 @@
+HOW TO CUT THE ARMOR INTO PIECES  (step by step)
+
+WHAT YOU'RE DOING
+  Each armor image is one whole suit. You cut it into its 4 separate pieces --
+  HELMET, CHEST, LEGS, BOOTS -- so the game can mix & match them (e.g. silver
+  helmet + copper chest). You do this once per suit (copper, then silver).
+
+WHICH EDITOR
+  Easiest: PHOTOPEA -- free, runs in your web browser, nothing to install.
+  Go to  photopea.com . (Krita or Photoshop work too if you prefer desktop.)
+
+THE FILES YOU START WITH  (all in this _REVIEW folder)
+  copper_FULL_SUIT_for_masking.png    the copper suit (see-through background)
+  silver_FULL_SUIT_for_masking.png    the silver suit
+  bald_front_fullres_for_lineup.png   the plain bald character, to line up against
+
+------------------------------------------------------------------
+STEP 1 -- LINE THE SUIT UP ON THE CHARACTER
+  1. Open  bald_front_fullres_for_lineup.png  (this is your bottom layer = the character).
+  2. Drag the suit file (e.g. copper) IN as a new layer on top.
+  3. Move the suit so it sits on the body: feet at the same bottom line, helmet
+     centered over the head. The armor is chunkier than the bare body -- that's
+     fine, just center it. (It should already be close.)
+  4. Once lined up, hide or delete the character layer. You only keep the suit.
+
+STEP 2 -- CUT OUT EACH PIECE  (do this 4 times)
+  For each piece, on a copy of the suit layer, ERASE everything except that one
+  piece, and DON'T move what's left:
+    - HELMET  = the head armor only
+    - CHEST   = the chestplate + shoulders + any arm plates
+    - LEGS    = the leg armor (thighs + shins)
+    - BOOTS   = the feet
+  Rough edges are OK -- I clean and sharpen them afterward.
+
+STEP 3 -- EXPORT + NAME + SAVE
+  Export each piece as a PNG at the FULL canvas size (do NOT crop or move it --
+  that's what keeps the piece in the right spot). In Photopea: File > Export As > PNG.
+  Save them into this exact folder:
+    C:\Users\emily\BugFarmer\tools\_generated\previews\player\_REVIEW\pieces\
+  Name them EXACTLY like this (all lowercase, with the underscore):
+    copper_helmet.png   copper_chest.png   copper_legs.png   copper_boots.png
+    silver_helmet.png   silver_chest.png   silver_legs.png   silver_boots.png
+  (You don't have to do all 8 -- even a couple of pieces is enough to test a mix.)
+
+STEP 4 -- TELL ME
+  When the pieces are in that folder, just say "done" (or which ones you did).
+  I'll sharpen them, snap them onto the character, and show you mix & match outfits.
+
+QUICK RULES
+  * Keep every export at the full 1024 x 1536 size. Never crop.
+  * Never move a piece from where it sits -- position = how it lands on the body.
+  * Don't sweat clean edges; I fix those.

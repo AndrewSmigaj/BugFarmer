@@ -100,7 +100,7 @@ namespace BugFarmer.Player
             if (GroundItemManager.Instance == null)
                 return;
 
-            var closest = GroundItemManager.Instance.GetItemAtPosition(transform.position, highlightRange);
+            var closest = MouseTarget(highlightRange);
 
             if (closest != _highlightedItem)
             {
@@ -136,8 +136,7 @@ namespace BugFarmer.Player
             GroundItemVisual target = null;
             if (GroundItemManager.Instance != null)
             {
-                var closest = GroundItemManager.Instance.GetItemAtPosition(
-                    transform.position, pickupRange);
+                var closest = MouseTarget(pickupRange);
                 if (closest != null && closest.gameObject.activeInHierarchy)
                 {
                     var def = BugFarmer.Data.EntityDatabase.Get(closest.ItemType);
@@ -171,12 +170,27 @@ namespace BugFarmer.Player
             }
         }
 
+        /// <summary>
+        /// The ground item under the MOUSE cursor that is within the player's reach. Drives the
+        /// highlight + E badge + the E grab, so you pick up exactly what you point at (the rule for
+        /// the no-magnet grounded items). Reach is gated by the PLAYER distance, not the cursor.
+        /// </summary>
+        private GroundItemVisual MouseTarget(float playerRange)
+        {
+            if (GroundItemManager.Instance == null) return null;
+            var cam = Camera.main;
+            if (cam == null) return null;
+            Vector3 mw = cam.ScreenToWorldPoint(Input.mousePosition);
+            mw.z = 0f;
+            var item = GroundItemManager.Instance.GetItemAtPosition(mw, 0.6f); // under the cursor
+            if (item == null) return null;
+            if (Vector2.Distance(transform.position, item.transform.position) > playerRange) return null;
+            return item;
+        }
+
         private void TryPickup()
         {
-            if (GroundItemManager.Instance == null)
-                return;
-
-            var item = GroundItemManager.Instance.GetItemAtPosition(transform.position, pickupRange);
+            var item = MouseTarget(pickupRange);
             if (item == null)
                 return;
 

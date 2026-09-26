@@ -1,0 +1,37 @@
+when      : 2026-08-14 21:02:45
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+dest      : explore/fireant-pair2
+references (in the order sent):
+  1. tools/_generated/player/bases/armless_front.png  (upscaled x14 -> 504x994)
+
+PROMPT:
+Draw TWO figures side by side on a FLAT SOLID MAGENTA background (pure magenta, RGB 255 0 255). The magenta must be completely flat and uniform with nothing else drawn on it - no shadow, no gradient, no vignette, no ground, no scenery, no text.
+
+THE ATTACHED IMAGE IS THE CHARACTER.
+
+Because the character has NO ARMS, do not draw arms, hands, elbows, forearms or gauntlets. Each shoulder ends in a rounded shoulder cap at the armless shoulder opening. This is deliberate - the hands are separate sprites added later. This applies to BOTH figures.
+
+LEFT FIGURE: the character exactly as in the attached image, redrawn unchanged - same body, same height, same proportions, same head size, same face, same stance, same clothes, and NO ARMS.
+
+RIGHT FIGURE: the SAME character, at the SAME height and the SAME size, now wearing armour made from RED FIRE-ANT parts - deep red and orange-red chitin plates, shell, carapace, mandibles, leg segments. It is ARMOUR WORN BY A PERSON, and it also has NO ARMS - the shoulders end in rounded armoured caps with nothing hanging below them.
+
+The two figures are the same character. They stand on the same baseline and their heads reach the same height. Only the armour differs. A helmet, crest, horns or antennae may rise ABOVE the top of the head and are extra - they must not make the armoured character shorter or smaller than the bare one.
+
+
+{head} The body is covered from the shoulders to the boots, with no bare skin between the waist and the boots.
+
+CRITICAL - THE FIGURE WILL BE SHRUNK TO ABOUT 62 PIXELS TALL. Everything below follows from that:
+- What makes each design recognisable must be its SILHOUETTE - the OUTLINE shape of the hat, hood, helm, crest, shoulders and hem. Shape survives shrinking. Surface pattern does not.
+- Do NOT distinguish the designs by engraving, filigree, trim, embroidery, scrollwork, inlay, rivets or fine linework. At 62 pixels tall all of that collapses into grey mush and the design is lost.
+- Use no more than four or five flat colour areas per figure, in big chunky blocks. Think a bold cut-paper shape, not an illustration.
+- If a design would only look different from the others when seen large, it is the wrong design.
+
+Draw each figure with HARD pixel edges against the magenta. Do not blur, feather, glow or blend the figure into the background. Do not draw a heavy black outline around the figure - where an outline is needed use a darker shade of that figure's own colours, one pixel thick.
+
+Do not use magenta, pink or purple ANYWHERE on the figures themselves - not on the armour, not as glowing eyes, not as trim. Magenta is reserved for the background alone.
+
+Match the PIXEL DENSITY of the FIRST attached reference image: its pixels are large visible squares, and yours must be the same size. Do not draw at a finer resolution than that reference - chunky blocks, flat colour, no smooth shading, no fine detail.
+

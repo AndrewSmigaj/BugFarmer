@@ -1,0 +1,11 @@
+when      : 2026-07-28 15:01:48
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+title     : copper-side-walk-frames
+references (in the order sent):
+  1. tools/_generated/player/runs/2026-07-28-1457-copper-front-side-helmet/result.png  (sent upscaled x14)
+
+PROMPT:
+The attached image shows a character in copper plate armour, front view on the left and side view on the right. Take the SIDE view figure and draw it THREE times in a row in one image, evenly spaced, all exactly the same height standing on the same baseline, all facing right. Left to right: (1) standing still with the feet together, (2) mid-stride with the near leg forward and the far leg back, (3) mid-stride with the far leg forward and the near leg back. ONLY THE LEGS CHANGE between the three figures - the helmet, the breastplate, the shoulder cap and the hip piece must be pixel-identical on all three, same shapes and same highlights. All three have NO ARMS. Big simple shapes, not fine detail, this is a small pixel art sprite. Black background.

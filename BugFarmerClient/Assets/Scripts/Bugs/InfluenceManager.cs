@@ -51,6 +51,11 @@ namespace BugFarmer.Bugs
             public int StrikeCooldownTicks;
         }
 
+        // Subdued (smoke/calm) swarms — the server-only condition meter, toggled to the client via
+        // SWARM_SUBDUED/UNSUBDUED so the per-bug sim suppresses the lunge/dive for a calmed swarm. A sim INPUT
+        // (like player cells): read each tick, NOT hashed; snapshot-hydrated like _swarmStrikes. Key: swarm_id.
+        private readonly HashSet<string> _subdued = new();
+
         // Event type constants (must match server)
         public const string EventPlayerCellEnter = "PLAYER_CELL_ENTER";
         public const string EventPlayerCellLeave = "PLAYER_CELL_LEAVE";
@@ -64,6 +69,10 @@ namespace BugFarmer.Bugs
         public const string EventItemRotted = "ITEM_ROTTED";
         public const string EventFoodConsumed = "FOOD_CONSUMED";
         public const string EventOccupantBlocksBugs = "OCCUPANT_BLOCKS_BUGS"; // Phase 1b: fence/wall placed (level=1) or removed (0)
+        public const string EventTreeFruitGrow = "TREE_FRUIT_GROW"; // server-only ledger; fruit shown via OpCode 93
+        public const string EventTreeFruitDrop = "TREE_FRUIT_DROP"; // server-only ledger; fruit shown via OpCode 93
+        public const string EventSwarmSubdued = "SWARM_SUBDUED";     // swarm crossed the calm threshold (smoke)
+        public const string EventSwarmUnsubdued = "SWARM_UNSUBDUED"; // swarm dropped below the calm threshold
 
         // === Deterministic FOOD REGISTRY ===
         // food_id -> (world position, remaining level). Maintained ONLY from tick+seq events
@@ -105,6 +114,32 @@ namespace BugFarmer.Bugs
             return bestId != null;
         }
 
+        /// <summary>Like TryGetNearestFood but ALSO returns the food id — an individual predator needs the id to
+        /// report a corpse-consume. Deterministic (same _food + ascending-id tie-break on every client).</summary>
+        public bool TryGetNearestFoodId(FixedPoint2 from, float maxDist, out string foodId, out FixedPoint2 pos)
+        {
+            pos = default; foodId = null;
+            int bestSqr = int.MaxValue;
+            var maxFixed = FixedPoint.FromFloat(maxDist);
+            int maxSqr = (maxFixed * maxFixed).Value;
+            foreach (var kv in _food)
+            {
+                int sqr = kv.Value.pos.SqrDistanceTo(from).Value;
+                if (sqr > maxSqr) continue;
+                if (sqr < bestSqr || (sqr == bestSqr && string.CompareOrdinal(kv.Key, foodId) < 0))
+                { bestSqr = sqr; foodId = kv.Key; pos = kv.Value.pos; }
+            }
+            return foodId != null;
+        }
+
+        /// <summary>Resolve a specific food source's current position by id (a bug feeding at ONE corpse); false if
+        /// it's gone (consumed / rotted).</summary>
+        public bool TryGetFoodPos(string foodId, out FixedPoint2 pos)
+        {
+            if (foodId != null && _food.TryGetValue(foodId, out var v)) { pos = v.pos; return true; }
+            pos = default; return false;
+        }
+
         /// <summary>Clear the registry (late-join resync re-bootstraps it).</summary>
         public void ClearFood() => _food.Clear();
 
@@ -128,6 +163,53 @@ namespace BugFarmer.Bugs
             if (string.IsNullOrEmpty(foodId) || level <= 0) return;
             _food[foodId] = (new FixedPoint2(
                 new FixedPoint { Value = x }, new FixedPoint { Value = y }), level);
+        }
+
+        // ── Hunt assignments (_swarmStrikes) snapshot, mirroring the food registry ──────────────────────────
+        // _swarmStrikes is per-swarm predator→prey state set ONLY from live/replayed SWARM_SET_TARGET events, so
+        // a late-joiner whose predator's hunt leg predates the replay window would have no prey list and wander
+        // while the authority hunts → per-bug desync. Snapshot it exactly like _food: authority ExportSwarmStrikes
+        // → relay → joiner ClearSwarmStrikes + HydrateSwarmStrike (before replay). Replay-window events converge
+        // it on top. Same clear-then-hydrate discipline as ClearFood/HydrateFoodExact.
+
+        /// <summary>Clear the hunt assignments (late-join/resync re-hydrates from the snapshot).</summary>
+        public void ClearSwarmStrikes() => _swarmStrikes.Clear();
+
+        /// <summary>Export the full hunt-assignment dict so the AUTHORITY can embed it in its ZoneSnapshot.</summary>
+        public IEnumerable<(string predatorId, SwarmStrike strike)> ExportSwarmStrikes()
+        {
+            foreach (var kv in _swarmStrikes)
+                yield return (kv.Key, kv.Value);
+        }
+
+        /// <summary>Hydrate one hunt assignment from a snapshot (late-join). Overwrites authoritatively; replay
+        /// events converge it. An empty target_prey_id means "not hunting" — skip (leaves no entry).</summary>
+        public void HydrateSwarmStrike(string predatorId, string targetPreyId, int strikeRadius, int kills, int cooldown)
+        {
+            if (string.IsNullOrEmpty(predatorId) || string.IsNullOrEmpty(targetPreyId)) return;
+            _swarmStrikes[predatorId] = new SwarmStrike
+            {
+                TargetPreyId = targetPreyId,
+                StrikeRadiusFixed = strikeRadius,
+                KillsPerStrike = kills,
+                StrikeCooldownTicks = cooldown,
+            };
+        }
+
+        // --- Subdued registry (smoke/calm) — snapshot-hydrated exactly like _swarmStrikes above ---
+        /// <summary>True if this swarm is currently subdued (calmed) — the per-bug sim reads this to suppress attacks.</summary>
+        public bool IsSubdued(string swarmId) => _subdued.Contains(swarmId);
+
+        /// <summary>Clear the subdued set (late-join/resync re-hydrates from the snapshot).</summary>
+        public void ClearSubdued() => _subdued.Clear();
+
+        /// <summary>Export the subdued swarm-ids so the AUTHORITY can embed them in its ZoneSnapshot.</summary>
+        public IEnumerable<string> ExportSubdued() => _subdued;
+
+        /// <summary>Hydrate one subdued swarm from a snapshot (late-join). Replay-window toggles converge on top.</summary>
+        public void HydrateSubdued(string swarmId)
+        {
+            if (!string.IsNullOrEmpty(swarmId)) _subdued.Add(swarmId);
         }
 
         private void Awake()
@@ -190,6 +272,16 @@ namespace BugFarmer.Bugs
                     }
                     break;
 
+                case EventSwarmSubdued:
+                    // Swarm was calmed (smoke) — the per-bug sim suppresses its lunge/dive.
+                    _subdued.Add(evt.swarm_id);
+                    break;
+
+                case EventSwarmUnsubdued:
+                    // Calm wore off — the swarm may attack again.
+                    _subdued.Remove(evt.swarm_id);
+                    break;
+
                 case EventBugRemoved:
                     // Remove bug from swarm (for late joiner replay)
                     SwarmManager.Instance?.GetSwarm(evt.swarm_id)?.RemoveBugsById(new[] { evt.bug_id });
@@ -249,6 +341,13 @@ namespace BugFarmer.Bugs
                     // collides identically. Idempotent (HashSet add/remove).
                     BugFarmer.World.TilemapManager.Instance?.SetBlocksBugs(
                         new Vector2Int(evt.cell_x, evt.cell_y), evt.level > 0);
+                    break;
+
+                case EventTreeFruitGrow:
+                case EventTreeFruitDrop:
+                    // Server-only ledger events (replay/determinism). The client renders fruit on
+                    // trees via the separate OpCode 93 (TilemapManager.HandleTreeFruitUpdate), so
+                    // there's nothing to do here — just don't warn as "unknown".
                     break;
 
                 default:

@@ -115,6 +115,11 @@ type ZoneConfig struct {
 	// Pure observation, never hashed; production omits it → zero overhead (see profiler.go).
 	Profile bool `json:"profile,omitempty"`
 
+	// Peaceful: OBSERVATION ZONES ONLY — bugs fully ignore the player (no sting/lunge damage, no cloud
+	// chase, no nest-defend). Lets the owner walk among the ecology to watch it undisturbed. Read directly
+	// at the three combat gates (bugAttackAllowed / aggroPlayerThink / nest-defend). Production omits it.
+	Peaceful bool `json:"peaceful,omitempty"`
+
 	// Cross-zone adjacency: edge direction ("north"/"south"/"east"/"west") -> neighbor zoneID.
 	// Walking off an edge with a neighbor hidden-swaps into it (see CrossZoneController). Absent/""
 	// = a hard edge (no crossing). +Y = north, so south edge = y0, north edge = y255.
@@ -134,6 +139,45 @@ type ChunkData struct {
 	ChunkY    int                 `json:"chunk_y"`
 	Ground    [][]string          `json:"ground"`    // 32x32 tile IDs (ChunkSize per side)
 	Occupants [][]json.RawMessage `json:"occupants"` // 32x32 polymorphic
+	Roof      [][]bool            `json:"roof,omitempty"` // 32x32: true = underground/no-sun (lighting only; cosmetic). Absent = all lit.
+
+	// Anchor index (soft, derived, never serialized — unexported). FindNearbyResources used to scan all
+	// 32x32 cells (each a json.Unmarshal) every call; instead it iterates this cached list of ANCHOR
+	// occupants, built once per chunk and reused until the chunk's occupants change. occVersion is bumped
+	// by every occupant mutation (SetOccupant/SetFootprintCell/ClearOccupant); ensureAnchors rebuilds when
+	// stale. Built in (ly,lx) scan order so the FindNearbyResources result stays byte-identical to the
+	// old cell-scan (same input order into the same sort). See item_index.go for the sibling item index.
+	anchors        []anchorEntry
+	anchorsVersion int
+	anchorsBuilt   bool
+	occVersion     int
+}
+
+// anchorEntry is one anchor occupant cell in a chunk's cached anchor index (local coords + occupant id).
+type anchorEntry struct {
+	lx, ly int
+	id     string
+}
+
+// ensureAnchors (re)builds the chunk's anchor index from the cell layer if it's stale (or never built).
+// Scans in (ly,lx) order — the same order the old per-cell FindNearbyResources loop used — so iterating
+// c.anchors yields hits in an identical order, keeping results byte-for-byte the same.
+func (c *ChunkData) ensureAnchors() {
+	if c.anchorsBuilt && c.anchorsVersion == c.occVersion {
+		return
+	}
+	c.anchors = c.anchors[:0]
+	for ly := 0; ly < ChunkSize; ly++ {
+		for lx := 0; lx < ChunkSize; lx++ {
+			cell, err := c.GetOccupantCell(lx, ly)
+			if err != nil || cell.IsEmpty || cell.Occupant == nil || !cell.Occupant.Anchor {
+				continue
+			}
+			c.anchors = append(c.anchors, anchorEntry{lx: lx, ly: ly, id: cell.Occupant.ID})
+		}
+	}
+	c.anchorsBuilt = true
+	c.anchorsVersion = c.occVersion
 }
 
 // OccupantCell represents parsed occupant layer data.
@@ -253,6 +297,7 @@ func (c *ChunkData) SetOccupant(lx, ly int, occ *PlacedOccupant) bool {
 
 	if occ == nil {
 		c.Occupants[ly][lx] = nil
+		c.occVersion++ // invalidate the anchor index
 		return true
 	}
 
@@ -263,6 +308,7 @@ func (c *ChunkData) SetOccupant(lx, ly int, occ *PlacedOccupant) bool {
 		return false
 	}
 	c.Occupants[ly][lx] = data
+	c.occVersion++ // invalidate the anchor index
 	return true
 }
 
@@ -275,6 +321,7 @@ func (c *ChunkData) SetFootprintCell(lx, ly int, occupantID string, dir int) boo
 	occ := &PlacedOccupant{ID: occupantID, Dir: dir, Anchor: false}
 	data, _ := json.Marshal(occ)
 	c.Occupants[ly][lx] = data
+	c.occVersion++ // invalidate the anchor index (footprint cells aren't anchors, but keep it consistent)
 	return true
 }
 
@@ -284,6 +331,7 @@ func (c *ChunkData) ClearOccupant(lx, ly int) bool {
 		return false
 	}
 	c.Occupants[ly][lx] = nil
+	c.occVersion++ // invalidate the anchor index
 	return true
 }
 

@@ -1,0 +1,18 @@
+when      : 2026-08-05 16:55:02
+model     : gpt-image-2
+size      : 1024x1536
+quality   : high
+mask      : NONE
+dest      : outfits/fireant/gauntlet2
+references (in the order sent):
+  1. tools/_generated/player/APPROVED/hands/SOURCE_SHEET_hand-D-pixel.png  (sent upscaled x14)
+  2. tools/_generated/player/outfits/fireant/result.png  (sent upscaled x14)
+
+PROMPT:
+The FIRST attached image is the reference: four small pixel-art gauntlet hands in a row on a black background. The SECOND attached image is a sprite sheet of a character wearing fire-ant carapace armour.
+
+Redraw those SAME FOUR HANDS in the SAME four poses, in the SAME row, at the SAME size and spacing, on a black background - but made of orange-red ant chitin instead, matching the material, colours, shadows and highlights of the armour in the second image.
+
+Copy the reference EXACTLY in shape. Same silhouette, same outline, same proportions, same wrist cuff at the bottom of each hand, same angle for each of the four. Left to right they are: (1) the back of a closed fist, (2) the palm side, (3) the fist in profile, (4) the fist closed around a pole with a small round hole through the grip. Do not redesign them, do not restyle them, do not change how any hand is posed or turned - the ONLY thing that changes is the material they are made of.
+
+Big simple shapes, chunky pixels, a dark outline, no fine detail. Nothing else in the image - no character, no body, no arms, just the four hands.

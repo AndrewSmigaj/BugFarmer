@@ -61,6 +61,10 @@ def place_carpenter(b, ox, oy):
     return (ox, oy, ox + BW - 1, oy + BH - 1)
 
 
+PREVIEW = "zones/village_21_B/scenes"
+SCALE = 6
+
+
 def build():
     b = ZoneBuilder("scene_carpenter", BW + 8, BH + 12, base_tile="grass", name="Carpenter")
     place_carpenter(b, 4, 7)
@@ -69,9 +73,7 @@ def build():
 
 
 if __name__ == "__main__":
+    from scene_preview import render
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "tests", "scene_carpenter.png"))
-    render_builder(b, out, scale=10)
-    print(dump(b, 4, 7, 15, 20))
-    print("LINT:", b.lint() or "0 defects", "| warnings:", len(b.warnings), "| missing_art:", b.missing_art())
-    print("rendered ->", out)
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

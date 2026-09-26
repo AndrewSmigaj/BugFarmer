@@ -21,7 +21,7 @@ func equipTestState() *WorldState {
 		"iron_helmet":   {Category: "armor", ArmorSlot: "head"},
 		"leather_chest": {Category: "armor", ArmorSlot: "body"},
 		"bee_charm":     {Category: "armor", ArmorSlot: "accessory"},
-		"sword_wood":    {Category: "tool", ToolType: "sword"},
+		"sword_wood":    {Category: "weapon", ToolType: "sword"},
 	}
 	return state
 }

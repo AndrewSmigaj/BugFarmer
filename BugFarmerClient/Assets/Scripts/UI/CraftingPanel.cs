@@ -32,8 +32,36 @@ namespace BugFarmer.UI
         private bool _isOpen;
         private Vector2Int _cell;
         private string _occupantId = "";
-        private bool _isCraft;
+        // Panel mode = the occupant's interaction_type ("craft" | "storage" | "station"). ONE panel serves
+        // every processing station; the mode selects which regions BuildContent composes. _isCraft/_isStation
+        // are read-only views so the existing craft/storage code is untouched.
+        private string _mode = "";
+        private bool _isCraft => _mode == "craft";
+        private bool _isStation => _mode == "station";
+        private bool _isNursery => _mode == "nursery";
+        private bool _isBeehive => _mode == "beehive";
         private bool _openedInventory; // true when opening this container also opened the inventory
+
+        // Station-mode caches (compost bin): the material-processor meters + its fly brood, keyed by cell and
+        // updated whenever an echo arrives (even while closed) so opening a station shows its state immediately.
+        private readonly Dictionary<Vector2Int, StationUpdateMessage> _stationEchoes =
+            new Dictionary<Vector2Int, StationUpdateMessage>();
+        private readonly Dictionary<Vector2Int, BroodUpdateMessage> _broodEchoes =
+            new Dictionary<Vector2Int, BroodUpdateMessage>();
+        // Station-mode widgets: the compost deposit grid + its two fill meters (rebuilt per open).
+        private readonly List<InventorySlotUI> _depositSlots = new List<InventorySlotUI>();
+        private Image _stInputFill, _stCompostFill;
+        private TMP_Text _stInputLbl, _stCompostLbl;
+        // Shared BROOD region — a compost's fly brood AND a wasp/bee/milkweed nursery all render it: egg/larva/
+        // pupa stage slots + count labels + a maturation bar + the resident-adult slot. Click a stage to TAKE
+        // its units; click while holding a brood item to PLACE-BACK (deposit). Fed by _broodEchoes[_cell].
+        private readonly List<InventorySlotUI> _broodSlots = new List<InventorySlotUI>();
+        private readonly List<TMP_Text> _broodCountLbls = new List<TMP_Text>();
+        private InventorySlotUI _residentSlot;
+        private TMP_Text _residentLbl, _broodEmptyLbl, _broodHead;
+        private Image _broodBar;
+        private float _broodBarShown, _broodBarTarget;
+        private bool _hasBrood; // this open renders a brood region (compost / nursery / beehive)
 
         // UI frame
         private CanvasGroup _group;
@@ -46,12 +74,22 @@ namespace BugFarmer.UI
             new List<(InventorySlotUI, RecipeDatabase.Recipe)>();
         private RecipeDatabase.Recipe _selected;
         private int _qty = 1;
+        private const int MaxInputs = 4;   // recipes have <=3 inputs + an optional catalyst
         private TMP_Text _qtyText;
-        private TMP_Text _inputsText;
         private TMP_Text _recipeName;
         private Button _craftButton;
-        private Image _progressFill;
-        private TMP_Text _queueText;
+        // PROCESSOR LANES (world.craft_slots, default 1): one row each — recipe icon +
+        // interpolated progress bar + queue label. All fed by the per-proc echo (procs[]).
+        private readonly List<InventorySlotUI> _procIcons = new List<InventorySlotUI>();
+        private readonly List<Image> _procFills = new List<Image>();
+        private readonly List<TMP_Text> _procLabels = new List<TMP_Text>();
+        private readonly Dictionary<string, string> _recipeOutputById = new Dictionary<string, string>();
+        private int _lanesOverride; // echo said more lanes than the def (stale data) → rebuild with this
+        // INPUT item-square row (icons + have/need labels) → arrow → output preview (replaces the old text)
+        private readonly List<InventorySlotUI> _inputSlots = new List<InventorySlotUI>();
+        private readonly List<TMP_Text> _inputLabels = new List<TMP_Text>();
+        private InventorySlotUI _outputPreview;
+        private TMP_Text _arrow;
         private readonly List<InventorySlotUI> _outputSlots = new List<InventorySlotUI>();
 
         // Storage-mode widgets
@@ -110,6 +148,11 @@ namespace BugFarmer.UI
             if (!_isOpen) return;
             if (Input.GetKeyDown(KeyCode.Escape)) { SetOpen(false); return; }
             if (_isCraft) AnimateProgress();
+            if (_hasBrood && _broodBar != null)
+            {
+                _broodBarShown = Mathf.MoveTowards(_broodBarShown, _broodBarTarget, Time.deltaTime * 2f);
+                SetBar(_broodBar, _broodBarShown);
+            }
         }
 
         // ---------------------------------------------------------------- open / route
@@ -121,8 +164,9 @@ namespace BugFarmer.UI
         /// </summary>
         public bool TryHandleRightClick(Vector3 mouseWorld)
         {
-            var hit = Physics2D.OverlapPoint(mouseWorld);
-            var target = hit != null ? hit.GetComponent<OccupantClickTarget>() : null;
+            // Front-most interactable occupant (shared resolver; not a bare OverlapPoint that an
+            // overlapping occupant could steal).
+            var target = InteractionResolver.TopmostInteractable(mouseWorld);
             if (target == null)
             {
                 if (_isOpen) { SetOpen(false); return true; }
@@ -131,9 +175,7 @@ namespace BugFarmer.UI
 
             var def = EntityDatabase.Get(target.OccupantId);
             string it = def?.World?.InteractionType;
-            bool craft = it == "craft";
-            bool storage = it == "storage";
-            if (!craft && !storage)
+            if (it != "craft" && it != "storage" && it != "station" && it != "nursery" && it != "beehive")
             {
                 if (_isOpen) { SetOpen(false); return true; }
                 return false;
@@ -154,10 +196,11 @@ namespace BugFarmer.UI
 
             _cell = target.AnchorCell;
             _occupantId = target.OccupantId;
-            _isCraft = craft;
+            _mode = it;
             _selected = null;
             _qty = 1;
             _last = null;
+            _lanesOverride = 0;
             Open();
             return true;
         }
@@ -165,29 +208,35 @@ namespace BugFarmer.UI
         private void Open()
         {
             _title.text = (EntityDatabase.Get(_occupantId)?.Name) ?? _occupantId;
-            ConfigureDock(_isCraft);
-            // Storage opens your inventory too (so you can drag items into the chest), and the
-            // container docks top-center between the bug + gear docks. If the inventory wasn't
-            // already open, WE opened it → close it when the container closes.
-            if (!_isCraft && InventoryPanel.Instance != null && !InventoryPanel.IsOpen)
+            ConfigureDock();
+            // Storage opens your inventory too (drag items into the chest). Craft + station have their own I/O
+            // (a station shows its own accepted-item deposit grid), so they don't open the inventory panel.
+            if (_mode == "storage" && InventoryPanel.Instance != null && !InventoryPanel.IsOpen)
             {
                 _openedInventory = true;
                 InventoryPanel.Instance.SetOpen(true);
             }
             BuildContent();
             SetOpen(true);
-            Send(new ContainerActionMessage { gx = _cell.x, gy = _cell.y, op = "open" });
+            // Craft/storage fetch their state via the container "open"; a station is fed by pushed
+            // StationUpdate/BroodUpdate echoes (cached by cell), so no open request.
+            if (!_isStation)
+                Send(new ContainerActionMessage { gx = _cell.x, gy = _cell.y, op = "open" });
         }
 
         // Craft stations get the big center panel; storage containers get a compact top-center dock
         // (the real inventory shows your side).
-        private void ConfigureDock(bool craft)
+        private void ConfigureDock()
         {
-            // Both dock at the TOP so the screen center stays open for the player. Craft stations
-            // need the wider panel (recipes + I/O); containers are a compact grid.
+            // Both dock at the TOP so the screen center stays open for the player. Craft stations need the
+            // wider panel (recipes + I/O); a station (compost) is a tall column (deposit + meters + brood);
+            // containers are a compact grid.
             _dock.anchorMin = _dock.anchorMax = new Vector2(0.5f, 1f);
             _dock.pivot = new Vector2(0.5f, 1f);
-            _dock.sizeDelta = craft ? new Vector2(600, 320) : new Vector2(312, 220);
+            _dock.sizeDelta = _isCraft ? new Vector2(600, 320)
+                            : _isStation ? new Vector2(340, 440)   // compost: description + material block + divider + flies block
+                            : (_isNursery || _isBeehive) ? new Vector2(320, 210)
+                            : new Vector2(312, 220);
             _dock.anchoredPosition = new Vector2(0, -8);
         }
 
@@ -219,19 +268,68 @@ namespace BugFarmer.UI
                 DestroyImmediate(_content.GetChild(i).gameObject);
             _recipeSlots.Clear();
             _outputSlots.Clear();
+            _inputSlots.Clear();
+            _inputLabels.Clear();
             _containerSlots.Clear();
             _playerSlots.Clear();
-            _qtyText = _inputsText = _recipeName = _queueText = null;
+            _procIcons.Clear();
+            _procFills.Clear();
+            _procLabels.Clear();
+            _depositSlots.Clear();
+            _broodSlots.Clear();
+            _broodCountLbls.Clear();
+            _qtyText = _recipeName = _arrow = null;
+            _outputPreview = null;
             _craftButton = null;
-            _progressFill = null;
+            _stInputFill = _stCompostFill = null;
+            _stInputLbl = _stCompostLbl = null;
+            _residentSlot = null;
+            _residentLbl = _broodEmptyLbl = null;
+            _broodBar = null;
+            _hasBrood = false;
 
             if (_isCraft) BuildCraftContent();
+            else if (_isStation) BuildStationContent();
+            else if (_isNursery) BuildNurseryContent();
+            else if (_isBeehive) BuildBeehiveContent();
             else BuildStorageContent();
+        }
+
+        // A pure nursery (wasp nest / milkweed) is just the shared brood region.
+        private void BuildNurseryContent()
+        {
+            BuildBroodRegion(0);
+            RefreshBrood();
+        }
+
+        // A beehive is a station: bees in (auto), honeycomb out. Shows the resident bees (the shared brood
+        // region — bee_honey has no stage sprites, so the stage slots hide) + a honeycomb-harvest control.
+        private void BuildBeehiveContent()
+        {
+            BuildBroodRegion(0);
+            MakeButton(_content, "Harvest", "Harvest honeycomb", 0, -152, 170, 26, HarvestHoney);
+            RefreshBrood();
+        }
+
+        private void HarvestHoney() => SendHive(new HiveHarvestMessage { gx = _cell.x, gy = _cell.y });
+
+        private void SendHive(HiveHarvestMessage msg)
+        {
+            var world = WorldManager.Instance;
+            var socket = NetworkManager.Instance?.Socket;
+            if (world?.CurrentMatch == null || socket == null || !socket.IsConnected) return;
+            _ = socket.SendMatchStateAsync(world.CurrentMatch.Id, OpCodes.HiveHarvest, JsonUtility.ToJson(msg));
         }
 
         private void BuildCraftContent()
         {
             var recipes = RecipeDatabase.ForStation(_occupantId);
+            // Hide gated recipes the player hasn't learned. Basic recipes (unlock "" / "default")
+            // are always craftable; "shop:<npc>"/"find" recipes appear only once in KnownRecipes.
+            var known = InventoryManager.Instance != null ? InventoryManager.Instance.KnownRecipes : null;
+            recipes = recipes.FindAll(r =>
+                string.IsNullOrEmpty(r.unlock) || r.unlock == "default" ||
+                (known != null && known.Contains(r.id)));
 
             // --- LEFT: recipe list ---
             var listHead = UIFactory.MakeText(_content, "RecipesHeader", UIFactory.HeaderSize,
@@ -255,10 +353,26 @@ namespace BugFarmer.UI
                                              UIFactory.TextColor, TextAlignmentOptions.Left);
             Place(_recipeName.rectTransform, 160, 0, 230, 18);
 
-            _inputsText = UIFactory.MakeText(_content, "Inputs", UIFactory.CountSize + 1f,
-                                             UIFactory.TextColor, TextAlignmentOptions.TopLeft);
-            _inputsText.enableWordWrapping = true;
-            Place(_inputsText.rectTransform, 160, -22, 230, 90);
+            // INPUT squares (icon + have/need under each) → arrow → the recipe's OUTPUT preview.
+            var needHead = UIFactory.MakeText(_content, "NeedHead", UIFactory.CountSize,
+                                              UIFactory.HeaderColor, TextAlignmentOptions.Left);
+            Place(needHead.rectTransform, 160, -22, 230, 14);
+            needHead.text = "NEEDS";
+            for (int i = 0; i < MaxInputs; i++)
+            {
+                var s = UIFactory.MakeSlot(_content, "slot_frame");
+                Place((RectTransform)s.transform, 160 + i * 42, -40, UIFactory.Slot, UIFactory.Slot);
+                _inputSlots.Add(s);
+                var lbl = UIFactory.MakeText(_content, $"In{i}Lbl", UIFactory.CountSize,
+                                             UIFactory.TextColor, TextAlignmentOptions.Center);
+                Place(lbl.rectTransform, 160 + i * 42, -82, UIFactory.Slot, 14);
+                _inputLabels.Add(lbl);
+            }
+            _arrow = UIFactory.MakeText(_content, "Arrow", UIFactory.HeaderSize + 4f,
+                                        UIFactory.HeaderColor, TextAlignmentOptions.Center);
+            Place(_arrow.rectTransform, 160, -52, 24, 20);
+            _outputPreview = UIFactory.MakeSlot(_content, "slot_frame");
+            Place((RectTransform)_outputPreview.transform, 188, -40, UIFactory.Slot, UIFactory.Slot);
 
             // qty stepper
             MakeButton(_content, "Minus", "-", 160, -116, 28, 24, () => { _qty = Mathf.Max(1, _qty - 1); RefreshSelected(); });
@@ -268,15 +382,32 @@ namespace BugFarmer.UI
 
             _craftButton = MakeButton(_content, "Craft", "Craft", 272, -116, 100, 24, DoCraft);
 
-            // progress bar + queue
-            var barBg = UIFactory.MakeImage(_content, "BarBg", "slot_frame", true);
-            barBg.color = new Color(0f, 0f, 0f, 0.4f);
-            Place(barBg.rectTransform, 160, -150, 230, 14);
-            _progressFill = UIFactory.MakeImage(_content, "BarFill", null);
-            _progressFill.color = new Color(0.95f, 0.7f, 0.25f, 1f);
-            Place(_progressFill.rectTransform, 162, -152, 0, 10);
-            _queueText = UIFactory.MakeText(_content, "Queue", UIFactory.CountSize, UIFactory.TextColor, TextAlignmentOptions.Left);
-            Place(_queueText.rectTransform, 160, -168, 230, 16);
+            // PROCESSOR LANE rows (one per craft_slot): what each lane is making, its progress,
+            // and its queue. The recipe-id → output-item map feeds the lane icons.
+            _recipeOutputById.Clear();
+            foreach (var r in RecipeDatabase.ForStation(_occupantId))
+                _recipeOutputById[r.id] = r.output.item;
+            int lanes = Mathf.Max(1, Mathf.Max(_lanesOverride,
+                EntityDatabase.Get(_occupantId)?.World?.CraftSlots ?? 0));
+            for (int i = 0; i < lanes; i++)
+            {
+                float y = -146 - i * 28;
+                var icon = UIFactory.MakeSlot(_content, "slot_frame");
+                Place((RectTransform)icon.transform, 160, y, 24, 24);
+                _procIcons.Add(icon);
+                var barBg = UIFactory.MakeImage(_content, $"BarBg{i}", "slot_frame", true);
+                barBg.color = new Color(0f, 0f, 0f, 0.4f);
+                Place(barBg.rectTransform, 190, y - 5, 160, 14);
+                var fill = UIFactory.MakeImage(_content, $"BarFill{i}", null);
+                fill.color = new Color(0.95f, 0.7f, 0.25f, 1f);
+                Place(fill.rectTransform, 192, y - 7, 0, 10);
+                _procFills.Add(fill);
+                var lbl = UIFactory.MakeText(_content, $"ProcQ{i}", UIFactory.CountSize,
+                                             UIFactory.TextColor, TextAlignmentOptions.Left);
+                Place(lbl.rectTransform, 356, y - 5, 48, 14);
+                _procLabels.Add(lbl);
+            }
+            RefreshProcs();
 
             // --- RIGHT: output grid + Get all ---
             var outHead = UIFactory.MakeText(_content, "OutputHeader", UIFactory.HeaderSize,
@@ -347,6 +478,251 @@ namespace BugFarmer.UI
                 Send(new ContainerActionMessage { gx = _cell.x, gy = _cell.y, op = "quick", zone = "container", slot = idx });
         }
 
+        // ---------------------------------------------------------------- station (compost) mode
+        // A compost bin is a two-aspect station: a material PROCESSOR (deposit compostables → fill meters that
+        // bugs feed on) AND a fly NURSERY (its brood, via the SHARED brood region below). Functional
+        // placeholder — the owner's mockup drives visual polish.
+        private void BuildStationContent()
+        {
+            var def = EntityDatabase.Get(_occupantId);
+
+            // Flavor description shown on open — one warm, plain blurb (italic + wrapped).
+            var desc = UIFactory.MakeText(_content, "StDesc", UIFactory.CountSize, UIFactory.TextColor, TextAlignmentOptions.TopLeft);
+            Place(desc.rectTransform, 0, 0, 312, 48);
+            desc.fontStyle = FontStyles.Italic;
+            desc.text = def?.Description ?? "";
+
+            // ── Block A — the compost itself: organic scraps convert to UNITS of compost over time (no stages) ──
+            var aHead = UIFactory.MakeText(_content, "StAHead", UIFactory.HeaderSize, UIFactory.HeaderColor, TextAlignmentOptions.Left);
+            Place(aHead.rectTransform, 0, -54, 100, 16);
+            aHead.text = "COMPOST";
+            var aHint = UIFactory.MakeText(_content, "StAHint", UIFactory.CountSize - 1f, UIFactory.TextColor, TextAlignmentOptions.Left);
+            Place(aHint.rectTransform, 104, -53, 200, 14);
+            aHint.text = "click a scrap to add it";
+
+            var grid = UIFactory.MakeGrid(_content, "DepositGrid", 6, UIFactory.Slot);
+            Place((RectTransform)grid.transform, 0, -74, 6 * 44, 2 * 44);
+            for (int i = 0; i < 12; i++)
+            {
+                var s = UIFactory.MakeSlot(grid.transform, "slot_frame");
+                int idx = i;
+                s.OnSlotClicked += (slot, ev) => DepositAccepted(idx);
+                _depositSlots.Add(s);
+            }
+
+            // Compost accumulates as UNITS (the hero readout, green bar); a small line shows how much raw is
+            // still converting. No hopper bar — a compost bin is just "scraps → units over time".
+            _stCompostLbl = UIFactory.MakeText(_content, "CoLbl", UIFactory.CountSize, UIFactory.TextColor, TextAlignmentOptions.Left);
+            Place(_stCompostLbl.rectTransform, 0, -168, 240, 14);
+            var coBg = UIFactory.MakeImage(_content, "CoBg", "slot_frame", true); coBg.color = new Color(0f, 0f, 0f, 0.4f);
+            Place(coBg.rectTransform, 0, -184, 184, 12);
+            _stCompostFill = UIFactory.MakeImage(_content, "CoFill", null); _stCompostFill.color = new Color(0.45f, 0.8f, 0.3f, 1f);
+            Place(_stCompostFill.rectTransform, 2, -186, 0, 8);
+
+            _stInputLbl = UIFactory.MakeText(_content, "InLbl", UIFactory.CountSize - 1f, UIFactory.TextColor, TextAlignmentOptions.Left);
+            Place(_stInputLbl.rectTransform, 0, -200, 200, 12);
+            _stInputFill = null; // raw-scraps amount is a small readout, not a second bar
+
+            // Scoop the finished compost out into the bag (take-all; the flies keep whatever regrows).
+            MakeButton(_content, "TakeCompost", "Take compost", 200, -186, 114, 24, HarvestCompost);
+
+            // ── divider: material processing above, the living flies below ──
+            var rule = UIFactory.MakeImage(_content, "StRule", null); rule.color = new Color(1f, 1f, 1f, 0.12f);
+            Place(rule.rectTransform, 0, -218, 312, 1);
+
+            // ── Block B — the flies living in the compost: their OWN area, separate from the material ──
+            BuildBroodRegion(-232);
+            RefreshStation();
+        }
+
+        private void RefreshStation()
+        {
+            var def = EntityDatabase.Get(_occupantId);
+
+            // deposit grid = the accepted items currently in your bag
+            var accepts = def?.World?.StationAccepts;
+            var inv = InventoryManager.Instance;
+            int n = 0;
+            if (inv?.ItemSlots != null && accepts != null)
+            {
+                foreach (var slot in inv.ItemSlots)
+                {
+                    if (n >= _depositSlots.Count) break;
+                    if (slot == null || slot.IsEmpty) continue;
+                    bool ok = false;
+                    foreach (var a in accepts) if (a == slot.item_id) { ok = true; break; }
+                    if (!ok) continue;
+                    _depositSlots[n].SetSlot(new InventorySlot(slot.item_id, slot.count));
+                    n++;
+                }
+            }
+            for (int i = n; i < _depositSlots.Count; i++) _depositSlots[i].Clear();
+
+            // fill meters
+            int input = 0, fill = 0, cap = def?.World?.StationCapacity ?? 10;
+            if (_stationEchoes.TryGetValue(_cell, out var st)) { input = st.input; fill = st.fill; cap = st.capacity; }
+            if (_stCompostLbl != null) _stCompostLbl.text = $"Compost   {fill}/{cap} units";
+            if (_stInputLbl != null) _stInputLbl.text = input > 0 ? $"converting {input} more…" : "";
+            SetBar(_stInputFill, cap > 0 ? (float)input / cap : 0f); // _stInputFill is null in compost mode → no-op
+            SetBar(_stCompostFill, cap > 0 ? (float)fill / cap : 0f);
+
+            RefreshBrood(); // the compost's fly-brood aspect
+        }
+
+        private static void SetBar(Image fill, float frac)
+        {
+            if (fill == null) return;
+            var rt = fill.rectTransform;
+            rt.sizeDelta = new Vector2(180f * Mathf.Clamp01(frac), rt.sizeDelta.y);
+        }
+
+        private void DepositAccepted(int idx)
+        {
+            if (idx < 0 || idx >= _depositSlots.Count) return;
+            var itemId = _depositSlots[idx].CurrentItemId;
+            if (string.IsNullOrEmpty(itemId)) return;
+            SendStation(new StationDepositMessage { gx = _cell.x, gy = _cell.y, item_id = itemId });
+        }
+
+        // ---------------------------------------------------------------- shared BROOD region (nursery aspect)
+        // Every breeding station renders this — a compost's fly brood, a wasp/bee/milkweed nursery: egg/larva/
+        // pupa stage slots + count labels + a maturation bar + the resident-adult slot. `y` = the region's top
+        // (compost places it below its meters; a pure nursery at the top). Click a stage to TAKE its units;
+        // click while holding a brood item to PLACE-BACK (deposit).
+        private void BuildBroodRegion(float y)
+        {
+            _hasBrood = true;
+
+            _broodHead = UIFactory.MakeText(_content, "BrHead", UIFactory.HeaderSize, UIFactory.HeaderColor, TextAlignmentOptions.Left);
+            Place(_broodHead.rectTransform, 0, y, 132, 16);
+            _broodHead.text = "NURSERY"; // replaced per-species in RefreshBrood (MAGGOTS / BROOD / CATERPILLARS / GRUBS …)
+            var hint = UIFactory.MakeText(_content, "BrHint", UIFactory.CountSize - 1f, UIFactory.TextColor, TextAlignmentOptions.Left);
+            Place(hint.rectTransform, 134, y + 1, 182, 14);
+            hint.text = "click to collect · drop to deposit";
+
+            for (int i = 0; i < 3; i++)
+            {
+                var s = UIFactory.MakeSlot(_content, "slot_frame");
+                Place((RectTransform)s.transform, i * 52, y - 20, UIFactory.Slot, UIFactory.Slot);
+                int stage = i;
+                s.OnSlotClicked += (slot, ev) => OnBroodStageClicked(stage, ev);
+                _broodSlots.Add(s);
+                var lbl = UIFactory.MakeText(_content, $"BrC{i}", UIFactory.CountSize, UIFactory.TextColor, TextAlignmentOptions.Center);
+                Place(lbl.rectTransform, i * 52 - 6, y - 62, UIFactory.Slot + 12, 14);
+                _broodCountLbls.Add(lbl);
+            }
+
+            var barBg = UIFactory.MakeImage(_content, "BrBarBg", "slot_frame", true); barBg.color = new Color(0f, 0f, 0f, 0.4f);
+            Place(barBg.rectTransform, 0, y - 80, 184, 12);
+            _broodBar = UIFactory.MakeImage(_content, "BrBar", null); _broodBar.color = new Color(0.30f, 0.72f, 0.82f, 1f); // teal — distinct from the green compost fill bar
+            Place(_broodBar.rectTransform, 2, y - 82, 0, 8);
+
+            var resHead = UIFactory.MakeText(_content, "ResHead", UIFactory.CountSize, UIFactory.HeaderColor, TextAlignmentOptions.Left);
+            Place(resHead.rectTransform, 0, y - 96, 200, 14);
+            resHead.text = "INSIDE";
+            _residentSlot = UIFactory.MakeSlot(_content, "slot_frame");
+            Place((RectTransform)_residentSlot.transform, 0, y - 112, UIFactory.Slot, UIFactory.Slot);
+            _residentLbl = UIFactory.MakeText(_content, "ResLbl", UIFactory.CountSize + 1f, UIFactory.TextColor, TextAlignmentOptions.Left);
+            Place(_residentLbl.rectTransform, 46, y - 124, 240, 16);
+
+            _broodEmptyLbl = UIFactory.MakeText(_content, "BrEmpty", UIFactory.CountSize + 1f, UIFactory.TextColor, TextAlignmentOptions.Left);
+            Place(_broodEmptyLbl.rectTransform, 0, y - 20, 300, 16);
+            _broodEmptyLbl.text = "Nothing developing here yet.";
+            _broodEmptyLbl.enabled = false;
+        }
+
+        private void RefreshBrood()
+        {
+            if (!_hasBrood) return;
+            _broodEchoes.TryGetValue(_cell, out var b);
+            bool has = b != null;
+            if (_broodEmptyLbl != null) _broodEmptyLbl.enabled = !has;
+
+            var sp = has ? EntityDatabase.GetSpecies(b.species) : null;
+            string[] ids = { sp?.EggSpriteId ?? "", sp?.LarvaSpriteId ?? "", sp?.PupaSpriteId ?? "" };
+            int[] counts = has ? new[] { b.eggs, b.maggots, b.pupae } : new[] { 0, 0, 0 };
+            // Species-appropriate stage words (fly=maggots, wasp/beetle=grubs, butterfly=caterpillars/
+            // chrysalises, centi/millipede=young); "brood" only where BroodLabel says a true nest/hive.
+            // Fall back to the generic terms when a species omits them.
+            string[] names = { "eggs", sp?.LarvaName ?? "larvae", sp?.PupaName ?? "pupae" };
+            if (_broodHead != null)
+            {
+                string label = has ? sp?.BroodLabel : null;
+                _broodHead.text = string.IsNullOrEmpty(label) ? "NURSERY" : label.ToUpperInvariant();
+            }
+            for (int i = 0; i < _broodSlots.Count; i++)
+            {
+                bool show = has && !string.IsNullOrEmpty(ids[i]);
+                _broodSlots[i].gameObject.SetActive(show);
+                _broodCountLbls[i].enabled = show;
+                if (!show) continue;
+                if (counts[i] > 0) _broodSlots[i].SetSlot(new InventorySlot(ids[i], counts[i]));
+                else _broodSlots[i].Clear();
+                _broodCountLbls[i].text = $"{names[i]}: {counts[i]}";
+            }
+
+            _broodBarTarget = has ? Mathf.Clamp01(b.progress) : 0f;
+
+            int residents = has ? b.residents : 0;
+            bool showRes = residents > 0;
+            if (_residentSlot != null) _residentSlot.gameObject.SetActive(showRes);
+            if (_residentLbl != null) _residentLbl.enabled = showRes;
+            if (showRes)
+            {
+                _residentSlot.SetSlot(new InventorySlot(b.species, residents));
+                _residentLbl.text = $"× {residents} {(string.IsNullOrEmpty(sp?.Name) ? b.species : sp.Name)}";
+            }
+        }
+
+        // Click a stage: hold a brood item on the cursor → DEPOSIT it here (place-back, species-validated
+        // server-side); otherwise COLLECT this stage's units.
+        private void OnBroodStageClicked(int stage, PointerEventData ev)
+        {
+            if (!_isOpen) return;
+            var drag = DragDropController.Instance;
+            if (drag != null && drag.HasCursorItem && drag.CursorSourceType == SlotType.Item)
+            {
+                SendNursery(new NurseryDepositMessage { gx = _cell.x, gy = _cell.y, slot = drag.CursorSourceIndex, count = drag.CursorCount });
+                drag.ForceClearCursor();
+                return;
+            }
+            SendNursery(new NurseryTakeMessage { gx = _cell.x, gy = _cell.y, stage = stage, count = 0 });
+        }
+
+        private void SendStation(StationDepositMessage msg)
+        {
+            var world = WorldManager.Instance;
+            var socket = NetworkManager.Instance?.Socket;
+            if (world?.CurrentMatch == null || socket == null || !socket.IsConnected) return;
+            _ = socket.SendMatchStateAsync(world.CurrentMatch.Id, OpCodes.StationDeposit, JsonUtility.ToJson(msg));
+        }
+
+        private void HarvestCompost() => SendCompostHarvest(new CompostHarvestMessage { gx = _cell.x, gy = _cell.y });
+
+        private void SendCompostHarvest(CompostHarvestMessage msg)
+        {
+            var world = WorldManager.Instance;
+            var socket = NetworkManager.Instance?.Socket;
+            if (world?.CurrentMatch == null || socket == null || !socket.IsConnected) return;
+            _ = socket.SendMatchStateAsync(world.CurrentMatch.Id, OpCodes.CompostHarvest, JsonUtility.ToJson(msg));
+        }
+
+        private void SendNursery(NurseryTakeMessage msg)
+        {
+            var world = WorldManager.Instance;
+            var socket = NetworkManager.Instance?.Socket;
+            if (world?.CurrentMatch == null || socket == null || !socket.IsConnected) return;
+            _ = socket.SendMatchStateAsync(world.CurrentMatch.Id, OpCodes.NurseryTake, JsonUtility.ToJson(msg));
+        }
+
+        private void SendNursery(NurseryDepositMessage msg)
+        {
+            var world = WorldManager.Instance;
+            var socket = NetworkManager.Instance?.Socket;
+            if (world?.CurrentMatch == null || socket == null || !socket.IsConnected) return;
+            _ = socket.SendMatchStateAsync(world.CurrentMatch.Id, OpCodes.NurseryDeposit, JsonUtility.ToJson(msg));
+        }
+
         // ---------------------------------------------------------------- craft refresh
 
         private void SelectRecipe(RecipeDatabase.Recipe r)
@@ -359,13 +735,17 @@ namespace BugFarmer.UI
             RefreshSelected();
         }
 
+        private static readonly Color ShortColor = new Color32(0xE0, 0x66, 0x66, 0xFF);
+
         private void RefreshSelected()
         {
             if (_qtyText != null) _qtyText.text = _qty.ToString();
             if (_selected == null)
             {
                 if (_recipeName != null) _recipeName.text = "(select a recipe)";
-                if (_inputsText != null) _inputsText.text = "";
+                for (int i = 0; i < _inputSlots.Count; i++) { _inputSlots[i].Clear(); _inputLabels[i].text = ""; }
+                _outputPreview?.Clear();
+                if (_arrow != null) _arrow.text = "";
                 if (_craftButton != null) _craftButton.interactable = false;
                 return;
             }
@@ -375,60 +755,148 @@ namespace BugFarmer.UI
                 _recipeName.text = $"{(od?.Name ?? _selected.output.item)} x{_selected.output.count}";
             }
 
+            // Fill the input squares (icon + need badge) with a have/need label coloured red when short.
             bool affordable = true;
-            var sb = new System.Text.StringBuilder();
+            int n = 0;
             foreach (var io in EnumInputs(_selected))
             {
+                if (n >= MaxInputs) break;
                 int have = CountItem(io.item);
                 int need = io.count * Mathf.Max(1, _qty);
                 bool ok = have >= need;
                 if (!ok) affordable = false;
-                var nd = EntityDatabase.Get(io.item);
-                string name = nd?.Name ?? io.item;
-                string line = $"{name}  {have}/{need}";
-                sb.AppendLine(ok ? line : $"<color=#E06666>{line}</color>");
+                _inputSlots[n].SetSlot(new InventorySlot { item_id = io.item, count = need });
+                _inputLabels[n].text = $"{have}/{need}";
+                _inputLabels[n].color = ok ? UIFactory.TextColor : ShortColor;
+                n++;
             }
-            if (_inputsText != null) _inputsText.text = sb.ToString();
+            for (int i = n; i < _inputSlots.Count; i++) { _inputSlots[i].Clear(); _inputLabels[i].text = ""; }
+
+            // A recipe is craftable only if some lane can take it (running it already, or idle).
+            bool laneFree = PickLane(_selected.id) >= 0;
+            if (!laneFree && _recipeName != null) _recipeName.text += "   (all lanes busy)";
+            affordable = affordable && laneFree;
+
+            // arrow after the last input → the output preview
+            if (_arrow != null)
+            {
+                _arrow.text = "→";
+                Place(_arrow.rectTransform, 160 + n * 42, -52, 24, 20);
+            }
+            if (_outputPreview != null)
+            {
+                Place((RectTransform)_outputPreview.transform, 160 + n * 42 + 24, -40, UIFactory.Slot, UIFactory.Slot);
+                _outputPreview.SetSlot(new InventorySlot { item_id = _selected.output.item, count = _selected.output.count });
+            }
             if (_craftButton != null) _craftButton.interactable = affordable;
         }
 
         private void DoCraft()
         {
             if (_selected == null) return;
-            Send(new ContainerActionMessage { gx = _cell.x, gy = _cell.y, op = "craft", recipe = _selected.id, qty = _qty });
+            int proc = PickLane(_selected.id);
+            if (proc < 0) return; // every lane busy with another recipe (button is disabled then)
+            Send(new ContainerActionMessage { gx = _cell.x, gy = _cell.y, op = "craft", recipe = _selected.id, qty = _qty, proc = proc });
+        }
+
+        /// <summary>The lane a craft of recipeId should target: a lane already running it (top up
+        /// its queue) → the first idle lane → -1 (all lanes busy with other recipes).</summary>
+        private int PickLane(string recipeId)
+        {
+            var procs = _last?.procs;
+            if (procs == null || procs.Length == 0) return 0; // pre-echo: lane 0 (server validates)
+            for (int i = 0; i < procs.Length; i++)
+                if (procs[i].queue > 0 && procs[i].recipe == recipeId) return i;
+            for (int i = 0; i < procs.Length; i++)
+                if (procs[i].queue <= 0) return i;
+            return -1;
+        }
+
+        /// <summary>Lane icons from the echo: the recipe's output item while the lane runs.</summary>
+        private void RefreshProcs()
+        {
+            for (int i = 0; i < _procIcons.Count; i++)
+            {
+                var p = (_last?.procs != null && i < _last.procs.Length) ? _last.procs[i] : null;
+                if (p != null && p.queue > 0 && !string.IsNullOrEmpty(p.recipe) &&
+                    _recipeOutputById.TryGetValue(p.recipe, out var outItem))
+                    _procIcons[i].SetSlot(new InventorySlot(outItem, 1));
+                else
+                    _procIcons[i].Clear();
+            }
         }
 
         private void AnimateProgress()
         {
-            if (_progressFill == null) return;
-            float total = _last != null ? _last.total : 0;
-            int queue = _last != null ? _last.queue : 0;
-            float t = 0f;
-            if (queue > 0 && total > 0f)
+            for (int i = 0; i < _procFills.Count; i++)
             {
-                float baseProg = _last.progress;
-                float prog = Mathf.Min(total, baseProg + (Time.time - _lastStamp) * TickRate);
-                t = Mathf.Clamp01(prog / total);
+                var p = (_last?.procs != null && i < _last.procs.Length) ? _last.procs[i] : null;
+                int queue = p != null ? p.queue : 0;
+                float t = 0f;
+                float remainingSec = 0f;
+                if (p != null && queue > 0 && p.total > 0)
+                {
+                    float prog = Mathf.Min(p.total, p.progress + (Time.time - _lastStamp) * TickRate);
+                    t = Mathf.Clamp01(prog / p.total);
+                    remainingSec = Mathf.Max(0f, (p.total - prog) / TickRate); // ticks → seconds (10 Hz)
+                }
+                var rt = _procFills[i].rectTransform;
+                rt.sizeDelta = new Vector2(156f * t, rt.sizeDelta.y);
+                if (i < _procLabels.Count)
+                    _procLabels[i].text = queue > 0 ? $"{Mathf.CeilToInt(remainingSec)}s ×{queue}" : "idle";
             }
-            var rt = _progressFill.rectTransform;
-            rt.sizeDelta = new Vector2(226f * t, rt.sizeDelta.y);
-            if (_queueText != null)
-                _queueText.text = queue > 0 ? $"Crafting… {queue} queued" : "Idle";
         }
 
         // ---------------------------------------------------------------- echoes / refresh
 
         private void OnMatchState(Nakama.IMatchState state)
         {
-            if (state.OpCode != OpCodes.ContainerUpdate) return;
             var json = System.Text.Encoding.UTF8.GetString(state.State);
-            var msg = JsonUtility.FromJson<ContainerUpdateMessage>(json);
-            if (msg == null || msg.gx != _cell.x || msg.gy != _cell.y || !_isOpen) return;
-            _last = msg;
-            _lastStamp = Time.time;
-
-            if (_isCraft) RefreshOutput();
-            else RefreshStorageSlots();
+            switch (state.OpCode)
+            {
+                // Station (compost) echoes — cached by cell ALWAYS (even while closed) so opening shows current
+                // state; a station's fill meter + its fly brood arrive on these two separate opcodes.
+                case OpCodes.StationUpdate:
+                {
+                    var m = JsonUtility.FromJson<StationUpdateMessage>(json);
+                    if (m == null) return;
+                    _stationEchoes[new Vector2Int(m.gx, m.gy)] = m;
+                    if (_isStation && _isOpen && m.gx == _cell.x && m.gy == _cell.y) RefreshStation();
+                    return;
+                }
+                case OpCodes.BroodUpdate:
+                {
+                    var m = JsonUtility.FromJson<BroodUpdateMessage>(json);
+                    if (m == null) return;
+                    var c = new Vector2Int(m.gx, m.gy);
+                    if (m.removed || (m.eggs + m.maggots + m.pupae + m.residents) <= 0) _broodEchoes.Remove(c);
+                    else _broodEchoes[c] = m;
+                    if ((_isStation || _isNursery || _isBeehive) && _isOpen && c == _cell) RefreshBrood();
+                    return;
+                }
+                case OpCodes.ContainerUpdate:
+                {
+                    var msg = JsonUtility.FromJson<ContainerUpdateMessage>(json);
+                    if (msg == null || msg.gx != _cell.x || msg.gy != _cell.y || !_isOpen) return;
+                    _last = msg;
+                    _lastStamp = Time.time;
+                    if (_isCraft)
+                    {
+                        // Server truth wins on the lane count (stale/missing client craft_slots):
+                        // rebuild the rows once, then refresh as normal.
+                        if (msg.procs != null && msg.procs.Length > 0 && msg.procs.Length != _procIcons.Count)
+                        {
+                            _lanesOverride = msg.procs.Length;
+                            BuildContent();
+                        }
+                        RefreshOutput();
+                        RefreshProcs();
+                        RefreshSelected(); // a lane freeing/filling can flip the Craft button
+                    }
+                    else RefreshStorageSlots();
+                    return;
+                }
+            }
         }
 
         private void RefreshOutput()
@@ -457,6 +925,7 @@ namespace BugFarmer.UI
         {
             if (!_isOpen) return;
             if (_isCraft) RefreshSelected();
+            else if (_isStation) RefreshStation();
             else RefreshStorageSlots();
         }
 

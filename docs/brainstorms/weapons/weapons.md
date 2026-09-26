@@ -4,7 +4,7 @@
 >
 > **Grounding:**
 > - Materials + tiers come from `../materials/ores_metals.md` (the tier→color table is shared).
-> - Combat ties into `docs/product/architecture_bugs.md`: most bugs are caught via **condition
+> - Combat ties into `docs/product/architecture/architecture_bugs.md`: most bugs are caught via **condition
 >   meters** (calm/stunned/distracted) or by **weakening to HP=0** then netting. So "weapons"
 >   here are mostly **subdue/weaken tools** that fill the `damage`/`stun` path, plus the nets
 >   themselves. A few are pure damage for hostile bugs (bees/wasps/scorpions/giant beetle attack).

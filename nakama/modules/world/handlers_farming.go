@@ -59,6 +59,13 @@ func (m *Match) handleToolUse(
 
 	logger.Info("ToolUse: tool %s has type=%s", toolID, toolDef.ToolType)
 
+	// CONSUMABLES ride the same verb (§C): OpCode 7 is "apply the equipped item at a cell" —
+	// one network verb for the smoker, calm_spray, and the future smoke_bomb/chill_canister.
+	if toolDef.Category == "consumable" {
+		m.handleConsumableUse(logger, dispatcher, state, userID, toolID, toolDef, msg.GridX, msg.GridY, tick)
+		return
+	}
+
 	// Route based on tool type
 	switch toolDef.ToolType {
 	case "hoe":
@@ -67,9 +74,296 @@ func (m *Match) handleToolUse(
 		m.handleWatering(logger, dispatcher, state, userID, msg.GridX, msg.GridY, tick)
 	case "scythe":
 		m.handleScythe(logger, dispatcher, state, userID, msg.GridX, msg.GridY, tick)
+	case "smoker":
+		m.handleSmoker(logger, dispatcher, state, userID, msg.GridX, msg.GridY, tick)
+	case "shovel":
+		m.handleShovel(logger, dispatcher, state, userID, msg.GridX, msg.GridY, msg.GroundID, msg.Dig, tick)
 	default:
 		m.sendWorldError(dispatcher, state, userID, "Use left-click for this tool")
 	}
+}
+
+// digIdleResetSeconds: a dig-in-progress left untouched this long heals back to full (the crack clears),
+// like walking away from breaking a block — so a half-dug cell never lingers.
+const digIdleResetSeconds = 3
+
+// processDiggingReset heals any shovel dig idle longer than digIdleResetSeconds: it clears the crack overlay
+// on every client (a CurrentHP<=0 BreakProgress) and drops the DiggingState entry, so resuming starts fresh.
+// DiggingState only — the occupant BreakingState is untouched. Cosmetic (BreakProgress isn't hashed), so
+// map-order iteration is fine.
+func (m *Match) processDiggingReset(state *WorldState, dispatcher runtime.MatchDispatcher, tick int64) {
+	if len(state.DiggingState) == 0 {
+		return
+	}
+	resetTicks := int64(state.Config.TickRate) * digIdleResetSeconds
+	if resetTicks <= 0 {
+		resetTicks = SimRate * digIdleResetSeconds
+	}
+	for key, prog := range state.DiggingState {
+		if tick-prog.LastTick < resetTicks {
+			continue
+		}
+		cx, cy, _, _ := GlobalToChunk(prog.GridX, prog.GridY)
+		m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeBreakProgress, BreakProgressMessage{
+			GridX: prog.GridX, GridY: prog.GridY, CurrentHP: 0, MaxHP: prog.MaxHP, PlayerID: prog.PlayerID,
+		})
+		delete(state.DiggingState, key)
+	}
+}
+
+// digHitsFor is how many shovel hits it takes to dig out a cell — stone-family floors are tougher (3),
+// soft ground (grass/dirt/sand/mud/wood) gives after 2. Judged by the tile's primary material.
+func digHitsFor(groundID string) int {
+	switch PrimaryMaterial(groundID) {
+	case "stone_floor", "stone_path", "cave_floor":
+		return 3
+	default:
+		return 2
+	}
+}
+
+// handleShovel is the shaped-ground builder's server verb. Two actions, split by `dig`:
+//   - DIG reverts the cell to the recessed "dug_soil" tile and DROPS the tile's material(s) as ground items
+//     (like felling a tree) — a composite drops BOTH its materials' ingredients; only tiles WITH a ground
+//     recipe are diggable. (Progressive multi-hit dig + crack overlay layers on top of this in a later step.)
+//   - PLACE consumes a RECIPE (all ingredients of every material the chosen id is made of — a sandwich needs
+//     bread AND filling) and sets the ground. The chosen id is player-supplied, so it is validated against the
+//     decorative material + shape allow-list (nothing else guards it). Gameplay semantics everywhere else still
+//     route through PrimaryMaterial (=matA); cost and semantics are separate concerns.
+func (m *Match) handleShovel(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	userID string,
+	gx, gy int,
+	groundID string,
+	dig bool,
+	tick int64,
+) {
+	player := state.Players[userID]
+	if player == nil {
+		return
+	}
+	if !m.validateToolCooldown(state, player, tick) {
+		return
+	}
+
+	cx, cy, lx, ly := GlobalToChunk(gx, gy)
+	chunk := state.Chunks[ChunkKey(cx, cy)]
+	if chunk == nil {
+		m.sendWorldError(dispatcher, state, userID, "Chunk not loaded")
+		return
+	}
+
+	current := chunk.GetGroundTile(lx, ly)
+	// Neither verb touches water/lava — filling water is the (future) sandbag system.
+	switch PrimaryMaterial(current) {
+	case "water_shallow", "water_deep", "lava":
+		m.sendWorldError(dispatcher, state, userID, "Can't shovel water")
+		return
+	}
+
+	if dig {
+		// DIG is PROGRESSIVE: each hit accumulates in DiggingState and broadcasts a crack overlay (reusing
+		// the block-break BreakProgress pipeline, which is cell-keyed so it renders on a bare ground cell).
+		// After digHitsFor(material) hits the cell becomes dug_soil and DROPS the tile's material(s) onto the
+		// ground (like felling a tree). Only tiles WITH a ground recipe are diggable. Untouched digs heal via
+		// processDiggingReset. DiggingState is SEPARATE from the occupant BreakingState (same key, distinct map).
+		drops := state.groundRecipeIngredients(current)
+		if len(drops) == 0 {
+			m.sendWorldError(dispatcher, state, userID, "Nothing to dig here")
+			return
+		}
+		digKey := fmt.Sprintf("%d,%d", gx, gy)
+		prog, ok := state.DiggingState[digKey]
+		if !ok || prog.PlayerID != userID {
+			maxHP := digHitsFor(current)
+			prog = &BreakingProgress{GridX: gx, GridY: gy, PlayerID: userID, CurrentHP: maxHP, MaxHP: maxHP, LastTick: tick}
+			state.DiggingState[digKey] = prog
+		}
+		prog.CurrentHP--
+		prog.LastTick = tick
+		// Broadcast the crack stage (CurrentHP<=0 clears the overlay on every client).
+		m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeBreakProgress, BreakProgressMessage{
+			GridX: gx, GridY: gy, CurrentHP: prog.CurrentHP, MaxHP: prog.MaxHP, PlayerID: userID,
+		})
+		if prog.CurrentHP > 0 {
+			return // still digging — crack shown, wait for the next hit
+		}
+		// Fully dug: clear state, sink the tile to dug_soil, drop its material(s).
+		delete(state.DiggingState, digKey)
+		chunk.Ground[ly][lx] = "dug_soil"
+		m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, "dug_soil", nil, false)
+		for _, d := range drops {
+			m.spawnHarvestDrops(dispatcher, state, d.Item, d.Count, gx, gy, cx, cy)
+		}
+		logger.Debug("Player %s dug %s at %d,%d -> dug_soil (+drops)", userID, current, gx, gy)
+		return
+	}
+
+	// PLACE: validate the chosen id, then consume its full recipe (every material it is made of) and set the
+	// ground. The world-error toast surfaces any shortfall.
+	id, ok := ValidateShovelGround(groundID)
+	if !ok {
+		m.sendWorldError(dispatcher, state, userID, "Invalid ground material")
+		return
+	}
+	ings := state.groundRecipeIngredients(id)
+	if len(ings) == 0 {
+		m.sendWorldError(dispatcher, state, userID, "Can't place that here")
+		return
+	}
+	if short := groundShortfall(player, ings); short != "" {
+		m.sendWorldError(dispatcher, state, userID, short)
+		return
+	}
+	// Capture every slot holding an ingredient BEFORE consuming, so we can push the updated (or emptied)
+	// slots to the client after — a single item may span multiple slots.
+	affected := map[int]bool{}
+	for _, ing := range ings {
+		for i := range player.ItemSlots {
+			if player.ItemSlots[i].ItemID == ing.Item {
+				affected[i] = true
+			}
+		}
+	}
+	for _, ing := range ings {
+		playerConsume(player, ing.Item, ing.Count)
+	}
+	chunk.Ground[ly][lx] = id
+	m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, id, nil, false)
+	for i := range affected {
+		m.sendSlotUpdate(dispatcher, state, userID, i, &player.ItemSlots[i])
+	}
+	logger.Debug("Player %s placed %s at %d,%d", userID, id, gx, gy)
+}
+
+// smokerCalmTicks: how long a puffed hive stays calm (both defend entries no-op) — the
+// harvest window. 30s: enough to harvest a couple of hives deliberately, short enough
+// that an unattended apiary re-arms.
+const smokerCalmTicks = 300
+
+// smokerReach: hives within this range of the puffed CELL are calmed (a puff covers a
+// small cluster of boxes, not the whole apiary).
+const smokerReach = 4.0
+
+// handleSmoker: one puff at the target cell (§C — the GENERAL subdual tool, not a bee gadget):
+//   - fills ConditionValue on EVERY swarm within smokerReach whose species has a
+//     condition_tools["calm"] entry (wasps, centipedes, bees, the harmless set — the "vast
+//     majority of bugs can be calmed" rule, written in data);
+//   - stamps SmokedUntilTick on hives in reach — smoke LINGERS at the hive entrance, keeping
+//     defense suppressed even while the (uncalmed remainder of the) colony forages afield.
+//
+// Server-only state both ways — the ABSENCE of stings/surges/defend legs replays identically
+// on every client, so no ledger event.
+func (m *Match) handleSmoker(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	userID string,
+	gx, gy int,
+	tick int64,
+) {
+	player := state.Players[userID]
+	if player == nil {
+		return
+	}
+	if !m.validateToolCooldown(state, player, tick) {
+		return
+	}
+	// Range check: same 3.0 allowance as container/station interactions.
+	cs := state.Config.ChunkSize
+	px, py := player.WorldX(cs), player.WorldY(cs)
+	dx, dy := px-(float32(gx)+0.5), py-(float32(gy)+0.5)
+	if dx*dx+dy*dy > 9.0 {
+		m.sendWorldError(dispatcher, state, userID, "Too far away")
+		return
+	}
+
+	// effect_power is the smoker-tier knob (item data; absent = 1.0).
+	power := float32(1.0)
+	if def := state.Entities[player.EquippedTool]; def != nil && def.EffectPower > 0 {
+		power = def.EffectPower
+	}
+	calmedSwarms := m.applyAreaCondition(state, gx, gy, smokerReach, "calm", power)
+
+	smokedNests := 0
+	reachSq := float32(smokerReach * smokerReach)
+	for _, key := range sortedStringKeys(state.NestStates) {
+		nest := state.NestStates[key]
+		ndx, ndy := float32(nest.GridX)+0.5-(float32(gx)+0.5), float32(nest.GridY)+0.5-(float32(gy)+0.5)
+		if ndx*ndx+ndy*ndy > reachSq {
+			continue
+		}
+		nest.SmokedUntilTick = tick + smokerCalmTicks
+		// A colony already boiling calms down too (smoke works mid-anger).
+		if resident, ok := state.Swarms[nest.ResidentSwarmID]; ok && resident.Phase == "defending" {
+			resident.Phase = "feeding"
+			resident.DefendTargetID = ""
+		}
+		smokedNests++
+	}
+	if calmedSwarms == 0 && smokedNests == 0 {
+		m.sendWorldError(dispatcher, state, userID, "Nothing nearby to smoke")
+		return
+	}
+	logger.Info("Smoker: %s calmed %d swarm(s), smoked %d hive(s) around %d,%d",
+		userID, calmedSwarms, smokedNests, gx, gy)
+}
+
+// handleConsumableUse applies an equipped consumable's effect at the target cell and consumes
+// one from the stack (§C: calm_spray's effect:"calm" finally has a consumer). The item's own
+// `reach` is the EFFECT radius around the cell; the cell itself must be within the standard
+// 3.0 interaction range. Species without the effect in condition_tools are simply unaffected —
+// spraying a species it can't touch reports "nothing happens" and costs nothing.
+func (m *Match) handleConsumableUse(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	userID, itemID string,
+	def *EntityDef,
+	gx, gy int,
+	tick int64,
+) {
+	player := state.Players[userID]
+	if player == nil {
+		return
+	}
+	if def.Effect == "" {
+		m.sendWorldError(dispatcher, state, userID, "Nothing happens")
+		return
+	}
+	if !m.validateToolCooldown(state, player, tick) {
+		return
+	}
+	cs := state.Config.ChunkSize
+	px, py := player.WorldX(cs), player.WorldY(cs)
+	dx, dy := px-(float32(gx)+0.5), py-(float32(gy)+0.5)
+	if dx*dx+dy*dy > 9.0 {
+		m.sendWorldError(dispatcher, state, userID, "Too far away")
+		return
+	}
+
+	slot := player.FindItem(itemID)
+	if slot < 0 {
+		m.sendWorldError(dispatcher, state, userID, "You don't have that")
+		return // possession first — never apply an effect the player can't pay for
+	}
+
+	radius := def.Reach
+	if radius <= 0 {
+		radius = 3.0
+	}
+	touched := m.applyAreaCondition(state, gx, gy, radius, def.Effect, def.EffectPower)
+	if touched == 0 {
+		m.sendWorldError(dispatcher, state, userID, "Nothing nearby to calm")
+		return // a miss costs nothing
+	}
+
+	player.RemoveItem(slot, 1)
+	m.sendSlotUpdate(dispatcher, state, userID, slot, &player.ItemSlots[slot])
+	logger.Info("Consumable %s: %s applied %q to %d swarm(s) at %d,%d",
+		itemID, userID, def.Effect, touched, gx, gy)
 }
 
 // validateCooldownTicks is THE cooldown gate: one body enforcing the shared LastToolTick
@@ -131,7 +425,9 @@ func (m *Match) handleHoe(
 	// Get tile at position
 	tile := chunk.GetGroundTile(lx, ly)
 	logger.Debug("Hoe: tile at (%d,%d) = %s", gx, gy, tile)
-	tileDef := state.TileDefs[tile]
+	// Shaped-ground: a composite tile is governed by its primary material (so hoeing a "grass~dirt~diagNE"
+	// tile behaves like hoeing grass).
+	tileDef := state.TileDefs[PrimaryMaterial(tile)]
 	if tileDef == nil {
 		m.sendWorldError(dispatcher, state, userID, "Unknown tile")
 		return
@@ -202,8 +498,8 @@ func (m *Match) handleWatering(
 
 	tile := chunk.GetGroundTile(lx, ly)
 
-	// Check if target is water tile (refill)
-	if tile == "water_shallow" || tile == "water_deep" {
+	// Check if target is water tile (refill) — primary material, so composite water still refills.
+	if pm := PrimaryMaterial(tile); pm == "water_shallow" || pm == "water_deep" {
 		// Refill watering can
 		if slot.Metadata == nil {
 			slot.Metadata = make(map[string]int)
@@ -246,6 +542,20 @@ func (m *Match) handleWatering(
 			m.broadcastTreeWaterUpdate(dispatcher, state, tree)
 			logger.Debug("Player %s watered tree at %d,%d (tank=%d/%d)",
 				userID, gx, gy, tree.WaterLevel, treeTankCap)
+			return
+		}
+		// Bare tilled soil (no crop/tree): watering wets the bed — visual feedback + accepts the
+		// water (mirrors the crop-watering wet-soil effect below). Already-wet soil accepts silently
+		// without wasting a use. Determinism: a ground-tile CellEdit only, never a bug-sim input.
+		if tile == "garden_plot" {
+			chunk.Ground[ly][lx] = "garden_plot_wet"
+			m.broadcastWorldUpdate(dispatcher, state, cx, cy, gx, gy, "garden_plot_wet", nil, false)
+			slot.Metadata["uses"]--
+			m.sendSlotUpdate(dispatcher, state, userID, slotIndex, slot)
+			logger.Debug("Player %s watered bare bed at %d,%d", userID, gx, gy)
+			return
+		}
+		if tile == "garden_plot_wet" {
 			return
 		}
 		m.sendWorldError(dispatcher, state, userID, "No crop here")
@@ -616,7 +926,7 @@ func (m *Match) spawnHarvestDrops(
 		},
 		Lifetime: 60.0,
 	}
-	state.GroundItems[itemID] = groundItem
+	state.putGroundItem(groundItem)
 
 	// Broadcast spawn
 	spawnMsg := GroundItemSpawnMessage{
@@ -796,13 +1106,15 @@ func (m *Match) dropFruitFromTree(
 		Position: entities.EntityPosition{
 			ChunkX: cx,
 			ChunkY: cy,
-			LocalX: localX,
-			LocalY: localY,
+			// Snap to the cell centre — fallen fruit is a placed GRID object (int() matches the
+			// rot-time food event's flooring, so the food cell is unchanged).
+			LocalX: float32(int(localX)) + 0.5,
+			LocalY: float32(int(localY)) + 0.5,
 		},
 		Lifetime: float32(rotTicks) * 0.1, // seconds until rot
 		DecaysTo: "rotten_" + fruitType,
 	}
-	state.GroundItems[itemID] = groundItem
+	state.putGroundItem(groundItem)
 
 	// Emit influence event
 	zoneID := ""
@@ -936,6 +1248,41 @@ func (m *Match) initStationsInChunk(
 	}
 }
 
+// resolveStation returns the station at (gx,gy), lazily creating its state the first time — mirrors
+// resolveCraftStation (craft_stations.go) + the initStationsInChunk builder. This is what lets a
+// MOVED/runtime-placed station accept deposits: initStationsInChunk only scans at chunk-load, so a bin
+// placed into an already-loaded chunk had no StationState and handleStationDeposit rejected it. Returns
+// nil if no station occupant is anchored at (gx,gy). Deterministic + server-authoritative (no RNG; an
+// empty station is inert until processStations sees input).
+func (m *Match) resolveStation(state *WorldState, gx, gy int) *entities.StationState {
+	key := entities.StationKey(gx, gy)
+	if s := state.Stations[key]; s != nil {
+		return s
+	}
+	cx, cy, lx, ly := GlobalToChunk(gx, gy)
+	chunk := state.Chunks[ChunkKey(cx, cy)]
+	if chunk == nil {
+		return nil
+	}
+	cell, _ := chunk.GetOccupantCell(lx, ly)
+	if cell.IsEmpty || cell.Occupant == nil || !cell.Occupant.Anchor {
+		return nil
+	}
+	def := state.Entities[cell.Occupant.ID]
+	if def == nil || def.World == nil || def.World.Station == nil {
+		return nil
+	}
+	s := &entities.StationState{
+		Key:      key,
+		EntityID: cell.Occupant.ID,
+		GridX:    gx,
+		GridY:    gy,
+		Fill:     0,
+	}
+	state.Stations[key] = s
+	return s
+}
+
 // handleStationDeposit processes a player depositing one inventory item into a station
 // (OpCode 85). Validates the item is accepted + capacity remains, consumes it from the
 // player's inventory, raises the fill meter, and publishes BOTH a display update (OpCode 86)
@@ -954,7 +1301,7 @@ func (m *Match) handleStationDeposit(
 	}
 
 	key := entities.StationKey(msg.GX, msg.GY)
-	st := state.Stations[key]
+	st := m.resolveStation(state, msg.GX, msg.GY) // lazily create for moved/runtime-placed bins (#10)
 	if st == nil {
 		m.sendWorldError(dispatcher, state, userID, "No station there")
 		return
@@ -1054,6 +1401,76 @@ func (m *Match) broadcastStationUpdate(dispatcher runtime.MatchDispatcher, st *e
 	updMsg := StationUpdateMessage{GX: st.GridX, GY: st.GridY, Input: st.InputCount, Fill: st.Fill, Capacity: capacity}
 	updData, _ := json.Marshal(updMsg)
 	dispatcher.BroadcastMessage(OpCodeStationUpdate, updData, nil, nil, true)
+}
+
+// handleCompostHarvest (OpCode 115): the player scoops the finished compost out of a bin into the
+// bag — the hive-harvest pattern (take-all, no panel-count). Compost is display/inventory yield AND
+// the flies' food source, so removing it MUST lower the deterministic food level to match: we emit
+// the SAME frontier-gated FOOD_CONSUMED event the process/feed loops use (no new ledger vocabulary),
+// so every client's food registry stays in sync with the now-empty bin and nothing desyncs.
+func (m *Match) handleCompostHarvest(
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	userID string,
+	msg CompostHarvestMessage,
+) {
+	player := state.Players[userID]
+	if player == nil {
+		return
+	}
+
+	key := entities.StationKey(msg.GX, msg.GY)
+	st := m.resolveStation(state, msg.GX, msg.GY)
+	if st == nil {
+		m.sendWorldError(dispatcher, state, userID, "No compost bin there")
+		return
+	}
+	def := state.Entities[st.EntityID]
+	if def == nil || def.World == nil || def.World.Station == nil {
+		return
+	}
+	sd := def.World.Station
+
+	// Range check (same 3.0 allowance as deposit/pickup/hive).
+	cs := state.Config.ChunkSize
+	px, py := player.WorldX(cs), player.WorldY(cs)
+	dx, dy := px-(float32(msg.GX)+0.5), py-(float32(msg.GY)+0.5)
+	if dx*dx+dy*dy > 9.0 {
+		m.sendWorldError(dispatcher, state, userID, "Too far away")
+		return
+	}
+
+	units := st.Fill
+	if units <= 0 {
+		m.sendWorldError(dispatcher, state, userID, "No compost ready yet")
+		return
+	}
+	if player.AddItem("compost", units) < 0 {
+		m.sendWorldError(dispatcher, state, userID, "Your bag is full")
+		return
+	}
+
+	// Scoop out the whole pile: every whole unit leaves, and the part-eaten fraction goes with it.
+	st.Fill = 0
+	st.FoodFrac = 0
+
+	capacity := sd.Capacity
+	if capacity <= 0 {
+		capacity = 10
+	}
+	m.broadcastStationUpdate(dispatcher, st, capacity)
+
+	// The compost was the flies' food source — drop its deterministic level to 0 to match (level =
+	// Fill*foodPerUnit - FoodFrac = 0). Same frontier-gated event processStations/feeding emit.
+	if state.CurrentZone != nil {
+		state.AddFoodEvent(state.CurrentZone.ZoneID, InfluenceFoodConsumed, key, st.GridX, st.GridY, 0)
+	}
+
+	if presence, ok := state.Presences[userID]; ok && presence != nil {
+		_ = m.sendInventorySync(logger, dispatcher, player, presence)
+	}
+	logger.Info("CompostHarvest: %s took %d compost at %d,%d", userID, units, msg.GX, msg.GY)
 }
 
 // processStations advances every station's INPUT -> OUTPUT conversion (the material-processor
@@ -1169,7 +1586,7 @@ func (m *Match) consumeFood(state *WorldState, dispatcher runtime.MatchDispatche
 			state.AddFoodEvent(zoneID, InfluenceFoodConsumed, foodID, wcx, wcy, item.FoodValue)
 		}
 		if item.FoodValue == 0 {
-			delete(state.GroundItems, foodID)
+			state.deleteGroundItem(foodID)
 			removeMsg := GroundItemRemoveMessage{ID: foodID}
 			m.broadcastToChunk(dispatcher, state, item.Position.ChunkX, item.Position.ChunkY, OpCodeGroundItemRemove, removeMsg)
 		}
@@ -1213,7 +1630,7 @@ func (m *Match) removeGroundItem(
 	item *entities.GroundItem,
 ) {
 	cx, cy := item.Position.ChunkX, item.Position.ChunkY
-	delete(state.GroundItems, itemID)
+	state.deleteGroundItem(itemID)
 
 	// An EDIBLE item leaving the world MUST clear the deterministic food registry.
 	// This path is reached by LIFETIME EXPIRY — and carrion (bug_parts, food_value 10,
@@ -1440,14 +1857,14 @@ func (m *Match) initFruitTreesInChunk(
 				pos := entities.EntityPosition{LocalX: float32(gx), LocalY: float32(gy)}
 				pos.Normalize(chunkSize)
 				itemID := state.nextItemID("item_windfall")
-				state.GroundItems[itemID] = &entities.GroundItem{
+				state.putGroundItem(&entities.GroundItem{
 					ID:        itemID,
 					ItemType:  "rotten_" + entityDef.World.FruitType,
 					Count:     1,
 					Position:  pos,
 					Lifetime:  rottenFruitDecaySeconds,
 					FoodValue: 100, // matches the rot pipeline (dropFruitFromTree → rotted)
-				}
+				})
 				if state.CurrentZone != nil {
 					state.AddFoodEvent(state.CurrentZone.ZoneID, InfluenceItemRotted, itemID, gx, gy, 100)
 				}

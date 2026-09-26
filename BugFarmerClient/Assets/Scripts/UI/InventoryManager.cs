@@ -31,6 +31,10 @@ namespace BugFarmer.UI
         public event System.Action OnCapacityChanged; // ItemSlotsUnlocked changed (backpack)
         public long Coins { get; private set; }
         public int SelectedSlot { get; private set; }
+        /// <summary>Gated recipe ids the player has learned (server-authoritative, from FullInventorySync).
+        /// Basic/default recipes are NOT listed — they're always craftable.</summary>
+        public System.Collections.Generic.HashSet<string> KnownRecipes { get; private set; }
+            = new System.Collections.Generic.HashSet<string>();
 
         // Events
         public event Action OnInventoryChanged;
@@ -183,6 +187,12 @@ namespace BugFarmer.UI
             // Sync coins and reset selection to slot 0
             Coins = msg.coins;
             SelectedSlot = 0;
+
+            // Sync learned recipes (drives the crafting-panel lock filter).
+            KnownRecipes.Clear();
+            if (msg.known_recipes != null)
+                foreach (var id in msg.known_recipes)
+                    if (!string.IsNullOrEmpty(id)) KnownRecipes.Add(id);
 
             Debug.Log($"[Inventory] Synced: {CountNonEmptySlots(BugSlots)} bug stacks, " +
                       $"{CountNonEmptySlots(ItemSlots)} item stacks, {Coins} coins");

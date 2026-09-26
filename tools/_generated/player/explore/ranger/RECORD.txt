@@ -1,0 +1,26 @@
+when      : 2026-07-29 11:00:18
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+dest      : explore/ranger
+references (in the order sent):
+  1. tools/_generated/player/bases/armless_front.png  (sent upscaled x14)
+
+PROMPT:
+Draw THREE different design options for a woodland ranger's outfit, side by side in a single row, on a FLAT SOLID MAGENTA background (pure magenta, RGB 255 0 255). The magenta must be completely flat and uniform with nothing else drawn on it - no shadow, no gradient, no vignette, no ground, no scenery, no text.
+
+Each of the three is the SAME character wearing a DIFFERENT DESIGN of the outfit: standing still, facing the viewer, full body from head to feet, all three at the same scale and standing on the same baseline.
+
+Because the character has NO ARMS, do not draw arms, hands, elbows, forearms or gauntlets. Each shoulder ends in a rounded shoulder cap at the armless shoulder opening. This is deliberate - the hands are separate sprites added later.
+
+The three designs, left to right:
+1. a HOODED FOREST SCOUT - a deep hood pulled up with the face in shadow, a long ragged cloak hanging over a light leather jerkin, muted forest greens and cool greys, lean and stealthy
+2. a PRACTICAL WOODSMAN - no hood, a short brimmed felt hat with a feather in the band, a brown leather jerkin over a moss-green tunic, belts and pouches, face clearly visible, rugged and grounded
+3. an ELITE FOREST WARDEN - layered overlapping leaf-shaped plates in deep lacquered green with bronze edging, a helm with swept antler-like prongs, richer and more ceremonial
+
+Every design covers the whole head with its own headgear, and covers the body from the shoulders to the boots, with no bare skin between the waist and the boots.
+
+Pixel art. Big simple shapes, chunky pixels, a handful of large blocks per area - no rivets, no filigree, no fine detail. Each figure is only about 40 pixels tall in the game, so it has to read by its silhouette and three or four shading bands alone.
+
+Draw each figure with HARD pixel edges against the magenta. Do not blur, feather, glow or blend the figure into the background. Do not draw a heavy black outline around the figure - where an outline is needed use a darker shade of that figure's own colours, one pixel thick.

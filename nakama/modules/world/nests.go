@@ -17,6 +17,10 @@ import (
 const (
 	nestFoundDistMin = 40
 	nestFoundDistMax = 120
+
+	// honeyPerDeposit: combs added per provisioning trip (before the hive's honey_mult).
+	// One comb ≈ 2 trips at the default 0.5 — a working colony fills a basic box in ~8 trips.
+	honeyPerDeposit = 0.5
 )
 
 // Wasp nests (architecture_swarm_sync.md §14): the fruit-tree pattern — occupant-backed
@@ -27,14 +31,27 @@ const (
 // vocabulary). NestState is deliberately species-generic (bees later: a `Deposit`
 // field + a yield item on the nest def).
 
-// speciesForNestOccupant finds the species whose nest this occupant type is.
-func (m *Match) speciesForNestOccupant(state *WorldState, occupantID string) (string, *entities.BugSpecies) {
-	for id, sp := range state.Species {
-		if sp.Predation != nil && sp.Predation.NestOccupant == occupantID {
-			return id, sp
+// speciesForNestOccupant finds the species whose nest this occupant type is — either the
+// primary (wild) NestOccupant or one of the player-placeable NestOccupantsExtra hive boxes.
+// The bool reports whether it is an EXTRA (a box → registers DORMANT, no free colony).
+func (m *Match) speciesForNestOccupant(state *WorldState, occupantID string) (string, *entities.BugSpecies, bool) {
+	// Sorted iteration: with multiple nest species in data, map order here would be a
+	// nondeterminism landmine (which species founds a contested occupant id).
+	for _, id := range sortedStringKeys(state.Species) {
+		sp := state.Species[id]
+		if sp.Predation == nil {
+			continue
+		}
+		if sp.Predation.NestOccupant == occupantID {
+			return id, sp, false
+		}
+		for _, extra := range sp.Predation.NestOccupantsExtra {
+			if extra == occupantID {
+				return id, sp, true
+			}
 		}
 	}
-	return "", nil
+	return "", nil, false
 }
 
 // initNestsInChunk scans a loaded chunk for nest occupants and registers their states,
@@ -55,30 +72,34 @@ func (m *Match) initNestsInChunk(
 			if cell.IsEmpty || cell.Occupant == nil || !cell.Occupant.Anchor {
 				continue
 			}
-			speciesID, species := m.speciesForNestOccupant(state, cell.Occupant.ID)
+			speciesID, species, isBox := m.speciesForNestOccupant(state, cell.Occupant.ID)
 			if species == nil {
 				continue
 			}
 
 			gx := cx*chunkSize + lx
 			gy := cy*chunkSize + ly
-			m.registerNestAt(state, gx, gy, cell.Occupant.ID, speciesID, species, logger)
+			m.registerNestAt(state, gx, gy, cell.Occupant.ID, speciesID, species, isBox, logger)
 		}
 	}
 }
 
-// registerNestAt creates the NestState for a nest occupant at (gx,gy) and founds its resident patrol
-// (cap-aware). Shared by chunk-load scanning (initNestsInChunk) and DYNAMIC founding (a colony splitting
-// off a daughter hive — processNestFounding). No-op if a nest is already registered there.
-func (m *Match) registerNestAt(state *WorldState, gx, gy int, occupantID, speciesID string, species *entities.BugSpecies, logger runtime.Logger) *entities.NestState {
+// registerNestAt creates the NestState for a nest occupant at (gx,gy). Wild nests (dormant=false)
+// found their resident patrol immediately (cap-aware); PLAYER-PLACED hive boxes (dormant=true)
+// register empty — a colony must claim them via daughter-founding/recovery, so placing a box never
+// mints free bees. Shared by chunk-load scanning, runtime placement, and dynamic founding.
+// No-op if a nest is already registered there.
+func (m *Match) registerNestAt(state *WorldState, gx, gy int, occupantID, speciesID string, species *entities.BugSpecies, dormant bool, logger runtime.Logger) *entities.NestState {
 	key := fmt.Sprintf("%d,%d", gx, gy)
 	if state.NestStates[key] != nil {
 		return state.NestStates[key]
 	}
 	nest := &entities.NestState{GridX: gx, GridY: gy, EntityID: occupantID, SpeciesID: speciesID}
 	state.NestStates[key] = nest
-	m.nestSpawnResident(state, nest, species, state.Tuning.NestFoundingSize, logger)
-	logger.Debug("Registered %s nest at %d,%d (resident=%q)", speciesID, gx, gy, nest.ResidentSwarmID)
+	if !dormant {
+		m.nestSpawnResident(state, nest, species, state.Tuning.NestFoundingSize, logger)
+	}
+	logger.Debug("Registered %s nest at %d,%d (dormant=%v resident=%q)", speciesID, gx, gy, dormant, nest.ResidentSwarmID)
 	return nest
 }
 
@@ -113,6 +134,7 @@ func (m *Match) nestSpawnResident(
 	swarm.HomePos = swarm.Position
 	nest.ResidentSwarmID = swarm.ID
 	nest.RehatchAtTick = 0
+	nest.Founded = true
 	logger.Info("Nest %s spawned resident %s (%d %s)", nestKey, swarm.ID, n, nest.SpeciesID)
 }
 
@@ -121,7 +143,7 @@ func (m *Match) nestSpawnResident(
 // breakOccupantAt hook) and the brood-drain RE-HATCH: a dead resident with banked
 // brood re-staffs after 2 min at a size equal to the brood consumed — ~3 consecutive
 // culls exhaust a nest into readable dormancy.
-func (m *Match) processNests(state *WorldState, logger runtime.Logger) {
+func (m *Match) processNests(state *WorldState, dispatcher runtime.MatchDispatcher, logger runtime.Logger) {
 	chunkSize := state.Config.ChunkSize
 	var toDelete []string
 
@@ -145,16 +167,18 @@ func (m *Match) processNests(state *WorldState, logger runtime.Logger) {
 			continue
 		}
 
-		// Resident dead (caught/killed). Brood-drain re-hatch:
-		if nest.Brood < state.Tuning.NestHatchCost {
+		// Resident dead (caught/killed). Brood-drain re-hatch (banked brood now lives in the nest BroodState):
+		if m.nestBroodCount(state, nest) < state.Tuning.NestHatchCost {
 			// Brood exhausted → the colony would otherwise be permanently dormant (the bug behind the
 			// collapsing wasp colonies). Since wasps are NEST-ONLY, this is their sole way back, so a dead
-			// colony RE-FOUNDS a fresh founding patrol — but PREY-GATED (only if live prey is within home
-			// range) and after a longer recovery delay, so we never re-staff a hive in an emptied field and
-			// dormancy stays readable where the prey is genuinely gone (owner's "new ~5 batch if the first die").
+			// colony RE-FOUNDS a fresh founding patrol — but FOOD-GATED (live prey for hunters, live
+			// nectar for bee-class nectar foragers, within home range) and after a longer recovery delay,
+			// so we never re-staff a hive in an emptied field and dormancy stays readable where the food
+			// is genuinely gone. Only nests that ONCE HELD a colony recover — a never-founded placed hive
+			// box waits for a daughter-founding to claim it (no colonies from nowhere).
 			species := state.Species[nest.SpeciesID]
-			if species == nil || !m.nestHasPreyNearby(state, nest, species) {
-				nest.RehatchAtTick = 0 // no prey — stay dormant (axe-at-leisure / wait for the prey base)
+			if species == nil || !nest.Founded || !m.nestCanFeedNearby(state, nest, species) {
+				nest.RehatchAtTick = 0 // no food (or never founded) — stay dormant
 				continue
 			}
 			if nest.RehatchAtTick == 0 {
@@ -172,11 +196,11 @@ func (m *Match) processNests(state *WorldState, logger runtime.Logger) {
 			continue
 		}
 		if state.TickCount >= nest.RehatchAtTick {
-			size := nest.Brood
+			size := m.nestBroodCount(state, nest)
 			if size > state.Tuning.NestHatchCost {
 				size = state.Tuning.NestHatchCost
 			}
-			nest.Brood -= size
+			m.drainNestBrood(state, dispatcher, nest, size)
 			species := state.Species[nest.SpeciesID]
 			if species != nil {
 				m.nestSpawnResident(state, nest, species, size, logger)
@@ -190,47 +214,55 @@ func (m *Match) processNests(state *WorldState, logger runtime.Logger) {
 	}
 }
 
-// depositBrood handles a sated resident arriving home: +1 brood (clamped — no banked
-// chain-hatching) and the hatch check (+2 into the resident per 3 brood, §13
-// partial-litter at the population cap; at zero room the brood stays banked).
+// depositBrood handles a sated resident arriving home. Breeding-unify: it lays ONE egg into the nest's
+// VISIBLE BroodState (banked at the nest brood cap) instead of bumping an invisible counter that
+// instant-pops adults. processBroods matures eggs -> maggots over GAME-HOURS and hatches them into the
+// resident (hatchFromBrood's "nest" case), honoring the population cap at hatch time (a capped nest banks
+// maggots, exactly like the old counter). Bees also make honey per trip. Dispatcher-free (called from the
+// deposit path inside predationThink) → no broadcast here; processBroods/processNests carry the display.
 func (m *Match) depositBrood(
 	state *WorldState,
 	swarm *entities.SwarmState,
 	nest *entities.NestState,
 	logger runtime.Logger,
 ) {
-	if nest.Brood < state.Tuning.NestBroodCap {
-		nest.Brood++
+	// Bees: every provisioning trip also makes honey (foraging IS the honey economy), up to
+	// the hive def's cap. Wasp nests have no world.hive → no-op. Display/inventory yield only.
+	if def := state.Entities[nest.EntityID]; def != nil && def.World != nil && def.World.Hive != nil {
+		h := def.World.Hive
+		mult := h.HoneyMult
+		if mult <= 0 {
+			mult = 1.0
+		}
+		nest.Honey += honeyPerDeposit * mult
+		if h.HoneyCap > 0 && nest.Honey > h.HoneyCap {
+			nest.Honey = h.HoneyCap
+		}
 	}
 
-	if nest.Brood >= state.Tuning.NestHatchCost {
-		n := state.Tuning.NestHatchCount
-		if maxPop := state.SpeciesMaxPopulation(swarm.SpeciesID); maxPop > 0 {
-			room := maxPop - state.SpeciesPopulation(swarm.SpeciesID)
-			if room < n {
-				n = room
-			}
-		}
-		if n > 0 {
-			nest.Brood -= state.Tuning.NestHatchCost
-			m.growSwarm(state, swarm, n)
-			logger.Info("Nest %d,%d hatched +%d into %s (now %d; brood %d)",
-				nest.GridX, nest.GridY, n, swarm.ID, swarm.Count, nest.Brood)
-		}
-	}
+	m.depositNestEgg(state, nest, state.Tuning.NestBroodCap)
+	_, _ = swarm, logger // hatch is deferred to processBroods (the resident grows there, not here)
 }
 
-// onNestOccupantRemoved is the breakOccupantAt hook: clear the state and ORPHAN the
-// resident — it never breeds again, tethers to its last HomePos, still hunts/stings.
-func (m *Match) onNestOccupantRemoved(state *WorldState, gx, gy int, logger runtime.Logger) {
+// onNestOccupantRemoved is the player-BREAK hook (breakOccupantAt): tearing a nursery open PERISHES its
+// developing brood (eggs/larvae/pupae die — only living adults survive) and orphans the resident patrol,
+// which is still alive and still stings. Kick a nest and the RESIDENT ADULTS come at you: they're right
+// next to the breaker, so their existing proximity aggro (aggroPlayerThink, aggro_enter) turns them onto
+// the attacker. No new bugs are minted from the brood — a torn brood is dead brood (harvest it first to
+// keep it). This is the BREAK path only; the occupant-gone SWEEP (processNests) stays calm-orphan.
+func (m *Match) onNestOccupantRemoved(state *WorldState, dispatcher runtime.MatchDispatcher, gx, gy int, logger runtime.Logger) {
 	key := fmt.Sprintf("%d,%d", gx, gy)
 	nest := state.NestStates[key]
 	if nest == nil {
 		return
 	}
+	// The brood PERISHES — clear it (broadcasts removed=true so the panel/display empties); no spawn.
+	m.clearNestBrood(state, dispatcher, nest)
+	// The live resident adults spill out: orphan the patrol (it keeps its bugs) so it stops homing; being
+	// adjacent to the breaker, its proximity aggro brings it onto them.
 	m.orphanNestResident(state, nest)
 	delete(state.NestStates, key)
-	logger.Info("Nest at %s destroyed (resident orphaned)", key)
+	logger.Info("Nest at %s destroyed (brood perished; resident adults orphaned)", key)
 }
 
 func (m *Match) orphanNestResident(state *WorldState, nest *entities.NestState) {
@@ -271,6 +303,7 @@ func (m *Match) processNestFounding(state *WorldState, dispatcher runtime.MatchD
 		occupantID string
 		speciesID  string
 		species    *entities.BugSpecies
+		claimKey   string // non-empty: colonize this EXISTING dormant hive box (no occupant placed)
 	}
 	var todo []founding
 
@@ -286,7 +319,7 @@ func (m *Match) processNestFounding(state *WorldState, dispatcher runtime.MatchD
 		}
 		// Thriving: saturated patrol + banked surplus brood (brood only accrues from successful
 		// post-kill homing, so a full bank means the colony is well-fed).
-		if resident.Count < species.MaxSwarmSize || nest.Brood < state.Tuning.NestBroodCap {
+		if resident.Count < species.MaxSwarmSize || m.nestBroodCount(state, nest) < state.Tuning.NestBroodCap {
 			continue
 		}
 		maxNests := state.CurrentZone.BugSpawning.SpeciesCaps[nest.SpeciesID].MaxNests
@@ -298,17 +331,65 @@ func (m *Match) processNestFounding(state *WorldState, dispatcher runtime.MatchD
 			state.SpeciesPopulation(nest.SpeciesID)+state.Tuning.NestFoundingSize > maxPop {
 			continue
 		}
+
+		if species.CarrionForager {
+			// ANT-CLASS carrion forager: no claimable boxes (ants don't move into
+			// apiaries) — a thriving colony digs a daughter brood beside its own food
+			// shape (carrion/windfalls/fungus), attraction-scoped.
+			gx, gy, ok := m.findNestSiteWithCarrion(state, nest.GridX, nest.GridY, species,
+				state.Tuning.NestFoundDistMin, state.Tuning.NestFoundDistMax)
+			if !ok {
+				continue // nothing to eat an adequate distance away — the colony WAITS
+			}
+			todo = append(todo, founding{gx: gx, gy: gy, occupantID: species.Predation.NestOccupant,
+				speciesID: nest.SpeciesID, species: species})
+			m.clearNestBrood(state, dispatcher, nest)
+			nestCount[nest.SpeciesID]++
+			continue
+		}
+		if len(species.Predation.Prey) == 0 {
+			// BEE-CLASS nectar forager: a swarming colony PREFERS an empty player-placed hive
+			// box (that's how an apiary comes alive), else founds a wild hive beside nectar.
+			if boxKey, ok := m.findClaimableBox(state, nest, species); ok {
+				todo = append(todo, founding{speciesID: nest.SpeciesID, species: species, claimKey: boxKey})
+				m.clearNestBrood(state, dispatcher, nest)
+				nestCount[nest.SpeciesID]++
+				continue
+			}
+			gx, gy, ok := m.findNestSiteWithNectar(state, nest.GridX, nest.GridY, species,
+				state.Tuning.NestFoundDistMin, state.Tuning.NestFoundDistMax)
+			if !ok {
+				continue // no flower field an adequate distance away — the colony WAITS
+			}
+			todo = append(todo, founding{gx: gx, gy: gy, occupantID: species.Predation.NestOccupant,
+				speciesID: nest.SpeciesID, species: species})
+			m.clearNestBrood(state, dispatcher, nest)
+			nestCount[nest.SpeciesID]++
+			continue
+		}
+
 		gx, gy, ok := m.findNestSiteWithPrey(state, nest.GridX, nest.GridY, species,
 			state.Tuning.NestFoundDistMin, state.Tuning.NestFoundDistMax)
 		if !ok {
 			continue // no prey cluster an adequate distance away yet — the colony WAITS (no doomed hive)
 		}
-		todo = append(todo, founding{gx, gy, nest.EntityID, nest.SpeciesID, species})
-		nest.Brood = 0              // drain the surplus -> founding cooldown (rebuild to NestBroodCap first)
+		todo = append(todo, founding{gx: gx, gy: gy, occupantID: nest.EntityID,
+			speciesID: nest.SpeciesID, species: species})
+		m.clearNestBrood(state, dispatcher, nest) // drain the surplus -> founding cooldown (rebuild to NestBroodCap first)
 		nestCount[nest.SpeciesID]++ // reserve the slot so two parents can't both overshoot MaxNests this pass
 	}
 
 	for _, f := range todo {
+		if f.claimKey != "" {
+			// Colonize the existing dormant box: no occupant change, just staff it.
+			nest := state.NestStates[f.claimKey]
+			if nest == nil || nest.ResidentSwarmID != "" {
+				continue // raced/claimed meanwhile
+			}
+			m.nestSpawnResident(state, nest, f.species, state.Tuning.NestFoundingSize, logger)
+			logger.Info("Nest founding: %s colony moved into the hive box at %s", f.speciesID, f.claimKey)
+			continue
+		}
 		cx, cy, lx, ly := GlobalToChunk(f.gx, f.gy)
 		chunk := state.Chunks[ChunkKey(cx, cy)]
 		if chunk == nil {
@@ -317,9 +398,168 @@ func (m *Match) processNestFounding(state *WorldState, dispatcher runtime.MatchD
 		occ := &PlacedOccupant{ID: f.occupantID, Dir: 0}
 		chunk.SetOccupant(lx, ly, occ)
 		m.broadcastWorldUpdate(dispatcher, state, cx, cy, f.gx, f.gy, "", occ, false)
-		m.registerNestAt(state, f.gx, f.gy, f.occupantID, f.speciesID, f.species, logger)
+		m.registerNestAt(state, f.gx, f.gy, f.occupantID, f.speciesID, f.species, false, logger)
 		logger.Info("Nest founding: %s colony split a new hive at %d,%d", f.speciesID, f.gx, f.gy)
 	}
+}
+
+// findClaimableBox picks the nearest EMPTY registered hive box (a dormant NestState of this
+// species with no resident) within the founding band of the parent — sorted iteration +
+// nearest/lowest-key tiebreak (deterministic). Boxes may sit close to the parent (min 4 cells):
+// side-by-side boxes ARE an apiary.
+func (m *Match) findClaimableBox(state *WorldState, parent *entities.NestState, species *entities.BugSpecies) (string, bool) {
+	px, py := float32(parent.GridX)+0.5, float32(parent.GridY)+0.5
+	maxD := float32(state.Tuning.NestFoundDistMax)
+	minSq, maxSq := float32(4*4), maxD*maxD
+	bestKey := ""
+	bestSq := float32(math.MaxFloat32)
+	for _, key := range sortedStringKeys(state.NestStates) {
+		n := state.NestStates[key]
+		if n.SpeciesID != parent.SpeciesID || n.ResidentSwarmID != "" || key == fmt.Sprintf("%d,%d", parent.GridX, parent.GridY) {
+			continue
+		}
+		if _, alive := state.Swarms[n.ResidentSwarmID]; alive {
+			continue
+		}
+		// Only player-placeable boxes are "claimable" targets; wild hives recover on their own.
+		isBox := false
+		for _, extra := range species.Predation.NestOccupantsExtra {
+			if extra == n.EntityID {
+				isBox = true
+				break
+			}
+		}
+		if !isBox {
+			continue
+		}
+		dx, dy := float32(n.GridX)+0.5-px, float32(n.GridY)+0.5-py
+		dsq := dx*dx + dy*dy
+		if dsq < minSq || dsq > maxSq {
+			continue
+		}
+		if dsq < bestSq || (dsq == bestSq && key < bestKey) {
+			bestSq, bestKey = dsq, key
+		}
+	}
+	return bestKey, bestKey != ""
+}
+
+// findNestSiteWithCarrion picks the ANT daughter-founding site: the NEAREST of the
+// species' own foods (attraction-scoped — carrion, rotten windfalls, stocked fungus
+// pools) in the [minD,maxD] band from the parent, then an empty walkable cell beside
+// it. Same WAIT-if-none semantics as the prey/nectar finders; determinism comes from
+// FindNearbyFood's dist-then-ID sort.
+func (m *Match) findNestSiteWithCarrion(state *WorldState, parentGX, parentGY int, species *entities.BugSpecies, minD, maxD int) (int, int, bool) {
+	attractions := species.AttractionsByPhase["feeding"]
+	if len(attractions) == 0 {
+		return 0, 0, false
+	}
+	pos := entities.EntityPosition{LocalX: float32(parentGX) + 0.5, LocalY: float32(parentGY) + 0.5}
+	minF := float32(minD)
+	for _, h := range FindNearbyFood(state, pos, float32(maxD), attractions) {
+		if h.Dist < minF {
+			continue // adequate distance first — daughters spread, not stack
+		}
+		return m.findEmptyCellNear(state, int(h.X), int(h.Y), 1, 8)
+	}
+	return 0, 0, false
+}
+
+// findNestSiteWithNectar picks a wild-founding site beside the RICHEST flower field an adequate
+// distance from the parent — the bee analog of findNestSiteWithPrey (same band, same WAIT-if-none
+// semantics, deterministic tiebreaks: highest nectar then lowest key).
+func (m *Match) findNestSiteWithNectar(state *WorldState, parentGX, parentGY int, species *entities.BugSpecies, minD, maxD int) (int, int, bool) {
+	px, py := float32(parentGX)+0.5, float32(parentGY)+0.5
+	minSq, maxSq := float32(minD*minD), float32(maxD*maxD)
+	const nectarFloor = 20.0
+	bestKey := ""
+	var bestX, bestY int
+	bestNectar := float32(-1)
+	for _, key := range sortedStringKeys(state.ForagePools) {
+		fp := state.ForagePools[key]
+		if fp.Nectar < nectarFloor {
+			continue
+		}
+		dx, dy := float32(fp.GridX)+0.5-px, float32(fp.GridY)+0.5-py
+		dsq := dx*dx + dy*dy
+		if dsq < minSq || dsq > maxSq {
+			continue
+		}
+		if fp.Nectar > bestNectar || (fp.Nectar == bestNectar && key < bestKey) {
+			bestNectar, bestKey, bestX, bestY = fp.Nectar, key, fp.GridX, fp.GridY
+		}
+	}
+	if bestKey == "" {
+		return 0, 0, false
+	}
+	return m.findEmptyCellNear(state, bestX, bestY, 1, 8)
+}
+
+// nestCanFeedNearby is the species-shape-aware food gate for recovery/founding checks:
+// hunters need live prey in range (nestHasPreyNearby); bee-class nectar foragers (a nest
+// species with an EMPTY prey list) need a live flower (a ForagePool with meaningful nectar)
+// within the same home-range tether; ANT-class carrion foragers (CarrionForager) need
+// ATTRACTION-SCOPED food — the nectar gate counts ALL pools, which would let a flower
+// field wrongly feed an ant colony.
+func (m *Match) nestCanFeedNearby(state *WorldState, nest *entities.NestState, species *entities.BugSpecies) bool {
+	p := species.Predation
+	if p == nil {
+		return false
+	}
+	if species.CarrionForager {
+		return m.nestHasCarrionFoodNearby(state, nest, species)
+	}
+	if len(p.Prey) == 0 {
+		return m.nestHasNectarNearby(state, nest, species)
+	}
+	return m.nestHasPreyNearby(state, nest, species)
+}
+
+// nestHasCarrionFoodNearby: the ANT food gate — any of the species' OWN foods (its
+// feeding attractions: carrion items, rotten windfalls via the wildcard, fungus pools
+// with stock) within the home-range tether. One FindNearbyFood call does the whole
+// mixed-source, attraction-scoped, depletion-aware check (resource_query.go).
+func (m *Match) nestHasCarrionFoodNearby(state *WorldState, nest *entities.NestState, species *entities.BugSpecies) bool {
+	p := species.Predation
+	if p == nil {
+		return false
+	}
+	reach := p.HomeRange
+	if reach <= 0 {
+		reach = 40
+	}
+	attractions := species.AttractionsByPhase["feeding"]
+	if len(attractions) == 0 {
+		return false
+	}
+	pos := entities.EntityPosition{LocalX: float32(nest.GridX) + 0.5, LocalY: float32(nest.GridY) + 0.5}
+	return len(FindNearbyFood(state, pos, reach, attractions)) > 0
+}
+
+// nestHasNectarNearby: any registered flower ForagePool with nectar above a graze-floor within
+// the species' home range of the nest. The bee analog of nestHasPreyNearby.
+func (m *Match) nestHasNectarNearby(state *WorldState, nest *entities.NestState, species *entities.BugSpecies) bool {
+	p := species.Predation
+	if p == nil {
+		return false
+	}
+	reach := p.HomeRange
+	if reach <= 0 {
+		reach = 40
+	}
+	reachSq := reach * reach
+	nx, ny := float32(nest.GridX)+0.5, float32(nest.GridY)+0.5
+	const nectarFloor = 20.0 // a grazed-out field doesn't count as "can feed a colony"
+	for _, fp := range state.ForagePools {
+		if fp.Nectar < nectarFloor {
+			continue
+		}
+		dx, dy := float32(fp.GridX)+0.5-nx, float32(fp.GridY)+0.5-ny
+		if dx*dx+dy*dy <= reachSq {
+			return true
+		}
+	}
+	return false
 }
 
 // nestHasPreyNearby reports whether any live prey swarm sits within the species' home range of the nest —
@@ -422,6 +662,11 @@ func (m *Match) recallNestDefenders(state *WorldState, gx, gy int, attackerID st
 	}
 	resident, ok := state.Swarms[nest.ResidentSwarmID]
 	if !ok {
+		return
+	}
+	// §C precedence rule (all three defend entries): suppressed while the resident is
+	// subdued OR the nest is smoked — the calm harvest window.
+	if nestDefenseSuppressed(state, nest, resident) {
 		return
 	}
 	resident.Phase = "defending"

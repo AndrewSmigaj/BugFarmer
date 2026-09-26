@@ -45,6 +45,10 @@ def place_one(b, specs, front, coll, *, with_porch=False, court=None, yard_style
                 b.place_occupant(oid, x, y)
 
 
+PREVIEW = "examples/buildings"
+SCALE = 2
+
+
 def build():
     b = ZoneBuilder("scene_houses", W, H, base_tile="grass", name="House shapes")
     # Row 1 (south): the fixed natural shapes
@@ -63,5 +67,7 @@ def build():
 
 
 if __name__ == "__main__":
-    from registry import render_one
-    render_one("scene_houses")
+    from scene_preview import render
+    b = build()
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

@@ -22,6 +22,7 @@ namespace BugFarmer.Player
         [SerializeField] private float maxPlaceDistance = 4f;
 
         private string _currentPlaceableId;
+        private string _ghostSpriteId; // what the placement will RENDER (seed → its plant) — positions the ghost
         private int _placementDirection;
         private bool _isPlacing;
         private bool _cursorMode;       // placing FROM the drag cursor (panel item)
@@ -124,6 +125,7 @@ namespace BugFarmer.Player
                     {
                         spriteId = "plant_" + def.PlacesCrop;
                     }
+                    _ghostSpriteId = spriteId; // what will actually render — drives the ghost position too
 
                     ghostPreview.sprite = EntityDatabase.GetWorldSprite(spriteId);
 
@@ -143,6 +145,7 @@ namespace BugFarmer.Player
             else if (!isPlaceable && _isPlacing)
             {
                 _currentPlaceableId = null;
+                _ghostSpriteId = null;
                 _isPlacing = false;
                 if (ghostPreview != null)
                     ghostPreview.gameObject.SetActive(false);
@@ -171,7 +174,11 @@ namespace BugFarmer.Player
             Vector3 mouseWorld = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
             mouseWorld.z = 0;
             Vector2Int cellPos = TilemapManager.Instance.WorldToCell(mouseWorld);
-            ghostPreview.transform.position = TilemapManager.Instance.CellToWorld(cellPos);
+            // Same position math as the real render (footprint-X + pivot-Y baseline) — a raw
+            // CellToWorld here is exactly how tall bottom-pivot blocks previewed LOWER than
+            // they landed (playtest #2).
+            ghostPreview.transform.position = TilemapManager.Instance.OccupantWorldPos(
+                cellPos, _ghostSpriteId ?? _currentPlaceableId);
             ghostPreview.color = CanPlaceAt(cellPos) ? validColor : invalidColor;
         }
 

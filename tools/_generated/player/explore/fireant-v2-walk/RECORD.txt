@@ -1,0 +1,23 @@
+when      : 2026-08-15 06:18:24
+model     : gpt-image-2
+size      : 1024x1536
+quality   : high
+mask      : NONE
+dest      : explore/fireant-v2-walk
+references (in the order sent):
+  1. tools/_generated/player/explore/fireant-v2-board/BOARD.png  (upscaled x14 -> 1176x1134)
+
+PROMPT:
+The attached image is a reference board of finished pixel-art sprites of ONE character in red fire-ant armor, left to right: front, right side, back. These three sprites are the ground truth.
+
+Create a sprite sheet of 3 rows by 4 columns: twelve walking frames of this character.
+Row 1: walking facing the viewer. Row 2: walking in exact right profile. Row 3: walking seen from the back.
+The 4 frames of each row are (1) left leg forward, (2) passing pose, (3) right leg forward, (4) the opposite passing pose.
+
+This is the same finished sprite posed differently, not a redraw. Do not redesign the armor, the helmet, the antennae, the face or the colors. Keep the same head size, torso length and leg length as the reference sprites. Do not shorten the legs. Do not enlarge the head. Walking is the legs moving, not the body being stretched or rescaled. Every frame is the same size as the reference sprites.
+
+Use the same size pixel blocks as the reference. Do not use smaller pixel detail. If armor detail does not fit, simplify it instead of adding smaller details.
+
+The helmet is open-faced but covers the whole head; hair may stick out from under it. Armless body: do not draw arms, hands, elbows, forearms or gauntlets. Solid rounded shoulder ends. No holes, sockets or empty arm openings.
+
+Flat pure magenta background (255 0 255), nothing else on it. Hard pixel edges, no blur.

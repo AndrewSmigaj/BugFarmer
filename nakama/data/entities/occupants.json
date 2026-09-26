@@ -20,7 +20,8 @@
         "drops": [
           {
             "item_id": "wood",
-            "count": 4,
+            "count_min": 2,
+            "count_max": 3,
             "chance": 1.0
           }
         ]
@@ -47,7 +48,8 @@
         "drops": [
           {
             "item_id": "wood",
-            "count": 4,
+            "count_min": 2,
+            "count_max": 3,
             "chance": 1.0
           }
         ]
@@ -80,7 +82,8 @@
         "drops": [
           {
             "item_id": "wood",
-            "count": 3,
+            "count_min": 2,
+            "count_max": 3,
             "chance": 1.0
           }
         ]
@@ -324,11 +327,6 @@
             "item_id": "fiber",
             "count": 1,
             "chance": 1.0
-          },
-          {
-            "item_id": "seed_tomato",
-            "count": 1,
-            "chance": 0.08
           }
         ]
       }
@@ -352,11 +350,6 @@
             "item_id": "fiber",
             "count": 1,
             "chance": 1.0
-          },
-          {
-            "item_id": "seed_wheat",
-            "count": 1,
-            "chance": 0.15
           }
         ]
       }
@@ -377,7 +370,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "reeds",
             "count": 1,
             "chance": 1.0
           }
@@ -474,16 +467,6 @@
             "item_id": "flower",
             "count": 1,
             "chance": 1.0
-          },
-          {
-            "item_id": "seed_tomato",
-            "count": 1,
-            "chance": 0.1
-          },
-          {
-            "item_id": "seed_corn",
-            "count": 1,
-            "chance": 0.1
           }
         ]
       }
@@ -821,6 +804,8 @@
     "sprite_h": 28,
     "world": {
       "host_plant": true,
+      "interactable": true,
+      "interaction_type": "nursery",
       "footprint": [
         1,
         1
@@ -1021,6 +1006,7 @@
     "stackable": false,
     "sell_price": 9,
     "world": {
+      "nectar": true,
       "footprint": [
         1,
         1
@@ -1077,6 +1063,7 @@
     "stackable": false,
     "sell_price": 5,
     "world": {
+      "nectar": true,
       "footprint": [
         1,
         1
@@ -1218,7 +1205,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "flower",
             "count": 1,
             "chance": 1.0
           }
@@ -1241,7 +1228,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "flower",
             "count": 1,
             "chance": 1.0
           }
@@ -1264,7 +1251,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "flower",
             "count": 1,
             "chance": 1.0
           }
@@ -1287,7 +1274,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "mint",
             "count": 1,
             "chance": 1.0
           }
@@ -1310,7 +1297,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "sage",
             "count": 1,
             "chance": 1.0
           }
@@ -1333,7 +1320,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "thyme",
             "count": 1,
             "chance": 1.0
           }
@@ -1356,7 +1343,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "fennel",
             "count": 1,
             "chance": 1.0
           }
@@ -1379,7 +1366,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "reeds",
             "count": 1,
             "chance": 1.0
           }
@@ -1563,7 +1550,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "aloe",
             "count": 1,
             "chance": 1.0
           }
@@ -1586,7 +1573,7 @@
         "hp": 1,
         "drops": [
           {
-            "item_id": "fiber",
+            "item_id": "agave",
             "count": 1,
             "chance": 1.0
           }
@@ -2170,7 +2157,7 @@
   },
   "apple_crate": {
     "name": "Apple Crate",
-    "category": "storage",
+    "category": "decoration",
     "sprite_w": 16,
     "sprite_h": 18,
     "world": {
@@ -2471,31 +2458,54 @@
   },
   "wasp_nest": {
     "name": "Wasp Nest",
-    "category": "nature",
+    "category": "natural",
+    "sprite_w": 24,
+    "sprite_h": 28,
     "world": {
       "footprint": [
         1,
         1
       ],
       "pivot": "bc",
-      "sprite_w": 24,
-      "sprite_h": 28,
       "blocks_players": false,
       "blocks_bugs": false,
+      "interactable": true,
+      "interaction_type": "nursery",
       "breakable": {
         "hp": 4,
         "required_tool_type": "axe",
         "required_tool_tier": 1,
+        "drops": []
+      }
+    }
+  },
+  "hornet_nest": {
+    "name": "Hornet Nest",
+    "category": "natural",
+    "sprite_w": 28,
+    "sprite_h": 34,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 6,
+        "required_tool_type": "axe",
+        "required_tool_tier": 2,
         "drops": [
           {
             "item_id": "paper_nest",
-            "count": 2,
+            "count": 3,
             "chance": 1.0
           },
           {
             "item_id": "wasp_larvae",
-            "count": 2,
-            "chance": 0.8
+            "count": 3,
+            "chance": 0.9
           }
         ]
       }
@@ -2789,6 +2799,1091 @@
         1
       ],
       "pivot": "bc"
+    }
+  },
+  "general_store_merchant": {
+    "name": "Marjoram (General Store)",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "shop": {
+        "kind": "items",
+        "sells": [
+          {
+            "id": "seed_tomato",
+            "price": 10
+          },
+          {
+            "id": "seed_corn",
+            "price": 8
+          },
+          {
+            "id": "seed_carrot",
+            "price": 8
+          },
+          {
+            "id": "seed_cabbage",
+            "price": 10
+          },
+          {
+            "id": "seed_pumpkin",
+            "price": 14
+          },
+          {
+            "id": "seed_wheat",
+            "price": 5
+          },
+          {
+            "id": "small_net",
+            "price": 30
+          },
+          {
+            "id": "watering_can_basic",
+            "price": 30
+          },
+          {
+            "id": "hoe_wood",
+            "price": 20
+          },
+          {
+            "id": "pickaxe_wood",
+            "price": 25
+          },
+          {
+            "id": "axe_wood",
+            "price": 25
+          },
+          {
+            "id": "calm_spray",
+            "price": 20
+          },
+          {
+            "id": "magnifying_glass",
+            "price": 40
+          },
+          {
+            "id": "gardener_gloves",
+            "price": 60
+          },
+          {
+            "id": "cot",
+            "price": 55
+          },
+          {
+            "id": "torch",
+            "price": 6
+          },
+          {
+            "id": "lantern",
+            "price": 30
+          },
+          {
+            "id": "fence_wood",
+            "price": 12
+          },
+          {
+            "id": "watering_can_large",
+            "price": 90
+          }
+        ],
+        "buys": [
+          "material",
+          "food"
+        ],
+        "recipes": [
+          {
+            "id": "candle",
+            "price": 20
+          }
+        ]
+      },
+      "greeting": "Morning! Fresh seeds and supplies, right this way."
+    }
+  },
+  "bug_dealer": {
+    "name": "Bug Dealer",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "shop": {
+        "kind": "bugs",
+        "sells": [
+          {
+            "id": "fly_common",
+            "price": 3
+          },
+          {
+            "id": "butterfly_meadow",
+            "price": 8
+          }
+        ]
+      }
+    }
+  },
+  "blacksmith": {
+    "name": "Brann (Blacksmith)",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "greeting": "Steel and sweat. Need a metal edge, or selling me some bars?",
+      "shop": {
+        "kind": "items",
+        "sells": [
+          {
+            "id": "iron_bar",
+            "price": 40
+          },
+          {
+            "id": "copper_bar",
+            "price": 28
+          },
+          {
+            "id": "bronze_bar",
+            "price": 40
+          },
+          {
+            "id": "steel_bar",
+            "price": 85
+          },
+          {
+            "id": "pickaxe_copper",
+            "price": 150
+          },
+          {
+            "id": "pickaxe_iron",
+            "price": 300
+          },
+          {
+            "id": "axe_copper",
+            "price": 140
+          },
+          {
+            "id": "axe_iron",
+            "price": 280
+          },
+          {
+            "id": "sword_copper",
+            "price": 90
+          },
+          {
+            "id": "spear_copper",
+            "price": 90
+          },
+          {
+            "id": "copper_helmet",
+            "price": 70
+          },
+          {
+            "id": "iron_chest",
+            "price": 160
+          }
+        ],
+        "buys": [
+          "metal"
+        ],
+        "recipes": [
+          {
+            "id": "candelabra",
+            "price": 40
+          },
+          {
+            "id": "stove_wood",
+            "price": 60
+          }
+        ]
+      }
+    }
+  },
+  "carpenter": {
+    "name": "Wynn (Carpenter)",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "greeting": "Fine joinery and honest planks. After a furniture book?",
+      "shop": {
+        "kind": "items",
+        "sells": [
+          {
+            "id": "plank",
+            "price": 6
+          },
+          {
+            "id": "loveseat",
+            "price": 120
+          }
+        ],
+        "buys": [
+          "wood",
+          "furniture"
+        ],
+        "recipes": [
+          {
+            "id": "keg",
+            "price": 60
+          },
+          {
+            "id": "grandfather_clock",
+            "price": 90
+          },
+          {
+            "id": "bed_canopy",
+            "price": 80
+          },
+          {
+            "id": "fence_wood",
+            "price": 30
+          },
+          {
+            "id": "fence_picket",
+            "price": 30
+          },
+          {
+            "id": "gate_wood",
+            "price": 35
+          },
+          {
+            "id": "gate_picket",
+            "price": 35
+          }
+        ],
+        "books": [
+          {
+            "id": "basic_furniture",
+            "price": 200
+          },
+          {
+            "id": "advanced_furniture",
+            "price": 350
+          }
+        ]
+      }
+    }
+  },
+  "weaver": {
+    "name": "Isolde (Weaver)",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "greeting": "Thread, cloth, and colour. The loom's always warm here.",
+      "shop": {
+        "kind": "items",
+        "sells": [
+          {
+            "id": "cloth",
+            "price": 18
+          },
+          {
+            "id": "thread",
+            "price": 8
+          },
+          {
+            "id": "red_dye",
+            "price": 10
+          },
+          {
+            "id": "yellow_dye",
+            "price": 10
+          },
+          {
+            "id": "blue_dye",
+            "price": 12
+          },
+          {
+            "id": "green_dye",
+            "price": 10
+          }
+        ],
+        "buys": [
+          "textile",
+          "fiber"
+        ],
+        "books": [
+          {
+            "id": "woven_goods",
+            "price": 120
+          }
+        ],
+        "recipes": [
+          {
+            "id": "loom",
+            "price": 90
+          },
+          {
+            "id": "spinning_wheel",
+            "price": 60
+          },
+          {
+            "id": "sewing_machine",
+            "price": 110
+          },
+          {
+            "id": "dye_vat",
+            "price": 70
+          }
+        ]
+      }
+    }
+  },
+  "stonemason": {
+    "name": "Dougal (Stonemason)",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "greeting": "Stone lasts. Brick, statues, a fountain for the square?",
+      "shop": {
+        "kind": "items",
+        "sells": [
+          {
+            "id": "brick",
+            "price": 4
+          },
+          {
+            "id": "stone_block",
+            "price": 3
+          }
+        ],
+        "books": [
+          {
+            "id": "stone_works",
+            "price": 150
+          }
+        ]
+      }
+    }
+  },
+  "modern_wares": {
+    "name": "Pim (Modern Wares)",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "greeting": "The latest comforts \u2014 though some need the new electrics.",
+      "shop": {
+        "kind": "items",
+        "sells": [
+          {
+            "id": "fridge",
+            "price": 260
+          },
+          {
+            "id": "range_stove",
+            "price": 220
+          },
+          {
+            "id": "sofa_modern",
+            "price": 180
+          },
+          {
+            "id": "lamp_floor",
+            "price": 90
+          },
+          {
+            "id": "lamp_floor_fancy",
+            "price": 140
+          }
+        ]
+      }
+    }
+  },
+  "fisherman": {
+    "name": "Cael (Fisherman)",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "greeting": "Poles, a boat, and a reed hat to keep the sun off. Fishing's coming.",
+      "shop": {
+        "kind": "items",
+        "sells": [
+          {
+            "id": "fishing_pole",
+            "price": 40
+          },
+          {
+            "id": "fishing_net",
+            "price": 30
+          },
+          {
+            "id": "boat",
+            "price": 400
+          }
+        ],
+        "recipes": [
+          {
+            "id": "reed_hat",
+            "price": 25
+          }
+        ]
+      }
+    }
+  },
+  "ecologist": {
+    "name": "Dr. Vesper (Ecologist)",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "greeting": "Specimens, scopes, terraria \u2014 recipes for the curious naturalist.",
+      "shop": {
+        "kind": "items",
+        "recipes": [
+          {
+            "id": "telescope",
+            "price": 80
+          },
+          {
+            "id": "specimen_shelf",
+            "price": 60
+          },
+          {
+            "id": "bug_terrarium",
+            "price": 40
+          },
+          {
+            "id": "bug_terrarium_big",
+            "price": 70
+          },
+          {
+            "id": "specimen_case",
+            "price": 50
+          },
+          {
+            "id": "globe",
+            "price": 40
+          }
+        ]
+      }
+    }
+  },
+  "mayor": {
+    "name": "Mayor Aldous",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "npc",
+      "greeting": "Welcome to the village. Land deeds? Not just yet \u2014 soon."
+    }
+  },
+  "ore_ruby_block": {
+    "name": "Ruby Deposit",
+    "category": "ore",
+    "sprite_w": 16,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 12,
+        "required_tool_type": "pickaxe",
+        "required_tool_tier": 4,
+        "drops": [
+          {
+            "item_id": "ruby",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "ore_sapphire_block": {
+    "name": "Sapphire Deposit",
+    "category": "ore",
+    "sprite_w": 16,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 12,
+        "required_tool_type": "pickaxe",
+        "required_tool_tier": 4,
+        "drops": [
+          {
+            "item_id": "sapphire",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "ore_emerald_block": {
+    "name": "Emerald Deposit",
+    "category": "ore",
+    "sprite_w": 16,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "breakable": {
+        "hp": 12,
+        "required_tool_type": "pickaxe",
+        "required_tool_tier": 3,
+        "drops": [
+          {
+            "item_id": "emerald",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "bee_hive_wild": {
+    "name": "Wild Bee Hive",
+    "category": "natural",
+    "sprite_w": 24,
+    "sprite_h": 28,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "interactable": true,
+      "interaction_type": "beehive",
+      "hive": {
+        "honey_cap": 3.0
+      },
+      "breakable": {
+        "hp": 4,
+        "required_tool_type": "axe",
+        "required_tool_tier": 1,
+        "drops": [
+          {
+            "item_id": "honeycomb",
+            "count": 2,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "beekeeper": {
+    "name": "Maren (Beekeeper)",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 32,
+    "world": {
+      "footprint": [
+        1,
+        2
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": true,
+      "interactable": true,
+      "interaction_type": "shop",
+      "greeting": "Smoke first, then slow hands. The bees forgive almost everything else.",
+      "shop": {
+        "kind": "items",
+        "sells": [
+          {
+            "id": "bee_station_small",
+            "price": 60
+          },
+          {
+            "id": "bee_station_large",
+            "price": 220
+          },
+          {
+            "id": "smoker",
+            "price": 120
+          },
+          {
+            "id": "bee_suit",
+            "price": 250
+          },
+          {
+            "id": "calm_spray",
+            "price": 20
+          }
+        ],
+        "buys": [
+          "honey",
+          "honeycomb",
+          "beeswax"
+        ]
+      }
+    }
+  },
+  "driftwood": {
+    "name": "Driftwood",
+    "category": "natural",
+    "sprite_w": 24,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        2,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "wood",
+            "count": 2,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "seashell_pile": {
+    "name": "Seashell Pile",
+    "category": "natural",
+    "sprite_w": 14,
+    "sprite_h": 10,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "any",
+        "drops": [
+          {
+            "item_id": "seashell",
+            "count": 2,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "sandcastle": {
+    "name": "Sandcastle",
+    "category": "natural",
+    "sprite_w": 18,
+    "sprite_h": 18,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "any",
+        "drops": []
+      }
+    }
+  },
+  "shipwreck_hull": {
+    "name": "Shipwrecked Hull",
+    "category": "natural",
+    "sprite_w": 32,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [
+        2,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 3,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "wood",
+            "count": 3,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "beach_umbrella": {
+    "name": "Beach Umbrella",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 24,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "cloth",
+            "count": 1,
+            "chance": 1.0
+          },
+          {
+            "item_id": "wood",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "starfish": {
+    "name": "Starfish",
+    "category": "natural",
+    "sprite_w": 10,
+    "sprite_h": 8,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "any",
+        "drops": [
+          {
+            "item_id": "starfish",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "message_bottle": {
+    "name": "Message in a Bottle",
+    "category": "natural",
+    "sprite_w": 8,
+    "sprite_h": 10,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "any",
+        "drops": [
+          {
+            "item_id": "message_bottle",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "buoy": {
+    "name": "Buoy",
+    "category": "structure",
+    "sprite_w": 10,
+    "sprite_h": 16,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "wood",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "drying_rack_fish": {
+    "name": "Fish Drying Rack",
+    "category": "structure",
+    "sprite_w": 24,
+    "sprite_h": 20,
+    "world": {
+      "footprint": [
+        2,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "wood",
+            "count": 2,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "net_pile": {
+    "name": "Heaped Net",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "any",
+        "drops": [
+          {
+            "item_id": "fiber",
+            "count": 2,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "lobster_pot": {
+    "name": "Lobster Pot",
+    "category": "structure",
+    "sprite_w": 12,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "any",
+        "drops": [
+          {
+            "item_id": "wood",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "honey_shelf": {
+    "name": "Honey Shelf",
+    "category": "structure",
+    "sprite_w": 16,
+    "sprite_h": 18,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": true,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 2,
+        "required_tool_type": "axe",
+        "drops": [
+          {
+            "item_id": "wood",
+            "count": 2,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "bee_waterer": {
+    "name": "Bee Waterer",
+    "category": "structure",
+    "sprite_w": 14,
+    "sprite_h": 12,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "blocks_players": false,
+      "blocks_bugs": false,
+      "breakable": {
+        "hp": 1,
+        "required_tool_type": "any",
+        "drops": [
+          {
+            "item_id": "wood",
+            "count": 1,
+            "chance": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "ant_brood": {
+    "name": "Ant Brood Pile",
+    "category": "natural",
+    "sprite_w": 16,
+    "sprite_h": 14,
+    "world": {
+      "footprint": [
+        1,
+        1
+      ],
+      "pivot": "bc",
+      "breakable": {
+        "hp": 2,
+        "drops": [
+          {
+            "item_id": "ant_egg",
+            "count": 1,
+            "chance": 1.0
+          },
+          {
+            "item_id": "ant_egg",
+            "count": 1,
+            "chance": 0.5
+          }
+        ]
+      }
     }
   }
 }

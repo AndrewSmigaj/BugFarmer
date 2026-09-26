@@ -1,0 +1,32 @@
+when      : 2026-07-29 12:15:22
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+dest      : explore/glowworm
+references (in the order sent):
+  1. tools/_generated/player/bases/armless_front.png  (sent upscaled x14)
+
+PROMPT:
+Draw THREE different design options for glowworm armour, side by side in a single row, on a FLAT SOLID MAGENTA background (pure magenta, RGB 255 0 255). The magenta must be completely flat and uniform with nothing else drawn on it - no shadow, no gradient, no vignette, no ground, no scenery, no text.
+
+Each of the three is the SAME character wearing a DIFFERENT DESIGN of the outfit: standing still, facing the viewer, full body from head to feet, all three at the same scale and standing on the same baseline.
+
+Because the character has NO ARMS, do not draw arms, hands, elbows, forearms or gauntlets. Each shoulder ends in a rounded shoulder cap at the armless shoulder opening. This is deliberate - the hands are separate sprites added later.
+
+The three designs, left to right:
+1. a LIVING LANTERN - almost everything is near-black carapace, and ONE big round glowing yellow-green lantern organ sits on the belly, large enough to read as a lamp, throwing a pool of green light onto the plates and boots around it
+2. SEAM-LIT PLATES - dark slate-grey plates separated by thick bright glowing cyan-green seam lines that trace the edges of the chest, thighs and helm, so the figure reads as a dark shape drawn in glowing outline
+3. a SOFT LARVA GLOW - a pale, plump, softly segmented body like a grub, each segment glowing warm yellow-green from inside so the whole figure is luminous rather than dark, with a smooth rounded featureless head
+
+Every design covers the whole head with its own headgear, and covers the body from the shoulders to the boots, with no bare skin between the waist and the boots.
+
+CRITICAL - THE FIGURE WILL BE SHRUNK TO ABOUT 40 PIXELS TALL. Everything below follows from that:
+- What makes each design recognisable must be its SILHOUETTE - the OUTLINE shape of the hat, hood, helm, crest, shoulders and hem. Shape survives shrinking. Surface pattern does not.
+- Do NOT distinguish the designs by engraving, filigree, trim, embroidery, scrollwork, inlay, rivets or fine linework. At 40 pixels tall all of that collapses into grey mush and the design is lost.
+- Use no more than four or five flat colour areas per figure, in big chunky blocks. Think a bold cut-paper shape, not an illustration.
+- If a design would only look different from the others when seen large, it is the wrong design.
+
+Draw each figure with HARD pixel edges against the magenta. Do not blur, feather, glow or blend the figure into the background. Do not draw a heavy black outline around the figure - where an outline is needed use a darker shade of that figure's own colours, one pixel thick.
+
+Do not use magenta, pink or purple ANYWHERE on the figures themselves - not on the armour, not as glowing eyes, not as trim. Magenta is reserved for the background alone.

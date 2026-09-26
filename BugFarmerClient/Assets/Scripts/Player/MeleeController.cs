@@ -78,9 +78,13 @@ namespace BugFarmer.Player
             var hits = SwarmManager.Instance?.GetBugsInSector(origin, aimDeg, arc, reach);
 
             // Swing plays even on a complete miss; the MOVE picks the animation kind
-            // (a sword jab plays Stab on a "sword" profile).
+            // (a sword jab plays Stab on a "sword" profile). The optimistic bug FLASH stays at swing-start
+            // below (zero-latency trust cue); we ADD a directional camera shake at the CONTACT frame.
+            Vector2 kick = aim.normalized * 0.06f;
+            bool connected = hits != null && hits.Count > 0;
             _animator?.Play(weapon.ToolType, EntityDatabase.GetItemSprite(toolId), aim,
-                            arc, move.SwingTime, move.Kind);
+                            arc, move.SwingTime, move.Kind,
+                            onContact: connected ? () => CameraFollow.AddShake(0.22f, kick) : (System.Action)null);
             _lastSwingTime = Time.time;
 
             if (hits == null || hits.Count == 0)

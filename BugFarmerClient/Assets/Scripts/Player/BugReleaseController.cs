@@ -64,7 +64,7 @@ namespace BugFarmer.Player
             if (_indicator == null) return;
 
             bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
-            if (!BugCursorActive || overUI || _mainCamera == null)
+            if (!BugCursorActive || overUI || _mainCamera == null || ShopPanel.IsOpen)
             {
                 _indicator.enabled = false;
                 return;
@@ -94,6 +94,11 @@ namespace BugFarmer.Player
         public bool TryHandleClick(bool releaseAll)
         {
             if (!BugCursorActive) return false;
+
+            // While a shop is open, a bug stack on the cursor is (almost certainly) being dragged
+            // to the sell basket — a missed world click must NOT release the goods. Consume the
+            // click and do nothing (the basket is the intended target).
+            if (ShopPanel.IsOpen) return true;
 
             var world = WorldManager.Instance;
             var socket = NetworkManager.Instance?.Socket;

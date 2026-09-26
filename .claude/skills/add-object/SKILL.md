@@ -5,6 +5,9 @@ description: Use when adding a new world object, occupant, placeable, item, tile
 
 # Add a world object / item
 
+> **Player character or wearables** (clothing / armor / hats / hair)? Use the **player-sprites** skill
+> (Pipeline B) — not this one. Where generated art lives: the `tools/_generated/README.md` MAP.
+
 Pipeline A (gpt-image-1). The art is **data-driven**: per-item silhouettes live in
 `tools/art/catalog/*.json`; the global look (pixel-art style, palettes, per-family art direction) lives
 in `tools/art/style.json`. To add an item you edit **two data files** (the canonical entity JSON + one
@@ -42,19 +45,25 @@ merges by id, so any object file works; pick the intuitive one):
 
 ## 3. Publish data to the client
 ```bash
-python3 tools/publish_entities.py
+python3 tools/data/publish_entities.py
 ```
 
 ## 4. Generate + clean
 ```bash
-python3 tools/gen_sprites.py --source <placeables|occupants|items|terrain> --keys <id> --dry-run  # read the prompt, no spend
-python3 tools/gen_sprites.py --source <...> --keys <id>      # generate
-python3 tools/pixelclean.py                                  # downscale + quantize in place (Tiles+Objects)
+python3 tools/sprites/gen_sprites.py --source <placeables|occupants|items|terrain> --keys <id> --dry-run  # read the prompt, no spend
+python3 tools/sprites/gen_sprites.py --source <...> --keys <id>      # generate
+python3 tools/sprites/pixelclean.py --keys <id1,id2>                 # clean ONLY the keys you just generated
 ```
-**Item icons clean differently** — opt-in per key, harder quantize (a bare `pixelclean.py`
-run never touches `Items/`, which holds finished icons a re-clean would mangle):
+**NEVER run bare `pixelclean.py` after adding items** (2026-07-05 incident: a bare run
+re-cleaned all 427 Objects/Tiles and RESIZED pre-existing sprites — agave 36x32 → 32x32 —
+because a re-clean re-derives sizes from current entity data and re-quantizes; 98 committed
+sprites had to be reverted from HEAD). The bare run is ONLY for a deliberate full-set
+re-clean/shared-palette pass — treat it as a repo-wide art migration, not a cleanup step.
+
+**Item icons clean differently** — opt-in per key, harder quantize (no pixelclean run
+ever touches `Items/` without `--items`, which holds finished icons a re-clean would mangle):
 ```bash
-python3 tools/pixelclean.py --k 8 --items <id1,id2>
+python3 tools/sprites/pixelclean.py --k 8 --items <id1,id2>
 ```
 
 ## 5. Preview
@@ -70,14 +79,31 @@ PNG, and run the acceptance check.
 - **Hand tools/weapons follow the DIAGONAL contract** (grip bottom-left, head top-right) — the same
   sprite is the in-hand swing art (`PlayerToolAnimator`). Say it in the look ("...HANDLE running to
   the bottom-left"). Watering cans are the 3/4-view exception.
-- **Tool TIERS are recolors, not generations**: author + generate only the `{family}_wood` base, then
-  `python3 tools/recolor_sprites.py --family <family>` derives every `{family}_{tier}` in items.json
-  (material ramps live inline in that script). Adding a new tier = items.json entry + re-run recolor.
+- **FAMILIES (tool/weapon tiers, metal bars) use REFERENCE generation, not recolors** (changed
+  2026-07-04; the old `recolor_sprites.py` palette-tints read as "tinted copies" and were replaced):
+  generate ONE hero of the family, eyeball it, then
+  `python3 tools/sprites/gen_sprites.py --source items --force --ref tools/_generated/raw/<hero>.png --keys <siblings>`
+  — the reference keeps every sibling on the hero's exact silhouette/angle/pixel style while each
+  key's catalog look swaps the material (author EXPLICIT per-metal look rows; a row that just says
+  "metal" loses the tier identity). Retry any sibling that breaks shape (happens ~1 in 7).
 
 ## Acceptance checklist (per sprite)
 - Reads instantly as the intended object at game zoom; correct silhouette.
 - Transparent background; no baked ground patch / cast shadow (tiles are the exception: opaque, full-bleed).
 - Even-width objects sit on grid in the preview (footprint-X rule).
 - Tiles / linear connectors (fence, wall) tile seam-free.
+
+## When you iterate — the naming rules that apply to ALL art
+These cost three days on the player sprites. They apply here too:
+- **Never name a variant for how it was made** — not `set_a`, `batch2`, `option_1`, or `result.png`. Name it
+  for what it *is*. A folder of files distinguishable only by run order is a folder nobody can use.
+- **Write the decision down the moment it's made**, in the owner's own words. An approval that lives only in
+  chat is gone by the next session.
+- **Never overwrite or bulk re-run.** A bare `pixelclean.py` re-cleaning 427 sprites is the same class of
+  mistake as a bulk re-cut: it destroys work nobody asked you to touch. Targeted `--keys` only.
+
+The full candidates → frames → current → archive workflow (with `promote.py` and a ledger) is **player-art
+specific** for now — world art writes straight to `Resources/` and has no scratchpad. See the
+`player-sprites` skill if you're touching the character or an outfit.
 
 Canonical pipeline detail: `docs/guides/art/object_pipeline.md`.

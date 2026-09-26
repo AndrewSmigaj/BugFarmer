@@ -9,9 +9,9 @@ DOTNET=$(command -v dotnet || echo "$HOME/.dotnet/dotnet")
 (cd tools/sync-harness && "$DOTNET" build -v quiet 2>&1 | grep -E "error|Build succeeded" | head -3)
 
 echo "=== fresh zones ==="
-python3 tools/make_test_zone.py --zone-id split_test2 --species fly_common \
+python3 tools/world/make_test_zone.py --zone-id split_test2 --species fly_common \
   --initial 1 --max 4 --swarm-size 30 --spawn-radius 3 --dynamic | tail -1
-python3 tools/make_test_zone.py --zone-id merge_test2 --species fly_common \
+python3 tools/world/make_test_zone.py --zone-id merge_test2 --species fly_common \
   --initial 4 --max 4 --swarm-size 5 --spawn-radius 1 --dynamic | tail -1
 docker compose restart nakama > /dev/null 2>&1
 sleep 6

@@ -68,6 +68,12 @@
     "accepts_furniture": true,
     "accepts_structure": true
   },
+  "dug_soil": {
+    "sprite_path": "Sprites/Terrain/dug_soil.png",
+    "movement_mult": 1.0,
+    "accepts_furniture": true,
+    "accepts_structure": true
+  },
   "water_shallow": {
     "sprite_path": "Sprites/Terrain/water_shallow.png",
     "movement_mult": 0.5,

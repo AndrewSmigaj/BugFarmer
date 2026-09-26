@@ -31,9 +31,12 @@ namespace BugFarmer.Player
         private float _firstDamageToastUntil;
         private static bool _everDamaged;
 
+        private PlayerController _controller; // dodge i-frames drive a distinct blink (this is the sole color owner)
+
         private void Start()
         {
             _sprite = GetComponent<SpriteRenderer>();
+            _controller = GetComponent<PlayerController>();
             BugFarmer.Audio.AudioFx.Ensure(); // the audio singleton boots with the player
             if (WorldManager.Instance != null)
                 WorldManager.Instance.OnMatchData += HandleMatchData;
@@ -97,7 +100,14 @@ namespace BugFarmer.Player
         {
             if (_sprite == null) return;
 
-            if (Time.time < _redFlashUntil)
+            // Dodge i-frames take visual priority: a fast bright/translucent blink reads as "invincible" and
+            // is distinct from the post-hit red flash. The i-frames themselves are enforced server-side.
+            if (_controller != null && _controller.IsDodgeInvulnerable)
+            {
+                _sprite.color = (Mathf.FloorToInt(Time.time * 24f) % 2 == 0)
+                    ? new Color(0.7f, 0.9f, 1f, 0.5f) : new Color(1f, 1f, 1f, 0.85f);
+            }
+            else if (Time.time < _redFlashUntil)
                 _sprite.color = new Color(1f, 0.45f, 0.45f);
             else if (Time.time < _invulnBlinkUntil)
                 _sprite.color = (Mathf.FloorToInt(Time.time * 10f) % 2 == 0)

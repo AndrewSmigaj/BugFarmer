@@ -54,15 +54,49 @@ namespace BugFarmer.Data
             public string[] StationAccepts;  // Item types depositable here (menu filter)
             public int StationCapacity = 10;
 
+            // Craft stations: how many recipes run AT ONCE (parallel processor lanes; 0/absent = 1).
+            public int CraftSlots;
+
             // Container block (item storage: chests/dressers/racks). ContainerSlots > 0 marks a
             // storage occupant; ContainerFilter (a tag) restricts what it accepts ("" = anything).
             public int ContainerSlots;
             public string ContainerFilter;
 
+            // Shop block (NPC vendor; interaction_type "shop"). ShopKind "items"|"bugs"; ShopSells is
+            // what the NPC offers (id+price). ShopBuys = the ids/tags this vendor purchases (the
+            // client-side stage filter + "Buys:" header); pricing stays server-authoritative.
+            public string ShopKind;            // null = not a shop
+            public string[] ShopBuys;          // ids or tags; null/empty = buys nothing
+            public ShopOffer[] ShopSells;
+            public ShopOffer[] ShopRecipes;    // recipes the NPC teaches (id = recipe id)
+            public ShopOffer[] ShopBooks;      // recipe-book collections (id = collection id)
+            public string Greeting;            // NPC dialogue line (null = use a default)
+
             // Light block (lamps/torches glow at night; 0 radius = no light)
             public float LightRadius;
             public Color LightColor = new Color(1f, 0.82f, 0.55f);
             public float LightIntensity = 1f;
+        }
+
+        /// <summary>One good an NPC vendor sells: an item/species id and its coin price.</summary>
+        public class ShopOffer
+        {
+            public string Id;
+            public long Price;
+        }
+
+        /// <summary>Parse a shop offer array (sells/recipes/books) → ShopOffer[] (null/empty → null).</summary>
+        private static ShopOffer[] ParseOffers(JArray arr)
+        {
+            if (arr == null || arr.Count == 0) return null;
+            var offers = new ShopOffer[arr.Count];
+            for (int i = 0; i < arr.Count; i++)
+                offers[i] = new ShopOffer
+                {
+                    Id = arr[i]["id"]?.Value<string>(),
+                    Price = arr[i]["price"]?.Value<long>() ?? 0,
+                };
+            return offers;
         }
 
         /// <summary>
@@ -84,6 +118,7 @@ namespace BugFarmer.Data
         {
             public string Id;
             public string Name;
+            public string Description = ""; // flavor/functional blurb (shown when a station panel opens)
             public string Category;
             public string EntityType; // "item", "occupant", or "placeable"
 
@@ -96,6 +131,10 @@ namespace BugFarmer.Data
             public int MaxStack = 99;
             public int SellPrice;
             public int BuyPrice;
+
+            // Item tags (material/food/metal/…): what vendor Buys filters match against
+            // (an entry in shop.buys matches the item id OR any tag — mirrors server shopBuysItem).
+            public string[] Tags;
 
             // Walk-over magnet exclusion: deliberate-E-only pickups (fresh tree fruit)
             public bool NoAutoPickup;
@@ -179,6 +218,62 @@ namespace BugFarmer.Data
             public string Name = "";
             public string Description = "";
             public int SellPrice;
+
+            // Combat: legacy top-level fields (kept for back-compat). Prefer Attack (the data-driven profile).
+            public int AttackDamage;
+            public float AttackCooldown;
+
+            // The data-driven attack profile (mirrors the server's attack{} block). Null = this bug can't
+            // hurt the player. The authority reads Range + TelegraphSecs for its per-species detect/wind-up.
+            public AttackInfo Attack;
+
+            // Segmented crawlers (centipede/millipede): which body/tail art set to string behind the head,
+            // and a render-scale multiplier so a giant tier is visibly bigger. SpriteFamily null → the
+            // legacy centipede/millipede fallback in CentipedeTrail.
+            public string SpriteFamily;
+            public float RenderScale = 1f;
+
+            // Life-stage nursery sprites (the nursery panel resolves each stage's sprite by id). A non-empty
+            // PupaSpriteId means the species PUPATES (egg->larva->pupa->adult); else egg->larva->adult.
+            public string EggSpriteId;
+            public string LarvaSpriteId;
+            public string PupaSpriteId;
+
+            // Plain, per-species stage LABELS for the nursery panel (display-only — read only by the UI,
+            // never by the sim, so they do NOT enter the state hash). The larva "form" is species-specific
+            // (fly=maggots, wasp/beetle=grubs, butterfly=caterpillars, centi/millipede=young); butterfly
+            // pupa=chrysalises. BroodLabel is the section's umbrella word — "Brood" only where it fits a
+            // true nest/hive. Null → the panel falls back to eggs / larvae / pupae.
+            public string LarvaName;
+            public string PupaName;
+            public string BroodLabel;
+        }
+
+        /// <summary>Client mirror of the server AttackConfig (species.json "attack"). Only the fields the
+        /// authority needs to run per-individual detection + the wind-up telegraph.</summary>
+        public class AttackInfo
+        {
+            public string Style = "contact"; // "contact" | "lunge"
+            public int Damage;
+            public float Range = 1.5f;        // detection range
+            public float TelegraphSecs;       // per-species wind-up before the strike (0 = instant)
+            public float AggroEnter;
+            public float AggroExit;
+            // ATTACK-MOVEMENT knobs (the "solo divers within a bigger swarm" — BugAgent reads these to hover +
+            // swoop). Hash-bearing sim data, like movement_style. 0 = a sensible default.
+            public float Standoff;            // cells the hovering cloud keeps off the player
+            public float DivePeriodSecs;      // each bug's dive cycle (staggered per bug → 1-2 diving at once)
+            public float DiveSecs;            // how long a swoop lasts
+            // STING knobs (SwarmManager reads these to pace the strike reports; the server ignores them).
+            public int AttackTokens;          // max concurrent stings reported per swarm (1-2)
+            public float DiveCooldownSecs;    // per-bug rest between its sting reports
+            // LUNGE knobs (style "lunge" = the centipede surge; BugAgent reads these to run windup→charge→recover).
+            public float CooldownSecs;        // seconds between lunges (the surge cooldown)
+            public float TriggerRange;        // player this close → begin the windup
+            public float SurgeSpeedMult;      // lunge speed = a client base × this
+            public float Overshoot;           // charge PAST the aim point by this many cells
+            public int SurgeMaxTicks;         // surge-flight safety cap
+            public float Lead;                // aim-lead: fraction of the player's windup-velocity to lead by
         }
         private static Dictionary<string, SpeciesInfo> _species;
         private static bool _initialized;
@@ -188,6 +283,16 @@ namespace BugFarmer.Data
         {
             EnsureInitialized();
             return _species != null && _species.TryGetValue(speciesId, out var info) ? info : null;
+        }
+
+        /// <summary>All known species ids, sorted (for the debug spawner picker). Empty if not loaded.</summary>
+        public static List<string> AllSpeciesIds()
+        {
+            EnsureInitialized();
+            var ids = new List<string>();
+            if (_species != null) ids.AddRange(_species.Keys);
+            ids.Sort();
+            return ids;
         }
 
         #region Initialization
@@ -251,6 +356,17 @@ namespace BugFarmer.Data
                         Description = obj?["description"]?.Value<string>() ?? "",
                         SellPrice = obj?["sell_price"]?.Value<int>() ?? 0,
                         NetSize = obj?["net_size"]?.Value<string>() ?? "small",
+                        AttackDamage = obj?["attack_damage"]?.Value<int>() ?? 0,
+                        AttackCooldown = obj?["attack_cooldown"]?.Value<float>() ?? 0f,
+                        SpriteFamily = obj?["sprite_family"]?.Value<string>(),
+                        RenderScale = obj?["render_scale"]?.Value<float>() ?? 1f,
+                        EggSpriteId = obj?["egg_sprite_id"]?.Value<string>(),
+                        LarvaSpriteId = obj?["larva_sprite_id"]?.Value<string>(),
+                        PupaSpriteId = obj?["pupa_sprite_id"]?.Value<string>(),
+                        LarvaName = obj?["larva_name"]?.Value<string>(),
+                        PupaName = obj?["pupa_name"]?.Value<string>(),
+                        BroodLabel = obj?["brood_label"]?.Value<string>(),
+                        Attack = ParseAttack(obj),
                     };
                 }
             }
@@ -258,6 +374,39 @@ namespace BugFarmer.Data
             {
                 Debug.LogError($"[EntityDatabase] Failed to parse Data/species: {e.Message}");
             }
+        }
+
+        /// <summary>Parse the data-driven attack{} profile; fall back to synthesizing one from the legacy
+        /// top-level attack_damage so un-migrated species still work. Null = can't hurt the player.</summary>
+        private static AttackInfo ParseAttack(JObject obj)
+        {
+            if (obj?["attack"] is JObject a)
+            {
+                var lunge = a["lunge"] as JObject; // present only for style "lunge" (centipedes)
+                return new AttackInfo
+                {
+                    Style = a["style"]?.Value<string>() ?? "contact",
+                    Damage = a["damage"]?.Value<int>() ?? 0,
+                    Range = a["range"]?.Value<float>() ?? 1.5f,
+                    TelegraphSecs = a["telegraph_secs"]?.Value<float>() ?? 0f,
+                    AggroEnter = a["aggro_enter"]?.Value<float>() ?? 0f,
+                    AggroExit = a["aggro_exit"]?.Value<float>() ?? 0f,
+                    Standoff = a["standoff"]?.Value<float>() ?? 0f,
+                    DivePeriodSecs = a["dive_period_secs"]?.Value<float>() ?? 0f,
+                    DiveSecs = a["dive_secs"]?.Value<float>() ?? 0f,
+                    AttackTokens = a["attack_tokens"]?.Value<int>() ?? 0,
+                    DiveCooldownSecs = a["dive_cooldown_secs"]?.Value<float>() ?? 0f,
+                    CooldownSecs = a["cooldown_secs"]?.Value<float>() ?? 0f,
+                    TriggerRange = lunge?["trigger_range"]?.Value<float>() ?? 0f,
+                    SurgeSpeedMult = lunge?["surge_speed_mult"]?.Value<float>() ?? 0f,
+                    Overshoot = lunge?["overshoot"]?.Value<float>() ?? 0f,
+                    SurgeMaxTicks = lunge?["surge_max_ticks"]?.Value<int>() ?? 0,
+                    Lead = lunge?["lead"]?.Value<float>() ?? 0f,
+                };
+            }
+            int dmg = obj?["attack_damage"]?.Value<int>() ?? 0;
+            if (dmg <= 0) return null;
+            return new AttackInfo { Style = "contact", Damage = dmg, Range = 1.5f, TelegraphSecs = 0.8f, AggroEnter = 8f, AggroExit = 12f };
         }
 
         private static int LoadEntityFile(string resourcePath, string entityType)
@@ -303,11 +452,13 @@ namespace BugFarmer.Data
                 Id = id,
                 EntityType = entityType,
                 Name = data["name"]?.Value<string>() ?? id,
+                Description = data["description"]?.Value<string>() ?? "",
                 Category = data["category"]?.Value<string>() ?? "",
                 Stackable = data["stackable"]?.Value<bool>() ?? false,
                 MaxStack = data["max_stack"]?.Value<int>() ?? 99,
                 SellPrice = data["sell_price"]?.Value<int>() ?? 0,
                 BuyPrice = data["buy_price"]?.Value<int>() ?? 0,
+                Tags = (data["tags"] as JArray)?.ToObject<string[]>(),
                 NoAutoPickup = data["no_auto_pickup"]?.Value<bool>() ?? false,
                 FoodValue = data["food_value"]?.Value<int>() ?? 0,
                 ToolType = data["tool_type"]?.Value<string>(),
@@ -378,7 +529,8 @@ namespace BugFarmer.Data
                 Rotatable = data["rotatable"]?.Value<bool>() ?? false,
                 Directions = data["directions"]?.Value<int>() ?? 4,
                 Interactable = data["interactable"]?.Value<bool>() ?? false,
-                InteractionType = data["interaction_type"]?.Value<string>()
+                InteractionType = data["interaction_type"]?.Value<string>(),
+                CraftSlots = data["craft_slots"]?.Value<int>() ?? 0
             };
 
             // Parse footprint array
@@ -413,6 +565,20 @@ namespace BugFarmer.Data
                 world.ContainerSlots = container["slots"]?.Value<int>() ?? 12;
                 world.ContainerFilter = container["filter"]?.Value<string>() ?? "";
             }
+
+            // Parse shop block (NPC vendor: kind + the goods it sells)
+            var shop = data["shop"] as JObject;
+            if (shop != null)
+            {
+                world.ShopKind = shop["kind"]?.Value<string>() ?? "items";
+                world.ShopBuys = (shop["buys"] as JArray)?.ToObject<string[]>();
+                world.ShopSells = ParseOffers(shop["sells"] as JArray);
+                world.ShopRecipes = ParseOffers(shop["recipes"] as JArray);   // D26: learnable recipes
+                world.ShopBooks = ParseOffers(shop["books"] as JArray);       // D26: recipe-book collections
+            }
+
+            // NPC dialogue greeting (sibling of shop)
+            world.Greeting = data["greeting"]?.Value<string>();
 
             // Parse light block (lamps/torches glow at night)
             var light = data["light"] as JObject;

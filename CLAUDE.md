@@ -31,26 +31,66 @@ time (you end up building every feature twice). For every feature:
 - `BugFarmerClient/` — Unity 6 client (C#); all art lives under `Assets/Resources/`.
 - `nakama/` — Nakama Go server (authoritative game logic) + canonical entity data.
 - `tools/` — Python sprite/world pipeline (gen → clean → preview → publish), the test-zone
-  generator (`make_test_zone.py`), and the headless `.NET` netcode harness (`sync-harness/`).
+  generator (`tools/world/make_test_zone.py`), and the headless `.NET` netcode harness (`sync-harness/`).
   Art prompts are DATA: `tools/art/style.json` (global look) + `tools/art/catalog/*.json` (per-item).
-  Zone/scene authoring: `tools/zonegen/` (builder + `features/` primitives + `scenes/` + the
-  `registry.py` scene catalog + `gallery.py` → `_generated/previews/index.html`, THE visual
-  entry point). `tools/README.md` is the map of every script + where outputs go.
+  Zone/scene authoring: `tools/zonegen/` (builder + `features/` primitives + `scenes/`). Previews are
+  plain PNG folders under `tools/_generated/previews/` (browse in a file explorer — no html):
+  `catalog/<group>/` = every in-game object by category (rebuild: `python3 tools/world/previews.py`, generated
+  from entity data so it can't drift); `zones/<zone>/` = each zone's full render + region crops + its
+  composing `scenes/`. `tools/README.md` is the map of every script + where outputs go.
+  **The ONE sanctioned html exception — `tools/_generated/player/gallery.html`** (`gallery.py`): 22 outfits ×
+  12 ANIMATIONS cannot be compared in a file explorer, which is the entire problem it solves. Owner asked
+  for it explicitly (2026-08-02). It is generated from the folder structure, never hand-maintained.
+  **Do not delete it as dead code** — that is exactly what happened to the previous html gallery.
 - `docs/` — `product/` (how the game works, incl. the GDD `game_design.md`) and `guides/`
   (`art/` = how sprites look & are made; `authoring/` = how to build zones/scenes — start at its `README.md`).
 - `.claude/skills/` — task playbooks: `test-changes` (verify ANY change — every test/determinism gate),
-  `frontier-sync` (wire a new deterministic bug-sim mechanic), `ecology-tuning` (balance the bug food web),
-  `run-backend` (the Nakama/Postgres/Go stack), `add-object` / `regenerate-sprite` (world art), `author-zone` (zones).
+  `frontier-sync` (wire a new deterministic bug-sim mechanic), `perf-tuning` (profile + optimize the sim),
+  `combat-enemy` (add/tune a COMBAT enemy — species tier, difficulty dial, nocturnal, the per-individual
+  telegraphed-sting foundation + the arena test loop), `ecology-tuning` (balance the bug food web),
+  `bug-spawning` (why a zone has the wrong # of bugs —
+  spawn paths, the walkability + stale-save gotchas, populate/reset/persist), `run-backend`
+  (the Nakama/Postgres/Go stack), `add-object` / `regenerate-sprite` (world art), `author-zone` (zone/scene
+  MECHANICS), `zone-craft` (zone/scene QUALITY — the craft loop: brief quotas, options, zone lenses,
+  the CORRECTIONS.md owner-taste ledger; start here when a place must be INTERESTING, not just built),
+  `economy` (items/stores/crafting/drops — the unified entity registry + the `catalogs/` map + coverage audit),
+  `deep-investigate` (root-cause ONE reported problem → an evidence-gated findings + recommendation doc under
+  `docs/product/investigations/`, NO fix — for working a playtest issue list rigorously),
+  `certainty-assessment` (score a plan/design/just-built change → an evidence-anchored numeric certainty TABLE,
+  MIN-aggregated; the scoring layer for the review machinery below — run it before claiming "done/verified/safe"),
+  `thorough-research` (invoke for ANY "research / look up how X is done / how do good games do Y" task BEFORE
+  designing — the anti-bare-minimum gate: agent fan-out + deep-read quotas + ≥4 scored candidates + an
+  adversarial cold-critic loop until dry + self-verification of load-bearing claims; a half-search is a failure).
 
 ## Where things live
+- **Repo organization rule (read before creating a folder or saving generated output):**
+  `docs/guides/authoring/ORGANIZATION.md`. One rule — **reusable technique → `examples/<feature>`,
+  a specific place → `zones/<zone>`, game content → `catalog/`** — mirrored across docs, previews, and
+  scene code. **Don't invent new top-level buckets.** Previews = exactly `catalog/ examples/ zones/ player/`.
 - World art (loaded by `key` at runtime): `Assets/Resources/{Objects,Tiles,Items,Bugs,Effects}/`.
 - Player + player gear (hand-authored): `Assets/Resources/Player/`.
 - Entity data is **canonical** in `nakama/data/entities/{occupants,placeables,items,crops}.json`
   — the Go server and every Python tool read only from there.
 - The client's `Assets/Resources/Data/entities/` is **published output** — never hand-edit it;
-  run `python3 tools/publish_entities.py` after editing the canonical JSON.
+  run `python3 tools/data/publish_entities.py` after editing the canonical JSON.
 
 ## Hard rules (the gotchas that bite)
+- **Building/reworking a ZONE = invoke the `zone-craft` skill and clear ITS GATE first.** Before
+  writing ANY zone/scene code you MUST produce + post: the BRIEF, the named LANDMARK-SCENE LIST
+  (every interesting place is a crafted `place_*(b,ox,oy)` piece with its OWN preview under
+  `previews/zones/<zone>/scenes/`), and 2-3 rendered OPTIONS per major feature. Build landmarks as
+  crafted scenes (text-grids/rows), compose-in-place, then LENS PASS + LEDGER CHECK. **NEVER a
+  monolithic prop-scatter `zone_*.py`** (the repeated failure). `dirt areas` = dirt-block MASSES with
+  stone/ore CORES so digging finds things (caves.md Rule 4) — never a flat pure-dirt fill.
+- **Zone orientation is FIXED: HIGH y = NORTH = top of every render; LOW y = SOUTH (= deep
+  underground); x=0 = WEST, x=255 = EAST** (`zone.go`: "+Y = north"). Never re-derive it —
+  sanity-check: `village_21_B`'s big lake is at (x=46, y=48) and IS in the SW quadrant. Getting
+  this wrong has burned us 3×.
+- **The GAME loads the SAVE, not the builder.** Editing a `zone_*.py` builder changes NOTHING
+  in-game until you regenerate the save. After ANY zone-builder change you MUST re-`save()`
+  (`--save`) AND verify the SAVED data north-up (`python3 tools/world/view_world.py <zone>` →
+  look). A "fixed" builder with a stale save = the game silently loads the OLD/flipped zone.
+  Never overwrite a committed zone without a temp-save + render check first.
 - **Don't resize sprites by hand.** The runtime NEAREST-scales to `sprite_w × sprite_h`;
   `pixelclean.py`'s downscale is the only intended resize. See [object_pipeline.md](docs/guides/art/object_pipeline.md).
 - **No `jq`** — decode the gpt-image-1 base64 with Python (curl-piped large base64 fails).
@@ -66,25 +106,27 @@ time (you end up building every feature twice). For every feature:
 
 ## Common commands
 ```bash
-python3 tools/publish_entities.py                  # canonical entity JSON -> client (run after editing)
-python3 tools/gen_sprites.py --keys <key> --dry-run # preview the prompt, no API spend
-python3 tools/gen_sprites.py --keys <key>           # generate (default source = placeables.json)
-python3 tools/pixelclean.py                         # clean sprites in place under Resources/
+python3 tools/data/publish_entities.py                  # canonical entity JSON -> client (run after editing)
+python3 tools/sprites/gen_sprites.py --keys <key> --dry-run # preview the prompt, no API spend
+python3 tools/sprites/gen_sprites.py --keys <key>           # generate (default source = placeables.json)
+python3 tools/sprites/pixelclean.py                         # clean sprites in place under Resources/
 python3 tools/make_scene.py                         # render tools/_generated/previews/scene.png
 ```
 
 ## Entry points for an AI coder (start here)
 - **Verify ANY change / run tests:** the `test-changes` skill — the single source of truth for every test
   gate (Go unit tests, headless sync-harness, the determinism / "are all players in sync" checks, Unity pass).
-- **Understand the deterministic world + add a bug-sim mechanic:** `docs/product/architecture_swarm_sync.md`
+- **Understand the deterministic world + add a bug-sim mechanic:** `docs/product/architecture/architecture_swarm_sync.md`
   **§0 as-built quick reference** (the guarantee, the one invariant, the ledger-event glossary, the recipe),
   then the `frontier-sync` skill (the step-by-step recipe).
+- **Performance — profile or optimize the sim:** the `perf-tuning` skill (run a profiled session, read the
+  `current/index.html` dashboard, the safe-optimization discipline; sim-touching opts are determinism changes).
 - **Any complex / risky / determinism change:** run it through `.claude/complex-change-review.md` (stages ×
   failure-modes + the BugFarmer invariant checklist) + `.claude/lenses.md` (review lenses) before coding.
 - **Git workflow (how we branch/commit/merge):** `.claude/git-guidelines.md`.
 
 ## Find depth in
-- `docs/product/ARCHITECTURE.md` — top-level architecture + index to all product docs.
+- `docs/product/architecture/ARCHITECTURE.md` — top-level architecture + index to all product docs.
 - `docs/product/BACKLOG.md` — the live "what's next" queue (Now / Next / Later). The throwaway plan
   doc covers only the item we're actively working; the backlog is what persists between sessions.
 - `docs/guides/art/object_pipeline.md` — canonical art/sprite pipeline (the one to read first).

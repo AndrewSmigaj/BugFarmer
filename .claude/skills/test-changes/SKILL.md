@@ -29,8 +29,12 @@ If you add a test, **also add its one-liner to §1–§4 below** so it's discove
 bash tools/run_go_tests.sh        # go test ./world/ -count=1 -v inside the builder image (live source)
 ```
 Suite: `centipede combat predation nest fruit_tree release swarm_population player_hp equip world_env
-host_plant brood forage_pool ecology_director predator_starvation` (`*_test.go`).
+host_plant brood forage_pool ecology_director predator_starvation shop recipe_unlock` (`*_test.go`).
 Run after ANY server-logic change. Add a `*_test.go` for new sim/economy logic (mirror `predation_test.go`).
+- `shop_test.go` covers buy/sell/recipe/book + the **`sell_batch`** barter basket (mixed batch, duplicate-slot
+  no-double-pay, the negative-qty duplication exploit, bug-dealer batch) + the arbitrage invariant.
+- NOTE: this script pipes through `tail -30` — for the FULL verbose list run the inner `docker compose run …
+  go test` yourself or grep the un-tailed output; don't conclude "test missing" from the tail.
 
 ## 2. Headless sync-harness (`tools/sync-harness/`, real Nakama .NET client, no Unity)
 Server must be up (`docker compose up -d`). `DOTNET=$(command -v dotnet || echo ~/.dotnet/dotnet)`.
@@ -56,13 +60,13 @@ minutes; the chart x-axis is GAME-TIME (`tick/SimRate`) so 6× and normal-speed 
 The harness records a per-species population series and writes `fly_counts.csv` to the **temp dir at run
 END** (not live). Full loop:
 ```bash
-python3 tools/make_bug_lab.py                                   # (re)author the lab zone (pens + predator-prey arenas)
+python3 tools/ecology/make_bug_lab.py                                   # (re)author the lab zone (pens + predator-prey arenas)
 docker compose build builder && docker compose up -d --force-recreate nakama   # server-CODE change: recompile plugin
 #   …OR just `docker compose restart nakama` if you ONLY edited bug_lab DATA (zone.json is read at startup)
 rm -f /tmp/fly_counts.csv
 ~/.dotnet/dotnet run --project tools/sync-harness -- --zone bug_lab --duration 150 --tag eco   # see below: 150s ≈ 8.5 game-days
-python3 tools/plot_fly_counts.py /tmp/fly_counts.csv <chart_name> "<Title>"   # → tools/_generated/ecology_charts/<chart_name>.png
-python3 tools/plot_interactions.py --tag <chart_name> --since 10m            # the "WHY": births-by-source / deaths-by-cause
+python3 tools/ecology/plot_fly_counts.py /tmp/fly_counts.csv <chart_name> "<Title>"   # → tools/_generated/ecology_charts/<chart_name>.png
+python3 tools/ecology/plot_interactions.py --tag <chart_name> --since 10m            # the "WHY": births-by-source / deaths-by-cause
 ```
 - **WHY a population is off-target (interaction log):** the server emits one `ECOSTATS day=N sp=… pop=…
   b_*=… d_*=… avg_sat=…` line per species + `PREDLOG …` per predator-prey pair at each game-day rollover
@@ -96,14 +100,14 @@ python3 tools/plot_interactions.py --tag <chart_name> --since 10m            # t
   `lifespan_secs` ≈ 6300 = **7.5 game-days**, so a 4-day run NEVER shows old-age death — predators only
   starve in a short run. To see a full multi-day lifecycle/turnover, run LONGER (a 15-game-day run ≈ 2100s
   wall ≈ 35 min at 6×; this is why batching sim-steps per call is worth doing).
-- **All the tuning dials live in `docs/product/ecology_parameters.md`** (the control panel: every birth /
+- **All the tuning dials live in `docs/product/ecology/ecology_parameters.md`** (the control panel: every birth /
   death / food / Director-band parameter, what it does, where it is, which way to tweak). Tune populations
   by adjusting those params — NOT by adding new food items/occupants (a hack). The whole web keys off the
   **fly prey base**; fix it first.
 - **Read the shape**, not just survival: predators should PERSIST (not crash to 0 in ~60s — the old
   spawn-at-0-satiation bug), populations should OSCILLATE in-band (a flat line pinned at a cap = dead
   dynamics), and `total` should stay under the hard `max_population` caps. The lab layout (per-species
-  pens + the wasp/centipede predator-prey-detritivore arenas) is authored in `tools/make_bug_lab.py`.
+  pens + the wasp/centipede predator-prey-detritivore arenas) is authored in `tools/ecology/make_bug_lab.py`.
 - **Master dials** (the tuning knobs): food regen (`nectarRegenPerTick`/`hostRegenPerTick` in
   `handlers_farming.go`), flower/tree density + Director bands in `make_bug_lab.py`'s `MAX_POP`/`DIRECTOR`.
 - Per-species live overlay in-game is DebugOverlay **F5**; this headless loop is the persistent record.
@@ -117,11 +121,29 @@ is ① — two REAL clients, full system. The others are pre-checks/backstops, N
   Real client + real server, merge/split/spawn all live. Built standalone players don't take the Unity
   project lock, so they run alongside an open Editor (this is how "N players, Editor open" works).
   ```bash
-  # one-time per code change: build a CURRENT player (needs the project lock free for a headless build):
-  #   Editor menu  BugFarmer ▸ Build Sync-Test Player        (build from the open Editor), OR with Editor closed:
-  #   "Unity.exe" -batchmode -quit -projectPath BugFarmerClient -executeMethod SyncTestBuild.Build -logFile -
-  docker compose up -d                         # server (rebuild if Go changed)
-  tools/run_sync_test.sh village_21_B 60       # launches 2 players, diffs their per-tick hash streams
+  # one-time per code change: build a CURRENT player (needs the project lock free → Editor CLOSED for a headless build):
+  #   Editor menu  BugFarmer ▸ Build Sync-Test Player    OR headless (Editor closed; -logFile MUST be a C:/ path, not /mnt/):
+  #   "Unity.exe" -batchmode -quit -nographics -projectPath BugFarmerClient -executeMethod SyncTestBuild.Build -logFile C:/…/build.log
+  #   VERIFY THE BUILD via the managed DLL, NOT the .exe: Build/SyncTest/BugFarmerClient_Data/Managed/Assembly-CSharp.dll
+  #   gets the fresh mtime + your new symbols (`strings … | grep <YourSymbol>`); the .exe is just the launcher and
+  #   never changes — a months-old .exe mtime alongside a fresh DLL is normal, NOT a failed build.
+  docker compose build builder && docker compose up -d   # rebuild the plugin (if Go changed) + start the server
+  # CANONICAL GATE — staggered LATE-JOIN (run_sync_latejoin.sh): A authority creates the match, B LATE-JOINS it.
+  # (run_sync_test.sh launches 2 CONCURRENT players → they can race into TWO separate matches → inconclusive; prefer latejoin.)
+  # FRESH=1 now `docker compose build builder` FIRST, then force-recreates builder+nakama (tick 0 on the CURRENT
+  # plugin). The build step is LOAD-BEARING: the compose builder BAKES source at image-build time, so a bare
+  # force-recreate recompiles OLD Go — a Go change silently doesn't deploy (this invalidated a fix verification
+  # 2026-07-19). NEVER pipe this gate through `| tail` when acting on its exit code — the pipe masks it (check
+  # PIPESTATUS or run unpiped). It also FAILS (exit 6) on reconstruction TRIPWIRES (merge/split deficit-fill
+  # `moved 0/N`, orphaned "caching for later") even when positions happen not to diverge. DRIFT-NET SELF-TEST:
+  # DESYNC_B=<n> makes client B deliberately perturb one bug n ticks into recording — the zone drift round must
+  # DETECT it ("broken by AUTHORITY" in the server log), resync B, and B must CONVERGE (post-resync IDENTICAL).
+  # NON-VACUITY for lifecycle coverage: a definitive run should show ≥1 in-window merge in player_B.log
+  # (`SWARM_MERGE .* moved [1-9]`) — an empty window proves steady-state only. BOTH halves → SYNC: IDENTICAL:
+  FRESH=1 tools/run_sync_latejoin.sh village_21_B 70 12                                  # co-located spawn
+  FRESH=1 SPAWN_A=126,2 SPAWN_B=126,253 tools/run_sync_latejoin.sh village_21_B 70 12     # spawn-APART: disjoint chunks (the harder half)
+  #   diff = tools/netcode/sync_diff.py (hash-stream primary + per-bug localizer; unit-tested by test_sync_diff.py).
+  #   NON-VACUITY: the run must actually exercise the change (e.g. wasps killing flies); harness fails fast on 0-seed/0-bugs (exit 4/5).
   ```
   Each player (`HeadlessSyncTest.cs`, flag `-synctest`) auth's as a distinct account (NetworkManager reads
   `-clientid`), enters the zone ephemerally, records its tick hashes (the F1/F2 `TickTraceBuffer`), quits.
@@ -138,8 +160,32 @@ is ① — two REAL clients, full system. The others are pre-checks/backstops, N
   `Tick N: >0 swarms`. (The bug that taught us this: the one-shot `WorldInit` was dropped during the join
   handshake by `WorldManager`'s `CurrentMatch==null` guard — fixed in commit `1c1b251` by buffering
   pre-join match-state. A 0-swarm authority gave a bogus "96% divergence" that wasn't real.)
+  **DENSE-ZONE late-join gotchas (2026-06-29 — the gate had silently passed only because zones were small):**
+  (1) **read cap** — the Nakama client's default `MaxMessageReadSize` is 256KB; a big `LateJoinSnapshot`
+  (village_21_B's grew to ~305KB base64) silently TRUNCATES → the late-joiner gets **0 swarms**. Fixed:
+  `NetworkManager` builds the socket with `WebSocketStdlibAdapter(maxMessageReadSize: 8MB)`. (2) **view-scoped reads
+  diverge ONLY on disjoint chunks** — that is the whole point of the spawn-APART half: it caught the per-chunk
+  `_food` hydration (food now rides the zone-wide ledger + snapshot, not `GroundItemSpawn`). Any sim-input read that
+  isn't zone-wide/frontier-gated passes co-located but FAILS spawn-apart. See `architecture_swarm_sync.md` §0.
+  (3) **NEW CLIENT SIM-STATE → LATE-JOIN COMPLETENESS (2026-07-14 — the S1/S2 predation desync).** If you add or
+  rename ANY client-side per-bug or per-swarm state that feeds `ComputeStateHash` (bug x/y/vx/vy/hunt_target/
+  feed_until) OR that moves a bug, it MUST be reconstructed on a late-joiner. Two carriers: **per-bug** state
+  rides the VERBATIM per-bug relay automatically (`SwarmSnapshotData.Bugs` is `json.RawMessage` — never re-declare
+  bug fields in a Go struct, or the server silently drops them: that was the bug); **per-swarm/zone** state (a
+  new `InfluenceManager` dict like `_swarmStrikes`) needs its OWN snapshot section — mirror `_food`
+  (`Export…`/`Clear…`/`Hydrate…` on the client + a relayed section on ZoneSnapshot/LateJoinSnapshot + clear-then-
+  hydrate before replay in `HandleLateJoinSnapshot`). **VERIFY it with a NON-VACUOUS `run_sync_latejoin` that
+  actually exercises the new state** (e.g. wasps must be HUNTING when B joins — a run where the behavior never
+  fires is VACUOUS and proves nothing; that is how S1/S2 passed while broken). A quick way to prove non-vacuity +
+  reconstruction at once: temporarily log the new field per bug on A and B and assert 0 A-vs-B mismatches over
+  the overlap, in a window where the behavior is active.
 - **② sim-determinism pre-check (FAST, no Unity, no server):** `~/.dotnet/dotnet run --project
-  tools/sim-determinism` (`--selftest` proves it detects divergence). Links the real per-bug sim source and
+  tools/sim-determinism` (`--selftest` proves it detects divergence; `--los-test` checks the
+  `BugCollision.LineBlocked` predator line-of-sight geometry, #20; `--predation-test` the individual hunt+feed;
+  `--surge-test` the centipede LUNGE — a pack windup→surge→overshoot→recover at a fixed player, byte-identical +
+  non-vacuous `surgeFired`/`recovered`; `--subdue-test` the smoke/calm gate — a SUBDUED pack must NOT lunge (control
+  DOES) yet still wanders, and an in-flight lunge aborts, all deterministic; `--attack-test` a moving player driving
+  attack/flee/curious). Links the real per-bug sim source and
   runs it twice — catches wall-clock / unordered-collection / static / float nondeterminism in seconds. But
   it ONLY covers the per-bug movement core (no merge/split/spawn, single process) — a green here does NOT
   replace ①. See `tools/sim-determinism/README.md`.

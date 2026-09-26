@@ -1,0 +1,2 @@
+2026-07-06_2053_ant_lab
+Ant lab v10: relight-recruitment + gentler economy (worker decay 0.45, 4 pools). Feel-bar: visible worker line nest->east carrion.

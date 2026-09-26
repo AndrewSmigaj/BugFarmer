@@ -12,7 +12,7 @@ import (
 // Tuning — the ecology balance dials, loaded from data/ecology_tuning.json at MatchInit so a config sweep
 // (tools/bug_lab_configs) can override them WITHOUT recompiling. Soft state, NEVER hashed. An absent file
 // (or a missing key) keeps the DefaultTuning() value, which equals the current code constant — so a
-// no-override run is byte-identical to the compiled defaults. See docs/product/ecology_parameters.md.
+// no-override run is byte-identical to the compiled defaults. See docs/product/ecology/ecology_parameters.md.
 type Tuning struct {
 	// Plant food governors (handlers_farming.go)
 	NectarRegenPerTick   float32 `json:"nectar_regen_per_tick"`

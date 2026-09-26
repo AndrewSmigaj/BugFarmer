@@ -4,7 +4,7 @@ Lights and mood objects across poor→fancy, indoor & outdoor — including the 
 crossover. Design only.
 
 Read alongside:
-- `docs/product/game_design.md` §16 (day/night), §11.5 (furniture idle boosts), §11.6 (fuel/power).
+- `docs/product/design/game_design.md` §16 (day/night), §11.5 (furniture idle boosts), §11.6 (fuel/power).
 - Existing ids: `torch`, `candle`, `candelabra`, `lantern`, `lamp_floor`, `lamp_floor_fancy`,
   `lamp_table`, `lamp_post`, `fireplace`.
 - Bug crossover inputs from `bug_farming.md` (glow-bugs) and `cooking_food.md`/beekeeping (beeswax).

@@ -29,7 +29,7 @@ for cfg in "${CONFIGS[@]}"; do
   i=$((i+1))
   echo "" | tee -a "$LOG"
   echo "### [$i/${#CONFIGS[@]}] $cfg  ($(date +%H:%M:%S))" | tee -a "$LOG"
-  if timeout 760 python3 tools/run_config.py "$cfg" --duration "$DUR" >>"$LOG" 2>&1; then
+  if timeout 760 python3 tools/ecology/run_config.py "$cfg" --duration "$DUR" >>"$LOG" 2>&1; then
     echo "    ok" | tee -a "$LOG"
   else
     echo "    !! FAILED (exit $?) — continuing" | tee -a "$LOG"
@@ -38,6 +38,6 @@ done
 
 echo "" | tee -a "$LOG"
 echo "=== sweep done — scoreboard ===" | tee -a "$LOG"
-python3 tools/compare_configs.py "${CONFIGS[@]}" 2>&1 | tee -a "$LOG"
+python3 tools/ecology/compare_configs.py "${CONFIGS[@]}" 2>&1 | tee -a "$LOG"
 echo "" | tee -a "$LOG"
 echo "log: $LOG"

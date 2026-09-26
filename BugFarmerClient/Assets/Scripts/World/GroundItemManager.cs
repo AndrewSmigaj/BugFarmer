@@ -70,24 +70,12 @@ namespace BugFarmer.World
             visual.Initialize(msg.id, msg.item_type, msg.count, sprite, worldPos);
             _items[msg.id] = visual;
 
-            // Join-time food-registry HYDRATION: chunk-subscribe re-sends existing ground
-            // items; ones that are bug food would otherwise be missed by a joiner (their
-            // ITEM_ROTTED events get pruned after 200 ticks). Two sources of edibility:
-            // the rotten_ prefix (rotten fruit — the server assigns 100 at rot time; the
-            // published item rows carry no food_value) and a def-level food_value
-            // (CARRION: bug_parts etc. — the prefix can't cover it, and without this a
-            // joiner's registry lacks the corpse while veterans' flies land on it = a
-            // hash-resync loop). Hydrating at the full def value while the real level is
-            // part-drained is the same accepted class as the rotten 100: the registry
-            // level is an existence gate only, and FOOD_CONSUMED(0) removes it.
-            if (msg.item_type.StartsWith("rotten_"))
-                Bugs.InfluenceManager.Instance?.HydrateFood(msg.id, new Vector2(msg.x, msg.y), 100);
-            else
-            {
-                var def = EntityDatabase.Get(msg.item_type);
-                if (def != null && def.FoodValue > 0)
-                    Bugs.InfluenceManager.Instance?.HydrateFood(msg.id, new Vector2(msg.x, msg.y), def.FoodValue);
-            }
+            // GroundItemSpawn is COSMETIC ONLY — it no longer hydrates the deterministic food registry.
+            // Per-chunk hydration injected VIEW-SCOPED food (a client only learned about food in chunks it
+            // had subscribed to), so two clients on disjoint chunks diverged (the spawn-apart late-join bug:
+            // the authority held ~85 food entries while a disjoint late-joiner hydrated ~265). Food enters
+            // _food ONLY via the zone-wide sources now: the ITEM_ROTTED / FOOD_CONSUMED ledger (live, incl.
+            // seedInitialCarrion's tick-0 ITEM_ROTTED) + the authority's ZoneSnapshot.Food (late-join).
         }
 
         private void HandleItemRemove(IMatchState state)
@@ -140,7 +128,11 @@ namespace BugFarmer.World
             if (string.IsNullOrEmpty(itemType)) return false;
             if (itemType.StartsWith("rotten_")) return true;
             var def = EntityDatabase.Get(itemType);
-            return def != null && def.NoAutoPickup;
+            // Bug food (dead bugs + carrion, FoodValue>0) joins no_auto_pickup fruit as a "grounded"
+            // item — never magneted, only the deliberate E grab. Matches the E-prompt's own eRequired
+            // check and fixes dead bugs being auto-hoovered. This predicate also = "render as a placed
+            // grid object" (GroundItemVisual reads it).
+            return def != null && (def.NoAutoPickup || def.FoodValue > 0);
         }
 
         /// <summary>

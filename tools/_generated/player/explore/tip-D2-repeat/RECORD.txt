@@ -1,0 +1,12 @@
+when      : 2026-08-14 22:40:48
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+dest      : explore/tip-D2-repeat
+references (in the order sent):
+  1. tools/_generated/player/bases/armless_front.png  (upscaled x14 -> 504x994)
+  2. tools/_generated/player/bases/armless_side.png  (upscaled x14 -> 504x994)
+
+PROMPT:
+Create a 3-view standing turnaround from the attached sprites: front, exact right profile, and back. Keep the same head size, torso length, leg length, face and hair as the reference. Change only the outfit into complete red fire-ant armor. Use the same size pixel blocks as the reference; do not use smaller pixel detail. If armor detail does not fit, simplify it instead of adding smaller details. The helmet is open-faced but covers the whole head; hair may stick out from under it. Armless body: do not draw arms, hands, elbows, forearms or gauntlets. Solid rounded shoulder ends. No holes, sockets or empty arm openings. Flat pure magenta background (255 0 255), nothing else on it. Hard pixel edges, no blur.

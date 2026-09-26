@@ -1,14 +1,14 @@
 # Bug Lab tuning configs
 
 Each `<NN_name>.json` is a **delta** over the baseline, deep-merged and applied by
-`tools/run_config.py <name>` (which snapshots → applies → restarts nakama → runs the fast `bug_lab`
-harness → charts → **restores** the canonical data). The sweep is scored by `tools/compare_configs.py`.
+`tools/ecology/run_config.py <name>` (which snapshots → applies → restarts nakama → runs the fast `bug_lab`
+harness → charts → **restores** the canonical data). The sweep is scored by `tools/ecology/compare_configs.py`.
 
 ## Schema (every section optional; absent = baseline)
 | section | merges into | what it tunes |
 |---|---|---|
 | `lab` | `make_bug_lab.DEFAULT_LAB` | per-species caps (`caps`), Director bands (`director`), `sim_batch`, `call_rate`, `max_pop` |
-| `tuning` | `nakama/data/ecology_tuning.json` | the Go balance dials (nectar/host regen, satiation, nest economy, nest-found distance…) — see `docs/product/ecology_parameters.md` |
+| `tuning` | `nakama/data/ecology_tuning.json` | the Go balance dials (nectar/host regen, satiation, nest economy, nest-found distance…) — see `docs/product/ecology/ecology_parameters.md` |
 | `species` | `nakama/data/species.json` | per-species fields (`reproduce_cooldown`, `breed_amount`, `feed_per_kill`, `lifespan_secs`, `satiation_decay_rate`, …) |
 | `fruit` | `nakama/data/entities/occupants.json` (under each tree's `world`) | tree fruit rates (`max_fruit`, `fruit_grow_ticks`, `fruit_drop_ticks`) |
 

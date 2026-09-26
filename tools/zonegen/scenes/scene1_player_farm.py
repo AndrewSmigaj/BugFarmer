@@ -33,6 +33,10 @@ W, H = 46, 50
 
 
 # ---- the scene --------------------------------------------------------------
+PREVIEW = "zones/village_21_B/scenes"
+SCALE = 3
+
+
 def build():
     b = ZoneBuilder("scene1_player_farm", W, H, base_tile="grass", name="Player farm")
 
@@ -146,8 +150,7 @@ def build():
 
 
 if __name__ == "__main__":
+    from scene_preview import render
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "scene1_player_farm.png"))
-    render_builder(b, out, scale=6)
-    print("missing_art:", b.missing_art())
-    print("warnings:", len(b.warnings))
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

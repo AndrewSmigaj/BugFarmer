@@ -1,0 +1,31 @@
+when      : 2026-08-15 17:23:52
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+dest      : explore/blackant-v3-backwalk
+references (in the order sent):
+  1. tools/_generated/player/explore/blackant-v3-backwalk/CHOSEN_ref.png  (upscaled x14 -> 462x1274)
+
+PROMPT:
+The attached image is a finished pixel-art sprite of a character in black-ant carapace armour, seen from behind, facing away from the viewer. Draw FOUR frames of this character WALKING, side by side in a single row, all four the same size and standing on the same baseline, all seen from behind, facing away from the viewer.
+
+The 4 frames are:
+Frame 1: the LEFT knee comes up and the LEFT foot leaves the ground. The right leg is straight and planted.
+Frame 2: both feet flat on the ground, together, directly under the hips.
+Frame 3: the RIGHT knee comes up and the RIGHT foot leaves the ground. The left leg is straight and planted.
+Frame 4: both feet flat on the ground, together, directly under the hips.
+
+The feet must stay directly underneath the hips - do NOT swing a foot out to the left or to the right, at all. In this view a step is straight UP and straight DOWN. Lift the knee HIGH: the raised knee should come up clearly in front of the body and sit visibly higher than the planted knee, and the raised foot well clear of the ground. Knees point FORWARD and feet point FORWARD, never splayed outward.
+
+Very important: the 4 frames must be DIFFERENT phases of a walk cycle, not repeated standing poses. Frame 1 and frame 3 must use OPPOSITE legs - if the same leg is forward, or the same foot is off the ground, in both, the cycle is wrong. Frame 3 is the MIRROR of frame 1, never a copy of it.
+
+This is the same finished sprite posed differently, not a redraw. Do not redesign the armour, the helmet, the antennae, the face or the colours. Keep the same head size, torso length, leg length and foot size as the reference. Do not shorten the legs. Do not enlarge the head. Walking is the legs moving, not the body being stretched or rescaled.
+
+Use the same size pixel blocks as the reference. Do not use smaller pixel detail. If armour detail does not fit, simplify it instead of adding smaller details.
+
+The character has NO ARMS: do not draw arms, hands, elbows, forearms or gauntlets. Solid rounded shoulder ends. No holes, sockets or empty arm openings. No bare skin between the shoulders and the boots.
+
+Match the PIXEL DENSITY of the attached reference image: its pixels are large visible squares and yours must be the same size.
+
+Flat pure MAGENTA background (255 0 255), nothing else on it. Hard pixel edges, no blur.

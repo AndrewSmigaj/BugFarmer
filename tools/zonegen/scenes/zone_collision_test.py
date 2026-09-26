@@ -4,7 +4,7 @@ bed (passable), a fully-CLOSED fly pen plus a GATED pen, and two fly_common swar
 pen, one outside). Built to verify player + bug collision headlessly via the sync-harness.
 
   python3 tools/zonegen/scenes/zone_collision_test.py     # build + save + lint
-  python3 tools/view_world.py collision_test              # whole-zone pixel overview
+  python3 tools/world/view_world.py collision_test              # whole-zone pixel overview
 """
 import os
 import sys

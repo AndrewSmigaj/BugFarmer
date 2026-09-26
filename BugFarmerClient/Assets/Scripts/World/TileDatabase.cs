@@ -53,6 +53,26 @@ namespace BugFarmer.World
             if (_tileCache.TryGetValue(tileId, out var cached))
                 return cached;
 
+            // Shaped ground: a composite id "matA~matB~shape" blends two materials through a shape mask into
+            // one tile (runtime GPU composite). Cached by the full id, so each combo builds once.
+            if (tileId.IndexOf('~') >= 0 && TileCompositor.TryParse(tileId, out var mA, out var mB, out var shape))
+            {
+                var comp = TileCompositor.Build(mA, mB, shape);
+                if (comp != null)
+                {
+                    var compSprite = Sprite.Create(comp,
+                        new Rect(0, 0, comp.width, comp.height),
+                        new Vector2(0.5f, 0.5f),
+                        comp.width);
+                    var compTile = ScriptableObject.CreateInstance<Tile>();
+                    compTile.sprite = compSprite;
+                    compTile.color = Color.white;
+                    _tileCache[tileId] = compTile;
+                    return compTile;
+                }
+                // compositing failed (missing material/shader) -> fall through to fallback below
+            }
+
             var tex = Resources.Load<Texture2D>($"Tiles/{tileId}");
             if (tex != null)
             {

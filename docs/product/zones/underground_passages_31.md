@@ -91,13 +91,15 @@ Found in natural caverns, not solid rock:
 ---
 
 ## Connections
+*(corrected 2026-07-06 to the D2/D3/D9 restructure — the old table predated it and put
+the Centipede Cavern at (3,0); ants own col 0 now, the cavern moved to (4,1).)*
 
 | Edge | To | Access |
 |------|-----|--------|
 | North | Village (2,1) | Mine entrance |
-| South | Deeper passages (4,1) | Mine through |
+| South | **Centipede Cavern (4,1)** | Mine through |
 | East | Underground River (3,2) | Mine through |
-| West | Centipede Cavern (3,0) | Mine through |
+| West | **Ant Tunnels (3,0)** | The SW dirt seam — the ants' territory bleeds in from col 0 |
 
 ---
 

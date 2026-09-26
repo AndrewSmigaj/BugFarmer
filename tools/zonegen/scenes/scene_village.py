@@ -79,6 +79,10 @@ def square(b, cx, cy, r=4):
     safe(b, "lamp_post", cx - 3, cy - 3); safe(b, "lamp_post", cx + 3, cy + 3)
 
 
+PREVIEW = "zones/village_21_B/scenes"
+SCALE = 2
+
+
 def build():
     b = ZoneBuilder("scene_village", W, H, base_tile="grass", name="Starting Village")
 
@@ -137,8 +141,7 @@ def build():
 
 
 if __name__ == "__main__":
+    from scene_preview import render
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "surface", "scene_village.png"))
-    render_builder(b, out, scale=4)
-    print("LINT:", b.lint() or "0 defects")
-    print("warnings:", len(b.warnings), "| missing_art:", b.missing_art())
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

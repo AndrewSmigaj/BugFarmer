@@ -40,6 +40,10 @@ const (
 	// think) and the wasp forages forever without ever heading home. 90 leaves the post-kill overshoot
 	// comfortably above it (decay-per-think ≈ 0.3), so the provision reliably fires.
 	predatorFullSatiation = 90.0
+	// nestDwellTicks: a homing resident that reaches the nest DWELLS a beat "inside" (parked via the
+	// FeedUntilTick hold branch) tending the brood before resuming the hunt — the "go inside the nest"
+	// read. ~10s; breeding-unify B renders the parked-at-nest resident as gone-inside (display-only).
+	nestDwellTicks = 100
 )
 
 // predationThink runs the species-specific Think branches that REPLACE the shared
@@ -62,6 +66,18 @@ func (m *Match) predationThink(
 	pt := state.Perf.Start()
 	state.Perf.Count(species.ID, "pred_thinks")
 	defer state.Perf.StopSpecies(species.ID, "pred", pt)
+
+	// Nocturnal hunters lie low by day: no hunting, no nest-defence aggro — they just wander (the
+	// caller's default). Clears any in-flight hunt/defend. Server-side + deterministic (outputs only
+	// legs), so the swarm sim stays in sync.
+	if species.Nocturnal && !isNightForHunting(state) {
+		swarm.TargetPreyID = ""
+		if swarm.Phase == "defending" {
+			swarm.Phase = "feeding"
+			swarm.DefendTargetID = ""
+		}
+		return false
+	}
 
 	// --- 1. PREY FLEE -------------------------------------------------------------
 	if species.PredatorFleeRadius > 0 {
@@ -123,8 +139,10 @@ func (m *Match) predationThink(
 		// DEFENDING — entry: recalled by nest damage (recallNestDefenders) OR a player
 		// loitering within NestDefendRadius of the nest. Exit: hysteresis distance or
 		// the timer. Defenders chase at hunt speed (scary NEAR the nest only).
+		// §C precedence rule (all three defend entries apply it): defense is suppressed
+		// while (the resident is SUBDUED) or (the nest is SMOKED).
 		nest := state.NestStates[swarm.NestKey]
-		if swarm.Phase != "defending" && nest != nil {
+		if swarm.Phase != "defending" && nest != nil && !nestDefenseSuppressed(state, nest, swarm) && !peacefulZone(state) {
 			if pid, px, py, found := m.nearestPlayer(state, float32(nest.GridX)+0.5, float32(nest.GridY)+0.5, entities.NestDefendRadius); found {
 				_ = px
 				_ = py
@@ -134,7 +152,9 @@ func (m *Match) predationThink(
 			}
 		}
 		if swarm.Phase == "defending" {
-			exit := state.TickCount >= swarm.DefendUntilTick || nest == nil
+			// Exit hysteresis — the same §C precedence rule ends an anger already in flight.
+			exit := state.TickCount >= swarm.DefendUntilTick || nest == nil ||
+				nestDefenseSuppressed(state, nest, swarm)
 			var tx, ty float32
 			if !exit {
 				if target, ok := state.Players[swarm.DefendTargetID]; ok {
@@ -189,6 +209,13 @@ func (m *Match) predationThink(
 					swarm.CarryingBrood = false
 					swarm.Phase = "feeding"
 					swarm.Satiation = p.DepositSatiation
+					// ENTER THE NEST: hunter residents (wasps/hornets) dwell a beat tending the brood before
+					// resuming the hunt (the "go inside the nest" read); parks via the FeedUntilTick hold-leg
+					// branch below — deterministic, and B renders the parked resident as gone-inside. Nectar/
+					// carrion foragers (bees/ants) keep their tight forage loop for now (village scope = wasp).
+					if len(p.Prey) > 0 {
+						swarm.FeedUntilTick = state.TickCount + nestDwellTicks
+					}
 				} else {
 					m.emitLeg(state, swarm, species, nx, ny, 1.0, chunkSize, deltaTime)
 					swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)
@@ -198,23 +225,153 @@ func (m *Match) predationThink(
 		}
 	}
 
-	// INDIVIDUAL ground predators (centipede): CARRION-FIRST — if food is visible,
-	// decline ownership so the SHARED forage block dines/breeds normally (it clears
-	// TargetPreyID + resets SpeedMult on entry). Hunting is the fallback for a hungry
-	// centipede with nothing to scavenge.
-	isIndividual := species.Category == "individual"
-	if isIndividual && swarm.TargetPreyID == "" {
-		// A fresh swarm's Phase is "" until the first CheckPhaseTransition — default
-		// to "feeding" for the attraction lookup (the transition's own default).
-		phase := swarm.Phase
-		if phase == "" || phase == "idle" {
-			phase = "feeding"
+	// FEED-PAUSE (#20): a predator PARKS on its kill for the feeding dwell. Slotted AFTER the nest
+	// defending/homing block (a nest attack still preempts the meal) and BEFORE the individual/hunt
+	// blocks. Re-emits a zero-length hold-leg at the jittered re-aim cadence (so the swarm re-checks
+	// defend/home each think — responsive) — the swarm freezes IN SYNC (clients mirror the march;
+	// origin==target → both arrival-clamps hold it). Determinism: FeedUntilTick is a deterministic
+	// tick stamp set by the ledgered strike, so every client/handoff-authority holds-or-thinks alike.
+	if swarm.FeedUntilTick > state.TickCount {
+		cx, cy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
+		m.emitLeg(state, swarm, species, cx, cy, 1.0, chunkSize, deltaTime)
+		swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)
+		return true
+	}
+
+	// ANT COLONY BEHAVIOR (P3.2): scouts breadcrumb their walk and REGISTER anything
+	// edible into the colony memory; hungry workers with nothing in VISION walk the
+	// best-known trail hop-by-hop (the scout's stored route — files share one literal
+	// polyline). Everything else falls through to the bee decline below, so dining,
+	// provisioning and homing stay the verbatim shared machinery. Server-only reads;
+	// the only outputs are ordinary legs.
+	if species.CarrionForager {
+		// Phase normalization FIRST (the bee_arena starve-sawtooth lesson): attractions
+		// resolve BY PHASE and a fresh swarm is born at Phase "" — an un-normalized
+		// worker would see "no food in vision" while standing on a feast.
+		if swarm.Phase == "" || swarm.Phase == "idle" {
+			swarm.Phase = "feeding"
 		}
-		if attractions := species.AttractionsByPhase[phase]; len(attractions) > 0 {
-			if hits := FindNearbyFood(state, swarm.Position, species.VisionRange, attractions); len(hits) > 0 {
-				return false
+		nestKey, colonyNest := m.nearestColonyNest(state, swarm, species, chunkSize)
+		if species.ColonyScout {
+			// THE SENSOR (owner ruling: scouts are pure sensors): crumb the walk,
+			// register nearby food, then decline below — the shared blocks feed and
+			// wander it. Spawned scouts carry no NestKey → PROVISION never fires.
+			m.scoutBreadcrumb(state, swarm, colonyNest, chunkSize)
+			if nestKey != "" && colonyNest != nil {
+				nx2 := float32(colonyNest.GridX) + 0.5
+				ny2 := float32(colonyNest.GridY) + 0.5
+				for _, h := range FindNearbyFood(state, swarm.Position, species.VisionRange,
+					swarm.GetCurrentAttractions(species)) {
+					// TRAILS ARE FOR FAR FOOD (the v3 lab finding): scouts constantly
+					// re-registered the colony's own fungus garden, and Strength/(1+dist)
+					// let the 5-cell mushrooms out-score the 48-cell bonanza 10:1 — every
+					// "march" was a 3-cell hop inside the garden. Food within vision of
+					// the NEST needs no trail by definition (workers at home already see
+					// it); only beyond-garden finds enter colony memory.
+					hdx, hdy := h.X-nx2, h.Y-ny2
+					if hdx*hdx+hdy*hdy <= species.VisionRange*species.VisionRange {
+						continue
+					}
+					isNew := registerCarrionSite(state, nestKey, int(h.X), int(h.Y),
+						scoutRegisterStrength, state.ScoutPaths[swarm.ID])
+					// Recruit on a FRESH site — or RELIGHT a known one whose trail
+					// has lapsed (v9: coalescence keeps sites alive, so fresh-only
+					// recruitment fired 4 times in 34 days).
+					if isNew || !anyMarcherFor(state, nestKeyFor(int(h.X), int(h.Y))) {
+						n := recruitWorkers(state, nestKey, int(h.X), int(h.Y), 5)
+						if n > 0 {
+							logger.Info("ANTLOG recruit nest=%s site=%d,%d workers=%d",
+								nestKey, int(h.X), int(h.Y), n)
+						}
+					}
+					logger.Info("ANTLOG register nest=%s site=%d,%d kind=%s routeLen=%d",
+						nestKey, int(h.X), int(h.Y), h.Kind, len(state.ScoutPaths[swarm.ID]))
+				}
+			}
+			// The sensor contract: scouts ALWAYS decline ownership — the shared forage/
+			// wander blocks feed and move them. (With nest_occupant now link-only, the
+			// bee decline below no longer catches them.)
+			return false
+		} else if swarm.Satiation < predatorFullSatiation && nestKey != "" {
+			// THE WORKER'S MARCH, WITH COMMITMENT. The v2 lab exposed the oscillation
+			// trap: pool trickle-regen re-captured every marcher at the garden's edge
+			// (a 1-nectar blip in vision cancelled the trip, the blip drained, repeat)
+			// — so no trail could ever cross the map. A worker now COMMITS to a site
+			// (MarchTargets, server-only) and holds the trail until the site dies, it
+			// ARRIVES (the site's own food enters vision → dining takes over), or a
+			// full load sends it home; after the deposit it re-commits — that cycle IS
+			// the visible trail.
+			committed := ""
+			if state.MarchTargets != nil {
+				committed = state.MarchTargets[swarm.ID]
+			}
+			mem := state.ColonyMemory[nestKey]
+			var site *entities.CarrionSite
+			if committed != "" {
+				if mem != nil {
+					for _, s2 := range mem.Sites {
+						if nestKeyFor(s2.GridX, s2.GridY) == committed {
+							site = s2
+							break
+						}
+					}
+				}
+				if site == nil {
+					delete(state.MarchTargets, swarm.ID) // the site died — release
+				}
+			}
+			visionHits := FindNearbyFood(state, swarm.Position, species.VisionRange,
+				swarm.GetCurrentAttractions(species))
+			if site == nil && len(visionHits) == 0 {
+				if site = bestKnownSite(mem, swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)); site != nil {
+					if state.MarchTargets == nil {
+						state.MarchTargets = make(map[string]string)
+					}
+					state.MarchTargets[swarm.ID] = nestKeyFor(site.GridX, site.GridY)
+					logger.Info("ANTLOG commit swarm=%s site=%d,%d", swarm.ID, site.GridX, site.GridY)
+				}
+			}
+			if site != nil {
+				sx2, sy2 := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
+				ddx, ddy := float32(site.GridX)+0.5-sx2, float32(site.GridY)+0.5-sy2
+				if ddx*ddx+ddy*ddy <= species.VisionRange*species.VisionRange && len(visionHits) > 0 {
+					// TRAFFIC REINFORCEMENT (the ACO other-half, v6 finding): an
+					// arrival re-vouches for the site, so a trail SUSTAINS ITSELF
+					// while the food lasts — scouts only have to LIGHT it. When the
+					// food is gone arrivals stop and decay retires the trail (the
+					// designed migrate-on-depletion dynamic).
+					registerCarrionSite(state, nestKey, site.GridX, site.GridY,
+						workerReinforceStrength, nil)
+					delete(state.MarchTargets, swarm.ID) // arrived: dine (decline below)
+					logger.Info("ANTLOG arrive swarm=%s site=%d,%d", swarm.ID, site.GridX, site.GridY)
+				} else {
+					tx, ty := nextTrailPoint(site, sx2, sy2)
+					swarm.TargetPreyID = ""
+					m.emitLeg(state, swarm, species, tx, ty, 1.0, chunkSize, deltaTime)
+					swarm.NextThinkTick = state.TickCount + huntReaimMinTicks + state.Rng.Int63n(huntReaimJitter)
+					return true
+				}
 			}
 		}
+	}
+
+	// NECTAR FORAGERS (bees): a NEST species with an EMPTY prey list never hunts — while
+	// below the full-load point it declines ownership (the centipede carrion-first pattern)
+	// so the SHARED forage block dines on flower nectar; satiation then climbs to
+	// predatorFullSatiation and the PROVISION block above carries the load home (brood +
+	// honey). Defend/homing/feed-pause above still preempt. At/above full with no live nest
+	// (orphan), it falls through to the home-range rest-wander below, like orphan wasps.
+	if p.NestOccupant != "" && len(p.Prey) == 0 && swarm.Satiation < predatorFullSatiation {
+		// PHASE NORMALIZATION AT THE HANDOFF (the bee_arena starve-sawtooth root cause): the
+		// shared forage block reads attractions BY PHASE, and nest species skip the standard
+		// phase machine (match.go — the sated→"reproducing" flip would strand them). A fresh
+		// resident is born at Phase "" and would look up attractions for "" forever — starving
+		// beside a full flower field. Default to "feeding" here, exactly like the centipede
+		// think's own "" → feeding default; deposits already set "feeding" on arrival.
+		if swarm.Phase == "" || swarm.Phase == "idle" {
+			swarm.Phase = "feeding"
+		}
+		return false
 	}
 
 	// Continue or acquire a hunt. Hunting persists once started (re-aim each think)
@@ -271,7 +428,7 @@ func (m *Match) predationThink(
 				cxp, cyp, bx, by, blocked := entities.RaycastClampWithBlock(sx, sy, tx, ty, func(x, y float32) bool {
 					return state.IsBlockedForSpecies(x, y, species)
 				})
-				if blocked && isIndividual && m.tryStartGnaw(state, swarm, species, bx, by, chunkSize, deltaTime) {
+				if blocked && species.MovementStyle == "centipede" && m.tryStartGnaw(state, swarm, species, bx, by, chunkSize, deltaTime) {
 					return true
 				}
 				tx, ty = cxp, cyp
@@ -282,14 +439,9 @@ func (m *Match) predationThink(
 		}
 	}
 
-	// Idle: individuals wander SERPENTINE (heading-constrained short legs + the
-	// dead-end escape hatch); swarm predators rest-wander in their home range.
-	if isIndividual {
-		m.centipedeWander(state, swarm, species, chunkSize, deltaTime)
-		return true
-	}
-
-	// Wander within the home range (rest between trips; the readable loiter).
+	// Wander within the home range (rest between trips; the readable loiter). A centipede
+	// pack's CENTER rest-wanders here too — each member's own serpentine wander runs
+	// per-bug on the client (movement_style "centipede").
 	sx, sy := swarm.WorldX(chunkSize), swarm.WorldY(chunkSize)
 	angle := state.Rng.Float64() * 2 * math.Pi
 	tx := sx + float32(math.Cos(angle))*predWanderDistance
@@ -344,6 +496,17 @@ func (m *Match) applyPredationStrike(
 	state.Stats.recordDeath(prey.SpeciesID, DeathPredation, len(removed))
 	state.Stats.recordPredation(predator.SpeciesID, prey.SpeciesID, len(removed))
 
+	// S2 individual predation: drop a REAL edible corpse (dead_<prey>) AT each victim so the individual
+	// predator can go eat it (or leave it). Predation was corpse-less before (only a fading VFX); the client
+	// FEED behaviour + the corpse-consume report do the eating. Falls back to the predator centre if a victim
+	// cell is blocked. Edible (food_value>0) so a LEFT corpse also feeds detritivores / rots away naturally.
+	if preySpecies != nil && preySpecies.CarcassItem != "" {
+		fbx, fby := predator.WorldX(chunkSize), predator.WorldY(chunkSize)
+		for i := 0; i < len(victimX) && i < len(victimY); i++ {
+			m.spawnCarcass(logger, dispatcher, state, preySpecies.CarcassItem, victimX[i], victimY[i], fbx, fby, chunkSize)
+		}
+	}
+
 	predator.LastStrikeTick = state.TickCount
 	predator.HuntStartTick = state.TickCount // a kill is progress: the timeout re-arms
 	predator.Satiation += p.FeedPerKill * float32(len(removed))
@@ -351,13 +514,46 @@ func (m *Match) applyPredationStrike(
 		predator.Satiation = 100
 	}
 
+	// FEED-PAUSE (#20): park on the kill for the dwell. NextThinkTick=now forces a prompt re-think so the
+	// park begins AT the kill (a tight, readable beat) instead of ~1s later along the stale hunt-leg.
+	// Per-species; 0 = off. (A load-filling kill that flips a nest predator to "homing" skips the park —
+	// the home trip is its own pause — but the corpse telegraph below still fires on every kill.)
+	if p.FeedPauseTicks > 0 {
+		predator.FeedUntilTick = state.TickCount + p.FeedPauseTicks
+		predator.NextThinkTick = state.TickCount
+	}
+
 	// Strike telegraph (display-only): the snatch flash + THWACK. Phase 2 carries the victim positions
 	// so the snatch plays AT each eaten fly (individual strike reads on screen); nil = predator-centre.
-	m.broadcastBugStrikeTelegraph(dispatcher, state, predator, victimX, victimY, chunkSize)
+	// #20: carry the prey's carcass + the feeding-dwell seconds so the client shows + fades a corpse.
+	tickRate := state.Config.TickRate
+	if tickRate <= 0 {
+		tickRate = 10
+	}
+	carcass := ""
+	if preySpecies != nil {
+		carcass = preySpecies.CarcassItem
+	}
+	feedPauseSecs := float32(p.FeedPauseTicks) / float32(tickRate)
+	m.broadcastBugStrikeTelegraph(dispatcher, state, predator, victimX, victimY, carcass, feedPauseSecs, chunkSize)
 
 	logger.Info("Predation: %s struck %s (-%d, satiation %.0f)",
 		predator.ID, prey.ID, len(removed), predator.Satiation)
 	return len(removed)
+}
+
+// handleCorpseConsume removes a corpse an individual predator finished eating (S2 individual predation, OpCode
+// 112). AUTHORITY ONLY (anti-cheat + dedup — the eat/leave roll is deterministic on every client, but only the
+// authority reports). The removal rides the shared consumeFood → FOOD_CONSUMED@0 → deleteGroundItem path, so
+// every client + late-joiner sees the corpse vanish. A LEFT corpse gets no report and rots away naturally.
+func (m *Match) handleCorpseConsume(state *WorldState, dispatcher runtime.MatchDispatcher, senderID string, msg CorpseConsumeMessage) {
+	if state.CurrentZone == nil || msg.FoodID == "" {
+		return
+	}
+	if zone := state.GetOrCreateZone(state.CurrentZone.ZoneID); zone.AuthorityUserID != senderID {
+		return // authority only
+	}
+	m.consumeFood(state, dispatcher, msg.FoodID, 9999) // drain it fully → the corpse vanishes
 }
 
 // handlePredationStrike validates + applies an AUTHORITY-reported individual-fly strike (OpCode 105).
@@ -399,6 +595,9 @@ func (m *Match) handlePredationStrike(
 		return
 	}
 	if state.TickCount-predator.LastStrikeTick < p.StrikeCooldownTicks { // server cooldown is authoritative
+		return
+	}
+	if predator.FeedUntilTick > state.TickCount { // #20: mid-feed — the predator is parked, ignore strike re-sends
 		return
 	}
 	// Loose centre-range sanity (the server has only centres): a legitimate individual strike has the two
@@ -572,6 +771,24 @@ func (m *Match) broadcastBugTelegraph(
 	m.broadcastToChunk(dispatcher, state, cx, cy, OpCodeBugTelegraph, msg)
 }
 
+// broadcastBugTelegraphAt is the player-attack telegraph (display-only): the flash/dart plays AT a world
+// point (atX/atY = the target player's position) so a SINGLE member peels off / darts, not the whole cloud.
+// Used for the wasp dive peel-off ("windup") + the dive connect ("dive"); the client resolves the nearest
+// member to that point and flashes/darts it. Chunk-scoped on the swarm's chunk like the other telegraphs.
+func (m *Match) broadcastBugTelegraphAt(
+	dispatcher runtime.MatchDispatcher,
+	state *WorldState,
+	swarm *entities.SwarmState,
+	kind string,
+	atX, atY float32,
+) {
+	msg := BugTelegraphMessage{
+		SwarmID: swarm.ID, Kind: kind,
+		VictimX: []float32{atX}, VictimY: []float32{atY},
+	}
+	m.broadcastToChunk(dispatcher, state, swarm.Position.ChunkX, swarm.Position.ChunkY, OpCodeBugTelegraph, msg)
+}
+
 // broadcastBugStrikeTelegraph is the predation-strike telegraph (display-only): the snatch/THWACK plays
 // AT each victim position (victimX/victimY) so an individual-fly strike reads on screen; nil victims fall
 // back to the predator-centre flash. Chunk-scoped on the predator's chunk like the other telegraphs.
@@ -580,9 +797,12 @@ func (m *Match) broadcastBugStrikeTelegraph(
 	state *WorldState,
 	predator *entities.SwarmState,
 	victimX, victimY []float32,
+	carcassItem string, // #20: the dead_<prey> the client shows at each victim (display-only)
+	feedPauseSecs float32, // #20: how long the corpse holds before fading (the feeding dwell)
 	chunkSize int,
 ) {
-	msg := BugTelegraphMessage{SwarmID: predator.ID, Kind: "strike", VictimX: victimX, VictimY: victimY}
+	msg := BugTelegraphMessage{SwarmID: predator.ID, Kind: "strike", VictimX: victimX, VictimY: victimY,
+		CarcassItem: carcassItem, FeedPauseSecs: feedPauseSecs}
 	m.broadcastToChunk(dispatcher, state, predator.Position.ChunkX, predator.Position.ChunkY, OpCodeBugTelegraph, msg)
 }
 

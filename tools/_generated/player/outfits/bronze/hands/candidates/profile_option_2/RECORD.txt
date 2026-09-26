@@ -1,0 +1,20 @@
+when      : 2026-08-01 17:21:57
+model     : gpt-image-2
+size      : 1536x1024
+quality   : high
+mask      : NONE
+dest      : outfits/bronze/hands/candidates/profile_option_2
+references (in the order sent):
+  1. tools/_generated/player/outfits/bronze/hands/grip_back_of_hand.png  (sent upscaled x14)
+  2. tools/_generated/player/outfits/bronze/result.png  (sent upscaled x14)
+
+PROMPT:
+The FIRST attached image is an approved bronze gauntlet hand from this game - match its material, its bronze colour, its shading and its dark outline exactly. The SECOND image is the character wearing the matching bronze armour.
+
+WHAT THIS SPRITE IS FOR. A small top-down 2D pixel-art game. The player character is drawn WITHOUT ARMS; the hands are separate little sprites that float beside the body and are moved by code. This particular hand is the one used when the character walks TOWARD the camera or AWAY from it. In that view a person's hands hang at their sides turned INWARD toward the thighs, so you see the hand EDGE-ON - its narrow side - not the flat back of it. That is the whole point of this sprite: it is the hand seen from the side as it hangs and swings.
+
+Draw TWO of them side by side on a flat magenta background (255,0,255): the same hand at rest, and the same hand with the fingers a little more curled. Nothing else in the image - no character, no body, no arms, no tools, no handles.
+
+Chunky pixel art, a dark outline, a short cuff at the wrist, about 12 pixels across in the game. Big simple shapes.
+
+SHAPE: a THREE-QUARTER TURN INWARD. Not fully edge-on - the hand is rotated so you see the narrow side plus a little of the back of the hand and the knuckles catching the light. Slightly wider than a pure profile, with a bit more shape to read.

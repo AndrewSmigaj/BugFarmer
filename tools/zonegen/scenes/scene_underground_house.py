@@ -24,12 +24,16 @@ W, H = 52, 44
 ORE = {"base": "stone_block",
        "veins": [("ore_copper_block", 5, 3, 5), ("ore_coal_block", 5, 3, 5),
                  ("ore_iron_block", 3, 2, 4), ("ore_silver_block", 2, 2, 3)],
-       "pockets": [("dirt_block", 3, 3, "top"), ("hard_stone_block", 2, 3, "bottom")]}
+       "pockets": [("dirt_block", 3, 3, "top")]}
 
 
 def _ellipse(cx, cy, rx, ry):
     return {(x, y) for y in range(cy - ry, cy + ry + 1) for x in range(cx - rx, cx + rx + 1)
             if ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1.0}
+
+
+PREVIEW = "examples/buildings"
+SCALE = 3
 
 
 def build():
@@ -93,9 +97,7 @@ def build():
 
 
 if __name__ == "__main__":
+    from scene_preview import render
     b = build()
-    out = os.path.abspath(os.path.join(ZG, "..", "_generated", "previews", "scene_underground_house.png"))
-    render_builder(b, out, scale=6)
-    print("placeholders:", b.missing_art())
-    print("warnings:", len(b.warnings))
-    print("validate:", b.validate() or "OK")
+    print("LINT:", b.lint() or "0 defects", "| missing_art:", b.missing_art())
+    render(b, __file__, PREVIEW, SCALE)

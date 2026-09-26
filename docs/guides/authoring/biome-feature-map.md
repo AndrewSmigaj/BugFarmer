@@ -4,13 +4,18 @@ Which `tools/zonegen/features/` primitives to reach for per biome, and the densi
 this with the per-zone design doc (`docs/product/zones/<zone_id>.md`) and `ZONE_GENERATION_GUIDE.md`.
 Precedence always: **biome base → water → roads → buildings → farms → scatter** (place hard features first).
 
+**Read this biome's full FEATURE GUIDE before building it** (this map is only the picker):
+village→`village.md` · meadow→`vegetation.md` · forest→`forest.md` · cave/mining→`caves.md` ·
+**ant nest→`ant-colony.md`** · desert/swamp/water→`water.md` · cliff/mine-entrance→`camps.md` ·
+blocks/walls→`blocks.md`.
+
 | Biome | Base tile | Primary features | Density / feel | Signature props |
 |-------|-----------|------------------|----------------|-----------------|
 | **Village / town** | grass | `terrain.path` + `smooth_paths` (bending roads, bevelled curves), `room`/`house` + `houses/layouts`, `yard`, `garden.orchard`/`crop_bed`, `terrain.lake` + `shore_dress`, `village.plaza`/`shop_building` | Buildings clustered along ONE bending main road; open meadow around; lake SW | signs, stalls, well, statues, docks, fences, windmill at the farm fork |
 | **Flowering meadow** | grass (lush) | heavy `scatter` (flowers + milkweed + tall grass + bushes), tree **clusters**, `place_bug` (pollinators/wasps) | Flowers dominant; few dirt patches; airy | milkweed stand, flower glade, boulder, broken fence |
 | **Forest / forest-edge** | grass→dirt | dense tree clusters, `scatter` (ferns, mushrooms, bushes), stumps, fallen logs | Darker, denser northward; canopy gaps | fallen-log bridge, stumps, mushroom rings |
 | **Cave / mining** | cave_floor | `cave.carve_tunnel` (meander + straight rail), `carve_cavern`, `fill_solid` (ore veins), `place_pool` | Mostly solid rock carved into tunnels/caverns; ore veins ~12–18% | rail track, mine cart, camp (workbench/torches), glow pool |
-| **Ant nest** | dirt/clay | `cave.carve_tunnel` (branching off a trunk), `carve_cavern` (chambers), `fill_solid` (dirt/clay/ore) | Claustrophobic, organic, busy; warm dim glow | egg chambers, fungus terraces, aphid pastures, mounds |
+| **Ant nest** (→ `ant-colony.md`) | dirt (mostly `dirt_block`) | `cave.carve_tunnel` (narrow, branching off a trunk), `carve_cavern` (chambers), `fill_solid` | Claustrophobic, organic, busy; warm dim glow; **files of ants** along the tunnels | brood chambers (`ant_brood` = the nest anchor), food stores (fungus / windfalls / the fallen), queen's chamber; entrance is a **dirt-block mound** (blocks — the `ant_mound` sprite is DEPRECATED per ant-colony.md) |
 | **Desert** | sand | `scatter` (cacti, dry brush, rocks), sandstone cliffs, sparse `terrain.pond` (oasis) | Sparse, sun-bleached, wide | bleached bones, ruins, cliff, oasis |
 | **Swamp / wetland** | mud/shallow water | `terrain.pond`/`stream`, `scatter` (reeds, cattails, lily pads), gnarled trees | Wet, low-visibility, water-threaded | sunken logs, mist, stilt platforms |
 | **Water / pond edge** | shallow/deep water | `terrain.pond`/`stream`, `garden` (lily pads), reeds | Use for lakes, streams, oases | docks, reeds, frogs |
