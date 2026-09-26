@@ -38,6 +38,10 @@ Run after ANY server-logic change. Add a `*_test.go` for new sim/economy logic (
   verbose per-test list run the inner `docker compose run … go test ./... -v` yourself.
 - `rpc/world_zone_test.go` — `world_enter`/`world_create` refuse unknown/malformed zone ids (the
   village_21 save-borrowing fallback).
+- `world/zone_links_test.go` — the SAVED zone map (`nakama/data/zones`, mounted read-only at `/data` by the
+  script): every neighbour exists, links back from the opposite edge, sits on the adjacent grid square, and
+  shares the same edge length. One-way links need a named entry in `zoneLinkExceptions` (with the reason);
+  an entry that is no longer needed fails the test too.
 
 ## 2. Headless sync-harness (`tools/sync-harness/`, real Nakama .NET client, no Unity)
 Server must be up (`docker compose up -d`). `DOTNET=$(command -v dotnet || echo ~/.dotnet/dotnet)`.

@@ -742,7 +742,7 @@ def build():
     # Arriving from the village reads naturally: spawn on the road just inside the east edge.
     b.spawn = [246, ROAD_Y + 2]
     b.grid = (2, 0)
-    b.neighbors = {"east": "village_21_B"}
+    b.neighbors = {"east": "village_21_B", "south": "ant_tunnels_30"}
     return b
 
 

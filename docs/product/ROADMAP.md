@@ -53,7 +53,8 @@ ecology stations) let you read and steer the ecosystem.
   world & zones · progression · bestiary · ecology + Ecology tab · bug farming & catching · farming · combat ·
   gear · tools & weapons · crafting · food & potions · electricity · fishing · mining · building & private plots ·
   NPCs & economy · exploration & secrets · time & weather · UI · art direction · audio · then 20 zone bibles.
-- **Engineering, in dependency order:** zone-link lint (every link exists + both ways) · saves: versioning,
+- **Engineering, in dependency order:** ~~zone-link lint~~ (done 2026-09-26: `zone_links_test.go`; two missing
+  return links added — bee meadow ↔ ant tunnels, ant tunnels ↔ underground passages) · saves: versioning,
   migration, backups, periodic character saves · hosting spike → standalone Nakama-compatible server + Host/Join
   + world list + version handshake · zone-complete collision/loading (+ ecology re-tune) · world clock ·
   frozen-zone catch-up · blocked zone entry · latent bugs (WorldEnter race, first-join seq stall, merge ignores

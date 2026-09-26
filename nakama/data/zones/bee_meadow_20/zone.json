@@ -12,7 +12,8 @@
   "biome_type": "meadow",
   "seed": 20,
   "neighbors": {
-    "east": "village_21_B"
+    "east": "village_21_B",
+    "south": "ant_tunnels_30"
   },
   "bug_spawning": {
     "static": false,
