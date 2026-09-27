@@ -591,3 +591,50 @@ seasons.
 Players can't damage or take the townspeople's things; trying shows a short message. Bugs can damage village
 fences, and the villagers repair them. Whether NPC workers exist more widely is left to the assistant's judgment
 (the overview's P6).
+
+## Resolved (2026-09-27) — the owner's review of the game overview, parts 4–9
+
+### D42 — Farming: wheat from the Locust Farmland; harvest or cut down; fertiliser means yield
+Wheat seeds are bought in the Locust Farmland or harvested from its fields; that zone has a small village with shops
+and people of its own, which needs more townspeople. The one harvest rule stands (D24), and plants can also be cut
+down and their parts processed at stations. Fertiliser increases yield.
+
+### D43 — Mining and the underground
+Each underground zone is made of what fits it: the ant zones are dirt (ants don't dig through rock), the mining zones
+rock. The underground's darkness belongs in every real underground zone, not a test zone. There is a limit on how much
+a player can carry back from a trip. No mining dangers (no gas, no cave-ins). Prospecting uses a pan.
+
+### D44 — Where stations come from; owned things; dyes
+A station is found abandoned in the world, bought from someone, or crafted from a recipe — all still to be finished,
+along with the missing stations and everything else in crafting that doesn't work yet. Stations that belong to someone
+(as in a mining camp) can't be taken, and trying gives a short refusal. Dyes recolour cloth outfits through a
+recolouring method built for it.
+
+### D45 — Building and homes
+Players build houses (walls, floors, doors), and can live in the village by building their own house there; they may
+sleep only in abandoned beds, never in one that belongs to someone. Doors turn to fit the wall they are placed in,
+which needs a second, side-facing door sprite. Ground is laid in whole grid squares — the diagonal shapes go. The
+shovel both digs and lays ground, with a clearly shown switch between the two; how it switches is the assistant's
+call.
+Furniture doesn't rotate. Tents are three squares wide. Mannequins are overhauled to show whole outfits on a plain
+white-faced figure. Decorative outfits are not on hold; they simply haven't been made yet.
+
+### D46 — Combat
+Danger rises outward from the village, not by compass direction. Swarms attack all at once, in sync, as they used to —
+this replaces the "at most two attackers" pool recorded on 2026-07-11. Only lunging species wind up before striking
+(millipedes, perhaps scorpions), decided bug by bug. Axe swings are attacks as well as tree-cutting. Players fight to
+sell carcasses or to catch bugs to farm; large bugs, once subdued and still, are dragged. Dying costs little, mostly
+the walk back. Stamina is allowed (replacing the January 2026 "no stamina"). Bosses are fully grown adults, harder and
+usually bigger, never added at random, perhaps one at a time; a locust swarm is a boss; only species where a fight is
+fun get one (no aphid boss). Aphids live on plants and are seen in the plant's own view, like the milkweed nursery.
+Enemies are built zone by zone, every one eventually, with test zones where the real zone isn't built yet.
+
+### D47 — Gear
+One outfit is worn at a time, whole, and changed any time from the inventory — no pieces. Non-combat outfits raise a
+yield or make a job easier, and their description says how. Player characters come in several skin colours (the same
+base, recoloured). The wizard's robe is dropped; an alchemist's robe comes with a potion station. Accessories need new
+ideas. The tiers are still to be resolved.
+
+### D48 — Nothing is locked
+"LOCKED" in the December 2025 requirements only meant "don't change this without asking the owner"; nothing in older
+documents is binding. Only dated decisions of the owner's are decisions.

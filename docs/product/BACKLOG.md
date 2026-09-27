@@ -936,6 +936,26 @@ Items marked (P#) wait for the owner's verdict on that proposal.
 - **Lighting** — the whole lighting system is a prototype and needs its own improvement pass.
 - **Opening text** — a placeholder; rewritten once the premise section is final.
 
+## Next — from the owner's review of the overview, parts 4–9 (2026-09-27; D42–D48)
+- **Rain shows nothing (diagnosed).** A shower waters crops and fruit trees, but the droplet over a tree means "not
+  watered by you today" (`last_water_day`), which rain doesn't set, so it stays; and rain only turns a plot wet when a
+  crop is in it (`rainWaterAll` loops over crop states). Fix: rain counts as the day's watering for trees and wets every
+  tilled plot.
+- **Underground darkness into the real zones** (today only `lighting_test` has the tunnel data); ant zones built of
+  dirt, mining zones of rock (D43).
+- **Ownership**: things that belong to townspeople or camps — stations, beds, fences, goods — refuse players, with a
+  short message (D41, D44, D45); abandoned beds and stations are free to use or take.
+- **Building**: doors that turn to fit their wall (+ a side-facing door sprite); ground laid in whole squares (the
+  diagonal shapes go) and the shovel's dig/lay switch (P12); tents three squares wide; mannequins showing whole outfits
+  on a white-faced figure.
+- **Combat**: swarms attack together in sync (the two-attacker pool goes); wind-ups only for lunging species; the axe's
+  swing attacks; stamina (P14); dragging big subdued bugs (P15); bosses (P13); aphids living on plants, shown in the
+  plant's view.
+- **Gear**: one outfit slot in place of the eight equipment slots; base characters in several skin colours by
+  recolouring; the alchemist's robe and a potion station (the wizard's robe goes); new accessory ideas; the tiers.
+- **Farming and mining**: wheat seeds from the Locust Farmland (the village stops selling them); plants cut down and
+  processed (P11); a carrying limit; the prospecting pan.
+
 ## Later — REAL cross-zone bug transfer (owner 2026-07-06: real transfer, not a pretend version)
 Zones are isolated per-match sims today (Neighbors is player-only). The real feature:
 a bug/swarm that walks off a connected edge LEAVES zone A's sim (a ledgered removal) and

@@ -19,7 +19,8 @@ deterministic swarm sim — see [`architecture_swarm_sync.md`](architecture_swar
   backlogged (gate danger by zone).
 - **Defensive verb: DODGE only** (no block/parry).
 - **Threat zoning:** extra danger **at night** — nocturnal hunters that don't hunt by day; otherwise not zoned.
-- **Bite-token pool = 2** (≤2 individual stings per swarm per attack-cooldown).
+- ~~**Bite-token pool = 2** (≤2 individual stings per swarm per attack-cooldown).~~ **Replaced 2026-09-27 (D46):** swarms
+  attack all at once, in sync, as they used to; only lunging species wind up first.
 - **Bug→player damage is PER-INDIVIDUAL**, authority-decided (mirrors the predation strike); **swarm-of-1 dropped**.
   Crucial fact: **player HP is SIM-INERT** (`state.go:314`) — the strike is a server-authoritative event, NOT a
   client-hashed sim input, so it needs no ledger/hash/snapshot wiring (lower determinism risk than predation).
