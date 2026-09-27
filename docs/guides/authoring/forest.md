@@ -29,8 +29,8 @@ This guide collects the rules as we learn them; the first real forest zone will 
    effectively "starts" on first exploration — fine, and worth exploiting for pacing.
 5. **Content-update workflow:** chunk files are read at chunk-touch and never written
    back. Edit/regenerate → restart the server → walk there.
-6. **CLEARINGS, not hilltops** (owner, 2026-07-05: "we cant really show a hilltop with
-   overhead but we can make clearings"). Overhead can't do elevation; absence-in-density
+6. **CLEARINGS, not hilltops** (owner, 2026-07-05: a top-down view cannot show a hilltop,
+   but it can show a clearing). Overhead can't do elevation; absence-in-density
    is our focal-point tool. Give big stands deliberate clearings that ARE places — a
    honey glade (flower ring + wild hive), a mushroom hollow (litter + fungus), a still
    clearing with one oak — and when travellers pass through the forest band, keep a
@@ -61,12 +61,12 @@ This guide collects the rules as we learn them; the first real forest zone will 
 - Centipede density tuning — PARTIALLY DONE 2026-06: centipedes are now KNOTS
   (swarms of 1-3 sharing a center; max_swarm_size is data); the village runs
   initial 2×2 / max 3 swarms / pop 8. Forest zones can push the knobs higher
-  ("their home").
+  (forests are their home).
 - Underbrush occupants that block players but NOT bugs (ambush grass).
 
 ## Zone-scale balance — wooded by default (owner correction, 2026-07-06)
-> "there should be a huge meadow surrounding the bee farm but everything else should be
-> more wooded... more to the east and south"
+> Owner direction (2026-07-06): a large meadow surrounds the bee farm; the rest of the zone is wooded,
+> increasingly so toward the east and south.
 
 A wilderness zone is not a lawn with tree blobs on it: it's WOODS with carved-out open
 places. Compose the zone so each named open region (a meadow, a farm clearing, a lake basin)

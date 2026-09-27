@@ -31,8 +31,8 @@ Score these independently. Mark any that don't apply **N/A** (a pure-docs change
 **dynamic rows** per change via `complex-change-review.md`'s recipe (one per invariant held / external input
 consumed / cross-boundary contract / state mutation). ★ = the axes that earn their keep here.
 
-1. **Requirements fidelity** — does it *observably* satisfy what the **user actually asked** (quote them
-   verbatim), and match what the user **decided** (not what you inferred or invented)? If a requirement got
+1. **Requirements fidelity** — does it *observably* satisfy what the **user actually asked** (cite the dated,
+   attributed decision restated in clean prose — never his words), and match what the user **decided** (not what you inferred or invented)? If a requirement got
    hard, score against the **original** ask, not a quietly-relaxed one. [Requirements + Authored-Decision lenses]
 2. **Comprehension** — is your mental model of the affected subsystem correct **and complete**: the real data
    flow, **every** reader/writer/emit-site, and is the data valid/populated *at your read point*? [FM1+FM2 · STAGE 1]
@@ -71,8 +71,8 @@ consumed / cross-boundary contract / state mutation). ★ = the axes that earn t
   a sub-agent summary are proxies; the **id-level / schema / ALL-call-sites** detail is the real altitude. [verify-at-load-bearing-altitude]
 - **Source is a doc / memory / sub-agent, not code you read THIS pass → ≤ 60 until re-confirmed.** Docs *you*
   wrote are NOT authority; they drift and are padded with unbuilt inventions. [FM6 · Docs-Aren't-Authority]
-- **A user-intent attribution that is actually your inference → the row is INVALID.** Quote the user verbatim,
-  or mark it an explicit **ASSUMPTION** (and ≤ 50). Preserve their hedges; their game-model beats real-world priors. [don't-launder-guesses]
+- **A user-intent attribution that is actually your inference → the row is INVALID.** Cite the user's dated decision
+  (restated in clean prose, attributed — never his words), or mark it an explicit **ASSUMPTION** (and ≤ 50). Preserve their hedges; their game-model beats real-world priors. [don't-launder-guesses]
 - **A "thorough / complete" claim without the quota met + per-unit enumeration → ≤ 60.** A lean sample is not thorough. [thoroughness-means-quotas]
 - **A hard requirement quietly relaxed because it got difficult → score Requirements against the ORIGINAL ask
   (usually Shaky) and flag it.** Never silently drop/redefine. [no-cowardice]
@@ -131,7 +131,7 @@ you must **re-score down** or a residual you must **name and close now**:
 - **Which load-bearing fact did I take from a doc / memory / sub-agent WITHOUT reading the code this pass?** (→ ≤60 cap; go read it)
 - **What input did I assume was populated / valid at my read point** that could be empty, stale, duplicated, or vanished mid-op?
 - **If a late-joiner or a replay hit this, what hash-input state has NO snapshot carrier?** (the recurring sync trap — swarm_sync §0)
-- **What did the user actually DECIDE (quote them) vs. what did I infer?** An inferred "decision" INVALIDATES that row.
+- **What did the user actually DECIDE (cite the dated decision) vs. what did I infer?** An inferred "decision" INVALIDATES that row.
 - **Which hard requirement got quietly easier because it was hard?** Score against the ORIGINAL ask.
 If the premortem surfaces anything not already a named residual, close it now or lower the score to match — a
 premortem that moves no number was not run honestly.
@@ -139,7 +139,7 @@ premortem that moves no number was not run honestly.
 ## Worked example — the #20 client-side-LOS plan, scored at PLAN time
 | # | Dimension | Score | Band | Evidence | Falsifier | To raise |
 |---|-----------|-------|------|----------|-----------|----------|
-| 1 | Requirements | 88 | Strong | User chose "Client-side (recommended)" verbatim; fixes the phantom + predators strike around walls | A corner-slip lets a strike pass a thin diagonal blocker | Unity check + a harness LOS scenario |
+| 1 | Requirements | 88 | Strong | The owner chose the client-side option; fixes the phantom + predators strike around walls | A corner-slip lets a strike pass a thin diagonal blocker | Unity check + a harness LOS scenario |
 | 2 | Comprehension | 90 | Strong | Read `RunPredationStrikes` SwarmManager:613-690 (narrow-phase), `BugCollision.cs`, `IsCellBlockedForBugs`→`_blocksBugsZoneWide` | A 2nd strike-report path exists I didn't grep | grep ALL `PredationStrike` emit sites |
 | 3 | Design quality | 85 | Strong | Reuses `GetCellCoords`/`IsCellBlockedForBugs`; delegate core mirrors server `RaycastClampWithBlock`; integer Bresenham, no new singleton | A supercover walk is needed for correctness | — |
 | 4 | ★ Sync & determinism | 80 | Strong | Integer Bresenham over fixed-point pos + the **zone-wide** map (verified not view-scoped, TilemapManager.cs:1206-1211); authority-only + ledgered → handoff-safe | A float sneaks into the walk → cross-client drift | **2-client sync gate BOTH halves** → would lift to Proven |

@@ -9,7 +9,7 @@ _status: ✅ FIXED 2026-07-02 (barter sell) · was: LIVE-CONFIRMED — the sell 
 
 ## ★ Live confirm (Andrew, 2026-06-28)
 The NPC dialogue + shop panel **open fine** → **NOT the OverlapPoint bug** (§3A falsified). Clicking sell
-slots "doesn't do anything", with **no indicator of what the NPC would buy**; the **bug vendor can't sell bugs
+slots does nothing, with **nothing showing which items the NPC buys**; the **bug vendor can't sell bugs
 by any click/drag**. So it's the **sell flow + a missing-feedback UX gap**, root-caused below (§3B confirmed).
 
 ## Real root cause (post-confirm)
@@ -43,7 +43,7 @@ is **feedback + filtering**, two parts:
   resolves its target with a single `Physics2D.OverlapPoint` that returns ONE arbitrary collider among
   overlapping occupants, with **no topmost-wins rule** — and NPCs stand in front of their storefronts (sprite
   bounds overlap the building), so the click can land on the building (not a "shop") and the dialogue never
-  opens. "tried clicking in different ways" fits this exactly.
+  opens. The report of trying several ways of clicking fits this exactly.
 - **Shared root cause** with #18 (break-behind-tree) and likely #14/#10/#4/#12 — see the cross-cutting note.
 - **Recommended fix:** replace the single `OverlapPoint` with `OverlapPointAll` + pick the **topmost
   interactable** occupant (highest sprite sorting order / nearest anchor / prefer the handler's own
@@ -54,7 +54,8 @@ is **feedback + filtering**, two parts:
 - **Status:** `BLOCKED ON: one live confirm` (then `READY` — the fix is clear either way).
 
 ## 1. Issue & evidence
-> "unable to sell items (at least clicking in different ways) and haven't tried buying as I have no money as I can't sell yet"
+> Owner playtest report (2026-06-28): items could not be sold, after trying several ways of clicking; buying was
+> untested because there was no money to spend without selling first.
 - Acceptance: clicking sell on an item at a shop transfers it + grants coins.
 
 ## 2. The system is fully wired (verified)
@@ -75,7 +76,7 @@ is **feedback + filtering**, two parts:
   topmost/sorting preference. NPCs sit at storefronts where their sprite bounds overlap the building/sign/
   counter → the click resolves to the wrong occupant → `def.InteractionType != "shop"` → falls through, nothing
   opens. The router (`PlayerInputRouter.cs:152-178`) chains many handlers, all using the same single hit, so a
-  mis-resolved click fails for all of them and falls through to a melee jab = "clicking did nothing."
+  mis-resolved click fails for all of them and falls through to a melee jab, so the click appears to do nothing.
 - **B — the shop opens but the sell is rejected (secondary).** If the user reached the board: selling an item
   the NPC's `buys` tags don't cover → `"They don't buy that"`; or a **slot-index mismatch** — `BuildSell` sends
   the client `ItemSlots[i]` index; if the client/server inventory slot layouts differ, `shopSell`'s

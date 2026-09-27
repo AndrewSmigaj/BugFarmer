@@ -129,7 +129,7 @@ def build():
             # (rocky-shore rework — sand edge + stone masses + individual stones + south stone cliff
             #  + sea-caves + less-straight coast + secret harbor — done in the dedicated shore pass)
     # a rocky shore: rock outcrops STRADDLING the waterline + sea-stacks poking from the shallows
-    # (owner: "rocky shores should have actual rocks") — headlands every ~28 cells down the coast.
+    # (owner direction: a rocky shore needs actual rocks) — headlands every ~28 cells down the coast.
     shrng = random.Random(430)
     for my in range(24, 236, 28):
         cxw = coast_x(my)

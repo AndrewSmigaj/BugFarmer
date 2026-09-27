@@ -20,7 +20,8 @@ underground's `"north":"village_21_B"`) via a post-save patch in `zone_village_2
   **Needs your decision:** none. **Status:** `READY`.
 
 ## 1. Issue
-> "at some point the zone transition broke, it goes sometimes doesnt others and leads to a black area not the north mining camp area it used to work so not sure why it doesnt now."
+> Owner playtest report (2026-06-28): the zone crossing, which used to work, now works only some of the time; when it fails it leads to a
+> black area instead of the mining camp to the north.
 
 ## 2. Root cause (verified)
 - Neighbors are loaded per-zone from `zone.json`'s `neighbors` map (`world.go:398 LoadZoneConfig` →

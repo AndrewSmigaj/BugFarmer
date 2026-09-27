@@ -45,7 +45,7 @@ between them is the story; every workplace shows its work.
 
 ## 5. The gorge: hand-set ore line → doctrine veins
 **Before:** [gorge_before.jpg](references/gorge_before.jpg) — masses floating off the banks,
-a hand-placed silver/gold/ruby line, stepped bank stones ("spread out in a linear fashion" —
+a hand-placed silver/gold/ruby line, stepped bank stones (ore laid out in a straight line —
 the owner correction that seeded C3).
 **After:** [gorge_after.jpg](references/gorge_after.jpg) — masses pressed against both banks,
 commons + short core-band rares via `rock_mass(vein_spec=…)`, ore visibly breaching the mass
@@ -57,8 +57,8 @@ huddle — scattered props read as litter.
 **Before (a CAUTION, not a win):** [antcountry_after.jpg](references/antcountry_after.jpg) —
 "THE OLD DIG": seven same-size discs in a row, mounds, a dig-site story. Built with craft,
 REJECTED by the owner — the whole ant framing was builder invention from one sentence
-("there is no ant colony in the zone"), and the discs-on-lawn read drew "just sudden
-changes no gradients, unatural geometry."
+(the owner's correction: this zone has no ant colony), and the owner judged the
+discs-on-lawn look abrupt, ungraded and geometrically unnatural.
 **After:** [southband_after.jpg](references/southband_after.jpg) — the owner's actual design:
 a noise-warped material GRADIENT (grass → speckle → dirt tongues → rocky grit; the frontier
 meanders, never a level line), five size-varied masses EMBEDDED in the field (one overlapping

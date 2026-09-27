@@ -90,7 +90,7 @@ ambient life (fireflies exist); per-zone tuning.
 3. Phase 3a spike → **accept:** dense tuft field (≥0.5/cell) at **playable FPS, no regression vs current**, zero
    new colliders (measured with the F7 perf overlay). Only then 3b.
 4. Phase 4 → **accept:** grass/dirt/path/water seams read organic (no hard stair-step) on rendered crops.
-5. Overall → **accept:** "reads lush/alive like Necesse, not a flat carpet" — owner sign-off on crops + in-engine.
+5. Overall → **accept:** the grass reads lush and alive, like Necesse, not a flat carpet — owner sign-off on crops + in-engine.
 
 ## Owner-taste / open questions (surface, don't guess)
 - **Art direction:** crisp-pixel (Stardew/Necesse, matches our current art) vs painterly (Don't Starve)? (lean crisp.)
@@ -110,7 +110,7 @@ ambient life (fireflies exist); per-zone tuning.
 ## Certainty assessment (Stage 4 — visual feature; Sync/determinism N/A)
 | # | Dimension | Score | Band | Evidence | Falsifier | To raise |
 |---|-----------|-------|------|----------|-----------|----------|
-| 1 | Requirements fidelity | 88 | Strong | Targets **Necesse** (owner-named) + Stardew polish; 12-game research; "no shortcuts/best-for-game" honored (spike-gates the perf risk vs doing the cheap-bad version); scope (art-dir/seasons/zone) SURFACED not invented | owner wanted something narrower/different | owner review |
+| 1 | Requirements fidelity | 88 | Strong | Targets **Necesse** (owner-named) + Stardew polish; 12-game research; the owner's direction (no shortcuts, best for the game) honored (spike-gates the perf risk vs doing the cheap-bad version); scope (art-dir/seasons/zone) SURFACED not invented | owner wanted something narrower/different | owner review |
 | 2 | Comprehension (our tile/shader system) | 86 | Strong | Read `TileDatabase.cs:45-93` (1 tile/id), `TilemapManager` (Unity Tilemap + `_ShoreMask` per-cell data-tex :928-962 + occupant weight :1007-1130), `SpriteLitWorld.shader:134` (global-sine wind) + `_NormalMap` :18/:177+, `TileCompositor`, `scatter.py` clumping :43; critic re-verified | the **ground tilemap material** can't take a tint shader w/o breaking `LitMaterials` lighting (unread) | read `LitMaterials.Apply` + ground-tilemap material assignment |
 | 3 | Design quality | 86 | Strong | Phased cheap-first; reuses proven patterns (water data-tex shader, LitWind, TileCompositor, scatter clumping); **≥4 scored options/hard-choice**; spike-gates the perf risk | the batched-tuft renderer (new system) is harder than scoped | Phase-3a spike |
 | 4 | ★ Sync & determinism | — | **N/A** | Client-visual only; grass variant/tint/tuft = **deterministic-by-worldpos hash** → all clients consistent, **no sync/hash surface** | — | — |

@@ -1,4 +1,4 @@
-"""showcase.py — the "show people" reel: several armour sets running and swinging. FREE, no API.
+"""showcase.py — the reel for showing people: several armour sets running and swinging. FREE, no API.
 
   python3 tools/player_sprites/showcase.py                       # five sets, the default pick
   python3 tools/player_sprites/showcase.py bronze silver ranger  # your own pick
@@ -97,7 +97,7 @@ def build(names, approach=APPROACH):
 
         Do not re-implement this here. An earlier version did, deriving the motion by eye from the
         reference gifs, and got the height, the travel, the hand sprite and the rotation all wrong —
-        "those look insane like flapping weird shit". gait.py is the single source; if the motion is
+        the owner rejected it on sight as flapping. gait.py is the single source; if the motion is
         wrong, it is wrong there.
         """
         bank = s[bank_name]

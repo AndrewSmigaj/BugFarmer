@@ -1,7 +1,7 @@
 # Economy / Crafting / Content — design folder
 
 The design for BugFarmer's **crafting, stations, merchants, items, gear bonuses, per-zone content, and the
-world-gated progression** that paces them — a content-DENSE, "much better than bare minimum" layer that stays
+world-gated progression** that paces them — a content-DENSE layer, well beyond a bare minimum, that stays
 inside the GDD guardrails (item-driven power, no stat grind, capped accessory bonuses, capped décor boosts).
 
 **Balance here means PACING — *where and when* things become available — not stripping content down.**

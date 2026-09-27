@@ -4,9 +4,9 @@ Open `ALL_TEN.png`, then play the gifs.
 
 ## What changed from `../2026-08-04-swing-arm/`
 
-*"you dont need to have the wrist angle with respect to the pommel of the sword, its awkward, it should
-start a little behind the head and swing down, but the sword can be angled back more, similar to far but
-the sword is angle back more so that the hand is perpendicular with the pommel"*
+Owner direction (2026-08-04): lose the awkward wrist angle against the pommel; start the swing slightly behind
+the head and bring it down; tilt the sword further back than B_far, so the hand meets the pommel at a right
+angle.
 
 - **No wrist articulation.** The blade sits at one fixed angle behind the arm for the whole swing, instead
   of the wrist rotating frame by frame.

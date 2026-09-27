@@ -21,7 +21,7 @@
 3. **Lean into warm-key / cool-ambient contrast** — the #1 "looks good" trick, already half-done.
 4. **Sprite-cookie lights + additive emissive accents** (fireflies/torches self-glow into the bloom).
 
-## Art-direction angle (the owner's core concern — "other games look more interesting") — DONE
+## Art-direction angle (the owner's core concern: comparable games are more visually engaging than ours) — DONE
 Synthesized in `02_art_direction_and_cohesion.md`: why the best 2D games look rich (source table), the
 **AI-sprite cohesion pipeline** (master palette → LUT proof → prompt anchoring → post-gen palette clamp → one
 light direction → gradient-map rescue), tile variety/anti-repetition, motion-density budget, a single

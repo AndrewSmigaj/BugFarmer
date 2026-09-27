@@ -8,9 +8,9 @@ move are backlogged. · investigated 2026-06-28_
 - **Direct answer:** corpses **ARE generated** for starvation & old-age (and director-culls). Verified: all
   three call `killBugsNaturally` → `spawnCarcass` (`handlers_combat.go:298`) which drops the species'
   `dead_<species>` ground item. The ONE exception is **predation** — `killBugsInSwarm` (`predation.go:339`)
-  drops only `KillDrops`, **no carcass**. So your hypothesis "not generated on starvation/old-age" is **false**;
+  drops only `KillDrops`, **no carcass**. So the idea that corpses are not created on starvation or old age is **false**;
   they are generated.
-- **Why you saw "barely any corpses" anyway — two real reasons:**
+- **Why you saw so few corpses anyway — two real reasons:**
   1. **They were invisible.** The `dead_*` carcass sprites were missing in your playtest build, so carcasses
      spawned but drew nothing. **I fixed this earlier today (commit 9b61b95).** Re-test — they should now show.
   2. **They're eaten fast.** Carcasses are `food_value:10` (edible) with no rot timer, so decomposers
@@ -24,7 +24,9 @@ move are backlogged. · investigated 2026-06-28_
   sprite fix confirms). **Needs your decision:** should predation drop a carcass too (for #20)? **Status:** `READY`.
 
 ## 1. Issue
-> "investigate if wasps and flies are dying of starvation and old age and if so why … chart plummets but barely any corpses … are the corpses not getting generated when dying of starvation or old age?"
+> Owner playtest report (2026-06-28): he asked whether wasps and flies are dying of starvation and old age, and if so why. The
+> population chart drops sharply but very few corpses appear, so he asked whether corpses are created at all for
+> those two causes of death.
 
 ## 2. Death-cause → carcass map (verified)
 | cause | path | carcass? |
@@ -37,7 +39,7 @@ move are backlogged. · investigated 2026-06-28_
 
 ## 3. Recommendation
 1. **Re-test with the sprite fix (commit 9b61b95)** — confirm carcasses are now visible after starvation/age
-   deaths. Most of "barely any corpses" should resolve.
+   deaths. Most of the missing corpses should now appear.
 2. If you want predation to leave corpses (and it underpins #20's feeding pause): add a `spawnCarcass` to
    `killBugsInSwarm` (or a `carcass_on_predation` flag). This changes the decomposer food supply → run
    `tools/sim-determinism` + the sync-harness + re-check the ecology bands (`ecology-tuning`).

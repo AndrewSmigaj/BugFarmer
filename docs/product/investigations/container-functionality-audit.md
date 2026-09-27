@@ -13,7 +13,7 @@ _status: READY TO IMPLEMENT · investigated 2026-06-28 · investigate-only_
   **Needs your decision:** none. **Status:** `READY` (data fix + the shared OverlapPoint fix).
 
 ## 1. Issue
-> "basket and other containers don't seem functional, do an audit."
+> Owner playtest report (2026-06-28): the basket and other containers do not seem to work; he asked for an audit of all of them.
 
 ## 2. Audit result (every entity with a `world.container` block)
 - **Broken — container block but NOT `interaction_type:"storage"` → won't open as storage:**

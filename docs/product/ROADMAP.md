@@ -5,10 +5,9 @@ The design itself is being consolidated into `docs/gdd/` (one section at a time,
 captured-but-unscheduled items stay in [`BACKLOG.md`](BACKLOG.md); finished work moves to
 [`CHANGELOG.md`](CHANGELOG.md).
 
-> Owner, 2026-09-26: *"we are not trying to bandaid it and ship we are trying to finish the game and a lot of
-> design decisions need to be made, content added"* · *"I want you to do most of the work and have me review"*
-> · *"we have bug behavior but this does not mean we have polished bug behavior, combat and other things could
-> be improved, and of course ecology tuning and all the other systems like the ecology tab and such, UI"*
+> The owner's brief (2026-09-26): finish the game properly — not patch it and ship. Many design decisions and much
+> content are still to come. Existing systems (bug behaviour, combat, ecology tuning, the Ecology tab, the UI) work
+> but need polish. I do most of the work; the owner reviews.
 
 ## The game in one paragraph
 It is 2126. A plague killed nearly every mammal, so humanity bred bugs giant to eat. You start over on the
@@ -20,26 +19,26 @@ roles and expeditions, not one best set. The shared world is chaotic (anything g
 property); private plots from City Hall are safe. The Ecologist and the Ecology tab (unlocked per area by
 ecology stations) let you read and steer the ecosystem.
 
-## Owner decisions (2026-09-26, verbatim)
+## Owner decisions (2026-09-26)
 | topic | decision |
 |---|---|
-| Art | **gpt-image-2 for everything, pixel-snapped** — *"we will use gpt-image-2 for everything, just full outfits I guess as yours are really bad … we had planned regenerating all the world and item actual sprites with gpt-image-2 … (the only thing done correctly are the outfits)"*. Art drawn by Claude in code was tried the same day and rejected (on the player-base cleanup: *"they look terrible"*). Outfits and other art come after the GDD sign-off, in test batches: *"most outfits and other things will be made after signing off on the GDD … (and with test batches so we can ensure you are doing it right)"*. The look stays — *"same style as currently"* — which is 32 art pixels per grid square. Every paid image call is asked first. |
-| Hosting | *"it should be like terraria"* — Host & Play + join + a dedicated server program; *"our own server will not be part of the game itself … We would cap based on what is a feasible cap like the minecraft servers do."* |
-| Characters | *"Necesse's is fine"* — per-server characters + a per-world host switch "allow characters from other worlds". |
-| Empty zones | *"as already designed frozen with aggregation upon first access with random border crossing events"* |
-| Cross-zone bugs | *"you decide based on what will be better design and more efficient"* → swarm-level migration (below). |
-| Private plots + City Hall | *"absolutely keep them … the world is chaotic and anything goes (except stealing citizens stuff or destroying their houses, a message will pop up saying its basically not nice)"* |
-| Electronics | *"power sources like wind turbines and solar powers, they create zones where things are powered, then things for gardening, bug farming, powered versions of different stations … (some are automatic some require manual interactions)"* |
-| Base village | *"NPCs and NPC behavior, Building and zone overhauls … general improvement and polish passes, village secrets"* |
-| Story | *"no overarching storyline it is like terraria"*; tutorials that unlock; the Ecology tab has its own small tasks. |
-| Process | *"one document at a time"*; every idea passes the lenses before the owner sees it. |
-| Git | *"main I want it pushed to main"* — main is merged + pushed at the end of every session. |
+| Art | **gpt-image-2 for everything, pixel-snapped.** Whole outfits (a tentative choice, made when code-drawn pieces were rejected). All world and item art is regenerated on the outfit pipeline, since only the outfits were made the right way. Code-drawn art was tried and rejected. Art is made after the GDD sign-off, in test batches. The look stays the same: 32 art pixels per grid square. Every paid image call is asked first. |
+| Hosting | Like Terraria: Host & Play, joining, and a dedicated server program. Our own server is just another server, not part of the game; each server is capped at what is measured to be feasible, as Minecraft servers are. |
+| Characters | Each world keeps its own characters (as in Necesse), with a host setting that lets in characters from other worlds. |
+| Empty zones | Frozen while empty; they catch up when someone first arrives, with random events of bugs crossing borders. |
+| Cross-zone bugs | Left to me, judged on design and efficiency → swarm-level migration (below). |
+| Private plots + City Hall | Kept — central to the design: the shared world is lawless except for the town's citizens, whose property can't be taken or damaged (a message says so). |
+| Electronics | Power sources such as wind turbines and solar panels create powered areas; powered tools for gardening and bug farming, and powered versions of stations — some fully automatic, some still needing the player. Details are mine to design. |
+| Base village | NPCs and their behaviour, overhauls of buildings and layout so it looks better and more coherent, general polish, and village secrets. |
+| Story | No overarching story, as in Terraria; tutorials unlock as you play, and the Ecology tab has its own small tasks. |
+| Process | The design document is reviewed one section at a time; every idea passes the lenses before the owner sees it. |
+| Git | `main` is merged and pushed to GitHub at the end of every session. |
 
 ## Phases
 ### Phase 0 — safety + baseline (2026-09-26)
 - [x] Everything pushed; `main` = all work (90216c0). New work on `feature/finish-the-game`.
 - [x] Art demo drawn in code: `tools/_generated/player/reviews/2026-09-26-art-demo/` — not adopted: after a
-  second code-drawn pass on the player base (*"they look terrible"*) all art moved to gpt-image-2 (decision above).
+  second code-drawn pass on the player base was rejected too, all art moved to gpt-image-2 (decision above).
 - [x] Safety fix: unknown zones refused (no silent `village_21` save-borrowing); dangling `ant_colony_40` link removed.
 - [x] Backup of `tools/_generated/raw` (1.1 GB) → `C:\Users\emily\BugFarmer_backups\generated_raw_2026-09-26\`.
 - [x] Baseline gates: Go tests (all packages), sim-determinism (7 modes), sync-harness cross-zone + observe.
@@ -52,7 +51,7 @@ ecology stations) let you read and steer the ecosystem.
 ### Phase 1 — prove the art, set the rules, design the spine, lay foundations
 - **Art (details: the top item of `BACKLOG.md`):** ~~import-scale fix~~ (done 2026-09-26: 89 sprites were drawing at
   the wrong size and 80 blurry) · the outfit procedure written into the `player-sprites` skill, with commands that
-  reproduce the approved runs · ~~copper as the test batch~~ (done 2026-09-26: 5 calls, approved — *"it looks good!"*) · the other seven picked
+  reproduce the approved runs · ~~copper as the test batch~~ (done 2026-09-26: 5 calls, approved) · the other seven picked
   outfits, batch by batch, each asked for · GDD §08 (outfit decisions) and §21 (art direction). After the GDD
   sign-off: the remaining outfits, the 11 NPCs, then the world + item regeneration (a sizing rule first, then test
   batches per category, then zone by zone — only content the GDD keeps).
@@ -68,7 +67,7 @@ ecology stations) let you read and steer the ecosystem.
   frozen-zone catch-up · blocked zone entry · latent bugs (WorldEnter race, first-join seq stall, merge ignores
   nests) · reconnect · CI + release builds · internet-reality test (latency, bandwidth).
 - **Examine view + examine texts:** an examine view for items, recipes and bugs, and ~650 short texts with the real
-  biology (the owner: *"when you examine it as a recipe or item you should see what it does"*); today hovering
+  biology (owner decision: examining an item or recipe shows what it does); today hovering
   shows only the name and 2 of 654 things have a description. Written alongside the art redo, category by category.
 - **Polish audits** (findings only): bug behaviour, combat, ecology + tab, UI, farming, catching, stations,
   building, lighting/weather, audio, tutorials, performance. **True-bug naming pass.**

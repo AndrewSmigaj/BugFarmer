@@ -6,11 +6,11 @@ All settled. Kept because these are the images the decisions were made from.
 
 | | decision |
 |---|---|
-| **Fist size** | walk stays at **0.17**. *"hand sizes we go with current"* — the "way too big" complaint was about the RUN, which has its own larger ratio (0.19) |
+| **Fist size** | walk stays at **0.17** — the owner kept the current hand sizes. The earlier complaint that the hands were far too big was about the RUN, which has its own larger ratio (0.19) |
 | **Wrist direction** | the cuff leans **toward the body**, because that is where the arm comes from |
 | **Palms** | turn **in** for the camera-facing walk |
 
-*"all three fixes look good! make it official"*
+Owner approval (2026-08-06): all three fixes accepted and made official.
 
 ## The sheets
 

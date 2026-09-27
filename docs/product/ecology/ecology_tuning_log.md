@@ -54,7 +54,7 @@ stays random. Safe for netcode (clients replay server-broadcast legs). **Result:
 reproducibility gate (same config twice → identical ECOSTATS)._
 
 ### 2026-06-18 · mechanic · Rotted fruit now decomposes (was an immortal-food hack)
-**Sanity check (is it sane / does it make sense / will it help):** rot window ≈ 2× fly lifespan (6
+**Sanity check (sensible? coherent? will it help?):** rot window ≈ 2× fly lifespan (6
 game-days) — sane (same order as the creatures eating it), makes sense (bounds the standing pile to "what
 dropped in the last ~6 days"), should help (turns infinite fly food into a finite, competed-for resource).
 **Change** (`handlers_farming.go`): rotted fruit `Lifetime` 999999 (≈1190 game-days = never) →
@@ -184,7 +184,7 @@ The big structural pass: seed the zone already ALIVE and spatially distributed, 
   initial/continuous/Director free-spawn paths → zero nestless reseeds (the root of the frozen-wasp bug).
 - **Prey-gated nest RECOVERY (`nests.go`):** a brood-exhausted (dormant) colony now re-founds a fresh
   NestFoundingSize patrol after NestRecoveryDelay=3000t IF live prey is within home range — else it WAITS.
-  This is the missing recovery path (owner's "new ~5 batch if the first die"); wasps are no longer a dead end.
+  This is the missing recovery path (the owner's request for a new batch of ~5 if the first dies); wasps are no longer a dead end.
 - **Large-carrion fly food (`species.json` + `match.go`):** flies now list `dead_millipede` in feeding/
   reproducing/breeding (the matcher already let an EXACT carrion id through the IsCarrion exclusion) +
   authored `initial_carrion` seeds 5 dead millipedes in the NE woods (new `CarrionSeed`/`seedInitialCarrion`)
@@ -230,8 +230,8 @@ wall-clock or higher batch to see the full fly boom→bust→wasp-dip→recovery
 
 ### 2026-06-18 · spawn+behavior · wasps closer to flies + live 50% longer + longer run (owner directive)
 Three bounded changes after reading the bug-map (wasps not close enough to the flies):
-- **Nests moved ~30% CLOSER to their nearest fly source** (zonegen, NOT a home_range change — owner was
-  explicit "closer to flies does not mean increase home range"): w1 (62,222)->(66,217), w3 (132,231)->
+- **Nests moved ~30% CLOSER to their nearest fly source** (zonegen, NOT a home_range change — the owner was
+  explicit that closer to the flies does not mean a larger home range): w1 (62,222)->(66,217), w3 (132,231)->
   (130,230), w4 (180,55)->(187,72), w5 (226,150)->(224,139), w6 (86,55)->(84,67); w2 already on its prey.
   The far southern/eastern nests (w4/w5/w6) move most. Observation pen + wasp_n* circles tracked the moves.
 - **Wasp lifespan +50%** (species.json): lifespan_secs 6300->9450, spread 1680->2520 (home_range UNCHANGED).
@@ -284,7 +284,7 @@ a full multi-cycle run would show whether it settles into a stable limit cycle o
 is now ABOVE the old 30 target — could thin to 1 butterfly nest, or accept the higher band. Owner's call.
 
 ### 2026-06-18 · spawn · +3 fly spawn circles + fly initial 60->78 + run 2x (duration 1200, owner)
-Owner: flies have a hard time taking off (stuck ~12-17 for days before the boom). Added 3 fly habitat
+Owner: the fly population struggles to get going (stuck ~12-17 for days before the boom). Added 3 fly habitat
 circles at the biggest rotten-fruit zones (fly_fields 100,210 / fly_plum2 160,139 / fly_orange2 210,118)
 so more flies seed ONTO food early, and bumped fly initial 60->78 so the extra circles are additive
 (keeps ~5-6 swarms/circle across 14 circles instead of thinning). CAVEAT logged for the owner: the slow

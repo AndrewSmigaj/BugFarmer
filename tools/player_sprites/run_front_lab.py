@@ -2,8 +2,8 @@
 
   python3 tools/player_sprites/run_front_lab.py [outfit]
 
-Owner, 2026-08-14: *"the only thing I don't like is run_front, it should have more of a fist pumping (so
-higher, with fists that get bigger and smaller)… that's just not running with hands down by the side."*
+Owner, 2026-08-14: run_front was the one part he rejected. It needs a stronger fist pump — fists rising
+higher and growing and shrinking with depth; hands hanging at the sides don't read as running.
 
 He is describing a defect that is in the data: `official.GAITS["FRONT_RUN"]` is byte-identical to
 `FRONT` apart from `ms` — the front run IS the front walk played faster. That is the same mistake the
@@ -13,7 +13,7 @@ its own pose.
 TWO THINGS THE OWNER ASKED FOR
 ------------------------------
   HIGHER   the fists pump around chest/shoulder height, not down at the hip (`row` 0.62 today).
-  DEPTH    "fists that get bigger and smaller" — the fist coming toward the camera grows and the one
+  DEPTH    fists that grow and shrink — the fist coming toward the camera grows and the one
            going back shrinks. Nothing else in the pipeline does this; it is what sells a run TOWARD
            the viewer, where the arms travel mostly in Z and a purely up-down motion reads as flapping.
 
@@ -44,10 +44,11 @@ OUT_DIR = "2026-08-14-run-front-pump"
 # fresh ideas. The reach three each move ONE axis off the original so the comparison stays legible.
 BIG_REACH = dict(row=0.46, gap=0.04, dx=0.08, dy=0.30, pulse=0.22)
 
-# Owner, 2026-08-14, on the first six: *"they cant go that high, it clips into the shoulders… they should
-# be slightly wider than big reach and slightly lower - the other ones are just ridiculous."* So the high
-# and the exotic ones are gone. These three sit around big reach, wider and lower, and differ only in how
-# much of the travel is trimmed off the TOP of the arc — which is what was hitting the pauldron.
+# Owner, 2026-08-14, on the first six: the fists cannot go that high, because they clip into the
+# shoulders; they should be slightly wider than big reach and slightly lower; the other options were
+# rejected outright. So the high and the exotic ones are gone. These three sit around big reach, wider
+# and lower, and differ only in how much of the travel is trimmed off the TOP of the arc — which is what
+# was hitting the pauldron.
 VARIANTS = [
     ("BIG_REACH", BIG_REACH, "the anchor, unchanged", "reach"),
     ("W1_wider_lower", dict(BIG_REACH, row=0.50, gap=0.07),
@@ -58,7 +59,7 @@ VARIANTS = [
      "a touch further again in both directions", "reach"),
 ]
 
-PICKED = "W3_widest_lowest"                        # owner, 2026-08-14: "we will go with wisdest lowest"
+PICKED = "W3_widest_lowest"                        # owner's pick, 2026-08-14: the widest, lowest variant
 
 
 def pump_frames(bank, hands, cfg):

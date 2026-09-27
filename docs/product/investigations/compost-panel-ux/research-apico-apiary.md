@@ -161,7 +161,7 @@ Cons: two horizontal bands make the panel fairly TALL — need to budget vertica
 +-----------------------------------------------------------+
 ```
 (|I| = the vertical conversion/"heat" thermometer hugging the input, Forestry-style.)
-Pros: closest to the named reference (Apico/Forestry) — vertical input + life-thermometer + honeycomb output cluster; compact, wide-but-short; brood as a tidy right column. Cons: the creatures area is just another column of slots — it does NOT read as "creatures living here," it reads as more inventory; weaker on the owner's "creatures using the station" feel; the honeycomb output motif is bee-specific, less apt for compost.
+Pros: closest to the named reference (Apico/Forestry) — vertical input + life-thermometer + honeycomb output cluster; compact, wide-but-short; brood as a tidy right column. Cons: the creatures area is just another column of slots — it does NOT read as "creatures living here," it reads as more inventory; weaker on the owner's goal of creatures visibly using the station; the honeycomb output motif is bee-specific, less apt for compost.
 
 ### Sketch C — "Terrarium-first: the bin IS a cross-section, slots docked around it"
 ```

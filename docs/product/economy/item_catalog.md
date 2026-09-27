@@ -166,7 +166,7 @@ mine/farm/catch → sell → buy recipes + materials → craft better gear → r
 1. **Currency**: one coin type, or barter? (Recommend one coin — simplest, matches `sell_price`.)
 2. **Fishing**: in or out for v1? It unlocks the fisherman's vest + a whole gathering loop, but it's a new
    system. (Recommend: backlog as its own feature; design the vest/rod now so it's ready.)
-3. **How many tiers** of armor/weapons is "much better than bare minimum" without becoming a treadmill?
+3. **How many tiers** of armor/weapons gives real depth without becoming a treadmill?
    (Recommend 4–5 metal tiers + ~6 utility outfits + ~15 accessories — broad but curated.)
 4. **Boss-bug drops** as a gear source (chitin set, bug-bane blade) — ties combat to the ecology bosses
    the GDD already wants (§14.2). (Recommend yes — it makes the fighting matter.)

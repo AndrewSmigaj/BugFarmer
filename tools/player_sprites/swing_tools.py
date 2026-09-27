@@ -10,14 +10,14 @@ follows the hand, and the whole thing runs on a frame budget (1 anticipation / 4
 where the fist parks beside the shoulder and spins in place. These rebuild them on the new model.
 
 ONE MOTION PER TOOL. They are not one arc with different constants — that was the code smell the owner
-caught: *"sword is not an axe swing"*. His notes on each, from `APPROVED/DECISIONS.md` and the sessions:
+caught: a sword swing is not an axe swing. His notes on each, from `APPROVED/DECISIONS.md` and the reviews:
 
-  AXE     "swing behind over then down in front ... like a real axe", "literally swing all the way
-          around", and it must NOT hover in the cocked-back position.
-  HOE     "lift a little, strike the ground and PULL" — not "someone whipping the ground with a stick".
+  AXE     travels behind the head, over the top and down in front, as a real axe does — one full circle — and it must
+          NOT hover in the cocked-back position.
+  HOE     a small lift, a strike into the ground, then a PULL — never a lashing arc.
   NET     the hoop is the OPENING and it should LEAD; faster, and swing across more.
-  SHOVEL  "downward stabbing then up like a scoop" — it must JAB DOWN, not wave around.
-  SPEAR   "stabby", two-handed, and the reach does the work rather than the rotation.
+  SHOVEL  stabs downward, then comes up like a scoop — it must JAB DOWN, not wave around.
+  SPEAR   a stab, two-handed, and the reach does the work rather than the rotation.
 
 Poses are (arm offset from centre, blade behind arm, reach in cells); `centre` is 0 for the side view,
 so an offset of 0 points straight forward. The arc must pass THROUGH the space being worked.
@@ -39,9 +39,9 @@ SIDE = dict(centre=0.0, sh=(0.06, 0.40), behind=False)
 
 # tool -> (icon, two-handed, LENGTH relative to a cell, variants)
 #
-# ⚠ THESE ARE NOT SWINGS WITH DIFFERENT ARCS. Owner: "you arent thinking of the tools right - you are
-# treating them all like swords you swing in different ways... do you sit there bashing the ground with
-# a shovel? do you?"  No. Each tool has a VERB, and the verb decides which channel carries the motion:
+# ⚠ THESE ARE NOT SWINGS WITH DIFFERENT ARCS. Owner direction: every tool was being handled as a sword
+# swung a different way, and no one digs by hammering a shovel into the ground. Each tool has a
+# VERB, and the verb decides which channel carries the motion:
 #
 #   axe     CHOP    - a big arc that BITES AND STOPS. A real axe does not follow through past the wood.
 #   hoe     TILL    - chop in, then DRAG back toward you. The drag is the working stroke, not the chop.
@@ -79,8 +79,8 @@ TOOLS = {
     }),
     "net": ("small_net_icon.png", False, {
         # THE SWEEP HAPPENS IN FRONT OF HIM. It is a weapon — you hit things with it — so the arc covers
-        # the space he is attacking, and that space is in front. Owner: "do you know any game with a
-        # sword or whatever that starts way behind the player and swings around like that?" No.
+        # the space he is attacking, and that space is in front. The owner pointed out that no game
+        # starts an attack like this far behind the player and swings it all the way around.
         #
         # I built a golf swing: the previous version started at x -0.48, behind his back, and travelled
         # through his own body before reaching anything. Winding up behind the player is cutscene
@@ -102,7 +102,7 @@ TOOLS = {
         #    below them. Mine had the hands at chest height because the arm aimed near horizontal from a
         #    shoulder that sits at 30% down the body.  Now the ARM aims steeply down (about -55 deg) so
         #    the hands sit at 50-57% down, and the BLADE is brought back up to a shallow forward angle by
-        #    a large `back` — that is what "hands low, blade forward into the block" looks like.
+        #    a large `back` — which gives hands low, with the blade forward into the block.
         #
         # 2. IT IS A LEVER, NOT A BATTERING RAM. Two hands at two points on the shaft; the LOWER hand
         #    barely moves and the top hand swings. So the strike drives the blade in with reach, and then
@@ -123,7 +123,7 @@ TOOLS = {
         # line — measured off the sprite's width profile, where the helmet ends and the torso starts. But
         # thrusting horizontally FROM there leaves the hands at shoulder height, up by his head. A spear
         # held two-handed sits at chest/waist. -20 deg drops the hands to about 45% down the body, which
-        # is where they belong. Owner: "the hands need to come down a bunch more they are near the head".
+        # is where they belong. Owner: the hands needed to come down a good deal — they were near the head.
         "A_thrust": ((-14, 0, 0.15),
                      [(-18, 0, 0.40), (-20, 0, 0.80), (-20, 0, 1.00), (-20, 0, 0.94)],
                      (-14, 10, 0.28)),
@@ -138,10 +138,10 @@ def out_dir(tag):
     """A NEW folder per run — timestamped. Nothing is ever overwritten.
 
     Every lab script used to write to one folder named for the day and clear it each run, so re-running
-    destroyed the previous attempt. That means when the owner says "it was mostly ok before you changed
-    something", the file he was looking at no longer exists, and I cannot even tell him which version it
-    was because the filenames were reused. Owner: "can you please stop overwriting files i cant show you
-    the old one".
+    destroyed the previous attempt. That means when the owner says an earlier version was mostly fine before
+    a change, the file he was looking at no longer exists, and I cannot even tell him which version it
+    was because the filenames were reused. The owner asked for files to stop being overwritten, because an
+    overwritten file can never be shown to him again.
 
     A dated batch folder per run is exactly the scratchpad convention already written into the
     player-sprites skill — which I designed and then did not apply to my own output.
@@ -159,7 +159,7 @@ def main():
     body = R.load_bank(OUTFIT, "side", 1)[1]
     bh = gait.anchor(body)[1] - gait.anchor(body)[0] + 1
     # WRITE THE SPECS NEXT TO THE GIFS. A review folder has to be self-describing: the numbers that
-    # produced each gif live beside it, so "this one" can always be traced back to a motion without
+    # produced each gif live beside it, so a picked gif can always be traced back to a motion without
     # digging through git history. The gifs stopped being overwritten; the specs were still being
     # thrown away every run, which is the same bug one level down.
     import json

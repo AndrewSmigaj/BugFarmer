@@ -45,7 +45,7 @@ building. Make the canvas big enough: `W ≈ BW + 2*side + 4`, `H ≈ BH + front
 - Leave side/back space + trees by default — a fence tight on the walls reads wrong.
 
 ## Backyards (owner correction, 2026-07-06)
-> "fences should have room for backyards"
+A fenced yard must leave room for a backyard.
 
 A fence that hugs the house wall makes the yard ALL front — nobody lives like that. When
 fencing a home, leave **3+ cells of enclosed ground BEHIND the house** (and 1-2 on the

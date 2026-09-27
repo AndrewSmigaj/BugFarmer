@@ -7,7 +7,7 @@ _status: BUILT 2026-06-30 (#20 shipped) — see AS-BUILT below · investigated 2
 > (the server holds only swarm CENTRES, so a server LOS could only be centre-approximate). Predators now strike
 > *around* a bin instead of whiffing.
 > (2) **The corpse is a CLIENT VISUAL** (`StrikeVfx`, *consumed*: pops in → holds for the feed → fades), NOT a server
-> `spawnCarcass` ground item — so it adds **no** carrion/ecology load (ecology-neutral, per the user's "Consumed" choice).
+> `spawnCarcass` ground item — so it adds **no** carrion/ecology load (ecology-neutral, per the owner's choice of the consumed-corpse option).
 > (3) **The feeding pause IS the determinism change** — `FeedUntilTick` + a per-species `feed_pause_ticks` (wasp 50t,
 > centipede 30t ≤ each one's strike cooldown → rate-neutral). The predator parks via a zero-length hold-leg on the
 > *existing* `SWARM_SET_TARGET` event (no new event type). Gated: Go feed-pause tests + sim-determinism + the
@@ -19,8 +19,8 @@ _status: BUILT 2026-06-30 (#20 shipped) — see AS-BUILT below · investigated 2
   line-of-sight check** (the snippet has range + satiation + telegraph, no `isBlocked`/LOS). So a predator
   within `strike_radius` but **behind a blocking occupant (the compost bin you placed)** still kills the fly;
   the strike telegraph (display-only flash/THWACK) plays AT the dead fly, while the attacker sits occluded /
-  "stuck" on the far side → you see a death with no visible attacker. Matches your guess exactly.
-- **Why attacks "barely show":** the kill is instant — `predator.Satiation += FeedPerKill` on the same tick
+  stuck on the far side → you see a death with no visible attacker. Matches your guess exactly.
+- **Why attacks are barely visible:** the kill is instant — `predator.Satiation += FeedPerKill` on the same tick
   (`:27`), then the predator immediately hunts again; the only tell is the lunge + a telegraph flash. No
   feeding beat, no corpse (predation skips `spawnCarcass`, see #22).
 - **Design (what you asked to plan):** (A) a real **attack indicator** (lunge + impact + connecting dart) —
@@ -31,7 +31,10 @@ _status: BUILT 2026-06-30 (#20 shipped) — see AS-BUILT below · investigated 2
   design is a proposal. **Needs your decision:** approve the feeding-pause sim change + LOS check? **Status:** `READY`.
 
 ## 1. Issue
-> "phantom wasp attack … saw wasps but not the attacking one … one wasp stuck … maybe behind a compost bin within attack range. … wasps … just kinda move forward a little, there needs to be … indicators … when they kill a fly the corpse appears while the hornet feeds on it over a short amount of time … same with other bugs. plan that out."
+> Owner playtest report (2026-06-28): a phantom wasp attack — wasps were visible, but not the one attacking; one wasp
+> seemed stuck, possibly behind a compost bin while within attack range. Attacking wasps only shift forward slightly, so
+> attacks need indicators. When a predator kills a fly, the corpse should appear while the predator (he named the
+> hornet) feeds on it for a short time, and the same should hold for other bugs. He asked for a plan.
 
 ## 2. What's there now (verified)
 - Strike: `predation.go applyPredationStrike` — sets `LastStrikeTick`, `Satiation += FeedPerKill` (instant),
@@ -44,7 +47,7 @@ _status: BUILT 2026-06-30 (#20 shipped) — see AS-BUILT below · investigated 2
 
 ### A. Attack indicator (display-only — NO determinism)
 On a strike telegraph: (1) a committed **lunge** of the predator individual toward the victim (bigger than the
-current "move forward a little"), (2) an **impact** flash/pop at the victim cell, (3) optionally a short
+current small forward shift), (2) an **impact** flash/pop at the victim cell, (3) optionally a short
 **dart/streak** from predator→victim so the attacker is identifiable even at the screen edge. Enrich
 `broadcastBugStrikeTelegraph` (already carries victim positions) + the client `RunPredationStrikes`/telegraph
 handler. Free of sim impact.

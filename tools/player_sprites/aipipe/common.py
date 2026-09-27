@@ -249,7 +249,7 @@ def extract_layer(base_rgba, edit_rgba, gen_mask, chroma=DEFAULT_CHROMA,
     edit_rgba : the aligned mannequin+gear render.
     gen_mask  : the rough paint-here region (bool, full res).
     hand_mask : optional owner-drawn bool mask (full res) — when present it REPLACES the
-                colour test as the silhouette (supports 'hand modify the mask').
+                colour test as the silhouette (supports editing the mask by hand).
     Returns (layer_rgba_32x64, gear_bool_32x64). Extraction = inside the region AND
     (hand-mask, if given, else 'not the mannequin colour') AND opaque.
     """

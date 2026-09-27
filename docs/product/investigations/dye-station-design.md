@@ -13,7 +13,8 @@ _status: READY (design) — all data, zero code · investigated 2026-06-28 · in
   station's name/theme + whether colored cloth feeds clothing/decor recipes. **Status:** `READY`.
 
 ## 1. Issue
-> "die vats should be for dying cloth, to make dyes we need another station, feel free to design it"
+> Owner playtest report (2026-06-28): dye vats should be for dyeing cloth. Making the dyes themselves needs a separate station, and he
+> asked for that station to be designed.
 
 ## 2. Current state (verified)
 - `recipes.json`: `red_dye←poppy`, `yellow_dye←dandelion`, `blue_dye←flower`, `green_dye←clover` — all

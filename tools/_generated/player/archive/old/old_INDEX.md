@@ -23,6 +23,6 @@ Name them exactly (lowercase):
 `silver_helmet.png · silver_chest.png · silver_legs.png · silver_boots.png`
 (Even one or two is enough to test a mix.) Then tell me "done".
 
-## HOW_TO_ASEPRITE.md  — quick Aseprite tutorial (answers "how do I export one layer?")
+## HOW_TO_ASEPRITE.md  — quick Aseprite tutorial (covers exporting a single layer)
 
 ## history/  — old comparison images + all the experimental folders. Ignore unless curious.

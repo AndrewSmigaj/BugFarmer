@@ -1,7 +1,7 @@
 # Crafting buildout — PROPOSAL for sign-off (decision-grounded)
 
-Status: **PROPOSAL** — Andrew reviews before authoring (per D26 "recipe creation is mine to author, Andrew
-reviews"). Scope is bounded by **D17** (build only what the **Village** + **Mining Camp / Underground Passages**
+Status: **PROPOSAL** — Andrew reviews before any recipe is
+authored. Scope is bounded by **D17** (build only what the **Village** + **Mining Camp / Underground Passages**
 need) and the decision log, NOT by my older `crafting.md` prose. Every line cites its decision.
 
 ## What's OUT of this pass (decision-backlogged — do NOT author)
@@ -38,7 +38,7 @@ the gem** (NO sluice, NO smelter, no intermediate). **⚠ CONFIRM #2 — the gem
 `quartz_block`/`crystal_*` drop the gem DIRECT → change them to drop a block/raw form that the crusher turns
 into the gem. Gems are **sellable** this pass (consumer = jeweler, backlogged).
 
-### 3. Metal bars + the base-material ladder — "just get built" (D26)
+### 3. Metal bars + the base-material ladder — built outright (D26: basic recipes auto-unlock)
 - Bars: copper/iron (furnace), bronze (copper+tin, forge), steel (iron+coal, forge) + silver/gold/platinum
   (exist) — all fed by the refine chain (#1).
 - Base mats (D26 names them explicitly): **plank** (sawmill ✓), **cloth** (loom ✓ thread→cloth), **glass**
@@ -51,8 +51,8 @@ into the gem. Gems are **sellable** this pass (consumer = jeweler, backlogged).
 - **D12 specials:** add a **saw** (wood tool above axes), a harvest **sickle**. Watering cans + nets stay
   **small + large only** (NOT tiered).
 - **⚠ CONFIRM #3 — weapons:** this session you bundled "weapon tiers" into the armor backlog, but weapons are
-  just ICONS (no paper-doll overlay) so they're cheap like tools, and D26 has the Blacksmith selling "weapons
-  beyond wood." Build the metal-tier sword/spear now (cheap), or keep them backlogged with armor?
+  just ICONS (no paper-doll overlay) so they're cheap like tools, and D26 has the Blacksmith selling weapons
+  beyond wood. Build the metal-tier sword/spear now (cheap), or keep them backlogged with armor?
 
 ### 5. Bug Extractor — dead_<bug> → materials (D18)
 Each `dead_<bug>` (the 6: fly/butterfly/wasp/centipede/millipede/beetle) → a material. D18: chitin, **leather**,

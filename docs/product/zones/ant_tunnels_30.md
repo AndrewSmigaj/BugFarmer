@@ -1,16 +1,16 @@
 # Zone Design: Ant Tunnels (3,0 · `ant_tunnels_30`) — rev 2 (owner review 2026-07-07)
 
-> Rev 2 incorporates the owner's line-item review verbatim. Authority: those rulings +
+> Rev 2 incorporates the owner's line-item review, restated as dated rulings. Authority: those rulings +
 > D2/D3/D9/D18/D21/D22. *(candidate)* = cut freely. Lighting backlogged (compose in full
 > light, glow anchors pre-placed). Objects need GAME REASONS — no decorative-only props.
 
 ## Overview
 - **Zone ID / Grid:** `ant_tunnels_30` · row 3, col 0 · 256×256
 - **Biome / Difficulty:** HALF OUTSIDE, half soil-and-stone underground · **EASY**
-- **The layout (owner):** "make half of the easy ant zone outside so ants can form
-  trails to food sources. The rock CLIFF FACE will start where it is in the next zone
-  over, near the top, then in a natural way curve down and then across, letting ants
-  have more room to do stuff." So: the cliff line enters at the EAST edge matching the
+- **The layout (owner):** this easy ant zone is half above ground, which gives the
+  ants open country to lay trails to food. The rock CLIFF FACE enters at the height it
+  has in the neighbouring zone, near the top, then bends down and across so the ants
+  get more open ground. So: the cliff line enters at the EAST edge matching the
   mining zone's cliff height, curves naturally DOWN and then ACROSS toward the west —
   everything above/west of it is OPEN GROUND (grass long since transitioned to dirt,
   scrub, SPREAD-OUT forest, food sources); below/east of it is the rock-and-soil
@@ -20,23 +20,23 @@
   fruit tree, a dead beetle in the scrub, a fungus patch in a tunnel room — and every
   trail eventually bends toward a dark mouth in the cliff. Inside: soil tunnels and
   small chambers against honest stone.
-- **Scouts (owner):** "the scouts are going to be based in the lower part but cross
-  zones — we have not implemented that yet, so that part is BACKLOGGED (ants heading up
-  and out)." In-zone, scouts range the outside half and light the trails; the
+- **Scouts (owner):** scouts are based in the lower part of the colony but cross
+  zones; that is not implemented yet, so the cross-zone part (ants heading up and out)
+  is BACKLOGGED. In-zone, scouts range the outside half and light the trails; the
   cross-zone foraging waits for real bug transfer. The old thin "surface strip" concept
   is superseded by the half-outside layout.
 
 ## Connections (map)
 - **N → bee_meadow_20**: a plain edge into open meadow. The meadow's old south dirtying
-  gradient is being REMOVED (owner review — "removing the strip at the bottom of the bee
-  zone... more spread out forest"; backlog: ANT-ARC BUILD PREP): now that (3,0) is
+  gradient is being REMOVED (owner review: drop the dirt strip along the bee zone's
+  southern edge and spread the forest further; backlog: ANT-ARC BUILD PREP): now that (3,0) is
   half-outside with its own cliff transition, the bee zone needs no dirt-wall blend.
   Ant presence in the bee zone itself waits for real cross-zone transfer (backlogged).
-- **E → underground_passages_31**: THE STONE SEAM — "there should be a natural boundary
-  like with the beginning mining zone all along the ant area and the rocky area." Rock
+- **E → underground_passages_31**: THE STONE SEAM — per the owner, a natural rock boundary runs
+  the full length of the border between the ant zone and the rocky zone, as at the first mining zone. Rock
   runs the whole shared edge; the cliff line continues the mining zone's; the committed
   burrow stubs at y ≈ 96/124/138/158/168/200 remain the tunnel-level contract. Stray
-  ore + stone in the seam (owner: "stray ore and stone is great").
+  ore + stone in the seam (owner: stray ore and stone are welcome).
 - **S → ant_colony_40**: the main tunnel arteries descend; traffic thickens downward.
 - **W**: world edge.
 
@@ -44,11 +44,11 @@
 - **v1 sim species:** `ant_worker` (files/trails — the zone's living signature) +
   `ant_scout` (ranges the outside; based lower per owner; cross-zone later). Nests =
   `ant_brood` piles (HAND-harvestable — no shovel; drops ant_egg). 2-3 small nests.
-- **Food, inside and out (owner: "some food sources and ecosystem"):** OUTSIDE —
+- **Food, inside and out (owner: the zone needs food sources and a working ecosystem):** OUTSIDE —
   rotting fruit under 2-3 wild fruit trees (flies aren't spawned here but may find it —
   fine), berry bushes, surface carrion as it happens. INSIDE — fungus gardens of REAL
-  mushrooms (`mushroom_inkcap`, `mushroom_morel` — pool-flagged staples; owner: "actual
-  mushrooms, not just 'cluster'"), litter drifts. Trails form to whichever is
+  mushrooms (`mushroom_inkcap`, `mushroom_morel` — pool-flagged staples; owner: real
+  mushroom species, not a generic cluster), litter drifts. Trails form to whichever is
   currently worth hauling.
 - **Food stores are REAL ITEMS (owner):** granary chambers hold actual ground items
   (fruit, rotten fruit, dead bugs) — never decoration props. *(The ants-carry-items-to-
@@ -91,16 +91,16 @@
 
 ## Structures / NPCs (owner-decided)
 - **THE MYRMECOLOGIST'S STATION — a live vendor in a WOODEN BUILDING near the main
-  entrance** (owner: "a wood building... the main [tunnel] has the building and the
-  dirt road, with a pen that is EMPTY, and stuff inside like the ecologist's but ant
-  oriented — wooden wall building on the dirt"). Interior: cot, table, chair, specimen
+  entrance** (owner: a wood-walled building on dirt ground beside the main tunnel, reached
+  by the dirt road, with an EMPTY pen; its interior mirrors the ecologist's,
+  themed to ants). Interior: cot, table, chair, specimen
   shelf/case + terrarium (ant-study gear), lantern, crates — every object with a game
   reason; NO trade board. The EMPTY PEN outside sits ready (its game reason arrives
   with ant husbandry — a deliberate tease that becomes real). Sells/buys: ant-line
   goods (ant_egg trade, light gear, fungus-farm starter — exact stock at economy pass).
 - **A new SCENE is required:** `scene_ant_entrance.py` — the building + dirt road +
-  empty pen + main mouth + side mouths + cliff face. (Owner: "need to create a scene
-  for the entrance.")
+  empty pen + main mouth + side mouths + cliff face. (Owner: the entrance needs its
+  own scene.)
 
 ## Materials / loot
 - Blocks: `dirt_block` soil; STONE along the whole east seam + under the cliff line
@@ -123,7 +123,7 @@ east burrow stubs at the contract rows.
 ## Backlogged from this review (owner)
 - Scouts based in the lower colony CROSSING ZONES up/out — waits for real bug transfer.
 - Ants CARRYING real items to chambers (the transport mechanic).
-- The ant BROOD system deep pass ("backlog the entire brood testing").
+- The ant BROOD system deep pass (the owner backlogged all brood testing).
 
 ## Owner decisions recorded (2026-07-07)
 Live vendor ✓ · formic/chitin via extractor ✓ · stray ore + stone at the seam ✓ ·

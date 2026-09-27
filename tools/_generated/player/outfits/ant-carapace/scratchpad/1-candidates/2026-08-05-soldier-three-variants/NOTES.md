@@ -1,6 +1,6 @@
 # 2026-08-05 — three variants of the SOLDIER-PLATE design
 
-> *"ok i want the first version, so give me three variants of it (the soldier carapace)"*
+> Owner pick (2026-08-05): the first version, the soldier carapace — next step, three variants of it.
 
 **One paid call.** The chosen option-1 figure was cropped out and passed as a **second reference**
 (`_reference_option1.png`), so these vary the design rather than inventing three new ones — same helm,

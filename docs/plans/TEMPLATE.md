@@ -8,8 +8,8 @@
 ## Context / why
 The problem or need this addresses; what prompted it; the intended outcome.
 
-## Requirements (VERBATIM where the user stated them — quote, don't paraphrase)
-- "<user's words>" — …
+## Requirements (owner decisions are restated in clean prose, dated and attributed — never his words)
+- <requirement, restated> (owner, <date>) — …
 
 ## Acceptance criteria (each TESTABLE — becomes a conformance-table row at done-time)
 - [ ] <criterion> — verified by <test / command / file:line>

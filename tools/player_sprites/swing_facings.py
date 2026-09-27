@@ -12,11 +12,11 @@ WHAT IS DIFFERENT PER FACING, and why it is not just the side swing rotated
 --------------------------------------------------------------------------
 * THE SHOULDER MOVES. `FACINGS` in `swing_lab.py` has it at (0.06, 0.40) side-on but (0.10, 0.10)
   front and (0.10, 0.22) away. Pretending it is in the same place put the hand at face height in the
-  front view — owner: "the face down the hand is too high, it holds it like face height with the tool
-  straight down the hand should be lower".
+  front view — the owner found that, facing down, the hand was too high: held at about face height with
+  the tool pointing straight down, where it should be lower.
 * FACING AWAY, THE WEAPON IS BEHIND HIM. Drawn in front it covers his back.
-* FACING DOWN, THE SWING MUST STOP IN FRONT of him rather than carry all the way through — owner: "the
-  hoe in the face down view needs to stop in front of the user not swing all the way down". Side-on the
+* FACING DOWN, THE SWING MUST STOP IN FRONT of him rather than carry all the way through — owner direction:
+  facing down, the hoe must stop in front of the character, not swing all the way down. Side-on the
   arm carries past straight down to the hip; here that would bury the blade in his own legs.
 
 Angle convention, as everywhere else: 0 = screen right, 90 = up, -90 = straight down.
@@ -49,8 +49,8 @@ def _mk(start, end, back_start, back_end, reach):
 
 
 # ⚠⚠ THIS IS A GAME. THE SWING HAS TO COVER WHAT IT HITS.
-# Owner, 2026-08-04: "when you strike something below you while facing down it means being able to strike
-# something below you, all your looking down ones are pretty much the same thing as the sideways ones".
+# Owner, 2026-08-04: a strike while facing down has to be able to hit what is below the character; the
+# facing-down options so far were essentially the sideways swing.
 #
 # Facing DOWN, the player is attacking the tile SOUTH of him — which is straight DOWN THE SCREEN. So the
 # blade must travel down-screen and finish with its TIP PAST HIS FEET, covering that tile. A swing that
@@ -63,9 +63,8 @@ def _mk(start, end, back_start, back_end, reach):
 # down (or straight up), which is what puts the tip out past the body.
 
 # THESE ARE THEIR OWN MOTIONS, NOT THE SIDE SWING RE-AIMED.
-# Owner, 2026-08-04: "you are starting with the sideways swing first and then trying to force it into
-# different melds, the swing will be different when facing down and up, and it also needs to finish the
-# swing, so its weird you are like so obsessed with the sideways swing".
+# Owner, 2026-08-04: don't bend the sideways swing into the other facings. Facing down and facing up
+# each need their own motion, and every swing must carry through to a finish.
 #
 # The side swing is one monotonic sweep from behind the head to the hip. Facing the camera that is the
 # wrong shape twice over: the arc happens in a different plane, and a monotonic sweep STOPS DEAD at the
@@ -151,10 +150,10 @@ def out_dir(tag):
     """A NEW folder per run — timestamped. Nothing is ever overwritten.
 
     Every lab script used to write to one folder named for the day and clear it each run, so re-running
-    destroyed the previous attempt. That means when the owner says "it was mostly ok before you changed
-    something", the file he was looking at no longer exists, and I cannot even tell him which version it
-    was because the filenames were reused. Owner: "can you please stop overwriting files i cant show you
-    the old one".
+    destroyed the previous attempt. That means when the owner says an earlier version was mostly fine before
+    a change, the file he was looking at no longer exists, and I cannot even tell him which version it
+    was because the filenames were reused. The owner asked for files to stop being overwritten, because an
+    overwritten file can never be shown to him again.
 
     A dated batch folder per run is exactly the scratchpad convention already written into the
     player-sprites skill — which I designed and then did not apply to my own output.
@@ -167,8 +166,8 @@ def out_dir(tag):
 
 def main():
     # A CLEAN FOLDER EVERY RUN. Re-running with renamed variants used to leave every dead attempt on
-    # disk beside the live ones — 56 gifs in one folder, of which 12 were current. Owner: "all i see in
-    # here is complete crap... so which ones are you talking about". Anything this script wrote last run
+    # disk beside the live ones — 56 gifs in one folder, of which 12 were current, and the owner could not
+    # tell which ones were meant. Anything this script wrote last run
     # is regenerable in one command, so it goes; nothing else in the folder is touched.
     d = out_dir("swing-facings")
     made = []

@@ -1,5 +1,5 @@
 # §01 · World & zones
-<!-- gdd: id=01 status=review updated=2026-09-26 -->
+<!-- gdd: id=01 status=rework updated=2026-09-26 -->
 
 ## The experience
 You start in the village, on the southern edge of the surface. The world is twenty hand-made zones laid out like a
@@ -11,45 +11,44 @@ The bugs don't respect the borders — ants forage out of their tunnels into the
 farmland — and a zone nobody has visited for a while has moved on when you come back.
 
 ## Decided
-- **The grid** — recorded in the June review (`economy/DECISIONS.md`, 2026-06-25): the world is **rows 0–4**, four
-  columns; the deepest row (row 5) is dropped *"for now"*, to be re-added later, and *"its rare ores (silver→diamond)
-  compress up into row 4, gated by the harder east columns"* (D2). Underground, the **west column is the ants** —
-  easy ants above, medium ants below with a **Queen** — by *"user direction"* (D3).
-- **All twenty, ring by ring** — the roadmap approved on 2026-09-26 builds every zone on the map: the five around home
-  first (Village, Bee Meadow, Ant Tunnels, Mining Camp, Ant Colony and its Queen), then the middle ring, then the far
-  rows.
-- **One village** — the June review: *"Zone 1 = `village_21_B` … NOT the plain `village_21` demo"* (D19) — the
-  rebuilt village ("Village B" on the dev menu), not the old one.
-- **A second town, in the locust farmland** — the far north-west zone is *"a little western-style town"*, and the
-  village's windmill can't be bought or built until you reach it (2026-06-27, `BACKLOG.md`): *"I will know what it
-  means when we get there."* The approved roadmap builds it with the farmland and electricity.
-- **The ants' country** — *"they will have their colony in the sw ant zone"* (2026-07-06); *"make half of the easy ant
-  zone outside so ants can form trails to food sources"* (2026-07-07); *"there should be a natural boundary like with
-  the beginning mining zone all along the ant area and the rocky area"* (2026-07-07 — the rock between the Ant Tunnels
-  and the Mining Camp).
-- **The Bee Meadow's borders** — *"there is no ant colony in the zone"* and *"the ants will be coming from the south,
-  they mostly collect dead bugs and food"* (2026-07-06); *"the river should flow to the sea not a little pond next to
-  the sea"* (2026-07-06); *"removing the strip at the bottom of the bee zone… more spread out forest"* (2026-07-07).
-- **Where bugs cross borders, already settled:** ants into the Bee Meadow (above); ants *"CROSS OVER"* into the Mining
-  Camp through the dirt tunnels (D21); the Deadly Ants forage up into the Shallow Swamp above them (D3, D9).
-- **Bugs really cross zone borders** — *"it will be real bug transfer"* (2026-07-06); and on 2026-09-26: *"finish the
-  mechanics and zones (including cross zone bug transfer when they get to an edge which will need care with our
-  deterministic lockstep system)"*. How they cross was left to me: *"you decide based on what will be better design
-  and more efficient"* (2026-09-26) — the design is under "How it will work".
-- **Zones nobody is in** — *"as already designed frozen with aggregation upon first access with random border
-  crossing events"* (2026-09-26).
-- **Progress is gated by cost, not locks** — *"things are gated by costs and such so you have to work on your char
-  before going to certain zones"* (2026-09-26).
-- **No rule forced on every zone** — *"we dont want mechanics forcing rules on zones"* (2026-09-26).
-- **New bugs, not new zones** — on adding bugs: *"as long as it doesnt mess up the balance and require completely new
-  zones"* (2026-09-26).
-- **A secret place** — the Queens' set is *"locked in a chest in a little underground fortress"* (2026-08-06,
-  `brainstorm_armor.md`); it isn't on the map yet (where secrets go is §17).
-- **The village's to-do list** — *"NPCs and NPC behavior, Building and zone overhauls to make it look better and more
-  coherent, just general improvement and polish passes, village secrets"* (2026-09-26).
-- **The zones' contents are still open** — *"We haven't fully fleshed out what is in the zones, all the interesting
-  items and weapons/clothes in various zones"* (2026-09-26). They get one design document per zone after this
-  document is signed off.
+- **The grid** (June review, 2026-06-25, `economy/DECISIONS.md`) — the world is rows 0–4, four columns wide. The
+  deepest row (row 5) is dropped for now, to come back later, and its rare ores (silver to diamond) move up into row
+  4, with the harder east columns holding the best of them (D2). Underground, the west column belongs to the ants:
+  easy ants above, medium ants below with a Queen (D3, the owner's direction).
+- **All twenty, ring by ring** — the roadmap approved on 2026-09-26 builds every zone on the map: the five around
+  home first (Village, Bee Meadow, Ant Tunnels, Mining Camp, Ant Colony and its Queen), then the middle ring, then the
+  far rows.
+- **One village** (June review, D19) — the real starting village is the rebuilt one ("Village B" on the dev menu),
+  not the old demo village.
+- **A second town, in the locust farmland** (2026-06-27) — the far north-west zone, the locust farmland, holds a
+  small western-style town. The village's windmill, which powers its houses, can't be bought or built until you reach
+  that town; the details are left for when the zone is built. The approved roadmap builds it with the farmland and
+  electricity.
+- **The ants' country** (2026-07-06 and 07-07) — the ant colony is in the south-west ant zone. The easy ant zone is
+  half above ground, giving the ants room to lay trails to food; the rock face starts where it does in the neighbouring mining
+  zone and curves down and across. A natural rock boundary runs all along the border between the ant zone and the
+  rocky mining zone.
+- **The Bee Meadow's borders** (2026-07-06 and 07-07) — the Bee Meadow holds no ant colony; the ants come in from
+  the south, mostly to collect dead bugs and food. Its river flows out to the sea rather than ending in a pond. The
+  dirt strip along its southern edge is removed in favour of more spread-out forest.
+- **Where bugs cross borders, already settled:** ants into the Bee Meadow (above); ants into the Mining Camp through
+  the dirt tunnels (D21); the Deadly Ants forage up into the Shallow Swamp above them (D3, D9).
+- **Bugs really cross zone borders** — real bug transfer between zones, not a pretend version (2026-07-06); finishing
+  it, with care for keeping every player's game identical, is part of finishing the game (2026-09-26). How they cross
+  was left to me, judged on design and efficiency (2026-09-26) — the design is under "How it will work".
+- **Zones nobody is in** (2026-09-26) — a zone nobody is in stays frozen; when someone first arrives it catches up on
+  the time it missed, including random events of bugs crossing its borders.
+- **Progress is gated by cost, not locks** (2026-09-26) — you build up your character before you can survive the
+  harder zones.
+- **No rule forced on every zone** (2026-09-26) — no mechanic should force the same rule onto every zone.
+- **New bugs, not new zones** (2026-09-26) — new species are welcome if the balance holds, but none should need a
+  whole new zone.
+- **A secret place** (2026-08-06) — the Queens' set is locked in a chest in a small underground fortress
+  (`brainstorm_armor.md`). It isn't on the map yet (where secrets go is §17).
+- **The village's to-do list** (2026-09-26) — its NPCs and how they behave; overhauls of its buildings and layout so it
+  looks better and more coherent; general polish; and village secrets.
+- **The zones' contents are still open** (2026-09-26) — what each zone holds (its interesting items, weapons and
+  clothes) isn't fully designed yet. Each zone gets its own design document after this one is signed off.
 
 ## Current design
 **The map** (`architecture_world.md`), north at the top, west on the left. Danger in brackets.
@@ -93,7 +92,7 @@ Deadly Ants core have none.
 
 **Where the documents disagree** (settled when each zone gets its design document; the map above wins, except where a
 later ruling changed things — water is Q1):
-- The January GDD's world *"expands radially from a starting village"*; the map puts the village on the southern edge
+- The January GDD's world expands outward from a central starting village; the map puts the village on the southern edge
   of the surface, west of centre. The December requirements describe the regions as one continuous world that
   players and bugs cross freely.
 - The Mining Camp is *easy* on the map, *medium to hard* on its sheet; the Centipede Cavern is *medium* on the map,
@@ -154,8 +153,8 @@ later ruling changed things — water is Q1):
 Row 5 stays out of 1.0 and can come back in an update. Nothing waits on it: the Queen already moved up to the Ant
 Colony (D3) and the rare ores up into row 4 (D2).
 
-**Lenses:** Scope — twenty zones is already the biggest job in the plan. Built on what's decided — D2 said *"for
-now"*; this says *"for 1.0"*.
+**Lenses:** Scope — twenty zones is already the biggest job in the plan. Built on what's decided — D2 dropped the row
+for now; this says for 1.0.
 
 ### P2. Gated by cost and danger — never by locked doors
 Any zone can be walked into at any time; a few water areas need waders or a grappling hook (June review). What stops
@@ -168,7 +167,7 @@ you is what lives there, and each danger has an answer you can make or buy:
 | far | Scorpion Rocks, Shallow Swamp, Millipede Forest, Locust Farmland, Deadly Ants outpost, the deep river | deadly venom and heat; deep water; locust swarms; fire |
 | edge | Deep Swamp, Spider Vale West, Spider Vale East, Deadly Ants core | disease and poison; webs; the War Queen |
 
-**Lenses:** Your *"gated by costs … work on your char before going to certain zones"*. Curiosity — nothing is
+**Lenses:** Your decision that zones are gated by cost. Curiosity — nothing is
 walled off, so you can always look ahead. Meaningful choices — several zones open at once in each ring. Picture the
 moment — you walk into the Wasp Thicket with copper tools, get stung twice, and go home to make an antidote.
 
@@ -193,12 +192,12 @@ see. Cost — border art in the outer zones, not a new system.
 Beyond the crossings already settled (the ants, the Deadly Ants), three more from the designs:
 - **giant centipedes** raid across from the Centipede Cavern into the Ant Colony (the Ant Colony's design);
 - **locust** swarms spill out of the farmland into the zones around it (its design);
-- **wasps** spread in from the zones next door (the January GDD: *"Wasps migrate from adjacent zones"*).
+- **wasps** spread in from the zones next door (the January GDD, §9.3).
 
 Crossings belong to the borders they cross, never a rule for every zone. When a frozen zone wakes, some of what
 happened while it slept comes from these neighbours: a new ant trail, a swarm that arrived from next door.
 
-**Lenses:** Your *"random border crossing events"*. Zone freedom — only these borders. Surprise — you come back and
+**Lenses:** Your random border-crossing events. Zone freedom — only these borders. Surprise — you come back and
 something has moved in. Bestiary — all three are bugs already designed.
 
 ### P6. A frozen zone catches up on its weather, orchard and machines too
@@ -206,7 +205,7 @@ When a zone wakes, it catches up on everything the time would have brought, not 
 have watered its crops (today three days in ten get one), the fruit that would have ripened, and the batches its
 machines would have finished.
 
-**Lenses:** Your *"frozen with aggregation upon first access"* — the catching up covers the whole zone. Fair to your
+**Lenses:** Your decision that a frozen zone catches up when someone arrives — here it covers the whole zone. Fair to your
 time (§00, proposed pillar 8). Cost — showers, fruit and machines already run on the game's clock, so catching them
 up means giving them the time they missed.
 
@@ -214,7 +213,7 @@ up means giving them the time they missed.
 ### Q1. Should water stop crawling bugs?
 Your playtest rule of 2026-06-11: water stops people only, because flies were getting stuck at shorelines — and that
 is how the game works now: every bug crosses every river. The June 25 review later wrote the older rule back into its
-notes: shallow water *"blocks insects"* (D7). The map was drawn with the river as a barrier. Whichever rule holds
+notes: shallow water stops insects (D7). The map was drawn with the river as a barrier. Whichever rule holds
 decides whether a river — or a moat around your farm — keeps any bug out.
 - **A.** As now: water stops people only; every bug crosses it.
 - **B.** Water stops bugs that walk, not bugs that fly. Ants, centipedes, millipedes and beetles stop at the water's

@@ -53,7 +53,7 @@ verified. Sprite batch = reference-generation per set (art_needed.md).
 
 ## 4. Reconciliation shipped with this arc
 Stale underground docs fixed/superseded; lighting FULLY SPECCED + backlogged (your
-Terraria rule captured verbatim); REAL cross-zone bug transfer backlogged (your ruling);
+Terraria rule recorded); REAL cross-zone bug transfer backlogged (your ruling);
 marble backlogged; 3 new interest lenses (Secret-Keeper / Surprise / Curiosity-Hook).
 
 ## 5. What starts after your review

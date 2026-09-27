@@ -44,7 +44,7 @@ recovered research (permanent) lives in `_raw_recovered/`.
   **Falloff Strength fixes the hard lamps · Bloom is one flag away (a `DefaultVolumeProfile` already exists) ·
   warm/cool contrast · sprite-cookie lights · emissive accents · (normal maps = the expensive lever) · no LUT
   exists yet = the cohesion gap.**
-- **`02_art_direction_and_cohesion.md`** — the owner's core "other games look more interesting" concern. Why
+- **`02_art_direction_and_cohesion.md`** — the owner's core concern that comparable games look more visually engaging. Why
   great 2D games look rich; the **AI-sprite cohesion pipeline** (master palette → global LUT → prompt-anchoring
   → post-gen palette clamp → one light direction → gradient-map rescue); tile variety; motion-density budget;
   **look-target = Stardew**; a verified **asset-pack shortlist**; pick order **LUT → palette-lock → tile-variety+motion**.

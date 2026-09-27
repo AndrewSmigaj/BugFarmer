@@ -144,7 +144,7 @@ OUTFITS = {
 # The first pass went straight to finished 12-frame sheets, so the first time a set could be judged
 # it had already been paid for in full and there was nothing to compare it against. This mode draws
 # three genuinely different designs of ONE set, standing still and large enough to actually see.
-# Owner: "I dont think we are spending enough time getting a good reference sprite."
+# The owner asked for more time to be spent getting a good reference sprite.
 #
 # The three options must have different PARENTS, not three tunings of one idea — the same discipline
 # the swing design used, for the same reason: left alone they collapse into one.
@@ -181,14 +181,14 @@ Match the PIXEL DENSITY of the FIRST attached reference image: its pixels are la
 # name -> (what the set is, [three designs with different parents])
 HEAD_COVERED = ("Every design covers the whole head with its own headgear.")
 
-# Owner, 2026-08-05: "i do want to see the players face though if possible". An open-faced helm, so the
+# Owner, 2026-08-05: the player's face should show where possible. An open-faced helm, so the
 # character reads as a PERSON in ant armour rather than a sealed shell.
 HEAD_FACE = ("Every design has headgear that leaves the character's FACE VISIBLE and uncovered - an "
              "open-faced helm, a raised visor, a framing hood or a crown-like piece. Draw the face: eyes, "
              "nose and mouth, human skin. The head is never fully enclosed and there is no blank visor "
              "slit. The headgear frames the face, it does not hide it.")
 
-# FACES ARE THE DEFAULT (owner, 2026-08-07: "we should show faces… yes show faces").
+# FACES ARE THE DEFAULT (owner decision, 2026-08-07).
 #
 # It used to be the other way round — HEAD_COVERED unless the set was listed here — which was how the
 # roster ended up mixed: bronze is a sealed great-helm, fireant and blackant show faces because they were
@@ -212,8 +212,8 @@ EXPLORATIONS = {
         "a second design, clearly and obviously different from the first",
         "a third design, clearly and obviously different from both of the others",
     )),
-    # A COMPLETE reroll of black-ant on the new pipeline, 2026-08-15. Owner: "can we try to do the
-    # black ant exactly like we did with fireant, a complete reroll". Same undirected brief as black2,
+    # A COMPLETE reroll of black-ant on the new pipeline, 2026-08-15, done exactly as fire-ant was (the
+    # owner's request). Same undirected brief as black2,
     # copied verbatim - the point is a fresh design, not a new direction. Its explore folder carries no
     # CHOSEN_*.png, so nothing steers it toward the existing black-ant.
     "ant-carapace-black3": ("armour made from BLACK ANT parts - near-black and dark charcoal chitin "
@@ -222,8 +222,8 @@ EXPLORATIONS = {
         "a second design, clearly and obviously different from the first",
         "a third design, clearly and obviously different from both of the others",
     )),
-    # OWNER'S EDIT, 2026-08-15: "can you put in parenthesis (Lasius niger) so that it knows it is
-    # literally a black garden ant". Naming the species is the whole change - the brief stays
+    # OWNER'S EDIT, 2026-08-15: name the species, Lasius niger, so the model draws a real black garden
+    # ant. Naming the species is the whole change - the brief stays
     # undirected, the model still decides what the armour looks like.
     "ant-carapace-black4": ("armour made from BLACK ANT (Lasius niger) parts - near-black and dark "
                             "charcoal chitin plates, shell, carapace, mandibles, leg segments. "
@@ -232,9 +232,9 @@ EXPLORATIONS = {
         "a second design, clearly and obviously different from the first",
         "a third design, clearly and obviously different from both of the others",
     )),
-    # Two colourways to lock in, undirected. Owner: "we will have both black and red fireant versions...
-    # lets do 2 more attempts on each red and black so we can lock those in, i do want to see the players
-    # face though if possible". No design briefs - the undirected round beat both directed ones.
+    # Two colourways to lock in, undirected: there will be both black and red fire-ant versions, with two
+    # more attempts at each, and the player's face showing where possible (owner). No design briefs - the
+    # undirected round beat both directed ones.
     "ant-carapace-red": ("armour made from RED FIRE-ANT parts - deep red and orange-red chitin plates, "
                          "shell, carapace, mandibles, leg segments. ARMOUR WORN BY A PERSON", (
         "your own design - decide for yourself what this armour looks like",
@@ -247,9 +247,9 @@ EXPLORATIONS = {
         "a second design, clearly and obviously different from the first",
         "a third design, clearly and obviously different from both of the others",
     )),
-    # OPEN exploration - the design is NOT specified. Owner, 2026-08-05: "just do three ant carapace
-    # armor versions without telling it what to put other than the sprite and it is made from ant parts
-    # and carapace". The technical constraints stay (magenta, armless, silhouette-over-detail, no magenta
+    # OPEN exploration - the design is NOT specified. Owner, 2026-08-05: three ant-carapace versions, telling
+    # the model only the sprite itself and its material (ant parts and carapace). The technical
+    # constraints stay (magenta, armless, silhouette-over-detail, no magenta
     # on the figure) because those are quality rules, not design direction. No CHOSEN_ reference either -
     # a reference would steer it, which is the opposite of the point.
     "ant-carapace-open": ("armour made from ant parts - chitin plates, shell, carapace, mandibles, "
@@ -259,8 +259,8 @@ EXPLORATIONS = {
         "a second design, clearly and obviously different from the first",
         "a third design, clearly and obviously different from both of the others",
     )),
-    # Variants of the CHOSEN soldier-plate design (option 1 of the 2026-08-05 three). Owner: "i want the
-    # first version, so give me three variants of it (the soldier carapace)". The chosen figure is passed
+    # Variants of the CHOSEN soldier-plate design (option 1 of the 2026-08-05 three) — the owner picked the
+    # first version and asked for three variants of it. The chosen figure is passed
     # as a REFERENCE so these stay on that design instead of drifting into three new ideas.
     "ant-carapace-soldier": ("ant-carapace SOLDIER-PLATE armour - keep the design in the attached "
                              "reference: dark red-brown chitin plates, a helm whose visor is flanked by "
@@ -295,7 +295,7 @@ EXPLORATIONS = {
          "an ELITE FOREST WARDEN - layered overlapping leaf-shaped plates in deep lacquered green "
          "with bronze edging, a helm with swept antler-like prongs, richer and more ceremonial"]),
 
-    # Owner: the current one "looks like a rhinocerous" — so the single frontal horn is banned, and
+    # The owner found the current one looked like a rhinoceros — so the single frontal horn is banned, and
     # each option takes a DIFFERENT REAL BEETLE as its parent rather than three horn sizes.
     "beetle-shell": (
         "beetle-shell armour",
@@ -323,7 +323,7 @@ EXPLORATIONS = {
          "warm yellow-green from inside so the whole figure is luminous rather than dark, with a "
          "smooth rounded featureless head"]),
 
-    # Owner: "we need a remake of swamp gear, not sure what to put" — so the three options are three
+    # The owner wants swamp gear remade, with no set idea of what it should be — so the three options are three
     # different ANSWERS to what a swamp set is for, not three shades of green.
     "swamp-gear": (
         "swamp gear",
@@ -336,7 +336,7 @@ EXPLORATIONS = {
          "breathing filter at the chin, pale grey-green rubber, clean simple curved shapes, "
          "protection against foul air"]),
 
-    # Owner: the current one "looks ridiculous like curious george with the goofy yellow thing" — so
+    # The owner rejected the current one's cartoonish bright-yellow look — so
     # the cartoon-bright sou'wester is out and the three options are three different WATERS.
     "fisherman": (
         "a fisherman's outfit",
@@ -348,7 +348,7 @@ EXPLORATIONS = {
          "a DEEP-WATER HARPOONER - a heavy dark storm coat wrapped with coils of rope, a deep hood "
          "over a scarfed face, weathered navy and rust, rugged and adventurous"]),
 
-    # Owner: platinum is the TOP of the ladder and must "stress that it is fancy". The lesson from
+    # Owner: platinum is the TOP of the ladder and must look unmistakably fancy. The lesson from
     # ranger option 3 is baked in — fancy has to live in the SILHOUETTE (crest, plume, cape, wings),
     # never in engraving, because engraving is exactly what dies at 40px.
     "platinum": (
@@ -394,8 +394,8 @@ EXPLORATIONS = {
         "board cuirass hanging from it, and no helm at all. Wide, flat-topped, top-heavy")),
 
     # ⚠ SUPERSEDED by copper-r2 / iron-r2 below. These two briefs DICTATE the three designs, which
-    # reversed the owner's 2026-08-05 instruction and produced sheets he rejected on 2026-08-13:
-    # "they look like absolute shit and look nothing like the ones we were getting before". Kept only
+    # reversed the owner's 2026-08-05 instruction and produced sheets he rejected on 2026-08-13 as far
+    # worse than the earlier results. Kept only
     # because explore/copper/ and explore/iron/ hold the art they produced. Do not re-run them.
     "copper": ("copper plate armour - warm orange-pink metal with salmon highlights and patches of pale "
                "green verdigris in the crevices", (
@@ -415,10 +415,10 @@ EXPLORATIONS = {
         "a RIVETED BRIGANDINE with a HORNED helm - a square-cut torso, bulky squared pauldrons, and two "
         "short blunt horns angling out from the helm. Broad, angular and top-heavy")),
 
-    # Owner, 2026-08-14: *"just tell it to draw 3 variants of the armor then whichever I pick is used, of
-    # course with all the things we need to keep the sprite consistent… I dont want you to constrain gpt
-    # with your garbage descriptions, remember the old copper armor one looked like a fucking mushroom the
-    # others huge barrels."* So: the MATERIAL, and nothing about the design. No silhouettes, no helm
+    # Owner decision, 2026-08-14: ask for three variants of the armour and use whichever he picks, with the
+    # technical rules that keep sprites consistent — no invented design descriptions, which had produced
+    # poor shapes (a copper set like a mushroom, others like barrels). So: the MATERIAL, and nothing about
+    # the design. No silhouettes, no helm
     # shapes, no hems. The face clause is automatic (FACE_SETS = "ALL").
     "fancy": ("fancy armour made of polished silver with gold trim. ARMOUR WORN BY A PERSON", (
         "your own design - decide for yourself what this armour looks like",
@@ -457,10 +457,10 @@ EXPLORATIONS = {
         "a third design, clearly and obviously different from both of the others",
     )),
 
-    # copper-r2 came back too high-res — owner, 2026-08-13: "the copper is way too high res". His fix,
-    # his wording: anchor the density to the reference rather than to a number. It works because gen.py
+    # copper-r2 came back far too high-res (owner, 2026-08-13). His fix: anchor the density to the
+    # reference rather than to a number. It works because gen.py
     # sends armless_front.png (36x71) upscaled x14, so the attached image literally has 14px blocks in it.
-    # Downsampling the r2 art instead was rejected outright: "you get trash downpixeling".
+    # Downsampling the r2 art instead was rejected outright: shrinking art destroys it.
     "copper-r3": ("copper plate armour - warm orange-pink metal with salmon highlights and patches of "
                   "pale green verdigris in the crevices. ARMOUR WORN BY A PERSON", (
         "your own design - decide for yourself what this armour looks like",
@@ -561,8 +561,8 @@ EXPLORATIONS = {
     )),
 
 
-    # 2026-08-14 rerolls. The steel and beetle-shell extras are the OWNER'S instructions, verbatim -
-    # not my design direction. He asked for them by name.
+    # 2026-08-14 rerolls. The steel and beetle-shell extras are the owner's own prompt instructions - not
+    # my design direction.
     "wood-r4": ("wooden armour. ARMOUR WORN BY A PERSON", (
         "your own design - decide for yourself what this armour looks like",
         "a second design, clearly and obviously different from the first",
@@ -738,7 +738,7 @@ Big simple shapes, chunky pixels. This is a small pixel art sprite - each hand i
 # 2026-07-28. Four hands, one shape, consistent angles, with a cuff:
 #   h1 back of hand (knuckles)  h2 palm  h3 profile  h4 GRIP — closed round a pole, hole through it
 # The walk/run use h1+h2 (side) and h3 (front); the tool swing uses the knuckles at rot 225, +16% down
-# the handle ("225 works ... +16% so the last one").
+# the handle (approved 2026-07-29).
 #
 # Every other outfit's gauntlet was generated INDEPENDENTLY from a material description, so the model
 # invented a different hand shape each time — five outfits, five different objects, visibly different
@@ -752,17 +752,17 @@ Big simple shapes, chunky pixels. This is a small pixel art sprite - each hand i
 # the same words and changing them is one edit with a diff the owner can see before a call is made.
 #
 # EVERY SENTENCE IS LOAD-BEARING — each one is a defect that shipped:
-#   feet under the hips     the default is feet kicking out sideways, which reads as a Russian dance
-#                           (*"they are ridiculous like someone doing a russian dance"*)
+#   feet under the hips     the default is feet kicking out sideways, which reads as a dance (rejected
+#                           by the owner)
 #   frames 1 and 3 opposite the model returns cycles where BOTH stepping frames lift the SAME leg. It
-#                           looks fine in a still and wrong only once it loops (*"it is not correct in
-#                           how it loops"*). `cut_walk_row.check_alternation` tests for exactly this.
+#                           looks fine in a still and wrong only once it loops (the owner caught it in
+#                           the loop). `cut_walk_row.check_alternation` tests for exactly this.
 #   same head/torso/legs    without it the model "walks" the character by stretching the body
 #   same pixel blocks       without it the render comes back smooth and there is no grid to convert
 #
 # KNEE LIFT — 2026-08-18. The wording used to be "Lift the knee HIGH", which measured 13.8-19.8% of
-# body height across the three built outfits. Owner: *"its lifting the knees really high which is ok
-# for running but not walking"*. Now MEDIUM-HIGH with a numeric anchor.
+# body height across the three built outfits — too high for a walk, though fine for a run (owner). Now
+# MEDIUM-HIGH with a numeric anchor.
 # ⚠ There is ONE leg set per direction: `official.ANIMATIONS` gives walk_side and run_side the same
 # `frames="side"` bank, and the run differs only in arm swing, fist size and timing. So this number
 # serves BOTH. A genuinely higher run lift would need a second set of leg frames per direction — three
@@ -840,7 +840,7 @@ def walk_prompt(what, view):
 # ── THE TURNAROUND — one paid call, and every later call for the outfit is seeded from it ────────────
 # THE APPROVED TEXT, WORD FOR WORD. It was typed by hand for fire-ant, black-ant and bronze on 2026-08-15
 # and came out IDENTICAL all three times (their RECORD.txt files), and those three are the outfits the
-# owner approved (*"those are fine, so this approach works"*; official 2026-08-18). The design rides
+# owner approved (2026-08-15; official 2026-08-18). The design rides
 # entirely on the reference image — the picked design, converted to real pixels — so no outfit name or
 # material appears in it. `procedure.py verify` checks this string against the three records.
 #

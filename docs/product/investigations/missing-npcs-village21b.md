@@ -1,10 +1,10 @@
-# Investigation: #6 "missing NPCs" in village_21_B
+# Investigation: #6 missing NPCs in village_21_B
 _status: RESOLVED (no NPC-authoring fix needed) · investigated 2026-06-28 · investigate-only_
 
 ## Debrief (read me first)
 - **TL;DR:** The NPCs are **correctly authored** in village_21_B — not a missing-content bug. Andrew
-  confirmed in-session ("all npcs are considered there… don't worry about that"). The data backs it: 9/10
-  shop NPCs (incl. the two named — "market person" = `general_store_merchant`, "bug salesperson" =
+  confirmed in-session that all the NPCs are in place and need no further work. The data backs it: 9/10
+  shop NPCs (incl. the two named in the report — the market vendor = `general_store_merchant`, the bug seller =
   `bug_dealer`) are present in the saved chunks.
 - **Only real finding:** **`fisherman` was placement-skipped** — it's in the builder (`zone_village_21_B.py:222`,
   cell 41,109) but ABSENT from the saved chunks (the known "P3a placement skips" class — `place_occupant`
@@ -16,8 +16,9 @@ _status: RESOLVED (no NPC-authoring fix needed) · investigated 2026-06-28 · in
   **Status:** `READY (no-op for NPCs; optional: re-place fisherman)`.
 
 ## 1. Issue, repro & evidence
-> "missing NPCs like market person and such, not in their store nor is the bug salesperson (village 21 B …
-> please ensure they are all looking at the right zone." → later: "yeah all npcs are considered there… don't worry about that."
+> Owner playtest report (2026-06-28): NPCs such as the market vendor and the bug seller were not in their stores in
+> village 21 B; he asked for a check that they all refer to the right zone. He later confirmed in-session that all the
+> NPCs are in place and need no further work.
 - **Acceptance:** NPCs present at their stores in village_21_B. **Met** by the data (below).
 
 ## 2. What the evidence shows
@@ -44,5 +45,5 @@ _status: RESOLVED (no NPC-authoring fix needed) · investigated 2026-06-28 · in
 No NPC-authoring fix needed. **Optional small fixes** (for the fix-pass, not blocking):
 1. **fisherman placement-skip** — its cell (41,109) is likely blocked/water; move it to a clear adjacent cell
    in `zone_village_21_B.py` and re-save, OR drop it (fishing is deferred anyway).
-2. If "looking at the right zone" referred to the NPCs' **shop stock targeting a zone**, that's not an NPC
+2. If the right-zone check referred to the NPCs' **shop stock targeting a zone**, that's not an NPC
    *placement* issue and would surface under #5 (selling) — investigated there.

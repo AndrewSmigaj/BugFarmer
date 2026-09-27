@@ -11,7 +11,8 @@ _status: READY (design) — display-only, reuses the progress hook · investigat
   (how juicy: flash+shake minimal, or full flash+shake+ring+debris) + keep or drop crack decals. **Status:** `READY`.
 
 ## 1. Issue
-> "we need to make a better breaking indicator which covers the whole things getting broken and just looks better, come up with a new solution"
+> Owner playtest report (2026-06-28): the breaking indicator needs replacing with a new design that covers the whole object being
+> broken and looks better.
 
 ## 2. Current state
 `BreakingVisual.SetProgress(progress)` picks a `break_stage_*` crack sprite by `1-progress` and draws it as a

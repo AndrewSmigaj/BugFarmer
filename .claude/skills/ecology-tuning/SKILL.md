@@ -11,7 +11,7 @@ hard `max_population` cap (which is only a rare backstop). The job is tuning the
 and plants until the emergent populations land well.
 
 ## 0. Discipline (the rule that matters most)
-Before EVERY change, say out loud: **is this sane? does it make sense? will it actually help?** Then change
+Before EVERY change, say out loud: **is this change sensible, and will it actually help?** Then change
 ONE lever, predict the effect, run, measure, and write it in the log. Do NOT lurch to 10×/100×/∞ values, and
 do NOT stack changes you can't separate. The owner has repeatedly caught kneejerk extremes — don't.
 

@@ -1,5 +1,5 @@
 # §00 · Premise, pillars & what belongs in the world
-<!-- gdd: id=00 status=review updated=2026-09-26 -->
+<!-- gdd: id=00 status=rework updated=2026-09-26 -->
 
 ## The experience
 It is 2126. A plague killed nearly every mammal, and people bred bugs big enough to eat. You arrive on the
@@ -9,43 +9,42 @@ to do next. The world is a living food web, and learning to read it is the game.
 frontier — anything goes out in the wild, while your own plot stays safe.
 
 ## Decided
-- **The premise** — your opening text, in the game today: *"It is the year 2126. A plague swept the Earth. Nearly
-  every mammal — gone. Humans held on. But humans still had to eat. So we made the bugs bigger. Bigger than anyone
-  meant to. Out on the frontier, you start over. As a bug farmer."*
-- **Bugs are giant** — *"keep in mind bug farmer is in the future where bugs are giant"* (2026-09-26). Their size
-  stays as designed: *"The way we designed it why even bring this up?"* (2026-09-26)
-- **No storyline; progress is earned** — *"there will be tutorials that unlock, the ecology tab has its own little
-  tasks and quests, but no overarching storyline it is like terraria where you just do whatever - things are gated
-  by costs and such so you have to work on your char before going to certain zones."* (2026-09-26)
-- **A chaotic shared world, a safe private plot** — *"absolutely keep them, it is part of the critical game design
-  where the world is chaotic and anything goes (except stealing citizens stuff or destroying their houses, a message
-  will pop up saying its basically not nice)"* (2026-09-26)
-- **New bugs are welcome, with care** — *"We can add as many new bugs as we want as long as things stay balanced
-  and things are explained"*; and on adding the honeypot ants and grasshoppers some food ideas need: *"I am
-  willing to add some as long as it doesnt mess up the balance and require completely new zones."* (2026-09-26)
-- **The biology shows when you examine things** — *"We need to make sure to include the biology lesson so it makes
-  sense, when you examine it as a recipe or item you should see what it does."* (2026-09-26)
-- **Surprise and curiosity matter** — *"we like surprises, the lens of curiosity and lens of surprise are important
-  lenses from the book of lenses."* (2026-09-26)
-- **No frogs** — recorded as *"frogs explicitly REJECTED"* in the decisions log after the 2026-07-05 playtest
-  review (`economy/DECISIONS.md`, D31).
+- **The premise** — the game's opening text, in the game today: *"It is the year 2126. A plague swept the Earth.
+  Nearly every mammal — gone. Humans held on. But humans still had to eat. So we made the bugs bigger. Bigger than
+  anyone meant to. Out on the frontier, you start over. As a bug farmer."*
+- **Bugs are giant** (2026-09-26) — the bugs are bred giant, and their size stays as designed; it isn't up for
+  redesign.
+- **No storyline; progress is earned** (2026-09-26) — like Terraria, there is no overarching story and you set your
+  own goals. Tutorials unlock as you play, and the Ecology tab has its own small tasks. Zones are gated by cost: you
+  build up your character before you can survive the harder ones.
+- **A chaotic shared world, a safe private plot** (2026-09-26) — private plots and City Hall stay; they are central
+  to the design. The shared world is lawless, with one exception: the town's citizens. Stealing from them or
+  damaging their houses isn't possible, and a message tells the player it isn't acceptable.
+- **New bugs are welcome, with care** (2026-09-26) — new species can be added as long as the balance holds and each
+  one is explained; none should need a whole new zone (said about the honeypot ants and grasshoppers some food ideas
+  need).
+- **The biology shows when you examine things** (2026-09-26) — examining an item or a recipe shows what it does and
+  the real biology behind it.
+- **Surprise and curiosity matter** (2026-09-26) — the lenses of Curiosity and Surprise (from *The Art of Game
+  Design*) are priorities.
+- **No frogs** — rejected at the review after the 2026-07-05 playtest (`economy/DECISIONS.md`, D31).
 
 ## Current design
 What the design documents already say, gathered in one place:
-- **The genre.** *"A top-down multiplayer sandbox game inspired by Terraria and Stardew Valley, focused on emergent
-  ecology, insect farming, environmental interaction, and player-driven problem solving."* There is no endgame:
-  *"The world evolves through player interaction and ecological dynamics."* (GDD §1–2)
-- **Two ways to play at once:** *"hands-on, risky exploration in the shared world"* and *"stable,
-  optimization-focused farming in private plots."* (GDD §1, §10)
+- **The genre.** A top-down multiplayer sandbox inspired by Terraria and Stardew Valley, about emergent ecology,
+  insect farming, shaping the environment and solving problems your own way. There is no endgame: the world keeps
+  changing through what players and the ecology do (GDD §1–2).
+- **Two ways to play at once:** risky exploration in the shared world, and calm, optimised farming on your private
+  plot (GDD §1, §10).
 - **Bugs are livestock.** Some bugs make a product at a station (bees → honey, silkworms → silk); the rest — flies,
   wasps — are sold as meat. The food chain is the progression: farm flies to feed wasps, and so on up to bigger,
   rarer bugs. (`bug_ecology_plan.md`)
-- **Progress comes from items**, not skill trees or experience points: *"Progression is driven by tools, knowledge,
-  preparation, and spatial design—not skill trees, scripted events, or stat grinding."* (GDD §1, §18)
-- **Machines ease chores, never play for you** — automation is allowed but slow and capped: *"no instant
-  auto-catching, no automated combat"*. The slow autonet is the first automatic catcher and others in the same
-  spirit are allowed (GDD §11.4); you've also named automatic bug catchers and bug zappers for the powered age.
-- **No disasters on a timer:** *"No timer-based disasters · No forced invasions"* (GDD §12.2).
+- **Progress comes from items**, not skill trees or experience points: tools, knowledge, preparation and how you lay
+  things out — no scripted events or stat grinding (GDD §1, §18).
+- **Machines ease chores, never play for you** — automation is allowed but slow and capped: no instant catching and
+  no automated fighting. The slow autonet is the first automatic catcher and others in the same spirit are allowed
+  (GDD §11.4); you've also named automatic bug catchers and bug zappers for the powered age.
+- **No disasters on a timer** and no forced invasions (GDD §12.2).
 - **The seven pillars** of the January 2026 GDD (§18): emergent systems over scripts · player agency over
   obligation · readable ecology · item-based progression · no offline punishment · no autoplay · no forced chaos.
 - **Lean into variety** — lots of things to gather, craft and decorate with. (GDD §19)
@@ -86,10 +85,10 @@ kind of game it is; this says what it is about.
    seem.
 8. **Fair to your time** — no punishment for being away, and machines ease chores but never play for you.
 
-Pillars 1, 3, 4, 5 and 8 carry all seven January pillars; 2 comes from the ecology design; 6 and 7 are your words
-from this week.
+Pillars 1, 3, 4, 5 and 8 carry all seven January pillars; 2 comes from the ecology design; 6 and 7 come from your
+decisions this week.
 
-**Lenses:** Built from the January pillars and your answers this week — every pillar traces to your words or a
+**Lenses:** Built from the January pillars and your decisions this week — every pillar traces to a decision or a
 design document. Unification.
 
 ### P3. Keep the old world's relics — they tell the story without a storyline
@@ -153,7 +152,7 @@ be hurt, taken or farmed — it belongs to a citizen. It's just there, asleep. E
 one small sprite, one resident, one hidden room in an existing house.
 
 **Lenses:** Premise — *"nearly every mammal"* leaves room for one. Surprise and Curiosity — the kind of find players
-tell each other about. Fits "village secrets" on your village list. Zone freedom — one place, not a rule for every
+tell each other about. Fits the village secrets on your list for the village. Zone freedom — one place, not a rule for every
 zone.
 
 ## Questions
@@ -188,9 +187,9 @@ built, and nothing written since January 2026 mentions it.
   ([PubMed](https://pubmed.ncbi.nlm.nih.gov/21167171/)). It is a big new part of the bug simulation, so it would be
   designed in §05, not here.
 
-**Recommendation: A.** Random meteor strikes clash with the GDD's *"No timer-based disasters"* (§12.2) and *"No
-forced chaos"* (§18), and with your *"we dont want mechanics forcing rules on zones"*; the plague already gives the
-world its history, and a second plague from space muddies it. C is good on its own merits but big — I'd bring it
+**Recommendation: A.** Random meteor strikes clash with the GDD's rules against timed disasters (§12.2) and forced
+chaos (§18), and with your rule that no mechanic is forced onto every zone; the plague already gives the world its
+history, and a second plague from space muddies it. C is good on its own merits but big — I'd bring it
 back as a proposal in §05 rather than decide it here.
 
 ### Q3. How should the game feel?
@@ -205,7 +204,7 @@ Terraria.
 chaos). How dangerous the far zones get is set in §07 Combat.
 
 ## Sources
-- Your answers, 2026-09-26 (this session) — quoted above.
+- Your decisions of 2026-09-26, restated above.
 - `BugFarmerClient/Assets/Scripts/UI/OpeningSequence.cs` (the opening text); `InventorySlotUI.cs`, `TooltipUI.cs`
   (hover shows the name only); `nakama/data/species.json` (the 15 live species).
 - `docs/product/design/game_design.md` §1, §2, §10, §11, §12.2, §18, §19 (January 2026 GDD).

@@ -1,7 +1,7 @@
 """procedure.py — the outfit procedure, exactly as the three approved outfits were made.
 
-Proven on fire-ant, then black-ant and bronze, on 2026-08-15 — owner: *"those are fine, so this approach works"*
-— and made official 2026-08-18. Until 2026-09-26, steps 3-6 existed only as hand-typed prompts and one-off session
+Proven on fire-ant, then black-ant and bronze, on 2026-08-15 — approved by the owner — and made official
+2026-08-18. Until 2026-09-26, steps 3-6 existed only as hand-typed prompts and one-off session
 scripts. This file rebuilds them from the run records (`explore/<run>/RECORD.txt`, `RUNS.txt`), and `verify`
 proves, with no image calls, that it reproduces those runs: the prompts word for word, the reference images pixel
 for pixel, and — cutting the approved renders at their grids — every committed frame and hand byte for byte.

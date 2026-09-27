@@ -86,7 +86,7 @@ the pruning pass:
 
 ### D10 — Set philosophy: sets are CONCEPTUAL, not one-per-zone
 A signature set represents a *concept* (beekeeping, ranger, mining, diving, bug-catching, chitin armour), and
-may span multiple zones — NOT one set per zone. "Thorough" = a balanced amount per category, **not excessive,
+may span multiple zones — NOT one set per zone. A thorough roster = a balanced amount per category, **not excessive,
 not lacking**. Consolidated bonus-set roster (replaces the 17 per-zone sets):
 - **Ranger** — Wasp Thicket (east of village, half-woods, ranger station). The early exploration/woodland set
   (replaces the old *Forager* and *Thornweave* — "thornweave" cut, weaving thorns doesn't read).
@@ -143,11 +143,11 @@ Base metal sets = **leather · padded(cloth) · copper · bronze · iron · stee
 ### D13 — Mining processing chain (NEW — mining is a priority loop)
 **Rock crusher** crushes rock + ore → **`paydirt`** *(working name — needs a final name)* → fed into a
 **sluice** that separates out ore/gems. A real gather→process→refine loop. Mining is deliberately a slow,
-exploratory ramp — being "up and running" takes time, which is fine (exploratory > rushed).
+exploratory ramp — getting a mining operation going takes time, which is fine (exploratory > rushed).
 
 ### D14 — Dredge (mechanic proposal, see backlog)
 Direction: place a **dredge on water** → at its station press **"dredge"** → the player appears with a **hose
-from the dredge** and **clicks the water to dredge it like a tool**. Tiers (weaker→stronger) + condition
+from the dredge** and **works the water with the hose like a tool**. Tiers (weaker→stronger) + condition
 variants (e.g. a **swamp dredge** that works better in bog) — all function, some give bonuses. Mechanic →
 **backlog** (get it right). (Consolidates the old `bed_dredge`/`silt_dredge`/`dredge_shovel`.)
 
@@ -325,7 +325,7 @@ After a long search for something non-clunky, the model is a single uniform rule
 
 **Status: DESIGN ONLY — not built.** Implementation later: most flora gain a chance-based seed drop; the flower
 resource becomes `dead_flower`; large plants get higher `hp`; seed items get created (only crop `seed_*` exist
-today). "We'll see how it works out" — the seed-drop chance is the main balance knob.
+today). It will be judged in play — the seed-drop chance is the main balance knob.
 
 ---
 
@@ -374,7 +374,7 @@ Collections: `basic_furniture`, `advanced_furniture`, + stone/woven/etc. as list
   bed_canopy. **advanced_furniture set** (loveseat/sofa/sofa_modern/armchair/chaise_lounge/ottoman/
   chair_cushioned/kitchen_island/map_table_big; sell the loveseat finished). **wall_wood** (default-unlock,
   wood station) + **fence recipe**. (Name collections better.)
-- **Ecologist** (building exists, "we forgot him") — has recipes for his house items: telescope,
+- **Ecologist** (building exists; he had been overlooked) — has recipes for his house items: telescope,
   specimen_shelf, bug_terrarium(_big), specimen_case.
 - **Mayor** — land deeds → DEFERRED. Add a **chest in his house** holding the **throne recipe** (found-only).
 - **Fisherman** (NEW NPC) — poles + boat (**fishing mechanic deferred**), **reed_hat recipe** (workbench).
@@ -462,7 +462,7 @@ player's REAL inventory (the design recorded in `crafting_buildout.md` "Barter s
   mid-shop) cannot resurrect staged slots. A "**Buys: …**" header + client filter mirror `shopBuysItem`
   (ids OR tags; bug dealer = live bugs + `dead_*`); refusals/skips/payout land in a shop **status line**
   that also finally surfaces **OpCode-40 server errors** (previously defined but consumed by NOTHING —
-  the #5 "clicking does nothing" root cause).
+  the root cause of playtest #5, where clicking appeared to do nothing).
 - **Server:** `op:"sell_batch"` with `lines[]` on the same `ShopActionMessage` (OpCode 2, additive).
   `sellLine` is the extracted single source of sell validation (`shopSell` wraps it); the batch validates +
   removes per line sequentially (duplicate-slot lines re-validate the live count), sums, **credits once**,
@@ -477,8 +477,8 @@ player's REAL inventory (the design recorded in `crafting_buildout.md` "Barter s
   + suite green; Unity batchmode compile clean (fresh DLL symbol-verified); in-Editor visual pass pending.
 
 ### D30 — Per-station craft-slots (Procs lanes) + the crafting sprite pass (2026-07-03)
-The last crafting-buildout mechanic (buildout §6, user-approved) + the user-scoped art pass ("missing +
-placeholders"):
+The last crafting-buildout mechanic (buildout §6, user-approved) + the user-scoped art pass (missing sprites +
+placeholders):
 - **Mechanic:** `CraftStationState` = a SHARED output grid + `Procs []CraftProcessor` lanes
   (`{Recipe,Queue,Progress}` each); lane count = `world.craft_slots` (default 1). Slots reward SLOW
   processors: furnace/forge/sawmill/ore_sluice/dye_vat/bug_extractor = 2; manual benches 1. Ops carry a
@@ -500,11 +500,11 @@ placeholders"):
 ### D31 — The beekeeping milestone: persistence + calming as FOUNDATIONS, then bees (2026-07-05)
 The full milestone (plan: harmonic-weaving-dolphin) shipped in phases A0→E, each gated. Economy/design
 decisions of record:
-- **Persistence is a first-class system, not a bee feature** (owner directive: "the entire game should
-  persist... like Terraria"). ONE WorldSave document per zone; the CLOCK persists; full-fidelity swarms;
+- **Persistence is a first-class system, not a bee feature** (owner directive: the entire game
+  persists, as in Terraria). ONE WorldSave document per zone; the CLOCK persists; full-fidelity swarms;
   a reflection-enforced classification table so "forgot to persist X" fails a test BY NAME. Old
   multi-record saves import once, then delete. See architecture_persistence.md.
-- **Calming is GENERAL** (owner correction: "the vast majority of bugs can be calmed"): the dead
+- **Calming is GENERAL** (owner correction: most bugs can be calmed): the dead
   condition stub (`condition_tools`/`ConditionValue`) is now the live §C system — one threshold (40)
   for behavior AND catching; every species carries an explicit `condition_tools.calm` fill (bee 95,
   centipede 90, wasp 85, harmless 80; no key = immune). calm_spray finally works; smoker + consumables

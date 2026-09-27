@@ -2,7 +2,7 @@
 """Building piece — a small NPC COTTAGE (a home): four rooms in a fenced yard.
 
 THE HOUSEHOLD RULE (house.md §Making DIVERSE houses, owner correction 2026-07-06:
-"you keep making every single house the same"): the SHELL (walls/doors) is shared;
+the houses were all coming out the same): the SHELL (walls/doors) is shared;
 the FURNISHING comes from a HOUSEHOLD spec — trade room, wealth tier, signature
 piece, tidiness. Adding a household = adding a spec below, never editing the shell.
 
@@ -148,8 +148,8 @@ HOUSEHOLDS = {
     },
     # MAREN THE BEEKEEPER (south-door plan) — the zone's anchor, comfortable, bee
     # everything. Signature: the honeycomb rug. Trade room: the BREWING BACKROOM —
-    # extractor, wine rack, honey shelf, keg (owner: "the brewing stuff should be
-    # in a backroom... not just out on the lawn").
+    # extractor, wine rack, honey shelf, keg (owner direction: the brewing equipment
+    # belongs in a backroom, not out on the lawn).
     "beekeeper": {
         "plan": "south",
         "npc": None,

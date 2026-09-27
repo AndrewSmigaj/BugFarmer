@@ -18,7 +18,7 @@ ant/centipede/underground noise — the game research below is a fresh deep-read
   `spider_web`/`web` ABSENT from entities.
 - **D21 (owner decision):** small webbed spiders live only in the **lower/harder underground** (Centipede
   Cavern + deeper), NOT the first Mining Camp; `cave_spider` "drops from the ceiling on silk." BACKLOG:
-  "Spiders & webs in the underground (don't forget!)".
+  the flagged spiders-and-webs-in-the-underground item.
 - **`design_ants_spiders.md` (APPROVED, reuse verified against real code)** already maps two archetypes:
   - **(A) Web-builder ambush trapper** — web = server-placed occupant that **SLOWS** prey via a new
     `web_slow` field read **server-side** (rides the existing leg-speed field, reuses the already-hashed
@@ -323,7 +323,7 @@ whole cluster erupts**; **attack one → the cluster is signalled to defend.** *
 
 **(d) Threat / role.** The **Swarm** role incarnate and the **underground headliner** — the reason the
 Centipede Cavern + deeper is scary. Density is high, per-bite damage is low, the pack drop is a genuine
-"oh no" moment. This is the "**spiders & webs in the underground (don't forget!)**" backlog item realized.
+"oh no" moment. This is the flagged **spiders & webs in the underground** backlog item realized.
 
 **(e) Telegraph + counterplay.** Tells: the **nest is a visible ceiling/wall lair**; the **landing shadows**
 telegraph each drop (the top-down fairness fix — you always see where they'll land); the aggro is
@@ -359,7 +359,7 @@ it adds**. Verdict from the totals + the phasing in `design_ants_spiders.md`.
 |---|:--:|:--:|:--:|:--:|---|
 | **Jumping — stalk-leap** | 3 | 5 | 5 | 3 | **PICK #1.** Pure `ActionState` reuse, no new data; the safest end-to-end proof of the pounce tech (`design_ants_spiders.md` agrees). |
 | **Orb-weaver — web trap** | 5 | 4 | 3 | 5 | **PICK #2.** The signature, screenshot-worthy spider; proves the `spider_web`+`web_slow` occupant tech that 4 other types reuse. Highest variety. |
-| **Cave spider — drop pack** | 5 | 4 | 3 | 4 | **PICK #3.** D21's mandate + the "don't forget underground spiders" backlog; proves the telegraphed ambush-spawn ("drop") + darkness-gated aggro; the underground headliner. |
+| **Cave spider — drop pack** | 5 | 4 | 3 | 4 | **PICK #3.** D21's mandate + the flagged underground-spiders backlog item; proves the telegraphed ambush-spawn ("drop") + darkness-gated aggro; the underground headliner. |
 | Wolf — active hunter | 5 | 5 | 4 | 3 | Strong, but **same core tech as jumping** (stalk→pounce) — build as a *tier-up variant* of #1, not a separate first effort. |
 | Funnel — ambush burst | 3 | 5 | 4 | 3 | Cheap reuse (ActionState burst + retreat); good *second wave*, lower memorability alone. |
 | Black widow — venom lurker | 4 | 4 | 4 | 3 | Reuses the web tech + a DoT knob; a **payload variant** of the orb-weaver — build after #2. |

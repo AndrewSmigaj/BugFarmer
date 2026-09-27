@@ -1,7 +1,8 @@
-# APPROVED player animations — the owner's decisions, with his words
+# APPROVED player animations — the owner's decisions
 
-Every file here was explicitly approved. The quote next to each is verbatim from the session where it
-was chosen, with its timestamp, so there is no ambiguity about what "that's the one" referred to.
+Every file here was explicitly approved. Each entry names exactly which file or variant was chosen, and when, so
+there is no ambiguity about what was approved. Decisions are restated in clean prose; the owner's conversation is
+never copied into the repo.
 
 **This folder is the record. It should be in git.** These decisions were made on 2026-07-28/29 and were
 never written down; the script that produced them lived in a temp directory and the art folder was
@@ -12,14 +13,14 @@ transcripts. That must not happen a second time.
 
 ## The animations
 
-| file | what it is | approved, verbatim |
+| file | what it is | approved |
 |---|---|---|
-| `01_WALK_front.gif` | walking, front-facing | *"first for walking forward gait_front_d3_bigger.gif is great"* — 2026-07-29 06:01 |
-| `02_WALK_side.gif` | walking, side-on | *"walk b is fine"* — 06:06 |
-| `03_RUN_side.gif` | running, side-on | *"RUN_r75.gif is fine, looks the best"* — 06:11 |
-| `04_HAND_SHAPE_front_rot90.gif` | the chosen hand shape/orientation for the front view | *"ok lets do the 2 rot 90 one (the good one), it looks pretty good as is, that will work"* — 04:53 |
-| `05_SWING_iteration7_best_for_SWORD.gif` | tool/weapon swing — best for the sword | *"for the sword iteration 7 is the best"* — 2026-07-29 20:43 |
-| `06_SWING_iteration11_best_overall.gif` | tool/weapon swing — best overall so far | *"iteration 11 looks best"* — 23:37 |
+| `01_WALK_front.gif` | walking, front-facing | `gait_front_d3_bigger.gif` chosen for the forward walk — 2026-07-29 06:01 |
+| `02_WALK_side.gif` | walking, side-on | walk option B — 06:06 |
+| `03_RUN_side.gif` | running, side-on | `RUN_r75.gif`, judged the best — 06:11 |
+| `04_HAND_SHAPE_front_rot90.gif` | the chosen hand shape/orientation for the front view | hand shape 2 rotated 90° — 04:53 |
+| `05_SWING_iteration7_best_for_SWORD.gif` | tool/weapon swing — best for the sword | iteration 7, best for the sword — 2026-07-29 20:43 |
+| `06_SWING_iteration11_best_overall.gif` | tool/weapon swing — best overall so far | iteration 11, best overall — 23:37 |
 
 Original filenames, for tracing: `GAIT_front_D3_bigger.gif`, `SWING3_walk_b.gif`, `RUN_r75.gif`,
 `HANDS_front_shape_2_rot90_outward.gif`, `swing-design/iteration-7.gif`, `swing-design/iteration-11.gif`.
@@ -34,8 +35,8 @@ whip; the shovel should jab straight down; the spear should be longer and two-ha
 rest sits at `IDLE_ANGLE = -35°`; there is no standing gif to point at.
 
 ## The back-facing walk
-**Requested, never delivered.** *"so we have forward and sideways might as well finish with back"* (06:11)
-— the session moved to tool swings instead.
+**Requested, never delivered.** With the forward and side walks done, the owner asked for the back walk too
+(06:11) — the session moved to tool swings instead.
 
 ---
 
@@ -44,10 +45,10 @@ rest sits at `IDLE_ANGLE = -35°`; there is no standing gif to point at.
 These are the hands used **for holding tools and weapons only**. They are not the walking or running
 hands — see the warning below.
 
-| file | which arm | approved, verbatim |
+| file | which arm | approved |
 |---|---|---|
-| `outfits/bronze/hands/grip_back_of_hand.png` | the arm where you see the **back** of the hand | *"the first rows' grip does look good enough we can use it"* — the axe and hoe read right "because the knuckles are appropriately pointing down" |
-| `outfits/bronze/hands/grip_palm.png` | the **other arm**, where you see the palm | *"For the other si[de] (the other arm so you would s[ee] the palm and knuckles) row 2 fist PALM is great"* |
+| `outfits/bronze/hands/grip_back_of_hand.png` | the arm where you see the **back** of the hand | the grip from the first row, good enough to use — the axe and hoe read right because the knuckles point down |
+| `outfits/bronze/hands/grip_palm.png` | the **other arm**, where you see the palm | the palm fist from row 2 |
 
 Provenance so this can never be lost again: `grip_back_of_hand.png` is the **3rd hand of
 `hands/candidates/set_a/result.png`**; `grip_palm.png` is the **4th hand of
@@ -56,8 +57,8 @@ Seen in context in `hands/candidates/hands_in_motion_row1_row2_grips.gif`.
 
 ### ⚠ THE GRIP HANDS ARE NOT THE WALK/RUN HANDS
 
-> *"the weapon grabbing is NOT to be blindly replacing walk and/or running — they all should be
-> carefully thought about and the best one picked"*
+> Owner rule: the weapon-grip hands must not simply replace the walk or run hands — each is chosen carefully, on its
+> own merits.
 
 Every animation gets its own hand **and its own rotation**, chosen deliberately. Reusing the grip hand
 for walking produced impossible poses, and he named them exactly:
@@ -83,13 +84,10 @@ Deliberately **not** here: `h4` (the fist closed round a pole) — nothing loads
 views `front/back/side/grip.png`, which are a re-cut made on 08-01 and were never approved. This folder
 holds approved work only; anything unapproved living here is how the wrong sprite gets picked later.
 
-**The tool-swing hand is the knuckles, not the grip.** The grip was chosen first —
-*"for swinging tools 'grip' is fine"* (04:53) — and then superseded the same session:
-
-> *"the correct hand would be **nuckles** but it has to go down at least 10 percent of the total width of
-> the sword, then it needs to be rotated so that the nuckles are roughly the other way"* — 06:43
-> *"**225 works** though keeping in mind thumb is on one side but yeah that works fine — soqn **+16%** so
-> the last one"* — 06:48
+**The tool-swing hand is the knuckles, not the grip.** The grip was chosen first (04:53) and superseded the same
+session: the knuckles hand, moved at least 10% of the sword's width down the handle and rotated so the knuckles
+face roughly the other way (06:43); then a rotation of **225°** and **+16%** down the handle were approved
+(06:48).
 
 Those two numbers are `HAND_ROT = 225` and `GRIP_EXTRA = 0.16` in `swing_lab.py`.
 
@@ -120,10 +118,8 @@ phase `[1, 0, -1, 0]`, left hand mirrored, neither rotated nor dimmed.
 
 ### What was wrong with every swing before this
 
-> *"do people take a sword in their fist, hold their fist up to their shoulder and rotate their fist to
-> swing it? ever?"* — 2026-08-04
-
-No. And that is exactly what `swing_frames` did. It computed **one angle**, placed the **tool** at a fixed
+The owner's objection (2026-08-04): nobody swings a sword by holding the fist at the shoulder and rotating it in
+place. And that is exactly what `swing_frames` did. It computed **one angle**, placed the **tool** at a fixed
 small radius from the body centre, then stuck the hand onto the tool's grip. The tool led and the hand was
 downstream of it, so the fist stayed parked beside the shoulder and **rotated in place** while the blade
 swept round it like a clock hand bolted to his chest.
@@ -145,28 +141,29 @@ tool        placed so its measured grip lands on the hand   <- the tool FOLLOWS
 
 ### Decided today
 
-| | value | his words |
+| | value | the owner's reason |
 |---|---|---|
-| hand rotation | **`HAND_PERP = 180`** | *"hand perp 180"* — picked off `HAND_ROTATION_which_way.png`, which renders 0/90/180/270 side by side |
-| wrist | **none** — blade at one fixed angle behind the arm for the whole swing | *"you dont need to have the wrist angle with respect to the pommel of the sword, its awkward"* |
-| path | starts a little behind the head (128°), swings down to −74° | *"it should start a little behind the head and swing down"* |
-| reach | **0.60 cells** | *"similar to far"* |
+| hand rotation | **`HAND_PERP = 180`** | picked off `HAND_ROTATION_which_way.png`, which renders 0/90/180/270 side by side |
+| wrist | **none** — blade at one fixed angle behind the arm for the whole swing | angling the wrist to the pommel looked awkward |
+| path | starts a little behind the head (128°), swings down to −74° | the owner's direction for where the swing starts and ends |
+| reach | **0.60 cells** | close to the "far" option |
 | two-handed | **both** approved grips — back of hand on one arm, palm on the other | the pair approved 08-01, one per arm |
 
 **The "keep the hand near the shoulder" constraint is OVERTURNED.** `DESIGN.md` said *"keep the hand
 within roughly a third of a cell of the shoulder"* because a fist out at arm's length was thought to look
 detached with no arm drawn. That is what pinned the hand at the shoulder and made a real swing impossible.
 
-> *"dont care about the arm missing, though it doesnt have to be realistic just out some"* — 2026-08-04
+> Owner decision (2026-08-04): the missing arm doesn't matter; the hand should reach out some distance — it
+> needn't be realistic.
 
 ⚠ **`HAND_ROT = 225` and `GRIP_EXTRA = 0.16` belong to the OLD shoulder-pivot swing.** They were tuned when
 the tool led. They are meaningless once the hand travels — do not carry them forward.
 
 ### ✅ THE OFFICIAL SWORD SWING — picked 2026-08-04
 
-> *"they look great, do sword_1h_f4_back85 as the official one, but have it pull back a tad more at the
-> end so the hand is at the hip not forward a little, you can also have tip slightly continue down more
-> as you dow"*
+> Owner decision (2026-08-04): `sword_1h_f4_back85` is the official swing, with two changes — pull back a little
+> more at the end so the hand finishes at the hip rather than slightly forward, and let the tip keep dropping a
+> little further on the way down.
 
 F4 (blade 85° behind the arm) with the two changes he asked for. **Live in
 `render_animations.arm_swing_frames` / `sword_motion`** — the sword no longer uses the old
@@ -185,22 +182,22 @@ last frame is the hand-at-hip pose he asked for.
 
 ### ✅ FACING DOWN AND FACING UP — picked 2026-08-04: **E_double_back**
 
-> *"lets do double back for both, they seem good"*
+> Owner decision (2026-08-04): the double-back motion for both facings.
 
 Out across, then whipped back through the other way. Live in `render_animations.attack_frames` /
 `DOUBLE_BACK`, rendered as `swing_sword_down.gif` and `swing_sword_up.gif`.
 
 **The structural rule these settle:** a top-down attack is a sweep **across the body that passes THROUGH**
-the tile being hit. It is **not** a thrust *along* the attack direction — doing that gave a reverse stab
-(*"its a backwards stabby motion as in going the wrong way"*). Motions are written relative to `centre`
+the tile being hit. It is **not** a thrust *along* the attack direction — doing that gave a stab going the wrong
+way, which the owner rejected. Motions are written relative to `centre`
 (−90 facing down, +90 facing up) and the arc **crosses** centre rather than ending on it.
 
-**And an attack is a frame budget, not an eased sweep** (*"the user has to watch the play pull back the
-sword the swing the sword, its not a video game swing"*):
+**And an attack is a frame budget, not an eased sweep** (the owner's point: watching the character slowly pull the
+sword back and then swing it doesn't feel like a video-game swing):
 
 | frames | | |
 |---|---|---|
-| 0 | anticipation | ONE frame — *"it really does not need that swing back"* |
+| 0 | anticipation | ONE frame — no long wind-up (owner) |
 | 1-4 | strike | the whole arc, with a blade trail |
 | 5-6 | hold | sits on the exit pose — this is what reads as impact |
 | 7-11 | recovery | eases home |
@@ -220,9 +217,9 @@ sword the swing the sword, its not a video game swing"*):
 
 ### THE PROMPT RULE (this one caused everything below)
 
-Owner, verbatim: *"I literally just want gpt to make 'copper armor' with 'open face helmet' and the things
-to make it consistent and such… I dont want you to constrain gpt with your garbage descriptions, remember
-the old copper armor one looked like a fucking mushroom the others huge barrels it was dumb."*
+Owner decision (2026-08-14): the design brief names only the material and the open-faced helmet, plus the
+technical rules that keep results consistent. No invented design descriptions — directed briefs had produced poor
+shapes (a copper set like a mushroom, others like barrels).
 
 **A brief is the MATERIAL and nothing else.** No silhouettes, no helm shapes, no hems, no "reads as the top
 of the ladder". The three options are left to the model:
@@ -250,9 +247,9 @@ discarded the undirected entry. That roll is `explore/platinum-r2/` and is NOT t
 | **platinum** | option 1 of `platinum-r4` | `explore/platinum-r4/CHOSEN_platinum.png` — *corrected 2026-09-26: the pick is `explore/platinum-r5/CHOSEN_platinum.png`; r4 holds the superseded option* |
 | **fancy** | NOT PICKED YET | `explore/fancy/result.png` — three options waiting — *corrected 2026-09-26: picked in the second roll, `explore/fancy-r2/CHOSEN_fancy.png`* |
 
-Copper needed three rolls: `copper` (directed, rejected), `copper-r2` (*"the copper is way too high res"*),
-then `copper-r3` with the owner's own fix — *"perhaps we can then try to say keep the pixel density"* — which
-anchors density to the attached reference rather than to a number. That line is what made it chunky.
+Copper needed three rolls: `copper` (directed, rejected), `copper-r2` (far too high-resolution), then `copper-r3`
+with the owner's own fix — ask the model to keep the reference's pixel density — which anchors density to the
+attached reference rather than to a number. That line is what made it chunky.
 
 ### What is DONE and what is NOT
 
@@ -266,22 +263,22 @@ anchors density to the attached reference rather than to a number. That line is 
 | hands cut to 5 roles | ❌ | ❌ | ❌ | ❌ |
 | in `official.py` | ❌ | ❌ | ❌ | ❌ |
 
-**The gauntlets need redoing.** Owner: *"the gauntlets need to have the same pixel density I dont want to
-make slop."* Both came back smoothly shaded with no dark outline, unlike bronze's crisp hands. The fix is
+**The gauntlets need redoing.** The owner requires the gauntlets to match the outfits' pixel density. Both came
+back smoothly shaded with no dark outline, unlike bronze's crisp hands. The fix is
 the same trick that fixed copper: the gauntlet call already sends bronze's five approved hands as the shape
 reference, and those *are* low-res cut sprites, so the prompt should anchor density to that reference.
 
 ### Other decisions made the same day
 
 - **run_front** — the camera-facing run had no pose of its own (`FRONT_RUN` was byte-identical to `FRONT`
-  apart from `ms`). Picked `W3_widest_lowest`, *"we will go with wisdest lowest"*. Numbers and the two
+  apart from `ms`). Picked `W3_widest_lowest`, the widest and lowest option. Numbers and the two
   rejected attempts: `reviews/2026-08-14-run-front-pump/DECISION.md`. **Shares numbers with `run_back`.**
-- **swing while running** — picked half pump, *"half pump is the one"*.
+- **swing while running** — picked half pump.
   `reviews/2026-08-14-swing-while-running/DECISION.md`. Not built.
 
 ---
 
-## 2026-08-15 — the generation pipeline changed. Approved: *"those are fine, so this approach works"*
+## 2026-08-15 — the generation pipeline changed, and the owner approved the approach
 
 Worked through on fire-ant. Renders, gifs and the reasoning:
 `reviews/2026-08-15-fireant-v2/` (start at its `README.md`).
@@ -303,8 +300,8 @@ real grids.
 
 ### All four frames are used
 
-`gait.CYCLE` is now `[1,2,3,4]`. Owner: *"we really should use the full animation frames unless there is a
-reason not to (why replace 4 with 2? makes no sense)"*.
+`gait.CYCLE` is now `[1,2,3,4]`. Owner decision: all four frames are used by default; repeating frame 2 in place of
+frame 4 had no justification.
 
 `[1,2,3,2]` was correct for the old sheet, whose frame 4 came back as a second copy of the same stride. On
 the camera-facing banks of a one-direction render, frames 2 and 4 are the two DIFFERENT passing poses —
@@ -335,12 +332,11 @@ usual 200px hand lands on 13. Predicted 12.4 before spending; measured 12.1–14
 
 Two defects, both found by measuring rather than looking:
 
-1. **Feet kicking out sideways** on the camera-facing walks — read as a dance. Owner: *"they are ridiculous
-   like someone doing a russian dance"*. Fixed by asking for the step to be straight up and down with both
+1. **Feet kicking out sideways** on the camera-facing walks — read as a dance, and the owner rejected it. Fixed by asking for the step to be straight up and down with both
    feet under the hips, knees and feet forward, and a higher knee lift.
 2. **Both stepping frames lifting the SAME leg.** Frames 1 and 3 both raised the left foot, so the cycle was
-   tap-left, together, tap-left, together. Invisible in a still; wrong only once it loops. Owner: *"it is
-   not correct in how it loops"*. `cut_walk_row.check_alternation` now tests this and must be run on the
+   tap-left, together, tap-left, together. Invisible in a still; wrong only once it loops — the owner caught it
+   in the looping animation. `cut_walk_row.check_alternation` now tests this and must be run on the
    front and back banks every time. The side bank cannot be tested this way — in profile both feet are
    planted in a contact frame, and which leg leads is carried by shading, not silhouette.
 
@@ -352,8 +348,8 @@ from the figure pixels only.
 
 ### Still open
 
-- **Everything gets regenerated on this pipeline.** Owner: *"we are going to regenerate everything… it is
-  new software, nothing old needs to be supported, all sprites will use the same pipelines."* bronze and
+- **Everything gets regenerated on this pipeline.** Owner decision: this is new software with nothing old to
+  support, so every sprite is regenerated on the same pipeline. bronze and
   blackant currently have three frames per bank and will not build until they are redone.
 - `promote.py` and the skill's rule 3 still target a `scratchpad/` → `current/` layout that no outfit on
   disk uses (the real one is `tries/ frames/ gauntlet/ anim/`).
@@ -375,7 +371,7 @@ not be found; nothing referenced that name).
 
 ## 2026-08-18 — the camera-facing walk hangs its hands off the SHOULDER LINE
 
-Owner, shown bronze, fire-ant and black-ant side by side: *"black ant is the only good one"*.
+Shown bronze, fire-ant and black-ant side by side, the owner judged black-ant's hand placement the only good one.
 
 Every number placing a fist used to be a fraction of the whole silhouette — row 0.62 down the figure,
 size 0.17 of total height. A percentage is not a place on a body: the headgear is not a constant share
@@ -397,27 +393,22 @@ Renders and the full numbers: `reviews/2026-08-18-walk-hands/`.
 
 ## 2026-09-26 — gpt-image-2 for everything; whole outfits; the picks
 
-Code-drawn art was tried (an art demo and a cleanup of the base) and rejected: *"they look terrible"*. Then,
-verbatim:
-
-> *"we will use gpt-image-2 for everything, just full outfits I guess as yours are really bad, so we were partway
-> done with the outfits and we had planned regenerating all the world and item actual sprites with gpt-image-2 as
-> it was a different pipeline and we did not use pixelsnap correctly like our new pipeline. anyways so that needs to
-> be done at some point (the only thing done correctly are the outfits). It should be in the plans and backlog"*
-
-> *"we were generating three different variants for each outfit, I would decide, then we created all the animation
-> frames - you see in fireant there is a 'CHOSEN' png but you dont see it some of the others as we didn't do them all
-> we just did one batch. we need to finish this but you need to figure and understand the entire procedure rather
-> than just assuming/guessing and rushing. as it is most outfits and other things will be made after signing off on
-> the GDD but you should know that (and with test batches so we can ensure you are doing it right)"*
-
-> *"anything with CHOSEN has been picked, the others we still need to work through together, yes you can do a batch
-> now"*
+Code-drawn art was tried (an art demo and a cleanup of the base) and rejected. The owner's decisions:
+- **gpt-image-2 for everything, whole outfits** (the whole-outfit choice tentative, made when the code-drawn pieces
+  were rejected). The outfits are the only art made the right way so far; all world and item art is to be
+  regenerated on the same pipeline, since the older route didn't convert its pixels properly. It belongs in the
+  plans and the backlog.
+- **The procedure** — three design variants per outfit, the owner picks one, then all the animation frames. Only
+  one batch of picks was made, so only some outfits have a `CHOSEN` file. The procedure must be understood from its
+  records before continuing, not assumed. Most outfits and other art come after the GDD sign-off, with test batches
+  first.
+- **The picks** — every design with a `CHOSEN` file has been picked; the rest are worked through together. The
+  copper test batch was approved to run.
 
 ### What that settles
-- **One pipeline for all art:** gpt-image-2 + pixelsnap, as the outfits are made. The 2026-08-15 note *"all sprites
-  will use the same pipelines"* now covers world, item, bug, tile and UI art too.
-- **Whole outfits** (with his "I guess" — the reason given was that the drawn-in-code pieces were bad).
+- **One pipeline for all art:** gpt-image-2 + pixelsnap, as the outfits are made. The 2026-08-15 decision that all
+  sprites use the same pipeline now covers world, item, bug, tile and UI art too.
+- **Whole outfits** (tentative — chosen when the drawn-in-code pieces were rejected).
 - **The picks** — every design with a `CHOSEN_*.png` is picked:
 
 | set | the pick |
@@ -443,17 +434,16 @@ Rebuilding the procedure from the records (`tools/player_sprites/procedure.py`, 
 outfits with no calls) found that when the walk prompt moved into code on 2026-08-18, the side view's first
 paragraph changed from *"…all facing RIGHT."* — the words every approved side walk was made with — to *"…all seen in
 right profile."*, which no paid call ever used. Asked: (a) keep "all facing RIGHT" (recommended), or (b) use "all
-seen in right profile". Owner: *"whatever your recommendation is"* → **"all facing RIGHT"** (`outfits.WALK_FACING`).
+seen in right profile". The owner went with the recommendation → **"all facing RIGHT"** (`outfits.WALK_FACING`).
 
-The first copper call was stopped by Claude Code's own permission check for spending. Owner: *"yeah you can add it,
-add it to the permissions"* — `Bash(python3 tools/player_sprites/procedure.py:*)` is allowed in his local
-settings. Each batch is still asked for first; this only lets an approved batch run.
+The first copper call was stopped by Claude Code's own permission check for spending. The owner approved adding a
+permission for it — `Bash(python3 tools/player_sprites/procedure.py:*)` is allowed in his local settings. Each batch is still asked for first; this only lets an approved batch run.
 
 ## 2026-09-26 — copper approved: the first outfit made end to end by `procedure.py`
-Reviewed from `reviews/2026-09-26-copper/`. Owner: *"it looks good! there are polish issues but we can work on that
-later as they involve hand positions"*.
+Reviewed from `reviews/2026-09-26-copper/` and approved by the owner; polish is left for later, since it concerns
+hand positions.
 
-- **Official:** `outfits/copper/{frames,gauntlet,anim}`, in `official.OUTFITS` with those words. Copied from the
+- **Official:** `outfits/copper/{frames,gauntlet,anim}`, in `official.OUTFITS`. Copied from the
   attempt `outfits/copper/tries/2026-09-26-procedure/` (kept). What `outfits/copper/` held before — an August hands
   attempt made the older way and the retired renderer's animations — moved to
   `outfits/copper/archive/2026-09-26-superseded-sheet/`. Nothing deleted.

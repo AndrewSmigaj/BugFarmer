@@ -1,7 +1,7 @@
 # 2026-08-05 — RED fire-ant, three designs, FACE VISIBLE
 
-> *"we will have both black and red fireant versions... i do want to see the players face though if
-> possible"*
+> Owner direction (2026-08-05): there will be both a black and a red fire-ant version, and the player's
+> face should be visible if possible.
 
 Undirected again — the prompt gives only the material and the colour. What changed is the **head
 treatment**: `EXPLORE` gained a `{head}` slot, and these two colourways use `HEAD_FACE` instead of

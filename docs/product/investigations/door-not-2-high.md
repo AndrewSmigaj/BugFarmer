@@ -18,7 +18,7 @@ are unused/0-placement). Fix: `door_square` → `sprite_h 32` (1×2, matches the
   `door_wood` meant to be a single (1-wide) or double (2-wide) door? **Status:** `READY` (data).
 
 ## 1. Issue
-> "Door is not 2 blocks high."
+> Owner playtest report (2026-06-28): the door is not two blocks high.
 
 ## 2. Evidence
 Render height comes from `sprite_h` (`TilemapManager.RenderOccupant`: `spriteHeightCells = targetSize.y/16`,

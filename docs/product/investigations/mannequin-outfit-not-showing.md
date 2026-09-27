@@ -14,7 +14,7 @@ _status: READY (it's a feature to BUILD, not a bug) · investigated 2026-06-28 �
   backlogged? **Status:** `READY` (as a build task) — recommend scoping it with the player paper-doll reuse.
 
 ## 1. Issue
-> "mannequins do not visually show when i put things on them"
+> Owner playtest report (2026-06-28): items put on a mannequin do not show on it.
 
 ## 2. What's there vs not (verified)
 - **Storage — works:** right-click a `interaction_type:"mannequin"` occupant → `MannequinController` outfit

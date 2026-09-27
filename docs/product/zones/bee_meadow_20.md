@@ -4,8 +4,8 @@
 - **Zone ID / Grid:** `bee_meadow_20` · row 2, col 0
 - **Biome / Difficulty:** meadow / coast · EASY (the gentlest zone on the map — west of the start)
 - **The feel:** a sunlit flower clearing in a WOODED coast (owner 2026-07-06 + forest.md
-  §Zone-scale balance: "a huge meadow surrounding the bee farm but everything else should be
-  more wooded"). The great meadow rings Maren's farm; woods band the east, south and north;
+  §Zone-scale balance: a large meadow around the bee farm, with everything else more heavily
+  wooded). The great meadow rings Maren's farm; woods band the east, south and north;
   the RIVER runs from a flared sea-mouth in the north-west, under the road bridge, through
   the rocky gorge, east into the village. A wild cove beach walls the west, and the fishing
   hamlet drowses over its inlet in the south-west. The hook: this is where the player learns
@@ -17,12 +17,12 @@
   side); the STREAM exits east at y≈76 (the village declares it entering at (0,76) and feeding its
   lake). Both edges must line up.
 - **W**: the sea — a natural boundary (no neighbor).
-- **N (future)**: Meadow (1,0) "advanced bee stuff" — the open corridor between the north forest
+- **N (future)**: Meadow (1,0), advanced beekeeping — the open corridor between the north forest
   stands is the eventual route.
 - **S (future) → Ant Colony (3,0, underground)**: NO ant content in THIS zone (owner, 2026-07-06:
-  "there is no ant colony in the zone" — the colony is the neighbor zone, mostly underground
-  tunnels). The south band is a terrain GRADIENT ONLY: the meadow "start[s] getting dirty and
-  rocky on a gradient, not suddenly having the dirt wall" — clean grass → dirt-speckled →
+  this zone has no ant colony — the colony is the neighbouring zone, mostly underground
+  tunnels). The south band is a terrain GRADIENT ONLY: the meadow turns dirtier and rockier
+  on a gradient instead of ending in a sudden dirt wall — clean grass → dirt-speckled →
   mostly dirt → rockier at the edge, with mineable dirt masses + rocky cores embedded in the
   dirtiest band. Crossing the zone line lands mid-gradient (C12).
 
@@ -34,8 +34,8 @@
 - **Pests/predators:** wasps (2 nests at the forest edges — the raiders, GDD 9.2); dragonflies over
   the water hunting the wasps (the counterweight); NO centipedes (this is the EASY zone).
 - **Ambience:** fireflies drifting along the stream (amber glow at dusk), flies/millipedes/beetles low.
-- **Future — ants forage in from the SOUTH** (owner, 2026-07-06: "the ants will be coming from
-  the south, they mostly collect dead bugs and food"): the gradient band stays walkable
+- **Future — ants forage in from the SOUTH** (owner, 2026-07-06: ants come up from the south,
+  mainly to gather dead bugs and food): the gradient band stays walkable
   (lanes between the masses/woods), and the south-meadow WILD FRUIT pair (≈(100,44)) drops
   windfalls near the band — carrion + food on their path without any ant content in-zone.
 - **Wild fruit clumps** (2026-07-06): corridor apple+cherry (≈150,212), road-fork plum pair
@@ -44,8 +44,8 @@
 
 ## Landmarks & little features
 1. **THE RIVER MOUTH (NW coast)** — the river reaches the SEA through a flared, reeded
-   mouth in the north beach (owner 2026-07-06: "the river should flow to the sea not a
-   little pond next to the sea" — the old spring pondlet is gone). Fireflies still drift
+   mouth in the north beach (owner 2026-07-06: the river flows into the sea, not into a
+   small pond beside it — the old spring pondlet is gone). Fireflies still drift
    the lower banks at dusk. The river runs sea → gorge → village, width 4 at the mouth,
    3 along the run (C17).
 2. **The coves** — the west beach bitten into arcs, dressed with a WRACK LINE (shells, driftwood,
@@ -119,7 +119,7 @@ zones; see caves.md per-zone tables).
 ## Craft brief (zone-craft skill; this pass: the south band + the gorge, 2026-07-06)
 > **OWNER CORRECTION after this pass shipped (2026-07-06):** everything ant-flavored below
 > (mounds, the ring "colony", the OLD DIG story, the sign gag, the ant owner-questions) was
-> builder invention and is VOID — "there is no ant colony in the zone." The south band is a
+> builder invention and is VOID — this zone has no ant colony. The south band is a
 > pure dirty/rocky GRADIENT with embedded mineable masses (see Connections §S + C12). Kept
 > from this pass: the mass/core/vein mechanics, the gorge, Halloway's claim.
 - **The promise:** a gentle flower coast that HUMS — the zone where you learn bees, while the

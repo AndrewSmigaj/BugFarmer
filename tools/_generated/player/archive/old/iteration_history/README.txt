@@ -10,13 +10,13 @@ You picked CRISP. These show how it's going.
     copper_FULL_SUIT_for_masking.png + silver_FULL_SUIT_for_masking.png.
     Save the cut pieces into the  pieces\  subfolder. <<<
 
-23_crest_aware_height.png  <-- NEWEST. Fixes the "short" issue: OLD row measured height to
+23_crest_aware_height.png  <-- NEWEST. Fixes the body coming out too short: OLD row measured height to
     the crest tip (squashed the body); NEW row measures to the top of the HEAD (bodies all
     match, crest sticks up extra). Baked into the height-lock; nothing changes in your masking.
 22_silver_framed.png  a FAILED experiment (prompt framing zoomed in + cut the feet) -- ignore.
 
 21_copper_silver_matched.png  base | copper v4 | silver v2, all locked to the
-    SAME height + pixel size. This is the fix for "different pixel count/size": every suit is
+    SAME height + pixel size. This is the fix for suits differing in pixel count/size: every suit is
     crisped to the base character's height, so gpt's per-gen scale drift no longer matters.
     copper_FULL_SUIT_for_masking.png is now copper v4 (uniform pixels). Both suits match -> mask + mix.
 

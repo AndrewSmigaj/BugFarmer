@@ -141,7 +141,7 @@ func TestCompositeMaterials(t *testing.T) {
 }
 
 // TestGroundRecipeIngredients: a solid tile costs its one material's recipe; a COMPOSITE costs the UNION of
-// both materials' recipes, with duplicate items SUMMED (a sandwich needs bread AND filling). First-seen order.
+// both materials' recipes, with duplicate items SUMMED (each material is paid for in full). First-seen order.
 func TestGroundRecipeIngredients(t *testing.T) {
 	w := &WorldState{GroundRecipes: map[string][]entities.RecipeIO{
 		"stone_floor": {{Item: "stone", Count: 2}},

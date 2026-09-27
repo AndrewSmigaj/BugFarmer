@@ -13,7 +13,7 @@ walks, the three runs, and all seven tool swings, playing together.
 
 Every cell is at 2x native pixels, one whole-number scale for the whole sheet, nothing resampled.
 
-## The answer to "did it pixelize"
+## The answer: did it convert to real pixels?
 
 ### `OLD_vs_NEW_bronze.png`
 The bronze `official.py` points at today, next to the pixel one, at the same on-screen height.

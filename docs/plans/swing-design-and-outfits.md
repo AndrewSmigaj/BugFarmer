@@ -4,10 +4,10 @@
 mode and never written to a file, so it existed only in the conversation. Recorded here so it survives.
 
 **Status: Phases 0-5 DONE. Phase 6 NOT STARTED** (up to 5 more outfits from `armor.md`).
-Two owner amendments after approval, both verbatim:
-- "you can switch to platinum" — diamond was replaced by platinum, so diamond was never built.
-- "i already said to do the swamp one" — swamp set confirmed; noted in `armor.md` as owner-directed.
-- "also as part of the plan we need to get the guide written on hwo to create and process these" —
+Owner amendments after approval:
+- The owner approved switching from diamond to platinum, so diamond was never built.
+- The owner confirmed he had already asked for the swamp set; noted in `armor.md` as owner-directed.
+- The owner added a guide on how to create and process these outfits to the plan —
   done: `.claude/skills/player-sprites/SKILL.md` (c920d99) + `docs/guides/art/CHARACTER_DESIGN_GUIDE.md`.
 
 **Note:** the overnight run itself was lost — the turn was ended with "Ready when you are" instead of
@@ -81,7 +81,7 @@ padded/cloth, copper, steel, platinum (base ladder); Entomologist, Miner/Spelunk
 Up to 5 of these.
 
 ## ⚠ Needs your call before Phase 5
-- **Diamond** is recorded as **cut** (`armor.md:25`) — "platinum is the top". Build it anyway, or skip?
+- **Diamond** is recorded as **cut** (`armor.md:25`) — platinum is the top tier. Build it anyway, or skip?
 - **Swamp set** is recorded as **optional/pending until the swamp is designed** (`armor.md:56`). Your ask
   overrides if you say so.
 

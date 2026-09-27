@@ -5,8 +5,8 @@
 
 ## These are their own motions, not the side swing re-aimed
 
-> *"you are starting with the sideways swing first and then trying to force it into different melds, the
-> swing will be different when facing down and up, and it also needs to finish the swing"*
+> Owner direction (2026-08-04): don't bend the sideways swing into the other facings. Facing down and
+> facing up each need their own motion, and every swing must carry through to a finish.
 
 The side swing is **one monotonic sweep** from behind the head to the hip. Facing the camera that is the
 wrong shape twice over — the arc is in a different plane, and a monotonic sweep **stops dead** at the
@@ -20,8 +20,8 @@ bottom instead of following through. So each of these is written in three phases
 
 ## It has to cover what it hits
 
-> *"when you strike something below you while facing down it means being able to strike something below
-> you, all your looking down ones are pretty much the same thing as the sideways ones"*
+> Owner direction (2026-08-04): a strike while facing down has to be able to hit what is below the
+> character; the facing-down options so far were essentially the sideways swing.
 
 **Facing down, the blade lands with its tip past his feet** — covering the tile south of him. **Facing up,
 past his head** — the tile north. A swing that sweeps out to the side is a front-facing sprite doing the

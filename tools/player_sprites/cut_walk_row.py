@@ -227,8 +227,8 @@ def check_alternation(frames_dir, bank):
 
     ALWAYS RUN THIS on the camera-facing banks. The model happily returns a cycle where both stepping
     frames lift the SAME leg, and it does not look wrong in a still — only once it loops, as one foot
-    tapping twice instead of a walk. It shipped before anyone spotted it (owner: "it is not correct in
-    how it loops"), and it was caught by measuring, not by looking.
+    tapping twice instead of a walk. It shipped before anyone spotted it (the owner saw that it did not
+    loop correctly), and it was caught by measuring, not by looking.
 
     The SIDE bank cannot be checked this way and returns nothing. In profile both feet are planted in
     a contact frame, so foot HEIGHT says nothing; which leg leads is carried by shading (near leg vs
@@ -267,8 +267,8 @@ def check_alternation(frames_dir, bank):
 # foot is up, on a 1px threshold, so a 2px shuffle and a 14px stride passed identically. Measured on the
 # three outfits built under the old "Lift the knee HIGH" wording: bronze 19.1% front / 16.2% back,
 # fire-ant 18.2 / 15.4, black-ant 13.8 / 19.8 — a 6-point spread across the set and 3-6 points between
-# front and back of the SAME outfit. Owner: *"its lifting the knees really high which is ok for running
-# but not walking"*, and the prompt now asks for MEDIUM-HIGH (`outfits.WALK_KNEE`).
+# front and back of the SAME outfit. Owner, 2026-08-18: the knees lifted too high — acceptable for a run,
+# but not for a walk — and the prompt now asks for MEDIUM-HIGH (`outfits.WALK_KNEE`).
 #
 # ⚠ The band is provisional — derived from that instruction, not from a picked number. It is a WARNING,
 # not a hard fail: it is a taste range, and the rule is to look at the render, not to trust a threshold.

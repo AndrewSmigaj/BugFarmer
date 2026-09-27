@@ -77,7 +77,7 @@ def build(zone_id="village_21", vseed=0):
     forest(Z, 233, 184, 20, 28, density=0.6, seed=(3 + vseed), dirt=False)      #   with clearings + a trail
     forest(Z, 201, 150, 13, 16, density=0.55, seed=(7 + vseed), dirt=False)     # a grove hugging the cabin
 
-    # 5) NORTH road -> a DIRT row going EAST into a northern forest stand
+    # 5) NORTH road -> a DIRT row heading EAST to a northern forest stand
     dirt_h(MAINX, 206, 214)
     forest(Z, 220, 222, 30, 28, density=0.58, seed=(2 + vseed), dirt=False)
 

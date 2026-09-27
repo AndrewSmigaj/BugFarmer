@@ -260,8 +260,8 @@ def cut_outfit(folder):
     frames came out 30x58 against bronze's 184x310 — where bronze had been cut BY HAND at full
     resolution the session before. A hand-cut one-off became the standard, snapping was dropped to
     match it, and every outfit made since is a smooth render rather than pixel art. Owner, 2026-08-14:
-    *"I ALWAYS wanted the pixelsnapped same pixel density converted to pixels (ABSOLUTELY NOT
-    DOWNSCALING) version."*
+    the intended version was always the pixel-snapped one — the same pixel density, converted to real
+    pixels — and never a downscale.
 
     **Snapping is not downscaling.** `pixelsnap` finds the grid gpt actually drew on and takes the
     median of the inner half of each cell, recovering the artist's pixels exactly. Area-average and

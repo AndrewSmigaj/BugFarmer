@@ -1,15 +1,16 @@
 """promote.py — make something the current version of an outfit. FREE, no API.
 
   python3 tools/player_sprites/promote.py bronze scratchpad/2-frames/2026-08-02-1344-first-cut \
-      "ok lets use this one moving forward"
+      "approved as the base to build on"
 
   python3 tools/player_sprites/promote.py bronze scratchpad/3-gauntlets/2026-08-02-1120-plated \
-      "these are good" --dry-run
+      "gauntlets approved" --dry-run
 
 PROMOTING **IS** RECORDING — that is the entire point
 -----------------------------------------------------
 One atomic action: copy into `current/`, move whatever it replaced into `archive/`, append the row to
-`CURRENT.md` with the owner's words VERBATIM, re-render the animations, refresh the gallery.
+`CURRENT.md` recording the owner's decision (dated, attributed, in clean prose — never his words),
+re-render the animations, refresh the gallery.
 
 There is deliberately NO way to promote something without recording it, because every time recording was a
 separate step it got skipped — and a decision nobody wrote down is a decision that gets lost. This is not a
@@ -54,7 +55,7 @@ The pre-commit hook fails the commit if this table and the folder disagree.
 
 `anim/` is listed too — an agreed motion is a decision, not derived output.
 
-| file | agreed | from | your words |
+| file | agreed | from | decision |
 |---|---|---|---|
 """
 
@@ -127,7 +128,7 @@ def promote(outfit, src, words, dry=False, rerender=True):
     if not os.path.isdir(d):
         raise SystemExit(f"no such outfit: {outfit}")
     if not words or not words.strip():
-        raise SystemExit("refusing to promote with no reason recorded — pass the owner's words verbatim")
+        raise SystemExit("refusing to promote with no reason recorded — pass the owner's decision, restated in clean prose")
 
     abs_src = src if os.path.isabs(src) else os.path.join(d, src)
     if not os.path.exists(abs_src):
@@ -199,7 +200,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Make something the current version of an outfit.")
     ap.add_argument("outfit")
     ap.add_argument("path", help="path under the outfit folder, e.g. scratchpad/2-frames/<batch>")
-    ap.add_argument("words", help="the owner's words, verbatim — this goes in the ledger")
+    ap.add_argument("words", help="the owner's decision in clean prose, dated — this goes in the ledger")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--no-rerender", action="store_true")
     a = ap.parse_args()

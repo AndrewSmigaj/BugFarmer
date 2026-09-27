@@ -4,9 +4,9 @@ Ten gifs, nothing else. `ALL_down.png` / `ALL_up.png` show each one mid-arc and 
 
 ## What was wrong before
 
-- **down** — *"it really does not need that swing back, and it really should swing through farther"*
-- **up** — *"not even a real swing, its backwards and also down pull through, its a backwards stabby
-  motion as in going the wrong way"*
+- **down** — owner review (2026-08-04): it does not need the swing back, and it should swing through farther.
+- **up** — owner review (2026-08-04): not a real swing — it runs backwards, with a downward pull-through, a
+  stabbing motion going the wrong way.
 
 The up swing dipped the blade **down** and then drove it **up**. That is a reverse stab, not a sword
 swing, and I should have seen it.
@@ -23,7 +23,7 @@ it. Anticipation is now **one frame**, not a wind-up you can watch.
 | | |
 |---|---|
 | **A_sweep_across** | the standard — enters one side, sweeps through, exits the other |
-| **B_chop_through** | from over the shoulder, carries well past centre. The "swing through farther" one |
+| **B_chop_through** | from over the shoulder, carries well past centre — swings through farther |
 | **C_thrust** | barely rotates; the **reach** does the work, straight in and back |
 | **D_round** | a full circle about the shoulder, passing through the space at speed |
 | **E_double_back** | out across, then whipped back through the other way — reads as a fast double |

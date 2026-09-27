@@ -15,7 +15,8 @@ _status: READY (design) — needs your pick of approach · investigated 2026-06-
   (breakable ground occupant) vs B (no-bob flag + click-pickup on the existing ground item)? **Status:** `READY`.
 
 ## 1. Issue
-> "I think apples should not hover like that but be placeable on the ground and hit with whatever to pick them up, please investigate how we can do that."
+> Owner playtest report (2026-06-28): dropped apples float above the ground. They should rest on the ground and be picked up by hitting
+> them with any tool; he asked how that could be done.
 
 ## 2. Why it hovers (verified)
 - `GroundItemVisual` (class comment "Handles bob animation and highlight feedback") bobs every drop by

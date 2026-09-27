@@ -1,7 +1,7 @@
 # Zone Design: Ant Colony (4,0 · `ant_colony_40`)
 
-> Authority: owner rulings 2026-07-06 ("they will have their colony in the sw ant zone";
-> Queen "scripted like a game is fine"; structures are BLOCK-BUILT from dirt blocks) +
+> Authority: owner rulings 2026-07-06 (the ants' colony is in the SW ant zone; a scripted,
+> game-style Queen encounter is acceptable; structures are BLOCK-BUILT from dirt blocks) +
 > D2/D3/D9/D18/D21/D22. *(candidate)* items are mined from assistant drafts — cut freely.
 > Lighting backlogged: compose readable in full light, glow anchors pre-placed (R5).
 

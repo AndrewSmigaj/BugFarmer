@@ -1,7 +1,7 @@
 # Self-critique — what I missed, other approaches, and how I'd do it
 
-*The requested cross-cutting pass: for each topic, "was there anything else I could look into that I missed?
-Other interesting approaches? How would I do it?" Written after the docs, deliberately adversarial toward my
+*The requested cross-cutting pass: for each topic, the owner asked what else was worth looking into that had been
+missed, which other approaches were interesting, and how I would do it. Written after the docs, deliberately adversarial toward my
 own work.*
 
 ## UPDATE 2026-07-11 — most of this critique has since been ADDRESSED
@@ -76,8 +76,8 @@ a taste call). Then build the **click-to-stop** primitive as one reusable Unity 
 anvil in a playtest — the fatigue question only answers in the hand.
 
 ## 4. Visuals — what I missed (this is the owner's actual concern, and the weakest topic)
-The lighting doc is strong and actionable, but the owner's real complaint — *"other games look more
-interesting"* — is an **art-direction** problem, and that's exactly the part that survived only as raw:
+The lighting doc is strong and actionable, but the owner's real concern — that comparable games look more
+visually engaging — is an **art-direction** problem, and that's exactly the part that survived only as raw:
 - **Making AI-generated sprites COHERE** — our specific risk. Palette unification, gradient-map recolor to a
   master ramp, one consistent light direction across all sprites, a unifying color-grade/LUT post-pass. This is
   probably the single biggest lever for "looks like a game, not a pile of assets," and it's unsynthesized.
@@ -93,7 +93,7 @@ interesting"* — is an **art-direction** problem, and that's exactly the part t
 - **Asset packs** — the survey died; no shortlist (Feel/DOTween for juice, All-In-1 Sprite Shader, a
   post-processing/LUT pack) — all owed.
 
-**How I'd do it (and I think this is the real answer to "higher visual quality"):**
+**How I'd do it (and I think this is the real answer to the visual-quality question):**
 1. **Pick ONE reference screenshot** (e.g. a Stardew or Spiritfarer frame) and break it down — palette count,
    value structure, light direction, motion density — as the concrete bar.
 2. **Do a cohesion spike:** run our AI sprites through a **gradient-map palette-unification post-pass** + a

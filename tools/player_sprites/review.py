@@ -5,8 +5,8 @@ both have been got wrong more than once, and a convention nobody can forget beat
 down somewhere.
 
 1. **TEXT IS ~2x PIL's DEFAULT.** `ImageDraw.text()` with no `font=` uses an ~11px bitmap face. Owner,
-   2026-08-06: *"i literally have to zoom in to see it its so tiny... maybe make it twice as big... i
-   asked you before so can you somehow remember this."* Asking twice is the failure; a helper that
+   2026-08-06: the labels were too small to read without zooming in and should be about twice as big —
+   a request he had made before. Asking twice is the failure; a helper that
    cannot render small text is the fix.
 
 2. **IT LANDS IN THE REPO, never a temp dir.** Claude runs in a VM — `/tmp/...` and `/mnt/...` paths do
@@ -14,10 +14,9 @@ down somewhere.
 
 THE SCRIPT IS THE REMINDER
 --------------------------
-`save()` prints the conventions it just applied. Owner's idea, 2026-08-06: *"having python scripts
-perhaps actually output things - reminders and such, as a form of 'hook' - as long as you read the output
-of the script."* Cheaper than a hook, impossible to route around, and it fires exactly when relevant —
-at the moment the sheet is being made.
+`save()` prints the conventions it just applied. Owner's idea, 2026-08-06: scripts can print
+reminders as a form of hook, provided their output is actually read. Cheaper than a hook, impossible to
+route around, and it fires exactly when relevant — at the moment the sheet is being made.
 """
 import os
 
@@ -155,8 +154,8 @@ def save(sheet, folder, name):
     """Write into reviews/<folder>/ and print the conventions that were applied.
 
     `folder` is `<YYYY-MM-DD>-<what>` — dated so a re-run never overwrites the sheet a decision was made
-    from. Overwriting review output has cost real work ("can you please stop overwriting files i cant
-    show you the old one").
+    from. Overwriting review output has cost real work: once a sheet was overwritten,
+    the earlier version could no longer be shown to the owner.
     """
     d = os.path.join(REVIEWS, folder)
     os.makedirs(d, exist_ok=True)
@@ -174,8 +173,8 @@ def pixel_proof(outfit, scale=8, banks=("front", "side", "back"), frame=2, frame
 
     A sprite can come out of the pipeline looking fine at a glance and still not be pixel art — the
     render is smooth, or the snap landed between grid lines, or something downstream resampled it. All
-    three have shipped. Owner, 2026-08-18, before authorising a 25-outfit rebuild: *"we NEED to make
-    sure the pixelized versions work or we are blowing away money"*.
+    three have shipped. Owner, 2026-08-18, before authorising a 25-outfit rebuild: the pixel-converted
+    versions must be proven to work first, or the money is wasted.
 
     Each bank is shown at 1:1 and again at `scale`x NEAREST, with its true size and colour count. What
     you are checking in the big version is that every block is the SAME SIZE and has a HARD EDGE. A raw

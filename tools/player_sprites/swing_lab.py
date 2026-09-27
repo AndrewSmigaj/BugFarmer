@@ -40,7 +40,7 @@ def ease_out_back(t):
 # `art_rot` rotates the SPRITE only. ⚠ IT MUST STAY 0 UNLESS THE GRIP IS RECOMPUTED WITH IT: `grip_of`
 # measures the handle end off the unrotated sprite, so spinning the art 180 deg leaves the hand clamped on
 # the HEAD with the handle sticking out the far side. Tried that on the net and it looked worse, not better.
-# The net's "upside down" is fixed by reversing the SWEEP instead — see `sweep` in arm_motion.
+# The net coming out upside down is fixed by reversing the SWEEP instead — see `sweep` in arm_motion.
 TOOLS = {
     "sword": dict(icon="sword_bronze_icon.png", kind="swing", arc=100.0, dur=0.20, off=0.60, weight=0.25,
                   art_rot=0.0),
@@ -62,8 +62,8 @@ KIND10 = {"swing": "slash", "chop": "wheel", "sweep": "sweep",
 DEMO_TOOLS = ("sword", "axe", "net", "hoe", "spear", "shovel")
 
 # One entry per facing. The shoulder is NOT in the same place in every view, and pretending it is put the
-# hand at face height in the front view — owner: "the face down the hand is too high, it holds it like face
-# height with the tool straight down the hand should be lower".
+# hand at face height in the front view — the owner found that, facing down, the hand was too high: held at
+# about face height with the tool pointing straight down, where it should be lower.
 #   sprite  which body frame to draw
 #   aim     rotates the whole arc for that facing
 #   sh      shoulder offset from body centre, CELL units, +x forward / +y up
@@ -86,12 +86,12 @@ FPS = 30
 # visible pop. The lab used to loop straight back to t=0, which hid that cost from every approach.
 #
 # IDLE_SCALE was 0.75 while every swing frame drew the tool at 1.0, so the weapon visibly CHANGED SIZE the
-# instant the swing ended. Owner: "the idle sword/tool is different sized than the ones used in the
-# animation". That is a real bug in the shipped animator too — `PlayerToolAnimator.IdleScale` has to come
-# to 1.0 with it, or the game will still pop even once the motion is right.
+# instant the swing ended. The owner spotted it: the idle sword/tool was a different size from the one
+# in the animation. That is a real bug in the shipped animator too — `PlayerToolAnimator.IdleScale` has to
+# come to 1.0 with it, or the game will still pop even once the motion is right.
 IDLE_ANGLE, IDLE_OFF, IDLE_SCALE = -35.0, 0.4, 1.0
 
-# Approach 7 retimes for ACTUAL PLAY. Owner: "these are to be used in game so they can't be really slow."
+# Approach 7 retimes for ACTUAL PLAY. Owner direction: these are for use in the game, so they cannot be slow.
 # The lab's durations came from the shipped profiles, which were authored for a demo loop, not for a player
 # holding the button — the axe at 0.34s is a third of a second of committed animation per tree.
 DUR_SCALE = {7: 0.70, 8: 0.70, 9: 0.70}
@@ -100,7 +100,7 @@ DUR_SCALE = {7: 0.70, 8: 0.70, 9: 0.70}
 def duration(approach, p):
     if approach in VERTICALS:
         # A vertical swing is lift + drop + recover, so it cannot be as short as a flat slash. Still has
-        # to be playable: "these are to be used in game so they can't be really slow." Heavier tools take
+        # to be playable — these are for use in the game, so they cannot be slow. Heavier tools take
         # longer, which is the only weight cue a player actually reads.
         return 0.24 + 0.14 * p["weight"]
     if approach in (10, 11, 12):
@@ -113,9 +113,9 @@ def duration(approach, p):
 #
 # Owner caught this as a code smell and he is right: the previous pass gave all four tools one arc shape
 # with different constants, so a sword slash and an axe chop were the same function. They are not the same
-# motion. "sword is not an axe swing"; "the sword needs to be combat appropriate we can't have huge dramatic
-# arcs it needs to be fast and slashy"; the axe is "swing behind over then down in front ... like a real
-# axe"; a spear is "stabby"; a shovel is "downward stabbing then up like a scoop".
+# motion. His notes, in short: a sword swing is not an axe swing — the sword suits combat, quick slashes
+# without big theatrical arcs; the axe travels behind the head, over the top and down in front, as a real
+# axe does; a spear thrusts; a shovel jabs down and scoops back up.
 #
 # So each KIND gets its own function below. They differ in what they do with the two channels available —
 # angle and reach — and a thrust barely uses angle at all, which is the point.
@@ -126,8 +126,8 @@ COMBAT_DUR = {"slash": 0.11, "wheel": 0.20, "sweep": 0.15,
               "till": 0.18, "thrust": 0.12, "scoop": 0.22}
 
 
-# EVERY MOTION STARTS AND ENDS AT THE IDLE POSE. This is the fix for the "hover in the cocked back
-# position" — measured, the tool used to TELEPORT 235 deg (axe) / 205 deg (net) from idle to its start
+# EVERY MOTION STARTS AND ENDS AT THE IDLE POSE. This is the fix for the tool hovering in the cocked-back
+# position — measured, the tool used to TELEPORT 235 deg (axe) / 205 deg (net) from idle to its start
 # pose and then sit there while the curve eased in, parked near that pose for 22-45% of the animation
 # depending on the approach. Approach 11 only parked for 6-8%, which is exactly why it felt best.
 #
@@ -140,7 +140,7 @@ def seg(t, a, b):
 
 
 def m_slash(t):
-    """SWORD — short, fast, slashy. NOT a dramatic wheel: a combat slash is a flick that lives in the
+    """SWORD — short, fast, slashing. NOT a dramatic wheel: a combat slash is a flick that lives in the
     middle third of its own duration. Owner approved iteration 7's shape; this is that, anchored."""
     if t < 0.16:                                        # travelled wind-up, from where the tool rests
         return IDLE_ANGLE + (60.0 - IDLE_ANGLE) * ease_in_out(seg(t, 0.0, 0.16)), 1.0, 0.0, False
@@ -152,8 +152,8 @@ def m_slash(t):
 
 
 def m_wheel(t):
-    """AXE — round and down in one continuous travel. Owner revised this off a full circle: "i dont
-    think you need to swing the net and axe all the way around ... just make it faster". So it is a big
+    """AXE — round and down in one continuous travel. Owner revised this off a full circle: the net and
+    axe do not need to swing all the way around; just make it faster. So it is a big
     arc that never stops rather than a wheel, and it starts from idle instead of appearing at the top."""
     if t < 0.22:
         return IDLE_ANGLE + (150.0 - IDLE_ANGLE) * ease_in(seg(t, 0.0, 0.22)), 1.0, 0.0, t > 0.12
@@ -166,7 +166,7 @@ def m_wheel(t):
 
 def m_sweep(t):
     """NET — same anchoring. WHICH WAY IT SHOULD GO IS AN OPEN QUESTION: five rounds of theories about
-    "backwards" were all wrong, so the orientation is being chosen from a rendered grid
+    why it looked backwards were all wrong, so the orientation is being chosen from a rendered grid
     (`net_options.py`) rather than reasoned about again. This is the placeholder shape until he picks."""
     if t < 0.20:
         return IDLE_ANGLE + (145.0 - IDLE_ANGLE) * ease_in(seg(t, 0.0, 0.20)), 1.0, 0.0, False
@@ -178,9 +178,9 @@ def m_sweep(t):
 
 
 def m_till(t):
-    """HOE — a SMALL lift, strike the ground, pull back. Owner: "the hoe is not supposed to look like
-    someone whipping the ground with a stick, you have it swinging in a big arc, it should be more lift
-    a little then strike the ground and pull." So the angle barely travels (100 deg, not 200) and the
+    """HOE — a SMALL lift, strike the ground, pull back. Owner direction: no big arc that reads as
+    lashing the ground with a stick — a small lift, a strike into the ground, then a pull
+    back. So the angle barely travels (100 deg, not 200) and the
     work is done by REACH — that is the difference between digging and swinging."""
     if t < 0.18:                                        # lift a little. A LITTLE.
         return IDLE_ANGLE + 60.0 * ease_in(seg(t, 0.0, 0.18)), 1.0, 0.0, False
@@ -195,7 +195,7 @@ def m_till(t):
 
 
 def m_thrust(t):
-    """SPEAR — stabby. The angle barely moves; the REACH is the whole animation. The one motion that is
+    """SPEAR — a stab. The angle barely moves; the REACH is the whole animation. The one motion that is
     a translation rather than a rotation, which is why it could never be a tuning of a swing."""
     if t < 0.18:                                        # settle to level, and load back a little
         return IDLE_ANGLE + (8.0 - IDLE_ANGLE) * ease_out(seg(t, 0.0, 0.18)), 0.62, 0.0, False
@@ -209,9 +209,9 @@ def m_thrust(t):
 
 
 def m_scoop(t):
-    """SHOVEL — a downward JAB, then a small lift coming back. Owner: "the shovel is not working, your
-    just waving it around, it needs to jab downward (like digging) then when coming back it could lift
-    a little, no need to be crazy". Like the spear thrust, aimed at the ground: the reach does the work
+    """SHOVEL — a downward JAB, then a small lift coming back. Owner direction: the shovel read as waved
+    about aimlessly; it should jab down as if digging, with at most a small lift on the way back —
+    nothing large. Like the spear thrust, aimed at the ground: the reach does the work
     and the angle stays put, so it reads as digging rather than as another swing."""
     if t < 0.20:                                        # bring it over the spot, barely any travel
         return IDLE_ANGLE + (-58.0 - IDLE_ANGLE) * ease_out(seg(t, 0.0, 0.20)), 0.80, 0.0, False
@@ -220,7 +220,7 @@ def m_scoop(t):
         return -58.0 - 14.0 * u, 0.80 + 0.62 * ease_in(u), 0.40, u > 0.45
     if t < 0.60:
         return -72.0, 1.42, 0.0, False                  # buried
-    u = seg(t, 0.60, 1.0)                               # lift a little on the way back, nothing crazy
+    u = seg(t, 0.60, 1.0)                               # lift a little on the way back, nothing large
     return -72.0 + (IDLE_ANGLE + 72.0 + 18.0) * ease_out(u) - 18.0 * u, 1.42 - 0.52 * ease_out(u), 0.0, False
 
 
@@ -251,8 +251,8 @@ def variation(approach, kind, t):
 #
 # A TOP-TO-BOTTOM swing removes the conflict instead of drawing around it: the arm stays inside the
 # geometry one hand view can honestly represent, so one sprite carries the whole motion and no new art is
-# needed. Owner, 2026-08-04: "just not have laterally s[w]ings, everything is just a top to bottom swing,
-# that way we dont have to worry about different hand shapes".
+# needed. Owner, 2026-08-04: no lateral swings — everything is a top-to-bottom swing, so different hand
+# shapes are not a concern.
 #
 # Every variant STARTS AND ENDS AT `IDLE_ANGLE` so the swing has an exit and does not pop when it ends.
 VERTICALS = {20: "overhead", 21: "diagonal", 22: "loaded", 23: "chop_and_stop"}
@@ -359,16 +359,16 @@ def motion(approach, p, t):
         # ITERATION 2, TUNED — owner picked 2 as the closest and listed what was wrong with it.
         # Everything here is one of his notes, not a fresh idea:
         #
-        #  * "the hand should arc forward a little more ... the sword one has the best, the rest should
-        #    do that too". Only `swing` ever pushed the tool outward mid-strike (+0.20); chop, sweep and
+        #  * every tool's hand should carry further forward through the arc, as the sword's already
+        #    does. Only `swing` ever pushed the tool outward mid-strike (+0.20); chop, sweep and
         #    till held a fixed radius, which is why they read as spinning on the spot. Now every kind
-        #    extends, and the sword's own push goes 0.20 -> 0.38 because "it just needs to extend a
-        #    little further".
-        #  * "the tip of the hoe does not go down to ground level". It stopped at -12 deg, barely under
+        #    extends, and the sword's own push goes 0.20 -> 0.38 because it just needed to extend a
+        #    little further.
+        #  * the tip of the hoe did not reach ground level. It stopped at -12 deg, barely under
         #    horizontal. The tip reaches the feet at about -80.
-        #  * "for the ax i would prefer it a swing that goes back and all the way around" — so chop's
+        #  * for the axe he preferred one continuous circle, back, over and all the way round — so chop's
         #    lift-hold-drop is replaced by a single continuous 250 deg circle.
-        #  * the sword "can be the sharp slash like it is now", so its angle curve is untouched.
+        #  * the sword can stay the sharp slash it already was, so its angle curve is untouched.
         ext = 0.38 if kind == "swing" else 0.30      # how far the tool reaches out through the strike
         contact = {"swing": 0.62, "chop": 0.58, "sweep": 0.50, "till": 0.55}[kind]
         freeze = contact <= t < contact + 0.06 + 0.10 * w
@@ -475,8 +475,8 @@ def motion(approach, p, t):
 #
 # Approaches 1-7 all share one mechanism: rotate a rigid tool sprite about the player's CENTRE at a fixed
 # radius. That is WHY the swing reads wrong no matter how the timing is tuned — the fist travels a circle
-# around the character's navel, so it rides up past the chest and the weapon spins on the spot. Owner:
-# "who even swings a sword like that their fist up near their chest".
+# around the character's navel, so it rides up past the chest and the weapon spins on the spot. The owner
+# rejected it: nobody swings a sword with the fist up near the chest.
 #
 # Nothing here needs a new sprite. The character is armless and the fist is already a free-floating sprite
 # moved by code, so the hand can follow ANY path we choose — we simply never chose one. These two give it
@@ -508,16 +508,16 @@ def arm_motion(approach, p, t):
     freeze = contact <= t < contact + 0.05 + 0.09 * w
 
     if kind == "chop":
-        # AXE — ONE continuous arc the whole way round. Owner: "i want the axes swung around in an arc,
-        # not pulled back and swung down." The previous version had a distinct wind-back that STOPPED and
-        # then a separate chop, which is exactly the two-part motion he is rejecting. This never stops:
-        # it starts at rest and travels ~330 deg in a single accelerating-then-decelerating sweep, so the
-        # head is always moving and the "wind up" is just the first third of the same circle.
+        # AXE — ONE continuous arc the whole way round. Owner direction: one unbroken arc, not a
+        # wind-back followed by a separate downswing. The previous version had a distinct wind-back that
+        # STOPPED and then a separate chop, which is exactly the two-part motion he is rejecting. This
+        # never stops: it starts at rest and travels ~330 deg in a single accelerating-then-decelerating
+        # sweep, so the head is always moving and the "wind up" is just the first third of the same circle.
         theta = 60.0 - 330.0 * ease_in_out(t)
     elif kind == "sweep":
         # NET — faster and further across (dur 0.25 -> 0.16, arc 90 -> 150), and now sweeping UPWARD:
-        # low behind, up and over the front. Owner: "the net is upside down (you are swinging the net
-        # bulge first)". Sweeping down led with the closed underside of the bag; scooping up leads with
+        # low behind, up and over the front. The owner found the net upside down — swung bulge
+        # first. Sweeping down led with the closed underside of the bag; scooping up leads with
         # the mouth, which is also how you actually catch something.
         theta = -55.0 + 150.0 * ease_out(t)
     elif kind == "till":
@@ -654,8 +654,8 @@ def build(approach):
     tiles = [rgba(os.path.join(RES, "Tiles", n)) for n in
              ("grass.png", "grass_v2.png", "grass_v3.png", "grass_v4.png", "grass_v5.png")]
 
-    # Three characters now — side, front and away-facing. Owner: "might as well put the facing upward
-    # swings in here too." All three have to work, so all three are on screen at once rather than being
+    # Three characters now — side, front and away-facing. At the owner's request the facing-up
+    # swings are included too. All three have to work, so all three are on screen at once rather than being
     # checked one at a time and assumed fine.
     W, H = int(CELL * 8.6), int(CELL * 3.6)
     TS = int(CELL)

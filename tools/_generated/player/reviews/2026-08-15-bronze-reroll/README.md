@@ -23,9 +23,9 @@ a re-roll. Nothing needed fixing.
 
 ## Two decisions recorded
 
-**Crowns are reserved for higher-value armour.** Owner, choosing between the three designs: *"crows
-[crowns] are reserved for higher value armor"* — option 3 had a crown-like helm and was set aside for
-that reason, not because it looked wrong. This constrains future explorations at the gold/platinum
+**Crowns are reserved for higher-value armour.** Owner decision (2026-08-15), made while choosing between
+the three designs — option 3 had a crown-like helm and was set aside for that reason, not because it
+looked wrong. This constrains future explorations at the gold/platinum
 end.
 
 **bronze-r2's brief was dictated and was not reused.** It spelled out three designs — "a ROUNDED

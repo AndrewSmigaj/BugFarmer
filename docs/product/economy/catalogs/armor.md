@@ -83,25 +83,26 @@ with what exists on disk.
 > and **omitted `iron`**, which had no sprite either (its ✅ above is an `items.json` id, not art). All
 > four are built now.*
 
-**Set-design rule (D10):** a new set must justify a *concept*, not just exist because a zone does. "Thorough"
-= ~7 bonus-set concepts + 9 base sets — enough variety, not bloat.
+**Set-design rule (D10):** a new set must justify a *concept*, not just exist because a zone does. A thorough
+roster = ~7 bonus-set concepts + 9 base sets — enough variety, not bloat.
 
 ### Owner decisions 2026-07-29 (from the ranger design sheet)
 
 Three designs were drawn as options for one set; the owner kept **all three** and gave each a different home.
 `tools/_generated/player/explore/ranger/REVIEW.png`.
 
-| design | becomes | owner's words |
+| design | becomes | owner's direction |
 |---|---|---|
-| 1 — hooded scout, ragged cloak | the **spidersilk stealth set** (the old `ranger` slot) | *"keep the first as ranger outfit (need a better naming), made from spidersilk and some other things, makes you stealthier"* |
-| 2 — brimmed hat, leather jerkin | **Entomologist** — replaces the khaki pith-helmet version | *"the second one will be the preemptive etomologist outfit"* |
-| 3 — leaf plates, antlered helm | **Forest armour** — a new set | *"the third is the forest armor"* |
+| 1 — hooded scout, ragged cloak | the **spidersilk stealth set** (the old `ranger` slot) | keep it as the ranger outfit (it needs a better name), made from spidersilk and other materials; it makes the wearer stealthier |
+| 2 — brimmed hat, leather jerkin | **Entomologist** — replaces the khaki pith-helmet version | the second design becomes the provisional entomologist outfit |
+| 3 — leaf plates, antlered helm | **Forest armour** — a new set | the third design is the forest armour |
 
-- **NAMED `shadowsilk`** by the owner, 2026-07-29 — *"ranger's shadowsilk armor"*. It is spider-silk and
+- **NAMED `shadowsilk`** by the owner, 2026-07-29, as the ranger's shadowsilk armour. It is spider-silk and
   stealth, which makes it the **Silk** concept in section B arriving earlier than T4–T5, not a new set. The
   old `ranger` set name retires; `forest` takes the woodland slot.
 - **Signature stat is STEALTH / reduced aggro**, not the `dodge_chance / move_speed / crit` this table
-  currently lists for Silk — *"makes you stealthier (backlog stealth bonuses, basically reduces aggro I guess)"*.
+  currently lists for Silk — per the owner, it makes the wearer stealthier; the stealth bonuses go to the backlog,
+  and he tentatively described the effect as reduced aggro.
   The mechanic is **backlogged**, so the table row is left as-is until it is built rather than being rewritten
   to describe something that does not exist.
 - **Design 3 is the legibility risk.** At real game size its gold linework turns to noise while designs 1 and 2
@@ -117,4 +118,4 @@ canonical set list** (consolidated). When pruning the zone sheets, map each old 
 
 ## Count
 **9 base sets** (45 pieces) + **7 bonus-set concepts** (5 active + Silk pending). Down from the 28-set draft —
-deliberately consolidated to "thorough, not excessive."
+deliberately consolidated to a thorough but not excessive roster.

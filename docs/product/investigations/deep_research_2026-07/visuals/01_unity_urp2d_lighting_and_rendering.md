@@ -13,7 +13,7 @@ lever below is version-verified for Unity 6000.2 / URP 17. Raw transcript:
 - **One Global Light2D** (Multiply) driven by `DayNightController` — night floor **0.20** → **1.0** day; tints
   moonlit-blue night → warm amber dawn/dusk → white day.
 - **`LampLight` Point lights**, warm `(1.0, 0.97, 0.85)`, `Inner = 0.25×Outer` — **but no Falloff Strength set**
-  → *this is the "hard falloff" ring you flagged.*
+  → *this is the hard-falloff ring you flagged.*
 - **One shared `Sprite-Lit-Default` material** (`LitMaterials.Lit`) on every renderer — correct for batching;
   do **not** make per-sprite material variants.
 - **HDR ON, post-processing OFF** (`m_RenderPostProcessing: 0`) → **no bloom can run today** even though HDR is on.
@@ -27,7 +27,7 @@ lever below is version-verified for Unity 6000.2 / URP 17. Raw transcript:
 
 | # | Lever | What it does | Effort | Perf | Notes |
 |---|---|---|---|---|---|
-| **1** | **Lamp Falloff Strength** (`m_FalloffIntensity` ≈ 0.6–0.9) | Feathers the hard lamp ring into a soft pool — **directly fixes the flagged "hard disc" look** | Trivial (one field) | Free | Pair with a slightly larger Outer + small Inner radius |
+| **1** | **Lamp Falloff Strength** (`m_FalloffIntensity` ≈ 0.6–0.9) | Feathers the hard lamp ring into a soft pool — **directly fixes the flagged hard-disc look** | Trivial (one field) | Free | Pair with a slightly larger Outer + small Inner radius |
 | **2** | **Turn on Bloom** (camera `RenderPostProcessing = 1` + a Global Volume with a Bloom override) | Lamps/emissive glow; the single biggest "cozy night" upgrade. HDR already on → only the camera flag + Volume are missing | Low | Downscale=Quarter, Max Iter cap = cheap | Threshold ~0.8–1.0, Intensity ~0.3–1, Scatter ~0.7. Bump key lights >Intensity 1 to make them bloom |
 | **3** | **Warm-key / cool-ambient contrast** (already partly done) | Warm lamps against cool night ambient = the #1 "looks good" trick; lean into it more | Trivial | Free | Multiply-global (cool) + point lamps (warm) is exactly the right combo |
 | **4** | **Sprite "cookie" lights** for lamps/lanterns | A soft radial-gradient sprite as a `Sprite`-type Light2D → art-directed soft pool / lantern teardrop / window rectangle shapes | Low | Same as point | Use when you want a *specific shape* or extra-soft edge beyond Falloff Strength |
@@ -54,7 +54,7 @@ Axes: **visual impact · effort · perf on low-end · fits pixel-art** (1–5).
 - **Bloom that eats pixel art** — keep Threshold above mid-tones and Intensity modest so it glows lamps, not everything (the classic "bloom destroyed my pixel art" mistake).
 
 ## Cohesion — likely the biggest single visual lever (added supplement)
-The owner's core complaint ("other games look more interesting") is probably **less about missing effects and
+The owner's core concern (comparable games look more visually engaging) is probably **less about missing effects and
 more about COHESION** — our sprites are AI-generated in separate passes, so their palettes, contrast, and
 implied light direction don't fully agree, which reads as "a pile of assets" rather than "one world." Two
 cheap, global, engine-side cohesion levers (verified absent today):

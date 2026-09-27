@@ -16,8 +16,7 @@ That last sentence is the entire fix. Every confusion in this pipeline came from
     So the record of what was official and the thing the code loaded were never the same object, which is
     why asking for "a gallery of the official ones" returned whatever happened to be on disk.
 
-Owner, 2026-08-06: *"when we make a change it is reflected in our fucking code somewhere - I dont care
-where as long as its actually used."* This is that place.
+Owner rule (2026-08-06): every decision must live somewhere the code actually uses. This is that place.
 
 HOW TO CHANGE SOMETHING
 -----------------------
@@ -52,8 +51,8 @@ HAND_ROLE_MEANING = {
     "grip_palm": "fist closed around a pole, palm showing — the SECOND hand on a two-handed tool",
 }
 
-# The hand set every other outfit is a material variant of. Owner: *"the only officially established hands
-# are the bronze hands... everything else will have literally their own as close as possible variants."*
+# The hand set every other outfit is a material variant of. Owner decision: bronze's hands are the only
+# established hands; every other outfit gets its own variant, as close to them as possible.
 REFERENCE_OUTFIT = "bronze"
 
 
@@ -88,20 +87,19 @@ OUTFITS = {
     # turnaround plus one call per direction, so there is no single sheet to point at.
     "bronze":   dict(dir="outfits/bronze", approved="2026-08-18",
                      sheet="",
-                     words="it looks good... these seem good, pixelization works"),
+                     words="approved after review of the pixel-converted rebuild"),
     "fireant":  dict(dir="outfits/fireant", approved="2026-08-18",
                      sheet="",
-                     words="it looks good... these seem good, pixelization works"),
+                     words="approved after review of the pixel-converted rebuild"),
     "blackant": dict(dir="outfits/blackant", approved="2026-08-18",
                      sheet="",
-                     words="it looks good... these seem good, pixelization works"),
+                     words="approved after review of the pixel-converted rebuild"),
     # 2026-09-26 — the first outfit made end to end by `procedure.py` (pick copper-r3 design 1; five calls,
     # no rerolls; review: reviews/2026-09-26-copper/). Known and left for the polish pass: the back walk is
     # 71 px against the front's 66, and the front walk's knee lift is 18% of body height.
     "copper":   dict(dir="outfits/copper", approved="2026-09-26",
                      sheet="",
-                     words="it looks good! there are polish issues but we can work on that later as they "
-                           "involve hand positions"),
+                     words="approved after review; hand-position polish left for later"),
 }
 
 # NOT OFFICIAL YET — listed so the gap is visible, but NOT built. An outfit is either complete and in
@@ -141,14 +139,14 @@ GAITS = {
     # amp=hand travel, ay=rise, rot=base rotation, tilt=wrist lean, ratio=fist size vs body height,
     # waist=where the hands hang, ms=frame duration
     #
-    # 2026-07-29 — "walk b is fine"   (rendered as walk_ref/walk_b)
+    # 2026-07-29 — walk option B approved   (rendered as walk_ref/walk_b)
     "WALK": dict(amp=0.52, ay=0.013, rot=0.0,  tilt=22.0, ratio=0.17, waist=0.60, ms=150),
-    # 2026-07-29 — "RUN_r75.gif is fine, looks the best"
+    # 2026-07-29 — RUN_r75.gif approved as the best run
     "RUN":  dict(amp=0.58, ay=0.032, rot=75.0, tilt=14.0, ratio=0.19, waist=0.46, ms=90),
 
     # The camera-facing walk is a SEPARATE motion, not the side one re-aimed: a different fist (profile),
     # hands outside the body edges rather than swinging through the torso, one rising as the other drops.
-    # 2026-07-29 — "first for walking forward gait_front_d3_bigger.gif is great"
+    # 2026-07-29 — gait_front_d3_bigger.gif approved for the forward walk
     #
     # ⚠ 2026-08-18 — THE UNITS CHANGED, THE DESIGN DID NOT. `ratio` is now the fist's height as a
     # fraction of the SHOULDER WIDTH, `row` how far from the shoulders down to the feet the fists
@@ -156,29 +154,29 @@ GAITS = {
     # (`gap`, a fraction of an arbitrary silhouette row, floored to its 2px minimum on every outfit
     # and is gone). Hanging hands off a percentage of the whole silhouette made every outfit with
     # different headgear disagree — fire-ant's fists ended up at its armpits and black-ant's inside
-    # its own shoulder line. Owner, shown all three: *"black ant is the only good one"*, so every
+    # its own shoulder line. Shown all three, the owner judged black-ant the only good one, so every
     # constant below was solved from black-ant and it renders unchanged.
     # Measured before/after: reviews/2026-08-18-walk-hands/.
     "FRONT":     dict(ratio=0.484, row=0.340, edge=0.016, dx=0.037, dy=0.092, ms=150),
     # Same motion at run speed. ⚠ NOT designed — see NOT_AGREED. Only the SIDE run has its own pose.
-    # 2026-08-14 — "we will go with wisdest lowest". The camera-facing run had NO pose of its own:
+    # 2026-08-14 — the widest, lowest option picked. The camera-facing run had NO pose of its own:
     # this row was byte-identical to FRONT apart from ms, i.e. the walk played faster, which is the
-    # failure the side run already fixed. Owner: "that's just not running with hands down by the
-    # side". Picked from reviews/2026-08-14-run-front-pump/ against three rendered options; the two
+    # failure the side run already fixed; the owner judged hands down by the sides not to read as
+    # running. Picked from reviews/2026-08-14-run-front-pump/ against three rendered options; the two
     # rejected attempts are recorded there. `pulse` is new — the fist coming toward the camera grows.
     # ⚠ run_back shares this row, so it changes too.
     "FRONT_RUN": dict(ratio=0.484, row=0.180, edge=0.016, dx=0.047, dy=0.151, pulse=0.22, ms=90),
 }
 # The back-facing walk reuses FRONT deliberately: from behind you also see both hands clear of the
 # silhouette, and at ~10px a hand the near/far distinction the side walk needs does not read.
-# 2026-08-02, delivered against "so we have forward and sideways might as well finish with back".
+# 2026-08-02, delivered when the owner asked for the back walk to finish the set.
 
-# ── SETTLED 2026-08-06 — "all three fixes look good! make it official" ────────────────────────────────
+# ── SETTLED 2026-08-06 — all three fixes approved and made official ──────────────────────────────────
 # Three things about how the hands are PLACED. They are behaviour, not numbers, so they live in the code
 # that draws them — recorded here because this file is where "what did we agree" gets answered.
 #
-#  1. FIST SIZE — walk stays at 0.17. He was explicit: "hand sizes we go with current". His earlier
-#     "way too big" complaint was about the RUN, which has its own larger ratio (0.19, above).
+#  1. FIST SIZE — walk stays at 0.17; the owner kept the current hand sizes. His earlier note that the
+#     hands were far too big was about the RUN, which has its own larger ratio (0.19, above).
 #  2. WRIST DIRECTION — the cuff leans TOWARD the body, because that is where the arm comes from
 #     (`gait.pose_into`). Both signs had been inverted, so the forward fist's wrist sat further forward
 #     than the fist and the arm read as reaching around from the far side. Reported 2026-08-03 and again
@@ -190,35 +188,35 @@ GAITS = {
 # SWING motions: (anticipation pose, [4 strike poses], rest pose).
 # A pose is (arm offset from the aim direction, blade angle behind the arm, reach in cells).
 SWINGS = {
-    # 2026-08-04 — "yes we obviously want the quick candidate"
+    # 2026-08-04 — the quick candidate approved
     # Behind the head, past straight down, hand finishing at the hip; the blade unwinds so the tip keeps
     # dropping after the arm has stopped.
     "SWORD_SIDE": ((120, 88, 0.60),
                    [(60, 76, 0.62), (-10, 62, 0.64), (-70, 48, 0.62), (-104, 40, 0.60)],
                    (-35, 60, 0.58)),
 
-    # 2026-08-04 — "lets do double back for both, the seem good". Used facing DOWN and facing UP.
+    # 2026-08-04 — double back approved for both facings. Used facing DOWN and facing UP.
     # Out across, then whipped back through the other way.
     "DOUBLE_BACK": ((+70, 66, 0.50),
                     [(0, 44, 0.60), (-64, 30, 0.56), (-10, 46, 0.58), (+34, 58, 0.54)],
                     (+34, 60, 0.46)),
 
-    # 2026-08-04 — "this net for the side will work: ...1204_8bfd24e_net_A_sweep_and_lift.gif"
+    # 2026-08-04 — side net approved: ...1204_8bfd24e_net_A_sweep_and_lift.gif
     "NET_SIDE": ((80, -40, 0.50),
                  [(30, -48, 0.62), (-20, -54, 0.66), (-50, -40, 0.62), (-30, -10, 0.58)],
                  (40, -30, 0.46)),
 
-    # 2026-08-04 — "...axe_B_high_chop.gif for the axe"
+    # 2026-08-04 — axe approved: ...axe_B_high_chop.gif
     "AXE_SIDE": ((172, 78, 0.42),
                  [(95, 56, 0.52), (16, 22, 0.62), (-34, -2, 0.64), (-38, 0, 0.62)],
                  (70, 58, 0.44)),
 
-    # 2026-08-04 — "...hoe_B_long_drag.gif for the side hoe"
+    # 2026-08-04 — side hoe approved: ...hoe_B_long_drag.gif
     "HOE_SIDE": ((78, 58, 0.46),
                  [(-46, 12, 0.64), (-60, 2, 0.68), (-72, 6, 0.46), (-84, 12, 0.26)],
                  (40, 50, 0.44)),
 
-    # 2026-08-04 — "...shovel_B_deeper.gif for the shovel". A lever held low, not a battering ram.
+    # 2026-08-04 — shovel approved: ...shovel_B_deeper.gif. A lever held low, not a battering ram.
     "SHOVEL_SIDE": ((-60, 44, 0.32),
                     [(-58, 38, 0.52), (-56, 28, 0.76), (-50, 56, 0.74), (-44, 74, 0.68)],
                     (-60, 46, 0.32)),
