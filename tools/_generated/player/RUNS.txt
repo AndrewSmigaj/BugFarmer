@@ -188,3 +188,8 @@
 2026-08-15 18:02  gpt-image-2    explore/bronze-v2-frontwalk  tools/_generated/player/explore/bronze-v2-frontwalk
 2026-08-15 18:03  gpt-image-2    explore/bronze-v2-backwalk   tools/_generated/player/explore/bronze-v2-backwalk
 2026-08-15 18:06  gpt-image-2    explore/bronze-v2-gauntlet   tools/_generated/player/explore/bronze-v2-gauntlet
+2026-09-26 17:59  gpt-image-2    explore/copper-turnaround    tools/_generated/player/explore/copper-turnaround
+2026-09-26 18:02  gpt-image-2    explore/copper-sidewalk      tools/_generated/player/explore/copper-sidewalk
+2026-09-26 18:04  gpt-image-2    explore/copper-frontwalk     tools/_generated/player/explore/copper-frontwalk
+2026-09-26 18:06  gpt-image-2    explore/copper-backwalk      tools/_generated/player/explore/copper-backwalk
+2026-09-26 18:10  gpt-image-2    explore/copper-gauntlet      tools/_generated/player/explore/copper-gauntlet

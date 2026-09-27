@@ -169,8 +169,10 @@ on his 2026-08-18 note.
   2026-08-18: *"its lifting the knees really high which is ok for running but not walking"*. `check_lift` warns
   outside 7–15%; it is a WARNING, not a fail — look at the render. ⚠ One leg set serves both walk and run
   (`walk_side` and `run_side` share `frames="side"`), so the walk's lift IS the run's lift.
-- **Side comes back facing LEFT** whatever the prompt says. `cutwalk` mirrors it at cut time — never after rendering
-  (`gait`'s wrist maths assumes the character faces +x).
+- **The side frames must end up facing RIGHT** (`gait`'s wrist maths assumes +x). All three approved side walks came
+  back facing LEFT whatever the prompt said; copper's (2026-09-26) came back facing RIGHT. So look, and tell `cutwalk`
+  which way the render faces (`--faces left|right`); it mirrors a left-facing render at cut time — never after
+  rendering, which puts the wrists on backwards.
 - **Why one direction at a time:** a 3x4 twelve-frame sheet gives each figure a twelfth of the canvas, the blocks come
   back too small to form a grid, and the render is smooth with nothing to snap to. Four in a row gives each figure the
   room the turnaround had — the layout that converts every time.

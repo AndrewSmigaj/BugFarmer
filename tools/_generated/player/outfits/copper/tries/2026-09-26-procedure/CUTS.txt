@@ -1,0 +1,4 @@
+frames/side_1..4  from explore/copper-sidewalk/result.png  grid 10.7
+frames/front_1..4  from explore/copper-frontwalk/result.png  grid 13.3
+frames/back_1..4  from explore/copper-backwalk/result.png  grid 10.7
+gauntlet/*  from explore/copper-gauntlet/result.png  grid 19.7  11px tall

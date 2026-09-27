@@ -783,7 +783,7 @@ WALK_VIEW = {
 # How the first paragraph ENDS. For the camera-facing views it repeats the view; for the side it said "all
 # facing RIGHT" in every approved side walk (bronze-v2-sidewalk, blackant-v3-sidewalk, 2026-08-15). The
 # template first built on 2026-08-18 reused `WALK_VIEW` here and silently changed the side to "all seen in
-# right profile" — a wording no paid call ever used. Restored 2026-09-27; `procedure.py verify` checks it.
+# right profile" — a wording no paid call ever used. Restored 2026-09-26; `procedure.py verify` checks it.
 WALK_FACING = {"side": "facing RIGHT", "front": WALK_VIEW["front"], "back": WALK_VIEW["back"]}
 
 # The side view carries which leg leads in the SILHOUETTE (one leg forward, one back). The camera-facing

@@ -437,3 +437,14 @@ verbatim:
   procedure.
 - **Timing:** most outfits and other art are made after the GDD is signed off, with test batches first. One test
   batch approved now (copper).
+
+### Later the same day — the side-walk wording, and running the copper batch
+Rebuilding the procedure from the records (`tools/player_sprites/procedure.py`, which reproduces the three approved
+outfits with no calls) found that when the walk prompt moved into code on 2026-08-18, the side view's first
+paragraph changed from *"…all facing RIGHT."* — the words every approved side walk was made with — to *"…all seen in
+right profile."*, which no paid call ever used. Asked: (a) keep "all facing RIGHT" (recommended), or (b) use "all
+seen in right profile". Owner: *"whatever your recommendation is"* → **"all facing RIGHT"** (`outfits.WALK_FACING`).
+
+The first copper call was stopped by Claude Code's own permission check for spending. Owner: *"yeah you can add it,
+add it to the permissions"* — `Bash(python3 tools/player_sprites/procedure.py:*)` is allowed in his local
+settings. Each batch is still asked for first; this only lets an approved batch run.

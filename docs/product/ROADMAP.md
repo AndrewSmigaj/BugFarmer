@@ -52,7 +52,7 @@ ecology stations) let you read and steer the ecosystem.
 ### Phase 1 — prove the art, set the rules, design the spine, lay foundations
 - **Art (details: the top item of `BACKLOG.md`):** ~~import-scale fix~~ (done 2026-09-26: 89 sprites were drawing at
   the wrong size and 80 blurry) · the outfit procedure written into the `player-sprites` skill, with commands that
-  reproduce the approved runs · **copper as the approved test batch** (5 image calls) · the other seven picked
+  reproduce the approved runs · **copper as the approved test batch** (5 image calls; made 2026-09-26, waiting for his review) · the other seven picked
   outfits, batch by batch, each asked for · GDD §08 (outfit decisions) and §21 (art direction). After the GDD
   sign-off: the remaining outfits, the 11 NPCs, then the world + item regeneration (a sizing rule first, then test
   batches per category, then zone by zone — only content the GDD keeps).
