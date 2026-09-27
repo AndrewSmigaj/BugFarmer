@@ -45,6 +45,12 @@ twelve-cell sheet leaves each figure too small to carry a pixel grid.)
 Model **gpt-image-2**, **NO MASK**. Masked runs come back as black boxes. The prompt must state that the
 character has no arms, or the model draws them back on.
 
+`gen.py` enforces that: it refuses to spend on a character prompt missing any of `NO ARMS`, `bare skin`,
+`MAGENTA` or `PIXEL DENSITY` (hands runs are exempt). The approved turnaround text (`outfits.TURNAROUND`) spells
+those rules differently ("Armless body", lower-case "magenta", "same size pixel blocks") yet made all three
+approved outfits, so since 2026-09-27 gen.py accepts it by EXACT match only — edit one word and it is checked
+like any other prompt.
+
 **Generate on MAGENTA, never on black (2026-07-29).** Black is the one colour the armour also contains, so
 "is this pixel background?" stops being answerable. The cutter used to decide by brightness, and deleted the
 artwork's own dark pixels: hornet-stinger lost 17% of the figure — every black band — and ant-carapace 17%,
