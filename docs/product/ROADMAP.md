@@ -8,6 +8,9 @@ captured-but-unscheduled items stay in [`BACKLOG.md`](BACKLOG.md); finished work
 > The owner's brief (2026-09-26): finish the game properly — not patch it and ship. Many design decisions and much
 > content are still to come. Existing systems (bug behaviour, combat, ecology tuning, the Ecology tab, the UI) work
 > but need polish. I do most of the work; the owner reviews.
+>
+> *(Checked 2026-09-26: the Ecology tab isn't built yet — the game has only a developer population graph. The full
+> design read also found where the game and its design disagree: `docs/gdd/overview.md`, "As built".)*
 
 ## The game in one paragraph
 It is 2126. A plague killed nearly every mammal, so humanity bred bugs giant to eat. You start over on the

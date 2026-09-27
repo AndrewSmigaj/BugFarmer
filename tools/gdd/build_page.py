@@ -72,7 +72,7 @@ LIST_ITEM = re.compile(r"^([-*]|\d+\.)\s+(.*)$")
 
 
 def blocks(lines):
-    """Lines -> HTML blocks: paragraphs, lists (with indented continuation lines), tables, quotes, code."""
+    """Lines -> HTML blocks: paragraphs, ### headings, lists (with indented continuation lines), tables, quotes, code."""
     out, para, i = [], [], 0
 
     def flush():
@@ -115,6 +115,10 @@ def blocks(lines):
                 i += 1
             tag = "ol" if ordered else "ul"
             out.append(f"<{tag}>" + "".join("<li>" + inline(" ".join(it)) + "</li>" for it in items) + f"</{tag}>")
+        elif line.startswith("### "):
+            flush()
+            out.append("<h3>" + inline(line[4:].strip()) + "</h3>")
+            i += 1
         elif line.startswith(">"):
             flush()
             quote = []
@@ -212,7 +216,7 @@ def parse_section(path):
     if not lines[0].startswith("# ") or not meta_m:
         raise Malformed(f"{path.name}: needs a '# §NN · Title' first line and a '<!-- gdd: … -->' line")
     meta = dict(re.findall(r"(\w+)=([\w\-]+)", meta_m.group(1)))
-    title = re.sub(r"^§\s*\d+\s*·\s*", "", lines[0][2:].strip())
+    title = re.sub(r"^§\s*\w+\s*·\s*", "", lines[0][2:].strip())
     parts, order, cur, lead = {}, [], None, []
     for line in lines[1:]:
         if line.startswith("<!--"):
@@ -235,6 +239,7 @@ def parse_section(path):
         "lead": blocks(lead),
         "experience": blocks(part("The experience")),
         "decided": blocks(part("Decided")),
+        "activities": blocks(part("The game, activity by activity")),
         "reference": [{"title": n, "html": blocks(part(n))} for n in REFERENCE_PARTS if part(n)],
         "proposals": [parse_proposal(it, path.name) for it in split_h3(part("Proposals"))],
         "questions": [parse_question(it, path.name) for it in split_h3(part("Questions"))],
@@ -248,10 +253,11 @@ def parse_section(path):
 
 
 def review_order():
-    """The order table in docs/gdd/README.md: | order | § | section | status | [file](file) |"""
+    """The order table in docs/gdd/README.md: | order | § | section | status | [file](file) | (§ = two digits, or OV
+    for the overview that opens the review)."""
     order = []
     for line in (GDD / "README.md").read_text(encoding="utf-8").split("\n"):
-        m = re.match(r"^\|\s*(\d+)\s*\|\s*(\d{2})\s*\|.*\((\w+\.md)\)\s*\|\s*$", line)
+        m = re.match(r"^\|\s*(\d+)\s*\|\s*(\d{2}|OV)\s*\|.*\((\w+\.md)\)\s*\|\s*$", line)
         if m:
             order.append((int(m.group(1)), m.group(3)))
     return [name for _, name in sorted(order)]

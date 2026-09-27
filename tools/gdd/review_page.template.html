@@ -166,6 +166,8 @@ main { min-width: 0; max-width: 780px; padding-bottom: 96px; }
 .prose blockquote { margin: 0 0 .8em; padding-left: 14px; border-left: 3px solid var(--line-strong); color: var(--ink-2); }
 .prose pre { background: var(--surface-2); padding: 10px 12px; border-radius: var(--r); overflow-x: auto; font-size: 13px; }
 .prose pre code { background: none; padding: 0; }
+.prose h3 { font-size: 19px; line-height: 1.3; margin: 1.7em 0 .5em; text-wrap: balance; }
+.prose h3:first-child { margin-top: 0; }
 .tbl { overflow-x: auto; margin: 0 0 1em; }
 .tbl table { border-collapse: collapse; font-size: 14px; min-width: 520px; }
 .tbl th, .tbl td { text-align: left; vertical-align: top; padding: 7px 10px; border-bottom: 1px solid var(--line); }
@@ -296,6 +298,9 @@ textarea:focus, input[type="text"]:focus { outline: 2px solid var(--focus); outl
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  // a numbered section shows "§NN"; the overview (id OV) shows a star
+  const secNum = id => /^\d+$/.test(id) ? `<span class="ss">§</span>${esc(id)}` : "★";
+  const secName = id => /^\d+$/.test(id) ? `§${id}` : "Overview";
   const clone = o => JSON.parse(JSON.stringify(o));
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const store = {
@@ -447,8 +452,8 @@ textarea:focus, input[type="text"]:focus { outline: 2px solid var(--focus); outl
     $("#tally").innerHTML = `<b>${ready}</b> ready for you · <b>${done}</b> answered · <b>${final}</b> final · ${SECTIONS.length} sections in all`;
     $("#nav").innerHTML = SECTIONS.map(s => {
       const [cls, label] = sectionState(s.id);
-      return `<li><button type="button" data-sid="${esc(s.id)}" class="${cls === "draft" ? "draft" : ""}" aria-current="${s.id === current}" title="§${esc(s.id)} ${esc(s.title)}">
-        <span class="num"><span class="ss">§</span>${esc(s.id)}</span>
+      return `<li><button type="button" data-sid="${esc(s.id)}" class="${cls === "draft" ? "draft" : ""}" aria-current="${s.id === current}" title="${esc(secName(s.id))} ${esc(s.title)}">
+        <span class="num">${secNum(s.id)}</span>
         <span class="t"><span class="long">${esc(s.title)}</span><span class="short">${esc(shortTitle(s.title))}</span></span>
         <span class="chip ${cls}">${esc(label)}</span></button></li>`;
     }).join("");
@@ -515,7 +520,7 @@ textarea:focus, input[type="text"]:focus { outline: 2px solid var(--focus); outl
     const statusWord = { review: "Ready for your answers", final: "Final", draft: "Not written yet",
                          rework: "Being redone" }[s.status] || s.status;
     let h = `<header class="label">
-      <div class="sec" aria-hidden="true"><span class="ss">§</span>${esc(s.id)}</div>
+      <div class="sec" aria-hidden="true">${secNum(s.id)}</div>
       <h1>${esc(s.title)}</h1>
       <div class="meta"><span>${esc(statusWord)}</span>${updated ? `<span>updated ${esc(updated)}</span>` : ""}<span><code>${esc(s.file)}</code></span></div>
     </header>`;
@@ -538,6 +543,7 @@ textarea:focus, input[type="text"]:focus { outline: 2px solid var(--focus); outl
     if (s.lead) h += `<div class="prose part">${s.lead}</div>`;
     if (s.experience) h += `<section class="part experience"><h2>The experience</h2>${s.experience}</section>`;
     if (s.decided) h += `<section class="part"><h2>Already decided <span class="aside">in my words — tell me if I got it wrong</span></h2><div class="prose decided">${s.decided}</div></section>`;
+    if (s.activities) h += `<section class="part activities"><h2>The game, activity by activity <span class="aside">decided · built · designed · still open</span></h2><div class="prose">${s.activities}</div></section>`;
     if (s.reference.length) {
       h += `<section class="part">` + s.reference.map(r => {
         const [t, note] = REF_TITLES[r.title] || [r.title, ""];
