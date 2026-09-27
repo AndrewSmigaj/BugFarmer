@@ -962,15 +962,21 @@ Items marked (P#) wait for the owner's verdict on that proposal.
   without gold or diamond (§09; gold swords and spears — the suggestion is that they go too); the unused `durability`
   field (43 items) and the durability bonuses in `economy/stats_and_bonuses.md` go; the pickaxe gets the axe's motion
   when the worked-out tool motions go in.
-- **Food, potions, healing**: meals that heal and boost (with the recipe list); a small potion set (P16); bandages;
-  using a bandage or potion on another player; giving items to other players (P17).
+- **Food, potions, healing** (P16 and P17, accepted — D54): timed effects first (nothing in the game can give one
+  yet), then venom and poison on stings, then the cures; meals that heal over a while with one fullness boost at a
+  time (with the recipe list); healing potions with a short wait for the person healed; antivenom, salve, venom
+  resistance, night sight; bandages; the cauldron's recipes; food that doesn't spoil in bags; right-click a player to
+  offer items, bugs or coins; left-click to heal a friend; a new drop action with a per-zone limit.
 - **Fishing in the village**: place the Fisherman — his spot at the boat store (`zone_village_21_B.py:222`) is blocked,
   so he was skipped when the village was saved (`investigations/missing-npcs-village21b.md`); then the fishing
   mini-game, rods, bug baits, fish traps and boats.
 - **Water and the coast**: a wading outfit for shallow water (slow wading), boats for deep water (today every water
   tile stops players); the coastline into the western and eastern zones; the bug-shaped island in an inlet off the west coast;
   natural water barriers between areas.
-- **Trade**: bartering on the shop screen (P19) — each townsperson's accepted kinds of goods; coins from many sources.
+- **Trade** (P19, accepted — D54): one trade screen — a "to take" box beside the "to sell" box, goods counted at the
+  townsperson's buying price, coins making up the difference either way, one step that swaps everything at once
+  (tested against duplication like the sell box); fish for the fisherman, stone for the stonemason; coins from many
+  sources.
 - **Shop screen bug (found 2026-09-27):** `ShopPanel.RowOfOffers` skips every offer after the sixth (`col >= 6`), so
   the general store's last 13 goods (small net, both watering cans, wooden hoe/pickaxe/axe, calm spray, magnifying
   glass, gardener's gloves, cot, torch, lantern, wooden fence), the blacksmith's last six (copper and iron axes,
@@ -978,10 +984,11 @@ Items marked (P#) wait for the owner's verdict on that proposal.
   bought. Data slips: the carpenter's `buys: furniture` matches nothing (79 placeables have the furniture category,
   none the tag, and `shopBuysItem` matches ids and tags only), and the blacksmith's `metal` tag covers ores as well as
   bars (D26 says bars only).
-- **Townspeople**: daily routines — chores (mending fences, gathering fallen fruit, dealing with bugs that threaten
-  people), sleeping at home at night; P18 suggests shopkeepers stay at their counters by day and trade at the door at
-  night; townspeople become moving characters shown to every player; quests from several townspeople; the
-  myrmecologist's retrieval board.
+- **Townspeople** (P18, accepted — D54): shopkeepers at their counters by day; chores (mending fences, gathering
+  fallen fruit, dealing with bugs that threaten people) early and late or by townspeople without a shop; sleeping at
+  home at night, where players walk in and trade; townspeople become moving characters shown to every player, and
+  their chores go through the same sync checks as a player's; quests from several townspeople; the myrmecologist's
+  retrieval board.
 - **Towns**: the western town's strings of lights and other electric things; the starting village mostly unpowered,
   its windmill lighting only part of it (the Mayor's house) as a glimpse of power to come, and not takeable.
 - **World**: bugs spawn only in their own species' spawn areas and are free to cross zones (with "REAL cross-zone bug

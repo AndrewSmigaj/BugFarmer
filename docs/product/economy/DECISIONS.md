@@ -678,3 +678,15 @@ Bugs cross from zone to zone but spawn only in their species' own spawn areas. E
 redesigned: zones can be designed much better now, and some houses don't meet the roads properly. The underground
 fortress with the Queens' set is one example of a secret, not the only one. The prototype has four zones; the old
 version of the village doesn't count. Where documents disagree, the owner and the assistant settle it together.
+
+### D54 — Food, potions, giving, townspeople and trading: the overview's P16–P19 accepted (2026-09-27)
+The owner accepted P16–P19 with two changes. A night-sight potion stays in the starting set — it is worth doing
+properly, and simple to build. At night players simply walk into a townsperson's house and trade there, with no
+knocking: simple play matters more than realism. So: a meal heals over a while and gives one fullness boost at a time; a healing
+potion heals at once, then the person healed waits a short while before another works on them; other potions
+(antivenom, a salve for sprays and acid, venom resistance, night sight) have no wait; stronger bugs make stronger
+potions; the cauldron is the potion station; food doesn't spoil in bags or chests. Right-click a player to offer an
+item, bugs or coins; left-click a bandage or potion on a friend to heal them at once; a new action drops things on the
+ground. Shopkeepers keep their counters by day and chores fall early and late or to townspeople without a shop. One
+trade screen: goods count at what that townsperson pays, and coins make up the difference either way. The art
+approach is decided, so proposals don't offer cheaper art routes in its place.
