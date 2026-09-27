@@ -14,10 +14,9 @@
 
 ## 1. The problem, stated precisely
 
-Owner, verbatim: *"any blocks which are not exposed to the outside [should] be dark, like terraria… the
-tunnels in the underground [should] be dark without lighting… our boundary between open areas and underground
-areas is not a straight line so we can't just easily set up two lighting zones, the zones need to be in the
-shape of the underground."*
+Owner requirement: any block not exposed to the outside should be dark, as in Terraria, and underground
+tunnels should be dark unless lit. The boundary between open areas and the underground is not a straight line,
+so two simple lighting zones will not do — the dark region has to follow the shape of the underground.
 
 Two distinct sub-problems needing **two distinct signals** (the crux the research settled):
 

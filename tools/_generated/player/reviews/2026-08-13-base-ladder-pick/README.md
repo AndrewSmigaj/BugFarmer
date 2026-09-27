@@ -43,8 +43,8 @@ more like it, per rung. Three changes went in, not one:
 
 and your instruction it came from, 2026-08-05:
 
-> *"just do three ant carapace armor versions **without telling it what to put** other than the sprite and
-> it is made from ant parts and carapace"*
+> Three ant-carapace armour designs, from a prompt that says **nothing about what to draw** beyond the sprite
+> itself and its material (ant parts and carapace).
 
 So the directed brief had already been tried on the same subject, lost, and been dropped at your
 instruction — and then the whole base ladder was generated with it anyway. That is the bug, and it is
@@ -71,7 +71,7 @@ the sheet, the walk/run/swing animations, the gallery — is free.
 
 ## ⚠ The faces rule and the metal rungs — your call
 
-Faces became the default on 2026-08-07 (*"we should show faces… yes show faces"*). **Copper, iron and
+Faces became the default on 2026-08-07 (your decision to show faces). **Copper, iron and
 steel were generated ~an hour before that change, and all nine of their options are sealed helms** — a
 dark slit, no face. Checked at full resolution, not skimmed. Leather, wood-r2 and bronze-r2 show faces.
 

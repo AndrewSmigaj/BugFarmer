@@ -6,8 +6,8 @@ Writes into `tools/_generated/player/reviews/<date>-swing-game/` (cleared each r
 
 WHY THE PREVIOUS ONES READ AS POSING, NOT ATTACKING
 ---------------------------------------------------
-Owner: *"the user has to watch the play pull back the sword the swing the sword, its not a video game
-swing"*.
+Owner review (2026-08-04): the player has to watch the character pull the sword back and then swing it —
+that is not a video-game swing.
 
 They spread the motion evenly across the runtime with smooth easing, and gave the wind-up a third of it.
 So you watch him lift the sword, then watch him lower it. That is a cutscene.
@@ -48,7 +48,7 @@ BG = (150, 160, 150)
 PAD = 210
 # 20ms is the lowest delay gif players reliably honour (below that many clamp to 100ms). 14 frames x
 # 20ms = 0.28s, which is an attack. At 33ms it came out 0.46s — half a second of committed animation per
-# swing, which is the "watch him pull it back" problem measured rather than eyeballed.
+# swing, which is the slow pull-back problem measured rather than eyeballed.
 MS = 20
 
 ANTIC, STRIKE, HOLD, REC = 2, 3, 3, 6
@@ -155,10 +155,10 @@ def out_dir(tag):
     """A NEW folder per run — timestamped. Nothing is ever overwritten.
 
     Every lab script used to write to one folder named for the day and clear it each run, so re-running
-    destroyed the previous attempt. That means when the owner says "it was mostly ok before you changed
-    something", the file he was looking at no longer exists, and I cannot even tell him which version it
-    was because the filenames were reused. Owner: "can you please stop overwriting files i cant show you
-    the old one".
+    destroyed the previous attempt. That means when the owner says an earlier version was mostly fine before
+    a change, the file he was looking at no longer exists, and I cannot even tell him which version it
+    was because the filenames were reused. The owner asked for files to stop being overwritten, because an
+    overwritten file can never be shown to him again.
 
     A dated batch folder per run is exactly the scratchpad convention already written into the
     player-sprites skill — which I designed and then did not apply to my own output.

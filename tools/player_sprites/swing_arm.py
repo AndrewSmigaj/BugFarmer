@@ -11,8 +11,7 @@ sticks the hand onto the tool's grip point. So the tool leads and the hand is do
 stays parked next to the shoulder and *rotates in place* while the blade sweeps round it like a clock
 hand bolted to his chest.
 
-Owner, 2026-08-04: *"do people take a sword in their fist, hold their fist up to their shoulder and rotate
-their fist to swing it? ever?"* No. Nobody does.
+Owner, 2026-08-04: nobody swings a sword by holding the fist up at the shoulder and rotating it there.
 
 A real swing is the other way round. **The hand travels** — shoulder and elbow drive it out through an arc
 away from the body — and the blade pivots about the **wrist**. The blade's rotation is mostly a consequence
@@ -26,8 +25,8 @@ WHY IT WAS BUILT WRONG
 The same doc says: "The armless design caps how far the hand may travel... Keep the hand within roughly a
 third of a cell of the shoulder", because a fist out at arm's length was thought to look detached with no
 arm drawn. That constraint is what pinned the hand at the shoulder, and it is incompatible with a swing
-that reads as a swing. Owner overturned it: *"dont care about the arm missing, though it doesnt have to be
-realistic just out some"*.
+that reads as a swing. Owner overturned it (2026-08-04): the missing arm does not matter; the hand
+does not have to be realistic, just somewhat further out.
 
 HOW THIS ONE WORKS
 ------------------
@@ -81,7 +80,7 @@ def ease_in_out(u):
 # The character's half-width is only ~0.28 cell. Anything past ~0.7 stops reading as attached to him and
 # becomes a sword floating in space next to a man, which is the first thing this file got wrong.
 def v_short(t):
-    """A — the hand travels, but stays close. The conservative reading of "just out some"."""
+    """A — the hand travels, but stays close. The conservative reading of a little further out."""
     th = 105 + (-70 - 105) * ease_in_out(t)
     return th, 0.34, -18
 
@@ -126,10 +125,9 @@ def v_wrist(t):
 
 
 # ---------------------------------------------------------------------------------------------------
-# 2026-08-04, second pass. Owner: "you dont need to have the wrist angle with respect to the pommel of
-# the sword, its awkward, it should start a little behind the head and swing down, but the sword can be
-# angled back more, similar to far but the sword is angle back more so that the hand is perpendicular
-# with the pommel".
+# 2026-08-04, second pass. Owner direction: lose the awkward wrist angle against the pommel; start the
+# swing slightly behind the head and bring it down; tilt the sword further back than B_far, so the hand
+# meets the pommel at a right angle.
 #
 # So: NO per-frame wrist articulation. The blade sits at a FIXED angle behind the arm for the whole
 # swing, and the fist grips ACROSS the handle — perpendicular to the blade — instead of being rotated
@@ -137,9 +135,9 @@ def v_wrist(t):
 #
 # `HAND_PERP` replaces `HAND_ROT` (225), which was tuned for the old shoulder-pivot swing and has no
 # meaning once the hand travels.
-# OWNER'S PICK, 2026-08-04: "hand perp 180". Chosen off `HAND_ROTATION_which_way.png` in the review
+# OWNER'S PICK, 2026-08-04: HAND_PERP = 180. Chosen off `HAND_ROTATION_which_way.png` in the review
 # folder, which renders 0 / 90 / 180 / 270 side by side at the same frame.
-# 90 was wrong — "dude you turned the hand the wrong way" — and 270 was my guess at the opposite, also
+# 90 was wrong — the owner saw the hand turned the wrong way — and 270 was my guess at the opposite, also
 # not it. Do not re-derive this from reasoning about wrists; it was picked by eye against the render.
 HAND_PERP = 180.0
 START_TH, END_TH = 128.0, -74.0     # a little behind the head, swinging down
@@ -155,10 +153,9 @@ def _back(deg):
 
 
 # ---------------------------------------------------------------------------------------------------
-# THE OFFICIAL SWORD SWING — owner's pick, 2026-08-04:
-#   "they look great, do sword_1h_f4_back85 as the official one, but have it pull back a tad more at the
-#    end so the hand is at the hip not forward a little, you can also have tip slightly continue down
-#    more as you dow"
+# THE OFFICIAL SWORD SWING — owner's pick, 2026-08-04 (he judged the options good):
+#   sword_1h_f4_back85 is official, with a slightly deeper pull at the finish (the hand ends at the hip,
+#   not just ahead of it) and a tip allowed to travel a little lower.
 #
 # So it is F4 (blade 85 deg behind the arm) with two changes:
 #   * the arm carries past straight-down to END so the hand finishes AT THE HIP rather than out in front

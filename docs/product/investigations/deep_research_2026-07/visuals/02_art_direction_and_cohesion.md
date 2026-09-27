@@ -12,7 +12,7 @@ Verified project state: a `DefaultVolumeProfile.asset` exists but has NO LUT/col
 post-processing is currently OFF.*
 
 ## Bottom line up front
-The owner's complaint ("other games look a lot more interesting than ours") is, on the evidence, **less about
+The owner's concern — that comparable games look far more visually engaging than ours — is, on the evidence, **less about
 missing effects and more about COHESION + DENSITY + MOTION**:
 1. **Cohesion** — our sprites are generated in separate gpt-image passes, so their palettes, contrast, and
    implied light direction don't agree. The richest-looking 2D games force everything into **one value key,
@@ -245,7 +245,7 @@ discounted values seen July 2026; treat the struck base price as the norm.)*
 
 ## 7. Scored candidates — biggest look uplift we can actually do
 
-*Axes (1–5): **impact** on the owner's "looks more interesting" concern · **effort** (5 = cheap) · **fits our
+*Axes (1–5): **impact** on the owner's visual-appeal concern · **effort** (5 = cheap) · **fits our
 AI-sprite workflow** · **complements the planned grass/wind pass**.*
 
 | Candidate | Impact | Effort | Fits-AI | Grass-synergy | Verdict |

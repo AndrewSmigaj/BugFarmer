@@ -6,8 +6,8 @@ Open `REVIEW_large_and_game_size.png` — large on top, and the bottom row is ea
 grass**, next to the bare base for scale. The small row is the one that decides: the ranger was the
 best-looking design on the page and the worst in the game.
 
-> *"in all cases it should be armor, wearing armor made from ant carapace does not magically turn you into
-> an ant"* — so all three are a **person in armour**, with a helmet, not an ant's head.
+> Owner direction (2026-08-05): in every case it is armour — wearing armour made from ant carapace does not
+> turn the wearer into an ant. So all three are a **person in armour**, with a helmet, not an ant's head.
 
 | | design | the silhouette |
 |---|---|---|

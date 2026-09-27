@@ -1,6 +1,6 @@
 ---
 name: thorough-research
-description: Invoke for ANY non-trivial research, "look up how X is done / research best practices / how do good games do Y / find the right approach" task BEFORE proposing a design or writing code. This is the anti-bare-minimum gate — the default failure is "do half a search, find a couple things, call it good," and that is a FAILURE here. Forces breadth by agent fan-out, deep-reading (not snippets), ≥4 scored candidates per hard choice, an adversarial cold-critic loop until it finds nothing, and self-verification of load-bearing claims against the real code/docs. Pairs with certainty-assessment (the scoring gate) and deep-investigate (root-causing ONE bug). Read this the moment a task says "research" or "how should we do X".
+description: Invoke for ANY non-trivial research, "look up how X is done / research best practices / how do good games do Y / find the right approach" task BEFORE proposing a design or writing code. This is the anti-bare-minimum gate — the default failure is a shallow search that finds a couple of things and stops, and that is a FAILURE here. Forces breadth by agent fan-out, deep-reading (not snippets), ≥4 scored candidates per hard choice, an adversarial cold-critic loop until it finds nothing, and self-verification of load-bearing claims against the real code/docs. Pairs with certainty-assessment (the scoring gate) and deep-investigate (root-causing ONE bug). Read this the moment a task says "research" or "how should we do X".
 ---
 
 # Thorough research — breadth by construction, not willpower
@@ -58,8 +58,8 @@ prototype can resolve a render/behavior question, say so and make the **spike** 
 it, only the tool can.
 
 ### 7. Surface owner-taste as QUESTIONS, never guesses
-Genuine taste/scope decisions (how-dark, which mood, which trade-off) are **surfaced as questions**, quoting the
-owner verbatim where attributing intent. Never launder your inference into their decision. (See the
+Genuine taste/scope decisions (how-dark, which mood, which trade-off) are **surfaced as questions**; where you
+attribute intent, restate the owner's decision in clean prose, dated — never his words. Never launder your inference into their decision. (See the
 `dont-launder-guesses` memory.)
 
 ## Definition of DONE (countable — no "looks good enough")

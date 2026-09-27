@@ -61,7 +61,7 @@ def _rgba(path, why):
 # number — measured 3.678x for black-ant, 4.156x for fire-ant, 4.706x for bronze — and a fractional
 # NEAREST resize makes some source pixels 4 screen-px wide and the ones beside them 5. The sprite stops
 # being on a grid, which is the whole point of converting it to pixels in the first place. Owner,
-# 2026-08-18: *"NOT THE RAW version the PIXEL version"*.
+# 2026-08-18: it must be the pixel version, not the raw one.
 #
 # It also normalised on the TOTAL figure height, headgear included, so a tall-helmeted outfit's BODY
 # came out smaller — the same mistake as the pre-2026-08-18 hand placement.
@@ -235,7 +235,7 @@ def status():
         anim = os.path.join(PLAYER, O.path(name, O.ANIM_DIR))
         n = len([f for f in os.listdir(anim) if f.endswith(".gif")]) if os.path.isdir(anim) else 0
         print(f"  {name:<12} {', '.join(parts)}, anim {n}/{len(O.ANIMATIONS)}")
-        print(f"  {'':<12} approved {o['approved']} — \"{o['words']}\"")
+        print(f"  {'':<12} approved {o['approved']} — {o['words']}")
 
     if O.PENDING:
         print(f"\nNOT OFFICIAL — listed, deliberately NOT built ({len(O.PENDING)})")

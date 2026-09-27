@@ -8,7 +8,7 @@ to the WEST of the mouth with a gap (never over it); the mouth + compound are cl
 ORIENTATION: HIGH y = NORTH = top. The MOUTH opens SOUTH (down, toward the colony); the dirt ROAD
 arrives from the NORTH; the building sits on the surface to the WEST.
 
-Composition contract (so it drops into the zone without messing it up):
+Composition contract (so it can be placed into the zone without disturbing the rest):
   `place_ant_entrance(b, mx, my)` places ONLY the SURFACE compound around a mouth whose opening is
   at (mx, my) — it does NOT carve the tunnel (the ZONE owns the tunnel network). It clears a
   clearing first, so trees never end up in the throat. The standalone `build()` carves one clean

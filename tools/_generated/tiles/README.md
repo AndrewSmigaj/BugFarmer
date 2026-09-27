@@ -24,7 +24,7 @@ with **no dominant base** (base_share 0.11) vs the Stardew reference's **0.48**.
 | **A3** | render a big field, crop the interior | **Works well.** Asking for a *field* (not "a tile") avoids tile-framing/vignette artefacts; marks came out at a good size. |
 | **A4** | offset 50% + mask-repaint the seam cross | **Works.** Clean seams (seam 23/13), texture preserved. A solid way to make any candidate wrap. |
 | **A5** | reference-fed edit (input_fidelity=high) | Mediocre here — picked up checkering from its source. Reference-feeding is still the right tool for *palette matching* (see tufts). |
-| **SH** | **4 tiles on ONE sheet** | **The standout.** Four good, distinct tiles that share palette/style *by construction* (one image), plus a nice checkered base + light/dark blade fans + tan specks. `q4` measures seam (0,0). Owner's "probably won't work" idea worked best. |
+| **SH** | **4 tiles on ONE sheet** | **The standout.** Four good, distinct tiles that share palette/style *by construction* (one image), plus a nice checkered base + light/dark blade fans + tan specks. `q4` measures seam (0,0). This was the owner's idea — one he expected probably would not work — and it worked best. |
 | **M1** | AI texture → grid-sample → code seam-heal | Good: AI look, guaranteed wrap, no extra API call. |
 | **M2** | AI texture → patch quilting | Tiles fine but the quilt repeats visibly — patch size needs work. |
 | **M3** | palette extracted from AI → procedural stamping | Good, calm, guaranteed seamless; the most controllable. |

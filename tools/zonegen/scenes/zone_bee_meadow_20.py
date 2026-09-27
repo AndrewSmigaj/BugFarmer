@@ -85,10 +85,10 @@ def build():
             elif b.surface[y][x] == "grass" and (-h_s - 1.7 <= dy <= h_n + 1.7):
                 b.set_ground(x, y, "sand")
 
-    # THE RIVER runs SEA → VILLAGE (owner 2026-07-06: "the river should flow to the
-    # sea not a little pond next to the sea" — the old spring pondlet is gone; the
+    # THE RIVER runs SEA → VILLAGE (owner 2026-07-06: the river must flow to the
+    # sea, not end in a little pond beside it — the old spring pondlet is gone; the
     # west end is a real MOUTH through the beach). Widths: mouth 4 → 3 → 3 (wider
-    # overall per the same correction: "river should be wider").
+    # overall per the same correction: the river should be wider).
     for seg_start, seg_end, sw_ in [((10, 207), (38, 202), 4), ((38, 202), (58, 172), 3),
                                     ((58, 172), (76, 142), 3), ((76, 142), (92, 108), 3),
                                     ((92, 108), (150, 84), 3), ((150, 84), (255, STREAM_Y), 3)]:
@@ -117,8 +117,8 @@ def build():
     pond(b, 212, 204, 7, 5, seed=26)
 
     # ---- 1b. THE SOUTH GRADIENT (owner design, 2026-07-06) ---------------------
-    # "there is no ant colony in the zone... wanted it to start getting dirty and rocky
-    # on a gradient not suddenly having the dirt wall." NO ants, NO set-piece: the meadow
+    # This zone has no ant colony; the ground shifts gradually toward dirt and rock
+    # instead of stopping at an abrupt dirt wall. NO ants, NO set-piece: the meadow
     # itself dirties and roughens toward the south edge (C12), mineable dirt masses with
     # rocky cores sit EMBEDDED in the dirtiest part, and patchy village-style woods with
     # real clear areas hold the band's east (C13: no blob stamps, no even spacing).
@@ -200,8 +200,8 @@ def build():
               core="stone_block",
               vein_spec=COMMONS + [("ore_gold_block", 1, 2, 3, "core"),
                                    ("ore_ruby_block", 1, 2, 2, "core")])
-    # TWO MORE masses so the rock FLANKS the whole notch (owner 2026-07-06: "the
-    # gorge does not surround the river" — two pads at two spots left the river
+    # TWO MORE masses so the rock FLANKS the whole notch (owner 2026-07-06: the
+    # gorge did not surround the river — two pads at two spots left the river
     # running through plain grass for most of the stretch).
     rock_mass(b, 211, 76, 6, 5, seed=56, shell="stone_block", floor="stone_floor",
               core="stone_block", gap_chance=0.1, vein_spec=[("ore_coal_block", 2, 3, 5, "any")])
@@ -439,9 +439,9 @@ def build():
     # north-west band, and TWO NEW NORTH STANDS framing the top of the zone. The gap between
     # the north stands is deliberate — travellers pass through here, and the open corridor
     # around y≈200-215 stays wide and readable.
-    # THE WOODED ZONE (owner 2026-07-06: "there should be a huge meadow surrounding
-    # the bee farm but everything else should be more wooded... more to the east and
-    # south" — forest.md §Zone-scale balance). The MEADOW HEART stays open (~x60-190,
+    # THE WOODED ZONE (owner 2026-07-06: a large meadow around the bee farm, woods
+    # everywhere else, thickening toward the east and south — forest.md
+    # §Zone-scale balance). The MEADOW HEART stays open (~x60-190,
     # y95-200 around Maren's), plus the road corridor, the north travel corridor,
     # the meadow_e spawn circle (184-216, 109-141), and the lake basin. Everything
     # else grows stands that MERGE into bands.
@@ -535,8 +535,8 @@ def build():
     for wx, wy in [(232, 158), (186, 90)]:
         _place_near("wasp_nest", wx, wy)
 
-    # WILD FRUIT PATCHES (owner, twice: "needs a few patches of fruit trees" — pairs
-    # weren't patches). Four loose clumps of 4-5, each near a route: windfalls feed
+    # WILD FRUIT PATCHES (owner, twice: the zone needs a few patches of fruit trees —
+    # pairs weren't patches). Four loose clumps of 4-5, each near a route: windfalls feed
     # flies today and the ants foraging up from the south tomorrow, blossom forage
     # for the bees either way. Clumped wild spacing, not orchard rows (C6).
     for fx, fy, sp in [
@@ -698,8 +698,8 @@ def build():
             continue
         b.set_ground(tx_, ty_, "dirt", surface="path")
 
-    # ---- ROAD CONNECTIVITY GATE (C15: "the roads are not connected... all your
-    # paths have huge gaps in them") — BFS over the actual walk network (path
+    # ---- ROAD CONNECTIVITY GATE (C15: the roads were not connected — the paths had
+    # large gaps in them) — BFS over the actual walk network (path
     # surface, bridge decks, worn dirt) from the east entrance; every declared
     # endpoint must be REACHED or the build FAILS. No silent gaps, ever again.
     from collections import deque

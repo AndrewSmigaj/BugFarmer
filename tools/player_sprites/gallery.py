@@ -16,9 +16,8 @@ IT SHOWS WHAT IS OFFICIAL — NOT WHAT IS ON DISK
 -----------------------------------------------
 Every name, path and animation comes from `official.py`. This page used to SCAN DIRECTORIES instead, so
 it inherited the renderer's fallback chains and showed whatever happened to be lying around — which is
-exactly why asking for "a gallery of the official ones" returned things nobody had chosen. Owner,
-2026-08-06: *"I will for example ask for a gallery showing all the official whatevers and it will just
-be random crap."*
+exactly why asking for a gallery of the official outfits returned things nobody had chosen. Owner,
+2026-08-06: a request for a gallery of the official items kept producing a random assortment instead.
 
 Concretely, before this: `thrust_spear_two_handed.gif` appeared in the gallery for 22 outfits, long after
 the code that produced it had been deleted; and 21 outfits displayed hands loaded from a gitignored
@@ -274,7 +273,7 @@ function detail() {
   if (!o.official)
     h += `<div class="card"><h2>NOT OFFICIAL</h2><p class="note">Nothing below is built. Needs: ${esc(o.needs)}</p></div>`;
   else if (o.words)
-    h += `<div class="card"><h2>Approved ${esc(o.approved)}</h2><p class="note">“${esc(o.words)}”</p></div>`;
+    h += `<div class="card"><h2>Approved ${esc(o.approved)}</h2><p class="note">${esc(o.words)}</p></div>`;
 
   // A declared animation with no file shows as a MISSING tile rather than being quietly left out.
   h += sec('Animations',

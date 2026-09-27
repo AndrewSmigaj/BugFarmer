@@ -6,7 +6,7 @@ _status: READY TO IMPLEMENT (sim-touching — needs the determinism gate) · inv
   `initStationsInChunk` (`handlers_farming.go:901`). When you **move** a compost (break + re-place into an
   already-loaded chunk), the runtime place handler creates the occupant but **no StationState**, and
   `handleStationDeposit` requires a **pre-existing** one (`:956-961` → "No station there") with **no
-  find-or-create**. So the moved bin silently can't accept deposits = "could no longer load compost."
+  find-or-create**. So the moved bin silently can't accept deposits — the reported symptom.
 - **Why only compost:** craft stations + containers lazily find-or-create on first use
   (`resolveCraftStation` `craft_stations.go:64`, `resolveContainer`). The deterministic **station** path
   (compost/breeding) is the one place that was never given that fallback.
@@ -19,7 +19,7 @@ _status: READY TO IMPLEMENT (sim-touching — needs the determinism gate) · inv
 - **Certainty:** root cause **95%** · fix-shape **90%**. **Needs your decision:** none. **Status:** `READY`.
 
 ## 1. Issue
-> "moving the compost container broke it, could no longer load compost"
+> Owner playtest report (2026-06-28): after the compost bin was moved, it no longer accepted compost.
 
 ## 2. Root cause (verified, the chain)
 1. compost_bin: `interaction_type:"station"`, `world.station{accepts[], capacity, process_ticks,

@@ -134,7 +134,7 @@ Five layers, matching GDD §15.1 (armor + utility-overlay + accessories) plus co
 
 1. **Armor sets** — every piece gives `defense`; a **full set grants a themed set bonus.** The progression
    ladder: *leather → copper → bug-chitin → iron → silver → crystal/gold (endgame).*
-2. **Utility outfits** (the "much better than bare minimum" headline — §4 below) — themed working clothes
+2. **Utility outfits** (the headline of the fuller-than-minimum design — §4 below) — themed working clothes
    that trade combat defense for **big bonuses to one activity** (bee suit, fisherman's vest, miner's kit…).
 3. **Accessories** (2 slots, small bonuses, mix-and-match — §5 below).
 4. **Consumables** — timed buffs from the cauldron/kitchen (potions, meals). Strong but expire.
@@ -147,8 +147,8 @@ tuning, consumables = burst, décor = slow idle. You can't wear two outfits, so 
 
 ## 4. Utility outfits (themed working sets) — the fun part
 
-Each is a 1–3 piece overlay set whose **set bonus defines a playstyle.** These are the "bee suits, special
-clothing like a fisherman's vest" the request called for. Defense on these is low — they're tools, not armor.
+Each is a 1–3 piece overlay set whose **set bonus defines a playstyle.** These are the bee suits and special working
+clothes (a fisherman's vest and the like) the request called for. Defense on these is low — they're tools, not armor.
 
 | Outfit | Pieces | Headline set bonus | Smaller per-piece bonuses |
 |---|---|---|---|
@@ -180,7 +180,7 @@ drops, and quest rewards. A taste of the menu:
 - **Economy:** Merchant's Seal (`sell_pct`), Coin Pouch (`buy_discount`).
 - **Light/utility:** Glowstone Amulet (`light_radius`), Tinkerer's Gear (`tool_durability`).
 
-## 6. Trade-off items ("bonus while detrimenting") — Terraria flavor
+## 6. Trade-off items (a bonus paired with a drawback) — Terraria flavor
 
 The request specifically asked for items that **bonus while hurting another stat.** These create build
 tension and let a player over-commit. Examples (all just a `bonuses` block with a negative field):

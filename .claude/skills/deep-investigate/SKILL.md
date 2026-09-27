@@ -30,7 +30,8 @@ maxed — so a human can approve the fix in the morning from the doc alone.
 - **Certainty is evidence-gated.** A `%` is a *ranking of how well-evidenced a claim is*, never a vibe.
   90%+ means "I read the thing that proves it." Front-load EVERY surprise/uncertainty into the open before
   you call it done — do not leave a knowable unknown for the morning.
-- **Don't launder guesses as the user's decisions; quote the user verbatim** when attributing intent. The
+- **Don't launder guesses as the user's decisions.** When attributing intent, restate what the owner decided in
+  clean prose, dated, keeping his hedges — never his conversation copied into the repo. The
   user's game-model beats real-world priors. Docs *I* authored are NOT authority — built artifacts + the
   user's words are.
 - **No cowardice.** If the real cause is hard, ugly, or implicates earlier work, say so plainly. Never
@@ -45,7 +46,8 @@ with the **Debrief at the very top** (written last, read first). Use the templat
 ## The phases
 
 ### 0 · Frame & reproduce
-- Restate the issue in precise terms; **quote the user's report verbatim** so intent isn't drifted.
+- Restate the issue in precise terms: **the owner's report in clean prose, dated, keeping every detail and hedge**
+  (never his words copied — his conversation stays out of the repo), so intent isn't drifted.
 - Pin: the observable **symptom**, the **expected** behavior, **repro conditions** (which zone, single- vs
   multi-client, fresh vs persisted save, which build, what triggers it), and all **evidence** (console
   lines, screenshots, numbers).
@@ -157,7 +159,7 @@ _status: <DRAFT | READY TO IMPLEMENT | BLOCKED ON …> · investigated <date> ·
 - **Risk / determinism:** <…>   **Effort:** <S/M/L>   **Needs your decision:** <none | …>
 
 ## 1. Issue, repro & evidence
-> <verbatim user report>
+> Owner report (<date>): <the report restated in clean prose — every detail and hedge, no quotes>
 - Symptom · Expected · Repro conditions (zone/clients/save/build) · Evidence (logs/numbers) · Acceptance test.
 
 ## 2. Root cause (the chain)

@@ -6,9 +6,9 @@
 Status: ✅ done · 🎨 old art, needs a fresh roll · ⬜ nothing yet · ⚠ needs your call
 
 > ⚠ **PREREQUISITE — the species list.** Several sets below depend on which bugs have how many tiers.
-> `species.json` has **15 entries**; the design docs describe many more. Owner: *"we need for all the bugs
-> simpler and more advanced version — a lot of bugs having three species in their tiers though some just 2
-> and some 1 but most have 3."* **Wasps and hornets: ~2 types each. Bees: 3, including killer bee.**
+> `species.json` has **15 entries**; the design docs describe many more. Owner direction: every bug needs simpler
+> and more advanced versions — most bugs have three species across their tiers, though some have two and
+> some only one. **Wasps and hornets: ~2 types each. Bees: 3, including killer bee.**
 > Worth settling that list before the thorn and bee sets get briefed.
 
 ---
@@ -38,14 +38,14 @@ leather · wood · **bronze ✅** · copper · iron · steel · platinum
 | **blackant** ✅ | Ant Colony | |
 | **scorpion** ⬜ | Scorpion Rocks (sand/desert) | venom + heat |
 
-> I had cut beetle-shell as "redundant". That was wrong. The owner's *"i dont think we need multiple chitin
-> just the fireant and black ant"* was about **ant variants** — don't make five ant sets — and I generalised
+> I had cut beetle-shell as "redundant". That was wrong. The owner's ruling that only two chitin sets are
+> needed — fire ant and black ant — was about **ant variants** — don't make five ant sets — and I generalised
 > it into "no other bug-plate armour", which would also have ruled out the scorpion and thorn sets he
 > explicitly asked for.
 
 ## 5. Thorn line — 3  ·  species-specific
 
-*"things that hit you get stung."* **Not one ladder** — wasps and hornets are different species; hornets
+Attackers that hit the wearer get stung (owner). **Not one ladder** — wasps and hornets are different species; hornets
 *hunt* wasps. Three separate sets, three zones, three ingredient sources. Each may need thorns from
 **multiple species within its own family**.
 
@@ -60,12 +60,12 @@ leather · wood · **bronze ✅** · copper · iron · steel · platinum
 | set | what it is | names to try |
 |---|---|---|
 | **ranger** 🎨 | wasp/hornet protection. From the eastern outpost zone | *(keep "ranger")* |
-| **forest plate** ⬜ | **samurai-ish. No bugs** — special trees and plants. **CAMO**: certain things have a hard time seeing you, plus tank defence, but **slower** | Forest Plate · Bark Harness · Greenwarden |
+| **forest plate** ⬜ | **samurai-ish. No bugs** — special trees and plants. **CAMO**: some creatures struggle to see you, plus tank defence, but **slower** | Forest Plate · Bark Harness · Greenwarden |
 
 ## 7. Silk / stealth — 3  ·  light, fast, quiet, WEAK
 
 ⚠ **Correction: silk is NOT venom-related.** Silk is stealth and speed — the robes are quiet *because they
-are light*. Venom comes from elsewhere: **weapons** cause poisoned states, and **widow's armour reduces
+weigh so little*. Venom comes from elsewhere: **weapons** cause poisoned states, and **widow's armour reduces
 venom**.
 
 **Two different stealth flavours, deliberately:** silk = light-and-quiet (fast, weak) · forest = camo
@@ -86,8 +86,8 @@ station bonuses. *(Dredging: later.)*
 
 ## 9. Fishing — 3, maybe 4
 
-⚠ **My mistake:** I had this as one dock set plus two underground-river sets, which is *"one tiny part of
-the water world."* **There is no diving in this game.**
+⚠ **My mistake:** I had this as one dock set plus two underground-river sets, which covers only a small part of
+the water world (owner correction). **There is no diving in this game.**
 
 **basic fishing gear** 🎨 · **cave fishing gear** ⬜ · **armoured fishing gear** ⬜ · *(ultimate fishing gear?* ⚠*)*
 
@@ -110,12 +110,12 @@ one set only)*
 
 ## 13. Potions — 2
 
-**village healer's garb** ⬜ · **industrial chemist** ⬜ — *"neat having potions made via these two lenses."*
+**village healer's garb** ⬜ · **industrial chemist** ⬜ — the owner likes potions being made from these two angles.
 
 ## 14. Light — 2 (+1 experiment)
 
-⚠ **Brief it as ARMOUR, like everything else** — not *"an outfit that turns you into a mutant glowworm
-humanoid."* That is what made the old sheet ugly.
+⚠ **Brief it as ARMOUR, like everything else** — not an outfit that turns the wearer into a mutant glowworm
+humanoid. That is what made the old sheet ugly.
 
 | set | note |
 |---|---|
@@ -125,10 +125,10 @@ humanoid."* That is what made the old sheet ugly.
 
 ## 15. Decorative / social — 6+  ·  ⏸ ON HOLD
 
-Owner 2026-08-07: *"hold off on clothing."* The list stands; nothing gets briefed yet.
+Owner decision (2026-08-07): clothing is on hold. The list stands; nothing gets briefed yet.
 
-**Dye is a RECOLOUR, not new sprites.** *"dye is for things with cloth, but I want to try to use python or
-something to manually change the colors rather than creating new sprites — it would take forever."* So dye
+**Dye is a RECOLOUR, not new sprites.** Owner direction: dye applies to cloth items, and he wants to try recolouring existing sprites
+with a script (e.g. Python) rather than generating new sprites, which would take far too long. So dye
 is a palette-swap pass over an existing cloth outfit — free, no API — and only cloth sets are dyeable.
 Parked until the clothing line starts.
 
@@ -153,8 +153,8 @@ prospector's oilskin · queen's regalia *(it IS the queens' set)* · merchant ·
 
 ## Your calls
 
-1. **Fishing 4th** — is there an "ultimate fishing gear"?
-2. **Beekeeping 4th** — is there a "fancy armoured beesuit"?
+1. **Fishing 4th** — is there a top-tier fishing outfit?
+2. **Beekeeping 4th** — is there a top-tier armoured beesuit?
 3. **The third legendary** — still an empty slot.
 4. **Names** — pick from the candidates above, or say the flavour and I will try more.
 

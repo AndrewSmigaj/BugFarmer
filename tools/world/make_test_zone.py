@@ -6,7 +6,7 @@ path) — just small, and fully described by its zone.json. The zone config is t
 single source of truth: `static` disables spawn/merge/split, `swarm_size` fixes the
 bug count per swarm, and `seed` pins the world seed for reproducible runs.
 
-This is the knob for "make a test world / change it / scale it up". To grow toward
+This is the knob for making a test world, changing it, and scaling it up. To grow toward
 production-like load (e.g. to reproduce a load-sensitive sync bug), just raise
 --initial (swarm count) and re-run.
 

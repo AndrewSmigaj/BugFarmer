@@ -60,7 +60,7 @@ then temporary dev keys M/N cycle material A/B).
   materials × known shapes + length cap). The cost is then the **ground recipe**
   (`nakama/data/entities/ground_recipes.json`, id → `[]RecipeIO`): a solid tile costs its one material's
   recipe; a **composite costs the UNION of BOTH materials' recipes**, duplicates summed — it's made of both
-  (owner: "a sandwich needs bread AND filling"). `groundRecipeIngredients(id)` merges via `CompositeMaterials`;
+  materials, so it costs both (owner decision). `groundRecipeIngredients(id)` merges via `CompositeMaterials`;
   `groundShortfall` builds a "Need 2 stone, 1 plank" message; consume goes through the crafting item path
   (`playerCount`/`playerConsume`). Missing ingredients → the world-error toast, not silence.
 - **DIG = a progressive break.** Each Shift+LMB hit accumulates in a **`DiggingState`** map (separate from the
@@ -76,7 +76,7 @@ then temporary dev keys M/N cycle material A/B).
 - **World-error toast (foundational, game-wide):** `WorldToast` (client HUD) surfaces every OpCode-40
   refusal ("Need 2 stone", "Can't shovel water", "Nothing to dig here"). Previously only `ShopPanel` read
   OpCode 40 (and only while open), so refusals outside a shop were invisible — the root cause of the shovel
-  "does nothing, no feedback" bug. Fixed once, for all systems.
+  bug where an action appeared to do nothing and gave no feedback. Fixed once, for all systems.
 - Feedback: dust poof (`HitBurst.Kind.Dust`) + the shovel scoop swing per hit/place.
 
 ## Palette scope (decorative only) & excluded systems

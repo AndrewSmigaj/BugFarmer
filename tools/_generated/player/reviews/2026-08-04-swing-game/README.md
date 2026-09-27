@@ -8,7 +8,8 @@ Six gifs, nothing else. `FRAME_BUDGET_down.png` shows all 14 frames labelled.
 
 ## What changed
 
-> *"the user has to watch the play pull back the sword the swing the sword, its not a video game swing"*
+> Owner review (2026-08-04): the player has to watch the character pull the sword back and then swing it —
+> that is not a video-game swing.
 
 The previous ones spread the motion evenly across the runtime and gave the wind-up a third of it, so you
 watch him lift the sword and then watch him lower it. That is a cutscene.
@@ -24,7 +25,7 @@ of the time is spent **sitting on the end pose** and recovering.
 | **8-13** | recovery | eases home. Slowest part, nobody is watching it. |
 
 14 frames at 20ms = **0.28s**. The previous version was 0.46s once measured — half a second of committed
-animation per swing, which is the "watch him pull it back" problem in numbers rather than in my opinion.
+animation per swing, which is the slow pull-back problem in numbers rather than in my opinion.
 
 The strike frames draw a short **trail** — the blade at the angles it just passed through — because three
 frames of travel is too fast for the eye to read the arc without it.

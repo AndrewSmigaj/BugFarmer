@@ -76,8 +76,8 @@ Destroying a nursery is the **normal occupant-break** (hit it N times → pick u
 - Only the **live resident adults** spill out into the world (wasps come out **aggressive**).
 - To keep any brood, **harvest it first**, then move it to a compatible nursery.
 - **Built:** `onNestOccupantRemoved` now **perishes the brood** (`clearNestBrood`, no bugs minted) and orphans
-  the resident patrol — the already-live adults proximity-aggro the breaker. Matches "the brood dies, only
-  living adults spill out."
+  the resident patrol — the already-live adults proximity-aggro the breaker. Matches the rule above: the brood dies and
+  only living adults spill out.
 
 ## Stages — egg → larva → pupa → adult (flies pupate too)
 The nursery bugs run the real insect life cycle: **egg → larva → pupa → adult**. Flies included — a housefly is

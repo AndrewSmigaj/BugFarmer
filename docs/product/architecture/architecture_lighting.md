@@ -89,8 +89,8 @@ world→screen sampling must then track the camera.)
 | **C. Derive from solids only** (mechanism 1 alone — no roof signal) | **No** — open tunnels read lit | n/a | Zero (already have the solid map) | Low | **REJECT for tunnels** — handles buried blocks only; keep as mechanism 1, not a tunnel solution |
 | **D. Sparse sky-seed + enclosure flood** (client-derived) | **No** — surface-connected tunnels flood as "exposed" through their mouth (the common case); the only patch is the horizontal sky-flood §3 proves meaningless | — | ~Zero | Low | **REJECT** — reintroduces the exact top-down bug (research §6a) |
 
-**Recommendation — RESOLVED: A, the authored BINARY mask** (decided 2026-07-08; owner wants "terraria dark"
-+ simplicity). Scalar/ceiling-hole light shafts (B) are a **deferred nice-to-have**, not v1 — the pipeline is
+**Recommendation — RESOLVED: A, the authored BINARY mask** (decided 2026-07-08; the owner wants Terraria-style
+darkness + simplicity). Scalar/ceiling-hole light shafts (B) are a **deferred nice-to-have**, not v1 — the pipeline is
 the same (byte vs bit) so we can upgrade later without rework. The flood (D) is a documented dead-end. This is
 a **new end-to-end feature** (below).
 
@@ -159,9 +159,9 @@ move, no re-tune — that cost only applies to A2/B). This is the least-invasive
 
 ## HC4 — How dark is "dark"? — RESOLVED (owner, 2026-07-08)
 
-Owner: *"terraria dark in the underground, above ground very dark in the middle of the night like it is now."*
+Owner decision: Terraria-style darkness underground; above ground, the middle of the night stays as dark as it is now.
 - **Underground = Terraria PITCH-BLACK** beyond the light bubble (darkness floor ≈ 0; unlit caves unnavigable —
-  a torch is required, which matches the existing `LampLight.cs:98` stance and the owner's "no free glow" call).
+  a torch is required, which matches the existing `LampLight.cs:98` stance and the owner's no-free-glow call).
 - **Surface = the EXISTING day/night** — the current deep-night darkness (`nightIntensity = 0.20`) is what the
   owner wants; **do not change it.** The darkness system is *additive underground only*; it must not alter the
   surface night that already reads correctly.
@@ -175,17 +175,17 @@ mask is authored content, not a runtime sim read. No `frontier-sync` recipe need
 
 ## Cross-zone continuity (owner requirement 2026-07-07 — captured in BACKLOG.md)
 
-Owner: *"lighting must be continuous ACROSS zone seams, not per-zone-isolated… no hard light/dark wall at the
-seam, and a player straddling the edge sees one coherent light field."* Also (2026-07-06): *"the outside area
-at the top… lit like any other day/night… we can make it dark past that point"* + *"all masses of ore block
-should have the inner ones dark, wherever they are surrounded, like terraria."* The B′ model honors these:
+Owner requirement: lighting must be continuous ACROSS zone seams, not isolated per zone — no hard light/dark wall
+at the seam, and a player straddling the edge sees one coherent light field. Also (2026-07-06): the outside area at
+the top is lit by the normal day/night cycle and may turn dark past that point, and in every mass of ore blocks the
+inner, fully surrounded blocks are dark, as in Terraria. The B′ model honors these:
 - **The lit-surface half is continuous by construction** — day/night is one global driven by the shared server
   tick (`DayNightController.cs`), identical in every zone, so a lit surface strip matches its neighbor's.
 - **The dark half is an AUTHORING edge-contract.** The darkness field is per-zone (computed from that zone's
   solid map + roof mask), so the shared edge cells between two zones must have **matching roof values** — a new
   row in the zone edge-contract discipline (same idea as terrain edge contracts in zone-craft). A surface zone's
   bottom edge and the underground zone's top edge must agree, so crossing the seam shows no light/dark wall.
-- **The Terraria "inner surrounded blocks are dark" rule = mechanism 1** (darkness-from-solids) — it already
+- **The Terraria-style rule that inner, surrounded blocks are dark = mechanism 1** (darkness-from-solids) — it already
   darkens the interior of any block mass (ore masses on the surface included), no roof needed.
 - **Open question:** does the game ever *render two zones simultaneously* at a seam, or is it a hidden swap
   (per BACKLOG "cross-zone movement — hidden swap")? If simultaneous, both zones' darkness fields must be
@@ -281,14 +281,14 @@ Read/Write on, compression off, non-sRGB/bilinear (1024×32, matches `m_ColorGra
 
 # Decisions — RESOLVED (owner 2026-07-08)
 
-All settled; no open owner questions remain for v1. Verbatim where the owner spoke:
-- **How dark** — *"terraria dark in the underground, above ground very dark in the middle of the night like it
-  is now."* → underground pitch-black; surface = the existing night, untouched. *(HC4)*
-- **Roof: binary**, not scalar — matches "terraria dark" + simplicity; ceiling-hole light shafts deferred. *(HC2)*
-- **Player light: torch required, no free glow** — owner: glowing without a torch *"would just be silly."*
+All settled; no open owner questions remain for v1. The owner's decisions, restated:
+- **How dark** — Terraria-style darkness underground; the surface night stays as dark as it is now
+  → underground pitch-black; surface = the existing night, untouched. *(HC4)*
+- **Roof: binary**, not scalar — matches Terraria-style darkness + simplicity; ceiling-hole light shafts deferred. *(HC2)*
+- **Player light: torch required, no free glow** — the owner ruled out glowing without a torch.
   Keeps the existing `LampLight.cs:98` stance.
-- **Mood: distinct BugFarmer look**, broadly like other indie systems. Owner: Apico was *"an example of one of
-  many indie games with better lighting… not so you could hyperfocus on it and… over match."* **Do NOT treat
+- **Mood: distinct BugFarmer look**, broadly like other indie systems. Owner: Apico was one example among
+  many indie games with better lighting, not a reference to fixate on or over-match. **Do NOT treat
   Apico as the benchmark** — it's one reference; its concentric-ring (stepped radial falloff) is the technique
   worth borrowing, and it aligns with the Terraria/Minecraft stepped-light look we're already targeting. *(HC-L1)*
 - **Emission tooling: deferred** — bloom-on-bright-pixels + a point light on glowers (`mushroom_glow` etc.) for

@@ -19,7 +19,8 @@ _status: READY — mostly by-design + discoverability; ties to #13/#11 · invest
   would close it). **Needs your decision:** auto-pickup fruit too, or keep E/hit? **Status:** `READY`.
 
 ## 1. Issue
-> "picking up bugs and/or other things doesn't seem to work, some things seem to work fine picking up others dont so an investigation is needed"
+> Owner playtest report (2026-06-28): picking things up, bugs included, is inconsistent: some things pick up fine and others do not.
+> He asked for an investigation.
 
 ## 2. Evidence
 - `PickupController.TryAutoPickup` → `GetClosestItem(pos, 1.25, includeBugFood:false)` — auto-grabs non-bug-food

@@ -1,7 +1,7 @@
 'bala# Economy & Crafting — Suggestions
 
 Recommendations for turning the Stage-1 crafting spine + flat item list ([`findings.md`](findings.md)) into
-the **fleshed-out, "much better than bare minimum"** system the request wants — including the **town NPCs
+the **fleshed-out system, well beyond a bare minimum,** that the request wants — including the **town NPCs
 (merchant, blacksmith, carpenter)** with intro dialogue + random tips. Companion design:
 [`stats_and_bonuses.md`](stats_and_bonuses.md), [`item_catalog.md`](item_catalog.md). Stays inside the GDD
 guardrails (item-driven power, no grind, small accessories, capped idle bonuses).

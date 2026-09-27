@@ -1,7 +1,6 @@
 # 2026-09-26 — Copper: the first test batch on the rebuilt procedure
 
-> **VERDICT (2026-09-26): approved** — *"it looks good! there are polish issues but we can work on that later as they
-> involve hand positions"*. Copper is now official (`outfits/copper/`). No rerolls were asked for; the back-walk size
+> **VERDICT (2026-09-26): approved**, with polish left for later (it concerns hand positions). Copper is now official (`outfits/copper/`). No rerolls were asked for; the back-walk size
 > and the front knee lift below stay on the polish list with his hand-position note.
 
 Folder: `C:\Users\emily\BugFarmer\tools\_generated\player\reviews\2026-09-26-copper\`
@@ -33,7 +32,7 @@ frames and hands sit in `outfits/copper/tries/2026-09-26-procedure/` until you s
    the three within 3–4 px (black-ant 74 / 75 / 78); this spread is 8, and the back is visibly larger when he
    turns around. The usual fix is a fresh roll of the back walk (same prompt), never a resize.
 2. **The front walk lifts the knee too high: 18% of body height** (the target band is 7–15%). This is your August
-   note — *"its lifting the knees really high which is ok for running but not walking"* — and the medium-high
+   note that the knees lift too high for a walk (fine for a run) — and the medium-high
    wording added then did not cure it on this roll. The three approved outfits have the same thing (bronze 19%,
    fire-ant 18%), which you put down as polish for later.
 

@@ -5,14 +5,15 @@ Not written yet. This section will gather the design from the sources below, run
 idea lenses, then go to the review page.
 
 ## Decided
-- **Whole outfits, not separate armour pieces** — *"we are moving to a whole outfit system (no way I can mask all
-  the individual things)"* (2026-08-05); on 2026-09-26: *"we will use gpt-image-2 for everything, just full outfits
-  I guess as yours are really bad"*. One image set per outfit, each drawn with its own head, hair and helmet.
+- **Whole outfits, not separate armour pieces** (2026-08-05, confirmed 2026-09-26) — each outfit is drawn as one
+  complete set, because cutting every piece out separately wasn't workable. The confirmation was tentative, given when
+  the code-drawn pieces were rejected; it could be revisited if separate pieces ever look as good. One image set per
+  outfit, each drawn with its own head, hair and helmet.
 - **An armless character with floating hands** — decided 2026-07-28: the hands are separate fists moved by code, so
   a new weapon needs no new body poses. Every approved outfit is built this way.
 - **How an outfit is made** — three designs in one image, you pick one, then a turnaround, one walk per direction and
-  the five hands, and you approve the finished animations (the `player-sprites` skill). *"anything with CHOSEN has
-  been picked, the others we still need to work through together"* (2026-09-26). Made: bronze, fire-ant,
+  the five hands, and you approve the finished animations (the `player-sprites` skill). Every design marked as chosen
+  has been picked; the rest are worked through together (2026-09-26). Made: bronze, fire-ant,
   black-ant, copper. Picked, not yet made: iron, platinum, steel, leather, beetle-shell, gilded-steel, fancy.
 
 ## To settle (raw list — not yet checked against the idea lenses)

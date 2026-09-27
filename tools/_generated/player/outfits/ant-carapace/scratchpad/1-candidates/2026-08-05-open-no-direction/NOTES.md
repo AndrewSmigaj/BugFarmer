@@ -1,7 +1,7 @@
 # 2026-08-05 — three ant-carapace designs, NO design direction
 
-> *"can you please just do three ant carapace armor versions without telling it what to put other than
-> the sprite and it is made from ant parts and carapace"*
+> Owner request (2026-08-05): three ant-carapace armour designs, from a prompt that says nothing about
+> what to draw beyond the sprite itself and its material (ant parts and carapace).
 
 **One paid call.** The prompt says only: armour made from ant parts — chitin, shell, carapace, mandibles,
 leg segments — worn by a person, not an ant costume. The three design slots just say *"your own design"*,

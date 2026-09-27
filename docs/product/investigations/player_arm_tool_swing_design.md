@@ -24,7 +24,7 @@ Stardew-proven at exactly this structure.)
 Add **one** separate **near-arm SpriteRenderer** (the arm nearest the camera), drawn **over the tool** so the
 hand grips it, showing a small set of hand-authored bent-arm **poses** per direction:
 - **HOLD** — bent elbow, forearm forward, hand out front. *(Idle: the tool grip sits at this pose's hand
-  anchor → "bent-elbow sword out in front." This alone satisfies the hold ask.)*
+  anchor → a bent-elbow sword held out in front. This alone satisfies the hold ask.)*
 - **WIND-UP** — arm cocked back.
 - **STRIKE** — arm extended (elbow straightens) at contact.
 - **RECOVER** — arm re-bending back to hold.

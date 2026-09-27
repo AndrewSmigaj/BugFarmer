@@ -11,8 +11,8 @@ habit is what made 131 files indistinguishable.
 EVERY OUTFIT RENDERS AT THE SAME SIZE
 -------------------------------------
 The 22 outfits on disk are cut at two different scales: 7 sit at 267-292px body height and 15 at
-395-435px, a 1.63x split. That is a cutting artifact, not a difference in the art, and side by side it
-reads as "these outfits are different sizes". So every frame bank is scaled (NEAREST only — never a hand
+395-435px, a 1.63x split. That is a cutting artifact, not a difference in the art, and side by side the
+outfits read as different sizes. So every frame bank is scaled (NEAREST only — never a hand
 resize) so the character's measured body height equals TARGET_BODY_H before anything is animated. Each
 direction is normalised against its own neutral frame, which also fixes outfits whose sheet rows came out
 at slightly different scales.
@@ -24,7 +24,8 @@ WHICH HAND EACH ANIMATION USES, and why the rotation matters
 -----------------------------------------------------------
 The hand sheets are drawn FINGERS UP, CUFF DOWN. Drawn straight into a walk that gives you a hand
 hanging at the waist with its fingers pointing at the sky, which is what happened and was rejected:
-"fingers pointing upward for walking, backward and alternating between open and fist for the running".
+the owner found the fingers pointing upward in the walk, and in the run pointing backward and
+alternating between open hand and fist.
 
 So each animation picks its hand AND its base rotation deliberately:
 
@@ -32,8 +33,8 @@ So each animation picks its hand AND its base rotation deliberately:
   run    relaxed hand, flipped then turned to point forward rot 75 (a runner's fist leads)
   swing  the APPROVED grip hands, knuckles pointing down    HAND_ROT 225, +16% down the handle
 
-The grip hands are NOT reused for walking. Owner: "the weapon grabbing is NOT to be blindly replacing
-walk and/or running - they all should be carefully thought about and the best one picked."
+The grip hands are NOT reused for walking. Owner direction: the weapon-grip hands must not simply
+replace the walk or run hands — each animation's hand is to be considered carefully and the best one picked.
 
 EACH OUTFIT USES ITS OWN GAUNTLET, not bronze's. Preferring bronze's hand-D-pixel fists where they
 existed made bronze's hands a different SHAPE from everyone else's (aspect 0.80 vs 0.55-0.60), so across
@@ -59,8 +60,8 @@ OUTFITS = os.path.join(PLAYER, "outfits")
 RES = os.path.join(REPO, "BugFarmerClient", "Assets", "Resources")
 
 # TWO swings were approved, not one. DECISIONS.md:
-#   05_SWING_iteration7_best_for_SWORD  — "for the sword iteration 7 is the best"  (20:43)
-#   06_SWING_iteration11_best_overall   — "iteration 11 looks best"                (23:37)
+#   05_SWING_iteration7_best_for_SWORD  — picked as the best for the sword  (20:43)
+#   06_SWING_iteration11_best_overall   — picked as the best overall        (23:37)
 # So the sword uses 7 and everything else uses 11. Rendering all six tools with 11 threw away the
 # sword pick, which is the one he named a tool for explicitly.
 SWING_APPROACH = 11                # best overall
@@ -149,8 +150,8 @@ def load_hands(outfit):
     They are what the reference gifs in `APPROVED/` were rendered with, so anything else does not match
     the approved look. Do not substitute:
 
-      * NOT the tool-grip hands (`hands/grip_*.png`). Those are for SWINGS only. Owner: "the weapon
-        grabbing is NOT to be blindly replacing walk and/or running."
+      * NOT the tool-grip hands (`hands/grip_*.png`). Those are for SWINGS only. Owner direction: the
+        weapon-grip hands must not simply replace the walk or run hands.
       * NOT the cut gauntlet views (`gauntlet/{front,back,side}.png`) where an approved hand exists.
         `DECISIONS.md`: those "are a re-cut made on 08-01 and were never approved... anything unapproved
         living here is how the wrong sprite gets picked later." Which is exactly what happened — all 264
@@ -178,9 +179,9 @@ def load_hands(outfit):
         return None, prov
 
     # THE TWO GRIPS ARE A PAIR, ONE PER ARM — approved together 2026-08-01:
-    #   grip_back_of_hand.png  the arm where you see the BACK of the hand ("the knuckles are
-    #                          appropriately pointing down")
-    #   grip_palm.png          "the other arm so you would see the palm ... row 2 fist PALM is great"
+    #   grip_back_of_hand.png  the arm where you see the BACK of the hand (approved because the
+    #                          knuckles point down, as they should)
+    #   grip_palm.png          the other arm, where the palm is visible — the row-2 palm fist
     # A two-handed grip uses BOTH. Do not mirror one to make the other — mirroring the back of a hand
     # gives a mirrored back of a hand, never a palm.
     gb = os.path.join(outfit_dir(outfit), "hands", "grip_back_of_hand.png")
@@ -221,8 +222,8 @@ def save(frames, ms, path):
 #   tool      placed so its grip lands on the hand
 #
 # This replaces the shoulder-pivot model for the sword. That one rotated the TOOL about a point near the
-# body and stuck the hand on afterwards, so the fist sat by the shoulder and spun in place — "do people
-# take a sword in their fist, hold their fist up to their shoulder and rotate their fist to swing it?"
+# body and stuck the hand on afterwards, so the fist sat by the shoulder and spun in place. The owner
+# rejected that: nobody swings a sword by holding the fist up at the shoulder and rotating it there.
 SHOULDER = (0.06, 0.40)     # cell units from body centre, +x forward / +y up (swing_lab.FACINGS "side")
 HAND_PERP = 180.0           # picked BY EYE off HAND_ROTATION_which_way.png. Do not re-derive.
 SWORD_START_TH, SWORD_END_TH = 128.0, -104.0   # behind the head -> past straight down, hand at the hip
@@ -247,7 +248,7 @@ def sword_motion(t):
 
 
 # ---------------------------------------------------------------------------------------------------
-# THE FACING-DOWN / FACING-UP SWORD ATTACK — owner's pick 2026-08-04: "lets do double back for both".
+# THE FACING-DOWN / FACING-UP SWORD ATTACK — owner's pick 2026-08-04: double-back for both facings.
 #
 # A top-down attack is a sweep ACROSS the body that passes THROUGH the tile being hit — it is NOT a
 # thrust along the attack direction. Driving the blade along that direction gives a reverse stab, which
@@ -263,7 +264,7 @@ ATK_MS = 20
 # (arm offset from centre, blade behind arm, reach in cells).
 DOUBLE_BACK = M.DOUBLE_BACK
 
-# THE SIDE SWORD SWING — owner's pick 2026-08-04: "yes we obviously want the quick candidate".
+# THE SIDE SWORD SWING — owner's pick 2026-08-04: the quick (frame-budget) candidate.
 #
 # Same arc as the eased version it replaces (behind the head -> past straight down, hand finishing at the
 # hip, blade unwinding so the tip keeps dropping), but on the FRAME BUDGET rather than smoothly eased
@@ -295,8 +296,8 @@ def attack_poses(centre, spec):
         u = 1 - (1 - (i + 1) / ATK_REC) ** 3
         out.append(tuple(hit[k] + (r[k] - hit[k]) * u for k in range(3)))
     # Sit at rest before the loop restarts. A gif that cuts straight from recovery back to the
-    # anticipation reads as a ping-pong and you cannot tell which way the swing is going — owner:
-    # "i cant even tell which direction that animation is going with it repeating".
+    # anticipation reads as a ping-pong and you cannot tell which way the swing is going — the
+    # owner could not tell which direction the animation ran while it repeated.
     out += [r] * ATK_REST
     return out
 
@@ -317,7 +318,7 @@ def attack_frames(body, hands, tool_png, bh, cfg, spec=DOUBLE_BACK, two_handed=F
     # at two different points, and the motion is a lever about the LOWER hand, which barely moves, while
     # the top hand swings through a big arc. With pivot=0 and both fists welded to the tool, the only
     # thing the rig can do is slide the whole shovel forward like a battering ram — which is exactly what
-    # it looked like. Owner: "is that how you use a shovel?"
+    # it looked like. The owner rejected it: that is not how a shovel is used.
     #
     # `second` is where the other fist sits relative to the pivot, along the shaft. NEGATIVE puts it
     # BEHIND the pivot, toward the butt — which is where the top hand goes on a shovel.

@@ -1,6 +1,6 @@
 # Brainstorm: Butterfly Meadow — Landmarks & Little Features
 
-Named points of interest for the **Butterfly Meadow** (`butterfly_meadow_11`) — the "little features"
+Named points of interest for the **Butterfly Meadow** (`butterfly_meadow_11`) — the little features
 that make the meadow feel like a *place* you can navigate by memory rather than a uniform field of
 scatter. The zone design (`butterfly_meadow_11.md`) seeds the iconic ones; this brainstorm is generous
 and evocative, adding many more.

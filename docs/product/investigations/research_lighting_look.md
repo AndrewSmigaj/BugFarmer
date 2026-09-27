@@ -10,8 +10,8 @@
 
 ## 1. The diagnosis — why ours looks flat today (VERIFIED against the real assets)
 
-Owner, verbatim: *"our lighting looks terrible compared to any other indie game… Even Apico… your approach is
-as naive as it can get, just point and spot lights."* Verified against the actual project files:
+Owner assessment: the lighting compares poorly with other indie games, Apico included, because the current
+approach is too simple — only point and spot lights. Verified against the actual project files:
 
 - **Post-processing is OFF at the camera** — `SampleScene.unity:898` `m_RenderPostProcessing: 0`, and
   `UniversalRP.asset` `m_VolumeProfile: {fileID: 0}` (no scene Volume assigned). No post runs regardless.

@@ -778,8 +778,8 @@ No forced chaos
 We have AI artists and a working sprite pipeline, so adding content is cheap. LEAN INTO VARIETY: many
 furniture pieces across a poor->rich value ladder, several tree/plant/mushroom species, graded ores,
 lots of decorations. "Quality" is just the item's value (sell_price); the fancy/appropriate-for-wealth
-knowledge lives in the AUTHORING scaffolding (furniture collections), never in game data. There is such
-a thing as too much, but the world is far from it — richness of things to gather, craft, and decorate
+knowledge lives in the AUTHORING scaffolding (furniture collections), never in game data. Too much is
+possible, but the world is far from it — richness of things to gather, craft, and decorate
 with is a feature. New art is a catalog row away (see the add-object skill).
 
 

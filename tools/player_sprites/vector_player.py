@@ -241,8 +241,8 @@ def hires_composite(layers):
 
 
 def pixelize(layers):
-    """WHOLE-image pixelization (Andrew: per-region snapping looked monstrous;
-    the world art's own pipeline is downscale-the-whole-picture). The outline
+    """WHOLE-image pixelization (Andrew's feedback: per-region snapping looked
+    very wrong, and the world art's own pipeline downscales the whole picture). The outline
     is drawn at HI-RES (a dilated silhouette ring) so it downscales into a
     soft natural edge instead of a chunky post-pass."""
     from PIL import ImageFilter

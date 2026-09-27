@@ -154,7 +154,7 @@ def build():
 
     # ==================== 4. THE COASTAL CLIFF (dirt north -> rocky south) ===================
     # Where land meets the sea, a broken cliff lip + scree; DIRT blocks in the north, STONE in
-    # the rockier south (owner: "rocky/dirt cliffs along the coast, rockier going south").
+    # the rockier south (owner direction: the coast is lined with cliffs of dirt and rock, rockier to the south).
     for y in range(ZH):
         cx = int(coast_x(y))
         rocky = y < 150 - 40 * (coast_nf[y][1] - 0.5)                  # south + noise -> rocky

@@ -13,7 +13,7 @@ _status: READY TO IMPLEMENT · investigated 2026-06-28 · investigate-only_
   the water? **Status:** `READY`.
 
 ## 1. Issue
-> "unable to water ground without a seed or plant in it (watering garden beds)"
+> Owner playtest report (2026-06-28): a garden bed cannot be watered unless something is planted in it.
 
 ## 2. Root cause (verified)
 `handleWatering`: refill on water tiles → else `cropKey="gx,gy"`; `crop := state.CropStates[cropKey]`; if nil,

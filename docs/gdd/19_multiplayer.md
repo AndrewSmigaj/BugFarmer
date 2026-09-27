@@ -1,5 +1,5 @@
 # §19 · Multiplayer & hosting
-<!-- gdd: id=19 status=review updated=2026-09-26 -->
+<!-- gdd: id=19 status=rework updated=2026-09-26 -->
 
 ## The experience
 It works like Terraria. From the main menu you play alone, **host** a world your friends join, or **join** someone
@@ -9,26 +9,24 @@ the same things. Your character belongs to the world you made it in, unless the 
 worlds in.
 
 ## Decided
-- **Like Terraria** — *"not sure what you mean, it should be like terraria."* · *"It should be like terraria."*
-  (2026-09-26)
-- **Our server is just another server** — *"We have no idea how many people can get on a server, our own server will
-  not be part of the game itself just our own server people would be able to join just like any other players
-  server. We would cap based on what is a feasible cap like the minecraft servers do."* (2026-09-26)
-- **Joining** — typing an address plus Epic's free relay first, Steam later: you chose that option with *"I already
-  answered this"* (2026-09-26).
-- **Characters** — per world, plus a host setting that lets in characters from other worlds: *"Necesse's is fine"*
-  (2026-09-26). Earlier: *"I think on each server, but we will have to think about this based on what players would
-  like."*
-- **Empty zones** — *"as already designed frozen with aggregation upon first access with random border crossing
-  events."* (2026-09-26)
-- **Shared-world rules** — *"the world is chaotic and anything goes (except stealing citizens stuff or destroying
-  their houses, a message will pop up saying its basically not nice)"* (2026-09-26)
+- **Like Terraria** (2026-09-26) — hosting and joining work the way they do in Terraria.
+- **Our server is just another server** (2026-09-26) — we will run a server of our own, but it is not part of the
+  game: players join it like anyone else's. Nobody knows yet how many players a server can hold; each server is
+  capped at whatever is measured to be feasible, the way Minecraft servers are.
+- **Joining** (2026-09-26) — by typing an address, plus Epic's free relay first; Steam later.
+- **Characters** (2026-09-26) — each world keeps its own characters, as in Necesse, with a host setting that lets in
+  characters from other worlds. Earlier the same day the owner had leaned towards characters living on each server,
+  to be revisited based on what players want.
+- **Empty zones** (2026-09-26) — a zone nobody is in stays frozen; when someone first arrives it catches up on the time
+  it missed, including random events of bugs crossing its borders (as already designed).
+- **Shared-world rules** (2026-09-26) — the shared world is lawless, with one exception: the town's citizens. Stealing
+  from them or damaging their houses isn't possible, and a message tells the player it isn't acceptable.
 
 ## Current design
 - **Many separate worlds, each moderated by its own owner** — from the December 2025 requirements: a world has an
   owner and admins who can kick and ban; access can be public, private or invite-only; inside a world anyone can
   place or break blocks (no land claims — safe land comes from City Hall's private plots). (`requirements.md` §2–3)
-- **Light anti-cheat** — *"No heavy anti-cheat or strict authority model (player-hosted servers)"* (GDD §5.3). The
+- **Light anti-cheat** — no heavy anti-cheat and no strict authority model, since players host (GDD §5.3). The
   server still checks what matters: coins, inventory, catches, damage.
 - **Zones run separately.** Each zone is its own running game on the server; walking off an edge moves you into the
   next one. A zone with nobody in it pauses and catches up when someone arrives (§01).
@@ -73,7 +71,7 @@ allowed in — the same program underneath, so there is one set of bugs to fix, 
 later, as in Terraria. When the host quits, the world closes for everyone (as in Terraria); a dedicated server keeps
 it running.
 
-**Lenses:** Simpler alternative — one way of running a world, not two. Your "like terraria".
+**Lenses:** Simpler alternative — one way of running a world, not two. Like Terraria, as decided.
 
 ### P2. Join with an address or a short code
 Friends type your address, which works when your router lets the game through, or a short **join code** you read
@@ -89,7 +87,7 @@ the host's computer, their upload speed, and the slowest player's computer, sinc
 the bugs in their zone — and print it next to the setting. For comparison: Terraria's server defaults to 16 (8
 before 2020); Valheim, which also simulates on players' computers, caps at 10.
 
-**Lenses:** Your *"cap based on what is a feasible cap"*. Scale — measured, not guessed.
+**Lenses:** Your decision to cap each server at what is feasible. Scale — measured, not guessed.
 
 ### P4. A settings file and admin commands, like Minecraft and Terraria
 The dedicated server reads one plain settings file: world name, password, max players, the network port (the
@@ -119,9 +117,8 @@ that already lets a player walk into a busy zone mid-game and see every bug wher
 **Lenses:** What can go wrong. Built on something already proven.
 
 ### P8. Text chat
-Press Enter to talk. Chat also shows players joining and leaving and admin notices. The "not nice" message pops up
-on screen when someone tries to take a citizen's things (your words: *"a message will pop up"*), and is noted in
-chat too.
+Press Enter to talk. Chat also shows players joining and leaving and admin notices. The message about citizens'
+property pops up on screen when someone tries to take a citizen's things (as decided), and is noted in chat too.
 
 **Lenses:** Already covered? — nothing today. Every reference game has chat.
 
@@ -137,8 +134,8 @@ combat research recommended no friendly fire by default, with an opt-in left ope
   nobody can hurt you unless you switch it on.
 
 **Recommendation: C.** One setting lets a friendly co-op world and a rougher public world both exist, the way
-Minecraft servers work; the default behaves like Terraria and keeps the research's "no friendly fire unless you
-choose it".
+Minecraft servers work; the default behaves like Terraria and keeps the research's finding: no friendly fire unless
+you choose it.
 
 ### Q2. Which computers at launch?
 Everyone who plays together must simulate the bugs identically, so every platform we support has to pass the

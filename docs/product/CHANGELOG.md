@@ -51,8 +51,8 @@ connectivity GATE, all zone gates green (lint 0/0, save, smoke, crosszone both w
   beehive_basic boxes migrate to stations on the village's next pass.
 
 ## Done 2026-07-06 — THE ZONE-CRAFT SCAFFOLDING (the skill that teaches zone quality)
-Owner directive ("lets create a zone improvement guide, scaffolding for you… this new skill related
-to zone authoring") — built and VALIDATED by a live run, all phases committed green:
+Owner directive: build a zone-improvement guide — a new skill that scaffolds zone authoring — built
+and VALIDATED by a live run, all phases committed green:
 - **The `zone-craft` skill** (craft loop: brief w/ quotas → 2-3 rendered OPTIONS the owner picks →
   build via author-zone → lens pass against pixels → corrections-ledger walk → polish) + routing
   (author-zone starts there; a COLD-agent probe reached zone-craft → CORRECTIONS.md → caves.md
@@ -70,11 +70,11 @@ to zone authoring") — built and VALIDATED by a live run, all phases committed 
   MEASURED: 10-21% per mass region, runs not specks, ring-visible; grep gate zero hand-set calls.
   Zone gates all green (lint 0/0, smoke 90 swarms, crosszone both ways).
 - **OWNER VERDICT on the live run (2026-07-06): the scaffolding did NOT move the pixels** —
-  "everything looks aweful, just sudden changes no gradients, unatural geometry (lines)…
-  why is everything barely different at all?" AND the ant framing was builder invention:
-  "there is no ant colony in the zone" (the colony IS zone (3,0), mostly underground; the
-  south band should "start getting dirty and rocky on a gradient not suddenly having the
-  dirt wall" — C12). Postmortem: adopted research rules had no code mechanism behind them
+  the result still looked poor: abrupt changes with no gradients, unnatural straight-line
+  geometry, and barely any visible difference from before. AND the ant framing was builder
+  invention: this zone has no ant colony (the colony IS zone (3,0), mostly underground; the
+  south band should shift gradually toward dirt and rock rather than stop at an abrupt dirt
+  wall — C12). Postmortem: adopted research rules had no code mechanism behind them
   (the same blob-stamp rock_mass reused ×7); the lens pass was self-graded; brief promises
   were met in comments, not pixels ("aprons = the lanes"). → C12/C13 + agent memory.
 - **→ DONE (2026-07-06, the deep-rework session):** south band rebuilt as the gradient

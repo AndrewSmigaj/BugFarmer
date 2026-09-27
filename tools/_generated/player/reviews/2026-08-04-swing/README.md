@@ -24,7 +24,7 @@ Top-to-bottom removes the conflict rather than drawing around it. One hand carri
 Both already approved, 2026-08-01, as a pair — one per arm:
 
 - `grip_back_of_hand.png` — the arm you see the **back** of
-- `grip_palm.png` — *"the other arm so you would see the palm"*
+- `grip_palm.png` — the other arm, the one whose palm is visible
 
 **Two-handed uses both**, the palm hand further up the handle. Not a mirrored copy of the first — mirroring
 the back of a hand gives a mirrored back of a hand, never a palm.
@@ -53,5 +53,6 @@ That is my read from the still frames only — the gifs are what decide it.
 
 ## Once you pick
 
-It gets baked into `render_animations.py` as the sword default and written into `APPROVED/DECISIONS.md`
-with your words, the same day. The axe, hoe, net, shovel and spear come after, using whatever wins here.
+It gets baked into `render_animations.py` as the sword default and your decision is recorded in
+`APPROVED/DECISIONS.md` — dated, attributed, in clean prose — the same day. The axe, hoe, net, shovel
+and spear come after, using whatever wins here.

@@ -36,7 +36,7 @@ tools/_generated/player/
                     tries/<date>-<what>/     = attempts, cut and waiting for review (never read by the build
                                                unless the outfit is PENDING — see step 7)
                     archive/                 = superseded work. Nothing deleted, ever.
-  APPROVED/DECISIONS.md   every decision, the owner's words verbatim
+  APPROVED/DECISIONS.md   every decision, restated in clean prose and dated
   gallery.html      generated. Open it to see every official outfit as it stands.
 ```
 Folders are named for **what is in them**, never for how they were made. Looking for the bronze armour means
@@ -73,12 +73,13 @@ days and a day of approved work.
    forbids them.
 3. **Official = the owner's yes, then a copy, then `official.py`.** Only after he approves the review sheet:
    copy the attempt's `frames/` + `gauntlet/` into `outfits/<name>/` (whatever was there moves to `archive/`),
-   add the outfit to `official.OUTFITS` with his words and the date, run `build.py <name>`, `gallery.py`, and
+   add the outfit to `official.OUTFITS` with his decision (restated) and the date, run `build.py <name>`, `gallery.py`, and
    record it in `APPROVED/DECISIONS.md`. **Recording is part of choosing** — a decision with no record is a
    decision that gets lost. (`promote.py` belongs to an older `current/` layout; none of the official outfits
    use it.)
-4. **Quote the owner verbatim in the ledger.** Not your paraphrase of what they approved. Approvals sound like
-   *"row 2 fist PALM is great"* and *"walk b is fine"* — the exact words are what makes it unambiguous later.
+4. **Record exactly WHICH thing he approved — in your own words, never his.** Name the file, the row, the variant
+   ("the palm fist in row 2", "walk option B") so it is unambiguous later. The owner's conversation never goes into
+   the repo: restate the decision in clean prose, dated.
 5. **Nothing is deleted or overwritten.** Superseded work moves to `archive/`. **Never bulk re-cut or bulk
    move** — every bulk run so far has destroyed or hidden something the owner was using. Show the list first.
 6. **`explore/` and `tries/` are tracked in git.** Work in progress is real work. Decisions are not instant.
@@ -99,21 +100,21 @@ getting lost — and it is why the procedure below could be rebuilt from the rec
 
 ## ⚠ ASK BEFORE EVERY PAID IMAGE CALL
 The spend is unrecoverable and a wrong guess buys nothing. State how many calls and what each is for, then
-wait. An earlier "use the API as needed" is **not** standing permission. Free work — compositing, cutting,
+wait. An earlier general go-ahead to use the API is **not** standing permission. Free work — compositing, cutting,
 measuring, rendering previews — needs no permission, but say plainly which kind a result came from.
 
 ---
 
 ## Making an outfit — the procedure (proven 2026-08-15, approved)
 
-Proven on fire-ant, then black-ant and bronze — owner: *"those are fine, so this approach works"* — and official
+Proven on fire-ant, then black-ant and bronze — approved by the owner on 2026-08-15 — and official
 2026-08-18. The commands are `tools/player_sprites/procedure.py`; **`procedure.py verify` reproduces those three
 runs with no image calls** (prompts word for word, references pixel for pixel, every committed frame and hand byte
 for byte). Run it after touching any prompt, cutter or template.
 
 | # | step | command | cost | the owner's part |
 |---|---|---|---|---|
-| 1 | three designs in one image | `outfits.py explore <name>` | 1 call | **picks one** — his words recorded |
+| 1 | three designs in one image | `outfits.py explore <name>` | 1 call | **picks one** — the pick recorded, restated and dated |
 | 2 | the pick | his figure, cropped from the render, saved as `explore/<run>/CHOSEN_<name>.png` | free | — |
 | 3 | the pick in real pixels | `procedure.py grids <run> --option N` → judge → `procedure.py pick <name> <run> --pitch P` | free | — |
 | 4 | turnaround (front, side, back) | `procedure.py turnaround <name>` → `views <name> --pitch P` | 1 call | looks |
@@ -126,9 +127,9 @@ fire-ant 10 (plus research), black-ant about 14; the design step took 1–6 call
 A paid command **without `--go`** prepares its references in the run folder and prints the exact prompt, each
 reference at the size the model will see, and the canvas — and spends nothing. `--go` only after the owner's yes.
 
-**Timing (owner, 2026-09-26):** *"most outfits and other things will be made after signing off on the GDD … (and
-with test batches so we can ensure you are doing it right)"*. The eight picked designs (`CHOSEN_*` — *"anything with
-CHOSEN has been picked"*) go through steps 3–7 batch by batch, each asked for; everything else starts at step 1,
+**Timing (owner, 2026-09-26):** most outfits and other art are made after the GDD is signed off, starting with test
+batches that check the work is done right. The picked designs (every `CHOSEN_*` file is a pick) go through steps 3–7
+batch by batch, each asked for; everything else starts at step 1,
 worked through with him.
 
 ### Step 1 — three designs
@@ -148,8 +149,8 @@ on ONE grid, split into its three designs, his cropped, magenta fringe cleaned �
 1536x1024, the ONLY reference is the pick in real pixels (sent enlarged ×14), prompt = `outfits.TURNAROUND` — the
 approved text, identical for all three approved outfits. It carries no outfit name: the design rides entirely on
 the reference. `gen.py` accepts it by exact match (its clauses are spelled differently); **change a word and it is
-checked like any other prompt — and prompts are his: show him the diff first.** ⚠ It says *"The helmet is open-faced
-but covers the whole head"*; for a design without a helmet (a cap, a hood), show him that sentence before the call.
+checked like any other prompt — and prompts are his: show him the diff first.** ⚠ It says the helmet is open-faced
+but covers the whole head; for a design without a helmet (a cap, a hood), show him that sentence before the call.
 
 Cut with `views --pitch P`: the three views on ONE grid, each cropped to its figure → `view_front/side/back.png`. The
 side view is kept as drawn. Every later call for this outfit is seeded from one of these views, so the three
@@ -164,9 +165,9 @@ that shipped (`outfits.py` says which); it matches the August runs word for word
 on his 2026-08-18 note.
 
 - **Camera-facing views: the legs do not swing sideways.** The default is feet kicking out to either side, which
-  reads as a dance (*"they are ridiculous like someone doing a russian dance"*).
+  reads as a dance (the owner rejected it for exactly that).
 - **Knee lift is MEDIUM-HIGH, and measured.** "Lift the knee HIGH" produced 13.8–19.8% of body height — owner,
-  2026-08-18: *"its lifting the knees really high which is ok for running but not walking"*. `check_lift` warns
+  2026-08-18: too high for a walk, though fine for a run. `check_lift` warns
   outside 7–15%; it is a WARNING, not a fail — look at the render. ⚠ One leg set serves both walk and run
   (`walk_side` and `run_side` share `frames="side"`), so the walk's lift IS the run's lift.
 - **The side frames must end up facing RIGHT** (`gait`'s wrist maths assumes +x). All three approved side walks came
@@ -198,12 +199,12 @@ makes "the same pixel density as the character" binding: both are drawn on one c
 the wrist to the exact height — never rescales — and says how many rows it touched.
 
 ### Step 7 — review, then official. Always.
-*"we always want to review before updating anything official."* The cut attempt sits in
+The owner always reviews before anything becomes official. The cut attempt sits in
 `outfits/<name>/tries/<date>-procedure/` (`frames/`, `gauntlet/`, and `CUTS.txt` saying which render and grid each
 came from). To render it for review, list it in `official.PENDING` with `dir` = that attempt folder, then
 `build.py <name>` (it renders a PENDING outfit only when named, into the attempt's `anim/`, and says so). Show him the
 thing itself — the animations and a `review.pixel_proof` sheet — in `reviews/<date>-<name>/` with a README. **Only
-after his yes:** copy into `outfits/<name>/`, move the entry from PENDING to OUTFITS with his words and the date,
+after his yes:** copy into `outfits/<name>/`, move the entry from PENDING to OUTFITS with his decision (restated) and the date,
 `build.py <name>`, `gallery.py`, and a row in `APPROVED/DECISIONS.md`.
 
 ### The grid — chosen by eye, as it always was
@@ -250,8 +251,8 @@ weapon was drawn.
   torso, the far hand behind it and dimmed. Anchor to the **torso width at chest height**, measured once from
   the neutral frame — measuring per frame makes the hands jitter as the legs change the silhouette.
 - **Run** — the same four frames played faster (90ms vs 150ms), but a **DIFFERENT HAND POSE, not the walk
-  sped up.** The run is a real, approved motion — `RUN` settled 2026-07-29 ("RUN_r75.gif is fine, looks the
-  best") and `FRONT_RUN` 2026-08-14 ("we will go with wisdest lowest"). It shares the walk's leg frames BY
+  sped up.** The run is a real, approved motion — `RUN` settled 2026-07-29 (the owner chose the r75
+  run) and `FRONT_RUN` 2026-08-14 (he chose the widest, lowest variant). It shares the walk's leg frames BY
   DESIGN and lives in the arm swing, fist size and timing; sharing legs is not a gap to be filled. Both fists visible *even side-on*, raised to **chest** height (~0.05 of body height above the
   torso row — 0.13 puts them over the face), rotated **~75° to point forward and held there** with only a
   small roll (~16°) on top, and bigger travel (0.62 vs the walk's 0.42). **No new art for running.**
@@ -281,7 +282,7 @@ weapon was drawn.
 
 ## Pointers
 - `tools/player_sprites/procedure.py` — the procedure's commands; `verify` reproduces the approved runs.
-- `tools/_generated/player/APPROVED/DECISIONS.md` — every pick and approval, his words; `RUNS.txt` — every call.
+- `tools/_generated/player/APPROVED/DECISIONS.md` — every pick and approval, restated and dated; `RUNS.txt` — every call.
 - `docs/product/BACKLOG.md`, top item — where each outfit stands, and the world-art regeneration that reuses this.
 - `docs/guides/art/CHARACTER_DESIGN_GUIDE.md` — the as-built format.
 - `tools/player_sprites/demo_swings.py` — the motion preview. Imports `swing_lab.py` approach 6 (the

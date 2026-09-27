@@ -1,6 +1,6 @@
 # Swing while running — PICKED: half pump
 
-Owner, 2026-08-14, verbatim: **"half pump is the one"**
+Owner decision (2026-08-14): **half pump**.
 
 Chosen from three renders of the off (far) hand while the sword arm swings and the legs keep running:
 `bronze_ALL_THREE.gif` — keeps its full run pump / **half pump** / held forward.
@@ -19,7 +19,7 @@ From `tools/player_sprites/run_swing_lab.py`, variant `B_half_pump`:
 ## Not built
 
 This is a lab render only. Nothing in the game or in `build.py` swings while running yet — owner,
-2026-08-14: *"None of this has actually been implemented so we will need to implement this later."*
+2026-08-14: none of this is implemented, and it will need implementing later.
 Wiring it in means a new animation kind, since today a gait and a swing are separate rows in
 `official.ANIMATIONS` that never overlap.
 

@@ -4,11 +4,10 @@
 
 Writes `tools/_generated/player/NET_OPTIONS.png`.
 
-WHY THIS EXISTS. The net swing has been wrong for five rounds. Each round produced a THEORY about what
-"backwards" meant — the sweep direction, the sprite rotation, the hoop facing the camera — and each
-theory was wrong; the last one was invented outright. Owner: "it is consistently net first, not the
-opening but the net part ... you dont get it to the point of making up phantom things I might be
-talking about."
+WHY THIS EXISTS. The net swing has been wrong for five rounds. Each round produced a THEORY about why it
+looked backwards — the sweep direction, the sprite rotation, the hoop facing the camera — and each
+theory was wrong; the last one was invented outright. Owner: the net consistently leads with the net
+bag, not with the opening.
 
 So this stops arguing and enumerates. Eight combinations of the only three things that can actually
 change, rendered identically, captioned, three frames each so the DIRECTION OF TRAVEL is visible:

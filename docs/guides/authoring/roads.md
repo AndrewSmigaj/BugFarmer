@@ -72,8 +72,8 @@ vpath(b, x, y0, y1, tile="stone_path")     # one column
   that bends also fixes the Traveler lens for free: bends make sightlines, sightlines promise.
 - **Degrade outward:** stone (`stone_path`) in the core → `dirt` shoulders via `edge_tile` → let the
   ends taper and fade into trampled grass at the zone margins. (See the Village zone's road rules.)
-- **A road/lane must be GAPLESS end to end** (owner correction 2026-07-06: "the roads are
-  not connected... all your paths have huge gaps in them"): `path()` skips reserved cells
+- **A road/lane must be GAPLESS end to end** (owner correction 2026-07-06: the roads were
+  not connected — every path had large gaps in it): `path()` skips reserved cells
   and cell-by-cell traces skip occupied ones — every skip is a HOLE in the walkway. After
   laying all roads, WALK each route in data (flood along path/dirt ground from endpoint to
   endpoint) and treat any break as a build failure: reroute around the blocker or clear it.

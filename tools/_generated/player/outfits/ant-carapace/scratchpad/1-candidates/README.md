@@ -19,7 +19,7 @@ armour. Cleanable, but it is real work — worth preferring a clean batch where 
 
 | batch | why it is not in the running |
 |---|---|
-| `2026-07-28-1604-original-sheet` | the original ant-PERSON design, pre-dates "it should be armour" |
+| `2026-07-28-1604-original-sheet` | the original ant-PERSON design, from before it was made armour |
 | `2026-08-05-three-armour-options` | first armour pass, full helms, **before** the face requirement |
 | `2026-08-05-soldier-three-variants` | variants of one of those; also full-helm |
 | `2026-08-05-open-no-direction` | first undirected round; full-helm, and it proved undirected > directed |

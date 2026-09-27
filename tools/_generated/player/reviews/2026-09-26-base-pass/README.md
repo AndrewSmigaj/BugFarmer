@@ -1,8 +1,7 @@
 # 2026-09-26 — A cleanup pass on the player base
 
-> **VERDICT (2026-09-26): rejected** — *"they look terrible."* The bases in `tools/_generated/player/bases/` are
-> unchanged and stay as they are. The decision that followed: *"we will use gpt-image-2 for everything, just full
-> outfits I guess as yours are really bad"*. Kept as a record only.
+> **VERDICT (2026-09-26): rejected.** The bases in `tools/_generated/player/bases/` are unchanged and stay as they
+> are. The decision that followed: all art is made with gpt-image-2, with whole outfits. Kept as a record only.
 
 Folder: `C:\Users\emily\BugFarmer\tools\_generated\player\reviews\2026-09-26-base-pass\`
 

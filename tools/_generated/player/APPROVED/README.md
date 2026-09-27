@@ -1,17 +1,18 @@
 # APPROVED — open this first
 
-**"Where is the animation we agreed on?"** — the table below. Every path starts at
+**Where the agreed animations are:** the table below. Every path starts at
 `C:\Users\emily\BugFarmer\tools\_generated\player\APPROVED\`.
 
-Nothing goes in this folder unless you said yes to it, in words, and the words are quoted in
-`DECISIONS.md`.
+Nothing goes in this folder unless you explicitly approved it, and each approval is recorded in
+`DECISIONS.md` in clean prose, dated and attributed.
 
 ---
 
 ## The current character animation, in real pixels
 
 **`2026-08-15-fireant-v2\ALL_ANIMATIONS.gif`** ← this is the one. All six at once, walks on top,
-runs underneath. Approved 2026-08-15: *"those are fine, so this approach works"*.
+runs underneath. Approved 2026-08-15: the results were accepted, confirming that the new generation
+approach works.
 
 | file | |
 |---|---|
@@ -49,7 +50,7 @@ They are finished on disk and waiting on your eyes. They are deliberately **not*
 | black-ant, rebuilt (Lasius niger) | `reviews\2026-08-15-blackant-reroll\ALL_ANIMATIONS.gif` | `outfits\blackant-v3\frames\` |
 | bronze, rebuilt | `reviews\2026-08-15-bronze-reroll\ALL_ANIMATIONS.gif` | `outfits\bronze-v2\frames\` |
 
-You picked the *design* for both ("go with 2, it looks good" for black-ant; option 2 for bronze).
+You picked the *design* for both (option 2 for black-ant, which you judged good; option 2 for bronze).
 The animations built from those designs have not been shown to you — the bronze one finished at
 18:09 on 08-15, which is when the power went out.
 

@@ -13,7 +13,7 @@ info = lake(b, cx, cy, radius, seed=3, shore="sand", reeds=12)
 - A real lake is a UNION of 2-4 elongated, offset blobs strung along a random long
   axis — a long body with bays and a bowed shoreline. The first version used radius
   harmonics from one center and produced symmetric 5-7-point STARS (2026-06
-  correction: "I really don't like the shapes of all the lakes"). High-frequency
+  owner correction: he disliked every lake's shape). High-frequency
   radial bumps always read as geometry; offset-blob unions read as water.
 - Structure: deep core → shallow rim → a `shore` ring (sand/mud) with gaps → reeds
   clumped on the banks. Water is reserved; lakes FLOW INTO existing water (skip
@@ -48,8 +48,8 @@ deliberately water-anchored occupants (their `validate()` notes are expected).
   ends mid-channel.
 
 ## Coasts, harbors & tidelines (learned building bee_meadow_20)
-- **A harbor CONNECTS to the sea** (owner correction 2026-07-05: "the little lake with
-  the fishing buildings does not connect to the ocean"). Water that boats and fishing
+- **A harbor CONNECTS to the sea** (owner correction 2026-07-05: the small lake with
+  the fishing buildings did not connect to the ocean). Water that boats and fishing
   imply must be PROVABLY continuous open water to the sea — verify IN TEXT (walk a
   water-only line across the map), never by eyeball. A landlocked "bay" is a bug.
 - **Beach debris follows the WRACK LINE, never even spray**: flotsam (shells, driftwood,
@@ -59,7 +59,7 @@ deliberately water-anchored occupants (their `validate()` notes are expected).
   as confetti.
 
 ## Rivers reach the SEA (owner correction, 2026-07-06)
-> "the river should flow to the sea not a little pond next to the sea" · "river should be wider"
+The river must flow into the sea, not into a small pond beside it, and it should be wider.
 
 A river's endpoints are non-negotiable geography: one end is a SOURCE (spring, lake,
 zone-edge contract), the other REACHES BASE WATER — the sea, a lake, or an edge contract.
@@ -68,7 +68,7 @@ if a river runs anywhere near the sea, CONNECT it (carve the mouth through the b
 mouth FLARES or forks per research_coasts_geology.md §2 — never a constant-width pipe
 butting the surf). Width: rivers only WIDEN downstream — 2 cells at the source is fine,
 but the lower run should be 3-4+, and the mouth wider still. Inlet/arm HEADS never end in
-a straight cut ("its like it is cut off"): taper and ROUND the head (narrowing noisy banks
+a straight cut (it reads as abruptly chopped off): taper and ROUND the head (narrowing noisy banks
 that pinch closed), and let the still head go mud + reeds.
 
 ## Placement & the "used lake" rule (kept from trees-and-ponds)

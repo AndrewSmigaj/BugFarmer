@@ -62,7 +62,7 @@ def place_bee_farm(b, ox, oy):
 
     # The work corner keeps only YARD storage — the brewing line (extractor, wine
     # rack, honey shelf) lives INSIDE, in the cottage's backroom (owner 2026-07-06:
-    # "the brewing stuff should be in a backroom... not just out on the lawn").
+    # the brewing equipment belongs in a backroom, not out on the lawn).
     b.place_occupant("table_wood", ax0 + 3, ay1 - 4)        # the outdoor work table stays
     b.place_occupant("crate", ax0 + 6, ay1 - 3)
     b.place_occupant("crate", ax0 + 7, ay1 - 3)

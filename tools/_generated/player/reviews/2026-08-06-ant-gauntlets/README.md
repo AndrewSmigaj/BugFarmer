@@ -1,7 +1,7 @@
 # Ant gauntlets — APPROVED 2026-08-06
 
-*"they are all correct in the animation png. go ahead and update the red and black ants — these gauntlets
-are fine, i just then need to see the tools stuff to ensure those hands are correct."*
+Owner approval (2026-08-06): every hand in the animation sheet is correct and these gauntlets are approved;
+the red and black ant outfits get them. The tool swings still need his review, to confirm those hands are correct.
 
 fireant and blackant are official. 3 outfits, 39 animations.
 
@@ -24,7 +24,7 @@ The shovel is the one worth looking at hardest. Until today, **23 of 24 outfits 
 twice**, because the gauntlet sheet only ever produced four hands and `grip_palm` fell back to `grip_back`.
 All three sets now have a real pair.
 
-## The "reversed" question — resolved
+## The reversed-hands question — resolved
 
 You confirmed it: row 3 matches row 1, B disagrees. The hands were never mirrored. My sheet was the
 problem — it compared *source files* and never said which one the animation actually uses, so it could not
@@ -51,8 +51,8 @@ is the one that disagrees.
 `WHY_IT_LOOKS_REVERSED.png` was my first attempt at this and **its labels are wrong** — I asserted a
 facing direction I had misread. Kept only so the mistake is on the record; ignore its captions.
 
-Worth noting: on 2026-08-05 you said *"the gauntlets for red and black ants for walk front need to be
-flipped horizontally, the palms are facing out"*. That was about the **old 4-hand** gauntlets, and the
+Worth noting: on 2026-08-05 you noted that the red and black ants' gauntlets for the front walk needed
+flipping horizontally, because the palms faced out. That was about the **old 4-hand** gauntlets, and the
 palms-out cause has since been fixed globally — the camera-facing walk now mirrors the left hand for every
 outfit. So that specific complaint should already be gone.
 

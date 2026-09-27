@@ -11,26 +11,21 @@ working; this file is what survives between sessions.
 
 ## Now — ALL ART ON gpt-image-2 + pixelsnap (owner decisions 2026-09-26)
 
-Owner, verbatim:
-> *"we will use gpt-image-2 for everything, just full outfits I guess as yours are really bad, so we were partway
-> done with the outfits and we had planned regenerating all the world and item actual sprites with gpt-image-2 as
-> it was a different pipeline and we did not use pixelsnap correctly like our new pipeline. anyways so that needs
-> to be done at some point (the only thing done correctly are the outfits). It should be in the plans and
-> backlog"*
->
-> *"we were generating three different variants for each outfit, I would decide, then we created all the animation
-> frames … as it is most outfits and other things will be made after signing off on the GDD but you should know
-> that (and with test batches so we can ensure you are doing it right)"*
->
-> *"anything with CHOSEN has been picked, the others we still need to work through together, yes you can do a
-> batch now"*
+The owner's decisions (2026-09-26):
+- **All art uses gpt-image-2 and pixelsnap**, including whole outfits (a tentative choice, made when the code-drawn
+  pieces were rejected). The outfits are the only art made the right way so far; all world and item art is to be
+  regenerated on the same pipeline, because the older route didn't convert its pixels properly.
+- **The outfit procedure:** three design variants per outfit; the owner picks one; then all the animation frames are
+  made. Most outfits and other art are made after the GDD is signed off, starting with test batches that check the
+  work is done right.
+- **Every design marked as chosen has been picked;** the others are worked through together. The copper test batch
+  was approved to run.
 
-Art drawn by Claude in code was tried the same day and rejected (*"they look terrible"*) — kept only as a record:
+Art drawn by Claude in code was tried the same day and rejected — kept only as a record:
 `tools/sprites/drawn/`, `tools/_generated/player/reviews/2026-09-26-art-demo/` and `…/2026-09-26-base-pass/`.
 The decision log with every pick is `tools/_generated/player/APPROVED/DECISIONS.md`.
 
-**The procedure** (proven on fire-ant, black-ant and bronze, approved 2026-08-15: *"those are fine, so this
-approach works"*): three designs in one image → the owner picks one (`explore/<run>/CHOSEN_<name>.png`) → the pick
+**The procedure** (proven on fire-ant, black-ant and bronze, approved 2026-08-15): three designs in one image → the owner picks one (`explore/<run>/CHOSEN_<name>.png`) → the pick
 turned into a real-pixel reference at the base's size → a front/side/back turnaround (1 image) → one walk per
 direction (3 images) → the five hands (1 image) → a review sheet → only on his yes: `outfits/<name>/`,
 `official.py`, `build.py`, `gallery.py`, `DECISIONS.md`. The step-by-step how-to is the `player-sprites` skill.
@@ -38,8 +33,7 @@ Every paid image call is asked for first.
 
 **Outfits:**
 - **Done on the procedure** (in `official.py`): bronze, fire-ant, black-ant (approved 2026-08-18) and **copper**
-  (2026-09-26, the first made end to end by `procedure.py`: *"it looks good! there are polish issues but we can
-  work on that later as they involve hand positions"*).
+  (2026-09-26, the first made end to end by `procedure.py`; approved, with hand-position polish left for later).
 - **Picked, still to build** (turnaround → walks → hands → review), each batch asked for first: iron (`iron-r2`),
   platinum (`platinum-r5`), steel (`steel-r5`), leather (`leather-r2`), beetle-shell (`beetle-shell-r3`),
   gilded-steel, fancy (`fancy-r2`). Gilded-steel and fancy have no words in `outfits.OUTFITS` yet — his, before
@@ -75,8 +69,8 @@ Items 185, Bugs 106, Tiles 29, UI 20, Effects 4) were made on the old route (a g
 **Built outfits into the game — its own plan, with the owner's decisions in it** (GDD §08). None of the new art is
 in the game: the client still draws the old 16×32 farmer from layers (`CharacterComposer.cs`, `RemoteEntity.cs`),
 and `PlayerToolAnimator.cs` still runs the old swing curves.
-- Owner decisions needed: the **published size** — *"art is 36×71, the game's paperdoll is 16×32 at 16 PPU. Decide
-  against a rendered scene, not in the abstract"*; the **equip model** (the server checks 8 armour slots piece by
+- Owner decisions needed: the **published size** — the art is 36×71 while the game's character is 16×32 at 16
+  pixels per unit; decide against a rendered scene, not in the abstract; the **equip model** (the server checks 8 armour slots piece by
   piece, `handlers_world.go:812,867`; no item exists for bronze/fire-ant/black-ant — see *Armour economy overhaul*
   below); a **starter outfit**; what becomes of **class, hair and skin** choices (`CharacterSelectPanel.cs:28-30`);
   **tool motions** — 9 tools animate in the game, only the sword is approved in all three facings (axe, net, hoe
@@ -87,21 +81,20 @@ and `PlayerToolAnimator.cs` still runs the old swing curves.
   the nameplate assumes a 2-unit-tall player (`RemoteEntity.cs:212`). First piece (no decision needed): draw a
   whole-outfit frame behind a debug outfit id, to make the rendered scene the size decision asks for.
 
-**Polish later** — *"we have several outfits that are almost done (we need to polish but we can do that later)"*
-(2026-09-26). Known: the camera-facing walks lift the knees too high — *"its lifting the knees really high which
-is ok for running but not walking"* (2026-08-18; `check_lift` flags 5 of the 6 front/back walks of the first three,
-and copper's front at 18%); copper's hand positions — *"there are polish issues but we can work on that later as
-they involve hand positions"* (2026-09-26); copper's back walk is 71 px tall against its front's 66 (a fresh roll of
+**Polish later** — several outfits are nearly done and need a polish pass later (owner, 2026-09-26). Known: the
+camera-facing walks lift the knees too high — fine for a run, too much for a walk (owner, 2026-08-18; `check_lift`
+flags 5 of the 6 front/back walks of the first three, and copper's front at 18%); copper's hand positions (owner,
+2026-09-26); copper's back walk is 71 px tall against its front's 66 (a fresh roll of
 that one direction is the fix). Also *Running improvements* and *Sprite pipeline cleanup* below.
 
-## Next — RUNNING IMPROVEMENTS (owner 2026-08-14: "backlog 'running improvements' just dont want to do it now")
+## Next — RUNNING IMPROVEMENTS (owner 2026-08-14: backlogged, not for now)
 
 Two motions are **picked but not built**. Both are lab renders only; nothing in the game or in `build.py`
 does either of them.
 
 - **`run_front` has no pose of its own.** `official.GAITS["FRONT_RUN"]` is byte-identical to `FRONT` apart
   from `ms` — the camera-facing run is the camera-facing *walk* played faster, which is the failure the side
-  run already fixed. Owner: *"that's just not running with hands down by the side."* Picked
+  run already fixed. The owner judged the walk-sped-up version not to read as running. Picked
   `W3_widest_lowest`; numbers and the two rejected attempts are in
   `_generated/player/reviews/2026-08-14-run-front-pump/DECISION.md`.
   Building it needs a **`pulse`** term in `gait.walk_front_into` (fists grow/shrink with depth — it has no
@@ -112,7 +105,7 @@ does either of them.
   the weapon arm takes the swing arc. `reviews/2026-08-14-swing-while-running/DECISION.md`. Needs a new
   animation kind: today a gait and a swing are separate rows in `official.ANIMATIONS` that never overlap.
 
-## Later — SPRITE PIPELINE CLEANUP + IMPROVEMENTS (owner 2026-08-14, "after we get our sprites done based on what works")
+## Later — SPRITE PIPELINE CLEANUP + IMPROVEMENTS (owner 2026-08-14: after the sprites are done, based on what worked)
 
 Do this **after** the outfit run finishes, so it is built from what actually worked rather than guessed.
 Known material, all learned the hard way today:
@@ -124,7 +117,7 @@ Known material, all learned the hard way today:
   entry and rolled a directed one instead — one wasted call, and it looked like the model's fault.
 - **The pixel-density anchor line works and is not applied everywhere.** *"Match the PIXEL DENSITY of the
   attached reference"* fixed copper; the gauntlet prompt never got it and both gauntlets came back smooth
-  and outline-less. Owner: *"the gauntlets need to have the same pixel density I dont want to make slop."*
+  and outline-less. The owner requires the gauntlets to match the outfits' pixel density.
 - **Tier separation is measurable, so measure it.** Mean luma + shadow hue over the worn material, skin
   excluded. It found that steel had drifted into silver's slot and that platinum's blue shadows were the
   real discriminator; the fix moved shadow hue +20 → +84. Worth a committed script rather than ad-hoc.
@@ -135,9 +128,7 @@ Known material, all learned the hard way today:
 
 ## Underground fortress — a secret, and the Queens' set (owner 2026-08-06)
 
-*"it would be locked in a chest in a little underground fortress we will backlog. i do want secrets."*
-
-A small built structure somewhere underground holding a **chest with a legendary armour recipe**. The set
+The owner wants secrets in the world; this one is backlogged. A small built structure somewhere underground holding a **chest with a legendary armour recipe**. The set
 needs parts from **BOTH colony queens** — the col-0 intro colony and the col-3 deadly one — plus rare
 metals. Requiring both is the good part: it forces a traverse of the whole underground, east and west,
 rather than grinding one place.
@@ -150,20 +141,17 @@ queen-part drop items. None of those exist.
 
 ## Base village improvements (owner 2026-08-06 — placeholder, owner to fill)
 
-*"please backlog 'base village improvements' because there are some things I want to add and improve on."*
+The owner has things to add and improve in the village; this is the bucket for them. Known members so far:
 
-Owner has a list in mind; this is the bucket for it. Known members so far:
-
-- **Bug processing station.** *"wood… you get by processing bugs — there will be a bug processing station."*
+- **Bug processing station.** A station that turns bugs into materials (owner, 2026-08-06).
   The `bug_extractor` placeable and its 8 recipes (carcasses → `chitin` / `leather` / `formic_acid`) already
   exist; what is open is its role in the village and in the armour ladder, since it is the source of the
   whole bug→material economy and gates the bottom two rungs (leather, then wood).
 
 ## Thorns — spiked armour hurts what runs into you (owner 2026-08-06)
 
-*"lets then redo the hornet thorn one — if enemies run into you it should do damage."*
-
-The signature bonus of the **Chitin/Carapace** line. `stats_and_bonuses.md` already lists `thorns` under
+The owner asked for the hornet thorn outfit to be redone so that enemies that run into you take damage. The
+signature bonus of the **Chitin/Carapace** line. `stats_and_bonuses.md` already lists `thorns` under
 that concept with status 🔴 **not built**, and there is nothing to hang it on yet: the entire armour system
 in the sim is `sting_immune` (a bool) and `slot_bonus` (an int) — `entities.go:56-68`. No defense field, no
 bonuses map, no `PlayerStats`.
@@ -177,10 +165,8 @@ bonuses map, no `PlayerStats`.
 
 ## Glowsticks and glow lanterns — a crafted light material (owner 2026-08-06)
 
-*"one describing it as being made from glowsticks which we might end up making it out of (glowsticks, glow
-lanterns both made at workbench)."*
-
-Workbench recipes for a **glowstick** and a **glow lantern**, which then become the material story for the
+The owner is considering a glowworm-outfit variant made from glowsticks, with glowsticks and glow lanterns both made
+at the workbench. Workbench recipes for a **glowstick** and a **glow lantern**, which then become the material story for the
 glowstick variant of the glowworm outfit — a *crafted* light set as an alternative to the *harvested*
 glowworm one. Glowworms live in **Centipede Cavern (4,1)**; `light_radius` is 🔴 not built, so this pairs
 with the lighting/mining bonus work.
@@ -188,7 +174,7 @@ with the lighting/mining bonus work.
 ## Armour economy overhaul — WHOLE OUTFITS, not per-slot pieces (owner 2026-08-05)
 
 The player art moved to **whole-outfit sprite sheets** — one image per outfit, generated in a single
-render. Owner: *"we are moving to a whole outfit system (no way I can mask all the individual things)"*.
+render. The owner moved to whole outfits because masking every individual piece wasn't workable.
 The economy still assumes the old **per-piece** model, so it no longer matches the art.
 
 **What has to change:**
@@ -201,8 +187,8 @@ The economy still assumes the old **per-piece** model, so it no longer matches t
   that is a design decision, not a mechanical one, and it touches the server's equip handling.
 - **Drops and vendors.** Same knock-on: what drops, what a shop stocks.
 
-**Per-zone special outfits.** Owner: *"in each zone there might be one or two special outfits including
-the ones made from natural material."* So the roster is partly **zone-gated content** — ant-carapace,
+**Per-zone special outfits.** The owner expects one or two special outfits in each zone, including ones made from
+natural materials. So the roster is partly **zone-gated content** — ant-carapace,
 beetle-shell, moth-wool, glowworm and the rest are made from things a specific zone provides, and should
 be obtainable there. That is a content-design pass over `docs/product/economy/zones/` as well as a
 mechanical one.
@@ -211,15 +197,15 @@ mechanical one.
 material-sourced sets to go through the new whole-outfit flow.
 
 ## Stealth / reduced aggro — the spidersilk bonus (owner 2026-07-29, not built)
-The spidersilk set's signature bonus:
-*"makes you stealthier (backlog stealth bonuses, basically reduces aggro I guess)"*. Nothing in the sim reads
+The spidersilk set's signature bonus: it makes you stealthier — roughly, bugs notice you less (the owner's
+tentative description; backlogged). Nothing in the sim reads
 a stealth stat today, so this is a real mechanic to design — bug aggro is CLIENT-authority per
 `architecture_swarm_sync.md`, so anything that changes which bugs notice the player is a determinism-touching
 change and goes through the `frontier-sync` recipe, not a cosmetic tweak.
 
-> **STEALTH AND SPIDERS ARE ONE SPRINT (owner 2026-08-06).** *"spiders give silk which is what stealth based
-> equipment is based on, one way to deal with harder levels without combat… we are eventually going to do
-> spiders so we can backlog stealth and spiders as one sprint."* They are the same feature: stealth needs a
+> **STEALTH AND SPIDERS ARE ONE SPRINT (owner 2026-08-06).** Spiders give silk, silk is what stealth gear is
+> made from, and stealth is a way through harder zones without fighting — so stealth and spiders are one sprint.
+> They are the same feature: stealth needs a
 > material, the material is silk, and **`silk` is currently an orphan item** — `items.json:1631` exists with
 > no recipe and no bug that drops it. Spiders are the source. See *Later — creatures: ants & spiders*.
 > Sequence: cave spider + webs → silk drops → the silk/`shadowsilk` set → the stealth stat.
@@ -233,9 +219,8 @@ change and goes through the `frontier-sync` recipe, not a cosmetic tweak.
 
 ## CLAUDE.md & scaffolding improvements (owner wants a pass here; captured 2026-07-09)
 Umbrella for tightening how the assistant is steered. Add items here as they come up.
-- **SCRIPTS AS REMINDERS — a cheaper hook (owner's idea, 2026-08-06).** *"having python scripts perhaps
-  actually output things - reminders and such, as a form of 'hook' - as long as you read the output of the
-  script."* A tool that prints the convention it just applied fires exactly when it is relevant, cannot be
+- **SCRIPTS AS REMINDERS — a cheaper hook (owner's idea, 2026-08-06).** Tools print reminders of the conventions
+  they apply, as a lightweight kind of hook — provided their output is read. A tool that prints the convention it just applied fires exactly when it is relevant, cannot be
   routed around, and costs one `print()` — no manifest row, no session-start snapshot, no fail-open logic.
   **First instance is live:** `tools/player_sprites/review.py` `save()` prints the `C:/` path, that labels
   are 22pt (~2× PIL's default, because he has twice had to zoom in to read a comparison sheet), and warns
@@ -343,8 +328,8 @@ pickups, ambience), tune the volume mix + distance falloff, positional-audio pol
 
 ## Tutorials & instructions review (owner, 2026-07-09)
 Polish pass on player onboarding — show users the different systems instead of leaving them to guess.
-Includes tool-role instruction via tooltips/first-use hints, e.g. **shovel** = "change the ground below your
-feet", **pick** = "break blocks & items at your level" (better wording TBD), and surfacing the other mechanics
+Includes tool-role instruction via tooltips/first-use hints, e.g. the **shovel** reshapes the ground under the
+player's feet and the **pick** breaks blocks and items at the player's level (tooltip wording TBD), and surfacing the other mechanics
 (farming, catching, crafting, ground-editing) as they're encountered. Ties into the shovel ground-editing UX
 being designed now.
 
@@ -518,7 +503,7 @@ Plan + designs: `docs/product/economy/crafting_buildout.md` + the saved plan. Al
   (the good-design alternative to the F8-give); fruit/crop + breeding-station info panels (separate backlog).
 - **Compost → fertilizer (backlogged 2026-07, owner decision):** the compost bin now yields a sellable
   `compost` item (take-all harvest, `OpCodeCompostHarvest` 115). Its FERTILIZER use — apply compost to tilled
-  soil/crops for a growth or yield boost — is DEFERRED (owner: "backlog the fertilizer part"). Design when
+  soil/crops for a growth or yield boost — is DEFERRED (owner decision). Design when
   picked up: what the boost is (faster growth vs. better yield vs. water-retention — cf. Sun Haven's elemental
   split), how it's applied (a use-item on soil, mirroring `garden_plot` watering), and whether it tiers
   (basic/quality/deluxe). Compost also needs an icon sprite (`Items/compost_icon.png`, gpt-image-1).
@@ -533,7 +518,7 @@ The **SERVER ecology is built + verified** (Go tests + 6× headless lab + per-sp
 (future) the Ecologist restores → progression**. Done:
 - **Breeding-unify — ONE visible brood model (2026-07-14, SERVER DONE + deployed):** ALL non-instant
   breeding lays eggs into a visible `BroodState` that develops over GAME-HOURS (`BroodEggMatureTicks=350`
-  ≈ 1 game-hour/egg, was ~10s = the "always-empty nests" problem) and hatches — flies/butterflies (compost /
+  ≈ 1 game-hour/egg, was ~10s, which is why nests always looked empty) and hatches — flies/butterflies (compost /
   rotten-fruit pile / milkweed), detritivores, AND **wasp NESTS** (nest brood routed off the old invisible
   instant-pop counter onto the `BroodState`; recovery/founding read it via `nestBroodCount`; the homing
   resident ENTERS the nest a beat to tend). Go-tested; A1 ecology-validated (ground species self-sustain via
@@ -691,8 +676,8 @@ mirrors predation; swarm-of-1 dropped — player HP is SIM-INERT so it needs no 
   base centipede surge model — `centipede_tiger` (Scolopendra polymorpha) + `centipede_giant` (S. gigantea). One
   clean code change: de-hardcode `CentipedeTrail` segment family (add `sprite_family`).
 - **✅ Enemy AI — individual attack movement + phantom/bumble fix (2026-07-12) → `architecture_combat.md §
-  Individual attack AI`.** Owner report (*"wasps bumble … centipedes phantom-hit … they should swoop in and
-  attack, solo divers one or two at a time"*) fixed. ROOT CAUSE of the bumbling: wasps shipped
+  Individual attack AI`.** Owner report fixed: wasps bumbled about and centipedes hit from a distance; they should
+  swoop in and attack, one or two divers at a time. ROOT CAUSE of the bumbling: wasps shipped
   `player_reaction:"ignore"` so each individual bug's AI wandered and never engaged (the swarm-centre chase +
   cosmetic-dart first pass didn't fix it). REAL fix: (A) **individual attack MOVEMENT** — `player_reaction:"attack"`
   + `BugAgent.AttackMove`: each bug HOVERS at `standoff` then SWOOPS in during its phase-offset slice
@@ -711,8 +696,8 @@ mirrors predation; swarm-of-1 dropped — player HP is SIM-INERT so it needs no 
   `CentipedeMovement` (real chase steering) + the surge state machine on `BugAgent` (`CentipedeSurge`/`LaunchSurge`,
   hash+snapshot wired). Ecology (breeding/pop/food) + the GNAW stay server-side. **Gated:** Go world+entities PASS ·
   sim-determinism default + a NEW `--surge-test` (the lunge fires twice byte-identical, non-vacuous) · 2-client
-  `run_sync_latejoin` co-located + disjoint SYNC IDENTICAL · Unity batchmode compile · owner playtest ("watched them
-  kill flies"). Arch: `architecture_swarm_sync.md §14.3` (rewritten).
+  `run_sync_latejoin` co-located + disjoint SYNC IDENTICAL · Unity batchmode compile · owner playtest (the
+  kills on flies seen in-game). Arch: `architecture_swarm_sync.md §14.3` (rewritten).
   **Deferred (owner feel calls):** per-MEMBER lunge-connect re-key (each surging member reports its own hit; i-frames
   cap burst — balance) · `village_21_B` `centipede_garden.swarm_size` density dial (currently 2, below pack min 3 →
   packs render sparse).
@@ -805,12 +790,10 @@ through 2 adversarial critic rounds): `docs/product/investigations/research_ligh
 - **Owner-taste Qs** (mostly settled during the build; revisit if needed): scalar/binary roof (light shafts),
   palette mood, emission tooling, normal maps, player-light-underground.
 
-**Original owner spec (still the requirement — the reference the build targets):**
-Owner: "the outside area at the top should be lit like any other day/night, on the top ant
-zone and the mining zone with the mining camp, we can make it dark past that point. as it
-is all masses of ore block should have the inner ones dark, wherever they are surrounded,
-this is like terraria. but we can backlog lighting for now as we are just focused on the
-zones, so backlog all lighting."
+**Original owner spec (still the requirement — the reference the build targets):** the outdoor top of the ant
+zone and of the mining zone follow the normal day/night cycle; everything past that is dark. Inside any mass of
+ore blocks, the inner blocks that are surrounded are dark, as in Terraria. (At the time, all lighting was
+backlogged while the zones were built.)
 - Surface strips of (3,0) + (3,1) get normal day/night; DARK below/past them.
 - Terraria block rule: any block cell fully surrounded by blocks renders dark (applies to
   ore masses on the surface too — inner blocks of a mass are dark).
@@ -827,12 +810,12 @@ zones, so backlog all lighting."
 ## Later — ANT mechanics riders (owner review 2026-07-07)
 - Ants CARRY real items to chambers (fruit/rotten fruit/dead bugs -> granary caches) —
   the transport mechanic; v1 granaries are authored caches of real items.
-- The ant BROOD system deep pass ("backlog the entire brood testing") — lifecycle,
+- The ant BROOD system deep pass (the owner deferred all brood testing to here) — lifecycle,
   harvest response, defense tuning.
 - Scouts are BASED in the lower colony and head UP AND OUT across zones — rides the
   real cross-zone transfer below.
 
-## Later — UNDERGROUND BUG ROSTER (owner ruling 2026-07-07: "backlog all bugs, we're just building the zones")
+## Later — UNDERGROUND BUG ROSTER (owner ruling 2026-07-07: all bugs backlogged while the zones are built)
 Built AFTER the row-4 zone terrain. The zones PLAN the spawn locations; these are the sims.
 - **Warrior ants** (soldier caste — BLACK ants): guard the Queen; turn aggressive near her; the
   general **defender response to STEALING/DAMAGING** (also the fix for players stealing boats/
@@ -863,8 +846,7 @@ must be compatible with real game mechanics** (don't assume unbuilt mechanics).
 ## Now — ANT-ARC BUILD PREP (owner decisions 2026-07-06, do alongside the (3,0) build)
 - **bee_meadow_20 — REMOVE the south dirtying/rocky GRADIENT** (zone_bee_meadow_20.py §1b:
   the `gradient_field` + rock_masses + torn-ground rubble + dead-tree/dry-flora band along
-  the south edge). Owner: "removing the strip at the bottom of the bee zone just to give
-  more space to encounter ants, and more spread out forest." Its original job (blend into
+  the south edge) — the owner wants that space for meeting ants, and more spread-out forest. Its original job (blend into
   the ant zone below with no sudden dirt wall) is gone now that ant_tunnels_30 is
   half-outside and carries its own cliff transition. AFTER: restore meadow to the south
   edge with more spread-out forest. **Keep the Rocky Gorge (§1c, the stream's east exit) —
@@ -872,13 +854,13 @@ must be compatible with real game mechanics** (don't assume unbuilt mechanics).
 - **Mushroom realism sweep — REPLACE the two generic ids** (`mushroom_cluster`,
   `mushroom_brown`) at all 17 placements with existing real species (morel, inkcap,
   chanterelle, puffball, bracket, red, glow…), then DEPRECATE the two generic entities.
-  Owner: "actual mushrooms, not just 'cluster' or 'brown mushroom'." Touches many
+  The owner wants real mushroom species, not generic clusters. Touches many
   zone_*.py + regen; no new art (real species already have sprites). Ant zone already uses
   inkcap/morel natively.
 
 ## Next — the village and the world map, as built (found 2026-09-26 while researching GDD §01)
-- **One village.** The June review settled it: *"Zone 1 = `village_21_B` … NOT the plain `village_21` demo"*
-  (`economy/DECISIONS.md` D19). The game still starts new players in `village_21` ("Normal", first in the dev menu,
+- **One village.** The June review settled it: the starting village is `village_21_B`, not the old `village_21`
+  demo (`economy/DECISIONS.md` D19). The game still starts new players in `village_21` ("Normal", first in the dev menu,
   `WorldMenu.cs`; also the server's fallback, `rpc/world.go`, `match.go`), a village with no vendors that nothing links
   back to — walk south from it and north again and you arrive in `village_21_B`. To do: start in `village_21_B`,
   drop the one-way link and its exception in `zone_links_test.go`, and move `village_21` to the test zones (the sync
@@ -894,7 +876,7 @@ must be compatible with real game mechanics** (don't assume unbuilt mechanics).
   Underground Passages seam where the openings on the two sides don't line up — the "blocked zone entry" item on the
   roadmap.
 
-## Later — REAL cross-zone bug transfer (owner 2026-07-06: "it will be real bug transfer")
+## Later — REAL cross-zone bug transfer (owner 2026-07-06: real transfer, not a pretend version)
 Zones are isolated per-match sims today (Neighbors is player-only). The real feature:
 a bug/swarm that walks off a connected edge LEAVES zone A's sim (a ledgered removal) and
 ARRIVES in zone B's sim (a ledgered spawn at the matching edge) — two zone-local ledger
@@ -902,7 +884,7 @@ events, no shared sim state, each zone stays independently deterministic; transf
 via the existing Neighbors map. Until built: NO fake edge-spawn pretense; ant populations
 stay zone-local (D21's "ants cross into the Mining Camp" waits for this).
 
-## Later — MARBLE (owner 2026-07-06, "backlog this just talking")
+## Later — MARBLE (owner 2026-07-06: an idea, backlogged)
 The material exists (style.json marble palette; column_marble; wall_marble client-side).
 Future: a quarry source in the deep zones (row 4), statues + fountains crafted at the
 Stonemason (D27 sculpture yard), and the marble premium furniture tier (P2 of the
@@ -933,7 +915,7 @@ ambusher (web tiles slow prey via a server speed-debuff; reuse occupant placemen
 + a jumping/stalk-pounce hunter (reuse the centipede `ActionState` lunge). Determinism-light (ant trails add
 zero sync surface). Build spiders first (lower risk); ants are Med–High complexity. Includes Step 0 = the
 rotten-fruit decay fix (bound the pile).
-- **Spiders & webs in the underground (don't forget!)** — finish adding the cave spider + its webs to the
+- **Spiders & webs in the underground (owner priority)** — finish adding the cave spider + its webs to the
   FIRST underground zone (Underground Passages / Mining Camp). Per the zone sheet it's the dark-warren ambush
   species (`cave_spider` drops from the ceiling on silk; web-choked side-passages; `cave_spider_silk` is the
   zone's soft-material spine) — designed, not yet placed/wired into the zone.
@@ -1048,8 +1030,8 @@ Tidy what's clearly safe; leave anything risky alone.
 > **Superseded (noted 2026-09-26):** this was the layered paper-doll model. Outfits became whole images on
 > 2026-07-28, each drawn with its own hair, and today's base (`tools/_generated/player/bases/armless_front.png`)
 > has hair. Whether players choose hair or skin under whole outfits is an open question in GDD §08.
-The player BASE is now **BALD**; hair is a generated+masked **layer** like armor (owner: "lets go without hair
-and do the hair just like the other parts"). Locked bald front = `refart_spike/bald/base_down_bald_FINAL.png`
+The player BASE is now **BALD**; hair is a generated+masked **layer** like armor (owner decision: hair is handled
+like the other parts). Locked bald front = `refart_spike/bald/base_down_bald_FINAL.png`
 (`_REVIEW/LOCKED_bald_front.png`). `CharacterComposer` already draws `hair` as its own layer under `helmet`, so
 this fits. Hair generation is proven (`refart_spike/hair/_hair.png` — `neat_short`+`tousled_mop`, face kept
 pixel-identical via composite-in-post). TODO: build the hair-layer library on the bald base + a matching
@@ -1130,7 +1112,7 @@ intentionally over-produced to **prune down**, then wire via `production.md`'s w
   (potions), stove (meals), jeweler (accessory gems), honey_extractor — data + recipes once art lands.
 - **Recipe acquisition** — per-character known-recipes set + the auto/buy@npc/find content split.
 - **Gear content** — armor tiers, utility outfits (bee suit, fisherman's vest, miner kit…), accessories,
-  trade-off ("bonus-while-detrimenting") items, consumables.
+  trade-off items (a bonus paired with a drawback), consumables.
 
 ## Later — mining depth (the loop is thin; flagged 2026-06-24)
 Mining is currently "tool_tier gates ore → break block → get ore" with no risk, variety, or reason to go
@@ -1211,10 +1193,10 @@ These came out of designing `economy/zones/` + `catalogs/`; each needs its own d
   reject if it clips); machines split into fuel-fed (wood stove) vs electric; stove cooking-capacity
   tiers. Add the power/fuel-requirement entity flag only when building this. Author a small
   **power/electronics demo scene** to tinker with it visually.
-  - **Village windmill (Andrew, 2026-06-27):** put a **windmill in the starting town that powers the
-    houses** — but the player **cannot buy or build it until the wheat/locust area** (the
-    `locust_farmland` zone — *"a little western-style town"*). Gates the village's electrification behind
-    reaching that zone. ("I will know what it means when we get there.")
+  - **Village windmill (Andrew, 2026-06-27):** a **windmill in the starting town that powers its
+    houses**, which the player **can only buy or build after reaching the wheat/locust area** (the
+    `locust_farmland` zone, which holds a small western-style town). Gates the village's electrification behind
+    reaching that zone; the details are left for when the zone is built.
   - **`clothing_rack` unlock (D27):** the 2-wide garment rail is a **display fixture only** in the Weaver
     for now — **not craftable/buyable until "the other town"** (same later-zone gate as the windmill).
     Wire its recipe/shop-entry when that zone lands. (`coat_rack` stays the house clothing piece.)

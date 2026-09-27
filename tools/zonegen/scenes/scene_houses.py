@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """scene_houses — the HOUSE-SHAPE showcase (house.md's test card).
 
-v2 (2026-06, "not squares — natural, and mostly square"): the grid shows the
+v2 (2026-06: natural outlines, not plain squares — while staying mostly square): the grid shows the
 NON-CONVEX shapes — a true L (with a PORCH), a courtyard U (dressed court), a Z
 with an annex shed — and two GENERATIVE `sculpt_plan` seeds, across basic/fancy
 collections, each in a yard. Rendering this card is the proof that a street built

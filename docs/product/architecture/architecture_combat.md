@@ -46,7 +46,7 @@ These compose: the **stage manager** sits above per-bug **FSM brains** whose Att
 **steering**, which sets the next `SWARM_SET_TARGET` leg.
 
 ## Adopted alongside the skeleton (owner-approved 2026-07-11)
-*(These make the three actually work — without them "smarter enemies" is just "more unavoidable damage." The core
+*(These make the three actually work — without them, smarter enemies only mean more unavoidable damage. The core
 bundle is inseparable from the skeleton; the pacing + polish layers land in later milestones.)*
 
 ### Core bundle — ADOPTED (M1 foundation)
@@ -152,7 +152,7 @@ per-enemy code. All are debug-spawnable in the arena immediately via the M1 spec
   `max_hp` (hits-to-kill) · `min/max_swarm_size` · `nocturnal` · `sprite_family`/render scale (segmented crawlers).
   Add/tune an enemy → the **`combat-enemy` skill**.
 - **Verified:** full Go world suite + `sim-determinism` PASS; sprites acceptance-checked at full res.
-## Data-driven attack model (2026-07-12 refactor — the "maintainable for 50 bugs" pass)
+## Data-driven attack model (2026-07-12 refactor — the pass that keeps combat maintainable across 50+ species)
 Every player-facing combat behaviour is now a **per-species `attack{}` profile** in `species.json`
 (`entities.AttackConfig`, mirroring `predation{}`) — no combat feel is hardcoded, so adding bug #51 is DATA:
 - `style` (`contact` | `lunge`) · `damage` · `cooldown_secs` · `range` · **`telegraph_secs` (per-species
@@ -172,9 +172,9 @@ Every player-facing combat behaviour is now a **per-species `attack{}` profile**
 - **Remaining follow-ups (small):** `checkBugAttacks` is retired but kept as a test-only funnel-driver (2 tests);
   the legacy top-level `attack_*` struct fields remain as normalize-input. Neither is on a production path.
 
-## Individual attack AI: orbit-and-dive (2026-07-12 — "swoop in and attack")
-Fixed two structural bugs the owner reported (*"wasps just bumble around … centipedes phantom-hit"*) and gave
-enemies the **"solo divers within a bigger swarm, one or two at a time"** feel — as **real deterministic
+## Individual attack AI: orbit-and-dive (2026-07-12 — individual bugs swoop in to attack)
+Fixed two structural bugs the owner reported (wasps only wandered aimlessly; centipedes hit with no visible
+attack) and gave enemies the requested feel — **individual divers out of a bigger swarm, one or two at a time** — as **real deterministic
 per-bug movement**, not a cosmetic overlay. The root cause of the bumbling: wasps shipped `player_reaction:
 "ignore"`, so each individual bug's AI wandered around the swarm centre and never engaged. Making the *centre*
 chase faster + adding a cosmetic dart (the first pass) didn't fix it — the bugs themselves weren't attacking.

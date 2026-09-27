@@ -2,7 +2,8 @@
 
 How mouse input maps to game actions on the Unity client. One page because this was the
 project's repeated bug source: four controllers independently polling `Input` and guessing
-whether a click was theirs ("every click near a swarm hand-catches even with a pickaxe").
+whether a click was theirs (the owner reported that every click near a swarm tried to catch a bug by hand, even
+with a pickaxe).
 
 ## The contract
 

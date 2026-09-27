@@ -20,7 +20,7 @@ no new art is needed.
 THE TWO HANDS ARE A PAIR, ONE PER ARM
 ------------------------------------
 Approved together 2026-08-01: `grip_back_of_hand.png` is the arm you see the BACK of, `grip_palm.png` is
-"the other arm so you would see the palm". Two-handed uses BOTH. Never mirror one to make the other —
+the other arm, the one whose palm is visible. Two-handed uses BOTH. Never mirror one to make the other —
 mirroring the back of a hand gives a mirrored back of a hand, never a palm.
 """
 import datetime

@@ -35,7 +35,7 @@ Graduate the kept conclusion into `architecture_nursery_stations.md` once built 
 - **Compost residents aren't produced server-side yet** (residents exist only for nests today — per
   `architecture_nursery_stations.md` "Not built"). So the "adults inside" readout will be empty for compost until
   that server bit is added. Design the slot; don't promise data that isn't emitted.
-- **Output block is pending the owner's output decision** — "remove the compost" is unbuilt (fertilizer = "later"
+- **Output block is pending the owner's output decision** — taking the compost out is unbuilt (fertilizer = "later"
   in `station.go`). Reserve the space; populate it only when we build the take-out path.
 
 ## The ≥4 scored candidate layouts (from the automation thread, axes: Apico-feel · readability · narrow-fit · dev-cost · reuse)
@@ -70,7 +70,7 @@ clean, correct panel; with it the bin feels alive. → an owner scope call (buil
 ## Cold-critic pass — resolutions (see COLD-CRITIC.md; each finding re-verified against real code)
 - **F1 (was flagged "blocking"): the fly compost brood pupates (`brood.go` `broodPupates` = `PupaSpriteID!=""`,
   applied to compost broods; `fly_common` has one) while `architecture_nursery_stations.md` said "flies: NO pupa."**
-  Resolved the way the owner already endorsed ("finally flies to have pupae, i saw that") + real biology (a
+  Resolved the way the owner already endorsed (he had noticed flies finally gaining a pupa stage and welcomed it) + real biology (a
   housefly IS egg→maggot→pupa→adult): **keep the pupa, fix the stale doc** (done). The critic's framing ("drop
   fly pupa = a determinism change") had the direction backwards — the fix is doc→code, no sim change.
 - **F2 (valid, fold into redesign): the world-object "ready/working" indicator was dropped.** Add a subtle

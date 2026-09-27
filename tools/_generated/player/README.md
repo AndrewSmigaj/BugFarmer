@@ -3,7 +3,7 @@
 Everything for the player character and its outfits lives here.
 
 **Open `gallery.html`** (double-click it) to see every outfit as it stands right now — all its animations,
-how far along it is, and its candidate sheets. That is the answer to "what do we have". Regenerate with
+how far along it is, and its candidate sheets. That is where to see what exists. Regenerate with
 `python3 tools/player_sprites/gallery.py`.
 
 **To SHOW someone, send `ALL_OUTFITS_ALL_ANIMATIONS.gif`** — the gallery's Current grid as one animated
@@ -47,12 +47,12 @@ ALL_THREE_walk.gif / ALL_THREE_swing.gif   older, narrower versions of the same 
 
 ### Inside an outfit
 
-**`tools/player_sprites/official.py` is the answer to "what are we using".** The build reads it and nothing
+**`tools/player_sprites/official.py` is what says which art is in use.** The build reads it and nothing
 else — no directory scanning, no fallbacks, and a missing file stops the build naming it. Folders hold the
 art; `official.py` says which art counts.
 
 Every outfit has the same four folders. The names are fixed by the system, not chosen per outfit, so
-"where are this outfit's hands?" has one answer for all thirty:
+the question of where an outfit's hands live has one answer for all thirty:
 
 ```
 outfits/bronze/
@@ -72,7 +72,7 @@ per outfit any more — it was a third version system sitting next to `tries/` a
 1. **Generate candidates** into `tries/<date>-<what>/`. Paid; **ask first**.
 2. **The owner picks one.**
 3. **Copy it into place** — `frames/` or `gauntlet/` — and add or update the outfit's row in `official.py`
-   with the date and his words verbatim.
+   with the date and the owner's decision stated in clean prose (attributed and dated, never his words).
 4. **Build:**
 
    ```bash
@@ -119,7 +119,7 @@ Every outfit has **its own version of all five**, in `<outfit>/gauntlet/`, under
 | `back.png` | palm — walk + run, the **far** hand (dimmed, drawn behind the body) |
 | `side.png` | profile — walking **toward or away** from the camera |
 | `grip_back.png` | **SWINGS ONLY** — the arm you see the back of |
-| `grip_palm.png` | **SWINGS ONLY** — *"the other arm so you would see the palm"* |
+| `grip_palm.png` | **SWINGS ONLY** — the other arm, the one whose palm is visible |
 
 The two grips are a **pair, one per arm**, approved together. A two-handed swing uses **both**. Never
 mirror one to make the other — mirroring the back of a hand gives a mirrored back of a hand, never a palm.
@@ -135,8 +135,8 @@ mirror one to make the other — mirroring the back of a hand gives a mirrored b
 
 **The hand travels and the tool follows it.** Not the other way round — the old model rotated the *tool*
 about a point near the body and stuck the hand on afterwards, so the fist sat by the shoulder and spun in
-place. *"do people take a sword in their fist, hold their fist up to their shoulder and rotate their fist
-to swing it? ever?"*
+place. The owner rejected this on 2026-08-04: nobody swings a sword by holding the fist up at the shoulder
+and rotating it there.
 
 Arm **128° → −104°** (past straight down, so the hand finishes **at the hip**), blade **85° → 52°** behind
 the arm (decreasing, so the **tip keeps dropping** after the arm stops), reach 0.60, `HAND_PERP = 180`.
@@ -166,8 +166,8 @@ Check the lever numerically: between drive-in and lift the hand should move **al
 blade rotates a lot. Currently 0.11 cells of hand travel against 46° of blade rotation.
 
 **THIS IS A BLOCK WORLD — aim the tool at the BLOCK IT IS ACTUALLY BREAKING.** Standing sideways, he digs
-the block **beside** him, not the ground under his feet. Owner: *"this is a block based world so when
-standing sideways you are digging dirt to the side of you not below you."* So the side-view shovel is a
+the block **beside** him, not the ground under his feet. Owner direction: in a block-based world, a
+character standing side-on digs the dirt to his side, not below him. So the side-view shovel is a
 roughly **horizontal** drive into the adjacent cell; a downward jab is the *facing-down* animation, which
 breaks the block below. A cell is half his body height, so the block beside him spans his lower half —
 aim a little under horizontal to land in it.
@@ -192,8 +192,7 @@ ping-pongs and you cannot tell which direction the swing runs.
 This was the root of a whole day of churn. `motions.py` recorded what the owner picked; `build()` had its
 own constants and never imported it. Every pick got written into the record, hand-placed as a gif, and
 then **silently overwritten by the next re-render** with the superseded motion — so approved things kept
-coming back wrong. Owner: *"they are NOT using the official agreed on animations. why has this been so
-convoluted and difficult?"*
+coming back wrong. The owner caught it: the rendered animations were not the officially agreed ones.
 
 Measured at the time, in bronze's own `current/anim/`: the sword was the agreed 320ms frame budget while
 axe, hoe, net and shovel were all still the old shoulder-pivot approaches.
@@ -237,8 +236,8 @@ tried, and nothing in them is durable.
 ⚠ **The spec IS the artifact, not just the gif.** Timestamped review folders stopped the *gifs* being
 overwritten, but the **numbers that define a motion** had the same bug one level down and it went
 unnoticed: each new variant replaced the last in the lab file, so a picked motion had to be dug out of git
-history. Owner: *"after all this desperate trying to get you to get organized, you think its ok while
-developing which animation to use in the game you are just throwing them away as we go?"*
+history. Owner direction (2026-08-04): while the game's animations are being chosen, the candidate
+motions must be kept, not thrown away as work moves on.
 
 Every lab run now also writes **`SPECS.json` beside its gifs**, so a review folder is self-describing and
 any gif can be traced to its exact numbers without git archaeology.
@@ -249,13 +248,14 @@ replacement beside it and marking the old superseded.
 **AGREED ANIMATIONS LIVE IN `outfits/bronze/current/anim/`, NOT IN A REVIEW FOLDER.** Bronze is the
 reference outfit: motions are designed on it, then applied to the other 21 with their own gauntlets.
 
-**The moment he says "this one", copy it there and add a `CURRENT.md` row the same day.** Everything under
-`reviews/` is exploration — later runs regenerate it and it is not safe. Owner: *"these animations need to
-stay somewhere so we can use them - we cant just willy nilly explore things and when i say 'this one' just
-shrug and move on."*
+**The moment the owner picks one, copy it there and add a `CURRENT.md` row the same day.** Everything
+under `reviews/` is exploration — later runs regenerate it and it is not safe. Owner direction: agreed
+animations must be stored somewhere they can be used; exploration must not carry on as if a pick had not
+been made.
 
-`CURRENT.md` records, per animation, **the motion constant in code** that produces it as well as his
-words, so it can be rebuilt from source alone rather than only existing as a gif.
+`CURRENT.md` records, per animation, **the motion constant in code** that produces it as well as the
+owner's dated decision (in clean prose, never his words), so it can be rebuilt from source alone rather
+than only existing as a gif.
 
 ⚠ `anim/` **is ledgered.** It was once excluded as derived output, on the assumption animations are just
 regenerated from the frames. That is wrong: the **motion is the decision**. An agreed animation that is

@@ -13,7 +13,7 @@ single file that can be.
 
 IT LOOKS LIKE THE GALLERY BECAUSE IT IS BUILT LIKE THE GALLERY
 --------------------------------------------------------------
-Owner, 2026-08-13: *"i really need the gif to look like the gallery"*. The version before this one
+Owner, 2026-08-13: the gif has to look like the gallery. The version before this one
 composed its cells differently from the page — it cropped every frame to the character and applied one
 global scale — and the result read as a different thing entirely: ragged grey off-cuts where the crop
 box overshot the body, and characters about half the size the gallery shows them at.
@@ -133,7 +133,7 @@ def fit(size, cell_px):
     This used to be `round(w * min(cell_px/w, cell_px/h, 1.0))` — an arbitrary ratio — and `frame_at`
     then resampled the cell with LANCZOS. Between them they turned a sprite that had been carefully
     converted to pixels back into a smooth image: exactly the thing the conversion exists to prevent.
-    Owner, 2026-08-18: *"NOT THE RAW version the PIXEL version"*.
+    Owner, 2026-08-18: it must show the pixel version, not the raw one.
 
     Only divisors that divide BOTH sides exactly are allowed, so a 4x block grid becomes a clean 2x or
     1x one and never a 1.7x smear. If no divisor gets the cell under `cell_px`, the largest legal one

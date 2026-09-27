@@ -7,8 +7,8 @@ still frame cannot show it.
 
 ## What was wrong with every previous swing, including this morning's
 
-*"do people take a sword in their fist, hold their fist up to their shoulder and rotate their fist to
-swing it? ever?"* — no, and that is exactly what the old code did.
+The owner's objection (2026-08-04): nobody swings a sword by holding the fist up at the shoulder and
+rotating it there — and that is exactly what the old code did.
 
 `swing_frames` computed **one angle**, placed the **tool** at a fixed small radius from the body centre,
 and then stuck the hand onto the tool's grip. The tool led and the hand was downstream of it, so the fist

@@ -37,7 +37,7 @@ APPROACH = 6
 WALK_MS = 150
 WALK_CYCLE = [1, 2, 3, 2]                   # frame 4 came back a second stride, so it is not cut
 HAND_SWING = 0.42                           # fore/aft travel, as a fraction of torso width
-HAND_ROLL = 55.0                            # the fist rolls as it swings, "as if it were on a wheel"
+HAND_ROLL = 55.0                            # the fist rolls as it swings, turning like a wheel
 
 
 def rgba(p):

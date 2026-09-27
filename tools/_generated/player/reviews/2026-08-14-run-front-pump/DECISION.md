@@ -1,6 +1,6 @@
 # run_front — PICKED: widest lowest
 
-Owner, 2026-08-14, verbatim: **"we will go with wisdest lowest"**
+Owner decision (2026-08-14): **the widest, lowest variant**, `W3_widest_lowest`.
 
 Chosen from `bronze_REACH.gif` — current, big reach, and three variants of it.
 
@@ -8,7 +8,7 @@ Chosen from `bronze_REACH.gif` — current, big reach, and three variants of it.
 
 `official.GAITS["FRONT_RUN"]` is byte-identical to `FRONT` apart from `ms`. The camera-facing run IS the
 camera-facing walk played faster, and never got its own pose — the same mistake the side run already
-fixed. Owner: *"that's just not running with hands down by the side."*
+fixed. The owner rejected it: hands held down by the sides do not read as running.
 
 ## The picked numbers
 
@@ -23,13 +23,14 @@ fixed. Owner: *"that's just not running with hands down by the side."*
 | `pulse` | — | **0.22** ← new |
 | `ratio`, `ms` | 0.17, 90 | unchanged |
 
-**`pulse` does not exist in the pipeline yet.** It is the thing the owner asked for — *"fists that get
-bigger and smaller"* — the fist coming toward the camera grows and the one going back shrinks, which is
+**`pulse` does not exist in the pipeline yet.** It is the thing the owner asked for — fists that grow and
+shrink — the fist coming toward the camera grows and the one going back shrinks, which is
 what sells a run toward the viewer. In the lab it scales each fist's size ratio by `1 ± pulse * s`.
 
 Two earlier attempts were rejected on the way, both worth not repeating:
 
-- **higher** (row 0.38 and above) — *"they cant go that high, it clips into the shoulders."*
+- **higher** (row 0.38 and above) — rejected by the owner: the fists cannot go that high, because they clip
+  into the shoulders.
 - drawing the smaller fist BEHIND the body — at chest height the torso is at its widest and swallows it
   entirely. Both fists go in front, as `gait.walk_front_into` already does; the size change carries the
   depth on its own.

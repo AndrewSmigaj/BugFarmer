@@ -148,9 +148,8 @@ placeable as an independent item).
   `basic`, and register it in `COLLECTIONS`. New ids are added via the **add-object** skill.
 
 ## Making DIVERSE houses — the household ontology (owner correction, 2026-07-06)
-> "you keep making every single house the same, same furniture, same stuff, its not even
-> well organized it is poorly organized, i said to make houses different and all you did
-> was change the room layout."
+Every house had been built the same — the same furniture and contents, poorly organized — and
+the earlier request to make houses different had only changed their room layouts.
 
 A house is not a floor plan — it's a HOUSEHOLD. Changing the room layout while stamping the
 same furniture grid produces the same person cloned into differently-shaped boxes. Before
@@ -171,7 +170,7 @@ furnishing ANY home, answer four questions, and let every placement follow from 
    clear floor. Messy = the same objects but drifted: a chair pulled out, a crate that never
    got put away. Mess is still PLACED (near the work, near the door) — never random scatter.
 
-**Room ontology (what "well organized" means — each room has ONE job and its furniture serves it):**
+**Room ontology (what well organized means — each room has ONE job and its furniture serves it):**
 - **Sleep**: bed anchored to a wall AWAY from the door, head to the wall; nightstand touches
   the bed; storage (dresser/chest) against a wall; personal items here, not in the parlor.
 - **Cook + eat**: the work TRIANGLE clusters — stove/counter/sink in one contiguous wall run
@@ -236,7 +235,8 @@ A building is a **home or shop, not a single room**, wrapped in a [`property_yar
   visibly *through* it. In a composed scene, keep each footprint+yard off the road columns/rows.
 - Compose the village from the `place_*` pieces: shops cluster at the square (commercial), homes line a
   residential street (each fenced), one cottage per NPC. **Doors face CONTEXT, not compass south**
-  (owner correction 2026-07-05: "not all houses have to have doors on the bottom — it is awkward"): a
+  (owner correction 2026-07-05: not every house needs its door on the south wall — doors all on the
+  bottom look awkward): a
   house opens toward whatever it lives on — the street, the quay, the lane, the water. A south shore's
   home opens NORTH (see `scene_cottage.place_cottage_north` / the `COT_N` grid — a real second floor
   plan, not a mirror; Gullwash Landing in bee_meadow_20 is the worked example: two homes facing each

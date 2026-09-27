@@ -72,7 +72,7 @@ at its ORIGIN. Findings, evidence-backed:
 ## 1. Issue
 > Co-located `tools/run_sync_latejoin.sh village_21_B 120 12` → `SYNC: DIVERGED — 629/190576 shared-bug
 > states differ (0.3%); hash-mismatch 217/217 ticks. First: tick 697`. Reproduces every run at the same
-> tick (pinned seed 1337). Owner: "i am not currently logged in, a thorough investigation is needed."
+> tick (pinned seed 1337). The owner confirmed he was not logged in and asked for a thorough investigation.
 
 ## 2. Evidence (all from the 19:17 run, trace_A_191754 / trace_B_191725)
 1. **Reproducible, not a fluke:** 3/3 runs diverge first at **tick 697** (pinned seed → same first-diverging

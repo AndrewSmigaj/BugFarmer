@@ -13,9 +13,9 @@ All six playing at once, walks on the top row, runs underneath, each at its own 
 loop three times and the runs five times in the 1800ms it takes to go round, so nothing jumps at
 the loop point.
 
-The run is its own motion, not the walk sped up: `RUN` (2026-07-29, "RUN_r75.gif is fine, looks the
-best") swings the fists wider, rotates them 75 degrees into a running arm, makes them bigger and
-carries them lower; `FRONT_RUN` (2026-08-14, "we will go with wisdest lowest") is the camera-facing
+The run is its own motion, not the walk sped up: `RUN` (approved 2026-07-29 as the best-looking run,
+`RUN_r75.gif`) swings the fists wider, rotates them 75 degrees into a running arm, makes them bigger and
+carries them lower; `FRONT_RUN` (picked 2026-08-14: the widest, lowest variant) is the camera-facing
 one, with `pulse` so the fist coming toward you grows. Both share the walk's leg frames by design.
 
 ## The six animations individually
@@ -30,7 +30,7 @@ one, with `pulse` so the fist coming toward you grows. Both share the walk's leg
 All shown at 6x. The sprites underneath are real pixels — 77 (side), 75 (front), 78 (back) pixels
 from head to feet.
 
-### `LIVE_vs_NEW.png` ← **the one that answers "is this better"**
+### `LIVE_vs_NEW.png` ← **the one that shows whether this is better**
 The current live fireant on top, the new one below, same scale. The live one has purple fringe
 pixels around the edges and mushy shapes; the new one doesn't.
 

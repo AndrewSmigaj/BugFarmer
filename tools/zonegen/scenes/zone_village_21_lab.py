@@ -101,7 +101,7 @@ def build(zone_id="village_21_lab", vseed=0):
     # ================= 2) ROADS (one bending main + lanes) =================
     # Main road: S edge → quarry fork → THE BEND at the plaza → farm fork → N taper.
     # THE TOWN GRID RULE (roads.md, 2026-06 — after three failed rounds of
-    # organic-meets-buildings, Emily's call adopted): wherever anything is BUILT,
+    # organic-meets-buildings, the owner's call adopted): wherever anything is BUILT,
     # roads are STRAIGHT horizontal/vertical with L-elbow corners (smooth_paths
     # bevels them). route_road meander lives ONLY in the empty wilds.
     route_road(b, (118, 2), (140, 48), width=4, seed=21)          # WILD: S approach
@@ -475,7 +475,8 @@ def build(zone_id="village_21_lab", vseed=0):
         },
         "spawn_areas": [
             # FLY — one circle at EVERY fruit grove + patch + the fly farm + compost, so the spread-on-spawn
-            # seeds flies across the whole map (owner: "more fly spawns, notably where fruit clusters are").
+            # seeds flies across the whole map (owner direction: more fly spawns, especially where fruit
+            # clusters).
             {"id": "fly_orchW",    "species": ["fly_common"], "type": "circle", "cx": 74, "cy": 205, "radius": 12, "weight": HAB},
             {"id": "fly_farm",     "species": ["fly_common"], "type": "circle", "cx": ff_center[0], "cy": ff_center[1], "radius": ff_r, "weight": HAB},
             {"id": "fly_compost",  "species": ["fly_common"], "type": "circle", "cx": 88, "cy": 228, "radius": 10, "weight": HAB},
@@ -487,7 +488,7 @@ def build(zone_id="village_21_lab", vseed=0):
             {"id": "fly_eorange",  "species": ["fly_common"], "type": "circle", "cx": 220, "cy": 114, "radius": 9, "weight": HAB},  # E-of-orange patch (w5 prey)
             {"id": "fly_nff",      "species": ["fly_common"], "type": "circle", "cx": 127, "cy": 226, "radius": 9, "weight": HAB},  # N-of-fly-farm patch (w3 prey)
             {"id": "fly_newoods",  "species": ["fly_common"], "type": "circle", "cx": 195, "cy": 238, "radius": 11, "weight": HAB}, # NE woods carrion (w2 prey)
-            # +3 more fly seeds (2026-06-18, owner: flies have a hard time taking off) — reinforce the 3
+            # +3 more fly seeds (2026-06-18, owner: the fly population struggles to get going) — reinforce the 3
             # biggest rotten-fruit zones so more flies seed ONTO food early and breed before the rot-lag
             # starves them: the crop-field/farm belt, the plum orchard (centre), the orange orchard (E, w5 prey).
             {"id": "fly_fields",   "species": ["fly_common"], "type": "circle", "cx": 100, "cy": 210, "radius": 12, "weight": HAB},
@@ -525,7 +526,7 @@ def build(zone_id="village_21_lab", vseed=0):
         # Seed a few DEAD MILLIPEDES in the NE woods (by w2 + the fly_newoods patch) — day-1 carrion so the
         # woods' beetles feed and the flies BREED on large carrion (fly attractions now include dead_millipede)
         # from tick 0, instead of waiting for the seeded millipedes to start dying. The natural supply takes
-        # over after the first deaths. (Owner: "seed the woods with a few dead millipedes so they can feed on them".)
+        # over after the first deaths. (Owner direction: the woods start with some millipede carcasses as food.)
         "initial_carrion": [
             {"item": "dead_millipede", "x": 193, "y": 238, "count": 2},
             {"item": "dead_millipede", "x": 198, "y": 241, "count": 2},

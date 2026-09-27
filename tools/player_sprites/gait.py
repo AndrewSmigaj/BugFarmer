@@ -8,7 +8,7 @@ WHY IT HAD TO BE RECOVERED: the original was written into a session scratch dire
 committed. Only its output gifs survived, and those live in a gitignored folder. When the motion was
 needed again it was rebuilt BY HAND from those gifs, got the height, travel and hand sprite wrong, and
 then — the worst part — the owner's tuned constants were EDITED to compensate for bugs in the
-rebuild. Owner: "we spent so long perfecting this and you just go fuckoff and delete it".
+rebuild. The owner had spent a long time perfecting this motion, and that work was lost.
 
 ⚠ THE NUMBERS IN `WALK` AND `RUN` ARE THE OWNER'S. Do not adjust them to make some other code look
 right; fix that other code. If they genuinely need to change, that is a decision to raise, not a tweak.
@@ -96,9 +96,9 @@ def pose_into(scene, bx, by, body, neutral, back_hand, palm_hand, beat, p):
 
     2. THE TWO HANDS TILT IN OPPOSITE DIRECTIONS. The transcript gave both the same `ang`, so the hand
        swinging FORWARD and the hand swinging BACK leaned the same way — the wrists read as locked
-       together rather than as an arm swing. Owner, 2026-08-03: "the rotations are wrong for the hands
-       when they are swinging in the walking (the back hand for example is rotating the wrong way when
-       forward)". `back_hand` sits at `+dx`, so it is the forward one when s > 0 — the hand he named.
+       together rather than as an arm swing. Owner, 2026-08-03: the hand rotations were wrong during the
+       walk swing — the back hand, for example, rotated the wrong way when it came forward. `back_hand`
+       sits at `+dx`, so it is the forward one when s > 0 — the hand he named.
        Each hand now tilts with ITS OWN direction of travel: forward hand `-tilt*s`, rear hand `+tilt*s`.
        `p["tilt"]` itself is unchanged.
     """
@@ -115,10 +115,9 @@ def pose_into(scene, bx, by, body, neutral, back_hand, palm_hand, beat, p):
     # A hand held out in FRONT of you has its wrist BEHIND it, nearer the shoulder. A hand trailing
     # behind has its wrist in FRONT of it. Both signs were backwards, so the forward fist's cuff sat
     # further forward still — the arm appeared to reach around from the far side. Owner, repeatedly,
-    # most recently 2026-08-06: "when a hand is in front of you the wrist has to be like closer to you
-    # not coming from the other side... this is something I have been saying several times and you just
-    # dont fix". First raised 2026-08-03; the 08-05 change made the two hands tilt OPPOSITE ways but
-    # kept both directions wrong, so it never actually fixed what he was pointing at.
+    # most recently 2026-08-06: when a hand is in front of the body, its wrist has to be nearer the body,
+    # not coming from the far side. First raised 2026-08-03; the 08-05 change made the two hands tilt
+    # OPPOSITE ways but kept both directions wrong, so it never actually fixed what he was pointing at.
     #
     # Measured, not reasoned: the character faces +x, and rotating this (already flipped: cuff up,
     # fingers down) sprite by +22 deg moves the cuff 2.4px to the LEFT, by -22 deg 2.0px to the RIGHT.
@@ -138,7 +137,7 @@ def walk_into(scene, bx, by, body, neutral, back_hand, palm_hand, beat):
 
 
 # --- the FRONT walk is a SEPARATE implementation, not the side one re-aimed ---------------------------
-# `GAIT_front_D3_bigger.gif`, owner: "for walking forward gait_front_d3_bigger.gif is great".
+# `GAIT_front_D3_bigger.gif` — approved by the owner (2026-07-29) for the camera-facing walk.
 # It shares almost nothing with the side walk and applying the side one instead was immediately obvious:
 #   * a different fist — D3, not the back/palm pair
 #   * hands sit OUTSIDE the body edges, they do not swing through the torso centre
@@ -148,8 +147,8 @@ def walk_into(scene, bx, by, body, neutral, back_hand, palm_hand, beat):
 #   * the left hand is MIRRORED; neither is rotated or dimmed
 # ⚠ UNITS CHANGED 2026-08-18 — these are SHOULDER-relative, not silhouette-relative. The design is
 # unchanged and black-ant is the calibration: every number was solved so black-ant renders as it did,
-# because it was the one the owner kept. *"black ant is the only good one"*. `official.GAITS` carries
-# the live copy; this is the fallback default.
+# because it was the one the owner kept (2026-08-18: of the three, only black-ant was good).
+# `official.GAITS` carries the live copy; this is the fallback default.
 FRONT = dict(ratio=0.484, row=0.340, edge=0.016, dx=0.037, dy=0.092, ms=150)
 FRONT_PHASE = [1, 0, -1, 0]
 
@@ -178,7 +177,7 @@ def shoulder_line(a):
     ant head 40 of 77, more than half the figure — so the same 0.62 landed at the hip on bronze and
     at the ARMPIT on fire-ant, and the body's width at that row ran 0.73 / 0.70 / 0.61 of the
     shoulders, which threw the hands out at three different widths. Owner, 2026-08-18, looking at all
-    three: *"black ant is the only good one"*. Measured before/after: reviews/2026-08-18-walk-hands/.
+    three: only black-ant was good. Measured before/after: reviews/2026-08-18-walk-hands/.
 
     The shoulder line is a real feature of the armour, so it holds still: across all four frames of
     both camera-facing banks of the three rebuilt outfits it moves at most 2px in width and 1px in
@@ -222,7 +221,7 @@ def walk_front_into(scene, bx, by, body, neutral, hand_d3, beat, p=None):
 
     # `pulse` — the fist coming TOWARD the camera grows, the one going back shrinks. Facing the viewer
     # the arms travel mostly in Z, so a purely up-down swing reads as flapping; the size change is what
-    # sells it. Owner picked this 2026-08-14 ("we will go with wisdest lowest") from
+    # sells it. Owner picked this 2026-08-14 (the widest, lowest variant) from
     # reviews/2026-08-14-run-front-pump/. DEFAULTS TO 0, so WALK/FRONT render byte-identical to before —
     # only a gait that sets `pulse` (FRONT_RUN) changes.
     pulse = p.get("pulse", 0.0)
@@ -231,15 +230,15 @@ def walk_front_into(scene, bx, by, body, neutral, hand_d3, beat, p=None):
 
     # WHICH HAND IS MIRRORED. The RIGHT one is, not the left — that turns both openings INWARD toward
     # the body. Mirroring the left instead faces both palms OUT, away from him, which is what shipped
-    # until 2026-08-05: "the gauntlets for red and black ants for walk front need to be flipped
-    # horizontally, the palms are facing out". It was never ant-specific; every outfit had it, bronze
-    # included, and it was invisible while the gauntlets were featureless slabs with no readable palm.
+    # until 2026-08-05, when the owner reported that the red and black ants' front-walk gauntlets needed
+    # flipping horizontally because the palms faced out. It was never ant-specific; every outfit had it,
+    # bronze included, and it was invisible while the gauntlets were featureless slabs with no readable palm.
     # PALMS TURN IN, TOWARD THE BODY — the LEFT hand is the mirrored one.
     #
     # A left hand IS a mirrored right hand, so producing the pair from one sprite is not a shortcut: it
     # guarantees they match. Storing two drawings instead would cost a sixth paid hand per outfit and let
     # the pair drift apart. What was wrong was never the mirror — it was mirroring the RIGHT one, which
-    # turns both palms outward. Reported twice ("the palms are facing out when they should be facing in")
+    # turns both palms outward. Reported twice (the palms faced out when they should face in)
     # and settled 2026-08-06 against all four rendered options.
     # The fist hangs FLUSH with the shoulder: its outer edge on the shoulder edge, so half its width
     # sits inboard. Placing the fist's CENTRE on a body edge (what this did) makes the reach depend on
@@ -277,7 +276,7 @@ def front_hand_for(outfit_dir):
     """The single fist the FRONT and BACK walks use — the PROFILE view, `gauntlet/side.png`.
 
     NOT the back of the hand. Facing the camera you see the hand edge-on, and both hands turn INWARD
-    toward the body. Owner: "walk front needs to actually have it's hands sideways (turned inward)",
+    toward the body. Owner direction: the front walk's hands must be sideways (turned inward),
     and APPROVED/DECISIONS.md lists `h3 — profile` as the front-facing walk's hand.
 
     `flip()` is a 180 degree rotation, so the profile ends up fingers-down pointing INWARD for the right

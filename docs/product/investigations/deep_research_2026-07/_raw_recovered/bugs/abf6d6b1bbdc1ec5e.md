@@ -58,7 +58,7 @@ The `description` is one long single-line sentence following a consistent shape:
 Each lens is a single bullet: an optional `★` (marks lenses that "earned their keep"), the **bold lens name**, an em-dash, the question it forces (often ending in `?`), and a parenthetical concrete "earned"/caught example. Verbatim format examples (lines 15-18):
 ```
 - ★ **Requirements** — Does this *observably* satisfy what the user actually asked, not just "technically
-  work"? (e.g. "*see* hornets attack individual flies" needs the visual, not only the correct kill.)
+  work"? (e.g. a request to *see* hornets attack individual flies needs the visual, not only the correct kill.)
 - ★ **Data / Contract** — Units, scales, serialization round-trips, fixed-point vs float, enum/string
   matches across a boundary. (Caught a ×1000 fixed-point radius-scale bug: threshold must use FixedPoint
   multiply, not raw int².)
@@ -98,13 +98,13 @@ Previews live in exactly four folders (lines 26-32): `catalog/`, `examples/`, `z
 
 **Guide rule/correction formatting.** Guides open with `# Feature guide: <topic>`, a one-paragraph scope line naming the module (`tools/zonegen/features/terrain.py`) and a "Test card" scene, then `##` sections mixing rules, fenced `python` snippets, and a `## Checklist` of `- [ ]` items (see water.md lines 51-58). Rules are bold-lead bullets.
 
-The **"learned corrections" style** is a recurring inline convention: a dated, quoted owner correction embedded in the rule it produced. Examples:
-- water.md line 15-16: `(2026-06 correction: "I really don't like the shapes of all the lakes")`
+The **"learned corrections" style** is a recurring inline convention: a dated owner correction embedded in the rule it produced. Examples:
+- water.md line 15-16: `(2026-06 owner correction: he disliked the shapes of all the lakes)`
 - roads.md line 35-36: `(2026-06 correction: a meandering town segment walked through the hall's yard)`
 - vegetation.md line 46: `reads as speckle, never as a forest wall (2026-06 correction).`
 - Section headers also carry provenance: roads.md line 87 `## Junctions & building adjacency (learned building village_21_B)`.
 
-house.md is the richest example: an explicit numbered corrections block titled (line 202) `### Conventions the lint enforces — don't relearn these (each cost a correction)` — 8 numbered rules, each a hard-won gotcha (doors 1 cell wide, NPC 2 cells back, tall decor off the south row, etc.). It also carries an inline dated owner correction (line 194): `(owner correction 2026-07-05: "not all houses have to have doors on the bottom — it is awkward")` and the phrase (line 98) `this exact mistake cost an [collision]`.
+house.md is the richest example: an explicit numbered corrections block titled (line 202) `### Conventions the lint enforces — don't relearn these (each cost a correction)` — 8 numbered rules, each a hard-won gotcha (doors 1 cell wide, NPC 2 cells back, tall decor off the south row, etc.). It also carries an inline dated owner correction (line 194): `(owner correction 2026-07-05: not every house needs its door on the south wall — doors all on the bottom look awkward)` and the phrase (line 98) `this exact mistake cost an [collision]`.
 
 ---
 

@@ -8,7 +8,7 @@ _status: READY — confirmed latent bug (shared with #5) · investigated 2026-06
   :906-913`); a tree's sprite is tall and extends DOWN over the cells in front of it, so its collider overlaps
   a target there. `OverlapPoint` has no topmost/intended-target rule → it can hand back the tree, and the break
   either hits the tree or, if it returns a non-breakable occupant, does nothing ("Hit … but no
-  OccupantClickTarget or not breakable", `:86`). The reporter's "they were wrong" is plausible (intermittent —
+  OccupantClickTarget or not breakable", `:86`). The possibility that the report was mistaken is plausible (intermittent —
   depends which collider OverlapPoint returns), but the defect is real.
 - **Fix:** the shared `OverlapPointAll` + topmost-interactable resolution (see #5 / index cross-cutting note) —
   prefer the occupant whose anchor cell is nearest the click / highest sorting order / matches the action.
@@ -16,7 +16,8 @@ _status: READY — confirmed latent bug (shared with #5) · investigated 2026-06
   unsure). **Needs your decision:** none. **Status:** `READY` (folded into the shared OverlapPoint fix).
 
 ## 1. Issue
-> "supposedly someone was unable to break something behind a tree so not sure if the tree intercepted the click and just did nothing they were wrong"
+> Owner playtest report (2026-06-28): a player reportedly could not break something standing behind a tree. It was unclear whether the
+> tree caught the click and did nothing, or whether the report was simply mistaken.
 
 ## 2. Evidence
 - `BreakingController.HandleBreak`: `Collider2D hitCollider = Physics2D.OverlapPoint(mouseWorld)` (`:68`) →

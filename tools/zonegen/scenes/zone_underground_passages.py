@@ -37,7 +37,7 @@ H_OX, H_OY = RAIL_X - 28, 118          # hub: rx=28 -> rail at RAIL_X; sits belo
 CLIFF_Y = 232                          # the grass↔rock cliff line (matches the camp's surface level)
 
 # Ore — DENSE + depth-RAMPED (band: top=shallow/high-y, bottom=deep/low-y). Even grid seeding (fill_solid) keeps
-# coverage gap-free, so there are no dead stone walls; rares concentrate deep ("more iron and other things").
+# coverage gap-free, so there are no dead stone walls; rares concentrate deep, with more iron and other ores.
 ORE = {
     "base": "stone_block",
     "veins": [

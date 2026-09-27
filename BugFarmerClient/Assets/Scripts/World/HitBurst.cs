@@ -89,7 +89,7 @@ namespace BugFarmer.World
                 });
             col.color = new ParticleSystem.MinMaxGradient(grad);
 
-            var rot = _ps.rotationOverLifetime;      // gentle flutter (owner: "rotate a little", not spin)
+            var rot = _ps.rotationOverLifetime;      // gentle flutter (owner: slight rotation, not a spin)
             rot.enabled = true;
             rot.z = new ParticleSystem.MinMaxCurve(-1.2f, 1.2f);
 

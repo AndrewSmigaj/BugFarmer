@@ -13,7 +13,7 @@ Lives in `outfits/blackant-v3/`. Not promoted; `official.py` still points at the
 All six at once, walks on top, runs underneath. Individual gifs are here too.
 
 ### `DESIGN_OPTIONS_lasius.png`
-The three designs the reroll produced. **Option 2 chosen** — "go with 2, it looks good".
+The three designs the reroll produced. **Option 2 chosen** — the owner judged it good.
 
 ---
 
@@ -29,7 +29,7 @@ The three designs the reroll produced. **Option 2 chosen** — "go with 2, it lo
 | gauntlets | portrait canvas, hands beside the character | five hands at 15px |
 
 **Nine calls.** One of them — the first `ant-carapace-black3` exploration — I made without asking,
-on my own reading of "exactly like fire-ant". That was mine to own, not budgeted.
+on my own reading of the instruction to do it exactly like fire-ant. That was mine to own, not budgeted.
 
 ## What was different this time, and why it mattered
 
@@ -41,8 +41,8 @@ colours, no grid — and its prompt **described the armour in words**:
 
 Fire-ant's turnaround prompt contains no material description at all. It says "from the attached
 sprite… the same sprite seen from three angles, not a redesign", and the reference image carries
-everything. That is the standing rule — *"I dont want you to constrain gpt with your garbage
-descriptions"* — and v2 broke it.
+everything. That is the standing rule (owner, 2026-08-14): the model is not to be constrained with written
+design descriptions — and v2 broke it.
 
 This run used fire-ant's prompt verbatim with a **pixel-art** seed. The design came through intact
 in all three views, and the turnaround measured 91 art-px against the seed's 89 — the density

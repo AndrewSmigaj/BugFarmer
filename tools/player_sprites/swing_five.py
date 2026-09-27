@@ -7,9 +7,9 @@ Writes into `tools/_generated/player/reviews/<date>-swing-five/` (cleared each r
 WHAT THE PREVIOUS PASS GOT WRONG
 --------------------------------
 Owner, 2026-08-04:
-  down — *"it really does not need that swing back, and it really should swing through farther"*
-  up   — *"not even a real swing, its backwards and also down pull through, its a backwards stabby
-          motion as in going the wrong way"*
+  down — it does not need the swing back, and it should swing through farther.
+  up   — not a real swing: it runs backwards, with a downward pull-through — a stabbing motion going
+          the wrong way.
 
 The up swing dipped the blade DOWN and then drove it UP. That is a reverse stab, not a sword swing.
 
@@ -72,7 +72,7 @@ APPROACHES = {
         [(+40, 62, 0.56), (0, 50, 0.60), (-46, 40, 0.58), (-86, 34, 0.52)],
         (-86, 55, 0.46),
     ),
-    # 2 — chop through. Comes from over the shoulder and carries well past centre. "swing through farther".
+    # 2 — chop through. Comes from over the shoulder and carries well past centre, to swing through farther.
     "B_chop_through": (
         (+112, 88, 0.44),
         [(+50, 60, 0.54), (0, 20, 0.62), (-58, -6, 0.60), (-104, -18, 0.52)],
@@ -188,10 +188,10 @@ def out_dir(tag):
     """A NEW folder per run — timestamped. Nothing is ever overwritten.
 
     Every lab script used to write to one folder named for the day and clear it each run, so re-running
-    destroyed the previous attempt. That means when the owner says "it was mostly ok before you changed
-    something", the file he was looking at no longer exists, and I cannot even tell him which version it
-    was because the filenames were reused. Owner: "can you please stop overwriting files i cant show you
-    the old one".
+    destroyed the previous attempt. That means when the owner says an earlier version was mostly fine before
+    a change, the file he was looking at no longer exists, and I cannot even tell him which version it
+    was because the filenames were reused. The owner asked for files to stop being overwritten, because an
+    overwritten file can never be shown to him again.
 
     A dated batch folder per run is exactly the scratchpad convention already written into the
     player-sprites skill — which I designed and then did not apply to my own output.

@@ -334,6 +334,7 @@ textarea:focus, input[type="text"]:focus { outline: 2px solid var(--focus); outl
   function sectionState(sid) {
     const s = byId[sid];
     if (s.status === "final") return ["final", "Final"];
+    if (s.status === "rework") return ["draft", "Being redone"];
     if (s.status !== "review") return ["draft", "Later"];
     const b = answers[sid];
     if (b && b.submitted) return ["done", "Answered"];
@@ -511,7 +512,8 @@ textarea:focus, input[type="text"]:focus { outline: 2px solid var(--focus); outl
     const s = byId[sid];
     const main = $("#main");
     const updated = s.updated ? new Date(s.updated + "T12:00:00").toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" }) : "";
-    const statusWord = { review: "Ready for your answers", final: "Final", draft: "Not written yet" }[s.status] || s.status;
+    const statusWord = { review: "Ready for your answers", final: "Final", draft: "Not written yet",
+                         rework: "Being redone" }[s.status] || s.status;
     let h = `<header class="label">
       <div class="sec" aria-hidden="true"><span class="ss">§</span>${esc(s.id)}</div>
       <h1>${esc(s.title)}</h1>
@@ -520,9 +522,11 @@ textarea:focus, input[type="text"]:focus { outline: 2px solid var(--focus); outl
     const b = answers[sid];
     if (b && b.submitted) h += `<div class="banner">You marked this section done. I’ll read your answers and write them into the design document. You can still change anything here.</div>`;
 
-    if (s.status === "draft") {
-      h += `<p class="draftnote">This section isn’t written yet. It comes after the sections marked ready; each one is gathered from the documents below and checked before it reaches you.</p>`;
-      if (s.decided) h += `<section class="part"><h2>Already decided <span class="aside">your words — not asked again</span></h2><div class="prose decided">${s.decided}</div></section>`;
+    if (s.status === "draft" || s.status === "rework") {
+      h += s.status === "rework"
+        ? `<p class="draftnote">Being redone. The first version was written without reading all of the design documents, so it missed parts of the game. It comes back for your answers once it is rewritten from a full read.</p>`
+        : `<p class="draftnote">This section isn’t written yet. It comes after the sections marked ready; each one is gathered from the documents below and checked before it reaches you.</p>`;
+      if (s.decided) h += `<section class="part"><h2>Already decided <span class="aside">in my words — tell me if I got it wrong</span></h2><div class="prose decided">${s.decided}</div></section>`;
       if (s.settle) h += `<section class="part"><h2>To settle <span class="aside">my raw list — not yet checked</span></h2><div class="prose">${s.settle}</div></section>`;
       if (s.gather) h += `<section class="part"><h2>Documents it will gather</h2><div class="prose">${s.gather}</div></section>`;
       main.innerHTML = h;
@@ -533,7 +537,7 @@ textarea:focus, input[type="text"]:focus { outline: 2px solid var(--focus); outl
 
     if (s.lead) h += `<div class="prose part">${s.lead}</div>`;
     if (s.experience) h += `<section class="part experience"><h2>The experience</h2>${s.experience}</section>`;
-    if (s.decided) h += `<section class="part"><h2>Already decided <span class="aside">your words — not asked again</span></h2><div class="prose decided">${s.decided}</div></section>`;
+    if (s.decided) h += `<section class="part"><h2>Already decided <span class="aside">in my words — tell me if I got it wrong</span></h2><div class="prose decided">${s.decided}</div></section>`;
     if (s.reference.length) {
       h += `<section class="part">` + s.reference.map(r => {
         const [t, note] = REF_TITLES[r.title] || [r.title, ""];

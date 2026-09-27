@@ -30,7 +30,7 @@ def _occ(b, oid, x, y):
 
 
 # ---- ORGANIC PLACEMENT ENGINE (natural, not geometric) --------------------------------------
-# The fix for "haphazardly sprinkled": growth/piles gather in irregular CLUSTERS that hug the
+# The fix for a haphazard, sprinkled look: growth/piles gather in irregular CLUSTERS that hug the
 # chamber WALLS and corners, dense-core + ragged falloff, leaving the CENTRE open (ant traffic).
 # No rows, no rings, no even spacing.
 

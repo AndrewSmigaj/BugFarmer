@@ -7,12 +7,13 @@ one section per topic, and every section is reviewed by the owner before it is f
 **The plan for building it all:** [`docs/product/ROADMAP.md`](../product/ROADMAP.md).
 
 ## How a section is reviewed
-1. I write the section from its sources: what you have already **decided** (your words, quoted and dated), the
+1. I write the section from its sources: what you have already **decided** (restated in my words and dated — never
+   quoted — so you can check I understood it), the
    **current design**, what is **built**, then my **proposals** (each checked against the idea lenses in
    `.claude/lenses.md` and by a separate reviewer) and the few **questions** that are genuinely yours to answer.
 2. You open the review page, pick the section, and answer: each proposal gets **Keep / Cut / Change**, each question
    gets an option (or your own answer). Answers save as you go.
-3. I read your answers back, write the results into the section (under "Decided", quoted and dated) and into
+3. I read your answers back, write the results into the section (under "Decided", in my words and dated) and into
    `docs/product/economy/DECISIONS.md`, mark the section **final**, and republish the page.
 4. Old documents are kept, with a one-line note at the top saying which section now holds their content.
 
@@ -25,13 +26,13 @@ Answers are stored in the page's own database, one document per section (`answer
 `ArtifactData` tool (`list`, collection `answers`). Republish from another session by passing that URL.
 
 ## Sections, in review order
-Status: **review** = ready for your answers · **draft** = not written yet · **final** = reviewed and settled.
+Status: **review** = ready for your answers · **rework** = being redone · **draft** = not written yet · **final** = reviewed and settled.
 
 | order | § | section | status | file |
 |---|---|---|---|---|
-| 1 | 00 | Premise, pillars & what belongs in the world | review | [00_premise.md](00_premise.md) |
-| 2 | 19 | Multiplayer & hosting | review | [19_multiplayer.md](19_multiplayer.md) |
-| 3 | 01 | World & zones | review | [01_world.md](01_world.md) |
+| 1 | 00 | Premise, pillars & what belongs in the world | rework | [00_premise.md](00_premise.md) |
+| 2 | 19 | Multiplayer & hosting | rework | [19_multiplayer.md](19_multiplayer.md) |
+| 3 | 01 | World & zones | rework | [01_world.md](01_world.md) |
 | 4 | 02 | Progression & tiers | draft | [02_progression.md](02_progression.md) |
 | 5 | 03 | Bestiary & tiers | draft | [03_bestiary.md](03_bestiary.md) |
 | 6 | 04 | Ecology, the Ecologist & the Ecology tab | draft | [04_ecology.md](04_ecology.md) |

@@ -13,8 +13,8 @@ we learn.
 - A commit = a **known-good checkpoint**: commit a unit only after its gates pass (the STAGE-4 / VERIFY cells
   in `complex-change-review.md`). Don't commit a half-finished or unverified unit.
 - **`main` on GitHub must always hold all our work — merge + push it at the END OF EVERY SESSION** (standing
-  go-ahead from the owner, 2026-09-26: *"main I want it pushed to main, this is fucked I already sent my repo
-  as part of an assessment and now you havent been pushing for months"*). At session end: commit the whole
+  go-ahead from the owner, 2026-09-26: `main` must be pushed, and it had fallen months behind). At session end:
+  commit the whole
   working tree on the feature branch → `git checkout main && git merge --no-ff feature/<name>` → `git push
   origin main` → check `git rev-parse main` equals `git rev-parse origin/main` → back to the feature branch.
   Unfinished work still goes to `main` (the repo is the owner's portfolio; months of unpushed work was the

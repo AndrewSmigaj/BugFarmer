@@ -65,8 +65,8 @@ pixel reachable from outside is background, one enclosed by the figure is its ow
 This was the root of a whole day of churn. `motions.py` recorded what the owner picked; `build()` had its
 own constants and never imported it. Every pick got written into the record, hand-placed as a gif, and
 then **silently overwritten by the next re-render** with the superseded motion — so approved things kept
-coming back wrong. Owner: *"they are NOT using the official agreed on animations. why has this been so
-convoluted and difficult?"*
+coming back wrong. The owner reported that the renders were not using the officially agreed
+animations.
 
 Measured at the time, in bronze's own `current/anim/`: the sword was the agreed 320ms frame budget while
 axe, hoe, net and shovel were all still the old shoulder-pivot approaches.
@@ -78,8 +78,8 @@ all 24 outfits.
 **FRONT WALK: the RIGHT hand is the mirrored one.** That turns both openings **inward** toward the body.
 Mirroring the left instead faces both palms outward, which is what shipped until 2026-08-05 — on every
 outfit, bronze included. It stayed invisible while gauntlets were featureless slabs, and only showed once
-they had knuckles and a thumb. Owner: *"the palms are facing out"*, and originally *"walk front needs to
-actually have it's hands sideways (turned inward)"*.
+they had knuckles and a thumb. The owner reported the palms facing outward, and had originally asked for the front
+walk to hold the hands sideways, turned inward.
 
 **EVERY OUTFIT'S GAUNTLET IS A RE-SKIN OF BRONZE'S APPROVED HANDS.** (Superseded method below: since 2026-08-15
 the hands are drawn in one PORTRAIT call beside the character, in boxes one hand tall, copying bronze's five shapes
@@ -94,8 +94,8 @@ python3 tools/player_sprites/outfits.py gauntlet <set>   # lets the model invent
 Plain `gauntlet` mode sends only the outfit's own sheet, so the model designs hands from scratch and
 returns **featureless slabs with no fingers, knuckles or thumb**. There is then nothing to establish which
 way a palm faces, and every swing reads wrong — because `HAND_PERP` and the grip offsets were tuned
-against **bronze's** shapes. Owner caught it: *"its used in the wrong gauntlets, are you feeding the
-official bronze gauntlet in when creating those?"*
+against **bronze's** shapes. The owner caught it: the wrong gauntlets were in use, and he asked whether the
+official bronze gauntlet was being supplied when creating them.
 
 `official` writes to `gauntlet2/` and never over `gauntlet/`; promote it deliberately and archive what it
 replaces.
@@ -117,10 +117,10 @@ measured **1.04%** of fireant's opaque pixels and **1.32%** of blackant's. `defr
 tinted pixel with the mean of its clean neighbours over three passes and drops any with no clean
 neighbour rather than guessing. Check it: count pixels where R and B both exceed G by 40+.
 
-**A BRIEF IS THE MATERIAL AND NOTHING ELSE.** Owner, 2026-08-14: *"I literally just want gpt to make 'copper
-armor' with 'open face helmet' and the things to make it consistent and such… I dont want you to constrain gpt
-with your garbage descriptions, remember the old copper armor one looked like a fucking mushroom the others
-huge barrels it was dumb."* No silhouettes, no helm shapes, no hems, no "must read as the top of the ladder".
+**A BRIEF IS THE MATERIAL AND NOTHING ELSE.** Owner decision (2026-08-14): the model gets only the material
+and the essentials — e.g. copper armour with an open-face helmet — plus what keeps the sets consistent, and no
+invented design description; over-described briefs had produced a copper set shaped like a mushroom and
+others like huge barrels. No silhouettes, no helm shapes, no hems, no "must read as the top of the ladder".
 The three option slots are left to the model — *"your own design, decide for yourself"* — and the technical
 block stays, because magenta / armless / face-visible / silhouette-over-detail are quality rules, not design
 direction. Settled for the ants on 2026-08-05, broken on 08-06 at a cost of 7 paid calls and 21 rejected
@@ -200,9 +200,9 @@ shrank, while the two plainer designs kept working. So:
   three "fancy" options are a plume, wings and a spiked crown for this reason, and all three stayed readable.
 - Four or five flat colour areas per figure, in chunky blocks.
 
-**MATERIAL-NAMED SETS ARE ARMOUR MADE OF THE MATERIAL, NOT A COSTUME OF THE CREATURE.** Owner, 2026-08-05:
-*"in all cases it should be armor, wearing armor made from ant carapace does not magically turn you into an
-ant."* So ant-carapace is a **person in a helmet** whose mandibles have been repurposed as jaw guards — not
+**MATERIAL-NAMED SETS ARE ARMOUR MADE OF THE MATERIAL, NOT A COSTUME OF THE CREATURE.** Owner decision
+(2026-08-05): in every case it is armour — wearing armour made from ant carapace does not turn the wearer
+into an ant. So ant-carapace is a **person in a helmet** whose mandibles have been repurposed as jaw guards — not
 an ant's head on a body. The same reading applies to beetle-shell, hornet-stinger, moth-wool and the rest.
 
 **The model will paint the KEY COLOUR onto the figure** if you let it — magenta "glowing eyes" on a beetle,
@@ -278,8 +278,8 @@ A tool that begins in front has no swing in it, whatever the timing does.
 
 **Every motion starts AND ends at the idle pose.** Swings used to *teleport* to their wind-up pose — 235° for
 the axe, 205° for the net — then sit there while the curve eased in. That jump, not the timing, is what read
-as "hovering in the cocked-back position". Travel the wind-up and land the recovery on idle; that also closes
-the old "the swing has no exit" defect. Arrive at the top **at speed** (`ease_in`), never decelerating into
+as hovering in the cocked-back position. Travel the wind-up and land the recovery on idle; that also closes
+the old defect where the swing had no exit. Arrive at the top **at speed** (`ease_in`), never decelerating into
 it, or the tool lingers at the extreme.
 
 **Combat durations are 0.11–0.22s.** Anything slower cannot be held down in a fight.
@@ -290,7 +290,7 @@ little. Both keep the angle nearly still and let the reach drive — that is the
 swinging.
 
 ### When a note keeps coming back, stop theorising and enumerate
-The net swing was wrong five rounds running. Each round produced a *theory* about what "backwards" meant,
+The net swing was wrong five rounds running. Each round produced a *theory* about what the owner meant by backwards,
 changed something on the strength of it, and was wrong; the last theory was invented outright and attributed
 to the owner. `net_options.py` is the correction: render every combination that could possibly be meant —
 sweep direction × sprite transform × which end leads — caption them, and have him point at one. Cheaper than
@@ -322,7 +322,7 @@ A percentage of the silhouette is not a place on a body. Headgear is not a const
 figure — bronze's helm is 19 of 68px, black-ant's horned head 31 of 87, fire-ant's ant head **40 of
 77, more than half** — so the same 0.62 landed at the hip on bronze and at the **armpit** on
 fire-ant, and the body's width at that row ran 0.73 / 0.70 / 0.61 of the shoulders, throwing the
-fists out at three different reaches. Owner, shown all three: *"black ant is the only good one"*.
+fists out at three different reaches. The owner, shown all three, approved only black ant.
 
 `gait.shoulder_line(a)` returns the widest row across the torso (searched in the 0.35–0.60 band). It
 is a feature of the armour, not of the framing, so it holds still — across all four frames of both
@@ -365,7 +365,7 @@ Measured under the old *"Lift the knee HIGH"* wording:
 | black-ant | 13.8% | 19.8% |
 
 A 6-point spread across the set, and 3–6 points between front and back of the *same* outfit. Owner,
-2026-08-18: *"its lifting the knees really high which is ok for running but not walking"*. The prompt
+2026-08-18: the knees lift very high, which suits running but not walking. The prompt
 (`outfits.WALK_KNEE`) now asks for MEDIUM-HIGH with a numeric anchor — about a tenth of the character's
 height. The band is provisional and a **warning, not a fail**: it is a taste range, so look at the render.
 
@@ -383,8 +383,8 @@ It used to normalise every outfit to `render_animations.TARGET_BODY_H = 320` **o
 is never a whole number — measured 3.678x black-ant, 4.156x fire-ant, 4.706x bronze — and a fractional
 NEAREST resize makes some source pixels 4 screen-px wide and the ones beside them 5. `gallery_gif.py`
 then resized each cell again with `Image.LANCZOS`, a blur filter. Between them, a sprite that had been
-carefully converted to pixels came back out smooth. Owner, 2026-08-18: *"NOT THE RAW version the PIXEL
-version"*.
+carefully converted to pixels came back out smooth. The owner (2026-08-18) asked for the pixel version,
+not the raw one.
 
 **Check it by arithmetic, not by eye:** every rendered frame must be an exact block grid — reshape to
 `(h/4, 4, w/4, 4, 3)` and assert every 4x4 block is one flat colour. It passes for all 13 animations of
@@ -410,9 +410,8 @@ A hand held out **in front** of you has its wrist **behind** it, nearer the shou
 body.
 
 Both signs were inverted, so the forward fist's cuff sat *further forward still* and the arm read as
-reaching around from the far side. Owner, first on 2026-08-03 and again on 2026-08-06: *"when a hand is in
-front of you the wrist has to be like closer to you not coming from the other side… this is something I
-have been saying several times and you just dont fix"*.
+reaching around from the far side. The owner reported it on 2026-08-03 and again on 2026-08-06: when a hand
+is in front of the body, the wrist must sit nearer the body, not come from the far side.
 
 **Why the earlier fix missed.** On 2026-08-05 the two hands were changed to tilt in *opposite* directions,
 which sounds like the same fix and is not — both directions stayed wrong, so the thing he was pointing at
@@ -472,11 +471,11 @@ That rule is the whole point. Before it, two things were true at once and nobody
   reading two other folders under different filenames. Nobody chose that. The fallback did.
 * **No build code ever opened a decision record.** `render_animations.py` mentions "APPROVED" 18 times in
   comments and reads `DECISIONS.md`/`CURRENT.md` zero times. So *what was official* and *what got loaded*
-  were never the same object — which is why asking for "a gallery of the official ones" returned whatever
+  were never the same object — which is why a request for a gallery of the official outfits returned whatever
   happened to be sitting on disk.
 
 `official.py` holds four things: `HAND_ROLES` (the five hands every outfit has), `OUTFITS` (which folders
-are that outfit's chosen frames and hands, with the owner's words and date), `GAITS` + `SWINGS` (the
+are that outfit's chosen frames and hands, with the owner's dated decision), `GAITS` + `SWINGS` (the
 approved motion numbers — this only ever GROWS, so "go back to Tuesday's swing" is a one-line change), and
 `ANIMATIONS`, where **one row fully defines one animation**. Adding an animation is a row, not a branch.
 
@@ -486,7 +485,7 @@ which broke the moment those were tidied into `tries/`.
 
 ### REVIEW COMES BEFORE OFFICIAL. Always.
 
-Owner, 2026-08-06: *"we always want to review before updating anything official."* The order is:
+Owner decision (2026-08-06): everything is reviewed before anything official is updated. The order is:
 
 ```
 generate into tries/  →  render a review sheet  →  HE LOOKS AND SAYS YES  →  copy into place  →  official.py
@@ -500,8 +499,8 @@ untouched.
 The generated art being good is not the point. Whether it is good is his call, not mine.
 
 **And show him the THING, not its inputs.** When he reported the ant gauntlets looked reversed, I built a
-sheet comparing the source PNGs against bronze's — which he could not act on: *"i dont know which one you
-are using in the animation"*. The hands are mirrored at render time, so the files and the frames are not
+sheet comparing the source PNGs against bronze's — which he could not act on — he could not tell which one the
+animation was using. The hands are mirrored at render time, so the files and the frames are not
 the same thing. The sheet that resolved it in one look rendered the walk exactly as `build` does and
 cropped to the hands.
 
@@ -547,16 +546,16 @@ Anything the owner must LOOK AT to make a decision goes through this. Two conven
 because both have been got wrong more than once:
 
 * **Labels are 22pt — about 2× PIL's default.** `ImageDraw.text()` with no `font=` gives an ~11px bitmap
-  face. Owner, twice: *"i literally have to zoom in to see it its so tiny… maybe make it twice as big…
-  i asked you before so can you somehow remember this."* The helper cannot render small text, so a new
+  face. The owner reported twice that labels were too small to read without zooming and asked for
+  roughly double the size. The helper cannot render small text, so a new
   script cannot reintroduce it. (Watch the width: a sheet sized to its images alone will **clip** a long
   label, which defeats the point. `stack()`/`row()` measure the text too.)
 * **It lands in the repo**, under `reviews/<YYYY-MM-DD>-<what>/`, and `save()` prints the `C:/…` path
   back. `/tmp` and `/mnt` paths do not exist on his machine, so showing him one shows him nothing.
 
 **The script is the reminder.** `save()` prints the conventions it just applied and warns when a review
-folder has no `README.md`. Owner's idea, 2026-08-06: *"having python scripts perhaps actually output
-things — reminders and such, as a form of 'hook' — as long as you read the output of the script."* It
+folder has no `README.md`. Owner's idea, 2026-08-06: scripts can print reminders as a kind of hook,
+provided their output is actually read. It
 fires exactly when relevant, cannot be routed around, and costs one `print()`.
 
 ### Rendering it — `tools/player_sprites/build.py`
@@ -602,8 +601,8 @@ through the new path. The render is deterministic (same md5 across runs), so tha
 than a promise — and it is what proves the port faithful before anything old is deleted.
 
 **`gallery.py` reads `official.py` too** (2026-08-06). It used to scan directories, so it inherited the
-renderer's fallbacks and displayed whatever was lying around — which is why *"I ask for a gallery showing
-all the official whatevers and it will just be random crap"*. Concretely: it showed
+renderer's fallbacks and displayed whatever was lying around — which is why a request for a gallery of the
+official outfits returned an arbitrary mix. Concretely: it showed
 `thrust_spear_two_handed.gif` for 22 outfits long after the code that made it was deleted, and showed 21
 outfits wearing hands loaded from a gitignored archive. Both were on disk, so both were displayed.
 
@@ -625,12 +624,12 @@ cuff-down, so using them raw gives a hand hanging at the waist with its fingers 
 | run | relaxed, flipped then turned to lead | 75° |
 | swing | the approved **grip** hands, knuckles down | `HAND_ROT` 225, +16% down the handle |
 
-> The grip hands are **not** the walk/run hands. *"the weapon grabbing is NOT to be blindly replacing walk
-> and/or running — they all should be carefully thought about and the best one picked."*
+> The grip hands are **not** the walk/run hands. Owner direction: the weapon-grip hands must not blindly
+> replace the walk or run hands — each is chosen deliberately, and the best one picked.
 
-**Each outfit uses its own gauntlet — but every one is a material variant of BRONZE's shapes.** Owner,
-2026-08-06: *"the only officially established hands are the bronze hands... everything else will have
-literally their own as close as possible variants (well with different color and texture and such)."*
+**Each outfit uses its own gauntlet — but every one is a material variant of BRONZE's shapes.** Owner
+decision (2026-08-06): the only officially established hands are bronze's; every other outfit gets its own
+variant, as close to them as possible, differing only in colour, texture and similar material details.
 The gauntlet prompt sends bronze's hand sheet as reference image #1 and says *"Copy the reference EXACTLY
 in shape... the ONLY thing that changes is the material."* Proven — fireant and blackant were made this
 way and still hold their `ref_1_SOURCE_SHEET_hand-D-pixel.png`.
@@ -691,8 +690,8 @@ gallery existing at all.
 
 **1. The two walking hands must tilt in OPPOSITE directions.** The recovered transcript gave both hands
 the same `ang`, so the hand swinging forward and the hand swinging back leaned the same way and the
-wrists read as locked together. Owner: *"the rotations are wrong for the hands when they are swinging in
-the walking (the back hand for example is rotating the wrong way when forward)"*. `back_hand` sits at
+wrists read as locked together. The owner reported that the hand rotations were wrong during the walk swing —
+the back hand, for example, rotated the wrong way when forward. `back_hand` sits at
 `+dx`, so it is the forward one when `s > 0` — the hand he named. Each hand now tilts with **its own**
 direction of travel. **The `WALK`/`RUN` constants are untouched**; only the per-hand sign changed.
 
@@ -734,8 +733,8 @@ pitch **per blob**, but the four hands are one image at one scale, so there is o
 outfits agree to within 0.3 and are unaffected.
 
 ### THE HAND TRAVELS. The tool follows it. (2026-08-04 — the root cause)
-Owner: *"do people take a sword in their fist, hold their fist up to their shoulder and rotate their fist
-to swing it? ever?"* No. And that is exactly what `swing_frames` did for weeks.
+The owner asked whether anyone swings a sword by holding the fist up at the shoulder and rotating it
+there. No one does. And that is exactly what `swing_frames` did for weeks.
 
 It computed **one angle**, placed the **tool** at a fixed small radius from the body centre, then stuck
 the hand onto the tool's grip. The tool led and the hand was downstream of it — so the fist stayed parked
@@ -755,14 +754,14 @@ tool        placed so its measured grip lands on the hand   <- the tool FOLLOWS
 **SHIPPED for the sword, 2026-08-04** — `render_animations.arm_swing_frames` / `sword_motion`:
 arm **128° → −104°** (past straight down, so the hand finishes at the hip), blade **85° → 52°** behind the
 arm (decreasing, so the tip keeps dropping after the arm stops), reach **0.60**, `HAND_PERP = 180`, 0.30s.
-Owner: *"do sword_1h_f4_back85 as the official one, but have it pull back a tad more at the end so the
-hand is at the hip not forward a little, you can also have tip slightly continue down more."*
+Owner decision: sword_1h_f4_back85 is the official one, pulled back slightly more at the end so the hand
+finishes at the hip rather than a little forward, and the tip may continue slightly further down.
 The other five tools still run the old shoulder-pivot approaches.
 
 **THE ATTACK HAPPENS IN FRONT OF HIM. NEVER WIND UP BEHIND HIS BACK.** No game swings a weapon from
 behind the player and around — that is cutscene staging, and it wastes the frames a game attack does not
-have. Owner: *"do you know any game with a sword or whatever that starts way behind the player and swings
-around like that?"*
+have. The owner challenged it by asking for any game whose sword swing starts far behind the player
+and sweeps around.
 
 **Check the sign of the hand's x offset across the whole motion.** If it goes negative, the arc is passing
 behind him, through his own body, before it reaches anything. A net sweep built that way measured
@@ -770,7 +769,7 @@ x −0.48 → +0.48; the fix keeps it at +0.06 → +0.55.
 
 **SWEEP AND HEIGHT ARE SEPARATE KNOBS — do not trade one for the other.** The net went wrong twice in a
 row on exactly this: one version swept the arm to +92°, putting the hand **3-4% down the body** (above the
-top of the helmet — *"its crazy how it ends up over the head"*); the fix for that shrank the travel to
+top of the helmet — the owner flagged that it ended up over the head); the fix for that shrank the travel to
 **9% of body height**, so it stopped reading as a scoop at all. The answer is to keep the sweep and shift
 the whole RANGE down. Working motions live between roughly **40% and 70% down the body**.
 
@@ -779,10 +778,10 @@ sin(arm)·reach·cell`, as a fraction of body height. Two rounds of this were wa
 
 **NEVER OVERWRITE REVIEW OUTPUT.** Every lab script writes to `reviews/<date>-<HHMM>-<tag>/` — a **new
 folder per run**. They used to write into one folder named for the day and clear it each run, so
-re-rendering destroyed the previous attempt. When the owner says *"it was mostly ok before you changed
-something"*, that file has to still exist, and reusing filenames across runs means you cannot even tell
-him which version he was looking at. Owner: *"can you please stop overwriting files i cant show you the
-old one"*.
+re-rendering destroyed the previous attempt. When the owner says an earlier version was mostly fine before a
+change, that file has to still exist, and reusing filenames across runs means you cannot even tell
+him which version he was looking at. The owner asked for files to stop being overwritten, since he could
+not point to the old one.
 
 This is the dated-batch convention already in the `player-sprites` skill. It was designed and then not
 applied to the assistant's own output.
@@ -805,8 +804,8 @@ Check the lever numerically: between drive-in and lift the hand should move **al
 blade rotates a lot. Currently 0.11 cells of hand travel against 46° of blade rotation.
 
 **THIS IS A BLOCK WORLD — aim the tool at the BLOCK IT IS ACTUALLY BREAKING.** Standing sideways, he digs
-the block **beside** him, not the ground under his feet. Owner: *"this is a block based world so when
-standing sideways you are digging dirt to the side of you not below you."* So the side-view shovel is a
+the block **beside** him, not the ground under his feet. Owner direction: the world is made of blocks,
+so a player facing sideways digs into the block next to them, not the ground below. So the side-view shovel is a
 roughly **horizontal** drive into the adjacent cell; a downward jab is the *facing-down* animation, which
 breaks the block below. A cell is half his body height, so the block beside him spans his lower half —
 aim a little under horizontal to land in it.
@@ -832,17 +831,17 @@ ping-pongs and you cannot tell which direction the swing runs.
 - **reach GROWING with a still angle** is the spear's *thrust*
 - only the axe, net and sword are actually carried by **angle**
 
-Building the spear and shovel as arcs is why they read as waving the thing around. Owner: *"do you sit
-there bashing the ground with a shovel? do you?"*
+Building the spear and shovel as arcs is why they read as waving the thing around. The owner pointed out that
+no one digs by hammering a shovel into the ground.
 
 ⚠ **TOOL LENGTH IS A PARAMETER AND IT WAS NEVER SET.** `attack_frames(scale=…)`; the spear is **1.9×** a
 cell. It was rendered at sword length for weeks while the owner asked three separate times for it to be
 longer — every time, the motion got adjusted and the sprite scale was never looked at.
 
-**ONE MOTION PER TOOL** (`swing_tools.py`) — not one arc with different constants. Owner caught that as
-a code smell: *"sword is not an axe swing"*. The channel that carries the motion differs per tool:
+**ONE MOTION PER TOOL** (`swing_tools.py`) — not one arc with different constants. The owner caught that as
+a code smell: a sword stroke is not an axe swing. The channel that carries the motion differs per tool:
 
-- **axe** — a big continuous arc, "behind over then down in front", **never hovering** cocked-back
+- **axe** — a big continuous arc — behind, over, then down in front — **never hovering** cocked-back
 - **hoe** — lift a little, strike the ground, then **PULL back** toward the player
 - **net** — the **hoop LEADS**: carry the tool *ahead* of the arm (negative blade-behind). Trailing it is
   what made the net swing bulge-first
@@ -852,7 +851,7 @@ a code smell: *"sword is not an axe swing"*. The channel that carries the motion
 ⚠ Rotation is the wrong channel for a stab. Building the spear and shovel as arcs is why they read as
 waving the tool around.
 
-**SHIPPED for facing down and up, 2026-08-04: `E_double_back`** (*"lets do double back for both"*) —
+**SHIPPED for facing down and up, 2026-08-04: `E_double_back`** (the owner chose double-back for both) —
 `render_animations.attack_frames` / `DOUBLE_BACK`, rendered as `swing_sword_down.gif` /
 `swing_sword_up.gif`. Out across, then whipped back through the other way.
 
@@ -863,11 +862,11 @@ Write each motion relative to `centre`, the direction attacked (−90 facing dow
 the arc **cross** centre rather than end on it.
 
 ⚠ Driving the blade *along* the attack direction gives a **reverse stab**, not a swing — the facing-up
-version dipped the blade down and then drove it up, and owner called it *"a backwards stabby motion as in
-going the wrong way"*. Five diverse approaches live in `swing_five.py`.
+version dipped the blade down and then drove it up, and the owner described it as a backwards stab,
+moving the wrong way. Five diverse approaches live in `swing_five.py`.
 
-**AN ATTACK IS A FRAME BUDGET, NOT AN EASED SWEEP** (`swing_game.py`). Owner: *"the user has to watch
-the play pull back the sword the swing the sword, its not a video game swing"*. Spreading the motion
+**AN ATTACK IS A FRAME BUDGET, NOT AN EASED SWEEP** (`swing_game.py`). The owner's objection: the player
+has to watch the character pull the sword back and then swing it, which is not how a game swing works. Spreading the motion
 evenly across the runtime and giving the wind-up a third of it makes a cutscene — you watch him lift the
 sword, then watch him lower it. A game attack puts almost all the travel in **two or three frames** and
 spends the rest **sitting on the end pose**:
@@ -885,15 +884,15 @@ animation per swing. 20ms is the floor gif players reliably honour.
 **A SWING MUST COVER WHAT IT HITS.** This is a game, not a portrait. Facing down the player attacks the
 tile SOUTH of him — straight down the screen — so the blade has to finish with its **tip past his feet**.
 Facing up, past his head. A swing that sweeps out to the side is a front-facing sprite performing the
-sideways attack: it covers nothing in the direction he is attacking. Owner: *"when you strike something
-below you while facing down it means being able to strike something below you, all your looking down ones
-are pretty much the same thing as the sideways ones"*.
+sideways attack: it covers nothing in the direction he is attacking. The owner pointed out that striking
+while facing down must reach what is below, and that the facing-down swings were essentially the sideways
+ones.
 
 **AND THEY ARE THEIR OWN MOTIONS, NOT THE SIDE SWING RE-AIMED.** The side swing is one monotonic sweep;
 facing the camera that is wrong twice over — different plane, and a monotonic sweep **stops dead** instead
 of following through. Each facing is written in three phases: **RAISE**, **STRIKE** (through the tile),
-**FINISH** (carry past contact and settle). Owner: *"the swing will be different when facing down and up,
-and it also needs to finish the swing, so its weird you are like so obsessed with the sideways swing"*.
+**FINISH** (carry past contact and settle). Owner: facing down and facing up each need their own
+motion, and every swing must carry through to a finish — not everything should be modelled on the sideways swing.
 
 ⚠ A follow-through must move the blade somewhere **visibly different** from the strike. Taking the arm
 past vertical while unwinding the blade by the same amount leaves `blade = arm + back` pinned — the up
@@ -913,16 +912,15 @@ the renderer contradicted its own design doc and nobody checked.
 **The constraint that caused it, now overturned.** `DESIGN.md` also said *"keep the hand within roughly a
 third of a cell of the shoulder"*, because a fist out at arm's length was thought to look detached with no
 arm drawn. That is what pinned the hand at the shoulder, and it is incompatible with a swing that reads as
-a swing. Owner, 2026-08-04: *"dont care about the arm missing, though it doesnt have to be realistic just
-out some."*
+a swing. Owner decision (2026-08-04): the missing arm does not matter; the hand need not be realistic, only
+extended somewhat.
 
-**No wrist articulation, and the fist grips ACROSS the handle.** Owner: *"you dont need to have the wrist
-angle with respect to the pommel of the sword, its awkward... the sword can be angled back more... so that
-the hand is perpendicular with the pommel."* So the blade sits at **one fixed angle behind the arm** for
+**No wrist articulation, and the fist grips ACROSS the handle.** Owner: no awkward wrist angle against the
+pommel — tilt the sword further back instead, so the hand meets the pommel at a right angle. So the blade sits at **one fixed angle behind the arm** for
 the whole swing, and the fist is rotated to **`HAND_PERP = 180`**.
 
 ⚠ **180 was picked BY EYE, not derived.** `reviews/2026-08-04-swing-arm2/HAND_ROTATION_which_way.png`
-renders 0 / 90 / 180 / 270 at the same frame; owner: *"hand perp 180"*. Reasoning about where a wrist
+renders 0 / 90 / 180 / 270 at the same frame; the owner picked hand-perpendicular 180. Reasoning about where a wrist
 "should" be produced 90 first and then 270, and both were wrong. **Render the four and look** — do not
 re-derive it.
 
@@ -952,22 +950,22 @@ looked wrong — and why retiming, re-cutting and swapping between the hands we 
 
 **The fix is to remove the conflict, not to draw around it: swing top-to-bottom.** A vertical arc keeps
 the arm inside the geometry one hand view can honestly represent, so one sprite carries the whole motion
-and no new art is needed. Owner: *"just not have laterally s[w]ings, everything is just a top to bottom
-swing, that way we dont have to worry about different hand shapes."*
+and no new art is needed. Owner decision: no lateral swings — every swing runs top to
+bottom, so different hand shapes are not needed.
 
 `swing_lab.py` approaches **20–23** are the vertical set (overhead, diagonal, loaded, chop-and-stop), all
 anchored to `IDLE_ANGLE` at both ends. `swing_options.py` renders them one- and two-handed for review.
 
 **Two-handed uses BOTH approved grips** — `grip_back_of_hand.png` on one arm, `grip_palm.png` on the other
-(*"the other arm so you would see the palm"*). Never mirror one to make the other: mirroring the back of a
+(on the other arm the palm is what shows). Never mirror one to make the other: mirroring the back of a
 hand gives a mirrored back of a hand, never a palm.
 
 ⚠ A vertical swing needs padding on **both** axes — `swing_frames` only padded sideways and clipped the
 blade off the bottom.
 
 **ALL THREE SWORD SWINGS RUN ON THE FRAME BUDGET** (`attack_frames`), one spec per facing in
-`SWORD_FACINGS`: `SWORD_SIDE` for side-on, `DOUBLE_BACK` for facing down and up. Owner, 2026-08-04:
-*"yes we obviously want the quick candidate"*.
+`SWORD_FACINGS`: `SWORD_SIDE` for side-on, `DOUBLE_BACK` for facing down and up. Owner decision
+(2026-08-04): the quick candidate.
 
 The eased `sword_motion` + `arm_swing_frames` path is **no longer used for the sword** — it remains only
 because `swing_arm.py` imports it for the lab. Its 27 smoothly-eased frames were what the frame budget
@@ -981,8 +979,8 @@ tried, and nothing in them is durable.
 ⚠ **The spec IS the artifact, not just the gif.** Timestamped review folders stopped the *gifs* being
 overwritten, but the **numbers that define a motion** had the same bug one level down and it went
 unnoticed: each new variant replaced the last in the lab file, so a picked motion had to be dug out of git
-history. Owner: *"after all this desperate trying to get you to get organized, you think its ok while
-developing which animation to use in the game you are just throwing them away as we go?"*
+history. The owner objected that candidate animations were being thrown away while choosing which one the
+game would use.
 
 Every lab run now also writes **`SPECS.json` beside its gifs**, so a review folder is self-describing and
 any gif can be traced to its exact numbers without git archaeology.
@@ -993,13 +991,12 @@ replacement beside it and marking the old superseded.
 **AGREED ANIMATIONS LIVE IN `outfits/bronze/current/anim/`, NOT IN A REVIEW FOLDER.** Bronze is the
 reference outfit: motions are designed on it, then applied to the other 21 with their own gauntlets.
 
-**The moment he says "this one", copy it there and add a `CURRENT.md` row the same day.** Everything under
-`reviews/` is exploration — later runs regenerate it and it is not safe. Owner: *"these animations need to
-stay somewhere so we can use them - we cant just willy nilly explore things and when i say 'this one' just
-shrug and move on."*
+**The moment he picks one, copy it there and add a `CURRENT.md` row the same day.** Everything under
+`reviews/` is exploration — later runs regenerate it and it is not safe. Owner direction: chosen animations must
+be kept somewhere usable; exploration cannot simply move on after he picks one.
 
 `CURRENT.md` records, per animation, **the motion constant in code** that produces it as well as his
-words, so it can be rebuilt from source alone rather than only existing as a gif.
+dated decision (restated, never his words), so it can be rebuilt from source alone rather than only existing as a gif.
 
 ⚠ `anim/` **is ledgered.** It was once excluded as derived output, on the assumption animations are just
 regenerated from the frames. That is wrong: the **motion is the decision**. An agreed animation that is
@@ -1010,11 +1007,11 @@ An outfit lives in three folders: `scratchpad/` (candidates, in four numbered st
 agreed), `archive/` (superseded — nothing is deleted).
 
 ```bash
-python3 tools/player_sprites/promote.py bronze scratchpad/2-frames/2026-08-02-1344-first-cut "ok lets use this one"
+python3 tools/player_sprites/promote.py bronze scratchpad/2-frames/2026-08-02-1344-first-cut "<the decision, restated>"
 ```
 
 One atomic action: copy into `current/`, move what it replaced into `archive/`, append the `CURRENT.md` row
-with the owner's words **verbatim**, re-render the animations, refresh the gallery. **Promoting IS
+with the owner's decision (restated in clean prose, dated and attributed — never his words), re-render the animations, refresh the gallery. **Promoting IS
 recording.** There is deliberately no way to do one without the other, because every time recording was a
 separate step it got skipped — and the approved walk/run constants were lost exactly that way.
 
@@ -1131,7 +1128,7 @@ direction = explosion. Pragmatic compromise to recommend:
 1. **Registration spike** (cheap, ~2-3 API calls): one base body -> `images/edits` add a
    helmet -> confirm the helmet pixels land on the head box and overlay cleanly. PROVE the
    edits approach before scaling. (If it fails, fall back to hand-registered atlas.)
-2. Generate 4 base bodies (4 dir each) = the "variants to choose from".
+2. Generate 4 base bodies (4 dir each) = the variants for the owner to choose from.
 3. Hair + a couple clothing layers; verify stacking in Unity.
 4. Wire the data model (Go + network + multi-SpriteRenderer client) — separate effort,
    C# cannot be compiled here (needs Unity).

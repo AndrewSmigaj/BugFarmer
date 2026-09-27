@@ -8,15 +8,15 @@ description: Use when a zone or scene needs to be INTERESTING — planning a new
 The enemy this skill exists to kill is the **technically-correct bland zone**: lint 0, contracts
 honored, and nothing worth walking to. Two rules frame everything below:
 - **Guides are GUIDELINES.** Context-appropriateness and variety beat rule-following —
-  "sameness reads worse than any individual rule-break" (house.md, owner-corrected). Every zone
+  sameness reads worse than any individual rule-break (house.md; owner correction C11). Every zone
   names one deliberate rule-bend and why.
 - **You are expected to be CREATIVE**, not to assemble the minimum the request named. The owner
   reviews taste; your job is to bring real options worth choosing between.
 
 ## ⛔ THE GATE — read this before you write ANY builder/scene code
 This exists because the failure mode is real and repeated: skipping the loop and writing a
-**monolithic `zone_*.py` that scatters props randomly** — no scene previews, haphazard "rooms with
-stuff thrown in," boring, near-pure dirt. **That is a protocol VIOLATION, not a build.**
+**monolithic `zone_*.py` that scatters props randomly** — no scene previews, haphazard rooms with
+objects dropped in at random, boring, near-pure dirt. **That is a protocol VIOLATION, not a build.**
 
 You may NOT write or edit a zone builder / scene until you have PRODUCED and POSTED to the owner:
 1. **The BRIEF** (the fields below — promise, region jobs, ≥3 named landmarks, ground-variety, edges,
@@ -75,7 +75,7 @@ before the scene list + options exist and are posted, STOP — you are violating
    stepped lines, even for "special" rares. Applies to surface rock (`terrain.rock_mass`) too.
 3. **Blandness = ground variety FIRST.** Before decorating a dead region, change what it's
    made of: materials, block masses, transitions. Ground reads at every zoom.
-4. **"Dirt areas" are DIRT-BLOCK masses** (shovel shell, stone/ore core) — terrain that looks
+4. **Dirt areas are DIRT-BLOCK masses** (shovel shell, stone/ore core) — terrain that looks
    diggable must BE diggable. Painted dirt is only the apron between masses.
 5. **Regeneration tools clobber newer committed art.** Before committing any bulk regen, diff
    the MODIFIED (not new) files against HEAD; run cleaners targeted. Exit 0 is not success.

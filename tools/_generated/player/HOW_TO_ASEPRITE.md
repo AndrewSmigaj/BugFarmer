@@ -1,6 +1,6 @@
 # Aseprite — the little tutorial for cutting armor pieces
 
-## FIRST: your #1 problem — "how do I export only some layers?"
+## FIRST: your #1 problem — exporting only some layers
 The trick is the command you use AND hiding (not deleting) layers:
 
 1. **Hide** the layers you DON'T want in the output — click the **eye icon** next to each layer

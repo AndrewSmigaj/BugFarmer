@@ -47,7 +47,7 @@
   carrion-first, hiss→lunge telegraph, gnaws WOOD but stone stops it) re-tuned + the
   segmented giant sprites that already exist in bugs.json, zoned here. Dens in side
   caverns; patrols the galleries; scavenges the web's dead.
-- **The ambush layer:** **cave spiders + WEBS** — the BACKLOG's "don't forget!" lands
+- **The ambush layer:** **cave spiders + WEBS** — the BACKLOG's flagged spiders-and-webs item lands
   HERE (D21: small webbed spiders in the lower underground, NOT the first Mining Camp).
   Web-choked side passages; drop-on-silk. *(Spider SIM is designed-not-built and NOT in
   this plan's scope — the zone doc reserves their caverns; v1 places webs as decor +

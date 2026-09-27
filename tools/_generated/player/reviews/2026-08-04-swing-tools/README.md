@@ -5,11 +5,10 @@ show every frame of the two that were most wrong.
 
 ## The correction
 
-> *"you arent thinking of the tools right - you are treating them all like swords you swing in different
-> ways, more thought should be going into each of these, do you sit there bashing the ground with a
-> shovel? do you?"*
+> Owner direction (2026-08-04): every tool was being handled as a sword swung a different way. Each
+> needs its own motion — no one digs by hammering a shovel into the ground.
 
-No. They were five arcs with different constants. Each tool has a **verb**, and the verb decides which
+They were, in fact, five arcs with different constants. Each tool has a **verb**, and the verb decides which
 channel carries the motion — angle, or reach.
 
 | tool | verb | what actually moves |

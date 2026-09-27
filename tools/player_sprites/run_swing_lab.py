@@ -3,12 +3,12 @@
   python3 tools/player_sprites/run_swing_lab.py            # bronze
   python3 tools/player_sprites/run_swing_lab.py fireant
 
-Owner, 2026-08-14: *"we need to make sure we can swing while running… when swinging while running the
-walk/run hands change."* None of it is implemented — not in the game, not in `build.py` — so this renders
+Owner, 2026-08-14: the character must be able to swing while running, and when it does, the walk/run
+hands change. None of it is implemented — not in the game, not in `build.py` — so this renders
 what it would LOOK like, to settle the off-hand before anything is built.
 
 It is a LAB on purpose. `motions.py`: *the labs are for exploring, and nothing in a lab is durable.* A
-motion becomes real by being copied into the approved data with the owner's words and rendered by
+motion becomes real by being copied into the approved data with the owner's dated decision and rendered by
 `build.py`. So nothing here outlives the decision, and it edits neither `gait.py` nor `official.py`.
 
 WHAT IS BEING COMBINED, AND WHAT THE ACTUAL QUESTION IS

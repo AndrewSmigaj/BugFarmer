@@ -2,8 +2,8 @@
 
 **Status:** PROPOSED design, evidence-backed (3 deep-research agents + 1 adversarial cold-critic, ~20
 deep-read sources, 3 open-source codebases studied, load-bearing claims re-verified against our code).
-Graduates to `architecture_*` once built + verified. Owner: "swings feel natural and the movements make
-sense — you don't swing a shovel, you do a scooping motion."
+Graduates to `architecture_*` once built + verified. Owner requirement: swings should feel natural and every
+movement should make sense — a shovel is not swung, it makes a scooping motion.
 
 ## The problem (verified in `PlayerToolAnimator.cs`)
 One procedural animator moves the tool's SINGLE icon (grip bottom-left, head top-right) around a `ToolPivot`
@@ -103,7 +103,7 @@ shape); the spring owns ONLY the follow-through/squash-return (impulse at the co
 ## Certainty assessment (design-time; MIN-aggregated)
 | # | Dimension | Score | Band | Evidence | Falsifier | To raise |
 |---|-----------|:---:|------|----------|-----------|----------|
-| 1 | Requirements fidelity | 88 | Strong | Owner verbatim "shovel scoops not swings"; per-tool motions + families deliver distinct sensible motions | Owner wanted body/character animation, not just the tool | confirm scope (tool-only) with owner |
+| 1 | Requirements fidelity | 88 | Strong | Owner requirement: a shovel scoops rather than swings; per-tool motions + families deliver distinct sensible motions | Owner wanted body/character animation, not just the tool | confirm scope (tool-only) with owner |
 | 2 | Comprehension | 90 | Strong | Re-read `PlayerToolAnimator`/`BreakingController`/`CameraFollow`/`ToolUseController`; found the existing stack + the 250ms cadence + the −45° shear + the 3 feedback regimes | A 4th feedback path exists I didn't grep | grep all `HitBurst.Play`/`AddShake` callers |
 | 3 | Design quality | 85 | Strong | Hybrid D scored vs 4; reuses the existing stack (retime not rebuild); phased 80/20-first; grounded in ~20 sources + a critic pass | A simpler model (springs-only) suffices | Phase-1 spike proves the phase-profile need |
 | 4 | Sync & determinism | 92 | Strong | All cosmetic, client-local, no ledger/hash (`frontier-sync`); hitstop is per-object not `Time.timeScale`; contact RNG local | A feedback path reads/writes sim state | confirm no `HitBurst`/shake touches hashed state (it doesn't today) |
@@ -124,4 +124,4 @@ for presenting; worth one pass before building.
 - **Heavy = slower?** Scaling `breakClickInterval` by tool weight makes an axe swing slower + weightier than a
   hoe. Good game-feel, but changes break-DPS pacing — owner call.
 - **Phasing:** do Phase 1 (cheap 80/20) and evaluate before committing to the per-tool Phase 2? (Recommended —
-  matches the iterative style; Phase 1 alone likely resolves most of the "clunky" complaint.)
+  matches the iterative style; Phase 1 alone likely resolves most of the complaint that the swings feel clunky.)

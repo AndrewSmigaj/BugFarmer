@@ -8,7 +8,7 @@ WHY THIS EXISTS
 The sheet prompt asks for "a strict RIGHT-facing side profile", but the model sometimes draws the side
 row facing LEFT anyway. Everything downstream assumes right-facing: the walk swings `back_hand` to `+dx`
 as the forward hand, and every swing motion arcs toward +x. A left-facing outfit therefore walks and
-swings backwards. Owner, 2026-08-03: "the copper is backwards".
+swings backwards. Owner, 2026-08-03: copper was facing backwards.
 
 Mirroring is the sanctioned fix and it is free and exact — the skill already says "Left = mirror of
 right. Never generate it." Re-generating the sheet would cost money and change the art.

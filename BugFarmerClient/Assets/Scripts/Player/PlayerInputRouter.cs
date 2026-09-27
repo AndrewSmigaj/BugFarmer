@@ -8,8 +8,8 @@ namespace BugFarmer.Player
     /// <summary>
     /// The single owner of BOTH mouse buttons' world clicks. Exactly one controller handles
     /// any click — replacing the old pattern of controllers each polling Input and guessing
-    /// (which is how "every click near a swarm hand-catches even with a pickaxe equipped"
-    /// and the Placement+Station right-click double-fire happened).
+    /// (which is how every click near a swarm hand-caught bugs even with a pickaxe equipped,
+    /// and how the Placement+Station right-click double-fire happened).
     ///
     /// LEFT-CLICK (resolved ONCE on mouse-down by equipped tool_type; never re-dispatched
     /// mid-hold):

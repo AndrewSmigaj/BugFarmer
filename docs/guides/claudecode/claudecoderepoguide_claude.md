@@ -98,7 +98,7 @@ Subagent frontmatter supports `model:` and `effort:` fields, which Part 5 uses.
 
 ### Plans and specs are files, not conversation
 
-Every nontrivial task produces a committed plan file in `plans/` with a fixed structure: requirements verbatim, acceptance criteria as testable statements, design decisions with evidence citations, decisions deferred to implementation, an explicit out-of-scope list, and the test plan. The plan is the bridge between an expensive planning session and a cheap fresh execution session, and it is the anchor that prevents requirement drift, because unlike early-conversation context it can be re-read, re-injected, and diffed against.
+Every nontrivial task produces a committed plan file in `plans/` with a fixed structure: requirements (the owner's decisions restated in clean prose, dated and attributed — never his words), acceptance criteria as testable statements, design decisions with evidence citations, decisions deferred to implementation, an explicit out-of-scope list, and the test plan. The plan is the bridge between an expensive planning session and a cheap fresh execution session, and it is the anchor that prevents requirement drift, because unlike early-conversation context it can be re-read, re-injected, and diffed against.
 
 The most useful specs are self-contained: files and interfaces named, out-of-scope stated explicitly, ending with an end-to-end verification step that proves the feature works. The out-of-scope section deserves particular care; the spec is the pin that prevents invention, and explicit "do not do X" lines carry much of that load. For fuzzy requirements, a useful pattern is having Claude interview you first (using its question tool) and write the resulting spec before any planning begins.
 
@@ -199,7 +199,7 @@ Context size dominates effort setting in the cost equation: the entire window re
 
 ## Part 6: The Standard Procedure
 
-1. **Plan.** Fresh session; invoke the certainty skill (carrying `effort: xhigh`). Explore in plan mode. Output: a committed plan file with requirements verbatim, acceptance criteria, evidence-cited design decisions, deferred-decisions list, out-of-scope list, test plan. Skip to a direct request for one-sentence-diff tasks.
+1. **Plan.** Fresh session; invoke the certainty skill (carrying `effort: xhigh`). Explore in plan mode. Output: a committed plan file with requirements (restated in clean prose, dated and attributed), acceptance criteria, evidence-cited design decisions, deferred-decisions list, out-of-scope list, test plan. Skip to a direct request for one-sentence-diff tasks.
 2. **Review the plan.** Spot-check evidence citations; read the deferred-decisions list and resolve what can be decided now by writing it into the plan (Ctrl+G edits it directly). Approve or send back.
 3. **Commit the plan.** Revert point and drift anchor.
 4. **Implement in a fresh session** (own worktree if parallel). Effort per the assignment rule. Load the plan; set acceptance criteria as `/goal` conditions or rely on the UserPromptSubmit injection.

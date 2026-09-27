@@ -17,7 +17,8 @@ _status: ✅ FIXED 2026-07-02 · investigated 2026-06-28_
 - **Certainty:** root cause **95%**. **Needs your decision:** none. **Status:** `READY`.
 
 ## 1. Issue
-> "when placing a block (not everything) the preview is lower than where it actually gets placed."
+> Owner playtest report (2026-06-28): when placing a block (though not every placeable), the preview is drawn lower than where the
+> block actually lands.
 
 ## 2. Root cause (verified — the two positions diverge)
 - **Ghost** (`PlacementController.UpdateGhostPreview:174`): `ghostPreview.transform.position =
