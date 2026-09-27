@@ -21,8 +21,9 @@ farmland — and a zone nobody has visited for a while has moved on when you com
 - **One village** (June review, D19) — the real starting village is the rebuilt one ("Village B" on the dev menu),
   not the old demo village.
 - **A second town, in the locust farmland** (2026-06-27) — the far north-west zone, the locust farmland, holds a
-  small western-style town. The village's windmill, which powers its houses, can't be bought or built until you reach
-  that town; the details are left for when the zone is built. The approved roadmap builds it with the farmland and
+  small western-style town. The starting village is mostly unpowered: its windmill lights only part of it, such as the
+  Mayor's house, as a glimpse of what power will bring, and can't be taken (2026-09-27); a windmill of your own can't
+  be bought or built until you reach that town; the details are left for when the zone is built. The approved roadmap builds it with the farmland and
   electricity.
 - **The ants' country** (2026-07-06 and 07-07) — the ant colony is in the south-west ant zone. The easy ant zone is
   half above ground, giving the ants room to lay trails to food; the rock face starts where it does in the neighbouring mining
