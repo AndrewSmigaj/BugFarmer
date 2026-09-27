@@ -3,14 +3,19 @@
 but its doc (per manifest doc_coverage) did not. This is our real backstop absent CI: it catches drift
 even if the Stop hook was bypassed. Override a legitimate case with `git commit --no-verify`.
 
+A staged .go/.py file whose change touched only comments (or Python docstrings) is not counted — see
+_comments.py.
+
 FAIL-OPEN on its own errors: a bug in this checker must NEVER block commits, so any exception -> exit 0
 (allow). Only genuine detected drift returns exit 1 (block). Staged files come from git, or from
-$CLAUDE_STAGED_FILES (space/newline-separated) for tests.
+$CLAUDE_STAGED_FILES (space/newline-separated) for tests; $CLAUDE_DIFF_CONTENT stands in for their
+versions (see _comments.py).
 """
 import sys
 import os
 import subprocess
 
+import _comments
 import _manifest
 
 
@@ -27,7 +32,13 @@ def main():
     staged = _staged()
     if not staged:
         return 0
-    drift = _manifest.doc_drift(staged, _manifest.load())
+    counted = []
+    for path in staged:
+        if path.endswith(_comments.CODE_SUFFIXES) and _comments.comments_only(path, *_comments.staged_versions(path)):
+            sys.stderr.write(f"doc-drift: comments only, not counted — {path}\n")
+            continue
+        counted.append(path)
+    drift = _manifest.doc_drift(counted, _manifest.load())
     seen, items = set(), []
     for doc, trig in drift:
         if doc in seen:

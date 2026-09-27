@@ -7,6 +7,9 @@ WAIVER (per doc, per session): if a doc-update genuinely isn't needed, write a r
 waiver marker — the deny message prints the exact command — and it clears for the rest of the session.
 This is a STRONG NUDGE, not a wall: Claude Code caps repeated Stop re-blocks, so it can never hard-loop.
 
+A .go/.py file whose working copy differs from HEAD only in comments (or Python docstrings) is not counted
+— see _comments.py.
+
 FAIL-OPEN: no edit log / any error -> allow the stop (exit 0). Only real, unwaived drift emits exit 2.
 stdin: { "session_id": "...", "stop_hook_active": bool, ... }
 """
@@ -15,6 +18,7 @@ import os
 import re
 import json
 
+import _comments
 import _manifest
 
 
@@ -38,6 +42,9 @@ def main():
         return  # nothing edited — allow stop
     with open(log) as f:
         changed = [ln.strip() for ln in f if ln.strip()]
+    changed = [c for c in dict.fromkeys(changed)
+               if not (c.endswith(_comments.CODE_SUFFIXES)
+                       and _comments.comments_only(c, *_comments.worktree_versions(c)))]
     if not changed:
         return
 
