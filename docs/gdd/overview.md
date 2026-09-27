@@ -442,16 +442,23 @@ signature branch — meat from carcasses, honey, royal jelly.
 - **Potions heal more and do what food can't** — stronger healing and other effects where food doesn't make sense
   (2026-09-27). Potions are ordinary items, not magic (2026-08-06).
 - **Healing someone else**: hold a bandage or a potion and use it on them (2026-09-27).
-- **Things can be given to other players**, as in Terraria or Stardew Valley (2026-09-27) — proposal P17.
+- **Things can be given to other players**, as in Terraria or Stardew Valley (2026-09-27): right-click a player to
+  offer an item, bugs or coins; left-click a bandage or potion on a friend to heal them at once; a new action drops
+  things on the ground (P17, accepted 2026-09-27).
+- **Meals and potions** (P16, accepted 2026-09-27): a meal heals over a while and gives one fullness boost at a time; a
+  healing potion heals at once, then the person healed waits a short while before another works on them; other
+  potions — antivenom, a salve for sprays and acid, venom resistance, night sight — have no wait; stronger bugs make
+  stronger potions; the cauldron is the potion station; food doesn't spoil in bags or chests.
 - Cooking is its own system (D19); venom and poison are real effects (D16).
 
 **In the prototype now** — food items exist and sell, but eating does nothing. No meals exist, the cooking stations
 have no recipes, and health comes back only by slowly regenerating.
 
-**Designed** — the old catalogue lists about 78 potions and 47 meals, weapon coatings among them (P16 suggests a
-much smaller set); eating fruit to heal; fridges that stop food rotting (P16 suggests food doesn't spoil).
+**Designed** — the old catalogue lists about 78 potions and 47 meals, weapon coatings among them (P16 cuts it to a
+small starting set); eating fruit to heal; fridges that stop food rotting (under P16 food doesn't spoil, so the fridge
+is a food chest).
 
-**Still open** (→ §11) — the recipe list; the potion set (P16).
+**Still open** (→ §11) — the recipe list, which meal does what, and whether a venom coating joins the starting set.
 
 ### 12 · Fishing and water
 Fishing starts in the starting village, at its lake and the fisherman's house, with rods, bug baits, fish traps and
@@ -492,7 +499,11 @@ home at night, and several of them give quests.
 - Which shops the village has (D20, D26), and what the village still needs: its townspeople and their behaviour,
   better buildings and layout, polish, and secrets (2026-09-26).
 - **Townspeople** mend fences, gather fruit, deal with pest bugs and more — whatever makes the game better — and sleep
-  in their houses at night (2026-09-27) — proposal P18.
+  in their houses at night (2026-09-27). Shopkeepers keep their counters by day, chores fall early and late or to
+  townspeople without a shop, and at night players simply walk in and trade with them at home (P18, accepted
+  2026-09-27).
+- **Trading** is one screen with what you give and what you take; goods count at the price that townsperson pays,
+  and coins make up the difference either way (P19, accepted 2026-09-27).
 - **Quests from several townspeople**, not only the Ecologist (2026-09-27): the myrmecologist has quests and a board of
   retrieval jobs, some of them out of reach until later. **No bounties** (2026-09-27).
 - **The second town** is a small western-style town in the Locust Farmland (2026-06-27) — a small village with shops and
@@ -993,6 +1004,7 @@ always has an answer. Real biology — carcasses feed the scavengers. **Cost and
 large species; a clear look for "subdued"; crossing zones waits for cross-zone bugs.
 
 ### P16. Food for a trip, potions for a fight
+**Accepted by the owner on 2026-09-27**, with seeing in the dark kept in.
 - **A meal heals you over a while and gives one fullness boost** — a bigger stamina pool (P14), quicker work, a
   better catch. One boost at a time: a new meal replaces the last, as in Stardew Valley. Which meal does what comes
   with the recipe list, as decided.
@@ -1000,12 +1012,12 @@ large species; a clear look for "subdued"; crossing zones waits for cross-zone b
   be healed by another one — whoever gives it — as in Terraria, where only healing potions have a wait. So friends
   can't stack heals, and a fight stays about dodging, not drinking.
 - **Other potions do what food can't, with no wait**: an antivenom for stings and bites, a salve for sprays and acid
-  burns (millipedes, ants), and resistance to venom for a while. Venom and poison are already decided as real effects
-  (D16).
+  burns (millipedes, ants), resistance to venom for a while, and seeing in the dark for a while. Venom and poison are
+  already decided as real effects (D16).
 - **Stronger bugs make stronger potions**: venom from a higher-tier bug makes a stronger antivenom, so potions follow
   the same ladder as the rest of the game.
-- **A small set to start** — a healing potion, the antivenom, the salve, venom resistance, and perhaps one venom
-  coating for blades and spears (offered back from the old list rather than dropped quietly). Each gets true examine
+- **A small set to start** — a healing potion, the antivenom, the salve, venom resistance, night sight, and perhaps
+  one venom coating for blades and spears (offered back from the old list rather than dropped quietly). Each gets true examine
   text: before the plague, antivenom was made in horses; now it is made in labs from the venom itself.
 - **Bandages** are the cheap heal over a few seconds, one at a time — cloth first, then better ones from honey or
   chitin, both real wound dressings.
@@ -1014,8 +1026,8 @@ large species; a clear look for "subdued"; crossing zones waits for cross-zone b
 - **Food doesn't spoil** in bags or chests, for the same reason tools don't wear out, so the fridge becomes a food
   chest. Fallen fruit still rots on the ground, where flies breed.
 - **What goes from the old list of 78 potions**: potions that later decisions rule out — breathing underwater (no
-  diving), lamp oils (no oil lamps), seeing in the dark (the light sources are decided), calming every bug nearby
-  (calming is per species) — and luck brews (nothing real makes anyone luckier). Its thirteen cures fold into the
+  diving), lamp oils (no oil lamps), calming every bug nearby (calming is per species) — and luck brews (nothing real
+  makes anyone luckier); the several night-sight brews become the one potion. Its thirteen cures fold into the
   antivenom and the salve, in strengths, and ingredients from extinct animals (frogs, bats) are swapped. The rest —
   thrown bombs, stat brews, more coatings — stay on the list for the owner to pick from.
 
@@ -1026,6 +1038,7 @@ nothing in the game can give a timed effect yet, so that comes first, then venom
 icons for every potion, meal and bandage (paid images, asked first).
 
 ### P17. Giving things to other players
+**Accepted by the owner on 2026-09-27.**
 - **Right-click a player to offer** what you're holding — an item or a stack of bugs — with a box for adding coins,
   since coins aren't items. They accept with one key; if their bag is full, nothing is lost. An offer nobody answers
   fades after a few seconds, and each player has one offer out at a time.
@@ -1043,14 +1056,14 @@ click while holding bugs releases them, so a player under the cursor has to come
 — dropped food feeds bugs, which every player's game has to agree on, so it needs the same checks as fallen fruit.
 
 ### P18. Townspeople with a day of their own
+**Accepted by the owner on 2026-09-27**, with players simply walking in to trade at night.
 - **By day, shopkeepers keep their counters.** Chores happen early and late, or are done by townspeople who don't keep
   a shop (both towns need more people anyway): mending fences that bugs have damaged (P6), gathering fallen fruit in
   town, and dealing with bugs that threaten people in the streets, such as wasps and centipedes — swatting them or
   emptying the town's traps — never the flies and butterflies new players come to catch.
-- **At night they sleep at home, and you can still knock and trade at the door**, as Terraria's townspeople trade from
-  their houses at night. Night is a large part of every day and nobody can skip it yet, so closed shops would leave a
-  player back from a trip with a full bag and nothing to do. (If the owner prefers closed shops, a box that buys goods
-  overnight is the minimum.)
+- **At night they sleep at home, and players simply walk in and trade with them there**, as Terraria's townspeople
+  trade from their houses at night. Night is a large part of every day and nobody can skip it yet, so closed shops
+  would leave a player back from a trip with a full bag and nothing to do.
 - **Every player sees the same townspeople in the same place.** They keep to their own town, and stop walking while
   anyone is talking to them.
 - **Quests from several townspeople.** The myrmecologist's board asks for things to be found and brought back — a
@@ -1059,15 +1072,15 @@ click while holding bugs releases them, so a player under the cursor has to come
 - Nobody can hurt them or take their things (D41), and bugs leave them alone.
 
 **Lenses:** Picture the moment — at dusk the blacksmith locks up and walks home past the orchard; later there's a
-knock, and he trades in his doorway. Readability — the village is visibly alive. Ecology — gathering fruit is the same
+player walks in and trades with him at home. Readability — the village is visibly alive. Ecology — gathering fruit is the same
 lever as P10's fruit cut, and the two are tuned together. Playing together — nobody waits for a shop to open. **Cost
 and risk:** today a shopkeeper is a fixed object at a counter, so townspeople become characters that move and are
 shown to every player; picking up fruit, mending fences and swatting bugs all change the bugs' world, which every
 player's game has to agree on, so each needs those checks; walking, working and sleeping animations for every
-townsperson (paid images, asked first) — or, much cheaper, townspeople built on the player's own figure and
-animations, each in their own outfit, which is the owner's call.
+townsperson (paid images, asked first).
 
 ### P19. Trading: coins, goods or both, on one screen
+**Accepted by the owner on 2026-09-27.**
 - **One screen, two sides**: what you give — goods, bugs, coins — and what you take — goods, recipes, books.
 - **Prices don't change**: what you give counts at what that townsperson pays for it, and what you take costs what
   they charge. The difference is paid in coins automatically, either way, and the button says what you'll get or pay.
