@@ -678,8 +678,8 @@ def gradient_field(b, x0, y0, x1, y1, *, edge="s", seed=0, ground="dirt",
                    noise_amp=0.55, threshold=0.40, speckle=0.18,
                    warp=0.0, warp_scale=0.02):
     """A zone-seam TERRAIN GRADIENT toward `edge` — the C12 rule (owner,
-    2026-07-06: the transition should "start getting dirty and rocky on a
-    gradient, not suddenly having the dirt wall"). Paints `ground` over plain
+    2026-07-06: the edge should shift gradually toward dirt and rock, never
+    stop at an abrupt dirt wall). Paints `ground` over plain
     grass with density = edge-ramp × smooth value noise: near-solid at the
     edge, breaking into organic TONGUES mid-band, thinning to lone speckle
     flecks, then clean grass — no contour line anywhere. `rocky` (e.g.

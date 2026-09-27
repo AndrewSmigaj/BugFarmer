@@ -83,7 +83,7 @@ def property_yard(b, bx0, by0, bx1, by1, door_x, *, side=2, front=5, back=4,
     return (fx0, fy0, fx1, fy1)
 
 
-# ---- YARD STYLES (2026-06: "yards are also not good" — variety is deliberate) --
+# ---- YARD STYLES (2026-06: the yards were judged not good either — variety is deliberate) --
 def styled_yard(b, bx0, by0, bx1, by1, door_x, *, style="modest", seed=0):
     """A yard with a deliberate STYLE — every home picks one; streets MIX them:
     - "grand":      BIG backyard (back=7) with garden rows + a hedge walk; iron fence.

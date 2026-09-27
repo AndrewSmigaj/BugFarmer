@@ -126,8 +126,8 @@ func digHitsFor(groundID string) int {
 //   - DIG reverts the cell to the recessed "dug_soil" tile and DROPS the tile's material(s) as ground items
 //     (like felling a tree) — a composite drops BOTH its materials' ingredients; only tiles WITH a ground
 //     recipe are diggable. (Progressive multi-hit dig + crack overlay layers on top of this in a later step.)
-//   - PLACE consumes a RECIPE (all ingredients of every material the chosen id is made of — a sandwich needs
-//     bread AND filling) and sets the ground. The chosen id is player-supplied, so it is validated against the
+//   - PLACE consumes a RECIPE (all ingredients of every material the chosen id is made of — each material is
+//     paid for in full) and sets the ground. The chosen id is player-supplied, so it is validated against the
 //     decorative material + shape allow-list (nothing else guards it). Gameplay semantics everywhere else still
 //     route through PrimaryMaterial (=matA); cost and semantics are separate concerns.
 func (m *Match) handleShovel(
@@ -249,8 +249,8 @@ const smokerReach = 4.0
 
 // handleSmoker: one puff at the target cell (§C — the GENERAL subdual tool, not a bee gadget):
 //   - fills ConditionValue on EVERY swarm within smokerReach whose species has a
-//     condition_tools["calm"] entry (wasps, centipedes, bees, the harmless set — the "vast
-//     majority of bugs can be calmed" rule, written in data);
+//     condition_tools["calm"] entry (wasps, centipedes, bees, the harmless set — the rule that
+//     most bugs can be calmed, written in data);
 //   - stamps SmokedUntilTick on hives in reach — smoke LINGERS at the hive entrance, keeping
 //     defense suppressed even while the (uncalmed remainder of the) colony forages afield.
 //

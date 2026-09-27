@@ -279,11 +279,12 @@ func (m *Match) orphanNestResident(state *WorldState, nest *entities.NestState) 
 // damage path): any hit on a nest occupant recalls the resident onto the attacker
 // REGARDLESS of distance — axing while the patrol hunts is a head start, not immunity.
 // processNestFounding lets a THRIVING colony split off a daughter hive — how a nest-based predator
-// population GROWS and SPREADS (the owner's "split and make another hive"). A nest founds when its
-// resident patrol is saturated (Count >= MaxSwarmSize) AND it has banked surplus brood (>= NestBroodCap,
-// the proxy for "well-fed from many kills"), the zone is under its MaxNests cap, and there's population
-// headroom for the daughter patrol. Founding drains the parent's brood — a natural cooldown (it must
-// rebuild to NestBroodCap before founding again). Collect-then-act (registerNestAt mutates NestStates).
+// population GROWS and SPREADS (the owner's model: a thriving colony splits off another hive). A nest
+// founds when its resident patrol is saturated (Count >= MaxSwarmSize) AND it has banked surplus brood
+// (>= NestBroodCap, the proxy for a colony well fed from many kills), the zone is under its MaxNests cap,
+// and there's population headroom for the daughter patrol. Founding drains the parent's brood — a natural
+// cooldown (it must rebuild to NestBroodCap before founding again). Collect-then-act (registerNestAt
+// mutates NestStates).
 //
 // Determinism: placing the wasp_nest occupant is a server-authoritative world-cell mutation broadcast via
 // broadcastWorldUpdate (the crop/torch-placement class, replayed not re-decided); the daughter resident
