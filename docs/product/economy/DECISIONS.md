@@ -528,3 +528,66 @@ decisions of record:
   IDENTICAL, the bug_lab bee-arena chart gate (self-maintained colony, b_reseed 0, honey at cap — after
   fixing a REAL phase-handoff sim bug run 1 exposed), zone lint 0 + text-verified edge contracts +
   headless crosszone BOTH directions. In-Editor feel pass = Andrew's.
+
+---
+
+## Resolved (2026-09-27) — the owner's review of the game overview, parts 0–3
+Restated in my words; the overview (`docs/gdd/overview.md`) carries the detail and the proposals built on these.
+
+### D32 — What survives: bugs, fish and people
+Birds, amphibians and reptiles died out along with the mammals; only bugs, fish and people survive. The mammal
+things that slipped into the idea lists (cave bats and bat guano, milk and cheese, horseshoes, livestock and manure,
+a rabbit's-foot charm, a pack mule) are dropped, and so is the December 2025 idea of a meteor-borne infection.
+
+### D33 — The prototype is not the design
+Nothing in the game is finished. Every value in the data — prices, timings, counts, capacities — is a placeholder
+until it is designed and tuned, and every bug, including the ones already worked on, needs more passes for
+behaviour, combat and ecology. Documents must not present prototype numbers as decisions.
+
+### D34 — Catching: hand nets by size, placed catchers, the autonet
+A small and a large hand net, each good only up to a certain size of bug; larger bugs are taken by catchers placed
+on the ground. Early placed nets that bugs fly into hold only a few; the autonet draws in bugs from the area just
+ahead of it and holds more; both take bugs out of the world. How they work is proposed in the overview (P3, P4).
+
+### D35 — Calming is set species by species
+One calming system, but what calms a species — and whether anything does — is set per species: many bugs can't be
+calmed, and what calms one (smoke calms bees) may irritate another. This replaces "most bugs can be calmed" in D31.
+
+### D36 — Pens hold every bug; fences are overhauled
+No bug flies over a fence or wall (the 2026-06-18 correction for wasps, now for all bugs). Each species has up to
+three tiers, stronger and often bigger, and a fence material holds only the bugs it is strong enough for; some bugs
+can't damage some fence types at all. Stone is not a general answer. Fencing is rebuilt as posts that connect, as in
+other games, instead of one repeated fence block.
+
+### D37 — Compost, bug prices, and getting hold of things
+Compost is sold and is also a fertiliser source. Carrion beetles do not make compost (a prototype rule that goes).
+A live bug and a dead one are worth the same; processing a carcass may pay more or less; coins also come from other
+things. Anything the game has but can't be obtained — the bug extractor, the large net and the rest — gets a way to
+obtain it at the right point in the game.
+
+### D38 — Butterflies grow up out in the world
+The nursery holds the eggs and the young caterpillars; caterpillars go out into the world, grow, form a chrysalis
+and emerge as butterflies. This settles the 2026-07-16 disagreement between the backlog (every stage on the
+milkweed) and the nursery design (the caterpillar wanders off).
+
+### D39 — Species: real ones, tiers per species, two kinds of ant
+Real species with real behaviour — the game teaches a little ecology and biology — so invented names are replaced.
+Tiers belong to a species, not a rule: some have one form, some two, none more than three (aphids have one). Two ant
+species only, black ants and fire ants, in different zones; the other ant species in the zone designs go.
+Mini-bosses are set off by conditions or simply placed. Real centipedes hunt alone; the game groups them only to
+keep network traffic down, so they should spread out.
+
+### D40 — The Ecologist, the Ecology tab and research
+The Ecologist lives in a house east of the village. The Ecology tab's button stays greyed out until the player meets
+him; his first quest asks the player to set up a bug monitoring station, which turns on that zone's information. His quests —
+rebalancing, placing stations and more — are the tab's tasks: one system. Rewards are money, and sometimes gear or
+recipes for big tasks such as taming a new area. The magnifying glass works like research in Apico: looking at
+enough of a species unlocks facts about it (what helps it breed, what it dislikes, what it eats…), shown on the bug's
+information page rather than in the tab. The ecology is balanced with many levers, not only food, predators and age;
+fallen fruit is too plentiful, so it comes down and another lever goes up when the ecology is retuned. No
+seasons.
+
+### D41 — Village property
+Players can't damage or take the townspeople's things; trying shows a short message. Bugs can damage village
+fences, and the villagers repair them. Whether NPC workers exist more widely is left to the assistant's judgment
+(the overview's P6).

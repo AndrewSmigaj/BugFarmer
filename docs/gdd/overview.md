@@ -15,6 +15,11 @@ not built**, and what is **still open**, with the section where each open point 
 D31) are entries in the decision log of June and July 2026 (`docs/product/economy/DECISIONS.md`); a few of its
 entries mix the owner's rulings with my own defaults, and where that matters I say which.
 
+**Nothing in the game is finished.** What the prototype has now is a first version: every system, every number in
+the data (prices, timings, counts) and every bug is a placeholder until it has been designed and tuned, and every bug
+still needs more passes for behaviour, combat and ecology (owner, 2026-09-27). "In the prototype now" below means
+exactly that — not "done".
+
 Please correct anything I got wrong or left out. The sections are rebuilt from this once you have checked it.
 
 ## The experience
@@ -39,11 +44,12 @@ and a private plot is safe.
 ## Decided
 The frame the rest of the design sits inside. Each line is the owner's decision in my words, with its date, unless
 it names another source.
-- **The premise** (the game's opening text, in the game since June 2026): the year 2126; a plague killed nearly
-  every mammal; people bred bugs bigger to have food; the player starts over on the frontier as a bug farmer.
+- **The premise**: the year 2126; a plague killed nearly every mammal; people bred bugs bigger to have food; the
+  player starts over on the frontier as a bug farmer. (The opening text in the game is a placeholder.)
 - **The bugs are giant**, and their size stays as designed (2026-09-26).
-- **Every creature is a real species** with real behaviour (2026-07-11); **no frogs** (D31, July 2026). New species
-  are welcome as long as each is explained, keeps the balance, and doesn't need a whole new zone (2026-09-26).
+- **Bugs, fish and people survive**; birds, amphibians and reptiles died out too, so no frogs (2026-09-27; D31).
+- **Every creature is a real species** with real behaviour (2026-07-11). New species are welcome as long as each is
+  explained, keeps the balance, and doesn't need a whole new zone (2026-09-26).
 - **No storyline; the player sets their own goals.** Progress comes from gear and preparation and is gated by cost;
   tutorials unlock as the player goes, and the Ecology tab has its own small tasks (2026-09-26).
 - **The food chain is the progression**, and bugs are livestock — sold as meat or kept for their product
@@ -64,6 +70,7 @@ it names another source.
 - **Hosting works like Terraria** — host and play, join a friend, or run a dedicated server — and each world keeps
   its own characters, as in Necesse (2026-09-26).
 - **Empty zones stay frozen** and catch up when a player first returns (2026-09-26).
+- **No seasons** (January 2026; confirmed 2026-09-27).
 - **All art is made with gpt-image-2 and pixel-snapped**, 32 art pixels to a grid square, and regenerated after this
   document is signed off, in test batches (2026-09-26).
 - From the January 2026 design document: **no stamina**, **no disasters on a timer and no forced invasions**,
@@ -73,123 +80,130 @@ it names another source.
 ## The game, activity by activity
 
 ### 0 · What belongs in the world
-The premise draws the line: bugs, the plants they live on, and people. Everything else has to earn its place.
-
-**Decided** — the premise, giant bugs, real species only, no frogs, and new species welcome on the three conditions
-above (see the frame).
-
-**Built today** — the opening text plays before the title screen. A few things in the game data don't fit the
-premise: a cow skull, a cat statue, a hay bale, a birdbath, and bones and bone piles.
-
-**Designed, not built** — more of the same in the old idea lists: cave bats and bat guano, milk and cheese, horseshoes,
-livestock and manure, a rabbit's-foot charm, a pack mule.
-
-**Still open** (→ §00) — which animals besides bugs survive (birds? fish — fishing implies them?); what becomes of the
-mammal-era things; the December 2025 idea of meteors bringing an infection that turns bugs into "zombie bugs", which
-nothing written since mentions; how the game should feel.
-
-### 1 · Catching and farming bugs — the heart of the game
-Any bug can be farmed if it can be held. The player catches bugs with a net sized to the bug — most need calming or
-weakening first — keeps them in pens built from fences and walls, breeds them at nurseries and host plants, and
-harvests either the bug itself (sold as meat) or its product at a station: honey from bees today; silk, honeydew,
-venom and more on paper. The food chain is the ladder: flies first, fed by the fruit that falls and rots under fruit
-trees and by compost; then wasps, kept alive on a surplus of flies; then bigger and rarer bugs. The first automatic
-catcher is the **autonet** — slow, and it stops when full; other slow catchers in the same spirit are allowed, and
-the owner has named automatic catchers and bug zappers for the powered age.
+Bugs, fish and people made it through. The plague took the mammals, and birds, amphibians and reptiles died out too.
+Everything in the world has to fit that.
 
 **Decided**
-- Killing a bug drops only its carcass (D18). The owner's bug map (2026-06-28): carcasses of beetles, centipedes,
-  millipedes and wasps give chitin; flies and butterflies give leather; ants give formic acid (2026-07-07). (The game
-  also makes chitin from ants.)
-- **Calming is one general system** — most bugs can be calmed (D31, the owner's correction).
+- **Bugs, fish and people survive; birds, amphibians and reptiles died out too** (2026-09-27). No frogs (D31)
+  follows from this.
+- **Nothing from the mammal world**: the mammal things that slipped into the old idea lists — cave bats and bat
+  guano, milk and cheese, horseshoes, livestock and manure, a rabbit's-foot charm, a pack mule — are dropped
+  (2026-09-27).
+- **No meteors**: the December 2025 idea of a meteor-borne infection is dropped (2026-09-27).
+- The premise, giant bugs, real species, and new species on three conditions (see the frame).
+
+**In the prototype now** — a placeholder opening text; a few items in the data that don't fit the premise (a cow
+skull, a cat statue, a hay bale, a birdbath, bones and bone piles) — §00 decides whether any stay as relics of the
+old world or go.
+
+**Still open** (→ §00) — what counts as a "bug" (Q2 below); how the game should feel.
+
+### 1 · Catching and farming bugs — the heart of the game
+Any bug can be farmed if it can be held. The player catches bugs, keeps them in pens built from fences and walls,
+breeds them at nurseries and host plants, and harvests either the bug itself or its product at a station — honey
+from bees today; silk, venom and more on paper. Food chains make several ladders, some short and some tall — flies
+feeding wasps is one of them, not the bottom rung of a single ladder. Bugs are caught three ways: with hand nets, in
+catchers placed on the ground that bugs fly or walk into, and by the autonet, a machine that draws in bugs from the area
+just ahead of it. Placed catchers and the autonet take bugs out of the world.
+
+**Decided**
+- Killing a bug drops only its carcass (D18); the bug extractor turns carcasses into materials — the owner's bug map
+  (2026-06-28) gives chitin from beetles, centipedes, millipedes and wasps, and leather from flies and butterflies;
+  ants give formic acid (2026-07-07).
+- **Calming is one system, set bug by bug** (2026-09-27): many bugs can't be calmed at all, and what calms one (smoke
+  calms bees) may irritate another. (The prototype's "most bugs can be calmed" came from an older note and is
+  replaced.)
+- **Catching** (2026-09-27): a small and a large hand net, each good only up to a certain size of bug; bigger bugs are
+  taken by catchers placed on the ground; early placed nets that bugs fly into hold only a few; the autonet draws
+  in bugs from the area just ahead of it and holds more. How these work in detail is proposal P3.
+- **Pens hold every bug — no bug flies over a fence or wall** (2026-09-27; for wasps since 2026-06-18). Each species
+  has up to three tiers, stronger and often bigger, and a fence material holds only the bugs it is strong enough for;
+  some bugs can't damage some fence types at all. Strengths are tuned with the ecology.
+- **Fencing is overhauled**: posts that connect, as in other games, instead of one repeated fence block
+  (2026-09-27). How is proposal P5.
+- **A live bug and a dead one are worth the same**; processing a carcass may pay more or less (2026-09-27). Coins also
+  come from other things than bugs.
+- **Compost is sold and is also a fertiliser source** (2026-09-27).
+- **Butterflies** (2026-09-27): the nursery holds the eggs and the young caterpillars; caterpillars go out into the
+  world, grow, form a chrysalis and emerge as butterflies. How they grow is proposal P7.
 - The flies breeding in a compost bin keep their pupa stage (2026-07-17).
+- **Anything the game has but can't be obtained** — the bug extractor, the large net and the rest — gets a way to
+  obtain it at the right point in the game (2026-09-27).
 
-**Built today**
-- Nets: bare hands and the small net take small bugs (flies, butterflies, beetles, millipedes, ants, bees,
-  fireflies). Wasps, hornets and dragonflies need the large net — **which no shop sells and no recipe makes**, so in
-  normal play they can't be caught. **Centipedes can't be caught at all**: they are marked for traps, and no trap
-  exists.
-- Calming: smoke or calm spray raises a bug's calm, and one threshold decides both whether it attacks and whether it
-  can be caught; bees must be calmed first. Caught bugs go into their own 20-slot bag; dropping them back into the
-  world joins a nearby swarm or starts a new one.
-- Pens: fences, walls and gates hold walking bugs **and wasps and hornets** (the owner had wasps flying over fences
-  corrected in June 2026); bees, dragonflies and fireflies fly over them. Centipedes chew through wooden fences;
-  stone holds them.
-- Breeding is visible: eggs, larvae and pupae develop over about a game hour, two young per hatch. The compost bin,
-  milkweed, wasp nest and beehive all open one panel, where the player can take eggs, larvae and pupae out as items
-  or put them back.
-- The compost bin turns scraps into sellable compost while flies breed inside it. Carcasses feed the beetles, the
-  beetles make compost, and compost feeds the flies — a closed loop.
-- Beekeeping works end to end at Maren's farm in the Bee Meadow: bees come only from hives (wild ones, or hive boxes
-  a wild colony moves into), and each honeycomb becomes honey or beeswax, the player's choice (D31 — written into the
-  decision log as my choice, not as the owner's ruling). The four beehives in the rebuilt village never come alive —
-  no bee colony lives there.
-- The Bug Dealer buys live bugs at each species' price (1 to 75 coins) and carcasses for a coin each. A new player's
-  first coins come from selling a caught bug.
-- The Bug Extractor, which turns carcasses into those materials, stands only in a test zone, so in normal play
-  carcasses can only be sold or composted. The autonet exists as an object but doesn't catch anything yet.
+**In the prototype now** — nets (bare hands and the small net take small bugs; wasps, hornets and dragonflies need
+the large net, which can't be bought or made; centipedes can't be caught); one calming threshold with placeholder
+values; pens that hold walking bugs and wasps; breeding you can see — eggs, larvae and pupae, with untuned timings;
+the compost bin making sellable compost while flies breed in it; beekeeping at Maren's farm, while the four
+beehives in the rebuilt village never come alive; the Bug Dealer buying bugs at placeholder prices; the bug
+extractor only in a test zone; the autonet only storing things. Three prototype rules are **not** the design and
+go: bees, dragonflies and fireflies flying over fences; wooden fences chewable by centipedes with stone as the
+cure-all; carrion beetles making compost.
 
-**Designed, not built** — traps and bait; bug research with the magnifying glass; specimen collecting; keeping ants;
-aphids farmed for honeydew; wasps used as pest control; roofed pens for flying bugs; NPC workers who mend fences and
-calm escaped bugs (December 2025 and January 2026; since then only in a June 2026 idea list).
+**Designed, not built** — bug research with the magnifying glass (wanted — P8); aphids (small ones); specimen
+collecting; keeping ants; traps and bait (not decided — P4 suggests a way); villagers mending fences (P6).
+(Two old items are gone: using wasps as pest control, since wasps already eat flies, and roofed pens for flying
+bugs, since no bug flies over.)
 
-**Still open** (→ §05) — whether butterfly young stay on the milkweed through every stage (the backlog recorded that
-as the owner's call on 2026-07-16; a design written three hours later says the caterpillar wanders off to pupate,
-deferred); whether a caught bug sells for more alive or as meat; which bugs make which products; how strong each pen
-material is (three different ladders on paper); whether NPC workers are still wanted.
+**Still open** (→ §05) — the tiers and fence strengths themselves (tuning); which bugs give which materials beyond
+the lines the materials catalogue already plans (chitin, silk, venom, glow and wing-scale lines — §10 checks the
+gaps).
 
 ### 2 · The bugs themselves
 **Decided**
-- Every bug family gets simpler and more advanced species — most have three, some two or one; wasps and hornets
-  about two each; bees three, including a killer bee (owner direction, August 2026).
-- Two ant species live in different zones — fire ants and black ants (August 2026).
-- Real species with real behaviour (2026-07-11), so the invented names in the game — soldier wasp, giant hornet —
-  are due a renaming pass; no frogs (D31); spiders live only in the lower underground (D21).
+- **Real species with real behaviour** (2026-07-11): the game teaches a little ecology and biology (2026-09-27).
+  The prototype's invented names (the soldier wasp, the giant hornet and others) are replaced by real species.
+- **Every bug is unfinished**, including the ones already worked on: each needs more passes for behaviour, combat
+  and ecology tuning (2026-09-27).
+- **Tiers belong to a species, not a rule**: some bugs have one form, some two, none more than three — aphids have
+  one (2026-09-27).
+- **Two ant species, black ants and fire ants**, in different zones, so no more ant zones are needed (August 2026;
+  2026-09-27). The other ant species in the zone designs — garden, harvester, army and bullet ants — go.
+- **Mini-bosses**: yes — set off by conditions or simply placed in the world (2026-09-27).
+- Spiders live only in the lower underground (D21).
 
-**Built today** — fifteen species: common fly, meadow butterfly, honeybee, wasp, soldier wasp, giant hornet, carrion
-beetle, garden centipede, tiger centipede, giant centipede, millipede, worker ant, scout ant, firefly and blue
+**In the prototype now** — fifteen species: common fly, meadow butterfly, honeybee, wasp, soldier wasp, giant hornet,
+carrion beetle, garden centipede, tiger centipede, giant centipede, millipede, worker ant, scout ant, firefly and
 dragonfly. Flies flee, butterflies are curious, bees are gentle until provoked, wasps and hornets hunt and dive,
-centipedes hunt in packs and lunge, fireflies glow at night and dragonflies hunt wasps.
+fireflies blink at night. Centipedes are grouped only to keep network traffic down; real centipedes hunt alone, so
+they should spread out rather than hunt as packs (2026-09-27). The lighting as a whole is a prototype.
 
-**Designed, not built** — about 84 species across the seventeen zone sheets, with about a dozen mini-bosses; each
-family with easy, medium and elite members; spiders and webs, scorpions, mosquitoes, moths, mayflies, cicadas,
-glowworms and aphids among them.
+**Designed** — the zone sheets name 84 species (98 rows across 17 zones, some repeated), including about 16
+mini-bosses — more than the owner expected. They include invented names, the extra ant species, and animals that
+aren't insects; most zones aren't designed yet, so the list is a starting point to prune, not a plan.
 
-**Still open** (→ §03) — the full list: which species, in which zones, in which order; how the two ant species fit
-the designed ant rosters (the Deadly Ants' army, fire and bullet ants) and the worker and scout ants in the game.
+**Still open** (→ §03) — the full list, zone by zone, as the zones are designed; what counts as a bug (Q2).
 
 ### 3 · The living ecosystem and the Ecologist
-Everything eats, breeds, ages and dies, and the player can see why numbers rise and fall and act on it — plant a host
-plant, remove a predator, leave fruit to rot. Populations are held in a living balance by food, by predators that get
-full, and by old age, with a hidden balancing system stepping in only at the extremes: it re-seeds a species that is
-nearly gone, thins one that is exploding, and can even hold back the rain. The **Ecologist** is the one character who
-explains the ecology and asks for help when something is really out of balance; the **magnifying glass** reveals what
-a bug eats; an **Ecology tab** collects what the player has learned.
+Everything eats, breeds, ages and dies, and the player can see why numbers rise and fall and act on it. Many levers
+hold populations in a living balance — food, breeding sites and host plants, predators, lifespans, habitat, weather,
+fences and everything the player does — with a hidden balancing system stepping in only at the extremes. The
+**Ecologist** lives in a house east of the village. The Ecology tab's button starts greyed out and says to find
+him; meeting him unlocks the tab, but a zone's information only appears once the player places a bug monitoring
+station there — his first quest. His quests — rebalancing a population, placing stations and more — are the tab's
+tasks; there is one system, not two. The **magnifying glass** works like research in Apico: looking at enough of a
+species unlocks facts about it — what helps it breed, what it dislikes, what it eats and more — shown on that bug's
+own information page. The Ecology tab holds the population charts.
 
 **Decided**
-- Numbers should rise and fall around a target, limited by food, predators and age rather than hard caps (June–July
-  2026).
-- The living ecosystem is the heart of the game, and every player sees it the same way; the Ecologist and the Ecology
-  tab let players read and steer it, and ecology stations open the tab area by area (the approved roadmap,
-  2026-09-26). The tab has its own small tasks (2026-09-26).
-- Every bug is its own creature, behaving the same on every player's screen (2026-07-13); the model is one wasp
-  hunting one fly, killing it and eating the corpse — sometimes leaving it behind.
+- The ecology works as designed and gets more passes as tuning and new behaviours arrive (2026-09-27).
+- The Ecologist, the tab, the monitoring station and the quests work as described above (2026-09-27).
+- Research with the magnifying glass fills in the bug's information page, not the Ecology tab (2026-09-27).
+- Every bug is its own creature, behaving the same on every player's screen (2026-07-13), and each species feeds its
+  own way: a wasp hunts a fly and eats it, sometimes leaving the corpse; ants gather food; spiders hunt, or wait in
+  webs.
+- Quest rewards: money, and sometimes gear or recipes for big tasks such as taming a new area (2026-09-27).
+- **No seasons** (January 2026; confirmed 2026-09-27).
 
-**Built today**
-- The food web runs: flies breed on rotting fruit and compost; butterflies drink nectar and breed on milkweed; wasps
-  hunt single flies and eat them; bees gather nectar; centipedes hunt; millipedes and beetles eat litter and
-  carcasses.
-- Natural death leaves carcasses; starvation thins a crowd; the balancing system re-seeds and thins, and can call a
-  drought. Each zone also has a hard ceiling per species (1,500 flies in the rebuilt village, for example).
-- **Not built:** the Ecology tab (only a developer graph exists), the Ecologist's tasks and the magnifying glass. The
-  village Ecologist today sells six decoration recipes.
+**In the prototype now** — the food web runs; the balancing system re-seeds and thins, and can hold back the rain;
+each zone also has a hard ceiling per species (1,500 flies in the rebuilt village, for example); there is no Ecology
+tab (only a developer graph), and the village Ecologist sells six decoration recipes.
 
-**Designed, not built** — crop pests (aphids, caterpillars, locusts) with ladybugs as the answer; pollination raising
-yields; frozen zones catching up on the first visit.
+**Designed, not built** — crop pests (aphids, caterpillars, locusts), each with its own natural enemies — ladybugs
+eat aphids; pollination raising yields.
 
-**Still open** (→ §04) — what the Ecologist's tasks are and what they reward; whether a left-behind corpse feeds
-other bugs; how far the per-bug model goes, part of the ecology or all of it (the owner's call). Seasons are asked
-under 17, Time and weather.
+**Still open** (→ §04) — the quest list and rewards (P9 suggests some); the tab's design (P9); whether a left-behind
+corpse feeds other bugs; how far the per-bug model goes, part of the ecology or all of it (the owner's call); fewer
+fruit on the ground, with another lever raised instead (P10).
 
 ### 4 · Farming and gardening
 Crops in tilled plots, watered by hand or by rain; fruit trees whose fallen fruit feeds the flies; later
@@ -202,14 +216,15 @@ materials cost.
 - One harvest rule for every plant: a harvest always gives the plant's resource and sometimes a seed, and plants
   regrow from seed (D24). Crops already work this way; flowers, bushes, trees and milkweed don't yet.
 - A harvest gives a share of what is there; the rest is lost (August 2026).
-- Fertiliser is deferred (July 2026).
+- Compost is a fertiliser source (2026-09-27); what fertiliser does is deferred (July 2026).
 
-**Built today**
-- Hoe a plot, plant a seed, water it (a can holds 40 uses and refills at water). Crops grow with watering, at most
-  twice a day, never wilt, and drop a seed now and then. Seven crops: tomato and eggplant give several harvests; corn,
-  wheat, carrot, pumpkin and cabbage one. Rain waters everything on about three days in ten.
-- Fruit trees — apple, orange, plum and cherry — fruit after three days of water; ripe fruit falls in the evening,
-  rots in about two days into fly food, and vanishes after six days if nothing eats it. Fruit is picked up by hand.
+**In the prototype now**
+- Hoe a plot, plant a seed, water it with a watering can (refilled at water). Crops grow as they are watered, never
+  wilt, and sometimes drop a seed. Seven crops — tomato, eggplant, corn, wheat, carrot, pumpkin and cabbage; tomato
+  and eggplant give several harvests. Rain waters everything when it falls.
+- Fruit trees — apple, orange, plum and cherry — fruit after a few days of water; ripe fruit falls in the evening and
+  rots into fly food, which disappears if nothing eats it. There is too much fruit on the ground (to be lowered — see
+  part 3). Fruit is picked up by hand.
 - **Not built:** sprinklers, fertiliser, crop pests, pollination.
 
 **Still open** (→ §06) — what fertiliser does (the January 2026 farming design says more yield, not faster growth);
@@ -218,7 +233,8 @@ build it wait for a pick; how many more crops, and where each first appears.
 
 ### 5 · Mining and the underground
 A block world. The surface has dirt and stone to dig; the underground is solid rock the player carves through; ore
-sits in veins that grow richer and rarer with depth; the dark needs light; and danger is meant to guard the best ore.
+sits in veins that grow richer and rarer with depth; the dark needs light; and the mining ideas have danger guarding
+the best ore.
 
 **Decided**
 - **It is a block world**: a player facing sideways digs the block beside them, not the ground below (2026-08-04).
@@ -231,7 +247,7 @@ sits in veins that grow richer and rarer with depth; the dark needs light; and d
 - Mining is a main loop, slow and exploratory (D13). Ore is refined in steps — crushed, washed, then smelted — the
   owner's choice over a shorter chain written into D26 (2026-06-28).
 
-**Built today**
+**In the prototype now**
 - Ore is gated by pickaxe: coal, copper and tin with a wooden pick, up to diamond with a steel one; tools come in
   eight tiers from wood to platinum.
 - The recipes for six metals exist — crusher, sluice, furnace with coal, bar; tin goes into bronze; gem blocks drop
@@ -261,7 +277,7 @@ the rest are bought or found, and most of them gather in the two towns and the f
   2026).
 - Making dyes and dyeing cloth are separate stations (2026-06-28) — not built: the dye vat still makes the dyes.
 
-**Built today** — 185 recipes on 15 stations. 105 are known from the start; 80 are bought from shopkeepers, singly or
+**In the prototype now** — 185 recipes on 15 stations. 105 are known from the start; 80 are bought from shopkeepers, singly or
 as recipe books, and each character remembers them. The slow stations run two jobs at once; ingredients leave the
 bag when a job starts, and results collect in the station's output slots. Three of the fifteen stations — the rock
 crusher, bug extractor and gem cutter — stand only in a test zone; twelve stand in the game, and eleven have
@@ -292,7 +308,7 @@ so variety pays. Bugs can't appear on floors, so paving keeps them away.
 - Decorative outfits are approved as a class, adding to farm output or happiness the way furniture does; making them
   is on hold (2026-08-07).
 
-**Built today** — about 280 placeable things, placed from the hotbar with a green or red preview; the shovel places
+**In the prototype now** — about 280 placeable things, placed from the hotbar with a green or red preview; the shovel places
 ground in thirteen shapes, and a tile made of two materials costs both; it also digs a cell down to bare soil (the
 ground is never a hole). A bed sets where the player wakes; containers have filters (a wardrobe takes clothes, a
 fridge food).
@@ -320,11 +336,12 @@ ones such as the Ant Colony's queen.
 - The Ant Colony's queen is a mini-boss for the middle of the game (D3); a scripted, game-style encounter is
   acceptable (2026-07-06).
 
-**Built today**
-- Ten hearts. A sting takes one to three hearts, a centipede bite two to four. Every attack flashes and hisses 0.4 to
-  0.9 seconds before it lands; a dodge dash gives half a second of safety.
+**In the prototype now**
+- Hearts for health; stings and bites take some away. Every attack gives a warning — a flash and a hiss — before it
+  lands, and a dodge dash gives a moment of safety.
 - Sword and spear with two moves each, and an axe jab. Soldier wasps, giant hornets and tiger and giant centipedes
-  are the tougher tiers. Wasp nests raid; centipedes hunt in packs.
+  are the tougher tiers (their names are placeholders — see part 2). Wasp nests raid; centipedes lunge after a
+  warning hiss.
 - **Fainting costs nothing**: the player wakes at the zone's start point or their bed, at full health, with
   everything they carried.
 - **Not built:** armour protection (armour is looks only, except the bee suit, which stops stings); night danger (no
@@ -335,9 +352,10 @@ ones such as the Ant Colony's queen.
 costs nothing; which enemies come next (spiders, scorpions, warrior ants) and how bosses work.
 
 ### 9 · Gear: outfits, armour and accessories
-An outfit is chosen for a trip, not swapped per action. Each gives defence plus one main bonus and one or two small
-ones; each role — tank, attack, agility, stealth, mining, fishing, farming, bug-catching, beekeeping — has its own
-best set, with a few hybrids. Legendary sets hide behind secrets; decorative outfits boost the farm. About 43 sets are
+An outfit is chosen for a trip, not swapped per action, and each role — tank, attack, agility, stealth, mining,
+fishing, farming, bug-catching, beekeeping — has its own best set, with a few hybrids. The armour notes suggest
+each set gives some defence plus one main bonus and one or two small ones (the owner's example: a set that raises
+boat speed and fishing speed). Legendary sets hide behind secrets; decorative outfits boost the farm. About 43 sets are
 planned. (The armour notes also propose light as a role, and sets above steel as keys to a zone's hazard — acid,
 venom, water, dark, heat.)
 
@@ -350,7 +368,7 @@ venom, water, dark, heat.)
 - Crowns are kept for higher-value armour (2026-08-15). Trinkets and shields are not for now (August 2026).
   Decorative clothing is on hold (2026-08-07).
 
-**Built today** — eight equipment slots (head, body, arms, legs, feet, two accessories, backpack). New characters
+**In the prototype now** — eight equipment slots (head, body, arms, legs, feet, two accessories, backpack). New characters
 wear leather. Armour shows on other players but does nothing except the bee suit (stops stings) and a backpack (more
 slots — though none can be had yet); the two accessories in the game, a bee charm and a lucky clover, do nothing.
 None of the new outfit art is in the game yet: it still draws the old small layered farmer.
@@ -370,7 +388,7 @@ nets small and large; a saw for big trees; a harvest sickle; smokers in three ti
 traps and no harpoons; **bugs are the light source** — firefly and glowworm lanterns replace oil lamps; the
 magnifying glass from the start; a grappling hook later; a bug vacuum and a headlamp; bows and cast nets set aside.
 
-**Built today** — pickaxe, axe, shovel and hoe in eight tiers from wood to platinum, the scythe in seven; saw and
+**In the prototype now** — pickaxe, axe, shovel and hoe in eight tiers from wood to platinum, the scythe in seven; saw and
 harvest sickle; sword and spear in eight tiers; both nets; watering cans; torch; flashlight; smoker; calm spray; the
 magnifying glass, which does nothing yet and isn't in the starting kit (the general store sells it). Durability
 exists in the data but isn't used.
@@ -392,7 +410,7 @@ a friend means holding the potion in the off hand.
 **Decided** — cooking is its own system and was set aside for later (D19); potions and alchemy likewise, with venom
 and poison staying real (D16); potions are not magic and can be given to other players (2026-08-06).
 
-**Built today** — food items exist and sell, but eating does nothing. No meals exist (the planned starter stew isn't
+**In the prototype now** — food items exist and sell, but eating does nothing. No meals exist (the planned starter stew isn't
 in the game), the cooking stations have no recipes, and health comes back only by slowly regenerating.
 
 **Designed** — about 78 potions and 47 meals in the economy catalogue; eating fruit to heal; fridges that stop food
@@ -410,7 +428,7 @@ fishing arrives with the Underground River and its blind cave fish.
 playtest rule of 2026-06-11); water divides the map — waders for the marsh (D10) and deep water walling off islands
 (the swamp design).
 
-**Built today** — nothing to play. Docks and fishing props are decoration; the Fisherman (rods, nets, a boat for 400
+**In the prototype now** — nothing to play. Docks and fishing props are decoration; the Fisherman (rods, nets, a boat for 400
 coins) exists in the data but stands in no zone. Every water tile stops players, and bugs fly over water.
 
 **Planned** — fishing arrives with the Underground River (the approved roadmap; it replaces D5, which in June 2026
@@ -434,7 +452,7 @@ Mayor sells land.
   can only be bought or built after the player reaches it (2026-06-27).
 - A myrmecologist — an ant specialist — sells from a wooden building at the Ant Tunnels' entrance (2026-07-07).
 
-**Built today** — eight shopkeepers in the rebuilt village (general store, Bug Dealer, blacksmith, carpenter,
+**In the prototype now** — eight shopkeepers in the rebuilt village (general store, Bug Dealer, blacksmith, carpenter,
 weaver, stonemason, modern wares, Ecologist) and Maren in the Bee Meadow; the Mayor is there too, and talks, but
 sells nothing yet. Players start with no coins. Shops sell items, single recipes and recipe books; six shopkeepers
 buy things (the general store, Bug Dealer, blacksmith, carpenter and weaver, and Maren); selling uses a basket;
@@ -470,7 +488,7 @@ standalone rocks; wild zones are wooded by default, with clearings; zone borders
 above, so caves show no ceilings; the village gets secrets (2026-09-26); a small underground fortress hides a
 legendary set in a locked chest (2026-08-06).
 
-**Built today** — five playable zones joined by walking off their edges: the rebuilt village, the Bee Meadow (sea,
+**In the prototype now** — five playable zones joined by walking off their edges: the rebuilt village, the Bee Meadow (sea,
 coves, Maren's farm, a fishing hamlet), Underground Passages and the Ant Tunnels, plus the old demo village — **which
 is where new players start, although it has no shops**. The Ant Tunnels were built after the owner went through their
 design line by line (2026-07-07); the Ant Colony and the Centipede Cavern are designed but not built. About sixteen
@@ -493,7 +511,7 @@ ones.
   deletes content (D4, June 2026).
 - No rule is forced on every zone (2026-09-26).
 
-**Built today** — tool tiers gate ores; 80 recipes are bought from shopkeepers; better bars and tools cost coins;
+**In the prototype now** — tool tiers gate ores; 80 recipes are bought from shopkeepers; better bars and tools cost coins;
 backpacks would add bag slots (none can be had yet). No experience points and no skill levels.
 
 **Designed** — about five tiers across three phases, each a complete chapter; iron a few sessions in; each new tool
@@ -513,7 +531,7 @@ rule stays the same: machines ease chores, and they never play for the player.
 details are mine to design (2026-09-26); the electronics are bought, never player-made (D1, D26); the village windmill
 waits for the western town (2026-06-27).
 
-**Built today** — nothing; the windmill, electric fence and heater exist as decoration only.
+**In the prototype now** — nothing; the windmill, electric fence and heater exist as decoration only.
 
 **Designed** — electricity as a wealth-gated expansion bought from a shop (the economy catalogues).
 
@@ -521,17 +539,16 @@ waits for the western town (2026-06-27).
 later ideas design conveyors and sorters).
 
 ### 17 · Time, weather and light
-**Decided** — the underground is pitch dark (2026-07-08); empty zones stay frozen and catch up on the first visit
-(2026-09-26).
+**Decided** — no seasons (January 2026; confirmed 2026-09-27); the underground is pitch dark (2026-07-08); empty
+zones stay frozen and catch up on the first visit (2026-09-26).
 
-**Built today** — a 14-minute day and a clock; golden dusk and dawn; nights dark enough to need a torch or lamp; rain on
-about three days in ten, with thunder; fruit falls in the evening. A bed only sets where the player wakes. Each zone
+**In the prototype now** — a 14-minute day and a clock; golden dusk and dawn; nights dark enough to need a torch or lamp; rain on
+some days, with thunder; fruit falls in the evening. A bed only sets where the player wakes. Each zone
 keeps its own clock and stops when it is empty, so two zones can show different times of day.
 
 **Designed** — one clock for the whole world (the roadmap).
 
-**Still open** (→ §18) — seasons ("no seasons" in January 2026, since reopened); sleeping to skip the night; the
-droughts the owner wants to design.
+**Still open** (→ §18) — sleeping to skip the night; the droughts the owner wants to design.
 
 ### 18 · Playing together
 **Decided** (2026-09-26) — Terraria-style hosting; our own server is just another server, and each server holds as
@@ -539,7 +556,7 @@ many players as is measured to work; players join by typing an address, with Epi
 later; each world keeps its own characters, with a setting that lets a host admit characters from other worlds; a
 lawless shared world and safe private plots. Everything in the world persists (D31).
 
-**Built today** — each zone is shared, every player sees the same bugs, and players who join late see everything as
+**In the prototype now** — each zone is shared, every player sees the same bugs, and players who join late see everything as
 it is. An account holds up to eight characters, usable in any world; zones save every ten minutes; the game's server
 decides damage, catches, inventories and prices.
 
@@ -554,7 +571,7 @@ whether anything in the shared world should go faster for one player than for an
 **Decided** — examining an item or a recipe shows what it does and its real biology; tutorials unlock as the player
 goes (2026-09-26). The roadmap plans about 650 short texts for it.
 
-**Built today** — a hotbar and an inventory at the screen edges while the world keeps running; one panel for crafting,
+**In the prototype now** — a hotbar and an inventory at the screen edges while the world keeps running; one panel for crafting,
 storage, compost, nurseries and hives; a shop basket; hearts; the clock; a bug card; a message for most refused
 actions (nursery deposits still fail silently); character select, the opening text and the title screen. Hovering
 shows only a name — 2 of the game's 654 things have a description.
@@ -572,7 +589,7 @@ pixel-perfect camera and one colour grade. Necesse is the target for the grass (
 style: seen from above at an angle, lit from the top left, chunky pixel art with three to five shades per material,
 and every sprite facing the camera.
 
-**Built today** — about 775 images from the older route, not pixel-snapped; four approved outfits made the new way but
+**In the prototype now** — about 775 images from the older route, not pixel-snapped; four approved outfits made the new way but
 not yet in the game; dark nights with lamps and torches, animated water, swaying plants, dust and shadows; the grass
 overhaul (July 2026). The bloom, the pixel-perfect camera and the colour grade are not built — the screen-wide
 effects are switched off. Sound is eight simple effects generated in code (hit, kill, sting, faint, thunder, hiss,
@@ -583,7 +600,7 @@ sits in the repo, unused.
 plan.
 
 ## As built
-**What a new player can do today.** Make a character and watch the opening; arrive wearing leather with wooden tools,
+**What a new player can do in the prototype now.** Make a character and watch the opening; arrive wearing leather with wooden tools,
 a small net, a watering can, three kinds of seeds, torches, a flashlight, fencing for a pen and no money; catch flies,
 butterflies and other small bugs; breed bugs in a compost bin; grow seven crops and pick fruit; mine ore (though not
 refine it); buy copper to steel bars and craft at eleven working stations; buy from eight shopkeepers and sell to
@@ -610,7 +627,10 @@ travel fast, read an Ecology tab, or get anything from armour except the bee sui
     cutter drops a rock crusher.
 11. At 88 places, walking off one zone's edge would put the player inside rock or a wall on the other side (35 of them
     boxed in); the fix is decided — land on the nearest open ground.
-12. Each zone has a hard ceiling per species, while the decided limits are food, predators and age.
+12. Each zone has a hard ceiling per species, while the design uses the ecology's many levers instead.
+13. Prototype rules that were never the design: bees, dragonflies and fireflies fly over fences; wooden fences are
+    chewable by centipedes and stone stops them; carrion beetles make compost; centipedes move as packs; "most bugs
+    can be calmed"; invented species names (the soldier wasp, the giant hornet).
 
 Some documents are also plainly out of date against the game — recipe counts, net sizes, hive types, the lighting
 document, rotting fruit, the zone scale. I'll correct each as its section is rebuilt.
@@ -620,7 +640,10 @@ document, rotting fruit, the zone scale. I'll correct each as its section is reb
 The older documents get a note saying so:
 - one seamless world (December 2025) → separate zones joined at their edges (the grid the owner's June rulings and the
   approved roadmap build on);
-- wasps flying over fences (January 2026) → fences hold wasps (the owner's correction, 2026-06-18);
+- bugs flying over fences (January 2026) → no bug flies over a fence or wall (the owner's corrections, 2026-06-18
+  for wasps and 2026-09-27 for all);
+- butterfly caterpillars staying on the milkweed (the backlog, 2026-07-16) → caterpillars go out into the world to
+  grow and pupate (2026-09-27);
 - no source for leather (the June 2026 crafting design) → leather from processing bugs (D11; the owner's bug map,
   2026-06-28);
 - ore going straight from the sluice to a bar (D26) → crushed, washed, then smelted (the owner's choice, 2026-06-28);
@@ -630,8 +653,7 @@ The older documents get a note saying so:
 - building only the village and the first mine (D17, June 2026) and fishing left out of the first release (D5) → all
   twenty zones, ring by ring, with fishing arriving with the Underground River (the approved roadmap, 2026-09-26).
 
-Four disagreements are **not** settled here:
-- whether butterfly young stay on the milkweed — the later text isn't clearly the owner's (§05);
+Three disagreements are **not** settled here:
 - how outfits are worn — drawing them whole is the owner's tentative choice, but it doesn't decide whether they are
   equipped as one outfit or as pieces (§08);
 - the armour ladder — the owner's August cuts (bronze, silver, tin and stone out, wood in) would replace D11's nine
@@ -651,12 +673,183 @@ still allows costumes like it — a look, with no powers — and what the robe b
 narrow rulings of the owner's: potions are ordinary items, and the fancy plate is non-magical. Surprise — the wonder
 comes from real biology (the examine texts), not spells.
 
+### P3. Catching: hand nets for the small ones, placed catchers for everything bigger
+Bugs here are giant — even a fly is the size of a cat next to the player — so every catcher is sized to that.
+- **Each species has a size for each of its tiers**, shown on its information page.
+- **Hand nets** (tools you swing): the small net takes the smallest bugs; the large net takes middle-sized ones. No
+  hand net takes anything bigger. A bug that has to be calmed first can only be netted once it is calm.
+- **Placed catchers** (bugs have to come to them; each holds only a few, and you can see what is inside):
+  - **net runs** — netting stretched between posts, put up with the same tool as fences. Flying bugs blunder into
+    them and hang there, like a real interception net. Fine mesh holds the smallest; heavy netting holds big flyers.
+    The prototype already has net posts and fly netting to build on.
+  - **pit traps** for walking bugs — a covered pit you place as an object (the ground itself is never dug into a
+    hole), in sizes up to the biggest walkers.
+  - **cage traps** for the largest bugs — a baited cage with a drop door.
+- **The autonet**: the machine that draws in bugs from the area just ahead of it; it holds more and stops when full.
+- **Lights at night** (the owner's idea, for the powered age): lamps draw night-flying bugs, and nets, automatic
+  catchers or bug zappers placed around them do the catching; a zapper leaves carcasses, not live bugs.
+Every catcher takes bugs out of the world, keeps them alive (except the zapper), and is emptied into the bug bag by
+hand.
+
+**Lenses:** Premise — sized for giant bugs, with no tiny-bug tools (the pooter and the Berlese funnel were rejected
+for that reason). Real biology — interception nets, pit traps and light traps are how bugs are really caught. Economy
+— small capacities and hand-emptying keep the January rule that machines ease chores, never play. **Cost and risk:**
+placed catchers are new objects in the shared bug simulation (every player must see the same bug caught), and each
+size needs art; balancing them against the hand net will take several passes.
+
+### P4. Traps and bait without the silliness
+- **Nothing bigger than the player goes in the backpack.** Small catchers are carried and placed like furniture. Big
+  ones — long net runs, large pits, cages — are put up where they stand from posts, netting and planks, and taking one
+  down gives back those parts, not the whole trap. That is an exception to D22 (placed objects drop themselves) for
+  structures bigger than the player, and it applies to fences too.
+- **Bait sits in a dish beside a catcher** and draws the species that like it from nearby: rotting fruit for flies,
+  a carcass for carrion beetles, something sweet for wasps — though sweet bait draws bees just as well, so beekeepers
+  have to think about where they put it. Which bait works on which bug is something the magnifying glass teaches (P8).
+
+**Lenses:** The owner's worry answered — no trap ten times the player's size in the backpack. Curiosity — finding the
+right bait is a small discovery for each species. **Cost and risk:** building big catchers in place needs the same
+assembly the fence overhaul needs (P5) — worth doing once for both; bait needs an "attraction" source the simulation
+can share, which the prototype has in a simple form (flies are drawn to compost).
+
+### P5. Fences built from posts, and pens that hold some bugs and not others
+- **Building**: place a post; drag to another post along the grid and rails fill the run; pieces join up on their
+  own — straight runs, corners, T-joins, crossings and gates. The simulation still sees fences square by square, so
+  the shared bug simulation doesn't change; only placing and drawing do.
+- **Different bugs damage fences in different ways, and each material resists each way differently**, so no material
+  is best against everything: real wasps scrape wood fibre off fences to make their paper nests; big beetles shove;
+  some bugs never touch a fence. (The prototype's centipede chewing wood goes — real centipedes don't.) Numbers are
+  set when the ecology is tuned.
+- **No bug flies over**, as decided — so a fence also keeps out bees and other pollinators, and a fenced garden needs
+  a way in for them (a gate, a gap, or a plant barrier, P8).
+- **Private plots are safe**: nothing damages a fence on a private plot while its owner is away (the January 2026
+  rule).
+
+**Lenses:** Readability — a pen reads as a pen, a gap as a gap. Real biology — damage comes from what each bug really
+does. Economy — materials become a choice, not a ladder with one answer. **Cost and risk:** the joining pieces need a
+sprite for every shape and material (fewer if posts and rails are drawn separately and combined); the pollinator
+consequence is real and needs a design answer, not an afterthought.
+
+### P6. Village fences mended by villagers, and hired hands later
+- **Players can't damage or take the townspeople's things**; trying shows a short message (as decided). The village's
+  own fences, buildings and goods are marked as the village's when the zone is made — today a placed object records
+  only what it is, where it faces and any sign text, so this mark is new.
+- **Bugs can damage village fences, and villagers mend them, visibly, from the start**: a villager walks to the damaged
+  stretch and works on it until it is whole. This fits the owner's own locked design for workers (December 2025):
+  workers are like stations with a job, not roaming characters — no pathfinding across the map, and the walking is for
+  show.
+- **Hired hands on private plots — my recommendation: not in the first release; afterwards, station-tenders and fence-
+  menders only.** Why: the private plot is where the player's own farm design is the fun; the catchers, the autonet
+  and powered stations already take chores off the player's hands; and workers who gather and farm (the December 2025
+  list had woodcutters and miners) would play the game for the player, against the January rule. The real costs are
+  character art for every kind of worker, the hiring and assigning screens, and balance — not pathfinding, which the
+  locked design already avoids. **This narrows a locked decision of the owner's, so it is his call.** (For reference:
+  Necesse builds its whole game on settlers who work; Stardew keeps them to late-game helpers.)
+
+**Lenses:** Fair start — new players can't strip the village for early money. Pillars — machines and helpers ease
+chores, never play. Picture the moment — a centipede damages the village fence at night; next morning a villager is
+there mending it. **Cost and risk:** village ownership marks on every authored object; villager repair walks need the
+villagers to exist as characters with a little behaviour, which they don't yet (today they stand at their counters).
+
+### P7. Butterflies grow up out in the world
+- **On a milkweed plant** — which is itself the butterfly nursery — eggs hatch into small caterpillars.
+- The caterpillars leave the plant and eat milkweed nearby — real monarch caterpillars eat nothing else — growing
+  through three visible sizes, small to large. (Real ones go through five stages.)
+- A fully grown caterpillar wanders to a sheltered spot the player can see from above — a fence post, a branch, a wall
+  — hangs, and forms a **chrysalis**; later a butterfly comes out. (Real monarchs often wander away from the milkweed
+  to do this.)
+- Players can catch caterpillars with the small net and move a chrysalis to a better spot; wasps hunt caterpillars, as
+  real wasps do. So farming butterflies means planting milkweed and giving caterpillars safe places to change.
+- Moths are the same shape with one difference: silk moths spin a **cocoon** of silk instead of forming a bare
+  chrysalis — and that cocoon is where silk comes from.
+
+**Lenses:** Real biology — the monarch–milkweed bond is one of the best-known facts in ecology, and chrysalis versus
+cocoon is a real, teachable difference. Picture the moment — finding a green chrysalis hanging from your own fence.
+**Cost and risk:** caterpillars and chrysalises are more bugs in the shared simulation, each with its own movement and
+timing; wasps eating them needs the predation to cover them.
+
+### P8. Research with the magnifying glass, and plants as a gentler fence
+- **Research is a list of small tasks per species**, not a head count: look at it, watch it feed, find it breeding,
+  catch one, see it at night — each task done a few times. (Counting "different individuals" can't work: the game
+  renumbers bugs when swarms split or merge. Task lists are how Pokémon Legends: Arceus does research, and Apico
+  rewards looking closely in a similar way.)
+- Progress opens facts in three steps: **what it is** (real name, size, food); **how to keep it** (what helps it
+  breed, what calms or irritates it, which bait draws it); **its secrets** (what it avoids, its predators and prey, how
+  long it lives, a real fact from biology). They appear on the bug's information page, not in the Ecology tab.
+- **Plants that push and pull**: farmers really use "push–pull" planting — some plants drive a pest away while others
+  draw it off somewhere harmless — and "trap crops", planted as bait for a pest so it leaves the real crop alone.
+  Research reveals which plants do what for each species, so a player can steer bugs without walls. Because fences
+  stop every bug, plants become the **selective** barrier — one that keeps a pest out but lets bees through.
+
+**Lenses:** Real biology — push–pull and trap crops are real farming methods, so the game teaches something true (no
+claims of plants that "repel" bugs unless the evidence is real). Curiosity — every species has something to find.
+**Cost and risk:** facts for every species, written and checked — about 650 short texts are already planned for the
+examine view; plant effects need the simulation to share them like any other lever.
+
+### P9. The Ecologist's quests and the Ecology tab
+- **The flow** (as decided): the tab button is greyed out; meeting the Ecologist east of the village unlocks it; his
+  first quest is to place a monitoring station, and that zone's information appears.
+- **A station hands the zone to the player**: where one stands, the hidden balancing system waits before it steps in —
+  first the Ecologist asks the player to fix a problem, and the system acts only if nobody does (the ecology notes
+  already plan this grace period). Without that, it would fix everything first and there would be no quests.
+- **Kinds of quest**:
+  1. **Survey** — place a station in a new zone and research a few of its species.
+  2. **Rebalance** — a species is outside its healthy range; fix it any way you like (plant, move bugs, cull, bring in
+     a predator, clean up food). Paid when the numbers come back and stay back; problems the player caused (by
+     releasing bugs, say) don't start a paid quest.
+  3. **Restore** — bring a species back to a zone it has vanished from.
+  4. **Specimens** — bring a live bug or a chrysalis for his collection; a display in his house fills up.
+  5. **Outbreak** — a pest booms on the farms and he asks for its natural enemy: ladybugs eat aphids.
+  6. **Tag and release** — catch, mark and release a number of one species, then count how many marked ones you catch
+     again: this "mark and recapture" is how real ecologists estimate a population.
+  7. **Tame a new area** — a chain in a new zone ending in the mini-boss that grew out of an imbalance; the reward is
+     gear or a recipe.
+- **Rewards**: coins, recipes (station upgrades, planters, nurseries) and, for the big chains, gear — but never the
+  basic tools a player needs to play; those are always sold or crafted.
+- **Rules**: quests belong to each player; the zone's balance is shared, so everyone benefits from a fixed ecosystem.
+  No outbreak or mini-boss comes to a private plot while its owner is away.
+- **The tab**: for each zone with a station, each species' numbers over time against its healthy range, and that
+  zone's quests with their progress; zones without a station stay blank.
+
+**Lenses:** Player agency — every problem has several solutions (a January 2026 pillar). Real biology — biological
+control, restoration and mark-and-recapture are real ecology. No forced chaos — quests come from real conditions and
+are optional. **Cost and risk:** a quest system is a new system; the rules against farming paid quests need testing;
+multiplayer ownership needs care.
+
+### P10. Ecology tuning — several food chains, fewer fruit, habitat instead of hard caps
+- **Several food chains, some short and some tall**, as decided — for example: rotting fruit and compost → flies →
+  wasps; flowers → bees → hornets; milkweed → caterpillars and butterflies → wasps; carcasses → carrion beetles;
+  leaf litter → millipedes. Each is tuned on its own.
+- **Fewer fruit on the ground** (as asked): first shorten how long uneaten fruit lies before it rots away, then lower
+  the fruit per tree if needed. Wild zones have no compost bins, so the flies' food there has to come from the land
+  itself — carcasses, rot and plants. The prototype's fly data still lists a manure pile among its breeding places
+  (unused), and that goes with everything else from the mammal world.
+- **Habitat instead of hard caps**: each species needs its own kind of place — flowers, rot, water, shade — and a crowd
+  thins where there isn't enough; today's fixed ceilings stay only as a high safety net.
+- **Mini-bosses set off by conditions** (decided) — the natural ones follow real biology: crowded locusts really do
+  change into swarming locusts, and crowded aphids grow wings; other mini-bosses are simply placed.
+
+**Lenses:** The owner's direction — many levers, not hard caps. Readability — the player can see why a population
+moved. Real biology — the locust and aphid changes are real. **Cost and risk:** habitat-based limits are a real change
+to the shared simulation and need the determinism checks; each food chain is its own tuning job.
+
 ## Questions
 ### Q1. Does this describe the game?
 If anything is wrong or missing, say what in the note or the box at the bottom.
 - **A.** Yes — rebuild the sections from it.
 - **B.** Mostly — fix what I noted, then rebuild the sections.
 - **C.** No — something big is wrong or missing; let's go over it first.
+
+### Q2. What counts as a "bug"?
+Bugs, fish and people survived; birds, amphibians and reptiles didn't. Spiders, scorpions, centipedes, millipedes and
+pill bugs are what most people call bugs; the zone designs also include snails, leeches, crayfish and a cave crab
+(the Underground River's mini-boss, with materials and gear built on it).
+- **A.** Every land and freshwater creature without a backbone counts — snails, leeches, crayfish and crabs stay.
+- **B.** Only the creepy-crawlies: insects, spiders, scorpions, centipedes, millipedes and pill bugs. Snails, leeches,
+  crayfish and the cave crab go, with the Underground River materials and gear built on them.
+- **C.** As B, but crayfish and crabs stay as catches in fish traps, like fish; snails and leeches go.
+
+**Recommendation: C.** Everything called a bug on screen reads as a bug, and the Underground River keeps its catches
+as fishing; its cave-crab mini-boss would need a new, real-bug replacement.
 
 ## Sources
 - The design documents — `docs/product/design/` (the December 2025 requirements, the January 2026 design document,
