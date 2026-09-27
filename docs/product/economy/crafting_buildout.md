@@ -1,7 +1,7 @@
 # Crafting buildout — PROPOSAL for sign-off (decision-grounded)
 
 Status: **PROPOSAL** — Andrew reviews before any recipe is
-authored. Scope is bounded by **D17** (build only what the **Village** + **Mining Camp / Underground Passages**
+authored (D26: Claude drafts the recipes, Andrew reviews them). Scope is bounded by **D17** (build only what the **Village** + **Mining Camp / Underground Passages**
 need) and the decision log, NOT by my older `crafting.md` prose. Every line cites its decision.
 
 ## What's OUT of this pass (decision-backlogged — do NOT author)

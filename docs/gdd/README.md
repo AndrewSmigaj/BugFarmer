@@ -61,7 +61,7 @@ After these: one design bible per zone, under `zones/`.
 # §NN · Title
 <!-- gdd: id=NN status=review|draft|final updated=YYYY-MM-DD -->
 ## The experience        one paragraph: what it feels like to play
-## Decided               the owner's words, quoted and dated
+## Decided               the owner's decisions, restated in my words and dated (never quoted)
 ## Current design        what the design documents already say
 ## As built              what exists in the game today (file references)
 ## How it will work      (optional) engineering the owner should see but not answer
