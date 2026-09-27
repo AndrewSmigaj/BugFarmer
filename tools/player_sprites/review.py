@@ -169,7 +169,7 @@ def save(sheet, folder, name):
     return p
 
 
-def pixel_proof(outfit, scale=8, banks=("front", "side", "back"), frame=2):
+def pixel_proof(outfit, scale=8, banks=("front", "side", "back"), frame=2, frames_dir=None):
     """Is this outfit ACTUALLY converted to pixels? One sheet that answers it by eye and by number.
 
     A sprite can come out of the pipeline looking fine at a glance and still not be pixel art — the
@@ -181,6 +181,9 @@ def pixel_proof(outfit, scale=8, banks=("front", "side", "back"), frame=2):
     you are checking in the big version is that every block is the SAME SIZE and has a HARD EDGE. A raw
     render at this magnification is unmistakable: soft gradients, thousands of colours, no grid.
 
+    `frames_dir` points it at an attempt that is not in place yet (`outfits/<name>/tries/<date>-<what>/frames`),
+    so an outfit can be proofed BEFORE it is approved — which is when the proof is needed.
+
     For contrast, measured on the outfits this replaced: `outfits/bronze/frames/front_2.png` is 162x297
     with 12,555 colours, blackant's 185x455 with 11,874. A converted sprite is tens of px and ~1,000.
     """
@@ -188,7 +191,8 @@ def pixel_proof(outfit, scale=8, banks=("front", "side", "back"), frame=2):
 
     panels = []
     for bank in banks:
-        p = os.path.join(os.path.dirname(REVIEWS), "outfits", outfit, "frames", f"{bank}_{frame}.png")
+        d = frames_dir or os.path.join(os.path.dirname(REVIEWS), "outfits", outfit, "frames")
+        p = os.path.join(d, f"{bank}_{frame}.png")
         if not os.path.exists(p):
             continue
         im = Image.open(p).convert("RGBA")

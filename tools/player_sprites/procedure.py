@@ -1,7 +1,7 @@
 """procedure.py — the outfit procedure, exactly as the three approved outfits were made.
 
 Proven on fire-ant, then black-ant and bronze, on 2026-08-15 — owner: *"those are fine, so this approach works"*
-— and made official 2026-08-18. Until 2026-09-27, steps 3-6 existed only as hand-typed prompts and one-off session
+— and made official 2026-08-18. Until 2026-09-26, steps 3-6 existed only as hand-typed prompts and one-off session
 scripts. This file rebuilds them from the run records (`explore/<run>/RECORD.txt`, `RUNS.txt`), and `verify`
 proves, with no image calls, that it reproduces those runs: the prompts word for word, the reference images pixel
 for pixel, and — cutting the approved renders at their grids — every committed frame and hand byte for byte.
@@ -372,12 +372,17 @@ def cmd_cutwalk(a):
     """Step 5, free half: one direction's render -> <view>_1..4.png in the outfit's attempt folder."""
     turn = a.turnaround or f"{a.name}-turnaround"
     run = a.run or f"{a.name}-{a.view}walk"
+    if a.view == "side" and a.faces is None:
+        raise SystemExit("Look at the render and say which way the side frames face: --faces left|right.\n"
+                         "  The frames must END UP facing right (gait's wrist maths assumes +x). All three approved\n"
+                         "  side walks came back facing LEFT and were mirrored; copper's came back facing RIGHT.")
+    mirror = a.view == "side" and a.faces == "left"
     tdir = _try_dir(a.name, turn)
     frames = os.path.join(tdir, "frames")
     pitch, w, h = C.cut_walk(os.path.join(EXPLORE, run, "result.png"), frames, a.view, pitch=a.pitch,
-                             mirror=(a.view == "side"))
+                             mirror=mirror)
     _log_cut(tdir, f"frames/{a.view}_1..4  from explore/{run}/result.png  grid {pitch}"
-                   + ("  mirrored" if a.view == "side" else ""))
+                   + ("  mirrored (drawn facing left)" if mirror else ""))
     ref = _crop(_rgba(os.path.join(EXPLORE, turn, f"view_{a.view}.png")))
     print(f"  {a.view}: 4 frames on a {w}x{h} canvas, grid {pitch}  (the turnaround's {a.view} view is "
           f"{ref.shape[0]} px tall)  -> {_c(frames)}")
@@ -468,7 +473,7 @@ def cmd_hands(a):
 # ── verify: the approved runs, reproduced with no calls ─────────────────────────────────────────────
 
 # The approved outfits' runs and the grid each render was cut at. The grids were not written down at the time;
-# they were re-found on 2026-09-27 by cutting each recorded render at every grid in 0.01 steps and keeping the
+# they were re-found on 2026-09-26 by cutting each recorded render at every grid in 0.01 steps and keeping the
 # one that reproduces the committed files exactly. Each did, byte for byte, with today's cutter.
 APPROVED = {
     "bronze": dict(what="bronze plate armour", glove="warm brown-gold bronze",   # not in outfits.OUTFITS
@@ -645,6 +650,9 @@ def main():
             s.add_argument("view", choices=VIEWS)
         s.add_argument("--pitch", type=float, required=True)
         s.add_argument("--run", help="the run folder under explore/")
+        if cmd == "cutwalk":
+            s.add_argument("--faces", choices=("left", "right"),
+                           help="side only: which way the render's figures face (left ones get mirrored)")
         if cmd != "views":
             s.add_argument("--turnaround", help="turnaround folder (default <name>-turnaround)")
 
