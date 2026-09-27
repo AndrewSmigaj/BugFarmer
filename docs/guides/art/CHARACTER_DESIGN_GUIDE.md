@@ -504,8 +504,12 @@ are using in the animation"*. The hands are mirrored at render time, so the file
 the same thing. The sheet that resolved it in one look rendered the walk exactly as `build` does and
 cropped to the hands.
 
-It also carries `PENDING` — outfits that are chosen but **not built**, with what each still needs. An
-outfit is complete and in `OUTFITS`, or it is here and renders nothing. Settled behavioural decisions that
+It also carries `PENDING` — outfits that are **not official yet**, with what each still needs. An outfit is
+complete and in `OUTFITS`, or it is in `PENDING`; the build never renders a pending outfit by default and the
+gallery lists it as not official, but `build.py <name>` renders one **when it is named, for review** (since
+2026-08-18). That is how the review sheet in the order above gets made: point the pending entry's `dir` at the
+attempt folder (`outfits/<name>/tries/<date>-<what>/`, holding `frames/` and `gauntlet/`), build it, show him —
+nothing is copied into place before his yes. Copper (2026-09-26) was the first done this way. Settled behavioural decisions that
 are code rather than numbers (the wrist direction, which hand is mirrored) are recorded beside the
 constants they affect, because this file is where *"what did we agree"* gets answered.
 

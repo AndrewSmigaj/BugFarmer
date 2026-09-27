@@ -40,8 +40,10 @@ Every paid image call is asked for first.
 - **Done on the procedure** (in `official.py`, approved 2026-08-18): bronze, fire-ant, black-ant.
 - **Picked, still to build** (turnaround → walks → hands → review): copper (`explore/copper-r3`), iron (`iron-r2`),
   platinum (`platinum-r5`), steel (`steel-r5`), leather (`leather-r2`), beetle-shell (`beetle-shell-r3`),
-  gilded-steel, fancy (`fancy-r2`). **Copper is the approved test batch** (5 image calls), run once the procedure's
-  missing commands exist and are checked against the approved runs with no calls.
+  gilded-steel, fancy (`fancy-r2`). **Copper, the approved test batch, is made and waiting for review**
+  (2026-09-26, 5 calls, `tools/_generated/player/reviews/2026-09-26-copper/`): the back walk came out 71 px against
+  the front's 66 (a reroll is the fix) and the front walk's knee lift is 18% (the August complaint, shared by the
+  three approved outfits). Gilded-steel and fancy have no words in `outfits.OUTFITS` yet — his, before their batches.
 - **To work through with the owner, from the three-designs step:** explored but not picked (wood, ranger,
   scorpion, the wasp/hornet/killer-bee sets, glowworm, fisherman, swamp-gear) and never explored on this procedure
   (silver, gold, padded, beekeeper, farmer, entomologist, moth-wool, wizard-robe, …; their folders hold July art —

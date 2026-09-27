@@ -100,7 +100,13 @@ OUTFITS = {
 # NOT OFFICIAL YET — listed so the gap is visible, but NOT built. An outfit is either complete and in
 # OUTFITS, or it is here and does not render at all. There is no third state where it renders with
 # somebody else's parts, which is exactly what the old fallback chain did to 21 outfits.
-PENDING = {}
+PENDING = {
+    # 2026-09-26 — copper, the first test batch on the rebuilt procedure (`procedure.py`). Listed so its
+    # attempt can be RENDERED FOR REVIEW (`build.py copper`); `dir` is the attempt folder, so nothing is copied
+    # into outfits/copper/ until the owner says yes. Then it moves to OUTFITS with his words.
+    "copper": dict(dir="outfits/copper/tries/2026-09-26-procedure", sheet="",
+                   needs="the owner's review — tools/_generated/player/reviews/2026-09-26-copper/"),
+}
 
 
 def path(outfit, kind):
