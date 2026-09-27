@@ -734,16 +734,15 @@ consequence is real and needs a design answer, not an afterthought.
   own fences, buildings and goods are marked as the village's when the zone is made — today a placed object records
   only what it is, where it faces and any sign text, so this mark is new.
 - **Bugs can damage village fences, and villagers mend them, visibly, from the start**: a villager walks to the damaged
-  stretch and works on it until it is whole. This fits the owner's own locked design for workers (December 2025):
-  workers are like stations with a job, not roaming characters — no pathfinding across the map, and the walking is for
-  show.
+  stretch and works on it until it is whole. This follows the December 2025 idea for workers: they are like stations
+  with a job, not roaming characters — no pathfinding across the map, and the walking is for show.
 - **Hired hands on private plots — my recommendation: not in the first release; afterwards, station-tenders and fence-
   menders only.** Why: the private plot is where the player's own farm design is the fun; the catchers, the autonet
   and powered stations already take chores off the player's hands; and workers who gather and farm (the December 2025
   list had woodcutters and miners) would play the game for the player, against the January rule. The real costs are
   character art for every kind of worker, the hiring and assigning screens, and balance — not pathfinding, which the
-  locked design already avoids. **This narrows a locked decision of the owner's, so it is his call.** (For reference:
-  Necesse builds its whole game on settlers who work; Stardew keeps them to late-game helpers.)
+  December 2025 idea already avoids. (For reference: Necesse builds its whole game on settlers who work; Stardew keeps
+  them to late-game helpers.)
 
 **Lenses:** Fair start — new players can't strip the village for early money. Pillars — machines and helpers ease
 chores, never play. Picture the moment — a centipede damages the village fence at night; next morning a villager is

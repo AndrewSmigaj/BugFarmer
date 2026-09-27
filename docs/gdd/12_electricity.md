@@ -5,7 +5,7 @@ Not written yet. This section will gather the design from the sources below, run
 idea lenses, then go to the review page.
 
 ## To settle (raw list — not yet checked against the idea lenses)
-- NPC workers (the December requirements call them locked) — in or out
+- NPC workers (an idea in the December 2025 requirements) — in or out
 - Which powered machines run on their own and which need you
 - Moths drawn to lights, with nets, automatic catchers and bug zappers (your idea)
 

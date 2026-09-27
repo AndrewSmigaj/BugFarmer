@@ -5,6 +5,9 @@ Frontend: Unity (2D)
 Backend: Nakama (authoritative, persistent worlds)
 Purpose: Capture all locked design decisions and system requirements for implementation planning.
 
+Note (2026-09-27): "LOCKED" in this document never meant final. The owner marked parts of the design that way only
+so they would not be changed without asking him. Nothing here is binding; the design now lives in `docs/gdd/`.
+
 1. Locked Technical Stack
 1.1 Frontend
 
