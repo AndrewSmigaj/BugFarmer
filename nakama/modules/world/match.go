@@ -467,7 +467,7 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 					player.PendingIntro = true
 				} else if save.HomeZone == zoneID {
 					// Returning with a bed home in this zone → wake at the bed (Minecraft-style
-					// save point: "wherever you last saved, via a bed").
+					// save point: you resume wherever you last saved, via a bed).
 					player.SetWorldPosition(save.HomeX, save.HomeY, worldState.Config.ChunkSize)
 				} else if save.LastZone == zoneID {
 					// No bed home here yet → drop back where they logged out.

@@ -41,8 +41,8 @@ const (
 	// comfortably above it (decay-per-think ≈ 0.3), so the provision reliably fires.
 	predatorFullSatiation = 90.0
 	// nestDwellTicks: a homing resident that reaches the nest DWELLS a beat "inside" (parked via the
-	// FeedUntilTick hold branch) tending the brood before resuming the hunt — the "go inside the nest"
-	// read. ~10s; breeding-unify B renders the parked-at-nest resident as gone-inside (display-only).
+	// FeedUntilTick hold branch) tending the brood before resuming the hunt, so it reads as going into the
+	// nest. ~10s; breeding-unify B renders the parked-at-nest resident as gone-inside (display-only).
 	nestDwellTicks = 100
 )
 
@@ -210,7 +210,7 @@ func (m *Match) predationThink(
 					swarm.Phase = "feeding"
 					swarm.Satiation = p.DepositSatiation
 					// ENTER THE NEST: hunter residents (wasps/hornets) dwell a beat tending the brood before
-					// resuming the hunt (the "go inside the nest" read); parks via the FeedUntilTick hold-leg
+					// resuming the hunt (so it reads as going into the nest); parks via the FeedUntilTick hold-leg
 					// branch below — deterministic, and B renders the parked resident as gone-inside. Nectar/
 					// carrion foragers (bees/ants) keep their tight forage loop for now (village scope = wasp).
 					if len(p.Prey) > 0 {

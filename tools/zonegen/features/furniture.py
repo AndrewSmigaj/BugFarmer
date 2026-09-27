@@ -74,8 +74,8 @@ FANCY = {
     "statue":     "statue_stone",
 }
 
-# The FLORAL set (the bee area — Maren's world; owner 2026-07-06 "a floral set for the
-# bee area"). Only roles that differ from BASIC; footprints match role members.
+# The FLORAL set (the bee area — Maren's world; owner direction 2026-07-06: the bee area
+# gets its own flower-themed furniture). Only roles that differ from BASIC; footprints match role members.
 FLORAL = {
     "bed":         "bed_floral",         # 2x4, matches bed_basic
     "seating":     "chair_floral",       # 1x1
@@ -87,8 +87,8 @@ FLORAL = {
     "bookshelf":   "bookshelf_floral",   # 2x1
 }
 
-# The STONE set (underground homes; owner: "a stone set underground (marble or
-# something)"). Marble premium pieces (table_marble/bench_marble/bust_marble) exist as
+# The STONE set (underground homes; owner direction: a stone set for underground homes,
+# marble or similar). Marble premium pieces (table_marble/bench_marble/bust_marble) exist as
 # placeables for scene authors + a future "marble" collection; the stone set proper:
 STONE = {
     "bed":         "bed_stone",          # 2x4

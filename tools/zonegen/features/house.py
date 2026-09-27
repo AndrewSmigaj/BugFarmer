@@ -372,7 +372,7 @@ def plus_house(ox=0, oy=0):
     return _shift(specs, ox, oy), ("main", "top")
 
 
-# ---- NATURAL shapes (2026-06: "not squares — natural, and mostly square") -----
+# ---- NATURAL shapes (2026-06: natural outlines, not plain squares — while staying mostly square) -----
 # Bars-of-rects still read boxy; these outlines are NON-CONVEX — wings attach with
 # a perpendicular OFFSET so corners don't align (the offset is what makes an L/Z/U
 # silhouette instead of a longer bar). All rectilinear (no diagonal wall art).

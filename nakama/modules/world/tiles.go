@@ -105,7 +105,7 @@ func PrimaryMaterial(tileID string) string {
 
 // CompositeMaterials returns the material(s) a ground id is MADE OF: [matA, matB] for a composite
 // "matA~matB~shape", or [id] for a solid tile. Used for recipe cost + dig drops — a composite is made
-// of both materials, so it costs both and drops both (owner: a sandwich needs bread AND filling).
+// of both materials, so it costs both and drops both (owner decision).
 func CompositeMaterials(id string) []string {
 	if strings.Contains(id, "~") {
 		if parts := strings.Split(id, "~"); len(parts) == 3 {

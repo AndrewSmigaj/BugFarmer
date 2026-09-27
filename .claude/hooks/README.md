@@ -45,7 +45,8 @@ must exist). **Extending the system is usually just adding a manifest row — no
 | `check_determinism.py` | Stop | Blocks turn-end (exit 2) if sim code changed but the determinism gate was not run. Session waiver; auto-clears when the gate runs. |
 | `smoke_log.py` | UserPromptSubmit, Stop, PreToolUse (ExitPlanMode) | **TEMPORARY** (P0) — logs which events fire to `_smoke.log`, to confirm the new events work after the next restart. Remove once confirmed. |
 
-Support (not wired as hooks): `_manifest.py` (shared loader + `path_matches` + `doc_drift`) · `validate_manifest.py`
+Support (not wired as hooks): `_manifest.py` (shared loader + `path_matches` + `doc_drift`) · `_comments.py`
+(was a change comments-only? — used by both drift checks) · `validate_manifest.py`
 · `selftest.py` · `check_staged_drift.py` (the pre-commit backstop, below).
 
 ## The two gates (keep BOTH green after any change here)
@@ -58,6 +59,13 @@ python3 .claude/hooks/validate_manifest.py # manifest referential integrity — 
 `.githooks/pre-commit` → `check_staged_drift.py` blocks a commit whose **staged** source changed but its doc
 did not (the same `doc_drift` check). Activated with `git config core.hooksPath .githooks`. Override a
 legitimate case with `git commit --no-verify`. Fail-open: a checker bug never blocks commits.
+
+**Comment-only changes don't count** (both drift checks, 2026-09-27): a `.go` or `.py` file whose code is identical
+before and after once comments (and Python docstrings) are stripped can't have made its doc stale, so it isn't a
+trigger — the pre-commit check compares HEAD with the staged copy, the Stop hook HEAD with the working copy
+(`_comments.py`). Conservative: identical text, other file types, and anything that won't tokenise or parse count as
+real changes; Go keeps string contents and line breaks (semicolons). Added after a sweep that reworded comments in
+nine source files was blocked for thirteen docs it could not have affected.
 
 ## How to extend
 - **Gate a new command / authoring path / domain** → add a row to the relevant manifest section. No hook edit.

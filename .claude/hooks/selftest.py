@@ -288,14 +288,76 @@ def main():
     check("log_touched FAIL-OPEN on bad stdin", rc == 0)
 
     # ============ PRE-COMMIT STAGED DRIFT (check_staged_drift.py) ============
-    rc, _o, _e = run3env(STAGED_DRIFT, {}, {"CLAUDE_STAGED_FILES": "nakama/modules/world/handlers_farming.go"})
+    # An empty content fixture keeps these hermetic: the real git state can't make them comment-only.
+    diffs = os.path.join(TMP, f"claude-diff-content-{SID}.json")
+
+    def with_diffs(content):
+        with open(diffs, "w", encoding="utf-8") as f:
+            json.dump(content, f)
+        return {"CLAUDE_DIFF_CONTENT": diffs}
+
+    rc, _o, _e = run3env(STAGED_DRIFT, {}, dict(with_diffs({}), CLAUDE_STAGED_FILES="nakama/modules/world/handlers_farming.go"))
     check("staged-drift BLOCKS (exit 1): source staged, doc not", rc == 1)
-    rc, _o, _e = run3env(STAGED_DRIFT, {}, {"CLAUDE_STAGED_FILES": "nakama/modules/world/handlers_farming.go " + FARM_DOC})
+    rc, _o, _e = run3env(STAGED_DRIFT, {}, dict(with_diffs({}), CLAUDE_STAGED_FILES="nakama/modules/world/handlers_farming.go " + FARM_DOC))
     check("staged-drift PASSES when doc also staged", rc == 0)
     rc, _o, _e = run3env(STAGED_DRIFT, {}, {"CLAUDE_STAGED_FILES": ".claude/manifest.json README.md"})
     check("staged-drift PASSES for non-covered files", rc == 0)
     rc, _o, _e = run3env(STAGED_DRIFT, {}, {"CLAUDE_STAGED_FILES": ""})
     check("staged-drift PASSES with nothing staged", rc == 0)
+
+    # ============ COMMENT-ONLY CHANGES DON'T COUNT (_comments.py) ============
+    GO = "nakama/modules/world/handlers_farming.go"       # doc: architecture_farming.md
+    PY = "tools/zonegen/features/yard.py"                  # doc: docs/guides/authoring/yard.md
+    go_old = 'package world\n\n// quoted: "x"\nfunc f() int {\n\treturn 1 // one\n}\n'
+    go_cmt = 'package world\n\n// restated\n/* a block\n   comment */\nfunc f() int {\n\treturn 1 // uno\n}\n'
+    go_code = go_old.replace("return 1", "return 2")
+    go_str_old = 'package world\n\nfunc g() string {\n\treturn "a  b" // s\n}\n'
+    go_str_new = 'package world\n\nfunc g() string {\n\treturn "a b" // s\n}\n'
+    go_semi_old = 'package world\n\nfunc h() {\n\treturn\n\tx()\n}\n'
+    go_semi_new = 'package world\n\nfunc h() {\n\treturn x()\n}\n'
+    py_old = 'def f():\n    """Old doc quoting "x"."""\n    return 1  # one\n'
+    py_cmt = 'def f():\n    """Restated doc."""\n    return 1  # uno\n'
+    py_code = 'def f():\n    """Old doc."""\n    return 2\n'
+
+    def staged_rc(path, old, new, extra=""):
+        env = dict(with_diffs({path: {"old": old, "new": new}}), CLAUDE_STAGED_FILES=(path + " " + extra).strip())
+        return run3env(STAGED_DRIFT, {}, env)
+
+    rc, _o, _e = staged_rc(GO, go_old, go_cmt)
+    check("staged-drift PASSES a Go change that touched only comments", rc == 0)
+    rc, _o, _e = staged_rc(GO, go_old, go_code)
+    check("staged-drift BLOCKS a Go code change", rc == 1)
+    rc, _o, _e = staged_rc(GO, go_str_old, go_str_new)
+    check("staged-drift BLOCKS a Go change inside a string", rc == 1)
+    rc, _o, _e = staged_rc(GO, go_semi_old, go_semi_new)
+    check("staged-drift BLOCKS a Go line-break change (semicolons)", rc == 1)
+    rc, _o, _e = staged_rc(GO, go_old, go_old)
+    check("staged-drift BLOCKS when the versions can't be told apart", rc == 1)
+    rc, _o, _e = staged_rc(PY, py_old, py_cmt)
+    check("staged-drift PASSES a Python change to comments and docstrings only", rc == 0)
+    rc, _o, _e = staged_rc(PY, py_old, py_code)
+    check("staged-drift BLOCKS a Python code change", rc == 1)
+    rc, _o, _e = staged_rc(PY, py_old, "def f(:\n")
+    check("staged-drift BLOCKS when the new Python won't parse", rc == 1)
+    env = dict(with_diffs({GO: {"old": go_old, "new": go_cmt}, PY: {"old": py_old, "new": py_code}}),
+               CLAUDE_STAGED_FILES=GO + " " + PY)
+    rc, _o, err = run3env(STAGED_DRIFT, {}, env)
+    check("staged-drift names only the doc of the real code change",
+          rc == 1 and "yard.md" in err and "architecture_farming.md" not in err)
+    try:
+        os.remove(tlog)
+    except OSError:
+        pass
+    run(LOG_TOUCHED, {"session_id": SID, "tool_input": {"file_path": FARM}})
+    rc, _o, _e = run3env(CHECK_DRIFT, {"session_id": SID}, with_diffs({FARM: {"old": go_old, "new": go_cmt}}))
+    check("drift ALLOWS stop when the edit touched only comments", rc == 0)
+    rc, _o, _e = run3env(CHECK_DRIFT, {"session_id": SID}, with_diffs({FARM: {"old": go_old, "new": go_code}}))
+    check("drift still BLOCKS a code edit", rc == 2)
+    for p in (tlog, diffs):
+        try:
+            os.remove(p)
+        except OSError:
+            pass
     clear_markers()
 
     # ============ DETERMINISM GATE (mark_determinism_run.py + check_determinism.py) ============
