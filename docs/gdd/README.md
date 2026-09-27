@@ -26,10 +26,15 @@ Answers are stored in the page's own database, one document per section (`answer
 `ArtifactData` tool (`list`, collection `answers`). Republish from another session by passing that URL.
 
 ## Sections, in review order
+**Start with the overview** ([overview.md](overview.md)): the whole game as every design document describes it,
+activity by activity — what is decided, built, designed and still open — written after reading all of them
+(2026-09-26). The sections below are rebuilt from it once it has been checked.
+
 Status: **review** = ready for your answers · **rework** = being redone · **draft** = not written yet · **final** = reviewed and settled.
 
 | order | § | section | status | file |
 |---|---|---|---|---|
+| 0 | OV | **Start here:** the game as the documents describe it | review | [overview.md](overview.md) |
 | 1 | 00 | Premise, pillars & what belongs in the world | rework | [00_premise.md](00_premise.md) |
 | 2 | 19 | Multiplayer & hosting | rework | [19_multiplayer.md](19_multiplayer.md) |
 | 3 | 01 | World & zones | rework | [01_world.md](01_world.md) |
@@ -62,6 +67,7 @@ After these: one design bible per zone, under `zones/`.
 <!-- gdd: id=NN status=review|draft|final updated=YYYY-MM-DD -->
 ## The experience        one paragraph: what it feels like to play
 ## Decided               the owner's decisions, restated in my words and dated (never quoted)
+## The game, activity by activity   (the overview only) one ### heading per activity
 ## Current design        what the design documents already say
 ## As built              what exists in the game today (file references)
 ## How it will work      (optional) engineering the owner should see but not answer

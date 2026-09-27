@@ -876,6 +876,44 @@ must be compatible with real game mechanics** (don't assume unbuilt mechanics).
   Underground Passages seam where the openings on the two sides don't line up — the "blocked zone entry" item on the
   roadmap.
 
+## Next — the game against its design (found 2026-09-26 by the full design read; see `docs/gdd/overview.md`)
+- **Processing stations missing from every playable zone.** The rock crusher, bug extractor and gem cutter stand only
+  in the `crafting_test` zone; no recipe makes them and no shop sells them. So in normal play mined ore can't be
+  refined (every bar recipe needs refined ore, which needs paydirt from the crusher), carcasses can't become chitin,
+  leather or formic acid, and gems can't be cut. The blacksmith sells copper, iron, bronze and steel bars; silver,
+  gold and platinum bars are neither sold nor makeable, so the top three metal tiers are out of reach. To do: place
+  them where the design puts them (crusher and gem cutter at the mine beside the sluice; the bug extractor in town,
+  D18) and settle how a player gets their own (D1). Data slip: `gem_cutter` drops a `rock_crusher` when broken.
+- **Eleven of the fifteen stations can't be crafted or bought** (D1 says crafted or bought): the workbench, furnace,
+  anvil, forge, sawmill, stonecutter, ore sluice, honey extractor and the three test-zone stations. Only the Weaver's
+  four (loom, spinning wheel, sewing machine, dye vat — made at the workbench from recipes she sells), a campfire, a
+  wood stove and a keg can be made. The only way to own one of the others is to break one where it stands and carry
+  it off, which the decided protection of townspeople's property will forbid.
+- **Unobtainable items.** `large_net` (no shop, no recipe) — so wasps, soldier wasps, giant hornets and dragonflies
+  (all `net_size: medium`, large net only) can't be caught in normal play; `spear_wood`, `scythe_wood` and
+  `shovel_wood` (starting kit only); `backpack` (no shop, recipe or placement — only the developer give-command;
+  D19's storage ladder is small sack → large basket → backpack); no bronze tools although bronze weapons exist; the
+  `floral_furniture` recipe book is sold by no one, so its 8 recipes can't be learned.
+- **Magnifying glass.** D12 gives it from the start; the starting kit (`state.go`) doesn't include it (the general
+  store sells it for 40), and it does nothing yet (see "Bug RESEARCH mechanic").
+- **Floors don't stop bugs appearing** (the December 2025 requirements lock that rule): the spawn check honours only
+  `blocks_bugs`, and no ground tile sets it.
+- **Night danger is idle.** The night-hunter mechanism exists, but no species is night-active — by design, since
+  real wasps and hornets hunt by day (the true-bug rule above); it waits for a real night hunter. `hornet_giant`'s
+  description still calls it nocturnal.
+- **Dormant hives.** `village_21_B`'s four beehives never wake: `bee_honey` isn't in that zone's roster.
+- **The autonet catches nothing** — it is a storage placeable today (see "catching gear: auto-catcher").
+- **Nest drops disagree.** Wasp nests drop nothing when broken, by design (D23 removed that drop); hornet nests
+  still drop paper and larvae. Make them consistent.
+- **Nursery gaps.** Milkweed and compost bins can't be seeded from empty, and nursery deposits and takes fail silently
+  — every refusal in `handlers_nursery.go` returns without a message.
+- **Hard population caps.** Each zone has a hard ceiling per species (`village_21_B`: flies 1,500, butterflies 800,
+  wasps 120, centipedes 140, millipedes 200, beetles 140), while the owner's direction is that food, predators and
+  age bound the numbers. Decide whether they stay as safety nets.
+- **The Ecology tab doesn't exist** — only the F5 developer graph; noted beside the roadmap's brief.
+- **An unused sound library.** 203 bug-sound and music files under `Audio/` (committed 2026-07-29) are neither in
+  the Unity project nor used by the game; check their licence before use (roadmap Phase 4).
+
 ## Later — REAL cross-zone bug transfer (owner 2026-07-06: real transfer, not a pretend version)
 Zones are isolated per-match sims today (Neighbors is player-only). The real feature:
 a bug/swarm that walks off a connected edge LEAVES zone A's sim (a ledgered removal) and
