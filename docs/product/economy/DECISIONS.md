@@ -597,7 +597,8 @@ fences, and the villagers repair them. Whether NPC workers exist more widely is 
 ### D42 — Farming: wheat from the Locust Farmland; harvest or cut down; fertiliser means yield
 Wheat seeds are bought in the Locust Farmland or harvested from its fields; that zone has a small village with shops
 and people of its own, which needs more townspeople. The one harvest rule stands (D24), and plants can also be cut
-down and their parts processed at stations. Fertiliser increases yield.
+down and their parts processed at stations — simply, one step per station: it is a game, not a simulation of
+real processing (no soaking or threshing steps). Fertiliser increases yield.
 
 ### D43 — Mining and the underground
 Each underground zone is made of what fits it: the ant zones are dirt (ants don't dig through rock), the mining zones
