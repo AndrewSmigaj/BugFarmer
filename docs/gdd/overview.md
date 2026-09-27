@@ -27,9 +27,9 @@ It is 2126. A plague killed nearly every mammal, and people bred bugs big enough
 the frontier as a bug farmer.
 
 Bug Farmer is a top-down multiplayer sandbox in the spirit of Terraria and Stardew Valley. The player **catches,
-breeds and sells bugs**; **grows crops and fruit trees**; **digs and mines** into rock for ore; **crafts** tools,
-gear, furniture and materials at stations; **builds** pens, fences and a home; **fights** the bugs that bite back;
-**trades** with the town's shopkeepers; and **explores** outward — north and east across the surface and down
+breeds and sells bugs**; **grows crops and fruit trees**; **digs and mines** for ore; **crafts** tools, gear,
+furniture and materials at stations; **builds** pens, fences and a home; **fights** the bugs that bite back;
+**trades** with the town's shopkeepers; and **explores** outward from the village — across the surface and down
 underground — where the bugs get bigger and the rewards richer.
 
 Under all of it runs a living ecosystem. Fruit falls and rots, flies breed on it, wasps hunt the flies, and every
@@ -73,9 +73,9 @@ it names another source.
 - **No seasons** (January 2026; confirmed 2026-09-27).
 - **All art is made with gpt-image-2 and pixel-snapped**, 32 art pixels to a grid square, and regenerated after this
   document is signed off, in test batches (2026-09-26).
-- From the January 2026 design document: **no stamina**, **no disasters on a timer and no forced invasions**,
-  **nothing on a player's private plot is lost while they are away**, and **machines ease chores but never play for
-  the player**.
+- From the January 2026 design document: **no disasters on a timer and no forced invasions**, **nothing on a
+  player's private plot is lost while they are away**, and **machines ease chores but never play for the player**.
+  (Its "no stamina" is replaced: stamina is allowed, 2026-09-27.)
 
 ## The game, activity by activity
 
@@ -139,7 +139,7 @@ extractor only in a test zone; the autonet only storing things. Three prototype 
 go: bees, dragonflies and fireflies flying over fences; wooden fences chewable by centipedes with stone as the
 cure-all; carrion beetles making compost.
 
-**Designed, not built** — bug research with the magnifying glass (wanted — P8); aphids (small ones); specimen
+**Designed, not built** — bug research with the magnifying glass (wanted — P8); aphids — small ones living on plants, shown in the plant's own view (part 8); specimen
 collecting; keeping ants; traps and bait (not decided — P4 suggests a way); villagers mending fences (P6).
 (Two old items are gone: using wasps as pest control, since wasps already eat flies, and roofed pens for flying
 bugs, since no bug flies over.)
@@ -206,181 +206,202 @@ corpse feeds other bugs; how far the per-bug model goes, part of the ecology or 
 fruit on the ground, with another lever raised instead (P10).
 
 ### 4 · Farming and gardening
-Crops in tilled plots, watered by hand or by rain; fruit trees whose fallen fruit feeds the flies; later
-sprinklers, fertiliser from compost, pests and pollination. Farming is open from the start and limited only by what
-materials cost.
+Crops in tilled plots, watered by hand or by rain; fruit trees whose fallen fruit feeds the flies; later sprinklers,
+fertiliser, pests and pollination. Farming is open from the start and limited only by what materials cost. Harvesting
+takes a plant's product and sometimes a seed; a plant that would keep producing can also be cut down, and its parts
+processed at stations.
 
 **Decided**
-- The village grows garden vegetables; **wheat is bought up north** — fast-growing and profitable, a reason to
-  travel; cotton comes later; new crops arrive with new zones (D19, June 2026).
-- One harvest rule for every plant: a harvest always gives the plant's resource and sometimes a seed, and plants
-  regrow from seed (D24). Crops already work this way; flowers, bushes, trees and milkweed don't yet.
+- The village grows garden vegetables, and new crops come with new zones (D19). **Wheat comes from the Locust
+  Farmland**: its seeds are bought there or harvested from its fields, and the zone has a small village of its own with
+  shops and people to meet (2026-09-27).
+- **One harvest rule**: harvesting gives the plant's product and sometimes a seed, and plants are grown again from
+  seed (D24; confirmed 2026-09-27). **Plants can also be cut down** and their parts processed at stations
+  (2026-09-27) — proposal P11.
+- **Fertiliser increases yield** (2026-09-27), and compost is a fertiliser source (2026-09-27).
 - A harvest gives a share of what is there; the rest is lost (August 2026).
-- Compost is a fertiliser source (2026-09-27); what fertiliser does is deferred (July 2026).
 
 **In the prototype now**
 - Hoe a plot, plant a seed, water it with a watering can (refilled at water). Crops grow as they are watered, never
   wilt, and sometimes drop a seed. Seven crops — tomato, eggplant, corn, wheat, carrot, pumpkin and cabbage; tomato
-  and eggplant give several harvests. Rain waters everything when it falls.
+  and eggplant give several harvests.
 - Fruit trees — apple, orange, plum and cherry — fruit after a few days of water; ripe fruit falls in the evening and
-  rots into fly food, which disappears if nothing eats it. There is too much fruit on the ground (to be lowered — see
-  part 3). Fruit is picked up by hand.
+  rots into fly food, which disappears if nothing eats it. There is too much fruit on the ground (to be lowered — part
+  3). Fruit is picked up by hand.
+- **Rain waters crops and trees but doesn't show it.** The droplet over a tree means "not watered by you today", and
+  rain doesn't count as that, so the droplet stays; and rain only darkens plots that already have a crop in them. A fix
+  is queued: rain counts as the day's watering and wets every tilled plot.
 - **Not built:** sprinklers, fertiliser, crop pests, pollination.
 
-**Still open** (→ §06) — what fertiliser does (the January 2026 farming design says more yield, not faster growth);
-how fallen fruit is collected by hitting it — the owner asked for that after the June playtest, and two ways to
-build it wait for a pick; how many more crops, and where each first appears.
+**Still open** (→ §06) — how fallen fruit is collected by hitting it: the owner asked for that after the June playtest,
+and two ways to build it wait for a pick; how many more crops, and where each first appears.
 
 ### 5 · Mining and the underground
-A block world. The surface has dirt and stone to dig; the underground is solid rock the player carves through; ore
-sits in veins that grow richer and rarer with depth; the dark needs light; and the mining ideas have danger guarding
-the best ore.
+A block world. The surface has dirt and stone to dig; underground, each zone is made of what fits it — the ant zones
+are dirt, because ants don't dig through rock, and the mining zones are rock. Ore sits in veins that grow richer and
+rarer with depth, the dark needs light, and a trip is limited by how much the player can carry.
 
 **Decided**
 - **It is a block world**: a player facing sideways digs the block beside them, not the ground below (2026-08-04).
+- **Each underground zone is made of what fits it** — dirt for the ant zones, rock for the mining zones (2026-09-27).
 - **One kind of rock.** Depth shows in the floor and the ores, never in harder rock (D22).
 - **Ore only in veins** of three to six blocks, never placed by hand — even rare ores — richer and rarer with depth
   (2026-07-06).
-- **Dirt areas are diggable masses** of dirt blocks around stone and ore cores, never flat painted dirt
-  (2026-07-06).
-- **Underground is pitch dark**, as in Terraria, and a torch is needed (2026-07-08).
-- Mining is a main loop, slow and exploratory (D13). Ore is refined in steps — crushed, washed, then smelted — the
-  owner's choice over a shorter chain written into D26 (2026-06-28).
+- **Dirt areas are diggable masses** of dirt blocks around stone and ore cores, never flat painted dirt (2026-07-06).
+- **Underground is pitch dark**, as in Terraria, and a torch is needed (2026-07-08) — in every real underground zone
+  (2026-09-27).
+- Mining is a main loop, slow and exploratory (D13); ore is crushed, washed, then smelted (2026-06-28).
+- **A carrying limit** caps what a trip brings back (2026-09-27); how it works is open.
+- **No mining dangers** — no gas, no cave-ins (2026-09-27).
+- **Prospecting with a pan** (2026-09-27).
 
 **In the prototype now**
-- Ore is gated by pickaxe: coal, copper and tin with a wooden pick, up to diamond with a steel one; tools come in
-  eight tiers from wood to platinum.
-- The recipes for six metals exist — crusher, sluice, furnace with coal, bar; tin goes into bronze; gem blocks drop
-  rough gems for a gem cutter. **But the rock crusher and the gem cutter stand only in a test zone**, so in normal play
-  mined ore can't be refined and gems can't be cut. The blacksmith sells copper, iron, bronze and steel bars; silver,
-  gold and platinum bars can't be had at all, so the top three metal tiers are out of reach.
-- Two underground zones: Underground Passages, the first mine, and the Ant Tunnels.
-- Darkness: buried blocks go dark everywhere, but dark tunnels only work in a test zone so far.
-- **Not built:** mining dangers (gas, cave-ins), drills, dynamite, carts and rails, prospecting — the backlog itself
-  calls mining thin beyond the basics.
+- Ore is gated by pickaxe: coal, copper and tin with a wooden pick, up to diamond with a steel one; tools come in eight
+  tiers from wood to platinum.
+- The refining recipes exist for six metals, but the rock crusher and the gem cutter stand only in a test zone for now
+  — part of the crafting and resources work that isn't finished (part 6).
+- **Underground zones**: two are in the prototype — Underground Passages (the first mine) and the Ant Tunnels — and two
+  more are designed, the Ant Colony and the Centipede Cavern.
+- Darkness: buried blocks go dark everywhere; the darkness of tunnels so far works only in a test zone and has to be
+  brought into the real zones.
+- **Not built:** drills, dynamite, carts and rails, the prospecting pan.
 
-**Still open** (→ §14) — what mining's dangers are; how deep the tiers go; whether carrying capacity limits a trip
-(the armour notes propose it; the game counts only bag slots); the first mine's name ("Mining Camp" in some
-documents, "Underground Passages" in others) and its difficulty (easy in one, medium to hard in another).
+**Still open** (→ §14) — how the carrying limit works; how deep the tiers go; the first mine's name ("Mining Camp" in
+some documents, "Underground Passages" in others) and its difficulty.
 
 ### 6 · Crafting and processing
 Stations turn materials into better ones over time: workbench, sawmill, furnace, forge, anvil, stonecutter, loom,
 spinning wheel, sewing machine, dye vat, bug extractor, crusher, sluice, gem cutter and honey extractor. Materials
-climb ladders — ore to bar to alloy, fibre to thread to cloth, log to plank. Some recipes are known from the start;
-the rest are bought or found, and most of them gather in the two towns and the first mine.
+climb ladders — ore to bar to alloy, fibre to thread to cloth, log to plank. Some recipes are known from the start; the
+rest are bought or found, and most gather in the two towns and the first mine. Crafting and resources are partway done
+and need finishing and polish.
 
 **Decided**
-- Basic recipes unlock by themselves at their station — every metal tier of tools, weapons and armour included —
-  and tools are never locked behind a purchase; décor, furniture and advanced recipes are bought or found (D26).
-- Stations are crafted or bought, occasionally found (D1). Cooking is its own system, separate from crafting (D19).
+- Basic recipes unlock by themselves at their station — every metal tier of tools, weapons and armour included — and
+  tools are never locked behind a purchase; décor, furniture and advanced recipes are bought or found (D26).
+- **Where a station comes from**: found abandoned in the world, bought from someone, or crafted from a recipe
+  (2026-09-27). **Stations that belong to someone** — like those in a mining camp — can't be taken; trying gives a short
+  refusal (2026-09-27).
+- Cooking is its own system, separate from crafting (D19).
 - Leather and a new "wood" armour rung come from processing bugs; players make clothes and a dyer dyes them (August
-  2026).
-- Making dyes and dyeing cloth are separate stations (2026-06-28) — not built: the dye vat still makes the dyes.
+  2026). **Dyes recolour cloth outfits**, using a recolouring method we build (2026-09-27).
+- Making dyes and dyeing cloth are separate stations (2026-06-28).
+- The missing stations, and everything else here that doesn't work yet, are part of finishing the system
+  (2026-09-27).
 
-**In the prototype now** — 185 recipes on 15 stations. 105 are known from the start; 80 are bought from shopkeepers, singly or
-as recipe books, and each character remembers them. The slow stations run two jobs at once; ingredients leave the
-bag when a job starts, and results collect in the station's output slots. Three of the fifteen stations — the rock
-crusher, bug extractor and gem cutter — stand only in a test zone; twelve stand in the game, and eleven have
-something to do (the sluice waits on the crusher).
+**In the prototype now** — 185 recipes on 15 stations. 105 are known from the start; 80 are bought from shopkeepers,
+singly or as recipe books, and each character remembers them. The slow stations run two jobs at once; ingredients
+leave the bag when a job starts, and results collect in the station's output slots.
 
-**Not working** — the cooking stations (campfire, stove, cooking pot, cauldron, keg) have no recipes. Eleven of the
-fifteen stations — the workbench, furnace, anvil, forge and sawmill among them — can't be crafted or bought,
-although D1 says they can; the only way to own one is to break one where it stands and carry it off. (The Weaver's
-four — loom, spinning wheel, sewing machine, dye vat — are made at the workbench from recipes she sells, and so are a
-campfire, a wood stove and a keg.) The eight floral-furniture recipes can never be learned, because no one sells
-their book; there are no bronze tools, though bronze weapons exist; the wooden spear, scythe and shovel, the large
-net and the backpack can't be bought or made; and bookshelves and wine racks accept nothing.
+**Not finished yet** — three stations (the rock crusher, bug extractor and gem cutter) stand only in a test zone; the
+cooking stations have no recipes; eleven stations can't be crafted or bought yet (the Weaver's four and a campfire,
+wood stove and keg can); nothing belongs to anyone yet, so any station can be broken and carried off; the eight
+floral-furniture recipes can't be learned; there are no bronze tools; the wooden spear, scythe and shovel, the large
+net and the backpack can't be bought or made; bookshelves and wine racks accept nothing.
 
-**Still open** (→ §10) — how the player gets each station; what the rare recipes are and where they hide; whether
-dyeing recolours cloth outfits (to be tried when clothing starts).
+**Still open** (→ §10) — which stations come from where; what the rare recipes are and where they hide.
 
 ### 7 · Building, pens and homes
-The player places blocks, floors, walls, fences, gates, doors, furniture and stations on the grid, and reshapes the
-ground with a shovel. Pens are always built, never bought. A private plot, bought through City Hall, is the safe
-home for calm, careful farming; decorations there give small production bonuses that shrink with every duplicate,
-so variety pays. Bugs can't appear on floors, so paving keeps them away.
+The player places blocks, floors, walls, fences, gates, doors, furniture and stations on the grid, builds houses, and
+digs with a shovel. Pens are always built, never bought. A private plot, bought through City Hall, is the safe home for
+calm, careful farming; decorations there are meant to give small production bonuses that shrink with every duplicate,
+so variety pays.
 
 **Decided**
 - Private plots from City Hall are safe and central to the design (2026-09-26).
+- **Players build houses** — walls, floors, doors — and that works in the prototype (2026-09-27).
+- **Players can live in the village** by building their own house there; they can't sleep in a bed that belongs to
+  someone, only in an abandoned one (2026-09-27).
+- **Doors turn to fit the wall they are placed in**, which needs a second, side-facing door sprite (2026-09-27).
+- **Ground is laid in whole squares**; the diagonal shapes go (2026-09-27). How the shovel switches between digging and
+  laying is proposal P12.
 - Bugs never appear on a floor (December 2025).
 - No roofs — the view is from above (D19). Placed objects drop themselves when broken (D22).
-- Furniture doesn't rotate (June 2026).
-- Decorative outfits are approved as a class, adding to farm output or happiness the way furniture does; making them
-  is on hold (2026-08-07).
+- Furniture doesn't rotate (June 2026; confirmed 2026-09-27).
+- **Tents are three squares wide** — today's are too small (2026-09-27).
+- **Mannequins are overhauled** to show whole outfits, on a plain white-faced figure (2026-09-27).
+- Decorative outfits are approved as a class, adding to farm output or happiness the way furniture does; they simply
+  haven't been made yet (2026-08-07; 2026-09-27).
 
-**In the prototype now** — about 280 placeable things, placed from the hotbar with a green or red preview; the shovel places
-ground in thirteen shapes, and a tile made of two materials costs both; it also digs a cell down to bare soil (the
-ground is never a hole). A bed sets where the player wakes; containers have filters (a wardrobe takes clothes, a
-fridge food).
+**In the prototype now** — about 280 placeable things, placed from the hotbar with a green or red preview; houses can
+be built; the shovel lays ground in thirteen shapes (the diagonals go) and digs a cell down to bare soil; a bed sets
+where the player wakes; containers have filters (a wardrobe takes clothes, a fridge food).
 
-**Not built** — private plots, City Hall and land deeds; decoration bonuses; floors stopping bugs from appearing; a
-limit on how far away a player can place things; items that hang on walls; doors that stop players; mannequins
-showing the clothes put on them; sorting and quick-stacking in chests.
+**Not built** — the private plot's bonuses from decorations; private plots, City Hall and land deeds; floors stopping
+bugs from appearing; a limit on how far away a player can place things; items that hang on walls; doors that stop
+players; mannequins showing outfits; sorting and quick-stacking in chests.
 
-**Still open** (→ §15) — how a player builds a house (walls, doors, rooms), which no document designs; how big a plot
-is, what it costs and who may enter; whether a player can live in the village (the village design says no; one
-economy sheet says "build out your house").
+**Still open** (→ §15) — how big a plot is, what it costs and who may enter.
 
 ### 8 · Combat and danger
-Real-time fights against bugs, with health but no stamina, and power from gear and preparation rather than levels.
-Starter zones are cosy; danger rises going north, east and deeper. Enemies warn before they strike and the player
-dodges. Bosses grow out of populations that got out of hand — a bloated queen, a locust swarm — alongside designed
-ones such as the Ant Colony's queen.
+Real-time fights against bugs, with power from gear and preparation rather than levels. Starter areas are cosy, and
+danger rises outward from the village. Players fight to sell carcasses or to catch bugs to farm; a big bug, once
+subdued and still, is dragged away. Dying costs little — mostly the walk back. Bosses are harder, usually bigger
+versions of their species.
 
 **Decided**
-- Combat is important and defence is critical (2026-08-06); starter zones cosy, dodge only, more danger at night, and
-  at most two bugs from one swarm striking at a time (2026-07-11).
-- Venom and poison are real effects; gear should change a variety of things rather than lean too hard on venom (D16).
-- Spider Vale is the hardest surface zone and the fire-ant domain the hardest underground; the swamp, the underground
-  river and the lake are about equal (August 2026).
-- The Ant Colony's queen is a mini-boss for the middle of the game (D3); a scripted, game-style encounter is
-  acceptable (2026-07-06).
+- Combat is important and defence is critical (2026-08-06); starter zones cosy, dodge the only defensive move, more
+  danger at night (2026-07-11).
+- **Danger rises outward from the village**, not by compass direction (2026-09-27).
+- **Swarms attack all at once, in sync, as they used to** (2026-09-27) — this replaces a two-at-a-time limit recorded
+  in July.
+- **Only lunging species wind up before they strike** — millipedes, perhaps scorpions — decided bug by bug for fun and
+  fair play (2026-09-27).
+- **Axe swings are attacks too**, as well as cutting trees (2026-09-27).
+- **Why players fight**: to sell carcasses, or to catch bugs to farm; large bugs, once subdued and still, are dragged
+  (2026-09-27) — proposal P15.
+- **Dying costs little** — mostly the walk back (2026-09-27).
+- **Stamina is allowed** (2026-09-27, replacing the January 2026 "no stamina") — what it is for is proposal P14.
+- **Bosses** are fully grown adults, harder and usually bigger; not added at random; perhaps only one at a time; a
+  locust swarm is a boss; only species where a fight is fun get one — no aphid boss (2026-09-27) — proposal P13.
+- **Aphids live on plants**, seen in the plant's own view the way the milkweed nursery shows its young — tiny bugs on
+  flowers, not roaming swarms (2026-09-27).
+- Venom and poison are real effects (D16). Spider Vale is the hardest surface zone and the fire-ant domain the hardest
+  underground (August 2026). The Ant Colony's queen is a mini-boss (D3; a scripted encounter is acceptable,
+  2026-07-06).
+- **Enemies come zone by zone**, every one eventually, with test zones where the real zone isn't built yet
+  (2026-09-27).
 
-**In the prototype now**
-- Hearts for health; stings and bites take some away. Every attack gives a warning — a flash and a hiss — before it
-  lands, and a dodge dash gives a moment of safety.
-- Sword and spear with two moves each, and an axe jab. Soldier wasps, giant hornets and tiger and giant centipedes
-  are the tougher tiers (their names are placeholders — see part 2). Wasp nests raid; centipedes lunge after a
-  warning hiss.
-- **Fainting costs nothing**: the player wakes at the zone's start point or their bed, at full health, with
-  everything they carried.
-- **Not built:** armour protection (armour is looks only, except the bee suit, which stops stings); night danger (no
-  bug is marked as a night hunter yet); bosses; poison and other effects; bows and other ranged weapons (set aside for
-  later, D12).
+**In the prototype now** — hearts for health; stings and bites take some away; every attack warns before it lands
+(to change: only lunges should); a dodge dash; sword and spear with two moves each, and an axe jab (its swing becomes
+an attack too); tougher tiers with placeholder names; wasp nests raid; centipedes lunge; fainting costs nothing — the
+player wakes at the zone's start point or their bed with everything they carried.
 
-**Still open** (→ §07) — why the player fights and what fighting rewards; what an expedition risks, since fainting
-costs nothing; which enemies come next (spiders, scorpions, warrior ants) and how bosses work.
+**Not built** — armour protection (armour is looks only, except the bee suit, which stops stings); night danger (no
+night hunter yet); bosses; poison and other effects; stamina; bows and other ranged weapons (set aside, D12).
+
+**Still open** (→ §07) — which enemies come in which zone; the boss list (P13).
 
 ### 9 · Gear: outfits, armour and accessories
-An outfit is chosen for a trip, not swapped per action, and each role — tank, attack, agility, stealth, mining,
-fishing, farming, bug-catching, beekeeping — has its own best set, with a few hybrids. The armour notes suggest
-each set gives some defence plus one main bonus and one or two small ones (the owner's example: a set that raises
-boat speed and fishing speed). Legendary sets hide behind secrets; decorative outfits boost the farm. About 43 sets are
-planned. (The armour notes also propose light as a role, and sets above steel as keys to a zone's hazard — acid,
-venom, water, dark, heat.)
+One outfit is worn at a time, whole, and can be changed any time from the inventory. Each role — tank, attack,
+agility, stealth, mining, fishing, farming, bug-catching, beekeeping — has its own best set, with a few hybrids.
+Non-combat outfits usually raise a yield or make a job easier, and their description says how. Legendary sets hide
+behind secrets; decorative outfits boost the farm. About 43 sets are in the roster so far.
 
 **Decided**
+- **One outfit, worn whole — no pieces** (2026-09-27; drawn whole since 2026-08-05), **changed any time from the
+  inventory** (2026-09-27).
 - Each role has its own best set; nothing is the best armour in the game (2026-08-06).
+- **Non-combat outfits raise a yield or make a job easier**, as their description explains (2026-09-27).
 - Nearly every zone hides at least one outfit recipe, calling for materials partly new to that zone (2026-08-06).
-- Outfits are drawn whole rather than as layered pieces — a tentative choice (2026-08-05, reaffirmed on 2026-09-26
-  with some hesitation); four are finished and approved — bronze, fire-ant, black-ant and copper.
 - Armour is made *of* a material and never a costume of the creature; faces show (August 2026).
+- **Player characters come in several skin colours** — the same base character, recoloured, so no one has to play a
+  white character (2026-09-27).
+- **The wizard's robe is dropped**; an alchemist's robe comes with a potion station instead (2026-09-27).
+- **Accessories need new ideas** — the earlier ones, like the lucky clover, don't fit (2026-09-27).
 - Crowns are kept for higher-value armour (2026-08-15). Trinkets and shields are not for now (August 2026).
-  Decorative clothing is on hold (2026-08-07).
+- **The tiers are still to be resolved**; everything is a work in progress (2026-09-27).
+- Four outfits are finished and approved — bronze, fire-ant, black-ant and copper.
 
-**In the prototype now** — eight equipment slots (head, body, arms, legs, feet, two accessories, backpack). New characters
-wear leather. Armour shows on other players but does nothing except the bee suit (stops stings) and a backpack (more
-slots — though none can be had yet); the two accessories in the game, a bee charm and a lucky clover, do nothing.
-None of the new outfit art is in the game yet: it still draws the old small layered farmer.
+**In the prototype now** — eight equipment slots (head, body, arms, legs, feet, two accessories, backpack). New
+characters wear leather. Armour shows on other players but does nothing except the bee suit (stops stings) and a
+backpack (more slots — though none can be had yet); the two accessories in the game do nothing. None of the new outfit
+art is in the game yet: it still draws the old small layered farmer.
 
-**Designed, not built** — about 88 accessories, set aside for later (D26); the stats that make gear matter (defence,
-damage, stealth, light radius and the rest).
-
-**Still open** (→ §08) — how outfits are equipped (one outfit slot, or pieces); how big the player is on screen; the
-starting outfit; what becomes of the class, hair and skin choices; the armour ladder — the decision log (D11) lists
-nine rungs (leather, padded cloth, copper, bronze, iron, steel, silver, gold, platinum), while the August armour
-notes list six (leather, wood, copper, iron, steel, platinum), cutting bronze — one of the four approved outfits —
-and silver; what the wizard's robe the owner asked for is (a set, a costume, or dropped).
+**Still open** (→ §08) — the tiers (the decision log, D11, lists nine rungs from leather to platinum; the August
+armour notes list six — leather, wood, copper, iron, steel, platinum — cutting bronze, one of the four approved
+outfits, and silver); how big the player is on screen; the starting outfit; what else the character screen offers
+besides skin colour (class, hair).
 
 ### 10 · Tools and weapons
 Metal tiers plus a few specials that matter (D12). Picks come in metal tiers only; watering cans small and large;
@@ -448,8 +469,9 @@ Mayor sells land.
 - One coin and no bartering (D6, D29).
 - Which shops the village has (D20, D26), and what the village still needs: its townspeople and their behaviour,
   better buildings and layout, polish, and secrets (2026-09-26).
-- The second town is a small western-style town in the Locust Farmland; the village windmill that powers its houses
-  can only be bought or built after the player reaches it (2026-06-27).
+- The second town is a small western-style town in the Locust Farmland (2026-06-27) — a small village with shops and
+  people of its own, which needs more townspeople (2026-09-27); the village windmill that powers its houses can only be
+  bought or built after the player reaches it (2026-06-27).
 - A myrmecologist — an ant specialist — sells from a wooden building at the Ant Tunnels' entrance (2026-07-07).
 
 **In the prototype now** — eight shopkeepers in the rebuilt village (general store, Bug Dealer, blacksmith, carpenter,
@@ -469,7 +491,7 @@ outpost); what townspeople do beyond trading; prices overall.
 
 ### 14 · The world and exploring
 Twenty zones of 256 by 256 squares on a grid five rows deep and four wide — three rows of surface, two underground —
-around the starting village. Danger rises going north and east on the surface and going deeper; rivers, cliffs and
+around the starting village. Danger rises outward from the village and going deeper; rivers, cliffs and
 deep water separate the harder places, with crossings. Every zone is meant to have named places, landmarks and
 secrets, and signposts give fast travel.
 
@@ -607,13 +629,15 @@ refine it); buy copper to steel bars and craft at eleven working stations; buy f
 six; fight wasps and centipedes; and walk between five zones. They can't yet cook, fish, eat to heal, use power,
 travel fast, read an Ecology tab, or get anything from armour except the bee suit.
 
-**Where the game and the design disagree today** — each goes on the backlog or into its section:
+**Unfinished, or different from the design** — the prototype is partway done; these are the places a player would
+notice, each on the backlog:
 1. New players start in the old demo village, which has no shops; the rebuilt village is meant to be the start.
-2. The rock crusher, bug extractor and gem cutter stand only in a test zone: mined ore can't be refined, carcasses
-   can't be processed and gems can't be cut, and silver, gold and platinum are out of reach.
+2. The rock crusher, bug extractor and gem cutter stand only in a test zone for now: mined ore can't be refined,
+   carcasses can't be processed and gems can't be cut, and silver, gold and platinum are out of reach.
 3. Wasps, hornets and dragonflies need the large net, which can't be bought or made; centipedes need a trap, and there
    is none; no backpack can be had either.
-4. Eleven of the fifteen stations can't be crafted or bought, although D1 says they can.
+4. Eleven of the fifteen stations can't be crafted or bought yet, and nothing belongs to anyone yet, so any station
+   can be broken and carried off.
 5. No bug hunts at night, so nights add no danger yet: real wasps and hornets hunt by day, and night danger waits for
    a real night-active species.
 6. The Ecology tab doesn't exist, although the roadmap's opening brief assumed it did (a note there now corrects
@@ -630,7 +654,10 @@ travel fast, read an Ecology tab, or get anything from armour except the bee sui
 12. Each zone has a hard ceiling per species, while the design uses the ecology's many levers instead.
 13. Prototype rules that were never the design: bees, dragonflies and fireflies fly over fences; wooden fences are
     chewable by centipedes and stone stops them; carrion beetles make compost; centipedes move as packs; "most bugs
-    can be calmed"; invented species names (the soldier wasp, the giant hornet).
+    can be calmed"; invented species names (the soldier wasp, the giant hornet); every attack giving a warning; at
+    most two attackers at a time.
+14. Rain waters crops and trees but doesn't show it (part 4); the darkness of tunnels works only in a test zone
+    (part 5); tents are too small (part 7).
 
 Some documents are also plainly out of date against the game — recipe counts, net sizes, hive types, the lighting
 document, rotting fruit, the zone scale. I'll correct each as its section is rebuilt.
@@ -688,8 +715,8 @@ Bugs here are giant — even a fly is the size of a cat next to the player — s
 - **The autonet**: the machine that draws in bugs from the area just ahead of it; it holds more and stops when full.
 - **Lights at night** (the owner's idea, for the powered age): lamps draw night-flying bugs, and nets, automatic
   catchers or bug zappers placed around them do the catching; a zapper leaves carcasses, not live bugs.
-Every catcher takes bugs out of the world, keeps them alive (except the zapper), and is emptied into the bug bag by
-hand.
+Every catcher takes bugs out of the world, keeps them alive (except the zapper), and is emptied by hand — small
+bugs into the bug bag, big ones dragged out (P15).
 
 **Lenses:** Premise — sized for giant bugs, with no tiny-bug tools (the pooter and the Berlese funnel were rejected
 for that reason). Real biology — interception nets, pit traps and light traps are how bugs are really caught. Economy
@@ -824,12 +851,107 @@ multiplayer ownership needs care.
   (unused), and that goes with everything else from the mammal world.
 - **Habitat instead of hard caps**: each species needs its own kind of place — flowers, rot, water, shade — and a crowd
   thins where there isn't enough; today's fixed ceilings stay only as a high safety net.
-- **Mini-bosses set off by conditions** (decided) — the natural ones follow real biology: crowded locusts really do
-  change into swarming locusts, and crowded aphids grow wings; other mini-bosses are simply placed.
+- **Bosses set off by conditions** (decided) follow real biology where they can — crowded locusts really do change
+  into swarming locusts; how bosses come about is proposal P13.
 
 **Lenses:** The owner's direction — many levers, not hard caps. Readability — the player can see why a population
-moved. Real biology — the locust and aphid changes are real. **Cost and risk:** habitat-based limits are a real change
+moved. Real biology — the locust change is real. **Cost and risk:** habitat-based limits are a real change
 to the shared simulation and need the determinism checks; each food chain is its own tuning job.
+
+### P11. Cutting plants down, and the stations that process what you cut
+- **Harvesting takes the product**: fruit, grain, flowers or leaves, plus sometimes a seed (the one harvest rule). Most
+  crops are gone once harvested (five of the seven today); fruit trees, bushes and some crops keep producing.
+- **Cutting down removes a plant that would otherwise keep going** — a fruit tree, a bush, a perennial, a wild plant —
+  and gives its body: wood, stalks, straw, roots. Hands harvest; the axe, scythe or shovel cuts. So for the plants that
+  last, the player chooses: keep it producing, or take it for materials.
+- **What the parts become**, each through what the real process does:
+  - **wheat**: threshing separates the grain from the straw (the scythe could do it in the field, or a threshing floor
+    in the Locust Farmland town); **straw** becomes mulch that keeps a plot wet longer, compost, a straw skep beehive and
+    a straw hat;
+  - **fibre plants** (flax, and cotton when it arrives): stalks are soaked to loosen the fibre — "retting", as flax
+    really is — then spun into thread on the spinning wheel the game already has;
+  - **milkweed**: its seed pods hold a silky floss that is a stuffing, not a thread — real enough to have filled life
+    jackets in the Second World War. The pods are a harvest; cutting the plant down would end the butterfly nursery
+    living on it;
+  - **herbs and flowers**: a drying rack dries them for potions; dyes come from roots, flowers and leaves (real blue dye
+    comes from leaves, red from madder roots), made at the dye station;
+  - **fruit**: a press makes juice, which ferments in the keg once cooking and drinks arrive;
+  - **anything left over** goes into the compost bin, and compost is fertiliser.
+- Grain and flour belong to the Locust Farmland, a harder zone, so that line opens in the middle of the game.
+
+**Lenses:** Real farming — threshing, retting, pressing and drying are how people really process plants, so the game
+teaches something true. Economy — ties farming to cloth, potions, beekeeping and compost. Premise — no straw for animal
+bedding: there are no farm animals. **Cost and risk:** retting and threshing are new steps with art (spinning and
+weaving already exist); juice and flour wait for the cooking system.
+
+### P12. One shovel, a clear switch between digging and laying
+- **The shovel does both, and the mouse wheel is the switch**: turning it steps through **Dig** and each kind of
+  ground the player has materials for — dirt, grass, sand, stone path, wooden floor — each with its count.
+- **The choice is always visible**: the shovel's hotbar slot shows the current mode's icon, the cursor matches (a spade
+  for digging, a square of the chosen ground for laying), and a short label under the cursor names it.
+- **Laying uses the raw materials**, as today — stone for a stone path, planks for a wooden floor, sand for sand — one
+  whole square at a time; the diagonal shapes go, as decided.
+- **What goes**: the hidden Shift-to-dig and the separate materials panel. Right-click stays free for doors, beds,
+  stations and signs, as it is now.
+- The same idea in a well-liked game: Valheim's hoe is one tool with a small menu of ground jobs, and paving it costs
+  stone.
+
+**Lenses:** Readability — the mode is on screen at all times, never a hidden key. The owner's ruling — one shovel, a
+clearly shown switch. **Cost and risk:** small — the wheel is already the shovel's (it chose the diagonal shape, which
+goes); icons for each ground kind.
+
+### P13. Bosses: the biggest of a few species
+(The zone designs call them mini-bosses; this uses "boss" for both.)
+- **A boss is the biggest of its kind, for real reasons**: queens are far bigger than their workers; larvae that feed
+  well grow into bigger adults; and many centipedes and millipedes keep growing through their lives, so their oldest
+  really are the biggest. (Insects don't grow once they are adults.) Only species where a big fight would be fun get
+  one — no aphid boss.
+- **Only one boss per zone at a time** — my reading of the owner's "perhaps only one".
+- **Where they come from** — never at random:
+  - **placed**: some live in a place made for them, like the Ant Colony's queen in her chamber;
+  - **grown**: when a wild population thrives for long enough, one of its young is fed into a giant, or a nest raises a
+    new, huge queen. The Ecologist warns about it in any zone with a monitoring station;
+  - **swarming**: a locust swarm is a boss made of many — real locusts change into swarming locusts when they crowd —
+    beaten by thinning it until it breaks up.
+- **What a boss leaves**: its carcass, like any bug, and the bug extractor turns it into materials only a boss gives; a
+  mounted carcass makes a trophy. Recipes come from the Ecologist's quests (P9). A queen might even be caught alive —
+  a queen founding a colony on your farm.
+- **Consequences**: killing a queen ends her colony until a new queen founds another. Bosses have a lifespan like any
+  bug.
+- **Safe places**: a boss never grows from penned bugs or on a private plot, and a swarm never enters a private plot.
+
+**Lenses:** Real biology — queens, well-fed larvae, lifelong growth in centipedes, crowding locusts. Curiosity and
+surprise — a neglected nest becomes an event, with warning. No forced chaos — conditions the player can see coming.
+**Cost and risk:** each boss is its own art, animation and fight design; a swarm boss is expensive for the shared
+simulation (many bugs at once); "grown" bosses need the ecology to track how long a population has thrived.
+
+### P14. Stamina for dodging
+- **Stamina is a small pool of dodges**: each dodge spends some, and it refills on its own in a few seconds. Today the
+  dodge has a fixed wait between uses; a pool lets a player chain two or three dodges in a tight spot, and lets gear
+  make it bigger or refill faster.
+- Nothing else uses it — no sprint unless the owner wants one, and tools, farming and catching never tire the player.
+- **Food helps before a trip**: once cooking arrives, some meals give a timed boost to stamina — a bigger pool or a
+  faster refill — eaten to prepare for a hard zone.
+
+**Lenses:** Combat — the dodge becomes a resource to manage, not a free escape. Fairness to the player's time — daily
+work never waits on a bar. Economy — food gets a purpose without hunger. **Cost and risk:** a small bar on screen; the
+bugs' attack timing has to be retuned around it.
+
+### P15. Moving big bugs: grab and drag
+- **A big bug can be grabbed once it is subdued and still** — calmed, or worn down in a fight (the backlogged
+  "weakened" catch) — or dead. Stand next to it and press E; press E again to let go. The E prompt looks like the
+  game's other prompts.
+- While dragging, the player walks slowly, can't use tools, and drags one bug at a time.
+- Drag a live one into a pen to keep it, or a carcass to the bug extractor or a buyer. A subdued bug left alone wakes
+  and goes back to what it was doing; a carcass left behind rots and feeds the carrion beetles.
+- **Placed catchers holding big bugs** (P3) are emptied the same way: open it, and the bug is dragged out rather than
+  going into the bag.
+- It ties to the carrying limit (D43): a hand cart can come later for hauling more at once.
+- Dragging across a zone's edge needs bugs to cross zones for real, which is planned but not built.
+
+**Lenses:** Picture the moment — hauling a giant beetle home across the meadow. Readability — "too big for the bag"
+always has an answer. Real biology — carcasses feed the scavengers. **Cost and risk:** a dragging animation for every
+large species; a clear look for "subdued"; crossing zones waits for cross-zone bugs.
 
 ## Questions
 ### Q1. Does this describe the game?
