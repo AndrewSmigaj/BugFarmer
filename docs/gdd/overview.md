@@ -1,5 +1,5 @@
 # §OV · The game as the documents describe it
-<!-- gdd: id=OV status=review updated=2026-09-26 -->
+<!-- gdd: id=OV status=review updated=2026-09-27 -->
 
 Before redoing the design document, every design document in the repo was read in full — about 240 files: the
 December 2025 requirements, the January 2026 design document, the brainstorms, the economy and zone designs, the
@@ -10,10 +10,11 @@ this overview against the notes and the code. (The 63 raw research notes behind 
 decisions rather than read line by line.)
 
 This is the whole game as those documents describe it, in my own words, organised by what the player does. For each
-activity it says what has been **decided** (and when), what is **built** in the game today, what is **designed but
-not built**, and what is **still open**, with the section where each open point will come to you. "D" numbers (D1 to
-D31) are entries in the decision log of June and July 2026 (`docs/product/economy/DECISIONS.md`); a few of its
-entries mix the owner's rulings with my own defaults, and where that matters I say which.
+activity it says what has been **decided** (and when), what is **in the prototype now**, what is **designed but not
+built**, and what is **still open**, with the section where each open point will come to you. "D" numbers are entries
+in the decision log (`docs/product/economy/DECISIONS.md`): D1 to D31 from June and July 2026, D32 onward from the
+owner's review of this overview. A few of the early entries mix the owner's rulings with my own defaults, and where
+that matters I say which.
 
 **Nothing in the game is finished.** What the prototype has now is a first version: every system, every number in
 the data (prices, timings, counts) and every bug is a placeholder until it has been designed and tuned, and every bug
@@ -62,9 +63,12 @@ it names another source.
 - **Curiosity and surprise** are priorities (2026-09-26).
 - **Combat matters and defence is critical**; each role has its own best gear (2026-08-06). Starter zones stay
   cosy, dodging is the only defensive move, and nights are more dangerous (2026-07-11).
-- **Gear is about roles and trips**: an outfit is chosen per expedition, and no single set is best at everything
-  (2026-08-06).
-- **Potions are ordinary items, not magic**, and one player can hand another a potion (2026-08-06).
+- **Gear is about roles**: combat, mining, stealth, fishing, farming and the other roles each have their own best
+  outfit, and no single set is best at everything (2026-08-06); one outfit is worn at a time, whole, and changed any
+  time from the inventory (2026-09-27).
+- **Potions are ordinary items, not magic** (2026-08-06); meals and potions heal and give boosts, and a bandage or a
+  potion can be used on another player (2026-09-27).
+- **No upkeep chores**: no hunger, and tools never wear out (2026-09-27).
 - **The world is a grid of zones** — surface to the north, underground to the south, danger rising with distance;
   five rows, with a sixth, deepest row left for later (D2, June 2026).
 - **Hosting works like Terraria** — host and play, join a friend, or run a dedicated server — and each world keeps
@@ -404,123 +408,156 @@ outfits, and silver); how big the player is on screen; the starting outfit; what
 besides skin colour (class, hair).
 
 ### 10 · Tools and weapons
-Metal tiers plus a few specials that matter (D12). Picks come in metal tiers only; watering cans small and large;
-nets small and large; a saw for big trees; a harvest sickle; smokers in three tiers; fishing rods in tiers with fish
-traps and no harpoons; **bugs are the light source** — firefly and glowworm lanterns replace oil lamps; the
-magnifying glass from the start; a grappling hook later; a bug vacuum and a headlamp; bows and cast nets set aside.
+Metal tiers plus a few specials that matter (D12): picks in metal tiers only; watering cans small and large; nets small
+and large; a saw for big trees; a harvest sickle; smokers in three tiers; fishing rods; the magnifying glass from the
+start; a hand bug vacuum; a grappling hook later; bows and cast nets set aside. Light comes from bug lanterns (firefly
+and glowworm), torches, a headlamp and electric lights. Tools never wear out.
 
-**In the prototype now** — pickaxe, axe, shovel and hoe in eight tiers from wood to platinum, the scythe in seven; saw and
-harvest sickle; sword and spear in eight tiers; both nets; watering cans; torch; flashlight; smoker; calm spray; the
-magnifying glass, which does nothing yet and isn't in the starting kit (the general store sells it). Durability
-exists in the data but isn't used.
+**Decided**
+- **Light comes from several sources**: bug lanterns, torches and electric lights; oil lamps are out (D12,
+  2026-09-27).
+- **Tools never wear out** — nothing to repair or replace (2026-09-27).
+- **No diamond or gold tools** — neither makes sense as a tool (2026-09-27).
+- **The swing motions are worked out** (July 2026) — a shovel scoops rather than swings (2026-07-09) — and the
+  pickaxe swings like the axe (2026-09-27).
+- Metal tiers plus a few specials that matter (D12).
 
-**Motions** — swings must feel natural: a shovel scoops, it isn't swung (2026-07-09). In the game every tool has a
-basic motion — seven kinds, built in July 2026 — with two known flaws: a hard snap back to rest, and the tool drawing
-through the body. For the new outfit art, the sword, axe, net, hoe and shovel have designed swings and only the sword
-is approved in all three facings; the floating hand can vanish against same-coloured armour; **the pickaxe, the main
-mining tool, has no swing yet**, and the spear's isn't agreed.
+**In the prototype now** — pickaxe, axe, shovel and hoe in eight tiers from wood to platinum, gold among them; the
+scythe in seven; sword and spear in eight, gold among them too; saw and harvest sickle; both nets; watering cans;
+torch; flashlight; smoker; calm spray; the magnifying glass, which does nothing yet and isn't in the starting kit (the
+general store sells it). Every tool moves with a simple motion from June 2026 that has two known flaws — a hard snap
+back to rest, and the tool drawing through the body; the worked-out motions aren't in the game yet. An unused wear
+value in the data goes.
 
-**Still open** (→ §09) — whether tools wear out; the bug lanterns, the grappling hook and the specials; the top of
-the metal ladder (diamond is an ore but not a tool tier; the backlog plans deep metals).
+**Still open** (→ §09) — which metals tools come in, now that gold and diamond are out, and whether gold swords and
+spears go too (gold is as soft for a blade as for a pick — I'd drop them); the grappling hook and the specials.
 
 ### 11 · Food, cooking and potions
-Meals are short boosts. Stoves grow from one dish at a time to several. Bug food is the signature branch — meat from
-carcasses, honey, royal jelly. Potions heal, cure and coat weapons, and one player can hand another a potion; healing
-a friend means holding the potion in the off hand.
+There is no hunger. Meals heal and give boosts; potions heal more strongly and give effects food can't; a bandage or a
+potion can be used on another player to heal them. Stoves grow from one dish at a time to several. Bug food is a
+signature branch — meat from carcasses, honey, royal jelly.
 
-**Decided** — cooking is its own system and was set aside for later (D19); potions and alchemy likewise, with venom
-and poison staying real (D16); potions are not magic and can be given to other players (2026-08-06).
+**Decided**
+- **No hunger** — meals heal and give boosts (2026-09-27); which meal does what is decided with the recipe list.
+- **Potions heal more and do what food can't** — stronger healing and other effects where food doesn't make sense
+  (2026-09-27). Potions are ordinary items, not magic (2026-08-06).
+- **Healing someone else**: hold a bandage or a potion and use it on them (2026-09-27).
+- **Things can be given to other players**, as in Terraria or Stardew Valley (2026-09-27) — proposal P17.
+- Cooking is its own system (D19); venom and poison are real effects (D16).
 
-**In the prototype now** — food items exist and sell, but eating does nothing. No meals exist (the planned starter stew isn't
-in the game), the cooking stations have no recipes, and health comes back only by slowly regenerating.
+**In the prototype now** — food items exist and sell, but eating does nothing. No meals exist, the cooking stations
+have no recipes, and health comes back only by slowly regenerating.
 
-**Designed** — about 78 potions and 47 meals in the economy catalogue; eating fruit to heal; fridges that stop food
-rotting.
+**Designed** — the old catalogue lists about 78 potions and 47 meals, weapon coatings among them (P16 suggests a
+much smaller set); eating fruit to heal; fridges that stop food rotting (P16 suggests food doesn't spoil).
 
-**Still open** (→ §11) — whether there is hunger: the economy catalogues say there isn't and credit the design
-document, which only rules out stamina; what food and potions are for; how healing works.
+**Still open** (→ §11) — the recipe list; the potion set (P16).
 
 ### 12 · Fishing and water
-A fishing mini-game with rod tiers and bug baits, fish traps as the slow option, and boats for getting around;
-fishing arrives with the Underground River and its blind cave fish.
+Fishing starts in the starting village, at its lake and the fisherman's house, with rods, bug baits, fish traps and
+boats. Water divides the map: rivers, lakes and the sea keep areas from running into each other, without having to sit
+exactly on zone borders. Shallow water can be waded slowly in a wading outfit; deep water always takes a boat. There are no separate sea zones: the coast comes into the western and eastern
+zones, and off the west coast at least one inlet holds an island shaped like a bug, with little inlets making its legs.
 
-**Decided** — **no diving** in this game (August 2026); fishing outfits carry two bonuses, fishing and boat speed
-(August 2026); rods in tiers with a mini-game, fish traps, no harpoons (D12); bugs fly over water (the owner's
-playtest rule of 2026-06-11); water divides the map — waders for the marsh (D10) and deep water walling off islands
-(the swamp design).
+**Decided**
+- **Fishing starts in the village**, at its lake and the fisherman's house (2026-09-27).
+- **Crossing water**: shallow water can be waded, slowly, by a player in a wading outfit; deep water always needs a
+  boat; there is no separate waders item (2026-09-27).
+- **Natural barriers** — rivers, lakes, the sea — keep areas from mixing too much, and needn't match zone borders
+  exactly (2026-09-27).
+- **No sea zones**: the coastline comes into the western and eastern zones, with at least one inlet off the west coast
+  holding a bug-shaped island (2026-09-27).
+- No diving (August 2026); fishing outfits carry fishing and boat-speed bonuses (August 2026); rods with a mini-game,
+  fish traps, no harpoons (D12); bugs fly over water (2026-06-11).
 
-**In the prototype now** — nothing to play. Docks and fishing props are decoration; the Fisherman (rods, nets, a boat for 400
-coins) exists in the data but stands in no zone. Every water tile stops players, and bugs fly over water.
+**In the prototype now** — nothing to play. The village has its lake, the fisherman's house and his boat store with a
+dock, but the Fisherman himself was left out when the village was saved (his spot is blocked). Docks and fishing props
+are decoration. Every water tile stops players; bugs fly over water.
 
-**Planned** — fishing arrives with the Underground River (the approved roadmap; it replaces D5, which in June 2026
-kept fishing out of the first release — see P1). Also designed: a dredge set on the water and worked with a hose, in
-tiers (D14).
+**Designed** — a dredge set on the water and worked with a hose, in tiers (D14).
 
-**Still open** (→ §01 and §13) — whether players wade slowly through shallow water, as the older world design says,
-or are stopped, as the game does now.
+**Still open** (→ §13) — how the fishing mini-game plays.
 
 ### 13 · Towns, shopkeepers and trade
 A safe starting village full of shops; a second town — a small western-style town in the Locust Farmland — and the
-first mine, where most recipes gather; one coin currency; the player starts with no money and earns the first coins
-by selling a bug. Shopkeepers sell tools, seeds, recipes and recipe books; the Ecologist explains the ecology; the
-Mayor sells land.
+first mine, where most recipes gather. Shopkeepers sell tools, seeds, recipes and recipe books; the Mayor sells land.
+Trading takes coins or goods: a townsperson may take goods of the kinds they deal in instead of coins, as in Baldur's
+Gate. Coins come from many sources. Townspeople live in their town: they keep their shops, do the chores, and sleep at
+home at night, and several of them give quests.
 
 **Decided**
-- One coin and no bartering (D6, D29).
+- **Coins and barter**: one coin, and bartering too — goods can be offered instead of coins to a townsperson who takes
+  that kind of goods, as in Baldur's Gate (2026-09-27; replaces "no bartering" in D6). **Coins come from many sources**
+  (2026-09-27).
 - Which shops the village has (D20, D26), and what the village still needs: its townspeople and their behaviour,
   better buildings and layout, polish, and secrets (2026-09-26).
-- The second town is a small western-style town in the Locust Farmland (2026-06-27) — a small village with shops and
-  people of its own, which needs more townspeople (2026-09-27); the village windmill that powers its houses can only be
-  bought or built after the player reaches it (2026-06-27).
+- **Townspeople** mend fences, gather fruit, deal with pest bugs and more — whatever makes the game better — and sleep
+  in their houses at night (2026-09-27) — proposal P18.
+- **Quests from several townspeople**, not only the Ecologist (2026-09-27): the myrmecologist has quests and a board of
+  retrieval jobs, some of them out of reach until later. **No bounties** (2026-09-27).
+- **The second town** is a small western-style town in the Locust Farmland (2026-06-27) — a small village with shops and
+  people of its own, which needs more townspeople — with strings of lights and other electric things (2026-09-27).
+- **The starting village is mostly unpowered**: its windmill lights only part of it, such as the Mayor's house — a
+  glimpse of what power will bring. Players can't take it (2026-09-27), and can buy or build a windmill of their own
+  only after reaching the Locust Farmland (2026-06-27).
 - A myrmecologist — an ant specialist — sells from a wooden building at the Ant Tunnels' entrance (2026-07-07).
 
 **In the prototype now** — eight shopkeepers in the rebuilt village (general store, Bug Dealer, blacksmith, carpenter,
-weaver, stonemason, modern wares, Ecologist) and Maren in the Bee Meadow; the Mayor is there too, and talks, but
-sells nothing yet. Players start with no coins. Shops sell items, single recipes and recipe books; six shopkeepers
-buy things (the general store, Bug Dealer, blacksmith, carpenter and weaver, and Maren); selling uses a basket;
-talking to someone shows a portrait and a greeting; a check stops buy-low, sell-high loops.
+weaver, stonemason, modern wares, Ecologist) and Maren in the Bee Meadow; the Mayor is there too, and talks, but sells
+nothing yet. Players start with no coins. Shops sell items, single recipes and recipe books, though the shop screen
+shows only a shop's first six goods, so most of the general store's stock can't be bought yet; six shopkeepers buy
+things — the player's bag opens beside the shop, they move what they want to sell into a small "to sell" box, and one
+button sells it all for coins; talking to someone shows a portrait and a greeting; a check stops buy-low, sell-high
+loops.
 
-**Not built** — land deeds; the Fisherman's shop; townspeople who walk about; quests; the second town; the shops at
-the mine; the myrmecologist.
+**Not built** — bartering; land deeds; the Fisherman; townspeople who work, walk about or sleep; quests; the second
+town; the shops at the mine; the myrmecologist.
 
 **Designed** — quests that are optional, grow out of what is happening in the world, can be solved several ways and
-are never forced (January 2026).
+are never forced (January 2026); which townspeople give which quests isn't designed yet.
 
-**Still open** (→ §16) — bounties (in the founding documents, and a bounty board designed for the Deadly Ants
-outpost); what townspeople do beyond trading; prices overall.
+**Still open** (→ §16) — prices overall; the quests themselves.
 
 ### 14 · The world and exploring
 Twenty zones of 256 by 256 squares on a grid five rows deep and four wide — three rows of surface, two underground —
-around the starting village. Danger rises outward from the village and going deeper; rivers, cliffs and
-deep water separate the harder places, with crossings. Every zone is meant to have named places, landmarks and
-secrets, and signposts give fast travel.
+around the starting village. Danger rises outward from the village and going deeper; rivers, lakes, cliffs and the
+sea keep areas apart, with crossings; the coast comes into the western and eastern zones. Every zone is meant to have
+named places, landmarks and secrets, and signposts give fast travel.
 
 | | west | | | east |
 |---|---|---|---|---|
 | far north | Locust Farmland · the western town | Millipede Forest | Spider Vale West | Spider Vale East |
 | north | Hilltop Meadow | Butterfly Fields | Scorpion Rocks | Deep Swamp |
-| the village's row | **Bee Meadow** — built | **the Village** — built | Wasp Thicket | Shallow Swamp |
-| underground | **Ant Tunnels** — built | **Underground Passages** (the first mine) — built | Underground River | Deadly Ants outpost |
+| the village's row | **Bee Meadow** — in the prototype | **the Village** — in the prototype | Wasp Thicket | Shallow Swamp |
+| underground | **Ant Tunnels** — in the prototype | **Underground Passages** (the first mine) — in the prototype | Underground River | Deadly Ants outpost |
 | deep underground | Ant Colony and its queen | Centipede Cavern | the deep river's sunken ruins | Deadly Ants core |
 
-**Decided** — the grid and its orientation (north at the top, underground to the south); the second town in the
-Locust Farmland (2026-06-27); **bugs really cross from one zone to the next** (2026-07-06) — finishing that is part of
-finishing the game, and how is left to me: whole swarms migrate (2026-09-26); objects need a reason to be there; no
-standalone rocks; wild zones are wooded by default, with clearings; zone borders blend on gradients; the view is from
-above, so caves show no ceilings; the village gets secrets (2026-09-26); a small underground fortress hides a
-legendary set in a locked chest (2026-08-06).
+**Decided**
+- The grid and its orientation (north at the top, underground to the south); the second town in the Locust Farmland
+  (2026-06-27).
+- **Bugs cross from one zone to the next, but each species only spawns in its own spawn areas** (2026-07-06;
+  2026-09-27). How they cross is left to me: whole swarms migrate (2026-09-26).
+- **Every zone built so far gets redesigned**, now that zones can be designed much better; some houses also don't
+  meet the roads properly (2026-09-27).
+- **Secrets everywhere**: the small underground fortress holding the Queens' set in a locked chest (2026-08-06) is one
+  example among many, not the only secret (2026-09-27).
+- Objects need a reason to be there; no standalone rocks; wild zones are wooded by default, with clearings; zone
+  borders blend on gradients; the view is from above, so caves show no ceilings; the village gets secrets
+  (2026-09-26).
+- The coast and the bug-shaped island (part 12).
 
-**In the prototype now** — five playable zones joined by walking off their edges: the rebuilt village, the Bee Meadow (sea,
-coves, Maren's farm, a fishing hamlet), Underground Passages and the Ant Tunnels, plus the old demo village — **which
-is where new players start, although it has no shops**. The Ant Tunnels were built after the owner went through their
-design line by line (2026-07-07); the Ant Colony and the Centipede Cavern are designed but not built. About sixteen
-test zones. Bugs can't yet cross from one zone to another. No map, no fast travel, no working signposts.
+**In the prototype now** — four zones, joined by walking off their edges: the rebuilt village, the Bee Meadow (sea,
+coves, Maren's farm, a fishing hamlet), Underground Passages and the Ant Tunnels. New players are still sent into an
+old version of the village, which isn't one of the game's zones. The Ant Tunnels were built after the owner went
+through their design line by line (2026-07-07); the Ant Colony and the Centipede Cavern are designed but not built.
+There are test zones for trying things. Bugs can't yet cross from one zone to another. No map, no fast travel, no
+working signposts.
 
-**Designed** — an economy sheet for seventeen zones, fuller zone designs for seven, landmark lists for four; secrets
-such as hermit cabins, special merchants and hidden caverns.
+**Designed** — economy sheets for seventeen zones, fuller zone designs for seven, landmark lists for four; secrets such
+as hermit cabins, special merchants and hidden caverns.
 
-**Still open** (→ §01, §17) — a few places disagree between documents (where the ranger station is; Spider Vale East
-described as the "western edge"); how fast travel is unlocked.
+**Still open** (→ §01, §17) — a few places where documents disagree (where the ranger station is; Spider Vale East
+called the "western edge"), to be resolved together (2026-09-27); how fast travel is unlocked.
 
 ### 15 · Progression and tiers
 The player moves up by getting better tools, which open harder ore, which makes better bars and gear, which open
@@ -594,7 +631,7 @@ whether anything in the shared world should go faster for one player than for an
 goes (2026-09-26). The roadmap plans about 650 short texts for it.
 
 **In the prototype now** — a hotbar and an inventory at the screen edges while the world keeps running; one panel for crafting,
-storage, compost, nurseries and hives; a shop basket; hearts; the clock; a bug card; a message for most refused
+storage, compost, nurseries and hives; a "to sell" box in shops; hearts; the clock; a bug card; a message for most refused
 actions (nursery deposits still fail silently); character select, the opening text and the title screen. Hovering
 shows only a name — 2 of the game's 654 things have a description.
 
@@ -626,12 +663,12 @@ plan.
 a small net, a watering can, three kinds of seeds, torches, a flashlight, fencing for a pen and no money; catch flies,
 butterflies and other small bugs; breed bugs in a compost bin; grow seven crops and pick fruit; mine ore (though not
 refine it); buy copper to steel bars and craft at eleven working stations; buy from eight shopkeepers and sell to
-six; fight wasps and centipedes; and walk between five zones. They can't yet cook, fish, eat to heal, use power,
+six; fight wasps and centipedes; and walk between the four zones. They can't yet cook, fish, eat to heal, use power,
 travel fast, read an Ecology tab, or get anything from armour except the bee suit.
 
 **Unfinished, or different from the design** — the prototype is partway done; these are the places a player would
 notice, each on the backlog:
-1. New players start in the old demo village, which has no shops; the rebuilt village is meant to be the start.
+1. New players are sent into an old version of the village, which has no shops; the rebuilt village is the start.
 2. The rock crusher, bug extractor and gem cutter stand only in a test zone for now: mined ore can't be refined,
    carcasses can't be processed and gems can't be cut, and silver, gold and platinum are out of reach.
 3. Wasps, hornets and dragonflies need the large net, which can't be bought or made; centipedes need a trap, and there
@@ -642,10 +679,11 @@ notice, each on the backlog:
    a real night-active species.
 6. The Ecology tab doesn't exist, although the roadmap's opening brief assumed it did (a note there now corrects
    it); the magnifying glass does nothing and isn't in the starting kit, although D12 says it should be.
-7. Floors don't stop bugs appearing; no door stops players; mud and shallow water don't slow anyone.
+7. Floors don't stop bugs appearing; no door stops players; mud doesn't slow anyone, and all water stops everyone
+   (shallow water is meant to be waded in a wading outfit, part 12).
 8. Wheat is still sold and planted in the village.
 9. The autonet doesn't catch anything; the rebuilt village's beehives never come alive; mannequins don't show
-   clothes; the Fisherman isn't placed.
+   clothes; the Fisherman is missing from the village.
 10. Breaking a full compost bin leaves an invisible food source behind; wild bug broods on the ground can't be seen;
     milkweed and compost bins can't be seeded from empty, and nursery refusals give no message; breaking the gem
     cutter drops a rock crusher.
@@ -658,6 +696,11 @@ notice, each on the backlog:
     most two attackers at a time.
 14. Rain waters crops and trees but doesn't show it (part 4); the darkness of tunnels works only in a test zone
     (part 5); tents are too small (part 7).
+15. Tools come in gold, which goes, and carry a wear value that nothing uses (part 10).
+16. The shop screen shows only the first six goods of each shop: the general store's net, watering cans, wooden
+    tools, calm spray, magnifying glass, gloves, cot, torch, lantern and fence, and the blacksmith's axes, weapons and
+    armour, can't be bought. The carpenter buys no furniture (the "furniture" it asks for matches no item), and the
+    blacksmith buys ore as well as bars.
 
 Some documents are also plainly out of date against the game — recipe counts, net sizes, hive types, the lighting
 document, rotting fruit, the zone scale. I'll correct each as its section is rebuilt.
@@ -677,8 +720,12 @@ The older documents get a note saying so:
 - no formic items (D18) → ants give formic acid (2026-07-07);
 - Apico as the owner's benchmark (the July research) → one example among many, not a target (2026-07-08);
 - a diver's set and diving in the zone designs → no diving in this game (August 2026);
-- building only the village and the first mine (D17, June 2026) and fishing left out of the first release (D5) → all
-  twenty zones, ring by ring, with fishing arriving with the Underground River (the approved roadmap, 2026-09-26).
+- building only the village and the first mine (D17, June 2026) → all twenty zones, ring by ring (the approved
+  roadmap, 2026-09-26);
+- fishing left out of the first release (D5) → fishing from the start, in the village (2026-09-27);
+- no bartering (D6) → coins and barter, as in Baldur's Gate (2026-09-27);
+- waders for the marsh (D10) → a wading outfit for shallow water; deep water always takes a boat (2026-09-27);
+- tools that wear out (the durability in the economy designs and the item data) → tools never wear out (2026-09-27);
 
 Three disagreements are **not** settled here:
 - how outfits are worn — drawing them whole is the owner's tentative choice, but it doesn't decide whether they are
@@ -944,6 +991,102 @@ bugs' attack timing has to be retuned around it.
 **Lenses:** Picture the moment — hauling a giant beetle home across the meadow. Readability — "too big for the bag"
 always has an answer. Real biology — carcasses feed the scavengers. **Cost and risk:** a dragging animation for every
 large species; a clear look for "subdued"; crossing zones waits for cross-zone bugs.
+
+### P16. Food for a trip, potions for a fight
+- **A meal heals you over a while and gives one fullness boost** — a bigger stamina pool (P14), quicker work, a
+  better catch. One boost at a time: a new meal replaces the last, as in Stardew Valley. Which meal does what comes
+  with the recipe list, as decided.
+- **A healing potion heals a lot at once.** Then there is a short wait, shown as a small timer, before that player can
+  be healed by another one — whoever gives it — as in Terraria, where only healing potions have a wait. So friends
+  can't stack heals, and a fight stays about dodging, not drinking.
+- **Other potions do what food can't, with no wait**: an antivenom for stings and bites, a salve for sprays and acid
+  burns (millipedes, ants), and resistance to venom for a while. Venom and poison are already decided as real effects
+  (D16).
+- **Stronger bugs make stronger potions**: venom from a higher-tier bug makes a stronger antivenom, so potions follow
+  the same ladder as the rest of the game.
+- **A small set to start** — a healing potion, the antivenom, the salve, venom resistance, and perhaps one venom
+  coating for blades and spears (offered back from the old list rather than dropped quietly). Each gets true examine
+  text: before the plague, antivenom was made in horses; now it is made in labs from the venom itself.
+- **Bandages** are the cheap heal over a few seconds, one at a time — cloth first, then better ones from honey or
+  chitin, both real wound dressings.
+- **Made at the potion station** — the cauldron, which already exists in the game but makes nothing yet. Basic recipes
+  are known there; stronger ones are found, bought or earned in quests.
+- **Food doesn't spoil** in bags or chests, for the same reason tools don't wear out, so the fridge becomes a food
+  chest. Fallen fruit still rots on the ground, where flies breed.
+- **What goes from the old list of 78 potions**: potions that later decisions rule out — breathing underwater (no
+  diving), lamp oils (no oil lamps), seeing in the dark (the light sources are decided), calming every bug nearby
+  (calming is per species) — and luck brews (nothing real makes anyone luckier). Its thirteen cures fold into the
+  antivenom and the salve, in strengths, and ingredients from extinct animals (frogs, bats) are swapped. The rest —
+  thrown bombs, stat brews, more coatings — stay on the list for the owner to pick from.
+
+**Lenses:** Game first — food is slow and long, potions are quick and strong, and there are no brewing chains.
+Premise — real remedies, no magic (P2). Playing together — the wait belongs to whoever is healed. Economy — bug
+ingredients tie potions to bug farming. Picture the moment — an antivenom after a scorpion's sting. **Cost and risk:**
+nothing in the game can give a timed effect yet, so that comes first, then venom and poison on stings, then the cures;
+icons for every potion, meal and bandage (paid images, asked first).
+
+### P17. Giving things to other players
+- **Right-click a player to offer** what you're holding — an item or a stack of bugs — with a box for adding coins,
+  since coins aren't items. They accept with one key; if their bag is full, nothing is lost. An offer nobody answers
+  fades after a few seconds, and each player has one offer out at a time.
+- **Left-click to heal**: holding a bandage or a potion, point at a friend within reach and click. It works at once,
+  with no question asked, and a small cross shows who will get it.
+- **Drop things on the ground** for anyone to pick up, as in Terraria and Stardew Valley — a new action; the game has
+  none today. Dropped food feeds bugs like fallen fruit; anything else stays until a zone holds too much, and then the
+  oldest goes.
+- No trade screen between players at first; if one comes later, it is P19's screen with a player on the other side.
+
+**Lenses:** Game first — right-click already means "interact" (doors, beds, stations, townspeople) and left-click
+means "use". Picture the moment — mid-fight, a friend's bandage lands with no pop-up. Fairness — the accept step stops
+anyone filling another player's bag. **Cost and risk:** the offer prompt with its coin box; aimed healing (today a
+click while holding bugs releases them, so a player under the cursor has to come first); the drop action and its limit
+— dropped food feeds bugs, which every player's game has to agree on, so it needs the same checks as fallen fruit.
+
+### P18. Townspeople with a day of their own
+- **By day, shopkeepers keep their counters.** Chores happen early and late, or are done by townspeople who don't keep
+  a shop (both towns need more people anyway): mending fences that bugs have damaged (P6), gathering fallen fruit in
+  town, and dealing with bugs that threaten people in the streets, such as wasps and centipedes — swatting them or
+  emptying the town's traps — never the flies and butterflies new players come to catch.
+- **At night they sleep at home, and you can still knock and trade at the door**, as Terraria's townspeople trade from
+  their houses at night. Night is a large part of every day and nobody can skip it yet, so closed shops would leave a
+  player back from a trip with a full bag and nothing to do. (If the owner prefers closed shops, a box that buys goods
+  overnight is the minimum.)
+- **Every player sees the same townspeople in the same place.** They keep to their own town, and stop walking while
+  anyone is talking to them.
+- **Quests from several townspeople.** The myrmecologist's board asks for things to be found and brought back — a
+  lost tool, a specimen, a live queen — never a number of dead ants, which would be a bounty by another name. A job
+  the player can't do yet shows what it needs.
+- Nobody can hurt them or take their things (D41), and bugs leave them alone.
+
+**Lenses:** Picture the moment — at dusk the blacksmith locks up and walks home past the orchard; later there's a
+knock, and he trades in his doorway. Readability — the village is visibly alive. Ecology — gathering fruit is the same
+lever as P10's fruit cut, and the two are tuned together. Playing together — nobody waits for a shop to open. **Cost
+and risk:** today a shopkeeper is a fixed object at a counter, so townspeople become characters that move and are
+shown to every player; picking up fruit, mending fences and swatting bugs all change the bugs' world, which every
+player's game has to agree on, so each needs those checks; walking, working and sleeping animations for every
+townsperson (paid images, asked first) — or, much cheaper, townspeople built on the player's own figure and
+animations, each in their own outfit, which is the owner's call.
+
+### P19. Trading: coins, goods or both, on one screen
+- **One screen, two sides**: what you give — goods, bugs, coins — and what you take — goods, recipes, books.
+- **Prices don't change**: what you give counts at what that townsperson pays for it, and what you take costs what
+  they charge. The difference is paid in coins automatically, either way, and the button says what you'll get or pay.
+  So bartering is selling and buying in one step, never a better or worse deal, and the check that stops buy-low,
+  sell-high loops still holds.
+- **Each townsperson takes the goods they deal in** — the lists the game already has (the blacksmith metal bars, the
+  weaver fibre and cloth, the carpenter wood and furniture, the general store materials and food, Maren her honey and
+  wax, the Bug Dealer bugs and carcasses) — plus fish for the fisherman and stone for the stonemason. Modern Wares
+  takes coins only.
+- **Coins come from many places**: selling bugs, carcasses, compost, crops, materials and crafted goods, and quests
+  from the Ecologist, the myrmecologist and others.
+- Stock and coins stay unlimited, as now, so several players can trade with one townsperson at once.
+
+**Lenses:** Game first — one screen for buying, selling and bartering; the owner's Baldur's Gate reference.
+Readability — the balance is always shown. Fairness — no deal is better than plain selling, so nothing can be gamed.
+**Cost and risk:** modest — today's screen already has a buy side and a "to sell" box; new are a "to take" box, the
+coin difference, and one step that swaps everything at once, tested against duplication the way the sell box was.
+The screen must show a whole shop's stock — today it shows only the first six goods — and the carpenter's
+"furniture" must match real items, so furniture can be sold.
 
 ## Questions
 ### Q1. Does this describe the game?

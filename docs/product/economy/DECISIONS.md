@@ -471,7 +471,8 @@ player's REAL inventory (the design recorded in `crafting_buildout.md` "Barter s
   guard and would GROW the stack (a real duplication exploit, caught in plan review; regression-tested).
 - **Scope decisions:** the four no-buy vendors (stonemason/modern_wares/fisherman/ecologist) stay buy-nothing
   (one-sided vendors are deliberate, merchants.md); "barter" = the staging-UI metaphor ONLY — the currency
-  model is unchanged (one coin type, no item-for-item). Bug-release is consumed (not fired) while a shop is
+  model is unchanged (one coin type, no item-for-item). *(Replaced 2026-09-27 by D52: goods can be traded for goods,
+  as in Baldur's Gate.)* Bug-release is consumed (not fired) while a shop is
   open so a missed basket drag can't free the bugs being sold.
 - **Gates:** 4 falsifiable Go tests (mixed batch / duplicate-slot / negative-qty exploit / bug-dealer batch)
   + suite green; Unity batchmode compile clean (fresh DLL symbol-verified); in-Editor visual pass pending.
@@ -639,3 +640,41 @@ ideas. The tiers are still to be resolved.
 ### D48 — Nothing is locked
 "LOCKED" in the December 2025 requirements only meant "don't change this without asking the owner"; nothing in older
 documents is binding. Only dated decisions of the owner's are decisions.
+
+## Resolved (2026-09-27) — the owner's review of the game overview, parts 10–14
+
+### D49 — Tools and light
+Light comes from several sources: bug lanterns (firefly and glowworm), torches, a headlamp and electric lights; oil
+lamps stay out (D12). Tools never wear out — the game avoids that kind of upkeep — so the unused durability value goes.
+No diamond or gold tools: neither makes sense as a tool. The tool motions are worked out; the pickaxe swings like the
+axe.
+
+### D50 — Food, potions and healing
+No hunger. Meals heal and give boosts; which meal does what is settled with the recipe list. Potions heal and boost
+too, but differently — stronger healing, and effects where food doesn't make sense; a better potion system is welcome
+(the overview's P16). To heal someone else, a player equips a bandage or a potion and uses it on them. Items can be
+given to other players, as in Terraria or Stardew Valley, in whatever way the assistant designs (P17).
+
+### D51 — Fishing and water
+Fishing starts in the starting village, at its lake and the fisherman's house — replacing D5 (fishing left out of the
+first release) and the roadmap's "fishing with the Underground River". Water divides the map: natural barriers keep
+areas from mixing too much, without having to follow zone borders exactly. There is no waders item: a wading outfit
+lets its wearer wade slowly through shallow water (replacing D10's waders); deep water always takes a boat. There are no separate
+sea zones: the coastline comes into the western and eastern zones, with at least one inlet, and off the west coast at
+least one island shaped like a bug, with little inlets making its legs.
+
+### D52 — Towns, trade and quests
+Coins come from many sources, designed by the assistant. Bartering is allowed, as in Baldur's Gate: goods can be
+offered instead of coins to a townsperson who accepts that kind of goods (replacing D6's "not barter"). The
+western-style town has strings of lights and other electric things. The starting village is mostly unpowered: its
+windmill (a kind of turbine) lights only part of it, such as the Mayor's house, as a glimpse of what power will bring,
+and players can't take it — this refines the 2026-06-27 ruling, which had the windmill powering the village's houses.
+Several townspeople give quests, not only the Ecologist — not designed yet; the myrmecologist has quests and a board
+of retrieval jobs, some out of reach at first. No bounties. Townspeople keep their town — mending fences, gathering
+fruit, dealing with bugs, and whatever else is good for the game — and sleep in their houses at night.
+
+### D53 — The world
+Bugs cross from zone to zone but spawn only in their species' own spawn areas. Every zone built so far will be
+redesigned: zones can be designed much better now, and some houses don't meet the roads properly. The underground
+fortress with the Queens' set is one example of a secret, not the only one. The prototype has four zones; the old
+version of the village doesn't count. Where documents disagree, the owner and the assistant settle it together.

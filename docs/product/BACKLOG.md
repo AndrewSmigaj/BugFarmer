@@ -834,6 +834,7 @@ Built AFTER the row-4 zone terrain. The zones PLAN the spawn locations; these ar
   build the mechanic, THEN mold that poisons on contact can be placed. (Not decorative-only.)
 
 ## Later — POLISH ALL ZONES to the craft bar (owner 2026-07-07)
+**2026-09-27: now a full redesign of every built zone (D53)** — see the parts 10–14 section above.
 Bring the existing zones (village_21_B, bee_meadow_20, underground_passages_31, …) up to the
 standard set building ant_tunnels_30: natural dirt/stone INTEGRATION (substrate model, not flat
 fills), NOISE-FADED boundaries (never straight material lines), clean prominent entrances, wooded-
@@ -955,6 +956,39 @@ Items marked (P#) wait for the owner's verdict on that proposal.
   recolouring; the alchemist's robe and a potion station (the wizard's robe goes); new accessory ideas; the tiers.
 - **Farming and mining**: wheat seeds from the Locust Farmland (the village stops selling them); plants cut down and
   processed (P11); a carrying limit; the prospecting pan.
+
+## Next — from the owner's review of the overview, parts 10–14 (2026-09-27; D49–D53)
+- **Tools**: the gold tier leaves the tools (pickaxe, axe, shovel, hoe, scythe) and the metal ladder is settled
+  without gold or diamond (§09; gold swords and spears — the suggestion is that they go too); the unused `durability`
+  field (43 items) and the durability bonuses in `economy/stats_and_bonuses.md` go; the pickaxe gets the axe's motion
+  when the worked-out tool motions go in.
+- **Food, potions, healing**: meals that heal and boost (with the recipe list); a small potion set (P16); bandages;
+  using a bandage or potion on another player; giving items to other players (P17).
+- **Fishing in the village**: place the Fisherman — his spot at the boat store (`zone_village_21_B.py:222`) is blocked,
+  so he was skipped when the village was saved (`investigations/missing-npcs-village21b.md`); then the fishing
+  mini-game, rods, bug baits, fish traps and boats.
+- **Water and the coast**: a wading outfit for shallow water (slow wading), boats for deep water (today every water
+  tile stops players); the coastline into the western and eastern zones; the bug-shaped island in an inlet off the west coast;
+  natural water barriers between areas.
+- **Trade**: bartering on the shop screen (P19) — each townsperson's accepted kinds of goods; coins from many sources.
+- **Shop screen bug (found 2026-09-27):** `ShopPanel.RowOfOffers` skips every offer after the sixth (`col >= 6`), so
+  the general store's last 13 goods (small net, both watering cans, wooden hoe/pickaxe/axe, calm spray, magnifying
+  glass, gardener's gloves, cot, torch, lantern, wooden fence), the blacksmith's last six (copper and iron axes,
+  copper sword and spear, copper helmet, iron chest) and the carpenter's seventh recipe (picket gate) can't be
+  bought. Data slips: the carpenter's `buys: furniture` matches nothing (79 placeables have the furniture category,
+  none the tag, and `shopBuysItem` matches ids and tags only), and the blacksmith's `metal` tag covers ores as well as
+  bars (D26 says bars only).
+- **Townspeople**: daily routines — chores (mending fences, gathering fallen fruit, dealing with bugs that threaten
+  people), sleeping at home at night; P18 suggests shopkeepers stay at their counters by day and trade at the door at
+  night; townspeople become moving characters shown to every player; quests from several townspeople; the
+  myrmecologist's retrieval board.
+- **Towns**: the western town's strings of lights and other electric things; the starting village mostly unpowered,
+  its windmill lighting only part of it (the Mayor's house) as a glimpse of power to come, and not takeable.
+- **World**: bugs spawn only in their own species' spawn areas and are free to cross zones (with "REAL cross-zone bug
+  transfer" below); every built zone redesigned (`village_21_B`, `bee_meadow_20`, `underground_passages_31`,
+  `ant_tunnels_30` — some village houses don't meet the roads; this replaces "POLISH ALL ZONES"); secrets everywhere,
+  the underground fortress being one example; the document disagreements (the ranger station, Spider Vale East)
+  settled with the owner.
 
 ## Later — REAL cross-zone bug transfer (owner 2026-07-06: real transfer, not a pretend version)
 Zones are isolated per-match sims today (Neighbors is player-only). The real feature:
@@ -1273,10 +1307,11 @@ These came out of designing `economy/zones/` + `catalogs/`; each needs its own d
   reject if it clips); machines split into fuel-fed (wood stove) vs electric; stove cooking-capacity
   tiers. Add the power/fuel-requirement entity flag only when building this. Author a small
   **power/electronics demo scene** to tinker with it visually.
-  - **Village windmill (Andrew, 2026-06-27):** a **windmill in the starting town that powers its
-    houses**, which the player **can only buy or build after reaching the wheat/locust area** (the
-    `locust_farmland` zone, which holds a small western-style town). Gates the village's electrification behind
-    reaching that zone; the details are left for when the zone is built.
+  - **Village windmill (Andrew, 2026-06-27; refined 2026-09-27, D52):** a **windmill in the starting town that powers
+    part of it** — the village is mostly unpowered, and the windmill lights only a part such as the Mayor's house, as a
+    glimpse of what power will bring; players can't take it. A windmill of their own the player **can only buy or build
+    after reaching the wheat/locust area** (the `locust_farmland` zone, which holds a small western-style town). Gates
+    electrification behind reaching that zone; the details are left for when the zone is built.
   - **`clothing_rack` unlock (D27):** the 2-wide garment rail is a **display fixture only** in the Weaver
     for now — **not craftable/buyable until "the other town"** (same later-zone gate as the windmill).
     Wire its recipe/shop-entry when that zone lands. (`coat_rack` stays the house clothing piece.)

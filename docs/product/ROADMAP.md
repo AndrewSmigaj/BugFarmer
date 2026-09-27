@@ -76,14 +76,14 @@ ecology stations) let you read and steer the ecosystem.
   building, lighting/weather, audio, tutorials, performance. **True-bug naming pass.**
 
 ### Phase 2 — the existing world to FINAL quality (the calibration slice)
-Village, Bee Meadow, Mining Camp, Ant Tunnels, Ant Colony (4,0) + Queen — each from its finalized zone bible —
-plus the systems that land with them (progression backbone, armour + stats, catching gear + bug storage,
-cooking + potions basics, ecology stations + tab, tutorials, private plots + City Hall, the whole-outfit player art
+Village, Bee Meadow, Mining Camp, Ant Tunnels, Ant Colony (4,0) + Queen — each redesigned from its finalized zone bible
+(D53) — plus the systems that land with them (progression backbone, armour + stats, catching gear + bug storage,
+cooking + potions basics, fishing in the village (D51), ecology stations + tab, tutorials, private plots + City Hall, the whole-outfit player art
 in the game (its own plan: published size, equip model, starter outfit, tool motions — owner decisions in GDD §08),
 the regenerated world art for these zones, cross-zone migration). Timed → the real estimate for Phase 3.
 
 ### Phase 3 — new zones in rings, each a complete package
-Ring B: Wasp Thicket, Butterfly Fields, Hilltop Meadow, Centipede Cavern, Underground River + fishing ·
+Ring B: Wasp Thicket, Butterfly Fields, Hilltop Meadow, Centipede Cavern, Underground River ·
 Ring C: Locust Farmland + western town + electricity, Millipede Forest, Scorpion Rocks, Shallow Swamp, Deadly Ants
 outpost, deep river · Ring D: Spider Vales + spiders/silk/stealth, Deep Swamp, Deadly Ants core, the underground
 fortress + legendary sets.
