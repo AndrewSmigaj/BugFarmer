@@ -30,10 +30,17 @@ call: keep the current resolution), not the 32x48 proposed below. How it works
 The character is **armless**; the hands are separate floating fists moved by code. A walk, a run and a weapon
 swing therefore need no drawn poses beyond the walk cycle itself, and one animator drives every tool.
 
-Outfits are generated as **whole 12-frame sheets** (3 rows front/back/side x 4 walk phases), one image per
+> **HOW AN OUTFIT IS MADE TODAY (2026-08-15, approved): the procedure in `.claude/skills/player-sprites/SKILL.md`**
+> — three designs → the owner's pick → the pick in real pixels → a turnaround → one walk call per direction →
+> the five hands on a portrait template → review → official. Commands: `tools/player_sprites/procedure.py`;
+> `procedure.py verify` reproduces the three approved outfits with no image calls. The 12-frame sheet described
+> next, and the `official` hands mode below, are the OLDER method, kept here for their lessons.
+
+Outfits were first generated as **whole 12-frame sheets** (3 rows front/back/side x 4 walk phases), one image per
 outfit, rather than composed from chest/legs/boots layers. Generating the whole sheet in one render removes
 drift by construction; the masked per-slot route needed hand-fixing on every piece and was abandoned
-(owner decision, 2026-07-28).
+(owner decision, 2026-07-28). (The whole-OUTFIT decision stands; the one-sheet render did not survive — a
+twelve-cell sheet leaves each figure too small to carry a pixel grid.)
 
 Model **gpt-image-2**, **NO MASK**. Masked runs come back as black boxes. The prompt must state that the
 character has no arms, or the model draws them back on.
@@ -67,7 +74,10 @@ outfit, bronze included. It stayed invisible while gauntlets were featureless sl
 they had knuckles and a thumb. Owner: *"the palms are facing out"*, and originally *"walk front needs to
 actually have it's hands sideways (turned inward)"*.
 
-**EVERY OUTFIT'S GAUNTLET IS A RE-SKIN OF BRONZE'S APPROVED HANDS — use `official` mode, never `gauntlet`.**
+**EVERY OUTFIT'S GAUNTLET IS A RE-SKIN OF BRONZE'S APPROVED HANDS.** (Superseded method below: since 2026-08-15
+the hands are drawn in one PORTRAIT call beside the character, in boxes one hand tall, copying bronze's five shapes
+— `procedure.py hands`. The `official` mode here is the older strip method; the rule that every outfit copies
+bronze's shapes is unchanged.)
 
 ```bash
 python3 tools/player_sprites/outfits.py official <set>   # copies bronze's four hands, changes material

@@ -101,6 +101,12 @@ def check_clauses(prompt, dest, skip=False):
     """
     if "gauntlet" in dest or "hands" in dest:
         return
+    # The approved turnaround text predates this guard and spells its clauses differently ("Armless body",
+    # lower-case "magenta", "same size pixel blocks"), yet it made all three approved outfits word for
+    # word. An EXACT match passes; any edit to it is checked like every other prompt.
+    import outfits
+    if prompt == outfits.TURNAROUND:
+        return
     missing = [c for c in CHARACTER_CLAUSES if c not in prompt]
     if not missing:
         return
@@ -111,7 +117,7 @@ def check_clauses(prompt, dest, skip=False):
     raise SystemExit(
         f"\nREFUSING TO SPEND - this character prompt is missing {len(missing)} mandatory clause(s):\n"
         f"{lines}\n\n"
-        "  Compose the prompt from outfits.EXPLORE / outfits.SHEET rather than assembling it by hand.\n"
+        "  Compose the prompt from outfits.py (EXPLORE, TURNAROUND, walk_prompt) rather than by hand.\n"
         "  If it is genuinely not a character prompt, pass --skip-clause-check and say why.\n")
 
 

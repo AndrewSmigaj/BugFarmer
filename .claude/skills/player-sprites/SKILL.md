@@ -29,13 +29,19 @@ turnaround and then measuring the results against each other.
 ## Where things live
 ```
 tools/_generated/player/
-  bases/          armless_front.png, armless_side.png   <- EXACTLY two files. The only source of a base.
-  outfits/<name>/ tries/ frames/ gauntlet/ anim/ archive/   <- see "Iterating on a sprite" below
-  props/<name>/   non-character props (practice dummy, …)
-  gallery.html    generated. Open it to see every outfit as it stands.
+  bases/            armless_front.png, armless_side.png   <- EXACTLY two files. The only source of a base.
+  explore/<run>/    every PAID run: result.png, RECORD.txt (prompt, model, references) and each reference
+                    exactly as sent (ref_N_*.png). gen.py writes these; RUNS.txt lists every run.
+  outfits/<name>/   frames/ gauntlet/ anim/  = what official.py points at
+                    tries/<date>-<what>/     = attempts, cut and waiting for review (never read by the build
+                                               unless the outfit is PENDING — see step 7)
+                    archive/                 = superseded work. Nothing deleted, ever.
+  APPROVED/DECISIONS.md   every decision, the owner's words verbatim
+  gallery.html      generated. Open it to see every official outfit as it stands.
 ```
 Folders are named for **what is in them**, never for how they were made. Looking for the bronze armour means
-knowing it is called bronze — not knowing which run produced it.
+knowing it is called bronze — not knowing which run produced it. (Run folders under `explore/` are the exception:
+they are named `<name>-<step>` and `-r2`, `-r3` for rerolls, because they record *attempts*.)
 
 ---
 
@@ -46,23 +52,14 @@ Everything below exists because it didn't: variants named `set_a` / `batch2` / `
 one folder, approvals never written down, and then neither of us could say what was current. That cost three
 days and a day of approved work.
 
-### The four stages an outfit passes through
+### What an outfit is made of
 
-| stage | produces | API? |
+| part | produces | API? |
 |---|---|---|
-| `tries/` | every candidate render, one folder per run with its `RECORD.txt` | **paid — ask first** |
-| `frames/` | the picked renders **cut** into `front_1..4` `side_1..4` `back_1..4` | free |
-| `gauntlet/` | that outfit's five hands | **paid — ask first** |
+| `explore/<name>-*/` | the paid renders, one folder per call, each with its `RECORD.txt` | **paid — ask first** |
+| `frames/` | the renders **cut** into `front_1..4` `side_1..4` `back_1..4` | free |
+| `gauntlet/` | that outfit's five hands: `front back side grip_back grip_palm` | free (cut from a paid render) |
 | `anim/` | the built gifs. `build.py` writes these; never hand-made. | free |
-
-```
-outfits/<name>/
-  tries/2026-08-15-frontwalk/    result.png + RECORD.txt (prompt, model, refs) per run
-  frames/                        front_1..4  side_1..4  back_1..4   <- what build.py reads
-  gauntlet/                      front back side grip_back grip_palm
-  anim/                          walk_side.gif, run_front.gif, swing_*.gif …
-  archive/                       superseded work. Nothing deleted, ever.
-```
 
 **Four frames per direction, always** — contact, passing, opposite contact, opposite passing, played
 `[1,2,3,4]`. Frame 2 is the neutral the whole bank is measured against (`build.NEUTRAL`).
@@ -74,19 +71,17 @@ outfits/<name>/
    the prompt. Today every candidate on disk is called `result.png`, which is most of why nothing is findable.
 2. **Batch folders are `YYYY-MM-DD-HHMM-what-it-was`.** Year first so Explorer sorts them; no colons, Windows
    forbids them.
-3. **To make something current, run `promote.py` — do not copy files by hand.**
-   ```bash
-   python3 tools/player_sprites/promote.py <outfit> <path-under-scratchpad> "<the owner's words, verbatim>"
-   ```
-   It copies to `current/`, moves the old current to `archive/`, appends the `CURRENT.md` row, re-renders the
-   animations and refreshes the gallery — atomically. **Promoting IS recording.** A hand-copy skips the
-   record, and a decision with no record is a decision that gets lost. The pre-commit hook fails the commit if
-   `CURRENT.md` and `current/` disagree.
+3. **Official = the owner's yes, then a copy, then `official.py`.** Only after he approves the review sheet:
+   copy the attempt's `frames/` + `gauntlet/` into `outfits/<name>/` (whatever was there moves to `archive/`),
+   add the outfit to `official.OUTFITS` with his words and the date, run `build.py <name>`, `gallery.py`, and
+   record it in `APPROVED/DECISIONS.md`. **Recording is part of choosing** — a decision with no record is a
+   decision that gets lost. (`promote.py` belongs to an older `current/` layout; none of the official outfits
+   use it.)
 4. **Quote the owner verbatim in the ledger.** Not your paraphrase of what they approved. Approvals sound like
    *"row 2 fist PALM is great"* and *"walk b is fine"* — the exact words are what makes it unambiguous later.
 5. **Nothing is deleted or overwritten.** Superseded work moves to `archive/`. **Never bulk re-cut or bulk
    move** — every bulk run so far has destroyed or hidden something the owner was using. Show the list first.
-6. **Scratchpad is tracked in git.** Work in progress is real work. Decisions are not instant.
+6. **`explore/` and `tries/` are tracked in git.** Work in progress is real work. Decisions are not instant.
 7. **One shape for every sprite.** The bare character is just another outfit. No special buckets.
 
 ### Seeing what you have
@@ -97,16 +92,10 @@ before asking the owner to look at anything, and re-run it after any promotion.
 `gallery_gif.py` renders that same grid, animated, into one `ALL_OUTFITS_ALL_ANIMATIONS.gif` — the version
 that can be sent to someone.
 
-`gen.py` is the **only** way to generate. Every run writes `RECORD.txt` beside the result (prompt, model,
-references as sent, timestamp) and appends a line to `RUNS.txt`. Nothing about a run lives in chat or in the
-assistant's head, because that is exactly what kept getting lost.
-
-```bash
-python3 tools/player_sprites/gen.py --dest outfits/steel --size 1024x1024 \
-  --ref tools/_generated/player/bases/armless_front.png \
-  --ref tools/_generated/player/bases/armless_side.png \
-  --prompt "..."
-```
+`gen.py` is the **only** way to generate, and `procedure.py` / `outfits.py` call it for every paid step. Every
+run writes `RECORD.txt` beside the result (prompt, model, references as sent, timestamp) and appends a line to
+`RUNS.txt`. Nothing about a run lives in chat or in the assistant's head, because that is exactly what kept
+getting lost — and it is why the procedure below could be rebuilt from the records.
 
 ## ⚠ ASK BEFORE EVERY PAID IMAGE CALL
 The spend is unrecoverable and a wrong guess buys nothing. State how many calls and what each is for, then
@@ -115,118 +104,136 @@ measuring, rendering previews — needs no permission, but say plainly which kin
 
 ---
 
-## Making an outfit
+## Making an outfit — the procedure (proven 2026-08-15, approved)
 
-**Four paid calls minimum: the turnaround, then one per walk direction, then the gauntlets.**
-Everything after that is free. Do not try to get more than one direction out of a call — see
-"Why one direction at a time" below.
+Proven on fire-ant, then black-ant and bronze — owner: *"those are fine, so this approach works"* — and official
+2026-08-18. The commands are `tools/player_sprites/procedure.py`; **`procedure.py verify` reproduces those three
+runs with no image calls** (prompts word for word, references pixel for pixel, every committed frame and hand byte
+for byte). Run it after touching any prompt, cutter or template.
 
-### 1. The turnaround — one call, and it sets everything downstream
-`1536x1024`, references = the two bases. Ask for THREE standing views in a row: front, strict right
-profile, rear.
+| # | step | command | cost | the owner's part |
+|---|---|---|---|---|
+| 1 | three designs in one image | `outfits.py explore <name>` | 1 call | **picks one** — his words recorded |
+| 2 | the pick | his figure, cropped from the render, saved as `explore/<run>/CHOSEN_<name>.png` | free | — |
+| 3 | the pick in real pixels | `procedure.py grids <run> --option N` → judge → `procedure.py pick <name> <run> --pitch P` | free | — |
+| 4 | turnaround (front, side, back) | `procedure.py turnaround <name>` → `views <name> --pitch P` | 1 call | looks |
+| 5 | walks, one direction per call | `procedure.py walk <name> <view>` → `cutwalk <name> <view> --pitch P` | 3 calls | looks |
+| 6 | the five hands | `procedure.py hands <name>` → `cuthands <name> --pitch P` | 1 call | looks |
+| 7 | review, then official | a review sheet → **his yes** → copy into place → `official.py` | free | **approves** |
 
-This is the design lock. The owner approves the design here, and every later call for this outfit is
-seeded from one of these three views — the front walk from the front view, and so on. Snap all three
-**on one grid** so they are guaranteed the same size, and keep them as `view_front/side/back.png`.
+**Five paid calls per outfit after the pick** (turnaround, three walks, hands), plus rerolls. As run: bronze 5,
+fire-ant 10 (plus research), black-ant about 14; the design step took 1–6 calls before a pick (copper 3, platinum 6).
+A paid command **without `--go`** prepares its references in the run folder and prints the exact prompt, each
+reference at the size the model will see, and the canvas — and spends nothing. `--go` only after the owner's yes.
 
-Two consequences worth knowing:
-- A direction's calls never see the other directions, so the back view can't come back as the front
-  with the head turned round — there is no front view in the room.
-- Nothing cross-checks the directions either. The turnaround is the ONLY place they are forced to
-  agree, which is why every walk is seeded from it. Measure each walk against the others anyway.
+**Timing (owner, 2026-09-26):** *"most outfits and other things will be made after signing off on the GDD … (and
+with test batches so we can ensure you are doing it right)"*. The eight picked designs (`CHOSEN_*` — *"anything with
+CHOSEN has been picked"*) go through steps 3–7 batch by batch, each asked for; everything else starts at step 1,
+worked through with him.
 
-### 2. Each walk direction — one call each, THREE calls
-`1536x1024` (landscape), reference = that direction's turnaround view. Four walk frames in a row:
+### Step 1 — three designs
+One call, 1536x1024, the `EXPLORE` template with three UNDIRECTED slots ("your own design…", "clearly different…"),
+face visible, magenta; reference = the base (plus an existing `CHOSEN_*.png` when asking for variants of a picked
+design). He judges from `preview_explore.py <name>` — the three large AND at game size on grass (`--ladder` for tier
+rows). **The brief is his**: an undirected brief beat every directed one, and a brief with three dictated designs
+was a waste of calls (see [[prompts-are-the-owners]]).
 
-> Frame 1: left leg forward, right leg back.
-> Frame 2: passing pose, legs closer together, transition between steps.
-> Frame 3: right leg forward, left leg back.
-> Frame 4: passing pose opposite to frame 2, transition back toward frame 1.
->
-> Very important: the 4 frames must be DIFFERENT phases of a walk cycle, not repeated standing poses.
+### Steps 2–3 — the pick, in real pixels
+His figure is cut from the render at full size (`CHOSEN_<name>.png`). Step 3 converts it: the WHOLE render snapped
+on ONE grid, split into its three designs, his cropped, magenta fringe cleaned → `explore/<name>-turnaround/CHOSEN_ref.png`.
+`pick` finds which design he chose by locating `CHOSEN_<name>.png` in the render. The grid is chosen **by eye**
+(below). For scale: bronze 27x68, fire-ant 23x76, black-ant 34x89; the bare base character is 25x62.
 
-plus the armless clause enumerating "arms, hands, elbows, forearms, gauntlets", the pixel-density
-clause, and the magenta background. Compose it from `outfits.py`; `gen.py` refuses to spend on a
-character prompt missing a mandatory clause.
+### Step 4 — the turnaround: one call, and it sets everything downstream
+1536x1024, the ONLY reference is the pick in real pixels (sent enlarged ×14), prompt = `outfits.TURNAROUND` — the
+approved text, identical for all three approved outfits. It carries no outfit name: the design rides entirely on
+the reference. `gen.py` accepts it by exact match (its clauses are spelled differently); **change a word and it is
+checked like any other prompt — and prompts are his: show him the diff first.** ⚠ It says *"The helmet is open-faced
+but covers the whole head"*; for a design without a helmet (a cap, a hood), show him that sentence before the call.
 
-**The walk prompt is `outfits.walk_prompt(what, view)` — do not type one.** It was typed fresh per run
-until 2026-08-18 and survived only inside each run's `RECORD.txt`, which is three chances to drift
-across three outfits and a guarantee across twenty-five. Every sentence in it is a defect that shipped;
-`outfits.py` says which. Change the wording there, once, and show the owner the diff before spending.
+Cut with `views --pitch P`: the three views on ONE grid, each cropped to its figure → `view_front/side/back.png`. The
+side view is kept as drawn. Every later call for this outfit is seeded from one of these views, so the three
+directions can only agree because they share this image — and nothing else forces them to: measure them against
+each other anyway.
 
-**For the camera-facing views it says the legs do not swing sideways.** The default is feet kicking out
-to either side, which reads as a dance (*"they are ridiculous like someone doing a russian dance"*).
+### Step 5 — the walks: one call per direction
+1536x1024, reference = that direction's view (copied into the run folder as `CHOSEN_ref.png`), prompt =
+**`outfits.walk_prompt(what, view)` — do not type one.** `what` is `outfits.OUTFITS[name][0]`; an outfit missing
+from `OUTFITS` has no words yet — add them and show him before spending. Every sentence in the prompt is a defect
+that shipped (`outfits.py` says which); it matches the August runs word for word except the knee sentence, changed
+on his 2026-08-18 note.
 
-**Knee lift is MEDIUM-HIGH, and it is now measured.** "Lift the knee HIGH" produced 13.8–19.8% of body
-height across the three built outfits — owner, 2026-08-18: *"its lifting the knees really high which is
-ok for running but not walking"*. `outfits.WALK_KNEE` asks for a lift of about a tenth of the
-character's height, and `cut_walk_row.check_lift` warns outside `LIFT_BAND` (7–15%). The band is
-provisional and a WARNING, not a fail — look at the render.
+- **Camera-facing views: the legs do not swing sideways.** The default is feet kicking out to either side, which
+  reads as a dance (*"they are ridiculous like someone doing a russian dance"*).
+- **Knee lift is MEDIUM-HIGH, and measured.** "Lift the knee HIGH" produced 13.8–19.8% of body height — owner,
+  2026-08-18: *"its lifting the knees really high which is ok for running but not walking"*. `check_lift` warns
+  outside 7–15%; it is a WARNING, not a fail — look at the render. ⚠ One leg set serves both walk and run
+  (`walk_side` and `run_side` share `frames="side"`), so the walk's lift IS the run's lift.
+- **Side comes back facing LEFT** whatever the prompt says. `cutwalk` mirrors it at cut time — never after rendering
+  (`gait`'s wrist maths assumes the character faces +x).
+- **Why one direction at a time:** a 3x4 twelve-frame sheet gives each figure a twelfth of the canvas, the blocks come
+  back too small to form a grid, and the render is smooth with nothing to snap to. Four in a row gives each figure the
+  room the turnaround had — the layout that converts every time.
+- **Rerolls are asked for separately.** Two kinds were used: a fresh roll (new run folder, same prompt) for a size
+  miss, and a **correction call** — the first roll's four snapped frames as the reference and a prompt naming what to
+  fix — for a wrong cycle (fire-ant front/back r4, black-ant front/back r2). The correction wording is not a template
+  yet; write it from those runs' `RECORD.txt` and show it first.
 
-⚠ **One leg set serves both walk and run.** `official.ANIMATIONS` gives `walk_side` and `run_side` the
-same `frames="side"` bank; the run differs only in arm swing, fist size and timing. So the walk's knee
-lift IS the run's knee lift. A higher run would need a second set of leg frames per direction — three
-more paid calls per outfit — and that has not been agreed.
+### Step 6 — the hands: one call, on a PORTRAIT canvas
+1024x1536. Reference 1 = the template `procedure.hands_template()` draws: the front view at 1:1 on magenta with five
+empty cyan boxes beside it, each exactly one hand tall. Reference 2 = the five hand SHAPES
+(`explore/bronze-v2-gauntlet/REF_shapes.png`, bronze's pre-August hands, 20 px — what black-ant and bronze both
+sent). Prompt = `outfits.hands_prompt(what, glove, blocks)`, the approved text with three slots: the outfit, what
+the hands are made of (`OUTFITS[name][3]`), and the hand height in words.
 
-**Side comes back facing LEFT.** Mirror it at cut time (`cut_walk(..., mirror=True)`), never after
-rendering — `gait`'s wrist-lean maths assumes the character faces +x, so mirroring the finished
-animation puts the wrists on backwards.
+The hand must be **exactly `round(front height × 0.17)`** — 12 for bronze's 68 px, 13 for fire-ant's 76, 15 for
+black-ant's 91 — the size the walk shows it. It has to be BORN at that size: rescaling player art is banned. Getting
+there is arithmetic, not wording: **the model draws a hand about 200 screen pixels tall** whatever you ask, so the hand
+is `200 / grid` pixels, and the grid is set by how tall the character is drawn. On a landscape canvas that floors the
+hands near 16 (four phrasings returned 19.7, 19.5, 16.0, 19.3). Portrait, with the hands stacked beside the
+character, puts the grid near 18.5 and the hands on 13. The template also carries the character itself, which is what
+makes "the same pixel density as the character" binding: both are drawn on one canvas. `cuthands` pads or trims at
+the wrist to the exact height — never rescales — and says how many rows it touched.
 
-#### Why one direction at a time
-The old approach asked for all twelve frames as a 3x4 sheet in one call. It never produced
-convertible pixel art. A twelve-cell sheet gives each figure about a twelfth of the canvas, so the
-blocks come back too small to form a grid, and the render is smooth with nothing to snap to. Four
-frames in a row gives each figure the same room as the standing turnaround, which is the layout that
-converts every time.
+### Step 7 — review, then official. Always.
+*"we always want to review before updating anything official."* The cut attempt sits in
+`outfits/<name>/tries/<date>-procedure/` (`frames/`, `gauntlet/`, and `CUTS.txt` saying which render and grid each
+came from). To render it for review, list it in `official.PENDING` with `dir` = that attempt folder, then
+`build.py <name>` (it renders a PENDING outfit only when named, into the attempt's `anim/`, and says so). Show him the
+thing itself — the animations and a `review.pixel_proof` sheet — in `reviews/<date>-<name>/` with a README. **Only
+after his yes:** copy into `outfits/<name>/`, move the entry from PENDING to OUTFITS with his words and the date,
+`build.py <name>`, `gallery.py`, and a row in `APPROVED/DECISIONS.md`.
 
-### 3. The gauntlets — one call, on a PORTRAIT canvas
-`1024x1536`, references = (1) a template image, (2) the crisp hand strip for shape.
+### The grid — chosen by eye, as it always was
+**Pixel conversion is mandatory.** Snapping RECOVERS the pixels the model drew, at their true grid — it is not a
+downscale, and downscaling player art is banned ([[player-sprites-are-pixelsnapped]]).
+- **Snap the whole canvas on ONE grid, then split.** All figures in a render were drawn at one scale; per-figure
+  detection disagrees with itself and the character shimmers.
+- **Pass the grid explicitly.** `pixelsnap.detect_pitch` takes the largest grid scoring within 90% of the best
+  (older comments said "smallest"; the code says largest), and it is still wrong often: 12.8 for bronze's 13.0, 10.9
+  for black-ant's 10.25, 9.25 for a hands column whose grid was 18.5.
+- **`procedure.py grids <run>`** scores every grid by how even each sampled cell is, and draws the quietest few side
+  by side (plus their doubles — on a hands render the quietest is HALF the grid). Tested on the 16 approved cuts, the
+  quietest is on or within 0.05–0.2 of the chosen grid for whole figures; it is a shortlist, not the answer. Judge the
+  shortlist enlarged against the full-size render: at the true grid a 1-px feature stays 1 px (copper's two-pixel eyes
+  came out doubled at 13.30, 13.45 and 13.50 and right at 13.35).
 
-The hand must end up **exactly `round(body_height * ratio)` tall** — 13 pixels for a 77-pixel body at
-the walk's 0.17. It has to be BORN at that size. It cannot be shrunk to it afterwards: `gait._sz`
-resizing a 20px hand down to 13 deletes rows, and rescaling player art is banned.
+### Gate every cut on the numbers, not a glance
+The three directions within a pixel or two of each other and of the turnaround (a front at 90 against a side of 77 is
+a visible jump when he turns — reroll, never rescale); `check_alternation` clean on front and back (the model returns
+cycles where both stepping frames lift the SAME leg — it looks fine in a still and wrong only in motion); the knee lift
+in band or looked at; the hands at exactly the height the walk asks for. Each of these has shipped broken while
+looking fine. The side cycle cannot be checked by numbers — look at it.
 
-Getting there is arithmetic, not wording. **The model always draws a hand about 200 screen pixels
-tall**, whatever you ask, so the hand's size in real pixels is `200 / grid`, and the grid is set by
-how tall the character gets drawn. On a landscape canvas the character can't exceed ~900px, which
-pins the grid near 12 and floors the hands at ~16. Four different phrasings — "one sixth as tall as
-the character", "exactly 13 blocks, count them", correctly-sized boxes to draw inside — returned
-19.7, 19.5, 16.0, 19.3. None of them could work.
+**A metal set earns its rung by COLOUR, not by shape** — at sprite size the silhouettes are identical, so "another
+grey" is a wasted tier. Measure it: mean luma over the worn material of `front_1.png` ran iron 66 → steel 90 →
+silver 113 → platinum 157. Judging this by eye once produced a confident wrong call.
 
-Portrait fixes it. Put the character on the left and the five hands **stacked in a column** on the
-right; the template is then taller than it is wide, so the canvas height binds, the character is
-drawn ~1400px tall, the grid goes to ~18.5, and the usual 200px hand lands on 13.
-
-Predict it before spending: `grid ≈ 1400 / template_height_in_blocks`, `hand ≈ 200 / grid`.
-
-The template also carries the character sprite itself at 1:1, which is what makes "the same pixel
-density as the character" binding rather than hopeful — both are drawn on one canvas, so they cannot
-disagree. The character came back at 25.0 x 76.5 against a 25 x 76 reference.
-
-### 4. Cut — free, `cut_walk_row.py`
-```python
-from cut_walk_row import cut_walk, cut_gauntlet_column, check_alternation
-cut_walk(render, frames_dir, "front", pitch=12.25)
-cut_gauntlet_column(render, hands_dir, pitch=18.50)
-```
-
-**Pixel conversion is mandatory, not optional.** It is what makes a player sprite a sprite. See
-[[player-sprites-are-pixelsnapped]]: snapping RECOVERS the pixels gpt drew, at their true grid — it
-is not a downscale, and downscaling player art is banned outright.
-
-- **Snap the whole canvas on ONE grid, then split.** All four frames were drawn at one scale, so
-  there is one true grid. Per-frame detection disagrees with itself and the character shimmers.
-- **Pass the pitch explicitly.** `detect_pitch` takes the smallest pitch scoring near-max and a comb
-  at half the true pitch also lands on every line, so it returns the harmonic constantly — 9.25 for a
-  true 18.50, 4.65 for a true 23.00. Score the candidates, check what figure height each implies,
-  then pass it.
-- **Run `check_alternation` on the front and back banks, every time.** The model returns cycles where
-  BOTH stepping frames lift the same leg. It looks fine in a still and wrong only once it loops, as a
-  foot tapping twice. That shipped before anyone caught it, and it was caught by measuring. The side
-  bank can't be checked this way and has to be judged by eye.
-- **Measure the three directions against each other.** They come from separate calls and nothing
-  makes them agree. A front that came back at 90 pixels against a side of 77 is a visible size jump
-  when the character turns; reroll rather than rescale.
+### `gen.py` is the only way to spend
+Every run writes `RECORD.txt` beside the result (prompt, model, references as sent, timestamp) and appends a line to
+`RUNS.txt`. It enlarges every reference under 400 px ×14 before sending, refuses a character prompt missing a
+mandatory clause (`NO ARMS`, `bare skin`, `MAGENTA`, `PIXEL DENSITY`; hands runs and the exact approved turnaround
+excepted), and writes the result atomically — a failed call leaves no file that looks like a result.
 
 ---
 
@@ -270,34 +277,10 @@ weapon was drawn.
 - **Look at the render.** Repeatedly a change was made, the output described as working, and the actual image
   showed it buried in the hip, cropped off-frame, or a hand the size of the head.
 
-## Making a whole set, end to end
-**Five paid calls, everything else free**, in this order. Ask before each; stop and look at every render
-before cutting it.
-
-| # | call | canvas | reference | out |
-|---|---|---|---|---|
-| 1 | turnaround — 3 standing views | 1536x1024 | the two bases | `view_front/side/back.png`, snapped on ONE grid |
-| 2 | front walk — 4 frames in a row | 1536x1024 | `view_front.png` | `front_1..4.png` |
-| 3 | side walk | 1536x1024 | `view_side.png` | `side_1..4.png` (mirror at cut time) |
-| 4 | back walk | 1536x1024 | `view_back.png` | `back_1..4.png` |
-| 5 | gauntlets — character + hand column | **1024x1536** | template + hand strip | the five hands at 13px |
-
-Then, free:
-```bash
-python3 tools/player_sprites/build.py steel        # every animation
-python3 tools/player_sprites/preview_all.py        # both ALL_*.png pages
-```
-
-**Gate every cut on the numbers, not on a glance:** the three directions within a pixel or two of each
-other, `check_alternation` clean on front and back, and the hands at exactly the height the walk asks for.
-Each of those three has shipped broken while looking fine.
-
-**A metal set earns its rung by COLOUR, not by shape** — at sprite size the silhouettes are identical, so
-"another grey" is a wasted tier. Check it by measuring, not by eye: mean luma over the worn material of
-`front_1.png` currently runs iron 66 → steel 90 → silver 113 → platinum 157. Judging this by eye once
-produced a confident wrong call (steel "collides with silver"; the numbers said otherwise).
-
 ## Pointers
+- `tools/player_sprites/procedure.py` — the procedure's commands; `verify` reproduces the approved runs.
+- `tools/_generated/player/APPROVED/DECISIONS.md` — every pick and approval, his words; `RUNS.txt` — every call.
+- `docs/product/BACKLOG.md`, top item — where each outfit stands, and the world-art regeneration that reuses this.
 - `docs/guides/art/CHARACTER_DESIGN_GUIDE.md` — the as-built format.
 - `tools/player_sprites/demo_swings.py` — the motion preview. Imports `swing_lab.py` approach 6 (the
   designed swing) rather than copying it, so the preview cannot drift from the design.
