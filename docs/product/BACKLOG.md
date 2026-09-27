@@ -914,6 +914,28 @@ must be compatible with real game mechanics** (don't assume unbuilt mechanics).
 - **An unused sound library.** 203 bug-sound and music files under `Audio/` (committed 2026-07-29) are neither in
   the Unity project nor used by the game; check their licence before use (roadmap Phase 4).
 
+## Next — from the owner's review of the overview, parts 0–3 (2026-09-27; D32–D41)
+The design lives in `docs/gdd/overview.md` and `economy/DECISIONS.md` D32–D41; this is the build work it creates.
+Items marked (P#) wait for the owner's verdict on that proposal.
+- **Prototype rules that go** (they change the shared simulation — frontier-sync gates apply): bees, dragonflies and
+  fireflies stop flying over fences (`flies_over_fences`); the wood-is-gnawable / stone-is-immune rule gives way to
+  fence strength against bug strength; carrion beetles stop making compost (`produces_compost`); centipedes spread
+  out instead of moving as packs; calming values are set per species.
+- **Fencing overhaul** — posts that connect, with materials of different strength (P5).
+- **Catching** — bug size classes, hand-net limits, placed catchers, the autonet's drawing zone (P3); traps and bait
+  (P4). Give the large net, the bug extractor and every other unobtainable item a way to be obtained (D37).
+- **Butterflies in the world** — caterpillars leave the nursery, grow, pupate and emerge (D38; P7).
+- **Research with the magnifying glass**, filling the bug's information page (D40; P8).
+- **The Ecologist's quests, the monitoring station and the Ecology tab's unlock** (D40; P9).
+- **Village property** — players can't damage or take it; bugs can damage village fences; villagers repair them
+  (D41; P6).
+- **Ecology retune** — fewer fruit on the ground with another lever raised; the other changes in P10.
+- **Compost as fertiliser** — and the compost item's description should say so.
+- **Species** — real names for all fifteen; the ant species cut to black and fire ants; birds, amphibians,
+  reptiles and mammal-era things removed from the designs (D32, D39).
+- **Lighting** — the whole lighting system is a prototype and needs its own improvement pass.
+- **Opening text** — a placeholder; rewritten once the premise section is final.
+
 ## Later — REAL cross-zone bug transfer (owner 2026-07-06: real transfer, not a pretend version)
 Zones are isolated per-match sims today (Neighbors is player-only). The real feature:
 a bug/swarm that walks off a connected edge LEAVES zone A's sim (a ledgered removal) and
