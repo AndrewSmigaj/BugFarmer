@@ -102,8 +102,9 @@ populations); cross-platform determinism; save migration; audio/music; legal (au
   zone's sync state is fully reset), with a server-side predation stand-in (predation kills are normally
   reported by a player's client).
 - **One world clock** via the existing per-zone `DayOffsetTicks` (the client bug sim never reads time of day).
-- **Blocked zone entry** (measured: ~90 walkable crossing points land on solid cells) → the server picks the
-  nearest walkable cell and never strands the player; zone builds check that shared edges match.
+- **Blocked zone entry** (measured: 88 walkable crossing points land on solid cells, 35 boxed in) → the server picks
+  the nearest walkable cell reachable from that edge and never strands the player (a failed join keeps you where you
+  were — latent bug 6); zone builds check that the openings on both sides of a shared edge line up.
 - **Hosting like Terraria:** a small Nakama-compatible Go server (the Unity client + test tools unchanged),
   Host & Play launches it, IP join + Epic's free relay first, Steam later. Measured bandwidth ≈ 2 KB/s per
   player in a busy zone.
@@ -115,6 +116,12 @@ populations); cross-platform determinism; save migration; audio/music; legal (au
 4. Swarm merge ignores nests → a nest's patrol can be absorbed; the nest then regrows one (population inflation).
 5. ~~A save-version bump discards every existing save~~ — **fixed** (save formats upgrade step by step; newer or
    unreadable saves are refused, never overwritten).
+6. **Crossing into a zone that won't start strands the player** (found 2026-09-26 while researching GDD §01; by code
+   reading, not yet reproduced): the client leaves the old zone before joining the new one
+   (`CrossZoneController.Swap`), and the server sends its errors back as normal replies (`rpc/world.go`
+   `errorResponse`), so a refused join throws after the old zone is gone. A zone refusing to start is now a real
+   case (a save from a newer build, or an unreadable one — item 5). Fix: check the reply, and on failure rejoin the
+   old zone at the spot the player left.
 
 ## Open plans not yet scheduled above
 - **Grass overhaul** — phase 1 shipped 2026-07-26 (`grass_01` + variants + tufts in every zone); phases 2–5

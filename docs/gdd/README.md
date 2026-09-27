@@ -31,7 +31,7 @@ Status: **review** = ready for your answers · **draft** = not written yet · **
 |---|---|---|---|---|
 | 1 | 00 | Premise, pillars & what belongs in the world | review | [00_premise.md](00_premise.md) |
 | 2 | 19 | Multiplayer & hosting | review | [19_multiplayer.md](19_multiplayer.md) |
-| 3 | 01 | World & zones | draft | [01_world.md](01_world.md) |
+| 3 | 01 | World & zones | review | [01_world.md](01_world.md) |
 | 4 | 02 | Progression & tiers | draft | [02_progression.md](02_progression.md) |
 | 5 | 03 | Bestiary & tiers | draft | [03_bestiary.md](03_bestiary.md) |
 | 6 | 04 | Ecology, the Ecologist & the Ecology tab | draft | [04_ecology.md](04_ecology.md) |
