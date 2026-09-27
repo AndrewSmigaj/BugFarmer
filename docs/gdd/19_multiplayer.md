@@ -149,7 +149,7 @@ same-bugs tests against the others.
 and on controller support, and Mac needs its own round of same-bugs testing — both are safer after launch.
 
 ## Sources
-- Your answers, 2026-09-26 (this session) — quoted above.
+- Your answers, 2026-09-26 — restated above under Decided.
 - `docs/product/design/requirements.md` §2–3 (worlds, moderation, placement rules — December 2025).
 - `docs/product/design/game_design.md` §5.3, §10 (January 2026 GDD).
 - `docs/product/architecture/architecture_persistence.md`; `nakama/modules/world/world_save.go`,
