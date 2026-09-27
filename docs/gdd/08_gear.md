@@ -13,7 +13,7 @@ idea lenses, then go to the review page.
 - **How an outfit is made** — three designs in one image, you pick one, then a turnaround, one walk per direction and
   the five hands, and you approve the finished animations (the `player-sprites` skill). *"anything with CHOSEN has
   been picked, the others we still need to work through together"* (2026-09-26). Made: bronze, fire-ant,
-  black-ant. Picked, not yet made: copper, iron, platinum, steel, leather, beetle-shell, gilded-steel, fancy.
+  black-ant, copper. Picked, not yet made: iron, platinum, steel, leather, beetle-shell, gilded-steel, fancy.
 
 ## To settle (raw list — not yet checked against the idea lenses)
 - **How big the player is on screen.** The finished outfits are 64–91 pixels tall (bronze to black-ant); the game
