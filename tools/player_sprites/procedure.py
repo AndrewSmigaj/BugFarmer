@@ -472,7 +472,7 @@ def cmd_hands(a):
 
 # ── verify: the approved runs, reproduced with no calls ─────────────────────────────────────────────
 
-# The approved outfits' runs and the grid each render was cut at. The grids were not written down at the time;
+# The approved outfits' runs and the grid each render was cut at. For the first three the grids were not written down;
 # they were re-found on 2026-09-26 by cutting each recorded render at every grid in 0.01 steps and keeping the
 # one that reproduces the committed files exactly. Each did, byte for byte, with today's cutter.
 APPROVED = {
@@ -488,6 +488,12 @@ APPROVED = {
                     pick=None, turnaround=("fireant-v2-turnaround", None),
                     side=("fireant-sidewalk", 9.7), front=("fireant-frontwalk-r4", 12.25),
                     back=("fireant-backwalk-r4", 12.0), hands=("fireant-gauntlet-tall", 18.5)),
+    # 2026-09-26 — the first outfit made entirely with these commands. Its side walk came back facing RIGHT
+    # (the three above all faced left and were mirrored), hence the third element.
+    "copper": dict(what=OF.OUTFITS["copper"][0], glove=OF.OUTFITS["copper"][3],
+                   pick=("copper-r3", 1, 13.35), turnaround=("copper-turnaround", 14.03),
+                   side=("copper-sidewalk", 10.7, "right"), front=("copper-frontwalk", 13.3),
+                   back=("copper-backwalk", 10.7), hands=("copper-gauntlet", 19.7)),
 }
 
 # Not reproducible from the records, and why. Listed so they are never mistaken for a regression.
@@ -530,7 +536,7 @@ def cmd_verify(a):
                 continue                               # corrections (see KNOWN); black-ant's first rolls below
             rec, now = _record_prompt(v[view][0]), OF.walk_prompt(v["what"], view)
             ok = rec == now if view == "side" else rec.replace(OLD_KNEE, OF.WALK_KNEE) == now
-            check(ok, f"walk prompt, {name} {view} = {v[view][0]}" + ("" if view == "side" else " (+ the knee change)"))
+            check(ok, f"walk prompt, {name} {view} = {v[view][0]}" + (" (+ the knee change)" if OLD_KNEE in rec else ""))
     for view in ("front", "back"):
         run = f"blackant-v3-{view}walk"                # black-ant's first rolls used the template
         check(_record_prompt(run).replace(OLD_KNEE, OF.WALK_KNEE) == OF.walk_prompt(APPROVED["blackant"]["what"], view),
@@ -568,7 +574,7 @@ def cmd_verify(a):
             check(np.array_equal(_rgba(os.path.join(EXPLORE, run, "CHOSEN_ref.png")),
                                  _rgba(os.path.join(EXPLORE, turn, f"view_{view}.png"))),
                   f"walk reference, {name} {view} = the turnaround's view_{view}")
-    for run in ("bronze-v2-gauntlet", "blackant-v3-gauntlet"):
+    for run in ("bronze-v2-gauntlet", "blackant-v3-gauntlet", "copper-gauntlet"):
         check(open(os.path.join(EXPLORE, run, "REF_shapes.png"), "rb").read() == open(HAND_SHAPES, "rb").read(),
               f"hand shapes = {run}/REF_shapes.png")
 
@@ -581,7 +587,7 @@ def cmd_verify(a):
             if v["pick"]:
                 run, option, pitch = v["pick"]
                 spr, fixed = snap_option(os.path.join(EXPLORE, run, "result.png"), pitch, option)
-                check(np.array_equal(spr, _rgba(os.path.join(EXPLORE, run, f"CHOSEN_{name}.png"))),
+                check(np.array_equal(spr, _rgba(os.path.join(EXPLORE, v["turnaround"][0], "CHOSEN_ref.png"))),
                       f"pick, {name}: {run} design {option} at {pitch}"
                       + (f" ({fixed} magenta pixel(s) cleaned, as by hand at the time)" if fixed else ""))
             turn, pitch = v["turnaround"]
@@ -590,8 +596,9 @@ def cmd_verify(a):
                 check(all(np.array_equal(s, _rgba(os.path.join(EXPLORE, turn, f"view_{w}.png")))
                           for w, (s, _) in zip(VIEWS, views)), f"views, {name}: {turn} at {pitch}")
             for view in VIEWS:
-                run, pitch = v[view]
-                C.cut_walk(os.path.join(EXPLORE, run, "result.png"), tmp, view, pitch=pitch, mirror=(view == "side"))
+                run, pitch, *faces = v[view]
+                mirror = view == "side" and (faces or ["left"])[0] == "left"
+                C.cut_walk(os.path.join(EXPLORE, run, "result.png"), tmp, view, pitch=pitch, mirror=mirror)
                 ok = all(np.array_equal(_rgba(os.path.join(tmp, f"{view}_{i}.png")),
                                         _rgba(os.path.join(PLAYER, "outfits", name, "frames", f"{view}_{i}.png")))
                          for i in (1, 2, 3, 4))

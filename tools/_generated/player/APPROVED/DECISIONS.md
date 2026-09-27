@@ -448,3 +448,18 @@ seen in right profile". Owner: *"whatever your recommendation is"* → **"all fa
 The first copper call was stopped by Claude Code's own permission check for spending. Owner: *"yeah you can add it,
 add it to the permissions"* — `Bash(python3 tools/player_sprites/procedure.py:*)` is allowed in his local
 settings. Each batch is still asked for first; this only lets an approved batch run.
+
+## 2026-09-26 — copper approved: the first outfit made end to end by `procedure.py`
+Reviewed from `reviews/2026-09-26-copper/`. Owner: *"it looks good! there are polish issues but we can work on that
+later as they involve hand positions"*.
+
+- **Official:** `outfits/copper/{frames,gauntlet,anim}`, in `official.OUTFITS` with those words. Copied from the
+  attempt `outfits/copper/tries/2026-09-26-procedure/` (kept). What `outfits/copper/` held before — an August hands
+  attempt made the older way and the retired renderer's animations — moved to
+  `outfits/copper/archive/2026-09-26-superseded-sheet/`. Nothing deleted.
+- **How it was made:** his pick (`copper-r3`, design 1) → five calls, no rerolls: turnaround, side / front / back
+  walks, hands. Grids: pick 13.35, turnaround 14.03, side 10.70 (drawn facing right, so not mirrored), front 13.30,
+  back 10.70, hands 19.70 (hands 11 px).
+- **Left as they are:** I asked whether to reroll the back walk (71 px tall against the front's 66 and the side's
+  63) and the front walk (knee lift 18% of body height); he did not ask for either, so no rerolls were made. Both
+  stay on the polish list beside his note about hand positions.

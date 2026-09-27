@@ -95,18 +95,19 @@ OUTFITS = {
     "blackant": dict(dir="outfits/blackant", approved="2026-08-18",
                      sheet="",
                      words="it looks good... these seem good, pixelization works"),
+    # 2026-09-26 — the first outfit made end to end by `procedure.py` (pick copper-r3 design 1; five calls,
+    # no rerolls; review: reviews/2026-09-26-copper/). Known and left for the polish pass: the back walk is
+    # 71 px against the front's 66, and the front walk's knee lift is 18% of body height.
+    "copper":   dict(dir="outfits/copper", approved="2026-09-26",
+                     sheet="",
+                     words="it looks good! there are polish issues but we can work on that later as they "
+                           "involve hand positions"),
 }
 
 # NOT OFFICIAL YET — listed so the gap is visible, but NOT built. An outfit is either complete and in
 # OUTFITS, or it is here and does not render at all. There is no third state where it renders with
 # somebody else's parts, which is exactly what the old fallback chain did to 21 outfits.
-PENDING = {
-    # 2026-09-26 — copper, the first test batch on the rebuilt procedure (`procedure.py`). Listed so its
-    # attempt can be RENDERED FOR REVIEW (`build.py copper`); `dir` is the attempt folder, so nothing is copied
-    # into outfits/copper/ until the owner says yes. Then it moves to OUTFITS with his words.
-    "copper": dict(dir="outfits/copper/tries/2026-09-26-procedure", sheet="",
-                   needs="the owner's review — tools/_generated/player/reviews/2026-09-26-copper/"),
-}
+PENDING = {}
 
 
 def path(outfit, kind):

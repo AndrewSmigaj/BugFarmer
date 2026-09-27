@@ -37,13 +37,13 @@ direction (3 images) → the five hands (1 image) → a review sheet → only on
 Every paid image call is asked for first.
 
 **Outfits:**
-- **Done on the procedure** (in `official.py`, approved 2026-08-18): bronze, fire-ant, black-ant.
-- **Picked, still to build** (turnaround → walks → hands → review): copper (`explore/copper-r3`), iron (`iron-r2`),
+- **Done on the procedure** (in `official.py`): bronze, fire-ant, black-ant (approved 2026-08-18) and **copper**
+  (2026-09-26, the first made end to end by `procedure.py`: *"it looks good! there are polish issues but we can
+  work on that later as they involve hand positions"*).
+- **Picked, still to build** (turnaround → walks → hands → review), each batch asked for first: iron (`iron-r2`),
   platinum (`platinum-r5`), steel (`steel-r5`), leather (`leather-r2`), beetle-shell (`beetle-shell-r3`),
-  gilded-steel, fancy (`fancy-r2`). **Copper, the approved test batch, is made and waiting for review**
-  (2026-09-26, 5 calls, `tools/_generated/player/reviews/2026-09-26-copper/`): the back walk came out 71 px against
-  the front's 66 (a reroll is the fix) and the front walk's knee lift is 18% (the August complaint, shared by the
-  three approved outfits). Gilded-steel and fancy have no words in `outfits.OUTFITS` yet — his, before their batches.
+  gilded-steel, fancy (`fancy-r2`). Gilded-steel and fancy have no words in `outfits.OUTFITS` yet — his, before
+  their batches.
 - **To work through with the owner, from the three-designs step:** explored but not picked (wood, ranger,
   scorpion, the wasp/hornet/killer-bee sets, glowworm, fisherman, swamp-gear) and never explored on this procedure
   (silver, gold, padded, beekeeper, farmer, entomologist, moth-wool, wizard-robe, …; their folders hold July art —
@@ -89,8 +89,10 @@ and `PlayerToolAnimator.cs` still runs the old swing curves.
 
 **Polish later** — *"we have several outfits that are almost done (we need to polish but we can do that later)"*
 (2026-09-26). Known: the camera-facing walks lift the knees too high — *"its lifting the knees really high which
-is ok for running but not walking"* (2026-08-18; `check_lift` flags 5 of the 6 built front/back walks). Also
-*Running improvements* and *Sprite pipeline cleanup* below.
+is ok for running but not walking"* (2026-08-18; `check_lift` flags 5 of the 6 front/back walks of the first three,
+and copper's front at 18%); copper's hand positions — *"there are polish issues but we can work on that later as
+they involve hand positions"* (2026-09-26); copper's back walk is 71 px tall against its front's 66 (a fresh roll of
+that one direction is the fix). Also *Running improvements* and *Sprite pipeline cleanup* below.
 
 ## Next — RUNNING IMPROVEMENTS (owner 2026-08-14: "backlog 'running improvements' just dont want to do it now")
 

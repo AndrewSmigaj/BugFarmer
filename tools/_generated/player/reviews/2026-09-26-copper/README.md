@@ -1,5 +1,9 @@
 # 2026-09-26 — Copper: the first test batch on the rebuilt procedure
 
+> **VERDICT (2026-09-26): approved** — *"it looks good! there are polish issues but we can work on that later as they
+> involve hand positions"*. Copper is now official (`outfits/copper/`). No rerolls were asked for; the back-walk size
+> and the front knee lift below stay on the polish list with his hand-position note.
+
 Folder: `C:\Users\emily\BugFarmer\tools\_generated\player\reviews\2026-09-26-copper\`
 
 Your copper pick (`explore/copper-r3`, design 1) taken through the whole procedure the approved outfits used:

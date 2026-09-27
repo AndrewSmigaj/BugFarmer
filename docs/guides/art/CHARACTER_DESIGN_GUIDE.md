@@ -33,7 +33,8 @@ swing therefore need no drawn poses beyond the walk cycle itself, and one animat
 > **HOW AN OUTFIT IS MADE TODAY (2026-08-15, approved): the procedure in `.claude/skills/player-sprites/SKILL.md`**
 > — three designs → the owner's pick → the pick in real pixels → a turnaround → one walk call per direction →
 > the five hands on a portrait template → review → official. Commands: `tools/player_sprites/procedure.py`;
-> `procedure.py verify` reproduces the three approved outfits with no image calls. The 12-frame sheet described
+> `procedure.py verify` reproduces every approved outfit (bronze, fire-ant, black-ant, and copper — the first made
+> end to end with these commands, 2026-09-26) with no image calls. The 12-frame sheet described
 > next, and the `official` hands mode below, are the OLDER method, kept here for their lessons.
 
 Outfits were first generated as **whole 12-frame sheets** (3 rows front/back/side x 4 walk phases), one image per
