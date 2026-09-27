@@ -1215,7 +1215,7 @@ These came out of designing `economy/zones/` + `catalogs/`; each needs its own d
     houses** — but the player **cannot buy or build it until the wheat/locust area** (the
     `locust_farmland` zone — *"a little western-style town"*). Gates the village's electrification behind
     reaching that zone. ("I will know what it means when we get there.")
-  - **`clothing_rack` unlock (D26):** the 2-wide garment rail is a **display fixture only** in the Weaver
+  - **`clothing_rack` unlock (D27):** the 2-wide garment rail is a **display fixture only** in the Weaver
     for now — **not craftable/buyable until "the other town"** (same later-zone gate as the windmill).
     Wire its recipe/shop-entry when that zone lands. (`coat_rack` stays the house clothing piece.)
   - **`electric_heater`** is a Modern-Wares showroom display; functional only with the electricity expansion.

@@ -102,8 +102,9 @@ populations); cross-platform determinism; save migration; audio/music; legal (au
   zone's sync state is fully reset), with a server-side predation stand-in (predation kills are normally
   reported by a player's client).
 - **One world clock** via the existing per-zone `DayOffsetTicks` (the client bug sim never reads time of day).
-- **Blocked zone entry** (measured: ~90 walkable crossing points land on solid cells) → the server picks the
-  nearest walkable cell and never strands the player; zone builds check that shared edges match.
+- **Blocked zone entry** (measured: 88 walkable crossing points land on solid cells, 35 boxed in) → the server picks
+  the nearest walkable cell reachable from that edge and never strands the player (a failed join keeps you where you
+  were — latent bug 6); zone builds check that the openings on both sides of a shared edge line up.
 - **Hosting like Terraria:** a small Nakama-compatible Go server (the Unity client + test tools unchanged),
   Host & Play launches it, IP join + Epic's free relay first, Steam later. Measured bandwidth ≈ 2 KB/s per
   player in a busy zone.
