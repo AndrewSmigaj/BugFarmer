@@ -780,6 +780,12 @@ WALK_VIEW = {
     "back":  "seen from behind, facing away from the viewer",
 }
 
+# How the first paragraph ENDS. For the camera-facing views it repeats the view; for the side it said "all
+# facing RIGHT" in every approved side walk (bronze-v2-sidewalk, blackant-v3-sidewalk, 2026-08-15). The
+# template first built on 2026-08-18 reused `WALK_VIEW` here and silently changed the side to "all seen in
+# right profile" — a wording no paid call ever used. Restored 2026-09-27; `procedure.py verify` checks it.
+WALK_FACING = {"side": "facing RIGHT", "front": WALK_VIEW["front"], "back": WALK_VIEW["back"]}
+
 # The side view carries which leg leads in the SILHOUETTE (one leg forward, one back). The camera-facing
 # views cannot — from the front a forward leg is hidden behind the body — so there the step is vertical
 # and the readable event is the KNEE coming up.
@@ -796,7 +802,7 @@ WALK_LEGS = {
                "Frame 4: both feet flat on the ground, together, directly under the hips."),
 }
 
-WALK_ROW = """The attached image is a finished pixel-art sprite of a character in {what}, {view}. Draw FOUR frames of this character WALKING, side by side in a single row, all four the same size and standing on the same baseline, all {view}.
+WALK_ROW = """The attached image is a finished pixel-art sprite of a character in {what}, {view}. Draw FOUR frames of this character WALKING, side by side in a single row, all four the same size and standing on the same baseline, all {facing}.
 
 The 4 frames are:
 {legs}
@@ -826,10 +832,57 @@ def walk_prompt(what, view):
         "\nThe feet must stay directly underneath the hips - do NOT swing a foot out to the left or to "
         "the right, at all. In this view a step is straight UP and straight DOWN. " + WALK_KNEE +
         " Knees point FORWARD and feet point FORWARD, never splayed outward.\n")
-    return WALK_ROW.format(what=what, view=WALK_VIEW[view],
+    return WALK_ROW.format(what=what, view=WALK_VIEW[view], facing=WALK_FACING[view],
                            legs=WALK_LEGS["side" if view == "side" else "camera"],
                            camera=camera + "\n")
 
+
+# ── THE TURNAROUND — one paid call, and every later call for the outfit is seeded from it ────────────
+# THE APPROVED TEXT, WORD FOR WORD. It was typed by hand for fire-ant, black-ant and bronze on 2026-08-15
+# and came out IDENTICAL all three times (their RECORD.txt files), and those three are the outfits the
+# owner approved (*"those are fine, so this approach works"*; official 2026-08-18). The design rides
+# entirely on the reference image — the picked design, converted to real pixels — so no outfit name or
+# material appears in it. `procedure.py verify` checks this string against the three records.
+#
+# It carries none of gen.py's four mandatory clauses as literally spelled ("Armless body" not "NO ARMS",
+# lower-case "magenta", "same size pixel blocks" not "PIXEL DENSITY", no coverage clause), so gen.py
+# accepts it by EXACT match instead. Change a word and the clause check applies again — and prompts are
+# the owner's: show him the diff before changing it.
+TURNAROUND = """Create a 3-view standing turnaround from the attached sprite: front, exact right profile, and back. Keep the same head size, torso length, leg length, face and hair as the reference. Change only the view - this is the same sprite seen from three angles, not a redesign. Use the same size pixel blocks as the reference; do not use smaller pixel detail. If armor detail does not fit, simplify it instead of adding smaller details. The helmet is open-faced but covers the whole head; hair may stick out from under it. Armless body: do not draw arms, hands, elbows, forearms or gauntlets. Solid rounded shoulder ends. No holes, sockets or empty arm openings. Flat pure magenta background (255 0 255), nothing else on it. Hard pixel edges, no blur."""
+
+# ── THE HANDS — one paid call, on a PORTRAIT canvas ─────────────────────────────────────────────────
+# THE APPROVED TEXT with its three outfit slots, verified against all three approved runs (fire-ant
+# 2026-08-15 `fireant-gauntlet-tall`, black-ant `blackant-v3-gauntlet`, bronze `bronze-v2-gauntlet`):
+#   {what}    the outfit, as in `OUTFITS[name][0]` ("black-ant carapace armour")
+#   {glove}   what the hands are made of, `OUTFITS[name][3]` ("near-black ant chitin")
+#   {blocks}  the hand's height in blocks, as a word: round(front-view height x 0.17) — twelve for
+#             bronze's 68 px, thirteen for fire-ant's 76, fifteen for black-ant's 91
+# The FIRST reference is the template `procedure.hands_template()` draws (the character + five empty
+# cyan boxes, each one hand tall); the SECOND is the five reference hand shapes.
+HANDS_IN_BOXES = """The FIRST attached image is a template: a finished pixel-art character in {what} on the left, and five empty cyan boxes in a vertical column on the right. The SECOND attached image is the reference: 5 small pixel-art gauntlet hands in a row.
+
+Redraw the FIRST image exactly as it is, with one change: draw one gauntlet hand INSIDE each of the five cyan boxes. Each hand must FILL its box - touching the top of the box and the bottom of the box, and no taller and no wider than its box. Then remove the cyan outlines so only the hands remain.
+
+Do not change the character. Do not move it, do not resize it, do not redraw it differently. It is there to fix the scale.
+
+The five hands, top to bottom, are: (1) back of a closed fist (knuckles toward camera), (2) the palm side, (3) the fist in profile, (4) fist closed around a pole, knuckles showing, (5) fist closed around a pole, palm showing - the SECOND hand on a two-handed tool. Do NOT draw the pole or any tool - draw only the hand, closed as if it were gripping one.
+
+Copy the hand shapes from the second image. Same silhouette, same outline, same proportions, same wrist cuff at the bottom of each hand, same angle for each of the 5. Do not redesign them, do not restyle them - the ONLY things that change are their size and that they are made of {glove}, matching the material, colours, shadows and highlights of the armour on the character.
+
+EVERYTHING must be drawn at the SAME PIXEL DENSITY as the character: the same size pixel blocks throughout. The hands must not be drawn at a finer resolution than the character. A hand is only about {blocks} pixel blocks tall, so use big simple shapes and a dark outline, and simplify rather than adding smaller detail.
+
+Flat pure magenta background (255 0 255), nothing else on it. Hard pixel edges, no blur."""
+
+HAND_BLOCK_WORDS = {8: "eight", 9: "nine", 10: "ten", 11: "eleven", 12: "twelve", 13: "thirteen",
+                    14: "fourteen", 15: "fifteen", 16: "sixteen", 17: "seventeen", 18: "eighteen",
+                    19: "nineteen", 20: "twenty"}
+
+
+def hands_prompt(what, glove, blocks):
+    """The hands prompt for one outfit. `blocks` is the hand height in pixels (an int)."""
+    if blocks not in HAND_BLOCK_WORDS:
+        raise ValueError(f"no word for a {blocks}px hand (the approved runs used 12, 13 and 15)")
+    return HANDS_IN_BOXES.format(what=what, glove=glove, blocks=HAND_BLOCK_WORDS[blocks])
 
 # The four APPROVED bronze hands, as a sheet — the shape every other outfit's gauntlet must copy.
 # ⚠ This used to point at outfits/bronze/hand-D-pixel/result.png, which no longer exists (bronze was

@@ -13,8 +13,10 @@ ignores the AA borders and recovers crisp, near-exact pixels. (Approach per Fabl
 
 Why libraries fail: they assume an integer downscale factor (dead on arrival for a float pitch)
 and use nearest/mean (drags in AA borders). The load-bearing bits here: float pitch, median of the
-inner 50%, and harmonic-safe pitch detection (a comb at 2x the true pitch also lands on grid lines,
-so we take the SMALLEST pitch that scores near-max — the fundamental)."""
+inner 50%, and pitch detection that resists harmonics: `detect_pitch` scores each pitch by the share of edge
+energy landing on its grid lines (a fraction of the true pitch scores as well, a multiple scores worse) and takes
+the LARGEST pitch within 90% of the best. It is still wrong on many renders (12.8 for a true 13.0, 10.9 for 10.25,
+9.25 for 18.5), so the player pipeline passes the pitch explicitly — see `procedure.py grids`."""
 import argparse
 import numpy as np
 from PIL import Image, ImageDraw
@@ -39,7 +41,7 @@ def edge_energy(img):
 def _comb_avg(e, p):
     """Best-phase AVERAGE energy per comb tooth at pitch p. True pitch and its multiples score
     ~equal (every tooth on a real boundary); a sub-multiple p/2 scores lower (half the teeth land
-    inside cells). So the fundamental = the SMALLEST pitch that scores near the max."""
+    inside cells). Used only to fine-tune a coarse pitch from `_ongrid_frac`, within +/-1.5 of it."""
     best = 0.0
     for phase in np.linspace(0, p, max(4, int(p * 3)), endpoint=False):
         idx = np.round(np.arange(phase, len(e), p)).astype(int)

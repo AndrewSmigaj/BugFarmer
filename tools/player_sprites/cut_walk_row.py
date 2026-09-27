@@ -17,11 +17,11 @@ the character shimmers as it walks. Snap once, split after.
 
 PITCH IS PASSED IN, NOT DETECTED
 --------------------------------
-`pixelsnap.detect_pitch` takes the SMALLEST pitch scoring near-max, and a comb at half the true pitch
-lands on every grid line too. It returns the harmonic constantly: the gauntlet column measured 9.25
-when the truth was 18.50, and a hand sheet measured 4.65 against a true 23.00. Score the candidates,
-look at the figure height each implies, and pass `pitch` explicitly. `pitch=None` falls back to the
-detector and will sometimes be wrong.
+`pixelsnap.detect_pitch` takes the LARGEST pitch scoring within 90% of the best (older notes here said
+"smallest"; the code says largest), and it is still wrong often: the gauntlet column measured 9.25 when the
+truth was 18.50, a hand sheet 4.65 against a true 23.00, bronze's pick 12.8 against 13.0. `procedure.py grids`
+draws a shortlist of candidates to judge by eye; pass the chosen `pitch` explicitly. `pitch=None` falls back
+to the detector and will sometimes be wrong.
 """
 import os
 import sys
