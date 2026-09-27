@@ -876,6 +876,22 @@ must be compatible with real game mechanics** (don't assume unbuilt mechanics).
   zone_*.py + regen; no new art (real species already have sprites). Ant zone already uses
   inkcap/morel natively.
 
+## Next — the village and the world map, as built (found 2026-09-26 while researching GDD §01)
+- **One village.** The June review settled it: *"Zone 1 = `village_21_B` … NOT the plain `village_21` demo"*
+  (`economy/DECISIONS.md` D19). The game still starts new players in `village_21` ("Normal", first in the dev menu,
+  `WorldMenu.cs`; also the server's fallback, `rpc/world.go`, `match.go`), a village with no vendors that nothing links
+  back to — walk south from it and north again and you arrive in `village_21_B`. To do: start in `village_21_B`,
+  drop the one-way link and its exception in `zone_links_test.go`, and move `village_21` to the test zones (the sync
+  harness's `crosszone` scenario and its default zone still use it), and update the comment in `zone_links_test.go`
+  that still calls this an open question. ⚠ `tools/zonegen/scenes/zone_village.py` saves `village_21` whenever it is
+  run, without neighbour links — don't run it until this is done.
+- **Doc errors found:** `architecture_world.md` says zones are 64×64 with 16×16 chunks (they are 256×256 with 32×32),
+  that players wade shallow water (it blocks them), and that the player is 3×2 cells; `village_21_B.md` says "no
+  transition system exists yet" (crossing works since 2026-06-16); `demo_slice.md` says a 24-zone world (20 now).
+- **Crossing details:** `CrossZoneController` hard-codes a 256-cell zone (`ZoneMax = 255`); worlds created through
+  `WorldJoin` get no neighbours, so they have no crossings; 82–101 crossing points land on solid cells (30–35 boxed
+  in), worst on the Ant Tunnels ↔ Underground Passages seam — the "blocked zone entry" item on the roadmap.
+
 ## Later — REAL cross-zone bug transfer (owner 2026-07-06: "it will be real bug transfer")
 Zones are isolated per-match sims today (Neighbors is player-only). The real feature:
 a bug/swarm that walks off a connected edge LEAVES zone A's sim (a ledgered removal) and

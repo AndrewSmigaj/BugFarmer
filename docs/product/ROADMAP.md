@@ -115,6 +115,12 @@ populations); cross-platform determinism; save migration; audio/music; legal (au
 4. Swarm merge ignores nests → a nest's patrol can be absorbed; the nest then regrows one (population inflation).
 5. ~~A save-version bump discards every existing save~~ — **fixed** (save formats upgrade step by step; newer or
    unreadable saves are refused, never overwritten).
+6. **Crossing into a zone that won't start strands the player** (found 2026-09-26 while researching GDD §01; by code
+   reading, not yet reproduced): the client leaves the old zone before joining the new one
+   (`CrossZoneController.Swap`), and the server sends its errors back as normal replies (`rpc/world.go`
+   `errorResponse`), so a refused join throws after the old zone is gone. A zone refusing to start is now a real
+   case (a save from a newer build, or an unreadable one — item 5). Fix: check the reply, and on failure rejoin the
+   old zone at the spot the player left.
 
 ## Open plans not yet scheduled above
 - **Grass overhaul** — phase 1 shipped 2026-07-26 (`grass_01` + variants + tufts in every zone); phases 2–5
