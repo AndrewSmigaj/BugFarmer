@@ -858,31 +858,23 @@ multiplayer ownership needs care.
 moved. Real biology — the locust change is real. **Cost and risk:** habitat-based limits are a real change
 to the shared simulation and need the determinism checks; each food chain is its own tuning job.
 
-### P11. Cutting plants down, and the stations that process what you cut
-- **Harvesting takes the product**: fruit, grain, flowers or leaves, plus sometimes a seed (the one harvest rule). Most
-  crops are gone once harvested (five of the seven today); fruit trees, bushes and some crops keep producing.
-- **Cutting down removes a plant that would otherwise keep going** — a fruit tree, a bush, a perennial, a wild plant —
-  and gives its body: wood, stalks, straw, roots. Hands harvest; the axe, scythe or shovel cuts. So for the plants that
-  last, the player chooses: keep it producing, or take it for materials.
-- **What the parts become**, each through what the real process does:
-  - **wheat**: threshing separates the grain from the straw (the scythe could do it in the field, or a threshing floor
-    in the Locust Farmland town); **straw** becomes mulch that keeps a plot wet longer, compost, a straw skep beehive and
-    a straw hat;
-  - **fibre plants** (flax, and cotton when it arrives): stalks are soaked to loosen the fibre — "retting", as flax
-    really is — then spun into thread on the spinning wheel the game already has;
-  - **milkweed**: its seed pods hold a silky floss that is a stuffing, not a thread — real enough to have filled life
-    jackets in the Second World War. The pods are a harvest; cutting the plant down would end the butterfly nursery
-    living on it;
-  - **herbs and flowers**: a drying rack dries them for potions; dyes come from roots, flowers and leaves (real blue dye
-    comes from leaves, red from madder roots), made at the dye station;
-  - **fruit**: a press makes juice, which ferments in the keg once cooking and drinks arrive;
-  - **anything left over** goes into the compost bin, and compost is fertiliser.
-- Grain and flour belong to the Locust Farmland, a harder zone, so that line opens in the middle of the game.
+### P11. Cutting plants down, and simple stations for what you cut
+- **Harvesting takes the product** — fruit, grain, flowers or leaves — and sometimes a seed. Most crops are gone once
+  harvested; fruit trees, bushes and some crops keep producing.
+- **Cutting down removes a plant that would otherwise keep going** and gives its materials straight away — wood,
+  fibre, straw, stalks. Hands harvest; the axe, scythe or shovel cuts.
+- **Processing is one simple step**, the way Stardew Valley's machines work — put something in, take something out:
+  - fibre → thread and cloth, on the spinning wheel and loom the game already has;
+  - wheat → grain and straw when cut; a mill turns grain into flour;
+  - fruit → juice in a press, for the keg once drinks arrive;
+  - flowers, leaves and roots → dyes at the dye station;
+  - herbs → potion ingredients at the potion station;
+  - straw → mulch that keeps a plot wet longer, a straw beehive, a straw hat; anything left over → compost.
+- Milkweed is the butterflies' nursery, so cutting it down ends the nursery on it.
 
-**Lenses:** Real farming — threshing, retting, pressing and drying are how people really process plants, so the game
-teaches something true. Economy — ties farming to cloth, potions, beekeeping and compost. Premise — no straw for animal
-bedding: there are no farm animals. **Cost and risk:** retting and threshing are new steps with art (spinning and
-weaving already exist); juice and flour wait for the cooking system.
+**Lenses:** Game first — one step per station, no realistic sub-steps; the real biology stays with the bugs and the
+ecology. Economy — ties farming to cloth, potions, beekeeping and compost. **Cost and risk:** a mill and a press are
+new stations; the rest exist or are already planned.
 
 ### P12. One shovel, a clear switch between digging and laying
 - **The shovel does both, and the mouse wheel is the switch**: turning it steps through **Dig** and each kind of
