@@ -889,8 +889,10 @@ must be compatible with real game mechanics** (don't assume unbuilt mechanics).
   that players wade shallow water (it blocks them), and that the player is 3×2 cells; `village_21_B.md` says "no
   transition system exists yet" (crossing works since 2026-06-16); `demo_slice.md` says a 24-zone world (20 now).
 - **Crossing details:** `CrossZoneController` hard-codes a 256-cell zone (`ZoneMax = 255`); worlds created through
-  `WorldJoin` get no neighbours, so they have no crossings; 82–101 crossing points land on solid cells (30–35 boxed
-  in), worst on the Ant Tunnels ↔ Underground Passages seam — the "blocked zone entry" item on the roadmap.
+  `WorldJoin` get no neighbours, so they have no crossings; 88 crossing points land on a solid square (measured at the
+  square under the player's feet, the one the game checks), 35 of them boxed in, worst on the Ant Tunnels ↔
+  Underground Passages seam where the openings on the two sides don't line up — the "blocked zone entry" item on the
+  roadmap.
 
 ## Later — REAL cross-zone bug transfer (owner 2026-07-06: "it will be real bug transfer")
 Zones are isolated per-match sims today (Neighbors is player-only). The real feature:
