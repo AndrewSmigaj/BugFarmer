@@ -3,10 +3,10 @@
 
 ## The experience
 It is 2126. A plague killed nearly every mammal, and people bred bugs big enough to eat. You arrive on the frontier
-with almost nothing and make a life as a bug farmer: you raise giant bugs the way any farmer raises livestock —
-catching them, penning them, feeding and breeding them, and selling their meat and what they make — and you garden
-the plants and the compost that feed them. You also fish, mine, craft and build, trade with the townspeople, and
-fight your way out from the village into wilder land where the bugs are more dangerous. There is no storyline: lessons and quests are offered, never forced, and you
+with almost nothing and make a life as a bug farmer — whatever that means to you. It's a sandbox: most players start
+a fly farm and grow from there, raising bugs the way any farmer raises livestock, but you can ranch ants, roam the
+wilds as a hunter, or anything between. You can grow your bugs' food or buy it; fish, mine, craft and build; trade
+with the townspeople; and push out from the village into wilder land where the bugs are more dangerous. There is no storyline: lessons and quests are offered, never forced, and you
 set your own goals. The world is a living food web that answers what you do — you can keep it in balance or tip it.
 With friends it becomes a shared frontier: the wild is lawless, while your own plot stays safe.
 
@@ -17,8 +17,9 @@ Each line is the owner's decision in my words, with its date.
   game's opening text is only a stand-in for now (2026-09-27).
 - **The bugs are giant**, and their size stays as designed (2026-09-26). Further from the village they grow more
   dangerous, not necessarily bigger (2026-09-28).
-- **Bug farming is farming**: bugs are raised like any other livestock, beside the gardening — plants, compost —
-  that feeds them (2026-09-28).
+- **A sandbox, not a path**: bugs are raised like any other livestock, and most players start a fly farm and grow
+  from there — but a player can ranch ants, roam as a hunter or do anything else; most garden to feed their bugs,
+  though food can be bought (2026-09-28, D66, D67).
 - **Bugs, fish and people survive**; birds, amphibians and reptiles died out too, so no frogs (2026-09-27; D31, D32).
 - **A bug is an insect or another arthropod** — spiders, scorpions, centipedes, millipedes, pill bugs, crayfish,
   crabs; fish are separate; no worms and no leeches (2026-09-28, D64).
@@ -47,8 +48,8 @@ Each line is the owner's decision in my words, with its date.
   village (2026-07-11; 2026-09-27, D46).
 - **A lawless shared world and safe private plots**: out in the world anything goes except the townspeople's
   property (2026-09-26; D41); players fight each other only where a server allows it — the game is players against
-  the world (2026-09-28, D58); private plots are invite-only, and nothing on one is damaged while its owner is away
-  (2026-09-28, D58).
+  the world (2026-09-28, D58); private plots are invite-only — nobody else can add or change anything on one without
+  permission, though what the owner sets up can still go wrong while they're away (2026-09-28, D58, D67).
 - **Everything in the shared world runs the same for every player** (2026-09-28, D58), and everything in the world
   persists, as in Terraria (July 2026, D31).
 - **Examining an item or a recipe shows what it does and the real biology behind it** (2026-09-26).
@@ -93,19 +94,24 @@ What the older design documents say that still stands:
   scarecrow — a bird-scarer — exists as an object.
 
 ## Proposals
-### P1. A pitch that names the whole game
-**Be a bug farmer on a frontier where nearly every mammal is gone. Raise giant bugs as livestock and grow the garden
-that feeds them; fish, mine, craft and build; trade with the townspeople; and fight your way into wilder land where
-the bugs are more dangerous — alone or with friends, in a living ecosystem you can balance or tip.**
+### P1. A pitch that says it's your sandbox
+**A multiplayer sandbox set in 2126: nearly every mammal is gone, and people have bred the bugs giant. Farm, mine,
+craft, build and explore however you like — most players start a fly farm and grow from there, but you can ranch ants,
+roam the wilds as a hunter, or anything in between — in a living ecosystem that answers everything you do.**
 
-It goes at the top of the design document, and it is the first test for any new idea: does this make those two
-sentences more true? It leads with farming — raising bugs the way a farmer raises livestock, with
-the garden beside them — and then names every other main activity, fighting included.
+Shorter, if you'd rather: **Nearly every mammal is gone and the bugs have been bred giant. Start a fly farm, ranch
+ants or hunt the wilds — a multiplayer sandbox where a living ecosystem answers everything you do.**
 
-**Lenses:** Unification — one statement every section serves. Premise — it opens with the world's situation, not a
-feature list. Completeness — checked against every activity in the overview.
+It says what kind of game this is — a sandbox — before anything else, and it gives examples of paths instead of one
+path: the first farm most players make, a bigger ranch, and a life with no farm at all. It goes at the top of the
+design document as the first test for any new idea: does this keep the player free, and does the world answer back?
+
+**Lenses:** The owner's direction — a sandbox that pigeonholes no one (2026-09-28). Premise — it opens with the
+world's situation. Readability — plain words, no feature list.
 
 ### P2. The pillars, rebuilt from everything decided
+**Accepted by the owner on 2026-09-28**, with the plot corrected: a plot is safe from other players, not from what its
+owner sets up there.
 1. **A bug farm** — giant bugs raised as livestock: caught, penned, fed, bred and sold; beside them the garden and
    compost that feed them; several food chains, some short and some tall, are the ladders. *(2026-09-27;
    2026-09-28; D39)*
@@ -122,10 +128,11 @@ feature list. Completeness — checked against every activity in the overview.
 7. **Curiosity and surprise** — secrets to find across the world, research that reveals each species, and things
    that aren't what they seem. *(2026-09-26; D63)*
 8. **Playing together** — the wild is lawless except for the townspeople's things; players fight the world, and each
-   other only where a server allows it; plots are safe and invite-only; everything runs the same for every player.
+   other only where a server allows it; plots are safe from other players, by invitation only; everything runs the
+   same for every player.
    *(D41; D58)*
-9. **No busywork** — nothing to repair, no hunger, food that keeps, nothing on your plot lost or damaged while
-   you're away, no disasters on a timer; machines ease chores and never play for you. *(D49, D50, D54; D58; the January design)*
+9. **No busywork** — nothing to repair, no hunger, food that keeps, no disasters on a timer; machines ease chores
+   and never play for you. *(D49, D50, D54; the January design)*
 
 The seven January pillars live on inside these.
 

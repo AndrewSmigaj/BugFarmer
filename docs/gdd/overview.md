@@ -40,7 +40,7 @@ to keep bigger bugs, the player farms the smaller ones they eat.
 
 There is no storyline. Progress comes from better tools and gear, from knowledge and from preparation, and the harder
 places are gated by what it costs to survive them. With friends it becomes a shared frontier: the wild is lawless,
-and a private plot is safe.
+and a private plot is safe from other players.
 
 ## Decided
 The frame the rest of the design sits inside. Each line is the owner's decision in my words, with its date, unless
@@ -56,7 +56,8 @@ it names another source.
 - **The food chain is the progression**, and bugs are livestock — sold as meat or kept for their product
   (the ecology plan; confirmed in the roadmap, 2026-09-26).
 - **No rule is forced on every zone** (2026-09-26).
-- **A lawless shared world and a safe private plot.** Private plots come from City Hall; out in the world anything
+- **A lawless shared world and a safe private plot** — safe from other players, who can't change anything on it
+  without the owner's permission (2026-09-28). Private plots come from City Hall; out in the world anything
   goes, except that the townspeople's property is protected (2026-09-26).
 - **Everything in the world persists**, as in Terraria (D31, July 2026).
 - **Examining an item or a recipe shows what it does and the real biology behind it** (2026-09-26).
@@ -77,9 +78,10 @@ it names another source.
 - **No seasons** (January 2026; confirmed 2026-09-27).
 - **All art is made with gpt-image-2 and pixel-snapped**, 32 art pixels to a grid square, and regenerated after this
   document is signed off, in test batches (2026-09-26).
-- From the January 2026 design document: **no disasters on a timer and no forced invasions**, **nothing on a
-  player's private plot is lost while they are away**, and **machines ease chores but never play for the player**.
-  (Its "no stamina" is replaced: stamina is allowed, 2026-09-27.)
+- From the January 2026 design document: **no disasters on a timer and no forced invasions**, and **machines ease
+  chores but never play for the player**. (Its "no stamina" is replaced: stamina is allowed, 2026-09-27. Its "nothing
+  on a private plot is lost while the owner is away" is replaced too: what a player sets up can still go wrong —
+  penned wasps can go wild — and a plot's protection is from other players, 2026-09-28.)
 
 ## The game, activity by activity
 
@@ -338,12 +340,12 @@ net and the backpack can't be bought or made; bookshelves and wine racks accept 
 
 ### 7 · Building, pens and homes
 The player places blocks, floors, walls, fences, gates, doors, furniture and stations on the grid, builds houses, and
-digs with a shovel. Pens are always built, never bought. A private plot, bought through City Hall, is the safe home for
+digs with a shovel. Pens are always built, never bought. A private plot, bought through City Hall, is the home — safe from other players — for
 calm, careful farming; decorations there are meant to give small production bonuses that shrink with every duplicate,
 so variety pays.
 
 **Decided**
-- Private plots from City Hall are safe and central to the design (2026-09-26).
+- Private plots from City Hall are safe from other players and central to the design (2026-09-26; 2026-09-28).
 - **Players build houses** — walls, floors, doors — and that works in the prototype (2026-09-27).
 - **Players can live in the village** by building their own house there; they can't sleep in a bed that belongs to
   someone, only in an abandoned one (2026-09-27).
@@ -741,8 +743,9 @@ lawless shared world and safe private plots. Everything in the world persists (D
 - **Fights between players only if the server allows them**: the game is about players against the world, but a
   server can switch player-versus-player on for those who want it (2026-09-28).
 - **Private plots are invite-only**, which keeps griefing down. They follow the January 2026 plot design — small
-  production bonuses from decorations, less for each duplicate, up to a cap; nothing damaged while the owner is
-  away — and need their own panel for the happiness level and the bonuses (2026-09-28) — proposal P26.
+  production bonuses from decorations, less for each duplicate, up to a cap — and other players can't change
+  anything on them without permission; what the owner sets up can still go wrong while they're away, as when penned
+  wasps go wild — and need their own panel for the happiness level and the bonuses (2026-09-28) — proposal P26.
 - **What runs on the server gets a thorough review.** The game began with the server running everything, then moved
   to every player's computer running the same simulation in step; whatever still runs on the server has to justify
   its place. This is one of the most fragile parts of the game (2026-09-28).
@@ -977,8 +980,8 @@ can share, which the prototype has in a simple form (flies are drawn to compost)
   set when the ecology is tuned.
 - **No bug flies over**, as decided — so a fence also keeps out bees and other pollinators, and a fenced garden needs
   a way in for them (a gate, a gap, or a plant barrier, P8).
-- **Private plots are safe**: they are invite-only (2026-09-28), and nothing damages a fence on a private plot while
-  its owner is away (the January 2026 rule).
+- **Private plots are safe from other players**: they are invite-only, and nobody else can touch a fence there
+  without permission (2026-09-28); bugs act on a plot as anywhere else.
 
 **Lenses:** Readability — a pen reads as a pen, a gap as a gap. Real biology — damage comes from what each bug really
 does. Economy — materials become a choice, not a ladder with one answer. **Cost and risk:** the joining pieces need a
