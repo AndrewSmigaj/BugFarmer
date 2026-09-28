@@ -203,6 +203,8 @@ own information page. The Ecology tab holds the population charts.
   webs.
 - Quest rewards: money, and sometimes gear or recipes for big tasks such as taming a new area (2026-09-27).
 - **No seasons** (January 2026; confirmed 2026-09-27).
+- **Players may tip the ecosystem**, for better or worse — that is the point of the game; fewer fruit on the ground
+  was for looks, and the flies are retuned to live on less; the caps are the safety net (2026-09-28, D62).
 
 **In the prototype now** — the food web runs; the balancing system re-seeds and thins, and can hold back the rain;
 each zone also has a hard ceiling per species (1,500 flies in the rebuilt village, for example); there is no Ecology
@@ -268,6 +270,8 @@ rarer with depth, the dark needs light, and a trip is limited by how much the pl
 - **A carrying limit** caps what a trip brings back (2026-09-27); how it works is open.
 - **No mining dangers** — no gas, no cave-ins (2026-09-27).
 - **Prospecting with a pan** (2026-09-27).
+- **The metal ladder** (P20, accepted 2026-09-28): each tool rung opens an ore; cobalt and tungsten are new ores;
+  silver, gold and platinum stay as deep rewards for money and machines.
 
 **In the prototype now**
 - Ore is gated by pickaxe: coal, copper and tin with a wooden pick, up to diamond with a steel one; tools come in eight
@@ -280,7 +284,7 @@ rarer with depth, the dark needs light, and a trip is limited by how much the pl
   brought into the real zones.
 - **Not built:** drills, dynamite, carts and rails, the prospecting pan.
 
-**Still open** (→ §14) — how the carrying limit works; how deep the tiers go; the first mine's name ("Mining Camp" in
+**Still open** (→ §14) — how the carrying limit works; the first mine's name ("Mining Camp" in
 some documents, "Underground Passages" in others) and its difficulty.
 
 **Proposals for this part:** P20.
@@ -414,15 +418,16 @@ behind secrets; decorative outfits boost the farm. About 43 sets are in the rost
 - Crowns are kept for higher-value armour (2026-08-15). Trinkets and shields are not for now (August 2026).
 - **The tiers are still to be resolved**; everything is a work in progress (2026-09-27).
 - Four outfits are finished and approved — bronze, fire-ant, black-ant and copper.
+- **Armour follows the tool metals**: bug leather and padded cloth, then copper, bronze, iron, steel and cobalt
+  steel; platinum goes into fancy armour that also needs steel — the platinum outfit picked — sells well as money,
+  and turns up in recipes where it fits (P20, accepted 2026-09-28).
 
 **In the prototype now** — eight equipment slots (head, body, arms, legs, feet, two accessories, backpack). New
 characters wear leather. Armour shows on other players but does nothing except the bee suit (stops stings) and a
 backpack (more slots — though none can be had yet); the two accessories in the game do nothing. None of the new outfit
 art is in the game yet: it still draws the old small layered farmer.
 
-**Still open** (→ §08) — the tiers (the decision log, D11, lists nine rungs from leather to platinum; the August
-armour notes list six — leather, wood, copper, iron, steel, platinum — cutting bronze, one of the four approved
-outfits, and silver); how big the player is on screen; the starting outfit; what else the character screen offers
+**Still open** (→ §08) — how big the player is on screen; the starting outfit; what else the character screen offers
 besides skin colour (class, hair).
 
 **Proposals for this part:** P20.
@@ -441,6 +446,12 @@ and glowworm), torches, a headlamp and electric lights. Tools never wear out.
 - **The swing motions are worked out** (July 2026) — a shovel scoops rather than swings (2026-07-09) — and the
   pickaxe swings like the axe (2026-09-27).
 - Metal tiers plus a few specials that matter (D12).
+- **The metal ladder** (P20, accepted 2026-09-28): wood → stone → copper → bronze → iron → steel → cobalt steel →
+  tungsten carbide for tools; weapons climb the same metals to steel, and past it the best blades and spears come from
+  bug parts; no gold, silver or platinum tools or weapons.
+- **What a better tool does** (P21, accepted 2026-09-28): a hit does the tool's strength minus the material's
+  toughness, so a newly reached ore starts slow and the next tier roughly halves the hits; the ores are the keys;
+  power tools, such as a rock drill and a chainsaw, sit in the tiers.
 
 **In the prototype now** — pickaxe, axe, shovel and hoe in eight tiers from wood to platinum, gold among them; the
 scythe in seven; sword and spear in eight, gold among them too; saw and harvest sickle; both nets; watering cans;
@@ -449,8 +460,7 @@ general store sells it). Every tool moves with a simple motion from June 2026 th
 back to rest, and the tool drawing through the body; the worked-out motions aren't in the game yet. An unused wear
 value in the data goes.
 
-**Still open** (→ §09) — which metals tools come in, now that gold and diamond are out, and whether gold swords and
-spears go too (gold is as soft for a blade as for a pick — I'd drop them); the grappling hook and the specials.
+**Still open** (→ §09) — how many tiers each tool has (the item table); the grappling hook and the specials.
 
 **Proposals for this part:** P20, P21.
 
@@ -613,8 +623,9 @@ lines lead there, but every player plays it their own way.
   blacksmith's and the other shops. Players can use them once they have the materials, and can't take them, since
   they belong to the townspeople. Other stations turn up in other places, mostly the first few zones, and powered
   versions arrive once the player reaches a place where generators can be bought or built (2026-09-28).
-- **The metal ladder is mine to recommend** (2026-09-28) — proposal P20. **How much each tool tier helps** has to be
-  justified against how Terraria and other games do it (2026-09-28) — proposal P21.
+- **The metal ladder** (P20) and **what a better tool does** (P21) — both accepted 2026-09-28: eight rungs of real
+  tool metals, and a newly reached ore starting slow, with the next tier roughly halving its hits (Terraria's tiers
+  don't halve the effort; they mostly decide what can be mined).
 - **Every item gets a thorough pass for taste**: the old lists were written without much taste, and many of the
   accessories will probably go; I give the owner a table of recommended additions, changes and cuts covering every
   item in the game (2026-09-28). So cutting content is on the table, and D4's "tuning never deletes content" no
@@ -628,7 +639,7 @@ backpacks would add bag slots (none can be had yet). No experience points and no
 roughly halves the effort of gathering (P21 checks this); the player can always name the current goal and the next
 two (the economy's progression design).
 
-**Still open** (→ §02) — the metal ladder (P20); how much each tier helps (P21); the item table (next).
+**Still open** (→ §02) — the item table (next).
 
 **Proposals for this part:** P20, P21.
 
@@ -651,6 +662,8 @@ ease chores, and they never play for the player.
 - **The Mayor's house has powered things the player may use**, such as a fridge; everyone else in the village lives by
   torches and bug lanterns (2026-09-28). The village is otherwise unpowered (2026-09-27), and players can buy or build
   a windmill only after reaching the Locust Farmland (2026-06-27).
+- **Sprinklers water whatever is in reach**, fruit trees included, and crops need one watering a day (2026-09-28);
+  a hand pump feeding the sprinklers, then a powered pump, is the owner's idea, worked out in P22.
 
 **In the prototype now** — nothing runs on power yet; the windmill, electric fence, heater, fridge, stove and floor
 lamps exist as objects only. There are no sprinklers.
@@ -660,7 +673,7 @@ stove) come before electric ones; power lines are laid with a line tool; stoves 
 four-burner range (January 2026); electricity is a wealth-gated expansion bought from a shop (the economy
 catalogues).
 
-**Still open** (→ §12) — the automation ladder (P22).
+**Still open** (→ §12) — the pump and sprinkler ladder (P22, revised).
 
 **Proposals for this part:** P22.
 
@@ -681,6 +694,8 @@ catalogues).
 - **Retuning is part of the bug overhaul**, and comes after bug behaviour has been polished and updated, because
   bugs that behave differently change the numbers. Everything is retuned anyway, since fallen fruit is being cut
   (2026-09-28).
+- **Border events** work as P25 describes (accepted 2026-09-28): a few bugs wander over from a frozen neighbour's
+  surplus, the exchange runs both ways, and a dangerous zone never trickles into a safe one.
 
 **In the prototype now** — a 14-minute day and a clock; golden dusk and dawn; nights dark enough to need a torch or
 lamp; rain on some days, with thunder; fruit falls in the evening. The balancing system starts droughts and extra
@@ -689,8 +704,7 @@ different times of day — both go. A bed only sets where the player wakes.
 
 **Designed** — one clock for the whole world (the roadmap).
 
-**Still open** (→ §18) — how border events work (P25); how often rain and drought come once they no longer steer
-the ecology.
+**Still open** (→ §18) — how often rain and drought come once they no longer steer the ecology.
 
 **Proposals for this part:** P25; P10 covers the tuning.
 
@@ -710,6 +724,8 @@ lawless shared world and safe private plots. Everything in the world persists (D
 - **What runs on the server gets a thorough review.** The game began with the server running everything, then moved
   to every player's computer running the same simulation in step; whatever still runs on the server has to justify
   its place. This is one of the most fragile parts of the game (2026-09-28).
+- **The plot's happiness** works as P26 describes (accepted 2026-09-28): a badge and a panel, decorations raising the
+  plot's crops and stations up to a cap, each copy counting half the one before.
 
 **In the prototype now** — each zone is shared, every player sees the same bugs, and players who join late see everything as
 it is. An account holds up to eight characters (the limit goes); zones save every ten minutes; the server decides
@@ -733,6 +749,9 @@ strand a player.
   joining, some when the player reaches a new area, and many end with a task that leads into the next — often back
   at a townsperson who sends the player on to another — proposal P23.
 - **Controls and settings are mine to design** (2026-09-28) — proposal P24.
+- **Lessons** work as P23 describes and **controls and settings** as P24 (both accepted 2026-09-28): a first chain
+  through the village's townspeople, tips the first time something happens, a Journal; genre-standard keys, R for
+  a tool's mode so the wheel stays on the hotbar, everything rebindable.
 
 **In the prototype now** — a hotbar and an inventory at the screen edges while the world keeps running; one panel for crafting,
 storage, compost, nurseries and hives; a "to sell" box in shops; hearts; the clock; a bug card; a message for most refused
@@ -742,7 +761,7 @@ shows only a name — 2 of the game's 654 things have a description.
 **Designed** — a bar of buttons for the inventory, Ecologist, Mayor and Herbalist; tutorials; the Ecology tab; station
 panels with their own look; Terraria-style controls — keys to move, the mouse to aim and use tools (December 2025).
 
-**Still open** (→ §20) — P23 and P24.
+**Still open** (→ §20) — the lesson lines for each townsperson, written with the townspeople's redesign.
 
 **Proposals for this part:** P23, P24.
 
@@ -1019,7 +1038,8 @@ multiplayer ownership needs care.
 - **Several food chains, some short and some tall**, as decided — for example: rotting fruit and compost → flies →
   wasps; flowers → bees → hornets; milkweed → caterpillars and butterflies → wasps; carcasses → carrion beetles;
   leaf litter → millipedes. Each is tuned on its own.
-- **Fewer fruit on the ground** (as asked): first shorten how long uneaten fruit lies before it rots away, then lower
+- **Fewer fruit on the ground** (as asked — for looks, since hundreds of fruit lying about look ugly; the flies are
+  retuned to live on less, 2026-09-28): first shorten how long uneaten fruit lies before it rots away, then lower
   the fruit per tree if needed. Wild zones have no compost bins, so the flies' food there has to come from the land
   itself — carcasses, rot and plants. The prototype's fly data still lists a manure pile among its breeding places
   (unused), and that goes with everything else from the mammal world.
@@ -1027,6 +1047,8 @@ multiplayer ownership needs care.
   thins where there isn't enough; today's fixed ceilings stay only as a high safety net.
 - **Bosses set off by conditions** (decided) follow real biology where they can — crowded locusts really do change
   into swarming locusts; how bosses come about is proposal P13.
+- **Players may tip the balance** (2026-09-28): changing the ecosystem, for better or worse, is the point of the
+  game — a player who waters an orchard into a fly boom is free to, and the caps are the safety net (D62).
 - **No steering by weather** (2026-09-28): the prototype's balancing system that calls droughts and extra rain when a
   species runs too high or too low goes. Rain and drought keep a rhythm of their own, and balance comes from the
   levers above.
@@ -1235,46 +1257,45 @@ The screen must show a whole shop's stock — today it shows only the first six 
 
 ### P20. A metal ladder made of real tool metals
 *Parts 10 and 15 · tools; progression. Also parts 5, 6 and 9.*
+**Accepted by the owner on 2026-09-28**, without manganese steel — I've put cobalt steel on that rung instead — and
+with eight rungs; platinum goes into fancy armour.
 - **Silver and platinum leave the tools too, not just gold.** All three are soft — about as soft as pure copper,
   softer than bronze or steel — and gold and platinum weigh more than twice as much as steel, while the cheaper metal
   on the rung below already does the job better.
 - **Tools climb eight rungs, every one a real tool material**: **wood → stone → copper → bronze → iron → steel →
-  manganese steel → tungsten carbide.** Bronze gives tools the rung weapons already have; the iron rung is an iron
-  head with a steel edge, as real iron tools were; manganese steel is the steel of rock crushers and digger teeth,
-  which gets harder the more it is struck — and manganese is one of the metals real bugs use to harden their stings;
-  tungsten carbide, set as tips in a steel head, is what real rock drills and mining picks use. The top tool can wear a
-  thin gold-coloured coating (titanium nitride, used on real drill bits), so it looks golden with no gold in it.
+  cobalt steel → tungsten carbide.** Bronze gives tools the rung weapons already have; the iron rung is an iron head
+  with a steel edge, as real iron tools were; cobalt steel is today's premium steel for drill bits, and in its tough
+  form (maraging steel) the steel of fencing blades; tungsten carbide, set as tips in a steel head, is what real rock
+  drills and mining picks use. The top tool can wear a thin gold-coloured coating (titanium nitride, used on real drill
+  bits), so it looks golden with no gold in it. Power tools sit in the tiers too (P21).
 - **Each rung opens an ore**, so none is skippable: stone reaches copper, copper reaches tin, bronze reaches iron, and
-  so on up to the deep ores and gems. That needs two new ores, **manganese** and **tungsten** — and a true fact for
-  tungsten's examine text: its ore glows sky-blue under ultraviolet light.
+  so on up to the deep ores and gems. That needs two new ores, **cobalt** and **tungsten**, each with a true fact for
+  its examine text: cobalt ore weathers into a pink crust ("cobalt bloom") that real prospectors followed to silver,
+  and tungsten ore glows sky-blue under ultraviolet light.
 - **Weapons climb the same metals to steel. Past steel, the best blades and spears come from the bugs themselves**:
-  real ants, scorpions and spiders harden their jaws, stings and fangs with zinc or manganese — up to a quarter of their
-  dry weight — which makes them light and very sharp, though no harder than aluminium. So bug parts make blades,
-  spears, sickles and daggers, never pickaxes; and the zinc builds up for days after an ant's last moult, so the best
-  jaws come from older adults — a reason to keep bugs to a good age. The legendary sets sit above both, in the hardest
-  zones (D55).
+  real ants, scorpions and spiders harden their jaws, stings and fangs with zinc — up to a quarter of their dry
+  weight — which makes them light and very sharp, though no harder than aluminium. So bug parts make blades, spears,
+  sickles and daggers, never pickaxes; and the zinc builds up for days after an ant's last moult, so the best jaws come
+  from older adults — a reason to keep bugs to a good age. The legendary sets sit above both, in the hardest zones
+  (D55).
+- **Armour follows the tool metals** — bug leather and padded cloth, then copper up to cobalt steel. **Platinum**
+  goes into fancy armour that also needs steel (the platinum outfit you picked), sells well as money, and turns up in
+  recipes where it fits (2026-09-28).
 - **Silver, gold and platinum become the metals of money and machines**: silver for solar panels, contacts and
   mirrors; gold for connectors and for gilding (the gilded-steel outfit); platinum as the catalyst that turns spare wind
   and solar power into stored hydrogen; all three for jewelry. Since the electronics are bought (D1, D26), players
   bring these metals to whoever builds their power parts. Their ores stay in the world as deep rewards.
-- **Armour is your call**, because it touches your own rulings: D11 (June 2026) made platinum the top armour, and you
-  picked a platinum outfit. The same science says gold, silver and platinum make poor armour too — soft and heavy;
-  real showpiece armour was gilded steel. **(a)** keep D11's ladder, platinum on top as the showpiece; **(b) my
-  recommendation:** armour follows the tool metals — bug leather and padded cloth, then copper to manganese steel —
-  and your platinum outfit's look becomes the top metal armour.
-- **How many rungs**: eight keeps every early step small and gives each ore its own tool; the older progression
-  design had about five tiers across three phases. If you'd rather have fewer, bigger steps, the six-rung version is
-  wood, stone, bronze, steel, manganese steel, tungsten carbide.
 
 **Lenses:** Premise — 2126 science: every rung is a real material with a real reason to beat the one before; no
-fantasy metals (P2). Readability — household names (bronze, iron, steel), and tungsten from Terraria, Necesse and
-Starbound. Real biology — metal-hardened jaws are published science and give a reason to raise bugs to a good age.
-Economy — the precious metals get real jobs. **Cost and risk:** two new ores; every tool, weapon and armour rung
-renamed, and each needs its icon (paid images, asked first), as do the bug-part weapons; recipes and item data
-reworked with the item table.
+fantasy metals (P2). Readability — household names (bronze, iron, steel), with cobalt and tungsten from Terraria.
+Real biology — metal-hardened jaws are published science and give a reason to raise bugs to a good age. Economy —
+the precious metals get real jobs. **Cost and risk:** two new ores; every tool, weapon and armour rung renamed, and
+each needs its icon (paid images, asked first), as do the bug-part weapons; recipes and item data reworked with the
+item table.
 
 ### P21. What a better tool does: the newest material starts slow
 *Part 15 · progression; part 10 · tools.*
+**Accepted by the owner on 2026-09-28**, with powered tools counted among the tiers.
 - **Your question answered: no, Terraria doesn't halve the effort each tier.** Its eight early pickaxes are only about
   1.1 times faster per step — 1.5 times from copper to platinum — and its tiers mainly decide what can be mined. None of
   the games checked (Terraria, Stardew Valley, Minecraft, Core Keeper, Valheim, Necesse, Luanti) halves every tier:
@@ -1295,6 +1316,8 @@ reworked with the item table.
 - **Farm tools improve by area, not speed**, and stay few (watering cans small and large, D12): a better hoe or
   scythe covers more squares per swing.
 - **Friends dig together**: two players hitting the same block add up — today a second player's hit restarts it.
+- **Power tools are part of the tiers** (2026-09-28): the top rungs include powered tools, such as a rock drill with
+  carbide bits and a chainsaw; how they draw their power is designed with the power system (part 16).
 
 **Lenses:** Game first — one number per tool, and the hit count is visible. Pacing — the newest material is always a
 little work, however many tiers there are. Playing together — the same gates for everyone, and co-op digging adds up.
@@ -1303,41 +1326,43 @@ its strength; every ore, gem and tree needs a toughness. An axe hit knocks a fru
 tree means less fallen fruit — a small change to the bugs' food, checked like any other. An axe's damage to bugs is
 set separately from its strength on wood.
 
-### P22. From the watering can to powered farming
+### P22. From the watering can to powered farming — revised with a hand pump
 *Part 16 · power and automation.*
-- **The ladder, bought once and then working**:
+**Revised 2026-09-28 after the owner's notes**: a hand pump feeds the sprinklers, then a powered pump; sprinklers
+water whatever is in reach, fruit trees included; crops need one watering a day (decided).
+- **The ladder**:
   1. **By hand**: the watering can; rain waters everything it falls on.
-  2. **The small sprinkler** — sold at the village general store, priced as something to save up for (as decided).
-     Every dawn it waters the eight squares around it. It covers a small patch, so early farming stays mostly by hand and
-     the early machines stay the more manual ones, as decided (D56).
-  3. **The large sprinkler** — from other places, such as the western town (as decided). It waters two rings around it
-     (a five-by-five).
-  4. **Power** — inside a powered area every sprinkler reaches one ring further; the same power runs the powered
-     versions of stations, which take bigger loads before they need the player (the early ones are loaded and emptied
-     by hand).
-- **My picks, with the alternatives**:
-  - **No upkeep**: a sprinkler has no tank to refill and no fuel, for the same reason tools don't wear out. (The
-    alternative: a small tank that rain refills, so the first sprinkler still needs a hand in dry spells.)
-  - **Crops need one watering a day** (the prototype asks for two), so a sprinkler takes the whole chore — the moment
-    Stardew Valley players remember as the end of watering. (The alternative: keep two, a sprinkler gives one, and a
-    second by hand still speeds the crop.)
-- **Sprinklers water crops only**, not fruit trees: fallen fruit feeds the flies and is being cut, so trees stay with
-  rain and the can.
+  2. **A hand pump and small sprinklers.** The pump is a well the player sets on the farm: a few strokes fill its
+     cistern, and every sprinkler within its reach draws on it at dawn. One fill lasts a few days, and rain tops it
+     up. The small sprinkler — sold in the village, priced as something to save up for — waters the eight squares
+     around it.
+  3. **The large sprinkler** — from other places, such as the western town — waters two rings around it (a
+     five-by-five), from the same pump.
+  4. **The powered pump** — inside a powered area it keeps the cistern full by itself, and the pressure pushes every
+     sprinkler one ring further. The same power runs the powered versions of stations.
+- **Why the pump works**: it keeps the early machines the manual ones, as decided (D56) — watering every square
+  becomes one short job every few days — and it gives power a real job to take over: the pumping. The pump's reach is
+  shown the way power's reach is, so players learn one idea, a machine that serves everything around it.
+- **Sprinklers water whatever is in reach** — crops, fruit trees, flower beds. An orchard kept wet fruits more, more
+  fruit feeds more flies, and a player who wants that is free to have it, up to the cap (D62).
+- **Crops need one watering a day** (decided 2026-09-28; the prototype asks for two), so the sprinklers take the whole
+  chore.
 - **Planting, harvesting and picking fruit always stay with the player**, and catching stays hands-on — placed
   catchers hold only a few and are emptied by hand (P3).
-- **Easy to read**: holding a sprinkler shows the squares it will water; a placed one shows them on hover; power units
-  show their reach the same way; crops that nothing waters get a small dry mark while the player holds a watering
-  can. Hoes and shovels never knock a sprinkler over by accident.
+- **Easy to read**: holding a sprinkler or a pump shows the squares it will reach; the pump shows its cistern as
+  full, half or empty; crops that nothing waters get a small dry mark while the player holds a watering can. Hoes and
+  shovels never knock a sprinkler over by accident.
 
-**Lenses:** Game first — bought once, and it works. The owner's fixed points — small sprinklers saved up for in the
-village, larger ones from further out. Picture the moment — the first dawn the player doesn't reach for the can.
-**Cost and risk:** the dawn watering runs on the server like the rain, limited to crops in range; when a zone has
-been frozen, its catch-up (decided, not built) has to apply the dawns it missed — and if a private plot is its own
-zone, sprinkled crops keep growing while nobody is there, which is a real gift to decide knowingly; the one-watering
-change retunes crop growth; sprite art for two sprinklers (paid images, asked first).
+**Lenses:** Game first — one short pumping job instead of watering every square, and power takes that away too. The
+owner's fixed points — small sprinklers saved up for in the village, larger ones from further out, early machines
+more manual. Picture the moment — a few strokes at the pump on a dry morning, then the whole farm hisses into life at
+dawn. **Cost and risk:** the dawn watering runs on the server like the rain; watered trees feed the bugs, so it is
+checked like any other change to their food; when a zone has been frozen, its catch-up (decided, not built) has to
+apply the dawns it missed; the pump, its cistern and two sprinklers need art (paid images, asked first).
 
 ### P23. Lessons that lead into each other
 *Part 19 · the interface and learning the game.*
+**Accepted by the owner on 2026-09-28.**
 - **One lesson system with three ways in, and one Journal**:
   - **On joining**: three one-line prompts — walk, pick a tool, talk to the Mayor — each showing the player's own key.
   - **From townspeople**: a first chain in the village, where finishing with one person often sends the player on to
@@ -1380,6 +1405,7 @@ whose lantern is decided for the first area (D12), living in the village.
 
 ### P24. Controls and settings
 *Part 19 · the interface.*
+**Accepted by the owner on 2026-09-28.**
 - **The genre's standard where there is one**: W A S D to walk; left mouse uses what's in the hand — swing, catch,
   water, place, heal a friend; right mouse works with whatever is under the cursor — talk, open, trade, sleep, offer
   something to a player — and on empty ground does the held weapon's second move (the sword's jab, the spear's sweep);
@@ -1418,6 +1444,7 @@ prompts; then a settings screen; full gamepad play after the keyboard version, i
 
 ### P25. Border events: bugs wander over from a frozen neighbour
 *Part 17 · time and weather; part 14 · the world.*
+**Accepted by the owner on 2026-09-28.**
 - **What the player sees**: now and then, a small group of bugs arrives at the edge of their zone from the zone next
   door, which has no players and is frozen — flying or walking in like any migrating swarm, at a stretch of the edge
   no player is looking at.
@@ -1446,6 +1473,7 @@ simulation, so they go through the same hand-over and checks as live migration.
 
 ### P26. The plot's happiness, shown plainly
 *Part 18 · playing together; part 7 · building.*
+**Accepted by the owner on 2026-09-28.**
 - **Whose happiness — my pick: the plot's own.** Decorations raise it, and it raises what the plot's crops and
   stations produce — hives and nurseries included — by a small amount, up to a cap (the January 2026 plot design). It
   doesn't change how the live bugs behave, so it stays outside the shared bug simulation, and it's the same number for

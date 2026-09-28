@@ -746,3 +746,18 @@ gpt-image-2, and they are people of many ethnicities. The look gets a polishing 
 Necesse; Unity's screen effects may help), clearer signs of hitting and being hit, and wind sway done well and only on
 plants — solid things such as standing stones sway today. The assistant makes the sound library and the music by
 whatever method works best, without paid services; the owner has music packs, and each zone can have its own music.
+
+### D61 — The overview's P20–P26 answered (2026-09-28)
+P20 accepted with eight rungs and without manganese steel — the assistant put cobalt steel on that rung instead: wood,
+stone, copper, bronze, iron, steel, cobalt steel, tungsten carbide; no gold, silver or platinum tools. Armour follows
+the tool metals, and platinum goes into fancy armour that also needs steel, sells well as money, and appears in
+recipes where it fits. P21 accepted, with powered tools counted among the tiers. P23 (lessons), P24 (controls and
+settings), P25 (border events) and P26 (the plot's happiness panel) accepted. Crops need one watering a day. For
+sprinklers the owner suggested a hand pump — a well of sorts — followed by a powered pump, and asked for the
+assistant's view — P22 revised with it; sprinklers water whatever is in reach, fruit trees included.
+
+### D62 — Players may tip the ecosystem
+Changing the ecosystem, balancing or unbalancing it, is the point of the game: a player who sets sprinklers on an
+orchard and gets a fly explosion is free to, up to the cap. Fewer fruit on the ground (D40) was asked for because
+hundreds of fruit lying around look ugly, not to control the bugs; the flies are retuned to live on the smaller
+supply, which is the natural fix. Crops feed bugs too — locusts eat wheat.

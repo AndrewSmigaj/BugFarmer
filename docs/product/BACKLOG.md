@@ -1004,9 +1004,16 @@ Items marked (P#) wait for the owner's verdict on that proposal.
   other shops — usable, owned by the townspeople, never takeable; other stations in the first few zones; powered
   versions where generators are sold or built. (Pairs with "Eleven of the fifteen stations can't be crafted or bought"
   and the ownership item above.)
-- **Metal ladder and tool tiers** (P20, P21): settle the ladder, then the per-tier gains; gold leaves the tools.
-- **Automation** (D56, P22): sprinklers — small ones in the village shop, priced to save up for; larger ones in the
-  western town; powered appliances usable inside the Mayor's powered area; the Mayor's own appliances usable; other
+- **Metal ladder and tool tiers** (P20, P21 — accepted, D61): tools wood → stone → copper → bronze → iron → steel →
+  cobalt steel → tungsten carbide; weapons to steel, then bug-part blades and spears; armour follows the metals, with
+  platinum in a fancy armour that also needs steel; two new ores (cobalt, tungsten); gold, silver and platinum leave
+  tools and weapons for money, power parts and jewelry; hits = tool strength − material toughness (the break handler's
+  one-point-per-hit goes; the unused `mining_speed` becomes the strength); co-op digging adds up; power tools (a rock
+  drill, a chainsaw) in the top tiers. Tier counts per tool come from the item table.
+- **Automation** (D56, P22 revised): a hand pump (a well on the farm) filling a cistern that the sprinklers draw on,
+  then a powered pump; sprinklers water everything in reach, trees included (D62); crops need one watering a day
+  (D61 — `max_daily_waterings` 2 → 1 in `crops.json`, retuned); sprinklers — small ones in the village shop, priced to
+  save up for; larger ones in the western town; powered appliances usable inside the Mayor's powered area; the Mayor's own appliances usable; other
   villagers' houses lit by torches and bug lanterns. No hired workers anywhere (the NPC workers of
   `design/game_design.md` §11.2 go).
 - **Time** (D57): one world clock (the roadmap's per-zone `DayOffsetTicks` plan); no night skip; the world stops only
