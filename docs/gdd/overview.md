@@ -95,12 +95,14 @@ Everything in the world has to fit that.
   (2026-09-27).
 - **No meteors**: the December 2025 idea of a meteor-borne infection is dropped (2026-09-27).
 - The premise, giant bugs, real species, and new species on three conditions (see the frame).
+- **A bug is an insect or another arthropod** — spiders, scorpions, centipedes, millipedes, pill bugs, crayfish,
+  crabs; fish are separate; no worms and no leeches (2026-09-28, Q2).
 
 **In the prototype now** — a placeholder opening text; a few items in the data that don't fit the premise (a cow
 skull, a cat statue, a hay bale, a birdbath, bones and bone piles) — §00 decides whether any stay as relics of the
 old world or go.
 
-**Still open** (→ §00) — what counts as a "bug" (Q2 below); how the game should feel.
+**Still open** (→ §00) — how the game should feel.
 
 **Proposals for this part:** P2; Q2 asks what counts as a bug.
 
@@ -135,6 +137,9 @@ just ahead of it. Placed catchers and the autonet take bugs out of the world.
 - The flies breeding in a compost bin keep their pupa stage (2026-07-17).
 - **Anything the game has but can't be obtained** — the bug extractor, the large net and the rest — gets a way to
   obtain it at the right point in the game (2026-09-27).
+- **Catching** works as P3 and P4 describe (accepted 2026-09-28): hand nets for small bugs; placed catchers — nets
+  count as traps once placed — for bigger ones; subduing and dragging for big ones (P15); a cast net that tangles a big
+  bug so it can be dragged.
 
 **In the prototype now** — nets (bare hands and the small net take small bugs; wasps, hornets and dragonflies need
 the large net, which can't be bought or made; centipedes can't be caught); one calming threshold with placeholder
@@ -168,6 +173,8 @@ gaps).
   2026-09-27). The other ant species in the zone designs — garden, harvester, army and bullet ants — go.
 - **Mini-bosses**: yes — set off by conditions or simply placed in the world (2026-09-27).
 - Spiders live only in the lower underground (D21).
+- **Butterflies grow up out in the world** (P7, accepted 2026-09-28). **Bosses** are placed or grow out of conditions,
+  and only some species get one (P13, accepted 2026-09-28).
 
 **In the prototype now** — fifteen species: common fly, meadow butterfly, honeybee, wasp, soldier wasp, giant hornet,
 carrion beetle, garden centipede, tiger centipede, giant centipede, millipede, worker ant, scout ant, firefly and
@@ -179,7 +186,7 @@ they should spread out rather than hunt as packs (2026-09-27). The lighting as a
 mini-bosses — more than the owner expected. They include invented names, the extra ant species, and animals that
 aren't insects; most zones aren't designed yet, so the list is a starting point to prune, not a plan.
 
-**Still open** (→ §03) — the full list, zone by zone, as the zones are designed; what counts as a bug (Q2).
+**Still open** (→ §03) — the full list, zone by zone, as the zones are designed.
 
 **Proposals for this part:** P7, P13.
 
@@ -205,6 +212,9 @@ own information page. The Ecology tab holds the population charts.
 - **No seasons** (January 2026; confirmed 2026-09-27).
 - **Players may tip the ecosystem**, for better or worse — that is the point of the game; fewer fruit on the ground
   was for looks, and the flies are retuned to live on less; the caps are the safety net (2026-09-28, D62).
+- **Research, plants, quests and tuning** work as P8, P9 and P10 describe (accepted 2026-09-28): examining a species
+  a set number of times opens its next fact; plants steer bugs and can boost breeding; the Ecologist's quests and
+  tab; hard caps and reseeding kept as safety nets, weather a lever of last resort, behaviour polished before tuning.
 
 **In the prototype now** — the food web runs; the balancing system re-seeds and thins, and can hold back the rain;
 each zone also has a hard ceiling per species (1,500 flies in the rebuilt village, for example); there is no Ecology
@@ -213,9 +223,8 @@ tab (only a developer graph), and the village Ecologist sells six decoration rec
 **Designed, not built** — crop pests (aphids, caterpillars, locusts), each with its own natural enemies — ladybugs
 eat aphids; pollination raising yields.
 
-**Still open** (→ §04) — the quest list and rewards (P9 suggests some); the tab's design (P9); whether a left-behind
-corpse feeds other bugs; how far the per-bug model goes, part of the ecology or all of it (the owner's call); fewer
-fruit on the ground, with another lever raised instead (P10).
+**Still open** (→ §04) — the quest list and rewards, and the tab's design, within P9; whether a left-behind corpse
+feeds other bugs; how far the per-bug model goes, part of the ecology or all of it (the owner's call).
 
 **Proposals for this part:** P8, P9, P10.
 
@@ -234,6 +243,7 @@ processed at stations.
   (2026-09-27) — proposal P11.
 - **Fertiliser increases yield** (2026-09-27), and compost is a fertiliser source (2026-09-27).
 - A harvest gives a share of what is there; the rest is lost (August 2026).
+- **Harvest or cut down** a plant, with simple one-step stations for what's cut (P11, accepted 2026-09-28).
 
 **In the prototype now**
 - Hoe a plot, plant a seed, water it with a watering can (refilled at water). Crops grow as they are watered, never
@@ -344,6 +354,8 @@ so variety pays.
 - **Mannequins are overhauled** to show whole outfits, on a plain white-faced figure (2026-09-27).
 - Decorative outfits are approved as a class, adding to farm output or happiness the way furniture does; they simply
   haven't been made yet (2026-08-07; 2026-09-27).
+- **Fences from posts**, holding some bugs and not others (P5), and **one shovel with R as its switch**, always shown
+  on screen (P12) — both accepted 2026-09-28.
 
 **In the prototype now** — about 280 placeable things, placed from the hotbar with a green or red preview; houses can
 be built; the shovel lays ground in thirteen shapes (the diagonals go) and digs a cell down to bare soil; a bed sets
@@ -353,7 +365,7 @@ where the player wakes; containers have filters (a wardrobe takes clothes, a fri
 bugs from appearing; a limit on how far away a player can place things; items that hang on walls; doors that stop
 players; mannequins showing outfits; sorting and quick-stacking in chests.
 
-**Still open** (→ §15) — how big a plot is, what it costs and who may enter.
+**Still open** (→ §15) — how big a plot is and what it costs (plots are invite-only, D58).
 
 **Proposals for this part:** P5, P12.
 
@@ -376,8 +388,10 @@ versions of their species.
   (2026-09-27) — proposal P15.
 - **Dying costs little** — mostly the walk back (2026-09-27).
 - **Stamina is allowed** (2026-09-27, replacing the January 2026 "no stamina") — what it is for is proposal P14.
-- **Bosses** are fully grown adults, harder and usually bigger; not added at random; perhaps only one at a time; a
-  locust swarm is a boss; only species where a fight is fun get one — no aphid boss (2026-09-27) — proposal P13.
+- **Bosses** are fully grown adults, harder and usually bigger; not added at random; perhaps only one at a time; only
+  species where a fight is fun get one — no aphid boss (2026-09-27) — proposal P13. **Locusts get no boss, and their
+  swarms aren't bosses either**: a locust swarm is a swarm that eats wheat and the other plants locusts eat (2026-09-28;
+  the record of 2026-09-27 had this backwards).
 - **Aphids live on plants**, seen in the plant's own view the way the milkweed nursery shows its young — tiny bugs on
   flowers, not roaming swarms (2026-09-27).
 - Venom and poison are real effects (D16). Spider Vale is the hardest surface zone and the fire-ant domain the hardest
@@ -385,6 +399,8 @@ versions of their species.
   2026-07-06).
 - **Enemies come zone by zone**, every one eventually, with test zones where the real zone isn't built yet
   (2026-09-27).
+- **Stamina** is a small pool used by dodging and running (P14), and **big bugs are grabbed and dragged** (P15) —
+  both accepted 2026-09-28.
 
 **In the prototype now** — hearts for health; stings and bites take some away; every attack warns before it lands
 (to change: only lunges should); a dodge dash; sword and spear with two moves each, and an axe jab (its swing becomes
@@ -394,7 +410,7 @@ player wakes at the zone's start point or their bed with everything they carried
 **Not built** — armour protection (armour is looks only, except the bee suit, which stops stings); night danger (no
 night hunter yet); bosses; poison and other effects; stamina; bows and other ranged weapons (set aside, D12).
 
-**Still open** (→ §07) — which enemies come in which zone; the boss list (P13).
+**Still open** (→ §07) — which enemies come in which zone; which species get a boss (within P13).
 
 **Proposals for this part:** P13, P14, P15.
 
@@ -546,6 +562,7 @@ home at night, and several of them give quests.
   glimpse of what power will bring. Players can't take it (2026-09-27), and can buy or build a windmill of their own
   only after reaching the Locust Farmland (2026-06-27).
 - A myrmecologist — an ant specialist — sells from a wooden building at the Ant Tunnels' entrance (2026-07-07).
+- **Village property** is marked as the village's, so players can't grief it (P6, accepted 2026-09-28).
 
 **In the prototype now** — eight shopkeepers in the rebuilt village (general store, Bug Dealer, blacksmith, carpenter,
 weaver, stonemason, modern wares, Ecologist) and Maren in the Bee Meadow; the Mayor is there too, and talks, but sells
@@ -662,8 +679,9 @@ ease chores, and they never play for the player.
 - **The Mayor's house has powered things the player may use**, such as a fridge; everyone else in the village lives by
   torches and bug lanterns (2026-09-28). The village is otherwise unpowered (2026-09-27), and players can buy or build
   a windmill only after reaching the Locust Farmland (2026-06-27).
-- **Sprinklers water whatever is in reach**, fruit trees included, and crops need one watering a day (2026-09-28);
-  a hand pump feeding the sprinklers, then a powered pump, is the owner's idea, worked out in P22.
+- **Sprinklers water whatever is in reach**, fruit trees included, and crops need one watering a day (2026-09-28).
+- **Pumps work like power** (P22, 2026-09-28): placing one shows its reach; working a hand pump's lever sets off
+  every sprinkler in reach; a powered pump does it by itself every day; no tanks and no hoses.
 
 **In the prototype now** — nothing runs on power yet; the windmill, electric fence, heater, fridge, stove and floor
 lamps exist as objects only. There are no sprinklers.
@@ -673,7 +691,7 @@ stove) come before electric ones; power lines are laid with a line tool; stoves 
 four-burner range (January 2026); electricity is a wealth-gated expansion bought from a shop (the economy
 catalogues).
 
-**Still open** (→ §12) — the pump and sprinkler ladder (P22, revised).
+**Still open** (→ §12) — which stations get powered versions, and what each takes over.
 
 **Proposals for this part:** P22.
 
@@ -690,7 +708,8 @@ catalogues).
 - **Droughts are part of the game**, like rain; both need tuning (2026-09-28).
 - **Balance doesn't lean on the weather.** The prototype's balancing system calls a drought or extra rain whenever a
   species runs too high or too low; that kept happening and made for poor play. Balance comes from many levers, and
-  if it leans on weather events too much, the other levers get rethought (2026-09-28).
+  if it leans on weather events too much, the other levers get rethought; weather stays a lever of last resort
+  (2026-09-28).
 - **Retuning is part of the bug overhaul**, and comes after bug behaviour has been polished and updated, because
   bugs that behave differently change the numbers. Everything is retuned anyway, since fallen fruit is being cut
   (2026-09-28).
@@ -699,8 +718,8 @@ catalogues).
 
 **In the prototype now** — a 14-minute day and a clock; golden dusk and dawn; nights dark enough to need a torch or
 lamp; rain on some days, with thunder; fruit falls in the evening. The balancing system starts droughts and extra
-rain to steer species numbers, and each zone keeps its own clock and stops when it is empty, so two zones can show
-different times of day — both go. A bed only sets where the player wakes.
+rain to steer species numbers — it becomes a last resort — and each zone keeps its own clock and stops when it is
+empty, so two zones can show different times of day — that goes. A bed only sets where the player wakes.
 
 **Designed** — one clock for the whole world (the roadmap).
 
@@ -895,6 +914,8 @@ comes from real biology (the examine texts), not spells.
 
 ### P3. Catching: hand nets for the small ones, placed catchers for everything bigger
 *Part 1 · catching and farming bugs.*
+**Accepted by the owner on 2026-09-28**, with subduing and dragging as a way to take big bugs (P15), and a cast
+net I recommend below.
 Bugs here are giant — even a fly is the size of a cat next to the player — so every catcher is sized to that.
 - **Each species has a size for each of its tiers**, shown on its information page.
 - **Hand nets** (tools you swing): the small net takes the smallest bugs; the large net takes middle-sized ones. No
@@ -911,6 +932,11 @@ Bugs here are giant — even a fly is the size of a cat next to the player — s
   catchers or bug zappers placed around them do the catching; a zapper leaves carcasses, not live bugs.
 Every catcher takes bugs out of the world, keeps them alive (except the zapper), and is emptied by hand — small
 bugs into the bug bag, big ones dragged out (P15).
+- **Subduing and dragging** is the other way to take a big bug: calm it or wear it down until it's still, then grab it
+  and drag it home (P15).
+- **A cast net — my recommendation: yes.** Thrown over a big bug, it tangles it and holds it still for a short while —
+  long enough to grab and drag. It subdues without a fight, which suits gentle species and players who'd rather not
+  fight, and it gives cast nets, set aside in D12, a job only they do.
 
 **Lenses:** Premise — sized for giant bugs, with no tiny-bug tools (the pooter and the Berlese funnel were rejected
 for that reason). Real biology — interception nets, pit traps and light traps are how bugs are really caught. Economy
@@ -920,6 +946,7 @@ size needs art; balancing them against the hand net will take several passes.
 
 ### P4. Traps and bait without the silliness
 *Part 1 · catching and farming bugs.*
+**Accepted by the owner on 2026-09-28**; a net placed in the world counts as a trap.
 - **Nothing bigger than the player goes in the backpack.** Small catchers are carried and placed like furniture. Big
   ones — long net runs, large pits, cages — are put up where they stand from posts, netting and planks, and taking one
   down gives back those parts, not the whole trap. That is an exception to D22 (placed objects drop themselves) for
@@ -935,6 +962,7 @@ can share, which the prototype has in a simple form (flies are drawn to compost)
 
 ### P5. Fences built from posts, and pens that hold some bugs and not others
 *Part 7 · building, pens and homes.*
+**Accepted by the owner on 2026-09-28.**
 - **Building**: place a post; drag to another post along the grid and rails fill the run; pieces join up on their
   own — straight runs, corners, T-joins, crossings and gates. The simulation still sees fences square by square, so
   the shared bug simulation doesn't change; only placing and drawing do.
@@ -954,6 +982,7 @@ consequence is real and needs a design answer, not an afterthought.
 
 ### P6. Village property and repairs — now covered by your rulings
 *Part 13 · towns and shopkeepers.*
+**Accepted by the owner on 2026-09-28** — it stops annoying players griefing the village.
 - Players can't damage or take the townspeople's things; bugs can damage village fences, and villagers mend them
   (D41) as part of their daily round (P18, accepted).
 - There are no hired workers (2026-09-28).
@@ -965,6 +994,7 @@ every authored object in the village.
 
 ### P7. Butterflies grow up out in the world
 *Part 2 · the bugs themselves.*
+**Accepted by the owner on 2026-09-28.**
 - **On a milkweed plant** — which is itself the butterfly nursery — eggs hatch into small caterpillars.
 - The caterpillars leave the plant and eat milkweed nearby — real monarch caterpillars eat nothing else — growing
   through three visible sizes, small to large. (Real ones go through five stages.)
@@ -983,13 +1013,19 @@ timing; wasps eating them needs the predation to cover them.
 
 ### P8. Research with the magnifying glass, and plants as a gentler fence
 *Part 3 · the ecosystem and the Ecologist.*
-- **Research is a list of small tasks per species**, not a head count: look at it, watch it feed, find it breeding,
+**Accepted by the owner on 2026-09-28**, with research that can be as simple as examining a species a set number
+of times to open its next fact, and plants that do more than steer bugs — they can boost breeding too, as in Apico.
+- **Research can be as simple as the owner suggests** — examining bugs of a species a set number of times (ten, say)
+  opens its next fact; each look counts, with a short wait between looks at the same bug, so no head count of
+  different individuals is needed. Small tasks can add variety on top: look at it, watch it feed, find it breeding,
   catch one, see it at night — each task done a few times. (Counting "different individuals" can't work: the game
   renumbers bugs when swarms split or merge. Task lists are how Pokémon Legends: Arceus does research, and Apico
   rewards looking closely in a similar way.)
 - Progress opens facts in three steps: **what it is** (real name, size, food); **how to keep it** (what helps it
   breed, what calms or irritates it, which bait draws it); **its secrets** (what it avoids, its predators and prey, how
   long it lives, a real fact from biology). They appear on the bug's information page, not in the Ecology tab.
+- **Plants do several things for bugs** (2026-09-28): some boost breeding, some feed, some draw bugs in and some keep
+  them away, much as flowers shape bees in Apico.
 - **Plants that push and pull**: farmers really use "push–pull" planting — some plants drive a pest away while others
   draw it off somewhere harmless — and "trap crops", planted as bait for a pest so it leaves the real crop alone.
   Research reveals which plants do what for each species, so a player can steer bugs without walls. Because fences
@@ -1002,6 +1038,7 @@ examine view; plant effects need the simulation to share them like any other lev
 
 ### P9. The Ecologist's quests and the Ecology tab
 *Part 3 · the ecosystem and the Ecologist.*
+**Accepted by the owner on 2026-09-28.**
 - **The flow** (as decided): the tab button is greyed out; meeting the Ecologist east of the village unlocks it; his
   first quest is to place a monitoring station, and that zone's information appears.
 - **A station hands the zone to the player**: where one stands, the hidden balancing system waits before it steps in —
@@ -1035,6 +1072,8 @@ multiplayer ownership needs care.
 
 ### P10. Ecology tuning — several food chains, fewer fruit, habitat instead of hard caps
 *Parts 3 and 17 · the ecosystem; time and weather.*
+**Accepted by the owner on 2026-09-28**, with the corrections below: hard caps and reseeding stay; weather is a
+lever of last resort.
 - **Several food chains, some short and some tall**, as decided — for example: rotting fruit and compost → flies →
   wasps; flowers → bees → hornets; milkweed → caterpillars and butterflies → wasps; carcasses → carrion beetles;
   leaf litter → millipedes. Each is tuned on its own.
@@ -1043,17 +1082,19 @@ multiplayer ownership needs care.
   the fruit per tree if needed. Wild zones have no compost bins, so the flies' food there has to come from the land
   itself — carcasses, rot and plants. The prototype's fly data still lists a manure pile among its breeding places
   (unused), and that goes with everything else from the mammal world.
-- **Habitat instead of hard caps**: each species needs its own kind of place — flowers, rot, water, shade — and a crowd
-  thins where there isn't enough; today's fixed ceilings stay only as a high safety net.
-- **Bosses set off by conditions** (decided) follow real biology where they can — crowded locusts really do change
-  into swarming locusts; how bosses come about is proposal P13.
+- **Habitat does the everyday work**: each species needs its own kind of place — flowers, rot, water, shade — and a
+  crowd thins where there isn't enough. **The hard caps stay** as the safety net that stops a player who dumps piles of
+  fruit from breeding so many flies that players' games crash, and **a species that dies out is reseeded** (2026-09-28).
+- **Locust swarms** follow real biology — crowded locusts really do change into swarming locusts — and strip wheat
+  and the other plants locusts eat; they are swarms, not bosses (2026-09-28).
 - **Players may tip the balance** (2026-09-28): changing the ecosystem, for better or worse, is the point of the
   game — a player who waters an orchard into a fly boom is free to, and the caps are the safety net (D62).
-- **No steering by weather** (2026-09-28): the prototype's balancing system that calls droughts and extra rain when a
-  species runs too high or too low goes. Rain and drought keep a rhythm of their own, and balance comes from the
-  levers above.
-- **Behaviour first, then numbers** (2026-09-28): bug behaviour is polished and updated before any tuning, and the
-  whole retune is part of the bug overhaul.
+- **Weather is a lever of last resort** (2026-09-28): a drought means less pollen and slower plants, while rain
+  makes both flourish and does the watering, so weather does move the ecology — but it was overused, until it rained all the time while the
+  numbers were untuned. It stays a lever, used last, never the main way to keep numbers in their bands.
+- **Behaviour first, then numbers** (2026-09-28): bug behaviour is polished and updated before any tuning — a wasp that
+  hunts flies better needs the levers moved to keep flies in their band — and the whole retune is part of the bug
+  overhaul. Before retuning, I learn exactly how the existing tuning and polish work, then suggest what's new.
 
 **Lenses:** The owner's direction — many levers, not hard caps. Readability — the player can see why a population
 moved. Real biology — the locust change is real. **Cost and risk:** habitat-based limits are a real change
@@ -1061,6 +1102,7 @@ to the shared simulation and need the determinism checks; each food chain is its
 
 ### P11. Cutting plants down, and simple stations for what you cut
 *Parts 4 and 6 · farming; crafting.*
+**Accepted by the owner on 2026-09-28.**
 - **Harvesting takes the product** — fruit, grain, flowers or leaves — and sometimes a seed. Most crops are gone once
   harvested; fruit trees, bushes and some crops keep producing.
 - **Cutting down removes a plant that would otherwise keep going** and gives its materials straight away — wood,
@@ -1080,12 +1122,15 @@ new stations; the rest exist or are already planned.
 
 ### P12. One shovel, a clear switch between digging and laying
 *Part 7 · building.*
+**Accepted by the owner on 2026-09-28**, provided no player can miss that the shovel digs: the interface always
+shows the switch, not only a first-time notice.
 - **The shovel does both, and R is the switch** (my change from the mouse wheel, so the wheel always stays on the
   hotbar — P24; R no longer rotates anything): pressing it steps through **Dig** and each kind of ground the player
   has materials for — dirt, grass (laid from turf), sand, stone path, wooden floor — each with its count; Shift + R
   steps back. When the chosen ground runs out mid-path, the shovel falls back to Dig and says so.
-- **The choice is always visible**: the shovel's hotbar slot shows the current mode's icon, the cursor matches (a spade
-  for digging, a square of the chosen ground for laying), and a short label under the cursor names it.
+- **The choice is always visible**: the shovel's hotbar slot shows the current mode's icon with a small "R" beside it,
+  the cursor matches (a spade for digging, a square of the chosen ground for laying), and a short label under the
+  cursor names it — so a player who missed the first notice still sees that the shovel can dig.
 - **Laying uses the raw materials**, as today — stone for a stone path, planks for a wooden floor, sand for sand — one
   whole square at a time; the diagonal shapes go, as decided.
 - **What goes**: the hidden Shift-to-dig and the separate materials panel. Right-click stays free for doors, beds,
@@ -1099,6 +1144,7 @@ over by the shovel, which today traps it there.
 
 ### P13. Bosses: the biggest of a few species
 *Parts 2 and 8 · the bugs; combat.*
+**Accepted by the owner on 2026-09-28**, without locust swarms: locusts get no boss, and a swarm isn't one.
 (The zone designs call them mini-bosses; this uses "boss" for both.)
 - **A boss is the biggest of its kind, for real reasons**: queens are far bigger than their workers; larvae that feed
   well grow into bigger adults; and many centipedes and millipedes keep growing through their lives, so their oldest
@@ -1109,8 +1155,6 @@ over by the shovel, which today traps it there.
   - **placed**: some live in a place made for them, like the Ant Colony's queen in her chamber;
   - **grown**: when a wild population thrives for long enough, one of its young is fed into a giant, or a nest raises a
     new, huge queen. The Ecologist warns about it in any zone with a monitoring station;
-  - **swarming**: a locust swarm is a boss made of many — real locusts change into swarming locusts when they crowd —
-    beaten by thinning it until it breaks up.
 - **What a boss leaves**: its carcass, like any bug, and the bug extractor turns it into materials only a boss gives; a
   mounted carcass makes a trophy. Recipes come from the Ecologist's quests (P9). A queen might even be caught alive —
   a queen founding a colony on your farm.
@@ -1120,15 +1164,17 @@ over by the shovel, which today traps it there.
 
 **Lenses:** Real biology — queens, well-fed larvae, lifelong growth in centipedes, crowding locusts. Curiosity and
 surprise — a neglected nest becomes an event, with warning. No forced chaos — conditions the player can see coming.
-**Cost and risk:** each boss is its own art, animation and fight design; a swarm boss is expensive for the shared
-simulation (many bugs at once); "grown" bosses need the ecology to track how long a population has thrived.
+**Cost and risk:** each boss is its own art, animation and fight design; "grown" bosses need the ecology to track how
+long a population has thrived.
 
 ### P14. Stamina for dodging
 *Part 8 · combat.*
+**Accepted by the owner on 2026-09-28**, with running added: it drains stamina too.
 - **Stamina is a small pool of dodges**: each dodge spends some, and it refills on its own in a few seconds. Today the
   dodge has a fixed wait between uses; a pool lets a player chain two or three dodges in a tight spot, and lets gear
   make it bigger or refill faster.
-- Nothing else uses it — no sprint unless the owner wants one, and tools, farming and catching never tire the player.
+- **Running uses it too** (2026-09-28): holding the run key moves faster and drains stamina; tools, farming and
+  catching never tire the player.
 - **Food helps before a trip**: once cooking arrives, some meals give a timed boost to stamina — a bigger pool or a
   faster refill — eaten to prepare for a hard zone.
 
@@ -1138,6 +1184,7 @@ bugs' attack timing has to be retuned around it.
 
 ### P15. Moving big bugs: grab and drag
 *Parts 1 and 8 · catching; combat.*
+**Accepted by the owner on 2026-09-28.**
 - **A big bug can be grabbed once it is subdued and still** — calmed, or worn down in a fight (the backlogged
   "weakened" catch) — or dead. Stand next to it and press E; press E again to let go. The E prompt looks like the
   game's other prompts.
@@ -1326,39 +1373,29 @@ its strength; every ore, gem and tree needs a toughness. An axe hit knocks a fru
 tree means less fallen fruit — a small change to the bugs' food, checked like any other. An axe's damage to bugs is
 set separately from its strength on wood.
 
-### P22. From the watering can to powered farming — revised with a hand pump
+### P22. From the watering can to powered farming
 *Part 16 · power and automation.*
-**Revised 2026-09-28 after the owner's notes**: a hand pump feeds the sprinklers, then a powered pump; sprinklers
-water whatever is in reach, fruit trees included; crops need one watering a day (decided).
+**Accepted by the owner on 2026-09-28, in his form**: pumps work like power — no tanks, no hoses.
 - **The ladder**:
   1. **By hand**: the watering can; rain waters everything it falls on.
-  2. **A hand pump and small sprinklers.** The pump is a well the player sets on the farm: a few strokes fill its
-     cistern, and every sprinkler within its reach draws on it at dawn. One fill lasts a few days, and rain tops it
-     up. The small sprinkler — sold in the village, priced as something to save up for — waters the eight squares
-     around it.
-  3. **The large sprinkler** — from other places, such as the western town — waters two rings around it (a
-     five-by-five), from the same pump.
-  4. **The powered pump** — inside a powered area it keeps the cistern full by itself, and the pressure pushes every
-     sprinkler one ring further. The same power runs the powered versions of stations.
-- **Why the pump works**: it keeps the early machines the manual ones, as decided (D56) — watering every square
-  becomes one short job every few days — and it gives power a real job to take over: the pumping. The pump's reach is
-  shown the way power's reach is, so players learn one idea, a machine that serves everything around it.
-- **Sprinklers water whatever is in reach** — crops, fruit trees, flower beds. An orchard kept wet fruits more, more
-  fruit feeds more flies, and a player who wants that is free to have it, up to the cap (D62).
-- **Crops need one watering a day** (decided 2026-09-28; the prototype asks for two), so the sprinklers take the whole
-  chore.
-- **Planting, harvesting and picking fruit always stay with the player**, and catching stays hands-on — placed
-  catchers hold only a few and are emptied by hand (P3).
-- **Easy to read**: holding a sprinkler or a pump shows the squares it will reach; the pump shows its cistern as
-  full, half or empty; crops that nothing waters get a small dry mark while the player holds a watering can. Hoes and
-  shovels never knock a sprinkler over by accident.
+  2. **A hand pump and sprinklers.** The hand pump works like a well: the player works its lever, and every sprinkler
+     within its reach goes off at once. Small sprinklers are sold in the village, priced as something to save up
+     for; larger ones come from other places, such as the western town.
+  3. **The powered pump** sets the sprinklers in its reach going by itself every day.
+- **Reach, not pipes**: placing a pump — like placing a power generator — shows the area within its reach, and every
+  sprinkler inside it is served. No tanks to stand on the farm (they would have to be tall and huge) and no hoses to
+  lay.
+- **Sprinklers water whatever is in reach** — crops, fruit trees, flower beds; an orchard kept wet fruits more and
+  feeds more flies, which is the player's call, up to the cap (D62). **Crops need one watering a day** (decided).
+- **Planting, harvesting and picking fruit always stay with the player**, and catching stays hands-on (P3).
+- **Easy to read**: holding a sprinkler shows the squares it will water, holding a pump shows its reach, and crops
+  that nothing waters get a small dry mark while the player holds a watering can. Hoes and shovels never knock a
+  sprinkler over by accident.
 
-**Lenses:** Game first — one short pumping job instead of watering every square, and power takes that away too. The
-owner's fixed points — small sprinklers saved up for in the village, larger ones from further out, early machines
-more manual. Picture the moment — a few strokes at the pump on a dry morning, then the whole farm hisses into life at
-dawn. **Cost and risk:** the dawn watering runs on the server like the rain; watered trees feed the bugs, so it is
-checked like any other change to their food; when a zone has been frozen, its catch-up (decided, not built) has to
-apply the dawns it missed; the pump, its cistern and two sprinklers need art (paid images, asked first).
+**Lenses:** Game first — one lever-pull waters the farm, and power takes even that away. The owner's design — reach
+shown like power's, no tanks or hoses. **Cost and risk:** the watering runs on the server like the rain; watered trees
+feed the bugs, so it is checked like any other change to their food; a frozen zone's catch-up (decided, not built)
+applies the days its powered pumps missed; the pumps and sprinklers need art (paid images, asked first).
 
 ### P23. Lessons that lead into each other
 *Part 19 · the interface and learning the game.*
@@ -1502,12 +1539,19 @@ the system; the panel reuses the station panel's column and bars; the outlines d
 
 ## Questions
 ### Q1. Does this describe the game?
+**Answered 2026-09-28: yes** — light on detail in places, but not wrong; the sections are rebuilt from it.
+
 If anything is wrong or missing, say what in the note or the box at the bottom.
 - **A.** Yes — rebuild the sections from it.
 - **B.** Mostly — fix what I noted, then rebuild the sections.
 - **C.** No — something big is wrong or missing; let's go over it first.
 
 ### Q2. What counts as a "bug"?
+**Answered 2026-09-28**: insects, and the other arthropods too, since they are bug-like — spiders, scorpions,
+centipedes, millipedes, pill bugs, crayfish and crabs; fish stay separate, because the owner enjoys fishing; no
+worms and no leeches. (Snails aren't arthropods either, so by the same rule they go — my reading.) The Underground
+River keeps its crayfish and its cave crab.
+
 Bugs, fish and people survived; birds, amphibians and reptiles didn't. Spiders, scorpions, centipedes, millipedes and
 pill bugs are what most people call bugs; the zone designs also include snails, leeches, crayfish and a cave crab
 (the Underground River's mini-boss, with materials and gear built on it).

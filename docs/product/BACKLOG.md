@@ -923,17 +923,24 @@ Items marked (P#) wait for the owner's verdict on that proposal.
   fence strength against bug strength; carrion beetles stop making compost (`produces_compost`); centipedes spread
   out instead of moving as packs; calming values are set per species.
 - **Fencing overhaul** — posts that connect, with materials of different strength (P5).
-- **Catching** — bug size classes, hand-net limits, placed catchers, the autonet's drawing zone (P3); traps and bait
-  (P4). Give the large net, the bug extractor and every other unobtainable item a way to be obtained (D37).
+- **Catching** (P3, P4 — accepted, D63) — bug size classes, hand-net limits, placed catchers (a placed net counts as
+  a trap), the autonet's drawing zone; subduing and dragging big bugs (P15); a cast net that tangles a big bug so it
+  can be dragged; traps and bait. Give the large net, the bug extractor and every other unobtainable item a way to be obtained (D37).
 - **Butterflies in the world** — caterpillars leave the nursery, grow, pupate and emerge (D38; P7).
-- **Research with the magnifying glass**, filling the bug's information page (D40; P8).
+- **Research with the magnifying glass**, filling the bug's information page (D40; P8 accepted, D63): examining a
+  species a set number of times opens its next fact (each look counts, with a short wait per bug); plants that steer
+  bugs and boost breeding.
 - **The Ecologist's quests, the monitoring station and the Ecology tab's unlock** (D40; P9).
 - **Village property** — players can't damage or take it; bugs can damage village fences; villagers repair them
   (D41; P6).
-- **Ecology retune** — fewer fruit on the ground with another lever raised; the other changes in P10.
+- **Ecology retune** (P10 accepted, D62, D63) — fewer fruit on the ground, for looks, with the flies retuned to live
+  on less; hard caps kept as the anti-crash safety net; a species that dies out is reseeded; weather a lever of last
+  resort; bug behaviour polished first. Before starting: learn exactly how the existing tuning and polish work (the
+  `ecology-tuning` skill, the bands, the harness), then suggest what's new.
 - **Compost as fertiliser** — and the compost item's description should say so.
 - **Species** — real names for all fifteen; the ant species cut to black and fire ants; birds, amphibians,
-  reptiles and mammal-era things removed from the designs (D32, D39).
+  reptiles and mammal-era things removed from the designs (D32, D39); a bug is an insect or another arthropod, so
+  worms, leeches and snails leave the designs, while crayfish and the cave crab stay (D64).
 - **Lighting** — the whole lighting system is a prototype and needs its own improvement pass.
 - **Opening text** — a placeholder; rewritten once the premise section is final.
 
@@ -950,8 +957,8 @@ Items marked (P#) wait for the owner's verdict on that proposal.
   diagonal shapes go) and the shovel's dig/lay switch (P12); tents three squares wide; mannequins showing whole outfits
   on a white-faced figure.
 - **Combat**: swarms attack together in sync (the two-attacker pool goes); wind-ups only for lunging species; the axe's
-  swing attacks; stamina (P14); dragging big subdued bugs (P15); bosses (P13); aphids living on plants, shown in the
-  plant's view.
+  swing attacks; stamina for dodging and running (P14); dragging big subdued bugs (P15); bosses (P13) — placed or grown
+  from conditions, never a locust boss (D63); aphids living on plants, shown in the plant's view.
 - **Gear**: one outfit slot in place of the eight equipment slots; base characters in several skin colours by
   recolouring; the alchemist's robe and a potion station (the wizard's robe goes); new accessory ideas; the tiers.
 - **Farming and mining**: wheat seeds from the Locust Farmland (the village stops selling them); plants cut down and
@@ -1010,17 +1017,19 @@ Items marked (P#) wait for the owner's verdict on that proposal.
   tools and weapons for money, power parts and jewelry; hits = tool strength − material toughness (the break handler's
   one-point-per-hit goes; the unused `mining_speed` becomes the strength); co-op digging adds up; power tools (a rock
   drill, a chainsaw) in the top tiers. Tier counts per tool come from the item table.
-- **Automation** (D56, P22 revised): a hand pump (a well on the farm) filling a cistern that the sprinklers draw on,
-  then a powered pump; sprinklers water everything in reach, trees included (D62); crops need one watering a day
+- **Automation** (D56, P22 accepted, D63): pumps work like power — placing one shows its reach; working a hand pump's
+  lever sets off every sprinkler in reach; a powered pump does it every day; no tanks, no hoses; sprinklers water
+  everything in reach, trees included (D62); crops need one watering a day
   (D61 — `max_daily_waterings` 2 → 1 in `crops.json`, retuned); sprinklers — small ones in the village shop, priced to
   save up for; larger ones in the western town; powered appliances usable inside the Mayor's powered area; the Mayor's own appliances usable; other
   villagers' houses lit by torches and bug lanterns. No hired workers anywhere (the NPC workers of
   `design/game_design.md` §11.2 go).
 - **Time** (D57): one world clock (the roadmap's per-zone `DayOffsetTicks` plan); no night skip; the world stops only
   when nobody is online; border events from frozen neighbours (P25).
-- **Weather and tuning** (D57): remove the ecology director's weather steering (`ecology_director.go`: droughts when a
-  species is high, extra rain when one is near collapse) as part of the bug overhaul; polish and update bug behaviour
-  first, then retune everything with many levers (P10); droughts and rain keep a rhythm of their own.
+- **Weather and tuning** (D57, D63): demote the ecology director's weather steering (`ecology_director.go`: droughts
+  when a species is high, extra rain when one is near collapse) to a last resort, as part of the bug overhaul; keep
+  its reseeding of species that die out; polish and update bug behaviour first, then retune everything with many
+  levers (P10).
 - **Playing together** (D58): drop the eight-character cap (`nakama/modules/rpc/character.go`
   `maxCharactersPerAccount`); a server setting for player-versus-player; private plots invite-only with the January
   2026 plot design and a happiness panel (P26); **a thorough review of what still runs on the server**, each piece
