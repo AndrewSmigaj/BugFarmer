@@ -738,7 +738,7 @@ is being cut.
 Everything in the shared world runs the same for every player; nothing goes faster for one player than another. No
 limit on characters per account. Player-versus-player is allowed only when a server switches it on; the game is about
 players against the world. Private plots are invite-only, follow the January 2026 plot design (decoration bonuses with
-diminishing returns and a cap; nothing damaged while the owner is away) and need a panel for their happiness level
+diminishing returns and a cap) and need a panel for their happiness level
 and bonuses. What still runs on the server gets a thorough review: the game moved from the server running everything
 to every player's computer running the same simulation in step, so each remaining server-side piece has to justify
 its place — one of the most fragile parts of the game.
@@ -813,3 +813,12 @@ becomes a butterfly water dish (the assistant's name — "puddling" would lose m
 the game passes on a little real biology and ecology, but it plays as a game — mosquitoes and other blood-feeders feed
 on people and on big bugs such as caterpillars, and the mosquito zone stays. Each townsperson has a voice of their
 own. The pillars use plain names.
+
+### D67 — A sandbox, not a path; what a private plot protects (2026-09-28)
+It's a sandbox, and no one way of playing is required: a player can ranch ants, roam the wilds as a hunter, or do
+anything else; most will start a fly farm and grow from there. Most players grow their bugs' food, but it can also be
+bought — gardening is a choice, not a step. A private plot's protection is from other players: nobody can add
+or change anything on it without the owner's permission. It is not protected from what the owner sets up there —
+penned wasps can go wild while the owner is away. *(This corrects D58 and the overview, which had carried over the
+January 2026 line that nothing on a plot is lost or damaged while its owner is away.)* The pillars (§00, P2) are
+accepted.
