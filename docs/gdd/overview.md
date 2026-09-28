@@ -1,5 +1,5 @@
 # §OV · The game as the documents describe it
-<!-- gdd: id=OV status=review updated=2026-09-27 -->
+<!-- gdd: id=OV status=final updated=2026-09-28 -->
 
 Before redoing the design document, every design document in the repo was read in full — about 240 files: the
 December 2025 requirements, the January 2026 design document, the brainstorms, the economy and zone designs, the
@@ -99,10 +99,11 @@ Everything in the world has to fit that.
   crabs; fish are separate; no worms and no leeches (2026-09-28, Q2).
 - **No magic** — the world runs on 2126 science; enchanting, arcane tools and books, magic bait, dwarven ruins and
   fantasy metals are dropped (P2, accepted 2026-09-28).
+- **The prototype's items that don't fit the premise can be removed** — the cow skull, the cat statue, the hay bale,
+  the birdbath, bones and bone piles; the prototype isn't finished (2026-09-27).
 
 **In the prototype now** — a placeholder opening text; a few items in the data that don't fit the premise (a cow
-skull, a cat statue, a hay bale, a birdbath, bones and bone piles) — §00 decides whether any stay as relics of the
-old world or go.
+skull, a cat statue, a hay bale, a birdbath, bones and bone piles), which can be removed (2026-09-27).
 
 **Still open** (→ §00) — how the game should feel.
 

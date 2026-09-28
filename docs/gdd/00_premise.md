@@ -1,228 +1,173 @@
 # §00 · Premise, pillars & what belongs in the world
-<!-- gdd: id=00 status=rework updated=2026-09-26 -->
+<!-- gdd: id=00 status=review updated=2026-09-28 -->
 
 ## The experience
-It is 2126. A plague killed nearly every mammal, and people bred bugs big enough to eat. You arrive on the
-frontier with almost nothing and make a life as a bug farmer: you catch, calm, breed and sell giant bugs, grow the
-plants that feed them, and push out into wilder places where the bugs get bigger and meaner. Nobody tells you what
-to do next. The world is a living food web, and learning to read it is the game. With friends it becomes a shared
-frontier — anything goes out in the wild, while your own plot stays safe.
+It is 2126. A plague killed nearly every mammal, and people bred bugs big enough to eat. You arrive on the frontier
+with almost nothing and make a life as a bug farmer. You catch, calm, breed and sell giant bugs, and fight the ones
+that bite back. You farm, fish, mine, craft and build, trade with the townspeople, and push out from the village into
+wilder land where the bugs get bigger. There is no storyline: lessons and quests are offered, never forced, and you
+set your own goals. The world is a living food web that answers what you do — you can keep it in balance or tip it.
+With friends it becomes a shared frontier: the wild is lawless, while your own plot stays safe.
 
 ## Decided
-- **The premise** — the game's opening text, in the game today: *"It is the year 2126. A plague swept the Earth.
-  Nearly every mammal — gone. Humans held on. But humans still had to eat. So we made the bugs bigger. Bigger than
-  anyone meant to. Out on the frontier, you start over. As a bug farmer."*
-- **Bugs are giant** (2026-09-26) — the bugs are bred giant, and their size stays as designed; it isn't up for
-  redesign.
-- **No storyline; progress is earned** (2026-09-26) — like Terraria, there is no overarching story and you set your
-  own goals. Tutorials unlock as you play, and the Ecology tab has its own small tasks. Zones are gated by cost: you
-  build up your character before you can survive the harder ones.
-- **A chaotic shared world, a safe private plot** (2026-09-26) — private plots and City Hall stay; they are central
-  to the design. The shared world is lawless, with one exception: the town's citizens. Stealing from them or
-  damaging their houses isn't possible, and a message tells the player it isn't acceptable.
-- **New bugs are welcome, with care** (2026-09-26) — new species can be added as long as the balance holds and each
-  one is explained; none should need a whole new zone (said about the honeypot ants and grasshoppers some food ideas
-  need).
-- **The biology shows when you examine things** (2026-09-26) — examining an item or a recipe shows what it does and
-  the real biology behind it.
-- **Surprise and curiosity matter** (2026-09-26) — the lenses of Curiosity and Surprise (from *The Art of Game
-  Design*) are priorities.
-- **No frogs** — rejected at the review after the 2026-07-05 playtest (`economy/DECISIONS.md`, D31).
+Each line is the owner's decision in my words, with its date.
+- **The premise**: the year 2126; a plague killed nearly every mammal — people held on; people bred bugs bigger to
+  have food; the player starts over on the frontier as a bug farmer (the owner's opening script, June 2026). The
+  game's opening text is only a stand-in for now (2026-09-27).
+- **The bugs are giant**, and their size stays as designed (2026-09-26).
+- **Bugs, fish and people survive**; birds, amphibians and reptiles died out too, so no frogs (2026-09-27; D31, D32).
+- **A bug is an insect or another arthropod** — spiders, scorpions, centipedes, millipedes, pill bugs, crayfish,
+  crabs; fish are separate; no worms and no leeches (2026-09-28, D64).
+- **Nothing from the mammal world**: cave bats and bat guano, milk and cheese, horseshoes, livestock and manure, a
+  rabbit's-foot charm and a pack mule are dropped; so is the old idea of a meteor-borne infection (2026-09-27, D32).
+  The prototype's own misfits — the cow skull, the cat statue, the hay bale, the birdbath, bones and bone piles — can
+  be removed; the prototype isn't finished (2026-09-27).
+- **No magic**: the world runs on 2126 science (2026-09-28, D65).
+- **Every creature is a real species** with real behaviour, and the game teaches a little ecology and biology
+  (2026-07-11; 2026-09-27, D39). New species are welcome if each is explained, keeps the balance and doesn't need a
+  whole new zone (2026-09-26).
+- **No storyline, and no ending**: players set their own goals in an open world, as in Terraria; the hardest zones
+  hold the bosses and the legendary sets, and some quest lines lead there (2026-09-26; 2026-09-28, D55).
+- **Food chains are the ladders** — several, some short and some tall, rather than one long climb up from flies; bugs are
+  livestock, sold as meat or kept for their product (2026-09-27).
+- **Players may tip the ecosystem** — balancing or unbalancing it is the point of the game, within the safety caps
+  (2026-09-28, D62, D63).
+- **It's a game, not a simulation**: real facts, but no realistic chores or extra steps — one step per station, and
+  no knocking at doors (2026-09-27, D42, D54).
+- **No wear-and-tear chores**: no hunger, tools never wear out, and food doesn't spoil (2026-09-27, D49, D50;
+  2026-09-28, D54).
+- **Combat matters and defence is critical**; each role has its own best gear, and no single set is best at
+  everything (2026-08-06). Starter zones are cosy, nights are more dangerous, and danger rises outward from the
+  village (2026-07-11; 2026-09-27, D46).
+- **A lawless shared world and safe private plots**: out in the world anything goes except the townspeople's
+  property (2026-09-26; D41); players fight each other only where a server allows it — the game is players against
+  the world (2026-09-28, D58); private plots are invite-only, and nothing on one is damaged while its owner is away
+  (2026-09-28, D58).
+- **Everything in the shared world runs the same for every player** (2026-09-28, D58), and everything in the world
+  persists, as in Terraria (July 2026, D31).
+- **Examining an item or a recipe shows what it does and the real biology behind it** (2026-09-26).
+- **Curiosity and surprise** are priorities (2026-09-26).
+- **No rule is forced on every zone** (2026-09-26). **No seasons** (January 2026; confirmed 2026-09-27).
+- **Every system gets a polishing pass**, with suggestions from taste and good game design (2026-09-28, D59).
+- **Nothing is locked, and the prototype is not the design**: only the owner's dated decisions are decisions
+  (2026-09-27, D33, D48).
 
 ## Current design
-What the design documents already say, gathered in one place:
-- **The genre.** A top-down multiplayer sandbox inspired by Terraria and Stardew Valley, about emergent ecology,
-  insect farming, shaping the environment and solving problems your own way. There is no endgame: the world keeps
-  changing through what players and the ecology do (GDD §1–2).
-- **Two ways to play at once:** risky exploration in the shared world, and calm, optimised farming on your private
-  plot (GDD §1, §10).
-- **Bugs are livestock.** Some bugs make a product at a station (bees → honey, silkworms → silk); the rest — flies,
-  wasps — are sold as meat. The food chain is the progression: farm flies to feed wasps, and so on up to bigger,
-  rarer bugs. (`bug_ecology_plan.md`)
-- **Progress comes from items**, not skill trees or experience points: tools, knowledge, preparation and how you lay
-  things out — no scripted events or stat grinding (GDD §1, §18).
-- **Machines ease chores, never play for you** — automation is allowed but slow and capped: no instant catching and
-  no automated fighting. The slow autonet is the first automatic catcher and others in the same spirit are allowed
-  (GDD §11.4); you've also named automatic bug catchers and bug zappers for the powered age.
-- **No disasters on a timer** and no forced invasions (GDD §12.2).
-- **The seven pillars** of the January 2026 GDD (§18): emergent systems over scripts · player agency over
-  obligation · readable ecology · item-based progression · no offline punishment · no autoplay · no forced chaos.
-- **Lean into variety** — lots of things to gather, craft and decorate with. (GDD §19)
+What the older design documents say that still stands:
+- **The genre**: a top-down multiplayer sandbox inspired by Terraria and Stardew Valley, about emergent ecology,
+  insect farming, shaping the environment and solving problems your own way (January 2026, §1–2).
+- **Two ways to play at once**: risky exploration in the shared world, and calm, carefully laid-out farming on the
+  private plot (January 2026, §1, §10).
+- **Progress comes from items** — tools, knowledge, preparation and layout — not skill trees or experience points
+  (January 2026, §1, §18).
+- **No disasters on a timer and no forced invasions**, and **machines ease chores but never play for the player**
+  (January 2026, §11–12).
+- **The seven January 2026 pillars** (§18): emergent systems over scripts · player agency over obligation · readable
+  ecology · item-based progression · no offline punishment · no autoplay · no forced chaos.
+- **Variety with taste** — many kinds of things to gather, craft and decorate with, each earning its place; the item
+  pass may cut many (2026-09-28, D55).
+- Replaced since: "there is no endgame" (now an open world with no ending, D55) and the NPC workers (none, D56).
+- **Dropped by the rulings above**, so the item table won't bring them back: the frog items (frog spawn, frog toxin,
+  the frog-leg charm, the frog pen, the frog spout); bat guano; the antler chandelier and the bearskin rug; the robin,
+  the feathered fishing fly, the bird feeder, the bird house and the owl decoy; the dog kennel, the cat basket, the
+  cat-grace band and the dog statue; the horseshoe sign and pile; the dairy props; the dung pat. Where a bug-world
+  version fits — a beetle charm, a dragline band, a stag-horn chandelier, a moth roost, frass — the item table
+  offers it.
 
 ## As built
-- The opening text plays before the title screen (`OpeningSequence.cs`, lines 28–42).
-- 15 bug species are in the game: Common Fly, Meadow Butterfly, Honeybee, Wasp, Wasp Soldier, Giant Hornet, Carrion
-  Beetle, Garden Centipede, Tiger Centipede, Giant Centipede, Garden Millipede, Worker Ant, Scout Ant, Firefly and
-  Dragonfly. About 75 more are designed on paper (`economy/species_and_drops.md`).
-- **There is no examine view yet.** Hovering an item shows only its name (`InventorySlotUI.cs` → `TooltipUI.cs`);
-  bugs have a one-line description on their info card; only 2 of the 654 items, objects and placeables have any
-  description (compost and the compost bin). Your "biology on examine" rule means an examine view plus about 650
-  short texts — now on the roadmap as its own content pass.
-- A few things in the game data don't fit the premise: `cow_skull`, `cat_statue`, `hay_bale` and the `birdbath`
-  (decorations), and `bone` and `bone_pile` (a material with no use yet, and piles in the caves). More are designed
-  on paper — see the proposals below.
+- The opening text plays before the title screen (`OpeningSequence.cs`, lines 28–42); it is a placeholder.
+- Fifteen bug species are in the prototype, all unfinished. The old zone sheets name 84 species (listed in §03) — a
+  list to cut from, not a plan.
+- There is no examine view yet: hovering an item shows only its name, and only 2 of the game's 654 things have a
+  description. About 650 examine texts are on the roadmap as their own pass.
+- The prototype's misfits and where they stand: 34 bone piles in the first mine (and the general store buys bones, as
+  a material); in the village, one cat statue, three hay bales and two birdbaths (the birdbath has a stonecutter
+  recipe); the cow skull is placed nowhere. The fly's data still lists a manure pile among its breeding places, and a
+  scarecrow — a bird-scarer — exists as an object.
 
 ## Proposals
-### P1. A one-line pitch that steers every decision
-**"Farm giant bugs on a frontier where nearly every mammal is gone — a living food web you learn to read, bend and
-harvest, alone or with friends."** It goes at the top of the design document and becomes the first test for any new
-idea: does this make that sentence more true?
+### P1. A pitch that names the whole game
+**Farm giant bugs on a frontier where nearly every mammal is gone. Catch them, breed them and fight them; farm, fish,
+mine, craft and build; trade with the townspeople; and push out from the village into wilder land where the bugs get
+bigger — alone or with friends, in a living ecosystem you can balance or tip.**
 
-**Lenses:** Unification — one sentence every section serves. Already covered? — the GDD's opening line says what
-kind of game it is; this says what it is about.
+It goes at the top of the design document, and it is the first test for any new idea: does this make those two
+sentences more true? The first try (2026-09-26) named only the bugs and the food web; this one names every main
+activity, fighting included.
 
-### P2. The pillars, updated with what you've said since January
-1. **A living food web you can read** — everything eats, breeds, dies and rots; the Ecologist and the Ecology tab
-   help you understand it.
-2. **Bugs are livestock; the food chain is the progression** — to keep bigger bugs you farm the smaller ones they
-   eat.
-3. **Progress through gear and preparation, gated by cost** — no experience points, no skill trees.
-4. **A chaotic shared world, a safe private plot** — the chaos comes from other players and the bugs, never from
-   disasters on a timer; anything goes out there (except citizens' property); your plot is yours.
-5. **Your own goals** — no storyline; tutorials and Ecology-tab tasks unlock as you go.
-6. **Real biology, shown when you examine things** — every bug, item and recipe says what it is and why it works.
-7. **Curiosity and surprise** — poking around is rewarded: secrets, hidden places, things that aren't what they
-   seem.
-8. **Fair to your time** — no punishment for being away, and machines ease chores but never play for you.
+**Lenses:** Unification — one statement every section serves. Premise — it opens with the world's situation, not a
+feature list. Completeness — checked against every activity in the overview.
 
-Pillars 1, 3, 4, 5 and 8 carry all seven January pillars; 2 comes from the ecology design; 6 and 7 come from your
-decisions this week.
+### P2. The pillars, rebuilt from everything decided
+1. **Bugs are the farm** — catch, calm, pen, breed and sell giant bugs; several food chains, some short and some
+   tall, are the ladders. *(2026-09-27; D39)*
+2. **A living ecosystem you can tip** — everything eats, breeds, ages and dies; players keep it in balance or tip
+   it, within the safety caps; the Ecologist and the Ecology tab help them read it. *(D62, D63)*
+3. **A whole sandbox, real facts, simple steps** — farming, mining, crafting, building, cooking, fishing and trading,
+   each a game-like system with one step per station and no realistic chores. *(D42, D54, D64)*
+4. **Danger you prepare for** — real fights against bugs; defence matters; gear by role, with no single best set;
+   danger rises outward from the cosy starter zones to the bosses in the hardest ones. *(2026-08-06; D46; D55)*
+5. **Progress through gear and preparation** — no levels, no storyline, no ending; better tools open new ores and
+   zones. *(2026-09-26; D55)*
+6. **Real creatures, no magic** — every creature is a real species with real behaviour, examining anything shows the
+   real biology, and the world runs on 2126 science. *(2026-07-11; D39; D65)*
+7. **Curiosity and surprise** — secrets to find across the world, research that reveals each species, and things
+   that aren't what they seem. *(2026-09-26; D63)*
+8. **Together, fairly** — the wild is lawless except for the townspeople's things; players fight the world, and each
+   other only where a server allows it; plots are safe and invite-only; everything runs the same for every player.
+   *(D41; D58)*
+9. **Fair to your time** — no wear-and-tear chores, nothing on your plot lost or damaged while you're away, no
+   disasters on a timer; machines ease chores and never play for you. *(D49, D50, D54; D58; the January design)*
 
-**Lenses:** Built from the January pillars and your decisions this week — every pillar traces to a decision or a
-design document. Unification.
+The seven January pillars live on inside these.
 
-### P3. Keep the old world's relics — they tell the story without a storyline
-Keep `cow_skull`, `bone_pile` / `bone` and `cat_statue` (and the designed dog statue) as **relics from before the
-plague**, each with a line of examine text — for example *"A cow's skull, bleached by the sun. From before the
-plague."* Bones get the use already designed for them: **bone meal**, a real fertiliser
-(`brainstorms/farming/farming_tools.md`, `economy/catalogs/materials.md`).
+**Lenses:** Built from decisions — each pillar names its source. Unification — each one can reject an idea.
+Completeness — the first try missed mining, crafting and building; pillars 3 and 4 name every activity, fighting
+included.
 
-**Lenses:** Premise — these are remains and memories, not living mammals. Storyteller — with no storyline, the world
-itself has to show what happened. Cost — the art exists and bone meal is already designed. Dead ends — `bone` has no
-use in the game yet.
+### P3. The misfits go
+You said the prototype's misfits can go (2026-09-27). My recommendation for each:
+- **Go**: the cow skull, the cat statue (the village cottage keeps its bug statue), the bones and the 34 bone piles
+  in the first mine, and the manure pile in the fly's data (D32).
+- **Become bug-world things**: the hay bale becomes a **straw bale** — straw comes from cutting wheat (P11 of the
+  overview, accepted) and makes mulch; the birdbath becomes a **puddling dish** — butterflies really gather on damp
+  ground to sip water and minerals; the scarecrow becomes a bug-scaring scarecrow or goes, since there are no birds.
+- The old world's story is told by the examine texts and the townspeople, not by animal remains.
 
-### P4. The hay bale becomes cricket feed
-Keep `hay_bale` and its art. Examine text: *"Dried grass. Crickets will eat it."* It becomes a feed item when
-crickets arrive (cave crickets are designed). Wiring it up is data only — the same way flies are drawn to the
-compost bin today.
+**Lenses:** Premise — nothing from the mammal world. Already covered — straw is already coming (P11), and puddling is
+real butterfly behaviour. **Cost:** removing the placed ones from the village and the first mine; the birdbath's
+recipe changes to the dish's.
 
-**Lenses:** Premise — hay only exists for livestock, and here the livestock are bugs. Bestiary — crickets are
-already designed, not new.
+### P4. Bugs that lived on the vanished animals
+Some designed bugs depend on animals that died out: ticks, mosquitoes and horse flies drink the blood of mammals and
+birds; dung beetles live on dung; bot flies grow inside mammals. With the animals gone, **each such species is either
+gone or lives on what's left — people, fish, plants and rot** — whichever is true of the real species. So mosquitoes,
+ticks and horse flies that bite people survive as pests the player deals with; dung beetles that can also live on
+carrion or rotting fruit survive as scavengers; the rest are gone. §03 applies this species by species, and the
+examine text says why — a real lesson in how species depend on each other.
 
-### P5. Cut dairy
-Cut the designed dairy things — milk, cheese, the cheese press, the milk churn, milk bottles and the cheese-wheel
-stack. None are built, and `crafting.md` already marks milk as *"future livestock"*. The sweet side of cooking
-stays with honey and **aphid honeydew**: ants really do tend aphids for the sweet honeydew they make, and the aphid
-ranch, honeydew tap and ant dairy are already designed (`brainstorms/bug_farming/bug_farming.md`).
-
-**Lenses:** Premise — no cows, no milk. Already covered — the honeydew line exists on paper.
-
-### P6. Bats become moth roosts; bat guano becomes frass
-Cut the designed `cave_bat` and `bat_swarm` — bats are mammals. The cave design already has the bug version:
-`cave_moth_roost`, a ceiling cluster of pale moths that bursts out like bats. The cave fertiliser `bat_guano`
-becomes **frass** — insect droppings, a real fertiliser that farms sell today — left by cave crickets, and it takes
-over guano's other job too (the damp salve's saltpetre note, `economy/zones/centipede_cavern.md`).
-
-**Lenses:** Premise. Bestiary — both replacements are already designed. Explain on examine.
-
-### P7. Animal parts and names become bug ones — and the frog items go
-| designed item | becomes | why |
-|---|---|---|
-| Lucky Rabbit's Foot (a charm) | **Beetle charm**, cut from a beetle's shell | the ancient Egyptians carried scarab-beetle charms for luck and protection |
-| `cat_grace_band` (protects from falls) | **Dragline band** | jumping spiders really fix a silk safety line before every leap |
-| antler chandelier | **stag-horn chandelier** | a stag beetle's huge jaws look like antlers; `stag_horn` is already designed |
-| bearskin rug | **tarantula-molt rug** | tarantulas shed their whole skin, hairs and all — no killing needed |
-| Frog Legs (walk on water) | **cut** | water-walking is already covered: the lily glider, strider gear and skater boots |
-| the frog items: `frog_spawn`, `frog_toxin`, `frog_leg_charm`, `frog_pen`, `frog_green`, `frog_brown` | **cut** | frogs were rejected; the swamp poison moves to a swamp bug (the Deep Swamp zone design picks which) |
-| the frog fountain spout | **beetle spout** | same fountain, a bug on it |
-
-**Lenses:** Premise. Bestiary — every replacement uses a designed bug or none. Already covered — water-walking.
-Explain on examine.
-
-### P8. Cut horseshoes and live pets; animal statues stay
-Cut the designed `sign_horseshoe` and `horseshoe_pile` (no horses — the smith's sign becomes an anvil) and the
-`dog_kennel` (no living pets). The `cat_basket` goes too — unless P9 is kept, when it becomes the last cat's bed.
-The cat and dog statues stay as relics (P3).
-
-**Lenses:** Premise.
-
-### P9. A village secret: the last cat (optional)
-Somewhere in the village, behind a door you have to find, an old resident keeps what may be the last cat. It can't
-be hurt, taken or farmed — it belongs to a citizen. It's just there, asleep. Examine text: *"A cat. Alive."* Cost:
-one small sprite, one resident, one hidden room in an existing house.
-
-**Lenses:** Premise — *"nearly every mammal"* leaves room for one. Surprise and Curiosity — the kind of find players
-tell each other about. Fits the village secrets on your list for the village. Zone freedom — one place, not a rule for every
-zone.
+**Lenses:** Premise — the plague's effects reach the bugs too. Real biology — host dependence is real, and many of
+these bugs really do bite people or switch food. Curiosity — a pest that bites the player, with a reason. **Cost:**
+none in code yet; it shapes §03's species list.
 
 ## Questions
-### Q1. Which animals share the world with the bugs?
-Fish exist — fishing is on your list, and a blind cave fish is already designed. Frogs are out. The open part is
-birds. The plague took mammals, so if birds are gone too the game needs a reason (for example, the giant bugs
-drove them out). Birds already appear in a few places: the `birdbath` is in the game, and a bird feeder, bird
-house, owl decoy, robin and a feathered fishing fly are designed. The July look-and-feel research suggested small
-birds as cheap background life that makes the world feel alive.
-- **A.** Bugs and fish only. Bird things get bug versions: the bird feeder becomes a butterfly feeder (nectar feeders are
-  real), the birdbath a butterfly puddling dish (butterflies really sip minerals from wet sand), the bird house a
-  bee hotel, the owl decoy and robin are cut (the scarecrow
-  scares bugs), and the fishing fly is tied from silk.
-- **B.** A few small birds as harmless background life, like robins on the lawn. Next to giant bugs, a robin would
-  be smaller than many of them.
-- **C.** Birds as part of the food web: they hunt bugs, including your livestock.
+### Q1. The voice of the words
+The shape is decided: cosy at home, danger rising outward, no storyline. What's open is how the words sound — the
+examine texts, the townspeople's lines and the opening. Your own opening turns wry at the end: "Bigger than anyone
+meant to."
+- **A.** Earnest and wistful — a quiet sadness for what was lost, and wonder at what's left.
+- **B.** Dry and wry — plain-spoken, with the understatement of the opening's last line.
+- **C.** Openly comic — the strangeness of giant bugs played for laughs.
 
-**Recommendation: A.** It draws the same line as the frog decision; everything on screen is then part of the bug
-world or fishing, and nothing competes with the bugs for attention. B and C each add a new family of creatures to
-draw, animate and balance.
-
-### Q2. The early "meteor infection" idea
-The first requirements (December 2025) and the world notes written a week later describe meteors that bring space
-bacteria: patches of infected ground, aggressive "zombie bugs" that spread it, and a cure spray. None of it is
-built, and nothing written since January 2026 mentions it.
-- **A.** Drop it. (The meteorite ore in old craters and the zombie-ant fungus are separate designs and stay either
-  way.)
-- **B.** Keep it as designed: meteor strikes, infection patches, zombie bugs, the cure spray.
-- **C.** Replace it with farm diseases that come from how you keep bugs: crowd too many into a pen and disease can
-  break out; give them space and keep pens clean to prevent it; a cure spray treats it. This really happens — a
-  virus devastated North America's commercial cricket farms from 2009
-  ([PubMed](https://pubmed.ncbi.nlm.nih.gov/21167171/)). It is a big new part of the bug simulation, so it would be
-  designed in §05, not here.
-
-**Recommendation: A.** Random meteor strikes clash with the GDD's rules against timed disasters (§12.2) and forced
-chaos (§18), and with your rule that no mechanic is forced onto every zone; the plague already gives the world its
-history, and a second plague from space muddies it. C is good on its own merits but big — I'd bring it
-back as a proposal in §05 rather than decide it here.
-
-### Q3. How should the game feel?
-The opening is sombre; the art is bright and full of flowers; the two reference games are Stardew Valley and
-Terraria.
-- **A.** Warm and curious, with danger at the edges — the plague is history you glimpse in relics and examine text;
-  home is cosy; the far zones are genuinely dangerous.
-- **B.** Frontier survival — wonder, but the wild is harsh everywhere and scarcity bites.
-- **C.** Light and funny — the strangeness of giant bugs played for laughs.
-
-**Recommendation: A.** It matches the art, both reference games and the pillars (fair to your time, no forced
-chaos). How dangerous the far zones get is set in §07 Combat.
+**Recommendation: B.** It matches your own opening, it carries real biology without preaching, and it lets a sad
+fact land lightly — which suits a cosy game with a plague in its past.
 
 ## Sources
-- Your decisions of 2026-09-26, restated above.
-- `BugFarmerClient/Assets/Scripts/UI/OpeningSequence.cs` (the opening text); `InventorySlotUI.cs`, `TooltipUI.cs`
-  (hover shows the name only); `nakama/data/species.json` (the 15 live species).
-- `docs/product/design/game_design.md` §1, §2, §10, §11, §12.2, §18, §19 (January 2026 GDD).
-- `docs/product/design/requirements.md` §12 and `docs/product/architecture/architecture_world.md` "Random Events"
-  (the meteor infection idea, December 2025).
-- `docs/brainstorms/ecology/bug_ecology_plan.md` (bugs as livestock; the food chain as progression).
-- `docs/product/economy/DECISIONS.md` D31 (frogs); `docs/product/economy/crafting.md` (milk);
-  `docs/product/investigations/research_look_and_feel.md` (ambient birds).
-- Premise audit — game data: `nakama/data/entities/{items,occupants,placeables}.json` (`bone`, `bone_pile`,
-  `cow_skull`, `cat_statue`, `hay_bale`, `birdbath`). Designs: `brainstorms/bugs/mining_caves.md` (cave bat, bat
-  swarm, moth roost, cave crickets), `brainstorms/bug_farming/bug_farming.md` (aphid ranch, honeydew tap, ant dairy),
-  `brainstorms/decorations/village.md` (horseshoes, dairy props, pets, statues, bird feeder, bird house, frog
-  spout), `brainstorms/farming/farming_tools.md` (bone meal, owl decoy, cheese press),
-  `brainstorms/objects/fishing_gear.md` (feathered fly), `brainstorms/objects/lighting_ambiance.md` (antler
-  chandelier), `brainstorms/bugs/village.md` (robin), `economy/stats_and_bonuses.md` (Frog Legs, Lucky Rabbit's
-  Foot), `economy/catalogs/accessories.md` (`cat_grace_band`, `frog_leg_charm`, lily glider),
-  `economy/catalogs/materials.md` (frog toxin, bone meal), `economy/zones/deep_swamp.md` (bog frogs),
-  `economy/zones/centipede_cavern.md` (bat guano), `economy/species_and_drops.md` (`strider_leg`, `stag_horn`,
-  skater oil), `brainstorms/materials/ores_metals.md` (meteorite ore), `BACKLOG.md` (bearskin rug).
-- Science: the cricket-farm virus — [PubMed 21167171](https://pubmed.ncbi.nlm.nih.gov/21167171/),
-  [Genome Announcements 2013](https://journals.asm.org/doi/10.1128/genomea.00629-13).
+- The owner's decisions, restated above; `docs/product/economy/DECISIONS.md` D31–D65; `docs/gdd/overview.md` (final,
+  2026-09-28).
+- `BugFarmerClient/Assets/Scripts/UI/OpeningSequence.cs` (the opening script); `nakama/data/species.json` (the
+  fifteen prototype species; the fly's breeding places); `nakama/data/entities/{items,occupants,placeables}.json` and
+  `recipes.json` (the misfits, the birdbath recipe, the scarecrow); the zone saves under `nakama/data/zones/` (where the
+  misfits stand).
+- `docs/product/design/game_design.md` §1, §2, §10–12, §18 (the January 2026 design).
+- The replacements for dropped items: the 2026-09-26 draft of this section (git history).

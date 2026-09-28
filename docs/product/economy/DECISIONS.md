@@ -547,6 +547,9 @@ Restated in my words; the overview (`docs/gdd/overview.md`) carries the detail a
 Birds, amphibians and reptiles died out along with the mammals; only bugs, fish and people survive. The mammal
 things that slipped into the idea lists (cave bats and bat guano, milk and cheese, horseshoes, livestock and manure,
 a rabbit's-foot charm, a pack mule) are dropped, and so is the December 2025 idea of a meteor-borne infection.
+The prototype's own items that don't fit the premise — a cow skull, a cat statue, a hay bale, a birdbath, bones and
+bone piles — can be removed too; the prototype isn't finished. *(Added 2026-09-28: the same review answered this, but
+it was left out of this entry at first.)*
 
 ### D33 — The prototype is not the design
 Nothing in the game is finished. Every value in the data — prices, timings, counts, capacities — is a placeholder
