@@ -31,7 +31,7 @@ Bug Farmer is a top-down multiplayer sandbox in the spirit of Terraria and Stard
 breeds and sells bugs**; **grows crops and fruit trees**; **digs and mines** for ore; **crafts** tools, gear,
 furniture and materials at stations; **builds** pens, fences and a home; **fights** the bugs that bite back;
 **trades** with the town's shopkeepers; and **explores** outward from the village — across the surface and down
-underground — where the bugs get bigger and the rewards richer.
+underground — where the bugs get more dangerous and the rewards richer.
 
 Under all of it runs a living ecosystem. Fruit falls and rots, flies breed on it, wasps hunt the flies, and every
 bug eats, breeds, ages and dies — and every player sees the same bugs doing the same things. Bugs are the livestock:

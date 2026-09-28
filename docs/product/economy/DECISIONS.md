@@ -802,3 +802,14 @@ P1 accepted: where a later decision of the owner's replaced an older text, the l
 documents now carry a note saying so. P2 accepted: no magic — the world runs on 2126 science, and enchanting, arcane
 tools and books, magic bait, dwarven ruins and fantasy metals are dropped. As a balancing lever, weather comes last;
 rain and drought themselves stay an ordinary part of the game.
+
+### D66 — §00 answers: a bug farmer, remains, the misfits, voices (2026-09-28)
+The game is about being a bug farmer: bugs are raised like any other livestock, beside the gardening — plants and
+compost — that feeds them; "catch, breed and fight" alone reads like a monster-collecting game, which it isn't.
+Further from the village the bugs grow more dangerous, not necessarily bigger. Old mammal bones and other remains are
+fine — only living mammals are out — so the bones, the bone piles and the cow skull stay, and so does the cat statue.
+The hay bale becomes a straw bale; the scarecrow goes, since bug control comes from other mechanics; the birdbath
+becomes a butterfly water dish (the assistant's name — "puddling" would lose most players). Realism is never required:
+the game passes on a little real biology and ecology, but it plays as a game — mosquitoes and other blood-feeders feed
+on people and on big bugs such as caterpillars, and the mosquito zone stays. Each townsperson has a voice of their
+own. The pillars use plain names.
