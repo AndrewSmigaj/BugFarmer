@@ -631,6 +631,7 @@ STUCK for MECHANIC reasons, not tunable by any param:
   too high / `max_swarm_size` 3 too small to accumulate / well-fed-split too slow. A ground-predator
   breeding pass would let it climb. (Tuning vision/position/seed-count all FAILED — it's a breeding bottleneck.)
 - **Brood CLIENT layer** — right-click a source → eggs/maggots panel + on-world maggot-pile/egg visuals + sprites.
+- *(Replaced 2026-09-27, D38: caterpillars leave the milkweed, grow out in the world and pupate there — see P7.)*
 - **Butterfly life stages ON the milkweed (owner decision 2026-07-16 — keep it simple):** caterpillar +
   chrysalis are STAGES that happen ON the milkweed host plant — eggs → caterpillar → chrysalis → adult — **NOT**
   a caterpillar that crawls off or a chrysalis that wanders to a tree/fence (that mobile-creature version is
@@ -941,6 +942,8 @@ Items marked (P#) wait for the owner's verdict on that proposal.
 - **Species** — real names for all fifteen; the ant species cut to black and fire ants; birds, amphibians,
   reptiles and mammal-era things removed from the designs (D32, D39); a bug is an insect or another arthropod, so
   worms, leeches and snails leave the designs, while crayfish and the cave crab stay (D64).
+- **No magic** (P2, D65) — enchanting, arcane tools and books, magic bait, dwarven ruins and fantasy metals (mithril,
+  adamant, voidsteel) leave the designs; the item table marks each.
 - **Lighting** — the whole lighting system is a prototype and needs its own improvement pass.
 - **Opening text** — a placeholder; rewritten once the premise section is final.
 

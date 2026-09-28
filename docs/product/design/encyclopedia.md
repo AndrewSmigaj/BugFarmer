@@ -1,5 +1,8 @@
 # BugFarmer encyclopedia — bugs & plants (taxonomy for sprite generation)
 
+> **Replaced in part (P1, accepted 2026-09-28)** — later decisions stand over this document: diving isn't part of the game (August 2026), so a diver's set and any diving here are dropped; marsh waders become a wading outfit for shallow water, and deep water takes a boat (D51). See `docs/gdd/overview.md` and `docs/product/economy/DECISIONS.md`.
+
+
 A rich, expandable catalogue of creatures and flora. We make **variants** so the world has depth and a
 difficulty ladder: most families get **3 difficulty tiers** — `easy` / `medium` / `elite` (elite =
 stronger, tougher, breaks more, higher value). Sprites are generated **A/B** (two candidates each) for

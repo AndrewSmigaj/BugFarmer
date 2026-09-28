@@ -8,6 +8,8 @@ Purpose: Capture all locked design decisions and system requirements for impleme
 Note (2026-09-27): "LOCKED" in this document never meant final. The owner marked parts of the design that way only
 so they would not be changed without asking him. Nothing here is binding; the design now lives in `docs/gdd/`.
 
+> **Replaced in part (P1, accepted 2026-09-28)** — later decisions stand over this document: regions joined seamlessly → separate zones joined at their edges; workers as people → no hired workers, automation comes from stations and tools (D56). See `docs/gdd/overview.md` and `docs/product/economy/DECISIONS.md`.
+
 1. Locked Technical Stack
 1.1 Frontend
 

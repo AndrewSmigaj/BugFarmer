@@ -1,5 +1,8 @@
 # Stats & Bonuses — the brainstorm menu
 
+> **Replaced in part (P1, accepted 2026-09-28)** — later decisions stand over this document: tools never wear out (D49), so the durability stat and every bonus to it go; the Lucky Rabbit's Foot goes with the mammal-era items (D32). See `docs/gdd/overview.md` and `docs/product/economy/DECISIONS.md`.
+
+
 Everything we could let an item, outfit, accessory, consumable, or decoration **change about a player**,
 across every system (combat, mining, farming, bug farming, movement, economy). This is a *menu to prune
 from*, not a commitment. Grounded in the GDD guardrails (`../game_design.md`):
