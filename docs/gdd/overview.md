@@ -97,6 +97,8 @@ Everything in the world has to fit that.
 - The premise, giant bugs, real species, and new species on three conditions (see the frame).
 - **A bug is an insect or another arthropod** — spiders, scorpions, centipedes, millipedes, pill bugs, crayfish,
   crabs; fish are separate; no worms and no leeches (2026-09-28, Q2).
+- **No magic** — the world runs on 2126 science; enchanting, arcane tools and books, magic bait, dwarven ruins and
+  fantasy metals are dropped (P2, accepted 2026-09-28).
 
 **In the prototype now** — a placeholder opening text; a few items in the data that don't fit the premise (a cow
 skull, a cat statue, a hay bale, a birdbath, bones and bone piles) — §00 decides whether any stay as relics of the
@@ -869,6 +871,7 @@ document, rotting fruit, the zone scale. I'll correct each as its section is reb
 ## Proposals
 ### P1. Where a later owner decision replaced an older text, the later one stands
 *The whole document.*
+**Accepted by the owner on 2026-09-28**; the older documents now carry a note saying what replaced them.
 The older documents get a note saying so:
 - one seamless world (December 2025) → separate zones joined at their edges (the grid the owner's June rulings and the
   approved roadmap build on);
@@ -904,6 +907,7 @@ Already covered — nothing here is new design.
 
 ### P2. No magic
 *Part 0 · what belongs in the world.*
+**Accepted by the owner on 2026-09-28.**
 The world is 2126 science. The magic and fantasy races in the old brainstorms — enchanting, arcane tools and books,
 magic bait, dwarven ruins — are dropped. The deep fantasy metals the backlog planned for end-game gear (mithril,
 adamant) go too; P20 recommends real metals instead. The wizard's robe is dropped for an alchemist's robe (D47).
@@ -1090,8 +1094,9 @@ lever of last resort.
 - **Players may tip the balance** (2026-09-28): changing the ecosystem, for better or worse, is the point of the
   game — a player who waters an orchard into a fly boom is free to, and the caps are the safety net (D62).
 - **Weather is a lever of last resort** (2026-09-28): a drought means less pollen and slower plants, while rain
-  makes both flourish and does the watering, so weather does move the ecology — but it was overused, until it rained all the time while the
-  numbers were untuned. It stays a lever, used last, never the main way to keep numbers in their bands.
+  makes both flourish and does the watering, so weather does move the ecology — but it was overused, until it rained
+  all the time while the numbers were untuned. As a way to keep numbers in their bands it comes last; as weather, rain
+  and drought stay an ordinary part of the game.
 - **Behaviour first, then numbers** (2026-09-28): bug behaviour is polished and updated before any tuning — a wasp that
   hunts flies better needs the levers moved to keep flies in their band — and the whole retune is part of the bug
   overhaul. Before retuning, I learn exactly how the existing tuning and polish work, then suggest what's new.

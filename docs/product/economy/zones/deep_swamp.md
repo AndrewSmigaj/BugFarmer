@@ -1,5 +1,8 @@
 # Zone Content Sheet — Deep Swamp
 
+> **Replaced in part (P1, accepted 2026-09-28)** — later decisions stand over this document: diving isn't part of the game (August 2026), so a diver's set and any diving here are dropped; marsh waders become a wading outfit for shallow water, and deep water takes a boat (D51). See `docs/gdd/overview.md` and `docs/product/economy/DECISIONS.md`.
+
+
 > **Status:** design only (content brainstorm). Generous-by-design — we prune later, never thin.
 > Reuses existing ids where they exist; new ids are `snake_case`. Builds directly on
 > [`shallow_swamp.md`](shallow_swamp.md) — reuses its swamp vocabulary (`peat`, `bog_iron`,

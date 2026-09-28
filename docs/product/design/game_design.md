@@ -1,6 +1,8 @@
 BugFarmer
 Game Design Document (GDD)
 
+> **Replaced in part (P1, accepted 2026-09-28)** — later decisions stand over this document: no endgame → an open world with no ending whose hardest zones hold the bosses and the legendary sets (D55); wasps flying over fences → no bug flies over a fence or wall (2026-06-18, 2026-09-27); NPC workers → none (D56); no stamina → stamina for dodging and running (D46, D63). See `docs/gdd/overview.md` and `docs/product/economy/DECISIONS.md`.
+
 1. Game Overview
 BugFarmer is a top-down multiplayer sandbox game inspired by Terraria and Stardew Valley, focused on emergent ecology, insect farming, environmental interaction, and player-driven problem solving.
 Players dig, build, explore, catch, farm, fight, and sell bugs in a persistent world that expands outward from a central village. Progression is driven by tools, knowledge, preparation, and spatial design—not skill trees, scripted events, or stat grinding.
@@ -781,5 +783,3 @@ lots of decorations. "Quality" is just the item's value (sell_price); the fancy/
 knowledge lives in the AUTHORING scaffolding (furniture collections), never in game data. Too much is
 possible, but the world is far from it — richness of things to gather, craft, and decorate
 with is a feature. New art is a catalog row away (see the add-object skill).
-
-

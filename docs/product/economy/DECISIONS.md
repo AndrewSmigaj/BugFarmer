@@ -27,15 +27,18 @@ Underground **col 0** (was Centipede Cavern easy+medium) becomes **Ants** — ea
 keep **surface access to the col-3 Swamp** for foraging. *Why:* user direction. → `../architecture_world.md`.
 
 ### D4 — Balance = pacing, not minimalism
+*Replaced 2026-09-28 (D55): content can be cut — every item gets a pass that may cut it.*
 Every gating/pricing choice is reasoned against named Schell lenses (Flow/Curve, Pacing/Reward, Economy,
 Meaningful Choices/Triangularity, Need/Toy). Each content category has a **target FLOOR** (a minimum count) —
 floors, not ceilings; tuning adjusts numbers, never deletes content. → `progression.md`, `crafting.md`.
 
 ### D5 — Fishing deferred; décor bonus values deferred
+*Replaced in part 2026-09-27 (D51): fishing starts in the village from the start.*
 Fishing is **out for v1** (design the rod + fisherman's vest only). Décor passive-bonus **VALUES** are not
 authored yet (the §11.5 field is unbuilt) — we only **tag the bonus TYPE** per décor item. → `crafting.md`.
 
 ### D6 — Single coin currency
+*Replaced in part 2026-09-27 (D52): one coin, and barter too, as in Baldur's Gate.*
 One coin type (matches the existing `sell_price`/`buy_price` on items), not barter. *Why:* simplest, already
 priced. → `merchants.md`.
 
@@ -85,6 +88,7 @@ the pruning pass:
 ## Finalize pass — content rulings (2026-06-25, from review)
 
 ### D10 — Set philosophy: sets are CONCEPTUAL, not one-per-zone
+*Replaced in part: no diving, so no diving set (August 2026); waders become a wading outfit for shallow water (D51).*
 A signature set represents a *concept* (beekeeping, ranger, mining, diving, bug-catching, chitin armour), and
 may span multiple zones — NOT one set per zone. A thorough roster = a balanced amount per category, **not excessive,
 not lacking**. Consolidated bonus-set roster (replaces the 17 per-zone sets):
@@ -106,6 +110,7 @@ not lacking**. Consolidated bonus-set roster (replaces the 17 per-zone sets):
 - Far/late zones: **design but mark PENDING** until we reach them.
 
 ### D11 — Base armour: leather→platinum, no straw, no diamond
+*Replaced 2026-09-28 (D61): armour follows the tool metals up to cobalt steel; platinum goes into a fancy armour that also needs steel.*
 Base metal sets = **leather · padded(cloth) · copper · bronze · iron · steel · silver · gold · platinum**
 (9). **Straw cut** (too hard to integrate). **Platinum is the top — no diamond armour** (doesn't make sense).
 - **Leather** comes from the **Bug Extractor** (dead bugs → leather, D18; no skinning mechanic).
@@ -165,6 +170,7 @@ potion-crafting system), not the venom/poison effect. **Don't over-prune** uncer
 we're unsure about in a later finalize pass; leaving a few is fine.
 
 ### D17 — Active build scope: Village + Mining Camp only
+*Replaced 2026-09-26 (the approved roadmap): all twenty zones, ring by ring.*
 Right now we are creating **just two zones**: the **Starting Village** (`zones/village.md`) and the **first
 underground "Mining Camp"** = **Underground Passages** (3,1, `zones/underground_passages.md`, the Miner's
 outpost hub). Everything else (the other 15 zone sheets + the full catalogs) stays as **catalog reference,
@@ -172,6 +178,7 @@ unpolished**, until we reach it. These two zones get finalized to a buildable sp
 from the catalogs.
 
 ### D18 — Bug drops = `dead_<bug>` only; the **Bug Extractor** processes them
+*Refined 2026-07-07: ants give formic acid — through the bug extractor.*
 Killing any bug drops **only `dead_<bug>`** (`dead_fly`, `dead_butterfly`, `dead_wasp`, `dead_centipede`,
 `dead_ant`, …) — **no messy per-bug ground drops** (no `ladybug_shell`/`pill_chitin`/`formic_dab`/etc.).
 A **Bug Extractor** — a clean in-town building/station with crates + equipment — **processes dead bugs into
@@ -347,6 +354,7 @@ The buy/sell/NPC/currency foundation is implemented and unit-tested. As built:
   and **distinct NPC art** (v1 reuses the player-model `merchant`/`scholar` sprites as placeholders).
 
 ### D26 — Village economy buildout: full vendor roster + recipe system (2026-06-27)
+*Replaced in part 2026-06-28: ore is crushed, washed, then smelted — not straight from the sluice to a bar.*
 Andrew's calls from the `zones/_village_vendors.prune.md` review. **These are decided — do not re-litigate.**
 
 **Recipe acquisition rule (the one that keeps getting inverted):** **basic recipes AUTO-unlock at their
@@ -785,3 +793,9 @@ The overview describes the game — light on detail in places, but not wrong —
 rebuilt from it. A bug is an insect or another arthropod, since those are bug-like: spiders, scorpions, centipedes,
 millipedes, pill bugs, crayfish and crabs. Fish are separate, because the owner enjoys fishing. No worms and no leeches
 (snails, not being arthropods, go by the same rule — the assistant's reading).
+
+### D65 — Later decisions stand; no magic; weather as weather (2026-09-28)
+P1 accepted: where a later decision of the owner's replaced an older text, the later one stands, and the older
+documents now carry a note saying so. P2 accepted: no magic — the world runs on 2126 science, and enchanting, arcane
+tools and books, magic bait, dwarven ruins and fantasy metals are dropped. As a balancing lever, weather comes last;
+rain and drought themselves stay an ordinary part of the game.

@@ -1,5 +1,8 @@
 # Armour & outfit design — brainstorm
 
+> **Replaced in part (P1, accepted 2026-09-28)** — later decisions stand over this document: diving isn't part of the game (August 2026), so a diver's set and any diving here are dropped; marsh waders become a wading outfit for shallow water, and deep water takes a boat (D51). See `docs/gdd/overview.md` and `docs/product/economy/DECISIONS.md`.
+
+
 Working document for the outfit roster. **Owner rulings are restated in clean prose, dated and attributed — never his words; everything else is a proposal.**
 Numbers are deliberately absent — this is about what each set IS FOR, not balance.
 

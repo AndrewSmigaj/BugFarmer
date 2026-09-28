@@ -1,5 +1,8 @@
 # Research — Broader look-&-feel improvements (beyond lighting)
 
+> **Replaced in part (P1, accepted 2026-09-28)** — later decisions stand over this document: Apico is one example among many indie games, not a benchmark or a target (2026-07-08). See `docs/gdd/overview.md` and `docs/product/economy/DECISIONS.md`.
+
+
 > **Status:** RESEARCH / working doc. Distilled from 3 parallel deep-read agents (particles + foliage/water ·
 > grounding + camera juice · post-FX + parallax/sky), ~29 sources deep-read, multiple real implementations
 > studied (Cyanilux 2D water, prime31 2D foliage, ProPixelizer, DOTween, Gobs&Gods shadow shader). Pairs with

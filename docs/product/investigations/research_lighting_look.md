@@ -1,5 +1,8 @@
 # Research — Making the lighting LOOK good (overhead 2D sprite game)
 
+> **Replaced in part (P1, accepted 2026-09-28)** — later decisions stand over this document: Apico is one example among many indie games, not a benchmark or a target (2026-07-08). See `docs/gdd/overview.md` and `docs/product/economy/DECISIONS.md`.
+
+
 > **Status:** RESEARCH / working doc. Distilled from 3 parallel deep-read agents (URP-2D building blocks ·
 > why polished pixel lighting reads as polished · cozy case studies), ≥5 full sources + ≥1 studied project
 > each, + an adversarial cold-critic pass that reordered the plan spine and caught pipeline/pixel-art gaps.
