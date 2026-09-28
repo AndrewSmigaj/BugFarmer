@@ -690,3 +690,59 @@ item, bugs or coins; left-click a bandage or potion on a friend to heal them at 
 ground. Shopkeepers keep their counters by day and chores fall early and late or to townspeople without a shop. One
 trade screen: goods count at what that townsperson pays, and coins make up the difference either way. The art
 approach is decided, so proposals don't offer cheaper art routes in its place.
+
+## Resolved (2026-09-28) — the owner's review of the game overview, parts 15–20
+
+### D55 — Progression, stations and the item pass
+An open world with no ending, as in Terraria: no game over and no finale; the legendary sets are powerful and come
+from the hardest zones, and some quest lines lead there to fight bosses, but players play however they like. The
+basic stations — the anvil, the forge and the rest — stand in the village at the blacksmith's and the other shops;
+players use them once they have the materials and can't take them, since they belong to the townspeople. Other
+stations turn up in other places, mostly the first few zones, and powered versions come once the player reaches
+where generators can be bought or built. The metal ladder is the assistant's to recommend, and the claim that each
+new tool roughly halves the effort has to be justified against Terraria and other games. Every item in the game gets
+a thorough pass for taste — the old lists, the accessories above all, will probably lose a lot — delivered as a
+table of recommended additions, changes and cuts; this ends D4's "tuning never deletes content".
+
+### D56 — Power and automation
+No hired workers anywhere: automation comes from stations and tools as the player reaches them, and the early ones
+are more manual. Small sprinklers are sold in the village but cost enough that the player saves up; larger ones come
+from other places, such as the western town; the rest of the automation design is the assistant's. Modern Wares
+sells powered things before the player can power them — a player can set up just outside the Mayor's house and run
+them on his power. The Mayor's house has powered things a player may use, such as a fridge; everyone else in the
+village lives by torches and bug lanterns.
+
+### D57 — Time, weather and tuning
+One clock for the whole world — no zone shows a different time of day. No skipping the night: sleeping doesn't move
+time on, and the world stops only when no player is online. Empty zones stay frozen (2026-09-26), but random border
+events still bring a few bugs from a frozen zone into a neighbouring zone that has players. Droughts and rain are
+part of the game and need tuning. Balance must not lean on the weather: the prototype's balancing system, which
+called a drought or extra rain whenever a species ran too high or too low, kept firing and made for poor play;
+balance comes from many levers, and if it leans on weather too much the other levers are rethought. Retuning is part
+of the bug overhaul, after bug behaviour has been polished and updated, and everything is retuned since fallen fruit
+is being cut.
+
+### D58 — Playing together
+Everything in the shared world runs the same for every player; nothing goes faster for one player than another. No
+limit on characters per account. Player-versus-player is allowed only when a server switches it on; the game is about
+players against the world. Private plots are invite-only, follow the January 2026 plot design (decoration bonuses with
+diminishing returns and a cap; nothing damaged while the owner is away) and need a panel for their happiness level
+and bonuses. What still runs on the server gets a thorough review: the game moved from the server running everything
+to every player's computer running the same simulation in step, so each remaining server-side piece has to justify
+its place — one of the most fragile parts of the game.
+
+### D59 — Interface, tutorials and controls
+Every system, the interface included, gets a polishing pass with the assistant's suggestions from taste and good game
+design. Tutorials are the assistant's to design: some come from townspeople as the first quests, some unlock on
+joining, some when the player reaches a new area, and many end with a task that leads into the next, often back at a
+townsperson who sends the player on to another. Controls and settings are the assistant's to design.
+
+### D60 — Art and sound
+Most art is made with gpt-image-2. The interface and the blocks are drawn by the assistant in code, improved over
+several rounds with the owner, since gpt-image-2 draws blocks poorly; characters stay with gpt-image-2 — this narrows
+the 2026-09-26 rejection of code-drawn art to characters. Townspeople are drawn by gpt-image-2, each with walking
+frames, floating hands like the player's and a matching face portrait for conversations; their looks are left to
+gpt-image-2, and they are people of many ethnicities. The look gets a polishing pass: lighting (it falls short of
+Necesse; Unity's screen effects may help), clearer signs of hitting and being hit, and wind sway done well and only on
+plants — solid things such as standing stones sway today. The assistant makes the sound library and the music by
+whatever method works best, without paid services; the owner has music packs, and each zone can have its own music.
