@@ -25,7 +25,7 @@ ecology stations) let you read and steer the ecosystem.
 ## Owner decisions (2026-09-26)
 | topic | decision |
 |---|---|
-| Art | **gpt-image-2 for everything, pixel-snapped.** Whole outfits (a tentative choice, made when code-drawn pieces were rejected). All world and item art is regenerated on the outfit pipeline, since only the outfits were made the right way. Code-drawn art was tried and rejected. Art is made after the GDD sign-off, in test batches. The look stays the same: 32 art pixels per grid square. Every paid image call is asked first. |
+| Art | **gpt-image-2 for characters and most art, pixel-snapped; the interface and the blocks drawn in code** (2026-09-28 — code-drawn characters were rejected; gpt-image-2 draws blocks poorly; code-drawn UI and blocks are iterated with the owner). Whole outfits. All world and item art is regenerated on the outfit pipeline, since only the outfits were made the right way. Townspeople: each drawn by gpt-image-2 with walking frames, floating hands and a face portrait, people of many ethnicities (D60). Art is made after the GDD sign-off, in test batches. The look stays the same: 32 art pixels per grid square. Every paid image call is asked first. |
 | Hosting | Like Terraria: Host & Play, joining, and a dedicated server program. Our own server is just another server, not part of the game; each server is capped at what is measured to be feasible, as Minecraft servers are. |
 | Characters | Each world keeps its own characters (as in Necesse), with a host setting that lets in characters from other worlds. |
 | Empty zones | Frozen while empty; they catch up when someone first arrives, with random events of bugs crossing borders. |
@@ -67,13 +67,16 @@ ecology stations) let you read and steer the ecosystem.
   migration~~ (done 2026-09-26: upgrade old, refuse newer, back up before upgrading), rolling backups, periodic
   character saves · hosting spike → standalone Nakama-compatible server + Host/Join
   + world list + version handshake · zone-complete collision/loading (+ ecology re-tune) · world clock ·
-  frozen-zone catch-up · blocked zone entry · latent bugs (WorldEnter race, first-join seq stall, merge ignores
-  nests) · reconnect · CI + release builds · internet-reality test (latency, bandwidth).
+  frozen-zone catch-up (+ border events from frozen neighbours, D57) · blocked zone entry · latent bugs (WorldEnter
+  race, first-join seq stall, merge ignores nests) · reconnect · CI + release builds · internet-reality test (latency,
+  bandwidth) · **a thorough review of what still runs on the server** — each piece justified now that the players'
+  computers run the simulation in step (D58) · no limit on characters per account.
 - **Examine view + examine texts:** an examine view for items, recipes and bugs, and ~650 short texts with the real
   biology (owner decision: examining an item or recipe shows what it does); today hovering
   shows only the name and 2 of 654 things have a description. Written alongside the art redo, category by category.
 - **Polish audits** (findings only): bug behaviour, combat, ecology + tab, UI, farming, catching, stations,
-  building, lighting/weather, audio, tutorials, performance. **True-bug naming pass.**
+  building, lighting/weather, audio, tutorials, performance — every system gets a polishing pass with suggestions
+  (D59). **True-bug naming pass.** **The item table** — recommended additions, changes and cuts for every item (D55).
 
 ### Phase 2 — the existing world to FINAL quality (the calibration slice)
 Village, Bee Meadow, Mining Camp, Ant Tunnels, Ant Colony (4,0) + Queen — each redesigned from its finalized zone bible
@@ -90,7 +93,8 @@ fortress + legendary sets.
 
 ### Phase 4 — whole-game polish, balance, QA, release
 Solo + hosted playthroughs; economy/ecology/combat balance; stress test (sync + FPS + tick + bandwidth at big
-populations); cross-platform determinism; save migration; audio/music; legal (audio licence, AI disclosure); launch.
+populations); cross-platform determinism; save migration; audio/music (a sound library and zone music made in code,
+plus the owner's music packs — D60); legal (audio licence, AI disclosure); launch.
 
 ## Key design calls (researched + critic-reviewed 2026-09-26)
 - **Bugs crossing zone edges = swarm-level migration.** Bugs stay inside their zone unless their swarm is

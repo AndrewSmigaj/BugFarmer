@@ -18,7 +18,9 @@ one section per topic, and every section is reviewed by the owner before it is f
 4. Old documents are kept, with a one-line note at the top saying which section now holds their content.
 
 Research-answerable calls are made by me and shown as proposals, never asked as questions. Nothing you have already
-decided is asked again.
+decided is asked again. Each proposal sits beside the part it belongs to — named at the end of that part and tagged
+with it — so it can be answered while the part is being read (the overview showed its proposals only at the end,
+2026-09-28).
 
 **The review page:** a private page on claude.ai, generated from these files by `python3 tools/gdd/build_page.py`
 (so it can't drift from them). Link: **https://claude.ai/artifact/CRtGxrNmWdXPVAVyNnwWW1** (private to the owner).
@@ -27,7 +29,7 @@ Answers are stored in the page's own database, one document per section (`answer
 
 ## Sections, in review order
 **Start with the overview** ([overview.md](overview.md)): the whole game as every design document describes it,
-activity by activity — what is decided, built, designed and still open — written after reading all of them
+activity by activity — what is decided, in the prototype, designed and still open — written after reading all of them
 (2026-09-26). The sections below are rebuilt from it once it has been checked.
 
 Status: **review** = ready for your answers · **rework** = being redone · **draft** = not written yet · **final** = reviewed and settled.

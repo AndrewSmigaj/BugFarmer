@@ -997,6 +997,36 @@ Items marked (P#) wait for the owner's verdict on that proposal.
   the underground fortress being one example; the document disagreements (the ranger station, Spider Vale East)
   settled with the owner.
 
+## Next — from the owner's review of the overview, parts 15–20 (2026-09-28; D55–D60)
+- **The item table** (D55): every item in the game — prototype data and the designed catalogues — with a recommended
+  add, change or cut and a one-line reason each; the accessories first. The owner reviews it before anything changes.
+- **Stations** (D55): the anvil, forge and other basic stations placed in the village at the blacksmith's and the
+  other shops — usable, owned by the townspeople, never takeable; other stations in the first few zones; powered
+  versions where generators are sold or built. (Pairs with "Eleven of the fifteen stations can't be crafted or bought"
+  and the ownership item above.)
+- **Metal ladder and tool tiers** (P20, P21): settle the ladder, then the per-tier gains; gold leaves the tools.
+- **Automation** (D56, P22): sprinklers — small ones in the village shop, priced to save up for; larger ones in the
+  western town; powered appliances usable inside the Mayor's powered area; the Mayor's own appliances usable; other
+  villagers' houses lit by torches and bug lanterns. No hired workers anywhere (the NPC workers of
+  `design/game_design.md` §11.2 go).
+- **Time** (D57): one world clock (the roadmap's per-zone `DayOffsetTicks` plan); no night skip; the world stops only
+  when nobody is online; border events from frozen neighbours (P25).
+- **Weather and tuning** (D57): remove the ecology director's weather steering (`ecology_director.go`: droughts when a
+  species is high, extra rain when one is near collapse) as part of the bug overhaul; polish and update bug behaviour
+  first, then retune everything with many levers (P10); droughts and rain keep a rhythm of their own.
+- **Playing together** (D58): drop the eight-character cap (`nakama/modules/rpc/character.go`
+  `maxCharactersPerAccount`); a server setting for player-versus-player; private plots invite-only with the January
+  2026 plot design and a happiness panel (P26); **a thorough review of what still runs on the server**, each piece
+  justified — bug behaviour stays on the players' computers.
+- **Interface** (D59): tutorials (P23); controls and settings (P24); a polishing pass on every system with
+  suggestions.
+- **Art and sound** (D60): the interface and the blocks drawn in code and iterated with the owner; townspeople by
+  gpt-image-2 — walking frames, floating hands, a face portrait, many ethnicities; lighting (compare Necesse; Unity
+  screen effects), hit feedback, wind sway only on plants — swaying follows the `natural`/`flora` category today
+  (`TilemapManager.cs`), so about 25 solid things sway, among them `standing_stone`, the crystals, `stump`, the logs,
+  the nests and `shipwreck_hull`; a sound library and zone music made in code (research the method first), alongside
+  the owner's music packs.
+
 ## Later — REAL cross-zone bug transfer (owner 2026-07-06: real transfer, not a pretend version)
 Zones are isolated per-match sims today (Neighbors is player-only). The real feature:
 a bug/swarm that walks off a connected edge LEAVES zone A's sim (a ledgered removal) and
