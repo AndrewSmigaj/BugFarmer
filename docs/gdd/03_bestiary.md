@@ -14,10 +14,11 @@ idea lenses, then go to the review page.
 - **Two ant species**, black ants and fire ants, in different zones (August 2026; 2026-09-27).
 - **Mini-bosses** are set off by conditions or simply placed in the world (2026-09-27).
 - Real centipedes hunt alone; the game groups them only to keep network traffic down (2026-09-27).
+- **What counts as a bug** (2026-09-28): insects and the other arthropods — spiders, scorpions, centipedes, millipedes,
+  pill bugs, crayfish and crabs; fish are separate; no worms or leeches (snails go by the same rule — my reading).
 
 ## To settle (raw list — not yet checked against the idea lenses)
 - Which species the game ships with, and in which zones — most zones aren't designed yet (2026-09-27).
-- What counts as a "bug" (the overview's Q2).
 - The real-species naming pass for the fifteen species in the prototype.
 - **The species the zone designs name** — 84 distinct species in 98 rows across 17 zone sheets, marked against the
   rulings above. The zone sheets were written to be generous ("prune later"), so this is a list to cut from, not a

@@ -627,8 +627,9 @@ this replaces the "at most two attackers" pool recorded on 2026-07-11. Only lung
 (millipedes, perhaps scorpions), decided bug by bug. Axe swings are attacks as well as tree-cutting. Players fight to
 sell carcasses or to catch bugs to farm; large bugs, once subdued and still, are dragged. Dying costs little, mostly
 the walk back. Stamina is allowed (replacing the January 2026 "no stamina"). Bosses are fully grown adults, harder and
-usually bigger, never added at random, perhaps one at a time; a locust swarm is a boss; only species where a fight is
-fun get one (no aphid boss). Aphids live on plants and are seen in the plant's own view, like the milkweed nursery.
+usually bigger, never added at random, perhaps one at a time; only species where a fight is fun get one (no aphid
+boss). *(Corrected 2026-09-28: this entry first said a locust swarm is a boss — a misreading; locusts get no boss and
+their swarms aren't bosses, D63.)* Aphids live on plants and are seen in the plant's own view, like the milkweed nursery.
 Enemies are built zone by zone, every one eventually, with test zones where the real zone isn't built yet.
 
 ### D47 — Gear
@@ -761,3 +762,26 @@ Changing the ecosystem, balancing or unbalancing it, is the point of the game: a
 orchard and gets a fly explosion is free to, up to the cap. Fewer fruit on the ground (D40) was asked for because
 hundreds of fruit lying around look ugly, not to control the bugs; the flies are retuned to live on the smaller
 supply, which is the natural fix. Crops feed bugs too — locusts eat wheat.
+
+### D63 — The overview's P3–P15 and P22 answered (2026-09-28)
+All accepted, with these changes. Catching (P3): subduing a big bug and dragging it is one of the ways to take it, and
+a larger cast net is welcome if it helps with big bugs (the assistant recommends one that tangles a bug so it can be
+dragged). Traps (P4): a net placed in the world counts as a trap. Village property (P6): it stops annoying players
+griefing. Research (P8): it can be as simple as examining a species a set number of times to open the next fact;
+plants do more than steer bugs — some boost breeding, as in Apico. Tuning (P10): the hard caps stay, because a player
+who dumps huge amounts of fruit could otherwise breed enough flies to crash players' games; a species that dies out is
+reseeded; weather is one lever among many and a last resort — a drought means less pollen and slower plants, while
+rain makes both flourish and does the watering — not the main way to keep numbers in their bands, as it was when it
+rained all the time; behaviour is polished first, since a better-hunting wasp moves the bands; before retuning, the
+assistant learns exactly how the existing tuning and polish work, then suggests what's new. The shovel (P12): the
+interface keeps the dig/lay option visible, not only a first-time notice. Bosses (P13): locusts get no boss, and their
+swarms aren't bosses either — a locust swarm eats wheat and other plants locusts eat; bosses are placed or grow out of
+conditions, and not every species needs one. Stamina (P14): running drains it too. Pumps (P22): they work like power —
+placing one shows its reach; working a hand pump's lever sets off every sprinkler within reach; a powered pump does it
+by itself every day; no tanks (they would have to be tall and huge) and no hoses.
+
+### D64 — The overview describes the game; what counts as a bug (2026-09-28)
+The overview describes the game — light on detail in places, but not wrong — so the design document's sections are
+rebuilt from it. A bug is an insect or another arthropod, since those are bug-like: spiders, scorpions, centipedes,
+millipedes, pill bugs, crayfish and crabs. Fish are separate, because the owner enjoys fishing. No worms and no leeches
+(snails, not being arthropods, go by the same rule — the assistant's reading).
