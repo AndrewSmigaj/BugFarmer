@@ -73,7 +73,7 @@ it names another source.
 - **The world is a grid of zones** — surface to the north, underground to the south, danger rising with distance;
   five rows, with a sixth, deepest row left for later (D2, June 2026).
 - **Hosting works like Terraria** — host and play, join a friend, or run a dedicated server — and each world keeps
-  its own characters, as in Necesse (2026-09-26).
+  its own characters (2026-09-26).
 - **Empty zones stay frozen** and catch up when a player first returns (2026-09-26).
 - **No seasons** (January 2026; confirmed 2026-09-27).
 - **All art is made with gpt-image-2 and pixel-snapped**, 32 art pixels to a grid square, and regenerated after this

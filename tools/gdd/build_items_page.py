@@ -1,0 +1,85 @@
+#!/usr/bin/env python3
+"""Build the item-pass review page from docs/gdd/item_table.jsonl.
+
+The item table (the owner's request of 2026-09-28, D55) gives every item in the game and in the old designs a
+recommendation — keep, change, cut or add — with one plain line on why. This script embeds it into
+tools/gdd/items_page.template.html and writes tools/gdd/_build/items_page.html (git-ignored), which is published to
+claude.ai. The owner's marks are stored in the page's own database (collection `item_marks`, one document per kind
+of item); read them back with the ArtifactData tool.
+
+Usage: python3 tools/gdd/build_items_page.py
+"""
+import json
+import os
+import sys
+from datetime import date
+
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+SRC = os.path.join(ROOT, "docs", "gdd", "item_table.jsonl")
+TEMPLATE = os.path.join(ROOT, "tools", "gdd", "items_page.template.html")
+OUT = os.path.join(ROOT, "tools", "gdd", "_build", "items_page.html")
+
+# Display order and plain labels for the kinds of item.
+GROUPS = [
+    ("tools", "Tools"), ("weapons", "Weapons"), ("armour", "Armour and outfits"), ("accessories", "Accessories"),
+    ("potions", "Potions and remedies"), ("meals", "Meals and food"), ("seeds_crops", "Seeds and crops"),
+    ("plants", "Plants"), ("materials", "Materials"), ("ores", "Ores and gems"), ("stations", "Stations"),
+    ("furniture", "Furniture"), ("decoration", "Decorations"), ("lighting", "Lights"), ("storage", "Storage"),
+    ("structures", "Structures, fences and buildings"), ("blocks", "Blocks and ground"), ("beekeeping", "Beekeeping"),
+    ("natural", "Things found in the world"), ("npcs", "Townspeople and shops"), ("other", "Other"),
+]
+VERDICTS = {"keep", "change", "cut", "add"}
+WHERE = {"game", "designed", "both"}
+
+
+def load():
+    items, seen, problems = [], set(), []
+    with open(SRC, encoding="utf-8") as f:
+        for n, line in enumerate(f, 1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                it = json.loads(line)
+            except json.JSONDecodeError as e:
+                problems.append(f"line {n}: not JSON ({e})")
+                continue
+            key = (it.get("group"), it.get("id"))
+            if key in seen:
+                problems.append(f"line {n}: duplicate {key}")
+                continue
+            seen.add(key)
+            if it.get("verdict") not in VERDICTS:
+                problems.append(f"line {n}: verdict {it.get('verdict')!r}")
+            if it.get("where") not in WHERE:
+                problems.append(f"line {n}: where {it.get('where')!r}")
+            if it.get("group") not in dict(GROUPS):
+                it["group"] = "other"
+            items.append({k: it.get(k, "") for k in ("id", "name", "group", "where", "verdict", "change", "reason")})
+    return items, problems
+
+
+def main():
+    items, problems = load()
+    if problems:
+        print("item table problems:\n  " + "\n  ".join(problems[:40]))
+        return 1
+    present = {it["group"] for it in items}
+    data = {"version": date.today().isoformat(), "groups": [g for g in GROUPS if g[0] in present], "items": items}
+    with open(TEMPLATE, encoding="utf-8") as f:
+        html = f.read()
+    payload = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
+    if "/*__DATA__*/null" not in html:
+        print("template has no data slot")
+        return 1
+    html = html.replace("/*__DATA__*/null", payload)
+    os.makedirs(os.path.dirname(OUT), exist_ok=True)
+    with open(OUT, "w", encoding="utf-8") as f:
+        f.write(html)
+    counts = {v: sum(1 for it in items if it["verdict"] == v) for v in sorted(VERDICTS)}
+    print(f"Item pass page built: {OUT} ({len(html) // 1024} KB) · {len(items)} items · {counts}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
