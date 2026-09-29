@@ -3,9 +3,11 @@
 
 The item table (the owner's request of 2026-09-28, D55) gives every item in the game and in the old designs a
 recommendation — keep, change, cut or add — with one plain line on why. This script embeds it into
-tools/gdd/items_page.template.html and writes tools/gdd/_build/items_page.html (git-ignored), which is published to
-claude.ai (https://claude.ai/artifact/3Sxunf4HDezB1fgAKFRZG1). The owner's marks are stored in the page's own database (collection `item_marks`, one document per kind
-of item); read them back with the ArtifactData tool.
+tools/gdd/items_page.template.html and writes tools/gdd/_build/item_pass.html (git-ignored), which is published to
+claude.ai (https://claude.ai/artifact/L9ftJfjRfcFD3yAB66qenD). The owner's marks are stored in the page's own database, one document per item at
+marks/<kind>/items/<item id> holding {mark, note, at}; read them back with the ArtifactData tool (list each kind's
+collection). The first version of the page (https://claude.ai/artifact/3Sxunf4HDezB1fgAKFRZG1) saved a whole kind as
+one document and lost marks when an older copy overwrote a newer one; it is retired, and its storage is not used.
 
 Usage: python3 tools/gdd/build_items_page.py
 """
@@ -17,7 +19,7 @@ from datetime import date
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC = os.path.join(ROOT, "docs", "gdd", "item_table.jsonl")
 TEMPLATE = os.path.join(ROOT, "tools", "gdd", "items_page.template.html")
-OUT = os.path.join(ROOT, "tools", "gdd", "_build", "items_page.html")
+OUT = os.path.join(ROOT, "tools", "gdd", "_build", "item_pass.html")
 
 # Display order and plain labels for the kinds of item.
 GROUPS = [

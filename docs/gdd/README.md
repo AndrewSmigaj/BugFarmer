@@ -30,9 +30,12 @@ Answers are stored in the page's own database, one document per section (`answer
 ## The item pass
 Every item in the game and in the old designs — 1,259 rows — with a recommendation (keep, change, cut or add) and a
 one-line reason (the owner's request of 2026-09-28, D55). The data is `item_table.jsonl`; the review page is built from
-it by `python3 tools/gdd/build_items_page.py` and published at **https://claude.ai/artifact/3Sxunf4HDezB1fgAKFRZG1**
+it by `python3 tools/gdd/build_items_page.py` and published at **https://claude.ai/artifact/L9ftJfjRfcFD3yAB66qenD**
 (private to the owner). His marks — agree, disagree and a note per row — are stored in that page's database, one
-document per kind of item (`item_marks/<group>`); read them back with the `ArtifactData` tool.
+document per item (`marks/<group>/items/<id>`, holding `{mark, note, at}`); read them back with the `ArtifactData`
+tool, one kind at a time. The first version of the page (https://claude.ai/artifact/3Sxunf4HDezB1fgAKFRZG1, 2026-09-28)
+stored a whole kind of item as one document and lost the owner's first batch of marks when an older copy overwrote a
+newer one; it was replaced on 2026-09-29 and its storage is not used.
 
 ## Sections, in review order
 **Start with the overview** ([overview.md](overview.md)): the whole game as every design document describes it,

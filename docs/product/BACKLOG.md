@@ -1010,7 +1010,8 @@ Items marked (P#) wait for the owner's verdict on that proposal.
 ## Next — from the owner's review of the overview, parts 15–20 (2026-09-28; D55–D60)
 - **The item table** (D55) — DONE as a draft for review (2026-09-28): 1,259 rows in `docs/gdd/item_table.jsonl`
   (356 keep, 323 change, 509 cut, 71 add), judged against the rulings by five agents and one cold critic (188 fixes);
-  the review page is https://claude.ai/artifact/3Sxunf4HDezB1fgAKFRZG1. Nothing in the data changes until the owner
+  the review page is https://claude.ai/artifact/L9ftJfjRfcFD3yAB66qenD (replaced 2026-09-29: the first version lost
+  marks by saving a whole kind of item as one record, and was too wide for the screen). Nothing in the data changes until the owner
   has marked it. Prototype faults it found: wheat still planted (231) and sold in the village; nobody sells eggplant
   seeds; cactus, cattail and reeds drop ids with no item; mined stone can't lay a stone path and a dug sand block can't
   be placed again; the gem cutter drops a rock crusher; chests, crates and barrels have no recipe; the Fisherman sells
