@@ -38,7 +38,7 @@ Status: **review** = ready for your answers · **rework** = being redone · **dr
 |---|---|---|---|---|
 | 0 | OV | **Start here:** the game as the documents describe it | final | [overview.md](overview.md) |
 | 1 | 00 | Premise, pillars & what belongs in the world | final | [00_premise.md](00_premise.md) |
-| 2 | 19 | Multiplayer & hosting | rework | [19_multiplayer.md](19_multiplayer.md) |
+| 2 | 19 | Multiplayer & hosting | review | [19_multiplayer.md](19_multiplayer.md) |
 | 3 | 01 | World & zones | rework | [01_world.md](01_world.md) |
 | 4 | 02 | Progression & tiers | draft | [02_progression.md](02_progression.md) |
 | 5 | 03 | Bestiary & tiers | draft | [03_bestiary.md](03_bestiary.md) |
