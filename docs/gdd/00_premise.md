@@ -1,5 +1,5 @@
 # §00 · Premise, pillars & what belongs in the world
-<!-- gdd: id=00 status=review updated=2026-09-28 -->
+<!-- gdd: id=00 status=final updated=2026-09-28 -->
 
 ## The experience
 It is 2126. A plague killed nearly every mammal, and people bred bugs big enough to eat. You arrive on the frontier
@@ -95,6 +95,7 @@ What the older design documents say that still stands:
 
 ## Proposals
 ### P1. A pitch that says it's your sandbox
+**Accepted by the owner on 2026-09-28** — the long version, to be revisited when the promotional material is made.
 **A multiplayer sandbox set in 2126: nearly every mammal is gone, and people have bred the bugs giant. Farm, mine,
 craft, build and explore however you like — most players start a fly farm and grow from there, but you can ranch ants,
 roam the wilds as a hunter, or anything in between — in a living ecosystem that answers everything you do.**
