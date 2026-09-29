@@ -4,7 +4,7 @@
 The item table (the owner's request of 2026-09-28, D55) gives every item in the game and in the old designs a
 recommendation — keep, change, cut or add — with one plain line on why. This script embeds it into
 tools/gdd/items_page.template.html and writes tools/gdd/_build/items_page.html (git-ignored), which is published to
-claude.ai. The owner's marks are stored in the page's own database (collection `item_marks`, one document per kind
+claude.ai (https://claude.ai/artifact/3Sxunf4HDezB1fgAKFRZG1). The owner's marks are stored in the page's own database (collection `item_marks`, one document per kind
 of item); read them back with the ArtifactData tool.
 
 Usage: python3 tools/gdd/build_items_page.py
@@ -29,7 +29,7 @@ GROUPS = [
     ("natural", "Things found in the world"), ("npcs", "Townspeople and shops"), ("other", "Other"),
 ]
 VERDICTS = {"keep", "change", "cut", "add"}
-WHERE = {"game", "designed", "both"}
+WHERE = {"game", "designed", "both", "new"}
 
 
 def load():

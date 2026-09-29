@@ -1008,8 +1008,14 @@ Items marked (P#) wait for the owner's verdict on that proposal.
   settled with the owner.
 
 ## Next — from the owner's review of the overview, parts 15–20 (2026-09-28; D55–D60)
-- **The item table** (D55): every item in the game — prototype data and the designed catalogues — with a recommended
-  add, change or cut and a one-line reason each; the accessories first. The owner reviews it before anything changes.
+- **The item table** (D55) — DONE as a draft for review (2026-09-28): 1,259 rows in `docs/gdd/item_table.jsonl`
+  (356 keep, 323 change, 509 cut, 71 add), judged against the rulings by five agents and one cold critic (188 fixes);
+  the review page is https://claude.ai/artifact/3Sxunf4HDezB1fgAKFRZG1. Nothing in the data changes until the owner
+  has marked it. Prototype faults it found: wheat still planted (231) and sold in the village; nobody sells eggplant
+  seeds; cactus, cattail and reeds drop ids with no item; mined stone can't lay a stone path and a dug sand block can't
+  be placed again; the gem cutter drops a rock crusher; chests, crates and barrels have no recipe; the Fisherman sells
+  a decorative pole as a rod; a fish crate sits on the Fisherman's square; a steel pick already reaches the first
+  mine's diamonds.
 - **Stations** (D55): the anvil, forge and other basic stations placed in the village at the blacksmith's and the
   other shops — usable, owned by the townspeople, never takeable; other stations in the first few zones; powered
   versions where generators are sold or built. (Pairs with "Eleven of the fifteen stations can't be crafted or bought"
