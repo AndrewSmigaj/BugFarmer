@@ -47,22 +47,26 @@
 }
 * { box-sizing: border-box; }
 body { background: var(--ground); color: var(--ink); font: 15px/1.5 var(--font-body); margin: 0; }
-.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 18px 60px; }
+/* The list uses the whole window. The first version capped it at 1180px and let cells refuse to wrap, so the table
+   came out wider than its box and had to be scrolled sideways. */
+.wrap { max-width: 2200px; margin: 0 auto; padding-inline: 16px; padding-block: 18px 60px; }
+@media (min-width: 1000px) { .wrap { padding-inline: 28px; } }
 h1 { font: 600 28px/1.1 var(--font-display); letter-spacing: .01em; margin: 0 0 6px; text-wrap: balance; }
-.lede { color: var(--ink-2); max-width: 70ch; margin: 0 0 14px; }
+.lede { color: var(--ink-2); max-width: 75ch; margin: 0 0 14px; }
 .bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--ground);
   border-bottom: 1px solid var(--line); padding-block: 10px; display: flex; flex-direction: column; gap: 8px; }
 .tallies { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; font-variant-numeric: tabular-nums; }
 .tally { color: var(--ink-2); font-size: 14px; }
 .tally b { color: var(--ink); font-size: 16px; }
 .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { font: 600 13px var(--font-body); border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2);
   border-radius: 999px; padding: 4px 11px; cursor: pointer; }
 .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .chip:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 select, input[type="search"] { font: 14px var(--font-body); color: var(--ink); background: var(--surface);
-  border: 1px solid var(--line-strong); border-radius: var(--r); padding: 5px 9px; }
-input[type="search"] { flex: 1 1 200px; min-width: 0; }
+  border: 1px solid var(--line-strong); border-radius: var(--r); padding: 5px 9px; max-width: 100%; }
+input[type="search"] { flex: 1 1 220px; min-width: 0; }
 .status { font-size: 13px; color: var(--ink-3); display: flex; align-items: center; gap: 6px; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); flex: none; }
 .dot.ok { background: var(--keep); } .dot.bad { background: var(--cut); } .dot.busy { background: var(--change); }
@@ -73,34 +77,51 @@ details.group > summary::-webkit-details-marker { display: none; }
 details.group > summary h2 { font: 600 20px var(--font-display); margin: 0; }
 .gcount { color: var(--ink-3); font-size: 13px; font-variant-numeric: tabular-nums; }
 .tablewrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+/* Fixed layout: the columns share the window by these widths and text wraps inside them, so the table can never be
+   wider than the screen. The two text columns in the middle get the most room. */
+table.items { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 14px; }
+.items col.c-item { width: 16%; } .items col.c-where { width: 8%; } .items col.c-call { width: 7%; }
+.items col.c-what { width: 27%; } .items col.c-why { width: 24%; } .items col.c-mark { width: 18%; }
 th { text-align: left; font: 600 12px var(--font-body); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3);
-  padding: 8px 8px 6px; border-bottom: 1px solid var(--line); }
-td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  padding: 8px 10px 6px; border-bottom: 1px solid var(--line); }
+td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
 tr.r:hover td { background: var(--surface); }
 .name { font-weight: 700; }
 .id { display: block; font: 12px var(--font-mono); color: var(--ink-3); }
-.where { font-size: 12px; color: var(--ink-3); white-space: nowrap; }
-.v { display: inline-block; font: 600 12px var(--font-body); border-radius: 4px; padding: 2px 7px; white-space: nowrap; }
+.c-where { font-size: 12px; color: var(--ink-3); }
+.v { display: inline-block; font: 600 12px var(--font-body); border-radius: 4px; padding: 2px 7px; }
 .v.keep { background: var(--keep-soft); color: var(--keep); }
 .v.cut { background: var(--cut-soft); color: var(--cut); }
 .v.change { background: var(--change-soft); color: var(--change); }
 .v.add { background: var(--add-soft); color: var(--add); }
-.what { color: var(--ink); }
-.why { color: var(--ink-2); }
-.mine { white-space: nowrap; }
-.mine button { font: 600 12px var(--font-body); border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2);
+.c-what { color: var(--ink); }
+.c-why { color: var(--ink-2); }
+.btns { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.btns button { font: 600 12px var(--font-body); border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2);
   border-radius: 4px; padding: 3px 8px; cursor: pointer; }
-.mine button[aria-pressed="true"].yes { background: var(--keep); border-color: var(--keep); color: var(--on-accent); }
-.mine button[aria-pressed="true"].no { background: var(--cut); border-color: var(--cut); color: var(--on-accent); }
-.note { width: 100%; min-width: 140px; margin-top: 6px; font: 13px var(--font-body); color: var(--ink); background: var(--surface);
-  border: 1px solid var(--line); border-radius: 4px; padding: 4px 6px; resize: vertical; }
+.btns button[aria-pressed="true"].yes { background: var(--keep); border-color: var(--keep); color: var(--on-accent); }
+.btns button[aria-pressed="true"].no { background: var(--cut); border-color: var(--cut); color: var(--on-accent); }
+.state { font-size: 12px; color: var(--ink-3); }
+.state.wait { color: var(--change); } .state.bad { color: var(--cut); font-weight: 700; }
+.note { display: block; width: 100%; min-height: 32px; max-height: 260px; margin: 7px 0 0; font: 13px/1.45 var(--font-body);
+  color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 5px 7px; resize: vertical; }
 .empty { color: var(--ink-3); padding: 14px 0; }
-@media (max-width: 720px) {
-  table, thead, tbody, tr, td { display: block; }
-  thead { display: none; }
-  tr.r { border-bottom: 1px solid var(--line); padding-block: 8px; }
-  td { border: 0; padding: 3px 0; }
+/* Narrower windows: each item becomes a card — name and call on top, the two texts under it, the mark last. */
+@media (max-width: 999.98px) {
+  table.items, table.items tbody { display: block; }
+  table.items thead, table.items colgroup { display: none; }
+  table.items tr.r { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; row-gap: 4px;
+    grid-template-areas: "item call" "item where" "what what" "why why" "mark mark";
+    padding-block: 12px; border-bottom: 1px solid var(--line); }
+  table.items td { display: block; padding: 0; border: 0; }
+  tr.r:hover td { background: none; }
+  td.c-item { grid-area: item; } td.c-call { grid-area: call; justify-self: end; }
+  td.c-where { grid-area: where; justify-self: end; text-align: right; }
+  td.c-what { grid-area: what; margin-top: 4px; } td.c-why { grid-area: why; } td.c-mark { grid-area: mark; margin-top: 6px; }
+  td.c-what::before, td.c-why::before { display: block; font: 600 11px var(--font-body); text-transform: uppercase;
+    letter-spacing: .06em; color: var(--ink-3); }
+  td.c-what::before { content: "What changes"; } td.c-why::before { content: "Why"; }
+  td.c-what.blank { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -109,11 +130,16 @@ tr.r:hover td { background: var(--surface); }
   <h1>The item pass</h1>
   <p class="lede">Every item in the game and in the old designs, with my recommendation — keep it, change it, cut it, or
     add something missing — and one line on why. Mark each one you agree or disagree with, and add a note where you'd
-    do it differently. Your marks save as you go.</p>
+    do it differently. Each row says <b>Stored</b> once the page's storage has kept your mark.</p>
   <div class="bar">
     <div class="tallies" id="tallies"></div>
     <div class="controls" role="toolbar" aria-label="Filters">
-      <span id="verdictChips"></span>
+      <span class="chips" id="verdictChips"></span>
+      <select id="showSel" aria-label="Which items to show">
+        <option value="">Marked and not</option>
+        <option value="todo">Not marked yet</option>
+        <option value="done">Marked</option>
+      </select>
       <select id="whereSel" aria-label="Where the item is">
         <option value="">Game and designs</option>
         <option value="game">In the prototype</option>
@@ -132,48 +158,81 @@ tr.r:hover td { background: var(--surface); }
 <script>
 const DATA = /*__DATA__*/null;
 (() => {
+  "use strict";
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const VERDICTS = [["cut", "Cut"], ["change", "Change"], ["add", "Add"], ["keep", "Keep"]];
+  const VLABEL = Object.fromEntries(VERDICTS);
   const WHERE = { game: "In the prototype", designed: "Designed only", both: "Both", new: "New" };
   const items = DATA.items;
   const groups = DATA.groups;                       // [[key, label], …] in display order
+  const byId = new Map(items.map(it => [it.id, it]));
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+    keys() { try { return Object.keys(localStorage); } catch (e) { return []; } },
   };
-  const LS = "bf-items-" + DATA.version;
-  let marks = store.get(LS + "-marks", {});         // group -> {id: {mark, note}}
-  const pending = store.get(LS + "-pending", {});   // group -> true when unsaved here
-  const f = store.get(LS + "-filter", { verdict: "", where: "", group: "", q: "" });
+  const K = "bf-items-v2";                          // browser keys; stable across rebuilds
+  const str = v => (typeof v === "string" ? v : "");
+  const filled = e => !!(e && (e.mark || (e.note && e.note.trim())));
+  const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+
+  // ---------------------------------------------------------------- state
+  // local: this browser's latest version of every item it has touched, id -> {mark, note, at, rec}. `at` orders the
+  // versions: a change is stamped later than any version this browser has seen, so an older copy arriving from the
+  // storage can never replace a newer mark (the fault that lost marks in the first version of this page).
+  const local = {};
+  for (const [id, e] of Object.entries(store.get(K + "-local", {})))
+    if (byId.has(id) && e && typeof e.at === "number") local[id] = { mark: str(e.mark), note: str(e.note), at: e.at, rec: !!e.rec };
+  const stored = {};                                // id -> the newest `at` the storage is known to hold
+  let clock = 0;
+  for (const id in local) clock = Math.max(clock, local[id].at);
+  const stamp = () => (clock = Math.max(Date.now(), clock + 1));
+  const unsaved = id => !!local[id] && (stored[id] ?? -1) < local[id].at;
+  function persist() {                              // merge, so two open tabs never drop each other's newer entries
+    const disk = store.get(K + "-local", {});
+    for (const id in local) if (!disk[id] || !(disk[id].at > local[id].at)) disk[id] = local[id];
+    store.set(K + "-local", disk);
+  }
+  const f = Object.assign({ verdict: "", show: "", where: "", group: "", q: "" }, store.get(K + "-filter", {}));
+  const saveFilter = () => store.set(K + "-filter", f);
 
   // ---------------------------------------------------------------- filters
   const chips = $("#verdictChips");
   chips.innerHTML = [["", "All"], ...VERDICTS].map(([k, l]) =>
-    `<button type="button" class="chip" data-v="${k}" aria-pressed="${f.verdict === k}">${l}</button>`).join(" ");
+    `<button type="button" class="chip" data-v="${k}" aria-pressed="${f.verdict === k}">${l}</button>`).join("");
   chips.addEventListener("click", e => {
     const b = e.target.closest(".chip"); if (!b) return;
-    f.verdict = b.dataset.v; store.set(LS + "-filter", f);
+    f.verdict = b.dataset.v; saveFilter();
     chips.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", String(c === b)));
     render();
   });
   const gs = $("#groupSel");
   gs.insertAdjacentHTML("beforeend", groups.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join(""));
-  gs.value = f.group; $("#whereSel").value = f.where; $("#q").value = f.q;
-  gs.addEventListener("change", () => { f.group = gs.value; store.set(LS + "-filter", f); render(); });
-  $("#whereSel").addEventListener("change", e => { f.where = e.target.value; store.set(LS + "-filter", f); render(); });
-  let qt; $("#q").addEventListener("input", e => { clearTimeout(qt); qt = setTimeout(() => { f.q = e.target.value; store.set(LS + "-filter", f); render(); }, 150); });
+  gs.value = f.group; $("#whereSel").value = f.where; $("#showSel").value = f.show; $("#q").value = f.q;
+  gs.addEventListener("change", () => { f.group = gs.value; saveFilter(); render(); });
+  $("#whereSel").addEventListener("change", e => { f.where = e.target.value; saveFilter(); render(); });
+  $("#showSel").addEventListener("change", e => { f.show = e.target.value; saveFilter(); render(); });
+  let qt; $("#q").addEventListener("input", e => { clearTimeout(qt); qt = setTimeout(() => { f.q = e.target.value; saveFilter(); render(); }, 150); });
 
-  // ---------------------------------------------------------------- tallies
+  // ---------------------------------------------------------------- tallies and counts
   function tallies() {
-    const c = { keep: 0, change: 0, cut: 0, add: 0 };
+    const c = {};
     for (const it of items) c[it.verdict] = (c[it.verdict] || 0) + 1;
-    let marked = 0;
-    for (const g in marks) for (const id in marks[g]) if (marks[g][id] && marks[g][id].mark) marked++;
+    const marked = items.filter(it => filled(local[it.id])).length;
     $("#tallies").innerHTML =
       `<span class="tally"><b>${items.length}</b> items</span>` +
       VERDICTS.map(([k, l]) => `<span class="tally"><span class="v ${k}">${l}</span> <b>${c[k] || 0}</b></span>`).join("") +
       `<span class="tally">· you've marked <b>${marked}</b></span>`;
+  }
+  function groupCounts(only) {
+    for (const el of document.querySelectorAll("#list .gcount")) {
+      const g = el.dataset.gc; if (only && g !== only) continue;
+      const all = items.filter(it => it.group === g);
+      const shown = el.closest("details").querySelectorAll("tr.r").length;
+      const marked = all.filter(it => filled(local[it.id])).length;
+      el.textContent = `${shown} shown · ${marked} of ${all.length} marked`;
+    }
   }
 
   // ---------------------------------------------------------------- list
@@ -181,6 +240,8 @@ const DATA = /*__DATA__*/null;
     if (f.verdict && it.verdict !== f.verdict) return false;
     if (f.where && it.where !== f.where) return false;
     if (f.group && it.group !== f.group) return false;
+    if (f.show === "todo" && filled(local[it.id])) return false;
+    if (f.show === "done" && !filled(local[it.id])) return false;
     if (f.q) {
       const q = f.q.toLowerCase();
       if (!(`${it.name} ${it.id} ${it.change || ""} ${it.reason}`.toLowerCase().includes(q))) return false;
@@ -188,96 +249,260 @@ const DATA = /*__DATA__*/null;
     return true;
   }
   function row(it) {
-    const m = (marks[it.group] || {})[it.id] || {};
-    return `<tr class="r" data-id="${esc(it.id)}" data-g="${esc(it.group)}">
-      <td><span class="name">${esc(it.name)}</span><span class="id">${esc(it.id)}</span></td>
-      <td class="where">${esc(WHERE[it.where] || it.where)}</td>
-      <td><span class="v ${esc(it.verdict)}">${esc((VERDICTS.find(v => v[0] === it.verdict) || [0, it.verdict])[1])}</span></td>
-      <td class="what">${esc(it.change || "")}</td>
-      <td class="why">${esc(it.reason)}</td>
-      <td class="mine">
+    const m = local[it.id] || {};
+    return `<tr class="r" data-id="${esc(it.id)}">
+      <td class="c-item"><span class="name">${esc(it.name)}</span><span class="id">${esc(it.id)}</span></td>
+      <td class="c-where">${esc(WHERE[it.where] || it.where)}</td>
+      <td class="c-call"><span class="v ${esc(it.verdict)}">${esc(VLABEL[it.verdict] || it.verdict)}</span></td>
+      <td class="c-what${it.change ? "" : " blank"}">${esc(it.change || "")}</td>
+      <td class="c-why">${esc(it.reason)}</td>
+      <td class="c-mark"><div class="btns">
         <button type="button" class="yes" data-m="agree" aria-pressed="${m.mark === "agree"}">Agree</button>
         <button type="button" class="no" data-m="disagree" aria-pressed="${m.mark === "disagree"}">Disagree</button>
-        <textarea class="note" id="n-${esc(it.id)}" rows="1" placeholder="Note" aria-label="Your note on ${esc(it.name)}">${esc(m.note || "")}</textarea>
+        <span class="state" aria-live="polite"></span></div>
+        <textarea class="note" rows="1" placeholder="Note" aria-label="Your note on ${esc(it.name)}">${esc(m.note || "")}</textarea>
       </td></tr>`;
   }
   function render() {
     tallies();
-    const openState = store.get(LS + "-open", {});
+    const open = store.get(K + "-open", {});
     let html = "";
     for (const [g, label] of groups) {
       const rows = items.filter(it => it.group === g && matches(it));
       if (!rows.length) continue;
-      const open = openState[g] !== false;
-      html += `<details class="group" data-g="${g}" ${open ? "open" : ""}><summary><h2>${esc(label)}</h2>
-        <span class="gcount">${rows.length} shown</span></summary>
-        <div class="tablewrap"><table><thead><tr><th>Item</th><th>Where</th><th>Call</th><th>What changes</th><th>Why</th><th>Your mark</th></tr></thead>
+      html += `<details class="group" data-g="${g}"${open[g] === false ? "" : " open"}><summary><h2>${esc(label)}</h2>
+        <span class="gcount" data-gc="${g}"></span></summary>
+        <div class="tablewrap"><table class="items">
+        <colgroup><col class="c-item"><col class="c-where"><col class="c-call"><col class="c-what"><col class="c-why"><col class="c-mark"></colgroup>
+        <thead><tr><th scope="col">Item</th><th scope="col">Where</th><th scope="col">Call</th><th scope="col">What changes</th><th scope="col">Why</th><th scope="col">Your mark</th></tr></thead>
         <tbody>${rows.map(row).join("")}</tbody></table></div></details>`;
     }
     $("#list").innerHTML = html || `<p class="empty">Nothing matches these filters.</p>`;
+    for (const tr of document.querySelectorAll("#list tr.r")) paintState(tr);
+    for (const t of document.querySelectorAll("#list details[open] .note")) if (t.value) fit(t);
+    groupCounts();
   }
+  const rowEl = id => document.querySelector(`#list tr.r[data-id="${CSS.escape(id)}"]`);
+  function fit(t) { t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight + 2, 260) + "px"; }
+  function stateOf(id) {
+    const e = local[id];
+    if (!e || (!filled(e) && !unsaved(id))) return ["", ""];
+    if (!unsaved(id)) return ["", "Stored"];
+    return failing[id] || blocked ? ["bad", "Not stored yet"] : ["wait", "Saving…"];
+  }
+  function paintState(tr) {
+    const [cls, text] = stateOf(tr.dataset.id);
+    const s = tr.querySelector(".state");
+    s.className = "state" + (cls ? " " + cls : ""); s.textContent = text;
+  }
+  function paintRow(id) {
+    const tr = rowEl(id); if (!tr) return;
+    const m = local[id] || {};
+    tr.querySelectorAll(".btns button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.m === m.mark)));
+    const t = tr.querySelector(".note");
+    if (t && document.activeElement !== t && t.value !== (m.note || "")) { t.value = m.note || ""; fit(t); }
+    paintState(tr);
+  }
+  const typing = id => {
+    const a = document.activeElement;
+    return !!(a && a.classList && a.classList.contains("note") && a.closest("tr.r") && a.closest("tr.r").dataset.id === id);
+  };
   $("#list").addEventListener("toggle", e => {
-    const d = e.target.closest("details.group"); if (!d) return;
-    const o = store.get(LS + "-open", {}); o[d.dataset.g] = d.open; store.set(LS + "-open", o);
+    const d = e.target.closest && e.target.closest("details.group"); if (!d) return;
+    const o = store.get(K + "-open", {}); o[d.dataset.g] = d.open; store.set(K + "-open", o);
+    if (d.open) for (const t of d.querySelectorAll(".note")) if (t.value) fit(t);   // closed boxes measure as empty
   }, true);
   $("#list").addEventListener("click", e => {
-    const b = e.target.closest(".mine button"); if (!b) return;
-    const tr = b.closest("tr"); const g = tr.dataset.g, id = tr.dataset.id;
-    marks[g] = marks[g] || {}; const m = marks[g][id] = marks[g][id] || {};
-    m.mark = m.mark === b.dataset.m ? "" : b.dataset.m;
-    tr.querySelectorAll(".mine button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.m === m.mark)));
-    changed(g); tallies();
+    const b = e.target.closest(".btns button"); if (!b) return;
+    const id = b.closest("tr.r").dataset.id;
+    const cur = local[id] || { mark: "" };
+    edit(id, { mark: cur.mark === b.dataset.m ? "" : b.dataset.m }, 200);
+    paintRow(id);
   });
   $("#list").addEventListener("input", e => {
     const t = e.target.closest(".note"); if (!t) return;
-    const tr = t.closest("tr"); const g = tr.dataset.g, id = tr.dataset.id;
-    marks[g] = marks[g] || {}; (marks[g][id] = marks[g][id] || {}).note = t.value;
-    changed(g);
+    edit(t.closest("tr.r").dataset.id, { note: t.value }, 800);
+    fit(t);
   });
+  $("#list").addEventListener("focusout", e => {       // a finished note is sent at once, not after the pause
+    const t = e.target.closest && e.target.closest(".note"); if (!t) return;
+    const id = t.closest("tr.r").dataset.id;
+    if (timers[id]) { clearTimeout(timers[id]); timers[id] = 0; enqueue(id); }
+  });
+  function edit(id, patch, delay) {
+    const cur = local[id] || { mark: "", note: "" };
+    local[id] = { mark: cur.mark, note: cur.note, ...patch, at: stamp(), rec: false };
+    persist(); schedule(id, delay);
+    const tr = rowEl(id); if (tr) paintState(tr);
+    tallies(); groupCounts(byId.get(id).group); status();
+  }
 
-  // ---------------------------------------------------------------- saving (one document per kind of item)
-  let db = null, lastSaved = null; const timers = {}, inflight = {}, again = {};
-  function changed(g) {
-    pending[g] = true; store.set(LS + "-marks", marks); store.set(LS + "-pending", pending);
-    clearTimeout(timers[g]); timers[g] = setTimeout(() => save(g), 700);
-    setStatus(db ? "saving" : "local");
+  // ---------------------------------------------------------------- saving: one stored record per item
+  // Each item is its own document, marks/<kind>/items/<id>, holding {mark, note, at}. Saving one item never touches
+  // another, and a copy is only ever replaced by a newer one.
+  const FATAL = new Set(["invalid_argument", "quota_exceeded", "not_granted", "capability_disabled", "capability_removed", "revoked", "transform_error"]);
+  const MAX_WRITES = 3;
+  let db = null, blocked = "", recovered = 0, lastStored = null, active = 0;
+  const timers = {}, inflight = {}, again = {}, failing = {}, tries = {}, queue = [], settled = {};
+  const ref = id => db.doc(`marks/${byId.get(id).group}/items/${id}`);
+
+  function schedule(id, delay) {
+    clearTimeout(timers[id]);
+    timers[id] = setTimeout(() => { timers[id] = 0; enqueue(id); }, delay);
   }
-  async function save(g) {
-    if (!db) { setStatus("local"); return; }
-    if (inflight[g]) { again[g] = true; return; }
-    inflight[g] = true; setStatus("saving");
+  function enqueue(id) {
+    if (!db || blocked || !unsaved(id)) { status(); return; }
+    if (inflight[id]) { again[id] = true; return; }
+    if (!queue.includes(id)) queue.push(id);
+    pump();
+  }
+  function pump() {
+    while (active < MAX_WRITES && queue.length) {
+      const id = queue.shift();
+      if (!inflight[id] && unsaved(id)) write(id);
+    }
+  }
+  async function write(id) {
+    inflight[id] = true; active++;
+    const e = local[id];
+    const body = { id, group: byId.get(id).group, mark: e.mark, note: e.note, at: e.at, page: DATA.version };
+    if (e.rec) body.recovered = true;
     try {
-      await db.doc("item_marks/" + g).set({ group: g, marks: marks[g] || {}, updatedAt: new Date().toISOString(), pageVersion: DATA.version });
-      pending[g] = false; store.set(LS + "-pending", pending); lastSaved = new Date(); setStatus("saved");
-    } catch (e) { setStatus("error"); }
-    finally { inflight[g] = false; if (again[g]) { again[g] = false; save(g); } }
+      await ref(id).set(body);
+      stored[id] = Math.max(stored[id] ?? -1, body.at);
+      failing[id] = false; tries[id] = 0; lastStored = new Date();
+    } catch (err) {
+      const code = (err && err.code) || "unavailable";
+      if (FATAL.has(code)) blocked = code;
+      else {
+        failing[id] = true; tries[id] = (tries[id] || 0) + 1;
+        const wait = Math.min(60000, 1500 * 2 ** Math.min(tries[id] - 1, 6)) * (0.8 + Math.random() * 0.4);
+        schedule(id, code === "resource_exhausted" ? Math.max(wait, 5000) : wait);
+      }
+    } finally {
+      inflight[id] = false; active--;
+      if (again[id]) { again[id] = false; if (!failing[id]) enqueue(id); }
+      const tr = rowEl(id); if (tr) paintState(tr);
+      status(); pump();
+    }
   }
-  function setStatus(kind) {
-    const map = {
-      saving: ["busy", "Saving…"],
-      saved: ["ok", "All marks saved" + (lastSaved ? " · " + lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "")],
-      local: ["bad", "This view can't reach the page's storage — marks are kept in this browser only. Open the page on claude.ai to save them."],
-      error: ["bad", "Couldn't save just now — your marks are kept in this browser; the next change retries."],
-      connecting: ["busy", "Connecting…"],
-    };
-    const [dot, text] = map[kind] || map.connecting;
+
+  function onSnap(g, snap) {
+    const touched = [];
+    for (const d of snap.docs) {
+      if (!d.exists || !byId.has(d.id)) continue;
+      const b = d.data(); if (!b || typeof b.at !== "number") continue;
+      const id = d.id;
+      if (b.at > clock) clock = b.at;
+      if (!(d.metadata && d.metadata.hasPendingWrites)) stored[id] = Math.max(stored[id] ?? -1, b.at);
+      const l = local[id];
+      if (l && l.at >= b.at) continue;              // this browser has the same version or a newer one: keep it
+      if (typing(id)) continue;                     // mid-note: the next keystroke is newer anyway
+      local[id] = { mark: str(b.mark), note: str(b.note), at: b.at, rec: false };
+      touched.push(id);
+    }
+    if (touched.length) { persist(); touched.forEach(paintRow); tallies(); groupCounts(g); }
+    if (!settled[g] && !(snap.metadata && snap.metadata.fromCache)) { settled[g] = true; settle(g); }
+    status();
+  }
+  function subscribe(g) {
+    db.collection(`marks/${g}/items`).onSnapshot(snap => onSnap(g, snap), err => {
+      const code = (err && err.code) || "unavailable";
+      if (FATAL.has(code)) { blocked = code; status(); return; }
+      setTimeout(() => subscribe(g), code === "resource_exhausted" ? 15000 : 3000);   // a dead listener: open a fresh one
+    });
+  }
+
+  // Once the storage has given its real view of a kind of item: bring over the marks the first version of this page
+  // kept, then send this browser's unsaved changes. Both re-read the stored copy first, so neither can replace a
+  // newer mark made on another device.
+  let legacy = {}, legacyReady = Promise.resolve();
+  function loadLegacy() {
+    for (const k of store.keys()) {                 // this browser's own copy, kept under a dated key
+      if (!/^bf-items-\d{4}-\d{2}-\d{2}-marks$/.test(k)) continue;
+      const old = store.get(k, {});
+      for (const g in old) for (const id in (old[g] || {})) if (byId.has(id) && filled(old[g][id]) && !legacy[id]) legacy[id] = old[g][id];
+    }
+    legacyReady = db.collection("item_marks").get().then(snap => {   // the old storage: one document per kind
+      for (const d of snap.docs) {
+        const m = d.exists && d.data() && d.data().marks;
+        if (m && typeof m === "object") for (const id in m) if (byId.has(id) && filled(m[id]) && !legacy[id]) legacy[id] = m[id];
+      }
+    }).catch(() => {});
+  }
+  async function readStored(id) {                   // -> the stored version, null if none, undefined if unreadable
+    try {
+      const s = await ref(id).get();
+      if (!s.exists) return null;
+      const b = s.data();
+      if (!b || typeof b.at !== "number") return null;
+      if (b.at > clock) clock = b.at;
+      stored[id] = Math.max(stored[id] ?? -1, b.at);
+      return b;
+    } catch (e) { return undefined; }
+  }
+  async function settle(g) {
+    await legacyReady;
+    const imported = store.get(K + "-imported", []);
+    if (!imported.includes(g)) {
+      let complete = true;
+      for (const [id, e] of Object.entries(legacy)) {
+        if (byId.get(id).group !== g || local[id] || stored[id] !== undefined) continue;
+        const b = await readStored(id);
+        if (b === undefined) { complete = false; continue; }
+        if (b || local[id]) continue;               // stored meanwhile, or marked here meanwhile: keep that
+        local[id] = { mark: str(e.mark), note: str(e.note), at: stamp(), rec: true };
+        recovered++; persist(); paintRow(id); enqueue(id);
+      }
+      if (complete) store.set(K + "-imported", [...store.get(K + "-imported", []), g]);
+      tallies(); groupCounts(g);
+    }
+    for (const it of items) if (it.group === g) await sendLeftover(it.id);
+    tallies(); groupCounts(g); status();
+  }
+  async function sendLeftover(id) {                 // a change this browser kept from an earlier visit
+    if (!unsaved(id) || timers[id] || inflight[id]) return;
+    const b = await readStored(id);
+    if (b === undefined) { setTimeout(() => sendLeftover(id), 15000); return; }   // unreadable: never send blind
+    if (b && local[id] && b.at >= local[id].at) {
+      if (!typing(id)) { local[id] = { mark: str(b.mark), note: str(b.note), at: b.at, rec: false }; persist(); paintRow(id); }
+      return;
+    }
+    enqueue(id);
+  }
+
+  function status() {
+    const ids = Object.keys(local);
+    const marked = ids.filter(id => filled(local[id])).length;
+    const waiting = ids.filter(unsaved).length;
+    const stuck = ids.some(id => unsaved(id) && failing[id]);
+    let dot, text;
+    if (blocked === "absent") [dot, text] = ["bad", "This copy of the page isn't connected to its storage, so marks are kept in this browser only. Open the page on claude.ai to store them."];
+    else if (blocked) [dot, text] = ["bad", `The page's storage refused to save (${blocked}). Your marks are kept in this browser.`];
+    else if (!db) [dot, text] = ["busy", "Connecting to the page's storage…"];
+    else if (waiting && stuck) [dot, text] = ["bad", `${plural(waiting, "mark")} not stored yet — retrying. They're kept in this browser meanwhile.`];
+    else if (waiting) [dot, text] = ["busy", `Saving ${plural(waiting, "mark")}…`];
+    else if (!marked) [dot, text] = ["ok", "Connected — nothing marked yet"];
+    else [dot, text] = ["ok", `All ${plural(marked, "mark")} stored` + (lastStored ? ` · last saved ${lastStored.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "")];
+    if (recovered) text += ` · brought back ${recovered} from the first version of this page`;
     $("#status").innerHTML = `<span class="dot ${dot}"></span><span>${esc(text)}</span>`;
+    for (const tr of document.querySelectorAll("#list tr.r .state.bad, #list tr.r .state.wait")) paintState(tr.closest("tr.r"));
   }
+
   function connect() {
-    const use = window.claude && typeof window.claude.use === "function" ? window.claude.use("db") : Promise.resolve(null);
-    use.then(ns => {
-      if (!ns) { setStatus("local"); return; }
-      db = ns; let first = true;
-      db.collection("item_marks").onSnapshot(snap => {
-        for (const d of snap.docs) {
-          if (!d.exists || pending[d.id]) continue;
-          const data = d.data(); if (data && data.marks) marks[d.id] = data.marks;
-        }
-        store.set(LS + "-marks", marks);
-        if (first) { first = false; render(); setStatus("saved"); for (const g in pending) if (pending[g]) save(g); }
-      }, () => setStatus("error"));
-    }).catch(() => setStatus("local"));
+    const use = window.claude && typeof window.claude.use === "function" ? window.claude.use("db") : null;
+    Promise.resolve(use).then(ns => {
+      if (!ns) { blocked = "absent"; status(); return; }
+      db = ns; loadLegacy(); status();
+      for (const [g] of groups) subscribe(g);
+      // If the storage never marks its view as final, settle anyway — every write re-reads the stored copy first.
+      setTimeout(() => { for (const [g] of groups) if (!settled[g]) { settled[g] = true; settle(g); } }, 10000);
+    }).catch(() => { blocked = "absent"; status(); });
   }
-  render(); connect();
+  const flushAll = () => { for (const id in timers) if (timers[id]) { clearTimeout(timers[id]); timers[id] = 0; enqueue(id); } };
+  addEventListener("pagehide", flushAll);
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushAll(); });
+
+  render(); status(); connect();
 })();
 </script>
