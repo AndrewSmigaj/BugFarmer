@@ -27,6 +27,13 @@ with it — so it can be answered while the part is being read (the overview sho
 Answers are stored in the page's own database, one document per section (`answers/<§>`); read them back with the
 `ArtifactData` tool (`list`, collection `answers`). Republish from another session by passing that URL.
 
+## The item pass
+Every item in the game and in the old designs — 1,259 rows — with a recommendation (keep, change, cut or add) and a
+one-line reason (the owner's request of 2026-09-28, D55). The data is `item_table.jsonl`; the review page is built from
+it by `python3 tools/gdd/build_items_page.py` and published at **https://claude.ai/artifact/3Sxunf4HDezB1fgAKFRZG1**
+(private to the owner). His marks — agree, disagree and a note per row — are stored in that page's database, one
+document per kind of item (`item_marks/<group>`); read them back with the `ArtifactData` tool.
+
 ## Sections, in review order
 **Start with the overview** ([overview.md](overview.md)): the whole game as every design document describes it,
 activity by activity — what is decided, in the prototype, designed and still open — written after reading all of them

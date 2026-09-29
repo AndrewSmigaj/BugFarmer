@@ -119,6 +119,7 @@ tr.r:hover td { background: var(--surface); }
         <option value="game">In the prototype</option>
         <option value="designed">Designed only</option>
         <option value="both">Both</option>
+        <option value="new">New</option>
       </select>
       <select id="groupSel" aria-label="Kind of item"><option value="">Every kind</option></select>
       <input type="search" id="q" placeholder="Search names, ids and reasons" aria-label="Search">
@@ -134,7 +135,7 @@ const DATA = /*__DATA__*/null;
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const VERDICTS = [["cut", "Cut"], ["change", "Change"], ["add", "Add"], ["keep", "Keep"]];
-  const WHERE = { game: "In the prototype", designed: "Designed only", both: "Both" };
+  const WHERE = { game: "In the prototype", designed: "Designed only", both: "Both", new: "New" };
   const items = DATA.items;
   const groups = DATA.groups;                       // [[key, label], …] in display order
   const store = {
