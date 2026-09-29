@@ -1,0 +1,282 @@
+<title>Bug Farmer Item Pass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Pixelify+Sans:wght@500;600&display=swap">
+<style>
+/* Tokens — the same palette and faces as the design review page, so the two read as one tool. */
+:root {
+  --ground: #edf0e3; --surface: #f8faf2; --surface-2: #e3e8d6;
+  --ink: #221820; --ink-2: #4a4452; --ink-3: #6a6770;
+  --line: #cad2bc; --line-strong: #9dab8d;
+  --accent: #26523a; --accent-hover: #3e763c; --on-accent: #f8faf2;
+  --keep: #3e763c; --keep-soft: #dde8cc;
+  --cut: #a8412f; --cut-soft: #f2d5cb;
+  --change: #a45418; --change-soft: #f4dfc0;
+  --add: #2f5f8a; --add-soft: #d6e3ef;
+  --focus: #4c6692;
+  --font-display: "Pixelify Sans", "Courier New", monospace;
+  --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --r: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #111915; --surface: #19231d; --surface-2: #151e19;
+    --ink: #e9ecdf; --ink-2: #b6bfad; --ink-3: #8c9588;
+    --line: #2c3a30; --line-strong: #46584a;
+    --accent: #6ea240; --accent-hover: #86b84e; --on-accent: #0f160f;
+    --keep: #8cc05a; --keep-soft: #213221;
+    --cut: #e5876a; --cut-soft: #3b2420;
+    --change: #e9a855; --change-soft: #3a2b18;
+    --add: #8cb4dc; --add-soft: #1c2a38;
+    --focus: #7494b6;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #111915; --surface: #19231d; --surface-2: #151e19;
+  --ink: #e9ecdf; --ink-2: #b6bfad; --ink-3: #8c9588;
+  --line: #2c3a30; --line-strong: #46584a;
+  --accent: #6ea240; --accent-hover: #86b84e; --on-accent: #0f160f;
+  --keep: #8cc05a; --keep-soft: #213221;
+  --cut: #e5876a; --cut-soft: #3b2420;
+  --change: #e9a855; --change-soft: #3a2b18;
+  --add: #8cb4dc; --add-soft: #1c2a38;
+  --focus: #7494b6;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font: 15px/1.5 var(--font-body); margin: 0; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 18px 60px; }
+h1 { font: 600 28px/1.1 var(--font-display); letter-spacing: .01em; margin: 0 0 6px; text-wrap: balance; }
+.lede { color: var(--ink-2); max-width: 70ch; margin: 0 0 14px; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--ground);
+  border-bottom: 1px solid var(--line); padding-block: 10px; display: flex; flex-direction: column; gap: 8px; }
+.tallies { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; font-variant-numeric: tabular-nums; }
+.tally { color: var(--ink-2); font-size: 14px; }
+.tally b { color: var(--ink); font-size: 16px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chip { font: 600 13px var(--font-body); border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2);
+  border-radius: 999px; padding: 4px 11px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.chip:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+select, input[type="search"] { font: 14px var(--font-body); color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line-strong); border-radius: var(--r); padding: 5px 9px; }
+input[type="search"] { flex: 1 1 200px; min-width: 0; }
+.status { font-size: 13px; color: var(--ink-3); display: flex; align-items: center; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); flex: none; }
+.dot.ok { background: var(--keep); } .dot.bad { background: var(--cut); } .dot.busy { background: var(--change); }
+details.group { margin-top: 18px; }
+details.group > summary { list-style: none; cursor: pointer; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  padding-block: 6px; border-bottom: 2px solid var(--line-strong); }
+details.group > summary::-webkit-details-marker { display: none; }
+details.group > summary h2 { font: 600 20px var(--font-display); margin: 0; }
+.gcount { color: var(--ink-3); font-size: 13px; font-variant-numeric: tabular-nums; }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font: 600 12px var(--font-body); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3);
+  padding: 8px 8px 6px; border-bottom: 1px solid var(--line); }
+td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr.r:hover td { background: var(--surface); }
+.name { font-weight: 700; }
+.id { display: block; font: 12px var(--font-mono); color: var(--ink-3); }
+.where { font-size: 12px; color: var(--ink-3); white-space: nowrap; }
+.v { display: inline-block; font: 600 12px var(--font-body); border-radius: 4px; padding: 2px 7px; white-space: nowrap; }
+.v.keep { background: var(--keep-soft); color: var(--keep); }
+.v.cut { background: var(--cut-soft); color: var(--cut); }
+.v.change { background: var(--change-soft); color: var(--change); }
+.v.add { background: var(--add-soft); color: var(--add); }
+.what { color: var(--ink); }
+.why { color: var(--ink-2); }
+.mine { white-space: nowrap; }
+.mine button { font: 600 12px var(--font-body); border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2);
+  border-radius: 4px; padding: 3px 8px; cursor: pointer; }
+.mine button[aria-pressed="true"].yes { background: var(--keep); border-color: var(--keep); color: var(--on-accent); }
+.mine button[aria-pressed="true"].no { background: var(--cut); border-color: var(--cut); color: var(--on-accent); }
+.note { width: 100%; min-width: 140px; margin-top: 6px; font: 13px var(--font-body); color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 4px; padding: 4px 6px; resize: vertical; }
+.empty { color: var(--ink-3); padding: 14px 0; }
+@media (max-width: 720px) {
+  table, thead, tbody, tr, td { display: block; }
+  thead { display: none; }
+  tr.r { border-bottom: 1px solid var(--line); padding-block: 8px; }
+  td { border: 0; padding: 3px 0; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <h1>The item pass</h1>
+  <p class="lede">Every item in the game and in the old designs, with my recommendation — keep it, change it, cut it, or
+    add something missing — and one line on why. Mark each one you agree or disagree with, and add a note where you'd
+    do it differently. Your marks save as you go.</p>
+  <div class="bar">
+    <div class="tallies" id="tallies"></div>
+    <div class="controls" role="toolbar" aria-label="Filters">
+      <span id="verdictChips"></span>
+      <select id="whereSel" aria-label="Where the item is">
+        <option value="">Game and designs</option>
+        <option value="game">In the prototype</option>
+        <option value="designed">Designed only</option>
+        <option value="both">Both</option>
+      </select>
+      <select id="groupSel" aria-label="Kind of item"><option value="">Every kind</option></select>
+      <input type="search" id="q" placeholder="Search names, ids and reasons" aria-label="Search">
+    </div>
+    <div class="status" id="status"><span class="dot busy"></span><span>Connecting…</span></div>
+  </div>
+  <div id="list"></div>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+(() => {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const VERDICTS = [["cut", "Cut"], ["change", "Change"], ["add", "Add"], ["keep", "Keep"]];
+  const WHERE = { game: "In the prototype", designed: "Designed only", both: "Both" };
+  const items = DATA.items;
+  const groups = DATA.groups;                       // [[key, label], …] in display order
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  };
+  const LS = "bf-items-" + DATA.version;
+  let marks = store.get(LS + "-marks", {});         // group -> {id: {mark, note}}
+  const pending = store.get(LS + "-pending", {});   // group -> true when unsaved here
+  const f = store.get(LS + "-filter", { verdict: "", where: "", group: "", q: "" });
+
+  // ---------------------------------------------------------------- filters
+  const chips = $("#verdictChips");
+  chips.innerHTML = [["", "All"], ...VERDICTS].map(([k, l]) =>
+    `<button type="button" class="chip" data-v="${k}" aria-pressed="${f.verdict === k}">${l}</button>`).join(" ");
+  chips.addEventListener("click", e => {
+    const b = e.target.closest(".chip"); if (!b) return;
+    f.verdict = b.dataset.v; store.set(LS + "-filter", f);
+    chips.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", String(c === b)));
+    render();
+  });
+  const gs = $("#groupSel");
+  gs.insertAdjacentHTML("beforeend", groups.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join(""));
+  gs.value = f.group; $("#whereSel").value = f.where; $("#q").value = f.q;
+  gs.addEventListener("change", () => { f.group = gs.value; store.set(LS + "-filter", f); render(); });
+  $("#whereSel").addEventListener("change", e => { f.where = e.target.value; store.set(LS + "-filter", f); render(); });
+  let qt; $("#q").addEventListener("input", e => { clearTimeout(qt); qt = setTimeout(() => { f.q = e.target.value; store.set(LS + "-filter", f); render(); }, 150); });
+
+  // ---------------------------------------------------------------- tallies
+  function tallies() {
+    const c = { keep: 0, change: 0, cut: 0, add: 0 };
+    for (const it of items) c[it.verdict] = (c[it.verdict] || 0) + 1;
+    let marked = 0;
+    for (const g in marks) for (const id in marks[g]) if (marks[g][id] && marks[g][id].mark) marked++;
+    $("#tallies").innerHTML =
+      `<span class="tally"><b>${items.length}</b> items</span>` +
+      VERDICTS.map(([k, l]) => `<span class="tally"><span class="v ${k}">${l}</span> <b>${c[k] || 0}</b></span>`).join("") +
+      `<span class="tally">· you've marked <b>${marked}</b></span>`;
+  }
+
+  // ---------------------------------------------------------------- list
+  function matches(it) {
+    if (f.verdict && it.verdict !== f.verdict) return false;
+    if (f.where && it.where !== f.where) return false;
+    if (f.group && it.group !== f.group) return false;
+    if (f.q) {
+      const q = f.q.toLowerCase();
+      if (!(`${it.name} ${it.id} ${it.change || ""} ${it.reason}`.toLowerCase().includes(q))) return false;
+    }
+    return true;
+  }
+  function row(it) {
+    const m = (marks[it.group] || {})[it.id] || {};
+    return `<tr class="r" data-id="${esc(it.id)}" data-g="${esc(it.group)}">
+      <td><span class="name">${esc(it.name)}</span><span class="id">${esc(it.id)}</span></td>
+      <td class="where">${esc(WHERE[it.where] || it.where)}</td>
+      <td><span class="v ${esc(it.verdict)}">${esc((VERDICTS.find(v => v[0] === it.verdict) || [0, it.verdict])[1])}</span></td>
+      <td class="what">${esc(it.change || "")}</td>
+      <td class="why">${esc(it.reason)}</td>
+      <td class="mine">
+        <button type="button" class="yes" data-m="agree" aria-pressed="${m.mark === "agree"}">Agree</button>
+        <button type="button" class="no" data-m="disagree" aria-pressed="${m.mark === "disagree"}">Disagree</button>
+        <textarea class="note" id="n-${esc(it.id)}" rows="1" placeholder="Note" aria-label="Your note on ${esc(it.name)}">${esc(m.note || "")}</textarea>
+      </td></tr>`;
+  }
+  function render() {
+    tallies();
+    const openState = store.get(LS + "-open", {});
+    let html = "";
+    for (const [g, label] of groups) {
+      const rows = items.filter(it => it.group === g && matches(it));
+      if (!rows.length) continue;
+      const open = openState[g] !== false;
+      html += `<details class="group" data-g="${g}" ${open ? "open" : ""}><summary><h2>${esc(label)}</h2>
+        <span class="gcount">${rows.length} shown</span></summary>
+        <div class="tablewrap"><table><thead><tr><th>Item</th><th>Where</th><th>Call</th><th>What changes</th><th>Why</th><th>Your mark</th></tr></thead>
+        <tbody>${rows.map(row).join("")}</tbody></table></div></details>`;
+    }
+    $("#list").innerHTML = html || `<p class="empty">Nothing matches these filters.</p>`;
+  }
+  $("#list").addEventListener("toggle", e => {
+    const d = e.target.closest("details.group"); if (!d) return;
+    const o = store.get(LS + "-open", {}); o[d.dataset.g] = d.open; store.set(LS + "-open", o);
+  }, true);
+  $("#list").addEventListener("click", e => {
+    const b = e.target.closest(".mine button"); if (!b) return;
+    const tr = b.closest("tr"); const g = tr.dataset.g, id = tr.dataset.id;
+    marks[g] = marks[g] || {}; const m = marks[g][id] = marks[g][id] || {};
+    m.mark = m.mark === b.dataset.m ? "" : b.dataset.m;
+    tr.querySelectorAll(".mine button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.m === m.mark)));
+    changed(g); tallies();
+  });
+  $("#list").addEventListener("input", e => {
+    const t = e.target.closest(".note"); if (!t) return;
+    const tr = t.closest("tr"); const g = tr.dataset.g, id = tr.dataset.id;
+    marks[g] = marks[g] || {}; (marks[g][id] = marks[g][id] || {}).note = t.value;
+    changed(g);
+  });
+
+  // ---------------------------------------------------------------- saving (one document per kind of item)
+  let db = null, lastSaved = null; const timers = {}, inflight = {}, again = {};
+  function changed(g) {
+    pending[g] = true; store.set(LS + "-marks", marks); store.set(LS + "-pending", pending);
+    clearTimeout(timers[g]); timers[g] = setTimeout(() => save(g), 700);
+    setStatus(db ? "saving" : "local");
+  }
+  async function save(g) {
+    if (!db) { setStatus("local"); return; }
+    if (inflight[g]) { again[g] = true; return; }
+    inflight[g] = true; setStatus("saving");
+    try {
+      await db.doc("item_marks/" + g).set({ group: g, marks: marks[g] || {}, updatedAt: new Date().toISOString(), pageVersion: DATA.version });
+      pending[g] = false; store.set(LS + "-pending", pending); lastSaved = new Date(); setStatus("saved");
+    } catch (e) { setStatus("error"); }
+    finally { inflight[g] = false; if (again[g]) { again[g] = false; save(g); } }
+  }
+  function setStatus(kind) {
+    const map = {
+      saving: ["busy", "Saving…"],
+      saved: ["ok", "All marks saved" + (lastSaved ? " · " + lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "")],
+      local: ["bad", "This view can't reach the page's storage — marks are kept in this browser only. Open the page on claude.ai to save them."],
+      error: ["bad", "Couldn't save just now — your marks are kept in this browser; the next change retries."],
+      connecting: ["busy", "Connecting…"],
+    };
+    const [dot, text] = map[kind] || map.connecting;
+    $("#status").innerHTML = `<span class="dot ${dot}"></span><span>${esc(text)}</span>`;
+  }
+  function connect() {
+    const use = window.claude && typeof window.claude.use === "function" ? window.claude.use("db") : Promise.resolve(null);
+    use.then(ns => {
+      if (!ns) { setStatus("local"); return; }
+      db = ns; let first = true;
+      db.collection("item_marks").onSnapshot(snap => {
+        for (const d of snap.docs) {
+          if (!d.exists || pending[d.id]) continue;
+          const data = d.data(); if (data && data.marks) marks[d.id] = data.marks;
+        }
+        store.set(LS + "-marks", marks);
+        if (first) { first = false; render(); setStatus("saved"); for (const g in pending) if (pending[g]) save(g); }
+      }, () => setStatus("error"));
+    }).catch(() => setStatus("local"));
+  }
+  render(); connect();
+})();
+</script>

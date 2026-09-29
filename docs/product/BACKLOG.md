@@ -1033,10 +1033,17 @@ Items marked (P#) wait for the owner's verdict on that proposal.
   when a species is high, extra rain when one is near collapse) to a last resort, as part of the bug overhaul; keep
   its reseeding of species that die out; polish and update bug behaviour first, then retune everything with many
   levers (P10).
+- **Character saves (fault, found 2026-09-28)**: a character is written only on creation (`rpc/character.go:108`), on
+  sleeping in a bed (`handlers_home.go:71`) and on leaving (`match.go:689`); `MatchTerminate` saves the zone, not the
+  players in it, so a crash or a host quitting can lose a player's recent items or duplicate them between a chest and
+  a bag. Save characters every few minutes and on zone shutdown, and back them up with the world (§19 P5).
 - **Playing together** (D58): drop the eight-character cap (`nakama/modules/rpc/character.go`
   `maxCharactersPerAccount`); a server setting for player-versus-player; private plots invite-only with the January
   2026 plot design and a happiness panel (P26); **a thorough review of what still runs on the server**, each piece
-  justified — bug behaviour stays on the players' computers.
+  justified, run BEFORE the frozen-zone catch-up, border events and migration are built (§19 P10) — each bug's own
+  behaviour stays on the players' computers; fights between players as §19 P9 describes (three-value server setting,
+  a switching wait, a visible mark, no loot for the winner, no fights on plots, no releasing biting bugs beside a player
+  who hasn't opted in); characters from other worlds off by default on dedicated servers (§19 P4).
 - **Interface** (D59): tutorials (P23); controls and settings (P24); a polishing pass on every system with
   suggestions.
 - **Art and sound** (D60): the interface and the blocks drawn in code and iterated with the owner; townspeople by

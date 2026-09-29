@@ -27,7 +27,7 @@ ecology stations) let you read and steer the ecosystem.
 |---|---|
 | Art | **gpt-image-2 for characters and most art, pixel-snapped; the interface and the blocks drawn in code** (2026-09-28 — code-drawn characters were rejected; gpt-image-2 draws blocks poorly; code-drawn UI and blocks are iterated with the owner). Whole outfits. All world and item art is regenerated on the outfit pipeline, since only the outfits were made the right way. Townspeople: each drawn by gpt-image-2 with walking frames, floating hands and a face portrait, people of many ethnicities (D60). Art is made after the GDD sign-off, in test batches. The look stays the same: 32 art pixels per grid square. Every paid image call is asked first. |
 | Hosting | Like Terraria: Host & Play, joining, and a dedicated server program. Our own server is just another server, not part of the game; each server is capped at what is measured to be feasible, as Minecraft servers are. |
-| Characters | Each world keeps its own characters (as in Necesse), with a host setting that lets in characters from other worlds. |
+| Characters | Each world keeps its own characters, with a host setting that lets in characters from other worlds. |
 | Empty zones | Frozen while empty; they catch up when someone first arrives, with random events of bugs crossing borders. |
 | Cross-zone bugs | Left to me, judged on design and efficiency → swarm-level migration (below). |
 | Private plots + City Hall | Kept — central to the design: the shared world is lawless except for the town's citizens, whose property can't be taken or damaged (a message says so). |
@@ -70,7 +70,10 @@ ecology stations) let you read and steer the ecosystem.
   frozen-zone catch-up (+ border events from frozen neighbours, D57) · blocked zone entry · latent bugs (WorldEnter
   race, first-join seq stall, merge ignores nests) · reconnect · CI + release builds · internet-reality test (latency,
   bandwidth) · **a thorough review of what still runs on the server** — each piece justified now that the players'
-  computers run the simulation in step (D58) · no limit on characters per account.
+  computers run the simulation in step (D58); it comes BEFORE the frozen-zone catch-up, border events and cross-zone
+  migration, which all depend on what the server runs (§19 P10) · no limit on characters per account · **characters
+  saved every few minutes and at zone shutdown** (today only on leaving or sleeping — a crash can lose or duplicate
+  items; §19).
 - **Examine view + examine texts:** an examine view for items, recipes and bugs, and ~650 short texts with the real
   biology (owner decision: examining an item or recipe shows what it does); today hovering
   shows only the name and 2 of 654 things have a description. Written alongside the art redo, category by category.
