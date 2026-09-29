@@ -822,3 +822,10 @@ or change anything on it without the owner's permission. It is not protected fro
 penned wasps can go wild while the owner is away. *(This corrects D58 and the overview, which had carried over the
 January 2026 line that nothing on a plot is lost or damaged while its owner is away.)* The pillars (§00, P2) are
 accepted.
+
+### D68 — §00 settled: the pitch (2026-09-28)
+The long pitch stands for now: a multiplayer sandbox set in 2126, where nearly every mammal is gone and people have
+bred the bugs giant; players farm, mine, craft, build and explore however they like — most start a fly farm and grow
+from there, while others ranch ants or roam the wilds as hunters — in a living ecosystem that answers everything they
+do. It gets another look when the promotional material is made. With the pillars (D67), the misfits (D66) and the
+voices (D66), §00 is final.
