@@ -68,6 +68,7 @@ raw/ ab/ blocklab/ variants/ scratch/ ecology_charts/   sprite staging + transie
 | `sync-harness/` | the headless .NET netcode harness (`dotnet run -- --zone <id>`) |
 | `bug_lab_configs/` | ecology tuning experiment configs (json) |
 | `gdd/` | the design-document review pages: `build_page.py` (the GDD review page from `docs/gdd/*.md`) and `build_items_page.py` (the item-pass page from `docs/gdd/item_table.jsonl`); both write to the git-ignored `gdd/_build/` for publishing to claude.ai. Also `ground_edges_sheet.py`: the comparison picture for laying ground with diagonals (three drawing methods × ten layouts, from the game's own tiles) → `_generated/previews/examples/ground-edges/methods.png`; `ground_shapes_mockup.py`: the mock-up of laying shaped ground by hand (aiming zones, preview, the shovel's R/T choice, a road and a checkerboard) → `…/ground-edges/shapes_mockup.png` |
+| `viewer/` | **the sprites page, "Bug Farmer Sprites"** (the owner's request of 2026-09-30): `build_sprites_page.py` puts every sprite and animation the game uses on one page — items, objects, crops, bugs, ground, the paper-doll player, the approved outfits (not in the game yet), effects and interface — found by the game's own lookup rules. Output goes to the git-ignored `_generated/viewer/sprites/` (`index.html` to publish, `preview.html` to open on this PC); published to claude.ai — see `viewer/README.md` |
 | `archive/` | retired one-off scripts (kept for reference, never run) |
 
 Removed (dead code): `artlab/`, `lab/`, `lab_server.py` (old variant viewers),
