@@ -131,7 +131,8 @@ Picture: C:/Users/emily/BugFarmer/tools/_generated/previews/examples/ground-edge
 - **Garden plots.**
   - **The owner's rule (2026-09-30):** no shaped piece can be laid on a garden plot, so there are no partial plots.
     The ghost shows a cross and "Not on a garden plot".
-  - **Which squares the hoe can till is open;** the owner asked for help thinking it through (2026-09-30). Today the
+  - **Which squares the hoe can till: option A, chosen by the owner (2026-09-30, D72; adjustable later).** He had
+    asked for help thinking it through. Today the
     hoe tills only full grass or full dirt, in one swing, and nothing comes back (`tiles.json` tool actions). The
     options:
     - (A, recommended) **Soft ground tills where it lies.** Any square made only of soft ground (grass, dirt, sand or
@@ -186,10 +187,9 @@ Picture: C:/Users/emily/BugFarmer/tools/_generated/previews/examples/ground-edge
   - saving, loading, and the late-join snapshot.
 
 ## The owner's answers (2026-09-30) and what's still open
-- **Garden plots:** no shaped pieces on them (his rule). Which squares the hoe can till, and how plots are removed,
-  are open. The options and recommendations are above.
+- **Garden plots:** no shaped pieces on them (his rule). The hoe tills any soft square where it lies, and a hard
+  part must be dug first (option A, chosen 2026-09-30). Plot removal is a recommendation above.
 - **Laying over something:** he leans toward getting it back, as if dug up. The design above follows that, with the
   swings added so a better shovel still matters, and no undo.
 - **The base:** left to the assistant: the bare soil a dug square shows today, the same everywhere.
-- **Open, for his OK:** which squares the hoe tills (A, B or C), the plot removal, and "laying over takes the dig's
-  swings; no undo".
+- **Open, for his OK:** the plot removal, and "laying over takes the dig's swings; no undo".
