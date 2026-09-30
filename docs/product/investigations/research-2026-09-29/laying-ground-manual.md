@@ -88,12 +88,10 @@ Picture: C:/Users/emily/BugFarmer/tools/_generated/previews/examples/ground-edge
    - Lines snap straight or to 45°, one square per step, so a diagonal edge gets exactly one triangle per step.
    - A line that runs out of ground stops. The shovel then shows Dig and says so, as P12 has it, but the held button
      never starts digging; the next press does.
-6. **Two helpers.**
-   - A copy key sets the shovel to a square's ground and shape. It copies the choice, not the materials, and it's the
-     quickest way to carry on an edge or a checkerboard.
-   - Undo takes back your last laying (a whole line counts as one), but only while the square is exactly as that laying
-     left it. Any change by anyone, you included, cancels it. It returns the cost, minus anything the laying already
-     gave back.
+6. **A copy key** sets the shovel to a square's ground and shape. It copies the choice, not the materials, and it's
+   the quickest way to carry on an edge or a checkerboard.
+   - There's no undo. Nothing is lost when you lay over something (see Layers), so a mistake is fixed by laying or
+     digging again. Without undo, there's also no way to use it to duplicate materials.
 7. **An option for mouse players: "aim by pointing".** The part of the square under the pointer sets the direction:
    the corner for a diagonal, the side for a half.
    - It's on by default where squares are big enough for corners (about 1080p and up) and off below.
@@ -111,10 +109,13 @@ Picture: C:/Users/emily/BugFarmer/tools/_generated/previews/examples/ground-edge
   - a **base** that can't be dug, the same everywhere: the bare soil a dug square shows today;
   - its **ground**, a full square such as grass, dirt, sand or stone path;
   - at most **one shaped piece** on top.
-- **Laying replaces, and what it replaces is gone,** as laying works today.
-  - A full square replaces the ground and any shaped piece. A shape replaces any shaped piece.
-  - To keep what was there, dig it first. Digging keeps its hits by shovel tier (D69), and nothing is refunded, so
-    there's no instant dig that skips the tiers and no way to duplicate materials through undo.
+- **Laying over something gives it back, as if you had dug it up.** This is the owner's lean, 2026-09-30.
+  - A full square replaces the ground and any shaped piece; a shape replaces any shaped piece.
+  - Whatever was covered comes back as its materials: tile under grass gives the tile back, and wild grass gives turf,
+    exactly as digging would. The materials land where dug materials land.
+  - Laying over something takes as many swings as digging it would, so a better shovel still saves time (D69). With
+    the iron shovel it's one swing; with the wooden one, three. The cracks show the progress, as when digging.
+  - So nothing is ever lost by laying, and it can't be used as a free, instant dig.
 - **A shaped piece costs what a full square of that ground costs** (its usual recipe), and gives the same back when
   dug. The owner's rule that a square made of two materials costs both holds, because each layer is paid for when it's
   laid. D69's hits per square apply to each layer.
@@ -126,13 +127,21 @@ Picture: C:/Users/emily/BugFarmer/tools/_generated/previews/examples/ground-edge
   piece overlaps the old one instead, the old one is removed, and the ghost marks it first.
 - **Two matching pieces of the same ground join into a full square,** two halves or two opposite diagonals, and one
   recipe's worth comes back.
-- **Laying on the base,** a dug hole, is allowed.
+- **Laying on the base,** a dug hole, is allowed. The base itself can't be dug or given back.
+- **Garden plots** (the owner, 2026-09-30: no partial garden plots):
+  - The hoe makes a garden plot only on a plain square of grass or dirt, never on a square with a shaped piece.
+  - No shaped piece can be laid on a garden plot. The ghost shows a cross and "Not on a garden plot".
+  - **Removing a garden plot:** dig it with the shovel like any ground, and its soil comes back and the square goes to
+    bare soil. Or lay any full square straight over it, which gives the soil back.
+  - A plot with something growing can't be dug or covered until the crop is harvested or pulled; the ghost says so.
+  - Empty plots don't disappear by themselves, so nothing a player prepared vanishes.
 - **Refused:**
   - laying exactly what is already there;
-  - a shaped piece of the same ground as the ground under it.
-- **Another player's plot:** nothing is laid, dug or undone there (D67).
-- **A square with a shaped piece behaves as that piece's ground,** for planting, watering and walking, as the
-  prototype does (`tiles.go:99`). So a stone triangle on tilled soil stops planting there. See question 2.
+  - a shaped piece of the same ground as the ground under it;
+  - a shaped piece on a garden plot, and the hoe on a square with a shaped piece.
+- **Another player's plot:** nothing is laid or dug there (D67).
+- **A square with a shaped piece behaves as that piece's ground,** as the prototype does (`tiles.go:99`). Since
+  pieces never go on garden plots, this matters only for walking and for floors.
 
 ## For the build plan later (my calls, not the owner's)
 - **Data.** Keep one ground id per square, add a short list of shaped pieces (a material, a shape and where), and the
@@ -148,8 +157,11 @@ Picture: C:/Users/emily/BugFarmer/tools/_generated/previews/examples/ground-edge
 - **The bug simulation doesn't read ground today;** ground never blocks bugs (`TilemapManager.cs:1467-1471`). So
   there's no sync risk now. If "bugs never appear on a floor" is built, it reads the use rule above, through the
   determinism checks.
-- **Server.** It checks each change against the square as the client saw it, and handles costs, joins, the plot rule
-  and a short undo history per player.
+- **Server.** It checks each change against the square as the client saw it, and handles costs, give-backs, joins,
+  swings and the plot rule.
+- **Give-backs must match costs exactly.** For every ground, digging it and laying over it return exactly the recipe
+  that laying it costs. Check the current recipes and dig results line by line (for example stone floor costs 2 stone),
+  or laying and covering could slowly create or lose materials.
 - **Keys.** T, the rotate key and the copy key are placeholders until the controls section settles them, and every key
   can be rebound. The copy key isn't called "pick up", because that is P24's item pick-up.
 - **Screens.** Whole-number scaling and a zoom are planned settings (P24). A zoom while shaping would help small
@@ -159,14 +171,14 @@ Picture: C:/Users/emily/BugFarmer/tools/_generated/previews/examples/ground-edge
   - gamepad, no holds, and lines along a 45° edge;
   - joining, and digging order;
   - plot borders;
-  - two players on one square, and undo conflicts;
+  - laying over each kind of ground at each shovel tier, with the give-backs counted;
+  - garden plots: hoe, dig and cover, with and without a crop;
+  - two players on one square;
   - saving, loading, and the late-join snapshot.
 
-## Questions for the owner
-1. **The base** is the bare soil a dug square shows today, the same everywhere. All right?
-2. **A square with a shaped piece behaves as the piece's ground,** for planting, watering and walking, so a stone
-   triangle on tilled soil means no planting there. Or should the piece be only for looks, with the square keeping its
-   ground's use?
-3. **Laying over something destroys it,** as laying does today. To keep it you dig it first, so a better shovel still
-   saves time. The downside: a mistake is lost unless you undo it straight away. Or would you rather get the old ground
-   back at once? That would make laying a free, instant dig.
+## The owner's answers (2026-09-30) and what's still open
+- **Garden plots:** no shaped pieces on them, and the hoe makes them. The removal above is the recommendation.
+- **Laying over something:** he leans toward getting it back, as if dug up. The design above follows that, with the
+  swings added so a better shovel still matters, and no undo.
+- **The base:** left to the assistant: the bare soil a dug square shows today, the same everywhere.
+- **Open, for his OK:** the garden-plot removal, and "laying over takes the dig's swings; no undo".
