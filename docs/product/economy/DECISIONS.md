@@ -871,3 +871,12 @@ The owner marked the first 34 rows of the item pass; these are settled with his 
 - **Testing grows with the game** as ongoing work, not a backlog item: test zones (a gardening one, for example) and
   more of what the assistant can run itself, such as Unity's command-line tools and screenshots, as each remaining
   system is built.
+
+### D70 — Laying ground: shapes placed by hand (2026-09-29)
+Building freedom comes first, so ground shapes are placed by hand rather than drawn automatically (the automatic
+proposal of the same day is set aside). Players must be able to build checkerboards and other patterns; full squares
+and the four diagonals are required, for roads, and straight halves and quarters are welcome only if the controls stay
+simple on small screens. A shape is laid on top of whatever ground is already in the square, so one material is chosen.
+Digging peels layers away down to a shared base that can't be dug, so a square is never empty. There is always a
+preview. How the controls work is the assistant's to design (D45); the design and its open questions are in
+`docs/product/investigations/research-2026-09-29/laying-ground-manual.md`.
