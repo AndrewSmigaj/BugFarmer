@@ -880,3 +880,10 @@ simple on small screens. A shape is laid on top of whatever ground is already in
 Digging peels layers away down to a shared base that can't be dug, so a square is never empty. There is always a
 preview. How the controls work is the assistant's to design (D45); the design and its open questions are in
 `docs/product/investigations/research-2026-09-29/laying-ground-manual.md`.
+
+### D71 — Laying ground: garden plots, what's covered, the base (2026-09-30)
+No shaped piece can be laid on a garden plot, which the hoe makes; partial garden plots are not wanted. The assistant
+is to suggest how garden plots are removed. On laying over something, the owner leans toward getting it back as its
+materials, as if dug up (a tile under grass comes back as the tile), rather than losing it; the assistant is to think
+it through and recommend. The base under all ground is left to the assistant. The recommendations are in
+`docs/product/investigations/research-2026-09-29/laying-ground-manual.md`.
