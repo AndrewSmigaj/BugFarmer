@@ -86,7 +86,10 @@ Village, Bee Meadow, Mining Camp, Ant Tunnels, Ant Colony (4,0) + Queen — each
 (D53) — plus the systems that land with them (progression backbone, armour + stats, catching gear + bug storage,
 cooking + potions basics, fishing in the village (D51), ecology stations + tab, tutorials, private plots + City Hall, the whole-outfit player art
 in the game (its own plan: published size, equip model, starter outfit, tool motions — owner decisions in GDD §08),
-the regenerated world art for these zones, cross-zone migration). Timed → the real estimate for Phase 3.
+the regenerated world art for these zones, cross-zone migration). Every scene is redone, the buildings better
+planned, starting from where each zone stands — the groundwork for the new zones (owner, 2026-09-29, D69). Test
+zones and the assistant's own testing tools (Unity's command line, screenshots) grow alongside, as ongoing work
+rather than backlog items. Timed → the real estimate for Phase 3.
 
 ### Phase 3 — new zones in rings, each a complete package
 Ring B: Wasp Thicket, Butterfly Fields, Hilltop Meadow, Centipede Cavern, Underground River ·

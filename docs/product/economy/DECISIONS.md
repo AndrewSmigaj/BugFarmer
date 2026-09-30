@@ -118,6 +118,7 @@ Base metal sets = **leather · padded(cloth) · copper · bronze · iron · stee
 - Per-zone armour DEFENSE values get tuned against each zone's enemy damage → **backlog** (armour-balance).
 
 ### D12 — Tools: trim to "metal tiers + a few meaningful specials"
+*Partly replaced 2026-09-29 (D69): axes are stone, iron and steel; an axe can fell a big tree, slowly, and the saw is much faster; the cast net is settled.*
 - **Picks:** metal tiers only — NO special pick variants. **Cut** `deepcut_pick`, `fortune_drill`,
   `fortune_pick`, `scorpion_pick`(as tool). (effective-tool-tier is a property of higher picks, not a separate
   tool.)
@@ -624,6 +625,7 @@ along with the missing stations and everything else in crafting that doesn't wor
 recolouring method built for it.
 
 ### D45 — Building and homes
+*2026-09-29 (D69): diagonal ground is being reconsidered — the assistant designs how laying ground works, diagonals included; whole squares stand until then.*
 Players build houses (walls, floors, doors), and can live in the village by building their own house there; they may
 sleep only in abandoned beds, never in one that belongs to someone. Doors turn to fit the wall they are placed in,
 which needs a second, side-facing door sprite. Ground is laid in whole grid squares — the diagonal shapes go. The
@@ -760,6 +762,7 @@ plants — solid things such as standing stones sway today. The assistant makes 
 whatever method works best, without paid services; the owner has music packs, and each zone can have its own music.
 
 ### D61 — The overview's P20–P26 answered (2026-09-28)
+*Renamed 2026-09-29 (D69): the top rung is tungsten steel, not tungsten carbide, and the top pickaxe has no gold-coloured finish.*
 P20 accepted with eight rungs and without manganese steel — the assistant put cobalt steel on that rung instead: wood,
 stone, copper, bronze, iron, steel, cobalt steel, tungsten carbide; no gold, silver or platinum tools. Armour follows
 the tool metals, and platinum goes into fancy armour that also needs steel, sells well as money, and appears in
@@ -829,3 +832,42 @@ bred the bugs giant; players farm, mine, craft, build and explore however they l
 from there, while others ranch ants or roam the wilds as hunters — in a living ecosystem that answers everything they
 do. It gets another look when the promotional material is made. With the pillars (D67), the misfits (D66) and the
 voices (D66), §00 is final.
+
+### D69 — The item pass, first batch: pickaxes, axes, shovels and the tool families (2026-09-29)
+The owner marked the first 34 rows of the item pass; these are settled with his notes.
+- **Pickaxes.** The eight rungs stay, copper and bronze both: each opens its own ore, and both outfits are already
+  made. The top two rungs are called cobalt steel and tungsten steel — tungsten steel replaces tungsten carbide (D61),
+  made at the forge from steel and tungsten the way cobalt steel is. The top pickaxe gets no gold-coloured finish, so it
+  can't read as a gold pickaxe; the rock drill has tungsten-steel bits.
+- **Axes.** A stone axe comes first, made from wood and stone at the village workbench, which an early task has the
+  player do; then iron, then steel. The wooden and copper axes go. Trees come in two kinds of wood, ordinary and hard,
+  each with big trees: the stone axe fells ordinary trees, hardwood needs iron, and steel is faster on both. An axe
+  can fell a big tree, very slowly; the saw does it much faster (this replaces "only the saw fells a big tree", D12 and
+  P21). The chainsaw tops the line, fast on every tree. A tree overview goes to the owner when the design reaches the
+  world.
+- **Shovels.** Wooden, copper and iron. Each takes one hit fewer per square at the same swing speed — three, two, one —
+  on dirt blocks and ground alike. Digging is meant as an early-game skill that tops out a few sessions in, and tool
+  lines may finish at different speeds, some early, some climbing all game. The shovel keeps all three jobs — digging
+  dirt blocks, digging up ground and laying ground — on the square the player points at, within reach. Past the iron
+  shovel, the faster step is a powered spade that chews through dirt when held against it, so the player tunnels
+  faster: the power tool for dirt, beside the rock drill and the chainsaw.
+- **Hoe and scythe.** Wooden, copper and iron, covering one square, then up to two by two, then up to three by three;
+  R picks the size and the cursor outlines the squares first. Playtesting confirms the sizes.
+- **Nets.** The small and large hand nets as the owner described them: the small net takes a few small bugs; the
+  large one takes more flies per swing and bigger bugs such as wasps; which nets can hold a bug is set per species,
+  and examining a bug tells at once which nets can't, while its other facts (bait, breeding needs) open with more
+  examining. The cast net is thrown and never stays in the world; the placed trap is the net that stays put (D63).
+- **Crafting.** Nothing is made by hand: every recipe needs a station, torches included — a separate system for a few
+  items isn't worth it. An early task points new players to the village workbench, where they make their first stone
+  axe. A player's own workbench can be picked up and carried; a player heading into the dark brings torches or a
+  workbench, as in Terraria, where a player who runs out of light is left in the dark. How a stranded player gets
+  home is open: a device that sends a player home would be used as a free warp, and what players like best is unknown.
+- **Laying ground.** The owner would prefer diagonal ground too — roads look better with it — but worried players
+  might find it confusing; the assistant designs how laying ground works, diagonals included, with the controls and
+  screens that make it easy, and brings suggestions. Until then, whole squares (D45, P12) stand.
+- **The first zones come first.** Before new zones are built, the owner and the assistant redo the first zones —
+  every scene, the buildings included — starting from where they stand, to see how it goes and get the groundwork
+  right for the rest (the roadmap's phase 2).
+- **Testing grows with the game** as ongoing work, not a backlog item: test zones (a gardening one, for example) and
+  more of what the assistant can run itself, such as Unity's command-line tools and screenshots, as each remaining
+  system is built.

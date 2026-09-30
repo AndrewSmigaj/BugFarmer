@@ -57,7 +57,7 @@ def load():
                 problems.append(f"line {n}: where {it.get('where')!r}")
             if it.get("group") not in dict(GROUPS):
                 it["group"] = "other"
-            items.append({k: it.get(k, "") for k in ("id", "name", "group", "where", "verdict", "change", "reason")})
+            items.append({k: it.get(k, "") for k in ("id", "name", "group", "where", "verdict", "change", "reason", "decided")})
     return items, problems
 
 
