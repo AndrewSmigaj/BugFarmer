@@ -1,0 +1,651 @@
+<title>Bug Farmer Sprites</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Pixelify+Sans:wght@600&display=swap">
+<style>
+/* Built by tools/viewer/build_sprites_page.py — generated, never edited by hand. */
+:root {
+  color-scheme: light;
+  --ground: #edf0e9;
+  --surface: #f8faf6;
+  --raised: #ffffff;
+  --ink: #1a211c;
+  --muted: #5a675d;
+  --line: #d2d9ce;
+  --accent: #3d6a36;
+  --accent-soft: #dfe9da;
+  --accent-ink: #ffffff;
+  --amber: #9a6410;
+  --amber-soft: #f4e6cc;
+  --chk-a: #e3e7df;
+  --chk-b: #d4dad0;
+  --dark-stage: #232a25;
+  --shadow: 0 1px 2px rgb(20 32 22 / .07), 0 8px 24px rgb(20 32 22 / .07);
+  --focus: #2f6fb1;
+  --f-display: "Pixelify Sans", "Atkinson Hyperlegible", system-ui, sans-serif;
+  --f-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --cell: 48px;
+  --tile-grass: none;
+  --tile-dirt: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #111512;
+    --surface: #171c18;
+    --raised: #1d231f;
+    --ink: #e3e9e2;
+    --muted: #97a49a;
+    --line: #2b342d;
+    --accent: #8cbf76;
+    --accent-soft: #24331f;
+    --accent-ink: #0f1410;
+    --amber: #e3a948;
+    --amber-soft: #3a2d15;
+    --chk-a: #262d27;
+    --chk-b: #1f2520;
+    --dark-stage: #0c0f0d;
+    --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px rgb(0 0 0 / .25);
+    --focus: #7fb2ea;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #111512;
+  --surface: #171c18;
+  --raised: #1d231f;
+  --ink: #e3e9e2;
+  --muted: #97a49a;
+  --line: #2b342d;
+  --accent: #8cbf76;
+  --accent-soft: #24331f;
+  --accent-ink: #0f1410;
+  --amber: #e3a948;
+  --amber-soft: #3a2d15;
+  --chk-a: #262d27;
+  --chk-b: #1f2520;
+  --dark-stage: #0c0f0d;
+  --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px rgb(0 0 0 / .25);
+  --focus: #7fb2ea;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }   /* the drawer and scrim set their own display */
+html, body { background: var(--ground); color: var(--ink); }
+body { font-family: var(--f-body); font-size: 15px; line-height: 1.45; margin: 0; }
+.wrap { max-width: 1320px; margin: 0 auto; padding-inline: 16px; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+img.px, canvas.px { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+
+/* ---- header ---- */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--ground);
+  border-bottom: 1px solid var(--line); }
+.top .wrap { display: grid; gap: 10px; padding-block: 14px 0; }
+.brand { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+h1 { font-family: var(--f-display); font-weight: 600; font-size: 28px; letter-spacing: .01em; margin: 0; line-height: 1.1; }
+.sub { margin: 0; color: var(--muted); font-size: 14px; max-width: 72ch; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.search input { width: min(320px, 100%); padding: 7px 11px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--raised); }
+.search { flex: 1 1 220px; max-width: 340px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--raised); }
+.seg button { border: 0; background: transparent; padding: 6px 10px; cursor: pointer; font-size: 13px; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.seg-label { font-size: 12px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-right: 2px; }
+.ctl { display: inline-flex; align-items: center; gap: 6px; }
+.playbtn { border: 1px solid var(--line); background: var(--raised); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 13px; }
+.tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: thin; margin-inline: -4px; padding-inline: 4px; }
+.tabs button { border: 0; background: transparent; padding: 9px 12px 10px; cursor: pointer; white-space: nowrap;
+  border-bottom: 3px solid transparent; font-weight: 700; color: var(--muted); font-size: 14px; }
+.tabs button .n { font-family: var(--f-mono); font-weight: 400; font-size: 12px; margin-left: 5px; opacity: .8; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+
+/* ---- main ---- */
+main { padding-block: 18px 40px; }
+.intro { color: var(--muted); max-width: 78ch; margin: 0 0 14px; font-size: 14px; }
+.intro strong { color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; }
+.chips button { border: 1px solid var(--line); background: var(--raised); border-radius: 999px; padding: 3px 11px;
+  cursor: pointer; font-size: 13px; }
+.chips button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); font-weight: 700; }
+.chips .n { font-family: var(--f-mono); font-size: 11px; color: var(--muted); margin-left: 4px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; }
+.card { display: flex; flex-direction: column; gap: 6px; padding: 8px; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 10px; cursor: pointer; text-align: left; min-width: 0; }
+.card:hover { border-color: var(--accent); }
+.card .stage { height: 116px; }
+.card .nm { font-weight: 700; font-size: 13px; line-height: 1.25; overflow-wrap: anywhere; }
+.card .id { font-family: var(--f-mono); font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+.badges { display: flex; flex-wrap: wrap; gap: 4px; }
+.badge { font-size: 11px; padding: 1px 6px; border-radius: 4px; background: var(--accent-soft); color: var(--ink); }
+.badge.anim { background: var(--amber-soft); color: var(--ink); }
+.empty { color: var(--muted); padding: 30px 0; }
+
+/* stages: where a sprite is drawn */
+.stage { display: grid; place-items: center; overflow: hidden; border-radius: 7px; position: relative; }
+.bg-checker .stage, .stage.bg-checker { background: repeating-conic-gradient(var(--chk-a) 0 25%, var(--chk-b) 0 50%) 0 0 / 16px 16px; }
+.bg-grass .stage { background-image: var(--tile-grass); background-size: var(--cell) var(--cell); image-rendering: pixelated; }
+.bg-dirt .stage { background-image: var(--tile-dirt); background-size: var(--cell) var(--cell); image-rendering: pixelated; }
+.bg-dark .stage { background: var(--dark-stage); }
+.nopic { width: 64px; height: 64px; border: 2px dashed var(--line); border-radius: 8px; display: grid; place-items: center;
+  color: var(--muted); font-size: 11px; text-align: center; line-height: 1.2; background: var(--surface); }
+
+/* rows (crops, bugs' extras, player) */
+.row-list { display: grid; gap: 12px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.panel h2, .panel h3 { margin: 0 0 8px; font-size: 16px; }
+.panel h2 .id, .panel h3 .id { font-family: var(--f-mono); font-weight: 400; font-size: 12px; color: var(--muted); margin-left: 6px; }
+.strip { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+.strip figure { margin: 0; display: grid; gap: 4px; justify-items: center; }
+.strip figcaption { font-family: var(--f-mono); font-size: 11px; color: var(--muted); text-align: center; }
+.strip .stage { padding: 6px; min-width: 48px; min-height: 48px; }
+.arrow { color: var(--muted); align-self: center; font-size: 18px; }
+.section-h { font-size: 18px; margin: 26px 0 10px; }
+.section-h:first-child { margin-top: 0; }
+.note { font-size: 13px; color: var(--muted); max-width: 78ch; margin: 0 0 12px; }
+
+/* player dresser */
+.dresser { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 760px) { .dresser { grid-template-columns: 1fr; } }
+.dresser label { display: grid; gap: 3px; font-size: 13px; color: var(--muted); }
+.dresser select { padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--raised); color: var(--ink); }
+.dress-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; }
+.dirs { display: flex; flex-wrap: wrap; gap: 12px; }
+.dirs figure { margin: 0; display: grid; gap: 4px; justify-items: center; }
+.dirs figcaption { font-size: 12px; color: var(--muted); }
+.dirs .stage { padding: 8px 14px; }
+
+/* outfits */
+.outfit { display: grid; gap: 10px; }
+.gifstage { background: #96a096; border-radius: 10px; overflow: hidden; display: grid; place-items: center; max-width: 100%; }
+.gifstage img { max-width: 100%; height: auto; image-rendering: pixelated; }
+.animchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.animchips button { border: 1px solid var(--line); background: var(--raised); border-radius: 999px; padding: 3px 10px; cursor: pointer;
+  font-family: var(--f-mono); font-size: 12px; }
+.animchips button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.warn { border-left: 4px solid var(--amber); background: var(--amber-soft); padding: 8px 12px; border-radius: 6px; font-size: 14px;
+  max-width: 78ch; margin: 0 0 16px; }
+
+/* detail drawer */
+.detail { position: fixed; z-index: 40; top: 0; right: 0; bottom: 0; width: min(560px, 100%); background: var(--raised);
+  border-left: 1px solid var(--line); box-shadow: var(--shadow); display: flex; flex-direction: column;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.detail header { display: flex; align-items: start; gap: 10px; padding: 14px 16px 10px; border-bottom: 1px solid var(--line); }
+.detail header h2 { margin: 0; font-size: 19px; line-height: 1.2; }
+.detail header .id { font-family: var(--f-mono); font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.detail .close { margin-left: auto; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 5px 10px; cursor: pointer; }
+.detail .body { overflow: auto; padding: 14px 16px 24px; display: grid; gap: 14px; align-content: start; }
+.detail .bigstage { min-height: 160px; padding: 18px; overflow: auto; place-items: center; }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 0; font-size: 14px; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; overflow-wrap: anywhere; }
+.files { font-family: var(--f-mono); font-size: 12px; color: var(--muted); display: grid; gap: 2px; overflow-wrap: anywhere; }
+.scrim { position: fixed; inset: 0; z-index: 30; background: rgb(0 0 0 / .25); }
+
+footer { color: var(--muted); font-size: 12px; padding-block: 14px 26px; border-top: 1px solid var(--line); }
+footer code { font-family: var(--f-mono); }
+@media (max-width: 560px) { h1 { font-size: 23px; } .card .stage { height: 96px; } .grid { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="top">
+  <div class="wrap">
+    <div class="brand">
+      <h1>Bug Farmer Sprites</h1>
+      <p class="sub" id="sub"></p>
+    </div>
+    <div class="controls">
+      <label class="search"><span class="vh">Search this tab</span><input id="q" type="search" placeholder="Search by name or id" autocomplete="off"></label>
+      <span class="ctl"><span class="seg-label">Zoom</span><span class="seg" id="zoom" role="group" aria-label="Zoom"></span></span>
+      <span class="ctl"><span class="seg-label">Behind</span><span class="seg" id="bg" role="group" aria-label="Background"></span></span>
+      <button class="playbtn" id="play" type="button" aria-pressed="true">Pause animations</button>
+    </div>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="Kinds of sprite"></nav>
+  </div>
+</div>
+<main class="wrap" id="main" tabindex="-1"></main>
+<footer class="wrap" id="foot"></footer>
+<div class="scrim" id="scrim" hidden></div>
+<aside class="detail" id="detail" hidden aria-labelledby="d-title" role="dialog">
+  <header>
+    <div><h2 id="d-title"></h2><div class="id" id="d-id"></div></div>
+    <button class="close" id="d-close" type="button">Close</button>
+  </header>
+  <div class="body" id="d-body"></div>
+</aside>
+
+<script id="bf-data" type="application/json">/*__DATA__*/null</script>
+<script>
+(() => {
+  "use strict";
+  const D = JSON.parse(document.getElementById("bf-data").textContent);
+  const S = D.sprites;
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const reduce = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem("bfs." + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem("bfs." + k, JSON.stringify(v)); } catch (e) { /* storage may be off */ } },
+  };
+
+  const TABS = [
+    { id: "items", label: "Items", n: D.items.length },
+    { id: "objects", label: "Objects", n: D.objects.length },
+    { id: "crops", label: "Crops", n: D.crops.length },
+    { id: "bugs", label: "Bugs", n: D.bugs.length },
+    { id: "tiles", label: "Ground", n: D.tiles.length },
+    { id: "player", label: "Player", n: D.player.classes.length },
+    { id: "outfits", label: "Approved outfits", n: D.outfits.length },
+    { id: "effects", label: "Effects & interface", n: D.effects.length + D.ui.length },
+  ];
+  const ZOOMS = [1, 2, 3, 4, 6];
+  const BGS = [["checker", "Checker"], ["grass", "Grass"], ["dirt", "Dirt"], ["dark", "Dark"]];
+  const st = {
+    tab: TABS.some(t => t.id === location.hash.slice(1)) ? location.hash.slice(1) : store.get("tab", "items"),
+    zoom: store.get("zoom", 3), bg: store.get("bg", "checker"), q: "", chip: "all", playing: !reduce,
+  };
+  if (!ZOOMS.includes(st.zoom)) st.zoom = 3;
+  if (!BGS.some(b => b[0] === st.bg)) st.bg = "checker";
+  if (!TABS.some(t => t.id === st.tab)) st.tab = "items";
+
+  // ---- the animation clock: every animated <img> swaps its frame from one loop --------------------------
+  let anims = [];
+  function animate(img, frames, fps) {
+    if (!frames || frames.length < 2) return;
+    anims.push({ img, frames, fps, i: 0 });
+  }
+  function loop(t) {
+    if (st.playing) {
+      for (const a of anims) {
+        const i = Math.floor(t / 1000 * a.fps) % a.frames.length;
+        if (i !== a.i) { a.i = i; const s = a.frames[i]; a.img.src = typeof s === "string" ? S[s].src : s; }
+      }
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  // ---- drawing a sprite ------------------------------------------------------------------------------------
+  // gw, gh = the size the game draws it at, in game pixels (16 to a cell); default = the picture's own size.
+  function pic(key, scale, gw, gh) {
+    const s = S[key];
+    const img = new Image();
+    img.className = "px"; img.alt = ""; img.decoding = "async"; img.src = s.src;
+    img.width = Math.max(1, Math.round((gw || s.w) * scale));
+    img.height = Math.max(1, Math.round((gh || s.h) * scale));
+    return img;
+  }
+  function fit(w, h, box) {
+    let s = Math.min(st.zoom, Math.floor(box / Math.max(w, h)));
+    if (s < 1) s = box / Math.max(w, h);
+    return s;
+  }
+  function nopic() { return el("div", "nopic", "no picture"); }
+  function stage(cls) { return el("div", "stage" + (cls ? " " + cls : "")); }
+  function cells(gw, gh) {
+    const f = (v) => (v / 16 % 1 === 0 ? String(v / 16) : (v / 16).toFixed(2).replace(/0$/, ""));
+    return f(gw) + " × " + f(gh) + " cells";
+  }
+
+  // ---- header + controls ------------------------------------------------------------------------------------
+  const nAnim = D.bugs.filter(b => b.frames.length > 1).length + D.crops.length + D.effects.length
+    + D.player.classes.length * 4 + D.outfits.reduce((a, o) => a + o.anims.length, 0);
+  $("sub").textContent = "Every sprite and animation in the game, straight from its own files: "
+    + D.counts.sprites.toLocaleString() + " pictures, " + nAnim + " animations. Bugs flap and the player walks at the game's own speeds.";
+  function setCssTiles() {
+    const r = document.documentElement.style;
+    if (S["Tiles/grass"]) r.setProperty("--tile-grass", "url(" + S["Tiles/grass"].src + ")");
+    if (S["Tiles/dirt"]) r.setProperty("--tile-dirt", "url(" + S["Tiles/dirt"].src + ")");
+    r.setProperty("--cell", (16 * st.zoom) + "px");
+  }
+  function buildControls() {
+    const z = $("zoom"); z.textContent = "";
+    for (const v of ZOOMS) {
+      const b = el("button", null, v + "×"); b.type = "button"; b.setAttribute("aria-pressed", String(v === st.zoom));
+      b.addEventListener("click", () => { st.zoom = v; store.set("zoom", v); setCssTiles(); buildControls(); render(); });
+      z.append(b);
+    }
+    const g = $("bg"); g.textContent = "";
+    for (const [v, label] of BGS) {
+      const b = el("button", null, label); b.type = "button"; b.setAttribute("aria-pressed", String(v === st.bg));
+      b.addEventListener("click", () => { st.bg = v; store.set("bg", v); applyBg(); buildControls(); });
+      g.append(b);
+    }
+    const t = $("tabs"); t.textContent = "";
+    for (const tab of TABS) {
+      const b = el("button"); b.type = "button"; b.setAttribute("role", "tab"); b.id = "tab-" + tab.id;
+      b.setAttribute("aria-selected", String(tab.id === st.tab));
+      b.append(document.createTextNode(tab.label)); b.append(el("span", "n", String(tab.n)));
+      b.addEventListener("click", () => { st.tab = tab.id; st.chip = "all"; st.q = ""; $("q").value = "";
+        store.set("tab", tab.id); history.replaceState(null, "", "#" + tab.id); buildControls(); render(); $("main").focus({ preventScroll: true }); });
+      t.append(b);
+    }
+    const p = $("play");
+    p.setAttribute("aria-pressed", String(st.playing));
+    p.textContent = st.playing ? "Pause animations" : "Play animations";
+  }
+  function applyBg() {
+    document.body.classList.remove("bg-checker", "bg-grass", "bg-dirt", "bg-dark");
+    document.body.classList.add("bg-" + st.bg);
+  }
+  $("play").addEventListener("click", () => { st.playing = !st.playing; buildControls(); });
+  $("q").addEventListener("input", (e) => { st.q = e.target.value.trim().toLowerCase(); render(); });
+
+  function matches(e) {
+    if (!st.q) return true;
+    return (e.name || "").toLowerCase().includes(st.q) || (e.id || "").toLowerCase().includes(st.q);
+  }
+
+  // ---- a grid of cards (items, objects, tiles, interface) ---------------------------------------------------
+  function chipsFor(list, onPick) {
+    const counts = {};
+    for (const e of list) counts[e.group] = (counts[e.group] || 0) + 1;
+    const none = list.filter(e => !e.frames.length).length;
+    const box = el("div", "chips");
+    const mk = (id, label, n) => {
+      const b = el("button"); b.type = "button"; b.setAttribute("aria-pressed", String(st.chip === id));
+      b.append(document.createTextNode(label)); b.append(el("span", "n", String(n)));
+      b.addEventListener("click", () => { st.chip = id; onPick(); });
+      box.append(b);
+    };
+    mk("all", "All", list.length);
+    for (const g of Object.keys(counts).sort()) mk(g, g, counts[g]);
+    if (none) mk("__none", "no picture yet", none);
+    return box;
+  }
+  function card(e, opts) {
+    const b = el("button", "card"); b.type = "button";
+    const sg = stage();
+    const f = e.frames;
+    if (f.length) {
+      const s = S[f[0]];
+      const gw = (opts.game && e.game) ? e.game[0] : s.w, gh = (opts.game && e.game) ? e.game[1] : s.h;
+      const img = pic(f[0], fit(gw, gh, 104), gw, gh);
+      sg.append(img); animate(img, f, e.fps || 4);
+    } else sg.append(nopic());
+    b.append(sg, el("div", "nm", e.name), el("div", "id", e.id));
+    const bd = el("div", "badges");
+    if (opts.game && e.game) bd.append(el("span", "badge", cells(e.game[0], e.game[1])));
+    if (f.length > 1) bd.append(el("span", "badge anim", (e.anim || "animated") + " · " + f.length + " frames"));
+    if (e.variants && e.variants.length) bd.append(el("span", "badge", (e.variants.length + 1) + " variants"));
+    if (bd.childElementCount) b.append(bd);
+    b.addEventListener("click", () => openDetail(e, opts));
+    return b;
+  }
+  function grid(list, opts) {
+    const frag = document.createDocumentFragment();
+    if (opts.intro) frag.append(opts.intro);
+    let shown = list.filter(matches);
+    if (opts.chips) {
+      frag.append(chipsFor(list.filter(matches), () => render()));
+      if (st.chip === "__none") shown = shown.filter(e => !e.frames.length);
+      else if (st.chip !== "all") shown = shown.filter(e => e.group === st.chip);
+    }
+    const g = el("div", "grid");
+    for (const e of shown) g.append(card(e, opts));
+    frag.append(shown.length ? g : el("p", "empty", "Nothing matches."));
+    return frag;
+  }
+  function intro(html) { const p = el("p", "intro"); p.innerHTML = html; return p; }
+
+  // ---- tabs -------------------------------------------------------------------------------------------------
+  const R = {};
+  R.items = () => grid(D.items, { chips: true, game: false, kind: "item",
+    intro: intro("Each item's <strong>inventory icon</strong>, found the way the game finds it: an object picture first, then the item's own icon. Click one for its details.") });
+  R.objects = () => grid(D.objects, { chips: true, game: true, kind: "object",
+    intro: intro("Everything placed in the world, drawn at the <strong>size the game draws it</strong> (16 game pixels to a cell). The townspeople are here too.") });
+  R.tiles = () => {
+    const frag = document.createDocumentFragment();
+    frag.append(grid(D.tiles, { chips: false, game: true, kind: "tile",
+      intro: intro("Every ground tile type, one cell each. Grass has four extra variants the game mixes square by square.") }));
+    if (D.tufts.length) {
+      frag.append(el("h2", "section-h", "Grass tufts, drawn on top of the grass"));
+      const s = el("div", "strip");
+      for (const k of D.tufts) { const f = el("figure"); const sg = stage(); sg.append(pic(k, st.zoom)); f.append(sg, el("figcaption", null, k.split("/").pop())); s.append(f); }
+      frag.append(s);
+    }
+    return frag;
+  };
+  R.crops = () => {
+    const frag = document.createDocumentFragment();
+    frag.append(intro("Each crop's <strong>growth stages</strong>, in order and at in-game size, then what it gives at harvest. The growth plays slowly here; in the game each stage takes days."));
+    const list = el("div", "row-list");
+    for (const c of D.crops.filter(matches)) {
+      const p = el("section", "panel");
+      const h = el("h2", null, c.name); h.append(el("span", "id", c.id + "_stage0…" + (c.frames.length - 1)));
+      p.append(h);
+      const s = el("div", "strip");
+      c.frames.forEach((k, i) => {
+        const f = el("figure"); const sg = stage(); const sz = c.sizes[i] || [];
+        sg.append(pic(k, st.zoom, sz[0], sz[1])); f.append(sg, el("figcaption", null, "stage " + i)); s.append(f);
+      });
+      const f = el("figure"); const sg = stage(); const img = pic(c.frames[0], st.zoom, (c.sizes[0] || [])[0], (c.sizes[0] || [])[1]);
+      sg.append(img); animate(img, c.frames, c.fps); f.append(sg, el("figcaption", null, "growing")); s.append(el("span", "arrow", "·"), f);
+      if (c.harvest) { const f2 = el("figure"); const sg2 = stage(); sg2.append(pic(c.harvest, st.zoom)); f2.append(sg2, el("figcaption", null, "harvest")); s.append(el("span", "arrow", "→"), f2); }
+      p.append(s);
+      p.addEventListener("click", () => openDetail(c, { game: false, kind: "crop" }));
+      p.style.cursor = "pointer";
+      list.append(p);
+    }
+    frag.append(list);
+    return frag;
+  };
+  R.bugs = () => {
+    const frag = document.createDocumentFragment();
+    frag.append(intro("Each species as the game draws it, <strong>flapping at the game's rate</strong> (11 frames a second; flies buzz at 20). Open one for its frames, its eggs and young, and its body segments."));
+    frag.append(grid(D.bugs, { chips: false, game: false, kind: "bug" }));
+    return frag;
+  };
+  R.effects = () => {
+    const frag = document.createDocumentFragment();
+    frag.append(grid(D.effects, { chips: false, game: false, kind: "effect",
+      intro: intro("The breaking overlay, shown in turn. In the game each stage appears as the damage builds up.") }));
+    frag.append(el("h2", "section-h", "Interface"));
+    frag.append(grid(D.ui, { chips: false, game: false, kind: "ui" }));
+    return frag;
+  };
+
+  // ---- player: the paper doll, composed exactly as the game stacks it ----------------------------------------
+  const P = D.player;
+  const dress = Object.assign({ body: "default", hair: "brown", shirt: "farmer", pants: "farmer", legs: "", feet: "", chest: "", arms: "", helmet: "" }, store.get("dress", {}));
+  function layerKey(slot, style, dir, suf) { return "Player/layers/" + slot + "/" + style + "_" + dir + suf; }
+  const composeCache = new Map();
+  function composeFrame(dir, suf) {
+    const ck = JSON.stringify(dress) + dir + suf;
+    if (composeCache.has(ck)) return composeCache.get(ck);
+    const c = document.createElement("canvas"); c.width = 16; c.height = 32;
+    const ctx = c.getContext("2d");
+    const hideHair = dress.helmet && P.hidesHair.includes(dress.helmet);
+    const jobs = [];
+    for (const slot of P.order) {
+      const style = dress[slot];
+      if (!style || (slot === "hair" && hideHair)) continue;
+      const k = layerKey(slot, style, dir, suf);
+      if (S[k]) jobs.push(S[k].src);
+    }
+    const done = Promise.all(jobs.map(src => new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; })))
+      .then(imgs => { for (const i of imgs) if (i) ctx.drawImage(i, 0, 0); return c.toDataURL(); });
+    composeCache.set(ck, done);
+    return done;
+  }
+  R.player = () => {
+    const frag = document.createDocumentFragment();
+    frag.append(intro("The game builds the player from <strong>layered parts</strong>, stacked in a fixed order (body, trousers, leg armour, boots, shirt, chest armour, gloves, hair, helmet), and walks through four frames at <strong>7 a second</strong>. Dress the figure below to see any combination the game can make."));
+    const box = el("section", "panel dresser");
+    const ctl = el("div", "dress-controls");
+    const labels = { body: "Skin", hair: "Hair", shirt: "Shirt (class)", pants: "Trousers (class)", helmet: "Helmet", chest: "Chest armour", arms: "Gloves", legs: "Leg armour", feet: "Boots" };
+    const optional = new Set(["helmet", "chest", "arms", "legs", "feet"]);
+    const dirsBox = el("div", "dirs");
+    const redraw = () => {
+      dirsBox.textContent = "";
+      anims = anims.filter(a => !a.dresser);
+      for (const dir of P.dirs) {
+        const f = el("figure"); const sg = stage(); const img = new Image(); img.className = "px"; img.alt = "";
+        img.width = 16 * st.zoom * 1.5; img.height = 32 * st.zoom * 1.5;
+        sg.append(img); f.append(sg, el("figcaption", null, dir)); dirsBox.append(f);
+        Promise.all(P.walk.map(suf => composeFrame(dir, suf))).then(frames => {
+          img.src = frames[1];
+          const a = { img, frames, fps: P.walkFps, i: -1, dresser: true }; anims.push(a);
+        });
+      }
+    };
+    for (const slot of ["body", "hair", "shirt", "pants", "helmet", "chest", "arms", "legs", "feet"]) {
+      const lab = el("label"); lab.append(document.createTextNode(labels[slot]));
+      const sel = el("select"); sel.id = "dress-" + slot;
+      if (optional.has(slot)) { const o = el("option", null, "none"); o.value = ""; sel.append(o); }
+      for (const s of (P.slots[slot] || [])) { const o = el("option", null, s.replace(/_/g, " ")); o.value = s; sel.append(o); }
+      sel.value = dress[slot] || "";
+      sel.addEventListener("change", () => { dress[slot] = sel.value; store.set("dress", dress); redraw(); });
+      lab.append(sel); ctl.append(lab);
+    }
+    box.append(ctl, dirsBox); frag.append(box); redraw();
+
+    frag.append(el("h2", "section-h", "Baked class sprites"));
+    frag.append(el("p", "note", "Ready-made walking sprites for each class, which the game uses when it can't compose layers."));
+    const cl = el("div", "row-list");
+    for (const c of P.classes) {
+      if (st.q && !c.includes(st.q)) continue;
+      const p = el("section", "panel"); p.append(el("h3", null, c));
+      const d = el("div", "dirs");
+      for (const dir of P.dirs) {
+        const frames = P.walk.map(suf => "Player/" + c + "_" + dir + suf).map(k => (S[k] ? k : "Player/" + c + "_" + dir)).filter(k => S[k]);
+        if (!frames.length) continue;
+        const f = el("figure"); const sg = stage(); const img = pic(frames[1] || frames[0], st.zoom);
+        sg.append(img); animate(img, frames, P.walkFps); f.append(sg, el("figcaption", null, dir + " · " + S[frames[0]].w + "×" + S[frames[0]].h)); d.append(f);
+      }
+      p.append(d); cl.append(p);
+    }
+    frag.append(cl);
+
+    frag.append(el("h2", "section-h", "Every layer piece"));
+    frag.append(el("p", "note", "Each piece as drawn facing down, walking. Open one to see all four directions and every frame."));
+    const pieces = [];
+    for (const slot of P.order) for (const s of (P.slots[slot] || [])) {
+      const frames = P.walk.map(suf => layerKey(slot, s, "down", suf)).filter(k => S[k]);
+      pieces.push({ id: slot + "/" + s, name: s.replace(/_/g, " "), group: slot, frames, fps: P.walkFps, anim: "walk", slot, style: s });
+    }
+    frag.append(grid(pieces, { chips: true, game: false, kind: "layer" }));
+    return frag;
+  };
+
+  // ---- approved outfits: the whole-outfit animations (not in the game yet) -----------------------------------
+  const pick = store.get("outfitAnim", {});
+  R.outfits = () => {
+    const frag = document.createDocumentFragment();
+    const w = el("p", "warn"); w.innerHTML = "<strong>Not in the game yet.</strong> These are the approved whole outfits and their animations. The game still draws the older layered player (see the Player tab).";
+    frag.append(w);
+    const list = el("div", "row-list");
+    for (const o of D.outfits) {
+      if (st.q && !(o.name.toLowerCase().includes(st.q) || o.id.includes(st.q))) continue;
+      const p = el("section", "panel outfit");
+      const h = el("h2", null, o.name); h.append(el("span", "id", "approved " + o.approved)); p.append(h);
+      const chips = el("div", "animchips"); const sg = el("div", "gifstage"); const img = new Image(); img.alt = o.name + " animation"; sg.append(img);
+      const show = (a) => {
+        pick[o.id] = a.id; store.set("outfitAnim", pick);
+        img.src = a.file; img.width = Math.round(a.size[0] / 2); img.height = Math.round(a.size[1] / 2);
+        for (const b of chips.children) b.setAttribute("aria-pressed", String(b.dataset.a === a.id));
+      };
+      for (const a of o.anims) {
+        const b = el("button", null, a.id.replace(/_/g, " ")); b.type = "button"; b.dataset.a = a.id;
+        b.addEventListener("click", () => show(a)); chips.append(b);
+      }
+      p.append(chips, sg); list.append(p);
+      show(o.anims.find(a => a.id === pick[o.id]) || o.anims[0]);
+    }
+    frag.append(list);
+    return frag;
+  };
+
+  // ---- detail drawer ----------------------------------------------------------------------------------------
+  function factsList(rows) {
+    const dl = el("dl", "facts");
+    for (const [k, v] of rows) { dl.append(el("dt", null, k), el("dd", null, v)); }
+    return dl;
+  }
+  function framesStrip(keys, gw, gh, labels) {
+    const s = el("div", "strip");
+    keys.forEach((k, i) => {
+      const f = el("figure"); const sg = stage(); sg.append(pic(k, Math.max(1, Math.min(st.zoom, 4)), gw, gh));
+      f.append(sg, el("figcaption", null, labels ? labels[i] : String(i))); s.append(f);
+    });
+    return s;
+  }
+  function openDetail(e, opts) {
+    const body = $("d-body"); body.textContent = "";
+    anims = anims.filter(a => !a.drawer);
+    $("d-title").textContent = e.name;
+    $("d-id").textContent = e.id + (e.group ? " · " + e.group : "");
+    const big = stage("bigstage");
+    if (e.frames && e.frames.length) {
+      const s0 = S[e.frames[0]];
+      const gw = (opts.game && e.game) ? e.game[0] : (e.sizes ? e.sizes[0][0] : s0.w);
+      const gh = (opts.game && e.game) ? e.game[1] : (e.sizes ? e.sizes[0][1] : s0.h);
+      const img = pic(e.frames[0], st.zoom * 2 > 12 ? st.zoom : st.zoom * 2, gw, gh);
+      big.append(img);
+      if (e.frames.length > 1) anims.push({ img, frames: e.frames, fps: e.fps || 4, i: 0, drawer: true });
+    } else big.append(nopic());
+    body.append(big);
+    const info = [];
+    if (e.frames && e.frames.length) {
+      const s0 = S[e.frames[0]];
+      info.push(["picture", s0.w + " × " + s0.h + " pixels"]);
+      if (opts.game && e.game) info.push(["in the game", e.game[0] + " × " + e.game[1] + " game pixels (" + cells(e.game[0], e.game[1]) + ")"]);
+      if (e.frames.length > 1) info.push(["animation", e.frames.length + " frames at " + (e.fps || 4) + " a second" + (opts.kind === "bug" ? " (the game's flap rate)" : opts.kind === "crop" ? " (sped up; real growth takes days)" : "")]);
+    }
+    if (info.length) body.append(factsList(info));
+    if (e.frames && e.frames.length > 1) {
+      body.append(el("h3", null, "Frames"));
+      body.append(framesStrip(e.frames, null, null, opts.kind === "crop" ? e.frames.map((_, i) => "stage " + i) : null));
+    }
+    if (e.variants && e.variants.length) {
+      body.append(el("h3", null, "Variants, mixed square by square"));
+      body.append(framesStrip([e.frames[0]].concat(e.variants), 16, 16, ["main"].concat(e.variants.map(k => k.split("_").pop()))));
+    }
+    if (opts.kind === "layer") {
+      body.append(el("h3", null, "All four directions"));
+      for (const dir of P.dirs) {
+        const keys = ["_w1", "", "_w3"].map(suf => layerKey(e.slot, e.style, dir, suf)).filter(k => S[k]);
+        const row = framesStrip(keys, null, null, keys.map((_, i) => dir + " " + ["step L", "stand", "step R"][i])); body.append(row);
+      }
+    }
+    if (e.brood && e.brood.length) {
+      body.append(el("h3", null, "Eggs and young (the nursery panel)"));
+      const s = el("div", "strip");
+      for (const b of e.brood) { const f = el("figure"); const sg = stage(); if (b.frames.length) sg.append(pic(b.frames[0], Math.min(st.zoom, 4))); else sg.append(nopic()); f.append(sg, el("figcaption", null, b.label)); s.append(f); }
+      body.append(s);
+    }
+    if (e.segments && e.segments.length) {
+      body.append(el("h3", null, "Body segments (head, repeated body, tail)"));
+      const s = el("div", "strip");
+      for (const g of e.segments) { const f = el("figure"); const sg = stage(); sg.append(pic(g.frames[0], Math.min(st.zoom, 4))); f.append(sg, el("figcaption", null, g.label)); s.append(f); }
+      body.append(s);
+    }
+    if (e.facts && e.facts.length) { body.append(el("h3", null, "From the game data")); body.append(factsList(e.facts)); }
+    const files = [].concat(e.frames || [], e.variants || []).map(k => "Resources/" + k + ".png");
+    if (e.stage_ids) files.unshift("stage ids: " + e.stage_ids.join(", "));
+    if (files.length) { body.append(el("h3", null, "Files")); const fl = el("div", "files"); for (const f of files) fl.append(el("div", null, f)); body.append(fl); }
+    $("detail").hidden = false; $("scrim").hidden = false; $("d-close").focus();
+  }
+  function closeDetail() { $("detail").hidden = true; $("scrim").hidden = true; anims = anims.filter(a => !a.drawer); }
+  $("d-close").addEventListener("click", closeDetail);
+  $("scrim").addEventListener("click", closeDetail);
+  document.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && !$("detail").hidden) closeDetail(); });
+
+  // ---- render -----------------------------------------------------------------------------------------------
+  function render() {
+    anims = anims.filter(a => a.drawer);
+    const m = $("main"); m.textContent = "";
+    m.append(R[st.tab]());
+  }
+  const b = D.built;
+  $("foot").innerHTML = "";
+  $("foot").append(document.createTextNode("Built " + b.date + " from commit " + b.commit + (b.dirty ? " (with uncommitted art or data changes)" : "")
+    + ". " + (D.counts.missing.length ? D.counts.missing.length + " things in the game data have no picture yet (shown as “no picture”). " : "")
+    + "Rebuild with "), el("code", null, "python3 tools/viewer/build_sprites_page.py"), document.createTextNode("."));
+  setCssTiles(); applyBg(); buildControls(); render();
+})();
+</script>
