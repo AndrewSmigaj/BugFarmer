@@ -128,17 +128,26 @@ Picture: C:/Users/emily/BugFarmer/tools/_generated/previews/examples/ground-edge
 - **Two matching pieces of the same ground join into a full square,** two halves or two opposite diagonals, and one
   recipe's worth comes back.
 - **Laying on the base,** a dug hole, is allowed. The base itself can't be dug or given back.
-- **Garden plots** (the owner, 2026-09-30: no partial garden plots):
-  - The hoe makes a garden plot only on a plain square of grass or dirt, never on a square with a shaped piece.
-  - No shaped piece can be laid on a garden plot. The ghost shows a cross and "Not on a garden plot".
-  - **Removing a garden plot:** dig it with the shovel like any ground, and its soil comes back and the square goes to
-    bare soil. Or lay any full square straight over it, which gives the soil back.
-  - A plot with something growing can't be dug or covered until the crop is harvested or pulled; the ghost says so.
-  - Empty plots don't disappear by themselves, so nothing a player prepared vanishes.
+- **Garden plots.**
+  - **The owner's rule (2026-09-30):** no shaped piece can be laid on a garden plot, so there are no partial plots.
+    The ghost shows a cross and "Not on a garden plot".
+  - **Which squares the hoe can till is open;** the owner asked for help thinking it through (2026-09-30). Today the
+    hoe tills only full grass or full dirt, in one swing, and nothing comes back (`tiles.json` tool actions). The
+    options:
+    - (A, recommended) **Soft ground tills where it lies.** Any square made only of soft ground (grass, dirt, sand or
+      mud, whole or mixed) becomes a plot in one swing, and nothing comes back, as in farming games generally. A
+      square with a hard part (stone path, stone floor, wooden floor) needs that part dug first, and the ghost says
+      so.
+    - (B) **The hoe clears, gives back, then tills.** As A, but the grass or sand comes back as materials, as if dug.
+      Nothing is lost, but every hoed meadow fills the bag with turf. The iron hoe, at three by three, would also dig
+      grass and sand faster than any shovel.
+    - (C) **Plain squares only.** Anything mixed must be dug first. Fiddly, and not recommended.
+  - **Removing a plot (recommended):** dig it back to bare soil, or lay any ground straight over it. Neither works
+    while something is growing; the ghost says why. Empty plots don't disappear by themselves.
 - **Refused:**
   - laying exactly what is already there;
   - a shaped piece of the same ground as the ground under it;
-  - a shaped piece on a garden plot, and the hoe on a square with a shaped piece.
+  - a shaped piece on a garden plot.
 - **Another player's plot:** nothing is laid or dug there (D67).
 - **A square with a shaped piece behaves as that piece's ground,** as the prototype does (`tiles.go:99`). Since
   pieces never go on garden plots, this matters only for walking and for floors.
@@ -177,8 +186,10 @@ Picture: C:/Users/emily/BugFarmer/tools/_generated/previews/examples/ground-edge
   - saving, loading, and the late-join snapshot.
 
 ## The owner's answers (2026-09-30) and what's still open
-- **Garden plots:** no shaped pieces on them, and the hoe makes them. The removal above is the recommendation.
+- **Garden plots:** no shaped pieces on them (his rule). Which squares the hoe can till, and how plots are removed,
+  are open. The options and recommendations are above.
 - **Laying over something:** he leans toward getting it back, as if dug up. The design above follows that, with the
   swings added so a better shovel still matters, and no undo.
 - **The base:** left to the assistant: the bare soil a dug square shows today, the same everywhere.
-- **Open, for his OK:** the garden-plot removal, and "laying over takes the dig's swings; no undo".
+- **Open, for his OK:** which squares the hoe tills (A, B or C), the plot removal, and "laying over takes the dig's
+  swings; no undo".
