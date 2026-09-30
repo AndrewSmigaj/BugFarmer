@@ -37,6 +37,23 @@ tool, one kind at a time. The first version of the page (https://claude.ai/artif
 stored a whole kind of item as one document and lost the owner's first batch of marks when an older copy overwrote a
 newer one; it was replaced on 2026-09-29 and its storage is not used.
 
+**Where it stands (paused 2026-09-30 for the repo clean-up).**
+- **Settled:** batch 1, the tool families and the pickaxes, axes and shovels, 34 rows (D69). Rows that are settled
+  carry `"decided"` in the table and show a Decided label on the page.
+- **Next:** the rest of Tools (29 rows, from the Power Spade to the bee smokers), then Weapons (81 rows, probably two
+  batches), then the other kinds in page order.
+
+**How a batch goes.**
+1. The owner marks rows on the page.
+2. Read his marks with `ArtifactData` (`list`, one `marks/<group>/items` collection per kind of item) and line them
+   up with the rows.
+3. Answer each note, checked against the decisions and the code; new ideas go past a reviewer before he sees them.
+4. When he answers, record the outcome as a new D-entry in `docs/product/economy/DECISIONS.md`, in our own words.
+5. Update the rows: settled rows get `"decided": "<date>"`, and item ids never change, because his marks are keyed by
+   id.
+6. Rebuild with `python3 tools/gdd/build_items_page.py`, republish `tools/gdd/_build/item_pass.html` to the same link,
+   and commit.
+
 ## Sections, in review order
 **Start with the overview** ([overview.md](overview.md)): the whole game as every design document describes it,
 activity by activity — what is decided, in the prototype, designed and still open — written after reading all of them
