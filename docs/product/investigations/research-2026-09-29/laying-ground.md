@@ -1,4 +1,7 @@
 # Laying ground with diagonals — options and a recommendation (2026-09-29)
+*Replaced later on 2026-09-29: the owner chose shapes placed by hand, not automatic diagonals — building freedom
+matters more (checkerboards, diagonals, other shapes). The design is [laying-ground-manual.md](laying-ground-manual.md).
+This file stays as the record of the automatic option and its comparison picture.*
 
 **The question (D69).**
 - In his item-pass note on shovels, the owner thought diagonals would be awkward to use.
