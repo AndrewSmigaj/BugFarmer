@@ -101,7 +101,8 @@ later ruling changed things — water is Q1):
   still puts the Deadly Ants in the west column.
 - The Wasp Thicket's camp is an abandoned shack on the map, a trapper on its sheet, and a ranger station in the June
   review (D10) — while the map puts the ranger station in the Millipede Forest. The armour notes (2026-08-06) want the
-  ranger armour found in a zone with a small outpost full of wasps and hornets, not designed yet.
+  ranger armour found in a zone with a small outpost full of wasps and hornets, not designed yet. *Settled 2026-09-30
+  (D72): the ranger outpost is in the Wasp Thicket.*
 - Three sheets swap directions (for example Spider Vale East, top right of the map, is called "the western edge").
 - Some sheets still have frogs (rejected, D31), and bugs dropping parts of themselves — since D18 a bug drops only its
   body, and the Bug Extractor turns bodies into materials (formic acid comes from dead ants that way).

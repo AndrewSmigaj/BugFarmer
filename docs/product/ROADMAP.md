@@ -95,7 +95,9 @@ rather than backlog items. Timed → the real estimate for Phase 3.
 Ring B: Wasp Thicket, Butterfly Fields, Hilltop Meadow, Centipede Cavern, Underground River ·
 Ring C: Locust Farmland + western town + electricity, Millipede Forest, Scorpion Rocks, Shallow Swamp, Deadly Ants
 outpost, deep river · Ring D: Spider Vales + spiders/silk/stealth, Deep Swamp, Deadly Ants core, the underground
-fortress + legendary sets.
+fortress + legendary sets. Across the rings (D72): pockets of new decorations and recipes in some zones (the western
+town's western style, for one), secret and rare ones elsewhere, and a couple more human places — the Wasp Thicket's
+ranger outpost, perhaps a castle or similar in Spider Vale. Items are added as each zone is designed.
 
 ### Phase 4 — whole-game polish, balance, QA, release
 Solo + hosted playthroughs; economy/ecology/combat balance; stress test (sync + FPS + tick + bandwidth at big

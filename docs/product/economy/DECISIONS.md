@@ -887,3 +887,16 @@ is to suggest how garden plots are removed. On laying over something, the owner 
 materials, as if dug up (a tile under grass comes back as the tile), rather than losing it; the assistant is to think
 it through and recommend. The base under all ground is left to the assistant. The recommendations are in
 `docs/product/investigations/research-2026-09-29/laying-ground-manual.md`.
+
+### D72 — The hoe; decorations and human places in later areas (2026-09-30)
+- **The hoe (option A; adjustable later).** Any square made only of soft ground — grass, dirt, sand or mud, whole or
+  mixed — is tilled where it lies in one swing, and nothing comes back. A square with a hard part (stone path, stone
+  floor, wooden floor) needs that part dug first, and the preview says so. There are no partial beds. Every option had
+  pros and cons; this one fits best.
+- **Later areas.** Fresh decorations and other goods turn up in pockets through the game, a handful in some places,
+  not in every area, with hidden and rare ones scattered in other places. The western town, for one, has recipes in a western style,
+  and Spider Vale might have things of its own.
+- **Human places.** Two or more are wanted. One is the Wasp Thicket's ranger outpost, which settles where the ranger
+  station is (the documents disagreed; §01). Perhaps a castle or something similar in Spider Vale, or
+  elsewhere.
+- Items are added as the zones are built; most zones still need designing.
