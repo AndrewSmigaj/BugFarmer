@@ -1008,6 +1008,7 @@ Items marked (P#) wait for the owner's verdict on that proposal.
   settled with the owner.
 
 ## Next — from the owner's review of the overview, parts 15–20 (2026-09-28; D55–D60)
+- **An item catalog web app** (the owner's request, 2026-09-30): a web page giving access to every item with its description, sprite and stats, built from the canonical entity data so it can't drift. Where it lives is part of the repo clean-up (`docs/product/investigations/repo-cleanup-2026-09-30/tools-map.md`).
 - **The item table** (D55) — DONE as a draft for review (2026-09-28): 1,259 rows in `docs/gdd/item_table.jsonl`
   (356 keep, 323 change, 509 cut, 71 add), judged against the rulings by five agents and one cold critic (188 fixes);
   the review page is https://claude.ai/artifact/L9ftJfjRfcFD3yAB66qenD (replaced 2026-09-29: the first version lost
