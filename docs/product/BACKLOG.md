@@ -1011,7 +1011,8 @@ Items marked (P#) wait for the owner's verdict on that proposal.
 - **The item table** (D55) — DONE as a draft for review (2026-09-28): 1,259 rows in `docs/gdd/item_table.jsonl`
   (356 keep, 323 change, 509 cut, 71 add), judged against the rulings by five agents and one cold critic (188 fixes);
   the review page is https://claude.ai/artifact/L9ftJfjRfcFD3yAB66qenD (replaced 2026-09-29: the first version lost
-  marks by saving a whole kind of item as one record, and was too wide for the screen). Nothing in the data changes until the owner
+  marks by saving a whole kind of item as one record, and was too wide for the screen). Batch 1 (the tool families, pickaxes, axes and shovels, 34 rows) is settled (D69,
+  2026-09-29); the owner goes on in batches. Nothing in the data changes until the owner
   has marked it. Prototype faults it found: wheat still planted (231) and sold in the village; nobody sells eggplant
   seeds; cactus, cattail and reeds drop ids with no item; mined stone can't lay a stone path and a dug sand block can't
   be placed again; the gem cutter drops a rock crusher; chests, crates and barrels have no recipe; the Fisherman sells
@@ -1022,7 +1023,7 @@ Items marked (P#) wait for the owner's verdict on that proposal.
   versions where generators are sold or built. (Pairs with "Eleven of the fifteen stations can't be crafted or bought"
   and the ownership item above.)
 - **Metal ladder and tool tiers** (P20, P21 — accepted, D61): tools wood → stone → copper → bronze → iron → steel →
-  cobalt steel → tungsten carbide; weapons to steel, then bug-part blades and spears; armour follows the metals, with
+  cobalt steel → tungsten steel (renamed 2026-09-29, D69); weapons to steel, then bug-part blades and spears; armour follows the metals, with
   platinum in a fancy armour that also needs steel; two new ores (cobalt, tungsten); gold, silver and platinum leave
   tools and weapons for money, power parts and jewelry; hits = tool strength − material toughness (the break handler's
   one-point-per-hit goes; the unused `mining_speed` becomes the strength); co-op digging adds up; power tools (a rock

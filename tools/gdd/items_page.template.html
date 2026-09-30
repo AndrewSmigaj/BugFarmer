@@ -94,6 +94,9 @@ tr.r:hover td { background: var(--surface); }
 .v.cut { background: var(--cut-soft); color: var(--cut); }
 .v.change { background: var(--change-soft); color: var(--change); }
 .v.add { background: var(--add-soft); color: var(--add); }
+.dec { display: inline-block; margin: 4px 0 0 0; font: 600 11px var(--font-body); color: var(--accent);
+  border: 1px solid var(--accent); border-radius: 4px; padding: 1px 6px; }
+.c-call .v { margin-right: 6px; }
 .c-what { color: var(--ink); }
 .c-why { color: var(--ink-2); }
 .btns { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
@@ -130,7 +133,8 @@ tr.r:hover td { background: var(--surface); }
   <h1>The item pass</h1>
   <p class="lede">Every item in the game and in the old designs, with my recommendation — keep it, change it, cut it, or
     add something missing — and one line on why. Mark each one you agree or disagree with, and add a note where you'd
-    do it differently. Each row says <b>Stored</b> once the page's storage has kept your mark.</p>
+    do it differently. Each row says <b>Stored</b> once the page's storage has kept your mark. Rows labelled
+    <b>Decided</b> are settled with your notes (their text is the final version); your marks on them are kept.</p>
   <div class="bar">
     <div class="tallies" id="tallies"></div>
     <div class="controls" role="toolbar" aria-label="Filters">
@@ -253,7 +257,8 @@ const DATA = /*__DATA__*/null;
     return `<tr class="r" data-id="${esc(it.id)}">
       <td class="c-item"><span class="name">${esc(it.name)}</span><span class="id">${esc(it.id)}</span></td>
       <td class="c-where">${esc(WHERE[it.where] || it.where)}</td>
-      <td class="c-call"><span class="v ${esc(it.verdict)}">${esc(VLABEL[it.verdict] || it.verdict)}</span></td>
+      <td class="c-call"><span class="v ${esc(it.verdict)}">${esc(VLABEL[it.verdict] || it.verdict)}</span>${it.decided
+        ? `<span class="dec" title="Settled with your notes on ${esc(it.decided)}">Decided</span>` : ""}</td>
       <td class="c-what${it.change ? "" : " blank"}">${esc(it.change || "")}</td>
       <td class="c-why">${esc(it.reason)}</td>
       <td class="c-mark"><div class="btns">

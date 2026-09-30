@@ -351,7 +351,8 @@ so variety pays.
   someone, only in an abandoned one (2026-09-27).
 - **Doors turn to fit the wall they are placed in**, which needs a second, side-facing door sprite (2026-09-27).
 - **Ground is laid in whole squares**; the diagonal shapes go (2026-09-27). How the shovel switches between digging and
-  laying is proposal P12.
+  laying is proposal P12. Diagonals are being reconsidered (2026-09-29, D69): I'm designing how laying ground works,
+  diagonals included, with controls that keep it easy.
 - Bugs never appear on a floor (December 2025).
 - No roofs — the view is from above (D19). Placed objects drop themselves when broken (D22).
 - Furniture doesn't rotate (June 2026; confirmed 2026-09-27).
@@ -468,7 +469,7 @@ and glowworm), torches, a headlamp and electric lights. Tools never wear out.
   pickaxe swings like the axe (2026-09-27).
 - Metal tiers plus a few specials that matter (D12).
 - **The metal ladder** (P20, accepted 2026-09-28): wood → stone → copper → bronze → iron → steel → cobalt steel →
-  tungsten carbide for tools; weapons climb the same metals to steel, and past it the best blades and spears come from
+  tungsten steel (renamed from tungsten carbide on 2026-09-29, D69) for tools; weapons climb the same metals to steel, and past it the best blades and spears come from
   bug parts; no gold, silver or platinum tools or weapons.
 - **What a better tool does** (P21, accepted 2026-09-28): a hit does the tool's strength minus the material's
   toughness, so a newly reached ore starts slow and the next tier roughly halves the hits; the ores are the keys;
@@ -1131,6 +1132,8 @@ new stations; the rest exist or are already planned.
 
 ### P12. One shovel, a clear switch between digging and laying
 *Part 7 · building.*
+*2026-09-29 (D69): the owner would prefer diagonal ground too, if it is easy to use; I'm designing how laying ground
+works, and whole squares stand until then.*
 **Accepted by the owner on 2026-09-28**, provided no player can miss that the shovel digs: the interface always
 shows the switch, not only a first-time notice.
 - **The shovel does both, and R is the switch** (my change from the mouse wheel, so the wheel always stays on the
@@ -1313,6 +1316,8 @@ The screen must show a whole shop's stock — today it shows only the first six 
 
 ### P20. A metal ladder made of real tool metals
 *Parts 10 and 15 · tools; progression. Also parts 5, 6 and 9.*
+*Renamed 2026-09-29 (D69): the top rung is tungsten steel, not tungsten carbide, and the top pickaxe has no
+gold-coloured finish.*
 **Accepted by the owner on 2026-09-28**, without manganese steel — I've put cobalt steel on that rung instead — and
 with eight rungs; platinum goes into fancy armour.
 - **Silver and platinum leave the tools too, not just gold.** All three are soft — about as soft as pure copper,
@@ -1351,6 +1356,9 @@ item table.
 
 ### P21. What a better tool does: the newest material starts slow
 *Part 15 · progression; part 10 · tools.*
+*Settled further 2026-09-29 (D69): axes are stone, iron and steel, and an axe can fell a big tree slowly while the
+saw is much faster; shovels are wooden, copper and iron, taking three, two, then one hit a square; hoes and scythes
+cover one square, then up to two by two, then three by three, picked with R.*
 **Accepted by the owner on 2026-09-28**, with powered tools counted among the tiers.
 - **Your question answered: no, Terraria doesn't halve the effort each tier.** Its eight early pickaxes are only about
   1.1 times faster per step — 1.5 times from copper to platinum — and its tiers mainly decide what can be mined. None of
