@@ -1,5 +1,5 @@
 # Investigation: #14 containers (basket, etc.) not functional — audit
-_status: READY TO IMPLEMENT · investigated 2026-06-28 · investigate-only_
+_status: DONE 2026-07-01 (BACKLOG, playtest #14) · investigated 2026-06-28_
 
 ## Debrief (read me first)
 - **TL;DR:** Four containers — **`basket`** (the one you named), **`chest`**, **`trunk`**, **`yarn_basket`** —

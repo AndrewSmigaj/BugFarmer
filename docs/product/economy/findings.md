@@ -4,7 +4,7 @@ A grounded review of the **crafting, items, equipment, economy (selling/recipes)
 they actually exist in the code right now (June 2026), so the brainstorm/design docs in this folder build
 on reality, not guesses. Companion docs: [`stats_and_bonuses.md`](stats_and_bonuses.md),
 [`item_catalog.md`](item_catalog.md), [`suggestions.md`](suggestions.md). Authoritative design intent lives
-in the GDD (`../game_design.md` §11, §13, §14, §15) and `../crafting_design.md`.
+in the GDD (`../design/game_design.md` §11, §13, §14, §15) and `../design/crafting_design.md`.
 
 **Legend:** ✅ built · 🟡 data/seam only (no behavior) · 🔴 designed, not started.
 
@@ -18,10 +18,10 @@ in the GDD (`../game_design.md` §11, §13, §14, §15) and `../crafting_design.
 | One-system station model (right-click → pick recipe → inputs leave bag → process bar → output grid → Get-all) | ✅ | `craft_stations.go`, `CraftingPanel.cs` |
 | Stations live: **workbench, stonecutter, furnace, anvil** | ✅ | `recipes.json` (10 recipes total) |
 | Ore→bar smelt (furnace: 2 iron_ore + 1 coal → iron_bar, 200 ticks) | ✅ | `recipes.json` |
-| Stations designed not built: sawmill, loom, forge, cauldron, cooking_pot/stove, chopping_block, honey_extractor, jeweler, dye/tailoring, electronics | 🔴 | `../crafting_design.md` §"Stations & recipes" |
+| Stations designed not built: sawmill, loom, forge, cauldron, cooking_pot/stove, chopping_block, honey_extractor, jeweler, dye/tailoring, electronics | 🔴 | `../design/crafting_design.md` §"Stations & recipes" |
 | **A placeable is a station iff it has recipes** (no dedicated flag) | ✅ | `RecipesByStation[entityID]` |
 | Inputs consumed up-front; output piles into an 8-slot output grid; queue stalls if grid full | ✅ | `craft_stations.go` |
-| Crafting is **display-only / never hashed** (not part of the deterministic bug sim) | ✅ | `../architecture_crafting.md` |
+| Crafting is **display-only / never hashed** (not part of the deterministic bug sim) | ✅ | `../architecture/architecture_crafting.md` |
 
 **Recipes that exist (10):** torch, chair_wood, table_wood, fence_wood, sword_wood (workbench); brick,
 wall_stone (stonecutter); iron_bar (furnace); pickaxe_iron, axe_iron (anvil).

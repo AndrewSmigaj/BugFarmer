@@ -1,5 +1,8 @@
 # Block prompts — the bake-off workflow
 
+> **Outdated (noted 2026-10-01):** the lab server this workflow runs on (`tools/lab_server.py`) no longer exists,
+> and blocks are now drawn in code (D60, 2026-09-28). Kept for the record.
+
 How we dial in the **block** sprites. A block is **3D**: a wide lit **TOP** surface with a short, only-
 slightly-darker **FRONT** face beneath it. Stacked in a grid the **tops line up and the fronts show** — it
 reads as a wall of blocks, exactly like the stone wall / wood wall / gold block. (A flat square with no

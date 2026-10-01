@@ -1,5 +1,8 @@
 # Player arm + tool-holding + swing — design (DRAFT, 2026-07-19)
 
+> **Outdated (noted 2026-10-01):** this draft for an arm with an elbow was replaced on 2026-07-28 by the armless
+> character with floating hands (the `player-sprites` skill). Kept for the record.
+
 ## The ask (owner)
 Make the player **hold** tools/weapons with a **bent elbow** (e.g. a sword held out in front), and **swing**
 them **smoothly (not clunky)**, reusing our existing tool-sprite animator.

@@ -1,5 +1,11 @@
 # Object & Sprite Pipeline
 
+> **Partly outdated (noted 2026-10-01):** the pipelines below are the ones built so far. Decided since
+> (2026-09-26/28, D60): characters and most art move to gpt-image-2 with pixel-snapping, the interface and the
+> blocks are drawn in code, and the hand-authored Pipeline B is retired for new art (player art is whole outfits —
+> the `player-sprites` skill). See the ROADMAP's art row and the BACKLOG's *Now — all art on gpt-image-2 +
+> pixelsnap*.
+
 How art gets into Bug Farmer. This is the canonical guide; it supersedes the old
 `architecture_new_object_pipeline.md`, `OBJECT_CREATION_GUIDE.md`, and
 `creating_objects.md` (all removed). There is **no ComfyUI** anywhere in the flow.

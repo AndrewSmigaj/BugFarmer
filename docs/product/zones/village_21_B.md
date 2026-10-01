@@ -1,5 +1,8 @@
 # Zone Design: Starting Village, Natural Rebuild (`village_21_B`)
 
+> **Note (2026-10-01):** this is now THE starting village (D19). The "candidate replacement" wording below is from
+> before that decision.
+
 The candidate replacement for `village_21`: the SAME functional content and macro-
 geography (spatial memory transfers — big lake SW, mining S, farms + predators N, core
 at center), rebuilt so it reads natural instead of stamped. `village_21` stays on disk
@@ -27,8 +30,8 @@ village.
 6. Confetti scatter → clumping ≈0.85 everywhere with a density gradient to the rim.
 
 ## Connections (map)
-Four exits KEPT (the world doc commits to them; no transition system exists yet, so
-these are taper-outs, not gates): **N** main road tapers out ≈(100,255) toward
+Four exits KEPT (the world doc commits to them; written before crossing between zones worked — it works since
+2026-06-16 — so these were drawn as taper-outs, not gates): **N** main road tapers out ≈(100,255) toward
 Butterfly Meadow · **S** main road start, toward the cave mouth / Mining ·
 **W** dirt lane tapers ≈(0,~130) toward Bee Meadow · **E** dirt lane past the
 ecologist tapers ≈(255,~148) toward Wasp Thicket.

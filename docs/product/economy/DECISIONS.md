@@ -18,13 +18,13 @@ system). → `crafting.md` (recipes), `merchants.md` (which are sold).
 ### D2 — Drop row 5 from the world (re-add later)
 The world becomes **rows 0–4**. The deepest underground row (Centipede Depths / Deep Passages / Deep River /
 Ant Queen Chamber) is removed for now; its rare ores (silver→diamond) compress up into **row 4**, gated by the
-harder east columns. *Why:* shrink initial authoring scope; re-add depth later. → `../architecture_world.md`.
+harder east columns. *Why:* shrink initial authoring scope; re-add depth later. → `../architecture/architecture_world.md`.
 
 ### D3 — Underground col-0: Centipede → Ants
 Underground **col 0** (was Centipede Cavern easy+medium) becomes **Ants** — easy ants (row 3) + medium ants
 (row 4), and the **medium ant zone gets a Queen** (mini-boss, relocated from the dropped row-5 chamber). The
 **Centipede Cavern** moves to the **medium-passages slot (4,1)**. The deep/deadly ants shift **up a row** and
-keep **surface access to the col-3 Swamp** for foraging. *Why:* user direction. → `../architecture_world.md`.
+keep **surface access to the col-3 Swamp** for foraging. *Why:* user direction. → `../architecture/architecture_world.md`.
 
 ### D4 — Balance = pacing, not minimalism
 *Replaced 2026-09-28 (D55): content can be cut — every item gets a pass that may cut it.*
@@ -46,18 +46,18 @@ priced. → `merchants.md`.
 Resolves O1. Surface **floor** tiles are never dug/removed (engine rule: "ground always filled, no holes").
 Players gather via diggable **block nodes** + mining-cliff tiles; "terraforming" = *placing* a floor tile on
 top. **Water care:** two water tiles exist — `water_shallow` (wade; blocks insects) and `water_deep` (blocks
-both) — any water placement/feature must respect both. → `../architecture_world.md`.
+both) — any water placement/feature must respect both. → `../architecture/architecture_world.md`.
 
 ### D8 — Sand is a diggable BLOCK in sandy/beach clumps
 Resolves O2. Sand is a **block** you dig through like stone/clay (break → drops `sand` → reveals floor),
 placed as **small clumps in sandy/beach areas** — NOT harvested from the sand *floor* tile (which stays
-decorative). Uses the existing `sand_block` concept. → `../architecture_world.md` (resource map),
+decorative). Uses the existing `sand_block` concept. → `../architecture/architecture_world.md` (resource map),
 `crafting.md` (sand → glass).
 
 ### D9 — Keep both ant colonies
 Resolves O3. **Col 0** = a gentle intro ant colony (easy/medium + the Queen); **col 3** = the deadly endgame
 ant colony (hard/extra-hard) that forages out to the surface swamp. Ants are a deliberate recurring theme
-across difficulty. → `../architecture_world.md`.
+across difficulty. → `../architecture/architecture_world.md`.
 
 ---
 
@@ -279,7 +279,7 @@ These were decided (some repeatedly) but kept getting dropped. Recorded here as 
 ---
 
 ### D23 — Breeding stations (host + brood): the canonical model (2026-06-27)
-> **⚠ SUPERSEDED (2026-07) — the canonical model is now [`architecture_nursery_stations.md`](../../architecture/architecture_nursery_stations.md).** A nursery is a **modified station**: the brood **IS** the station (not a separate host that "holds" it), and its egg/larva/pupa counts are collectable **output units** you take like any station transfer — **no random yield, nothing perishes on take**. The "portable host carries its brood" special case is **dropped** (breaking any nursery perishes the brood + spills the resident adults). The text below is kept for history; where it conflicts, the nursery spec wins.
+> **⚠ SUPERSEDED (2026-07) — the canonical model is now [`architecture_nursery_stations.md`](../architecture/architecture_nursery_stations.md).** A nursery is a **modified station**: the brood **IS** the station (not a separate host that "holds" it), and its egg/larva/pupa counts are collectable **output units** you take like any station transfer — **no random yield, nothing perishes on take**. The "portable host carries its brood" special case is **dropped** (breaking any nursery perishes the brood + spills the resident adults). The text below is kept for history; where it conflicts, the nursery spec wins.
 
 A **breeding station = a HOST that holds a BROOD** (eggs/larvae developing). The brood is a living thing
 separate from the host's material — larvae are **never loot/drops**.

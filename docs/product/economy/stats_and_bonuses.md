@@ -5,7 +5,7 @@
 
 Everything we could let an item, outfit, accessory, consumable, or decoration **change about a player**,
 across every system (combat, mining, farming, bug farming, movement, economy). This is a *menu to prune
-from*, not a commitment. Grounded in the GDD guardrails (`../game_design.md`):
+from*, not a commitment. Grounded in the GDD guardrails (`../design/game_design.md`):
 
 > **Power comes from items and preparation. Accessories = small, meaningful bonuses, 2–4 slots, no loot
 > treadmill, encourage experimentation. No skill trees, no stat grinding.** (§14, §15.2)

@@ -1,5 +1,9 @@
 # BugFarmer Farming System Architecture
 
+> **Partly outdated (noted 2026-10-01):** the tables of new files and code below are the original plan. Several
+> were never made under these names (for example `FarmingController.cs`, `CropVisual.cs` and `rotten_fruit.go`);
+> where this and the code disagree, the code is right.
+
 ## Overview
 
 This document defines the architecture for the farming system in BugFarmer, covering:

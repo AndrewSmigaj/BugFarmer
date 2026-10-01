@@ -1,5 +1,8 @@
 # DEPRECATED - Item Database
 
+> **Note (2026-10-01):** the paths below are out of date too. The entity data now lives in
+> `nakama/data/entities/` (`occupants.json`, `placeables.json`, `items.json`, `crops.json`).
+
 > **This file is deprecated.** The authoritative data sources are now:
 > - `nakama/data/occupants.json` - World occupants (trees, furniture, structures)
 > - `nakama/data/tiles.json` - Ground tiles
