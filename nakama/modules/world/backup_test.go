@@ -133,7 +133,7 @@ func TestBackupTakesZoneSavesAndCharactersButNotPreUpgradeCopies(t *testing.T) {
 		"z:world:v1": `{"version":1,"zone_id":"z","tick":2}`,    // the pre-upgrade copy: not part of a backup
 		"old:meta":   `{"version":1,"modified_chunks":["0_0"]}`, // a zone still in the old format: part of it
 		"old:0_0":    `{"cells":[]}`,
-		"old:swarms": `[]`,
+		"old:swarms": `{"swarms":[]}`,
 	} {
 		nk.objs[memKey(ZoneStateCollection, "", k)] = v
 	}

@@ -56,9 +56,14 @@ raw/ ab/ blocklab/ variants/ scratch/ ecology_charts/   sprite staging + transie
 
 **`data/`** — `publish_entities.py` (canonical `nakama/data/entities` → client Resources, one-way)
 
+**`saves/`** — `restore_backup.py`: list the server's backups of every zone and character (`--list`) or restore one
+(it asks, restarts the server, prints the server's report). Backups live outside the repo, in
+`C:/Users/emily/BugFarmer_backups/world` (see the run-backend skill).
+
 **`tools/` root** — `make_scene.py`: the shared renderer **library** (imported by `zonegen`; rarely run directly).
 `*.sh` harness/test runners (`run_go_tests.sh`, `run_sync_test.sh`, `harness_persist_test.sh`, `harness_crash_test.sh` —
-the saves crash test, `run_crosstest.sh` — the zone-crossing test in the headless game client, …).
+the saves crash test, `harness_restore_test.sh` — the backup restore round trip, `run_crosstest.sh` — the zone-crossing
+test in the headless game client, …).
 
 ## Directories
 | Dir | What |

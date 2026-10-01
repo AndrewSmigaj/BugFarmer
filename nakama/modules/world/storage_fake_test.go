@@ -12,15 +12,18 @@ package world
 //   - a delete without a version never fails (even if the object is missing); with a version it must match;
 //   - StorageList with an empty user id lists EVERY user's objects in the collection (StorageListObjectsAll),
 //     including system-owned ones, in pages;
-//   - an object can't be written for an account that doesn't exist (the storage table's foreign key).
+//   - an object can't be written for an account that doesn't exist (the storage table's foreign key);
+//   - a value must be a JSON object (runtime_go_nakama.go StorageWrite / MultiUpdate).
 //
 // Anything not implemented hits the nil embedded interface and panics, so a test can't silently depend on it.
 // storage_fake_test's own tests (TestMemStorage*) pin each rule above, so the stand-in can be trusted.
 
 import (
+	"bytes"
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -86,6 +89,9 @@ var errFakeForeignKey = errors.New(`insert or update on table "storage" violates
 
 func (m *memStorage) applyWrites(objs map[string]string, writes []*runtime.StorageWrite) error {
 	for _, w := range writes {
+		if v := []byte(w.Value); !json.Valid(v) || bytes.TrimSpace(v)[0] != '{' {
+			return errors.New("value must be a JSON-encoded object")
+		}
 		if m.users != nil && w.UserID != "" && !m.users[w.UserID] {
 			return fmt.Errorf("%w (user %s)", errFakeForeignKey, w.UserID)
 		}
@@ -273,7 +279,7 @@ func TestMemStorageVersionsLikeNakama(t *testing.T) {
 	ctx := context.Background()
 	nk := newMemStorage()
 	w := func(version, value string) error {
-		_, err := nk.StorageWrite(ctx, []*runtime.StorageWrite{{Collection: "c", Key: "k", Value: value, Version: version}})
+		_, err := nk.StorageWrite(ctx, []*runtime.StorageWrite{{Collection: "c", Key: "k", Value: obj(value), Version: version}})
 		return err
 	}
 	if err := w("*", "a"); err != nil {
@@ -283,16 +289,16 @@ func TestMemStorageVersionsLikeNakama(t *testing.T) {
 		t.Errorf(`"*" over an existing object must be rejected: %v`, err)
 	}
 	objs, _ := nk.StorageRead(ctx, []*runtime.StorageRead{{Collection: "c", Key: "k"}})
-	if len(objs) != 1 || objs[0].Version != storageVersion("a") {
+	if len(objs) != 1 || objs[0].Version != storageVersion(obj("a")) {
 		t.Fatalf("a stored object's version must be md5 of its value: %+v", objs)
 	}
-	if err := w(storageVersion("a"), "b"); err != nil {
+	if err := w(storageVersion(obj("a")), "b"); err != nil {
 		t.Errorf("a write with the current version must land: %v", err)
 	}
-	if err := w(storageVersion("a"), "c"); !errors.Is(err, runtime.ErrStorageRejectedVersion) {
+	if err := w(storageVersion(obj("a")), "c"); !errors.Is(err, runtime.ErrStorageRejectedVersion) {
 		t.Errorf("a write with a stale version must be rejected: %v", err)
 	}
-	if _, err := nk.StorageWrite(ctx, []*runtime.StorageWrite{{Collection: "c", Key: "missing", Value: "x", Version: storageVersion("x")}}); !errors.Is(err, runtime.ErrStorageRejectedVersion) {
+	if _, err := nk.StorageWrite(ctx, []*runtime.StorageWrite{{Collection: "c", Key: "missing", Value: obj("x"), Version: storageVersion(obj("x"))}}); !errors.Is(err, runtime.ErrStorageRejectedVersion) {
 		t.Errorf("a versioned write to a missing object must be rejected: %v", err)
 	}
 	if err := w("", "d"); err != nil {
@@ -305,8 +311,8 @@ func TestMemStorageBatchesAreAllOrNothing(t *testing.T) {
 	nk := newMemStorage()
 	nk.objs[memKey("c", "", "old")] = "v1"
 	_, err := nk.StorageWrite(ctx, []*runtime.StorageWrite{
-		{Collection: "c", Key: "new", Value: "x"},
-		{Collection: "c", Key: "old", Value: "y", Version: "stale"},
+		{Collection: "c", Key: "new", Value: obj("x")},
+		{Collection: "c", Key: "old", Value: obj("y"), Version: "stale"},
 	})
 	if !errors.Is(err, runtime.ErrStorageRejectedVersion) {
 		t.Fatalf("expected the stale write to reject the batch: %v", err)
@@ -316,7 +322,7 @@ func TestMemStorageBatchesAreAllOrNothing(t *testing.T) {
 	}
 
 	_, _, err = nk.MultiUpdate(ctx, nil,
-		[]*runtime.StorageWrite{{Collection: "c", Key: "new", Value: "x"}},
+		[]*runtime.StorageWrite{{Collection: "c", Key: "new", Value: obj("x")}},
 		[]*runtime.StorageDelete{{Collection: "c", Key: "old", Version: "stale"}}, nil, false)
 	if err == nil {
 		t.Fatal("a MultiUpdate whose delete is rejected must fail")
@@ -367,8 +373,8 @@ func TestMemStorageRefusesMissingAccountsAndInjectsFailures(t *testing.T) {
 	nk := newMemStorage()
 	nk.users = map[string]bool{"u1": true}
 	_, err := nk.StorageWrite(ctx, []*runtime.StorageWrite{
-		{Collection: "c", Key: "ok", UserID: "u1", Value: "x"},
-		{Collection: "c", Key: "gone", UserID: "deleted", Value: "y"},
+		{Collection: "c", Key: "ok", UserID: "u1", Value: obj("x")},
+		{Collection: "c", Key: "gone", UserID: "deleted", Value: obj("y")},
 	})
 	if !errors.Is(err, errFakeForeignKey) || len(nk.objs) != 0 {
 		t.Errorf("a write for a deleted account must fail the whole batch: %v, %v", err, nk.objs)
@@ -379,10 +385,10 @@ func TestMemStorageRefusesMissingAccountsAndInjectsFailures(t *testing.T) {
 
 	boom := errors.New("database unavailable")
 	nk.failOnce("write", boom)
-	if _, err := nk.StorageWrite(ctx, []*runtime.StorageWrite{{Collection: "c", Key: "k", Value: "v"}}); !errors.Is(err, boom) {
+	if _, err := nk.StorageWrite(ctx, []*runtime.StorageWrite{{Collection: "c", Key: "k", Value: obj("v")}}); !errors.Is(err, boom) {
 		t.Errorf("an injected failure must be returned: %v", err)
 	}
-	if _, err := nk.StorageWrite(ctx, []*runtime.StorageWrite{{Collection: "c", Key: "k", Value: "v"}}); err != nil {
+	if _, err := nk.StorageWrite(ctx, []*runtime.StorageWrite{{Collection: "c", Key: "k", Value: obj("v")}}); err != nil {
 		t.Errorf("an injected failure happens once: %v", err)
 	}
 
@@ -392,5 +398,20 @@ func TestMemStorageRefusesMissingAccountsAndInjectsFailures(t *testing.T) {
 	nk.matches = map[string]bool{"live": true}
 	if m, _ := nk.MatchGet(ctx, "live"); m == nil || m.MatchId != "live" {
 		t.Errorf("a running match must be found: %v", m)
+	}
+}
+
+// obj makes a small JSON object value — Nakama stores only JSON objects.
+func obj(s string) string { return `{"v":"` + s + `"}` }
+
+func TestMemStorageRefusesValuesThatAreNotObjects(t *testing.T) {
+	nk := newMemStorage()
+	for _, bad := range []string{"x", "[]", `"text"`, "{"} {
+		if _, err := nk.StorageWrite(context.Background(), []*runtime.StorageWrite{{Collection: "c", Key: "k", Value: bad}}); err == nil {
+			t.Errorf("Nakama refuses a value that isn't a JSON object: %q was written", bad)
+		}
+	}
+	if _, err := nk.StorageWrite(context.Background(), []*runtime.StorageWrite{{Collection: "c", Key: "k", Value: ` {"a":[1]}`}}); err != nil {
+		t.Errorf("a JSON object must be written: %v", err)
 	}
 }

@@ -98,6 +98,15 @@ instead of the live 48. A failure now is a regression in the save queue (`save_w
 character registry (`char_registry.go`). A crash is `docker kill -s KILL` followed by `docker compose start` (Docker doesn't auto-restart a
 killed container).
 ```bash
+bash tools/harness_restore_test.sh   # the BACKUP RESTORE ROUND TRIP (restores the whole database and back)
+```
+A scripted player with a real character: 3 fences, a restart (its start-up backup is B1), 3 more fences plus a new
+character and a first save of `persist_b`; then B1 is restored with the real tool (`tools/saves/restore_backup.py`)
+— 3 fences and a bag of 47, the later character and save gone, permissions kept, the restore recorded, the safety
+copy holding 44 — and the safety copy restored to undo it (6, 44, both back). Run it when no one is playing; on a
+pass it removes the four files it made in the backup folder. A failure is a regression in `restore.go` or
+`backup.go`. Unit tests: `backup_test.go`, `restore_test.go`.
+```bash
 bash tools/run_crosstest.sh   # the CROSSING TEST IN THE GAME CLIENT (headless Unity player; needs a current build)
 ```
 The game's side of the same crossings (`HeadlessSyncTest -crosstest -character <name>`): a new character enters

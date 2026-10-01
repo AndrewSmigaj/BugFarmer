@@ -2,10 +2,10 @@
 
 > System of record for HOW ZONES AND CHARACTERS SURVIVE A CRASH OR A RESTART (Terraria-style hosting: a player runs
 > the server; everything persists). The WorldSave document shipped 2026-07-05 (§P); the save queue, one live copy
-> per zone, saving characters with their zone and rolling backups on 2026-09-30 (D73). Code: `nakama/modules/world/world_save.go`
+> per zone, saving characters with their zone, rolling backups and restoring them on 2026-09-30 (D73). Code: `nakama/modules/world/world_save.go`
 > (the document) + `persist_classes.go` (the enforcement) + `zone_persist.go` (the dying legacy importer) +
 > `persistence.go` / `save_writer.go` / `save_batch.go` (the save queue) + `zone_lease.go` (one live copy per zone) +
-> `char_registry.go` (one zone at a time per character) + `backup.go` (rolling backups).
+> `char_registry.go` (one zone at a time per character) + `backup.go` / `restore.go` (rolling backups, restoring one).
 > Characters are user-owned documents (`character_persist.go`), saved only together with the zone they are in.
 
 ## The principle
@@ -173,6 +173,31 @@ First live run (2026-09-30): 64 zone records and 27 characters, 479 KB — ident
 (values and permissions); a restart with nothing changed wrote none; after a scripted player made a character and
 placed fences, the next start wrote a new one.
 
+## Restoring a backup (D73, 2026-09-30)
+`python3 tools/saves/restore_backup.py --list`, then `… restore_backup.py <file>` (it asks first; `--yes` doesn't).
+The tool copies the file into `<BF_BACKUP_DIR>/restore/` and restarts the server; the server does the rest at its
+next start, in InitModule — before the save queue or anything else runs, and before Nakama serves a single request
+(`restore.go`, `RestoreIfRequested`, called just before `StartSaveSystem`):
+1. **Checked first:** exactly one file waiting (more = all refused); a backup this build can read, intact (its
+   content hash); every zone save and character in a format this build can load (`upgradeSaveJSON`, the loaders' own
+   check — an older one is upgraded as usual when its zone loads, keeping a pre-upgrade copy).
+2. **A safety copy:** the current state is written to `pre-restore/` and read back — if that fails, nothing is
+   restored. Safety copies are never pruned, and one can itself be restored: that undoes the restore.
+3. **One transaction** (`MultiUpdate` — Nakama 3.35 `core_multi.go`: writes, then deletes, in one database
+   transaction): every zone record and character in the file is written back with its permissions; every zone record
+   and character NOT in it is removed — anything made after the backup is gone, as the owner chose (restoring puts the
+   zones and characters back together); a record of the restore is written. Characters of deleted accounts are left
+   out (storage would refuse them). Never touched: the pre-upgrade copies, `character_backup`, the accounts, the world
+   list.
+4. The file moves to `restore/done/`; refused or failed, to `restore/failed/`, with the reason in the log — and storage
+   exactly as it was. A restore never stops the server from starting.
+
+**Not applied twice by accident:** the record's key is the file's content hash plus when the file was put in place,
+so a file that couldn't be moved away isn't applied again at the next start (which would roll the game back each
+time); putting the same backup in place again later is a new request, and is applied. The server logs one line:
+`RESTORED <file>: … put back; … made after it removed; … left out. The state before is in pre-restore/<name>` (or
+`RESTORE … REFUSED — nothing was changed: <why>`), which the tool prints.
+
 ## Save formats — upgrade old, refuse newer, never overwrite what can't be read (2026-09-26)
 Every stored document carries `version` — the format of the build that wrote it (`worldSaveVersion`,
 `characterSaveVersion`). `save_versions.go` (`upgradeSaveJSON`) decides on load:
@@ -232,7 +257,17 @@ account across pages, sorted; damage and newer formats refused on reading; uncha
 restart; the retention (10 / 7 days / 4 weeks, reaching back past idle weeks); no pruning unless the new file reads
 back; files not ours left alone; a backup only when something was saved, none once the server is stopping. Each of
 three deliberate breaks (prune before the read-back, keep the pre-upgrade copies, list outside the queue) fails its
-test. `world_save_cost_test.go`: the byte fast path agrees with the full cell comparison on every real village_21_B cell,
+test. `restore_test.go`: a restore puts every zone record and character back and removes what came after, in one
+transaction, keeps a safety copy that undoes it, leaves pre-upgrade copies / `character_backup` / the world list alone,
+brings back an old-format zone; deleted accounts left out; a failed write changes nothing; newer formats and damaged
+files refused before anything happens; a stuck file not applied twice, a fresh placement applied; exactly one file;
+no safety copy, no restore. Each of four deliberate breaks (no record check, no removals, no account filter, no
+format check) fails its test. **The restore round trip,** `tools/harness_restore_test.sh`, on the real server with the
+real tool: B1 taken at a restart after 3 fences; 3 more fences, a new character and a first save of `persist_b` made
+after it; restoring B1 gives 3 fences and a bag of 47, the new character and `persist_b`'s save gone, permissions as
+before (zone 2/0, character 1/0), the restore recorded, a safety copy holding the bag of 44; restoring that safety
+copy gives back 6 fences, 44, the character and the save. PASS (2026-09-30). `world_save_cost_test.go`: the byte fast
+path agrees with the full cell comparison on every real village_21_B cell,
 and the save-build timing (run with -v). `final_save_test.go`: the clean stop queues the world and the present characters as ONE
 batch, waits for it, and returns nil; over a save changed by something else it writes nothing and stops saving. End-to-end: `tools/harness_persist_test.sh`
 (stop → wipe → start; build a farm headless → clean stop → start → assert restored; a direct Postgres inspection of

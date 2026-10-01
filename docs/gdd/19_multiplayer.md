@@ -34,7 +34,7 @@ Each line is the owner's decision in my words, with its date.
   zones stay frozen and catch up when someone arrives, with a few bugs wandering over from frozen neighbours
   (2026-09-26; 2026-09-28, D57, D61).
 - **The roles of the server and the players' computers are rethought by what works best**, and each job still on the
-  server has to justify its place — this is one of the most fragile parts of the game (2026-09-28, D58). Each bug's
+  server has to justify its place, because this area breaks easily (2026-09-28, D58). Each bug's
   own behaviour stays on the players' computers, as it has since July 2026.
 - **P5 is built in full** (2026-09-30, D73): characters saved with their zone every minute and when the server stops,
   the duplication faults fixed along with it, rolling backups, and a restore that brings zones and characters back
@@ -212,7 +212,7 @@ The review is decided (D58); this is how to run it.
 - **It comes first**: before the frozen zones' catch-up, the border events and bugs crossing between zones are built,
   since all of them depend on what the server runs.
 
-**Lenses:** The owner's direction — every server-side job justified, and this is one of the most fragile parts. What
+**Lenses:** The owner's direction — every server-side job justified, in an area that breaks easily. What
 can go wrong — a job moved without the in-step tests passing breaks the shared world, so the tests come first.
 
 ## Questions

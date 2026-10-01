@@ -83,8 +83,20 @@ back intact, and only files named `world-<time>.json`. Each one is logged: `dock
 Settings: `BF_BACKUP_DIR` (the folder inside the container, `/nakama/backups`) and `BF_BACKUP_MINUTES` in
 `nakama/data/local.yml` runtime.env; the folder mount in `docker-compose.yml` (`BF_BACKUP_HOST_DIR` moves it). A
 changed mount needs `docker compose up -d --force-recreate nakama`. How it works: `architecture_persistence.md` →
-"Backups". Restoring one is not built yet (next). The whole-database dump taken before the saves work began is
+"Backups". The whole-database dump taken before the saves work began is
 `C:/Users/emily/BugFarmer_backups/db-before-saves-2026-09-30.dump`.
+
+**Restore one** (puts every zone and character back as in the backup; anything made since is removed):
+```bash
+python3 tools/saves/restore_backup.py --list                      # the backups, newest first, with counts
+python3 tools/saves/restore_backup.py world-<time>.json           # asks, then restarts the server and reports
+python3 tools/saves/restore_backup.py pre-restore-<time>.json     # undo a restore: its safety copy
+```
+The server applies it at its next start, before anyone can join, after writing a safety copy of the current state
+to `world/pre-restore/` (never pruned) — all of it in one database transaction, or none. The file ends up in
+`world/restore/done/` (or `failed/`, with the reason in the log: `docker compose logs nakama | grep -i restore`).
+Accounts and the world list are not part of a backup. Test it with `bash tools/harness_restore_test.sh` (it restores
+the whole database and back — run it when no one is playing).
 
 ## Logs
 
