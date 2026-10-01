@@ -1,5 +1,8 @@
 # Entity Synchronization Architecture
 
+> **Partly outdated (noted 2026-10-01):** bugs no longer sync the way this describes — see
+> `architecture_swarm_sync.md`. The rest predates later work; where it and the code disagree, the code is right.
+
 ## Overview
 
 This document describes the real-time entity synchronization system for BugFarmer. The system handles position and facing updates for all dynamic entities (players, bugs) using a unified architecture.

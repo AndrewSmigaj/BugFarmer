@@ -1,5 +1,8 @@
 # Zone Design: Starting Village (2,1 · `village_21`)
 
+> **Outdated (noted 2026-10-01):** the real starting village is `village_21_B` (D19); this is the older demo
+> village, kept for the record.
+
 The single source of truth for the Village zone — its intent, contents, ecology, and the scene(s)
 that show it off. Players spawn here; it's the safe hub and the game's first impression.
 

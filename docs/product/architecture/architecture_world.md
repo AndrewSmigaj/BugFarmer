@@ -279,7 +279,8 @@ Roads provide safe-ish travel corridors. Bugs generally avoid roads but may cros
 Where each crafting material comes from — the geographic spine that paces progression. Per
 `economy/DECISIONS.md` **D7/D8**: surface **floor** tiles are never dug; materials come from diggable **block
 clumps** + harvestable **nature occupants** + the **mining cliff** + **bug drops**. "Terraforming" = *placing*
-a floor tile on top, never a hole. Water is placed with care — `water_shallow` (wade) vs `water_deep` (blocks).
+a floor tile on top, never a hole. Water is placed with care — `water_shallow` (wadeable once the wading outfit exists; it blocks today) vs
+`water_deep` (blocks).
 
 ### Surface (rows 0–2) — harvest occupants & dig block-clumps on fixed floor
 | Material | Source | Where (zones) | Tool |
@@ -467,7 +468,7 @@ Ground tiles fall into two categories:
 | mud | Swamp | Slow | No | Reduces movement speed |
 | stone_path | Placed | Normal | Yes (pickaxe) | Player-built paths |
 | wood_floor | Placed | Normal | Yes (axe) | Player-built floors |
-| water_shallow | Rivers, Ponds | Slow | No | Players wade, blocks insects |
+| water_shallow | Rivers, Ponds | Blocks | No | Blocks players today (`state.go`); the planned wading outfit will let its wearer wade (D51) |
 | water_deep | Lakes, Rivers | Blocks | No | Blocks players and insects |
 
 #### Solid Tiles (Mining Zone)
@@ -894,13 +895,13 @@ Zones are fixed-size areas with defined boundaries:
 
 ### Chunk Storage
 
-Zones are divided into 16×16 chunks for streaming:
+Zones are 256×256 cells, divided into 32×32-cell chunks for streaming (`ChunkSize = 32`, `zone.go`):
 
 ```
 zones/
   meadow_01/
     zone.json           # Zone metadata
-    chunk_0_0.json      # Ground + occupants for cells (0,0) to (15,15)
+    chunk_0_0.json      # Ground + occupants for cells (0,0) to (31,31)
     chunk_1_0.json
     ...
 ```
@@ -961,7 +962,7 @@ Zone data is authored at design-time with LLM assistance and committed to the re
 
 ### Workflow
 
-1. User provides high-level description (e.g., "grassland zone, 64x64, river runs through it, some ruins in the northeast")
+1. User provides high-level description (e.g., "grassland zone, 256x256, river runs through it, some ruins in the northeast")
 2. LLM generates complete zone data
 3. User reviews, provides feedback
 4. LLM regenerates or adjusts specific areas
@@ -1054,6 +1055,6 @@ type WorldUpdateMessage struct {
 | Tools | 10 tiers (wood → stone → copper → iron → steel → silver → gold → platinum → diamond), typed (axe, pickaxe, shovel, hammer) |
 | Item footprint | Boolean grid on ScriptableObject |
 | Placement | Grid snap, collision check, server validation |
-| Zone data | JSON files, chunk-based (16×16 cells) |
+| Zone data | JSON files, chunk-based (32×32 cells) |
 | LLM workflow | World-level features first, then per-zone content |
 | Multiplayer | Nakama validates and broadcasts changes |

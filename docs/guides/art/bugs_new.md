@@ -1,5 +1,9 @@
 # Bug System Architecture - BugFarmer
 
+> **Outdated (noted 2026-10-01):** June 2026 notes on the bug system, filed under art by mistake. The maintained
+> documents are `docs/product/architecture/architecture_bugs.md` and, for how bugs stay in step across players,
+> `architecture_swarm_sync.md`. Kept for the record.
+
 ## Overview
 
 This document defines the architecture for insects (bugs) in BugFarmer.

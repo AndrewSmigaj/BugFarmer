@@ -2,7 +2,7 @@
 
 > Copy this file to `docs/product/zones/<zone_id>.md` for a new zone. It's the concise design contract a
 > scene author reads before building. The whole-map context lives in `docs/product/architecture/architecture_world.md`;
-> the generation how-to in `docs/archive/ZONE_GENERATION_GUIDE.md` (incl. the biome→feature map). Keep this
+> the how-to in `docs/guides/authoring/README.md` (and its `biome-feature-map.md`). Keep this
 > short — it's intent, not implementation.
 
 ## Overview

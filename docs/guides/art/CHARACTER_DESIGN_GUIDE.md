@@ -1,6 +1,11 @@
 # Character Design Guide for Bug Farmer
 
-## AS BUILT (2026-06-12): 16x32 region-template paper-doll — READ THIS FIRST
+> **Read this first (noted 2026-10-01):** the current design is the section *AS BUILT (2026-07-28): whole-outfit
+> sprite sheets, armless character + floating hands* below. The 2026-06-12 section just under this note, and
+> everything from *Architecture Decision: LAYERED / Modular Player (2026-06-02)* onward, describe earlier designs,
+> kept for the record.
+
+## AS BUILT (2026-06-12): 16x32 region-template paper-doll — replaced on 2026-07-28
 The layered player SHIPPED at the game's existing **16x32** canvas (Andrew's
 call: keep the current resolution), not the 32x48 proposed below. How it works
 (`tools/player_sprites/`):

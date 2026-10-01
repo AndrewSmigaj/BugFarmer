@@ -1,5 +1,5 @@
 # Investigation: #10 moving the compost container broke it (can't load compost)
-_status: READY TO IMPLEMENT (sim-touching — needs the determinism gate) · investigated 2026-06-28 · investigate-only_
+_status: DONE 2026-07-01 (BACKLOG, playtest #10) · investigated 2026-06-28_
 
 ## Debrief (read me first)
 - **TL;DR:** A compost bin's `StationState` is created **only** by the chunk-load eager scan

@@ -1,4 +1,8 @@
 Consistent AI Pixel-Art Character + Equipment Pipeline (Final)
+
+> **Outdated (noted 2026-10-01):** this masked paper-doll pipeline was replaced on 2026-07-28 by whole-outfit
+> sprite sheets on an armless character with floating hands. The current procedure is the `player-sprites` skill
+> and the 2026-07-28 section of `docs/guides/art/CHARACTER_DESIGN_GUIDE.md`. Kept for the record.
 Goal: one animated player sprite plus hundreds of armor/clothing items that (a) match the gpt-image-1.5 style used by the rest of the game, (b) layer correctly over the body as a paperdoll, and (c) slice into body parts that drive your existing procedural animation rig.
 
 Style-agnostic: fill every {BRACES} placeholder yourself. Engine-agnostic: Section 9 adapts output to the part format your game already consumes.

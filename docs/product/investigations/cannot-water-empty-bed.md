@@ -1,5 +1,5 @@
 # Investigation: #15 can't water ground without a seed/plant in it
-_status: READY TO IMPLEMENT · investigated 2026-06-28 · investigate-only_
+_status: DONE 2026-07-01 (BACKLOG, playtest #15) · investigated 2026-06-28_
 
 ## Debrief (read me first)
 - **TL;DR:** By design today: `handleWatering` (`handlers_farming.go:73-89`) waters a cell only if it has a

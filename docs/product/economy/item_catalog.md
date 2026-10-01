@@ -13,7 +13,7 @@ Conventions:
 - **Source:** `craft@station` · `buy@npc` · `find@zone` · `drop@bug`.
 - **Unlock:** `auto` (recipe always available at the station) · `buy@npc` (learn the recipe from a vendor)
   · `find` (recipe scroll dropped/looted) · `n/a` (not crafted — gathered/bought).
-- Costs are **placeholder** integers (coins) / input lists — tune later. Stations from `../crafting_design.md`.
+- Costs are **placeholder** integers (coins) / input lists — tune later. Stations from `../design/crafting_design.md`.
 - ✅ = item already in `items.json` (see [`findings.md`](findings.md)); the rest are proposals.
 
 The acquisition philosophy (GDD): **most early recipes auto-unlock at the station you built; mid/late

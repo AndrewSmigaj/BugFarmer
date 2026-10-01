@@ -4,7 +4,9 @@
 > listed in [`CHANGELOG.md`](../CHANGELOG.md); open items in [`BACKLOG.md`](../BACKLOG.md). The game design is
 > being gathered into one place, `docs/gdd/`, one section at a time. Parts of this document were written before
 > much of the game was built — where it and the code disagree, the code is right. (Example: the "infection" and
-> meteor events described further down were an early idea and are not in the game.)
+> meteor events described further down were an early idea and are not in the game.) Sections 1–12 below are the
+> original 2024–25 design — for example Unity shows as "Not started" and chunks as 16×16 — so read them as
+> history; the `architecture_*.md` documents describe the game as built (noted 2026-10-01).
 
 ## Overview
 
@@ -26,12 +28,15 @@ Bug Farmer is a 2D multiplayer game where players farm bugs, build structures, a
 - [architecture_swarm_sync.md](architecture_swarm_sync.md) — authoritative-client swarm sim + deterministic followers
 - [architecture_persistence.md](architecture_persistence.md) — the WorldSave document: one doc per zone, the clock resumes, the classification enforcement (Terraria-style hosting)
 - [architecture_beekeeping.md](architecture_beekeeping.md) — the bee loop (forage→honey→harvest→extract) + the GENERAL condition/subdual (calming) system
+- [architecture_nursery_stations.md](architecture_nursery_stations.md) — the breeding model: nurseries as stations (open, see, take, teardown)
+- [architecture_lighting.md](architecture_lighting.md) — **DESIGN / PROPOSED** lighting, including the dark underground
 - [determinism_audit_2026-06-20.md](../investigations/determinism_audit_2026-06-20.md) — HISTORICAL root-cause audit of the cross-client divergence; its vectors are now FIXED (see the SUPERSEDED note at the top). Read for the mechanism map, not as open issues.
-- [game_design.md](../design/game_design.md) — the Game Design Document (GDD)
+- [game_design.md](../design/game_design.md) — the January 2026 design document; the current design document is
+  [docs/gdd/](../../gdd/README.md)
 - [requirements.md](../design/requirements.md) — game design requirements
 - [ROADMAP.md](../ROADMAP.md) — the plan for finishing the game (phases, owner decisions)
 - [BACKLOG.md](../BACKLOG.md) — open items not yet scheduled · [CHANGELOG.md](../CHANGELOG.md) — finished work
-- [zones/](zones/) — per-zone design notes
+- [zones/](../zones/) — per-zone design notes
 
 **`docs/guides/art/` — how sprites look & get made**
 - [object_pipeline.md](../../guides/art/object_pipeline.md) — **canonical** WORLD-art pipeline (Pipeline A: gen → clean → preview); read first. The PLAYER character + wearables pipeline (Pipeline B) is the **player-sprites** skill.
@@ -40,7 +45,7 @@ Bug Farmer is a 2D multiplayer game where players farm bugs, build structures, a
 
 **`docs/guides/authoring/` — how to build zones & scenes**
 - [README.md](../../guides/authoring/README.md) — the authoring **system** (builder · guides · scenes · art lab); read first
-- per-feature guides: [house](../../guides/authoring/house.md), [building](../../guides/authoring/building.md), [yard](../../guides/authoring/yard.md), [vegetation](../../guides/authoring/vegetation.md), [caves](../../guides/authoring/caves.md), [blocks](../../guides/authoring/blocks.md), [trees-and-ponds](../../guides/authoring/trees-and-ponds.md), [biome-feature-map](../../guides/authoring/biome-feature-map.md)
+- per-feature guides: [house](../../guides/authoring/house.md), [building](../../guides/authoring/building.md), [yard](../../guides/authoring/yard.md), [vegetation](../../guides/authoring/vegetation.md), [caves](../../guides/authoring/caves.md), [blocks](../../guides/authoring/blocks.md), [water](../../guides/authoring/water.md), [forest](../../guides/authoring/forest.md), [biome-feature-map](../../guides/authoring/biome-feature-map.md)
 
 ---
 

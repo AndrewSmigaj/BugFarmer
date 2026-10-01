@@ -1,5 +1,8 @@
 # Grass overhaul — research (how 2D top-down games do grass)
 
+> **Done (noted 2026-10-01):** the grass overhaul shipped on 2026-07-26; the "pending" marks below are from
+> before then. As built: `docs/product/architecture/architecture_world.md` §0.
+
 Working research for the grass overhaul (roadmap: `docs/plans/grass-overhaul.md`). Goal: understand exactly how
 polished top-down farming/crafting games render grass, so we can design the best overhaul for our game — not the
 cheapest or quickest.

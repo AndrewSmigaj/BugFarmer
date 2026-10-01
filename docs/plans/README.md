@@ -14,4 +14,10 @@ version lands here as `docs/plans/<slug>.md`.
 - One concern per plan; link related plans. Keep the PROGRESS log at the top as the resume pointer.
 
 ## Index
-- `repo-health-enforcement.md` — the enforcement-based repo-health pass (hooks + manifest; P0-P7). First entry.
+- `repo-health-enforcement.md` — the enforcement-based repo-health pass (hooks + manifest). P0–P6 done; the rest
+  waits for the owner.
+- `grass-overhaul.md` — the grass overhaul. Shipped 2026-07-26.
+- `swing-design-and-outfits.md` — the swing design and outfit build-out (2026-07-29). Phases 0–5 done; phase 6 not
+  started.
+- `player-arm-and-wearables.md` — superseded 2026-07-28 (the armless character replaced it).
+- `player-sprite-and-wearable-creation.md` — superseded (the July masked approach; noted 2026-09-26).

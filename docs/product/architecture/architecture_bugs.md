@@ -3157,6 +3157,10 @@ func (m *Match) removePlant(state *WorldState, plantID string) {
 
 ## Files Summary
 
+> **Outdated (noted 2026-10-01):** this is the original plan's file list. Several files were never made or were
+> removed later (for example `entities/individual.go`, `eggs.go`, `plant.go` and `world/spawner.go`); the code
+> shows what exists.
+
 ### Server (Go) - Create:
 | File | Purpose |
 |------|---------|

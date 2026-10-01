@@ -1,5 +1,8 @@
 # Zone Design: Butterfly Meadow (1,1 · `butterfly_meadow_11`)
 
+> **Outdated (noted 2026-10-01):** a June 2026 design for the zone north of the village, which the map now calls
+> Butterfly Fields (`docs/gdd/01_world.md`). Not built; kept as raw material.
+
 ## Overview
 - **Zone ID / Grid:** `butterfly_meadow_11` · row 1, col 1 (directly **north** of the village)
 - **Biome / Difficulty:** Flowering meadow → forest edge · **Medium** (a gentle step up from the village)

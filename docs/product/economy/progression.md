@@ -3,7 +3,7 @@
 How the economy is **gated and paced** — *where and when* things become available — so the game ramps fairly
 (not insane, not too easy). Balance lives here as **pacing**, justified against *The Art of Game Design* lenses.
 
-- **Geography** (zones, depths, what material is where) → `../architecture_world.md` (§1, §1b). Not copied here.
+- **Geography** (zones, depths, what material is where) → `../architecture/architecture_world.md` (§1, §1b). Not copied here.
 - **Recipes / costs** → `crafting.md`. **Shops / craft-vs-buy** → `merchants.md`. **Item purpose/bonuses** →
   `stats_and_bonuses.md`. **Decisions** → `DECISIONS.md`.
 

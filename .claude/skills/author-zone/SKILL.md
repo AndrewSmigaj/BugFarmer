@@ -25,10 +25,10 @@ top-level buckets, don't hand-type output paths — if a thing doesn't fit, it's
 ## Where the world lives (orient here first)
 - **The system index:** `docs/guides/authoring/README.md` — the parts (builder · guides · scenes · the
   scene→zone→`view_world`→test pipeline) and how they fit. Read it first.
-- **The whole map:** `docs/product/architecture/architecture_world.md` — the 24-zone grid, layout, river/roads,
+- **The whole map:** `docs/product/architecture/architecture_world.md` — the 20-zone grid (5 rows × 4), layout, river/roads,
   coordinates, per-zone species.
 - **Per-zone design docs:** `docs/product/zones/<zone_id>.md` (intent: biome, species, landmarks, ecology).
-  Start a new one from `docs/product/zones/_TEMPLATE.md`. Current build scope: `docs/product/zones/demo_slice.md`.
+  Start a new one from `docs/product/zones/_TEMPLATE.md`. Build scope: the ROADMAP (all twenty zones, ring by ring, decided 2026-09-26); `demo_slice.md` is the older June demo scope.
 - **Which primitives per biome:** `docs/guides/authoring/biome-feature-map.md`.
 - **Content to draw from:** `docs/brainstorms/<topic>/` (flora, fungus, trees, bugs, landmarks, decorations,
   materials, …) — mine these for what to place; `ecology_proposal.md` for how species relate.

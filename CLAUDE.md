@@ -28,6 +28,8 @@ time (you end up building every feature twice). For every feature:
 - **"Done" = professional-quality AND verified**, never "technically works."
 
 ## Repo map
+- **For people:** the front page is `README.md` (the game, where to start, the current document per topic);
+  `docs/README.md` says what each docs folder holds. Keep both in step when a document is replaced or moved.
 - `BugFarmerClient/` — Unity 6 client (C#); all art lives under `Assets/Resources/`.
 - `nakama/` — Nakama Go server (authoritative game logic) + canonical entity data.
 - `tools/` — Python sprite/world pipeline (gen → clean → preview → publish), the test-zone
@@ -77,9 +79,10 @@ time (you end up building every feature twice). For every feature:
 - **Repo organization rule (read before creating a folder or saving generated output):**
   `docs/guides/authoring/ORGANIZATION.md`. One rule — **reusable technique → `examples/<feature>`,
   a specific place → `zones/<zone>`, game content → `catalog/`** — mirrored across docs, previews, and
-  scene code. **Don't invent new top-level buckets.** Previews = exactly `catalog/ examples/ zones/ player/`.
+  scene code. **Don't invent new top-level buckets.** Previews mirror `catalog/ examples/ zones/`; player art work
+  lives in `tools/_generated/player/` (ORGANIZATION.md, Part 2).
 - World art (loaded by `key` at runtime): `Assets/Resources/{Objects,Tiles,Items,Bugs,Effects}/`.
-- Player + player gear (hand-authored): `Assets/Resources/Player/`.
+- Player + player gear (whole outfits — the `player-sprites` skill): `Assets/Resources/Player/`.
 - Entity data is **canonical** in `nakama/data/entities/{occupants,placeables,items,crops}.json`
   — the Go server and every Python tool read only from there.
 - The client's `Assets/Resources/Data/entities/` is **published output** — never hand-edit it;
@@ -102,18 +105,22 @@ time (you end up building every feature twice). For every feature:
   (`--save`) AND verify the SAVED data north-up (`python3 tools/world/view_world.py <zone>` →
   look). A "fixed" builder with a stale save = the game silently loads the OLD/flipped zone.
   Never overwrite a committed zone without a temp-save + render check first.
-- **Don't resize sprites by hand.** The runtime NEAREST-scales to `sprite_w × sprite_h`;
-  `pixelclean.py`'s downscale is the only intended resize. See [object_pipeline.md](docs/guides/art/object_pipeline.md).
-- **No `jq`** — decode the gpt-image-1 base64 with Python (curl-piped large base64 fails).
+- **Don't resize sprites by hand.** The runtime NEAREST-scales to `sprite_w × sprite_h`; the pipeline's own step
+  (pixelsnap for new art, `pixelclean.py` for the older world art) is the only intended resize. See
+  [object_pipeline.md](docs/guides/art/object_pipeline.md).
+- **No `jq`** — decode the image API's base64 with Python (curl-piped large base64 fails).
 - **No ComfyUI** anywhere in the flow.
 - **Even-width occupants need the footprint-X shift** (`worldPos.x += (footprint.x-1)*0.5*cellSize`),
   applied in both the game and `make_scene.py`, or they sit half a cell off-grid.
 
-## Two pipelines (scoped by *what* you make — never a per-task choice)
-- **A — gpt-image-1** for **all world art** (objects, occupants, tiles, items, bugs):
-  `gen_sprites.py` → `pixelclean.py` → `make_scene.py`.
-- **B — hand-authored** for **the player sprite + player gear only**:
-  `generate_player_sprites.py` writes explicit RGBA grids (no API, no cleanup).
+## Art pipelines
+- **Decided (2026-09-26/28, D60; the ROADMAP's art row):** characters and most art are made with gpt-image-2 and
+  pixel-snapped (pixelsnap recovers the exact pixels; it is not a downscaler); the interface and the blocks are
+  drawn in code, iterated with the owner. Whole outfits. Art is made after the GDD sign-off, in test batches, and
+  every paid image call is asked first. The move is the BACKLOG's *Now — all art on gpt-image-2 + pixelsnap*.
+- **As built today:** world art still runs `gen_sprites.py` (gpt-image-1) → `pixelclean.py` → `make_scene.py`;
+  player outfits run the `player-sprites` skill (gpt-image-2 + pixelsnap, `tools/player_sprites/gen.py`). The
+  hand-authored text-grid route (`generate_player_sprites.py`, `veg_sprites.py`) is retired for new art.
 
 ## Common commands
 ```bash
@@ -147,7 +154,7 @@ python3 tools/make_scene.py                         # render tools/_generated/pr
 ## Keep the canonical docs in step with the code
 When you finish a plan's work — before you call it done — reconcile the docs the change touched:
 - **`docs/product/BACKLOG.md`** — move/remove the item you completed; add anything new the work surfaced.
-- **The affected `docs/product/architecture_*.md`** — if behavior, data flow, or a contract changed,
+- **The affected `docs/product/architecture/architecture_*.md`** — if behavior, data flow, or a contract changed,
   update that doc so it still describes how the game actually works.
 - If nothing architectural changed, say so explicitly rather than skipping silently.
 

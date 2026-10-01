@@ -1,5 +1,8 @@
 # Grass overhaul — plan
 
+> **Shipped 2026-07-26** (commit `5f6fc1d5`, noted 2026-10-01). How the grass works as built is
+> `docs/product/architecture/architecture_world.md` §0. This plan is kept for the record.
+
 **Status:** research DONE (12 games + techniques + our-grass + feasibility + cold-critic, all in
 `docs/product/investigations/grass-overhaul/`). This is the PLAN (Stage 3). The certainty assessment (Stage 4)
 + raised certainties (Stage 5) are appended below once done. Quality bar: **best-for-the-game, not fast/prototype.**

@@ -1,4 +1,4 @@
-'bala# Economy & Crafting — Suggestions
+# Economy & Crafting — Suggestions
 
 Recommendations for turning the Stage-1 crafting spine + flat item list ([`findings.md`](findings.md)) into
 the **fleshed-out system, well beyond a bare minimum,** that the request wants — including the **town NPCs

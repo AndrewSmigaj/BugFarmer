@@ -7,14 +7,15 @@ inside the GDD guardrails (item-driven power, no stat grind, capped accessory bo
 **Balance here means PACING — *where and when* things become available — not stripping content down.**
 Content is intentionally **over-produced so you PRUNE down**, never beg for more.
 
-> Status: **design only** — nothing here is wired into the game yet.
+> Status: mostly design. The buy/sell/currency spine is built (D25), and the catalogs marked as built describe the
+> game as it is; the rest is design.
 
 ## The map
 
 **Start here / cross-cutting**
 | File | What it is |
 |---|---|
-| **[`DECISIONS.md`](DECISIONS.md)** | Every design decision — resolved (D1–D9) + the synthesis/prune notes. Check before assuming anything. |
+| **[`DECISIONS.md`](DECISIONS.md)** | The decision log for the whole game, not only the economy (D1 onward, newest last). Check before assuming anything. |
 | [`progression.md`](progression.md) | The **pacing & gating curve** + lens rationale + the starting-village scope. |
 | [`crafting.md`](crafting.md) | The crafting **system**: cost model, station roster, recipe schema, bug-derived/artisan/sprinkler mechanics. (Item *enumeration* lives in `catalogs/`.) |
 | [`merchants.md`](merchants.md) | The 3 shops (General Store / Blacksmith / Carpenter) + currency + the craft-vs-buy matrix. |
@@ -62,7 +63,7 @@ JSON and held drift-free by `tools/data/catalog_coverage.py` (no-orphan gate). T
 
 ## Where geography lives (do NOT duplicate here)
 The world map, zones, mining depth, and the **resource/material dispersion** are canonical in
-**[`../architecture_world.md`](../architecture/architecture_world.md)** (§1, §1b). The economy docs link to it.
+**[`../architecture/architecture_world.md`](../architecture/architecture_world.md)** (§1, §1b). The economy docs link to it.
 
 ## Synthesis / prune notes (carried from the generation pass — see `DECISIONS.md`)
 - **Spider Vale East** generated before West finished, so it used a parallel silk/venom lineage — reconcile

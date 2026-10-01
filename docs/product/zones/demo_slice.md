@@ -1,5 +1,8 @@
 # Demo Slice — the vertical N–S corridor
 
+> **Outdated (noted 2026-10-01):** the June 2026 demo scope. The plan now builds all twenty zones, ring by ring
+> (ROADMAP, decided 2026-09-26). Kept for the record.
+
 The first playable demo is a **vertical slice** through the map, centered on the starting village. Four
 zones, descending in difficulty/depth, each with real **landmarks and little features** (not flat maps).
 The rest of the 24-zone world (`architecture_world.md`) stays world-doc-only until after the demo.

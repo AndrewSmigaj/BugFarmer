@@ -44,7 +44,9 @@ The system is **four parts**, each with one home:
    overwritten). Rule: **verify in TEXT (lint + `dump`), then look at a rendered crop** — never call it
    good off a giant PNG. (`validate()` is the older bare overlap check; `lint()` supersedes it.) The one
    expected lint item now is the wall-32/door-24 height (pending a 1.5-cell re-bake).
-5. New object with no art renders as a labeled placeholder — log it in `docs/product/art_needed.md`.
+5. New object with no art renders as a labeled placeholder. Art waits for the art pass (the BACKLOG's *Now — all
+   art on gpt-image-2 + pixelsnap*); `docs/product/art_needed.md` is superseded, but its script still lists
+   entities with no image.
 
 ```bash
 python3 tools/zonegen/scenes/<scene>.py     # build + render ONE scene to its preview PNG + print lint
@@ -52,14 +54,15 @@ python3 tools/world/previews.py                    # rebuild the content CATALOG
 ```
 
 > **Where previews live** — the rule is [ORGANIZATION.md](ORGANIZATION.md). `tools/_generated/previews/`
-> has exactly four folders (browse them — no html, no registry):
+> mirrors three kinds of thing (browse them — no html, no registry):
 > - `catalog/<category>/` — every in-game object, by category. Each group has a `_sheet.png` (all at a
 >   glance) **and** every object as its own `<id>.png`. Generated from entity data by `tools/world/previews.py`,
 >   so it always matches what's in the game.
 > - `examples/<feature>/` — reusable technique demos (`buildings/`, `blocks/`, `roads/`, `water/`, …).
 > - `zones/<zone>/` — a zone's `full.png` + region crops + a `scenes/` folder of the vignettes that
 >   compose it (e.g. `zones/underground_passages_31/scenes/{mine_entrance,underground_caverns,underground_mining_camp}.png`).
-> - `player/` — player sprites + animations.
+> - Player art work is not a preview: it lives in `tools/_generated/player/`. A few category renders (`ui/`,
+>   `title/`) also sit in previews (ORGANIZATION.md, Part 2).
 >
 > Each scene declares its destination in a `PREVIEW = "..."` constant; `tools/world/previews.py` discovers and
 > renders them all (one render path, no hand-typed output paths). (The old html gallery + registry were removed.)
@@ -74,16 +77,15 @@ A **scene** is a small render-only vignette; a **ZONE** is the 256×256 world th
    add organic terrain (`lake`/`forest`/`rock_patch`), extend roads to the edges, set `Z.bug_spawning`,
    then `Z.save()` → `nakama/data/zones/<id>/` (size must be a multiple of 32; `save()` writes row/col 0,0
    so patch them after for real zones).
-4. **View the whole zone** — `python3 tools/world/view_world.py <zone>` → `tools/_generated/previews/maps/<zone>_detail.png`
+4. **View the whole zone** — `python3 tools/world/view_world.py <zone>` → `tools/_generated/previews/zones/<zone>/<zone>_detail.png`
    (a north-up colour minimap; it reads the SAVED chunks, so save first).
 5. **Test in-game (no Unity needed)** — `run-backend` skill to start the server, then the sync-harness
    joins the zone and verifies it loads + ticks + spawns (see `tools/sync-harness/`).
 
 **Quick mechanic-test zones:** `python3 tools/world/make_test_zone.py --zone-id <id> --species <s> --occupant 'id@x,y' …`
 builds a tiny deterministic zone with a bug spawn + placed occupants — for isolating one mechanic.
-**Spawning gotcha:** only species DEFINED in `nakama/data/species.json` spawn (currently
-`fly_common`, `butterfly_meadow`, `wasp_common`, `centipede_garden`, `millipede`,
-`beetle_carrion`, `bee_honey`, `dragonfly_blue`, `firefly`); `bugs.json` ids that lack a
+**Spawning gotcha:** only species DEFINED in `nakama/data/species.json` spawn (15 on 2026-10-01 — read the
+file for the list); `bugs.json` ids that lack a
 species spec silently don't spawn. Nest species (wasp, bee) need their NEST OCCUPANTS placed
 (wasp_nest / bee_hive_wild / beehive_* boxes) + `max_nests` in their species_cap — bees are
 nest-founded ONLY (`initial: 0`, never free-spawned).
@@ -143,10 +145,10 @@ nest-founded ONLY (`initial: 0`, never free-spawned).
   scoreboard — the rationale behind `noise_field`/`route_road`/`sculpt_plan`.
 
 ## Orient yourself
-- **The whole map:** `docs/product/architecture/architecture_world.md` — the 24-zone grid, layout, river/roads,
+- **The whole map:** `docs/product/architecture/architecture_world.md` — the 20-zone grid (5 rows × 4), layout, river/roads,
   per-zone species, coordinates.
-- **Per-zone design docs:** `docs/product/zones/<zone>.md` (start from `_TEMPLATE.md`). Current build
-  scope: `docs/product/zones/demo_slice.md`.
+- **Per-zone design docs:** `docs/product/zones/<zone>.md` (start from `_TEMPLATE.md`). Build scope: the ROADMAP
+  (all twenty zones, ring by ring, decided 2026-09-26); `demo_slice.md` is the older June demo scope.
 - **Content to draw from:** `docs/brainstorms/<topic>/` + `ecology_proposal.md`.
 - **Operational playbook:** the `author-zone` skill (`.claude/skills/author-zone/`) drives this loop.
 
