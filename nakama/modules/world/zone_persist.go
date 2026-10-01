@@ -99,10 +99,6 @@ type ZoneMeta struct {
 	SavedAt         int64    `json:"saved_at"`
 }
 
-// zoneAutosaveTicks gates the periodic autosave (~10 min at 10 Hz) — only fires while occupied (the
-// MatchLoop pause guard returns before this), exactly when crash-safety matters.
-const zoneAutosaveTicks = 6000
-
 // ---- legacy storage reads ----
 
 // LoadZoneMeta reads the legacy zone meta record. (nil, nil) when absent.

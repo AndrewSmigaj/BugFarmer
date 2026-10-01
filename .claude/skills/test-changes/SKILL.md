@@ -46,7 +46,18 @@ Run after ANY server-logic change. Add a `*_test.go` for new sim/economy logic (
   error; `MatchGet`/`MatchSignal`/`UsersGetId` are scriptable. Its own `TestMemStorage*` tests pin each rule — if
   you need another Nakama call in a save test, add it here, mirroring Nakama's real behaviour.
 - `world/final_save_test.go` — the clean-stop save (`MatchTerminate`): the world and every present character go to
-  storage in ONE write, MatchTerminate returns nil (stop at once), and nothing is written over an unusable save.
+  the save queue as ONE batch, MatchTerminate waits for it and returns nil (stop at once), and a save changed by
+  something else is never written over (saving stops).
+- `world/save_writer_test.go` — the one ordered save queue (D73): one write per batch, in order; versions (a changed
+  save stops saving); database errors retried until the batch lands; deleted accounts left out; autosaves coalesced,
+  departures never; barriers/tasks in order; departures freed only once written; old-format clean-up once.
+- `world/char_registry_test.go` — one zone at a time per character, through the real join/leave/signal callbacks:
+  the crossing waits for the departure and loads the newest character; a newer copy in the same zone takes over;
+  a dead zone retired first; another character of the account sent out first; entry-pass rules; a late join kicked;
+  busy refused within budget; deletion refused in play. Run with `RACE=1`.
+- `world/zone_lease_test.go` — one live copy per zone: started once and reused; 10 simultaneous requests → one copy;
+  a dead copy retired before the new one loads its last save, its late save refused; stale/failed starts; stopping;
+  the 8 s budget. Run these with `RACE=1`.
 - `world/zone_links_test.go` — the SAVED zone map (`nakama/data/zones`, mounted read-only at `/data` by the
   script): every neighbour exists, links back from the opposite edge, sits on the adjacent grid square, and
   shares the same edge length. One-way links need a named entry in `zoneLinkExceptions` (with the reason);
@@ -81,11 +92,23 @@ in the zone), **crash** (`docker kill -s KILL` after a sleep-in-bed save), **cro
 again while still connected). Each case wipes both zones (server stopped) and uses a new account. The harness options
 behind it: `--device <id>` (the same account every time), `--char <name>` (create-or-reuse a character; joins send its
 `char_id`), and the scenarios `fences-place` (`--count N --sleep --hold S`), `fences-count`, `cross-fences`, `bag-count`
-(`--expect N`). Regenerate the zones with the two `make_test_zone.py` lines in its docstring. **Until the D73 save queue
-and character registry land, crash, cross and reconnect FAIL on purpose** — they reproduce today's faults (recorded
-2026-09-30: 45 after a crash, 50 arriving after leaving with 45, 50 instead of the live 48); graceful passes since the
-clean-stop save. A crash is `docker kill -s KILL` followed by `docker compose start` (Docker doesn't auto-restart a
+(`--expect N`). Regenerate the zones with the two `make_test_zone.py` lines in its docstring. **All four PASS since D73 (2026-09-30)** — before
+it, crash gave 45 (five fences lost), cross 50 arriving after leaving with 45 (duplicated), reconnect the stored 50
+instead of the live 48. A failure now is a regression in the save queue (`save_writer.go`), the zone lease or the
+character registry (`char_registry.go`). A crash is `docker kill -s KILL` followed by `docker compose start` (Docker doesn't auto-restart a
 killed container).
+```bash
+bash tools/run_crosstest.sh   # the CROSSING TEST IN THE GAME CLIENT (headless Unity player; needs a current build)
+```
+The game's side of the same crossings (`HeadlessSyncTest -crosstest -character <name>`): a new character enters
+`persist_a`, places 2 fences, and crosses three times through the game's own `CrossZoneController` — into a zone
+that can't be entered (it must come back to `persist_a`), into `persist_b` (the server waits for `persist_a`'s 3 s
+held-back save) and back (`persist_b` holds its save 10 s, past the server's 8 s wait, so the game is told "busy" and
+must retry behind the fade) — each time checking the bag the server sends on arrival is the bag that left (48; a stale
+saved copy shows 50). A failure is a regression in `WorldManager.EnterWorld` / `EnterWorldWithRetry` (the entry pass,
+the retry) or `CrossZoneController.Swap` (the way back). `-character <name>` works in every headless mode (found by
+name or created; the menu's way in), and the late-join gate takes `CHAR_B=<name>` to make client B a player with a
+character (its spawn-apart half uses `<name>Edge`, since a character comes back where it last left the zone).
 
 ## 2.5. Ecology population tuning — the 6× `bug_lab` chart loop (THE living-ecology rig)
 The one you run for ANY bug-ecology/balance change (predator survival, oscillation, Director bands, food

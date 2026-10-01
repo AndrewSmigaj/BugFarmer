@@ -238,8 +238,8 @@ func TestWorldSaveRoundTrip(t *testing.T) {
 	}
 }
 
-// TestWorldSaveResumeClock: LastZoneSaveTick anchors to the restored tick so the autosave delta
-// doesn't see "forever ago" and fire immediately.
+// TestWorldSaveResumeClock: the world clock resumes at the restored tick. (The autosave no longer counts ticks: zone
+// start-up sets LastSaveAt, so the first autosave comes an interval after the zone starts — TestZoneStartSetsSaveClock.)
 func TestWorldSaveResumeClock(t *testing.T) {
 	m := &Match{}
 	src := buildPopulatedState(t)
@@ -247,8 +247,8 @@ func TestWorldSaveResumeClock(t *testing.T) {
 
 	dst := newPersistTestState()
 	m.restoreWorldSave(dst, ws, nopRuntimeLogger())
-	if dst.LastZoneSaveTick != 5000 {
-		t.Fatalf("LastZoneSaveTick = %d, want the restored tick 5000", dst.LastZoneSaveTick)
+	if dst.TickCount != 5000 {
+		t.Fatalf("TickCount = %d, want the restored tick 5000", dst.TickCount)
 	}
 }
 
@@ -290,19 +290,8 @@ func TestWorldSaveEphemeralZoneSkipsPopulation(t *testing.T) {
 	}
 }
 
-// TestWorldSaveGenerationGuard: the pure decision — a stored doc STRICTLY ahead wins; same-tick
-// and older docs are overwritten.
-func TestWorldSaveGenerationGuard(t *testing.T) {
-	if !worldSaveSuperseded(6000, 5000) {
-		t.Error("stored 6000 vs snapshot 5000: the newer stored save must win (skip the write)")
-	}
-	if worldSaveSuperseded(5000, 5000) {
-		t.Error("equal ticks are the same generation — the write must proceed")
-	}
-	if worldSaveSuperseded(4000, 5000) {
-		t.Error("stored 4000 vs snapshot 5000: the snapshot is newer — the write must proceed")
-	}
-}
+// (The old generation guard — a stored document with a higher tick won — is gone: every save now goes through the one
+// ordered save queue and is written against the stored document's version; save_writer_test.go covers both.)
 
 // TestLegacyChunkImportClamps: the OLD compensations live ONLY in the importer — legacy stamps
 // (written against a clock that reset to 0) are clamped, and the dangling resident ref is cleared.

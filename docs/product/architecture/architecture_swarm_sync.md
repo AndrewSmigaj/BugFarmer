@@ -707,7 +707,12 @@ headless `tools/sync-harness` (real Nakama .NET client, no Unity) reproduces/ver
 ### 11.1 World lifecycle (server, `match.go`)
 - **Entry is via `world_enter(zone_id)`** (RPC): find-or-create the canonical *singleton* world per
   zone (deterministic key `default_<zone>`), reuse its live match or recreate on demand, return the
-  match id. The frontend never creates worlds; Normal=`village_21`, Test=`sim_test`.
+  match id. The frontend never creates worlds; Normal=`village_21`, Test=`sim_test`. Since 2026-09-30 (D73)
+  every request that starts a zone goes through the zone's lease (`zone_lease.go`): one live copy per zone —
+  two players arriving at once can no longer start two copies with two sync states. A join that brings a character
+  also carries an entry pass (`char_registry.go`): MatchJoin activates only the session its attempt accepted, and a
+  re-entry into the same zone kicks the older session first — so every join and leave still runs the existing paths
+  (WorldInit, authority, the late-join snapshot); nothing new enters the sync layer.
 - **Unknown zones are refused (2026-09-26):** `world_enter`/`world_create` return `UNKNOWN_ZONE` for an id
   with no authored `data/zones/<id>/zone.json`, and `MatchInit`'s config-load fallback keeps the requested id
   instead of becoming `village_21` (which used to load and write village_21's save from a second match).
@@ -716,8 +721,9 @@ headless `tools/sync-harness` (real Nakama .NET client, no Unity) reproduces/ver
   autosaving over it; older formats upgrade after a backup. Nothing reaches the sync layer — the refusal
   happens before any join. See `architecture_persistence.md` → "Save formats".
 - **A clean stop saves each zone with the players in it (2026-09-30):** the server gives zones 15 s to stop
-  (`local.yml` `shutdown_grace_sec`); `MatchTerminate` writes the world and every present character in ONE write
-  and returns nil, so Nakama stops the match at once instead of letting it run on unsaved through the grace period.
+  (`local.yml` `shutdown_grace_sec`); `MatchTerminate` queues the world and every present character as ONE batch on
+  the save queue, waits for it, and returns nil, so Nakama stops the match at once instead of letting it run on
+  unsaved through the grace period. (Zones also save every minute and on every leave through the same queue.)
   Nothing reaches the sync layer — the ledger, epoch and seq are per-run, and the next start is a fresh sync epoch
   over the restored world. See `architecture_persistence.md` → "The clean stop".
 - **Test zones only — `debug_leave_delay_ms`** (zone.json): holds back a departing player's save, so the saves crash

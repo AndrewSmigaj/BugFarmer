@@ -58,7 +58,7 @@ raw/ ab/ blocklab/ variants/ scratch/ ecology_charts/   sprite staging + transie
 
 **`tools/` root** — `make_scene.py`: the shared renderer **library** (imported by `zonegen`; rarely run directly).
 `*.sh` harness/test runners (`run_go_tests.sh`, `run_sync_test.sh`, `harness_persist_test.sh`, `harness_crash_test.sh` —
-the saves crash test, …).
+the saves crash test, `run_crosstest.sh` — the zone-crossing test in the headless game client, …).
 
 ## Directories
 | Dir | What |

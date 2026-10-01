@@ -126,6 +126,11 @@ type ZoneConfig struct {
 	// Production omits it → 0 → no delay.
 	DebugLeaveDelayMs int `json:"debug_leave_delay_ms,omitempty"`
 
+	// AutosaveSeconds: TEST ZONES ONLY — how often this zone saves itself and everyone in it, overriding the server's
+	// interval (60 s; runtime.env BF_AUTOSAVE_SECONDS). The saves crash test sets 5 so a crash test needn't wait a
+	// minute. Production omits it.
+	AutosaveSeconds int `json:"autosave_seconds,omitempty"`
+
 	// Cross-zone adjacency: edge direction ("north"/"south"/"east"/"west") -> neighbor zoneID.
 	// Walking off an edge with a neighbor hidden-swaps into it (see CrossZoneController). Absent/""
 	// = a hard edge (no crossing). +Y = north, so south edge = y0, north edge = y255.

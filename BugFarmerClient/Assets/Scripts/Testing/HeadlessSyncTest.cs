@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Nakama;
 using UnityEngine;
 using BugFarmer.Networking;
 using BugFarmer.Entities;
 using BugFarmer.Bugs;
+using BugFarmer.Player;
 using BugFarmer.Tracing;
+using BugFarmer.UI;
 
 namespace BugFarmer.Testing
 {
@@ -24,13 +27,19 @@ namespace BugFarmer.Testing
     /// deterministic sync holds. This is the FULL system (real client + real server, merge/split/spawn all
     /// live) — not a reimplementation. Built players don't take the Unity project lock, so N instances run
     /// alongside an open Editor. See tools/run_sync_test.sh and the test-changes skill §3.
+    ///
+    /// <c>-character &lt;name&gt;</c> enters WITH that character (found by name, or created) — the way a player enters
+    /// from the menu: world_enter reserves it and the join carries its entry pass (D73).
+    /// <c>-crosstest</c> (needs <c>-character</c>) is the zone-crossing test in the real client, in the linked test
+    /// zones persist_a and persist_b — see <see cref="HeadlessSyncTestRunner.RunCrossTest"/> and
+    /// tools/run_crosstest.sh.
     /// </summary>
     public static class HeadlessSyncTest
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Boot()
         {
-            if (!HasFlag("-synctest") && !HasFlag("-ecology")) return;
+            if (!HasFlag("-synctest") && !HasFlag("-ecology") && !HasFlag("-crosstest")) return;
             var go = new GameObject("/[HeadlessSyncTest]");
             UnityEngine.Object.DontDestroyOnLoad(go);
             go.AddComponent<HeadlessSyncTestRunner>();
@@ -77,14 +86,31 @@ namespace BugFarmer.Testing
                 }
                 else Log($"WARNING: could not parse -spawn '{spawn}' (want gx,gy); using default spawn");
             }
-            Log($"start: zone={zone} clientId={clientId} duration={duration}s spawn={(entryX.HasValue ? $"{entryX},{entryY}" : "default")}");
+            string charName = HeadlessSyncTest.GetArg("-character", null);
+            Log($"start: zone={zone} clientId={clientId} duration={duration}s spawn={(entryX.HasValue ? $"{entryX},{entryY}" : "default")} character={charName ?? "none"}");
 
             try
             {
                 await NetworkManager.Instance.Session;            // device auth (distinct per -clientid)
                 await NetworkManager.Instance.ConnectSocketAsync();
-                Log("socket connected; entering world (ephemeral, no character)…");
-                await WorldManager.Instance.EnterWorld(zone, null, entryX, entryY);
+                string charId = null;
+                if (!string.IsNullOrEmpty(charName))
+                {
+                    charId = await EnsureCharacter(charName);
+                    CharacterSession.SelectedCharID = charId;     // what a zone crossing re-enters with
+                    CharacterSession.SelectedCharName = charName;
+                    Log($"character '{charName}' = {charId}");
+                }
+                if (HeadlessSyncTest.HasFlag("-crosstest"))
+                {
+                    if (charId == null) { Log("ERROR: -crosstest needs -character"); Quit(2); return; }
+                    Quit(await RunCrossTest(charId) ? 0 : 7);
+                    return;
+                }
+                Log(charId == null ? "socket connected; entering world (ephemeral, no character)…"
+                                   : $"socket connected; entering world as '{charName}'…");
+                // As the menu does: a refusal that clears by itself (the character still being saved) is retried.
+                await WorldManager.Instance.EnterWorldWithRetry(zone, charId, entryX, entryY);
                 Log($"entered '{zone}'; waiting for the bug sim…");
 
                 float t0 = Time.realtimeSinceStartup;
@@ -208,6 +234,140 @@ namespace BugFarmer.Testing
                 return;
             }
             Quit(0);
+        }
+
+        // ---- the zone-crossing test (-crosstest) ----
+
+        // The linked test zones (tools/world/make_test_zone.py): 64x64 each, persist_a west of persist_b. Each holds
+        // back its departure saves (debug_leave_delay_ms): persist_a 3 s — the next zone is asked for before the save
+        // lands, so the server must wait for it; persist_b 10 s — longer than the server waits (8 s), so the client is
+        // told "busy" and must retry behind the fade.
+        private const string ZoneA = "persist_a", ZoneB = "persist_b", Fence = "fence_wood";
+        private const int FenceRow = 44, FenceFirstX = 36;
+        private int _fullSyncs;          // full inventory syncs received (one per join)
+        private int _syncedFences = -1;  // fences in the bag in the latest full sync
+        private int _failures;
+
+        /// <summary>
+        /// The zone-crossing test in the real client (D73). Enter persist_a with the character and place 2 fences;
+        /// then three crossings through CrossZoneController, each checked against the bag that left:
+        ///   1. into a zone that can't be entered — the player must come back to persist_a;
+        ///   2. into persist_b — the server waits for persist_a's held-back save before letting the character in;
+        ///   3. back into persist_a — persist_b's save is held back past the server's wait, so the entry is refused
+        ///      as busy and must be retried behind the fade.
+        /// Every bag is read from the server's full inventory sync on arrival — a stale saved copy shows as 50.
+        /// </summary>
+        public async Task<bool> RunCrossTest(string charId)
+        {
+            var wm = WorldManager.Instance;
+            wm.OnMatchData += CountFullSyncs;
+
+            int syncs = _fullSyncs;
+            await wm.EnterWorldWithRetry(ZoneA, charId);
+            Check(await WaitUntil(() => _fullSyncs > syncs, 10f), $"entered {ZoneA} and received the character's bag");
+            Log($"CROSSTEST entered {ZoneA} with BAG {Fence}={_syncedFences}");
+
+            int placed = await PlaceFences(2);
+            int left = CountItem(InventoryManager.Instance.ItemSlots, Fence);
+            Check(placed == 2, $"placed 2 fences [placed {placed}]");
+            Log($"CROSSTEST placed {placed}; BAG {Fence}={left}");
+
+            var cross = FindObjectOfType<CrossZoneController>();
+            if (cross == null) { Log("CROSSTEST ERROR: no CrossZoneController (no local player)"); return false; }
+
+            await Crossing(cross, "no_such_zone", 2.5f, FenceRow + 0.5f, ZoneA, left,
+                           "a crossing into a zone that can't be entered comes back");
+            await Crossing(cross, ZoneB, 2.5f, FenceRow + 0.5f, ZoneB, left,
+                           "the crossing waits for the zone left behind to save the character");
+            int retries = wm.EnterRetries;
+            await Crossing(cross, ZoneA, 61.5f, FenceRow + 0.5f, ZoneA, left,
+                           "a crossing refused as busy is retried behind the fade");
+            Check(wm.EnterRetries > retries, $"the way back was refused as busy and retried [retries {wm.EnterRetries - retries}]");
+
+            wm.OnMatchData -= CountFullSyncs;
+            Log(_failures == 0 ? "CROSSTEST PASS" : $"CROSSTEST FAIL ({_failures} check(s) failed)");
+            return _failures == 0;
+        }
+
+        // One crossing: walk into `target` at (ex, ey); check the player ends up in `expectZone` with `bag` fences.
+        private async Task Crossing(CrossZoneController cross, string target, float ex, float ey, string expectZone,
+                                    int bag, string what)
+        {
+            int syncs = _fullSyncs;
+            float t0 = Time.realtimeSinceStartup;
+            await cross.CrossTo(target, ex, ey);
+            var wm = WorldManager.Instance;
+            bool arrived = wm.CurrentMatch != null && wm.CurrentZoneId == expectZone &&
+                           await WaitUntil(() => _fullSyncs > syncs, 10f);
+            Log($"CROSSTEST crossing to {target}: now in {wm.CurrentZoneId ?? "no zone"} after " +
+                $"{Time.realtimeSinceStartup - t0:F1}s with BAG {Fence}={_syncedFences}");
+            Check(arrived, $"{what}: in {expectZone} with a fresh bag");
+            Check(_syncedFences == bag, $"{what}: the bag that arrived is the bag that left — {bag} fences [got {_syncedFences}]");
+        }
+
+        // Place up to `count` fences along the test row; a placement counts once the server takes it out of the bag.
+        private async Task<int> PlaceFences(int count)
+        {
+            var inv = InventoryManager.Instance;
+            int placed = 0;
+            for (int x = FenceFirstX; placed < count && x < FenceFirstX + 24; x++)
+            {
+                int before = CountItem(inv.ItemSlots, Fence);
+                var json = JsonUtility.ToJson(new TilePlaceMessage { grid_x = x, grid_y = FenceRow, occupant_id = Fence, direction = 0 });
+                await NetworkManager.Instance.Socket.SendMatchStateAsync(WorldManager.Instance.CurrentMatch.Id, OpCodes.TilePlace, json);
+                if (await WaitUntil(() => CountItem(inv.ItemSlots, Fence) == before - 1, 3f)) placed++;
+            }
+            return placed;
+        }
+
+        private void CountFullSyncs(IMatchState state)
+        {
+            if (state.OpCode != OpCodes.FullInventorySync) return;
+            var msg = JsonUtility.FromJson<FullInventorySyncMessage>(Encoding.UTF8.GetString(state.State));
+            _syncedFences = CountItem(msg?.item_slots, Fence);
+            _fullSyncs++;
+        }
+
+        private void Check(bool ok, string what)
+        {
+            if (!ok) _failures++;
+            Log($"CROSSTEST CHECK {(ok ? "ok" : "FAILED")}: {what}");
+        }
+
+        private static int CountItem(InventorySlot[] slots, string itemId)
+        {
+            int n = 0;
+            if (slots != null)
+                foreach (var s in slots)
+                    if (s != null && s.item_id == itemId) n += s.count;
+            return n;
+        }
+
+        private static async Task<bool> WaitUntil(Func<bool> done, float seconds)
+        {
+            float t0 = Time.realtimeSinceStartup;
+            while (!done())
+            {
+                if (Time.realtimeSinceStartup - t0 > seconds) return false;
+                await Task.Yield();
+            }
+            return true;
+        }
+
+        /// <summary>The account's character with this name (as the select screen lists it), created if missing.</summary>
+        private static async Task<string> EnsureCharacter(string name)
+        {
+            var session = await NetworkManager.Instance.Session;
+            var client = NetworkManager.Instance.Client;
+            var list = JsonUtility.FromJson<CharacterListResponse>((await client.RpcAsync(session, "character_list", "{}")).Payload);
+            if (list?.characters != null)
+                foreach (var c in list.characters)
+                    if (string.Equals(c.name, name, StringComparison.OrdinalIgnoreCase)) return c.char_id;
+            var result = await client.RpcAsync(session, "character_create", JsonUtility.ToJson(new CharacterCreateRequest { name = name }));
+            var created = JsonUtility.FromJson<CharacterCreateResponse>(result.Payload);
+            if (created?.character == null || string.IsNullOrEmpty(created.character.char_id))
+                throw new InvalidOperationException($"character_create '{name}' refused: {JsonUtility.FromJson<ErrorResponse>(result.Payload)?.error}");
+            return created.character.char_id;
         }
 
         private static void Log(string m)

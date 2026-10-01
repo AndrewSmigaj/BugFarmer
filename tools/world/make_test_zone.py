@@ -22,13 +22,16 @@ Examples
   python3 tools/world/make_test_zone.py --zone-id sim_farm --chunks-w 4 --chunks-h 4 \
       --occupant compost_pile@70,70
 
-  # the saves crash-test pair (tools/harness_crash_test.sh): two linked bug-free zones, a bed in the first,
-  # test-only save knobs set with --set
-  python3 tools/world/make_test_zone.py --zone-id persist_a --chunks-w 2 --chunks-h 2 --initial 0 --max 0 \
-      --row 0 --col 10 --neighbor east=persist_b --occupant bed_basic@48,50 \
+  # the saves test pair (tools/harness_crash_test.sh, tools/run_crosstest.sh): two linked bug-free zones, a bed in
+  # the first, test-only save knobs set with --set. Each holds back a departing player's save: persist_a 3 s (the next
+  # zone is asked for first, so the server must wait), persist_b 10 s (past the server's 8 s wait, so the game is
+  # told "busy" and must retry)
+  python3 tools/world/make_test_zone.py --zone-id persist_a --name "Persistence test A" --chunks-w 2 --chunks-h 2 \
+      --initial 0 --max 0 --row 0 --col 10 --neighbor east=persist_b --occupant bed_basic@48,50 \
       --set autosave_seconds=5 --set debug_leave_delay_ms=3000
-  python3 tools/world/make_test_zone.py --zone-id persist_b --chunks-w 2 --chunks-h 2 --initial 0 --max 0 \
-      --row 0 --col 11 --neighbor west=persist_a --set autosave_seconds=5
+  python3 tools/world/make_test_zone.py --zone-id persist_b --name "Persistence test B" --chunks-w 2 --chunks-h 2 \
+      --initial 0 --max 0 --row 0 --col 11 --neighbor west=persist_a \
+      --set autosave_seconds=5 --set debug_leave_delay_ms=10000
 
 Output: nakama/data/zones/<zone-id>/zone.json + chunk_X_Y.json (one per chunk).
 The Nakama server loads it via world_create {"zone_id": "<zone-id>"}.

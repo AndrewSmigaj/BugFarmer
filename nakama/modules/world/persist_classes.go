@@ -123,5 +123,7 @@ var persistClasses = map[string]persistEntry{
 	"SpeciesSpawnCursor": {classPerRun, "round-robin cursor; restarting the rotation is harmless"},
 
 	// -- persistence bookkeeping --
-	"LastZoneSaveTick": {classPerRun, "SET to the restored Tick at load (else one spurious autosave fires immediately)"},
+	"MatchID":       {classPerRun, "this match's id, from Nakama at MatchInit — the zone's live copy, for the save queue"},
+	"LastSaveAt":    {classPerRun, "wall-clock time of the zone's last queued save; set at MatchInit, so the first autosave comes an interval later"},
+	"SaveRequested": {classPerRun, "a player slept: save soon (cleared once the save is queued)"},
 }

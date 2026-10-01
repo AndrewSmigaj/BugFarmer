@@ -15,6 +15,7 @@
 #
 # USAGE:  tools/run_sync_latejoin.sh [zone] [duration_seconds] [join_delay_seconds]
 #   tools/run_sync_latejoin.sh village_21_B 70 12
+#   CHAR_B=LateB tools/run_sync_latejoin.sh village_21_B 70 12     # client B enters with a character (D73)
 set -u
 
 ZONE="${1:-village_21_B}"
@@ -77,6 +78,14 @@ A_SPAWN_ARG=(); B_SPAWN_ARG=()
 # zone drift round + authority tie-referee must then DETECT + RESYNC it (server log: "tie broken by
 # AUTHORITY"). Such a run is EXPECTED to show a divergent span in the diff — it proves the net, not sync.
 [ -n "${DESYNC_B:-}" ] && B_SPAWN_ARG+=(-desyncafter "$DESYNC_B")
+# CHARACTER (D73): CHAR_B=<name> makes client B enter WITH a character, as a player does from the menu — world_enter
+# reserves it and the join carries its entry pass. A character comes back where it last left the zone, so the
+# spawn-apart half uses a character of its own (<name>Edge) and the co-located one stays at the zone's spawn.
+B_CHAR=""
+if [ -n "${CHAR_B:-}" ]; then
+  B_CHAR="$CHAR_B"; [ -n "${SPAWN_B:-}" ] && B_CHAR="${CHAR_B}Edge"
+  B_SPAWN_ARG+=(-character "$B_CHAR")
+fi
 
 echo "launching client A (authority, creates the match)… spawn=${SPAWN_A:-default}"
 "$PLAYER" -batchmode -nographics -synctest -zone "$ZONE" -clientid A -duration "$DUR" "${A_SPAWN_ARG[@]}" \
@@ -100,7 +109,7 @@ sleep "$DELAY"
 # B_launch = A_recstart+DELAY → B records [A_recstart+DELAY+28, ...]. So BDUR = DUR-DELAY-28 ends B with A.
 BDUR=$(( DUR - DELAY - 30 ))
 [ "$BDUR" -lt 30 ] && BDUR=30
-echo "launching client B (LATE JOIN), duration=${BDUR}s… spawn=${SPAWN_B:-default}"
+echo "launching client B (LATE JOIN), duration=${BDUR}s… spawn=${SPAWN_B:-default} character=${B_CHAR:-none}"
 "$PLAYER" -batchmode -nographics -synctest -zone "$ZONE" -clientid B -duration "$BDUR" "${B_SPAWN_ARG[@]}" \
   -logFile "$WPDATA/player_B.log" >"$PDATA/player_B.out" 2>&1 &
 PB=$!

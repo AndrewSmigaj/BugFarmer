@@ -215,8 +215,10 @@ the **core (row 4)** is the deadly heart.
 - In code, a zone's `neighbors` (zone.json) links its edges; a link must come back from the opposite edge, and the
   two zones must sit side by side on the world grid with edges of the same length (`zone_links_test.go`).
 - Two TEST zones, `persist_a` ↔ `persist_b` (row 0, columns 10–11, made by `tools/world/make_test_zone.py`), exist
-  only for the saves crash test (`tools/harness_crash_test.sh`). `persist_a` sets `debug_leave_delay_ms`, a test-only
-  knob that holds back a departing player's save, so the zone-crossing race happens every time.
+  only for the saves tests (`tools/harness_crash_test.sh`, and `tools/run_crosstest.sh` in the game client). Both set
+  `debug_leave_delay_ms`, a test-only knob that holds back a departing player's save: `persist_a` 3 s, so the
+  zone-crossing race happens every time; `persist_b` 10 s, past the server's 8 s wait, so the game is told "busy" and
+  must retry.
 
 ### Road & Signpost System
 
@@ -1022,11 +1024,12 @@ type WorldUpdateMessage struct {
 
 - Base zone data: loaded from committed JSON files
 - Player modifications: stored in Nakama storage **per zone** — one document, `<zone>:world` in `zone_state` —
-  not per world instance: two worlds running the same zone would read and write the same save (corrected
-  2026-09-30; keeping one live copy of each zone is part of the D73 saves work)
+  not per world instance, so only one live copy of a zone may run (`zone_lease.go`, D73: a second world asking for a
+  running zone is refused)
 - On load: apply modifications on top of base data
-- Saved when the zone empties, every 10 minutes while occupied, and — since 2026-09-30 — on a clean server stop,
-  in one write together with the characters still in the zone
+- Saved through one ordered save queue, always together with the characters in the zone (D73, 2026-09-30): every
+  minute while occupied (a test zone's `autosave_seconds` overrides it), whenever someone leaves, after a sleep, and
+  on a clean server stop
 - A save diffs every loaded chunk against its authored file; the files are read once per match and kept
   (`WorldState.BaseChunks`), so a save of a fully loaded 64-chunk zone takes ~1 ms (it was ~110 ms)
 - The full design — one WorldSave document per zone, how old save formats upgrade, why a newer or

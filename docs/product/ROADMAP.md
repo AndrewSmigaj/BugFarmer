@@ -67,14 +67,15 @@ ecology stations) let you read and steer the ecosystem.
   migration~~ (done 2026-09-26: upgrade old, refuse newer, back up before upgrading), rolling backups, periodic
   character saves · hosting spike → standalone Nakama-compatible server + Host/Join
   + world list + version handshake · zone-complete collision/loading (+ ecology re-tune) · world clock ·
-  frozen-zone catch-up (+ border events from frozen neighbours, D57) · blocked zone entry · latent bugs (WorldEnter
-  race, first-join seq stall, merge ignores nests) · reconnect · CI + release builds · internet-reality test (latency,
+  frozen-zone catch-up (+ border events from frozen neighbours, D57) · blocked zone entry · latent bugs (~~WorldEnter
+  race~~ fixed by D73, first-join seq stall, merge ignores nests) · reconnect · CI + release builds · internet-reality test (latency,
   bandwidth) · **a thorough review of what still runs on the server** — each piece justified now that the players'
   computers run the simulation in step (D58); it comes BEFORE the frozen-zone catch-up, border events and cross-zone
   migration, which all depend on what the server runs (§19 P10) · no limit on characters per account · **characters
-  saved every few minutes and at zone shutdown** — in progress (D73, 2026-09-30): the clean-stop save is done (a
-  stop now saves each zone with its players); saves every minute, the duplication fixes, backups and restore are next
-  (§19 P5).
+  saved every few minutes and at zone shutdown** — in progress (D73, 2026-09-30). Done: a clean stop saves each zone
+  with its players; each zone saves together with everyone in it every minute, on leaving and after a sleep, through
+  one ordered queue; one live copy per zone; a character enters the next zone only once the last one has saved it.
+  Next: rolling backups and restore (§19 P5).
 - **Examine view + examine texts:** an examine view for items, recipes and bugs, and ~650 short texts with the real
   biology (owner decision: examining an item or recipe shows what it does); today hovering
   shows only the name and 2 of 654 things have a description. Written alongside the art redo, category by category.
@@ -126,13 +127,16 @@ plus the owner's music packs — D60); legal (audio licence, AI disclosure); lau
 
 ## Latent bugs found 2026-09-26 (verified in code)
 1. ~~Unknown zone → silently becomes `village_21` and writes its save~~ — **fixed** (26d704a).
-2. `world_enter` has no lock → two players entering at once can create two copies of a zone.
+2. ~~`world_enter` has no lock → two players entering at once can create two copies of a zone~~ — **fixed** (D73,
+   2026-09-30: one live copy per zone, `zone_lease.go`).
 3. Possible first-join stall on fresh zones (MatchInit emits events; the first joiner is told there are none).
 4. Swarm merge ignores nests → a nest's patrol can be absorbed; the nest then regrows one (population inflation).
 5. ~~A save-version bump discards every existing save~~ — **fixed** (save formats upgrade step by step; newer or
    unreadable saves are refused, never overwritten).
-6. **Crossing into a zone that won't start strands the player** (found 2026-09-26 while researching GDD §01; by code
-   reading, not yet reproduced): the client leaves the old zone before joining the new one
+6. ~~**Crossing into a zone that won't start strands the player**~~ — **fixed** (D73, 2026-09-30) as proposed below:
+   the game reads the reply and goes back to the zone it left (tested by `tools/run_crosstest.sh`). Still open: if
+   that zone can't be entered either (the server stopping, say), the player is left in no zone. (Found 2026-09-26
+   while researching GDD §01, by code reading:) the client leaves the old zone before joining the new one
    (`CrossZoneController.Swap`), and the server sends its errors back as normal replies (`rpc/world.go`
    `errorResponse`), so a refused join throws after the old zone is gone. A zone refusing to start is now a real
    case (a save from a newer build, or an unreadable one — item 5). Fix: check the reply, and on failure rejoin the

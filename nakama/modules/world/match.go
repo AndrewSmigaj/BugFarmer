@@ -20,7 +20,11 @@ import (
 )
 
 // Match implements runtime.Match for world simulation
-type Match struct{}
+// Match is one zone's match handler (one per running match). sys is the save system it uses: nil = the server's
+// (currentSaves); unit tests give it their own.
+type Match struct {
+	sys *saveSystem
+}
 
 // Ecology tunables (per-second rates at 10Hz). First-pass values — tune via the repro_test
 // population graph. Species-specific rates (feed/breed/decay) live in species.json.
@@ -292,6 +296,10 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 	// be retried; the stored document is never touched. An OLDER format is upgraded (save_versions.go) after its
 	// original is backed up — and if the backup can't be written, the zone doesn't start either.
 	swarmsRestored := false
+	state.MatchID, _ = ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
+	if state.MatchID == "" {
+		state.MatchID = localMatchID(zoneID) // unit tests call MatchInit without Nakama's context
+	}
 	if state.CurrentZone != nil {
 		zoneKey := ZoneStateKey(state.CurrentZone.ZoneID, "")
 		found, err := loadWorldSave(ctx, nk, zoneKey)
@@ -313,7 +321,16 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 		default:
 			swarmsRestored = m.importLegacySave(ctx, nk, state, logger)
 		}
+		// The save queue writes this zone's document against the version just loaded ("" = none yet → `*`).
+		if sys := m.saveSys(); sys != nil {
+			version := ""
+			if found != nil {
+				version = found.ObjectVersion
+			}
+			sys.writer.zoneLoaded(state.CurrentZone.ZoneID, version)
+		}
 	}
+	state.LastSaveAt = time.Now() // the first autosave comes an interval after the zone starts
 	if !swarmsRestored {
 		m.spawnInitialSwarms(state, logger)
 		m.seedInitialCarrion(state, logger)
@@ -331,6 +348,15 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 	if err != nil {
 		logger.Error("MatchInit: failed to marshal label: %v", err)
 		return nil, 0, ""
+	}
+
+	// ONE LIVE COPY PER ZONE (D73, zone_lease.go): take the zone for this match — for the epoch the starting request
+	// reserved — only now that it has loaded. A stale start is refused.
+	if sys := m.saveSys(); sys != nil {
+		if err := sys.leases.bind(zoneID, zoneEpochParam(params), state.MatchID); err != nil {
+			logger.Error("Zone %s NOT started: %v", zoneID, err)
+			return nil, 0, ""
+		}
 	}
 
 	logger.Info("World match initialized: %s (%s)", name, worldID)
@@ -363,21 +389,48 @@ func (m *Match) MatchJoinAttempt(ctx context.Context, logger runtime.Logger, db 
 		}
 	}
 
-	// Character bridge: if the client passed a char_id in the join metadata, verify it belongs to
-	// this account and STASH it for MatchJoin to consume (the two callbacks are decoupled — MatchJoin
-	// gets no metadata). Match callbacks run serially on one goroutine per match, so PendingCharacters
-	// needs no lock. Absent char_id = ephemeral default join (sync-harness / debug) — still accepted.
+	// No joins while the server shuts down: the zone is making its final save (D73).
+	sys := m.saveSys()
+	if sys != nil && sys.stopping.Load() {
+		return state, false, "server_stopping"
+	}
+
+	// CHARACTER (D73, char_registry.go): a join that brings a character must carry the entry pass world_enter issued
+	// for this match. The character is loaded ONCE, here, and staged by SESSION for MatchJoin (which gets no metadata;
+	// both callbacks run serially on the match goroutine, so no lock). The pass is re-checked as the LAST step, so a
+	// join Nakama would already have reported as timed out is refused instead of leaving a ghost holding the character.
+	// No char_id = a join without a character (sync-harness / debug) — still accepted.
 	if charID := metadata["char_id"]; charID != "" {
-		save, err := LoadCharacterSave(ctx, nk, presence.GetUserId(), charID)
-		if err != nil {
-			logger.Error("MatchJoinAttempt: character load failed for %s/%s: %v", presence.GetUserId(), charID, err)
-			return state, false, "character load failed"
+		userID, session := presence.GetUserId(), presence.GetSessionId()
+		key, pass := charKey{userID, charID}, metadata["pass"]
+		if _, present := worldState.Players[userID]; present {
+			return state, false, "already_in_zone" // one player per account per zone: world_enter sends the other out first
 		}
-		if save == nil {
-			logger.Warn("MatchJoinAttempt: %s requested unknown character %s", presence.GetUserId(), charID)
+		if sys != nil {
+			if err := sys.chars.attempt(key, worldState.MatchID, pass); err != nil {
+				logger.Warn("MatchJoinAttempt: %s/%s refused: %v", userID, charID, err)
+				return state, false, joinRefusal(err)
+			}
+		}
+		save, err := LoadCharacterSave(ctx, nk, userID, charID)
+		if err != nil || save == nil {
+			if sys != nil {
+				sys.chars.cancel(key, worldState.MatchID, pass)
+			}
+			if err != nil {
+				logger.Error("MatchJoinAttempt: character load failed for %s/%s: %v", userID, charID, err)
+				return state, false, "character load failed"
+			}
+			logger.Warn("MatchJoinAttempt: %s requested unknown character %s", userID, charID)
 			return state, false, "character not found"
 		}
-		worldState.PendingCharacters[presence.GetUserId()] = charID
+		if sys != nil {
+			if err := sys.chars.confirmAttempt(key, worldState.MatchID, pass, session); err != nil {
+				logger.Warn("MatchJoinAttempt: %s/%s refused at the last check: %v", userID, charID, err)
+				return state, false, joinRefusal(err)
+			}
+		}
+		worldState.PendingCharacters[session] = &stagedCharacter{key: key, save: save}
 	}
 
 	// Cross-zone entry: if the client passed entry_x/entry_y (walking off an adjacent zone's edge),
@@ -410,7 +463,7 @@ func (m *Match) MatchJoinAttempt(ctx context.Context, logger runtime.Logger, db 
 			nearEdge := float64(cx) <= edge || float64(cx) >= w-1-edge ||
 				float64(cy) <= edge || float64(cy) >= h-1-edge
 			if nearEdge {
-				worldState.PendingEntryPositions[presence.GetUserId()] = [2]float32{cx, cy}
+				worldState.PendingEntryPositions[presence.GetSessionId()] = [2]float32{cx, cy}
 			} else {
 				logger.Warn("MatchJoinAttempt: rejecting non-edge entry pos (%.1f,%.1f) from %s", cx, cy, presence.GetUserId())
 			}
@@ -431,7 +484,22 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 	}
 
 	for _, presence := range presences {
-		userID := presence.GetUserId()
+		userID, session := presence.GetUserId(), presence.GetSessionId()
+
+		// CHARACTER (D73): the character this session's join attempt accepted and loaded. It becomes active only if
+		// its entry pass is still this session's; otherwise (the pass ran out and the character went elsewhere) the
+		// session is removed before it touches the zone.
+		staged := worldState.PendingCharacters[session]
+		delete(worldState.PendingCharacters, session)
+		entry, hasEntry := worldState.PendingEntryPositions[session]
+		delete(worldState.PendingEntryPositions, session)
+		if staged != nil {
+			if sys := m.saveSys(); sys != nil && !sys.chars.joined(staged.key, worldState.MatchID, session) {
+				logger.Warn("MatchJoin: %s/%s's entry pass ran out before the join — removing that session", userID, staged.key.charID)
+				_ = dispatcher.MatchKick([]runtime.Presence{presence})
+				continue
+			}
+		}
 
 		// RECONNECTION DETECTION: If this user already has a presence (old session),
 		// log it. The old session's MatchLeave will fire later but will be ignored
@@ -450,15 +518,13 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 			zoneID = worldState.CurrentZone.ZoneID
 		}
 
-		// CHARACTER LOAD (Part C): if a character was staged in MatchJoinAttempt, overlay its
-		// persisted inventory/equipment/coins/appearance/home onto AddPlayer's fresh defaults and
-		// choose the spawn. Character data is NOT in the bug-sim hash, and we set the spawn cell
-		// BEFORE the PLAYER_CELL event below — so this is invisible to the deterministic tick.
-		if charID, staged := worldState.PendingCharacters[userID]; staged {
-			delete(worldState.PendingCharacters, userID)
-			if save, err := LoadCharacterSave(ctx, nk, userID, charID); err != nil {
-				logger.Error("MatchJoin: character load failed for %s/%s: %v", userID, charID, err)
-			} else if save != nil {
+		// CHARACTER LOAD (Part C): overlay the character MatchJoinAttempt loaded (its inventory/equipment/coins/
+		// appearance/home) onto AddPlayer's fresh defaults and choose the spawn — no second storage read. Character
+		// data is NOT in the bug-sim hash, and we set the spawn cell BEFORE the PLAYER_CELL event below — so this is
+		// invisible to the deterministic tick.
+		if staged != nil {
+			charID := staged.key.charID
+			if save := staged.save; save != nil {
 				applyCharacterSave(player, save)
 				if !save.IntroSeen {
 					// First login: keep AddPlayer's spawn_point (the central square) + flag the
@@ -482,8 +548,7 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 		// at the matching edge of THIS zone — overrides the character save's spawn decision above (it's
 		// the last SetWorldPosition, so it wins). Still inventory-loaded from the char save. Set BEFORE
 		// the PLAYER_CELL event below, so the deterministic bug sim sees only the final entry cell.
-		if entry, staged := worldState.PendingEntryPositions[userID]; staged {
-			delete(worldState.PendingEntryPositions, userID)
+		if hasEntry {
 			player.SetWorldPosition(entry[0], entry[1], worldState.Config.ChunkSize)
 			logger.Info("Player %s cross-zone entered %s at edge (%.1f,%.1f)", userID, zoneID, entry[0], entry[1])
 		}
@@ -660,6 +725,8 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 		return state
 	}
 
+	var departing []charSave // the leaving characters, saved below in one batch with the zone
+	left := 0
 	for _, presence := range presences {
 		userID := presence.GetUserId()
 
@@ -674,30 +741,19 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 			}
 		}
 
-		// CHARACTER SAVE (Part C): persist this character before removing it. Build the snapshot
-		// synchronously here (race-free — the match goroutine is single-threaded, and player is
-		// freed by RemovePlayer just below), then write to storage in a detached goroutine so the
-		// leave path doesn't block on I/O. The stale-session guard above already prevents a
-		// reconnect's leave from clobbering the live session.
-		if player, ok := worldState.Players[userID]; ok && player.CharacterID != "" {
-			zoneID := ""
-			if worldState.CurrentZone != nil {
-				zoneID = worldState.CurrentZone.ZoneID
+		// CHARACTER SAVE (D73): capture this character as bytes before it leaves the zone's state. It goes to storage
+		// in this call's one leave batch, with the zone and everyone still in it (below the loop) — never on its own,
+		// so the character and the world it was played in are always saved from the same moment.
+		if dep, ok, err := departingCharacter(worldState, userID); err != nil {
+			logger.Error("MatchLeave: %v — its departure is not saved", err)
+		} else if ok {
+			departing = append(departing, dep)
+			// The character is leaving: free to enter another zone once this departure is written (char_registry.go).
+			if sys := m.saveSys(); sys != nil {
+				sys.chars.departing(dep.charKey, worldState.MatchID, presence.GetSessionId())
 			}
-			save := buildCharacterSave(player, zoneID, worldState.Config.ChunkSize, time.Now().Unix())
-			leaveDelay := 0
-			if worldState.CurrentZone != nil {
-				leaveDelay = worldState.CurrentZone.DebugLeaveDelayMs // test zones only (zone.go); 0 in production
-			}
-			go func() {
-				if leaveDelay > 0 {
-					time.Sleep(time.Duration(leaveDelay) * time.Millisecond)
-				}
-				if err := WriteCharacterSave(context.Background(), nk, userID, save); err != nil {
-					logger.Error("MatchLeave: character save failed for %s/%s: %v", userID, save.CharID, err)
-				}
-			}()
 		}
+		left++
 
 		worldState.RemovePlayer(userID)
 
@@ -742,14 +798,6 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 					// leaving a seq gap the client's HasAllEventsUpTo can never close (it stalls).
 					worldState.ClearPendingInfluence()
 					logger.Info("Zone %s is now empty - reset all sync state (NextSeq, InfluenceLog, Snapshot, Authority, PendingInfluence)", zoneID)
-
-					// ZONE PERSISTENCE: the zone just went quiet — snapshot the WorldSave document
-					// (synchronously on the match goroutine; frozen bytes) and write it async. The
-					// generation guard in writeWorldSave keeps a slow async write from ever rolling
-					// back a newer terminate save.
-					if doc, docTick := m.snapshotWorldSaveBytes(worldState); doc != "" {
-						go writeWorldSave(context.Background(), nk, logger, worldState.CurrentZone.ZoneID, doc, docTick)
-					}
 				} else if zone.AuthorityUserID == userID {
 					// Authority is leaving but zone still has members - reassign
 					zone.AuthorityUserID = ""
@@ -785,6 +833,12 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 		}
 
 		logger.Info("Player %s left world %s", presence.GetUsername(), worldState.WorldID)
+	}
+
+	// ZONE PERSISTENCE (D73): one leave batch — the departing characters, the zone, and everyone still in it, from
+	// this moment — on the save queue. A departing character is free to enter another zone once it is written.
+	if left > 0 {
+		m.queueLeaveSave(logger, worldState, departing)
 	}
 
 	// Update label with new player count
@@ -825,6 +879,11 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		return worldState
 	}
 
+	// ZONE PERSISTENCE (D73): queue the zone's save if one is due (the autosave, or soon after a player slept). It runs
+	// here — past the pause guard, so only while occupied — on the state the previous call left: a panic later in a
+	// tick can never stop saves.
+	m.saveIfDue(logger, worldState)
+
 	// SIM BATCH (test zones only; SimBatch=1 in production = ONE iteration = byte-identical behavior):
 	// advance N full sim-ticks per Nakama call so a headless tuning run covers many game-days fast. Each
 	// iteration is a complete, unchanged tick (TickCount++, sim, per-tick broadcast); the messages slice
@@ -834,16 +893,6 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		worldState.TickCount++
 		tickStart := worldState.Perf.Start() // whole-tick timer (recorded at loop-body end; see profiler.go)
 		chunkSize := worldState.Config.ChunkSize
-
-		// ZONE PERSISTENCE: periodic autosave while occupied (crash safety between the on-empty/terminate
-		// saves). Snapshot synchronously on the match goroutine, write async. Only fires past the pause
-		// guard, so it never runs on an empty zone.
-		if worldState.TickCount-worldState.LastZoneSaveTick >= zoneAutosaveTicks {
-			worldState.LastZoneSaveTick = worldState.TickCount
-			if doc, docTick := m.snapshotWorldSaveBytes(worldState); doc != "" {
-				go writeWorldSave(context.Background(), nk, logger, worldState.CurrentZone.ZoneID, doc, docTick)
-			}
-		}
 
 		// Process incoming messages
 		for _, msg := range messages {
@@ -1660,12 +1709,11 @@ func (m *Match) MatchTerminate(ctx context.Context, logger runtime.Logger, db *s
 
 	logger.Info("World %s terminating, grace period %d seconds", worldState.WorldID, graceSeconds)
 
-	// ZONE PERSISTENCE: the save for a clean stop — the world AND everyone still in it, in one write
-	// (writeFinalSave). SYNCHRONOUS, on a context of its own bounded by the grace period: Nakama cancels the
-	// match's context when it stops the match, and stops waiting for matches when the grace period ends.
-	saveCtx, cancel := context.WithTimeout(context.Background(), terminateSaveTimeout(graceSeconds))
-	defer cancel()
-	m.writeFinalSave(saveCtx, nk, logger, worldState)
+	// ZONE PERSISTENCE (D73): the final save — the world AND everyone still in it, in one write — on the save queue,
+	// then wait until it is written (every save queued before it, e.g. an earlier departure, lands first). The wait
+	// is bounded by the grace period: Nakama stops waiting for matches when it ends. This is the one wait on a match
+	// goroutine, and the match is ending.
+	m.finalSave(logger, worldState, terminateSaveTimeout(graceSeconds))
 
 	// nil = stop the match NOW. A non-nil state keeps the match running through the grace period
 	// (Nakama 3.35 match_handler.go QueueTerminate), and anything players did after the save above would be lost.
@@ -1698,6 +1746,20 @@ func (m *Match) MatchSignal(ctx context.Context, logger runtime.Logger, db *sql.
 	action, _ := cmd["action"].(string)
 
 	switch action {
+	case "kick":
+		// Remove one session (D73): the same character or account is entering this zone again — the newer copy of the
+		// game takes over. Nakama turns the kick into an ordinary MatchLeave, which saves the character.
+		userID, _ := cmd["user_id"].(string)
+		session, _ := cmd["session_id"].(string)
+		if p, ok := worldState.Presences[userID]; ok && p != nil && p.GetSessionId() == session {
+			if err := dispatcher.MatchKick([]runtime.Presence{p}); err != nil {
+				return worldState, `{"error": "kick failed"}`
+			}
+			logger.Info("Kicked %s (session %s): the same character or account entered this zone again", userID, session)
+			return worldState, `{"kicked": true}`
+		}
+		return worldState, `{"kicked": false}`
+
 	case "get_info":
 		info := map[string]interface{}{
 			"world_id":     worldState.WorldID,
