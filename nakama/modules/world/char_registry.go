@@ -333,7 +333,11 @@ func DeleteCharacter(ctx context.Context, nk runtime.NakamaModule, userID, charI
 	}
 	job := sys.writer.runTask(func(tctx context.Context) error {
 		defer sys.chars.endDelete(key)
-		return DeleteCharacterSave(tctx, nk, userID, charID)
+		if err := DeleteCharacterSave(tctx, nk, userID, charID); err != nil {
+			return err
+		}
+		sys.writer.changes.Add(1)
+		return nil
 	})
 	select {
 	case <-job.done:

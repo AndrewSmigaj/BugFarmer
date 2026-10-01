@@ -3,6 +3,31 @@
 Sections moved verbatim from `BACKLOG.md` on 2026-09-26 (nothing edited), newest first as they appeared
 there. The open queue is [`BACKLOG.md`](BACKLOG.md); the plan is [`ROADMAP.md`](ROADMAP.md).
 
+## Done 2026-09-30 — saves, steps 9–10: rolling backups and restoring them (D73; closes the BACKLOG "character saves" fault)
+- **Rolling backups** (`backup.go`): every zone's save and every character, at ONE moment — listed as a task on the
+  save queue, so each zone and the characters in it come from the same instant — written to
+  `C:/Users/emily/BugFarmer_backups/world/world-<UTC time>.json` at every start (before any zone saves, so the state
+  from before an update is kept) and every 30 minutes if anything was saved since. A copy identical to the newest
+  isn't written. Each file is written under a temporary name, synced, renamed and read back against its own hash
+  before older ones are pruned: the newest 10, plus the newest of each of the 7 most recent days and 4 most recent
+  weeks. Settings: `BF_BACKUP_DIR` / `BF_BACKUP_MINUTES` in `nakama/data/local.yml`; the folder mount in
+  `docker-compose.yml`.
+- **Restoring one** (`restore.go`, `tools/saves/restore_backup.py --list | <file>`): at the next start, before anyone
+  can join, the server checks the file (intact, formats it can load), writes a safety copy of the current state to
+  `pre-restore/` (never pruned; restoring it undoes the restore), then puts back every zone and character and removes
+  anything made since — in one database transaction, so all of it or none. Deleted accounts' characters are left
+  out; accounts, the world list and the pre-upgrade copies are never touched. A file that couldn't be moved away
+  afterwards isn't applied again.
+- **Verified:** `backup_test.go` and `restore_test.go` (each of seven deliberate breaks caught by its test); Go tests
+  with the race detector; sim-determinism; `harness_persist_test.sh`; the crash test (all four PASS with backups on);
+  the first live backup matched the database record by record; and the restore round trip on the real server
+  (`tools/harness_restore_test.sh`): 3 fences and a bag of 47 back, a later character and zone save removed,
+  permissions kept, the safety copy holding the later state — and restoring that safety copy put it all back.
+  Before the merge: the crash test again (all four PASS) and the two-player sync gate, together (87,513 states, 238
+  hashes) and apart (91,510 states, 242 hashes, disjoint chunks): identical.
+- **Docs:** `architecture_persistence.md` ("Backups", "Restoring a backup"), the run-backend and test-changes skills,
+  `tools/README.md`, BACKLOG ("saves follow-ups"), ROADMAP, GDD §19.
+
 ## Done 2026-09-30 — saves, steps 5–8: one save queue, one copy per zone, one zone at a time per character (D73)
 - **One save queue for the whole server** (`persistence.go`, `save_writer.go`, `save_batch.go`). Each zone save is a
   batch — the zone plus the character of everyone in it, and of everyone leaving — captured at one tick and written

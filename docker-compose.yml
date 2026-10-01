@@ -49,6 +49,10 @@ services:
     volumes:
       - ./nakama/data:/nakama/data
       - modules:/nakama/data/modules:ro
+      # Rolling backups of every zone and character (local.yml BF_BACKUP_DIR). On this PC they land in
+      # C:/Users/emily/BugFarmer_backups/world, beside the repo; BF_BACKUP_HOST_DIR puts them elsewhere.
+      # A new mount needs the container recreated: docker compose up -d --force-recreate nakama
+      - ${BF_BACKUP_HOST_DIR:-../BugFarmer_backups/world}:/nakama/backups
     healthcheck:
       test: ["CMD", "/nakama/nakama", "healthcheck"]
       interval: 10s

@@ -64,18 +64,19 @@ ecology stations) let you read and steer the ecosystem.
   NPCs & economy · exploration & secrets · time & weather · UI · art direction · audio · then 20 zone bibles.
 - **Engineering, in dependency order:** ~~zone-link lint~~ (done 2026-09-26: `zone_links_test.go`; two missing
   return links added — bee meadow ↔ ant tunnels, ant tunnels ↔ underground passages) · saves: ~~versioning,
-  migration~~ (done 2026-09-26: upgrade old, refuse newer, back up before upgrading), rolling backups, periodic
-  character saves · hosting spike → standalone Nakama-compatible server + Host/Join
+  migration~~ (done 2026-09-26: upgrade old, refuse newer, back up before upgrading), ~~rolling backups, periodic
+  character saves~~ (done 2026-09-30, D73) · hosting spike → standalone Nakama-compatible server + Host/Join
   + world list + version handshake · zone-complete collision/loading (+ ecology re-tune) · world clock ·
   frozen-zone catch-up (+ border events from frozen neighbours, D57) · blocked zone entry · latent bugs (~~WorldEnter
   race~~ fixed by D73, first-join seq stall, merge ignores nests) · reconnect · CI + release builds · internet-reality test (latency,
   bandwidth) · **a thorough review of what still runs on the server** — each piece justified now that the players'
   computers run the simulation in step (D58); it comes BEFORE the frozen-zone catch-up, border events and cross-zone
-  migration, which all depend on what the server runs (§19 P10) · no limit on characters per account · **characters
-  saved every few minutes and at zone shutdown** — in progress (D73, 2026-09-30). Done: a clean stop saves each zone
-  with its players; each zone saves together with everyone in it every minute, on leaving and after a sleep, through
-  one ordered queue; one live copy per zone; a character enters the next zone only once the last one has saved it.
-  Next: rolling backups and restore (§19 P5).
+  migration, which all depend on what the server runs (§19 P10) · no limit on characters per account ·
+  ~~**characters saved every few minutes and at zone shutdown**~~ — **done** (D73, 2026-09-30, §19 P5): a clean stop
+  saves each zone with its players; each zone saves together with everyone in it every minute, on leaving and after a
+  sleep, through one ordered queue; one live copy per zone; a character enters the next zone only once the last one
+  has saved it; rolling backups of every zone and character, and a restore command that keeps a safety copy first.
+  Follow-ups in BACKLOG ("saves follow-ups").
 - **Examine view + examine texts:** an examine view for items, recipes and bugs, and ~650 short texts with the real
   biology (owner decision: examining an item or recipe shows what it does); today hovering
   shows only the name and 2 of 654 things have a description. Written alongside the art redo, category by category.

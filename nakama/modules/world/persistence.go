@@ -56,6 +56,17 @@ func StartSaveSystem(nk runtime.NakamaModule, logger runtime.Logger, env map[str
 		sys.autosave = time.Duration(v) * time.Second
 	}
 	go sys.writer.run(context.Background())
+	// Rolling backups (backup.go): the start-up backup's listing is queued now, before any zone can save.
+	if dir := env["BF_BACKUP_DIR"]; dir != "" {
+		every := defaultBackupInterval
+		if v, err := strconv.Atoi(env["BF_BACKUP_MINUTES"]); err == nil && v > 0 {
+			every = time.Duration(v) * time.Minute
+		}
+		newBackups(sys, dir, every).start(context.Background())
+		logger.Info("Backups: at start-up, then every %v if anything was saved, in %s", every, dir)
+	} else {
+		logger.Warn("Backups are OFF: runtime.env has no BF_BACKUP_DIR")
+	}
 	savesMu.Lock()
 	saves = sys
 	savesMu.Unlock()

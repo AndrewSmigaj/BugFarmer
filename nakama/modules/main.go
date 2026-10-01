@@ -15,8 +15,10 @@ func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 
 	// The save system (D73): one ordered save queue for every zone and character save. Started first, so it is
 	// running before any zone can start; its shutdown hook waits for the queue to drain within the grace period
-	// (nakama/data/local.yml shutdown_grace_sec).
+	// (nakama/data/local.yml shutdown_grace_sec). Before it, a backup waiting in <BF_BACKUP_DIR>/restore/ is put back
+	// (restore.go) — nothing else runs yet, and Nakama serves no request until InitModule returns.
 	env, _ := ctx.Value(runtime.RUNTIME_CTX_ENV).(map[string]string)
+	world.RestoreIfRequested(ctx, logger, nk, env)
 	saves := world.StartSaveSystem(nk, logger, env)
 	if err := initializer.RegisterShutdown(func(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule) {
 		saves.Shutdown(ctx)
