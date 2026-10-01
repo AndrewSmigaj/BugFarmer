@@ -97,7 +97,9 @@ successful document write. New-doc-wins forever after. The importer dies a relea
 ## Gates that hold it
 `world_save_test.go`: classification completeness, full round-trip deep-equality, resume-clock,
 GroundItemSeq no-collision, ephemeral skip, generation guard, legacy decode+clamps, SwarmState
-json tags. `save_versions_test.go` (with an in-memory storage fake): the upgrade chain, refusing newer /
+json tags. `storage_fake_test.go`: `memStorage`, the faithful in-memory stand-in for Nakama storage the save tests run
+on (Nakama 3.35's version rules, all-or-nothing batches, all-users listing in pages, deleted accounts refused,
+injected failures), with tests pinning each rule. `save_versions_test.go`: the upgrade chain, refusing newer /
 unreadable saves at start-up and on write, upgrading an older save with its original backed up once, and
 the same for characters. `final_save_test.go`: the clean stop writes the world and the present characters in ONE
 write and returns nil, and writes nothing over an unusable save. End-to-end: `tools/harness_persist_test.sh`

@@ -27,6 +27,7 @@ If you add a test, **also add its one-liner to §1–§4 below** so it's discove
 ## 1. Go server unit tests
 ```bash
 bash tools/run_go_tests.sh        # go test ./... (world + entities + rpc) inside the builder image (live source)
+RACE=1 bash tools/run_go_tests.sh # the same with Go's race detector (-race) — for anything with more than one goroutine
 ```
 Suite: `centipede combat predation nest fruit_tree release swarm_population player_hp equip world_env
 host_plant brood forage_pool ecology_director predator_starvation shop recipe_unlock` (`*_test.go`).
@@ -38,6 +39,12 @@ Run after ANY server-logic change. Add a `*_test.go` for new sim/economy logic (
   verbose per-test list run the inner `docker compose run … go test ./... -v` yourself.
 - `rpc/world_zone_test.go` — `world_enter`/`world_create` refuse unknown/malformed zone ids (the
   village_21 save-borrowing fallback).
+- `world/storage_fake_test.go` — **`memStorage`, the faithful stand-in for Nakama storage that every save test uses**,
+  copied from Nakama 3.35's own storage code: an object's version is md5 of its value; `""` always writes, `*` only
+  creates, a version hash must still match; every write/delete/MultiUpdate is all-or-nothing; an empty user id lists
+  every user's objects in pages; writes for a deleted account fail (the foreign key); `failOnce` injects a database
+  error; `MatchGet`/`MatchSignal`/`UsersGetId` are scriptable. Its own `TestMemStorage*` tests pin each rule — if
+  you need another Nakama call in a save test, add it here, mirroring Nakama's real behaviour.
 - `world/final_save_test.go` — the clean-stop save (`MatchTerminate`): the world and every present character go to
   storage in ONE write, MatchTerminate returns nil (stop at once), and nothing is written over an unusable save.
 - `world/zone_links_test.go` — the SAVED zone map (`nakama/data/zones`, mounted read-only at `/data` by the
