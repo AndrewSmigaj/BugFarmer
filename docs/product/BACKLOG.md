@@ -1042,10 +1042,6 @@ Items marked (P#) wait for the owner's verdict on that proposal.
   when a species is high, extra rain when one is near collapse) to a last resort, as part of the bug overhaul; keep
   its reseeding of species that die out; polish and update bug behaviour first, then retune everything with many
   levers (P10).
-- **Character saves (fault, found 2026-09-28)**: a character is written only on creation (`rpc/character.go:108`), on
-  sleeping in a bed (`handlers_home.go:71`) and on leaving (`match.go:689`); `MatchTerminate` saves the zone, not the
-  players in it, so a crash or a host quitting can lose a player's recent items or duplicate them between a chest and
-  a bag. Save characters every few minutes and on zone shutdown, and back them up with the world (§19 P5).
 - **Playing together** (D58): drop the eight-character cap (`nakama/modules/rpc/character.go`
   `maxCharactersPerAccount`); a server setting for player-versus-player; private plots invite-only with the January
   2026 plot design and a happiness panel (P26); **a thorough review of what still runs on the server**, each piece
@@ -1061,6 +1057,33 @@ Items marked (P#) wait for the owner's verdict on that proposal.
   (`TilemapManager.cs`), so about 25 solid things sway, among them `standing_stone`, the crystals, `stump`, the logs,
   the nests and `shipwreck_hull`; a sound library and zone music made in code (research the method first), alongside
   the owner's music packs.
+
+## Next — saves follow-ups (found while building D73, 2026-09-30; each needs its own plan)
+The saves work itself is done (CHANGELOG, 2026-09-30). Found on the way, not fixed there:
+- **Test runs churn the rolling backups (owner's call).** The test scripts restart the server dozens of times, and each
+  restart after a change writes a backup, so one test session pushes the owner's own play out of the newest 10 (the
+  newest of each day and week stay). Options: also keep the newest of each hour for a day; or let test zones and test
+  accounts not count as a change.
+- **Catching with every bug slot full deletes the bugs** (`match.go` catch handler): the bugs leave the swarm before
+  `AddBugs` finds no slot.
+- **A broken chest, station or bin keeps its registry entry** (`handlers_containers.go` `resolveContainer` reuses
+  `state.Containers[key]`), so a new one placed on the same cell can inherit it.
+- **A failed crossing whose old zone can't be entered either** (the server stopping, say) leaves the player in no zone
+  — the rest of ROADMAP latent bug 6.
+- **A notice in the game when saving stops** — today only the server log says so (every 30 s).
+- **A second copy of the game in another zone waits** for the first to leave; "the newest login wins" across zones is
+  not built.
+- **Whole-database backups** (`pg_dump`) for disaster recovery — accounts and the world list are not in the rolling
+  backups. One was taken by hand before this work: `C:/Users/emily/BugFarmer_backups/db-before-saves-2026-09-30.dump`.
+- **The host settings file (§19 P4):** the autosave and backup settings live in `nakama/data/local.yml` runtime.env
+  until it exists.
+- **A recovered MatchLoop panic can save a half-finished transfer** (as before D73; unchanged).
+- **16 dead old-format records** (14 of village_21's, 2 of crawler_lab's) that the one-time clean-up can't see — they
+  have no index record. Harmless (never read) and carried in backups.
+- **The zone-authority hand-over picks from a map** (`match.go`, `for memberID := range zone.Members`): server-only and
+  not hashed, but worth a sort.
+- **A character list stops at 100** (`ListCharacterSummaries`): fine under today's cap of 8, matters once the cap goes
+  (D58).
 
 ## Later — REAL cross-zone bug transfer (owner 2026-07-06: real transfer, not a pretend version)
 Zones are isolated per-match sims today (Neighbors is player-only). The real feature:

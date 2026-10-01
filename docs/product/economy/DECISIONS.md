@@ -911,5 +911,5 @@ it through and recommend. The base under all ground is left to the assistant. Th
   option, accepted as the one that serves players best. The numbers: a save every minute, a backup every 30
   minutes while anything changes, keeping the newest 10, one a day for a week and one a week for a month. The owner
   took these on trust in the research behind them, so they are recommendations to revisit if playtesting argues
-  otherwise, not his design.
+  otherwise, not the owner's own design.
 - How it works: `docs/product/architecture/architecture_persistence.md`; the proposal it builds is §19 P5.

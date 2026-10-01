@@ -39,7 +39,7 @@ Each line is the owner's decision in my words, with its date.
 - **P5 is built in full** (2026-09-30, D73): characters saved with their zone every minute and when the server stops,
   the duplication faults fixed along with it, rolling backups, and a restore that brings zones and characters back
   together after a safety copy — all tested end to end. The backup folder, the restore behaviour and the numbers
-  (10 recent, 7 daily and 4 weekly backups) were recommendations he accepted.
+  (10 recent, 7 daily and 4 weekly backups) were recommendations the owner accepted.
 
 ## Current design
 - **Many separate worlds, each moderated by its own owner** — from the December 2025 requirements: a world has an
@@ -59,13 +59,16 @@ Each line is the owner's decision in my words, with its date.
 - **Characters are already per server:** an account can have up to eight (the limit goes, D58); a character carries
   its coins, inventory, equipment and known recipes; only the server can change coins and inventory
   (`character_persist.go`, `rpc/character.go`).
-- **Since 2026-09-30, a character is saved only together with the zone it is in** (D73, in progress), in one write,
+- **Since 2026-09-30, a character is saved only together with the zone it is in** (D73), in one write,
   so the two always come back from the same moment: every minute while the zone is occupied, whenever someone leaves,
   after a sleep in a bed, and when the server stops cleanly — through one ordered save queue (`persistence.go`,
   `save_writer.go`). Before, characters and the world were saved at different moments and a shutdown saved nothing at
   all. A character is also in one zone at a time: walking into the next zone waits until the last one has
   saved it, and a second copy of the game in the same zone takes over from the first (`char_registry.go`) — so a
-  crossing or a reconnect can no longer duplicate or lose items. Still to come in P5: backups and restore.
+  crossing or a reconnect can no longer duplicate or lose items. Every zone and every character are also backed up
+  together, at one moment — at each start and every 30 minutes while anything changes, keeping the newest 10, one a
+  day for a week and one a week for a month — and one command restores a backup, keeping a safety copy of the
+  current state first (`backup.go`, `restore.go`, `tools/saves/restore_backup.py`).
 - **Worlds save and restore** zone by zone (`world_save.go`). Since 2026-09-26 an old save is upgraded when the game
   updates (the original copy is kept), and a save from a newer version is refused instead of being overwritten — for
   worlds and characters alike.

@@ -114,7 +114,11 @@ docker compose logs nakama | grep -iE "error|panic" # scan for failures
 
 The client lives in `BugFarmerClient/` and connects via `Assets/Scripts/Networking/NetworkManager.cs` (`new Client("http", "127.0.0.1", 7350, "defaultkey")`). It must match the running server's host/port/key above.
 
-**The client is currently human-run:** the user opens the project in the Unity Editor and presses Play to test in-game. Claude cannot drive the Unity GUI, so after a backend change, verify what you can from server logs and the console, then hand off to the user for in-game checks. (Agent-driven Play-mode testing is a future goal, not yet wired up.)
+**Playing it:** the owner opens the project in the Unity Editor and presses Play. Claude can't drive the Editor's
+window, but it CAN run the real game client headless: the sync-test player build (`SyncTestBuild.Build` in Unity
+batchmode, Editor closed) driven by `HeadlessSyncTest` — the two-player sync gates (`tools/run_sync_latejoin.sh`) and
+the zone-crossing test with a character (`tools/run_crosstest.sh`). The test-changes skill lists what each covers;
+look there before handing an in-game check to the owner.
 
 ## Gotchas
 
