@@ -13,6 +13,12 @@ import (
 // charKey names one character: the account it belongs to and its id.
 type charKey struct{ userID, charID string }
 
+// stagedCharacter is a character MatchJoinAttempt accepted and loaded, waiting for its MatchJoin.
+type stagedCharacter struct {
+	key  charKey
+	save *CharacterSave
+}
+
 // charSave is one character's stored document, as bytes.
 type charSave struct {
 	charKey

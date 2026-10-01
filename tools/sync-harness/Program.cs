@@ -148,19 +148,39 @@ namespace BugFarmer.SyncHarness
         private static async Task<string> Enter(IClient client, ISocket socket, ISession session, string zone,
                                                 double? entryX = null, double? entryY = null)
         {
-            var enterPayload = JsonSerializer.Serialize(new Dictionary<string, object> { ["zone_id"] = zone });
-            var rpc = await client.RpcAsync(session, "world_enter", enterPayload);
-            string matchId;
-            using (var rdoc = JsonDocument.Parse(rpc.Payload))
+            // world_enter with the character (D73): the server waits until the character is free — saved by the zone
+            // it left — reserves it for this zone, and returns an entry pass the join must carry. A "busy" reply is
+            // retried for up to 15 s, as the game does behind its fade.
+            var enterArgs = new Dictionary<string, object> { ["zone_id"] = zone };
+            if (!string.IsNullOrEmpty(_charId)) enterArgs["char_id"] = _charId;
+            var enterPayload = JsonSerializer.Serialize(enterArgs);
+            string matchId = null, pass = null;
+            var started = Stopwatch.StartNew();
+            while (true)
             {
-                if (rdoc.RootElement.TryGetProperty("error", out var err))
-                    throw new InvalidOperationException($"world_enter {zone} refused: {err.GetString()}");
-                matchId = rdoc.RootElement.GetProperty("match_id").GetString();
+                var rpc = await client.RpcAsync(session, "world_enter", enterPayload);
+                using var rdoc = JsonDocument.Parse(rpc.Payload);
+                var root = rdoc.RootElement;
+                if (root.TryGetProperty("error", out var err))
+                {
+                    string code = root.TryGetProperty("code", out var c) ? c.GetString() : "";
+                    if ((code == "CHARACTER_BUSY" || code == "ZONE_BUSY") && started.Elapsed.TotalSeconds < 15)
+                    {
+                        Log($"[{_phase}] world_enter {zone}: {err.GetString()} — retrying");
+                        await Task.Delay(500);
+                        continue;
+                    }
+                    throw new InvalidOperationException($"world_enter {zone} refused: {err.GetString()} ({code})");
+                }
+                matchId = root.GetProperty("match_id").GetString();
+                if (root.TryGetProperty("pass", out var p)) pass = p.GetString();
+                break;
             }
-            Log($"[{_phase}] world_enter {zone} -> match={matchId}");
+            Log($"[{_phase}] world_enter {zone} -> match={matchId} (after {started.ElapsedMilliseconds} ms)");
 
             var meta = new Dictionary<string, string>();
             if (!string.IsNullOrEmpty(_charId)) meta["char_id"] = _charId;
+            if (!string.IsNullOrEmpty(pass)) meta["pass"] = pass;
             if (entryX.HasValue && entryY.HasValue)
             {
                 meta["entry_x"] = entryX.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);

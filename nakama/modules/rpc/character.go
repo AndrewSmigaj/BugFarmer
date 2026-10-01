@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"strings"
 	"time"
 
@@ -141,7 +142,12 @@ func CharacterDelete(ctx context.Context, logger runtime.Logger, db *sql.DB, nk 
 	if save == nil {
 		return errorResponse("character not found", "NOT_FOUND")
 	}
-	if err := world.DeleteCharacterSave(ctx, nk, userID, req.CharID); err != nil {
+	// Through the save system (D73): never while the character is in a zone, and in queue order after every save
+	// already queued — a crash or a backup never sees it deleted and then saved again.
+	if err := world.DeleteCharacter(ctx, nk, userID, req.CharID); err != nil {
+		if errors.Is(err, world.ErrCharacterInPlay) {
+			return errorResponse("that character is in play — leave the world first", "CHARACTER_IN_PLAY")
+		}
 		logger.Error("character_delete failed for %s: %v", userID, err)
 		return errorResponse("failed to delete character", "STORAGE_DELETE_FAILED")
 	}

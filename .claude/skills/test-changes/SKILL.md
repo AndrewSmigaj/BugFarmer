@@ -51,6 +51,10 @@ Run after ANY server-logic change. Add a `*_test.go` for new sim/economy logic (
 - `world/save_writer_test.go` — the one ordered save queue (D73): one write per batch, in order; versions (a changed
   save stops saving); database errors retried until the batch lands; deleted accounts left out; autosaves coalesced,
   departures never; barriers/tasks in order; departures freed only once written; old-format clean-up once.
+- `world/char_registry_test.go` — one zone at a time per character, through the real join/leave/signal callbacks:
+  the crossing waits for the departure and loads the newest character; a newer copy in the same zone takes over;
+  a dead zone retired first; another character of the account sent out first; entry-pass rules; a late join kicked;
+  busy refused within budget; deletion refused in play. Run with `RACE=1`.
 - `world/zone_lease_test.go` — one live copy per zone: started once and reused; 10 simultaneous requests → one copy;
   a dead copy retired before the new one loads its last save, its late save refused; stale/failed starts; stopping;
   the 8 s budget. Run these with `RACE=1`.
@@ -88,10 +92,10 @@ in the zone), **crash** (`docker kill -s KILL` after a sleep-in-bed save), **cro
 again while still connected). Each case wipes both zones (server stopped) and uses a new account. The harness options
 behind it: `--device <id>` (the same account every time), `--char <name>` (create-or-reuse a character; joins send its
 `char_id`), and the scenarios `fences-place` (`--count N --sleep --hold S`), `fences-count`, `cross-fences`, `bag-count`
-(`--expect N`). Regenerate the zones with the two `make_test_zone.py` lines in its docstring. **Until the D73 character registry
-lands, cross and reconnect FAIL on purpose** — they reproduce the faults it fixes (recorded 2026-09-30: 50 arriving
-after leaving with 45, 50 instead of the live 48). graceful passes since the clean-stop save, crash since the save
-queue (10 + 40 = 50 after a kill; before it, 45). A crash is `docker kill -s KILL` followed by `docker compose start` (Docker doesn't auto-restart a
+(`--expect N`). Regenerate the zones with the two `make_test_zone.py` lines in its docstring. **All four PASS since D73 (2026-09-30)** — before
+it, crash gave 45 (five fences lost), cross 50 arriving after leaving with 45 (duplicated), reconnect the stored 50
+instead of the live 48. A failure now is a regression in the save queue (`save_writer.go`), the zone lease or the
+character registry (`char_registry.go`). A crash is `docker kill -s KILL` followed by `docker compose start` (Docker doesn't auto-restart a
 killed container).
 
 ## 2.5. Ecology population tuning — the 6× `bug_lab` chart loop (THE living-ecology rig)

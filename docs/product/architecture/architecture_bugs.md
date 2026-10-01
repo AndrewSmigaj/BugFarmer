@@ -354,7 +354,9 @@ saves the zone — bugs included — together with every character still in it (
 stop; before that date the server stopped zones with no save at all. Test zones may also carry save-test knobs that
 never touch the bugs — `debug_leave_delay_ms` holds back a departing player's save (the saves crash test). Zones
 save every minute while occupied and on every leave, through the one save queue (D73: `persistence.go`; the autosave
-check runs at the start of an occupied MatchLoop, before the bug tick). The save is built on the match goroutine; it diffs each loaded chunk against its authored file, cached per match
+check runs at the start of an occupied MatchLoop, before the bug tick). Joins stage the character by SESSION
+(`PendingCharacters`, `state.go`) and a character is in one zone at a time (`char_registry.go`); none of it touches the
+bugs. The save is built on the match goroutine; it diffs each loaded chunk against its authored file, cached per match
 in `BaseChunks` (`state.go`), so it costs ~1 ms for a fully loaded 64-chunk zone (the first save after a zone starts
 reads the files once, ~110 ms).
 

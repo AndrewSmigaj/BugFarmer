@@ -107,6 +107,31 @@ The model check behind this design (two zones, a character carrying two items, c
 late callback) found that a takeover WITHOUT retiring first lets the dead copy's late save land after the new copy
 loaded — so retiring comes before waiting (investigation record: the D73 plan's Part 3).
 
+## One zone at a time — the character registry (D73, 2026-09-30)
+A character is loaded from storage when it enters a zone and saved with that zone. If it entered the next zone before
+the last one's save of it was written, the next zone would load an older copy (the zone-crossing duplication: Nakama
+acknowledges "left" before MatchLeave runs). So a character may enter a zone only once its departure is written
+(`char_registry.go`):
+
+| State | Entered by | Left by |
+|---|---|---|
+| free | — | `world_enter` (with `char_id`) reserves it for one match and returns an **entry pass** |
+| reserved (match, pass, time) | `world_enter` | MatchJoinAttempt checks the pass (this account, this character, this match), loads the character once, stages it **by session**, and re-checks that the pass is at most **8 s** old as its LAST step → joining. A pass not used in time counts as free; a failed load cancels it. |
+| joining (match, session) | MatchJoinAttempt | MatchJoin, for that session → active, using the staged character (no second read). A late MatchJoin for a pass that ran out (15 s) is kicked. |
+| active (match, session) | MatchJoin | MatchLeave for that session → its departure batch is queued → releasing |
+| releasing (match) | MatchLeave | the save queue writes the departure (`onWritten`) → free |
+
+`world_enter` waits for "free" on its own RPC goroutine, within the request's 8 s budget (then `CHARACTER_BUSY`; the game
+retries behind its fade): active in the SAME zone under another session (a second copy of the game) → that session is
+kicked through the match (`MatchSignal` "kick" → `dispatcher.MatchKick` → an ordinary MatchLeave, which saves it) — the
+newer copy takes over; another character of the same account in the zone → sent out the same way first (one player per
+account per zone); its zone's match gone → that match is retired, its queued saves awaited; active in another zone →
+wait (a second copy elsewhere is refused). **Why the 8 s pass:** Nakama gives a join 10 s and then tells the client
+"rejected", but still runs the join if the zone gets to it — a ghost holding the character. A pass is issued before the
+client starts joining, so refusing any attempt that finishes more than 8 s after the pass means the client always gets
+the answer. Character deletion (`DeleteCharacter`) is refused while a character is in play and otherwise runs as a task
+on the save queue, after every save already queued. A join without a character (test harness, debug) bypasses all this.
+
 ## Save formats — upgrade old, refuse newer, never overwrite what can't be read (2026-09-26)
 Every stored document carries `version` — the format of the build that wrote it (`worldSaveVersion`,
 `characterSaveVersion`). `save_versions.go` (`upgradeSaveJSON`) decides on load:
@@ -153,7 +178,11 @@ unreadable saves at start-up and on write, upgrading an older save with its orig
 the same for characters. `save_writer_test.go`: the queue writes each batch in one write and in order, against the stored version (a changed
 save stops saving), retries a database error until the batch lands, leaves out deleted accounts, coalesces autosaves
 but never departures, runs barriers and tasks in order, frees departures only once written, cleans up old-format
-records once. `zone_lease_test.go`: one copy started and reused; ten simultaneous requests start one copy; a dead copy
+records once. `char_registry_test.go` (through the real join / leave / signal callbacks): a crossing waits for the departure and
+loads the newest character; the newer copy in the same zone takes over (the old session kicked, the live bag kept); a
+dead zone retired before its character moves (its late save refused); another character of the account sent out
+first; pass rules (missing, expired, fresh); a late MatchJoin after expiry kicked; a busy character refused within the
+budget; deletion refused while in play, then queued after saves. `zone_lease_test.go`: one copy started and reused; ten simultaneous requests start one copy; a dead copy
 is retired before a new one loads its last save, and its late save is refused; a live zone reported for create; a
 stale start refused; a failed start frees the zone; no start while stopping; the 8 s budget gives up with "busy".
 `world_save_cost_test.go`: the byte fast path agrees with the full cell comparison on every real village_21_B cell,
@@ -168,5 +197,5 @@ checking fences in the world + in the bag = 50 through a clean stop, a `docker k
 Recorded on 2026-09-30, before the save queue and the character registry: graceful PASS (50); crash FAIL — 45, five
 fences lost (the world last saved on leaving, the character on sleeping); cross FAIL — the bag arrived with 50 after
 leaving with 45 (duplicated); reconnect FAIL — a second copy of the game saw the stored 50, not the live 48. With the
-save queue (same day): crash PASS — 10 in the world + 40 in the bag after the kill; cross and reconnect wait for the
-character registry.
+save queue (same day): crash PASS — 10 in the world + 40 in the bag after the kill. With the character registry (same
+day): **all four PASS** — cross arrived with the 45 it left with; reconnect saw the live 48.

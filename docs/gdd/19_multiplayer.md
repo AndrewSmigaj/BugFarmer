@@ -63,8 +63,9 @@ Each line is the owner's decision in my words, with its date.
   so the two always come back from the same moment: every minute while the zone is occupied, whenever someone leaves,
   after a sleep in a bed, and when the server stops cleanly — through one ordered save queue (`persistence.go`,
   `save_writer.go`). Before, characters and the world were saved at different moments and a shutdown saved nothing at
-  all. Still to come in P5: a zone crossing or a reconnect can load an older copy of a character (the next step
-  fixes it), then backups and restore.
+  all. A character is also in one zone at a time: walking into the next zone waits until the last one has
+  saved it, and a second copy of the game in the same zone takes over from the first (`char_registry.go`) — so a
+  crossing or a reconnect can no longer duplicate or lose items. Still to come in P5: backups and restore.
 - **Worlds save and restore** zone by zone (`world_save.go`). Since 2026-09-26 an old save is upgraded when the game
   updates (the original copy is kept), and a save from a newer version is refused instead of being overwritten — for
   worlds and characters alike.

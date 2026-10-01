@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -87,10 +88,16 @@ type ZoneNeighbors struct {
 type WorldJoinResponse struct {
 	MatchID   string         `json:"match_id"`
 	Neighbors *ZoneNeighbors `json:"neighbors,omitempty"` // cross-zone adjacency (edge -> neighbor zoneID)
+	// Pass: world_enter with a char_id — the entry pass the match join must carry as metadata "pass" (D73: the
+	// character is reserved for this zone; a join without the pass, or more than 8 s after it was issued, is refused).
+	Pass string `json:"pass,omitempty"`
 }
 
 type WorldEnterRequest struct {
 	ZoneID string `json:"zone_id"`
+	// CharID: the character entering (D73). The request waits until the character is free — saved by the zone it
+	// left — and reserves it for this zone. Empty = a join without a character (test harness, debug).
+	CharID string `json:"char_id,omitempty"`
 }
 
 // friendlyZoneName maps a zone id to a display name for the canonical (singleton) world.
@@ -443,6 +450,21 @@ func WorldEnter(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 		logger.Info("WorldEnter: zone %s -> match %s (reused)", req.ZoneID, matchID)
 	}
 
+	// The character entering: wait until it is free (the zone it left has saved it) and reserve it for this match.
+	// The wait shares the request's budget; past it the reply is "busy" and the client retries behind the fade.
+	pass := ""
+	if req.CharID != "" {
+		pass, err = world.ReserveCharacter(ctx, userID, req.CharID, matchID, req.ZoneID)
+		if err != nil {
+			logger.Warn("WorldEnter: zone %s: character %s/%s not free: %v", req.ZoneID, userID, req.CharID, err)
+			if errors.Is(err, world.ErrServerStopping) {
+				msg, code := world.DescribeZoneError(err)
+				return errorResponse(msg, code)
+			}
+			return errorResponse("your character is still in use — try again", "CHARACTER_BUSY")
+		}
+	}
+
 	// Include the zone's cross-zone neighbors so the client can hidden-swap at edges (best-effort).
 	var neighbors *ZoneNeighbors
 	if zc, err := world.LoadZoneConfig("data/zones/" + req.ZoneID); err == nil && zc != nil && zc.Neighbors != nil {
@@ -452,7 +474,7 @@ func WorldEnter(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 		}
 	}
 
-	responseJSON, _ := json.Marshal(WorldJoinResponse{MatchID: matchID, Neighbors: neighbors})
+	responseJSON, _ := json.Marshal(WorldJoinResponse{MatchID: matchID, Neighbors: neighbors, Pass: pass})
 	return string(responseJSON), nil
 }
 

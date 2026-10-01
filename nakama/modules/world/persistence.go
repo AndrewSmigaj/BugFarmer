@@ -29,7 +29,8 @@ type saveSystem struct {
 	nk       runtime.NakamaModule
 	logger   runtime.Logger
 	writer   *saveWriter
-	leases   *zoneLeases // one live copy per zone (zone_lease.go)
+	leases   *zoneLeases   // one live copy per zone (zone_lease.go)
+	chars    *charRegistry // each character live in one zone at a time (char_registry.go)
 	stopping atomic.Bool   // the server is shutting down: no new zone entries, joins or backups
 	autosave time.Duration // the default autosave interval
 }
@@ -41,8 +42,10 @@ var (
 
 // newSaveSystem makes a save system whose queue is not running yet (tests step it by hand).
 func newSaveSystem(nk runtime.NakamaModule, logger runtime.Logger) *saveSystem {
-	return &saveSystem{nk: nk, logger: logger, writer: newSaveWriter(nk, logger), leases: newZoneLeases(),
-		autosave: defaultAutosaveInterval}
+	sys := &saveSystem{nk: nk, logger: logger, writer: newSaveWriter(nk, logger), leases: newZoneLeases(),
+		chars: newCharRegistry(), autosave: defaultAutosaveInterval}
+	sys.writer.onWritten = sys.chars.written // a departing character is free once its batch is written
+	return sys
 }
 
 // StartSaveSystem makes the server's save system, starts its queue, and makes it the one every match and RPC uses.

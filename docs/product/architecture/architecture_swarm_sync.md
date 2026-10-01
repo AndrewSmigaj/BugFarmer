@@ -709,7 +709,10 @@ headless `tools/sync-harness` (real Nakama .NET client, no Unity) reproduces/ver
   zone (deterministic key `default_<zone>`), reuse its live match or recreate on demand, return the
   match id. The frontend never creates worlds; Normal=`village_21`, Test=`sim_test`. Since 2026-09-30 (D73)
   every request that starts a zone goes through the zone's lease (`zone_lease.go`): one live copy per zone —
-  two players arriving at once can no longer start two copies with two sync states.
+  two players arriving at once can no longer start two copies with two sync states. A join that brings a character
+  also carries an entry pass (`char_registry.go`): MatchJoin activates only the session its attempt accepted, and a
+  re-entry into the same zone kicks the older session first — so every join and leave still runs the existing paths
+  (WorldInit, authority, the late-join snapshot); nothing new enters the sync layer.
 - **Unknown zones are refused (2026-09-26):** `world_enter`/`world_create` return `UNKNOWN_ZONE` for an id
   with no authored `data/zones/<id>/zone.json`, and `MatchInit`'s config-load fallback keeps the requested id
   instead of becoming `village_21` (which used to load and write village_21's save from a second match).

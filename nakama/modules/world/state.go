@@ -90,15 +90,15 @@ type WorldState struct {
 	Players      map[string]*PlayerState
 	Presences    map[string]runtime.Presence
 
-	// Active character per joining user, set in MatchJoinAttempt (from join metadata) and
-	// consumed in MatchJoin — Nakama runs both serially on the match goroutine, so this is
-	// race-free without a mutex.
-	PendingCharacters map[string]string // userID -> charID
+	// The character a join brings, accepted and LOADED by MatchJoinAttempt (with its entry pass, D73) and consumed by
+	// MatchJoin — keyed by SESSION, so two sessions of one account can never swap characters. Nakama runs both
+	// callbacks serially on the match goroutine, so this is race-free without a mutex.
+	PendingCharacters map[string]*stagedCharacter // sessionID -> the accepted character
 
 	// Cross-zone entry position from join metadata (entry_x/entry_y): when a player walks off a zone
 	// edge, they join the neighbor at the matching edge instead of the save's last-pos. Stashed in
 	// MatchJoinAttempt, consumed in MatchJoin (top-priority spawn). Same serial-callback safety as above.
-	PendingEntryPositions map[string][2]float32 // userID -> (worldX, worldY)
+	PendingEntryPositions map[string][2]float32 // sessionID -> (worldX, worldY)
 
 	// Entity maps (Phase 1)
 	Swarms      map[string]*entities.SwarmState
@@ -395,7 +395,7 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		TickCount:             0,
 		Players:               make(map[string]*PlayerState),
 		Presences:             make(map[string]runtime.Presence),
-		PendingCharacters:     make(map[string]string),
+		PendingCharacters:     make(map[string]*stagedCharacter),
 		PendingEntryPositions: make(map[string][2]float32),
 		// Entity maps
 		Swarms:       make(map[string]*entities.SwarmState),
