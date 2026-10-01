@@ -1032,6 +1032,8 @@ type WorldUpdateMessage struct {
   on a clean server stop
 - A save diffs every loaded chunk against its authored file; the files are read once per match and kept
   (`WorldState.BaseChunks`), so a save of a fully loaded 64-chunk zone takes ~1 ms (it was ~110 ms)
+- Backed up with every character at one moment — at each server start and every 30 minutes while anything is saved
+  — and restored all together by `tools/saves/restore_backup.py`, after a safety copy (`backup.go`, `restore.go`)
 - The full design — one WorldSave document per zone, how old save formats upgrade, why a newer or
   unreadable save stops the zone instead of being overwritten, and the clean-stop save — is
   `architecture_persistence.md`.

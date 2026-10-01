@@ -712,7 +712,9 @@ headless `tools/sync-harness` (real Nakama .NET client, no Unity) reproduces/ver
   two players arriving at once can no longer start two copies with two sync states. A join that brings a character
   also carries an entry pass (`char_registry.go`): MatchJoin activates only the session its attempt accepted, and a
   re-entry into the same zone kicks the older session first — so every join and leave still runs the existing paths
-  (WorldInit, authority, the late-join snapshot); nothing new enters the sync layer.
+  (WorldInit, authority, the late-join snapshot); nothing new enters the sync layer. Checked by the late-join gate
+  with client B entering as a character (`CHAR_B` in `tools/run_sync_latejoin.sh`): identical together and apart
+  (2026-09-30).
 - **Unknown zones are refused (2026-09-26):** `world_enter`/`world_create` return `UNKNOWN_ZONE` for an id
   with no authored `data/zones/<id>/zone.json`, and `MatchInit`'s config-load fallback keeps the requested id
   instead of becoming `village_21` (which used to load and write village_21's save from a second match).
@@ -727,7 +729,9 @@ headless `tools/sync-harness` (real Nakama .NET client, no Unity) reproduces/ver
   Nothing reaches the sync layer — the ledger, epoch and seq are per-run, and the next start is a fresh sync epoch
   over the restored world. See `architecture_persistence.md` → "The clean stop".
 - **Test zones only — `debug_leave_delay_ms`** (zone.json): holds back a departing player's save, so the saves crash
-  test (`tools/harness_crash_test.sh`) can make the zone-crossing race happen every time. It touches no sync state.
+  test (`tools/harness_crash_test.sh`) can make the zone-crossing race happen every time; `persist_b` holds it past the
+  server's 8 s wait, so the game client's crossing test (`tools/run_crosstest.sh`) is told "busy" and must retry. It
+  touches no sync state.
 - **Pause when empty:** `MatchLoop` early-returns when no players/presences are connected — no tick
   advance, no swarm sim/merge/split, no broadcasts. A world only "runs" while someone is in it; a
   joining player resumes from the frozen `TickCount`. (Replaces the old never-terminating match that
