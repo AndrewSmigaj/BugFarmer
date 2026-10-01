@@ -869,9 +869,9 @@ must be compatible with real game mechanics** (don't assume unbuilt mechanics).
   harness's `crosszone` scenario and its default zone still use it), and update the comment in `zone_links_test.go`
   that still calls this an open question. ⚠ `tools/zonegen/scenes/zone_village.py` saves `village_21` whenever it is
   run, without neighbour links — don't run it until this is done.
-- **Doc errors found:** `architecture_world.md` says the player is 3×2 cells (not checked). *Fixed 2026-10-01: the
-  zone and chunk sizes (256×256, 32×32), the shallow-water line (it blocks players today), `village_21_B.md`'s
-  crossing note, and `demo_slice.md`, now marked outdated.*
+- **Doc errors found — all fixed 2026-10-01:** `architecture_world.md`'s zone and chunk sizes (256×256, 32×32), its
+  shallow-water line (it blocks players today) and the player's size (16×32 pixels, 1×2 cells, as `match.go` moves
+  it); `village_21_B.md`'s crossing note; and `demo_slice.md`, now marked outdated.
 - **Crossing details:** `CrossZoneController` hard-codes a 256-cell zone (`ZoneMax = 255`); worlds created through
   `WorldJoin` get no neighbours, so they have no crossings; 88 crossing points land on a solid square (measured at the
   square under the player's feet, the one the game checks), 35 of them boxed in, worst on the Ant Tunnels ↔
