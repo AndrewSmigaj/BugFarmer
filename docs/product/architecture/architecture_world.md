@@ -212,6 +212,11 @@ the **core (row 4)** is the deadly heart.
 - Centipede Cavern has 2+ tunnels to surface
 - Ant Colony has some surface access for foraging
 - Hard boundaries between zones (no seamless transitions)
+- In code, a zone's `neighbors` (zone.json) links its edges; a link must come back from the opposite edge, and the
+  two zones must sit side by side on the world grid with edges of the same length (`zone_links_test.go`).
+- Two TEST zones, `persist_a` ↔ `persist_b` (row 0, columns 10–11, made by `tools/world/make_test_zone.py`), exist
+  only for the saves crash test (`tools/harness_crash_test.sh`). `persist_a` sets `debug_leave_delay_ms`, a test-only
+  knob that holds back a departing player's save, so the zone-crossing race happens every time.
 
 ### Road & Signpost System
 

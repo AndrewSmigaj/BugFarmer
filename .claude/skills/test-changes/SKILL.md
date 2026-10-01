@@ -71,6 +71,21 @@ bash tools/harness_persist_test.sh   # PERSISTENCE regression: build farm → cl
 It stops the server before wiping (a clean stop saves every zone, so a running server would write a wiped zone
 straight back), and its last check proves the clean stop itself wrote the save (the stored `saved_at` is at or after
 the stop) — so it fails if the shutdown save stops working.
+```bash
+bash tools/harness_crash_test.sh [graceful|crash|cross|reconnect …]   # the SAVES CRASH TEST (default: all four)
+```
+A scripted player with a REAL character (`--char`) in the test zones `persist_a` ↔ `persist_b`; every case checks
+fences in the world + fences in the bag = 50 (a new character's starting kit): **graceful** (clean stop with the player
+in the zone), **crash** (`docker kill -s KILL` after a sleep-in-bed save), **cross** (walk into the next zone —
+`persist_a`'s `debug_leave_delay_ms` makes the crossing race happen every time), **reconnect** (the same account joins
+again while still connected). Each case wipes both zones (server stopped) and uses a new account. The harness options
+behind it: `--device <id>` (the same account every time), `--char <name>` (create-or-reuse a character; joins send its
+`char_id`), and the scenarios `fences-place` (`--count N --sleep --hold S`), `fences-count`, `cross-fences`, `bag-count`
+(`--expect N`). Regenerate the zones with the two `make_test_zone.py` lines in its docstring. **Until the D73 save queue
+and character registry land, crash, cross and reconnect FAIL on purpose** — they reproduce today's faults (recorded
+2026-09-30: 45 after a crash, 50 arriving after leaving with 45, 50 instead of the live 48); graceful passes since the
+clean-stop save. A crash is `docker kill -s KILL` followed by `docker compose start` (Docker doesn't auto-restart a
+killed container).
 
 ## 2.5. Ecology population tuning — the 6× `bug_lab` chart loop (THE living-ecology rig)
 The one you run for ANY bug-ecology/balance change (predator survival, oscillation, Director bands, food

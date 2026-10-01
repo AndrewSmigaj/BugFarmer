@@ -22,6 +22,14 @@ Examples
   python3 tools/world/make_test_zone.py --zone-id sim_farm --chunks-w 4 --chunks-h 4 \
       --occupant compost_pile@70,70
 
+  # the saves crash-test pair (tools/harness_crash_test.sh): two linked bug-free zones, a bed in the first,
+  # test-only save knobs set with --set
+  python3 tools/world/make_test_zone.py --zone-id persist_a --chunks-w 2 --chunks-h 2 --initial 0 --max 0 \
+      --row 0 --col 10 --neighbor east=persist_b --occupant bed_basic@48,50 \
+      --set autosave_seconds=5 --set debug_leave_delay_ms=3000
+  python3 tools/world/make_test_zone.py --zone-id persist_b --chunks-w 2 --chunks-h 2 --initial 0 --max 0 \
+      --row 0 --col 11 --neighbor west=persist_a --set autosave_seconds=5
+
 Output: nakama/data/zones/<zone-id>/zone.json + chunk_X_Y.json (one per chunk).
 The Nakama server loads it via world_create {"zone_id": "<zone-id>"}.
 """
@@ -46,11 +54,11 @@ def build_chunk(cx, cy, base_tile, occupants_by_cell):
 def build_zone_config(args, width, height):
     cx = args.spawn_cx if args.spawn_cx >= 0 else width // 2
     cy = args.spawn_cy if args.spawn_cy >= 0 else height // 2
-    return {
+    config = {
         "zone_id": args.zone_id,
         "name": args.name or f"Test Zone {args.zone_id}",
-        "row": 0,
-        "col": 0,
+        "row": args.row,
+        "col": args.col,
         "width": width,
         "height": height,
         "spawn_point": [cx, cy],
@@ -78,6 +86,38 @@ def build_zone_config(args, width, height):
             ],
         },
     }
+    if args.neighbor:
+        config["neighbors"] = parse_neighbors(args.neighbor)
+    for key, value in parse_sets(args.set).items():
+        config[key] = value
+    return config
+
+
+def parse_neighbors(specs):
+    """['east=persist_b', ...] -> {'east': 'persist_b'}. A link must be added on BOTH zones, from opposite edges,
+    and the two zones must sit next to each other on the world grid (--row/--col) — zone_links_test.go checks it."""
+    out = {}
+    for spec in specs:
+        direction, _, zone_id = spec.partition("=")
+        if direction not in ("north", "south", "east", "west") or not zone_id:
+            raise SystemExit(f"--neighbor wants dir=zone_id with dir north/south/east/west, got {spec!r}")
+        out[direction] = zone_id
+    return out
+
+
+def parse_sets(specs):
+    """['autosave_seconds=5', ...] -> {'autosave_seconds': 5}. The value is JSON (a bare word becomes a string). For
+    test-only zone.json fields the server reads, e.g. the saves crash test's autosave_seconds and debug_leave_delay_ms."""
+    out = {}
+    for spec in specs or []:
+        key, _, raw = spec.partition("=")
+        if not key:
+            raise SystemExit(f"--set wants key=value, got {spec!r}")
+        try:
+            out[key] = json.loads(raw)
+        except json.JSONDecodeError:
+            out[key] = raw
+    return out
 
 
 def parse_occupants(specs):
@@ -107,6 +147,10 @@ def main():
     p.add_argument("--spawn-radius", type=int, default=12, help="spawn-area radius in cells (default: 12)")
     p.add_argument("--dynamic", action="store_true", help="allow continuous spawn/merge/split (default: static)")
     p.add_argument("--occupant", action="append", default=[], help="place a single-cell occupant 'id@gx,gy' (repeatable)")
+    p.add_argument("--row", type=int, default=0, help="world-grid row (row 0 is the north-most; default 0)")
+    p.add_argument("--col", type=int, default=0, help="world-grid column (default 0)")
+    p.add_argument("--neighbor", action="append", default=[], help="an edge link 'dir=zone_id' (repeatable)")
+    p.add_argument("--set", action="append", default=[], help="an extra zone.json field 'key=json_value' (repeatable)")
     p.add_argument("--zones-dir", default=os.path.join("nakama", "data", "zones"), help="zones root directory")
     args = p.parse_args()
 

@@ -720,6 +720,8 @@ headless `tools/sync-harness` (real Nakama .NET client, no Unity) reproduces/ver
   and returns nil, so Nakama stops the match at once instead of letting it run on unsaved through the grace period.
   Nothing reaches the sync layer — the ledger, epoch and seq are per-run, and the next start is a fresh sync epoch
   over the restored world. See `architecture_persistence.md` → "The clean stop".
+- **Test zones only — `debug_leave_delay_ms`** (zone.json): holds back a departing player's save, so the saves crash
+  test (`tools/harness_crash_test.sh`) can make the zone-crossing race happen every time. It touches no sync state.
 - **Pause when empty:** `MatchLoop` early-returns when no players/presences are connected — no tick
   advance, no swarm sim/merge/split, no broadcasts. A world only "runs" while someone is in it; a
   joining player resumes from the frozen `TickCount`. (Replaces the old never-terminating match that

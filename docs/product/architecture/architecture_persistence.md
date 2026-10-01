@@ -105,4 +105,10 @@ the same for characters. `final_save_test.go`: the clean stop writes the world a
 write and returns nil, and writes nothing over an unusable save. End-to-end: `tools/harness_persist_test.sh`
 (stop → wipe → start; build a farm headless → clean stop → start → assert restored; a direct Postgres inspection of
 the stored document; and proof the clean stop itself wrote the save — its `saved_at` is at or after the stop),
-plus a seeded legacy-format migration run (imported → carried → legacy rows deleted).
+plus a seeded legacy-format migration run (imported → carried → legacy rows deleted). **The saves crash test,**
+`tools/harness_crash_test.sh`: a scripted player with a real character in the test zones `persist_a` ↔ `persist_b`,
+checking fences in the world + in the bag = 50 through a clean stop, a `docker kill`, a zone crossing (with
+`persist_a`'s `debug_leave_delay_ms` holding back the departure save so the race happens every time) and a reconnect.
+Recorded on 2026-09-30, before the save queue and the character registry: graceful PASS (50); crash FAIL — 45, five
+fences lost (the world last saved on leaving, the character on sleeping); cross FAIL — the bag arrived with 50 after
+leaving with 45 (duplicated); reconnect FAIL — a second copy of the game saw the stored 50, not the live 48.

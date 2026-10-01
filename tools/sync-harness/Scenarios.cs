@@ -26,6 +26,11 @@ namespace BugFarmer.SyncHarness
                 // --zone village_21_B, EAST with --zone bee_meadow_20.
                 case "crosszone-west": return new CrossZoneHopScenario("bee_meadow_20", 253f, 124f);
                 case "crosszone-east": return new CrossZoneHopScenario("village_21_B", 2f, 124f);
+                // The saves crash test (tools/harness_crash_test.sh), in persist_a / persist_b, with --char.
+                case "fences-place": return new FencesPlaceScenario();
+                case "fences-count": return new FencesCountScenario();
+                case "cross-fences": return new CrossFencesScenario();
+                case "bag-count": return new BagCountScenario();
                 default: return null;
             }
         }
@@ -177,6 +182,121 @@ namespace BugFarmer.SyncHarness
             WorldModel.AssertGroundAt(FarmCells.CropX, FarmCells.CropY, "garden_plot"); // tilled soil persisted
             WorldModel.AssertCropAt(FarmCells.CropX, FarmCells.CropY);
             WorldModel.AssertSwarmsAtLeast(1); // bug population restored
+        }
+    }
+
+    // ---- The saves crash test (tools/harness_crash_test.sh) ----
+    // Fences are the counted item: a new character carries 50 (the starting kit). Whatever happens — a crash, a clean
+    // stop, a zone crossing, a reconnect — the fences in the world plus the fences in the bag must stay 50.
+    internal static class FenceCells
+    {
+        public const int Row = 44, FirstX = 36;    // fences go in a row at y=44: x = 36, 37, …
+        public const int BedX = 48, BedY = 50;     // persist_a's bed (make_test_zone --occupant bed_basic@48,50)
+        public const string Neighbor = "persist_b"; // persist_a's east neighbour
+        public const double EntryX = 2, EntryY = 44; // persist_b's west edge, where a crossing from persist_a lands
+    }
+
+    internal static class Fences
+    {
+        // The join's full inventory, and the zone's chunks, before anything is read or placed.
+        public static async Task Settle()
+        {
+            await Actions.WaitFor(() => WorldModel.InventorySyncCount() > 0, 6000);
+            await Task.Delay(900);
+        }
+
+        // Place `count` fences in the next free cells of the row; returns how many the server confirmed.
+        public static async Task<int> Place(ISocket s, string m, int count)
+        {
+            int before = WorldModel.ItemCount("fence_wood"), placed = 0;
+            for (int x = FenceCells.FirstX; placed < count && x < FenceCells.FirstX + 24; x++)
+            {
+                if (WorldModel.OccupantAt(x, FenceCells.Row) != null) continue;
+                await Actions.Place(s, m, x, FenceCells.Row, "fence_wood");
+                if (await Actions.WaitForOccupant(x, FenceCells.Row, "fence_wood", 4000)) placed++;
+            }
+            await Actions.WaitFor(() => WorldModel.ItemCount("fence_wood") == before - placed, 3000);
+            return placed;
+        }
+    }
+
+    // fences-place: place --count fences; with --sleep, sleep in persist_a's bed (it saves the character); then stay
+    // connected for --hold seconds — the crash test stops or kills the server meanwhile — and leave.
+    internal sealed class FencesPlaceScenario : IScenario
+    {
+        public async Task RunAsync(ISocket s, string m)
+        {
+            var o = Program.Opt;
+            await Fences.Settle();
+            int placed = await Fences.Place(s, m, o.Count);
+            Console.WriteLine($"[scenario] PLACED {placed} fence(s); BAG fence_wood={WorldModel.ItemCount("fence_wood")}");
+            if (o.Sleep)
+            {
+                await Actions.SetHome(s, m, FenceCells.BedX, FenceCells.BedY);
+                await Task.Delay(1500);
+                Console.WriteLine("[scenario] SLEPT in the bed");
+            }
+            if (o.Hold > 0)
+            {
+                Console.WriteLine($"[scenario] HOLDING {o.Hold}s");
+                await Task.Delay(o.Hold * 1000);
+            }
+            await Task.Delay(800);
+        }
+    }
+
+    // fences-count: after a restart, count the fences in the zone and in the bag. --expect N asserts the total.
+    internal sealed class FencesCountScenario : IScenario
+    {
+        public async Task RunAsync(ISocket s, string m)
+        {
+            await Fences.Settle();
+            await Task.Delay(1500); // every subscribed chunk's data
+            int world = WorldModel.OccupantCount("fence_wood"), bag = WorldModel.ItemCount("fence_wood");
+            Console.WriteLine($"[scenario] COUNT world={world} bag={bag} total={world + bag}");
+            if (Program.Opt.Expect >= 0)
+                WorldModel.Assert(world + bag == Program.Opt.Expect,
+                    $"fences in the world + in the bag = {Program.Opt.Expect} [got {world} + {bag} = {world + bag}]");
+        }
+    }
+
+    // cross-fences: place --count fences in persist_a, walk into persist_b (leave, then enter at its west edge), and
+    // check the bag there is the bag that left — not an older saved copy. persist_a holds back its departure save
+    // (debug_leave_delay_ms), so the next zone always loads before that save lands: the crossing race, every time.
+    internal sealed class CrossFencesScenario : IScenario
+    {
+        public async Task RunAsync(ISocket s, string m)
+        {
+            var o = Program.Opt;
+            await Fences.Settle();
+            int placed = await Fences.Place(s, m, o.Count);
+            int left = WorldModel.ItemCount("fence_wood");
+            Console.WriteLine($"[scenario] PLACED {placed}; leaving with BAG fence_wood={left}");
+
+            int syncs = WorldModel.InventorySyncCount();
+            await s.LeaveMatchAsync(m); // Nakama acknowledges this before the zone has run its leave
+            string m2 = await Program.EnterZone(s, FenceCells.Neighbor, FenceCells.EntryX, FenceCells.EntryY);
+            bool synced = await Actions.WaitFor(() => WorldModel.InventorySyncCount() > syncs, 8000);
+            WorldModel.Assert(synced, $"entered {FenceCells.Neighbor} and received the character's inventory");
+            int arrived = WorldModel.ItemCount("fence_wood");
+            Console.WriteLine($"[scenario] arrived in {FenceCells.Neighbor} with BAG fence_wood={arrived}");
+            WorldModel.Assert(arrived == left,
+                $"the bag that arrived is the bag that left: {left} fences [got {arrived}]");
+            await Task.Delay(1200);
+        }
+    }
+
+    // bag-count: join and report the bag (the crash test's reconnect case runs it as a second copy of the game while
+    // the first is still connected). --expect N asserts it.
+    internal sealed class BagCountScenario : IScenario
+    {
+        public async Task RunAsync(ISocket s, string m)
+        {
+            await Fences.Settle();
+            int bag = WorldModel.ItemCount("fence_wood");
+            Console.WriteLine($"[scenario] BAG fence_wood={bag}");
+            if (Program.Opt.Expect >= 0)
+                WorldModel.Assert(bag == Program.Opt.Expect, $"the bag holds {Program.Opt.Expect} fences [got {bag}]");
         }
     }
 }

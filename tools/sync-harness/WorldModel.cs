@@ -34,6 +34,7 @@ namespace BugFarmer.SyncHarness
         private static double _myX, _myY;
         private static double _spawnX, _spawnY;   // last PlayerSpawn (102) — for cross-zone entry asserts
         private static bool _spawnSeen;
+        private static int _inventorySyncs;       // FullInventorySyncs received — the server sends one on every join
 
         // 0 = all asserts passed; set to 1 by a failing Assert (drives the process exit code).
         public static int ExitCode = 0;
@@ -161,6 +162,7 @@ namespace BugFarmer.SyncHarness
             {
                 lock (_gate)
                 {
+                    _inventorySyncs++;
                     int i = 0;
                     foreach (var s in slots.EnumerateArray())
                     {
@@ -247,6 +249,29 @@ namespace BugFarmer.SyncHarness
         public static bool HasCrop(int gx, int gy) { lock (_gate) return _crops.ContainsKey((gx, gy)); }
         public static int SwarmCount() { lock (_gate) return _swarmIds.Count; }
         public static int SwarmBugTotal() { lock (_gate) return _swarmBugTotal; }
+        public static int InventorySyncCount() { lock (_gate) return _inventorySyncs; }
+
+        // How many of this item the player carries (summed over every slot holding it).
+        public static int ItemCount(string id)
+        {
+            lock (_gate)
+            {
+                int n = 0;
+                foreach (var slot in _itemSlots.Values) if (slot.id == id) n += slot.count;
+                return n;
+            }
+        }
+
+        // How many cells of the loaded chunks hold this occupant.
+        public static int OccupantCount(string id)
+        {
+            lock (_gate)
+            {
+                int n = 0;
+                foreach (var occ in _occupants.Values) if (occ == id) n++;
+                return n;
+            }
+        }
 
         // ---- assertions (set ExitCode=1 on failure) ----
         public static void Assert(bool cond, string msg)
