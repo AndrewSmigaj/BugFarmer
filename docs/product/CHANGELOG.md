@@ -3,6 +3,20 @@
 Sections moved verbatim from `BACKLOG.md` on 2026-09-26 (nothing edited), newest first as they appeared
 there. The open queue is [`BACKLOG.md`](BACKLOG.md); the plan is [`ROADMAP.md`](ROADMAP.md).
 
+## Done 2026-09-30 — saves, steps 2–4: trustworthy tests, the crash test, and a save that costs ~1 ms (D73)
+- **A faithful stand-in for Nakama storage** in the save tests (`storage_fake_test.go`), copied from Nakama 3.35's own
+  storage code: versions are md5 of the value, `*` only creates, a stale version is rejected, every write is
+  all-or-nothing, listing with no user id covers every user, deleted accounts are refused, failures can be injected.
+  `RACE=1 bash tools/run_go_tests.sh` runs the race detector.
+- **The saves crash test** (`tools/harness_crash_test.sh`): a scripted player with a real character (`--char`) in the
+  test zones `persist_a` ↔ `persist_b`; fences in the world + in the bag must stay 50. On today's server it reproduces
+  the faults the rest of D73 fixes — a crash lost 5 fences (45), a zone crossing duplicated 5 (arrived with 50 after
+  leaving with 45), a reconnecting second copy saw the stored 50 instead of the live 48; a clean stop already passes.
+- **A zone's save costs ~1 ms instead of ~110 ms** (fully loaded village_21_B): cells are compared by their bytes first,
+  and the authored chunk files are read once per match (`BaseChunks`). So zones can save every minute, as decided.
+- **Verified:** Go tests with the race detector; sim-determinism; `harness_persist_test.sh`; the crash test; the
+  two-player sync gate together (85,961 states) and apart (89,384 states): identical.
+
 ## Done 2026-09-30 — saves, step 1: a clean stop saves every zone with its players (D73)
 - **A clean server stop now saves each zone together with the characters still in it**, in one write
   (`MatchTerminate` → `writeFinalSave`), then stops the zone at once (`MatchTerminate` returns nil). Until now Nakama
