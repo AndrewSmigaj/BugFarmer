@@ -3,6 +3,28 @@
 Sections moved verbatim from `BACKLOG.md` on 2026-09-26 (nothing edited), newest first as they appeared
 there. The open queue is [`BACKLOG.md`](BACKLOG.md); the plan is [`ROADMAP.md`](ROADMAP.md).
 
+## Done 2026-09-30 — saves, step 1: a clean stop saves every zone with its players (D73)
+- **A clean server stop now saves each zone together with the characters still in it**, in one write
+  (`MatchTerminate` → `writeFinalSave`), then stops the zone at once (`MatchTerminate` returns nil). Until now Nakama
+  was given no shutdown time (`shutdown_grace_sec` defaulted to 0), so a stop halted every zone with no save at all.
+- **Config:** `nakama/data/local.yml` `shutdown_grace_sec: 15`; `docker-compose.yml` `stop_grace_period: 30s` (the
+  container is recreated; `docker inspect` shows `StopTimeout` 30).
+- **Rebuilding while someone plays no longer crashes the server:** the builder renames the new plugin into place
+  instead of copying over the file the server has open. Reproduced first — overwriting it under a connected player
+  killed the server (exit 139, SIGSEGV; the player got 116 ticks in 40 s); with the fix, the same test ran with no
+  restart (450 ticks).
+- **Wipe scripts** (`tools/harness_persist_test.sh`, `tools/ecology/run_config.py` incl. its retry): stop → wipe →
+  start — a running server's final save would otherwise write a wiped zone straight back — and only keys starting
+  with exactly `<zone>:` (a wipe of `village_21` used to take 41 records across village_21, village_21_B and
+  village_21_lab; now 15, all village_21's).
+- **Verified:** Go tests incl. `final_save_test.go`; `harness_persist_test.sh` PASS, with a new check that the stop
+  itself wrote the save — and FAIL with the shutdown time switched off (the control run); the rebuild test
+  before/after; sim-determinism; the two-player sync gate, players together (all 80,775 shared-bug states and 245
+  tick hashes identical) and apart (all 85,836 states and 248 hashes identical, the two players on disjoint chunks).
+- **Docs:** `architecture_persistence.md` ("The clean stop"), `architecture_world.md` (saves are per zone, not per
+  world), `architecture_bugs.md`, `architecture_swarm_sync.md` §11.1, GDD §19, D73, and the run-backend,
+  bug-spawning and test-changes skills.
+
 ## Done 2026-06-16 — cross-zone movement (walk off a zone edge → hidden swap into the neighbor)
 Walk to a zone edge that has an authored neighbor → quick fade → tear down zone A → join the neighbor at
 its matching edge → fade back. Each zone is an independent Nakama match/sync domain, so a crossing is a

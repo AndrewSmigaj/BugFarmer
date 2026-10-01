@@ -3,8 +3,9 @@
 > System of record for HOW A ZONE SURVIVES A SERVER RESTART (Terraria-style hosting: a player runs
 > the server; everything persists). Shipped 2026-07-05 (§P). Code: `nakama/modules/world/
 > world_save.go` (the system) + `persist_classes.go` (the enforcement) + `zone_persist.go` (the
-> dying legacy importer). Character/player state is a SEPARATE user-owned system
-> (`character_persist.go`) and is untouched by all of this.
+> dying legacy importer). Characters are user-owned documents (`character_persist.go`); since 2026-09-30 a
+> zone's clean-stop save writes them together with the world (below), and the rest of the
+> saves-and-backups work (D73) is bringing every save to that shape.
 
 ## The principle
 **The world saves as-is and time continues.** One `WorldSave` JSON document per zone (storage key
@@ -38,11 +39,24 @@ already in memory (`chunkForCollision` is in-memory-first).
 ## Write (three triggers, one guard)
 Empty-transition (async), 10-minute autosave (async), MatchTerminate (synchronous). The snapshot
 is marshaled ON the match goroutine (frozen bytes; async-safe). **`WorldSave.Tick` doubles as the
-generation stamp**: `writeWorldSave` refuses to replace a stored document with a HIGHER tick —
-which kills the real race (a slow async empty-save landing after a newer terminate-save and
-rolling the zone back). `EphemeralSwarms` test zones skip ONLY the population (swarms + ground
-items) both ways; `tools/ecology/run_config.py` additionally WIPES the zone's storage before every
-tuning run so runs stay comparable.
+generation stamp**: every world write first passes `worldSaveWriteAllowed`, which refuses to replace a stored
+document with a HIGHER tick (a slow async empty-save landing after a newer terminate-save would roll the zone
+back) or one this build can't use. `EphemeralSwarms` test zones skip ONLY the population (swarms + ground
+items) both ways; `tools/ecology/run_config.py` additionally WIPES the zone's storage before every tuning run so
+runs stay comparable — with the server STOPPED (stop → wipe → start), since a clean stop now saves the zone.
+
+**The clean stop (2026-09-30).** `MatchTerminate` → `writeFinalSave` writes the zone's document AND the character
+of every player still in it (`characterSaveWrite`, the same shape the leave and sleep saves use) in **one**
+`StorageWrite` — Nakama runs a multi-object write as one transaction, so the world and the characters land
+together or not at all. If the guard refuses the world document, nothing is written. `MatchTerminate` then
+returns **nil**: Nakama stops the match at once, whereas a live state would keep the match running unsaved through
+the grace period (Nakama 3.35 `match_handler.go` `QueueTerminate`). The save runs on a context of its own,
+bounded by the grace period less a second (`terminateSaveTimeout`), because Nakama cancels the match's context
+when it stops the match. **This needs shutdown time:** `nakama/data/local.yml` `shutdown_grace_sec: 15` (Nakama's
+default, 0, halts every match with no MatchTerminate — so before this date no zone was ever saved on shutdown)
+and `docker-compose.yml` `stop_grace_period: 30s`, which applies when the container is (re)created; check it with
+`docker inspect -f '{{.Config.StopTimeout}}' bugfarmer-nakama` → 30. A crash (or turning off the PC / WSL)
+still skips this save.
 
 ## Save formats — upgrade old, refuse newer, never overwrite what can't be read (2026-09-26)
 Every stored document carries `version` — the format of the build that wrote it (`worldSaveVersion`,
@@ -85,6 +99,8 @@ successful document write. New-doc-wins forever after. The importer dies a relea
 GroundItemSeq no-collision, ephemeral skip, generation guard, legacy decode+clamps, SwarmState
 json tags. `save_versions_test.go` (with an in-memory storage fake): the upgrade chain, refusing newer /
 unreadable saves at start-up and on write, upgrading an older save with its original backed up once, and
-the same for characters. End-to-end: `tools/harness_persist_test.sh` (build a farm headless → restart → assert
-restored, incl. a [6/6] direct Postgres inspection of the stored document), plus a seeded
-legacy-format migration run (imported → carried → legacy rows deleted).
+the same for characters. `final_save_test.go`: the clean stop writes the world and the present characters in ONE
+write and returns nil, and writes nothing over an unusable save. End-to-end: `tools/harness_persist_test.sh`
+(stop → wipe → start; build a farm headless → clean stop → start → assert restored; a direct Postgres inspection of
+the stored document; and proof the clean stop itself wrote the save — its `saved_at` is at or after the stop),
+plus a seeded legacy-format migration run (imported → carried → legacy rows deleted).

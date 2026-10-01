@@ -1648,19 +1648,30 @@ func (m *Match) MatchTerminate(ctx context.Context, logger runtime.Logger, db *s
 	worldState, ok := state.(*WorldState)
 	if !ok {
 		logger.Error("MatchTerminate: invalid state type")
-		return state
+		return nil
 	}
 
 	logger.Info("World %s terminating, grace period %d seconds", worldState.WorldID, graceSeconds)
 
-	// ZONE PERSISTENCE: the authoritative save for a clean restart. SYNCHRONOUS — a detached
-	// goroutine could be killed during teardown; graceSeconds gives the window to finish the write.
-	if doc, docTick := m.snapshotWorldSaveBytes(worldState); doc != "" {
-		writeWorldSave(ctx, nk, logger, worldState.CurrentZone.ZoneID, doc, docTick)
-		logger.Info("Zone %s: persisted world save on terminate (tick %d)", worldState.ZoneID, docTick)
-	}
+	// ZONE PERSISTENCE: the save for a clean stop — the world AND everyone still in it, in one write
+	// (writeFinalSave). SYNCHRONOUS, on a context of its own bounded by the grace period: Nakama cancels the
+	// match's context when it stops the match, and stops waiting for matches when the grace period ends.
+	saveCtx, cancel := context.WithTimeout(context.Background(), terminateSaveTimeout(graceSeconds))
+	defer cancel()
+	m.writeFinalSave(saveCtx, nk, logger, worldState)
 
-	return worldState
+	// nil = stop the match NOW. A non-nil state keeps the match running through the grace period
+	// (Nakama 3.35 match_handler.go QueueTerminate), and anything players did after the save above would be lost.
+	return nil
+}
+
+// terminateSaveTimeout is how long the final save may take: the grace period less a second of margin, so the
+// write finishes (or gives up) before Nakama stops waiting for the match.
+func terminateSaveTimeout(graceSeconds int) time.Duration {
+	if graceSeconds < 2 {
+		return time.Second
+	}
+	return time.Duration(graceSeconds-1) * time.Second
 }
 
 // MatchSignal handles external commands (e.g., from RPC)

@@ -225,38 +225,86 @@ func worldSaveSuperseded(storedTick, snapshotTick int64) bool {
 	return storedTick > snapshotTick
 }
 
-// writeWorldSave stores the document — unless storage already holds one with a HIGHER tick
-// (a newer save from a racing writer: e.g. the async empty-transition save finishing after the
-// synchronous terminate save). On the first successful write it deletes the legacy multi-record
-// save, completing the one-time migration.
-func writeWorldSave(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, zoneID, value string, tick int64) {
-	zoneKey := ZoneStateKey(zoneID, "")
-	key := worldSaveKey(zoneKey)
-
-	existing, err := loadWorldSave(ctx, nk, zoneKey)
+// worldSaveWriteAllowed is the guard every world-save write passes first: never over a stored save this build
+// can't use (written by a newer build, or unreadable), and never over a newer generation (a HIGHER tick — a newer
+// save from a racing writer, e.g. the async empty-transition save finishing after the terminate save).
+func worldSaveWriteAllowed(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, zoneID string, tick int64) bool {
+	existing, err := loadWorldSave(ctx, nk, ZoneStateKey(zoneID, ""))
 	if err != nil && (errors.Is(err, errSaveFromNewerBuild) || errors.Is(err, errSaveUnreadable)) {
 		logger.Error("Zone %s: world-save write REFUSED — the stored save %v; it is left untouched", zoneID, err)
-		return
+		return false
 	}
 	if existing != nil && worldSaveSuperseded(existing.Save.Tick, tick) {
 		logger.Info("Zone %s: skipped world-save write (stored tick %d > snapshot tick %d — newer save wins)",
 			zoneID, existing.Save.Tick, tick)
-		return
+		return false
 	}
+	return true
+}
 
-	_, err = nk.StorageWrite(ctx, []*runtime.StorageWrite{{
+// worldSaveWrite builds the storage write for a zone's document (system-owned: the zone is shared).
+func worldSaveWrite(zoneID, value string) *runtime.StorageWrite {
+	return &runtime.StorageWrite{
 		Collection:      ZoneStateCollection,
-		Key:             key,
-		UserID:          "", // system-owned (shared zone)
+		Key:             worldSaveKey(ZoneStateKey(zoneID, "")),
+		UserID:          "",
 		Value:           value,
 		PermissionRead:  2,
 		PermissionWrite: 0,
-	}})
-	if err != nil {
+	}
+}
+
+// writeWorldSave stores the document if the guard allows it. On the first successful write it deletes the legacy
+// multi-record save, completing the one-time migration.
+func writeWorldSave(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, zoneID, value string, tick int64) {
+	if !worldSaveWriteAllowed(ctx, nk, logger, zoneID, tick) {
+		return
+	}
+	if _, err := nk.StorageWrite(ctx, []*runtime.StorageWrite{worldSaveWrite(zoneID, value)}); err != nil {
 		logger.Error("Zone %s: world-save write failed: %v", zoneID, err)
 		return
 	}
-	deleteLegacyZoneRecords(ctx, nk, logger, zoneKey, zoneID)
+	deleteLegacyZoneRecords(ctx, nk, logger, ZoneStateKey(zoneID, ""), zoneID)
+}
+
+// writeFinalSave is the save a zone makes when the server stops cleanly (MatchTerminate): the world document AND
+// the character of every player still in the zone, in ONE storage write. Nakama runs a multi-object write as one
+// transaction, so either all of it lands or none does — a restart can never bring the world back from one moment
+// and a character from another (an item put in a chest showing up in both, or in neither). If the guard refuses the
+// world document, nothing is written: storage keeps its last consistent state.
+func (m *Match) writeFinalSave(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, state *WorldState) {
+	if state.CurrentZone == nil {
+		return
+	}
+	zoneID := state.CurrentZone.ZoneID
+	doc, tick := m.snapshotWorldSaveBytes(state)
+	if doc == "" {
+		logger.Error("Zone %s: final save skipped — the world document could not be built", zoneID)
+		return
+	}
+	writes := []*runtime.StorageWrite{worldSaveWrite(zoneID, doc)}
+	now := time.Now().Unix()
+	for _, userID := range sortedStringKeys(state.Players) {
+		p := state.Players[userID]
+		if p == nil || p.CharacterID == "" {
+			continue // a join without a character (test harness, debug) has nothing to keep
+		}
+		w, err := characterSaveWrite(userID, buildCharacterSave(p, zoneID, state.Config.ChunkSize, now))
+		if err != nil {
+			logger.Error("Zone %s: final save NOT written — character %s/%s can't be encoded: %v", zoneID, userID, p.CharacterID, err)
+			return
+		}
+		writes = append(writes, w)
+	}
+	if !worldSaveWriteAllowed(ctx, nk, logger, zoneID, tick) {
+		return
+	}
+	if _, err := nk.StorageWrite(ctx, writes); err != nil {
+		logger.Error("Zone %s: final save failed: %v", zoneID, err)
+		return
+	}
+	logger.Info("Zone %s: final save on shutdown — world (tick %d) and %d character(s) in one write", zoneID, tick, len(writes)-1)
+	deleteLegacyZoneRecords(ctx, nk, logger, ZoneStateKey(zoneID, ""), zoneID)
 }
 
 // storedWorldSave is what loadWorldSave found: the document (upgraded to this build's format), the format it was

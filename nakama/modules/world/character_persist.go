@@ -219,21 +219,31 @@ func decodeCharacterSave(value string) (*CharacterSave, int, error) {
 	return &save, stored, nil
 }
 
-// WriteCharacterSave persists one character (user-owned, server-only write permission).
-func WriteCharacterSave(ctx context.Context, nk runtime.NakamaModule, userID string, save *CharacterSave) error {
+// characterSaveWrite builds the storage write for one character (user-owned, server-only write permission). The
+// one place a character's storage shape is decided — a lone write and the zone's final save both use it.
+func characterSaveWrite(userID string, save *CharacterSave) (*runtime.StorageWrite, error) {
 	save.Version = characterSaveVersion // the struct IS this build's format
 	data, err := json.Marshal(save)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	_, err = nk.StorageWrite(ctx, []*runtime.StorageWrite{{
+	return &runtime.StorageWrite{
 		Collection:      CharacterCollection,
 		Key:             save.CharID,
 		UserID:          userID,
 		Value:           string(data),
 		PermissionRead:  1, // owner can read (the select screen)
 		PermissionWrite: 0, // server-only writes — clients can't forge inventory
-	}})
+	}, nil
+}
+
+// WriteCharacterSave persists one character on its own.
+func WriteCharacterSave(ctx context.Context, nk runtime.NakamaModule, userID string, save *CharacterSave) error {
+	w, err := characterSaveWrite(userID, save)
+	if err != nil {
+		return err
+	}
+	_, err = nk.StorageWrite(ctx, []*runtime.StorageWrite{w})
 	return err
 }
 

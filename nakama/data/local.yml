@@ -1,5 +1,10 @@
 name: bugfarmer
 
+# Seconds a stopping server gives each zone to finish its final save (MatchTerminate saves the world and
+# everyone in it). Nakama's default, 0, halts every zone at once with no save at all. docker-compose.yml's
+# stop_grace_period must stay longer than this, or Docker kills the server mid-save.
+shutdown_grace_sec: 15
+
 logger:
   level: INFO
   stdout: true

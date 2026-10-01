@@ -168,14 +168,21 @@ def wipe_zone_state(zone):
     print(f"  wiping persisted zone_state for {zone}…")
     subprocess.run(["docker", "compose", "exec", "-T", "postgres", "psql", "-U", "postgres",
                     "-d", "nakama", "-c",
-                    f"delete from storage where collection='zone_state' and key like '{zone}%';"],
+                    # Exactly this zone's keys ("<zone>:" prefix): in LIKE, '_' is a wildcard, and a bare
+                    # '<zone>%' also caught other zones whose names start the same (village_21 → village_21_B).
+                    f"delete from storage where collection='zone_state' and left(key, length('{zone}:')) = '{zone}:';"],
                    cwd=ROOT, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
-def restart_nakama():
-    print("  restarting nakama (data reload)…")
-    subprocess.run(["docker", "compose", "restart", "nakama"], cwd=ROOT, check=True,
-                   stdout=subprocess.DEVNULL)
+def restart_fresh(zone):
+    """Stop nakama → wipe the zone → start nakama. The wipe MUST happen while the server is stopped: a clean stop
+    saves every zone (MatchTerminate's final save), so wiping a running server's zone just has that final save
+    write the previous run's state straight back — and the next run is no longer comparable."""
+    print("  stopping nakama (each zone writes its final save)…")
+    subprocess.run(["docker", "compose", "stop", "nakama"], cwd=ROOT, check=True, stdout=subprocess.DEVNULL)
+    wipe_zone_state(zone)
+    print("  starting nakama (data reload)…")
+    subprocess.run(["docker", "compose", "start", "nakama"], cwd=ROOT, check=True, stdout=subprocess.DEVNULL)
     for _ in range(40):
         h = subprocess.run(["docker", "inspect", "bugfarmer-nakama", "--format",
                             "{{.State.Health.Status}}"], capture_output=True, text=True).stdout.strip()
@@ -209,8 +216,8 @@ def run_harness(duration, tag, zone="bug_lab", retries=3):
                                   "nakama"], cwd=ROOT, capture_output=True, text=True).stdout
         if _csv_ok(csv):
             return csv, run_log
-        print(f"  attempt {attempt}: harness produced no CSV — restarting + retrying", file=sys.stderr)
-        restart_nakama()
+        print(f"  attempt {attempt}: harness produced no CSV — restarting fresh + retrying", file=sys.stderr)
+        restart_fresh(zone)
     return None, ""
 
 
@@ -301,8 +308,7 @@ def main():
     snap = snapshot([TUNING_JSON, SPECIES_JSON, OCCUPANTS_JSON, os.path.join(DATA, "zones", args.zone)])
     try:
         apply_config(cfg, args.zone)
-        wipe_zone_state(args.zone)
-        restart_nakama()
+        restart_fresh(args.zone)
         csv, run_log = run_harness(args.duration, name, args.zone)
         if csv is None:
             print("  ERROR: harness produced no CSV after retries — skipping charts for this config", file=sys.stderr)

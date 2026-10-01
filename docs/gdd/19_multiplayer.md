@@ -1,5 +1,5 @@
 # §19 · Multiplayer & hosting
-<!-- gdd: id=19 status=review updated=2026-09-28 -->
+<!-- gdd: id=19 status=review updated=2026-09-30 -->
 
 ## The experience
 It works like Terraria. From the main menu you play alone, **host** a world your friends join, or **join** someone
@@ -36,6 +36,10 @@ Each line is the owner's decision in my words, with its date.
 - **The roles of the server and the players' computers are rethought by what works best**, and each job still on the
   server has to justify its place — this is one of the most fragile parts of the game (2026-09-28, D58). Each bug's
   own behaviour stays on the players' computers, as it has since July 2026.
+- **P5 is built in full** (2026-09-30, D73): characters saved with their zone every minute and when the server stops,
+  the duplication faults fixed along with it, rolling backups, and a restore that brings zones and characters back
+  together after a safety copy — all tested end to end. The backup folder, the restore behaviour and the numbers
+  (10 recent, 7 daily and 4 weekly backups) were recommendations he accepted.
 
 ## Current design
 - **Many separate worlds, each moderated by its own owner** — from the December 2025 requirements: a world has an
@@ -55,10 +59,12 @@ Each line is the owner's decision in my words, with its date.
 - **Characters are already per server:** an account can have up to eight (the limit goes, D58); a character carries
   its coins, inventory, equipment and known recipes; only the server can change coins and inventory
   (`character_persist.go`, `rpc/character.go`).
-- **A character is saved only when it is made, when its player sleeps in a bed, and when the player leaves**
-  (`rpc/character.go`, `handlers_home.go`, `match.go`). When a zone shuts down, the world is saved but the players still
-  in it are not — so a crash or a host quitting can lose a player's recent items, or duplicate them between a chest
-  (saved with the world) and a bag (not saved).
+- **A character is saved when it is made, when its player sleeps in a bed, when the player leaves**
+  (`rpc/character.go`, `handlers_home.go`, `match.go`), **and — since 2026-09-30 — when the server stops cleanly**:
+  each zone then saves its world and every character still in it in one write, so they come back from the same moment
+  (`world_save.go` `writeFinalSave`). Before that, the server was given no time to stop, so a shutdown saved nothing
+  at all. A crash, or a host's PC switching off, still skips that save, so recent items can be lost, or duplicated
+  between a chest and a bag; the rest of P5 (in progress) removes that.
 - **Worlds save and restore** zone by zone (`world_save.go`). Since 2026-09-26 an old save is upgraded when the game
   updates (the original copy is kept), and a save from a newer version is refused instead of being overwritten — for
   worlds and characters alike.

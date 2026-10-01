@@ -16,7 +16,8 @@ import (
 // NakamaModule call hits the nil embedded interface and panics, so a test can't silently depend on one.
 type memStorage struct {
 	runtime.NakamaModule
-	objs map[string]string // "collection|user|key" -> value
+	objs       map[string]string // "collection|user|key" -> value
+	writeCalls int               // StorageWrite calls made — a test can check that things were written TOGETHER
 }
 
 func newMemStorage() *memStorage { return &memStorage{objs: map[string]string{}} }
@@ -34,6 +35,7 @@ func (m *memStorage) StorageRead(_ context.Context, reads []*runtime.StorageRead
 }
 
 func (m *memStorage) StorageWrite(_ context.Context, writes []*runtime.StorageWrite) ([]*api.StorageObjectAck, error) {
+	m.writeCalls++
 	for _, w := range writes {
 		m.objs[memKey(w.Collection, w.UserID, w.Key)] = w.Value
 	}

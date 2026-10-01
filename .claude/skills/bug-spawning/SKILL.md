@@ -65,9 +65,15 @@ entry. The toggle is one top-level `zone.json` field:
   **always starts fresh from `bug_spawning.initial`**. This is what test/combat *labs* want. (`zone.go:106`,
   gated in `zone_persist.go:123/350/504`.)
 - **omit it / `false`** (default) → persistent world: saves on leave, restores on entry, survives reloads.
-- **Reset a persistent zone** = delete its saved record so the next entry rebuilds from config
-  (`deleteZoneRecord`, key `zoneSwarmKey(ZoneStateKey(zoneID,""))`). After the 2026-06-25 fix, that yields a
-  fresh *populated* zone (before it, a wipe came back empty — which is why reset felt broken).
+- **Reset a persistent zone** = delete its save so the next start rebuilds from config: the zone's whole save is
+  the one `zone_state` document `<zone>:world` (plus any old-format `<zone>:meta` / `:swarms` / `:<cx>_<cy>` records
+  and `<zone>:world:v<N>` pre-upgrade copies — all start with `<zone>:`). **Stop the server first** — a clean stop
+  writes every zone's final save, so a zone wiped on a running server comes straight back:
+  `docker compose stop nakama` → `docker compose exec -T postgres psql -U postgres -d nakama -c "delete from storage
+  where collection='zone_state' and left(key, length('<zone>:')) = '<zone>:';"` → `docker compose start nakama`.
+  Match the exact `<zone>:` prefix (with `like '<zone>%'`, `village_21%` also deletes `village_21_B`). (Updated
+  2026-09-30: the old recipe named `deleteZoneRecord`, which no longer exists. A wipe yields a fresh *populated* zone
+  since the 2026-06-25 fix.)
 
 `ephemeral_swarms` only gates the bug population + transient ground items. Authored content + farm deltas
 persist regardless.

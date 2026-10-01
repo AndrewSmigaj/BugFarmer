@@ -900,3 +900,16 @@ it through and recommend. The base under all ground is left to the assistant. Th
   station is (the documents disagreed; §01). Perhaps a castle or something similar in Spider Vale, or
   elsewhere.
 - Items are added as the zones are built; most zones still need designing.
+
+### D73 — Saving characters with the world, and backups (2026-09-30)
+- **Build all of it now (the owner's decision).** Characters are saved together with their zone every minute and
+  when the server stops; the faults that could still duplicate or lose items are fixed as part of it (zone
+  crossings, reconnects, two copies of one zone); rolling backups and a restore command are added. Everything is
+  to be tested end to end before it counts as done.
+- **Recommendations the owner accepted.** Backups go to `C:/Users/emily/BugFarmer_backups/world`, outside the repo.
+  A restore brings back every zone and every character together, after taking a safety copy — the recommended
+  option, accepted as the one that serves players best. The numbers: a save every minute, a backup every 30
+  minutes while anything changes, keeping the newest 10, one a day for a week and one a week for a month. The owner
+  took these on trust in the research behind them, so they are recommendations to revisit if playtesting argues
+  otherwise, not his design.
+- How it works: `docs/product/architecture/architecture_persistence.md`; the proposal it builds is §19 P5.
