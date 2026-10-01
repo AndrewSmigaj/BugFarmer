@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 )
@@ -102,6 +103,7 @@ func knownRecipesSlice(p *PlayerState) []string {
 	for id := range p.KnownRecipes {
 		out = append(out, id)
 	}
+	sort.Strings(out) // a map's order changes run to run: sorted, an unchanged character always encodes to the same bytes
 	return out
 }
 
@@ -219,22 +221,36 @@ func decodeCharacterSave(value string) (*CharacterSave, int, error) {
 	return &save, stored, nil
 }
 
-// characterSaveWrite builds the storage write for one character (user-owned, server-only write permission). The
-// one place a character's storage shape is decided — a lone write and the zone's final save both use it.
-func characterSaveWrite(userID string, save *CharacterSave) (*runtime.StorageWrite, error) {
+// marshalCharacterSave encodes a character in this build's format.
+func marshalCharacterSave(save *CharacterSave) (string, error) {
 	save.Version = characterSaveVersion // the struct IS this build's format
 	data, err := json.Marshal(save)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
+	return string(data), nil
+}
+
+// characterStorageWrite is the storage write for one encoded character (user-owned, server-only write permission).
+// The one place a character's storage shape is decided — a lone write and the save queue's batches both use it.
+func characterStorageWrite(userID, charID, value string) *runtime.StorageWrite {
 	return &runtime.StorageWrite{
 		Collection:      CharacterCollection,
-		Key:             save.CharID,
+		Key:             charID,
 		UserID:          userID,
-		Value:           string(data),
+		Value:           value,
 		PermissionRead:  1, // owner can read (the select screen)
 		PermissionWrite: 0, // server-only writes — clients can't forge inventory
-	}, nil
+	}
+}
+
+// characterSaveWrite encodes a character and builds its storage write.
+func characterSaveWrite(userID string, save *CharacterSave) (*runtime.StorageWrite, error) {
+	value, err := marshalCharacterSave(save)
+	if err != nil {
+		return nil, err
+	}
+	return characterStorageWrite(userID, save.CharID, value), nil
 }
 
 // WriteCharacterSave persists one character on its own.

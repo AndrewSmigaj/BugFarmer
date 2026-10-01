@@ -20,7 +20,11 @@ import (
 )
 
 // Match implements runtime.Match for world simulation
-type Match struct{}
+// Match is one zone's match handler (one per running match). sys is the save system it uses: nil = the server's
+// (currentSaves); unit tests give it their own.
+type Match struct {
+	sys *saveSystem
+}
 
 // Ecology tunables (per-second rates at 10Hz). First-pass values — tune via the repro_test
 // population graph. Species-specific rates (feed/breed/decay) live in species.json.
@@ -292,6 +296,10 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 	// be retried; the stored document is never touched. An OLDER format is upgraded (save_versions.go) after its
 	// original is backed up — and if the backup can't be written, the zone doesn't start either.
 	swarmsRestored := false
+	state.MatchID, _ = ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
+	if state.MatchID == "" {
+		state.MatchID = localMatchID(zoneID) // unit tests call MatchInit without Nakama's context
+	}
 	if state.CurrentZone != nil {
 		zoneKey := ZoneStateKey(state.CurrentZone.ZoneID, "")
 		found, err := loadWorldSave(ctx, nk, zoneKey)
@@ -313,7 +321,16 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 		default:
 			swarmsRestored = m.importLegacySave(ctx, nk, state, logger)
 		}
+		// The save queue writes this zone's document against the version just loaded ("" = none yet → `*`).
+		if sys := m.saveSys(); sys != nil {
+			version := ""
+			if found != nil {
+				version = found.ObjectVersion
+			}
+			sys.writer.zoneLoaded(state.CurrentZone.ZoneID, version)
+		}
 	}
+	state.LastSaveAt = time.Now() // the first autosave comes an interval after the zone starts
 	if !swarmsRestored {
 		m.spawnInitialSwarms(state, logger)
 		m.seedInitialCarrion(state, logger)
@@ -331,6 +348,15 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 	if err != nil {
 		logger.Error("MatchInit: failed to marshal label: %v", err)
 		return nil, 0, ""
+	}
+
+	// ONE LIVE COPY PER ZONE (D73, zone_lease.go): take the zone for this match — for the epoch the starting request
+	// reserved — only now that it has loaded. A stale start is refused.
+	if sys := m.saveSys(); sys != nil {
+		if err := sys.leases.bind(zoneID, zoneEpochParam(params), state.MatchID); err != nil {
+			logger.Error("Zone %s NOT started: %v", zoneID, err)
+			return nil, 0, ""
+		}
 	}
 
 	logger.Info("World match initialized: %s (%s)", name, worldID)
@@ -660,6 +686,8 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 		return state
 	}
 
+	var departing []charSave // the leaving characters, saved below in one batch with the zone
+	left := 0
 	for _, presence := range presences {
 		userID := presence.GetUserId()
 
@@ -674,30 +702,15 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 			}
 		}
 
-		// CHARACTER SAVE (Part C): persist this character before removing it. Build the snapshot
-		// synchronously here (race-free — the match goroutine is single-threaded, and player is
-		// freed by RemovePlayer just below), then write to storage in a detached goroutine so the
-		// leave path doesn't block on I/O. The stale-session guard above already prevents a
-		// reconnect's leave from clobbering the live session.
-		if player, ok := worldState.Players[userID]; ok && player.CharacterID != "" {
-			zoneID := ""
-			if worldState.CurrentZone != nil {
-				zoneID = worldState.CurrentZone.ZoneID
-			}
-			save := buildCharacterSave(player, zoneID, worldState.Config.ChunkSize, time.Now().Unix())
-			leaveDelay := 0
-			if worldState.CurrentZone != nil {
-				leaveDelay = worldState.CurrentZone.DebugLeaveDelayMs // test zones only (zone.go); 0 in production
-			}
-			go func() {
-				if leaveDelay > 0 {
-					time.Sleep(time.Duration(leaveDelay) * time.Millisecond)
-				}
-				if err := WriteCharacterSave(context.Background(), nk, userID, save); err != nil {
-					logger.Error("MatchLeave: character save failed for %s/%s: %v", userID, save.CharID, err)
-				}
-			}()
+		// CHARACTER SAVE (D73): capture this character as bytes before it leaves the zone's state. It goes to storage
+		// in this call's one leave batch, with the zone and everyone still in it (below the loop) — never on its own,
+		// so the character and the world it was played in are always saved from the same moment.
+		if dep, ok, err := departingCharacter(worldState, userID); err != nil {
+			logger.Error("MatchLeave: %v — its departure is not saved", err)
+		} else if ok {
+			departing = append(departing, dep)
 		}
+		left++
 
 		worldState.RemovePlayer(userID)
 
@@ -742,14 +755,6 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 					// leaving a seq gap the client's HasAllEventsUpTo can never close (it stalls).
 					worldState.ClearPendingInfluence()
 					logger.Info("Zone %s is now empty - reset all sync state (NextSeq, InfluenceLog, Snapshot, Authority, PendingInfluence)", zoneID)
-
-					// ZONE PERSISTENCE: the zone just went quiet — snapshot the WorldSave document
-					// (synchronously on the match goroutine; frozen bytes) and write it async. The
-					// generation guard in writeWorldSave keeps a slow async write from ever rolling
-					// back a newer terminate save.
-					if doc, docTick := m.snapshotWorldSaveBytes(worldState); doc != "" {
-						go writeWorldSave(context.Background(), nk, logger, worldState.CurrentZone.ZoneID, doc, docTick)
-					}
 				} else if zone.AuthorityUserID == userID {
 					// Authority is leaving but zone still has members - reassign
 					zone.AuthorityUserID = ""
@@ -785,6 +790,12 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 		}
 
 		logger.Info("Player %s left world %s", presence.GetUsername(), worldState.WorldID)
+	}
+
+	// ZONE PERSISTENCE (D73): one leave batch — the departing characters, the zone, and everyone still in it, from
+	// this moment — on the save queue. A departing character is free to enter another zone once it is written.
+	if left > 0 {
+		m.queueLeaveSave(logger, worldState, departing)
 	}
 
 	// Update label with new player count
@@ -825,6 +836,11 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		return worldState
 	}
 
+	// ZONE PERSISTENCE (D73): queue the zone's save if one is due (the autosave, or soon after a player slept). It runs
+	// here — past the pause guard, so only while occupied — on the state the previous call left: a panic later in a
+	// tick can never stop saves.
+	m.saveIfDue(logger, worldState)
+
 	// SIM BATCH (test zones only; SimBatch=1 in production = ONE iteration = byte-identical behavior):
 	// advance N full sim-ticks per Nakama call so a headless tuning run covers many game-days fast. Each
 	// iteration is a complete, unchanged tick (TickCount++, sim, per-tick broadcast); the messages slice
@@ -834,16 +850,6 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 		worldState.TickCount++
 		tickStart := worldState.Perf.Start() // whole-tick timer (recorded at loop-body end; see profiler.go)
 		chunkSize := worldState.Config.ChunkSize
-
-		// ZONE PERSISTENCE: periodic autosave while occupied (crash safety between the on-empty/terminate
-		// saves). Snapshot synchronously on the match goroutine, write async. Only fires past the pause
-		// guard, so it never runs on an empty zone.
-		if worldState.TickCount-worldState.LastZoneSaveTick >= zoneAutosaveTicks {
-			worldState.LastZoneSaveTick = worldState.TickCount
-			if doc, docTick := m.snapshotWorldSaveBytes(worldState); doc != "" {
-				go writeWorldSave(context.Background(), nk, logger, worldState.CurrentZone.ZoneID, doc, docTick)
-			}
-		}
 
 		// Process incoming messages
 		for _, msg := range messages {
@@ -1660,12 +1666,11 @@ func (m *Match) MatchTerminate(ctx context.Context, logger runtime.Logger, db *s
 
 	logger.Info("World %s terminating, grace period %d seconds", worldState.WorldID, graceSeconds)
 
-	// ZONE PERSISTENCE: the save for a clean stop — the world AND everyone still in it, in one write
-	// (writeFinalSave). SYNCHRONOUS, on a context of its own bounded by the grace period: Nakama cancels the
-	// match's context when it stops the match, and stops waiting for matches when the grace period ends.
-	saveCtx, cancel := context.WithTimeout(context.Background(), terminateSaveTimeout(graceSeconds))
-	defer cancel()
-	m.writeFinalSave(saveCtx, nk, logger, worldState)
+	// ZONE PERSISTENCE (D73): the final save — the world AND everyone still in it, in one write — on the save queue,
+	// then wait until it is written (every save queued before it, e.g. an earlier departure, lands first). The wait
+	// is bounded by the grace period: Nakama stops waiting for matches when it ends. This is the one wait on a match
+	// goroutine, and the match is ending.
+	m.finalSave(logger, worldState, terminateSaveTimeout(graceSeconds))
 
 	// nil = stop the match NOW. A non-nil state keeps the match running through the grace period
 	// (Nakama 3.35 match_handler.go QueueTerminate), and anything players did after the save above would be lost.

@@ -1,9 +1,7 @@
 package world
 
 import (
-	"context"
 	"encoding/json"
-	"time"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 )
@@ -63,15 +61,11 @@ func (m *Match) handleSetHome(
 	player.HomeX = float32(msg.GX) + 0.5
 	player.HomeY = float32(msg.GY) + 0.5
 
-	// Persist now (async, best-effort) so the home survives a crash — not only a clean leave.
-	// No-op for an ephemeral (no-character) session, e.g. the sync-harness.
+	// Save soon, so the home survives a crash — not only a clean leave: the zone saves itself and everyone in it at
+	// the start of a coming tick (saveIfDue; at most one sleep save per 5 s). Never the character on its own — it is
+	// always saved with the world it is in (D73).
 	if player.CharacterID != "" {
-		save := buildCharacterSave(player, zoneID, cs, time.Now().Unix())
-		go func() {
-			if err := WriteCharacterSave(context.Background(), nk, userID, save); err != nil {
-				logger.Error("set-home save failed for %s/%s: %v", userID, save.CharID, err)
-			}
-		}()
+		state.SaveRequested = true
 	}
 
 	ack := SetHomeAckMessage{

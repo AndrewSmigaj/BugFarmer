@@ -46,7 +46,14 @@ Run after ANY server-logic change. Add a `*_test.go` for new sim/economy logic (
   error; `MatchGet`/`MatchSignal`/`UsersGetId` are scriptable. Its own `TestMemStorage*` tests pin each rule — if
   you need another Nakama call in a save test, add it here, mirroring Nakama's real behaviour.
 - `world/final_save_test.go` — the clean-stop save (`MatchTerminate`): the world and every present character go to
-  storage in ONE write, MatchTerminate returns nil (stop at once), and nothing is written over an unusable save.
+  the save queue as ONE batch, MatchTerminate waits for it and returns nil (stop at once), and a save changed by
+  something else is never written over (saving stops).
+- `world/save_writer_test.go` — the one ordered save queue (D73): one write per batch, in order; versions (a changed
+  save stops saving); database errors retried until the batch lands; deleted accounts left out; autosaves coalesced,
+  departures never; barriers/tasks in order; departures freed only once written; old-format clean-up once.
+- `world/zone_lease_test.go` — one live copy per zone: started once and reused; 10 simultaneous requests → one copy;
+  a dead copy retired before the new one loads its last save, its late save refused; stale/failed starts; stopping;
+  the 8 s budget. Run these with `RACE=1`.
 - `world/zone_links_test.go` — the SAVED zone map (`nakama/data/zones`, mounted read-only at `/data` by the
   script): every neighbour exists, links back from the opposite edge, sits on the adjacent grid square, and
   shares the same edge length. One-way links need a named entry in `zoneLinkExceptions` (with the reason);
@@ -81,10 +88,10 @@ in the zone), **crash** (`docker kill -s KILL` after a sleep-in-bed save), **cro
 again while still connected). Each case wipes both zones (server stopped) and uses a new account. The harness options
 behind it: `--device <id>` (the same account every time), `--char <name>` (create-or-reuse a character; joins send its
 `char_id`), and the scenarios `fences-place` (`--count N --sleep --hold S`), `fences-count`, `cross-fences`, `bag-count`
-(`--expect N`). Regenerate the zones with the two `make_test_zone.py` lines in its docstring. **Until the D73 save queue
-and character registry land, crash, cross and reconnect FAIL on purpose** — they reproduce today's faults (recorded
-2026-09-30: 45 after a crash, 50 arriving after leaving with 45, 50 instead of the live 48); graceful passes since the
-clean-stop save. A crash is `docker kill -s KILL` followed by `docker compose start` (Docker doesn't auto-restart a
+(`--expect N`). Regenerate the zones with the two `make_test_zone.py` lines in its docstring. **Until the D73 character registry
+lands, cross and reconnect FAIL on purpose** — they reproduce the faults it fixes (recorded 2026-09-30: 50 arriving
+after leaving with 45, 50 instead of the live 48). graceful passes since the clean-stop save, crash since the save
+queue (10 + 40 = 50 after a kill; before it, 45). A crash is `docker kill -s KILL` followed by `docker compose start` (Docker doesn't auto-restart a
 killed container).
 
 ## 2.5. Ecology population tuning — the 6× `bug_lab` chart loop (THE living-ecology rig)

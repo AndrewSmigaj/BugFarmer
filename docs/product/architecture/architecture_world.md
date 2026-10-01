@@ -1022,11 +1022,12 @@ type WorldUpdateMessage struct {
 
 - Base zone data: loaded from committed JSON files
 - Player modifications: stored in Nakama storage **per zone** — one document, `<zone>:world` in `zone_state` —
-  not per world instance: two worlds running the same zone would read and write the same save (corrected
-  2026-09-30; keeping one live copy of each zone is part of the D73 saves work)
+  not per world instance, so only one live copy of a zone may run (`zone_lease.go`, D73: a second world asking for a
+  running zone is refused)
 - On load: apply modifications on top of base data
-- Saved when the zone empties, every 10 minutes while occupied, and — since 2026-09-30 — on a clean server stop,
-  in one write together with the characters still in the zone
+- Saved through one ordered save queue, always together with the characters in the zone (D73, 2026-09-30): every
+  minute while occupied (a test zone's `autosave_seconds` overrides it), whenever someone leaves, after a sleep, and
+  on a clean server stop
 - A save diffs every loaded chunk against its authored file; the files are read once per match and kept
   (`WorldState.BaseChunks`), so a save of a fully loaded 64-chunk zone takes ~1 ms (it was ~110 ms)
 - The full design — one WorldSave document per zone, how old save formats upgrade, why a newer or

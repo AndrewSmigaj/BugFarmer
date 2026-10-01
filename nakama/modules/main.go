@@ -13,6 +13,17 @@ import (
 func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, initializer runtime.Initializer) error {
 	logger.Info("Bug Farmer module loading...")
 
+	// The save system (D73): one ordered save queue for every zone and character save. Started first, so it is
+	// running before any zone can start; its shutdown hook waits for the queue to drain within the grace period
+	// (nakama/data/local.yml shutdown_grace_sec).
+	env, _ := ctx.Value(runtime.RUNTIME_CTX_ENV).(map[string]string)
+	saves := world.StartSaveSystem(nk, logger, env)
+	if err := initializer.RegisterShutdown(func(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule) {
+		saves.Shutdown(ctx)
+	}); err != nil {
+		return err
+	}
+
 	// Register world management RPCs
 	if err := initializer.RegisterRpc("world_create", rpc.WorldCreate); err != nil {
 		return err

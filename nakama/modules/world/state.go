@@ -214,9 +214,10 @@ type WorldState struct {
 	ZoneStates       map[string]*ZoneState       // zoneID → zone authority/sync state
 	PendingInfluence []InfluenceEvent            // Events to broadcast this tick
 
-	// Zone persistence (see world_save.go + persist_classes.go). LastZoneSaveTick gates the
-	// periodic autosave; set to the restored Tick at load. Not in the bug-sim hash.
-	LastZoneSaveTick int64
+	// Zone persistence (D73: persistence.go, save_writer.go, persist_classes.go). Not in the bug-sim hash.
+	MatchID       string    // this match's id (Nakama's RUNTIME_CTX_MATCH_ID): the zone's live copy, for the save queue
+	LastSaveAt    time.Time // when this zone last queued a save; the autosave comes an interval after it
+	SaveRequested bool      // a player slept in a bed: save the zone and everyone in it soon (saveIfDue)
 }
 
 // DriftCheck accumulates per-client state-hash responses for one settled-tick drift round.

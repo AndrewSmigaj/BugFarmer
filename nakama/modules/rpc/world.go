@@ -144,21 +144,33 @@ func WorldCreate(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runt
 		return errorResponse("unknown zone", "UNKNOWN_ZONE")
 	}
 
+	if req.ZoneID == "" {
+		req.ZoneID = "village_21" // MatchInit's default — the zone's lease must be keyed by the zone that will run
+	}
+
 	// Generate world ID
 	worldID := uuid.Must(uuid.NewV4()).String()
 
-	// Create match
-	matchParams := map[string]interface{}{
-		"world_id":      worldID,
-		"owner_id":      userID,
-		"name":          req.Name,
-		"access_policy": req.AccessPolicy,
-		"zone_id":       req.ZoneID,
+	// Create the match — through the zone's lease (D73: one live copy per zone). A zone's save is per zone, not per
+	// world, so a new world for a zone that is already running is refused instead of starting a second copy.
+	ctx, cancel := context.WithTimeout(ctx, zoneEntryBudget)
+	defer cancel()
+	matchID, live, err := world.ZoneMatch(ctx, req.ZoneID, func(extra map[string]interface{}) (string, error) {
+		return nk.MatchCreate(ctx, "world", withParams(map[string]interface{}{
+			"world_id":      worldID,
+			"owner_id":      userID,
+			"name":          req.Name,
+			"access_policy": req.AccessPolicy,
+			"zone_id":       req.ZoneID,
+		}, extra))
+	})
+	if err == nil && live {
+		err = world.ErrZoneRunning
 	}
-	matchID, err := nk.MatchCreate(ctx, "world", matchParams)
 	if err != nil {
-		logger.Error("Failed to create match: %v", err)
-		return errorResponse("failed to create world", "MATCH_CREATE_FAILED")
+		logger.Error("WorldCreate: zone %s: %v", req.ZoneID, err)
+		msg, code := world.DescribeZoneError(err)
+		return errorResponse(msg, code)
 	}
 
 	// Store world metadata (system-owned for public listing)
@@ -288,20 +300,31 @@ func WorldJoin(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtim
 	matchID := metadata.MatchID
 	match, err := nk.MatchGet(ctx, matchID)
 	if err != nil || match == nil {
-		// Match doesn't exist (server restarted) - recreate it
+		// Match doesn't exist (server restarted) - recreate it, through the zone's lease (D73: one live copy per
+		// zone — if another world's match already runs this zone, the request is refused).
 		logger.Info("Match %s not found, recreating for world %s", matchID, req.WorldID)
-
-		matchParams := map[string]interface{}{
-			"world_id":      metadata.WorldID,
-			"owner_id":      metadata.OwnerID,
-			"name":          metadata.Name,
-			"access_policy": metadata.AccessPolicy,
-			"zone_id":       metadata.ZoneID,
+		zoneID := metadata.ZoneID
+		if zoneID == "" {
+			zoneID = "village_21"
 		}
-		newMatchID, err := nk.MatchCreate(ctx, "world", matchParams)
+		ctx, cancel := context.WithTimeout(ctx, zoneEntryBudget)
+		defer cancel()
+		newMatchID, live, err := world.ZoneMatch(ctx, zoneID, func(extra map[string]interface{}) (string, error) {
+			return nk.MatchCreate(ctx, "world", withParams(map[string]interface{}{
+				"world_id":      metadata.WorldID,
+				"owner_id":      metadata.OwnerID,
+				"name":          metadata.Name,
+				"access_policy": metadata.AccessPolicy,
+				"zone_id":       zoneID,
+			}, extra))
+		})
+		if err == nil && live {
+			err = world.ErrZoneRunning
+		}
 		if err != nil {
-			logger.Error("Failed to recreate match: %v", err)
-			return errorResponse("failed to join world", "MATCH_CREATE_FAILED")
+			logger.Error("WorldJoin: recreating world %s (zone %s): %v", req.WorldID, zoneID, err)
+			msg, code := world.DescribeZoneError(err)
+			return errorResponse(msg, code)
 		}
 
 		// Update storage with new match ID
@@ -370,32 +393,30 @@ func WorldEnter(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 		}
 	}
 
-	// Reuse the live match if it still exists; otherwise (re)create it.
-	matchID := ""
-	if haveMetadata && metadata.MatchID != "" {
-		if match, err := nk.MatchGet(ctx, metadata.MatchID); err == nil && match != nil {
-			matchID = metadata.MatchID
-		}
+	// The zone's live match, or a new one — through the zone's lease (D73: one live copy per zone; two players
+	// arriving at once used to start two copies). Every wait shares one budget, under Nakama's 10 s request limit.
+	ownerID := userID
+	if haveMetadata && metadata.OwnerID != "" {
+		ownerID = metadata.OwnerID
 	}
-
-	if matchID == "" {
-		ownerID := userID
-		if haveMetadata && metadata.OwnerID != "" {
-			ownerID = metadata.OwnerID
-		}
-		newMatchID, err := nk.MatchCreate(ctx, "world", map[string]interface{}{
+	ctx, cancel := context.WithTimeout(ctx, zoneEntryBudget)
+	defer cancel()
+	matchID, live, err := world.ZoneMatch(ctx, req.ZoneID, func(extra map[string]interface{}) (string, error) {
+		return nk.MatchCreate(ctx, "world", withParams(map[string]interface{}{
 			"world_id":      worldID,
 			"owner_id":      ownerID,
 			"name":          friendlyZoneName(req.ZoneID),
 			"access_policy": "public",
 			"zone_id":       req.ZoneID,
-		})
-		if err != nil {
-			logger.Error("WorldEnter: failed to create match for zone %s: %v", req.ZoneID, err)
-			return errorResponse("failed to enter world", "MATCH_CREATE_FAILED")
-		}
-		matchID = newMatchID
+		}, extra))
+	})
+	if err != nil {
+		logger.Error("WorldEnter: zone %s: %v", req.ZoneID, err)
+		msg, code := world.DescribeZoneError(err)
+		return errorResponse(msg, code)
+	}
 
+	if !live {
 		metadata = WorldMetadata{
 			WorldID:      worldID,
 			OwnerID:      ownerID,
@@ -433,6 +454,19 @@ func WorldEnter(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 
 	responseJSON, _ := json.Marshal(WorldJoinResponse{MatchID: matchID, Neighbors: neighbors})
 	return string(responseJSON), nil
+}
+
+// zoneEntryBudget bounds every wait a zone request makes (the zone's lock, an old copy's saves, a character's
+// release): Nakama cuts a request off at 10 s (socket.write_timeout_ms) with no reply at all, so the answer — even
+// "busy, try again" — must come first.
+const zoneEntryBudget = 8 * time.Second
+
+// withParams adds extra (the zone epoch ZoneMatch reserved) to a match's creation params.
+func withParams(params, extra map[string]interface{}) map[string]interface{} {
+	for k, v := range extra {
+		params[k] = v
+	}
+	return params
 }
 
 // Helper function for error responses

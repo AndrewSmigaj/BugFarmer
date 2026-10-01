@@ -11,16 +11,15 @@ package world
 //     unmarshal them back, resume the clock. No lossy rebuilds, no tick-stamp clamps, no
 //     reference relinking — those were all compensations for resetting the clock and reminting
 //     swarm identities, and both roots are gone.
-//   - WorldSave.Tick doubles as the GENERATION STAMP: a writer refuses to replace a document
-//     carrying a higher tick, so a slow async save can never roll the zone back over a newer one
-//     (the empty-transition save racing the terminate save).
+//   - Every save goes through the one ordered save queue (save_writer.go, D73), written against the stored
+//     document's version — so saves land in the order they were made, and a document changed by anything else is
+//     never written over.
 //   - Old multi-record saves (meta + per-chunk + swarms) are imported ONCE by the legacy importer
 //     in zone_persist.go and deleted after the first successful document write.
 
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
@@ -56,7 +55,6 @@ type WorldSave struct {
 	SavedAt int64  `json:"saved_at"`
 
 	// The world clock — restored FIRST; every persisted tick-stamp below is valid against it.
-	// Also the generation stamp (see writeWorldSave).
 	Tick            int64 `json:"tick"`
 	LastRolloverDay int64 `json:"last_rollover_day"`
 
@@ -233,33 +231,10 @@ func (m *Match) snapshotWorldSaveBytes(state *WorldState) (string, int64) {
 	return string(data), ws.Tick
 }
 
-// ---- write (with the generation guard) ----
+// ---- write: through the save queue (save_writer.go) ----
 
-// worldSaveSuperseded is the generation guard's decision: a stored document STRICTLY ahead of the
-// snapshot wins (equal ticks are the same generation — overwriting is fine). This is what stops a
-// slow async empty-transition write from rolling the zone back over a newer terminate save.
-func worldSaveSuperseded(storedTick, snapshotTick int64) bool {
-	return storedTick > snapshotTick
-}
-
-// worldSaveWriteAllowed is the guard every world-save write passes first: never over a stored save this build
-// can't use (written by a newer build, or unreadable), and never over a newer generation (a HIGHER tick — a newer
-// save from a racing writer, e.g. the async empty-transition save finishing after the terminate save).
-func worldSaveWriteAllowed(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, zoneID string, tick int64) bool {
-	existing, err := loadWorldSave(ctx, nk, ZoneStateKey(zoneID, ""))
-	if err != nil && (errors.Is(err, errSaveFromNewerBuild) || errors.Is(err, errSaveUnreadable)) {
-		logger.Error("Zone %s: world-save write REFUSED — the stored save %v; it is left untouched", zoneID, err)
-		return false
-	}
-	if existing != nil && worldSaveSuperseded(existing.Save.Tick, tick) {
-		logger.Info("Zone %s: skipped world-save write (stored tick %d > snapshot tick %d — newer save wins)",
-			zoneID, existing.Save.Tick, tick)
-		return false
-	}
-	return true
-}
-
-// worldSaveWrite builds the storage write for a zone's document (system-owned: the zone is shared).
+// worldSaveWrite builds the storage write for a zone's document (system-owned: the zone is shared). The save queue
+// sets its Version (save_writer.go).
 func worldSaveWrite(zoneID, value string) *runtime.StorageWrite {
 	return &runtime.StorageWrite{
 		Collection:      ZoneStateCollection,
@@ -271,65 +246,13 @@ func worldSaveWrite(zoneID, value string) *runtime.StorageWrite {
 	}
 }
 
-// writeWorldSave stores the document if the guard allows it. On the first successful write it deletes the legacy
-// multi-record save, completing the one-time migration.
-func writeWorldSave(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, zoneID, value string, tick int64) {
-	if !worldSaveWriteAllowed(ctx, nk, logger, zoneID, tick) {
-		return
-	}
-	if _, err := nk.StorageWrite(ctx, []*runtime.StorageWrite{worldSaveWrite(zoneID, value)}); err != nil {
-		logger.Error("Zone %s: world-save write failed: %v", zoneID, err)
-		return
-	}
-	deleteLegacyZoneRecords(ctx, nk, logger, ZoneStateKey(zoneID, ""), zoneID)
-}
-
-// writeFinalSave is the save a zone makes when the server stops cleanly (MatchTerminate): the world document AND
-// the character of every player still in the zone, in ONE storage write. Nakama runs a multi-object write as one
-// transaction, so either all of it lands or none does — a restart can never bring the world back from one moment
-// and a character from another (an item put in a chest showing up in both, or in neither). If the guard refuses the
-// world document, nothing is written: storage keeps its last consistent state.
-func (m *Match) writeFinalSave(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, state *WorldState) {
-	if state.CurrentZone == nil {
-		return
-	}
-	zoneID := state.CurrentZone.ZoneID
-	doc, tick := m.snapshotWorldSaveBytes(state)
-	if doc == "" {
-		logger.Error("Zone %s: final save skipped — the world document could not be built", zoneID)
-		return
-	}
-	writes := []*runtime.StorageWrite{worldSaveWrite(zoneID, doc)}
-	now := time.Now().Unix()
-	for _, userID := range sortedStringKeys(state.Players) {
-		p := state.Players[userID]
-		if p == nil || p.CharacterID == "" {
-			continue // a join without a character (test harness, debug) has nothing to keep
-		}
-		w, err := characterSaveWrite(userID, buildCharacterSave(p, zoneID, state.Config.ChunkSize, now))
-		if err != nil {
-			logger.Error("Zone %s: final save NOT written — character %s/%s can't be encoded: %v", zoneID, userID, p.CharacterID, err)
-			return
-		}
-		writes = append(writes, w)
-	}
-	if !worldSaveWriteAllowed(ctx, nk, logger, zoneID, tick) {
-		return
-	}
-	if _, err := nk.StorageWrite(ctx, writes); err != nil {
-		logger.Error("Zone %s: final save failed: %v", zoneID, err)
-		return
-	}
-	logger.Info("Zone %s: final save on shutdown — world (tick %d) and %d character(s) in one write", zoneID, tick, len(writes)-1)
-	deleteLegacyZoneRecords(ctx, nk, logger, ZoneStateKey(zoneID, ""), zoneID)
-}
-
 // storedWorldSave is what loadWorldSave found: the document (upgraded to this build's format), the format it was
 // stored in, and the stored bytes (kept for the pre-upgrade backup).
 type storedWorldSave struct {
 	Save          *WorldSave
 	StoredVersion int
 	Raw           string
+	ObjectVersion string // storage's version of the stored object (md5 of its value) — the save queue writes against it
 }
 
 // loadWorldSave reads the zone's document: (nil, nil) when there is none. An error means storage could not be
@@ -345,7 +268,11 @@ func loadWorldSave(ctx context.Context, nk runtime.NakamaModule, zoneKey string)
 	if len(objs) == 0 {
 		return nil, nil
 	}
-	return decodeWorldSave(objs[0].Value)
+	found, err := decodeWorldSave(objs[0].Value)
+	if found != nil {
+		found.ObjectVersion = objs[0].Version
+	}
+	return found, err
 }
 
 // decodeWorldSave parses a stored document, upgrading an older format through worldSaveSteps.
@@ -392,7 +319,6 @@ func backupWorldSave(ctx context.Context, nk runtime.NakamaModule, zoneKey strin
 func (m *Match) restoreWorldSave(state *WorldState, ws *WorldSave, logger runtime.Logger) {
 	// (1) The clock first — everything else's tick-stamps are relative to it.
 	state.TickCount = ws.Tick
-	state.LastZoneSaveTick = ws.Tick // else the autosave delta sees "forever ago" and fires at once
 	state.LastRolloverDay = ws.LastRolloverDay
 	state.DayOffsetTicks = ws.DayOffsetTicks
 	state.WeatherKind = ws.WeatherKind

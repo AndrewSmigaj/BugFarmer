@@ -66,8 +66,11 @@ func TestUpgradeSaveJSON(t *testing.T) {
 
 const saveTestZone = "savetest" // no data/zones/savetest in the test's working dir → a placeholder zone
 
-func startZone(nk runtime.NakamaModule) interface{} {
-	state, _, _ := (&Match{}).MatchInit(context.Background(), nopRuntimeLogger(), nil, nk, map[string]interface{}{
+func startZone(nk runtime.NakamaModule) interface{} { return startZoneWith(&Match{}, nk) }
+
+// startZoneWith runs MatchInit on the given match (one carrying a test save system, say) for the test zone.
+func startZoneWith(m *Match, nk runtime.NakamaModule) interface{} {
+	state, _, _ := m.MatchInit(context.Background(), nopRuntimeLogger(), nil, nk, map[string]interface{}{
 		"world_id": "w", "owner_id": "o", "zone_id": saveTestZone,
 	})
 	return state
@@ -129,24 +132,6 @@ func TestMatchInitUpgradesAnOlderSaveAndKeepsTheOriginal(t *testing.T) {
 	}
 	if nk.objs[backupKey] != original {
 		t.Errorf("a later start replaced the original backup")
-	}
-}
-
-func TestWorldSaveWriteNeverOverwritesAnUnusableSave(t *testing.T) {
-	nk := newMemStorage()
-	key := memKey(ZoneStateCollection, "", worldSaveKey(ZoneStateKey(saveTestZone, "")))
-	newer := `{"version":99,"zone_id":"savetest","tick":500}`
-	nk.objs[key] = newer
-	writeWorldSave(context.Background(), nk, nopRuntimeLogger(), saveTestZone, `{"version":1,"zone_id":"savetest","tick":900}`, 900)
-	if nk.objs[key] != newer {
-		t.Errorf("an autosave overwrote a save written by a newer build")
-	}
-
-	nk.objs[key] = `{"version":1,"zone_id":"savetest","tick":100}`
-	fresh := `{"version":1,"zone_id":"savetest","tick":900}`
-	writeWorldSave(context.Background(), nk, nopRuntimeLogger(), saveTestZone, fresh, 900)
-	if nk.objs[key] != fresh {
-		t.Errorf("a normal autosave over an older tick must still be written")
 	}
 }
 

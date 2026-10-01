@@ -59,12 +59,12 @@ Each line is the owner's decision in my words, with its date.
 - **Characters are already per server:** an account can have up to eight (the limit goes, D58); a character carries
   its coins, inventory, equipment and known recipes; only the server can change coins and inventory
   (`character_persist.go`, `rpc/character.go`).
-- **A character is saved when it is made, when its player sleeps in a bed, when the player leaves**
-  (`rpc/character.go`, `handlers_home.go`, `match.go`), **and — since 2026-09-30 — when the server stops cleanly**:
-  each zone then saves its world and every character still in it in one write, so they come back from the same moment
-  (`world_save.go` `writeFinalSave`). Before that, the server was given no time to stop, so a shutdown saved nothing
-  at all. A crash, or a host's PC switching off, still skips that save, so recent items can be lost, or duplicated
-  between a chest and a bag; the rest of P5 (in progress) removes that.
+- **Since 2026-09-30, a character is saved only together with the zone it is in** (D73, in progress), in one write,
+  so the two always come back from the same moment: every minute while the zone is occupied, whenever someone leaves,
+  after a sleep in a bed, and when the server stops cleanly — through one ordered save queue (`persistence.go`,
+  `save_writer.go`). Before, characters and the world were saved at different moments and a shutdown saved nothing at
+  all. Still to come in P5: a zone crossing or a reconnect can load an older copy of a character (the next step
+  fixes it), then backups and restore.
 - **Worlds save and restore** zone by zone (`world_save.go`). Since 2026-09-26 an old save is upgraded when the game
   updates (the original copy is kept), and a save from a newer version is refused instead of being overwritten — for
   worlds and characters alike.
@@ -79,8 +79,9 @@ Each line is the owner's decision in my words, with its date.
   numbers every event so every computer applies it at the same moment, sends a late joiner everything they need to
   catch up, and checks that everyone stays in step. Each bug's own movement, lunges and feeding run on the players'
   computers, in step (`predation.go`, `match.go`, `architecture_swarm_sync.md` §0).
-- **Known faults** (numbers 2, 3 and 6 in the roadmap's list): two players arriving at once can create two copies of a
-  zone; the first player into a fresh zone may stall; a failed zone crossing can strand a player.
+- **Known faults** (numbers 3 and 6 in the roadmap's list): the first player into a fresh zone may stall; a failed zone
+  crossing can strand a player. (Fault 2 — two players arriving at once starting two copies of a zone — is fixed: one
+  live copy per zone, 2026-09-30, `zone_lease.go`.)
 - **Not built yet:** Host & Play, Join, a world-list screen, passwords, kick and ban, chat (the server has a slot set
   aside for it, unused), the game reconnecting by itself (the server already accepts a returning player), a version
   check, giving things to other players, a drop action, private plots and their invitations, one clock for the whole
