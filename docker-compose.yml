@@ -34,6 +34,9 @@ services:
         /nakama/nakama migrate up --database.address postgres:localdev@postgres:5432/nakama &&
         exec /nakama/nakama --config /nakama/data/local.yml --database.address postgres:localdev@postgres:5432/nakama
     restart: unless-stopped
+    # Longer than nakama's shutdown_grace_sec (local.yml): Docker must not kill the server while zones are still
+    # writing their final saves. Applied when the container is (re)created, not on a plain restart.
+    stop_grace_period: 30s
     ports:
       - "7349:7349"
       - "7350:7350"

@@ -715,6 +715,11 @@ headless `tools/sync-harness` (real Nakama .NET client, no Unity) reproduces/ver
   can't be read from storage does not start (`MatchInit` returns no state) instead of starting empty and
   autosaving over it; older formats upgrade after a backup. Nothing reaches the sync layer — the refusal
   happens before any join. See `architecture_persistence.md` → "Save formats".
+- **A clean stop saves each zone with the players in it (2026-09-30):** the server gives zones 15 s to stop
+  (`local.yml` `shutdown_grace_sec`); `MatchTerminate` writes the world and every present character in ONE write
+  and returns nil, so Nakama stops the match at once instead of letting it run on unsaved through the grace period.
+  Nothing reaches the sync layer — the ledger, epoch and seq are per-run, and the next start is a fresh sync epoch
+  over the restored world. See `architecture_persistence.md` → "The clean stop".
 - **Pause when empty:** `MatchLoop` early-returns when no players/presences are connected — no tick
   advance, no swarm sim/merge/split, no broadcasts. A world only "runs" while someone is in it; a
   joining player resumes from the frozen `TickCount`. (Replaces the old never-terminating match that

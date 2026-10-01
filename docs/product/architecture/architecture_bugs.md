@@ -348,7 +348,10 @@ func (m *Match) initSpecies(state *WorldState) error {
 **requested** id — it no longer falls back to `village_21`, which made a second match load and write
 `village_21`'s save. Its world save loads next: a save that is newer than this build, unreadable, or unreachable stops the
 zone from starting rather than letting an empty zone autosave over it (`architecture_persistence.md` → "Save
-formats"); the bug population is therefore only ever restored from a save this build can read.
+formats"); the bug population is therefore only ever restored from a save this build can read. A clean server stop
+saves the zone — bugs included — together with every character still in it (`MatchTerminate`, 2026-09-30;
+`architecture_persistence.md` → "The clean stop"), so a restart brings the population back from the moment of the
+stop; before that date the server stopped zones with no save at all.
 
 ---
 

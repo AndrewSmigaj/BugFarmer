@@ -51,7 +51,15 @@ A healthy launch shows `Bug Farmer module loaded successfully`, the registered R
 docker compose down            # stops + removes containers and the network; KEEPS volumes (DB + compiled module)
 ```
 
-This is the safe default — it leaves no orphaned containers and preserves player data and the built plugin. Confirm nothing is left:
+This is the safe default — it leaves no orphaned containers and preserves player data and the built plugin.
+
+**A clean stop saves the world (since 2026-09-30).** `stop`, `down`, `restart` and `up --force-recreate` send the
+server a polite stop; it gives every zone up to 15 s (`shutdown_grace_sec` in `nakama/data/local.yml`) to write its
+final save — the world and every character still in it, in one write — and Docker waits up to 30 s
+(`stop_grace_period` in `docker-compose.yml`) before forcing it. `docker kill`, a crash, or switching off the PC/WSL
+skips that save. After changing `stop_grace_period`, recreate the container once (`docker compose up -d
+--force-recreate nakama`) — Compose applies it only when creating the container. Check: `docker inspect -f
+'{{.Config.StopTimeout}}' bugfarmer-nakama` → `30`. Confirm nothing is left:
 
 ```bash
 docker compose ps
@@ -88,9 +96,16 @@ The client lives in `BugFarmerClient/` and connects via `Assets/Scripts/Networki
 
 - An **Exited (0)** builder is success, not failure — it's a one-shot copy job.
 - After Go changes, a plain `up -d`/`restart` keeps the **old** `backend.so`; you must `build builder` first.
-- **Never rebuild while someone is PLAYING**: `build builder` + `up -d` swaps `backend.so`
-  under the running match — the match goroutine panics (SIGSEGV at pc=0x0), nakama restarts,
-  and any connected client is left bound to the DEAD match (every action silently fails until
-  the client reconnects). Rebuild between sessions, or tell the player to rejoin after.
+- **Rebuilding while someone plays no longer crashes the server (fixed 2026-09-30).** The builder used to copy the
+  new `backend.so` straight over the file the running server had open — the match goroutine panicked (SIGSEGV at
+  pc=0x0) and clients were left bound to a dead match. It now copies to `backend.so.new` and renames it into place,
+  so the running server keeps its old file (`nakama/modules/Dockerfile.build`). The new code still loads only when
+  nakama restarts (`up -d` after a build does that): a clean stop — every zone saves, players are disconnected and
+  rejoin.
+- **Reset one zone's save** (start it from the authored zone again): stop the server FIRST, or its final save writes
+  the zone straight back — `docker compose stop nakama`, then
+  `docker compose exec -T postgres psql -U postgres -d nakama -c "delete from storage where collection='zone_state'
+  and left(key, length('<zone>:')) = '<zone>:';"`, then `docker compose start nakama`. Match the exact `<zone>:`
+  prefix: with `like '<zone>%'`, `_` is a wildcard and `village_21%` also deletes `village_21_B` and `village_21_lab`.
 - Don't `down -v` unless you mean to wipe the database.
 - If Nakama won't go healthy, the cause is almost always the builder (compile error) — read `docker compose logs builder` before touching Nakama.

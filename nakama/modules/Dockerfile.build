@@ -19,6 +19,8 @@ RUN go mod download
 # Build the shared library
 RUN go build -buildmode=plugin -trimpath -o ./backend.so
 
-# Override entrypoint and copy the built .so to output volume
+# Override entrypoint and copy the built .so to output volume. Copy to a new name, then RENAME over the old one:
+# a running server keeps its already-open file, so rebuilding while someone plays no longer crashes it (copying
+# straight over the live file rewrote it under the running server — a SIGSEGV).
 ENTRYPOINT []
-CMD ["/bin/cp", "/backend/backend.so", "/output/backend.so"]
+CMD ["/bin/sh", "-c", "cp /backend/backend.so /output/backend.so.new && mv -f /output/backend.so.new /output/backend.so"]

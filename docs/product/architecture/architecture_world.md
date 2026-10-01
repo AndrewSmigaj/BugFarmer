@@ -1016,10 +1016,15 @@ type WorldUpdateMessage struct {
 ### Persistence
 
 - Base zone data: loaded from committed JSON files
-- Player modifications: stored in Nakama storage per world instance
+- Player modifications: stored in Nakama storage **per zone** — one document, `<zone>:world` in `zone_state` —
+  not per world instance: two worlds running the same zone would read and write the same save (corrected
+  2026-09-30; keeping one live copy of each zone is part of the D73 saves work)
 - On load: apply modifications on top of base data
-- The full design — one WorldSave document per zone, how old save formats upgrade, and why a newer or
-  unreadable save stops the zone instead of being overwritten — is `architecture_persistence.md`.
+- Saved when the zone empties, every 10 minutes while occupied, and — since 2026-09-30 — on a clean server stop,
+  in one write together with the characters still in the zone
+- The full design — one WorldSave document per zone, how old save formats upgrade, why a newer or
+  unreadable save stops the zone instead of being overwritten, and the clean-stop save — is
+  `architecture_persistence.md`.
 
 ---
 

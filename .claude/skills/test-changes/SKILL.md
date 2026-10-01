@@ -38,6 +38,8 @@ Run after ANY server-logic change. Add a `*_test.go` for new sim/economy logic (
   verbose per-test list run the inner `docker compose run … go test ./... -v` yourself.
 - `rpc/world_zone_test.go` — `world_enter`/`world_create` refuse unknown/malformed zone ids (the
   village_21 save-borrowing fallback).
+- `world/final_save_test.go` — the clean-stop save (`MatchTerminate`): the world and every present character go to
+  storage in ONE write, MatchTerminate returns nil (stop at once), and nothing is written over an unusable save.
 - `world/zone_links_test.go` — the SAVED zone map (`nakama/data/zones`, mounted read-only at `/data` by the
   script): every neighbour exists, links back from the opposite edge, sits on the adjacent grid square, and
   shares the same edge length. One-way links need a named entry in `zoneLinkExceptions` (with the reason);
@@ -57,8 +59,11 @@ Registered scenarios live in `Scenarios.cs`; add new ones there (see §0). The h
 observer + scripted player** — it verifies the deterministic INPUTS (event ledger: in-order seqs, no gaps, no
 stale-high) and server behavior; it does NOT itself compute bug-position hashes (see §3).
 ```bash
-bash tools/harness_persist_test.sh   # PERSISTENCE regression: build farm → restart server → rejoin → assert (PASS/FAIL)
+bash tools/harness_persist_test.sh   # PERSISTENCE regression: build farm → clean stop + start → rejoin → assert (PASS/FAIL)
 ```
+It stops the server before wiping (a clean stop saves every zone, so a running server would write a wiped zone
+straight back), and its last check proves the clean stop itself wrote the save (the stored `saved_at` is at or after
+the stop) — so it fails if the shutdown save stops working.
 
 ## 2.5. Ecology population tuning — the 6× `bug_lab` chart loop (THE living-ecology rig)
 The one you run for ANY bug-ecology/balance change (predator survival, oscillation, Director bands, food
