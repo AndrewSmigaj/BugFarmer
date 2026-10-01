@@ -1027,6 +1027,8 @@ type WorldUpdateMessage struct {
 - On load: apply modifications on top of base data
 - Saved when the zone empties, every 10 minutes while occupied, and — since 2026-09-30 — on a clean server stop,
   in one write together with the characters still in the zone
+- A save diffs every loaded chunk against its authored file; the files are read once per match and kept
+  (`WorldState.BaseChunks`), so a save of a fully loaded 64-chunk zone takes ~1 ms (it was ~110 ms)
 - The full design — one WorldSave document per zone, how old save formats upgrade, why a newer or
   unreadable save stops the zone instead of being overwritten, and the clean-stop save — is
   `architecture_persistence.md`.

@@ -1,6 +1,7 @@
 package world
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"strconv"
@@ -339,6 +340,13 @@ func deleteLegacyZoneRecords(ctx context.Context, nk runtime.NakamaModule, logge
 // occCellEqual semantically compares two occupant cells (parsed {ID,Dir,Anchor}), NOT raw bytes —
 // SetOccupant marshals canonically but authored JSON may be formatted differently.
 func occCellEqual(a, b json.RawMessage) bool {
+	// Fast path: the same bytes are the same cell. A chunk loaded from its file keeps each cell's bytes exactly
+	// (json.RawMessage), so an untouched cell matches its authored base here without parsing either side — the
+	// parse below is ~65,000 JSON decodes per save of a 64-chunk zone. Only cells whose bytes differ (edited, or
+	// re-encoded) are decoded and compared by meaning.
+	if bytes.Equal(a, b) {
+		return true
+	}
 	ca, _ := ParseOccupantCell(a)
 	cb, _ := ParseOccupantCell(b)
 	if ca.IsEmpty != cb.IsEmpty {

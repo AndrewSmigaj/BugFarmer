@@ -45,6 +45,15 @@ back) or one this build can't use. `EphemeralSwarms` test zones skip ONLY the po
 items) both ways; `tools/ecology/run_config.py` additionally WIPES the zone's storage before every tuning run so
 runs stay comparable — with the server STOPPED (stop → wipe → start), since a clean stop now saves the zone.
 
+**Save cost (2026-09-30).** The document is built on the match goroutine, so it must stay cheap now that zones save
+every minute. Building it diffs every loaded chunk against its authored file: `occCellEqual` first compares the
+cells' bytes (a chunk loaded from its file keeps each cell's exact bytes, so an untouched cell matches without
+decoding — the old path ran ~65,000 JSON decodes per save of a 64-chunk zone), and the authored files are read once
+per match and kept (`WorldState.BaseChunks` via `baseChunk`, per-run, read-only). Measured on a fully loaded
+village_21_B with 251 edits (`world_save_cost_test.go`): ~110 ms per save before, ~1.1 ms after — except the first
+save after a zone starts, which fills the cache (~110 ms once). The byte fast path agreed with the full comparison on
+all 140,600 cell pairs tested.
+
 **The clean stop (2026-09-30).** `MatchTerminate` → `writeFinalSave` writes the zone's document AND the character
 of every player still in it (`characterSaveWrite`, the same shape the leave and sleep saves use) in **one**
 `StorageWrite` — Nakama runs a multi-object write as one transaction, so the world and the characters land
@@ -101,7 +110,8 @@ json tags. `storage_fake_test.go`: `memStorage`, the faithful in-memory stand-in
 on (Nakama 3.35's version rules, all-or-nothing batches, all-users listing in pages, deleted accounts refused,
 injected failures), with tests pinning each rule. `save_versions_test.go`: the upgrade chain, refusing newer /
 unreadable saves at start-up and on write, upgrading an older save with its original backed up once, and
-the same for characters. `final_save_test.go`: the clean stop writes the world and the present characters in ONE
+the same for characters. `world_save_cost_test.go`: the byte fast path agrees with the full cell comparison on every real village_21_B cell,
+and the save-build timing (run with -v). `final_save_test.go`: the clean stop writes the world and the present characters in ONE
 write and returns nil, and writes nothing over an unusable save. End-to-end: `tools/harness_persist_test.sh`
 (stop → wipe → start; build a farm headless → clean stop → start → assert restored; a direct Postgres inspection of
 the stored document; and proof the clean stop itself wrote the save — its `saved_at` is at or after the stop),
