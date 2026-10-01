@@ -45,6 +45,15 @@ back) or one this build can't use. `EphemeralSwarms` test zones skip ONLY the po
 items) both ways; `tools/ecology/run_config.py` additionally WIPES the zone's storage before every tuning run so
 runs stay comparable — with the server STOPPED (stop → wipe → start), since a clean stop now saves the zone.
 
+**Save cost (2026-09-30).** The document is built on the match goroutine, so it must stay cheap now that zones save
+every minute. Building it diffs every loaded chunk against its authored file: `occCellEqual` first compares the
+cells' bytes (a chunk loaded from its file keeps each cell's exact bytes, so an untouched cell matches without
+decoding — the old path ran ~65,000 JSON decodes per save of a 64-chunk zone), and the authored files are read once
+per match and kept (`WorldState.BaseChunks` via `baseChunk`, per-run, read-only). Measured on a fully loaded
+village_21_B with 251 edits (`world_save_cost_test.go`): ~110 ms per save before, ~1.1 ms after — except the first
+save after a zone starts, which fills the cache (~110 ms once). The byte fast path agreed with the full comparison on
+all 140,600 cell pairs tested.
+
 **The clean stop (2026-09-30).** `MatchTerminate` → `writeFinalSave` writes the zone's document AND the character
 of every player still in it (`characterSaveWrite`, the same shape the leave and sleep saves use) in **one**
 `StorageWrite` — Nakama runs a multi-object write as one transaction, so the world and the characters land
@@ -97,10 +106,19 @@ successful document write. New-doc-wins forever after. The importer dies a relea
 ## Gates that hold it
 `world_save_test.go`: classification completeness, full round-trip deep-equality, resume-clock,
 GroundItemSeq no-collision, ephemeral skip, generation guard, legacy decode+clamps, SwarmState
-json tags. `save_versions_test.go` (with an in-memory storage fake): the upgrade chain, refusing newer /
+json tags. `storage_fake_test.go`: `memStorage`, the faithful in-memory stand-in for Nakama storage the save tests run
+on (Nakama 3.35's version rules, all-or-nothing batches, all-users listing in pages, deleted accounts refused,
+injected failures), with tests pinning each rule. `save_versions_test.go`: the upgrade chain, refusing newer /
 unreadable saves at start-up and on write, upgrading an older save with its original backed up once, and
-the same for characters. `final_save_test.go`: the clean stop writes the world and the present characters in ONE
+the same for characters. `world_save_cost_test.go`: the byte fast path agrees with the full cell comparison on every real village_21_B cell,
+and the save-build timing (run with -v). `final_save_test.go`: the clean stop writes the world and the present characters in ONE
 write and returns nil, and writes nothing over an unusable save. End-to-end: `tools/harness_persist_test.sh`
 (stop → wipe → start; build a farm headless → clean stop → start → assert restored; a direct Postgres inspection of
 the stored document; and proof the clean stop itself wrote the save — its `saved_at` is at or after the stop),
-plus a seeded legacy-format migration run (imported → carried → legacy rows deleted).
+plus a seeded legacy-format migration run (imported → carried → legacy rows deleted). **The saves crash test,**
+`tools/harness_crash_test.sh`: a scripted player with a real character in the test zones `persist_a` ↔ `persist_b`,
+checking fences in the world + in the bag = 50 through a clean stop, a `docker kill`, a zone crossing (with
+`persist_a`'s `debug_leave_delay_ms` holding back the departure save so the race happens every time) and a reconnect.
+Recorded on 2026-09-30, before the save queue and the character registry: graceful PASS (50); crash FAIL — 45, five
+fences lost (the world last saved on leaving, the character on sleeping); cross FAIL — the bag arrived with 50 after
+leaving with 45 (duplicated); reconnect FAIL — a second copy of the game saw the stored 50, not the live 48.

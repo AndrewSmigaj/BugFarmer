@@ -7,13 +7,18 @@
 # The exit code is go test's own: output goes to a temp file and only its tail is printed, because
 # piping into `tail` would hide a failure behind tail's success (it once did — see the memory
 # "FRESH != deploy + pipe masking").
+#
+# RACE=1 adds Go's race detector (-race): slower, but it catches two goroutines touching the same data — the
+# save queue and the zones run on different goroutines, so their tests run this way too.
 cd "$(dirname "$0")/.."
 LOG=$(mktemp)
+RACEFLAG=""
+[ "${RACE:-0}" = "1" ] && RACEFLAG="-race"
 docker compose run --rm \
   --volume "$(pwd)/nakama/modules:/backend" \
   --volume "$(pwd)/nakama/data:/data:ro" \
   --entrypoint sh builder \
-  -c "cd /backend && go test ./... -count=1" >"$LOG" 2>&1
+  -c "cd /backend && go test $RACEFLAG ./... -count=1" >"$LOG" 2>&1
 STATUS=$?
 tail -40 "$LOG"
 rm -f "$LOG"

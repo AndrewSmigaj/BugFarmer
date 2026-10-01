@@ -120,6 +120,12 @@ type ZoneConfig struct {
 	// at the three combat gates (bugAttackAllowed / aggroPlayerThink / nest-defend). Production omits it.
 	Peaceful bool `json:"peaceful,omitempty"`
 
+	// DebugLeaveDelayMs: TEST ZONES ONLY — hold back the save a player's departure writes by this many
+	// milliseconds. It makes the zone-crossing race happen every time (the next zone loads the character before
+	// this zone has saved it), so tools/harness_crash_test.sh can prove the crossing never duplicates items.
+	// Production omits it → 0 → no delay.
+	DebugLeaveDelayMs int `json:"debug_leave_delay_ms,omitempty"`
+
 	// Cross-zone adjacency: edge direction ("north"/"south"/"east"/"west") -> neighbor zoneID.
 	// Walking off an edge with a neighbor hidden-swaps into it (see CrossZoneController). Absent/""
 	// = a hard edge (no crossing). +Y = north, so south edge = y0, north edge = y255.

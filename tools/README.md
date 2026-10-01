@@ -43,7 +43,7 @@ raw/ ab/ blocklab/ variants/ scratch/ ecology_charts/   sprite staging + transie
 **`world/`** — zones, scenes, previews
 | `previews.py` | the content CATALOG + ALL scene previews (from entity data + each scene's `PREVIEW`) |
 | `view_world.py` | saved-zone minimap → `previews/zones/<zone>/<zone>_detail.png` |
-| `make_test_zone.py` | tiny deterministic mechanic-test zones |
+| `make_test_zone.py` | tiny deterministic mechanic-test zones (`--row/--col`, `--neighbor dir=zone`, `--set key=value` for linked pairs and test-only knobs — e.g. the saves crash test's `persist_a`/`persist_b`, see its docstring) |
 
 **`ecology/`** — sim tuning + charts
 | `run_config.py` / `compare_configs.py` | bug-lab config runs + comparison (use `make_bug_lab`) |
@@ -57,7 +57,8 @@ raw/ ab/ blocklab/ variants/ scratch/ ecology_charts/   sprite staging + transie
 **`data/`** — `publish_entities.py` (canonical `nakama/data/entities` → client Resources, one-way)
 
 **`tools/` root** — `make_scene.py`: the shared renderer **library** (imported by `zonegen`; rarely run directly).
-`*.sh` harness/test runners (`run_go_tests.sh`, `run_sync_test.sh`, …).
+`*.sh` harness/test runners (`run_go_tests.sh`, `run_sync_test.sh`, `harness_persist_test.sh`, `harness_crash_test.sh` —
+the saves crash test, …).
 
 ## Directories
 | Dir | What |

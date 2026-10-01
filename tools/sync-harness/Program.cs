@@ -19,6 +19,10 @@ using Nakama;
 //
 // Usage: dotnet run -- [--host 127.0.0.1] [--port 7350] [--key defaultkey]
 //                      [--zone village_21] [--duration 15] [--tag p1] [--reconnect]
+//                      [--device <id>]  log in as this device id (the same account every time) instead of a new one
+//                      [--char <name>]  play as this character (created on first use): joins send its char_id, so
+//                                       the server loads and saves a REAL character — the saves crash test needs it
+//                      [--count N] [--hold S] [--sleep] [--expect N]   knobs for the fences-* crash-test scenarios
 namespace BugFarmer.SyncHarness
 {
     internal static class Program
@@ -43,6 +47,9 @@ namespace BugFarmer.SyncHarness
         public static string MyUserId => _myUserId; // WorldModel matches the local player entity
         private static IClient _client; private static ISession _session;
         public static IClient Client => _client; public static ISession Session => _session; // scenarios re-enter zones
+        private static string _charId;                    // --char: the character every join plays as (null = none)
+        public static string CharId => _charId;
+        public static Args Opt { get; private set; }      // the parsed options, for scenarios
         private static bool _isAuthority, _loggedFirstInflThisPhase, _loggedStaleHigh;
 
         // Phase-1 collision-test observation
@@ -68,6 +75,7 @@ namespace BugFarmer.SyncHarness
         private static async Task<int> Main(string[] args)
         {
             var o = Args.Parse(args);
+            Opt = o;
             _chunks = o.Chunks;
             if (!string.IsNullOrEmpty(o.Walk))
             {
@@ -79,11 +87,16 @@ namespace BugFarmer.SyncHarness
 
             var client = new Client("http", o.Host, o.Port, o.Key) { Timeout = 10 };
             _client = client;
-            var deviceId = $"sim-{o.Tag}-{Guid.NewGuid():N}".Substring(0, 24);
+            var deviceId = !string.IsNullOrEmpty(o.Device) ? o.Device : $"sim-{o.Tag}-{Guid.NewGuid():N}".Substring(0, 24);
             var session = await client.AuthenticateDeviceAsync(deviceId);
             _session = session;
             _myUserId = session.UserId;
-            Log($"authenticated user={session.UserId}");
+            Log($"authenticated user={session.UserId} device={deviceId}");
+            if (!string.IsNullOrEmpty(o.Char))
+            {
+                _charId = await EnsureCharacter(client, session, o.Char);
+                Log($"playing as character '{o.Char}' ({_charId})");
+            }
 
             var socket = Socket.From(client);
             socket.Closed += () => Log("!! socket CLOSED");
@@ -127,16 +140,33 @@ namespace BugFarmer.SyncHarness
             return 0;
         }
 
-        private static async Task<string> Enter(IClient client, ISocket socket, ISession session, string zone)
+        // Enter a zone the way the game does: world_enter, then join the match — with the character's char_id (and an
+        // edge entry position on a crossing) in the join metadata. Scenarios use it to cross into another zone.
+        public static Task<string> EnterZone(ISocket socket, string zone, double? entryX = null, double? entryY = null)
+            => Enter(_client, socket, _session, zone, entryX, entryY);
+
+        private static async Task<string> Enter(IClient client, ISocket socket, ISession session, string zone,
+                                                double? entryX = null, double? entryY = null)
         {
             var enterPayload = JsonSerializer.Serialize(new Dictionary<string, object> { ["zone_id"] = zone });
             var rpc = await client.RpcAsync(session, "world_enter", enterPayload);
             string matchId;
             using (var rdoc = JsonDocument.Parse(rpc.Payload))
+            {
+                if (rdoc.RootElement.TryGetProperty("error", out var err))
+                    throw new InvalidOperationException($"world_enter {zone} refused: {err.GetString()}");
                 matchId = rdoc.RootElement.GetProperty("match_id").GetString();
+            }
             Log($"[{_phase}] world_enter {zone} -> match={matchId}");
 
-            var match = await socket.JoinMatchAsync(matchId);
+            var meta = new Dictionary<string, string>();
+            if (!string.IsNullOrEmpty(_charId)) meta["char_id"] = _charId;
+            if (entryX.HasValue && entryY.HasValue)
+            {
+                meta["entry_x"] = entryX.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+                meta["entry_y"] = entryY.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+            }
+            var match = meta.Count > 0 ? await socket.JoinMatchAsync(matchId, meta) : await socket.JoinMatchAsync(matchId);
             _myUserId = match.Self.UserId;
             Log($"[{_phase}] joined match={match.Id} self={_myUserId}");
 
@@ -153,11 +183,31 @@ namespace BugFarmer.SyncHarness
                 }
             Log($"[{_phase}] subscribed to {subN} chunks ({_chunks}x{_chunks} grid)");
 
-            double mx = _walk?.x0 ?? 48.0, my = _walk?.y0 ?? 48.0;
+            double mx = _walk?.x0 ?? entryX ?? 48.0, my = _walk?.y0 ?? entryY ?? 48.0;
             var mv = JsonSerializer.Serialize(new Dictionary<string, object> { ["x"] = mx, ["y"] = my, ["facing"] = 0 });
             await socket.SendMatchStateAsync(matchId, OpMovement, mv);
             Log($"[{_phase}] sent initial movement ({mx:F1},{my:F1})");
             return matchId;
+        }
+
+        // The character with this name on this account, created on first use (a new character carries the starting
+        // kit: 50 fences, which the saves crash test counts).
+        private static async Task<string> EnsureCharacter(IClient client, ISession session, string name)
+        {
+            var list = await client.RpcAsync(session, "character_list", "{}");
+            using (var doc = JsonDocument.Parse(list.Payload))
+                if (doc.RootElement.TryGetProperty("characters", out var chars) && chars.ValueKind == JsonValueKind.Array)
+                    foreach (var c in chars.EnumerateArray())
+                        if (string.Equals(c.GetProperty("name").GetString(), name, StringComparison.OrdinalIgnoreCase))
+                            return c.GetProperty("char_id").GetString();
+            var create = await client.RpcAsync(session, "character_create",
+                JsonSerializer.Serialize(new Dictionary<string, object> { ["name"] = name }));
+            using (var doc = JsonDocument.Parse(create.Payload))
+            {
+                if (doc.RootElement.TryGetProperty("error", out var err))
+                    throw new InvalidOperationException($"character_create '{name}' refused: {err.GetString()}");
+                return doc.RootElement.GetProperty("character").GetProperty("char_id").GetString();
+            }
         }
 
         // Drive the player in a straight line from (x0,y0) to (x1,y1), one ~0.5-cell step per 100ms (~10Hz,
@@ -451,11 +501,13 @@ namespace BugFarmer.SyncHarness
 
         private static void Log(string m) => Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss.fff}] {m}");
 
-        private sealed class Args
+        internal sealed class Args
         {
             public string Host = "127.0.0.1", Key = "defaultkey", Zone = "village_21", Tag = "p1", Walk = "", Scenario = "";
+            public string Device = "", Char = "";
             public int Port = 7350, Duration = 15, Chunks = 8;
-            public bool Reconnect;
+            public int Count = 5, Hold = 0, Expect = -1;
+            public bool Reconnect, Sleep;
             public static Args Parse(string[] a)
             {
                 var o = new Args();
@@ -473,6 +525,12 @@ namespace BugFarmer.SyncHarness
                         case "--chunks": o.Chunks = int.Parse(a[++i]); break;
                         case "--scenario": o.Scenario = a[++i]; break;
                         case "--reconnect": o.Reconnect = true; break;
+                        case "--device": o.Device = a[++i]; break;
+                        case "--char": o.Char = a[++i]; break;
+                        case "--count": o.Count = int.Parse(a[++i]); break;
+                        case "--hold": o.Hold = int.Parse(a[++i]); break;
+                        case "--expect": o.Expect = int.Parse(a[++i]); break;
+                        case "--sleep": o.Sleep = true; break;
                     }
                 }
                 return o;

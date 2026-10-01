@@ -8,57 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/heroiclabs/nakama-common/api"
 	"github.com/heroiclabs/nakama-common/runtime"
 )
 
-// memStorage stands in for Nakama storage in these tests. Only the storage calls are implemented; any other
-// NakamaModule call hits the nil embedded interface and panics, so a test can't silently depend on one.
-type memStorage struct {
-	runtime.NakamaModule
-	objs       map[string]string // "collection|user|key" -> value
-	writeCalls int               // StorageWrite calls made — a test can check that things were written TOGETHER
-}
-
-func newMemStorage() *memStorage { return &memStorage{objs: map[string]string{}} }
-
-func memKey(collection, userID, key string) string { return collection + "|" + userID + "|" + key }
-
-func (m *memStorage) StorageRead(_ context.Context, reads []*runtime.StorageRead) ([]*api.StorageObject, error) {
-	var out []*api.StorageObject
-	for _, r := range reads {
-		if v, ok := m.objs[memKey(r.Collection, r.UserID, r.Key)]; ok {
-			out = append(out, &api.StorageObject{Collection: r.Collection, Key: r.Key, UserId: r.UserID, Value: v})
-		}
-	}
-	return out, nil
-}
-
-func (m *memStorage) StorageWrite(_ context.Context, writes []*runtime.StorageWrite) ([]*api.StorageObjectAck, error) {
-	m.writeCalls++
-	for _, w := range writes {
-		m.objs[memKey(w.Collection, w.UserID, w.Key)] = w.Value
-	}
-	return nil, nil
-}
-
-func (m *memStorage) StorageDelete(_ context.Context, deletes []*runtime.StorageDelete) error {
-	for _, d := range deletes {
-		delete(m.objs, memKey(d.Collection, d.UserID, d.Key))
-	}
-	return nil
-}
-
-func (m *memStorage) StorageList(_ context.Context, _, userID, collection string, _ int, _ string) ([]*api.StorageObject, string, error) {
-	var out []*api.StorageObject
-	prefix := collection + "|" + userID + "|"
-	for k, v := range m.objs {
-		if strings.HasPrefix(k, prefix) {
-			out = append(out, &api.StorageObject{Collection: collection, Key: strings.TrimPrefix(k, prefix), UserId: userID, Value: v})
-		}
-	}
-	return out, "", nil
-}
+// memStorage (storage_fake_test.go) is the faithful stand-in for Nakama storage these tests use.
 
 func TestUpgradeSaveJSON(t *testing.T) {
 	steps := map[int]saveStep{

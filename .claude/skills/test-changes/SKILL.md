@@ -27,6 +27,7 @@ If you add a test, **also add its one-liner to §1–§4 below** so it's discove
 ## 1. Go server unit tests
 ```bash
 bash tools/run_go_tests.sh        # go test ./... (world + entities + rpc) inside the builder image (live source)
+RACE=1 bash tools/run_go_tests.sh # the same with Go's race detector (-race) — for anything with more than one goroutine
 ```
 Suite: `centipede combat predation nest fruit_tree release swarm_population player_hp equip world_env
 host_plant brood forage_pool ecology_director predator_starvation shop recipe_unlock` (`*_test.go`).
@@ -38,6 +39,12 @@ Run after ANY server-logic change. Add a `*_test.go` for new sim/economy logic (
   verbose per-test list run the inner `docker compose run … go test ./... -v` yourself.
 - `rpc/world_zone_test.go` — `world_enter`/`world_create` refuse unknown/malformed zone ids (the
   village_21 save-borrowing fallback).
+- `world/storage_fake_test.go` — **`memStorage`, the faithful stand-in for Nakama storage that every save test uses**,
+  copied from Nakama 3.35's own storage code: an object's version is md5 of its value; `""` always writes, `*` only
+  creates, a version hash must still match; every write/delete/MultiUpdate is all-or-nothing; an empty user id lists
+  every user's objects in pages; writes for a deleted account fail (the foreign key); `failOnce` injects a database
+  error; `MatchGet`/`MatchSignal`/`UsersGetId` are scriptable. Its own `TestMemStorage*` tests pin each rule — if
+  you need another Nakama call in a save test, add it here, mirroring Nakama's real behaviour.
 - `world/final_save_test.go` — the clean-stop save (`MatchTerminate`): the world and every present character go to
   storage in ONE write, MatchTerminate returns nil (stop at once), and nothing is written over an unusable save.
 - `world/zone_links_test.go` — the SAVED zone map (`nakama/data/zones`, mounted read-only at `/data` by the
@@ -64,6 +71,21 @@ bash tools/harness_persist_test.sh   # PERSISTENCE regression: build farm → cl
 It stops the server before wiping (a clean stop saves every zone, so a running server would write a wiped zone
 straight back), and its last check proves the clean stop itself wrote the save (the stored `saved_at` is at or after
 the stop) — so it fails if the shutdown save stops working.
+```bash
+bash tools/harness_crash_test.sh [graceful|crash|cross|reconnect …]   # the SAVES CRASH TEST (default: all four)
+```
+A scripted player with a REAL character (`--char`) in the test zones `persist_a` ↔ `persist_b`; every case checks
+fences in the world + fences in the bag = 50 (a new character's starting kit): **graceful** (clean stop with the player
+in the zone), **crash** (`docker kill -s KILL` after a sleep-in-bed save), **cross** (walk into the next zone —
+`persist_a`'s `debug_leave_delay_ms` makes the crossing race happen every time), **reconnect** (the same account joins
+again while still connected). Each case wipes both zones (server stopped) and uses a new account. The harness options
+behind it: `--device <id>` (the same account every time), `--char <name>` (create-or-reuse a character; joins send its
+`char_id`), and the scenarios `fences-place` (`--count N --sleep --hold S`), `fences-count`, `cross-fences`, `bag-count`
+(`--expect N`). Regenerate the zones with the two `make_test_zone.py` lines in its docstring. **Until the D73 save queue
+and character registry land, crash, cross and reconnect FAIL on purpose** — they reproduce today's faults (recorded
+2026-09-30: 45 after a crash, 50 arriving after leaving with 45, 50 instead of the live 48); graceful passes since the
+clean-stop save. A crash is `docker kill -s KILL` followed by `docker compose start` (Docker doesn't auto-restart a
+killed container).
 
 ## 2.5. Ecology population tuning — the 6× `bug_lab` chart loop (THE living-ecology rig)
 The one you run for ANY bug-ecology/balance change (predator survival, oscillation, Director bands, food

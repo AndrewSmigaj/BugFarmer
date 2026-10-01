@@ -1,0 +1,41 @@
+{
+  "zone_id": "persist_b",
+  "name": "Persistence test B",
+  "row": 0,
+  "col": 11,
+  "width": 64,
+  "height": 64,
+  "spawn_point": [
+    32,
+    32
+  ],
+  "biome_type": "test",
+  "seed": 1234,
+  "bug_spawning": {
+    "static": true,
+    "species_caps": {
+      "fly_common": {
+        "initial": 0,
+        "max": 0,
+        "spawn_interval": 999999.0,
+        "swarm_size": 2
+      }
+    },
+    "spawn_areas": [
+      {
+        "id": "center",
+        "species": [
+          "fly_common"
+        ],
+        "type": "circle",
+        "cx": 32,
+        "cy": 32,
+        "radius": 12
+      }
+    ]
+  },
+  "neighbors": {
+    "west": "persist_a"
+  },
+  "autosave_seconds": 5
+}

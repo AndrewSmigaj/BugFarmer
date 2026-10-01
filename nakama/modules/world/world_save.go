@@ -123,10 +123,7 @@ func (m *Match) buildWorldSave(state *WorldState) *WorldSave {
 			continue
 		}
 		cx, cy := live.ChunkX, live.ChunkY
-		base, err := LoadChunk(zonePath, cx, cy)
-		if err != nil {
-			base = NewEmptyChunk(cx, cy, "grass") // same fallback the subscribe path uses
-		}
+		base := state.baseChunk(zonePath, cx, cy)
 		for ly := 0; ly < ChunkSize; ly++ {
 			for lx := 0; lx < ChunkSize; lx++ {
 				edit := GlobalCellEdit{GX: cx*ChunkSize + lx, GY: cy*ChunkSize + ly}
@@ -200,6 +197,26 @@ func (m *Match) buildWorldSave(state *WorldState) *WorldSave {
 		ws.Broods = append(ws.Broods, state.BroodStates[k])
 	}
 	return ws
+}
+
+// baseChunk is chunk (cx, cy) as authored — its file — loaded once per match and kept: the save diffs every loaded
+// chunk against it, and re-reading + decoding a 64-chunk zone's files on every save cost ~100 ms on the match
+// goroutine (world_save_cost_test.go). The files don't change while the zone runs; the cache is read-only and
+// per-run (persist_classes.go). A missing file falls back to grass, as the subscribe path does.
+func (s *WorldState) baseChunk(zonePath string, cx, cy int) *ChunkData {
+	key := ChunkKey(cx, cy)
+	if c := s.BaseChunks[key]; c != nil {
+		return c
+	}
+	c, err := LoadChunk(zonePath, cx, cy)
+	if err != nil {
+		c = NewEmptyChunk(cx, cy, "grass") // same fallback the subscribe path uses
+	}
+	if s.BaseChunks == nil {
+		s.BaseChunks = make(map[string]*ChunkData)
+	}
+	s.BaseChunks[key] = c
+	return c
 }
 
 // snapshotWorldSaveBytes marshals the document synchronously on the match goroutine — the bytes

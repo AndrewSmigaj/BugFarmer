@@ -685,7 +685,14 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 				zoneID = worldState.CurrentZone.ZoneID
 			}
 			save := buildCharacterSave(player, zoneID, worldState.Config.ChunkSize, time.Now().Unix())
+			leaveDelay := 0
+			if worldState.CurrentZone != nil {
+				leaveDelay = worldState.CurrentZone.DebugLeaveDelayMs // test zones only (zone.go); 0 in production
+			}
 			go func() {
+				if leaveDelay > 0 {
+					time.Sleep(time.Duration(leaveDelay) * time.Millisecond)
+				}
 				if err := WriteCharacterSave(context.Background(), nk, userID, save); err != nil {
 					logger.Error("MatchLeave: character save failed for %s/%s: %v", userID, save.CharID, err)
 				}

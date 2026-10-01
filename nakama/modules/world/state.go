@@ -147,6 +147,7 @@ type WorldState struct {
 	// World Building (Phase 4)
 	CurrentZone   *ZoneConfig                  // Current zone metadata
 	Chunks        map[string]*ChunkData        // "chunkX,chunkY" -> chunk data
+	BaseChunks    map[string]*ChunkData        // the AUTHORED chunk files, cached for the save's diff (baseChunk; read-only)
 	ChunkSubs     map[string]map[string]bool   // "chunkX,chunkY" -> player IDs subscribed
 	TileDefs      map[string]*TileDefinition   // Loaded from tiles.json
 	Entities      map[string]*EntityDef        // Loaded from entities/*.json (items, occupants, placeables)
@@ -402,6 +403,7 @@ func NewWorldState(worldID, ownerID, name, accessPolicy string) *WorldState {
 		Species:      make(map[string]*entities.BugSpecies),
 		// World building
 		Chunks:        make(map[string]*ChunkData),
+		BaseChunks:    make(map[string]*ChunkData),
 		ChunkSubs:     make(map[string]map[string]bool),
 		TileDefs:      make(map[string]*TileDefinition),
 		Entities:      make(map[string]*EntityDef),

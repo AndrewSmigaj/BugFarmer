@@ -97,6 +97,7 @@ var persistClasses = map[string]persistEntry{
 
 	// -- the map --
 	"Chunks":        {classWorldState, "WorldSave.CellEdits — semantic diff of loaded chunks vs the authored zone; edited chunks eager-load at restore"},
+	"BaseChunks":    {classPerRun, "cache of the authored chunk files the save diffs against (baseChunk) — re-read from disk each run, never saved"},
 	"ChunkSubs":     {classPerRun, "live view subscriptions"},
 	"BreakingState": {classPerRun, "an in-progress hand action; abandoned on restart"},
 	"DiggingState":  {classPerRun, "an in-progress shovel dig; abandoned on restart"},

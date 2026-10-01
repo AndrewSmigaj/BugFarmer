@@ -351,7 +351,11 @@ zone from starting rather than letting an empty zone autosave over it (`architec
 formats"); the bug population is therefore only ever restored from a save this build can read. A clean server stop
 saves the zone — bugs included — together with every character still in it (`MatchTerminate`, 2026-09-30;
 `architecture_persistence.md` → "The clean stop"), so a restart brings the population back from the moment of the
-stop; before that date the server stopped zones with no save at all.
+stop; before that date the server stopped zones with no save at all. Test zones may also carry save-test knobs that
+never touch the bugs — `debug_leave_delay_ms` holds back a departing player's save (the saves crash test). The save
+is built on the match goroutine, between ticks; it diffs each loaded chunk against its authored file, cached per match
+in `BaseChunks` (`state.go`), so it costs ~1 ms for a fully loaded 64-chunk zone (the first save after a zone starts
+reads the files once, ~110 ms).
 
 ---
 
