@@ -32,3 +32,11 @@ runtime:
   js_entrypoint: ""
   lua_entrypoint: ""
   path: /nakama/data/modules
+  # Settings the game's server code reads (nakama/modules/world/persistence.go):
+  #   BF_BACKUP_DIR      where rolling backups go, INSIDE the container — docker-compose.yml mounts this PC's
+  #                      backup folder there (C:/Users/emily/BugFarmer_backups/world). Unset = no backups.
+  #   BF_BACKUP_MINUTES  a backup every this many minutes, if anything was saved since (also one at start-up).
+  # BF_AUTOSAVE_SECONDS (zones' autosave, default 60) can be set here too.
+  env:
+    - "BF_BACKUP_DIR=/nakama/backups"
+    - "BF_BACKUP_MINUTES=30"

@@ -74,6 +74,18 @@ docker compose down -v          # ALSO deletes pgdata + modules volumes: wipes t
 
 Never run `down -v` to "fix" a problem unless you intend to lose all server-side data. Confirm with the user first.
 
+## Backups — every zone and every character, kept automatically (since 2026-09-30)
+The server backs up every zone's save and every character, at one moment, to
+`C:/Users/emily/BugFarmer_backups/world/world-<UTC time>.json` — at every start, then every 30 minutes if anything
+was saved since; a copy identical to the newest isn't written. Kept: the newest 10, plus the newest of each of the 7
+most recent days and of the 4 most recent weeks that have one; older ones are pruned only after a new backup has read
+back intact, and only files named `world-<time>.json`. Each one is logged: `docker compose logs nakama | grep Backup`.
+Settings: `BF_BACKUP_DIR` (the folder inside the container, `/nakama/backups`) and `BF_BACKUP_MINUTES` in
+`nakama/data/local.yml` runtime.env; the folder mount in `docker-compose.yml` (`BF_BACKUP_HOST_DIR` moves it). A
+changed mount needs `docker compose up -d --force-recreate nakama`. How it works: `architecture_persistence.md` →
+"Backups". Restoring one is not built yet (next). The whole-database dump taken before the saves work began is
+`C:/Users/emily/BugFarmer_backups/db-before-saves-2026-09-30.dump`.
+
 ## Logs
 
 ```bash

@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/heroiclabs/nakama-common/runtime"
@@ -59,6 +60,7 @@ type saveWriter struct {
 	legacyDone    map[string]bool   // zones whose old-format records were cleaned up this run
 	onWritten     func(*saveBatch)  // after a batch lands — frees its departing characters
 	lastLongQueue time.Time
+	changes       atomic.Int64 // storage changes made (batches written, characters deleted) — backups wait for one
 
 	retryMin, retryMax, warnEvery, writeTimeout time.Duration
 }
@@ -255,6 +257,7 @@ func (w *saveWriter) tryWrite(ctx context.Context, b *saveBatch) error {
 	if err != nil {
 		return err
 	}
+	w.changes.Add(1)
 	w.mu.Lock()
 	if len(acks) > 0 && acks[0] != nil && acks[0].Version != "" { // acks come back in the order of the writes
 		w.versions[b.zoneID] = acks[0].Version
