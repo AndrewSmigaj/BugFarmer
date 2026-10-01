@@ -421,7 +421,7 @@ The world design supports this loop:
 | Entity | Pixels (W×H) | Grid Cells (W×H) |
 |--------|--------------|------------------|
 | Grid cell | 16×16 | 1×1 |
-| Player | 48×32 | 3×2 |
+| Player | 16×32 | 1×2 |
 
 **Perspective:** Bird's eye / top-down with slightly higher angle.
 
@@ -1046,7 +1046,7 @@ type WorldUpdateMessage struct {
 | Concept | Implementation |
 |---------|----------------|
 | Grid cell | 16×16 pixels |
-| Player | 48×32 pixels (3×2 cells) |
+| Player | 16×32 pixels (1×2 cells; `match.go` movement) |
 | Layers | Ground + Occupant |
 | World layout | **5 rows × 4 cols**: Surface (rows 0–2) + Underground (rows 3–4); row 5 deferred (see `economy/DECISIONS.md` D2) |
 | Difficulty | Easy/Medium west of river, Hard/Extra Hard east of river |
