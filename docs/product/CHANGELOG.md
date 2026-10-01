@@ -23,6 +23,8 @@ there. The open queue is [`BACKLOG.md`](BACKLOG.md); the plan is [`ROADMAP.md`](
   the first live backup matched the database record by record; and the restore round trip on the real server
   (`tools/harness_restore_test.sh`): 3 fences and a bag of 47 back, a later character and zone save removed,
   permissions kept, the safety copy holding the later state — and restoring that safety copy put it all back.
+  Before the merge: the crash test again (all four PASS) and the two-player sync gate, together (87,513 states, 238
+  hashes) and apart (91,510 states, 242 hashes, disjoint chunks): identical.
 - **Docs:** `architecture_persistence.md` ("Backups", "Restoring a backup"), the run-backend and test-changes skills,
   `tools/README.md`, BACKLOG ("saves follow-ups"), ROADMAP, GDD §19.
 
