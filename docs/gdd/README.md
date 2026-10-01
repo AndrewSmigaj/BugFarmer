@@ -28,7 +28,7 @@ Answers are stored in the page's own database, one document per section (`answer
 `ArtifactData` tool (`list`, collection `answers`). Republish from another session by passing that URL.
 
 ## The item pass
-Every item in the game and in the old designs — 1,259 rows — with a recommendation (keep, change, cut or add) and a
+Every item in the game and in the old designs — 1,168 rows — with a recommendation (keep, change, cut or add) and a
 one-line reason (the owner's request of 2026-09-28, D55). The data is `item_table.jsonl`; the review page is built from
 it by `python3 tools/gdd/build_items_page.py` and published at **https://claude.ai/artifact/L9ftJfjRfcFD3yAB66qenD**
 (private to the owner). His marks — agree, disagree and a note per row — are stored in that page's database, one
@@ -37,11 +37,17 @@ tool, one kind at a time. The first version of the page (https://claude.ai/artif
 stored a whole kind of item as one document and lost the owner's first batch of marks when an older copy overwrote a
 newer one; it was replaced on 2026-09-29 and its storage is not used.
 
-**Where it stands (paused 2026-09-30 for the repo clean-up).**
+**Where it stands (2026-10-01).**
 - **Settled:** batch 1, the tool families and the pickaxes, axes and shovels, 34 rows (D69). Rows that are settled
   carry `"decided"` in the table and show a Decided label on the page.
-- **Next:** the rest of Tools (29 rows, from the Power Spade to the bee smokers), then Weapons (81 rows, probably two
-  batches), then the other kinds in page order.
+- **Marked, waiting for the last answers:** batch 2, the rest of Tools and the Weapons (110 rows), and batch 3, the
+  Armour (22 rows). Half of batch 2's questions are answered; its D-entry and batch 3's follow the rest.
+- **Redone from scratch:** on 2026-10-01 the owner dropped every old accessory and potion and asked for new sets.
+  They replace the old rows: 32 accessories and 3 kits, 12 potions and remedies, each kind with a row of rules first.
+  The outfit roster (31 outfits and three family rows, with a rules row) and two powerful weapons were added for marking
+  too. Rows for things already in the game stay: the flashlight, the bee charm, the lucky clover and the calm spray.
+  The research behind them is in `docs/product/investigations/research-2026-10-01/`.
+- **Next:** the owner's marks on the new rows and the open questions, then the other kinds in page order.
 
 **How a batch goes.**
 1. The owner marks rows on the page.
