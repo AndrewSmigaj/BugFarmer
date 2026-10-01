@@ -80,9 +80,10 @@ Each line is the owner's decision in my words, with its date.
   numbers every event so every computer applies it at the same moment, sends a late joiner everything they need to
   catch up, and checks that everyone stays in step. Each bug's own movement, lunges and feeding run on the players'
   computers, in step (`predation.go`, `match.go`, `architecture_swarm_sync.md` §0).
-- **Known faults** (numbers 3 and 6 in the roadmap's list): the first player into a fresh zone may stall; a failed zone
-  crossing can strand a player. (Fault 2 — two players arriving at once starting two copies of a zone — is fixed: one
-  live copy per zone, 2026-09-30, `zone_lease.go`.)
+- **Known faults** (number 3 in the roadmap's list): the first player into a fresh zone may stall. (Fault 2 — two
+  players arriving at once starting two copies of a zone — is fixed: one live copy per zone, 2026-09-30,
+  `zone_lease.go`. Fault 6 — a failed zone crossing stranding the player — is fixed the same day: the game goes back
+  to the zone it left, with a short message; only if that zone can't be entered either is the player left in no zone.)
 - **Not built yet:** Host & Play, Join, a world-list screen, passwords, kick and ban, chat (the server has a slot set
   aside for it, unused), the game reconnecting by itself (the server already accepts a returning player), a version
   check, giving things to other players, a drop action, private plots and their invitations, one clock for the whole

@@ -3,6 +3,37 @@
 Sections moved verbatim from `BACKLOG.md` on 2026-09-26 (nothing edited), newest first as they appeared
 there. The open queue is [`BACKLOG.md`](BACKLOG.md); the plan is [`ROADMAP.md`](ROADMAP.md).
 
+## Done 2026-09-30 — saves, steps 5–8: one save queue, one copy per zone, one zone at a time per character (D73)
+- **One save queue for the whole server** (`persistence.go`, `save_writer.go`, `save_batch.go`). Each zone save is a
+  batch — the zone plus the character of everyone in it, and of everyone leaving — captured at one tick and written
+  in one transaction, in order. So after a crash or a restart, each zone and the characters in it come back from the
+  same moment: an item put in a chest can no longer end up in the chest and the bag, or in neither. Zones save every
+  minute while someone is in them, whenever someone leaves, after a sleep in a bed, and at a clean stop. A database
+  error retries the same batch until it lands; if something else changed a zone's save, saving stops (and says so in
+  the log every 30 s) rather than overwrite it.
+- **One live copy per zone** (`zone_lease.go`; the ROADMAP's latent bug 2): every request that starts a zone goes
+  through that zone's lock; a copy whose match died is retired before a new one loads its last save, and anything
+  it tries to save afterwards is refused; the debug panel can no longer start a second copy of a running zone.
+- **One zone at a time per character** (`char_registry.go`): a character enters the next zone only once the zone it
+  left has saved it, so crossing zones no longer duplicates items. A second copy of the game in the same zone takes
+  over (the older session is sent out and saved first, so the live bag is kept); one in another zone waits. Joins
+  carry an entry pass that expires after 8 s, so a join Nakama has already reported as timed out can't leave a ghost
+  holding the character. A character in play can't be deleted.
+- **The game's side** (`WorldManager.cs`, `CrossZoneController.cs`): entering sends the character and its pass; a
+  "busy" answer is retried behind the fade for up to 15 s; a crossing that still fails takes the player back to the
+  zone they left with a short message (the ROADMAP's latent bug 6, except when that zone can't be entered either);
+  the character screen shows why a delete was refused.
+- **Verified:** the saves crash test, all four cases PASS — before: a crash lost 5 fences (45), a crossing arrived
+  with 50 after leaving with 45, a reconnect saw the stored 50 instead of the live 48; after: 50, 45, 48. The new
+  crossing test in the real game client (`tools/run_crosstest.sh`) PASS: 48 fences arrived after a failed crossing,
+  a normal one and one refused as busy. Go tests with the race detector (a unit test for each row of both state
+  tables); sim-determinism; `harness_persist_test.sh`; the crosszone and reconnect harness runs; the two-player sync
+  gate with the late joiner entering as a character, together (89,420 states, 242 hashes) and apart (93,595 states,
+  249 hashes): identical.
+- **Docs:** `architecture_persistence.md` (the save queue, one live copy, the character registry, the game's side,
+  the gates), `architecture_world.md`, `architecture_bugs.md`, `architecture_swarm_sync.md` §11.1, GDD §19, the
+  test-changes skill, `tools/README.md`.
+
 ## Done 2026-09-30 — saves, steps 2–4: trustworthy tests, the crash test, and a save that costs ~1 ms (D73)
 - **A faithful stand-in for Nakama storage** in the save tests (`storage_fake_test.go`), copied from Nakama 3.35's own
   storage code: versions are md5 of the value, `*` only creates, a stale version is rejected, every write is
