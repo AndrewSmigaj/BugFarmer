@@ -37,5 +37,6 @@
   "neighbors": {
     "west": "persist_a"
   },
-  "autosave_seconds": 5
+  "autosave_seconds": 5,
+  "debug_leave_delay_ms": 10000
 }

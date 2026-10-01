@@ -132,6 +132,19 @@ client starts joining, so refusing any attempt that finishes more than 8 s after
 the answer. Character deletion (`DeleteCharacter`) is refused while a character is in play and otherwise runs as a task
 on the save queue, after every save already queued. A join without a character (test harness, debug) bypasses all this.
 
+**The game's side** (`WorldManager.cs`, `CrossZoneController.cs`). `EnterWorld` sends `char_id` to `world_enter` and
+carries the reply's pass in the join metadata (`char_id`, `pass`, and `entry_x`/`entry_y` on a crossing). A refusal
+throws a `WorldEnterException` with a code: the reply's own (`{error, code}` with HTTP 200 — `CHARACTER_BUSY`,
+`ZONE_BUSY`, `UNKNOWN_ZONE`, `SERVER_STOPPING`, …), or `JOIN_REJECTED` when the zone turns the join away (nakama-dotnet
+raises the server's reason as a `WebSocketException` message: `pass_expired`, `pass_refused`, `already_in_zone`, …).
+Any failure clears the half-made join (the pre-join buffer). `EnterWorldWithRetry` retries the refusals that clear by
+themselves — busy, and a join turned away for its pass or for the account's other session still leaving — every 0.5 s
+for up to 15 s; the menu's Play and every crossing use it. A crossing does this behind the fade; if the next zone still
+can't be entered, the player goes back to the zone they left — pulled back out of the edge band, so they don't walk
+straight into it again — and a short message says so (the fix the ROADMAP gave its latent bug 6). If the zone they left
+can't be entered either — the server stopping, say — they're left in no zone; that narrower case stays open. Deleting
+a character in play shows the server's refusal on the select screen.
+
 ## Save formats — upgrade old, refuse newer, never overwrite what can't be read (2026-09-26)
 Every stored document carries `version` — the format of the build that wrote it (`worldSaveVersion`,
 `characterSaveVersion`). `save_versions.go` (`upgradeSaveJSON`) decides on load:
@@ -198,4 +211,11 @@ Recorded on 2026-09-30, before the save queue and the character registry: gracef
 fences lost (the world last saved on leaving, the character on sleeping); cross FAIL — the bag arrived with 50 after
 leaving with 45 (duplicated); reconnect FAIL — a second copy of the game saw the stored 50, not the live 48. With the
 save queue (same day): crash PASS — 10 in the world + 40 in the bag after the kill. With the character registry (same
-day): **all four PASS** — cross arrived with the 45 it left with; reconnect saw the live 48.
+day): **all four PASS** — cross arrived with the 45 it left with; reconnect saw the live 48. **The crossing test in the
+game client,** `tools/run_crosstest.sh` (the headless Unity player, `HeadlessSyncTest -crosstest`): a new character
+enters `persist_a`, places 2 fences and crosses three times through the game's own `CrossZoneController` — into a zone
+that can't be entered (it must come back), into `persist_b` (the server waits for `persist_a`'s held-back save), and
+back (`persist_b` holds its save 10 s, past the server's 8 s wait, so the game is told "busy" and must retry) —
+checking each time that the bag the server sends on arrival is the bag that left. First run (2026-09-30): PASS — back
+from the unknown zone in 3.6 s, into `persist_b` in 3.5 s, back into `persist_a` in 10.9 s after one "busy" refusal;
+48 fences every time. The late-join gate also runs with client B entering as a character (`CHAR_B`).

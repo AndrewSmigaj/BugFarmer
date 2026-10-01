@@ -23,6 +23,9 @@ namespace BugFarmer.Networking
         public string CurrentZoneId { get; private set; }
         public ZoneNeighbors CurrentNeighbors { get; private set; }
 
+        // How many times EnterWorldWithRetry has retried a refused entry (D73) — read by the headless crossing test.
+        public int EnterRetries { get; private set; }
+
         // JOIN-HANDSHAKE BUFFER: match-data frames can arrive BEFORE JoinMatchAsync returns and assigns
         // CurrentMatch — Nakama dispatches them through one FIFO together with the join response
         // (Assets/Nakama/Runtime/UnitySocket.cs). The HandleMatchState guard would otherwise DROP them,
@@ -146,6 +149,11 @@ namespace BugFarmer.Networking
         /// Enter the canonical world for a zone (Normal=village_21, Test=sim_test) via the
         /// world_enter RPC, which finds-or-creates a singleton world server-side. No world
         /// creation happens client-side. Mirrors JoinWorld once it has the match id.
+        ///
+        /// With a character (D73): world_enter waits until the character is free — saved by the zone it left — and
+        /// reserves it for this zone, returning an entry pass that the join must carry. A refusal (the character still
+        /// in use, the zone busy, the join turned away) throws a <see cref="WorldEnterException"/>; on ANY failure the
+        /// half-made join state is cleared. Crossings and the menu use <see cref="EnterWorldWithRetry"/>.
         /// </summary>
         public async Task<IMatch> EnterWorld(string zoneId, string charId = null,
                                              float? entryX = null, float? entryY = null)
@@ -158,18 +166,26 @@ namespace BugFarmer.Networking
             _joiningMatchId = null;
             _preJoinBuffer.Clear();
 
-            var request = new WorldEnterRequest { zone_id = zoneId };
+            var request = new WorldEnterRequest { zone_id = zoneId, char_id = charId ?? "" };
             var payload = JsonUtility.ToJson(request);
 
             try
             {
                 var result = await NetworkManager.Instance.Client.RpcAsync(session, "world_enter", payload);
                 var response = JsonUtility.FromJson<WorldJoinResponse>(result.Payload);
+                // A refused request answers {error, code} (HTTP 200) with no match id.
+                if (!string.IsNullOrEmpty(response.error) || string.IsNullOrEmpty(response.match_id))
+                    throw new WorldEnterException(string.IsNullOrEmpty(response.code) ? "ENTER_FAILED" : response.code,
+                                                  string.IsNullOrEmpty(response.error) ? "no match id" : response.error);
 
-                // JOIN METADATA: char_id (load the save) + optional entry_x/entry_y (cross-zone edge
+                // JOIN METADATA: char_id + its entry pass (load the save) + optional entry_x/entry_y (cross-zone edge
                 // entry — places the player at the matching edge instead of the save's spawn).
                 var meta = new Dictionary<string, string>();
-                if (!string.IsNullOrEmpty(charId)) meta["char_id"] = charId;
+                if (!string.IsNullOrEmpty(charId))
+                {
+                    meta["char_id"] = charId;
+                    if (!string.IsNullOrEmpty(response.pass)) meta["pass"] = response.pass;
+                }
                 if (entryX.HasValue && entryY.HasValue)
                 {
                     meta["entry_x"] = entryX.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
@@ -177,9 +193,17 @@ namespace BugFarmer.Networking
                 }
                 // Buffer (don't drop) match-data that arrives for THIS match during the join handshake.
                 _joiningMatchId = response.match_id;
-                CurrentMatch = meta.Count > 0
-                    ? await socket.JoinMatchAsync(response.match_id, meta)
-                    : await socket.JoinMatchAsync(response.match_id);
+                try
+                {
+                    CurrentMatch = meta.Count > 0
+                        ? await socket.JoinMatchAsync(response.match_id, meta)
+                        : await socket.JoinMatchAsync(response.match_id);
+                }
+                catch (System.Net.WebSockets.WebSocketException wse)
+                {
+                    // The zone turned the join away; the server's reason is the message (e.g. pass_expired).
+                    throw new WorldEnterException("JOIN_REJECTED", wse.Message);
+                }
 
                 CurrentZoneId = zoneId;
                 CurrentNeighbors = response.neighbors;
@@ -201,12 +225,38 @@ namespace BugFarmer.Networking
                 Debug.Log($"[WorldManager] Entered zone '{zoneId}': match {CurrentMatch.Id} with {Players.Count} player(s)");
                 return CurrentMatch;
             }
-            catch (ApiResponseException ex)
+            catch (Exception ex)
             {
+                // Whatever went wrong, leave no half-made join behind: the next attempt starts clean.
                 _joiningMatchId = null;
                 _preJoinBuffer.Clear();
-                Debug.LogError($"[WorldManager] EnterWorld('{zoneId}') failed: {ex.Message}");
+                Debug.LogWarning($"[WorldManager] EnterWorld('{zoneId}') failed: {ex.Message}");
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// EnterWorld, retried for up to <paramref name="budgetSeconds"/> while the refusal is one that clears by itself
+        /// — the character still being saved by the zone it left (CHARACTER_BUSY), the zone busy, or the join turned
+        /// away because its entry pass ran out. Zone crossings call this behind the fade.
+        /// </summary>
+        public async Task<IMatch> EnterWorldWithRetry(string zoneId, string charId, float? entryX = null,
+                                                      float? entryY = null, float budgetSeconds = 15f)
+        {
+            float start = Time.realtimeSinceStartup;
+            while (true)
+            {
+                try
+                {
+                    return await EnterWorld(zoneId, charId, entryX, entryY);
+                }
+                catch (WorldEnterException e) when (e.Retryable && Time.realtimeSinceStartup - start < budgetSeconds)
+                {
+                    EnterRetries++;
+                    Debug.Log($"[WorldManager] entering '{zoneId}': {e.Message} — retrying");
+                    float wait = Time.realtimeSinceStartup + 0.5f;
+                    while (Time.realtimeSinceStartup < wait) await Task.Yield();
+                }
             }
         }
 
@@ -374,6 +424,7 @@ namespace BugFarmer.Networking
     public class WorldEnterRequest
     {
         public string zone_id;
+        public string char_id;   // D73: the character entering ("" = none) — the server reserves it for this zone
     }
 
     // Response DTOs
@@ -389,6 +440,25 @@ namespace BugFarmer.Networking
     {
         public string match_id;
         public ZoneNeighbors neighbors;   // cross-zone adjacency (may be null)
+        public string pass;               // D73: the entry pass the join carries (world_enter with a character)
+        public string error;              // a refused request: why ...
+        public string code;               // ... and a code (CHARACTER_BUSY, ZONE_BUSY, ZONE_RUNNING, SERVER_STOPPING, …)
+    }
+
+    /// <summary>
+    /// Entering a zone was refused (D73). Retryable refusals clear by themselves within seconds: the character is
+    /// still being saved by the zone it left, the zone is busy, or the join's entry pass ran out.
+    /// </summary>
+    public class WorldEnterException : Exception
+    {
+        public string Code { get; }
+
+        public WorldEnterException(string code, string message) : base(message) { Code = code; }
+
+        public bool Retryable => Code == "CHARACTER_BUSY" || Code == "ZONE_BUSY" ||
+                                 (Code == "JOIN_REJECTED" && (Message.Contains("pass_expired") ||
+                                                              Message.Contains("pass_refused") ||
+                                                              Message.Contains("already_in_zone")));
     }
 
     /// <summary>A zone's edge neighbors (zoneID per direction; "" = a hard edge). Fixed fields so JsonUtility parses it.</summary>

@@ -97,6 +97,18 @@ it, crash gave 45 (five fences lost), cross 50 arriving after leaving with 45 (d
 instead of the live 48. A failure now is a regression in the save queue (`save_writer.go`), the zone lease or the
 character registry (`char_registry.go`). A crash is `docker kill -s KILL` followed by `docker compose start` (Docker doesn't auto-restart a
 killed container).
+```bash
+bash tools/run_crosstest.sh   # the CROSSING TEST IN THE GAME CLIENT (headless Unity player; needs a current build)
+```
+The game's side of the same crossings (`HeadlessSyncTest -crosstest -character <name>`): a new character enters
+`persist_a`, places 2 fences, and crosses three times through the game's own `CrossZoneController` — into a zone
+that can't be entered (it must come back to `persist_a`), into `persist_b` (the server waits for `persist_a`'s 3 s
+held-back save) and back (`persist_b` holds its save 10 s, past the server's 8 s wait, so the game is told "busy" and
+must retry behind the fade) — each time checking the bag the server sends on arrival is the bag that left (48; a stale
+saved copy shows 50). A failure is a regression in `WorldManager.EnterWorld` / `EnterWorldWithRetry` (the entry pass,
+the retry) or `CrossZoneController.Swap` (the way back). `-character <name>` works in every headless mode (found by
+name or created; the menu's way in), and the late-join gate takes `CHAR_B=<name>` to make client B a player with a
+character (its spawn-apart half uses `<name>Edge`, since a character comes back where it last left the zone).
 
 ## 2.5. Ecology population tuning — the 6× `bug_lab` chart loop (THE living-ecology rig)
 The one you run for ANY bug-ecology/balance change (predator survival, oscillation, Director bands, food

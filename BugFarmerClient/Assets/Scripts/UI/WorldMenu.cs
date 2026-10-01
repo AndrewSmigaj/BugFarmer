@@ -145,7 +145,9 @@ namespace BugFarmer.UI
                 SetStatus("Connecting...");
                 await NetworkManager.Instance.ConnectSocketAsync();
                 SetStatus($"Entering {choice.label} as {CharacterSession.SelectedCharName}...");
-                await WorldManager.Instance.EnterWorld(choice.zoneId, CharacterSession.SelectedCharID);
+                // D73: if the character is still in use (e.g. the game was restarted while its old session was still
+                // in the zone), the server sends the old session out and saves it first — retried for up to 15 s.
+                await WorldManager.Instance.EnterWorldWithRetry(choice.zoneId, CharacterSession.SelectedCharID);
                 SetStatus($"In world: {choice.label}");
             }
             catch (Exception ex)

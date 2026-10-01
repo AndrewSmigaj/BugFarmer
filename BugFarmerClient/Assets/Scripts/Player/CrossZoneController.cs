@@ -55,11 +55,24 @@ namespace BugFarmer.Player
                 transform.position = new Vector3(cx, cy, transform.position.z);
         }
 
+        /// <summary>
+        /// Cross into a zone now, as walking off an edge does — for the headless crossing test (HeadlessSyncTest
+        /// -crosstest), whose small test zones are narrower than the 256-cell edges this controller watches.
+        /// </summary>
+        public Task CrossTo(string neighborZone, float ex, float ey) => _swapping ? Task.CompletedTask : Swap(neighborZone, ex, ey);
+
         private async Task Swap(string neighborZone, float ex, float ey)
         {
             _swapping = true;
             PlayerController.InputLocked = true;
             Debug.Log($"[CrossZone] swapping to {neighborZone} at entry ({ex:F0},{ey:F0})");
+            // Where we came from: if the neighbour can't be entered, we go back here rather than strand the player —
+            // pulled back out of the edge band, so they don't walk straight into the failed crossing again.
+            string sourceZone = WorldManager.Instance.CurrentZoneId;
+            float sx = transform.position.x, sy = transform.position.y;
+            float backX = sx <= Trigger ? Lo : sx >= ZoneMax - Trigger ? Hi : sx;
+            float backY = sy <= Trigger ? Lo : sy >= ZoneMax - Trigger ? Hi : sy;
+            bool sentBack = false;
             try
             {
                 // Mirror the server's clamp so client + server agree on the exact entry cell.
@@ -69,7 +82,23 @@ namespace BugFarmer.Player
                 await ScreenFade.Instance.FadeOut();
                 WorldManager.Instance.ResetForZoneSwap();
                 await WorldManager.Instance.LeaveWorld();
-                await WorldManager.Instance.EnterWorld(neighborZone, CharacterSession.SelectedCharID, ex, ey);
+                try
+                {
+                    // D73: the server waits until zone A has saved the character before letting it into zone B;
+                    // a "busy" answer is retried behind the fade for up to 15 s.
+                    await WorldManager.Instance.EnterWorldWithRetry(neighborZone, CharacterSession.SelectedCharID, ex, ey);
+                }
+                catch (System.Exception enterFailed) when (WorldManager.Instance.CurrentMatch == null)
+                {
+                    // Not in any zone now (a join that went through and failed afterwards is NOT this case: the player
+                    // is in the neighbour, and the outer handler keeps them there).
+                    Debug.LogWarning($"[CrossZone] couldn't enter {neighborZone} ({enterFailed.Message}) — going back to {sourceZone}");
+                    WorldManager.Instance.ResetForZoneSwap();
+                    await WorldManager.Instance.EnterWorldWithRetry(sourceZone, CharacterSession.SelectedCharID, backX, backY);
+                    ex = backX;
+                    ey = backY;
+                    sentBack = true;
+                }
 
                 // AUTHORITATIVELY place the local player at the known entry. Position is client-
                 // authoritative (PlayerController.SendMovement pushes transform.position), so the swap
@@ -93,6 +122,8 @@ namespace BugFarmer.Player
             finally
             {
                 await ScreenFade.Instance.FadeIn();
+                if (sentBack)
+                    WorldToast.Instance?.Show("Couldn't cross into the next area just now — try again in a moment.");
                 PlayerController.InputLocked = false;
                 _debounceUntil = Time.time + 1.5f; // don't immediately re-trigger at the arrival edge
                 _swapping = false;

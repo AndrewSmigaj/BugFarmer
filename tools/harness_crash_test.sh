@@ -74,7 +74,8 @@ case_cross() {
   player x_cross --zone persist_a --device "$dev" --char Crasher --scenario cross-fences --count 5
   local code=$?
   RESULT[cross]="$([ $code -eq 0 ] && echo PASS || echo FAIL) — $(grep -o "arrived in persist_b with BAG fence_wood=[0-9]*" "$LOGS/x_cross.log" | tail -1) (left with 45)"
-  sleep 5                                         # let the held-back departure save land before the next case
+  # Let the held-back departure save land before the next case: the player ends in persist_b, which holds it 10 s.
+  sleep 11
 }
 
 case_reconnect() {

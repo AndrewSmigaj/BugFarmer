@@ -326,7 +326,14 @@ namespace BugFarmer.UI
             {
                 var req = new CharacterDeleteRequest { char_id = charId };
                 var session = await NetworkManager.Instance.Session;
-                await NetworkManager.Instance.Client.RpcAsync(session, "character_delete", JsonUtility.ToJson(req));
+                var result = await NetworkManager.Instance.Client.RpcAsync(session, "character_delete", JsonUtility.ToJson(req));
+                // A refusal comes back as {error, code} (HTTP 200) — e.g. CHARACTER_IN_PLAY while it is in a world.
+                var refused = JsonUtility.FromJson<ErrorResponse>(result.Payload);
+                if (refused != null && !string.IsNullOrEmpty(refused.error))
+                {
+                    SetStatus($"Can't delete {name}: {refused.error}");
+                    return;
+                }
                 if (CharacterSession.SelectedCharID == charId)
                 {
                     CharacterSession.SelectedCharID = null;
