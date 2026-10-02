@@ -1016,3 +1016,21 @@ proposal that followed.
   applied only to the test runs. Every paid image is still asked for first.
 - **Left open:** a quality mark for well-raised bugs (prime materials), raised with the sheet; it comes back with the
   ranching design.
+
+### D77 — How cooking plays: recipes from books, no experimenting (2026-10-02)
+The owner answered §11's main question.
+- **Cooking from recipes (the "cook from the book" route).** Dishes are cooked from recipes you know: there's no
+  experimenting with ingredients and no Palia-style chains of preparing steps (single steps at other stations, such as
+  milling flour, stay as they are). Recipes come singly and in recipe books, and both are found in the world and
+  bought.
+- **Everyday and rare dishes.** The food list needs a good spread of rare dishes beside the everyday ones.
+- **Each recipe names its station.** Some need the cooking range; others need only the spit, whose own recipe takes a
+  campfire (the owner's leaning).
+- The follow-up questions that only mattered for the hands-on routes (how well you cook, experimenting, the spit's
+  timing, mastering a dish, a mix that matches nothing) fall away. Feasts (§11 P4) and what a feast gives are still
+  open.
+- **Proposed, not decided:** the details are in §11 P9–P11 and Q2 for the owner's review. Bought recipes and books
+  use the shop system the carpenter's books already run on (`shopBuyBook`); found ones are read where they lie, so
+  nobody takes one from the others; the spit is made from a campfire and wood, and the plain campfire stops cooking.
+  Which stations can cook which dishes is asked as Q2 (recommended: the range also cooks the wood stove's dishes, and
+  only the spit cooks the fire dishes).
