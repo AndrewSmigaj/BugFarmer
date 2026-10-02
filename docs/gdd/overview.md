@@ -513,7 +513,8 @@ have no recipes, and health comes back only by slowly regenerating.
 small starting set); eating fruit to heal; fridges that stop food rotting (under P16 food doesn't spoil, so the fridge
 is a food chest).
 
-**Still open** (→ §11) — the recipe list, which meal does what, and whether a venom coating joins the starting set.
+**Still open** (→ §11) — the recipe list and the rare dishes. Since settled: what a meal does (D76), cooking from
+recipes and recipe books (D77), and no weapon coatings (D75).
 
 **Proposals for this part:** P16, P17.
 

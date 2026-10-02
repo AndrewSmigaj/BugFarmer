@@ -3,12 +3,12 @@
 
 ## The experience
 There's no hunger: you eat to be ready for the trip ahead. Food is what your farm, your nets and your rod bring home —
-a fly roasted whole on the campfire's spit, a beetle's chest seared as a steak, a crayfish boil, sourdough from your
-own wheat. Better food raises your Health and Stamina more while it lasts, and most dishes add one boost: a better
-haul at the lake, more from a harvest, one pickaxe hit fewer. One meal works at a time, and a new one replaces it.
-Potions are short and strong, for the moment you need them — a healing draught in a fight, antivenom after a scorpion,
-night vision for the dark — and one timed potion works at a time. How cooking itself plays in your hands is the big
-question of this section.
+a fly roasted whole on the spit, a beetle's chest seared as a steak, a crayfish boil, sourdough from your own wheat.
+Better food raises your Health and Stamina more while it lasts, and most dishes add one boost: a better haul at the
+lake, more from a harvest, one pickaxe hit fewer. One meal works at a time, and a new one replaces it. Potions are
+short and strong, for the moment you need them — a healing draught in a fight, antivenom after a scorpion, night
+vision for the dark — and one timed potion works at a time. You cook from recipes, single ones and whole recipe books
+found in the world or bought, each at the station it names, from the spit to the cooking range.
 
 ## Decided
 Each line is the owner's decision in my words, with its date.
@@ -25,8 +25,9 @@ Each line is the owner's decision in my words, with its date.
 - **Healing and giving** (2026-09-27, D50, P17) — hold a bandage or a potion and use it on someone to heal them;
   items, bugs and coins can be given to other players.
 - **Cooking is its own system** (2026-06-25, D19) — it gets its own recipes and rules.
-- **One simple step per station** (2026-09-27, D42; P11, accepted 2026-09-28, D63) — put something in, take something
-  out, with no realistic sub-steps such as soaking or threshing: a game, not a simulation of real processing.
+- **One simple step per station** (2026-09-27, D42; the overview's P11, accepted 2026-09-28, D63) — put something in,
+  take something out, with no realistic sub-steps such as soaking or threshing: a game, not a simulation of real
+  processing.
 - **Real food** (2026-10-01, D74) — every dish is a real one cooked from what you grow, fish and farm, with nothing
   silly; everything in the world needs a use, or whether it belongs is questioned; several things can give the same
   boost.
@@ -45,26 +46,31 @@ Each line is the owner's decision in my words, with its date.
   Potion.
 - **The Oven Mitts** (2026-10-01, D75) — an accessory: cooking a dish (not the staples that go into one) has a 30%
   chance of an extra portion.
-- **How cooking plays is to be designed**, with options (2026-10-02, D76) — this section's main question.
+- **Cooking from recipes** (2026-10-02, D77) — dishes are cooked from recipes you know, with no experimenting and no
+  Palia-style chains of preparing steps (single steps at other stations, such as milling flour, stay); recipes come
+  singly and in recipe books, found in the world and bought. The list needs rare dishes as well as everyday ones. Each
+  recipe names its station: some need the range, others only the spit, whose own recipe takes a campfire (your
+  leaning).
 
 ## Current design
-- **The food list** (proposed 2026-10-01/02, waiting for your marks): 50 rows in the item table — a rules row, 8
-  staples, 38 dishes and 3 drinks — each a real dish or marked as adapted from one, apart from the scorpion tail,
-  marked as game logic (`research-2026-10-01/foods-real-dishes.md`). Every dish carries one of the eight boosts:
-  Stamina, Sturdy, Harvest, Forage, Fishing, Catch (your net reaches further), Mining and Swift. The proposed length
-  follows effort: about 5 minutes for a campfire dish, about 10 for a stove dish or something from the keg, and about
-  20 for a big stove dish (three or more main foods, or a dough, pastry or bread) or food dried or smoked for the
-  trail.
-- **The stations** (the same rules row): the campfire, with its spit and coals, cooks one dish at a time and is made
-  at the workbench from the start; the wood stove cooks two and bakes; the range, the big powered stove, cooks several
-  (in the village only in the Mayor's house, D56); the keg makes drinks and ferments, the fruit press juice and oil,
-  the mill flour and cornmeal. The separate cooking pot and spit objects are proposed cut. (The January 2026 design
-  had the starter wood stove cooking one dish, and stoves growing from hand-fed fuel to powered, `game_design.md`
-  §11.6–11.7.)
-- **A new player's first food**: five dishes are known from the start — the roast fly (the fly farm's first dinner),
-  corn on the cob, roasted seeds, salt-grilled fish and damper — and four come with the wood stove (fly soup, polenta,
-  pumpkin soup, mushroom soup); the General Store sells flour, cornmeal and salt. Who shows a new player how to cook
-  could be one of the townspeople's lessons (§20).
+- **The food list** (proposed 2026-10-01/02, waiting for your marks): 51 rows in the item table — two rules rows (the
+  meals, and recipes and recipe books), 8 staples, 38 dishes and 3 drinks — each a real dish or marked as adapted from
+  one, apart from the scorpion tail, marked as game logic (`research-2026-10-01/foods-real-dishes.md`). Every dish
+  carries one of the eight boosts: Stamina, Sturdy, Harvest, Forage, Fishing, Catch (your net reaches further), Mining
+  and Swift. The proposed length follows effort: about 5 minutes for a dish from the spit, about 10 for a stove dish
+  or something from the keg, and about 20 for a big stove dish (three or more main foods, or a dough, pastry or bread)
+  or food dried or smoked for the trail.
+- **The stations** (the same rules row): the spit, a campfire with a spit over it, cooks one dish at a time; it is
+  made at the workbench from the start, with a campfire as one of its parts (D77, your leaning). The wood stove cooks
+  two and bakes; the range, the big powered stove, cooks several (Modern Wares sells it; until you have power of your
+  own, a windmill after reaching the Locust Farmland, it runs on the Mayor's, set up just outside the Mayor's house,
+  D56); the keg makes drinks and ferments, the fruit press juice and oil, the mill flour and cornmeal. The plain
+  campfire stays the camp light (P10), and the separate cooking pot is proposed cut. (The January 2026 design had the
+  starter wood stove cooking one dish, and stoves growing from hand-fed fuel to powered, `game_design.md` §11.6–11.7.)
+- **A new player's first food**: five dishes are known from the start, cooked on the spit — the roast fly (the fly
+  farm's first dinner), corn on the cob, roasted seeds, salt-grilled fish and damper — and four come with the wood
+  stove (fly soup, polenta, pumpkin soup, mushroom soup); the General Store sells flour, cornmeal and salt. Who shows
+  a new player how to cook could be one of the townspeople's lessons (§20).
 - **The potion list**: settled — the potion rules, the calm spray, bandages, the healing potion, the antivenom, the
   burn salve, strong coffee, the bug bomb, the Night Vision Potion and the Venom Resistance Potion; waiting for your
   marks — the stamina tonic, the cricket protein drink, the pollen tonic, the mint and sting balms, the cover scent
@@ -73,9 +79,11 @@ Each line is the owner's decision in my words, with its date.
   the showpiece dish.
 
 ## As built
-- The cooking stations exist as objects with no recipes: the campfire, the stove, the cooking pot, the cauldron and
-  the keg (found 2026-07-03, D30). Eating does nothing yet, health comes back only by slow regeneration, nothing can
-  give a timed effect, and venom on the player isn't built.
+- The cooking stations exist as objects with no recipes: the campfire, the old two-plate stove, the cooking pot, the
+  cauldron and the keg (found 2026-07-03, D30). Eating does nothing yet, health comes back only by slow regeneration,
+  nothing can give a timed effect, and venom on the player isn't built. The spit exists too, made at the workbench
+  from wood and an iron bar, and like the campfire it has no recipes. The wood stove and the range exist as objects
+  with no cooking panel at all.
 - The stations run on the crafting engine: a recipe names its station, its exact inputs, one output and a time; a
   station can cook a set number of recipes at once, each with a queue of batches that runs while you do other things;
   finished things wait in the station's tray until collected (`nakama/modules/world/craft_stations.go`;
@@ -84,29 +92,33 @@ Each line is the owner's decision in my words, with its date.
 - **A gap found today:** a station's tray belongs to no one, so anyone at a shared station can collect what someone
   else made (`craftCollectOne`); and two players queuing the same recipe share one queue, their batches merging. It
   affects every shared station, not only cooking, and is now in the backlog.
+- **Recipes are already sold.** A townsperson can sell single recipes and recipe books, and buying one teaches it at
+  once; a book teaches a whole set (`shopBuyRecipe`, `shopBuyBook`, `nakama/modules/world/handlers_shop.go`). The
+  carpenter, the weaver and the stonemason sell books today. A recipe can be set to be found rather than bought, but
+  nothing in the game yet lets a player find one.
 
 ## How it will work
 - A meal raises the most Health and Stamina you can have while it lasts and heals you over a while (D54, D76); the
   meal and the potion are named entries on the character sheet (§08): the strength they add, their boost and their
-  time. A dish's box states exactly what it gives. A meal's effect ends when you faint, as a potion's does (§08
-  P4).
+  time. A dish's box states exactly what it gives. A meal's effect ends when you faint, as a potion's does (§08 P4).
 - Batches run on the stations' existing queue; taking ingredients from nearby chests and the sound when a batch is
-  done are new. If dishes are cooked by hand (Q1), your game records when you pressed, counted from the cook's start,
-  and the server checks the time is possible: the result can't be faked, and a slow connection doesn't make you late.
-- New recipe data: ingredient groups (any fish, any fruit, any fat, any edible bug) and, per player, which dishes they
-  know and how well they've cooked them.
+  done are new.
+- New recipe data: ingredient groups (any fish, any fruit, any fat, any edible bug). Which recipes each player knows
+  is already kept, and shops already sell recipes and books (As built); recipes found in the world, read where they
+  lie, are new (P9).
 - Cooking never touches the shared bug simulation, except that a dish dropped on the ground feeds bugs like any food
   (P17).
 
 ## Proposals
 ### P1. Better food is a ladder you can see
-What you cook sets a meal's strength: a campfire dish a little, a stove dish more, a big stove dish or a bake more
-again, a feast most. Depending on Q2, how well you cook may add a step; and if ranching later adds prime (well-raised)
-bugs, a prime fly lifts its dish one step too. The dish's box says exactly what it gives — the strength, the boost and
-the minutes — with no luck and no hidden numbers. How many dots each step adds is set with the sheet's numbers (§08).
-Your normal Health and Stamina are enough for ordinary play: a meal is a bonus you choose, never hunger in disguise
-(D50). Campfire food keeps a lasting job: it's the cheapest to make, and the campfire's dried and smoked food lasts
-longest of all. How much a meal heals, and how that fits with the raise, is set with the numbers.
+What you cook sets a meal's strength: a dish from the spit a little, a stove dish more, a big dish or a bake from the
+stove or the range more again, a feast most; a rare dish (P11) is one step above the everyday dish it's most like,
+never above a feast. If ranching later adds prime (well-raised) bugs, a prime fly lifts its dish one step too. The
+dish's box says exactly what it gives — the strength, the boost and the minutes — with no luck and no hidden numbers.
+How many dots each step adds is set with the sheet's numbers (§08). Your normal Health and Stamina are enough for
+ordinary play: a meal is a bonus you choose, never hunger in disguise (D50). Food from the spit keeps a lasting job:
+it's the cheapest to make, and its dried and smoked food lasts as long as the biggest dishes. How much a meal heals,
+and how that fits with the raise, is set with the numbers.
 
 **Lenses:** Readability — in Zelda the best dishes come down to luck, and a Palia player complained that its quality
 stars aren't explained; a ladder in plain steps avoids both. Balance — it sits on top of the length rule proposed in
@@ -114,10 +126,10 @@ the food rows (more effort, a longer meal), which is still waiting for your mark
 becoming a chore when an unfed player is too weak, which the rule that a meal is a bonus you choose prevents. **Cost
 and risk:** small; numbers to tune.
 
-### P2. Cook from the book
-Every dish you know can be queued in batches on a station and collected later: ingredients come from your bag and
+### P2. Cooking from the book, in batches
+Every recipe you know can be queued in batches on a station and collected later: ingredients come from your bag and
 nearby chests you may open, the station sounds when it's done, and some dishes make several portions. A meal every 5
-to 20 minutes then costs a few clicks, not a chore. Every route in Q1 includes this as its everyday way to cook.
+to 20 minutes then costs a few clicks, not a chore. This is how all cooking works (D77).
 
 **Lenses:** Readability — Disney Dreamlight Valley's ingredient autofill; Stardew Valley's kitchen reads from the
 fridge as well as the bag. Fit — the stations' queue already runs batches; the nearby chests and the done-sound are
@@ -139,7 +151,7 @@ fixed number of servings. Each serving counts as that player's one meal and last
 minutes). Friends cook the parts at the same time, a newcomer can take the simplest part, or one player can make them
 over a day, since food doesn't spoil. Nobody gets a copy: Palia gives every helper a full dish, its group cooking
 out-earned everything else, and its developers cut every dish's price by a quarter (patch 0.169). A feast is as good
-as its parts, never dragged down by its worst one. Feasts work with any route in Q1.
+as its parts, never dragged down by its worst one.
 
 **Lenses:** Picture the moment — a table on your plot, the platter emptying as your friends eat before a trip to the
 fire-ant domain. Multiplayer — Valheim's feast feeds a group from one tray of ten servings; Overcooked shows that
@@ -147,13 +159,12 @@ sharing work is fun when there is waiting to share. **Cost and risk:** a table a
 stages; who may eat at a village table needs a rule.
 
 ### P5. Nothing hidden
-Each ingredient's box shows its group (bug, fish, fruit, vegetable, grain, fat, egg, seasoning) and the boost it leans
-towards. The cookbook records every dish you know, with favourites; if you can experiment (Q1), it also records every
-attempt. Townspeople teach dishes when their ingredients are within reach.
+Each dish's box says exactly what it gives and what it needs, including any group it takes (any fish, any fruit, any
+fat, any edible bug). The cookbook lists every recipe you know, with favourites and the station each one needs.
+Townspeople teach and sell recipes when their ingredients are within reach.
 
-**Lenses:** Readability — some Don't Starve players use a mod to predict their dishes, and Core Keeper players ask to
-see food effects, because the rules are hidden; one Stardew player complained of recipes taught for crops out of
-season. **Cost and risk:** a cookbook screen.
+**Lenses:** Readability — Core Keeper players ask to see what a food does before they cook it; one Stardew player
+complained of recipes taught for crops out of season. **Cost and risk:** a cookbook screen.
 
 ### P6. Every dish is wanted by someone
 Food matters beyond your own meters: some townspeople's requests ask for a dish, a dish makes a good gift, and dishes
@@ -174,112 +185,88 @@ their own slot beside food. **Cost and risk:** none.
 
 ### P8. Brewing stays simple
 Potions are brewed from the book at the cauldron — basic recipes known there, stronger ones found, bought or earned —
-with no hands-on action and no brewing chains, whatever Q1 decides for cooking.
+with no hands-on action and no brewing chains, the same as cooking (D77).
 
-**Lenses:** Fit — P16's own rule (no brewing chains) and the potion rules row; cooking carries the hands-on moment, if
-any. **Cost and risk:** none.
+**Lenses:** Fit — P16's own rule (no brewing chains), the potion rules row, and cooking's own rule (D77). **Cost and
+risk:** none.
+
+### P9. Recipes, single and in books
+Cooking uses the recipe shops the game already has: townspeople sell single recipes and recipe books, and buying one
+teaches it at once (the rows say who teaches each dish) — the Bug Dealer's five bug dishes as one book, or the
+Fisherman's fish dishes. Found recipes are new. A found recipe is a book or a note left somewhere in a zone, and it's
+read where it lies: everyone who reads it learns it, and it stays for the next player, so in a shared world nobody
+takes it from the others. A message in a bottle can point to one, as its row already says, and a quest can teach one
+as its reward. Everyday recipes are bought in the village; others are found, earned, or bought farther away, as the
+western town's farm store already teaches its grilled locust legs — the same three ways as stronger potion recipes
+(D54).
+
+**Lenses:** Fit — your answer (D77), on the system the carpenter, the weaver and the stonemason already use for their
+recipe books. Multiplayer — a recipe read where it lies can't be taken by the first player to arrive. Picture the
+moment — a water-stained book of desert recipes, hidden in Scorpion Rocks. **Cost and risk:** small for bought
+recipes, which exist, though the shop screen shows at most six recipes and three books today, so a cook's shop needs a
+longer list; found ones need an object you read in place.
+
+### P10. The spit, the first cooking station
+The spit is a campfire with a wooden spit over it, made at the workbench from a campfire and wood (D77; the campfire
+as a part is your leaning), so a new player can make it on the first day: today's recipe also takes an iron bar, 40
+coins at the blacksmith (a lot on the first day) or smelted from iron ore that needs a better pickaxe. It cooks the
+fire dishes: roasts, skewers, grilled fish, corn and damper in the coals beneath it, and food dried or smoked for the
+trail. The plain campfire stays the camp light and cooks nothing, and its description says to add a spit to cook: two
+stations doing the same job is why the spit was cut before. The wood stove cooks stews, soups, breads and pies; the
+range, the powered stove, cooks the biggest dishes and many of the rare ones (which stations can cook which dishes is
+Q2).
+
+**Lenses:** Fit — your answer (D77); Valheim works the same way, its cooking station a spit set over a fire. Picture
+the moment — the first evening on the fly farm, a fly turning on the spit. **Cost and risk:** a new recipe for the
+spit; the spit needs the campfire's light, which it lacks today, and its picture roasts what looks like a ham, which
+this world doesn't have (D32), so it's redrawn with a fly when the art is made.
+
+### P11. Everyday and rare dishes
+Beside the everyday dishes sits a set of rare ones: about a dozen to start, spread over the zones beyond the village,
+with more of them in the harder ones. A rare dish takes a rare ingredient — royal jelly, the blind cave fish of the
+Underground River, and the fruit and other finds of zones still to be designed (D72) — and its recipe is found,
+earned, or bought far from the village (P9). Each is one step above the everyday dish it's most like, never above a
+feast (P1), and sells for more than any everyday dish. The rare dishes are drafted next, as rows on the items page for
+your marks.
+
+**Lenses:** Fit — your ask for a good spread of everyday and rare dishes (D77). Curiosity — a rare recipe is a reason
+to go farther out. **Cost and risk:** more dishes, each needing an icon.
 
 ## Questions
-### Q1. How should cooking play in your hands?
-The research behind these is in `docs/product/investigations/research-2026-10-02/cooking-systems.md` (89 sources,
-about 28 games). Every option keeps one meal at a time, better food making a stronger meal, and bugs cooked as they
-are; every option also gets cooking from the book for everyday meals (P2) and can have feasts (P4). The options differ
-in how you first make a dish and whether your hands change it.
-- **A.** **From the book, as in Stardew Valley.** Pick a dish you know and cook it — in Stardew it's instant; here it
-  runs on the station while you do other things. Better food means choosing a better dish. It's the clearest and the
-  least work to build, but nothing you do changes a dish. With feasts (P4), friends still cook together.
-- **B.** **Prepared ingredients, as in Palia.** A dish is made from ingredients you prepare first, each in one step at
-  its own station: chop the vegetables at a prep counter, knead the dough, then cook at the stove, each step a short
-  skill moment. Once you know a dish, the book cooks it and prepares its ingredients for you; doing the steps by hand
-  is how you learn a dish and, depending on Q2, make it better. It's the best for cooking together — friends take
-  different steps at once, and a newcomer can take a step that needs no ingredients — and gives the strongest feeling
-  of having cooked. But it needs a prep counter, many half-made ingredients (each with its own art and data) and
-  several skill moments, and a dish's first cooks take a minute or more. Preparing steps like chopping are the kind of
-  sub-step your one-step rule (D42) left out of processing, so whether cooking is the exception is your call; bugs
-  would still go to the stove whole (D76). The light form — staples made in one step at their own station (tortillas,
-  sourdough starter, fish sauce, seed oil, flour) — is already in the food list.
-- **C.** **The open pot, as in Disney Dreamlight Valley, Zelda and Don't Starve.** Put ingredients in and see what you
-  make; a match writes the dish in your cookbook, and from then on you can cook it from the book. Better food comes
-  from what you put in: more and better main ingredients make a stronger dish. Discovery is the fun, but your skill at
-  cooking never changes a dish, and hidden rules send players to wikis unless every ingredient shows its group (P5).
-- **D.** **Learn it, then master it by hand, as in Coral Island, with Genshin Impact's mastery.** You can try
-  ingredients at a station, as in C, and a match is a new dish in your book (Q3). A dish you've learned — taught,
-  bought, found or discovered — can be cooked from the book straight away, as a *fair* dish. Cooking it by hand is one
-  short action that suits the station: watch the fly turn on the spit and lift it when its skin turns golden and the
-  sizzle changes, take the pot off at a simmer, take the bread out of the oven in time (Q5). It comes out *well done*,
-  or fair if you're early or late; nothing is ever ruined, and stopping gives the ingredients back. The keg, the press
-  and the mill take time only. After a few well-done cooks by hand (say three), you've mastered the dish, and its
-  batches come out well done too (Q6). But it's the most work after B — a hands-on moment for three kinds of cooking,
-  a grade and a mastery count for every player and dish, matching for the open pot, a cookbook — two grades of the
-  same dish sit in separate stacks in your bag, and like C, the open pot needs every ingredient's group shown (P5). An
-  option for anyone who wants it widens the timing window, so everyone can reach well done and nobody gets it for
-  free.
-
-**Recommendation: D.** Like every option, it keeps Stardew Valley's book for every day and can put Palia's
-cooking-together into feasts; what D adds is that your effort changes the dish, but only while you master it, never as
-a tax on every meal (with Q2 A and Q6 A). A is the sensible fallback if a hands-on moment isn't wanted: with feasts it
-still gives the group moment. Also considered, for later: a base dish plus a seasoning that picks the boost, as in
-Don't Starve Together and Grounded.
-
-### Q2. If dishes are cooked by hand (B or D), does cooking well make a dish stronger?
-- **A.** Yes: a well-done dish is one step stronger than a fair one.
-- **B.** Only longer: well done lasts longer, with the same strength.
-- **C.** No: cooking by hand only teaches or masters the dish (then D's grades and mastery go).
-
-**Recommendation: A.** Effort you can see on the sheet is what makes the hands-on moment worth doing. In a Coral
-Island thread one player called its cooking action pointless, while another wished it set the dish's quality.
-
-### Q3. If you can experiment (C or D), how many dishes can you find that way?
-About 29 dishes are taught by townspeople, sold or found today; about 19 of them are simple (one or two main foods,
-no dough, pastry or bread),
-and about 8 of those are made only from what the village grows and catches.
-- **A.** Any dish; townspeople and found notes become shortcuts and hints.
-- **B.** The simple ones (about 19); big dishes must be taught, bought or found.
-- **C.** Only the simple village ones (about 8); everything else is taught, bought or found.
-
-**Recommendation: B.** Small experiments stay satisfying, the big dishes keep the townspeople and the zones worth
-seeking out, and nobody needs a wiki to find a four-ingredient stew.
-
-### Q4. What does a feast give?
+### Q1. What does a feast give?
+If you keep feasts (P4):
 - **A.** The strongest meal in the game and one boost from its parts, chosen by whoever lays the table.
 - **B.** The strongest meal, and no boost.
 - **C.** The strongest meal, and each person who eats picks one boost from the feast's parts.
 
-**Recommendation: C.** A mixed group heading out together — miners and anglers — can each take what they need, and
-it still keeps one boost per meal.
+**Recommendation: C.** A mixed group heading out together — miners and anglers — can each take what they need, and it
+still keeps one boost per meal.
 
-### Q5. If dishes are cooked by hand (D), how does the spit work?
-- **A.** You stay and lift the fly at the right moment.
-- **B.** You can walk away and come back within a window.
-- **C.** Both: lift it at the moment if you stay, or leave it and come back in time.
+### Q2. Can a bigger station cook a smaller one's dishes?
+Your answer names a station for each recipe (D77); this settles what that means, before each dish gets its station.
+- **A.** Only its own station: a range can't cook a wood-stove soup.
+- **B.** Any bigger station too: the wood stove and the range can cook the spit's dishes as well, so once you have a
+  stove the spit is only a cheap fire for the road, a light and one more place to cook.
+- **C.** The range cooks everything the wood stove does, since it's the bigger stove, but only the spit cooks the fire
+  dishes (roasts, skewers, smoking), so the spit keeps its job all game.
 
-**Recommendation: C.** Players who enjoy the moment get it, and a busy farmer is never pinned to the fire.
-
-### Q6. Once a dish is mastered (D), do its batches come out well done?
-- **A.** Yes: the hands-on step is a one-off for each dish.
-- **B.** No: the best food is always cooked by hand.
-
-**Recommendation: A.** It keeps the hands-on moment a pleasure rather than a chore on every meal; B suits players who
-love cooking but taxes everyone else.
-
-### Q7. If you can experiment (C or D), what happens when a mix matches no dish?
-- **A.** You get a plain dish named by how it was cooked — a simple stew, a campfire roast — weak but never wasted.
-- **B.** Nothing is cooked: the ingredients come back, and the cookbook notes the try.
-
-**Recommendation: B.** The list stays real dishes only, with nothing silly (D74), and nothing is wasted; the cookbook
-keeps the try so a player never repeats it by mistake.
+**Recommendation: C.** The range is a bigger stove, so it should make a stove's soup, but no stove can turn a spit or
+smoke fish over an open fire, so the fire dishes stay the spit's and it keeps a real job all game. The wood stove
+stays the stove for anyone without power, and a second place to cook beside a range.
 
 ## To settle later (not in this review)
 - **Eating raw food for a small heal** — a carrot or an apple straight from the bag (the old catalogue's idea).
 - **The early heal** — answered by the cloth bandage (D74).
 - **Numbers** — how many dots each step of food adds, how much a meal heals, each dish's portions, and a feast's
   servings and length, once the sheet's numbers are set (§08).
-- **Feasts** — who may eat at a table in the village, whether a newcomer can cook a part they haven't learned, and
-  whether a feast left out on a table draws flies, like food on the ground (P17).
+- **Feasts** — who may eat at a table in the village, and whether a feast left out on a table draws flies, like food
+  on the ground (P17).
+- **The rare dishes and each dish's station** — drafted next as rows on the items page (P10, P11, Q2), including which
+  drafted dishes count as rare, such as the ones whose recipes are found in a zone.
 
 ## Sources
-- Your answers, 2026-06-25 to 2026-10-02 — restated above; `docs/product/economy/DECISIONS.md` D16, D19, D30, D42,
-  D47, D50, D54, D55, D56, D59, D63, D74, D75, D76; `docs/gdd/overview.md` part 11, P11, P14, P16, P17.
+- Your answers, 2026-06-25 to 2026-10-02 — restated above; `docs/product/economy/DECISIONS.md` D16, D19, D30, D32,
+  D42, D47, D50, D54, D55, D56, D59, D63, D72, D74, D75, D76, D77; `docs/gdd/overview.md` part 11, P11, P14, P16, P17.
 - `docs/product/design/game_design.md` §11.6–11.7 (January 2026); `docs/brainstorms/objects/cooking_food.md`,
   `docs/brainstorms/objects/alchemy_potions.md`, `docs/product/economy/catalogs/consumables.md` (the old lists,
   replaced in the item pass).

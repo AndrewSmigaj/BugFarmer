@@ -28,16 +28,17 @@ Answers are stored in the page's own database, one document per section (`answer
 `ArtifactData` tool (`list`, collection `answers`). Republish from another session by passing that URL.
 
 ## The item pass
-Every item in the game and in the old designs — 1,203 rows — with a recommendation (keep, change, cut or add) and a
-one-line reason (the owner's request of 2026-09-28, D55). The data is `item_table.jsonl`; the review page is built from
-it by `python3 tools/gdd/build_items_page.py` and published at **https://claude.ai/artifact/L9ftJfjRfcFD3yAB66qenD**
-(private to the owner). His marks — agree, disagree and a note per row — are stored in that page's database, one
-document per item (`marks/<group>/items/<id>`, holding `{mark, note, at}`); read them back with the `ArtifactData`
-tool, one kind at a time. The first version of the page (https://claude.ai/artifact/3Sxunf4HDezB1fgAKFRZG1, 2026-09-28)
-stored a whole kind of item as one document and lost the owner's first batch of marks when an older copy overwrote a
-newer one; it was replaced on 2026-09-29 and its storage is not used.
+Every item in the game and in the old designs — 1,204 rows — with a recommendation (keep, change, cut or add) and a
+one-line reason (the owner's request of 2026-09-28, D55). The data is `item_table.jsonl`; the review page is built
+from it by `python3 tools/gdd/build_items_page.py` and published at
+**https://claude.ai/artifact/L9ftJfjRfcFD3yAB66qenD** (private to the owner). His marks — agree, disagree and a note
+per row — are stored in that page's database, one document per item (`marks/<group>/items/<id>`, holding `{mark, note,
+at}`); read them back with the `ArtifactData` tool, one kind at a time. The first version of the page
+(https://claude.ai/artifact/3Sxunf4HDezB1fgAKFRZG1, 2026-09-28) stored a whole kind of item as one document and lost
+the owner's first batch of marks when an older copy overwrote a newer one; it was replaced on 2026-09-29 and its
+storage is not used.
 
-**Where it stands (2026-10-01).**
+**Where it stands (2026-10-02).**
 - **Settled:** batch 1, the tool families and the pickaxes, axes and shovels, 34 rows (D69). Rows that are settled
   carry `"decided"` in the table and show a Decided label on the page.
 - **Settled:** batch 3, the Armour (22 rows, D75): the metal sets are armour, the start is the Farmer's Outfit, gilded
@@ -56,18 +57,22 @@ newer one; it was replaced on 2026-09-29 and its storage is not used.
 - **Batch 4, the potions (D74, D75):** marked and settled; the Night Vision Potion and the Venom Resistance Potion
   follow his answers, and one timed potion works at a time. Seven new potions from his list of effects wait for his
   marks.
-- **Foods redone from scratch (D74), then around giant bugs as livestock (D75, D76):** 50 rows wait for his marks:
-  the staples, 38 dishes and three drinks, built on the research in
+- **Foods redone from scratch (D74), then around giant bugs as livestock (D75, D76):** 51 rows wait for the owner's
+  marks: two rules rows, 8 staples, 38 dishes and three drinks, built on the research in
   `docs/product/investigations/research-2026-10-01/foods-real-dishes.md`. A meal raises Health and Stamina and many
-  dishes add a boost; the stove takes the bugs themselves (the four cuts proposed in D75 went in D76). New dyes, cotton
-  cloth and the plant rows were updated in D74 so every plant has a use.
+  dishes add a boost; the stove takes the bugs themselves (the four cuts proposed in D75 went in D76). New dyes,
+  cotton cloth and the plant rows were updated in D74 so every plant has a use.
 - **The item system as a whole (D76):** a character sheet of six meters, three protections and standalone perks, with
-  a job for each kind of item, accepted as a start. Rules first, rows second: a design section for the review page
-  comes next, researched and reviewed, and the rows are then rewritten against it in one pass. Options for how
-  cooking plays (Palia, Stardew Valley and other routes) follow.
-- **Next:** the item-system section (the character sheet) and the cooking options; the owner's marks on the foods, the
-  jewelry, the new potions, the outfit roster and the two powerful weapons; batch 2's last two answers; then the other
-  kinds in page order.
+  a job for each kind of item, accepted as a start. Rules first, rows second: the design sections are on the review
+  page — §08 (gear and the character sheet) and §11 (food, cooking and potions) — and the rows are rewritten against
+  them in one pass once they're answered.
+- **How cooking plays (D77):** from recipes, with no experimenting and no Palia-style chains of preparing steps;
+  recipes come singly and in books, found and bought; each recipe names its station, and the spit is back as one. The
+  rules row, the station rows and a new recipe-books row follow the answer; §11 proposes the details (P9–P11) and asks
+  which stations can cook which dishes (Q2).
+- **Next:** the owner's answers on §08 and the rest of §11; the rare dishes and each dish's station, drafted as rows
+  and past a reviewer first; the owner's marks on the foods, the jewelry, the new potions, the outfit roster and the
+  two powerful weapons; batch 2's last two answers; then the other kinds in page order.
 
 **How a batch goes.**
 1. The owner marks rows on the page.
