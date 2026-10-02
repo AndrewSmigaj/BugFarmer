@@ -913,3 +913,23 @@ it through and recommend. The base under all ground is left to the assistant. Th
   took these on trust in the research behind them, so they are recommendations to revisit if playtesting argues
   otherwise, not the owner's own design.
 - How it works: `docs/product/architecture/architecture_persistence.md`; the proposal it builds is §19 P5.
+
+### D74 — The item pass: the potion batch, foods from scratch, and a use for everything (2026-10-01)
+The owner marked the fourteen rows of the new potion set and, the same day, set four directions for the item pass.
+- **Potions.** The rules row, the calm spray, the bandages, the healing potion, the antivenom, the burn salve, strong
+  coffee and the bug bomb stand as proposed. The venom coating goes, since a whole mechanic for coating a weapon isn't
+  wanted, and so do the muscle rub, the stimulant shot and the sage tonic, which he marked down. The list should be
+  fuller and designed effect first, ingredient second: stamina, speed, strength, healing at once and a health boost,
+  armour, venom, stealth (how close a bug has to be to notice you), the private plot's happiness beside its
+  decorations, sting resistance, and others. This replaces P16's "a small set to start". He asked how coffee would be
+  made; an answer is proposed in its row. What "venom" means, and what to change in the night-sight drops, wait for
+  his answers; night sight itself stays (D54).
+- **Several things can boost the same thing.** An outfit's bonus doesn't stop a meal, a potion or an accessory from
+  giving it too.
+- **Everything in the world needs a use** — a food, a potion or a dye (dyes have recipes, and dye and dyed cloth
+  sell) — or whether it belongs is questioned; some plants simply give different amounts of fibre. Items that clearly
+  have no use are cut before his review.
+- **Foods start again from scratch**: real dishes cooked from what players grow, fish and farm, and nothing goofy. The
+  old list of 46 goes.
+- **Cotton can stay**, his leaning after first saying cloth from thread was enough (D15 had already decided cotton):
+  cotton thread and cotton cloth make finer clothes, beside roughspun clothes made from plant fibre.

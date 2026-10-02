@@ -28,7 +28,7 @@ Answers are stored in the page's own database, one document per section (`answer
 `ArtifactData` tool (`list`, collection `answers`). Republish from another session by passing that URL.
 
 ## The item pass
-Every item in the game and in the old designs — 1,168 rows — with a recommendation (keep, change, cut or add) and a
+Every item in the game and in the old designs — 1,180 rows — with a recommendation (keep, change, cut or add) and a
 one-line reason (the owner's request of 2026-09-28, D55). The data is `item_table.jsonl`; the review page is built from
 it by `python3 tools/gdd/build_items_page.py` and published at **https://claude.ai/artifact/L9ftJfjRfcFD3yAB66qenD**
 (private to the owner). His marks — agree, disagree and a note per row — are stored in that page's database, one
@@ -47,6 +47,11 @@ newer one; it was replaced on 2026-09-29 and its storage is not used.
   The outfit roster (31 outfits and three family rows, with a rules row) and two powerful weapons were added for marking
   too. Rows for things already in the game stay: the flashlight, the bee charm, the lucky clover and the calm spray.
   The research behind them is in `docs/product/investigations/research-2026-10-01/`.
+- **Batch 4, the potions (D74):** marked; settled rows carry `"decided"`. Seven new potions follow his list of
+  effects; venom and night sight wait for his answers.
+- **Foods redone from scratch (D74):** the 46 old meal rows went; 44 new rows (six kitchen staples, the dishes and the
+  drinks, from the research in `docs/product/investigations/research-2026-10-01/foods-real-dishes.md`) wait for his
+  marks, with new dyes, cotton cloth and the plant rows updated so every plant has a use.
 - **Next:** the owner's marks on the new rows and the open questions, then the other kinds in page order.
 
 **How a batch goes.**
