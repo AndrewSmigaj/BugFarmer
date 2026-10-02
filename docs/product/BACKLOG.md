@@ -497,6 +497,13 @@ Plan + designs: `docs/product/economy/crafting_buildout.md` + the saved plan. Al
   errors surfaced in a shop status line (were silently dropped — the #5 feedback gap), per-line `qty<=0`
   rejection (closed a real negative-qty duplication exploit), bug-release guarded while a shop is open.
   Gated: 4 new falsifiable Go tests + suite green + Unity batchmode compile clean + in-Editor CONFIRMED (Andrew, 2026-07-02; incl. the layout fix — wide short trade dock clearing the inventory).
+- **Shared stations: finished items belong to no one (found 2026-10-02, not fixed).** A station's lanes record
+  only their recipe, queue and progress, and its one output grid is shared: `craftCollectOne` / `craftCollectAll`
+  hand any stack to whoever collects (`nakama/modules/world/craft_stations.go`). At the village's shared stations
+  (D55) another player can take your smelted bars or your cooked dishes, and a one-lane station (the campfire) runs
+  only one player's job at a time. Fix before shared stations matter in play: each job and its output belong to the
+  player who queued it until they collect or give it away, and shared stations may need a lane per player. Found by
+  the cooking research (`docs/product/investigations/research-2026-10-02/cooking-systems.md`, Part 4).
 - **Station mockups** (PIL) — extend `tools/ui_mock.py` to render every craft station + the breeding/food
   stations (compost/beehive/milkweed/wasp-nest) with the Apico I/O-square treatment, for visual review.
 - Also: armor + weapon-tier *sprite polish* (placeholders shipped); the InitialContainers authored-stock seed
