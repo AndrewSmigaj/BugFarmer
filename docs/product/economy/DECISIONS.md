@@ -1034,3 +1034,18 @@ The owner answered §11's main question.
   nobody takes one from the others; the spit is made from a campfire and wood, and the plain campfire stops cooking.
   Which stations can cook which dishes is asked as Q2 (recommended: the range also cooks the wood stove's dishes, and
   only the spit cooks the fire dishes).
+
+### D78 — Cooking stations by how they cook; rare dishes can give more (2026-10-02)
+The owner described the cooking stations and asked for help designing the rest, aiming for what is most fun.
+- **Stations.** Cooking takes time, so a larger stove cooks more dishes at once. A stove has a top with burners and
+  can have an oven, and bread and other baking needs the oven. The wood stove has a top only; a larger range has more
+  burners. The spit only roasts.
+- **Fires.** Someone on the road carries a spit, a pot and firewood and makes a fire where they stop. A fire is made
+  and placed where it's wanted, never carried: it stays where it is until it's dug out.
+- **The owner's ideas to explore, not rulings:** adding a pot to a fire, and building up from a fire to a fire with a
+  spit, then a pot as well. The design is left to the assistant. This replaces D77's leaning that the spit's recipe
+  takes a campfire.
+- **Rare dishes** may do more than raise Health and Stamina, and may raise those two by different amounts.
+- **One review at the end.** Open review items are held until the whole set is ready, then reviewed together.
+- **Paused the same day** for a check of the bugs: the owner asked to review the bug list first, since brainstorm
+  passes make tentative lists, not additions to the game.
