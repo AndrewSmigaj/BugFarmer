@@ -1216,7 +1216,7 @@ large species; a clear look for "subdued"; crossing zones waits for cross-zone b
 ### P16. Food for a trip, potions for a fight
 *Part 11 · food and potions.*
 *Changed 2026-10-02 (D76): a meal raises Health and Stamina, better food more, and many dishes add one of the eight
-boosts — guidelines, not hard rules; bugs go to the stove as they are, and the bug extractor makes materials only.*
+boosts — guidelines, not laws; bugs go to the stove as they are, and the bug extractor makes materials only.*
 **Accepted by the owner on 2026-09-27**, with seeing in the dark kept in.
 - **A meal heals you over a while and gives one fullness boost** — a bigger stamina pool (P14), quicker work, a
   better catch. One boost at a time: a new meal replaces the last, as in Stardew Valley. Which meal does what comes

@@ -8,6 +8,11 @@ Research only: nothing here is decided. The routes are a menu for the game's des
 
 Status: COMPLETE (2026-10-02).
 
+> **Read with GDD §11 (2026-10-02).** `docs/gdd/11_food.md` Q1 restates these routes with corrections from two cold
+> reviews: every route gets cooking from the book; route B prepares ingredients one step at each station, and whether
+> preparing steps are allowed is the owner's call, not a breach of P11; meal lengths by effort are a proposal awaiting
+> his marks, not a decision.
+
 ## Summary
 
 - **Pick: Route D, "learn it by hand, cook it from the book, feast together."** You cook a new dish by hand at its
@@ -1034,8 +1039,7 @@ craft of cooking well, and its hidden-rule trap is well documented.
 
 1. **A quality ladder the player can see.** Three things raise a meal, one step each, shown on the dish: *what* you cook
    (campfire < stove < big dish or bake < feast), *how well* you cook it (well done or fair), and later *what goes in*
-   (prime bugs, if ranching adds them, D76). Each step raises Health and Stamina a little more; length keeps following
-   effort, as already decided. No random quality (Palia's unexplained stars annoy players, S9; Zelda's critical cooks are
+   (prime bugs, if ranching adds them, D76). Each step raises Health and Stamina a little more; length keeps following effort, as the food rows propose (still waiting for the owner's marks). No random quality (Palia's unexplained stars annoy players, S9; Zelda's critical cooks are
    luck, S29). The tooltip states the dots, the boost and the minutes.
 2. **One short hands-on action per dish, only while learning.** About 5 to 10 seconds, one press, never a hold or button
    mashing (S82), never a countdown across stations (Palia's ruin-by-lag, S10). A miss gives a fair dish, not a ruined

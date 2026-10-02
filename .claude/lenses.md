@@ -13,7 +13,7 @@ keep on this codebase (each caught a real, shipped-would-have-bitten issue).
 ## The lenses
 
 - ★ **Requirements** — Does this *observably* satisfy what the user actually asked, not just "technically
-  work"? (e.g. an ask to *see* hornets attack individual flies needs the visual, not only the correct kill.)
+  work"? (e.g. a request to *watch* hornets pick off single flies needs the visual, not only the correct kill.)
 - ★ **Data / Contract** — Units, scales, serialization round-trips, fixed-point vs float, enum/string
   matches across a boundary. (Caught a ×1000 fixed-point radius-scale bug: threshold must use FixedPoint
   multiply, not raw int².)
@@ -110,8 +110,8 @@ keep on this codebase (each caught a real, shipped-would-have-bitten issue).
 > Design*) matter most to him.
 
 **The process (every time):** (1) read what the owner already designed or cut for this topic — the GDD section
-(`docs/gdd/`), `docs/product/economy/DECISIONS.md`, and for gear `docs/product/design/brainstorm_armor.md`
-(§7 the expedition + verbs rules, §11 the saturation test) — and start there, not from a blank page;
+(`docs/gdd/`), `docs/product/economy/DECISIONS.md`, and for gear `docs/gdd/08_gear.md` (its Decided list is the
+owner's; `brainstorm_armor.md` mixes his rulings with the assistant's ideas) — and start there, not from a blank page;
 (2) write one line per lens below for each idea (PASS / RISK / CUT + why); (3) a cold-critic agent (told: no
 sub-agents) sees only the ideas, these lenses and the owner's rules and tries to cut each one; (4) show the owner
 the survivors WITH their lens notes, and list the cuts with a one-line reason each so he can rescue one.
@@ -144,12 +144,17 @@ that was skipped. His verdicts, restated:
 - **New-mechanic tax** — Does it need a new system (a flip state, a pin state…)? Is the payoff worth building and
   balancing it? Use common sense. (Rhino-beetle maul: needs a new flip mechanic — doubtful.)
 - **Art-system fit** — Does it depend on an art capability we don't have yet (separate armour pieces, a new
-  animation)? State the dependency. (Waders: fine, if separate armour pieces can be drawn to work with the system.)
-- **Owner's gear rules** (outfits and accessories) — suits an EXPEDITION, not one action; bonuses attach to
-  VERBS, not idle output (decorative outfits that boost the farm are the owner's allowed exception); passes the
-  SATURATION test — say what it is FOR in one phrase, and no other set has that answer.
-- **Balance** — Where does it sit on the cost ladder, and what does it make obsolete? (Food ideas: fine as long as
-  they don't upset the balance.)
+  animation)? State the dependency. (Waders: possible only if separate armour pieces can be drawn to fit the outfit system.)
+- **Owner's gear rules** (outfits and accessories; dated, his) — outfits don't need constant changing and are never
+  single-purpose: each keeps defence plus other bonuses (2026-08-06); any outfit in the bag can be put on at any time,
+  and a working outfit raises a yield or makes a job easier, its description saying how (D47, 2026-09-27); more
+  outfits are wanted, but not so many that each means less (2026-08-06); decorative outfits are their own class
+  (2026-08-07). **Not his:** "suits an expedition / a trip", "bonuses attach to verbs" and the one-phrase saturation
+  test were the assistant's August 2026 ideas — on 2026-09-27 the owner said the trip idea meant
+  nothing to him. Use them as the assistant's lenses if useful, never as his rules (a GDD section once listed them
+  under Decided; corrected 2026-10-02).
+- **Balance** — Where does it sit on the cost ladder, and what does it make obsolete? (Food ideas: welcome
+  while they keep the balance.)
 - **Schell's lenses** (*The Art of Game Design*) — the Eight Filters (it feels right · the players it's for will like it ·
   it's well designed · it's new enough · it helps the game sell · it can be built · it serves playing together ·
   playtesters enjoy it), then **Curiosity** and

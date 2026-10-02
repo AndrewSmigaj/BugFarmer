@@ -100,10 +100,10 @@ Status: **review** = ready for your answers · **rework** = being redone · **dr
 | 7 | 05 | Bug farming, catching & storage | draft | [05_bug_farming.md](05_bug_farming.md) |
 | 8 | 06 | Farming & gardening | draft | [06_farming.md](06_farming.md) |
 | 9 | 07 | Combat, enemies & bosses | draft | [07_combat.md](07_combat.md) |
-| 10 | 08 | Gear: armour, clothing & accessories | draft | [08_gear.md](08_gear.md) |
+| 10 | 08 | Gear, accessories & the character sheet | review | [08_gear.md](08_gear.md) |
 | 11 | 09 | Tools & weapons | draft | [09_tools_weapons.md](09_tools_weapons.md) |
 | 12 | 10 | Crafting, stations & materials | draft | [10_crafting.md](10_crafting.md) |
-| 13 | 11 | Food, cooking & potions | draft | [11_food.md](11_food.md) |
+| 13 | 11 | Food, cooking & potions | review | [11_food.md](11_food.md) |
 | 14 | 12 | Electricity & automation | draft | [12_electricity.md](12_electricity.md) |
 | 15 | 13 | Fishing & water | draft | [13_fishing.md](13_fishing.md) |
 | 16 | 14 | Mining & the underground | draft | [14_mining.md](14_mining.md) |
