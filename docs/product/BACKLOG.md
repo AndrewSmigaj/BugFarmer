@@ -516,6 +516,10 @@ Plan + designs: `docs/product/economy/crafting_buildout.md` + the saved plan. Al
   (basic/quality/deluxe). Compost also needs an icon sprite (`Items/compost_icon.png`, gpt-image-1).
 
 ## Now — Bug ecology / farming (livestock loop on a living-ecosystem engine)
+- **Herding ants with the bug stick (owner idea, 2026-10-02, D79; not designed, not built).** Tapping ants with the
+  non-lethal bug stick turns them off their trail, so a player can steer and herd them. Needs: a nudge on the ant's
+  trail-following (client-side, deterministic like the rest of the bug simulation) and a design for how far a tap
+  carries.
 Design of record: [bug_ecology_plan.md](../brainstorms/ecology/bug_ecology_plan.md). Phased build P0–P11
 (P1 Bug Lab DONE). **Verify every sim-touching phase with the `test-changes` skill** (Go tests +
 sync-harness + the determinism / "all players in sync" checks — the testing methodology is now captured as a
