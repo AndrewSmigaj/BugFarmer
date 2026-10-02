@@ -13,6 +13,7 @@
   --cut: #a8412f; --cut-soft: #f2d5cb;
   --change: #a45418; --change-soft: #f4dfc0;
   --add: #2f5f8a; --add-soft: #d6e3ef;
+  --later: #5f5873; --later-soft: #e4e0ea;
   --focus: #4c6692;
   --font-display: "Pixelify Sans", "Courier New", monospace;
   --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -30,6 +31,7 @@
     --cut: #e5876a; --cut-soft: #3b2420;
     --change: #e9a855; --change-soft: #3a2b18;
     --add: #8cb4dc; --add-soft: #1c2a38;
+    --later: #b9b0cf; --later-soft: #2a2733;
     --focus: #7494b6;
   }
 }
@@ -43,6 +45,7 @@
   --cut: #e5876a; --cut-soft: #3b2420;
   --change: #e9a855; --change-soft: #3a2b18;
   --add: #8cb4dc; --add-soft: #1c2a38;
+  --later: #b9b0cf; --later-soft: #2a2733;
   --focus: #7494b6;
 }
 * { box-sizing: border-box; }
@@ -94,6 +97,7 @@ tr.r:hover td { background: var(--surface); }
 .v.cut { background: var(--cut-soft); color: var(--cut); }
 .v.change { background: var(--change-soft); color: var(--change); }
 .v.add { background: var(--add-soft); color: var(--add); }
+.v.later { background: var(--later-soft); color: var(--later); }
 .dec { display: inline-block; margin: 4px 0 0 0; font: 600 11px var(--font-body); color: var(--accent);
   border: 1px solid var(--accent); border-radius: 4px; padding: 1px 6px; }
 .c-call .v { margin-right: 6px; }
@@ -124,6 +128,7 @@ tr.r:hover td { background: var(--surface); }
   td.c-what::before, td.c-why::before { display: block; font: 600 11px var(--font-body); text-transform: uppercase;
     letter-spacing: .06em; color: var(--ink-3); }
   td.c-what::before { content: "What changes"; } td.c-why::before { content: "Why"; }
+  table.items.bugs td.c-what::before { content: "What it is, and where it’s named"; }
   td.c-what.blank { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -135,6 +140,9 @@ tr.r:hover td { background: var(--surface); }
     add something missing — and one line on why. Mark each one you agree or disagree with, and add a note where you'd
     do it differently. Each row says <b>Stored</b> once the page's storage has kept your mark. Rows labelled
     <b>Decided</b> are settled with your notes (their text is the final version); your marks on them are kept.</p>
+  <p class="lede"><b>Bugs</b> (first on the page) works the same way: every bug in the game, in the old zone plans, in
+    the game's files with only a picture, or named in my item rows — with my call: <b>keep</b>, <b>cut</b>, or
+    <b>later</b> (decide when its zone is designed). Nothing is removed until you've marked it.</p>
   <div class="bar">
     <div class="tallies" id="tallies"></div>
     <div class="controls" role="toolbar" aria-label="Filters">
@@ -144,12 +152,8 @@ tr.r:hover td { background: var(--surface); }
         <option value="todo">Not marked yet</option>
         <option value="done">Marked</option>
       </select>
-      <select id="whereSel" aria-label="Where the item is">
-        <option value="">Game and designs</option>
-        <option value="game">In the prototype</option>
-        <option value="designed">Designed only</option>
-        <option value="both">Both</option>
-        <option value="new">New</option>
+      <select id="whereSel" aria-label="Where the item or bug comes from">
+        <option value="">Everywhere</option>
       </select>
       <select id="groupSel" aria-label="Kind of item"><option value="">Every kind</option></select>
       <input type="search" id="q" placeholder="Search names, ids and reasons" aria-label="Search">
@@ -165,9 +169,11 @@ const DATA = /*__DATA__*/null;
   "use strict";
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const VERDICTS = [["cut", "Cut"], ["change", "Change"], ["add", "Add"], ["keep", "Keep"]];
+  const VERDICTS = [["cut", "Cut"], ["change", "Change"], ["add", "Add"], ["later", "Later"], ["keep", "Keep"]];
   const VLABEL = Object.fromEntries(VERDICTS);
-  const WHERE = { game: "In the prototype", designed: "Designed only", both: "Both", new: "New" };
+  const WHERE = { game: "In the prototype", designed: "Designed only", both: "Both", new: "New",
+    asked: "Yours, not in the game yet", art: "Art only, never spawned", artplan: "Art and a zone plan", plan: "A zone plan only",
+    rows: "Only in my item rows" };
   const items = DATA.items;
   const groups = DATA.groups;                       // [[key, label], …] in display order
   const byId = new Map(items.map(it => [it.id, it]));
@@ -213,6 +219,9 @@ const DATA = /*__DATA__*/null;
   });
   const gs = $("#groupSel");
   gs.insertAdjacentHTML("beforeend", groups.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join(""));
+  const ws = $("#whereSel");
+  ws.insertAdjacentHTML("beforeend", Object.keys(WHERE).filter(k => items.some(it => it.where === k))
+    .map(k => `<option value="${k}">${esc(WHERE[k])}</option>`).join(""));
   gs.value = f.group; $("#whereSel").value = f.where; $("#showSel").value = f.show; $("#q").value = f.q;
   gs.addEventListener("change", () => { f.group = gs.value; saveFilter(); render(); });
   $("#whereSel").addEventListener("change", e => { f.where = e.target.value; saveFilter(); render(); });
@@ -277,9 +286,10 @@ const DATA = /*__DATA__*/null;
       if (!rows.length) continue;
       html += `<details class="group" data-g="${g}"${open[g] === false ? "" : " open"}><summary><h2>${esc(label)}</h2>
         <span class="gcount" data-gc="${g}"></span></summary>
-        <div class="tablewrap"><table class="items">
+        <div class="tablewrap"><table class="items${g === "bugs" ? " bugs" : ""}">
         <colgroup><col class="c-item"><col class="c-where"><col class="c-call"><col class="c-what"><col class="c-why"><col class="c-mark"></colgroup>
-        <thead><tr><th scope="col">Item</th><th scope="col">Where</th><th scope="col">Call</th><th scope="col">What changes</th><th scope="col">Why</th><th scope="col">Your mark</th></tr></thead>
+        <thead><tr>${(g === "bugs" ? ["Bug", "From", "Call", "What it is, and where it’s named", "Why"] : ["Item", "Where", "Call", "What changes", "Why"])
+          .map(h => `<th scope="col">${h}</th>`).join("")}<th scope="col">Your mark</th></tr></thead>
         <tbody>${rows.map(row).join("")}</tbody></table></div></details>`;
     }
     $("#list").innerHTML = html || `<p class="empty">Nothing matches these filters.</p>`;

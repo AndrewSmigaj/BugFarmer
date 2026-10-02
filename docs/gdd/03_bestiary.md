@@ -18,13 +18,16 @@ idea lenses, then go to the review page.
   pill bugs, crayfish and crabs; fish are separate; no worms or leeches (snails go by the same rule — my reading).
 
 ## To settle (raw list — not yet checked against the idea lenses)
+- **Reviewing every bug (2026-10-02)** — on the items page, the Bugs list (`docs/gdd/bug_table.jsonl`, 116 bugs):
+  the game's 15, the zone plans' 84 below, the picture-only extras in the game's bug file, the bugs the owner has
+  asked for and the bugs the item rows name, each with a call of keep, cut or later for the owner's marks.
 - Which species the game ships with, and in which zones — most zones aren't designed yet (2026-09-27).
 - The real-species naming pass for the fifteen species in the prototype.
 - **The species the zone designs name** — 84 distinct species in 98 rows across 17 zone sheets, marked against the
   rulings above. The zone sheets were written to be generous ("prune later"), so this is a list to cut from, not a
   plan:
 
-- **Starting Village** — fly, ladybug, aphid, pill bug, garden ant (ant species — cut (D39)), garden snail (not an insect — Q2).
+- **Starting Village** — fly, ladybug, aphid, pill bug, garden ant (the black ant itself: the owner's black ant is the black garden ant, 2026-08-15), garden snail (not an insect — Q2).
 - **Bee Meadow** — honeybee, mason bee, leafcutter bee, sweat bee, pollen beetle.
 - **Wasp Thicket** — paper wasp, mud dauber, earwig, silverfish, thicket matriarch (mini-boss; invented — needs a real species).
 - **Shallow Swamp** — damselfly, pond skater, whirligig beetle, leech (not an insect — Q2), marsh mosquito, bog centipede.
@@ -36,7 +39,7 @@ idea lenses, then go to the review page.
 - **Millipede Forest** — giant millipede, forest centipede, bark beetle, stag beetle, rhino beetle (mini-boss), forest snail (not an insect — Q2).
 - **Spider Vale West** — orb weaver, wolf spider, jumping spider, armored centipede, web tender (invented — needs a real species), vale broodmother (mini-boss; invented — needs a real species).
 - **Spider Vale East** — black widow, tarantula, trapdoor spider, spiderling swarm (invented — needs a real species), giant huntsman (mini-boss).
-- **Ant Colony** — garden ant (ant species — cut (D39)), black ant, harvester ant (ant species — cut (D39)), soldier ant (an ant caste — belongs to black or fire ants), colony queen (mini-boss; an ant caste — belongs to black or fire ants).
+- **Ant Colony** — garden ant (the black ant itself: the owner's black ant is the black garden ant, 2026-08-15), black ant, harvester ant (ant species — cut (D39)), soldier ant (an ant caste — belongs to black or fire ants), colony queen (mini-boss; an ant caste — belongs to black or fire ants).
 - **Centipede Cavern** — giant centipede, glowworm, cave beetle, camel cricket, centipede matron (mini-boss; invented — needs a real species).
 - **Underground Passages** — springtail, blind beetle, mole cricket, cave spider, glow grub (invented — needs a real species).
 - **Underground River** — cave crayfish (not an insect — Q2), water beetle, aquatic larva, albino isopod, glow mayfly (invented — needs a real species), blind cave fish (a fish), cave crab (mini-boss; not an insect — Q2).

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the item-pass review page from docs/gdd/item_table.jsonl.
+"""Build the item-pass review page from docs/gdd/item_table.jsonl (and the bug list, docs/gdd/bug_table.jsonl).
 
 The item table (the owner's request of 2026-09-28, D55) gives every item in the game and in the old designs a
 recommendation — keep, change, cut or add — with one plain line on why. This script embeds it into
@@ -8,6 +8,10 @@ claude.ai (https://claude.ai/artifact/L9ftJfjRfcFD3yAB66qenD). The owner's marks
 marks/<kind>/items/<item id> holding {mark, note, at}; read them back with the ArtifactData tool (list each kind's
 collection). The first version of the page (https://claude.ai/artifact/3Sxunf4HDezB1fgAKFRZG1) saved a whole kind as
 one document and lost marks when an older copy overwrote a newer one; it is retired, and its storage is not used.
+
+The bug list (the owner's request of 2026-10-02) rides on the same page as its own kind, "bugs": every bug in the game,
+in the old zone plans, in the game's files with only a picture, or named in the item rows, with a call of keep, cut or
+later. Its marks are stored the same way, at marks/bugs/items/<bug id>.
 
 Usage: python3 tools/gdd/build_items_page.py
 """
@@ -18,11 +22,13 @@ from datetime import date
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC = os.path.join(ROOT, "docs", "gdd", "item_table.jsonl")
+BUGS = os.path.join(ROOT, "docs", "gdd", "bug_table.jsonl")
 TEMPLATE = os.path.join(ROOT, "tools", "gdd", "items_page.template.html")
 OUT = os.path.join(ROOT, "tools", "gdd", "_build", "item_pass.html")
 
 # Display order and plain labels for the kinds of item.
 GROUPS = [
+    ("bugs", "Bugs"),
     ("tools", "Tools"), ("weapons", "Weapons"), ("armour", "Armour and outfits"), ("accessories", "Accessories"),
     ("potions", "Potions and remedies"), ("meals", "Meals and food"), ("seeds_crops", "Seeds and crops"),
     ("plants", "Plants"), ("materials", "Materials"), ("ores", "Ores and gems"), ("stations", "Stations"),
@@ -30,13 +36,25 @@ GROUPS = [
     ("structures", "Structures, fences and buildings"), ("blocks", "Blocks and ground"), ("beekeeping", "Beekeeping"),
     ("natural", "Things found in the world"), ("npcs", "Townspeople and shops"), ("other", "Other"),
 ]
-VERDICTS = {"keep", "change", "cut", "add"}
+ITEM_VERDICTS = {"keep", "change", "cut", "add"}
+BUG_VERDICTS = {"keep", "cut", "later"}       # later = decide when the bug's zone is designed
+VERDICTS = ITEM_VERDICTS | BUG_VERDICTS
 WHERE = {"game", "designed", "both", "new"}
+BUG_WHERE = {"game", "asked", "art", "artplan", "plan", "rows"}   # in the game · asked for · art only · art and a plan · plan · rows
 
 
 def load():
     items, seen, problems = [], set(), []
-    with open(SRC, encoding="utf-8") as f:
+    for src in (SRC, BUGS):
+        if os.path.exists(src):
+            read(src, items, seen, problems)
+    return items, problems
+
+
+def read(src, items, seen, problems):
+    name = os.path.basename(src)
+    is_bugs = src == BUGS
+    with open(src, encoding="utf-8") as f:
         for n, line in enumerate(f, 1):
             line = line.strip()
             if not line:
@@ -44,21 +62,25 @@ def load():
             try:
                 it = json.loads(line)
             except json.JSONDecodeError as e:
-                problems.append(f"line {n}: not JSON ({e})")
+                problems.append(f"{name} line {n}: not JSON ({e})")
                 continue
-            key = (it.get("group"), it.get("id"))
+            # Ids must be unique across the whole page: the page keys its own state by id alone.
+            key = it.get("id")
             if key in seen:
-                problems.append(f"line {n}: duplicate {key}")
+                problems.append(f"{name} line {n}: duplicate id {key!r}")
                 continue
             seen.add(key)
-            if it.get("verdict") not in VERDICTS:
-                problems.append(f"line {n}: verdict {it.get('verdict')!r}")
-            if it.get("where") not in WHERE:
-                problems.append(f"line {n}: where {it.get('where')!r}")
+            if is_bugs and it.get("group") != "bugs":
+                problems.append(f"{name} line {n}: group {it.get('group')!r} (the bug list is all 'bugs')")
+            if not is_bugs and it.get("group") == "bugs":
+                problems.append(f"{name} line {n}: an item row in the 'bugs' group")
+            if it.get("verdict") not in (BUG_VERDICTS if is_bugs else ITEM_VERDICTS):
+                problems.append(f"{name} line {n}: verdict {it.get('verdict')!r}")
+            if it.get("where") not in (BUG_WHERE if is_bugs else WHERE):
+                problems.append(f"{name} line {n}: where {it.get('where')!r}")
             if it.get("group") not in dict(GROUPS):
                 it["group"] = "other"
             items.append({k: it.get(k, "") for k in ("id", "name", "group", "where", "verdict", "change", "reason", "decided")})
-    return items, problems
 
 
 def main():
