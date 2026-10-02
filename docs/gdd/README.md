@@ -28,7 +28,7 @@ Answers are stored in the page's own database, one document per section (`answer
 `ArtifactData` tool (`list`, collection `answers`). Republish from another session by passing that URL.
 
 ## The item pass
-Every item in the game and in the old designs — 1,180 rows — with a recommendation (keep, change, cut or add) and a
+Every item in the game and in the old designs — 1,203 rows — with a recommendation (keep, change, cut or add) and a
 one-line reason (the owner's request of 2026-09-28, D55). The data is `item_table.jsonl`; the review page is built from
 it by `python3 tools/gdd/build_items_page.py` and published at **https://claude.ai/artifact/L9ftJfjRfcFD3yAB66qenD**
 (private to the owner). His marks — agree, disagree and a note per row — are stored in that page's database, one
@@ -40,24 +40,34 @@ newer one; it was replaced on 2026-09-29 and its storage is not used.
 **Where it stands (2026-10-01).**
 - **Settled:** batch 1, the tool families and the pickaxes, axes and shovels, 34 rows (D69). Rows that are settled
   carry `"decided"` in the table and show a Decided label on the page.
-- **Marked, waiting for the last answers:** batch 2, the rest of Tools and the Weapons (110 rows), and batch 3, the
-  Armour (22 rows). Half of batch 2's questions are answered; its D-entry and batch 3's follow the rest.
-- **Redone from scratch:** on 2026-10-01 the owner dropped every old accessory and potion and asked for new sets.
-  They replace the old rows: 32 accessories and 3 kits, 12 potions and remedies, each kind with a row of rules first.
-  The outfit roster (31 outfits and three family rows, with a rules row) and two powerful weapons were added for marking
+- **Settled:** batch 3, the Armour (22 rows, D75): the metal sets are armour, the start is the Farmer's Outfit, gilded
+  steel is cut and Fancy Armor replaces the platinum plate.
+- **Marked, waiting for the last answers:** batch 2, the rest of Tools and the Weapons (110 rows). All but two of its
+  questions are answered and recorded in D75 (still open: the harvest sickle, and the tools that bring a bug in
+  alive); its rows are updated once those two are in.
+- **Redone from scratch:** on 2026-10-01 the owner dropped every old accessory and potion and asked for new sets. They
+  replace the old rows: 32 accessories and 3 kits, 12 potions and remedies, each kind with a row of rules first. The
+  outfit roster (31 outfits and three family rows, with a rules row) and two powerful weapons were added for marking
   too. Rows for things already in the game stay: the flashlight, the bee charm, the lucky clover and the calm spray.
-  The research behind them is in `docs/product/investigations/research-2026-10-01/`.
-- **Batch 4, the potions (D74):** marked; settled rows carry `"decided"`. Seven new potions follow his list of
-  effects; venom and night sight wait for his answers.
-- **Foods redone from scratch (D74):** the 46 old meal rows went; 44 new rows (six kitchen staples, the dishes and the
-  drinks, from the research in `docs/product/investigations/research-2026-10-01/foods-real-dishes.md`) wait for his
-  marks, with new dyes, cotton cloth and the plant rows updated so every plant has a use.
-- **Next:** the owner's marks on the new rows and the open questions, then the other kinds in page order.
+  The research behind them is in `docs/product/investigations/research-2026-10-01/`. His marks on the accessories are
+  recorded in D75: twelve kept (station accessories at 30%, the figure he gave for most), the rest cut, a Drag Harness
+  proposed in place of the running insoles, and jewelry (five pieces and a stand) added so a plot's happiness can come
+  from things on display.
+- **Batch 4, the potions (D74, D75):** marked and settled; the Night Vision Potion and the Venom Resistance Potion
+  follow his answers, and one timed potion works at a time. Seven new potions from his list of effects wait for his
+  marks.
+- **Foods redone from scratch (D74), then around giant bugs as livestock (D75):** 54 rows wait for his marks: the
+  staples, four cuts from the bug extractor, 38 dishes and three drinks, built on the research in
+  `docs/product/investigations/research-2026-10-01/foods-real-dishes.md`. New dyes, cotton cloth and the plant rows
+  were updated in D74 so every plant has a use.
+- **Next:** the owner's marks on the foods, the jewelry, the Drag Harness, the new potions, the outfit roster and the
+  two powerful weapons, and batch 2's last two answers; then the other kinds in page order.
 
 **How a batch goes.**
 1. The owner marks rows on the page.
 2. Read his marks with `ArtifactData` (`list`, one `marks/<group>/items` collection per kind of item) and line them
-   up with the rows.
+   up with the rows. Read every kind, not only the one he names, and compare each mark's time with the last batch:
+   on 2026-10-01 his accessory marks were missed because only the potions were read.
 3. Answer each note, checked against the decisions and the code; new ideas go past a reviewer before he sees them.
 4. When he answers, record the outcome as a new D-entry in `docs/product/economy/DECISIONS.md`, in our own words.
 5. Update the rows: settled rows get `"decided": "<date>"`, and item ids never change, because his marks are keyed by
