@@ -991,3 +991,28 @@ recorded here, with his answers of the same day, the outcome of batch 3 (armour)
   above). Three weapons are made of bug parts, his choice: the Beetle-Horn Maul, the Scorpion-Sting Spear, which
   carries venom, and the Spider-Fang Dagger. Two answers are still open, the harvest sickle and the tools that bring a
   bug in alive; batch 2's rows are updated once they are in.
+
+### D76 — The item system's backbone, food and the stove, and no limit on art (2026-10-02)
+The owner asked for the item system to be thought through as a whole rather than row by row, and answered the
+proposal that followed.
+- **A character sheet, to start (my proposal, accepted as a starting point).** Six meters shown as dots — Health,
+  Stamina, Armor, Strength, Speed and Stealth (how close a bug gets before it notices you) — three protections (Sting,
+  Venom, Acid) and a list of standalone perks (night vision, +30% planks, faster dragging). Each kind of item has a
+  job: the one outfit sets armour and protections, shifts a meter or two and gives one to three perks; the two
+  accessories give perks only; the one meal raises Health and Stamina; the one timed potion makes a strong, short
+  change; tools take their power from their metal; weapons have damage, speed, reach and one trait. These are
+  guidelines, not laws: an item may break the pattern when that makes sense.
+- **Small mechanics are perks, not items.** Dragging is minor, so faster dragging is a second perk on the Bug
+  Wrangler's Leathers; the Drag Harness goes, and the running insoles get no replacement. An outfit can carry several
+  bonuses.
+- **Food.** A meal raises Health and Stamina while it lasts, better food more, and many dishes add one of the eight
+  boosts, depending on the food; the eight boost families stay. Coffee is made and sold with food but works like a
+  potion.
+- **Bugs go straight to the stove.** The bug extractor makes materials, and dishes take the bugs themselves, so
+  players don't prepare cuts: the four cuts and bug meat go, and D18's line that the extractor is used in cooking no
+  longer holds. How cooking plays — preparing ingredients first, as in Palia, straight from recipe to dish, as in
+  Stardew Valley, or another way — is to be designed, with options for him.
+- **No art budget.** The game gets as many outfits and as much art as a rich and varied game needs; the spending limit
+  applied only to the test runs. Every paid image is still asked for first.
+- **Left open:** a quality mark for well-raised bugs (prime materials), raised with the sheet; it comes back with the
+  ranching design.

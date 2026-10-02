@@ -56,12 +56,18 @@ newer one; it was replaced on 2026-09-29 and its storage is not used.
 - **Batch 4, the potions (D74, D75):** marked and settled; the Night Vision Potion and the Venom Resistance Potion
   follow his answers, and one timed potion works at a time. Seven new potions from his list of effects wait for his
   marks.
-- **Foods redone from scratch (D74), then around giant bugs as livestock (D75):** 54 rows wait for his marks: the
-  staples, four cuts from the bug extractor, 38 dishes and three drinks, built on the research in
-  `docs/product/investigations/research-2026-10-01/foods-real-dishes.md`. New dyes, cotton cloth and the plant rows
-  were updated in D74 so every plant has a use.
-- **Next:** the owner's marks on the foods, the jewelry, the Drag Harness, the new potions, the outfit roster and the
-  two powerful weapons, and batch 2's last two answers; then the other kinds in page order.
+- **Foods redone from scratch (D74), then around giant bugs as livestock (D75, D76):** 50 rows wait for his marks:
+  the staples, 38 dishes and three drinks, built on the research in
+  `docs/product/investigations/research-2026-10-01/foods-real-dishes.md`. A meal raises Health and Stamina and many
+  dishes add a boost; the stove takes the bugs themselves (the four cuts proposed in D75 went in D76). New dyes, cotton
+  cloth and the plant rows were updated in D74 so every plant has a use.
+- **The item system as a whole (D76):** a character sheet of six meters, three protections and standalone perks, with
+  a job for each kind of item, accepted as a start. Rules first, rows second: a design section for the review page
+  comes next, researched and reviewed, and the rows are then rewritten against it in one pass. Options for how
+  cooking plays (Palia, Stardew Valley and other routes) follow.
+- **Next:** the item-system section (the character sheet) and the cooking options; the owner's marks on the foods, the
+  jewelry, the new potions, the outfit roster and the two powerful weapons; batch 2's last two answers; then the other
+  kinds in page order.
 
 **How a batch goes.**
 1. The owner marks rows on the page.
