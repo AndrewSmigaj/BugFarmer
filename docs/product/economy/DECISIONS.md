@@ -933,3 +933,61 @@ The owner marked the fourteen rows of the new potion set and, the same day, set 
   old list of 46 goes.
 - **Cotton can stay**, his leaning after first saying cloth from thread was enough (D15 had already decided cotton):
   cotton thread and cotton cloth make finer clothes, beside roughspun clothes made from plant fibre.
+
+### D75 — The item pass: the accessory marks, bugs as livestock in the kitchen, armour, and weapons so far (2026-10-01)
+The owner's marks on the new accessory set were made just before his potion marks but were missed in D74; they are
+recorded here, with his answers of the same day, the outcome of batch 3 (armour) and batch 2's answers so far.
+- **Accessories.** He kept the work and harvest accessories (the garden gloves, seed tin, hive tool, oven mitts, tape
+  measure, thimble, ore sieve and dyer's gloves), both headlamps, the first-aid kit (a kit sold in the village rather
+  than a pouch from a far outpost) and, on trial, the telescopic net pole. A station accessory gives a 30% chance of
+  an extra, his figure; the ore sieve helps the pan as well as the sluice. He cut the rest of the set: the accessories
+  for stamina, defence and resistances, the hori-hori, the infrared thermometer, the measuring cylinder, the work
+  apron, the night-vision goggles, the UV torch, the barometer, the thermos, the jar belt, the fuel pouch and the
+  three kits; the dissecting kit because the bug extractor is a machine, and the mosquito head net because the
+  mosquitoes are giant. In place of the running insoles he asked for something else: a Drag Harness is proposed, a
+  smaller help with dragging than the Bug Wrangler's Leathers. My calls: the dyer's gloves rise to 30% to match the
+  other station accessories, and the garden gloves stay at 15%, since crops are the bulk of a farm's harvest. With
+  these marks, help in a fight comes from outfits, potions and food, and accessories are the work tools and lights.
+- **Bugs in the kitchen are livestock (his direction).** Giant bugs give steaks, and a fly roasts like a small bird.
+  The shape is my proposal, which he accepted: a small bug such as the fly is cooked whole; a big bug is butchered at
+  the bug extractor into one cut per job (D31) — beetle steak, locust legs, scorpion tail, spider meat, or bug meat
+  from flies, centipedes and dragonflies; giant ant eggs are the eggs; grub fat stands in for lard. Some bugs aren't
+  food, for their real reasons: fireflies, millipedes, milkweed caterpillars, carrion beetles and ladybirds. The teas
+  go. Drinks are juice, cider and mead in glass bottles, which are bought or made. After review I made these calls:
+  drinks give no boost, so they never compete with a potion; centipedes give bug meat, since large centipedes really
+  are eaten; and a dish's length follows the effort that went into it.
+- **Potions.** The night-sight drops become the Night Vision Potion, made from carrot and glowing mushroom, with no
+  moth eyes. Venom in his list meant resisting it: the Venom Resistance Potion, with spider venom among its sources as
+  he said; wasp venom makes the first strength so it can be made early, as D54 has it, and stronger bugs' venom makes
+  stronger ones (my call after review). One timed potion works at a time, drinks and balms alike, while cures and
+  healing don't count against it (my proposal, accepted).
+- **Venom on weapons.** There are no coatings: venom comes only on weapons made from a venomous part. The Venom
+  Dagger kept in batch 2 is dropped (my recommendation, accepted).
+- **Lights.** The Firefly Lantern pulses yellow-green, its fireflies blinking out of step with their glows overlapping,
+  and the Glowworm Lantern glows a steady blue-green (his picture; both colours are true to life). Each is a glass
+  bottle holding the live bugs.
+- **Bee suits.** The bee suit stops every sting but is weak armour, worn for the bees; the ranger outfit is the quicker,
+  better-armoured answer to wasps and hornets; the Padded Bee Suit comes later, with real armour (his calls). The
+  ventilated suit goes. Fire ants and scorpions still hurt a player in a bee suit through their bites and claws, so
+  their own armours keep a job (my proposal, accepted).
+- **A private plot's happiness.** Outfits shown on a mannequin raise it, and so does armour made for show, such as
+  Fancy Armor; jewelry on a stand raises it too (his direction). Counting them on display rather than worn, and making
+  jewelry the happiness accessory, were my recommendations, accepted: five pieces made at the gem cutter from silver,
+  gold or platinum and a cut gem, which give those metals and the gems a job.
+- **Armour (batch 3).** The metal sets are armour, named Copper, Bronze, Iron, Steel and Cobalt-Steel Armor in the game.
+  A new character starts in the Farmer's Outfit, and Bug-Leather Armor is an early craft once you have been out for
+  bugs. Gilded steel is cut. Fancy Armor, made with gold and the high metals and not the strongest, replaces the
+  platinum plate and uses the picked "fancy" design. Cobalt-Steel Armor's look was left to me, asked only to be
+  striking and late-game: its own design, with the art asked for first. The picked "platinum" and "gilded-steel"
+  designs are left without an armour for now.
+- **Obsidian.** Everything mined comes as blocks, so obsidian is black blocks in Spider Vale West; the steel pickaxe
+  opens them (my call).
+- **Weapons and tools (batch 2), answered so far.** The weapon rule stands: each kind of weapon comes in the few metals
+  that suit it, so each new metal upgrades some weapons, not all; swords are the exception, in every metal up to the
+  two top steels; each kind mixes in two or three special weapons, mostly made the old-fashioned way. This changes
+  P20, where weapons stopped at steel and bug parts took over. Daggers and maces come in copper and iron only.
+  The specials are the Winged Spear, the Stiletto, the Obsidian Dagger, the War Hammer and the Beetle-Horn Maul, plus
+  an Obsidian Sword, quick and nearly the strongest, and a katana sold in the western town (the Venom Dagger is dropped
+  above). Three weapons are made of bug parts, his choice: the Beetle-Horn Maul, the Scorpion-Sting Spear, which
+  carries venom, and the Spider-Fang Dagger. Two answers are still open, the harvest sickle and the tools that bring a
+  bug in alive; batch 2's rows are updated once they are in.

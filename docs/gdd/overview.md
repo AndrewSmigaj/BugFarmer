@@ -441,7 +441,7 @@ behind secrets; decorative outfits boost the farm. About 43 sets are in the rost
 - **The tiers are still to be resolved**; everything is a work in progress (2026-09-27).
 - Four outfits are finished and approved — bronze, fire-ant, black-ant and copper.
 - **Armour follows the tool metals**: bug leather and padded cloth, then copper, bronze, iron, steel and cobalt
-  steel; platinum goes into fancy armour that also needs steel — the platinum outfit picked — sells well as money,
+  steel; platinum goes into Fancy Armor, with gold and steel (D75), sells well as money,
   and turns up in recipes where it fits (P20, accepted 2026-09-28).
 
 **In the prototype now** — eight equipment slots (head, body, arms, legs, feet, two accessories, backpack). New
@@ -469,8 +469,9 @@ and glowworm), torches, a headlamp and electric lights. Tools never wear out.
   pickaxe swings like the axe (2026-09-27).
 - Metal tiers plus a few specials that matter (D12).
 - **The metal ladder** (P20, accepted 2026-09-28): wood → stone → copper → bronze → iron → steel → cobalt steel →
-  tungsten steel (renamed from tungsten carbide on 2026-09-29, D69) for tools; weapons climb the same metals to steel, and past it the best blades and spears come from
-  bug parts; no gold, silver or platinum tools or weapons.
+  tungsten steel (renamed from tungsten carbide on 2026-09-29, D69) for tools; each kind of weapon comes in the few
+  metals that suit it, swords in every metal, with two or three specials per kind and only three weapons made of bug
+  parts (changed 2026-10-01, D75); no gold, silver or platinum tools or weapons.
 - **What a better tool does** (P21, accepted 2026-09-28): a hit does the tool's strength minus the material's
   toughness, so a newly reached ore starts slow and the next tier roughly halves the hits; the ores are the keys;
   power tools, such as a rock drill and a chainsaw, sit in the tiers.
@@ -501,7 +502,7 @@ signature branch — meat from carcasses, honey, royal jelly.
   things on the ground (P17, accepted 2026-09-27).
 - **Meals and potions** (P16, accepted 2026-09-27): a meal heals over a while and gives one fullness boost at a time; a
   healing potion heals at once, then the person healed waits a short while before another works on them; other
-  potions — antivenom, a salve for sprays and acid, venom resistance, night sight — have no wait; stronger bugs make
+  potions — antivenom, a salve for sprays and acid, venom resistance, night vision — have no wait; stronger bugs make
   stronger potions; the cauldron is the potion station; food doesn't spoil in bags or chests.
 - Cooking is its own system (D19); venom and poison are real effects (D16).
 
@@ -1226,7 +1227,7 @@ large species; a clear look for "subdued"; crossing zones waits for cross-zone b
   already decided as real effects (D16).
 - **Stronger bugs make stronger potions**: venom from a higher-tier bug makes a stronger antivenom, so potions follow
   the same ladder as the rest of the game.
-- **A small set to start** — a healing potion, the antivenom, the salve, venom resistance, night sight, and perhaps
+- **A small set to start** — a healing potion, the antivenom, the salve, venom resistance, night vision, and perhaps
   one venom coating for blades and spears (offered back from the old list rather than dropped quietly). Each gets true examine
   text: before the plague, antivenom was made in horses; now it is made in labs from the venom itself.
 - **Bandages** are the cheap heal over a few seconds, one at a time — cloth first, then better ones from honey or
@@ -1318,6 +1319,9 @@ The screen must show a whole shop's stock — today it shows only the first six 
 *Parts 10 and 15 · tools; progression. Also parts 5, 6 and 9.*
 *Renamed 2026-09-29 (D69): the top rung is tungsten steel, not tungsten carbide, and the top pickaxe has no
 gold-coloured finish.*
+*Changed 2026-10-01 (D75): weapons no longer stop at steel — each kind comes in the metals that suit it, swords in
+every metal, with a few specials, and only three weapons are made of bug parts; gilded steel is cut, so gold trims
+Fancy Armor (steel, gold and platinum, the picked "fancy" design) instead.*
 **Accepted by the owner on 2026-09-28**, without manganese steel — I've put cobalt steel on that rung instead — and
 with eight rungs; platinum goes into fancy armour.
 - **Silver and platinum leave the tools too, not just gold.** All three are soft — about as soft as pure copper,
@@ -1340,12 +1344,12 @@ with eight rungs; platinum goes into fancy armour.
   from older adults — a reason to keep bugs to a good age. The legendary sets sit above both, in the hardest zones
   (D55).
 - **Armour follows the tool metals** — bug leather and padded cloth, then copper up to cobalt steel. **Platinum**
-  goes into fancy armour that also needs steel (the platinum outfit you picked), sells well as money, and turns up in
+  goes into fancy armour that also needs steel (now Fancy Armor, D75), sells well as money, and turns up in
   recipes where it fits (2026-09-28).
 - **Silver, gold and platinum become the metals of money and machines**: silver for solar panels, contacts and
-  mirrors; gold for connectors and for gilding (the gilded-steel outfit); platinum as the catalyst that turns spare wind
-  and solar power into stored hydrogen; all three for jewelry. Since the electronics are bought (D1, D26), players
-  bring these metals to whoever builds their power parts. Their ores stay in the world as deep rewards.
+  mirrors; gold for connectors and Fancy Armor's trim (gilded steel was cut, D75); platinum as the catalyst that turns
+  spare wind and solar power into stored hydrogen; all three for jewelry. Since the electronics are bought (D1, D26),
+  players bring these metals to whoever builds their power parts. Their ores stay in the world as deep rewards.
 
 **Lenses:** Premise — 2126 science: every rung is a real material with a real reason to beat the one before; no
 fantasy metals (P2). Readability — household names (bronze, iron, steel), with cobalt and tungsten from Terraria.

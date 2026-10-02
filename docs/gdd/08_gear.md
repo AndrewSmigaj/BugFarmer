@@ -14,7 +14,11 @@ idea lenses, then go to the review page.
 - **How an outfit is made** — three designs in one image, you pick one, then a turnaround, one walk per direction and
   the five hands, and you approve the finished animations (the `player-sprites` skill). Every design marked as chosen
   has been picked; the rest are worked through together (2026-09-26). Made: bronze, fire-ant,
-  black-ant, copper. Picked, not yet made: iron, platinum, steel, leather, beetle-shell, gilded-steel, fancy.
+  black-ant, copper. Picked, not yet made: iron, platinum, steel, leather, beetle-shell, gilded-steel, fancy. Since
+  2026-10-01 (D75) gilded steel is cut and Fancy Armor uses the fancy design, so the platinum and gilded-steel designs
+  have no armour for now.
+- **The start** — a new character wears the Farmer's Outfit, and Bug-Leather Armor is an early craft (2026-10-01,
+  D75). The metal sets are called armour: Copper, Bronze, Iron, Steel and Cobalt-Steel Armor.
 
 ## To settle (raw list — not yet checked against the idea lenses)
 - **How big the player is on screen.** The finished outfits are 64–91 pixels tall (bronze to black-ant); the game
@@ -22,7 +26,6 @@ idea lenses, then go to the review page.
 - **How outfits are worn.** The server checks 8 armour slots piece by piece and no item exists yet for the three
   finished outfits: one outfit slot, or an outfit plus some separate slots (accessories)? What drops, what shops
   sell, and how recipes and prices change (backlog: *Armour economy overhaul*).
-- **A starter outfit** — what a new character wears.
 - **Character choices** — today you pick a class, hair and skin (5 × 5 × 3, `CharacterSelectPanel.cs:28-30`). With
   whole outfits, which of these stay, and how?
 - **Tool motions still missing** — the game animates 9 tools; the sword has approved motions in all three facings;
