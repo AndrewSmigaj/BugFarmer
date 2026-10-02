@@ -723,6 +723,14 @@ mirrors predation; swarm-of-1 dropped — player HP is SIM-INERT so it needs no 
   one threat-table in a deliberate pass.
 
 ## Content — TRUE BUG MAPPINGS (make every bug a real bug) — owner direction 2026-07-11
+> **Corrected 2026-10-02:** `bugs.json` is not a roster. 67 of its 99 entries are a picture and an entry that nothing
+> spawns (50 from an overnight art pass on 2026-06-06, working from a brainstorm catalogue). Which bugs exist is being
+> decided bug by bug on the items page (the Bugs list, `docs/gdd/bug_table.jsonl`); this naming pass covers only the
+> bugs that survive it.
+- **Bug list follow-ups (2026-10-02, waiting on the owner's marks):** fix the item rows that lean on a cut bug, in one
+  pass; tidy the picture-only extras out of `bugs.json`, `Resources/Bugs/` and the art catalogue
+  (`tools/art/catalog/bugs.json`) only with the owner's yes (nothing spawns them); keep "later" bugs out of new rows
+  until their zone is designed.
 Every creature in the game should be an **actual real bug species** — real name, real look, and behavior that
 matches the real animal (so a player's real-world knowledge never jars, e.g. "hornets are diurnal, why is this one
 nocturnal?"). The hint was already there: `nakama/data/bugs.json` is a roster of REAL species (honeybee, bumblebee,

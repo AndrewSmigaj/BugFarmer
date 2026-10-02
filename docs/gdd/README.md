@@ -38,6 +38,17 @@ at}`); read them back with the `ArtifactData` tool, one kind at a time. The firs
 the owner's first batch of marks when an older copy overwrote a newer one; it was replaced on 2026-09-29 and its
 storage is not used.
 
+**The bug list (2026-10-02).** The owner asked to review every bug after suspecting that brainstorm passes had put
+bugs into the game as if they were real (they had: of the 99 entries in the game's bug file, `nakama/data/bugs.json`,
+the game runs only 15; 67 are a picture and an entry that nothing spawns, 50 of them from an overnight art pass on
+2026-06-06). `bug_table.jsonl` gives every bug — the 15 the game runs, the 84 the old zone plans name, the
+picture-only extras, the bugs the owner has asked for and the bugs the item rows name — one row with where it comes
+from, where it's named, and a call of keep, cut or **later** (decide when its zone is designed). It is the first kind
+on the same page, marked the same way; marks are stored at `marks/bugs/items/<bug id>`, and bug ids, like item ids,
+never change. Nothing is removed until the owner has marked it; then the rows that lean on a cut bug are fixed in one
+pass, and the picture-only extras are tidied only with the owner's yes. A brainstorm pass makes a tentative list,
+never game data, rows or art.
+
 **Where it stands (2026-10-02).**
 - **Settled:** batch 1, the tool families and the pickaxes, axes and shovels, 34 rows (D69). Rows that are settled
   carry `"decided"` in the table and show a Decided label on the page.
