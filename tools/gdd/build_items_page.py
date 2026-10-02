@@ -23,12 +23,14 @@ from datetime import date
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC = os.path.join(ROOT, "docs", "gdd", "item_table.jsonl")
 BUGS = os.path.join(ROOT, "docs", "gdd", "bug_table.jsonl")
+LINEUPS = os.path.join(ROOT, "docs", "gdd", "bug_lineups.jsonl")   # my bug lineups for the owner's marks (D79)
 TEMPLATE = os.path.join(ROOT, "tools", "gdd", "items_page.template.html")
 OUT = os.path.join(ROOT, "tools", "gdd", "_build", "item_pass.html")
 
 # Display order and plain labels for the kinds of item.
 GROUPS = [
     ("bugs", "Bugs"),
+    ("bug_ideas", "Bug lineups (my suggestions)"),
     ("tools", "Tools"), ("weapons", "Weapons"), ("armour", "Armour and outfits"), ("accessories", "Accessories"),
     ("potions", "Potions and remedies"), ("meals", "Meals and food"), ("seeds_crops", "Seeds and crops"),
     ("plants", "Plants"), ("materials", "Materials"), ("ores", "Ores and gems"), ("stations", "Stations"),
@@ -45,7 +47,7 @@ BUG_WHERE = {"game", "asked", "art", "artplan", "plan", "rows"}   # in the game 
 
 def load():
     items, seen, problems = [], set(), []
-    for src in (SRC, BUGS):
+    for src in (SRC, BUGS, LINEUPS):
         if os.path.exists(src):
             read(src, items, seen, problems)
     return items, problems
@@ -54,6 +56,7 @@ def load():
 def read(src, items, seen, problems):
     name = os.path.basename(src)
     is_bugs = src == BUGS
+    is_lineups = src == LINEUPS
     with open(src, encoding="utf-8") as f:
         for n, line in enumerate(f, 1):
             line = line.strip()
@@ -70,10 +73,11 @@ def read(src, items, seen, problems):
                 problems.append(f"{name} line {n}: duplicate id {key!r}")
                 continue
             seen.add(key)
-            if is_bugs and it.get("group") != "bugs":
-                problems.append(f"{name} line {n}: group {it.get('group')!r} (the bug list is all 'bugs')")
-            if not is_bugs and it.get("group") == "bugs":
-                problems.append(f"{name} line {n}: an item row in the 'bugs' group")
+            want = "bugs" if is_bugs else "bug_ideas" if is_lineups else None
+            if want and it.get("group") != want:
+                problems.append(f"{name} line {n}: group {it.get('group')!r} (this file is all {want!r})")
+            if not want and it.get("group") in ("bugs", "bug_ideas"):
+                problems.append(f"{name} line {n}: an item row in the {it.get('group')!r} group")
             if it.get("verdict") not in (BUG_VERDICTS if is_bugs else ITEM_VERDICTS):
                 problems.append(f"{name} line {n}: verdict {it.get('verdict')!r}")
             if it.get("where") not in (BUG_WHERE if is_bugs else WHERE):

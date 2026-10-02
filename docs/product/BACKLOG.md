@@ -732,7 +732,9 @@ mirrors predation; swarm-of-1 dropped — player HP is SIM-INERT so it needs no 
 > decided bug by bug on the items page (the Bugs list, `docs/gdd/bug_table.jsonl`); this naming pass covers only the
 > bugs that survive it.
 - **Bug list follow-ups (2026-10-02, waiting on the owner's marks):** fix the item rows that lean on a cut bug, in one
-  pass; tidy the picture-only extras out of `bugs.json`, `Resources/Bugs/` and the art catalogue
+  pass — among them the wood grub and grub fat (carrion-beetle grubs could supply the fat), cochineal and its crimson
+  dye, honeydew (aphids are cut), and silk (the lineups suggest farmed silk moths instead of luna and emperor moths);
+  fold the marked bug lineups (`docs/gdd/bug_lineups.jsonl`) into the bug list; tidy the picture-only extras out of `bugs.json`, `Resources/Bugs/` and the art catalogue
   (`tools/art/catalog/bugs.json`) only with the owner's yes (nothing spawns them); keep "later" bugs out of new rows
   until their zone is designed.
 Every creature in the game should be an **actual real bug species** — real name, real look, and behavior that
