@@ -142,7 +142,9 @@ tr.r:hover td { background: var(--surface); }
     <b>Decided</b> are settled with your notes (their text is the final version); your marks on them are kept.</p>
   <p class="lede"><b>Bugs</b> (first on the page) works the same way: every bug in the game, in the old zone plans, in
     the game's files with only a picture, or named in my item rows — with my call: <b>keep</b>, <b>cut</b>, or
-    <b>later</b> (decide when its zone is designed). Nothing is removed until you've marked it.</p>
+    <b>later</b> (decide when its zone is designed). Nothing is removed until you've marked it.
+    <b>Bug lineups</b> are my own suggestions, family by family, starting from the bugs you kept: each kind behaves
+    differently, and danger follows each bug's real reputation.</p>
   <div class="bar">
     <div class="tallies" id="tallies"></div>
     <div class="controls" role="toolbar" aria-label="Filters">
@@ -286,9 +288,11 @@ const DATA = /*__DATA__*/null;
       if (!rows.length) continue;
       html += `<details class="group" data-g="${g}"${open[g] === false ? "" : " open"}><summary><h2>${esc(label)}</h2>
         <span class="gcount" data-gc="${g}"></span></summary>
-        <div class="tablewrap"><table class="items${g === "bugs" ? " bugs" : ""}">
+        <div class="tablewrap"><table class="items${g === "bugs" || g === "bug_ideas" ? " bugs" : ""}">
         <colgroup><col class="c-item"><col class="c-where"><col class="c-call"><col class="c-what"><col class="c-why"><col class="c-mark"></colgroup>
-        <thead><tr>${(g === "bugs" ? ["Bug", "From", "Call", "What it is, and where it’s named", "Why"] : ["Item", "Where", "Call", "What changes", "Why"])
+        <thead><tr>${(g === "bugs" ? ["Bug", "From", "Call", "What it is, and where it’s named", "Why"]
+          : g === "bug_ideas" ? ["Bug", "From", "Call", "What it is, where it lives, how it plays", "Why"]
+          : ["Item", "Where", "Call", "What changes", "Why"])
           .map(h => `<th scope="col">${h}</th>`).join("")}<th scope="col">Your mark</th></tr></thead>
         <tbody>${rows.map(row).join("")}</tbody></table></div></details>`;
     }
