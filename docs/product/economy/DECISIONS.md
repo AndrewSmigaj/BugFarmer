@@ -1049,3 +1049,30 @@ The owner described the cooking stations and asked for help designing the rest, 
 - **One review at the end.** Open review items are held until the whole set is ready, then reviewed together.
 - **Paused the same day** for a check of the bugs: the owner asked to review the bug list first, since brainstorm
   passes make tentative lists, not additions to the game.
+
+### D79 — The bug list marked: what stays, what goes, and fresh suggestions (2026-10-02)
+The owner went through all 116 bugs on the items page and asked for the assistant's own suggestions in place of the
+old lists, which earlier models wrote without taste, starting from the bugs kept.
+- **Kept:** the fifteen in the game; black and fire ants, each with workers, warriors and a queen (fire ants far more
+  dangerous); the locust; the mosquito; the glowworm, the cave beetle and the small cave spider; the cave fly; the
+  killer bee; the black widow; the scorpion; the rhinoceros beetle. Saved from my cuts: the horse fly, woodland
+  butterflies such as the purple emperor, the medium and deadly dragonflies, and more kinds of centipede.
+- **Cut:** the aphid and the ladybird (the owner doubts aphids add play without muddling it), cockroaches, the
+  gall wasp, leeches and snails, the extra ant species, the invented creatures, and the picture-only extras I proposed
+  cutting. The thirty old zone-plan picks the owner disagreed with are off the list; any can return only as a fresh,
+  reasoned suggestion.
+- **Still candidates, for their zones:** the bumblebee, the carpenter bee, the paper wasp, the yellowjacket, a second
+  hornet, the luna, emperor and hawk moths, the monarch, the water strider (its name), the daddy longlegs (its
+  name, not "harvestman"), the cricket, the crop beetle, the mantis, the stag beetle, the wolf and jumping spiders,
+  the tarantula, the giant huntsman, the crayfish and the crab.
+- **How many of each:** two kinds of dragonfly at least, a beginner one found first west of the village and others
+  in later areas; three millipedes, one more dangerous, perhaps poisonous, and fast, dangerous ones among them; three
+  centipedes, chosen for real danger; at least two scorpions, some in the Wasp Thicket; two wasps and two hornets (the
+  giant hornet and the hornet are separate species with hives). The owner asks whether wasps have soldiers at all.
+- **What a zone holds:** zone bugs should be recognizable, or variants of known ones, with now and then a unique bug
+  that has no variants; nothing that would puzzle players.
+- **Ecosystems, not events:** centipedes near the ants live there as part of the ecosystem; there are no random raid
+  events, and "raid centipede" isn't a species. Mosquitoes need something in the marsh to feed on; they are a
+  later-stage danger that lunges and swarms, held back by sand laid on the marsh and other means. The desert zone is
+  pictured as a drier, rocky place rather than sand.
+- **A new mechanic:** the non-lethal bug stick can steer ants off their trail and herd them by tapping them.
