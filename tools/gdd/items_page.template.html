@@ -109,6 +109,7 @@ tr.r:hover td { background: var(--surface); }
 .btns button[aria-pressed="true"].yes { background: var(--keep); border-color: var(--keep); color: var(--on-accent); }
 .btns button[aria-pressed="true"].no { background: var(--cut); border-color: var(--cut); color: var(--on-accent); }
 .state { font-size: 12px; color: var(--ink-3); }
+.was { display: block; width: 100%; font-size: 12px; color: var(--ink-2); }
 .state.wait { color: var(--change); } .state.bad { color: var(--cut); font-weight: 700; }
 .note { display: block; width: 100%; min-height: 32px; max-height: 260px; margin: 7px 0 0; font: 13px/1.45 var(--font-body);
   color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 5px 7px; resize: vertical; }
@@ -139,7 +140,9 @@ tr.r:hover td { background: var(--surface); }
   <p class="lede">Every item in the game and in the old designs, with my recommendation — keep it, change it, cut it, or
     add something missing — and one line on why. Mark each one you agree or disagree with, and add a note where you'd
     do it differently. Each row says <b>Stored</b> once the page's storage has kept your mark. Rows labelled
-    <b>Decided</b> are settled with your notes (their text is the final version); your marks on them are kept.</p>
+    <b>Decided</b> are settled with your notes (their text is the final version). A mark you gave before a row was
+    settled is already applied: it shows as <b>applied</b>, with the buttons left clear, so there is nothing to do on
+    those rows. Mark one again only to change it.</p>
   <p class="lede"><b>Bugs</b> (first on the page) works the same way: every bug in the game, in the old zone plans, in
     the game's files with only a picture, or named in my item rows — with my call: <b>keep</b>, <b>cut</b>, or
     <b>later</b> (decide when its zone is designed). All of them are settled now: your marks (D79) and the bug lineups
@@ -188,6 +191,12 @@ const DATA = /*__DATA__*/null;
   const K = "bf-items-v2";                          // browser keys; stable across rebuilds
   const str = v => (typeof v === "string" ? v : "");
   const filled = e => !!(e && (e.mark || (e.note && e.note.trim())));
+  // A mark records which settled version of its row it answers (`on` = the row's decided date, "" if unsettled).
+  // On a Decided row, a mark given before that decision is already applied: shown as applied, never as a live vote.
+  const appliedOn = (it, e) => !!(it && it.decided && e && e.mark && str(e.on) !== it.decided);
+  const live = id => (appliedOn(byId.get(id), local[id]) ? "" : (local[id] || {}).mark || "");
+  const wasText = id => appliedOn(byId.get(id), local[id])
+    ? `Your earlier ${local[id].mark === "agree" ? "Agree" : "Disagree"} is applied` : "";
   const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 
   // ---------------------------------------------------------------- state
@@ -196,7 +205,7 @@ const DATA = /*__DATA__*/null;
   // storage can never replace a newer mark (the fault that lost marks in the first version of this page).
   const local = {};
   for (const [id, e] of Object.entries(store.get(K + "-local", {})))
-    if (byId.has(id) && e && typeof e.at === "number") local[id] = { mark: str(e.mark), note: str(e.note), at: e.at, rec: !!e.rec };
+    if (byId.has(id) && e && typeof e.at === "number") local[id] = { mark: str(e.mark), note: str(e.note), at: e.at, rec: !!e.rec, on: str(e.on) };
   const stored = {};                                // id -> the newest `at` the storage is known to hold
   let clock = 0;
   for (const id in local) clock = Math.max(clock, local[id].at);
@@ -265,7 +274,7 @@ const DATA = /*__DATA__*/null;
     return true;
   }
   function row(it) {
-    const m = local[it.id] || {};
+    const m = local[it.id] || {}, lm = live(it.id);
     return `<tr class="r" data-id="${esc(it.id)}">
       <td class="c-item"><span class="name">${esc(it.name)}</span><span class="id">${esc(it.id)}</span></td>
       <td class="c-where">${esc(WHERE[it.where] || it.where)}</td>
@@ -274,9 +283,9 @@ const DATA = /*__DATA__*/null;
       <td class="c-what${it.change ? "" : " blank"}">${esc(it.change || "")}</td>
       <td class="c-why">${esc(it.reason)}</td>
       <td class="c-mark"><div class="btns">
-        <button type="button" class="yes" data-m="agree" aria-pressed="${m.mark === "agree"}">Agree</button>
-        <button type="button" class="no" data-m="disagree" aria-pressed="${m.mark === "disagree"}">Disagree</button>
-        <span class="state" aria-live="polite"></span></div>
+        <button type="button" class="yes" data-m="agree" aria-pressed="${lm === "agree"}">Agree</button>
+        <button type="button" class="no" data-m="disagree" aria-pressed="${lm === "disagree"}">Disagree</button>
+        <span class="state" aria-live="polite"></span><span class="was">${esc(wasText(it.id))}</span></div>
         <textarea class="note" rows="1" placeholder="Note" aria-label="Your note on ${esc(it.name)}">${esc(m.note || "")}</textarea>
       </td></tr>`;
   }
@@ -317,8 +326,9 @@ const DATA = /*__DATA__*/null;
   }
   function paintRow(id) {
     const tr = rowEl(id); if (!tr) return;
-    const m = local[id] || {};
-    tr.querySelectorAll(".btns button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.m === m.mark)));
+    const m = local[id] || {}, lm = live(id);
+    tr.querySelectorAll(".btns button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.m === lm)));
+    const w = tr.querySelector(".was"); if (w) w.textContent = wasText(id);
     const t = tr.querySelector(".note");
     if (t && document.activeElement !== t && t.value !== (m.note || "")) { t.value = m.note || ""; fit(t); }
     paintState(tr);
@@ -335,8 +345,7 @@ const DATA = /*__DATA__*/null;
   $("#list").addEventListener("click", e => {
     const b = e.target.closest(".btns button"); if (!b) return;
     const id = b.closest("tr.r").dataset.id;
-    const cur = local[id] || { mark: "" };
-    edit(id, { mark: cur.mark === b.dataset.m ? "" : b.dataset.m }, 200);
+    edit(id, { mark: live(id) === b.dataset.m ? "" : b.dataset.m }, 200);
     paintRow(id);
   });
   $("#list").addEventListener("input", e => {
@@ -351,7 +360,7 @@ const DATA = /*__DATA__*/null;
   });
   function edit(id, patch, delay) {
     const cur = local[id] || { mark: "", note: "" };
-    local[id] = { mark: cur.mark, note: cur.note, ...patch, at: stamp(), rec: false };
+    local[id] = { mark: live(id), note: cur.note, ...patch, on: byId.get(id).decided || "", at: stamp(), rec: false };
     persist(); schedule(id, delay);
     const tr = rowEl(id); if (tr) paintState(tr);
     tallies(); groupCounts(byId.get(id).group); status();
@@ -385,7 +394,7 @@ const DATA = /*__DATA__*/null;
   async function write(id) {
     inflight[id] = true; active++;
     const e = local[id];
-    const body = { id, group: byId.get(id).group, mark: e.mark, note: e.note, at: e.at, page: DATA.version };
+    const body = { id, group: byId.get(id).group, mark: e.mark, note: e.note, at: e.at, on: e.on || "", page: DATA.version };
     if (e.rec) body.recovered = true;
     try {
       await ref(id).set(body);
@@ -418,7 +427,7 @@ const DATA = /*__DATA__*/null;
       const l = local[id];
       if (l && l.at >= b.at) continue;              // this browser has the same version or a newer one: keep it
       if (typing(id)) continue;                     // mid-note: the next keystroke is newer anyway
-      local[id] = { mark: str(b.mark), note: str(b.note), at: b.at, rec: false };
+      local[id] = { mark: str(b.mark), note: str(b.note), at: b.at, rec: false, on: str(b.on) };
       touched.push(id);
     }
     if (touched.length) { persist(); touched.forEach(paintRow); tallies(); groupCounts(g); }
@@ -471,7 +480,7 @@ const DATA = /*__DATA__*/null;
         const b = await readStored(id);
         if (b === undefined) { complete = false; continue; }
         if (b || local[id]) continue;               // stored meanwhile, or marked here meanwhile: keep that
-        local[id] = { mark: str(e.mark), note: str(e.note), at: stamp(), rec: true };
+        local[id] = { mark: str(e.mark), note: str(e.note), at: stamp(), rec: true, on: "" };
         recovered++; persist(); paintRow(id); enqueue(id);
       }
       if (complete) store.set(K + "-imported", [...store.get(K + "-imported", []), g]);
@@ -485,7 +494,7 @@ const DATA = /*__DATA__*/null;
     const b = await readStored(id);
     if (b === undefined) { setTimeout(() => sendLeftover(id), 15000); return; }   // unreadable: never send blind
     if (b && local[id] && b.at >= local[id].at) {
-      if (!typing(id)) { local[id] = { mark: str(b.mark), note: str(b.note), at: b.at, rec: false }; persist(); paintRow(id); }
+      if (!typing(id)) { local[id] = { mark: str(b.mark), note: str(b.note), at: b.at, rec: false, on: str(b.on) }; persist(); paintRow(id); }
       return;
     }
     enqueue(id);
