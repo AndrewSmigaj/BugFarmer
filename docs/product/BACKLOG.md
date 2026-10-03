@@ -745,6 +745,19 @@ matches the real animal (so a player's real-world knowledge never jars, e.g. "ho
 nocturnal?"). The hint was already there: `nakama/data/bugs.json` is a roster of REAL species (honeybee, bumblebee,
 luna/atlas moth, stag/rhino beetle, wolf/jumping spider, scorpions, cicadas…). Combat generated GENERIC invented
 names (`wasp_soldier`, `hornet_giant`, `caterpillar_spiny/thornback`) that break this.
+- **Behaviour and ecology for every decided bug (2026-10-03):** the bugs are decided, but most have no behaviour
+  design or ecology tuning yet, and finishing each bug's ecology means it gets a real food source and a real place to
+  breed in its zone. In the game today (species.json, checked 2026-10-03), the fly, the meadow butterfly, the
+  millipede, the carrion beetle, the honeybee, the black ants and the nest-based wasps and hornet have both. Gaps:
+  - the three centipedes eat only flies and have no breeding place (they multiply from food alone); the tiger
+    centipede should eat ants (the lineups);
+  - the dragonfly never breeds (breed amount 0) and eats only the paper wasp; real ones lay eggs in water;
+  - the firefly has no food and breeds on a timer;
+  - the hornet's nest has no picture and sits in no zone; the yellowjacket still shares the paper wasp's nest;
+  - the other 43 decided bugs aren't in the game yet.
+  Plan: a sheet per bug (what it eats, what eats it, where it breeds, its hours and its behaviour), from the facts in
+  `docs/product/investigations/research-2026-10-03/`, into GDD §03 and §04 for the owner's review; then each zone's
+  bugs are built and tuned with the zone (ROADMAP phases 2 and 3), using the `ecology-tuning` skill.
 - **The mapping now exists (2026-10-02, D80, D81):** `docs/gdd/bug_lineups.jsonl` names each kept bug's real species
   (all but the meadow butterfly's, still open), e.g. `wasp_common` → the European paper wasp, `wasp_soldier` → the
   yellowjacket (Vespula vulgaris), `hornet_giant` → the European hornet (Vespa crabro, which really flies at night),
