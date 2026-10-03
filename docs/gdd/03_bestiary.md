@@ -4,8 +4,8 @@
 ## The experience
 Every bug is a real animal doing what it really does, made giant. You learn them the way a naturalist does: where
 each lives, when it's out, what it eats, how it breeds, how it warns you. The fly roosts high at night and can't be
-swatted; the paper wasp raises its wings before it stings; the cave spider drops on a thread from a white egg sac on
-the roof; the locusts turn yellow and black when they crowd; five ants follow your bug stick off their trail while the
+swatted; the paper wasp raises its wings before it stings; the cave spider drops on a thread, its shadow on the floor
+first; the locusts turn yellow and black when they crowd; five ants follow your bug stick off their trail while the
 rest carry on. Each family plays differently, danger grows outward, and every danger warns you first.
 
 ## Decided
@@ -20,7 +20,7 @@ rest carry on. Each family plays differently, danger grows outward, and every da
   cricket is a maybe.
 - **Tiers belong to a species, not a rule**: one form, two or at most three (2026-09-27).
 - **Two ant species**, black ants and fire ants, each with workers, warriors and a queen; fire ants far more dangerous
-  (August 2026; 2026-10-02, D79).
+  (August 2026; D39; 2026-10-02, D79).
 - **The bug stick** (2026-10-02, D79): a non-lethal stick that can steer ants off their trail and herd them by tapping.
 - **Mini-bosses and bosses**: set off by conditions or placed; a boss is the biggest of a few species, for real reasons
   (accepted, overview P13, 2026-09-28).
@@ -28,9 +28,17 @@ rest carry on. Each family plays differently, danger grows outward, and every da
 - **What counts as a bug** (2026-09-28): insects and the other arthropods — spiders, scorpions, centipedes, millipedes,
   crayfish and crabs; fish are separate; no worms or leeches.
 - **Bugs are livestock**: raised and farmed like animals on a farm, the heart of the game (2026-09-28).
+- **Butterflies grow up out in the world**: the nursery holds the eggs and young caterpillars, which then go out,
+  grow and pupate (D38).
+- **One clock for the whole world**, underground included (D57).
+- **Only powered lights draw night-flying bugs**, as part of catching in the powered age (accepted catching plan,
+  overview P3, D63).
+- **Blood-feeders feed on people and on big bugs such as caterpillars** (2026-09-28, D66).
+- **The view is from above, so caves show no ceilings** (2026-09-26).
 
 ## Current design
-The roster by family (58 bugs; details per bug in P9 onward):
+The roster by family (58 bugs; details per bug in P9 onward; each sheet's header names the bug's home zone first,
+the zone §04 counts it in, then the other zones it lives in):
 - **Flies:** house fly, horse fly, cave fly, ant-decapitating fly.
 - **Wasps and hornets:** paper wasp, yellowjacket, European hornet, northern giant hornet, tarantula hawk.
 - **Bees:** honeybee, killer bee, bumblebee, Asian honey bee (proposed).
@@ -50,22 +58,25 @@ The roster by family (58 bugs; details per bug in P9 onward):
 Where each lives is GDD §04 (one proposal per zone).
 
 ## As built
-- **Fifteen bugs run in the prototype**, all unfinished: the fly, the meadow butterfly, the paper wasp (as "the wasp"),
+- **Fourteen of the roster's bugs run in the prototype** (fifteen entries: the black ants' workers and scouts are
+  two), all unfinished: the fly, the meadow butterfly, the paper wasp (as "the wasp"),
   the yellowjacket (as "the wasp soldier"), the European hornet (as "the giant hornet"), the honeybee, black ant workers
   and scouts, the garden, tiger and giant centipedes, the millipede, the carrion beetle, the dragonfly and the firefly.
-- **The engine** (`architecture_bug_behaviour.md` §1): groups of bugs simulated identically on every player's computer;
-  five ways of moving; flee, curious or attack reactions; a shared combat foundation with telegraphed attacks; four ways
-  of feeding and breeding; ant trails that work per group, not per ant.
+- **The engine** (`architecture_bug_behaviour.md` §1): every player's computer moves each bug identically, with five
+  ways of moving, its reactions to you (flee, curious, attack) and a hunter's choice of victim; the server still runs
+  feeding, breeding, nests, eggs and grubs, the ants' memory of food, and night (`individual_ecology_redesign.md`). A
+  shared combat foundation gives telegraphed attacks; ant trails work per group, not per ant.
 - **Gaps** (2026-10-03): the centipedes have no breeding place; the dragonfly never breeds and hunts the wrong prey; the
   firefly has no food; the hornet's nest has no picture or zone; the yellowjacket shares the paper wasp's nest.
-- The other forty-three bugs exist only as designs (and some as pictures).
+- The other forty-four (two of them still open: the Asian honey bee and the house cricket) exist only as designs, and
+  some as pictures.
 
 ## How it will work
-In short (the full plan is `docs/product/architecture/architecture_bug_behaviour.md`, and P2 below): about a dozen
+In short (the full plan is `docs/product/architecture/architecture_bug_behaviour.md`, and P2 below): about fifteen
 shared building blocks are built once — leaving a group, trails, the bug stick, routines, nests, life stages, water
-life, ambush, webs, defences, lights, parasites, locust crowding — and each bug is then its numbers, foods and homes
-plus one signature mechanic. The home zones' bugs come first, one zone at a time; each bug is watched in its own Bug Lab
-pen, checked so every player's game stays identical, and signed off by you before it goes into its zone.
+life, ambush, webs, defences, lights, parasites, locust crowding, new ways of moving — and each bug is then its numbers,
+foods and homes plus one signature mechanic. The home zones' bugs come first, one zone at a time; each bug is watched in
+its own Bug Lab pen, checked so every player's game stays identical, and signed off by you before it goes into its zone.
 
 ## Proposals
 
@@ -75,8 +86,9 @@ pen, checked so every player's game stays identical, and signed off by you befor
 - **A want**: what it eats and where it breeds, both real and both present in its zone (§04 P1).
 - **A routine**: when it's out (day, night, dusk), where it goes, and what rain or drought does to it. There are no
   seasons (decided), so the routine is daily.
-- **A signature**: one thing it does that no other bug does, taken from the real animal — the ant's trail, the
-  bombardier's boiling spray, the cave spider dropping on a single thread, the firefly's flash code. Bugs of the
+- **A signature**: the one thing only this bug asks of the player — something you do with it, for it or against
+  it — built on what the real animal does: leading ants off their trail, emptying the bombardier's spray before you
+  pick it up, stepping out of the cave spider's shadow, answering the firefly's flash. Bugs of the
   same family differ in how they play, not just in their numbers (the bestiary research, 2026-10-02).
 - Each bug's sheet below (P9 onward) gives these, plus how it treats you, what it's for on the farm, and what it
   needs built.
@@ -87,11 +99,11 @@ bug, and when. **Cost and risk:** none here; the cost is in each bug.
 
 ### P2. How behaviour gets built: shared building blocks, zone by zone, signed off bug by bug
 *The plan for building it (detail: `docs/product/architecture/architecture_bug_behaviour.md`).*
-- **About a dozen shared building blocks** are built once and reused: leaving a group and acting alone; trails;
-  the bug stick; day-and-night routines; nests and colonies; eggs, grubs and cocoons you can see; life in water;
-  ambush and lures; webs; defences (sprays, clouds, curling up); lights and sounds; parasites and burial; locust
-  crowding; and the player's tools on bugs. A new bug is then mostly its numbers, foods and homes plus its
-  signature.
+- **About fifteen shared building blocks** are built once and reused: leaving a group and acting alone; trails; the bug
+  stick; day-and-night routines; nests and colonies; eggs, grubs and cocoons you can see; life in water; ambush and
+  lures; webs; defences (sprays, clouds, curling up); lights and sounds; parasites and burial; locust crowding; the
+  player's tools on bugs; and new ways of moving (running in bursts, skating on water, leaping). A new bug is then
+  mostly its numbers, foods and homes plus its signature.
 - **Order:** the blocks the home zones need first, then the five home zones one at a time (Village, Bee Meadow,
   Ant Tunnels, Mining Camp, Ant Colony) — every bug already there redone to its sheet, the newcomers added, then
   the zone's food web tuned. The later rings follow as each zone is built.
@@ -99,14 +111,16 @@ bug, and when. **Cost and risk:** none here; the cost is in each bug.
   of paid images asked for first) → a pen in the Bug Lab test zone where you can watch it feed, breed, hunt and
   react to you, with a short recording → the checks that every player's game stays identical → your sign-off →
   placed and tuned in its zone.
+- **Real time becomes game time.** A game day is 14 minutes, so the real durations in the sheets below (a
+  caterpillar's year, a grub's years) are the animal's story; each is shrunk for play in the Bug Lab.
 - **A bug is done** when it does what its sheet says, passes those checks with its behaviour actually happening,
   has its final art, carcass and examine facts, holds its numbers in its zone without the safety net doing the
   work, and you have signed it off. Until then it isn't finished — none is today.
 
 **Lenses:** Fit — behaviour before numbers, as you accepted (overview P10); every bug runs on the players'
 computers, identically, the way the game already works. Picture the moment — you watch each bug in its pen before
-it reaches a zone. **Cost and risk:** large: about fifty-eight bugs and a dozen blocks. The individual behaviour
-on players' computers is the biggest piece, so it is built one block at a time, ants first.
+it reaches a zone. **Cost and risk:** large: about fifty-eight bugs and fifteen blocks. The individual behaviour
+on players' computers is the biggest piece, built step by step behind its checks, ants first; its pace is Q1.
 
 ### P3. Groups where it doesn't matter, individuals where it does
 - Flies, gnats, mosquitoes and bees out foraging can move as loose groups, which keeps hundreds of them cheap.
@@ -116,32 +130,50 @@ on players' computers is the biggest piece, so it is built one block at a time, 
 
 **Lenses:** Picture the moment — your example: five ants peel away and follow you while the column carries on.
 Real biology — real colonies are individuals following shared signals. **Cost and risk:** the per-bug decision
-logic runs on every player's computer and must stay identical; built and checked one block at a time.
+logic runs on every player's computer and must stay identical; each step is built and checked behind its gates
+(the pace is Q1).
 
 ### P4. The bug stick: tap, steer and lead
-*Your mechanic (D79), designed.*
-- **A tap** on a walking bug turns it from what it was doing to follow the stick for a short while. One tap takes
-  one bug, or a few that are touching; a better stick takes more and holds them longer.
-- **Ants** leave their trail and follow you; the rest of the column keeps going (P22, the black ants). Lead them
-  to food and they start a new trail home that others follow; lead them nowhere and they drift back.
-- **Other walkers** — beetles, crickets, millipedes, caterpillars — can be steered into a pen or away from your
-  crops the same way. Fliers can't be tapped; stinging bugs don't follow, they defend.
+*Your mechanic (D79), designed (the research behind it: `bug-mechanics-in-games.md`, Part 4).*
+- **Two taps.** The first tap stops the bugs under the stick: they rear up and face you, and go back to what they
+  were doing if you leave them. A second tap while they're stopped makes them follow you. A stray swing never
+  wrecks a trail; Pikmin 3 Deluxe does the same, where a short whistle only stops a busy worker.
+- **How many:** a tap catches the few bugs nearest the stick, up to a number the stick sets (about five to start).
+  If the tool families give the stick better versions, a better one takes more and holds them longer.
+- **Following:** they walk in a loose line just behind you and step aside if you turn back into them, rather than
+  piling onto your feet.
+- **Letting go:** a follower drops out if you get too far ahead for a few seconds, when it reaches food, when you
+  let it go, or after a while; for a short time after, it can't be taken again. A dropped ant looks lost — slower,
+  wiggling, turning back — until it finds a trail or walks home (real ants do exactly this).
+- **Ants** leave their trail and follow you; the rest of the column keeps going (P22). Lead them to food and they
+  carry some home, marking a new trail, and remember the spot, so the new trail survives while it's faint; if the
+  new food is nearer or richer, more ants switch to it over time.
+- **Other walkers** — beetles, crickets, millipedes, caterpillars — can be steered into a pen or away from your crops
+  the same way. Fliers can't be tapped; stinging bugs, the fire ants among them, defend rather than follow. Some answer
+  a tap their own way: a millipede curls up, and a beetle may play dead for a moment, long enough to pick it up (my
+  proposal).
+- **Your followers stay yours:** another player's tap can't take bugs that are following you; they leave by the
+  usual rules (my call, so no one can steal another player's work).
 - **Non-lethal:** the stick never harms a bug, so it's the gentle farmer's tool; a smoked bug can't be led.
 
-**Lenses:** Fit — your idea, and a sandbox tool: it gives herding, feeding and pest control without walls.
-Picture the moment — leading a line of ants past your bug catcher. **Cost and risk:** a new tool item, the tap
-as a shared event, and the follow behaviour (P3); the item row joins the item table.
+**Lenses:** Fit — your idea, and a sandbox tool: herding, feeding and pest control without walls. Real biology — an ant
+off its trail slows, wiggles and turns back, and an ant trusts a route it remembers over the trail (two studies of the
+black garden ant, 2016 and 2021). Games — the two-step call is Pikmin 3 Deluxe's; leading five or ten ants and releasing
+them is SimAnt's (1991). Picture the moment — leading a line of ants past your bug catcher. **Cost and risk:** a new
+tool item (in the item table as the Bug Stick), the taps as shared events, and the follow behaviour (P3).
 
 ### P5. Eggs, grubs and cocoons you can see and farm
-- Where a bug's young matter to play, they're in the world: caterpillars on milkweed (built), silkworms on the
-  mulberry, stag beetle grubs in dead wood, mantis egg cases on stems, cave spider egg sacs on cave roofs, a wolf
-  spider mother carrying her young, mosquito egg rafts on still water, glowworms on cave ceilings.
+- Where a bug's young matter to play, they're in the world: caterpillars that leave the milkweed nursery and grow out in
+  the world (decided, D38; the nursery itself is built), silkworms on the mulberry, stag beetle grubs in dead wood,
+  mantis egg cases on stems, cave spider egg sacs in hollows of the cave walls, a wolf spider mother carrying her young,
+  mosquito egg rafts on still water, glowworms on cave walls.
 - The player can take, move or protect them: move caterpillars to a better plant, keep cocoons for silk, set
   mantis egg cases out against locusts, scrape mosquito rafts off a pond, leave a wolf spider mother alone.
 - Young elsewhere stay unseen (a fly's maggots in rot), so the world isn't cluttered.
 
 **Lenses:** Real biology — each is the real life cycle (the facts files). Curiosity — the life cycle is something
-to find. **Cost and risk:** one model, already built for the butterfly, carried to new hosts.
+to find. **Cost and risk:** one model, already built for flies, wasps, bees and the butterfly (eggs, grubs and pupae
+you can take and put back), carried to new hosts; D38's caterpillars out in the world first need the work that keeps every player's game identical.
 
 ### P6. Every danger warns first, and every danger has an answer
 - Anything that hurts you shows a tell you can learn and dodge — a wasp's dive, a centipede's freeze, a
@@ -150,19 +182,30 @@ to find. **Cost and risk:** one model, already built for the butterfly, carried 
   antidote, bait to draw it off, or its natural enemy.
 - Stinging nests escalate: hitting a nest or crushing its bugs calls more defenders (real alarm scent); smoke
   stops the call (the July research's finding, and real beekeeping).
+- **Nests answer in steps:** walking close brings out a few guards to look; hitting the nest brings them all, with a
+  few more for each extra player nearby, so a group fight stays fair. A hurt worker runs home and brings the guards
+  back to where it was hurt.
 
 **Lenses:** Fit — preparation beats reflexes, the combat zones' design. Real biology — alarm scent and smoke.
+Games — the stepped nest answer is Don't Starve's spider dens; the messenger is Grounded's ants.
 **Cost and risk:** mostly built; the alarm call is one new shared event.
 
 ### P7. Night, light and lamps
-- Night is its own world: fireflies flash, moths and the hornet come to lamps (real for both), glowworms light
+- Night is its own world: fireflies flash, moths and the hornet come to lights (real for both; in the game, powered
+  lights), glowworms light
   the caves, mosquitoes bite at dusk, wolf spiders' eyes shine back at a torch, scorpions glow under ultraviolet
   light (real), and the wandering spider walks.
-- Lamps are therefore a choice: a lamp by your door draws moths for catching, and hornets with them.
+- **Powered lights draw night fliers; ordinary lamps don't** (the accepted catching plan, D63): torches and firefly
+  lanterns keep the village calm at night, while in the powered age a light trap draws moths for catching, and
+  hornets with them. The ranger outpost's lights are powered, so they draw the hornet (its lineup).
+- Moths circle a light, and now and then one breaks away into the dark, so a light trap gathers moths without
+  holding them forever (my proposal).
 
-**Lenses:** Picture the moment — a lamp ringed with moths, a torch sweeping a meadow and catching green eye-shine.
-Real biology — every one of these is real. **Cost and risk:** lamps as lures are a small attraction grid; the
-glows are display only.
+**Lenses:** Picture the moment — a light trap ringed with moths, a torch sweeping a meadow and catching green
+eye-shine. Real biology — every one of these is real. Games — the circling and the escape come from a well-known
+moth-and-light simulation (a simple computer model of moths and lights). **Cost and risk:** light traps as lures are
+a small map of light on the ground;
+the glows are display only.
 
 ### P8. An option for players afraid of spiders
 - A setting that redraws spiders as rounder, legless critters, in steps, without changing how they behave or
@@ -183,7 +226,8 @@ pictures only; nothing in the simulation changes.
   net works — the slow, the full and the resting are the easy catches.
 - **On the farm:** the starter livestock: raised in pens on compost, sold as meat and kept as maggots for bug feed
   and fish bait (the item rows).
-- **Signature:** the fly you can't swat — it jinks away from a swing a moment before it lands.
+- **Signature:** the roost catch — it dodges every swing by day, so you net it at dusk, when the flies settle high and slow on
+  the night perches.
 - **To build:** the night roost on high perches (routine block); the dodge from a swing; the old manure entry
   taken out of its data.
 
@@ -191,53 +235,58 @@ pictures only; nothing in the simulation changes.
 Picture the moment — an orchard at dusk, flies settling on the branches like dust. **Cost and risk:** small.
 
 ### P10. Horse fly (the black horse fly, Tabanus atratus) — the biter of sunny wet edges
-*Shallow Swamp edges and sunny wet meadows; Deep Swamp · by day only · new.*
+*Shallow Swamp edges; Deep Swamp · by day only · new.*
 - **Lives and moves:** fast, straight-flying, out in the sun; it avoids shade and stops at dusk.
-- **Eats:** the females need blood to make eggs, and in 2126 the only large warm-blooded animals left are people,
-  so they bite players; the males drink nectar.
+- **Eats:** the females need blood to make eggs; in the game they bite people and big bugs such as caterpillars, as
+  decided (D66), so they can breed with no player near; the males drink nectar.
 - **Breeds:** egg masses on reed stems and stones over the water; the young live in the wet mud, hunting other
   water bugs' young (unseen).
-- **With you:** females find you by sight and are drawn to dark, shiny, moving things (real), so a dark outfit and
-  running draw them, and standing in shade breaks the chase. A bite is a small, sharp hit; it can't be smoked away
-  because it has no nest to calm.
+- **With you:** females find you by sight and are drawn to dark, shiny things (real for horse flies; that movement draws
+  them too is the game's), so a dark outfit and running draw them, and standing in shade breaks the chase. A bite is a
+  small, sharp hit; it can't be smoked away because it has no nest to calm.
 - **On the farm:** a pest, and a catch for the Bug Dealer.
 - **Signature:** your outfit's colour matters — light clothes and shade are real protection.
-- **To build:** a target pick that weighs dark, moving players (the outfit's colour is already known to the game);
-  the shade-avoiding routine.
+- **To build:** a target pick that weighs dark, moving players. Both halves are new inputs for the bug simulation:
+  a darkness value for each outfit, sent to every player's computer when someone changes clothes, and a map of
+  shaded cells (trees, roofs); then the shade-avoiding routine.
 
 **Lenses:** Real biology — blood-feeding females, day flight, sight and dark surfaces (facts A; the species-level
 sources are thin, so its numbers lean on the horse-fly family). Picture the moment — noon on the marsh edge, a
 heavy fly circling your dark coat until you step into the shade of a willow. **Cost and risk:** the colour-aware
-target pick is new.
+target pick and the shade map are new.
 
 ### P11. Cave fly (the coffin fly, Conicera tibialis — species to be rechecked) — the runner of the underground
-*Mining Camp, Ant Colony, the caves · no day or night underground · new (your underground fly).*
-- **Lives and moves:** a scuttle fly: it runs across surfaces in fast, jerky bursts rather than flying, so it
-  slips into gaps other bugs can't (real for the family).
+*Ant Colony (its home: the food stores and refuse heaps), Mining Camp, Centipede Cavern, the Underground River ·
+on the world's one clock (D57), though no daylight reaches it · new (your underground fly).*
+- **Lives and moves:** a scuttle fly: it escapes by running across surfaces in fast, jerky bursts rather than
+  flying off, so it slips into gaps other bugs can't (real for the family); it still flies between feeding places,
+  and the ones on the wing end in the glowworms' threads.
 - **Eats and breeds:** a problem found in the research: the coffin fly's real young eat buried human bodies, and no
   source puts it in caves or ant nests. I propose keeping your faster, stronger underground fly but rechecking its
   species against a scuttle fly that really lives in caves or ant nests before it's built; until then its food is
-  the underground's dead bugs and the ants' refuse.
+  the underground's dead bugs and the ants' refuse, and it lays its eggs in them (the stand-in).
 - **With you:** harmless and hard to net — a swing at the air misses a bug that runs; a net swept along the ground
   catches it.
-- **On the farm:** food for cave spiders and glowworms, which is why it matters: it carries the dark food chain.
-- **Signature:** the fly that runs instead of flying, so you catch it low.
+- **On the farm:** food for the glowworms, whose real prey is small flies, and for the cave's hunters, which is why
+  it matters: it carries the dark food chain.
+- **Signature:** the fly that runs from you instead of flying off, so you catch it low.
 - **To build:** the burst-running movement (a new movement style); a recheck of its real species.
 
-**Lenses:** Real biology — scuttle flies really run in bursts (facts A). Honesty — its cave life isn't confirmed
-for the species named in the bug lineups. **Cost and risk:** a new movement style; the species question.
+**Lenses:** Real biology — scuttle flies really escape by running in bursts (facts A). Honesty — its cave life isn't
+confirmed for the species named in the bug lineups. **Cost and risk:** a new movement style; the species question.
 
 ### P12. Ant-decapitating fly (Pseudacteon tricuspis) — the fire ants' living enemy
-*Deadly Ants outpost and core, and wherever fire ants forage · by day, most at midday · new.*
+*Shallow Swamp, over the fire ants' columns where they forage up from below; its "zombie" ants wander out of the
+Deadly Ants' galleries · by day, most at midday · new.*
 - **Lives and moves:** tiny flies hovering a few millimetres above fire-ant columns, darting down.
-- **Eats:** adults take sugar; its young eat a fire ant from the inside.
+- **Eats:** adults take sugar (seen in the lab); its young eat a fire ant from the inside.
 - **Breeds:** it injects one egg into a fire-ant worker; after about two weeks the ant leaves the nest like a
   sleepwalker and dies, its head falls off, and the new fly grows in the empty head (real).
 - **With you:** harmless; easy to net.
-- **On the farm:** the safe answer to fire ants: raise them and release them over a mound, as the United States
-  really did. Real fire ants forage far less when these flies are about (about 84% less).
-- **Signature:** a fire-ant column that thins and slows when the flies hover over it, and "zombie" ants wandering
-  away from the mound.
+- **On the farm:** the safe answer to fire ants: catch them over one column and release them over another mound (the
+  United States really released them against fire ants, from flies reared in the lab). Real fire ants forage far less when these flies are about (about 84% less).
+- **Signature:** catch them and release them over a fire-ant mound: the column thins and slows under the hovering
+  flies, and "zombie" ants wander away to die.
 - **To build:** the parasite block (one bug living in another); a scare effect that cuts fire-ant foraging while
   flies are near.
 
@@ -245,7 +294,8 @@ for the species named in the bug lineups. **Cost and risk:** a new movement styl
 red column, one ant staggering off alone. **Cost and risk:** the parasite block.
 
 ### P13. Paper wasp (the European paper wasp, Polistes dominula) — the village wasp that teaches warnings
-*Village, Bee Meadow edges · by day, home at night · in the prototype now (the wasp), to be redone.*
+*Village, Bee Meadow edges, Hilltop Meadow (kept as pest control, §01) · by day, home at night · in the prototype
+now (the wasp), to be redone.*
 - **Lives and moves:** a queen and her workers on an open, umbrella-shaped paper comb hung under eaves, branches
   and fence rails — the whole nest in plain view, eggs and grubs in the cells.
 - **Eats:** adults drink nectar, fruit juice and sap, and bite into ripe fruit (a real fruit pest); the young are
@@ -253,11 +303,13 @@ red column, one ant staggering off alone. **Cost and risk:** the parasite block.
 - **Breeds:** one egg per cell in the open comb; a thriving nest founds daughter nests (built).
 - **Hunts:** caterpillars on plants and flies, so it is the village's caterpillar check — which cuts both ways: it
   protects tomatoes from caterpillars and takes the young of your milkweed butterflies.
-- **With you:** calm away from its nest. Near it, it warns in three steps — wings raised, then patrolling, then a
-  wasp flies out and stings — the least aggressive wasp and the one that teaches the player to read warnings.
+- **With you:** calm away from its nest. Near it, it warns in three steps — wings raised, then patrolling, then a wasp
+  flies out and stings — the least aggressive of the nest wasps and the one that teaches the player to read warnings.
   Smoke calms it.
 - **On the farm:** pest control for crops, a threat to a butterfly farm, and wasp grubs from its comb.
-- **Signature:** the open nest you can watch, and the three-step warning.
+- **Signature:** the wasp you keep — a nest under your eaves clears the caterpillars off your crops, and takes your butterflies'
+  young too, so where you let it build matters (the game's use; real paper wasps feed their young caterpillars above
+  all).
 - **To build:** hunting caterpillars on host plants; the three-step warning; its own nest picture, separate from
   the yellowjacket's.
 
@@ -269,7 +321,8 @@ caterpillar hunt uses the life-stage block.
 *Wasp Thicket · by day, most in the morning · in the prototype now as the "wasp soldier", to be redone.*
 - **Lives and moves:** thousands of workers from a hidden paper nest underground or in a hollow tree; they come and
   go through one entrance, so you find the nest by watching where they go.
-- **Eats:** adults take nectar, rotten fruit and honey, and raid beehives for it; the young eat chewed insects —
+- **Eats:** adults take nectar, rotten fruit and honey, and raid beehives for it wherever a player keeps hives near
+  the Thicket; the young eat chewed insects —
   caterpillars, bees, flies, other wasps.
 - **Breeds:** a big nest of thousands of cells; daughter nests when thriving.
 - **Hunts:** a generalist hunter, and the beekeeper's thief at the hive door.
@@ -277,7 +330,7 @@ caterpillar hunt uses the life-stage block.
   real threat pose). Hit the nest or crush a wasp and more come — the alarm call (P6). Smoke stops the call; the
   nest is safest at night.
 - **On the farm:** a pest of hives and orchards; its grubs are food.
-- **Signature:** finding the hidden nest by watching the workers, and the alarm that escalates.
+- **Signature:** finding the hidden nest by watching where the workers go.
 - **To build:** the hidden ground or tree nest (its own nest picture); the alarm call (a new shared event);
   raiding hives for honey.
 
@@ -286,7 +339,7 @@ caterpillar hunt uses the life-stage block.
 event is new.
 
 ### P15. European hornet (Vespa crabro) — the night hunter at your lamps
-*Wasp Thicket (the ranger station's lights), Hilltop Meadow (its top threat) · day and night · in the prototype now
+*Wasp Thicket (the ranger outpost's lights), Hilltop Meadow (its top threat) · day and night · in the prototype now
 (the "giant hornet"), to be redone.*
 - **Lives and moves:** big, slow-cruising hunters from a paper nest in a hollow tree; it hunts by moonlight and
   comes to lamps (real).
@@ -295,17 +348,18 @@ event is new.
 - **Breeds:** one nest per hollow tree, hundreds of workers; daughter nests when thriving.
 - **Hunts:** the big insects of its zone, including the yellowjacket — so it checks the wasps as well as threatening
   your bees.
-- **With you:** it avoids trouble unless stepped on, grabbed, or near its nest or its food; before attacking it does
+- **With you:** it avoids trouble unless stepped on, grabbed, or near its nest or its food (though real ones
+  sometimes sting without warning); before attacking it does
   an alarm dance, buzzing and darting in and out (the July research). Smoke calms it.
-- **On the farm:** a lamp by your hives brings hornets to them at night; a lamp far from them draws hornets away
-  and lets you catch the moths they chase.
-- **Signature:** lamps as bait — light decides where it hunts.
-- **To build:** the night routine and lamp attraction (lights block); the hollow-tree nest; web robbing where
-  spiders are.
+- **On the farm:** in the powered age, a light trap by your hives brings hornets to them at night; one far from
+  them draws hornets away and lets you catch the moths they chase (only powered lights draw bugs, P7).
+- **Signature:** lights as bait — light decides where it hunts.
+- **To build:** the night routine and attraction to powered lights (lights block); the hollow-tree nest; web robbing
+  where spiders are.
 
-**Lenses:** Real biology — night flight to lights, hollow-tree nests, prey list (facts A). Picture the moment — your
-porch lamp at midnight, moths spiralling, a hornet sliding in out of the dark. **Cost and risk:** lamp attraction is
-a small grid; the rest exists.
+**Lenses:** Real biology — night flight to lights, hollow-tree nests, prey list (facts A). Picture the moment — the
+ranger outpost's lamp at midnight, moths spiralling, a hornet sliding in out of the dark. **Cost and risk:** light
+attraction is a small grid; the rest exists.
 
 ### P16. Northern giant hornet (Vespa mandarinia) — the hive raider of the far forest
 *Millipede Forest · by day · new (your giant hornet).*
@@ -319,7 +373,9 @@ a small grid; the rest exists.
   the hive and carry off the brood.
 - **With you:** it clicks its jaws as a warning; its sting is dangerous. During the slaughter the hornets don't fight
   back (real), which is the moment to strike.
-- **On the farm:** the far-ring beekeeper's enemy, and why the Asian honey bee matters there (P21).
+- **On the farm:** the far-ring beekeeper's enemy, and why the Asian honey bee matters there (P21). Without that
+  bee, the forest's hornets feed their young on the emperor dragonflies along the river (real prey: darners), big
+  moths, beetles, and any hive a player keeps there.
 - **Signature:** the scout you must stop before it brings the raid.
 - **To build:** the raid (a scout's scent mark on a hive, then the group); the slaughter and occupation; its own
   underground nest.
@@ -340,7 +396,9 @@ the largest new piece among the wasps; it builds on the existing nest-defence an
 - **With you:** docile; it stings only if handled or trapped, and its sting ranks among the most painful of any insect
   but short and not dangerous — in the game a brief stun, little damage.
 - **On the farm:** a check on tarantulas.
-- **Signature:** a wasp dragging a spider many times its weight across the ground.
+- **Signature:** the stolen catch: follow a hunting tarantula hawk, and when it stings a Goliath still, the spider
+  lies paralysed and alive (real) — the one safe moment to take a Goliath home, if you get there before the wasp drags
+  it off (taking it is the game's).
 - **To build:** the parasite block (a paralysed tarantula dragged to a burrow); milkweed in Spider Vale East for its
   nectar.
 
@@ -348,9 +406,10 @@ the largest new piece among the wasps; it builds on the existing nest-defence an
 Goliath tarantula past your boots. **Cost and risk:** shares the parasite block with the decapitating fly.
 
 ### P18. Honeybee (the western honey bee, Apis mellifera) — where the beekeeping ladder starts
-*Village hives, Bee Meadow (wild hives and Maren's farm) · by day · in the prototype now, to be redone.*
+*Village hives, Bee Meadow (wild hives and Maren's farm), Hilltop Meadow, Butterfly Fields (wild bees foraging) · by day · in the prototype now, to be redone.*
 - **Lives and moves:** a colony of a queen, tens of thousands of workers and drones on wax combs in a hollow tree
-  or a hive box; foragers range out to flowers and back; guards at the entrance check who comes in.
+  or a hive box; foragers range out to flowers and back, and stay home at night and in rain; guards at the entrance
+  check who comes in.
 - **Eats:** nectar (made into honey) and pollen; the young get royal jelly, then pollen and nectar.
 - **Breeds:** the colony splits by swarming: the old queen leaves with part of the workers and the swarm moves
   into an empty box or hollow (built — this is how an apiary comes alive).
@@ -373,7 +432,8 @@ Goliath tarantula past your boots. **Cost and risk:** shares the parasite block 
 - **With you:** a larger alarm zone, three to four times the defenders, a chase of up to 400 m and about ten times
   the stings (real); a small visual tell such as darker bands, since real ones look the same as honeybees. Needs
   the stronger smoker.
-- **On the farm:** a real upgrade: more honey per hive and better resistance to mites and disease. A keeper tames a
+- **On the farm:** a real upgrade: better resistance to mites and disease (real), and more honey in the game's
+  numbers (no source compares the yield). A keeper tames a
   hive by requeening it with a calm queen, as real beekeepers do; the hive calms as the new queen's workers replace
   the old.
 - **Signature:** requeening — taming a dangerous hive over time.
@@ -388,13 +448,13 @@ risk:** requeening is new; the rest is tuning.
 - **Lives and moves:** a small colony of a few hundred, underground in an old hollow or in a nest box (real ones use old
   rodent burrows, gone in 2126); it warms up by shivering,
   so it flies on cool, damp days when honeybees stay in.
-- **Eats:** nectar and pollen from the widest range of flowers of any bumblebee.
+- **Eats:** nectar and pollen from a very wide range of flowers, probably the widest of any British bumblebee.
 - **Breeds:** a queen starts a colony alone; in the game a queen founds her colony in a bumblebee nest box (the item
   row).
 - **With you:** gentle; it stings only if its nest is disturbed or it's hurt, and it can sting more than once.
 - **On the farm:** buzz pollination — it shakes pollen out of tomato flowers, which other bees can't, so a nest box
   in a glass greenhouse makes the tomatoes there give more; little honey, since it stores only a few days' food.
-- **Signature:** the bee that works the greenhouse and the rainy days.
+- **Signature:** the bee that works the greenhouse and the cool days.
 - **To build:** the nest box; the cool-weather routine; the tomato pollination bonus.
 
 **Lenses:** Real biology — buzz pollination, cool-weather flight, small stores (facts A). Picture the moment — a grey
@@ -411,8 +471,12 @@ morning, honeybees indoors, bumblebees droning in the greenhouse. **Cost and ris
 - **On the farm:** the one hive that holds out where the giant hornets raid: when a hornet attacks, waves of wing
   shimmering ripple across the comb, and about 500 bees ball round the hornet and heat it to 47 °C, just below what
   kills the bees themselves (real). It grooms off the mites that trouble other bees.
-- **Signature:** the heat-ball.
+- **Signature:** the heat-ball — the hive that kills the giant hornet's scout for you, so it is the beekeeper's
+  answer in the far forest.
 - **To build:** the defence against a raid (a hornet in the ball dies); absconding.
+- **The ladder:** it bends your rule that the bees climb in danger (D80): it is gentler than the killer bee, and its
+  step up is surviving where the giant hornets raid, not being more dangerous. Whether that is the third step you want
+  is still open (D82).
 
 **Lenses:** Real biology — heat-balling, shimmering, absconding (facts A). Fit — a hive bee, as you asked (D81,
 D82). **Cost and risk:** small once the giant hornet's raid exists.
@@ -422,26 +486,35 @@ D82). **Cost and risk:** small once the giant hornet's raid exists.
 (workers and scouts), to be redone.*
 - **Lives and moves:** one queen in a deep chamber, thousands of workers. Scouts range out; when one finds food it
   carries a load home, marking the way, and workers follow the scent in files; trails strengthen with use and fade
-  when the food runs out. They roof their busiest trails with earth tunnels (real).
-- **Castes:** workers; scouts; warriors — older, bigger workers that stay by the queen and the nest mouths (real
-  black garden ants have no soldier caste, decided as warriors in D79); the queen; and, in time, winged queens and
-  males that leave on a mating flight on warm afternoons and found new colonies (real).
+  when the food runs out. Most ants follow a strong trail, but not all: at a fork about one in fifteen goes the other
+  way (real; 93% follow), and those strays find new food. An ant that remembers its own route trusts it over the
+  trail (real). They roof their busiest trails with earth tunnels (real).
+- **Castes:** workers; scouts; warriors — the bigger, stronger workers of later generations that stay by the queen and
+  the nest mouths (real black garden ants have no soldier caste, decided as warriors in D79); the queen; and, in time,
+  winged queens and males that leave on a mating flight on warm afternoons and found new colonies (real).
 - **Eats:** nectar, fruit, carcasses and small bugs (with aphids cut, as the lineup has it).
-- **With you:** workers ignore you; touch the nest and the warriors bite and squirt formic acid (real — no sting).
+- **With you:** workers ignore you; touch the nest and the warriors bite and squirt formic acid (real for its subfamily
+  — no sting).
+- **Changing a trail:** besides the stick (P4), a stone across it sends the ants round, bait beside it pulls some
+  aside, and rain washes trails away. When the food at the end runs out, the trail dies and the ants spread out to
+  search (the old game SimAnt worked this way; rain washing the scent is real).
 - **On the farm:** a clean-up crew for carcasses; a colony to keep, read and lead.
-- **Signature:** the trail you can redirect: tap a few ants with the bug stick and they follow you while the column
+- **Signature:** the trail you can redirect: two taps of the bug stick and a few ants follow you while the column
   carries on; bring them to food and a new trail grows (P4).
-- **To build:** the trail grid with per-ant following; the tap and follow; the formic-acid spray; mating flights;
-  earth roofs over busy trails (display).
+- **To build:** the scent trail laid by ants carrying food and followed ant by ant (architecture doc §4); the
+  two-tap lead; the formic-acid spray; mating flights; earth roofs over busy trails (display).
 
-**Lenses:** Real biology — trail scent laid by successful foragers, no soldiers, formic acid, mating flights (facts A).
+**Lenses:** Real biology — trail scent laid by successful foragers, the 93% follow rate and route memory (two
+studies of the black garden ant), no soldiers, formic acid, mating flights (facts A).
 Picture the moment — your example: five ants leaving the line to follow your stick. **Cost and risk:** the largest
 ant piece is the per-ant trail; it is the first block built (architecture doc, §4).
 
 ### P23. Fire ants (the red imported fire ant, Solenopsis invicta) — the mound that boils over
-*Deadly Ants outpost and core; foraging up into the Shallow Swamp (decided) · by day on warm ground · new.*
-- **Lives and moves:** a colony of hundreds of thousands under a mound with no entrance you can see; tunnels run
-  metres out from it, and foragers spread from their ends.
+*Deadly Ants outpost and core (the galleries and the queens, underground); their foraging front breaks the surface in
+the Shallow Swamp (decided), where the mounds, rafts and mating flights are · the front by day on warm ground · new.*
+- **Lives and moves:** a colony of hundreds of thousands. Below, galleries and chambers run through the Deadly Ants
+  zones, with the queens deep in the core; where they forage up into the Shallow Swamp they raise mounds with no
+  entrance you can see, tunnels run metres out from them, and foragers spread from their ends.
 - **Castes:** small workers, major workers (up to a third of the colony and four times heavier — the warriors), the
   queen, and winged queens and males.
 - **Eats:** almost anything: flies, beetles, crickets, millipedes, centipedes, seeds, nectar, carcasses; it piles its
@@ -450,18 +523,21 @@ ant piece is the per-ant trail; it is the first block built (architecture doc, �
 - **With you:** touch the mound and it boils over; each ant grips with its jaws and stings again and again, leaving a
   burning blister — in the game a lasting burn that a remedy treats. A forager that finds rich food brings a crowd
   within half an hour.
-- **Hazards:** after heavy rain the colony links into a floating raft with the queen inside — more aggressive and
-  dangerous to touch (real).
+- **Hazards:** after heavy rain a mound's colony in the swamp links into a floating raft with its queen inside —
+  more aggressive and dangerous to touch (real).
 - **On the farm:** nothing to keep; an enemy to weaken with the ant-decapitating fly (P12) and fire resistance.
-- **Signature:** the boiling mound, and the living raft on flood water.
-- **To build:** the mound (an ant nest of its own); the recruitment rush; the burn; rafts after heavy rain.
+- **Signature:** the mound you never step on and the raft you never touch — answered with bait to draw a column
+  off, fire resistance, and the decapitating fly.
+- **To build:** the galleries below and the mounds at the swamp front (an ant nest of its own); the recruitment
+  rush; the burn; rafts after heavy rain (once rain reaches the bug simulation).
 
 **Lenses:** Real biology — the hidden entrance, the majors, the raft, the recruitment rush (facts A). Picture the
 moment — a red raft turning slowly on brown floodwater. **Cost and risk:** rafts need the water block; the rest
 reuses the black ants' work.
 
 ### P24. Garden centipede (the stone centipede, Lithobius forficatus) — the village's first fight
-*Village, the north-east woods' logs and stones · at night · in the prototype now, to be redone.*
+*Village, the north-east woods' logs and stones; Ant Tunnels (built there today); Spider Vale East's damp litter
+(proposed, §04) · at night · in the prototype now, to be redone.*
 - **Lives and moves:** under stones, logs and bark by day, out at night; it runs very fast for cover when uncovered
   (real).
 - **Eats:** insects, spiders and flies, killed with venom from its front claws (real; the slugs and worms it also eats
@@ -472,50 +548,53 @@ reuses the black ants' work.
   small to break the skin, a fact for its description. Its real defence is a gem: it raises its last legs and flings
   sticky droplets that string into threads and glue an attacker (real) — in the game a short sticky slow on you.
 - **On the farm:** a check on flies near the woods; carcass for materials.
-- **Signature:** the sticky-thread defence — it glues what attacks it.
+- **Signature:** strike it from the front — it flings its glue from its back legs, so a blow from behind leaves you stuck.
 - **To build:** breeding under stones and logs (it has no breeding place today); the sticky slow (defence block);
   prey beyond flies.
 
-**Lenses:** Real biology — night hunting, fast retreat, the telopod threads (facts A; the "lunges at anything warm"
-line is the game's, not the animal's). **Cost and risk:** small.
+**Lenses:** Real biology — night hunting, fast retreat, the sticky threads from its last legs (facts A; the "lunges at
+anything warm" line is the game's, not the animal's). **Cost and risk:** small.
 
 ### P25. Tiger centipede (Scolopendra polymorpha) — the banded night hunter by the ants
 *Mining Camp (D21's cave centipede), Ant Colony seam, Centipede Cavern's upper halls · at night, in cool damp ·
 in the prototype now, to be redone.*
 - **Lives and moves:** under rocks, in burrows and rotting logs; it comes out only when it's cool and damp, and stays
-  dug in otherwise (real).
+  dug in otherwise (real). Honest note: it is really a desert centipede (the Sonoran desert's), placed underground by
+  D21; the cool, damp caves suit its habits.
 - **Eats:** insects and other bugs (real for its genus) — in the game the ants at the colony's edge, the insects at
   hand (the sources don't confirm ants specifically).
 - **Breeds:** the mother guards her eggs, curled round them (real for its family).
-- **With you:** a stronger lunge than the garden centipede. Its venom is real and painful; after a big bite the venom's
-  volume mostly comes back in two days, but its strength takes months (real) — in the game, one that has just bitten
-  hits a little weaker for a while.
+- **With you:** a stronger lunge than the garden centipede; its venom is real and painful.
 - **On the farm:** carcass for venom and chitin.
-- **Signature:** the brooding mother curled round her eggs under a stone — and the weaker second bite.
-- **To build:** breeding with a brooding mother (life-stage block); cool-and-damp routine; the venom recovery.
+- **Signature:** the ants' hunter at the seam: where tiger centipedes den, the colony's trails falter, and leading
+  ants past a den with the bug stick feeds it — or costs you the ants (the game's; the sources don't name its prey).
+- **To build:** hunting ants at the seam; breeding with a brooding mother (life-stage block); the cool-and-damp
+  routine.
 
 **Lenses:** Real biology — burrows, damp nights, the venom refill numbers (facts A; its natural history sources are
 thin). Fit — the centipedes that live by the ants (D79). **Cost and risk:** small.
 
-### P26. Giant centipede (the Amazonian giant, Scolopendra gigantea) — the one on the ceiling
+### P26. Giant centipede (the Amazonian giant, Scolopendra gigantea) — the one in the wall
 *Centipede Cavern's depths, Millipede Forest, Spider Vale West · at night · in the prototype now, to be redone.*
 - **Lives and moves:** the world's largest centipede, over 30 cm (real); in dark, damp places — leaf litter, rotten
   wood, caves (real).
-- **Eats:** big insects, spiders, millipedes, scorpions and tarantulas (real). Real ones climb cave ceilings and catch
-  bats in flight, holding on with a few legs (real) — the bats are gone, so in the game it takes big flying bugs that
-  pass below.
+- **Eats:** big insects, spiders, millipedes, scorpions and tarantulas (real). Real ones climb cave walls and ceilings
+  and catch bats there, hanging from the rock by a few legs (real); the bats are gone, so in the game it takes big bugs
+  that pass close.
 - **Breeds:** the female broods her eggs until the young can feed themselves (real); it lives about ten years (real).
-- **With you:** dangerous: a bite strong enough to wound a person, and one killed a child (real). In the cavern it hangs
-  from the ceiling and drops on what passes below — look up.
+- **With you:** dangerous: a bite strong enough to wound a person, and one killed a child (real). In the cavern it
+  waits flat in the cracks of the walls and lunges out at what passes close; its feelers show at the crack first.
 - **On the farm:** Centipede Fang and venom; its boss form is an old mother curled round her eggs (the item rows).
-- **Signature:** the ceiling ambush.
-- **To build:** hanging from the ceiling and dropping (ambush block); brooding; prey beyond flies.
+- **Signature:** the wall ambush: walk the middle of a passage, and watch the cracks for feelers.
+- **To build:** waiting in wall cracks and lunging out (ambush block); brooding; prey beyond flies.
 
-**Lenses:** Real biology — size, the ceiling hunt, brooding, the danger (facts A). Picture the moment — your torch
-finds a shape on the cave roof. **Cost and risk:** the ceiling drop is shared with the cave spider.
+**Lenses:** Real biology — size, climbing hunts, brooding, the danger (facts A). Fit — the view is from above, so caves
+show no ceilings (decided, overview §14); the walls are where a top-down player can see it. Picture the moment — your
+torch finds two feelers twitching in a crack. **Cost and risk:** the ambush block.
 
 ### P27. Garden millipede (the American giant millipede, Narceus americanus) — the slow recycler
-*Village woods, Butterfly Fields' edge, the forests · at night · in the prototype now, to be redone.*
+*Village woods; Bee Meadow (built there today); Spider Vale East's damp litter (proposed, §04) · at night · in the
+prototype now, to be redone.*
 - **Lives and moves:** in and under rotting logs, out at night; it digs in when the surface dries (real).
 - **Eats:** rotting wood and leaf litter; given the choice it prefers fresh fruit (real).
 - **Breeds:** a single egg in a nest of chewed litter, with the mother wrapped round it for several weeks (real); it
@@ -523,36 +602,43 @@ finds a shape on the cave roof. **Cost and risk:** the ceiling drop is shared wi
 - **With you:** harmless if left alone; when threatened it curls up or oozes a liquid that stains the skin brown and
   stings the eyes (real) — in the game a short sting if you grab it bare-handed.
 - **On the farm:** the leaf-litter recycler; not food.
-- **Signature:** the curled spiral you can pick up — carefully.
+- **Signature:** millicompost: keep them in a compost bin and leaves turn into rich compost faster (real: people
+  compost with millipedes, and it improves the compost).
 - **To build:** curling up (defence block); the single egg and brooding mother.
 
-**Lenses:** Real biology — single-egg nests, curling, the brown "burn" (facts A, a single source). **Cost and risk:**
+**Lenses:** Real biology — single-egg nests, curling, the brown "burn" (facts A, a single source); millicomposting
+(Wikipedia, "Millipede"). **Cost and risk:**
 small.
 
 ### P28. Giant African millipede (Archispirostreptus gigas) — the armoured one
-*Millipede Forest, Mining Camp (D21's tougher cave millipede) · new.*
-- **Lives and moves:** one of the largest millipedes, up to 33 cm with about 256 legs (real); docile (real).
+*Mining Camp (D21's tougher cave millipede), Millipede Forest, Centipede Cavern, Spider Vale East as prey
+(proposed, §04) · at night · new.*
+- **Lives and moves:** one of the largest millipedes, up to 33 cm with about 256 legs (real); docile (real). Honest
+  note: it is a forest animal; D21's tougher cave millipede puts it in the Mining Camp too.
 - **Eats:** decaying plants (real for millipedes).
 - **Breeds:** eggs on moist ground (real for millipedes); it lives seven to ten years (real).
 - **With you:** it curls into a tight spiral showing only its shell (real) and oozes a liquid from pores along its body
-  that harms the eyes (real) — in the game a short spray when struck, so keep your distance or wear goggles (the
+  that harms the eyes (real) — in the game a short spray when struck, so keep your distance (the
   spray is the game's; real ones ooze).
 - **On the farm:** small mites ride on its shell and clean it (real); its plates for armour (the item rows).
-- **Signature:** the hard spiral that a weapon glances off.
+- **Signature:** the gentle giant — docile, slow and long-lived on rotting leaves, the big bug a beginner can keep in a pen
+  (real: big millipedes of its kind are popular pets).
 - **To build:** curling (defence block) with a tougher shell; the spray.
 
 **Lenses:** Real biology — size, the spiral, the secretion, the cleaning mites (facts A; thin sources). **Cost and
 risk:** small.
 
 ### P29. Shocking pink dragon millipede (Desmoxytes purpurosea) — the poisonous one
-*Deep in the Millipede Forest · comes out in numbers after rain · new.*
+*Deep in the Millipede Forest; Centipede Cavern as D21's venomous millipede (proposed, §04) · comes out in numbers
+after rain · new.*
 - **Lives and moves:** vivid pink and spiny, out in the open on leaf litter; it appears in large numbers after rain
   (real).
 - **Eats:** decaying plants (real for millipedes).
 - **With you:** it makes hydrogen cyanide and smells of almonds; the colour is the warning (real). In the game a struck
   one leaves a small poison cloud (the game's; the sources say only that it makes the cyanide).
 - **On the farm:** a poison ingredient (my proposal) and a specimen.
-- **Signature:** the rain march — after a shower the forest floor turns pink.
+- **Signature:** the rain harvest — after a shower the forest floor turns pink, the one time to gather them in numbers for their
+  poison, with gloves.
 - **To build:** the rain routine (routine block); the poison cloud (defence block).
 
 **Lenses:** Real biology — the cyanide, the warning colour, the rain appearance (facts A; very thin sources). Picture
@@ -566,10 +652,10 @@ the moment — rain stops, and pink spines are everywhere. **Cost and risk:** sm
 - **Breeds:** live young that ride on the mother's back until their first moult (real for scorpions); some of its genus
   breed without males (real).
 - **With you:** it fights with its big claws more than its tail (real) — in the game a pinch that holds you briefly, the
-  sting only if you struggle (scorpions really save the sting for big prey). Its sting hurts badly but isn't dangerous
-  (real). Glows blue-green under ultraviolet light (real for scorpions).
+  sting only if you struggle (the game's: real scorpions save the sting for prey they can't hold). Its sting hurts badly
+  but isn't dangerous (real). Glows blue-green under ultraviolet light (real for scorpions).
 - **On the farm:** Scorpion Shell from its carcass (the item rows).
-- **Signature:** the big-claw grab — the scorpion that holds, where the desert one kills.
+- **Signature:** stand still in its grip — caught in its claws, stay still and it lets go; struggle and it stings.
 - **To build:** the burrow ambush with an emerge warning (ambush block, from the July design); the grab-then-sting
   (combat).
 
@@ -581,23 +667,26 @@ covers it.
 *Scorpion Rocks · at night · new.*
 - **Lives and moves:** thin claws and a fat tail; hides in crevices and dark, damp spots by day (real); its shell is
   covered in tiny bumps that resist blowing sand (real).
-- **Eats:** insects, and anything that moves and is smaller than itself (real; the small lizards it also takes are
-  gone); it eats its own kind (real).
+- **Eats:** insects, and anything that moves and is smaller than itself (real for its genus, in captivity; the small
+  lizards it also takes are gone); it eats its own kind (real).
 - **Breeds:** live young carried on the mother's back (real for scorpions) — the boss form is a big mother carrying
   hers (the item rows).
 - **With you:** one of the world's most dangerous scorpions (real): its sting needs antivenom. It crushes with its claws
-  and stings to paralyse (real). Glows under ultraviolet light, so an ultraviolet lantern shows where they wait.
+  and stings to paralyse (real). Glows under ultraviolet light (real), a fact for its description.
 - **On the farm:** Scorpion Venom and Shell (the item rows).
-- **Signature:** thin claws mean deadly venom — the rule of thumb the two scorpions teach.
+- **Signature:** kept one to a crate — it eats its own kind (real), so a keeper who wants its venom pens each scorpion alone;
+  thin claws and a fat tail mark it as the deadly one.
 - **To build:** the burrow-and-crevice ambush; venom that needs antivenom.
 
 **Lenses:** Real biology — danger, crevices, cannibalism, the bumpy shell (facts A). Fit — your dry-zone scorpion (D79)
 and the rocky zone you pictured. **Cost and risk:** small once the forest scorpion exists.
 
 ### P32. Blue dasher (Pachydiplax longipennis) — the pond's fly catcher
-*Village (the west side's water), Bee Meadow river · by day · in the prototype now (the dragonfly), to be redone.*
-- **Lives and moves:** a sit-and-wait hunter: it perches still on a reed and darts out at prey, then returns; males hold
-  territories fiercely and point their tails at the sky (real); at night they roost in trees (real).
+*Village (the west side's water), Bee Meadow river, both Swamps (proposed, §04) · by day · in the prototype now (the
+dragonfly), to be redone.*
+- **Lives and moves:** a sit-and-wait hunter: it perches still on a reed and darts out at prey, then returns; it
+  aims where its prey is going, not where it is, so few escape (real for dragonflies); males hold territories
+  fiercely and point their tails at the sky (real); at night they roost in trees (real).
 - **Eats:** nearly any small flying insect — flies, gnats, mosquitoes, small moths — hundreds a day (real). The
   prototype has it hunt the village wasps; no source says blue dashers eat wasps, so I propose it hunts flies and other
   small fliers instead.
@@ -605,9 +694,10 @@ and the rocky zone you pictured. **Cost and risk:** small once the forest scorpi
   its nursery (today it never breeds).
 - **With you:** harmless; a fast, prized catch.
 - **On the farm:** free fly control around water.
-- **Signature:** the perch-and-dart — a dragonfly on a reed tip, gone, back again.
-- **To build:** perch-and-sally hunting (the July design); breeding in the pond (water block); prey changed from wasps
-  to flies.
+- **Signature:** the reed it always comes back to — plant reeds by your pond and blue dashers move in to hold them, keeping the
+  flies and mosquitoes down.
+- **To build:** perch-and-dart hunting that aims ahead of the prey (the July design); breeding in the pond (water
+  block); prey changed from wasps to flies.
 
 **Lenses:** Real biology — sit-and-wait hunting, territories, the tail-up pose, roosting in trees (facts A). Honesty —
 the wasp-hunting was the prototype's, not the animal's. **Cost and risk:** small, plus the water block.
@@ -622,45 +712,53 @@ the wasp-hunting was the prototype's, not the animal's. **Cost and risk:** small
   young are fierce underwater hunters (real).
 - **With you:** harmless.
 - **On the farm:** a threat to a butterfly farm and to the smaller dragonflies.
-- **Signature:** the hawk that never lands.
-- **To build:** in-flight hunting of butterflies (a hunt in the air); breeding ponds (water block) — the Butterfly
-  Fields need one.
+- **Signature:** the hawk that never lands — catch it in flight with a long net, and keep a butterfly farm away from
+  its ponds.
+- **To build:** in-flight hunting of butterflies that aims ahead of the prey (a hunt in the air); breeding ponds
+  (water block) — the Butterfly Fields need one.
 
 **Lenses:** Real biology — prey, flight, egg-laying in floating plants (facts A). **Cost and risk:** the water block.
 
 ### P34. Dragonhunter (Hagenius brevistylus) — the dragonfly that eats dragonflies
-*The surface river, past the Butterfly Fields and the Millipede Forest (moved from the underground, a correction) ·
-by day · new.*
+*Millipede Forest, along its river, ranging down the river past the Butterfly Fields (moved from the underground, a
+correction) · by day · new.*
 - **Lives and moves:** a big black-and-yellow dragonfly (about 8.4 cm) with green eyes; it ambushes other dragonflies
   from above (real).
 - **Eats:** other dragonflies — darners like the emperor — and monarch butterflies (real).
 - **Breeds:** its young are flat, slow, camouflaged hunters among bark and leaf litter at the stream's edge (real).
-- **With you:** harmless.
+- **With you:** it swoops at a player who comes near its stretch of river, a dodgeable strike from above — a liberty
+  the game takes, as its lineup has it (real dragonflies don't harm people).
 - **On the farm:** a danger to a dragonfly or butterfly collection near the river.
-- **Signature:** the strike from above on another dragonfly.
-- **To build:** in-flight hunting of dragonflies; its young along the river (water block).
+- **Signature:** the strike from above — dodge it, and keep your dragonflies and butterflies away from its stretch of river.
+- **To build:** in-flight hunting of dragonflies; the telegraphed swoop at a player; its young along the river
+  (water block).
 
 **Lenses:** Real biology — it lives on streams (facts A; its bug lineup's "deep river" put it underground, where a sight
-hunter can't live). **Cost and risk:** small.
+hunter can't live). Fit — your deadly dragonfly (D79), its strike kept as accepted (D80). **Cost and risk:** small.
 
 ### P35. Meadow butterfly (the queen butterfly, Danaus gilippus — name open) — the village butterfly
 *Village meadows, Bee Meadow, Butterfly Fields · by day · in the prototype now (the meadow butterfly), to be redone.*
 - **Lives and moves:** gliding, curious; males patrol all day for females (real).
 - **Eats:** flower nectar and rotting fruit (real); its caterpillars eat milkweed (real).
 - **Breeds:** the female tests a leaf with her feet, then lays single eggs on milkweed leaves, stems and buds (real);
-  caterpillars, chrysalis and butterfly on the plant (built — the milkweed nursery, D38).
+  the milkweed nursery holds the eggs and young caterpillars, which then go out into the world, grow, form a
+  chrysalis and emerge (decided, D38; the nursery is built, the caterpillars out in the world are not).
 - **With you:** curious; it drifts near you (built).
 - **On the farm:** the butterfly farm's first species; it is mildly poisonous, as poisonous as its milkweed makes it
   (real), so only some hunters take it.
-- **Signature:** the milkweed nursery you can tend — and its real name, still yours to accept (my suggestion is the
-  queen, darker and plainer than a monarch, the look you wanted).
-- **To build:** mostly built; the patrolling flight and the poison reading from its plant are new.
+- **Signature:** poison you can grow — raised on a stronger milkweed, its butterflies carry more of the plant's poison, and the
+  wasps leave them alone (real: a queen is as poisonous as its plant).
+- **Its real name is still yours to accept:** my suggestion is the queen, the monarch's darker, plainer cousin. You
+  asked for a cartoonish butterfly rather than one drawn like a real monarch (2026-06-23), which the art can give it
+  whatever its name; the monarch shares the Butterfly Fields with it, so the two must look clearly different there.
+- **To build:** the caterpillars out in the world (D38; they need the sync work, life-stage block); the patrolling
+  flight and the poison reading from its plant.
 
 **Lenses:** Real biology — milkweed hosts, leaf-testing, the food-plant poison (facts A, a single source). Fit — the
 cartoonish milkweed butterfly you wanted (2026-06-23). **Cost and risk:** small.
 
 ### P36. Monarch (Danaus plexippus) — the poisonous cluster
-*Butterfly Fields · by day · new.*
+*Butterfly Fields; both Swamps, on swamp milkweed (proposed, §04) · by day · new.*
 - **Lives and moves:** orange and black, strong fliers; at night they roost together in clusters, from a few to
   thousands, on trees (real for travelling monarchs).
 - **Eats:** nectar from milkweeds, sunflowers, asters and goldenrods; it sips water and salts from damp ground (real).
@@ -670,7 +768,8 @@ cartoonish milkweed butterfly you wanted (2026-06-23). **Cost and risk:** small.
 - **With you:** harmless.
 - **On the farm:** a prize; poisonous, with most of the poison in its wings (real), so hunters leave it — but the paper
   wasp takes its caterpillars and the dragonhunter takes adults (real).
-- **Signature:** the roost — a tree hung with monarchs at dusk.
+- **Signature:** the roost — at dusk monarchs gather on a tree to rest together, and a player who finds the roost
+  can net them while they're still.
 - **To build:** clustering at night (a resting group); milkweed nursery (built for the meadow butterfly); the poison
   reading for hunters.
 
@@ -681,8 +780,9 @@ A). Picture the moment — a tree turning orange at dusk. **Cost and risk:** sma
 *Wasp Thicket, high in the oaks · by day · new.*
 - **Lives and moves:** lives high in the treetops; males gather at the same "master trees" and defend treetop
   territories (real). The male's purple shows only at some angles to the sun (real).
-- **Eats:** not flowers: sap oozing from oaks, rot and carcasses, and salts — males even drink sweat from people
-  watching them (real). Its caterpillars eat willows (sallows), not oaks (real), so the Thicket needs willow scrub.
+- **Eats:** not flowers: sap oozing from oaks, rot and carcasses (in the game, dead bugs), and salts — males even drink
+  sweat from people watching them (real). Its caterpillars eat willows (sallows), not oaks (real), so the Thicket needs
+  willow scrub.
 - **Breeds:** single eggs on willow leaves in half-shade; the caterpillar takes almost a year, growing two horns (real).
 - **With you:** a male may land on you to drink your sweat (real).
 - **On the farm:** a prize catch: old collectors lured males down with carcasses and a long net (real) — in the game a
@@ -695,21 +795,22 @@ A). Picture the moment — a tree turning orange at dusk. **Cost and risk:** sma
 moment — standing still under an oak while a purple butterfly settles on your arm. **Cost and risk:** small.
 
 ### P38. Luna moth (Actias luna) — the pale night visitor
-*Butterfly Fields, Wasp Thicket · at night · new.*
-- **Lives and moves:** big, pale-green moths with long tails, out at night, and like many moths drawn to lamps; by day
-  they sit still on leaves and pass for leaves (real).
+*Wasp Thicket, Butterfly Fields, Millipede Forest (proposed, §04) · at night · new.*
+- **Lives and moves:** big, pale-green moths with long tails, out at night, and like many moths drawn to lights (real;
+  in the game, to powered lights, P7); by day they sit still on leaves and pass for leaves (real).
 - **Eats:** the adult never eats and lives about a week (real); the caterpillars eat the leaves of walnut, hickory,
   sweetgum, white birch, persimmon and sumac (real; they do very poorly on oak and cherry).
 - **Breeds:** eggs on the undersides of host-tree leaves; the caterpillars grow for six or seven weeks, then go down
   to spin a thin cocoon wrapped in dead leaves on the ground (real).
 - **With you:** harmless; a prize night catch. A disturbed caterpillar clicks and spits up its gut (real).
 - **On the farm:** a specimen and a sight; it gives no silk (the silk moth does).
-- **Signature:** a moth that only lives a week — so every one is a short-lived find — and comes to your lamp.
-- **To build:** lamp attraction (lights block); caterpillars on host trees (life-stage block); host trees in its
-  zones.
+- **Signature:** cocoons in the leaf litter — under walnut and birch you find its leaf-wrapped cocoons on the ground, and hatch
+  your own lunas.
+- **To build:** attraction to powered lights (lights block); caterpillars on host trees (life-stage block); host trees
+  in its zones.
 
 **Lenses:** Real biology — the non-eating week-long adult, host trees, leaf-wrapped cocoons (facts B). Picture the
-moment — a lamp at midnight and a pale green moth the size of your hand. **Cost and risk:** small.
+moment — a light trap at midnight and a pale green moth the size of your hand. **Cost and risk:** small.
 
 ### P39. Death's-head hawkmoth (Acherontia atropos) — the honey thief
 *Bee Meadow · late at night · new.*
@@ -721,7 +822,8 @@ moment — a lamp at midnight and a pale green moth the size of your hand. **Cos
   a chamber underground (real).
 - **With you:** harmless. Handle it and it squeaks loudly and flashes its striped abdomen (real).
 - **On the farm:** a honey thief at the hive and a tomato pest in the garden — two reasons to watch the night.
-- **Signature:** the squeak — a moth that talks back — and the hive raid.
+- **Signature:** the night raid on your hives — it slips in squeaking for the honey; narrowing the hive door at night keeps it
+  out (the game's answer).
 - **To build:** the night hive raid (it enters a hive and takes honey, unharmed by the guards); caterpillars on
   tomato-family plants (life-stage block, a crop host).
 
@@ -730,7 +832,7 @@ nightshades, though the sources name potato). Picture the moment — finding a h
 squeak from the hive door at night. **Cost and risk:** the hive raid is new.
 
 ### P40. Silk moth (Bombyx mori, the silkworm) — the farm moth
-*The player's farm, on a mulberry tree · new.*
+*The player's farm, on a mulberry tree · day and night, indoors and out · new.*
 - **Lives and moves:** a moth that can't fly and doesn't exist in the wild; the adult doesn't eat (real).
 - **Eats:** its caterpillars, the silkworms, eat mulberry leaves and almost nothing else (real).
 - **Breeds:** the weaver sells the first eggs (my proposal); after that, a player lets some cocoons hatch, the moths
@@ -755,7 +857,8 @@ redone.*
 - **With you:** harmless; it ignores you.
 - **On the farm:** the clean-up crew: carcasses vanish into the ground instead of feeding flies; its grubs are bug
   feed (the item rows).
-- **Signature:** the burial — a carcass sinking slowly into the soil with two beetles under it.
+- **Signature:** the undertaker — leave dead bugs out for burying beetles and they bury them within a day, raising their young
+  on them: your carcass disposal, with beetles as the harvest.
 - **To build:** the burial (a carcass becomes a brood in the ground; the parasite and burial block); the mites'
   effect on fly breeding at that carcass.
 
@@ -764,7 +867,7 @@ moment — a dead wasp that wasn't there the next morning, and a little mound of
 is new.
 
 ### P42. Cave beetle (Leptodirus hochenwartii) — the blind beetle of cold caves
-*Mining Camp, Centipede Cavern, the cold caves · no day or night · new (D21).*
+*Mining Camp, Centipede Cavern, the cold caves · on the world's one clock (D57), in the dark · new (D21).*
 - **Lives and moves:** small, blind, wingless and pale, with long legs and a domed back that holds moist air; it
   feels its way by touch and senses the damp with its antennae (real).
 - **Eats:** what seeping water carries into the cave and dead cave bugs (real ones also eat bat droppings, gone in
@@ -775,8 +878,8 @@ is new.
 - **Signature:** found where water seeps down cave walls — follow the wet rock.
 - **To build:** seeping-water spots on cave walls as its food; slow breeding.
 
-**Lenses:** Real biology — blind, wingless, damp-sensing, slow-breeding (facts B; the first cave beetle described,
-1831). **Cost and risk:** small.
+**Lenses:** Real biology — blind, wingless, damp-sensing, slow-breeding (facts B; the first cave beetle described: found
+in 1831, named in 1832). **Cost and risk:** small.
 
 ### P43. Rhinoceros beetle (the Hercules beetle, Dynastes hercules) — the horned wrestler
 *Millipede Forest (its boss form) · at night · new.*
@@ -789,7 +892,7 @@ is new.
   warns with a huffing sound (real). The forest's boss is the biggest of its kind (overview P13): it throws a player the
   same way.
 - **On the farm:** its horn makes the Beetle-Horn Maul (decided); grubs and a big steak.
-- **Signature:** the lift-and-throw, and the huff before it.
+- **Signature:** the lift-and-throw aimed at you — the huff is your warning to step aside before the horns close.
 - **To build:** the grab-and-throw attack (new combat move); grubs in fallen trees (life-stage block); its wing
   cases changing colour with humidity (real; display only).
 
@@ -804,11 +907,14 @@ risk:** a new throw move.
 - **With you:** males wrestle on logs, trying to throw each other off; the males' jaws can't hurt you, but a
   female's bite pinches (real).
 - **On the farm:** its grubs, found in dead wood, are the item rows' grubs (my proposal: roasted in the ashes or
-  rendered into fat); the jaw makes the Mandible Sickle.
-- **Signature:** the jousting on a log at sunset.
-- **To build:** grubs in dead trees and fallen logs (life-stage block); the wrestling (two bugs, display).
+  rendered into fat); the jaw makes the Mandible Sickle (proposed; the sickle is still open, D75).
+- **Signature:** the log pyramid — bury logs upright and stag beetles breed in the rotting wood for years, a slow crop
+  of grubs and beetles (real: people build log pyramids for them).
+- **To build:** grubs in dead trees, fallen logs and log pyramids (life-stage block); the log pyramid as a buildable
+  object; the males' jousting on logs (two bugs, display).
 
-**Lenses:** Real biology — the jousts, the long-lived grubs, the dusk flights (facts B). Picture the moment — two
+**Lenses:** Real biology — the jousts, the long-lived grubs, the dusk flights (facts B); log pyramids (Wikipedia,
+"Lucanus cervus"). Picture the moment — two
 males locked on a mossy log as the light goes. **Cost and risk:** small.
 
 ### P45. Colorado beetle (Leptinotarsa decemlineata) — the crop stripper
@@ -821,7 +927,8 @@ males locked on a mossy log as the light goes. **Cost and risk:** small.
 - **With you:** harmless.
 - **On the farm:** a true crop pest: it strips tomatoes and eggplants; the answers are its enemies (in the game the
   mantis), handpicking and squashing its egg clusters, trap crops (accepted, overview P8), and crop rotation.
-- **Signature:** a race against its generations — clear the egg clusters before they hatch.
+- **Signature:** the trap crop — plant a strip of potatoes or eggplants beside the field and the beetles gather there, where you
+  pick them off (a real farmer's answer).
 - **To build:** crop damage on the tomato family (crops feed bugs, D62); egg clusters under leaves (life-stage
   block).
 
@@ -832,15 +939,17 @@ pest. **Cost and risk:** crop damage is a small new link.
 *Hilltop Meadow, under stones · at night · new.*
 - **Lives and moves:** a small ground beetle under stones by day, out hunting at night; several often shelter
   together (real for bombardier beetles).
-- **Eats:** other small bugs; its young live on the pupae of other beetles (real).
-- **Breeds:** little is known in life; in the game, eggs in the soil under stones.
+- **Eats:** other small bugs at night (real for bombardier beetles); its young are thought to live on the pupae of
+  other beetles (real). The Hilltop Meadow has no other beetle yet, which its question takes up (§04).
+- **Breeds:** little is known in life; in the game, eggs in the soil under stones, near other beetles' pupae.
 - **With you:** lift its stone or grab it and it fires a boiling, foul spray with a pop — about 20 shots before it
   runs dry (real). In the game a short-range spray that burns a little, then a few seconds' wait before the next.
 - **On the farm:** a specimen; maybe a chemical ingredient later.
-- **Signature:** the pop — the spray you hear before you feel it, and the beetle that runs dry.
+- **Signature:** empty its gun — tease out its twenty shots from a distance, then it's safe to pick up until it reloads.
 - **To build:** the spray (defence block, with a shot count); life under stones (a "lift the stone" interaction).
 
-**Lenses:** Real biology — the chemistry and the 20 shots (facts B; sources are thin at species level). Picture the
+**Lenses:** Real biology — the chemistry and the 20 shots (facts B; sources are thin at species level, and the
+young's food is only thought to be beetle pupae). Picture the
 moment — lifting a flat stone and getting a pop of hot spray. **Cost and risk:** the spray is the defence block's
 first use.
 
@@ -849,29 +958,30 @@ first use.
 - **Lives and moves:** shuns light, lives near cave mouths and tunnels; it drops onto prey on a single silk line and
   swings down (real).
 - **Eats:** millipedes and centipedes above all (real; the slugs it also eats are gone in 2126).
-- **Breeds:** white, tear-shaped egg sacs, 2–3 cm, hung from the cave roof near the entrance, each with a few hundred
-  eggs (real) — visible, and a sign the spider is near.
+- **Breeds:** white, tear-shaped egg sacs hung near the cave entrance, each with a few hundred eggs (real); in the game
+  they hang in hollows of the walls, where a top-down player can see them, and they are a sign the spider is near.
 - **With you:** not dangerous; it drops and bites only if you blunder into it. Its young, after a few moults, are
   drawn to light and leave the cave (real) — so spiderlings drift toward your torch.
 - **On the farm:** the cave's check on millipedes and centipedes; its silk (Cave Spider Silk) for the stealth outfits.
-- **Signature:** the drop on a line, and the white egg sacs on the roof.
-- **To build:** the drop from above (ambush block); egg sacs on the cave roof (life-stage block); spiderlings drawn
-  to light.
+- **Signature:** the drop on a line — a shadow grows on the floor, then the spider comes down on its thread; step
+  out of the shadow.
+- **To build:** the drop from above with its floor shadow (ambush block); egg sacs in the wall hollows (life-stage
+  block); spiderlings drawn to light.
 
-**Lenses:** Real biology — the lasso drop, the egg sacs, light-shy adults and light-seeking young (facts B). Picture
-the moment — a white teardrop over the tunnel, and a spider sliding down on a thread. **Cost and risk:** the drop is
-new.
+**Lenses:** Real biology — the lasso drop, the egg sacs, light-shy adults and light-seeking young (facts B). Fit — caves
+show no ceilings (decided), so the drop is told by its shadow. Picture the moment — a white teardrop in a hollow of the
+wall, and a shadow spreading on the floor ahead of you. **Cost and risk:** the drop is new.
 
 ### P48. Daddy longlegs (the eastern harvestman, Leiobunum vittatum) — the cluster that bobs
-*Mining Camp caves, both Spider Vales, the woods · at night · new.*
+*Mining Camp caves, Centipede Cavern, both Spider Vales · at night · new.*
 - **Lives and moves:** long-legged, harmless; gathers in clusters of thousands (real for its kind) on walls and
   overhangs; when alarmed the whole cluster bobs its bodies to blur them (real).
 - **Eats:** small insects, plants, fungi and dead things — a scavenger and omnivore (real; earthworms gone).
-- **Breeds:** eggs (the sources don't say where for this species); in the game, in damp ground.
+- **Breeds:** eggs (the sources don't say where for this species); the game puts them in damp ground.
 - **With you:** harmless — no venom, no bite (real; not a spider). Grab one and it drops a leg that keeps twitching
   while it escapes (real).
 - **On the farm:** a cleaner of small dead things; a specimen.
-- **Signature:** the bobbing cluster, and the twitching dropped leg.
+- **Signature:** catch it by the body — grab a leg and you're left holding a twitching leg while it walks off.
 - **To build:** clusters (a group that rests together); the dropped-leg decoy (defence block).
 
 **Lenses:** Real biology — clusters, bobbing, leg-dropping, no venom (facts B; species-level sources thin). Picture the
@@ -901,10 +1011,13 @@ is more.
   safety line and leaps; if it misses it climbs back up the line (real). At night it rests in a silk pouch.
 - **Eats:** caterpillars, dragonflies, grasshoppers and other spiders (real).
 - **Breeds:** a guarded egg sac under bark or stones (real).
-- **With you:** it turns to watch you, and flees from anything too big to eat (real); a rare mild bite if handled.
+- **With you:** it turns to face you and watch, and flees from anything too big to eat (real); a rare mild bite if
+  handled.
 - **On the farm:** pest control on caterpillars; a favourite catch.
-- **Signature:** it watches you — the spider that turns its head.
-- **To build:** stalk and leap (the centipede lunge reused, from the June design); the watching turn (display).
+- **Signature:** the spider that watches back — it turns to face you as you move, and a slow, calm approach lets you
+  catch it by hand; rush it and it leaps away on its safety line.
+- **To build:** stalk and leap (the centipede lunge reused, from the June design); turning to face a player, and a
+  calm approach that lets you catch it.
 
 **Lenses:** Real biology — the safety-line leap, sight hunting, fleeing big animals (facts B). Picture the moment — a
 fuzzy spider on a fence post turning to look at you. **Cost and risk:** small (the June design's first spider).
@@ -918,7 +1031,8 @@ fuzzy spider on a fence post turning to look at you. **Cost and risk:** small (t
 - **With you:** its warning is a real threat display: it rears up, raises its front legs to show the bands beneath
   and sways (real). Ignore it and it bites; its venom is truly dangerous (real), so the bite needs antivenom.
 - **On the farm:** nothing to keep; respect it.
-- **Signature:** the swaying threat display — the clearest warning in the game, because the bite is the worst.
+- **Signature:** back away slowly — when it rears and sways, it is warning you; step back and it lets you go, press on and it
+  bites (the game's rule, built on its real display).
 - **To build:** night wandering; the threat display as the telegraph (combat); venom that needs antivenom.
 
 **Lenses:** Real biology — wandering, the display, the danger (facts B). Picture the moment — a spider rising on its
@@ -949,22 +1063,24 @@ silk between two stones, and a black shape in the tunnel behind it. **Cost and r
   hairs that sting the eyes and skin (real) — in the game a short cloud that blurs your view and itches; its bite is
   like a wasp sting (real).
 - **On the farm:** Spider Plate and Fried Spider (the item rows; it really is eaten roasted, hairs singed off).
-- **Signature:** hiss, then hairs — two warnings before a bite.
+- **Signature:** the hairs come off first — roasted Goliath is real food, its hairs singed off before cooking, and the same hairs
+  are its last warning before a bite.
 - **To build:** burrow ambush (ambush block); the hair cloud (defence block).
 
-**Lenses:** Real biology — burrows, hissing, urticating hairs, its use as food (facts B). Picture the moment — a hiss
+**Lenses:** Real biology — burrows, hissing, irritating hairs, its use as food (facts B). Picture the moment — a hiss
 from a hole the size of a hand. **Cost and risk:** small.
 
 ### P54. Giant huntsman (Heteropoda maxima) — the wall runner
 *Spider Vale East's caves · at night · new.*
-- **Lives and moves:** the widest spider in the world (legs to 30 cm), a cave dweller; huntsmen run fast, spring as
-  they run, walk on walls and ceilings and hide in crevices (real for the family).
+- **Lives and moves:** the widest spider in the world (legs to 30 cm), thought to live in caves (real); huntsmen run
+  fast, spring as they run, walk on walls and ceilings and hide in crevices (real for the family).
 - **Eats:** insects and other bugs (real for the family).
 - **Breeds:** the female guards her egg sac fiercely (real for the family).
 - **With you:** when provoked it rears in a threat display, then bites if you ignore it (real for the family); its
   speed is the danger.
 - **On the farm:** Huntsman Fang (the item rows).
-- **Signature:** the fastest spider — it runs on the cave walls, not the floor.
+- **Signature:** the sideways bolt — flat enough to vanish into any crack, it runs sideways like a crab; block its crack before
+  you reach for it.
 - **To build:** wall running (a new movement style along cave walls).
 
 **Lenses:** Real biology — size and cave life (facts B; behaviour is the family's, the species sources are thin).
@@ -975,8 +1091,9 @@ running is new.
 *Shallow Swamp · at dusk and night · new.*
 - **Lives and moves:** mating swarms dance at sunset and sunrise (real); females hunt by the carbon dioxide people
   breathe out (real), weaving toward you.
-- **Eats:** nectar; females also bite — in 2126, people, the last warm-blooded animals left (one real form bites
-  mainly people).
+- **Eats:** nectar; females also need blood to lay eggs, and in the game they bite people and big bugs such as
+  caterpillars, as decided (D66) — in the swamp, the milkweed butterflies' caterpillars on swamp milkweed (my proposal,
+  §04) — so they breed with no player near (one real form bites mainly people).
 - **Breeds:** floating rafts of about 200 eggs on still water (real), so sand laid on the marsh stops them, as you
   said (D79); the young need still water with rotting matter in it (real).
 - **With you:** a slow, weaving approach you can read and dodge (the July research's "cast-and-surge"); a bite is a
@@ -993,23 +1110,24 @@ risk:** the water block.
 *Deep Swamp · at dusk, dawn and night · new (your later-stage mosquito, D79).*
 - **Lives and moves:** rests by day in shade — hollow trees, under the stilt walkways — and comes out at dusk; it
   rests with its tail tipped up, unlike the marsh mosquito (real). Most stay near their breeding water (real).
-- **Eats:** nectar; the females need blood to lay eggs, and in 2126 that means people. A 2014 study found a related
-  malaria mosquito drinking caterpillars' body fluid and living longer for it — so in the game it also feeds on the
-  swamp's soft young bugs, a stretch of real behaviour (my proposal).
+- **Eats:** nectar; the females need blood to lay eggs, and in the game they bite people and big bugs such as
+  caterpillars, as decided (D66). A 2014 study found a related malaria mosquito drinking caterpillars' body fluid and
+  living longer for it, so the rule has a real echo.
 - **Breeds:** single floating eggs on still, sunlit water with plants; the young lie flat just under the surface
   (real) — sand laid on the marsh stops them too (D79).
 - **With you:** your later, lunging and swarming mosquito (D79): the lunge and the swarm are the game's (real ones
   bite quietly); it weaves in on your breath like the marsh mosquito, faster and in numbers.
 - **On the farm:** a pest; food for dragonflies and water striders.
-- **Signature:** the swarm at dusk over black water, held back only by what you do to its water.
+- **Signature:** follow it home — it never strays far from its pool (real), so its bites tell you where its water is: find the
+  pool and sand it.
 - **To build:** as the marsh mosquito (water block), plus the swarm-and-lunge attack.
 
 **Lenses:** Real biology — resting pose, dusk activity, floating eggs, flat-lying young (facts B); the caterpillar
-feeding is the related species' and is labelled as a stretch. Fit — your later-stage danger (D79). **Cost and risk:**
+feeding is decided (D66), with a real echo in a related species. Fit — your later-stage danger (D79). **Cost and risk:**
 shares the marsh mosquito's work.
 
 ### P57. Water strider (the common pond skater, Gerris lacustris) — the ripple reader
-*Village lake, Shallow and Deep Swamps · new.*
+*Village lake, Shallow and Deep Swamps · by day · new.*
 - **Lives and moves:** skates on the water surface on water-repellent hairs, rowing fast (real); each holds a patch of
   water and warns others off with ripples (real).
 - **Eats:** insects that fall on the water, and mosquitoes and their young (real) — it finds them by feeling the
@@ -1035,14 +1153,15 @@ onto the lake and seeing three striders converge on the rings. **Cost and risk:*
 - **With you:** it backs away from you; in the game, a small pinch if you grab it bare-handed.
 - **On the farm:** real livestock — farmed in rice fields for centuries (real); caught in the fish trap; the crayfish
   boil. Its burrows weaken banks (real), so a crayfish pond needs watching.
-- **Signature:** a mother carrying her young under her tail, and burrows along the bank.
+- **Signature:** the crayfish pond — quick to breed, but its burrows weaken the banks, so a keeper watches the bank
+  as well as the crop.
 - **To build:** water life (the water block); burrows in banks (a new small habitat object); the fish trap.
 
 **Lenses:** Real biology — burrows, dusk foraging, carried young, farming history (facts B). Fit — the item rows'
 crayfish boil and fish trap. **Cost and risk:** the water block.
 
 ### P59. River crab (Potamon fluviatile) — the right-handed fighter
-*Underground River, shallow and deep · after dark · new.*
+*Underground River, shallow and deep · at night by the world's clock (D57) · new.*
 - **Lives and moves:** burrows in the banks, small ones under stones; it forages on land near the water and can go
   tens of metres from it (real).
 - **Eats:** algae, plant debris, insects and their young, small fish (real; the frogs and snails it also eats are gone).
@@ -1060,7 +1179,7 @@ crayfish boil and fish trap. **Cost and risk:** the water block.
 crab of the bug lineups. **Cost and risk:** small once the water block exists.
 
 ### P60. Praying mantis (the Chinese mantis, Tenodera sinensis) — the still hunter you can keep
-*Locust Farmland, the Wasp Thicket's edges · by day · new.*
+*The Wasp Thicket's edges, Locust Farmland · by day · new.*
 - **Lives and moves:** sits motionless on plants until prey comes within reach, then snaps out its forelegs (real).
 - **Eats:** large insects — hornets, grasshoppers, spiders, caterpillars, bees (real); the biggest mantis in North
   America, up to about 11 cm (real).
@@ -1085,7 +1204,7 @@ said so. Fit — mantis eggs from your own mantises (D80). **Cost and risk:** th
   petal-shaped legs (real).
 - **With you:** harmless; it shifts between pink and brown to match its perch (real).
 - **On the farm:** a quiet danger to a butterfly farm and a prize catch.
-- **Signature:** the flower that isn't — a bee lands on it and doesn't leave.
+- **Signature:** spot the flower that isn't — move it off your butterfly patch, or keep one where pests come to the flowers.
 - **To build:** ambush as a lure (it draws pollinators the way a flower does; the ambush block).
 
 **Lenses:** Real biology — pollinator deception measured in the field (facts B). Picture the moment — a pink flower
@@ -1096,7 +1215,7 @@ among the clover that moves. **Cost and risk:** the ambush block's lure.
 - **Lives and moves:** small, fast-breeding, happy in a box of damp bedding.
 - **Eats:** almost anything — leaves, fruit, scraps, dead bugs (real).
 - **Breeds:** eggs in damp ground; egg to adult in two to three months in warmth (real).
-- **With you:** harmless; males sing at night (real).
+- **With you:** harmless; males sing at night (real for crickets).
 - **On the farm:** the cricket protein drink and cricket flour — farmed today for food and feed (real).
 - **Signature:** the easiest livestock: feed scraps, get protein.
 - **To build:** a cricket pen (a farm object); song (sound).
@@ -1105,7 +1224,8 @@ among the clover that moves. **Cost and risk:** the ambush block's lure.
 risk:** small.
 
 ### P63. Field cricket (Gryllus campestris) — the singer at his door
-*Bee Meadow, Hilltop Meadow, on dry, sunny, short-grass ground · day and early night · new.*
+*Bee Meadow, Hilltop Meadow, on dry, sunny, short-grass ground; proposed as prey in Scorpion Rocks' gravel and
+Spider Vale West's heath (§04) · day and early night · new.*
 - **Lives and moves:** each male digs a burrow with a little platform at the mouth and sings there, audible 50–200 m
   away (real); females wander. Flightless; it rarely jumps (real).
 - **Eats:** leaves and roots, and small soil bugs and carcasses (real).
@@ -1113,34 +1233,39 @@ risk:** small.
 - **With you:** harmless; in the game it goes quiet and drops into its burrow as you come close. Males defend their
   burrows fiercely against other males, sometimes to the death (real).
 - **On the farm:** a specimen; food for wolf spiders.
-- **Signature:** find it by its song — the meadow sings, and goes silent around you.
+- **Signature:** stalk the song — walk toward the singing, stand still when it stops, and move again when it starts.
 - **To build:** the burrow and song (sound tied to position); going quiet when a player nears.
 
 **Lenses:** Real biology — burrow platforms, singing, fights (facts B). Picture the moment — a hilltop full of song
 that hushes in a ring around your feet. **Cost and risk:** small; sound is display only.
 
 ### P64. Firefly (the common eastern firefly, Photinus pyralis) — the J of light
-*Village meadows at dusk, Butterfly Fields at night · at dusk and night · in the prototype now, to be redone.*
+*Village meadows at dusk, Bee Meadow (built there today), Butterfly Fields at night · at dusk and night · in the
+prototype now, to be redone.*
 - **Lives and moves:** males fly over long grass at dusk tracing a J, lighting on the upswing, every five or six
   seconds; females answer from the ground a second or two later (real).
 - **Eats:** most adults don't eat; the young live in damp soil for one to two years and hunt worms, slugs and snails
-  (real) — all gone in 2126, so in the game they hunt soft insect young in the soil, such as fly maggots, which real
-  ones also take.
+  (real) — all gone in 2126, so in the game they hunt soft insect young in the soil, such as fly maggots (the stand-in;
+  the game's choice).
 - **Breeds:** about 500 eggs on damp soil; the young glow as a warning (real).
 - **With you:** harmless; when grabbed it bleeds a bitter fluid (real), so hunters leave it alone.
 - **On the farm:** living light: a jar of fireflies is a lantern (the item rows).
-- **Signature:** the flash code — answer it with a lantern and males come to you.
+- **Signature:** answer its flash — flash a lantern by hand on the female's beat, a second or two after his J, and males fly to
+  you (real: the females answer from the ground after a set delay). A flash is a signal, so it doesn't break the rule
+  that only powered lights draw bugs.
 - **To build:** the J-flash (display, from the shared clock); larvae in damp ground eating maggots (the stand-in);
-  the answer-a-flash lure (lights block).
+  the answer-a-flash lure: a player's lantern flash sent as an event every computer sees (lights block).
 
 **Lenses:** Real biology — the J flight, the timed answer, the bitter blood, the glowing young (facts B). Picture the
 moment — dusk over the village meadow, the grass lighting in J's. **Cost and risk:** the lure is new; the glow is
 display only.
 
-### P65. Cave glowworm (the New Zealand glowworm, Arachnocampa luminosa) — the starry ceiling
-*Mining Camp, Centipede Cavern, a ceiling over the Underground River · always · new (D21).*
-- **Lives and moves:** a fly larva in a silk nest on the cave ceiling, hanging up to 30 sticky threads below it; its
-  glow lures small flying bugs into the threads (real).
+### P65. Cave glowworm (the New Zealand glowworm, Arachnocampa luminosa) — the blue stars in the dark
+*Mining Camp (D21: with the glowing mushrooms, its light), Centipede Cavern, over the Underground River · on the
+world's clock, glowing always · new (D21).*
+- **Lives and moves:** a fly larva in a silk nest on cave ceilings and overhangs, hanging up to 30 sticky threads
+  below it; its glow lures small flying bugs into the threads (real). The view is from above and caves show no
+  ceilings (decided), so in the game they hang from the walls and overhangs, along seams and over the water.
 - **Eats:** small flies above all, also moths, mosquitoes, millipedes and spiders that touch the threads (real); in the
   game the cave flies on the wing.
 - **Breeds:** eggs in clumps on the cave wall; the larva lives six months to a year; the adult fly can't eat and lives
@@ -1149,41 +1274,66 @@ display only.
   careless player darkens the cave around them.
 - **On the farm:** living light: catch one for a lantern (D21).
 - **Signature:** the lights go out where you touch.
-- **To build:** a ceiling bug with threads (the web block's sticky lines); its light (lights block); going dark when
-  touched.
+- **To build:** a wall-and-overhang bug with threads (the web block's sticky lines); its light (lights block); going
+  dark when touched.
 
-**Lenses:** Real biology — the snares, the lure, the touch response (facts B). Picture the moment — a cave ceiling like
-a night sky, and a dark patch spreading where your shoulder brushed the threads. **Cost and risk:** small.
+**Lenses:** Real biology — the snares, the lure, the touch response (facts B). Picture the moment — the walls of a seam
+lit with blue stars, and a dark patch spreading where your shoulder brushed the threads. **Cost and risk:** small.
 
 ### P66. Locust (the desert locust, Schistocerca gregaria) — the swarm with a cause
-*Locust Farmland, spilling into the zones around it (decided) · solitary ones fly at night, swarms by day · new.*
+*Locust Farmland, swarms carrying on into the next zone (your wish, 2025-12-30, with nothing to stop them) · solitary
+ones fly at night, swarms by day · new.*
 - **Lives and moves:** two forms of one insect. Solitary locusts are green or beige, avoid each other and fly at night.
   When rain brings a flush of green and they crowd, legs bumping, they change within hours into the swarming form —
-  yellow and black, marching in bands as young, then flying in swarms by day (real).
+  yellow and black, marching in bands as young, then flying in swarms by day (real). Once changed, they stay
+  changed for a day or more even when thinned out, and a marching band moves in fits and starts, only some walking
+  at any moment (real).
 - **Eats:** almost every green plant, about its own weight a day (real) — wheat and the other crops, as decided.
 - **Breeds:** egg pods of up to about 150 eggs pushed into bare soil and sealed with foam (real).
 - **With you:** no bite; the swarm is the danger to your crops, not to you.
 - **On the farm:** a crop disaster and a harvest: people really net and eat them (real); grilled locust legs and the
   protein drink (the item rows).
-- **Signature:** you can see it coming: crowding turns them; keeping their numbers down keeps them from crowding — the
-  real trigger. Harvesting and mantises are the game's ways to do it (real natural enemies do little, because swarms
-  move on).
+- **Signature:** you can see it coming: crowding turns them, and once turned they stay turned, so the time to act is
+  before they crowd — keeping their numbers down is the real answer. Harvesting and mantises are the game's ways to do
+  it (real natural enemies do little, because swarms move on).
 - **To build:** the crowding switch (swarm-change block); marching bands and flying swarms; egg pods in bare soil.
 
 **Lenses:** Real biology — the phase change, its trigger, the colours, egg pods, night flight of solitary adults (facts
 B). Fit — locust swarms eat wheat and aren't bosses (decided). **Cost and risk:** the swarm-change block is the most
 striking new mechanic outside the ants.
 
+## Questions
+### Q1. Moving what's left of each bug's life onto the players' computers: piece by piece, or all at once first?
+Today the players' computers run each bug's movement, its reactions to you and a hunter's choice of victim; the server
+still runs feeding, breeding, nests, eggs and grubs, the ants' memory of food, and night. Your rule is that bug
+behaviour lives on the players' computers, and the earlier design work left the pace of the move to you
+(`individual_ecology_redesign.md`, 2026-07).
+- **A.** Piece by piece: each building block moves its own part when it's built (the ant trail takes the ants'
+  food-finding, nests take breeding, and so on), and the server keeps the rest until then. New bug behaviour arrives
+  sooner; for a while a bug's life is split between the two, and a few blocks lean on reports to the server that are
+  removed later.
+- **B.** All at once first: rebuild feeding, breeding, nests and hunting on the players' computers as one engine, in
+  checked stages, then build the bugs on it. Built once, and the messages per kill or birth disappear, but no new bug
+  behaviour lands until it's done, and it is the largest single job in the plan.
+- **C.** A short trial first, then decide: the redesign's test of a day or two — food that stays identical on two
+  computers, and three hundred bugs feeding for themselves on a weak computer. If both pass, B; if not, A.
+
+**Recommendation: C.** The trial answers the two things that could sink B, for a couple of days' work. If they
+pass, B avoids building feeding and breeding twice; if they fail, A is the safe road. The ant trail's scent and
+the bug stick are built the same way under either.
+
 ## To settle later (not in this review)
 - Each bug's numbers (speed, damage, breeding rates, caps) — set in the Bug Lab and the zone tuning runs, after its
   behaviour is signed off (overview P10).
-- Which species get a boss beyond the ant queens and the Hercules beetle (within overview P13, with each zone's design).
+- Which species get a boss beyond the ones the sheets already give (the ant queens, the Hercules beetle, the giant
+  centipede's brooding mother, the fat-tailed scorpion's mother with her young, the wolf spider's mother), within
+  overview P13, with each zone's design.
 - How dangerous venom is overall, and what the antidotes cost (GDD §07 combat, §11 potions).
-- The art for the forty-three new bugs, batch by batch, each paid batch asked for first.
+- The art for the forty-four new bugs (two still open), batch by batch, each paid batch asked for first.
 
 ## Sources
-- The bug lineups (`docs/gdd/bug_lineups.jsonl`) and the bug list (`docs/gdd/bug_table.jsonl`); decisions D21, D39,
-  D79–D82 (`docs/product/economy/DECISIONS.md`).
+- The bug lineups (`docs/gdd/bug_lineups.jsonl`) and the bug list (`docs/gdd/bug_table.jsonl`); decisions D21, D38, D39,
+  D57, D62, D63, D66, D75, D79–D82 (`docs/product/economy/DECISIONS.md`).
 - Facts per bug, with their sources: `docs/product/investigations/research-2026-10-03/bug-ecology-facts-A.md` and
   `bug-ecology-facts-B.md`.
 - How games and biology handle trails, nests, hunting, defences, schedules and herding:

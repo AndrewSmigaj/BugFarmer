@@ -3,7 +3,7 @@
 These are tentative suggestions for the owner, not decisions or game data.
 
 How this was checked: each candidate was read on its Wikipedia pages (English, and German or Polish where they say
-more) and on other pages where named (Animal Diversity Web, university extension pages, BWARS, open-access papers),
+more) and on other pages where named (BWARS and open-access papers read through PubMed Central and Europe PMC),
 all fetched on 2026-10-03; only the pages listed under "Sources" were used, and anything they did not state is listed
 under "Not confirmed". Facts stated only for a genus or family are labelled as such. The game's rules used for the fit
 checks come from `docs/gdd/00_premise.md`: fish and people survive; mammals, birds, reptiles and amphibians are gone;
@@ -428,7 +428,7 @@ in the brief were checked, and one more found on the way that matches the heath 
 - **Sources:** https://en.wikipedia.org/wiki/Deinopis_subrufa (now titled Asianopis subrufa) ;
   https://en.wikipedia.org/wiki/Deinopidae ; https://en.wikipedia.org/wiki/Deinopis
 - **Not confirmed:** whether this species aims with droppings, hears at a distance or remakes its eye membrane each
-  night (stated for Deinopis); its daytime disguise; how cold a heath it can live on (Tasmania is its coldest range).
+  night (stated for Deinopis); its daytime disguise; how cold a heath it can live on (its range reaches Tasmania and New Zealand).
 
 ### 5c. Pirate spider — Ero furcata — fits loosely: it needs web-building spiders to eat
 - **Eats:** only other spiders, especially web-building cobweb spiders (Theridiidae) (German page). Some pirate
@@ -487,3 +487,230 @@ in the brief were checked, and one more found on the way that matches the heath 
 - **Size:** females 10–20 mm (19 mm in Mastophora); males under 2 mm.
 - **Sources:** https://en.wikipedia.org/wiki/Bolas_spider ; https://en.wikipedia.org/wiki/Mastophora_(spider)
 - **Not confirmed:** whether any bolas spider has been found luring a moth on the roster.
+
+## 6. Deadly Ants core (the deepest underground; the fire ant queen's fortress, a boss)
+
+**No good new fit was found.** What was checked:
+- **The outpost's three guests reach the core too.** The fire ant scarab eats brood inside the nest; Orasema wasps
+  grow on the ant pupae and are groomed and fed "as if they were part of the ants' brood"; Caenocholax males grow in
+  the ant larvae and pupae (sections 3a–3c). The brood is kept by the queen, so the core could hold the same three in
+  greater numbers, with the frozen, perch-climbing infected ants (3c) as the sign the player is getting close. Where in
+  the nest each one lives is not stated on the pages read.
+- **A parasite of queen larvae only — Nothomicrodon (a scuttle fly) — fails:** its larva is an internal parasite of ant
+  larvae, "exclusively attacking sexual female (gyne) larvae", one per host, which would have suited a queen's
+  fortress; but its host is the ant Azteca chartifex in Bahia, Brazil, not a fire ant, and the adult fly has never been
+  reared. (https://pmc.ncbi.nlm.nih.gov/articles/PMC5374537/ ; Pérez-Lachaud et al. 2017, Scientific Reports)
+- **Ruled out by the game's rules, not checked further:** a social-parasite ant that lives in fire ant nests (named in
+  a 2023 paper's title; ants other than the two are not allowed), and the fire ants' microsporidian parasite (not an
+  arthropod).
+- **Searches that found nothing usable:** Europe PMC searches for mites and scarabs in fire ant nests and queens
+  returned no species with a described life (https://www.ebi.ac.uk/europepmc/webservices/rest/search, queries on
+  "Solenopsis invicta" with mites, queens, nest and scarab).
+
+**Suggestion:** keep the core's cast to the fire ants themselves (the queen, her soldiers and brood) plus the
+outpost's three guests at their thickest; a new species is not needed to make it the colony's heart.
+
+## 7. Hilltop Meadow (surface wildflower meadow; advanced beekeeping)
+
+Two of the meadow's candidates need a soil beetle: the bee-killing robber fly Mallophora ruficauda (round 1), whose
+larvae "feed only on white grubs, the soil-dwelling young of scarab beetles", and the roster's bombardier beetle. Both
+chafers below are scarab beetles (family Scarabaeidae on their pages), and the cockchafer page calls its larvae "white
+grubs". The bombardier beetle turned out to need a different beetle (7c).
+
+### 7a. Garden chafer — Phyllopertha horticola — fits, and suits a meadow best
+- **Eats:** the larvae "feed on roots of clover, grasses and crops (cereals, cabbages, cucumbers, beets, peas)"
+  (English page); the German page says that despite their numbers they do little damage, because they are small.
+  Adults eat "leaves, flowers and developing fruits of many deciduous trees and shrubs (mainly oak leaves, hazelnut
+  and birch leaves, as well as cherry and rose petals)".
+- **Breeds:** females lay 15–25 eggs in the ground, 10–15 cm deep; they hatch after 4–6 weeks, and the larvae grow up
+  to 2 cm long in the soil. The pages disagree on how long that takes: "2–3 years" (English) or about one year,
+  moving deeper in April to pupate and coming out in May (German).
+- **Behaviour worth playing:** (1) it flies by day: the day-active beetles "mostly fly around looking for food"
+  (German page); (2) "The males swarm first; the females follow with a few days delay" (English page), and mass
+  outbreaks sometimes do real damage (German page); (3) small and many, a living food supply for the meadow's hunters
+  above ground and below.
+- **Danger to people:** not stated.
+- **Pest status:** "Larvae and beetles are considered an agricultural pest" (English page).
+- **Habitat and fit:** "widespread and common" in central Europe (German page), across Europe and Asia east to Siberia
+  and Mongolia (English page). Fits a hilltop wildflower meadow: its grubs live under the clover and grass, and its
+  adults visit the roses and fruit-tree blossom a beekeeper would plant.
+- **Needs gone animals?** No.
+- **Adds:** the robber fly's young get their white grubs right under the meadow, and the day-flying adults are prey
+  the player can see; a farmer also gets a real pest of lawns, clover and crops.
+- **Size:** 8.5–11 mm.
+- **Season note:** adults are out from April to July; the game has no seasons, so they would simply be present.
+- **Sources:** https://en.wikipedia.org/wiki/Phyllopertha_horticola ; https://de.wikipedia.org/wiki/Gartenlaubkäfer
+- **Not confirmed:** how long the grubs take (the pages disagree); its predators; whether the robber fly's larvae
+  would eat its grubs (round 1's page names a South American chafer as their preferred food).
+
+### 7b. Cockchafer (May bug) — Melolontha melolontha — fits, but its life is built on seasons
+- **Eats:** the grubs ("chafer grubs" or "white grubs") "feed on plant roots, for instance potato roots", damaging
+  "grasses, cereals, and other crops", strawberries among them (English page); the German page says they eat the roots
+  of grasses and herbs, preferring dandelion, then sorrel and yarrow, and find roots through the soil by carbon dioxide
+  and plant scents, travelling about 70 cm. Adults eat oak leaves, and also conifer needles such as pine (English);
+  oak and beech leaves, sometimes fruit trees (German).
+- **Breeds:** females lay 60–80 eggs (English page), or clutches of about 24, usually two (German page), 15–25 cm
+  deep; the eggs hatch after 4–6 weeks. The grubs grow for three to four years, "in colder climates even five years"
+  (English); three years in south-central Europe, four in the north, through three stages, the third doing the most
+  damage (German). Adults live five to seven weeks (English) or four to six (German).
+- **Behaviour worth playing:** (1) the dusk flight: "male beetles, at dusk, will begin to swarm and locate around
+  groups of trees at forest edges" (English); the flight is almost entirely at evening twilight, steering by the sky's
+  polarised light and seeing a forest's outline from about 3 km away, and males find females by the scent of leaves
+  the beetles have chewed (German); (2) mass years: because the grubs take three or four years, the generations don't
+  overlap and the beetles come in waves every three or four years ("May bug years"), with a bigger cycle of about 30
+  years (English); in 1938 nearly 200 million were collected in Schleswig-Holstein (German); (3) people's long war
+  with it: collected and killed in France in the late Middle Ages (English), formally excommunicated by the bishop in
+  Bern in 1478–79 (German), and eaten in the 19th century "raw, sugared, candied, or in soup" (English): good
+  examine-text facts.
+- **Danger to people:** none stated.
+- **Pest status:** in mass years the grubs are serious farm pests, leaving stunted, browning patches in meadows and
+  pastures (German); adults occasionally harm cherry or plum orchards (English). Controls named: light traps, soil
+  tilling and sex pheromones (English); a fungus, Beauveria brongniartii, sold for biological control, and a parasitic
+  fly, Dexia rustica, whose larvae seek out the grubs in the soil (German).
+- **Habitat and fit:** across Europe, Turkey and the Caucasus (English). The adults swarm at trees and forest edges and
+  the grubs live under meadow and pasture, so it fits the Hilltop Meadow if there are trees at its edge.
+- **Needs gone animals?** No. Its named enemies include moles, starlings, crows and gulls (gone) and ground beetles,
+  ants and click beetles (bugs).
+- **Season note:** much of what makes it famous is seasonal: adults out in April or May for a few weeks, grubs digging
+  deeper in winter, and mass years every three or four years. Without seasons, the dusk flight could happen every
+  evening, but the "May bug years" would need a game-made cycle or be left out.
+- **Adds:** a big, familiar beetle with an evening swarm at the meadow's trees, and grubs that feed the robber fly's
+  young; a farmer's pest that browns the grass.
+- **Size:** 25–30 mm (English); 22–32 mm (German).
+- **Sources:** https://en.wikipedia.org/wiki/Common_cockchafer ; https://de.wikipedia.org/wiki/Feldmaikäfer
+- **Not confirmed:** whether the robber fly's larvae would eat its grubs; how many eggs (the pages differ).
+
+### 7c. The bombardier beetle needs a different soil beetle: an Amara ground beetle, not a chafer
+- The larvae of the great bombardier beetle (Brachinus crepitans) develop "as ectoparasites on the pupae of other
+  ground beetles", and "so far only species of the ground beetle genus Amara are known as hosts"; the first two larval
+  stages drink the pupa's body fluid and the third eats its tissue (German page). The English bombardier beetle page
+  says only that most species, "including the larva", are carnivorous; the Brachinus page says nothing on larvae.
+- The adults of the great bombardier beetle hunt at night and live on dry heath, dry grassland, fields and vineyards on
+  chalky soil, quarry spoil heaps and waste ground (German page).
+- A common meadow Amara is the common sun beetle, Amara aenea: adults hunt other insects and eat the developing seeds
+  of meadow grasses (Poa trivialis and smooth meadow grass); the larvae are omnivorous; almost all of Europe and
+  northern Asia, and parts of northern Africa; it "is under study for use in integrated pest management" (English
+  page). No page read names it as a bombardier beetle's host.
+- **So:** a chafer feeds the robber fly's young, but the bombardier beetle's young need Amara ground beetles. Either the
+  meadow gets an Amara too, or the game simplifies the bombardier beetle's larvae to eat other beetles' pupae.
+- **Sources:** https://de.wikipedia.org/wiki/Großer_Bombardierkäfer ; https://en.wikipedia.org/wiki/Bombardier_beetle ;
+  https://en.wikipedia.org/wiki/Brachinus ; https://en.wikipedia.org/wiki/Amara_aenea
+- **Not confirmed:** which species the roster's bombardier beetle is (the facts above are for the European great
+  bombardier beetle); whether Amara aenea is one of the known hosts; its size.
+
+## 8. Locust Farmland (ruined farmland with locust swarms)
+
+The game's locust is the desert locust, whose female lays an egg pod of up to 100 eggs, 3–4 cm long, its lower end
+about 10 cm down in soft soil (desert locust page). That page names the locust's enemies only as groups, among them
+"predatory beetle larvae". Blister beetles whose larvae eat grasshopper and locust eggs are real, and three were
+checked; no page read names the desert locust itself as their food.
+
+### 8a. Chinese blister beetle — Epicauta chinensis — fits: its larvae eat locust eggs
+- **Eats:** "Larvae feed on locust eggs, such as Locusta migratoria, Oxya chinensis, etc. or on the larvae and
+  provisions of soil- or wood-nesting bees"; in the study they were reared on migratory locust eggs. Adults are
+  "polyphagous insects with adults mainly feeding on fresh soybean and Lucerne (alfalfa) leaves" (2014 study).
+- **Breeds:** six larval stages: the first is a "triungulin", "slender, active and well-sclerotized"; the second to
+  fourth are less mobile "first grubs", "the primary feeding stages"; the fifth is "a pseudo pupa that does not eat and
+  does not move, but enters diapause" (a resting stage); the sixth, the "second grub", does not feed and then pupates.
+  One generation a year in northern China (2014 study).
+- **Behaviour worth playing:** (1) its first larva is an active hunter that finds a buried egg pod, then turns into a
+  fat grub feeding on it; (2) the adult is a crop pest above ground (soybean, alfalfa), so the same beetle that thins
+  the locusts below chews the farm above; (3) its poison, cantharidin (below), makes it a beetle never to grab.
+- **Danger to people:** blister beetles release cantharidin, "a poisonous chemical that causes blistering of the skin"
+  (family page); it is "a potent vesicant (blistering agent), exposure to which can cause severe chemical burns";
+  swallowed, it damages the gut and urinary tract and "may also cause permanent renal damage", and "fatal doses have
+  been recorded between 10 mg and 65 mg" (cantharidin page). The male makes it and gives it to the female when they
+  mate (cantharidin page). It is also a medicine: diluted, it removes warts (cantharidin page), and it is used in China
+  against cancer (2014 study).
+- **Habitat and fit:** northern China (2014 study). Fits the Locust Farmland: larvae in the soil where the locusts lay
+  their egg pods, adults in the farm's bean and alfalfa fields.
+- **Needs gone animals?** No.
+- **Adds:** a real natural check on locusts that a farmer can encourage, at a price: the adults eat the crops and burn
+  the hands that catch them.
+- **Season note:** one generation a year, with a resting stage; the game has no seasons.
+- **Sources:** https://www.ebi.ac.uk/europepmc/webservices/rest/PMC3931803/fullTextXML (Li et al. 2014, PLoS One) ;
+  https://en.wikipedia.org/wiki/Meloidae ; https://en.wikipedia.org/wiki/Cantharidin
+- **Not confirmed:** whether it eats desert locust eggs (the migratory locust and Oxya, a rice grasshopper, are
+  named); its size; how many egg pods one larva needs; whether it swarms.
+
+### 8b. Yellow-and-black blister beetle — Hycleus cichorii (formerly Mylabris cichorii) — fits: a locust-egg specialist
+- **Eats:** "Adult beetles mainly feed on flowers and leaves of plants in the legume, nightshade, and gourd families,
+  while the larvae must feed specifically on locust eggs" (2024 study); in a 2016 study "each larva was reared with
+  one Locusta migratoria manilensis egg mass" (a migratory locust) in a cup of soil.
+- **Breeds:** four larval stages are named (2024 study); nothing else stated.
+- **Behaviour worth playing:** (1) its young can only live on locust eggs, so it follows the locusts: a 2025 review
+  says the medicinal blister beetles' "distribution ... in a given area is positively correlated with the density of
+  locusts and the types and quantities of legume crops"; (2) bold colours: three pale yellow to brownish-yellow cross
+  stripes (2025 review), the "yellow and black small blister beetle" (2024 study); (3) cantharidin "is a feeding
+  deterrent to most insects" (2016 study), so few bugs would eat it.
+- **Danger to people:** cantharidin, as in 8a. Its "dried body ... has been used in traditional Chinese medicine for
+  thousands of years" (2016 study); swallowed preparations poison people, usually "immediately after ingestion", and
+  in one account poisoning began an hour after ingestion and "led to death within 6 days" (2025 review).
+- **Habitat and fit:** the medicinal blister beetles are "mainly distributed in Henan, Guangxi, Anhui, Jiangsu, Hunan,
+  Guizhou, and Fujian provinces in China, as well as Myanmar" (2025 review in Chinese Medicine, stated for the group).
+  Fits the farmland: adults on beans, the tomato and potato family, and squashes; larvae in the locusts' egg beds.
+- **Needs gone animals?** No.
+- **Adds:** the locust specialist: where locusts and bean fields are thick, these beetles follow; a warning-striped
+  beetle the player learns not to touch.
+- **Size:** 1.0–1.5 cm long, 0.5–0.7 cm wide (2025 review).
+- **Sources:** https://pmc.ncbi.nlm.nih.gov/articles/PMC11341433/ (Ma et al. 2024, Ecol Evol) ;
+  https://www.ebi.ac.uk/europepmc/webservices/rest/PMC4709229/fullTextXML (Huang et al. 2016, PLoS One) ;
+  https://pmc.ncbi.nlm.nih.gov/articles/PMC12627003/ (Cai et al. 2025, Front Pharmacol) ;
+  https://pmc.ncbi.nlm.nih.gov/articles/PMC12676896/ (Wang et al. 2025, Chin Med) ;
+  https://en.wikipedia.org/wiki/Cantharidin
+- **Not confirmed:** whether its adults damage crops (the studies name only plant families); whether it takes desert
+  locust eggs; there is no Wikipedia page for it.
+
+### 8c. Striped blister beetle — Epicauta vittata — fits loosely: its larvae eat grasshopper eggs, not locust eggs
+- **Real for a named species:** "The striped blister beetle is associated with grasshopper species that produce large
+  egg-pods, such as the two-striped grasshopper and differential grasshopper" (Melanoplus species). "The new larva is
+  whitish and has long legs that allow it to be mobile. During this more mobile stage, it parasitizes a grasshopper egg
+  case"; then "it becomes a sedentary grub", darkening and with its legs shrinking. For the genus: "The larvae are
+  predators on the eggs of grasshoppers" (genus page).
+- **Eats (adults):** "beans, beet, carrot, cabbages, corn, eggplant, pea, potato, radish, spinach, squash, sweet
+  potato, tomato, turnip, clovers, soybean, and alfalfa".
+- **Behaviour:** it "forms swarms that travel en masse": a swarm of farm pests to set against the locust swarms.
+- **Danger to people:** it contains cantharidin, "a vesicant that causes the blistering of skin and mucous
+  membranes"; "the ingestion of 30 to 50 beetles can be fatal" to a horse (horses are gone; no figure is given for
+  people on this page; see 8a).
+- **Habitat:** eastern North America (eastern Canada and the eastern United States). **Size:** 9–17 mm.
+- **Why only loosely:** its real hosts are ordinary grasshoppers, which the owner cut; in the game it would have to
+  use the locusts' egg pods. 8a and 8b are the blister beetles actually recorded on locust eggs.
+- **Needs gone animals?** No.
+- **Sources:** https://en.wikipedia.org/wiki/Epicauta_vittata ; https://en.wikipedia.org/wiki/Epicauta
+- **Not confirmed:** whether it ever uses locust eggs.
+
+## Summary
+
+1. **Ant Colony + Queen:** best is the ant-nest case beetle (Clytra laeviuscula): the black garden ant is a recorded
+   host, the ants carry its eggs into the nest themselves, and its cased larvae live for years on the colony's rubbish
+   and some of its brood. The ant-nest hoverfly (Microdon analis) is a good second, a slug-shaped brood thief, though
+   its Lasius niger link is "believed". The rove beetles, the highwayman beetle and the ant-nest beetles all belong to
+   other ants.
+2. **Scorpion Rocks:** best is the six-eyed sand spider (Sicarius thomisoides): it lives in real desert, hides under
+   warm rocks by day and lies buried in sand, and its venom kills skin, which suits the zone's "deadly venom" without
+   a third scorpion. The desert stink beetle (Eleodes) is the zone's common, harmless catch with a headstand spray. The
+   Jerusalem cricket fits only the dry edges.
+3. **Deadly Ants outpost:** all three fit. Best for this zone's layout is the Orasema wasp: it lays in the swamp's
+   plants and its larvae ride the foragers down into the galleries. The twisted-wing parasite (Caenocholax fenyesi) is
+   the most striking: infected ants freeze on high perches. The fire ant scarab is real but thinly documented. No named
+   spider or beetle that hunts fire ants was found.
+4. **Underground River, deep:** best is the cave amphipod (Niphargus): a true cave dweller, blind and white, that hunts
+   smaller water animals, can go 200 days without food, and in one Italian cave lives in a food web run by sulfur
+   bacteria with no sunlight. The Kentucky cave shrimp fits but little is known about it; the venomous remipede fits
+   only if the sunken lake has salt water at the bottom.
+5. **Spider Vale West:** best is the ladybird spider (Eresus sandaliatus): dry, sandy, sunny heath in northern Europe
+   is exactly its home, with a burrow trap, warning-coloured males and a mother who becomes her young's first meal.
+   The net-casting spider (Asianopis subrufa) is the best pick for a striking hunt and lives on heathland too. The
+   pirate spider needs web spiders in the zone; the spitting spider lives indoors in the north; the bolas spider fails
+   (it lures only particular moths, and it is an orb-weaver).
+6. **Deadly Ants core:** nothing new fits; the outpost's three guests at their thickest, around the queen's brood, are
+   the honest answer.
+7. **Hilltop Meadow:** the garden chafer suits a meadow best (grubs under clover and grass, adults flying by day) and
+   gives the robber fly's young their white grubs; the cockchafer adds an evening swarm but needs trees and is built on
+   seasons. The bombardier beetle's young need Amara ground beetles, not chafers.
+8. **Locust Farmland:** best is the Chinese blister beetle (Epicauta chinensis), recorded eating migratory locust eggs,
+   with crop-eating adults; the yellow-and-black blister beetle (Hycleus cichorii) is the stricter locust-egg
+   specialist. Both carry cantharidin, which blisters skin and has killed people when swallowed (10–65 mg). No page
+   names the desert locust as a host. The American striped blister beetle eats ordinary grasshoppers' eggs, which the
+   owner cut.
