@@ -1085,3 +1085,11 @@ The owner answered the assistant's bug lineups in conversation.
 - **Mantis egg cases** come from the game's own mantises.
 - **The farm cricket** is a maybe.
 - **The rest of the lineups stand,** on one condition: every bug carries its real name.
+
+### D81 — Bees for the hives (2026-10-02)
+The owner added to D80 in conversation.
+- **Hive bees.** The bees of the beekeeping ladder should, ideally, be bees a player can keep in hives.
+- **The bumblebee is accepted.**
+- My wild giant honey bee, hunted rather than kept, missed this. The revised lineup keeps it on rafters, as people
+  in southern Vietnam really keep it, and offers the Asian honey bee, which lives in boxes, as the alternative. The
+  third step is not yet decided.
