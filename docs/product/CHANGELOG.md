@@ -3,6 +3,11 @@
 Sections moved verbatim from `BACKLOG.md` on 2026-09-26 (nothing edited), newest first as they appeared
 there. The open queue is [`BACKLOG.md`](BACKLOG.md); the plan is [`ROADMAP.md`](ROADMAP.md).
 
+## Done 2026-10-03 — the giant honey bee out (D82)
+- The owner ruled the giant honey bee out: beekeeping takes bees kept in hives. Its lineup row is cut, and a new
+  row proposes the Asian honey bee, kept in hives, as the third step (open). The lineups are now 63 rows: 56
+  accepted, 2 open, 5 cut.
+
 ## Done 2026-10-02 — the bug check: every bug settled, the item rows cleaned (D79–D81)
 - **The bug list** (`docs/gdd/bug_table.jsonl`, 116 bugs): all settled — 54 kept, 62 cut. The owner's marks (D79) and
   the accepted bug lineups (D80, D81) decided the open ones; each kept bug names its real species (the meadow
