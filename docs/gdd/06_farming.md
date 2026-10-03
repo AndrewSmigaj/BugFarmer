@@ -6,7 +6,7 @@ idea lenses, then go to the review page.
 
 ## To settle (raw list — not yet checked against the idea lenses)
 - What fertiliser does, and its tiers
-- Crop pests (aphids) in 1.0
+- Crop pests in 1.0 (aphids are cut, D79)
 
 ## Sources to gather
 - `docs/product/architecture/architecture_farming.md`

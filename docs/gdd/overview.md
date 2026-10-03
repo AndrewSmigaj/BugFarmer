@@ -225,8 +225,8 @@ own information page. The Ecology tab holds the population charts.
 each zone also has a hard ceiling per species (1,500 flies in the rebuilt village, for example); there is no Ecology
 tab (only a developer graph), and the village Ecologist sells six decoration recipes.
 
-**Designed, not built** — crop pests (aphids, caterpillars, locusts), each with its own natural enemies — ladybugs
-eat aphids; pollination raising yields.
+**Designed, not built** — crop pests (aphids, caterpillars, locusts), each with its own natural enemies — ladybugs eat
+aphids (both since cut, 2026-10-02, D79); pollination raising yields.
 
 **Still open** (→ §04) — the quest list and rewards, and the tab's design, within P9; whether a left-behind corpse
 feeds other bugs; how far the per-bug model goes, part of the ecology or all of it (the owner's call).
@@ -1062,7 +1062,8 @@ examine view; plant effects need the simulation to share them like any other lev
      releasing bugs, say) don't start a paid quest.
   3. **Restore** — bring a species back to a zone it has vanished from.
   4. **Specimens** — bring a live bug or a chrysalis for his collection; a display in his house fills up.
-  5. **Outbreak** — a pest booms on the farms and he asks for its natural enemy: ladybugs eat aphids.
+  5. **Outbreak** — a pest booms on the farms and he asks for its natural enemy: mantises against the locusts (the bug
+     lineups, 2026-10-02; the first example, ladybirds against aphids, went with D79).
   6. **Tag and release** — catch, mark and release a number of one species, then count how many marked ones you catch
      again: this "mark and recapture" is how real ecologists estimate a population.
   7. **Tame a new area** — a chain in a new zone ending in the mini-boss that grew out of an imbalance; the reward is

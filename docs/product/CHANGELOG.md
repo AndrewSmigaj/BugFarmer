@@ -3,6 +3,25 @@
 Sections moved verbatim from `BACKLOG.md` on 2026-09-26 (nothing edited), newest first as they appeared
 there. The open queue is [`BACKLOG.md`](BACKLOG.md); the plan is [`ROADMAP.md`](ROADMAP.md).
 
+## Done 2026-10-02 — the bug check: every bug settled, the item rows cleaned (D79–D81)
+- **The bug list** (`docs/gdd/bug_table.jsonl`, 116 bugs): all settled — 54 kept, 62 cut. The owner's marks (D79) and
+  the accepted bug lineups (D80, D81) decided the open ones; each kept bug names its real species (the meadow
+  butterfly's is still open), names that would mislead say what they became (e.g. "Giant hornet (now the European
+  hornet)"), and each row's "Named in" count is recounted against the cleaned item table.
+- **The bug lineups** (`docs/gdd/bug_lineups.jsonl`, 62 rows: 56 accepted, 2 still open, 4 cut) are the roster. Open:
+  the giant honey bee (proposed as the beekeeping ladder's third step, now kept on rafters) and the farm cricket;
+  the meadow butterfly is accepted, but its real name is still open.
+- **The item rows** (49 changed, over three rounds, each past a cold review): honeydew, the cochineal, its crimson dye
+  and the moth roost are cut with their bugs; the wood grub becomes the stag beetle's grub, found where stag beetles
+  live (my proposal); silk comes from the farmed silk moth; the boss-only materials name real mothers and queens (a
+  yellowjacket queen if the Wasp Thicket keeps a boss, a mother giant centipede, a mother fat-tailed scorpion, a mother
+  wolf spider and her egg-sac silk) in place of the invented bosses, and the wasp venom no longer swallows the queen's;
+  the killer bee rows stop treating it as uncertain; crayfish and crabs sit in the lineups' waters; the rest drop the
+  cut bug's name. Five new rows cover what the accepted bugs need: the Mulberry Tree (the silkworms' food) and its
+  Mulberries, Silkworm Eggs (the weaver sells the first, my proposal), the Bumblebee Nest Box (D81; Maren sells it, my
+  proposal) and the Mantis Egg Case (D80). GDD lines followed in §00, §01, §03, §06, §11 and the overview, with dated
+  notes where a settled record changed; D79's count of the thirty turned-down picks is corrected.
+
 ## Done 2026-09-30 — saves, steps 9–10: rolling backups and restoring them (D73; closes the BACKLOG "character saves" fault)
 - **Rolling backups** (`backup.go`): every zone's save and every character, at ONE moment — listed as a task on the
   save queue, so each zone and the characters in it come from the same instant — written to

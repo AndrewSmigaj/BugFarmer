@@ -1057,10 +1057,12 @@ old lists, which earlier models wrote without taste, starting from the bugs kept
   dangerous); the locust; the mosquito; the glowworm, the cave beetle and the small cave spider; the cave fly; the
   killer bee; the black widow; the scorpion; the rhinoceros beetle. Saved from my cuts: the horse fly, woodland
   butterflies such as the purple emperor, the medium and deadly dragonflies, and more kinds of centipede.
-- **Cut:** the aphid and the ladybird (the owner doubts aphids add play without muddling it), cockroaches, the
-  gall wasp, leeches and snails, the extra ant species, the invented creatures, and the picture-only extras I proposed
-  cutting. The thirty old zone-plan picks the owner disagreed with are off the list; any can return only as a fresh,
-  reasoned suggestion.
+- **Cut:** the aphid and the ladybird (the owner doubts aphids add play without muddling it), cockroaches, the gall
+  wasp, leeches and snails, the extra ant species, the invented creatures, and the picture-only extras I proposed
+  cutting. The thirty picks the owner turned down (twenty-four from the old zone plans, three bugs that only my item
+  rows named, and three that were only pictures) are off the list; any can return only as a fresh, reasoned suggestion.
+  *(Corrected 2026-10-02: this entry first called all thirty old zone-plan picks; six were only in my item rows or only
+  pictures.)*
 - **Still candidates, for their zones:** the bumblebee, the carpenter bee, the paper wasp, the yellowjacket, a second
   hornet, the luna, emperor and hawk moths, the monarch, the water strider (its name), the daddy longlegs (its
   name, not "harvestman"), the cricket, the crop beetle, the mantis, the stag beetle, the wolf and jumping spiders,

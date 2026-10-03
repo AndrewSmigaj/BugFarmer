@@ -28,7 +28,7 @@ Answers are stored in the page's own database, one document per section (`answer
 `ArtifactData` tool (`list`, collection `answers`). Republish from another session by passing that URL.
 
 ## The item pass
-Every item in the game and in the old designs — 1,204 rows — with a recommendation (keep, change, cut or add) and a
+Every item in the game and in the old designs — 1,209 rows — with a recommendation (keep, change, cut or add) and a
 one-line reason (the owner's request of 2026-09-28, D55). The data is `item_table.jsonl`; the review page is built
 from it by `python3 tools/gdd/build_items_page.py` and published at
 **https://claude.ai/artifact/L9ftJfjRfcFD3yAB66qenD** (private to the owner). His marks — agree, disagree and a note
@@ -50,15 +50,19 @@ pass, and the picture-only extras are tidied only with the owner's yes. A brains
 never game data, rows or art.
 
 **The bug lineups (2026-10-02, D79–D81).** After marking the bug list, the owner asked for the assistant's own
-suggestions in place of the old lists, starting from the bugs kept. `bug_lineups.jsonl` gives them family by family —
-62 real species, each with where it lives, how it plays, why, and its real name — as the second kind on the same page
-("Bug lineups"); marks are stored at `marks/bug_ideas/items/<lineup id>`, and lineup ids never change. The owner
-accepted them on 2026-10-02 (D80) with changes: bees climb in danger (honeybee, killer bee, and a proposed third),
-termites and the stick insect are cut, mantis egg cases come from the game's own mantises, and the farm cricket is a
-maybe. D81 added that the beekeeping bees should be ones a player can keep in hives, and accepted the bumblebee; the
-proposed third is now the giant honey bee kept on rafters, with the Asian honey bee as the alternative. The research is
-in `docs/product/investigations/research-2026-10-02/` (`bug-species-candidates.md`, `bug-bestiaries.md`). Next, the
-accepted lineups replace the bug list's open rows and the item rows that lean on them are fixed in one pass.
+suggestions in place of the old lists, starting from the bugs kept. `bug_lineups.jsonl` gives them family by family — 62
+real species, each with where it lives, how it plays, why, and its real name — as the second kind on the same page ("Bug
+lineups"); marks are stored at `marks/bug_ideas/items/<lineup id>`, and lineup ids never change. The owner accepted them
+on 2026-10-02 (D80) with changes: bees climb in danger (honeybee, killer bee, and a proposed third), termites and the
+stick insect are cut, mantis egg cases come from the game's own mantises, and the farm cricket is a maybe. D81 added
+that the beekeeping bees should be ones a player can keep in hives, and accepted the bumblebee; the proposed third is
+now the giant honey bee kept on rafters, with the Asian honey bee as the alternative. The research is in
+`docs/product/investigations/research-2026-10-02/` (`bug-species-candidates.md`, `bug-bestiaries.md`). The lineups are
+now the roster ("Bug lineups (the roster)" on the page), and on 2026-10-02 they settled the bug list's open rows: all
+116 bugs are decided (54 kept, each with its real species except the meadow butterfly, whose name is still open; 62
+cut), the item rows that leaned on a cut or renamed bug are fixed (49 changed), and five new rows cover what the
+accepted bugs need (CHANGELOG, 2026-10-02). Still open in the lineups: the giant honey bee as the third step, the farm
+cricket, and the meadow butterfly's real name.
 
 **Where it stands (2026-10-02).**
 - **Settled:** batch 1, the tool families and the pickaxes, axes and shovels, 34 rows (D69). Rows that are settled
@@ -92,9 +96,10 @@ accepted lineups replace the bug list's open rows and the item rows that lean on
   recipes come singly and in books, found and bought; each recipe names its station, and the spit is back as one. The
   rules row, the station rows and a new recipe-books row follow the answer; §11 proposes the details (P9–P11) and asks
   which stations can cook which dishes (Q2).
-- **Next:** the owner's answers on §08 and the rest of §11; the rare dishes and each dish's station, drafted as rows
-  and past a reviewer first; the owner's marks on the foods, the jewelry, the new potions, the outfit roster and the
-  two powerful weapons; batch 2's last two answers; then the other kinds in page order.
+- **Next:** the owner's answers on §08 and the rest of §11; the rare dishes and each dish's station, drafted as rows and
+  past a reviewer first; the owner's marks on the foods, the jewelry, the new potions, the outfit roster, the two
+  powerful weapons and the five new rows the accepted bugs need; batch 2's last two answers; then the other kinds in
+  page order.
 
 **How a batch goes.**
 1. The owner marks rows on the page.
