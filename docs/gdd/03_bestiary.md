@@ -18,11 +18,14 @@ idea lenses, then go to the review page.
   pill bugs, crayfish and crabs; fish are separate; no worms or leeches (snails go by the same rule — my reading).
 
 ## To settle (raw list — not yet checked against the idea lenses)
-- **Reviewing every bug (2026-10-02)** — on the items page, the Bugs list (`docs/gdd/bug_table.jsonl`, 116 bugs):
-  the game's 15, the zone plans' 84 below, the picture-only extras in the game's bug file, the bugs the owner has
-  asked for and the bugs the item rows name, each with a call of keep, cut or later for the owner's marks.
-- Which species the game ships with, and in which zones — most zones aren't designed yet (2026-09-27).
-- The real-species naming pass for the fifteen species in the prototype.
+- **Reviewing every bug (2026-10-02)** — done: the Bugs list on the items page (`docs/gdd/bug_table.jsonl`, 116 bugs:
+  the game's 15, the zone plans' 84 below, the picture-only extras in the game's bug file, the bugs the owner has asked
+  for and the bugs the item rows name) is settled by the owner's marks and the accepted bug lineups (D79–D81): 54 kept,
+  62 cut. The lineups (`docs/gdd/bug_lineups.jsonl`) are the roster.
+- Which species the game ships with, and in which zones — most zones aren't designed yet (2026-09-27); the bug lineups
+  (D80, D81) now place most kept species in their zones.
+- The real-species naming pass for the fifteen species in the prototype: the names are chosen, all but the meadow
+  butterfly's (D80); renaming them in the game is in the BACKLOG.
 - **The species the zone designs name** — 84 distinct species in 98 rows across 17 zone sheets, marked against the
   rulings above. The zone sheets were written to be generous ("prune later"), so this is a list to cut from, not a
   plan:

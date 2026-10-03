@@ -31,10 +31,10 @@ Each line is the owner's decision in my words, with its date.
 - **Real food** (2026-10-01, D74) — every dish is a real one cooked from what you grow, fish and farm, with nothing
   silly; everything in the world needs a use, or whether it belongs is questioned; several things can give the same
   boost.
-- **Bugs are livestock in the kitchen** (2026-10-01, D75; 2026-10-02, D76) — a fly roasts whole like a small bird, a
-  big beetle gives a steak, giant ant eggs are the eggs; the stove takes the bugs themselves, and the bug extractor
-  only makes materials. Some bugs aren't food, for their real reasons: fireflies, millipedes, milkweed caterpillars,
-  carrion beetles and ladybirds.
+- **Bugs are livestock in the kitchen** (2026-10-01, D75; 2026-10-02, D76) — a fly roasts whole like a small bird, a big
+  beetle gives a steak, giant ant eggs are the eggs; the stove takes the bugs themselves, and the bug extractor only
+  makes materials. Some bugs aren't food, for their real reasons: fireflies, millipedes, milkweed caterpillars, carrion
+  beetles and ladybirds (the ladybird has since been cut, D79).
 - **Drinks** (2026-10-01, D75) — the teas are cut; juice, cider and mead come in glass bottles, which are bought or
   made.
 - **What a meal does** (2026-10-02, D76) — it raises your Health and Stamina while it lasts, better food more, and

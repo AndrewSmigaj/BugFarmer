@@ -731,22 +731,31 @@ mirrors predation; swarm-of-1 dropped — player HP is SIM-INERT so it needs no 
 > spawns (50 from an overnight art pass on 2026-06-06, working from a brainstorm catalogue). Which bugs exist is being
 > decided bug by bug on the items page (the Bugs list, `docs/gdd/bug_table.jsonl`); this naming pass covers only the
 > bugs that survive it.
-- **Bug list follow-ups (2026-10-02, waiting on the owner's marks):** fix the item rows that lean on a cut bug, in one
-  pass — among them the wood grub and grub fat (carrion-beetle grubs could supply the fat), cochineal and its crimson
-  dye, honeydew (aphids are cut), and silk (the lineups suggest farmed silk moths instead of luna and emperor moths);
-  fold the marked bug lineups (`docs/gdd/bug_lineups.jsonl`) into the bug list; tidy the picture-only extras out of `bugs.json`, `Resources/Bugs/` and the art catalogue
-  (`tools/art/catalog/bugs.json`) only with the owner's yes (nothing spawns them); keep "later" bugs out of new rows
-  until their zone is designed.
+- **Bug list follow-ups (2026-10-02):** the item rows that leaned on cut bugs are fixed and the accepted lineups are
+  folded into the bug list (CHANGELOG, 2026-10-02). Still open:
+  - tidy the picture-only extras out of `bugs.json`, `Resources/Bugs/` and the art catalogue
+    (`tools/art/catalog/bugs.json`), only with the owner's yes (nothing spawns them);
+  - the giant hornet (the lineups' northern giant hornet) needs a nest occupant of its own when the Millipede Forest
+    is designed: two species sharing one nest id leave one of them with no nests;
+  - the proposed Mulberry Tree row (the silkworms' food) needs a place in the village when that zone is next
+    worked on, through the zone-craft skill.
+
 Every creature in the game should be an **actual real bug species** — real name, real look, and behavior that
 matches the real animal (so a player's real-world knowledge never jars, e.g. "hornets are diurnal, why is this one
 nocturnal?"). The hint was already there: `nakama/data/bugs.json` is a roster of REAL species (honeybee, bumblebee,
 luna/atlas moth, stag/rhino beetle, wolf/jumping spider, scorpions, cicadas…). Combat generated GENERIC invented
 names (`wasp_soldier`, `hornet_giant`, `caterpillar_spiny/thornback`) that break this.
+- **The mapping now exists (2026-10-02, D80, D81):** `docs/gdd/bug_lineups.jsonl` names each kept bug's real species
+  (all but the meadow butterfly's, still open), e.g. `wasp_common` → the European paper wasp, `wasp_soldier` → the
+  yellowjacket (Vespula vulgaris), `hornet_giant` → the European hornet (Vespa crabro, which really flies at night),
+  `beetle_carrion` → a burying beetle; the bug list (`bug_table.jsonl`) gives each old name's outcome. The pass below
+  applies it to the game.
 - **Task:** sweep ALL species (`species.json` combat + `bugs.json` art) and MAP each to a real species — rename ids,
-  names, descriptions, sprites, AND align behavior to the real animal (diurnal/nocturnal, diet, aggression). e.g.
-  the combat tiers → real day-active wasps/hornets (Vespa spp.) + real nocturnal caterpillars/moths; verify each
-  flag against the real animal.
-- **Discipline:** nocturnal ONLY where the real species is night-active (caterpillars/moths yes; wasps/hornets no).
+  names, descriptions, sprites, AND align behavior to the real animal (diurnal/nocturnal, diet, aggression). e.g. the
+  combat tiers → the lineups' real wasps and hornets (day-active, except the European hornet, which also flies at night)
+  and real nocturnal caterpillars/moths; verify each flag against the real animal.
+- **Discipline:** nocturnal ONLY where the real species is night-active (caterpillars/moths yes; wasps and hornets
+  no, except the European hornet, which really flies at night and comes to lights).
   This is a rename+realism pass, not new mechanics — the combat/ecology machinery is unchanged.
 **Backlog `zone barriers`:** gate danger by zone so starter zones stay cozy while wilds/caves/night are dangerous.
 Earlier notes (still valid): Deferred — utility-AI attack selection, enemy-role/species expansion. Rejected: GOAP, flow fields.

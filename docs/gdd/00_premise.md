@@ -75,12 +75,12 @@ What the older design documents say that still stands:
 - **Variety with taste** — many kinds of things to gather, craft and decorate with, each earning its place; the item
   pass may cut many (2026-09-28, D55).
 - Replaced since: "there is no endgame" (now an open world with no ending, D55) and the NPC workers (none, D56).
-- **Dropped by the rulings above** — things that need living animals — so the item table won't bring them back: the
-  frog items (frog spawn, frog toxin, the frog-leg charm, the frog pen, the frog spout); bats and bat guano; the robin,
-  the bird feeder, the bird house and the owl decoy; the dog kennel and the cat basket; the horseshoe sign and pile;
-  the dairy props; the dung pat. Where a bug-world version fits — a moth roost for the bats, frass for the guano — the
-  item table offers it, and it judges the rest of the old world's leftovers (an antler chandelier, a bearskin rug, a
-  dog statue) under the rule that old remains are fine.
+- **Dropped by the rulings above** — things that need living animals — so the item table won't bring them back: the frog
+  items (frog spawn, frog toxin, the frog-leg charm, the frog pen, the frog spout); bats and bat guano; the robin, the
+  bird feeder, the bird house and the owl decoy; the dog kennel and the cat basket; the horseshoe sign and pile; the
+  dairy props; the dung pat. Where a bug-world version fits — frass for the guano — the item table offers it (a moth
+  roost for the bats went with the herald moth, 2026-10-02, D79), and it judges the rest of the old world's leftovers
+  (an antler chandelier, a bearskin rug, a dog statue) under the rule that old remains are fine.
 
 ## As built
 - The opening text plays before the title screen (`OpeningSequence.cs`, lines 28–42); it is a placeholder.

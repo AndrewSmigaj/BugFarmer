@@ -30,7 +30,7 @@ OUT = os.path.join(ROOT, "tools", "gdd", "_build", "item_pass.html")
 # Display order and plain labels for the kinds of item.
 GROUPS = [
     ("bugs", "Bugs"),
-    ("bug_ideas", "Bug lineups (my suggestions)"),
+    ("bug_ideas", "Bug lineups (the roster)"),
     ("tools", "Tools"), ("weapons", "Weapons"), ("armour", "Armour and outfits"), ("accessories", "Accessories"),
     ("potions", "Potions and remedies"), ("meals", "Meals and food"), ("seeds_crops", "Seeds and crops"),
     ("plants", "Plants"), ("materials", "Materials"), ("ores", "Ores and gems"), ("stations", "Stations"),

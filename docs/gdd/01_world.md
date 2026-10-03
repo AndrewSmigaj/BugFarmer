@@ -192,7 +192,8 @@ see. Cost — border art in the outer zones, not a new system.
 
 ### P5. More places where bugs cross — written into the zones they touch
 Beyond the crossings already settled (the ants, the Deadly Ants), three more from the designs:
-- **giant centipedes** raid across from the Centipede Cavern into the Ant Colony (the Ant Colony's design);
+- **tiger centipedes** live on both sides, in the Centipede Cavern's upper halls and by the Ant Colony, whose ants they
+  eat: part of the ecosystem, not a raid (the Ant Colony's design, as D79 and the bug lineups revised it);
 - **locust** swarms spill out of the farmland into the zones around it (its design);
 - **wasps** spread in from the zones next door (the January GDD, §9.3).
 
