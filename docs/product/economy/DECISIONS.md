@@ -1076,3 +1076,12 @@ old lists, which earlier models wrote without taste, starting from the bugs kept
   later-stage danger that lunges and swarms, held back by sand laid on the marsh and other means. The desert zone is
   pictured as a drier, rocky place rather than sand.
 - **A new mechanic:** the non-lethal bug stick can steer ants off their trail and herd them by tapping them.
+
+### D80 — The bug lineups answered: bees as a progression, two cuts, real names (2026-10-02)
+The owner answered the assistant's bug lineups in conversation.
+- **Bees climb in danger.** The honeybee stays, with a more dangerous step up after it, the killer bee, and possibly
+  a third beyond that. Beekeeping matters as much as the rest of bug farming, and both need progression.
+- **Cut:** termites, which would not fit the game's mechanics, and the stick insect.
+- **Mantis egg cases** come from the game's own mantises.
+- **The farm cricket** is a maybe.
+- **The rest of the lineups stand,** on one condition: every bug carries its real name.
