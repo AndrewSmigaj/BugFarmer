@@ -49,12 +49,15 @@ never change. Nothing is removed until the owner has marked it; then the rows th
 pass, and the picture-only extras are tidied only with the owner's yes. A brainstorm pass makes a tentative list,
 never game data, rows or art.
 
-**The bug lineups (2026-10-02, D79).** After marking the bug list, the owner asked for the assistant's own suggestions
-in place of the old lists, starting from the bugs kept. `bug_lineups.jsonl` gives them family by family — about sixty
-real species, each with where it lives, how it plays and why — as the second kind on the same page ("Bug lineups");
-marks are stored at `marks/bug_ideas/items/<lineup id>`, and lineup ids never change. The research behind them is in
-`docs/product/investigations/research-2026-10-02/` (`bug-species-candidates.md`, `bug-bestiaries.md`). Once marked,
-the agreed lineups replace the bug list's open rows and the rows that lean on them are fixed in one pass.
+**The bug lineups (2026-10-02, D79, D80).** After marking the bug list, the owner asked for the assistant's own
+suggestions in place of the old lists, starting from the bugs kept. `bug_lineups.jsonl` gives them family by family —
+62 real species, each with where it lives, how it plays, why, and its real name — as the second kind on the same page
+("Bug lineups"); marks are stored at `marks/bug_ideas/items/<lineup id>`, and lineup ids never change. The owner
+accepted them on 2026-10-02 (D80) with changes: bees climb in danger (honeybee, killer bee, and a proposed third, the
+wild giant honey bee), termites and the stick insect are cut, mantis egg cases come from the game's own mantises, and
+the farm cricket is a maybe. The research is in `docs/product/investigations/research-2026-10-02/`
+(`bug-species-candidates.md`, `bug-bestiaries.md`). Next, the accepted lineups replace the bug list's open rows and
+the item rows that lean on them are fixed in one pass.
 
 **Where it stands (2026-10-02).**
 - **Settled:** batch 1, the tool families and the pickaxes, axes and shovels, 34 rows (D69). Rows that are settled
