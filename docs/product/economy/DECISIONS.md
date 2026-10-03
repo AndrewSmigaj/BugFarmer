@@ -1092,6 +1092,13 @@ The owner answered the assistant's bug lineups in conversation.
 The owner added to D80 in conversation.
 - **Hive bees.** The bees of the beekeeping ladder should, ideally, be bees a player can keep in hives.
 - **The bumblebee is accepted.**
-- My wild giant honey bee, hunted rather than kept, missed this. The revised lineup keeps it on rafters, as people
-  in southern Vietnam really keep it, and offers the Asian honey bee, which lives in boxes, as the alternative. The
-  third step is not yet decided.
+- My wild giant honey bee, hunted rather than kept, missed this. The revised lineup keeps it on rafters, as people in
+  southern Vietnam really keep it, and offers the Asian honey bee, which lives in boxes, as the alternative. The third
+  step is not yet decided. *(Superseded 2026-10-03: D82 cuts the giant honey bee.)*
+
+### D82 — Hive bees only: no giant honey bee (2026-10-03)
+The owner made D81 firm: the beekeeping bees are bees a player keeps in hives, so the giant honey bee goes. A
+rafter that a wild colony settles on is not a hive, and keeping the giant honey bee that way, as the assistant
+proposed after D81, went against the owner's ask.
+- The assistant now proposes the Asian honey bee, which people really keep in hives, as the third step; stopping at
+  two steps is the other choice. Not yet decided.

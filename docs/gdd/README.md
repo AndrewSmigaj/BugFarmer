@@ -49,19 +49,19 @@ never change. Nothing is removed until the owner has marked it; then the rows th
 pass, and the picture-only extras are tidied only with the owner's yes. A brainstorm pass makes a tentative list,
 never game data, rows or art.
 
-**The bug lineups (2026-10-02, D79–D81).** After marking the bug list, the owner asked for the assistant's own
-suggestions in place of the old lists, starting from the bugs kept. `bug_lineups.jsonl` gives them family by family — 62
+**The bug lineups (2026-10-02, D79–D82).** After marking the bug list, the owner asked for the assistant's own
+suggestions in place of the old lists, starting from the bugs kept. `bug_lineups.jsonl` gives them family by family — 63
 real species, each with where it lives, how it plays, why, and its real name — as the second kind on the same page ("Bug
 lineups"); marks are stored at `marks/bug_ideas/items/<lineup id>`, and lineup ids never change. The owner accepted them
 on 2026-10-02 (D80) with changes: bees climb in danger (honeybee, killer bee, and a proposed third), termites and the
 stick insect are cut, mantis egg cases come from the game's own mantises, and the farm cricket is a maybe. D81 added
-that the beekeeping bees should be ones a player can keep in hives, and accepted the bumblebee; the proposed third is
-now the giant honey bee kept on rafters, with the Asian honey bee as the alternative. The research is in
+that the beekeeping bees should be ones a player can keep in hives, and accepted the bumblebee; D82 ruled the giant
+honey bee out, and the proposed third is now the Asian honey bee, which is kept in hives. The research is in
 `docs/product/investigations/research-2026-10-02/` (`bug-species-candidates.md`, `bug-bestiaries.md`). The lineups are
 now the roster ("Bug lineups (the roster)" on the page), and on 2026-10-02 they settled the bug list's open rows: all
 116 bugs are decided (54 kept, each with its real species except the meadow butterfly, whose name is still open; 62
 cut), the item rows that leaned on a cut or renamed bug are fixed (49 changed), and five new rows cover what the
-accepted bugs need (CHANGELOG, 2026-10-02). Still open in the lineups: the giant honey bee as the third step, the farm
+accepted bugs need (CHANGELOG, 2026-10-02). Still open in the lineups: the Asian honey bee as the third step, the farm
 cricket, and the meadow butterfly's real name.
 
 **Where it stands (2026-10-02).**
