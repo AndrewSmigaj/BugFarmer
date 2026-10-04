@@ -2,22 +2,10 @@
 //   node tools/gdd/tests/screens.mjs [tools/gdd/_build/review_app.html] [out dir]
 // Opens every page at 1440 and 400 px wide, light and dark, saves screenshots, and fails (exit 1) on:
 // sideways scrolling, visible text under 16 px (map labels excepted), the village map not north-up, or console errors.
-// Playwright comes from PLAYWRIGHT_DIR or the npx cache (~/.npm/_npx/*/node_modules/playwright).
-import { createRequire } from "module";
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from "fs";
+// Playwright is found by pw.mjs (PLAYWRIGHT_DIR or the npx cache).
+import { mkdirSync, writeFileSync } from "fs";
 import { join, resolve } from "path";
-import { homedir } from "os";
-
-const require = createRequire(import.meta.url);
-function findPlaywright() {
-  if (process.env.PLAYWRIGHT_DIR) return process.env.PLAYWRIGHT_DIR;
-  const base = join(homedir(), ".npm/_npx");
-  const dirs = existsSync(base) ? readdirSync(base).map(d => join(base, d, "node_modules/playwright")).filter(existsSync) : [];
-  const stable = dirs.filter(d => !require(join(d, "package.json")).version.includes("alpha"));
-  if (!(stable.length || dirs.length)) throw new Error("Playwright not found: set PLAYWRIGHT_DIR");
-  return (stable.length ? stable : dirs)[0];
-}
-const { chromium } = require(findPlaywright());
+import { chromium } from "./pw.mjs";
 
 const page = resolve(process.argv[2] || "tools/gdd/_build/review_app.html");
 const day = new Date().toISOString().slice(0, 10);

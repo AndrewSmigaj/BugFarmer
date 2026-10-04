@@ -55,7 +55,7 @@ window.BFStore = function BFStore(cfg) {
     ? `Your earlier ${local[k].mark === "agree" ? "Agree" : "Disagree"} is applied` : "";
 
   // ------------------------------------------------------------ editing
-  const timers = {}, inflight = {}, again = {}, failing = {}, tries = {}, queue = [], settled = {};
+  const timers = {}, inflight = {}, again = {}, failing = {}, tries = {}, queue = [], settled = {}, checks = {};
   const FATAL = new Set(["invalid_argument", "quota_exceeded", "not_granted", "capability_disabled", "capability_removed", "revoked", "transform_error"]);
   const MAX_WRITES = 3;
   let db = null, blocked = "", recovered = 0, lastStored = null, active = 0;
@@ -133,7 +133,12 @@ window.BFStore = function BFStore(cfg) {
       if (b.at > clock) clock = b.at;
       if (!(d.metadata && d.metadata.hasPendingWrites)) stored[k] = Math.max(stored[k] ?? -1, b.at);
       const l = local[k];
-      if (l && l.at >= b.at) continue;
+      if (l && l.at >= b.at) {
+        // An older copy than ours: a late delivery, or another device's older answer landing after ours. Ask the
+        // store itself; if it really went back, ours is sent again, so the newest answer wins in the end.
+        if (l.at > b.at && !(snap.metadata && snap.metadata.fromCache)) recheckSoon(k);
+        continue;
+      }
       if (typing(k)) continue;
       local[k] = { ...clean(b), at: b.at, rec: false };
       touched.push(k);
@@ -160,6 +165,17 @@ window.BFStore = function BFStore(cfg) {
       stored[k] = Math.max(stored[k] ?? -1, b.at);
       return b;
     } catch (e) { return undefined; }
+  }
+
+  function recheckSoon(k) { if (!checks[k]) checks[k] = setTimeout(() => recheck(k), 1200 + Math.random() * 800); }
+  async function recheck(k) {
+    checks[k] = 0;
+    if (!db || !local[k] || unsaved(k) || inflight[k] || timers[k]) return;
+    let s;
+    try { s = await db.doc(things.get(k).path).get(); }
+    catch (e) { checks[k] = setTimeout(() => recheck(k), 5000); return; }
+    const b = s.exists ? s.data() : null, at = b && typeof b.at === "number" ? b.at : -1;
+    if (local[k] && at < local[k].at && !unsaved(k)) { stored[k] = at; enqueue(k); }
   }
 
   // The marks the very first items page kept (old storage and this browser's dated keys) — brought over once.
