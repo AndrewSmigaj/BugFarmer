@@ -72,6 +72,11 @@ bootstrap. Fixed: `GroundItemSpawn` is cosmetic-only; food enters `_food` only v
 `ITEM_ROTTED`/`FOOD_CONSUMED` ledger + the authority's `ZoneSnapshot.Food`. With collision (Phase 1b) already
 zone-wide, **the per-bug sim is now fully zone-wide.** BOTH gate halves re-verified `SYNC: IDENTICAL` on
 village_21_B (co-located 166k + spawn-apart 161k shared-bug states, no drift).
+**Cost (measured 2026-10-04):** `InfluenceManager.TryGetNearestFood` walks the WHOLE `_food` registry, once per wandering
+bug per tick (from the group's centre, so every bug of a group gets the same answer). It is 69–91% of the client's
+bug-simulation time and grows with bugs × food (`docs/product/investigations/scaling-2026-10-04/`); it carries a
+`Sim.FoodLookup` profiler scope (timing only). Fix planned in the BACKLOG: one lookup per group per tick + a cell index,
+both result-identical.
 
 **Update 2026-07-14 — the S1/S2 predation late-join desync + the VERBATIM-RELAY CONTRACT.** New per-bug
 predation state (`HuntTargetBugId`, `FeedUntilTick`, `FeedCorpseId`) and the per-swarm hunt assignment

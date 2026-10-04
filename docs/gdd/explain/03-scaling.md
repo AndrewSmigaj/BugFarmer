@@ -50,8 +50,9 @@ at 60 frames a second:
 - **~2,540 bugs:** 27 ms on a typical tick, 38 ms on the slowest. That's about two whole frames, ten times a second: the
   game would stutter, and this was a fast desktop.
 
-Twice the bugs cost three times as much; about five times the bugs cost twenty-three times as much. The likely reason,
-found in the code but not yet confirmed with a timer: every bug looks for the nearest food every tick by checking
+Twice the bugs cost three times as much; about five times the bugs cost twenty-three times as much. The reason, found
+in the code and then confirmed with a timer (it is 91% of the time at the largest size): every bug looks for the
+nearest food every tick by checking
 **every** piece of food in the zone (rotten fruit, carcasses). Starving bugs leave carcasses, so more bugs also means
 more food to check, and the work grows with the square of the bug count. The fix keeps the same results on every
 computer: look the food up once per group instead of once per bug, and only check food in nearby cells.
@@ -59,9 +60,13 @@ computer: look the food up once per group instead of once per bug, and only chec
 The data the server sends each player roughly doubles with each step, to about 35 KB a second at the largest. That's
 fine for one player on broadband, and worth watching with many players.
 
+**The second limit is the snapshot.** Every 10 game-seconds the player whose computer is in charge of the zone uploads
+a full picture of every bug, so anyone who joins can catch up. It's about 250 KB today, and about 2 MB at the largest
+size: about 200 KB a second of upload, which many home connections can't keep up with.
+
 ### What I recommend
-- **Don't decide on more bugs or bigger zones yet.** First confirm the food lookup with a timer and fix it, then
-  measure again.
+- **Don't decide on more bugs or bigger zones yet.** First fix the food lookup, and make the snapshot smaller or
+  rarer, then measure again.
 - **Next measurements:** finer timers inside the bug simulation (which part of a tick takes the time); several players
   on one machine; a zone four times bigger (three client limits fixed at 256 cells have to be raised first); real
   frame times with drawing.

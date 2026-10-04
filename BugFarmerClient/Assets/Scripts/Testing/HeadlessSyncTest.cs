@@ -214,14 +214,16 @@ namespace BugFarmer.Testing
             // observation: PerfProfiler only times existing work, never the hashed sim state.
             PerfProfiler.Enabled = true;
             PerfProfiler.ResetTotals();
-            var perf = new StringBuilder("real_s,tick,swarms,bugs,ticks,frames,cpu_ms,sim_ms,gc0,managed_mb\n");
+            var perf = new StringBuilder("real_s,tick,swarms,bugs,ticks,frames,cpu_ms,sim_ms,gc0,managed_mb,food_ms,food_calls\n");
             var proc = System.Diagnostics.Process.GetCurrentProcess();
             double CpuMs() { try { proc.Refresh(); return proc.TotalProcessorTime.TotalMilliseconds; } catch { return -1; } }
             double SimMs() => PerfProfiler.Totals.TryGetValue("Sim.SwarmTick", out var st) ? st.ms : 0;
+            (double ms, int calls) Food() => PerfProfiler.Totals.TryGetValue("Sim.FoodLookup", out var ft) ? (ft.ms, ft.calls) : (0, 0);
             float wStart = Time.realtimeSinceStartup;
             long wTick = SwarmManager.Instance.SimulationTick;
             int wFrames = Time.frameCount, wGc = GC.CollectionCount(0), windows = 0;
             double wCpu = CpuMs(), wSim = SimMs();
+            var wFood = Food();
 
             float t0 = Time.realtimeSinceStartup;
             while (Time.realtimeSinceStartup - t0 < durationSeconds)
@@ -232,11 +234,12 @@ namespace BugFarmer.Testing
                 if (now - wStart >= 5f)
                 {
                     double cpu = CpuMs(), sim = SimMs();
+                    var food = Food();
                     int gc = GC.CollectionCount(0);
                     perf.Append(FormattableString.Invariant(
-                        $"{now - t0:F1},{tick},{SwarmManager.Instance.SwarmCount},{SwarmManager.Instance.TotalBugCount},{tick - wTick},{Time.frameCount - wFrames},{cpu - wCpu:F1},{sim - wSim:F2},{gc - wGc},{GC.GetTotalMemory(false) / 1048576.0:F1}\n"));
+                        $"{now - t0:F1},{tick},{SwarmManager.Instance.SwarmCount},{SwarmManager.Instance.TotalBugCount},{tick - wTick},{Time.frameCount - wFrames},{cpu - wCpu:F1},{sim - wSim:F2},{gc - wGc},{GC.GetTotalMemory(false) / 1048576.0:F1},{food.ms - wFood.ms:F2},{food.calls - wFood.calls}\n"));
                     windows++;
-                    wStart = now; wTick = tick; wFrames = Time.frameCount; wGc = gc; wCpu = cpu; wSim = sim;
+                    wStart = now; wTick = tick; wFrames = Time.frameCount; wGc = gc; wCpu = cpu; wSim = sim; wFood = food;
                 }
                 // ~1 sample / game-second (SimRate=10 ticks/sim-sec). The first pass always samples: `tick - long.MinValue`
                 // overflows to a negative number, which kept every ecology run since 2026-07-18 at 0 samples.

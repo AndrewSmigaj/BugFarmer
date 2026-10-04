@@ -802,10 +802,16 @@ Every wandering bug calls `InfluenceManager.TryGetNearestFood` each tick (`BugAg
 client's WHOLE food list (rotten fruit, carcasses), from the group's centre (so every bug of a group gets the same
 answer). Measured: the client's bug simulation takes ~0.4 ms per tick at ~280 bugs, ~1.2 ms at ~550 and ~27 ms at
 ~2,540 (`docs/product/investigations/scaling-2026-10-04/`). The food list grows with dying bugs and with the rotten-fruit
-pile below, so cost grows faster than the bug count. **Not yet confirmed by a timer** (a `Sim.FoodLookup` scope is
-written, waiting for a test-player build). **Fix (results identical on every computer):** look the food up once per
+pile below, so cost grows faster than the bug count. **Confirmed by a timer the same night** (`Sim.FoodLookup`): 69% of
+the bug-simulation time at ~290 bugs, 91% at ~2,590. **Fix (results identical on every computer):** look the food up once per
 group per tick, and index the food by cell like the server's `FindNearbyFood`. A change to the shared bug simulation:
 `frontier-sync` + `perf-tuning` gates, then the three scaling runs again.
+
+## Next — the zone snapshot grows with the bugs (found 2026-10-04 by the scaling study)
+The computer in charge uploads a full zone snapshot every 10 game-seconds (`SwarmManager.cs:117`): ~250 KB (max ~580 KB)
+at today's numbers, ~1.9 MB (max 2.3 MB) at 4× the bugs, i.e. ~200 KB a second of upload at 4×, and a late joiner
+downloads the latest one (~670 KB measured at 143 groups). Options: snapshot only when someone joins or asks, send only
+what changed, or compress. A late-join and resync change: `frontier-sync` + both late-join gate halves.
 
 ## Next — re-check ecology numbers measured with the headless client in fast-forwarded zones (found 2026-10-04)
 Until `4c824a09` the headless client stepped at 10 ticks a second whatever the zone's speed, so in a 6× zone the bugs'

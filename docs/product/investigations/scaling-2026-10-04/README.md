@@ -38,7 +38,9 @@ baseline shows the same), so the runs are compared by the bugs actually present,
    27–38 ms, about two whole frames: a stutter ten times a second, and about a quarter of one core.
 3. **Data per player roughly doubles with each step** (9.6 → 17 → 34 KB/s). About 35 KB/s is fine for one player on
    broadband; it matters with many players in one zone.
-4. **Leading suspect (read in the code, not yet confirmed by a timer):** every bug that isn't hunting or eating looks
+4. **Confirmed by a timer (re-run of 1× and 4× with `Sim.FoodLookup`, same night):** the food lookup is **69%** of the
+   client's bug-simulation time at ~290 bugs and **91%** at ~2,590 (28.7 of 30.9 ms per tick); one lookup costs 2.6 µs
+   at 1× and 11 µs at 4× (a longer food list). Every bug that isn't hunting or eating looks
    for the nearest food each tick (`BugAgent.TryFeedAtFood` → `InfluenceManager.TryGetNearestFood`), and that lookup
    walks the zone's **whole** food list (every rotten fruit and every carcass). So a tick costs bugs × food items, and
    since starving bugs leave carcasses, more bugs means more food items too: the cost grows roughly with the square of
@@ -48,8 +50,14 @@ baseline shows the same), so the runs are compared by the bugs actually present,
    few tens of nanoseconds each. The lookup is made from the group's centre, so every bug in a group computes the same
    answer.
 
-**Recommendation (mine):** before deciding on "more bugs" or a zone 4× the size, confirm the suspect with a timer around
-the food lookup, then fix it. Two changes, both with identical results on every computer (so determinism holds): look
+5. **The snapshot grows with the bugs, and the computer in charge uploads it every 10 game-seconds**
+   (`SwarmManager.cs:117`). Re-run with the new counter: ~250 KB on average (max ~580 KB) at ~290 bugs and **~1.9 MB
+   (max 2.3 MB) at ~2,590**. Today that's 13–37 KB a second of upload for the player in charge; at the 4× size it
+   would be about **200 KB a second** of upload, too much for many home connections, and a late joiner would download
+   ~2.3 MB (about 3 MB on the wire).
+
+**Recommendation (mine):** before deciding on "more bugs" or a zone 4× the size, fix the food lookup, and make the
+snapshot smaller or rarer (for example, send it only when someone joins, or only what changed). Two changes, both with identical results on every computer (so determinism holds): look
 the food up once per group per tick instead of once per bug, and keep the food in a grid of cells so a lookup only
 checks nearby cells. It is a change to the shared bug simulation, so it goes through the determinism gates
 (`frontier-sync`, `perf-tuning`) and the same three runs are repeated after it.
@@ -72,8 +80,12 @@ checks nearby cells. It is a change to the shared bug simulation, so it goes thr
 - The first pass of this study ran next to browser tests and its CPU numbers were unfair; it was re-run quietly.
 
 ## Not measured yet
-- **The snapshot a late joiner downloads:** the profiler now counts it (`05e14624`), but the server was still running
-  the older build during these runs, so it reads 0 here. It comes from the late-join check and the baseline run.
+- **The snapshot a late joiner downloads at 2× and 4×.** These runs used the server's older build, so their snapshot
+  columns read 0. Measured afterwards at today's numbers: the late-join check sent **~670 KB for 143 groups** (about
+  0.9 MB on the wire, which carries it as text); over the 47-day baseline the authority's uploaded snapshot averaged
+  **206 KB, max 574 KB**, with ~200 bugs (`docs/product/investigations/village-baseline-2026-10-04/`). The client's
+  read limit is 8 MB (`NetworkManager.cs:80`), so 4× bugs is likely still under it, but the size should be
+  measured there before any decision.
 - **Several players on one machine**, then a 512-cell zone (4× the area). A 512 zone needs three client limits raised
   first: `DarknessOverlay.cs:21` (`N = 256`), `TilemapManager.cs:31` (`ShoreN = 256`) and `WaterAnimated.shader:28`
   (`_ShoreN = 256`).

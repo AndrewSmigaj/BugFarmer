@@ -95,6 +95,15 @@ def summarize_one(d):
                 "frames_per_s": round(sum(int(r["frames"]) for r in rows) / real),
                 "heap_mb_max": max(float(r["managed_mb"]) for r in rows),
             }
+            if "food_ms" in rows[0]:            # the food-lookup timer (added for the scaling study's suspect)
+                sim_total = sum(float(r["sim_ms"]) for r in rows)
+                food_total = sum(float(r["food_ms"]) for r in rows)
+                calls = sum(int(r["food_calls"]) for r in rows)
+                s["client"].update({
+                    "food_ms_per_tick_median": round(statistics.median(float(r["food_ms"]) / int(r["ticks"]) for r in rows), 2),
+                    "food_share_of_sim": round(food_total / sim_total, 2) if sim_total else None,
+                    "food_us_per_call": round(1000 * food_total / calls, 2) if calls else None,
+                })
     # server
     n = os.path.join(d, "nakama.log")
     if os.path.exists(n):
