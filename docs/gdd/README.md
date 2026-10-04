@@ -61,10 +61,15 @@ honey bee out, and the proposed third is now the Asian honey bee, which is kept 
 now the roster ("Bug lineups (the roster)" on the page), and on 2026-10-02 they settled the bug list's open rows: all
 116 bugs are decided (54 kept, each with its real species except the meadow butterfly, whose name is still open; 62
 cut), the item rows that leaned on a cut or renamed bug are fixed (49 changed), and five new rows cover what the
-accepted bugs need (CHANGELOG, 2026-10-02). Still open in the lineups: the Asian honey bee as the third step, the farm
-cricket, and the meadow butterfly's real name.
+accepted bugs need (CHANGELOG, 2026-10-02). The last three lineup rows were agreed on 2026-10-03 (D83): the Asian
+honey bee as the third hive bee, the house cricket, and the queen butterfly as the meadow butterfly.
 
-**Where it stands (2026-10-02).**
+**Where it stands (2026-10-04).** §03 (bestiary) and §04 (ecology) are back in rework: they were natural-history
+sheets, and the owner's direction of 2026-10-03 (D83) asks for game-first designs where bug behaviour serves both
+the ecosystem and combat. The work is planned in `docs/plans/finish-bugs-zones-items.md`. It starts with one review
+app that replaces this page and the items page, then the village's bug life as the first finished slice.
+
+**Where it stood (2026-10-02).**
 - **Settled:** batch 1, the tool families and the pickaxes, axes and shovels, 34 rows (D69). Rows that are settled
   carry `"decided"` in the table and show a Decided label on the page.
 - **Settled:** batch 3, the Armour (22 rows, D75): the metal sets are armour, the start is the Farmer's Outfit, gilded
@@ -127,8 +132,8 @@ Status: **review** = ready for your answers · **rework** = being redone · **dr
 | 2 | 19 | Multiplayer & hosting | review | [19_multiplayer.md](19_multiplayer.md) |
 | 3 | 01 | World & zones | rework | [01_world.md](01_world.md) |
 | 4 | 02 | Progression & tiers | draft | [02_progression.md](02_progression.md) |
-| 5 | 03 | Bestiary & tiers | draft | [03_bestiary.md](03_bestiary.md) |
-| 6 | 04 | Ecology, the Ecologist & the Ecology tab | draft | [04_ecology.md](04_ecology.md) |
+| 5 | 03 | Bestiary & tiers | rework | [03_bestiary.md](03_bestiary.md) |
+| 6 | 04 | Ecology, the Ecologist & the Ecology tab | rework | [04_ecology.md](04_ecology.md) |
 | 7 | 05 | Bug farming, catching & storage | draft | [05_bug_farming.md](05_bug_farming.md) |
 | 8 | 06 | Farming & gardening | draft | [06_farming.md](06_farming.md) |
 | 9 | 07 | Combat, enemies & bosses | draft | [07_combat.md](07_combat.md) |

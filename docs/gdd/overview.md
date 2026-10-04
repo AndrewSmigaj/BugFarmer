@@ -385,8 +385,9 @@ versions of their species.
 - Combat is important and defence is critical (2026-08-06); starter zones cosy, dodge the only defensive move, more
   danger at night (2026-07-11).
 - **Danger rises outward from the village**, not by compass direction (2026-09-27).
-- **Swarms attack all at once, in sync, as they used to** (2026-09-27) — this replaces a two-at-a-time limit recorded
-  in July.
+- **Group attacks are designed per bug** (2026-10-03, D83): a provoked group sends more attackers, who take turns
+  swooping in and out — never the whole group at once, and never a fixed number. *(Corrects the 2026-09-27 entry "swarms
+  attack all at once", which followed a sentence the owner says meant the opposite.)*
 - **Only lunging species wind up before they strike** — millipedes, perhaps scorpions — decided bug by bug for fun and
   fair play (2026-09-27).
 - **Axe swings are attacks too**, as well as cutting trees (2026-09-27).

@@ -644,6 +644,9 @@ usually bigger, never added at random, perhaps one at a time; only species where
 boss). *(Corrected 2026-09-28: this entry first said a locust swarm is a boss — a misreading; locusts get no boss and
 their swarms aren't bosses, D63.)* Aphids live on plants and are seen in the plant's own view, like the milkweed nursery.
 Enemies are built zone by zone, every one eventually, with test zones where the real zone isn't built yet.
+*(Corrected 2026-10-03, D83: "swarms attack all at once, in sync" followed a sentence in the owner's message of
+2026-09-27, which the owner says meant the opposite. Group attacks are designed per bug: a provoked group sends more
+attackers, who take turns, never the whole group at once. Wind-ups stay decided bug by bug.)*
 
 ### D47 — Gear
 One outfit is worn at a time, whole, and changed any time from the inventory — no pieces. Non-combat outfits raise a
@@ -1101,4 +1104,57 @@ The owner made D81 firm: the beekeeping bees are bees a player keeps in hives, s
 rafter that a wild colony settles on is not a hive, and keeping the giant honey bee that way, as the assistant
 proposed after D81, went against the owner's ask.
 - The assistant now proposes the Asian honey bee, which people really keep in hives, as the third step; stopping at
-  two steps is the other choice. Not yet decided.
+  two steps is the other choice. *(Decided 2026-10-03: the Asian honey bee is the third step, D83.)*
+
+### D83 — Finishing the bugs, their fights and their zones: the direction (2026-10-03 and 2026-10-04)
+The owner set the direction in conversation on 2026-10-03 and answered the plan's questions on 2026-10-04. In the
+assistant's words. The plan that carries it out is `docs/plans/finish-bugs-zones-items.md`.
+- **Improve, don't replace.** Finishing the game means making what exists better. Changing something that works needs
+  a stated reason.
+- **The game comes first.** Real biology is light flavour, and a stand-in that plays the same beats a full simulation.
+- **Ecosystems fluctuate.** Populations cycle within rough ranges, with surges and collapses now and then. Players may
+  wipe a species out (D62), and the Ecologist rewards those who bring it back. Tuning aims for living cycles, not flat
+  lines.
+- **Bug behaviour has two jobs:** keeping each zone's ecosystem going, and being much of the combat. A bug keeps
+  pursuing its own goals while it fights.
+- **Danger is real.** The village is fairly easy, yet dangerous enough that a player wants armour and a sword, and the
+  challenge climbs further out.
+- **Warnings belong to each critter.** Some bugs warn before they strike and some don't, decided bug by bug. §03 P6
+  ("every danger warns first") was the assistant's proposal and was never adopted.
+- **Group attacks are designed per bug.** Never the whole group at once, and never a fixed number: a provoked group
+  sends more attackers, who take turns swooping in and out. This corrects D46.
+- **Ants.**
+  - Trails form when a scout discovers food and the workers take up its route. Egg laying rises with the food brought
+    home. Workers forage and soldiers defend.
+  - Black-ant workers mostly leave a player alone unless properly attacked. Their soldiers patrol the colony and the
+    trails and attack intruders.
+  - A far more dangerous ant lives deep underground, in colonies of its own.
+  - Herding means tapping ants with the bug stick to turn them onto a new heading, so that a new route forms. It does
+    not mean making them follow the player.
+- **The bug stick** is non-lethal and looks like a billy club. Taps steer ants; hits stun bigger bugs and help subdue
+  them.
+- **Subduing is a second way to win a fight.** Nets, sprays and the bug stick wear a bug down until it can be caught,
+  or dragged away if it is large.
+- **Ranged weapons return.** Bows, with arrows from bug parts such as stingers and mosquito needles. This lifts D12's
+  shelving of bows. Weapons made from bug parts stay few and are never gross; armour made from shells is fine.
+- **UV light and safety goggles are welcome where they earn their place:** a hand-held UV light that shows several
+  dangerous bugs at a greater distance than the headlamp reveals, and goggles with a real use. This revisits D75's cut.
+- **Bugs live in many zones.** Each zone introducing roughly three to four species of its own is a target, not a
+  rule.
+- **Natural barriers separate zones of different difficulty:** rivers that need a bridge (with some shallow places),
+  and stone or dirt ridges. They hold back players and wandering bugs alike.
+- **Water and bugs** (answering §01 Q1): shallow water stops bugs that walk; deep water stops all bugs, fliers
+  included. Fliers must turn away from deep water rather than pile up at the shore.
+- **Scale.** As much as possible runs on the players' computers, not the server. Bug counts and zone size (possibly
+  four times today's area) wait for real measurements.
+- **How the work is reviewed and ordered.**
+  - Reviews happen in one web app, explanations included, with questions in plain text.
+  - The village's bug life is the first slice: finished, then played by the owner.
+  - The village is also the trial zone for the new zone-design process, worked out together in the app.
+  - Sign-offs come one per zone (map and bug list), one per behaviour system, and by kind for items.
+  - Options come written with diagrams, plus playable versions in a combat arena when the question is how something
+    feels.
+- **The arena** releases bugs from a list in a chosen number, or draws them with a placed station, and can be watched
+  unseen or joined in a fight.
+- **The lineup marks of 2026-10-03 stand as decided:** the Asian honey bee as the third hive bee, the house cricket,
+  and the queen butterfly as the meadow butterfly.
