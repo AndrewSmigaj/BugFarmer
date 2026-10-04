@@ -43,28 +43,47 @@ window.BFMaps = (function () {
   }
   const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 
-  // The labelled layer on top: spawn circles named by bug, the neighbours at each edge, the compass.
+  // The labelled layer on top: spawn circles named by bug, the neighbours at each edge, the compass. Labels never
+  // overlap: the edges and the compass are placed first, then each breeding area's name goes above, below or inside
+  // its circle, wherever it fits; a name already shown close by isn't repeated, and one that fits nowhere is left to
+  // the hover line (which names every area under the pointer). Sizes are in map cells (the SVG's own units).
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const textW = (t, size) => t.length * size * 0.58 + 2;
   function overlay(svg, m, opts) {
     opts = opts || {};
     const w = m ? m.w : 256, h = m ? m.h : 256;
     svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
     let s = "";
+    const placed = [];                                          // boxes already used: [x0, y0, x1, y1]
+    const hits = b => placed.some(q => b[0] < q[2] && b[2] > q[0] && b[1] < q[3] && b[3] > q[1]);
     const label = (x, y, text, anchor, cls) =>
-      `<text x="${x}" y="${y}" text-anchor="${anchor || "middle"}" class="${cls || "lab"}">${text}</text>`;
+      `<text x="${x}" y="${y}" text-anchor="${anchor || "middle"}" class="${cls || "lab"}">${esc(text)}</text>`;
+    const e = opts.edges || {};
+    if (e.north) { const t = "↑ " + e.north, tw = textW(t, 7); s += label(w / 2, 9, t); placed.push([w / 2 - tw / 2, 1, w / 2 + tw / 2, 11]); }
+    if (e.south) { const t = "↓ " + e.south, tw = textW(t, 7); s += label(w / 2, h - 4, t); placed.push([w / 2 - tw / 2, h - 12, w / 2 + tw / 2, h]); }
+    if (e.west) { const tw = textW("← " + e.west, 7); s += `<text x="7" y="${h / 2}" class="lab" transform="rotate(-90 7 ${h / 2})" text-anchor="middle">← ${esc(e.west)}</text>`; placed.push([0, h / 2 - tw / 2, 11, h / 2 + tw / 2]); }
+    if (e.east) { const tw = textW(e.east + " →", 7); s += `<text x="${w - 5}" y="${h / 2}" class="lab" transform="rotate(90 ${w - 5} ${h / 2})" text-anchor="middle">${esc(e.east)} →</text>`; placed.push([w - 11, h / 2 - tw / 2, w, h / 2 + tw / 2]); }
+    s += `<g class="compass"><text x="${w - 14}" y="20" text-anchor="middle" class="lab">N</text><path d="M${w - 14} 24 l-4 9 h8 z"/></g>`;
+    placed.push([w - 20, 12, w - 8, 34]);
     if (m && opts.spawn !== false) {
-      for (const a of m.spawn_areas || []) {
-        const p = toScreen(m, a.x, a.y);
+      const areas = (m.spawn_areas || []).map(a => ({ a, p: toScreen(m, a.x, a.y) }));
+      for (const { a, p } of areas) s += `<circle cx="${p.x + .5}" cy="${p.y + .5}" r="${a.r}" class="spawn"/>`;
+      const shown = [];                                         // [name, x, y] of names already on the map
+      for (const { a, p } of [...areas].sort((u, v) => v.a.r - u.a.r)) {
         const names = (a.bugs || []).join(", ");
-        s += `<circle cx="${p.x + .5}" cy="${p.y + .5}" r="${a.r}" class="spawn"/>`;
-        if (names) s += label(p.x + .5, p.y + .5 - a.r - 2, names, "middle", "lab small");
+        if (!names) continue;
+        const cx = p.x + .5, cy = p.y + .5;
+        if (shown.some(([n, x, y]) => n === names && Math.hypot(x - cx, y - cy) < 40)) continue;
+        const tw = textW(names, 5);
+        for (const y of [cy - a.r - 2, cy + a.r + 6, cy + 2]) {
+          const box = [cx - tw / 2, y - 5, cx + tw / 2, y + 1];
+          if (box[0] < 0 || box[2] > w || box[1] < 0 || box[3] > h || hits(box)) continue;
+          s += label(cx, y, names, "middle", "lab small");
+          placed.push(box); shown.push([names, cx, cy]);
+          break;
+        }
       }
     }
-    const e = opts.edges || {};
-    if (e.north) s += label(w / 2, 9, "↑ " + e.north);
-    if (e.south) s += label(w / 2, h - 4, "↓ " + e.south);
-    if (e.west) s += `<text x="7" y="${h / 2}" class="lab" transform="rotate(-90 7 ${h / 2})" text-anchor="middle">← ${e.west}</text>`;
-    if (e.east) s += `<text x="${w - 5}" y="${h / 2}" class="lab" transform="rotate(90 ${w - 5} ${h / 2})" text-anchor="middle">${e.east} →</text>`;
-    s += `<g class="compass"><text x="${w - 14}" y="20" text-anchor="middle" class="lab">N</text><path d="M${w - 14} 24 l-4 9 h8 z"/></g>`;
     if (!m) s += label(w / 2, h / 2, opts.empty || "Layout not drawn yet", "middle", "lab big");
     svg.innerHTML = s;
   }
@@ -79,5 +98,10 @@ window.BFMaps = (function () {
     return { x: sx, y, ground: m.ground_palette[g], thing: t ? m.thing_palette[t] : null };
   }
 
-  return { draw, overlay, cellAt, probeOk, toScreen, unrle };
+  // The breeding areas covering a cell (game coordinates), for the hover line.
+  function areasAt(m, x, y) {
+    return (m.spawn_areas || []).filter(a => (a.x - x) ** 2 + (a.y - y) ** 2 <= a.r * a.r).flatMap(a => a.bugs || []);
+  }
+
+  return { draw, overlay, cellAt, areasAt, probeOk, toScreen, unrle };
 })();

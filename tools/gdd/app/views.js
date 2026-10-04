@@ -257,7 +257,9 @@
       cv.addEventListener("mousemove", ev => {
         const c = window.BFMaps.cellAt(m, cv, ev); if (!c) return;
         const it = c.thing && itemById.get(c.thing);
-        $("#hover").textContent = `(${c.x}, ${c.y}) · ${c.ground.replace(/_/g, " ")}${c.thing ? " · " + (it ? it.name : c.thing) : ""}`;
+        const breed = [...new Set(window.BFMaps.areasAt(m, c.x, c.y))];
+        $("#hover").textContent = `(${c.x}, ${c.y}) · ${c.ground.replace(/_/g, " ")}${c.thing ? " · " + (it ? it.name : c.thing) : ""}` +
+          (breed.length ? ` · breeding area: ${breed.join(", ")}` : "");
       });
     } else { cv.hidden = true; window.BFMaps.overlay(svg, null, { edges: names, empty: "Layout not drawn yet" }); svg.classList.add("blank"); }
   }
