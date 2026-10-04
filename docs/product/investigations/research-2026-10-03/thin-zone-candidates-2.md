@@ -120,7 +120,9 @@ belong to other ants, as the "fails" entries show.
   imitate the sounds of an ant queen, and have a bombardier-like spray that is "never used against ants". No Lasius
   or fire ant host is named. (https://en.wikipedia.org/wiki/Paussinae)
 - **Lycaenid butterflies:** the silver-studded blue (round 1) is still the best Lasius niger partner found; the Lasius
-  niger, BWARS and German pages name no other butterfly, and no further one was checked.
+  niger, BWARS and German pages name no other butterfly. The Idas blue (Plebejus idas) is "usually attended by ants
+  (Lasius and Formica species)", but its page names no Lasius species and does not say the caterpillars live in the
+  nests (https://en.wikipedia.org/wiki/Idas_blue).
 
 ## 2. Scorpion Rocks (dry, rocky, hot; mining by day, deadly venom, heat)
 
@@ -166,9 +168,10 @@ rock (rather than sand) had been checked; 2a is one.
   beneath the soil surface", flicking sand over itself with its legs and holding it in place with tufts of
   sickle-shaped hairs. H. hahni's long, widely spaced legs carry it quickly across sand.
 - **Breeds:** the egg cocoon is cup-shaped and buried in the sand (genus page).
-- **Behaviour worth playing:** (1) it lies buried, so the player sees nothing until it moves; (2) it is out at night
-  and "shelter[s] under large and warm rocks during the day" (S. thomisoides); (3) its family "are able to go long
-  periods without food or water", and some live up to fifteen years, "some of the longest living spiders".
+- **Behaviour worth playing:** (1) it lies buried, so the player sees nothing until it moves; (2) it is out at night and
+  "shelter[s] under large and warm rocks during the day" (S. thomisoides); (3) the sand spiders (Hexophthalma and
+  Sicarius) "are known for their self-burying behavior and the ability to go long periods without food or water" (family
+  page).
 - **Danger to people:** the family's venom is "highly hemolytic and dermonecrotic", destroying red blood cells and
   causing wounds up to 25 mm across that are slow to heal. The Hexophthalma page reports one confirmed bite (South
   America, 1992, a 17-year-old with a skin-killing wound) and two suspected African bites, one victim losing his arm;
@@ -186,9 +189,10 @@ rock (rather than sand) had been checked; 2a is one.
 - **Sources:** https://en.wikipedia.org/wiki/Hexophthalma_hahni ; https://en.wikipedia.org/wiki/Hexophthalma ;
   https://en.wikipedia.org/wiki/Sicariidae ; https://pmc.ncbi.nlm.nih.gov/articles/PMC7694614/ (Arán-Sekul et al.
   2020, Toxins)
-- **Not confirmed:** what H. hahni eats; how long it can go without food (no figure given); egg numbers; how long
-  either species lives (the fifteen years is for "some" of the family); which spider gave the confirmed 1992 bite (the
-  page does not say); whether it buries itself to ambush or only to hide (the pages say camouflage and stillness).
+- **Not confirmed:** what H. hahni eats; how long it can go without food (no figure given); egg numbers; how long either
+  species lives (the family page's "some living up to fifteen years old" follows a passage on the recluse spiders, so it
+  may not mean the sand spiders); which spider gave the confirmed 1992 bite (the page does not say); whether it buries
+  itself to ambush or only to hide (the pages say camouflage and stillness).
 
 ### 2c. Jerusalem cricket — Stenopelmatus (the family Stenopelmatidae) — fits loosely: dry country, not desert
 - **Eats:** "primarily dead organic matter, but can also eat other insects"; it digs under moist soil "to feed on
@@ -484,6 +488,8 @@ in the brief were checked, and one more found on the way that matches the heath 
   a bolas spider); its young need moth flies, which are not in the game; and bolas spiders "do not occur in temperate
   Eurasia" (the Americas, Africa, Australasia and Asia), reaching 45° north in Minnesota. It would not take the field
   crickets proposed as the vale's prey.
+- **A cut relative:** bolas spiders belong to the orb-weaver family (Araneidae), and the orb weaver was cut from the
+  bug list on 2026-10-02 (D79).
 - **Size:** females 10–20 mm (19 mm in Mastophora); males under 2 mm.
 - **Sources:** https://en.wikipedia.org/wiki/Bolas_spider ; https://en.wikipedia.org/wiki/Mastophora_(spider)
 - **Not confirmed:** whether any bolas spider has been found luring a moth on the roster.

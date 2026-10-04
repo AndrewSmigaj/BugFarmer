@@ -519,7 +519,12 @@ Plan + designs: `docs/product/economy/crafting_buildout.md` + the saved plan. Al
 - **Herding ants with the bug stick (owner idea, 2026-10-02, D79; not designed, not built).** Tapping ants with the
   non-lethal bug stick turns them off their trail, so a player can steer and herd them. Needs: a nudge on the ant's
   trail-following (client-side, deterministic like the rest of the bug simulation) and a design for how far a tap
-  carries.
+  carries. *(Made exact 2026-10-03, D83: a tap turns the ants it touches onto a new heading, so a new route forms; it
+  never makes them follow the player. Designed with the ants, the second slice of `docs/plans/finish-bugs-zones-items.md`.)*
+- **Rephrase older owner wording in DECISIONS.md (found 2026-10-04).** A word-run check against the owner's message
+  history (6 words or more) finds ten short phrases in entries from before 2026-10-03, for example in D12 and the
+  early economy entries; some are ordinary lists that match by chance. Reword each in our own words, keeping its
+  meaning exactly, and re-run the check until it reports none. The repo is public and holds no quotes of the owner.
 Design of record: [bug_ecology_plan.md](../brainstorms/ecology/bug_ecology_plan.md). Phased build P0–P11
 (P1 Bug Lab DONE). **Verify every sim-touching phase with the `test-changes` skill** (Go tests +
 sync-harness + the determinism / "all players in sync" checks — the testing methodology is now captured as a
@@ -748,11 +753,15 @@ names (`wasp_soldier`, `hornet_giant`, `caterpillar_spiny/thornback`) that break
 - **Behaviour and ecology for every decided bug (2026-10-03):** the bugs are decided, but most have no behaviour
   design or ecology tuning yet, and finishing each bug's ecology means it gets a real food source and a real place to
   breed in its zone. In the game today (species.json, checked 2026-10-03), the fly, the meadow butterfly, the
-  millipede, the carrion beetle, the honeybee, the black ants and the nest-based wasps and hornet have both. Gaps:
+  millipede, the carrion beetle, the honeybee and the nest-based wasps and hornet have both. *(Corrected 2026-10-04:
+  the black ants have a breeding place only in the `ant_lab` test zone; the real Ant Tunnels has no `ant_brood` nest.)*
+  Gaps:
   - the three centipedes eat only flies and have no breeding place (they multiply from food alone); the tiger
     centipede should eat ants (the lineups);
-  - the dragonfly never breeds (breed amount 0) and eats only the paper wasp; real ones lay eggs in water;
-  - the firefly has no food and breeds on a timer;
+  - the dragonfly eats only the paper wasp; real ones lay eggs in water. *(Corrected 2026-10-04: it does breed, as a
+    nestless hunter that is well fed, `predation.go:868-887`. Like the centipedes, it can breed at birth, because
+    the tuned threshold of 32 is below the fullness of 50 it is born with.)*
+  - the firefly has no food, so it never breeds *(corrected 2026-10-04; it doesn't breed on a timer)*;
   - the hornet's nest has no picture and sits in no zone; the yellowjacket still shares the paper wasp's nest;
   - the other 43 decided bugs aren't in the game yet.
   Plan: a sheet per bug (what it eats, what eats it, where it breeds, its hours and its behaviour), from the facts in

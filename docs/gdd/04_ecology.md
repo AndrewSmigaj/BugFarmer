@@ -1,5 +1,5 @@
 # §04 · Ecology, the Ecologist & the Ecology tab
-<!-- gdd: id=04 status=review updated=2026-10-03 -->
+<!-- gdd: id=04 status=rework updated=2026-10-04 -->
 
 ## The experience
 Every zone is a food web you can read. Reeds mean dragonflies and mosquitoes, rotten logs mean grubs and centipedes,

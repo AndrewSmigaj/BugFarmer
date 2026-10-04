@@ -1,5 +1,11 @@
 # Bug behaviour — how every bug gets built (PROPOSED, 2026-10-03)
 
+**Revision note (2026-10-04):** parts of this plan are replaced by the owner's direction of 2026-10-03 (D83) and the
+umbrella plan `docs/plans/finish-bugs-zones-items.md`. Herding means taps that turn ants onto a new heading, not ants
+following the player. The design is game first. Warnings are decided per critter. The first finished slice is the
+village's bug life, with the ants second. Replaced passages are marked and kept as the record until Part D of that plan
+rewrites this document.
+
 **Status: a plan for the owner's review. Nothing here is built unless a line says so.** No bug is finished yet: the
 fourteen roster bugs in the prototype (fifteen entries, as the black ants' workers and scouts are two) each get their
 behaviour polished or redone, and the other forty-four (two of them still open) aren't in the game yet (the owner's
@@ -22,7 +28,8 @@ every bug is built from, the order of work, and how each bug is tested and signe
    test results come with it. A zone is signed off when its bugs live together in it the way §04 describes.
 4. **Behaviour before numbers.** A bug's behaviour is finished before its numbers are tuned (accepted, overview
    P10); then the zone's food web is balanced with the existing tuning tools.
-5. **Ants first, the way real ants work.** Trails become scent on the ground that each ant follows on its own, so the
+5. *(Replaced 2026-10-04, D83: herding is steering, not following, and the ants are the second slice, after the
+   village.)* **Ants first, the way real ants work.** Trails become scent on the ground that each ant follows on its own, so the
    owner's example works: two taps of the bug stick and five ants follow the player while the column carries on, and if
    the player leads them to food a new trail grows (§4). Before any routine, the day's clock and rain have to reach the
    bug simulation; today they don't (§1).
@@ -76,10 +83,12 @@ every bug is built from, the order of work, and how each bug is tested and signe
   player handles, follows or fights acts on its own (an ant the player taps, a wasp guarding its nest, a spider at its
   web). This builds on the individual ecology design (`investigations/individual_ecology_redesign.md`); whether the
   rest of each bug's life moves over block by block or all at once is the owner's call (GDD §03 Q1).
-- **Real biology first.** A behaviour is in because the real animal does it (the facts and their sources:
+- **Game first** *(replaces "Real biology first", 2026-10-04, D83)*. A behaviour is in because it makes the game
+  better; the real animal is light flavour and a source of ideas (the facts and their sources:
   `investigations/research-2026-10-03/bug-ecology-facts-A.md`, `-B.md`); where 2126 lacks what it needs (no
   mammals, birds, reptiles or snails), the stand-in is named in the bug's sheet.
-- **Telegraphed danger.** Anything that hurts the player warns first and can be dodged (the combat foundation).
+- **Danger per critter** *(replaces "Telegraphed danger", 2026-10-04, D83)*. How a bug signals danger is part of its
+  own design: some warn and can be dodged, some ambush, some are simply dangerous to be near.
 - **Who eats whom is data.** Which species eats, fears, ignores or gathers with which is one table that both the
   server and the game read, with each bug's small differences (bolder, shyer) worked out from its id; fifty-eight
   species then need no special code per pair (Rain World's approach, research Part 1 S20).
@@ -98,9 +107,9 @@ keeps every computer in step (the `frontier-sync` classes).
 
 | # | Block | Bugs that use it | Exists today | To build |
 |---|---|---|---|---|
-| B1 | **Leave the group, act alone** (split off on a stimulus, follow, rejoin) | ants, any bug a player taps, herds or lures | groups split and merge for population; one wasp can hunt one fly | per-bug goals that can pull a bug out of its group and back (a split event naming the bug ids), the individual "brain" from the redesign: the most urgent need wins (hunger, home, safety, curiosity), and each species keeps its own distance from a player, so walking behind a group herds it (Game AI Pro ch. 44; the sheepdog study, S5, S24) |
+| B1 | **Leave the group, act alone** (split off on a stimulus, follow, rejoin; *the follow-the-player use is replaced, 2026-10-04, D83*) | ants, any bug a player taps, herds or lures | groups split and merge for population; one wasp can hunt one fly | per-bug goals that can pull a bug out of its group and back (a split event naming the bug ids), the individual "brain" from the redesign: the most urgent need wins (hunger, home, safety, curiosity), and each species keeps its own distance from a player, so walking behind a group herds it (Game AI Pro ch. 44; the sheepdog study, S5, S24) |
 | B2 | **Trails** (scent paths that strengthen with use and fade) | black ants, fire ants (and marching locust bands) | per-group remembered routes, scout recruitment, fading sites | scent on cells, laid only by ants carrying food home and followed ant by ant, with a small stray chance per ant and "no entry" scent at food that ran out (§4) |
-| B3 | **The bug stick** (tap, steer, lead; non-lethal) | ants first; later any walker (beetles, crickets, millipedes) | none | an item; two taps sent as ledger events (stop, then follow); following in a loose line behind the player; drop-out rules and a short cool-down (§4; Pikmin, SimAnt) |
+| B3 | **The bug stick** (tap to steer; non-lethal; looks like a billy club) | ants first; other walkers decided with their own systems | none | an item: taps turn the ants they touch onto a new heading, so a new route forms; hits stun bigger bugs and help subdue them (D83). Designed with the ants. *(The earlier two-tap stop-then-follow design is replaced, 2026-10-04.)* |
 | B4 | **Day, night and weather routines** | every bug (fireflies, moths and the hornet at night; mosquitoes at dusk; dragon millipedes after rain; bumblebees in cool weather) | a night-only switch for attacks, decided on the server; time and rain don't reach the bug simulation (§1) | first, time and rain as simulation inputs: the clock from the shared tick, and a clock change and each shower's start and stop as ledger events (the weather doc's deferred design); the shower is scheduled a day ahead, so bugs can settle before it. Then an activity curve per species: when it's out, where it rests (under logs, in cracks, in the nest), and what rain does |
 | B5 | **Nests and colonies** (castes, brood, a queen, defence, new colonies) | ants, wasps, hornets, bees, bumblebees | nests that hatch bugs, found daughter nests, recall defenders; swarms claim empty hive boxes | one nest per species (each its own nest picture, so species don't steal each other's nests), visible castes, a queen; jobs by age (young inside, old foraging); nests that answer in steps (a few guards come to look, all come out when the nest is hit, a few more per extra player — Don't Starve); a hurt worker that brings the guards (Grounded); smoke as a patch that cancels alarm; raids on other nests (the giant hornet), requeening (the killer bee), the bumblebee box |
 | B6 | **Life stages in the world** (eggs, larvae, pupae a player can see and take) | butterflies and moths, the silk moth, beetle grubs, mantis egg cases, spider egg sacs, fireflies, the glowworm | life stages as counts at their source, shown on it: eggs, larvae and pupae on the milkweed, in rot and in nests (`brood.go`) | D38's caterpillars that leave the nursery, grow out in the world and pupate there (bugs run on the players' computers, so they need the sync work, BACKLOG); the same model on other hosts: the mulberry (silkworms), dead wood (stag and Hercules grubs), stems (mantis egg cases), hollows in cave walls (cave spider egg sacs) |
@@ -134,6 +143,10 @@ Building a block means: the design in this document; the deterministic implement
 pen that shows it; the gates; then the bugs that use it.
 
 ## 4. Worked example: ant trails a player can lead ants off
+*Replaced in part (2026-10-04, D83).* The owner's herding means taps that steer ants onto a new heading, not ants
+following the player. The "follow" steps below (the two-tap prod, following the player, letting go) are withdrawn,
+and will be redesigned with the ants as the second slice. The scent-trail analysis stays as research input.
+
 The owner's example (2026-10-03): tapping some ants with the bug stick makes them leave their trail, so a player can
 lead a handful of them away while most of the column carries on as before.
 

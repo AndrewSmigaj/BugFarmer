@@ -52,6 +52,10 @@ ecology stations) let you read and steer the ecosystem.
   (https://claude.ai/artifact/CRtGxrNmWdXPVAVyNnwWW1): §00 Premise and §19 Multiplayer ready for the owner.
 
 ### Phase 1 — prove the art, set the rules, design the spine, lay foundations
+- **Bugs, behaviour and combat, zones' bug lists, items (2026-10-04):** planned in
+  [`docs/plans/finish-bugs-zones-items.md`](../plans/finish-bugs-zones-items.md) — one review app first, then measurements
+  (scaling, player pressure, a combat arena), then the village's bug life as the first finished slice the owner plays
+  (D83).
 - **Art (details: the top item of `BACKLOG.md`):** ~~import-scale fix~~ (done 2026-09-26: 89 sprites were drawing at
   the wrong size and 80 blurry) · the outfit procedure written into the `player-sprites` skill, with commands that
   reproduce the approved runs · ~~copper as the test batch~~ (done 2026-09-26: 5 calls, approved) · the other seven picked

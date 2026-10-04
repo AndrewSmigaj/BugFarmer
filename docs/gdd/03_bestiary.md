@@ -1,5 +1,5 @@
 # §03 · Bestiary & tiers
-<!-- gdd: id=03 status=review updated=2026-10-03 -->
+<!-- gdd: id=03 status=rework updated=2026-10-04 -->
 
 ## The experience
 Every bug is a real animal doing what it really does, made giant. You learn them the way a naturalist does: where
@@ -176,6 +176,9 @@ to find. **Cost and risk:** one model, already built for flies, wasps, bees and 
 you can take and put back), carried to new hosts; D38's caterpillars out in the world first need the work that keeps every player's game identical.
 
 ### P6. Every danger warns first, and every danger has an answer
+*My proposal, never adopted. The owner's view (2026-10-03, D83): warnings depend on the critter — some bugs warn,
+some ambush, some are simply dangerous to be near — and good games don't rely on warnings for every interaction. This
+proposal will be rewritten as each bug's own danger design; until then, read it as notes.*
 - Anything that hurts you shows a tell you can learn and dodge — a wasp's dive, a centipede's freeze, a
   scorpion's ground breaking open, a spider rearing up — as the combat foundation already does.
 - Each danger has more than one answer: distance, smoke, light, stone instead of wood, the right outfit, an

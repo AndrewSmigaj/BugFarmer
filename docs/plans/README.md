@@ -14,6 +14,10 @@ version lands here as `docs/plans/<slug>.md`.
 - One concern per plan; link related plans. Keep the PROGRESS log at the top as the resume pointer.
 
 ## Index
+- `finish-bugs-zones-items.md` — the umbrella plan for finishing the bugs, their behaviour and combat, the zones' bug
+  lists, the zone-design process and the items (2026-10-04). Part 0 in progress; the village's bug life is the first
+  finished slice.
+- `review-app.md` — Part A of that plan: one review app replacing the GDD and items pages. Not started.
 - `repo-health-enforcement.md` — the enforcement-based repo-health pass (hooks + manifest). P0–P6 done; the rest
   waits for the owner.
 - `grass-overhaul.md` — the grass overhaul. Shipped 2026-07-26.
