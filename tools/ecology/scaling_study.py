@@ -1,0 +1,178 @@
+#!/usr/bin/env python3
+"""Scaling study — how bug counts cost the players' computers and the server (S1 in
+docs/plans/finish-bugs-zones-items.md; results in docs/product/investigations/scaling-*/).
+
+    python3 tools/ecology/scaling_study.py                      # run 1x, 2x, 4x on bench_village, then summarise
+    python3 tools/ecology/scaling_study.py --summarize <outdir>  # summarise saved runs again
+
+Each run is one tools/ecology/run_config.py config (tools/bug_lab_configs/bench_scale_*.json, made by
+make_scaling_configs.py) on a BENCH zone — run_config wipes the tested zone's save, so real zones are refused. One run
+at a time; nothing else should be running (the CPU numbers are only fair on a quiet machine). After each run the
+canonical data must be back as committed (`git status nakama/data` clean) or the study stops.
+
+What it reads:
+  client  client_perf.csv from the headless ecology client: every ~5 s, ticks simulated, process CPU ms, bug-sim ms
+          (PerfProfiler Sim.SwarmTick), frames, GC, heap, bug count.
+  server  the nakama log for the run's window: PERFSYS per game-day (tick time and its worst tick, broadcast bytes,
+          the authority's snapshot upload) and PERFSTATS (bugs per species).
+Writes <outdir>/<config>/{client_perf.csv, fly_counts.csv, player.log, nakama.log, run.log} and
+<outdir>/summary.{json,md}.
+"""
+import argparse
+import csv
+import datetime as dt
+import json
+import os
+import re
+import shutil
+import statistics
+import subprocess
+import sys
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+PDATA = "/mnt/c/Users/emily/AppData/LocalLow/DefaultCompany/BugFarmerClient"
+SYS_RE = re.compile(r"PERFSYS day=(\d+) (.*?)(?:\"|$)")
+PERF_RE = re.compile(r"PERFSTATS day=(\d+) sp=(\S+) (.*?)(?:\"|$)")
+KV_RE = re.compile(r"(\w+)=(\d+)")
+LJ_RE = re.compile(r"Sent LateJoinSnapshot to \S+: (\d+) bytes")
+WARMUP_S = 30          # client windows before this many real seconds are start-up, not steady cost
+
+
+def sh(cmd, **kw):
+    return subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, **kw)
+
+
+def data_clean():
+    return sh(["git", "status", "--porcelain", "nakama/data"]).stdout.strip() == ""
+
+
+def run_one(cfg, zone, duration, out):
+    d = os.path.join(out, cfg)
+    os.makedirs(d, exist_ok=True)
+    for f in ("/tmp/client_perf.csv", "/tmp/fly_counts.csv"):
+        if os.path.exists(f):
+            os.remove(f)
+    t0 = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    print(f"=== {cfg}: start {t0}", flush=True)
+    with open(os.path.join(d, "run.log"), "w") as log:
+        rc = subprocess.run(["python3", "tools/ecology/run_config.py", cfg, "--zone", zone, "--duration", str(duration)],
+                            cwd=ROOT, stdout=log, stderr=subprocess.STDOUT).returncode
+    for src, dst in (("/tmp/client_perf.csv", "client_perf.csv"), ("/tmp/fly_counts.csv", "fly_counts.csv"),
+                     (os.path.join(PDATA, "player_ecology.log"), "player.log")):
+        if os.path.exists(src):
+            shutil.copy(src, os.path.join(d, dst))
+    with open(os.path.join(d, "nakama.log"), "w") as f:
+        f.write(sh(["docker", "compose", "logs", "--no-color", "--since", t0, "nakama"]).stdout)
+    print(f"=== {cfg}: run_config exit {rc}", flush=True)
+    return rc
+
+
+def pct(xs, q):
+    xs = sorted(xs)
+    return xs[min(len(xs) - 1, int(round(q * (len(xs) - 1))))] if xs else None
+
+
+def summarize_one(d):
+    s = {"config": os.path.basename(d)}
+    runlog = open(os.path.join(d, "run.log")).read() if os.path.exists(os.path.join(d, "run.log")) else ""
+    s["retries"] = len(re.findall(r"attempt \d+: harness produced no CSV", runlog))
+    # client
+    p = os.path.join(d, "client_perf.csv")
+    if os.path.exists(p):
+        rows = [r for r in csv.DictReader(open(p)) if float(r["real_s"]) >= WARMUP_S and int(r["ticks"]) > 0]
+        if rows:
+            ticks = sum(int(r["ticks"]) for r in rows)
+            real = sum(5.0 for _ in rows)   # windows are ~5 s each
+            sim_per_tick = [float(r["sim_ms"]) / int(r["ticks"]) for r in rows]
+            cpu_per_tick = [float(r["cpu_ms"]) / int(r["ticks"]) for r in rows]
+            s["client"] = {
+                "windows": len(rows), "bugs_mean": round(statistics.mean(int(r["bugs"]) for r in rows)),
+                "swarms_mean": round(statistics.mean(int(r["swarms"]) for r in rows)),
+                "ticks_per_s": round(ticks / real, 1),
+                "sim_ms_per_tick_median": round(statistics.median(sim_per_tick), 2),
+                "sim_ms_per_tick_p90": round(pct(sim_per_tick, 0.9), 2),
+                "cpu_ms_per_tick_median": round(statistics.median(cpu_per_tick), 1),
+                "frames_per_s": round(sum(int(r["frames"]) for r in rows) / real),
+                "heap_mb_max": max(float(r["managed_mb"]) for r in rows),
+            }
+    # server
+    n = os.path.join(d, "nakama.log")
+    if os.path.exists(n):
+        text = open(n).read()
+        days = {}
+        for m in SYS_RE.finditer(text):
+            days[int(m.group(1))] = {k: int(v) for k, v in KV_RE.findall(m.group(2))}
+        bugs = {}
+        for m in PERF_RE.finditer(text):
+            kv = {k: int(v) for k, v in KV_RE.findall(m.group(3))}
+            bugs.setdefault(int(m.group(1)), 0)
+            bugs[int(m.group(1))] += kv.get("bugs", 0)
+        if days:
+            ds = [v for v in days.values() if v.get("tick_count")]
+            tc = sum(v["tick_count"] for v in ds)
+            s["server"] = {
+                "game_days": len(ds), "ticks": tc,
+                "tick_us_mean": round(sum(v["tick_total_us"] for v in ds) / tc) if tc else None,
+                "tick_us_worst": max(v["tick_max_us"] for v in ds),
+                "ticks_over_100ms": sum(v.get("ticks_over", 0) for v in ds),
+                # broadcast bytes per game-second (10 ticks) = per real second at normal speed, per player
+                "broadcast_bytes_per_s": round(sum(v["influence_bytes"] + v["roster_bytes"] for v in ds) / (tc / 10)) if tc else None,
+                "snapshot_bytes_max": max((v.get("snapshot_in_max", 0) for v in ds), default=0),
+                "snapshot_bytes_mean": round(sum(v.get("snapshot_in_bytes", 0) for v in ds) /
+                                             max(1, sum(v.get("snapshot_in_msgs", 0) for v in ds))),
+                "heap_mb_max": max(v.get("heap_alloc_mb", 0) for v in ds),
+                "bugs_by_day": {str(k): v for k, v in sorted(bugs.items())},
+            }
+        lj = [int(x) for x in LJ_RE.findall(text)]
+        if lj:
+            s["latejoin_bytes"] = lj
+    return s
+
+
+def summarize(out):
+    runs = [summarize_one(os.path.join(out, c)) for c in sorted(os.listdir(out)) if os.path.isdir(os.path.join(out, c))]
+    json.dump(runs, open(os.path.join(out, "summary.json"), "w"), indent=2)
+    L = ["| run | bugs (client) | client bug-sim ms per tick (median / 90th) | client ticks/s reached | "
+         "server ms per tick (mean / worst) | broadcast KB/s per player | authority snapshot KB (mean / max) |",
+         "|---|---|---|---|---|---|---|"]
+    for r in runs:
+        c, v = r.get("client", {}), r.get("server", {})
+        L.append(f"| {r['config']} | {c.get('bugs_mean', '—')} | {c.get('sim_ms_per_tick_median', '—')} / "
+                 f"{c.get('sim_ms_per_tick_p90', '—')} | {c.get('ticks_per_s', '—')} | "
+                 f"{(v['tick_us_mean'] / 1000) if v.get('tick_us_mean') is not None else '—'} / "
+                 f"{(v['tick_us_worst'] / 1000) if v.get('tick_us_worst') is not None else '—'} | "
+                 f"{round(v['broadcast_bytes_per_s'] / 1024, 1) if v.get('broadcast_bytes_per_s') else '—'} | "
+                 f"{round(v.get('snapshot_bytes_mean', 0) / 1024)} / {round(v.get('snapshot_bytes_max', 0) / 1024)} |")
+    open(os.path.join(out, "summary.md"), "w").write("\n".join(L) + "\n")
+    print("\n".join(L))
+    return runs
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--configs", default="bench_scale_1x,bench_scale_2x,bench_scale_4x")
+    ap.add_argument("--zone", default="bench_village")
+    ap.add_argument("--duration", type=int, default=300, help="real seconds per run")
+    ap.add_argument("--out", default=os.path.join(ROOT, "tools/_generated/scaling", dt.date.today().isoformat()))
+    ap.add_argument("--summarize", metavar="OUTDIR", help="only summarise saved runs")
+    a = ap.parse_args()
+    if a.summarize:
+        summarize(a.summarize)
+        return 0
+    if not a.zone.startswith("bench_"):
+        sys.exit(f"refusing: {a.zone} is not a bench zone (run_config wipes the tested zone's save)")
+    if sh(["pgrep", "-f", r"^python3 .*run_config"]).stdout.strip():
+        sys.exit("refusing: another run_config is running")
+    os.makedirs(a.out, exist_ok=True)
+    for cfg in a.configs.split(","):
+        if not data_clean():
+            sys.exit(f"stopping before {cfg}: nakama/data is not as committed")
+        run_one(cfg, a.zone, a.duration, a.out)
+        if not data_clean():
+            sys.exit(f"stopping after {cfg}: nakama/data was NOT restored — look before touching it")
+    summarize(a.out)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

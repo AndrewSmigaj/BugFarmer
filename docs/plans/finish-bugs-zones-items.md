@@ -54,6 +54,24 @@
     - memory updated;
     - `review-app.md` written.
     Then: commit, push, merge into `main`.
+  - **Part A (the app):** see `review-app.md` PROGRESS. Built, tested (screens, 11 saving scenarios, a builder
+    test), the real marks exported (read only) and checked offline. The rehearsal and the publish are still to do.
+  - **Server and test player:** the server came back after the WSL shutdown (Postgres recovered on its own). The test
+    player was rebuilt twice tonight (batch mode, Editor closed, verified in the compiled file).
+  - **Bench village** (`a88ea301`): `bench_village` is a copy of `village_21_B`'s authored files, never the real
+    save.
+  - **Faults found in the ecology test tools (since 2026-07-18), fixed in `4c824a09`:**
+    - the client's population sampler never recorded a sample, so every real-client run charted nothing;
+    - in a zone run 6× faster, the client simulated at a sixth of the server's pace (server ≈ tick 17,990 against
+      client ≈ 2,980 after 5 minutes), so the bugs' own decisions ran 6× too slowly against the server's births and
+      starvation. The client now runs its clock at the zone's speed.
+    Ecology conclusions drawn from real-client runs between 2026-07-18 and tonight should be re-checked; the July
+    village tuning (07-13/14) used the older driver and is unaffected by the second fault.
+  - **S2, part 1** (`05e14624`): `ECOSTATS` gains `d_kill` and `d_catch` (player kills and catches). The profiler
+    gains the authority's snapshot upload size. Go tests and the determinism replay pass.
+  - **S1, the scaling study:** the first pass ran beside my browser tests, so its CPU numbers were unfair; it was
+    re-run on a quiet machine with `tools/ecology/scaling_study.py`. Results in
+    `docs/product/investigations/scaling-2026-10-04/`.
 
 ## Certainty assessment (the `certainty-assessment` method; scores read off evidence; judged by the weakest design row)
 | # | Dimension | Score now | Evidence | What raises it |
