@@ -878,6 +878,7 @@ document, rotting fruit, the zone scale. I'll correct each as its section is reb
 
 ## Proposals
 ### P1. Where a later owner decision replaced an older text, the later one stands
+<!-- key: ov.where-later-owner-decision-replaced -->
 *The whole document.*
 **Accepted by the owner on 2026-09-28**; the older documents now carry a note saying what replaced them.
 The older documents get a note saying so:
@@ -914,6 +915,7 @@ The three disagreements this list couldn't settle are now answered: outfits are 
 Already covered — nothing here is new design.
 
 ### P2. No magic
+<!-- key: ov.no-magic -->
 *Part 0 · what belongs in the world.*
 **Accepted by the owner on 2026-09-28.**
 The world is 2126 science. The magic and fantasy races in the old brainstorms — enchanting, arcane tools and books,
@@ -925,6 +927,7 @@ narrow rulings of the owner's: potions are ordinary items, and the fancy plate i
 comes from real biology (the examine texts), not spells.
 
 ### P3. Catching: hand nets for the small ones, placed catchers for everything bigger
+<!-- key: ov.catching-hand-nets-small-ones -->
 *Part 1 · catching and farming bugs.*
 **Accepted by the owner on 2026-09-28**, with subduing and dragging as a way to take big bugs (P15), and a cast
 net I recommend below.
@@ -957,6 +960,7 @@ placed catchers are new objects in the shared bug simulation (every player must 
 size needs art; balancing them against the hand net will take several passes.
 
 ### P4. Traps and bait without the silliness
+<!-- key: ov.traps-bait-without-silliness -->
 *Part 1 · catching and farming bugs.*
 **Accepted by the owner on 2026-09-28**; a net placed in the world counts as a trap.
 - **Nothing bigger than the player goes in the backpack.** Small catchers are carried and placed like furniture. Big
@@ -973,6 +977,7 @@ assembly the fence overhaul needs (P5) — worth doing once for both; bait needs
 can share, which the prototype has in a simple form (flies are drawn to compost).
 
 ### P5. Fences built from posts, and pens that hold some bugs and not others
+<!-- key: ov.fences-built-posts-pens-hold -->
 *Part 7 · building, pens and homes.*
 **Accepted by the owner on 2026-09-28.**
 - **Building**: place a post; drag to another post along the grid and rails fill the run; pieces join up on their
@@ -993,6 +998,7 @@ sprite for every shape and material (fewer if posts and rails are drawn separate
 consequence is real and needs a design answer, not an afterthought.
 
 ### P6. Village property and repairs — now covered by your rulings
+<!-- key: ov.village-property-repairs-now-covered -->
 *Part 13 · towns and shopkeepers.*
 **Accepted by the owner on 2026-09-28** — it stops annoying players griefing the village.
 - Players can't damage or take the townspeople's things; bugs can damage village fences, and villagers mend them
@@ -1005,6 +1011,7 @@ consequence is real and needs a design answer, not an afterthought.
 every authored object in the village.
 
 ### P7. Butterflies grow up out in the world
+<!-- key: ov.butterflies-grow-up-out-world -->
 *Part 2 · the bugs themselves.*
 **Accepted by the owner on 2026-09-28.**
 - **On a milkweed plant** — which is itself the butterfly nursery — eggs hatch into small caterpillars.
@@ -1024,6 +1031,7 @@ cocoon is a real, teachable difference. Picture the moment — finding a green c
 timing; wasps eating them needs the predation to cover them.
 
 ### P8. Research with the magnifying glass, and plants as a gentler fence
+<!-- key: ov.research-magnifying-glass-plants-gentler -->
 *Part 3 · the ecosystem and the Ecologist.*
 **Accepted by the owner on 2026-09-28**, with research that can be as simple as examining a species a set number
 of times to open its next fact, and plants that do more than steer bugs — they can boost breeding too, as in Apico.
@@ -1049,6 +1057,7 @@ claims of plants that "repel" bugs unless the evidence is real). Curiosity — e
 examine view; plant effects need the simulation to share them like any other lever.
 
 ### P9. The Ecologist's quests and the Ecology tab
+<!-- key: ov.ecologists-quests-ecology-tab -->
 *Part 3 · the ecosystem and the Ecologist.*
 **Accepted by the owner on 2026-09-28.**
 - **The flow** (as decided): the tab button is greyed out; meeting the Ecologist east of the village unlocks it; his
@@ -1084,6 +1093,7 @@ are optional. **Cost and risk:** a quest system is a new system; the rules again
 multiplayer ownership needs care.
 
 ### P10. Ecology tuning — several food chains, fewer fruit, habitat instead of hard caps
+<!-- key: ov.ecology-tuning-several-food-chains -->
 *Parts 3 and 17 · the ecosystem; time and weather.*
 **Accepted by the owner on 2026-09-28**, with the corrections below: hard caps and reseeding stay; weather is a
 lever of last resort.
@@ -1115,6 +1125,7 @@ moved. Real biology — the locust change is real. **Cost and risk:** habitat-ba
 to the shared simulation and need the determinism checks; each food chain is its own tuning job.
 
 ### P11. Cutting plants down, and simple stations for what you cut
+<!-- key: ov.cutting-plants-down-simple-stations -->
 *Parts 4 and 6 · farming; crafting.*
 **Accepted by the owner on 2026-09-28.**
 - **Harvesting takes the product** — fruit, grain, flowers or leaves — and sometimes a seed. Most crops are gone once
@@ -1135,6 +1146,7 @@ ecology. Economy — ties farming to cloth, potions, beekeeping and compost. **C
 new stations; the rest exist or are already planned.
 
 ### P12. One shovel, a clear switch between digging and laying
+<!-- key: ov.one-shovel-clear-switch-between -->
 *Part 7 · building.*
 *2026-09-29 (D69): the owner would prefer diagonal ground too, if it is easy to use; I'm designing how laying ground
 works, and whole squares stand until then.*
@@ -1159,6 +1171,7 @@ clearly shown switch. **Cost and risk:** small — one key and icons for each gr
 over by the shovel, which today traps it there.
 
 ### P13. Bosses: the biggest of a few species
+<!-- key: ov.bosses-biggest-few-species -->
 *Parts 2 and 8 · the bugs; combat.*
 **Accepted by the owner on 2026-09-28**, without locust swarms: locusts get no boss, and a swarm isn't one.
 (The zone designs call them mini-bosses; this uses "boss" for both.)
@@ -1184,6 +1197,7 @@ surprise — a neglected nest becomes an event, with warning. No forced chaos �
 long a population has thrived.
 
 ### P14. Stamina for dodging
+<!-- key: ov.stamina-dodging -->
 *Part 8 · combat.*
 **Accepted by the owner on 2026-09-28**, with running added: it drains stamina too.
 - **Stamina is a small pool of dodges**: each dodge spends some, and it refills on its own in a few seconds. Today the
@@ -1199,6 +1213,7 @@ work never waits on a bar. Economy — food gets a purpose without hunger. **Cos
 bugs' attack timing has to be retuned around it.
 
 ### P15. Moving big bugs: grab and drag
+<!-- key: ov.moving-big-bugs-grab-drag -->
 *Parts 1 and 8 · catching; combat.*
 **Accepted by the owner on 2026-09-28.**
 - **A big bug can be grabbed once it is subdued and still** — calmed, or worn down in a fight (the backlogged
@@ -1217,6 +1232,7 @@ always has an answer. Real biology — carcasses feed the scavengers. **Cost and
 large species; a clear look for "subdued"; crossing zones waits for cross-zone bugs.
 
 ### P16. Food for a trip, potions for a fight
+<!-- key: ov.food-trip-potions-fight -->
 *Part 11 · food and potions.*
 *Changed 2026-10-02 (D76): a meal raises Health and Stamina, better food more, and many dishes add one of the eight
 boosts — guidelines, not laws; bugs go to the stove as they are, and the bug extractor makes materials only.*
@@ -1254,6 +1270,7 @@ nothing in the game can give a timed effect yet, so that comes first, then venom
 icons for every potion, meal and bandage (paid images, asked first).
 
 ### P17. Giving things to other players
+<!-- key: ov.giving-things-other-players -->
 *Parts 11 and 18 · healing; playing together.*
 **Accepted by the owner on 2026-09-27.**
 - **Right-click a player to offer** what you're holding — an item or a stack of bugs — with a box for adding coins,
@@ -1273,6 +1290,7 @@ click while holding bugs releases them, so a player under the cursor has to come
 — dropped food feeds bugs, which every player's game has to agree on, so it needs the same checks as fallen fruit.
 
 ### P18. Townspeople with a day of their own
+<!-- key: ov.townspeople-day-their-own -->
 *Part 13 · towns.*
 **Accepted by the owner on 2026-09-27**, with players simply walking in to trade at night.
 - **By day, shopkeepers keep their counters.** Chores happen early and late, or are done by townspeople who don't keep
@@ -1298,6 +1316,7 @@ player's game has to agree on, so each needs those checks; walking, working and 
 townsperson (paid images, asked first).
 
 ### P19. Trading: coins, goods or both, on one screen
+<!-- key: ov.trading-coins-goods-both-one -->
 *Part 13 · trade.*
 **Accepted by the owner on 2026-09-27.**
 - **One screen, two sides**: what you give — goods, bugs, coins — and what you take — goods, recipes, books.
@@ -1321,6 +1340,7 @@ The screen must show a whole shop's stock — today it shows only the first six 
 "furniture" must match real items, so furniture can be sold.
 
 ### P20. A metal ladder made of real tool metals
+<!-- key: ov.metal-ladder-made-real-tool -->
 *Parts 10 and 15 · tools; progression. Also parts 5, 6 and 9.*
 *Renamed 2026-09-29 (D69): the top rung is tungsten steel, not tungsten carbide, and the top pickaxe has no
 gold-coloured finish.*
@@ -1364,6 +1384,7 @@ each needs its icon (paid images, asked first), as do the bug-part weapons; reci
 item table.
 
 ### P21. What a better tool does: the newest material starts slow
+<!-- key: ov.better-tool-newest-material-starts -->
 *Part 15 · progression; part 10 · tools.*
 *Settled further 2026-09-29 (D69): axes are stone, iron and steel, and an axe can fell a big tree slowly while the
 saw is much faster; shovels are wooden, copper and iron, taking three, two, then one hit a square; hoes and scythes
@@ -1400,6 +1421,7 @@ tree means less fallen fruit — a small change to the bugs' food, checked like 
 set separately from its strength on wood.
 
 ### P22. From the watering can to powered farming
+<!-- key: ov.watering-can-powered-farming -->
 *Part 16 · power and automation.*
 **Accepted by the owner on 2026-09-28, in his form**: pumps work like power — no tanks, no hoses.
 - **The ladder**:
@@ -1424,6 +1446,7 @@ feed the bugs, so it is checked like any other change to their food; a frozen zo
 applies the days its powered pumps missed; the pumps and sprinklers need art (paid images, asked first).
 
 ### P23. Lessons that lead into each other
+<!-- key: ov.lessons-lead-into-each-other -->
 *Part 19 · the interface and learning the game.*
 **Accepted by the owner on 2026-09-28.**
 - **One lesson system with three ways in, and one Journal**:
@@ -1467,6 +1490,7 @@ copper (a stone one under P20); teaching beds and pen in the village; and a smal
 whose lantern is decided for the first area (D12), living in the village.
 
 ### P24. Controls and settings
+<!-- key: ov.controls-settings -->
 *Part 19 · the interface.*
 **Accepted by the owner on 2026-09-28.**
 - **The genre's standard where there is one**: W A S D to walk; left mouse uses what's in the hand — swing, catch,
@@ -1506,6 +1530,7 @@ moving the input code onto Unity's Input System (already installed, unused) so k
 prompts; then a settings screen; full gamepad play after the keyboard version, if Steam Deck support is wanted.
 
 ### P25. Border events: bugs wander over from a frozen neighbour
+<!-- key: ov.border-events-bugs-wander-over -->
 *Part 17 · time and weather; part 14 · the world.*
 **Accepted by the owner on 2026-09-28.**
 - **What the player sees**: now and then, a small group of bugs arrives at the edge of their zone from the zone next
@@ -1535,6 +1560,7 @@ server-side stand-in for the ecology is part of the same server review); arrivin
 simulation, so they go through the same hand-over and checks as live migration.
 
 ### P26. The plot's happiness, shown plainly
+<!-- key: ov.plots-happiness-shown-plainly -->
 *Part 18 · playing together; part 7 · building.*
 **Accepted by the owner on 2026-09-28.**
 - **Whose happiness — my pick: the plot's own.** Decorations raise it, and it raises what the plot's crops and
@@ -1565,6 +1591,7 @@ the system; the panel reuses the station panel's column and bars; the outlines d
 
 ## Questions
 ### Q1. Does this describe the game?
+<!-- key: ov.describe-game -->
 **Answered 2026-09-28: yes** — light on detail in places, but not wrong; the sections are rebuilt from it.
 
 If anything is wrong or missing, say what in the note or the box at the bottom.
@@ -1573,6 +1600,7 @@ If anything is wrong or missing, say what in the note or the box at the bottom.
 - **C.** No — something big is wrong or missing; let's go over it first.
 
 ### Q2. What counts as a "bug"?
+<!-- key: ov.counts-bug -->
 **Answered 2026-09-28**: insects, and the other arthropods too, since they are bug-like — spiders, scorpions,
 centipedes, millipedes, pill bugs, crayfish and crabs; fish stay separate, because the owner enjoys fishing; no
 worms and no leeches. (Snails aren't arthropods either, so by the same rule they go — my reading.) The Underground

@@ -81,6 +81,7 @@ its own Bug Lab pen, checked so every player's game stays identical, and signed 
 ## Proposals
 
 ### P1. Every bug has a home, a want, a routine and a signature
+<!-- key: 03.every-bug-has-home-want -->
 *The bestiary's rule for every bug.*
 - **A home**: where it lives and rests (a nest, a burrow, a web, under logs, a crack in the rock, the water).
 - **A want**: what it eats and where it breeds, both real and both present in its zone (§04 P1).
@@ -98,6 +99,7 @@ its own Bug Lab pen, checked so every player's game stays identical, and signed 
 bug, and when. **Cost and risk:** none here; the cost is in each bug.
 
 ### P2. How behaviour gets built: shared building blocks, zone by zone, signed off bug by bug
+<!-- key: 03.behaviour-gets-built-shared-building -->
 *The plan for building it (detail: `docs/product/architecture/architecture_bug_behaviour.md`).*
 - **About fifteen shared building blocks** are built once and reused: leaving a group and acting alone; trails; the bug
   stick; day-and-night routines; nests and colonies; eggs, grubs and cocoons you can see; life in water; ambush and
@@ -123,6 +125,7 @@ it reaches a zone. **Cost and risk:** large: about fifty-eight bugs and fifteen 
 on players' computers is the biggest piece, built step by step behind its checks, ants first; its pace is Q1.
 
 ### P3. Groups where it doesn't matter, individuals where it does
+<!-- key: 03.groups-where-doesnt-matter-individuals -->
 - Flies, gnats, mosquitoes and bees out foraging can move as loose groups, which keeps hundreds of them cheap.
 - A bug you handle, follow or fight acts on its own: an ant you tap, a wasp guarding its nest, a spider at its web,
   a scorpion in its burrow, a mother wolf spider. It can leave its group and come back.
@@ -134,6 +137,7 @@ logic runs on every player's computer and must stay identical; each step is buil
 (the pace is Q1).
 
 ### P4. The bug stick: tap, steer and lead
+<!-- key: 03.bug-stick-tap-steer-lead -->
 *Your mechanic (D79), designed (the research behind it: `bug-mechanics-in-games.md`, Part 4).*
 - **Two taps.** The first tap stops the bugs under the stick: they rear up and face you, and go back to what they
   were doing if you leave them. A second tap while they're stopped makes them follow you. A stray swing never
@@ -163,6 +167,7 @@ them is SimAnt's (1991). Picture the moment — leading a line of ants past your
 tool item (in the item table as the Bug Stick), the taps as shared events, and the follow behaviour (P3).
 
 ### P5. Eggs, grubs and cocoons you can see and farm
+<!-- key: 03.eggs-grubs-cocoons-can-see -->
 - Where a bug's young matter to play, they're in the world: caterpillars that leave the milkweed nursery and grow out in
   the world (decided, D38; the nursery itself is built), silkworms on the mulberry, stag beetle grubs in dead wood,
   mantis egg cases on stems, cave spider egg sacs in hollows of the cave walls, a wolf spider mother carrying her young,
@@ -176,6 +181,7 @@ to find. **Cost and risk:** one model, already built for flies, wasps, bees and 
 you can take and put back), carried to new hosts; D38's caterpillars out in the world first need the work that keeps every player's game identical.
 
 ### P6. Every danger warns first, and every danger has an answer
+<!-- key: 03.every-danger-warns-first-every -->
 *My proposal, never adopted. The owner's view (2026-10-03, D83): warnings depend on the critter — some bugs warn,
 some ambush, some are simply dangerous to be near — and good games don't rely on warnings for every interaction. This
 proposal will be rewritten as each bug's own danger design; until then, read it as notes.*
@@ -194,6 +200,7 @@ Games — the stepped nest answer is Don't Starve's spider dens; the messenger i
 **Cost and risk:** mostly built; the alarm call is one new shared event.
 
 ### P7. Night, light and lamps
+<!-- key: 03.night-light-lamps -->
 - Night is its own world: fireflies flash, moths and the hornet come to lights (real for both; in the game, powered
   lights), glowworms light
   the caves, mosquitoes bite at dusk, wolf spiders' eyes shine back at a torch, scorpions glow under ultraviolet
@@ -211,6 +218,7 @@ a small map of light on the ground;
 the glows are display only.
 
 ### P8. An option for players afraid of spiders
+<!-- key: 03.option-players-afraid-spiders -->
 - A setting that redraws spiders as rounder, legless critters, in steps, without changing how they behave or
   warn (the way Grounded does it).
 
@@ -218,6 +226,7 @@ the glows are display only.
 pictures only; nothing in the simulation changes.
 
 ### P9. House fly (Musca domestica) — the first livestock
+<!-- key: bug.house_fly -->
 *Village, and anywhere with rot · by day · in the prototype now (the fly), to be redone.*
 - **Lives and moves:** loose, jittering clouds over rot and compost; at night they settle high up — tree crowns,
   fences, roofs — and lift off again at dawn (real flies rest high at night).
@@ -238,6 +247,7 @@ pictures only; nothing in the simulation changes.
 Picture the moment — an orchard at dusk, flies settling on the branches like dust. **Cost and risk:** small.
 
 ### P10. Horse fly (the black horse fly, Tabanus atratus) — the biter of sunny wet edges
+<!-- key: bug.horse_fly -->
 *Shallow Swamp edges; Deep Swamp · by day only · new.*
 - **Lives and moves:** fast, straight-flying, out in the sun; it avoids shade and stops at dusk.
 - **Eats:** the females need blood to make eggs; in the game they bite people and big bugs such as caterpillars, as
@@ -259,6 +269,7 @@ heavy fly circling your dark coat until you step into the shade of a willow. **C
 target pick and the shade map are new.
 
 ### P11. Cave fly (the coffin fly, Conicera tibialis — species to be rechecked) — the runner of the underground
+<!-- key: bug.cave_fly -->
 *Ant Colony (its home: the food stores and refuse heaps), Mining Camp, Centipede Cavern, the Underground River ·
 on the world's one clock (D57), though no daylight reaches it · new (your underground fly).*
 - **Lives and moves:** a scuttle fly: it escapes by running across surfaces in fast, jerky bursts rather than
@@ -279,6 +290,7 @@ on the world's one clock (D57), though no daylight reaches it · new (your under
 confirmed for the species named in the bug lineups. **Cost and risk:** a new movement style; the species question.
 
 ### P12. Ant-decapitating fly (Pseudacteon tricuspis) — the fire ants' living enemy
+<!-- key: bug.decapitating_fly -->
 *Shallow Swamp, over the fire ants' columns where they forage up from below; its "zombie" ants wander out of the
 Deadly Ants' galleries · by day, most at midday · new.*
 - **Lives and moves:** tiny flies hovering a few millimetres above fire-ant columns, darting down.
@@ -297,6 +309,7 @@ Deadly Ants' galleries · by day, most at midday · new.*
 red column, one ant staggering off alone. **Cost and risk:** the parasite block.
 
 ### P13. Paper wasp (the European paper wasp, Polistes dominula) — the village wasp that teaches warnings
+<!-- key: bug.paper_wasp -->
 *Village, Bee Meadow edges, Hilltop Meadow (kept as pest control, §01) · by day, home at night · in the prototype
 now (the wasp), to be redone.*
 - **Lives and moves:** a queen and her workers on an open, umbrella-shaped paper comb hung under eaves, branches
@@ -321,6 +334,7 @@ the eaves of the Bug Dealer's shop, workers raising their wings as you come clos
 caterpillar hunt uses the life-stage block.
 
 ### P14. Yellowjacket (the common wasp, Vespula vulgaris) — the hidden nest that boils over
+<!-- key: bug.yellowjacket -->
 *Wasp Thicket · by day, most in the morning · in the prototype now as the "wasp soldier", to be redone.*
 - **Lives and moves:** thousands of workers from a hidden paper nest underground or in a hollow tree; they come and
   go through one entrance, so you find the nest by watching where they go.
@@ -342,6 +356,7 @@ caterpillar hunt uses the life-stage block.
 event is new.
 
 ### P15. European hornet (Vespa crabro) — the night hunter at your lamps
+<!-- key: bug.european_hornet -->
 *Wasp Thicket (the ranger outpost's lights), Hilltop Meadow (its top threat) · day and night · in the prototype now
 (the "giant hornet"), to be redone.*
 - **Lives and moves:** big, slow-cruising hunters from a paper nest in a hollow tree; it hunts by moonlight and
@@ -365,6 +380,7 @@ ranger outpost's lamp at midnight, moths spiralling, a hornet sliding in out of 
 attraction is a small grid; the rest exists.
 
 ### P16. Northern giant hornet (Vespa mandarinia) — the hive raider of the far forest
+<!-- key: bug.giant_hornet -->
 *Millipede Forest · by day · new (your giant hornet).*
 - **Lives and moves:** queens over 50 mm long; a nest underground among rotten roots; it flies far
   and fast to forage.
@@ -388,6 +404,7 @@ hornet hovering at your hive door, and the choice to chase it before it flies ho
 the largest new piece among the wasps; it builds on the existing nest-defence and hunting code.
 
 ### P17. Tarantula hawk (Pepsis grossa) — the wasp that hunts tarantulas
+<!-- key: bug.tarantula_hawk -->
 *Spider Vale East · at dusk and dawn · new.*
 - **Lives and moves:** a huge, blue-black wasp with rust-red wings, flying low over the ground; the males perch on
   high points watching for females (real "hill-topping").
@@ -409,6 +426,7 @@ the largest new piece among the wasps; it builds on the existing nest-defence an
 Goliath tarantula past your boots. **Cost and risk:** shares the parasite block with the decapitating fly.
 
 ### P18. Honeybee (the western honey bee, Apis mellifera) — where the beekeeping ladder starts
+<!-- key: bug.honeybee -->
 *Village hives, Bee Meadow (wild hives and Maren's farm), Hilltop Meadow, Butterfly Fields (wild bees foraging) · by day · in the prototype now, to be redone.*
 - **Lives and moves:** a colony of a queen, tens of thousands of workers and drones on wax combs in a hollow tree
   or a hive box; foragers range out to flowers and back, and stay home at night and in rain; guards at the entrance
@@ -428,6 +446,7 @@ Goliath tarantula past your boots. **Cost and risk:** shares the parasite block 
 (D80). **Cost and risk:** small; most of it is built.
 
 ### P19. Killer bee (the Africanized honey bee) — the dangerous step up
+<!-- key: bug.killer_bee -->
 *Locust Farmland, Scorpion Rocks · by day · new (D79, D80).*
 - **Lives and moves:** a honeybee colony with a short temper; more often in ground cavities and rock crevices than
   honeybees; it swarms more often and abandons a hive when food runs short.
@@ -447,6 +466,7 @@ Goliath tarantula past your boots. **Cost and risk:** shares the parasite block 
 risk:** requeening is new; the rest is tuning.
 
 ### P20. Bumblebee (the buff-tailed bumblebee, Bombus terrestris) — the greenhouse bee
+<!-- key: bug.bumblebee -->
 *Bee Meadow, Hilltop Meadow · by day, and in cool weather when honeybees stay home · new (accepted, D81).*
 - **Lives and moves:** a small colony of a few hundred, underground in an old hollow or in a nest box (real ones use old
   rodent burrows, gone in 2126); it warms up by shivering,
@@ -464,6 +484,7 @@ risk:** requeening is new; the rest is tuning.
 morning, honeybees indoors, bumblebees droning in the greenhouse. **Cost and risk:** small.
 
 ### P21. Asian honey bee (Apis cerana) — the hive that survives the giant hornets (proposed third step)
+<!-- key: bug.asian_honey_bee -->
 *Millipede Forest · by day · new, open (D82).*
 - **Lives and moves:** a smaller colony (several thousand workers) in a small cavity or hive box; less likely to
   sting than the honeybee (real).
@@ -485,6 +506,7 @@ morning, honeybees indoors, bumblebees droning in the greenhouse. **Cost and ris
 D82). **Cost and risk:** small once the giant hornet's raid exists.
 
 ### P22. Black ants (the black garden ant, Lasius niger) — the trail you can redirect
+<!-- key: bug.black_ants -->
 *Ant Tunnels, Ant Colony; foraging into the Bee Meadow and the Mining Camp · day and night · in the prototype now
 (workers and scouts), to be redone.*
 - **Lives and moves:** one queen in a deep chamber, thousands of workers. Scouts range out; when one finds food it
@@ -513,6 +535,7 @@ Picture the moment — your example: five ants leaving the line to follow your s
 ant piece is the per-ant trail; it is the first block built (architecture doc, §4).
 
 ### P23. Fire ants (the red imported fire ant, Solenopsis invicta) — the mound that boils over
+<!-- key: bug.fire_ants -->
 *Deadly Ants outpost and core (the galleries and the queens, underground); their foraging front breaks the surface in
 the Shallow Swamp (decided), where the mounds, rafts and mating flights are · the front by day on warm ground · new.*
 - **Lives and moves:** a colony of hundreds of thousands. Below, galleries and chambers run through the Deadly Ants
@@ -539,6 +562,7 @@ moment — a red raft turning slowly on brown floodwater. **Cost and risk:** raf
 reuses the black ants' work.
 
 ### P24. Garden centipede (the stone centipede, Lithobius forficatus) — the village's first fight
+<!-- key: bug.stone_centipede -->
 *Village, the north-east woods' logs and stones; Ant Tunnels (built there today); Spider Vale East's damp litter
 (proposed, §04) · at night · in the prototype now, to be redone.*
 - **Lives and moves:** under stones, logs and bark by day, out at night; it runs very fast for cover when uncovered
@@ -559,6 +583,7 @@ reuses the black ants' work.
 anything warm" line is the game's, not the animal's). **Cost and risk:** small.
 
 ### P25. Tiger centipede (Scolopendra polymorpha) — the banded night hunter by the ants
+<!-- key: bug.tiger_centipede -->
 *Mining Camp (D21's cave centipede), Ant Colony seam, Centipede Cavern's upper halls · at night, in cool damp ·
 in the prototype now, to be redone.*
 - **Lives and moves:** under rocks, in burrows and rotting logs; it comes out only when it's cool and damp, and stays
@@ -578,6 +603,7 @@ in the prototype now, to be redone.*
 thin). Fit — the centipedes that live by the ants (D79). **Cost and risk:** small.
 
 ### P26. Giant centipede (the Amazonian giant, Scolopendra gigantea) — the one in the wall
+<!-- key: bug.giant_centipede -->
 *Centipede Cavern's depths, Millipede Forest, Spider Vale West · at night · in the prototype now, to be redone.*
 - **Lives and moves:** the world's largest centipede, over 30 cm (real); in dark, damp places — leaf litter, rotten
   wood, caves (real).
@@ -596,6 +622,7 @@ show no ceilings (decided, overview §14); the walls are where a top-down player
 torch finds two feelers twitching in a crack. **Cost and risk:** the ambush block.
 
 ### P27. Garden millipede (the American giant millipede, Narceus americanus) — the slow recycler
+<!-- key: bug.garden_millipede -->
 *Village woods; Bee Meadow (built there today); Spider Vale East's damp litter (proposed, §04) · at night · in the
 prototype now, to be redone.*
 - **Lives and moves:** in and under rotting logs, out at night; it digs in when the surface dries (real).
@@ -614,6 +641,7 @@ prototype now, to be redone.*
 small.
 
 ### P28. Giant African millipede (Archispirostreptus gigas) — the armoured one
+<!-- key: bug.african_millipede -->
 *Mining Camp (D21's tougher cave millipede), Millipede Forest, Centipede Cavern, Spider Vale East as prey
 (proposed, §04) · at night · new.*
 - **Lives and moves:** one of the largest millipedes, up to 33 cm with about 256 legs (real); docile (real). Honest
@@ -632,6 +660,7 @@ small.
 risk:** small.
 
 ### P29. Shocking pink dragon millipede (Desmoxytes purpurosea) — the poisonous one
+<!-- key: bug.dragon_millipede -->
 *Deep in the Millipede Forest; Centipede Cavern as D21's venomous millipede (proposed, §04) · comes out in numbers
 after rain · new.*
 - **Lives and moves:** vivid pink and spiny, out in the open on leaf litter; it appears in large numbers after rain
@@ -648,6 +677,7 @@ after rain · new.*
 the moment — rain stops, and pink spines are everywhere. **Cost and risk:** small.
 
 ### P30. Forest scorpion (the Asian forest scorpion, Heterometrus spinifer) — big claws, mild sting
+<!-- key: bug.forest_scorpion -->
 *Wasp Thicket, under logs in the damp woods · at night · new.*
 - **Lives and moves:** big, black and shiny (10–12 cm); it digs a burrow and hides by day, waiting at the mouth at night
   (real).
@@ -667,6 +697,7 @@ the moment — rain stops, and pink spines are everywhere. **Cost and risk:** sm
 covers it.
 
 ### P31. Fat-tailed scorpion (the yellow fat-tailed scorpion, Androctonus australis) — the deadly one
+<!-- key: bug.fat_tailed_scorpion -->
 *Scorpion Rocks · at night · new.*
 - **Lives and moves:** thin claws and a fat tail; hides in crevices and dark, damp spots by day (real); its shell is
   covered in tiny bumps that resist blowing sand (real).
@@ -685,6 +716,7 @@ covers it.
 and the rocky zone you pictured. **Cost and risk:** small once the forest scorpion exists.
 
 ### P32. Blue dasher (Pachydiplax longipennis) — the pond's fly catcher
+<!-- key: bug.blue_dasher -->
 *Village (the west side's water), Bee Meadow river, both Swamps (proposed, §04) · by day · in the prototype now (the
 dragonfly), to be redone.*
 - **Lives and moves:** a sit-and-wait hunter: it perches still on a reed and darts out at prey, then returns; it
@@ -706,6 +738,7 @@ dragonfly), to be redone.*
 the wasp-hunting was the prototype's, not the animal's. **Cost and risk:** small, plus the water block.
 
 ### P33. Emperor dragonfly (Anax imperator) — the butterfly hawk
+<!-- key: bug.emperor_dragonfly -->
 *Butterfly Fields, both Swamps · by day · new.*
 - **Lives and moves:** big (about 8 cm, wings 10 cm), it rarely lands and eats its prey in flight (real); males are
   territorial (real).
@@ -723,6 +756,7 @@ the wasp-hunting was the prototype's, not the animal's. **Cost and risk:** small
 **Lenses:** Real biology — prey, flight, egg-laying in floating plants (facts A). **Cost and risk:** the water block.
 
 ### P34. Dragonhunter (Hagenius brevistylus) — the dragonfly that eats dragonflies
+<!-- key: bug.dragonhunter -->
 *Millipede Forest, along its river, ranging down the river past the Butterfly Fields (moved from the underground, a
 correction) · by day · new.*
 - **Lives and moves:** a big black-and-yellow dragonfly (about 8.4 cm) with green eyes; it ambushes other dragonflies
@@ -740,6 +774,7 @@ correction) · by day · new.*
 hunter can't live). Fit — your deadly dragonfly (D79), its strike kept as accepted (D80). **Cost and risk:** small.
 
 ### P35. Meadow butterfly (the queen butterfly, Danaus gilippus — name open) — the village butterfly
+<!-- key: bug.meadow_butterfly -->
 *Village meadows, Bee Meadow, Butterfly Fields · by day · in the prototype now (the meadow butterfly), to be redone.*
 - **Lives and moves:** gliding, curious; males patrol all day for females (real).
 - **Eats:** flower nectar and rotting fruit (real); its caterpillars eat milkweed (real).
@@ -761,6 +796,7 @@ hunter can't live). Fit — your deadly dragonfly (D79), its strike kept as acce
 cartoonish milkweed butterfly you wanted (2026-06-23). **Cost and risk:** small.
 
 ### P36. Monarch (Danaus plexippus) — the poisonous cluster
+<!-- key: bug.monarch -->
 *Butterfly Fields; both Swamps, on swamp milkweed (proposed, §04) · by day · new.*
 - **Lives and moves:** orange and black, strong fliers; at night they roost together in clusters, from a few to
   thousands, on trees (real for travelling monarchs).
@@ -780,6 +816,7 @@ cartoonish milkweed butterfly you wanted (2026-06-23). **Cost and risk:** small.
 A). Picture the moment — a tree turning orange at dusk. **Cost and risk:** small.
 
 ### P37. Purple emperor (Apatura iris) — the treetop butterfly you lure down
+<!-- key: bug.purple_emperor -->
 *Wasp Thicket, high in the oaks · by day · new.*
 - **Lives and moves:** lives high in the treetops; males gather at the same "master trees" and defend treetop
   territories (real). The male's purple shows only at some angles to the sun (real).
@@ -798,6 +835,7 @@ A). Picture the moment — a tree turning orange at dusk. **Cost and risk:** sma
 moment — standing still under an oak while a purple butterfly settles on your arm. **Cost and risk:** small.
 
 ### P38. Luna moth (Actias luna) — the pale night visitor
+<!-- key: bug.luna_moth -->
 *Wasp Thicket, Butterfly Fields, Millipede Forest (proposed, §04) · at night · new.*
 - **Lives and moves:** big, pale-green moths with long tails, out at night, and like many moths drawn to lights (real;
   in the game, to powered lights, P7); by day they sit still on leaves and pass for leaves (real).
@@ -816,6 +854,7 @@ moment — standing still under an oak while a purple butterfly settles on your 
 moment — a light trap at midnight and a pale green moth the size of your hand. **Cost and risk:** small.
 
 ### P39. Death's-head hawkmoth (Acherontia atropos) — the honey thief
+<!-- key: bug.deaths_head -->
 *Bee Meadow · late at night · new.*
 - **Lives and moves:** a heavy, fast moth with a skull-like mark, flying late at night.
 - **Eats:** nectar and honey: it walks into honeybee hives undisturbed because it smells like the bees, and drinks
@@ -835,6 +874,7 @@ nightshades, though the sources name potato). Picture the moment — finding a h
 squeak from the hive door at night. **Cost and risk:** the hive raid is new.
 
 ### P40. Silk moth (Bombyx mori, the silkworm) — the farm moth
+<!-- key: bug.silk_moth -->
 *The player's farm, on a mulberry tree · day and night, indoors and out · new.*
 - **Lives and moves:** a moth that can't fly and doesn't exist in the wild; the adult doesn't eat (real).
 - **Eats:** its caterpillars, the silkworms, eat mulberry leaves and almost nothing else (real).
@@ -850,6 +890,7 @@ squeak from the hive door at night. **Cost and risk:** the hive raid is new.
 in the truest sense. **Cost and risk:** small; the item rows exist.
 
 ### P41. Carrion beetle (a burying beetle, Nicrophorus vespilloides) — the undertaker
+<!-- key: bug.burying_beetle -->
 *Village and anywhere carcasses fall · often at night, like carrion beetles generally · in the prototype now, to be
 redone.*
 - **Lives and moves:** it smells a carcass from far off with its clubbed antennae (real) and flies or walks to it.
@@ -870,6 +911,7 @@ moment — a dead wasp that wasn't there the next morning, and a little mound of
 is new.
 
 ### P42. Cave beetle (Leptodirus hochenwartii) — the blind beetle of cold caves
+<!-- key: bug.cave_beetle -->
 *Mining Camp, Centipede Cavern, the cold caves · on the world's one clock (D57), in the dark · new (D21).*
 - **Lives and moves:** small, blind, wingless and pale, with long legs and a domed back that holds moist air; it
   feels its way by touch and senses the damp with its antennae (real).
@@ -885,6 +927,7 @@ is new.
 in 1831, named in 1832). **Cost and risk:** small.
 
 ### P43. Rhinoceros beetle (the Hercules beetle, Dynastes hercules) — the horned wrestler
+<!-- key: bug.hercules_beetle -->
 *Millipede Forest (its boss form) · at night · new.*
 - **Lives and moves:** the longest beetle in the world (males to 17 cm with the horn, real); by day it hides in leaf
   litter, at night it forages.
@@ -903,6 +946,7 @@ in 1831, named in 1832). **Cost and risk:** small.
 risk:** a new throw move.
 
 ### P44. Stag beetle (Lucanus cervus) — the antlered jousters of the oak woods
+<!-- key: bug.stag_beetle -->
 *Wasp Thicket woods · at dusk · new.*
 - **Lives and moves:** males fly at sunset looking for females (real); adults live only a few weeks.
 - **Eats:** adults sip sap and fruit juice if anything; the grubs eat rotting wood for three to seven years (real).
@@ -921,6 +965,7 @@ risk:** a new throw move.
 males locked on a mossy log as the light goes. **Cost and risk:** small.
 
 ### P45. Colorado beetle (Leptinotarsa decemlineata) — the crop stripper
+<!-- key: bug.colorado_beetle -->
 *Locust Farmland · by day · new.*
 - **Lives and moves:** a striped beetle that walks and flies from field to field.
 - **Eats:** leaves of the tomato family — potato, eggplant, tomato and wild nightshade; each larva eats about 40 cm²
@@ -939,6 +984,7 @@ males locked on a mossy log as the light goes. **Cost and risk:** small.
 pest. **Cost and risk:** crop damage is a small new link.
 
 ### P46. Bombardier beetle (Brachinus crepitans) — the boiling spray
+<!-- key: bug.bombardier -->
 *Hilltop Meadow, under stones · at night · new.*
 - **Lives and moves:** a small ground beetle under stones by day, out hunting at night; several often shelter
   together (real for bombardier beetles).
@@ -957,6 +1003,7 @@ moment — lifting a flat stone and getting a pop of hot spray. **Cost and risk:
 first use.
 
 ### P47. Cave spider (the European cave spider, Meta menardi) — the drop from the dark
+<!-- key: bug.cave_spider -->
 *Lower underground: Centipede Cavern and deeper (D21: not the first Mining Camp) · emerges at dusk · new.*
 - **Lives and moves:** shuns light, lives near cave mouths and tunnels; it drops onto prey on a single silk line and
   swings down (real).
@@ -976,6 +1023,7 @@ show no ceilings (decided), so the drop is told by its shadow. Picture the momen
 wall, and a shadow spreading on the floor ahead of you. **Cost and risk:** the drop is new.
 
 ### P48. Daddy longlegs (the eastern harvestman, Leiobunum vittatum) — the cluster that bobs
+<!-- key: bug.daddy_longlegs -->
 *Mining Camp caves, Centipede Cavern, both Spider Vales · at night · new.*
 - **Lives and moves:** long-legged, harmless; gathers in clusters of thousands (real for its kind) on walls and
   overhangs; when alarmed the whole cluster bobs its bodies to blur them (real).
@@ -991,6 +1039,7 @@ wall, and a shadow spreading on the floor ahead of you. **Cost and risk:** the d
 moment — a cave wall that shivers when your torch touches it. **Cost and risk:** small.
 
 ### P49. Wolf spider (the Carolina wolf spider, Hogna carolinensis) — the eyes in the torchlight
+<!-- key: bug.wolf_spider -->
 *Spider Vale West · at night · new.*
 - **Lives and moves:** no web: it waits at the mouth of its burrow at night and rushes what comes near, or chases a
   short way (real).
@@ -1009,6 +1058,7 @@ sweeping the vale and fifty points of light looking back. **Cost and risk:** sma
 is more.
 
 ### P50. Jumping spider (the bold jumping spider, Phidippus audax) — the harmless jumper
+<!-- key: bug.jumping_spider -->
 *Butterfly Fields, Spider Vale West · by day · new.*
 - **Lives and moves:** a small, bold, hairy jumper with big front eyes; it hunts by sight, stalks, ties on a silk
   safety line and leaps; if it misses it climbs back up the line (real). At night it rests in a silk pouch.
@@ -1026,6 +1076,7 @@ is more.
 fuzzy spider on a fence post turning to look at you. **Cost and risk:** small (the June design's first spider).
 
 ### P51. Brazilian wandering spider (Phoneutria nigriventer) — the vale's real danger
+<!-- key: bug.wandering_spider -->
 *Spider Vale West · at night · new.*
 - **Lives and moves:** no web and no lair: it wanders the ground at night and hides under logs and in crevices by day
   (real).
@@ -1042,6 +1093,7 @@ fuzzy spider on a fence post turning to look at you. **Cost and risk:** small (t
 hind legs in your torchlight. **Cost and risk:** small.
 
 ### P52. Black widow (the southern black widow, Latrodectus mactans) — the tangle in the dark
+<!-- key: bug.black_widow -->
 *Spider Vale East · at night · new.*
 - **Lives and moves:** a messy, strong tangle web in a sheltered spot — under stones, in crevices — with a silk
   tunnel where she waits by day (real); at the slightest disturbance she drops and plays dead (real).
@@ -1057,6 +1109,7 @@ hind legs in your torchlight. **Cost and risk:** small.
 silk between two stones, and a black shape in the tunnel behind it. **Cost and risk:** the web block.
 
 ### P53. Tarantula (the Goliath tarantula, Theraphosa blondi) — the hissing giant
+<!-- key: bug.goliath -->
 *Spider Vale East, deep burrows in damp ground · at night · new.*
 - **Lives and moves:** a huge tarantula (legs to 30 cm) in a deep burrow; it drags prey back to the burrow to eat
   (real).
@@ -1074,6 +1127,7 @@ silk between two stones, and a black shape in the tunnel behind it. **Cost and r
 from a hole the size of a hand. **Cost and risk:** small.
 
 ### P54. Giant huntsman (Heteropoda maxima) — the wall runner
+<!-- key: bug.huntsman -->
 *Spider Vale East's caves · at night · new.*
 - **Lives and moves:** the widest spider in the world (legs to 30 cm), thought to live in caves (real); huntsmen run
   fast, spring as they run, walk on walls and ceilings and hide in crevices (real for the family).
@@ -1091,6 +1145,7 @@ Picture the moment — something long-legged crossing the cave wall faster than 
 running is new.
 
 ### P55. Marsh mosquito (the house mosquito, Culex pipiens) — the dusk swarm
+<!-- key: bug.house_mosquito -->
 *Shallow Swamp · at dusk and night · new.*
 - **Lives and moves:** mating swarms dance at sunset and sunrise (real); females hunt by the carbon dioxide people
   breathe out (real), weaving toward you.
@@ -1110,6 +1165,7 @@ running is new.
 risk:** the water block.
 
 ### P56. Swamp mosquito (the common malaria mosquito, Anopheles quadrimaculatus) — the quiet biter of the deep swamp
+<!-- key: bug.malaria_mosquito -->
 *Deep Swamp · at dusk, dawn and night · new (your later-stage mosquito, D79).*
 - **Lives and moves:** rests by day in shade — hollow trees, under the stilt walkways — and comes out at dusk; it
   rests with its tail tipped up, unlike the marsh mosquito (real). Most stay near their breeding water (real).
@@ -1130,6 +1186,7 @@ feeding is decided (D66), with a real echo in a related species. Fit — your la
 shares the marsh mosquito's work.
 
 ### P57. Water strider (the common pond skater, Gerris lacustris) — the ripple reader
+<!-- key: bug.water_strider -->
 *Village lake, Shallow and Deep Swamps · by day · new.*
 - **Lives and moves:** skates on the water surface on water-repellent hairs, rowing fast (real); each holds a patch of
   water and warns others off with ripples (real).
@@ -1146,6 +1203,7 @@ shares the marsh mosquito's work.
 onto the lake and seeing three striders converge on the rings. **Cost and risk:** the water block.
 
 ### P58. Crayfish (the red swamp crayfish, Procambarus clarkii) — the farmed crawfish
+<!-- key: bug.crayfish -->
 *Village lake, both Swamps · at dusk and night · new.*
 - **Lives and moves:** hides in its burrow by day and forages at dusk (real); digs burrows down to the water in dry
   spells and can wander across wet ground between waters (real).
@@ -1164,6 +1222,7 @@ onto the lake and seeing three striders converge on the rings. **Cost and risk:*
 crayfish boil and fish trap. **Cost and risk:** the water block.
 
 ### P59. River crab (Potamon fluviatile) — the right-handed fighter
+<!-- key: bug.river_crab -->
 *Underground River, shallow and deep · at night by the world's clock (D57) · new.*
 - **Lives and moves:** burrows in the banks, small ones under stones; it forages on land near the water and can go
   tens of metres from it (real).
@@ -1182,6 +1241,7 @@ crayfish boil and fish trap. **Cost and risk:** the water block.
 crab of the bug lineups. **Cost and risk:** small once the water block exists.
 
 ### P60. Praying mantis (the Chinese mantis, Tenodera sinensis) — the still hunter you can keep
+<!-- key: bug.mantis -->
 *The Wasp Thicket's edges, Locust Farmland · by day · new.*
 - **Lives and moves:** sits motionless on plants until prey comes within reach, then snaps out its forelegs (real).
 - **Eats:** large insects — hornets, grasshoppers, spiders, caterpillars, bees (real); the biggest mantis in North
@@ -1199,6 +1259,7 @@ crab of the bug lineups. **Cost and risk:** small once the water block exists.
 said so. Fit — mantis eggs from your own mantises (D80). **Cost and risk:** the ambush block.
 
 ### P61. Orchid mantis (Hymenopus coronatus) — the flower that eats butterflies
+<!-- key: bug.orchid_mantis -->
 *Butterfly Fields · by day · new.*
 - **Lives and moves:** pink and white, shaped like an orchid; it climbs to a cluster of flowers and holds still (real).
   It draws more pollinators than real flowers do, and to bees its colour can't be told from the flowers (real).
@@ -1214,6 +1275,7 @@ said so. Fit — mantis eggs from your own mantises (D80). **Cost and risk:** th
 among the clover that moves. **Cost and risk:** the ambush block's lure.
 
 ### P62. House cricket (Acheta domesticus) — the farm cricket (a maybe, D80)
+<!-- key: bug.house_cricket -->
 *The player's farm; the western town's farm store · mostly at night, like most crickets · new, open.*
 - **Lives and moves:** small, fast-breeding, happy in a box of damp bedding.
 - **Eats:** almost anything — leaves, fruit, scraps, dead bugs (real).
@@ -1227,6 +1289,7 @@ among the clover that moves. **Cost and risk:** the ambush block's lure.
 risk:** small.
 
 ### P63. Field cricket (Gryllus campestris) — the singer at his door
+<!-- key: bug.field_cricket -->
 *Bee Meadow, Hilltop Meadow, on dry, sunny, short-grass ground; proposed as prey in Scorpion Rocks' gravel and
 Spider Vale West's heath (§04) · day and early night · new.*
 - **Lives and moves:** each male digs a burrow with a little platform at the mouth and sings there, audible 50–200 m
@@ -1243,6 +1306,7 @@ Spider Vale West's heath (§04) · day and early night · new.*
 that hushes in a ring around your feet. **Cost and risk:** small; sound is display only.
 
 ### P64. Firefly (the common eastern firefly, Photinus pyralis) — the J of light
+<!-- key: bug.firefly -->
 *Village meadows at dusk, Bee Meadow (built there today), Butterfly Fields at night · at dusk and night · in the
 prototype now, to be redone.*
 - **Lives and moves:** males fly over long grass at dusk tracing a J, lighting on the upswing, every five or six
@@ -1264,6 +1328,7 @@ moment — dusk over the village meadow, the grass lighting in J's. **Cost and r
 display only.
 
 ### P65. Cave glowworm (the New Zealand glowworm, Arachnocampa luminosa) — the blue stars in the dark
+<!-- key: bug.glowworm -->
 *Mining Camp (D21: with the glowing mushrooms, its light), Centipede Cavern, over the Underground River · on the
 world's clock, glowing always · new (D21).*
 - **Lives and moves:** a fly larva in a silk nest on cave ceilings and overhangs, hanging up to 30 sticky threads
@@ -1284,6 +1349,7 @@ world's clock, glowing always · new (D21).*
 lit with blue stars, and a dark patch spreading where your shoulder brushed the threads. **Cost and risk:** small.
 
 ### P66. Locust (the desert locust, Schistocerca gregaria) — the swarm with a cause
+<!-- key: bug.locust -->
 *Locust Farmland, swarms carrying on into the next zone (your wish, 2025-12-30, with nothing to stop them) · solitary
 ones fly at night, swarms by day · new.*
 - **Lives and moves:** two forms of one insect. Solitary locusts are green or beige, avoid each other and fly at night.
@@ -1307,6 +1373,7 @@ striking new mechanic outside the ants.
 
 ## Questions
 ### Q1. Moving what's left of each bug's life onto the players' computers: piece by piece, or all at once first?
+<!-- key: 03.moving-whats-left-each-bugs -->
 Today the players' computers run each bug's movement, its reactions to you and a hunter's choice of victim; the server
 still runs feeding, breeding, nests, eggs and grubs, the ants' memory of food, and night. Your rule is that bug
 behaviour lives on the players' computers, and the earlier design work left the pace of the move to you

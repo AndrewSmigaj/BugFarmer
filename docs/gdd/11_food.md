@@ -111,6 +111,7 @@ Each line is the owner's decision in my words, with its date.
 
 ## Proposals
 ### P1. Better food is a ladder you can see
+<!-- key: 11.better-food-ladder-can-see -->
 What you cook sets a meal's strength: a dish from the spit a little, a stove dish more, a big dish or a bake from the
 stove or the range more again, a feast most; a rare dish (P11) is one step above the everyday dish it's most like,
 never above a feast. If ranching later adds prime (well-raised) bugs, a prime fly lifts its dish one step too. The
@@ -127,6 +128,7 @@ becoming a chore when an unfed player is too weak, which the rule that a meal is
 and risk:** small; numbers to tune.
 
 ### P2. Cooking from the book, in batches
+<!-- key: 11.cooking-book-batches -->
 Every recipe you know can be queued in batches on a station and collected later: ingredients come from your bag and
 nearby chests you may open, the station sounds when it's done, and some dishes make several portions. A meal every 5
 to 20 minutes then costs a few clicks, not a chore. This is how all cooking works (D77).
@@ -136,6 +138,7 @@ fridge as well as the bag. Fit — the stations' queue already runs batches; the
 new. **Cost and risk:** small.
 
 ### P3. Your cooking stays yours at a shared station
+<!-- key: 11.cooking-stays-yours-shared-station -->
 At the village's shared stations, each player's batches and finished dishes belong to them until they collect them or
 give them away. This mends the gap found today in every shared station — the blacksmith's furnace as much as the
 village's wood stove. How many things a shared station can cook at once for several players is §10's to settle.
@@ -145,6 +148,7 @@ shared by your decision (D55), so this has to hold before people play together. 
 shared station's tray; things left uncollected need a rule (§10).
 
 ### P4. Feasts, cooked together
+<!-- key: 11.feasts-cooked-together -->
 A few big dishes are feasts: three or four finished dishes, cooked at more than one station — say a roast fly from the
 spit, bread and pumpkin soup from the wood stove, and juice from the press — laid on a table as one platter with a
 fixed number of servings. Each serving counts as that player's one meal and lasts longer than any single dish (say 30
@@ -159,6 +163,7 @@ sharing work is fun when there is waiting to share. **Cost and risk:** a table a
 stages; who may eat at a village table needs a rule.
 
 ### P5. Nothing hidden
+<!-- key: 11.nothing-hidden -->
 Each dish's box says exactly what it gives and what it needs, including any group it takes (any fish, any fruit, any
 fat, any edible bug). The cookbook lists every recipe you know, with favourites and the station each one needs.
 Townspeople teach and sell recipes when their ingredients are within reach.
@@ -167,6 +172,7 @@ Townspeople teach and sell recipes when their ingredients are within reach.
 complained of recipes taught for crops out of season. **Cost and risk:** a cookbook screen.
 
 ### P6. Every dish is wanted by someone
+<!-- key: 11.every-dish-wanted-someone -->
 Food matters beyond your own meters: some townspeople's requests ask for a dish, a dish makes a good gift, and dishes
 sell. A dish nobody wants goes uncooked, as Stardew Valley's unused recipes show. How townspeople's requests and gifts
 work is designed in §16.
@@ -175,6 +181,7 @@ work is designed in §16.
 §16's.
 
 ### P7. Drinks, and kitchen drinks that act like potions
+<!-- key: 11.drinks-kitchen-drinks-act-like -->
 Juice, cider and mead are a small heal over a few seconds, one at a time, like a bandage, and take neither the meal's
 spot nor the potion's. Coffee, and any later kitchen drink that works like a potion, takes the timed potion's spot on
 the sheet (§08 P7) — the same rule as §08 P2, so one answer settles both — and follows the potion rules — so drinking
@@ -184,6 +191,7 @@ coffee replaces a running potion such as night vision, and the other way round.
 their own slot beside food. **Cost and risk:** none.
 
 ### P8. Brewing stays simple
+<!-- key: 11.brewing-stays-simple -->
 Potions are brewed from the book at the cauldron — basic recipes known there, stronger ones found, bought or earned —
 with no hands-on action and no brewing chains, the same as cooking (D77).
 
@@ -191,6 +199,7 @@ with no hands-on action and no brewing chains, the same as cooking (D77).
 risk:** none.
 
 ### P9. Recipes, single and in books
+<!-- key: 11.recipes-single-books -->
 Cooking uses the recipe shops the game already has: townspeople sell single recipes and recipe books, and buying one
 teaches it at once (the rows say who teaches each dish) — the Bug Dealer's five bug dishes as one book, or the
 Fisherman's fish dishes. Found recipes are new. A found recipe is a book or a note left somewhere in a zone, and it's
@@ -207,6 +216,7 @@ recipes, which exist, though the shop screen shows at most six recipes and three
 longer list; found ones need an object you read in place.
 
 ### P10. The spit, the first cooking station
+<!-- key: 11.spit-first-cooking-station -->
 The spit is a campfire with a wooden spit over it, made at the workbench from a campfire and wood (D77; the campfire
 as a part is your leaning), so a new player can make it on the first day: today's recipe also takes an iron bar, 40
 coins at the blacksmith (a lot on the first day) or smelted from iron ore that needs a better pickaxe. It cooks the
@@ -222,6 +232,7 @@ spit; the spit needs the campfire's light, which it lacks today, and its picture
 this world doesn't have (D32), so it's redrawn with a fly when the art is made.
 
 ### P11. Everyday and rare dishes
+<!-- key: 11.everyday-rare-dishes -->
 Beside the everyday dishes sits a set of rare ones: about a dozen to start, spread over the zones beyond the village,
 with more of them in the harder ones. A rare dish takes a rare ingredient — royal jelly, the blind cave fish of the
 Underground River, and the fruit and other finds of zones still to be designed (D72) — and its recipe is found,
@@ -234,6 +245,7 @@ to go farther out. **Cost and risk:** more dishes, each needing an icon.
 
 ## Questions
 ### Q1. What does a feast give?
+<!-- key: 11.feast-give -->
 If you keep feasts (P4):
 - **A.** The strongest meal in the game and one boost from its parts, chosen by whoever lays the table.
 - **B.** The strongest meal, and no boost.
@@ -243,6 +255,7 @@ If you keep feasts (P4):
 still keeps one boost per meal.
 
 ### Q2. Can a bigger station cook a smaller one's dishes?
+<!-- key: 11.can-bigger-station-cook-smaller -->
 Your answer names a station for each recipe (D77); this settles what that means, before each dish gets its station.
 - **A.** Only its own station: a range can't cook a wood-stove soup.
 - **B.** Any bigger station too: the wood stove and the range can cook the spit's dishes as well, so once you have a

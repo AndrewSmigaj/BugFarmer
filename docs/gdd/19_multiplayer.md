@@ -110,6 +110,7 @@ choices you can change are the proposals below.
 
 ## Proposals
 ### P1. Three buttons, one kind of world
+<!-- key: 19.three-buttons-one-kind-world -->
 The main menu has **Single Player**, **Host & Play** and **Join**. Single Player is Host & Play with nobody else
 allowed in — the same program underneath, so there is one set of bugs to fix, and any world can be opened to friends
 later, as in Terraria. When the host quits, the world closes for everyone still playing (as in Terraria), and every
@@ -118,6 +119,7 @@ character is saved first; a dedicated server keeps a world running.
 **Lenses:** Simpler alternative — one way of running a world, not two. Like Terraria, as decided.
 
 ### P2. Join with an address or a short code
+<!-- key: 19.join-address-short-code -->
 Friends type your address, which works when your router lets the game through, or a short **join code** you read
 out to them, which works for almost everyone because it goes through Epic's connection service. A "recent servers"
 list remembers where you've played.
@@ -126,6 +128,7 @@ list remembers where you've played.
 only works when the host's router lets the game through.
 
 ### P3. The player limit is a host setting, capped at what's measured
+<!-- key: 19.player-limit-host-setting-capped -->
 Each world gets a **max players** setting (default 8 until measured). Before launch we measure the real ceiling —
 the host's computer, their upload speed, and the slowest player's computer, since every player's computer simulates
 the bugs in their zone — both with everyone in one zone and with players spread across zones, since the host runs
@@ -136,6 +139,7 @@ which also simulates on players' computers, caps at 10.
 **Lenses:** Your decision to cap each server at what is feasible. Scale — measured, not guessed.
 
 ### P4. A settings file and admin commands, like Minecraft and Terraria
+<!-- key: 19.settings-file-admin-commands-like -->
 The dedicated server reads one plain settings file: world name, password, max players, the network port (the number
 the game listens on), whether characters from other worlds may join, fights between players (P9), how often it
 autosaves, how many backups to keep, and a welcome message. Admins get chat commands: kick, ban, unban, an allow-list
@@ -149,6 +153,7 @@ items; big public Terraria servers keep characters on the server for the same re
 Fairness — no one brings made-up riches into a public world.
 
 ### P5. Automatic backups, and characters saved with the world
+<!-- key: 19.automatic-backups-characters-saved-world -->
 Saves already upgrade safely when the game updates. Still to build: the server keeps backups of every world — for
 example the last 5, plus one a day for a week — and can restore one with a command. **Characters are backed up and
 restored with their world**, so restoring one without the other can't duplicate or delete items; and characters are
@@ -157,6 +162,7 @@ saved every few minutes while playing and whenever a zone shuts down, not only o
 **Lenses:** What can go wrong — a bad update, a crash mid-save, a griefer, a host who quits without warning.
 
 ### P6. A plain version check
+<!-- key: 19.plain-version-check -->
 If your game and the server are different builds, you are told plainly — *"This server runs 1.2; you have 1.1.
 Update to join."* — instead of a confusing failure. The check compares exact builds, since any change to the bugs'
 behaviour would put players out of step.
@@ -164,6 +170,7 @@ behaviour would put players out of step.
 **Lenses:** What can go wrong. Picture the moment.
 
 ### P7. Drop back in after a disconnect
+<!-- key: 19.drop-back-after-disconnect -->
 If your connection drops, your character leaves the world at once and is saved; rejoining puts you back where you
 were, with the bugs exactly in step — the same catch-up that already lets a player walk into a busy zone mid-game and
 see every bug where it should be.
@@ -171,6 +178,7 @@ see every bug where it should be.
 **Lenses:** What can go wrong. Built on something already proven.
 
 ### P8. Text chat
+<!-- key: 19.text-chat -->
 Press Enter to talk (P24 of the overview). Chat also shows players joining and leaving and admin notices; on public
 servers a player can mute or hide someone. The message about others' property pops up on screen when someone tries to
 take what isn't theirs (as decided), and is noted in chat too.
@@ -178,6 +186,7 @@ take what isn't theirs (as decided), and is noted in chat too.
 **Lenses:** Already covered? — nothing today. Every reference game has chat.
 
 ### P9. Fights between players
+<!-- key: 19.fights-between-players -->
 As decided, fights between players happen only where a server allows them.
 - **The server setting has three values**: off (the default), each player chooses, or everyone always — for rough
   public servers that want it.
@@ -196,6 +205,7 @@ whether nets, smoke and sprays affect other players. Weapons are tuned against b
 balance pass only if servers use them.
 
 ### P10. How the server review is done
+<!-- key: 19.server-review-done -->
 The review is decided (D58); this is how to run it.
 - **Start from a full list of the server's jobs, taken from the code** — every message it handles, every job it runs
   each tick, each bug group's decisions, every remote call — so nothing escapes. The biggest job on it is running the
@@ -220,6 +230,7 @@ can go wrong — a job moved without the in-step tests passing breaks the shared
 
 ## Questions
 ### Q1. Which computers at launch?
+<!-- key: 19.computers-launch -->
 Everyone who plays together must simulate the bugs identically, so every platform we support has to pass the
 same-bugs tests against the others. The Steam Deck runs the Windows version, so it needs a Steam release, full
 controller play (P24 of the overview) and Valve's check — not a separate build.
@@ -232,6 +243,7 @@ controller play (P24 of the overview) and Valve's check — not a separate build
 on full controller play, and Mac and Linux each need their own round of same-bugs testing — all safer after launch.
 
 ### Q2. Does a world pause when you play alone?
+<!-- key: 19.world-pause-play-alone -->
 The shared world never pauses, and it stops only when nobody is online. With one player in Single Player, the world
 could pause while they're in a menu, as Stardew Valley's and Terraria's single-player games do.
 - **A.** Yes — in Single Player the world pauses whenever the only player opens the menu.
