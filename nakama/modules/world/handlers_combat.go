@@ -120,6 +120,7 @@ func (m *Match) handleMeleeAttack(
 			if len(removed) == 0 {
 				continue
 			}
+			state.Stats.recordDeath(swarm.SpeciesID, DeathKill, len(removed))
 			result.Killed = append(result.Killed, bugID)
 			// A player kill leaves the dead bug as a grabbable corpse at the strike cell
 			// (bug kill_drops are empty by design). Predation stays corpse-less — the

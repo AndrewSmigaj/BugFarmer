@@ -33,6 +33,9 @@ type PerfStats struct {
 
 	influenceBytes, influenceMsgs int64 // SWARM leg broadcast (OpCode 71) wire totals
 	rosterBytes, rosterMsgs       int64 // SwarmUpdate roster broadcast (OpCode 20) wire totals
+	// The authority's zone snapshot upload (OpCode 75): its size is most of what a late joiner downloads, and the
+	// authority's upload cost. Max = the fattest single snapshot this day.
+	snapInBytes, snapInMsgs, snapInMax int64
 
 	// WHOLE-TICK timing — the full sim-batch tick wrapped (match.go), so we see total cost (not just the
 	// instrumented sub-phases) → "dark time" = tickTotal − Σ(cpu+sys), throughput (µs/tick vs the 100ms
@@ -139,6 +142,18 @@ func (p *PerfStats) AddRosterBytes(n int) {
 	p.rosterMsgs++
 }
 
+// AddSnapshotInBytes records the wire size of one authority zone snapshot received (OpCode 75).
+func (p *PerfStats) AddSnapshotInBytes(n int) {
+	if p == nil || !p.enabled {
+		return
+	}
+	p.snapInBytes += int64(n)
+	p.snapInMsgs++
+	if int64(n) > p.snapInMax {
+		p.snapInMax = int64(n)
+	}
+}
+
 func (p *PerfStats) reset() {
 	if p == nil {
 		return
@@ -148,6 +163,7 @@ func (p *PerfStats) reset() {
 	p.sys = map[string]int64{}
 	p.influenceBytes, p.influenceMsgs = 0, 0
 	p.rosterBytes, p.rosterMsgs = 0, 0
+	p.snapInBytes, p.snapInMsgs, p.snapInMax = 0, 0, 0
 	p.tickTotalNs, p.tickCount, p.tickMaxNs, p.ticksOver = 0, 0, 0, 0
 	// NOTE: lastNumGC/lastPauseNs are NOT reset — they're the running baseline for next day's GC delta.
 }
@@ -212,7 +228,9 @@ func (m *Match) emitPerfStats(state *WorldState, day int64, logger runtime.Logge
 		sysLine += " sys_" + ph + "_us=" + itoa(p.sys[ph]/1000)
 	}
 	sysLine += " influence_bytes=" + itoa(p.influenceBytes) + " influence_msgs=" + itoa(p.influenceMsgs) +
-		" roster_bytes=" + itoa(p.rosterBytes) + " roster_msgs=" + itoa(p.rosterMsgs)
+		" roster_bytes=" + itoa(p.rosterBytes) + " roster_msgs=" + itoa(p.rosterMsgs) +
+		" snapshot_in_bytes=" + itoa(p.snapInBytes) + " snapshot_in_msgs=" + itoa(p.snapInMsgs) +
+		" snapshot_in_max=" + itoa(p.snapInMax)
 
 	// Whole-tick throughput (tick_total_us ÷ tick_count = avg µs/tick; vs 100ms budget) + spikes.
 	sysLine += " tick_total_us=" + itoa(p.tickTotalNs/1000) + " tick_count=" + itoa(p.tickCount) +

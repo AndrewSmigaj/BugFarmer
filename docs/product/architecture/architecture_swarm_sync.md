@@ -810,6 +810,11 @@ Now: tool stats are data-driven (`state.Entities[EquippedTool]` — this also fi
 treated as a bare hand), and the rate limit is per-SWING (`LastCatchTick`): same-tick messages
 share the swing's slot.
 
+**Player kills and catches in the ecology stats (2026-10-04):** `handleMeleeAttack` (after the shared
+`killBugsInSwarm`) and `handleCatchBug` add `d_kill` / `d_catch` to the zone's daily `ECOSTATS` line, so the
+pressure runs can see how much of a decline players cause. `EcologyStats` is soft state, never hashed: the ledger,
+the state hash and late-join are untouched.
+
 **Future boundary (BACKLOG):** if bugs ever *behave* differently when damaged (flee at low HP),
 HP becomes sim-state and must move into the deterministic path + state hash.
 

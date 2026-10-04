@@ -43,12 +43,14 @@ const (
 	DeathStarve    DeathCause = "starve"    // starvation cull (processStarvation)
 	DeathPredation DeathCause = "predation" // eaten by a predator (checkPredationStrike)
 	DeathCull      DeathCause = "cull"      // Director hard-cull (directorCull)
+	DeathKill      DeathCause = "kill"      // killed by a player (handleMeleeAttack)
+	DeathCatch     DeathCause = "catch"     // caught by a player and carried off (handleCatchBug)
 )
 
 // allBirthSources / allDeathCauses fix the column order so every ECOSTATS line has the same fields
 // (0 when nothing happened) — trivial for tools/ecology/plot_interactions.py to parse into a CSV.
 var allBirthSources = []BirthSource{BirthBrood, BirthNest, BirthReproduce, BirthReseed, BirthSpawn}
-var allDeathCauses = []DeathCause{DeathOldAge, DeathStarve, DeathPredation, DeathCull}
+var allDeathCauses = []DeathCause{DeathOldAge, DeathStarve, DeathPredation, DeathCull, DeathKill, DeathCatch}
 
 // NewEcologyStats returns an empty accumulator (maps ready).
 func NewEcologyStats() *EcologyStats {
