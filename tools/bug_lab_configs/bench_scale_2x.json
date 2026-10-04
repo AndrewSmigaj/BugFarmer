@@ -1,0 +1,53 @@
+{
+  "name": "bench_scale_2x",
+  "description": "S1 scaling: village_21_B's bug numbers x2, shipped tuning (bench zone only)",
+  "species": {},
+  "tuning": {
+    "max_nectar": 30.0,
+    "nectar_regen_per_tick": 0.004,
+    "max_host_capacity": 25.0,
+    "host_regen_per_tick": 0.007,
+    "host_breed_cost": 70.0,
+    "predator_breed_satiation": 32.0,
+    "litter_regen_per_tick": 0.0008,
+    "starvation_death_secs": 90.0
+  },
+  "bug_spawning": {
+    "species_caps": {
+      "fly_common": {
+        "initial": 156,
+        "max": 400,
+        "max_population": 3000,
+        "min_population": 24,
+        "event_low": 80,
+        "event_high": 800
+      },
+      "butterfly_meadow": {
+        "initial": 60,
+        "max": 280,
+        "max_population": 1600,
+        "min_population": 20,
+        "event_low": 60,
+        "event_high": 500
+      },
+      "centipede_garden": {
+        "initial": 32,
+        "max": 80,
+        "max_population": 280,
+        "min_population": 6
+      },
+      "millipede": {
+        "initial": 32,
+        "max": 500,
+        "max_population": 400,
+        "min_population": 6
+      },
+      "beetle_carrion": {
+        "initial": 24,
+        "max": 80,
+        "max_population": 280,
+        "min_population": 4
+      }
+    }
+  }
+}
