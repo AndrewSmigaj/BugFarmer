@@ -38,12 +38,21 @@ baseline shows the same), so the runs are compared by the bugs actually present,
    27–38 ms, about two whole frames: a stutter ten times a second, and about a quarter of one core.
 3. **Data per player roughly doubles with each step** (9.6 → 17 → 34 KB/s). About 35 KB/s is fine for one player on
    broadband; it matters with many players in one zone.
-4. **The cost per bug rises with the number of groups** (82 → 539). That pattern points at work that compares each
-   group or bug with every other one. Which part it is hasn't been measured yet.
+4. **Leading suspect (read in the code, not yet confirmed by a timer):** every bug that isn't hunting or eating looks
+   for the nearest food each tick (`BugAgent.TryFeedAtFood` → `InfluenceManager.TryGetNearestFood`), and that lookup
+   walks the zone's **whole** food list (every rotten fruit and every carcass). So a tick costs bugs × food items, and
+   since starving bugs leave carcasses, more bugs means more food items too: the cost grows roughly with the square of
+   the bug count. It also explains why the ~280-bug run got slower as it went while its bugs dwindled (carcasses and
+   rot piled up). The server's food counts at the end of day 1 (`RESSTATS`: about 40, 76 and 160 carcasses, plus
+   rotten fruit) give roughly 14 thousand to a million distance checks per tick, which matches the measured times at a
+   few tens of nanoseconds each. The lookup is made from the group's centre, so every bug in a group computes the same
+   answer.
 
-**Recommendation (mine):** before deciding on "more bugs" or a zone 4× the size, find what makes the client's cost grow
-faster than the bug count, and fix it or spread a tick's work over several frames. Next measurement: finer timers inside
-the client's bug simulation (which part of a tick takes the time), then the same three runs again.
+**Recommendation (mine):** before deciding on "more bugs" or a zone 4× the size, confirm the suspect with a timer around
+the food lookup, then fix it. Two changes, both with identical results on every computer (so determinism holds): look
+the food up once per group per tick instead of once per bug, and keep the food in a grid of cells so a lookup only
+checks nearby cells. It is a change to the shared bug simulation, so it goes through the determinism gates
+(`frontier-sync`, `perf-tuning`) and the same three runs are repeated after it.
 
 **Caveats**
 - The ~2,540-bug run's client couldn't keep up, so it ran many ticks per frame to catch up. Its frame rate means
