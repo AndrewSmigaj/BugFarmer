@@ -75,7 +75,11 @@ village_21_B (co-located 166k + spawn-apart 161k shared-bug states, no drift).
 **Cost (measured 2026-10-04):** `InfluenceManager.TryGetNearestFood` walks the WHOLE `_food` registry, once per wandering
 bug per tick (from the group's centre, so every bug of a group gets the same answer). It is 69–91% of the client's
 bug-simulation time and grows with bugs × food (`docs/product/investigations/scaling-2026-10-04/`); it carries a
-`Sim.FoodLookup` profiler scope (timing only). Fix planned in the BACKLOG: one lookup per group per tick + a cell index,
+`Sim.FoodLookup` profiler scope (timing only). `AdvanceOneTick` is timed part by part too (`Sim.Tick`, `Sim.Events`,
+`Sim.HuntPrep`, `Sim.SwarmLoop`, `Sim.Strikes`, `Sim.Hash`, `Sim.Reconcile`; timing only): at ~3,300 bugs at normal
+speed a tick is 27.4 ms, of which ~23 ms is avoidable (the food lookup, per-tick re-sorting, the strike check's list
+copies, and the state hash building a full snapshot record per bug). The fixes are planned in
+`docs/plans/finishing-the-game.md` (Stage 1). Fix planned in the BACKLOG: one lookup per group per tick + a cell index,
 both result-identical.
 
 **Update 2026-07-14 — the S1/S2 predation late-join desync + the VERBATIM-RELAY CONTRACT.** New per-bug

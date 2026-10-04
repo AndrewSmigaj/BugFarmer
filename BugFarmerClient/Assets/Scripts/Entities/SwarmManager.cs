@@ -545,10 +545,11 @@ namespace BugFarmer.Entities
         /// </summary>
         private void AdvanceOneTick()
         {
+            using var _perfTick = PerfProfiler.Sample("Sim.Tick"); // timing only: the whole tick (scaling study)
             // 1. Process events for the tick we're LEAVING (end-of-tick semantics)
             // Events stamped tick=T are applied AFTER simulating T, BEFORE simulating T+1
             // This ensures effects are visible starting at tick T+1
-            ProcessEventsForTick(_simulationTick);
+            using (PerfProfiler.Sample("Sim.Events")) ProcessEventsForTick(_simulationTick); // timing only
 
             // 2. Increment tick - now entering the new tick
             _simulationTick++;
@@ -573,6 +574,7 @@ namespace BugFarmer.Entities
             // deterministic — captured BEFORE the sim loop so every predator pursues the same last-tick positions
             // regardless of swarm iteration order). GetHuntingSwarms is InfluenceManager's predator→{TargetPreyId}
             // map (the same source RunPredationStrikes uses). Passed into SimulateTick so bugs pursue individual prey.
+            var _perfHunt = PerfProfiler.Sample("Sim.HuntPrep"); // timing only
             Dictionary<string, IReadOnlyList<(int bugId, FixedPoint2 pos)>> huntTargets = null;
             var influence = InfluenceManager.Instance;
             if (influence != null)
@@ -585,9 +587,11 @@ namespace BugFarmer.Entities
                     huntTargets[kv.Key] = prey.GetAllBugsAliveSorted().ToList();
                 }
             }
+            _perfHunt.Dispose();
 
             // 4. Simulate all bugs for the NEW tick
             // FIX #2: MUST iterate in deterministic order (sorted by swarmId)
+            var _perfLoop = PerfProfiler.Sample("Sim.SwarmLoop"); // timing only: the loop incl. its sort
             foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
             {
                 IReadOnlyList<(int bugId, FixedPoint2 pos)> prey = null;
@@ -597,6 +601,7 @@ namespace BugFarmer.Entities
                 bool subdued = influence != null && influence.IsSubdued(swarmId);
                 _swarms[swarmId].SimulateTick(_simulationTick, players, prey, subdued);
             }
+            _perfLoop.Dispose();
 
             // 4b. Phase 2 — individual-fly predation strike (AUTHORITY ONLY, LIVE only). Positions are
             // final for the tick; this detects which individual prey a predator struck and REPORTS it to
@@ -605,17 +610,19 @@ namespace BugFarmer.Entities
             // Live so a catching-up authority doesn't fire stale strikes for replayed ticks.
             if (_isAuthority && _syncState == SyncState.Live)
             {
+                using var _perfStrikes = PerfProfiler.Sample("Sim.Strikes"); // timing only
                 RunPredationStrikes();
                 RunBugPlayerStrikes(players);
                 RunCorpseConsumes();
             }
 
             // Record this tick's state hash for tick-aligned drift checks (always on, cheap).
-            var hash = ComputeStateHash();
+            long hash;
+            using (PerfProfiler.Sample("Sim.Hash")) hash = ComputeStateHash(); // timing only
             RecordTickHash(_simulationTick, hash);
 
             // Tick-aligned cosmetic husk sweep (deferred SwarmUpdate reconcile — see ReconcileDespawnedSwarms).
-            ReconcileDespawnedSwarms();
+            using (PerfProfiler.Sample("Sim.Reconcile")) ReconcileDespawnedSwarms(); // timing only
 
             // Invoke trace callback if recording
             if (_traceCallback != null)

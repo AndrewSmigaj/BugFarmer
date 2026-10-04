@@ -14,6 +14,8 @@ version lands here as `docs/plans/<slug>.md`.
 - One concern per plan; link related plans. Keep the PROGRESS log at the top as the resume pointer.
 
 ## Index
+- `finishing-the-game.md` — the order of work from here to a finished game (2026-10-04): the foundation under the
+  bugs, the bug budget, the zone process and how tuning works. Start here.
 - `finish-bugs-zones-items.md` — the umbrella plan for finishing the bugs, their behaviour and combat, the zones' bug
   lists, the zone-design process and the items (2026-10-04). Part 0 in progress; the village's bug life is the first
   finished slice.

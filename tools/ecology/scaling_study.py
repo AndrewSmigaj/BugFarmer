@@ -49,7 +49,7 @@ def data_clean():
 def run_one(cfg, zone, duration, out):
     d = os.path.join(out, cfg)
     os.makedirs(d, exist_ok=True)
-    for f in ("/tmp/client_perf.csv", "/tmp/fly_counts.csv"):
+    for f in ("/tmp/client_perf.csv", "/tmp/client_perf_totals.csv", "/tmp/fly_counts.csv"):
         if os.path.exists(f):
             os.remove(f)
     t0 = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -57,7 +57,8 @@ def run_one(cfg, zone, duration, out):
     with open(os.path.join(d, "run.log"), "w") as log:
         rc = subprocess.run(["python3", "tools/ecology/run_config.py", cfg, "--zone", zone, "--duration", str(duration)],
                             cwd=ROOT, stdout=log, stderr=subprocess.STDOUT).returncode
-    for src, dst in (("/tmp/client_perf.csv", "client_perf.csv"), ("/tmp/fly_counts.csv", "fly_counts.csv"),
+    for src, dst in (("/tmp/client_perf.csv", "client_perf.csv"), ("/tmp/client_perf_totals.csv", "client_perf_totals.csv"),
+                     ("/tmp/fly_counts.csv", "fly_counts.csv"),
                      (os.path.join(PDATA, "player_ecology.log"), "player.log")):
         if os.path.exists(src):
             shutil.copy(src, os.path.join(d, dst))
@@ -104,6 +105,13 @@ def summarize_one(d):
                     "food_share_of_sim": round(food_total / sim_total, 2) if sim_total else None,
                     "food_us_per_call": round(1000 * food_total / calls, 2) if calls else None,
                 })
+    # every timed part of the client, per simulated tick (whole run; includes start-up)
+    t = os.path.join(d, "client_perf_totals.csv")
+    if os.path.exists(t):
+        tot = {r["scope"]: (float(r["ms"]), int(r["calls"])) for r in csv.DictReader(open(t))}
+        ticks = tot.get("Sim.Tick", (0, 0))[1]
+        if ticks:
+            s["client_breakdown_ms_per_tick"] = {k: round(ms / ticks, 3) for k, (ms, _) in sorted(tot.items())}
     # server
     n = os.path.join(d, "nakama.log")
     if os.path.exists(n):

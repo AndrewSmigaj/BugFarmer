@@ -30,7 +30,7 @@ fi
 
 # A stray player from a prior run keeps the server match alive → contaminates the next run. Kill strays.
 taskkill.exe /F /IM BugFarmerClient.exe >/dev/null 2>&1 || true
-rm -f "$PDATA/fly_counts.csv" "$PDATA/client_perf.csv" "$PDATA/player_ecology.log" /tmp/client_perf.csv 2>/dev/null
+rm -f "$PDATA/fly_counts.csv" "$PDATA/client_perf.csv" "$PDATA/client_perf_totals.csv" "$PDATA/player_ecology.log" /tmp/client_perf.csv /tmp/client_perf_totals.csv 2>/dev/null
 
 # Keep the client's clock at the zone's speed (call_rate/10 x sim_batch): a client stepping at 1x in a 6x zone falls
 # ever further behind the server, so the bugs' own decisions (hunting, eating) run at a sixth of the server's pace.
@@ -52,3 +52,4 @@ else
 fi
 # The client's own cost per game tick, in ~5 s windows (the scaling study reads it from /tmp too).
 [ -f "$PDATA/client_perf.csv" ] && cp "$PDATA/client_perf.csv" /tmp/client_perf.csv
+[ -f "$PDATA/client_perf_totals.csv" ] && cp "$PDATA/client_perf_totals.csv" /tmp/client_perf_totals.csv
