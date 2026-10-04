@@ -1,6 +1,6 @@
 # Plan — Finishing the bugs, their behaviour, where they live, and the items (2026-10-03)
 
-> Finish this part of the game properly, with the owner: **improve, don't replace**. The game stays the game; a
+> Finish these parts of the game properly, with the owner: **improve, don't replace**. The game stays the game; a
 > change to something that works needs a good, stated reason. This is the umbrella plan. Each piece of building work
 > gets its own committed plan in `docs/plans/` before it starts; the first is `review-app.md`, written in Part 0.
 
@@ -93,7 +93,7 @@
 - **Verification is pending** (normal at plan time). The gates are in "Test plan".
 
 ## Context / why
-The owner wants this part of the game finished, and much of it is half done. Today showed four problems:
+The owner wants these parts of the game finished, and much of it is half done. Today showed four problems:
 - reviewing in the terminal doesn't work;
 - the write-ups were natural history, not game design;
 - rules were made out of guidelines and examples;

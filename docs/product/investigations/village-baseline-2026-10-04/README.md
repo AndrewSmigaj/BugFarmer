@@ -43,11 +43,11 @@ for the first slice (the village's bug life). No players, no changes: the villag
 - The snapshot the computer in charge uploads (most of what a late joiner downloads): about 206 KB on average,
   574 KB at most, with only about 200 bugs. It gets bigger with more bugs; worth measuring at 2× and 4×.
 - **The client's cost per tick grows over time:** from 0.7 ms to about 5.7 ms with roughly the same number of bugs.
-  Over the same days the rotten fruit on the ground grows from 3 pieces to about 700 (`RESSTATS`). This fits the
+  Over the same days the pile of rotten fruit grows from 3 pieces to about 700 (`RESSTATS`). This fits the
   scaling study's suspect (every bug scans every piece of food each tick). The client's memory also climbs, from 38 to
   113 MB; not yet explained.
 
-## What it means for the village slice (my reading, for the design work)
+## Lessons for the village slice (my reading, for the design work)
 - The flies-and-wasps loop already behaves the way you asked for; the slice should keep it.
 - The centipede needs the breeding fix before its population means anything.
 - Millipedes and carrion beetles need a real food source and a reason to die other than hunger, or they stay
