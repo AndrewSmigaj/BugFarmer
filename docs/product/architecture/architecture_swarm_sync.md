@@ -72,6 +72,11 @@ bootstrap. Fixed: `GroundItemSpawn` is cosmetic-only; food enters `_food` only v
 `ITEM_ROTTED`/`FOOD_CONSUMED` ledger + the authority's `ZoneSnapshot.Food`. With collision (Phase 1b) already
 zone-wide, **the per-bug sim is now fully zone-wide.** BOTH gate halves re-verified `SYNC: IDENTICAL` on
 village_21_B (co-located 166k + spawn-apart 161k shared-bug states, no drift).
+**Cost (measured 2026-10-04):** `InfluenceManager.TryGetNearestFood` walks the WHOLE `_food` registry, once per wandering
+bug per tick (from the group's centre, so every bug of a group gets the same answer). It is 69–91% of the client's
+bug-simulation time and grows with bugs × food (`docs/product/investigations/scaling-2026-10-04/`); it carries a
+`Sim.FoodLookup` profiler scope (timing only). Fix planned in the BACKLOG: one lookup per group per tick + a cell index,
+both result-identical.
 
 **Update 2026-07-14 — the S1/S2 predation late-join desync + the VERBATIM-RELAY CONTRACT.** New per-bug
 predation state (`HuntTargetBugId`, `FeedUntilTick`, `FeedCorpseId`) and the per-swarm hunt assignment
@@ -809,6 +814,11 @@ was silently dropped, leaving optimistically-removed bugs as client-side ghosts 
 Now: tool stats are data-driven (`state.Entities[EquippedTool]` — this also fixed large_net being
 treated as a bare hand), and the rate limit is per-SWING (`LastCatchTick`): same-tick messages
 share the swing's slot.
+
+**Player kills and catches in the ecology stats (2026-10-04):** `handleMeleeAttack` (after the shared
+`killBugsInSwarm`) and `handleCatchBug` add `d_kill` / `d_catch` to the zone's daily `ECOSTATS` line, so the
+pressure runs can see how much of a decline players cause. `EcologyStats` is soft state, never hashed: the ledger,
+the state hash and late-join are untouched.
 
 **Future boundary (BACKLOG):** if bugs ever *behave* differently when damaged (flee at low HP),
 HP becomes sim-state and must move into the deterministic path + state hash.

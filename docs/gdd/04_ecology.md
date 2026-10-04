@@ -87,6 +87,7 @@ Each zone is finished in three passes, in the roadmap's order (home zones first,
 ## Proposals
 
 ### P1. Finishing the ecology: every bug has food, a place to breed, and a check, where it lives
+<!-- key: 04.finishing-ecology-every-bug-has -->
 - **Food:** something it really eats, present in its zone, in amounts a zone can be tuned around.
 - **A place to breed:** the real one — rot, a host plant, a nest, water, dead wood, a burrow, a web, a carcass —
   so its numbers come from its own breeding, not from the game reseeding it.
@@ -105,6 +106,7 @@ that every bug have food and a place to breed (2026-10-03), made a rule. **Cost 
 water or objects for breeding (each zone lists them).
 
 ### P2. Habitat makes the ecology
+<!-- key: 04.habitat-makes-ecology -->
 - Each zone's plants, water, wood and rock are chosen for its bugs: milkweed for the milkweed butterflies, reeds
   and still water for dragonflies and mosquitoes, dead wood for beetle grubs, stones and cracks for scorpions and
   centipedes, cave walls and overhangs for glowworms and cave spiders (the view is from above, so caves show no
@@ -119,6 +121,7 @@ its plants: reeds mean dragonflies, rotten logs mean grubs. **Cost and risk:** z
 each zone.
 
 ### P3. Zones trade bugs where real bugs would
+<!-- key: 04.zones-trade-bugs-where-real -->
 - Ants forage out of their zones along trails (the black ants into the Bee Meadow and the Mining Camp, decided;
   the fire ants up into the Shallow Swamp, decided), locust swarms carry on out of the farmland (your wish,
   2025-12-30), wasps and hornets spread from their nests, night flyers cross toward powered lights, dragonflies
@@ -130,6 +133,7 @@ each zone.
 animal would cross. **Cost and risk:** rides the cross-zone transfer already planned.
 
 ### P4. Every zone gives the player levers
+<!-- key: 04.every-zone-gives-player-levers -->
 - In each zone the player can push the ecology with the tools of the trade: bait (decided, overview P4), plants,
   light, sand on a marsh, smoke, fences and stone, the bug stick, releasing a natural enemy (the mantis against
   locusts, the blue dasher against flies and mosquitoes by the water, the decapitating fly against fire ants), or
@@ -141,6 +145,7 @@ setting mantis egg cases along a field edge before the locusts hatch. **Cost and
 designed; each zone lists what's new.
 
 ### P5. Village (home, easy) — the fly farm's food web
+<!-- key: 04.village-home-easy-fly-farms -->
 - **Bugs it brings in (13):** house fly, queen butterfly (its real name still open), paper wasp, garden centipede,
   garden millipede, carrion beetle, blue dasher, firefly, honeybee, water strider, crayfish; on the player's farm
   the silk moth and the house cricket (a maybe).
@@ -167,6 +172,7 @@ moment — dusk: flies settling, fireflies rising, a dragonfly on a reed. **Cost
 breeding places; the village's numbers are retuned after (P10).
 
 ### P6. Bee Meadow (home, easy) — honey, flowers and a thief at night
+<!-- key: 04.bee-meadow-home-easy-honey -->
 - **Bugs it brings in (3):** bumblebee, death's-head hawkmoth, field cricket. **Also here:** wild honeybee hives and
   Maren's farm, paper wasps at the forest edges (built), blue dashers on the river, queen butterflies, house flies,
   fireflies, garden millipedes and carrion beetles (all built there today); black ants foraging in from the south once
@@ -186,6 +192,7 @@ breeding places; the village's numbers are retuned after (P10).
 the hive (facts B). **Cost and risk:** small; most of it is the bees' existing work.
 
 ### P7. Ant Tunnels (home, easy, half above ground) — the ants' open country
+<!-- key: 04.ant-tunnels-home-easy-half -->
 - **Bugs it brings in (1 species, 2 castes):** black ants — workers and scouts. **Also here:** flies and carrion
   beetles at windfalls and carcasses, and garden centipedes (built there today).
 - **The food web:** nectar, windfalls and dead bugs feed the black ants, who carry it along their trails down to the
@@ -202,6 +209,7 @@ the hive (facts B). **Cost and risk:** small; most of it is the bees' existing w
 bending toward the dark mouth in the cliff. **Cost and risk:** the trail block is the largest single piece.
 
 ### P8. Mining Camp (home, easy, underground) — the dark food chain
+<!-- key: 04.mining-camp-home-easy-underground -->
 - **Bugs it brings in (5):** tiger centipede (D21's cave centipede), cave beetle, cave glowworm (D21: with the glowing
   mushrooms, the mine's light), giant African millipede (D21's tougher cave millipede), daddy longlegs. **Also
   here:** black ants coming in through the dirt tunnels (decided, D21); cave flies, whose home is the Ant Colony's
@@ -220,6 +228,7 @@ lineup gives it. Picture the moment — blue stars along a wet seam of the mine 
 risk:** small per bug.
 
 ### P9. Ant Colony and its Queen (home, medium, deep) — the superorganism
+<!-- key: 04.ant-colony-queen-home-medium -->
 - **Bugs it brings in (1, with the ants' castes):** the cave fly, at the granaries and refuse heaps (its lineup's
   home); the black ants' warriors and their queen. **Also here:** tiger centipedes at the dirt-and-rock seam with the
   Centipede Cavern, eating ants (an ecosystem, not a raid — D79).
@@ -237,6 +246,7 @@ risk:** small per bug.
 risk:** reuses the ant work.
 
 ### P10. Wasp Thicket (middle ring, medium) — the first place that fights back
+<!-- key: 04.wasp-thicket-middle-ring-medium -->
 - **Bugs it brings in (7):** yellowjacket, European hornet, forest scorpion, stag beetle, purple emperor, Chinese mantis
   (at its edges), luna moth. **Also here:** house flies at the rotten fruit.
 - **The food web:** flowers and rotten fruit feed the yellowjackets, which hunt the caterpillars on the willows and
@@ -255,6 +265,7 @@ risk:** reuses the ant work.
 — the ranger outpost's powered lamp at midnight, and the hum of hornets. **Cost and risk:** the alarm call and the lights.
 
 ### P11. Butterfly Fields (middle ring, medium) — milkweed, beauty and the night glow
+<!-- key: 04.butterfly-fields-middle-ring-medium -->
 - **Bugs it brings in (4):** monarch, emperor dragonfly, orchid mantis, jumping spider. **Also here:** luna moths, queen
   butterflies, fireflies at night, bees; dragonhunters from the Millipede Forest along the river at its edge (P16).
 - **The food web:** milkweed feeds the monarch and queen caterpillars, whose stored poison keeps most hunters off;
@@ -273,6 +284,7 @@ moment — monarchs clustered on a milkweed stand, and a pink "flower" that eats
 block for one pond.
 
 ### P12. Hilltop Meadow (middle ring, medium) — advanced beekeeping under the hornets
+<!-- key: 04.hilltop-meadow-middle-ring-medium -->
 - **Bugs it brings in (1):** bombardier beetle. **Also here:** paper wasps a player keeps as pest control (§01), the
   European hornet (its top threat), bumblebees, field crickets, honeybees.
 - **The food web:** flowers feed the bees; hornets hunt bees at the hives by day and come to powered lights at
@@ -287,6 +299,7 @@ block for one pond.
 **Lenses:** Fit — the step up from the Bee Meadow (the zone sheet). **Cost and risk:** small.
 
 ### P13. Centipede Cavern (middle ring, medium, deep) — glowworm light and the giant in the wall
+<!-- key: 04.centipede-cavern-middle-ring-medium -->
 - **Bugs it brings in (2):** giant centipede, cave spider. **Also here:** tiger centipedes in the upper halls,
   glowworms, cave beetles, cave flies, African millipedes, daddy longlegs; and D21's venomous millipede for these
   depths, which I propose is the shocking pink dragon millipede, the roster's poisonous one (its home is the Millipede
@@ -304,6 +317,7 @@ first mine); the view from above (no ceilings, decided). Picture the moment — 
 hollow of the wall, then two feelers in the crack beside it. **Cost and risk:** the ambush block.
 
 ### P14. Underground River (middle ring, medium) — the dark river
+<!-- key: 04.underground-river-middle-ring-medium -->
 - **Bugs it brings in (1):** river crab. **Also here:** glowworms hanging their lines from the overhangs over the
   water (their lineup; real ones of their kind live in stream caves), cave flies, cave beetles.
 - **The food web:** debris washed in feeds the crabs and beetles; glowworms over the water take the flies.
@@ -314,6 +328,7 @@ hollow of the wall, then two feelers in the crack beside it. **Cost and risk:** 
 **Lenses:** Fit — the water rung below the swamps (the zone sheet). **Cost and risk:** small.
 
 ### P15. Locust Farmland and the western town (far ring, hard) — holding the line
+<!-- key: 04.locust-farmland-western-town-far -->
 - **Bugs it brings in (3):** desert locust, Colorado beetle, killer bee. **Also here:** Chinese mantises; house crickets
   at the town's farm store.
 - **The food web:** crops and wild green feed the locusts and the Colorado beetles (the tomato family); mantises take
@@ -332,6 +347,7 @@ hollow of the wall, then two feelers in the crack beside it. **Cost and risk:** 
 swarm-change block.
 
 ### P16. Millipede Forest (far ring, hard) — old growth and the hornets' raids
+<!-- key: 04.millipede-forest-far-ring-hard -->
 - **Bugs it brings in (4, 5 with the proposed bee):** northern giant hornet, Hercules beetle, shocking pink dragon
   millipede, the dragonhunter on the forest's river (moved from the underground, a correction: a dragonfly hunts by
   sight, and its real home is streams), and the Asian honey bee (open). **Also here:** giant centipedes, giant
@@ -354,6 +370,7 @@ belongs. Real biology — the dragonhunter lives on streams (facts A). Picture t
 **Cost and risk:** the raid; the water block for the river's dragonflies.
 
 ### P17. Scorpion Rocks (far ring, hard) — heat, cracks and deadly venom
+<!-- key: 04.scorpion-rocks-far-ring-hard -->
 - **Bugs it brings in (1):** fat-tailed scorpion. **Also here:** killer bees.
 - **A gap:** the scorpions need prey, and the zone has almost none. The accepted field cricket really lives in warm,
   dry, sunny, gravelly ground (facts B), so I propose field crickets in the rocks' gravel and scrub as the scorpions'
@@ -369,6 +386,7 @@ belongs. Real biology — the dragonhunter lives on streams (facts A). Picture t
 **Cost and risk:** small.
 
 ### P18. Shallow Swamp (far ring, hard) — water, reeds and biters
+<!-- key: 04.shallow-swamp-far-ring-hard -->
 - **Bugs it brings in (3):** horse fly, house mosquito, and the ant-decapitating fly, which hunts over the fire ants'
   columns by day. **Also here:** water striders, crayfish, emperor dragonflies, blue dashers (real marsh
   mosquito-eaters); the fire ants' foraging front up from the Deadly Ants (decided), with their mounds, mating flights
@@ -389,6 +407,7 @@ belongs. Real biology — the dragonhunter lives on streams (facts A). Picture t
 **Lenses:** Fit — the water zone (the zone sheet) and your sand rule (D79). **Cost and risk:** the water block.
 
 ### P19. Deadly Ants outpost (far ring, hard, underground) — the fire ants' front
+<!-- key: 04.deadly-ants-outpost-far-ring -->
 - **Bugs it brings in (1):** fire ants (workers and warriors), in galleries and chambers below the swamp. **Also
   here:** the decapitating flies' "zombie" ants wandering out of the galleries to die (the flies themselves hunt by
   day at the front in the Shallow Swamp, P18).
@@ -402,6 +421,7 @@ belongs. Real biology — the dragonhunter lives on streams (facts A). Picture t
 **Lenses:** Fit — the endgame ant war (the zone sheet), given its real enemy. **Cost and risk:** the parasite block.
 
 ### P20. Underground River, deep (far ring, hard) — the sunken lake
+<!-- key: 04.underground-river-deep-far-ring -->
 - **Bugs it brings in:** none new yet — river crabs, glowworms and cave beetles continue from above. The dragonhunter
   that the bug lineups put on "the deep river" belongs on the Millipede Forest's river (P16): dragonflies hunt by sight
   and need daylight.
@@ -420,6 +440,7 @@ crayfish's facts); dragonflies hunt by sight (the July research). **Cost and ris
 exists.
 
 ### P21. Spider Vale West (edge ring, extra hard) — hunters in the dark
+<!-- key: 04.spider-vale-west-edge-ring -->
 - **Bugs it brings in (2):** wolf spider, Brazilian wandering spider. **Also here:** jumping spiders, giant centipedes,
   daddy longlegs.
 - **A gap:** like Scorpion Rocks, the hunters need prey. Field crickets really live on heath and dry sunny ground (facts
@@ -434,6 +455,7 @@ exists.
 **Lenses:** Fit — the spider zone (the zone sheet). **Cost and risk:** small.
 
 ### P22. Spider Vale East (edge ring, the hardest surface zone) — webs, burrows and the tarantula's wasp
+<!-- key: 04.spider-vale-east-edge-ring -->
 - **Bugs it brings in (4):** black widow, Goliath tarantula, giant huntsman, tarantula hawk. **Also here:** daddy
   longlegs; garden millipedes, giant African millipedes and garden centipedes in the damp litter, as the prey base
   (my proposal: the vale is dim and damp, no place for the sun-loving field cricket).
@@ -449,6 +471,7 @@ exists.
 **Cost and risk:** the parasite and web blocks.
 
 ### P23. Deep Swamp (edge ring, extra hard) — the quiet biters and the black water
+<!-- key: 04.deep-swamp-edge-ring-extra -->
 - **Bugs it brings in (1):** malaria mosquito. **Also here:** horse flies, crayfish, water striders, blue dashers,
   emperor dragonflies and their young in the weeds; the milkweed butterflies' caterpillars on swamp milkweed (my
   proposal, as in the Shallow Swamp).
@@ -467,6 +490,7 @@ exists.
 malaria mosquito's still, sunlit, planted water (facts B). **Cost and risk:** the water block, with diving.
 
 ### P24. Deadly Ants core (edge ring, extra hard, deep) — the war queen's fortress
+<!-- key: 04.deadly-ants-core-edge-ring -->
 - **Bugs it brings in:** the fire ant queen (the war queen, a boss — accepted, overview P13). **Also here:** fire ants,
   workers and warriors guarding the brood; the decapitating flies' "zombie" ants wandering in from above.
 - **The food web:** everything the foragers carry down from the swamp front feeds the queen and her brood; the
@@ -489,6 +513,7 @@ and then a unique one. Nothing here joins the roster until you choose it. The ch
 `docs/product/investigations/research-2026-10-03/thin-zone-candidates.md` and `thin-zone-candidates-2.md`.
 
 ### Q1. Bee Meadow: a fourth new bug?
+<!-- key: 04.bee-meadow-fourth-new-bug -->
 Three new bugs today (bumblebee, death's-head hawkmoth, field cricket), which meets your guideline.
 - **A.** The European beewolf: a wasp that catches honeybees on the flowers, stings them still and flies them to
   burrows in the dune belt by the coves, where its young eat them; in some places it really cuts honeybee numbers. A
@@ -504,6 +529,7 @@ works the flowers rather than the hive, with a nest field to find in the dunes. 
 puzzled. The hawk-moth is lovely, but it adds less to play.
 
 ### Q2. Ant Tunnels: what lives along the trails?
+<!-- key: 04.ant-tunnels-lives-along-trails -->
 One new species today (the black ants); the trails are the zone's heart, but it falls short of your guideline.
 - **A.** The antlion: its young dig pits in the dry, loose soil under the cliff's overhangs, where the trails bend
   into the tunnel mouths, and catch the ants that slip in, throwing sand at any that climb (real; ants are its main
@@ -518,6 +544,7 @@ away from a pit, or feeding one. The butterfly brings back the trade of sugar fo
 aphids (D79).
 
 ### Q3. Ant Colony: who lives in the nest with the ants?
+<!-- key: 04.ant-colony-lives-nest-ants -->
 One new species besides the ants' own castes: the cave fly at the granaries (its lineup's home).
 - **A.** The ant cricket: a tiny wingless cricket that rubs against the ants until it smells like one of them, then
   begs food from them (real for ant crickets with Lasius ants; the black garden ant itself isn't named). A thief an
@@ -535,6 +562,7 @@ a thief at the food and a guest in the brood that the ants themselves let in. Wi
 The hoverfly's slug-shaped young would puzzle players, and its tie to our ant is the weakest.
 
 ### Q4. Hilltop Meadow: what threatens the advanced beekeeper?
+<!-- key: 04.hilltop-meadow-threatens-advanced-beekeeper -->
 One new species today (the bombardier beetle), whose young need other beetles' pupae, which the meadow lacks.
 - **A.** The large velvet ant: a wingless, armoured wasp that walks into bumblebee nests and lays its eggs on the young;
   it squeaks when caught and has a painful but not dangerous sting (real). Despite its name, it isn't an ant.
@@ -551,6 +579,7 @@ young their food, and makes three. The velvet ant is a fine threat to bumblebee 
 puzzle players in a game with two ants (D79).
 
 ### Q5. Centipede Cavern: a third new bug?
+<!-- key: 04.centipede-cavern-third-new-bug -->
 Two new today (giant centipede, cave spider).
 - **A.** The whip spider: a flat hunter, harmless to you, whose whip-thin front legs, longer than its body many times
   over, sweep the dark for prey, which it spears on spiny arms (real); whip spider mothers carry their young on their
@@ -562,6 +591,7 @@ Two new today (giant centipede, cave spider).
 than its looks, and it is the caves' one unique bug (D79 allows one now and then).
 
 ### Q6. Underground River: which bugs live in the dark water?
+<!-- key: 04.underground-river-bugs-live-dark -->
 One new today (the river crab); glowworms, cave flies and cave beetles also live here.
 - **A.** The blind cave crayfish (the southern cave crayfish): pale and blind, it lives only in cave streams, first
   breeds at five or six years and lives over twenty (real). The slow, valuable crayfish beside the fast red swamp
@@ -577,6 +607,7 @@ One new today (the river crab); glowworms, cave flies and cave beetles also live
 the wait), and the dobsonfly gives the cave angler a bait to dig, so the river has three.
 
 ### Q7. Locust Farmland: a fourth new bug, against the locusts?
+<!-- key: 04.locust-farmland-fourth-new-bug -->
 Three new today (desert locust, Colorado beetle, killer bee), which meets your guideline.
 - **A.** The Chinese blister beetle: its young hunt out buried locust egg pods and eat the eggs (real, on migratory
   locust eggs; desert locust eggs aren't named); its adults eat bean and alfalfa leaves; its body holds a poison that
@@ -587,6 +618,7 @@ Three new today (desert locust, Colorado beetle, killer bee), which meets your g
 farmer can encourage it at a price: the adults eat crops and burn the hands that catch them.
 
 ### Q8. Scorpion Rocks: what else lives in the hot rocks?
+<!-- key: 04.scorpion-rocks-else-lives-hot -->
 One new today (the fat-tailed scorpion); field crickets are proposed as its prey (P17).
 - **A.** The camel spider: a fast night hunter that eats scorpions, and by day follows your shadow for the shade it
   gives (real) — a scare that turns out to be about shade; a painful bite, but no venom.
@@ -601,6 +633,7 @@ zone a fearsome-looking bug that isn't and a gentle one, beside the deadly scorp
 but a second deadly venom in one zone blurs the scorpion's role.
 
 ### Q9. Shallow Swamp: a fourth new bug?
+<!-- key: 04.shallow-swamp-fourth-new-bug -->
 Three new: the horse fly, the house mosquito, and the ant-decapitating fly, which hunts over the fire ants' columns
 here (P18).
 - **A.** The six-spotted fishing spider: it runs on the water, dives and stays under for up to ninety minutes in a coat
@@ -614,6 +647,7 @@ the water gear, and it sets up its bigger cousin in the Deep Swamp (Q13). The wa
 players (D79).
 
 ### Q10. Deadly Ants outpost: who lives off the fire ants?
+<!-- key: 04.deadly-ants-outpost-lives-off -->
 One new species today (the fire ants); the decapitating flies hunt them at the front in the Shallow Swamp.
 - **A.** Orasema wasps: small wasps that lay their eggs in the swamp's plants; their young ride foraging fire ants down
   into the nest and grow on the ants' pupae, fed by the ants as if they were their own brood (real) — a thread from the
@@ -629,6 +663,7 @@ fights. The twisted-wing parasite is the strangest of the three and would puzzle
 the decapitating fly's "zombies".
 
 ### Q11. Underground River, deep: anything new in the sunken lake?
+<!-- key: 04.underground-river-deep-anything-new -->
 No new species today; river crabs, glowworms and cave beetles continue from above.
 - **A.** The cave amphipod (Niphargus): a blind, white, shrimp-like hunter of underground water that can go more than
   two hundred days without food; in one cave it lives in a food web run on bacteria, with no sunlight at all (real).
@@ -640,6 +675,7 @@ No new species today; river crabs, glowworms and cave beetles continue from abov
 even so the zone stays below your guideline, which its fishing and diving can carry.
 
 ### Q12. Spider Vale West: more spiders?
+<!-- key: 04.spider-vale-west-more-spiders -->
 Two new today (wolf spider, Brazilian wandering spider).
 - **A.** The ladybird spider: it lives in a silk-lined burrow in dry, sandy, sunny heath with a trap at the mouth; the
   males are red and black like a ladybird; the young end by eating their mother (real); its bite brings pain
@@ -653,6 +689,7 @@ Two new today (wolf spider, Brazilian wandering spider).
 net, beside the wolf spider's burrow ambush and the wandering spider's night walks. The vale reaches four.
 
 ### Q13. Deep Swamp: which bugs, and its apex hunter?
+<!-- key: 04.deep-swamp-bugs-apex-hunter -->
 One new today (the malaria mosquito); the zone's design wants an apex predator, and the giant water bug is cut.
 - **A.** The diving bell spider: it lives underwater in a bell of silk filled with air carried down on its hairs, and
   darts out at prey that touches its threads (real); the diving zone's own bug. It needs clean water, so it lives in
@@ -668,6 +705,7 @@ One new today (the malaria mosquito); the zone's design wants an apex predator, 
 big fishing spider above the water and the emperor's young below it.
 
 ### Q14. Deadly Ants core: anything besides the war queen?
+<!-- key: 04.deadly-ants-core-anything-besides -->
 No new species; the war queen is the zone's boss (accepted, overview P13).
 - **A.** As it is: the war queen, her warriors and brood, and the outpost's nest guests at their thickest around her
   brood. No other real species was found that fits: the one parasite of queen larvae found lives with another ant.

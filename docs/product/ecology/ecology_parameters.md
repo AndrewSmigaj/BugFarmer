@@ -11,7 +11,8 @@ defaults = byte-identical). A run is a CONFIG — `tools/bug_lab_configs/<name>.
 baseline (sections: `tuning`→ecology_tuning.json, `species`→species.json, `fruit`→occupants.json tree
 rates, `lab`→Director bands/caps) — applied + run + restored by `tools/ecology/run_config.py <name>`. The
 **interaction log** (`ECOSTATS`/`PREDLOG` → `tools/ecology/plot_interactions.py`) is the "why": per-day
-births-by-source / deaths-by-cause + the predation matrix. `tools/ecology/compare_configs.py` scores each config
+births-by-source / deaths-by-cause (old age, starvation, predation, Director cull, and since 2026-10-04 `kill` and
+`catch` by players) + the predation matrix. `tools/ecology/compare_configs.py` scores each config
 on the objective (mean vs target center, amplitude, **%re-seed births → 0 = self-maintained**). Change
 ONE dial per config; diagnose with the interaction log; never guess.
 

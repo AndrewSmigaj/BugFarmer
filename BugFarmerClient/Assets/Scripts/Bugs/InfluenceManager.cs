@@ -95,6 +95,9 @@ namespace BugFarmer.Bugs
         /// </summary>
         public bool TryGetNearestFood(FixedPoint2 from, float maxDist, out FixedPoint2 pos)
         {
+            // Timing only. This walks the WHOLE food list for every wandering bug every tick: the scaling study
+            // (2026-10-04) measured it at 69-91% of the client's bug-simulation time (see BACKLOG).
+            using var _perf = BugFarmer.Util.PerfProfiler.Sample("Sim.FoodLookup");
             pos = default;
             int bestSqr = int.MaxValue;
             string bestId = null;

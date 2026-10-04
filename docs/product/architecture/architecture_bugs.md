@@ -1060,6 +1060,14 @@ namespace BugFarmer.Networking
 
 ### Server Handler
 
+**Client cost (measured 2026-10-04):** every wandering bug looks up the nearest food each tick by walking the client's
+whole food registry (`InfluenceManager.TryGetNearestFood`, timed as `Sim.FoodLookup`); at ~2,600 bugs that is 91% of
+the client's bug-simulation time. See `docs/product/investigations/scaling-2026-10-04/` and the BACKLOG.
+
+**As built (2026-10-04):** a catch takes the bugs out of the zone's population and is recorded as `d_catch` in the
+daily `ECOSTATS` line (`handleCatchBug`, `match.go`); a player's kill is `d_kill`. The sketch below is the original
+design and is older than the code (the real handler rate-limits per swing in ticks and reads net stats from data).
+
 ```go
 // OpCode constants for bug system
 const (

@@ -1,6 +1,6 @@
 # Plan — Finishing the bugs, their behaviour, where they live, and the items (2026-10-03)
 
-> Finish this part of the game properly, with the owner: **improve, don't replace**. The game stays the game; a
+> Finish these parts of the game properly, with the owner: **improve, don't replace**. The game stays the game; a
 > change to something that works needs a good, stated reason. This is the umbrella plan. Each piece of building work
 > gets its own committed plan in `docs/plans/` before it starts; the first is `review-app.md`, written in Part 0.
 
@@ -54,6 +54,38 @@
     - memory updated;
     - `review-app.md` written.
     Then: commit, push, merge into `main`.
+  - **Part A (the app):** see `review-app.md` PROGRESS. Built, tested (screens, 11 saving scenarios, a builder
+    test), the real marks exported (read only) and checked offline. The rehearsal and the publish are still to do.
+  - **Server and test player:** the server came back after the WSL shutdown (Postgres recovered on its own). The test
+    player was rebuilt twice tonight (batch mode, Editor closed, verified in the compiled file).
+  - **Bench village** (`a88ea301`): `bench_village` is a copy of `village_21_B`'s authored files, never the real
+    save.
+  - **Faults found in the ecology test tools (since 2026-07-18), fixed in `4c824a09`:**
+    - the client's population sampler never recorded a sample, so every real-client run charted nothing;
+    - in a zone run 6× faster, the client simulated at a sixth of the server's pace (server ≈ tick 17,990 against
+      client ≈ 2,980 after 5 minutes), so the bugs' own decisions ran 6× too slowly against the server's births and
+      starvation. The client now runs its clock at the zone's speed.
+    Ecology conclusions drawn from real-client runs between 2026-07-18 and tonight should be re-checked; the July
+    village tuning (07-13/14) used the older driver and is unaffected by the second fault.
+  - **S2, part 1** (`05e14624`): `ECOSTATS` gains `d_kill` and `d_catch` (player kills and catches). The profiler
+    gains the authority's snapshot upload size. Go tests and the determinism replay pass.
+  - **S1, the scaling study (bug counts, one player):** re-run on a quiet machine with
+    `tools/ecology/scaling_study.py`. Results in `docs/product/investigations/scaling-2026-10-04/` and the explanation
+    page `docs/gdd/explain/03-scaling.md`:
+    - the server is cheap (0.2–0.4 ms per tick at every size);
+    - the client is the limit: its bug simulation takes 0.4 ms per tick at ~280 bugs and 27–31 ms at ~2,600, and
+      **91% of that is one food lookup** (every bug walks the whole food list each tick), confirmed with a timer;
+    - **the snapshot is the second limit:** ~250 KB at today's numbers, ~1.9 MB at 4×, uploaded every 10 game-seconds
+      by the player in charge (~200 KB/s at 4×); a late joiner downloads ~670 KB today.
+    Both fixes are in the BACKLOG. Still to measure: several players, a 512 zone, frame time with drawing, the cost per
+    server system.
+  - **S2, part 1:** the 48-game-day "before" baseline of the village's bugs
+    (`docs/product/investigations/village-baseline-2026-10-04/`): flies and wasps cycle as predator and prey; centipedes
+    breed and starve in a churn; millipedes and carrion beetles live only on top-ups; butterflies sink to a low level.
+    The pressure bots (a new headless-player mode) are next.
+  - **The two-player late-join check** with tonight's code, on the bench copy: both halves `SYNC: IDENTICAL`.
+  - **Waiting for the owner:** the publish of the review app (pause marking on every device first); deleting the
+    rehearsal page (https://claude.ai/artifact/66W8APLeDRsBHT12Nrr6TW, made-up marks only).
 
 ## Certainty assessment (the `certainty-assessment` method; scores read off evidence; judged by the weakest design row)
 | # | Dimension | Score now | Evidence | What raises it |
@@ -62,9 +94,9 @@
 | 2 | Understanding of the game as it stands | 88 Strong | Read this pass, among others: `match.go:1333` (chasing switches off the bug's other work); `ecology_stats.go:42-51` (no player-kill or catch cause); `SwarmManager.cs:895-904` (exact hits only for the authority's own player); `handlers_player.go:17` (1 s shared invulnerability); `nests.go` (food-driven brood, 1 egg per trip, a bank of 9, re-hatch and re-found); `game_design.md` §11 (idle design) | The audit (D1) |
 | 3 | The process finds great design, not slop | 76 Plausible | A finished slice before going wide; the owner plays it; playable variants for feel; a "what the player sees" check; every rule cites the owner or is labelled my proposal | The first slice played by the owner |
 | 4 | The behaviour approach is sound and *improves* what exists | 78 Plausible | Keeps the food-driven population model untouched. Changes only *why* a bug fights and what it does after. Don't Starve's spider brain checked in its source, used for structure only. | The slice build and the owner's play |
-| 5 | Fits the synced simulation and its costs | 65 Plausible | The recipe is known. The costs at 2× and 4× bug counts and zone size are unmeasured. Several systems still run on the server. | **S1, the scaling study** |
-| 6 | Ecosystems behave as the owner wants: cycles, surges, collapses, a way back | 72 Plausible | The village cycles in bands when tuned (owner, 2026-10-03); reseeds bring species back. Player pressure is unmeasured, and kills and catches aren't recorded. | **S2, the pressure runs** |
-| 7 | The owner's marks and the repo stay safe | 85 Strong | Export, rehearsal of the exact risky step, comparison, a tested restore; repo-only saving | The rehearsal |
+| 5 | Fits the synced simulation and its costs | 74 Plausible (measured 2026-10-04: the server is cheap; the client's food lookup and the snapshot size are the two limits, both with result-identical fixes in the BACKLOG) | The recipe is known. The costs at 2× and 4× bug counts and zone size are unmeasured. Several systems still run on the server. | **S1, the scaling study** |
+| 6 | Ecosystems behave as the owner wants: cycles, surges, collapses, a way back | 74 Plausible (48-day baseline 2026-10-04: flies and wasps cycle; centipedes churn; millipedes and beetles propped by top-ups) | The village cycles in bands when tuned (owner, 2026-10-03); reseeds bring species back. Player pressure is unmeasured, and kills and catches aren't recorded. | **S2, the pressure runs** |
+| 7 | The owner's marks and the repo stay safe | 90 Strong (the rehearsal passed 2026-10-04: E0 = E1, restore exact; the app opened on a copy of the real marks writes nothing) | Export, rehearsal of the exact risky step, comparison, a tested restore; repo-only saving | The rehearsal |
 | 8 | Project management | 74 Plausible | Milestones defined by what they prove, not by dates; a risk table; work-in-progress limits; two definitions of done | The first slice's real effort |
 | 9 | Fits the owner's time | 75 Plausible | Batches when ready; plays at each milestone; explanations as pages in the app | Adjust after the first two batches |
 | 10 | Art and readability dependency | 65 Plausible | Placeholder readability in the slice; an art list per system | A readability check in the slice |
@@ -75,7 +107,7 @@
 - **Verification is pending** (normal at plan time). The gates are in "Test plan".
 
 ## Context / why
-The owner wants this part of the game finished, and much of it is half done. Today showed four problems:
+The owner wants these parts of the game finished, and much of it is half done. Today showed four problems:
 - reviewing in the terminal doesn't work;
 - the write-ups were natural history, not game design;
 - rules were made out of guidelines and examples;

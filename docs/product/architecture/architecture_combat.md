@@ -126,6 +126,10 @@ Shipped 2026-07-11 (commits `combat M1.1`…`M1.4`). The foundation everything e
   (co-located + disjoint) and the **owner arena playtest** (telegraph reads · dodge negates · no phantom · ≤2 bite
   · night enemies via the debug time control).
 
+- **Player kills are counted (2026-10-04).** A bug a player kills is recorded as `d_kill` in the zone's daily
+  `ECOSTATS` line (`handleMeleeAttack`, after `killBugsInSwarm`); a predator's kill stays `d_predation`, and a catch
+  is `d_catch`. Soft state, never hashed. The pressure runs (S2 in `docs/plans/finish-bugs-zones-items.md`) read it.
+
 ## Milestones 2–3 — as-built (enemy tiers)
 Shipped 2026-07-11 (commits `Combat: nocturnal…`, `Combat M2+M3…`). Four new enemies on the M1 foundation, each
 just DATA (`species.json` combat spec + `bugs.json` art + a carcass item) + a fresh gpt-image-1.5 sprite — no

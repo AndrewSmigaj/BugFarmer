@@ -29,6 +29,7 @@ namespace BugFarmer.Util
 
         static readonly Dictionary<string, (long ticks, int calls)> _cur = new();
         static readonly Dictionary<string, Stat> _display = new();
+        static readonly Dictionary<string, Stat> _totals = new();
         static readonly double _ticksToMs = 1000.0 / Stopwatch.Frequency;
 
         /// <summary>Time a hot path: <c>using var _p = PerfProfiler.Sample("Render.Interpolate");</c></summary>
@@ -67,12 +68,22 @@ namespace BugFarmer.Util
             if (Enabled)
             {
                 foreach (var kv in _cur)
-                    _display[kv.Key] = new Stat { ms = kv.Value.ticks * _ticksToMs, calls = kv.Value.calls };
+                {
+                    var st = new Stat { ms = kv.Value.ticks * _ticksToMs, calls = kv.Value.calls };
+                    _display[kv.Key] = st;
+                    _totals.TryGetValue(kv.Key, out var t);
+                    _totals[kv.Key] = new Stat { ms = t.ms + st.ms, calls = t.calls + st.calls };
+                }
             }
             if (_cur.Count > 0) _cur.Clear();
         }
 
         /// <summary>The most recent full frame's per-scope cost (ms + call count). Read by the overlay.</summary>
         public static IReadOnlyDictionary<string, Stat> Display => _display;
+
+        /// <summary>Per-scope cost summed over every frame since <see cref="ResetTotals"/> (while Enabled). Read by
+        /// the headless measurement runs (HeadlessSyncTest -ecology → client_perf.csv).</summary>
+        public static IReadOnlyDictionary<string, Stat> Totals => _totals;
+        public static void ResetTotals() => _totals.Clear();
     }
 }

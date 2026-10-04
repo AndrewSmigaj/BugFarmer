@@ -511,3 +511,31 @@ func TestMeleeEmptySwarmDespawns(t *testing.T) {
 		t.Fatal("despawn must set SwarmsDirty (catch-path parity)")
 	}
 }
+
+// Player kills and catches are causes of death in the ecology stats (ECOSTATS d_kill / d_catch), so the pressure
+// runs can tell how much of a species' decline the players caused.
+func TestPlayerKillsAndCatchesAreCounted(t *testing.T) {
+	state, swarm := meleeState(1)
+	state.Stats = NewEcologyStats()
+	m := &Match{}
+
+	m.handleMeleeAttack(nopRuntimeLogger(), nopDispatcher{}, state, MeleeAttackMessage{ClickX: 11, ClickY: 10,
+		Hits: []MeleeSwarmHits{{SwarmID: "s1", BugIDs: []int{0, 1}}}}, "p1", 32)
+	if got := state.Stats.Deaths["fly_common"][DeathKill]; got != 2 {
+		t.Fatalf("d_kill = %d after killing 2 bugs, want 2", got)
+	}
+
+	state.Players["p1"].EquippedTool = "small_net"
+	state.TickCount += 10
+	m.handleCatchBug(nopRuntimeLogger(), nopDispatcher{}, state,
+		CatchBugMessage{ClickX: 11, ClickY: 10, SwarmID: "s1", BugIDs: []int{2, 3, 4}}, "p1", 32)
+	if got := state.Stats.Deaths["fly_common"][DeathCatch]; got != 3 {
+		t.Fatalf("d_catch = %d after catching 3 bugs, want 3", got)
+	}
+	if swarm.Count != 5 {
+		t.Fatalf("swarm has %d bugs, want 5 (10 - 2 killed - 3 caught)", swarm.Count)
+	}
+	if got := state.Stats.Deaths["fly_common"][DeathPredation]; got != 0 {
+		t.Fatalf("player kills were counted as predation (%d)", got)
+	}
+}

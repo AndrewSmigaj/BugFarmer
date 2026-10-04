@@ -1187,6 +1187,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 					logger.Warn("Invalid zone snapshot from %s: %v", userID, err)
 					continue
 				}
+				worldState.Perf.AddSnapshotInBytes(len(msg.GetData())) // cost profiler: authority upload size
 				m.handleZoneSnapshot(logger, worldState, userID, snapMsg)
 
 			case OpCodePredationStrike:
@@ -2609,6 +2610,7 @@ func (m *Match) handleCatchBug(
 	if len(removed) == 0 {
 		return
 	}
+	state.Stats.recordDeath(swarm.SpeciesID, DeathCatch, len(removed))
 
 	// Emit BUG_REMOVED influence events for deterministic late joiner replay
 	// Each removed bug gets its own event so replay can process them individually
@@ -3203,8 +3205,8 @@ func (m *Match) sendLateJoinSnapshot(
 	if zone.LatestSnapshot != nil && zone.LatestSnapshot.Swarms != nil {
 		swarmCount = len(zone.LatestSnapshot.Swarms)
 	}
-	logger.Info("Sent LateJoinSnapshot to %s: tick range %d to %d, seq range (%d, %d], %d events, %d player_cells, %d swarms, %d swarm_metadata",
-		joinerID, snapshotTick, endTick, snapshotLastSeq, endLastSeq, len(influenceLog), len(playerCells), swarmCount, len(swarmMetadata))
+	logger.Info("Sent LateJoinSnapshot to %s: %d bytes, tick range %d to %d, seq range (%d, %d], %d events, %d player_cells, %d swarms, %d swarm_metadata",
+		joinerID, len(data), snapshotTick, endTick, snapshotLastSeq, endLastSeq, len(influenceLog), len(playerCells), swarmCount, len(swarmMetadata))
 	for _, cell := range playerCells {
 		logger.Info("  PlayerCell: %s at (%d, %d)", cell.PlayerID, cell.CellX, cell.CellY)
 	}

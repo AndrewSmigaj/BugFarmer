@@ -152,6 +152,7 @@ later ruling changed things — water is Q1):
 
 ## Proposals
 ### P1. The dropped deepest row stays out of 1.0
+<!-- key: 01.dropped-deepest-row-stays-out -->
 Row 5 stays out of 1.0 and can come back in an update. Nothing waits on it: the Queen already moved up to the Ant
 Colony (D3) and the rare ores up into row 4 (D2).
 
@@ -159,6 +160,7 @@ Colony (D3) and the rare ores up into row 4 (D2).
 for now; this says for 1.0.
 
 ### P2. Gated by cost and danger — never by locked doors
+<!-- key: 01.gated-cost-danger-never-locked -->
 Any zone can be walked into at any time; a few water areas need waders or a grappling hook (June review). What stops
 you is what lives there, and each danger has an answer you can make or buy:
 
@@ -174,6 +176,7 @@ walled off, so you can always look ahead. Meaningful choices — several zones o
 moment — you walk into the Wasp Thicket with copper tools, get stung twice, and go home to make an antidote.
 
 ### P3. Where danger changes, the land changes
+<!-- key: 01.where-danger-changes-land-changes -->
 Every border between two danger levels shows it on the ground: a river with bridges and shallow crossings you can
 walk, the cliff wall, a forest edge, the swamp's open water. Borders between zones of the same danger are drawn for
 their own two zones — open meadow, or the rock you asked for between the Ant Tunnels and the Mining Camp. Each zone's
@@ -183,6 +186,7 @@ design document shows its borders, and a check keeps both sides of a shared bord
 cliff wall are on the map. Zone freedom — each border is drawn for its own two zones.
 
 ### P4. The edge of the world is land, not an invisible wall
+<!-- key: 01.edge-world-land-not-invisible -->
 The outer rim is natural and can't be crossed: the sea to the west (built — the Bee Meadow's coast), mountains to the
 north, open water beyond the swamps to the east, and bedrock beneath the deepest zones. Walking up to it shows why you
 can't go on.
@@ -191,6 +195,7 @@ can't go on.
 see. Cost — border art in the outer zones, not a new system.
 
 ### P5. More places where bugs cross — written into the zones they touch
+<!-- key: 01.more-places-where-bugs-cross -->
 Beyond the crossings already settled (the ants, the Deadly Ants), three more from the designs:
 - **tiger centipedes** live on both sides, in the Centipede Cavern's upper halls and by the Ant Colony, whose ants they
   eat: part of the ecosystem, not a raid (the Ant Colony's design, as D79 and the bug lineups revised it);
@@ -204,6 +209,7 @@ happened while it slept comes from these neighbours: a new ant trail, a swarm th
 something has moved in. Bestiary — all three are bugs already designed.
 
 ### P6. A frozen zone catches up on its weather, orchard and machines too
+<!-- key: 01.frozen-zone-catches-up-weather -->
 When a zone wakes, it catches up on everything the time would have brought, not only its bugs: the showers that would
 have watered its crops (today three days in ten get one), the fruit that would have ripened, and the batches its
 machines would have finished.
@@ -214,6 +220,7 @@ up means giving them the time they missed.
 
 ## Questions
 ### Q1. Should water stop crawling bugs?
+<!-- key: 01.water-stop-crawling-bugs -->
 Your playtest rule of 2026-06-11: water stops people only, because flies were getting stuck at shorelines — and that
 is how the game works now: every bug crosses every river. The June 25 review later wrote the older rule back into its
 notes: shallow water stops insects (D7). The map was drawn with the river as a barrier. Whichever rule holds

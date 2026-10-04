@@ -95,6 +95,7 @@ What the older design documents say that still stands:
 
 ## Proposals
 ### P1. A pitch that says it's your sandbox
+<!-- key: 00.pitch-says-sandbox -->
 **Accepted by the owner on 2026-09-28** — the long version, to be revisited when the promotional material is made.
 **A multiplayer sandbox set in 2126: nearly every mammal is gone, and people have bred the bugs giant. Farm, mine,
 craft, build and explore however you like — most players start a fly farm and grow from there, but you can ranch ants,
@@ -111,6 +112,7 @@ design document as the first test for any new idea: does this keep the player fr
 world's situation. Readability — plain words, no feature list.
 
 ### P2. The pillars, rebuilt from everything decided
+<!-- key: 00.pillars-rebuilt-everything-decided -->
 **Accepted by the owner on 2026-09-28**, with the plot corrected: a plot is safe from other players, not from what its
 owner sets up there.
 1. **A bug farm** — giant bugs raised as livestock: caught, penned, fed, bred and sold; beside them the garden and
@@ -142,6 +144,7 @@ Completeness — the first try missed mining, crafting and building; pillars 3 a
 included.
 
 ### P3. The misfits: what stays and what goes
+<!-- key: 00.misfits-stays-goes -->
 **Answered by the owner on 2026-09-28**, with the changes below.
 - **Old bones stay** — the bone piles in the first mine, bones and the cow skull are remains, and remains are fine;
   only living mammals are out. The cat statue is a statue, so it stays too.
@@ -156,6 +159,7 @@ water-dish sprite; the birdbath's recipe changes to the dish's; the scarecrow le
 
 ## Questions
 ### Q1. The voice of the words
+<!-- key: 00.voice-words -->
 **Answered 2026-09-28**: it depends on the townsperson — each has a voice of their own. For the examine texts, my
 pick is one plain voice with a light touch of the opening's wryness.
 

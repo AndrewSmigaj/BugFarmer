@@ -174,3 +174,6 @@ tools/honeybee*.png
 .claude/scheduled_tasks.lock
 .claude/hooks/_smoke.log
 tools/gdd/_build/
+
+# Bench copies of real zones for measurement runs (tools/ecology/make_bench_zone.py) — regenerated, never committed
+nakama/data/zones/bench_*/

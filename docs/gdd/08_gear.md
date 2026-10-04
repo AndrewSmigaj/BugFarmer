@@ -106,6 +106,7 @@ writes armour.)
 
 ## Proposals
 ### P1. Six meters, ten dots each
+<!-- key: 08.six-meters-ten-dots-each -->
 The sheet shows six meters as rows of ten dots; you start partway up each (Armor starts at what your outfit gives),
 and items add or take away whole dots. What each one means (the numbers are examples, set when combat is tuned):
 
@@ -133,6 +134,7 @@ player. **Cost and risk:** a character screen built from scratch; its dot shapes
 the interface (D60).
 
 ### P2. A job for each kind of item
+<!-- key: 08.job-each-kind-item -->
 | item | what it can do |
 |---|---|
 | Outfit (one, worn whole) | sets Armor and protections, can shift one or two other meters, and gives one to three perks that suit its role |
@@ -155,6 +157,7 @@ on the sheet skips a pickaxe. Balance — the slots themselves limit how many th
 risk:** every item in the table needs its dots, protections and perks written down; a pass over the rows.
 
 ### P3. Three protections: stings, venom and acid
+<!-- key: 08.three-protections-stings-venom-acid -->
 Every bite, pinch or sting is a hit, and Armor lowers it. On top of that:
 - **Sting** lowers what a sting does — bees, wasps, hornets, fire ants, scorpions. The bee suit stops every sting
   completely, and the ranger outfit stops wasps' and hornets' (D75).
@@ -178,6 +181,7 @@ the two kinds of number visibly apart; Grounded's ten damage types are a lot to 
 acid aren't built yet, and fire ants and scorpions need a two-part attack (today each bug has one).
 
 ### P4. One rule for adding up
+<!-- key: 08.one-rule-adding-up -->
 Each slot holds one thing and the slots add up: the outfit, two accessories, the meal and the potion. Meters stop at
 their top (Q2) and protections at their cap; a wasted dot shows as a dim "+1 over", and an item warns you before you
 put it on ("Speed +1 — wasted, Speed is already full"). Two perks of the same kind add up, to a limit set for each
@@ -191,6 +195,7 @@ rule years later. What can go wrong — every dot comes from a named entry, so n
 risk:** small; it decides the arithmetic every other proposal uses.
 
 ### P5. Two kinds of perk, in standard sizes
+<!-- key: 08.two-kinds-perk-standard-sizes -->
 - **Switches** change what you can do: night vision, a lamp in your helmet, no knockback, a bug that bites you takes
   a hit back, a wider view. You have one or you don't.
 - **Sized perks** come in three sizes from one table, written on the item as a number:
@@ -217,6 +222,7 @@ effects from 2% to 50%, and its players had to look the size up; Grounded later 
 to 50%. **Cost and risk:** the table is tuning, and it can grow a kind when a real item needs one.
 
 ### P6. See it before you wear it
+<!-- key: 08.see-before-wear -->
 Pointing at an outfit, accessory, meal or potion shows the result on the sheet: dots that would be gained pulse with a
 small +, dots that would be lost pulse with a small −, and perks that would come or go are marked + or −. The item's
 own box lists only what changes, best first. A meal or potion says what it would replace and how long that has left
@@ -229,6 +235,7 @@ Spire shows the result before you act. Picture the moment — standing at the bl
 dot as you look at the steel armour. **Cost and risk:** part of the character screen's build.
 
 ### P7. Two spots for what's running out
+<!-- key: 08.two-spots-whats-running-out -->
 Beside Health and Stamina sit two fixed spots, one for your meal and one for your potion: the item's icon, a ring that
 drains, the minutes left, a slow blink near the end (no fast flashing, P24), and a faint outline when empty — a quiet
 reminder that you could eat. Other effects (venom in you, an acid burn, the healing potion's wait, night vision from
@@ -240,6 +247,7 @@ where an effect comes from. Because the game allows one meal and one potion, thi
 small, on the always-on display.
 
 ### P8. Perks for one kind of bug
+<!-- key: 08.perks-one-kind-bug -->
 Some of the clearest perks are about how one kind of bug treats you: black ants taking you for one of their own until
 you strike one (offered as a costly option on the Black-Ant Armor's row), skittish flies fleeing later (the
 entomologist's coat), curious butterflies coming from further away (the collector's whites). They sit beside Stealth:
@@ -255,6 +263,7 @@ work around you. **Cost and risk:** each one changes what bugs do, so each needs
 chosen.
 
 ### P9. Heavier armour costs something
+<!-- key: 08.heavier-armour-costs-something -->
 Each tier has light, medium and heavy outfits. Light ones give a dot or two less Armor than the metal armour of the
 same tier and cost nothing; heavy ones give the most Armor and a slashed dot of Speed or Stamina. The role outfits are
 mostly light, the metal armours medium and heavy, and a few, like the Brigandine, trade a little Armor for speed. As a
@@ -268,6 +277,7 @@ heavy armour trade damage taken for stamina the same way. Readability — the tr
 and risk:** the roster's rows each need a weight; a tuning pass.
 
 ### P10. The sheet stays the same size
+<!-- key: 08.sheet-stays-same-size -->
 The six meters and three protections never grow: a new idea becomes a perk, either a switch or a sized perk. Perks you
 don't have are hidden, so the list only shows what you have. Each kind of item has a perk budget — outfit one to
 three, accessory one or two, meal one boost, potion one change — so the sheet stays around ten lines however big the
@@ -279,6 +289,7 @@ item can still break the pattern on purpose. **Cost and risk:** none to build; i
 
 ## Questions
 ### Q1. Should the fire-ant and scorpion armours stop their own bugs' stings completely?
+<!-- key: 08.fire-ant-scorpion-armours-stop -->
 The bee suit stops every sting and the ranger outfit stops wasps' and hornets' (your calls, D75). The roster also has
 the Fire-Ant Armor and the Scorpion Armor stopping their own bugs' stings. Every other protection stops at 80% (P3).
 - **A.** Yes: the Fire-Ant and Scorpion Armor stop their own bugs' stings completely, and their plates cut those bugs'
@@ -291,6 +302,7 @@ the Fire-Ant Armor and the Scorpion Armor stopping their own bugs' stings. Every
 thicket, and it still differs from the bee suit, which stops every sting but leaves you open to bites and claws.
 
 ### Q2. How full can a meter get?
+<!-- key: 08.full-can-meter-get -->
 Each meter has ten dots (P1), and the best armour reaches about 7 or 8 (P9).
 - **A.** Gear can reach ten.
 - **B.** Gear tops out at eight, and only meals and potions fill the last two.

@@ -143,6 +143,23 @@ class Malformed(Exception):
     pass
 
 
+# A stable key under a proposal or question heading (`<!-- key: 03.bug-stick -->`), so feedback stays attached
+# when proposals are renumbered (docs/plans/review-app.md). Added once by tools/gdd/assign_keys.py.
+KEY = re.compile(r"^<!--\s*key:\s*([a-z0-9][a-z0-9_.-]*)\s*-->\s*$")
+
+
+def take_key(lines):
+    """The item's stable key (or None) and its lines without the key line."""
+    key, rest = None, []
+    for line in lines:
+        m = KEY.match(line)
+        if m and key is None:
+            key = m.group(1)
+        else:
+            rest.append(line)
+    return key, rest
+
+
 def split_h3(lines):
     items, cur = [], None
     for line in lines:
@@ -158,11 +175,11 @@ def parse_proposal(item, where):
     m = re.match(r"^(P\d+)\.\s+(.+)$", item["head"])
     if not m:
         raise Malformed(f"{where}: proposal heading must read '### P<n>. Title' — got {item['head']!r}")
-    lines = item["lines"]
+    key, lines = take_key(item["lines"])
     k = next((i for i, l in enumerate(lines) if l.startswith("**Lenses:**")), None)
     body, lens = (lines[:k], lines[k:]) if k is not None else (lines, [])
     lens_text = re.sub(r"^\*\*Lenses:\*\*\s*", "", " ".join(x.strip() for x in lens if x.strip()))
-    return {"id": m.group(1), "title": inline(m.group(2)), "plain": plain(m.group(2)),
+    return {"id": m.group(1), "key": key, "title": inline(m.group(2)), "plain": plain(m.group(2)),
             "html": blocks(body), "lenses": inline(lens_text)}
 
 
@@ -174,7 +191,8 @@ def parse_question(item, where):
     m = re.match(r"^(Q\d+)\.\s+(.+)$", item["head"])
     if not m:
         raise Malformed(f"{where}: question heading must read '### Q<n>. Question?' — got {item['head']!r}")
-    qid, lines = m.group(1), item["lines"]
+    qid = m.group(1)
+    key, lines = take_key(item["lines"])
     context, options, rec, i = [], [], None, 0
     while i < len(lines):
         line = lines[i]
@@ -202,7 +220,7 @@ def parse_question(item, where):
         raise Malformed(f"{where} {qid}: a question needs at least two '- **A.** …' options")
     if rec and rec["key"] not in {o["key"] for o in options}:
         raise Malformed(f"{where} {qid}: the recommendation names option {rec['key']}, which doesn't exist")
-    return {"id": qid, "title": inline(m.group(2)), "plain": plain(m.group(2)),
+    return {"id": qid, "key": key, "title": inline(m.group(2)), "plain": plain(m.group(2)),
             "context": blocks(context), "options": options, "rec": rec}
 
 
@@ -219,7 +237,7 @@ def parse_section(path):
     title = re.sub(r"^§\s*\w+\s*·\s*", "", lines[0][2:].strip())
     parts, order, cur, lead = {}, [], None, []
     for line in lines[1:]:
-        if line.startswith("<!--"):
+        if line.startswith("<!--") and not KEY.match(line):
             continue
         if line.startswith("## "):
             cur = line[3:].strip()

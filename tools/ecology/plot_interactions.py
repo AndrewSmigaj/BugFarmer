@@ -21,11 +21,12 @@ Outputs (under tools/_generated/ecology_charts/):
 import argparse, csv, os, re, subprocess, sys
 
 BIRTH_SRCS = ["brood", "nest", "reproduce", "reseed", "spawn"]
-DEATH_CAUSES = ["oldage", "starve", "predation", "cull"]
+DEATH_CAUSES = ["oldage", "starve", "predation", "cull", "kill", "catch"]  # kill / catch = by players (2026-10-04)
 # Distinct, legible colors (births = greens/blues, reseed = red = "the safety net is propping it up").
 SRC_COLOR = {"brood": "#4caf50", "nest": "#26a69a", "reproduce": "#42a5f5",
              "reseed": "#e53935", "spawn": "#9e9e9e"}
-CAUSE_COLOR = {"oldage": "#8d6e63", "starve": "#ffb300", "predation": "#ab47bc", "cull": "#ef5350"}
+CAUSE_COLOR = {"oldage": "#8d6e63", "starve": "#ffb300", "predation": "#ab47bc", "cull": "#ef5350",
+                "kill": "#263238", "catch": "#26a69a"}
 
 ECO_RE = re.compile(r"ECOSTATS day=(\d+) sp=(\S+) pop=(\d+) (.*?) avg_sat=([\d.]+)")
 KV_RE = re.compile(r"(b_\w+|d_\w+)=(\d+)")
