@@ -521,9 +521,13 @@ Plan + designs: `docs/product/economy/crafting_buildout.md` + the saved plan. Al
   trail-following (client-side, deterministic like the rest of the bug simulation) and a design for how far a tap
   carries. *(Made exact 2026-10-03, D83: a tap turns the ants it touches onto a new heading, so a new route forms; it
   never makes them follow the player. Designed with the ants, the second slice of `docs/plans/finish-bugs-zones-items.md`.)*
+- **Delete the review app's rehearsal page when the owner agrees (2026-10-04).**
+  https://claude.ai/artifact/66W8APLeDRsBHT12Nrr6TW holds made-up marks only; it was the throwaway for rehearsing the
+  publish (`docs/plans/review-app.md`). Deleting an artifact needs the owner's OK.
 - **Rephrase older owner wording in DECISIONS.md (found 2026-10-04).** A word-run check against the owner's message
   history (6 words or more) finds ten short phrases in entries from before 2026-10-03, for example in D12 and the
-  early economy entries; some are ordinary lists that match by chance. Reword each in our own words, keeping its
+  early economy entries; some are ordinary lists that match by chance. BACKLOG.md itself has 8 such runs (5 words or
+  more) in older items. Reword each in our own words, keeping its
   meaning exactly, and re-run the check until it reports none. The repo is public and holds no quotes of the owner.
 Design of record: [bug_ecology_plan.md](../brainstorms/ecology/bug_ecology_plan.md). Phased build P0–P11
 (P1 Bug Lab DONE). **Verify every sim-touching phase with the `test-changes` skill** (Go tests +
@@ -792,6 +796,22 @@ Plan exists (`~/.claude/plans` / the torch+HUD plan). Bigger/nudged hearts; bott
 access buttons (Inventory works; Ecologist/Mayor/Herbalist locked w/ toasts); Apico-style layout
 (hotbar→top) OR keep bottom — DECISION pending. Needs `UIFactory.MakeButton` + `btn_square` art + a
 reusable `ToastUI`. Also backlog: how players learn WHERE those NPCs are.
+
+## Next — perf: the client's food lookup grows with bugs × food (found 2026-10-04 by the scaling study)
+Every wandering bug calls `InfluenceManager.TryGetNearestFood` each tick (`BugAgent.TryFeedAtFood`), which walks the
+client's WHOLE food list (rotten fruit, carcasses), from the group's centre (so every bug of a group gets the same
+answer). Measured: the client's bug simulation takes ~0.4 ms per tick at ~280 bugs, ~1.2 ms at ~550 and ~27 ms at
+~2,540 (`docs/product/investigations/scaling-2026-10-04/`). The food list grows with dying bugs and with the rotten-fruit
+pile below, so cost grows faster than the bug count. **Not yet confirmed by a timer** (a `Sim.FoodLookup` scope is
+written, waiting for a test-player build). **Fix (results identical on every computer):** look the food up once per
+group per tick, and index the food by cell like the server's `FindNearbyFood`. A change to the shared bug simulation:
+`frontier-sync` + `perf-tuning` gates, then the three scaling runs again.
+
+## Next — re-check ecology numbers measured with the headless client in fast-forwarded zones (found 2026-10-04)
+Until `4c824a09` the headless client stepped at 10 ticks a second whatever the zone's speed, so in a 6× zone the bugs'
+own decisions (hunting, eating) ran at a sixth of the server's pace, and its population sampler never recorded. Re-check
+any predator number measured that way (the 2026-07-13 wasp measurement in `ecology_tuning_log.md`, if it ran
+fast-forwarded). The 2026-10-04 48-game-day bench baseline is the first faithful run.
 
 ## Next — perf: bound the ground-item pile (decay pass grows O(items))
 **Diagnosis (2026-06-22, investigate-only):** the `decay` system pass climbs monotonically over a run
