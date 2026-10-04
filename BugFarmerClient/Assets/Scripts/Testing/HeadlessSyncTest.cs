@@ -11,6 +11,7 @@ using BugFarmer.Bugs;
 using BugFarmer.Player;
 using BugFarmer.Tracing;
 using BugFarmer.UI;
+using BugFarmer.Util;
 
 namespace BugFarmer.Testing
 {
@@ -69,6 +70,14 @@ namespace BugFarmer.Testing
             string clientId = HeadlessSyncTest.GetArg("-clientid", "A");
             if (!int.TryParse(HeadlessSyncTest.GetArg("-duration", "60"), out int duration)) duration = 60;
 
+            // -timescale N: run this client's clock N times faster, to keep pace with a fast-forwarded test zone
+            // (call_rate 60 = 6x). The bug sim steps by Time.deltaTime, so without it a client in a 6x zone simulates
+            // at a sixth of the server's pace and falls ever further behind (every real-client ecology run did,
+            // 2026-07-18 to 2026-10-04). -duration stays in real seconds.
+            if (float.TryParse(HeadlessSyncTest.GetArg("-timescale", "1"), System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out float timeScale) && timeScale > 0f)
+                Time.timeScale = timeScale;
+
             // Phase 1b proof: -spawn gx,gy places this client at a chosen cell so two instances load DIFFERENT
             // chunk sets (one near a fly-farm fence, one far away). Collision is now zone-wide, so fence-adjacent
             // bugs must stay bit-identical even on the client that never loaded the fence. Omitted = default spawn.
@@ -87,7 +96,7 @@ namespace BugFarmer.Testing
                 else Log($"WARNING: could not parse -spawn '{spawn}' (want gx,gy); using default spawn");
             }
             string charName = HeadlessSyncTest.GetArg("-character", null);
-            Log($"start: zone={zone} clientId={clientId} duration={duration}s spawn={(entryX.HasValue ? $"{entryX},{entryY}" : "default")} character={charName ?? "none"}");
+            Log($"start: zone={zone} clientId={clientId} duration={duration}s timescale={Time.timeScale} spawn={(entryX.HasValue ? $"{entryX},{entryY}" : "default")} character={charName ?? "none"}");
 
             try
             {
@@ -200,12 +209,38 @@ namespace BugFarmer.Testing
             long lastSampledTick = long.MinValue;
             int maxTotal = 0;
 
+            // COST WINDOWS (the scaling study, docs/product/investigations/scaling-2026-10-04/): every ~5 s of real
+            // time, the CPU this client spent per game tick at the bug count it carried -> client_perf.csv. Pure
+            // observation: PerfProfiler only times existing work, never the hashed sim state.
+            PerfProfiler.Enabled = true;
+            PerfProfiler.ResetTotals();
+            var perf = new StringBuilder("real_s,tick,swarms,bugs,ticks,frames,cpu_ms,sim_ms,gc0,managed_mb\n");
+            var proc = System.Diagnostics.Process.GetCurrentProcess();
+            double CpuMs() { try { proc.Refresh(); return proc.TotalProcessorTime.TotalMilliseconds; } catch { return -1; } }
+            double SimMs() => PerfProfiler.Totals.TryGetValue("Sim.SwarmTick", out var st) ? st.ms : 0;
+            float wStart = Time.realtimeSinceStartup;
+            long wTick = SwarmManager.Instance.SimulationTick;
+            int wFrames = Time.frameCount, wGc = GC.CollectionCount(0), windows = 0;
+            double wCpu = CpuMs(), wSim = SimMs();
+
             float t0 = Time.realtimeSinceStartup;
             while (Time.realtimeSinceStartup - t0 < durationSeconds)
             {
                 await Task.Delay(100);
                 long tick = SwarmManager.Instance.SimulationTick;
-                if (tick - lastSampledTick < 10) continue; // ~1 sample / game-second (SimRate=10 ticks/sim-sec)
+                float now = Time.realtimeSinceStartup;
+                if (now - wStart >= 5f)
+                {
+                    double cpu = CpuMs(), sim = SimMs();
+                    int gc = GC.CollectionCount(0);
+                    perf.Append(FormattableString.Invariant(
+                        $"{now - t0:F1},{tick},{SwarmManager.Instance.SwarmCount},{SwarmManager.Instance.TotalBugCount},{tick - wTick},{Time.frameCount - wFrames},{cpu - wCpu:F1},{sim - wSim:F2},{gc - wGc},{GC.GetTotalMemory(false) / 1048576.0:F1}\n"));
+                    windows++;
+                    wStart = now; wTick = tick; wFrames = Time.frameCount; wGc = gc; wCpu = cpu; wSim = sim;
+                }
+                // ~1 sample / game-second (SimRate=10 ticks/sim-sec). The first pass always samples: `tick - long.MinValue`
+                // overflows to a negative number, which kept every ecology run since 2026-07-18 at 0 samples.
+                if (lastSampledTick != long.MinValue && tick - lastSampledTick < 10) continue;
                 lastSampledTick = tick;
                 var counts = SwarmManager.Instance.BugCountBySpecies();
                 foreach (var k in counts.Keys) speciesSeen.Add(k);
@@ -226,6 +261,9 @@ namespace BugFarmer.Testing
             string path = Path.Combine(Application.persistentDataPath, "fly_counts.csv");
             File.WriteAllText(path, sb.ToString());
             Log($"ECOLOGY: {samples.Count} population samples, {cols.Count} species, max total {maxTotal} -> {path}");
+            string perfPath = Path.Combine(Application.persistentDataPath, "client_perf.csv");
+            File.WriteAllText(perfPath, perf.ToString());
+            Log($"PERF: {windows} cost windows -> {perfPath}");
 
             if (maxTotal == 0)
             {

@@ -30,10 +30,14 @@ fi
 
 # A stray player from a prior run keeps the server match alive → contaminates the next run. Kill strays.
 taskkill.exe /F /IM BugFarmerClient.exe >/dev/null 2>&1 || true
-rm -f "$PDATA/fly_counts.csv" "$PDATA/player_ecology.log" 2>/dev/null
+rm -f "$PDATA/fly_counts.csv" "$PDATA/client_perf.csv" "$PDATA/player_ecology.log" /tmp/client_perf.csv 2>/dev/null
 
-echo "=== ecology client: zone=$ZONE duration=${DUR}s ==="
-"$PLAYER" -batchmode -nographics -ecology -zone "$ZONE" -clientid E -duration "$DUR" \
+# Keep the client's clock at the zone's speed (call_rate/10 x sim_batch): a client stepping at 1x in a 6x zone falls
+# ever further behind the server, so the bugs' own decisions (hunting, eating) run at a sixth of the server's pace.
+TS="$(python3 -c "import json; z=json.load(open('$ROOT/nakama/data/zones/$ZONE/zone.json')); print((z.get('call_rate') or 10) * max(1, z.get('sim_batch') or 1) / 10)" 2>/dev/null || echo 1)"
+
+echo "=== ecology client: zone=$ZONE duration=${DUR}s timescale=$TS ==="
+"$PLAYER" -batchmode -nographics -ecology -zone "$ZONE" -clientid E -duration "$DUR" -timescale "$TS" \
   -logFile "$WPDATA/player_ecology.log"
 
 # Hand the population CSV to run_config where it already looks (/tmp), so the Python side is a one-line swap.
@@ -46,3 +50,5 @@ if [ -f "$PDATA/fly_counts.csv" ]; then
 else
   echo "WARNING: ecology client wrote no fly_counts.csv (see $PDATA/player_ecology.log)"
 fi
+# The client's own cost per game tick, in ~5 s windows (the scaling study reads it from /tmp too).
+[ -f "$PDATA/client_perf.csv" ] && cp "$PDATA/client_perf.csv" /tmp/client_perf.csv
