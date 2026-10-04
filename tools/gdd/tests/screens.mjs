@@ -11,7 +11,7 @@ const page = resolve(process.argv[2] || "tools/gdd/_build/review_app.html");
 const day = new Date().toISOString().slice(0, 10);
 const out = resolve(process.argv[3] || `tools/gdd/_build/shots/${day}`);
 mkdirSync(out, { recursive: true });
-const ROUTES = ["zones", "z-village", "zh-village.fence_picket_weathered", "z-spider_vale_east", "b-house_fly", "bugs", "items", "k-decoration", "archive", "design", "s-03", "s-08", "status", "explain"];
+const ROUTES = ["zones", "z-village", "zh-village.fence_picket_weathered", "z-spider_vale_east", "b-house_fly", "bugs", "items", "k-decoration", "archive", "design", "s-03", "s-08", "status", "explain", "e-01-behaviour-model", "e-03-scaling"];
 const VIEWS = [[1440, 900], [400, 800]];
 const SCHEMES = ["light", "dark"];
 const failures = [], notes = [];

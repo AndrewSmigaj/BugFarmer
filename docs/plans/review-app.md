@@ -6,6 +6,21 @@
 
 ## PROGRESS (newest last; the resume pointer)
 - 2026-10-04: plan written (Part 0). Nothing built yet.
+- 2026-10-04 (overnight, on auto):
+  - **Built:** the registries and stable keys (`8341f16e`); the builder, the page and the screenshot check
+    (`af9d5451`); the saving stress test (`65a34e77`): 11 scenarios with reloads, all passing, and planted faults
+    caught.
+  - **Found and fixed by the two-device scenario:** when another device's older answer lands after ours, storage
+    kept it and the page never re-sent its newer one. The page now checks storage and re-sends, so the newest answer
+    wins in the end.
+  - **Added:** diagrams on explanation pages (```svg blocks, checked for scripts); two explanation pages
+    (`docs/gdd/explain/`); `test_build_app.py` (a planted fault per builder check); `marks_diff.py` (manifest, diff,
+    orphans) and `marks_restore.py` (a restore plan that never deletes).
+  - **Dry-run export of the real marks** (read only) to `BugFarmer_backups/2026-10-04_review-app/dryrun-1/`:
+    374 documents (373 marks in 7 kinds, plus the GDD page's one answer document); the old `item_marks` store and every
+    new note and approval collection are empty; 35 filled marks sit on rows the item table no longer has, so the
+    app's "Older notes" must list 35.
+  - **Not done:** the rehearsal on a throwaway page and the publish (it waits for the owner's pause).
 
 ## Context / why
 The owner reviews the design and can't do it in a terminal: they had to scroll back and forth to see what they were

@@ -75,6 +75,9 @@ h3 { font-size: 1.05rem; margin: 0; }
 .prose table { border-collapse: collapse; display: block; max-width: 100%; overflow-x: auto; }
 .prose pre { max-width: 100%; overflow-x: auto; }
 .prose img { max-width: 100%; } .prose td, .prose th { border-bottom: 1px solid var(--line); padding: 4px 8px; text-align: left; vertical-align: top; }
+.diagram { margin: 20px 0; max-width: 100%; overflow-x: auto; }
+.diagram svg { display: block; max-width: none; height: auto; font-family: var(--font-body); }
+.diagram figcaption { color: var(--ink-2); margin-top: 6px; }
 .prose blockquote { border-left: 3px solid var(--line-strong); margin: 0; padding-left: 12px; color: var(--ink-2); }
 .draftnote { background: var(--change-soft); color: var(--ink); border-radius: var(--r); padding: 8px 12px; max-width: 80ch; }
 button.ghost { font: 700 .86rem var(--font-body); background: none; border: 1px dashed var(--line-strong); color: var(--ink-2); border-radius: 4px; padding: 3px 10px; cursor: pointer; }

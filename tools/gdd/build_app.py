@@ -480,6 +480,36 @@ def compare_where(zones, bugs, lineups, phrases, maps, species_to_bug, P):
 
 # ------------------------------------------------------------------ page
 
+SVG_BAD = re.compile(r"<script|<foreignObject|\son[a-z]+\s*=|javascript:|href\s*=\s*[\"'](?!#)", re.I)
+
+
+def explain_body(lines, name, P):
+    """Markdown blocks, plus diagrams: a ```svg fence holds a hand-drawn SVG (its first line may carry a caption,
+    ```svg Caption). Diagrams colour themselves with the page's tokens (var(--ink) ...) so they follow light/dark."""
+    html, text, i = [], [], 0
+    while i < len(lines):
+        if lines[i].startswith("```svg"):
+            html.append(bp.blocks(text))
+            text = []
+            cap = lines[i][6:].strip()
+            j = i + 1
+            while j < len(lines) and not lines[j].startswith("```"):
+                j += 1
+            svg = "\n".join(lines[i + 1:j]).strip()
+            if not svg.startswith("<svg") or not svg.endswith("</svg>"):
+                P.err(f"explain/{name}: a ```svg block must hold one <svg>…</svg>")
+            elif SVG_BAD.search(svg):
+                P.err(f"explain/{name}: a diagram may not hold scripts, event handlers or outside links")
+            else:
+                html.append(f'<figure class="diagram">{svg}' + (f"<figcaption>{bp.inline(cap)}</figcaption>" if cap else "") + "</figure>")
+            i = j + 1
+        else:
+            text.append(lines[i])
+            i += 1
+    html.append(bp.blocks(text))
+    return "\n".join(h for h in html if h)
+
+
 def explain_pages(P):
     out = []
     d = GDD / "explain"
@@ -489,7 +519,7 @@ def explain_pages(P):
             P.err(f"explain/{f.name}: needs a '# Title' first line")
             continue
         out.append({"slug": f.stem, "title": bp.inline(lines[0][2:].strip()), "plain": bp.plain(lines[0][2:]),
-                    "html": bp.blocks(lines[1:])})
+                    "html": explain_body(lines[1:], f.name, P)})
     return out
 
 
@@ -618,8 +648,8 @@ def build(test_mock=False):
     head = html[:8192]
     if "<title>" not in head:
         P.err("the <title> must be in the first 8 KB")
-    for tag in ("<html", "<head", "<body"):
-        if re.search(tag + r"[\s>]", html[:20000], re.I):
+    for tag in ("<html", "<head", "<body"):     # the whole template and code; the data may quote anything
+        if re.search(tag + r"[\s>]", shell.replace("/*__DATA__*/null", ""), re.I):
             P.err(f"the page must not contain its own {tag}> (the viewer adds the skeleton)")
     for src in re.findall(r"<script[^>]+src=\"([^\"]+)\"", html):
         if not src.startswith(("https://cdnjs.cloudflare.com/", "https://cdn.jsdelivr.net/npm/", "https://unpkg.com/")):
