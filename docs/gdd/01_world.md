@@ -20,6 +20,8 @@ farmland — and a zone nobody has visited for a while has moved on when you com
   far rows.
 - **One village** (June review, D19) — the real starting village is the rebuilt one ("Village B" on the dev menu),
   not the old demo village.
+- **Zones of 512 × 512** (2026-10-04, D84) — the village is rebuilt four times bigger (twice as wide and tall) as the
+  first slice, and later zones are built at that size, for a larger world. How: `docs/plans/village-slice.md`.
 - **A second town, in the locust farmland** (2026-06-27) — the far north-west zone, the locust farmland, holds a
   small western-style town. The starting village is mostly unpowered: its windmill lights only part of it, such as the
   Mayor's house, as a glimpse of what power will bring, and can't be taken (2026-09-27); a windmill of your own can't

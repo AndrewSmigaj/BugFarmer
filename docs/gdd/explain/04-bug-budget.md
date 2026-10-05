@@ -33,9 +33,11 @@ the bugs are on screen or not.
 
 About 23 of the 27 ms per tick, and most of the per-frame cost, is work that doesn't need doing.
 
-### The fixes (the game stays exactly the same)
-Every fix below gives **bit-identical results** on every computer, so every player still sees the same bugs and nothing about how the
-game plays changes. They only remove wasted work.
+### The fixes (every behaviour kept)
+Every computer still gets exactly the same results as every other, so every player sees the same bugs. Most of the
+fixes below also give exactly the same results as today, because they only remove repeated or copied work. Where a
+different method is clearly better, it's allowed as long as the game still plays the same, and a behaviour check
+proves it: food eaten, kills, strikes, merges and trips home, measured before and after.
 
 0. **Bring the whole zone to life.** Separately from cost: the server only sets up food, nests and stations in the
    chunks a player has loaded (25 of the village's 64 around one player), and treats unloaded ground as a wall for
