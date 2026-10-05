@@ -266,6 +266,11 @@ namespace BugFarmer.Testing
             Log($"ECOLOGY: {samples.Count} population samples, {cols.Count} species, max total {maxTotal} -> {path}");
             string perfPath = Path.Combine(Application.persistentDataPath, "client_perf.csv");
             File.WriteAllText(perfPath, perf.ToString());
+            // Every timed part of the client over the whole run (ms and calls per scope), for the per-tick breakdown.
+            var totals = new StringBuilder("scope,ms,calls\n");
+            foreach (var kv in PerfProfiler.Totals)
+                totals.Append(FormattableString.Invariant($"{kv.Key},{kv.Value.ms:F2},{kv.Value.calls}\n"));
+            File.WriteAllText(Path.Combine(Application.persistentDataPath, "client_perf_totals.csv"), totals.ToString());
             Log($"PERF: {windows} cost windows -> {perfPath}");
 
             if (maxTotal == 0)

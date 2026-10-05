@@ -1062,7 +1062,14 @@ namespace BugFarmer.Networking
 
 **Client cost (measured 2026-10-04):** every wandering bug looks up the nearest food each tick by walking the client's
 whole food registry (`InfluenceManager.TryGetNearestFood`, timed as `Sim.FoodLookup`); at ~2,600 bugs that is 91% of
-the client's bug-simulation time. See `docs/product/investigations/scaling-2026-10-04/` and the BACKLOG.
+the client's bug-simulation time. See `docs/product/investigations/scaling-2026-10-04/` and the BACKLOG. Each part of a
+client tick is timed (`Sim.Tick` and its parts, timing only); the fixes are Stage 1.1–1.2 of `docs/plans/village-slice.md`.
+
+**The server brings to life only the chunks a player has loaded (found 2026-10-04):** food sources, nests and stations
+are set up when a chunk is first loaded for a player (`handlers_world.go:23-43`), and an unloaded chunk counts as a
+wall for moving bugs (`state.go:607`), so with one player (a 5×5 block of chunks) about 40% of a zone lives. This is a
+fault against the zone-wide design (`architecture_swarm_sync.md` §12.3); the fix is Stage 1.3 of
+`docs/plans/village-slice.md`.
 
 **As built (2026-10-04):** a catch takes the bugs out of the zone's population and is recorded as `d_catch` in the
 daily `ECOSTATS` line (`handleCatchBug`, `match.go`); a player's kill is `d_kill`. The sketch below is the original

@@ -9,6 +9,11 @@ working; this file is what survives between sessions.
 > **2026-09-26:** finished sections moved to [`CHANGELOG.md`](CHANGELOG.md); the ordered plan is
 > [`ROADMAP.md`](ROADMAP.md). This file is the capture queue for open items.
 
+> **2026-10-04: the one active plan is [`docs/plans/village-slice.md`](../plans/village-slice.md)** (the village
+> slice: the foundation under the bugs, the bug budget, the village rebuilt at 512 × 512). The sections below headed
+> "Now" are capture lists; their items are scheduled through that plan (its register says where each earlier plan
+> item went). The art section runs alongside it.
+
 ## Now — ALL ART ON gpt-image-2 + pixelsnap (owner decisions 2026-09-26)
 
 The owner's decisions (2026-09-26):
@@ -18,6 +23,9 @@ The owner's decisions (2026-09-26):
 - **The outfit procedure:** three design variants per outfit; the owner picks one; then all the animation frames are
   made. Most outfits and other art are made after the GDD is signed off, starting with test batches that check the
   work is done right.
+- **To settle with the owner (found 2026-10-04):** ROADMAP's decision table (line 28) and CLAUDE.md's art section say
+  art is made after the GDD sign-off, while ROADMAP's Phase 1 art line lets the other seven picked outfits continue
+  batch by batch now (as "most" above allows). One plain question to the owner; the answer goes into both.
 - **Every design marked as chosen has been picked;** the others are worked through together. The copper test batch
   was approved to run.
 
@@ -214,7 +222,7 @@ change and goes through the `frontier-sync` recipe, not a cosmetic tweak.
 > a publishing to-do) — was folded into *Now — all art on gpt-image-2 + pixelsnap* at the top on 2026-09-26:
 > those 22 were July renders, never pixel-snapped; three outfits are done on the approved procedure. Still
 > open from it: the deferred `_generated/` root tidy (`scratch/` · `variants/` · category previews).
-> `docs/plans/player-arm-and-wearables.md` (split arms) and `docs/plans/player-sprite-and-wearable-creation.md`
+> `docs/plans/archive/player-arm-and-wearables.md` (split arms) and `docs/plans/archive/player-sprite-and-wearable-creation.md`
 > are both superseded — kept for their findings.
 
 ## CLAUDE.md & scaffolding improvements (owner wants a pass here; captured 2026-07-09)
@@ -520,7 +528,7 @@ Plan + designs: `docs/product/economy/crafting_buildout.md` + the saved plan. Al
   non-lethal bug stick turns them off their trail, so a player can steer and herd them. Needs: a nudge on the ant's
   trail-following (client-side, deterministic like the rest of the bug simulation) and a design for how far a tap
   carries. *(Made exact 2026-10-03, D83: a tap turns the ants it touches onto a new heading, so a new route forms; it
-  never makes them follow the player. Designed with the ants, the second slice of `docs/plans/finish-bugs-zones-items.md`.)*
+  never makes them follow the player. Designed with the ants, which come after the village slice: `docs/plans/village-slice.md`, Stage 4.)*
 - **Delete the review app's rehearsal page when the owner agrees (2026-10-04).**
   https://claude.ai/artifact/66W8APLeDRsBHT12Nrr6TW holds made-up marks only; it was the throwaway for rehearsing the
   publish (`docs/plans/review-app.md`). Deleting an artifact needs the owner's OK.
@@ -923,7 +931,7 @@ CRAFT RULES set this session (also in CORRECTIONS.md): **NO CEILINGS** (overhead
 them — no ceiling glowworms/stalactites/star-fields; features are floor/wall based); **micro-stories
 must be compatible with real game mechanics** (don't assume unbuilt mechanics).
 
-## Now — ANT-ARC BUILD PREP (owner decisions 2026-07-06, do alongside the (3,0) build)
+## Later — ANT-ARC BUILD PREP (owner decisions 2026-07-06, do alongside the (3,0) build; the ants come after the village slice)
 - **bee_meadow_20 — REMOVE the south dirtying/rocky GRADIENT** (zone_bee_meadow_20.py §1b:
   the `gradient_field` + rock_masses + torn-ground rubble + dead-tree/dry-flora band along
   the south edge) — the owner wants that space for meeting ants, and more spread-out forest. Its original job (blend into
@@ -1177,7 +1185,7 @@ Future: a quarry source in the deep zones (row 4), statues + fountains crafted a
 Stonemason (D27 sculpture yard), and the marble premium furniture tier (P2 of the
 underground-arc plan adds table/bench/bust_marble as stone-set premium overrides).
 
-## Now — ANT TRAIL FEEL-BAR (open; mechanism proven, rate-tuning remains)
+## Later — ANT TRAIL FEEL-BAR (open; mechanism proven, rate-tuning remains; the ants come after the village slice)
 The underground-arc P3 shipped the ant colony sim (species, nest gates, colony memory,
 commitment, recruitment, reinforcement, coalescence — all gated: go suite, determinism,
 latejoin x2 SYNC IDENTICAL, zero new ledger events). The visible nest→carrion FILE has

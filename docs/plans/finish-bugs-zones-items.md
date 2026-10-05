@@ -4,6 +4,11 @@
 > change to something that works needs a good, stated reason. This is the umbrella plan. Each piece of building work
 > gets its own committed plan in `docs/plans/` before it starts; the first is `review-app.md`, written in Part 0.
 
+> **2026-10-04 (evening): the order of work is replaced by [`village-slice.md`](village-slice.md)**, the one active
+> plan. This file stays as the reference for its requirements and designs (Parts B–E, the behaviour model D0–D7, the
+> combat groundwork C1–C12, "How we work", the owner's answers); each section below is labelled done, replaced or
+> reference, and every live item has a place in `village-slice.md`'s register.
+
 ## PROGRESS (newest last; the resume pointer)
 - **2026-10-03 (evening):** rebuilt after the WSL shutdown. Nothing built yet. The repo is clean at `1b60ac2d` and
   pushed; `main` lacks 2 commits (merged in Part 0).
@@ -86,8 +91,11 @@
   - **The two-player late-join check** with tonight's code, on the bench copy: both halves `SYNC: IDENTICAL`.
   - **Waiting for the owner:** the publish of the review app (pause marking on every device first); deleting the
     rehearsal page (https://claude.ai/artifact/66W8APLeDRsBHT12Nrr6TW, made-up marks only).
+- **2026-10-04 (evening):** the review app is built, tested and rehearsed; only the publish is left, on the owner's
+  word. This plan's order of work is replaced by [`village-slice.md`](village-slice.md); its PROGRESS continues
+  there.
 
-## Certainty assessment (the `certainty-assessment` method; scores read off evidence; judged by the weakest design row)
+## (Replaced by `village-slice.md`) Certainty assessment of 2026-10-04 morning
 | # | Dimension | Score now | Evidence | What raises it |
 |---|---|---|---|---|
 | 1 | Matches what the owner asked | 86 Strong | The owner's answers of 3 and 4 October applied: fluctuating ecosystems, improve-not-replace, per-bug group attacks, real danger, client-first, the arena, the village slice and dry run, ants, barriers, water, playable variants, no calendar. **No questions are open now.** Later decisions (zone size, the two-zone ant colony, each system's design) come with their evidence. | The owner's sign-off on each slice |
@@ -106,7 +114,7 @@
   first.
 - **Verification is pending** (normal at plan time). The gates are in "Test plan".
 
-## Context / why
+## (Reference) Context / why
 The owner wants these parts of the game finished, and much of it is half done. Today showed four problems:
 - reviewing in the terminal doesn't work;
 - the write-ups were natural history, not game design;
@@ -155,7 +163,7 @@ The owner wants these parts of the game finished, and much of it is half done. T
 - **Zone scaffolding.** The gate checks reading, not outputs. zone-craft still says to use the pop-up question tool
   and to decide on a timeout.
 
-## Requirements (the owner's, restated and dated)
+## (Reference, in force) Requirements (the owner's, restated and dated)
 - **One review app** for zones (maps drawn in code, every bug there), bugs, items with settled cuts archived, and design
   sections. Feedback sits beside what it's about; a zone's high-level map is approved first. **Explanations live there
   too**, with diagrams (2026-10-03).
@@ -206,7 +214,7 @@ The owner wants these parts of the game finished, and much of it is half done. T
 - **Guidelines are strong defaults.** Think for yourself; explain plainly; no name-dropping (2026-10-03).
 - **The repo is the only save place; git and file moves allow no guesses** (2026-10-03).
 
-## How we work
+## (Reference, in force) How we work
 - **Saving.**
   - Commit and push after each finished step. Check the drive first; if it's unreadable, stop and tell the owner.
   - At most two helpers read C: at once.
@@ -230,13 +238,13 @@ The owner wants these parts of the game finished, and much of it is half done. T
     - the owner has played it.
 - **Every behaviour gets a "what the player sees" column.** Invisible complexity is cut unless it's free.
 
-## What I need from you, and when
+## (Replaced by `village-slice.md`) What I need from you, and when
 1. **Now:** the questions at the end.
 2. **Before the app is published:** pause marking for about 20 minutes, and confirm nothing is waiting to save.
 3. **After publishing:** one test note, and a short look-over.
 4. **From then on:** review batches in the app when they're ready, and play each slice when it's ready.
 
-## The order of work
+## (Replaced by `village-slice.md`'s stages) The order of work, as of 2026-10-04 morning
 - **M0:** Part 0 (records, saving, merge into `main`) → Part A (the app) → Part B's conversation.
 - **M1, measurements by me, alongside Part A** (no owner time):
   - **S1, the scaling study:** real numbers instead of guesses.
@@ -290,7 +298,7 @@ The owner wants these parts of the game finished, and much of it is half done. T
 - **Items:** the weapons batch and the UV light early; each slice's core items with the slice; decorations after the
   plot design (§15).
 
-## Key risks
+## (Replaced by `village-slice.md`) Key risks
 | Risk | Retired by |
 |---|---|
 | Too much still on the server limits how many players can join | S1, then the server review (D4) |
@@ -301,7 +309,7 @@ The owner wants these parts of the game finished, and much of it is half done. T
 | Owner review load | Batches when ready; limits on work in progress |
 | The drive drops mid-operation | The stop rule; rehearsal before publishing |
 
-## Part 0 — Make the record honest, then save (about 45 minutes; nothing republished)
+## Part 0 — DONE 2026-10-04 — Make the record honest, then save
 1. **D83, in my words** (no quotes), with the dated owner decisions:
    - herding means steering;
    - trails form from scouts;
@@ -348,7 +356,7 @@ The owner wants these parts of the game finished, and much of it is half done. T
 7. **Commit, push and merge into `main`** per `.claude/git-guidelines.md` (`status` clean, a plain `merge --no-ff`,
    push, check `main` equals `origin/main`, back to the feature branch).
 
-## Part A — The review app (about a full day; published only after a rehearsal; plan: `review-app.md`)
+## Part A — The review app — BUILT AND REHEARSED 2026-10-04; the publish is `village-slice.md`'s Stage 0 (plan: `review-app.md`)
 *(Unchanged from the reviewed design: checked facts, data, accounting, one source of truth, feedback storage,
 views, maps, tests and the step-by-step publish with export, rehearsal and comparison.)*
 - **Where it lives:** one file of about 1.5 MB at the items page's address
@@ -647,7 +655,7 @@ at a time, logged.
   following the idle design (game_design.md §11) and P26. Stations with §10.
 - **The 28 cut-recommended items in zones** go to the owner as one list; nothing is removed without them.
 
-## The owner's answers (2026-10-04)
+## (Reference, in force) The owner's answers (2026-10-04)
 1. **Order:** wait; the zone-design conversation happens in the app once it's published.
 2. **Sign-off size:** one per zone (map plus list), one per behaviour system, and items by kind.
 3. **The dry-run zone:** the village.
@@ -657,7 +665,7 @@ at a time, logged.
    steering: fliers turn away from deep water instead of piling up against it. This is a slice task, with a test.
 6. **Feel options:** written options with diagrams, plus playable variants in the arena for anything about feel.
 
-## The overnight run (the owner is away; I'm on auto) — scope, order, stop rules
+## (Done 2026-10-04) The overnight run — scope, order, stop rules
 **Checked tonight, read only:**
 - **The PC never sleeps or hibernates** (powercfg: 0, on High performance). The earlier pauses weren't sleep. The WSL
   settings use mirrored networking (`.wslconfig`), unproven as the cause and left unchanged.
@@ -736,7 +744,7 @@ at a time, logged.
 - the village bench baseline charts;
 - a short report in PROGRESS and in chat.
 
-## Acceptance criteria (each with how it's verified)
+## (Reference) Acceptance criteria — the slice-level ones continue in `village-slice.md`'s Stage 3
 - [ ] **Part 0 recorded.** D83 and the D46 correction checked against the owner's history; §03 and §04 at
   `rework`; the Bug Stick row changed after its marks were read. *Verified by:* the `git show` diff and grep.
 - [ ] **`main` up to date.** *Verified by:* `git rev-parse main` = `origin/main`.
@@ -761,19 +769,19 @@ at a time, logged.
 - [ ] **Each zone's list and item batch settled.** *Verified by:* the owner's approvals and marks, D-entries, and
   `decided` dates.
 
-## Deferred decisions
+## (Reference) Deferred decisions
 - **Mine, on evidence:** what moves to players' computers (from S1); per-system technical designs; the C1 cheating
   trade-off (co-op against the world, so loose server checks).
 - **The owner's, later, each with its evidence:** zone size (after S1's numbers); merging the two ant zones or not
   (after S1); the behaviour principles and feel bars; each system's design and variant; each zone's list; item
   batches; band values. (Q1–Q6 were all answered on 2026-10-04.)
 
-## Out of scope (separate plans later)
+## (Reference) Out of scope — the village's layout redesign is now in scope (`village-slice.md`, Stage 3)
 UI and onboarding, graphics and art production (no paid image calls here), audio, fishing, and the zone layout
 rebuilds (roadmap Phase 2). Building the player's own kit (bows, stamina) gets its own build plans, scheduled
 alongside.
 
-## Files
+## (Reference) Files
 - **New:**
   - `docs/plans/finish-bugs-zones-items.md`, `docs/plans/review-app.md`;
   - `tools/gdd/{build_app.py, app.template.html, app_save.js, app_views.js, app_maps.js, seed_registry.py, assign_keys.py, marks_diff.py, marks_restore.py}`;
@@ -793,7 +801,7 @@ alongside.
   - `tools/gdd/build_page.py`; `tools/README.md`;
   - later: `ecology_stats.go`, the combat skill and docs, zone-craft and author-zone, `gate_authoring_edits.py`.
 
-## Test plan
+## (Reference) Test plan
 - **The app:** builder checks and planted faults; stress and screenshots; export, publish and diff; the test note.
 - **S1:** profiled runs at each size, plus the food-trial hash match. **S2:** pressure runs with kill causes.
   **S3:** the arena and the fighter bot.

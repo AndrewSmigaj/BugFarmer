@@ -35,4 +35,6 @@ parts, how dangers are signalled, the tuning settings, the arena set-ups and the
 - Two players stay in sync during fights and nest defence, including one who joins late.
 - You have played it and signed it off.
 
-The village's layout redesign stays with the zone-design process, separately.
+**Updated 2026-10-04 (evening):** the slice now includes the village's layout. The village is rebuilt at 512 × 512
+through the zone-design process, its layout comes before tuning (tuning depends on where the food is), and the bugs
+are tuned on the new layout. The order of work is in `docs/plans/village-slice.md`.

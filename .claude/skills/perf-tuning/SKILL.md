@@ -12,7 +12,7 @@ One-glance view: the dashboard. System of record for the determinism rules: `arc
 
 ## 1. Run a profiled session
 ```bash
-python3 tools/ecology/run_config.py <tag> --zone village_21_B --duration 600
+python3 tools/ecology/run_config.py <tag> --zone bench_village --duration 600   # NEVER --zone village_21_B: run_config wipes the tested zone's save
 ```
 ~600 s ≈ 8 game-days, `profile:True` injected, restarts nakama, runs the harness, emits PERFSTATS/PERFSYS,
 charts everything, files into `tools/_generated/ecology_charts/<zone>/archive/<ts>_<tag>/`, refreshes
@@ -39,8 +39,12 @@ CSV sidecars (for exact numbers): `tools/_generated/ecology_charts/_data/perf_lo
 1. **Measure** — run a profiled baseline; identify the #1 cost from the WHOLE-tick view (incl. dark time),
    not just the biggest wrapped phase.
 2. **Understand** — read the actual hot loop + its complexity before changing anything.
-3. **Behavior-preserving fix only** — a perf change to the sim must produce BYTE-IDENTICAL results (the sim
-   is deterministic + cross-client hashed). E.g. `FindNearbyFood` output is sort-normalized by `(Dist, ID)`,
+3. **Behavior-preserving fix only** — every computer must still get the same results as every other (the sim is
+   deterministic + cross-client hashed; that never changes). Against the OLD build: identical where that comes
+   naturally (most waste removal), proven by the equivalence check (`docs/plans/village-slice.md` Stage 1.0); a
+   different method is allowed where it is clearly better (owner, 2026-10-04: keep every behaviour working, different
+   heuristics are fine), named as a behaviour change in its commit and judged by the behaviour check against the
+   noise floor. E.g. `FindNearbyFood` output is sort-normalized by `(Dist, ID)`,
    so a chunk-bucket spatial index that finds the same in-range SET is identical. Prefer rebuild-from-source
    over incremental — UNLESS a reader observes the source mid-batch (feeding deletes items mid-swarm-loop),
    which forces incremental (Cache-Coherence lens). Worked example (2026-06-22, DONE): `FindNearbyFood` had

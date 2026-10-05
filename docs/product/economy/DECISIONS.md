@@ -1158,3 +1158,27 @@ assistant's words. The plan that carries it out is `docs/plans/finish-bugs-zones
   unseen or joined in a fight.
 - **The lineup marks of 2026-10-03 stand as decided:** the Asian honey bee as the third hive bee, the house cricket,
   and the queen butterfly as the meadow butterfly.
+
+### D84 — The village slice: four times bigger, more bugs, the waste fixed first (2026-10-04)
+The owner's direction of 2026-10-04 (evening), restated:
+- **The village is the first slice, rebuilt four times bigger:** 512 × 512 cells (twice as wide and twice as tall),
+  for a larger world. Later zones are built at that size. Redesigning the village completely is fine, using what
+  exists as the base and iterating until it is good.
+- **Bug numbers:** a zone holds 1,000–2,000 bugs to start, and more is better. A tick heavy enough to stall the
+  picture for a couple of frames is not acceptable.
+- **The order:** fix the wasted work first; then set how many bugs a zone holds from measured costs; then design the
+  layout; then tune. Tuning depends on where the food is, so the layout comes before it.
+- **Optimisation keeps every behaviour working.** A different method (heuristic) is fine where it is better, as long
+  as the game still plays the same. Every player's computer must still agree with every other's.
+- **Testing is thorough and like real play:** the real client and server, the whole zone, real speeds, several
+  players.
+- **Tuning aims for an ecosystem that works on its own, without players.** What players do to it is up to them;
+  disruption is fine.
+- **One active plan**, `docs/plans/village-slice.md`, tied to the rest of the planning, so the work doesn't drift
+  between plans.
+- **Built on, not re-decided:** every bug in a zone is simulated while anyone is in that zone, in step on every
+  player's computer. That is the long-standing design (`architecture_swarm_sync.md` §0 and §12.3) and the only way
+  players stay in step; bugs still act only on what they sense nearby. The server setting up food and nests only near
+  a player is a fault against that design, fixed in the plan's Stage 1.3.
+- **This settles part of D83's "Scale" point:** the zone size is 512 × 512 for the village and the zones after it;
+  bug counts start at 1,000–2,000 and are confirmed from measurements (the plan's Stage 2).

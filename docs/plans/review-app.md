@@ -21,6 +21,11 @@
     new note and approval collection are empty; 35 filled marks sit on rows the item table no longer has, so the
     app's "Older notes" must list 35.
   - **Not done:** the rehearsal on a throwaway page and the publish (it waits for the owner's pause).
+- 2026-10-04 (day): **the rehearsal passed** on a throwaway page holding made-up marks only
+  (https://claude.ai/artifact/66W8APLeDRsBHT12Nrr6TW, deleted only on the owner's OK): the export before equals the
+  export after, and the restore is exact; the app opened on a copy of the real marks writes nothing
+  (`tools/gdd/tests/real_marks.mjs`). **Only the publish is left**, on the owner's word; it is Stage 0 of
+  [`village-slice.md`](village-slice.md).
 
 ## Context / why
 The owner reviews the design and can't do it in a terminal: they had to scroll back and forth to see what they were

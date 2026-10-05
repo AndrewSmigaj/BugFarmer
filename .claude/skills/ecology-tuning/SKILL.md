@@ -49,14 +49,20 @@ do NOT stack changes you can't separate. The owner has repeatedly caught kneejer
   + the kills→breeding conversion). Read before re-investigating a "stuck" species.
 - Tune in ISOLATION then couple: get a consumer↔food pair into a good band before adding predators on top.
 
-## 1. Zones — tune the REAL one
-- **`village_21_B`** — the real shipped 256×256 open zone with the full food web. **TUNE HERE.**
+## 1. Zones — tune a BENCH COPY of the real one, never the real one
+- **`village_21_B`** — the real shipped 256×256 open zone with the full food web. It is what you tune FOR, but
+  **never run `run_config.py` on it**: the tool deletes the tested zone's save before every run
+  (`run_config.py` `wipe_zone_state`), so `--zone village_21_B` erases the live village.
+- **`bench_village`** — a throwaway copy of `village_21_B`'s authored files (its own zone id, keeps no save,
+  git-ignored). Make or refresh it with `python3 tools/ecology/make_bench_zone.py` (it refuses ids that don't start
+  with `bench_`). **TUNE HERE.** The active plan (`docs/plans/village-slice.md`) does its tuning on the 512 village's
+  bench copy once that exists.
 - **`bug_lab`** — a small FENCED arena for OBSERVING individual behavior only. Its pens are fake/unnatural;
   balance tuned there does NOT transfer. Archived. Don't balance on it.
 
 ## 2. Run a config
 ```bash
-python3 tools/ecology/run_config.py <config> --zone village_21_B --duration 600   # ~8 game-days
+python3 tools/ecology/run_config.py <config> --zone bench_village --duration 600   # ~8 game-days
 ```
 - Configs live in `tools/bug_lab_configs/*.json` — a DELTA deep-merged over canonical data:
   `species` (species.json fields, incl. nested `predation`), `tuning` (ecology_tuning.json dials),
@@ -68,11 +74,23 @@ python3 tools/ecology/run_config.py <config> --zone village_21_B --duration 600 
   (the old passive .NET harness never did → it was predation-blind), then charts and restores. `v21b_baseline` =
   no deltas (the reference). NOTE: needs a BUILT player (`Build/SyncTest/BugFarmerClient.exe`; build it via
   `SyncTestBuild.Build`, Editor closed) — same player the sync tests use.
-- **Speed: `call_rate:60 / sim_batch:1` = 6× real-time — the CEILING.** The Unity client is the speed governor
-  (~60-70 ticks/sec on village_21_B); `sim_batch:2` is faithful in principle but MEASURED to break the client (it
-  desyncs to 0 bugs). So `--duration × 60/8400 ≈ game-days`: **~48 game-days = `--duration 6720` (~112 min,
+- **Speed: `call_rate:60 / sim_batch:1` = 6× real-time — the ceiling today.** The Unity client is the speed governor
+  (~60-70 ticks/sec on village_21_B); `sim_batch:2` is faithful in principle and was MEASURED to break the client (it
+  desyncs to 0 bugs) — but that was measured while the client ran its clock at 1/6 of the zone's pace (fixed
+  2026-10-04: `tools/run_ecology_client.sh` now passes `-timescale` = call_rate×sim_batch/10), so it is re-tested in
+  `village-slice.md` Stage 1.6, not assumed either way. So `--duration × 60/8400 ≈ game-days`: **~48 game-days = `--duration 6720` (~112 min,
   overnight-friendly)**. Don't undershoot — 4 days is a transient; ~48 is standard.
 - The run pins **seed 1337** for reproducibility (production zones keep seed 0 = random per match).
+- **Facts as of 2026-10-04 (read before trusting any run):**
+  - **The whole zone must be alive.** Today the server sets up food sources and nests only in chunks a player has
+    loaded, and treats unloaded ground as a wall for moving bugs (`handlers_world.go:23-43`, `state.go:607-609`); the
+    one test player loads a 5×5 block, about 40% of the village. That is a fault against the zone-wide design, fixed
+    in `village-slice.md` Stage 1.3. Until then, runs measure a shrunken village (the June tuning's driver loaded all
+    64 chunks; every real-client run since 2026-07-18 did not).
+  - **The client's clock runs at the zone's speed** (`-timescale`, above). Real-client ecology conclusions from
+    2026-07-18 to 2026-10-04 were drawn with the client at 1/6 pace and its population sampler broken; re-check them.
+  - **Measuring cost and scale:** `tools/ecology/scaling_study.py` runs configs on the bench and summarises per-part
+    client timings (`client_perf_totals.csv`) and the server tick.
 
 ## 3. Where the charts go (per-zone layout)
 `tools/_generated/ecology_charts/` (see its README.md). Per ZONE:

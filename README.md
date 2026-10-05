@@ -48,7 +48,7 @@ Older documents are kept for the record; each now says at its top when it has be
 | Items | the item review, [`docs/gdd/item_table.jsonl`](docs/gdd/item_table.jsonl), and [`docs/product/economy/catalogs/`](docs/product/economy/catalogs/) | `economy/item_catalog.md`, `design/item_database.md` |
 | The world map and zones | [`docs/gdd/01_world.md`](docs/gdd/01_world.md) and [`architecture_world.md`](docs/product/architecture/architecture_world.md) | `docs/product/zones/demo_slice.md`, the June zone sheets in `docs/product/economy/zones/` |
 | Bugs | [`architecture_bugs.md`](docs/product/architecture/architecture_bugs.md) and [`architecture_swarm_sync.md`](docs/product/architecture/architecture_swarm_sync.md) | `docs/guides/art/bugs_new.md` |
-| Player art | the [`player-sprites`](.claude/skills/player-sprites/SKILL.md) skill and [`CHARACTER_DESIGN_GUIDE.md`](docs/guides/art/CHARACTER_DESIGN_GUIDE.md) (its 2026-07-28 section) | `docs/playerspritepipeline.md`, the two superseded player plans in `docs/plans/` |
+| Player art | the [`player-sprites`](.claude/skills/player-sprites/SKILL.md) skill and [`CHARACTER_DESIGN_GUIDE.md`](docs/guides/art/CHARACTER_DESIGN_GUIDE.md) (its 2026-07-28 section) | `docs/playerspritepipeline.md`, the two superseded player plans in `docs/plans/archive/` |
 | World art | [`object_pipeline.md`](docs/guides/art/object_pipeline.md), with the art decision in the [ROADMAP](docs/product/ROADMAP.md) | `docs/product/art_needed.md` |
 | Saving and backups | [`architecture_persistence.md`](docs/product/architecture/architecture_persistence.md) | — |
 | Building zones | [`docs/guides/authoring/`](docs/guides/authoring/README.md) | `docs/archive/` |

@@ -47,7 +47,9 @@ time (you end up building every feature twice). For every feature:
   **Second sanctioned html exception — the GDD review page** (`tools/gdd/build_page.py` +
   `review_page.template.html`): the owner asked for a page to answer the design document section by section
   (2026-09-26). It is generated from `docs/gdd/*.md` into the git-ignored `tools/gdd/_build/` and published to
-  claude.ai (link in `docs/gdd/README.md`); it never lives in `_generated/`.
+  claude.ai (link in `docs/gdd/README.md`); it never lives in `_generated/`. The active plan's readable page
+  (`tools/gdd/build_plan_page.py`; the owner asked for it 2026-10-04, since the terminal cuts long plans off) is built
+  the same way from `docs/plans/village-slice.md` (link in that plan) and moves into the review app once it's published.
   **Third sanctioned html exception — the sprites page, "Bug Farmer Sprites"** (`tools/viewer/build_sprites_page.py`
   + `sprites_page.template.html`): every sprite and animation the game uses, on one page, found by the game's own
   lookup rules; the owner asked for it (2026-09-30). It is generated into the git-ignored
@@ -145,6 +147,8 @@ python3 tools/make_scene.py                         # render tools/_generated/pr
 
 ## Find depth in
 - `docs/product/ROADMAP.md` — the plan for finishing the game (phases, the owner's decisions of 2026-09-26).
+- `docs/plans/village-slice.md` — **the one active plan** (the village slice: the foundation under the bugs, the bug
+  budget, the village rebuilt at 512 × 512). Read its one-screen summary and PROGRESS before any bug, zone or tuning work.
 - `docs/gdd/README.md` — the design document: what is decided, what is waiting for the owner's review.
 - `docs/product/architecture/ARCHITECTURE.md` — top-level architecture + index to all product docs.
 - `docs/product/BACKLOG.md` — open items not yet scheduled (finished work moves to `CHANGELOG.md`). The

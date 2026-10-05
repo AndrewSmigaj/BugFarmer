@@ -66,8 +66,9 @@ honey bee as the third hive bee, the house cricket, and the queen butterfly as t
 
 **Where it stands (2026-10-04).** §03 (bestiary) and §04 (ecology) are back in rework: they were natural-history
 sheets, and the owner's direction of 2026-10-03 (D83) asks for game-first designs where bug behaviour serves both
-the ecosystem and combat. The work is planned in `docs/plans/finish-bugs-zones-items.md`. It starts with one review
-app that replaces this page and the items page, then the village's bug life as the first finished slice.
+the ecosystem and combat. The work is planned in `docs/plans/village-slice.md` (the one active plan; its designs come
+from `docs/plans/finish-bugs-zones-items.md`). The review app replaces this page and the items page; the village,
+rebuilt at 512 × 512 with its bugs tuned, is the first finished slice.
 
 **Where it stood (2026-10-02).**
 - **Settled:** batch 1, the tool families and the pickaxes, axes and shovels, 34 rows (D69). Rows that are settled
