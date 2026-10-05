@@ -79,7 +79,7 @@ bug-simulation time and grows with bugs × food (`docs/product/investigations/sc
 `Sim.HuntPrep`, `Sim.SwarmLoop`, `Sim.Strikes`, `Sim.Hash`, `Sim.Reconcile`; timing only): at ~3,300 bugs at normal
 speed a tick is 27.4 ms, of which ~23 ms is avoidable (the food lookup, per-tick re-sorting, the strike check's list
 copies, and the state hash building a full snapshot record per bug). The fixes are planned in
-`docs/plans/finishing-the-game.md` (Stage 1). Fix planned in the BACKLOG: one lookup per group per tick + a cell index,
+`docs/plans/village-slice.md` (Stage 1.1–1.2). Fix planned in the BACKLOG: one lookup per group per tick + a cell index,
 both result-identical.
 
 **Update 2026-07-14 — the S1/S2 predation late-join desync + the VERBATIM-RELAY CONTRACT.** New per-bug

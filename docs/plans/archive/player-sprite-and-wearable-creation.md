@@ -1,5 +1,7 @@
 # Player sprite + wearable creation system
 
+> **Archived 2026-10-04** into `docs/plans/archive/` (superseded, as the note below says). Kept for its findings.
+
 > **SUPERSEDED (noted 2026-09-26).** This records the July masked/per-slot approach (gpt-image-1.5, a mannequin,
 > pieces cut in Aseprite). It was replaced on 2026-07-28 by whole outfits on gpt-image-2, and on 2026-08-15 by
 > the procedure used today (three designs → the owner's pick → turnaround → one walk per direction → hands, all

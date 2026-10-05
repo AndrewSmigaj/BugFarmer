@@ -1,5 +1,7 @@
 # Player character: swinging arm + a wearables pipeline that registers
 
+> **Archived 2026-10-04** into `docs/plans/archive/` (superseded, as the note below says). Kept for its findings.
+
 > ## ⛔ SUPERSEDED 2026-07-28 — THIS IS NOT THE CURRENT DESIGN.
 > The whole premise below — that the weapon arm is its own sprite, split off the base at a shoulder pivot —
 > was **abandoned the same day**. The character is now **armless**, with separate floating fists that are

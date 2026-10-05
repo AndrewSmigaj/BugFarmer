@@ -1,8 +1,11 @@
 # Plan — Finishing Bug Farmer: the foundation, the zone process and tuning (2026-10-04)
 
+> **Archived 2026-10-04 (evening).** Replaced the same day by [`village-slice.md`](../village-slice.md), which took
+> over its order of work and everything still open in it. Kept for the record.
+
 > The order of work from here to a finished game, with a repeatable process for designing, building and tuning
-> each zone's ecosystem. It sits on top of [`ROADMAP.md`](../product/ROADMAP.md) (the phases) and
-> [`finish-bugs-zones-items.md`](finish-bugs-zones-items.md) (the detail for bugs, behaviour, zones and items). Every
+> each zone's ecosystem. It sits on top of [`ROADMAP.md`](../../product/ROADMAP.md) (the phases) and
+> [`finish-bugs-zones-items.md`](../finish-bugs-zones-items.md) (the detail for bugs, behaviour, zones and items). Every
 > step is reviewed by the owner; nothing is decided automatically.
 
 ## PROGRESS (newest last)

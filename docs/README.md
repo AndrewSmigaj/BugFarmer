@@ -15,7 +15,7 @@ it has been replaced.
 | [`product/zones/`](product/zones/) | Design notes for the zones that exist. The starting village is `village_21_B`. | Mixed; outdated ones are marked |
 | [`product/investigations/`](product/investigations/) | Research and root-cause write-ups, most dated. Working material behind decisions, not decisions. | Records |
 | [`guides/`](guides/) | How-to guides: `art/` (how sprites look and are made), `authoring/` (how to build zones and scenes), `claudecode/` (an essay on working with Claude Code). | Current; outdated parts are marked |
-| [`plans/`](plans/README.md) | Approved implementation plans; the README lists each with its status. | Records |
+| [`plans/`](plans/README.md) | Approved plans. **One active plan** ([`village-slice.md`](plans/village-slice.md)); its README groups the rest as reference, paused and archived (`plans/archive/`). | The active plan is current; the rest are records |
 | [`brainstorms/`](brainstorms/) | June 2026 idea lists, raw material for the design document. Not decisions. | Older |
 | [`archive/`](archive/) | Guides for the retired zone generator. | Retired |
 

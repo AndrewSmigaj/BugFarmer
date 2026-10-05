@@ -145,6 +145,8 @@ python3 tools/make_scene.py                         # render tools/_generated/pr
 
 ## Find depth in
 - `docs/product/ROADMAP.md` — the plan for finishing the game (phases, the owner's decisions of 2026-09-26).
+- `docs/plans/village-slice.md` — **the one active plan** (the village slice: the foundation under the bugs, the bug
+  budget, the village rebuilt at 512 × 512). Read its one-screen summary and PROGRESS before any bug, zone or tuning work.
 - `docs/gdd/README.md` — the design document: what is decided, what is waiting for the owner's review.
 - `docs/product/architecture/ARCHITECTURE.md` — top-level architecture + index to all product docs.
 - `docs/product/BACKLOG.md` — open items not yet scheduled (finished work moves to `CHANGELOG.md`). The

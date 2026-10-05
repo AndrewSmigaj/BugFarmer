@@ -52,10 +52,11 @@ ecology stations) let you read and steer the ecosystem.
   (https://claude.ai/artifact/CRtGxrNmWdXPVAVyNnwWW1): §00 Premise and §19 Multiplayer ready for the owner.
 
 ### Phase 1 — prove the art, set the rules, design the spine, lay foundations
-- **Bugs, behaviour and combat, zones' bug lists, items (2026-10-04):** planned in
-  [`docs/plans/finish-bugs-zones-items.md`](../plans/finish-bugs-zones-items.md) — one review app first, then measurements
-  (scaling, player pressure, a combat arena), then the village's bug life as the first finished slice the owner plays
-  (D83).
+- **Bugs, behaviour and combat, zones' bug lists, items — the village slice (2026-10-04):** the one active plan is
+  [`docs/plans/village-slice.md`](../plans/village-slice.md): the foundation under the bugs first (the waste cut on the
+  players' computers, the whole zone running on the server, the bug state sent on join, zones of 512 × 512, tuning
+  tools), then the bug budget, then the village rebuilt at 512 with its bugs tuned, played and signed off (D83, D84).
+  Its requirements and designs come from [`finish-bugs-zones-items.md`](../plans/finish-bugs-zones-items.md).
 - **Art (details: the top item of `BACKLOG.md`):** ~~import-scale fix~~ (done 2026-09-26: 89 sprites were drawing at
   the wrong size and 80 blurry) · the outfit procedure written into the `player-sprites` skill, with commands that
   reproduce the approved runs · ~~copper as the test batch~~ (done 2026-09-26: 5 calls, approved) · the other seven picked
@@ -148,8 +149,9 @@ plus the owner's music packs — D60); legal (audio licence, AI disclosure); lau
    old zone at the spot the player left.
 
 ## Open plans not yet scheduled above
-- **Grass overhaul** — phase 1 shipped 2026-07-26 (`grass_01` + variants + tufts in every zone); phases 2–5
-  (motion, dense detail layer, …) not started: `docs/plans/grass-overhaul.md`. The shipped grass is 16 px per square,
+- **Grass overhaul** — phase 1a and a simple tuft layer shipped 2026-07-26 (`grass_01` + variants + tufts in every
+  zone); 1b–1c and phases 2–5 (colour variation, normal maps, motion, the dense detail layer, …) not started:
+  `docs/plans/grass-overhaul.md`. The shipped grass is 16 px per square,
   so it is also part of the art regeneration.
 - **Swing design, phase 6** (up to 5 more outfits from the catalog) — not started; the spring swing itself is
   designed but not in the game: `docs/plans/swing-design-and-outfits.md`.

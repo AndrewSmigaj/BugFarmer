@@ -1,7 +1,10 @@
 # Grass overhaul — plan
 
-> **Shipped 2026-07-26** (commit `5f6fc1d5`, noted 2026-10-01). How the grass works as built is
-> `docs/product/architecture/architecture_world.md` §0. This plan is kept for the record.
+> **Partly shipped 2026-07-26** (commit `5f6fc1d5`; this note corrected 2026-10-04 against the commit and the code):
+> Phase 1a (five grass variants picked per cell, `TilemapManager.VariantTileId`) and a simple per-chunk tuft layer
+> (`GrassTuftRenderer`, a lighter take on Phase 3's tufts without 3a's batched renderer). **Still open, paused:** 1b
+> (colour variation in the shader), 1c (normal maps), Phase 2 (gusts, walk-through bend), 3a/3b (the batched dense
+> layer), Phase 4 (organic edges), Phase 5. How the grass works as built: `docs/product/architecture/architecture_world.md` §0.
 
 **Status:** research DONE (12 games + techniques + our-grass + feasibility + cold-critic, all in
 `docs/product/investigations/grass-overhaul/`). This is the PLAN (Stage 3). The certainty assessment (Stage 4)
