@@ -85,8 +85,8 @@ making a four-times-bigger village good to walk around and making tuning runs fa
 | Open plans: grass phases 2–5, swing phase 6, repo-health P7 | paused | unchanged; picked up when their turn comes on the roadmap |
 
 ## Now (the resume pointer — update at the start and end of every session)
-- **Now:** Stage 0 (make this the one active plan, archive the old ones; publish the review app when the owner says
-  "publish").
+- **Now:** Stage 0's last step: publish the review app when the owner says "publish" (steps 1–3 done 2026-10-04:
+  the plan home and archive, the records and D84, the plan's page).
 - **Next:** Stage 1.0, the measuring and checking tools (the behaviour check and the "before" numbers first).
 - **Waiting on the owner:** approval of this plan; "publish"; the OK to delete the rehearsal page.
 
@@ -103,6 +103,17 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   files: "keep by default" for the server review (against D58 and D83) removed; the perf-tuning skill's identical-only
   rule and its real-save command added to Stage 0; the arena checks moved to a non-peaceful copy; the fallback made
   able to finish Stage 1; missed links and memory notes added to the archiving; dropped earlier-plan items restored.
+- **2026-10-04 (night), Stage 0 steps 1–3 done** (`0b882826`, `165fbe7e`, and the plan page's commit):
+  - this plan committed as `docs/plans/village-slice.md`; the earlier plan labelled section by section as done,
+    replaced or reference; three plans archived with `git mv` (history kept) and every link updated, found by name
+    and by description; the plans index grouped (active, reference, paused, archived); the grass plan's status
+    corrected against its commit and the code;
+  - the tuning and performance skills, the tuning log and the charts README no longer tell anyone to run
+    `run_config.py` on the real village; the performance skill and the bug-budget page follow the owner's direction
+    on optimisation; D84 written; the review-app plan records the passed rehearsal;
+  - the plan's readable page published (link in Stage 0, step 3), built by `tools/gdd/build_plan_page.py`.
+  - **Next:** Stage 1.0 (the behaviour check, the noise floor and the "before" numbers first); the publish waits for
+    the owner.
 
 ## The owner's direction for this stage (2026-10-04)
 - **The village is the first slice, and it becomes four times bigger** (twice as wide and tall: 512 × 512 cells), for a larger
@@ -176,8 +187,9 @@ alongside Stage 3's first design steps (they don't depend on each other), but **
      opening paragraph, the §02 and §18 stubs, one section order in the GDD README) go with the GDD work
      ("Alongside"); the stale combat docs (C12) go with Stage 3's combat work; the art-timing mismatch between
      ROADMAP:28 and ROADMAP:61-62 becomes a BACKLOG line for the art track.
-3. **The plan as a readable page,** published privately so the owner can read it whole (the terminal cuts it off);
-   it moves into the app once the app is published.
+3. **The plan as a readable page,** published privately so the owner can read it whole (the terminal cuts it off):
+   **done 2026-10-04,** https://claude.ai/artifact/LGvYMWJWdgT8HBkjtD4Udp, built by `tools/gdd/build_plan_page.py`
+   and republished at the end of each stage; it moves into the app once the app is published.
 4. **Publish the review app** (the owner closes the items page on other devices and says "publish"; then export, publish,
    compare every mark, test note — the procedure rehearsed on 2026-10-04). From then on every review lives in the app,
    including this plan and the explanation pages. **Until it is published**, a review that is ready goes out as its own

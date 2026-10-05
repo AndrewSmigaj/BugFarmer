@@ -47,7 +47,9 @@ time (you end up building every feature twice). For every feature:
   **Second sanctioned html exception — the GDD review page** (`tools/gdd/build_page.py` +
   `review_page.template.html`): the owner asked for a page to answer the design document section by section
   (2026-09-26). It is generated from `docs/gdd/*.md` into the git-ignored `tools/gdd/_build/` and published to
-  claude.ai (link in `docs/gdd/README.md`); it never lives in `_generated/`.
+  claude.ai (link in `docs/gdd/README.md`); it never lives in `_generated/`. The active plan's readable page
+  (`tools/gdd/build_plan_page.py`; the owner asked for it 2026-10-04, since the terminal cuts long plans off) is built
+  the same way from `docs/plans/village-slice.md` (link in that plan) and moves into the review app once it's published.
   **Third sanctioned html exception — the sprites page, "Bug Farmer Sprites"** (`tools/viewer/build_sprites_page.py`
   + `sprites_page.template.html`): every sprite and animation the game uses, on one page, found by the game's own
   lookup rules; the owner asked for it (2026-09-30). It is generated into the git-ignored
