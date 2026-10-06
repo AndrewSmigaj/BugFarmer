@@ -297,8 +297,15 @@ still agree. All of it is behind test flags; the game itself never turns any of 
     first value per tick kept; resync, timeout or a replay after going live → INCONCLUSIVE; reports compared after a
     warm-up on `detect` (what each predator could strike, before the local report throttle) and `corpse` — NOT on the
     sent strikes, which a late joiner's empty throttle legitimately shifts in time. Tests: `tools/netcode/test_equiv_check.py`.
-  - `tools/ecology/behaviour_check.py --base RUN... [--new RUN...]` — per-species behaviour against the base runs'
-    noise floor (±3 sd; zero↔nonzero flagged). Tests: `tools/ecology/test_behaviour_check.py`.
+  - `tools/ecology/behaviour_check.py --base RUN... [--new RUN...]` — per-species behaviour, old build against new.
+    **Paired by seed**: run both builds on the SAME seeds (`scaling_study.py --configs s10_behave_1000 --behaviour
+    --duration 600 --seeds 1,2,3,4,5 --label <name> --player <exe>`; the folders end in `_seed<N>`) and it judges each
+    seed's difference: flagged only when the change goes the same way on every seed, is over 4 standard errors of those
+    differences AND over 15%; fewer than 20 counted events (a state's STARTS, not its bug-ticks) = too rare to judge.
+    Different seeds fall back to comparing group means, which a seed's layout swamps (2026-10-06: a false alarm on the
+    same build, a real change missed). Held-count runs only (natural runs go different ways in their first days), and
+    at least 600 s, so the server's daily lines reach day 3 (day 1 is skipped). Tests:
+    `tools/ecology/test_behaviour_check.py`.
   - `tools/run_sync_latejoin.sh` takes `PLAYER_A` / `PLAYER_B` (a build each), `A_FLAGS` / `B_FLAGS`, `EQUIV=1` (end with
     equiv_check; its verdict is the exit code) and `WIPE=1` (on by default for bench zones).
   - `tools/run_players.sh N [zone] [s]` — 2–4 players (P1 in charge, the rest walk a route), `LEAVE_AT`, `REJOIN_AT`;

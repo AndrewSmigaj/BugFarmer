@@ -17,18 +17,26 @@ namespace BugFarmer.Testing
     /// <summary>
     /// What the bugs are doing, per species, from their own state after each tick: bug-ticks in total and while
     /// hunting, landed at food, eating a corpse, fleeing a player, attacking, curious, winding up a lunge and lunging;
-    /// plus the reports made (predation strikes, prey claimed, corpses eaten). Read-only over the bugs. Compared before
-    /// and after a change by tools/ecology/behaviour_check.py.
+    /// plus the reports made (predation strikes, prey claimed, corpses eaten); plus how many times a bug STARTED each of
+    /// those states (the <c>*_starts</c> columns), because a few bugs holding a state for a long time make many
+    /// bug-ticks but few separate occurrences. Read-only over the bugs. Compared before and after a change by
+    /// tools/ecology/behaviour_check.py.
     /// </summary>
     public static class BehaviourTally
     {
         public static readonly string[] Columns =
             { "bug_ticks", "hunting", "landed", "eating", "flee", "attack", "curious", "windup", "lunge" };
         public const string Header =
-            "real_s,tick,species,bug_ticks,hunting,landed,eating,flee,attack,curious,windup,lunge,strikes,prey_claimed,corpses";
+            "real_s,tick,species,bug_ticks,hunting,landed,eating,flee,attack,curious,windup,lunge,strikes,prey_claimed,corpses,"
+            + "hunting_starts,landed_starts,eating_starts,flee_starts,attack_starts,curious_starts,windup_starts,lunge_starts";
+        const int States = 8; // Columns[1..8]; their starts are counted after them, at Columns.Length + state
 
         static readonly Dictionary<string, long[]> _bySpecies = new Dictionary<string, long[]>();
         static readonly List<BugAgent> _agents = new List<BugAgent>();
+        // Each bug's states on the previous tick (bit i = Columns[1 + i]); swapped every tick, so bugs gone are dropped.
+        // A bug first seen in a state counts as starting it.
+        static Dictionary<BugAgent, int> _prev = new Dictionary<BugAgent, int>();
+        static Dictionary<BugAgent, int> _cur = new Dictionary<BugAgent, int>();
 
         public static void Start()
         {
@@ -43,25 +51,37 @@ namespace BugFarmer.Testing
             foreach (var swarm in sm.GetAllSwarms())
             {
                 string sp = swarm.SpeciesId ?? "?";
-                if (!_bySpecies.TryGetValue(sp, out var c)) _bySpecies[sp] = c = new long[Columns.Length];
+                if (!_bySpecies.TryGetValue(sp, out var c)) _bySpecies[sp] = c = new long[Columns.Length + States];
                 _agents.Clear();
                 swarm.AppendAgents(_agents);
                 foreach (var a in _agents)
                 {
-                    c[0]++;
-                    if (a.HuntTargetBugId >= 0) c[1]++;
-                    if (a.LandTicks > 0) c[2]++;
-                    if (a.FeedUntilTick > tick) c[3]++;
+                    int s = 0;
+                    if (a.HuntTargetBugId >= 0) s |= 1;
+                    if (a.LandTicks > 0) s |= 2;
+                    if (a.FeedUntilTick > tick) s |= 4;
                     switch (a.CurrentBehavior)
                     {
-                        case "flee": c[4]++; break;
-                        case "attack": c[5]++; break;
-                        case "curious": c[6]++; break;
+                        case "flee": s |= 8; break;
+                        case "attack": s |= 16; break;
+                        case "curious": s |= 32; break;
                     }
-                    if (a.SurgePhase == 1) c[7]++;
-                    else if (a.SurgePhase == 2) c[8]++;
+                    if (a.SurgePhase == 1) s |= 64;
+                    else if (a.SurgePhase == 2) s |= 128;
+
+                    c[0]++;
+                    _prev.TryGetValue(a, out int was);
+                    int started = s & ~was;
+                    for (int i = 0; i < States; i++)
+                    {
+                        if ((s & (1 << i)) != 0) c[1 + i]++;
+                        if ((started & (1 << i)) != 0) c[Columns.Length + i]++;
+                    }
+                    _cur[a] = s;
                 }
             }
+            var t = _prev; _prev = _cur; _cur = t;
+            _cur.Clear();
         }
 
         /// <summary>Appends this window's rows (one per species, ordinal order) and clears the window.</summary>
@@ -81,6 +101,8 @@ namespace BugFarmer.Testing
                 reports.TryGetValue(sp, out var r);
                 for (int i = 0; i < 3; i++)
                     into.Append(',').Append((r != null ? r[i] : 0).ToString(CultureInfo.InvariantCulture));
+                for (int i = 0; i < States; i++)
+                    into.Append(',').Append((c != null ? c[Columns.Length + i] : 0).ToString(CultureInfo.InvariantCulture));
                 into.Append('\n');
             }
             _bySpecies.Clear();

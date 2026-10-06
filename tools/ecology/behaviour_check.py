@@ -2,29 +2,54 @@
 """The behaviour check: does a changed build still make the bugs do what they did before? (docs/plans/village-slice.md,
 Stage 1.0.) Unit-tested by tools/ecology/test_behaviour_check.py.
 
-It compares runs of the NEW build against several runs (seeds) of the BASE build, metric by metric and species by
-species, using the base runs' own spread as the noise floor. With only --base runs it prints that noise floor.
+It compares runs of the NEW build against runs of the BASE build, metric by metric and species by species. With only
+--base runs it prints the base runs' spread (the noise floor).
 
 Each run is a folder holding what one behaviour run wrote:
   client_behaviour*.csv   the client's behaviour tally (HeadlessSyncTest -behaviour): per species per window, bug-ticks
                           in total and while hunting, landed, eating, fleeing, attacking, curious, winding up and
-                          lunging, plus reports made (strikes, prey claimed, corpses eaten).
+                          lunging, plus reports made (strikes, prey claimed, corpses eaten), plus how many times a bug
+                          started each of those states (the *_starts columns; older files lack them).
   nakama.log              the server log of the run: ECOSTATS (births by source, deaths by cause), PREDLOG (kills),
                           BEHAVSTATS (feeding and breeding bug-ticks, eggs, trips home, nest defences, merges, splits,
                           hits on players), one line per species per game-day.
 
 Metrics (per species):
-  client  share of bug-ticks in each state, per 1,000 bug-ticks; reports per 10,000 bug-ticks
+  client  share of bug-ticks in each state, per 1,000 bug-ticks; starts of each state and reports, per 10,000 bug-ticks
   server  feeding/breeding share of bug-ticks per 1,000; everything else per bug-day (bug-days = the daily populations
           summed); kills per predator bug-day per prey species
 Day 1 (the starting spawn) and the first 30 s of client windows are skipped by default.
 
-A metric is FLAGGED when the new mean is outside the base mean ± K standard deviations (K = 3), or when it is zero on
-one side and not on the other. Exit codes: 0 = no flags, 1 = flags, 2 = not enough data.
+PAIRED BY SEED (the normal way): when the base and new runs share at least 3 seeds (a run's seed is the "_seed<N>" at
+the end of its folder name, as scaling_study.py names them), each seed's new value is compared with the SAME seed's
+base value, and only those per-seed differences are judged. A metric is FLAGGED only when the change
+  goes the same way on every seed, AND
+  its mean is over K standard errors of the per-seed differences (K = 4; or the differences have no spread), AND
+  its mean is over MIN_CHANGE of the base mean (15%).
+UNPAIRED (fallback, when the seeds don't match): flagged when |new mean - base mean| is over K standard errors of the
+difference of the two groups AND over MIN_CHANGE.
+Either way, a metric whose events are rare (fewer than MIN_EVENTS counted across the base runs, and across the new
+runs) is reported "too rare to judge", never flagged; one that is absent in the base runs but frequent in the new ones
+(or the reverse) is flagged as appearing (vanishing). For a client state the events counted are its STARTS when the
+file has them (a few bugs holding a state for a long time give many bug-ticks but few separate occurrences).
+
+Why these rules (2026-10-06): the first noise-floor runs (natural ecology, 3 game-days, 5 + 3 seeds of the SAME
+build) raised 14 false alarms under a plain "±3 sd or zero on one side" rule: the village's first days go different
+ways from seed to seed (in some seeds the flies die out, in others they breed), and rare events (a beetle laying eggs
+once) flip between zero and non-zero. So the check runs with the bug count held steady (the hold_population test
+zone, docs/plans/village-slice.md Stage 1.0), and judges only clear, sizeable changes in well-counted behaviour.
+Tiny exact differences are the equivalence check's job (tools/netcode/equiv_check.py).
+Why paired (2026-10-06, the first held-count calibration): a seed sets where everything starts, and that alone moves
+some numbers enormously (wasp attacks: none on three seeds, up to 59,000 bug-ticks on others), so comparing group
+averages over different seeds raised a false alarm on the same build and missed a real planted change (the food radius
+2.5 -> 4.0), which seed by seed was plain: flies landing up and wasp attacks down on every seed.
+
+Exit codes: 0 = no flags, 1 = flags, 2 = not enough data.
 
 Usage:
-  behaviour_check.py --base RUN_DIR [RUN_DIR ...] [--new RUN_DIR ...] [--k 3] [--skip-days 1] [--skip-seconds 30]
-                     [--min-bug-ticks 10000] [--out report.md]
+  behaviour_check.py --base RUN_DIR [RUN_DIR ...] [--new RUN_DIR ...] [--k 4] [--min-change 0.15]
+                     [--min-events 20] [--skip-days 1] [--skip-seconds 30] [--min-bug-ticks 10000] [--unpaired]
+                     [--out report.md]
 """
 import argparse
 import glob
@@ -39,6 +64,7 @@ CLIENT_REPORTS = ["strikes", "prey_claimed", "corpses"]
 BEHAV_SHARES = ["feed", "breed"]
 BEHAV_EVENTS = ["eggs", "trip_home", "trip_abandon", "nest_defend", "merge", "split", "player_hit"]
 DAY_TICKS = 8400
+MIN_PAIRED_SEEDS = 3
 LINE = re.compile(r"(ECOSTATS|BEHAVSTATS|PREDLOG) (day=\d+[^\"\\]*)")
 
 
@@ -49,6 +75,7 @@ def kv(s):
 def client_metrics(run_dir, skip_seconds, min_bug_ticks):
     """species -> {metric: value} from the client tally (summed over windows after the warm-up)."""
     sums = defaultdict(lambda: defaultdict(float))
+    has_starts = False
     files = sorted(glob.glob(os.path.join(run_dir, "client_behaviour*.csv")))
     for path in files:
         with open(path, encoding="utf-8") as f:
@@ -59,21 +86,26 @@ def client_metrics(run_dir, skip_seconds, min_bug_ticks):
                     continue
                 if p[0] == "real_s":
                     header = p
+                    has_starts = has_starts or "landed_starts" in header
                     continue
                 if header is None or len(p) != len(header):
                     continue
                 row = dict(zip(header, p))
                 if float(row["real_s"]) < skip_seconds:
                     continue
-                for k in ["bug_ticks"] + CLIENT_STATES + CLIENT_REPORTS:
+                for k in ["bug_ticks"] + CLIENT_STATES + CLIENT_REPORTS + [s + "_starts" for s in CLIENT_STATES]:
                     sums[row["species"]][k] += float(row.get(k, 0) or 0)
     out = {}
     for sp, s in sums.items():
         bt = s["bug_ticks"]
         if bt < min_bug_ticks:
             continue
-        m = {f"client.{k}_per_1k": 1000.0 * s[k] / bt for k in CLIENT_STATES}
-        m.update({f"client.{k}_per_10k": 10000.0 * s[k] / bt for k in CLIENT_REPORTS})
+        # (value, events): a state's events are its starts when the file counts them, else its bug-ticks
+        m = {f"client.{k}_per_1k": (1000.0 * s[k] / bt, s[k + "_starts"] if has_starts else s[k]) for k in CLIENT_STATES}
+        if has_starts:
+            m.update({f"client.{k}_starts_per_10k": (10000.0 * s[k + "_starts"] / bt, s[k + "_starts"])
+                      for k in CLIENT_STATES})
+        m.update({f"client.{k}_per_10k": (10000.0 * s[k] / bt, s[k]) for k in CLIENT_REPORTS})
         out[sp] = m
     return out
 
@@ -121,11 +153,11 @@ def server_metrics(run_dir, skip_days):
     for sp, bd in pop.items():
         if bd <= 0:
             continue
-        m = {f"server.{k}_per_1k": 1000.0 * beh[sp][k] / (bd * DAY_TICKS) for k in BEHAV_SHARES}
-        m.update({f"server.{k}_per_bugday": beh[sp][k] / bd for k in BEHAV_EVENTS})
-        m.update({f"server.{k}_per_bugday": v / bd for k, v in eco[sp].items()})
+        m = {f"server.{k}_per_1k": (1000.0 * beh[sp][k] / (bd * DAY_TICKS), beh[sp][k]) for k in BEHAV_SHARES}
+        m.update({f"server.{k}_per_bugday": (beh[sp][k] / bd, beh[sp][k]) for k in BEHAV_EVENTS})
+        m.update({f"server.{k}_per_bugday": (v / bd, v) for k, v in eco[sp].items()})
         for prey, n in kills.get(sp, {}).items():
-            m[f"server.kills_{prey}_per_bugday"] = n / bd
+            m[f"server.kills_{prey}_per_bugday"] = (n / bd, n)
         out[sp] = m
     return out
 
@@ -139,6 +171,24 @@ def run_metrics(run_dir, args):
     return m
 
 
+SEED = re.compile(r"_seed(\d+)$")
+
+
+def seed_of(run_dir):
+    m = SEED.search(os.path.basename(os.path.normpath(run_dir)))
+    return int(m.group(1)) if m else None
+
+
+def pairing(base_dirs, new_dirs):
+    """The seeds to pair on (sorted), or None when the runs can't be paired (a run without a seed, a new seed missing
+    from the base runs, or fewer than MIN_PAIRED_SEEDS shared seeds)."""
+    bs, ns = [seed_of(d) for d in base_dirs], [seed_of(d) for d in new_dirs]
+    if not ns or None in bs or None in ns or not set(ns) <= set(bs):
+        return None
+    common = sorted(set(ns))
+    return common if len(common) >= MIN_PAIRED_SEEDS else None
+
+
 def mean_sd(xs):
     n = len(xs)
     mu = sum(xs) / n
@@ -146,26 +196,84 @@ def mean_sd(xs):
     return mu, sd
 
 
-def compare(base_runs, new_runs, k):
-    """-> rows (species, metric, base_mean, base_sd, new_mean, flagged, why)."""
+def rarity(b_events, n_events, mu, nmu, min_events):
+    """-> (note, flagged) when the events are too few to judge the usual way, else None."""
+    if b_events < min_events and n_events < min_events:
+        return "too rare to judge", False
+    if b_events < min_events <= n_events and mu == 0:
+        return "appears", True
+    if n_events < min_events <= b_events and nmu == 0:
+        return "vanishes", True
+    return None
+
+
+def pct(new, base):
+    return f"{100 * (new - base) / base:+.0f}%" if base else "from 0"
+
+
+def compare_paired(base_runs, base_seeds, new_runs, new_seeds, seeds, k, min_change, min_events):
+    """Per-seed differences. -> rows (species, metric, base_mean, sd of the per-seed differences, new_mean, flagged,
+    note)."""
     rows = []
     species = sorted({sp for r in base_runs + new_runs for sp in r})
     for sp in species:
         metrics = sorted({mt for r in base_runs + new_runs for mt in r.get(sp, {})})
         for mt in metrics:
-            b = [r.get(sp, {}).get(mt, 0.0) for r in base_runs]
-            mu, sd = mean_sd(b)
+            b_vals, n_vals, b_events, n_events = [], [], 0.0, 0.0
+            for s in seeds:
+                b = [r.get(sp, {}).get(mt, (0.0, 0.0)) for r, rs in zip(base_runs, base_seeds) if rs == s]
+                n = [r.get(sp, {}).get(mt, (0.0, 0.0)) for r, rs in zip(new_runs, new_seeds) if rs == s]
+                b_vals.append(sum(x[0] for x in b) / len(b))
+                n_vals.append(sum(x[0] for x in n) / len(n))
+                b_events += sum(x[1] for x in b)
+                n_events += sum(x[1] for x in n)
+            mu, nmu = sum(b_vals) / len(b_vals), sum(n_vals) / len(n_vals)
+            d = [nv - bv for nv, bv in zip(n_vals, b_vals)]
+            dmu, dsd = mean_sd(d)
+            se = dsd / math.sqrt(len(d))
+            rare = rarity(b_events, n_events, mu, nmu, min_events)
+            if rare:
+                why, flag = rare
+            else:
+                up, down = sum(1 for x in d if x > 0), sum(1 for x in d if x < 0)
+                one_way = up == len(d) or down == len(d)
+                clear = se == 0 and dmu != 0 or se > 0 and abs(dmu) > k * se
+                big = abs(dmu) > min_change * abs(mu)
+                flag = one_way and clear and big
+                spread = f"{abs(dmu) / se:.1f} se" if se > 0 else "no spread"
+                why = (f"{'changed' if flag else ''} {pct(nmu, mu)}, {up} up / {down} down of {len(d)} seeds, {spread}"
+                       .strip())
+            rows.append((sp, mt, mu, dsd, nmu, flag, why))
+    return rows
+
+
+def compare(base_runs, new_runs, k, min_change, min_events):
+    """Unpaired (group means). -> rows (species, metric, base_mean, base_sd, new_mean, flagged, note)."""
+    rows = []
+    species = sorted({sp for r in base_runs + new_runs for sp in r})
+    for sp in species:
+        metrics = sorted({mt for r in base_runs + new_runs for mt in r.get(sp, {})})
+        for mt in metrics:
+            b = [r.get(sp, {}).get(mt, (0.0, 0.0)) for r in base_runs]
+            mu, sd = mean_sd([x[0] for x in b])
+            b_events = sum(x[1] for x in b)
             if not new_runs:
-                rows.append((sp, mt, mu, sd, None, False, ""))
+                rows.append((sp, mt, mu, sd, None, False, "rare" if b_events < min_events else ""))
                 continue
-            nv = [r.get(sp, {}).get(mt, 0.0) for r in new_runs]
-            nmu, _ = mean_sd(nv)
-            why = ""
-            if (mu == 0) != (nmu == 0) and (abs(mu) > 0 or abs(nmu) > 0):
-                why = "zero on one side only"
-            elif abs(nmu - mu) > k * sd + 1e-12:
-                why = f"outside base ±{k:g}sd"
-            rows.append((sp, mt, mu, sd, nmu, bool(why), why))
+            nv = [r.get(sp, {}).get(mt, (0.0, 0.0)) for r in new_runs]
+            nmu, nsd = mean_sd([x[0] for x in nv])
+            n_events = sum(x[1] for x in nv)
+            why, flag = "", False
+            rare = rarity(b_events, n_events, mu, nmu, min_events)
+            if rare:
+                why, flag = rare
+            else:
+                se = math.sqrt(sd * sd / len(b) + nsd * nsd / len(nv))
+                diff = abs(nmu - mu)
+                if diff > k * se + 1e-12 and diff > min_change * abs(mu):
+                    why, flag = (f"changed {pct(nmu, mu)} ({diff / se:.1f} se)" if se > 0
+                                 else f"changed {pct(nmu, mu)} (no spread)"), True
+            rows.append((sp, mt, mu, sd, nmu, flag, why))
     return rows
 
 
@@ -177,10 +285,13 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--base", nargs="+", required=True)
     ap.add_argument("--new", nargs="*", default=[])
-    ap.add_argument("--k", type=float, default=3.0)
+    ap.add_argument("--k", type=float, default=4.0, help="standard errors of the difference a change must exceed")
+    ap.add_argument("--min-change", type=float, default=0.15, help="smallest relative change that counts (0.15 = 15%%)")
+    ap.add_argument("--min-events", type=float, default=20, help="fewer counted events than this = too rare to judge")
     ap.add_argument("--skip-days", type=int, default=1)
     ap.add_argument("--skip-seconds", type=float, default=30.0)
     ap.add_argument("--min-bug-ticks", type=float, default=10000.0)
+    ap.add_argument("--unpaired", action="store_true", help="compare group means even when the seeds match")
     ap.add_argument("--out")
     args = ap.parse_args(argv)
 
@@ -190,13 +301,21 @@ def main(argv=None):
         print("not enough data: need at least two base runs, and every run must have metrics "
               f"(base runs with data: {sum(1 for r in base if r)}, new: {sum(1 for r in new if r)})")
         return 2
-    rows = compare(base, new, args.k)
+    seeds = None if args.unpaired else pairing(args.base, args.new)
+    if seeds:
+        rows = compare_paired(base, [seed_of(d) for d in args.base], new, [seed_of(d) for d in args.new], seeds,
+                              args.k, args.min_change, args.min_events)
+        mode, spread_col = f"paired by seed ({', '.join(map(str, seeds))})", "sd of per-seed differences"
+    else:
+        rows = compare(base, new, args.k, args.min_change, args.min_events)
+        mode = "unpaired: group means; seed differences count as noise" if new else "noise floor"
+        spread_col = "base sd"
     flagged = [r for r in rows if r[5]]
-    lines = ["| species | metric | base mean | base sd | new mean | flag |", "|---|---|---|---|---|---|"]
+    lines = [f"| species | metric | base mean | {spread_col} | new mean | flag |", "|---|---|---|---|---|---|"]
     for sp, mt, mu, sd, nmu, fl, why in rows:
-        lines.append(f"| {sp} | {mt} | {fmt(mu)} | {fmt(sd)} | {fmt(nmu)} | {why} |")
+        lines.append(f"| {sp} | {mt} | {fmt(mu)} | {fmt(sd)} | {fmt(nmu)} | {'**FLAG** ' if fl else ''}{why} |")
     summary = (f"{len(rows)} metrics over {len(base)} base run(s)"
-               + (f" and {len(new)} new run(s): {len(flagged)} flagged" if new else " (noise floor only)"))
+               + (f" and {len(new)} new run(s), {mode}: {len(flagged)} flagged" if new else " (noise floor only)"))
     text = "\n".join(lines) + "\n\n" + summary + "\n"
     if args.out:
         with open(args.out, "w", encoding="utf-8") as f:
@@ -204,6 +323,11 @@ def main(argv=None):
     print(text if not args.out else summary + f"(table: {args.out})")
     for sp, mt, mu, sd, nmu, fl, why in flagged:
         print(f"FLAG {sp} {mt}: base {fmt(mu)} ± {fmt(sd)}, new {fmt(nmu)} ({why})")
+    if new:
+        rare = sum(1 for r in rows if r[6] == "too rare to judge")
+        rule = ("goes the same way on every seed, is over" if seeds else "is over")
+        print(f"({rare} metrics too rare to judge; a change counts when it {rule} {args.k:g} standard errors AND over "
+              f"{100 * args.min_change:.0f}%)")
     return 1 if flagged else 0
 
 

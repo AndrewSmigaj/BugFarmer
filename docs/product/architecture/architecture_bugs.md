@@ -1088,7 +1088,8 @@ fault against the zone-wide design (`architecture_swarm_sync.md` §12.3); the fi
   (`Util/TestProbes.cs`, `Testing/TestRig.cs`): `CostProbe` times each whole tick (`AdvanceOneTick`, outside the
   per-part timers), the bug drawing per frame (`InterpolateAllSwarms`, `CentipedeTrail`), frame times, the snapshot's
   build time and size, and allocations per frame; `SwarmManager.TestTickObserver` hands each finished tick to the
-  behaviour tally (read-only over the bugs, via `SwarmVisual.AppendAgents`); `HashLog` and `ReportLog` are the
+  behaviour tally (read-only over the bugs, via `SwarmVisual.AppendAgents`; it counts bug-ticks in each state and, per
+  bug from tick to tick, how many times each state STARTED); `HashLog` and `ReportLog` are the
   equivalence check's logs (`architecture_swarm_sync.md`). With every flag off, each hook is one static bool read.
 
 **As built (2026-10-04):** a catch takes the bugs out of the zone's population and is recorded as `d_catch` in the

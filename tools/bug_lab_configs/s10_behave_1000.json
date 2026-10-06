@@ -1,0 +1,6 @@
+{
+  "name": "s10_behave_1000",
+  "extends": "s10_fixed_1000",
+  "description": "Stage 1.0 behaviour check: about 1000 bugs held steady (hold_population) at 6x speed, so per-bug behaviour can be compared between builds without the ecology going different ways from seed to seed",
+  "flags": {"call_rate": 60}
+}

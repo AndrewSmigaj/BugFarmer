@@ -85,11 +85,11 @@ making a four-times-bigger village good to walk around and making tuning runs fa
 | Open plans: grass phases 2–5, swing phase 6, repo-health P7 | paused | unchanged; picked up when their turn comes on the roadmap |
 
 ## Now (the resume pointer — update at the start and end of every session)
-- **Now:** Stage 0's last step: publish the review app when the owner says "publish" (steps 1–3 done 2026-10-04:
-  the plan home and archive, the records and D84, the plan's page).
-- **Next:** Stage 1.0a (the server's hold-population switch and behaviour counts), then 1.0b–1.0e, as designed under
-  "Stage 1.0 design" (reviewed against the code 2026-10-06).
-- **Waiting on the owner:** approval of this plan; "publish"; the OK to delete the rehearsal page.
+- **Now:** Stage 1.0d, proving the checks: the behaviour check's paired calibration (15 held-count runs, seeds 1–5:
+  the base build, the radius-4.0 copy, the base build again), then its verdict. 1.0a–1.0c are built and committed.
+- **Next:** Stage 1.0e, the "before" numbers; then Stage 1.1. Stage 0's last step (publishing the review app) waits
+  for the owner's "publish".
+- **Waiting on the owner:** "publish"; the OK to delete the rehearsal page.
 
 ## PROGRESS (this plan; newest last — the history before it is in the earlier plan's PROGRESS)
 - **2026-10-04 (evening):** written after the owner asked for one careful, coherent plan for the village slice (512 ×
@@ -133,6 +133,21 @@ making a four-times-bigger village good to walk around and making tuning runs fa
     detections and corpse reports. A build with the food-sensing radius planted at 2.6 instead of 2.5: DIVERGED both
     ways round, from the joiner's first live tick. The first same-build run exposed a flaw in the check (strike sends
     are paced by a local throttle that starts empty on a joiner), fixed by comparing detections instead.
+  - **The behaviour check, first two calibrations: both failed, and the check was redesigned twice.**
+    - Natural ecology, 5 + 3 seeds of the same build: 14 false alarms, because the village's first days go different
+      ways from seed to seed. So the check moved to held-count runs (`s10_behave_1000`) and judged only changes that
+      are clear (over 4 standard errors) and sizeable (over 15%).
+    - Held count, 280 s runs (5 base seeds, 3 same-build seeds, 3 seeds of the radius-4.0 copy; the PC restarted
+      during the last run, which was re-run): a false alarm on the same build (wasp attacks "vanished" on the other
+      seeds), and the planted change missed. Three causes: the runs reached only game-day 1, which the check skips,
+      so the server half judged nothing; the seeds differ so much that group averages hide real changes (seed by
+      seed, flies landed more and wasps attacked less on all three seeds); and the "too rare" rule counted bug-ticks,
+      so one wasp attacking for a long time looked well counted.
+    - Redesigned: paired by seed, a change must go the same way on every seed; the client tally counts each state's
+      starts and "too rare" counts those; 600 s runs. 16 unit tests; both test builds rebuilt (no errors); a 2-minute
+      trial wrote the new columns (one wasp attack start = 1,455 bug-ticks; centipede attacks 11 starts = 48,991).
+  - **The owner (2026-10-06):** go ahead with the redesign; each zone will get a chosen starting seed; the power-plan
+    cap for the slower-computer runs is allowed; bug counts will be chosen by feel once the limits are known.
 
 ## The owner's direction for this stage (2026-10-04)
 - **The village is the first slice, and it becomes four times bigger** (twice as wide and tall: 512 × 512 cells), for a larger
@@ -148,6 +163,10 @@ making a four-times-bigger village good to walk around and making tuning runs fa
 - **Test thoroughly, simulated like real:** the real client and server, the whole zone, real speed checks.
 - **Tune for a functional ecosystem without players.** What players do to it, they do; disruption is fine.
 - **One coherent plan** that ties into the rest of the planning, with no drifting between plans.
+- **Added 2026-10-06:** zones probably won't need very many bugs; the scaling work shows what the engine can do, and
+  the owner then picks each zone's count by how it plays. The game will have minimum hardware requirements, so
+  the slower-computer target is a minimum specification, not every older machine. Each zone will start from a chosen
+  seed (the best one found for it).
 
 ## The order of work
 Each stage ends at a check that proves it; the owner reviews the results in the app. Stage 1's engineering can run
@@ -248,7 +267,7 @@ Cheap, certain wins first; the size work, which depends on the village's new lay
 - **1.0e — the "before" numbers** on the 256 village's bench copy: natural runs at 1× and 4×, fixed counts of 1,000 /
   2,000 / 4,000 (clean and breakdown), the windowed tour, two players, the slower computer; written up for the owner.
 - **The slower computer:** two cores by process affinity (no machine setting touched); the frequency cap through the
-  Windows power plan is a machine-wide setting, so it is used only with the owner's OK and restored right after.
+  Windows power plan is a machine-wide setting: the owner allowed it (2026-10-06), restored right after each use.
 - **Every gate on bench zones by default, wiped before each run** (`run_sync_latejoin.sh` defaults to `village_21_B`; a
   bench zone has no neighbours, and wiping its save first means each run starts from the same state).
 
@@ -658,7 +677,8 @@ checked in the code.*
   build (where the Unity profiler markers are compiled out).
 - **`client_perf.csv`** gains the whole tick (`Sim.Tick`) beside today's `sim_ms`; the snapshot build gets a timer and its
   size is recorded.
-- **Behaviour tally** (`-behaviour`): after each tick, per species, bug-ticks in total and while hunting
+- **Behaviour tally** (`-behaviour`; since 2026-10-06 it also counts each state's starts): after each tick, per
+  species, bug-ticks in total and while hunting
   (`HuntTargetBugId`), landed, feeding on a corpse (`FeedUntilTick`), fleeing a player, attacking, curious and lunging
   (`CurrentBehavior`, `SurgePhase`); corpse feeds and lunges started (both have start-tick timestamps, `BugAgent.cs:63`,
   `:455-456`); reports made. Read-only over the bugs; written per window to `client_behaviour.csv`; never on in cost
@@ -693,9 +713,21 @@ checked in the code.*
   or a reconstruction tripwire is inconclusive, never a pass. It applies only to builds with the same snapshot and
   message formats. Unit-tested with planted faults (like `test_sync_diff.py`).
 - **`tools/ecology/behaviour_check.py`:** reads `client_behaviour.csv`, `BEHAVSTATS`, `ECOSTATS` and `PREDLOG`; rates per
-  species per 1,000 bug-ticks and per bug-day; the baseline is the noise-floor seeds; a metric is flagged when the new
-  mean falls outside the baseline mean ± 3 standard deviations, or when it goes to zero from nonzero (or the reverse);
-  unit-tested.
+  species per 1,000 bug-ticks and per bug-day; the baseline is the noise-floor seeds; unit-tested. *Revised
+  2026-10-06 after the first noise-floor runs:* a metric is flagged only when the change is both clear (over 4
+  standard errors of the difference, from both groups' spread) and large enough to matter (over 15%); a metric with
+  fewer than 20 counted events is "too rare to judge"; a frequent one that appears or vanishes is flagged. And the
+  check runs with the bug count held (`s10_behave_1000`: about 1,000 bugs, `hold_population`, 6× speed), because in
+  natural runs the village's first days go different ways from seed to seed (in some seeds the flies die out, in
+  others they breed): five plus three seeds of the SAME build raised 14 false alarms under the first rule. Small exact
+  differences are the equivalence check's job. *Revised again 2026-10-06 after the first held-count calibration
+  failed both ways* (a false alarm on the same build; the planted change missed): **paired by seed** — both builds run
+  on the same seeds and each seed's difference is judged; a change counts when it goes the same way on every seed, is
+  over 4 standard errors of those differences and over 15%. A seed sets where everything starts, and that alone moved
+  wasp attacks from none (three seeds) to 59,000 bug-ticks (another); seed by seed, the planted change was plain
+  (flies landing more and wasps attacking less on every seed). The client tally also counts how often each state
+  STARTS, and "too rare" counts starts (one wasp attack had made 1,455 bug-ticks). Runs last 600 s, so the server's
+  daily lines reach day 3 (the 280 s runs reached only day 1, which is skipped, so the server half judged nothing).
 - **`scaling_study.py`** reads the cost files and reports percentiles, frames over 16.7 ms, allocations and the snapshot
   timing; options for the perf mode, a windowed run and a route.
 - **`tools/run_players.sh N`:** two to four test players, staggered, with roles (in charge, wanderers), an optional
@@ -706,9 +738,10 @@ checked in the code.*
 **1.0d — proving the checks:**
 - The same build copied twice: the equivalence check says IDENTICAL both ways round, over a window with real activity
   (merges, hunts, feeding, a late join), counted from the tally so a quiet window can't pass.
-- A build with a planted one-line change (the food-lookup radius 2.5 → 2.6): caught by the equivalence check, and by the
-  behaviour check over the seeds.
-- Five seeds of the current build: the noise floor for every metric, recorded.
+- A build with a planted one-line change (the food-lookup radius 2.5 → 2.6): caught by the equivalence check. The
+  behaviour check is calibrated on a meaningful change instead (radius 2.5 → 4.0, seeds 1–5): it must flag it, and
+  the same build run again on the same seeds must pass.
+- Five seeds of the current build: the noise floor for every metric, recorded (held count, `s10_behave_1000`).
 - A fixed-count run holds its count: no births after the start-up moments, no ageing or starvation deaths
   (`ECOSTATS`).
 - The test flags change nothing: in one run, the player in charge with every test flag on and a second player with
