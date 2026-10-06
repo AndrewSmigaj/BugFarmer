@@ -167,6 +167,17 @@ making a four-times-bigger village good to walk around and making tuning runs fa
     earlier natural runs of the morning bred normally, so the bench was clean then). The bench was rebuilt from
     `village_21_B` (`make_bench_zone.py`), and Stage 1.0e's script rebuilds it before every run. A lasting guard in
     `run_config.py` waits on the owner.
+  - **The owner's answers (2026-10-06):** (1) the behaviour check becomes a coarse safety net with its limits written
+    down, and any speed-up that uses a different method gets a side-by-side check (old against new on the same
+    state) built with it; (2) a test that proves the check can catch something, after block A; (3) a lasting guard
+    in `run_config.py`.
+  - **The catching test, decided before it runs:** config `s10_behave_1000_hunt` (centipedes half as fed by each
+    kill, `feed_per_kill` 45 → 22.5), seeds 1–5, 600 s, against the base runs. **Passes only if** the check flags at
+    least one of centipede strikes per 10,000 bug-ticks, prey claimed per 10,000, or fly kills per centipede bug-day,
+    going UP. Not "hunting twice as often" (as first proposed): centipedes already chase 91% of the time and wasps
+    99%. Strikes come in bursts that end when the group is full (a quarter of the gaps between strikes sit at the
+    4-second cooldown, the longest tenth are over 3 minutes), so how full each kill makes them sets the strike
+    count; a longer cooldown would move strikes only 1–6%.
   - **Stage 1.0e started (block A, headless, 13 runs):** natural 1× and 4× (release build, clean; 4× breakdown on the
     development build; behaviour at both), fixed 1,000 / 2,000 / 4,000 at normal speed (release clean, development
     breakdown), and two-core runs at 1,000 and 2,000. Results: `tools/_generated/scaling/2026-10-06-before/`.
@@ -265,7 +276,9 @@ kept apart:
 - **Performance changes (1.1, 1.2) keep every behaviour working.** Most of them give exactly the same results by nature
   (the waste is repeated or copied work), and for those the equivalence check proves it cheaply. Where a different
   method is clearly better (faster or simpler, and the game still plays the same; the owner's direction of
-  2026-10-04), it is allowed, named as a behaviour change in its commit, and judged by the behaviour check instead.
+  2026-10-04), it is allowed, named as a behaviour change in its commit, and judged by a **side-by-side check** built
+  with it (the old and new methods answer the same questions on the same state, every tick, and every disagreement is
+  counted), with the behaviour check as the coarse net over the whole game (the owner's choice, 2026-10-06).
 - **Structural changes (1.3–1.5)** change what happens, on purpose, and are measured as such.
 Cheap, certain wins first; the size work, which depends on the village's new layout, last. Built in this order:
 
@@ -761,8 +774,10 @@ checked in the code.*
 - The same build copied twice: the equivalence check says IDENTICAL both ways round, over a window with real activity
   (merges, hunts, feeding, a late join), counted from the tally so a quiet window can't pass.
 - A build with a planted one-line change (the food-lookup radius 2.5 → 2.6): caught by the equivalence check. The
-  behaviour check is calibrated on a meaningful change instead (radius 2.5 → 4.0, seeds 1–5): it must flag it, and
-  the same build run again on the same seeds must pass.
+  behaviour check: the same build run again on the same seeds must pass, and a meaningful change in a common
+  behaviour must be flagged (centipedes half as fed by each kill; the radius 2.5 → 4.0 change was below its limits,
+  see PROGRESS). Its role since 2026-10-06 (the owner's choice): a coarse safety net, with the smallest change it can
+  see written down per behaviour (`docs/product/investigations/stage1-before-2026-10-06/behaviour-check.md`).
 - Five seeds of the current build: the noise floor for every metric, recorded (held count, `s10_behave_1000`).
 - A fixed-count run holds its count: no births after the start-up moments, no ageing or starvation deaths
   (`ECOSTATS`).

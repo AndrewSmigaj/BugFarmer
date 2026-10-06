@@ -304,7 +304,11 @@ still agree. All of it is behind test flags; the game itself never turns any of 
     differences AND over 15%; fewer than 20 counted events (a state's STARTS, not its bug-ticks) = too rare to judge.
     Different seeds fall back to comparing group means, which a seed's layout swamps (2026-10-06: a false alarm on the
     same build, a real change missed). Held-count runs only (natural runs go different ways in their first days), and
-    at least 600 s, so the server's daily lines reach day 3 (day 1 is skipped). Tests:
+    at least 600 s, so the server's daily lines reach day 3 (day 1 is skipped). **It is a coarse net** (the owner's
+    choice, 2026-10-06): runs don't repeat even on one seed, so it sees only sizeable changes in common behaviours;
+    the smallest change it can see per behaviour is in
+    `docs/product/investigations/stage1-before-2026-10-06/behaviour-check.md`. A speed-up that uses a different method
+    also needs a side-by-side check (old and new on the same state, every disagreement counted), built with it. Tests:
     `tools/ecology/test_behaviour_check.py`.
   - `tools/run_sync_latejoin.sh` takes `PLAYER_A` / `PLAYER_B` (a build each), `A_FLAGS` / `B_FLAGS`, `EQUIV=1` (end with
     equiv_check; its verdict is the exit code) and `WIPE=1` (on by default for bench zones).

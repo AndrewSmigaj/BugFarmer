@@ -1,0 +1,6 @@
+{
+  "name": "s10_behave_1000_hunt",
+  "extends": "s10_behave_1000",
+  "description": "Stage 1.0d behaviour-check calibration: s10_behave_1000 with centipedes half as fed by each kill (feed_per_kill 45 -> 22.5), so they need about twice the kills to fill up; the check must flag their strikes or kills going up",
+  "species": {"centipede_garden": {"predation": {"feed_per_kill": 22.5}}}
+}
