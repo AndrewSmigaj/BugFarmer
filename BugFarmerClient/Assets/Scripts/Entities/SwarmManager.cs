@@ -41,6 +41,10 @@ namespace BugFarmer.Entities
     {
         public static SwarmManager Instance { get; private set; }
 
+        /// <summary>TEST ONLY (HeadlessSyncTest -behaviour): called at the end of every simulated tick, after the state
+        /// check, with the tick number. Null in the game. Observers must only read.</summary>
+        public static Action<long> TestTickObserver;
+
         private readonly Dictionary<string, SwarmVisual> _swarms = new();
 
         // Pending swarm data waiting for WorldSeed initialization
@@ -328,7 +332,10 @@ namespace BugFarmer.Entities
                 {
                     _deferredReplayPending = false;
                     if (timedOut && !chunksReady)
+                    {
+                        HashLog.Marker("timeout", _simulationTick); // test only: inconclusive
                         DebugFileLogger.Log("[SwarmManager] Deferred replay TIMEOUT — replaying without the collision map (bugs near walls may diverge until resync)");
+                    }
                     else
                         DebugFileLogger.Log($"[SwarmManager] Collision map ready — running deferred late-join replay to {_deferredReplayEndTick}");
                     RunLateJoinReplay(_deferredReplayEndTick);
@@ -390,6 +397,7 @@ namespace BugFarmer.Entities
                 if (Time.realtimeSinceStartup >= _collisionMapDeadline)
                 {
                     collisionReady = true; // fallback: don't freeze; bugs near walls may diverge until resync
+                    HashLog.Marker("timeout", _simulationTick); // test only: inconclusive
                     DebugFileLogger.Log("[SwarmManager] Collision-map TIMEOUT — advancing sim without it (bugs near walls may diverge until resync)");
                 }
             }
@@ -460,7 +468,9 @@ namespace BugFarmer.Entities
 
             // Visual interpolation (read-only) - always runs in LIVE
             float t = (float)(_tickAccumulator / SecondsPerTick);
+            if (CostProbe.Enabled) CostProbe.RenderBegin(); // test only: bug drawing per frame
             InterpolateAllSwarms(t);
+            if (CostProbe.Enabled) CostProbe.RenderEnd();
         }
 
         // ==========================================================================
@@ -545,6 +555,7 @@ namespace BugFarmer.Entities
         /// </summary>
         private void AdvanceOneTick()
         {
+            if (CostProbe.Enabled) CostProbe.TickBegin(); // test only: the whole tick, outside the per-part timers
             using var _perfTick = PerfProfiler.Sample("Sim.Tick"); // timing only: the whole tick (scaling study)
             // 1. Process events for the tick we're LEAVING (end-of-tick semantics)
             // Events stamped tick=T are applied AFTER simulating T, BEFORE simulating T+1
@@ -611,9 +622,17 @@ namespace BugFarmer.Entities
             if (_isAuthority && _syncState == SyncState.Live)
             {
                 using var _perfStrikes = PerfProfiler.Sample("Sim.Strikes"); // timing only
-                RunPredationStrikes();
+                RunPredationStrikes(shadow: false);
                 RunBugPlayerStrikes(players);
-                RunCorpseConsumes();
+                RunCorpseConsumes(shadow: false);
+            }
+            else if (ReportLog.Shadow && _syncState == SyncState.Live)
+            {
+                // TEST ONLY (HeadlessSyncTest -shadowreports): a computer that isn't in charge works out the same
+                // reports, logs them and sends nothing. Both passes read only simulated state and a report-only
+                // throttle, so the simulation is untouched (village-slice.md, Stage 1.0 design).
+                RunPredationStrikes(shadow: true);
+                RunCorpseConsumes(shadow: true);
             }
 
             // Record this tick's state hash for tick-aligned drift checks (always on, cheap).
@@ -623,6 +642,11 @@ namespace BugFarmer.Entities
 
             // Tick-aligned cosmetic husk sweep (deferred SwarmUpdate reconcile — see ReconcileDespawnedSwarms).
             using (PerfProfiler.Sample("Sim.Reconcile")) ReconcileDespawnedSwarms(); // timing only
+
+            // TEST ONLY: the tick's cost ends here; the probes below are test overhead and stay outside it.
+            if (CostProbe.Enabled) CostProbe.TickEnd();
+            if (HashLog.Enabled) HashLog.Record(_simulationTick, hash, ComputeFullRecordHash(), TotalBugCount, _syncState == SyncState.Live);
+            TestTickObserver?.Invoke(_simulationTick);
 
             // Invoke trace callback if recording
             if (_traceCallback != null)
@@ -644,7 +668,7 @@ namespace BugFarmer.Entities
         /// identically on every client (incl. this authority), so the hash stays bit-identical and an
         /// authority handoff is safe (any client computes the same victims from identical positions).
         /// </summary>
-        private void RunPredationStrikes()
+        private void RunPredationStrikes(bool shadow)
         {
             var im = InfluenceManager.Instance;
             if (im == null) return;
@@ -656,8 +680,12 @@ namespace BugFarmer.Entities
                 if (string.IsNullOrEmpty(strike.TargetPreyId)) continue;
 
                 // Local cooldown throttle (server is authoritative).
-                if (_lastLocalStrikeTick.TryGetValue(predatorId, out var last) &&
-                    _simulationTick - last < strike.StrikeCooldownTicks)
+                bool throttled = _lastLocalStrikeTick.TryGetValue(predatorId, out var last) &&
+                                 _simulationTick - last < strike.StrikeCooldownTicks;
+                // TEST ONLY: with the report log on, detection runs even while throttled, so two computers can be
+                // compared on what they DETECT (the simulated state) — the throttle is local and report-only, and a
+                // late joiner's starts empty, so its sends are legitimately out of phase. Off: exactly as before.
+                if (throttled && !ReportLog.Active)
                     continue;
 
                 var predator = GetSwarm(predatorId);
@@ -717,8 +745,12 @@ namespace BugFarmer.Entities
                 }
 
                 if (victimIds.Count == 0) continue;
+                if (ReportLog.Active) ReportLog.Detect(_simulationTick, predatorId, strike.TargetPreyId, victimIds);
+                if (throttled) continue; // (test mode only reaches here throttled)
 
                 _lastLocalStrikeTick[predatorId] = _simulationTick;
+                if (ReportLog.Active) ReportLog.Strike(_simulationTick, predatorId, strike.TargetPreyId, predator.SpeciesId, victimIds.ToArray(), sent: !shadow);
+                if (shadow) continue; // test only: worked out and logged, never sent
                 SendToServer(OpCodes.PredationStrike, new PredationStrikeMessage
                 {
                     predator_swarm_id = predatorId,
@@ -740,7 +772,7 @@ namespace BugFarmer.Entities
         /// frontier-gated so the corpse vanishes identically on every client. A LEFT corpse is never reported
         /// (it stays a real ground item and rots). Swarms iterated ascending-id for a deterministic report order.
         /// </summary>
-        private void RunCorpseConsumes()
+        private void RunCorpseConsumes(bool shadow)
         {
             foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
             {
@@ -749,6 +781,8 @@ namespace BugFarmer.Entities
                 foreach (var foodId in ids)
                 {
                     if (string.IsNullOrEmpty(foodId)) continue;
+                    if (ReportLog.Active) ReportLog.Corpse(_simulationTick, _swarms[swarmId].SpeciesId, foodId, sent: !shadow);
+                    if (shadow) continue; // test only: logged, never sent
                     SendToServer(OpCodes.CorpseConsume, new CorpseConsumeMessage { food_id = foodId });
                 }
             }
@@ -1035,6 +1069,8 @@ namespace BugFarmer.Entities
 
         private void RequestResync()
         {
+            HashLog.Marker("resync", _simulationTick);   // test only: the equivalence check treats a resync as inconclusive
+            ReportLog.Marker("resync", _simulationTick);
             Debug.LogWarning($"[SwarmManager] Requesting zone resync (late-join path)");
             DebugFileLogger.Log($"[SwarmManager] RequestResync -> Joining (from {_syncState}, simTick={_simulationTick}, authTick={_authoritativeTick}, lastSeq={_lastReceivedSeq})");
             _syncState = SyncState.Joining;
@@ -1649,16 +1685,18 @@ namespace BugFarmer.Entities
         /// <summary>
         /// Send a message to the server via the match socket.
         /// </summary>
-        private void SendToServer(int opCode, object message)
+        /// <summary>Sends a message to the match; returns its size in characters (0 if not sent).</summary>
+        private int SendToServer(int opCode, object message)
         {
             var world = WorldManager.Instance;
-            if (world?.CurrentMatch == null) return;
+            if (world?.CurrentMatch == null) return 0;
 
             var socket = NetworkManager.Instance?.Socket;
-            if (socket == null || !socket.IsConnected) return;
+            if (socket == null || !socket.IsConnected) return 0;
 
             var json = JsonUtility.ToJson(message);
             _ = socket.SendMatchStateAsync(world.CurrentMatch.Id, opCode, json);
+            return json.Length;
         }
 
         private void SpawnSwarm(SwarmData data, long serverTick)
@@ -1816,6 +1854,8 @@ namespace BugFarmer.Entities
 
             // Enter REPLAYING state
             DebugFileLogger.Log($"[SwarmManager] STATE -> Replaying (late-join snapshot received, from {_syncState})");
+            HashLog.Marker("replay", _simulationTick);   // test only
+            ReportLog.Marker("replay", _simulationTick);
             _syncState = SyncState.Replaying;
             _inboxBySeq.Clear();
             _pendingEvents.Clear();
@@ -2356,6 +2396,8 @@ namespace BugFarmer.Entities
         /// </summary>
         private void TransitionToLive()
         {
+            HashLog.Marker("live", _simulationTick);     // test only: reports are compared from each computer's first live tick
+            ReportLog.Marker("live", _simulationTick);
             _syncState = SyncState.Live;
             _tickAccumulator = 0.0;
 
@@ -2424,6 +2466,7 @@ namespace BugFarmer.Entities
         {
             // Guard: don't send snapshot before any ticks simulated (snapshot_tick would be negative)
             if (_simulationTick <= 0) return;
+            long snapStart = CostProbe.Enabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0; // test only: build time
 
             var swarmSnapshots = new List<SwarmSnapshotData>();
             foreach (var kvp in _swarms)
@@ -2519,7 +2562,9 @@ namespace BugFarmer.Entities
                 state_hash = "" // TODO: Implement state hash
             };
 
-            SendToServer(OpCodes.ZoneSnapshot, snapshot);
+            int snapBytes = SendToServer(OpCodes.ZoneSnapshot, snapshot);
+            if (CostProbe.Enabled)
+                CostProbe.SnapshotBuilt((System.Diagnostics.Stopwatch.GetTimestamp() - snapStart) * 1000.0 / System.Diagnostics.Stopwatch.Frequency, snapBytes);
             // DEBUG: Tick semantics - log when snapshot is sent
             var snapLog = $"[Snapshot] Sending zone snapshot: snapshot_tick={snapshot.snapshot_tick}, simTick={_simulationTick}, lastAppliedSeq={_lastAppliedSeq}, swarms={swarmSnapshots.Count}";
             Debug.Log(snapLog);
@@ -2691,6 +2736,44 @@ namespace BugFarmer.Entities
                     }
                 }
                 return (long)hash;
+            }
+        }
+
+        /// <summary>
+        /// TEST ONLY (HeadlessSyncTest -hashlog): FNV-1a over every bug's FULL record — the snapshot record, which also
+        /// holds landing, the random-number state, movement intent, alert state, behaviour and the corpse id that
+        /// <see cref="ComputeStateHash"/> leaves out — so a build that changes those is caught before positions drift.
+        /// Diagnostic fields (spawn tick/source) are left out: they legitimately differ on a late-joiner. Allocates;
+        /// never called in the game.
+        /// </summary>
+        public long ComputeFullRecordHash()
+        {
+            unchecked
+            {
+                ulong h = 14695981039346656037UL;
+                const ulong prime = 1099511628211UL;
+                void Mix(long v) { h ^= (ulong)v; h *= prime; }
+                void MixS(string s) { if (s != null) foreach (char c in s) Mix(c); Mix(-1); }
+                var ids = new List<string>(_swarms.Keys);
+                ids.Sort(string.CompareOrdinal);
+                foreach (var swarmId in ids)
+                {
+                    MixS(swarmId);
+                    var samples = _swarms[swarmId].GetAllBugPositions();
+                    Array.Sort(samples, (a, b) => a.bug_id.CompareTo(b.bug_id));
+                    foreach (var b in samples)
+                    {
+                        Mix(b.bug_id); Mix(b.x); Mix(b.y); Mix(b.vx); Mix(b.vy); Mix(b.rng_state);
+                        MixS(b.behavior); MixS(b.target_id); Mix(b.is_alerted ? 1 : 0); Mix(b.alert_cooldown);
+                        Mix(b.ticks_until_change); Mix(b.intent_dir_x); Mix(b.intent_dir_y); Mix(b.intent_target_x);
+                        Mix(b.intent_target_y); Mix(b.current_dir_x); Mix(b.current_dir_y); Mix(b.land_ticks);
+                        Mix(b.hunt_target); Mix(b.feed_until); MixS(b.feed_corpse_id);
+                        Mix(b.surge_phase); Mix(b.surge_until); Mix(b.surge_cooldown_until); Mix(b.windup_cell_x);
+                        Mix(b.windup_cell_y); Mix(b.surge_heading_x); Mix(b.surge_heading_y); Mix(b.surge_dist_left);
+                        MixS(b.surge_target_id);
+                    }
+                }
+                return (long)h;
             }
         }
 

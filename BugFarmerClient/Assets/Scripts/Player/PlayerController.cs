@@ -25,6 +25,11 @@ namespace BugFarmer.Player
         /// behind the fade). Static: one local player.</summary>
         public static bool InputLocked = false;
 
+        /// <summary>TEST ONLY (HeadlessSyncTest -route): when set, replaces the keyboard as this player's move input
+        /// (x, y in -1..1), so a scripted route walks the player through the game's own movement, collision, sending,
+        /// chunk streaming and camera. Null in the game.</summary>
+        public static Vector2? ScriptedMove;
+
         // Walk animation: [dir][frame] with frame order [contact, idle, contact, idle].
         // Composed via CharacterComposer (paper-doll layers) or LoadBaked; falls back
         // to the static directionSprites when neither is available.
@@ -226,16 +231,17 @@ namespace BugFarmer.Player
                 World.Emote.Show(transform, demo[_emoteDemoIx++ % demo.Length]);
             }
 
-            // Skip input when typing in UI
-            if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject != null)
+            // Skip input when typing in UI (a scripted test route has no UI focus to respect)
+            bool scripted = ScriptedMove.HasValue;
+            if (!scripted && EventSystem.current != null && EventSystem.current.currentSelectedGameObject != null)
             {
                 Velocity = Vector2.zero;
                 return;
             }
 
             // Read input (suppressed while a cross-zone swap is mid-flight — see CrossZoneController).
-            float horizontal = InputLocked ? 0f : Input.GetAxisRaw("Horizontal");
-            float vertical = InputLocked ? 0f : Input.GetAxisRaw("Vertical");
+            float horizontal = InputLocked ? 0f : scripted ? ScriptedMove.Value.x : Input.GetAxisRaw("Horizontal");
+            float vertical = InputLocked ? 0f : scripted ? ScriptedMove.Value.y : Input.GetAxisRaw("Vertical");
 
             // Calculate velocity
             Vector2 input = new Vector2(horizontal, vertical);

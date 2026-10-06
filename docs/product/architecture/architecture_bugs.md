@@ -1084,6 +1084,12 @@ fault against the zone-wide design (`architecture_swarm_sync.md` §12.3); the fi
   each event (feed and breed are bug-ticks at a food source). Soft state, never hashed; tests in
   `behaviour_stats_test.go`. It is the server half of the behaviour check that proves an optimisation kept every
   behaviour.
+- **The client's measuring hooks (Stage 1.0b)**, all off unless the headless test runner turns them on from a flag
+  (`Util/TestProbes.cs`, `Testing/TestRig.cs`): `CostProbe` times each whole tick (`AdvanceOneTick`, outside the
+  per-part timers), the bug drawing per frame (`InterpolateAllSwarms`, `CentipedeTrail`), frame times, the snapshot's
+  build time and size, and allocations per frame; `SwarmManager.TestTickObserver` hands each finished tick to the
+  behaviour tally (read-only over the bugs, via `SwarmVisual.AppendAgents`); `HashLog` and `ReportLog` are the
+  equivalence check's logs (`architecture_swarm_sync.md`). With every flag off, each hook is one static bool read.
 
 **As built (2026-10-04):** a catch takes the bugs out of the zone's population and is recorded as `d_catch` in the
 daily `ECOSTATS` line (`handleCatchBug`, `match.go`); a player's kill is `d_kill`. The sketch below is the original

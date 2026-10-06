@@ -115,6 +115,24 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   - the plan's readable page published (link in Stage 0, step 3), built by `tools/gdd/build_plan_page.py`.
   - **Next:** Stage 1.0 (the behaviour check, the noise floor and the "before" numbers first); the publish waits for
     the owner.
+- **2026-10-06, Stage 1.0 under way.** The owner: wiping the village's save is fine (it gets rebuilt), so the
+  save-wipe rule was softened everywhere (`a7ba05da`). The Stage 1.0 design was reviewed against the code, then by a
+  cold reviewer (13 findings, all checked and folded in: `902e1c01`).
+  - **1.0a done** (`32a8eda4`): `hold_population` and `BEHAVSTATS`; 16 paired Go tests; a live hold-vs-control pair on
+    the bench (2 game-days each) shows no births after day 1 and only predation deaths when held.
+  - **1.0b/1.0c built:** the client probes (`Util/TestProbes.cs`, `Testing/TestRig.cs`, hooks in `SwarmManager`,
+    `CentipedeTrail`, `PlayerController`, `HeadlessSyncTest`), a release build, and the scripts (`equiv_check.py`
+    with 13 tests, `behaviour_check.py` with 8, `make_route.py`, `run_gates.sh`, `run_players.sh`, `wipe_zone.py`,
+    and options in `run_sync_latejoin.sh`, `run_ecology_client.sh`, `run_config.py`, `scaling_study.py`). The base
+    build for old-against-new checks is kept at `BugFarmerClient/Build/SyncTest_base/` (the rig, no optimisation).
+  - **First smoke test** (bench, 2 game-days, clean mode): every file written; per tick p50 1.4 ms / p99 6.3 ms at
+    ~270–890 bugs; the snapshot builds in 10–12 ms at ~590 KB; per-thread allocation counting isn't supported by the
+    client's Mono (as the reviewer expected), the per-frame counter is, and shows ~170–450 KB of garbage per tick.
+  - **The equivalence check proven:** the same build twice, both ways round, on the bench (3-minute runs, the
+    player in charge with every test flag on): IDENTICAL, about 1,300 live ticks of fingerprints and 551 / 1,303
+    detections and corpse reports. A build with the food-sensing radius planted at 2.6 instead of 2.5: DIVERGED both
+    ways round, from the joiner's first live tick. The first same-build run exposed a flaw in the check (strike sends
+    are paced by a local throttle that starts empty on a joiner), fixed by comparing detections instead.
 
 ## The owner's direction for this stage (2026-10-04)
 - **The village is the first slice, and it becomes four times bigger** (twice as wide and tall: 512 × 512 cells), for a larger
@@ -648,6 +666,11 @@ checked in the code.*
 - **Shadow reports** (`-shadowreports`): computers that aren't in charge run the predation-strike and corpse-consume
   passes in log-only mode, under the same "live" condition as the one in charge (`SwarmManager.cs:611`); every computer
   logs `tick,kind,ids` for each report it sends or would send. Not used in runs where the one in charge leaves.
+  *Found in the first run (2026-10-06):* each computer paces a predator's strike reports with a local, report-only
+  throttle that starts empty on a late joiner, so the same strikes come out at shifted ticks for as long as the
+  predator keeps striking. So with the report log on, detection also runs while throttled and logs `detect` lines
+  (what each predator could strike, from the simulated state alone); the equivalence check compares `detect` and
+  `corpse`, not the paced sends. With the log off, the code path is exactly as before.
 - **Fingerprint log** (`-hashlog`): every tick, the game's own state check, a test-only check over each bug's full
   record (the snapshot record: also landing, random-number state, movement intent, alert state, behaviour), and the bug
   count, for the whole run; resyncs and replays are marked in the log.
@@ -689,8 +712,8 @@ checked in the code.*
 - A fixed-count run holds its count: no births after the start-up moments, no ageing or starvation deaths
   (`ECOSTATS`).
 - The test flags change nothing: in one run, the player in charge with every test flag on and a second player with
-  only `-shadowreports` and `-hashlog` (same build): identical fingerprints, and the reports the first one sent equal
-  the second one's shadow log.
+  only `-shadowreports` and `-hashlog` (same build): identical fingerprints and identical detections. (What the one in
+  charge sends is unchanged by construction: the flags add logging and detection while throttled, never a send.)
 
 **1.0e — the "before" numbers,** under `docs/product/investigations/stage1-before-<date>/` with a plain write-up: natural
 runs at 1× and 4× (6× speed; cost and behaviour); fixed counts of 1,000 / 2,000 / 4,000 at normal speed, clean and

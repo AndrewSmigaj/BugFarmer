@@ -58,6 +58,12 @@ Run after ANY server-logic change. Add a `*_test.go` for new sim/economy logic (
 - `world/zone_lease_test.go` — one live copy per zone: started once and reused; 10 simultaneous requests → one copy;
   a dead copy retired before the new one loads its last save, its late save refused; stale/failed starts; stopping;
   the 8 s budget. Run these with `RACE=1`.
+- `world/hold_population_test.go` — the test-zone `hold_population` switch (Stage 1.0a of `docs/plans/village-slice.md`):
+  each birth path (brood hatch, clutch, nest-species growth, nest eggs, re-hatch) and both natural death paths
+  (ageing, starvation) and the director are off when held and on in a paired control; breeding still resets its meters;
+  merges, splits and nest staffing on chunk load keep running.
+- `world/behaviour_stats_test.go` — the daily `BEHAVSTATS` line: its fixed columns and reset, and each counter counted
+  once (eggs, merges, splits, nest defences, trips home and abandoned, player hits; feed/breed are checked in runs).
 - `world/zone_links_test.go` — the SAVED zone map (`nakama/data/zones`, mounted read-only at `/data` by the
   script): every neighbour exists, links back from the opposite edge, sits on the adjacent grid square, and
   shares the same edge length. One-way links need a named entry in `zoneLinkExceptions` (with the reason);
@@ -136,7 +142,9 @@ python3 tools/ecology/plot_interactions.py --tag <chart_name> --since 10m       
 ```
 - **WHY a population is off-target (interaction log):** the server emits one `ECOSTATS day=N sp=… pop=…
   b_*=… d_*=… avg_sat=…` line per species + `PREDLOG …` per predator-prey pair at each game-day rollover
-  (soft state, never hashed — `ecology_stats.go`). `plot_interactions.py` greps `docker compose logs
+  (soft state, never hashed — `ecology_stats.go`), and beside it one `BEHAVSTATS day=N sp=… feed= breed= eggs=
+  trip_home= trip_abandon= nest_defend= merge= split= player_hit=` line (what the bugs did; 2026-10-06).
+  `plot_interactions.py` greps `docker compose logs
   nakama` (use `--since` to bound the window; it keeps only the last run), writes
   `interaction_log_<tag>.csv` + `predation_log_<tag>.csv`, and charts births-up / deaths-down per species
   with pop+avg_sat overlaid. Read it to diagnose: below target because births are food-limited (low
@@ -265,6 +273,41 @@ is ① — two REAL clients, full system. The others are pre-checks/backstops, N
 owner's requirement is two REAL clients agreeing on the ENTIRE system. Do not present a movement-only or
 seed-run-twice check as "players are in sync." And do not build any of this as throwaway scripts — it lives
 in the repo (`HeadlessSyncTest.cs`, `SyncTestBuild.cs`, `tools/run_sync_test.sh`).
+
+## 3.4. The Stage 1 measuring and checking rig (performance work — `docs/plans/village-slice.md`, Stage 1.0)
+Built 2026-10-06 for the optimisation work: every performance change must keep every behaviour, and every computer must
+still agree. All of it is behind test flags; the game itself never turns any of it on.
+- **Client flags** (`HeadlessSyncTest`; outputs in persistentDataPath named by `-clientid` and `-runtag`):
+  `-perfmode clean|breakdown` (cost probe: per-tick and per-frame p50/p99/max, bug-drawing time, allocations, snapshot
+  build time → `client_cost_<id>.csv` + `client_cost_summary_<id>.json`; clean turns the per-part timers off) ·
+  `-behaviour` (per-species tally of what the bugs are doing → `client_behaviour_<id>.csv`) · `-hashlog` (every tick's
+  state check, a full-record check, bug count, live flag, and resync/replay/timeout markers → `hashlog_<id>.csv`) ·
+  `-reportlog` / `-shadowreports` (the strike and corpse reports sent, or worked out and not sent by a computer not in
+  charge → `reports_<id>.csv`) · `-route <file>` (walk a route; `tools/ecology/make_route.py <zone> [--png]` makes one
+  around water and walls) · `-vsyncoff` · `-runtag <t>`.
+- **Builds:** `SyncTestBuild.Build` (Development, `Build/SyncTest/`) and `SyncTestBuild.BuildRelease` (`Build/Release/`,
+  the timings judged against the targets; the Unity profiler counters, and so the allocation figure, exist only in the
+  Development build).
+- **Server:** the test-zone flag `hold_population` (fixed-count cost runs) and the daily `BEHAVSTATS` line (§2.5).
+- **Scripts:**
+  - `tools/ecology/scaling_study.py --perfmode clean|breakdown [--behaviour] [--player <exe>] [--route <file>]
+    [--windowed] [--seeds 1,2,3,4,5]` — runs configs on the bench zone and summarises (percentiles, allocations,
+    snapshot timing); `run_config.py --seed N --tag NAME` underneath.
+  - `tools/netcode/equiv_check.py HASH_A HASH_B [--reports REP_A REP_B]` — the old-build-against-new-build check:
+    first value per tick kept; resync, timeout or a replay after going live → INCONCLUSIVE; reports compared after a
+    warm-up on `detect` (what each predator could strike, before the local report throttle) and `corpse` — NOT on the
+    sent strikes, which a late joiner's empty throttle legitimately shifts in time. Tests: `tools/netcode/test_equiv_check.py`.
+  - `tools/ecology/behaviour_check.py --base RUN... [--new RUN...]` — per-species behaviour against the base runs'
+    noise floor (±3 sd; zero↔nonzero flagged). Tests: `tools/ecology/test_behaviour_check.py`.
+  - `tools/run_sync_latejoin.sh` takes `PLAYER_A` / `PLAYER_B` (a build each), `A_FLAGS` / `B_FLAGS`, `EQUIV=1` (end with
+    equiv_check; its verdict is the exit code) and `WIPE=1` (on by default for bench zones).
+  - `tools/run_players.sh N [zone] [s]` — 2–4 players (P1 in charge, the rest walk a route), `LEAVE_AT`, `REJOIN_AT`;
+    every player's fingerprints compared with P2's.
+  - `tools/run_gates.sh [--old <exe> --new <exe>] [--only ...]` — every gate in one table with real exit codes.
+  - `tools/saves/wipe_zone.py <zone>` — stop, wipe one zone's save by its exact key prefix, start, wait healthy (bench
+    zones only unless `--any-zone`).
+- **Don't edit a shell script while a run is using it**: bash reads a running script as it goes, so an edit can break the
+  run in flight (2026-10-06: an ecology run lost its first attempt that way).
 
 ## 3.5. Debugging WHY a behavior stalls (temporary server diagnostics)
 The harness reports the event ledger and dumps swarm positions only at t=0 — it does NOT show a bug's

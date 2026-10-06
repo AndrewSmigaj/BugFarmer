@@ -830,6 +830,18 @@ and its ageing and starvation deaths; the events those would have emitted (`SWAR
 `BEHAVSTATS` line is more soft `EcologyStats` telemetry. Details: `architecture_bugs.md`, and
 `docs/plans/village-slice.md` Stage 1.0a.
 
+**The equivalence check's client logs (2026-10-06, Stage 1.0b; test flags only):** `-hashlog` writes, every tick,
+the state hash, a test-only hash over each bug's full snapshot record (`ComputeFullRecordHash`: also landing, the RNG
+state, movement intent, alert, behaviour and the corpse id), the bug count and the live flag, with `replay` /
+`live` / `resync` / `timeout` markers at the sync-state changes. `-shadowreports` makes a client that isn't the
+authority run `RunPredationStrikes` and `RunCorpseConsumes` in log-only mode under the same Live gate (both read only
+simulated state, the collision map and the hunting list; their writes are the report-only throttle and the transient
+`WantsConsumeCorpse` flag, neither hashed nor in the snapshot). With the report log on, detection also runs while a
+predator is throttled and logs `detect` lines, because the throttle is local and a late joiner's starts empty, which
+shifts its sends in time; two builds are compared on `detect` and `corpse`. With the flags off the code paths are as
+before. Proven 2026-10-06: the same build twice is IDENTICAL both ways round (about 1,300 live ticks each); a build
+with the food-sensing radius changed from 2.5 to 2.6 diverges at the joiner's first live tick.
+
 **Future boundary (BACKLOG):** if bugs ever *behave* differently when damaged (flee at low HP),
 HP becomes sim-state and must move into the deterministic path + state hash.
 

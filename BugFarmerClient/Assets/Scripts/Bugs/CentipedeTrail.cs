@@ -97,6 +97,14 @@ namespace BugFarmer.Bugs
 
         private void LateUpdate()
         {
+            // TEST ONLY: summed into the frame's bug-drawing time when the cost probe is on.
+            if (!BugFarmer.Util.CostProbe.Enabled) { DrawTrail(); return; }
+            BugFarmer.Util.CostProbe.RenderBegin();
+            try { DrawTrail(); } finally { BugFarmer.Util.CostProbe.RenderEnd(); }
+        }
+
+        private void DrawTrail()
+        {
             using var _perf = PerfProfiler.Sample("Render.Trail");
             if (_head == null || _segments == null) return;
 

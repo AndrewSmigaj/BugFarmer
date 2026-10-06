@@ -64,6 +64,13 @@ namespace BugFarmer.Testing
 
     public class HeadlessSyncTestRunner : MonoBehaviour
     {
+        // Stage 1.0b test rig flags (docs/plans/village-slice.md): -perfmode clean|breakdown (cost probe; clean = the
+        // per-part timers off), -behaviour (behaviour tally), -hashlog (fingerprint log), -shadowreports (a computer
+        // not in charge logs the reports it would send), -reportlog (log the reports sent), -route <file> (walk a
+        // route), -vsyncoff. Outputs go to persistentDataPath with the client id in the name.
+        private string _perfMode;
+        private string _fileId;
+
         private async void Start()
         {
             string zone = HeadlessSyncTest.GetArg("-zone", "village_21_B");
@@ -116,6 +123,17 @@ namespace BugFarmer.Testing
                     Quit(await RunCrossTest(charId) ? 0 : 7);
                     return;
                 }
+                // Logs that must see the join itself (the replay and the first live tick) open before entering.
+                string pdir = Application.persistentDataPath;
+                // -runtag <t>: a suffix for this process's files, so the same player rejoining (same -clientid, same
+                // account) doesn't overwrite its first session's files.
+                string fileId = clientId + (HeadlessSyncTest.GetArg("-runtag", null) is string rt ? "_" + rt : "");
+                _fileId = fileId;
+                if (HeadlessSyncTest.HasFlag("-hashlog")) HashLog.Open(Path.Combine(pdir, $"hashlog_{fileId}.csv"));
+                if (HeadlessSyncTest.HasFlag("-shadowreports") || HeadlessSyncTest.HasFlag("-reportlog"))
+                    ReportLog.Open(Path.Combine(pdir, $"reports_{fileId}.csv"));
+                ReportLog.Shadow = HeadlessSyncTest.HasFlag("-shadowreports");
+
                 Log(charId == null ? "socket connected; entering world (ephemeral, no character)…"
                                    : $"socket connected; entering world as '{charName}'…");
                 // As the menu does: a refusal that clears by itself (the character still being saved) is retried.
@@ -143,6 +161,7 @@ namespace BugFarmer.Testing
                 }
                 bool ecology = HeadlessSyncTest.HasFlag("-ecology");
                 Log($"world seed ready ({WorldSeedProvider.Instance.WorldSeed}); {(ecology ? "sampling population" : "recording")}…");
+                StartRig(_fileId ?? clientId);
 
                 // ECOLOGY MODE: just live in the zone (authority → predation runs) while the SERVER logs ECOSTATS;
                 // sample the client's ground-truth population and write fly_counts.csv. No hash trace (that's the
@@ -212,17 +231,18 @@ namespace BugFarmer.Testing
             // COST WINDOWS (the scaling study, docs/product/investigations/scaling-2026-10-04/): every ~5 s of real
             // time, the CPU this client spent per game tick at the bug count it carried -> client_perf.csv. Pure
             // observation: PerfProfiler only times existing work, never the hashed sim state.
-            PerfProfiler.Enabled = true;
+            PerfProfiler.Enabled = _perfMode != "clean"; // -perfmode clean: the per-part timers stay off (their own cost skews timings)
             PerfProfiler.ResetTotals();
-            var perf = new StringBuilder("real_s,tick,swarms,bugs,ticks,frames,cpu_ms,sim_ms,gc0,managed_mb,food_ms,food_calls\n");
+            var perf = new StringBuilder("real_s,tick,swarms,bugs,ticks,frames,cpu_ms,sim_ms,gc0,managed_mb,food_ms,food_calls,tick_ms\n");
             var proc = System.Diagnostics.Process.GetCurrentProcess();
             double CpuMs() { try { proc.Refresh(); return proc.TotalProcessorTime.TotalMilliseconds; } catch { return -1; } }
             double SimMs() => PerfProfiler.Totals.TryGetValue("Sim.SwarmTick", out var st) ? st.ms : 0;
+            double TickMs() => PerfProfiler.Totals.TryGetValue("Sim.Tick", out var tt) ? tt.ms : 0; // the whole tick
             (double ms, int calls) Food() => PerfProfiler.Totals.TryGetValue("Sim.FoodLookup", out var ft) ? (ft.ms, ft.calls) : (0, 0);
             float wStart = Time.realtimeSinceStartup;
             long wTick = SwarmManager.Instance.SimulationTick;
             int wFrames = Time.frameCount, wGc = GC.CollectionCount(0), windows = 0;
-            double wCpu = CpuMs(), wSim = SimMs();
+            double wCpu = CpuMs(), wSim = SimMs(), wTickMs = TickMs();
             var wFood = Food();
 
             float t0 = Time.realtimeSinceStartup;
@@ -233,13 +253,13 @@ namespace BugFarmer.Testing
                 float now = Time.realtimeSinceStartup;
                 if (now - wStart >= 5f)
                 {
-                    double cpu = CpuMs(), sim = SimMs();
+                    double cpu = CpuMs(), sim = SimMs(), tickMs = TickMs();
                     var food = Food();
                     int gc = GC.CollectionCount(0);
                     perf.Append(FormattableString.Invariant(
-                        $"{now - t0:F1},{tick},{SwarmManager.Instance.SwarmCount},{SwarmManager.Instance.TotalBugCount},{tick - wTick},{Time.frameCount - wFrames},{cpu - wCpu:F1},{sim - wSim:F2},{gc - wGc},{GC.GetTotalMemory(false) / 1048576.0:F1},{food.ms - wFood.ms:F2},{food.calls - wFood.calls}\n"));
+                        $"{now - t0:F1},{tick},{SwarmManager.Instance.SwarmCount},{SwarmManager.Instance.TotalBugCount},{tick - wTick},{Time.frameCount - wFrames},{cpu - wCpu:F1},{sim - wSim:F2},{gc - wGc},{GC.GetTotalMemory(false) / 1048576.0:F1},{food.ms - wFood.ms:F2},{food.calls - wFood.calls},{tickMs - wTickMs:F2}\n"));
                     windows++;
-                    wStart = now; wTick = tick; wFrames = Time.frameCount; wGc = gc; wCpu = cpu; wSim = sim; wFood = food;
+                    wStart = now; wTick = tick; wFrames = Time.frameCount; wGc = gc; wCpu = cpu; wSim = sim; wFood = food; wTickMs = tickMs;
                 }
                 // ~1 sample / game-second (SimRate=10 ticks/sim-sec). The first pass always samples: `tick - long.MinValue`
                 // overflows to a negative number, which kept every ecology run since 2026-07-18 at 0 samples.
@@ -422,8 +442,35 @@ namespace BugFarmer.Testing
             BugFarmer.Util.DebugFileLogger.Log("[HeadlessSyncTest] " + m);
         }
 
+        /// <summary>Starts the Stage 1.0b probes the command line asks for (the flags are listed above _perfMode).</summary>
+        private void StartRig(string clientId)
+        {
+            _perfMode = HeadlessSyncTest.GetArg("-perfmode", null);
+            bool cost = _perfMode != null;
+            if (cost)
+            {
+                CostProbe.Start();
+                gameObject.AddComponent<CostProbeFrame>();
+                Log($"cost probe on (perfmode={_perfMode}; per-thread allocations {(CostProbe.ThreadAllocSupported ? "" : "NOT ")}counted, " +
+                    $"per-frame allocations {(CostProbe.FrameAllocSupported ? "" : "NOT ")}counted)");
+            }
+            bool behaviour = HeadlessSyncTest.HasFlag("-behaviour");
+            if (behaviour) BehaviourTally.Start();
+            if (HeadlessSyncTest.HasFlag("-vsyncoff")) { QualitySettings.vSyncCount = 0; Application.targetFrameRate = -1; }
+            RouteFollower route = null;
+            string routeFile = HeadlessSyncTest.GetArg("-route", null);
+            if (!string.IsNullOrEmpty(routeFile))
+            {
+                route = gameObject.AddComponent<RouteFollower>();
+                Log(route.Load(routeFile) ? $"route loaded: {routeFile}" : $"WARNING: route file missing or empty: {routeFile}");
+            }
+            if (cost || behaviour || route != null || HashLog.Enabled || ReportLog.Active)
+                gameObject.AddComponent<ProbeWriter>().Begin(Application.persistentDataPath, clientId, _perfMode, cost, behaviour, route);
+        }
+
         private static void Quit(int code)
         {
+            ProbeWriter.Instance?.Finish(); // write the probes' files before the player exits
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
 #else

@@ -299,10 +299,15 @@ def main():
     ap.add_argument("--zone", default="bug_lab", help="zone to run (bug_lab regenerates; others are authored)")
     ap.add_argument("--duration", type=int, default=250, help="harness seconds (×0.057 = game-days)")
     ap.add_argument("--keep", action="store_true", help="don't restore canonical data after the run (debug)")
+    ap.add_argument("--seed", type=int, help="the zone seed for this run (default: the config's, else 1337) — "
+                                              "several seeds of one config give the noise floor")
+    ap.add_argument("--tag", help="the run's name (default: the config's name); one experiment = one name")
     args = ap.parse_args()
 
     cfg = load_config(args.config)
-    name = cfg.get("name", args.config)
+    if args.seed is not None:
+        cfg.setdefault("flags", {})["seed"] = args.seed
+    name = args.tag or cfg.get("name", args.config)
     print(f"=== config {name} [{args.zone}]: {cfg.get('description', '')}")
 
     snap = snapshot([TUNING_JSON, SPECIES_JSON, OCCUPANTS_JSON, os.path.join(DATA, "zones", args.zone)])

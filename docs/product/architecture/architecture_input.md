@@ -7,6 +7,11 @@ with a pickaxe).
 
 ## The contract
 
+- **Test-only scripted move (2026-10-06):** `PlayerController.ScriptedMove` (a `Vector2?`, null in the game) replaces
+  the keyboard axes when set, read before the UI-focus check. The headless test runner's route follower
+  (`Testing/TestRig.cs`, `-route`) sets it, so a scripted player walks through the real movement, collision, sending,
+  chunk streaming and camera.
+
 - **UI always wins.** Any click over UI (`EventSystem.IsPointerOverGameObject`) reaches no
   world controller — left AND right click.
 - **Left-click is owned by `PlayerInputRouter`** (code-attached to the player by

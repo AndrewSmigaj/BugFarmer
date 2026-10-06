@@ -14,23 +14,35 @@ using UnityEngine;
 public static class SyncTestBuild
 {
     private const string OutPath = "Build/SyncTest/BugFarmerClient.exe";
+    private const string ReleaseOutPath = "Build/Release/BugFarmerClient.exe";
 
     [MenuItem("BugFarmer/Build Sync-Test Player")]
-    public static void Build()
+    public static void Build() =>
+        // Development build keeps Debug.Log output + a Player.log we can read; no script debugging server.
+        BuildTo(OutPath, BuildOptions.Development);
+
+    /// <summary>
+    /// The same player WITHOUT the Development flag (docs/plans/village-slice.md, Stage 1.0b): the Unity profiler
+    /// markers are compiled out, so timings judged against the performance targets come from this build. Headless:
+    /// -executeMethod SyncTestBuild.BuildRelease → Build/Release/BugFarmerClient.exe.
+    /// </summary>
+    [MenuItem("BugFarmer/Build Release Test Player")]
+    public static void BuildRelease() => BuildTo(ReleaseOutPath, BuildOptions.None);
+
+    private static void BuildTo(string outPath, BuildOptions options)
     {
         var opts = new BuildPlayerOptions
         {
             scenes = new[] { "Assets/Scenes/SampleScene.unity" },
-            locationPathName = OutPath,
+            locationPathName = outPath,
             target = BuildTarget.StandaloneWindows64,
-            // Development build keeps Debug.Log output + a Player.log we can read; no script debugging server.
-            options = BuildOptions.Development,
+            options = options,
         };
 
         BuildReport report = BuildPipeline.BuildPlayer(opts);
         bool ok = report.summary.result == BuildResult.Succeeded;
         if (ok)
-            Debug.Log($"[SyncTestBuild] OK -> {OutPath} ({report.summary.totalSize} bytes)");
+            Debug.Log($"[SyncTestBuild] OK -> {outPath} ({report.summary.totalSize} bytes)");
         else
             Debug.LogError($"[SyncTestBuild] FAILED: {report.summary.result} ({report.summary.totalErrors} errors)");
 

@@ -16,6 +16,12 @@
 # USAGE:  tools/run_sync_latejoin.sh [zone] [duration_seconds] [join_delay_seconds]
 #   tools/run_sync_latejoin.sh village_21_B 70 12
 #   CHAR_B=LateB tools/run_sync_latejoin.sh village_21_B 70 12     # client B enters with a character (D73)
+# The Stage 1.0 rig (docs/plans/village-slice.md):
+#   PLAYER_A=<exe> PLAYER_B=<exe>   a different build per client (the equivalence check: old build against new)
+#   A_FLAGS="..." B_FLAGS="..."     extra client flags, e.g. A_FLAGS="-hashlog -reportlog" B_FLAGS="-hashlog -shadowreports"
+#   EQUIV=1                         end with tools/netcode/equiv_check.py on the two fingerprint logs (and report logs,
+#                                   when both exist); its verdict becomes the exit code
+#   WIPE=1                          wipe the zone's save first (tools/saves/wipe_zone.py); on by default for bench_* zones
 set -u
 
 ZONE="${1:-village_21_B}"
@@ -23,15 +29,18 @@ DUR="${2:-120}"      # A records this long (from when it starts recording)
 DELAY="${3:-10}"     # after A is recording, wait this long (A spawns runtime swarms) before B joins
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PLAYER="$ROOT/BugFarmerClient/Build/SyncTest/BugFarmerClient.exe"
+PLAYER_A="${PLAYER_A:-$PLAYER}"
+PLAYER_B="${PLAYER_B:-$PLAYER}"
 PDATA="/mnt/c/Users/$USER/AppData/LocalLow/DefaultCompany/BugFarmerClient"
 [ -d "$PDATA" ] || PDATA="/mnt/c/Users/emily/AppData/LocalLow/DefaultCompany/BugFarmerClient"
 # The Windows .exe silently ignores a -logFile under /mnt/... — it MUST be a native C:/ path or no log is
 # written (and our "wait for A recording" poll would never fire). Convert /mnt/<drive>/ -> <DRIVE>:/.
 WPDATA="$(echo "$PDATA" | sed -E 's#^/mnt/([a-z])/#\U\1:/#')"
 
-if [ ! -f "$PLAYER" ]; then
-  echo "ERROR: no player build at $PLAYER"; exit 1
-fi
+for P in "$PLAYER_A" "$PLAYER_B"; do
+  [ -f "$P" ] || { echo "ERROR: no player build at $P"; exit 1; }
+done
+[ "$PLAYER_A" != "$PLAYER_B" ] && echo "two builds: A=$PLAYER_A  B=$PLAYER_B"
 echo "=== late-join sync test: zone=$ZONE A-duration=${DUR}s B-joins-after=${DELAY}s ==="
 
 # CONTAMINATION GUARD (cost real debugging time once): a stray player from a prior run keeps the
@@ -62,7 +71,16 @@ if [ "${FRESH:-0}" = "1" ]; then
   [ "$ok" = 1 ] || { echo "  ERROR: nakama not healthy after FRESH redeploy"; exit 1; }
 fi
 
+# A bench zone's save still restores nests, plants, broods and the clock, so measuring runs start from a wiped save.
+WIPE="${WIPE:-$([[ "$ZONE" == bench_* ]] && echo 1 || echo 0)}"
+if [ "$WIPE" = "1" ]; then
+  echo "WIPE=1: wiping $ZONE's save…"
+  WIPE_FLAG=""; [[ "$ZONE" == bench_* ]] || WIPE_FLAG="--any-zone"
+  python3 "$ROOT/tools/saves/wipe_zone.py" "$ZONE" $WIPE_FLAG || { echo "  ERROR: wipe failed"; exit 1; }
+fi
+
 rm -f "$PDATA"/trace_A_*.csv "$PDATA"/trace_B_*.csv 2>/dev/null
+rm -f "$PDATA"/hashlog_A.csv "$PDATA"/hashlog_B.csv "$PDATA"/reports_A.csv "$PDATA"/reports_B.csv 2>/dev/null
 rm -f "$PDATA"/player_A.log "$PDATA"/player_B.log 2>/dev/null
 
 # Optional spawn-apart (Phase 1b proof): SPAWN_A / SPAWN_B = "gx,gy" place each client at a chosen edge so
@@ -88,7 +106,8 @@ if [ -n "${CHAR_B:-}" ]; then
 fi
 
 echo "launching client A (authority, creates the match)… spawn=${SPAWN_A:-default}"
-"$PLAYER" -batchmode -nographics -synctest -zone "$ZONE" -clientid A -duration "$DUR" "${A_SPAWN_ARG[@]}" \
+# shellcheck disable=SC2086  # A_FLAGS / B_FLAGS are meant to split into words
+"$PLAYER_A" -batchmode -nographics -synctest -zone "$ZONE" -clientid A -duration "$DUR" "${A_SPAWN_ARG[@]}" ${A_FLAGS:-} \
   -logFile "$WPDATA/player_A.log" >"$PDATA/player_A.out" 2>&1 &
 PA=$!
 
@@ -110,7 +129,7 @@ sleep "$DELAY"
 BDUR=$(( DUR - DELAY - 30 ))
 [ "$BDUR" -lt 30 ] && BDUR=30
 echo "launching client B (LATE JOIN), duration=${BDUR}s… spawn=${SPAWN_B:-default} character=${B_CHAR:-none}"
-"$PLAYER" -batchmode -nographics -synctest -zone "$ZONE" -clientid B -duration "$BDUR" "${B_SPAWN_ARG[@]}" \
+"$PLAYER_B" -batchmode -nographics -synctest -zone "$ZONE" -clientid B -duration "$BDUR" "${B_SPAWN_ARG[@]}" ${B_FLAGS:-} \
   -logFile "$WPDATA/player_B.log" >"$PDATA/player_B.out" 2>&1 &
 PB=$!
 
@@ -182,4 +201,15 @@ docker compose -f "$ROOT/docker-compose.yml" logs --since "$((DUR+30))s" nakama 
   | grep -iE "Drift detected|ambiguous hash split" \
   && echo "(server drift machinery fired — see lines above)" \
   || echo "(server drift machinery silent)"
+
+# THE EQUIVALENCE CHECK (Stage 1.0): the whole run's fingerprint logs, not just the trace's last 500 ticks; plus the
+# report logs when both clients wrote one. A tripwire still fails the run.
+if [ "${EQUIV:-0}" = "1" ]; then
+  echo "--- equivalence check (tools/netcode/equiv_check.py) ---"
+  REP_ARGS=()
+  [ -f "$PDATA/reports_A.csv" ] && [ -f "$PDATA/reports_B.csv" ] && REP_ARGS=(--reports "$PDATA/reports_A.csv" "$PDATA/reports_B.csv")
+  python3 "$ROOT/tools/netcode/equiv_check.py" "$PDATA/hashlog_A.csv" "$PDATA/hashlog_B.csv" "${REP_ARGS[@]}"
+  ERC=$?
+  [ "$RC" = 6 ] || RC=$ERC
+fi
 exit $RC

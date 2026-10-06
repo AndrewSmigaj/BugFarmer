@@ -814,6 +814,12 @@ namespace BugFarmer.Entities
             };
         }
 
+        /// <summary>TEST ONLY (the behaviour tally): append this swarm's bug agents to a reused list. Read-only.</summary>
+        public void AppendAgents(List<BugAgent> into)
+        {
+            foreach (var bug in _bugs.Values) into.Add(bug.Agent);
+        }
+
         /// <summary>
         /// Get positions for all bugs (used for full snapshot response).
         /// </summary>

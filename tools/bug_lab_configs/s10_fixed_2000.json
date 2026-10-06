@@ -1,0 +1,57 @@
+{
+  "name": "s10_fixed_2000",
+  "description": "Stage 1.0 fixed-count cost run: about 2000 bugs (village_21_B's mix x2.23), hold_population, normal speed",
+  "species": {},
+  "tuning": {
+    "max_nectar": 30.0,
+    "nectar_regen_per_tick": 0.004,
+    "max_host_capacity": 25.0,
+    "host_regen_per_tick": 0.007,
+    "host_breed_cost": 70.0,
+    "predator_breed_satiation": 32.0,
+    "litter_regen_per_tick": 0.0008,
+    "starvation_death_secs": 90.0
+  },
+  "bug_spawning": {
+    "species_caps": {
+      "fly_common": {
+        "initial": 174,
+        "max": 446,
+        "max_population": 3343,
+        "min_population": 27,
+        "event_low": 89,
+        "event_high": 891
+      },
+      "butterfly_meadow": {
+        "initial": 67,
+        "max": 312,
+        "max_population": 1783,
+        "min_population": 22,
+        "event_low": 67,
+        "event_high": 557
+      },
+      "centipede_garden": {
+        "initial": 36,
+        "max": 89,
+        "max_population": 312,
+        "min_population": 7
+      },
+      "millipede": {
+        "initial": 36,
+        "max": 557,
+        "max_population": 446,
+        "min_population": 7
+      },
+      "beetle_carrion": {
+        "initial": 27,
+        "max": 89,
+        "max_population": 312,
+        "min_population": 4
+      }
+    }
+  },
+  "flags": {
+    "hold_population": true,
+    "call_rate": 10
+  }
+}
