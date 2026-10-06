@@ -1,2 +1,2 @@
-2026-10-06_0855_s10a_control
-Stage 1.0a check: the control for s10a_hold (the bench village as shipped, same length)
+2026-10-06_1514_s10_behave_1000_repeat_seed5
+Stage 1.0 behaviour check: about 1000 bugs held steady (hold_population) at 6x speed, so per-bug behaviour can be compared between builds without the ecology going different ways from seed to seed

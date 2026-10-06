@@ -85,8 +85,8 @@ making a four-times-bigger village good to walk around and making tuning runs fa
 | Open plans: grass phases 2–5, swing phase 6, repo-health P7 | paused | unchanged; picked up when their turn comes on the roadmap |
 
 ## Now (the resume pointer — update at the start and end of every session)
-- **Now:** Stage 1.0d, proving the checks: the behaviour check's paired calibration (15 held-count runs, seeds 1–5:
-  the base build, the radius-4.0 copy, the base build again), then its verdict. 1.0a–1.0c are built and committed.
+- **Now:** Stage 1.0d, proving the checks: the paired calibration is done (no false alarms; the radius-4.0 change not
+  caught, see PROGRESS); what the behaviour check must prove waits on the owner. Meanwhile Stage 1.0e's preparation.
 - **Next:** Stage 1.0e, the "before" numbers; then Stage 1.1. Stage 0's last step (publishing the review app) waits
   for the owner's "publish".
 - **Waiting on the owner:** "publish"; the OK to delete the rehearsal page.
@@ -148,6 +148,17 @@ making a four-times-bigger village good to walk around and making tuning runs fa
       trial wrote the new columns (one wasp attack start = 1,455 bug-ticks; centipede attacks 11 starts = 48,991).
   - **The owner (2026-10-06):** go ahead with the redesign; each zone will get a chosen starting seed; the power-plan
     cap for the slower-computer runs is allowed; bug counts will be chosen by feel once the limits are known.
+  - **The paired calibration (15 runs of 600 s, seeds 1–5; base, radius-4.0 copy, base again; every run reached
+    game-day 4):** the same build against itself: **0 false alarms** (38 measures judged; the other 199 are true zeros,
+    such as births in a held run or beetles hunting). The radius-4.0 copy: **not caught** under the rule set before the
+    runs. Its effect is there, in the right direction (wasps starting to land +155% on all five seeds, 2.6 standard
+    errors; centipedes landing +97%, flies +22%), but under the bar. **Why:** a seed does not make a run repeat. For
+    most measures the same seed run twice differs about as much as two seeds do (wasps landing, seed 1: 0.25 then
+    10.92 per 1,000 bug-ticks); only what the layout fixes repeats (centipede strikes: same-seed spread a tenth of the
+    seed-to-seed spread). Landing is rare in held runs (flies are landed 0.04% of the time), so a change to it hides in
+    that noise. Results: `tools/_generated/scaling/2026-10-06-paired/` (`check_control.md`, `check_planted4.md`).
+    **Open:** what the behaviour check must prove, and how (the owner's call on the acceptance line; my proposal is in
+    the report of 2026-10-06).
 
 ## The owner's direction for this stage (2026-10-04)
 - **The village is the first slice, and it becomes four times bigger** (twice as wide and tall: 512 × 512 cells), for a larger
