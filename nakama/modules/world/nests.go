@@ -166,6 +166,9 @@ func (m *Match) processNests(state *WorldState, dispatcher runtime.MatchDispatch
 		if _, alive := state.Swarms[nest.ResidentSwarmID]; alive && nest.ResidentSwarmID != "" {
 			continue
 		}
+		if holdPopulation(state) {
+			continue // test zones holding the count: no re-hatch or recovery (the occupant sweep above still runs)
+		}
 
 		// Resident dead (caught/killed). Brood-drain re-hatch (banked brood now lives in the nest BroodState):
 		if m.nestBroodCount(state, nest) < state.Tuning.NestHatchCost {
@@ -290,7 +293,7 @@ func (m *Match) orphanNestResident(state *WorldState, nest *entities.NestState) 
 // broadcastWorldUpdate (the crop/torch-placement class, replayed not re-decided); the daughter resident
 // rides SwarmUpdate. Bug positions — the only hashed state — are untouched by the placement itself.
 func (m *Match) processNestFounding(state *WorldState, dispatcher runtime.MatchDispatcher, logger runtime.Logger) {
-	if state.CurrentZone == nil || state.CurrentZone.BugSpawning == nil {
+	if state.CurrentZone == nil || state.CurrentZone.BugSpawning == nil || holdPopulation(state) {
 		return
 	}
 
@@ -669,6 +672,9 @@ func (m *Match) recallNestDefenders(state *WorldState, gx, gy int, attackerID st
 	// subdued OR the nest is smoked — the calm harvest window.
 	if nestDefenseSuppressed(state, nest, resident) {
 		return
+	}
+	if resident.Phase != "defending" {
+		state.Stats.recordBehaviour(resident.SpeciesID, BehNestDefend, 1)
 	}
 	resident.Phase = "defending"
 	resident.DefendTargetID = attackerID

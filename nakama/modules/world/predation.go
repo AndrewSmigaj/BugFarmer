@@ -147,6 +147,7 @@ func (m *Match) predationThink(
 				_ = px
 				_ = py
 				swarm.Phase = "defending"
+				state.Stats.recordBehaviour(swarm.SpeciesID, BehNestDefend, 1)
 				swarm.DefendTargetID = pid
 				swarm.DefendUntilTick = state.TickCount + entities.NestDefendTicks
 			}
@@ -194,6 +195,7 @@ func (m *Match) predationThink(
 		}
 		if swarm.Phase == "homing" {
 			if nest == nil || state.TickCount-swarm.HomingStartTick > entities.NestHomingTimeout {
+				state.Stats.recordBehaviour(swarm.SpeciesID, BehTripAbandon, 1)
 				swarm.Phase = "feeding" // brood dropped / nest gone
 				swarm.CarryingBrood = false
 			} else {
@@ -203,6 +205,7 @@ func (m *Match) predationThink(
 				if ddx*ddx+ddy*ddy <= entities.NestDepositRange*entities.NestDepositRange {
 					// Arrived: deposit + hatch check, then rest (hunt resumes only when
 					// satiation decays below the hunt threshold — the trip pacing knob)
+					state.Stats.recordBehaviour(swarm.SpeciesID, BehTripHome, 1)
 					if swarm.CarryingBrood {
 						m.depositBrood(state, swarm, nest, logger)
 					}

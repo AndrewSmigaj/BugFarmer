@@ -89,7 +89,9 @@ func (m *Match) reproduceSwarm(state *WorldState, dispatcher runtime.MatchDispat
 	// free-roaming predators with no nest, so they lay an own-cell clutch here like every other
 	// nestless species; hatchFromBrood grows the nearest pack, which then splits past split_threshold.
 	if species.Predation == nil || species.Predation.NestOccupant == "" {
-		m.layIntoBrood(state, dispatcher, swarm, count) // own-cell fallback never fails → always a visible clutch
+		if !holdPopulation(state) { // test zones holding the count: the meters reset and the food is eaten, no clutch
+			m.layIntoBrood(state, dispatcher, swarm, count) // own-cell fallback never fails → always a visible clutch
+		}
 		swarm.ReproductionMeter = 0
 		swarm.Satiation = 0
 		swarm.ReproduceCooldown = species.ReproduceCooldown
@@ -112,8 +114,10 @@ func (m *Match) reproduceSwarm(state *WorldState, dispatcher runtime.MatchDispat
 		}
 	}
 
-	m.growSwarm(state, swarm, count) // the shared id-math + SWARM_REPRODUCED event
-	state.Stats.recordBirth(swarm.SpeciesID, BirthReproduce, count)
+	if !holdPopulation(state) { // test zones holding the count: no birth, the resets and food cost below still apply
+		m.growSwarm(state, swarm, count) // the shared id-math + SWARM_REPRODUCED event
+		state.Stats.recordBirth(swarm.SpeciesID, BirthReproduce, count)
+	}
 	swarm.ReproductionMeter = 0
 	swarm.Satiation = 0
 	swarm.ReproduceCooldown = species.ReproduceCooldown
@@ -1454,6 +1458,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 				}
 				switch swarm.Phase {
 				case "feeding":
+					worldState.Stats.recordBehaviour(swarm.SpeciesID, BehFeed, swarm.Count)
 					// Species rates are per-second (FeedAmount 5 => sated in 20s).
 					swarm.Satiation += species.FeedAmount * deltaTime
 					if swarm.Satiation > 100 {
@@ -1474,6 +1479,7 @@ func (m *Match) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB
 					}
 				case "reproducing":
 					if swarm.TargetFoodDepletable { // v1: breeding requires a depletable source
+						worldState.Stats.recordBehaviour(swarm.SpeciesID, BehBreed, swarm.Count)
 						swarm.ReproductionMeter += species.BreedAmount * deltaTime
 						m.consumeFood(worldState, dispatcher, swarm.TargetFoodID,
 							consumeRate*float32(swarm.Count)*deltaTime)
@@ -2065,7 +2071,7 @@ func (m *Match) spawnSwarmInArea(state *WorldState, speciesID string, species *e
 // checkContinuousSpawning spawns new swarms over time until species caps are reached.
 // Should be called periodically from the tick loop.
 func (m *Match) checkContinuousSpawning(state *WorldState, tick int64, logger runtime.Logger) {
-	if state.StaticSim {
+	if state.StaticSim || holdPopulation(state) {
 		return // Skip continuous spawning in debug mode
 	}
 
@@ -2171,6 +2177,9 @@ func (m *Match) depositCompostNear(state *WorldState, dispatcher runtime.MatchDi
 // a species carcass. Collects culls first, then acts (so it never mutates state.Swarms mid-range —
 // matches the merge/split style). Removal order is irrelevant: BUG_REMOVED events commute.
 func (m *Match) processNaturalDeath(logger runtime.Logger, dispatcher runtime.MatchDispatcher, state *WorldState, chunkSize int) {
+	if holdPopulation(state) {
+		return // test zones holding the count: no ageing deaths
+	}
 	now := state.TickCount
 	type cull struct {
 		swarm *entities.SwarmState
@@ -2219,6 +2228,9 @@ const (
 // re-arms its timer so it keeps dying back (gradually) until it finds food again. Collect-then-act
 // (no map mutation mid-range), mirroring processNaturalDeath.
 func (m *Match) processStarvation(logger runtime.Logger, dispatcher runtime.MatchDispatcher, state *WorldState, chunkSize int) {
+	if holdPopulation(state) {
+		return // test zones holding the count: no starvation deaths
+	}
 	type cull struct {
 		swarm *entities.SwarmState
 		ids   []int
@@ -2299,6 +2311,7 @@ func (m *Match) checkSwarmMerging(state *WorldState, chunkSize int, logger runti
 					swarm1.NextBugID += swarm2.Count
 					swarm1.Count = combined
 					merged[id2] = true
+					state.Stats.recordBehaviour(swarm1.SpeciesID, BehMerge, 1)
 					toDelete = append(toDelete, id2)
 
 					// Transfer damaged HP + natural-death schedule along the exact mapping the
@@ -2464,6 +2477,7 @@ func (m *Match) checkSwarmSplitting(state *WorldState, chunkSize int, logger run
 			newSwarm.BugHP = shedHP        // damaged HP follows the moved bugs (nil if none)
 			newSwarm.DeathTick = shedDeath // natural-death schedule follows the moved bugs too
 			newSwarms = append(newSwarms, newSwarm)
+			state.Stats.recordBehaviour(swarm.SpeciesID, BehSplit, 1)
 
 			// Tick+seq event: lifecycle travels ONLY through the deterministic ledger
 			// (NO SwarmsDirty — avoids the on-receipt SwarmUpdate creation race).

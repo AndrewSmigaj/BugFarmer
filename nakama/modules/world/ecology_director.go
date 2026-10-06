@@ -32,7 +32,7 @@ const (
 )
 
 func (m *Match) processEcologyDirector(logger runtime.Logger, dispatcher runtime.MatchDispatcher, state *WorldState, chunkSize int) {
-	if state.StaticSim || state.CurrentZone == nil || state.CurrentZone.BugSpawning == nil {
+	if state.StaticSim || holdPopulation(state) || state.CurrentZone == nil || state.CurrentZone.BugSpawning == nil {
 		return
 	}
 	wantRain, wantDrought := false, false

@@ -69,6 +69,12 @@ legs, spawns/removals — ride the existing ledger vocabulary (`SWARM_SET_TARGET
 `SWARM_REPRODUCED` / `SWARM_SPAWNED` / `BUG_REMOVED`). **Zero new ledger events.** Gated by the
 FRESH 2-client latejoin run, both halves SYNC IDENTICAL.
 
+**Counted and held (2026-10-06):** the nest economy feeds the daily `BEHAVSTATS` line: eggs laid at the nest
+(`depositNestEgg`), trips home completed and abandoned (the homing branch of `predationThink`), and the change into
+defending (the proximity entry and `recallNestDefenders`; a recall of a resident already defending doesn't count
+again). In a test zone with `hold_population`, nest eggs, re-hatching, recovery and founding are off, while the
+occupant sweep and the staffing of a nest when its chunk first loads still run. Soft state; no ledger change.
+
 ## The suit
 `bee_suit` (body armor, `sting_immune`) is the game's first armor damage hook: in
 applyBugAttackToPlayer, a sting-class attack (`attack_is_sting` — bees AND wasps) against a

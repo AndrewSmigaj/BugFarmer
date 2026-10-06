@@ -1071,6 +1071,20 @@ wall for moving bugs (`state.go:607`), so with one player (a 5×5 block of chunk
 fault against the zone-wide design (`architecture_swarm_sync.md` §12.3); the fix is Stage 1.3 of
 `docs/plans/village-slice.md`.
 
+**Measuring switches and behaviour counts (2026-10-06, `docs/plans/village-slice.md` Stage 1.0a):**
+- **`hold_population`** (a test-zone flag in zone.json; production omits it): holds the bug count steady for cost
+  measurements. Nothing is born after the start — `reproduceSwarm` still resets the meter, satiation and cooldown and
+  eats its food but lays no clutch or growth; nest eggs, hatching, nest re-hatch, recovery and founding, continuous
+  spawning and the director are off — and nothing dies of age or hunger (`processNaturalDeath`, `processStarvation`).
+  Merges, splits, predation and player actions still run, and nests still staff when their chunk first loads. The gates
+  are in `match.go`, `brood.go`, `nests.go` and `ecology_director.go`, each with a paired test in
+  `hold_population_test.go`.
+- **`BEHAVSTATS day= sp= feed= breed= eggs= trip_home= trip_abandon= nest_defend= merge= split= player_hit=`**, one line
+  per species per game-day beside `ECOSTATS` (`ecology_stats.go`): what the bugs did, counted where the server applies
+  each event (feed and breed are bug-ticks at a food source). Soft state, never hashed; tests in
+  `behaviour_stats_test.go`. It is the server half of the behaviour check that proves an optimisation kept every
+  behaviour.
+
 **As built (2026-10-04):** a catch takes the bugs out of the zone's population and is recorded as `d_catch` in the
 daily `ECOSTATS` line (`handleCatchBug`, `match.go`); a player's kill is `d_kill`. The sketch below is the original
 design and is older than the code (the real handler rate-limits per swing in ticks and reads net stats from data).

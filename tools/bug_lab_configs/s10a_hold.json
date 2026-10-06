@@ -1,0 +1,6 @@
+{
+  "name": "s10a_hold",
+  "extends": "bench_baseline",
+  "description": "Stage 1.0a check: the bench village as shipped with hold_population on (no births after the start, no ageing or starvation deaths)",
+  "flags": {"hold_population": true}
+}

@@ -52,6 +52,10 @@ python3 tools/zonegen/scenes/scene_ant_colony.py
   lighter "trail ant" preview variant (or a preview highlight) would read better.
 
 ## Notes
+- **Testing a colony's numbers:** a test zone with `hold_population` keeps nests from laying, re-hatching, recovering
+  or founding (a nest still staffs when its chunk first loads), so a colony stays at its starting size while its
+  behaviour is measured; the daily `BEHAVSTATS` line counts its eggs, trips home and nest defences
+  (`docs/product/architecture/architecture_bugs.md`).
 - Bug *sprites* exist already; this scene places them with `place_bug` (free-floating, sub-grid). A
   proper colony in-game (queen laying, workers pathing the trails) is gameplay for later.
 - If the trail/file + branching-tunnel logic settles, promote it to `features/ant.py`

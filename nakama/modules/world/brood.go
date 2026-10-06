@@ -61,6 +61,7 @@ func (m *Match) layEggs(dispatcher runtime.MatchDispatcher, state *WorldState, b
 		n = room
 	}
 	b.Eggs += n
+	state.Stats.recordBehaviour(b.SpeciesID, BehEggs, n)
 	m.broadcastBroodUpdate(dispatcher, state, b, false)
 	return n
 }
@@ -197,9 +198,13 @@ func (m *Match) nestBroodCount(state *WorldState, nest *entities.NestState) int 
 // trip), clamped at the nest brood cap. Dispatcher-free (called from the deposit path inside
 // predationThink) so it does NOT broadcast — processBroods/processNests carry the display update.
 func (m *Match) depositNestEgg(state *WorldState, nest *entities.NestState, capEggs int) {
+	if holdPopulation(state) {
+		return // test zones holding the count: no eggs
+	}
 	b := m.getOrCreateBrood(state, nest.GridX, nest.GridY, nest.SpeciesID, "nest", "", capEggs)
 	if b.Eggs+b.Maggots+b.Pupae < b.CapEggs {
 		b.Eggs++
+		state.Stats.recordBehaviour(nest.SpeciesID, BehEggs, 1)
 	}
 }
 
@@ -300,6 +305,9 @@ func (m *Match) advanceBroodStage(state *WorldState, b *entities.BroodState) boo
 // the nearest same-species swarm camped there (the breeder) or, failing that, minting a small new swarm.
 // Returns the number hatched (0 if held at the population/swarm cap). Mirrors the nest hatch + reproduceSwarm caps.
 func (m *Match) hatchFromBrood(state *WorldState, b *entities.BroodState) int {
+	if holdPopulation(state) {
+		return 0 // test zones holding the count: nothing hatches
+	}
 	species := state.Species[b.SpeciesID]
 	// The final pre-adult stage: PUPAE for a pupating source brood, else MAGGOTS (nests + non-pupating).
 	ready := &b.Maggots

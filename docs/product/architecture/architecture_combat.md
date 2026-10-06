@@ -129,6 +129,9 @@ Shipped 2026-07-11 (commits `combat M1.1`…`M1.4`). The foundation everything e
 - **Player kills are counted (2026-10-04).** A bug a player kills is recorded as `d_kill` in the zone's daily
   `ECOSTATS` line (`handleMeleeAttack`, after `killBugsInSwarm`); a predator's kill stays `d_predation`, and a catch
   is `d_catch`. Soft state, never hashed. The pressure runs (S2 in `docs/plans/finish-bugs-zones-items.md`) read it.
+- **Hits on players are counted (2026-10-06).** Every sting or lunge that damages a player adds one `player_hit` to the
+  attacking species' daily `BEHAVSTATS` line (`handleBugPlayerStrike`, when `applyBugAttackToPlayer` returns true; a
+  windup doesn't count). Soft state, never hashed; it lets the behaviour check see a change in how often bugs land hits.
 
 ## Milestones 2–3 — as-built (enemy tiers)
 Shipped 2026-07-11 (commits `Combat: nocturnal…`, `Combat M2+M3…`). Four new enemies on the M1 foundation, each

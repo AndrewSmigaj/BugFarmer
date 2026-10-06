@@ -906,6 +906,11 @@ zones/
     ...
 ```
 
+**Test-zone switches** (top level of zone.json, test zones only; production omits them; each is described at its field
+in `zone.go`): `ephemeral_swarms`, `call_rate`, `sim_batch`, `profile`, `peaceful`, `autosave_seconds`,
+`debug_leave_delay_ms`, and `hold_population` (2026-10-06: holds the bug count steady for cost measurements — no births
+after the start, no ageing or starvation deaths; see `architecture_bugs.md`).
+
 ### Chunk Format
 
 ```json

@@ -824,6 +824,12 @@ share the swing's slot.
 pressure runs can see how much of a decline players cause. `EcologyStats` is soft state, never hashed: the ledger,
 the state hash and late-join are untouched.
 
+**Measuring switches (2026-10-06):** the test-zone `hold_population` flag stops the server's births (after the start)
+and its ageing and starvation deaths; the events those would have emitted (`SWARM_REPRODUCED`, `SWARM_SPAWNED`,
+`BUG_REMOVED`) are simply never emitted, so the ledger contract, the state hash and late-join are unchanged. The daily
+`BEHAVSTATS` line is more soft `EcologyStats` telemetry. Details: `architecture_bugs.md`, and
+`docs/plans/village-slice.md` Stage 1.0a.
+
 **Future boundary (BACKLOG):** if bugs ever *behave* differently when damaged (flee at low HP),
 HP becomes sim-state and must move into the deterministic path + state hash.
 

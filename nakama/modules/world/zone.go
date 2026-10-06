@@ -120,6 +120,13 @@ type ZoneConfig struct {
 	// at the three combat gates (bugAttackAllowed / aggroPlayerThink / nest-defend). Production omits it.
 	Peaceful bool `json:"peaceful,omitempty"`
 
+	// HoldPopulation: TEST ZONES ONLY — hold the bug count steady for cost measurements (docs/plans/village-slice.md,
+	// Stage 1.0a). Nothing is born after the start (breeding still resets its meters and eats its food; eggs, hatching,
+	// nest re-hatch/recovery/founding, continuous spawning and the director are off) and nothing dies of age or
+	// hunger; merges, splits, predation and player actions still run, so hunting stays real. Nests still staff when
+	// their chunk first loads (the starting count). Production omits it → every path unchanged.
+	HoldPopulation bool `json:"hold_population,omitempty"`
+
 	// DebugLeaveDelayMs: TEST ZONES ONLY — hold back the save a player's departure writes by this many
 	// milliseconds. It makes the zone-crossing race happen every time (the next zone loads the character before
 	// this zone has saved it), so tools/harness_crash_test.sh can prove the crossing never duplicates items.
@@ -370,6 +377,11 @@ func ChunkToGlobal(chunkX, chunkY, localX, localY int) (gx, gy int) {
 	gx = chunkX*ChunkSize + localX
 	gy = chunkY*ChunkSize + localY
 	return
+}
+
+// holdPopulation reports the test-zone HoldPopulation switch (nil-safe; false in every production zone).
+func holdPopulation(state *WorldState) bool {
+	return state != nil && state.CurrentZone != nil && state.CurrentZone.HoldPopulation
 }
 
 // ChunkKey generates a map key string for chunk coordinates.

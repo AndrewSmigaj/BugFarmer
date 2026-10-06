@@ -18,9 +18,10 @@ import (
 // bug positions (the only hashed state). All record* methods are nil-safe so the test states (which
 // don't construct Stats) are unaffected. See docs/product/ecology/ecology_parameters.md.
 type EcologyStats struct {
-	Births    map[string]map[BirthSource]int // species -> source -> bugs born this day
-	Deaths    map[string]map[DeathCause]int  // species -> cause -> bugs lost this day
-	Predation map[string]map[string]int      // predator species -> prey species -> kills this day
+	Births    map[string]map[BirthSource]int    // species -> source -> bugs born this day
+	Deaths    map[string]map[DeathCause]int     // species -> cause -> bugs lost this day
+	Predation map[string]map[string]int         // predator species -> prey species -> kills this day
+	Behaviour map[string]map[BehaviourEvent]int // species -> what the bugs did this day (BEHAVSTATS)
 }
 
 // BirthSource attributes a minted bug to the mechanic that produced it (recorded at the semantic call
@@ -47,6 +48,26 @@ const (
 	DeathCatch     DeathCause = "catch"     // caught by a player and carried off (handleCatchBug)
 )
 
+// BehaviourEvent counts what bugs DID on the server this day (the BEHAVSTATS line) — the server half of the
+// behaviour check that proves an optimisation kept every behaviour (docs/plans/village-slice.md, Stage 1.0a).
+// Counted where the server applies each event; soft state, never hashed, like the rest of this file.
+type BehaviourEvent string
+
+const (
+	BehFeed        BehaviourEvent = "feed"         // bug-ticks spent feeding at a food source
+	BehBreed       BehaviourEvent = "breed"        // bug-ticks spent breeding at a depletable source
+	BehEggs        BehaviourEvent = "eggs"         // eggs laid (brood clutches + nest deposits)
+	BehTripHome    BehaviourEvent = "trip_home"    // a nest resident reached its nest on a trip home
+	BehTripAbandon BehaviourEvent = "trip_abandon" // a trip home given up (timeout or nest gone)
+	BehNestDefend  BehaviourEvent = "nest_defend"  // a resident switched into defending its nest
+	BehMerge       BehaviourEvent = "merge"        // two bug groups merged (counted for the species)
+	BehSplit       BehaviourEvent = "split"        // a bug group split
+	BehPlayerHit   BehaviourEvent = "player_hit"   // a sting or lunge that damaged a player
+)
+
+var allBehaviourEvents = []BehaviourEvent{BehFeed, BehBreed, BehEggs, BehTripHome, BehTripAbandon, BehNestDefend,
+	BehMerge, BehSplit, BehPlayerHit}
+
 // allBirthSources / allDeathCauses fix the column order so every ECOSTATS line has the same fields
 // (0 when nothing happened) — trivial for tools/ecology/plot_interactions.py to parse into a CSV.
 var allBirthSources = []BirthSource{BirthBrood, BirthNest, BirthReproduce, BirthReseed, BirthSpawn}
@@ -58,7 +79,21 @@ func NewEcologyStats() *EcologyStats {
 		Births:    map[string]map[BirthSource]int{},
 		Deaths:    map[string]map[DeathCause]int{},
 		Predation: map[string]map[string]int{},
+		Behaviour: map[string]map[BehaviourEvent]int{},
 	}
+}
+
+func (s *EcologyStats) recordBehaviour(species string, ev BehaviourEvent, n int) {
+	if s == nil || n <= 0 {
+		return
+	}
+	if s.Behaviour == nil {
+		s.Behaviour = map[string]map[BehaviourEvent]int{}
+	}
+	if s.Behaviour[species] == nil {
+		s.Behaviour[species] = map[BehaviourEvent]int{}
+	}
+	s.Behaviour[species][ev] += n
 }
 
 func (s *EcologyStats) recordBirth(species string, src BirthSource, n int) {
@@ -99,6 +134,7 @@ func (s *EcologyStats) reset() {
 	s.Births = map[string]map[BirthSource]int{}
 	s.Deaths = map[string]map[DeathCause]int{}
 	s.Predation = map[string]map[string]int{}
+	s.Behaviour = map[string]map[BehaviourEvent]int{}
 }
 
 // emitEcologyStats logs one structured ECOSTATS line per species (current pop + avg satiation from the
@@ -139,6 +175,9 @@ func (m *Match) emitEcologyStats(state *WorldState, day int64, logger runtime.Lo
 	for sp := range state.Stats.Deaths {
 		speciesSet[sp] = struct{}{}
 	}
+	for sp := range state.Stats.Behaviour {
+		speciesSet[sp] = struct{}{}
+	}
 	species := make([]string, 0, len(speciesSet))
 	for sp := range speciesSet {
 		species = append(species, sp)
@@ -164,6 +203,14 @@ func (m *Match) emitEcologyStats(state *WorldState, day int64, logger runtime.Lo
 		}
 		line += " avg_sat=" + ftoa(avgSat)
 		logger.Info(line)
+
+		// BEHAVSTATS: what this species did today (fixed columns, 0 when absent).
+		bl := "BEHAVSTATS day=" + itoa(day) + " sp=" + sp
+		beh := state.Stats.Behaviour[sp]
+		for _, ev := range allBehaviourEvents {
+			bl += " " + string(ev) + "=" + itoa(int64(beh[ev]))
+		}
+		logger.Info(bl)
 	}
 
 	// Predation matrix: one line per predator→prey pair (sorted).

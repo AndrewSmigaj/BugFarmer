@@ -101,6 +101,7 @@ func (m *Match) handleBugPlayerStrike(
 			continue
 		}
 		if m.applyBugAttackToPlayer(logger, dispatcher, state, swarm, species, msg.PlayerID, player, atk.Damage) {
+			state.Stats.recordBehaviour(swarm.SpeciesID, BehPlayerHit, 1)
 			// Connected: the member DARTS in as it strikes (contact = a big cosmetic dart, lunge =
 			// just the flash — the surge already carried the body). Display-only; damage already applied.
 			m.broadcastBugTelegraphAt(dispatcher, state, swarm, "dive", px, py)
