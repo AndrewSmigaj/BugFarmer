@@ -71,7 +71,11 @@ python3 tools/ecology/run_config.py <config> --zone bench_village --duration 600
   `bug_spawning` (zone.json species_caps / spawn weights / Director bands), `fruit` (tree rates),
   `flags`. Supports `"extends": "<parent>"` to build on a prior config.
 - `run_config.py` SNAPSHOTS + RESTORES canonical data around the run (it mutates species.json etc. then
-  reverts) — so a sweep never leaves the repo dirty. It restarts nakama, **drives the run with the REAL headless
+  reverts) — so a sweep never leaves the repo dirty. **An interrupted run** (a crash, a PC restart, a killed process,
+  `--keep`) can't restore, so its before-copy stays in `tools/_generated/scratch/run_config_unrestored.pickle` and the
+  next run REFUSES to start; `python3 tools/ecology/run_config.py --restore-leftover` puts every file back as it was
+  (2026-10-06: a PC restart left the git-ignored bench zone holding a held-count run's settings, and every later run
+  copied them; rebuild a bench with `make_bench_zone.py` if in doubt). It restarts nakama, **drives the run with the REAL headless
   Unity client (`-ecology` mode, via `tools/run_ecology_client.sh`) — which runs client-authoritative PREDATION**
   (the old passive .NET harness never did → it was predation-blind), then charts and restores. `v21b_baseline` =
   no deltas (the reference). NOTE: needs a BUILT player (`Build/SyncTest/BugFarmerClient.exe`; build it via

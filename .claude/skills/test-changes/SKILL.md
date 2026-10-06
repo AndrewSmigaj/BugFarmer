@@ -317,6 +317,8 @@ still agree. All of it is behind test flags; the game itself never turns any of 
   - `tools/run_gates.sh [--old <exe> --new <exe>] [--only ...]` — every gate in one table with real exit codes.
   - `tools/saves/wipe_zone.py <zone>` — stop, wipe one zone's save by its exact key prefix, start, wait healthy (bench
     zones only unless `--any-zone`).
+  - `run_config.py`'s leftover guard: an interrupted run makes the next one refuse to start until
+    `run_config.py --restore-leftover` puts the data back. Tests: `tools/ecology/test_run_config_guard.py`.
 - **Don't edit a shell script while a run is using it**: bash reads a running script as it goes, so an edit can break the
   run in flight (2026-10-06: an ecology run lost its first attempt that way).
 

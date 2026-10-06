@@ -8,6 +8,7 @@ leaves the repo dirty. See docs/product/ecology/ecology_parameters.md and the te
   python3 tools/ecology/run_config.py 00_baseline                 # baseline (no deltas → compiled defaults)
   python3 tools/ecology/run_config.py 01_no_cull --duration 250   # ~14 game-days
   python3 tools/ecology/run_config.py 02_fly_food_up --keep       # leave the applied data in place (debug)
+  python3 tools/ecology/run_config.py --restore-leftover          # put back the data an interrupted run left changed
 
 A config (tools/bug_lab_configs/<name>.json) is a DELTA, deep-merged over the baseline:
   "lab":     quantities → make_bug_lab.DEFAULT_LAB (caps / Director bands / sim_batch)
@@ -15,8 +16,13 @@ A config (tools/bug_lab_configs/<name>.json) is a DELTA, deep-merged over the ba
   "species": fields      → nakama/data/species.json          (per-species overrides)
   "fruit":   tree rates  → nakama/data/entities/occupants.json (merged under each tree's "world")
 Outputs land in tools/_generated/ecology_charts/ tagged with the config name (then compare_configs.py).
+
+The leftover guard (2026-10-06): the restore runs in a `finally`, so a crash, a PC restart or a killed process skips
+it, and a bench zone is git-ignored, so nothing else notices. That happened once: a bench zone kept a run's settings
+and every later run took its "before" copy from them. So each run saves its before-copy to LEFTOVER first and deletes
+it only after restoring; a run that finds one refuses to start until `--restore-leftover` has put the data back.
 """
-import argparse, copy, datetime, json, os, shutil, subprocess, sys, time
+import argparse, copy, datetime, json, os, pickle, shutil, subprocess, sys, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(ROOT, "tools"))
@@ -28,6 +34,7 @@ TUNING_JSON = os.path.join(DATA, "ecology_tuning.json")
 SPECIES_JSON = os.path.join(DATA, "species.json")
 OCCUPANTS_JSON = os.path.join(DATA, "entities", "occupants.json")
 ZONE_DIR = os.path.join(DATA, "zones", "bug_lab")
+LEFTOVER = os.path.join(ROOT, "tools", "_generated", "scratch", "run_config_unrestored.pickle")
 CHARTS = os.path.join(ROOT, "tools", "_generated", "ecology_charts")
 DOTNET = os.path.expanduser("~/.dotnet/dotnet")
 if not os.path.exists(DOTNET):
@@ -94,6 +101,55 @@ def restore(snap):
             for f, b in data.items():
                 with open(os.path.join(p, f), "wb") as fh:
                     fh.write(b)
+
+
+def _running(pid):
+    try:
+        return "run_config" in open(f"/proc/{pid}/cmdline", "rb").read().decode(errors="replace")
+    except OSError:
+        return False
+
+
+def check_leftover():
+    """Refuse to start if an earlier run never put the data back (or one is still running)."""
+    if not os.path.exists(LEFTOVER):
+        return
+    with open(LEFTOVER, "rb") as f:
+        left = pickle.load(f)
+    if _running(left["pid"]):
+        sys.exit(f"refusing: run_config '{left['name']}' (pid {left['pid']}) is still running")
+    sys.exit(f"refusing: the run '{left['name']}' on {left['zone']} (started {left['started']}) never put the data "
+             f"back (interrupted, or --keep), so the data now holds its settings.\n"
+             f"  python3 tools/ecology/run_config.py --restore-leftover   puts every file back as it was before it")
+
+
+def record_leftover(snap, name, zone):
+    os.makedirs(os.path.dirname(LEFTOVER), exist_ok=True)
+    tmp = LEFTOVER + ".tmp"
+    with open(tmp, "wb") as f:
+        pickle.dump({"snap": snap, "name": name, "zone": zone, "pid": os.getpid(),
+                     "started": datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}, f)
+    os.replace(tmp, LEFTOVER)
+
+
+def clear_leftover():
+    if os.path.exists(LEFTOVER):
+        os.remove(LEFTOVER)
+
+
+def restore_leftover():
+    if not os.path.exists(LEFTOVER):
+        print("nothing to restore: no interrupted run left its data changed")
+        return 0
+    with open(LEFTOVER, "rb") as f:
+        left = pickle.load(f)
+    if _running(left["pid"]):
+        sys.exit(f"refusing: run_config '{left['name']}' (pid {left['pid']}) is still running")
+    restore(left["snap"])
+    clear_leftover()
+    print(f"restored the data from before '{left['name']}' (started {left['started']}): "
+          + ", ".join(os.path.relpath(p, ROOT) for p in left["snap"]))
+    return 0
 
 
 def apply_config(cfg, zone="bug_lab"):
@@ -295,14 +351,21 @@ def chart(csv, tag, run_log, zone, description=""):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("config", help="config name under tools/bug_lab_configs/ (with or without .json)")
+    ap.add_argument("config", nargs="?", help="config name under tools/bug_lab_configs/ (with or without .json)")
     ap.add_argument("--zone", default="bug_lab", help="zone to run (bug_lab regenerates; others are authored)")
     ap.add_argument("--duration", type=int, default=250, help="harness seconds (×0.057 = game-days)")
     ap.add_argument("--keep", action="store_true", help="don't restore canonical data after the run (debug)")
     ap.add_argument("--seed", type=int, help="the zone seed for this run (default: the config's, else 1337) — "
                                               "several seeds of one config give the noise floor")
     ap.add_argument("--tag", help="the run's name (default: the config's name); one experiment = one name")
+    ap.add_argument("--restore-leftover", action="store_true",
+                    help="put back the data an interrupted (or --keep) run left changed, then stop")
     args = ap.parse_args()
+    if args.restore_leftover:
+        return restore_leftover()
+    if not args.config:
+        ap.error("a config name is needed")
+    check_leftover()
 
     cfg = load_config(args.config)
     if args.seed is not None:
@@ -311,6 +374,7 @@ def main():
     print(f"=== config {name} [{args.zone}]: {cfg.get('description', '')}")
 
     snap = snapshot([TUNING_JSON, SPECIES_JSON, OCCUPANTS_JSON, os.path.join(DATA, "zones", args.zone)])
+    record_leftover(snap, name, args.zone)
     try:
         apply_config(cfg, args.zone)
         restart_fresh(args.zone)
@@ -320,12 +384,13 @@ def main():
         chart(csv, name, run_log, args.zone, cfg.get("description", ""))
     finally:
         if args.keep:
-            print("  --keep: canonical data LEFT MUTATED (restore with `git checkout nakama/data`)")
+            print("  --keep: canonical data LEFT MUTATED (put it back with `run_config.py --restore-leftover`)")
         else:
             restore(snap)
+            clear_leftover()
             print("  restored canonical data")
     print(f"=== done: tools/_generated/ecology_charts/{name}.png + interactions_{name}.png")
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

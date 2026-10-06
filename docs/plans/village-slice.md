@@ -165,8 +165,10 @@ making a four-times-bigger village good to walk around and making tuning runs fa
     the "is the data as committed" check never saw it. It kept the 1,000-bug test's starting numbers, the held count,
     seed 3 and the 6× speed. Today's held runs used exactly those settings anyway, so their results stand (the
     earlier natural runs of the morning bred normally, so the bench was clean then). The bench was rebuilt from
-    `village_21_B` (`make_bench_zone.py`), and Stage 1.0e's script rebuilds it before every run. A lasting guard in
-    `run_config.py` waits on the owner.
+    `village_21_B` (`make_bench_zone.py`), and Stage 1.0e's script rebuilds it before every run. **The lasting guard
+    (the owner's yes, built the same day):** each run saves its before-copy to disk first and deletes it only after
+    restoring; a run that finds one refuses to start, and `run_config.py --restore-leftover` puts every file back
+    (6 tests, `tools/ecology/test_run_config_guard.py`).
   - **The owner's answers (2026-10-06):** (1) the behaviour check becomes a coarse safety net with its limits written
     down, and any speed-up that uses a different method gets a side-by-side check (old against new on the same
     state) built with it; (2) a test that proves the check can catch something, after block A; (3) a lasting guard
@@ -181,6 +183,9 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   - **Stage 1.0e started (block A, headless, 13 runs):** natural 1× and 4× (release build, clean; 4× breakdown on the
     development build; behaviour at both), fixed 1,000 / 2,000 / 4,000 at normal speed (release clean, development
     breakdown), and two-core runs at 1,000 and 2,000. Results: `tools/_generated/scaling/2026-10-06-before/`.
+    **Done** (all 13 ran cleanly). The player's computer per tick at normal speed, typical / worst 1 in 100: 1,000
+    bugs 2.7 / 4.5 ms; 2,000 bugs 6.0 / 10.0 ms; 4,000 bugs 13.3 / 29.9 ms (targets at 2,000: 2 / 4 ms). Written up at
+    the end of 1.0e.
 
 ## The owner's direction for this stage (2026-10-04)
 - **The village is the first slice, and it becomes four times bigger** (twice as wide and tall: 512 × 512 cells), for a larger
