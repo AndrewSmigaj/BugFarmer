@@ -49,13 +49,15 @@ do NOT stack changes you can't separate. The owner has repeatedly caught kneejer
   + the kills→breeding conversion). Read before re-investigating a "stuck" species.
 - Tune in ISOLATION then couple: get a consumer↔food pair into a good band before adding predators on top.
 
-## 1. Zones — tune a BENCH COPY of the real one, never the real one
-- **`village_21_B`** — the real shipped 256×256 open zone with the full food web. It is what you tune FOR, but
-  **never run `run_config.py` on it**: the tool deletes the tested zone's save before every run
-  (`run_config.py` `wipe_zone_state`), so `--zone village_21_B` erases the live village.
-- **`bench_village`** — a throwaway copy of `village_21_B`'s authored files (its own zone id, keeps no save,
-  git-ignored). Make or refresh it with `python3 tools/ecology/make_bench_zone.py` (it refuses ids that don't start
-  with `bench_`). **TUNE HERE.** The active plan (`docs/plans/village-slice.md`) does its tuning on the 512 village's
+## 1. Zones — run on a BENCH COPY of the real one by default
+- **`village_21_B`** — the real 256×256 open zone with the full food web; what you tune FOR. `run_config.py` deletes
+  the tested zone's save before every run (`wipe_zone_state`). Wiping the village's save is acceptable for now: the
+  village is unfinished and is rebuilt at 512 (owner, 2026-10-06). It is still not the default, because between runs
+  it carries whatever playtests left behind and it has live neighbours.
+- **`bench_village`** — a throwaway copy of `village_21_B`'s authored files (its own zone id, keeps no save, no
+  neighbours, git-ignored), so every run starts from the same authored state and runs stay comparable. Make or
+  refresh it with `python3 tools/ecology/make_bench_zone.py` (it refuses ids that don't start with `bench_`).
+  **TUNE HERE.** The active plan (`docs/plans/village-slice.md`) does its tuning on the 512 village's
   bench copy once that exists.
 - **`bug_lab`** — a small FENCED arena for OBSERVING individual behavior only. Its pens are fake/unnatural;
   balance tuned there does NOT transfer. Archived. Don't balance on it.

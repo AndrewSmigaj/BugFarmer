@@ -12,7 +12,7 @@ One-glance view: the dashboard. System of record for the determinism rules: `arc
 
 ## 1. Run a profiled session
 ```bash
-python3 tools/ecology/run_config.py <tag> --zone bench_village --duration 600   # NEVER --zone village_21_B: run_config wipes the tested zone's save
+python3 tools/ecology/run_config.py <tag> --zone bench_village --duration 600   # the bench copy keeps runs comparable (run_config wipes the tested zone's save)
 ```
 ~600 s ≈ 8 game-days, `profile:True` injected, restarts nakama, runs the harness, emits PERFSTATS/PERFSYS,
 charts everything, files into `tools/_generated/ecology_charts/<zone>/archive/<ts>_<tag>/`, refreshes

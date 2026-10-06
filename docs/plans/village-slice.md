@@ -36,14 +36,14 @@ faults (the centipede breeds and starves in a loop, and three more).
 - **2. Your decisions on the numbers:** the bug budget, and what moves off the server.
 - **3. The village at 512, with you:** first how we design zones (in the app) → map and bug list → layout → build, with
   each bug's behaviour and fight designed alongside and tried in the arena → the bug items → tuning → pressure tests →
-  you play it and sign off → it replaces the live village (after a backup and your OK). **3b:** the rest of the
+  you play it and sign off → it replaces today's unfinished village. **3b:** the rest of the
   village (fishing, the Ecology tab, plots, tutorials, catching gear).
 - **4.** The kit, then the next zones. **Alongside:** the design document's sections, in the order the village needs.
 
 **What I need from you:** approval; "publish" when the items page is closed on your other devices. Along the way: the
 Stage 1 targets, the bug budget and what moves off the server, a wording change to the zone-building rule (so natural
-ground can be generated), the village's map and bug list, a navigation aid for big zones, your OK before the live
-village is replaced, each sign-off; and whether I may delete the rehearsal page.
+ground can be generated), the village's map and bug list, a navigation aid for big zones, each sign-off; and
+whether I may delete the rehearsal page.
 
 **How sure I am:** I would do this, in this order (90). That the design is right as written: 75. The weakest parts are
 making a four-times-bigger village good to walk around and making tuning runs fast enough; both are tried early.
@@ -238,8 +238,8 @@ Cheap, certain wins first; the size work, which depends on the village's new lay
   players on one machine (valid for sync, server and bandwidth numbers, not for one client's CPU); the computer in
   charge leaving under load; a reconnect; a two-hour soak at normal speed.
 - **A slower computer:** the same runs with the Windows power plan capped at 50% and the game held to two cores.
-- **One gate-runner script; every gate on bench zones only** (`run_sync_latejoin.sh` defaults to `village_21_B`, whose
-  save the server writes every minute).
+- **One gate-runner script; every gate on bench zones by default** (`run_sync_latejoin.sh` defaults to `village_21_B`;
+  a bench zone keeps no save, so each run starts from the same state and runs stay comparable).
 - **The "before" numbers** on the 256 village's bench copy at 1× and 4× bugs.
 
 **1.1 — The client's bug simulation without waste** (one change per commit; each through the behaviour check, and the
@@ -393,8 +393,8 @@ food is). The Parts B–E, D0–D7 and C1–C12 named in this stage are defined 
 7. **Its bug items** (nets, smoker, bug stick, compost bin; Part E).
 8. **Tune, pressure, play** (process steps 6–8), with the population director's rain lever brought in line with
    weather being a lever of last resort (D7).
-9. **The 512 village goes live.** Replacing the live village save is destructive (anything built there in playtests
-   goes): a backup and a tested restore first (`tools/saves/restore_backup.py`), and the owner's OK before it happens.
+9. **The 512 village goes live,** replacing today's unfinished village and its save (wiping it is fine, owner
+   2026-10-06; the automatic start-up backups, D73, keep a copy anyway).
    With it, new players start in the rebuilt village (D19; §01 "One village"; the dev menu's "Normal" world still
    opens the old `village_21`, `WorldMenu.cs:43,77`).
 

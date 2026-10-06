@@ -14,4 +14,4 @@ The exact run that produced them is also kept in `../archive/<timestamp>_baselin
   live boom-bust oscillation, inward spiral = damping to flat, outward = crash/runaway.
 
 To refresh: `python3 tools/ecology/run_config.py v21b_baseline --zone bench_village --duration 600` (the bench copy of
-this zone, made by `tools/ecology/make_bench_zone.py`; never `--zone village_21_B`, which wipes the live village's save).
+this zone, made by `tools/ecology/make_bench_zone.py`, so each run starts from the authored zone).

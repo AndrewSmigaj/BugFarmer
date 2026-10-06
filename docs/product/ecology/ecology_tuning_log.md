@@ -26,8 +26,8 @@ directional, not reproducible.
   flowers, leaf-litter; orchard layout. Fruit→rot pipeline timing in `handlers_farming.go`.
 - **Spawn/Director** — zone.json `bug_spawning.species_caps` (initial/max/`max_population`/`min_population`/
   `event_low`/`event_high`/`cull_at`/`spawn_interval`) + `ecology_director.go`.
-- **Run a config**: `python3 tools/ecology/run_config.py <cfg> --zone bench_village --duration 300` (never
-  `--zone village_21_B`: the tool wipes the tested zone's save; make the bench copy with `tools/ecology/make_bench_zone.py`)
+- **Run a config**: `python3 tools/ecology/run_config.py <cfg> --zone bench_village --duration 300` (the bench
+  copy keeps runs comparable; the tool wipes the tested zone's save first; make the copy with `tools/ecology/make_bench_zone.py`)
   (charts → `tools/_generated/ecology_charts/`; food stocks via RESSTATS + `plot_phase.py`).
 
 ---
