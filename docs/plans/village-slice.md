@@ -213,8 +213,9 @@ Cheap, certain wins first; the size work, which depends on the village's new lay
 **1.0 — The rig and the checks, before any change** (reviewed against the code 2026-10-06; the full design is under
 "Stage 1.0 design" below). Built and proven in this order, each piece tested before the next relies on it:
 - **1.0a — the server side:** a test-zone switch that holds the bug count steady (no births, no ageing or starvation
-  deaths; predation still kills, so hunting stays real), and one daily line of behaviour counts per species (food eaten,
-  eggs, hatchings, trips home, nest defences, merges, splits, stings on players).
+  deaths, no top-ups; predation still kills, so hunting stays real; merges and splits keep running), one daily line of
+  behaviour counts per species (feeding, eggs, trips home, nest defences, merges, splits, hits on players), and a clean
+  start for every run.
 - **1.0b — the client side** (one test build): per-tick and per-frame timings with p50 / p99 / max and allocations, a
   "clean" mode without the per-part timers (their own cost skews the numbers) and a "breakdown" mode with them; the
   snapshot's build time and size; a per-species tally of what the bugs are doing; the strike and corpse reports logged
@@ -230,8 +231,8 @@ Cheap, certain wins first; the size work, which depends on the village's new lay
   2,000 / 4,000 (clean and breakdown), the windowed tour, two players, the slower computer; written up for the owner.
 - **The slower computer:** two cores by process affinity (no machine setting touched); the frequency cap through the
   Windows power plan is a machine-wide setting, so it is used only with the owner's OK and restored right after.
-- **Every gate on bench zones by default** (`run_sync_latejoin.sh` defaults to `village_21_B`; a bench zone keeps no
-  save, so each run starts from the same state and runs stay comparable).
+- **Every gate on bench zones by default, wiped before each run** (`run_sync_latejoin.sh` defaults to `village_21_B`; a
+  bench zone has no neighbours, and wiping its save first means each run starts from the same state).
 
 **1.1 — The client's bug simulation without waste** (one change per commit; each through the behaviour check, and the
 ones meant to give identical results through the equivalence check too):
@@ -597,49 +598,77 @@ under Verification).
   Stings read drawn positions (`SwarmManager.cs:781` on), which depend on each computer's frames, so they can't be
   compared exactly; the behaviour check and Stage 1.2's two-player sting test cover them.
 
-**1.0a — server** (test-zone only; real zones unchanged):
-- **`hold_population`** (a zone flag, off by default): when on, `reproduceSwarm` (`match.go:77`), `depositNestEgg`
-  (`brood.go:199`), `hatchFromBrood` (`brood.go:302`), re-hatching, recovery and founding in `processNests` /
-  `processNestFounding` (`nests.go:146`, `:292`), `processNaturalDeath` (`match.go:2173`) and `processStarvation`
-  (`match.go:2221`) do nothing. Used with `static`. The starting nest staffing stays (it is part of the starting count).
-  Predation still kills, so hunting stays real and the count drifts down slowly; each window records the actual count,
-  and costs are per bug.
+**1.0a — server** (test-zone only; real zones unchanged). *Revised after the cold review of 2026-10-06, each point
+checked in the code.*
+- **A clean start for every run.** A bench zone keeps no bugs or ground items between runs, but its save still holds
+  and restores nests (with their resident pointing at a bug group that no longer exists), trees, food plants, broods
+  and the clock (`world_save.go:155-196`), and a restored nest is never restaffed (`registerNestAt` returns early,
+  `nests.go:94-96`). So every 1.0 script wipes the bench zone's save before a run (stop, delete, start), through one
+  shared helper, as `run_config.py` already does (`run_config.py:162-183`).
+- **`hold_population`** (a zone flag, off by default). When on: no births after the start, no natural deaths, no
+  top-ups or culls, while merges and splits keep running (so their cost is measured):
+  - `reproduceSwarm` skips only the birth (`layIntoBrood` / `growSwarm`) and keeps the meter, satiation and cooldown
+    resets and the food cost (`match.go:91-96`, `:115-119`); skipping the whole function would leave the bug group
+    breeding, and draining its plant, every tick (`match.go:1476-1498`);
+  - `depositNestEgg` (`brood.go:199`), `hatchFromBrood` (`brood.go:302`), re-hatching, recovery and founding
+    (`nests.go:146`, `:292`), `processNaturalDeath` (`match.go:2173`), `processStarvation` (`match.go:2221`),
+    continuous spawning (`match.go:2067`) and the director (`ecology_director.go:35`) do nothing.
+  - Nests are still staffed when their chunk first loads (until Stage 1.3 loads the whole zone), which is part of the
+    starting count: in fixed-count runs the player stands still, so this happens in the first moments; a wandering
+    player staffs nests as it reaches them, recorded as nest births.
+  - Predation and player actions still remove bugs, so hunting stays real and the count drifts down slowly; each
+    window records the actual count, and costs are per bug.
 - **`BEHAVSTATS day= sp= …`**, once per species per game-day beside `ECOSTATS`, from the same never-hashed accumulator
-  (`ecology_stats.go`): food eaten, eggs laid, brood hatched, trips home completed, nest defences set off, merges,
-  splits, and stings and lunges applied to players, each counted where the server applies it. Observation only.
-- **Go tests:** the flag stops every birth path and the two death paths and nothing else; each counter counts its event
-  once.
+  (`ecology_stats.go`), each counted where the server applies it: feeding ticks and breeding ticks at a food source
+  (`match.go:1456-1479`); eggs laid (`brood.go:63`, `:202`); trips home completed and abandoned (`predation.go:196-207`);
+  nest defences set off (the change into "defending", `predation.go:149`, `nests.go:673`); merges (`match.go:2300-2336`)
+  and splits (`match.go:2471`); hits on players by bugs (`applyBugAttackToPlayer` returning true,
+  `handlers_player.go:27-128`). Hatchings are already `ECOSTATS`' `b_brood`. Lines appear only at a day's end, so
+  behaviour runs last whole game-days.
+- **Go tests:** the flag stops every birth path and both natural death paths, keeps the resets and the food cost, and
+  leaves merges, splits, predation and nest staffing on chunk load working; each counter counts its event once.
 
 **1.0b — client** (one test build; everything behind a test flag, the game's own behaviour unchanged):
-- **Cost recorder:** a stopwatch and an allocated-bytes reading around each whole tick (outside the per-part timers),
-  and a per-frame record (frame time, ticks run that frame, bug-drawing time), into arrays made once, so recording
-  allocates nothing; per-window p50 / p99 / max and a whole-run histogram, written to `client_cost.csv` and
-  `client_cost_summary.json`. Allocations come from `GC.GetAllocatedBytesForCurrentThread()` if the built player's Mono
-  supports it (checked first), otherwise from Unity's `ProfilerRecorder` ("GC Allocated In Frame").
+- **Cost recorder:** a stopwatch around each whole tick (outside the per-part timers) and a per-frame record (frame
+  time, ticks run that frame, bug-drawing time), into arrays made once, so recording allocates nothing; per-window
+  p50 / p99 / max and a whole-run histogram, written to `client_cost.csv` and `client_cost_summary.json`.
   `-perfmode clean|breakdown`: clean turns the per-part timers off.
+- **Allocations:** `GC.GetAllocatedBytesForCurrentThread()` is tried first, but the client's Mono uses the Boehm
+  collector, which likely reports 0; then Unity's `ProfilerRecorder` ("GC Allocated In Frame"), which works in
+  Development builds only and per frame, so per-tick allocation is estimated from frames with one tick against frames
+  with none. Allocations come from the Development build; timings judged against the targets come from the release
+  build (where the Unity profiler markers are compiled out).
 - **`client_perf.csv`** gains the whole tick (`Sim.Tick`) beside today's `sim_ms`; the snapshot build gets a timer and its
   size is recorded.
-- **Behaviour tally** (`-behaviour`): after each tick, per species, bug-ticks in total and while feeding, hunting,
-  fleeing, attacking and lunging; feeds, hunts and lunges started; reports made (predation strikes and victims, corpse
-  consumes). Read-only over the bugs; written per window to `client_behaviour.csv`. It runs in behaviour runs, never in
-  cost runs.
+- **Behaviour tally** (`-behaviour`): after each tick, per species, bug-ticks in total and while hunting
+  (`HuntTargetBugId`), landed, feeding on a corpse (`FeedUntilTick`), fleeing a player, attacking, curious and lunging
+  (`CurrentBehavior`, `SurgePhase`); corpse feeds and lunges started (both have start-tick timestamps, `BugAgent.cs:63`,
+  `:455-456`); reports made. Read-only over the bugs; written per window to `client_behaviour.csv`; never on in cost
+  runs. (Prey fleeing a predator is decided on the server and counted there.)
 - **Shadow reports** (`-shadowreports`): computers that aren't in charge run the predation-strike and corpse-consume
-  passes in log-only mode; every computer logs `tick,kind,ids` for each report (the one in charge still sends).
-- **Fingerprint log** (`-hashlog`): `tick,hash,bugs` every tick, for the whole run.
-- **Route** (`-route <file>`): `PlayerController` gains a test-only scripted input, used only when set; a follower steers
-  to each waypoint in turn and skips one it can't reach in 10 s. `-vsyncoff` turns vSync off with no frame cap.
-  Waypoints come from `tools/ecology/make_route.py <zone>`: the busiest clusters of food sources (fruit trees, nests,
-  flowers, litter), at least 6 cells from an edge, in nearest-neighbour order. Headless it is the wanderer; windowed,
-  the camera follows it, so it is the tour.
-- **`SyncTestBuild.BuildRelease`** → `Build/Release/` (no Development flag); timings judged against the targets come from
-  it.
+  passes in log-only mode, under the same "live" condition as the one in charge (`SwarmManager.cs:611`); every computer
+  logs `tick,kind,ids` for each report it sends or would send. Not used in runs where the one in charge leaves.
+- **Fingerprint log** (`-hashlog`): every tick, the game's own state check, a test-only check over each bug's full
+  record (the snapshot record: also landing, random-number state, movement intent, alert state, behaviour), and the bug
+  count, for the whole run; resyncs and replays are marked in the log.
+- **Route** (`-route <file>`): `PlayerController` gains a test-only scripted input, read before the UI-focus check
+  (`PlayerController.cs:229-234`) and used only when set; a follower steers to each waypoint in turn, skips one it
+  can't reach in 10 game-seconds, and after a faint (which sends the player back to spawn) heads for the nearest
+  unvisited waypoint. `-vsyncoff` turns vSync off with no frame cap. Waypoints come from
+  `tools/ecology/make_route.py <zone>`: the busiest clusters of food sources, each leg pathed on the player-blocking grid
+  (water, walls, blocking objects; the village has 4,643 water cells) with a cell of clearance, at least 6 cells from an
+  edge. Headless it is the wanderer; windowed, the camera follows it, so it is the tour. (Routes on 512 zones wait for
+  Stage 1.5's crossing change: `CrossZoneController` stops the player at 255.)
+- **`SyncTestBuild.BuildRelease`** → `Build/Release/` (no Development flag).
 
 **1.0c — scripts:**
 - **`PLAYER_A` / `PLAYER_B`** (build paths) in `run_sync_latejoin.sh` and the ecology launcher, with per-client output
-  names so runs don't collide.
-- **`tools/netcode/equiv_check.py`:** compares two fingerprint logs over every tick both computers were live, and the
-  shadow reports after a warm-up as long as the longest strike cooldown; names the first difference; unit-tested with
-  planted faults (like `test_sync_diff.py`).
+  names so runs don't collide; every script wipes the bench zone's save before a run.
+- **`tools/netcode/equiv_check.py`:** compares two fingerprint logs over every tick both computers were live (the first
+  value kept for a tick seen twice), and the shadow reports from each computer's first live tick plus a warm-up as long
+  as the longest strike cooldown; names the first difference. A run with a resync, a collision-map or replay timeout,
+  or a reconstruction tripwire is inconclusive, never a pass. It applies only to builds with the same snapshot and
+  message formats. Unit-tested with planted faults (like `test_sync_diff.py`).
 - **`tools/ecology/behaviour_check.py`:** reads `client_behaviour.csv`, `BEHAVSTATS`, `ECOSTATS` and `PREDLOG`; rates per
   species per 1,000 bug-ticks and per bug-day; the baseline is the noise-floor seeds; a metric is flagged when the new
   mean falls outside the baseline mean ± 3 standard deviations, or when it goes to zero from nonzero (or the reverse);
@@ -648,8 +677,8 @@ under Verification).
   timing; options for the perf mode, a windowed run and a route.
 - **`tools/run_players.sh N`:** two to four test players, staggered, with roles (in charge, wanderers), an optional
   authority leave and reconnect, and one combined report.
-- **`tools/run_gates.sh`:** Go tests, every sim-determinism mode, both late-join halves on the bench (FRESH), and the
-  equivalence check when two builds are given; a pass/fail table and real exit codes (no pipes that hide them).
+- **`tools/run_gates.sh`:** Go tests, every sim-determinism mode, both late-join halves on the bench (wiped first), and
+  the equivalence check when two builds are given; a pass/fail table and real exit codes (no pipes that hide them).
 
 **1.0d — proving the checks:**
 - The same build copied twice: the equivalence check says IDENTICAL both ways round, over a window with real activity
@@ -657,9 +686,11 @@ under Verification).
 - A build with a planted one-line change (the food-lookup radius 2.5 → 2.6): caught by the equivalence check, and by the
   behaviour check over the seeds.
 - Five seeds of the current build: the noise floor for every metric, recorded.
-- A fixed-count run holds its count (births and natural deaths zero in `ECOSTATS`).
-- The test flags change nothing: in one run, one test player with every test flag on and one with none (same build)
-  come out identical (runs can't be compared run to run, because the server applies reports as they arrive).
+- A fixed-count run holds its count: no births after the start-up moments, no ageing or starvation deaths
+  (`ECOSTATS`).
+- The test flags change nothing: in one run, the player in charge with every test flag on and a second player with
+  only `-shadowreports` and `-hashlog` (same build): identical fingerprints, and the reports the first one sent equal
+  the second one's shadow log.
 
 **1.0e — the "before" numbers,** under `docs/product/investigations/stage1-before-<date>/` with a plain write-up: natural
 runs at 1× and 4× (6× speed; cost and behaviour); fixed counts of 1,000 / 2,000 / 4,000 at normal speed, clean and
