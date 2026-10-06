@@ -159,6 +159,17 @@ making a four-times-bigger village good to walk around and making tuning runs fa
     that noise. Results: `tools/_generated/scaling/2026-10-06-paired/` (`check_control.md`, `check_planted4.md`).
     **Open:** what the behaviour check must prove, and how (the owner's call on the acceptance line; my proposal is in
     the report of 2026-10-06).
+  - **Found after the crash: the bench zone kept a crashed run's settings.** `run_config.py` patches the zone's
+    `zone.json` and puts it back afterwards from a copy taken at the start; the PC restart (11:51) stopped the run
+    before that, and every run since took its starting copy from the patched file. The bench zone is git-ignored, so
+    the "is the data as committed" check never saw it. It kept the 1,000-bug test's starting numbers, the held count,
+    seed 3 and the 6× speed. Today's held runs used exactly those settings anyway, so their results stand (the
+    earlier natural runs of the morning bred normally, so the bench was clean then). The bench was rebuilt from
+    `village_21_B` (`make_bench_zone.py`), and Stage 1.0e's script rebuilds it before every run. A lasting guard in
+    `run_config.py` waits on the owner.
+  - **Stage 1.0e started (block A, headless, 13 runs):** natural 1× and 4× (release build, clean; 4× breakdown on the
+    development build; behaviour at both), fixed 1,000 / 2,000 / 4,000 at normal speed (release clean, development
+    breakdown), and two-core runs at 1,000 and 2,000. Results: `tools/_generated/scaling/2026-10-06-before/`.
 
 ## The owner's direction for this stage (2026-10-04)
 - **The village is the first slice, and it becomes four times bigger** (twice as wide and tall: 512 × 512 cells), for a larger
