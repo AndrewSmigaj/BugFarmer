@@ -1112,7 +1112,10 @@ backbone: **clients replay AI OUTPUTS, not decisions.**
   to its deterministic position. `SwarmManager.AdvanceOneTick` feeds each hunting swarm's prey
   positions into `SimulateTick`; `RunPredationStrikes`' broad-phase was relaxed from a swarm-CENTRE
   gate to PER-BUG so a pursuer that left the cloud still connects. The kill itself is unchanged
-  (authority-detect → relay via `BUG_REMOVED`, §14).
+  (authority-detect → relay via `BUG_REMOVED`, §14). *2026-10-07 (Stage 1.1):* the prey positions fed into
+  `SimulateTick` are one value copy per prey group per tick (reused lists, shared by the predators chasing it), and the
+  strike pass reuses its lists and set; the hunting groups are still walked in key order (the comparer `OrderBy` used,
+  which decides which predator claims which prey first). Proven identical by the equivalence check.
 - **S2 — the REAL corpse + EAT (server drop + client feed).** `applyPredationStrike` now drops a
   `dead_<prey>` carcass AT each victim cell (predation was corpse-less; production prey all have
   empty `kill_drops`, so this is the sole corpse — no double-drop with `spawnKillDrops`). Edible →

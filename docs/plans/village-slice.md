@@ -93,6 +93,23 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   check for a different method. Open, not scheduled: the startup resync loop (BACKLOG).
 - **The owner's answers (2026-10-07):** the behaviour check becomes a two-step check; the three late-join fixes now,
   as their own change; the windowed tour whenever suits.
+- **Stage 1.1 started (2026-10-07, the owner's go-ahead).** Each step is a pair of builds that differ only by that
+  step (a base built from HEAD, then the step) and the equivalence check both ways round, 300 s each way, on the bench
+  village; one commit per step:
+  1. **The food lookup through a cell index** (`FoodGrid`), one lookup per group: also proven against the full scan on
+     80,195 random queries (`sim-determinism --food-index-test`; a planted fault caught); IDENTICAL both ways (2,417 /
+     2,403 live ticks), with 1,333 / 1,231 landings at food in the windows.
+  2. **The state check reads each bug directly** (`FoldStateHash`, no snapshot record per bug per tick): IDENTICAL
+     (2,409 / 2,427).
+  3. **Groups and bugs kept sorted** (`SortedIdTable`: a new sorted array after any change, never edited; the drawing
+     and the sting check too): IDENTICAL (2,527 / 2,536), through 264 / 243 group births, merges and splits.
+  4. **Reused per-tick lists, and the applied events removed in one cut** (they are always the front of the sorted
+     waiting list; the old per-event `RemoveAll` scanned the whole list per event): IDENTICAL (2,539 / 2,537).
+  5. **The strike check's reused lists** (the hunting groups, prey and predator copies, the claimed set, the victims):
+     IDENTICAL (2,579 / 2,578; 2,653 / 1,414 reports).
+  The batch is measured against the "before" numbers once step 5 passes; one behaviour check covers the identical
+  batch (they are bit-identical by the equivalence check, so it is a confirmation), and the ordinal-order change gets
+  its own.
 - **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
   resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
   and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism

@@ -686,7 +686,13 @@ namespace BugFarmer.Entities
             var im = InfluenceManager.Instance;
             if (im == null) return;
 
-            foreach (var kv in im.GetHuntingSwarms().OrderBy(k => k.Key))
+            // The hunting groups in key order, copied into a reused list (Stage 1.1): the order OrderBy(k => k.Key) gave —
+            // the same default comparer, and keys are unique.
+            var hunting = _strikeHunting;
+            hunting.Clear();
+            foreach (var kv in im.GetHuntingSwarms()) hunting.Add(kv);
+            hunting.Sort(ByStrikeKey);
+            foreach (var kv in hunting)
             {
                 string predatorId = kv.Key;
                 var strike = kv.Value;
@@ -718,15 +724,18 @@ namespace BugFarmer.Entities
                 long perBugBroadSqr = (perBugFixed * perBugFixed).Value;
 
                 int kills = strike.KillsPerStrike > 0 ? strike.KillsPerStrike : 1;
-                var preyBugs = prey.GetAllBugsAliveSorted().ToList();
-                var claimed = new HashSet<int>();
-                var victimIds = new List<int>();
-                var victimX = new List<float>();
-                var victimY = new List<float>();
+                // Reused lists and set (Stage 1.1). The predator's bugs are copied up front instead of read lazily: nothing
+                // moves during this pass, so the positions are the same; the loop may stop early as before.
+                var preyBugs = _strikePrey; preyBugs.Clear(); prey.CopyBugsAliveSorted(preyBugs);
+                var predatorBugs = _strikePredator; predatorBugs.Clear(); predator.CopyBugsAliveSorted(predatorBugs);
+                var claimed = _strikeClaimed; claimed.Clear();
+                var victimIds = _strikeVictimIds; victimIds.Clear();
+                var victimX = _strikeVictimX; victimX.Clear();
+                var victimY = _strikeVictimY; victimY.Clear();
 
                 // NARROW-PHASE: each predator individual (ascending id) claims the nearest UNCLAIMED prey
                 // individual within strike_radius; ascending-bug-id tie-break; up to kills_per_strike total.
-                foreach (var (pbId, pbPos) in predator.GetAllBugsAliveSorted())
+                foreach (var (pbId, pbPos) in predatorBugs)
                 {
                     if (victimIds.Count >= kills) break;
                     if (pbPos.SqrDistanceTo(prey.SimCenter).Value > perBugBroadSqr) continue; // this predator bug is far from the prey cloud
@@ -1040,6 +1049,16 @@ namespace BugFarmer.Entities
         }
 
         private readonly List<PlayerTarget> _playerTargets = new List<PlayerTarget>();
+        // The predation strike pass's reused lists (Stage 1.1).
+        private readonly List<KeyValuePair<string, InfluenceManager.SwarmStrike>> _strikeHunting = new List<KeyValuePair<string, InfluenceManager.SwarmStrike>>();
+        private static readonly Comparison<KeyValuePair<string, InfluenceManager.SwarmStrike>> ByStrikeKey =
+            (a, b) => Comparer<string>.Default.Compare(a.Key, b.Key);
+        private readonly List<(int bugId, FixedPoint2 pos)> _strikePrey = new List<(int bugId, FixedPoint2 pos)>();
+        private readonly List<(int bugId, FixedPoint2 pos)> _strikePredator = new List<(int bugId, FixedPoint2 pos)>();
+        private readonly HashSet<int> _strikeClaimed = new HashSet<int>();
+        private readonly List<int> _strikeVictimIds = new List<int>();
+        private readonly List<float> _strikeVictimX = new List<float>();
+        private readonly List<float> _strikeVictimY = new List<float>();
         private static readonly Comparison<PlayerTarget> ByPlayerId =
             (a, b) => Comparer<string>.Default.Compare(a.PlayerId, b.PlayerId);
         private readonly Dictionary<string, IReadOnlyList<(int bugId, FixedPoint2 pos)>> _huntTargets =
