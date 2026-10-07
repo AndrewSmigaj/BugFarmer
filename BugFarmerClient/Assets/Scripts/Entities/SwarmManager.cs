@@ -45,7 +45,9 @@ namespace BugFarmer.Entities
         /// check, with the tick number. Null in the game. Observers must only read.</summary>
         public static Action<long> TestTickObserver;
 
-        private readonly Dictionary<string, SwarmVisual> _swarms = new();
+        // The zone's groups, with their ids kept sorted (SortedIdTable, Stage 1.1): the per-tick loops walk SortedKeys
+        // — the order OrderBy(id => id) gave, without re-sorting every tick.
+        private readonly SortedIdTable<string, SwarmVisual> _swarms = new(Comparer<string>.Default);
 
         // Pending swarm data waiting for WorldSeed initialization
         private SwarmUpdateMessage _pendingUpdate;
@@ -604,7 +606,7 @@ namespace BugFarmer.Entities
             // 4. Simulate all bugs for the NEW tick
             // FIX #2: MUST iterate in deterministic order (sorted by swarmId)
             var _perfLoop = PerfProfiler.Sample("Sim.SwarmLoop"); // timing only: the loop incl. its sort
-            foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
+            foreach (var swarmId in _swarms.SortedKeys)
             {
                 IReadOnlyList<(int bugId, FixedPoint2 pos)> prey = null;
                 huntTargets?.TryGetValue(swarmId, out prey);
@@ -775,7 +777,7 @@ namespace BugFarmer.Entities
         /// </summary>
         private void RunCorpseConsumes(bool shadow)
         {
-            foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
+            foreach (var swarmId in _swarms.SortedKeys)
             {
                 var ids = _swarms[swarmId].DrainCorpseConsumes();
                 if (ids == null) continue;
@@ -819,7 +821,7 @@ namespace BugFarmer.Entities
             if (string.IsNullOrEmpty(_localUserId)) _localUserId = WorldManager.Instance?.Self?.UserId;
             if (_localPlayerTf == null) _localPlayerTf = FindObjectOfType<BugFarmer.Player.PlayerController>()?.transform;
 
-            foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
+            foreach (var swarmId in _swarms.SortedKeys)
             {
                 var swarm = _swarms[swarmId];
                 if (swarm == null || swarm.Count == 0) { ClearStingState(swarmId); continue; }
@@ -1030,7 +1032,7 @@ namespace BugFarmer.Entities
         private void InterpolateAllSwarms(float t)
         {
             using var _perf = PerfProfiler.Sample("Render.Interpolate");
-            foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
+            foreach (var swarmId in _swarms.SortedKeys)
             {
                 _swarms[swarmId].Interpolate(t);
             }
@@ -1249,7 +1251,7 @@ namespace BugFarmer.Entities
         /// any production path — only HeadlessSyncTest wires it, and only when the flag is passed.</summary>
         public bool DebugPerturbOneBug()
         {
-            foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
+            foreach (var swarmId in _swarms.SortedKeys)
             {
                 var agent = _swarms[swarmId].GetFirstAgentForDebug();
                 if (agent == null) continue;
@@ -2654,7 +2656,7 @@ namespace BugFarmer.Entities
         private List<BugTrace> CollectBugTraces()
         {
             var traces = new List<BugTrace>();
-            foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
+            foreach (var swarmId in _swarms.SortedKeys)
             {
                 var samples = _swarms[swarmId].GetAllBugPositions();
                 foreach (var sample in samples)
@@ -2674,7 +2676,7 @@ namespace BugFarmer.Entities
         {
             var legs = new List<SwarmLegTrace>();
             var im = InfluenceManager.Instance;
-            foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
+            foreach (var swarmId in _swarms.SortedKeys)
             {
                 var sv = _swarms[swarmId];
                 var rec = new SwarmLegTrace { tick = _simulationTick, swarmId = swarmId };
@@ -2714,7 +2716,7 @@ namespace BugFarmer.Entities
                 // chase-target desync directly), the corpse-eat timer, and the centipede lunge's position-determining
                 // fields (so a phase/heading/timer desync is caught before positions drift). Read straight from each
                 // bug (SwarmVisual.FoldStateHash) — no per-bug record per tick (Stage 1.1).
-                foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
+                foreach (var swarmId in _swarms.SortedKeys)
                     _swarms[swarmId].FoldStateHash(ref hash, prime);
                 return (long)hash;
             }

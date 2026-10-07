@@ -1067,7 +1067,9 @@ whole food registry (`InfluenceManager.TryGetNearestFood`, timed as `Sim.FoodLoo
 the client's bug-simulation time. See `docs/product/investigations/scaling-2026-10-04/` and the BACKLOG. **Fixed
 2026-10-07:** the registry is a `FoodGrid` (a cell index; a group's bugs share one lookup) with identical answers —
 `architecture_swarm_sync.md`, the food registry's cost note; and the per-tick state check folds each bug's values
-directly (`SwarmVisual.FoldStateHash`) instead of building a snapshot record per bug per tick. Each part of a
+directly (`SwarmVisual.FoldStateHash`) instead of building a snapshot record per bug per tick; and the zone's groups
+and each group's bugs are kept sorted (`SortedIdTable`: a new sorted id array after any change, never edited), so the
+per-tick loops, the drawing and the sting check stop re-sorting. Each part of a
 client tick is timed (`Sim.Tick` and its parts, timing only); the fixes are Stage 1.1–1.2 of `docs/plans/village-slice.md`.
 
 **The server brings to life only the chunks a player has loaded (found 2026-10-04):** food sources, nests and stations

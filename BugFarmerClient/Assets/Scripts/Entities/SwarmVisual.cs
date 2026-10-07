@@ -23,7 +23,9 @@ namespace BugFarmer.Entities
     public class SwarmVisual : MonoBehaviour
     {
         // Bugs keyed by ID for O(1) lookup and deterministic removal
-        private readonly Dictionary<int, BugVisual> _bugs = new();
+        // This group's bugs, with their ids kept sorted (SortedIdTable, Stage 1.1): the per-tick and per-frame loops walk
+        // SortedKeys — the order OrderBy(id => id) gave, without re-sorting.
+        private readonly SortedIdTable<int, BugVisual> _bugs = new(Comparer<int>.Default);
         private static readonly Stack<Transform> _spritePool = new();
 
         // Species sprite loaded from Resources/Bugs/{species_id}
@@ -434,7 +436,7 @@ namespace BugFarmer.Entities
             _simCenter = newCenter;
 
             // FIX #2: MUST iterate bugs in deterministic order (sorted by bugId)
-            var sortedBugIds = _bugs.Keys.OrderBy(id => id).ToList();
+            var sortedBugIds = _bugs.SortedKeys;
 
             // Debug: warn if no bugs exist (key diagnostic)
             if (_bugs.Count == 0 && tick % 100 == 0)
@@ -457,7 +459,7 @@ namespace BugFarmer.Entities
             }
 
             // Debug: log first bug's state every 100 ticks (sample one swarm)
-            if (sortedBugIds.Count > 0 && tick % 100 == 0 && SwarmId.GetHashCode() % 50 == 0)
+            if (sortedBugIds.Length > 0 && tick % 100 == 0 && SwarmId.GetHashCode() % 50 == 0)
             {
                 var firstBug = _bugs[sortedBugIds[0]];
                 var agent = firstBug.Agent;
@@ -475,7 +477,7 @@ namespace BugFarmer.Entities
         /// <param name="t">Interpolation factor (0 to 1)</param>
         public void Interpolate(float t)
         {
-            foreach (var bugId in _bugs.Keys.OrderBy(id => id))
+            foreach (var bugId in _bugs.SortedKeys)
             {
                 _bugs[bugId].Interpolate(t);
             }
@@ -820,9 +822,6 @@ namespace BugFarmer.Entities
             foreach (var bug in _bugs.Values) into.Add(bug.Agent);
         }
 
-        // Reused by FoldStateHash so the per-tick state check allocates nothing.
-        private readonly List<int> _hashBugIds = new List<int>();
-
         /// <summary>
         /// Fold this group's bugs into the per-tick state check (FNV-1a), in ascending bug id, reading each value
         /// straight from the bug — the same twelve values, types and order the check used to take from a snapshot
@@ -830,14 +829,12 @@ namespace BugFarmer.Entities
         /// </summary>
         public void FoldStateHash(ref ulong hash, ulong prime)
         {
-            _hashBugIds.Clear();
-            foreach (var id in _bugs.Keys) _hashBugIds.Add(id);
-            _hashBugIds.Sort();
+            var ids = _bugs.SortedKeys;
             unchecked
             {
-                for (int i = 0; i < _hashBugIds.Count; i++)
+                for (int i = 0; i < ids.Length; i++)
                 {
-                    var a = _bugs[_hashBugIds[i]].Agent;
+                    var a = _bugs[ids[i]].Agent;
                     hash ^= (ulong)a.Position.X.Value; hash *= prime;
                     hash ^= (ulong)a.Position.Y.Value; hash *= prime;
                     hash ^= (ulong)a.Velocity.X.Value; hash *= prime;
@@ -874,7 +871,7 @@ namespace BugFarmer.Entities
         /// </summary>
         public IEnumerable<(int bugId, FixedPoint2 pos)> GetAllBugsAliveSorted()
         {
-            foreach (var bugId in _bugs.Keys.OrderBy(id => id))
+            foreach (var bugId in _bugs.SortedKeys)
                 yield return (bugId, _bugs[bugId].Agent.Position);
         }
 
@@ -907,7 +904,7 @@ namespace BugFarmer.Entities
         /// </summary>
         public IEnumerable<(int bugId, FixedPoint2 pos)> GetAllBugsRenderedSorted()
         {
-            foreach (var bugId in _bugs.Keys.OrderBy(id => id))
+            foreach (var bugId in _bugs.SortedKeys)
             {
                 var b = _bugs[bugId];
                 Vector2 v = b.Transform != null ? (Vector2)b.Transform.position : b.CurrPos;
