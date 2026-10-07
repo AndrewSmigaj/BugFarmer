@@ -19,6 +19,7 @@ Writes <outdir>/<config>/{client_perf.csv, fly_counts.csv, player.log, nakama.lo
 <outdir>/summary.{json,md}.
 """
 import argparse
+import glob
 import csv
 import datetime as dt
 import json
@@ -55,6 +56,8 @@ def run_one(cfg, zone, duration, out, env=None, label=None, seed=None):
     for f in ("/tmp/client_perf.csv", "/tmp/client_perf_totals.csv", "/tmp/fly_counts.csv") + tuple("/tmp/" + r for r in RIG_FILES):
         if os.path.exists(f):
             os.remove(f)
+    for f in glob.glob(os.path.join(PDATA, "screenshot_E_*.png")):  # a windowed run's pictures (-screenshot)
+        os.remove(f)
     t0 = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     print(f"=== {cfg}: start {t0}", flush=True)
     with open(os.path.join(d, "run.log"), "w") as log:
@@ -70,6 +73,8 @@ def run_one(cfg, zone, duration, out, env=None, label=None, seed=None):
                      (os.path.join(PDATA, "player_ecology.log"), "player.log")) + tuple(("/tmp/" + r, r) for r in RIG_FILES):
         if os.path.exists(src):
             shutil.copy(src, os.path.join(d, dst))
+    for f in glob.glob(os.path.join(PDATA, "screenshot_E_*.png")):
+        shutil.move(f, os.path.join(d, os.path.basename(f)))
     with open(os.path.join(d, "nakama.log"), "w") as f:
         f.write(sh(["docker", "compose", "logs", "--no-color", "--since", t0, "nakama"]).stdout)
     print(f"=== {cfg}: run_config exit {rc}", flush=True)
@@ -209,6 +214,7 @@ def main():
     ap.add_argument("--route", help="a route file (tools/ecology/make_route.py) for the player to walk")
     ap.add_argument("--windowed", action="store_true", help="draw for real in a window (not headless), vSync off")
     ap.add_argument("--affinity", help="hold the client to these logical CPUs, a hex mask (the slower-computer emulation)")
+    ap.add_argument("--screenshot", help="a windowed run saves the game's own picture at these seconds, e.g. 60,240")
     ap.add_argument("--label", help="folder name suffix for these runs (default: the config name)")
     ap.add_argument("--seeds", help="comma-separated zone seeds: each config runs once per seed (the noise floor)")
     a = ap.parse_args()
@@ -231,6 +237,8 @@ def main():
             flags += ["-perfmode", a.perfmode]
         if a.behaviour:
             flags += ["-behaviour"]
+        if a.screenshot:
+            flags += ["-screenshot", a.screenshot]
         if flags:
             env["CLIENT_FLAGS"] = " ".join(flags)
         if a.player:

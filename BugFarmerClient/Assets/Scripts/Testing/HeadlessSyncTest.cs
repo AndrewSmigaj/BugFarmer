@@ -458,8 +458,11 @@ namespace BugFarmer.Testing
             bool behaviour = HeadlessSyncTest.HasFlag("-behaviour");
             if (behaviour) BehaviourTally.Start();
             if (HeadlessSyncTest.HasFlag("-vsyncoff")) { QualitySettings.vSyncCount = 0; Application.targetFrameRate = -1; }
-            // The test enters the world directly, so the character-select overlay (built at scene load, hidden only when
-            // a player picks a character) would stay drawn over the game in a windowed run (found 2026-10-06).
+            // The test enters the world directly, so the start-up overlays a player dismisses by hand stay drawn over the
+            // game in a windowed run (found 2026-10-06, seen in -screenshot pictures): the title screen (OpeningSequence,
+            // gone when Start is pressed) and the character select (hidden when a character is picked).
+            var opening = FindFirstObjectByType<OpeningSequence>();
+            if (opening != null) Destroy(opening.gameObject);
             if (CharacterSelectPanel.Instance != null) CharacterSelectPanel.Instance.gameObject.SetActive(false);
             string shots = HeadlessSyncTest.GetArg("-screenshot", null);
             if (!string.IsNullOrEmpty(shots))
