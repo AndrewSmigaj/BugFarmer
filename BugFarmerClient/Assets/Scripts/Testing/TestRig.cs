@@ -109,6 +109,37 @@ namespace BugFarmer.Testing
         }
     }
 
+    /// <summary>
+    /// Saves the game's own picture at the given seconds after the rig starts (-screenshot 20,60), so a windowed test run
+    /// can be checked without capturing anyone's screen. Nothing is drawn in a -batchmode -nographics run, so no file.
+    /// </summary>
+    public class TestScreenshots : MonoBehaviour
+    {
+        private readonly List<float> _at = new List<float>();
+        private string _dir, _id;
+        private float _t0;
+
+        public void Begin(string dir, string clientId, string secondsList)
+        {
+            _dir = dir; _id = clientId; _t0 = Time.realtimeSinceStartup;
+            foreach (var part in secondsList.Split(','))
+                if (float.TryParse(part, NumberStyles.Float, CultureInfo.InvariantCulture, out float s) && s >= 0f)
+                    _at.Add(s);
+            _at.Sort();
+        }
+
+        private void Update()
+        {
+            if (_at.Count == 0) return;
+            float t = Time.realtimeSinceStartup - _t0;
+            if (t < _at[0]) return;
+            string path = Path.Combine(_dir, $"screenshot_{_id}_{Mathf.RoundToInt(_at[0])}s.png");
+            ScreenCapture.CaptureScreenshot(path);
+            Debug.Log($"[TestScreenshots] {path}");
+            _at.RemoveAt(0);
+        }
+    }
+
     /// <summary>Records each frame for the cost probe, after every other script (so the frame's drawing is in).</summary>
     [DefaultExecutionOrder(32000)]
     public class CostProbeFrame : MonoBehaviour

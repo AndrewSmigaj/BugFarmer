@@ -1,2 +1,2 @@
-2026-10-06_1514_s10_behave_1000_repeat_seed5
-Stage 1.0 behaviour check: about 1000 bugs held steady (hold_population) at 6x speed, so per-bug behaviour can be compared between builds without the ecology going different ways from seed to seed
+2026-10-06_2003_s10_behave_1000_hunt_hunt2_seed10
+Stage 1.0d behaviour-check calibration: s10_behave_1000 with centipedes half as fed by each kill (feed_per_kill 45 -> 22.5), so they need about twice the kills to fill up; the check must flag their strikes or kills going up

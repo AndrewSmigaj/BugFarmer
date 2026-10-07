@@ -67,7 +67,8 @@ namespace BugFarmer.Testing
         // Stage 1.0b test rig flags (docs/plans/village-slice.md): -perfmode clean|breakdown (cost probe; clean = the
         // per-part timers off), -behaviour (behaviour tally), -hashlog (fingerprint log), -shadowreports (a computer
         // not in charge logs the reports it would send), -reportlog (log the reports sent), -route <file> (walk a
-        // route), -vsyncoff. Outputs go to persistentDataPath with the client id in the name.
+        // route), -vsyncoff, -screenshot <s>[,<s>...] (a windowed run saves the game's own picture that many seconds
+        // after the rig starts). Outputs go to persistentDataPath with the client id in the name.
         private string _perfMode;
         private string _fileId;
 
@@ -457,6 +458,12 @@ namespace BugFarmer.Testing
             bool behaviour = HeadlessSyncTest.HasFlag("-behaviour");
             if (behaviour) BehaviourTally.Start();
             if (HeadlessSyncTest.HasFlag("-vsyncoff")) { QualitySettings.vSyncCount = 0; Application.targetFrameRate = -1; }
+            // The test enters the world directly, so the character-select overlay (built at scene load, hidden only when
+            // a player picks a character) would stay drawn over the game in a windowed run (found 2026-10-06).
+            if (CharacterSelectPanel.Instance != null) CharacterSelectPanel.Instance.gameObject.SetActive(false);
+            string shots = HeadlessSyncTest.GetArg("-screenshot", null);
+            if (!string.IsNullOrEmpty(shots))
+                gameObject.AddComponent<TestScreenshots>().Begin(Application.persistentDataPath, clientId, shots);
             RouteFollower route = null;
             string routeFile = HeadlessSyncTest.GetArg("-route", null);
             if (!string.IsNullOrEmpty(routeFile))

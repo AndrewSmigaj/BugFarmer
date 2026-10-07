@@ -284,7 +284,10 @@ still agree. All of it is behind test flags; the game itself never turns any of 
   state check, a full-record check, bug count, live flag, and resync/replay/timeout markers → `hashlog_<id>.csv`) ·
   `-reportlog` / `-shadowreports` (the strike and corpse reports sent, or worked out and not sent by a computer not in
   charge → `reports_<id>.csv`) · `-route <file>` (walk a route; `tools/ecology/make_route.py <zone> [--png]` makes one
-  around water and walls) · `-vsyncoff` · `-runtag <t>`.
+  around water and walls) · `-vsyncoff` · `-runtag <t>` · `-screenshot <s>[,<s>…]` (a windowed run saves the game's own
+  picture to `screenshot_<id>_<s>s.png` that many seconds after the rig starts — check a windowed run without capturing
+  the owner's screen). A test run enters the world directly, so the rig hides the character-select overlay (until
+  2026-10-06 it stayed drawn over windowed runs).
 - **Builds:** `SyncTestBuild.Build` (Development, `Build/SyncTest/`) and `SyncTestBuild.BuildRelease` (`Build/Release/`,
   the timings judged against the targets; the Unity profiler counters, and so the allocation figure, exist only in the
   Development build).
