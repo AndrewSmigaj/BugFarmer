@@ -85,11 +85,15 @@ making a four-times-bigger village good to walk around and making tuning runs fa
 | Open plans: grass phases 2–5, swing phase 6, repo-health P7 | paused | unchanged; picked up when their turn comes on the roadmap |
 
 ## Now (the resume pointer — update at the start and end of every session)
-- **Now:** Stage 1.0d, proving the checks: the paired calibration is done (no false alarms; the radius-4.0 change not
-  caught, see PROGRESS); what the behaviour check must prove waits on the owner. Meanwhile Stage 1.0e's preparation.
-- **Next:** Stage 1.0e, the "before" numbers; then Stage 1.1. Stage 0's last step (publishing the review app) waits
-  for the owner's "publish".
-- **Waiting on the owner:** "publish"; the OK to delete the rehearsal page.
+- **Now (2026-10-06, late):** Stage 1.0 nearly done. 1.0d: the equivalence check is proven; the behaviour check gives
+  no false alarms but has not caught a real change (third try: +65% on every seed at 3.7 standard errors, bar 4).
+  1.0e: blocks A and B measured (single player, slower computer, players); the windowed tour still to run; the plain
+  write-up of the "before" numbers still to write. The late-join investigation is written (three causes, fixes
+  proposed).
+- **Next:** the owner's answers below; then the windowed tour, the 1.0e write-up, and Stage 1.1.
+- **Waiting on the owner:** how to make the behaviour check useful (more seeds, longer runs, or a two-step check); the
+  three late-join fixes (now, or within 1.4); a time for the windowed tour; "publish"; the OK to delete the rehearsal
+  page.
 
 ## PROGRESS (this plan; newest last — the history before it is in the earlier plan's PROGRESS)
 - **2026-10-04 (evening):** written after the owner asked for one careful, coherent plan for the village slice (512 ×
