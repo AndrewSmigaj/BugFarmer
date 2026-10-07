@@ -302,6 +302,11 @@ making a four-times-bigger village good to walk around and making tuning runs fa
 - **Test thoroughly, simulated like real:** the real client and server, the whole zone, real speed checks.
 - **Tune for a functional ecosystem without players.** What players do to it, they do; disruption is fine.
 - **One coherent plan** that ties into the rest of the planning, with no drifting between plans.
+- **Added 2026-10-07 (from watching the test runs):** predators keep attacking flies far too long; nothing shows when a
+  bug attacks; the player was seldom hurt, so the bugs offered little threat. So tuning starts with **behaviour,
+  tuned until it is fun** (how each bug hunts, attacks and fights, tried in the arena), and only then the ecology's
+  other levers. The bugs' combat needs an overhaul — that is Stage 3, steps 3 and 6 (the earlier plan's C1–C12),
+  with a visible sign when a bug attacks another bug added to it.
 - **Added 2026-10-06:** zones probably won't need very many bugs; the scaling work shows what the engine can do, and
   the owner then picks each zone's count by how it plays. The game will have minimum hardware requirements, so
   the slower-computer target is a minimum specification, not every older machine. Each zone will start from a chosen
@@ -627,7 +632,9 @@ owner's play is the last word. Behaviour comes before numbers (overview P10, D57
   the truth.
 - **Reading a run** (charts in the app): population against the range; births by source (keeping itself going, or
   living on top-ups?); deaths by cause (what limits it); food against population; the cost per tick.
-- **Order:** structural breaks first (anything that can't work: food out of reach, instant breeding, a frozen habitat;
+- **Order:** **behaviour first, until it is fun** (the owner's direction, 2026-10-07): each bug's hunting, attacks and
+  fight — how long a predator stays on its prey, how often and how fairly the player is hit, the signs before and
+  during an attack — designed and tried in the arena (Stage 3, steps 3 and 6). Then structural breaks (anything that can't work: food out of reach, instant breeding, a frozen habitat;
   for the village, what's left of the earlier plan's D0b list after Stage 1.3 fixed the others: carcasses lasting 60 s
   and the firefly with no food), then from the bottom of the food web up: food supply → plant-eaters → predators →
   scavengers; each consumer and its food brought into range on their own before predators are added on top.

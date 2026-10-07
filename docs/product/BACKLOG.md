@@ -695,6 +695,12 @@ STUCK for MECHANIC reasons, not tunable by any param:
   behavior starts to matter; capture it before it bites the ecology tuning.
 
 ## Now — COMBAT FOUNDATION (M1 BUILT 2026-07-11 → `architecture_combat.md § Milestone 1 — as-built`)
+- **The owner's notes from watching the test runs (2026-10-07)** — scheduled in `docs/plans/village-slice.md`, Stage 3,
+  steps 3 and 6 (behaviour tuned for fun before the ecology's other levers):
+  - predators keep attacking flies far too long;
+  - **a visible sign when a bug attacks another bug** (a predator striking its prey) — not in the earlier plan's C1–C12,
+    whose cues (C3) cover attacks on the player only;
+  - the player was seldom hurt, so the bugs offered little threat — the combat overhaul (C1–C5, C7, C9, C11).
 Owner adopted the skeleton (**attack-token + FSM + steering**) + core bundle. **Decided dials:** bite-token
 pool = **2**, **dodge-only**, danger **at night**, bug→player damage **per-individual** (authority-decided,
 mirrors predation; swarm-of-1 dropped — player HP is SIM-INERT so it needs no hash/snapshot wiring), new sprites
