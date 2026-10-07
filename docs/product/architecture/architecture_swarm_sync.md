@@ -106,7 +106,8 @@ actively hunting when B joins (non-vacuous; 0 ht + 0 pc A-vs-B mismatch over 11.
   (`{x,y,vx,vy,hunt_target,feed_until}` per bug, plus the six centipede-lunge fields; since 2026-10-07 each group folds
   them straight from its bugs, `SwarmVisual.FoldStateHash`, instead of building a snapshot record per bug per tick —
   the same values, types and order, proven identical by the equivalence check; the groups and their bugs are walked in
-  `SortedIdTable.SortedKeys` order — the same order `OrderBy(id => id)` gave, with the same comparer); its full input set to reconstruct on late-join =
+  `SortedIdTable.SortedKeys` order — the same order `OrderBy(id => id)` gave, with the same comparer; the events applied
+  at a tick are always the front of the sorted waiting list, and leave it in one `RemoveRange`); its full input set to reconstruct on late-join =
   {all `BugAgent` snapshot fields (via the verbatim relay) + the 4 `InfluenceManager` dicts —
   `_swarmLegs`/`_swarmStrikes`/`_food`/`_playerCells` + the movement-state round-trip}. Any NEW client sim-state
   outside this set needs its own snapshot carrier + a NON-VACUOUS gate that exercises it.

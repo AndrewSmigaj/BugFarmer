@@ -515,7 +515,7 @@ namespace BugFarmer.Entities
         /// <summary>
         /// Get sorted pending events for processing.
         /// </summary>
-        private IEnumerable<InfluenceEvent> GetSortedPendingEvents()
+        private List<InfluenceEvent> GetSortedPendingEvents()
         {
             if (_pendingEventsDirty)
             {
@@ -588,17 +588,28 @@ namespace BugFarmer.Entities
             // deterministic — captured BEFORE the sim loop so every predator pursues the same last-tick positions
             // regardless of swarm iteration order). GetHuntingSwarms is InfluenceManager's predator→{TargetPreyId}
             // map (the same source RunPredationStrikes uses). Passed into SimulateTick so bugs pursue individual prey.
+            // Reused lists (Stage 1.1): one value copy per prey group per tick, shared by every predator chasing that group —
+            // all copies were taken at this same moment before, so their contents are identical; bugs only read them.
             var _perfHunt = PerfProfiler.Sample("Sim.HuntPrep"); // timing only
-            Dictionary<string, IReadOnlyList<(int bugId, FixedPoint2 pos)>> huntTargets = null;
+            var huntTargets = _huntTargets;
+            huntTargets.Clear();
+            foreach (var list in _preyCopies.Values) { list.Clear(); _preyListPool.Push(list); }
+            _preyCopies.Clear();
             var influence = InfluenceManager.Instance;
             if (influence != null)
             {
                 foreach (var kv in influence.GetHuntingSwarms())
                 {
-                    var prey = GetSwarm(kv.Value.TargetPreyId);
+                    var preyId = kv.Value.TargetPreyId;
+                    var prey = GetSwarm(preyId);
                     if (prey == null || prey.Count == 0) continue;
-                    huntTargets ??= new Dictionary<string, IReadOnlyList<(int bugId, FixedPoint2 pos)>>();
-                    huntTargets[kv.Key] = prey.GetAllBugsAliveSorted().ToList();
+                    if (!_preyCopies.TryGetValue(preyId, out var copy))
+                    {
+                        copy = _preyListPool.Count > 0 ? _preyListPool.Pop() : new List<(int bugId, FixedPoint2 pos)>();
+                        prey.CopyBugsAliveSorted(copy);
+                        _preyCopies[preyId] = copy;
+                    }
+                    huntTargets[kv.Key] = copy;
                 }
             }
             _perfHunt.Dispose();
@@ -608,8 +619,7 @@ namespace BugFarmer.Entities
             var _perfLoop = PerfProfiler.Sample("Sim.SwarmLoop"); // timing only: the loop incl. its sort
             foreach (var swarmId in _swarms.SortedKeys)
             {
-                IReadOnlyList<(int bugId, FixedPoint2 pos)> prey = null;
-                huntTargets?.TryGetValue(swarmId, out prey);
+                huntTargets.TryGetValue(swarmId, out var prey);
                 // Subdued (smoke/calm) is a per-swarm sim INPUT (like players): read from the synced registry,
                 // passed down so a calmed swarm's per-bug sim suppresses its lunge/dive.
                 bool subdued = influence != null && influence.IsSubdued(swarmId);
@@ -963,7 +973,7 @@ namespace BugFarmer.Entities
         /// </summary>
         private void ProcessEventsForTick(long targetTick)
         {
-            var toRemove = new List<long>();
+            int applied = 0;
 
             foreach (var evt in GetSortedPendingEvents())
             {
@@ -982,15 +992,16 @@ namespace BugFarmer.Entities
                 // Apply event
                 ApplyInfluenceEvent(evt);
                 _lastAppliedSeq = evt.seq;
-                toRemove.Add(evt.seq);
+                applied++;
             }
 
-            // Remove processed events from inbox
-            foreach (var seq in toRemove)
-            {
-                _inboxBySeq.Remove(seq);
-                _pendingEvents.RemoveAll(e => e.seq == seq);
-            }
+            // Remove the processed events. They are always the FRONT of the list (sorted by tick then seq; processing
+            // stops at the first later tick) and every seq is unique (a duplicate is refused on arrival), so one
+            // RemoveRange removes exactly what a RemoveAll per event did — without a scan of the whole list per event
+            // or a list per tick (Stage 1.1).
+            for (int i = 0; i < applied; i++)
+                _inboxBySeq.Remove(_pendingEvents[i].seq);
+            _pendingEvents.RemoveRange(0, applied);
         }
 
         private void ApplyInfluenceEvent(InfluenceEvent evt)
@@ -1004,12 +1015,14 @@ namespace BugFarmer.Entities
         /// </summary>
         private List<PlayerTarget> GetDeterministicPlayerTargets()
         {
-            var targets = new List<PlayerTarget>();
+            // One list, reused every tick (Stage 1.1): it is read only during the tick, and the trace copies it. Sorted with
+            // the comparer OrderBy(p => p.playerId) used (Comparer<string>.Default); ids are unique, so the order is the same.
+            var targets = _playerTargets;
+            targets.Clear();
 
             if (InfluenceManager.Instance != null)
             {
-                foreach (var (playerId, cellX, cellY) in InfluenceManager.Instance.GetPlayerCells()
-                    .OrderBy(p => p.playerId))
+                foreach (var (playerId, cellX, cellY) in InfluenceManager.Instance.GetPlayerCells())
                 {
                     targets.Add(new PlayerTarget
                     {
@@ -1020,10 +1033,21 @@ namespace BugFarmer.Entities
                         )
                     });
                 }
+                targets.Sort(ByPlayerId);
             }
 
             return targets;
         }
+
+        private readonly List<PlayerTarget> _playerTargets = new List<PlayerTarget>();
+        private static readonly Comparison<PlayerTarget> ByPlayerId =
+            (a, b) => Comparer<string>.Default.Compare(a.PlayerId, b.PlayerId);
+        private readonly Dictionary<string, IReadOnlyList<(int bugId, FixedPoint2 pos)>> _huntTargets =
+            new Dictionary<string, IReadOnlyList<(int bugId, FixedPoint2 pos)>>();
+        private readonly Dictionary<string, List<(int bugId, FixedPoint2 pos)>> _preyCopies =
+            new Dictionary<string, List<(int bugId, FixedPoint2 pos)>>();
+        private readonly Stack<List<(int bugId, FixedPoint2 pos)>> _preyListPool =
+            new Stack<List<(int bugId, FixedPoint2 pos)>>();
 
         /// <summary>
         /// Interpolate all swarms for visual smoothing.

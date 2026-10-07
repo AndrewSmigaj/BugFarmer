@@ -869,6 +869,15 @@ namespace BugFarmer.Entities
         /// bug-id order — deterministic so any client (e.g. a new authority after handoff) selects the
         /// same victim. _bugs is alive-only (RemoveBugsById deletes from it).
         /// </summary>
+        /// <summary>The same as <see cref="GetAllBugsAliveSorted"/>, copied by value into a list the caller reuses (the
+        /// per-tick hunting prep, Stage 1.1).</summary>
+        public void CopyBugsAliveSorted(List<(int bugId, FixedPoint2 pos)> into)
+        {
+            var ids = _bugs.SortedKeys;
+            for (int i = 0; i < ids.Length; i++)
+                into.Add((ids[i], _bugs[ids[i]].Agent.Position));
+        }
+
         public IEnumerable<(int bugId, FixedPoint2 pos)> GetAllBugsAliveSorted()
         {
             foreach (var bugId in _bugs.SortedKeys)
