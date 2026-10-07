@@ -215,6 +215,20 @@ making a four-times-bigger village good to walk around and making tuning runs fa
     the change — the pace gate was needed — and halving how full a kill makes a centipede barely changes behaviour in
     held runs. The check has still not been shown to catch a real change; a third try needs a change whose effect is
     certain from the code, not from my reading of the ecology (proposed to the owner).
+  - **The windowed tour: stopped at the owner's request** (20:28). The game ran the tour, but the character-select
+    overlay stayed drawn over it: a test enters the world directly, and the overlay hides only when a player picks a
+    character. Fixed in test code only (the rig hides it; `-screenshot <s>` saves the game's own picture so a windowed
+    run can be checked without capturing the owner's screen); the release build compiles (0 errors). The stopped run
+    left its settings in the bench zone and the leftover guard did its job: the next run refused, and
+    `--restore-leftover` put every file back. The tour's numbers are not used; it runs again when the owner says.
+  - **The rejoin fault: investigated** (`docs/product/investigations/latejoin-rejoin-divergence.md`, READY TO
+    IMPLEMENT pending the owner): reproduced on run 3's world (6 of 8 plain joins and every rejoin out of step) with
+    traces covering the whole join. **Three causes**, each a piece of the join that doesn't describe the snapshot's
+    moment: (B) the bug collision map is sent as of now, so a fence a centipede chews through between the snapshot
+    and the join is already gone in the joiner's replay; (A) a departed player's position is removed on receipt,
+    outside the ordered stream, and a same-account rejoin brings back a phantom of itself; (C) a join in the zone's
+    first ~10 s can get a stand-in instead of a snapshot (the authority's first snapshot is skipped while its sim is at
+    tick 0). Every out-of-step session today has exactly one of them. Fixes proposed; the owner decides.
   - **The rejoin fault: investigation started** (the owner's yes, 2026-10-06):
     `docs/product/investigations/latejoin-rejoin-divergence.md` (draft). The rejoin session has an evidenced cause (a
     departed player's position is removed on receipt, outside the ordered stream, and a same-account rejoin brings
