@@ -85,12 +85,12 @@ making a four-times-bigger village good to walk around and making tuning runs fa
 | Open plans: grass phases 2–5, swing phase 6, repo-health P7 | paused | unchanged; picked up when their turn comes on the roadmap |
 
 ## Now (the resume pointer — update at the start and end of every session)
-- **Now (2026-10-06, late):** Stage 1.0 nearly done. 1.0d: the equivalence check is proven; the behaviour check gives
-  no false alarms but has not caught a real change (third try: +65% on every seed at 3.7 standard errors, bar 4).
-  1.0e: blocks A and B measured (single player, slower computer, players); the windowed tour still to run; the plain
-  write-up of the "before" numbers still to write. The late-join investigation is written (three causes, fixes
-  proposed).
-- **Next:** the owner's answers below; then the windowed tour, the 1.0e write-up, and Stage 1.1.
+- **Now (2026-10-07):** Stage 1.0 is done — the equivalence check and the two-step behaviour check are proven, the
+  "before" numbers are measured and written up (`docs/product/investigations/stage1-before-2026-10-06/README.md`), and
+  the three late-join faults the player tests found are fixed and proven.
+- **Next:** Stage 1.1, the waste cut on the players' computers (food lookup, strikes, the per-tick state check,
+  drawing, memory per tick), each proven by the equivalence check, or by a side-by-side check plus the behaviour
+  check for a different method. Open, not scheduled: the startup resync loop (BACKLOG).
 - **The owner's answers (2026-10-07):** the behaviour check becomes a two-step check; the three late-join fixes now,
   as their own change; the windowed tour whenever suits.
 - **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
@@ -115,6 +115,10 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   on at least nine, is over 4 standard errors and over 15%. On the existing data: the same-build pair raises no
   suspect (exit 0); the longer-eating copy raises two (centipede eating +65%, wasp eating +128%, 3.7 standard errors
   each). **Validation, decided before it runs:** step 2 on seeds 16–20 must CONFIRM centipede eating going up.
+  **PASSED (2026-10-07, 09:48):** centipede eating confirmed, +81%, up on all ten seeds, 6.6 standard errors; pace
+  0.02% apart; no broken runs. Wasp eating (+114%) was not confirmed (seven of ten seeds, 2.3 standard errors): wasps
+  are few, so their behaviour stays below what the check can see — the coarse net's limit, as written down. **Stage
+  1.0 is done.**
 - **Waiting on the owner:** "publish"; the OK to delete the rehearsal page.
 
 ## PROGRESS (this plan; newest last — the history before it is in the earlier plan's PROGRESS)

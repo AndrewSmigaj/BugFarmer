@@ -412,7 +412,9 @@ def main(argv=None):
               f"seeds together with --confirm")
     if new:
         rare = sum(1 for r in rows if r[6] == "too rare to judge")
-        rule = ("goes the same way on every seed, is over" if seeds else "is over")
+        rule = ("is over" if not seeds else
+                f"goes the same way on at least {100 * CONFIRM_AGREE:.0f}% of the seeds, is over" if args.confirm else
+                "goes the same way on every seed, is over")
         print(f"({rare} metrics too rare to judge; a change counts when it {rule} {args.k:g} standard errors AND over "
               f"{100 * args.min_change:.0f}%)")
     return 1 if flagged else (3 if suspects else 0)

@@ -104,7 +104,10 @@ reports); `server` = the server's daily counts (per bug-day, or per 1,000 bug-ti
    seeds, over 15% and over 2.78 standard errors (the textbook 5% bar for five seeds) as a SUSPECT; step 2 runs five
    fresh seeds and confirms it over all ten (the same way on at least nine, over 4 standard errors, over 15%). On the
    existing runs the same-build pair raises no suspect and the longer-eating copy raises two (centipede eating +65%,
-   wasp eating +128%). *Validation pending:* step 2 on seeds 16–20 must confirm centipede eating going up.
+   wasp eating +128%). **Validation passed (2026-10-07):** step 2 on seeds 16–20 confirmed centipede eating, +81%,
+   up on all ten seeds at 6.6 standard errors. Wasp eating (+114%) was not confirmed (seven of ten seeds, 2.3 standard
+   errors): a real change in a rare, noisy behaviour stays below what the check can see. **The check is proven for
+   common behaviours; for rare ones, the side-by-side check is the tool.**
 
 **Where this leaves the check (2026-10-06):** it raises no false alarms, and it misses even a certain, consistent
 +65% change with five seeds. The "smallest change it can see" table above was worked out from the same-build runs
