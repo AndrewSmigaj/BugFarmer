@@ -2710,40 +2710,12 @@ namespace BugFarmer.Entities
                 ulong hash = 14695981039346656037UL;
                 const ulong prime = 1099511628211UL;
 
+                // Per bug, in ascending bug id: position, velocity, the individual-predation commit (catches a
+                // chase-target desync directly), the corpse-eat timer, and the centipede lunge's position-determining
+                // fields (so a phase/heading/timer desync is caught before positions drift). Read straight from each
+                // bug (SwarmVisual.FoldStateHash) — no per-bug record per tick (Stage 1.1).
                 foreach (var swarmId in _swarms.Keys.OrderBy(id => id))
-                {
-                    var samples = _swarms[swarmId].GetAllBugPositions();
-                    // GetAllBugPositions already returns in consistent order
-                    foreach (var bug in samples.OrderBy(b => b.bug_id))
-                    {
-                        hash ^= (ulong)bug.x;
-                        hash *= prime;
-                        hash ^= (ulong)bug.y;
-                        hash *= prime;
-                        hash ^= (ulong)bug.vx;
-                        hash *= prime;
-                        hash ^= (ulong)bug.vy;
-                        hash *= prime;
-                        hash ^= (ulong)bug.hunt_target; // individual-predation commit — catches a chase-target desync directly
-                        hash *= prime;
-                        hash ^= (ulong)bug.feed_until;  // corpse-eat timer — catches a feed-state desync directly
-                        hash *= prime;
-                        // Centipede lunge: fold the position-determining surge fields so a phase/heading/timer desync
-                        // is caught DIRECTLY (not only once positions have already drifted).
-                        hash ^= (ulong)bug.surge_phase;
-                        hash *= prime;
-                        hash ^= (ulong)bug.surge_heading_x;
-                        hash *= prime;
-                        hash ^= (ulong)bug.surge_heading_y;
-                        hash *= prime;
-                        hash ^= (ulong)bug.surge_dist_left;
-                        hash *= prime;
-                        hash ^= (ulong)bug.surge_until;
-                        hash *= prime;
-                        hash ^= (ulong)bug.surge_cooldown_until;
-                        hash *= prime;
-                    }
-                }
+                    _swarms[swarmId].FoldStateHash(ref hash, prime);
                 return (long)hash;
             }
         }

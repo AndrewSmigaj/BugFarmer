@@ -820,6 +820,40 @@ namespace BugFarmer.Entities
             foreach (var bug in _bugs.Values) into.Add(bug.Agent);
         }
 
+        // Reused by FoldStateHash so the per-tick state check allocates nothing.
+        private readonly List<int> _hashBugIds = new List<int>();
+
+        /// <summary>
+        /// Fold this group's bugs into the per-tick state check (FNV-1a), in ascending bug id, reading each value
+        /// straight from the bug — the same twelve values, types and order the check used to take from a snapshot
+        /// record per bug per tick (Stage 1.1, docs/plans/village-slice.md), so the result is bit-identical.
+        /// </summary>
+        public void FoldStateHash(ref ulong hash, ulong prime)
+        {
+            _hashBugIds.Clear();
+            foreach (var id in _bugs.Keys) _hashBugIds.Add(id);
+            _hashBugIds.Sort();
+            unchecked
+            {
+                for (int i = 0; i < _hashBugIds.Count; i++)
+                {
+                    var a = _bugs[_hashBugIds[i]].Agent;
+                    hash ^= (ulong)a.Position.X.Value; hash *= prime;
+                    hash ^= (ulong)a.Position.Y.Value; hash *= prime;
+                    hash ^= (ulong)a.Velocity.X.Value; hash *= prime;
+                    hash ^= (ulong)a.Velocity.Y.Value; hash *= prime;
+                    hash ^= (ulong)a.HuntTargetBugId; hash *= prime;
+                    hash ^= (ulong)a.FeedUntilTick; hash *= prime;
+                    hash ^= (ulong)a.SurgePhase; hash *= prime;
+                    hash ^= (ulong)a.SurgeHeadingX; hash *= prime;
+                    hash ^= (ulong)a.SurgeHeadingY; hash *= prime;
+                    hash ^= (ulong)a.SurgeDistLeft; hash *= prime;
+                    hash ^= (ulong)a.SurgeUntilTick; hash *= prime;
+                    hash ^= (ulong)a.SurgeCooldownUntil; hash *= prime;
+                }
+            }
+        }
+
         /// <summary>
         /// Get positions for all bugs (used for full snapshot response).
         /// </summary>
