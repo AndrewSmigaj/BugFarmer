@@ -88,9 +88,10 @@ making a four-times-bigger village good to walk around and making tuning runs fa
 - **Now (2026-10-07):** Stage 1.0 is done — the equivalence check and the two-step behaviour check are proven, the
   "before" numbers are measured and written up (`docs/product/investigations/stage1-before-2026-10-06/README.md`), and
   the three late-join faults the player tests found are fixed and proven.
-- **Next:** Stage 1.1, the waste cut on the players' computers (food lookup, strikes, the per-tick state check,
-  drawing, memory per tick), each proven by the equivalence check, or by a side-by-side check plus the behaviour
-  check for a different method. Open, not scheduled: the startup resync loop (BACKLOG).
+- **Next:** Stage 1.1, the waste cut on the players' computers — in progress: steps 1–5 done and measured (the
+  targets for 1,000–4,000 bugs are met, see PROGRESS); step 6 (ordinal order) in its behaviour check; step 7 (no
+  memory per tick) written, built and checked after it. Then Stage 1.2 (drawing). Open, not scheduled: the startup
+  resync loop (BACKLOG).
 - **The owner's answers (2026-10-07):** the behaviour check becomes a two-step check; the three late-join fixes now,
   as their own change; the windowed tour whenever suits.
 - **Stage 1.1 started (2026-10-07, the owner's go-ahead).** Each step is a pair of builds that differ only by that
@@ -110,6 +111,23 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   The batch is measured against the "before" numbers once step 5 passes; one behaviour check covers the identical
   batch (they are bit-identical by the equivalence check, so it is a confirmation), and the ordinal-order change gets
   its own.
+- **Steps 1–5 measured (2026-10-07):** `docs/product/investigations/stage1.1-after-2026-10-07.md`. Per tick (release,
+  fixed count, typical / slow): 1,000 bugs 2.7 / 4.5 → 0.56 / 1.06 ms; 2,000 bugs 6.0 / 10.0 → 1.06 / 2.0 ms (target
+  2 / 4 ✓); 4,000 bugs 13.3 / 29.9 → 2.1 / 3.5 ms (target slow ≤ 6 ✓). The natural village at four times its bugs now
+  keeps up (60.4 ticks a second; 32.8 before); at 2,000–3,000 bugs its tick went from 65 to 2.6 ms. Memory thrown away
+  per tick: 1,705 → ~40–54 KB at 4,000 bugs — not yet zero.
+  6. **Ordinal order** (the deliberate behaviour change): the three simulation sorts (the groups, the hunting groups,
+     the players) plus the hit and net lists, which now use the server's byte order. Equivalence: IDENTICAL with the old
+     build in charge (2,579 live ticks) — on this computer the old order and ordinal agree for the ids in use. Its
+     behaviour check (the plan's) runs with the batch's: five fresh seeds (21–25), three builds interleaved (before
+     Stage 1.1, after step 5, after step 6), so both comparisons share the step-5 runs.
+  7. **No memory per tick, found:** the counter RNG turned the group id into a new byte array on every roll
+     (`Encoding.UTF8.GetBytes`, per bug per tick) — about 11 bytes per bug per tick, the size the game measured; now
+     folded in place, byte for byte the same (`sim-determinism --alloc-test`: 160,052 hashes equal to the old ones,
+     including other alphabets and broken surrogates; the per-bug sim, hunting and feeding included, allocates 0 bytes
+     per tick; the four simulation tests' final hashes equal the old code's). Also the player cells and the hunting
+     groups are copied into reused lists instead of read through an iterator made every tick. Built and checked after
+     step 6's runs (one change per commit).
 - **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
   resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
   and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism
