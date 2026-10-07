@@ -2,7 +2,8 @@
 """Tests for behaviour_check.py: identical runs pass, a clear and sizeable change is flagged, a small change or a rare
 event is not, a frequent metric that appears is flagged, day 1 and duplicate log lines are handled, and too little data
 is refused. Paired by seed: a change hidden by large seed-to-seed differences is caught, noise and a change that goes
-different ways on different seeds are not; a state's starts (not its bug-ticks) decide whether it is too rare.
+different ways on different seeds are not; a state's starts (not its bug-ticks) decide whether it is too rare. The pace
+gate: groups whose client kept a different pace are not compared.
 
     python3 tools/ecology/test_behaviour_check.py
 """
@@ -19,7 +20,7 @@ STARTS = ",hunting_starts,landed_starts,eating_starts,flee_starts,attack_starts,
 
 
 def write_run(root, name, hunting=100, noise=0, strikes=5, feed=8400 * 10, kills=7, extra_day1=False, dup=False, lunge=0,
-              eggs=3, attack=0, attack_starts=None):
+              eggs=3, attack=0, attack_starts=None, pace=None):
     """attack_starts given: the file has the *_starts columns (hunting/landed/eating start 30 times a window, the
     attacks start attack_starts times in all, in the last window)."""
     d = os.path.join(root, name)
@@ -32,6 +33,11 @@ def write_run(root, name, hunting=100, noise=0, strikes=5, feed=8400 * 10, kills
         rows.append(row)
     with open(os.path.join(d, "client_behaviour_A.csv"), "w") as f:
         f.write("\n".join(rows) + "\n")
+    if pace is not None:  # client_perf.csv: 5 s windows of `pace` ticks per second
+        perf = ["real_s,tick,swarms,bugs,ticks,frames"]
+        perf += [f"{w * 5}.0,{int(w * 5 * pace)},10,100,{int(5 * pace)},300" for w in range(1, 13)]
+        with open(os.path.join(d, "client_perf.csv"), "w") as f:
+            f.write("\n".join(perf) + "\n")
     log = []
     days = [1, 2, 3] if extra_day1 else [2, 3]
     for day in days:
@@ -141,6 +147,14 @@ class BehaviourCheck(unittest.TestCase):
         b2 = [write_run(self.root, f"old{i}", noise=(i % 3) - 1, attack=500) for i in range(5)]  # no starts columns
         n2 = [write_run(self.root, "oldnew0", attack=0)]
         self.assertEqual(self.check(b2, n2), 1)
+
+    def test_pace_gate(self):
+        self.assertAlmostEqual(bc.client_pace(write_run(self.root, "p", pace=59.8), 30), 59.8, places=1)
+        b = [write_run(self.root, f"base_seed{s}", hunting=100 + 50 * s, pace=59.8) for s in range(1, 6)]
+        slow = [write_run(self.root, f"slow_seed{s}", hunting=100 + 50 * s, pace=58.8) for s in range(1, 6)]  # 1.7%
+        self.assertEqual(self.check(b, slow), 2)  # not comparable, even though the behaviour is identical
+        same = [write_run(self.root, f"same_seed{s}", hunting=100 + 50 * s, pace=59.9) for s in range(1, 6)]
+        self.assertEqual(self.check(b, same), 0)
 
     def test_run_without_data_is_refused(self):
         empty = os.path.join(self.root, "empty")

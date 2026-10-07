@@ -44,12 +44,18 @@ some numbers enormously (wasp attacks: none on three seeds, up to 59,000 bug-tic
 averages over different seeds raised a false alarm on the same build and missed a real planted change (the food radius
 2.5 -> 4.0), which seed by seed was plain: flies landing up and wasp attacks down on every seed.
 
-Exit codes: 0 = no flags, 1 = flags, 2 = not enough data.
+THE PACE GATE: a run's client pace (ticks per real second, from client_perf.csv after the warm-up) must match between
+the two groups within MAX_PACE_DIFF (1%); otherwise the check refuses to judge (exit 2). Why (2026-10-06): runs made
+hours apart kept different paces (the machine ran ~1.7% slower in the evening), and a client that falls behind the
+zone changes what the bugs do; comparing such runs flagged a 46% drop in fly breeding that the pace alone may explain.
+So run the two builds INTERLEAVED, in one session (base seed 1, new seed 1, base seed 2, ...).
+
+Exit codes: 0 = no flags, 1 = flags, 2 = not enough data, or not comparable (the pace gate).
 
 Usage:
   behaviour_check.py --base RUN_DIR [RUN_DIR ...] [--new RUN_DIR ...] [--k 4] [--min-change 0.15]
                      [--min-events 20] [--skip-days 1] [--skip-seconds 30] [--min-bug-ticks 10000] [--unpaired]
-                     [--out report.md]
+                     [--max-pace-diff 0.01] [--out report.md]
 """
 import argparse
 import glob
@@ -160,6 +166,28 @@ def server_metrics(run_dir, skip_days):
             m[f"server.kills_{prey}_per_bugday"] = (n / bd, n)
         out[sp] = m
     return out
+
+
+def client_pace(run_dir, skip_seconds):
+    """Ticks the client simulated per real second after the warm-up (client_perf.csv), or None without the file."""
+    path = os.path.join(run_dir, "client_perf.csv")
+    if not os.path.exists(path):
+        return None
+    ticks = secs = 0.0
+    prev = None
+    with open(path, encoding="utf-8") as f:
+        header = f.readline().strip().split(",")
+        for line in f:
+            row = dict(zip(header, line.strip().split(",")))
+            try:
+                real, n = float(row["real_s"]), float(row["ticks"])
+            except (KeyError, ValueError):
+                continue
+            if prev is not None and real >= skip_seconds:
+                ticks += n
+                secs += real - prev
+            prev = real
+    return ticks / secs if secs > 0 else None
 
 
 def run_metrics(run_dir, args):
@@ -292,6 +320,8 @@ def main(argv=None):
     ap.add_argument("--skip-seconds", type=float, default=30.0)
     ap.add_argument("--min-bug-ticks", type=float, default=10000.0)
     ap.add_argument("--unpaired", action="store_true", help="compare group means even when the seeds match")
+    ap.add_argument("--max-pace-diff", type=float, default=0.01,
+                    help="the largest relative difference in client pace between the groups (0.01 = 1%%)")
     ap.add_argument("--out")
     args = ap.parse_args(argv)
 
@@ -301,6 +331,20 @@ def main(argv=None):
         print("not enough data: need at least two base runs, and every run must have metrics "
               f"(base runs with data: {sum(1 for r in base if r)}, new: {sum(1 for r in new if r)})")
         return 2
+    if new:
+        bp = [x for x in (client_pace(d, args.skip_seconds) for d in args.base) if x]
+        np_ = [x for x in (client_pace(d, args.skip_seconds) for d in args.new) if x]
+        if bp and np_:
+            bmu, nmu = sum(bp) / len(bp), sum(np_) / len(np_)
+            diff = abs(nmu - bmu) / bmu
+            print(f"client pace: base {bmu:.2f}, new {nmu:.2f} ticks/s ({100 * diff:.2f}% apart)")
+            if diff > args.max_pace_diff:
+                print(f"NOT COMPARABLE: the client kept a different pace in the two groups (over "
+                      f"{100 * args.max_pace_diff:g}%), which changes what the bugs do by itself. Run the two builds "
+                      f"interleaved, in one session.")
+                return 2
+        else:
+            print("client pace: not recorded (no client_perf.csv), so the pace gate could not run")
     seeds = None if args.unpaired else pairing(args.base, args.new)
     if seeds:
         rows = compare_paired(base, [seed_of(d) for d in args.base], new, [seed_of(d) for d in args.new], seeds,

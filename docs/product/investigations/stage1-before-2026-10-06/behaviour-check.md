@@ -84,6 +84,12 @@ reports); `server` = the server's daily counts (per bug-day, or per 1,000 bug-ti
    **no false alarms** (38 behaviours judged); **the radius change not caught** (under the limits above).
 4. **The catching test (decided before it ran):** centipedes half as fed by each kill (`feed_per_kill` 45 → 22.5,
    config `s10_behave_1000_hunt`), seeds 1–5, against the base runs. It passes only if the check flags centipede
-   strikes, prey claimed, or fly kills going up. *Result: pending.*
+   strikes, prey claimed, or fly kills going up. **Inconclusive:** strikes did not rise and kills fell 26% (my
+   prediction was wrong); the one flag was flies breeding 46% less on every seed. But the test runs were compared
+   with base runs made hours earlier on a machine that had slowed (client 58.8 against 59.7–60.4 ticks/s), so the
+   check now has a **pace gate** (groups more than 1% apart in client pace are not compared) and the rule is: run
+   the two builds interleaved, in one session.
+5. **The catching test again** (decided before it ran): interleaved, fresh seeds 6–10; passes only if the pace gate
+   passes and fly breeding or feeding is flagged going down. *Result: pending.*
 
 Raw runs: `tools/_generated/scaling/2026-10-06-paired/` (git-ignored; `check_control.md`, `check_planted4.md`).

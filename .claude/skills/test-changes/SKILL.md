@@ -308,7 +308,9 @@ still agree. All of it is behind test flags; the game itself never turns any of 
     choice, 2026-10-06): runs don't repeat even on one seed, so it sees only sizeable changes in common behaviours;
     the smallest change it can see per behaviour is in
     `docs/product/investigations/stage1-before-2026-10-06/behaviour-check.md`. A speed-up that uses a different method
-    also needs a side-by-side check (old and new on the same state, every disagreement counted), built with it. Tests:
+    also needs a side-by-side check (old and new on the same state, every disagreement counted), built with it.
+    **Run the two builds interleaved in one session** (base seed 1, new seed 1, base seed 2, ...): it refuses groups
+    whose client pace differs by over 1% (exit 2), because a slower machine changes what the bugs do. Tests:
     `tools/ecology/test_behaviour_check.py`.
   - `tools/run_sync_latejoin.sh` takes `PLAYER_A` / `PLAYER_B` (a build each), `A_FLAGS` / `B_FLAGS`, `EQUIV=1` (end with
     equiv_check; its verdict is the exit code) and `WIPE=1` (on by default for bench zones).

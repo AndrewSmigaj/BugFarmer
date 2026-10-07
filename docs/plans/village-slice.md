@@ -180,6 +180,17 @@ making a four-times-bigger village good to walk around and making tuning runs fa
     99%. Strikes come in bursts that end when the group is full (a quarter of the gaps between strikes sit at the
     4-second cooldown, the longest tenth are over 3 minutes), so how full each kill makes them sets the strike
     count; a longer cooldown would move strikes only 1–6%.
+  - **The catching test, first try: inconclusive.** One flag, and not a predicted one: flies breeding 46% less on
+    all five seeds (fly feeding −37%, under the bar). Centipede strikes did not rise (−3%); their kills fell 26%
+    (not flagged): the prediction was wrong. And the comparison was unfair: the test runs (evening) were compared
+    with base runs from the afternoon, and the machine had slowed — the client kept 58.8 ticks/s against 59.7–60.4,
+    which over a run leaves it about 70 game-seconds behind the zone. **My mistake: the runs must be interleaved.**
+    The check now refuses groups whose client pace differs by over 1% (the afternoon pair: 0.24% apart; this test:
+    1.30%, refused), with a test.
+  - **The catching test, second try, decided before it runs:** base and half-fed runs interleaved on fresh seeds
+    6–10 (block B, step 3). **Passes only if** the pace gate passes AND the check flags fly breeding or fly feeding
+    going DOWN (what the first try showed). If the pace gate passes and nothing is flagged, the first try's flag was
+    the slower machine, and the catching test has failed.
   - **Stage 1.0e started (block A, headless, 13 runs):** natural 1× and 4× (release build, clean; 4× breakdown on the
     development build; behaviour at both), fixed 1,000 / 2,000 / 4,000 at normal speed (release clean, development
     breakdown), and two-core runs at 1,000 and 2,000. Results: `tools/_generated/scaling/2026-10-06-before/`.
