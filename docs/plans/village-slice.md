@@ -121,6 +121,18 @@ making a four-times-bigger village good to walk around and making tuning runs fa
      build in charge (2,579 live ticks) — on this computer the old order and ordinal agree for the ids in use. Its
      behaviour check (the plan's) runs with the batch's: five fresh seeds (21–25), three builds interleaved (before
      Stage 1.1, after step 5, after step 6), so both comparisons share the step-5 runs.
+     **Its behaviour runs (2026-10-07):** both equivalence directions IDENTICAL (2,579 live ticks each). Two of the 15
+     behaviour runs were broken and run again (one by the machine stalling: client and server slowed together, no
+     errors; one by the startup fault in the BACKLOG, which also hit the before-1.1 build). Then: steps 1–5 vs before
+     1.1 — one SUSPECT (butterfly breeding share +104%, 5/5 seeds, 3.1 se); step 6 vs step 5 — one FLAG (centipede hits
+     on the player +115%, 5/5 seeds, 4.7 se, from 13 to 28 events). Both builds of each pair are identical in the
+     simulation, and hits on the player are detected from drawn positions (frame timing) outside the equivalence check;
+     the runs went in a fixed order per seed (before 1.1, step 5, step 6), and the centipede hits rise with that order
+     on every seed (totals 5 / 13 / 28). **Decided before the next runs:** the two-step rule's step 2 for both
+     comparisons — five fresh seeds (26–30), the three builds with the order rotated per seed (26: step 6, step 5,
+     before; 27: step 5, before, step 6; 28: before, step 6, step 5; 29: step 6, before, step 5; 30: step 5, step 6,
+     before) — then `--confirm` over all ten seeds for both comparisons, the same bars; plus the centipede hits by run
+     position over the ten seeds. A flag that holds there is investigated as a real change.
   7. **No memory per tick, found:** the counter RNG turned the group id into a new byte array on every roll
      (`Encoding.UTF8.GetBytes`, per bug per tick) — about 11 bytes per bug per tick, the size the game measured; now
      folded in place, byte for byte the same (`sim-determinism --alloc-test`: 160,052 hashes equal to the old ones,
