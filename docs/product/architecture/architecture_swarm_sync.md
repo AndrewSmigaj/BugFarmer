@@ -76,7 +76,11 @@ bootstrap. Fixed: `GroundItemSpawn` is cosmetic-only; food enters `_food` only v
 zone-wide, **the per-bug sim is now fully zone-wide.** BOTH gate halves re-verified `SYNC: IDENTICAL` on
 village_21_B (co-located 166k + spawn-apart 161k shared-bug states, no drift).
 **Cost (measured 2026-10-04):** `InfluenceManager.TryGetNearestFood` walks the WHOLE `_food` registry, once per wandering
-bug per tick (from the group's centre, so every bug of a group gets the same answer). It is 69–91% of the client's
+bug per tick (from the group's centre, so every bug of a group gets the same answer). **Fixed 2026-10-07 (Stage 1.1):**
+`_food` is a `FoodGrid` — the same id→entry dictionary plus a 4-world-cell index; a lookup checks only the cells the
+search square touches (radius plus a one-cell margin), with the same total order (nearest, then the lower id ordinal),
+and keeps its last answer per (registry version, point, radius), so a group's bugs share one lookup. Proven against the
+full scan on 80,195 random queries (`sim-determinism --food-index-test`) and by the equivalence check both ways round. It is 69–91% of the client's
 bug-simulation time and grows with bugs × food (`docs/product/investigations/scaling-2026-10-04/`); it carries a
 `Sim.FoodLookup` profiler scope (timing only). `AdvanceOneTick` is timed part by part too (`Sim.Tick`, `Sim.Events`,
 `Sim.HuntPrep`, `Sim.SwarmLoop`, `Sim.Strikes`, `Sim.Hash`, `Sim.Reconcile`; timing only): at ~3,300 bugs at normal

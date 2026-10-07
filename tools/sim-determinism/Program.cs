@@ -43,6 +43,86 @@ namespace SimDeterminism
         // --los-test. Proves the integer Bresenham tests cells STRICTLY BETWEEN the endpoints (skipping
         // both) — a deterministically-WRONG walk would still pass the 2-client sync gate but fails here.
         // Drives the delegate core with a stubbed blocked-set, so no Unity/TilemapManager is needed.
+        // --food-index-test (Stage 1.1, docs/plans/village-slice.md): the food registry's cell index must give EXACTLY the
+        // answer the old full scan gave — same food, same position, same found/not-found — for random registries (adds,
+        // moves, removals, clears, negative positions, shared positions for the tie-break) and random queries; and its
+        // kept last answer must never outlive a change to the registry.
+        static int RunFoodIndexTest()
+        {
+            var rng = new System.Random(20261007);
+            var grid = new FoodGrid();
+            float[] radii = { 0.4f, 1.0f, 2.0f, 2.5f, 4.0f, 7.5f, 12.0f };
+            int queries = 0, found = 0, ties = 0, mismatches = 0, cachedChecks = 0;
+            FixedPoint2 RandPos() => new FixedPoint2(new FixedPoint { Value = rng.Next(-20000, 280000) },
+                                                     new FixedPoint { Value = rng.Next(-20000, 280000) });
+            var shared = new FixedPoint2(new FixedPoint { Value = 100500 }, new FixedPoint { Value = 100500 });
+            for (int step = 0; step < 200000; step++)
+            {
+                int op = rng.Next(100);
+                string id = "food_" + rng.Next(0, 800);
+                if (op < 45) grid.Set(id, rng.Next(10) == 0 ? shared : RandPos(), 1 + rng.Next(5));   // add or move
+                else if (op < 60) grid.Remove(id);
+                else if (op == 60 && rng.Next(50) == 0) grid.Clear();
+                else
+                {
+                    // queries near existing food (so most find something), at random spots, and on cell borders
+                    FixedPoint2 from;
+                    int kind = rng.Next(4);
+                    if (kind == 0 && grid.TryGet(id, out var e))
+                        from = new FixedPoint2(new FixedPoint { Value = e.pos.X.Value + rng.Next(-3000, 3000) },
+                                               new FixedPoint { Value = e.pos.Y.Value + rng.Next(-3000, 3000) });
+                    else if (kind == 1)
+                        from = new FixedPoint2(new FixedPoint { Value = FoodGrid.CellSize * rng.Next(-3, 70) },
+                                               new FixedPoint { Value = FoodGrid.CellSize * rng.Next(-3, 70) });
+                    else if (kind == 2)  // near the spot several foods share, so the id tie-break decides
+                        from = new FixedPoint2(new FixedPoint { Value = shared.X.Value + rng.Next(-2000, 2000) },
+                                               new FixedPoint { Value = shared.Y.Value + rng.Next(-2000, 2000) });
+                    else from = RandPos();
+                    float r = radii[rng.Next(radii.Length)];
+                    bool a = grid.TryGetNearest(from, r, out var idA, out var posA);
+                    bool b = grid.TryGetNearestByFullScan(from, r, out var idB, out var posB);
+                    queries++;
+                    if (b) found++;
+                    if (a != b || idA != idB || posA != posB)
+                    {
+                        mismatches++;
+                        if (mismatches <= 5)
+                            Console.WriteLine($"FOOD-INDEX: ❌ step {step} from ({from.X.Value},{from.Y.Value}) r={r}: grid {a} {idA} vs scan {b} {idB}");
+                    }
+                    if (b && posB == shared)  // answered from the shared spot: a real tie when two or more foods sit there
+                    {
+                        int there = 0;
+                        foreach (var kv in grid.Entries) if (kv.Value.pos == shared) there++;
+                        if (there >= 2) ties++;
+                    }
+                    // the kept answer: asked twice it must equal the scan; after a change it must be recomputed
+                    if (rng.Next(4) == 0)
+                    {
+                        bool c1 = grid.TryGetNearestCached(from, r, out var p1);
+                        bool c2 = grid.TryGetNearestCached(from, r, out var p2);
+                        cachedChecks++;
+                        if (c1 != b || c2 != b || (b && (p1 != posB || p2 != posB))) mismatches++;
+                    }
+                }
+            }
+            // a tie on purpose: two foods at one spot, the lower id must win from any visiting order
+            var tie = new FoodGrid();
+            tie.Set("food_b", shared, 1); tie.Set("food_a", shared, 1); tie.Set("food_c", shared, 1);
+            bool tieOk = tie.TryGetNearest(shared, 2.5f, out var tieId, out _) && tieId == "food_a";
+            // the kept answer is dropped when the registry changes
+            var memo = new FoodGrid();
+            memo.Set("f1", shared, 1);
+            memo.TryGetNearestCached(shared, 2.5f, out _);
+            memo.Remove("f1");
+            bool memoOk = !memo.TryGetNearestCached(shared, 2.5f, out _);
+            Console.WriteLine($"FOOD-INDEX: {queries} queries ({found} found something, {ties} at a shared spot), " +
+                              $"{cachedChecks} kept-answer checks; mismatches {mismatches}; tie-break {(tieOk ? "ok" : "WRONG")}; " +
+                              $"kept answer dropped on change {(memoOk ? "ok" : "WRONG")}");
+            bool pass = mismatches == 0 && tieOk && memoOk && found > queries / 4 && ties > 0;
+            Console.WriteLine(pass ? "FOOD-INDEX: PASS" : "FOOD-INDEX: FAIL");
+            return pass ? 0 : 1;
+        }
+
         static int RunLosTest()
         {
             int failures = 0;
@@ -338,6 +418,8 @@ namespace SimDeterminism
             RepoRoot = FindRepoRoot();
             if (args.Contains("--los-test"))
                 return RunLosTest();
+            if (args.Contains("--food-index-test"))
+                return RunFoodIndexTest();
             if (args.Contains("--predation-test"))
                 return RunPredationTest();
             if (args.Contains("--surge-test"))

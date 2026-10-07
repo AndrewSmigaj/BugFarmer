@@ -80,66 +80,38 @@ namespace BugFarmer.Bugs
         // exception: on-receipt HYDRATION of already-rotten ground items re-sent on chunk
         // subscribe (join-time bootstrap, same approximate-until-resync class as snapshots).
         // Bug landing visuals read this; it must never be mutated from OpCode-47/48 directly.
-        private readonly Dictionary<string, (FixedPoint2 pos, int level)> _food = new();
+        // Kept in a cell index (FoodGrid, Stage 1.1): same answers as checking every entry, far fewer checks.
+        private readonly FoodGrid _food = new FoodGrid();
 
         /// <summary>Join-time bootstrap for an already-rotten ground item (see note above).</summary>
         public void HydrateFood(string foodId, Vector2 worldPos, int level)
         {
-            if (level <= 0 || _food.ContainsKey(foodId)) return;
-            _food[foodId] = (FixedPoint2.FromVector2(worldPos), level);
+            if (level <= 0 || _food.Contains(foodId)) return;
+            _food.Set(foodId, FixedPoint2.FromVector2(worldPos), level);
         }
 
         /// <summary>
         /// Deterministic nearest food source within maxDist of a point (the swarm centre).
-        /// Ties broken by food id. Returns false if none in range.
+        /// Ties broken by food id. Returns false if none in range. Every bug of a group asks with the group's centre in
+        /// the same tick, so the grid's kept last answer serves the whole group (Stage 1.1: this used to walk the whole
+        /// food list for every wandering bug, 69-91% of the client's bug-simulation time in the 2026-10-04 study).
         /// </summary>
         public bool TryGetNearestFood(FixedPoint2 from, float maxDist, out FixedPoint2 pos)
         {
-            // Timing only. This walks the WHOLE food list for every wandering bug every tick: the scaling study
-            // (2026-10-04) measured it at 69-91% of the client's bug-simulation time (see BACKLOG).
-            using var _perf = BugFarmer.Util.PerfProfiler.Sample("Sim.FoodLookup");
-            pos = default;
-            int bestSqr = int.MaxValue;
-            string bestId = null;
-            var maxFixed = FixedPoint.FromFloat(maxDist);
-            int maxSqr = (maxFixed * maxFixed).Value;
-            foreach (var kv in _food)
-            {
-                int sqr = kv.Value.pos.SqrDistanceTo(from).Value;
-                if (sqr > maxSqr) continue;
-                if (sqr < bestSqr || (sqr == bestSqr && string.CompareOrdinal(kv.Key, bestId) < 0))
-                {
-                    bestSqr = sqr;
-                    bestId = kv.Key;
-                    pos = kv.Value.pos;
-                }
-            }
-            return bestId != null;
+            using var _perf = BugFarmer.Util.PerfProfiler.Sample("Sim.FoodLookup"); // timing only
+            return _food.TryGetNearestCached(from, maxDist, out pos);
         }
 
         /// <summary>Like TryGetNearestFood but ALSO returns the food id — an individual predator needs the id to
         /// report a corpse-consume. Deterministic (same _food + ascending-id tie-break on every client).</summary>
         public bool TryGetNearestFoodId(FixedPoint2 from, float maxDist, out string foodId, out FixedPoint2 pos)
-        {
-            pos = default; foodId = null;
-            int bestSqr = int.MaxValue;
-            var maxFixed = FixedPoint.FromFloat(maxDist);
-            int maxSqr = (maxFixed * maxFixed).Value;
-            foreach (var kv in _food)
-            {
-                int sqr = kv.Value.pos.SqrDistanceTo(from).Value;
-                if (sqr > maxSqr) continue;
-                if (sqr < bestSqr || (sqr == bestSqr && string.CompareOrdinal(kv.Key, foodId) < 0))
-                { bestSqr = sqr; foodId = kv.Key; pos = kv.Value.pos; }
-            }
-            return foodId != null;
-        }
+            => _food.TryGetNearest(from, maxDist, out foodId, out pos);
 
         /// <summary>Resolve a specific food source's current position by id (a bug feeding at ONE corpse); false if
         /// it's gone (consumed / rotted).</summary>
         public bool TryGetFoodPos(string foodId, out FixedPoint2 pos)
         {
-            if (foodId != null && _food.TryGetValue(foodId, out var v)) { pos = v.pos; return true; }
+            if (foodId != null && _food.TryGet(foodId, out var v)) { pos = v.pos; return true; }
             pos = default; return false;
         }
 
@@ -153,7 +125,7 @@ namespace BugFarmer.Bugs
         /// </summary>
         public IEnumerable<(string id, int x, int y, int level)> ExportFood()
         {
-            foreach (var kv in _food)
+            foreach (var kv in _food.Entries)
                 yield return (kv.Key, kv.Value.pos.X.Value, kv.Value.pos.Y.Value, kv.Value.level);
         }
 
@@ -164,8 +136,7 @@ namespace BugFarmer.Bugs
         public void HydrateFoodExact(string foodId, int x, int y, int level)
         {
             if (string.IsNullOrEmpty(foodId) || level <= 0) return;
-            _food[foodId] = (new FixedPoint2(
-                new FixedPoint { Value = x }, new FixedPoint { Value = y }), level);
+            _food.Set(foodId, new FixedPoint2(new FixedPoint { Value = x }, new FixedPoint { Value = y }), level);
         }
 
         // ── Hunt assignments (_swarmStrikes) snapshot, mirroring the food registry ──────────────────────────
@@ -324,7 +295,7 @@ namespace BugFarmer.Bugs
                 case EventItemRotted:
                     // A ground item became bug food: register it (world cell centre).
                     if (!string.IsNullOrEmpty(evt.food_id) && evt.level > 0)
-                        _food[evt.food_id] = (FixedPoint2.FromVector2(
+                        _food.Set(evt.food_id, FixedPoint2.FromVector2(
                             new Vector2(evt.cell_x + 0.5f, evt.cell_y + 0.5f)), evt.level);
                     break;
 
@@ -336,7 +307,7 @@ namespace BugFarmer.Bugs
                         if (evt.level <= 0)
                             _food.Remove(evt.food_id);
                         else
-                            _food[evt.food_id] = (FixedPoint2.FromVector2(
+                            _food.Set(evt.food_id, FixedPoint2.FromVector2(
                                 new Vector2(evt.cell_x + 0.5f, evt.cell_y + 0.5f)), evt.level);
                     }
                     break;

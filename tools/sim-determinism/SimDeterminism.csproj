@@ -42,6 +42,7 @@
     <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/MovementFactory.cs" Link="client/MovementFactory.cs" />
     <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/BugAgent.cs" Link="client/BugAgent.cs" />
     <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/BugCollision.cs" Link="client/BugCollision.cs" />
+    <Compile Include="../../BugFarmerClient/Assets/Scripts/Bugs/FoodGrid.cs" Link="client/FoodGrid.cs" />
   </ItemGroup>
 
 </Project>

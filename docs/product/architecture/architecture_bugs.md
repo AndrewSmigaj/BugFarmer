@@ -1064,7 +1064,9 @@ namespace BugFarmer.Networking
 
 **Client cost (measured 2026-10-04):** every wandering bug looks up the nearest food each tick by walking the client's
 whole food registry (`InfluenceManager.TryGetNearestFood`, timed as `Sim.FoodLookup`); at ~2,600 bugs that is 91% of
-the client's bug-simulation time. See `docs/product/investigations/scaling-2026-10-04/` and the BACKLOG. Each part of a
+the client's bug-simulation time. See `docs/product/investigations/scaling-2026-10-04/` and the BACKLOG. **Fixed
+2026-10-07:** the registry is a `FoodGrid` (a cell index; a group's bugs share one lookup) with identical answers —
+`architecture_swarm_sync.md`, the food registry's cost note. Each part of a
 client tick is timed (`Sim.Tick` and its parts, timing only); the fixes are Stage 1.1–1.2 of `docs/plans/village-slice.md`.
 
 **The server brings to life only the chunks a player has loaded (found 2026-10-04):** food sources, nests and stations

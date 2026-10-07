@@ -259,7 +259,8 @@ is ① — two REAL clients, full system. The others are pre-checks/backstops, N
   `--surge-test` the centipede LUNGE — a pack windup→surge→overshoot→recover at a fixed player, byte-identical +
   non-vacuous `surgeFired`/`recovered`; `--subdue-test` the smoke/calm gate — a SUBDUED pack must NOT lunge (control
   DOES) yet still wanders, and an in-flight lunge aborts, all deterministic; `--attack-test` a moving player driving
-  attack/flee/curious). Links the real per-bug sim source and
+  attack/flee/curious; `--food-index-test` the food registry's cell index (`FoodGrid`) against the full scan on random
+  registries and queries — any mismatch fails it, and a planted fault was caught, 2026-10-07). Links the real per-bug sim source and
   runs it twice — catches wall-clock / unordered-collection / static / float nondeterminism in seconds. But
   it ONLY covers the per-bug movement core (no merge/split/spawn, single process) — a green here does NOT
   replace ①. See `tools/sim-determinism/README.md`.
