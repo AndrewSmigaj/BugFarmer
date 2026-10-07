@@ -209,6 +209,12 @@ making a four-times-bigger village good to walk around and making tuning runs fa
     7.5 / 12.6; normal 6.0 / 10.0); 1,000 bugs 3.2 / 6.0 (two cores alone 3.4 / 10.6). The cap made no clear
     difference, so it probably did not lower this processor's clock (some Intel desktop chips mostly ignore it or
     only drop the boost). Not claimed as a slower-computer result until the clock is measured during a capped run.
+  - **The catching test, second try: FAILED** (by the rule set before it ran). Interleaved, seeds 6–10, the pace gate
+    passed (0.01% apart), and nothing was flagged: fly breeding −10% and feeding −12% (not the same way on every
+    seed), centipede strikes −8%, kills +9%. So the first try's 46% drop in fly breeding was the slower machine, not
+    the change — the pace gate was needed — and halving how full a kill makes a centipede barely changes behaviour in
+    held runs. The check has still not been shown to catch a real change; a third try needs a change whose effect is
+    certain from the code, not from my reading of the ecology (proposed to the owner).
   - **The rejoin fault: investigation started** (the owner's yes, 2026-10-06):
     `docs/product/investigations/latejoin-rejoin-divergence.md` (draft). The rejoin session has an evidenced cause (a
     departed player's position is removed on receipt, outside the ordered stream, and a same-account rejoin brings
