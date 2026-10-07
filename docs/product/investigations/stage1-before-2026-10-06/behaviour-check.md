@@ -94,6 +94,8 @@ reports); `server` = the server's daily counts (per bug-day, or per 1,000 bug-ti
    nothing was flagged (fly breeding −10%, feeding −12%, centipede strikes −8%, kills +9%, none the same way on
    every seed). So the first try's flag was the slower machine, and this change barely moves behaviour in held
    runs. **The check has not yet been shown to catch a real change.**
-6. *Next (proposed):* a change whose effect is certain from the code itself.
+6. **The catching test, third try** (decided before it ran): bugs stay on a corpse for 50 ticks instead of 25
+   (`BugAgent.FeedTicks`), both builds from the same code; interleaved, fresh seeds 11–15. Passes only if the pace
+   gate passes and centipede eating time is flagged going up. *Result: pending.*
 
 Raw runs: `tools/_generated/scaling/2026-10-06-paired/` (git-ignored; `check_control.md`, `check_planted4.md`).
