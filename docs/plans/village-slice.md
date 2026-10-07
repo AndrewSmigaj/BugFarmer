@@ -191,6 +191,19 @@ making a four-times-bigger village good to walk around and making tuning runs fa
     6–10 (block B, step 3). **Passes only if** the pace gate passes AND the check flags fly breeding or fly feeding
     going DOWN (what the first try showed). If the pace gate passes and nothing is flagged, the first try's flag was
     the slower machine, and the catching test has failed.
+  - **Block B, the player tests** (`tools/run_players.sh` on the bench village as authored, normal speed, the base
+    build; results in `tools/_generated/players/2026-10-07T0052…`, `…0056…`, `…0101…`):
+    - 2 players, one walking a route: IDENTICAL (2,054 live ticks).
+    - 3 players, the one in charge leaving at 120 s: charge passed on twice; every pair IDENTICAL (1,065 and 2,553).
+    - 3 players, P2 leaving at 100 s and rejoining as the same account: P1 and P3 IDENTICAL (2,557 ticks), but **P2
+      was out of step from its first live tick in BOTH sessions** (ticks 96 and 1,087), with the same bug count as
+      the others, until the server's drift check resynced it about 20 s later (ticks 280 and 1,180). The other late
+      joiners today (same early snapshot, same 155 groups made before replay) were identical from their first tick.
+      **A real late-join fault, cause not yet known**; finding it needs per-bug traces. Asked the owner.
+    - Found on the way: my batch scripts logged `echo "$(date) … exit=$?"`, which reports `date`'s exit code, not
+      the run's — so every "exit=0" in today's batch logs was the clock's. Every run was re-checked from the
+      measuring script's own log ("run_config exit 0" in all 34 finished runs); the player script itself returns
+      the right code (1 for the rejoin run). Later scripts save `$?` first.
   - **Stage 1.0e started (block A, headless, 13 runs):** natural 1× and 4× (release build, clean; 4× breakdown on the
     development build; behaviour at both), fixed 1,000 / 2,000 / 4,000 at normal speed (release clean, development
     breakdown), and two-core runs at 1,000 and 2,000. Results: `tools/_generated/scaling/2026-10-06-before/`.
