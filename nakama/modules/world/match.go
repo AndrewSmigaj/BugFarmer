@@ -638,15 +638,14 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 				}
 				authData, _ := json.Marshal(authMsg)
 				dispatcher.BroadcastMessage(OpCodeZoneAuthority, authData, []runtime.Presence{presence}, nil, true)
+				// Phase 1b: the zone-wide blocks_bugs collision map, so its bug sim collides identically regardless of
+				// camera position. This client starts from now (no replay), so the map is the current one.
+				m.sendZoneCollisionMap(dispatcher, worldState, presence, zone.NextSeq-1)
 			} else {
-				// Late joiner - needs snapshot from authority
+				// Late joiner - needs snapshot from authority (its collision map, as of the snapshot, comes with it)
 				logger.Info("Late joiner %s in zone %s, authority is %s", userID, zoneID, zone.AuthorityUserID)
 				m.sendLateJoinSnapshot(logger, dispatcher, worldState, userID, presence)
 			}
-
-			// Phase 1b: every joiner (first or late) gets the zone-wide blocks_bugs collision map so its
-			// bug sim collides identically regardless of camera position. Dynamic changes ride the ledger.
-			m.sendZoneCollisionMap(dispatcher, worldState, presence)
 			m.sendZoneRoofMap(dispatcher, worldState, presence) // cosmetic: underground lighting roof mask
 		}
 	}
@@ -2857,9 +2856,8 @@ func (m *Match) handleSnapshotRequest(
 	}
 
 	logger.Info("Zone resync requested by %s - sending late-join snapshot", requesterID)
-	m.sendLateJoinSnapshot(logger, dispatcher, state, requesterID, presence)
-	m.sendZoneCollisionMap(dispatcher, state, presence) // Phase 1b: refresh the zone-wide collision map too
-	m.sendZoneRoofMap(dispatcher, state, presence)      // cosmetic: underground lighting roof mask
+	m.sendLateJoinSnapshot(logger, dispatcher, state, requesterID, presence) // sends its collision map too
+	m.sendZoneRoofMap(dispatcher, state, presence)                           // cosmetic: underground lighting roof mask
 }
 
 // handleZoneSnapshot stores a snapshot from the authority client (OpCode 75).
@@ -2952,14 +2950,15 @@ func (m *Match) buildSwarmSeedBaseline(state *WorldState, zone *ZoneState, chunk
 	return baseline
 }
 
-// sendZoneCollisionMap sends one joiner the zone's COMPLETE blocks_bugs cell set (OpCodeZoneCollisionMap)
-// so its per-bug collision runs zone-wide + identically to every other client (decoupled from its camera's
-// loaded chunks). Sent on join AND on resync; dynamic changes after this ride OCCUPANT_BLOCKS_BUGS events.
-func (m *Match) sendZoneCollisionMap(dispatcher runtime.MatchDispatcher, state *WorldState, presence runtime.Presence) {
+// sendZoneCollisionMap sends one client the zone's COMPLETE blocks_bugs cell set (OpCodeZoneCollisionMap) as it stood
+// just after event seq baseSeq, so its per-bug collision runs zone-wide + identically to every other client (decoupled
+// from its camera's loaded chunks). The first joiner gets it as of now; every late-join / resync package carries one
+// as of its snapshot (sendLateJoinSnapshot), because that client replays the later OCCUPANT_BLOCKS_BUGS changes itself.
+func (m *Match) sendZoneCollisionMap(dispatcher runtime.MatchDispatcher, state *WorldState, presence runtime.Presence, baseSeq int64) {
 	if state.CurrentZone == nil || presence == nil {
 		return
 	}
-	cx, cy := state.BlocksBugsCells()
+	cx, cy := state.BlocksBugsCellsAsOf(state.GetOrCreateZone(state.CurrentZone.ZoneID), baseSeq)
 	data, err := json.Marshal(ZoneCollisionMapMessage{Cx: cx, Cy: cy})
 	if err != nil {
 		return
@@ -3054,30 +3053,7 @@ func (m *Match) sendLateJoinSnapshot(
 	logger.Info("LateJoinSnapshot coherence: swarms=%d (leg-less=%d) food_entries=%d",
 		len(zone.LatestSnapshot.Swarms), noLegCount, len(zone.LatestSnapshot.Food))
 
-	// Player cells: PREFER the authority's snapshot-moment registry (one-time-base rule, 2026-07-19) —
-	// end-tick cells would let the joiner's replay see FUTURE player positions until each window ENTER
-	// replays. Filtered to CURRENT zone.Members so a player who left during the window doesn't linger as a
-	// ghost cell forever (their in-window influence on bugs is a known ~4s micro-gap; post-window state
-	// converges exactly as before). Fallback to current state for bootstrap / a pre-fix authority.
-	var playerCells []PlayerCellData
-	if len(zone.LatestSnapshot.PlayerCells) > 0 {
-		for _, cell := range zone.LatestSnapshot.PlayerCells {
-			if _, member := zone.Members[cell.PlayerID]; member {
-				playerCells = append(playerCells, cell)
-			}
-		}
-	}
-	if len(playerCells) == 0 {
-		for playerID := range zone.Members {
-			if cell, ok := state.PlayerCells[playerID]; ok {
-				playerCells = append(playerCells, PlayerCellData{
-					PlayerID: playerID,
-					CellX:    cell.CellX,
-					CellY:    cell.CellY,
-				})
-			}
-		}
-	}
+	playerCells := lateJoinPlayerCells(zone.LatestSnapshot.PlayerCells, zone.Members, state.PlayerCells)
 
 	// Note: playerCells may be FEWER than zone.Members — a player who joined after the snapshot has no
 	// snapshot cell; their PLAYER_CELL_ENTER replays from the influence log (correct by construction).
@@ -3235,6 +3211,30 @@ func (m *Match) sendLateJoinSnapshot(
 	handoffData, _ := json.Marshal(handoffMsg)
 	dispatcher.BroadcastMessage(OpCodeZoneHandoff, handoffData, []runtime.Presence{presence}, nil, true)
 	logger.Info("Sent ZoneHandoff to %s: live_start_tick=%d, last_event_seq=%d", joinerID, endTick+1, endLastSeq)
+
+	// Every package (late join, requested resync, drift resync) carries the collision map as of ITS snapshot: the
+	// client replays the in-window OCCUPANT_BLOCKS_BUGS changes at their ticks (a bootstrap's cut is "now").
+	m.sendZoneCollisionMap(dispatcher, state, presence, snapshotLastSeq)
+}
+
+// lateJoinPlayerCells: the player cells a joiner starts from. The authority's registry AT the snapshot moment
+// (one-time-base rule, 2026-07-19), unfiltered: a player who left after the snapshot is removed by its
+// PLAYER_CELL_LEAVE at that event's tick when the joiner replays it, exactly as on every other client. (Until
+// 2026-10-06 the cells were filtered to the current members, because clients dropped a departed player on receipt
+// of the presence-leave message rather than at an event tick; a same-account rejoin then passed the filter with
+// its OLD cell and replayed a phantom of itself — docs/product/investigations/latejoin-rejoin-divergence.md, A.)
+// With no snapshot registry (a bootstrap), the current members' cells, in player-id order.
+func lateJoinPlayerCells(snapshot []PlayerCellData, members map[string]bool, current map[string]*PlayerCellState) []PlayerCellData {
+	if len(snapshot) > 0 {
+		return append([]PlayerCellData(nil), snapshot...)
+	}
+	var cells []PlayerCellData
+	for _, playerID := range sortedStringKeys(members) {
+		if cell, ok := current[playerID]; ok {
+			cells = append(cells, PlayerCellData{PlayerID: playerID, CellX: cell.CellX, CellY: cell.CellY})
+		}
+	}
+	return cells
 }
 
 // driftSampleMargin is how far behind the frontier the sampled tick sits, so every client

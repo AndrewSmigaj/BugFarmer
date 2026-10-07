@@ -41,7 +41,9 @@ every derivation site so a composite never falls through a `TileDefs[...]` looku
 - Client `TilemapManager.PrimaryMaterial` mirror: `IsWaterTile` (feeds collision + water overlay + minimap)
   and the player-collision check.
 - **Lockstep:** the server (`state.go`) and client (`TilemapManager.IsCellBlockedForPlayers`) water/lava
-  checks must change together or players desync at water edges. (Neutralized in practice: the palette is
+  checks must change together or players desync at water edges. (That is PLAYER collision. Bug collision is a
+  separate, zone-wide set of cells with blocks_bugs occupants, also held by `TilemapManager` —
+  `architecture_swarm_sync.md` §12.3.) (Neutralized in practice: the palette is
   decorative-only, so no composite is ever water-primary.)
 - Forward-compatible: ground MECHANICS later replace `PrimaryMaterial` with a `Properties(id)` that BLENDS
   matA+matB — same call sites.

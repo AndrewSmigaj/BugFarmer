@@ -97,7 +97,9 @@ The server owns all game state and validates all actions:
   (a moved bug just starts drifting toward its new center; its counter-RNG re-keys on the new
   swarm-id/bug-id). Handlers are idempotent (move what exists, spawn the deficit, no-op on
   count match), which also covers late-join replay — and since 2026-07-19 the late-join package is
-  built on ONE time base (snapshot_tick), so a replayed merge always finds the absorbed swarm's REAL
+  built on ONE time base (snapshot_tick; since 2026-10-07 its collision map and player cells too, and a player's
+  departure removes their cell at the `PLAYER_CELL_LEAVE` tick — `docs/product/investigations/latejoin-rejoin-divergence.md`),
+  so a replayed merge always finds the absorbed swarm's REAL
   bugs to move (the deficit-fill is a last resort, and the sync harness FAILS on it firing; see
   architecture_swarm_sync.md §0 "Update 2026-07-19"). Bookkeeping: split parent marks shed ids
   in `RemovedBugIDs` (event carries `split_count` + post-split `parent_count`); merge advances

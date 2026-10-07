@@ -711,6 +711,64 @@ func (s *WorldState) AddInfluenceEvent(zoneID, eventType, playerID string, cellX
 	s.PendingInfluence = append(s.PendingInfluence, event)
 }
 
+// BlocksBugsCellsAsOf returns the zone's blocks_bugs cells as they stood just after event seq baseSeq: the current
+// set with every later OCCUPANT_BLOCKS_BUGS change undone. A late joiner (or a resyncing client) rebuilds the bug sim
+// from a snapshot taken at baseSeq and then replays every later event, those changes included, at its own tick — so
+// its starting collision map must describe the snapshot's moment, not now. (2026-10-06: a fence a centipede gnawed
+// through between the snapshot and the join was already open in the joiner's replay, and that centipede walked
+// through it on the joiner only — docs/product/investigations/latejoin-rejoin-divergence.md, cause B.)
+func (s *WorldState) BlocksBugsCellsAsOf(zone *ZoneState, baseSeq int64) (cx []int, cy []int) {
+	cx, cy = s.BlocksBugsCells()
+	if zone == nil {
+		return cx, cy
+	}
+	return undoBlocksBugsAfter(cx, cy, zone.InfluenceLog, baseSeq)
+}
+
+// undoBlocksBugsAfter undoes, newest first, every OCCUPANT_BLOCKS_BUGS change in log after baseSeq: a cell an
+// in-window event opened (level 0) is blocked again, a cell it blocked (level 1) is opened. Unchanged input when no
+// such event exists; otherwise the cells come back sorted by y, then x (deterministic, never map order).
+func undoBlocksBugsAfter(cx, cy []int, log []InfluenceEvent, baseSeq int64) ([]int, []int) {
+	var changes []InfluenceEvent
+	for _, e := range log {
+		if e.Type == InfluenceOccupantBlocksBugs && e.Seq > baseSeq {
+			changes = append(changes, e)
+		}
+	}
+	if len(changes) == 0 {
+		return cx, cy
+	}
+	sort.Slice(changes, func(i, j int) bool { return changes[i].Seq > changes[j].Seq })
+	type cell struct{ x, y int }
+	blocked := make(map[cell]bool, len(cx))
+	for i := range cx {
+		blocked[cell{cx[i], cy[i]}] = true
+	}
+	for _, e := range changes {
+		c := cell{e.CellX, e.CellY}
+		if e.Level > 0 {
+			delete(blocked, c) // placed after the snapshot: open at the snapshot's moment
+		} else {
+			blocked[c] = true // removed after the snapshot: still blocking at the snapshot's moment
+		}
+	}
+	cells := make([]cell, 0, len(blocked))
+	for c := range blocked {
+		cells = append(cells, c)
+	}
+	sort.Slice(cells, func(i, j int) bool {
+		if cells[i].y != cells[j].y {
+			return cells[i].y < cells[j].y
+		}
+		return cells[i].x < cells[j].x
+	})
+	ox, oy := make([]int, len(cells)), make([]int, len(cells))
+	for i, c := range cells {
+		ox[i], oy[i] = c.x, c.y
+	}
+	return ox, oy
+}
+
 // BlocksBugsCells returns every world cell in the zone whose occupant blocks bugs (World.BlocksBugs) —
 // the COMPLETE zone-wide collision set sent to each joiner (OpCodeZoneCollisionMap). Phase 1b: clients run
 // per-bug collision against this instead of their view-scoped chunks, so a bug near a fence collides

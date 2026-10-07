@@ -1,6 +1,29 @@
 # Investigation: a joining player out of step from its first live tick
-_status: READY TO IMPLEMENT (pending the owner's approval of the fixes) · investigated 2026-10-06 · investigate-only
-(no fix applied)_
+_status: **FIXED 2026-10-07** (the owner approved the three fixes the same morning) · investigated 2026-10-06_
+
+## Outcome (2026-10-07)
+Built as proposed in §5, with one addition found at the design review: the drift-check resync (`match.go`, the
+"resyncing dissenters" path) also sent a package without any collision map, so **every package now sends its own map
+as of its snapshot from one place** (`sendLateJoinSnapshot` → `sendZoneCollisionMap(…, snapshotLastSeq)` →
+`BlocksBugsCellsAsOf`), the first joiner gets the current map, and the client re-arms the map wait on every package
+(`TilemapManager.ExpectCollisionMap`) so a resync replays on the matching map, not its own newer one. Player
+departures: `PLAYER_CELL_LEAVE` now removes a matching cell at its tick; `HandlePlayerLeft` no longer touches the
+sim; the snapshot's cells go out unfiltered (`lateJoinPlayerCells`). The first authority snapshot waits for the sim to
+start. Six Go tests (`latejoin_baseline_test.go`).
+
+**Gates:** Go tests (all), the seven sim-determinism modes, both late-join halves on the bench (fresh plugin) — all
+PASS. **Acceptance on world 1704694170488522611** (`tools/_generated/players/accept-2026-10-07/`):
+| Case | Trigger present | Before | After |
+|---|---|---|---|
+| plain join, a fence gnawed inside the replay window (B) | 5 of 5 | 3 of 4 out of step | **5 of 5 identical**, joiner's map 5,116 = the authority's |
+| join ~1.5 s after the zone starts (C) | not triggered | — | 2 of 2 identical, a real snapshot (tick 3) |
+| same-account rejoin (A) | 5 of 5 (stale cell in the snapshot) | every one out of step | **5 of 5 identical**, both sessions |
+| run 3 replayed in full | yes | both P2 sessions out of step | **identical, twice** (every player, no resync) |
+*Residual:* C's trigger (the authority's sim still at tick 0 at the first snapshot) did not occur in these runs, so its
+fix is shown harmless but not shown preventing the fault; a server log line "No authority snapshot yet" after the first
+second of a zone would show it again. The lasting fix is Stage 1.4's snapshot on demand. The rejoin traces were not
+kept (the player script doesn't copy them), so cause A's fix is shown by before/after on the same scenario, not by a
+per-tick player-count trace.
 
 ## Debrief (read me first)
 - **TL;DR:** a player who joins a zone that is already running can see slightly wrong bugs from the moment they

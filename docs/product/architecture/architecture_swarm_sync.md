@@ -26,7 +26,7 @@ desync (it caused the Phase 1b fence bug: collision read view-scoped chunks insi
 client `BugFarmerClient/.../Bugs/InfluenceManager.cs` `ProcessInfluenceEvent`). All carry `tick`+`seq`:
 | Event | Fields | Sim effect |
 |---|---|---|
-| `PLAYER_CELL_ENTER` / `_LEAVE` | player_id, cell_x/y | player position bugs flee/seek (ENTER overwrites; LEAVE is a no-op) |
+| `PLAYER_CELL_ENTER` / `_LEAVE` | player_id, cell_x/y | player position bugs flee/seek (ENTER overwrites; LEAVE removes the player when it matches their cell — on a move LEAVE+ENTER net to the new cell; on leaving the zone the player goes at the event tick on every client. Until 2026-10-06 LEAVE was a no-op and the removal happened on receipt of the presence message) |
 | `SWARM_SET_TARGET` | origin/target/speed (+hunt: target_prey_id, strike_radius, kills, cooldown) | re-anchors a swarm's movement leg; hunt fields drive the authority's predation strike |
 | `BUG_REMOVED` | swarm_id, bug_id | removes a bug on every client at the event tick (catch / melee / predation / gnaw) |
 | `SWARM_SPAWNED` | swarm_id, species, center, count | mints a NEW swarm at the event tick, seeded from (worldSeed,swarmId,bugId) |
@@ -55,7 +55,10 @@ fixed): the empty-bootstrap window (#137)** — a late-joiner that arrives in th
 authority's first snapshot reaches the server gets a seed-baseline bootstrap and converges via drift-resync;
 the fix (server asks the authority to snapshot on demand) is a non-trivial round-trip whose cost exceeds the
 benefit for a self-healing ~1-frame transient, so it is documented as accepted rather than shipped. Likewise
-the continuous-spawn on-receipt-vs-hash sub-1% self-healing caveat.
+the continuous-spawn on-receipt-vs-hash sub-1% self-healing caveat. *Corrected 2026-10-06:* the window was up to
+10 s, not ~1 frame — the authority's first snapshot was skipped while its sim was still at tick 0 and retried only
+at the 10 s cadence. The first snapshot now waits for the sim to start; the on-demand snapshot is Stage 1.4 of
+`docs/plans/village-slice.md` (`docs/product/investigations/latejoin-rejoin-divergence.md`, cause C).
 
 **Update 2026-06-29 — two latent late-join determinism bugs found + fixed (the gate had been silently failing
 on DENSE zones; the "proven bit-identical" above held only while zones were small).** (1) **Client websocket
@@ -868,7 +871,13 @@ through on the rest → that bug's position diverged for players in different ar
 **The fix (mirrors the food-registry pattern):** the bug sim now reads a ZONE-WIDE collision set,
 identical on every client and decoupled from the camera:
 - **Static, on join + resync:** the server sends each joiner the COMPLETE blocks_bugs cell set via
-  `OpCodeZoneCollisionMap` (106) → client hydrates `TilemapManager._blocksBugsZoneWide`. Built by
+  `OpCodeZoneCollisionMap` (106) → client hydrates `TilemapManager._blocksBugsZoneWide`. **As of which moment
+  (2026-10-06):** the first joiner gets the current set; every late-join / requested-resync / drift-resync package
+  carries its own map AS OF ITS SNAPSHOT (`sendLateJoinSnapshot` → `BlocksBugsCellsAsOf`: the current set with each
+  later `OCCUPANT_BLOCKS_BUGS` change undone), because that client replays those changes at their ticks; and the
+  client re-arms the readiness gate on every package (`ExpectCollisionMap`) so a resync replays on the matching map,
+  not its own newer one. Before, a fence gnawed between the snapshot and the join was already open in the joiner's
+  replay (`docs/product/investigations/latejoin-rejoin-divergence.md`, cause B). Built by
   `WorldState.BlocksBugsCells`, which scans EVERY chunk in the zone — including ones not yet in
   `state.Chunks` (chunks load lazily per subscription, so the first joiner has none in memory). Missing
   chunks are loaded TRANSIENTLY from disk (read-only, occupant-delta overlaid, NO RNG-bearing init, not

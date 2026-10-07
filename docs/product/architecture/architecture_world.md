@@ -9,8 +9,11 @@ BugFarmer uses a tile-based world with fixed-size zones. World data is authored 
 ## 0. Ground rendering — tile variants + the decorative tuft layer
 
 Ground is stored as one id per cell (`grass`, `dirt`, …), and every zone with grass uses the id `grass`,
-so ground ART changes apply everywhere at once with no zone-data edit. Two client-side visual layers sit
-on top of that single id (both purely cosmetic — no server, sim, or determinism surface):
+so ground ART changes apply everywhere at once with no zone-data edit. (`TilemapManager` also holds one sim input,
+the zone-wide bug collision set — the cells with blocks_bugs occupants — hydrated from the server on join and on every
+late-join/resync package as of that package's snapshot (2026-10-07); see `architecture_swarm_sync.md` §12.3.) Two
+client-side visual layers sit on top of that single id (both purely cosmetic — no server, sim, or determinism
+surface):
 
 - **Tile variants.** `grass` ships as `grass.png` + `grass_v2..v5.png` (16×16 = one cell at the game's
   16 PPU). `TilemapManager.VariantTileId` picks one per cell from a hash of the cell coordinate, so a

@@ -238,9 +238,13 @@ namespace BugFarmer.Bugs
                     break;
 
                 case EventPlayerCellLeave:
-                    // DO NOTHING - keep last known position
-                    // ENTER will overwrite when player enters new cell
-                    // This guarantees single cell per player, no transient states
+                    // On a move the server sends LEAVE(old) + ENTER(new) at one tick; both apply before that tick's
+                    // sim step, so the pair still nets to the new cell. On leaving the zone LEAVE comes alone and
+                    // removes the player — at the same tick on every client. (Until 2026-10-06 LEAVE was ignored and
+                    // a departed player was dropped on receipt of the presence-leave message, at a different tick on
+                    // each client; docs/product/investigations/latejoin-rejoin-divergence.md, cause A.)
+                    if (_playerCells.TryGetValue(evt.player_id, out var at) && at.cellX == evt.cell_x && at.cellY == evt.cell_y)
+                        _playerCells.Remove(evt.player_id);
                     break;
 
                 case EventSwarmSetTarget:

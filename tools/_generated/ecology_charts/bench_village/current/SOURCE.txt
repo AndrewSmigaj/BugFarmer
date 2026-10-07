@@ -1,2 +1,2 @@
-2026-10-06_2252_s10_behave_1000_feed50_seed12
-Stage 1.0 behaviour check: about 1000 bugs held steady (hold_population) at 6x speed, so per-bug behaviour can be compared between builds without the ecology going different ways from seed to seed
+2026-10-07_0726_s10_fixed_4000
+Stage 1.0 fixed-count cost run: about 4000 bugs (village_21_B's mix x4.47), hold_population, normal speed

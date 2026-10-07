@@ -93,6 +93,13 @@ making a four-times-bigger village good to walk around and making tuning runs fa
 - **Next:** the owner's answers below; then the windowed tour, the 1.0e write-up, and Stage 1.1.
 - **The owner's answers (2026-10-07):** the behaviour check becomes a two-step check; the three late-join fixes now,
   as their own change; the windowed tour whenever suits.
+- **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
+  resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
+  and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism
+  modes, both late-join halves). On the world where the faults reproduced: plain joins with a fence gnawed in the
+  window 5 of 5 identical (before: 3 of 4 out of step), same-account rejoins 5 of 5 identical (before: all out of step),
+  run 3 replayed twice, every player identical. Cause C's trigger did not occur (residual noted). The player script
+  now clears every player's old files (a stale P3 file was being compared). Details: the investigation's Outcome.
 - **The windowed tour (2026-10-07, 07:16–07:27):** the first check with `-screenshot` showed the TITLE screen
   (`OpeningSequence`, removed only when Start is pressed) still over the game — the first overlay fix had hidden only
   the character select; the rig now removes both (test code only), and the pictures show the village with the

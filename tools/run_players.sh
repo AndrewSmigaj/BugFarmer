@@ -39,10 +39,10 @@ if [ "$WIPE" = "1" ]; then
   WIPE_FLAG=""; [[ "$ZONE" == bench_* ]] || WIPE_FLAG="--any-zone"
   python3 "$ROOT/tools/saves/wipe_zone.py" "$ZONE" $WIPE_FLAG || { echo "ERROR: wipe failed"; exit 1; }
 fi
-for i in $(seq 1 "$N"); do
-  rm -f "$PDATA"/hashlog_P"$i"*.csv "$PDATA"/client_cost_P"$i"*.csv "$PDATA"/client_cost_summary_P"$i"*.json \
-        "$PDATA"/player_P"$i"*.log "$PDATA"/trace_P"$i"_*.csv 2>/dev/null
-done
+# Every player's files, not just P1..N: the results are gathered with P* globs, so a 2-player run after a 3-player one
+# used to compare against a stale P3 file (found 2026-10-06).
+rm -f "$PDATA"/hashlog_P*.csv "$PDATA"/client_cost_P*.csv "$PDATA"/client_cost_summary_P*.json \
+      "$PDATA"/player_P*.log "$PDATA"/trace_P*_*.csv 2>/dev/null
 
 launch() {  # id duration extra-args...   (sets LAST_PID; called directly, never in $(...), so `wait` can see it)
   local id="$1" dur="$2"; shift 2

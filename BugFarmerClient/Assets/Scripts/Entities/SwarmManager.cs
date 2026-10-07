@@ -253,13 +253,14 @@ namespace BugFarmer.Entities
         }
 
         /// <summary>
-        /// Clean up InfluenceManager when a player leaves (presence-based safety net).
-        /// Server also emits PLAYER_CELL_LEAVE, but this handles the case where the event is lost.
+        /// A player left the match. Their cell is NOT removed here: the bug sim reads player cells, so the removal
+        /// rides the server's PLAYER_CELL_LEAVE event and happens at that event's tick on every client. (Removing on
+        /// receipt of this presence message dropped the cell at a different tick on each client — 2026-10-06,
+        /// docs/product/investigations/latejoin-rejoin-divergence.md, cause A.)
         /// </summary>
         private void HandlePlayerLeft(Nakama.IUserPresence presence)
         {
-            InfluenceManager.Instance?.RemovePlayerCell(presence.UserId);
-            Debug.Log($"[SwarmManager] Player left: {presence.UserId}, removed from InfluenceManager");
+            Debug.Log($"[SwarmManager] Player left: {presence.UserId} (their cell leaves at the PLAYER_CELL_LEAVE tick)");
         }
 
         // Debug: track last logged state to avoid spam
@@ -2151,6 +2152,10 @@ namespace BugFarmer.Entities
             // bugs near walls collide differently than the authority (permanent per-bug divergence). The map
             // (OpCodeZoneCollisionMap) is sent alongside the late-join snapshot. If it's not here yet, defer to
             // Update(); else replay now. (Was gated on view chunks; collision is now zone-wide, not view-scoped.)
+            // Every package (join, requested resync, drift resync) is followed by the collision map AS OF its snapshot
+            // (2026-10-06). A resyncing client already holds a map — its live, newer one — so mark it stale: the
+            // replay must run on the map that matches the snapshot, then re-apply the window's changes itself.
+            TilemapManager.Instance?.ExpectCollisionMap();
             if (TilemapManager.Instance != null && !TilemapManager.Instance.CollisionMapReady)
             {
                 _deferredReplayPending = true;
@@ -2445,8 +2450,12 @@ namespace BugFarmer.Entities
         /// </summary>
         private IEnumerator AuthoritySnapshotLoop()
         {
-            // Small delay to ensure swarms are initialized, then send first snapshot
+            // Small delay to ensure swarms are initialized, then send first snapshot — once the sim has started: a
+            // snapshot at tick 0 is skipped (SendAuthoritySnapshot), and the next try used to be 10 s later, so anyone
+            // joining in between got a seed-baseline stand-in instead (2026-10-06, the late-join investigation, cause C).
             yield return new WaitForSeconds(0.5f);
+            while (_isAuthority && _simulationTick <= 0)
+                yield return null;
             if (!_isAuthority) yield break;
 
             SendAuthoritySnapshot();

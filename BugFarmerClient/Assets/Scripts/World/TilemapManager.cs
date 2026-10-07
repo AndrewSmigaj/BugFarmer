@@ -1492,6 +1492,15 @@ namespace BugFarmer.World
         }
 
         /// <summary>
+        /// A late-join / resync package has arrived; its own collision map (as of its snapshot) follows it. Mark the
+        /// current one stale so the replay waits for it (the set itself is replaced wholesale when it arrives).
+        /// </summary>
+        public void ExpectCollisionMap()
+        {
+            _collisionMapReady = false;
+        }
+
+        /// <summary>
         /// Phase 1b: hydrate the complete zone-wide blocks_bugs set from the server (OpCodeZoneCollisionMap,
         /// sent on join + resync). Replaces the set wholesale (resync re-sends the authoritative current state),
         /// then marks the bug sim free to run. Dynamic changes after this ride OCCUPANT_BLOCKS_BUGS events.
