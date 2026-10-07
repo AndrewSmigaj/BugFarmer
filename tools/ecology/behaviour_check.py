@@ -28,6 +28,12 @@ base value, and only those per-seed differences are judged. A metric is FLAGGED 
   its mean is over MIN_CHANGE of the base mean (15%).
 UNPAIRED (fallback, when the seeds don't match): flagged when |new mean - base mean| is over K standard errors of the
 difference of the two groups AND over MIN_CHANGE.
+TWO STEPS (the owner's choice, 2026-10-07; five seeds alone missed a certain +65% change at 3.7 standard errors):
+  step 1, five seeds: besides the FLAG above, a change that goes the same way on every seed, is over 15% and over the
+          5% two-sided critical t for the seeds (2.78 for five) is a SUSPECT -> exit 3: run five FRESH seeds of both
+          builds, interleaved, and judge all ten with --confirm;
+  step 2, --confirm: flagged when the change goes the same way on at least 9 in 10 of the seeds, is over K standard
+          errors of the per-seed differences and over 15%. A suspect that fails this is cleared.
 Either way, a metric whose events are rare (fewer than MIN_EVENTS counted across the base runs, and across the new
 runs) is reported "too rare to judge", never flagged; one that is absent in the base runs but frequent in the new ones
 (or the reverse) is flagged as appearing (vanishing). For a client state the events counted are its STARTS when the
@@ -53,12 +59,13 @@ So run the two builds INTERLEAVED, in one session (base seed 1, new seed 1, base
 A run whose client pace is under 90% of the median of all the runs is named as BROKEN (2026-10-06: one client stuck
 in a resync loop from tick 0 kept 2.9 ticks/s and showed up only as a 19% gap between the group means).
 
-Exit codes: 0 = no flags, 1 = flags, 2 = not enough data, or not comparable (the pace gate, or a broken run).
+Exit codes: 0 = no flags, 1 = flags, 2 = not enough data, or not comparable (the pace gate, or a broken run),
+3 = suspects only (step 1): run step 2.
 
 Usage:
   behaviour_check.py --base RUN_DIR [RUN_DIR ...] [--new RUN_DIR ...] [--k 4] [--min-change 0.15]
                      [--min-events 20] [--skip-days 1] [--skip-seconds 30] [--min-bug-ticks 10000] [--unpaired]
-                     [--max-pace-diff 0.01] [--out report.md]
+                     [--max-pace-diff 0.01] [--confirm] [--out report.md]
 """
 import argparse
 import glob
@@ -74,6 +81,17 @@ BEHAV_SHARES = ["feed", "breed"]
 BEHAV_EVENTS = ["eggs", "trip_home", "trip_abandon", "nest_defend", "merge", "split", "player_hit"]
 DAY_TICKS = 8400
 MIN_PAIRED_SEEDS = 3
+CONFIRM_AGREE = 0.9  # step 2: the share of seeds a change must go the same way on
+# Two-sided 5% critical values of Student's t by degrees of freedom (seeds - 1): the step-1 SUSPECT bar.
+T_CRIT_5PCT = {1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571, 6: 2.447, 7: 2.365, 8: 2.306, 9: 2.262, 10: 2.228,
+               11: 2.201, 12: 2.179, 13: 2.160, 14: 2.145, 15: 2.131, 19: 2.093, 24: 2.064, 29: 2.045}
+
+
+def t_crit(df):
+    """The two-sided 5% critical t for df degrees of freedom (the nearest tabulated df at or below; 1.96 past 29)."""
+    if df > 29:
+        return 1.96
+    return T_CRIT_5PCT[max(d for d in T_CRIT_5PCT if d <= df)]
 LINE = re.compile(r"(ECOSTATS|BEHAVSTATS|PREDLOG) (day=\d+[^\"\\]*)")
 
 
@@ -242,9 +260,11 @@ def pct(new, base):
     return f"{100 * (new - base) / base:+.0f}%" if base else "from 0"
 
 
-def compare_paired(base_runs, base_seeds, new_runs, new_seeds, seeds, k, min_change, min_events):
+def compare_paired(base_runs, base_seeds, new_runs, new_seeds, seeds, k, min_change, min_events, confirm=False):
     """Per-seed differences. -> rows (species, metric, base_mean, sd of the per-seed differences, new_mean, flagged,
-    note)."""
+    note). Step 1 (confirm=False): flagged = all seeds one way + over k se + over min_change; a SUSPECT (note starts
+    "SUSPECT") = all seeds one way + over the 5% critical t + over min_change. Step 2 (confirm=True): flagged = at
+    least CONFIRM_AGREE of the seeds one way + over k se + over min_change."""
     rows = []
     species = sorted({sp for r in base_runs + new_runs for sp in r})
     for sp in species:
@@ -267,13 +287,16 @@ def compare_paired(base_runs, base_seeds, new_runs, new_seeds, seeds, k, min_cha
                 why, flag = rare
             else:
                 up, down = sum(1 for x in d if x > 0), sum(1 for x in d if x < 0)
-                one_way = up == len(d) or down == len(d)
+                need = math.ceil(CONFIRM_AGREE * len(d)) if confirm else len(d)
+                one_way = max(up, down) >= need
                 clear = se == 0 and dmu != 0 or se > 0 and abs(dmu) > k * se
                 big = abs(dmu) > min_change * abs(mu)
                 flag = one_way and clear and big
+                suspect = (not confirm and not flag and one_way and big
+                           and (se == 0 and dmu != 0 or se > 0 and abs(dmu) > t_crit(len(d) - 1) * se))
                 spread = f"{abs(dmu) / se:.1f} se" if se > 0 else "no spread"
-                why = (f"{'changed' if flag else ''} {pct(nmu, mu)}, {up} up / {down} down of {len(d)} seeds, {spread}"
-                       .strip())
+                label = "changed" if flag else ("SUSPECT" if suspect else "")
+                why = f"{label} {pct(nmu, mu)}, {up} up / {down} down of {len(d)} seeds, {spread}".strip()
             rows.append((sp, mt, mu, dsd, nmu, flag, why))
     return rows
 
@@ -323,6 +346,7 @@ def main(argv=None):
     ap.add_argument("--skip-seconds", type=float, default=30.0)
     ap.add_argument("--min-bug-ticks", type=float, default=10000.0)
     ap.add_argument("--unpaired", action="store_true", help="compare group means even when the seeds match")
+    ap.add_argument("--confirm", action="store_true", help="step 2: judge the step-1 and fresh seeds together")
     ap.add_argument("--max-pace-diff", type=float, default=0.01,
                     help="the largest relative difference in client pace between the groups (0.01 = 1%%)")
     ap.add_argument("--out")
@@ -361,13 +385,14 @@ def main(argv=None):
     seeds = None if args.unpaired else pairing(args.base, args.new)
     if seeds:
         rows = compare_paired(base, [seed_of(d) for d in args.base], new, [seed_of(d) for d in args.new], seeds,
-                              args.k, args.min_change, args.min_events)
+                              args.k, args.min_change, args.min_events, confirm=args.confirm)
         mode, spread_col = f"paired by seed ({', '.join(map(str, seeds))})", "sd of per-seed differences"
     else:
         rows = compare(base, new, args.k, args.min_change, args.min_events)
         mode = "unpaired: group means; seed differences count as noise" if new else "noise floor"
         spread_col = "base sd"
     flagged = [r for r in rows if r[5]]
+    suspects = [r for r in rows if not r[5] and r[6].startswith("SUSPECT")]
     lines = [f"| species | metric | base mean | {spread_col} | new mean | flag |", "|---|---|---|---|---|---|"]
     for sp, mt, mu, sd, nmu, fl, why in rows:
         lines.append(f"| {sp} | {mt} | {fmt(mu)} | {fmt(sd)} | {fmt(nmu)} | {'**FLAG** ' if fl else ''}{why} |")
@@ -380,12 +405,17 @@ def main(argv=None):
     print(text if not args.out else summary + f"(table: {args.out})")
     for sp, mt, mu, sd, nmu, fl, why in flagged:
         print(f"FLAG {sp} {mt}: base {fmt(mu)} ± {fmt(sd)}, new {fmt(nmu)} ({why})")
+    for sp, mt, mu, sd, nmu, fl, why in suspects:
+        print(f"SUSPECT {sp} {mt}: base {fmt(mu)}, new {fmt(nmu)} ({why})")
+    if suspects and not flagged:
+        print(f"{len(suspects)} suspect(s): step 2 — run five FRESH seeds of both builds, interleaved, then judge all the "
+              f"seeds together with --confirm")
     if new:
         rare = sum(1 for r in rows if r[6] == "too rare to judge")
         rule = ("goes the same way on every seed, is over" if seeds else "is over")
         print(f"({rare} metrics too rare to judge; a change counts when it {rule} {args.k:g} standard errors AND over "
               f"{100 * args.min_change:.0f}%)")
-    return 1 if flagged else 0
+    return 1 if flagged else (3 if suspects else 0)
 
 
 if __name__ == "__main__":

@@ -100,6 +100,11 @@ reports); `server` = the server's daily counts (per bug-day, or per 1,000 bug-ti
    gate passes and centipede eating time is flagged going up. **Failed, narrowly:** eating time +65%, up on all five
    seeds, at 3.7 standard errors (the bar is 4); pace 0.11% apart. One run was a broken client (a resync loop from
    tick 0, 2.9 ticks/s), set aside and re-run; the pace gate now names such runs.
+7. **The two-step check (the owner's choice, 2026-10-07):** step 1 marks a change that goes the same way on all five
+   seeds, over 15% and over 2.78 standard errors (the textbook 5% bar for five seeds) as a SUSPECT; step 2 runs five
+   fresh seeds and confirms it over all ten (the same way on at least nine, over 4 standard errors, over 15%). On the
+   existing runs the same-build pair raises no suspect and the longer-eating copy raises two (centipede eating +65%,
+   wasp eating +128%). *Validation pending:* step 2 on seeds 16–20 must confirm centipede eating going up.
 
 **Where this leaves the check (2026-10-06):** it raises no false alarms, and it misses even a certain, consistent
 +65% change with five seeds. The "smallest change it can see" table above was worked out from the same-build runs

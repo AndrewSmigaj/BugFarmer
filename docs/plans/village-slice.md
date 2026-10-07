@@ -91,9 +91,24 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   write-up of the "before" numbers still to write. The late-join investigation is written (three causes, fixes
   proposed).
 - **Next:** the owner's answers below; then the windowed tour, the 1.0e write-up, and Stage 1.1.
-- **Waiting on the owner:** how to make the behaviour check useful (more seeds, longer runs, or a two-step check); the
-  three late-join fixes (now, or within 1.4); a time for the windowed tour; "publish"; the OK to delete the rehearsal
-  page.
+- **The owner's answers (2026-10-07):** the behaviour check becomes a two-step check; the three late-join fixes now,
+  as their own change; the windowed tour whenever suits.
+- **The windowed tour (2026-10-07, 07:16–07:27):** the first check with `-screenshot` showed the TITLE screen
+  (`OpeningSequence`, removed only when Start is pressed) still over the game — the first overlay fix had hidden only
+  the character select; the rig now removes both (test code only), and the pictures show the village with the
+  player walking its route. Release build, 300 s each, frame and drawing times per frame (typical / worst 1 in 100):
+  2,000 bugs: frame 4.0 / 14.1 ms, bug drawing 3.2 / 5.3 ms, 173 of 67,852 frames over 16.7 ms; 4,000 bugs: frame
+  6.7 / 29.9 ms, bug drawing 5.3 / 8.9 ms, 2,539 of 36,848 frames over 16.7 ms (targets at 2,000: drawing 2 ms worst).
+  The game's own world menu ("Play" and a mode list) stays on screen after entering — nothing in the game hides it.
+  Results: `tools/_generated/scaling/2026-10-07-tour/` (with the pictures).
+- **The two-step behaviour check (2026-10-07), its rules set before its validation:** step 1, five seeds: flagged as
+  before (all one way, over 4 standard errors, over 15%); a SUSPECT when all one way, over 15% and over the 5%
+  critical t for the seeds (2.78 at five; a textbook bar, not one picked from the results). Step 2, only for
+  suspects: five fresh seeds of both builds, interleaved; confirmed when, over all ten, the change goes the same way
+  on at least nine, is over 4 standard errors and over 15%. On the existing data: the same-build pair raises no
+  suspect (exit 0); the longer-eating copy raises two (centipede eating +65%, wasp eating +128%, 3.7 standard errors
+  each). **Validation, decided before it runs:** step 2 on seeds 16–20 must CONFIRM centipede eating going up.
+- **Waiting on the owner:** "publish"; the OK to delete the rehearsal page.
 
 ## PROGRESS (this plan; newest last — the history before it is in the earlier plan's PROGRESS)
 - **2026-10-04 (evening):** written after the owner asked for one careful, coherent plan for the village slice (512 ×

@@ -148,6 +148,26 @@ class BehaviourCheck(unittest.TestCase):
         n2 = [write_run(self.root, "oldnew0", attack=0)]
         self.assertEqual(self.check(b2, n2), 1)
 
+    # --- two steps (2026-10-07)
+    def test_step_one_marks_a_consistent_moderate_change_as_suspect(self):
+        # every seed up, by 45 on average (18% of 250) with a wide spread: about 2.85 se — over the 2.78 suspect bar,
+        # under the 4 se flag bar
+        b = self.seeded("base", lambda s: 100 + 50 * s)
+        n = self.seeded("new", lambda s: 100 + 50 * s + 45 + [40, -40, 30, -30, 0][s - 1])
+        self.assertEqual(self.check(b, n), 3)
+
+    def test_confirm_flags_a_change_that_holds_on_nine_of_ten_seeds(self):
+        seeds = range(1, 11)
+        b = self.seeded("base", lambda s: 100 + 50 * s, seeds)
+        n = self.seeded("new", lambda s: 100 + 50 * s + (80 if s != 7 else -5), seeds)  # nine up, one down; 19%
+        self.assertEqual(self.check(b, n, "--confirm"), 1)
+
+    def test_confirm_clears_a_change_that_holds_on_only_eight_of_ten(self):
+        seeds = range(1, 11)
+        b = self.seeded("base", lambda s: 100 + 50 * s, seeds)
+        n = self.seeded("new", lambda s: 100 + 50 * s + (80 if s not in (3, 7) else -5), seeds)  # eight up
+        self.assertEqual(self.check(b, n, "--confirm"), 0)
+
     def test_pace_gate(self):
         self.assertAlmostEqual(bc.client_pace(write_run(self.root, "p", pace=59.8), 30), 59.8, places=1)
         b = [write_run(self.root, f"base_seed{s}", hunting=100 + 50 * s, pace=59.8) for s in range(1, 6)]
