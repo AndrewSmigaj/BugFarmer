@@ -199,6 +199,13 @@ during the replay. Consistent with the mechanism, and why the fault is intermitt
 - Found cause C in early1 (stand-in snapshot) and its origin in the authority's first-snapshot skip.
 - Audited every join-time message for the same flaw (none other).
 
+## 8b. A related fault found later the same night (not investigated)
+In the behaviour check's runs, one client of 79 kept its simulation at tick 0 for its first 5 s ("Frontier stalled 5s
+(simTick=0, authTick=46)"), resynced, and then kept receiving events for ticks it had already simulated ("PROTOCOL
+VIOLATION: Old event not applied", `SwarmManager.cs:970-976`), resyncing again each time for the rest of the run
+(`tools/_generated/scaling/2026-10-06-paired/invalid/s10_behave_1000_feed50_seed12/player.log`). It belongs to the
+same slow-start family as cause C and should be investigated with it.
+
 ## 9. Open decisions for you
 - Approve the three fixes (B, A, C as above), and when: as part of Stage 1 (1.4 rebuilds the join anyway; C's
   lasting fix is 1.4's snapshot on demand), or now as their own change. My recommendation: B and A now (small,

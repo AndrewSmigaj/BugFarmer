@@ -50,7 +50,10 @@ hours apart kept different paces (the machine ran ~1.7% slower in the evening), 
 zone changes what the bugs do; comparing such runs flagged a 46% drop in fly breeding that the pace alone may explain.
 So run the two builds INTERLEAVED, in one session (base seed 1, new seed 1, base seed 2, ...).
 
-Exit codes: 0 = no flags, 1 = flags, 2 = not enough data, or not comparable (the pace gate).
+A run whose client pace is under 90% of the median of all the runs is named as BROKEN (2026-10-06: one client stuck
+in a resync loop from tick 0 kept 2.9 ticks/s and showed up only as a 19% gap between the group means).
+
+Exit codes: 0 = no flags, 1 = flags, 2 = not enough data, or not comparable (the pace gate, or a broken run).
 
 Usage:
   behaviour_check.py --base RUN_DIR [RUN_DIR ...] [--new RUN_DIR ...] [--k 4] [--min-change 0.15]
@@ -332,8 +335,18 @@ def main(argv=None):
               f"(base runs with data: {sum(1 for r in base if r)}, new: {sum(1 for r in new if r)})")
         return 2
     if new:
-        bp = [x for x in (client_pace(d, args.skip_seconds) for d in args.base) if x]
-        np_ = [x for x in (client_pace(d, args.skip_seconds) for d in args.new) if x]
+        paces = {d: client_pace(d, args.skip_seconds) for d in args.base + args.new}
+        known = sorted(v for v in paces.values() if v)
+        if known:
+            median = known[len(known) // 2]
+            slow = [(d, v) for d, v in paces.items() if v and v < 0.9 * median]
+            for d, v in slow:  # 2026-10-06: one client stuck in a resync loop kept 2.9 ticks/s and hid in a group mean
+                print(f"BROKEN RUN: {d} kept {v:.1f} ticks/s against the runs' median {median:.1f} — check its "
+                      f"player.log (a resync loop?) and run that seed again")
+            if slow:
+                return 2
+        bp = [x for x in (paces[d] for d in args.base) if x]
+        np_ = [x for x in (paces[d] for d in args.new) if x]
         if bp and np_:
             bmu, nmu = sum(bp) / len(bp), sum(np_) / len(np_)
             diff = abs(nmu - bmu) / bmu

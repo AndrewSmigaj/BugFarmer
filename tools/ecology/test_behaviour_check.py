@@ -155,6 +155,9 @@ class BehaviourCheck(unittest.TestCase):
         self.assertEqual(self.check(b, slow), 2)  # not comparable, even though the behaviour is identical
         same = [write_run(self.root, f"same_seed{s}", hunting=100 + 50 * s, pace=59.9) for s in range(1, 6)]
         self.assertEqual(self.check(b, same), 0)
+        broken = [write_run(self.root, f"broken_seed{s}", hunting=100 + 50 * s, pace=2.9 if s == 2 else 59.8)
+                  for s in range(1, 6)]
+        self.assertEqual(self.check(b, broken), 2)  # one stalled run is named, not averaged in
 
     def test_run_without_data_is_refused(self):
         empty = os.path.join(self.root, "empty")

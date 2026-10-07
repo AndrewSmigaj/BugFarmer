@@ -25,6 +25,7 @@ Stage 1 makes the bug simulation faster without changing what the bugs do. Three
   landing must more than double it before five seeds can tell.
 
 ## The smallest change it can see, per behaviour
+*Caution (2026-10-06, after the third catching test): these limits are about half the real ones.*
 From the same build run twice on seeds 1–5 (held count of about 1,000 bugs, 600 s runs at 6× speed, game-days 2–4):
 the change needed to clear both the 4-standard-error bar and the 15% floor. The last column is the food-radius
 2.5 → 4.0 copy, which the check did NOT flag: every change there is under its limit. Behaviours that never happen in
@@ -96,6 +97,14 @@ reports); `server` = the server's daily counts (per bug-day, or per 1,000 bug-ti
    runs. **The check has not yet been shown to catch a real change.**
 6. **The catching test, third try** (decided before it ran): bugs stay on a corpse for 50 ticks instead of 25
    (`BugAgent.FeedTicks`), both builds from the same code; interleaved, fresh seeds 11–15. Passes only if the pace
-   gate passes and centipede eating time is flagged going up. *Result: pending.*
+   gate passes and centipede eating time is flagged going up. **Failed, narrowly:** eating time +65%, up on all five
+   seeds, at 3.7 standard errors (the bar is 4); pace 0.11% apart. One run was a broken client (a resync loop from
+   tick 0, 2.9 ticks/s), set aside and re-run; the pace gate now names such runs.
+
+**Where this leaves the check (2026-10-06):** it raises no false alarms, and it misses even a certain, consistent
++65% change with five seeds. The "smallest change it can see" table above was worked out from the same-build runs
+and is about half the real figure (it predicted 35% for centipede eating; a real +65% fell short). Ways to make it
+useful, for the owner to choose: more seeds (ten per side: about 3¾ hours of runs per check), longer runs, or a two-step
+check (a lower bar marks a change as suspect, and five fresh seeds must confirm it).
 
 Raw runs: `tools/_generated/scaling/2026-10-06-paired/` (git-ignored; `check_control.md`, `check_planted4.md`).

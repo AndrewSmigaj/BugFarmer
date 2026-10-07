@@ -220,6 +220,18 @@ making a four-times-bigger village good to walk around and making tuning runs fa
     centipedes spend eating should roughly double (the check sees 35% there). Both builds made from the same code, the
     one constant apart; base and changed copy interleaved on fresh seeds 11–15, 600 s held runs. **Passes only if** the
     pace gate passes AND the check flags centipede eating time (`client.eating_per_1k`) going UP.
+  - **The catching test, third try: FAILED, narrowly.** The change did what the code says: centipede eating time
+    **+65%, up on all five seeds** — but at **3.7 standard errors**, under the bar of 4, so not flagged. The pace gate
+    passed (0.11% apart). On the way, one run (the changed copy, seed 12) was a **broken client**: stuck at tick 0
+    for 5 s, then in a resync loop for the whole run ("PROTOCOL VIOLATION: Old event not applied", 3,891 times; 2.9
+    ticks/s); it was set aside (`…/2026-10-06-paired/invalid/`) and both builds re-run on seed 12, as the rule's five
+    seeds required. The pace gate now names such a run ("BROKEN RUN", under 90% of the median pace; 17 tests).
+    **Conclusion:** with five seeds and a bar of 4, the check misses even a certain +65% change; the limits written
+    down from the same-build runs were too optimistic (about half the real ones). Not loosened after the fact; the
+    choices go to the owner (more seeds, longer runs, or a two-step check).
+  - **A fourth fault found (not investigated):** a client whose simulation is still at tick 0 five seconds into a
+    zone resyncs, then keeps meeting events for ticks it has already passed and resyncs again for the whole run
+    (1 of 79 runs today). The same slow-start family as the late-join cause C.
   - **The windowed tour: stopped at the owner's request** (20:28). The game ran the tour, but the character-select
     overlay stayed drawn over it: a test enters the world directly, and the overlay hides only when a player picks a
     character. Fixed in test code only (the rig hides it; `-screenshot <s>` saves the game's own picture so a windowed
