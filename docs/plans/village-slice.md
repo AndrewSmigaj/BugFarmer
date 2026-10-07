@@ -204,6 +204,16 @@ making a four-times-bigger village good to walk around and making tuning runs fa
       the run's — so every "exit=0" in today's batch logs was the clock's. Every run was re-checked from the
       measuring script's own log ("run_config exit 0" in all 34 finished runs); the player script itself returns
       the right code (1 for the rejoin run). Later scripts save `$?` first.
+  - **Block B, the slower computer:** two P-cores plus the processor capped at 50% (Windows power plan; set 18:06, put
+    back to 100% at 18:17 and checked). Typical / worst 1 in 100 per tick: 2,000 bugs 7.1 / 13.3 ms (two cores alone
+    7.5 / 12.6; normal 6.0 / 10.0); 1,000 bugs 3.2 / 6.0 (two cores alone 3.4 / 10.6). The cap made no clear
+    difference, so it probably did not lower this processor's clock (some Intel desktop chips mostly ignore it or
+    only drop the boost). Not claimed as a slower-computer result until the clock is measured during a capped run.
+  - **The rejoin fault: investigation started** (the owner's yes, 2026-10-06):
+    `docs/product/investigations/latejoin-rejoin-divergence.md` (draft). The rejoin session has an evidenced cause (a
+    departed player's position is removed on receipt, outside the ordered stream, and a same-account rejoin brings
+    the old position back through the snapshot); the first session is not explained yet; the reproduction runs
+    after the windowed tour.
   - **Stage 1.0e started (block A, headless, 13 runs):** natural 1× and 4× (release build, clean; 4× breakdown on the
     development build; behaviour at both), fixed 1,000 / 2,000 / 4,000 at normal speed (release clean, development
     breakdown), and two-core runs at 1,000 and 2,000. Results: `tools/_generated/scaling/2026-10-06-before/`.
