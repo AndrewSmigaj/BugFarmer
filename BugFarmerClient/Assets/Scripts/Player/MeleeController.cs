@@ -92,11 +92,11 @@ namespace BugFarmer.Player
 
             // Truncate to the per-SWING cap in the same deterministic order the server
             // applies (swarm id ascending, bug ids ascending) so client expectation and
-            // server outcome agree.
+            // server outcome agree. Ordinal, like Go's byte order (Stage 1.1, 2026-10-07).
             int cap = move.MaxTargets > 0 ? move.MaxTargets : 1;
             var entries = new List<MeleeSwarmHits>();
             int taken = 0;
-            foreach (var hit in hits.OrderBy(h => h.swarmId))
+            foreach (var hit in hits.OrderBy(h => h.swarmId, System.StringComparer.Ordinal))
             {
                 if (taken >= cap) break;
                 var ids = hit.bugIds.OrderBy(id => id).Take(cap - taken).ToArray();

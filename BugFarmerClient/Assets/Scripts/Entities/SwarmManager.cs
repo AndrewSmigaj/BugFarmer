@@ -45,9 +45,10 @@ namespace BugFarmer.Entities
         /// check, with the tick number. Null in the game. Observers must only read.</summary>
         public static Action<long> TestTickObserver;
 
-        // The zone's groups, with their ids kept sorted (SortedIdTable, Stage 1.1): the per-tick loops walk SortedKeys
-        // — the order OrderBy(id => id) gave, without re-sorting every tick.
-        private readonly SortedIdTable<string, SwarmVisual> _swarms = new(Comparer<string>.Default);
+        // The zone's groups, with their ids kept sorted (SortedIdTable, Stage 1.1): the per-tick loops walk SortedKeys.
+        // Ordinal (character by character), like every string order that feeds the simulation (Stage 1.1, 2026-10-07):
+        // the old default comparer followed each computer's language setting, which nothing pinned.
+        private readonly SortedIdTable<string, SwarmVisual> _swarms = new(StringComparer.Ordinal);
 
         // Pending swarm data waiting for WorldSeed initialization
         private SwarmUpdateMessage _pendingUpdate;
@@ -686,8 +687,8 @@ namespace BugFarmer.Entities
             var im = InfluenceManager.Instance;
             if (im == null) return;
 
-            // The hunting groups in key order, copied into a reused list (Stage 1.1): the order OrderBy(k => k.Key) gave —
-            // the same default comparer, and keys are unique.
+            // The hunting groups in key order (ordinal), copied into a reused list (Stage 1.1). This order decides which
+            // predator claims which prey first.
             var hunting = _strikeHunting;
             hunting.Clear();
             foreach (var kv in im.GetHuntingSwarms()) hunting.Add(kv);
@@ -1024,8 +1025,8 @@ namespace BugFarmer.Entities
         /// </summary>
         private List<PlayerTarget> GetDeterministicPlayerTargets()
         {
-            // One list, reused every tick (Stage 1.1): it is read only during the tick, and the trace copies it. Sorted with
-            // the comparer OrderBy(p => p.playerId) used (Comparer<string>.Default); ids are unique, so the order is the same.
+            // One list, reused every tick (Stage 1.1): it is read only during the tick, and the trace copies it. Sorted by
+            // player id, ordinal.
             var targets = _playerTargets;
             targets.Clear();
 
@@ -1052,7 +1053,7 @@ namespace BugFarmer.Entities
         // The predation strike pass's reused lists (Stage 1.1).
         private readonly List<KeyValuePair<string, InfluenceManager.SwarmStrike>> _strikeHunting = new List<KeyValuePair<string, InfluenceManager.SwarmStrike>>();
         private static readonly Comparison<KeyValuePair<string, InfluenceManager.SwarmStrike>> ByStrikeKey =
-            (a, b) => Comparer<string>.Default.Compare(a.Key, b.Key);
+            (a, b) => string.CompareOrdinal(a.Key, b.Key);
         private readonly List<(int bugId, FixedPoint2 pos)> _strikePrey = new List<(int bugId, FixedPoint2 pos)>();
         private readonly List<(int bugId, FixedPoint2 pos)> _strikePredator = new List<(int bugId, FixedPoint2 pos)>();
         private readonly HashSet<int> _strikeClaimed = new HashSet<int>();
@@ -1060,7 +1061,7 @@ namespace BugFarmer.Entities
         private readonly List<float> _strikeVictimX = new List<float>();
         private readonly List<float> _strikeVictimY = new List<float>();
         private static readonly Comparison<PlayerTarget> ByPlayerId =
-            (a, b) => Comparer<string>.Default.Compare(a.PlayerId, b.PlayerId);
+            (a, b) => string.CompareOrdinal(a.PlayerId, b.PlayerId);
         private readonly Dictionary<string, IReadOnlyList<(int bugId, FixedPoint2 pos)>> _huntTargets =
             new Dictionary<string, IReadOnlyList<(int bugId, FixedPoint2 pos)>>();
         private readonly Dictionary<string, List<(int bugId, FixedPoint2 pos)>> _preyCopies =

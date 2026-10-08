@@ -132,6 +132,10 @@ Shipped 2026-07-11 (commits `combat M1.1`…`M1.4`). The foundation everything e
 - **Hits on players are counted (2026-10-06).** Every sting or lunge that damages a player adds one `player_hit` to the
   attacking species' daily `BEHAVSTATS` line (`handleBugPlayerStrike`, when `applyBugAttackToPlayer` returns true; a
   windup doesn't count). Soft state, never hashed; it lets the behaviour check see a change in how often bugs land hits.
+- **A swing's hit list uses the server's order (2026-10-07).** When a swing or net sweep reaches more bugs than its
+  `max_targets`, the client keeps the first by group id, then bug id — the order `handleMeleeAttack` uses (Go compares
+  the ids byte by byte). `MeleeController` and `CatchingController` now compare the group ids ordinal too; the old
+  default comparer followed each computer's language setting, so the two orders were only equal in practice.
 
 ## Milestones 2–3 — as-built (enemy tiers)
 Shipped 2026-07-11 (commits `Combat: nocturnal…`, `Combat M2+M3…`). Four new enemies on the M1 foundation, each

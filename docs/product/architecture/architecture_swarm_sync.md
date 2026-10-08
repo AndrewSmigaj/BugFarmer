@@ -106,7 +106,8 @@ actively hunting when B joins (non-vacuous; 0 ht + 0 pc A-vs-B mismatch over 11.
   (`{x,y,vx,vy,hunt_target,feed_until}` per bug, plus the six centipede-lunge fields; since 2026-10-07 each group folds
   them straight from its bugs, `SwarmVisual.FoldStateHash`, instead of building a snapshot record per bug per tick —
   the same values, types and order, proven identical by the equivalence check; the groups and their bugs are walked in
-  `SortedIdTable.SortedKeys` order — the same order `OrderBy(id => id)` gave, with the same comparer; the events applied
+  `SortedIdTable.SortedKeys` order — group ids compared ordinal (character by character) since the same day, so every
+  computer agrees whatever its language setting (the old default comparer followed it); bug ids are integers; the events applied
   at a tick are always the front of the sorted waiting list, and leave it in one `RemoveRange`); its full input set to reconstruct on late-join =
   {all `BugAgent` snapshot fields (via the verbatim relay) + the 4 `InfluenceManager` dicts —
   `_swarmLegs`/`_swarmStrikes`/`_food`/`_playerCells` + the movement-state round-trip}. Any NEW client sim-state
@@ -1114,8 +1115,9 @@ backbone: **clients replay AI OUTPUTS, not decisions.**
   gate to PER-BUG so a pursuer that left the cloud still connects. The kill itself is unchanged
   (authority-detect → relay via `BUG_REMOVED`, §14). *2026-10-07 (Stage 1.1):* the prey positions fed into
   `SimulateTick` are one value copy per prey group per tick (reused lists, shared by the predators chasing it), and the
-  strike pass reuses its lists and set; the hunting groups are still walked in key order (the comparer `OrderBy` used,
-  which decides which predator claims which prey first). Proven identical by the equivalence check.
+  strike pass reuses its lists and set. Proven identical by the equivalence check. The hunting groups are walked in key
+  order, which decides which predator claims which prey first; since the same day that order is ordinal (character by
+  character), the same on every computer (the old default comparer followed each computer's language setting).
 - **S2 — the REAL corpse + EAT (server drop + client feed).** `applyPredationStrike` now drops a
   `dead_<prey>` carcass AT each victim cell (predation was corpse-less; production prey all have
   empty `kill_drops`, so this is the sole corpse — no double-drop with `spawnKillDrops`). Edible →

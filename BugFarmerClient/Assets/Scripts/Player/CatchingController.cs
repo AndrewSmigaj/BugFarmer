@@ -97,7 +97,7 @@ namespace BugFarmer.Player
                 {
                     var capped = new List<CatchResult>();
                     int taken = 0;
-                    foreach (var c in catches.OrderBy(c => c.swarmId))
+                    foreach (var c in catches.OrderBy(c => c.swarmId, System.StringComparer.Ordinal))
                     {
                         if (taken >= cap) break;
                         var ids = c.bugIds.OrderBy(id => id).Take(cap - taken).ToArray();

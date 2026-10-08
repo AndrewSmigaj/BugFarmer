@@ -133,6 +133,10 @@ making a four-times-bigger village good to walk around and making tuning runs fa
      before; 27: step 5, before, step 6; 28: before, step 6, step 5; 29: step 6, before, step 5; 30: step 5, step 6,
      before) — then `--confirm` over all ten seeds for both comparisons, the same bars; plus the centipede hits by run
      position over the ten seeds. A flag that holds there is investigated as a real change.
+     **Result:** nothing flagged over the ten seeds in either comparison (pace 0.48% and 0.33% apart). In the rotated
+     round step 6 had the fewest centipede hits (2, against 10 for step 5 and 13 before 1.1), and by run position the
+     hits were 7 / 10 / 8: the step-1 flag was chance on very few events. Steps 1–5 and step 6 pass their behaviour
+     checks. From now on the build order is rotated per seed (`stage1-before-2026-10-06/behaviour-check.md`, item 8).
   7. **No memory per tick, found:** the counter RNG turned the group id into a new byte array on every roll
      (`Encoding.UTF8.GetBytes`, per bug per tick) — about 11 bytes per bug per tick, the size the game measured; now
      folded in place, byte for byte the same (`sim-determinism --alloc-test`: 160,052 hashes equal to the old ones,

@@ -109,6 +109,20 @@ reports); `server` = the server's daily counts (per bug-day, or per 1,000 bug-ti
    errors): a real change in a rare, noisy behaviour stays below what the check can see. **The check is proven for
    common behaviours; for rare ones, the side-by-side check is the tool.**
 
+8. **First real use (Stage 1.1, 2026-10-07):** the identical steps 1–5 against the build before Stage 1.1, and the
+   ordinal-order change (step 6, identical in the simulation by the equivalence check) against step 5; seeds 21–25,
+   the three builds always in the same order per seed. Step 1 raised one SUSPECT for the batch (butterfly breeding
+   share +104%) and one FLAG for step 6: centipede hits on the player +115%, up on all five seeds at 4.7 standard
+   errors — from 13 events to 28. Both builds of each pair are identical in the simulation, and hits on the player are
+   detected from drawn positions, which depend on frame timing. Step 2 on seeds 26–30, with the build order rotated
+   per seed (decided and committed before it ran): **nothing flagged over the ten seeds in either comparison**; in the
+   rotated round step 6 had the fewest centipede hits (2, against 10 and 13), and the hits by run position were
+   7 / 10 / 8. So the step-1 flag was chance on very few events. What it shows: (a) a metric is judged when either
+   side reaches the 20-event floor, so 13 events on one side were enough to be judged — requiring the floor on both
+   sides is a candidate for the next calibration, not changed now; (b) **the build order is rotated per seed from now
+   on** (a fixed order can only add a bias, never remove one). Two of the 30 runs were broken (one machine stall, one
+   startup fault, `../../BACKLOG.md`) and run again; one more run hit the startup fault and recovered at full pace.
+
 **Where this leaves the check (2026-10-06):** it raises no false alarms, and it misses even a certain, consistent
 +65% change with five seeds. The "smallest change it can see" table above was worked out from the same-build runs
 and is about half the real figure (it predicted 35% for centipede eating; a real +65% fell short). Ways to make it

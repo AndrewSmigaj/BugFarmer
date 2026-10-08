@@ -1581,6 +1581,8 @@ These must be enforced everywhere in simulation code:
 - Iterate bugs by `OrderBy(bugId)`
 - Iterate plants by `OrderBy(plantId)` or stable spatial index
 - Iterate players by `OrderBy(playerId)`
+- **Compare string ids ordinal** (`StringComparer.Ordinal` / `string.CompareOrdinal`), never with the default comparer,
+  which follows each computer's language setting (2026-10-07)
 - **Never rely on Dictionary/map iteration order**
 
 ### State Access

@@ -79,7 +79,9 @@ Axes have ONLY a secondary (left-click stays breaking — Stardew-strict). The m
 Stab on a "sword" profile; unknown kinds LogWarning. New weapon kinds (whip) = data + one
 AnimKind + one client hit-geometry query; the server validates only move-existence + reach.
 Cooldowns share ONE `LastToolTick` server-side (sword↔hoe↔jab throttle each other; closes
-alternating-spam + swap bypass); the client mirrors with one shared swing timer.
+alternating-spam + swap bypass); the client mirrors with one shared swing timer. A swing that
+reaches more bugs than `max_targets` keeps the first by group id then bug id, compared character
+by character like the server (2026-10-07; `architecture_combat.md`).
 
 **Held-at-rest display:** the equipped TOOL's sprite rests in-hand (animator `SetIdleItem`;
 restored by the single `RestoreIdle()` after every animation/interrupt — which also turns the

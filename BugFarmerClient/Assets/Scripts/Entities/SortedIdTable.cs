@@ -10,8 +10,9 @@ namespace BugFarmer.Entities
     /// they made ran every tick).
     ///
     /// <see cref="SortedKeys"/> is rebuilt as a NEW array after any change and never edited, so a loop that took the old
-    /// array keeps the same snapshot an <c>OrderBy(id => id)</c> taken at the same moment gave it. The comparer is the
-    /// one the old sorts used (<c>Comparer&lt;T&gt;.Default</c>), and keys are unique, so the order is exactly the same.
+    /// array keeps the same snapshot an <c>OrderBy(id => id)</c> taken at the same moment gave it. The caller names the
+    /// comparer: ordinal for the group ids (character by character, the same on every computer), the default for the
+    /// integer bug ids. Keys are unique, so the comparer alone decides the order.
     /// Every change goes through this class (there is no other way to reach the dictionary), so none can be missed.
     /// </summary>
     public sealed class SortedIdTable<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
