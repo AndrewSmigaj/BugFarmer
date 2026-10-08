@@ -21,6 +21,11 @@ once and never committed — hence the rule: this lives in the repo.)
 `--selftest` injects a wall-clock perturbation into one run and asserts the harness reports the divergence —
 so a normal PASS is meaningful, not vacuous. Run it once after touching this tool.
 
+The focused modes (`--attack-test`, `--predation-test`, `--surge-test`, `--subdue-test`, `--los-test`,
+`--food-index-test`, `--alloc-test`) are described in the `test-changes` skill, which runs all of them.
+`--alloc-test` (2026-10-07) checks the counter RNG's hash against the old one and that the per-bug sim allocates no
+memory per tick (exact, from the thread's allocated-bytes counter).
+
 ## How it works (and why it's trustworthy)
 
 - The `.csproj` **links the real client sim source** (`FixedPoint`, `DeterministicRandom`, the movement

@@ -1074,7 +1074,9 @@ reused lists (one value copy per prey group per tick), and the applied events le
 are always its front block) instead of one scan of the whole list per event; the predation strike pass reuses its lists
 and set. Every string order that feeds the simulation (the group ids, the hunting groups, the player ids) is ordinal —
 character by character, the same on every computer — since 2026-10-07; the old default comparer followed each
-computer's language setting. Each part of a client tick is timed (`Sim.Tick` and its parts, timing only); the fixes are Stage 1.1–1.2 of `docs/plans/village-slice.md`.
+computer's language setting. The tick allocates no memory (the counter RNG folds the group id in place instead of
+copying it per roll; the player cells and hunting groups are copied into reused lists): `architecture_swarm_sync.md`,
+the food registry's cost note. Each part of a client tick is timed (`Sim.Tick` and its parts, timing only); the fixes are Stage 1.1–1.2 of `docs/plans/village-slice.md`.
 
 **The server brings to life only the chunks a player has loaded (found 2026-10-04):** food sources, nests and stations
 are set up when a chunk is first loaded for a player (`handlers_world.go:23-43`), and an unloaded chunk counts as a

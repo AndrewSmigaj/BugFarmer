@@ -1,4 +1,4 @@
-# Stage 1.1, steps 1–5: the numbers after (2026-10-07)
+# Stage 1.1: the numbers after (2026-10-07)
 
 Part of `docs/plans/village-slice.md`, Stage 1.1 (the client's bug simulation without waste). The same measurements as
 the "before" numbers (`stage1-before-2026-10-06/README.md`), on the same PC, bench village and settings, made after the
@@ -27,11 +27,16 @@ looked into.
 | Predator strikes | 1.03 → 0.07 ms | 1.72 → 0.14 ms | 3.23 → 0.27 ms |
 | The per-tick state check | 0.88 → 0.02 ms | 1.62 → 0.04 ms | 3.07 → 0.09 ms |
 | Memory thrown away per tick (should be ≈ 0) | 464 → ~11 KB | 884 → ~19 KB | 1,705 → ~40–54 KB |
+| … after step 7 (the counter RNG fix) | ≈ 0 | ≈ 0 | ≈ 0 |
 
 (From the part-by-part timing totals divided by the ticks run; the memory is the estimate the rig makes from frames with
 and without a tick.) Moving the bugs themselves, at about half a millisecond per 1,000 bugs, is now most of the cost.
-The memory thrown away per tick is about 3% of before but **not yet zero**, which the plan asks for; finding what still
-allocates is the next part of Stage 1.1.
+The memory thrown away per tick was about 3% of before after step 5, not yet zero. **Step 7 found it:** the counter
+random-number helper made a copy of the group's id on every roll, about 11 bytes per bug per tick (the headless test
+program measured the same 11 bytes exactly, and zero after the fix). After step 7, in the 5-second windows without the
+authority's 10-second snapshot, a frame with a tick allocates no more than a frame without one (+0.4 / +3.0 / −0.2 KB
+at 1,000 / 2,000 / 4,000 bugs: noise). The snapshot itself still allocates (the send-on-join change removes it), and
+drawing allocates 1–7 KB a frame (Stage 1.2). Raw files: `tools/_generated/scaling/2026-10-07-after-s17/`.
 
 ## 3. Today's village at four times its bugs, living normally (6× speed, 600 s)
 | | Before | After |

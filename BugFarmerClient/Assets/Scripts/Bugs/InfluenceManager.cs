@@ -347,15 +347,31 @@ namespace BugFarmer.Bugs
         }
 
         /// <summary>
+        /// The player cells added to a list the caller reuses, in the same order <see cref="GetPlayerCells"/> gives them,
+        /// without the iterator object that makes (Stage 1.1: the simulation reads the cells every tick).
+        /// </summary>
+        public void CopyPlayerCells(List<(string playerId, int cellX, int cellY)> into)
+        {
+            foreach (var kvp in _playerCells)
+                into.Add((kvp.Key, kvp.Value.cellX, kvp.Value.cellY));
+        }
+
+        /// <summary>
         /// Get player count for debugging/validation.
         /// </summary>
         public int PlayerCellCount => _playerCells.Count;
 
         /// <summary>
-        /// Phase 2: the predator swarms currently hunting (predator swarm_id → strike params), for the
-        /// authority's per-tick strike pass. Caller iterates in a deterministic order (sort by key).
+        /// Phase 2: the predator swarms currently hunting (predator swarm_id → strike params), added to a list the caller
+        /// reuses — for the hunt preparation and the authority's per-tick strike pass, which sorts it by key. Copied in
+        /// the registry's own order, without the boxed enumerator returning the registry as a sequence made every call
+        /// (Stage 1.1).
         /// </summary>
-        public IEnumerable<KeyValuePair<string, SwarmStrike>> GetHuntingSwarms() => _swarmStrikes;
+        public void CopyHuntingSwarms(List<KeyValuePair<string, SwarmStrike>> into)
+        {
+            foreach (var kv in _swarmStrikes)
+                into.Add(kv);
+        }
 
         /// <summary>
         /// Compute a swarm's center deterministically for a given tick via closed-form march

@@ -54,16 +54,9 @@ namespace BugFarmer.Bugs
                 hash *= FNV_PRIME;
             }
 
-            // Hash swarmId string
+            // Hash swarmId string: its UTF-8 bytes, folded without making a byte array (Stage 1.1)
             if (!string.IsNullOrEmpty(swarmId))
-            {
-                byte[] swarmBytes = Encoding.UTF8.GetBytes(swarmId);
-                foreach (byte b in swarmBytes)
-                {
-                    hash ^= b;
-                    hash *= FNV_PRIME;
-                }
-            }
+                hash = FoldUtf8(hash, swarmId);
 
             // Hash bugId bytes
             for (int i = 0; i < 4; i++)
@@ -88,6 +81,46 @@ namespace BugFarmer.Bugs
 
             // Mix and return as uint32
             return (uint)(hash ^ (hash >> 32));
+        }
+
+        /// <summary>
+        /// Fold a string's UTF-8 bytes into an FNV-1a hash, byte for byte what Encoding.UTF8.GetBytes gives (a surrogate
+        /// pair becomes its four bytes; a lone surrogate becomes U+FFFD, EF BF BD, as the default encoder does) — without
+        /// making a new array. Stage 1.1 (docs/plans/village-slice.md): GetBytes allocated one on every roll, per bug per
+        /// tick. Proven equal to the old hash by tools/sim-determinism --alloc-test.
+        /// </summary>
+        private static ulong FoldUtf8(ulong hash, string s)
+        {
+            for (int i = 0; i < s.Length; i++)
+            {
+                int c = s[i];
+                if (c < 0x80)
+                {
+                    hash = (hash ^ (uint)c) * FNV_PRIME;
+                    continue;
+                }
+                if (c < 0x800)
+                {
+                    hash = (hash ^ (uint)(0xC0 | (c >> 6))) * FNV_PRIME;
+                    hash = (hash ^ (uint)(0x80 | (c & 0x3F))) * FNV_PRIME;
+                    continue;
+                }
+                if (c >= 0xD800 && c <= 0xDBFF && i + 1 < s.Length && s[i + 1] >= 0xDC00 && s[i + 1] <= 0xDFFF)
+                {
+                    int cp = 0x10000 + ((c - 0xD800) << 10) + (s[i + 1] - 0xDC00);
+                    i++;
+                    hash = (hash ^ (uint)(0xF0 | (cp >> 18))) * FNV_PRIME;
+                    hash = (hash ^ (uint)(0x80 | ((cp >> 12) & 0x3F))) * FNV_PRIME;
+                    hash = (hash ^ (uint)(0x80 | ((cp >> 6) & 0x3F))) * FNV_PRIME;
+                    hash = (hash ^ (uint)(0x80 | (cp & 0x3F))) * FNV_PRIME;
+                    continue;
+                }
+                if (c >= 0xD800 && c <= 0xDFFF) c = 0xFFFD; // a lone surrogate
+                hash = (hash ^ (uint)(0xE0 | (c >> 12))) * FNV_PRIME;
+                hash = (hash ^ (uint)(0x80 | ((c >> 6) & 0x3F))) * FNV_PRIME;
+                hash = (hash ^ (uint)(0x80 | (c & 0x3F))) * FNV_PRIME;
+            }
+            return hash;
         }
 
         /// <summary>

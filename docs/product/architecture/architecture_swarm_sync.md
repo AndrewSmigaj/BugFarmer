@@ -88,6 +88,13 @@ speed a tick is 27.4 ms, of which ~23 ms is avoidable (the food lookup, per-tick
 copies, and the state hash building a full snapshot record per bug). The fixes are planned in
 `docs/plans/village-slice.md` (Stage 1.1–1.2). Fix planned in the BACKLOG: one lookup per group per tick + a cell index,
 both result-identical.
+**No memory per tick (Stage 1.1, 2026-10-07):** the counter RNG (`CounterRng.Hash`) folds the group id's UTF-8 bytes in
+place (`FoldUtf8`) instead of making a byte array on every roll — the same bytes, so the same numbers (proven equal to
+the old hash on 160,052 inputs, other alphabets and broken surrogates included, and by the equivalence check both ways);
+the player cells and the hunting groups reach the tick through `InfluenceManager.CopyPlayerCells` /
+`CopyHuntingSwarms` into reused lists, in the registry's own order as before. `sim-determinism --alloc-test` holds the
+per-bug sim (hunting and feeding included) to zero bytes per tick. The full snapshot the authority builds every 10 s
+still allocates (the send-on-join change of Stage 1 removes it).
 
 **Update 2026-07-14 — the S1/S2 predation late-join desync + the VERBATIM-RELAY CONTRACT.** New per-bug
 predation state (`HuntTargetBugId`, `FeedUntilTick`, `FeedCorpseId`) and the per-swarm hunt assignment

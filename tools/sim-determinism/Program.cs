@@ -123,6 +123,142 @@ namespace SimDeterminism
             return pass ? 0 : 1;
         }
 
+        // --alloc-test (Stage 1.1, docs/plans/village-slice.md: no memory allocated per tick): (1) the counter RNG's hash
+        // must equal the old one, which hashed Encoding.UTF8.GetBytes(swarmId), for every kind of string (group ids,
+        // other alphabets, surrogate pairs, lone surrogates, empty, null); (2) the per-bug sim — every species, with and
+        // without a moving player, so wander, feed, attack, flee, curious and the centipede lunge all run — must allocate
+        // NOTHING per tick once warmed up (exact: this thread's allocated-bytes counter).
+        static int RunAllocTest()
+        {
+            ulong OldHash(long worldSeed, string swarmId, int bugId, long tick, int purposeId)
+            {
+                const ulong P = 1099511628211;
+                ulong h = 14695981039346656037;
+                for (int i = 0; i < 8; i++) { h ^= (byte)(worldSeed >> (i * 8)); h *= P; }
+                if (!string.IsNullOrEmpty(swarmId))
+                    foreach (byte b in System.Text.Encoding.UTF8.GetBytes(swarmId)) { h ^= b; h *= P; }
+                for (int i = 0; i < 4; i++) { h ^= (byte)(bugId >> (i * 8)); h *= P; }
+                for (int i = 0; i < 8; i++) { h ^= (byte)(tick >> (i * 8)); h *= P; }
+                for (int i = 0; i < 4; i++) { h ^= (byte)(purposeId >> (i * 8)); h *= P; }
+                return (uint)(h ^ (h >> 32));
+            }
+            var rng = new System.Random(20261007);
+            var ids = new List<string> { null, "", "swarm_0a1b2c3d", "swarm_ffffffff", "swarm_fly_common", "é", "Ωmega", "日本語",
+                                         "\U0001F41D bee", "\uD83D", "x\uDC1Dy", "\uDC1D\uD83D", "a\uD83D" };
+            for (int n = 0; n < 20000; n++)
+            {
+                int len = rng.Next(0, 24);
+                var chars = new char[len];
+                int kind = rng.Next(4);
+                for (int i = 0; i < len; i++)
+                    chars[i] = kind == 0 ? (char)rng.Next(0x20, 0x7F)            // ASCII
+                             : kind == 1 ? (char)rng.Next(0x80, 0x800)           // two-byte
+                             : kind == 2 ? (char)rng.Next(0x800, 0x10000)        // three-byte, surrogates included
+                             : (char)rng.Next(0, 0x10000);                       // anything
+                ids.Add(new string(chars));
+                ids.Add("swarm_" + rng.Next().ToString("x8"));
+            }
+            int hashChecks = 0, hashMismatches = 0;
+            foreach (var id in ids)
+                for (int k = 0; k < 4; k++)
+                {
+                    long ws = rng.NextInt64(); int bug = rng.Next(-5, 5000); long tick = rng.NextInt64(0, 1L << 40); int purpose = rng.Next(0, 12);
+                    hashChecks++;
+                    if (CounterRng.Hash(ws, id, bug, tick, purpose) != OldHash(ws, id, bug, tick, purpose))
+                    {
+                        hashMismatches++;
+                        if (hashMismatches <= 5) Console.WriteLine($"ALLOC-TEST: ❌ hash differs for id of length {id?.Length}");
+                    }
+                }
+            Console.WriteLine($"ALLOC-TEST: counter RNG — {hashChecks} hashes over {ids.Count} ids; mismatches with the old hash {hashMismatches}");
+
+            // (2) the per-bug sim, allocation-counted
+            const int warm = 200, measured = 600;
+            long worstPerTick = 0, totalMeasured = 0, bugTicks = 0;
+            foreach (bool withPlayer in new[] { false, true })
+            {
+                var packs = new List<(string id, List<BugAgent> bugs)>();
+                foreach (var spc in Species)
+                {
+                    string swarmId = "swarm_" + spc;
+                    var bugs = new List<BugAgent>(BugsPerSpecies);
+                    for (int i = 0; i < BugsPerSpecies; i++)
+                    {
+                        double ang = i * 2.0 * Math.PI / BugsPerSpecies;
+                        bugs.Add(new BugAgent(WorldSeed, swarmId, spc, i, new FixedPoint2(
+                            FixedPoint.FromFloat(100f + 3f * (float)Math.Cos(ang)), FixedPoint.FromFloat(100f + 3f * (float)Math.Sin(ang)))));
+                    }
+                    packs.Add((swarmId, bugs));   // Species order + ascending bug ids, built once (no sorting in the loop)
+                }
+                var players = new List<PlayerTarget>();
+                var playerEntry = new PlayerTarget { PlayerId = "p1" };
+                for (int t = 0; t < warm + measured; t++)
+                {
+                    long before = GC.GetAllocatedBytesForCurrentThread();
+                    players.Clear();
+                    if (withPlayer) { playerEntry.Position = PlayerAt(t); players.Add(playerEntry); }
+                    for (int p = 0; p < packs.Count; p++)
+                    {
+                        FixedPoint2 center = CenterAt(packs[p].id, t);
+                        var bugs = packs[p].bugs;
+                        for (int b = 0; b < bugs.Count; b++) bugs[b].SimulateTick(center, players, t);
+                    }
+                    long used = GC.GetAllocatedBytesForCurrentThread() - before;
+                    if (t >= warm)
+                    {
+                        totalMeasured += used;
+                        bugTicks += packs.Count * BugsPerSpecies;
+                        worstPerTick = Math.Max(worstPerTick, used);
+                    }
+                }
+            }
+            Console.WriteLine($"ALLOC-TEST: per-bug sim — {bugTicks} bug-ticks measured (with and without a player); " +
+                              $"allocated {totalMeasured} bytes in all, worst tick {worstPerTick} bytes");
+
+            // (3) hunting and feeding: 8 wasps chase 20 flies (last tick's prey positions in one reused list, as the client
+            // passes them), with food on the ground and one wasp sent to a corpse, so pursuit, landing and the corpse feed run
+            var influence = new BugFarmer.Bugs.InfluenceManager();
+            BugFarmer.Bugs.InfluenceManager.Instance = influence;
+            influence.HydrateFood("food_a", new FixedPoint2(FixedPoint.FromFloat(103f), FixedPoint.FromFloat(101f)), 10);
+            influence.HydrateFood("corpse_a", new FixedPoint2(FixedPoint.FromFloat(101f), FixedPoint.FromFloat(100f)), 10);
+            var wasps = new List<BugAgent>();
+            var flies = new List<BugAgent>();
+            for (int i = 0; i < 8; i++)
+                wasps.Add(new BugAgent(WorldSeed, "swarm_wasp_common", "wasp_common", i, new FixedPoint2(
+                    FixedPoint.FromFloat(100f + 3f * (float)Math.Cos(i * Math.PI / 4)), FixedPoint.FromFloat(100f + 3f * (float)Math.Sin(i * Math.PI / 4)))));
+            for (int i = 0; i < 20; i++)
+                flies.Add(new BugAgent(WorldSeed, "swarm_fly_common", "fly_common", i, new FixedPoint2(
+                    FixedPoint.FromFloat(104f + 3f * (float)Math.Cos(i * Math.PI / 10)), FixedPoint.FromFloat(100f + 3f * (float)Math.Sin(i * Math.PI / 10)))));
+            wasps[0].FeedCorpseId = "corpse_a";
+            wasps[0].FeedUntilTick = 22;
+            var preyList = new List<(int bugId, FixedPoint2 pos)>(flies.Count);
+            var noPlayers = new List<PlayerTarget>();
+            var waspCentre = new FixedPoint2(FixedPoint.FromFloat(100f), FixedPoint.FromFloat(100f));
+            var flyCentre = new FixedPoint2(FixedPoint.FromFloat(104f), FixedPoint.FromFloat(100f));
+            long huntMeasured = 0, huntBugTicks = 0;
+            int hunting = 0;
+            for (int t = 0; t < warm + measured; t++)
+            {
+                long before = GC.GetAllocatedBytesForCurrentThread();
+                preyList.Clear();
+                for (int i = 0; i < flies.Count; i++) preyList.Add((flies[i].BugId, flies[i].Position));
+                for (int i = 0; i < flies.Count; i++) flies[i].SimulateTick(flyCentre, noPlayers, t);
+                for (int i = 0; i < wasps.Count; i++)
+                {
+                    wasps[i].SimulateTick(waspCentre, noPlayers, t, preyList);
+                    if (wasps[i].HuntTargetBugId >= 0) hunting++;
+                }
+                long used = GC.GetAllocatedBytesForCurrentThread() - before;
+                if (t >= warm) { huntMeasured += used; huntBugTicks += flies.Count + wasps.Count; }
+            }
+            BugFarmer.Bugs.InfluenceManager.Instance = null;
+            Console.WriteLine($"ALLOC-TEST: hunting and feeding — {huntBugTicks} bug-ticks measured, {hunting} wasp-ticks chasing a fly; " +
+                              $"allocated {huntMeasured} bytes");
+            bool pass = hashMismatches == 0 && totalMeasured == 0 && huntMeasured == 0 && hunting > 0;
+            Console.WriteLine(pass ? "ALLOC-TEST: PASS" : "ALLOC-TEST: FAIL");
+            return pass ? 0 : 1;
+        }
+
         static int RunLosTest()
         {
             int failures = 0;
@@ -420,6 +556,8 @@ namespace SimDeterminism
                 return RunLosTest();
             if (args.Contains("--food-index-test"))
                 return RunFoodIndexTest();
+            if (args.Contains("--alloc-test"))
+                return RunAllocTest();
             if (args.Contains("--predation-test"))
                 return RunPredationTest();
             if (args.Contains("--surge-test"))

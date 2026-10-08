@@ -587,7 +587,7 @@ namespace BugFarmer.Entities
 
             // INDIVIDUAL PREDATION (S1): resolve each HUNTING predator swarm's target-prey positions (last tick,
             // deterministic — captured BEFORE the sim loop so every predator pursues the same last-tick positions
-            // regardless of swarm iteration order). GetHuntingSwarms is InfluenceManager's predator→{TargetPreyId}
+            // regardless of swarm iteration order). CopyHuntingSwarms gives InfluenceManager's predator→{TargetPreyId}
             // map (the same source RunPredationStrikes uses). Passed into SimulateTick so bugs pursue individual prey.
             // Reused lists (Stage 1.1): one value copy per prey group per tick, shared by every predator chasing that group —
             // all copies were taken at this same moment before, so their contents are identical; bugs only read them.
@@ -599,7 +599,10 @@ namespace BugFarmer.Entities
             var influence = InfluenceManager.Instance;
             if (influence != null)
             {
-                foreach (var kv in influence.GetHuntingSwarms())
+                var huntingNow = _huntPrepHunting;
+                huntingNow.Clear();
+                influence.CopyHuntingSwarms(huntingNow);
+                foreach (var kv in huntingNow)
                 {
                     var preyId = kv.Value.TargetPreyId;
                     var prey = GetSwarm(preyId);
@@ -691,7 +694,7 @@ namespace BugFarmer.Entities
             // predator claims which prey first.
             var hunting = _strikeHunting;
             hunting.Clear();
-            foreach (var kv in im.GetHuntingSwarms()) hunting.Add(kv);
+            im.CopyHuntingSwarms(hunting);
             hunting.Sort(ByStrikeKey);
             foreach (var kv in hunting)
             {
@@ -1032,7 +1035,10 @@ namespace BugFarmer.Entities
 
             if (InfluenceManager.Instance != null)
             {
-                foreach (var (playerId, cellX, cellY) in InfluenceManager.Instance.GetPlayerCells())
+                var cells = _playerCellsNow;
+                cells.Clear();
+                InfluenceManager.Instance.CopyPlayerCells(cells);
+                foreach (var (playerId, cellX, cellY) in cells)
                 {
                     targets.Add(new PlayerTarget
                     {
@@ -1050,6 +1056,8 @@ namespace BugFarmer.Entities
         }
 
         private readonly List<PlayerTarget> _playerTargets = new List<PlayerTarget>();
+        private readonly List<(string playerId, int cellX, int cellY)> _playerCellsNow = new List<(string playerId, int cellX, int cellY)>();
+        private readonly List<KeyValuePair<string, InfluenceManager.SwarmStrike>> _huntPrepHunting = new List<KeyValuePair<string, InfluenceManager.SwarmStrike>>();
         // The predation strike pass's reused lists (Stage 1.1).
         private readonly List<KeyValuePair<string, InfluenceManager.SwarmStrike>> _strikeHunting = new List<KeyValuePair<string, InfluenceManager.SwarmStrike>>();
         private static readonly Comparison<KeyValuePair<string, InfluenceManager.SwarmStrike>> ByStrikeKey =

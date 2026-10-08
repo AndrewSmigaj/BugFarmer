@@ -88,10 +88,9 @@ making a four-times-bigger village good to walk around and making tuning runs fa
 - **Now (2026-10-07):** Stage 1.0 is done — the equivalence check and the two-step behaviour check are proven, the
   "before" numbers are measured and written up (`docs/product/investigations/stage1-before-2026-10-06/README.md`), and
   the three late-join faults the player tests found are fixed and proven.
-- **Next:** Stage 1.1, the waste cut on the players' computers — in progress: steps 1–5 done and measured (the
-  targets for 1,000–4,000 bugs are met, see PROGRESS); step 6 (ordinal order) in its behaviour check; step 7 (no
-  memory per tick) written, built and checked after it. Then Stage 1.2 (drawing). Open, not scheduled: the startup
-  resync loop (BACKLOG).
+- **Next:** Stage 1.2, the drawing (smoothing and trails only for bugs on screen, the sting check's drawn positions on
+  demand). Stage 1.1 is done (2026-10-07): steps 1–7 committed, the targets for 1,000–4,000 bugs met, no memory per
+  tick, the behaviour checks passed (PROGRESS). Open, not scheduled: the startup resync loop (BACKLOG).
 - **The owner's answers (2026-10-07):** the behaviour check becomes a two-step check; the three late-join fixes now,
   as their own change; the windowed tour whenever suits.
 - **Stage 1.1 started (2026-10-07, the owner's go-ahead).** Each step is a pair of builds that differ only by that
@@ -142,8 +141,13 @@ making a four-times-bigger village good to walk around and making tuning runs fa
      folded in place, byte for byte the same (`sim-determinism --alloc-test`: 160,052 hashes equal to the old ones,
      including other alphabets and broken surrogates; the per-bug sim, hunting and feeding included, allocates 0 bytes
      per tick; the four simulation tests' final hashes equal the old code's). Also the player cells and the hunting
-     groups are copied into reused lists instead of read through an iterator made every tick. Built and checked after
-     step 6's runs (one change per commit).
+     groups are copied into reused lists instead of read through an iterator made every tick. Equivalence against
+     step 6: IDENTICAL both ways (2,579 / 2,577 live ticks). Memory per tick, development build at 1,000 / 2,000 /
+     4,000 bugs: in the 5-second windows without the 10-second snapshot, frames with a tick allocate +0.4 / +3.0 /
+     −0.2 KB more than frames without one (noise; at the median they allocate less), against ~11 / 15 / 36 KB before.
+     **No memory per tick: met.** What remains is the authority's full snapshot every 10 s (~63 KB per tick averaged
+     over its windows at 4,000 bugs; the send-on-join change removes it) and drawing's own per-frame memory (1–7 KB a
+     frame, growing with bugs; Stage 1.2).
 - **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
   resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
   and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism
