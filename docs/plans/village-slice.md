@@ -88,10 +88,13 @@ making a four-times-bigger village good to walk around and making tuning runs fa
 - **Now (2026-10-07):** Stage 1.0 is done — the equivalence check and the two-step behaviour check are proven, the
   "before" numbers are measured and written up (`docs/product/investigations/stage1-before-2026-10-06/README.md`), and
   the three late-join faults the player tests found are fixed and proven.
-- **Next:** Stage 1.2's two follow-ups (the group objects stop gliding — the owner's yes, 2026-10-08 — and one pass per
-  group per tick), then Stage 1.3 (the server runs the whole zone). Stage 1.1 is done (2026-10-07); Stage 1.2 is
-  committed (2026-10-08): drawing only what is in view, bug drawing 3.2 → 0.07 ms a frame at 2,000 bugs (PROGRESS).
-  Open, not scheduled: the startup resync loop (BACKLOG; seed 75 reproduces it); slow frames that are not the bugs.
+- **Next (2026-10-08, paused while the owner uses Unity):** with the machine free — the Unity build and Stage 1.3's
+  integration checks (both late-join gate halves on the bench village with food at start; parts 1 and 2 are committed
+  but not yet deployed), the one-pass change's timing re-run (its equivalence passed; uncommitted in `SwarmVisual.cs`),
+  then the whole-zone ecology baseline, the costs (measured first), and the four "wrong numbers" one at a time.
+  Done: Stage 1.1; Stage 1.2 and its drag fix; Stage 1.3 parts 1–2 in code. Waiting on the owner: the missing shaders
+  in built copies (BACKLOG). Open, not scheduled: the startup resync loop (seed 75 reproduces it); slow frames that are
+  not the bugs.
 - **The owner's answers (2026-10-07):** the behaviour check becomes a two-step check; the three late-join fixes now,
   as their own change; the windowed tour whenever suits.
 - **Stage 1.1 started (2026-10-07, the owner's go-ahead).** Each step is a pair of builds that differ only by that
