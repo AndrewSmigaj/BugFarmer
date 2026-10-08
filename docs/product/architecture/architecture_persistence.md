@@ -36,7 +36,9 @@ load-order-independent). An edit outside the zone's chunk grid (older saves coul
 chunk) is left out with a warning — splitting its coordinates would index a chunk with a negative number and stop the
 zone starting — and the save never writes one (Stage 1.3, 2026-10-08). The untouched chunks are loaded right after,
 at MatchInit, by `loadWholeZone` (`architecture_world.md`), which skips these; every chunk is then in memory, so each
-autosave compares every chunk with its authored file (a cost to measure at 512). The zone-wide collision map sees saved fences because edited chunks are
+autosave compares every chunk with its authored file (a cost to measure at 512). The food ledger
+(`WorldState.FoodLedger`, the clients' food registry as the events build it) is per-run: rebuilt at MatchInit from the
+set-up's events plus the restored ground items and stations (`seedFoodLedgerFromState`), never saved. The zone-wide collision map sees saved fences because edited chunks are
 already in memory (`chunkForCollision` is in-memory-first).
 
 ## Write: one save queue (D73, 2026-09-30)

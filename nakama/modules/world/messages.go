@@ -1078,6 +1078,10 @@ type ZoneAuthorityMessage struct {
 	// swarm centre. SwarmUpdate no longer creates swarms — every swarm is born via this baseline,
 	// the late-join snapshot, or a SWARM_SPAWNED event. omitempty: only the first joiner gets it.
 	Swarms []SwarmData `json:"swarms,omitempty"`
+	// The zone's food registry for the first joiner (Stage 1.3): it has no snapshot to take food from, and the food that
+	// exists before it came (restored, or made while the zone set up) has no event it will ever see. The client clears
+	// its registry and hydrates from this (HydrateFoodExact). The server-made bootstrap snapshot carries the same list.
+	Food []FoodSnapshotData `json:"food,omitempty"`
 }
 
 // ZoneTickBroadcastMessage sent EVERY tick (10Hz) by server (OpCode 78)

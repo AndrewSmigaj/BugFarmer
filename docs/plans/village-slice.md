@@ -1139,6 +1139,17 @@ leaving, a reconnect; the slower computer.
   walkable phantom chunk, a saved phantom edit, a partial zone); all Go tests pass. **Not yet run, needing the server
   deployed and the machine free:** both late-join gate halves, the equivalence check, and the whole-zone baseline that
   measures the ecology change; then part 2 (the food list in both bootstraps, with its client half) and the costs.
+- **Stage 1.3, part 2 — the zone's food in both bootstraps (2026-10-08; server unit-tested, client written but not yet
+  compiled — Unity was in use):** a better route than the review's (rebuilding the list from item positions would put
+  fallen fruit at the item's cell where its event named the tree's): the server keeps `FoodLedger`, the food registry
+  the events build, in `AddFoodEvent` with the client's rules, so it equals every client's by construction; restored
+  food is added once at MatchInit at its own cell; `foodBootstrapList` goes in the first player's `ZoneAuthorityMessage`
+  and in the server-made bootstrap snapshot for an early joiner. Client: `ProcessZoneAuthority` clears the registry and
+  hydrates before the first tick (both callers carry the list). Three Go tests (the client's rules, seeding only
+  restored food, the same list for an early joiner); all Go tests pass (the persistence-classification guard caught the
+  new field: per-run). Known gap: a client that becomes the one in charge from the tick broadcast has no list. **Still
+  to run, with the machine free:** a Unity build, both late-join gate halves (non-vacuous: a zone with food at start),
+  the equivalence check, the whole-zone baseline.
 
 ## Stage 1.4 design — the snapshot on demand (checked in code 2026-10-04)
 **Today:** the computer in charge uploads a full snapshot every 10 s (`SnapshotInterval`, `SwarmManager.cs:117`) because

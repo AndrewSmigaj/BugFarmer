@@ -350,6 +350,9 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 		if zone := state.GetZone(state.CurrentZone.ZoneID); zone != nil {
 			state.resetZoneSync(zone)
 		}
+		// The food that exists without an event this match (restored from a save) joins the food ledger, which the first
+		// player and an early joiner hydrate from (Stage 1.3).
+		state.seedFoodLedgerFromState()
 	}
 
 	// Create label for match listing
@@ -647,6 +650,8 @@ func (m *Match) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB
 					// swarms itself — SwarmUpdate no longer creates. Bugs seed from (worldSeed,swarmId,bugId)
 					// at the centre; this client is the origin of truth, so seed-from-centre is exact.
 					Swarms: m.buildSwarmSeedBaseline(worldState, zone, worldState.Config.ChunkSize),
+					// The zone's food registry: no event will ever tell this client about the food that exists now.
+					Food: worldState.foodBootstrapList(),
 				}
 				authData, _ := json.Marshal(authMsg)
 				dispatcher.BroadcastMessage(OpCodeZoneAuthority, authData, []runtime.Presence{presence}, nil, true)
@@ -3018,6 +3023,9 @@ func (m *Match) sendLateJoinSnapshot(
 			SnapshotLastEventSeq: zone.NextSeq - 1,      // All events to date are "in" the bootstrap state
 			Swarms:               []SwarmSnapshotData{}, // No per-bug data; swarm_metadata carries the seed-baseline
 			StateHash:            "",
+			// The same food list the first player hydrated from (Stage 1.3), as of now — consistent with
+			// SnapshotLastEventSeq: the ledger holds every food event to date.
+			Food: state.foodBootstrapList(),
 		}
 		zone.LatestSnapshotTick = state.TickCount
 	}

@@ -1087,7 +1087,9 @@ as a wall for moving bugs, so with one player (a 5×5 block of chunks) about 40%
 loaded and set up at MatchInit (`loadWholeZone`, `architecture_world.md`): the server's groups see the whole zone's
 food and walls, and every nest is alive from the start — an ecology change, measured on its own (the whole-zone
 baseline in Stage 1.3). The starting spawn no longer empties a species' group list (it dropped nest groups founded
-during a test zone's restore, so no cap, the director or a release counted them again).
+during a test zone's restore, so no cap, the director or a release counted them again). The first player's client now
+starts with the zone's food (restored, or made while the zone set up), hydrated from its bootstrap message; an early
+joiner gets the same list (`architecture_swarm_sync.md` §11.3, Stage 1.3 part 2).
 
 **Measuring switches and behaviour counts (2026-10-06, `docs/plans/village-slice.md` Stage 1.0a):**
 - **`hold_population`** (a test-zone flag in zone.json; production omits it): holds the bug count steady for cost

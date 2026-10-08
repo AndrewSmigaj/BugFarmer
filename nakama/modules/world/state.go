@@ -213,6 +213,11 @@ type WorldState struct {
 	PlayerCells      map[string]*PlayerCellState // playerID → current cell
 	ZoneStates       map[string]*ZoneState       // zoneID → zone authority/sync state
 	PendingInfluence []InfluenceEvent            // Events to broadcast this tick
+	// FoodLedger is the food registry the food events build on every client (Stage 1.3): food id → the cell and level
+	// of its last event, by the client's own rules. Kept by AddFoodEvent — the one place food events are made — so it
+	// equals every client's registry by construction; food restored from a save is added once at MatchInit
+	// (seedFoodLedgerFromState). A first player and an early joiner start from it (foodBootstrapList). Not saved.
+	FoodLedger map[string]FoodLedgerEntry
 
 	// Zone persistence (D73: persistence.go, save_writer.go, persist_classes.go). Not in the bug-sim hash.
 	MatchID       string    // this match's id (Nakama's RUNTIME_CTX_MATCH_ID): the zone's live copy, for the save queue
@@ -1055,6 +1060,95 @@ func (s *WorldState) AddFoodEvent(zoneID, eventType, foodID string, cellX, cellY
 
 	zone.InfluenceLog = append(zone.InfluenceLog, event)
 	s.PendingInfluence = append(s.PendingInfluence, event)
+	s.applyFoodLedger(eventType, foodID, cellX, cellY, level)
+}
+
+// FoodLedgerEntry is one food source as every client's registry holds it: its world cell (the client stores the cell
+// centre) and its level (the clients read only "above 0").
+type FoodLedgerEntry struct {
+	CellX, CellY, Level int
+}
+
+// applyFoodLedger applies one food event to FoodLedger with the client's rules (InfluenceManager.ProcessInfluenceEvent):
+// ITEM_ROTTED with a level registers the food; FOOD_CONSUMED sets the level, and 0 or less removes it.
+func (s *WorldState) applyFoodLedger(eventType, foodID string, cellX, cellY, level int) {
+	if foodID == "" {
+		return
+	}
+	if s.FoodLedger == nil {
+		s.FoodLedger = map[string]FoodLedgerEntry{}
+	}
+	switch eventType {
+	case InfluenceItemRotted:
+		if level > 0 {
+			s.FoodLedger[foodID] = FoodLedgerEntry{CellX: cellX, CellY: cellY, Level: level}
+		}
+	case InfluenceFoodConsumed:
+		if level <= 0 {
+			delete(s.FoodLedger, foodID)
+		} else {
+			s.FoodLedger[foodID] = FoodLedgerEntry{CellX: cellX, CellY: cellY, Level: level}
+		}
+	}
+}
+
+// seedFoodLedgerFromState adds the food that exists without having had an event this match — ground items and stations
+// restored from a save (or imported) — at their own cells: no client has held them, so any one cell works, the same for
+// every client. Runs once at MatchInit, after the whole zone is loaded; food the set-up made through events is already
+// in the ledger with its event's cell and is left alone. Sorted, so the ledger's contents never depend on map order.
+func (s *WorldState) seedFoodLedgerFromState() {
+	if s.FoodLedger == nil {
+		s.FoodLedger = map[string]FoodLedgerEntry{}
+	}
+	cs := s.Config.ChunkSize
+	for _, id := range sortedStringKeys(s.GroundItems) {
+		item := s.GroundItems[id]
+		if item == nil || item.FoodValue <= 0 {
+			continue
+		}
+		if _, known := s.FoodLedger[id]; known {
+			continue
+		}
+		s.FoodLedger[id] = FoodLedgerEntry{
+			CellX: item.Position.ChunkX*cs + int(item.Position.LocalX),
+			CellY: item.Position.ChunkY*cs + int(item.Position.LocalY),
+			Level: item.FoodValue,
+		}
+	}
+	for _, key := range sortedStringKeys(s.Stations) {
+		st := s.Stations[key]
+		if st == nil || st.Fill <= 0 {
+			continue
+		}
+		if _, known := s.FoodLedger[key]; known {
+			continue
+		}
+		foodPerUnit := 100 // as the station's compost event computes it (processStations)
+		if def := s.Entities[st.EntityID]; def != nil && def.World != nil && def.World.Station != nil && def.World.Station.FoodPerUnit > 0 {
+			foodPerUnit = def.World.Station.FoodPerUnit
+		}
+		level := st.Fill*foodPerUnit - int(st.FoodFrac)
+		if level < 1 {
+			level = 1
+		}
+		s.FoodLedger[key] = FoodLedgerEntry{CellX: st.GridX, CellY: st.GridY, Level: level}
+	}
+}
+
+// foodBootstrapList is FoodLedger as a snapshot food list, sorted by id, with the positions the client gives a food
+// event (FixedPoint2.FromVector2(cell + 0.5): cell × 1000 + 500 inside the zone). A first player hydrates from it
+// (ZoneAuthorityMessage.Food) and the server-made bootstrap snapshot gives it to an early joiner, so both start from
+// the same registry the authority's events then keep.
+func (s *WorldState) foodBootstrapList() []FoodSnapshotData {
+	if len(s.FoodLedger) == 0 {
+		return nil
+	}
+	out := make([]FoodSnapshotData, 0, len(s.FoodLedger))
+	for _, id := range sortedStringKeys(s.FoodLedger) {
+		e := s.FoodLedger[id]
+		out = append(out, FoodSnapshotData{FoodID: id, X: e.CellX*1000 + 500, Y: e.CellY*1000 + 500, Level: e.Level})
+	}
+	return out
 }
 
 // AddSwarmReproducedEvent logs a reproduction: the swarm bred at a food source and gains

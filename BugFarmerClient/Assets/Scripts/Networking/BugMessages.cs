@@ -473,6 +473,9 @@ namespace BugFarmer.Networking
         // adopt, so it CREATES these swarms and seeds their bugs from (worldSeed,swarmId,bugId) at
         // the centre. Empty for everyone else (they get swarms via the snapshot / SWARM_SPAWNED).
         public SwarmData[] swarms;
+        // The zone's food registry for the first joiner (Stage 1.3): the food that exists before it came has no event it
+        // will ever see. Cleared and hydrated in the Joining branch, like the late-join snapshot's food.
+        public FoodSnapshotData[] food;
     }
 
     /// <summary>

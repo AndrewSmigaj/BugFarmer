@@ -128,6 +128,7 @@ namespace BugFarmer.Entities
         private long _pendingAuthorityTick;
         private long _pendingAuthoritySeq;
         private SwarmData[] _pendingAuthoritySwarms; // seed-baseline carried with a cached ZoneAuthority
+        private FoodSnapshotData[] _pendingAuthorityFood; // the zone's food list carried with it (Stage 1.3)
 
         // First-joiner seed-baseline awaiting the world seed: ProcessZoneAuthority stashes the swarm
         // baseline here; Update() creates the swarms (seed-from-centre) once WorldSeedProvider is ready,
@@ -300,9 +301,10 @@ namespace BugFarmer.Entities
                 {
                     Debug.Log($"[SwarmManager] Processing DEFERRED ZoneAuthority now that localUserId={localUserId} is known");
                     DebugFileLogger.Log($"[SwarmManager] Processing DEFERRED ZoneAuthority: authority={_pendingAuthorityId}, localUserId={localUserId}");
-                    ProcessZoneAuthority(_pendingAuthorityId, _pendingAuthorityTick, _pendingAuthoritySeq, _currentZoneId, localUserId, _pendingAuthoritySwarms);
+                    ProcessZoneAuthority(_pendingAuthorityId, _pendingAuthorityTick, _pendingAuthoritySeq, _currentZoneId, localUserId, _pendingAuthoritySwarms, _pendingAuthorityFood);
                     _pendingAuthorityId = null;  // Clear pending - processed
                     _pendingAuthoritySwarms = null;
+                    _pendingAuthorityFood = null;
                 }
             }
 
@@ -2381,20 +2383,21 @@ namespace BugFarmer.Entities
                 _pendingAuthorityTick = msg.authoritative_tick;
                 _pendingAuthoritySeq = msg.last_event_seq;
                 _pendingAuthoritySwarms = msg.swarms;
+                _pendingAuthorityFood = msg.food;
                 _currentZoneId = msg.zone_id;
                 Debug.LogWarning($"[SwarmManager] ZoneAuthority received but localUserId not yet known - caching. authority={msg.authority_id}, tick={msg.authoritative_tick}");
                 DebugFileLogger.Log($"[SwarmManager] ZoneAuthority CACHED (localUserId empty): authority={msg.authority_id}, tick={msg.authoritative_tick}");
                 return;
             }
 
-            ProcessZoneAuthority(msg.authority_id, msg.authoritative_tick, msg.last_event_seq, msg.zone_id, localUserId, msg.swarms);
+            ProcessZoneAuthority(msg.authority_id, msg.authoritative_tick, msg.last_event_seq, msg.zone_id, localUserId, msg.swarms, msg.food);
         }
 
         /// <summary>
         /// Process zone authority assignment. Called immediately from HandleZoneAuthority
         /// or deferred from Update() when localUserId becomes available.
         /// </summary>
-        private void ProcessZoneAuthority(string authorityId, long authoritativeTick, long lastEventSeq, string zoneId, string localUserId, SwarmData[] baselineSwarms)
+        private void ProcessZoneAuthority(string authorityId, long authoritativeTick, long lastEventSeq, string zoneId, string localUserId, SwarmData[] baselineSwarms, FoodSnapshotData[] bootstrapFood)
         {
             bool wasAuthority = _isAuthority;
             _isAuthority = (authorityId == localUserId);
@@ -2413,6 +2416,17 @@ namespace BugFarmer.Entities
                 _lastReceivedSeq = lastEventSeq;     // FIX #7: Assume all prior events received
                 TransitionToLive();
                 DebugFileLogger.Log($"[SwarmManager] First client -> LIVE at tick {_simulationTick}");
+
+                // The zone's food registry (Stage 1.3): the food that exists now (restored, or made while the zone set up)
+                // has no event this client will ever see. The server-made bootstrap snapshot gives an early joiner the
+                // same list, so both start from one registry. Applied before the first tick, like the late-join snapshot's.
+                InfluenceManager.Instance?.ClearFood();
+                if (bootstrapFood != null)
+                {
+                    foreach (var f in bootstrapFood)
+                        InfluenceManager.Instance?.HydrateFoodExact(f.food_id, f.x, f.y, f.level);
+                    DebugFileLogger.Log($"[SwarmManager] First client: hydrated {bootstrapFood.Length} food entries from the zone's bootstrap");
+                }
 
                 // Bootstrap the initial swarms from the seed-baseline (SwarmUpdate no longer creates).
                 // Deferred to Update() so it runs once the world seed is initialized, before the tick loop.

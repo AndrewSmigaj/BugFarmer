@@ -806,10 +806,18 @@ next client always gets a clean stream from seq 0.
 carrion, every chunk's fruit trees and nests) logs events while nobody is connected, but the first player is told
 there are none before it (`LastEventSeq: -1`) and gets the groups from the seed baseline — so those events were a gap
 in the sequence it could never fill (it stalls, then resyncs). MatchInit now ends with `WorldState.resetZoneSync` —
-the same reset the last player's leaving does (no events, no snapshot, nobody in charge, nothing queued). Food the
-start-up made (windfall fruit, carrion) is then on the server but on no client: consistent between clients, since
-neither the first player nor an early joiner (the server-made bootstrap snapshot) gets food; the zone's food list in
-both bootstraps is the next step (`docs/plans/village-slice.md`, Stage 1.3).
+the same reset the last player's leaving does (no events, no snapshot, nobody in charge, nothing queued).
+
+**The zone's food in both bootstraps (Stage 1.3 part 2, 2026-10-08).** The food that exists before a first player comes
+(restored from a save, or made while the zone set up) has no event that client will ever see. The server keeps
+`WorldState.FoodLedger` — the food registry the food events build, kept by `AddFoodEvent` (the one place food events
+are made) with the client's own rules (ITEM_ROTTED with a level registers; FOOD_CONSUMED sets the level, 0 removes) — so
+it equals every client's registry by construction; food restored from a save is added once at MatchInit, at its own
+cell (`seedFoodLedgerFromState`). `foodBootstrapList` (sorted by id, positions `cell × 1000 + 500`, as the client's
+`FromVector2(cell + 0.5)` gives them) goes in the first player's `ZoneAuthorityMessage.Food` (the client clears its
+registry and hydrates, `ProcessZoneAuthority`, before its first tick) and in the server-made bootstrap snapshot an
+early joiner gets before the computer in charge has sent one — the same list on both paths. Known gap: a client that
+becomes the one in charge from the tick broadcast (its `ZoneAuthority` lost) has no list.
 
 ### 11.4 Test/dev knobs
 Test zones are ordinary zones authored by `tools/world/make_test_zone.py`; the zone config is the single

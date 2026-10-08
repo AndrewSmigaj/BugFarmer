@@ -94,9 +94,10 @@ var persistClasses = map[string]persistEntry{
 	"PlayerCells":      {classPerRun, "live player positions"},
 	"ZoneStates":       {classPerRun, "authority + influence ledger (NextSeq/InfluenceLog/snapshots) — per-run by the sync architecture"},
 	"PendingInfluence": {classPerRun, "this tick's outgoing events"},
+	"FoodLedger":       {classPerRun, "the clients' food registry as the food events build it — rebuilt each run from events + the restored items/stations (seedFoodLedgerFromState)"},
 
 	// -- the map --
-	"Chunks":        {classWorldState, "WorldSave.CellEdits — semantic diff of loaded chunks vs the authored zone; edited chunks eager-load at restore"},
+	"Chunks":        {classWorldState, "WorldSave.CellEdits — semantic diff of loaded chunks vs the authored zone; edited chunks load at restore, the rest by loadWholeZone"},
 	"BaseChunks":    {classPerRun, "cache of the authored chunk files the save diffs against (baseChunk) — re-read from disk each run, never saved"},
 	"ChunkSubs":     {classPerRun, "live view subscriptions"},
 	"BreakingState": {classPerRun, "an in-progress hand action; abandoned on restart"},
