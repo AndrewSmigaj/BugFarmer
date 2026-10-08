@@ -348,14 +348,24 @@ being designed now.
   receipt instead of at `PLAYER_CELL_LEAVE`'s tick, so a same-account rejoin replayed a phantom of itself; the
   authority's first snapshot was skipped at tick 0, so an early joiner got a seed-baseline stand-in. Fixed and proven
   on the failing world: `docs/product/investigations/latejoin-rejoin-divergence.md`.
-- **Bug sprites dragged by their group's gliding object (found 2026-10-07 by Stage 1.2's side-by-side check; a fix
-  proposed, waiting for the owner's yes).** Each group's GameObject glides toward the group's centre in its own
+- **DONE 2026-10-08 (the owner's yes) — bug sprites dragged by their group's gliding object** (found 2026-10-07 by
+  Stage 1.2's side-by-side check). Fixed: the group's object is placed once and never moves; the side-by-side check
+  then found 0 of 19.5 million positions more than 0.05 cells off, start-up included. Each group's GameObject glides toward the group's centre in its own
   `SwarmVisual.Update` (`UpdateCenterInterpolation`), and the bug sprites are its children, so after the drawing places
   them each frame they are carried along by the parent's glide until the next frame: up to 0.13 cells while start-up
   frames are slow, invisible once the game runs fast (0 of 3.37 million positions more than 0.05 cells off). Nothing
   needs the glide: the bugs, trails and shadows are placed in world space; the one reader of the group object's position
   is the telegraph handler's sound position (`SwarmManager.HandleBugTelegraph`), which can use the group's simulated
   centre. Proposed: stop moving the group object (and so drop ~500 `Update` calls a frame). Display only.
+- **Built copies of the game miss three custom shaders (found 2026-10-08 in the test logs; a fix proposed, waiting for
+  the owner's yes).** Every player build (the test builds and `Build/Release`, since at least 2026-10-06) logs
+  `'BugFarmer/DarknessMultiply' not found` (no darkness overlay), `'BugFarmer/SpriteLitWorld' not found` (sprites lit by
+  Unity's default, without the motion and flash), and `'BugFarmer/WaterAnimated' not found` (static water): the shaders
+  are looked up by name (`Shader.Find`), which only finds shaders a build includes, and nothing tells the build to keep
+  these three (the Editor finds them, so play in the Editor looks right). Proposed: add them to Graphics settings →
+  Always Included Shaders (or load them from a material under Resources), then check the logs and a windowed picture.
+  It also means the windowed timing tours so far ran without those effects. The same logs: `The referenced script on
+  this Behaviour (Game Object 'Player') is missing!` — a deleted script still attached to the Player.
 - **Slow frames that are not the bugs (found 2026-10-07, the windowed tours).** About 130 frames per 300 s run take
   more than 16.7 ms in every build since before Stage 1.1, while the bugs' drawing is now ~0.1 ms: half fall in the
   windows with the full bug snapshot built every 10 s (23 / 42 ms at 2,000 / 4,000 bugs; the send-on-join change

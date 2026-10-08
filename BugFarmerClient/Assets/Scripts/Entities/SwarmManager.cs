@@ -1524,7 +1524,7 @@ namespace BugFarmer.Entities
             var swarm = GetSwarm(msg.swarm_id);
             if (swarm == null) return;
 
-            Vector2 pos = swarm.transform.position;
+            Vector2 pos = swarm.SimCenter.ToVector2();   // the group's centre (its object no longer follows it, 2026-10-08)
             switch (msg.kind)
             {
                 case "strike":

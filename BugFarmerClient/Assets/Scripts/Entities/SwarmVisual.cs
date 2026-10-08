@@ -48,11 +48,9 @@ namespace BugFarmer.Entities
         private bool _returning;
         private float _bodyReach;
 
-        // Swarm center interpolation (server-driven)
-        private Vector2 _previousCenter;
-        private Vector2 _targetCenter;
-        private float _centerInterpProgress = 1f;
-        private const float CenterInterpDuration = 0.15f;
+        // The group's object stays where it is created (2026-10-08): its bug sprites, shadows and trails are placed in
+        // world space every frame, so nothing needs it to follow the group; it used to glide toward the group's centre in
+        // its own per-frame update and drag its bug sprites until the next frame placed them (BACKLOG).
 
         // NOTE: SwarmManager owns THE ONE simulation tick.
         // SwarmVisual NEVER advances time on its own.
@@ -144,11 +142,10 @@ namespace BugFarmer.Entities
                 Debug.LogWarning($"[SwarmVisual] No sprite found at Resources/Bugs/{spriteId}");
             }
 
-            _previousCenter = new Vector2(data.x, data.y);
-            _targetCenter = _previousCenter;
-            _fallbackCenter = FixedPoint2.FromVector2(_previousCenter);
+            var initialCenter = new Vector2(data.x, data.y);
+            _fallbackCenter = FixedPoint2.FromVector2(initialCenter);
             _simCenter = _fallbackCenter;
-            transform.position = _previousCenter;
+            transform.position = initialCenter;   // once; the object never moves (see the field note above)
             _radius = data.radius;
 
             // Setup bug ID tracking for late joiner sync
@@ -389,29 +386,8 @@ namespace BugFarmer.Entities
             }
         }
 
-        private void Update()
-        {
-            // ONLY do center interpolation - SwarmManager owns tick advancement
-            UpdateCenterInterpolation();
-
-            // DO NOT advance ticks here - SwarmManager.AdvanceOneTick() handles that
-            // DO NOT call SimulateTick() here
-            // Interpolation is called by SwarmManager.InterpolateAllSwarms()
-        }
-
-        private void UpdateCenterInterpolation()
-        {
-            // COSMETIC ONLY. Lerps the rendered transform toward the deterministic _simCenter.
-            // It MUST NOT write any value the simulation reads (that was the #1 determinism bug).
-            if (_centerInterpProgress < 1f)
-            {
-                _centerInterpProgress += Time.deltaTime / CenterInterpDuration;
-                if (_centerInterpProgress > 1f)
-                    _centerInterpProgress = 1f;
-
-                transform.position = Vector2.Lerp(_previousCenter, _targetCenter, _centerInterpProgress);
-            }
-        }
+        // No Update(): SwarmManager owns the tick (SimulateTick) and the drawing (Interpolate), and the group's object
+        // doesn't move (2026-10-08).
 
         /// <summary>
         /// Simulate one tick. Called by SwarmManager (which owns SimulationTick).
@@ -436,13 +412,6 @@ namespace BugFarmer.Entities
                 ? c
                 : _fallbackCenter;
 
-            if (newCenter != _simCenter)
-            {
-                // Drive cosmetic interpolation from the rendered position toward the new sim center.
-                _previousCenter = transform.position;
-                _targetCenter = newCenter.ToVector2();
-                _centerInterpProgress = 0f;
-            }
             _simCenter = newCenter;
 
             // FIX #2: MUST iterate bugs in deterministic order (sorted by bugId)

@@ -106,9 +106,10 @@ picks and the hit area read `SwarmVisual.DrawnPos` — the sprite while in view,
 frame's blend, time)`, the drawing's own formula over the two positions the last frame blended between, kept per bug at
 each tick (`CapturePosition(DrawFrame)`); the float's phase comes from the clock. Measured by the side-by-side check
 (`-drawcheck`): 0 of 3.37 million positions more than 0.05 cells from the sprite once the game is running; 182 in the
-first 600 ticks, up to 0.13 cells — the sprites hang on their group's object, which glides toward the group's centre
-in its own `Update` and drags them until the next frame places them, a drag that is large only while start-up frames
-are slow (BACKLOG). Sting reports go to the test report log under their own kinds (`sting_windup`, `sting_strike`),
+first 600 ticks, up to 0.13 cells — the sprites hang on their group's object, which glided toward the group's centre
+in its own `Update` and dragged them until the next frame placed them. **Since 2026-10-08 the group's object is placed
+once and never moves** (no `SwarmVisual.Update`; the attack sound plays at the group's simulated centre): 0 of 19.5
+million positions more than 0.05 cells off, start-up included. Sting reports go to the test report log under their own kinds (`sting_windup`, `sting_strike`),
 which the equivalence check doesn't compare.
 
 **Update 2026-07-14 — the S1/S2 predation late-join desync + the VERBATIM-RELAY CONTRACT.** New per-bug

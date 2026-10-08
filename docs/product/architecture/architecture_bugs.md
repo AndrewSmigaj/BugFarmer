@@ -1077,7 +1077,8 @@ character by character, the same on every computer — since 2026-10-07; the old
 computer's language setting. The tick allocates no memory (the counter RNG folds the group id in place instead of
 copying it per roll; the player cells and hunting groups are copied into reused lists): `architecture_swarm_sync.md`,
 the food registry's cost note. Only the groups in the camera's view are drawn (Stage 1.2: out of view a group's object
-is switched off; the sting check works out drawn positions on demand): `architecture_swarm_sync.md`, the same place.
+is switched off; the sting check works out drawn positions on demand; since 2026-10-08 the group's object never moves,
+so it no longer drags its bug sprites): `architecture_swarm_sync.md`, the same place.
 Each part of a client tick is timed (`Sim.Tick` and its parts, timing only); the fixes are Stage 1.1–1.2 of `docs/plans/village-slice.md`.
 
 **The server brings to life only the chunks a player has loaded (found 2026-10-04):** food sources, nests and stations

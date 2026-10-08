@@ -243,6 +243,10 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   plays at the group's simulated centre. **Checks, decided before running:** equivalence both ways, IDENTICAL; the
   side-by-side check at 2,000 bugs (normal speed) and 1,000 at 6×: no position more than 0.05 cells from its sprite,
   start-up included; a windowed run with the game's own pictures, looked at.
+  **Results:** equivalence IDENTICAL both ways (2,574 / 2,577 live ticks); the side-by-side check 0 of 4.6 million
+  (2,000 bugs) and 0 of 14.9 million (1,000 at 6×) positions more than 0.05 cells off, largest 0.049, start-up included;
+  the pictures look right (centipede bodies trailing their heads, flies, butterflies, a wasp at the hives). **Passed.**
+  The logs showed an old, separate fault: every built copy of the game misses three custom shaders (BACKLOG; asked).
 - **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
   resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
   and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism
