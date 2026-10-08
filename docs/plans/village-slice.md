@@ -188,6 +188,11 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   centipedes there); seeds 31–33, old and new in rotated order, 600 s each; stings on F counted from E's report log:
   passes if the new build stings F on every seed the old one does and its total is within half to twice the old one's.
   (5) The behaviour check (two steps), seeds 41–45, the order rotated.
+  **Added during the round (2026-10-07, 20:55, before the sting results were all in):** the first at-spawn sting run
+  (old build, seed 31) had no sting on F and no centipede hit on anyone, so in case the at-spawn test turns out to
+  compare zero with zero, a walking variant runs too: F walks the bench route through the busiest feeding spots (all far
+  from E's view), seeds 31–33, old and new rotated, the same pass rule. (The side-by-side runs had not started: the
+  flag `--client-flags -drawcheck` needs "=" because its value starts with a dash; re-run as decided.)
 - **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
   resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
   and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism
