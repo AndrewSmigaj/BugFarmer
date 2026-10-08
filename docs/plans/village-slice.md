@@ -148,6 +148,46 @@ making a four-times-bigger village good to walk around and making tuning runs fa
      **No memory per tick: met.** What remains is the authority's full snapshot every 10 s (~63 KB per tick averaged
      over its windows at 4,000 bugs; the send-on-join change removes it) and drawing's own per-frame memory (1–7 KB a
      frame, growing with bugs; Stage 1.2).
+- **Stage 1.2 started (2026-10-07) — the design, from the code** (`perf-tuning` loop; measured first: at 4,000 bugs the
+  centipede trails cost ~3.2 ms a frame, 241 trails each inserting at the front of a list of up to ~150 head points
+  and walking it once per body part with a square root per step; moving the sprites ~0.8 ms):
+  1. **In view or not, per group, each frame:** the camera's view (orthographic) grown by a margin, against a box
+     around the group's bugs over its last two ticks, grown by the body length for centipedes and millipedes. No
+     camera → everything counts as in view (today's behaviour).
+  2. **Out of view, the group's object is switched off** (its bugs, shadows, glows and trails hidden; no per-frame
+     work). Only freezing the sprites would leave ghosts: the sprites hang on the group's object, so a player walking
+     back to where a group was would see its frozen bugs. **Back in view:** switched on, every bug placed at its drawn
+     position, every trail rebuilt as a straight body behind its head along its motion.
+  3. **The drawn position as one function** (`BugVisual.DrawnPosition`): the blend between the two positions the
+     last drawn frame used (kept per bug at each tick — the same values the drawing uses today, kept even when no
+     frame draws the bug), plus the strike jab and the float; the float's phase comes from the clock instead of a
+     timer advanced only by drawing. The sting check, the flash/jab picking and the hit area read it for every bug, in
+     view or not, with the last frame's blend fraction and time — so a remote player off the computer-in-charge's
+     screen is tested against where the bugs really are, never frozen sprites.
+  4. **Trails in a ring:** a fixed ring of recorded head points, each with the distance travelled when it was
+     recorded, so placing the seven parts is one pass and trimming is constant time; no memory per frame. Renderer
+     writes (sorting order, tint, flap frame) only when the value changes.
+  **Checks, decided before running:** a headless compile; the equivalence check both ways (the simulation is untouched,
+  so IDENTICAL, in-charge reports included); the drawing cost at 1,000 / 2,000 / 4,000 bugs (headless) and the
+  windowed tour at 2,000 / 4,000 against the before numbers (target at 2,000: slow ≤ 2 ms); **the two-player sting
+  test** — the stung player out of the in-charge computer's view, old build against new, hits on that player counted
+  (passes if the new build stings it at a comparable rate, not zero); the behaviour check, build order rotated.
+  **First results (2026-10-07):** headless compile clean; equivalence IDENTICAL both ways (2,521 / 2,520 live ticks); the
+  bug drawing per frame (headless, the camera's view) at 1,000 / 2,000 / 4,000 bugs: 1.19 / 2.11 / 3.98 ms → 0.03 /
+  0.07 / 0.13 ms typical (trails 3.1 → 0.05 ms a frame at 4,000). The simulation tick read 10–30% higher in every part,
+  the untouched ones too (state check, strikes, food lookup): the headless client now runs ~3,200 frames a second instead
+  of ~220, and those frames compete with the tick — so ticks are compared with the frame rate held.
+  **Second round, rules decided before it runs:** the base build is HEAD's four files plus the sting record (both builds
+  log stings the same way; `-fps`, `-drawcheck` and the second player are test-only and shared). (1) Equivalence both ways,
+  IDENTICAL. (2) **The side-by-side check** (`-drawcheck`: every group still drawn, and every tick every bug's on-demand
+  drawn position compared with its sprite), 2,000 bugs at normal speed and 1,000 at 6×, 300 s each: passes if no position
+  is more than 0.05 cells (a twentieth of a cell) from its sprite. (3) The tick at 60 frames a second, old and new
+  interleaved, 1,000 / 2,000 / 4,000 bugs: passes if no part of the simulation tick is more than 10% slower. (4) **The
+  two-player sting test:** 1,000 held bugs at 6×, the computer in charge (E) at the south edge (126, 2), the second
+  player (F) at the zone's spawn, where centipedes come (all 98 hits on the standing player in the 30 behaviour runs were
+  centipedes there); seeds 31–33, old and new in rotated order, 600 s each; stings on F counted from E's report log:
+  passes if the new build stings F on every seed the old one does and its total is within half to twice the old one's.
+  (5) The behaviour check (two steps), seeds 41–45, the order rotated.
 - **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
   resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
   and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism
