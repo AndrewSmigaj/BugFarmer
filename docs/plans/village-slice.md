@@ -222,6 +222,12 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   above; the two-step rule's step 2 settles a suspect, so **decided (08:10):** (c) step 2, seeds 66–70, rotated,
   `--confirm` over ten — confirmed = the fly drop comes from the extreme frame rate (BACKLOG) and Stage 1.2 is
   committed; cleared = the drop is investigated before the commit.
+  **(c) step 2: cleared** — nothing flagged over ten seeds. So the uncapped fly flag (old against new, seeds 41–45) is
+  explained neither by the change at a monitor's frame rate (a) nor by the frame rate alone (b, c). **The investigation,
+  decided (09:55):** the same step 2 that settled the doubtful step-1 flag of 2026-10-07 — the uncapped comparison, old
+  against new, five fresh seeds (71–75) rotated, `--confirm` over all ten: confirmed = a real interaction between the
+  change and a very high frame rate, whose mechanism is found before the commit; cleared = the first flag was chance
+  (like the centipede flag of 2026-10-07) and Stage 1.2 is committed.
 - **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
   resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
   and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism
