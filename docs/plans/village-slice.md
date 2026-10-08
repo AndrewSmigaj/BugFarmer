@@ -208,6 +208,14 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   committed; (b) the old build against itself, uncapped and at 60 frames a second, seeds 51–55, rotated — flies
   flagged the same way = the in-charge computer's frame rate alone changes the ecology, a fault of its own (players'
   frame rates differ), recorded in the BACKLOG to investigate.
+  **(a) and (b), 2026-10-08:** (a) at 60 frames a second, old against new: **nothing flagged** — the fly differences are
+  gone; two SUSPECTs, centipede eating share and starts +23% (5/5 seeds, 3.2–3.3 standard errors). (b) the old build
+  uncapped (~740 frames a second) against itself at 60: nothing flagged, no suspect. The game itself syncs to the monitor
+  by default (Windows uses the Ultra quality level, vSync on). **Decided before running (04:35):** (a) step 2 as the rule
+  says — five fresh seeds (56–60) of both builds at 60, rotated, then `--confirm` over all ten; (c) the new build
+  uncapped (~3,600 frames a second) against itself at 60, seeds 61–65, rotated: flies flagged the same way = the fly drop
+  comes from that extreme frame rate (a game synced to the monitor never runs there), recorded in the BACKLOG; not
+  flagged = the drop needs the change and the uncapped rate together, investigated before Stage 1.2 is committed.
 - **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
   resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
   and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism
