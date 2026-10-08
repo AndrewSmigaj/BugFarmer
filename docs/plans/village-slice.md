@@ -247,6 +247,11 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   (2,000 bugs) and 0 of 14.9 million (1,000 at 6×) positions more than 0.05 cells off, largest 0.049, start-up included;
   the pictures look right (centipede bodies trailing their heads, flies, butterflies, a wasp at the hives). **Passed.**
   The logs showed an old, separate fault: every built copy of the game misses three custom shaders (BACKLOG; asked).
+- **1.2 follow-up 2, one pass per group per tick (2026-10-08):** each bug's drawn positions are captured inside the loop
+  that simulates it, instead of in a pass of their own before it (the capture reads only the bug's own position, so the
+  results are the same, with one walk over the group's bugs instead of two). **Checks, decided before running:**
+  equivalence both ways, IDENTICAL; the tick at 60 frames a second, old and new interleaved (order rotated) at 1,000 /
+  2,000 / 4,000 bugs: passes if the group tick (`Sim.SwarmTick`) is faster, or no more than 2% slower, at every count.
 - **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
   resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
   and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism
