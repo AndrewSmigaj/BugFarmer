@@ -32,8 +32,11 @@ self-heals (`WindupTargetID` was removed with the centipede combat-brain move to
 One order, one function (`restoreWorldSave`): **(1)** the clock + scalars, **(2)** the registries, **(3)** the swarms
 (+ `SwarmsBySpecies` rebuild), **(4)** every chunk referenced by a CellEdit: `LoadChunk` → apply
 edits → the five init scans (all skip-if-present; tree randomness is position-hashed, so
-load-order-independent). Untouched chunks keep lazy-loading on subscribe, where the same scans
-start them from scratch. The zone-wide collision map sees saved fences because edited chunks are
+load-order-independent). An edit outside the zone's chunk grid (older saves could hold one, from a walkable "phantom"
+chunk) is left out with a warning — splitting its coordinates would index a chunk with a negative number and stop the
+zone starting — and the save never writes one (Stage 1.3, 2026-10-08). The untouched chunks are loaded right after,
+at MatchInit, by `loadWholeZone` (`architecture_world.md`), which skips these; every chunk is then in memory, so each
+autosave compares every chunk with its authored file (a cost to measure at 512). The zone-wide collision map sees saved fences because edited chunks are
 already in memory (`chunkForCollision` is in-memory-first).
 
 ## Write: one save queue (D73, 2026-09-30)

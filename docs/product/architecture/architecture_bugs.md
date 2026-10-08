@@ -1081,11 +1081,13 @@ is switched off; the sting check works out drawn positions on demand; since 2026
 so it no longer drags its bug sprites): `architecture_swarm_sync.md`, the same place.
 Each part of a client tick is timed (`Sim.Tick` and its parts, timing only); the fixes are Stage 1.1–1.2 of `docs/plans/village-slice.md`.
 
-**The server brings to life only the chunks a player has loaded (found 2026-10-04):** food sources, nests and stations
-are set up when a chunk is first loaded for a player (`handlers_world.go:23-43`), and an unloaded chunk counts as a
-wall for moving bugs (`state.go:607`), so with one player (a 5×5 block of chunks) about 40% of a zone lives. This is a
-fault against the zone-wide design (`architecture_swarm_sync.md` §12.3); the fix is Stage 1.3 of
-`docs/plans/village-slice.md`.
+**The server brought to life only the chunks a player had loaded (found 2026-10-04; fixed 2026-10-08, Stage 1.3):**
+food sources, nests and stations were set up when a chunk was first loaded for a player, and an unloaded chunk counted
+as a wall for moving bugs, so with one player (a 5×5 block of chunks) about 40% of a zone lived. Now every chunk is
+loaded and set up at MatchInit (`loadWholeZone`, `architecture_world.md`): the server's groups see the whole zone's
+food and walls, and every nest is alive from the start — an ecology change, measured on its own (the whole-zone
+baseline in Stage 1.3). The starting spawn no longer empties a species' group list (it dropped nest groups founded
+during a test zone's restore, so no cap, the director or a release counted them again).
 
 **Measuring switches and behaviour counts (2026-10-06, `docs/plans/village-slice.md` Stage 1.0a):**
 - **`hold_population`** (a test-zone flag in zone.json; production omits it): holds the bug count steady for cost

@@ -55,9 +55,9 @@ func (m *Match) speciesForNestOccupant(state *WorldState, occupantID string) (st
 }
 
 // initNestsInChunk scans a loaded chunk for nest occupants and registers their states,
-// founding the resident patrol (cap-aware). Mirrors initFruitTreesInChunk: the nest
-// "comes alive" when a player first approaches its chunk (same class as fruit trees;
-// wild prey spawning is zone-wide from match start — accepted asymmetry).
+// founding the resident patrol (cap-aware). Mirrors initFruitTreesInChunk. Since Stage 1.3 every chunk is set up at
+// MatchInit (loadWholeZone), so every nest is alive from the zone's start (before, a nest came alive only when a player
+// first approached its chunk).
 func (m *Match) initNestsInChunk(
 	state *WorldState,
 	chunk *ChunkData,

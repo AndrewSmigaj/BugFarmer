@@ -802,6 +802,15 @@ resume, it created a `lastSeq` ≫ `watermark` gap that `HasAllEventsUpTo` can n
 stall. Fix: clear `PendingInfluence` in the empty-reset (and defensively in the pause guard) so the
 next client always gets a clean stream from seq 0.
 
+**The zone also starts with no events (Stage 1.3, 2026-10-08):** setting a zone up at MatchInit (the starting groups, the
+carrion, every chunk's fruit trees and nests) logs events while nobody is connected, but the first player is told
+there are none before it (`LastEventSeq: -1`) and gets the groups from the seed baseline — so those events were a gap
+in the sequence it could never fill (it stalls, then resyncs). MatchInit now ends with `WorldState.resetZoneSync` —
+the same reset the last player's leaving does (no events, no snapshot, nobody in charge, nothing queued). Food the
+start-up made (windfall fruit, carrion) is then on the server but on no client: consistent between clients, since
+neither the first player nor an early joiner (the server-made bootstrap snapshot) gets food; the zone's food list in
+both bootstraps is the next step (`docs/plans/village-slice.md`, Stage 1.3).
+
 ### 11.4 Test/dev knobs
 Test zones are ordinary zones authored by `tools/world/make_test_zone.py`; the zone config is the single
 source of truth (`static` = no spawn/merge/split, `swarm_size` = fixed count, `seed` = fixed world
@@ -910,10 +919,10 @@ identical on every client and decoupled from the camera:
   client re-arms the readiness gate on every package (`ExpectCollisionMap`) so a resync replays on the matching map,
   not its own newer one. Before, a fence gnawed between the snapshot and the join was already open in the joiner's
   replay (`docs/product/investigations/latejoin-rejoin-divergence.md`, cause B). Built by
-  `WorldState.BlocksBugsCells`, which scans EVERY chunk in the zone — including ones not yet in
-  `state.Chunks` (chunks load lazily per subscription, so the first joiner has none in memory). Missing
-  chunks are loaded TRANSIENTLY from disk (read-only, occupant-delta overlaid, NO RNG-bearing init, not
-  stored) so the map is zone-complete and identical for first + late joiners.
+  `WorldState.BlocksBugsCells`, which scans EVERY chunk in the zone. Since Stage 1.3 (2026-10-08) every
+  chunk is loaded at MatchInit, so it reads memory; a chunk somehow not loaded is read TRANSIENTLY from
+  disk (read-only, NO RNG-bearing init, not stored), so the map stays zone-complete and identical for
+  first + late joiners.
 - **Dynamic, on place/break:** a frontier-gated `OCCUPANT_BLOCKS_BUGS` ledger event (emitted centrally in
   `broadcastWorldUpdate` for every placement path, and in `breakOccupantAt` for player-break + gnaw, one
   per footprint cell) → client `SetBlocksBugs(cell, blocked)` at the SAME tick on every client.

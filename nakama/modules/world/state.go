@@ -29,8 +29,8 @@ func (s *WorldState) nextItemID(prefix string) string {
 
 // posHash returns a deterministic non-negative pseudo-random int from (seed, gx, gy, salt) — for per-cell
 // world init (e.g. a tree's initial FruitCount/DropTimer) that must NOT depend on chunk-LOAD order. Chunks
-// load lazily in non-deterministic order, so drawing such init from the shared sequential Rng made it vary
-// run to run; keying off position instead makes it reproducible. FNV-1a; `salt` separates distinct draws
+// loaded lazily in non-deterministic order (until Stage 1.3 loaded the whole zone at MatchInit), so drawing such init
+// from the shared sequential Rng made it vary run to run; keying off position keeps it reproducible either way. FNV-1a; `salt` separates distinct draws
 // for the same cell. (Mirrors the client's counter-RNG idea.)
 func posHash(seed int64, gx, gy, salt int) int {
 	h := uint64(14695981039346656037)
@@ -584,12 +584,48 @@ func (w *WorldState) IsBlockedForSpecies(worldX, worldY float32, species *entiti
 	return w.isBlockedImpl(worldX, worldY, skipOccupants, false)
 }
 
+// zoneChunkGrid is the zone's size in chunks — Width/ChunkSize × Height/ChunkSize, 8 × 8 when the zone doesn't say —
+// the grid every whole-zone pass walks (the collision and roof maps, loadWholeZone). Stage 1.3.
+func (s *WorldState) zoneChunkGrid() (chunksX, chunksY int) {
+	chunksX, chunksY = 8, 8
+	if s.CurrentZone == nil {
+		return
+	}
+	if n := s.CurrentZone.Width / ChunkSize; n > 0 {
+		chunksX = n
+	}
+	if n := s.CurrentZone.Height / ChunkSize; n > 0 {
+		chunksY = n
+	}
+	return
+}
+
+// ChunkInZone reports whether chunk (cx, cy) is part of the current zone's chunk grid. Outside it there is no zone
+// (Stage 1.3): no chunk is stored, set up, edited or saved there, and every blocked check treats its cells as walls —
+// before, a chunk asked for there was made as walkable "phantom" grass. Without a current zone (bare test states)
+// every chunk counts as inside.
+func (s *WorldState) ChunkInZone(cx, cy int) bool {
+	if s.CurrentZone == nil {
+		return true
+	}
+	chunksX, chunksY := s.zoneChunkGrid()
+	return cx >= 0 && cy >= 0 && cx < chunksX && cy < chunksY
+}
+
+// CellInZone reports whether grid cell (gx, gy) lies in a chunk of the current zone (ChunkInZone).
+func (s *WorldState) CellInZone(gx, gy int) bool {
+	return s.ChunkInZone(floorDiv(gx, ChunkSize), floorDiv(gy, ChunkSize))
+}
+
 func (w *WorldState) isBlockedImpl(worldX, worldY float32, skipOccupants, loadAuthored bool) bool {
 	cs := w.Config.ChunkSize
 
 	// Convert to integer grid coordinates using floor (consistent for negative coords)
 	gx := int(math.Floor(float64(worldX)))
 	gy := int(math.Floor(float64(worldY)))
+	if !w.CellInZone(gx, gy) {
+		return true // outside the zone: a wall for everyone (Stage 1.3)
+	}
 
 	// Get chunk coordinates using floor division
 	cx := floorDiv(gx, cs)
@@ -638,6 +674,9 @@ func (w *WorldState) IsBlockedForPlayers(worldX, worldY float32) bool {
 	cs := w.Config.ChunkSize
 	gx := int(math.Floor(float64(worldX)))
 	gy := int(math.Floor(float64(worldY)))
+	if !w.CellInZone(gx, gy) {
+		return true // outside the zone (Stage 1.3)
+	}
 	cx := floorDiv(gx, cs)
 	cy := floorDiv(gy, cs)
 	lx := gx - cx*cs
@@ -683,6 +722,21 @@ func (s *WorldState) GetOrCreateZone(zoneID string) *ZoneState {
 }
 
 // GetZone returns zone state if it exists
+// resetZoneSync empties a zone's sync state: no events (NextSeq 0, an empty log, nothing queued for broadcast), no
+// snapshot, no computer in charge. Used when the zone's last player leaves (MatchLeave) and at the end of MatchInit, so
+// the next first player — told there are no earlier events — never meets a gap in the sequence (the client's
+// HasAllEventsUpTo could never close it, and it would stall). Any event still queued is dropped too, or it could reach
+// the next client mixed with the fresh seq-0 stream.
+func (s *WorldState) resetZoneSync(zone *ZoneState) {
+	zone.NextSeq = 0
+	zone.InfluenceLog = nil
+	zone.LatestSnapshot = nil
+	zone.LatestSnapshotTick = 0
+	zone.LatestSnapshotHash = ""
+	zone.AuthorityUserID = ""
+	s.ClearPendingInfluence()
+}
+
 func (s *WorldState) GetZone(zoneID string) *ZoneState {
 	return s.ZoneStates[zoneID]
 }
@@ -778,17 +832,10 @@ func (s *WorldState) BlocksBugsCells() (cx []int, cy []int) {
 	if s.CurrentZone == nil {
 		return nil, nil
 	}
-	// Scan the WHOLE zone grid, not just s.Chunks — chunks load lazily (per subscription), so the first
-	// joiner has NONE in memory at MatchJoin. We load the missing ones transiently from disk (read-only,
-	// no RNG-bearing init, not stored) so the map is zone-COMPLETE and identical for first + late joiners.
-	chunksX := s.CurrentZone.Width / ChunkSize
-	chunksY := s.CurrentZone.Height / ChunkSize
-	if chunksX <= 0 {
-		chunksX = 8
-	}
-	if chunksY <= 0 {
-		chunksY = 8
-	}
+	// Scan the WHOLE zone grid. Since Stage 1.3 every chunk is loaded at MatchInit (loadWholeZone), so this reads
+	// memory; a chunk somehow not loaded is read transiently from disk (read-only, no RNG-bearing init, not stored), so
+	// the map stays zone-COMPLETE and identical for first + late joiners.
+	chunksX, chunksY := s.zoneChunkGrid()
 	zonePath := "data/zones/" + s.CurrentZone.ZoneID
 	for ccy := 0; ccy < chunksY; ccy++ {
 		for ccx := 0; ccx < chunksX; ccx++ {
@@ -823,14 +870,7 @@ func (s *WorldState) RoofCells() (cx []int, cy []int) {
 	if s.CurrentZone == nil {
 		return nil, nil
 	}
-	chunksX := s.CurrentZone.Width / ChunkSize
-	chunksY := s.CurrentZone.Height / ChunkSize
-	if chunksX <= 0 {
-		chunksX = 8
-	}
-	if chunksY <= 0 {
-		chunksY = 8
-	}
+	chunksX, chunksY := s.zoneChunkGrid()
 	zonePath := "data/zones/" + s.CurrentZone.ZoneID
 	for ccy := 0; ccy < chunksY; ccy++ {
 		for ccx := 0; ccx < chunksX; ccx++ {

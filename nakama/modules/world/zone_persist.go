@@ -183,11 +183,7 @@ func (m *Match) importLegacySave(ctx context.Context, nk runtime.NakamaModule, s
 		}
 		state.Chunks[chunkKey] = chunk
 		m.applyLegacyChunkSave(state, chunk, cs)
-		m.initFruitTreesInChunk(state, chunk, cs.ChunkX, cs.ChunkY, logger)
-		m.initNestsInChunk(state, chunk, cs.ChunkX, cs.ChunkY, logger)
-		m.initHostPlantsInChunk(state, chunk, cs.ChunkX, cs.ChunkY, logger)
-		m.initForagePoolsInChunk(state, chunk, cs.ChunkX, cs.ChunkY, logger)
-		m.initStationsInChunk(state, chunk, cs.ChunkX, cs.ChunkY, logger)
+		m.initChunkRegistries(state, chunk, cs.ChunkX, cs.ChunkY, logger)
 	}
 
 	// The legacy latent GroundItemSeq bug, fixed at import: restored item ids carry "<prefix>_<n>"

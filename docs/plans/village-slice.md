@@ -1096,6 +1096,49 @@ leaving, a reconnect; the slower computer.
   hosting track, measured in Stage 3's build step).
 - **Empty zones stay frozen** (already built: `MatchLoop` returns early with no players, `match.go:869-880`); the
   catch-up on arrival stays on the roadmap and now has the whole zone it needs.
+- **Re-checked against the code, 2026-10-08** (before any code; `.claude/complex-change-review.md` stage 1): the five
+  setup scans are called from subscribe (`handlers_world.go:38-43`), restore (`world_save.go:422-426`) and the import
+  (`zone_persist.go:186-190`), as above — plus a debug "spawn an occupant" path (`handlers_env.go:249`) that registers a
+  placed tree the way placement does (placement, not chunk loading: unchanged). MatchInit restores or imports
+  (`match.go:323/326`), then spawns the starting groups and carrion only when no groups were restored
+  (`match.go:338-341`); `spawnInitialSwarms` empties each species' group list (`match.go:1830`), so nest groups founded
+  during a test zone's restore are dropped from the count today. The first player is told there are no earlier events
+  (`LastEventSeq: -1`, `match.go:633`) with a seed baseline of the groups; the full reset of the zone's sync state runs
+  only when the last player leaves (`match.go:791-803`). The client never calls `HydrateFood`; a late joiner's food comes
+  in the snapshot (`HydrateFoodExact`, `SwarmManager.cs:2005-2010`), the first player's from nowhere. **Split:** the
+  server work (the helper, `loadWholeZone`, the kept group lists, the sync reset at the end of MatchInit, the zone's
+  food list in the first player's bootstrap message, the server's bounds guards, the two costs) is built and tested in
+  Docker; the client work (applying that food list, clamping chunk requests) waits for a Unity build.
+- **The independent review (2026-10-08, a fresh-context agent; its load-bearing claims re-read in the code):**
+  (1) the server-made bootstrap snapshot carries no food (`match.go:3008-3014`) and an early joiner gets exactly that
+  (`:3182`) — so the first player's food list must go into that snapshot too, from the same builder, or the first player
+  and an early joiner diverge (clients stay consistent today only because neither gets food); (2) the "first player"
+  gap exists today already: start-up spawns and carrion emit events at MatchInit, and the empty-zone pause clears queued
+  events but keeps the counter and the log (`match.go:876-883`) — the change widens it, the reset fixes both; (3) the
+  save path needs bounds too: restore splits coordinates with truncating division and remainder (`world_save.go:396,
+  413`), so an out-of-zone edit west or south would index an array with a negative number and stop the zone starting;
+  edits on phantom chunks are saved, and placement accepts phantom chunks — guard the save build, the restore and
+  placement as well as subscribe and the blocked checks; (4) the food list: ground items with food value and stations
+  with fill, ids and positions exactly as the food events give them, sorted by id, applied on the client by clearing
+  then `HydrateFoodExact`; (5) **a behaviour change, not only a cost:** an unloaded chunk counts as a wall for the
+  server's groups (`state.go:608-610`) and its food is invisible, so the ecology will shift — measured on its own; (6)
+  costs to add: the first autosave copies every chunk from disk, start-up runs five JSON passes per chunk (one anchor
+  list per chunk would do), every fruit tree's ledger events go to every client, the collision map's per-cell decode on
+  every join; (7) `crawler_lab/zone.json` says 96×96 over a 4×4 grid of chunk files; (8) docs that go stale (invariant 6
+  in `complex-change-review.md`, the lazy-loading comments, the memory note). **Order:** the server pieces that keep
+  every client consistent first (the helper, `loadWholeZone`, the kept group lists, the sync reset at the end of
+  MatchInit, the bounds guards incl. save and placement), unit-tested in Docker; then the food list on both bootstrap
+  paths with its client half (a Unity build, the `frontier-sync` recipe, both late-join gate halves); then the costs.
+- **Stage 1.3, part 1 — the server's whole zone, written and unit-tested (2026-10-08, while the owner had Unity; not
+  yet deployed):** `initChunkRegistries` (the one setup helper, at subscribe, restore and import); `loadWholeZone` at
+  the end of MatchInit's set-up; `spawnInitialSwarms` keeps groups already listed; `WorldState.resetZoneSync` at the end
+  of MatchInit and on the last player's leaving; `ChunkInZone` / `CellInZone`: outside the zone's grid every cell is a
+  wall, nothing is placed, stored or saved, a restored out-of-zone edit is left out with a warning, and a chunk request
+  there is answered with display-only grass (today's look beyond the edge kept). Six Go tests
+  (`whole_zone_test.go`), each failing on the old code (a restore panic, a dropped group list, events left at start, a
+  walkable phantom chunk, a saved phantom edit, a partial zone); all Go tests pass. **Not yet run, needing the server
+  deployed and the machine free:** both late-join gate halves, the equivalence check, and the whole-zone baseline that
+  measures the ecology change; then part 2 (the food list in both bootstraps, with its client half) and the costs.
 
 ## Stage 1.4 design — the snapshot on demand (checked in code 2026-10-04)
 **Today:** the computer in charge uploads a full snapshot every 10 s (`SnapshotInterval`, `SwarmManager.cs:117`) because

@@ -9,7 +9,52 @@ import (
 	"github.com/heroiclabs/nakama-common/runtime"
 )
 
-// handleChunkSubscribe loads a chunk and sends it to the subscribing player
+// initChunkRegistries runs the five setup scans on a chunk just placed in state.Chunks, in one fixed order: fruit trees,
+// nests (founding a nest's resident group, cap-aware), milkweed breeding capacity, flower nectar, stations (compost bins
+// and other world.station entities). The one place every chunk-load path (subscribe, the world-save restore, the
+// legacy import) sets a chunk up (Stage 1.3, docs/plans/village-slice.md). Each scan skips what is already registered,
+// so running it twice on a chunk is harmless.
+func (m *Match) initChunkRegistries(state *WorldState, chunk *ChunkData, cx, cy int, logger runtime.Logger) {
+	m.initFruitTreesInChunk(state, chunk, cx, cy, logger)
+	m.initNestsInChunk(state, chunk, cx, cy, logger)
+	m.initHostPlantsInChunk(state, chunk, cx, cy, logger)
+	m.initForagePoolsInChunk(state, chunk, cx, cy, logger)
+	m.initStationsInChunk(state, chunk, cx, cy, logger)
+}
+
+// loadWholeZone loads every chunk of the zone into state.Chunks and sets each up (Stage 1.3, docs/plans/village-slice.md:
+// the whole zone lives on the server, not only the chunks some player has asked for — an unloaded chunk was a wall to
+// the server's groups and its food invisible). Row by row in a fixed order, skipping chunks already loaded: the
+// world-save restore and the legacy import load the chunks holding the player's edits first, so this runs after them; a
+// chunk without a file is grass, as on subscribe. Each setup scan skips what is registered, so nothing is set up twice.
+func (m *Match) loadWholeZone(state *WorldState, logger runtime.Logger) {
+	if state.CurrentZone == nil {
+		return
+	}
+	chunksX, chunksY := state.zoneChunkGrid()
+	zonePath := "data/zones/" + state.CurrentZone.ZoneID
+	loaded := 0
+	for cy := 0; cy < chunksY; cy++ {
+		for cx := 0; cx < chunksX; cx++ {
+			chunkKey := ChunkKey(cx, cy)
+			if _, exists := state.Chunks[chunkKey]; exists {
+				continue
+			}
+			chunk, err := LoadChunk(zonePath, cx, cy)
+			if err != nil {
+				chunk = NewEmptyChunk(cx, cy, "grass")
+			}
+			state.Chunks[chunkKey] = chunk
+			m.initChunkRegistries(state, chunk, cx, cy, logger)
+			loaded++
+		}
+	}
+	logger.Info("Zone %s: the whole zone is loaded (%d x %d chunks; %d loaded now, the rest by the restore)",
+		state.CurrentZone.ZoneID, chunksX, chunksY, loaded)
+}
+
+// handleChunkSubscribe sends a chunk to the subscribing player. Every chunk of the zone is loaded at MatchInit
+// (loadWholeZone); the load below remains for safety (a zone whose grid changed under a running match).
 func (m *Match) handleChunkSubscribe(
 	logger runtime.Logger,
 	dispatcher runtime.MatchDispatcher,
@@ -18,6 +63,18 @@ func (m *Match) handleChunkSubscribe(
 	cx, cy int,
 ) {
 	chunkKey := ChunkKey(cx, cy)
+
+	// Outside the zone's chunk grid there is no zone (Stage 1.3): answer with plain grass, for the picture beyond the
+	// edge only — never stored, set up, subscribed to, editable or saved. Before, the request made a walkable "phantom"
+	// chunk on the server.
+	if !state.ChunkInZone(cx, cy) {
+		if presence, ok := state.Presences[userID]; ok && presence != nil {
+			edge := NewEmptyChunk(cx, cy, "grass")
+			data, _ := json.Marshal(ChunkDataMessage{ChunkX: cx, ChunkY: cy, Ground: edge.Ground, Occupants: edge.Occupants})
+			dispatcher.BroadcastMessage(OpCodeChunkData, data, []runtime.Presence{presence}, nil, true)
+		}
+		return
+	}
 
 	// Load chunk if not in memory
 	if _, exists := state.Chunks[chunkKey]; !exists {
@@ -34,13 +91,7 @@ func (m *Match) handleChunkSubscribe(
 		// MatchInit by restoreWorldSave/importLegacySave — a chunk reaching this lazy path is
 		// UNTOUCHED authored content, so the init scans below start it from scratch.
 
-		// Initialize fruit tree states for any fruit trees in this chunk
-		m.initFruitTreesInChunk(state, chunk, cx, cy, logger)
-		m.initNestsInChunk(state, chunk, cx, cy, logger)
-		m.initHostPlantsInChunk(state, chunk, cx, cy, logger)  // milkweed breeding capacity
-		m.initForagePoolsInChunk(state, chunk, cx, cy, logger) // flower nectar (depletable feeding)
-		// Initialize stations (compost bins etc. — entities with world.station)
-		m.initStationsInChunk(state, chunk, cx, cy, logger)
+		m.initChunkRegistries(state, chunk, cx, cy, logger)
 	}
 
 	// NOTE: bug state for late joiners is delivered zone-wide via LateJoinSnapshot (OpCode 72)
@@ -603,6 +654,9 @@ func (m *Match) canPlace(state *WorldState, gx, gy int, def *EntityDef, dir int)
 
 	for dy := 0; dy < h; dy++ {
 		for dx := 0; dx < w; dx++ {
+			if !state.CellInZone(gx+dx, gy+dy) {
+				return false // nothing is placed outside the zone (Stage 1.3)
+			}
 			cx, cy, lx, ly := GlobalToChunk(gx+dx, gy+dy)
 			chunkKey := ChunkKey(cx, cy)
 			chunk, exists := state.Chunks[chunkKey]

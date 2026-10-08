@@ -1834,8 +1834,8 @@ func (m *Match) initFruitTreesInChunk(
 				GridX:        gx,
 				GridY:        gy,
 				MaxFruit:     maxFruit,
-				// Position-seeded (NOT the shared sequential Rng): chunks load lazily in non-deterministic
-				// order, so drawing per-tree init from the shared stream made FruitCount/DropTimer — and
+				// Position-seeded (NOT the shared sequential Rng): chunks loaded lazily in non-deterministic
+				// order before Stage 1.3, so drawing per-tree init from the shared stream made FruitCount/DropTimer — and
 				// thus the whole fruit-drop schedule — vary run to run. posHash keys it to (seed,gx,gy).
 				FruitCount:   2 + posHash(state.WorldSeed, gx, gy, 1)%2,
 				DropTimer:    posHash(state.WorldSeed, gx, gy, 2) % treeDefDropTicks(entityDef),

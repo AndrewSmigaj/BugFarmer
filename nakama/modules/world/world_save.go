@@ -121,6 +121,9 @@ func (m *Match) buildWorldSave(state *WorldState) *WorldSave {
 			continue
 		}
 		cx, cy := live.ChunkX, live.ChunkY
+		if !state.ChunkInZone(cx, cy) {
+			continue // nothing outside the zone is kept (Stage 1.3)
+		}
 		base := state.baseChunk(zonePath, cx, cy)
 		for ly := 0; ly < ChunkSize; ly++ {
 			for lx := 0; lx < ChunkSize; lx++ {
@@ -390,7 +393,20 @@ func (m *Match) restoreWorldSave(state *WorldState, ws *WorldSave, logger runtim
 	}
 
 	// (4) Edited chunks — loaded and scanned NOW so their occupants exist before any client
-	// (and before the zone-wide collision map builds). Untouched chunks keep loading lazily.
+	// (and before the zone-wide collision map builds). The untouched chunks are loaded next, by loadWholeZone (Stage 1.3),
+	// which skips these.
+	// An edit outside the zone's chunk grid (older saves could hold one, from a walkable "phantom" chunk) is left out:
+	// splitting its coordinates below would index a chunk with a negative number and stop the zone starting (Stage 1.3).
+	inZone := ws.CellEdits[:0:0]
+	for _, e := range ws.CellEdits {
+		if state.CellInZone(e.GX, e.GY) {
+			inZone = append(inZone, e)
+		}
+	}
+	if dropped := len(ws.CellEdits) - len(inZone); dropped > 0 {
+		logger.Warn("Zone %s: left out %d saved cell edit(s) outside the zone", ws.ZoneID, dropped)
+	}
+	ws.CellEdits = inZone
 	touched := map[string][2]int{}
 	for _, e := range ws.CellEdits {
 		cx, cy := e.GX/ChunkSize, e.GY/ChunkSize
@@ -419,11 +435,7 @@ func (m *Match) restoreWorldSave(state *WorldState, ws *WorldSave, logger runtim
 			}
 		}
 		state.Chunks[chunkKey] = chunk
-		m.initFruitTreesInChunk(state, chunk, cx, cy, logger)
-		m.initNestsInChunk(state, chunk, cx, cy, logger)
-		m.initHostPlantsInChunk(state, chunk, cx, cy, logger)
-		m.initForagePoolsInChunk(state, chunk, cx, cy, logger)
-		m.initStationsInChunk(state, chunk, cx, cy, logger)
+		m.initChunkRegistries(state, chunk, cx, cy, logger)
 	}
 
 	logger.Info("Zone %s: restored world save (tick %d, %d swarms, %d edits, %d nests, %d items)",

@@ -100,8 +100,11 @@ stage's exit gate.
 4. **AUTHORITY-ONLY writes**; followers REPLAY; detect-don't-remove (kills ride `BUG_REMOVED` on every
    client at the event tick, including the authority).
 5. **DATA SCOPE**: zone-wide sim reads zone-COMPLETE data; rendering + player-collision stay view-scoped.
-6. **SERVER CHUNKS LOAD LAZILY** — a zone-complete scan must read the full grid from disk, not
-   `state.Chunks`. [`server-chunks-lazy-loaded` memory]
+6. **SERVER CHUNKS: THE WHOLE ZONE, BUT ONLY AFTER `loadWholeZone`** — since Stage 1.3 (2026-10-08) every chunk of
+   the zone's grid is in `state.Chunks` once MatchInit has run `loadWholeZone`; code that runs earlier in MatchInit (the
+   restore, the starting spawn) still sees only the restore's chunks, so a zone-complete read there goes through
+   `chunkForCollision` / `loadAuthored`. Outside the grid there is no zone (`ChunkInZone`). [`server-chunks-lazy-loaded`
+   memory]
 7. **SNAPSHOT/REPLAY COHERENCE**: entities created in the snapshot-lag window are minted by REPLAY at
    `evt.tick`, not prespawned from live metadata count. (the #127 class)
 8. **CANONICAL ENTITY DATA** in `nakama/data/entities/*`; publish to the client; never hand-edit the client

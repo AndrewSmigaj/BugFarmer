@@ -909,6 +909,15 @@ zones/
     ...
 ```
 
+**The whole zone lives on the server (Stage 1.3, 2026-10-08):** at MatchInit, after the save restore (which loads the
+chunks holding the player's edits) and the starting spawn, `loadWholeZone` loads every chunk of the zone's grid
+(Width/32 × Height/32, 8 × 8 by default; row by row) and sets each up through one helper, `initChunkRegistries` (fruit
+trees, nests, milkweed, flower nectar, stations — the same five scans every load path uses). Outside that grid there is
+no zone: every blocked check treats its cells as walls (`CellInZone`), nothing is placed, stored, edited or saved there,
+and a chunk request there is answered with plain grass for the picture beyond the edge only (before, it made a walkable
+"phantom" chunk). Chunk files outside a zone's grid are never loaded (`crawler_lab` keeps a 4th row and column of
+walls from an older, larger layout; its zone is 96 × 96).
+
 **Test-zone switches** (top level of zone.json, test zones only; production omits them; each is described at its field
 in `zone.go`): `ephemeral_swarms`, `call_rate`, `sim_batch`, `profile`, `peaceful`, `autosave_seconds`,
 `debug_leave_delay_ms`, and `hold_population` (2026-10-06: holds the bug count steady for cost measurements — no births

@@ -366,6 +366,10 @@ being designed now.
   Always Included Shaders (or load them from a material under Resources), then check the logs and a windowed picture.
   It also means the windowed timing tours so far ran without those effects. The same logs: `The referenced script on
   this Behaviour (Game Object 'Player') is missing!` — a deleted script still attached to the Player.
+- **`crawler_lab` keeps chunk files outside its 96 × 96 grid (found 2026-10-08, Stage 1.3's review).** A 4th row and
+  column of chunk files (`chunk_3_*`, `chunk_*_3`: stone walls of an older, larger layout — the generator,
+  `tools/zonegen/scenes/zone_crawler_lab.py`, now builds 96 × 96 and never writes them). Since Stage 1.3 they are never
+  loaded; deleting them is the owner's call.
 - **Slow frames that are not the bugs (found 2026-10-07, the windowed tours).** About 130 frames per 300 s run take
   more than 16.7 ms in every build since before Stage 1.1, while the bugs' drawing is now ~0.1 ms: half fall in the
   windows with the full bug snapshot built every 10 s (23 / 42 ms at 2,000 / 4,000 bugs; the send-on-join change

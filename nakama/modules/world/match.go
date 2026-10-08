@@ -339,6 +339,18 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 		m.spawnInitialSwarms(state, logger)
 		m.seedInitialCarrion(state, logger)
 	}
+	if state.CurrentZone != nil {
+		// The whole zone on the server (Stage 1.3): after the restore/import (which load the edited chunks first) and the
+		// starting spawn.
+		m.loadWholeZone(state, logger)
+		// Setting the zone up (the starting groups, the carrion, every chunk's fruit trees and nests) logs events while
+		// nobody is connected, but the first player is told there are none before it (LastEventSeq -1, MatchJoin) and gets
+		// the groups from the seed baseline instead — the events would be a gap it never fills. So the zone starts with no
+		// events, as it does when its last player leaves (resetZoneSync).
+		if zone := state.GetZone(state.CurrentZone.ZoneID); zone != nil {
+			state.resetZoneSync(zone)
+		}
+	}
 
 	// Create label for match listing
 	label := MatchLabel{
@@ -789,17 +801,7 @@ func (m *Match) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.D
 				// Check if zone is now completely empty - reset ALL sync state
 				// This prevents watermark mismatch when next player joins
 				if len(zone.Members) == 0 {
-					zone.NextSeq = 0
-					zone.InfluenceLog = nil
-					zone.LatestSnapshot = nil
-					zone.LatestSnapshotTick = 0
-					zone.LatestSnapshotHash = ""
-					zone.AuthorityUserID = ""
-					// Drop any event still queued for broadcast. Otherwise an event from the last
-					// tick before everyone left can survive the reset + pause-when-empty and be
-					// delivered to the next (reconnecting) client mixed with the fresh seq-0 stream,
-					// leaving a seq gap the client's HasAllEventsUpTo can never close (it stalls).
-					worldState.ClearPendingInfluence()
+					worldState.resetZoneSync(zone)
 					logger.Info("Zone %s is now empty - reset all sync state (NextSeq, InfluenceLog, Snapshot, Authority, PendingInfluence)", zoneID)
 				} else if zone.AuthorityUserID == userID {
 					// Authority is leaving but zone still has members - reassign
@@ -1827,7 +1829,11 @@ func (m *Match) spawnInitialSwarms(state *WorldState, logger runtime.Logger) {
 	// Initialize species tracking and spawn initial swarms
 	for _, speciesID := range sortedStringKeys(cfg.SpeciesCaps) { // sorted: initial spawn mints IDs in order
 		cap := cfg.SpeciesCaps[speciesID]
-		state.SwarmsBySpecies[speciesID] = []string{}
+		// Keep the groups already listed (Stage 1.3): nest groups founded while the restore set up its edited chunks were
+		// dropped from the list here, so no cap, the director or a release ever counted them again.
+		if state.SwarmsBySpecies[speciesID] == nil {
+			state.SwarmsBySpecies[speciesID] = []string{}
+		}
 
 		// Schedule first continuous spawn check
 		state.SpeciesNextSpawn[speciesID] = float64(cap.SpawnInterval)
