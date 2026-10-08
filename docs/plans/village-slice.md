@@ -252,6 +252,11 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   results are the same, with one walk over the group's bugs instead of two). **Checks, decided before running:**
   equivalence both ways, IDENTICAL; the tick at 60 frames a second, old and new interleaved (order rotated) at 1,000 /
   2,000 / 4,000 bugs: passes if the group tick (`Sim.SwarmTick`) is faster, or no more than 2% slower, at every count.
+  **First round (2026-10-08, 13:20–13:55): equivalence IDENTICAL both ways (2,543 / 2,578 live ticks); the timing is
+  spoiled** — the new build read slower at every count (+4 / +21 / +26%), but so did the parts it doesn't touch (food
+  lookup +9 / +18 / +30%, strikes +9 / +19 / +17%, state check +2 / +16 / +19%), and the Unity Editor was found open
+  using ~1.4 processor cores. Not judged; the timing is re-run on a quiet machine (and builds wait while the Editor holds
+  the project).
 - **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
   resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
   and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism
