@@ -193,6 +193,21 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   compare zero with zero, a walking variant runs too: F walks the bench route through the busiest feeding spots (all far
   from E's view), seeds 31–33, old and new rotated, the same pass rule. (The side-by-side runs had not started: the
   flag `--client-flags -drawcheck` needs "=" because its value starts with a dash; re-run as decided.)
+  **Results so far:** (1) equivalence IDENTICAL both ways (2,518 / 2,512 live ticks). (3) **failed as written:** at 60
+  frames a second the simulation tick is 9–13% slower (1,000 bugs 0.69 → 0.78 ms; 2,000 1.35 → 1.48; 4,000 2.64 → 2.87),
+  the slow tick 19–58% slower (still inside Stage 1's targets), and parts whose code didn't change slowed too (state
+  check +7–14%, strikes +6–20%); the processor time per second of play (ticks plus drawing) fell 87% (2,000 bugs:
+  156 → 21 ms). The suspected cause, the old build's drawing keeping every bug's data in the processor's cache for the
+  next tick, is being tested (the cache test). (4) at the spawn: **passed** — stings on F old 0 / 138 / 16 (154), new
+  38 / 4 / 107 (149). (5) **flagged:** flies landed −49%, landings started −50%, fly breeding share −54% (5/5 seeds,
+  ~5 standard errors), fly feeding a suspect −54%; pace equal (58.2 ticks a second both); the frame rates were not
+  (~740 frames a second old, ~3,600 new, uncapped headless). The simulation is identical, so the server's fly groups
+  spent less time at food: something the server receives differed. **Decided before running (23:30):** (a) the behaviour
+  check again with both builds held to 60 frames a second, seeds 46–50, rotated — nothing flagged = the culling doesn't
+  change behaviour at a monitor's frame rate; a flag = Stage 1.2 changes behaviour and is investigated before it is
+  committed; (b) the old build against itself, uncapped and at 60 frames a second, seeds 51–55, rotated — flies
+  flagged the same way = the in-charge computer's frame rate alone changes the ecology, a fault of its own (players'
+  frame rates differ), recorded in the BACKLOG to investigate.
 - **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
   resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
   and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism
