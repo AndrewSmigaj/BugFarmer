@@ -238,6 +238,11 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   (the tick at 60 frames a second: half added work, half a colder cache; the start-up positions: the group objects'
   glide). Next, with the owner's yes (2026-10-08): the group objects stop gliding; then the tick's two passes over each
   group's bugs become one.
+- **1.2 follow-up 1, the group objects stay put (2026-10-08; the owner's yes, as long as the game still works the same):**
+  the group's object is placed once at creation; its per-frame glide (`SwarmVisual.Update`) is gone; the attack sound
+  plays at the group's simulated centre. **Checks, decided before running:** equivalence both ways, IDENTICAL; the
+  side-by-side check at 2,000 bugs (normal speed) and 1,000 at 6×: no position more than 0.05 cells from its sprite,
+  start-up included; a windowed run with the game's own pictures, looked at.
 - **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
   resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
   and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism
