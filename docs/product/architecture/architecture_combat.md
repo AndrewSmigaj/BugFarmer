@@ -214,7 +214,10 @@ chase faster + adding a cosmetic dart (the first pass) didn't fix it — the bug
   cells, so testing the sim pos fired the "hit" that far off-screen; the rendered read matches what you see. It
   feeds only server-bound strike REPORTS (HP is display-only) → never enters the hash. **The server-side
   centipede bite was DELETED** (centipede.go) — the last centre-fire phantom; the centipede connect is now
-  client-detected (`style:"lunge"` → per-tick connect) like the wasp sting.
+  client-detected (`style:"lunge"` → per-tick connect) like the wasp sting. *Since Stage 1.2 (2026-10-07)* a group out of
+  the computer-in-charge's view isn't drawn, so for its bugs the check uses the position the drawing would give them
+  (`BugVisual.DrawnPosition`, `architecture_swarm_sync.md`) — a remote player far from that computer's camera is still
+  stung by where the bugs are (the two-player sting test: stings on that player at the old build's rate).
 - **The sting layer is now thin.** The MOVEMENT does the swooping; `RunContactSting` only lands the telegraphed
   DAMAGE: it flashes an in-range diving bug (the dodge-able wind-up), then after `telegraph_secs` stings if a bug
   is STILL in rendered range (a dodge/step-out whiffs). `attack_tokens` = how many bugs flash/report at once; the

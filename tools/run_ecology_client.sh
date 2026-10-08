@@ -17,6 +17,10 @@
 #   WINDOWED=1                            draw for real (no -batchmode -nographics), 1600x900 windowed, vSync off
 #   AFFINITY=<hex mask>                   hold the client to these logical CPUs (the slower-computer emulation; 5 = two
 #                                         different P-cores on this i7-14700F, whose hyperthread pairs are 0-1, 2-3, …)
+#   SECOND_PLAYER=<path to .exe>          a second headless player (client F) that enters SECOND_DELAY seconds (default
+#   SECOND_FLAGS="..."                    15) after E, so E stays in charge, and stands at the zone's spawn unless its
+#                                         flags say otherwise (Stage 1.2's two-player sting test: E at an edge with
+#                                         -spawn, F where the bugs are). Its log: /tmp/player_F.log
 set -u
 
 ZONE="${1:-village_21_B}"
@@ -41,6 +45,7 @@ taskkill.exe /F /IM BugFarmerClient.exe >/dev/null 2>&1 || true
 rm -f "$PDATA/fly_counts.csv" "$PDATA/client_perf.csv" "$PDATA/client_perf_totals.csv" "$PDATA/player_ecology.log" /tmp/client_perf.csv /tmp/client_perf_totals.csv 2>/dev/null
 RIG_FILES="client_cost_E.csv client_cost_summary_E.json client_behaviour_E.csv hashlog_E.csv reports_E.csv"
 for f in $RIG_FILES; do rm -f "$PDATA/$f" "/tmp/$f"; done
+rm -f /tmp/player_F.log
 
 # Keep the client's clock at the zone's speed (call_rate/10 x sim_batch): a client stepping at 1x in a 6x zone falls
 # ever further behind the server, so the bugs' own decisions (hunting, eating) run at a sixth of the server's pace.
@@ -65,8 +70,23 @@ if [ -n "${AFFINITY:-}" ]; then
   powershell.exe -NoProfile -Command "Get-Process BugFarmerClient | ForEach-Object { \$_.ProcessorAffinity = [IntPtr]0x$AFFINITY; \$_.ProcessorAffinity }" \
     | tr -d '\r' | sed 's/^/affinity set: /'
 fi
+FPID=""
+if [ -n "${SECOND_PLAYER:-}" ]; then
+  SD="${SECOND_DELAY:-15}"
+  sleep "$SD"
+  rm -f "$PDATA/player_ecology_F.log"
+  # shellcheck disable=SC2086
+  "$SECOND_PLAYER" -batchmode -nographics -synctest -zone "$ZONE" -clientid F -duration "$((DUR - SD))" -timescale "$TS" \
+    ${SECOND_FLAGS:-} -logFile "$WPDATA/player_ecology_F.log" &
+  FPID=$!
+  echo "second player F started ${SD}s after E"
+fi
 wait "$CPID"
 CLIENT_EXIT=$?
+if [ -n "$FPID" ]; then
+  wait "$FPID"
+  [ -f "$PDATA/player_ecology_F.log" ] && cp "$PDATA/player_ecology_F.log" /tmp/player_F.log
+fi
 
 # Hand the population CSV to run_config where it already looks (/tmp), so the Python side is a one-line swap.
 if [ -f "$PDATA/fly_counts.csv" ]; then

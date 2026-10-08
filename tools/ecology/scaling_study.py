@@ -70,7 +70,8 @@ def run_one(cfg, zone, duration, out, env=None, label=None, seed=None):
         rc = subprocess.run(cmd, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, env={**os.environ, **(env or {})}).returncode
     for src, dst in (("/tmp/client_perf.csv", "client_perf.csv"), ("/tmp/client_perf_totals.csv", "client_perf_totals.csv"),
                      ("/tmp/fly_counts.csv", "fly_counts.csv"),
-                     (os.path.join(PDATA, "player_ecology.log"), "player.log")) + tuple(("/tmp/" + r, r) for r in RIG_FILES):
+                     (os.path.join(PDATA, "player_ecology.log"), "player.log"),
+                     ("/tmp/player_F.log", "player_F.log")) + tuple(("/tmp/" + r, r) for r in RIG_FILES):
         if os.path.exists(src):
             shutil.copy(src, os.path.join(d, dst))
     for f in glob.glob(os.path.join(PDATA, "screenshot_E_*.png")):
@@ -215,6 +216,11 @@ def main():
     ap.add_argument("--windowed", action="store_true", help="draw for real in a window (not headless), vSync off")
     ap.add_argument("--affinity", help="hold the client to these logical CPUs, a hex mask (the slower-computer emulation)")
     ap.add_argument("--screenshot", help="a windowed run saves the game's own picture at these seconds, e.g. 60,240")
+    ap.add_argument("--fps", type=int, help="hold the client to this frame rate (as a monitor would)")
+    ap.add_argument("--client-flags", help='more client flags; give them with "=", since they start with a dash: '
+                                           '--client-flags="-spawn 126,2 -reportlog -drawcheck"')
+    ap.add_argument("--second-player", help="a second headless player's build (client F; enters after E, so E is in charge)")
+    ap.add_argument("--second-flags", help='the second player\'s client flags (with "=", like --client-flags)')
     ap.add_argument("--label", help="folder name suffix for these runs (default: the config name)")
     ap.add_argument("--seeds", help="comma-separated zone seeds: each config runs once per seed (the noise floor)")
     a = ap.parse_args()
@@ -249,6 +255,16 @@ def main():
             env["WINDOWED"] = "1"
         if a.affinity:
             env["AFFINITY"] = a.affinity
+        if a.fps:
+            flags += ["-fps", str(a.fps)]
+            env["CLIENT_FLAGS"] = " ".join(flags)
+        if a.client_flags:
+            flags += a.client_flags.split()
+            env["CLIENT_FLAGS"] = " ".join(flags)
+        if a.second_player:
+            env["SECOND_PLAYER"] = os.path.abspath(a.second_player)
+            if a.second_flags:
+                env["SECOND_FLAGS"] = a.second_flags
         label = cfg + ("_" + a.label if a.label else "") + (f"_seed{seed}" if seed is not None else "")
         run_one(cfg, a.zone, a.duration, a.out, env=env, label=label, seed=seed)
         if not data_clean():

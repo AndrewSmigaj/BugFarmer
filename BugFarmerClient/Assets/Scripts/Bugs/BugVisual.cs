@@ -59,7 +59,10 @@ namespace BugFarmer.Bugs
         /// Real-butterfly feel: flap in short bursts, then GLIDE (hold wings-open frame 0) between bursts.
         /// </summary>
         public Sprite[] Frames;
-        private float _animTime = -1f; // <0 = uninitialised; seeded per-bug on first frame
+        // The flap/float phase: a per-bug offset added to the clock (Stage 1.2: the clock instead of a timer advanced
+        // only while the bug is drawn, so a bug out of view keeps its phase and its drawn position can be worked out
+        // without drawing it). Golden-ratio spread so a swarm doesn't flap in unison.
+        private readonly float _animPhase;
         // Per-species cosmetic flap profile (display-only). Defaults = the graceful butterfly
         // flap-then-glide; SwarmVisual overrides these for fast continuous buzzers (flies).
         public float FlapFps = 11f;      // frames/sec while flapping
@@ -71,6 +74,16 @@ namespace BugFarmer.Bugs
         private static readonly Color DamagedTint = new Color(1f, 0.6f, 0.6f, 1f);
         private static readonly Color FlashTint = new Color(1f, 0.25f, 0.25f, 1f);
 
+        // The two positions the last drawn frame blended between (Stage 1.2): kept at each tick for every bug, drawn or
+        // not, so DrawnPosition can say where the bug is drawn — or would be — without its sprite.
+        private Vector2 _drawFrom, _drawTo;
+        private int _capturedAtFrame = int.MinValue;   // the drawing frame number at the last capture
+        // The renderer's last written values, so a frame writes only what changed (Stage 1.2). Unknown at first.
+        private int _sortingOrder = int.MinValue;
+        private int _tint = -1;                        // 0 plain, 1 damaged, 2 flash
+        private int _frameIdx = -1;
+        private readonly float _z;
+
         public BugVisual(BugAgent agent, Transform transform)
         {
             Agent = agent;
@@ -78,19 +91,51 @@ namespace BugFarmer.Bugs
             Renderer = transform?.GetComponent<SpriteRenderer>();
             CurrPos = agent.Position.ToVector2();
             PrevPos = CurrPos;
+            _drawFrom = _drawTo = CurrPos;
+            _z = transform != null ? transform.position.z : 0f;
+            _animPhase = ((agent.BugId * 0.61803399f) % 1f) * 3f;
         }
 
         /// <summary>
-        /// Capture current position as previous before simulating next tick.
-        /// Call this before SimulateTick(). CurrPos will be updated in Interpolate()
-        /// after simulation has run.
+        /// Capture current position as previous before simulating next tick. CurrPos is what the last drawing frame
+        /// blended to — the bug's position at that frame — so if a frame has passed since the last capture it is refreshed
+        /// here from the agent (unchanged since that frame), whether or not the frame drew this bug; within a batch of
+        /// ticks with no frame between them it stays, as before. <paramref name="drawFrame"/> = SwarmManager.DrawFrame.
         /// </summary>
-        public void CapturePosition()
+        public void CapturePosition(int drawFrame)
         {
+            if (drawFrame != _capturedAtFrame)
+            {
+                CurrPos = Agent.Position.ToVector2();
+                _drawFrom = PrevPos;   // the last frame drew between these two
+                _drawTo = CurrPos;
+                _capturedAtFrame = drawFrame;
+            }
             PrevPos = CurrPos;
-            // Don't update CurrPos here - it will be updated in Interpolate()
-            // after SimulateTick() has changed Agent.Position
         }
+
+        /// <summary>
+        /// Where the bug is drawn at blend fraction <paramref name="t"/> and time <paramref name="now"/>: the blend between
+        /// the positions the last drawn frame used, plus the strike jab and the float. With the last frame's t and time it
+        /// is where the sprite was put — or would have been, for a bug out of view (Stage 1.2). Display only: it feeds the
+        /// computer-in-charge's sting reports and cosmetic picks, never the simulation or its hash.
+        /// </summary>
+        public Vector2 DrawnPosition(float t, float now)
+        {
+            Vector2 pos = Vector2.Lerp(_drawFrom, _drawTo, t) + JabOffset(now);
+            if (Frames != null && Renderer != null && Frames.Length >= 2) pos.y += BobOffset(now);   // as Interpolate
+            return pos;
+        }
+
+        // #20 strike lunge: a quick out-and-back jab toward the victim (display-only; sin envelope peaks at mid-window).
+        private Vector2 JabOffset(float now)
+        {
+            if (LungeStart < 0f) return Vector2.zero;
+            float le = now - LungeStart;
+            return le >= 0f && le < LungeDur ? LungeVec * Mathf.Sin(Mathf.PI * le / LungeDur) : Vector2.zero;
+        }
+
+        private float BobOffset(float now) => Mathf.Sin((_animPhase + now) * BobHz * 6.2831853f) * BobAmp;
 
         /// <summary>
         /// Interpolate visual position between PrevPos and CurrPos.
@@ -98,66 +143,52 @@ namespace BugFarmer.Bugs
         /// Also updates sorting order for Y-sorting (bugs in front of lower objects).
         /// </summary>
         /// <param name="t">Interpolation factor 0-1 (time within current tick)</param>
-        public void Interpolate(float t)
+        /// <param name="now">Time.time for this frame (one read per frame, by the caller)</param>
+        public void Interpolate(float t, float now)
         {
             // Update CurrPos from agent's current position (after SimulateTick)
             CurrPos = Agent.Position.ToVector2();
 
             if (Transform != null)
             {
-                Vector2 pos = Vector2.Lerp(PrevPos, CurrPos, t);
-
-                // #20 strike lunge: a quick out-and-back jab toward the victim (display-only; sin envelope
-                // peaks at mid-window, returns to 0). Added before the flap/bob so the whole sprite jabs.
-                if (LungeStart >= 0f)
-                {
-                    float le = Time.time - LungeStart;
-                    if (le >= LungeDur) LungeStart = -1f;
-                    else pos += LungeVec * Mathf.Sin(Mathf.PI * le / LungeDur);
-                }
+                // The strike jab is added before the flap/bob so the whole sprite jabs.
+                Vector2 pos = Vector2.Lerp(PrevPos, CurrPos, t) + JabOffset(now);
 
                 // Cosmetic flap animation + vertical float (display-only; never hashed).
                 float bobY = 0f;
                 if (Frames != null && Renderer != null && Frames.Length >= 2)
                 {
-                    if (_animTime < 0f)
-                    {
-                        // per-bug phase offset so the swarm doesn't flap in unison (golden-ratio spread)
-                        _animTime = ((Agent.BugId * 0.61803399f) % 1f) * 3f;
-                    }
-                    _animTime += Time.deltaTime;
-
                     int n = Frames.Length;
                     float burst = FlapsPerBurst * n / FlapFps; // seconds of flapping per burst
                     float period = burst + GlideSecs;          // burst + glide
-                    float m = _animTime % period;
+                    float m = (_animPhase + now) % period;
                     int idx = m < burst ? Mathf.FloorToInt(m * FlapFps) % n : 0; // glide holds frame 0 (wings open)
-                    var frame = Frames[idx];
-                    if (Renderer.sprite != frame) Renderer.sprite = frame;
-
-                    bobY = Mathf.Sin(_animTime * BobHz * 6.2831853f) * BobAmp;
+                    if (idx != _frameIdx) { _frameIdx = idx; Renderer.sprite = Frames[idx]; }
+                    bobY = BobOffset(now);
                 }
 
-                Transform.position = new Vector3(pos.x, pos.y + bobY, Transform.position.z);
+                Transform.position = new Vector3(pos.x, pos.y + bobY, _z);
 
                 // Y-sorting uses the SIM y (not the cosmetic float) to avoid sort flicker.
                 if (Renderer != null)
                 {
-                    Renderer.sortingOrder = -Mathf.FloorToInt(pos.y) + 1;
-                    UpdateTint();
+                    int order = -Mathf.FloorToInt(pos.y) + 1;
+                    if (order != _sortingOrder) { _sortingOrder = order; Renderer.sortingOrder = order; }
+                    UpdateTint(now);
                 }
             }
         }
 
         /// <summary>
         /// Combat display tint: brief flash on hit, persistent light-red while damaged
-        /// (DisplayHP set), white otherwise. Pure cosmetics over the display HP copy.
+        /// (DisplayHP set), white otherwise. Pure cosmetics over the display HP copy. Written only when it changes.
         /// </summary>
-        private void UpdateTint()
+        private void UpdateTint(float now)
         {
-            Renderer.color = Time.time < FlashUntil
-                ? FlashTint
-                : (DisplayHP > 0 ? DamagedTint : Color.white);
+            int tint = now < FlashUntil ? 2 : (DisplayHP > 0 ? 1 : 0);
+            if (tint == _tint) return;
+            _tint = tint;
+            Renderer.color = tint == 2 ? FlashTint : (tint == 1 ? DamagedTint : Color.white);
         }
 
         /// <summary>
@@ -168,6 +199,7 @@ namespace BugFarmer.Bugs
         {
             CurrPos = Agent.Position.ToVector2();
             PrevPos = CurrPos;
+            _drawFrom = _drawTo = CurrPos;
             if (Transform != null)
             {
                 Transform.position = CurrPos;
@@ -175,7 +207,8 @@ namespace BugFarmer.Bugs
                 // Update sorting order to match position
                 if (Renderer != null)
                 {
-                    Renderer.sortingOrder = -Mathf.FloorToInt(CurrPos.y) + 1;
+                    _sortingOrder = -Mathf.FloorToInt(CurrPos.y) + 1;
+                    Renderer.sortingOrder = _sortingOrder;
                 }
             }
         }

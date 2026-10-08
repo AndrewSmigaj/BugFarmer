@@ -88,9 +88,10 @@ making a four-times-bigger village good to walk around and making tuning runs fa
 - **Now (2026-10-07):** Stage 1.0 is done — the equivalence check and the two-step behaviour check are proven, the
   "before" numbers are measured and written up (`docs/product/investigations/stage1-before-2026-10-06/README.md`), and
   the three late-join faults the player tests found are fixed and proven.
-- **Next:** Stage 1.2, the drawing (smoothing and trails only for bugs on screen, the sting check's drawn positions on
-  demand). Stage 1.1 is done (2026-10-07): steps 1–7 committed, the targets for 1,000–4,000 bugs met, no memory per
-  tick, the behaviour checks passed (PROGRESS). Open, not scheduled: the startup resync loop (BACKLOG).
+- **Next:** Stage 1.2's two follow-ups (the group objects stop gliding — the owner's yes, 2026-10-08 — and one pass per
+  group per tick), then Stage 1.3 (the server runs the whole zone). Stage 1.1 is done (2026-10-07); Stage 1.2 is
+  committed (2026-10-08): drawing only what is in view, bug drawing 3.2 → 0.07 ms a frame at 2,000 bugs (PROGRESS).
+  Open, not scheduled: the startup resync loop (BACKLOG; seed 75 reproduces it); slow frames that are not the bugs.
 - **The owner's answers (2026-10-07):** the behaviour check becomes a two-step check; the three late-join fixes now,
   as their own change; the windowed tour whenever suits.
 - **Stage 1.1 started (2026-10-07, the owner's go-ahead).** Each step is a pair of builds that differ only by that
@@ -228,6 +229,15 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   against new, five fresh seeds (71–75) rotated, `--confirm` over all ten: confirmed = a real interaction between the
   change and a very high frame rate, whose mechanism is found before the commit; cleared = the first flag was chance
   (like the centipede flag of 2026-10-07) and Stage 1.2 is committed.
+  **The uncapped step 2 (2026-10-08): cleared** — nothing flagged over ten seeds (41–45, 71–74, 76; pace 0.31% apart).
+  Seed 75 broke twice with the old build (the startup fault, BACKLOG: a reproducer) and the first seed-76 pair broke
+  while another project's containers started on the machine; both set aside, as the rules say. Fly landing still leans
+  down (−48%, 8 of 10 seeds, 3.1 standard errors — under the bar; it is one of the rarest behaviours, where the check is
+  coarse), while the server's fly feeding and breeding show no difference (−20% / −22%, under 1 standard error): watched
+  in the next behaviour checks. **Stage 1.2 is committed as tested.** Two rules failed as written and are explained
+  (the tick at 60 frames a second: half added work, half a colder cache; the start-up positions: the group objects'
+  glide). Next, with the owner's yes (2026-10-08): the group objects stop gliding; then the tick's two passes over each
+  group's bugs become one.
 - **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
   resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
   and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism

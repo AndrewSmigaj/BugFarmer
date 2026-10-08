@@ -290,15 +290,23 @@ still agree. All of it is behind test flags; the game itself never turns any of 
   around water and walls) · `-vsyncoff` · `-runtag <t>` · `-screenshot <s>[,<s>…]` (a windowed run saves the game's own
   picture to `screenshot_<id>_<s>s.png` that many seconds after the rig starts — check a windowed run without capturing
   the owner's screen). A test run enters the world directly, so the rig hides the character-select overlay (until
-  2026-10-06 it stayed drawn over windowed runs).
+  2026-10-06 it stayed drawn over windowed runs). Added 2026-10-07 (Stage 1.2): `-fps <n>` (hold the frame rate —
+  **compare tick costs only at a held frame rate**: a headless client otherwise runs thousands of frames a second once
+  drawing is cheap, and the frames change both the tick's cost and, through timing, the run itself) · `-drawcheck` (every
+  group stays drawn; each tick every bug's on-demand drawn position is compared with its sprite, `[DrawCheck]` lines) ·
+  `-reportlog` also writes `sting_windup` / `sting_strike` lines (player stings, read from drawn positions — not compared
+  by `equiv_check.py`).
 - **Builds:** `SyncTestBuild.Build` (Development, `Build/SyncTest/`) and `SyncTestBuild.BuildRelease` (`Build/Release/`,
   the timings judged against the targets; the Unity profiler counters, and so the allocation figure, exist only in the
   Development build).
 - **Server:** the test-zone flag `hold_population` (fixed-count cost runs) and the daily `BEHAVSTATS` line (§2.5).
 - **Scripts:**
   - `tools/ecology/scaling_study.py --perfmode clean|breakdown [--behaviour] [--player <exe>] [--route <file>]
-    [--windowed] [--seeds 1,2,3,4,5]` — runs configs on the bench zone and summarises (percentiles, allocations,
-    snapshot timing); `run_config.py --seed N --tag NAME` underneath.
+    [--windowed] [--seeds 1,2,3,4,5] [--fps 60] [--client-flags="-spawn 126,2 -reportlog"] [--second-player <exe>
+    --second-flags="-route C:/…"]` — runs configs on the bench zone and summarises (percentiles, allocations, snapshot
+    timing); `run_config.py --seed N --tag NAME` underneath. Flags that start with a dash need `=` (argparse). The
+    second player (client F, `tools/run_ecology_client.sh` `SECOND_PLAYER`) joins 15 s after E, so E stays in charge.
+    **Rotate the build order per seed** in any old-against-new comparison (a fixed order raised a false flag, 2026-10-07).
   - `tools/netcode/equiv_check.py HASH_A HASH_B [--reports REP_A REP_B]` — the old-build-against-new-build check:
     first value per tick kept; resync, timeout or a replay after going live → INCONCLUSIVE; reports compared after a
     warm-up on `detect` (what each predator could strike, before the local report throttle) and `corpse` — NOT on the

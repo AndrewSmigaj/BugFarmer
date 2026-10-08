@@ -348,6 +348,19 @@ being designed now.
   receipt instead of at `PLAYER_CELL_LEAVE`'s tick, so a same-account rejoin replayed a phantom of itself; the
   authority's first snapshot was skipped at tick 0, so an early joiner got a seed-baseline stand-in. Fixed and proven
   on the failing world: `docs/product/investigations/latejoin-rejoin-divergence.md`.
+- **Bug sprites dragged by their group's gliding object (found 2026-10-07 by Stage 1.2's side-by-side check; a fix
+  proposed, waiting for the owner's yes).** Each group's GameObject glides toward the group's centre in its own
+  `SwarmVisual.Update` (`UpdateCenterInterpolation`), and the bug sprites are its children, so after the drawing places
+  them each frame they are carried along by the parent's glide until the next frame: up to 0.13 cells while start-up
+  frames are slow, invisible once the game runs fast (0 of 3.37 million positions more than 0.05 cells off). Nothing
+  needs the glide: the bugs, trails and shadows are placed in world space; the one reader of the group object's position
+  is the telegraph handler's sound position (`SwarmManager.HandleBugTelegraph`), which can use the group's simulated
+  centre. Proposed: stop moving the group object (and so drop ~500 `Update` calls a frame). Display only.
+- **Slow frames that are not the bugs (found 2026-10-07, the windowed tours).** About 130 frames per 300 s run take
+  more than 16.7 ms in every build since before Stage 1.1, while the bugs' drawing is now ~0.1 ms: half fall in the
+  windows with the full bug snapshot built every 10 s (23 / 42 ms at 2,000 / 4,000 bugs; the send-on-join change
+  removes it), the rest elsewhere (up to 67–84 ms; the camera walking the village — world loading — is the first
+  suspect). Stage 1's "no dropped frames at 2,000 bugs" needs both found.
 - **A client stuck at tick 0 for its first seconds, then in a resync loop for the whole session** (1 of 79 runs on
   2026-10-06: "Frontier stalled 5s (simTick=0)", then "PROTOCOL VIOLATION: Old event not applied" thousands of times).
   The same slow-start family as the late-join cause C; not yet investigated
@@ -358,6 +371,12 @@ being designed now.
   ~230 s (`tools/_generated/scaling/2026-10-07-s11-behave/broken_ordinal_seed24_startup_loop/`,
   `…/s10_behave_1000_pre11_seed21/`). Both recovered, unlike the 2026-10-06 run (whether the late-join fixes are why
   is not known). It costs measurement sessions a re-run now and then (the behaviour check names the run BROKEN).
+  **A reproducer (2026-10-08):** seed 75 of the held-count behaviour config (`s10_behave_1000`, 1,000 bugs at 6×)
+  broke the same way twice running with the build before Stage 1.2 (`Build/SyncTest_base12`): "Frontier stalled 5s
+  (simTick=0, authTick=62)", then a stall mid-run too ("simTick=689, authTick=690, lastSeq=4515, watermark=4511"),
+  3,134 "Old event not applied" errors in the first run, 1.8–3.2 ticks a second; the Stage 1.2 build on the same seed
+  ran clean (`tools/_generated/scaling/2026-10-07-s12-behave/broken_old_seed75_*`). In all, about 1 run in 10 at 6×
+  hits it.
 - **DONE 2026-06-29 — late-joiner gets 0 bugs in dense zones (real multiplayer bug + why the determinism gate "couldn't run").** Root cause: the Nakama client's default `MaxMessageReadSize` is **256KB**; village_21_B's `LateJoinSnapshot` is ~230KB raw → **~305KB base64 on the wire** (Nakama frames match-state data as base64) → the client silently truncates the frame, the websocket framing **desyncs**, and the late joiner receives **nothing** after it (snapshot + handoff + tick broadcasts) → **0 swarms**. Any 2nd player into a populated zone saw no bugs; regressed when #113 tripled swarm counts ("worked the other day"). Fix (shipped, `NetworkManager.Awake`): build the socket with `WebSocketStdlibAdapter(maxMessageReadSize: 8MB)` to match the server's `max_message_size_bytes`. **Verified:** co-located late-join `SYNC: IDENTICAL` (128332 bug-states + 236 tick-hashes, no drift). Proven by A/B zone size: bug_lab (20KB snapshot) ingested fine; village_21_B (230KB) dropped everything.
 - **DONE 2026-06-29 — spawn-apart (disjoint-chunk) late-join divergence (the determinism gate's 2nd half).** Root cause (proven by a per-tick `_food` digest probe): the client deterministic food registry (`InfluenceManager._food`, which bug LANDING visuals read — `BugAgent.TryFeedAtFood` sets bug position) was hydrated **per-chunk** — `GroundItemManager.HandleItemSpawn` called `HydrateFood` for each `GroundItemSpawn`, and those are sent **per-chunk-subscribe** — so a client only knew food in its loaded chunks (authority held ~85 entries, a disjoint late-joiner ~265) → bugs forage/land differently → ~11-15% per-bug divergence. Fix (shipped, `GroundItemManager.cs`, 1 file): `GroundItemSpawn` is **COSMETIC-ONLY**; food enters `_food` only via the zone-wide `ITEM_ROTTED`/`FOOD_CONSUMED` ledger + the authority's `ZoneSnapshot.Food`. **Verified:** BOTH gate halves `SYNC: IDENTICAL` (co-located 166k + spawn-apart 161k shared-bug states, no drift). NOT an ecology change — `_food` is landing-visuals only; the server ecology uses its own `ForagePools`/`HostPlantStates`/`FindNearbyFood(worldState)`. With the collision map (#133) already zone-wide, food was the last view-scoped sim input → the deterministic bug sim is now fully zone-wide. (Optional polish, backlogged: a `ZoneFoodMap` would let bugs land on the FULL zone food set for richer feeding visuals, vs only the ledgered/un-consumed food they land on now.)
 - **Snapshot size scalability (follow-up).** The `LateJoinSnapshot` grows unbounded with zone density (8MB client cap = ~30× today's headroom, not infinite). Consider gzip-compressing or chunking the snapshot, or bounding it.

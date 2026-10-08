@@ -302,6 +302,8 @@ namespace BugFarmer.Testing
                 File.WriteAllText(Path.Combine(_dir, $"client_behaviour_{_id}.csv"), _behaviour.ToString());
             if (_route != null)
                 Debug.Log($"[HeadlessSyncTest] route: reached={_route.Reached} skipped={_route.Skipped} laps={_route.Laps}");
+            if (DrawCheck.Enabled)
+                Debug.Log(DrawCheck.Summary(SwarmManager.Instance != null ? SwarmManager.Instance.SimulationTick : -1));
             HashLog.Close();
             ReportLog.Close();
             CostProbe.Stop();

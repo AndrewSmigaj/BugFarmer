@@ -631,6 +631,14 @@ namespace BugFarmer.Entities
             }
             _perfLoop.Dispose();
 
+            // TEST ONLY (-drawcheck, Stage 1.2): each bug's on-demand drawn position against its sprite, every tick.
+            if (DrawCheck.Enabled)
+            {
+                foreach (var swarmId in _swarms.SortedKeys)
+                    _swarms[swarmId].CompareDrawnPositions(LastDrawT, LastDrawTime);
+                if (_simulationTick % 600 == 0) Debug.Log(DrawCheck.Summary(_simulationTick));
+            }
+
             // 4b. Phase 2 — individual-fly predation strike (AUTHORITY ONLY, LIVE only). Positions are
             // final for the tick; this detects which individual prey a predator struck and REPORTS it to
             // the server (it does NOT remove anything locally — the kill comes back as a frontier-gated
@@ -972,6 +980,7 @@ namespace BugFarmer.Entities
 
         private void SendStrike(string swarmId, string playerId, List<int> bugIds, string phase)
         {
+            if (ReportLog.Active) ReportLog.Sting(_simulationTick, swarmId, playerId, phase, bugIds); // test only
             SendToServer(OpCodes.BugPlayerStrike, new BugPlayerStrikeMessage
             {
                 swarm_id = swarmId, player_id = playerId, bug_ids = bugIds.ToArray(),
@@ -1077,17 +1086,64 @@ namespace BugFarmer.Entities
         private readonly Stack<List<(int bugId, FixedPoint2 pos)>> _preyListPool =
             new Stack<List<(int bugId, FixedPoint2 pos)>>();
 
+        /// <summary>Display only (Stage 1.2): the drawing frame's number, and the last frame's blend fraction and time —
+        /// what BugVisual needs to keep and work out drawn positions for bugs that aren't drawn. Never read by the sim.</summary>
+        public static int DrawFrame { get; private set; }
+        public static float LastDrawT { get; private set; }
+        public static float LastDrawTime { get; private set; }
+
+        // The drawn view (Stage 1.2): the main camera's rectangle grown by this margin (world units), which covers a
+        // frame's movement, the strike jab and a sprite's size. Groups outside it aren't drawn.
+        private const float DrawViewMargin = 3f;
+        private Camera _drawCamera;
+        private bool? _drawViewLogged;
+
         /// <summary>
-        /// Interpolate all swarms for visual smoothing.
+        /// Interpolate all swarms for visual smoothing — only the groups in view (Stage 1.2).
         /// INVARIANT: Visual code MUST NOT mutate simulation state.
         /// </summary>
         private void InterpolateAllSwarms(float t)
         {
             using var _perf = PerfProfiler.Sample("Render.Interpolate");
+            float now = Time.time;
+            DrawFrame++;
+            LastDrawT = t;
+            LastDrawTime = now;
+            bool haveView = TryGetDrawView(out float x0, out float y0, out float x1, out float y1);
+            if (haveView != _drawViewLogged)
+            {
+                _drawViewLogged = haveView;
+                var viewMsg = haveView
+                    ? $"[SwarmManager] drawing only the groups in view ({x1 - x0:F1} x {y1 - y0:F1} with the margin)"
+                    : "[SwarmManager] no usable camera: drawing every group";
+                Debug.Log(viewMsg);
+                DebugFileLogger.Log(viewMsg);
+            }
             foreach (var swarmId in _swarms.SortedKeys)
             {
-                _swarms[swarmId].Interpolate(t);
+                var swarm = _swarms[swarmId];
+                if (swarm.UpdateInView(haveView, x0, y0, x1, y1, keepDrawing: DrawCheck.Enabled))
+                    swarm.Interpolate(t, now);
             }
+        }
+
+        /// <summary>The main camera's view in world units, grown by <see cref="DrawViewMargin"/>; false without a usable
+        /// orthographic camera (then every group is drawn, as before Stage 1.2).</summary>
+        private bool TryGetDrawView(out float minX, out float minY, out float maxX, out float maxY)
+        {
+            minX = minY = maxX = maxY = 0f;
+            if (_drawCamera == null) _drawCamera = Camera.main;
+            var cam = _drawCamera;
+            if (cam == null || !cam.orthographic || !cam.isActiveAndEnabled) return false;
+            float halfH = cam.orthographicSize;
+            float halfW = halfH * cam.aspect;
+            if (!(halfH > 0f) || !(halfW > 0f) || float.IsInfinity(halfW)) return false;
+            var p = cam.transform.position;
+            minX = p.x - halfW - DrawViewMargin;
+            maxX = p.x + halfW + DrawViewMargin;
+            minY = p.y - halfH - DrawViewMargin;
+            maxY = p.y + halfH + DrawViewMargin;
+            return true;
         }
 
         /// <summary>

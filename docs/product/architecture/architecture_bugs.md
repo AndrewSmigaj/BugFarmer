@@ -1076,7 +1076,9 @@ and set. Every string order that feeds the simulation (the group ids, the huntin
 character by character, the same on every computer — since 2026-10-07; the old default comparer followed each
 computer's language setting. The tick allocates no memory (the counter RNG folds the group id in place instead of
 copying it per roll; the player cells and hunting groups are copied into reused lists): `architecture_swarm_sync.md`,
-the food registry's cost note. Each part of a client tick is timed (`Sim.Tick` and its parts, timing only); the fixes are Stage 1.1–1.2 of `docs/plans/village-slice.md`.
+the food registry's cost note. Only the groups in the camera's view are drawn (Stage 1.2: out of view a group's object
+is switched off; the sting check works out drawn positions on demand): `architecture_swarm_sync.md`, the same place.
+Each part of a client tick is timed (`Sim.Tick` and its parts, timing only); the fixes are Stage 1.1–1.2 of `docs/plans/village-slice.md`.
 
 **The server brings to life only the chunks a player has loaded (found 2026-10-04):** food sources, nests and stations
 are set up when a chunk is first loaded for a player (`handlers_world.go:23-43`), and an unloaded chunk counts as a
@@ -1104,6 +1106,10 @@ fault against the zone-wide design (`architecture_swarm_sync.md` §12.3); the fi
   behaviour tally (read-only over the bugs, via `SwarmVisual.AppendAgents`; it counts bug-ticks in each state and, per
   bug from tick to tick, how many times each state STARTED); `HashLog` and `ReportLog` are the
   equivalence check's logs (`architecture_swarm_sync.md`). With every flag off, each hook is one static bool read.
+  Added for Stage 1.2 (2026-10-07): `-fps <n>` holds the frame rate (as a monitor would; a headless client otherwise
+  runs thousands of frames a second); `-drawcheck` (`DrawCheck` in `TestProbes.cs`) keeps every group drawn and compares
+  each bug's on-demand drawn position with its sprite every tick; the report log's `sting_*` lines; and a second test
+  player in `tools/run_ecology_client.sh` (`SECOND_PLAYER`, for the two-player sting test).
 
 **As built (2026-10-04):** a catch takes the bugs out of the zone's population and is recorded as `d_catch` in the
 daily `ECOSTATS` line (`handleCatchBug`, `match.go`); a player's kill is `d_kill`. The sketch below is the original

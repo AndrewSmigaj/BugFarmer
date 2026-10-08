@@ -252,6 +252,32 @@ namespace BugFarmer.Util
     }
 
     /// <summary>
+    /// TEST ONLY (HeadlessSyncTest -drawcheck; Stage 1.2's side-by-side check, docs/plans/village-slice.md): every group
+    /// keeps being drawn, and each tick every bug's on-demand drawn position — what the sting check reads for a group out
+    /// of view — is compared with its sprite; the groups that would be out of view are counted apart. Off in the game.
+    /// </summary>
+    public static class DrawCheck
+    {
+        public static bool Enabled;
+        public const float Tolerance = 0.05f;   // world units: a twentieth of a cell
+        public static long Compared, OutOfView, Over;
+        public static float Largest;
+
+        public static void Add(float distance, bool outOfView)
+        {
+            Compared++;
+            if (outOfView) OutOfView++;
+            if (distance > Tolerance) Over++;
+            if (distance > Largest) Largest = distance;
+        }
+
+        public static string Summary(long tick) =>
+            "[DrawCheck] tick " + tick.ToString(CultureInfo.InvariantCulture) + ": " + Compared + " drawn positions compared (" +
+            OutOfView + " in groups out of view), " + Over + " more than " +
+            Tolerance.ToString(CultureInfo.InvariantCulture) + " apart, largest " + Largest.ToString("F4", CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
     /// The strike and corpse reports, logged on every computer: the one in charge logs what it sends; one that isn't
     /// (with <see cref="Shadow"/>) runs the same passes in log-only mode and logs what it WOULD send. Comparing the
     /// two logs shows whether two builds make the same decisions.
@@ -304,6 +330,17 @@ namespace BugFarmer.Util
             CountsFor(eaterSpecies)[2]++;
             if (_w == null) return;
             _w.WriteLine(tick.ToString(CultureInfo.InvariantCulture) + ",corpse," + foodId + ",,," + (sent ? "1" : "0"));
+        }
+
+        /// <summary>A sting report on a player (phase "windup" or "strike"), as the computer in charge sends it. Stings are
+        /// read from drawn positions, so they depend on each computer's frames: they go under their own kinds
+        /// (sting_windup, sting_strike), which the equivalence check doesn't compare. Stage 1.2's two-player sting test
+        /// counts them per player.</summary>
+        public static void Sting(long tick, string swarmId, string playerId, string phase, List<int> bugIds)
+        {
+            if (_w == null) return;
+            _w.WriteLine(tick.ToString(CultureInfo.InvariantCulture) + ",sting_" + phase + "," + swarmId + "," + playerId +
+                         "," + string.Join(";", bugIds) + ",1");
         }
 
         /// <summary>The per-species counts since the last call (then cleared).</summary>

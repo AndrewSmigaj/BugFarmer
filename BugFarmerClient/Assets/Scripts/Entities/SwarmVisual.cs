@@ -11,7 +11,7 @@ namespace BugFarmer.Entities
     /// Visual representation of a swarm - a PASSIVE RENDERER that never owns time.
     /// SwarmManager owns THE ONE simulation tick and calls:
     /// - SimulateTick(tick, players) to advance bug simulation
-    /// - Interpolate(t) to smooth visuals between ticks
+    /// - Interpolate(t, now) to smooth visuals between ticks, only while the group is in view (UpdateInView, Stage 1.2)
     ///
     /// This class manages Dictionary of bugs keyed by ID for O(1) lookup.
     /// FIX #2: All bug iteration uses OrderBy(bugId) for determinism.
@@ -38,6 +38,15 @@ namespace BugFarmer.Entities
         // Bug ID tracking (matches server)
         private int _nextBugId;
         private HashSet<int> _removedIds = new();
+
+        // Drawing only what is in view (Stage 1.2, docs/plans/village-slice.md): a box around this group's bugs over its
+        // last two ticks (world units), whether the group was in view at the last frame (out of view its object is
+        // switched off), and how far its bodies reach behind their heads (segmented crawlers).
+        private Vector2 _boxMin, _boxMax, _prevBoxMin, _prevBoxMax;
+        private bool _hasBox;
+        private bool _inView = true;
+        private bool _returning;
+        private float _bodyReach;
 
         // Swarm center interpolation (server-driven)
         private Vector2 _previousCenter;
@@ -317,6 +326,7 @@ namespace BugFarmer.Entities
                 // Head scale matches its trail segments — per species (millipede = 2x centipede).
                 float headScale = Bugs.CentipedeTrail.PartScaleFor(SpeciesId);
                 visual.localScale = new Vector3(headScale, headScale, 1f);
+                _bodyReach = Mathf.Max(_bodyReach, Bugs.CentipedeTrail.HistoryLengthFor(SpeciesId));
                 if (!_trails.ContainsKey(bugId))
                 {
                     var trailGo = new GameObject($"trail_{bugId}");
@@ -447,15 +457,34 @@ namespace BugFarmer.Entities
             }
 
             // 1. Capture previous positions for interpolation FIRST
+            int drawFrame = SwarmManager.DrawFrame;
             foreach (var bugId in sortedBugIds)
             {
-                _bugs[bugId].CapturePosition();
+                _bugs[bugId].CapturePosition(drawFrame);
             }
 
-            // 2. Simulate each bug in deterministic order
+            // 2. Simulate each bug in deterministic order (and note the box around the bugs, display only: Stage 1.2)
+            int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue;
             foreach (var bugId in sortedBugIds)
             {
-                _bugs[bugId].Agent.SimulateTick(_simCenter, players, tick, preyBugs, subdued);
+                var agent = _bugs[bugId].Agent;
+                agent.SimulateTick(_simCenter, players, tick, preyBugs, subdued);
+                int x = agent.Position.X.Value, y = agent.Position.Y.Value;
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+            }
+            if (sortedBugIds.Length > 0)
+            {
+                const float s = 1f / FixedPoint.Scale;
+                var bMin = new Vector2(minX * s, minY * s);
+                var bMax = new Vector2(maxX * s, maxY * s);
+                _prevBoxMin = _hasBox ? _boxMin : bMin;
+                _prevBoxMax = _hasBox ? _boxMax : bMax;
+                _boxMin = bMin;
+                _boxMax = bMax;
+                _hasBox = true;
             }
 
             // Debug: log first bug's state every 100 ticks (sample one swarm)
@@ -475,13 +504,70 @@ namespace BugFarmer.Entities
         /// INVARIANT: This is READ-ONLY visual lerp. MUST NOT mutate simulation state.
         /// </summary>
         /// <param name="t">Interpolation factor (0 to 1)</param>
-        public void Interpolate(float t)
+        public void Interpolate(float t, float now)
         {
             foreach (var bugId in _bugs.SortedKeys)
             {
-                _bugs[bugId].Interpolate(t);
+                _bugs[bugId].Interpolate(t, now);
+            }
+            if (_returning)
+            {
+                // Back in view: the heads are placed; lay each body straight behind its head along its last movement.
+                _returning = false;
+                foreach (var kv in _trails)
+                    if (kv.Value != null && _bugs.TryGetValue(kv.Key, out var bug))
+                        kv.Value.Rebuild(bug.CurrPos - bug.PrevPos);
             }
         }
+
+        /// <summary>
+        /// Stage 1.2: is this group in the drawn view (world units, already grown by the drawing margin)? A group leaving
+        /// the view has its object switched off — its bugs, shadows, glows and trails hidden, with no per-frame work, and no
+        /// frozen sprites left behind where it was — and switched back on when it returns (its trails are then rebuilt).
+        /// Without a view, or before its first tick, a group counts as in view. Returns whether to draw it this frame.
+        /// </summary>
+        public bool UpdateInView(bool haveView, float viewMinX, float viewMinY, float viewMaxX, float viewMaxY,
+                                 bool keepDrawing = false)
+        {
+            bool inView = !haveView || !_hasBox
+                || (Mathf.Max(_boxMax.x, _prevBoxMax.x) + _bodyReach >= viewMinX
+                    && Mathf.Min(_boxMin.x, _prevBoxMin.x) - _bodyReach <= viewMaxX
+                    && Mathf.Max(_boxMax.y, _prevBoxMax.y) + _bodyReach >= viewMinY
+                    && Mathf.Min(_boxMin.y, _prevBoxMin.y) - _bodyReach <= viewMaxY);
+            if (keepDrawing)
+            {
+                // TEST ONLY (DrawCheck): drawn whatever the view, so its sprites can be compared with DrawnPosition.
+                _wouldBeOutOfView = !inView;
+                return true;
+            }
+            if (inView != _inView)
+            {
+                _inView = inView;
+                gameObject.SetActive(inView);
+                if (inView) _returning = true;
+            }
+            return inView;
+        }
+
+        private bool _wouldBeOutOfView;
+
+        /// <summary>TEST ONLY (DrawCheck, Stage 1.2): each bug's on-demand drawn position against its sprite.</summary>
+        public void CompareDrawnPositions(float t, float now)
+        {
+            foreach (var bugId in _bugs.SortedKeys)
+            {
+                var b = _bugs[bugId];
+                if (b.Transform == null) continue;
+                DrawCheck.Add((b.DrawnPosition(t, now) - (Vector2)b.Transform.position).magnitude, _wouldBeOutOfView);
+            }
+        }
+
+        /// <summary>Where a bug of this group is drawn now: its sprite while the group is in view, else the position the
+        /// drawing would give it at the last frame (BugVisual.DrawnPosition) — never a frozen sprite (Stage 1.2).</summary>
+        private Vector2 DrawnPos(BugVisual bug) =>
+            _inView && bug.Transform != null
+                ? (Vector2)bug.Transform.position
+                : bug.DrawnPosition(SwarmManager.LastDrawT, SwarmManager.LastDrawTime);
 
         // NOTE: GetPlayerTargets() REMOVED - SwarmManager provides deterministic player targets
         // from InfluenceManager.GetPlayerCells() via the SimulateTick(tick, players) parameter.
@@ -524,9 +610,7 @@ namespace BugFarmer.Entities
 
             foreach (var kvp in _bugs)
             {
-                Vector2 bugPos = kvp.Value.Transform != null
-                    ? (Vector2)kvp.Value.Transform.position
-                    : kvp.Value.CurrPos;
+                Vector2 bugPos = DrawnPos(kvp.Value);
                 Vector2 delta = bugPos - origin;
                 if (delta.sqrMagnitude > reachSq)
                     continue;
@@ -540,11 +624,11 @@ namespace BugFarmer.Entities
             // trail). Without this, 6/8ths of every body whiffs. The server validates
             // click-vs-PLAYER reach only (it holds no per-bug positions), so no server
             // change is needed — the rule is "stand within reach of whichever body
-            // part you slash".
+            // part you slash". Out of view the bodies aren't laid out (Stage 1.2) — and are far beyond any reach.
             foreach (var kvp in _trails)
             {
                 int bugId = kvp.Key;
-                if (kvp.Value == null || result.Contains(bugId) || !_bugs.ContainsKey(bugId))
+                if (!_inView || kvp.Value == null || result.Contains(bugId) || !_bugs.ContainsKey(bugId))
                     continue;
                 foreach (var seg in kvp.Value.SegmentPositions())
                 {
@@ -590,7 +674,7 @@ namespace BugFarmer.Entities
             foreach (var bug in _bugs.Values)
             {
                 if (bug.Transform == null) continue;
-                float d = ((Vector2)bug.Transform.position - worldPos).sqrMagnitude;
+                float d = (DrawnPos(bug) - worldPos).sqrMagnitude;
                 if (d < bestSqr) { bestSqr = d; best = bug; }
             }
             if (best != null)
@@ -611,12 +695,12 @@ namespace BugFarmer.Entities
             foreach (var bug in _bugs.Values)
             {
                 if (bug.Transform == null) continue;
-                float d = ((Vector2)bug.Transform.position - worldPos).sqrMagnitude;
+                float d = (DrawnPos(bug) - worldPos).sqrMagnitude;
                 if (d < bestSqr) { bestSqr = d; best = bug; }
             }
             if (best == null) return;
             best.FlashUntil = Time.time + 0.15f;
-            Vector2 from = best.Transform.position;
+            Vector2 from = DrawnPos(best);
             Vector2 dir = worldPos - from;
             float dist = dir.magnitude;
             // dart toward the victim, but never overshoot past it (cap at 0.6× the gap for a near target).
@@ -908,15 +992,15 @@ namespace BugFarmer.Entities
         /// hit matches the sprite you see: for a fast surging centipede the rendered sprite lags the sim by
         /// ~1.4 cells, and testing the sim pos fired the "hit" that far off-screen (the phantom). This read is
         /// AUTHORITY-ONLY + sim-inert (feeds only server-bound strike reports; HP is display-only), so a
-        /// rendered (non-deterministic) value here can NEVER enter the hash. Falls back to CurrPos if the
-        /// transform is missing.
+        /// rendered (non-deterministic) value here can NEVER enter the hash. A group out of the computer's view
+        /// isn't drawn (Stage 1.2), so its bugs give the position the drawing would have given them at the last
+        /// frame (DrawnPos) — a remote player there is tested against where the bugs are, never frozen sprites.
         /// </summary>
         public IEnumerable<(int bugId, FixedPoint2 pos)> GetAllBugsRenderedSorted()
         {
             foreach (var bugId in _bugs.SortedKeys)
             {
-                var b = _bugs[bugId];
-                Vector2 v = b.Transform != null ? (Vector2)b.Transform.position : b.CurrPos;
+                Vector2 v = DrawnPos(_bugs[bugId]);
                 yield return (bugId, new FixedPoint2 { X = FixedPoint.FromFloat(v.x), Y = FixedPoint.FromFloat(v.y) });
             }
         }

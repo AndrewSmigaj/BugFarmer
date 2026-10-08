@@ -68,7 +68,8 @@ namespace BugFarmer.Testing
         // per-part timers off), -behaviour (behaviour tally), -hashlog (fingerprint log), -shadowreports (a computer
         // not in charge logs the reports it would send), -reportlog (log the reports sent), -route <file> (walk a
         // route), -vsyncoff, -screenshot <s>[,<s>...] (a windowed run saves the game's own picture that many seconds
-        // after the rig starts). Outputs go to persistentDataPath with the client id in the name.
+        // after the rig starts), -fps <n> (hold the frame rate), -drawcheck (Stage 1.2's side-by-side check of drawn
+        // positions). Outputs go to persistentDataPath with the client id in the name.
         private string _perfMode;
         private string _fileId;
 
@@ -458,6 +459,14 @@ namespace BugFarmer.Testing
             bool behaviour = HeadlessSyncTest.HasFlag("-behaviour");
             if (behaviour) BehaviourTally.Start();
             if (HeadlessSyncTest.HasFlag("-vsyncoff")) { QualitySettings.vSyncCount = 0; Application.targetFrameRate = -1; }
+            // -fps <n>: hold the frame rate to n, as a monitor would (Stage 1.2: a headless client otherwise runs thousands
+            // of frames a second once drawing is cheap, and those frames compete with the tick it is meant to measure).
+            if (int.TryParse(HeadlessSyncTest.GetArg("-fps", ""), out int fps) && fps > 0)
+            {
+                QualitySettings.vSyncCount = 0;
+                Application.targetFrameRate = fps;
+            }
+            DrawCheck.Enabled = HeadlessSyncTest.HasFlag("-drawcheck");
             // The test enters the world directly, so the start-up overlays a player dismisses by hand stay drawn over the
             // game in a windowed run (found 2026-10-06, seen in -screenshot pictures): the title screen (OpeningSequence,
             // gone when Start is pressed) and the character select (hidden when a character is picked).

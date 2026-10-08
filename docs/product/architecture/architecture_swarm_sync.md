@@ -95,6 +95,21 @@ the player cells and the hunting groups reach the tick through `InfluenceManager
 `CopyHuntingSwarms` into reused lists, in the registry's own order as before. `sim-determinism --alloc-test` holds the
 per-bug sim (hunting and feeding included) to zero bytes per tick. The full snapshot the authority builds every 10 s
 still allocates (the send-on-join change of Stage 1 removes it).
+**Drawing only what is in view (Stage 1.2, 2026-10-07; display only — the simulation is untouched, equivalence
+IDENTICAL both ways):** each frame `SwarmManager.InterpolateAllSwarms` takes the main camera's view grown by 3 cells and
+asks each group `UpdateInView`: a group whose bugs (a box over its last two ticks, grown by its body length for
+centipedes and millipedes) are outside it has its GameObject switched off — bugs, shadows, glows, trails hidden, no
+per-frame work, no frozen sprites left behind — and back on when it returns, with its bugs placed and its trails rebuilt
+straight behind their heads (`CentipedeTrail.Rebuild`; the trail is now a fixed ring with each point's distance
+travelled). No usable camera → every group is drawn. **The sting check never reads a frozen sprite:** it, the flash/jab
+picks and the hit area read `SwarmVisual.DrawnPos` — the sprite while in view, else `BugVisual.DrawnPosition(the last
+frame's blend, time)`, the drawing's own formula over the two positions the last frame blended between, kept per bug at
+each tick (`CapturePosition(DrawFrame)`); the float's phase comes from the clock. Measured by the side-by-side check
+(`-drawcheck`): 0 of 3.37 million positions more than 0.05 cells from the sprite once the game is running; 182 in the
+first 600 ticks, up to 0.13 cells — the sprites hang on their group's object, which glides toward the group's centre
+in its own `Update` and drags them until the next frame places them, a drag that is large only while start-up frames
+are slow (BACKLOG). Sting reports go to the test report log under their own kinds (`sting_windup`, `sting_strike`),
+which the equivalence check doesn't compare.
 
 **Update 2026-07-14 — the S1/S2 predation late-join desync + the VERBATIM-RELAY CONTRACT.** New per-bug
 predation state (`HuntTargetBugId`, `FeedUntilTick`, `FeedCorpseId`) and the per-swarm hunt assignment

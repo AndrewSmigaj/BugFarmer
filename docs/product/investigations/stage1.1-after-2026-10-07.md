@@ -61,3 +61,50 @@ measure.
 
 Drawing improved a little because it reads the kept-sorted bugs instead of sorting them each frame; the rest of it
 (on-screen-only smoothing and trails) is Stage 1.2.
+
+## 5. Stage 1.2: drawing only what is in view (2026-10-07)
+A group of bugs outside the camera's view (plus a 3-cell margin) isn't drawn: its object is switched off, and switched
+back on when it returns. The sting check works out drawn positions on demand for groups out of view. The simulation is
+untouched: the equivalence check gave identical results both ways round (2,518 / 2,512 live ticks).
+
+**On screen (windowed, the camera walking the village, release build, typical / slow):**
+| | Before Stage 1.1 | After 1.1 | After 1.2 | Target at 2,000 |
+|---|---|---|---|---|
+| Whole frame, 2,000 bugs | 3.98 / 14.1 ms | 2.99 / 4.47 ms | **0.63 / 1.68 ms** | |
+| Drawing the bugs, 2,000 bugs | 3.16 / 5.31 ms | 2.11 / 2.66 ms | **0.07 / 0.11 ms** | slow ≤ 2 ms ✓ |
+| Whole frame, 4,000 bugs | 6.68 / 29.9 ms | 5.31 / 8.91 ms | **0.71 / 1.88 ms** | |
+| Drawing the bugs, 4,000 bugs | 5.31 / 8.91 ms | 4.22 / 5.62 ms | **0.13 / 0.22 ms** | |
+
+About 130 frames per 300 s run still take more than 16.7 ms, in every build (173 before Stage 1.1): about half in the
+5-second windows holding the full bug snapshot the computer in charge builds every 10 s (23 ms at 2,000 bugs, 42 ms at
+4,000; the send-on-join change removes it), the rest elsewhere (up to 67–84 ms; not the bugs, cause not yet known).
+
+**The simulation tick at 60 frames a second** (development build, old against new, interleaved): the tick reads 9–13%
+slower (2,000 bugs 1.35 → 1.48 ms), the slow tick 19–58% slower, while the processor time per second of play (ticks
+plus drawing) falls 87% (2,000 bugs 156 → 21 ms; 4,000 bugs 300 → 40 ms). The cache test explains it: with every group
+still drawn, the parts that didn't change come back to the old build's values (strikes 0.115 against 0.111 ms, state
+check 0.042 against 0.040) — the old build's drawing touched every bug every frame and so kept their data in the
+processor's cache for the next tick — and the group tick shows the real added work, +7.6% (0.08 ms at 2,000 bugs).
+The plan's rule for this check (no part more than 10% slower) **failed as written**; the next step merges the tick's two
+passes over each group's bugs into one, which removes a pass of both.
+
+**Side-by-side check** (every group still drawn, each bug's on-demand position against its sprite, every tick): at
+2,000 bugs, 0 of 3.37 million positions more than 0.05 cells apart once the game was running; 182 in the first 600
+ticks, up to 0.13 cells. Cause: the sprites hang on their group's object, which glides toward the group's centre in its
+own per-frame update and drags them until the next frame places them — large only while start-up frames are slow. The
+on-demand position is the intended one; the drag is old and cosmetic (BACKLOG). The rule (none over 0.05) **failed as
+written** on those start-up positions. (The 6× run hit the startup resync fault and is set aside.)
+
+**The two-player sting test** (the computer in charge at the south edge, the stung player F out of its view; 1,000
+held bugs at 6×; stings on F from the in-charge computer's report log): F standing at the spawn — old 0 / 138 / 16
+(154), new 38 / 4 / 107 (149); F walking the busiest feeding spots — old 26 / 12 / 30 (68), new 8 / 10 / 24 (42).
+**Passed** both (stung on every seed the old build stung, totals within half to twice). The counts swing widely from run
+to run; the side-by-side check is the precise test of the positions the stings read.
+
+**Behaviour check:** the first five seeds (uncapped frame rate) flagged flies — landed −49%, landings started −50%,
+breeding share −54% (5/5 seeds, ~5 standard errors), with the pace equal but the frame rates not (~740 old, ~3,600
+new). Then: old against new at 60 frames a second, ten seeds — nothing flagged; the old build uncapped against itself at
+60 — nothing; the new build uncapped against itself at 60, ten seeds — nothing; and the uncapped comparison itself on
+five fresh seeds, ten in all — nothing flagged (fly breeding −22% and feeding −20%, under 1 standard error). The first
+flag was chance. Fly landing still leans down over the ten (−48%, 8 of 10 seeds, 3.1 standard errors, under the bar):
+watched in the next behaviour checks.
