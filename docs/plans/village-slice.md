@@ -216,6 +216,12 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   uncapped (~3,600 frames a second) against itself at 60, seeds 61–65, rotated: flies flagged the same way = the fly drop
   comes from that extreme frame rate (a game synced to the monitor never runs there), recorded in the BACKLOG; not
   flagged = the drop needs the change and the uncapped rate together, investigated before Stage 1.2 is committed.
+  **Results (2026-10-08):** (a) step 2, ten seeds: **nothing flagged** (the centipede suspects cleared; pace 0.07% apart).
+  (c) the new build uncapped against itself at 60: not flagged, but two SUSPECTs the same way as the uncapped fly drop —
+  flies landed −58%, landings started −57% (5/5 seeds, 3.2–3.3 standard errors). Neither of the two outcomes decided
+  above; the two-step rule's step 2 settles a suspect, so **decided (08:10):** (c) step 2, seeds 66–70, rotated,
+  `--confirm` over ten — confirmed = the fly drop comes from the extreme frame rate (BACKLOG) and Stage 1.2 is
+  committed; cleared = the drop is investigated before the commit.
 - **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
   resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
   and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism
