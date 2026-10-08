@@ -1,2 +1,2 @@
-2026-10-07_0948_s10_behave_1000_feed50_seed20
+2026-10-07_1837_s10_behave_1000_pre11_seed30
 Stage 1.0 behaviour check: about 1000 bugs held steady (hold_population) at 6x speed, so per-bug behaviour can be compared between builds without the ecology going different ways from seed to seed
