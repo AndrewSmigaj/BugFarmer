@@ -1163,6 +1163,13 @@ leaving, a reconnect; the slower computer.
   side gets food — so a confirming run logs it to the main log: the first player hydrated 63 entries from its bootstrap,
   the joiner 68 from the snapshot, `SYNC: IDENTICAL` (211,431). The equivalence check doesn't apply (a server change:
   both clients face the same server). Next: the one-pass timing re-run, then the whole-zone baseline.
+- **The whole-zone baseline, decided before it runs (2026-10-09):** today's village on its bench copy, the shipped
+  tuning (`bench_baseline`), 6,720 s at 6× (≈ 47 game-days), seeds 1337 (the 2026-10-04 run's), 41 and 42, the
+  Stage 1.3 client and server. **Checked:** every food source lives — the server's `RESSTATS` equal the authored census
+  (29 milkweed, 185 flowers, 129 fruit trees, 7 nests, 10 leaf-litter piles); the acceptance item "the whole zone
+  lives". **Measured, not judged:** per species born / died by cause / average alive, against the June bake (flies ~112,
+  butterflies ~45, millipedes ~19, wasps ~16, centipedes ~4, beetles ~3) and the 40%-of-the-zone run of 2026-10-04;
+  only a structural fault it shows is fixed now (the real tuning is at 512).
 
 ## Stage 1.4 design — the snapshot on demand (checked in code 2026-10-04)
 **Today:** the computer in charge uploads a full snapshot every 10 s (`SnapshotInterval`, `SwarmManager.cs:117`) because
