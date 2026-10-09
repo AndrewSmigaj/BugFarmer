@@ -88,7 +88,8 @@ making a four-times-bigger village good to walk around and making tuning runs fa
 - **Now (2026-10-07):** Stage 1.0 is done — the equivalence check and the two-step behaviour check are proven, the
   "before" numbers are measured and written up (`docs/product/investigations/stage1-before-2026-10-06/README.md`), and
   the three late-join faults the player tests found are fixed and proven.
-- **Next (2026-10-09):** the short structural check on today's village (after the one-pass timing re-run), then Stage 1.5
+- **Next (2026-10-09):** the one-pass change is dropped (its timing re-run found no gain and slower drawing, PROGRESS);
+  the short structural check on today's village, then Stage 1.5
   with the 512 test zone (today's village tiled 2 × 2, about 1,000 bugs) for the owner to walk; then the faster test
   runs (1.6), then tuning in bands (the owner's order, 2026-10-09). Superseded below:
 - **Earlier (2026-10-08, paused while the owner uses Unity):** with the machine free — the Unity build and Stage 1.3's
@@ -266,6 +267,12 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   `SyncTest_onepass`, against the now-deployed Stage 1.3 server — both face the same server), at each count the order
   old, new, new, old (mirrored, so a slow patch falls on both), each part judged on the mean of the two runs per build;
   the same pass rule.
+  **The re-run's result (2026-10-09, 06:53–07:53, quiet machine):** the rule passes as written — the group tick
+  +1.7% / +1.1% / +0.3% at 1,000 / 2,000 / 4,000 bugs (the parts it doesn't touch moved 0–4%, so the machine was
+  quiet) — but the change is **dropped, not committed**: it was meant to make the tick faster and is not faster at any
+  count, and the bug drawing (`Render.Interpolate`, which the rule didn't judge) read slower in every pair, +9.8% at
+  2,000 and +18.4% at 4,000 (both new runs above both old ones each time). No gain and a cost: the two-pass code stays
+  as committed. Data: `tools/_generated/scaling/2026-10-09-onepass/summary.json`.
 - **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
   resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
   and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism
